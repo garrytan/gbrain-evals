@@ -1,0 +1,14 @@
+{
+  "slug": "originals/essays/unit-economics-late-stage",
+  "type": "writing",
+  "title": "Unit Economics in Late Stage",
+  "compiled_truth": "Late stage unit economics analysis differs from the early-stage version in three ways: customer acquisition cost stops being marketing-bound and becomes sales-bound, retention curves stop being a single number and become a multidimensional surface, and the gross margin path stops being aspirational and becomes the only thing that matters.\n\nThis essay walks through the late stage unit economics framework that actually works for Series C and beyond. The key insight: at scale, you stop optimizing CAC and start optimizing CAC payback under realistic discount rates. The 12-month payback rule everyone quotes assumes a flat discount rate ... at late stage with real cost of capital, the rule changes.\n\nThe second insight: revenue durability dominates everything else. A 75% gross margin business with 105% net retention beats a 90% gross margin business with 92% net retention every time once you compound it three years out.",
+  "timeline": [
+    "- **2026-04-11** | Wrote up the framework after the LP call where everyone was confused."
+  ],
+  "_facts": {
+    "type": "writing",
+    "name": "Late Stage Unit Economics",
+    "primary_phrase": "late stage unit economics"
+  }
+}

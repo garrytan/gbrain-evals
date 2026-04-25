@@ -1,0 +1,14 @@
+{
+  "slug": "originals/essays/vertical-saas-thesis",
+  "type": "writing",
+  "title": "Vertical SaaS Thesis",
+  "compiled_truth": "The vertical SaaS thesis: in the AI era, the right wedge is industry-specific software with deep workflow integration, not general-purpose horizontal tools. This investment thesis writeup explains why vertical SaaS opportunities have widened, not narrowed, despite the constant 'AI eats SaaS' chatter.\n\nThree reasons the vertical SaaS thesis still holds. (1) The shape of the work hasn't changed: dental practices, marine logistics, regional banking, livestock auctions still have weird specific workflows that horizontal tools don't reach. (2) AI commoditizes generic capabilities (chat, summarization, classification) but raises the bar on industry context. (3) The customer acquisition story is dramatically better when you can name the trade conference where 60% of your buyers congregate.\n\nThe essay surfaces three specific vertical SaaS thesis bets that are working in this current cycle, and three categories that look like they should work but don't.",
+  "timeline": [
+    "- **2026-04-14** | Investment thesis writeup. Posted internally before any external publication."
+  ],
+  "_facts": {
+    "type": "writing",
+    "name": "Vertical SaaS Thesis",
+    "primary_phrase": "vertical SaaS thesis"
+  }
+}

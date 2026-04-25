@@ -1,0 +1,14 @@
+{
+  "slug": "originals/talks/rag-pattern-anti-patterns",
+  "type": "writing",
+  "title": "RAG Anti-Patterns",
+  "compiled_truth": "RAG anti patterns are the dominant failure mode in production retrieval-augmented generation systems today. This talk surveys the eight most common RAG anti patterns we see in production deployments and the structural fixes for each.\n\nThe canonical RAG anti patterns: (1) chunk-first thinking ... building the retriever before knowing what gets asked. (2) cosine-only ranking ... assuming vector similarity is enough. (3) reranking-as-cherry-on-top ... doing reranking but not measuring whether it helps. (4) ignoring intent ... treating temporal queries the same as entity queries. (5) the swamp problem ... bulky low-signal pages crowd out curated content because keyword density is higher per byte. (6) source-blind ranking ... treating a chat dump and an essay as equally authoritative. (7) over-retrieval ... fetching 50 chunks and praying the LLM can sort them. (8) under-retrieval ... fetching 3 and missing the answer.\n\nThe talk closes with the structural fix for each ... most are a few lines of SQL or a small reranking pass. None require a model upgrade.",
+  "timeline": [
+    "- **2026-04-19** | Talk delivered. Got asked about gbrain's source-boost work."
+  ],
+  "_facts": {
+    "type": "writing",
+    "name": "RAG Anti Patterns",
+    "primary_phrase": "RAG anti patterns"
+  }
+}

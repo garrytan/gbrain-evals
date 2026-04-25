@@ -1,0 +1,15 @@
+{
+  "slug": "originals/essays/do-things-that-don-t-scale-revisited",
+  "type": "writing",
+  "title": "Do Things That Don't Scale, Revisited",
+  "compiled_truth": "Twelve years after Paul Graham's essay, the do things that don't scale frame deserves a revisit. The original argument was: in the earliest days of a startup, founders should engage in labor-intensive, high-touch activities that would be impossible to sustain at scale. This is still right, but the AI era has shifted what counts as unscalable.\n\nThe revisit makes three claims. First, AI compresses the cost of unscalable work by 10-100x ... the same hand-crafted founder white-glove that took a week now takes an afternoon. Second, the right unscalable work has shifted from manual onboarding toward direct user research and product taste calibration. Third, founders who skip the do things that don't scale phase by leaning on AI-generated outputs end up with products that are technically correct and commercially dead.\n\nThe canonical examples (manual onboarding, hand-written cold emails, founder-led customer support) all still apply, but the bar has moved.",
+  "timeline": [
+    "- **2026-03-15** | Wrote first draft. Got pushback that the AI angle was overclaimed.",
+    "- **2026-04-02** | Revised with the three-claim structure."
+  ],
+  "_facts": {
+    "type": "writing",
+    "name": "Do Things That Don't Scale Revisited",
+    "primary_phrase": "do things that don't scale revisited"
+  }
+}

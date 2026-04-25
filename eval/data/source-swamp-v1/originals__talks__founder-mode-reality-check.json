@@ -1,0 +1,14 @@
+{
+  "slug": "originals/talks/founder-mode-reality-check",
+  "type": "writing",
+  "title": "Founder Mode: A Reality Check",
+  "compiled_truth": "Founder mode reality is more boring than the meme. The meme: a founder who refuses to delegate, knows every detail, ships product features unilaterally on a Sunday. The reality: the founders who consistently outperform are the ones who can context-switch between detail-mode and management-mode at sub-day cadence, not the ones who live in detail-mode permanently.\n\nThis founder mode reality check covers three places where the meme misleads. (1) The detail-mode-as-default founders ship faster but accumulate organizational debt. (2) The pure-management founders accumulate product debt. (3) The successful founders are deliberately bilingual ... they spend Monday in detail-mode shipping a feature and Wednesday in management-mode running a 1:1, and they're conscious about the switch.\n\nThe talk closes with a self-test: count the days last quarter you context-switched cleanly. If the answer is fewer than 5, you don't have founder mode, you have founder default-mode.",
+  "timeline": [
+    "- **2026-04-09** | Talk outline."
+  ],
+  "_facts": {
+    "type": "writing",
+    "name": "Founder Mode Reality Check",
+    "primary_phrase": "founder mode reality check"
+  }
+}

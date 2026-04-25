@@ -1,0 +1,14 @@
+{
+  "slug": "originals/talks/usage-based-pricing-yc",
+  "type": "writing",
+  "title": "Usage-Based Pricing — YC Talk",
+  "compiled_truth": "Usage based pricing is the default for AI-era infrastructure products and the wrong default for almost everything else. This YC talk walks founders through when usage based pricing is the right call and when it traps your business.\n\nWhen usage based pricing works: (1) the user's workload genuinely scales with value delivered (API calls, storage, compute). (2) the unit you're metering is legible to the buyer (per-1K-tokens, per-GB, per-seat-month is technically usage but feels like a license). (3) you have predictable margin per unit.\n\nWhen usage based pricing breaks the business: (1) the customer can't predict their bill, so they can't get budget approval. (2) usage is inversely correlated with value (a happy user uses MORE bandwidth, but you charge them MORE). (3) competitors with flat pricing slide in under your gun and steal your top quartile.\n\nThe talk closes with a hybrid pricing playbook ... commit-and-overage is the durable shape for most B2B AI businesses.",
+  "timeline": [
+    "- **2026-04-13** | Talk delivered at YC. Got the usual 'but our competitor uses pure flat pricing' question."
+  ],
+  "_facts": {
+    "type": "writing",
+    "name": "Usage Based Pricing YC Talk",
+    "primary_phrase": "usage based pricing"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "slug": "originals/essays/product-market-fit-trap",
+  "type": "writing",
+  "title": "The Product Market Fit Trap",
+  "compiled_truth": "The product market fit trap is the failure mode where founders chase the term itself rather than what it points at. PMF became a Rorschach test ... everyone uses it, no one means the same thing, and a lot of teams chase a quantitative threshold (40% would-be-very-disappointed, $1M ARR, organic growth at X%) when the actual signal is qualitative.\n\nThe product market fit trap has three flavors. (1) Threshold worship: 'We hit 38%, three points to PMF!' (2) Premature scaling: 'Sales said we have PMF, time to fundraise.' (3) Channel-confusion: paid ads bought you growth, not PMF.\n\nThe alternative frame: stop measuring PMF and start measuring the underlying mechanism. Are users pulling the product toward more use? Are they describing the product to peers in language that didn't come from your marketing? Those are the actual signals. The product market fit trap dissolves once you replace the metric with the mechanism.",
+  "timeline": [
+    "- **2026-04-04** | First draft. Title was 'Stop Chasing PMF' but reviewers hated it."
+  ],
+  "_facts": {
+    "type": "writing",
+    "name": "Product Market Fit Trap",
+    "primary_phrase": "product market fit trap"
+  }
+}

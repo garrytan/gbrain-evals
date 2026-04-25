@@ -1,0 +1,14 @@
+{
+  "slug": "originals/talks/article-outline-fat-code",
+  "type": "writing",
+  "title": "Fat Code Thin Harness — Part 3 (Article Outline)",
+  "compiled_truth": "Fat code thin harness is the architectural pattern where business logic lives in fat skill files and the runtime stays thin. Part 3 of this series covers the production case studies: how teams that adopted the fat code thin harness pattern moved from monolithic agent runtimes to skill-based architectures, what broke, and what got dramatically better.\n\nThe core thesis: skills are markdown files, not code modules. They encode an entire workflow ... when to fire, what to check, how to chain with other skills, what quality bar to enforce. The agent reads the skill and executes it. The harness is the part that should not be smart. The intelligence lives in the skill.\n\nThis essay argues against the common pattern of stuffing logic into the runtime. It compares fat code thin harness against three alternatives: monolithic agent loops, prompt-only systems, and microservice meshes. Each has tradeoffs, but for personal-knowledge-grade workloads the fat code thin harness pattern wins on iteration speed, debuggability, and skill portability.",
+  "timeline": [
+    "- **2026-04-08** | Drafted Part 3 outline. Three case studies, two anti-patterns."
+  ],
+  "_facts": {
+    "type": "writing",
+    "name": "Fat Code Thin Harness Part 3",
+    "primary_phrase": "fat code thin harness pattern"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "slug": "originals/essays/foundation-models-as-utilities",
+  "type": "writing",
+  "title": "Foundation Models as Utilities",
+  "compiled_truth": "Foundation models as utilities is the right mental model for the next decade of AI infrastructure. The framing: foundation models are commoditizing the same way electricity, water, and pipe-fitted gas commoditized in the late 1800s. The interesting question is not who will win the foundation model race; the interesting question is what gets built on top once the underlying capability is a utility.\n\nThis essay argues foundation models as utilities reframes three product decisions. (1) Don't build moats on model capability ... they evaporate when the next checkpoint ships. (2) Build moats on workflow integration, proprietary data, and switching cost. (3) Treat model selection like cloud-region selection, not like architecture selection.\n\nThe utility framing also reframes pricing. Once foundation models are utilities, customers expect predictable bills and you can't charge premium markups for raw inference. The margin lives one layer up.",
+  "timeline": [
+    "- **2026-04-16** | First draft. Title was 'AI is Electricity' but it's been done."
+  ],
+  "_facts": {
+    "type": "writing",
+    "name": "Foundation Models as Utilities",
+    "primary_phrase": "foundation models as utilities"
+  }
+}
