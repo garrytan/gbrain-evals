@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-4.0",
+  "source": "Wikipedia (en.wikipedia.org). Each item pinned to a specific revision id (oldid) so the source HTML and canonical extract are byte-stable across fetches.",
+  "items": [
+    {
+      "name": "marie-curie",
+      "path": "marie-curie.html",
+      "canonical_path": "canonical/marie-curie.txt",
+      "sha256": "8136711c386aa22201747b91566d81c16d458ef21f0b41c724b7e80f27440b59",
+      "source_url": "https://en.wikipedia.org/wiki/Marie_Curie?oldid=1350691364",
+      "canonical_url": "https://en.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext=1&format=json&revids=1350691364"
+    },
+    {
+      "name": "photosynthesis",
+      "path": "photosynthesis.html",
+      "canonical_path": "canonical/photosynthesis.txt",
+      "sha256": "10c79b04f543cbf6f3a4490628c3d2ad0369072eabbcd8a3676348157858325d",
+      "source_url": "https://en.wikipedia.org/wiki/Photosynthesis?oldid=1348236588",
+      "canonical_url": "https://en.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext=1&format=json&revids=1348236588"
+    },
+    {
+      "name": "apollo-11",
+      "path": "apollo-11.html",
+      "canonical_path": "canonical/apollo-11.txt",
+      "sha256": "9d03e1e95844b5602e1f15716fa6953e5b61b2e55dc7f1acb474e9255fbb38d7",
+      "source_url": "https://en.wikipedia.org/wiki/Apollo_11?oldid=1350616946",
+      "canonical_url": "https://en.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext=1&format=json&revids=1350616946"
+    },
+    {
+      "name": "mount-everest",
+      "path": "mount-everest.html",
+      "canonical_path": "canonical/mount-everest.txt",
+      "sha256": "c6974b619a8e81496d3c17fe353c32426bec6409b1a1b7a98ce57ed56fdff9c9",
+      "source_url": "https://en.wikipedia.org/wiki/Mount_Everest?oldid=1350333656",
+      "canonical_url": "https://en.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext=1&format=json&revids=1350333656"
+    },
+    {
+      "name": "programming-language",
+      "path": "programming-language.html",
+      "canonical_path": "canonical/programming-language.txt",
+      "sha256": "4b130f41a493fc750aefa244fdebcf36fc3ef66634873e31d7a22ff82d1c3ce3",
+      "source_url": "https://en.wikipedia.org/wiki/Programming_language?oldid=1350063785",
+      "canonical_url": "https://en.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext=1&format=json&revids=1350063785"
+    },
+    {
+      "name": "tokyo",
+      "path": "tokyo.html",
+      "canonical_path": "canonical/tokyo.txt",
+      "sha256": "bf0b67b00e3bf8aba9b26ab9a7d8f94d541c0a7bcbfe9ce442be8726e3bd8b44",
+      "source_url": "https://en.wikipedia.org/wiki/Tokyo?oldid=1351096923",
+      "canonical_url": "https://en.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext=1&format=json&revids=1351096923"
+    },
+    {
+      "name": "black-hole",
+      "path": "black-hole.html",
+      "canonical_path": "canonical/black-hole.txt",
+      "sha256": "c95e9d3ee7d70aa1fd029fd259926f0c27b922fab275254544f5162d7874c24a",
+      "source_url": "https://en.wikipedia.org/wiki/Black_hole?oldid=1351334948",
+      "canonical_url": "https://en.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext=1&format=json&revids=1351334948"
+    },
+    {
+      "name": "world-war-i",
+      "path": "world-war-i.html",
+      "canonical_path": "canonical/world-war-i.txt",
+      "sha256": "1eff730e0f22f254adf5e70d1f123b9008c0eee7fa018f341534eceac97f7933",
+      "source_url": "https://en.wikipedia.org/wiki/World_War_I?oldid=1351326033",
+      "canonical_url": "https://en.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext=1&format=json&revids=1351326033"
+    },
+    {
+      "name": "internet",
+      "path": "internet.html",
+      "canonical_path": "canonical/internet.txt",
+      "sha256": "3f50f8501b0167aa4190997ff696d2340e8d4c4ef7d2b4158ecdba2d7cd0baad",
+      "source_url": "https://en.wikipedia.org/wiki/Internet?oldid=1346604556",
+      "canonical_url": "https://en.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext=1&format=json&revids=1346604556"
+    },
+    {
+      "name": "albert-einstein",
+      "path": "albert-einstein.html",
+      "canonical_path": "canonical/albert-einstein.txt",
+      "sha256": "56b2219e3ab1f59d44638ec759e058ad85bed310b4bbab442a906d5cc17e8b54",
+      "source_url": "https://en.wikipedia.org/wiki/Albert_Einstein?oldid=1351479489",
+      "canonical_url": "https://en.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext=1&format=json&revids=1351479489"
+    }
+  ]
+}

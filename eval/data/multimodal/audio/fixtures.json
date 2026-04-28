@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "license": "Public domain (LibriVox recordings, public-domain source texts)",
+  "source": "LibriVox via Internet Archive (archive.org). 3 short poetry recordings from \"Short Poetry Collection 29\" (https://archive.org/details/short_poetry_029_librivox), each by a different reader and poet. Poetry texts are public-domain. v1 ships with 3 fixtures; expanding to 5 is tracked as follow-up work in the audio README.",
+  "items": [
+    {
+      "name": "a-white-rose",
+      "path": "a-white-rose.mp3",
+      "canonical_path": "canonical/a-white-rose.txt",
+      "sha256": "8612934039780b00f37b533a7958db39f4a0510cacf469a4f85ccae815d657af",
+      "source_url": "https://archive.org/download/short_poetry_029_librivox/awhiterose_oreilly_jhs.mp3"
+    },
+    {
+      "name": "all-religions-are-one",
+      "path": "all-religions-are-one.mp3",
+      "canonical_path": "canonical/all-religions-are-one.txt",
+      "sha256": "e5a61b32e520077a8d9322814664e37efb4f7d420e7322273dcbb98a14cbed3d",
+      "source_url": "https://archive.org/download/short_poetry_029_librivox/all_religions_are_one_blake_mb.mp3"
+    },
+    {
+      "name": "the-engine",
+      "path": "the-engine.mp3",
+      "canonical_path": "canonical/the-engine.txt",
+      "sha256": "079bcef46a93b3247bba5d2d289e54c99a00da5d6acc900292d337aa8f3c8998",
+      "source_url": "https://archive.org/download/short_poetry_029_librivox/engine_wilcox_lah.mp3"
+    }
+  ]
+}

@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "license": "CC-BY-4.0 or CC-BY-SA-4.0 (per-paper; full breakdown in README.md)",
+  "source": "arXiv (https://arxiv.org); HTML versions via ar5iv (https://ar5iv.labs.arxiv.org)",
+  "items": [
+    {
+      "name": "qlora",
+      "path": "qlora.pdf",
+      "canonical_path": "canonical/qlora.txt",
+      "sha256": "33a4e757c19d6ea8d3cca8958fce8fe405e290272e135c99ee66065c775d5bd1",
+      "source_url": "https://arxiv.org/pdf/2305.14314v1.pdf",
+      "canonical_url": "https://ar5iv.labs.arxiv.org/html/2305.14314v1",
+      "entities": [
+        "QLoRA",
+        "LoRA",
+        "Guanaco",
+        "NF4"
+      ]
+    },
+    {
+      "name": "palm",
+      "path": "palm.pdf",
+      "canonical_path": "canonical/palm.txt",
+      "sha256": "692b101e3d0abf3736fa6721dc03de4fe86eed27f8831705e8aafb81f9aa0a90",
+      "source_url": "https://arxiv.org/pdf/2204.02311v1.pdf",
+      "canonical_url": "https://ar5iv.labs.arxiv.org/html/2204.02311v1",
+      "entities": [
+        "PaLM",
+        "Pathways",
+        "TPU",
+        "BIG-bench"
+      ]
+    },
+    {
+      "name": "pythia",
+      "path": "pythia.pdf",
+      "canonical_path": "canonical/pythia.txt",
+      "sha256": "58633a350f19a65852620682381d9f0baff0ac31bf4bceeab09c2ecaef85a711",
+      "source_url": "https://arxiv.org/pdf/2304.01373v2.pdf",
+      "canonical_url": "https://ar5iv.labs.arxiv.org/html/2304.01373v2",
+      "entities": [
+        "Pythia",
+        "EleutherAI",
+        "Pile",
+        "scaling"
+      ]
+    },
+    {
+      "name": "mistral-7b",
+      "path": "mistral-7b.pdf",
+      "canonical_path": "canonical/mistral-7b.txt",
+      "sha256": "dfbac4e7035344b305c947481f2e7e8a02f7a24a563917eb6e47f6591d14c5ae",
+      "source_url": "https://arxiv.org/pdf/2310.06825v1.pdf",
+      "canonical_url": "https://ar5iv.labs.arxiv.org/html/2310.06825v1",
+      "entities": [
+        "Mistral",
+        "sliding window attention",
+        "grouped-query attention"
+      ]
+    },
+    {
+      "name": "dpo",
+      "path": "dpo.pdf",
+      "canonical_path": "canonical/dpo.txt",
+      "sha256": "304d57efe53317673ee5e93e1e1d990e3231fb4e24198aedd4829968e2c3cfbb",
+      "source_url": "https://arxiv.org/pdf/2305.18290v1.pdf",
+      "canonical_url": "https://ar5iv.labs.arxiv.org/html/2305.18290v1",
+      "entities": [
+        "Direct Preference Optimization",
+        "DPO",
+        "RLHF",
+        "Bradley-Terry"
+      ]
+    },
+    {
+      "name": "llama",
+      "path": "llama.pdf",
+      "canonical_path": "canonical/llama.txt",
+      "sha256": "2e663675ae36ad12adb2f5a05281bac2747ecf8d23d92bedd9f937a89fee7136",
+      "source_url": "https://arxiv.org/pdf/2302.13971v1.pdf",
+      "canonical_url": "https://ar5iv.labs.arxiv.org/html/2302.13971v1",
+      "entities": [
+        "LLaMA",
+        "Common Crawl",
+        "RMSNorm",
+        "SwiGLU"
+      ]
+    },
+    {
+      "name": "constitutional-ai",
+      "path": "constitutional-ai.pdf",
+      "canonical_path": "canonical/constitutional-ai.txt",
+      "sha256": "9a456a07ad346e3372f9867d346f69f5b0f68b4c65f060aca0b8a13fa9d98e83",
+      "source_url": "https://arxiv.org/pdf/2212.08073v1.pdf",
+      "canonical_url": "https://ar5iv.labs.arxiv.org/html/2212.08073v1",
+      "entities": [
+        "Constitutional AI",
+        "RLAIF",
+        "harmlessness",
+        "Anthropic"
+      ]
+    },
+    {
+      "name": "mixtral",
+      "path": "mixtral.pdf",
+      "canonical_path": "canonical/mixtral.txt",
+      "sha256": "f8bbf0e9d979b7a8ce7be65119266545a229a85b57e077d8bd048e458bb642da",
+      "source_url": "https://arxiv.org/pdf/2401.04088v1.pdf",
+      "canonical_url": "https://ar5iv.labs.arxiv.org/html/2401.04088v1",
+      "entities": [
+        "Mixtral",
+        "mixture of experts",
+        "SMoE",
+        "router"
+      ]
+    },
+    {
+      "name": "opt",
+      "path": "opt.pdf",
+      "canonical_path": "canonical/opt.txt",
+      "sha256": "d61aab59b02568b907722ecb1cd9dbab16391ad3f13f97aea73926ca64d640fb",
+      "source_url": "https://arxiv.org/pdf/2205.01068v1.pdf",
+      "canonical_url": "https://ar5iv.labs.arxiv.org/html/2205.01068v1",
+      "entities": [
+        "OPT",
+        "Open Pre-trained Transformer",
+        "Meta AI",
+        "GPT-3"
+      ]
+    },
+    {
+      "name": "zephyr",
+      "path": "zephyr.pdf",
+      "canonical_path": "canonical/zephyr.txt",
+      "sha256": "c7667911d13ba72d4ce0c8eb13762cdec72f6034064683dbfc2de944a219b6ba",
+      "source_url": "https://arxiv.org/pdf/2310.16944v1.pdf",
+      "canonical_url": "https://ar5iv.labs.arxiv.org/html/2310.16944v1",
+      "entities": [
+        "Zephyr",
+        "distilled DPO",
+        "MT-Bench",
+        "alignment"
+      ]
+    }
+  ]
+}
