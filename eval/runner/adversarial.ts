@@ -9,7 +9,15 @@
  */
 
 import { PGLiteEngine } from 'gbrain/pglite-engine';
-import { extractPageLinks, parseTimelineEntries } from 'gbrain/link-extraction';
+import { extractPageLinks, parseTimelineEntries, type SlugResolver } from 'gbrain/link-extraction';
+
+// Adversarial cases run against a resolver that knows nothing — we want to
+// observe extractor behavior on weird input, not test slug resolution. Any
+// candidate slug emitted will simply be unresolved (which is fine for the
+// crash/silent-corruption invariants we actually care about here).
+const adversarialResolver: SlugResolver = {
+  resolve: async () => null,
+};
 import type { PageInput } from 'gbrain/types';
 
 interface CaseResult {
@@ -108,12 +116,14 @@ const ADVERSARIAL_CASES: AdversarialCase[] = [
     compiled_truth: Array.from({ length: 50 }, () => '[Same](people/same-target)').join(' '),
     timeline: '',
   }, expect: async () => {
-    const candidates = extractPageLinks(
+    const result = await extractPageLinks(
+      'concepts/repeat-1',
       Array.from({ length: 50 }, () => '[Same](people/same-target)').join(' '),
       {},
       'concept',
+      adversarialResolver,
     );
-    const matches = candidates.filter(c => c.targetSlug === 'people/same-target');
+    const matches = result.candidates.filter(c => c.targetSlug === 'people/same-target');
     return { pass: matches.length === 1, note: `expected 1 candidate after within-page dedup, got ${matches.length}` };
   } },
 ];
@@ -183,12 +193,14 @@ async function main() {
 
     // 4. extractPageLinks (pure function, code-fence and false-positive checks happen here)
     result.ops_attempted++;
-    const extract = await tryOp('extractPageLinks', async () => extractPageLinks(c.page.compiled_truth, {}, c.page.type));
+    const extract = await tryOp('extractPageLinks', async () =>
+      extractPageLinks(c.slug, c.page.compiled_truth, {}, c.page.type, adversarialResolver),
+    );
     if (extract.ok) {
       result.ops_succeeded++;
       // Check: code fence content should NOT produce link candidates
       if (c.name.includes('code fence') || c.name.includes('inline code')) {
-        const candidates = extract.result;
+        const candidates = extract.result.candidates;
         const leaked = candidates.filter(cand => cand.targetSlug.includes('not-extract') || cand.targetSlug.includes('code-fenced-slug'));
         if (leaked.length > 0) result.silent_corruption.push(`code fence leak: extracted ${leaked.map(l => l.targetSlug).join(', ')}`);
       }

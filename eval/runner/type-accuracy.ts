@@ -27,7 +27,7 @@
 
 import { readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
-import { extractPageLinks } from 'gbrain/link-extraction';
+import { extractPageLinks, type SlugResolver } from 'gbrain/link-extraction';
 import type { PageType } from 'gbrain/types';
 
 interface RichPage {
@@ -153,12 +153,18 @@ function buildGoldEdges(pages: RichPage[]): GoldEdge[] {
 }
 
 /** Run extractPageLinks on every page; return flat list of inferred edges. */
-function inferAllEdges(pages: RichPage[]): GoldEdge[] {
+async function inferAllEdges(pages: RichPage[]): Promise<GoldEdge[]> {
   const edges: GoldEdge[] = [];
+  // Corpus-scoped resolver: known slugs resolve to themselves, unknown → null.
+  // Matches the pattern in cat6-prose-scale.ts (makeCorpusResolver).
+  const known = new Set(pages.map(p => p.slug));
+  const resolver: SlugResolver = {
+    resolve: async (name: string) => (known.has(name) ? name : null),
+  };
   for (const p of pages) {
     const content = `${p.title}\n\n${p.compiled_truth}\n\n${p.timeline}`;
-    const candidates = extractPageLinks(content, {}, p.type as PageType);
-    for (const c of candidates) {
+    const result = await extractPageLinks(p.slug, content, {}, p.type as PageType, resolver);
+    for (const c of result.candidates) {
       edges.push({ from: p.slug, to: c.targetSlug, type: c.linkType });
     }
   }
@@ -321,7 +327,7 @@ async function main() {
   log(`Loaded ${pages.length} pages.\n`);
 
   const gold = buildGoldEdges(pages);
-  const inferred = inferAllEdges(pages);
+  const inferred = await inferAllEdges(pages);
 
   log(`Gold edges (from _facts):     ${gold.length}`);
   log(`Inferred edges (extractPageLinks): ${inferred.length}\n`);
