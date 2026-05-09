@@ -151,6 +151,120 @@ describe('fetchBuffer', () => {
     const fetchImpl = stubFetch(new Map([['https://x', Buffer.alloc(1024)]]));
     await expect(fetchBuffer('https://x', { fetchImpl, maxBytes: 100 })).rejects.toThrow(/too large/);
   });
+
+  // ─── SSRF gate ─────────────────────────────────────────────────────
+  // The fetcher reads contributor-controlled URLs. The gate must reject
+  // file:/, private IPs, metadata hostnames, and IP-encoding bypasses
+  // *before* any fetch goes out.
+
+  test('rejects file:// URLs without calling fetch', async () => {
+    let called = false;
+    const fetchImpl: typeof fetch = async () => {
+      called = true;
+      return new Response('x');
+    };
+    await expect(fetchBuffer('file:///etc/passwd', { fetchImpl })).rejects.toThrow(/blocked URL/);
+    expect(called).toBe(false);
+  });
+
+  test('rejects loopback hosts', async () => {
+    const fetchImpl: typeof fetch = async () => new Response('x');
+    await expect(fetchBuffer('http://127.0.0.1/admin', { fetchImpl })).rejects.toThrow(/blocked URL/);
+    await expect(fetchBuffer('http://[::1]/', { fetchImpl })).rejects.toThrow(/blocked URL/);
+    await expect(fetchBuffer('http://localhost/', { fetchImpl })).rejects.toThrow(/blocked URL/);
+  });
+
+  test('rejects AWS metadata + IP-encoding bypasses', async () => {
+    const fetchImpl: typeof fetch = async () => new Response('x');
+    await expect(fetchBuffer('http://169.254.169.254/latest/meta-data/', { fetchImpl }))
+      .rejects.toThrow(/blocked URL/);
+    await expect(fetchBuffer('http://2130706433/', { fetchImpl })).rejects.toThrow(/blocked URL/);
+    await expect(fetchBuffer('http://0x7f000001/', { fetchImpl })).rejects.toThrow(/blocked URL/);
+  });
+
+  // ─── Manual redirect walking ──────────────────────────────────────
+  // Default fetch follows redirects. We re-validate every Location hop so a
+  // public origin returning `302 → http://127.0.0.1/admin` can't probe the
+  // maintainer's localhost services during --bootstrap.
+
+  test('follows a same-origin relative redirect (arxiv-style)', async () => {
+    // Mirrors arxiv.org/pdf/X.pdf → /pdf/X (relative Location).
+    const payload = Buffer.from('pdf-bytes');
+    const fetchImpl: typeof fetch = async (input) => {
+      const u = typeof input === 'string' ? input : input.toString();
+      if (u === 'https://arxiv.org/pdf/X.pdf') {
+        return new Response(null, { status: 301, headers: { location: '/pdf/X' } });
+      }
+      if (u === 'https://arxiv.org/pdf/X') {
+        return new Response(payload as unknown as ArrayBuffer, { status: 200 });
+      }
+      return new Response('not found', { status: 404 });
+    };
+    const buf = await fetchBuffer('https://arxiv.org/pdf/X.pdf', { fetchImpl });
+    expect(buf.toString()).toBe('pdf-bytes');
+  });
+
+  test('follows a cross-origin absolute redirect (archive.org-style)', async () => {
+    const payload = Buffer.from('mp3-bytes');
+    const fetchImpl: typeof fetch = async (input) => {
+      const u = typeof input === 'string' ? input : input.toString();
+      if (u === 'https://archive.org/download/x/y.mp3') {
+        return new Response(null, {
+          status: 302,
+          headers: { location: 'https://ia600607.us.archive.org/7/items/x/y.mp3' },
+        });
+      }
+      if (u === 'https://ia600607.us.archive.org/7/items/x/y.mp3') {
+        return new Response(payload as unknown as ArrayBuffer, { status: 200 });
+      }
+      return new Response('not found', { status: 404 });
+    };
+    const buf = await fetchBuffer('https://archive.org/download/x/y.mp3', { fetchImpl });
+    expect(buf.toString()).toBe('mp3-bytes');
+  });
+
+  test('rejects a redirect into a private IP (SSRF via Location)', async () => {
+    const fetchImpl: typeof fetch = async (input) => {
+      const u = typeof input === 'string' ? input : input.toString();
+      if (u === 'https://attacker.example/innocuous') {
+        return new Response(null, { status: 302, headers: { location: 'http://127.0.0.1:8080/admin' } });
+      }
+      return new Response('reached', { status: 200 });
+    };
+    await expect(fetchBuffer('https://attacker.example/innocuous', { fetchImpl }))
+      .rejects.toThrow(/blocked URL/);
+  });
+
+  test('rejects a redirect into file://', async () => {
+    const fetchImpl: typeof fetch = async (input) => {
+      const u = typeof input === 'string' ? input : input.toString();
+      if (u === 'https://attacker.example/start') {
+        return new Response(null, { status: 302, headers: { location: 'file:///etc/passwd' } });
+      }
+      return new Response('x', { status: 200 });
+    };
+    await expect(fetchBuffer('https://attacker.example/start', { fetchImpl }))
+      .rejects.toThrow(/blocked URL/);
+  });
+
+  test('caps redirect chain at maxRedirects', async () => {
+    let n = 0;
+    const fetchImpl: typeof fetch = async () => {
+      n++;
+      return new Response(null, {
+        status: 302,
+        headers: { location: `https://hop-${n}.example/` },
+      });
+    };
+    await expect(fetchBuffer('https://hop-0.example/', { fetchImpl, maxRedirects: 2 }))
+      .rejects.toThrow(/Too many redirects/);
+  });
+
+  test('errors on redirect with no Location header', async () => {
+    const fetchImpl: typeof fetch = async () => new Response(null, { status: 302 });
+    await expect(fetchBuffer('https://example.com/', { fetchImpl }))
+      .rejects.toThrow(/no Location header/);
+  });
 });
 
 // ─── runModality: --check ─────────────────────────────────────────────

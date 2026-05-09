@@ -37,6 +37,7 @@ import { createHash } from 'crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { dirname, join, resolve } from 'path';
 import { htmlToText } from '../runner/cat11-multimodal.ts';
+import { assertSafeUrl } from './url-safety.ts';
 
 // ─── Manifest schema (superset of what the runner reads) ──────────────
 
@@ -136,20 +137,59 @@ export interface FetchOptions {
   fetchImpl?: typeof fetch;
   /** Bytes; reject responses larger than this. Default 100 MB. */
   maxBytes?: number;
+  /** Max redirect hops. Default 3 — covers arxiv.org/pdf/* (1) and archive.org → CDN (1). */
+  maxRedirects?: number;
 }
 
+/**
+ * SSRF-aware fetch with manual redirect walking.
+ *
+ * Why manual: the fetcher consumes contributor-controlled URLs from
+ * `fixtures.json`. A 302 → http://127.0.0.1/admin or → file:/// would let a
+ * legitimate-looking https origin redirect into the maintainer's localhost
+ * services or local filesystem. Default `redirect: 'follow'` does no per-hop
+ * validation. We re-run `assertSafeUrl` on every Location header up to
+ * `maxRedirects` hops.
+ */
 export async function fetchBuffer(url: string, opts: FetchOptions = {}): Promise<Buffer> {
   const fetchImpl = opts.fetchImpl ?? fetch;
   const maxBytes = opts.maxBytes ?? 100 * 1024 * 1024;
-  const res = await fetchImpl(url, { headers: { 'User-Agent': USER_AGENT } });
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status} ${res.statusText} for ${url}`);
+  const maxRedirects = opts.maxRedirects ?? 3;
+
+  let current = url;
+  for (let hop = 0; hop <= maxRedirects; hop++) {
+    assertSafeUrl(current);
+    const res = await fetchImpl(current, {
+      headers: { 'User-Agent': USER_AGENT },
+      redirect: 'manual',
+    });
+
+    // 3xx → walk Location ourselves so we can re-validate each hop.
+    if (res.status >= 300 && res.status < 400) {
+      const location = res.headers.get('location');
+      if (!location) {
+        throw new Error(`HTTP ${res.status} for ${current} but no Location header`);
+      }
+      if (hop === maxRedirects) {
+        throw new Error(`Too many redirects (>${maxRedirects}) starting at ${url}`);
+      }
+      // Resolve relative redirects (e.g. arxiv.org/pdf/X.pdf → /pdf/X) against current.
+      current = new URL(location, current).toString();
+      continue;
+    }
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status} ${res.statusText} for ${current}`);
+    }
+    const ab = await res.arrayBuffer();
+    if (ab.byteLength > maxBytes) {
+      throw new Error(`Response too large for ${current}: ${ab.byteLength} > ${maxBytes}`);
+    }
+    return Buffer.from(ab);
   }
-  const ab = await res.arrayBuffer();
-  if (ab.byteLength > maxBytes) {
-    throw new Error(`Response too large for ${url}: ${ab.byteLength} > ${maxBytes}`);
-  }
-  return Buffer.from(ab);
+
+  // Unreachable: the loop body either returns or throws on every iteration.
+  throw new Error(`fetchBuffer: redirect loop fell through for ${url}`);
 }
 
 // ─── Manifest IO ──────────────────────────────────────────────────────
