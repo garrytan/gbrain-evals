@@ -407,11 +407,62 @@ function pctBand(mean: number, sd: number, digits = 1): string {
   return `${pct(mean, digits)} \u00b1${(sd * 100).toFixed(digits)}`;
 }
 
+// ─── Subset loader (v0.35.1.0 embedder-shootout) ───────────────────
+
+/**
+ * Load a curated query subset from eval/data/gold/brainbench-<name>.json.
+ * Used by the embedder-shootout matrix to run a Cat 13 conceptual-recall
+ * cell that's actually embedder-sensitive (the relational corpus is
+ * graph/keyword-dominated and produces near-zero embedder signal).
+ *
+ * The JSON file shape MUST match:
+ *   {
+ *     "schema_version": 1,
+ *     "subset": "<name>",
+ *     "queries": [
+ *       { "id": "...", "text": "...", "relevant_chunk_ids": ["..."],
+ *         "inclusion_reason": "..." (optional) },
+ *       ...
+ *     ]
+ *   }
+ *
+ * Loaded entries are normalized to the runner's `Query` type so the
+ * existing scoring pipeline runs unchanged.
+ */
+function loadSubset(name: string): Query[] {
+  const path = `eval/data/gold/brainbench-${name}-subset.json`;
+  const raw = readFileSync(path, 'utf8');
+  const parsed = JSON.parse(raw);
+  if (typeof parsed !== 'object' || parsed === null || !Array.isArray(parsed.queries)) {
+    throw new Error(`Subset ${path}: missing or malformed "queries" array`);
+  }
+  const out: Query[] = [];
+  for (const q of parsed.queries) {
+    if (typeof q.id !== 'string' || typeof q.text !== 'string' || !Array.isArray(q.relevant_chunk_ids)) {
+      throw new Error(`Subset ${path}: entry ${JSON.stringify(q.id)} missing id/text/relevant_chunk_ids`);
+    }
+    out.push({
+      id: q.id,
+      tier: 'medium',
+      text: q.text,
+      expected_output_type: 'cited-source-pages',
+      gold: { relevant: q.relevant_chunk_ids as string[] },
+      tags: ['embedder-sensitive'],
+    });
+  }
+  return out;
+}
+
 // ─── Main ──────────────────────────────────────────────────────────
 
 async function main() {
   const json = process.argv.includes('--json');
   const only = process.argv.find(a => a.startsWith('--adapter='))?.slice('--adapter='.length);
+  // v0.35.1.0 embedder-shootout: optional curated subset. When set, the
+  // auto-generated relational queries are REPLACED by the JSON subset's
+  // queries. Run twice — once without the flag (relational), once with
+  // (Cat 13 / embedder-sensitive) — to get both numbers on the same cell.
+  const subset = process.argv.find(a => a.startsWith('--include-subset='))?.slice('--include-subset='.length);
   const log = json ? () => {} : console.log;
 
   log('# BrainBench — multi-adapter side-by-side\n');
@@ -420,8 +471,14 @@ async function main() {
   const pages = loadCorpus('eval/data/world-v1') as Page[];
   log(`Corpus: ${pages.length} rich-prose pages from eval/data/world-v1/`);
 
-  const queries = buildQueries(pages as RichPage[]);
-  log(`Relational queries: ${queries.length}\n`);
+  let queries: Query[];
+  if (subset) {
+    queries = loadSubset(subset);
+    log(`Subset queries (${subset}): ${queries.length}\n`);
+  } else {
+    queries = buildQueries(pages as RichPage[]);
+    log(`Relational queries: ${queries.length}\n`);
+  }
 
   const allAdapters: Adapter[] = [
     new GbrainAfterAdapter(),

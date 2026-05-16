@@ -31,6 +31,8 @@
 
 import type { Adapter, AdapterConfig, BrainState, Page, Query, RankedDoc } from '../types.ts';
 import { embed, embedBatch } from 'gbrain/embedding';
+import { configureGateway } from 'gbrain/ai/gateway';
+import { assertEvalAdapterConfig, type EvalAdapterConfig } from '../eval-adapter-config.ts';
 
 // ─── Vector math ────────────────────────────────────────────────────
 
@@ -73,6 +75,14 @@ interface VectorOnlyConfig extends AdapterConfig {
   /** Max parallel embedding requests during init (the embedBatch helper
    *  chunks internally; this throttles if upstream rate-limits). */
   batchSize?: number;
+  /**
+   * v0.35.1.0 embedder-shootout knob. When set, the adapter calls
+   * configureGateway() at the top of init() so every downstream embed
+   * call routes through the configured (provider, model, dim) tuple
+   * instead of the OpenAI defaults baked into gbrain/embedding's
+   * re-exports.
+   */
+  shootout?: EvalAdapterConfig;
 }
 
 export class VectorOnlyAdapter implements Adapter {
@@ -81,6 +91,17 @@ export class VectorOnlyAdapter implements Adapter {
   async init(rawPages: Page[], config: VectorOnlyConfig): Promise<BrainState> {
     const maxChars = config.maxChars ?? 8000;
     const batchSize = config.batchSize ?? 50;
+
+    // v0.35.1.0: per-cell embedder swap. Fail-loud at init time so a typo
+    // in {embedder, dim, reranker} surfaces BEFORE we embed 240 pages.
+    if (config.shootout) {
+      assertEvalAdapterConfig(config.shootout);
+      configureGateway({
+        embedding_model: config.shootout.embedder,
+        embedding_dimensions: config.shootout.dim,
+        env: process.env as Record<string, string | undefined>,
+      });
+    }
 
     const docs = new Map<string, Page>();
     const contents: string[] = [];
@@ -105,12 +126,20 @@ export class VectorOnlyAdapter implements Adapter {
       }
     }
 
-    // EMBEDDING_MODEL is a const export; lazy-imported here to avoid circular.
-    const { EMBEDDING_MODEL } = await import('gbrain/embedding');
+    // Embedder identity for the receipt:
+    //   - shootout mode: prefer the explicitly-configured embedder string.
+    //   - default mode: fall back to gbrain's EMBEDDING_MODEL constant.
+    let embeddingModel: string;
+    if (config.shootout) {
+      embeddingModel = config.shootout.embedder;
+    } else {
+      const { EMBEDDING_MODEL } = await import('gbrain/embedding');
+      embeddingModel = EMBEDDING_MODEL;
+    }
     return {
       vectors,
       docs,
-      embeddingModel: EMBEDDING_MODEL,
+      embeddingModel,
     } satisfies VectorOnlyState;
   }
 

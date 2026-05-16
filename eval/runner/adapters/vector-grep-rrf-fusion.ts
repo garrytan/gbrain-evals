@@ -23,6 +23,8 @@ import type { Adapter, AdapterConfig, BrainState, Page, Query, RankedDoc } from 
 import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { hybridSearch } from 'gbrain/search/hybrid';
 import { importFromContent } from 'gbrain/import-file';
+import { configureGateway } from 'gbrain/ai/gateway';
+import { assertEvalAdapterConfig, type EvalAdapterConfig } from '../eval-adapter-config.ts';
 
 // Known-safe config: auto_link OFF at the engine layer via direct setConfig
 // call. Does NOT run `extract --source db`, so typed links stay empty even
@@ -36,12 +38,35 @@ interface HybridNoGraphConfig extends AdapterConfig {
   /** Top-K results requested from hybridSearch. Defaults to 20 so the
    *  scorer's k=5 slice has headroom. */
   limit?: number;
+  /**
+   * v0.35.1.0 embedder-shootout knob. When set, the adapter:
+   *   - Calls configureGateway() with {embedding_model, embedding_dimensions}
+   *     so embeds + hybridSearch route through the configured provider.
+   *   - Threads reranker via engine.setConfig:
+   *       search.reranker.enabled = (shootout.reranker is set)
+   *       search.reranker.model   = shootout.reranker
+   *   - Threads search.mode (default 'tokenmax' for the shootout).
+   */
+  shootout?: EvalAdapterConfig;
 }
 
 export class HybridNoGraphAdapter implements Adapter {
   readonly name = 'vector-grep-rrf-fusion';
 
   async init(rawPages: Page[], _config: HybridNoGraphConfig): Promise<BrainState> {
+    // v0.35.1.0 shootout: validate and apply the per-cell provider config
+    // BEFORE spinning up the engine so configureGateway is in effect when
+    // importFromContent first calls embed().
+    if (_config.shootout) {
+      assertEvalAdapterConfig(_config.shootout);
+      configureGateway({
+        embedding_model: _config.shootout.embedder,
+        embedding_dimensions: _config.shootout.dim,
+        reranker_model: _config.shootout.reranker,
+        env: process.env as Record<string, string | undefined>,
+      });
+    }
+
     const engine = new PGLiteEngine();
     await engine.connect({});
     await engine.initSchema();
@@ -50,6 +75,21 @@ export class HybridNoGraphAdapter implements Adapter {
     // typed edges would exist in the graph layer. This adapter doesn't call
     // traversePaths at all, so graph state is doubly-ignored.
     await engine.setConfig('auto_link', 'false');
+
+    // v0.35.1.0 shootout: thread reranker + search-lite mode through engine
+    // config so hybridSearch picks them up via the normal resolution chain.
+    if (_config.shootout) {
+      const mode = _config.shootout.searchMode ?? 'tokenmax';
+      await engine.setConfig('search.mode', mode);
+      if (_config.shootout.reranker) {
+        await engine.setConfig('search.reranker.enabled', 'true');
+        await engine.setConfig('search.reranker.model', _config.shootout.reranker);
+      } else {
+        // Explicit disable so the tokenmax mode bundle's default reranker=on
+        // doesn't silently fire for "no-rerank" cells.
+        await engine.setConfig('search.reranker.enabled', 'false');
+      }
+    }
 
     // importFromContent does the chunking + embedding that hybridSearch needs.
     // Plain putPage() just writes the page row without any search infra; that's
