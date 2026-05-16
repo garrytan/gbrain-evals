@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "subset": "cat13-embedder",
+  "description": "Hand-curated 50-query subset of BrainBench Cat 13 (conceptual recall). Each query is a paraphrase or vocabulary substitution that would NOT match the target page via keyword/grep. A graph adapter that traverses typed edges from entity names would also miss most of these because the phrasing avoids the page title. Curated from SYNONYMS dict in eval/runner/cat13-conceptual.ts. Used by the v0.35.1.0 embedder shootout (see docs/designs/2026_05_EVAL_PLAN.md in gbrain).",
+  "curation_rule": "include a query only if a competent grep/BM25 adapter would likely miss it but a semantic embedder would likely find it. Test: does the query share <30% of its content words with the target page's title and compiled_truth.",
+  "queries": [
+    { "id": "cat13-emb-001", "text": "unscalable founder work that doesn't generalize", "relevant_chunk_ids": ["concepts/do-things-that-don-t-scale"], "inclusion_reason": "no overlap with title 'do things that don't scale'; pure paraphrase" },
+    { "id": "cat13-emb-002", "text": "manual white-glove onboarding for the earliest users", "relevant_chunk_ids": ["concepts/do-things-that-don-t-scale"], "inclusion_reason": "operational restating; vocabulary substitution" },
+    { "id": "cat13-emb-003", "text": "hand-crafted early traction", "relevant_chunk_ids": ["concepts/do-things-that-don-t-scale"], "inclusion_reason": "different lexical surface, same intent" },
+
+    { "id": "cat13-emb-004", "text": "when the product pulls users toward it instead of being pushed", "relevant_chunk_ids": ["concepts/product-market-fit"], "inclusion_reason": "metaphorical phrasing avoids the literal term PMF" },
+    { "id": "cat13-emb-005", "text": "the thing founders chase before scale", "relevant_chunk_ids": ["concepts/product-market-fit"], "inclusion_reason": "indirect reference, no overlap with title" },
+    { "id": "cat13-emb-006", "text": "market pull versus market push", "relevant_chunk_ids": ["concepts/product-market-fit"], "inclusion_reason": "PMF aliased; embedder space neighbor" },
+
+    { "id": "cat13-emb-007", "text": "hands-on founder involvement at every layer", "relevant_chunk_ids": ["concepts/founder-mode"], "inclusion_reason": "rephrases founder-mode without using the term" },
+    { "id": "cat13-emb-008", "text": "the opposite of professional management", "relevant_chunk_ids": ["concepts/founder-mode"], "inclusion_reason": "definitional negation; no keyword overlap" },
+    { "id": "cat13-emb-009", "text": "deep founder ownership of execution details", "relevant_chunk_ids": ["concepts/founder-mode"], "inclusion_reason": "actionable phrasing instead of named concept" },
+
+    { "id": "cat13-emb-010", "text": "AI agents collaborating to complete tasks", "relevant_chunk_ids": ["concepts/agentic-workflows"], "inclusion_reason": "natural language for agentic-workflows" },
+    { "id": "cat13-emb-011", "text": "agent-to-agent delegation patterns", "relevant_chunk_ids": ["concepts/agentic-workflows"], "inclusion_reason": "implementation-level phrasing" },
+    { "id": "cat13-emb-012", "text": "multi-agent orchestration in production systems", "relevant_chunk_ids": ["concepts/agentic-workflows"], "inclusion_reason": "operational variant" },
+
+    { "id": "cat13-emb-013", "text": "per-customer profitability after acquisition costs", "relevant_chunk_ids": ["concepts/unit-economics"], "inclusion_reason": "definition-style; avoids the term unit economics" },
+    { "id": "cat13-emb-014", "text": "CAC versus LTV math", "relevant_chunk_ids": ["concepts/unit-economics"], "inclusion_reason": "acronym aliasing" },
+
+    { "id": "cat13-emb-015", "text": "metered billing where you pay only for what you consume", "relevant_chunk_ids": ["concepts/usage-based-pricing"], "inclusion_reason": "pay-per-use phrased differently" },
+    { "id": "cat13-emb-016", "text": "consumption pricing model", "relevant_chunk_ids": ["concepts/usage-based-pricing"], "inclusion_reason": "synonym swap" },
+
+    { "id": "cat13-emb-017", "text": "industry-specific software for one narrow vertical", "relevant_chunk_ids": ["concepts/vertical-saas"], "inclusion_reason": "expansion of the term" },
+    { "id": "cat13-emb-018", "text": "specialized enterprise tools that only work in one domain", "relevant_chunk_ids": ["concepts/vertical-saas"], "inclusion_reason": "indirect definition" },
+
+    { "id": "cat13-emb-019", "text": "broadly-applicable developer infrastructure", "relevant_chunk_ids": ["concepts/horizontal-api"], "inclusion_reason": "describes horizontal-api scope without the term" },
+    { "id": "cat13-emb-020", "text": "cross-industry API platform", "relevant_chunk_ids": ["concepts/horizontal-api"], "inclusion_reason": "synonym swap" },
+
+    { "id": "cat13-emb-021", "text": "large pretrained base models that everyone builds on", "relevant_chunk_ids": ["concepts/foundation-models"], "inclusion_reason": "description, not term" },
+    { "id": "cat13-emb-022", "text": "general-purpose LLMs trained on broad corpora", "relevant_chunk_ids": ["concepts/foundation-models"], "inclusion_reason": "technical paraphrase" },
+
+    { "id": "cat13-emb-023", "text": "taking a base model and teaching it new tricks", "relevant_chunk_ids": ["concepts/fine-tuning"], "inclusion_reason": "colloquial phrasing of fine-tuning" },
+    { "id": "cat13-emb-024", "text": "domain adaptation of a generalist model", "relevant_chunk_ids": ["concepts/fine-tuning"], "inclusion_reason": "academic paraphrase" },
+
+    { "id": "cat13-emb-025", "text": "what it costs to actually run the model in production", "relevant_chunk_ids": ["concepts/inference-cost"], "inclusion_reason": "definitional restating" },
+    { "id": "cat13-emb-026", "text": "runtime LLM cost per request", "relevant_chunk_ids": ["concepts/inference-cost"], "inclusion_reason": "operational phrasing" },
+
+    { "id": "cat13-emb-027", "text": "how fast the product has to feel to the user", "relevant_chunk_ids": ["concepts/latency-budget"], "inclusion_reason": "UX-side framing of latency budget" },
+    { "id": "cat13-emb-028", "text": "speed SLA constraints in real-time apps", "relevant_chunk_ids": ["concepts/latency-budget"], "inclusion_reason": "infrastructure framing" },
+
+    { "id": "cat13-emb-029", "text": "grounding LLMs in external private documents", "relevant_chunk_ids": ["concepts/retrieval-augmented-generation"], "inclusion_reason": "technical description avoiding RAG" },
+    { "id": "cat13-emb-030", "text": "injecting your own context into model calls", "relevant_chunk_ids": ["concepts/retrieval-augmented-generation"], "inclusion_reason": "implementation-side phrasing" },
+
+    { "id": "cat13-emb-031", "text": "OSS-led GTM where the free tier creates pipeline", "relevant_chunk_ids": ["concepts/open-source-distribution"], "inclusion_reason": "GTM-side framing" },
+    { "id": "cat13-emb-032", "text": "free-then-paid open-core strategy", "relevant_chunk_ids": ["concepts/open-source-distribution"], "inclusion_reason": "tactical phrasing" },
+
+    { "id": "cat13-emb-033", "text": "building bottoms-up developer mindshare", "relevant_chunk_ids": ["concepts/developer-relations"], "inclusion_reason": "DevRel outcome phrased indirectly" },
+    { "id": "cat13-emb-034", "text": "developer advocacy as a function", "relevant_chunk_ids": ["concepts/developer-relations"], "inclusion_reason": "alternative name" },
+
+    { "id": "cat13-emb-035", "text": "grassroots adoption strategy driven by users", "relevant_chunk_ids": ["concepts/community-led-growth"], "inclusion_reason": "describes community-led-growth without keywords" },
+
+    { "id": "cat13-emb-036", "text": "self-serve-first growth motion", "relevant_chunk_ids": ["concepts/plg-motion"], "inclusion_reason": "product-led aliased to self-serve" },
+    { "id": "cat13-emb-037", "text": "freemium-driven user expansion", "relevant_chunk_ids": ["concepts/plg-motion"], "inclusion_reason": "tactic vs strategy framing" },
+
+    { "id": "cat13-emb-038", "text": "six-figure-contract B2B selling motion", "relevant_chunk_ids": ["concepts/enterprise-gtm"], "inclusion_reason": "deal-size signaling, not term" },
+
+    { "id": "cat13-emb-039", "text": "selling directly to the C-suite executives", "relevant_chunk_ids": ["concepts/top-down-sales"], "inclusion_reason": "describes top-down without the term" },
+
+    { "id": "cat13-emb-040", "text": "models that handle vision plus text plus audio together", "relevant_chunk_ids": ["concepts/multi-modal"], "inclusion_reason": "operational definition" },
+    { "id": "cat13-emb-041", "text": "cross-modality AI systems beyond text-only", "relevant_chunk_ids": ["concepts/multi-modal"], "inclusion_reason": "technical variant" },
+
+    { "id": "cat13-emb-042", "text": "products where the language model is the product itself", "relevant_chunk_ids": ["concepts/ai-first-product"], "inclusion_reason": "definitional paraphrase" },
+    { "id": "cat13-emb-043", "text": "AI as a core primitive instead of a feature bolted on", "relevant_chunk_ids": ["concepts/ai-first-product"], "inclusion_reason": "framing-vs-implementation contrast" },
+
+    { "id": "cat13-emb-044", "text": "finance APIs powering other companies' apps", "relevant_chunk_ids": ["concepts/embedded-fintech"], "inclusion_reason": "describes embedded-fintech ecosystem" },
+    { "id": "cat13-emb-045", "text": "invisible financial infrastructure inside non-fintech products", "relevant_chunk_ids": ["concepts/embedded-fintech"], "inclusion_reason": "metaphorical, no keyword overlap" },
+
+    { "id": "cat13-emb-046", "text": "retention sliced by signup month", "relevant_chunk_ids": ["concepts/churn-cohorts"], "inclusion_reason": "methodology phrased operationally" },
+
+    { "id": "cat13-emb-047", "text": "revenue riding entirely on one whale account", "relevant_chunk_ids": ["concepts/customer-concentration"], "inclusion_reason": "vivid restating of customer-concentration risk" },
+
+    { "id": "cat13-emb-048", "text": "margin improvement as the business gets bigger", "relevant_chunk_ids": ["concepts/gross-margin-expansion"], "inclusion_reason": "outcome paraphrase" },
+
+    { "id": "cat13-emb-049", "text": "how sticky the ARR actually is over multi-year horizons", "relevant_chunk_ids": ["concepts/revenue-durability"], "inclusion_reason": "investor-side framing" },
+
+    { "id": "cat13-emb-050", "text": "what fraction of a customer's total spend the product captures", "relevant_chunk_ids": ["concepts/wallet-share"], "inclusion_reason": "definitional paraphrase; avoids both 'wallet' and 'share' to keep grep adapter blind" }
+  ]
+}
