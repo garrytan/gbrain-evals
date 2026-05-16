@@ -99,6 +99,7 @@ export class VectorOnlyAdapter implements Adapter {
       configureGateway({
         embedding_model: config.shootout.embedder,
         embedding_dimensions: config.shootout.dim,
+        env: process.env as Record<string, string | undefined>,
       });
     }
 

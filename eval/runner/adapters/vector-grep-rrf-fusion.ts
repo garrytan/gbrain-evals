@@ -62,6 +62,8 @@ export class HybridNoGraphAdapter implements Adapter {
       configureGateway({
         embedding_model: _config.shootout.embedder,
         embedding_dimensions: _config.shootout.dim,
+        reranker_model: _config.shootout.reranker,
+        env: process.env as Record<string, string | undefined>,
       });
     }
 
