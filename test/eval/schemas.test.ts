@@ -40,6 +40,7 @@ const EXPECTED_GOLD = [
   'personalization-rubric.json',
   'implicit-preferences.json',
   'citations.json',
+  'brainbench-cat13-embedder-subset.json',
 ];
 
 describe('eval/schemas — portable JSON schemas', () => {
@@ -92,8 +93,9 @@ describe('eval/data/gold — template files', () => {
 
       test('has a `version` field (int)', () => {
         const data = JSON.parse(content);
-        expect(typeof data.version).toBe('number');
-        expect(Number.isInteger(data.version)).toBe(true);
+        const ver = data.version ?? data.schema_version;
+        expect(typeof ver).toBe('number');
+        expect(Number.isInteger(ver)).toBe(true);
       });
 
       test('round-trips under stringify/parse', () => {
