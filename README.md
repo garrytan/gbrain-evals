@@ -6,21 +6,27 @@ public benchmarks (LongMemEval today, ConvoMem + LoCoMo on the roadmap).
 
 ## Latest results
 
-**LongMemEval `_s` (full 500-question public benchmark, 2026-05-07)** —
-gbrain-hybrid hits **97.60% R@5**, beating MemPalace's published raw
-baseline by 1.0pt on the same dataset, K, and n with no LLM in the
-retrieval loop. Per-type wins: +7.1pt single-session-assistant, +1.5pt
-multi-session, ties on user/preference, -1.5pt temporal-reasoning.
-**Read the full report:** [docs/benchmarks/2026-05-07-longmemeval-s.md](docs/benchmarks/2026-05-07-longmemeval-s.md).
+**v0.40.6.0 comprehensive snapshot (2026-05-23)** — every published eval
+result against current master in one page, plus the gap-map for what
+v0.36.x → v0.40.6.0 features still need eval coverage. **Read the
+snapshot:** [docs/benchmarks/2026-05-23-v0.40.6.0-snapshot.md](docs/benchmarks/2026-05-23-v0.40.6.0-snapshot.md).
 
-**BrainBench v0.12.1 (in-house corpus, 2026-04-19)** — gbrain P@5 49.1%,
-R@5 97.9% on the 240-page fictional-life corpus. Beats its own
-graph-disabled variant by +31.4pt P@5, grep-only by 32 points, vector by
-38 points. The graph layer is load-bearing.
+**Headline numbers that hold up against v0.40.6.0:**
+
+- **97.60% R@5 on public LongMemEval `_s`** — SOTA against MemPalace's
+  published 96.6% baseline on the same dataset, same K, same n, no LLM
+  in the retrieval loop.
+- **49.1% P@5 / 97.9% R@5 on BrainBench v1 relational queries** — beats
+  commodity vector RAG by 38 points P@5 and ripgrep-BM25 by 32 points.
+  The graph layer alone is worth 30 points.
+- **Zero retrieval regression across 20 releases** (v0.20.0 → v0.40.6.0).
+  Headline numbers byte-identical to the v0.20.0 baseline.
 
 | Benchmark | Latest result | Date | Report |
 |---|---|---|---|
+| v0.40.6.0 snapshot (comprehensive) | gbrain master HEAD | 2026-05-23 | [link](docs/benchmarks/2026-05-23-v0.40.6.0-snapshot.md) |
 | LongMemEval `_s` (public) | gbrain-hybrid 97.60% R@5 | 2026-05-07 | [link](docs/benchmarks/2026-05-07-longmemeval-s.md) |
+| BrainBench Cat 14+15 — Calibration A/B | gates v0.36.1.0 advice quality | 2026-05-18 | [link](docs/benchmarks/2026-05-18-brainbench-cat14-cat15-calibration.md) |
 | BrainBench Cat 13b — Source Swamp | gbrain top-1 93.3% | 2026-04-25 | [link](docs/benchmarks/2026-04-25-brainbench-cat13b-source-swamp.md) |
 | BrainBench v0.20.0 baseline | gbrain P@5 49.1% / R@5 97.9% | 2026-04-23 | [link](docs/benchmarks/2026-04-23-brainbench-v0.20.0.md) |
 | Cross-system comparison | MemPal / Hindsight / Mastra / Stella / Contriever | living | [docs/comparison-systems.md](docs/comparison-systems.md) |

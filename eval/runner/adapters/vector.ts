@@ -101,6 +101,15 @@ export class VectorOnlyAdapter implements Adapter {
         embedding_dimensions: config.shootout.dim,
         env: process.env as Record<string, string | undefined>,
       });
+    } else {
+      // v0.40+ requires explicit gateway configuration. Default to OpenAI
+      // text-embedding-3-large so the EXT-2 baseline keeps its historical
+      // shape.
+      configureGateway({
+        embedding_model: 'openai:text-embedding-3-large',
+        embedding_dimensions: 1536,
+        env: process.env as Record<string, string | undefined>,
+      });
     }
 
     const docs = new Map<string, Page>();

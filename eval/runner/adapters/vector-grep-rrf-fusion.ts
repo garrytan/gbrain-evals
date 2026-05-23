@@ -65,6 +65,15 @@ export class HybridNoGraphAdapter implements Adapter {
         reranker_model: _config.shootout.reranker,
         env: process.env as Record<string, string | undefined>,
       });
+    } else {
+      // v0.40+ requires the gateway to be explicitly configured before any
+      // embed call. Default to gbrain's pre-v0.40 OpenAI-compatible behavior
+      // so existing baseline scorecards stay reproducible.
+      configureGateway({
+        embedding_model: 'openai:text-embedding-3-large',
+        embedding_dimensions: 1536,
+        env: process.env as Record<string, string | undefined>,
+      });
     }
 
     const engine = new PGLiteEngine();
