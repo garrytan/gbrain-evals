@@ -1,0 +1,15 @@
+{
+  "cell": null,
+  "embedder": "openai:text-embedding-3-large",
+  "dim": 1536,
+  "reranker": null,
+  "subset": null,
+  "queries": 90,
+  "top_k": 5,
+  "mean_precision_at_k": 0.1799999999999998,
+  "mean_recall_at_k": 0.6333333333333333,
+  "correct_in_top_k": 81,
+  "total_expected": 184,
+  "wallclock_ms": 133175,
+  "timestamp": "2026-05-23T23:14:40.689Z"
+}

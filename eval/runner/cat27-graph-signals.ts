@@ -33,7 +33,7 @@ import { writeFileSync, mkdirSync } from 'fs';
 import { dirname, join } from 'path';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { importFromContent } from 'gbrain/import-file';
-import { runExtract } from 'gbrain/extract';
+import { extractEntityRefs } from 'gbrain/link-extraction';
 import { configureGateway } from 'gbrain/ai/gateway';
 
 // ─── Probe DSL ─────────────────────────────────────────────────────────
@@ -74,12 +74,12 @@ const PROBES: Probe[] = [
       // Hub page: short, generic, NO overlap with "AI infrastructure stack"
       { slug: 'companies/acme-ai', source_id: 'default', title: 'Acme AI', body: 'Founded 2024. Series A.' },
       // 4 employee bios that all match "AI infrastructure stack" strongly AND link to the hub
-      { slug: 'people/alice-okafor', source_id: 'default', title: 'Alice Okafor', body: 'Alice Okafor is the CEO of [[wiki/companies/acme-ai]]. Previously built the AI infrastructure stack at OpenAI.' },
-      { slug: 'people/bob-chen', source_id: 'default', title: 'Bob Chen', body: 'Bob Chen is CTO at [[wiki/companies/acme-ai]]. Built the AI infrastructure stack and inference layer.' },
-      { slug: 'people/carol-singh', source_id: 'default', title: 'Carol Singh', body: 'Carol Singh, VP Eng at [[wiki/companies/acme-ai]], owns the AI infrastructure stack and GPU scheduling.' },
-      { slug: 'people/dan-park', source_id: 'default', title: 'Dan Park', body: 'Dan Park leads ML research at [[wiki/companies/acme-ai]]. Co-authored the AI infrastructure stack paper.' },
-      { slug: 'deals/acme-ai-series-a', source_id: 'default', title: 'Acme AI Series A', body: '[[wiki/companies/acme-ai]] raised $30M Series A to scale the AI infrastructure stack.' },
-      { slug: 'deals/acme-ai-seed', source_id: 'default', title: 'Acme AI seed', body: '[[wiki/companies/acme-ai]] earlier seed round of $4M to validate the AI infrastructure stack thesis.' },
+      { slug: 'people/alice-okafor', source_id: 'default', title: 'Alice Okafor', body: 'Alice Okafor is the CEO of [[companies/acme-ai]]. Previously built the AI infrastructure stack at OpenAI.' },
+      { slug: 'people/bob-chen', source_id: 'default', title: 'Bob Chen', body: 'Bob Chen is CTO at [[companies/acme-ai]]. Built the AI infrastructure stack and inference layer.' },
+      { slug: 'people/carol-singh', source_id: 'default', title: 'Carol Singh', body: 'Carol Singh, VP Eng at [[companies/acme-ai]], owns the AI infrastructure stack and GPU scheduling.' },
+      { slug: 'people/dan-park', source_id: 'default', title: 'Dan Park', body: 'Dan Park leads ML research at [[companies/acme-ai]]. Co-authored the AI infrastructure stack paper.' },
+      { slug: 'deal/acme-ai-series-a', source_id: 'default', title: 'Acme AI Series A', body: '[[companies/acme-ai]] raised $30M Series A to scale the AI infrastructure stack.' },
+      { slug: 'deal/acme-ai-seed', source_id: 'default', title: 'Acme AI seed', body: '[[companies/acme-ai]] earlier seed round of $4M to validate the AI infrastructure stack thesis.' },
       // Distractor: keyword-rich but no inbound links from peers
       { slug: 'companies/widget-co', source_id: 'default', title: 'Widget Co', body: 'Widget Co does AI infrastructure stack consulting for enterprise. Founded 2024.' },
     ],
@@ -90,21 +90,40 @@ const PROBES: Probe[] = [
   {
     id: 'cross-source-corroborated-fund-x',
     family: 'cross_source',
-    description: 'organizations/fund-x is referenced by pages in 3 sources (notes/meetings/deals). The fund page itself does NOT contain the query keywords. Without cross-source boost, the keyword-rich single-source competitor wins.',
+    description: 'companies/fund-x is referenced by pages in 3 sources (notes/meetings/deal). The fund page itself does NOT contain the query keywords. Without cross-source boost, the keyword-rich single-source competitor wins.',
     pages: [
       // Gold: minimal body, no query-term overlap
-      { slug: 'organizations/fund-x', source_id: 'default', title: 'Fund X', body: 'Based in SF.' },
+      { slug: 'companies/fund-x', source_id: 'default', title: 'Fund X', body: 'Based in SF.' },
       // 3 sources reference fund-x
-      { slug: 'notes/2026-04-fund-x-meeting', source_id: 'notes', title: 'Notes from meeting', body: 'Met with [[wiki/organizations/fund-x]] partner. They lead seed rounds in early ML and AI.' },
-      { slug: 'meetings/2026-05-fund-x-quarterly', source_id: 'meetings', title: 'Quarterly review', body: 'Quarterly with [[wiki/organizations/fund-x]]. They focus on early-stage seed-round investments in ML and AI infra.' },
-      { slug: 'deals/widget-co-seed', source_id: 'deals', title: 'Widget Co seed', body: '[[wiki/organizations/fund-x]] led the seed round in [[wiki/companies/widget-co]]. Their thesis is early-stage AI infra investing.' },
+      { slug: 'people/anna-notes-fund-x', source_id: 'notes', title: 'Notes from meeting', body: 'Met with [[companies/fund-x]] partner. They lead seed rounds in early ML and AI.' },
+      { slug: 'meetings/2026-05-fund-x-quarterly', source_id: 'meetings', title: 'Quarterly review', body: 'Quarterly with [[companies/fund-x]]. They focus on early-stage seed-round investments in ML and AI infra.' },
+      { slug: 'deal/widget-co-seed', source_id: 'deal', title: 'Widget Co seed', body: '[[companies/fund-x]] led the seed round in [[companies/widget-co]]. Their thesis is early-stage AI infra investing.' },
       // Single-source competitor: keyword-rich, ONE source mention
-      { slug: 'organizations/fund-y', source_id: 'default', title: 'Fund Y', body: 'Fund Y is a seed-stage venture fund focused on early ML and AI investments. They lead seed rounds and partner with founders early.' },
-      { slug: 'notes/2026-04-fund-y-note', source_id: 'notes', title: 'Fund Y note', body: 'Brief note on [[wiki/organizations/fund-y]]. Met once.' },
-      { slug: 'companies/widget-co', source_id: 'deals', title: 'Widget Co', body: 'Widget Co does ML consulting.' },
+      { slug: 'companies/fund-y', source_id: 'default', title: 'Fund Y', body: 'Fund Y is a seed-stage venture fund focused on early ML and AI investments. They lead seed rounds and partner with founders early.' },
+      { slug: 'people/bob-notes-fund-y', source_id: 'notes', title: 'Fund Y note', body: 'Brief note on [[companies/fund-y]]. Met once.' },
+      { slug: 'companies/widget-co', source_id: 'deal', title: 'Widget Co', body: 'Widget Co does ML consulting.' },
     ],
     query: 'seed-stage fund early ML and AI',
-    relevant_slugs: ['organizations/fund-x'],
+    relevant_slugs: ['companies/fund-x'],
+  },
+  // ── adjacency-close: hub is rank-2 in baseline, boost should flip to rank-1
+  {
+    id: 'adjacency-close-hub-foundry',
+    family: 'adjacency',
+    description: 'Hub page IS in baseline top-3 (one keyword match). Adjacency boost from 2+ peers should flip the close ranking to top-1.',
+    pages: [
+      // Hub: title matches the query weakly, body has one match
+      { slug: 'companies/foundry-labs', source_id: 'default', title: 'Foundry Labs', body: 'Foundry Labs is a robotics company. Working on autonomous picking.' },
+      // 4 peers that ALL link the hub, all stronger keyword matches
+      { slug: 'people/erin-yu', source_id: 'default', title: 'Erin Yu', body: 'Erin Yu leads autonomous picking at [[companies/foundry-labs]] — robotics company stack.' },
+      { slug: 'people/frank-osman', source_id: 'default', title: 'Frank Osman', body: 'Frank Osman, robotics company CTO at [[companies/foundry-labs]], owns the autonomous picking platform.' },
+      { slug: 'people/grace-park', source_id: 'default', title: 'Grace Park', body: 'Grace Park: robotics company VP at [[companies/foundry-labs]] for autonomous picking.' },
+      { slug: 'people/henry-davis', source_id: 'default', title: 'Henry Davis', body: 'Henry Davis advises [[companies/foundry-labs]] on robotics company autonomous picking.' },
+      // Distractor: keyword-rich, no inbound
+      { slug: 'companies/orbit-tech', source_id: 'default', title: 'Orbit Tech', body: 'Orbit Tech robotics company autonomous picking platform consulting.' },
+    ],
+    query: 'robotics company autonomous picking',
+    relevant_slugs: ['companies/foundry-labs'],
   },
   // ── session: chatty session crowds top-K, demote rescues the curated note ──
   {
@@ -216,17 +235,46 @@ async function seedBrain(probe: Probe): Promise<any> {
     }
   }
 
-  // Make sure the graph is actually populated. importFromContent's auto-link
-  // covers it in default-source single-source brains; multi-source needs the
-  // explicit extract pass to round out the typed-edge table.
-  try {
-    await runExtract(engine, { source: 'db' } as any);
-  } catch {
-    // Older engine shapes don't expose runExtract from this entry — fall
-    // through; auto-link still covers the single-source probes.
+  // Populate page_links by directly extracting entity refs and inserting.
+  // importFromContent does NOT fire auto-link (only the put_page op handler
+  // does). For a hermetic eval we don't want to spin up the full op-dispatch
+  // layer; we just need the link rows to exist so applyGraphSignals' SQL
+  // can read them. We extract `[[wiki/...]]` refs from each page body,
+  // look up the to_page_id by slug, and INSERT into links directly.
+  for (const p of probe.pages) {
+    const refs = extractEntityRefs(p.body);
+    if (refs.length === 0) continue;
+    // Resolve source page id
+    const fromRows = await engine.executeRaw(
+      `SELECT id FROM pages WHERE slug = $1 AND source_id = $2 LIMIT 1`,
+      [p.slug, p.source_id],
+    ) as any[];
+    if (!fromRows[0]) continue;
+    const fromId = fromRows[0].id;
+    for (const ref of refs) {
+      const targetSlug = ref.slug;
+      // Targets sit in any source — look up by slug across all sources for now
+      const toRows = await engine.executeRaw(
+        `SELECT id FROM pages WHERE slug = $1 LIMIT 1`,
+        [targetSlug],
+      ) as any[];
+      if (!toRows[0]) continue;
+      const toId = toRows[0].id;
+      if (toId === fromId) continue;
+      await engine.executeRaw(
+        `INSERT INTO links (from_page_id, to_page_id, link_type, link_source) VALUES ($1, $2, 'mentions', 'markdown') ON CONFLICT DO NOTHING`,
+        [fromId, toId],
+      );
+    }
   }
 
   console.log = origLog;
+
+  // Debug: how many pages and links did we actually populate?
+  const linkCount = await engine.executeRaw(`SELECT COUNT(*)::int AS n FROM links`, []) as any[];
+  const pageCount = await engine.executeRaw(`SELECT COUNT(*)::int AS n FROM pages`, []) as any[];
+  process.stderr.write(`[cat27]   seeded ${pageCount[0]?.n ?? 0} pages, ${linkCount[0]?.n ?? 0} links\n`);
+
   return engine;
 }
 

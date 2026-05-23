@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "name": "synthetic-v1",
+  "pages": 165,
+  "seed": 1111638594,
+  "generated_at": "2026-05-23",
+  "privacy_note": "All names are placeholders. No PII. Inspired by real brain shape, not content. See eval/generators/synthetic-v1-gen.ts."
+}
