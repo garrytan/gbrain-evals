@@ -1,6 +1,6 @@
 # cat14 — Calibration A/B (think with vs without --with-calibration)
 
-The headline product question for gbrain v0.36.1.0's Hindsight calibration
+The headline product question for gbrain v0.36.1.0's calibration
 wave: **does `gbrain think --with-calibration` actually produce better
 answers than plain `gbrain think` on questions where the user has a
 relevant track record?**

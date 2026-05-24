@@ -29,7 +29,7 @@ snapshot:** [docs/benchmarks/2026-05-23-v0.40.6.0-snapshot.md](docs/benchmarks/2
 | BrainBench Cat 14+15 — Calibration A/B | gates v0.36.1.0 advice quality | 2026-05-18 | [link](docs/benchmarks/2026-05-18-brainbench-cat14-cat15-calibration.md) |
 | BrainBench Cat 13b — Source Swamp | gbrain top-1 93.3% | 2026-04-25 | [link](docs/benchmarks/2026-04-25-brainbench-cat13b-source-swamp.md) |
 | BrainBench v0.20.0 baseline | gbrain P@5 49.1% / R@5 97.9% | 2026-04-23 | [link](docs/benchmarks/2026-04-23-brainbench-v0.20.0.md) |
-| Cross-system comparison | MemPal / Hindsight / Mastra / Stella / Contriever | living | [docs/comparison-systems.md](docs/comparison-systems.md) |
+| Cross-system comparison | MemPal / Mastra / Stella / Contriever | living | [docs/comparison-systems.md](docs/comparison-systems.md) |
 
 ## Why a separate repo
 
@@ -111,7 +111,7 @@ bun run eval:brainbench:smoke           # N=1 smoke (~$22)
 Each public benchmark gets a runner under `eval/runner/<bench>.ts`, a
 report under `docs/benchmarks/<date>-<bench>.md`, and per-row entries in
 [`docs/comparison-systems.md`](docs/comparison-systems.md) with sourced
-numbers from MemPalace, Hindsight, Mastra, Supermemory, Stella,
+numbers from MemPalace, Mastra, Supermemory, Stella,
 Contriever, and BM25 baselines.
 
 ## BrainBench Cat catalog

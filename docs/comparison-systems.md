@@ -16,7 +16,6 @@ LLM judge. **Different metrics, not directly comparable.**
 | MemPal hybrid v4 + Haiku rerank | 100% | R@5 | 5 | 500 | yes (Haiku) | [BENCHMARKS.md](https://github.com/MemPalace/mempalace/blob/main/benchmarks/BENCHMARKS.md) — tuned on 3 specific failing Qs |
 | MemPal hybrid v4 + Haiku, held-out | 98.4% | R@5 | 5 | 450 | yes (Haiku) | held-out generalisable figure |
 | MemPal raw (ChromaDB) | 96.6% | R@5 | 5 | 500 | none | their public-facing headline |
-| Hindsight | 91.4% | R@5 (per their release) | 5 | 500 | yes (Gemini-3) | flagged "metric unverified" by MemPal |
 | Stella | ~85% | R@5 | 5 | 500 | none | academic dense retriever |
 | Contriever | ~78% | R@5 | 5 | 500 | none | academic dense retriever |
 | BM25 (sparse) | ~70% | R@5 | 5 | 500 | none | published baseline in the LongMemEval paper |
@@ -25,7 +24,7 @@ LLM judge. **Different metrics, not directly comparable.**
 
 **Important reading note:** Mastra and Supermemory's numbers are end-to-end
 QA accuracy (does the system produce the right answer string, judged by
-gpt-4o or similar). MemPal, Hindsight, and the gbrain numbers in this
+gpt-4o or similar). MemPal and the gbrain numbers in this
 table are retrieval recall (does the right session land in top-k). A
 system can have 100% retrieval recall and 60% QA accuracy if its answer
 model is bad, and vice versa. Don't compare them head-to-head without
@@ -38,7 +37,6 @@ naming the gap.
 | MemPal | 92.9% | verbatim text + semantic search |
 | Gemini (long context) | 70-82% | full history in context window |
 | Block extraction | 57-71% | LLM-processed blocks |
-| Mem0 (RAG) | 30-45% | LLM-extracted memories |
 
 We don't run ConvoMem yet. Filed as a follow-up.
 
@@ -57,7 +55,6 @@ We don't run LoCoMo yet. Filed as a follow-up.
 
 - [`MemPalace/mempalace/benchmarks/BENCHMARKS.md`](https://github.com/MemPalace/mempalace/blob/main/benchmarks/BENCHMARKS.md) — most thorough public benchmark page in this category. They credit competitors fairly and call out their own tuning caveats.
 - [`mastra.ai/research/observational-memory`](https://mastra.ai/research/observational-memory) — observational-memory framework, QA accuracy.
-- [`mem0.ai/research`](https://mem0.ai/research) — Mem0's research page. Publishes LoCoMo QA accuracy (~66.9%); does not publish LongMemEval.
 - [`supermemory.ai/blog/we-broke-the-frontier-in-agent-memory-introducing-99-sota-memory-system/`](https://supermemory.ai/blog/we-broke-the-frontier-in-agent-memory-introducing-99-sota-memory-system/) — Supermemory ASMR. Experimental ensemble, not production.
 - [LongMemEval HuggingFace](https://huggingface.co/datasets/xiaowu0162/longmemeval) — the dataset itself. Three splits: `_oracle` (15MB, ~3 sessions per Q), `_s` (278MB, ~50 sessions per Q), `_m` (2.7GB, more distractors).
 

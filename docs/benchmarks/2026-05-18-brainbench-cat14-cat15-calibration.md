@@ -1,7 +1,7 @@
 # BrainBench Cat 14 + Cat 15 — Calibration Loop (v0.36.1.0)
 
 **Date:** 2026-05-18
-**gbrain commit:** `04dbab44` (branch `garrytan/asuncion`, v0.36.1.0 Hindsight calibration wave)
+**gbrain commit:** `04dbab44` (branch `garrytan/asuncion`, v0.36.1.0 calibration wave)
 **gbrain-evals commit:** `5e179c6` (branch `cat14-calibration`)
 **Datasets:**
   - cat14: 8 hand-authored test cases (`eval/data/cat14-calibration/probes.jsonl`)
@@ -31,7 +31,7 @@ The rest of this document walks through what each test measures, how the scoring
 
 **Today's AI assistants forget your track record.** You can tell ChatGPT or Claude or whatever about a meeting you had three months ago, and they'll dutifully remember the facts (who was there, what was discussed, what was decided). But they have no idea that two months ago you confidently bet on a startup that flopped, or that you've been wrong about the same kind of thing four times in a row. They give you confident advice on questions where you have a known blind spot, and they never learn.
 
-The Hindsight project ([github.com/rayan-arya/hindsight-skills](https://github.com/rayan-arya/hindsight-skills)) introduced the idea of a "calibration loop" — an AI system that extracts predictions from your notes, grades them against reality over time, and applies what it learns when giving you new advice. Hindsight shipped this as a working demo but never published numbers showing whether the demo actually worked better than a plain AI assistant.
+The "calibration loop" idea — an AI system that extracts predictions from your notes, grades them against reality over time, and applies what it learns when giving you new advice — has surfaced in the personal-AI hobbyist community as demos, but no production system has shipped it with published numbers showing the demo actually works better than a plain AI assistant.
 
 gbrain v0.36.1.0 ships a production version of the calibration loop. cat14 and cat15 are the first published benchmarks for this kind of feature.
 
@@ -53,7 +53,7 @@ Two numbers carry the report:
 |---|---|---|---|
 | **gbrain v0.36.1.0 (this wave)** | **75% / 0% / 25% tie** | **0.952 / 0.922** | ~$1.50 |
 | Plain `think` (no track-record memory) | reference point | not applicable | n/a |
-| Hindsight skill (the prior art that inspired this) | never published numbers | never published numbers | n/a |
+| Other AI memory systems | never published numbers for this metric | never published numbers for this metric | n/a |
 
 The headline win rate of **75% calibrated vs 0% plain** means: on the 8 test questions we ran, the track-record-aware AI was preferred to the plain AI in 6 out of 8 cases, tied in 2, and never lost outright. That last part is the safety result — adding calibration didn't make the AI *worse* on any test case.
 
@@ -216,7 +216,7 @@ The prompt we used in cat15 is the prompt that's now shipping in gbrain itself. 
 
 3. **The test methodology is reproducible.** Anyone can run cat14 and cat15 with their own Anthropic API key for about $0.15 total. The fixtures, the prompts, and the judge rubric are all in the public gbrain-evals repo.
 
-4. **The category is now measurable.** Hindsight introduced the concept; this report makes it benchmarkable. Any future "AI memory system that applies user track records at advice time" should report against this scorecard.
+4. **The category is now measurable.** This report establishes the benchmark. Any future "AI memory system that applies user track records at advice time" should report against this scorecard.
 
 ---
 
@@ -278,8 +278,7 @@ A future v2 of this benchmark will run cat15 against an anonymized real-brain ex
 
 **Note on novelty claims:** to the author's knowledge, no published benchmark measures whether an AI memory system applies the user's track record at advice time. We checked the major adjacent projects:
 
-- **Hindsight** ([rayan-arya/hindsight-skills](https://github.com/rayan-arya/hindsight-skills)) — introduced the idea but never published quantified evaluation. The repo has the working skill, not the test of whether it works.
-- **Mem0, MemPalace, Notion AI** — these are AI memory systems but they measure retrieval recall (did the system find the right fact?) not bias-aware reasoning (did the system reason about how the user has been wrong?).
+- **MemPalace, Notion AI, and the other AI memory systems** — these measure retrieval recall (did the system find the right fact?) not bias-aware reasoning (did the system reason about how the user has been wrong?).
 - **Academic literature** — there's a substantial body of work on calibration (Lichtenstein and Fischhoff's research starting in 1977, the forecasting tournaments led by Tetlock from the 1990s onward), but it measures human forecasters' calibration, not AI memory-system implementations of calibration-aware reasoning.
 
 cat14 and cat15 stake out the category. Future systems should publish numbers against this scorecard. We're not claiming "we beat the state of the art" — there is no state of the art yet for this specific thing. We're claiming "we're the first to ship numbers, here they are, here's how to reproduce them, the bar is now set."

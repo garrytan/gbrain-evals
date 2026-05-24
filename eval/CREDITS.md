@@ -25,7 +25,7 @@ No third-party adapters yet. The shipping adapter set:
 - `grep-only` — classic IR baseline built in an afternoon
 - `vector` — commodity vector RAG, same embedder as gbrain
 
-Third-party submissions (mem0, supermemory, Letta, Cognee, etc.) via
+Third-party submissions (supermemory, Letta, Cognee, etc.) via
 `eval/runner/adapters/<adapter>.ts` PRs. See `eval/CONTRIBUTING.md` for
 the adapter interface and submission flow.
 

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://brainbench.dev/schemas/tool-schema.schema.json",
   "title": "BrainBench Stack Tool Surface",
-  "description": "The contract a stack (gbrain / mem0 / supermemory / ...) must expose to be scorable by BrainBench. 12 read tools + 3 dry_run write tools. Dry-run writes record intent to the flight-recorder but MUST NOT mutate brain state. This schema is stack-agnostic.",
+  "description": "The contract a stack (gbrain / supermemory / Letta / ...) must expose to be scorable by BrainBench. 12 read tools + 3 dry_run write tools. Dry-run writes record intent to the flight-recorder but MUST NOT mutate brain state. This schema is stack-agnostic.",
   "type": "object",
   "required": ["schema_version", "stack_id", "read_tools", "dry_run_tools"],
   "additionalProperties": false,
@@ -10,7 +10,7 @@
     "schema_version": {"type": "integer", "const": 1},
     "stack_id": {
       "type": "string",
-      "description": "Stack identifier, e.g. 'gbrain-0.12.1', 'mem0-local'."
+      "description": "Stack identifier, e.g. 'gbrain-0.40.6.0', 'supermemory-local'."
     },
     "read_tools": {
       "type": "array",

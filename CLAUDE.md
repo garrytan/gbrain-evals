@@ -95,7 +95,7 @@ Required columns:
 | System | Recall@k | k | n | LLM in retrieval loop | Source |
 
 Include EVERY published system we can find at the same metric. MemPalace,
-Hindsight, Stella, Contriever, BM25 all publish numbers on LongMemEval R@5;
+Stella, Contriever, BM25 all publish numbers on LongMemEval R@5;
 they belong in the table. Mastra and Supermemory publish QA accuracy not
 R@k — flag them as "different metric, not directly comparable" but keep
 them in the table as context.

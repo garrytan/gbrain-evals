@@ -118,7 +118,6 @@ Each gbrain adapter exercises a specific code path. Numbers in the table reflect
 | **`gbrain-hybrid+expansion`** (this run) | **97.60%** | **5** | **500** | **yes** (Haiku for query rewriting only) | this report |
 | **`gbrain-vector`** (this run) | **97.40%** | **5** | **500** | **no** | this report |
 | MemPal raw (ChromaDB) | 96.6% | 5 | 500 | no | their public-facing headline |
-| Hindsight | 91.4% | 5 | 500 | yes (Gemini-3) | flagged "metric unverified" by MemPal |
 | Stella (dense retriever) | ~85% | 5 | 500 | no | academic baseline |
 | Contriever (dense retriever) | ~78% | 5 | 500 | no | academic baseline |
 | BM25 (sparse) | ~70% | 5 | 500 | no | published baseline in the LongMemEval paper |
