@@ -22,13 +22,19 @@ same harness every other system on the leaderboard uses.
 
 ## Intentional edits to vendored code
 
-1. **`scorer/baseAdapter.ts` — `CONFIG_PATH` only.** Upstream resolves
-   `providers.config.json` at repo root (`../../` from `src/adapters/`). The
-   vendored copy lives at `scorer/`, so the path is `../providers.config.json`
-   (co-located at `eval/precisionmembench/providers.config.json`). No logic
-   change. The scoring-relevant methods (`buildContext`, `listPinnedFacts`,
-   `listPinnedOpenQuestions`, `expandRelationParticipants`, `seed`,
-   `searchText`) are byte-identical to upstream.
+1. **`scorer/baseAdapter.ts` — two layout-only path edits, no logic change.**
+   (a) `CONFIG_PATH`: upstream resolves `providers.config.json` at repo root
+   (`../../` from `src/adapters/`). The vendored copy lives at `scorer/`, so the
+   path is `../providers.config.json` (co-located at
+   `eval/precisionmembench/providers.config.json`).
+   (b) The `Belief` type import: upstream is `../types/belief.ts` (from
+   `src/adapters/` → `src/types/`). In the vendored layout `belief.ts` is
+   co-located in `scorer/`, so the import is `./belief.js`. (It's a type-only
+   import that Bun erases at runtime, but the upstream path resolved to nothing
+   in this layout and `tsc --noEmit` flagged it — fixed for correctness.)
+   No logic change. The scoring-relevant methods (`buildContext`,
+   `listPinnedFacts`, `listPinnedOpenQuestions`, `expandRelationParticipants`,
+   `seed`, `searchText`) are byte-identical to upstream.
 
 2. **`scorer/runCases.ts` — NEW (not upstream).** The per-case assertion +
    precision/recall computation is lifted **verbatim** out of upstream's

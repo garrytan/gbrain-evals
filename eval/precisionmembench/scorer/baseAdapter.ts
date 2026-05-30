@@ -18,7 +18,7 @@
 
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import type { Belief } from "../types/belief.js";
+import type { Belief } from "./belief.js";
 
 interface ProviderConfigJson {
   envVar: string;
