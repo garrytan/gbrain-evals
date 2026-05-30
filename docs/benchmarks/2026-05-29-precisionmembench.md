@@ -85,7 +85,7 @@ The adaptive gate is a smooth precision/recall dial on the same retrieval:
 | Setting | Precision | Recall | Active | Pass |
 |---|---|---|---|---|
 | off (default top-K) | 0.076 | 0.99 | 0 | 7/77 |
-| caps entity=2 / other=6 (shipped default) | 0.15 | 0.93 | 0 | — |
+| caps entity=2 / other=6 (shipped default) | 0.16 | 0.96 | 1 | 8/77 |
 | caps entity=1 / other=2 (recall-preserving) | 0.40 | 0.91 | 12 | 21/77 |
 | caps entity=1 / other=1 (max precision) | 0.58 | 0.82 | 29 | 44/77 |
 
