@@ -1,0 +1,919 @@
+[
+  {
+    "caseId": "happy-stack-repository-layer",
+    "category": "Type routing and open questions",
+    "description": "Repository layer query: pinned DB decision surfaces; scoped open question surfaces; relevant beliefs depend on query token overlap",
+    "scope": ["domain:code"],
+    "query": "How should I structure my repository layer?",
+    "expect": {
+      "personaPrelude": { "nonEmpty": true },
+      "pinnedFacts": { "mustInclude": ["b-db-decision"] },
+      "relevantBeliefs": { "shouldOnlyInclude": [] },
+      "openQuestions": { "mustInclude": ["b-auth-open-q"] }
+    }
+  },
+  {
+    "caseId": "happy-alias-match-kubernetes",
+    "category": "Alias resolution",
+    "description": "Alias 'k8s' resolves to Kubernetes entity",
+    "scope": ["domain:code"],
+    "query": "what's my k8s deploy story?",
+    "expect": {
+      "pinnedFacts": { "mustInclude": [] },
+      "relevantBeliefs": { "shouldOnlyInclude": ["b-kubernetes-entity"] }
+    }
+  },
+  {
+    "caseId": "alias-kube-resolves",
+    "category": "Alias resolution",
+    "description": "Alias 'kube' drives text search retrieval",
+    "scope": ["domain:code"],
+    "query": "how does kube schedule pods across our CI pipeline nodes?",
+    "expect": {
+      "relevantBeliefs": {
+        "shouldOnlyInclude": ["b-ci-gha-entity", "b-kubernetes-entity"]
+      }
+    },
+    "notes": ""
+  },
+  {
+    "caseId": "alias-gha-resolves",
+    "category": "Alias resolution",
+    "description": "Alias 'GHA' (short form) drives text-search retrieval of b-ci-gha-entity",
+    "scope": ["domain:code"],
+    "query": "GHA secrets config",
+    "expect": {
+      "relevantBeliefs": { "shouldOnlyInclude": ["b-ci-gha-entity"] }
+    }
+  },
+  {
+    "caseId": "long-query-rambling-kubernetes",
+    "category": "Alias resolution",
+    "description": "Verbose 400+ char query.",
+    "scope": ["domain:code"],
+    "query": "ok so I've been thinking about this for a while and I know we've talked about infrastructure before but I'm circling back because the team had some pushback in the last review and honestly I'm not sure what the right call is anymore. Basically the question is how we should handle rolling deploys for the landing page when it lands — should we do Kubernetes native rolling updates or something more custom, and does it matter that the service holds session state in memory?",
+    "expect": {
+      "personaPrelude": { "nonEmpty": true },
+      "pinnedFacts": { "mustInclude": [] },
+      "relevantBeliefs": {
+        "shouldOnlyInclude": ["b-kubernetes-entity"]
+      },
+      "openQuestions": { "mustInclude": ["b-auth-open-q"] }
+    }
+  },
+  {
+    "caseId": "out-of-scope-coin-collecting",
+    "category": "Scope disambiguation",
+    "description": "Query in a domain the user has no beliefs about: personaPrelude only, no scope/relevant leakage",
+    "scope": ["domain:hobby"],
+    "query": "what's a good way to grade a 1909-S VDB penny without sending it to PCGS?",
+    "expect": {
+      "personaPrelude": { "nonEmpty": true },
+      "relevantBeliefs": { "shouldOnlyInclude": [] }
+    }
+  },
+  {
+    "caseId": "happy-writing-scope",
+    "category": "Scope disambiguation",
+    "description": "Writing query surfaces writing beliefs only; no code leakage",
+    "scope": ["domain:writing"],
+    "query": "How should I open the next chapter with Mara?",
+    "expect": {
+      "personaPrelude": { "nonEmpty": true },
+      "pinnedFacts": { "mustInclude": ["b-protagonist-entity"] },
+      "relevantBeliefs": { "shouldOnlyInclude": [] }
+    }
+  },
+  {
+    "caseId": "conflict-scope-disambiguation-redis-writing",
+    "category": "Scope disambiguation",
+    "description": "'Redis' in writing scope returns character, not datastore",
+    "scope": ["domain:writing"],
+    "query": "What's Redis doing in chapter three?",
+    "expect": {
+      "relevantBeliefs": { "shouldOnlyInclude": ["b-redis-writing"] }
+    }
+  },
+  {
+    "caseId": "conflict-scope-disambiguation-redis-code",
+    "category": "Scope disambiguation",
+    "description": "'Redis' in code scope returns datastore, not character",
+    "scope": ["domain:code"],
+    "query": "What are we using Redis for?",
+    "expect": {
+      "relevantBeliefs": { "shouldOnlyInclude": ["b-redis-code"] }
+    }
+  },
+  {
+    "caseId": "multi-scope-redis-both-surfaces",
+    "category": "Scope disambiguation",
+    "description": "With scope=['code','writing'], both Redis beliefs should surface — one per scope",
+    "scope": ["domain:code", "domain:writing"],
+    "query": "What's Redis doing?",
+    "expect": {
+      "relevantBeliefs": {
+        "shouldOnlyInclude": ["b-redis-code", "b-redis-writing"]
+      }
+    }
+  },
+  {
+    "caseId": "conflict-mongodb-supersedes-sqlalchemy",
+    "category": "Supersession chain exclusion",
+    "description": "Superseded SQLAlchemy belief never surfaces",
+    "scope": ["domain:code"],
+    "query": "how's our SQLAlchemy setup these days?",
+    "expect": {
+      "pinnedFacts": { "mustInclude": ["b-db-decision"] },
+      "relevantBeliefs": { "shouldOnlyInclude": [] }
+    }
+  },
+  {
+    "caseId": "edge-empty-query",
+    "category": "Design boundary cases",
+    "description": "Empty query: persona + scope prelude + pinned facts injected, no relevant beliefs",
+    "scope": ["domain:code"],
+    "query": "",
+    "expect": {
+      "personaPrelude": { "nonEmpty": true },
+      "pinnedFacts": {
+        "mustInclude": ["b-db-decision"],
+        "mustExclude": ["b-auth-open-q", "b-comm-response-length"]
+      },
+      "relevantBeliefs": { "shouldOnlyInclude": [] }
+    }
+  },
+  {
+    "caseId": "edge-short-query-raw-passthrough",
+    "category": "Alias resolution",
+    "description": "Short query 'fastify?' passes raw to text search. Belief is pinned so verified in pinnedFacts.",
+    "scope": ["domain:code"],
+    "query": "fastify?",
+    "expect": {
+      "pinnedFacts": { "mustInclude": [] },
+      "relevantBeliefs": { "shouldOnlyInclude": ["b-fastify-pref"] }
+    }
+  },
+  {
+    "caseId": "isolation-user-scoping",
+    "category": "Cross-user isolation",
+    "description": "Other-user beliefs never leak",
+    "scope": ["domain:code"],
+    "query": "what language do I write in?",
+    "expect": {
+      "relevantBeliefs": { "mustExclude": ["b-other-user-leak-check"] },
+      "pinnedFacts": { "mustExclude": ["b-other-user-leak-check"] },
+      "personaPrelude": { "mustNotContain": ["Haskell"] }
+    }
+  },
+  {
+    "caseId": "questions-pinned-active-only",
+    "category": "Type routing and open questions",
+    "description": "listPinnedOpenQuestions returns only pinned+active questions for the given scope",
+    "scope": ["domain:code"],
+    "query": "any open questions?",
+    "expect": {
+      "relevantBeliefs": { "shouldOnlyInclude": [] },
+      "openQuestions": {
+        "mustInclude": ["b-auth-open-q"],
+        "mustExclude": ["b-chapter-structure-q", "b-hosting-resolved"]
+      }
+    }
+  },
+  {
+    "caseId": "alias-ts-resolves",
+    "category": "Alias resolution",
+    "description": "Alias 'TS' drives text-search retrieval.",
+    "scope": ["domain:code"],
+    "query": "TS strict mode question about unknown types",
+    "expect": {
+      "pinnedFacts": { "mustInclude": [] },
+      "relevantBeliefs": {
+        "shouldOnlyInclude": ["b-ts-pref"]
+      }
+    }
+  },
+  {
+    "caseId": "alias-mongo-resolves",
+    "category": "Alias resolution",
+    "description": "Alias 'Mongo' drives text-search retrieval.",
+    "scope": ["domain:code"],
+    "query": "what's the Mongo pattern we're using for collections?",
+    "expect": {
+      "pinnedFacts": { "mustInclude": [] },
+      "relevantBeliefs": {
+        "shouldOnlyInclude": ["b-mongo-raw-driver"]
+      }
+    },
+    "notes": ""
+  },
+  {
+    "caseId": "alias-reactjs-resolves",
+    "category": "Alias resolution",
+    "description": "Alias 'ReactJS' resolves to b-react-entity via text search — genuine retrieval proof",
+    "scope": ["domain:code"],
+    "query": "how should I structure my ReactJS components here?",
+    "expect": {
+      "relevantBeliefs": { "shouldOnlyInclude": ["b-react-entity"] }
+    }
+  },
+  {
+    "caseId": "alias-protagonist-resolves",
+    "category": "Alias resolution",
+    "description": "Alias 'protagonist' retrieves b-protagonist-entity (pinned). b-pov-shift-entity (non-pinned) proves text search fired.",
+    "scope": ["domain:writing"],
+    "query": "what does the protagonist want, and does their viewpoint stay consistent in act two?",
+    "expect": {
+      "pinnedFacts": { "mustInclude": ["b-protagonist-entity"] },
+      "relevantBeliefs": { "shouldOnlyInclude": ["b-pov-shift-entity"] }
+    }
+  },
+  {
+    "caseId": "canonical-name-match-mara",
+    "category": "Alias resolution",
+    "description": "Direct canonical_name 'Mara' retrieves protagonist. b-protagonist-entity is pinned.",
+    "scope": ["domain:writing"],
+    "query": "tell me about Mara's backstory with her father",
+    "expect": {
+      "pinnedFacts": { "mustInclude": ["b-protagonist-entity"] },
+      "relevantBeliefs": { "shouldOnlyInclude": [] }
+    }
+  },
+  {
+    "caseId": "alias-pov-shift-resolves",
+    "category": "Alias resolution",
+    "description": "Alias 'POV' drives text-search retrieval of b-pov-shift-entity (non-pinned, writing scope)",
+    "scope": ["domain:writing"],
+    "query": "POV rules for chapter 7",
+    "expect": {
+      "relevantBeliefs": { "shouldOnlyInclude": ["b-pov-shift-entity"] }
+    }
+  },
+  {
+    "caseId": "alias-base-class-retrieves-composition",
+    "category": "Alias resolution",
+    "description": "Natural-language proxy 'base class' retrieves b-composition-inheritance (non-pinned) via alias",
+    "scope": ["domain:code"],
+    "query": "should I use a base class hierarchy for these domain objects?",
+    "expect": {
+      "relevantBeliefs": { "shouldOnlyInclude": ["b-composition-inheritance"] }
+    }
+  },
+  {
+    "caseId": "alias-exceptions-retrieves-error-handling",
+    "category": "Alias resolution",
+    "description": "Natural-language proxy 'exceptions' retrieves b-error-handling (non-pinned) via alias",
+    "scope": ["domain:code"],
+    "query": "when should I throw exceptions versus return them?",
+    "expect": {
+      "relevantBeliefs": { "shouldOnlyInclude": ["b-error-handling"] }
+    }
+  },
+  {
+    "caseId": "filter-resolved-at-excluded",
+    "category": "Type routing and open questions",
+    "description": "b-hosting-resolved has resolved_at set — query matching its aliases must not surface it",
+    "scope": ["domain:code"],
+    "query": "should we self-host the landing page or go with Fly.io?",
+    "expect": {
+      "relevantBeliefs": { "shouldOnlyInclude": [] },
+      "openQuestions": { "mustExclude": ["b-hosting-resolved"] }
+    }
+  },
+  {
+    "caseId": "scope-bleed-questions-code-excludes-writing",
+    "category": "Scope disambiguation",
+    "description": "Code-scope query must not surface writing-scope open questions",
+    "scope": ["domain:code"],
+    "query": "any unresolved decisions on this sprint?",
+    "expect": {
+      "relevantBeliefs": { "shouldOnlyInclude": [] },
+      "openQuestions": {
+        "mustInclude": ["b-auth-open-q"],
+        "mustExclude": ["b-chapter-structure-q"]
+      }
+    }
+  },
+  {
+    "caseId": "persona-prelude-content-present",
+    "category": "Persona prelude content",
+    "description": "Persona prelude contains substantive content tokens derived from universal preferences",
+    "scope": ["domain:code"],
+    "query": "what's our stack?",
+    "expect": {
+      "personaPrelude": {
+        "nonEmpty": true,
+        "contains": ["direct", "preamble"]
+      },
+      "relevantBeliefs": { "shouldOnlyInclude": [] }
+    }
+  },
+  {
+    "caseId": "edge-short-query-score-clears",
+    "category": "Alias resolution",
+    "description": "Short query 'k8s'",
+    "scope": ["domain:code"],
+    "query": "k8s?",
+    "expect": {
+      "pinnedFacts": { "mustInclude": [] },
+      "relevantBeliefs": { "shouldOnlyInclude": ["b-kubernetes-entity"] }
+    }
+  },
+  {
+    "caseId": "edge-whitespace-query",
+    "category": "Design boundary cases",
+    "description": "Whitespace-only query is treated as empty by queryExpander — no relevant beliefs",
+    "scope": ["domain:code"],
+    "query": "   ",
+    "expect": {
+      "personaPrelude": { "nonEmpty": true },
+      "relevantBeliefs": { "shouldOnlyInclude": [] }
+    }
+  },
+  {
+    "caseId": "score-boundary-weak-match-filtered",
+    "category": "Design boundary cases",
+    "description": "Weakly-related in-scope query does not surface tangential beliefs below minScore",
+    "scope": ["domain:code"],
+    "query": "thinking about observability and monitoring dashboards",
+    "expect": {
+      "relevantBeliefs": { "shouldOnlyInclude": [] }
+    }
+  },
+  {
+    "caseId": "user-edited-cross-scope-surfaces",
+    "category": "Scope disambiguation",
+    "description": "user_edited belief scoped to domain:writing does NOT surface in domain:code — scope isolation takes precedence over user_edited flag",
+    "scope": ["domain:code"],
+    "query": "summarize what you know about my preferences",
+    "expect": {
+      "pinnedFacts": { "mustExclude": ["b-prose-style-user-edited"] },
+      "relevantBeliefs": { "shouldOnlyInclude": [] }
+    }
+  },
+  {
+    "caseId": "user-edited-absent-without-flag",
+    "category": "Scope disambiguation",
+    "description": "Non-user-edited writing belief does NOT cross into code scope pinnedFacts",
+    "scope": ["domain:code"],
+    "query": "what are my writing preferences?",
+    "expect": {
+      "pinnedFacts": { "mustExclude": ["b-narrator-voice"] },
+      "relevantBeliefs": { "shouldOnlyInclude": [] }
+    }
+  },
+  {
+    "caseId": "ranking-canonical-name-over-content",
+    "category": "Ranking stability",
+    "description": "canonical_name match (weight 10) outranks content-only match (weight 1) in relevantBeliefs ordering",
+    "scope": ["domain:code"],
+    "query": "composition over inheritance — what's our pattern?",
+    "expect": {
+      "relevantBeliefs": {
+        "shouldOnlyInclude": ["b-composition-inheritance"]
+      }
+    }
+  },
+  {
+    "caseId": "messy-typo-blind-spot",
+    "category": "Fuzzy matching and prefix guards",
+    "description": "Typo 'typscript' does NOT match 'TypeScript' — documents text search limitation",
+    "scope": ["domain:code"],
+    "query": "how do I configure typscript strict mode?",
+    "expect": {
+      "pinnedFacts": { "mustInclude": [] },
+      "relevantBeliefs": { "shouldOnlyInclude": ["b-ts-pref"] }
+    }
+  },
+  {
+    "caseId": "messy-all-caps-case-insensitive",
+    "category": "Alias resolution",
+    "description": "ALL-CAPS 'REACTJS' still resolves via case-insensitive text index",
+    "scope": ["domain:code"],
+    "query": "REACTJS component patterns",
+    "expect": {
+      "relevantBeliefs": {
+        "shouldOnlyInclude": ["b-react-entity"]
+      }
+    }
+  },
+  {
+    "caseId": "messy-filler-heavy-extraction",
+    "category": "Alias resolution",
+    "description": "Filler-heavy query — NLP extraction must cut through noise to find 'error handling'",
+    "scope": ["domain:code"],
+    "query": "ugh so like I was wondering you know about how we should think about error handling in our codebase because honestly it's been bugging me for a while and I'm not really sure what the right approach is here",
+    "expect": {
+      "relevantBeliefs": {
+        "shouldOnlyInclude": ["b-error-handling"]
+      }
+    }
+  },
+  {
+    "caseId": "messy-negation-surfaces-topic",
+    "category": "Alias resolution",
+    "description": "Negation 'I don't want class hierarchies' still surfaces the composition belief — text search has no semantic negation",
+    "scope": ["domain:code"],
+    "query": "I don't want class hierarchies in this codebase, what should I use instead?",
+    "expect": {
+      "relevantBeliefs": { "shouldOnlyInclude": ["b-composition-inheritance"] }
+    }
+  },
+  {
+    "caseId": "messy-compound-surfaces-two-beliefs",
+    "category": "Alias resolution",
+    "description": "Single query spanning two topics surfaces both non-pinned beliefs",
+    "scope": ["domain:code"],
+    "query": "how should ReactJS components handle exceptions from async calls?",
+    "expect": {
+      "relevantBeliefs": {
+        "shouldOnlyInclude": ["b-react-entity", "b-error-handling"]
+      }
+    }
+  },
+  {
+    "caseId": "cap-stress-compound-six-entities",
+    "category": "Alias resolution",
+    "description": "Compound query mentions 6 entities — tests whether 12-token cap in buildSearchQuery drops non-pinned targets",
+    "scope": ["domain:code"],
+    "query": "When our React frontend catches error handling exceptions, how should the Kubernetes pods running MongoDB TypeScript services report to GitHub Actions?",
+    "expect": {
+      "relevantBeliefs": {
+        "shouldOnlyInclude": [
+          "b-react-entity",
+          "b-error-handling",
+          "b-ci-gha-entity",
+          "b-kubernetes-entity",
+          "b-mongo-raw-driver",
+          "b-ts-pref"
+        ]
+      }
+    }
+  },
+  {
+    "caseId": "cap-stress-kitchen-sink-exceeds-twelve",
+    "category": "Alias resolution",
+    "description": "Dense 8+ entity query that deliberately exceeds the 12-token cap — tests which non-pinned beliefs survive extraction truncation",
+    "scope": ["domain:code"],
+    "query": "Set up our React components to use composition pattern with explicit error handling, wire GitHub Actions CI to deploy Kubernetes pods serving the MongoDB TypeScript API with functional pipeline transforms",
+    "expect": {
+      "relevantBeliefs": {
+        "shouldOnlyInclude": [
+          "b-react-entity",
+          "b-error-handling",
+          "b-ci-gha-entity",
+          "b-kubernetes-entity",
+          "b-mongo-raw-driver",
+          "b-ts-pref",
+          "b-functional-pipeline"
+        ]
+      }
+    }
+  },
+  {
+    "caseId": "cap-stress-late-position-entity-at-risk",
+    "category": "Alias resolution",
+    "description": "Critical alias 'exceptions' appears after 6+ proper nouns — tests whether extraction order causes late-position tokens to fall past the 12-token cap",
+    "scope": ["domain:code"],
+    "query": "Given our React frontend, the GitHub Actions CI pipeline, the Kubernetes deployment, and the MongoDB TypeScript backend, how should we approach exceptions in the data layer?",
+    "expect": {
+      "relevantBeliefs": {
+        "shouldOnlyInclude": [
+          "b-ci-gha-entity",
+          "b-react-entity",
+          "b-kubernetes-entity",
+          "b-mongo-raw-driver",
+          "b-ts-pref",
+          "b-error-handling"
+        ]
+      }
+    }
+  },
+  {
+    "caseId": "fuzzy-single-edit-fires-non-pinned",
+    "category": "Fuzzy matching and prefix guards",
+    "description": "1-edit deletion 'eror' fuzzy-matches alias 'error' — prefix 'er' passes",
+    "scope": ["domain:code"],
+    "query": "eror handling patterns",
+    "expect": {
+      "relevantBeliefs": { "shouldOnlyInclude": ["b-error-handling"] }
+    }
+  },
+  {
+    "caseId": "fuzzy-scope-filter-discriminates-after-fuzzy-fires",
+    "category": "Fuzzy matching and prefix guards",
+    "description": "Typo 'Reedis' fuzzy-matches alias 'Redis' in both scopes — scope filter returns only code belief",
+    "scope": ["domain:code"],
+    "query": "Reedis cache eviction strategy",
+    "expect": {
+      "relevantBeliefs": { "shouldOnlyInclude": ["b-redis-code"] }
+    }
+  },
+  {
+    "caseId": "fuzzy-prefix-blocks-transitive-match",
+    "category": "Fuzzy matching and prefix guards",
+    "description": "1-edit distance but prefix guard blocks — 'mango' shares edit distance 1 with 'mongo' but 'ma' ≠ 'mo'",
+    "scope": ["domain:code"],
+    "query": "mango connection pooling",
+    "expect": {
+      "relevantBeliefs": { "shouldOnlyInclude": [] }
+    }
+  },
+  {
+    "caseId": "fuzzy-abbreviation-prefix-blind-spot",
+    "category": "Fuzzy matching and prefix guards",
+    "description": "Alias 'k8s' — typo 'k9s' fails because prefix 'k9' ≠ 'k8' — single-char substitution in short aliases hits prefix guard",
+    "scope": ["domain:code"],
+    "query": "k9s pod scheduling",
+    "expect": {
+      "pinnedFacts": { "mustInclude": [] },
+      "relevantBeliefs": { "shouldOnlyInclude": [] }
+    }
+  },
+  {
+    "caseId": "fuzzy-two-edit-transposition-blocked",
+    "category": "Fuzzy matching and prefix guards",
+    "description": "Transposition 'typsecript' IS matched by Atlas (Damerau-Levenshtein, 1 edit)",
+    "scope": ["domain:code"],
+    "query": "typsecript compilation config",
+    "expect": {
+      "pinnedFacts": { "mustInclude": [] },
+      "relevantBeliefs": { "shouldOnlyInclude": ["b-ts-pref"] }
+    }
+  },
+  {
+    "caseId": "fuzzy-single-term-only-signal",
+    "category": "Fuzzy matching and prefix guards",
+    "description": "Query is a single misspelled term — 'mongod' is the only token, 1 edit from alias 'Mongo', prefix 'mo' passes",
+    "scope": ["domain:code"],
+    "query": "mongod",
+    "expect": {
+      "pinnedFacts": { "mustInclude": [] },
+      "relevantBeliefs": { "shouldOnlyInclude": ["b-mongo-raw-driver"] }
+    }
+  },
+  {
+    "caseId": "universal-scope-belief-content-in-persona-prelude",
+    "category": "Persona prelude content",
+    "description": "user:universal belief content appears in personaPrelude for a domain with no per-scope description",
+    "scope": ["domain:hobby"],
+    "query": "what's a good way to grade a 1909-S VDB penny without sending it to PCGS?",
+    "expect": {
+      "personaPrelude": {
+        "nonEmpty": true,
+        "contains": ["direct", "preamble"]
+      },
+      "relevantBeliefs": { "shouldOnlyInclude": [] }
+    }
+  },
+  {
+    "caseId": "type-isolation-open-question-not-in-relevant",
+    "category": "Type routing and open questions",
+    "description": "open_question belief with directly matched aliases must appear in openQuestions only — not in pinnedFacts or relevantBeliefs",
+    "scope": ["domain:code"],
+    "query": "JWT authentication token strategy",
+    "expect": {
+      "pinnedFacts": { "mustExclude": ["b-auth-open-q"] },
+      "openQuestions": { "mustInclude": ["b-auth-open-q"] },
+      "relevantBeliefs": { "shouldOnlyInclude": [] }
+    }
+  },
+  {
+    "caseId": "multi-hop-supersession-chain-all-excluded",
+    "category": "Supersession chain exclusion",
+    "description": "Three-hop chain: TSLint (b-linting-v0) → ESLint (b-linting-v1) → Biome (b-linting-current). Query terms matching both superseded hops must surface neither; only the active terminal belief surfaces via pinnedFacts",
+    "scope": ["domain:code"],
+    "query": "ESLint rules and TSLint configuration",
+    "expect": {
+      "pinnedFacts": { "mustInclude": ["b-linting-current"] },
+      "relevantBeliefs": { "shouldOnlyInclude": [] }
+    }
+  },
+  {
+    "caseId": "cross-scope-one-empty-domain-does-not-degrade",
+    "category": "Scope disambiguation",
+    "description": "Multi-scope query where one scope (domain:hobby) has zero beliefs — code-scope retrieval must be unaffected and no empty-scope error must occur",
+    "scope": ["domain:code", "domain:hobby"],
+    "query": "What are we using Redis for?",
+    "expect": {
+      "relevantBeliefs": { "shouldOnlyInclude": ["b-redis-code"] }
+    }
+  },
+  {
+    "caseId": "ranking-orderedbefore-alias-beats-content",
+    "category": "Ranking stability",
+    "description": "Rare alias 'pipe' (high IDF, short field) outranks common alias 'error' — documents Atlas Search BM25 IDF weighting behavior",
+    "scope": ["domain:code"],
+    "query": "explicit error returns in pipe transforms",
+    "expect": {
+      "relevantBeliefs": {
+        "shouldOnlyInclude": ["b-functional-pipeline", "b-error-handling"]
+      }
+    },
+    "notes": "Content is not a scored path in the search pipeline — only canonical_name and aliases are."
+  },
+  {
+    "caseId": "cold-start-user-no-beliefs",
+    "category": "Cold start behavior",
+    "description": "User with zero seeded beliefs returns fully empty context at every output tier without error",
+    "userId": "brand-new-user",
+    "scope": ["domain:code"],
+    "query": "how should I structure my repository layer?",
+    "expect": {
+      "personaPrelude": { "isNull": true },
+      "relevantBeliefs": { "shouldOnlyInclude": [] }
+    }
+  },
+  {
+    "caseId": "narrator-voice-pinned-in-own-scope",
+    "category": "Persona prelude content",
+    "description": "Empty query against domain:writing surfaces all three pinned writing-scope beliefs in pinnedFacts and the writing open question in openQuestions",
+    "scope": ["domain:writing"],
+    "query": "",
+    "expect": {
+      "personaPrelude": { "nonEmpty": true },
+      "pinnedFacts": {
+        "mustInclude": [
+          "b-narrator-voice",
+          "b-protagonist-entity",
+          "b-prose-style-user-edited"
+        ]
+      },
+      "openQuestions": { "mustInclude": ["b-chapter-structure-q"] },
+      "relevantBeliefs": { "shouldOnlyInclude": [] }
+    }
+  },
+  {
+    "caseId": "multi-scope-prelude-uses-primary-scope-only",
+    "category": "Persona prelude content",
+    "description": "With scope=['code','writing'], personaPrelude is universal only — documents that scope-specific content is not injected",
+    "scope": ["domain:code", "domain:writing"],
+    "query": "give me an overview of what I'm working on",
+    "expect": {
+      "personaPrelude": { "nonEmpty": true },
+      "relevantBeliefs": { "shouldOnlyInclude": [] }
+    }
+  },
+  {
+    "caseId": "why-it-matters-not-indexed-blind-spot",
+    "category": "Design boundary cases",
+    "description": "'Vue' appears only in b-react-entity.why_it_matters — not in canonical_name, aliases, or content. The query must not surface the belief.",
+    "scope": ["domain:code"],
+    "query": "Vue component architecture",
+    "expect": {
+      "relevantBeliefs": { "shouldOnlyInclude": [] }
+    }
+  },
+  {
+    "caseId": "budget-ceiling-evicts-relevant-beliefs",
+    "category": "Budget eviction and capacity",
+    "description": "maxBeliefs set to exact pinned count — no slots remain for relevantBeliefs",
+    "scope": ["domain:code"],
+    "query": "How should I handle errors in my repository layer?",
+    "budget": { "maxBeliefs": 2 },
+    "expect": {
+      "pinnedFacts": { "mustInclude": [] },
+      "relevantBeliefs": { "shouldOnlyInclude": [] }
+    }
+  },
+  {
+    "caseId": "negative-guidance-mongoose",
+    "category": "Counter-signal retrieval",
+    "description": "Query for Mongoose schema surfaces b-mongo-raw-driver — the raw-driver preference is the counter-signal",
+    "scope": ["domain:code"],
+    "query": "suggest a good Mongoose schema for my user model",
+    "expect": {
+      "pinnedFacts": { "mustInclude": [] },
+      "relevantBeliefs": { "shouldOnlyInclude": ["b-mongo-raw-driver"] }
+    }
+  },
+  {
+    "caseId": "recency-tiebreak-reinforcement",
+    "category": "Ranking stability",
+    "description": "Among equally-scored pinned beliefs, higher last_reinforced_at sorts first in pinnedFacts",
+    "scope": ["domain:code"],
+    "query": "",
+    "expect": {
+      "pinnedFacts": {
+        "mustInclude": []
+      }
+    }
+  },
+  {
+    "caseId": "preference-flood-relevant-entity-survives",
+    "category": "Budget eviction and capacity",
+    "description": "Query about a specific entity is not drowned out by high-reinforcement preferences at budget ceiling",
+    "scope": ["domain:code"],
+    "query": "how does our CI pipeline handle secrets?",
+    "budget": { "maxBeliefs": 8 },
+    "expect": {
+      "relevantBeliefs": {
+        "shouldOnlyInclude": ["b-ci-gha-entity"]
+      }
+    }
+  },
+  {
+    "caseId": "cross-scope-non-user-edited-blocked",
+    "category": "Scope disambiguation",
+    "description": "Writing-scope entity with strong name match does not surface in code-scope query",
+    "scope": ["domain:code"],
+    "query": "tell me about Mara",
+    "expect": {
+      "relevantBeliefs": {
+        "mustExclude": ["b-protagonist-entity"],
+        "shouldOnlyInclude": []
+      },
+      "pinnedFacts": { "mustExclude": ["b-protagonist-entity"] }
+    }
+  },
+  {
+    "caseId": "alias-two-word-shingle-dead-letter",
+    "category": "Alias resolution",
+    "description": "Two-word alias 'dead letter' fires via the shingle analyzer path on aliases.shingle multi-field",
+    "scope": ["domain:code"],
+    "query": "what happens to dead letter messages that fail replay?",
+    "expect": {
+      "relevantBeliefs": { "shouldOnlyInclude": ["b-dead-letter-queue"] }
+    }
+  },
+  {
+    "caseId": "alias-dlq-abbreviation-resolves",
+    "category": "Alias resolution",
+    "description": "Alias 'DLQ' (abbreviation) drives text-search retrieval",
+    "scope": ["domain:code"],
+    "query": "how do we replay items from the DLQ?",
+    "expect": {
+      "relevantBeliefs": { "shouldOnlyInclude": ["b-dead-letter-queue"] }
+    }
+  },
+  {
+    "caseId": "counter-signal-jest-surfaces-vitest",
+    "category": "Counter-signal retrieval",
+    "description": "Counter-signal alias 'jest' on b-vitest-pref surfaces when user queries about Jest",
+    "scope": ["domain:code"],
+    "query": "should I configure Jest for this project?",
+    "expect": {
+      "relevantBeliefs": { "shouldOnlyInclude": ["b-vitest-pref"] }
+    }
+  },
+  {
+    "caseId": "relation-type-expands-participants",
+    "category": "Relation expansion",
+    "description": "Relation belief 'auth depends on redis' surfaces via alias match AND pulls its participants (b-redis-code) into relevantBeliefs via one-hop join. b-auth-open-q goes to openQuestions since it's an open_question type.",
+    "scope": ["domain:code"],
+    "query": "what are the auth service dependencies and failure modes?",
+    "expect": {
+      "relevantBeliefs": {
+        "shouldOnlyInclude": ["b-auth-depends-redis", "b-redis-code"]
+      },
+      "openQuestions": { "mustInclude": ["b-auth-open-q"] }
+    }
+  },
+  {
+    "caseId": "relation-participant-open-question-routes-correctly",
+    "category": "Relation expansion",
+    "description": "Participant b-auth-open-q is type=open_question and pinned. Even though it's pulled in via relation expansion, it must appear in openQuestions, not relevantBeliefs.",
+    "scope": ["domain:code"],
+    "query": "session backend dependency graph",
+    "expect": {
+      "relevantBeliefs": {
+        "shouldOnlyInclude": ["b-auth-depends-redis", "b-redis-code"]
+      },
+      "openQuestions": { "mustInclude": ["b-auth-open-q"] },
+      "pinnedFacts": { "mustExclude": ["b-auth-open-q"] }
+    }
+  },
+  {
+    "caseId": "relation-expansion-respects-scope-filter",
+    "category": "Relation expansion",
+    "description": "If a relation's participant is out of scope, it must NOT be pulled in by expansion. Hypothetical: b-auth-depends-redis has participant b-redis-writing (wrong scope). Scope filter in expandRelationParticipants blocks it.",
+    "scope": ["domain:code"],
+    "query": "auth redis failure modes",
+    "expect": {
+      "relevantBeliefs": {
+        "shouldOnlyInclude": ["b-auth-depends-redis", "b-redis-code"],
+        "mustExclude": ["b-redis-writing"]
+      }
+    }
+  },
+  {
+    "caseId": "subtype-expertise-retrieval",
+    "category": "Type routing and open questions",
+    "description": "Subtype 'expertise' belief surfaces on a query about React skill calibration",
+    "scope": ["domain:code"],
+    "query": "what's my react depth — should you explain hooks to me?",
+    "expect": {
+      "relevantBeliefs": { "shouldOnlyInclude": ["b-react-entity"] }
+    }
+  },
+  {
+    "caseId": "pinned-plus-resolved-excluded-from-questions",
+    "category": "Type routing and open questions",
+    "description": "A belief that is both pinned AND has resolved_at set must NOT appear in openQuestions or pinnedFacts",
+    "scope": ["domain:code"],
+    "query": "API versioning strategy for v2 migration",
+    "expect": {
+      "pinnedFacts": { "mustExclude": ["b-pinned-resolved-interaction"] },
+      "openQuestions": { "mustExclude": ["b-pinned-resolved-interaction"] },
+      "relevantBeliefs": { "shouldOnlyInclude": [] }
+    }
+  },
+  {
+    "caseId": "zero-reinforcement-fresh-belief-surfaces",
+    "category": "Budget eviction and capacity",
+    "description": "Brand new belief with reinforcement_count: 0 still surfaces via alias match — recency/reinforcement must not suppress it",
+    "scope": ["domain:code"],
+    "query": "how is our Turborepo monorepo structured?",
+    "expect": {
+      "relevantBeliefs": { "shouldOnlyInclude": ["b-zero-reinforcement-fresh"] }
+    }
+  },
+  {
+    "caseId": "budget-zero-graceful-empty",
+    "category": "Budget eviction and capacity",
+    "description": "maxBeliefs: 0 returns empty arrays without throwing",
+    "scope": ["domain:code"],
+    "query": "what's our stack?",
+    "budget": { "maxBeliefs": 0 },
+    "expect": {
+      "pinnedFacts": { "mustInclude": [] },
+      "relevantBeliefs": { "shouldOnlyInclude": [] }
+    }
+  },
+  {
+    "caseId": "budget-one-pinned-wins-over-relevant",
+    "category": "Budget eviction and capacity",
+    "description": "maxBeliefs: 1 with a query matching both a pinned belief and a non-pinned belief — pinned belief gets the slot",
+    "scope": ["domain:code"],
+    "query": "MongoDB collection typing patterns",
+    "budget": { "maxBeliefs": 1 },
+    "expect": {
+      "pinnedFacts": { "mustInclude": ["b-db-decision"] },
+      "relevantBeliefs": { "shouldOnlyInclude": [] }
+    }
+  },
+  {
+    "caseId": "multi-scope-code-writing-dedup-no-double-surface",
+    "category": "Scope disambiguation",
+    "description": "With scope=['domain:code','domain:writing'], a belief scoped to both does not appear twice",
+    "scope": ["domain:code", "domain:writing"],
+    "query": "what tools do we use?",
+    "expect": {
+      "relevantBeliefs": { "shouldOnlyInclude": [] }
+    }
+  },
+  {
+    "caseId": "empty-alias-belief-content-path-only",
+    "category": "Design boundary cases",
+    "description": "b-comm-recommendation has aliases: [] — can only be retrieved via content path. Since content is not a scored search path, it should NOT surface.",
+    "scope": ["domain:code"],
+    "query": "should you give me one recommendation or a list of options?",
+    "expect": {
+      "relevantBeliefs": { "shouldOnlyInclude": [] }
+    }
+  },
+  {
+    "caseId": "universal-scope-explicit-query-no-relevant",
+    "category": "Scope disambiguation",
+    "description": "Query scoped explicitly to user:universal — universal beliefs appear in personaPrelude only, not in relevantBeliefs",
+    "scope": ["user:universal"],
+    "query": "how do I want you to respond to me?",
+    "expect": {
+      "personaPrelude": { "nonEmpty": true, "contains": ["direct"] },
+      "relevantBeliefs": { "shouldOnlyInclude": [] }
+    }
+  },
+  {
+    "caseId": "negation-query-still-surfaces-rejected-tool",
+    "category": "Design boundary cases",
+    "description": "Query 'I do NOT want to use Express' still surfaces b-fastify-pref because text search has no negation awareness",
+    "scope": ["domain:code"],
+    "query": "I do NOT want to use Express, what should I use instead?",
+    "expect": {
+      "relevantBeliefs": { "shouldOnlyInclude": ["b-fastify-pref"] }
+    }
+  },
+  {
+    "caseId": "superseded-chain-query-terminal-only",
+    "category": "Supersession chain exclusion",
+    "description": "Query 'TSLint' matches b-linting-v0 (superseded by v1, which is superseded by b-linting-current). Only terminal active belief surfaces.",
+    "scope": ["domain:code"],
+    "query": "TSLint migration path",
+    "expect": {
+      "pinnedFacts": { "mustInclude": ["b-linting-current"] },
+      "relevantBeliefs": { "shouldOnlyInclude": [] }
+    }
+  },
+  {
+    "caseId": "relation-does-not-appear-as-entity",
+    "category": "Relation expansion",
+    "description": "Relation-type belief does not bleed into pinnedFacts despite alias overlap with pinned beliefs",
+    "scope": ["domain:code"],
+    "query": "Redis session backend dependency graph",
+    "expect": {
+      "relevantBeliefs": {
+        "shouldOnlyInclude": ["b-auth-depends-redis", "b-redis-code"]
+      },
+      "openQuestions": { "mustInclude": ["b-auth-open-q"] }
+    }
+  }
+]

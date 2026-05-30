@@ -1,0 +1,9 @@
+{
+  "gbrain": {
+    "envVar": "GBRAIN_PMB_URL",
+    "defaultUrl": "http://localhost:0",
+    "seedDelayMs": 0,
+    "beliefToText": "canonical_name_aliases",
+    "supportsUpdate": false
+  }
+}

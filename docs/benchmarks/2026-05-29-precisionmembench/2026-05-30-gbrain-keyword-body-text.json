@@ -1,0 +1,260 @@
+{
+  "provider": "gbrain-keyword-body-text",
+  "retrieval": {
+    "meanLatencyMs": 1.42,
+    "p50LatencyMs": 1.22,
+    "p95LatencyMs": 3.29,
+    "caseCount": 10,
+    "meanPrecision": 0.1905,
+    "meanRecall": 0.2143,
+    "totalPassed": 4,
+    "totalCases": 10,
+    "passRate": 0.4,
+    "activeRetrievalPasses": 1,
+    "passTypes": {
+      "activeRetrieval": 1,
+      "structural": 3,
+      "triviallyEmpty": 0
+    },
+    "categories": [
+      {
+        "category": "Scope disambiguation",
+        "caseCount": 5,
+        "passed": 3,
+        "failed": 2,
+        "meanPrecision": 0.4444,
+        "meanRecall": 0.5
+      },
+      {
+        "category": "Alias resolution",
+        "caseCount": 4,
+        "passed": 0,
+        "failed": 4,
+        "meanPrecision": 0,
+        "meanRecall": 0
+      },
+      {
+        "category": "Type routing and open questions",
+        "caseCount": 1,
+        "passed": 1,
+        "failed": 0,
+        "meanPrecision": null,
+        "meanRecall": null
+      }
+    ]
+  },
+  "cases": [
+    {
+      "caseId": "happy-stack-repository-layer",
+      "category": "Type routing and open questions",
+      "description": "Repository layer query: pinned DB decision surfaces; scoped open question surfaces; relevant beliefs depend on query token overlap",
+      "pinnedBeliefs": [
+        "b-db-decision",
+        "b-linting-current"
+      ],
+      "relevantBeliefs": [],
+      "retrievedQuestions": [
+        "b-auth-open-q"
+      ],
+      "retrievalPrecision": null,
+      "retrievalRecall": null,
+      "pinnedCoverage": 1,
+      "passed": true,
+      "failures": [],
+      "retrievalLatencyMs": 3.29
+    },
+    {
+      "caseId": "happy-alias-match-kubernetes",
+      "category": "Alias resolution",
+      "description": "Alias 'k8s' resolves to Kubernetes entity",
+      "pinnedBeliefs": [
+        "b-db-decision",
+        "b-linting-current"
+      ],
+      "relevantBeliefs": [],
+      "retrievedQuestions": [
+        "b-auth-open-q"
+      ],
+      "retrievalPrecision": 0,
+      "retrievalRecall": 0,
+      "pinnedCoverage": null,
+      "passed": false,
+      "failures": [
+        "missing expected belief: b-kubernetes-entity"
+      ],
+      "retrievalLatencyMs": 1.5
+    },
+    {
+      "caseId": "alias-kube-resolves",
+      "category": "Alias resolution",
+      "description": "Alias 'kube' drives text search retrieval",
+      "pinnedBeliefs": [
+        "b-db-decision",
+        "b-linting-current"
+      ],
+      "relevantBeliefs": [],
+      "retrievedQuestions": [
+        "b-auth-open-q"
+      ],
+      "retrievalPrecision": 0,
+      "retrievalRecall": 0,
+      "pinnedCoverage": null,
+      "passed": false,
+      "failures": [
+        "missing expected belief: b-ci-gha-entity",
+        "missing expected belief: b-kubernetes-entity"
+      ],
+      "retrievalLatencyMs": 1.55
+    },
+    {
+      "caseId": "alias-gha-resolves",
+      "category": "Alias resolution",
+      "description": "Alias 'GHA' (short form) drives text-search retrieval of b-ci-gha-entity",
+      "pinnedBeliefs": [
+        "b-db-decision",
+        "b-linting-current"
+      ],
+      "relevantBeliefs": [],
+      "retrievedQuestions": [
+        "b-auth-open-q"
+      ],
+      "retrievalPrecision": 0,
+      "retrievalRecall": 0,
+      "pinnedCoverage": null,
+      "passed": false,
+      "failures": [
+        "missing expected belief: b-ci-gha-entity"
+      ],
+      "retrievalLatencyMs": 1.22
+    },
+    {
+      "caseId": "long-query-rambling-kubernetes",
+      "category": "Alias resolution",
+      "description": "Verbose 400+ char query.",
+      "pinnedBeliefs": [
+        "b-db-decision",
+        "b-linting-current"
+      ],
+      "relevantBeliefs": [],
+      "retrievedQuestions": [
+        "b-auth-open-q"
+      ],
+      "retrievalPrecision": 0,
+      "retrievalRecall": 0,
+      "pinnedCoverage": null,
+      "passed": false,
+      "failures": [
+        "missing expected belief: b-kubernetes-entity"
+      ],
+      "retrievalLatencyMs": 1.48
+    },
+    {
+      "caseId": "out-of-scope-coin-collecting",
+      "category": "Scope disambiguation",
+      "description": "Query in a domain the user has no beliefs about: personaPrelude only, no scope/relevant leakage",
+      "pinnedBeliefs": [],
+      "relevantBeliefs": [],
+      "retrievedQuestions": [],
+      "retrievalPrecision": null,
+      "retrievalRecall": null,
+      "pinnedCoverage": null,
+      "passed": true,
+      "failures": [],
+      "retrievalLatencyMs": 1.01
+    },
+    {
+      "caseId": "happy-writing-scope",
+      "category": "Scope disambiguation",
+      "description": "Writing query surfaces writing beliefs only; no code leakage",
+      "pinnedBeliefs": [
+        "b-narrator-voice",
+        "b-protagonist-entity",
+        "b-prose-style-user-edited"
+      ],
+      "relevantBeliefs": [],
+      "retrievedQuestions": [
+        "b-chapter-structure-q"
+      ],
+      "retrievalPrecision": null,
+      "retrievalRecall": null,
+      "pinnedCoverage": 1,
+      "passed": true,
+      "failures": [],
+      "retrievalLatencyMs": 0.92
+    },
+    {
+      "caseId": "conflict-scope-disambiguation-redis-writing",
+      "category": "Scope disambiguation",
+      "description": "'Redis' in writing scope returns character, not datastore",
+      "pinnedBeliefs": [
+        "b-narrator-voice",
+        "b-protagonist-entity",
+        "b-prose-style-user-edited"
+      ],
+      "relevantBeliefs": [],
+      "retrievedQuestions": [
+        "b-chapter-structure-q"
+      ],
+      "retrievalPrecision": 0,
+      "retrievalRecall": 0,
+      "pinnedCoverage": null,
+      "passed": false,
+      "failures": [
+        "missing expected belief: b-redis-writing"
+      ],
+      "retrievalLatencyMs": 0.97
+    },
+    {
+      "caseId": "conflict-scope-disambiguation-redis-code",
+      "category": "Scope disambiguation",
+      "description": "'Redis' in code scope returns datastore, not character",
+      "pinnedBeliefs": [
+        "b-db-decision",
+        "b-linting-current"
+      ],
+      "relevantBeliefs": [
+        "b-redis-code"
+      ],
+      "retrievedQuestions": [
+        "b-auth-open-q"
+      ],
+      "retrievalPrecision": 1,
+      "retrievalRecall": 1,
+      "pinnedCoverage": null,
+      "passed": true,
+      "failures": [],
+      "retrievalLatencyMs": 1.23
+    },
+    {
+      "caseId": "multi-scope-redis-both-surfaces",
+      "category": "Scope disambiguation",
+      "description": "With scope=['code','writing'], both Redis beliefs should surface — one per scope",
+      "pinnedBeliefs": [
+        "b-db-decision",
+        "b-narrator-voice",
+        "b-protagonist-entity",
+        "b-prose-style-user-edited",
+        "b-linting-current"
+      ],
+      "relevantBeliefs": [
+        "b-auth-depends-redis",
+        "b-redis-code",
+        "b-auth-open-q"
+      ],
+      "retrievedQuestions": [
+        "b-auth-open-q",
+        "b-chapter-structure-q"
+      ],
+      "retrievalPrecision": 0.3333333333333333,
+      "retrievalRecall": 0.5,
+      "pinnedCoverage": null,
+      "passed": false,
+      "failures": [
+        "unexpected belief in relevantBeliefs: b-auth-depends-redis",
+        "unexpected belief in relevantBeliefs: b-auth-open-q",
+        "missing expected belief: b-redis-writing"
+      ],
+      "retrievalLatencyMs": 1.01
+    }
+  ]
+}

@@ -1,0 +1,251 @@
+[
+  {
+    "caseId": "session-drift-noise-10-turns-implicit-redis",
+    "description": "Redis established in turn 0. 8 turns of substantive drift across Kubernetes, React, CI, error handling, auth. Turn 9 asks about eviction policy without naming Redis. Tests whether accumulated token mass from drift turns drags in noise beliefs.",
+    "turns": [
+      {
+        "turnIndex": 0,
+        "label": "establishes_topic",
+        "scope": ["domain:code"],
+        "userMessage": "I'm seeing high cache miss rates on our Redis instance. The hit ratio dropped from 94% to about 71% over the last week and I'm not sure if it's a traffic pattern change or if we need to rethink our key structure. We're using the single-node setup with the default eviction policy. Can you help me think through what might be happening?",
+        "assistantMessage": "A drop from 94% to 71% on a single-node Redis instance usually points to one of three things: working set growth exceeding maxmemory, a change in access patterns that defeats LRU, or key TTLs expiring in bulk due to a deployment that reset them simultaneously.\n\nSince you're on the default eviction policy (volatile-lru), only keys with an explicit TTL are candidates for eviction. If your working set grew but the new keys don't have TTLs, Redis won't evict anything — it'll just reject writes once maxmemory is hit, which would show up as OOM errors in your logs rather than a gradual hit-ratio decline.\n\nThe more likely explanation for a gradual decline: your access pattern shifted. If a new feature started writing keys that get read once and then age out, they're consuming memory that used to hold hot keys. The LRU approximation (Redis samples 5 keys by default) might not be aggressive enough to catch this.\n\nFirst diagnostic step: run `redis-cli info stats` and check `evicted_keys`. If that number is climbing, you're hitting maxmemory and the eviction policy is actively working. If it's flat, you're not evicting — you're just missing because the keys were never there or expired naturally.\n\nWant me to walk through the key-structure analysis next, or should we look at whether allkeys-lru would be a better fit for your access pattern?",
+        "turnSignal": "substantive",
+        "topics": ["redis-cache-performance"],
+        "expect": {
+          "relevantBeliefs": { "shouldOnlyInclude": ["b-redis-code"] },
+          "topicRetrieval": { "shouldRetrieveTurns": [] }
+        }
+      },
+      {
+        "turnIndex": 1,
+        "label": "drift",
+        "scope": ["domain:code"],
+        "userMessage": "Actually before we go deeper on that — quick context switch. We had a production incident last night where one of our Kubernetes pods got stuck in CrashLoopBackOff and the team spent 45 minutes debugging it before realizing the liveness probe was hitting an endpoint that depended on an external service being up. I want to rethink our probe strategy. Right now we have liveness and readiness probes on every service pointing at /health, which does a full dependency check. Should we split those?",
+        "assistantMessage": "Yes, split them. The fundamental issue is that liveness and readiness probes answer different questions, and conflating them causes exactly what you saw.\n\nLiveness answers: \"Is this process fundamentally broken and needs a restart?\" It should check only process-internal health — can the event loop respond, is the main thread alive, has memory exceeded a fatal threshold. If a liveness probe fails, Kubernetes kills the pod. You never want that triggered by a downstream dependency being slow.\n\nReadiness answers: \"Can this pod serve traffic right now?\" This is where dependency checks belong. If Redis is down or the database connection pool is exhausted, the pod is alive but shouldn't receive requests. Kubernetes removes it from the Service endpoints but doesn't restart it.\n\nHere's the pattern I'd recommend for your Fastify services:\n\n```typescript\n// Liveness: process-internal only\napp.get('/healthz', async () => ({ status: 'alive' }));\n\n// Readiness: dependency-aware\napp.get('/ready', async () => {\n  const checks = await Promise.allSettled([\n    db.command({ ping: 1 }),\n    redis.ping(),\n  ]);\n  const failed = checks.filter(c => c.status === 'rejected');\n  if (failed.length > 0) {\n    throw app.httpErrors.serviceUnavailable();\n  }\n  return { status: 'ready' };\n});\n```\n\nFor the Helm chart, set the liveness probe with a higher failure threshold (3-5 failures before restart) and the readiness probe with aggressive timing (check every 5s, fail after 1). This way a momentary downstream blip removes the pod from traffic without killing it.\n\nOne nuance: if the external service your liveness probe was checking is something the pod literally cannot function without (like its own database), you might want a startup probe instead — it runs only during boot, gives the pod time to establish connections, and then hands off to liveness/readiness. That prevents CrashLoopBackOff during slow cold starts.\n\nWant me to draft the Helm values for all three probe types?",
+        "turnSignal": "substantive",
+        "topics": ["kubernetes-probes"],
+        "expect": {
+          "relevantBeliefs": { "shouldOnlyInclude": ["b-kubernetes-entity"] }
+        }
+      },
+      {
+        "turnIndex": 2,
+        "label": "drift",
+        "scope": ["domain:code"],
+        "userMessage": "Yeah let's do that later. Related question though — on the React side, we have a dashboard that shows pod health status in real-time via a WebSocket connection. The problem is when the WebSocket drops, the UI just shows stale data with no indication that it's disconnected. I want to add a connection-state indicator and automatic reconnection with exponential backoff. We're using TanStack Query for everything else but I'm not sure if it handles WebSocket lifecycle or if I need something separate.",
+        "assistantMessage": "TanStack Query doesn't manage WebSocket lifecycle directly — it's built around request/response semantics (fetch, cache, invalidate). For persistent connections you need a separate layer that feeds updates into TanStack Query's cache.\n\nThe cleanest pattern with your stack (React 18 + TanStack Query + Tailwind) is a custom hook that owns the WebSocket connection and pushes updates into the query cache via `queryClient.setQueryData`. This keeps your components consuming data through the same TanStack Query hooks they use for REST endpoints — they don't know or care whether the data came from a fetch or a socket.\n\nHere's the architecture:\n\n```typescript\nimport { useEffect, useRef, useState } from 'react';\nimport { useQueryClient } from '@tanstack/react-query';\n\ntype ConnectionState = 'connecting' | 'connected' | 'disconnected' | 'reconnecting';\n\ninterface UseWebSocketOpts {\n  url: string;\n  queryKey: readonly string[];\n  maxRetries?: number;\n  baseDelayMs?: number;\n}\n\nexport function usePodHealthSocket(opts: UseWebSocketOpts) {\n  const { url, queryKey, maxRetries = 8, baseDelayMs = 1000 } = opts;\n  const queryClient = useQueryClient();\n  const [connectionState, setConnectionState] = useState<ConnectionState>('connecting');\n  const retriesRef = useRef(0);\n  const wsRef = useRef<WebSocket | null>(null);\n  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();\n\n  useEffect(() => {\n    function connect() {\n      setConnectionState(retriesRef.current === 0 ? 'connecting' : 'reconnecting');\n      const ws = new WebSocket(url);\n      wsRef.current = ws;\n\n      ws.onopen = () => {\n        retriesRef.current = 0;\n        setConnectionState('connected');\n      };\n\n      ws.onmessage = (event) => {\n        const data = JSON.parse(event.data);\n        queryClient.setQueryData(queryKey, data);\n      };\n\n      ws.onclose = () => {\n        setConnectionState('disconnected');\n        if (retriesRef.current < maxRetries) {\n          const delay = baseDelayMs * Math.pow(2, retriesRef.current);\n          const jitter = delay * (0.5 + Math.random() * 0.5);\n          timeoutRef.current = setTimeout(() => {\n            retriesRef.current++;\n            connect();\n          }, jitter);\n        }\n      };\n\n      ws.onerror = () => ws.close();\n    }\n\n    connect();\n    return () => {\n      clearTimeout(timeoutRef.current);\n      wsRef.current?.close();\n    };\n  }, [url, queryKey, queryClient, maxRetries, baseDelayMs]);\n\n  return { connectionState };\n}\n```\n\nFor the UI indicator, a small Tailwind badge in the dashboard header:\n\n```typescript\nconst STATE_STYLES: Record<ConnectionState, string> = {\n  connected: 'bg-green-500',\n  connecting: 'bg-yellow-500 animate-pulse',\n  reconnecting: 'bg-yellow-500 animate-pulse',\n  disconnected: 'bg-red-500',\n};\n\nexport function ConnectionBadge({ state }: { state: ConnectionState }) {\n  return (\n    <span className={`inline-block h-2 w-2 rounded-full ${STATE_STYLES[state]}`} />\n  );\n}\n```\n\nThe exponential backoff with jitter prevents thundering herd if all connected clients lose the socket simultaneously (e.g., during a pod restart). The `maxRetries` cap prevents infinite reconnection attempts if the backend is genuinely down.\n\nOne thing to watch: if the WebSocket reconnects after being down for a while, the first message might be a partial state. You might want the server to send a full snapshot on connection and then switch to deltas. That way `setQueryData` always has complete data regardless of when the client reconnected.",
+        "turnSignal": "substantive",
+        "topics": ["react-websocket-dashboard"],
+        "expect": {
+          "relevantBeliefs": { "shouldOnlyInclude": ["b-react-entity"] }
+        }
+      },
+      {
+        "turnIndex": 3,
+        "label": "drift",
+        "scope": ["domain:code"],
+        "userMessage": "Good approach. Switching topics again — we're having a debate on the team about error handling in our data access layer. Some people want to use try/catch everywhere and let exceptions bubble up to a global error handler in Fastify. Others (including me) want explicit Result types that force callers to handle the error case. The argument against Result types is that they're verbose and TypeScript doesn't have pattern matching. The argument for them is that you can't accidentally forget to handle an error. Where do you land on this for our stack?",
+        "assistantMessage": "You already know where I land — you prefer explicit error returns, and I think that's the right call for your stack specifically. But let me steelman the opposition and then explain why I still think they're wrong here.\n\nThe try/catch camp has a point about verbosity. In a language with pattern matching (Rust, Kotlin), Result types are ergonomic. In TypeScript, you end up with:\n\n```typescript\nconst [err, user] = await userRepo.findById(id);\nif (err) {\n  // handle\n  return;\n}\n// use user\n```\n\nOr the discriminated union style:\n\n```typescript\ntype Result<T, E = Error> = \n  | { ok: true; value: T }\n  | { ok: false; error: E };\n\nconst result = await userRepo.findById(id);\nif (!result.ok) {\n  // handle\n  return;\n}\n// result.value is narrowed to T\n```\n\nThe second form is better because TypeScript's control flow analysis narrows it automatically. You get compile-time safety without pattern matching.\n\nHere's why the global-error-handler approach is worse for your codebase specifically:\n\n1. **You're using Fastify.** Fastify's error handler is per-route, not truly global. An unhandled throw in a deeply nested async call produces a 500 with a generic error shape. You lose the ability to return domain-specific error responses (409 Conflict, 422 Unprocessable) without catching at every layer anyway.\n\n2. **You're using the MongoDB raw driver.** The raw driver throws for everything — network timeouts, duplicate keys, validation failures. These are semantically different errors that deserve different handling. A global catch treats them identically.\n\n3. **Composition over inheritance.** Your factory-function pattern means errors need to flow through return values naturally. You can't rely on class hierarchy to carry error context up the stack.\n\nMy recommendation: define a `Result<T, E>` type in a shared utility, use it at the repository boundary (where IO happens), and let pure business logic above that layer work with unwrapped values. The boundary is where errors are born; that's where they should be named and typed.\n\n```typescript\n// shared/result.ts\nexport type Result<T, E = AppError> =\n  | { ok: true; value: T }\n  | { ok: false; error: E };\n\nexport const ok = <T>(value: T): Result<T, never> => ({ ok: true, value });\nexport const fail = <E>(error: E): Result<never, E> => ({ ok: false, error });\n```\n\nThe team's verbosity concern is real but manageable. A `pipe()` utility that short-circuits on error makes chains readable without nested if-checks. Want me to sketch that?",
+        "turnSignal": "substantive",
+        "topics": ["error-handling-team-debate"],
+        "expect": {
+          "relevantBeliefs": {
+            "shouldOnlyInclude": [
+              "b-error-handling",
+              "b-ts-pref",
+              "b-fastify-pref"
+            ]
+          }
+        }
+      },
+      {
+        "turnIndex": 4,
+        "label": "drift",
+        "scope": ["domain:code"],
+        "userMessage": "No that's good, I'll share that with the team. Different thing — our GitHub Actions CI pipeline is taking 14 minutes on average and the team is complaining. The main bottleneck seems to be the test suite which runs all integration tests sequentially. We have about 180 integration tests that each spin up a test database. I'm thinking about parallelizing them but I'm worried about port conflicts and shared state. We're on GitHub-hosted runners. What's the best approach?",
+        "assistantMessage": "14 minutes is painful for a feedback loop. The good news is that integration test parallelization on GitHub Actions is a solved problem — you just need to pick the right level of parallelism.\n\nYou have three options, from least to most effort:\n\n**Option 1: Parallel jobs with matrix strategy (recommended)**\n\nSplit your 180 tests into N shards, run each shard as a separate job. Each job gets its own runner, its own network namespace, no port conflicts possible.\n\n```yaml\nstrategy:\n  matrix:\n    shard: [0, 1, 2, 3]\n  fail-fast: false\n\nsteps:\n  - uses: actions/checkout@v4\n  - run: |\n      npx vitest run \\\n        --shard=${{ matrix.shard + 1 }}/4 \\\n        --reporter=json \\\n        --outputFile=results-${{ matrix.shard }}.json\n```\n\nVitest's built-in `--shard` flag handles splitting deterministically. 180 tests across 4 shards ≈ 45 tests per runner. If each test takes ~4.5s on average (180 × 4.5s = 810s ≈ 13.5min), you'd drop to ~3.5 minutes per shard plus setup overhead.\n\n**Option 2: In-process parallelism with isolated databases**\n\nIf you want to stay in a single job, use Vitest's `--pool=forks` with `--poolOptions.forks.maxForks=4` and give each fork a unique database name:\n\n```typescript\n// globalSetup.ts\nconst dbName = `test_${process.env.VITEST_POOL_ID ?? 'default'}`;\n```\n\nThis avoids port conflicts because each fork connects to the same MongoDB instance but uses a different database. You're already using the raw driver, so switching the database name per-fork is trivial.\n\n**Option 3: Testcontainers with dynamic ports**\n\nEach test file spins up its own MongoDB container on a random port. Maximum isolation, but adds ~2s per container startup. With 180 tests that's 6 minutes just in container boot — worse than what you have.\n\nI'd go with Option 1. The matrix approach is the most GitHub Actions-native solution, gives you the best wall-clock improvement, and the sharding is deterministic so flaky-test detection still works. The only downside is you'll burn 4× the runner minutes (but wall-clock drops 4×).\n\nOne optimization: add a `setup` job that builds and caches `node_modules` + the compiled output, then have each shard job restore from cache. That prevents all 4 shards from running `npm ci` independently:\n\n```yaml\njobs:\n  setup:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-node@v4\n      - run: npm ci\n      - uses: actions/cache/save@v4\n        with:\n          path: |\n            node_modules\n            dist\n          key: build-${{ hashFiles('package-lock.json') }}-${{ github.sha }}\n\n  test:\n    needs: setup\n    strategy:\n      matrix:\n        shard: [0, 1, 2, 3]\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/cache/restore@v4\n        with:\n          key: build-${{ hashFiles('package-lock.json') }}-${{ github.sha }}\n      - run: npx vitest run --shard=${{ matrix.shard + 1 }}/4\n```\n\nThat should get you from 14 minutes to ~4-5 minutes total including setup. Want me to look at any other bottlenecks in the pipeline?",
+        "turnSignal": "substantive",
+        "topics": ["ci-pipeline-performance"],
+        "expect": {
+          "relevantBeliefs": { "shouldOnlyInclude": ["b-ci-gha-entity"] }
+        },
+        "createBeliefAtTurn": {
+          "_id": "b-ci-parallel-decision",
+          "user_id": "test-user",
+          "type": "decision",
+          "canonical_name": "ci_parallel_tests",
+          "aliases": [
+            "parallel tests",
+            "matrix strategy",
+            "test parallelization",
+            "sequential tests"
+          ],
+          "content": "Decided to parallelize integration tests using GitHub Actions matrix strategy with per-job ephemeral databases.",
+          "why_it_matters": "Shapes CI/CD suggestions — test parallelization approach is settled; prevents re-litigating sequential test runs.",
+          "scope": ["domain:code"],
+          "epistemic_status": "active",
+          "confidence": 0.9,
+          "pinned": false,
+          "reinforcement_count": 1,
+          "last_reinforced_at": "2026-10-07T00:00:00Z",
+          "user_edited": false,
+          "resolved_at": null,
+          "superseded_by": null,
+          "created_at": "2026-10-07T00:00:00Z",
+          "updated_at": "2026-10-07T00:00:00Z",
+          "change_log": [],
+          "provenance": {
+            "session_id": "session-drift-eval",
+            "turn_id": "turn-4",
+            "extracted_at": "2026-10-07T00:00:00Z",
+            "source_model": "eval-synthetic"
+          }
+        }
+      },
+      {
+        "turnIndex": 5,
+        "label": "drift",
+        "scope": ["domain:code"],
+        "userMessage": "That's great, I'll try the matrix approach. Hey one more unrelated thing — we're about to start building the auth service and I need to make a decision on the session token format. I know we've been going back and forth on JWT vs opaque session tokens. The new constraint is that we need to support token revocation within 30 seconds (compliance requirement). JWTs are stateless which is their whole point, so revocation means either short-lived tokens with refresh rotation or a revocation list that every service checks. Opaque tokens are naturally revocable since they're just a lookup key. But then every API call requires a round-trip to the session store. Given our setup, which way should we lean?",
+        "assistantMessage": "This is the auth strategy question you've been sitting on. The 30-second revocation constraint is the deciding factor — let me work through both paths with that constraint applied.\n\n**JWT with short expiry + refresh rotation:**\n- Set access token TTL to 30 seconds (meets revocation SLA by expiry)\n- Refresh tokens stored server-side, revocable instantly\n- Problem: 30-second access tokens mean your refresh endpoint gets hit constantly. With 10k concurrent users, that's ~333 refresh requests/second. Your auth service becomes a high-throughput token mint.\n- Worse: if the refresh endpoint is down for even 30 seconds, every user's session dies simultaneously.\n\n**JWT with revocation list:**\n- Longer access token TTL (5-15 minutes)\n- Broadcast revocation events to all services (Redis pub/sub or similar)\n- Each service maintains an in-memory deny list\n- Problem: you need every service to subscribe to revocation events AND guarantee delivery within 30 seconds. If a service misses an event, a revoked token is still valid there until natural expiry. This is eventually consistent, and your compliance requirement sounds like it needs strong consistency.\n\n**Opaque tokens with session store lookup:**\n- Every API call does: `GET /sessions/{token}` → returns user context or 401\n- Revocation is instant: delete the session record\n- Round-trip cost: if the session store is your Redis instance (single-node, same VPC), lookup latency is <1ms. The network hop to Redis is already in your request path for rate limiting.\n- Scalability: Redis handles 100k+ ops/sec on a single node. Session lookups are O(1) key fetches.\n\nGiven your constraints, I'd lean opaque tokens. Here's why specifically for your stack:\n\n1. **You already have Redis in the request path** for rate limiting. Adding a session lookup is marginal cost — you're already paying the network hop.\n2. **Single-node Redis** means no replication lag on revocation. Delete the key, it's gone, every subsequent lookup sees it immediately. Strong consistency for free.\n3. **30-second revocation** with JWTs requires either unacceptably short TTLs or a distributed revocation system that's more complex than a session store would be.\n4. **Kubernetes on EKS** means your services are in the same VPC as Redis. Sub-millisecond lookups.\n\nThe main risk: Redis becomes a SPOF for all authenticated requests. If Redis goes down, nobody can authenticate. Mitigation: your readiness probe (from earlier) should check Redis connectivity, so pods that can't reach Redis get pulled from traffic automatically.\n\nThis doesn't fully resolve your open question — you still need to decide the token format, rotation policy, and whether the session store is the same Redis instance or a dedicated one. But the architecture direction should be opaque tokens backed by Redis.\n\nWant me to sketch the session schema and the lookup middleware?",
+        "turnSignal": "substantive",
+        "topics": ["auth-token-decision"],
+        "expect": {
+          "openQuestions": { "mustInclude": ["b-auth-open-q"] },
+          "relevantBeliefs": {
+            "shouldOnlyInclude": ["b-auth-depends-redis", "b-redis-code"]
+          }
+        }
+      },
+      {
+        "turnIndex": 6,
+        "label": "drift",
+        "scope": ["domain:code"],
+        "userMessage": "Good analysis. I'm leaning opaque too. Let me sit on it over the weekend. Completely different topic — I've been thinking about our data transformation pipeline. We have a bunch of ETL-style jobs that read from MongoDB, transform the data, and write it back. Right now they're written as imperative for-loops with a lot of intermediate variables. I want to refactor them to be more functional. The transforms are things like: filter out inactive users, enrich with external data, compute aggregates, format for the downstream API. Each step is independent. What's the cleanest way to compose these with our pipe() pattern?",
+        "assistantMessage": "This is a perfect fit for your functional pipeline preference. Each transform is a pure function `(input: T[]) → T[]` (or `→ U[]` when the shape changes), and they compose naturally with `pipe()`.\n\nHere's the pattern, using a type-safe pipe that preserves the type through each stage:\n\n```typescript\n// pipe.ts — already in your shared utils presumably\nexport function pipe<A>(a: A): A;\nexport function pipe<A, B>(a: A, ab: (a: A) => B): B;\nexport function pipe<A, B, C>(a: A, ab: (a: A) => B, bc: (b: B) => C): C;\nexport function pipe<A, B, C, D>(\n  a: A, ab: (a: A) => B, bc: (b: B) => C, cd: (c: C) => D\n): D;\nexport function pipe(initial: unknown, ...fns: Array<(x: unknown) => unknown>) {\n  return fns.reduce((acc, fn) => fn(acc), initial);\n}\n```\n\nNow your ETL job becomes:\n\n```typescript\nimport { pipe } from '../shared/pipe.js';\nimport type { Collection } from 'mongodb';\n\ninterface RawUser {\n  _id: string;\n  email: string;\n  status: 'active' | 'inactive' | 'suspended';\n  lastLoginAt: Date;\n  orgId: string;\n}\n\ninterface EnrichedUser extends RawUser {\n  org: { name: string; plan: string };\n}\n\ninterface UserAggregate {\n  orgId: string;\n  orgName: string;\n  activeCount: number;\n  lastActivity: Date;\n}\n\n// Each transform is a named, testable function\nconst filterActive = (users: RawUser[]): RawUser[] =>\n  users.filter(u => u.status === 'active');\n\nconst enrichWithOrg = (orgLookup: Map<string, { name: string; plan: string }>) =>\n  (users: RawUser[]): EnrichedUser[] =>\n    users.map(u => ({ ...u, org: orgLookup.get(u.orgId)! }));\n\nconst aggregateByOrg = (users: EnrichedUser[]): UserAggregate[] => {\n  const groups = Map.groupBy(users, u => u.orgId);\n  return [...groups.entries()].map(([orgId, members]) => ({\n    orgId,\n    orgName: members[0].org.name,\n    activeCount: members.length,\n    lastActivity: new Date(Math.max(...members.map(u => u.lastLoginAt.getTime()))),\n  }));\n};\n\nconst formatForApi = (aggregates: UserAggregate[]) =>\n  aggregates.map(a => ({\n    organization_id: a.orgId,\n    organization_name: a.orgName,\n    active_user_count: a.activeCount,\n    last_activity_iso: a.lastActivity.toISOString(),\n  }));\n\n// The pipeline reads top-to-bottom\nexport async function runUserAggregationJob(\n  users: Collection<RawUser>,\n  orgLookup: Map<string, { name: string; plan: string }>,\n) {\n  const raw = await users.find({}).toArray();\n\n  const output = pipe(\n    raw,\n    filterActive,\n    enrichWithOrg(orgLookup),\n    aggregateByOrg,\n    formatForApi,\n  );\n\n  return output;\n}\n```\n\nKey things this gives you:\n\n1. **Each transform is unit-testable in isolation** — no database, no side effects, just input → output.\n2. **The pipeline is readable** — you scan the `pipe()` call and see the data flow without tracing through intermediate variables.\n3. **Adding a step is inserting a line**, not restructuring control flow.\n4. **Type safety flows through** — if `enrichWithOrg` returns `EnrichedUser[]`, the next function must accept that type.\n\nFor async transforms (like the enrichment step if it needs to call an external API), you'd need an async pipe variant:\n\n```typescript\nexport async function pipeAsync<A, B>(\n  a: A,\n  ...fns: Array<(x: any) => any | Promise<any>>\n): Promise<B> {\n  let result: any = a;\n  for (const fn of fns) {\n    result = await fn(result);\n  }\n  return result;\n}\n```\n\nThe tradeoff: async pipes are less type-safe because TypeScript can't infer through arbitrary-length `Promise` unwrapping in rest parameters. For your case, if only one step is async, I'd pull it out, await it, and feed the result into a synchronous pipe for the rest. Keeps the type narrowing intact.\n\nWant me to look at a specific job from your codebase, or is this pattern enough to refactor from?",
+        "turnSignal": "substantive",
+        "topics": ["functional-etl-pipeline"],
+        "expect": {
+          "relevantBeliefs": {
+            "shouldOnlyInclude": ["b-functional-pipeline", "b-mongo-raw-driver"]
+          }
+        }
+      },
+      {
+        "turnIndex": 7,
+        "label": "drift",
+        "scope": ["domain:code"],
+        "userMessage": "Pattern's enough, thanks. Oh wait — I forgot to ask. We got a Biome update notification and it's introducing a new rule that conflicts with one of our existing overrides. The rule is `noExplicitAny` which we already enforce via TypeScript's strict mode. Biome wants to flag it separately with its own error message. Should we disable the Biome rule since TS already catches it, or keep both for defense in depth? Also, is there a way to suppress Biome warnings inline without the ugly ignore comments? the test suite is still slow even after we split the jobs — should we add caching for the database containers?",
+        "assistantMessage": "Disable the Biome rule. Defense in depth doesn't apply here — these aren't independent checks catching different things. TypeScript's `noImplicitAny` in strict mode and Biome's `noExplicitAny` are catching literally the same code patterns. Running both means:\n\n1. Duplicate error messages in CI output (confusing for the team)\n2. Two different suppression mechanisms if you ever need a legitimate `any` (TypeScript's `// @ts-expect-error` vs Biome's `// biome-ignore`)\n3. Potential for the rules to drift in edge cases as Biome evolves independently\n\nSince TypeScript is your source of truth for type safety (strict mode, no implicit any), let it own that domain entirely. Biome should focus on what it does better than TypeScript: formatting, import organization, and lint rules that TypeScript doesn't cover (like `noConsoleLog`, `useExhaustiveDeps`, etc.).\n\nTo disable it in your `biome.json`:\n\n```json\n{\n  \"linter\": {\n    \"rules\": {\n      \"suspicious\": {\n        \"noExplicitAny\": \"off\"\n      }\n    }\n  }\n}\n```\n\nRegarding inline suppression — Biome supports:\n\n```typescript\n// biome-ignore lint/suspicious/noExplicitAny: reason here\nconst cache: Map<string, any> = new Map();\n```\n\nThere's no way to avoid the comment-based syntax; Biome doesn't support directive-style suppression like ESLint's `/* eslint-disable */` block form. The `// biome-ignore` comment is the only mechanism.\n\nIf you find yourself needing inline suppressions frequently, that's usually a signal that the rule doesn't fit your codebase and should be disabled globally rather than suppressed per-line. Since you're already disabling `noExplicitAny` for the reason above, this shouldn't come up for that rule specifically.\n\nOne thing to watch on the update: check if the new Biome version changed any default-on rules. They occasionally promote \"recommended\" rules to \"all\" or change severity levels between minor versions. Run `biome check --changed` against your codebase before merging the update to catch surprises.",
+        "turnSignal": "substantive",
+        "topics": ["biome-linting-config"],
+        "expect": {
+          "pinnedFacts": { "mustInclude": ["b-linting-current"] },
+          "relevantBeliefs": {
+            "shouldOnlyInclude": ["b-ts-pref", "b-error-handling"]
+          }
+        }
+      },
+      {
+        "turnIndex": 8,
+        "label": "drift",
+        "scope": ["domain:code"],
+        "userMessage": "Makes sense, I'll disable it. Last thing before I circle back to something from earlier — we're thinking about adding a base class for all our repository implementations. The idea is to put common methods like findById, insertOne, updateOne into an abstract base class and have each concrete repository extend it. The team likes it because it reduces boilerplate. I'm skeptical. What do you think?",
+        "assistantMessage": "I think you already know what I think, and you're right to be skeptical.\n\nA base class for repositories is the classic inheritance trap that looks good in week one and becomes a liability by month three. Here's what happens:\n\n1. **Week 1:** `BaseRepository<T>` has `findById`, `insertOne`, `updateOne`. Clean, DRY, the team is happy.\n\n2. **Month 1:** The user repository needs soft-delete. You add `softDelete` to the base class with a default implementation. The audit-log repository doesn't support soft-delete. Now you're either throwing `NotImplemented` from the base (violating LSP) or adding a `supportsSoftDelete` flag (feature flags on an abstract class — bad sign).\n\n3. **Month 3:** The analytics repository needs batch inserts with different write concern. The session repository needs TTL-based expiry logic in its insert. The base class `insertOne` signature doesn't accommodate either. You're overriding methods that exist only to be overridden — the base class is no longer reducing boilerplate, it's generating workarounds.\n\n4. **Month 6:** Someone needs to compose two repositories in a transaction. The base class methods don't thread a session parameter. Retrofitting it means changing the base class signature, which means touching every concrete implementation. The \"reduced boilerplate\" has become a coupling point.\n\nYour existing pattern — factory functions returning plain objects — already solves the boilerplate problem without these risks:\n\n```typescript\n// The \"base\" is just a factory helper, not an inheritance hierarchy\nfunction makeBaseOps<T extends Document>(col: Collection<T>) {\n  return {\n    async findById(id: string, ctx?: { session?: ClientSession }) {\n      const doc = await col.findOne(\n        { _id: new ObjectId(id) } as Filter<T>,\n        { session: ctx?.session },\n      );\n      return doc ?? null;\n    },\n    async insertOne(data: OptionalUnlessRequiredId<T>, ctx?: { session?: ClientSession }) {\n      const result = await col.insertOne(data, { session: ctx?.session });\n      return result.insertedId;\n    },\n  };\n}\n\n// Each repository composes what it needs\nexport function makeUserRepository(db: Db) {\n  const col = db.collection<UserDoc>('users');\n  const base = makeBaseOps(col);\n\n  return {\n    ...base,\n    async findByEmail(email: string) {\n      return col.findOne({ email });\n    },\n    async softDelete(id: string) {\n      await col.updateOne(\n        { _id: new ObjectId(id) },\n        { $set: { deletedAt: new Date() } },\n      );\n    },\n  };\n}\n```\n\nThis gives you:\n- **Composition without inheritance** — spread what you need, leave what you don't\n- **No LSP violations** — each repository's type is exactly its capabilities\n- **Session threading for free** — the `ctx` parameter is in the helper, not bolted on later\n- **Testability** — you can mock individual methods without mocking a class hierarchy\n\nThe team's boilerplate concern is real but the solution is composition (shared helper functions) not inheritance (abstract base classes). Push back on this one.",
+        "turnSignal": "substantive",
+        "topics": ["repository-design-patterns"],
+        "expect": {
+          "relevantBeliefs": {
+            "shouldOnlyInclude": ["b-composition-inheritance"]
+          }
+        }
+      },
+      {
+        "turnIndex": 9,
+        "label": "implicit_continuation",
+        "scope": ["domain:code"],
+        "userMessage": "Ok circling back to what we were talking about at the start...",
+        "assistantMessage": "",
+        "turnSignal": "substantive",
+        "topics": ["redis-cache-performance"],
+        "updateBeliefAtTurn": {
+          "beliefId": "b-redis-code",
+          "addAliases": [
+            "allkeys-lru",
+            "eviction policy",
+            "maxmemory",
+            "eviction sweeps",
+            "volatile-lru"
+          ],
+          "_note": "Merge worker collapses turn 9 extraction into b-redis-code. These surface forms are now indexed."
+        },
+        "expect": {
+          "pinnedFacts": { "mustInclude": ["b-linting-current"] },
+          "relevantBeliefs": { "shouldOnlyInclude": [] },
+          "noiseCheck": {
+            "mustNotSurface": [
+              "b-kubernetes-entity",
+              "b-ci-gha-entity",
+              "b-react-entity",
+              "b-composition-inheritance",
+              "b-error-handling",
+              "b-functional-pipeline"
+            ]
+          }
+        }
+      },
+      {
+        "turnIndex": 10,
+        "label": "re_entry",
+        "scope": ["domain:code"],
+        "userMessage": "One more thing on the allkeys-lru decision — what is the difference between allkeys-lru and allkeys-lfu and when would you prefer lfu?",
+        "assistantMessage": "",
+        "turnSignal": "substantive",
+        "topics": ["redis-cache-performance"],
+        "expect": {
+          "relevantBeliefs": {
+            "pinnedFacts": { "mustInclude": ["b-linting-current"] },
+            "shouldOnlyInclude": ["b-redis-code"],
+            "_note": "allkeys-lru is now indexed as an alias on b-redis-code following turn 9 updateBeliefAtTurn. This turn validates the alias enrichment flywheel produced a retrievable belief."
+          },
+          "noiseCheck": {
+            "mustNotSurface": [
+              "b-kubernetes-entity",
+              "b-ci-gha-entity",
+              "b-react-entity",
+              "b-composition-inheritance",
+              "b-error-handling",
+              "b-functional-pipeline",
+              "b-ci-parallel-decision"
+            ]
+          }
+        }
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "caseId": "cross-session-formative-turn-surfaces-via-belief-join",
+    "description": "Implicit reference to prior-session topic — b-redis-code surfaces on eviction query without naming Redis. Also verifies b-ci-parallel-decision (created in prior case) is now in the index and does NOT surface on an unrelated query.",
+    "turns": [
+      {
+        "turnIndex": 0,
+        "label": "implicit_continuation",
+        "scope": ["domain:code"],
+        "userMessage": "Hey, remember that eviction issue we were debugging? I want to switch to allkeys-lru. What should I set maxmemory to given we have 2GB available?",
+        "assistantMessage": "",
+        "turnSignal": "substantive",
+        "topics": ["redis-cache-performance"],
+        "expect": {
+          "relevantBeliefs": {
+            "shouldOnlyInclude": ["b-redis-code"]
+          },
+          "noiseCheck": {
+            "mustNotSurface": ["b-ci-parallel-decision"]
+          }
+        }
+      }
+    ],
+    "notes": "Depends on b-ci-parallel-decision being in the index from the prior case. The noiseCheck verifies it does not bleed into an unrelated eviction query."
+  }
+]
