@@ -49,6 +49,19 @@ result JSONs).
 > (unreleased as of this entry — `bun link` a local gbrain checkout until it
 > merges to `gbrain` master). The other three modes run on `gbrain` master.
 
+### Fixed
+
+- Committed the backing result JSONs for the report's headline (adaptive
+  tight, 0.582 / 29 / 44-of-77) and shipped-default rows — both were quoted
+  in the report without a reproducible artifact. The tight config reproduces
+  the headline exactly; the shipped-default row was reconciled to its real
+  run (0.16 / 1 active / 8-of-77).
+- Corrected the vendored scorer's `Belief` type import to the co-located
+  `./belief.js` (was the upstream `../types/` layout path; documented in
+  ATTRIBUTION.md).
+- Scoped the gold-template schema test to canonical templates so a
+  colocated subset fixture no longer trips the exact-set assertion.
+
 ### Also
 
 - Hermetic baseline + qrels for the `gbrain eval gate` (v0.41-launch work,
