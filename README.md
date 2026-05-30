@@ -97,8 +97,13 @@ takeaways:
    clear of supermemory (0.43) on both axes at a third of the latency — **#2**
    behind the benchmark author's purpose-built belief store.
 
-It's a narrow lexical probe (35 beliefs, embedding-invariant by design), not a
-measure of what a personal brain is for. Full numbers, caveats, and the
+Worth being clear-eyed about: this is a narrow lexical probe (35 beliefs,
+embedding-invariant by design) that scores a single property. Agentic memory
+needs to be strong across the whole grid — recall, multi-session reasoning,
+temporal and contradiction handling, synthesis at scale — and a system tuned to
+top a precision-only test would be worse at most of that. We optimize for the
+general case (and report the honest 0.076 default to prove it), which is why the
+precision gate is opt-in rather than the default. Full numbers, caveats, and the
 "return-tight beats a score-cliff detector" finding are in the
 [report](docs/benchmarks/2026-05-29-precisionmembench.md).
 

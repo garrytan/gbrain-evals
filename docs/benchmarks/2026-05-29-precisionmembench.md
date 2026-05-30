@@ -31,8 +31,12 @@ aware return-sizing — gbrain reaches **0.582 precision and 29 active passes,
 clear of supermemory on both axes.** That is a solid #2, at a third of
 supermemory's latency.
 
-We did not chase tenure's 1.00. See §9 for why that number is less impressive
-than it looks.
+We did not chase tenure's 1.00, on purpose. This benchmark scores one narrow
+property (exact-ID precision on a 35-belief lexical store), and a system tuned to
+top it would be worse at what agentic memory actually needs: recall, multi-
+session reasoning, temporal and contradiction handling, synthesis at scale. You
+want a memory that is strong across that whole grid, not excellent in one cell.
+§9 makes that case in full.
 
 ## 2. What is gbrain
 
@@ -116,6 +120,22 @@ tenure's 9.8ms reflects a purpose-built BM25 belief store.
 
 ## 9. Limits & caveats (read this before quoting numbers)
 
+**The bigger caveat is what this benchmark is for.** PrecisionMemBench measures
+one property: return the exact right belief ID from a 35-item store and nothing
+else. That is a real property, and it found a real gap in gbrain's default (we
+built a feature from it). But being good *only* at that is the wrong goal for
+agentic memory. A working agent's memory has to not miss the fact (recall),
+reason across many sessions, handle contradictions and time, and hand a
+reasoning loop the relevant cluster rather than one pre-filtered row. A system
+tuned to win this test (return a single belief by lexical match) is actively
+worse at most of that: aggressive precision is a recall tax, and an agent that
+only ever sees one retrieved belief cannot weigh alternatives. That is exactly
+why gbrain's default optimizes for recall and reasoning (and "loses" here at
+0.076), and why the precision gate is opt-in. You do not want a memory that is
+excellent in one narrow way. You want one that is strong across the board:
+recall, precision, temporal reasoning, contradiction handling, synthesis, and
+scale. This benchmark scores a single cell of that grid.
+
 - **Structural categories are harness-computed, not gbrain.** The harness builds
   pinned facts, open questions, and relation expansion from the fixture itself —
   identical for every provider. gbrain's real contribution is only the
@@ -133,15 +153,16 @@ tenure's 9.8ms reflects a purpose-built BM25 belief store.
   whoknows / contradictions?) that is deliberately *not* done here. The
   precision/recall frontier in §5 is the on-surface evidence; the cross-surface
   answer-quality gate is future work.
-- **tenure's 1.00 is overfit.** It is a BM25 belief store tuned to a 35-item
-  lexical corpus, scored on a single `/search` call. That call cannot see
-  gbrain's retrieve→synthesize architecture, and the benchmark measures none of
-  what a personal brain is actually for: breadth, multi-session reasoning,
-  long-context recall, synthesis, calibration. gbrain's results on those live in
-  the LongMemEval and BrainBench reports in this repo. PrecisionMemBench surfaces
-  a real gap — precision isolation is a genuine contribution, and it is why we
-  built the adaptive feature — but a 1.00 on a 35-belief lexical set is a
-  narrow win, not a general one.
+- **tenure's 1.00 is the clean illustration of the narrow-win trap.** A
+  purpose-built BM25 belief store, tuned to its own 35-belief lexical corpus,
+  scored on a single `/search` call that cannot even see a retrieve-then-reason
+  architecture. Impressive on this test; unmeasured on everything a personal
+  brain is actually for. gbrain's general-purpose results live in the LongMemEval
+  (97.60% R@5, SOTA) and BrainBench reports in this repo. Precision isolation is
+  a genuine gap worth probing, which is why we built a feature from it, but a
+  1.00 on a 35-belief lexical set is not a general-purpose memory. We would
+  rather be #2 here and strong everywhere than top this one probe by sacrificing
+  recall and reasoning on real workloads.
 
 ## 10. Reproduction
 
