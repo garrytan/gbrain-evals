@@ -42,6 +42,15 @@ const EXPECTED_GOLD = [
   'citations.json',
 ];
 
+// Files that colocate in eval/data/gold/ but are NOT canonical gold templates
+// (they use their own schema, e.g. `schema_version` instead of the `version`
+// int contract). Excluded from the exact-set + per-template assertions below.
+// brainbench-cat13-embedder-subset.json is a hand-curated query subset for the
+// embedder shootout (added in 89445dd), not a gold-truth template.
+const NON_TEMPLATE_GOLD = [
+  'brainbench-cat13-embedder-subset.json',
+];
+
 describe('eval/schemas — portable JSON schemas', () => {
   test('all expected schema files exist', () => {
     const found = readdirSync(SCHEMAS_DIR).filter(f => f.endsWith('.schema.json')).sort();
@@ -77,7 +86,10 @@ describe('eval/schemas — portable JSON schemas', () => {
 
 describe('eval/data/gold — template files', () => {
   test('all expected gold templates exist', () => {
-    const found = readdirSync(GOLD_DIR).filter(f => f.endsWith('.json')).sort();
+    const found = readdirSync(GOLD_DIR)
+      .filter(f => f.endsWith('.json'))
+      .filter(f => !NON_TEMPLATE_GOLD.includes(f))
+      .sort();
     expect(found).toEqual([...EXPECTED_GOLD].sort());
   });
 
