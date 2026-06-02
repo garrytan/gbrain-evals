@@ -58,13 +58,20 @@ function frontmatter(name: string, trigger: string, body: string): string {
   return `---\nname: ${name}\nversion: 0.1.0\ndescription: ${body.split('\n')[0]?.replace(/^#\s*/, '') ?? name}\ntriggers:\n  - "${trigger}"\nbrain_first: exempt\n---\n\n${body}\n`;
 }
 
+// Judges are deliberately ROBUST so the eval measures the STRUCTURE the optimizer
+// is supposed to add, not an exact-string lottery: `section_present` matches a
+// heading at any depth/case; `regex` checks tolerate case + ':'/'='. Exact
+// `contains` zeroed out correct fixes that wrote "## Key risks" (lowercase r),
+// which made the median-of-3 land at 0 and the validation gate reject real gains.
+// Every seed starts genuinely DEFICIENT (baseline ~0) so there is headroom for
+// the optimizer to demonstrably improve it.
 const SEEDS: Seed[] = [
   {
     // FLAW: never asks for a ## Key Risks section or a Confidence line.
     name: 'seed-missing-structure',
     skill: frontmatter('brief-writer-example', 'write a brief',
       `# Brief Writer\n\nWhen asked, write a short, clear research brief that answers the question.\nKeep it focused and readable. Lead with the answer.`),
-    checks: [{ op: 'contains', arg: '## Key Risks' }, { op: 'contains', arg: 'Confidence:' }],
+    checks: [{ op: 'section_present', arg: 'Key Risks' }, { op: 'regex', arg: '[Cc]onfidence\\s*[:=]' }],
     benchTopics: DECISION_TOPICS,
     heldTopics: HELD_TOPICS,
   },
@@ -72,16 +79,18 @@ const SEEDS: Seed[] = [
     // FLAW: actively encourages length; never bounds it.
     name: 'seed-verbose',
     skill: frontmatter('thorough-analyst-example', 'analyze the decision',
-      `# Thorough Analyst\n\nWhen asked, analyze the decision as thoroughly and completely as you can.\nExplore every angle, consider many scenarios, and be exhaustive and detailed.`),
+      `# Thorough Analyst\n\nWhen asked, analyze the decision as thoroughly and completely as you can.\nExplore every angle, consider many scenarios, and be exhaustive and detailed. Write multiple paragraphs.`),
     checks: [{ op: 'max_chars', arg: 1200 }],
     benchTopics: DECISION_TOPICS,
     heldTopics: HELD_TOPICS,
   },
   {
-    // FLAW: answers straight from model knowledge; never checks the brain first.
+    // FLAW: explicitly answers from model memory and avoids tools, so the
+    // baseline never calls search (headroom to learn brain-first). Earlier seed
+    // wording let the model search anyway → baseline 1.0, nothing to improve.
     name: 'seed-no-brain-first',
     skill: frontmatter('quick-answerer-example', 'answer the question',
-      `# Quick Answerer\n\nWhen asked, answer the question directly from what you know.\nBe fast and concise.`),
+      `# Quick Answerer\n\nAnswer immediately from your own knowledge. Do NOT look anything up, search, or use any tools — just reply directly and concisely from memory.`),
     checks: [{ op: 'tool_called', arg: 'search' }],
     benchTopics: DECISION_TOPICS,
     heldTopics: HELD_TOPICS,
@@ -91,7 +100,7 @@ const SEEDS: Seed[] = [
     name: 'seed-no-verdict',
     skill: frontmatter('advisor-example', 'advise on the decision',
       `# Advisor\n\nWhen asked, discuss the considerations around the decision so the\nreader can make up their own mind.`),
-    checks: [{ op: 'contains', arg: 'Recommendation:' }, { op: 'contains', arg: 'Confidence:' }],
+    checks: [{ op: 'regex', arg: '[Rr]ecommendation\\s*[:=]' }, { op: 'regex', arg: '[Cc]onfidence\\s*[:=]' }],
     benchTopics: DECISION_TOPICS,
     heldTopics: HELD_TOPICS,
   },

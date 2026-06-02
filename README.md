@@ -1,192 +1,188 @@
 # gbrain-evals
 
-**Public, reproducible benchmarks for personal-knowledge agent stacks.** Two
-families: **BrainBench** (our own corpus, the in-house Cat 1–12 suite) and
-**public benchmarks** (LongMemEval today; ConvoMem + LoCoMo on the roadmap).
-[gbrain](https://github.com/garrytan/gbrain) is the reference stack under test,
-but any adapter that implements the interface can be scored.
+The test suite for [gbrain](https://github.com/garrytan/gbrain), the long-term
+memory an AI agent reads from and writes to.
 
-## Headline result
+Everything here is public, runs on your own machine, and can be reproduced from a
+commit hash. We test the whole surface that an agent's memory has to get right,
+not just the one number that looks good in a tweet: finding the relevant thing,
+remembering who's who, keeping time straight, not contradicting itself, citing
+where a fact came from, and staying fast when the brain has hundreds of thousands
+of pages. And we publish the numbers we are not proud of right next to the ones we
+are, because a memory system you are going to build on has to be honest about
+where it is weak.
 
-> **97.60% R@5 on the public LongMemEval `_s` benchmark — SOTA, beating
-> MemPalace's published 96.6% on the same dataset, same K, same n, with no LLM
-> in the retrieval loop.**
-> [Full report →](docs/benchmarks/2026-05-07-longmemeval-s.md)
+If you are deciding whether to trust gbrain with your agent's memory, this repo is
+how you check our work instead of taking our word for it.
 
-Two other numbers that hold against current master:
+## How these benchmarks work (the 60-second version)
 
-- **49.1% P@5 / 97.9% R@5 on BrainBench v1 relational queries** — beats
-  commodity vector RAG by 38 points P@5; the graph layer alone is worth ~30.
-- **Zero retrieval regression across 20 releases** (v0.20.0 → v0.40.6.0),
-  headline numbers byte-identical to baseline.
+A benchmark here is three things:
 
-## Results
+1. **A corpus** — a pile of realistic content (chat logs, meeting notes, emails,
+   biographical pages). Some is a fictional life we generated; some is a public
+   dataset other researchers use.
+2. **Questions with sealed answers** — each question has a known-correct answer
+   that lives in a separate file the system under test never sees. gbrain has to
+   find the answer from the content alone. It cannot peek at the answer key, so it
+   cannot cheat.
+3. **A score** — we run the question, look at what came back, and compare it to
+   the sealed answer.
 
-| Benchmark | gbrain result | Date | Report |
+Two plain-English measures show up everywhere:
+
+- **Recall** — "was the right thing in what we got back?" Recall@5 of 97% means
+  the correct memory was in the top 5 results 97 times out of 100.
+- **Precision** — "of what we got back, how much was actually relevant?" High
+  precision means little junk mixed in.
+
+Most questions want high recall (don't miss the answer). Some want high precision
+(don't bury it). A real memory system has to be good at both, in the right
+proportion for the question being asked. We test for that balance, not for one
+metric at the expense of the other.
+
+## Where gbrain lands today
+
+| What we measured | Result | Plain English | Report |
 |---|---|---|---|
-| **LongMemEval `_s`** (public) | **97.60% R@5 (SOTA)** | 2026-05-07 | [link](docs/benchmarks/2026-05-07-longmemeval-s.md) |
-| v0.40.6.0 snapshot (all evals) | master HEAD | 2026-05-23 | [link](docs/benchmarks/2026-05-23-v0.40.6.0-snapshot.md) |
-| BrainBench v0.20.0 baseline | P@5 49.1% / R@5 97.9% | 2026-04-23 | [link](docs/benchmarks/2026-04-23-brainbench-v0.20.0.md) |
-| BrainBench Cat 13b — Source Swamp | top-1 93.3% | 2026-04-25 | [link](docs/benchmarks/2026-04-25-brainbench-cat13b-source-swamp.md) |
-| PrecisionMemBench (external) | #2 — 0.582 precision w/ opt-in gate | 2026-05-29 | [link](docs/benchmarks/2026-05-29-precisionmembench.md) |
-| Cross-system comparison | living list | — | [link](docs/comparison-systems.md) |
+| **LongMemEval** (public dataset, 500 questions over long chat histories) | **97.6% recall@5** | The right memory is in the top 5 results 97.6% of the time. Best published score on this test, with no LLM in the retrieval loop. | [report](docs/benchmarks/2026-05-07-longmemeval-s.md) |
+| **Relational questions** ("who introduced X to Y?") on a 240-page fictional life | **97.9% recall@5, 49.1% precision@5** | Beats plain vector search by 38 points of precision. The graph layer (who-knows-whom) is worth about 30 of those points on its own. | [report](docs/benchmarks/2026-04-23-brainbench-v0.20.0.md) |
+| **Stability across 20 releases** (v0.20.0 → v0.40.6.0) | **zero regression** | The headline numbers stayed identical, release after release. New features did not quietly make retrieval worse. | [report](docs/benchmarks/2026-05-23-v0.40.6.0-snapshot.md) |
+| **PrecisionMembench** (an outside precision-only test) | **#2, and an honest #1-by-default story** | See the honesty note below. | [report](docs/benchmarks/2026-05-29-precisionmembench.md) |
 
-## Why a separate repo
+A living cross-system comparison lives in
+[docs/comparison-systems.md](docs/comparison-systems.md).
 
-Benchmark corpora (world-v1 + amara-life-v1 ≈ 4MB) shouldn't ship in every
-gbrain install. Clone this when you want to *run* benchmarks against gbrain, not
-to use gbrain as a brain. `gbrain-evals` depends on `gbrain` via its GitHub URL;
-`bun install` pulls it in as a library and evals call its `gbrain/*` subpath
-exports (`pglite-engine`, `search/hybrid`, `operations`, …).
+## We report the bad numbers too
 
-## Quickstart
+The clearest example of how we think is PrecisionMembench, an outside test that
+scores retrieval *precision* only and punishes any system that returns several
+results and lets the model sort them out.
+
+- gbrain's **default** scored **0.076 precision** on it. That looks bad, and we
+  published it. It is bad *on this specific test* because gbrain's default is
+  tuned to never miss the answer (recall stayed at 0.99), which is the right call
+  for the general case.
+- That result prompted a real feature: an opt-in setting that tightens how many
+  results come back when the question wants a single answer. With it on, gbrain
+  reaches **0.582 precision** at a third of the latency of the nearest
+  general-purpose system, second only to a tool purpose-built for that one
+  benchmark.
+
+We left the honest 0.076 default in the README on purpose. A system you build on
+should optimize for the real distribution of questions, not for topping a narrow
+test, and it should tell you plainly when a number comes from a corner case.
+Anti-gaming is built into the harness itself: sealed answer keys at the boundary,
+tolerance bands from repeated runs, pinned judge versions, and randomized
+question order.
+
+## What we test, end to end
+
+Each row is a real test with a committed pass/fail threshold. "Shipping" means it
+runs in CI and gates releases.
+
+| Area | What it checks | Bar | Status |
+|------|----------------|-----|--------|
+| Retrieval | Find the relevant page in rich prose at scale | recall@5 > 0.83 | shipping |
+| Identity | Resolve aliases, handles, emails to one person | recall > 0.80 | shipping |
+| Time | "As of last March", point/range/recency questions | as-of recall > 0.80 | shipping |
+| Provenance | Cite which source a fact came from | accuracy > 0.90 | shipping |
+| Linking | Connect related pages without false links | precision > 0.95 | shipping |
+| Speed | Stay fast under load | p95 < 200ms | shipping |
+| Skills | Agent behaviors do what they claim | all > 0.90 | shipping |
+| Workflows | Full multi-step tasks, judged by rubric | 80% pass | shipping |
+| Robustness | 22 adversarial inputs, never crash or corrupt | 100% | shipping |
+| Multi-modal | Ingest PDF + audio + HTML correctly | text > 0.95, audio WER < 0.15 | shipping |
+| Trust boundary | The agent-facing API can't be tricked into silent corruption | no corruption | shipping |
+
+## Run it yourself
 
 ```sh
 git clone https://github.com/garrytan/gbrain-evals.git
 cd gbrain-evals
-bun install        # pulls gbrain as a library dep
+bun install          # pulls gbrain in as a library
 ```
 
-### LongMemEval (public, 500 questions × 4 adapters)
+**The public dataset (LongMemEval, 500 questions):**
 
 ```sh
 mkdir -p ~/datasets/longmemeval
 curl -Lo ~/datasets/longmemeval/longmemeval_s.json \
   https://huggingface.co/datasets/xiaowu0162/longmemeval/resolve/main/longmemeval_s
 
-export OPENAI_API_KEY="sk-..."         # vector + hybrid adapters
-export ANTHROPIC_API_KEY="sk-ant-..."  # hybrid+expansion adapter only
+export OPENAI_API_KEY="sk-..."         # embeddings
+export ANTHROPIC_API_KEY="sk-ant-..."  # only for the query-expansion variant
 
-bash eval/runner/longmemeval-batch.sh                  # all 4 adapters, parallel, resumable
-bash eval/runner/longmemeval-batch.sh --adapters hybrid
-bun eval/runner/longmemeval.ts --stratify 10           # fast 10-per-type sample
+bash eval/runner/longmemeval-batch.sh         # all variants, parallel, resumable
+bun eval/runner/longmemeval.ts --stratify 10  # fast 10-per-type sample
 ```
 
-First run pays ~$2 in OpenAI embeddings; later runs hit the local
-content-addressed cache (~$0).
+First run costs about $2 in embeddings; later runs hit a local cache and cost
+roughly nothing.
 
-### BrainBench (in-house 240-page fictional life)
+**Our own suite (we call it BrainBench; no API keys, fully offline):**
 
 ```sh
-bun run eval:run                  # full 4-adapter benchmark (N=5, ~15 min, no API keys)
-bun run eval:run:dev              # N=1 smoke
-bun run eval:type-accuracy        # per-link-type accuracy
-bun run eval:world:view           # browse the corpus
+bun run eval:run        # the full retrieval + behavior suite, about 15 min
+bun run eval:run:dev    # one-shot smoke test
+bun run eval:world:view # browse the fictional corpus the tests run against
 ```
 
-## Public benchmarks
-
-| Benchmark | What it tests | gbrain best |
-|---|---|---|
-| **LongMemEval `_s`** | retrieval recall over long chat (500 Q, ~50 distractor sessions) | **97.60% R@5 (SOTA)** |
-| PrecisionMemBench | retrieval *precision* isolation on a 35-belief belief store | #2 (see below) |
-| ConvoMem / LoCoMo | conversational memory at scale / multi-hop | roadmap |
-
-### PrecisionMemBench (external)
-
-[PrecisionMemBench](https://github.com/tenurehq/precisionmembench) isolates
-retrieval *precision* from answer quality on a small structured belief store. We
-ran gbrain against it with Tenure's own scorer vendored verbatim. Two honest
-takeaways:
-
-1. gbrain's **default top-K hybrid scores 0.076 precision** — a precision-only
-   benchmark punishes returning many results and letting a model sort them out
-   (recall stays 0.99). This is expected, and it prompted a real feature.
-2. With **intent-aware adaptive return-sizing** (an opt-in gbrain retrieval
-   feature, default-off), gbrain reaches **0.582 precision / 29 active passes**,
-   clear of supermemory (0.43) on both axes at a third of the latency — **#2**
-   behind the benchmark author's purpose-built belief store.
-
-Worth being clear-eyed about: this is a narrow lexical probe (35 beliefs,
-embedding-invariant by design) that scores a single property. Agentic memory
-needs to be strong across the whole grid — recall, multi-session reasoning,
-temporal and contradiction handling, synthesis at scale — and a system tuned to
-top a precision-only test would be worse at most of that. We optimize for the
-general case (and report the honest 0.076 default to prove it), which is why the
-precision gate is opt-in rather than the default. Full numbers, caveats, and the
-"return-tight beats a score-cliff detector" finding are in the
-[report](docs/benchmarks/2026-05-29-precisionmembench.md).
-
-Run it:
+**The precision test:**
 
 ```sh
-bun eval/runner/precisionmembench.ts --mode gbrain-hybrid     # default baseline (0.076)
-bun eval/runner/precisionmembench.ts --mode gbrain-adaptive --entity-max 1 --other-max 1   # 0.582
-bun eval/runner/precisionmembench-instrument.ts              # policy sweep + cliff read
+bun eval/runner/precisionmembench.ts --mode gbrain-hybrid    # the honest default (0.076)
+bun eval/runner/precisionmembench.ts --mode gbrain-adaptive --entity-max 1 --other-max 1  # 0.582
 ```
 
-`gbrain-adaptive` needs a gbrain build with the `adaptiveReturn` SearchOpt
-(`bun link` a local checkout until it lands on `gbrain` master); the other modes
-run on master.
+## The corpora
 
-## BrainBench Cat catalog
+We test against content we can publish, so anyone can reproduce a result without
+touching private data.
 
-| Cat | Tests | Threshold | Status |
-|-----|-------|-----------|--------|
-| 1+2 | Retrieval (relational, 240-page rich prose) | P@5 > 0.39, R@5 > 0.83 | shipping |
-| 3 | Identity resolution (aliases, handles, emails) | recall > 0.80 | shipping |
-| 4 | Temporal queries (as-of, point, range, recency) | as-of recall > 0.80 | shipping |
-| 5 | Source attribution / provenance | citation_accuracy > 0.90 | shipping |
-| 6 | Auto-link precision under prose at scale | link_precision > 0.95 | shipping |
-| 7 | Performance / latency | p95 < 200ms | shipping |
-| 8 | Skill behavior compliance | all > 0.90 | shipping |
-| 9 | End-to-end workflows (5 × rubric) | 80% pass | shipping |
-| 10 | Robustness / adversarial (22 cases) | 100%, no crash | shipping |
-| 11 | Multi-modal ingest (PDF + audio + HTML) | text > 0.95, WER < 0.15 | shipping |
-| 12 | MCP operation contract (trust boundary) | no silent corruption | shipping |
-
-Cats 5, 8, 9 are programmatic (driven via their `runCatN` harness API, not a CLI
-script).
-
-## The fictional corpus
-
-- **world-v1** (2.0MB, committed): 240 Opus-generated biographical pages (80
-  people, 80 companies, 50 meetings, 30 concepts). Each carries `_facts` gold
-  that never crosses the adapter boundary (sealed-qrels enforcement).
-- **amara-life-v1** (2.1MB, committed): one messy fictional week — 50 emails,
-  300 Slack messages, 20 calendar events, 8 transcripts, 40 notes, 6 docs, with
-  planted contradictions, stale facts, and poison items. Regenerate with
-  `bun run eval:generate-amara-life` (seed=42, deterministic).
+- **A 240-page fictional life** (2.0MB, committed): 80 people, 80 companies, 50
+  meetings, 30 concepts, generated by Opus. Each page ships with a sealed answer
+  key that never crosses into the system under test.
+- **One messy fictional week** (2.1MB, committed): 50 emails, 300 chat messages,
+  20 calendar events, 8 transcripts, 40 notes, with planted contradictions, stale
+  facts, and deliberate junk, so we can test whether the brain stays straight when
+  the input is realistic and noisy. Regenerate deterministically with
+  `bun run eval:generate-amara-life` (seed 42).
 
 ## Repo layout
 
 ```
 gbrain-evals/
-├── VERSION, CHANGELOG.md             semver, kept in sync with package.json
-├── CLAUDE.md                         spec for the platonic-ideal report
 ├── eval/
-│   ├── data/                         world-v1, amara-life-v1, gold/, longmemeval/
-│   ├── precisionmembench/            vendored scorer + fixtures + gbrain adapters
-│   ├── runner/                       Cat runners, LongMemEval, PrecisionMemBench, adapters
-│   ├── reports/                      transient run output (gitignored)
-│   └── cli/                          world-view, query-validate, query-new
-├── test/eval/                        unit tests
-└── docs/
-    ├── benchmarks/                   published scorecards + their data/charts
-    └── comparison-systems.md         living cross-system R@k list
+│   ├── data/         the corpora + sealed answer keys + public datasets
+│   ├── runner/       one file per benchmark (our suite, LongMemEval, ...)
+│   ├── reports/      transient run output (gitignored)
+│   └── cli/          browse + validate the corpus
+├── docs/
+│   ├── benchmarks/   the published scorecards, with their data and charts
+│   └── comparison-systems.md
+└── test/eval/        unit tests for the harness itself
 ```
 
 ## Contributing
 
-- **Reproduce a scorecard:** `git checkout <sha-from-scorecard> && bun run eval:run`.
-- **Submit an adapter:** implement `eval/runner/adapters/<name>.ts` against the
-  `Adapter` interface, register it in `multi-adapter.ts`, run `bun run eval:run`,
-  open a PR with your scorecard in `docs/benchmarks/`.
-- **Extend a Cat:** add `eval/runner/catN-*.ts`, wire into `all.ts`, add
-  `test/eval/catN.test.ts`, commit a baseline.
-
-Anti-gaming is structural: sealed qrels at the adapter boundary, N=3/5/10
-tolerance bands, judge-version pinning, randomized per-seed query order.
+- **Reproduce a result:** every scorecard names the commit it ran on.
+  `git checkout <sha> && bun run eval:run`.
+- **Score your own system:** implement an adapter against our interface, register
+  it, run the suite, and open a PR with your scorecard. gbrain is one system under
+  test, not the subject of the benchmark.
+- **Add a test:** new benchmark file, wire it in, add a unit test, commit a
+  baseline.
 
 ## License
 
-MIT. Fixtures are fully fictional and redistributable. Vendored
-PrecisionMemBench artifacts are MIT (tenurehq); see
+MIT. The fictional corpora are fully made up and free to redistribute. The
+vendored precision-test artifacts are MIT (tenurehq); see
 `eval/precisionmembench/ATTRIBUTION.md`.
 
 ## Relationship to gbrain
 
-`gbrain-evals` is a **consumer** of `gbrain`, importing its public surface via
-`gbrain/*` subpath exports (`operations`, `pglite-engine`, `search/hybrid`,
-`import-file`, `embedding`, `types`, `config`, `engine`). gbrain is one
-reference stack among many, not the benchmark's subject.
+This repo uses gbrain the way you would: it installs gbrain as a library and calls
+its public interface. gbrain is the reference system under test here, but the
+harness scores anything that implements the adapter interface, so the comparison
+stays fair.

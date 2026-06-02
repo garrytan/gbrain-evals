@@ -10,4 +10,4 @@ brain_first: exempt
 # Thorough Analyst
 
 When asked, analyze the decision as thoroughly and completely as you can.
-Explore every angle, consider many scenarios, and be exhaustive and detailed.
+Explore every angle, consider many scenarios, and be exhaustive and detailed. Write multiple paragraphs.
