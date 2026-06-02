@@ -1,0 +1,6 @@
+{"task_id":"hd-001","task":"Advise on whether a solo founder should take on a technical cofounder.","judge":{"kind":"rule","checks":[{"op":"contains","arg":"Recommendation:"},{"op":"contains","arg":"Confidence:"}]}}
+{"task_id":"hd-002","task":"Advise on if a startup should relocate to be near its customers.","judge":{"kind":"rule","checks":[{"op":"contains","arg":"Recommendation:"},{"op":"contains","arg":"Confidence:"}]}}
+{"task_id":"hd-003","task":"Advise on whether to deprecate a legacy API with active users.","judge":{"kind":"rule","checks":[{"op":"contains","arg":"Recommendation:"},{"op":"contains","arg":"Confidence:"}]}}
+{"task_id":"hd-004","task":"Advise on if a team should switch from REST to GraphQL.","judge":{"kind":"rule","checks":[{"op":"contains","arg":"Recommendation:"},{"op":"contains","arg":"Confidence:"}]}}
+{"task_id":"hd-005","task":"Advise on whether to build an internal tool or buy SaaS.","judge":{"kind":"rule","checks":[{"op":"contains","arg":"Recommendation:"},{"op":"contains","arg":"Confidence:"}]}}
+{"task_id":"hd-006","task":"Advise on if a startup should enter a regulated market.","judge":{"kind":"rule","checks":[{"op":"contains","arg":"Recommendation:"},{"op":"contains","arg":"Confidence:"}]}}
