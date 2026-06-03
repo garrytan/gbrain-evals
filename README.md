@@ -49,6 +49,7 @@ metric at the expense of the other.
 | **Relational questions** ("who introduced X to Y?") on a 240-page fictional life | **97.9% recall@5, 49.1% precision@5** | Beats plain vector search by 38 points of precision. The graph layer (who-knows-whom) is worth about 30 of those points on its own. | [report](docs/benchmarks/2026-04-23-brainbench-v0.20.0.md) |
 | **Stability across 20 releases** (v0.20.0 → v0.40.6.0) | **zero regression** | The headline numbers stayed identical, release after release. New features did not quietly make retrieval worse. | [report](docs/benchmarks/2026-05-23-v0.40.6.0-snapshot.md) |
 | **PrecisionMembench** (an outside precision-only test) | **#2, and an honest #1-by-default story** | See the honesty note below. | [report](docs/benchmarks/2026-05-29-precisionmembench.md) |
+| **SkillOpt** (can a skill improve itself, without cheating?) | **4/4 skills 0 → 1.00; cheating blocked; gains transfer** | Deficient skills rewrote themselves to perfect on held-out tasks; a keyword-stuffing cheat is caught by an independent judge; a skill optimized on one model works on another. | [report](docs/benchmarks/2026-06-03-skillopt.md) |
 
 A living cross-system comparison lives in
 [docs/comparison-systems.md](docs/comparison-systems.md).
