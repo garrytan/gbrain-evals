@@ -1,0 +1,15 @@
+{"task_id":"bm-001","task":"Analyze the decision of whether a seed-stage dev-tools startup should ship a free tier.","judge":{"kind":"rule","checks":[{"op":"max_chars","arg":1200}]}}
+{"task_id":"bm-002","task":"Analyze the decision of if a two-person team should adopt Kubernetes now or wait.","judge":{"kind":"rule","checks":[{"op":"max_chars","arg":1200}]}}
+{"task_id":"bm-003","task":"Analyze the decision of whether to open-source a core library or keep it proprietary.","judge":{"kind":"rule","checks":[{"op":"max_chars","arg":1200}]}}
+{"task_id":"bm-004","task":"Analyze the decision of if a B2B SaaS should move from usage-based to seat-based pricing.","judge":{"kind":"rule","checks":[{"op":"max_chars","arg":1200}]}}
+{"task_id":"bm-005","task":"Analyze the decision of whether a fintech should build payments in-house or use a provider.","judge":{"kind":"rule","checks":[{"op":"max_chars","arg":1200}]}}
+{"task_id":"bm-006","task":"Analyze the decision of if an AI startup should fine-tune or rely on prompting.","judge":{"kind":"rule","checks":[{"op":"max_chars","arg":1200}]}}
+{"task_id":"bm-007","task":"Analyze the decision of whether to hire a first salesperson before or after product-market fit.","judge":{"kind":"rule","checks":[{"op":"max_chars","arg":1200}]}}
+{"task_id":"bm-008","task":"Analyze the decision of if a marketplace should subsidize supply or demand first.","judge":{"kind":"rule","checks":[{"op":"max_chars","arg":1200}]}}
+{"task_id":"bm-009","task":"Analyze the decision of whether a hardware startup should manufacture domestically.","judge":{"kind":"rule","checks":[{"op":"max_chars","arg":1200}]}}
+{"task_id":"bm-010","task":"Analyze the decision of if a content site should gate articles behind a paywall.","judge":{"kind":"rule","checks":[{"op":"max_chars","arg":1200}]}}
+{"task_id":"bm-011","task":"Analyze the decision of whether to raise a bridge round or cut burn.","judge":{"kind":"rule","checks":[{"op":"max_chars","arg":1200}]}}
+{"task_id":"bm-012","task":"Analyze the decision of if a mobile app should launch single-platform or cross-platform.","judge":{"kind":"rule","checks":[{"op":"max_chars","arg":1200}]}}
+{"task_id":"bm-013","task":"Analyze the decision of whether to acquire a small competitor or build the feature.","judge":{"kind":"rule","checks":[{"op":"max_chars","arg":1200}]}}
+{"task_id":"bm-014","task":"Analyze the decision of if a data startup should sell to engineers or to executives.","judge":{"kind":"rule","checks":[{"op":"max_chars","arg":1200}]}}
+{"task_id":"bm-015","task":"Analyze the decision of whether to run a paid pilot or a free design partnership.","judge":{"kind":"rule","checks":[{"op":"max_chars","arg":1200}]}}
