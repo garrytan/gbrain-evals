@@ -126,6 +126,12 @@ const CATEGORIES: readonly Category[] = [
     name: 'MCP Operation Contract',
     script: 'eval/runner/mcp-contract.ts',
   },
+  {
+    kind: 'subprocess',
+    num: 34,
+    name: 'BrainBench Memory Conformance (cross-harness: know-to-ask / push / write-back / continuity)',
+    script: 'eval/runner/cat34-brainbench-memory.ts',
+  },
 ];
 
 interface CategoryRun {
