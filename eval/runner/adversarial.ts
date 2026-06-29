@@ -9,7 +9,7 @@
  */
 
 import { PGLiteEngine } from 'gbrain/pglite-engine';
-import { extractPageLinks, parseTimelineEntries } from 'gbrain/link-extraction';
+import { extractPageLinks, parseTimelineEntries, type SlugResolver } from 'gbrain/link-extraction';
 import type { PageInput } from 'gbrain/types';
 
 interface CaseResult {
@@ -27,6 +27,9 @@ interface AdversarialCase {
   /** Optional invariants to check after putPage. */
   expect?: (engine: PGLiteEngine) => Promise<{ pass: boolean; note?: string }>;
 }
+
+/** Minimal no-op slug resolver for adversarial edge-case tests. */
+const nullResolver: SlugResolver = { resolve: async (_name: string) => null };
 
 const ADVERSARIAL_CASES: AdversarialCase[] = [
   // ── Empty / whitespace ──
@@ -108,12 +111,14 @@ const ADVERSARIAL_CASES: AdversarialCase[] = [
     compiled_truth: Array.from({ length: 50 }, () => '[Same](people/same-target)').join(' '),
     timeline: '',
   }, expect: async () => {
-    const candidates = extractPageLinks(
+    const result = await extractPageLinks(
+      'concepts/repeat-1',
       Array.from({ length: 50 }, () => '[Same](people/same-target)').join(' '),
       {},
       'concept',
+      nullResolver,
     );
-    const matches = candidates.filter(c => c.targetSlug === 'people/same-target');
+    const matches = result.candidates.filter(c => c.targetSlug === 'people/same-target');
     return { pass: matches.length === 1, note: `expected 1 candidate after within-page dedup, got ${matches.length}` };
   } },
 ];
@@ -183,12 +188,12 @@ async function main() {
 
     // 4. extractPageLinks (pure function, code-fence and false-positive checks happen here)
     result.ops_attempted++;
-    const extract = await tryOp('extractPageLinks', async () => extractPageLinks(c.page.compiled_truth, {}, c.page.type));
+    const extract = await tryOp('extractPageLinks', async () => extractPageLinks(c.page.slug, c.page.compiled_truth, {}, c.page.type, nullResolver));
     if (extract.ok) {
       result.ops_succeeded++;
       // Check: code fence content should NOT produce link candidates
       if (c.name.includes('code fence') || c.name.includes('inline code')) {
-        const candidates = extract.result;
+        const candidates = extract.result.candidates;
         const leaked = candidates.filter(cand => cand.targetSlug.includes('not-extract') || cand.targetSlug.includes('code-fenced-slug'));
         if (leaked.length > 0) result.silent_corruption.push(`code fence leak: extracted ${leaked.map(l => l.targetSlug).join(', ')}`);
       }
