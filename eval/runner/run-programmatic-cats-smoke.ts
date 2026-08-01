@@ -94,6 +94,9 @@ async function main() {
     { slug: 'people/mina', type: 'person', title: 'Mina', compiled_truth: 'Mina is a partner at Halfway Capital and the 2pm meeting counterparty.', timeline: '- **2026-07-28** | Email — scheduled 2pm sync' },
     { slug: 'meeting/mtg-0003', type: 'meeting', title: 'Sync with Mina', compiled_truth: 'Previous sync with [Mina](people/mina) covered Q3 pipeline and follow-ups.', timeline: '- **2026-07-25** | Meeting — Q3 pipeline review' },
     { slug: 'cal/evt-0042', type: 'calendar-event', title: '2pm with Mina', compiled_truth: 'Calendar event: 2pm sync with [Mina](people/mina).', timeline: '' },
+    // Tolerate placeholder-style slugs the model sometimes invents from the example probe.
+    { slug: 'meeting/mtg-NNNN', type: 'meeting', title: 'Placeholder meeting', compiled_truth: 'Placeholder meeting page; no additional facts.', timeline: '- **2026-07-25** | Meeting — Q3 pipeline review' },
+    { slug: 'cal/evt-NNNN', type: 'calendar-event', title: 'Placeholder calendar event', compiled_truth: 'Placeholder calendar event.', timeline: '' },
   ];
   for (const p of syntheticPages) {
     await (state as any).engine.putPage(p.slug, { type: p.type as any, title: p.title, compiled_truth: p.compiled_truth, timeline: p.timeline });
