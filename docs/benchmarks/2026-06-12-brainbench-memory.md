@@ -6,6 +6,15 @@ leaks across sources, and loses zero facts through the write path — while the
 two contract seams quantify exactly what tighter injection budgets cost
 (recall 0.66 at 2 pointers, 0.45 at 1 fragment).**
 
+> **Reproduced against shipped master.** Re-run 2026-08-10 against **gbrain
+> 0.44.0.0** (Cathedral 2 merged to `master`, #2158): **byte-identical** to the
+> authoring run — same rates, same `fixtures_hash 76f201590dd3…`. Across the
+> `v0.42.40 → 0.44.0.0` master delta (strict flag-validation, WAL-repair,
+> memory-verbs protocol) the memory-conformance numbers **stayed the same: no
+> regression, no improvement.** This is a hermetic, deterministic suite (seed
+> 42, in-memory PGLite, no keys), so a moved number would mean a real behavior
+> change, not run-to-run noise.
+
 | harness (seam) | know-to-ask failure ↓ | false fire ↓ | push recall ↑ | push precision ↑ | write-back fidelity ↑ | continuity ↑ | isolation violations |
 |---|---|---|---|---|---|---|---|
 | **openclaw (production)** | **0.150** | **0.000** | **0.809** | **1.000** | **1.000** | **1.000** | **0** |
