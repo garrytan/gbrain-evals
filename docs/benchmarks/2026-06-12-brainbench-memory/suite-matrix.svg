@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="360" font-family="ui-sans-serif,system-ui" font-size="13">
+<text x="380.0" y="24" text-anchor="middle" font-size="16" font-weight="600">BrainBench suite headlines per harness (lower is better for failure/false-fire)</text>
+<line x1="60" y1="290" x2="730" y2="290" stroke="#e5e7eb"/>
+<text x="52" y="294" text-anchor="end" fill="#6b7280">0.00</text>
+<line x1="60" y1="230.0" x2="730" y2="230.0" stroke="#e5e7eb"/>
+<text x="52" y="234.0" text-anchor="end" fill="#6b7280">0.25</text>
+<line x1="60" y1="170.0" x2="730" y2="170.0" stroke="#e5e7eb"/>
+<text x="52" y="174.0" text-anchor="end" fill="#6b7280">0.50</text>
+<line x1="60" y1="110.0" x2="730" y2="110.0" stroke="#e5e7eb"/>
+<text x="52" y="114.0" text-anchor="end" fill="#6b7280">0.75</text>
+<line x1="60" y1="50.0" x2="730" y2="50.0" stroke="#e5e7eb"/>
+<text x="52" y="54.0" text-anchor="end" fill="#6b7280">1.00</text>
+<rect x="82.3" y="254.0" width="37.2" height="36.0" fill="#2563eb" rx="3"/>
+<text x="100.9" y="249.0" text-anchor="middle" fill="#374151" font-size="11">0.15</text>
+<rect x="125.1" y="254.0" width="37.2" height="36.0" fill="#d97706" rx="3"/>
+<text x="143.8" y="249.0" text-anchor="middle" fill="#374151" font-size="11">0.15</text>
+<rect x="167.9" y="254.0" width="37.2" height="36.0" fill="#059669" rx="3"/>
+<text x="186.6" y="249.0" text-anchor="middle" fill="#374151" font-size="11">0.15</text>
+<text x="143.8" y="308" text-anchor="middle" fill="#111827">know-to-ask failure</text>
+<rect x="249.8" y="290.0" width="37.2" height="0.0" fill="#2563eb" rx="3"/>
+<text x="268.4" y="285.0" text-anchor="middle" fill="#374151" font-size="11">0.00</text>
+<rect x="292.6" y="284.4" width="37.2" height="5.6" fill="#d97706" rx="3"/>
+<text x="311.2" y="279.4" text-anchor="middle" fill="#374151" font-size="11">0.02</text>
+<rect x="335.4" y="290.0" width="37.2" height="0.0" fill="#059669" rx="3"/>
+<text x="354.1" y="285.0" text-anchor="middle" fill="#374151" font-size="11">0.00</text>
+<text x="311.2" y="308" text-anchor="middle" fill="#111827">false fire</text>
+<rect x="417.3" y="50.0" width="37.2" height="240.0" fill="#2563eb" rx="3"/>
+<text x="435.9" y="45.0" text-anchor="middle" fill="#374151" font-size="11">1.00</text>
+<rect x="460.1" y="50.0" width="37.2" height="240.0" fill="#d97706" rx="3"/>
+<text x="478.8" y="45.0" text-anchor="middle" fill="#374151" font-size="11">1.00</text>
+<rect x="502.9" y="50.0" width="37.2" height="240.0" fill="#059669" rx="3"/>
+<text x="521.6" y="45.0" text-anchor="middle" fill="#374151" font-size="11">1.00</text>
+<text x="478.8" y="308" text-anchor="middle" fill="#111827">write-back fidelity</text>
+<rect x="584.8" y="50.0" width="37.2" height="240.0" fill="#2563eb" rx="3"/>
+<text x="603.4" y="45.0" text-anchor="middle" fill="#374151" font-size="11">1.00</text>
+<rect x="627.6" y="50.0" width="37.2" height="240.0" fill="#d97706" rx="3"/>
+<text x="646.2" y="45.0" text-anchor="middle" fill="#374151" font-size="11">1.00</text>
+<rect x="670.4" y="50.0" width="37.2" height="240.0" fill="#059669" rx="3"/>
+<text x="689.1" y="45.0" text-anchor="middle" fill="#374151" font-size="11">1.00</text>
+<text x="646.2" y="308" text-anchor="middle" fill="#111827">continuity</text>
+<rect x="60" y="334" width="12" height="12" fill="#2563eb" rx="2"/>
+<text x="77" y="345" fill="#374151">openclaw (production)</text>
+<rect x="250" y="334" width="12" height="12" fill="#d97706" rx="2"/>
+<text x="267" y="345" fill="#374151">claude-code (contract)</text>
+<rect x="440" y="334" width="12" height="12" fill="#059669" rx="2"/>
+<text x="457" y="345" fill="#374151">codex (contract)</text>
+</svg>

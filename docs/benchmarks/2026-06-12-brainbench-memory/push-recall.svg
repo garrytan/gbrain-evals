@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="360" font-family="ui-sans-serif,system-ui" font-size="13">
+<text x="380.0" y="24" text-anchor="middle" font-size="16" font-weight="600">Push recall by harness seam — the pointer-budget gradient (gate corpus)</text>
+<line x1="60" y1="290" x2="730" y2="290" stroke="#e5e7eb"/>
+<text x="52" y="294" text-anchor="end" fill="#6b7280">0.00</text>
+<line x1="60" y1="230.0" x2="730" y2="230.0" stroke="#e5e7eb"/>
+<text x="52" y="234.0" text-anchor="end" fill="#6b7280">0.25</text>
+<line x1="60" y1="170.0" x2="730" y2="170.0" stroke="#e5e7eb"/>
+<text x="52" y="174.0" text-anchor="end" fill="#6b7280">0.50</text>
+<line x1="60" y1="110.0" x2="730" y2="110.0" stroke="#e5e7eb"/>
+<text x="52" y="114.0" text-anchor="end" fill="#6b7280">0.75</text>
+<line x1="60" y1="50.0" x2="730" y2="50.0" stroke="#e5e7eb"/>
+<text x="52" y="54.0" text-anchor="end" fill="#6b7280">1.00</text>
+<rect x="161.5" y="96.0" width="40.0" height="194.0" fill="#2563eb" rx="3"/>
+<text x="181.5" y="91.0" text-anchor="middle" fill="#374151" font-size="11">0.81</text>
+<rect x="207.5" y="131.7" width="40.0" height="158.3" fill="#d97706" rx="3"/>
+<text x="227.5" y="126.7" text-anchor="middle" fill="#374151" font-size="11">0.66</text>
+<rect x="253.5" y="182.8" width="40.0" height="107.2" fill="#059669" rx="3"/>
+<text x="273.5" y="177.8" text-anchor="middle" fill="#374151" font-size="11">0.45</text>
+<text x="227.5" y="308" text-anchor="middle" fill="#111827">push_recall</text>
+<rect x="496.5" y="50.0" width="40.0" height="240.0" fill="#2563eb" rx="3"/>
+<text x="516.5" y="45.0" text-anchor="middle" fill="#374151" font-size="11">1.00</text>
+<rect x="542.5" y="50.0" width="40.0" height="240.0" fill="#d97706" rx="3"/>
+<text x="562.5" y="45.0" text-anchor="middle" fill="#374151" font-size="11">1.00</text>
+<rect x="588.5" y="50.0" width="40.0" height="240.0" fill="#059669" rx="3"/>
+<text x="608.5" y="45.0" text-anchor="middle" fill="#374151" font-size="11">1.00</text>
+<text x="562.5" y="308" text-anchor="middle" fill="#111827">push_precision</text>
+<rect x="60" y="334" width="12" height="12" fill="#2563eb" rx="2"/>
+<text x="77" y="345" fill="#374151">openclaw (production)</text>
+<rect x="250" y="334" width="12" height="12" fill="#d97706" rx="2"/>
+<text x="267" y="345" fill="#374151">claude-code (contract)</text>
+<rect x="440" y="334" width="12" height="12" fill="#059669" rx="2"/>
+<text x="457" y="345" fill="#374151">codex (contract)</text>
+</svg>
