@@ -412,7 +412,13 @@ export function createToolBridge(config: ToolBridgeConfig): ToolBridge {
     const safeInput = { ...input };
     if (name === 'query') safeInput.expand = false;
 
-    const raw = await op.handler(ctx, safeInput);
+    let raw: unknown;
+    try {
+      raw = await op.handler(ctx, safeInput);
+    } catch (err: any) {
+      const code = err?.code ?? 'tool_error';
+      raw = { error: err?.message ?? String(err), code };
+    }
     const serialized = typeof raw === 'string' ? raw : JSON.stringify(raw);
     const { content, truncated } = truncateContent(serialized, maxChars);
     const matched = matchPoison(content, config.poisonFixtures);

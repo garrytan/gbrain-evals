@@ -30,6 +30,11 @@ import { join } from 'path';
 import { extractPageLinks } from 'gbrain/link-extraction';
 import type { PageType } from 'gbrain/types';
 
+const resolver = {
+  resolve: async () => null,
+  resolveBasenameMatches: async () => [],
+};
+
 interface RichPage {
   slug: string;
   type: 'person' | 'company' | 'meeting' | 'concept';
@@ -153,12 +158,12 @@ function buildGoldEdges(pages: RichPage[]): GoldEdge[] {
 }
 
 /** Run extractPageLinks on every page; return flat list of inferred edges. */
-function inferAllEdges(pages: RichPage[]): GoldEdge[] {
+async function inferAllEdges(pages: RichPage[]): Promise<GoldEdge[]> {
   const edges: GoldEdge[] = [];
   for (const p of pages) {
     const content = `${p.title}\n\n${p.compiled_truth}\n\n${p.timeline}`;
-    const candidates = extractPageLinks(content, {}, p.type as PageType);
-    for (const c of candidates) {
+    const result = await extractPageLinks(p.slug, content, {}, p.type as PageType, resolver, { skipFrontmatter: true });
+    for (const c of result.candidates) {
       edges.push({ from: p.slug, to: c.targetSlug, type: c.linkType });
     }
   }
@@ -321,7 +326,7 @@ async function main() {
   log(`Loaded ${pages.length} pages.\n`);
 
   const gold = buildGoldEdges(pages);
-  const inferred = inferAllEdges(pages);
+  const inferred = await inferAllEdges(pages);
 
   log(`Gold edges (from _facts):     ${gold.length}`);
   log(`Inferred edges (extractPageLinks): ${inferred.length}\n`);
