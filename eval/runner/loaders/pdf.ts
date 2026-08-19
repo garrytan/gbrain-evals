@@ -87,23 +87,43 @@ export async function extractPdfText(
   const buffer = await readFile(path);
 
   // Lazy import — avoids triggering any init-time side-effects of pdf-parse
-  // unless this function is actually called.
+  // unless this function is actually called. pdf-parse v2 exports a PDFParse
+  // class (vs v1's bare function); v1 also exposed a default export. Try both
+  // shapes so the loader survives a future v1↔v2 swap.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pdfParseModule: any = await import('pdf-parse');
-  const pdfParse = pdfParseModule.default ?? pdfParseModule;
+  const PDFParse = pdfParseModule.PDFParse ?? pdfParseModule.default?.PDFParse;
+  const legacyParse = typeof pdfParseModule.default === 'function'
+    ? pdfParseModule.default
+    : (typeof pdfParseModule === 'function' ? pdfParseModule : null);
 
   try {
-    const result = await pdfParse(buffer);
-    return {
-      text: String(result.text ?? ''),
-      numPages: Number(result.numpages ?? 0),
-      info: result.info ? { ...result.info } : undefined,
-    };
+    if (PDFParse) {
+      // v2 API: instantiate, call getText().
+      const parser = new PDFParse({ data: buffer });
+      const result = await parser.getText();
+      return {
+        text: String(result.text ?? ''),
+        numPages: Number(result.total ?? result.numpages ?? 0),
+        info: result.info ? { ...result.info } : undefined,
+      };
+    }
+    if (legacyParse) {
+      // v1 API: call directly.
+      const result = await legacyParse(buffer);
+      return {
+        text: String(result.text ?? ''),
+        numPages: Number(result.numpages ?? 0),
+        info: result.info ? { ...result.info } : undefined,
+      };
+    }
+    throw new PdfParseError(path, new Error('pdf-parse exposes neither PDFParse class nor a default function'));
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     if (/encrypt/i.test(message) || /password/i.test(message)) {
       throw new PdfEncryptedError(path);
     }
+    if (err instanceof PdfParseError) throw err;
     throw new PdfParseError(path, err);
   }
 }

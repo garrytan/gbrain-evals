@@ -23,7 +23,8 @@
     "eval:brainbench:smoke": "BRAINBENCH_N=1 BRAINBENCH_CONCURRENCY=2 bun eval/runner/all.ts",
     "eval:brainbench:published": "BRAINBENCH_N=10 BRAINBENCH_CONCURRENCY=2 bun eval/runner/all.ts",
     "eval:cat6": "bun eval/runner/cat6-prose-scale.ts",
-    "eval:cat11": "bun eval/runner/cat11-multimodal.ts"
+    "eval:cat11": "bun eval/runner/cat11-multimodal.ts",
+    "eval:fetch-multimodal": "bun eval/cli/fetch-multimodal.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.30.0",
