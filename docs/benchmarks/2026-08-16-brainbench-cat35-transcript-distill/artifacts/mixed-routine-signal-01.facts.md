@@ -1,0 +1,8 @@
+- [commitment] User committed to renewing the fernpost domain for three years and stopped second-guessing it (fernpost, medium)
+- [fact] Fernpost three-year domain renewal cost $38 (fernpost, medium)
+- [event] User paid the fernpost domain renewal (fernpost, medium)
+- [commitment] User is considering mirroring fernpost to a backup host as a future weekend project (fernpost, medium)
+- [belief] User believes the fernpost mobile nav should be collapsed to a single hamburger menu with nested sections to fix tap-error issues reported by Casper (fernpost, medium)
+- [event] Casper reported that the three separate dropdowns on the fernpost mobile nav are hard to tap without accidentally opening the wrong one (fernpost, medium)
+- [event] User returned a faulty keyboard within the return window (medium)
+- [fact] EXTRACTION_COMPLETE (low)

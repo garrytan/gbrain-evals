@@ -51,6 +51,27 @@ We don't run ConvoMem yet. Filed as a follow-up.
 
 We don't run LoCoMo yet. Filed as a follow-up.
 
+## Write-path / memory-extraction benchmarks (HaluMem)
+
+HaluMem ([arXiv 2511.03506](https://arxiv.org/abs/2511.03506), 2025) is the
+only published benchmark that scores the WRITE path of memory systems —
+extraction recall of gold memory points from synthetic persona conversations,
+scored FULL/PARTIAL/OMITTED at 1/0.5/0. Different corpus and task shape from
+our Cat 35 (persona chit-chat vs agent working sessions; memory points vs a
+distilled page artifact) — **context rows, not directly comparable.**
+
+| System | Extraction recall | Corpus | Source |
+|---|---|---|---|
+| Mem0 | 42.9% | HaluMem-Medium (Table 3) | arXiv 2511.03506 |
+| Supermemory | 41.5% | HaluMem-Medium (Table 3) | arXiv 2511.03506 |
+
+Reading note: the same products report 90%+ on read-path QA benchmarks
+(Mem0 self-reports 92.5% LLM-judged accuracy on LoCoMo, arXiv 2504.19413).
+The write path is where extraction quality actually lives; nobody publishes
+it voluntarily. Cat 35 (transcript → brain-page distillation fidelity) is
+gbrain's write-path benchmark; SummHay ([arXiv 2407.01370](https://arxiv.org/abs/2407.01370),
+human ceiling 56.1 joint score) is the planted-gold protocol ancestor.
+
 ## Sources we've checked (so we don't redo the lookup)
 
 - [`MemPalace/mempalace/benchmarks/BENCHMARKS.md`](https://github.com/MemPalace/mempalace/blob/main/benchmarks/BENCHMARKS.md) — most thorough public benchmark page in this category. They credit competitors fairly and call out their own tuning caveats.

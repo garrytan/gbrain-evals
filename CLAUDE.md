@@ -216,6 +216,9 @@ You owe a benchmark. Pick the right one:
   stress retrieval differently)
 - Code-aware retrieval → cat13 conceptual-recall + a code-corpus follow-up
 - Cross-source federation → world-v1 multi-source mode
+- Write path (transcripts ingest / facts extraction / dream synthesis) →
+  cat35 transcript-distill-v1 (salient-unit recall, hallucination, leakage,
+  usability). If you touch the distiller or extractor, you owe a Cat 35 line.
 
 Don't ship the gbrain feature without an updated benchmark line. Even if
 the number doesn't move, the regression test is the deliverable.

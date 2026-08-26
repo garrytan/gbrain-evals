@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="328" viewBox="0 0 880 328">
+  <rect width="880" height="328" fill="#0a0a0a" rx="8"/>
+  <text x="20" y="28" fill="#e5e7eb" font-size="16" font-weight="700" font-family="ui-sans-serif,system-ui">Cat 35 — salient-unit recall: what survives transcript → brain page</text>
+  <text x="20" y="48" fill="#9ca3af" font-size="11" font-family="ui-sans-serif,system-ui">FULL/PARTIAL/ABSENT → 1/0.5/0 · macro over transcripts, whiskers = bootstrap 95% CI · amber rows are HaluMem-published write-path numbers on a DIFFERENT corpus (context, not head-to-head) · mode=full · gbrain v0.46.3.0 · judge claude-sonnet-4-6</text>
+
+  <line x1="250" y1="70" x2="250" y2="302" stroke="#262626" stroke-width="1"/>
+  <text x="250" y="318" text-anchor="middle" fill="#9ca3af" font-size="10" font-family="ui-monospace,SFMono-Regular">0%</text>
+  <line x1="385" y1="70" x2="385" y2="302" stroke="#262626" stroke-width="1"/>
+  <text x="385" y="318" text-anchor="middle" fill="#9ca3af" font-size="10" font-family="ui-monospace,SFMono-Regular">25%</text>
+  <line x1="520" y1="70" x2="520" y2="302" stroke="#262626" stroke-width="1"/>
+  <text x="520" y="318" text-anchor="middle" fill="#9ca3af" font-size="10" font-family="ui-monospace,SFMono-Regular">50%</text>
+  <line x1="655" y1="70" x2="655" y2="302" stroke="#262626" stroke-width="1"/>
+  <text x="655" y="318" text-anchor="middle" fill="#9ca3af" font-size="10" font-family="ui-monospace,SFMono-Regular">75%</text>
+  <line x1="790" y1="70" x2="790" y2="302" stroke="#262626" stroke-width="1"/>
+  <text x="790" y="318" text-anchor="middle" fill="#9ca3af" font-size="10" font-family="ui-monospace,SFMono-Regular">100%</text>
+
+  <text x="240" y="88" text-anchor="end" fill="#e5e7eb" font-size="13" font-weight="700" font-family="ui-sans-serif,system-ui">gbrain dream (headline)</text>
+  <text x="240" y="103" text-anchor="end" fill="#9ca3af" font-size="10" font-family="ui-sans-serif,system-ui">macro · strict 56.1% · n=24</text>
+  <rect x="250" y="80" width="331.875" height="22" rx="3" fill="#16a34a" opacity="1"/>
+  <line x1="492.7375" y1="91" x2="669.1" y2="91" stroke="#e5e7eb" stroke-width="1.5" opacity="0.9"/>
+  <line x1="492.7375" y1="87" x2="492.7375" y2="95" stroke="#e5e7eb" stroke-width="1.5" opacity="0.9"/>
+  <line x1="669.1" y1="87" x2="669.1" y2="95" stroke="#e5e7eb" stroke-width="1.5" opacity="0.9"/>
+  <text x="589.875" y="95" fill="#e5e7eb" font-size="12" font-family="ui-monospace,SFMono-Regular" font-weight="700">61.5%</text>
+  <text x="240" y="132" text-anchor="end" fill="#e5e7eb" font-size="13" font-weight="700" font-family="ui-sans-serif,system-ui">gbrain facts</text>
+  <text x="240" y="147" text-anchor="end" fill="#9ca3af" font-size="10" font-family="ui-sans-serif,system-ui">macro · strict 51.4% · n=24</text>
+  <rect x="250" y="124" width="328.0875" height="22" rx="3" fill="#10b981" opacity="1"/>
+  <line x1="518.0875" y1="135" x2="634.5250000000001" y2="135" stroke="#e5e7eb" stroke-width="1.5" opacity="0.9"/>
+  <line x1="518.0875" y1="131" x2="518.0875" y2="139" stroke="#e5e7eb" stroke-width="1.5" opacity="0.9"/>
+  <line x1="634.5250000000001" y1="131" x2="634.5250000000001" y2="139" stroke="#e5e7eb" stroke-width="1.5" opacity="0.9"/>
+  <text x="586.0875" y="139" fill="#e5e7eb" font-size="12" font-family="ui-monospace,SFMono-Regular" font-weight="700">60.8%</text>
+  <text x="240" y="176" text-anchor="end" fill="#e5e7eb" font-size="13" font-weight="700" font-family="ui-sans-serif,system-ui">gbrain verbatim (control)</text>
+  <text x="240" y="191" text-anchor="end" fill="#9ca3af" font-size="10" font-family="ui-sans-serif,system-ui">macro · strict 86.1% · n=24</text>
+  <rect x="250" y="168" width="502.98750000000007" height="22" rx="3" fill="#6b7280" opacity="1"/>
+  <line x1="735.55" y1="179" x2="769.75" y2="179" stroke="#e5e7eb" stroke-width="1.5" opacity="0.9"/>
+  <line x1="735.55" y1="175" x2="735.55" y2="183" stroke="#e5e7eb" stroke-width="1.5" opacity="0.9"/>
+  <line x1="769.75" y1="175" x2="769.75" y2="183" stroke="#e5e7eb" stroke-width="1.5" opacity="0.9"/>
+  <text x="760.9875000000001" y="183" fill="#e5e7eb" font-size="12" font-family="ui-monospace,SFMono-Regular" font-weight="700">93.1%</text>
+  <text x="240" y="220" text-anchor="end" fill="#e5e7eb" font-size="13" font-weight="400" font-family="ui-sans-serif,system-ui">Mem0 (HaluMem-Medium)</text>
+  <text x="240" y="235" text-anchor="end" fill="#9ca3af" font-size="10" font-family="ui-sans-serif,system-ui">arXiv 2511.03506 — different corpus</text>
+  <rect x="250" y="212" width="231.66" height="22" rx="3" fill="#f59e0b" opacity="0.7"/>
+  <text x="489.65999999999997" y="227" fill="#e5e7eb" font-size="12" font-family="ui-monospace,SFMono-Regular" font-weight="400">42.9%</text>
+  <text x="240" y="264" text-anchor="end" fill="#e5e7eb" font-size="13" font-weight="400" font-family="ui-sans-serif,system-ui">Supermemory (HaluMem-Medium)</text>
+  <text x="240" y="279" text-anchor="end" fill="#9ca3af" font-size="10" font-family="ui-sans-serif,system-ui">arXiv 2511.03506 — different corpus</text>
+  <rect x="250" y="256" width="224.1" height="22" rx="3" fill="#f59e0b" opacity="0.7"/>
+  <text x="482.1" y="271" fill="#e5e7eb" font-size="12" font-family="ui-monospace,SFMono-Regular" font-weight="400">41.5%</text>
+</svg>

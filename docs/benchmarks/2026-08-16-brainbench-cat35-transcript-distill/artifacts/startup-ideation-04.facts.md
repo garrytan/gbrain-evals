@@ -1,0 +1,8 @@
+- [fact] Driftless is building async scheduling infrastructure for mid-market and enterprise knowledge-work teams (Driftless, medium)
+- [belief] Driftless has been using top-down TAM numbers that VCs see through and wants to switch to bottoms-up market sizing (Driftless, medium)
+- [fact] Driftless ACV ranges from ~$4K for 50-200 employee band up to ~$40K for 1001-5000 employee band (Driftless, medium)
+- [fact] Driftless year-one reachable ARR modeled bottoms-up at ~$19.8M across three company size segments (Driftless, high)
+- [commitment] Driftless deck leads with bottoms-up market number, no top-down figures (Driftless, medium)
+- [event] User spoke with Lumopact about their freight data and grid-emissions-based shipment scheduling last week (Lumopact, medium)
+- [fact] Lumopact schedules freight pickups against the emissions curve, moving shipments to times when the grid is greener (Lumopact, medium)
+- [fact] EXTRACTION_COMPLETE (low)
