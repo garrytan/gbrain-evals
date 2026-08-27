@@ -1,0 +1,486 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://brainbench.dev/schemas/cat35-receipt.schema.json",
+  "title": "BrainBench Cat 35 Transcript-Distill Receipt",
+  "description": "Receipt contract for Cat 35 (Transcript → Brain-Page Distillation Fidelity). The chart generator, the published report, and the E1 regression-delta path all consume this shape. additionalProperties stays true at the top level for forward compatibility (e.g. judge_calibration, lane_errors, prior_run_skipped_reason).",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "cat",
+    "mode",
+    "gbrain_version",
+    "gbrain_sha",
+    "timestamp",
+    "corpus",
+    "corpus_sha",
+    "judge_model",
+    "judge_prompt_version",
+    "config_snapshot",
+    "lanes",
+    "per_item",
+    "coverage_by_lane",
+    "coverage_by_kind",
+    "coverage_by_notability",
+    "coverage_by_depth",
+    "verbatim_quote_fidelity",
+    "hallucination",
+    "distractor_leakage",
+    "usability",
+    "emission",
+    "compression_ratio_by_lane",
+    "attribution_hazards",
+    "triage",
+    "judge_failed_rate",
+    "prior_run",
+    "deltas",
+    "item_flips",
+    "facts_budget_exhausted",
+    "total_cost_usd",
+    "wall_seconds",
+    "gate_pass",
+    "gates",
+    "transcripts"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "cat": {
+      "type": "string",
+      "const": "cat35-transcript-distill"
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "b-pre-validity",
+        "partial",
+        "full"
+      ],
+      "description": "Only mode=full receipts (whole corpus, all lanes, no subset flags) may feed the published benchmark page; partial = CAT35_FULL with narrowing flags (never publication-eligible); b-pre-validity is the safe-by-default smoke."
+    },
+    "gbrain_version": {
+      "type": "string"
+    },
+    "gbrain_sha": {
+      "type": "string",
+      "description": "The pinned gbrain commit the run executed against (package.json pin)."
+    },
+    "timestamp": {
+      "type": "string"
+    },
+    "corpus": {
+      "type": "string",
+      "const": "transcript-distill-v1"
+    },
+    "corpus_sha": {
+      "type": "string",
+      "description": "SHA256 over the corpus manifest — pins every benchmark input file."
+    },
+    "judge_model": {
+      "type": "string"
+    },
+    "judge_prompt_version": {
+      "type": "string"
+    },
+    "config_snapshot": {
+      "type": "object",
+      "description": "Models, thresholds, max_turns — everything needed to check E1 comparability."
+    },
+    "lanes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "verbatim",
+          "facts",
+          "dream"
+        ]
+      }
+    },
+    "per_item": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "transcript_id",
+          "lane",
+          "item_id",
+          "kind",
+          "notability",
+          "depth_bucket",
+          "status",
+          "joint"
+        ],
+        "properties": {
+          "transcript_id": {
+            "type": "string"
+          },
+          "lane": {
+            "type": "string",
+            "enum": [
+              "verbatim",
+              "facts",
+              "dream"
+            ]
+          },
+          "item_id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "notability": {
+            "type": "string"
+          },
+          "depth_bucket": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "FULL",
+              "PARTIAL",
+              "ABSENT",
+              "JUDGE_FAILED"
+            ]
+          },
+          "joint": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Per-item joint score (coverage credit × mechanical evidence verification). Dream lane only; null elsewhere."
+          }
+        }
+      }
+    },
+    "coverage_by_lane": {
+      "type": "object",
+      "description": "Per lane: macro (headline — mean of per-transcript recall), micro, strict (FULL-only), partial_rate, and the seeded transcript-level bootstrap CI.",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "macro",
+          "micro",
+          "strict",
+          "partial_rate",
+          "ci_lo",
+          "ci_hi"
+        ],
+        "properties": {
+          "macro": {
+            "type": "number"
+          },
+          "micro": {
+            "type": "number"
+          },
+          "strict": {
+            "type": "number"
+          },
+          "partial_rate": {
+            "type": "number"
+          },
+          "ci_lo": {
+            "type": "number"
+          },
+          "ci_hi": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "coverage_by_kind": {
+      "type": "object",
+      "description": "Descriptive breakdown: kind → lane → 1/0.5/0 recall."
+    },
+    "coverage_by_notability": {
+      "type": "object",
+      "description": "Descriptive breakdown: notability tier → lane → recall."
+    },
+    "coverage_by_depth": {
+      "type": "object",
+      "description": "Descriptive breakdown: depth bucket (early/middle/late) → lane → recall."
+    },
+    "verbatim_quote_fidelity": {
+      "type": "object",
+      "required": [
+        "total",
+        "grounded",
+        "rate"
+      ],
+      "properties": {
+        "total": {
+          "type": "number"
+        },
+        "grounded": {
+          "type": "number"
+        },
+        "rate": {
+          "type": "number"
+        }
+      },
+      "description": "Mechanical quote fidelity over dream-page blockquotes + qualifying inline spans, checked against the transcript."
+    },
+    "hallucination": {
+      "type": "object",
+      "description": "Per lane (facts + dream): claim counts and 1 − claim precision over verifiable claims.",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "claims",
+          "verifiable",
+          "ungrounded",
+          "rate"
+        ],
+        "properties": {
+          "claims": {
+            "type": "number"
+          },
+          "verifiable": {
+            "type": "number"
+          },
+          "ungrounded": {
+            "type": "number"
+          },
+          "rate": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "distractor_leakage": {
+      "type": "object",
+      "description": "Per lane: mechanical anchor hits and judge-confirmed surfaced-as-salient leaks. Separate axis from hallucination — distractor content is true-but-noise.",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "hits",
+          "confirmed",
+          "rate"
+        ],
+        "properties": {
+          "hits": {
+            "type": "number"
+          },
+          "confirmed": {
+            "type": "number"
+          },
+          "rate": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "usability": {
+      "type": "object",
+      "required": [
+        "satisfied",
+        "total",
+        "rate",
+        "per_transcript"
+      ],
+      "properties": {
+        "satisfied": {
+          "type": "number"
+        },
+        "total": {
+          "type": "number"
+        },
+        "rate": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "null when no page-producing lane emitted anything (usability is conditional on emission)."
+        },
+        "per_transcript": {
+          "type": "array"
+        }
+      }
+    },
+    "emission": {
+      "type": "object",
+      "required": [
+        "expected_high",
+        "emitted",
+        "rate"
+      ],
+      "properties": {
+        "expected_high": {
+          "type": "number"
+        },
+        "emitted": {
+          "type": "number"
+        },
+        "rate": {
+          "type": "number"
+        }
+      },
+      "description": "Selectivity axis: expected-high transcripts that produced ≥1 dream page. Pure-routine silence is correct and never pollutes usability."
+    },
+    "compression_ratio_by_lane": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      },
+      "description": "Output tokens ÷ transcript tokens per lane, chars/4 approximation on both sides."
+    },
+    "attribution_hazards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "hazard_id",
+          "transcript_id",
+          "type",
+          "violated"
+        ],
+        "properties": {
+          "hazard_id": {
+            "type": "string"
+          },
+          "transcript_id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "violated": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "null = not evaluable (lane error or judge failure)."
+          }
+        }
+      }
+    },
+    "triage": {
+      "type": "object",
+      "required": [
+        "verdicts",
+        "separation",
+        "threshold_curve"
+      ],
+      "properties": {
+        "verdicts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "transcript_id",
+              "score",
+              "expected"
+            ],
+            "properties": {
+              "transcript_id": {
+                "type": "string"
+              },
+              "score": {
+                "type": "number"
+              },
+              "expected": {
+                "type": "string",
+                "enum": [
+                  "high",
+                  "low"
+                ]
+              }
+            }
+          }
+        },
+        "separation": {
+          "type": "object",
+          "description": "Score distributions per expected group (high vs low). Descriptive separation check, not calibration."
+        },
+        "threshold_curve": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "threshold",
+              "high_pass_rate",
+              "low_pass_rate",
+              "accuracy"
+            ],
+            "properties": {
+              "threshold": {
+                "type": "number"
+              },
+              "high_pass_rate": {
+                "type": "number"
+              },
+              "low_pass_rate": {
+                "type": "number"
+              },
+              "accuracy": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      }
+    },
+    "judge_failed_rate": {
+      "type": "number"
+    },
+    "prior_run": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "E1 regression baseline actually used (null on first run or comparability mismatch)."
+    },
+    "deltas": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Headline metric deltas vs prior_run. Informational only — nothing gates on a delta."
+    },
+    "item_flips": {
+      "type": "array",
+      "description": "Per-item status flips vs the prior run (e.g. FULL→ABSENT) — the actionable regression signal."
+    },
+    "facts_budget_exhausted": {
+      "type": "boolean"
+    },
+    "total_cost_usd": {
+      "type": "number"
+    },
+    "wall_seconds": {
+      "type": "number"
+    },
+    "gate_pass": {
+      "type": "boolean"
+    },
+    "gates": {
+      "type": "object",
+      "description": "Validity gates (verbatim coverage, judge_failed rate, dream emission). Values may be null when a gate is not applicable to the lane set."
+    },
+    "transcripts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Transcript ids evaluated in this run (the chart reads its length)."
+    },
+    "signal_transcripts": {
+      "type": "number",
+      "description": "Count of evaluated transcripts carrying gold items — the coverage-macro denominator population (headline n). Optional: receipts written before 2026-08-26 predate it."
+    },
+    "usability_by_lane": {
+      "type": "object",
+      "description": "Per-lane usability (verbatim and dream are incompatible populations; the blended usability.rate alone misleads).",
+      "additionalProperties": {
+        "type": "object"
+      }
+    },
+    "cost_note": {
+      "type": "string",
+      "description": "What total_cost_usd covers. Judges + facts only: the gbrain phase API does not surface dream-lane subagent spend."
+    }
+  }
+}
