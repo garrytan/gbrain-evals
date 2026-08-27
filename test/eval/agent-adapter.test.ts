@@ -12,12 +12,13 @@
  *   - extractSlugs regex
  */
 
-import { describe, test, expect } from 'bun:test';
+import { describe, test, expect, beforeAll, afterAll } from 'bun:test';
 import Anthropic from '@anthropic-ai/sdk';
 import {
   ClaudeSonnetWithToolsAdapter,
   runAgentLoop,
   extractSlugs,
+  setTeardownDisconnectBoundMs,
   type AgentAdapterState,
 } from '../../eval/runner/adapters/claude-sonnet-with-tools.ts';
 import type { Page } from '../../eval/runner/types.ts';
@@ -97,7 +98,10 @@ describe('ClaudeSonnetWithToolsAdapter — Adapter interface', () => {
     expect(state.engine).toBeDefined();
     const page = await state.engine.getPage('people/amara');
     expect(page?.title).toBe('Amara Okafor');
-    await adapter.teardown?.(state);
+    // teardown skipped: at the pinned gbrain (v0.46.3) PGLiteEngine.disconnect()
+    // after ops-layer use enters a sync WASM spin that freezes the bun test
+    // runner (even un-awaited). Per-test engines die with the process. See
+    // TODOS.md (gbrain upstream) — restore teardown when the pin moves past it.
   });
 
   test('query() throws — agent adapter does not participate in retrieval scorecard', async () => {
@@ -114,7 +118,10 @@ describe('ClaudeSonnetWithToolsAdapter — Adapter interface', () => {
     }
     expect(err).toBeInstanceOf(Error);
     expect((err as Error).message).toContain('intentionally unsupported');
-    await adapter.teardown?.(state);
+    // teardown skipped: at the pinned gbrain (v0.46.3) PGLiteEngine.disconnect()
+    // after ops-layer use enters a sync WASM spin that freezes the bun test
+    // runner (even un-awaited). Per-test engines die with the process. See
+    // TODOS.md (gbrain upstream) — restore teardown when the pin moves past it.
   });
 });
 
@@ -163,7 +170,10 @@ describe('runAgentLoop — happy path', () => {
     expect(result.total_output_tokens).toBe(70);
     expect(result.total_cost_usd).toBeGreaterThan(0);
 
-    await adapter.teardown?.(state);
+    // teardown skipped: at the pinned gbrain (v0.46.3) PGLiteEngine.disconnect()
+    // after ops-layer use enters a sync WASM spin that freezes the bun test
+    // runner (even un-awaited). Per-test engines die with the process. See
+    // TODOS.md (gbrain upstream) — restore teardown when the pin moves past it.
   });
 
   test('immediate end_turn (no tool calls) → no_brain_calls ordering', async () => {
@@ -182,7 +192,10 @@ describe('runAgentLoop — happy path', () => {
     expect(result.stop_reason).toBe('end_turn');
     expect(result.brain_first_ordering).toBe('no_brain_calls');
     expect(result.evidence_refs).toEqual([]);
-    await adapter.teardown?.(state);
+    // teardown skipped: at the pinned gbrain (v0.46.3) PGLiteEngine.disconnect()
+    // after ops-layer use enters a sync WASM spin that freezes the bun test
+    // runner (even un-awaited). Per-test engines die with the process. See
+    // TODOS.md (gbrain upstream) — restore teardown when the pin moves past it.
   });
 });
 
@@ -211,7 +224,10 @@ describe('runAgentLoop — turn cap + error paths', () => {
     expect(lastTurn.kind).toBe('final_answer');
     expect(lastTurn.final_answer?.text).toBe('');
 
-    await adapter.teardown?.(state);
+    // teardown skipped: at the pinned gbrain (v0.46.3) PGLiteEngine.disconnect()
+    // after ops-layer use enters a sync WASM spin that freezes the bun test
+    // runner (even un-awaited). Per-test engines die with the process. See
+    // TODOS.md (gbrain upstream) — restore teardown when the pin moves past it.
   });
 
   test('agent attempts a mutating op → tool_result records is_error', async () => {
@@ -236,7 +252,10 @@ describe('runAgentLoop — turn cap + error paths', () => {
     // Loop continues; final answer eventually happens
     expect(result.stop_reason).toBe('end_turn');
 
-    await adapter.teardown?.(state);
+    // teardown skipped: at the pinned gbrain (v0.46.3) PGLiteEngine.disconnect()
+    // after ops-layer use enters a sync WASM spin that freezes the bun test
+    // runner (even un-awaited). Per-test engines die with the process. See
+    // TODOS.md (gbrain upstream) — restore teardown when the pin moves past it.
   });
 });
 
@@ -268,5 +287,74 @@ describe('extractSlugs', () => {
     const slugs = extractSlugs('Path: [thing](path/to/thing).');
     // "path/to/thing" has two slashes, doesn't match the single-slash regex
     expect(slugs).toEqual([]);
+  });
+});
+
+// ─── teardown — bounded disconnect ────────────────────────────────────
+//
+// The real-PGLite teardown path can't run here (see the "teardown skipped"
+// notes above), so these tests pin the bounded-race semantics with a
+// CONSTRUCTED stub engine object (the tool-bridge.test.ts fake-engine
+// convention — never a monkeypatched real engine). This is the behavior the
+// 2026-08 diff changed: a wedged disconnect() must not hang eval teardown.
+
+describe('ClaudeSonnetWithToolsAdapter — teardown bounded disconnect', () => {
+  const adapter = new ClaudeSonnetWithToolsAdapter();
+  const stateWith = (engine: unknown) =>
+    ({ engine, poisonFixtures: [] }) as unknown as AgentAdapterState;
+
+  // Inject a small bound so the never-resolving case doesn't cost a real 5s
+  // per suite run (and so assertions aren't load-sensitive wall-clock windows).
+  beforeAll(() => setTeardownDisconnectBoundMs(50));
+  afterAll(() => setTeardownDisconnectBoundMs(5000));
+
+  test('resolving disconnect() completes teardown promptly and is awaited', async () => {
+    let calls = 0;
+    await adapter.teardown(stateWith({ disconnect: async () => { calls++; } }));
+    expect(calls).toBe(1);
+  });
+
+  test('rejecting disconnect() is swallowed — teardown resolves, never throws', async () => {
+    let threw = false;
+    try {
+      await adapter.teardown(
+        stateWith({ disconnect: () => Promise.reject(new Error('op context handle survives')) }),
+      );
+    } catch {
+      threw = true;
+    }
+    expect(threw).toBe(false);
+  });
+
+  test('never-resolving disconnect() is bounded — cannot hang the suite', async () => {
+    // With the 50ms injected bound this completes near-instantly; the only
+    // assertion that matters is that it completes at all.
+    await adapter.teardown(stateWith({ disconnect: () => new Promise(() => {}) }));
+  }, 5_000);
+
+  test('synchronously-throwing disconnect() is swallowed', async () => {
+    let threw = false;
+    try {
+      await adapter.teardown(
+        stateWith({
+          disconnect: () => {
+            throw new Error('sync wedge');
+          },
+        }),
+      );
+    } catch {
+      threw = true;
+    }
+    expect(threw).toBe(false);
+  });
+
+  test('non-promise-returning disconnect() does not reject teardown', async () => {
+    let threw = false;
+    try {
+      await adapter.teardown(stateWith({ disconnect: () => undefined }));
+    } catch {
+      threw = true;
+    }
+    expect(threw).toBe(false);
   });
 });
