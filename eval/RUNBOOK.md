@@ -18,8 +18,11 @@ bun run eval:run
 
 ### "ANTHROPIC_API_KEY environment variable is missing"
 
-Only needed if you regenerate the corpus (`eval/generators/gen.ts`). If
-you're using the committed `eval/data/world-v1/` shards, you don't need it.
+Needed by corpus regeneration (`eval/generators/gen.ts`,
+`eval/generators/transcript-distill-gen.ts`) and by the runners that call
+Claude — Cat 34, Cat 35, and the `eval:brainbench` sweep that includes them.
+Retrieval-only runs over the committed `eval/data/world-v1/` shards don't
+need it.
 
 ### `Cannot find module '.../@electric-sql/pglite/dist/pglite.wasm'`
 

@@ -285,7 +285,7 @@ export ANTHROPIC_API_KEY=... OPENAI_API_KEY=...
 
 bun test test/eval/                                   # $0, no network
 bun run eval:cat35:smoke                              # BPRE smoke, measured $0.10 / 81 s
-CAT35_JUDGE_MODEL=claude-sonnet-4-6 bun run eval:cat35 # published run, measured $6.20 / 29 min
+CAT35_HARD_STOP_USD=50 CAT35_JUDGE_MODEL=claude-sonnet-4-6 bun run eval:cat35 # published run, measured $6.20 / 29 min
 # (eval:cat35 sets CAT35_FULL=1 — full spend; pre-run estimate was $11-18
 #  Haiku-judge / $19-28 Sonnet-judge; the batched judges came in far under.
 #  CAT35_HARD_STOP_USD=50 was set for the published run because the
@@ -303,7 +303,8 @@ re-verification (master had already moved past this SHA within hours of
 verification). The corpus FIXTURES ship committed — you never need to
 regenerate them. The generator's Opus cache is gitignored, so a from-scratch
 regeneration (`bun run eval:generate-transcript-distill`) costs ~$6 on a fresh
-clone and $0 on a machine with a warm cache. Receipts land in
+clone and under $1 on a machine with a warm cache (only the Opus prose is
+cached; the Haiku audit pass always re-runs). Receipts land in
 `eval/reports/cat35-transcript-distill/` (gitignored); the published baseline
 receipt is committed next to this report.
 
@@ -352,7 +353,7 @@ receipt is committed next to this report.
 ## 12. Files
 
 - Runner: `eval/runner/cat35-transcript-distill.ts` (+ registration in
-  `eval/runner/all.ts`, timeout 2h)
+  `eval/runner/all.ts`, timeout 3h)
 - Mechanical checks: `eval/runner/cat35-checks.ts`
 - Judges: `eval/runner/cat35-judges.ts` (prompt version 2026-08-16-v1)
 - Chart: `eval/runner/cat35-transcript-distill-chart.ts`

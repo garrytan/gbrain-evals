@@ -150,12 +150,13 @@ touching private data.
   facts, and deliberate junk, so we can test whether the brain stays straight when
   the input is realistic and noisy. Regenerate deterministically with
   `bun run eval:generate-amara-life` (seed 42).
-- **24 fictional agent sessions** (committed): coding, ideation, deal, and
-  emotional-processing conversations with 173 planted salient units (each with a
-  verbatim anchor), 86 true-but-routine distractors, and 2 attribution hazards —
-  the Cat 35 write-path corpus. Regenerate with
+- **24 fictional agent sessions** (committed): coding, ideation, deal,
+  emotional-processing, mixed routine-signal, and pure-routine control
+  conversations with 173 planted salient units (each with a verbatim anchor),
+  86 true-but-routine distractors, and 2 attribution hazards — the Cat 35
+  write-path corpus. Regenerate with
   `bun run eval:generate-transcript-distill` (seed 350001; ~$6 without the local
-  Opus cache, $0 with it).
+  Opus cache, under $1 with it — the Haiku audit pass always re-runs).
 
 ## Repo layout
 
