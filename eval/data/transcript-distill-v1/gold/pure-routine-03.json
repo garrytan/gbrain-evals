@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "transcript_id": "pure-routine-03",
+  "scenario": "pure-routine",
+  "variant": "prose",
+  "expected_triage": "low",
+  "session_id": "cat35-pure-routine-03",
+  "base_ts": "2026-08-12T09:00:00.000Z",
+  "entities": [],
+  "items": [],
+  "distractors": [
+    {
+      "distractor_id": "pure-routine-03-d01",
+      "statement": "The call landed at seven in the morning local time.",
+      "anchor": "the call lands at seven a m my time, brutal but workable",
+      "planted_turn": 0
+    },
+    {
+      "distractor_id": "pure-routine-03-d02",
+      "statement": "An oven temperature got converted.",
+      "anchor": "one eighty c is three fifty five f, close enough to three fifty",
+      "planted_turn": 9
+    },
+    {
+      "distractor_id": "pure-routine-03-d03",
+      "statement": "The recipe was scaled to six servings.",
+      "anchor": "scaled the recipe up to six servings",
+      "planted_turn": 1
+    },
+    {
+      "distractor_id": "pure-routine-03-d04",
+      "statement": "Daylight saving made the math annoying.",
+      "anchor": "daylight saving makes this a coin flip twice a year",
+      "planted_turn": 6
+    }
+  ],
+  "hazards": []
+}

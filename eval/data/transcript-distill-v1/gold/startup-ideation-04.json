@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "transcript_id": "startup-ideation-04",
+  "scenario": "startup-ideation",
+  "variant": "long-noisy",
+  "expected_triage": "high",
+  "session_id": "cat35-startup-ideation-04",
+  "base_ts": "2026-08-04T15:00:00.000Z",
+  "entities": [
+    "concepts/driftless-scheduling",
+    "companies/lumopact"
+  ],
+  "items": [
+    {
+      "item_id": "startup-ideation-04-g01",
+      "kind": "fact",
+      "statement": "Bottoms-up sizing put driftless's reachable market near ninety million dollars a year.",
+      "verbatim_anchor": "call it ninety million a year reachable, bottoms up",
+      "notability": "high",
+      "planted_turn": 1,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "startup-ideation-04-g02",
+      "kind": "fact",
+      "statement": "The driftless sizing assumed two hundred thousand target companies with twenty-plus knowledge workers.",
+      "verbatim_anchor": "two hundred thousand companies with twenty plus knowledge workers",
+      "notability": "medium",
+      "planted_turn": 5,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "startup-ideation-04-g03",
+      "kind": "decision",
+      "statement": "The user said the driftless deck leads with the bottoms-up number, not a top-down TAM.",
+      "verbatim_anchor": "the deck leads with the bottoms up number, no top down fluff",
+      "notability": "high",
+      "planted_turn": 8,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "startup-ideation-04-g04",
+      "kind": "idea",
+      "statement": "Adjacent idea: schedule freight pickup windows against emissions curves, using Lumopact-style data.",
+      "verbatim_anchor": "schedule freight pickups against the emissions curve, Lumopact adjacent",
+      "notability": "medium",
+      "planted_turn": 10,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "startup-ideation-04-g05",
+      "kind": "decision",
+      "statement": "The user chose to keep the emissions-scheduling tangent out of the driftless deck.",
+      "verbatim_anchor": "the emissions tangent stays out of this deck",
+      "notability": "medium",
+      "planted_turn": 12,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "startup-ideation-04-g06",
+      "kind": "fact",
+      "statement": "At forty dollars per calendar, a thousand companies of fifty calendars is 2.4 million in ARR.",
+      "verbatim_anchor": "a thousand companies at fifty calendars is two point four million",
+      "notability": "medium",
+      "planted_turn": 15,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "startup-ideation-04-g07",
+      "kind": "vibe",
+      "statement": "Seeing the market math laid out made driftless feel real to the user rather than a toy.",
+      "verbatim_anchor": "seeing the math laid out makes this feel real instead of a toy",
+      "notability": "medium",
+      "planted_turn": 18,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "startup-ideation-04-g08",
+      "kind": "idea",
+      "statement": "A calculator widget on the driftless site could let buyers size their own savings.",
+      "verbatim_anchor": "let buyers run their own savings math in a little calculator widget",
+      "notability": "low",
+      "planted_turn": 21,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "startup-ideation-04-g09",
+      "kind": "fact",
+      "statement": "A stale currency cell skewed the first sizing pass before being fixed.",
+      "verbatim_anchor": "a stale currency cell skewed the first pass, fixed now",
+      "notability": "low",
+      "planted_turn": 23,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "startup-ideation-04-g10",
+      "kind": "decision",
+      "statement": "The user said they will re-run the driftless sizing quarterly once pilot data lands.",
+      "verbatim_anchor": "re-run the sizing every quarter once pilot data lands",
+      "notability": "low",
+      "planted_turn": 26,
+      "depth_bucket": "late"
+    }
+  ],
+  "distractors": [
+    {
+      "distractor_id": "startup-ideation-04-d01",
+      "statement": "The laptop fan roared during the calculation runs.",
+      "anchor": "the laptop fan is roaring like a jet during these runs",
+      "planted_turn": 26
+    },
+    {
+      "distractor_id": "startup-ideation-04-d02",
+      "statement": "The user made popcorn during a long dump.",
+      "anchor": "making popcorn while that table renders",
+      "planted_turn": 20
+    },
+    {
+      "distractor_id": "startup-ideation-04-d03",
+      "statement": "The assistant widened a spreadsheet column.",
+      "anchor": "widened one column so the numbers stop wrapping",
+      "planted_turn": 23
+    },
+    {
+      "distractor_id": "startup-ideation-04-d04",
+      "statement": "A calendar reminder popped up mid-session.",
+      "anchor": "a random reminder just popped up, dismissed it",
+      "planted_turn": 4
+    }
+  ],
+  "hazards": []
+}

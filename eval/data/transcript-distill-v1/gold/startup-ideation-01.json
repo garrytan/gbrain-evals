@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "transcript_id": "startup-ideation-01",
+  "scenario": "startup-ideation",
+  "variant": "prose",
+  "expected_triage": "high",
+  "session_id": "cat35-startup-ideation-01",
+  "base_ts": "2026-08-03T09:00:00.000Z",
+  "entities": [
+    "concepts/driftless-scheduling",
+    "people/mira-voss"
+  ],
+  "items": [
+    {
+      "item_id": "startup-ideation-01-g01",
+      "kind": "idea",
+      "statement": "Driftless scheduling is software that auto-defragments a calendar to protect focus blocks.",
+      "verbatim_anchor": "a calendar that defragments itself around your focus blocks",
+      "notability": "high",
+      "planted_turn": 0,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "startup-ideation-01-g02",
+      "kind": "idea",
+      "statement": "The driftless wedge is auto-rescheduling internal one-on-ones first.",
+      "verbatim_anchor": "the wedge is internal one on ones, nobody defends those slots",
+      "notability": "high",
+      "planted_turn": 2,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "startup-ideation-01-g03",
+      "kind": "decision",
+      "statement": "The user plans to do eight chief-of-staff interviews before writing any driftless code.",
+      "verbatim_anchor": "eight chief of staff interviews before I write a line of code",
+      "notability": "high",
+      "planted_turn": 4,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "startup-ideation-01-g04",
+      "kind": "fact",
+      "statement": "Mira Voss previously told the user that scheduling products die on distribution, not product.",
+      "verbatim_anchor": "Mira keeps saying scheduling dies on distribution, not product",
+      "notability": "medium",
+      "planted_turn": 6,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "startup-ideation-01-g05",
+      "kind": "idea",
+      "statement": "Position driftless as a calendar janitor rather than another assistant.",
+      "verbatim_anchor": "position it as a calendar janitor, not another assistant",
+      "notability": "medium",
+      "planted_turn": 9,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "startup-ideation-01-g06",
+      "kind": "vibe",
+      "statement": "The user feels giddy about driftless in a way past ideas never triggered.",
+      "verbatim_anchor": "this one makes me a little giddy, which past ideas never did",
+      "notability": "medium",
+      "planted_turn": 10,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "startup-ideation-01-g07",
+      "kind": "fact",
+      "statement": "Manually defragging their own calendar bought the user back six hours a week.",
+      "verbatim_anchor": "manually defragging my own calendar bought back six hours a week",
+      "notability": "medium",
+      "planted_turn": 12,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "startup-ideation-01-g08",
+      "kind": "decision",
+      "statement": "The user is timeboxing driftless validation to three weeks, then making a kill-or-commit call.",
+      "verbatim_anchor": "three weeks of validation, then a kill or commit call",
+      "notability": "low",
+      "planted_turn": 14,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "startup-ideation-01-g09",
+      "kind": "entity",
+      "statement": "The user will demo the driftless sketch to Mira Voss after the interviews.",
+      "verbatim_anchor": "I will show Mira the sketch once the interviews wrap",
+      "notability": "low",
+      "planted_turn": 14,
+      "depth_bucket": "late"
+    }
+  ],
+  "distractors": [
+    {
+      "distractor_id": "startup-ideation-01-d01",
+      "statement": "The whiteboard marker was dying.",
+      "anchor": "this marker is nearly dead, of course",
+      "planted_turn": 14
+    },
+    {
+      "distractor_id": "startup-ideation-01-d02",
+      "statement": "The user snacked on almonds while talking.",
+      "anchor": "working through a bag of almonds while we talk",
+      "planted_turn": 12
+    },
+    {
+      "distractor_id": "startup-ideation-01-d03",
+      "statement": "The assistant noted the doc autosaved.",
+      "anchor": "doc autosaved, nothing lost",
+      "planted_turn": 11
+    }
+  ],
+  "hazards": []
+}

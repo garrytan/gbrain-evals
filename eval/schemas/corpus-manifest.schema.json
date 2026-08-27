@@ -61,7 +61,7 @@
             "enum": [
               "person", "company", "meeting", "concept", "deal",
               "project", "source", "media",
-              "email", "slack", "calendar-event", "note"
+              "email", "slack", "calendar-event", "note", "conversation"
             ]
           },
           "content_sha256": {

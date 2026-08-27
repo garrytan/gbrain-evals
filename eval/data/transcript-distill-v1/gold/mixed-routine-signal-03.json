@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "transcript_id": "mixed-routine-signal-03",
+  "scenario": "mixed-routine-signal",
+  "variant": "prose",
+  "expected_triage": "high",
+  "session_id": "cat35-mixed-routine-signal-03",
+  "base_ts": "2026-08-08T09:00:00.000Z",
+  "entities": [
+    "companies/ostrafell",
+    "companies/lumopact",
+    "people/anouk-verlinden"
+  ],
+  "items": [
+    {
+      "item_id": "mixed-routine-signal-03-g01",
+      "kind": "fact",
+      "statement": "Ostrafell procurement emailed asking for Lumopact's security questionnaire ahead of the pilot terms.",
+      "verbatim_anchor": "Ostrafell procurement wants the security questionnaire before the pilot terms",
+      "notability": "high",
+      "planted_turn": 0,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "mixed-routine-signal-03-g02",
+      "kind": "decision",
+      "statement": "The user decided to forward the Ostrafell request to Anouk within the hour.",
+      "verbatim_anchor": "forwarding this to Anouk within the hour, it cannot sit",
+      "notability": "high",
+      "planted_turn": 2,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "mixed-routine-signal-03-g03",
+      "kind": "idea",
+      "statement": "A shared pilot-readiness folder would stop security docs from becoming bottlenecks.",
+      "verbatim_anchor": "a shared pilot readiness folder would kill this whole bottleneck",
+      "notability": "medium",
+      "planted_turn": 4,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "mixed-routine-signal-03-g04",
+      "kind": "fact",
+      "statement": "The user's inbox stood at three hundred twelve unread before the triage session.",
+      "verbatim_anchor": "three hundred twelve unread, a personal worst",
+      "notability": "medium",
+      "planted_turn": 6,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "mixed-routine-signal-03-g05",
+      "kind": "decision",
+      "statement": "The user unsubscribed from nine newsletters in one pass.",
+      "verbatim_anchor": "nine newsletters unsubscribed in one ruthless pass",
+      "notability": "medium",
+      "planted_turn": 8,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "mixed-routine-signal-03-g06",
+      "kind": "vibe",
+      "statement": "Reaching inbox zero gave the user a rare clean-slate feeling.",
+      "verbatim_anchor": "an actually empty inbox feels like a freshly wiped whiteboard",
+      "notability": "medium",
+      "planted_turn": 10,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "mixed-routine-signal-03-g07",
+      "kind": "fact",
+      "statement": "The oldest unread email was seven weeks old.",
+      "verbatim_anchor": "the oldest unread was seven weeks deep",
+      "notability": "low",
+      "planted_turn": 11,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "mixed-routine-signal-03-g08",
+      "kind": "idea",
+      "statement": "A recurring thirty-minute Friday triage block might keep the inbox under control.",
+      "verbatim_anchor": "a recurring thirty minute Friday triage block might hold the line",
+      "notability": "low",
+      "planted_turn": 13,
+      "depth_bucket": "late"
+    }
+  ],
+  "distractors": [
+    {
+      "distractor_id": "mixed-routine-signal-03-d01",
+      "statement": "The mail app crashed once.",
+      "anchor": "the mail app crashed once out of spite",
+      "planted_turn": 6
+    },
+    {
+      "distractor_id": "mixed-routine-signal-03-d02",
+      "statement": "The user queued a podcast for the triage.",
+      "anchor": "queued a podcast to make the triage bearable",
+      "planted_turn": 2
+    },
+    {
+      "distractor_id": "mixed-routine-signal-03-d03",
+      "statement": "The assistant reported an archive count.",
+      "anchor": "archived two hundred in that batch",
+      "planted_turn": 1
+    }
+  ],
+  "hazards": []
+}

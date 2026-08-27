@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "transcript_id": "mixed-routine-signal-01",
+  "scenario": "mixed-routine-signal",
+  "variant": "prose",
+  "expected_triage": "high",
+  "session_id": "cat35-mixed-routine-signal-01",
+  "base_ts": "2026-08-07T09:00:00.000Z",
+  "entities": [
+    "concepts/fernpost",
+    "people/casper-hale"
+  ],
+  "items": [
+    {
+      "item_id": "mixed-routine-signal-01-g01",
+      "kind": "decision",
+      "statement": "The user decided to renew the fernpost domain for three more years.",
+      "verbatim_anchor": "renew the fernpost domain for three years and stop rethinking it",
+      "notability": "high",
+      "planted_turn": 0,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "mixed-routine-signal-01-g02",
+      "kind": "fact",
+      "statement": "Casper Hale found the fernpost redesign navigation confusing on his phone.",
+      "verbatim_anchor": "Casper says the new nav is confusing on his phone",
+      "notability": "medium",
+      "planted_turn": 2,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "mixed-routine-signal-01-g03",
+      "kind": "decision",
+      "statement": "The user will collapse the fernpost mobile navigation to a single menu button.",
+      "verbatim_anchor": "collapse the mobile nav to one menu button",
+      "notability": "medium",
+      "planted_turn": 4,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "mixed-routine-signal-01-g04",
+      "kind": "fact",
+      "statement": "The fernpost domain renewal costs thirty-eight dollars for three years.",
+      "verbatim_anchor": "thirty eight bucks for the three year renewal",
+      "notability": "medium",
+      "planted_turn": 6,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "mixed-routine-signal-01-g05",
+      "kind": "idea",
+      "statement": "The user considered possibly mirroring fernpost to a backup host for resilience.",
+      "verbatim_anchor": "maybe mirror fernpost to a backup host just in case",
+      "notability": "medium",
+      "planted_turn": 8,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "mixed-routine-signal-01-g06",
+      "kind": "vibe",
+      "statement": "The user felt disproportionate satisfaction closing long-open chore tabs.",
+      "verbatim_anchor": "closing these chore tabs feels disproportionately satisfying",
+      "notability": "medium",
+      "planted_turn": 10,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "mixed-routine-signal-01-g07",
+      "kind": "fact",
+      "statement": "The user returned the faulty keyboard within the return window.",
+      "verbatim_anchor": "the faulty keyboard finally went back within the window",
+      "notability": "low",
+      "planted_turn": 12,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "mixed-routine-signal-01-g08",
+      "kind": "idea",
+      "statement": "The user considered possibly batching every subscription renewal into one calendar day per year.",
+      "verbatim_anchor": "batch every renewal into one single day a year",
+      "notability": "low",
+      "planted_turn": 13,
+      "depth_bucket": "late"
+    }
+  ],
+  "distractors": [
+    {
+      "distractor_id": "mixed-routine-signal-01-d01",
+      "statement": "A grocery run was planned for after the session.",
+      "anchor": "grocery run after this, list is done",
+      "planted_turn": 2
+    },
+    {
+      "distractor_id": "mixed-routine-signal-01-d02",
+      "statement": "The recycling went out late.",
+      "anchor": "took the recycling out embarrassingly late",
+      "planted_turn": 12
+    },
+    {
+      "distractor_id": "mixed-routine-signal-01-d03",
+      "statement": "The assistant confirmed a reminder was set.",
+      "anchor": "reminder set, you are covered",
+      "planted_turn": 3
+    },
+    {
+      "distractor_id": "mixed-routine-signal-01-d04",
+      "statement": "The user reheated soup.",
+      "anchor": "reheating soup for the second time today",
+      "planted_turn": 8
+    }
+  ],
+  "hazards": []
+}

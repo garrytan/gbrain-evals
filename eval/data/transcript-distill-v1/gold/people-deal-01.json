@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "transcript_id": "people-deal-01",
+  "scenario": "people-deal",
+  "variant": "prose",
+  "expected_triage": "high",
+  "session_id": "cat35-people-deal-01",
+  "base_ts": "2026-08-05T09:00:00.000Z",
+  "entities": [
+    "people/anouk-verlinden",
+    "companies/lumopact",
+    "companies/vantabrook",
+    "people/tomas-brekke",
+    "companies/ostrafell"
+  ],
+  "items": [
+    {
+      "item_id": "people-deal-01-g01",
+      "kind": "fact",
+      "statement": "Lumopact is raising a two-million-dollar seed led by Vantabrook Capital.",
+      "verbatim_anchor": "two million seed with Vantabrook leading",
+      "notability": "high",
+      "planted_turn": 0,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "people-deal-01-g02",
+      "kind": "fact",
+      "statement": "The Lumopact round is priced at a twelve-million-dollar post-money cap.",
+      "verbatim_anchor": "twelve million post money cap on the note",
+      "notability": "high",
+      "planted_turn": 2,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "people-deal-01-g03",
+      "kind": "decision",
+      "statement": "The user decided to commit twenty-five thousand dollars to Lumopact's seed.",
+      "verbatim_anchor": "I am in for twenty five k, final answer",
+      "notability": "high",
+      "planted_turn": 4,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "people-deal-01-g04",
+      "kind": "fact",
+      "statement": "Lumopact's grocer pilot cut estimated freight emissions by eighteen percent.",
+      "verbatim_anchor": "their grocer pilot cut estimated freight emissions eighteen percent",
+      "notability": "medium",
+      "planted_turn": 6,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "people-deal-01-g05",
+      "kind": "entity",
+      "statement": "Tomas Brekke is the Vantabrook partner running the Lumopact deal.",
+      "verbatim_anchor": "Tomas Brekke is running point for Vantabrook",
+      "notability": "medium",
+      "planted_turn": 8,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "people-deal-01-g06",
+      "kind": "vibe",
+      "statement": "The user trusts Anouk's calm under hostile diligence questioning.",
+      "verbatim_anchor": "Anouk stayed dead calm under the nastiest diligence questions, I like that",
+      "notability": "medium",
+      "planted_turn": 10,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "people-deal-01-g07",
+      "kind": "decision",
+      "statement": "The user will do two customer reference calls before wiring the Lumopact check.",
+      "verbatim_anchor": "two customer reference calls before I wire anything",
+      "notability": "medium",
+      "planted_turn": 12,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "people-deal-01-g08",
+      "kind": "idea",
+      "statement": "The user might intro Lumopact to Ostrafell for a second pilot.",
+      "verbatim_anchor": "maybe I intro them to Ostrafell for a second pilot",
+      "notability": "low",
+      "planted_turn": 14,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "people-deal-01-g09",
+      "kind": "fact",
+      "statement": "The Lumopact team is seven people, five of them engineers.",
+      "verbatim_anchor": "seven people, five engineers",
+      "notability": "low",
+      "planted_turn": 14,
+      "depth_bucket": "late"
+    }
+  ],
+  "distractors": [
+    {
+      "distractor_id": "people-deal-01-d01",
+      "statement": "The pitch deck fonts bothered the user.",
+      "anchor": "their deck font choice hurt a little, not that it matters",
+      "planted_turn": 6
+    },
+    {
+      "distractor_id": "people-deal-01-d02",
+      "statement": "The user ate a granola bar while taking notes.",
+      "anchor": "inhaling a granola bar while I get this down",
+      "planted_turn": 12
+    },
+    {
+      "distractor_id": "people-deal-01-d03",
+      "statement": "The assistant fixed a name spelling in the notes.",
+      "anchor": "corrected one name spelling in the notes file",
+      "planted_turn": 15
+    }
+  ],
+  "hazards": []
+}

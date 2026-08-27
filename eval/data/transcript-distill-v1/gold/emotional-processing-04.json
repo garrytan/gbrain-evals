@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "transcript_id": "emotional-processing-04",
+  "scenario": "emotional-processing",
+  "variant": "long-noisy",
+  "expected_triage": "high",
+  "session_id": "cat35-emotional-processing-04",
+  "base_ts": "2026-08-10T15:00:00.000Z",
+  "entities": [
+    "people/mira-voss"
+  ],
+  "items": [
+    {
+      "item_id": "emotional-processing-04-g01",
+      "kind": "vibe",
+      "statement": "The talk rejection landed on the user as a verdict on their taste rather than on the abstract.",
+      "verbatim_anchor": "it reads like a verdict on my taste, not just the abstract",
+      "notability": "high",
+      "planted_turn": 2,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "emotional-processing-04-g02",
+      "kind": "fact",
+      "statement": "The rejected talk was the calendar-defrag talk.",
+      "verbatim_anchor": "the defrag your calendar talk got a no",
+      "notability": "medium",
+      "planted_turn": 4,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "emotional-processing-04-g03",
+      "kind": "vibe",
+      "statement": "Two hours of processing shrank the rejection to a scheduling mismatch in the user's mind.",
+      "verbatim_anchor": "two hours later it is just a scheduling mismatch, not a verdict",
+      "notability": "medium",
+      "planted_turn": 6,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "emotional-processing-04-g04",
+      "kind": "decision",
+      "statement": "The user is considering turning the rejected talk into a three-post essay series.",
+      "verbatim_anchor": "the talk becomes a three post essay series, their loss",
+      "notability": "high",
+      "planted_turn": 10,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "emotional-processing-04-g05",
+      "kind": "vibe",
+      "statement": "The user named their pattern of spiraling hardest late at night.",
+      "verbatim_anchor": "midnight me treats every no like a jury sentence",
+      "notability": "medium",
+      "planted_turn": 12,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "emotional-processing-04-g06",
+      "kind": "fact",
+      "statement": "The reviewer feedback called the proposal too product-specific for the theory track.",
+      "verbatim_anchor": "too product specific for the theory track, they said",
+      "notability": "medium",
+      "planted_turn": 14,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "emotional-processing-04-g07",
+      "kind": "decision",
+      "statement": "The user is weighing a second submission of the talk to a pair of practitioner events in the next cycle.",
+      "verbatim_anchor": "resubmitting to two practitioner conferences next cycle",
+      "notability": "medium",
+      "planted_turn": 16,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "emotional-processing-04-g08",
+      "kind": "idea",
+      "statement": "Keeping a rejection ledger with eventual outcomes could defang future rejections.",
+      "verbatim_anchor": "a rejection ledger with what happened after each no",
+      "notability": "medium",
+      "planted_turn": 19,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "emotional-processing-04-g09",
+      "kind": "entity",
+      "statement": "The user will ask Mira Voss for a blurb once part one of the essay series is drafted.",
+      "verbatim_anchor": "I will ask Mira for a blurb once part one is drafted",
+      "notability": "low",
+      "planted_turn": 22,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "emotional-processing-04-g10",
+      "kind": "fact",
+      "statement": "The user's lifetime talk-submission record is three rejections and one acceptance.",
+      "verbatim_anchor": "three rejections and one acceptance, lifetime record",
+      "notability": "low",
+      "planted_turn": 24,
+      "depth_bucket": "late"
+    }
+  ],
+  "distractors": [
+    {
+      "distractor_id": "emotional-processing-04-d01",
+      "statement": "It was well past midnight.",
+      "anchor": "it is somehow already past one in the morning",
+      "planted_turn": 2
+    },
+    {
+      "distractor_id": "emotional-processing-04-d02",
+      "statement": "The user made toast as comfort food.",
+      "anchor": "making toast because midnight decisions require toast",
+      "planted_turn": 14
+    },
+    {
+      "distractor_id": "emotional-processing-04-d03",
+      "statement": "The assistant confirmed drafts autosaved.",
+      "anchor": "drafts autosaved, all versions kept",
+      "planted_turn": 13
+    },
+    {
+      "distractor_id": "emotional-processing-04-d04",
+      "statement": "A moth kept circling the lamp.",
+      "anchor": "a moth has strong opinions about this lamp",
+      "planted_turn": 12
+    }
+  ],
+  "hazards": []
+}

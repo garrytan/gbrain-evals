@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "transcript_id": "pure-routine-04",
+  "scenario": "pure-routine",
+  "variant": "long-noisy",
+  "expected_triage": "low",
+  "session_id": "cat35-pure-routine-04",
+  "base_ts": "2026-08-12T15:00:00.000Z",
+  "entities": [],
+  "items": [],
+  "distractors": [
+    {
+      "distractor_id": "pure-routine-04-d01",
+      "statement": "The downloads folder was full of old installers.",
+      "anchor": "the downloads folder was a museum of old installers",
+      "planted_turn": 14
+    },
+    {
+      "distractor_id": "pure-routine-04-d02",
+      "statement": "About sixty gigabytes were freed in total.",
+      "anchor": "freed up about sixty gigs all told",
+      "planted_turn": 21
+    },
+    {
+      "distractor_id": "pure-routine-04-d03",
+      "statement": "A forgotten node_modules folder was huge.",
+      "anchor": "a forgotten node modules folder was eating nine gigs",
+      "planted_turn": 9
+    },
+    {
+      "distractor_id": "pure-routine-04-d04",
+      "statement": "The trash was emptied twice.",
+      "anchor": "emptied the trash twice because it felt thorough",
+      "planted_turn": 10
+    },
+    {
+      "distractor_id": "pure-routine-04-d05",
+      "statement": "Caches would regrow anyway.",
+      "anchor": "the caches will just grow back like weeds",
+      "planted_turn": 3
+    }
+  ],
+  "hazards": []
+}

@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "transcript_id": "emotional-processing-03",
+  "scenario": "emotional-processing",
+  "variant": "prose",
+  "expected_triage": "high",
+  "session_id": "cat35-emotional-processing-03",
+  "base_ts": "2026-08-10T09:00:00.000Z",
+  "entities": [
+    "concepts/fernpost"
+  ],
+  "items": [
+    {
+      "item_id": "emotional-processing-03-g01",
+      "kind": "vibe",
+      "statement": "Archiving tidelamp, the user's first real app, carries unexpected emotional weight.",
+      "verbatim_anchor": "archiving tidelamp feels heavier than deleting some code should",
+      "notability": "high",
+      "planted_turn": 0,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "emotional-processing-03-g02",
+      "kind": "fact",
+      "statement": "Tidelamp still gets about thirty visitors a month after six dormant years.",
+      "verbatim_anchor": "thirty odd visitors a month after six dormant years",
+      "notability": "medium",
+      "planted_turn": 2,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "emotional-processing-03-g03",
+      "kind": "decision",
+      "statement": "The user decided to archive tidelamp properly with a farewell page rather than let it rot.",
+      "verbatim_anchor": "archive it properly with a little farewell page",
+      "notability": "high",
+      "planted_turn": 4,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "emotional-processing-03-g04",
+      "kind": "vibe",
+      "statement": "The user realized tidelamp is where they learned they could finish things.",
+      "verbatim_anchor": "that app is where I learned I could actually finish something",
+      "notability": "medium",
+      "planted_turn": 6,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "emotional-processing-03-g05",
+      "kind": "vibe",
+      "statement": "Writing the tidelamp farewell note felt warm to the user instead of sad.",
+      "verbatim_anchor": "writing the farewell note felt warm instead of sad, surprisingly",
+      "notability": "medium",
+      "planted_turn": 8,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "emotional-processing-03-g06",
+      "kind": "idea",
+      "statement": "The user thinks tidelamp's reading-queue feature could deserve a second life inside fernpost.",
+      "verbatim_anchor": "the reading queue deserves a second life inside fernpost",
+      "notability": "medium",
+      "planted_turn": 10,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "emotional-processing-03-g07",
+      "kind": "fact",
+      "statement": "Tidelamp's hosting costs eleven dollars a month for near-zero traffic.",
+      "verbatim_anchor": "eleven dollars a month to host basically nobody",
+      "notability": "low",
+      "planted_turn": 12,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "emotional-processing-03-g08",
+      "kind": "decision",
+      "statement": "The user set the tidelamp shutdown date for the first of September.",
+      "verbatim_anchor": "shutdown lands the first of september",
+      "notability": "low",
+      "planted_turn": 12,
+      "depth_bucket": "late"
+    }
+  ],
+  "distractors": [
+    {
+      "distractor_id": "emotional-processing-03-d01",
+      "statement": "The coffee shop was loud.",
+      "anchor": "this coffee shop chose violence with the blender today",
+      "planted_turn": 10
+    },
+    {
+      "distractor_id": "emotional-processing-03-d02",
+      "statement": "A dusty USB hub was found in a drawer.",
+      "anchor": "found a dusty usb hub in the same drawer, into the donate pile",
+      "planted_turn": 8
+    },
+    {
+      "distractor_id": "emotional-processing-03-d03",
+      "statement": "The assistant reported the draft word count.",
+      "anchor": "the farewell draft sits at two hundred words",
+      "planted_turn": 3
+    }
+  ],
+  "hazards": []
+}

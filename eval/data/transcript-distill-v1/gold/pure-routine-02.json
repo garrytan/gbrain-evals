@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "transcript_id": "pure-routine-02",
+  "scenario": "pure-routine",
+  "variant": "prose",
+  "expected_triage": "low",
+  "session_id": "cat35-pure-routine-02",
+  "base_ts": "2026-08-11T15:00:00.000Z",
+  "entities": [],
+  "items": [],
+  "distractors": [
+    {
+      "distractor_id": "pure-routine-02-d01",
+      "statement": "The package sat at a depot for days.",
+      "anchor": "the package has been meditating at the depot for three days",
+      "planted_turn": 6
+    },
+    {
+      "distractor_id": "pure-routine-02-d02",
+      "statement": "The CSV needed commas swapped for semicolons.",
+      "anchor": "swapped commas for semicolons across the csv",
+      "planted_turn": 11
+    },
+    {
+      "distractor_id": "pure-routine-02-d03",
+      "statement": "The printer needed a new cartridge.",
+      "anchor": "the printer wants a new cartridge again",
+      "planted_turn": 8
+    },
+    {
+      "distractor_id": "pure-routine-02-d04",
+      "statement": "A survey email was deleted.",
+      "anchor": "deleted the survey email without guilt",
+      "planted_turn": 6
+    }
+  ],
+  "hazards": []
+}

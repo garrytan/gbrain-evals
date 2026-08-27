@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "transcript_id": "coding-reflection-03",
+  "scenario": "coding-reflection",
+  "variant": "prose",
+  "expected_triage": "high",
+  "session_id": "cat35-coding-reflection-03",
+  "base_ts": "2026-08-02T09:00:00.000Z",
+  "entities": [
+    "concepts/fernpost"
+  ],
+  "items": [
+    {
+      "item_id": "coding-reflection-03-g01",
+      "kind": "fact",
+      "statement": "FP-2203 duplicates came from fernpost regenerating RSS GUIDs on every deploy.",
+      "verbatim_anchor": "the feed GUIDs churn on every deploy, that is the whole bug",
+      "notability": "high",
+      "planted_turn": 1,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "coding-reflection-03-g02",
+      "kind": "decision",
+      "statement": "The user said fernpost should derive RSS GUIDs from the post slug plus publish date so they stay stable.",
+      "verbatim_anchor": "derive the GUID from slug plus publish date and it stays stable",
+      "notability": "high",
+      "planted_turn": 4,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "coding-reflection-03-g03",
+      "kind": "decision",
+      "statement": "The user said to render the fernpost feed at build time rather than on request.",
+      "verbatim_anchor": "render the feed at build time, one less moving part",
+      "notability": "medium",
+      "planted_turn": 6,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "coding-reflection-03-g04",
+      "kind": "fact",
+      "statement": "Three fernpost readers emailed about duplicate feed entries within one week.",
+      "verbatim_anchor": "three readers emailed about the duplicates in a single week",
+      "notability": "medium",
+      "planted_turn": 8,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "coding-reflection-03-g05",
+      "kind": "idea",
+      "statement": "The user is considering a fernpost changelog page generated from git history.",
+      "verbatim_anchor": "a changelog page straight from git history could be neat for fernpost",
+      "notability": "medium",
+      "planted_turn": 10,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "coding-reflection-03-g06",
+      "kind": "vibe",
+      "statement": "The user feels quiet pride that strangers actually read fernpost.",
+      "verbatim_anchor": "strangers actually read this thing, which still feels quietly amazing",
+      "notability": "medium",
+      "planted_turn": 12,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "coding-reflection-03-g07",
+      "kind": "fact",
+      "statement": "The fernpost staging rebuild finishes in under twenty seconds.",
+      "verbatim_anchor": "staging rebuilds in under twenty seconds now",
+      "notability": "low",
+      "planted_turn": 13,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "coding-reflection-03-g08",
+      "kind": "idea",
+      "statement": "The user may write a short post about debugging FP-2203.",
+      "verbatim_anchor": "might write a short post about chasing FP-2203",
+      "notability": "low",
+      "planted_turn": 14,
+      "depth_bucket": "late"
+    }
+  ],
+  "distractors": [
+    {
+      "distractor_id": "coding-reflection-03-d01",
+      "statement": "Tea went cold during the trace.",
+      "anchor": "my tea went completely cold during that trace",
+      "planted_turn": 10
+    },
+    {
+      "distractor_id": "coding-reflection-03-d02",
+      "statement": "The assistant fixed a typo in a code comment.",
+      "anchor": "fixed one typo in a code comment along the way",
+      "planted_turn": 15
+    },
+    {
+      "distractor_id": "coding-reflection-03-d03",
+      "statement": "It rained all afternoon.",
+      "anchor": "it has rained all afternoon here",
+      "planted_turn": 4
+    }
+  ],
+  "hazards": []
+}
