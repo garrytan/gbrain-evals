@@ -18,8 +18,9 @@ unreadable as a knowledge base; the distiller trades a third of the salient
 content for pages you'd actually reread, and its failure mode is inventing
 (14.1% hallucination rate on page claims) rather than leaking noise (0%).
 That tradeoff — and where each lane drops which KIND of content — is what
-this page measures. Run: 24 transcripts × 3 lanes, 29 minutes, $6.20,
-Sonnet judge, gbrain v0.46.3.0 pinned.
+this page measures. Run: 24 transcripts × 3 lanes, 29 minutes, $6.20 in
+judge+extraction spend (dream-synthesis tokens not surfaced by gbrain's phase
+API — see §8), Sonnet judge, gbrain v0.46.3.0 pinned.
 
 ## 2. What is gbrain
 
@@ -137,7 +138,7 @@ into pages you'll actually reread.
 |---|---|---|---|---|---|---|---|
 | **gbrain dream (headline)** | **61.5%** [45.0-77.6] | 56.1% | 14.1% | 0% | 85% | 20 signal transcripts | [baseline receipt](./2026-08-16-brainbench-cat35-transcript-distill/baseline-receipt.json) |
 | **gbrain facts** | **60.8%** [49.6-71.2] | 51.4% | 3.6% | 0% | n/a (not a page) | 20 | same |
-| **gbrain verbatim (control)** | **93.1%** [89.9-96.3] | 86.1% | ≈0 by construction | 96.5% | 0% | 20 | same |
+| **gbrain verbatim (control)** | **93.1%** [89.9-96.3] | 86.1% | ≈0 by construction | 100%† | 0% | 20 | same |
 | Mem0 (HaluMem-Medium) | 42.9% | — | — | — | — | different corpus | arXiv 2511.03506 — NOT directly comparable |
 | Supermemory (HaluMem-Medium) | 41.5% | — | — | — | — | different corpus | arXiv 2511.03506 — NOT directly comparable |
 
@@ -208,14 +209,16 @@ in this run (null).
 | Item | Value |
 |---|---|
 | Full run wall (24 × 3 lanes, dream p-limit 2) | 29 min |
-| Full run cost (Sonnet judge + Sonnet synthesis) | $6.20 |
+| Full run measured cost — judges + facts extraction | $6.20 |
+| Dream-lane synthesis spend | not surfaced by gbrain's phase API (estimated $2-6 additional; see receipt `cost_note`) |
 | BPRE smoke | $0.10, 81 s |
 | Judge failure rate (published run) | 0.6% (retry-then-judge-failed policy, §11) |
 | Corpus generation (one-time, now cached) | $6.60 |
 | Compression ratio (output/transcript, chars) | verbatim 1.06× · facts 0.15× · dream 0.64× |
 
-The $6.20 published run came in far under the $19-28 estimate — batched
-judging (one call per lane × transcript) is the difference. The pre-flight
+The $6.20 published run came in far under the pre-run estimate ($11-18 with a
+Haiku judge / $19-28 with the Sonnet judge used here) — batched judging (one
+call per lane × transcript) is the difference. The pre-flight
 worst-case model projected $45 and initially refused at the default $40 cap;
 the run was launched with an explicit `CAT35_HARD_STOP_USD=50`.
 
@@ -242,12 +245,29 @@ the run was launched with an explicit `CAT35_HARD_STOP_USD=50`.
 - **Mechanical claim segmentation** leaves compound sentences atomic
   (deterministic beats FactScore-style LLM decomposition for reproducibility;
   the tradeoff is coarser hallucination resolution).
+- **Coverage verdicts are judge-trusting.** The mechanical anchor and quote
+  checks verify the dream lane's joint score and quote fidelity; the headline
+  FULL/PARTIAL credit itself comes from the judge, and judged documents are
+  embedded in the judge prompt without delimiter neutralization. On this
+  self-authored synthetic corpus that is a benchmark-integrity note, not an
+  exploit; hardening (escaped delimiters, a judge-prompt version bump, and a
+  re-run) is filed in TODOS.md.
 - **Usability and tenor judgments are human-uncalibrated in v1** (the
   calibration sample stratifies coverage/grounding/distractor slots).
 - **Nothing was tuned on this corpus.** Triage threshold is the shipped 0.5
   default; the threshold curve in section 6 is descriptive and recommends
   nothing. The corpus was frozen (manifest hash in the receipt) before the
   full run.
+- **†Erratum (2026-08-26, pre-publication adversarial review):** the leakage
+  scanner was case-sensitive while the corpus generator validated anchors
+  case-insensitively, leaving 14/261 committed anchors (3 of them distractors)
+  invisible to the scan. The baseline receipt therefore records verbatim
+  leakage as 96.5% (83/86); a mechanical recount over the committed artifacts
+  with the fixed scanner gives exactly 100% (86/86) — the floor the design
+  promises. Dream-lane hits are unchanged (the same 3, judge-confirmed as
+  benign passing mentions → dream leakage stays 0%), facts unchanged (0%).
+  The receipt is kept as-written; the noise-panel SVG's verbatim bar shows the
+  pre-fix 96.5%.
 - **One gate was recalibrated after the run, at the gate level, with this
   disclosure.** The original verbatim validity gate was ≥0.95, set assuming a
   near-literal judge; the control lane measured the judge's actual ceiling at
@@ -266,9 +286,10 @@ export ANTHROPIC_API_KEY=... OPENAI_API_KEY=...
 bun test test/eval/                                   # $0, no network
 bun run eval:cat35:smoke                              # BPRE smoke, measured $0.10 / 81 s
 CAT35_JUDGE_MODEL=claude-sonnet-4-6 bun run eval:cat35 # published run, measured $6.20 / 29 min
-# (eval:cat35 sets CAT35_FULL=1 — full spend; pre-run estimates were $11-28,
-#  the batched judges came in far under. CAT35_HARD_STOP_USD=50 was set for the
-#  published run because the deliberately pessimistic pre-flight projects $45.)
+# (eval:cat35 sets CAT35_FULL=1 — full spend; pre-run estimate was $11-18
+#  Haiku-judge / $19-28 Sonnet-judge; the batched judges came in far under.
+#  CAT35_HARD_STOP_USD=50 was set for the published run because the
+#  deliberately pessimistic pre-flight projects $45.)
 
 # Charts from the receipt:
 bun eval/runner/cat35-transcript-distill-chart.ts \

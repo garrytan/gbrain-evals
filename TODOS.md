@@ -3,7 +3,62 @@
 Deferred work with enough context to pick up cold. Filed by the Cat 35 plan
 reviews (2026-08-16); each entry names its origin.
 
+## P1 — publication gate
+
+- [ ] **Cat 35 judge-calibration hand-scoring (the open publication gate).**
+  Why: the published report's §11 kappa line is `[pending]` until a human fills
+  the `human_verdict` column for the 24 judge-filled coverage pairs in
+  `docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill/judge-calibration-2026-08-25.json`
+  (~45 min; each pair = gold statement vs the lane's artifact in `artifacts/`).
+  Then `--judge-calibration` (parse fixed for the object-wrapped sample this
+  ship) computes raw agreement + linearly weighted kappa; drop both into
+  report §11 and remove the status banner. Deferred from plan step 6b by the
+  explicit ship command; the report discloses the pending state. From: /ship
+  plan-completion audit (2026-08-26).
+
 ## P2 — Cat 35 v1.1 candidates
+
+- [ ] **Runner wall-clock bundle: parallelize the scoring loop + facts workers +
+  lane overlap.** Why: the scoring phase is a fully serial await chain (~130
+  judge calls one at a time — the llm-budget semaphore never holds more than 1
+  slot), the facts lane pins `workers: 1`, and the dream lane waits for Engine A
+  to finish; together plausibly half of the 29-minute full run. How: wrap
+  per-(fixture, lane) scoring blocks in the existing `makeLimiter` (merge into
+  perItem in deterministic order post-await), raise facts workers to 2-4,
+  Promise.all Engine A with the dream lane. Deferred from ship: restructuring
+  the pipeline that produced the committed baseline mid-ship risks subtle
+  accounting drift; do it with a fresh BPRE + delta check. Also swap the
+  `perItem.find()` linear re-scan in jointFallback for a keyed Map first —
+  it becomes load-bearing under parallelism. From: /ship performance
+  specialist (2026-08-26).
+- [ ] **Judge prompt-cache layout.** Why: `cache_control: ephemeral` on the
+  small judge system prompts is below Anthropic's minimum cacheable prefix
+  (1024+ tokens), so nothing caches, while the large transcript/document is
+  re-sent per call. How: move the shared transcript into a cacheable system
+  block reused across the 2-4 calls per transcript. Bundle with the wall-clock
+  item (same re-baseline). From: /ship performance specialist.
+- [ ] **Judge delimiter neutralization (needs judge_prompt_version bump +
+  re-run).** Why: judged documents are embedded in pseudo-XML judge prompts
+  without escaping closing tags; distiller output containing `</document>`
+  could steer verdicts (benchmark-integrity on synthetic corpora, disclosed in
+  report §9). How: neutralize `</document>`/`</transcript>` in embedded
+  bodies or use per-call random tag names; bump CAT35_JUDGE_PROMPT_VERSION;
+  re-run and re-baseline. From: /ship security specialist.
+- [ ] **Wire the mechanical page-shape checks into the receipt.** Why:
+  `hasWikilink` / `selfContainedOpening` / `slugDisciplineOk` are unit-tested
+  but nothing in production calls them (imports removed from the runner this
+  ship); the usability checklist is judge-only for page shape. How: compute a
+  `usability_mechanical` cross-check per dream page-set and record
+  judge-vs-mechanical disagreements. Also give `seededSample` a caller or
+  drop it. From: /ship testing + maintainability specialists.
+- [ ] **Generator helper unit tests + export.** Why: `checkTranscript`
+  (tolerance band that killed the first full run), `parseTurns`, and
+  `buildCalibrationSample` are deterministic and $0-testable but unexported
+  and untested; a regression surfaces as a failed multi-dollar generation run
+  instead of a red test. How: export the helpers, add
+  test/eval/transcript-distill-gen.test.ts; dedupe the copy-pasted Mulberry32 +
+  BANNED_RE into exports from transcript-distill.ts while there. From: /ship
+  testing + maintainability specialists.
 
 - [ ] **Multi-format transcript corpus (codex JSONL + chatgpt export renderings).**
   Why: v1 renders claude-code JSONL only; the other 5 gbrain adapters go
@@ -61,3 +116,7 @@ reviews (2026-08-16); each entry names its origin.
   are both Anthropic in v1 (G-Eval self-preference risk, disclosed in the report).
   OPENAI_API_KEY is already required for embeddings, so a GPT-class judge needs
   no new secret. From: CEO deep review (disclosed limit).
+
+## Completed
+
+(none yet — items move here with **Completed:** vX.Y.Z (YYYY-MM-DD))
