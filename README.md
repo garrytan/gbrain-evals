@@ -194,6 +194,9 @@ vendored precision-test artifacts are MIT (tenurehq); see
 ## Relationship to gbrain
 
 This repo uses gbrain the way you would: it installs gbrain as a library and calls
-its public interface. gbrain is the reference system under test here, but the
+its public interface. (One exception: the Cat 35 write-path runner deep-imports
+three ingest/extract/synthesize internals from `gbrain/src`, which is why the
+dependency is pinned to an exact SHA.) gbrain is the reference system under test
+here, but the
 harness scores anything that implements the adapter interface, so the comparison
 stays fair.

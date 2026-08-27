@@ -43,8 +43,8 @@ persona-chat memory points; nobody else publishes write-path numbers at all).
   publication-eligible receipts now require the whole corpus (cherry-picked
   subsets are marked `partial`), coverage verdicts without supporting
   evidence are rejected, judge transport errors degrade to judge-failed
-  instead of crashing paid runs, and corpus files are hash-verified against
-  the manifest at load.
+  instead of crashing paid runs, and corpus transcript files are
+  hash-verified against the manifest at load.
 - `test/eval/all-and-budget.test.ts` (broken on main since Cat 34 landed) and
   the tool-bridge fake engine (predating gbrain's alias-hop contract) are
   green again; a PGLite disconnect freeze under `bun test` at the pinned
