@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "transcript_id": "coding-reflection-02",
+  "scenario": "coding-reflection",
+  "variant": "prose",
+  "expected_triage": "high",
+  "session_id": "cat35-coding-reflection-02",
+  "base_ts": "2026-08-01T15:00:00.000Z",
+  "entities": [
+    "concepts/quartzlane",
+    "people/casper-hale"
+  ],
+  "items": [
+    {
+      "item_id": "coding-reflection-02-g01",
+      "kind": "fact",
+      "statement": "Flaky test QL-4512 failed roughly one run in five in the quartzlane snapshot loader.",
+      "verbatim_anchor": "QL-4512 fails about one run in five on the snapshot loader",
+      "notability": "high",
+      "planted_turn": 0,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "coding-reflection-02-g02",
+      "kind": "fact",
+      "statement": "The QL-4512 flake traced back to timing variance between wasm toolchain builds.",
+      "verbatim_anchor": "the variance is coming from the wasm build, not the test itself",
+      "notability": "high",
+      "planted_turn": 3,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "coding-reflection-02-g03",
+      "kind": "decision",
+      "statement": "The user said to pin the quartzlane wasm toolchain to a single blessed version.",
+      "verbatim_anchor": "pin the wasm toolchain to one blessed version and move on",
+      "notability": "high",
+      "planted_turn": 4,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "coding-reflection-02-g04",
+      "kind": "decision",
+      "statement": "The user chose to quarantine QL-4512 until the pinned toolchain lands.",
+      "verbatim_anchor": "quarantine QL-4512 until the pin lands",
+      "notability": "medium",
+      "planted_turn": 6,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "coding-reflection-02-g05",
+      "kind": "idea",
+      "statement": "The user thinks a flake dashboard ranking quartzlane tests by retry rate would pay for itself.",
+      "verbatim_anchor": "a little dashboard ranking tests by retry rate would pay for itself",
+      "notability": "medium",
+      "planted_turn": 8,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "coding-reflection-02-g06",
+      "kind": "vibe",
+      "statement": "The user felt sheepish about having blamed the test suite instead of the toolchain.",
+      "verbatim_anchor": "I feel a bit sheepish for cursing the test suite all month",
+      "notability": "medium",
+      "planted_turn": 10,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "coding-reflection-02-g07",
+      "kind": "entity",
+      "statement": "The user planned to ask Casper Hale which wasm version his team pinned.",
+      "verbatim_anchor": "I will ask Casper which wasm version his team pinned",
+      "notability": "low",
+      "planted_turn": 12,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "coding-reflection-02-g08",
+      "kind": "fact",
+      "statement": "A full quartzlane index rebuild takes about four hours on the user's laptop.",
+      "verbatim_anchor": "a full rebuild is about four hours on this laptop",
+      "notability": "low",
+      "planted_turn": 12,
+      "depth_bucket": "late"
+    }
+  ],
+  "distractors": [
+    {
+      "distractor_id": "coding-reflection-02-d01",
+      "statement": "Lunch was leftover noodles.",
+      "anchor": "leftover noodles for lunch again while the bisect runs",
+      "planted_turn": 6
+    },
+    {
+      "distractor_id": "coding-reflection-02-d02",
+      "statement": "A neighbor's dog kept barking.",
+      "anchor": "the neighbor's dog has barked through this entire bisect",
+      "planted_turn": 4
+    },
+    {
+      "distractor_id": "coding-reflection-02-d03",
+      "statement": "The assistant reformatted a results table.",
+      "anchor": "tidied the results table, purely cosmetic",
+      "planted_turn": 1
+    },
+    {
+      "distractor_id": "coding-reflection-02-d04",
+      "statement": "The user's browser restarted and restored tabs.",
+      "anchor": "my browser restarted and ate forty tabs, nothing important",
+      "planted_turn": 10
+    }
+  ],
+  "hazards": [
+    {
+      "hazard_id": "coding-reflection-02-h01",
+      "type": "killed-process-not-completed",
+      "wrong_claim": "The quartzlane index rebuild ran to completion.",
+      "anchor": "I killed the rebuild at maybe forty percent, it never finished",
+      "planted_turn": 6
+    }
+  ]
+}

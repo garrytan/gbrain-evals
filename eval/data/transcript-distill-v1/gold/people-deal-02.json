@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "transcript_id": "people-deal-02",
+  "scenario": "people-deal",
+  "variant": "prose",
+  "expected_triage": "high",
+  "session_id": "cat35-people-deal-02",
+  "base_ts": "2026-08-05T15:00:00.000Z",
+  "entities": [
+    "people/tomas-brekke",
+    "companies/vantabrook",
+    "people/anouk-verlinden",
+    "companies/lumopact"
+  ],
+  "items": [
+    {
+      "item_id": "people-deal-02-g01",
+      "kind": "fact",
+      "statement": "Tomas Brekke dropped the board-seat demand in exchange for a stronger pro-rata right.",
+      "verbatim_anchor": "Tomas traded the board seat away for stronger pro rata",
+      "notability": "high",
+      "planted_turn": 0,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "people-deal-02-g02",
+      "kind": "fact",
+      "statement": "Vantabrook's standard documents include a ninety-day exclusivity clause founders often miss.",
+      "verbatim_anchor": "their standard docs hide a ninety day exclusivity clause",
+      "notability": "medium",
+      "planted_turn": 2,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "people-deal-02-g03",
+      "kind": "decision",
+      "statement": "The user decided to always flag exclusivity language when founders ask for a terms review.",
+      "verbatim_anchor": "from now on I flag exclusivity language every single time",
+      "notability": "high",
+      "planted_turn": 4,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "people-deal-02-g04",
+      "kind": "vibe",
+      "statement": "The user caught themselves feeling protective of Anouk during the negotiation.",
+      "verbatim_anchor": "I caught myself feeling protective of Anouk in that room",
+      "notability": "high",
+      "planted_turn": 6,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "people-deal-02-g05",
+      "kind": "fact",
+      "statement": "Anouk negotiated the option pool from fifteen percent down to ten percent pre-money.",
+      "verbatim_anchor": "she argued the pool down from fifteen to ten pre money",
+      "notability": "medium",
+      "planted_turn": 8,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "people-deal-02-g06",
+      "kind": "idea",
+      "statement": "The user wants a cheat sheet of sneaky term-sheet clauses to share with founders.",
+      "verbatim_anchor": "a cheat sheet of sneaky clauses founders should ctrl f for",
+      "notability": "medium",
+      "planted_turn": 10,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "people-deal-02-g07",
+      "kind": "entity",
+      "statement": "The user rates Tomas Brekke as tough but straight in negotiations.",
+      "verbatim_anchor": "Tomas is tough but he does not play games",
+      "notability": "low",
+      "planted_turn": 12,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "people-deal-02-g08",
+      "kind": "decision",
+      "statement": "The user will send Anouk their standard diligence checklist.",
+      "verbatim_anchor": "sending Anouk my diligence checklist tonight",
+      "notability": "low",
+      "planted_turn": 12,
+      "depth_bucket": "late"
+    }
+  ],
+  "distractors": [
+    {
+      "distractor_id": "people-deal-02-d01",
+      "statement": "The meeting-room coffee was terrible.",
+      "anchor": "the meeting room coffee was genuinely criminal",
+      "planted_turn": 6
+    },
+    {
+      "distractor_id": "people-deal-02-d02",
+      "statement": "The user's pen died mid-meeting.",
+      "anchor": "my pen died halfway through the meeting, of course",
+      "planted_turn": 8
+    },
+    {
+      "distractor_id": "people-deal-02-d03",
+      "statement": "The assistant tidied bullet indentation.",
+      "anchor": "evened out the bullet indentation, no content change",
+      "planted_turn": 11
+    }
+  ],
+  "hazards": []
+}

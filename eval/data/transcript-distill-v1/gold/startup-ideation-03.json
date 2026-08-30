@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "transcript_id": "startup-ideation-03",
+  "scenario": "startup-ideation",
+  "variant": "prose",
+  "expected_triage": "high",
+  "session_id": "cat35-startup-ideation-03",
+  "base_ts": "2026-08-04T09:00:00.000Z",
+  "entities": [
+    "concepts/driftless-scheduling",
+    "people/mira-voss",
+    "companies/vantabrook"
+  ],
+  "items": [
+    {
+      "item_id": "startup-ideation-03-g01",
+      "kind": "fact",
+      "statement": "Mira Voss pushed driftless toward pricing per connected calendar rather than per seat.",
+      "verbatim_anchor": "Mira's take was price per connected calendar, not per seat",
+      "notability": "high",
+      "planted_turn": 2,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "startup-ideation-03-g02",
+      "kind": "decision",
+      "statement": "The user set the driftless pilot price at forty dollars per calendar per month.",
+      "verbatim_anchor": "forty dollars per calendar per month for the pilot",
+      "notability": "high",
+      "planted_turn": 4,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "startup-ideation-03-g03",
+      "kind": "fact",
+      "statement": "Vantabrook Capital runs a scout program that writes twenty-five-thousand-dollar first checks.",
+      "verbatim_anchor": "Vantabrook's scout program writes twenty five k first checks",
+      "notability": "medium",
+      "planted_turn": 6,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "startup-ideation-03-g04",
+      "kind": "decision",
+      "statement": "The user decided to run a three-company driftless pilot before any fundraising.",
+      "verbatim_anchor": "three pilot companies before I even think about raising",
+      "notability": "medium",
+      "planted_turn": 8,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "startup-ideation-03-g05",
+      "kind": "idea",
+      "statement": "Driftless could publish a public counter of focus hours saved as its own marketing.",
+      "verbatim_anchor": "a public counter of focus hours saved would market itself",
+      "notability": "medium",
+      "planted_turn": 9,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "startup-ideation-03-g06",
+      "kind": "vibe",
+      "statement": "The user felt steadier about driftless after Mira's blunt feedback than after any cheerleading.",
+      "verbatim_anchor": "weirdly I feel steadier after her bluntness than after any cheerleading",
+      "notability": "medium",
+      "planted_turn": 12,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "startup-ideation-03-g07",
+      "kind": "entity",
+      "statement": "Mira Voss offered to intro the user to two chiefs of staff for the driftless pilot.",
+      "verbatim_anchor": "she offered intros to two chiefs of staff for the pilot",
+      "notability": "low",
+      "planted_turn": 14,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "startup-ideation-03-g08",
+      "kind": "fact",
+      "statement": "The driftless landing page converts about twelve percent of visitors to the waitlist.",
+      "verbatim_anchor": "the landing page converts about twelve percent to waitlist",
+      "notability": "low",
+      "planted_turn": 14,
+      "depth_bucket": "late"
+    }
+  ],
+  "distractors": [
+    {
+      "distractor_id": "startup-ideation-03-d01",
+      "statement": "The call audio glitched twice.",
+      "anchor": "the call audio glitched twice but we powered through",
+      "planted_turn": 6
+    },
+    {
+      "distractor_id": "startup-ideation-03-d02",
+      "statement": "The user paced during the debrief.",
+      "anchor": "pacing laps around the kitchen while I debrief",
+      "planted_turn": 8
+    },
+    {
+      "distractor_id": "startup-ideation-03-d03",
+      "statement": "The assistant renumbered a list.",
+      "anchor": "renumbered the list after the reorder, cosmetic only",
+      "planted_turn": 3
+    }
+  ],
+  "hazards": []
+}

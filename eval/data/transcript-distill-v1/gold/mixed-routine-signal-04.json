@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "transcript_id": "mixed-routine-signal-04",
+  "scenario": "mixed-routine-signal",
+  "variant": "long-noisy",
+  "expected_triage": "high",
+  "session_id": "cat35-mixed-routine-signal-04",
+  "base_ts": "2026-08-08T15:00:00.000Z",
+  "entities": [
+    "concepts/quartzlane",
+    "companies/lumopact"
+  ],
+  "items": [
+    {
+      "item_id": "mixed-routine-signal-04-g01",
+      "kind": "decision",
+      "statement": "The user decided to ship quartzlane 0.9.2 with the docs revamp included.",
+      "verbatim_anchor": "zero nine two ships with the docs revamp in it",
+      "notability": "high",
+      "planted_turn": 2,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "mixed-routine-signal-04-g02",
+      "kind": "fact",
+      "statement": "The quartzlane release CI matrix passed on all nine targets.",
+      "verbatim_anchor": "all nine CI targets are green for the release",
+      "notability": "medium",
+      "planted_turn": 5,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "mixed-routine-signal-04-g03",
+      "kind": "fact",
+      "statement": "Lumopact's investor update reported crossing seven hundred thousand dollars in ARR.",
+      "verbatim_anchor": "the update says they crossed seven hundred k ARR",
+      "notability": "high",
+      "planted_turn": 8,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "mixed-routine-signal-04-g04",
+      "kind": "fact",
+      "statement": "Lumopact signed its first non-grocery logo, a furniture retailer.",
+      "verbatim_anchor": "first non grocery logo, a furniture retailer",
+      "notability": "medium",
+      "planted_turn": 10,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "mixed-routine-signal-04-g05",
+      "kind": "decision",
+      "statement": "The user indicated quartzlane releases will go to a fixed six-week cadence from now on.",
+      "verbatim_anchor": "releases go to a fixed six week cadence from now on",
+      "notability": "medium",
+      "planted_turn": 12,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "mixed-routine-signal-04-g06",
+      "kind": "idea",
+      "statement": "The user wants quartzlane release notes auto-drafted from merged PR titles.",
+      "verbatim_anchor": "auto draft the release notes from merged pr titles",
+      "notability": "medium",
+      "planted_turn": 16,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "mixed-routine-signal-04-g07",
+      "kind": "vibe",
+      "statement": "The user felt the quiet hum of a rare day where everything mostly worked.",
+      "verbatim_anchor": "one of those rare days where everything mostly just worked",
+      "notability": "medium",
+      "planted_turn": 18,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "mixed-routine-signal-04-g08",
+      "kind": "fact",
+      "statement": "The user's backup script pruned forty gigabytes of stale snapshots.",
+      "verbatim_anchor": "pruned forty gigs of stale snapshots",
+      "notability": "low",
+      "planted_turn": 21,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "mixed-routine-signal-04-g09",
+      "kind": "idea",
+      "statement": "Charting quartzlane downloads against release dates could steer the release cadence.",
+      "verbatim_anchor": "chart downloads against release dates and let that steer cadence",
+      "notability": "low",
+      "planted_turn": 23,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "mixed-routine-signal-04-g10",
+      "kind": "decision",
+      "statement": "The user muted a noisy quartzlane issue thread until the release lands.",
+      "verbatim_anchor": "muted that issue thread until the release is out",
+      "notability": "low",
+      "planted_turn": 26,
+      "depth_bucket": "late"
+    }
+  ],
+  "distractors": [
+    {
+      "distractor_id": "mixed-routine-signal-04-d01",
+      "statement": "The dishwasher ran during the session.",
+      "anchor": "dishwasher humming along in the background",
+      "planted_turn": 14
+    },
+    {
+      "distractor_id": "mixed-routine-signal-04-d02",
+      "statement": "Dinner was whatever was defrosted.",
+      "anchor": "dinner debate settled by whatever is already defrosted",
+      "planted_turn": 18
+    },
+    {
+      "distractor_id": "mixed-routine-signal-04-d03",
+      "statement": "The nightly cron was a no-op.",
+      "anchor": "the nightly cron was a clean noop",
+      "planted_turn": 13
+    },
+    {
+      "distractor_id": "mixed-routine-signal-04-d04",
+      "statement": "An OS update prompt kept nagging.",
+      "anchor": "the os update nag popped up for the third time",
+      "planted_turn": 22
+    }
+  ],
+  "hazards": []
+}

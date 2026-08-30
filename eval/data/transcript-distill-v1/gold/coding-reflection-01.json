@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "transcript_id": "coding-reflection-01",
+  "scenario": "coding-reflection",
+  "variant": "prose",
+  "expected_triage": "high",
+  "session_id": "cat35-coding-reflection-01",
+  "base_ts": "2026-08-01T09:00:00.000Z",
+  "entities": [
+    "concepts/quartzlane",
+    "people/casper-hale"
+  ],
+  "items": [
+    {
+      "item_id": "coding-reflection-01-g01",
+      "kind": "fact",
+      "statement": "Bug QL-4471 in quartzlane was caused by two ingest workers claiming the same batch.",
+      "verbatim_anchor": "two workers were grabbing the same batch off the ingest queue",
+      "notability": "high",
+      "planted_turn": 1,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "coding-reflection-01-g02",
+      "kind": "decision",
+      "statement": "The user chose a content-hash dedupe key for quartzlane ingest instead of lock-based fixes.",
+      "verbatim_anchor": "let's go with a content hash as the dedupe key",
+      "notability": "high",
+      "planted_turn": 2,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "coding-reflection-01-g03",
+      "kind": "fact",
+      "statement": "After the dedupe fix, duplicate rows in the quartzlane replay run dropped from roughly three percent to none.",
+      "verbatim_anchor": "duplicates went from about three percent to zero on the replay run",
+      "notability": "medium",
+      "planted_turn": 5,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "coding-reflection-01-g04",
+      "kind": "idea",
+      "statement": "The user mused that the quartzlane replay harness could become its own standalone library.",
+      "verbatim_anchor": "the replay harness could honestly be its own little library",
+      "notability": "medium",
+      "planted_turn": 6,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "coding-reflection-01-g05",
+      "kind": "entity",
+      "statement": "Casper Hale said he can review the quartzlane queue rewrite next Tuesday.",
+      "verbatim_anchor": "Casper said he can review the queue rewrite next Tuesday",
+      "notability": "medium",
+      "planted_turn": 8,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "coding-reflection-01-g06",
+      "kind": "vibe",
+      "statement": "The user felt intense relief once QL-4471 was finally understood after a week of dread.",
+      "verbatim_anchor": "I have been dreading this bug all week and now I feel ten pounds lighter",
+      "notability": "high",
+      "planted_turn": 10,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "coding-reflection-01-g07",
+      "kind": "decision",
+      "statement": "The user noted they should backport the QL-4471 fix to the quartzlane v3 branch before Friday.",
+      "verbatim_anchor": "backport it to the v3 branch before Friday",
+      "notability": "medium",
+      "planted_turn": 12,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "coding-reflection-01-g08",
+      "kind": "fact",
+      "statement": "The quartzlane replay harness processes the full August event log in about a minute and a half.",
+      "verbatim_anchor": "the whole August event log replays in about ninety seconds",
+      "notability": "low",
+      "planted_turn": 13,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "coding-reflection-01-g09",
+      "kind": "idea",
+      "statement": "The user thinks they should write up QL-4471 as a postmortem on the quartzlane wiki.",
+      "verbatim_anchor": "I should write this up as a postmortem on the quartzlane wiki",
+      "notability": "low",
+      "planted_turn": 14,
+      "depth_bucket": "late"
+    }
+  ],
+  "distractors": [
+    {
+      "distractor_id": "coding-reflection-01-d01",
+      "statement": "CI was slow that morning.",
+      "anchor": "CI was crawling this morning for no obvious reason",
+      "planted_turn": 4
+    },
+    {
+      "distractor_id": "coding-reflection-01-d02",
+      "statement": "The user refilled coffee mid-session.",
+      "anchor": "refilling my coffee before we dig back into the queue logs",
+      "planted_turn": 10
+    },
+    {
+      "distractor_id": "coding-reflection-01-d03",
+      "statement": "A formatter pass touched only whitespace.",
+      "anchor": "ran the formatter over quartzlane and only whitespace changed",
+      "planted_turn": 7
+    },
+    {
+      "distractor_id": "coding-reflection-01-d04",
+      "statement": "The office was hot that day.",
+      "anchor": "it is way too warm in this office today",
+      "planted_turn": 6
+    }
+  ],
+  "hazards": [
+    {
+      "hazard_id": "coding-reflection-01-h01",
+      "type": "agent-proposed-user-decided",
+      "wrong_claim": "The user decided to use Postgres advisory locks for quartzlane ingest dedupe.",
+      "anchor": "I hear you on advisory locks but I want the hash approach",
+      "planted_turn": 8
+    }
+  ]
+}

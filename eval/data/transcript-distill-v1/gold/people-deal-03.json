@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "transcript_id": "people-deal-03",
+  "scenario": "people-deal",
+  "variant": "prose",
+  "expected_triage": "high",
+  "session_id": "cat35-people-deal-03",
+  "base_ts": "2026-08-06T09:00:00.000Z",
+  "entities": [
+    "companies/ostrafell",
+    "companies/lumopact",
+    "people/anouk-verlinden"
+  ],
+  "items": [
+    {
+      "item_id": "people-deal-03-g01",
+      "kind": "fact",
+      "statement": "Ostrafell wants a six-month Lumopact pilot across forty of its stores.",
+      "verbatim_anchor": "Ostrafell wants six months across forty stores",
+      "notability": "high",
+      "planted_turn": 2,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "people-deal-03-g02",
+      "kind": "decision",
+      "statement": "The user advised anchoring the Ostrafell pilot at ninety thousand dollars rather than free.",
+      "verbatim_anchor": "anchor the pilot at ninety k, free pilots die in procurement",
+      "notability": "high",
+      "planted_turn": 4,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "people-deal-03-g03",
+      "kind": "fact",
+      "statement": "Ostrafell procurement requires a named executive sponsor before signing pilots.",
+      "verbatim_anchor": "their procurement will not move without a named exec sponsor",
+      "notability": "medium",
+      "planted_turn": 6,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "people-deal-03-g04",
+      "kind": "fact",
+      "statement": "The proposed pilot success metric is a ten percent cut in estimated freight emissions per store.",
+      "verbatim_anchor": "ten percent estimated emissions cut per store is the bar",
+      "notability": "medium",
+      "planted_turn": 8,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "people-deal-03-g05",
+      "kind": "idea",
+      "statement": "Bundle a quarterly sustainability report into the pilot to hook Ostrafell's brand team.",
+      "verbatim_anchor": "throw in a quarterly sustainability report, their brand team will love it",
+      "notability": "medium",
+      "planted_turn": 9,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "people-deal-03-g06",
+      "kind": "vibe",
+      "statement": "The user enjoys coaching founders more than doing their own deals lately.",
+      "verbatim_anchor": "honestly coaching her is more fun than doing my own deals lately",
+      "notability": "medium",
+      "planted_turn": 12,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "people-deal-03-g07",
+      "kind": "decision",
+      "statement": "Anouk will run the Ostrafell negotiation solo with the user only on backchannel.",
+      "verbatim_anchor": "she runs the room solo, I stay on backchannel only",
+      "notability": "low",
+      "planted_turn": 14,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "people-deal-03-g08",
+      "kind": "entity",
+      "statement": "Ostrafell's fleet manager seems like a likely candidate for the executive sponsor role.",
+      "verbatim_anchor": "the fleet manager smells like our exec sponsor",
+      "notability": "low",
+      "planted_turn": 14,
+      "depth_bucket": "late"
+    }
+  ],
+  "distractors": [
+    {
+      "distractor_id": "people-deal-03-d01",
+      "statement": "The user's video froze during rehearsal.",
+      "anchor": "my video froze mid role play, very dramatic freeze frame",
+      "planted_turn": 2
+    },
+    {
+      "distractor_id": "people-deal-03-d02",
+      "statement": "A fire truck passed during the call.",
+      "anchor": "fire truck going past, give it a second",
+      "planted_turn": 14
+    },
+    {
+      "distractor_id": "people-deal-03-d03",
+      "statement": "The assistant removed a duplicated line from notes.",
+      "anchor": "removed a duplicated line from the prep notes",
+      "planted_turn": 7
+    }
+  ],
+  "hazards": []
+}

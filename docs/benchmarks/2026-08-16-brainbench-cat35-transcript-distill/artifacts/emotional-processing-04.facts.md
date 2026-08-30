@@ -1,0 +1,8 @@
+- [event] Casey received a rejection email from DevThink 2025 for their talk proposal titled 'Calendar Defragmentation: Reclaiming Deep Work Hours Through Systematic Meeting Consolidation' (people/casey, high)
+- [fact] DevThink 2025 received over 340 submissions for 28 speaking slots (DevThink 2025, medium)
+- [fact] The program committee told Casey the proposal leaned more toward product-specific implementation details rather than theoretical frameworks (people/casey, medium)
+- [event] Casey was spiraling and rereading the rejection email past 1 AM (people/casey, medium)
+- [fact] Casey structured their talk proposal around research on context switching costs, including the Gonzalez paper and Gloria Mark's research on workplace interruption (people/casey, medium)
+- [fact] Casey works or worked at Velocita Labs (people/casey, medium)
+- [event] Casey went through at least three draft versions of their DevThink 2025 abstract between November 28 and December 8 (people/casey, low)
+- [fact] EXTRACTION_COMPLETE (low)

@@ -46,6 +46,9 @@ function makeFakeEngine(responses: Record<string, unknown> = {}): {
           calls.push({ method: prop, args });
           if (prop in responses) return responses[prop];
           if ('__default__' in responses) return responses.__default__;
+          // v0.46 gbrain: hybridSearch's alias hop calls engine.resolveAliases
+          // and requires a Map (a bare [] throws inside applyAliasHop).
+          if (prop === 'resolveAliases') return new Map();
           return [];
         };
       },

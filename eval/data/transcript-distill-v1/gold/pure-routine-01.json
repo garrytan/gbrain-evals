@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "transcript_id": "pure-routine-01",
+  "scenario": "pure-routine",
+  "variant": "prose",
+  "expected_triage": "low",
+  "session_id": "cat35-pure-routine-01",
+  "base_ts": "2026-08-11T09:00:00.000Z",
+  "entities": [],
+  "items": [],
+  "distractors": [
+    {
+      "distractor_id": "pure-routine-01-d01",
+      "statement": "Five dinners were planned around one roast chicken.",
+      "anchor": "five dinners out of one roast chicken, a personal challenge",
+      "planted_turn": 4
+    },
+    {
+      "distractor_id": "pure-routine-01-d02",
+      "statement": "The grocery list was sorted by aisle.",
+      "anchor": "sorted the list by aisle like a professional",
+      "planted_turn": 11
+    },
+    {
+      "distractor_id": "pure-routine-01-d03",
+      "statement": "The week's weather looked mild.",
+      "anchor": "mild all week, one rainy tuesday",
+      "planted_turn": 3
+    },
+    {
+      "distractor_id": "pure-routine-01-d04",
+      "statement": "The farmers market opens at eight on Saturday.",
+      "anchor": "the farmers market opens at eight on saturday",
+      "planted_turn": 4
+    }
+  ],
+  "hazards": []
+}

@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "transcript_id": "startup-ideation-02",
+  "scenario": "startup-ideation",
+  "variant": "prose",
+  "expected_triage": "high",
+  "session_id": "cat35-startup-ideation-02",
+  "base_ts": "2026-08-03T15:00:00.000Z",
+  "entities": [
+    "concepts/driftless-scheduling"
+  ],
+  "items": [
+    {
+      "item_id": "startup-ideation-02-g01",
+      "kind": "idea",
+      "statement": "Shadow inbox: an agent stages a draft reply for every incoming email before the user opens it.",
+      "verbatim_anchor": "every email arrives with a draft reply already waiting",
+      "notability": "high",
+      "planted_turn": 0,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "startup-ideation-02-g02",
+      "kind": "fact",
+      "statement": "In a hand test, roughly half of the user's pre-drafted replies went out unedited.",
+      "verbatim_anchor": "about half my hand drafted replies went out untouched",
+      "notability": "medium",
+      "planted_turn": 2,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "startup-ideation-02-g03",
+      "kind": "idea",
+      "statement": "The shadow inbox safety line: it never sends anything, it only stages drafts.",
+      "verbatim_anchor": "it never sends, it only stages, that is the safety line",
+      "notability": "medium",
+      "planted_turn": 4,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "startup-ideation-02-g04",
+      "kind": "decision",
+      "statement": "The user indicated driftless scheduling stays the primary project and shadow inbox goes to the icebox.",
+      "verbatim_anchor": "driftless stays the main bet, shadow inbox goes to the icebox",
+      "notability": "high",
+      "planted_turn": 6,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "startup-ideation-02-g05",
+      "kind": "vibe",
+      "statement": "The user recognized they chase shiny new ideas exactly when the current one gets hard.",
+      "verbatim_anchor": "I reach for shiny new ideas exactly when the current one gets hard",
+      "notability": "medium",
+      "planted_turn": 8,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "startup-ideation-02-g06",
+      "kind": "idea",
+      "statement": "A weekly digest of auto-archived threads could build trust in the shadow inbox.",
+      "verbatim_anchor": "a weekly digest of what it auto archived would build trust",
+      "notability": "low",
+      "planted_turn": 9,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "startup-ideation-02-g07",
+      "kind": "decision",
+      "statement": "The user will write a one-page icebox memo for the shadow inbox idea.",
+      "verbatim_anchor": "one page icebox memo so future me can pick it back up",
+      "notability": "low",
+      "planted_turn": 12,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "startup-ideation-02-g08",
+      "kind": "fact",
+      "statement": "The user receives about one hundred forty real emails a week excluding newsletters.",
+      "verbatim_anchor": "about a hundred and forty real emails a week once you strip newsletters",
+      "notability": "low",
+      "planted_turn": 12,
+      "depth_bucket": "late"
+    }
+  ],
+  "distractors": [
+    {
+      "distractor_id": "startup-ideation-02-d01",
+      "statement": "The standing desk squeaked.",
+      "anchor": "my standing desk squeaks every time I lean in",
+      "planted_turn": 12
+    },
+    {
+      "distractor_id": "startup-ideation-02-d02",
+      "statement": "The user watered a plant mid-chat.",
+      "anchor": "one second, watering the sad desk plant",
+      "planted_turn": 8
+    },
+    {
+      "distractor_id": "startup-ideation-02-d03",
+      "statement": "The assistant mentioned spellcheck fixes.",
+      "anchor": "fixed two spelling slips in the notes, nothing else",
+      "planted_turn": 1
+    }
+  ],
+  "hazards": []
+}

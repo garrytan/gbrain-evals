@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="360" viewBox="0 0 880 360">
+  <rect width="880" height="360" fill="#0a0a0a" rx="8"/>
+  <text x="20" y="28" fill="#e5e7eb" font-size="15" font-weight="700" font-family="ui-sans-serif,system-ui">Salient-unit recall by kind × lane</text>
+  <text x="20" y="46" fill="#9ca3af" font-size="11" font-family="ui-sans-serif,system-ui">The vibes column is the axis no other benchmark measures — descriptive breakdown, single run</text>
+
+  <line x1="60" y1="300" x2="850" y2="300" stroke="#262626" stroke-width="1"/>
+  <text x="52" y="304" text-anchor="end" fill="#9ca3af" font-size="10" font-family="ui-monospace,SFMono-Regular">0%</text>
+  <line x1="60" y1="242.5" x2="850" y2="242.5" stroke="#262626" stroke-width="1"/>
+  <text x="52" y="246.5" text-anchor="end" fill="#9ca3af" font-size="10" font-family="ui-monospace,SFMono-Regular">25%</text>
+  <line x1="60" y1="185" x2="850" y2="185" stroke="#262626" stroke-width="1"/>
+  <text x="52" y="189" text-anchor="end" fill="#9ca3af" font-size="10" font-family="ui-monospace,SFMono-Regular">50%</text>
+  <line x1="60" y1="127.5" x2="850" y2="127.5" stroke="#262626" stroke-width="1"/>
+  <text x="52" y="131.5" text-anchor="end" fill="#9ca3af" font-size="10" font-family="ui-monospace,SFMono-Regular">75%</text>
+  <line x1="60" y1="70" x2="850" y2="70" stroke="#262626" stroke-width="1"/>
+  <text x="52" y="74" text-anchor="end" fill="#9ca3af" font-size="10" font-family="ui-monospace,SFMono-Regular">100%</text>
+
+  <rect x="84" y="179.34426229508196" width="34" height="120.65573770491804" rx="2" fill="#16a34a"/>
+  <text x="101" y="175.34426229508196" text-anchor="middle" fill="#9ca3af" font-size="9" font-family="ui-monospace,SFMono-Regular">52</text>
+  <rect x="122" y="141.63934426229508" width="34" height="158.36065573770492" rx="2" fill="#10b981"/>
+  <text x="139" y="137.63934426229508" text-anchor="middle" fill="#9ca3af" font-size="9" font-family="ui-monospace,SFMono-Regular">69</text>
+  <rect x="160" y="96.39344262295083" width="34" height="203.60655737704917" rx="2" fill="#6b7280"/>
+  <text x="177" y="92.39344262295083" text-anchor="middle" fill="#9ca3af" font-size="9" font-family="ui-monospace,SFMono-Regular">89</text>
+  <text x="139" y="318" text-anchor="middle" fill="#e5e7eb" font-size="12" font-family="ui-sans-serif,system-ui">fact</text>
+  <rect x="242" y="162" width="34" height="138" rx="2" fill="#16a34a"/>
+  <text x="259" y="158" text-anchor="middle" fill="#9ca3af" font-size="9" font-family="ui-monospace,SFMono-Regular">60</text>
+  <rect x="280" y="211.83333333333334" width="34" height="88.16666666666666" rx="2" fill="#10b981"/>
+  <text x="297" y="207.83333333333334" text-anchor="middle" fill="#9ca3af" font-size="9" font-family="ui-monospace,SFMono-Regular">38</text>
+  <rect x="318" y="70" width="34" height="230" rx="2" fill="#6b7280"/>
+  <text x="335" y="66" text-anchor="middle" fill="#9ca3af" font-size="9" font-family="ui-monospace,SFMono-Regular">100</text>
+  <text x="297" y="318" text-anchor="middle" fill="#e5e7eb" font-size="12" font-family="ui-sans-serif,system-ui">idea</text>
+  <rect x="400" y="145.79545454545456" width="34" height="154.20454545454544" rx="2" fill="#16a34a"/>
+  <text x="417" y="141.79545454545456" text-anchor="middle" fill="#9ca3af" font-size="9" font-family="ui-monospace,SFMono-Regular">67</text>
+  <rect x="438" y="140.5681818181818" width="34" height="159.4318181818182" rx="2" fill="#10b981"/>
+  <text x="455" y="136.5681818181818" text-anchor="middle" fill="#9ca3af" font-size="9" font-family="ui-monospace,SFMono-Regular">69</text>
+  <rect x="476" y="80.45454545454544" width="34" height="219.54545454545456" rx="2" fill="#6b7280"/>
+  <text x="493" y="76.45454545454544" text-anchor="middle" fill="#9ca3af" font-size="9" font-family="ui-monospace,SFMono-Regular">95</text>
+  <text x="455" y="318" text-anchor="middle" fill="#e5e7eb" font-size="12" font-family="ui-sans-serif,system-ui">decision</text>
+  <rect x="558" y="135.71428571428572" width="34" height="164.28571428571428" rx="2" fill="#16a34a"/>
+  <text x="575" y="131.71428571428572" text-anchor="middle" fill="#9ca3af" font-size="9" font-family="ui-monospace,SFMono-Regular">71</text>
+  <rect x="596" y="193.21428571428572" width="34" height="106.78571428571428" rx="2" fill="#10b981"/>
+  <text x="613" y="189.21428571428572" text-anchor="middle" fill="#9ca3af" font-size="9" font-family="ui-monospace,SFMono-Regular">46</text>
+  <rect x="634" y="78.21428571428571" width="34" height="221.78571428571428" rx="2" fill="#6b7280"/>
+  <text x="651" y="74.21428571428571" text-anchor="middle" fill="#9ca3af" font-size="9" font-family="ui-monospace,SFMono-Regular">96</text>
+  <text x="613" y="318" text-anchor="middle" fill="#e5e7eb" font-size="12" font-family="ui-sans-serif,system-ui">vibe</text>
+  <rect x="716" y="139" width="34" height="161" rx="2" fill="#16a34a"/>
+  <text x="733" y="135" text-anchor="middle" fill="#9ca3af" font-size="9" font-family="ui-monospace,SFMono-Regular">70</text>
+  <rect x="754" y="185" width="34" height="115" rx="2" fill="#10b981"/>
+  <text x="771" y="181" text-anchor="middle" fill="#9ca3af" font-size="9" font-family="ui-monospace,SFMono-Regular">50</text>
+  <rect x="792" y="127.5" width="34" height="172.5" rx="2" fill="#6b7280"/>
+  <text x="809" y="123.5" text-anchor="middle" fill="#9ca3af" font-size="9" font-family="ui-monospace,SFMono-Regular">75</text>
+  <text x="771" y="318" text-anchor="middle" fill="#e5e7eb" font-size="12" font-family="ui-sans-serif,system-ui">entity</text>
+
+  <rect x="60" y="336" width="12" height="12" rx="2" fill="#16a34a"/>
+  <text x="78" y="346" fill="#e5e7eb" font-size="11" font-family="ui-sans-serif,system-ui">dream</text>
+  <rect x="190" y="336" width="12" height="12" rx="2" fill="#10b981"/>
+  <text x="208" y="346" fill="#e5e7eb" font-size="11" font-family="ui-sans-serif,system-ui">facts</text>
+  <rect x="320" y="336" width="12" height="12" rx="2" fill="#6b7280"/>
+  <text x="338" y="346" fill="#e5e7eb" font-size="11" font-family="ui-sans-serif,system-ui">verbatim</text>
+</svg>

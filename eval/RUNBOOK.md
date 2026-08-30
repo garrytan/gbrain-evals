@@ -18,14 +18,34 @@ bun run eval:run
 
 ### "ANTHROPIC_API_KEY environment variable is missing"
 
-Only needed if you regenerate the corpus (`eval/generators/gen.ts`). If
-you're using the committed `eval/data/world-v1/` shards, you don't need it.
+Needed by corpus regeneration (`eval/generators/gen.ts`,
+`eval/generators/transcript-distill-gen.ts`) and by the runners that call
+Claude — Cat 34, Cat 35, and the `eval:brainbench` sweep that includes them.
+Retrieval-only runs over the committed `eval/data/world-v1/` shards don't
+need it.
 
-### `bun install` fails with "Cannot find package 'openai'"
+### `Cannot find module '.../@electric-sql/pglite/dist/pglite.wasm'`
 
-The `openai` package is in `package.json` dependencies. Run `bun install`
-to fetch it. This shouldn't happen post-clone if you followed the normal
-setup; see CLAUDE.md troubleshooting.
+gbrain reaches PGLite's WASM through a nested node_modules path that bun's
+hoisting breaks when gbrain is installed from the pinned GitHub SHA. The
+`postinstall` script (`scripts/postinstall-pglite-link.ts`) creates the
+symlink automatically — if you see this error, re-run `bun install` (or run
+the script directly).
+
+### Cat 35 pre-flight refuses to start ("projected worst-case $X exceeds CAT35_HARD_STOP_USD")
+
+Working as designed: the runner computes a deliberately pessimistic worst-case
+cost before spending and refuses when it exceeds the cap (default $40). The
+published run needed `CAT35_HARD_STOP_USD=50` (projection $45; measured $6.20).
+Raise the cap explicitly rather than removing it.
+
+### `bun test` hangs forever on a file that creates real PGLite engines
+
+At the pinned gbrain (v0.46.3), `PGLiteEngine.disconnect()` after ops-layer use
+enters a synchronous WASM spin that freezes the bun test runner (timers cannot
+fire; `--timeout` cannot interrupt). Plain `bun` runs are unaffected. Tests
+skip teardown for per-test engines (they die with the process); see TODOS.md
+for the upstream item.
 
 ## Runner failures
 
@@ -142,11 +162,11 @@ new ledger. Don't overwrite `world-v1/` — that's the reproducibility baseline.
 
 ## CI failures
 
-### `bun run test:eval` fails on a fresh checkout
+### `bun run test` fails on a fresh checkout
 
 ```sh
-bun install                   # fetch openai (+ deps)
-bun run test:eval             # retry
+bun install                   # fetch deps (postinstall links pglite)
+bun run test                  # = bun test test/eval/
 ```
 
 If tests still fail, bisect:

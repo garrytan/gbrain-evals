@@ -1,0 +1,8 @@
+- [fact] User's Mac disk is 93% full with only 33GB free out of 500GB (medium)
+- [event] User stopped using Nettex email app and switched to Mailbird months ago (medium)
+- [fact] User's home directory Library folder consumes 142GB (medium)
+- [fact] Nettex is uninstalled from user's machine (low)
+- [fact] User's username on their Mac is jmarcus (medium)
+- [event] User ran `docker system prune -a` and reclaimed 22.4 GB of disk space (medium)
+- [fact] User started the disk cleanup session with approximately 33 GB free disk space (medium)
+- [fact] EXTRACTION_COMPLETE (low)
