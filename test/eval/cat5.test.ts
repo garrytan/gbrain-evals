@@ -4,13 +4,22 @@
  * Uses a stubbed Haiku client (no real LLM calls). Covers:
  *   - classifyClaim happy path: well-formed classify_claim → ClaimScore
  *   - Retry once on malformed → fallback to judge_failed
- *   - aggregate computes citation_accuracy correctly
- *   - runCat5 with concurrency resolves expected_evidence from pagesBySlug
+ *   - BLIND CLASSIFICATION (regression for audit agentic-cats-02 /
+ *     tests-audit-04): the prompt never contains the gold label, the
+ *     empty-sources note carries no verdict hint, and every claim's
+ *     classifier context includes its own source_page (label-independent)
+ *   - Gold drift fails loudly: unresolvable slugs are harness errors
+ *   - aggregate computes citation_accuracy over classified claims only
+ *     (judge_failed excluded from the denominator, never scored 0)
+ *   - runCat5 writes a valid receipt (probe accounting + typed errors)
  *   - Verdict is baseline_only by default (no threshold gating in v1)
  *   - Verdict flips to pass/fail when enableThreshold=true
  */
 
 import { describe, test, expect } from 'bun:test';
+import { mkdtempSync } from 'fs';
+import { join } from 'path';
+import { tmpdir } from 'os';
 import Anthropic from '@anthropic-ai/sdk';
 import {
   classifyClaim,
@@ -18,11 +27,18 @@ import {
   runCat5,
   renderClaimPrompt,
   parseClassification,
+  resolveClaimSources,
   CLASSIFY_CLAIM_TOOL,
+  CAT5_CATEGORY,
   type Claim,
   type GroundTruthPage,
   type ClaimScore,
 } from '../../eval/runner/cat5-provenance.ts';
+import { loadReceipt, receiptPath } from '../../eval/runner/receipt.ts';
+
+function tmpReportsRoot(): string {
+  return mkdtempSync(join(tmpdir(), 'cat5-test-'));
+}
 
 // ─── Stub client ──────────────────────────────────────────────────────
 
@@ -171,12 +187,13 @@ describe('classifyClaim — retry + fallback', () => {
 // ─── aggregate ────────────────────────────────────────────────────────
 
 describe('aggregate', () => {
+  let scoreSeq = 0;
   function mkScore(
     predicted: 'supported' | 'unsupported' | 'over-generalized' | 'judge_failed',
     expected: 'supported' | 'unsupported' | 'over-generalized',
   ): ClaimScore {
     return {
-      claim_id: `c-${Math.random()}`,
+      claim_id: `c-${scoreSeq++}`,
       predicted_label: predicted,
       expected_label: expected,
       matches_expected: predicted === expected,
@@ -218,6 +235,25 @@ describe('aggregate', () => {
     ];
     const report = aggregate([], scores);
     expect(report.judge_failure_rate).toBeCloseTo(2 / 3, 6);
+  });
+
+  // WS0 policy: judge failures are excluded from the accuracy denominator —
+  // never averaged in as 0 (that silently deflated citation_accuracy).
+  test('citation_accuracy excludes judge_failed claims from the denominator', () => {
+    const scores: ClaimScore[] = [
+      mkScore('supported', 'supported'),   // classified, match
+      mkScore('unsupported', 'supported'), // classified, miss
+      mkScore('judge_failed', 'supported'), // NOT in denominator
+      mkScore('judge_failed', 'unsupported'), // NOT in denominator
+    ];
+    const report = aggregate([], scores);
+    expect(report.citation_accuracy).toBe(0.5); // 1/2, not 1/4
+  });
+
+  test('citation_accuracy is 0 (not NaN) when every claim judge_failed', () => {
+    const report = aggregate([], [mkScore('judge_failed', 'supported')]);
+    expect(report.citation_accuracy).toBe(0);
+    expect(Number.isNaN(report.citation_accuracy)).toBe(false);
   });
 
   test('verdict is baseline_only by default', () => {
@@ -292,17 +328,29 @@ describe('runCat5', () => {
       classifyResp('over-generalized', 'date is wrong'),
     ]);
 
-    const report = await runCat5({ claims, pagesBySlug, client, concurrency: 1 });
+    const reportsRoot = tmpReportsRoot();
+    const report = await runCat5({ claims, pagesBySlug, client, concurrency: 1, reportsRoot });
     expect(report.total_claims).toBe(2);
     expect(report.citation_accuracy).toBe(1);
     expect(report.per_claim[0].claim_id).toBe('c1');
     expect(report.per_claim[1].claim_id).toBe('c2');
+
+    // Receipt written + valid (shared contract).
+    const receipt = loadReceipt(receiptPath(CAT5_CATEGORY, reportsRoot));
+    expect(receipt.run_status).toBe('completed');
+    expect(receipt.verdict).toBe('partial'); // baseline_only → partial (no real gate yet)
+    expect(receipt.n_total).toBe(2);
+    expect(receipt.n_scored).toBe(2);
+    expect(receipt.judge).toEqual({ model: 'claude-haiku-4-5-20251001', temperature: 0 });
   });
 
-  test('handles missing evidence pages gracefully (empty source list passed to judge)', async () => {
+  // Regression: unresolvable gold slugs previously produced an EMPTY source
+  // list, which flipped the prompt into the label-leaking shape. Now gold
+  // drift is a loud harness error and the claim is never classified.
+  test('unresolvable slugs → harness error, claim excluded (was silent empty-context classify)', async () => {
     const claims: Claim[] = [
       {
-        id: 'c1',
+        id: 'c-ghost',
         source_page: 'people/ghost',
         claim_text: 'Ghost person does stuff.',
         expected_label: 'unsupported',
@@ -310,10 +358,139 @@ describe('runCat5', () => {
       },
     ];
     const pagesBySlug = new Map<string, GroundTruthPage>(); // empty
+    const client = stubClient([]); // classifier must NEVER be called
+    const reportsRoot = tmpReportsRoot();
+    const report = await runCat5({ claims, pagesBySlug, client, reportsRoot });
+
+    expect(report.per_claim.length).toBe(0);
+
+    const receipt = loadReceipt(receiptPath(CAT5_CATEGORY, reportsRoot));
+    expect(receipt.n_total).toBe(1);
+    expect(receipt.n_scored).toBe(0);
+    expect(receipt.errors.length).toBe(1);
+    expect(receipt.errors[0].origin).toBe('harness');
+    expect(receipt.errors[0].probe_id).toBe('c-ghost');
+    expect(receipt.errors[0].message).toContain('people/ghost');
+    expect(receipt.publishable).toBe(false); // smoke run with an infra error
+  });
+
+  test('good gold data still classifies (fail-loud gate passes on good input)', async () => {
+    const claims: Claim[] = [
+      {
+        id: 'c-good',
+        source_page: 'people/amara',
+        claim_text: 'Amara collects vintage submarines.',
+        expected_label: 'unsupported',
+        expected_evidence: [],
+      },
+    ];
+    const pagesBySlug = new Map<string, GroundTruthPage>([
+      ['people/amara', { slug: 'people/amara', title: 'Amara', content: 'Partner at Halfway.' }],
+    ]);
     const client = stubClient([classifyResp('unsupported')]);
-    const report = await runCat5({ claims, pagesBySlug, client });
-    expect(report.per_claim[0].predicted_label).toBe('unsupported');
+    const report = await runCat5({ claims, pagesBySlug, client, reportsRoot: tmpReportsRoot() });
+    expect(report.per_claim.length).toBe(1);
     expect(report.per_claim[0].matches_expected).toBe(true);
+    expect(report.citation_accuracy).toBe(1);
+  });
+
+  test('judge_failed claim → typed judge error in the receipt, excluded from accuracy', async () => {
+    const claims: Claim[] = [
+      {
+        id: 'c-jf',
+        source_page: 'people/amara',
+        claim_text: 'Amara is a partner.',
+        expected_label: 'supported',
+        expected_evidence: ['people/amara'],
+      },
+    ];
+    const pagesBySlug = new Map<string, GroundTruthPage>([
+      ['people/amara', { slug: 'people/amara', title: 'Amara', content: 'Partner at Halfway.' }],
+    ]);
+    const client = stubClient([malformedResp(), malformedResp()]);
+    const reportsRoot = tmpReportsRoot();
+    const report = await runCat5({ claims, pagesBySlug, client, reportsRoot });
+
+    expect(report.per_claim[0].predicted_label).toBe('judge_failed');
+    expect(report.citation_accuracy).toBe(0); // nothing classified — not a fake miss average
+
+    const receipt = loadReceipt(receiptPath(CAT5_CATEGORY, reportsRoot));
+    expect(receipt.errors.length).toBe(1);
+    expect(receipt.errors[0].origin).toBe('judge');
+  });
+
+  // BLIND CLASSIFICATION regression (agentic-cats-02 / tests-audit-04): the
+  // context handed to the classifier is label-independent — an unsupported
+  // claim with no expected_evidence still gets its source_page content, and
+  // the prompt carries no verdict hint.
+  test('unsupported claims get a non-empty, hint-free classifier context', async () => {
+    const claims: Claim[] = [
+      {
+        id: 'c-blind',
+        source_page: 'people/amara',
+        claim_text: 'Amara collects vintage submarines.',
+        expected_label: 'unsupported',
+        expected_evidence: [], // gold-unsupported: no evidence pages
+      },
+    ];
+    const pagesBySlug = new Map<string, GroundTruthPage>([
+      ['people/amara', { slug: 'people/amara', title: 'Amara', content: 'Partner at Halfway Capital.' }],
+    ]);
+    const captured: string[] = [];
+    const capturingClient = {
+      messages: {
+        create: async (req: { messages: Array<{ content: string }> }) => {
+          captured.push(req.messages[0].content);
+          return classifyResp('unsupported') as unknown as Anthropic.Messages.Message;
+        },
+      },
+    } as unknown as Anthropic;
+
+    await runCat5({ claims, pagesBySlug, client: capturingClient, reportsRoot: tmpReportsRoot() });
+
+    expect(captured.length).toBe(1);
+    const prompt = captured[0];
+    // Label-independent context: the claim's own source page is present.
+    expect(prompt).toContain('Partner at Halfway Capital.');
+    // No leak: neither the empty-context hint nor the gold label appears.
+    expect(prompt).not.toContain('no source pages provided');
+    expect(prompt).not.toContain('almost certainly');
+    expect(prompt).not.toContain('unsupported');
+  });
+});
+
+// ─── resolveClaimSources ─────────────────────────────────────────────
+
+describe('resolveClaimSources', () => {
+  const PAGES = new Map<string, GroundTruthPage>([
+    ['people/amara', { slug: 'people/amara', title: 'Amara', content: 'Partner.' }],
+    ['companies/halfway', { slug: 'companies/halfway', title: 'Halfway', content: 'VC firm.' }],
+  ]);
+
+  test('always includes source_page first, then evidence, deduped', () => {
+    const claim: Claim = {
+      id: 'c1',
+      source_page: 'people/amara',
+      claim_text: 'x',
+      expected_label: 'supported',
+      expected_evidence: ['companies/halfway', 'people/amara'],
+    };
+    const { sources, missing } = resolveClaimSources(claim, PAGES);
+    expect(missing).toEqual([]);
+    expect(sources.map(s => s.slug)).toEqual(['people/amara', 'companies/halfway']);
+  });
+
+  test('reports every unresolvable slug', () => {
+    const claim: Claim = {
+      id: 'c2',
+      source_page: 'people/ghost',
+      claim_text: 'x',
+      expected_label: 'supported',
+      expected_evidence: ['doc/missing'],
+    };
+    const { sources, missing } = resolveClaimSources(claim, PAGES);
+    expect(sources).toEqual([]);
+    expect(missing).toEqual(['people/ghost', 'doc/missing']);
   });
 });
 
@@ -329,9 +506,24 @@ describe('renderClaimPrompt', () => {
     expect(rendered).toContain('Halfway Capital is a seed-stage');
   });
 
-  test('handles empty source list with explicit note', () => {
+  test('handles empty source list with a NEUTRAL note — no verdict hint (tests-audit-04)', () => {
     const rendered = renderClaimPrompt(SAMPLE_CLAIM, []);
     expect(rendered).toContain('no source pages provided');
+    // The old note said "— the claim is almost certainly unsupported",
+    // literally handing the judge the gold label for every gold-unsupported
+    // claim. The rendered prompt must never contain a label word.
+    expect(rendered).not.toContain('almost certainly');
+    expect(rendered).not.toContain('unsupported');
+    expect(rendered).not.toContain('supported');
+    expect(rendered).not.toContain('over-generalized');
+  });
+
+  test('rendered prompt never contains the claim expected_label for any class', () => {
+    for (const expected_label of ['supported', 'unsupported', 'over-generalized'] as const) {
+      const rendered = renderClaimPrompt({ ...SAMPLE_CLAIM, expected_label }, SAMPLE_PAGES);
+      expect(rendered).not.toContain('expected_label');
+      expect(rendered).not.toContain('almost certainly');
+    }
   });
 });
 

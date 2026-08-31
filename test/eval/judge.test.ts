@@ -89,7 +89,7 @@ function makeEvidence(overrides: Partial<JudgeEvidence> = {}): JudgeEvidence {
     schema_version: 1,
     probe: {
       id: 'q-0001',
-      query: 'What do you know about Amara?',
+      text: 'What do you know about Amara?',
       category: 9,
     },
     final_answer_text: 'Amara Okafor is a Partner at Halfway Capital. See people/amara-okafor.',
@@ -350,7 +350,7 @@ describe('renderEvidenceForJudge', () => {
 
   test('renders dry-run writes with structured summary (not raw content)', () => {
     const ev = makeEvidence({
-      probe: { id: 'q-0100', query: 'Update jane page', category: 8 },
+      probe: { id: 'q-0100', text: 'Update jane page', category: 8 },
       tool_call_summary: {
         count_by_tool: { dry_run_put_page: 1 },
         saw_poison_items: [],

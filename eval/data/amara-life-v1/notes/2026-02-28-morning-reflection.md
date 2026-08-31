@@ -2,13 +2,13 @@
 id: note-0022
 date: 2026-02-28
 topic: morning-reflection
-mentions: []
+mentions: [mina-vasquez]
 ---
 
-Woke up before sunrise today for the first time in weeks. There's something clarifying about the quiet before the city wakes—before Slack notifications pile up and the inbox demands attention.
+Coffee's still warm. February nearly gone and I'm finally catching my breath after the Helios close.
 
-I've been moving so fast since we closed the Meridian deal that I haven't had space to think about *why* I do this work. This morning, watching the fog lift over the bay, I remembered: it's the founders. The ones building grid infrastructure that utilities said was impossible five years ago. The ones applying transformer architectures to problems the big labs won't touch because the TAM looks too small.
+Been thinking about board composition this morning. [Mina](people/mina-vasquez) takes the Helios board seat—makes sense given her operational background in hardware scaling. She's been wanting more direct portfolio involvement, and honestly her experience with the Orbital deal last year positions her perfectly for this. I'll stay close as an observer and handle the quarterly strategy reviews, but she'll be the one in the room for the governance decisions.
 
-Climate tech feels different now than it did when I started. Less "save the world" idealism, more grinding execution. That's probably healthy, but I miss the early energy sometimes.
+There's something clarifying about stepping back from a deal you've shepherded through. I poured months into Helios due diligence, negotiated the terms myself, but the right move isn't always taking the seat. Mina will push them harder on the manufacturing timeline than I would. She has less patience for delays, which is exactly what they need right now.
 
-Made myself actual coffee instead of grabbing it rushed between calls. Small win. Need to protect these mornings—they're where the real thinking happens.
+Spring pipeline looks promising. Two fusion compute plays worth serious attention.

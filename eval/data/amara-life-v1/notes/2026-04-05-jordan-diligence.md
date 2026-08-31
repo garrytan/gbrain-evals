@@ -2,11 +2,11 @@
 id: note-0004
 date: 2026-04-05
 topic: jordan-diligence
-mentions: [jordan-melo, terraflux]
+mentions: [jordan-mwangi, datastream-analytics]
 ---
 
-Spent most of today deep in diligence on [Jordan Melo](people/jordan-melo)'s background before we finalize the [Terraflux](companies/terraflux) term sheet. Third reference call confirmed what I suspected—Jordan's technical chops are real, but the more interesting signal is how former reports talk about them. Two used the word "relentless" unprompted. One mentioned Jordan once debugged a carbon accounting discrepancy at 2am on Christmas Eve because "the numbers have to be right."
+Spent most of the afternoon digging into [Datastream Analytics](people/jordan-mwangi)'s operational metrics ahead of the Series B decision. [Jordan](people/jordan-mwangi) walked me through their org structure—they're at about 60 people now, which feels right for their stage. Not bloated, but enough depth in engineering to actually ship the data pipeline improvements they've been promising.
 
-That's the founder energy I look for. Climate infrastructure doesn't forgive sloppiness—grid operators, utilities, regulators will eat you alive if you can't back up your claims with airtight data.
+What I keep coming back to is Jordan's ability to articulate technical trade-offs without losing the business context. Rare in founders, honestly. The climate-AI infrastructure angle is exactly our thesis, and their approach to satellite imagery processing could be genuinely differentiated if they nail the next release.
 
-Still want to dig into the co-founder dynamic more. [Jordan](people/jordan-melo) clearly drives the technical vision, but I need to understand how decisions get made when they disagree. Planning to grab coffee with their CTO next week to get a read on that chemistry. Partnership health is the thing that kills companies quietly.
+Still need to pressure-test their enterprise sales motion. The pilots look promising but conversion timelines have been fuzzy in the materials. Will schedule a follow-up with their head of revenue before I bring this to Monday's IC.

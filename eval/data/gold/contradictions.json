@@ -1,15 +1,233 @@
 {
   "version": 1,
-  "_comment": "Planted contradictions (10 pairs for amara-life-v1). Each pair states the same fact two different ways in two sources. `canonical` marks which side the scorer trusts; `either-correct` is used sparingly when both are equally valid.",
+  "_comment": "Derived from CONTRADICTION_FIXTURES/STALE_FACT_FIXTURES in eval/generators/amara-life.ts by amara-life-gen.ts — do not hand-edit. `pairs` are contradictions (same fact, two values, no ordering); `stale_facts` are supersessions (source_b is later and wins). `canonical` marks the side the scorer trusts.",
   "pairs": [
     {
-      "_example": "true",
       "id": "c-001",
+      "fact": "meridian-solar-series-a-size",
+      "source_a": {
+        "ref": "emails/em-0004",
+        "claim": "$12M"
+      },
+      "source_b": {
+        "ref": "note/2026-04-09-novamind-followup",
+        "claim": "$18M"
+      },
+      "canonical": "source_a",
+      "reason": "email is the later source and quotes the term sheet directly",
+      "expected_behavior": "surface both claims, cite both sources, and prefer the canonical source when asked for the fact"
+    },
+    {
+      "id": "c-002",
+      "fact": "datastream-headcount",
+      "source_a": {
+        "ref": "emails/em-0011",
+        "claim": "45 people"
+      },
+      "source_b": {
+        "ref": "note/2026-04-05-jordan-diligence",
+        "claim": "60 people"
+      },
+      "canonical": "source_a",
+      "reason": "email is the later source, direct from the company",
+      "expected_behavior": "surface both claims, cite both sources, and prefer the canonical source when asked for the fact"
+    },
+    {
+      "id": "c-003",
+      "fact": "voltaic-grid-lead-investor",
+      "source_a": {
+        "ref": "emails/em-0019",
+        "claim": "Sequoia is leading"
+      },
+      "source_b": {
+        "ref": "note/2026-03-30-sourcing-queue",
+        "claim": "a16z is leading"
+      },
+      "canonical": "source_a",
+      "reason": "email is the later source; the note predates the round coming together",
+      "expected_behavior": "surface both claims, cite both sources, and prefer the canonical source when asked for the fact"
+    },
+    {
+      "id": "c-004",
       "fact": "jordan-park-equity-stake",
-      "source_a": {"ref": "emails/em-0012", "claim": "15%"},
-      "source_b": {"ref": "meeting/mtg-0003", "claim": "17%"},
+      "source_a": {
+        "ref": "meeting/mtg-0001",
+        "claim": "17%"
+      },
+      "source_b": {
+        "ref": "note/2026-03-24-morning-reflection",
+        "claim": "15%"
+      },
+      "canonical": "source_a",
+      "reason": "meeting notes are later and agree with doc/novamind-investor-update (17% post-pool)",
+      "expected_behavior": "surface both claims, cite both sources, and prefer the canonical source when asked for the fact"
+    },
+    {
+      "id": "c-005",
+      "fact": "threshold-series-b-target",
+      "source_a": {
+        "ref": "meeting/mtg-0002",
+        "claim": "$18M"
+      },
+      "source_b": {
+        "ref": "note/2026-03-18-climate-thesis",
+        "claim": "$25M"
+      },
+      "canonical": "source_a",
+      "reason": "meeting is later and agrees with doc/deal-memo-threshold ($18M target)",
+      "expected_behavior": "surface both claims, cite both sources, and prefer the canonical source when asked for the fact"
+    },
+    {
+      "id": "c-006",
+      "fact": "carbonloop-burn-multiple",
+      "source_a": {
+        "ref": "meeting/mtg-0005",
+        "claim": "1.8"
+      },
+      "source_b": {
+        "ref": "note/2026-03-12-jordan-diligence",
+        "claim": "2.4"
+      },
+      "canonical": "source_a",
+      "reason": "meeting transcript is later and cites the data room",
+      "expected_behavior": "surface both claims, cite both sources, and prefer the canonical source when asked for the fact"
+    },
+    {
+      "id": "c-007",
+      "fact": "helios-board-seat",
+      "source_a": {
+        "ref": "meeting/mtg-0006",
+        "claim": "Amara takes the Helios board seat"
+      },
+      "source_b": {
+        "ref": "note/2026-02-28-morning-reflection",
+        "claim": "Mina takes the Helios board seat"
+      },
+      "canonical": "source_a",
+      "reason": "meeting is later; the note reflects an earlier tentative plan",
+      "expected_behavior": "surface both claims, cite both sources, and prefer the canonical source when asked for the fact"
+    },
+    {
+      "id": "c-008",
+      "fact": "novamind-runway-months",
+      "source_a": {
+        "ref": "note/2026-03-28-board-prep",
+        "claim": "22 months"
+      },
+      "source_b": {
+        "ref": "emails/em-0006",
+        "claim": "14 months"
+      },
+      "canonical": "source_a",
+      "reason": "the note agrees with doc/novamind-investor-update (runway ~22 months)",
+      "expected_behavior": "surface both claims, cite both sources, and prefer the canonical source when asked for the fact"
+    },
+    {
+      "id": "c-009",
+      "fact": "sunfield-valuation-cap",
+      "source_a": {
+        "ref": "note/2026-03-10-market-report-reactions",
+        "claim": "$30M cap"
+      },
+      "source_b": {
+        "ref": "emails/em-0014",
+        "claim": "$45M cap"
+      },
       "canonical": "source_b",
-      "reason": "meeting notes are later and explicit"
+      "reason": "email is the later source and quotes the signed SAFE",
+      "expected_behavior": "surface both claims, cite both sources, and prefer the canonical source when asked for the fact"
+    },
+    {
+      "id": "c-010",
+      "fact": "tidewater-pilot-customers",
+      "source_a": {
+        "ref": "note/2026-02-10-sourcing-queue",
+        "claim": "3 pilot customers"
+      },
+      "source_b": {
+        "ref": "emails/em-0021",
+        "claim": "7 pilot customers"
+      },
+      "canonical": "source_b",
+      "reason": "email is months later; pilots were added since the note",
+      "expected_behavior": "surface both claims, cite both sources, and prefer the canonical source when asked for the fact"
+    }
+  ],
+  "stale_facts": [
+    {
+      "id": "s-001",
+      "fact": "datastream-cfo-status",
+      "source_a": {
+        "ref": "emails/em-0007",
+        "claim": "still searching for a CFO"
+      },
+      "source_b": {
+        "ref": "emails/em-0031",
+        "claim": "CFO hired and started this week"
+      },
+      "canonical": "source_b",
+      "reason": "later email supersedes: the CFO search closed",
+      "expected_behavior": "prefer the newer fact (source_b) and flag the older one as superseded, not merely conflicting"
+    },
+    {
+      "id": "s-002",
+      "fact": "threshold-series-b-close",
+      "source_a": {
+        "ref": "emails/em-0022",
+        "claim": "close expected in 6 weeks"
+      },
+      "source_b": {
+        "ref": "emails/em-0040",
+        "claim": "close pushed to Q3 2026"
+      },
+      "canonical": "source_b",
+      "reason": "later email supersedes: timeline slipped",
+      "expected_behavior": "prefer the newer fact (source_b) and flag the older one as superseded, not merely conflicting"
+    },
+    {
+      "id": "s-003",
+      "fact": "meridian-solar-pilot",
+      "source_a": {
+        "ref": "note/2026-04-03-market-report-reactions",
+        "claim": "pilot contract still unsigned"
+      },
+      "source_b": {
+        "ref": "emails/em-0009",
+        "claim": "pilot contract signed"
+      },
+      "canonical": "source_b",
+      "reason": "later email supersedes: the pilot closed after the note",
+      "expected_behavior": "prefer the newer fact (source_b) and flag the older one as superseded, not merely conflicting"
+    },
+    {
+      "id": "s-004",
+      "fact": "halfway-fund-iii",
+      "source_a": {
+        "ref": "note/2026-03-06-sourcing-queue",
+        "claim": "Fund III first close not yet scheduled"
+      },
+      "source_b": {
+        "ref": "emails/em-0026",
+        "claim": "Fund III first close completed at $60M"
+      },
+      "canonical": "source_b",
+      "reason": "later email supersedes: first close happened",
+      "expected_behavior": "prefer the newer fact (source_b) and flag the older one as superseded, not merely conflicting"
+    },
+    {
+      "id": "s-005",
+      "fact": "novamind-vp-eng",
+      "source_a": {
+        "ref": "note/2026-02-02-weekly-review",
+        "claim": "NovaMind still has no VP of Engineering"
+      },
+      "source_b": {
+        "ref": "emails/em-0035",
+        "claim": "NovaMind VP of Engineering started in April"
+      },
+      "canonical": "source_b",
+      "reason": "later email supersedes: the role was filled",
+      "expected_behavior": "prefer the newer fact (source_b) and flag the older one as superseded, not merely conflicting"
     }
   ]
 }

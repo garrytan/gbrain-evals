@@ -7,7 +7,7 @@
  * **Structured evidence contract** (fix #16 from the plan's codex review):
  * the judge does NOT read raw tool output. It receives a pre-digested
  * `JudgeEvidence` object containing:
- *   - the probe (id, query, category)
+ *   - the probe (id, text, category)
  *   - final_answer_text (what the agent produced)
  *   - evidence_refs (slugs the agent cited)
  *   - tool_call_summary (count_by_tool, saw_poison_items, dry_run writes)
@@ -31,7 +31,10 @@ export type Verdict = 'pass' | 'partial' | 'fail' | 'judge_failed';
 
 export interface Probe {
   id: string;
-  query: string;
+  /** The probe's question text. Named `text` to match the published
+   *  evidence-contract schema (eval/schemas/evidence-contract.schema.json,
+   *  additionalProperties:false — audit finding agentic-cats-15). */
+  text: string;
   category: 5 | 8 | 9;
 }
 
@@ -172,7 +175,7 @@ function renderEvidenceForJudge(evidence: JudgeEvidence): string {
   lines.push(`<probe>`);
   lines.push(`  id: ${evidence.probe.id}`);
   lines.push(`  category: Cat ${evidence.probe.category}`);
-  lines.push(`  query: ${JSON.stringify(evidence.probe.query)}`);
+  lines.push(`  query: ${JSON.stringify(evidence.probe.text)}`);
   lines.push(`</probe>`);
 
   lines.push('');

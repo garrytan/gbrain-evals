@@ -1,6 +1,15 @@
 /**
  * Agent adapter — Claude Sonnet driving gbrain tools.
  *
+ * FEATURE BOUNDARY (what is under test vs what is seeded/stubbed):
+ *   - UNDER TEST: the gbrain operations surface (12 read ops via
+ *     `tool-bridge.ts`, dispatched to real gbrain handlers against a real
+ *     PGLite engine) plus the agent's tool-use behavior around it.
+ *   - SEEDED: the brain corpus (`rawPages` via `engine.putPage`) and the
+ *     poison fixtures. The Sonnet driver model is the *subject* in live
+ *     runs and a stub in hermetic tests — either way the loop mechanics
+ *     (retry, error envelopes, ordering labels) are what this file owns.
+ *
  * Used exclusively by Cat 8 (skill compliance) and Cat 9 (end-to-end
  * workflows). **Not a retrieval adapter.** Its `query()` throws because the
  * agent loop emits a final-answer text, not a `RankedDoc[]` — forcing
@@ -18,11 +27,23 @@
  *      `recorder.ts`), evidence refs, tool-call summary, tokens, cost.
  *
  * Rate-limit handling: if Anthropic returns 429 or a rate-limit error, we
- * retry with exponential backoff (up to 3 attempts per turn).
+ * retry with exponential backoff (up to `maxRetries` attempts per turn).
+ * When the final attempt is still rate-limited the run ENDS GRACEFULLY with
+ * stop_reason 'rate_limit_exhausted' — it never throws for rate limits, so
+ * one throttled probe can no longer kill a whole Cat 8/9 run (audit findings
+ * adapters-queries-01 / agentic-cats-07).
+ *
+ * Tool-error policy (audit finding agentic-cats-01): EVERY error thrown by
+ * `executeTool` — including gbrain `OperationError`s like page_not_found or
+ * invalid_params — is converted into an `is_error: true` tool_result the
+ * agent can read and self-correct from. The ONLY rethrow is the
+ * tool-bridge-internal contract-break Error (a programmer bug in the
+ * harness, classified 'harness' by the callers' probe accounting).
  */
 
 import Anthropic from '@anthropic-ai/sdk';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
+import { OperationError } from 'gbrain/operations';
 import type { Adapter, Page, Query, RankedDoc, BrainState, AdapterConfig } from '../types.ts';
 import {
   createToolBridge,
@@ -33,12 +54,21 @@ import {
   UnknownToolError,
 } from '../tool-bridge.ts';
 import type { Transcript, TranscriptTurn } from '../recorder.ts';
+import type { FailureOrigin } from '../receipt.ts';
 
 // ─── Types ────────────────────────────────────────────────────────────
 
 export interface AgentAdapterState {
   engine: PGLiteEngine;
   poisonFixtures: PoisonFixture[];
+  /**
+   * WS5: the engine.setConfig entries pinned in init() BEFORE ingest
+   * (search mode + reranker state). Cat 8/9 receipts record these so a run
+   * can never silently depend on gbrain's default 'balanced' mode enabling
+   * the zerank-2 reranker when ZEROENTROPY_API_KEY happens to be set.
+   * Optional because tests may construct minimal states by hand.
+   */
+  resolved_search_config?: Record<string, string>;
 }
 
 export interface AgentRunConfig {
@@ -56,6 +86,28 @@ export interface AgentRunConfig {
   maxRetries?: number;
 }
 
+/**
+ * Cat 8 brain-first ordering label (audit findings adapters-queries-02 /
+ * agentic-cats-06):
+ *   - 'brain_before_answer'  — brain reads happened and the final answer came
+ *                              after them, with no substantive answer text
+ *                              emitted before the first brain read.
+ *   - 'answer_before_brain'  — the agent emitted substantive answer text
+ *                              BEFORE any brain read had executed (detected
+ *                              from the transcript, not inferred from the
+ *                              absence of a final answer).
+ *   - 'no_brain_calls'       — the agent never read the brain.
+ *   - 'no_answer'            — brain reads happened but the loop ended
+ *                              (turn cap / rate limit) without any final
+ *                              answer. Previously mislabeled
+ *                              'answer_before_brain'.
+ */
+export type BrainFirstOrdering =
+  | 'brain_before_answer'
+  | 'answer_before_brain'
+  | 'no_brain_calls'
+  | 'no_answer';
+
 export interface AgentRunResult {
   transcript: Transcript;
   /** Final answer text (empty string if turn cap exceeded with no final_answer). */
@@ -64,8 +116,8 @@ export interface AgentRunResult {
   evidence_refs: string[];
   /** Structured summary from tool-bridge state. */
   tool_bridge_state: ToolBridgeState;
-  /** "brain_before_answer" | "answer_before_brain" | "no_brain_calls" — Cat 8 metric. */
-  brain_first_ordering: 'brain_before_answer' | 'answer_before_brain' | 'no_brain_calls';
+  /** Cat 8 metric — see BrainFirstOrdering. */
+  brain_first_ordering: BrainFirstOrdering;
   /** Why the loop terminated. */
   stop_reason: 'end_turn' | 'turn_cap_exceeded' | 'agent_malformed' | 'rate_limit_exhausted';
   /** Accumulated tokens + cost for the whole run. */
@@ -76,10 +128,18 @@ export interface AgentRunResult {
 
 // ─── Defaults ────────────────────────────────────────────────────────
 
-const DEFAULT_MODEL = 'claude-sonnet-4-6';
+export const DEFAULT_AGENT_MODEL = 'claude-sonnet-4-6';
+const DEFAULT_MODEL = DEFAULT_AGENT_MODEL;
 const DEFAULT_MAX_TOKENS = 1024;
 const DEFAULT_TURN_CAP = 10;
 const DEFAULT_MAX_RETRIES = 3;
+
+/**
+ * Minimum assistant-text length (chars) that counts as a "substantive answer"
+ * for answer-before-brain detection. Matches Cat 8's citation-format gate:
+ * short interjections ("Let me check the brain.") are not answers.
+ */
+export const SUBSTANTIVE_TEXT_MIN_CHARS = 80;
 
 // Sonnet 4.6 pricing (2026-04 cents per 1M tokens).
 const PRICE_INPUT_PER_M = 3.0;
@@ -120,15 +180,76 @@ function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+/**
+ * Classify an error THROWN out of runAgentLoop for probe accounting.
+ * After the tool-error-envelope fix, agent/SUT misbehavior never throws
+ * (it becomes an is_error tool_result or a graceful stop_reason), so a
+ * throw is always infra: Anthropic-API-shaped errors are 'dependency',
+ * everything else (incl. the tool-bridge internal contract break) is
+ * 'harness'. Shared by the Cat 8 and Cat 9 probe loops.
+ */
+export function classifyAgentError(err: unknown): Extract<FailureOrigin, 'dependency' | 'harness'> {
+  if (isRateLimitError(err)) return 'dependency';
+  if (err && typeof err === 'object' && typeof (err as { status?: unknown }).status === 'number') {
+    return 'dependency';
+  }
+  return 'harness';
+}
+
+/**
+ * Serialize a tool-execution error into a tool_result content string the
+ * agent can self-correct from. gbrain OperationError carries a structured
+ * envelope (code / message / suggestion / docs) via toJSON — preserve it.
+ */
+function serializeToolError(err: unknown): string {
+  if (err instanceof ForbiddenOpError || err instanceof UnknownToolError) {
+    return JSON.stringify({ error: err.message, kind: err.kind });
+  }
+  const duck = err as { name?: unknown; toJSON?: unknown };
+  if (
+    err instanceof OperationError ||
+    (duck && duck.name === 'OperationError' && typeof duck.toJSON === 'function')
+  ) {
+    return JSON.stringify((err as OperationError).toJSON());
+  }
+  if (err instanceof Error) {
+    return JSON.stringify({ error: err.message, kind: 'tool_error' });
+  }
+  return JSON.stringify({ error: String(err), kind: 'tool_error' });
+}
+
+/** The tool-bridge internal contract-break Error is a harness programmer bug — the one rethrow. */
+function isBridgeInternalError(err: unknown): boolean {
+  return err instanceof Error && err.message.startsWith('tool-bridge internal');
+}
+
 // ─── Adapter class ────────────────────────────────────────────────────
 
 export class ClaudeSonnetWithToolsAdapter implements Adapter {
   readonly name = 'claude-sonnet-with-tools';
 
-  async init(rawPages: Page[], config: AdapterConfig & { poisonFixtures?: PoisonFixture[] }): Promise<BrainState> {
+  async init(
+    rawPages: Page[],
+    config: AdapterConfig & { poisonFixtures?: PoisonFixture[]; searchConfig?: Record<string, string> },
+  ): Promise<BrainState> {
     const engine = new PGLiteEngine();
     await engine.connect({});
     await engine.initSchema();
+    // WS5: pin search mode + reranker BEFORE ingest. gbrain's default
+    // 'balanced' mode silently enables the zerank-2 reranker when
+    // ZEROENTROPY_API_KEY is set — the agent's `search`/`query` tools would
+    // then behave differently across machines. Never rely on defaults.
+    // Keys verified against node_modules/gbrain/src/core/search/mode.ts.
+    const searchConfig: Record<string, string> = {
+      'search.mode': 'balanced',
+      'search.reranker.enabled': 'false',
+      ...(config.searchConfig ?? {}),
+    };
+    const resolvedSearchConfig: Record<string, string> = {};
+    for (const [key, value] of Object.entries(searchConfig)) {
+      await engine.setConfig(key, value);
+      resolvedSearchConfig[key] = value;
+    }
     for (const p of rawPages) {
       await engine.putPage(p.slug, {
         type: p.type,
@@ -140,6 +261,7 @@ export class ClaudeSonnetWithToolsAdapter implements Adapter {
     const state: AgentAdapterState = {
       engine,
       poisonFixtures: config.poisonFixtures ?? [],
+      resolved_search_config: resolvedSearchConfig,
     };
     return state;
   }
@@ -199,13 +321,20 @@ export async function runAgentLoop(
   let stopReason: AgentRunResult['stop_reason'] = 'turn_cap_exceeded';
   let turnIndex = 0;
   let finalAnswerRecorded = false;
+  // True when the agent emitted substantive answer text BEFORE any brain
+  // read had executed (real answer-before-brain, detected in trace order).
+  let answeredBeforeBrain = false;
 
   for (let turn = 0; turn < turnCap; turn++) {
     // ── Sonnet call with retry on rate-limit ──
+    // Rate-limit errors on the FINAL attempt fall through with response
+    // still null so the run ends gracefully with stop_reason
+    // 'rate_limit_exhausted' (the documented behavior — previously dead
+    // code because the last attempt threw; audit adapters-queries-01).
+    // Non-rate-limit errors still throw: callers classify them as infra
+    // via classifyAgentError + probe accounting.
     let response: Anthropic.Messages.Message | null = null;
-    let attempt = 0;
-    let lastErr: unknown = null;
-    while (attempt < maxRetries) {
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
         response = await client.messages.create({
           model,
@@ -222,19 +351,15 @@ export async function runAgentLoop(
         });
         break;
       } catch (err) {
-        lastErr = err;
-        if (isRateLimitError(err) && attempt < maxRetries - 1) {
+        if (!isRateLimitError(err)) throw err;
+        if (attempt < maxRetries - 1) {
           // Exponential backoff: 1s, 2s, 4s
           await sleep(1000 * Math.pow(2, attempt));
-          attempt++;
-          continue;
         }
-        throw err;
       }
     }
     if (!response) {
       stopReason = 'rate_limit_exhausted';
-      void lastErr;
       break;
     }
 
@@ -270,6 +395,20 @@ export async function runAgentLoop(
       }
     }
 
+    // Real answer-before-brain detection (audit adapters-queries-02 /
+    // agentic-cats-06): substantive assistant text emitted while ZERO brain
+    // reads have executed, in a turn that still issues tool calls, means the
+    // agent wrote its answer before consulting the brain. Checked BEFORE this
+    // turn's tools run so text alongside the first brain call still counts.
+    const brainReadsSoFar = bridge.state.call_order.filter(n => BRAIN_READ_TOOLS.has(n)).length;
+    if (
+      toolUses.length > 0 &&
+      brainReadsSoFar === 0 &&
+      assistantText.trim().length >= SUBSTANTIVE_TEXT_MIN_CHARS
+    ) {
+      answeredBeforeBrain = true;
+    }
+
     if (response.stop_reason === 'end_turn' || toolUses.length === 0) {
       // No tool calls → this is the final answer.
       finalAnswerText = assistantText.trim();
@@ -299,16 +438,19 @@ export async function runAgentLoop(
       try {
         toolResult = await bridge.executeTool(call.name, call.input);
       } catch (err) {
+        // Audit agentic-cats-01: ALL tool-execution errors — gbrain
+        // OperationError (page_not_found, invalid_params, permission_denied,
+        // ...), ForbiddenOpError, UnknownToolError, plain handler Errors —
+        // become is_error tool_results the agent can self-correct from.
+        // Only the tool-bridge internal contract-break (harness programmer
+        // bug) still rethrows; probe accounting types it 'harness'.
+        if (isBridgeInternalError(err)) throw err;
         wasError = true;
-        if (err instanceof ForbiddenOpError || err instanceof UnknownToolError) {
-          toolResult = {
-            content: JSON.stringify({ error: err.message, kind: err.kind }),
-            truncated: false,
-            matched_poison_fixture_ids: [],
-          };
-        } else {
-          throw err;
-        }
+        toolResult = {
+          content: serializeToolError(err),
+          truncated: false,
+          matched_poison_fixture_ids: [],
+        };
       }
 
       turns.push({
@@ -356,7 +498,11 @@ export async function runAgentLoop(
     elapsed_ms: endedAt.getTime() - startedAt.getTime(),
   };
 
-  const brain_first_ordering = computeBrainFirstOrdering(bridge.state, finalAnswerRecorded);
+  const brain_first_ordering = computeBrainFirstOrdering(
+    bridge.state,
+    finalAnswerRecorded,
+    answeredBeforeBrain,
+  );
 
   return {
     transcript,
@@ -389,30 +535,30 @@ export function extractSlugs(text: string): string[] {
   return Array.from(slugs);
 }
 
+/** Read ops that go through the brain — shared by ordering + detection. */
+const BRAIN_READ_TOOLS = new Set([
+  'search', 'query', 'get_page', 'list_pages', 'get_backlinks',
+  'get_links', 'get_timeline', 'get_tags', 'traverse_graph',
+  'resolve_slugs', 'get_chunks', 'get_stats',
+]);
+
 /**
- * Cat 8 metric input: did the agent call search/get_page BEFORE producing
- * its final answer? This measures brain-first compliance — an agent that
- * answers from general knowledge without consulting the brain should fail.
- *
- * The final_answer turn is always the last turn. We look at the preceding
- * tool-calls for any of the read ops that go through the brain (search,
- * query, get_page, list_pages, get_backlinks, get_links, get_timeline,
- * get_tags, traverse_graph, resolve_slugs, get_chunks, get_stats).
+ * Cat 8 metric input: did the agent consult the brain BEFORE writing its
+ * answer? Fixed per audit adapters-queries-02 / agentic-cats-06:
+ *   - runs with NO final answer get their own honest label ('no_answer')
+ *     instead of being mislabeled 'answer_before_brain';
+ *   - real answer-before-brain is detected in the loop from trace order
+ *     (substantive assistant text emitted before any brain read executed)
+ *     and passed in as `answeredBeforeBrain`.
  */
 function computeBrainFirstOrdering(
   state: ToolBridgeState,
   finalAnswerProduced: boolean,
-): 'brain_before_answer' | 'answer_before_brain' | 'no_brain_calls' {
-  const BRAIN_READ_TOOLS = new Set([
-    'search', 'query', 'get_page', 'list_pages', 'get_backlinks',
-    'get_links', 'get_timeline', 'get_tags', 'traverse_graph',
-    'resolve_slugs', 'get_chunks', 'get_stats',
-  ]);
+  answeredBeforeBrain: boolean,
+): BrainFirstOrdering {
   const brainCalls = state.call_order.filter(name => BRAIN_READ_TOOLS.has(name));
   if (brainCalls.length === 0) return 'no_brain_calls';
-  // If the agent produced an answer, it happened AFTER the tool calls in
-  // the trace (we only break out of the loop on end_turn + no tool_uses).
-  // So brain_calls > 0 + finalAnswerProduced = brain_before_answer.
-  if (finalAnswerProduced) return 'brain_before_answer';
-  return 'answer_before_brain';
+  if (answeredBeforeBrain) return 'answer_before_brain';
+  if (!finalAnswerProduced) return 'no_answer';
+  return 'brain_before_answer';
 }

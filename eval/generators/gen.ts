@@ -20,12 +20,14 @@ import Anthropic from '@anthropic-ai/sdk';
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 'fs';
 import { join } from 'path';
 import { buildWorld, type EntityFacts, type World } from './world.ts';
+import { sha256, canonicalJson } from './amara-life-gen.ts';
 
-// ─── Setup: load env, init client ──────────────────────────────
+// ─── Setup: load env, init client (in main() — importing this module has no side effects) ──
 
 function loadEnv() {
+  if (process.env.ANTHROPIC_API_KEY) return; // already exported (CI/sandbox)
   const envPath = '.env.testing';
-  if (!existsSync(envPath)) throw new Error(`${envPath} not found`);
+  if (!existsSync(envPath)) throw new Error(`${envPath} not found and ANTHROPIC_API_KEY not set`);
   const content = readFileSync(envPath, 'utf-8');
   for (const line of content.split('\n')) {
     const m = line.match(/^([A-Z_]+)=(.*)$/);
@@ -33,19 +35,13 @@ function loadEnv() {
   }
 }
 
-loadEnv();
-if (!process.env.ANTHROPIC_API_KEY) {
-  console.error('ANTHROPIC_API_KEY not set after loading .env.testing');
-  process.exit(1);
-}
+let client: Anthropic; // initialized in main(); never touched by importers
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
-// Opus 4.7 pricing as of 2026-04-18.
-const PRICE_INPUT_PER_M = 15;
-const PRICE_OUTPUT_PER_M = 75;
+// Claude Opus 4.5 pricing: $5/MTok input, $25/MTok output.
+const PRICE_INPUT_PER_M = 5;
+const PRICE_OUTPUT_PER_M = 25;
 const HARD_STOP_USD = 80;
-const MODEL = 'claude-opus-4-5'; // 4.7 model id; SDK accepts the alias
+export const MODEL = 'claude-opus-4-5'; // Claude Opus 4.5 (distinct from claude-opus-4-7)
 
 // ─── Prompt construction ──────────────────────────────────────
 
@@ -98,7 +94,11 @@ ${company ? `  Topic company: [${company.name}](${company.slug}) (${company.indu
 
   return `${context}
 
-Write a brain page for this entity. Output JSON with this exact shape:
+${PAGE_PROMPT_TEMPLATE}`;
+}
+
+// Extracted as a constant so the cache key can hash it (audit fix generators-04).
+export const PAGE_PROMPT_TEMPLATE = `Write a brain page for this entity. Output JSON with this exact shape:
 {
   "title": "Display title for the page",
   "compiled_truth": "Multi-paragraph current understanding. 250-500 words. NATURAL prose, not bullet lists. Reference other entities by markdown link [Name](slug) at least twice using the slugs given above. Vary writing style — sometimes terse, sometimes prose-heavy. Include a couple of natural typos (1-2% of words). Mention the entity by varying names (full name, short name, role). For companies, include details on what they do, recent moves, who's involved. For people, write a bio that mentions their company, history, what they're known for. For meetings, write attendee notes + key discussion points. For concepts, write a thesis with examples.",
@@ -106,6 +106,25 @@ Write a brain page for this entity. Output JSON with this exact shape:
 }
 
 Output ONLY the JSON object. No preamble, no code fences.`;
+
+// ─── Cache key (audit fix generators-04) ───────────────────────
+//
+// Previously the "cache key" was the slug alone: changed facts, a new prompt
+// template, or a model swap never invalidated a cached page. The key now
+// hashes slug + template + model + canonical facts, mirroring
+// amara-life-gen's structured cache_key. Legacy shards (no _cache_key field)
+// are kept when their stored _facts still match the current entity — full
+// migration of world-v1 to keyed shards requires a paid regen (deferred).
+
+export const PROMPT_TEMPLATE_HASH = sha256(PAGE_PROMPT_TEMPLATE);
+
+export function worldCacheKey(entity: EntityFacts): string {
+  return sha256(canonicalJson({
+    slug: entity.slug,
+    template_hash: PROMPT_TEMPLATE_HASH,
+    model_id: MODEL,
+    facts: entity,
+  }));
 }
 
 // ─── Cost tracking ───────────────────────────────────────────
@@ -118,6 +137,9 @@ interface CostLedger {
 }
 
 const ledger: CostLedger = { inputTokens: 0, outputTokens: 0, costUsd: 0, calls: 0 };
+// Distinct server-reported model ids seen this run (audit fix generators-19):
+// the ledger records what the API actually served, not just the MODEL constant.
+const modelsSeen = new Set<string>();
 
 function recordUsage(inT: number, outT: number) {
   ledger.inputTokens += inT;
@@ -132,7 +154,23 @@ const OUTPUT_DIR = 'eval/data/world-v1';
 
 async function generateOne(entity: EntityFacts, world: World): Promise<{ ok: true; cached: boolean } | { ok: false; error: string }> {
   const cachePath = join(OUTPUT_DIR, `${entity.slug.replace('/', '__')}.json`);
-  if (existsSync(cachePath)) return { ok: true, cached: true };
+  const expectedKey = worldCacheKey(entity);
+  if (existsSync(cachePath)) {
+    try {
+      const cached = JSON.parse(readFileSync(cachePath, 'utf8')) as { _cache_key?: string; _facts?: unknown };
+      if (cached._cache_key === expectedKey) return { ok: true, cached: true };
+      if (cached._cache_key === undefined && canonicalJson(cached._facts) === canonicalJson(entity)) {
+        // Legacy shard (pre-cache-key) whose stored facts still match the
+        // current entity: keep it. Template/model drift is undetectable for
+        // legacy shards; migrating all of world-v1 to keyed shards means a
+        // paid full regen (deferred follow-up, audit generators-04).
+        return { ok: true, cached: true };
+      }
+      // Key mismatch or facts drift → fall through and regenerate.
+    } catch {
+      // Unreadable shard → regenerate.
+    }
+  }
 
   if (ledger.costUsd > HARD_STOP_USD) {
     return { ok: false, error: `HARD_STOP: cost ${ledger.costUsd.toFixed(2)} > ${HARD_STOP_USD}` };
@@ -146,6 +184,7 @@ async function generateOne(entity: EntityFacts, world: World): Promise<{ ok: tru
       messages: [{ role: 'user', content: prompt }],
     });
     recordUsage(resp.usage.input_tokens, resp.usage.output_tokens);
+    modelsSeen.add(resp.model);
 
     const text = resp.content[0].type === 'text' ? resp.content[0].text : '';
     // Be lenient with trailing junk — find first { and last }.
@@ -161,6 +200,8 @@ async function generateOne(entity: EntityFacts, world: World): Promise<{ ok: tru
       compiled_truth: json.compiled_truth,
       timeline: json.timeline,
       _facts: entity, // ground truth for benchmark scoring
+      _cache_key: expectedKey, // sha256({slug, template_hash, model_id, facts})
+      _model: resp.model,      // server-reported model id (generators-19)
     }, null, 2));
 
     return { ok: true, cached: false };
@@ -170,13 +211,30 @@ async function generateOne(entity: EntityFacts, world: World): Promise<{ ok: tru
   }
 }
 
+/** --max/--concurrency need positive-integer values; missing/NaN is a hard error (audit fix generators-12). */
+export function parseIntFlag(args: string[], flag: string, fallback: number): number {
+  const idx = args.indexOf(flag);
+  if (idx === -1) return fallback;
+  const raw = args[idx + 1];
+  const n = Number(raw);
+  if (raw === undefined || raw.startsWith('--') || !Number.isInteger(n) || n <= 0) {
+    throw new Error(`${flag} requires a positive integer value; got ${JSON.stringify(raw ?? null)}`);
+  }
+  return n;
+}
+
 async function main() {
   const args = process.argv.slice(2);
-  const maxIdx = args.indexOf('--max');
-  const max = maxIdx !== -1 ? Number(args[maxIdx + 1]) : 240;
-  const concIdx = args.indexOf('--concurrency');
-  const concurrency = concIdx !== -1 ? Number(args[concIdx + 1]) : 1;
+  const max = parseIntFlag(args, '--max', 240);
+  const concurrency = parseIntFlag(args, '--concurrency', 1);
   const dryRun = args.includes('--dry-run');
+
+  loadEnv();
+  if (!process.env.ANTHROPIC_API_KEY) {
+    console.error('ANTHROPIC_API_KEY not set (env or .env.testing)');
+    process.exit(1);
+  }
+  client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
   if (!existsSync(OUTPUT_DIR)) mkdirSync(OUTPUT_DIR, { recursive: true });
 
@@ -283,10 +341,13 @@ async function main() {
   writeFileSync(join(OUTPUT_DIR, '_ledger.json'), JSON.stringify({
     generated_at: new Date().toISOString(),
     model: MODEL,
+    models_served: [...modelsSeen].sort(), // server-reported ids (generators-19)
     pricing: { input_per_m: PRICE_INPUT_PER_M, output_per_m: PRICE_OUTPUT_PER_M },
     ...ledger,
     files_total: readdirSync(OUTPUT_DIR).filter(f => f.endsWith('.json') && f !== '_ledger.json').length,
   }, null, 2));
 }
 
-main().catch(e => { console.error(e); process.exit(1); });
+if (import.meta.main) {
+  main().catch(e => { console.error(e); process.exit(1); });
+}

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "corpus_id": "amara-life-v1",
-  "generated_at": "2026-04-20T15:23:40.663Z",
+  "generated_at": "2026-04-19T00:00:00.000Z",
   "generator": {
     "name": "amara-life-gen",
     "model": "claude-opus-4-5",
@@ -135,6 +135,42 @@
       "content_sha256": "769b493b44507041f5d1a8c7de6d74c1d02cc9c6cb29d0e4ca2a611bc82fc135"
     },
     {
+      "slug": "doc/novamind-investor-update",
+      "path": "doc/novamind-investor-update.md",
+      "type": "source",
+      "content_sha256": "525868fba504120f92097dae7cfd1ce5ef8186f709ec4713afee98a5da3fb5fe"
+    },
+    {
+      "slug": "doc/market-report-ai-infra",
+      "path": "doc/market-report-ai-infra.md",
+      "type": "source",
+      "content_sha256": "25f2caac6580788e314098a39abcac85835cb03337aae86a088d7df245dce14f"
+    },
+    {
+      "slug": "doc/cap-table-q1",
+      "path": "doc/cap-table-q1.md",
+      "type": "source",
+      "content_sha256": "226455452ac1119bbffad1db8fa88db7ec77bc63201c886b97dc65520c29bb5a"
+    },
+    {
+      "slug": "doc/deal-memo-threshold",
+      "path": "doc/deal-memo-threshold.md",
+      "type": "source",
+      "content_sha256": "28cd6b2de3baabea0b15b9f978fdcf3d2dfac6ca4287ee6e0d2db2c1fc0eab08"
+    },
+    {
+      "slug": "doc/reference-series-a-terms",
+      "path": "doc/reference-series-a-terms.md",
+      "type": "source",
+      "content_sha256": "c34406464662afdd08c60e0e99d8fda41b06eb293fef3fc3a9ea1691d001d4c2"
+    },
+    {
+      "slug": "doc/reference-diligence-checklist",
+      "path": "doc/reference-diligence-checklist.md",
+      "type": "source",
+      "content_sha256": "4c0ecf5241fba46945fab12d56cc25703ab06568b3c034d582335a3244282d03"
+    },
+    {
       "slug": "emails/em-0000",
       "path": "inbox/emails.jsonl",
       "type": "email",
@@ -145,8 +181,8 @@
       "slug": "emails/em-0001",
       "path": "inbox/emails.jsonl",
       "type": "email",
-      "content_sha256": "599e1b1a89f3ca6bf180d91fa19ec2bae72a8715368c751f19d8521dc5cea286",
-      "generator_cache_key": "b67eb5fec486144615a98a177b83a993f71ceb5314e0419e4e7dd0ab296c3444"
+      "content_sha256": "6a89939e2cb651b14d6599b153f4c862a4a30fec69998b191d1f09143b6bcba4",
+      "generator_cache_key": "21e4650a44b2fd0976179eb617298f29f19e9aa4289d214ad7470826389ebbe4"
     },
     {
       "slug": "emails/em-0002",
@@ -159,15 +195,15 @@
       "slug": "emails/em-0003",
       "path": "inbox/emails.jsonl",
       "type": "email",
-      "content_sha256": "039f3b59213115c9670ea094beaf6ae4d1dde7b34089ab1321fd595219a352fc",
-      "generator_cache_key": "04a67ae1a6ade60a22917a9001115a68011ed20522530cb8183179f840ae5567"
+      "content_sha256": "3973033a3096247b8504ec4775bd5cde60e7af206f25329f9e4f28188d2a58fd",
+      "generator_cache_key": "9f93be34e4a30c98a105117f771582de0c3a4de05fb3d96ea6cdfd79ff8e6722"
     },
     {
       "slug": "emails/em-0004",
       "path": "inbox/emails.jsonl",
       "type": "email",
-      "content_sha256": "a02b9e91d7d7a5e22b55aa7f91483701040a3ce92b707911b45698784ed802ad",
-      "generator_cache_key": "6cf2c8b02f3db471e202bdd0e983334cffb5f8874a8e0feb88b139d8c86ad2ed",
+      "content_sha256": "4aec527d68c0668e3d73698cd4b8ca42393190e4c0edae829651103d9c238fc3",
+      "generator_cache_key": "35a36b2e93b1826a095c362d7ad5bd8b5cbb4dd4d3d1fe95eac4d15803eb4cdf",
       "perturbations": [
         "contradiction"
       ]
@@ -176,22 +212,25 @@
       "slug": "emails/em-0005",
       "path": "inbox/emails.jsonl",
       "type": "email",
-      "content_sha256": "86c3da25e08efbcd6187d2aa07f1ade5c3f5075899031be846b8a68cfc7104c2",
-      "generator_cache_key": "3634a09d21095d1103438d72f5fcfb0fc2d510d22dfc839369ef83da8742ad69"
+      "content_sha256": "4a378aa07aaaab5b5a9d6532d991210f459e1405fd2b3611a061430566400abe",
+      "generator_cache_key": "f97f45dab95b067edf4bf9639c468d50a4650f2362c94fb70a2ee8054cd439ae"
     },
     {
       "slug": "emails/em-0006",
       "path": "inbox/emails.jsonl",
       "type": "email",
-      "content_sha256": "44e4c56c6886d2ca1a69e779e5a15213d225e527c05495bf167d0369802ad8de",
-      "generator_cache_key": "ebe2c57af2fbbb86e60d845f96bca3657ec059ae97306b7ec9af942973ab9d10"
+      "content_sha256": "e3b08352314b335259b9545a1922116798ef4b9f8719b951ad9eba0a9b577f79",
+      "generator_cache_key": "2535702ea1129b6aea387d80cedf697bd91297359eb4d84f54a3a9da3def5092",
+      "perturbations": [
+        "contradiction"
+      ]
     },
     {
       "slug": "emails/em-0007",
       "path": "inbox/emails.jsonl",
       "type": "email",
-      "content_sha256": "128b8f8664a500a4a4ee530e3cacf06c44e5f7ca65735e34f3d42cacf2f48e57",
-      "generator_cache_key": "344995f9a1ba1608d2718d77f5aef5c13487bfe24c16dcb998abedf32feb7311",
+      "content_sha256": "e518076f29c17f909a1c9f89c3ab959ce3495c5a493c57d048f6a7fc9cecc11e",
+      "generator_cache_key": "a96b77d7bb220d1329456d0986bbb3c42a08589a75b8f014dc90b466a762d18b",
       "perturbations": [
         "stale-fact"
       ]
@@ -207,8 +246,11 @@
       "slug": "emails/em-0009",
       "path": "inbox/emails.jsonl",
       "type": "email",
-      "content_sha256": "229a0c52ce5039198a48712562006fd514acf4f4459a54b2fe03eb0efdf2ed5f",
-      "generator_cache_key": "38691a9fda78b09298d652cbff2a11a2e58feeac052512b06fe06267503d0ddc"
+      "content_sha256": "978259120f21e9d5060f53a93f8c24a46f04c6bc9727974e933ecd6468aef072",
+      "generator_cache_key": "f11ccd754533f03cec904eda3f1373ebbf633c1cd7b1151a7be68a68edfd6432",
+      "perturbations": [
+        "stale-fact"
+      ]
     },
     {
       "slug": "emails/em-0010",
@@ -221,8 +263,8 @@
       "slug": "emails/em-0011",
       "path": "inbox/emails.jsonl",
       "type": "email",
-      "content_sha256": "8d4205b0388f26eb0d371cf382fc89aa8590c527a2d54a1419804cbf14884b9c",
-      "generator_cache_key": "da7958207155faa1d3d71de656e243c2b0e20e350ac6ab10d36dff51d7d3878a",
+      "content_sha256": "6b5b4da69e54e311022ce0ead85ed03e7f3be825524f11c21f241a37c033d5d9",
+      "generator_cache_key": "799537089b4c3aaa74038ef42da178684586ca24288d2a238812d90d8365c7f1",
       "perturbations": [
         "contradiction"
       ]
@@ -238,22 +280,28 @@
       "slug": "emails/em-0013",
       "path": "inbox/emails.jsonl",
       "type": "email",
-      "content_sha256": "1210cfd3ffa2e400bf4c049b7b0119ce8fd4c2bb434760a972ed5bc1480aea45",
-      "generator_cache_key": "16bc222be4c1860d1280751bda87466e7e6b8d3e128904505cbb209d24a59293"
+      "content_sha256": "c31333e472ecc25f4be00301e112c35902ac9a8691f01601e92e97db3eb9467d",
+      "generator_cache_key": "b00a930c924dde5e3b2f52ab23259571cbb53960120426bad00e07ab283b5c42",
+      "perturbations": [
+        "implicit-preference"
+      ]
     },
     {
       "slug": "emails/em-0014",
       "path": "inbox/emails.jsonl",
       "type": "email",
-      "content_sha256": "9beedbb7ce4bacad6599d237f04431ce56846a29e7a77875c7818686959f0cd4",
-      "generator_cache_key": "88a2c2236701444ca3e4cc1b7a10ee6b838ff1d8abc73fb7dd36cb2b34ecf74b"
+      "content_sha256": "9e556f2191df790a514576927882938a5824ea26c8a5ca3c785f81017282b027",
+      "generator_cache_key": "ed4cfb4fac61c5b04b6e885e539839fd4ea3964c57beb9fb9b301d7462f1d6e9",
+      "perturbations": [
+        "contradiction"
+      ]
     },
     {
       "slug": "emails/em-0015",
       "path": "inbox/emails.jsonl",
       "type": "email",
-      "content_sha256": "b10c7cb256628160e03ae888205becade49a00f50c51d048cbf9aa6b2d389a25",
-      "generator_cache_key": "9d11d8c46fced240b8d2624256087f6056f368b7f47b4fb566f3f541c2eb2ab2"
+      "content_sha256": "84d62f1dbf884ea23e71b416581387350cebdaf9abc12107ce01e349c9330ced",
+      "generator_cache_key": "0db556d5bf4292fa0d1d3e68c4e088b9ae20a30b6628ea2cdefd4bc1c3ed03a1"
     },
     {
       "slug": "emails/em-0016",
@@ -266,8 +314,8 @@
       "slug": "emails/em-0017",
       "path": "inbox/emails.jsonl",
       "type": "email",
-      "content_sha256": "17d41d9efb0cb7a80885cfaba04bed16b6086d35db12529ddc12e791ab0be986",
-      "generator_cache_key": "eb9c8c1ea1f5f61857acce3f1fa5061b6c8532c0380c87fa9d8ac7959fe90d26"
+      "content_sha256": "93a73265aee89c85201bea4187b1c5067bc40b56ed1a8b57d80dec906b751a69",
+      "generator_cache_key": "a0b2e6d2f9e58bfadb67a9e9a046947a91dedfb8bf0d0db9947d3cc470551ee1"
     },
     {
       "slug": "emails/em-0018",
@@ -280,8 +328,8 @@
       "slug": "emails/em-0019",
       "path": "inbox/emails.jsonl",
       "type": "email",
-      "content_sha256": "9d00be5739eb76d06280b42b829ebad4a5300ef0c7ded42e728315703c31e45a",
-      "generator_cache_key": "51ad81eba384ac51ea0ad87eb58c3848d890cb09b0bc9f7e3867d7b1b305c434",
+      "content_sha256": "7ccd8e1e73945bca1fee53ea81385b6f33916dec8d56b88ed47d89a4091007e0",
+      "generator_cache_key": "4b1f9067c69fae30afeb2312fb4d88894e292bb4475515d1decf5d5b0ca4f959",
       "perturbations": [
         "contradiction"
       ]
@@ -297,15 +345,18 @@
       "slug": "emails/em-0021",
       "path": "inbox/emails.jsonl",
       "type": "email",
-      "content_sha256": "7e6929d57bdb986946288f382d6bfe3d14e3d2a67bfc2eb1bc2df9c38e56bad0",
-      "generator_cache_key": "f958672d339d2e6d67684d19756479f5bb7cd847973663087c1f79f5cf0d91e0"
+      "content_sha256": "47989d83c90aef7dba69733915622757abf4e5d61d1e21a57283d3d80ae61ed1",
+      "generator_cache_key": "04a5df6014c9ebb79e4a01fcb24fea02e858f57e571a87b6049ac90bfc41b303",
+      "perturbations": [
+        "contradiction"
+      ]
     },
     {
       "slug": "emails/em-0022",
       "path": "inbox/emails.jsonl",
       "type": "email",
-      "content_sha256": "40d02b37aae42a4d0dbb96c1b569ab090dc2c3a53554c99376686fd2eb9fef63",
-      "generator_cache_key": "1b7478c8302f3efd59532d5e18cfad910e6896f9e67d4fe9c91fdc8b74a692b0",
+      "content_sha256": "da075a73d4a4cae8d08e0d1d4ae018a08bf47929881af5265a52f5c0fdfb725e",
+      "generator_cache_key": "ea37d16b2c8fc7b63a87e129c829f1d0a141926720ea533474d7e092b3cf6069",
       "perturbations": [
         "stale-fact"
       ]
@@ -314,8 +365,8 @@
       "slug": "emails/em-0023",
       "path": "inbox/emails.jsonl",
       "type": "email",
-      "content_sha256": "7251916d0b5b99c2d4ea9b405403eea4c7a0b346d72fa9757df44d53f897e699",
-      "generator_cache_key": "07dee2451f67bb8f0a002f23c98cd0ff11d6b3d5619182a1e80acc43c6063c87"
+      "content_sha256": "a92ae956024a8515685cd89d5d47244d3e4e050f82688026a208b8d8b4066b70",
+      "generator_cache_key": "7ff1e94b636e9116732573704ddb7af56122c4116bf6de33dc46872e1315681d"
     },
     {
       "slug": "emails/em-0024",
@@ -328,22 +379,25 @@
       "slug": "emails/em-0025",
       "path": "inbox/emails.jsonl",
       "type": "email",
-      "content_sha256": "77fc2f0180c4e71f3bcc36ef09a0f55605c1a18d37c20e282c30edc746f7b38b",
-      "generator_cache_key": "52ad094011442b1a072bc7e6255a7b7652574ebfe6598232352eda2575a18188"
+      "content_sha256": "26bed708fa498c94a6c779845949f4291588d3db6c4bdc4368ba0b08891b9090",
+      "generator_cache_key": "08128d55eeffb2b51ce3fa8f9e08957575752b109e9ad8ce5b2e337d829c1641"
     },
     {
       "slug": "emails/em-0026",
       "path": "inbox/emails.jsonl",
       "type": "email",
-      "content_sha256": "76d429ae76dc767fc427764fa3ae55eef95a3efee4c8338754dee481375e07d8",
-      "generator_cache_key": "bccd479358eb9ef9ff95b991ecafa6e5979b266adf869a03a037e5e21246f77a"
+      "content_sha256": "00820a89d84ae8709ffba6cba303dde3b2f087d7f1d1422119236eca1cb145fd",
+      "generator_cache_key": "d13d98c820f70854b18c793d9e8a2f82285ac50cb6e2b06117e7b4f39b75d1f4",
+      "perturbations": [
+        "stale-fact"
+      ]
     },
     {
       "slug": "emails/em-0027",
       "path": "inbox/emails.jsonl",
       "type": "email",
-      "content_sha256": "d8d1a3a63e50baf5d1590fa49515ab31507ff77f44dbefb7a24c191c1cb7d7e9",
-      "generator_cache_key": "2f1b528f62465ca6afc743908e2077ed31c0f186a42b66e9c17f3aeb3a772bdb"
+      "content_sha256": "287afe8d947ff3d09d600fe766f35e42ba980610c756a5eaec854b1ad551ff3f",
+      "generator_cache_key": "0c0e66155720e66c92444c49010a3cef16063a43b1b0e3b55815641314da7ceb"
     },
     {
       "slug": "emails/em-0028",
@@ -373,8 +427,11 @@
       "slug": "emails/em-0031",
       "path": "inbox/emails.jsonl",
       "type": "email",
-      "content_sha256": "1f89173da0f7842ec0f057612262c1630c4da3a0d18b6ce11d1404faef7fd8d4",
-      "generator_cache_key": "b3b0afb15da9898e88da737a73698b24c1a5b459c3814ed43c0c57cb6427ddd3"
+      "content_sha256": "5cf481396d0c8821c508ab410ba6ae514b05bc70ba4dd40096bb07e972a42cf0",
+      "generator_cache_key": "d17fef03ef1616803b703955242ab9bb3894d4ddc822e43bdf3505d5e0462cb6",
+      "perturbations": [
+        "stale-fact"
+      ]
     },
     {
       "slug": "emails/em-0032",
@@ -387,8 +444,8 @@
       "slug": "emails/em-0033",
       "path": "inbox/emails.jsonl",
       "type": "email",
-      "content_sha256": "77a7c6afa76c275c7db33db394b0baf1af0879df8960d039d3a11c2c57715344",
-      "generator_cache_key": "33811986d08cbfa6b7b595e189bb74907b6c61ab139e64bbc65e6be21ab5fc9d",
+      "content_sha256": "5673c59587fdab29f318d6d8dd1193e0ab9dfcebb4c788e3a3dcb0a36821271b",
+      "generator_cache_key": "5b3e02bdeeb3a581f2179b32a8b2dcb7a7ff86425efe082b9bb80d6dab125b80",
       "perturbations": [
         "poison"
       ]
@@ -404,8 +461,11 @@
       "slug": "emails/em-0035",
       "path": "inbox/emails.jsonl",
       "type": "email",
-      "content_sha256": "abb69a0aa9f48ee84e41e03325eb36671ef20b1b8616b17cb8e0f282cbfd6d44",
-      "generator_cache_key": "18c65b2e898189c3992b8218b5789ff3ad23046c78db9a26d41a773bd74eef7c"
+      "content_sha256": "f835fe9e7ca8770a8095850858777c28f7140bb478727cceaad07167688d9f38",
+      "generator_cache_key": "b9b127fc38013acc59a4a53dfe5e1a035b3c69b1ff965e354f42bca8a353fc77",
+      "perturbations": [
+        "stale-fact"
+      ]
     },
     {
       "slug": "emails/em-0036",
@@ -418,8 +478,8 @@
       "slug": "emails/em-0037",
       "path": "inbox/emails.jsonl",
       "type": "email",
-      "content_sha256": "e061ce465833159cf57e057a1c764b596802f1477de0965ef939d3778f327bc1",
-      "generator_cache_key": "e8f84c6348cebd2a42e4c28c8a9f7ab1fad386a8dbf1f2261510d931e7eadcdf"
+      "content_sha256": "6a2abfa18a6007613cdc931426ac0305a424df73d2e11fded41b1857122210c3",
+      "generator_cache_key": "838dc84c81bb9bc59d8ddf1ccc2dd9206df4052080fd5187a4bbe2684bd018d6"
     },
     {
       "slug": "emails/em-0038",
@@ -432,22 +492,25 @@
       "slug": "emails/em-0039",
       "path": "inbox/emails.jsonl",
       "type": "email",
-      "content_sha256": "18a276b83b6f30e25000e2e527b6dc4f15b124fe804ec0d1ecceaa30faa02759",
-      "generator_cache_key": "0631144b9ad0ba05d45c16ab4dbc0d19cd5d3582e8a4d8f49af891a8ad7ac592"
+      "content_sha256": "600ffe865317bad9ba308a1983adf9bec860f5c727053f3c635e9e463911f8be",
+      "generator_cache_key": "ccad99eced5154404853f47a2f66015458ec77a8f3a0ef48a7aa36bbce267b6e"
     },
     {
       "slug": "emails/em-0040",
       "path": "inbox/emails.jsonl",
       "type": "email",
-      "content_sha256": "385f3a867886ffa86ef2a94361ed19d1de7b416afba0406c51cb8bb918800b28",
-      "generator_cache_key": "457e9bd58f6d993b5bbc70fe13ca04ffe1ac7aa57ea72097ce79f74597b9000a"
+      "content_sha256": "94f77a46ddd85e05c71d3d2c2da278e8cabf48eb7e1eb969db3699f730fee391",
+      "generator_cache_key": "ef3f63b20e725f6d08c908be232861b7cd2d72f39896d7a445d7ad72b8da6a28",
+      "perturbations": [
+        "stale-fact"
+      ]
     },
     {
       "slug": "emails/em-0041",
       "path": "inbox/emails.jsonl",
       "type": "email",
-      "content_sha256": "ad0e174c875813c4b40d924104e82615249520657c499085b20e770f5992e152",
-      "generator_cache_key": "4429af034f43a1d55839abb487647287ce50e69ab59fec00b6d99df0842c9334"
+      "content_sha256": "62d1a63079bd55def29a07dcf42967204b4e24e52e7b0f2fd0b97dbcfdc1dfd2",
+      "generator_cache_key": "77fed12b6e36b335cb3064519ce24a8bc20d6cdd41fce3528cd357542437025b"
     },
     {
       "slug": "emails/em-0042",
@@ -460,8 +523,8 @@
       "slug": "emails/em-0043",
       "path": "inbox/emails.jsonl",
       "type": "email",
-      "content_sha256": "0bf9d36a52ce4c4799dfb55836153de473c5da67acf33ee33515b436f938f3fc",
-      "generator_cache_key": "b5353e8293ee0343be99aae2dd5aa20cde55d409da793fc293ce052de0631180"
+      "content_sha256": "4ffbb10384d947a8e9a85f19cf84d9303c73186e1b248d42b3975ed55c546844",
+      "generator_cache_key": "338fd0addd2cfd2e84c752584aa6a041ea7412a068898928b1b3a5f817e4848c"
     },
     {
       "slug": "emails/em-0044",
@@ -477,8 +540,8 @@
       "slug": "emails/em-0045",
       "path": "inbox/emails.jsonl",
       "type": "email",
-      "content_sha256": "657f471f2e2d67ea5f189cf9ff191e655f287ac3b318970bfa0c96af3a0f0ea2",
-      "generator_cache_key": "86836cab3b03ab11f612ea72edc16a930ac031c4b8a096a39448541a32f72b4e"
+      "content_sha256": "7c9e985518f7fffd2b59e0ae8237d8b252e2dc5ec96dad24286b7b76bb530003",
+      "generator_cache_key": "9d42df31246a896d2831127ef0e506892dddcae1cff99c4abeef14340d9ccfb1"
     },
     {
       "slug": "emails/em-0046",
@@ -491,8 +554,8 @@
       "slug": "emails/em-0047",
       "path": "inbox/emails.jsonl",
       "type": "email",
-      "content_sha256": "da2bc588d4a320924f50645a81aec21e1f959b146bfd62767a579898cfbb9eea",
-      "generator_cache_key": "270be8032e26792b55d9f9fdf20665c07bdc92c8de2663dbf63f47369abfa90e"
+      "content_sha256": "ec78940f8cab88468b5b555e5a5123b81e002d962aabab150ff78ce251bccc26",
+      "generator_cache_key": "ba3a1fa407aa725d04b4cadd2408043ea6110ce8f25af34321a35f0bbea237a4"
     },
     {
       "slug": "emails/em-0048",
@@ -505,8 +568,8 @@
       "slug": "emails/em-0049",
       "path": "inbox/emails.jsonl",
       "type": "email",
-      "content_sha256": "b4150bc79884b8890e014faef3c033c2444fea8ea4ec5aa18e786e0b8e3f3b62",
-      "generator_cache_key": "58456b25d362c4681a005f07492d5504a7d943ae7c0af290042cd55ba72c9b77"
+      "content_sha256": "5c2e56ca276b7dc9e47409639ae72f67ec0454c41a0cfa4e003b4102bcb0c4eb",
+      "generator_cache_key": "ffa5908c160df0e5145786123de377a5022617e66d163608d549fe186cd730b7"
     },
     {
       "slug": "slack/sl-0000",
@@ -827,8 +890,11 @@
       "slug": "slack/sl-0045",
       "path": "slack/messages.jsonl",
       "type": "slack",
-      "content_sha256": "b37e2b0e1cfceaa18ccbe49b6d5a3668cb76e1d6c8cccf7ef01c1cc232e43af0",
-      "generator_cache_key": "96076e80ed12cfdae8954a08225450480c1c6ad159cc07a229959c483db7c164"
+      "content_sha256": "a9cf0990ba5245dd34a3308f76b1177588b49a8de70532908165f84be23f2a6c",
+      "generator_cache_key": "751ac4721570857dc7d330952fcf6720eb0c439a6322410489df0303577f6099",
+      "perturbations": [
+        "implicit-preference"
+      ]
     },
     {
       "slug": "slack/sl-0046",
@@ -1142,8 +1208,11 @@
       "slug": "slack/sl-0090",
       "path": "slack/messages.jsonl",
       "type": "slack",
-      "content_sha256": "6bd8b7c1622af2dc9239597af1fa391edfa510e34f265f25a255a87fe95b3187",
-      "generator_cache_key": "e1ab7147f2190ca570f28ccab9d76b2b3e7c59aa00c033665ec7caf262f8a2cf"
+      "content_sha256": "3ccdb55d5ad6003ee2d7375cf8bb4a04f01695facb7a6c340c68679bdc86f7c8",
+      "generator_cache_key": "085533d3d10a8f0d918c167a8141d497ae09c0cf13d83d41ba0e7d55c3380456",
+      "perturbations": [
+        "implicit-preference"
+      ]
     },
     {
       "slug": "slack/sl-0091",
@@ -1436,8 +1505,11 @@
       "slug": "slack/sl-0132",
       "path": "slack/messages.jsonl",
       "type": "slack",
-      "content_sha256": "1634fae58b9d7d68ea49041a2b29db88e5c85285fa434696c091aa6feb280357",
-      "generator_cache_key": "b234cc911df8cebf9cac9c8c810f8ddaf4bbcc5ed40421684af96da74e816163"
+      "content_sha256": "f6c70715de8e823ea61683faecd1a6d2467b2a20e5997ec3ca524ea196accf3c",
+      "generator_cache_key": "d99123d97faab6f44bcfe9e56a88302d2294069966a85306e3ef1abc6de0d3f5",
+      "perturbations": [
+        "implicit-preference"
+      ]
     },
     {
       "slug": "slack/sl-0133",
@@ -2618,15 +2690,15 @@
       "slug": "meeting/mtg-0000",
       "path": "meetings/mtg-0000.md",
       "type": "meeting",
-      "content_sha256": "932305b823f6d2138f542e27fa00a1cd7d4e65955fe0da2b1c3cc5f60de2a4e3",
-      "generator_cache_key": "074731ccd8ad711bc3a03d1188b109a5ecdb1ca990479004efeaf3758c39dd48"
+      "content_sha256": "7fa88549839d3883c7c7bda7208dd456baf378a21b1a3b3650c1e886ac981f34",
+      "generator_cache_key": "924b20095fb7d3bf709e6ec10a6a46d2ebd595a070e5b9d9162f6bd82fb87ad6"
     },
     {
       "slug": "meeting/mtg-0001",
       "path": "meetings/mtg-0001.md",
       "type": "meeting",
-      "content_sha256": "398b687f597c131860417ea288ad7f44e3de3a369d8d4285a29afd0d6b6097b6",
-      "generator_cache_key": "7b688582ceb6d67eecae4dac763a036fa14843bc223190d4ee6cee0de65192b3",
+      "content_sha256": "d61f241a4a1984657d01885a5f9dbeec81298dac95dff02515b292ded7103ff9",
+      "generator_cache_key": "8ed7bc4883954effce395b9fc2e3d96950a6a6ffd1db892c9057a9957b4e6e20",
       "perturbations": [
         "contradiction"
       ]
@@ -2635,8 +2707,8 @@
       "slug": "meeting/mtg-0002",
       "path": "meetings/mtg-0002.md",
       "type": "meeting",
-      "content_sha256": "7e87ed8854ad6e0b233b4ee58141c3a2aaa0c94d3120aaccc7f90c5d3cbc6ec7",
-      "generator_cache_key": "872706223425aa68fe2c354fd79391ded4981a9feb1d9d606947f7aa9b078ab1",
+      "content_sha256": "e7fcc5265e30b2524d6a9f34e231c1628727c14fe3066c923df6cfb46d39fc64",
+      "generator_cache_key": "f98901a9ddde52d3cf3ee30fe7931de9ed8cc7360301430bbbaf1e69de6b3b42",
       "perturbations": [
         "contradiction"
       ]
@@ -2645,22 +2717,25 @@
       "slug": "meeting/mtg-0003",
       "path": "meetings/mtg-0003.md",
       "type": "meeting",
-      "content_sha256": "7d75cf1ea462ee4fbfb1070cac068c4f5005827784d2797771cc5a1f051299cc",
-      "generator_cache_key": "afc66b1220438106bce0f4c34b15adb3d4ece80cf4b5d10805bc6119c7f4f8f5"
+      "content_sha256": "78c07e46fda470719e57f3c27b307f20bdfe2555ec7d21037b919bb3924c5a2a",
+      "generator_cache_key": "dbf37e44ffffc129c2b1a5ee58ea9c9cd2368841b93e6530b059cec3d74f7474",
+      "perturbations": [
+        "implicit-preference"
+      ]
     },
     {
       "slug": "meeting/mtg-0004",
       "path": "meetings/mtg-0004.md",
       "type": "meeting",
-      "content_sha256": "2e5a486b92b91df09a02547df4ba3c966ff36b59a620718e434c05c3e5667803",
-      "generator_cache_key": "765982f3ba787c91d4f8c282bda0caf8baf16921152e691872dce627cf2e26a1"
+      "content_sha256": "d5c5f0661cfc07678a4c702512a9f679f98d9c214d3d18c808c880203a18f674",
+      "generator_cache_key": "87a52fc8080719f3e3a7dc14465288b64a38ac10d6a114207af43ee2270b4111"
     },
     {
       "slug": "meeting/mtg-0005",
       "path": "meetings/mtg-0005.md",
       "type": "meeting",
-      "content_sha256": "72ac2df91aff2292893ad62b97eefb5d70d9ce8e2d8ae4edb28e502690833def",
-      "generator_cache_key": "d5609b3ca8d91ef2700daa1aec1395a0b5139f9cf9f4ab1398d1069ed8b06622",
+      "content_sha256": "139454bc8a0363e805ed03cd950f3ea4974a1bdc573fcbd989f2ab629e7a7810",
+      "generator_cache_key": "e2322fd69b6d8cbebb91a685e952d93c7a0d3aaf3ed13d4f24ce20d671a27a69",
       "perturbations": [
         "contradiction"
       ]
@@ -2669,8 +2744,8 @@
       "slug": "meeting/mtg-0006",
       "path": "meetings/mtg-0006.md",
       "type": "meeting",
-      "content_sha256": "57e2440e13cdeaec0b87e288ccdc0041cc925944520a7d430a8d95deb8978be0",
-      "generator_cache_key": "0dc1f474ab75a9dc6dbfd6d29b20a3065c53283c68c7194ef7b7690c0c9896b7",
+      "content_sha256": "fdd18147591613eed46d3b05e8d8ca917babe6f802e05828d47c23854995bb64",
+      "generator_cache_key": "754b60926b63f55b0a6f81715910e10b7d8c111d38b0b46f50931ae064af5e13",
       "perturbations": [
         "contradiction"
       ]
@@ -2679,8 +2754,8 @@
       "slug": "meeting/mtg-0007",
       "path": "meetings/mtg-0007.md",
       "type": "meeting",
-      "content_sha256": "6f017d8b88157d61e3bae5a7dcea78360a21179ddbd3de9a45092ecea37c2471",
-      "generator_cache_key": "d0c264b176644d77a1bb5908236e48d6e580d50ca65e5fa646d0fb8ef402d669"
+      "content_sha256": "feb1df420c8625925bbb9774248941ce4b032a9ca18a6c7b888dfc267c394b17",
+      "generator_cache_key": "d0849cfe4641ac6cd441b5f84361602a1c0dc5be8ff45a39a5b02b489bec2483"
     },
     {
       "slug": "note/2026-04-13-orange-mode",
@@ -2700,8 +2775,11 @@
       "slug": "note/2026-04-09-novamind-followup",
       "path": "notes/2026-04-09-novamind-followup.md",
       "type": "note",
-      "content_sha256": "1ba620f0486d99d20e22d4a2eb57f7811676a04768ffc737a1bb558f82757ffd",
-      "generator_cache_key": "979f77c81994a8773b4bd0ae35e31e8640a583403f8eecee7cde143918698526"
+      "content_sha256": "3807e3f71abb0e2765f288c896fa91c452d182fd8bd252754436a30b4694e583",
+      "generator_cache_key": "947451da59ec324e49603553766268d4fe7a56fbbbdb07a2286527ccb480b894",
+      "perturbations": [
+        "contradiction"
+      ]
     },
     {
       "slug": "note/2026-04-07-next-quarter-plan",
@@ -2714,15 +2792,18 @@
       "slug": "note/2026-04-05-jordan-diligence",
       "path": "notes/2026-04-05-jordan-diligence.md",
       "type": "note",
-      "content_sha256": "9ded228b8d2143e5570752e67a22e99007c0e9410fb9967090f65a0ecf069659",
-      "generator_cache_key": "016d0ad3426632470aa3a0ca143b49966745ab250d8cc23cfb540da50f45e6db"
+      "content_sha256": "19e21103ddcec7e69cd9142a92bfac6be5343002d40f0f53abe41f2c4145963d",
+      "generator_cache_key": "614cf6692f3cca315aeb6748c936e972e11fd99f6d64362d9b311774018b80da",
+      "perturbations": [
+        "contradiction"
+      ]
     },
     {
       "slug": "note/2026-04-03-market-report-reactions",
       "path": "notes/2026-04-03-market-report-reactions.md",
       "type": "note",
-      "content_sha256": "5189e8b3f38ec3d5eea6ab9c6f1624af2d15152dc08cdfef2993ae87f5057109",
-      "generator_cache_key": "9391df7e508ff2c9000e830760b07414f488c7aa04f70e8ae548a4015062a5bd",
+      "content_sha256": "2128bd7481774bcfec7194558ef5c60c36418f8a13fdaeb6d8b7b63aa76c74f6",
+      "generator_cache_key": "a87c6c5a083461efe1c6b6d05ba46cd7148d1121889762c303455fc325929b14",
       "perturbations": [
         "stale-fact"
       ]
@@ -2738,15 +2819,18 @@
       "slug": "note/2026-03-30-sourcing-queue",
       "path": "notes/2026-03-30-sourcing-queue.md",
       "type": "note",
-      "content_sha256": "71d6c82cf1d54e9cd00257048af969e8e70efaf028ab9aa27f1d2be2325d6745",
-      "generator_cache_key": "5773c46df99510d32e8cc850d490822047c1344bbf9e642716f0e40e4e170c42"
+      "content_sha256": "d35841bf2a983a1c30a4cc13234ddd1ae7956efb0c47099e86369d447fba4881",
+      "generator_cache_key": "ac4a02e281ecaefb94e87a24340a0ebcaa65ba9e01e7f6cb76235614c7dfb28a",
+      "perturbations": [
+        "contradiction"
+      ]
     },
     {
       "slug": "note/2026-03-28-board-prep",
       "path": "notes/2026-03-28-board-prep.md",
       "type": "note",
-      "content_sha256": "d13011a82b7b96ef7aadcddc350b173f6c58e7242abc17e56423f2888dfa0841",
-      "generator_cache_key": "f7f9e9663b3fd949579154270a3f39ce72c46e91793d23d06f536cf96908c78b",
+      "content_sha256": "3a744f6f9b230c7d09eb246c977dcef780b93649f5954f104111521448c72284",
+      "generator_cache_key": "2f71bef4a304a1fbefc1668cd74a0ce41644dbdc9603da64890016b7100a1a97",
       "perturbations": [
         "contradiction"
       ]
@@ -2762,15 +2846,21 @@
       "slug": "note/2026-03-24-morning-reflection",
       "path": "notes/2026-03-24-morning-reflection.md",
       "type": "note",
-      "content_sha256": "917be863eb3936b33c479e55337e60a87e41c427455864f5e2da734209edc783",
-      "generator_cache_key": "a8ad2ba8aef17cb50c97823ef66eb697ea2818e2f9d98eb93ef862b1b2be30e9"
+      "content_sha256": "0570084a2f16c188a08ba10ac69200cfc90593e3b77b1c9681d6d5af07734dc9",
+      "generator_cache_key": "0215f9e76105ae7919dd61c18cea4fded4017ca66b1d210a457faa46cc6ffa30",
+      "perturbations": [
+        "contradiction"
+      ]
     },
     {
       "slug": "note/2026-03-22-weekly-review",
       "path": "notes/2026-03-22-weekly-review.md",
       "type": "note",
-      "content_sha256": "1a4c833750931894ea7c097cd8757287eb68845d5badc2b9d0bbb55f0597ddd0",
-      "generator_cache_key": "d72e8759f01035ef11c4f8adcc519c3a8cccc54b28dfc17f48db1ed3598339fe"
+      "content_sha256": "af57254ef6b7698b5ed11cc5a4ca4e4c7fe88f0ddd742b016dee24be6e46d8f1",
+      "generator_cache_key": "2ddb12e0d721da2a24c1d67095e7f5581ae93e70e23e4a30643aa55fa7c5e949",
+      "perturbations": [
+        "implicit-preference"
+      ]
     },
     {
       "slug": "note/2026-03-20-orange-mode",
@@ -2783,8 +2873,11 @@
       "slug": "note/2026-03-18-climate-thesis",
       "path": "notes/2026-03-18-climate-thesis.md",
       "type": "note",
-      "content_sha256": "866856ca3bb611641eafc13163a1f5c2f8bad80b78103d0958a68831d12b064e",
-      "generator_cache_key": "c38d3d076f8b7cd34ccda074661d92c71de3ff467bfb373faed3745cfbd5392f"
+      "content_sha256": "1f5e7a6bb9d23693f71a728b8c426f467c5a531a5dd5cd57e15e158fb898ff0e",
+      "generator_cache_key": "0af72028c56f4899445ad7a377b76ad6909108dfe0abc5d6fdd527ddf2e4a675",
+      "perturbations": [
+        "contradiction"
+      ]
     },
     {
       "slug": "note/2026-03-16-novamind-followup",
@@ -2804,15 +2897,18 @@
       "slug": "note/2026-03-12-jordan-diligence",
       "path": "notes/2026-03-12-jordan-diligence.md",
       "type": "note",
-      "content_sha256": "16d628e589c0e3c9bc2df951e8ba9e302009a48035f79e33de1b40da9db30062",
-      "generator_cache_key": "583edc3941297d2cdd5114a5d81746aee48f9de9e64ef073181f44f681d87db0"
+      "content_sha256": "4222995ff7c23f8a25774ed36580830ce8178fa55c23385de05b332b5d7b5540",
+      "generator_cache_key": "50dd518be10c90c7b44b3f03a0fed152f0f7a9fd45aaf44c1d01437b1e80d593",
+      "perturbations": [
+        "contradiction"
+      ]
     },
     {
       "slug": "note/2026-03-10-market-report-reactions",
       "path": "notes/2026-03-10-market-report-reactions.md",
       "type": "note",
-      "content_sha256": "6299b2c7875f85fa3de1ecac67d7977fe8de730569bf521ff1a5c32ca2304967",
-      "generator_cache_key": "aea1d514135bc9a37a3760ef0b31c64253ae2604257bfc2ec1c0df301304f872",
+      "content_sha256": "3094c8941dc8ff3e4da0759e6a47cf6682e809d2f52ffe3f79f746a8d750bfea",
+      "generator_cache_key": "3cb2a9053fd725ba21aeda3999136de89169d9955113d937348e1857b569c0eb",
       "perturbations": [
         "contradiction"
       ]
@@ -2828,8 +2924,8 @@
       "slug": "note/2026-03-06-sourcing-queue",
       "path": "notes/2026-03-06-sourcing-queue.md",
       "type": "note",
-      "content_sha256": "0335afac98e10c1ffbfeff38525829ea0b692a297abd550a1259b28c9764b472",
-      "generator_cache_key": "29ce10d047a6ba89cad1eb4cbd325741a3d90493dc4beb2c9ac655e88e484a24",
+      "content_sha256": "190351c3942bbe1b0f9aa91a2efbe36a060e3b211b9eb1385a2d64e6c1e579a7",
+      "generator_cache_key": "85a047fe07cc24687fd92f6ed7cee583f0959d0993538daa964c6a8174bae7e4",
       "perturbations": [
         "stale-fact"
       ]
@@ -2852,15 +2948,21 @@
       "slug": "note/2026-02-28-morning-reflection",
       "path": "notes/2026-02-28-morning-reflection.md",
       "type": "note",
-      "content_sha256": "c01c4df04e92f5f68f5c62dd1e534d846fe8c7202867c675ae06d9532da49831",
-      "generator_cache_key": "e44a417efabe4549cb87642cd3bb2df3155ae81dd041e1ec9fb0e3254bf90482"
+      "content_sha256": "e5fb2e01f909fc8562e53ebbd66fb80dd8ca51dcee8e0bc66ef52e621aafc604",
+      "generator_cache_key": "bb2cbfe05f6ba42c4e247bcc516fdf63f53cffa186420a69e16b7767b6f598b0",
+      "perturbations": [
+        "contradiction"
+      ]
     },
     {
       "slug": "note/2026-02-26-weekly-review",
       "path": "notes/2026-02-26-weekly-review.md",
       "type": "note",
-      "content_sha256": "b3688e3999f7689fc0f543d764690deb8b67bd81cf438061f17403cb73b2164b",
-      "generator_cache_key": "c6046f7acdf6e027121f24d66480649f8c787182a8577316b6e88165f4b0a2b5"
+      "content_sha256": "cfd2381f4f3831e229de51f355f137acf82077ac2115542a058fb848974cf93b",
+      "generator_cache_key": "9b59acb45c106180acf9020536ce3101d04ac70be94d9c5f1f60ec4bcde6bc48",
+      "perturbations": [
+        "implicit-preference"
+      ]
     },
     {
       "slug": "note/2026-02-24-orange-mode",
@@ -2873,8 +2975,11 @@
       "slug": "note/2026-02-22-climate-thesis",
       "path": "notes/2026-02-22-climate-thesis.md",
       "type": "note",
-      "content_sha256": "940478daa0e37e42cefc7420e7711b383c9085a4c1e01378fbd302ba9a4ca554",
-      "generator_cache_key": "31bd06177f7aeb4a6ae3f92cfefb4801fcaa1345ac994c1bea97e4c78b93cf81"
+      "content_sha256": "093081cb0c6d386d2c2ed41b0bc6482553c02903889fa08a91997d05f37045eb",
+      "generator_cache_key": "e046acd59e41fd0f0b14ecb99bc28dd0a4111bb1892e52395caff3f99d6fb8ad",
+      "perturbations": [
+        "implicit-preference"
+      ]
     },
     {
       "slug": "note/2026-02-20-novamind-followup",
@@ -2901,8 +3006,11 @@
       "slug": "note/2026-02-14-market-report-reactions",
       "path": "notes/2026-02-14-market-report-reactions.md",
       "type": "note",
-      "content_sha256": "af27a137f7b4c980c65046093434d8fa38efbd6f54492ee3a9ac26f65ce01aac",
-      "generator_cache_key": "acee2e9f0ebc135de8e8a7757ae202e98e1ccd7df7eb42df4edfd438359b66f2"
+      "content_sha256": "f488f07abd9e5c8b4d94faa53baae6ca8002a3d73245f0645b16dfd63f7d22c5",
+      "generator_cache_key": "627a5eae2dd3650113b388a00fa2835fc3f4eea9a2b2a55058920320fac04ab7",
+      "perturbations": [
+        "implicit-preference"
+      ]
     },
     {
       "slug": "note/2026-02-12-threshold-terms",
@@ -2915,8 +3023,8 @@
       "slug": "note/2026-02-10-sourcing-queue",
       "path": "notes/2026-02-10-sourcing-queue.md",
       "type": "note",
-      "content_sha256": "a280d4d54f377de5b883bcacd9c0065d90c1c46a00872436c8278bb0ffc73bc9",
-      "generator_cache_key": "db428522848e42b03efa61fbdae57a5f95ebceb7828291b5a881b0200e72a14d",
+      "content_sha256": "842c6a4bb847fc9349afd63cc7631927dc9f5ad6712f4d83dcf292501248adbd",
+      "generator_cache_key": "ab95b56b75d2cf75422e01a01176956aa4e9faa34811247765b6eab332e2191e",
       "perturbations": [
         "contradiction"
       ]
@@ -2946,8 +3054,8 @@
       "slug": "note/2026-02-02-weekly-review",
       "path": "notes/2026-02-02-weekly-review.md",
       "type": "note",
-      "content_sha256": "c8f67aa31f2c319040c09b4022d1d3b844b94cf4475a664156adbbe9ba2d02d0",
-      "generator_cache_key": "4bc8d93f783815bd81375d76eac0d242051a3454bb7c8313bd7bd1cd67964cfd",
+      "content_sha256": "6a09afbdfbe038068d8f57979d09b6250cbf2de11189825214a9a4d26cafa5df",
+      "generator_cache_key": "c80c2f0d7994323b1ef4727014d2b0319cb02d47f3d36f6ea6f1f3891e22e04d",
       "perturbations": [
         "stale-fact"
       ]

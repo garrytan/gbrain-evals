@@ -1,12 +1,25 @@
 /**
  * Content-addressed embedding cache for LongMemEval (and any other
- * fixed-corpus benchmark). Keyed by (model, sha256(text)) so:
+ * fixed-corpus benchmark). Keyed by (model, input_type, sha256(text)) so:
  *
  *   - The cache is correct: different content → different embedding → cache miss.
+ *   - The cache is side-aware: asymmetric providers (zembed-1, Voyage v3+)
+ *     return DIFFERENT vectors for the same text depending on whether it is
+ *     embedded as a query or as a document. gbrain threads that discriminator
+ *     through `providerOptions.openaiCompatible.input_type` (see gateway.ts
+ *     embedSubBatch); the cache key includes it so a document-side vector can
+ *     never be served for a query-side embed (audit finding longmemeval-06).
  *   - The cache is fair: we're remembering past computation, not borrowing
  *     future data. First run fills the cache; subsequent runs hit it.
  *   - The cache is share-friendly: anyone with the dataset re-derives the same
  *     keys and can warm their own cache from a fresh run.
+ *
+ * KEY CHANGE NOTE (2026-08-31): adding input_type to the text hash deliberately
+ * orphans every entry written by the old side-blind key. Those entries were
+ * unsound for asymmetric models (a warm run silently reused document-side
+ * vectors for query embeds), so re-paying the embed cost once is the correct
+ * trade. Symmetric providers (OpenAI text-3) key both sides as 'document'
+ * (the gateway drops input_type for them), so no double storage there.
  *
  * Wires into gbrain's gateway via __setEmbedTransportForTests — the test seam
  * is the cleanest interception point for benchmarks (production never calls it).
@@ -25,6 +38,20 @@ interface CacheStats {
   misses: number;
   inserts: number;
   bytes: number;
+}
+
+export type EmbedInputType = 'query' | 'document';
+
+/**
+ * Extract the asymmetric-embedding side from an ai-sdk embedMany params
+ * object. gbrain's gateway emits `providerOptions.openaiCompatible.input_type`
+ * ('query' | 'document') for asymmetric models and omits it entirely for
+ * symmetric ones — an absent discriminator means the document/default side
+ * (embed()/embedOne are document-side; only embedQuery threads 'query').
+ */
+export function inputTypeFromParams(params: Record<string, unknown>): EmbedInputType {
+  const po = params.providerOptions as { openaiCompatible?: { input_type?: unknown } } | undefined;
+  return po?.openaiCompatible?.input_type === 'query' ? 'query' : 'document';
 }
 
 export class EmbeddingCache {
@@ -55,17 +82,23 @@ export class EmbeddingCache {
     this.model = model;
   }
 
-  private hash(text: string): string {
-    return createHash('sha256').update(text).digest('hex');
+  /**
+   * text_hash = sha256(input_type || NUL || text). The NUL separator cannot
+   * appear in the input_type enum, so 'query' + text can never collide with
+   * 'document' + text' for any text/text' pair. Old entries hashed plain
+   * sha256(text) — they no longer resolve, which is deliberate (see header).
+   */
+  private hash(text: string, inputType: EmbedInputType): string {
+    return createHash('sha256').update(inputType).update('\u0000').update(text).digest('hex');
   }
 
   /**
-   * Look up a single text. Returns the vector or null. The vector is stored
-   * as a Float32 little-endian blob; we deserialize back to number[] (the
-   * shape ai-sdk's embedMany expects) on the way out.
+   * Look up a single text for one embedding side. Returns the vector or null.
+   * The vector is stored as a Float32 little-endian blob; we deserialize back
+   * to number[] (the shape ai-sdk's embedMany expects) on the way out.
    */
-  get(text: string): number[] | null {
-    const h = this.hash(text);
+  get(text: string, inputType: EmbedInputType = 'document'): number[] | null {
+    const h = this.hash(text, inputType);
     const row = this.db
       .query<{ vector: Uint8Array; dims: number }, [string, string]>(
         'SELECT vector, dims FROM embeddings WHERE model = ? AND text_hash = ?',
@@ -83,8 +116,8 @@ export class EmbeddingCache {
     return out;
   }
 
-  put(text: string, vector: number[]): void {
-    const h = this.hash(text);
+  put(text: string, vector: number[], inputType: EmbedInputType = 'document'): void {
+    const h = this.hash(text, inputType);
     const buf = new ArrayBuffer(vector.length * 4);
     const view = new DataView(buf);
     for (let i = 0; i < vector.length; i++) view.setFloat32(i * 4, vector[i], true);
@@ -113,7 +146,9 @@ export class EmbeddingCache {
 /**
  * Wrap the gateway's embed transport so cached vectors are returned without
  * an API call. Misses fall through to the real embedMany. Aligned with the
- * ai-sdk's `embedMany({values})` signature.
+ * ai-sdk's `embedMany({values})` signature. The per-call input_type is read
+ * from providerOptions and folded into the cache key so query-side and
+ * document-side vectors of the same text never alias.
  *
  * Returns a function suitable for `__setEmbedTransportForTests(fn)`.
  */
@@ -125,7 +160,8 @@ export function makeCachingTransport(
     params: { values: string[] } & Record<string, unknown>,
   ): Promise<{ embeddings: number[][]; values: string[]; warnings: unknown[]; usage?: any }> {
     const values = params.values;
-    const cached: Array<number[] | null> = values.map(v => cache.get(v));
+    const inputType = inputTypeFromParams(params);
+    const cached: Array<number[] | null> = values.map(v => cache.get(v, inputType));
     const missingIdx: number[] = [];
     for (let i = 0; i < cached.length; i++) {
       if (cached[i] === null) missingIdx.push(i);
@@ -142,7 +178,7 @@ export function makeCachingTransport(
       const idx = missingIdx[i];
       const vec = realResult.embeddings[i];
       cached[idx] = vec;
-      cache.put(values[idx], vec);
+      cache.put(values[idx], vec, inputType);
     }
     return { embeddings: cached as number[][], values, warnings: [], usage: realResult.usage };
   };

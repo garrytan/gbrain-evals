@@ -2,142 +2,265 @@
  * Aggregate the per-question NDJSON stream from `longmemeval.ts --ndjson`
  * into the same RunSummary[] shape the all-in-one runner produces.
  *
+ * FEATURE BOUNDARY: pure post-processing — no gbrain code runs here. The
+ * pipeline under test already ran in longmemeval.ts; this file only re-scores
+ * the streamed rows via the SAME summarizeAdapterRows the runner uses (one
+ * metric implementation, zero drift) and writes the authoritative receipt for
+ * the aggregated run.
+ *
+ * Metric + denominator policy (see longmemeval.ts header): recall_all@k is
+ * the headline, recall_any@k is the secondary any-hit diagnostic, `_abs`
+ * questions are excluded from recall denominators and reported as
+ * abs_noise@k, and rows are typed by failure origin (sut → scored 0,
+ * harness/dependency → excluded + capped).
+ *
  * Run:
  *   bun eval/runner/longmemeval-aggregate.ts <ndjson-path> [--output <out.json>]
+ *        [--top-k <k>] [--dataset <name>] [--min-recall-all <x>]
+ *
+ * top_k/dataset are read from the NDJSON rows (the runner stamps every row).
+ * Legacy streams (pre 2026-08-31) don't carry them — pass --top-k/--dataset
+ * explicitly for those; mixed values across rows are an error, never a guess
+ * (audit finding longmemeval-04: k=8 runs were published as Recall@5).
  *
  * Writes:
  *   <stem>.json — { opts: {...}, summaries: [...] } same shape as runner output
  *   <stem>.md   — human-readable summary table
+ *   eval/reports/longmemeval-aggregate/receipt.json — verdict + accounting
  */
 
 import { readFileSync, writeFileSync } from 'fs';
+import { join } from 'path';
+import {
+  summarizeAdapterRows,
+  classifyErrorOrigin,
+  computeVerdict,
+  defaultMinRecallAll,
+  fmt,
+  type NdjsonRow,
+  type RunSummary,
+} from './longmemeval.ts';
+import {
+  writeReceipt,
+  receiptPath,
+  RECEIPT_SCHEMA_VERSION,
+  BENCHMARK_VERSION,
+  type Receipt,
+} from './receipt.ts';
+import { ProbeAccounting } from './probe-accounting.ts';
+import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
 
-interface NdjsonRow {
-  adapter: string;
-  question_id: string;
-  question_type: string;
-  retrieved: string[];
-  ground_truth: string[];
-  hit_at_k: boolean;
-  num_haystack: number;
-  latency_ms: number;
-  error?: string;
-}
+const AGG_CATEGORY = 'longmemeval-aggregate';
 
-const args = process.argv.slice(2);
-const ndjsonPath = args.find(a => !a.startsWith('--'));
-if (!ndjsonPath) {
-  console.error('usage: bun longmemeval-aggregate.ts <ndjson-path> [--output <out.json>]');
-  process.exit(1);
-}
-const outputArg = (() => {
-  const i = args.indexOf('--output');
-  return i >= 0 && args[i + 1] ? args[i + 1] : null;
-})();
-
-const raw = readFileSync(ndjsonPath, 'utf8');
-const rows: NdjsonRow[] = [];
-const seen = new Set<string>();
-let lineNo = 0;
-let dupes = 0;
-for (const line of raw.split('\n')) {
-  lineNo++;
-  if (!line.trim()) continue;
-  try {
-    const obj = JSON.parse(line) as NdjsonRow;
-    const key = `${obj.adapter}::${obj.question_id}`;
-    if (seen.has(key)) {
-      // Concurrent workers can race past the resume-skip and double-process
-      // the same (adapter, question_id). The result is deterministic given
-      // the same question text + cached embeddings, so dropping the second
-      // occurrence is correct. First-wins keeps the original latency_ms.
-      dupes++;
+/**
+ * Parse + dedupe NDJSON rows. Concurrent workers can race past the resume
+ * skip and double-process a pair; dedup prefers the NON-error row when one
+ * exists (audit finding longmemeval-03: first-wins used to drop a later
+ * success in favor of an earlier transient error). Between two clean rows,
+ * first wins (results are deterministic given the same cached embeddings).
+ * Malformed/truncated lines are skipped and counted.
+ */
+export function dedupeRows(raw: string): { rows: NdjsonRow[]; dupes: number; parseErrors: number } {
+  const byKey = new Map<string, NdjsonRow>();
+  let dupes = 0;
+  let parseErrors = 0;
+  for (const line of raw.split('\n')) {
+    if (!line.trim()) continue;
+    let obj: NdjsonRow;
+    try {
+      obj = JSON.parse(line) as NdjsonRow;
+    } catch {
+      parseErrors++;
       continue;
     }
-    seen.add(key);
-    rows.push(obj);
-  } catch (err) {
-    process.stderr.write(`[aggregate] line ${lineNo} skipped (parse error)\n`);
+    if (!obj?.adapter || !obj?.question_id) {
+      parseErrors++;
+      continue;
+    }
+    const key = `${obj.adapter}::${obj.question_id}`;
+    const existing = byKey.get(key);
+    if (existing === undefined) {
+      byKey.set(key, obj);
+      continue;
+    }
+    dupes++;
+    if (existing.error !== undefined && obj.error === undefined) {
+      byKey.set(key, obj); // success supersedes an earlier transient error
+    }
   }
-}
-if (dupes > 0) process.stderr.write(`[aggregate] ${dupes} duplicate (adapter, question_id) rows deduped\n`);
-
-// Group by adapter
-const byAdapter = new Map<string, NdjsonRow[]>();
-for (const r of rows) {
-  if (!byAdapter.has(r.adapter)) byAdapter.set(r.adapter, []);
-  byAdapter.get(r.adapter)!.push(r);
+  return { rows: [...byKey.values()], dupes, parseErrors };
 }
 
-const summaries = [];
-for (const [adapterName, adapterRows] of byAdapter) {
-  const total = adapterRows.length;
-  const hits = adapterRows.filter(r => r.hit_at_k).length;
-  const errors = adapterRows.filter(r => r.error).length;
-  const recallByType: Record<string, { hit: number; total: number; recall: number }> = {};
-  for (const r of adapterRows) {
-    const b = recallByType[r.question_type] ?? (recallByType[r.question_type] = { hit: 0, total: 0, recall: 0 });
-    b.total++;
-    if (r.hit_at_k) b.hit++;
+/**
+ * Resolve top_k + dataset from the rows themselves. Mixed values are an
+ * error; absent values (legacy streams) fall back to the CLI-provided
+ * override or fail loudly — never a hardcoded 5/'s'.
+ */
+export function inferRunParams(
+  rows: NdjsonRow[],
+  cli: { topK: number | null; dataset: string | null },
+): { topK: number; dataset: string } {
+  const topKs = new Set(rows.map(r => r.top_k).filter((v): v is number => typeof v === 'number'));
+  const datasets = new Set(rows.map(r => r.dataset).filter((v): v is string => typeof v === 'string'));
+  if (topKs.size > 1) throw new Error(`mixed top_k values in NDJSON: ${[...topKs].join(', ')} — aggregate shards separately`);
+  if (datasets.size > 1) throw new Error(`mixed dataset values in NDJSON: ${[...datasets].join(', ')} — aggregate shards separately`);
+  const rowTopK = topKs.size === 1 ? [...topKs][0] : null;
+  const rowDataset = datasets.size === 1 ? [...datasets][0] : null;
+  if (rowTopK !== null && cli.topK !== null && rowTopK !== cli.topK) {
+    throw new Error(`--top-k ${cli.topK} contradicts top_k=${rowTopK} recorded in the NDJSON rows`);
   }
-  for (const k of Object.keys(recallByType)) {
-    recallByType[k].recall = recallByType[k].total === 0 ? 0 : recallByType[k].hit / recallByType[k].total;
+  if (rowDataset !== null && cli.dataset !== null && rowDataset !== cli.dataset) {
+    throw new Error(`--dataset ${cli.dataset} contradicts dataset=${rowDataset} recorded in the NDJSON rows`);
   }
-  const lat = adapterRows.map(r => r.latency_ms).sort((a, b) => a - b);
-  const p50 = lat[Math.floor(lat.length * 0.5)] || 0;
-  const p99 = lat[Math.floor(lat.length * 0.99)] || 0;
-  summaries.push({
-    adapter: adapterName,
-    dataset: 's',
-    total,
-    topK: 5,                     // assumed; the NDJSON doesn't carry topK; documented in the report
-    recall_at_k: total === 0 ? 0 : hits / total,
-    recall_by_type: recallByType,
-    avg_latency_ms: lat.reduce((s, x) => s + x, 0) / Math.max(lat.length, 1),
-    p50_latency_ms: p50,
-    p99_latency_ms: p99,
-    total_seconds: lat.reduce((s, x) => s + x, 0) / 1000,
-    errors,
-  });
+  const topK = rowTopK ?? cli.topK;
+  const dataset = rowDataset ?? cli.dataset;
+  if (topK === null) throw new Error('NDJSON rows carry no top_k (legacy stream) — pass --top-k explicitly');
+  if (dataset === null) throw new Error('NDJSON rows carry no dataset (legacy stream) — pass --dataset explicitly');
+  return { topK, dataset };
 }
 
-// Sort adapters in a stable preferred order so charts and tables look the same across runs.
-const adapterOrder = ['gbrain-keyword', 'gbrain-vector', 'gbrain-hybrid', 'gbrain-hybrid+expansion'];
-summaries.sort((a, b) => adapterOrder.indexOf(a.adapter) - adapterOrder.indexOf(b.adapter));
+/** Stable preferred adapter order so charts and tables look the same across runs. */
+const ADAPTER_ORDER = ['gbrain-keyword', 'gbrain-vector', 'gbrain-hybrid', 'gbrain-hybrid+expansion'];
 
-const stem = outputArg || ndjsonPath.replace(/\.ndjson$/, '');
-const outJson = stem.endsWith('.json') ? stem : stem + '.json';
-writeFileSync(outJson, JSON.stringify({
-  opts: { datasetName: 's', topK: 5 },
-  summaries,
-}, null, 2) + '\n');
-process.stderr.write(`wrote ${outJson}\n`);
-
-// Human-readable markdown
-const mdPath = outJson.replace(/\.json$/, '.md');
-const lines: string[] = [];
-lines.push(`# LongMemEval results (aggregated from ${ndjsonPath})\n`);
-lines.push(`Dataset: \`s\`  |  Top-K: 5\n`);
-lines.push('| Adapter | n | Recall@5 | p50 latency | p99 latency | Errors |');
-lines.push('|---|---|---|---|---|---|');
-for (const s of summaries) {
-  lines.push(`| ${s.adapter} | ${s.total} | ${(s.recall_at_k * 100).toFixed(2)}% | ${s.p50_latency_ms.toFixed(0)}ms | ${s.p99_latency_ms.toFixed(0)}ms | ${s.errors} |`);
+export function aggregateRows(rows: NdjsonRow[], topK: number, dataset: string): RunSummary[] {
+  const byAdapter = new Map<string, NdjsonRow[]>();
+  for (const r of rows) {
+    if (!byAdapter.has(r.adapter)) byAdapter.set(r.adapter, []);
+    byAdapter.get(r.adapter)!.push(r);
+  }
+  const summaries: RunSummary[] = [];
+  for (const [adapterName, adapterRows] of byAdapter) {
+    summaries.push(summarizeAdapterRows(adapterName, adapterRows, topK, dataset));
+  }
+  summaries.sort((a, b) => ADAPTER_ORDER.indexOf(a.adapter) - ADAPTER_ORDER.indexOf(b.adapter));
+  return summaries;
 }
-lines.push('');
-const types = Array.from(new Set(rows.map(r => r.question_type))).sort();
-if (types.length > 0 && summaries.length > 0) {
-  lines.push('## Recall by question_type\n');
-  lines.push('| question_type | total | ' + summaries.map(s => s.adapter).join(' | ') + ' |');
-  lines.push('|---|---|' + summaries.map(() => '---').join('|') + '|');
-  for (const t of types) {
-    const total = summaries[0].recall_by_type[t]?.total ?? 0;
-    const cells = summaries.map(s => {
-      const b = s.recall_by_type[t];
-      return b ? `${(b.recall * 100).toFixed(1)}% (${b.hit}/${b.total})` : '—';
+
+function argValue(args: string[], name: string): string | null {
+  const i = args.indexOf(name);
+  return i >= 0 && args[i + 1] ? args[i + 1] : null;
+}
+
+if (import.meta.main) {
+  const startedAt = new Date().toISOString();
+  const args = process.argv.slice(2);
+  // Positional input path: first arg that is neither a flag nor a flag's value.
+  const flagValues = new Set<string>();
+  for (let i = 0; i < args.length; i++) {
+    if (args[i].startsWith('--') && i + 1 < args.length && !args[i + 1].startsWith('--')) flagValues.add(args[i + 1]);
+  }
+  const positional = args.filter(a => !a.startsWith('--') && !flagValues.has(a));
+  const input = positional[0];
+  if (!input) {
+    console.error('usage: bun longmemeval-aggregate.ts <ndjson-path> [--output <out.json>] [--top-k <k>] [--dataset <name>] [--min-recall-all <x>]');
+    process.exit(1);
+  }
+  const outputArg = argValue(args, '--output');
+  const cliTopK = argValue(args, '--top-k');
+  const cliDataset = argValue(args, '--dataset');
+  const cliMin = argValue(args, '--min-recall-all');
+
+  const receiptFile = receiptPath(AGG_CATEGORY, join(process.cwd(), 'eval/reports'));
+  try {
+    const raw = readFileSync(input, 'utf8');
+    const { rows, dupes, parseErrors } = dedupeRows(raw);
+    if (dupes > 0) process.stderr.write(`[aggregate] ${dupes} duplicate (adapter, question_id) rows deduped (non-error rows preferred)\n`);
+    if (parseErrors > 0) process.stderr.write(`[aggregate] ${parseErrors} malformed/truncated lines skipped\n`);
+    if (rows.length === 0) throw new Error(`no parseable rows in ${input}`);
+
+    const { topK, dataset } = inferRunParams(rows, {
+      topK: cliTopK !== null ? Number(cliTopK) : null,
+      dataset: cliDataset,
     });
-    lines.push(`| ${t} | ${total} | ${cells.join(' | ')} |`);
+    const summaries = aggregateRows(rows, topK, dataset);
+
+    // Accounting over deduped rows: sut errors scored 0, infra errors
+    // excluded + capped (probe-accounting policy).
+    const acc = new ProbeAccounting(rows.length);
+    for (const r of rows) {
+      const id = `${r.adapter}::${r.question_id}`;
+      if (r.error !== undefined) {
+        acc.error(id, r.error_origin ?? classifyErrorOrigin(r.error), r.error);
+      } else {
+        acc.score(id, r.recall_all ?? (r.hit_at_k ? 1 : 0));
+      }
+    }
+    const accSummary = acc.summary();
+    const minGate = cliMin !== null
+      ? Number(cliMin)
+      : process.env.LME_MIN_RECALL_ALL
+        ? Number(process.env.LME_MIN_RECALL_ALL)
+        : defaultMinRecallAll(summaries.map(s => s.adapter));
+    const gate = computeVerdict(summaries, minGate);
+    const runInvalid = accSummary.run_invalid;
+
+    const stem = outputArg || input.replace(/\.ndjson$/, '');
+    const outJson = stem.endsWith('.json') ? stem : stem + '.json';
+    writeFileSync(outJson, JSON.stringify({
+      opts: { datasetName: dataset, topK },
+      resolved: { gbrain_version: gbrainVersion(), gbrain_pin: gbrainPin(), source_ndjson: input },
+      summaries,
+    }, null, 2) + '\n');
+    process.stderr.write(`wrote ${outJson}\n`);
+
+    // Human-readable markdown — same fmt as the runner (one formatter).
+    const mdPath = outJson.replace(/\.json$/, '.md');
+    const md = `<!-- aggregated from ${input} -->\n` + fmt(summaries);
+    writeFileSync(mdPath, md + '\n');
+    process.stderr.write(`wrote ${mdPath}\n\n${md}\n`);
+
+    const receipt: Receipt = {
+      schema_version: RECEIPT_SCHEMA_VERSION,
+      benchmark_version: BENCHMARK_VERSION,
+      category: AGG_CATEGORY,
+      run_status: runInvalid ? 'error' : 'completed',
+      ...(runInvalid ? {} : { verdict: gate.verdict }),
+      n_total: accSummary.n_total,
+      n_scored: accSummary.n_scored,
+      completion_rate: accSummary.completion_rate,
+      errors: accSummary.errors,
+      publishable: accSummary.publishable,
+      gbrain_version: gbrainVersion(),
+      gbrain_pin: gbrainPin(),
+      resolved_config: {
+        dataset,
+        top_k: topK,
+        min_recall_all_gate: minGate,
+        source_ndjson: input,
+        dupes_deduped: dupes,
+        parse_errors: parseErrors,
+      },
+      started_at: startedAt,
+      finished_at: new Date().toISOString(),
+      data: {
+        headline_metric: 'recall_all_at_k',
+        verdict_reason: gate.reason,
+        infra_error_rate: accSummary.infra_error_rate,
+        summaries,
+      },
+    };
+    writeReceipt(receiptFile, receipt);
+    process.stderr.write(`[aggregate] receipt: ${receiptFile} (run_status=${receipt.run_status} verdict=${receipt.verdict ?? 'n/a'})\n`);
+    process.exit(runInvalid ? 1 : gate.verdict === 'fail' ? 1 : 0);
+  } catch (e: any) {
+    try {
+      writeReceipt(receiptFile, {
+        schema_version: RECEIPT_SCHEMA_VERSION,
+        benchmark_version: BENCHMARK_VERSION,
+        category: AGG_CATEGORY,
+        run_status: 'error',
+        n_total: 0,
+        n_scored: 0,
+        completion_rate: 0,
+        errors: [{ probe_id: 'aggregate', origin: 'harness', message: String(e?.message ?? e).slice(0, 500) }],
+        publishable: false,
+        gbrain_version: gbrainVersion(),
+        gbrain_pin: gbrainPin(),
+        started_at: startedAt,
+        finished_at: new Date().toISOString(),
+      });
+    } catch { /* receipt write failed too */ }
+    console.error(`[aggregate] FATAL: ${e?.message ?? e}`);
+    process.exit(1);
   }
 }
-writeFileSync(mdPath, lines.join('\n') + '\n');
-process.stderr.write(`wrote ${mdPath}\n\n`);
-process.stderr.write(lines.join('\n') + '\n');

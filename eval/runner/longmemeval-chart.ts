@@ -1,42 +1,75 @@
 /**
- * Generate SVG charts from a longmemeval runner JSON output. Inline-SVG so
- * GitHub markdown renders it without an external image host.
+ * Generate SVG charts from a longmemeval runner/aggregate JSON output.
+ * Inline-SVG so GitHub markdown renders it without an external image host.
+ *
+ * FEATURE BOUNDARY: presentation only — no gbrain code runs here, no metric
+ * math beyond reading the summary fields the runner/aggregate wrote.
+ *
+ * Charts plot recall_all@k (the official LongMemEval headline; see
+ * longmemeval.ts header). Inputs produced by the pre-2026-08-31 pipeline
+ * only carry the inflating any-hit `recall_at_k` — those are REJECTED with
+ * instructions to re-aggregate rather than silently charted as recall_all
+ * (audit finding longmemeval-01). Titles carry the actual dataset name and
+ * question count from the input, never a hardcoded "full 500 questions"
+ * (audit finding longmemeval-09).
  *
  * Run:
  *   bun eval/runner/longmemeval-chart.ts <runner-output.json> [<runner-output.json> ...]
  *   bun eval/runner/longmemeval-chart.ts --merge a.json b.json   # combine adapters from two files
  *
- * Writes <input>.svg next to each input file, plus <input>.per-type.svg if
- * the input has multiple adapters with per-type breakdowns.
+ * Writes <input>.headline.svg + <input>.per-type.svg next to each input file.
  */
 
 import { readFileSync, writeFileSync } from 'fs';
-
-interface AdapterSummary {
-  adapter: string;
-  dataset: string;
-  total: number;
-  topK: number;
-  recall_at_k: number;
-  recall_by_type: Record<string, { hit: number; total: number; recall: number }>;
-  avg_latency_ms: number;
-  p50_latency_ms: number;
-  p99_latency_ms: number;
-  total_seconds: number;
-}
+import type { RunSummary } from './longmemeval.ts';
 
 interface RunnerOutput {
   opts: { datasetName: string; topK: number };
-  summaries: AdapterSummary[];
+  summaries: RunSummary[];
+}
+
+/**
+ * Refuse legacy summaries: `recall_at_k` (any-hit) is a strictly looser
+ * metric than recall_all@k and must never be charted next to published
+ * recall_all baselines. Re-run longmemeval-aggregate.ts on the NDJSON stream
+ * (it recomputes recall_all from retrieved+ground_truth, legacy rows
+ * included) to get a chartable summary.
+ */
+export function assertChartable(data: RunnerOutput, source: string): void {
+  if (!Array.isArray(data.summaries) || data.summaries.length === 0) {
+    throw new Error(`${source}: no summaries to chart`);
+  }
+  for (const s of data.summaries) {
+    if (typeof s.recall_all_at_k !== 'number') {
+      throw new Error(
+        `${source}: adapter ${s.adapter} has no recall_all_at_k — this is a legacy any-hit summary. ` +
+        `Re-aggregate the NDJSON with longmemeval-aggregate.ts; any-hit numbers are not comparable to published recall_all baselines.`,
+      );
+    }
+  }
+  if (typeof data.opts?.topK !== 'number' || typeof data.opts?.datasetName !== 'string' || data.opts.datasetName === '') {
+    throw new Error(`${source}: opts.topK/opts.datasetName missing — cannot label the chart honestly`);
+  }
+}
+
+/** "n=500" when every adapter scored the same count, "n=60–500 per adapter" otherwise. */
+export function nLabel(summaries: RunSummary[]): string {
+  const totals = [...new Set(summaries.map(s => s.total))].sort((a, b) => a - b);
+  return totals.length === 1 ? `n=${totals[0]}` : `n varies ${totals[0]}–${totals[totals.length - 1]} per adapter`;
+}
+
+export function chartTitle(data: RunnerOutput): string {
+  return `recall_all@${data.opts.topK} on LongMemEval _${data.opts.datasetName} — ${nLabel(data.summaries)}`;
 }
 
 // External published baselines for comparison context. Numbers come from
 // the linked source documents — keep them in sync with the report's
 // `## Comparison vs published systems` section, and re-check the source
-// files quarterly since memory-systems publish frequently.
+// files quarterly since memory-systems publish frequently. These are
+// recall_all-style session-level numbers, comparable to our headline.
 interface ExternalBaseline {
   label: string;
-  recall: number;          // R@K, as a fraction
+  recall: number;          // recall_all@K, as a fraction
   topK: number;
   questions: number;
   source: string;
@@ -88,7 +121,9 @@ function escapeXml(s: string): string {
 
 // ─── Headline horizontal bar chart ──────────────────────────────────
 
-function headlineCard(summaries: AdapterSummary[], topK: number): string {
+export function headlineCard(data: RunnerOutput): string {
+  const summaries = data.summaries;
+  const topK = data.opts.topK;
   // Rows: gbrain adapters + applicable external baselines.
   interface Row {
     label: string;
@@ -102,7 +137,7 @@ function headlineCard(summaries: AdapterSummary[], topK: number): string {
     rows.push({
       label: s.adapter,
       sub: `n=${s.total} · k=${s.topK}`,
-      recall: s.recall_at_k,
+      recall: s.recall_all_at_k ?? 0,
       color: adapterColor(s.adapter),
       isUs: true,
     });
@@ -156,7 +191,7 @@ function headlineCard(summaries: AdapterSummary[], topK: number): string {
   return `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
   <rect width="${W}" height="${H}" fill="${COLORS.bgPanel}" />
-  <text x="${padL}" y="16" font-family="ui-sans-serif,system-ui,sans-serif" font-size="12" fill="${COLORS.textMuted}">recall@${topK} on LongMemEval _s — full 500 questions</text>
+  <text x="${padL}" y="16" font-family="ui-sans-serif,system-ui,sans-serif" font-size="12" fill="${COLORS.textMuted}">${escapeXml(chartTitle(data))}</text>
   ${grid.join('\n  ')}
   ${rowsXml}
 </svg>
@@ -165,7 +200,9 @@ function headlineCard(summaries: AdapterSummary[], topK: number): string {
 
 // ─── Per-type grouped bar chart ─────────────────────────────────────
 
-function perTypeChart(summaries: AdapterSummary[], topK: number): string {
+export function perTypeChart(data: RunnerOutput): string {
+  const summaries = data.summaries;
+  const topK = data.opts.topK;
   // Pull all question_types in stable order across summaries.
   const types: string[] = [];
   for (const s of summaries) {
@@ -173,11 +210,11 @@ function perTypeChart(summaries: AdapterSummary[], topK: number): string {
       if (!types.includes(t)) types.push(t);
     }
   }
-  // Stable order: easiest to hardest based on hybrid recall.
+  // Stable order: easiest to hardest based on hybrid recall_all.
   const sorter = summaries.find(s => s.adapter.includes('hybrid')) ?? summaries[0];
   types.sort((a, b) => {
-    const ra = sorter.recall_by_type[a]?.recall ?? 0;
-    const rb = sorter.recall_by_type[b]?.recall ?? 0;
+    const ra = sorter.recall_by_type[a]?.recall_all ?? 0;
+    const rb = sorter.recall_by_type[b]?.recall_all ?? 0;
     return rb - ra;
   });
 
@@ -191,8 +228,8 @@ function perTypeChart(summaries: AdapterSummary[], topK: number): string {
   const plotW = W - padL - padR;
   const plotH = H - padT - padB;
 
-  const groupH = plotH / types.length;
-  const barH = (groupH - 8) / adapters.length;
+  const groupH = plotH / Math.max(types.length, 1);
+  const barH = (groupH - 8) / Math.max(adapters.length, 1);
   const maxX = 1.0;
 
   // Grid lines (every 20%)
@@ -210,7 +247,7 @@ function perTypeChart(summaries: AdapterSummary[], topK: number): string {
     rows.push(`<text x="${padL - 12}" y="${yGroup + groupH / 2 + 4}" text-anchor="end" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13" fill="${COLORS.text}">${escapeXml(t)}</text>`);
     for (let ai = 0; ai < adapters.length; ai++) {
       const a = adapters[ai];
-      const v = a.recall_by_type[t]?.recall ?? 0;
+      const v = a.recall_by_type[t]?.recall_all ?? 0;
       const w = plotW * (v / maxX);
       const y = yGroup + ai * (barH + 2);
       rows.push(`<rect x="${padL}" y="${y}" width="${w}" height="${barH}" fill="${adapterColor(a.adapter)}" />`);
@@ -223,7 +260,7 @@ function perTypeChart(summaries: AdapterSummary[], topK: number): string {
     }
   }
 
-  // External reference line (overall recall, not per-type)
+  // External reference line (overall recall_all, not per-type)
   const refLines = externals.map(b => {
     const x = padL + plotW * b.recall;
     return `
@@ -244,7 +281,7 @@ function perTypeChart(summaries: AdapterSummary[], topK: number): string {
   return `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
   <rect width="${W}" height="${H}" fill="${COLORS.bgPanel}" />
-  <text x="${padL}" y="20" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13" fill="${COLORS.text}">recall@${adapters[0]?.topK ?? topK} by question_type</text>
+  <text x="${padL}" y="20" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13" fill="${COLORS.text}">recall_all@${topK} by question_type — LongMemEval _${escapeXml(data.opts.datasetName)}, ${escapeXml(nLabel(summaries))}</text>
   ${gridLines.join('\n  ')}
   ${rows.join('\n  ')}
   ${refLines}
@@ -255,40 +292,51 @@ function perTypeChart(summaries: AdapterSummary[], topK: number): string {
 
 // ─── Main ───────────────────────────────────────────────────────────
 
-const args = process.argv.slice(2);
-if (args.length === 0) {
-  process.stderr.write('usage: bun longmemeval-chart.ts <runner-output.json> [...]\n');
-  process.stderr.write('       bun longmemeval-chart.ts --merge a.json b.json\n');
-  process.exit(1);
-}
-
-if (args[0] === '--merge') {
-  const inputs = args.slice(1);
-  if (inputs.length < 2) {
-    process.stderr.write('--merge needs at least 2 inputs\n');
+if (import.meta.main) {
+  const args = process.argv.slice(2);
+  if (args.length === 0) {
+    process.stderr.write('usage: bun longmemeval-chart.ts <runner-output.json> [...]\n');
+    process.stderr.write('       bun longmemeval-chart.ts --merge a.json b.json\n');
     process.exit(1);
   }
-  const merged: RunnerOutput = { opts: { datasetName: '', topK: 0 }, summaries: [] };
-  for (const f of inputs) {
-    const data = JSON.parse(readFileSync(f, 'utf8')) as RunnerOutput;
-    merged.opts.datasetName = data.opts.datasetName;
-    merged.opts.topK = data.opts.topK;
-    merged.summaries.push(...data.summaries);
-  }
-  const stem = inputs[0].replace(/\.json$/, '');
-  const headlineSvg = headlineCard(merged.summaries, merged.opts.topK);
-  const perTypeSvg = perTypeChart(merged.summaries, merged.opts.topK);
-  writeFileSync(stem + '.headline.svg', headlineSvg + '\n');
-  writeFileSync(stem + '.per-type.svg', perTypeSvg + '\n');
-  process.stderr.write(`wrote ${stem}.headline.svg + ${stem}.per-type.svg (merged from ${inputs.length} files)\n`);
-} else {
-  for (const f of args) {
-    const data = JSON.parse(readFileSync(f, 'utf8')) as RunnerOutput;
-    const stem = f.replace(/\.json$/, '');
-    const headlineSvg = headlineCard(data.summaries, data.opts.topK);
-    const perTypeSvg = perTypeChart(data.summaries, data.opts.topK);
-    writeFileSync(stem + '.headline.svg', headlineSvg + '\n');
-    writeFileSync(stem + '.per-type.svg', perTypeSvg + '\n');
-    process.stderr.write(`wrote ${stem}.headline.svg + ${stem}.per-type.svg\n`);
+
+  try {
+    if (args[0] === '--merge') {
+      const inputs = args.slice(1);
+      if (inputs.length < 2) {
+        process.stderr.write('--merge needs at least 2 inputs\n');
+        process.exit(1);
+      }
+      const merged: RunnerOutput = { opts: { datasetName: '', topK: 0 }, summaries: [] };
+      for (const f of inputs) {
+        const data = JSON.parse(readFileSync(f, 'utf8')) as RunnerOutput;
+        assertChartable(data, f);
+        // Merging different datasets or K values would mislabel the chart —
+        // refuse instead of last-write-wins (audit finding longmemeval-09).
+        if (merged.summaries.length > 0
+          && (merged.opts.datasetName !== data.opts.datasetName || merged.opts.topK !== data.opts.topK)) {
+          throw new Error(`--merge inputs disagree: ${merged.opts.datasetName}@k=${merged.opts.topK} vs ${f} ${data.opts.datasetName}@k=${data.opts.topK}`);
+        }
+        merged.opts.datasetName = data.opts.datasetName;
+        merged.opts.topK = data.opts.topK;
+        merged.summaries.push(...data.summaries);
+      }
+      const stem = inputs[0].replace(/\.json$/, '');
+      writeFileSync(stem + '.headline.svg', headlineCard(merged) + '\n');
+      writeFileSync(stem + '.per-type.svg', perTypeChart(merged) + '\n');
+      process.stderr.write(`wrote ${stem}.headline.svg + ${stem}.per-type.svg (merged from ${inputs.length} files)\n`);
+    } else {
+      for (const f of args) {
+        const data = JSON.parse(readFileSync(f, 'utf8')) as RunnerOutput;
+        assertChartable(data, f);
+        const stem = f.replace(/\.json$/, '');
+        writeFileSync(stem + '.headline.svg', headlineCard(data) + '\n');
+        writeFileSync(stem + '.per-type.svg', perTypeChart(data) + '\n');
+        process.stderr.write(`wrote ${stem}.headline.svg + ${stem}.per-type.svg\n`);
+      }
+    }
+  } catch (e: any) {
+    process.stderr.write(`[longmemeval-chart] FATAL: ${e?.message ?? e}\n`);
+    process.exit(1);
   }
 }

@@ -14,6 +14,15 @@
  * Each injection has a `kind` tag that flows into `eval/data/world-v1-
  * adversarial/_adversarial/{slug}.json` metadata so the Cat 6 scorer can
  * compute per-kind precision / recall / false-positive rate.
+ *
+ * Feature boundary: the pipeline under test is gbrain's pure link extractor
+ * (`extractPageLinks` in gbrain/link-extraction) as exercised by the Cat 6 /
+ * Cat 10 runners. The injections themselves (content transforms + gold
+ * deltas) are harness-side and deterministic (seeded Mulberry32); nothing
+ * here calls an LLM or a database. `scoreGoldDelta` below is the canonical
+ * scorer for a GoldDelta — consumers must use it (or match its semantics)
+ * so `must_extract[].type` with `enforce_type` is actually enforced and
+ * type-downgrade injections can fail on mistyping.
  */
 
 export type InjectionKind =
@@ -61,8 +70,15 @@ export interface GoldDelta {
    * Links that MUST appear in extraction output (exact match). Used by
    * Cat 6 recall + per-kind recall. Empty when the injection is purely
    * negative (e.g., isolated code_fence_leak test).
+   *
+   * `enforce_type` marks entries whose DISCRIMINATING criterion is the link
+   * type (ambiguous_role, prose_only_mention): a slug extracted with a
+   * different type is a `mistyped` failure, not a match. Entries without
+   * the flag match on slug alone — their kinds test presence/absence, and
+   * gbrain's page-role priors may legitimately assign a non-`mentions`
+   * type to the injected link.
    */
-  must_extract: Array<{ slug: string; type: string; reason: string }>;
+  must_extract: Array<{ slug: string; type: string; reason: string; enforce_type?: boolean }>;
   /** Human-readable note for the scorer's error reporting. */
   note: string;
 }
@@ -150,28 +166,48 @@ export function injectInlineCodeSlug(input: InjectionInput): InjectionResult {
 
 export function injectSubstringCollision(input: InjectionInput): InjectionResult {
   const rng = createRng(input.seed);
-  const realTarget = pick(rng, input.forcedRefs ?? input.refs);
-  // Create a substring collision: if realTarget.name is "Sam", the collision
-  // is "SamAI". The extractor should match ONLY the [Sam](slug) reference,
-  // NOT "SamAI" appearing as prose.
-  const baseName = realTarget.name.split(' ')[0];
+  const pool = input.forcedRefs ?? input.refs;
+  const realTarget = pick(rng, pool);
+  // Substring collision, rebuilt so a false positive CAN occur (audit
+  // misc-runners-04: the old fabricated `people/<name>ai` slug was
+  // unreachable by ANY extraction pass — even a sloppy prose-name matcher
+  // would emit the REAL slug, never the fabricated one, so the FP branch
+  // was structurally dead and substring_fp_rate was always 0).
+  //
+  // New shape: pick a SECOND corpus entity (the collision target) that is
+  // NOT otherwise linked on this page, and inject its name-prefix collision
+  // word ("Sam" -> "SamAI") as plain prose. The forbidden slug is that real
+  // entity's slug: a name-based / substring auto-linker bug that resolves
+  // "SamAI" to the entity "Sam" now produces a detectable FP (the slug is
+  // real and never legitimately linked here), while a correct extractor —
+  // which never links bare prose words — extracts nothing for it.
+  const eligible = pool.filter(
+    r => r.slug !== realTarget.slug && !input.content.includes(r.slug),
+  );
+  const collisionTarget = eligible.length > 0 ? pick(rng, eligible) : null;
+
+  const baseName = (collisionTarget ?? realTarget).name.split(' ')[0];
   const collisionWord = `${baseName}AI`;
+  // Fallback (single-ref pools, e.g. forcedRefs in tests): keep the legacy
+  // fabricated near-miss slug. Weaker (only a slug-fabrication bug can trip
+  // it) but never spuriously chargeable.
+  const forbiddenSlug = collisionTarget
+    ? collisionTarget.slug
+    : `people/${baseName.toLowerCase()}ai`;
+  const forbiddenReason = collisionTarget
+    ? `substring_collision: prose word "${collisionWord}" contains the name of ${collisionTarget.slug}, which is never linked on this page — extracting it means a prose-substring match fired`
+    : `substring_collision: "${collisionWord}" must not be auto-linked to a people/ slug`;
 
   const content = `${input.content}\n\nThe ${collisionWord} initiative (unrelated) was launched last quarter. In parallel, [${realTarget.name}](${realTarget.slug}) continued their work on climate tooling.`;
 
   return {
     content,
     goldDelta: {
-      must_not_extract: [
-        {
-          slug: `people/${baseName.toLowerCase()}ai`,
-          reason: `substring_collision: "${collisionWord}" must not be auto-linked to a people/ slug`,
-        },
-      ],
+      must_not_extract: [{ slug: forbiddenSlug, reason: forbiddenReason }],
       must_extract: [
         { slug: realTarget.slug, type: 'mentions', reason: 'substring_collision: real markdown link should extract' },
       ],
-      note: `Injected substring collision "${collisionWord}" near real mention ${realTarget.slug}.`,
+      note: `Injected substring collision "${collisionWord}" (forbidden: ${forbiddenSlug}) near real mention ${realTarget.slug}.`,
     },
   };
 }
@@ -179,12 +215,17 @@ export function injectSubstringCollision(input: InjectionInput): InjectionResult
 export function injectAmbiguousRole(input: InjectionInput): InjectionResult {
   const rng = createRng(input.seed);
   const realTarget = pick(rng, input.forcedRefs ?? input.refs);
-  // Replace "works at" → "works with" if present, else append a "works with"
-  // sentence. "works with" should downgrade to `mentions`, not `works_at`.
+  // Replace "works at" → "works with" if present, and ALWAYS append a
+  // "works with [realTarget]" sentence so the gold entity actually exists
+  // in the content (audit misc-runners-03 / tests-audit-05: the old
+  // replace-only branch demanded extraction of a random corpus entity that
+  // was never inserted, charging a guaranteed miss to the extractor).
+  // "works with" should downgrade to `mentions`, not `works_at`.
   const hasWorksAt = /works at/i.test(input.content);
-  const content = hasWorksAt
+  const base = hasWorksAt
     ? input.content.replace(/works at/gi, 'works with')
-    : `${input.content}\n\nShe regularly works with [${realTarget.name}](${realTarget.slug}) on quarterly reviews.`;
+    : input.content;
+  const content = `${base}\n\nShe regularly works with [${realTarget.name}](${realTarget.slug}) on quarterly reviews.`;
 
   return {
     content,
@@ -194,6 +235,7 @@ export function injectAmbiguousRole(input: InjectionInput): InjectionResult {
         {
           slug: realTarget.slug,
           type: 'mentions',
+          enforce_type: true,
           reason: 'ambiguous_role: "works with" is loose enough that type must downgrade from works_at to mentions',
         },
       ],
@@ -226,6 +268,7 @@ export function injectProseOnlyMention(input: InjectionInput): InjectionResult {
         {
           slug: realTarget.slug,
           type: 'mentions',
+          enforce_type: true,
           reason: 'prose_only_mention: bare name in prose resolves to mentions, not typed relation',
         },
       ],
@@ -313,4 +356,76 @@ export function applyInjection(kind: InjectionKind, input: InjectionInput): Inje
 
 function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// ─── Canonical GoldDelta scorer ──────────────────────────────────────
+//
+// The ONE place a GoldDelta is compared against extractor output. Audit
+// misc-runners-05: the previous consumer (cat6-prose-scale.ts scoreVariant)
+// matched must_extract by slug alone, so `type` was computed into the gold
+// and silently dropped — ambiguous_role / prose_only_mention could never
+// fail on the type downgrade that is their whole point. Consumers should
+// call this instead of re-implementing slug-set membership.
+
+/** Minimal extracted-link shape (matches cat6's ExtractedLink). */
+export interface ExtractedLinkLike {
+  targetSlug: string;
+  linkType: string;
+}
+
+export interface GoldDeltaScore {
+  /** must_extract entries whose slug appeared (and, when enforce_type, with the required type). */
+  matched: Array<{ slug: string; type: string }>;
+  /** enforce_type entries whose slug appeared but ONLY with a different type — a scoring failure. */
+  mistyped: Array<{ slug: string; expected_type: string; actual_types: string[]; reason: string }>;
+  /** must_extract entries whose slug never appeared. */
+  missed: Array<{ slug: string; type: string; reason: string }>;
+  /** must_not_extract entries whose slug appeared. */
+  false_positives: Array<{ slug: string; reason: string }>;
+}
+
+/**
+ * Score extractor output against a GoldDelta.
+ *
+ * - must_not_extract: slug present in output → false positive.
+ * - must_extract without `enforce_type`: slug present → matched (any type).
+ * - must_extract with `enforce_type`: slug present with the required type →
+ *   matched; slug present but only with other types → mistyped (a failure,
+ *   NOT a match); slug absent → missed.
+ */
+export function scoreGoldDelta(
+  gold: GoldDelta,
+  extracted: readonly ExtractedLinkLike[],
+): GoldDeltaScore {
+  const typesBySlug = new Map<string, Set<string>>();
+  for (const e of extracted) {
+    if (!typesBySlug.has(e.targetSlug)) typesBySlug.set(e.targetSlug, new Set());
+    typesBySlug.get(e.targetSlug)!.add(e.linkType);
+  }
+
+  const score: GoldDeltaScore = { matched: [], mistyped: [], missed: [], false_positives: [] };
+
+  for (const mustNot of gold.must_not_extract) {
+    if (typesBySlug.has(mustNot.slug)) {
+      score.false_positives.push({ slug: mustNot.slug, reason: mustNot.reason });
+    }
+  }
+
+  for (const must of gold.must_extract) {
+    const types = typesBySlug.get(must.slug);
+    if (!types) {
+      score.missed.push({ slug: must.slug, type: must.type, reason: must.reason });
+    } else if (must.enforce_type && !types.has(must.type)) {
+      score.mistyped.push({
+        slug: must.slug,
+        expected_type: must.type,
+        actual_types: [...types].sort(),
+        reason: must.reason,
+      });
+    } else {
+      score.matched.push({ slug: must.slug, type: must.type });
+    }
+  }
+
+  return score;
 }

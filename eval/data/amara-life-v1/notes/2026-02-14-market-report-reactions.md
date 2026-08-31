@@ -2,13 +2,13 @@
 id: note-0029
 date: 2026-02-14
 topic: market-report-reactions
-mentions: [jin-mehta, david-lenton]
+mentions: [daniel-okonkwo, maya-lindqvist]
 ---
 
-The Q4 climate tech market report from BloombergNEF landed this morning, and I've been processing the implications all day. The headline numbers look strong—$71B deployed globally—but the composition tells a more nuanced story.
+Read through the Q4 infrastructure report [Daniel](people/daniel-okonkwo) circulated this morning. The macro trends are roughly what we expected—AI compute capex still climbing, though the hyperscaler retrenchment rumors are getting louder.
 
-What stands out: grid-scale storage continues its tear, but early-stage climate AI companies are struggling to close rounds. [Jin Mehta](people/jin-mehta) flagged this divergence last month, and the data now confirms it. LPs are getting skittish about anything that sounds like "AI for climate" without clear near-term revenue.
+But the section on grid-connected storage caught my attention. [Maya](people/maya-lindqvist) flagged a company last week in that space, and now I'm second-guessing whether we pushed hard enough in our initial call. I want to go back and understand their degradation curves over the first 500 cycles. What's the actual capacity factor they're projecting at year three versus year one? The deck said "competitive LCOE" but competitive against what baseline—2024 gas peakers? Current offshore wind? I need the denominator.
 
-This creates opportunity for us. Our thesis around infrastructure software—the boring middle layer that makes intermittent renewables dispatchable—remains underappreciated. Had a quick call with [David Lenton](people/david-lenton) about whether this affects the Meridian timeline. His view: if anything, it strengthens our position since competing capital is pulling back.
+Also realized we never asked about the offtake structure. Are these merchant sales or contracted? If contracted, what's the tenor and counterparty credit quality?
 
-Need to update the IC memo before Monday. The contrarian window won't stay open forever.
+Scheduling a follow-up for next week. Want to pressure-test the unit economics properly before IC.

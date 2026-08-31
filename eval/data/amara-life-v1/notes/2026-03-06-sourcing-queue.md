@@ -2,13 +2,13 @@
 id: note-0019
 date: 2026-03-06
 topic: sourcing-queue
-mentions: [daniel-oyelaran, priya-anand]
+mentions: [amara-okafor, derek-chen, halfway-fund-iii]
 ---
 
-Spent the morning reorganizing our sourcing queue with [Daniel](people/daniel-oyelaran). We're tracking 23 active prospects in the climate-AI intersection right now, which feels both exciting and overwhelming.
+Spent the morning reviewing our inbound sourcing queue with [Derek](people/derek-chen). We're seeing a noticeable uptick in climate-adjacent AI infrastructure pitches—particularly around grid optimization and predictive maintenance for renewable assets. The thesis is maturing faster than I expected.
 
-One thing I keep coming back to: [Priya](people/priya-anand) is still leading GridSense's technical strategy, and her background in distributed systems is exactly what makes their approach to demand response so compelling. I want to prioritize getting her on a call before their Series A momentum builds further.
+One challenge: we're still operating from Fund II reserves, and Fund III first close not yet scheduled. This creates some awkward timing when founders ask about our deployment capacity. I've been transparent about where we are, but it means we're being highly selective right now. Only taking meetings where there's genuine conviction.
 
-Also flagged three cold outbound targets from the YC W26 batch—two doing interesting work on carbon accounting automation, one building AI agents for energy traders. Daniel thinks the energy trading play is crowded, but I'm not convinced the incumbents have cracked the real-time inference problem yet.
+Three deals caught my attention this week: a satellite imagery startup applying foundation models to methane detection, a hardware-software play on modular nuclear cooling systems, and a seed-stage team building inference optimization tools for edge deployments. All different stages, but each sits squarely in our climate + AI infra overlap.
 
-Need to be more disciplined about pruning this list. We keep adding without removing, and my bandwidth for deep diligence is finite. Setting a rule: for every two additions, one drops off or advances to active diligence.
+Need to triage properly before next week's partner meeting. The methane detection team has the strongest team pedigree, but I'm most intellectually excited about the inference tooling.

@@ -2,13 +2,13 @@
 id: note-0017
 date: 2026-03-10
 topic: market-report-reactions
-mentions: [leon-marchetti, priya-anand]
+mentions: [sunfield-energy, marcus-chen]
 ---
 
-The BloombergNEF Q1 climate tech report dropped this morning and I've been processing it all day. Their projection that grid-scale battery deployment will hit 847 GWh globally by 2028 feels conservative to me based on what we're seeing in the pipeline.
+Just finished reviewing the Q1 climate infrastructure market report from Lux. Some of the valuations they're tracking feel inflated, but their thesis on grid-edge AI is solid. We're seeing the same convergence signals in our own deal flow.
 
-Had a quick call with [Leon Marchetti](people/leon-marchetti) about the implications for our storage thesis. He pointed out that the report completely missed the AI datacenter demand surge—typical of these legacy research shops to compartmentalize.
+Speaking of which, [Marcus Chen](people/marcus-chen) sent over the updated [Sunfield Energy](companies/sunfield-energy) term sheet. They're holding firm at a $30M cap, which honestly feels reasonable given their current traction. The pilot deployments in Arizona are showing real efficiency gains, and their ML-driven load balancing is genuinely differentiated from what I've seen elsewhere.
 
-One thing that caught my eye: they cited Terraform Grid's Series C as $180M. I'm pretty sure it was actually $165M when we looked at the deal in December. Small discrepancy but makes me wonder what else they're getting wrong. [Priya Anand](people/priya-anand) was closer to that process—I should ask her to double-check.
+I'm less convinced by some of the later-stage companies in the report—several seem to be riding the "AI for climate" narrative without demonstrable technical depth. We should stay disciplined on diligence even as the market heats up.
 
-Overall bullish signal for the sector, even if the methodology feels dated. The institutional appetite numbers are what matter, and those are undeniably strong.
+Need to sync with the team on whether Sunfield fits our infrastructure thesis or if we're stretching the definition. Meeting scheduled for Thursday.
