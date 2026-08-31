@@ -123,7 +123,7 @@ export function makeCachingTransport(
 ) {
   return async function cachingEmbedMany(
     params: { values: string[] } & Record<string, unknown>,
-  ): Promise<{ embeddings: number[][]; usage?: any }> {
+  ): Promise<{ embeddings: number[][]; values: string[]; warnings: unknown[]; usage?: any }> {
     const values = params.values;
     const cached: Array<number[] | null> = values.map(v => cache.get(v));
     const missingIdx: number[] = [];
@@ -131,7 +131,9 @@ export function makeCachingTransport(
       if (cached[i] === null) missingIdx.push(i);
     }
     if (missingIdx.length === 0) {
-      return { embeddings: cached as number[][] };
+      // Mirror ai-sdk EmbedManyResult structurally (values/warnings) so the
+      // gateway's transport seam sees a complete result on cache hits too.
+      return { embeddings: cached as number[][], values, warnings: [] };
     }
     // Fetch only the missing values via the real transport.
     const missingValues = missingIdx.map(i => values[i]);
@@ -142,6 +144,6 @@ export function makeCachingTransport(
       cached[idx] = vec;
       cache.put(values[idx], vec);
     }
-    return { embeddings: cached as number[][], usage: realResult.usage };
+    return { embeddings: cached as number[][], values, warnings: [], usage: realResult.usage };
   };
 }

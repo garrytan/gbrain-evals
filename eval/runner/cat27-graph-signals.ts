@@ -30,6 +30,7 @@
  */
 
 import { writeFileSync, mkdirSync } from 'fs';
+import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 import { dirname, join } from 'path';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { importFromContent } from 'gbrain/import-file';
@@ -405,13 +406,7 @@ async function main(): Promise<void> {
   }
 
   // Resolve gbrain version from the installed package.
-  let gbrainVersion = 'unknown';
-  try {
-    const pkg = await import('gbrain/package.json' as any);
-    gbrainVersion = (pkg as any).default?.version ?? (pkg as any).version ?? 'unknown';
-  } catch {
-    // best-effort
-  }
+  const gbrainVersion = gbrainVersionResolved();
 
   const results: ProbeResult[] = [];
   for (const probe of subset) {

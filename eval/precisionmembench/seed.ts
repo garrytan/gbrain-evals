@@ -38,7 +38,7 @@ export interface SeedOpts {
 
 /** Configure the AI gateway once (mirrors cli.ts#connectEngine + longmemeval). */
 export function configureGatewayForBench(): void {
-  const cfg = (loadConfig() as Record<string, unknown>) || {};
+  const cfg = (loadConfig() as unknown as Record<string, unknown>) || {};
   configureGateway({
     embedding_model: cfg.embedding_model,
     embedding_dimensions: cfg.embedding_dimensions,

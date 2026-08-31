@@ -20,6 +20,7 @@
  */
 
 import { writeFileSync, mkdirSync, readdirSync, statSync, readFileSync } from 'fs';
+import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 import { join, relative } from 'path';
 import { tmpdir } from 'os';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
@@ -171,11 +172,7 @@ async function main(): Promise<void> {
     }
   }
 
-  let gbrainVersion = 'unknown';
-  try {
-    const pkg = await import('gbrain/package.json' as any);
-    gbrainVersion = (pkg as any).default?.version ?? (pkg as any).version ?? 'unknown';
-  } catch { /* best-effort */ }
+  const gbrainVersion = gbrainVersionResolved();
 
   const receipt: Receipt = {
     schema_version: 1,

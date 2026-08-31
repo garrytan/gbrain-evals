@@ -51,7 +51,9 @@ async function setup(): Promise<{ engine: PGLiteEngine; cleanup: () => Promise<v
 function ctx(remote: boolean, engine: PGLiteEngine): OperationContext {
   const config: GBrainConfig = { engine: 'pglite', database_path: ':memory:' };
   const logger = { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} };
-  return { engine, config, logger: logger as never, dryRun: false, remote };
+  // v0.34 D4: sourceId is REQUIRED write-authority scope; 'default' matches
+  // buildOperationContext's auto-fill on single-source brains.
+  return { engine, config, logger: logger as never, dryRun: false, remote, sourceId: 'default' };
 }
 
 async function runOp(opName: string, params: Record<string, unknown>, c: OperationContext): Promise<{ ok: true; result: unknown } | { ok: false; error: string }> {

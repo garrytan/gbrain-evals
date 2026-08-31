@@ -18,6 +18,7 @@
  */
 
 import { writeFileSync, mkdirSync, rmSync } from 'fs';
+import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
@@ -197,11 +198,7 @@ async function main(): Promise<void> {
     }
   }
 
-  let gbrainVersion = 'unknown';
-  try {
-    const pkg = await import('gbrain/package.json' as any);
-    gbrainVersion = (pkg as any).default?.version ?? (pkg as any).version ?? 'unknown';
-  } catch { /* best-effort */ }
+  const gbrainVersion = gbrainVersionResolved();
 
   const bestMrr = cells.reduce((a, b) => a.mrr >= b.mrr ? a : b, cells[0]);
   const bestRecall = cells.reduce((a, b) => a.recall_at_10 >= b.recall_at_10 ? a : b, cells[0]);

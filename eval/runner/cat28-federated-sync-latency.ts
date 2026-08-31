@@ -21,6 +21,7 @@
  */
 
 import { writeFileSync, mkdirSync } from 'fs';
+import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 import { join } from 'path';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { importFromContent } from 'gbrain/import-file';
@@ -123,11 +124,7 @@ async function main(): Promise<void> {
   const parallelMs = Date.now() - tParallel;
   process.stderr.write(`[cat28] parallel done: ${parallelMs}ms\n`);
 
-  let gbrainVersion = 'unknown';
-  try {
-    const pkg = await import('gbrain/package.json' as any);
-    gbrainVersion = (pkg as any).default?.version ?? (pkg as any).version ?? 'unknown';
-  } catch { /* best-effort */ }
+  const gbrainVersion = gbrainVersionResolved();
 
   const speedup = serialMs > 0 ? serialMs / Math.max(1, parallelMs) : 0;
   const efficiency = N_SOURCES > 0 ? (speedup / N_SOURCES) * 100 : 0;

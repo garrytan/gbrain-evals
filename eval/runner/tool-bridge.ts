@@ -367,6 +367,8 @@ export function createToolBridge(config: ToolBridgeConfig): ToolBridge {
     logger: silentLogger(),
     dryRun: false,
     remote: true, // agent loop is untrusted caller — matches MCP posture
+    // v0.34 D4: REQUIRED write-authority scope; 'default' = single-source brain.
+    sourceId: 'default',
   };
 
   const readNames = new Set<string>(EXPOSED_READ_TOOLS);

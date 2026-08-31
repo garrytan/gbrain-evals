@@ -308,7 +308,7 @@ async function runProbe(probe: Probe, dryRun: boolean): Promise<ProbeResult> {
   ];
   for (const axis of axes) {
     const expected = probe.expected[axis] ?? false;
-    const actual = judgeOut ? Boolean((judgeOut as Record<string, unknown>)[axis]) : false;
+    const actual = judgeOut ? Boolean((judgeOut as unknown as Record<string, unknown>)[axis]) : false;
     scores.push({
       axis,
       expected,

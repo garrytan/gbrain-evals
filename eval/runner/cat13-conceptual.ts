@@ -25,6 +25,7 @@ import { join } from 'path';
 import { RipgrepBm25Adapter } from './adapters/grep-only.ts';
 import { VectorOnlyAdapter } from './adapters/vector.ts';
 import { HybridNoGraphAdapter } from './adapters/vector-grep-rrf-fusion.ts';
+import { GbrainInlineAdapter } from './adapters/gbrain-inline.ts';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { runExtract } from 'gbrain/extract';
 import { hybridSearch } from "gbrain/search/hybrid";
@@ -397,62 +398,6 @@ function ndcgAtKDocs(docs: RankedDoc[], grades: Map<string, number>, k: number):
 
 // ─── gbrain adapter (inline, mirrors multi-adapter.ts) ──────
 
-class GbrainAfterAdapter implements Adapter {
-  readonly name = 'gbrain';
-  async init(rawPages: Page[]): Promise<unknown> {
-    const engine = new PGLiteEngine();
-    await engine.connect({});
-    await engine.initSchema();
-    const origLog = console.log;
-    const origErr = console.error;
-    console.log = () => {};
-    console.error = () => {};
-    try {
-      for (const p of rawPages) {
-        const fm: string[] = [
-          `---`,
-          `type: ${p.type}`,
-          `title: ${JSON.stringify(p.title)}`,
-          `---`,
-          '',
-          `# ${p.title}`,
-          '',
-          p.compiled_truth,
-        ];
-        if (p.timeline && p.timeline.trim().length > 0) {
-          fm.push('', '## Timeline', '', p.timeline);
-        }
-        await importFromContent(engine, p.slug, fm.join('\n'));
-      }
-      await runExtract(engine, ['links', '--source', 'db']);
-      await runExtract(engine, ['timeline', '--source', 'db']);
-    } finally {
-      console.log = origLog;
-      console.error = origErr;
-    }
-    return { engine };
-  }
-
-  async query(q: Query, state: unknown): Promise<RankedDoc[]> {
-    const { engine } = state as { engine: PGLiteEngine };
-    const chunkResults = await hybridSearch(engine, q.text, { limit: TOP_K * 6 });
-    const pageBest = new Map<string, number>();
-    for (const r of chunkResults) {
-      const existing = pageBest.get(r.slug);
-      if (existing === undefined || r.score > existing) pageBest.set(r.slug, r.score);
-    }
-    const pageScored = [...pageBest.entries()]
-      .map(([slug, score]) => ({ slug, score }))
-      .sort((a, b) => b.score - a.score || a.slug.localeCompare(b.slug))
-      .slice(0, TOP_K);
-    return pageScored.map((p, i) => ({ page_id: p.slug, score: p.score, rank: i + 1 }));
-  }
-
-  async teardown(state: unknown): Promise<void> {
-    const { engine } = state as { engine: PGLiteEngine };
-    await engine.disconnect();
-  }
-}
 // ─── Runner ───────────────────────────────────────────────────────
 
 async function scoreAdapter(
@@ -534,7 +479,7 @@ async function main() {
   console.log('');
 
   const allAdapters: Adapter[] = [
-    new GbrainAfterAdapter(),
+    new GbrainInlineAdapter({ topK: TOP_K }),
     new HybridNoGraphAdapter(),
     new RipgrepBm25Adapter(),
     new VectorOnlyAdapter(),

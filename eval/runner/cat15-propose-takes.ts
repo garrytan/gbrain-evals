@@ -51,6 +51,8 @@ interface ExtractedClaim {
   kind?: string;
   holder?: string;
   weight?: number;
+  /** Older extractor prompts emitted `conviction`; newer ones emit `weight`. Accept both. */
+  conviction?: number;
   domain?: string;
 }
 

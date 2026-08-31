@@ -33,6 +33,7 @@
  */
 
 import { writeFileSync, mkdirSync, readFileSync, cpSync } from 'fs';
+import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
@@ -150,8 +151,7 @@ async function main(): Promise<void> {
   for (const seed of SEEDS) for (const { x, y } of PAIRS) results.push(await runPair(engine, seed, x, y));
   await engine.disconnect();
 
-  let gbrainVersion = 'unknown';
-  try { const pkg = await import('gbrain/package.json' as any); gbrainVersion = (pkg as any).default?.version ?? (pkg as any).version ?? 'unknown'; } catch { /* best-effort */ }
+  const gbrainVersion = gbrainVersionResolved();
 
   const transferred = results.filter((r) => r.transferred).length;
   const totalCost = results.reduce((a, r) => a + r.cost_usd, 0);

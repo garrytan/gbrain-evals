@@ -16,6 +16,21 @@
 
 import { PGLiteEngine } from 'gbrain/pglite-engine';
 
+/**
+ * Normalize a timeline date to YYYY-MM-DD / ISO string. gbrain types
+ * TimelineEntry.date as string, but PGLite date columns can surface Date
+ * objects at runtime — accept both without tripping TS2358 on a
+ * string-typed instanceof.
+ */
+function dateKey(d: unknown): string {
+  return d instanceof Date ? d.toISOString().slice(0, 10) : String(d).slice(0, 10);
+}
+
+function dateIso(d: unknown): string {
+  return d instanceof Date ? d.toISOString() : String(d);
+}
+
+
 interface TimelineEvent {
   slug: string;
   date: string;
@@ -125,7 +140,7 @@ async function main() {
     for (const slug of eventsBySlug.keys()) {
       const tl = await engine.getTimeline(slug);
       for (const t of tl) {
-        const tDate = t.date instanceof Date ? t.date.toISOString().slice(0, 10) : String(t.date).slice(0, 10);
+        const tDate = dateKey(t.date);
         if (tDate === date) allEntries.push({ slug, summary: t.summary });
       }
     }
@@ -159,7 +174,7 @@ async function main() {
     for (const slug of eventsBySlug.keys()) {
       const tl = await engine.getTimeline(slug);
       for (const t of tl) {
-        const tDate = t.date instanceof Date ? t.date.toISOString().slice(0, 10) : String(t.date).slice(0, 10);
+        const tDate = dateKey(t.date);
         if (tDate >= r.from && tDate <= r.to) allEntries.push({ slug, date: tDate, summary: t.summary });
       }
     }
@@ -181,14 +196,14 @@ async function main() {
     const expected = events.filter(e => e.slug === slug).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3);
     const tl = await engine.getTimeline(slug);
     const sortedTl = [...tl].sort((a, b) => {
-      const ad = a.date instanceof Date ? a.date.toISOString() : String(a.date);
-      const bd = b.date instanceof Date ? b.date.toISOString() : String(b.date);
+      const ad = dateIso(a.date);
+      const bd = dateIso(b.date);
       return bd.localeCompare(ad);
     }).slice(0, 3);
     for (const e of expected) {
       recencyTotal++;
       const sd = sortedTl.find(t => {
-        const tDate = t.date instanceof Date ? t.date.toISOString().slice(0, 10) : String(t.date).slice(0, 10);
+        const tDate = dateKey(t.date);
         return tDate === e.date && t.summary === e.summary;
       });
       if (sd) recencyCorrect++;
@@ -206,12 +221,12 @@ async function main() {
     const tl = await engine.getTimeline(q.slug);
     const eligible = tl
       .filter(t => {
-        const tDate = t.date instanceof Date ? t.date.toISOString().slice(0, 10) : String(t.date).slice(0, 10);
+        const tDate = dateKey(t.date);
         return tDate <= q.asOfDate && (t.summary.startsWith('joined') || t.summary.startsWith('hired by'));
       })
       .sort((a, b) => {
-        const ad = a.date instanceof Date ? a.date.toISOString() : String(a.date);
-        const bd = b.date instanceof Date ? b.date.toISOString() : String(b.date);
+        const ad = dateIso(a.date);
+        const bd = dateIso(b.date);
         return bd.localeCompare(ad);
       });
     if (eligible.length > 0 && eligible[0].summary === q.expected) asOfCorrect++;

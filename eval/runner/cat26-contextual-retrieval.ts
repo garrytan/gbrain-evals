@@ -20,6 +20,7 @@
  */
 
 import { writeFileSync, mkdirSync } from 'fs';
+import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 import { join } from 'path';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { importFromContent } from 'gbrain/import-file';
@@ -147,11 +148,7 @@ async function main(): Promise<void> {
     process.stderr.write(`[cat26]   mode=${mode} mean R@10=${(r.mean_recall_at_10 * 100).toFixed(1)}%\n`);
   }
 
-  let gbrainVersion = 'unknown';
-  try {
-    const pkg = await import('gbrain/package.json' as any);
-    gbrainVersion = (pkg as any).default?.version ?? (pkg as any).version ?? 'unknown';
-  } catch { /* best-effort */ }
+  const gbrainVersion = gbrainVersionResolved();
 
   const bestMode = results.reduce((a, b) => a.mean_recall_at_10 >= b.mean_recall_at_10 ? a : b).mode;
   const noneR = results.find(r => r.mode === 'none')!.mean_recall_at_10;

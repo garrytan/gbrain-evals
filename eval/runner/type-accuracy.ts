@@ -153,12 +153,19 @@ function buildGoldEdges(pages: RichPage[]): GoldEdge[] {
 }
 
 /** Run extractPageLinks on every page; return flat list of inferred edges. */
-function inferAllEdges(pages: RichPage[]): GoldEdge[] {
+async function inferAllEdges(pages: RichPage[]): Promise<GoldEdge[]> {
+  // v0.13+ contract: async (slug, content, frontmatter, pageType, resolver).
+  // The pre-audit 3-arg sync call put content in the slug slot and iterated
+  // a Promise — the runner crashed before scoring anything (finding
+  // misc-runners-02). Resolver accepts corpus slugs so cross-page edges
+  // survive resolution.
+  const known = new Set(pages.map(p => p.slug));
+  const resolver = { resolve: async (name: string) => (known.has(name) ? name : null) };
   const edges: GoldEdge[] = [];
   for (const p of pages) {
     const content = `${p.title}\n\n${p.compiled_truth}\n\n${p.timeline}`;
-    const candidates = extractPageLinks(content, {}, p.type as PageType);
-    for (const c of candidates) {
+    const res = await extractPageLinks(p.slug, content, {}, p.type as PageType, resolver);
+    for (const c of res.candidates) {
       edges.push({ from: p.slug, to: c.targetSlug, type: c.linkType });
     }
   }
@@ -321,7 +328,7 @@ async function main() {
   log(`Loaded ${pages.length} pages.\n`);
 
   const gold = buildGoldEdges(pages);
-  const inferred = inferAllEdges(pages);
+  const inferred = await inferAllEdges(pages);
 
   log(`Gold edges (from _facts):     ${gold.length}`);
   log(`Inferred edges (extractPageLinks): ${inferred.length}\n`);

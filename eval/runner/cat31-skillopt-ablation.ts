@@ -31,6 +31,7 @@
  */
 
 import { writeFileSync, mkdirSync, readFileSync, cpSync } from 'fs';
+import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
@@ -162,8 +163,7 @@ async function main(): Promise<void> {
     gatePass = loopLifts && gateIsFree;
   }
 
-  let gbrainVersion = 'unknown';
-  try { const pkg = await import('gbrain/package.json' as any); gbrainVersion = (pkg as any).default?.version ?? (pkg as any).version ?? 'unknown'; } catch { /* best-effort */ }
+  const gbrainVersion = gbrainVersionResolved();
 
   const receipt = {
     schema_version: 1 as const, cat: 'cat31-skillopt-ablation', mode: BPRE ? 'b-pre-validity' : 'full',

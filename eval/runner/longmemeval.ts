@@ -44,15 +44,12 @@ import { hybridSearch } from 'gbrain/search/hybrid';
 import { expandQuery } from 'gbrain/search/expansion';
 import type { SearchResult } from 'gbrain/types';
 import { loadConfig } from 'gbrain/config';
-import { embed } from '../../node_modules/gbrain/src/core/embedding.ts';
-import {
-  configureGateway,
-  __setEmbedTransportForTests,
-} from '../../node_modules/gbrain/src/core/ai/gateway.ts';
-// Reach into gbrain's bundled ai-sdk so we don't need a parallel install.
-// The cache wrapper passes ai-sdk's params through, so model + dimensions
-// arrive at OpenAI exactly as gbrain configured them.
-import { embedMany as aiSdkEmbedMany } from '../../node_modules/gbrain/node_modules/ai/dist/index.mjs';
+import { embed } from 'gbrain/embedding';
+import { configureGateway, __setEmbedTransportForTests } from 'gbrain/ai/gateway';
+// `ai` is a direct dependency of this repo (pinned to gbrain's major) — the
+// old deep import into gbrain's nested node_modules broke on any packaged
+// install because bun hoists the dependency (audit finding longmemeval-07).
+import { embedMany as aiSdkEmbedMany } from 'ai';
 import { EmbeddingCache, makeCachingTransport } from './longmemeval-cache.ts';
 
 // ─── CLI ──────────────────────────────────────────────────────────
@@ -352,8 +349,14 @@ async function run(opts: Opts): Promise<RunSummary[]> {
       // Pass the params straight through to the real ai-sdk embedMany so
       // model + providerOptions + dimensions arrive intact. gbrain's gateway
       // already builds the model object with the right dimensions config.
-      const realTransport = async (params: any) => aiSdkEmbedMany(params);
-      __setEmbedTransportForTests(makeCachingTransport(realTransport, cache));
+      const realTransport = async (params: { values: string[] } & Record<string, unknown>) =>
+        aiSdkEmbedMany(params as Parameters<typeof aiSdkEmbedMany>[0]);
+      // The caching wrapper satisfies the transport contract structurally
+      // (embeddings + values + warnings); the cast crosses gbrain's
+      // test-seam type, which demands the full ai-sdk embedMany signature.
+      __setEmbedTransportForTests(
+        makeCachingTransport(realTransport, cache) as unknown as Parameters<typeof __setEmbedTransportForTests>[0],
+      );
       process.stderr.write(`[longmemeval] embedding cache at ${cachePath} (${cache.size()} entries warm)\n`);
     }
   }
