@@ -18,6 +18,8 @@
 
 import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { runExtract } from 'gbrain/extract';
+import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION } from './receipt.ts';
+import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
 import { readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 
@@ -186,6 +188,7 @@ function beforePrAnswer(q: RelationalQuery, contentBySlug: Map<string, string>):
 }
 
 async function main() {
+  const startedAt = new Date().toISOString();
   const json = process.argv.includes('--json');
   const log = json ? () => {} : console.log;
 
@@ -426,6 +429,54 @@ async function main() {
       perQuery: results,
     }, null, 2) + '\n');
   }
+
+  // ── Gates (audit finding orchestrators-15: this runner exited 0 whenever
+  // it didn't crash, so all.ts's Cat 1 "pass" only meant "ran to
+  // completion"). The gates encode the report's own claims: AFTER dominates
+  // BEFORE at top-K, and no link type regresses.
+  const gateFailures: string[] = [];
+  if (afterTotalAtK < beforeTotalAtK) {
+    gateFailures.push(`top-${TOP_K} found regressed: after=${afterTotalAtK} < before=${beforeTotalAtK}`);
+  }
+  if (afterRecAtK + 1e-9 < beforeRecAtK) {
+    gateFailures.push(`top-${TOP_K} recall regressed: ${afterRecAtK.toFixed(4)} < ${beforeRecAtK.toFixed(4)}`);
+  }
+  if (afterPrecAtK + 1e-9 < beforePrecAtK) {
+    gateFailures.push(`top-${TOP_K} precision regressed: ${afterPrecAtK.toFixed(4)} < ${beforePrecAtK.toFixed(4)}`);
+  }
+  for (const [t, v] of Object.entries(byType)) {
+    if (v.aF < v.bF) gateFailures.push(`type "${t}" found regressed: after=${v.aF} < before=${v.bF}`);
+  }
+
+  const finishedAt = new Date().toISOString();
+  writeReceipt(receiptPath('before-after'), {
+    schema_version: RECEIPT_SCHEMA_VERSION,
+    benchmark_version: BENCHMARK_VERSION,
+    category: 'before-after',
+    run_status: 'completed',
+    verdict: gateFailures.length === 0 ? 'pass' : 'fail',
+    n_total: queries.length,
+    n_scored: queries.length,
+    completion_rate: 1,
+    errors: [],
+    publishable: true,
+    gbrain_version: gbrainVersion(),
+    gbrain_pin: gbrainPin(),
+    started_at: startedAt,
+    finished_at: finishedAt,
+    data: {
+      top_k: TOP_K,
+      before: { recall_at_k: beforeRecAtK, precision_at_k: beforePrecAtK, found_at_k: beforeTotalAtK },
+      after: { recall_at_k: afterRecAtK, precision_at_k: afterPrecAtK, found_at_k: afterTotalAtK },
+      gate_failures: gateFailures,
+    },
+  });
+
+  if (gateFailures.length > 0) {
+    console.error(`\n✗ before-after gates FAILED:\n  - ${gateFailures.join('\n  - ')}`);
+    process.exit(1);
+  }
+  log(`\n✓ gates passed: AFTER >= BEFORE on top-${TOP_K} found/recall/precision, no type regressed.`);
 }
 
 main().catch(e => { console.error(e); process.exit(1); });

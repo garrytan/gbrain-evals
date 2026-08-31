@@ -92,21 +92,41 @@ async function phaseWiring(cfg: EvalAdapterConfig): Promise<void> {
   );
 }
 
-/** Phase 2: one big payload through the embed path. */
+/** Phase 2: a genuinely large payload through the embed path.
+ *
+ * HONESTY (audit finding orchestrators-08): gbrain's gateway truncates every
+ * individual input to MAX_CHARS = 8000 (ai/gateway.ts:104/:1880), so the old
+ * "one 175K-char string ≈ 50K tokens" never reached the provider — the gate
+ * was testing an 8K string while claiming 50K tokens. What the embed path
+ * can genuinely be stressed with is BATCH volume: many distinct inputs near
+ * the per-input cap, exercising the gateway's token-budget batch splitting
+ * (splitByTokenBudget) and the provider's real large-payload behavior. */
 async function phaseLongHaystack(cfg: EvalAdapterConfig): Promise<void> {
-  // ~50K tokens at ~3.5 chars/token ≈ 175K chars. Use a repetitive
-  // sentence; tokenizers handle this cleanly without sneaking past caps.
-  const sentence = 'The quick brown fox jumps over the lazy dog. ';
-  const bigText = sentence.repeat(Math.ceil(175_000 / sentence.length));
+  const COUNT = 32;
+  const PER_INPUT_CHARS = 7_500; // just under gbrain's MAX_CHARS=8000 truncation
+  const inputs = Array.from({ length: COUNT }, (_, i) => {
+    const sentence = `Haystack document ${i}: the quick brown fox jumps over lazy dog number ${i}. `;
+    return sentence.repeat(Math.ceil(PER_INPUT_CHARS / sentence.length)).slice(0, PER_INPUT_CHARS);
+  });
+  const totalChars = inputs.reduce((s, t) => s + t.length, 0);
   process.stderr.write(
-    `  [phase 2 long-haystack] sending ${bigText.length.toLocaleString()} chars (~50K tokens)\n`,
+    `  [phase 2 long-haystack] sending ${COUNT} distinct inputs, ${totalChars.toLocaleString()} chars aggregate (per-input <8K = gbrain's truncation cap)\n`,
   );
-  const vectors = await embed([bigText]);
-  if (vectors.length !== 1 || vectors[0].length !== cfg.dim) {
-    throw new Error('Phase 2 long-haystack: response shape mismatch');
+  const vectors = await embed(inputs);
+  if (vectors.length !== COUNT) {
+    throw new Error(`Phase 2 long-haystack: expected ${COUNT} vectors, got ${vectors.length}`);
+  }
+  for (const v of vectors) {
+    if (v.length !== cfg.dim) throw new Error(`Phase 2 long-haystack: dim mismatch (${v.length} != ${cfg.dim})`);
+  }
+  // Distinct inputs must not collapse to identical vectors (catches a
+  // batching/caching bug that maps every value to the first embedding).
+  const first = JSON.stringify(vectors[0]);
+  if (vectors.every(v => JSON.stringify(v) === first)) {
+    throw new Error('Phase 2 long-haystack: all vectors identical — embed path is collapsing distinct inputs');
   }
   process.stderr.write(
-    `  [phase 2 long-haystack] ok — 1 vector @ dim=${cfg.dim} (provider handled long input)\n`,
+    `  [phase 2 long-haystack] ok — ${COUNT} distinct vectors @ dim=${cfg.dim}\n`,
   );
 }
 

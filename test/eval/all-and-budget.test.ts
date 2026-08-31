@@ -241,9 +241,9 @@ describe('getDefaultLlmBudget', () => {
 describe('buildReport', () => {
   test('includes every Cat + programmatic-only section', async () => {
     const runs: CategoryRun[] = [
-      { num: 1, name: 'Cat 1', kind: 'subprocess', script: 'a.ts', status: 'pass', output: 'output1', exitCode: 0, elapsedMs: 1500 },
-      { num: 5, name: 'Cat 5', kind: 'programmatic', status: 'programmatic', output: 'Run via harness.', exitCode: 0, elapsedMs: 0 },
-      { num: 6, name: 'Cat 6', kind: 'subprocess', script: 'cat6.ts', status: 'pass', output: 'output6', exitCode: 0, elapsedMs: 800 },
+      { num: 1, name: 'Cat 1', kind: 'subprocess', script: 'a.ts', status: 'pass', statusSource: 'exit-code', output: 'output1', exitCode: 0, elapsedMs: 1500 },
+      { num: 5, name: 'Cat 5', kind: 'programmatic', status: 'programmatic', statusSource: 'n/a', output: 'Run via harness.', exitCode: 0, elapsedMs: 0 },
+      { num: 6, name: 'Cat 6', kind: 'subprocess', script: 'cat6.ts', status: 'pass', statusSource: 'exit-code', output: 'output6', exitCode: 0, elapsedMs: 800 },
     ];
     const report = await buildReport(runs);
     expect(report).toContain('# BrainBench');
@@ -256,12 +256,12 @@ describe('buildReport', () => {
 
   test('summary correctly counts passed/failed/programmatic', async () => {
     const runs: CategoryRun[] = [
-      { num: 1, name: 'x', kind: 'subprocess', script: 'a.ts', status: 'pass', output: '', exitCode: 0, elapsedMs: 0 },
-      { num: 2, name: 'x', kind: 'subprocess', script: 'a.ts', status: 'fail', output: '', exitCode: 1, elapsedMs: 0 },
-      { num: 5, name: 'x', kind: 'programmatic', status: 'programmatic', output: 'r', exitCode: 0, elapsedMs: 0 },
+      { num: 1, name: 'x', kind: 'subprocess', script: 'a.ts', status: 'pass', statusSource: 'exit-code', output: '', exitCode: 0, elapsedMs: 0 },
+      { num: 2, name: 'x', kind: 'subprocess', script: 'a.ts', status: 'fail', statusSource: 'exit-code', output: '', exitCode: 1, elapsedMs: 0 },
+      { num: 5, name: 'x', kind: 'programmatic', status: 'programmatic', statusSource: 'n/a', output: 'r', exitCode: 0, elapsedMs: 0 },
     ];
     const report = await buildReport(runs);
-    expect(report).toContain('2 subprocess Cats ran. 1 passed, 1 failed. 1 programmatic');
+    expect(report).toContain('2 subprocess Cats ran. 1 passed, 1 failed, 0 SKIPPED');
   });
 
   test('strips migration noise from subprocess output', async () => {
@@ -272,6 +272,7 @@ describe('buildReport', () => {
         kind: 'subprocess',
         script: 'a.ts',
         status: 'pass',
+        statusSource: 'exit-code',
         output: 'Migration 5 applied: foo\n12 migration(s) applied\nreal output line',
         exitCode: 0,
         elapsedMs: 0,

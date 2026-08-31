@@ -10,11 +10,22 @@
  * under `p-limit(2)` — max 2 in-flight at any time, which caps peak
  * memory around 800MB (≈400MB per PGLite instance).
  *
+ * **Status source (WS0):** each Cat's status comes from its RECEIPT
+ * (eval/reports/<script-stem>/receipt.json, validated, freshness-checked
+ * against run start) when one exists; the exit code is only a crash
+ * backstop for legacy runners. A receipt with run_status 'skipped' is
+ * NEVER counted as pass, and skipped Cats fail the whole run unless
+ * `BRAINBENCH_ALLOW_SKIP=1` explicitly acknowledges them.
+ *
  * **Env vars passed through to every child:**
  *   - `BRAINBENCH_N` — run count per scorecard (1=smoke, 5=iteration,
- *     10=published). Cat runners honor this internally where relevant.
+ *     10=published). Honesty note: only runners that document BRAINBENCH_N
+ *     support actually read it — it is NOT a universal work cap. CI bounds
+ *     each runner with explicit per-job caps + timeouts instead.
  *   - `BRAINBENCH_LLM_CONCURRENCY` — max simultaneous Anthropic calls,
  *     read by `llm-budget.ts`.
+ *   - `BRAINBENCH_ALLOW_SKIP` — set to 1 to let receipt-declared skips
+ *     (missing keys/fixtures) not fail the aggregate run.
  *   - `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` / `GROQ_API_KEY` — agent,
  *     judge, embedding, transcription credentials.
  *
@@ -26,8 +37,9 @@
  */
 
 import { spawn } from 'child_process';
-import { writeFileSync, mkdirSync, existsSync } from 'fs';
-import { join } from 'path';
+import { writeFileSync, mkdirSync, existsSync, statSync } from 'fs';
+import { basename, join } from 'path';
+import { loadReceipt, receiptPath, type Receipt } from './receipt.ts';
 
 // ─── Cat catalog ──────────────────────────────────────────────────────
 
@@ -139,10 +151,72 @@ interface CategoryRun {
   name: string;
   kind: 'subprocess' | 'programmatic';
   script?: string;
-  status: 'pass' | 'fail' | 'programmatic';
+  status: 'pass' | 'fail' | 'skipped' | 'programmatic';
+  /** Where the status came from: validated receipt, or legacy exit code. */
+  statusSource: 'receipt' | 'exit-code' | 'n/a';
+  statusNote?: string;
   output: string;
   exitCode: number;
   elapsedMs: number;
+}
+
+// ─── Receipt-driven status (WS0 outcome contract) ─────────────────────
+//
+// The receipt — not the exit code — is the source of truth. Exit codes
+// remain only a crash backstop for runners that predate receipt adoption.
+// This kills the class where a runner skipped everything, exited 0, and
+// all.ts recorded PASS (audit finding retrieval-cats cat11).
+
+/** Receipt directory convention: eval/reports/<script-stem>/receipt.json. */
+function receiptSlugFor(script: string): string {
+  return basename(script).replace(/\.ts$/, '');
+}
+
+/**
+ * Derive a CategoryRun status from a receipt, guarding against stale
+ * receipts left by previous runs (audit finding skillopt-cats cat34: a
+ * subprocess that died before writing left last week's result to be read
+ * as today's). A receipt older than the run start is ignored.
+ */
+export function deriveStatusFromReceipt(
+  receipt: Receipt | null,
+  exitCode: number,
+): { status: 'pass' | 'fail' | 'skipped'; statusSource: 'receipt' | 'exit-code'; statusNote?: string } {
+  if (receipt === null) {
+    return {
+      status: exitCode === 0 ? 'pass' : 'fail',
+      statusSource: 'exit-code',
+      statusNote: 'no fresh receipt — legacy exit-code status',
+    };
+  }
+  switch (receipt.run_status) {
+    case 'completed': {
+      // 'partial' verdicts count as fail at the aggregate: a category either
+      // meets its own bar or it does not.
+      const pass = receipt.verdict === 'pass';
+      return {
+        status: pass ? 'pass' : 'fail',
+        statusSource: 'receipt',
+        statusNote: `verdict=${receipt.verdict}${receipt.publishable ? '' : ' (not publishable)'}`,
+      };
+    }
+    case 'skipped':
+      return { status: 'skipped', statusSource: 'receipt', statusNote: receipt.skip_reason };
+    case 'error':
+    case 'not_run':
+      return { status: 'fail', statusSource: 'receipt', statusNote: `run_status=${receipt.run_status}` };
+  }
+}
+
+function loadFreshReceipt(script: string, startedAtMs: number): Receipt | null {
+  const path = receiptPath(receiptSlugFor(script));
+  try {
+    const mtime = statSync(path).mtimeMs;
+    if (mtime < startedAtMs) return null; // stale — from a previous run
+    return loadReceipt(path);
+  } catch {
+    return null;
+  }
 }
 
 // ─── Subprocess dispatch with concurrency cap ─────────────────────────
@@ -183,6 +257,8 @@ function runCatSubprocess(cat: SubprocessCategory): Promise<CategoryRun> {
         kind: 'subprocess',
         script: cat.script,
         status: 'fail',
+        statusSource: 'exit-code',
+        statusNote: 'timeout',
         output,
         exitCode: 124,
         elapsedMs: elapsed,
@@ -195,17 +271,21 @@ function runCatSubprocess(cat: SubprocessCategory): Promise<CategoryRun> {
       clearTimeout(timer);
       const exitCode = code ?? 1;
       const elapsedMs = Date.now() - started;
+      const receipt = loadFreshReceipt(cat.script, started);
+      const derived = deriveStatusFromReceipt(receipt, exitCode);
       const lastLines = output.split('\n').slice(-3).join('\n').trim();
       // eslint-disable-next-line no-console
       console.log(
-        `  [done ] Cat ${cat.num}: ${exitCode === 0 ? 'PASS' : 'FAIL'} (${Math.round(elapsedMs / 1000)}s)  ${lastLines ? '— ' + lastLines.split('\n')[0] : ''}`,
+        `  [done ] Cat ${cat.num}: ${derived.status.toUpperCase()} [${derived.statusSource}] (${Math.round(elapsedMs / 1000)}s)  ${lastLines ? '— ' + lastLines.split('\n')[0] : ''}`,
       );
       resolve({
         num: cat.num,
         name: cat.name,
         kind: 'subprocess',
         script: cat.script,
-        status: exitCode === 0 ? 'pass' : 'fail',
+        status: derived.status,
+        statusSource: derived.statusSource,
+        statusNote: derived.statusNote,
         output,
         exitCode,
         elapsedMs,
@@ -222,6 +302,8 @@ function runCatSubprocess(cat: SubprocessCategory): Promise<CategoryRun> {
         kind: 'subprocess',
         script: cat.script,
         status: 'fail',
+        statusSource: 'exit-code',
+        statusNote: 'spawn error',
         output: output + `\n\nSPAWN ERROR: ${err.message}`,
         exitCode: 127,
         elapsedMs: Date.now() - started,
@@ -286,6 +368,7 @@ async function buildReport(runs: CategoryRun[]): Promise<string> {
   const subprocess = runs.filter(r => r.kind === 'subprocess');
   const passed = subprocess.filter(r => r.status === 'pass').length;
   const failed = subprocess.filter(r => r.status === 'fail').length;
+  const skipped = subprocess.filter(r => r.status === 'skipped').length;
   const programmatic = runs.filter(r => r.kind === 'programmatic').length;
 
   const lines: string[] = [];
@@ -300,18 +383,21 @@ async function buildReport(runs: CategoryRun[]): Promise<string> {
 
   lines.push('## Summary');
   lines.push('');
-  lines.push(`${subprocess.length} subprocess Cats ran. ${passed} passed, ${failed} failed. ${programmatic} programmatic Cats skipped (run via harness).`);
+  lines.push(
+    `${subprocess.length} subprocess Cats ran. ${passed} passed, ${failed} failed, ${skipped} SKIPPED (a skipped Cat is never a pass). ${programmatic} programmatic Cats run via harness.`,
+  );
   lines.push('');
 
-  lines.push('| # | Category | Kind | Status | Elapsed | Notes |');
-  lines.push('|---|----------|------|--------|---------|-------|');
+  lines.push('| # | Category | Kind | Status | Source | Elapsed | Notes |');
+  lines.push('|---|----------|------|--------|--------|---------|-------|');
   for (const r of runs) {
     if (r.kind === 'subprocess') {
-      const status = r.status === 'pass' ? '✓ pass' : '✗ fail';
+      const status = r.status === 'pass' ? '✓ pass' : r.status === 'skipped' ? '⤼ SKIPPED' : '✗ fail';
       const elapsed = `${Math.round(r.elapsedMs / 1000)}s`;
-      lines.push(`| ${r.num} | ${r.name} | subprocess | ${status} | ${elapsed} | \`${r.script}\` |`);
+      const note = [r.statusNote, `\`${r.script}\``].filter(Boolean).join(' — ');
+      lines.push(`| ${r.num} | ${r.name} | subprocess | ${status} | ${r.statusSource} | ${elapsed} | ${note} |`);
     } else {
-      lines.push(`| ${r.num} | ${r.name} | programmatic | — | — | run via harness |`);
+      lines.push(`| ${r.num} | ${r.name} | programmatic | — | n/a | — | run via harness |`);
     }
   }
   lines.push('');
@@ -403,8 +489,9 @@ async function main() {
     .map(c => ({
       num: c.num,
       name: c.name,
-      kind: 'programmatic',
-      status: 'programmatic',
+      kind: 'programmatic' as const,
+      status: 'programmatic' as const,
+      statusSource: 'n/a' as const,
       output: c.reason,
       exitCode: 0,
       elapsedMs: 0,
@@ -420,12 +507,24 @@ async function main() {
 
   // eslint-disable-next-line no-console
   console.log(`\nReport written to ${reportPath}`);
+  const skippedRuns = subprocessRuns.filter(r => r.status === 'skipped');
   // eslint-disable-next-line no-console
   console.log(
-    `${subprocessRuns.filter(r => r.status === 'pass').length}/${subprocessRuns.length} subprocess Cats passed.`,
+    `${subprocessRuns.filter(r => r.status === 'pass').length}/${subprocessRuns.length} subprocess Cats passed` +
+      (skippedRuns.length > 0 ? `, ${skippedRuns.length} SKIPPED (${skippedRuns.map(r => `Cat ${r.num}`).join(', ')})` : '') + '.',
   );
 
+  // Exit policy (WS0): failures always fail the run. Skips also fail it
+  // unless explicitly acknowledged — a benchmark that silently shrinks is
+  // how the cat11 always-pass bug shipped. Set BRAINBENCH_ALLOW_SKIP=1 to
+  // acknowledge expected skips (e.g. keyless environments).
+  const allowSkip = process.env.BRAINBENCH_ALLOW_SKIP === '1';
   if (subprocessRuns.some(r => r.status === 'fail')) process.exit(1);
+  if (skippedRuns.length > 0 && !allowSkip) {
+    // eslint-disable-next-line no-console
+    console.error('Skipped Cats present and BRAINBENCH_ALLOW_SKIP is not set — failing the run.');
+    process.exit(2);
+  }
 }
 
 if (import.meta.main) {
