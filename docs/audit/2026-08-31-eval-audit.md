@@ -50,7 +50,7 @@ remediation plan.
    were quietly reranked; the shootout shell script's env-prefix expansion
    bug killed 4 of 7 cells with exit 127 while printing "done".
 
-## What changed (BrainBench v0.3.0 — scores not comparable to v0.2.x)
+## What changed (BrainBench v0.4.0 — scores not comparable to v0.3.x/v0.2.x)
 
 - **Contracts:** every runner writes a validated receipt
   (`run_status` / `verdict` / typed `failure_origin`); the umbrella runner

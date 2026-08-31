@@ -1,5 +1,5 @@
 /**
- * Shared ranking-metric primitives + per-benchmark wrappers (BrainBench v0.3.0).
+ * Shared ranking-metric primitives + per-benchmark wrappers (BrainBench v0.4.0).
  *
  * One denominator policy, one place to test. This file replaces the ~7
  * divergent recall/precision implementations that previously lived in

@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "transcript_id": "coding-reflection-04",
+  "scenario": "coding-reflection",
+  "variant": "long-noisy",
+  "expected_triage": "high",
+  "session_id": "cat35-coding-reflection-04",
+  "base_ts": "2026-08-02T15:00:00.000Z",
+  "entities": [
+    "concepts/quartzlane",
+    "people/casper-hale"
+  ],
+  "items": [
+    {
+      "item_id": "coding-reflection-04-g01",
+      "kind": "fact",
+      "statement": "QL-4620: quartzlane query latency roughly doubled after the tokenizer refactor.",
+      "verbatim_anchor": "latency basically doubled right after the tokenizer refactor",
+      "notability": "high",
+      "planted_turn": 2,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "coding-reflection-04-g02",
+      "kind": "fact",
+      "statement": "Profiling showed the quartzlane ngram splitter recompiling its pattern on every call.",
+      "verbatim_anchor": "the ngram splitter recompiles its pattern on every single call",
+      "notability": "high",
+      "planted_turn": 5,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "coding-reflection-04-g03",
+      "kind": "decision",
+      "statement": "The user indicated shipping a compiled-pattern cache as the fix for the quartzlane tokenizer.",
+      "verbatim_anchor": "ship the compiled pattern cache, that is the fix",
+      "notability": "high",
+      "planted_turn": 8,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "coding-reflection-04-g04",
+      "kind": "decision",
+      "statement": "The user indicated reverting the strategy interface added in the refactor.",
+      "verbatim_anchor": "revert the strategy interface, it bought us nothing",
+      "notability": "medium",
+      "planted_turn": 10,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "coding-reflection-04-g05",
+      "kind": "fact",
+      "statement": "With the pattern cache, quartzlane p95 query latency fell from 210ms back to 96ms.",
+      "verbatim_anchor": "p95 went from 210 down to 96 with the cache in place",
+      "notability": "medium",
+      "planted_turn": 13,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "coding-reflection-04-g06",
+      "kind": "idea",
+      "statement": "The user wants a perf gate in quartzlane CI that fails p95 regressions over ten percent.",
+      "verbatim_anchor": "a perf gate in CI that fails anything ten percent over baseline",
+      "notability": "medium",
+      "planted_turn": 16,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "coding-reflection-04-g07",
+      "kind": "vibe",
+      "statement": "The user felt embarrassed that the regression shipped in their own refactor.",
+      "verbatim_anchor": "mildly embarrassing that my own refactor did this",
+      "notability": "medium",
+      "planted_turn": 20,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "coding-reflection-04-g08",
+      "kind": "entity",
+      "statement": "Casper Hale flagged the quartzlane latency regression first from his own install.",
+      "verbatim_anchor": "Casper actually flagged it first from his install",
+      "notability": "medium",
+      "planted_turn": 22,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "coding-reflection-04-g09",
+      "kind": "fact",
+      "statement": "The quartzlane benchmark suite covers twelve query shapes.",
+      "verbatim_anchor": "the bench suite covers twelve query shapes",
+      "notability": "low",
+      "planted_turn": 25,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "coding-reflection-04-g10",
+      "kind": "decision",
+      "statement": "The user planned to cut quartzlane release 0.9.1 once the cache merges.",
+      "verbatim_anchor": "cut zero nine one as soon as the cache merges",
+      "notability": "low",
+      "planted_turn": 28,
+      "depth_bucket": "late"
+    }
+  ],
+  "distractors": [
+    {
+      "distractor_id": "coding-reflection-04-d01",
+      "statement": "The profiler UI theme annoyed the user.",
+      "anchor": "this profiler theme is burning my eyes",
+      "planted_turn": 6
+    },
+    {
+      "distractor_id": "coding-reflection-04-d02",
+      "statement": "A courier interrupted mid-benchmark.",
+      "anchor": "courier at the door mid benchmark, one minute",
+      "planted_turn": 2
+    },
+    {
+      "distractor_id": "coding-reflection-04-d03",
+      "statement": "The assistant cleaned trailing whitespace.",
+      "anchor": "stripped some trailing whitespace while in there",
+      "planted_turn": 5
+    },
+    {
+      "distractor_id": "coding-reflection-04-d04",
+      "statement": "The playlist repeated the same song.",
+      "anchor": "this playlist has looped the same song three times",
+      "planted_turn": 24
+    }
+  ],
+  "hazards": []
+}

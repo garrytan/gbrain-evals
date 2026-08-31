@@ -281,9 +281,38 @@ export class ClaudeSonnetWithToolsAdapter implements Adapter {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const anyEngine = s.engine as any;
     if (typeof anyEngine.disconnect === 'function') {
-      await anyEngine.disconnect();
+      // Bounded: at gbrain v0.46.3 disconnect() can leave a never-resolving
+      // promise after the ops-bridge path has run against the engine (an op
+      // context handle survives; observed as bun test hanging forever on this
+      // file — even --timeout can't interrupt it). Eval teardown must never
+      // hang the suite on engine internals; bound then move on.
+      // Promise.resolve().then(...) also swallows a SYNCHRONOUSLY-throwing or
+      // non-promise-returning disconnect (a bare `.disconnect().catch()` would
+      // throw before .catch attaches).
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const bounded = new Promise<void>((resolveP) => {
+        timer = setTimeout(resolveP, teardownDisconnectBoundMs);
+        if (typeof (timer as { unref?: () => void }).unref === 'function') {
+          (timer as unknown as { unref: () => void }).unref();
+        }
+      });
+      const safeDisconnect = Promise.resolve()
+        .then(() => anyEngine.disconnect())
+        .catch(() => {});
+      await Promise.race([safeDisconnect, bounded]);
+      if (timer) clearTimeout(timer);
     }
   }
+}
+
+/**
+ * Teardown disconnect bound (ms). Tests inject a small value via
+ * setTeardownDisconnectBoundMs so the never-resolving-disconnect case doesn't
+ * cost a real 5s of wall clock per suite run.
+ */
+let teardownDisconnectBoundMs = 5000;
+export function setTeardownDisconnectBoundMs(ms: number): void {
+  teardownDisconnectBoundMs = ms;
 }
 
 // ─── Agent loop ───────────────────────────────────────────────────────

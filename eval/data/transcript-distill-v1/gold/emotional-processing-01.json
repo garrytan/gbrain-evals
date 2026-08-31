@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "transcript_id": "emotional-processing-01",
+  "scenario": "emotional-processing",
+  "variant": "prose",
+  "expected_triage": "high",
+  "session_id": "cat35-emotional-processing-01",
+  "base_ts": "2026-08-09T09:00:00.000Z",
+  "entities": [
+    "concepts/quartzlane"
+  ],
+  "items": [
+    {
+      "item_id": "emotional-processing-01-g01",
+      "kind": "vibe",
+      "statement": "The user wakes up already tired and vaguely dreading the day's list this month.",
+      "verbatim_anchor": "lately I wake up already tired and vaguely dreading the list",
+      "notability": "high",
+      "planted_turn": 0,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "emotional-processing-01-g02",
+      "kind": "vibe",
+      "statement": "Maintaining quartzlane has shifted from energizing fun to one more obligation for the user.",
+      "verbatim_anchor": "quartzlane went from the fun thing to another obligation somewhere",
+      "notability": "high",
+      "planted_turn": 2,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "emotional-processing-01-g03",
+      "kind": "decision",
+      "statement": "The user expressed that the laptop stays in the drawer this weekend, both days.",
+      "verbatim_anchor": "this weekend the laptop stays in the drawer, both days",
+      "notability": "high",
+      "planted_turn": 4,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "emotional-processing-01-g04",
+      "kind": "vibe",
+      "statement": "Saying the overwhelm out loud made it feel roughly half the size to the user.",
+      "verbatim_anchor": "saying it out loud makes it feel about half the size",
+      "notability": "medium",
+      "planted_turn": 6,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "emotional-processing-01-g05",
+      "kind": "fact",
+      "statement": "The user counted eleven open commitments across projects and favors.",
+      "verbatim_anchor": "I counted eleven open commitments, no wonder",
+      "notability": "medium",
+      "planted_turn": 8,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "emotional-processing-01-g06",
+      "kind": "decision",
+      "statement": "The user will hand two quartzlane triage duties to the co-maintainer.",
+      "verbatim_anchor": "handing two triage duties to the co maintainer",
+      "notability": "medium",
+      "planted_turn": 10,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "emotional-processing-01-g07",
+      "kind": "idea",
+      "statement": "A quarterly commitments audit could catch overload earlier.",
+      "verbatim_anchor": "an audit of commitments every quarter would catch this earlier",
+      "notability": "low",
+      "planted_turn": 11,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "emotional-processing-01-g08",
+      "kind": "fact",
+      "statement": "The user's last real day off was nine weeks ago.",
+      "verbatim_anchor": "the last real day off was nine weeks back",
+      "notability": "low",
+      "planted_turn": 12,
+      "depth_bucket": "late"
+    }
+  ],
+  "distractors": [
+    {
+      "distractor_id": "emotional-processing-01-d01",
+      "statement": "The tea over-steeped.",
+      "anchor": "over steeped this tea into bitterness, fitting",
+      "planted_turn": 12
+    },
+    {
+      "distractor_id": "emotional-processing-01-d02",
+      "statement": "A cat walked across the keyboard.",
+      "anchor": "the cat just contributed a row of j's",
+      "planted_turn": 12
+    },
+    {
+      "distractor_id": "emotional-processing-01-d03",
+      "statement": "The assistant adjusted note formatting.",
+      "anchor": "cleaned up the note spacing a touch",
+      "planted_turn": 9
+    }
+  ],
+  "hazards": []
+}

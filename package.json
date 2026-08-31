@@ -1,6 +1,6 @@
 {
   "name": "gbrain-evals",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "BrainBench \u2014 public benchmark for personal knowledge agent stacks. Consumes gbrain as a library.",
   "type": "module",
   "license": "MIT",
@@ -23,7 +23,12 @@
     "eval:brainbench:smoke": "BRAINBENCH_N=1 BRAINBENCH_CONCURRENCY=2 bun eval/runner/all.ts",
     "eval:brainbench:published": "BRAINBENCH_N=10 BRAINBENCH_CONCURRENCY=2 bun eval/runner/all.ts",
     "eval:cat6": "bun eval/runner/cat6-prose-scale.ts",
-    "eval:cat11": "bun eval/runner/cat11-multimodal.ts"
+    "eval:cat11": "bun eval/runner/cat11-multimodal.ts",
+    "postinstall": "bun scripts/postinstall-pglite-link.ts",
+    "eval:cat35": "CAT35_FULL=1 bun eval/runner/cat35-transcript-distill.ts",
+    "eval:cat35:smoke": "bun eval/runner/cat35-transcript-distill.ts",
+    "eval:generate-transcript-distill": "bun eval/generators/transcript-distill-gen.ts",
+    "eval:generate-transcript-distill:dry": "bun eval/generators/transcript-distill-gen.ts --dry-run"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",

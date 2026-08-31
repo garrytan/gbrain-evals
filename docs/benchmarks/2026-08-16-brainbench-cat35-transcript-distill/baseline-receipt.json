@@ -1,0 +1,5812 @@
+{
+  "schema_version": 1,
+  "cat": "cat35-transcript-distill",
+  "mode": "full",
+  "gbrain_version": "0.46.3.0",
+  "gbrain_sha": "cc3e284316d6f0d66a3d73cddb680e8803d914be",
+  "timestamp": "2026-08-25T15:56:18.250Z",
+  "corpus": "transcript-distill-v1",
+  "corpus_sha": "5fce384e57839be4d9adc231849718463af5235061b698576f63ff587cd22eef",
+  "judge_model": "claude-sonnet-4-6",
+  "judge_prompt_version": "2026-08-16-v1",
+  "config_snapshot": {
+    "dream_model": "anthropic:claude-sonnet-4-6",
+    "triage_model": "anthropic:claude-haiku-4-5",
+    "facts_model": "anthropic:claude-sonnet-4-6",
+    "max_turns": 16,
+    "triage_threshold": 0.5,
+    "subagent_timeout_ms": 600000,
+    "dream_concurrency": 2
+  },
+  "lanes": [
+    "verbatim",
+    "facts",
+    "dream"
+  ],
+  "transcripts": [
+    "coding-reflection-01",
+    "coding-reflection-02",
+    "coding-reflection-03",
+    "coding-reflection-04",
+    "emotional-processing-01",
+    "emotional-processing-02",
+    "emotional-processing-03",
+    "emotional-processing-04",
+    "mixed-routine-signal-01",
+    "mixed-routine-signal-02",
+    "mixed-routine-signal-03",
+    "mixed-routine-signal-04",
+    "people-deal-01",
+    "people-deal-02",
+    "people-deal-03",
+    "people-deal-04",
+    "pure-routine-01",
+    "pure-routine-02",
+    "pure-routine-03",
+    "pure-routine-04",
+    "startup-ideation-01",
+    "startup-ideation-02",
+    "startup-ideation-03",
+    "startup-ideation-04"
+  ],
+  "per_item": [
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-01-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-01-g02",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-01-g03",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-01-g04",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-01-g05",
+      "kind": "entity",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-01-g06",
+      "kind": "vibe",
+      "notability": "high",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-01-g07",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-01-g08",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-01-g09",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "facts",
+      "item_id": "coding-reflection-01-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "facts",
+      "item_id": "coding-reflection-01-g02",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "facts",
+      "item_id": "coding-reflection-01-g03",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "facts",
+      "item_id": "coding-reflection-01-g04",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "facts",
+      "item_id": "coding-reflection-01-g05",
+      "kind": "entity",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "facts",
+      "item_id": "coding-reflection-01-g06",
+      "kind": "vibe",
+      "notability": "high",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "facts",
+      "item_id": "coding-reflection-01-g07",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "facts",
+      "item_id": "coding-reflection-01-g08",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "facts",
+      "item_id": "coding-reflection-01-g09",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "dream",
+      "item_id": "coding-reflection-01-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "dream",
+      "item_id": "coding-reflection-01-g02",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": 0
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "dream",
+      "item_id": "coding-reflection-01-g03",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": 0.5
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "dream",
+      "item_id": "coding-reflection-01-g04",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "dream",
+      "item_id": "coding-reflection-01-g05",
+      "kind": "entity",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "PARTIAL",
+      "joint": 0
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "dream",
+      "item_id": "coding-reflection-01-g06",
+      "kind": "vibe",
+      "notability": "high",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "dream",
+      "item_id": "coding-reflection-01-g07",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "dream",
+      "item_id": "coding-reflection-01-g08",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 0
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "dream",
+      "item_id": "coding-reflection-01-g09",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "coding-reflection-02",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-02-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-02",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-02-g02",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-02",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-02-g03",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-02",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-02-g04",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-02",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-02-g05",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-02",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-02-g06",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-02",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-02-g07",
+      "kind": "entity",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-02",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-02-g08",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-02",
+      "lane": "facts",
+      "item_id": "coding-reflection-02-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-02",
+      "lane": "facts",
+      "item_id": "coding-reflection-02-g02",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-02",
+      "lane": "facts",
+      "item_id": "coding-reflection-02-g03",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-02",
+      "lane": "facts",
+      "item_id": "coding-reflection-02-g04",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-02",
+      "lane": "facts",
+      "item_id": "coding-reflection-02-g05",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-02",
+      "lane": "facts",
+      "item_id": "coding-reflection-02-g06",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-02",
+      "lane": "facts",
+      "item_id": "coding-reflection-02-g07",
+      "kind": "entity",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-02",
+      "lane": "facts",
+      "item_id": "coding-reflection-02-g08",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-02",
+      "lane": "dream",
+      "item_id": "coding-reflection-02-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "coding-reflection-02",
+      "lane": "dream",
+      "item_id": "coding-reflection-02-g02",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "coding-reflection-02",
+      "lane": "dream",
+      "item_id": "coding-reflection-02-g03",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "coding-reflection-02",
+      "lane": "dream",
+      "item_id": "coding-reflection-02-g04",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "coding-reflection-02",
+      "lane": "dream",
+      "item_id": "coding-reflection-02-g05",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "coding-reflection-02",
+      "lane": "dream",
+      "item_id": "coding-reflection-02-g06",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "coding-reflection-02",
+      "lane": "dream",
+      "item_id": "coding-reflection-02-g07",
+      "kind": "entity",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "coding-reflection-02",
+      "lane": "dream",
+      "item_id": "coding-reflection-02-g08",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "coding-reflection-03",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-03-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-03",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-03-g02",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-03",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-03-g03",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-03",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-03-g04",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-03",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-03-g05",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-03",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-03-g06",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-03",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-03-g07",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-03",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-03-g08",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-03",
+      "lane": "facts",
+      "item_id": "coding-reflection-03-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-03",
+      "lane": "facts",
+      "item_id": "coding-reflection-03-g02",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-03",
+      "lane": "facts",
+      "item_id": "coding-reflection-03-g03",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-03",
+      "lane": "facts",
+      "item_id": "coding-reflection-03-g04",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-03",
+      "lane": "facts",
+      "item_id": "coding-reflection-03-g05",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-03",
+      "lane": "facts",
+      "item_id": "coding-reflection-03-g06",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-03",
+      "lane": "facts",
+      "item_id": "coding-reflection-03-g07",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-03",
+      "lane": "facts",
+      "item_id": "coding-reflection-03-g08",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-03",
+      "lane": "dream",
+      "item_id": "coding-reflection-03-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "coding-reflection-03",
+      "lane": "dream",
+      "item_id": "coding-reflection-03-g02",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "coding-reflection-03",
+      "lane": "dream",
+      "item_id": "coding-reflection-03-g03",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "coding-reflection-03",
+      "lane": "dream",
+      "item_id": "coding-reflection-03-g04",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "coding-reflection-03",
+      "lane": "dream",
+      "item_id": "coding-reflection-03-g05",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "coding-reflection-03",
+      "lane": "dream",
+      "item_id": "coding-reflection-03-g06",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "coding-reflection-03",
+      "lane": "dream",
+      "item_id": "coding-reflection-03-g07",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "coding-reflection-03",
+      "lane": "dream",
+      "item_id": "coding-reflection-03-g08",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "coding-reflection-04",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-04-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-04",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-04-g02",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-04",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-04-g03",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-04",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-04-g04",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-04",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-04-g05",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-04",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-04-g06",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-04",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-04-g07",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-04",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-04-g08",
+      "kind": "entity",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-04",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-04-g09",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-04",
+      "lane": "verbatim",
+      "item_id": "coding-reflection-04-g10",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-04",
+      "lane": "facts",
+      "item_id": "coding-reflection-04-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-04",
+      "lane": "facts",
+      "item_id": "coding-reflection-04-g02",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-04",
+      "lane": "facts",
+      "item_id": "coding-reflection-04-g03",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-04",
+      "lane": "facts",
+      "item_id": "coding-reflection-04-g04",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-04",
+      "lane": "facts",
+      "item_id": "coding-reflection-04-g05",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-04",
+      "lane": "facts",
+      "item_id": "coding-reflection-04-g06",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-04",
+      "lane": "facts",
+      "item_id": "coding-reflection-04-g07",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-04",
+      "lane": "facts",
+      "item_id": "coding-reflection-04-g08",
+      "kind": "entity",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-04",
+      "lane": "facts",
+      "item_id": "coding-reflection-04-g09",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-04",
+      "lane": "facts",
+      "item_id": "coding-reflection-04-g10",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "coding-reflection-04",
+      "lane": "dream",
+      "item_id": "coding-reflection-04-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": 0.5
+    },
+    {
+      "transcript_id": "coding-reflection-04",
+      "lane": "dream",
+      "item_id": "coding-reflection-04-g02",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": 0.5
+    },
+    {
+      "transcript_id": "coding-reflection-04",
+      "lane": "dream",
+      "item_id": "coding-reflection-04-g03",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "coding-reflection-04",
+      "lane": "dream",
+      "item_id": "coding-reflection-04-g04",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "coding-reflection-04",
+      "lane": "dream",
+      "item_id": "coding-reflection-04-g05",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "coding-reflection-04",
+      "lane": "dream",
+      "item_id": "coding-reflection-04-g06",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "coding-reflection-04",
+      "lane": "dream",
+      "item_id": "coding-reflection-04-g07",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "coding-reflection-04",
+      "lane": "dream",
+      "item_id": "coding-reflection-04-g08",
+      "kind": "entity",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "coding-reflection-04",
+      "lane": "dream",
+      "item_id": "coding-reflection-04-g09",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "coding-reflection-04",
+      "lane": "dream",
+      "item_id": "coding-reflection-04-g10",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "emotional-processing-01",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-01-g01",
+      "kind": "vibe",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-01",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-01-g02",
+      "kind": "vibe",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-01",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-01-g03",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-01",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-01-g04",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-01",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-01-g05",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-01",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-01-g06",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-01",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-01-g07",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-01",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-01-g08",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-01",
+      "lane": "facts",
+      "item_id": "emotional-processing-01-g01",
+      "kind": "vibe",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-01",
+      "lane": "facts",
+      "item_id": "emotional-processing-01-g02",
+      "kind": "vibe",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-01",
+      "lane": "facts",
+      "item_id": "emotional-processing-01-g03",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-01",
+      "lane": "facts",
+      "item_id": "emotional-processing-01-g04",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-01",
+      "lane": "facts",
+      "item_id": "emotional-processing-01-g05",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-01",
+      "lane": "facts",
+      "item_id": "emotional-processing-01-g06",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-01",
+      "lane": "facts",
+      "item_id": "emotional-processing-01-g07",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-01",
+      "lane": "facts",
+      "item_id": "emotional-processing-01-g08",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-01",
+      "lane": "dream",
+      "item_id": "emotional-processing-01-g01",
+      "kind": "vibe",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "emotional-processing-01",
+      "lane": "dream",
+      "item_id": "emotional-processing-01-g02",
+      "kind": "vibe",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "emotional-processing-01",
+      "lane": "dream",
+      "item_id": "emotional-processing-01-g03",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "emotional-processing-01",
+      "lane": "dream",
+      "item_id": "emotional-processing-01-g04",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "emotional-processing-01",
+      "lane": "dream",
+      "item_id": "emotional-processing-01-g05",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "emotional-processing-01",
+      "lane": "dream",
+      "item_id": "emotional-processing-01-g06",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "emotional-processing-01",
+      "lane": "dream",
+      "item_id": "emotional-processing-01-g07",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 0
+    },
+    {
+      "transcript_id": "emotional-processing-01",
+      "lane": "dream",
+      "item_id": "emotional-processing-01-g08",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "emotional-processing-02",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-02-g01",
+      "kind": "vibe",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-02",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-02-g02",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-02",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-02-g03",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-02",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-02-g04",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-02",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-02-g05",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-02",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-02-g06",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-02",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-02-g07",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-02",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-02-g08",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-02",
+      "lane": "facts",
+      "item_id": "emotional-processing-02-g01",
+      "kind": "vibe",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-02",
+      "lane": "facts",
+      "item_id": "emotional-processing-02-g02",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-02",
+      "lane": "facts",
+      "item_id": "emotional-processing-02-g03",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-02",
+      "lane": "facts",
+      "item_id": "emotional-processing-02-g04",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-02",
+      "lane": "facts",
+      "item_id": "emotional-processing-02-g05",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-02",
+      "lane": "facts",
+      "item_id": "emotional-processing-02-g06",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-02",
+      "lane": "facts",
+      "item_id": "emotional-processing-02-g07",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-02",
+      "lane": "facts",
+      "item_id": "emotional-processing-02-g08",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-02",
+      "lane": "dream",
+      "item_id": "emotional-processing-02-g01",
+      "kind": "vibe",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": 0.5
+    },
+    {
+      "transcript_id": "emotional-processing-02",
+      "lane": "dream",
+      "item_id": "emotional-processing-02-g02",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "emotional-processing-02",
+      "lane": "dream",
+      "item_id": "emotional-processing-02-g03",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 0
+    },
+    {
+      "transcript_id": "emotional-processing-02",
+      "lane": "dream",
+      "item_id": "emotional-processing-02-g04",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "emotional-processing-02",
+      "lane": "dream",
+      "item_id": "emotional-processing-02-g05",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "emotional-processing-02",
+      "lane": "dream",
+      "item_id": "emotional-processing-02-g06",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "PARTIAL",
+      "joint": 0
+    },
+    {
+      "transcript_id": "emotional-processing-02",
+      "lane": "dream",
+      "item_id": "emotional-processing-02-g07",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 0
+    },
+    {
+      "transcript_id": "emotional-processing-02",
+      "lane": "dream",
+      "item_id": "emotional-processing-02-g08",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 0
+    },
+    {
+      "transcript_id": "emotional-processing-03",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-03-g01",
+      "kind": "vibe",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-03",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-03-g02",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-03",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-03-g03",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-03",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-03-g04",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-03",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-03-g05",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-03",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-03-g06",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-03",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-03-g07",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-03",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-03-g08",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-03",
+      "lane": "facts",
+      "item_id": "emotional-processing-03-g01",
+      "kind": "vibe",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-03",
+      "lane": "facts",
+      "item_id": "emotional-processing-03-g02",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-03",
+      "lane": "facts",
+      "item_id": "emotional-processing-03-g03",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-03",
+      "lane": "facts",
+      "item_id": "emotional-processing-03-g04",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-03",
+      "lane": "facts",
+      "item_id": "emotional-processing-03-g05",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-03",
+      "lane": "facts",
+      "item_id": "emotional-processing-03-g06",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-03",
+      "lane": "facts",
+      "item_id": "emotional-processing-03-g07",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-03",
+      "lane": "facts",
+      "item_id": "emotional-processing-03-g08",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-03",
+      "lane": "dream",
+      "item_id": "emotional-processing-03-g01",
+      "kind": "vibe",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "emotional-processing-03",
+      "lane": "dream",
+      "item_id": "emotional-processing-03-g02",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "emotional-processing-03",
+      "lane": "dream",
+      "item_id": "emotional-processing-03-g03",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 0
+    },
+    {
+      "transcript_id": "emotional-processing-03",
+      "lane": "dream",
+      "item_id": "emotional-processing-03-g04",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "emotional-processing-03",
+      "lane": "dream",
+      "item_id": "emotional-processing-03-g05",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "emotional-processing-03",
+      "lane": "dream",
+      "item_id": "emotional-processing-03-g06",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 0
+    },
+    {
+      "transcript_id": "emotional-processing-03",
+      "lane": "dream",
+      "item_id": "emotional-processing-03-g07",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 0
+    },
+    {
+      "transcript_id": "emotional-processing-03",
+      "lane": "dream",
+      "item_id": "emotional-processing-03-g08",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 0
+    },
+    {
+      "transcript_id": "emotional-processing-04",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-04-g01",
+      "kind": "vibe",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-04",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-04-g02",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-04",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-04-g03",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-04",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-04-g04",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-04",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-04-g05",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-04",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-04-g06",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-04",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-04-g07",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-04",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-04-g08",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-04",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-04-g09",
+      "kind": "entity",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-04",
+      "lane": "verbatim",
+      "item_id": "emotional-processing-04-g10",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-04",
+      "lane": "facts",
+      "item_id": "emotional-processing-04-g01",
+      "kind": "vibe",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-04",
+      "lane": "facts",
+      "item_id": "emotional-processing-04-g02",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-04",
+      "lane": "facts",
+      "item_id": "emotional-processing-04-g03",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-04",
+      "lane": "facts",
+      "item_id": "emotional-processing-04-g04",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-04",
+      "lane": "facts",
+      "item_id": "emotional-processing-04-g05",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-04",
+      "lane": "facts",
+      "item_id": "emotional-processing-04-g06",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-04",
+      "lane": "facts",
+      "item_id": "emotional-processing-04-g07",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-04",
+      "lane": "facts",
+      "item_id": "emotional-processing-04-g08",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-04",
+      "lane": "facts",
+      "item_id": "emotional-processing-04-g09",
+      "kind": "entity",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-04",
+      "lane": "facts",
+      "item_id": "emotional-processing-04-g10",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "emotional-processing-04",
+      "lane": "dream",
+      "item_id": "emotional-processing-04-g01",
+      "kind": "vibe",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "emotional-processing-04",
+      "lane": "dream",
+      "item_id": "emotional-processing-04-g02",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "emotional-processing-04",
+      "lane": "dream",
+      "item_id": "emotional-processing-04-g03",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": 0
+    },
+    {
+      "transcript_id": "emotional-processing-04",
+      "lane": "dream",
+      "item_id": "emotional-processing-04-g04",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "emotional-processing-04",
+      "lane": "dream",
+      "item_id": "emotional-processing-04-g05",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 0
+    },
+    {
+      "transcript_id": "emotional-processing-04",
+      "lane": "dream",
+      "item_id": "emotional-processing-04-g06",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "emotional-processing-04",
+      "lane": "dream",
+      "item_id": "emotional-processing-04-g07",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 0
+    },
+    {
+      "transcript_id": "emotional-processing-04",
+      "lane": "dream",
+      "item_id": "emotional-processing-04-g08",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "emotional-processing-04",
+      "lane": "dream",
+      "item_id": "emotional-processing-04-g09",
+      "kind": "entity",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "PARTIAL",
+      "joint": 0.5
+    },
+    {
+      "transcript_id": "emotional-processing-04",
+      "lane": "dream",
+      "item_id": "emotional-processing-04-g10",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "mixed-routine-signal-01",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-01-g01",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-01",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-01-g02",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-01",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-01-g03",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-01",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-01-g04",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-01",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-01-g05",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-01",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-01-g06",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-01",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-01-g07",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-01",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-01-g08",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-01",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-01-g01",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-01",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-01-g02",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-01",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-01-g03",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-01",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-01-g04",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-01",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-01-g05",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-01",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-01-g06",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-01",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-01-g07",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-01",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-01-g08",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-01",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-01-g01",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "mixed-routine-signal-01",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-01-g02",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "mixed-routine-signal-01",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-01-g03",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "mixed-routine-signal-01",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-01-g04",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "mixed-routine-signal-01",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-01-g05",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "mixed-routine-signal-01",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-01-g06",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "mixed-routine-signal-01",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-01-g07",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "mixed-routine-signal-01",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-01-g08",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "mixed-routine-signal-02",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-02-g01",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-02",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-02-g02",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-02",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-02-g03",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-02",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-02-g04",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-02",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-02-g05",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-02",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-02-g06",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-02",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-02-g07",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-02",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-02-g08",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-02",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-02-g01",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-02",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-02-g02",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-02",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-02-g03",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-02",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-02-g04",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-02",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-02-g05",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-02",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-02-g06",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-02",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-02-g07",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-02",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-02-g08",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-02",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-02-g01",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "mixed-routine-signal-02",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-02-g02",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "mixed-routine-signal-02",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-02-g03",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 0
+    },
+    {
+      "transcript_id": "mixed-routine-signal-02",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-02-g04",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "mixed-routine-signal-02",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-02-g05",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "mixed-routine-signal-02",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-02-g06",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "mixed-routine-signal-02",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-02-g07",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "mixed-routine-signal-02",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-02-g08",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 0
+    },
+    {
+      "transcript_id": "mixed-routine-signal-03",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-03-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-03",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-03-g02",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-03",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-03-g03",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-03",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-03-g04",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-03",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-03-g05",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-03",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-03-g06",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-03",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-03-g07",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-03",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-03-g08",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-03",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-03-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-03",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-03-g02",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-03",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-03-g03",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-03",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-03-g04",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-03",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-03-g05",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-03",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-03-g06",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-03",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-03-g07",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-03",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-03-g08",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-03",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-03-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "mixed-routine-signal-03",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-03-g02",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "mixed-routine-signal-03",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-03-g03",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "mixed-routine-signal-03",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-03-g04",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "mixed-routine-signal-03",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-03-g05",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "mixed-routine-signal-03",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-03-g06",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "mixed-routine-signal-03",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-03-g07",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "mixed-routine-signal-03",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-03-g08",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "mixed-routine-signal-04",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-04-g01",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-04",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-04-g02",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-04",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-04-g03",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-04",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-04-g04",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-04",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-04-g05",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-04",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-04-g06",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-04",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-04-g07",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-04",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-04-g08",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-04",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-04-g09",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-04",
+      "lane": "verbatim",
+      "item_id": "mixed-routine-signal-04-g10",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-04",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-04-g01",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-04",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-04-g02",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-04",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-04-g03",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-04",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-04-g04",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-04",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-04-g05",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-04",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-04-g06",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-04",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-04-g07",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-04",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-04-g08",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-04",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-04-g09",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-04",
+      "lane": "facts",
+      "item_id": "mixed-routine-signal-04-g10",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "mixed-routine-signal-04",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-04-g01",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "mixed-routine-signal-04",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-04-g02",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "mixed-routine-signal-04",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-04-g03",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "mixed-routine-signal-04",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-04-g04",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "mixed-routine-signal-04",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-04-g05",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "mixed-routine-signal-04",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-04-g06",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "mixed-routine-signal-04",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-04-g07",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "mixed-routine-signal-04",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-04-g08",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "mixed-routine-signal-04",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-04-g09",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "mixed-routine-signal-04",
+      "lane": "dream",
+      "item_id": "mixed-routine-signal-04-g10",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "verbatim",
+      "item_id": "people-deal-01-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "verbatim",
+      "item_id": "people-deal-01-g02",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "verbatim",
+      "item_id": "people-deal-01-g03",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "verbatim",
+      "item_id": "people-deal-01-g04",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "verbatim",
+      "item_id": "people-deal-01-g05",
+      "kind": "entity",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "verbatim",
+      "item_id": "people-deal-01-g06",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "verbatim",
+      "item_id": "people-deal-01-g07",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "verbatim",
+      "item_id": "people-deal-01-g08",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "verbatim",
+      "item_id": "people-deal-01-g09",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "facts",
+      "item_id": "people-deal-01-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "facts",
+      "item_id": "people-deal-01-g02",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "facts",
+      "item_id": "people-deal-01-g03",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "facts",
+      "item_id": "people-deal-01-g04",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "facts",
+      "item_id": "people-deal-01-g05",
+      "kind": "entity",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "facts",
+      "item_id": "people-deal-01-g06",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "facts",
+      "item_id": "people-deal-01-g07",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "facts",
+      "item_id": "people-deal-01-g08",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "facts",
+      "item_id": "people-deal-01-g09",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "dream",
+      "item_id": "people-deal-01-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": 0.5
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "dream",
+      "item_id": "people-deal-01-g02",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "dream",
+      "item_id": "people-deal-01-g03",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "dream",
+      "item_id": "people-deal-01-g04",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "dream",
+      "item_id": "people-deal-01-g05",
+      "kind": "entity",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "dream",
+      "item_id": "people-deal-01-g06",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "dream",
+      "item_id": "people-deal-01-g07",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "dream",
+      "item_id": "people-deal-01-g08",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "dream",
+      "item_id": "people-deal-01-g09",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "people-deal-02",
+      "lane": "verbatim",
+      "item_id": "people-deal-02-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-02",
+      "lane": "verbatim",
+      "item_id": "people-deal-02-g02",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-02",
+      "lane": "verbatim",
+      "item_id": "people-deal-02-g03",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-02",
+      "lane": "verbatim",
+      "item_id": "people-deal-02-g04",
+      "kind": "vibe",
+      "notability": "high",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-02",
+      "lane": "verbatim",
+      "item_id": "people-deal-02-g05",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-02",
+      "lane": "verbatim",
+      "item_id": "people-deal-02-g06",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-02",
+      "lane": "verbatim",
+      "item_id": "people-deal-02-g07",
+      "kind": "entity",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-02",
+      "lane": "verbatim",
+      "item_id": "people-deal-02-g08",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-02",
+      "lane": "facts",
+      "item_id": "people-deal-02-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-02",
+      "lane": "facts",
+      "item_id": "people-deal-02-g02",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-02",
+      "lane": "facts",
+      "item_id": "people-deal-02-g03",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-02",
+      "lane": "facts",
+      "item_id": "people-deal-02-g04",
+      "kind": "vibe",
+      "notability": "high",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-02",
+      "lane": "facts",
+      "item_id": "people-deal-02-g05",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-02",
+      "lane": "facts",
+      "item_id": "people-deal-02-g06",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-02",
+      "lane": "facts",
+      "item_id": "people-deal-02-g07",
+      "kind": "entity",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-02",
+      "lane": "facts",
+      "item_id": "people-deal-02-g08",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-02",
+      "lane": "dream",
+      "item_id": "people-deal-02-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "JUDGE_FAILED",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-02",
+      "lane": "dream",
+      "item_id": "people-deal-02-g02",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "JUDGE_FAILED",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-02",
+      "lane": "dream",
+      "item_id": "people-deal-02-g03",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "JUDGE_FAILED",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-02",
+      "lane": "dream",
+      "item_id": "people-deal-02-g04",
+      "kind": "vibe",
+      "notability": "high",
+      "depth_bucket": "middle",
+      "status": "JUDGE_FAILED",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-02",
+      "lane": "dream",
+      "item_id": "people-deal-02-g05",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "JUDGE_FAILED",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-02",
+      "lane": "dream",
+      "item_id": "people-deal-02-g06",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "JUDGE_FAILED",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-02",
+      "lane": "dream",
+      "item_id": "people-deal-02-g07",
+      "kind": "entity",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "JUDGE_FAILED",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-02",
+      "lane": "dream",
+      "item_id": "people-deal-02-g08",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "JUDGE_FAILED",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-03",
+      "lane": "verbatim",
+      "item_id": "people-deal-03-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-03",
+      "lane": "verbatim",
+      "item_id": "people-deal-03-g02",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-03",
+      "lane": "verbatim",
+      "item_id": "people-deal-03-g03",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-03",
+      "lane": "verbatim",
+      "item_id": "people-deal-03-g04",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-03",
+      "lane": "verbatim",
+      "item_id": "people-deal-03-g05",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-03",
+      "lane": "verbatim",
+      "item_id": "people-deal-03-g06",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-03",
+      "lane": "verbatim",
+      "item_id": "people-deal-03-g07",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-03",
+      "lane": "verbatim",
+      "item_id": "people-deal-03-g08",
+      "kind": "entity",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-03",
+      "lane": "facts",
+      "item_id": "people-deal-03-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-03",
+      "lane": "facts",
+      "item_id": "people-deal-03-g02",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-03",
+      "lane": "facts",
+      "item_id": "people-deal-03-g03",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-03",
+      "lane": "facts",
+      "item_id": "people-deal-03-g04",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-03",
+      "lane": "facts",
+      "item_id": "people-deal-03-g05",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-03",
+      "lane": "facts",
+      "item_id": "people-deal-03-g06",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-03",
+      "lane": "facts",
+      "item_id": "people-deal-03-g07",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-03",
+      "lane": "facts",
+      "item_id": "people-deal-03-g08",
+      "kind": "entity",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-03",
+      "lane": "dream",
+      "item_id": "people-deal-03-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": 0.5
+    },
+    {
+      "transcript_id": "people-deal-03",
+      "lane": "dream",
+      "item_id": "people-deal-03-g02",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "people-deal-03",
+      "lane": "dream",
+      "item_id": "people-deal-03-g03",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "people-deal-03",
+      "lane": "dream",
+      "item_id": "people-deal-03-g04",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "people-deal-03",
+      "lane": "dream",
+      "item_id": "people-deal-03-g05",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "people-deal-03",
+      "lane": "dream",
+      "item_id": "people-deal-03-g06",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "people-deal-03",
+      "lane": "dream",
+      "item_id": "people-deal-03-g07",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "people-deal-03",
+      "lane": "dream",
+      "item_id": "people-deal-03-g08",
+      "kind": "entity",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "people-deal-04",
+      "lane": "verbatim",
+      "item_id": "people-deal-04-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-04",
+      "lane": "verbatim",
+      "item_id": "people-deal-04-g02",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-04",
+      "lane": "verbatim",
+      "item_id": "people-deal-04-g03",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-04",
+      "lane": "verbatim",
+      "item_id": "people-deal-04-g04",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-04",
+      "lane": "verbatim",
+      "item_id": "people-deal-04-g05",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-04",
+      "lane": "verbatim",
+      "item_id": "people-deal-04-g06",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-04",
+      "lane": "verbatim",
+      "item_id": "people-deal-04-g07",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-04",
+      "lane": "verbatim",
+      "item_id": "people-deal-04-g08",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-04",
+      "lane": "verbatim",
+      "item_id": "people-deal-04-g09",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-04",
+      "lane": "verbatim",
+      "item_id": "people-deal-04-g10",
+      "kind": "entity",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-04",
+      "lane": "facts",
+      "item_id": "people-deal-04-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-04",
+      "lane": "facts",
+      "item_id": "people-deal-04-g02",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-04",
+      "lane": "facts",
+      "item_id": "people-deal-04-g03",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-04",
+      "lane": "facts",
+      "item_id": "people-deal-04-g04",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-04",
+      "lane": "facts",
+      "item_id": "people-deal-04-g05",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-04",
+      "lane": "facts",
+      "item_id": "people-deal-04-g06",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-04",
+      "lane": "facts",
+      "item_id": "people-deal-04-g07",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-04",
+      "lane": "facts",
+      "item_id": "people-deal-04-g08",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-04",
+      "lane": "facts",
+      "item_id": "people-deal-04-g09",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-04",
+      "lane": "facts",
+      "item_id": "people-deal-04-g10",
+      "kind": "entity",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "people-deal-04",
+      "lane": "dream",
+      "item_id": "people-deal-04-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": 0.5
+    },
+    {
+      "transcript_id": "people-deal-04",
+      "lane": "dream",
+      "item_id": "people-deal-04-g02",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "people-deal-04",
+      "lane": "dream",
+      "item_id": "people-deal-04-g03",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "people-deal-04",
+      "lane": "dream",
+      "item_id": "people-deal-04-g04",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "people-deal-04",
+      "lane": "dream",
+      "item_id": "people-deal-04-g05",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "PARTIAL",
+      "joint": 0.5
+    },
+    {
+      "transcript_id": "people-deal-04",
+      "lane": "dream",
+      "item_id": "people-deal-04-g06",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "people-deal-04",
+      "lane": "dream",
+      "item_id": "people-deal-04-g07",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "PARTIAL",
+      "joint": 0.5
+    },
+    {
+      "transcript_id": "people-deal-04",
+      "lane": "dream",
+      "item_id": "people-deal-04-g08",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 0
+    },
+    {
+      "transcript_id": "people-deal-04",
+      "lane": "dream",
+      "item_id": "people-deal-04-g09",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "people-deal-04",
+      "lane": "dream",
+      "item_id": "people-deal-04-g10",
+      "kind": "entity",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-01-g01",
+      "kind": "idea",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-01-g02",
+      "kind": "idea",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-01-g03",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-01-g04",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-01-g05",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-01-g06",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-01-g07",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-01-g08",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-01-g09",
+      "kind": "entity",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "facts",
+      "item_id": "startup-ideation-01-g01",
+      "kind": "idea",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "facts",
+      "item_id": "startup-ideation-01-g02",
+      "kind": "idea",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "facts",
+      "item_id": "startup-ideation-01-g03",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "facts",
+      "item_id": "startup-ideation-01-g04",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "facts",
+      "item_id": "startup-ideation-01-g05",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "facts",
+      "item_id": "startup-ideation-01-g06",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "facts",
+      "item_id": "startup-ideation-01-g07",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "facts",
+      "item_id": "startup-ideation-01-g08",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "facts",
+      "item_id": "startup-ideation-01-g09",
+      "kind": "entity",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "dream",
+      "item_id": "startup-ideation-01-g01",
+      "kind": "idea",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": 0
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "dream",
+      "item_id": "startup-ideation-01-g02",
+      "kind": "idea",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "dream",
+      "item_id": "startup-ideation-01-g03",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "dream",
+      "item_id": "startup-ideation-01-g04",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "dream",
+      "item_id": "startup-ideation-01-g05",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "dream",
+      "item_id": "startup-ideation-01-g06",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "dream",
+      "item_id": "startup-ideation-01-g07",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "PARTIAL",
+      "joint": 0.5
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "dream",
+      "item_id": "startup-ideation-01-g08",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "dream",
+      "item_id": "startup-ideation-01-g09",
+      "kind": "entity",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "startup-ideation-02",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-02-g01",
+      "kind": "idea",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-02",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-02-g02",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-02",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-02-g03",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-02",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-02-g04",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-02",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-02-g05",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-02",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-02-g06",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-02",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-02-g07",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-02",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-02-g08",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-02",
+      "lane": "facts",
+      "item_id": "startup-ideation-02-g01",
+      "kind": "idea",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-02",
+      "lane": "facts",
+      "item_id": "startup-ideation-02-g02",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-02",
+      "lane": "facts",
+      "item_id": "startup-ideation-02-g03",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-02",
+      "lane": "facts",
+      "item_id": "startup-ideation-02-g04",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-02",
+      "lane": "facts",
+      "item_id": "startup-ideation-02-g05",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-02",
+      "lane": "facts",
+      "item_id": "startup-ideation-02-g06",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-02",
+      "lane": "facts",
+      "item_id": "startup-ideation-02-g07",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-02",
+      "lane": "facts",
+      "item_id": "startup-ideation-02-g08",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-02",
+      "lane": "dream",
+      "item_id": "startup-ideation-02-g01",
+      "kind": "idea",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "startup-ideation-02",
+      "lane": "dream",
+      "item_id": "startup-ideation-02-g02",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "startup-ideation-02",
+      "lane": "dream",
+      "item_id": "startup-ideation-02-g03",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 0
+    },
+    {
+      "transcript_id": "startup-ideation-02",
+      "lane": "dream",
+      "item_id": "startup-ideation-02-g04",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "startup-ideation-02",
+      "lane": "dream",
+      "item_id": "startup-ideation-02-g05",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "startup-ideation-02",
+      "lane": "dream",
+      "item_id": "startup-ideation-02-g06",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 0
+    },
+    {
+      "transcript_id": "startup-ideation-02",
+      "lane": "dream",
+      "item_id": "startup-ideation-02-g07",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "PARTIAL",
+      "joint": 0.5
+    },
+    {
+      "transcript_id": "startup-ideation-02",
+      "lane": "dream",
+      "item_id": "startup-ideation-02-g08",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "startup-ideation-03",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-03-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-03",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-03-g02",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-03",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-03-g03",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-03",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-03-g04",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-03",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-03-g05",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-03",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-03-g06",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-03",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-03-g07",
+      "kind": "entity",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-03",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-03-g08",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-03",
+      "lane": "facts",
+      "item_id": "startup-ideation-03-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-03",
+      "lane": "facts",
+      "item_id": "startup-ideation-03-g02",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-03",
+      "lane": "facts",
+      "item_id": "startup-ideation-03-g03",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-03",
+      "lane": "facts",
+      "item_id": "startup-ideation-03-g04",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-03",
+      "lane": "facts",
+      "item_id": "startup-ideation-03-g05",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-03",
+      "lane": "facts",
+      "item_id": "startup-ideation-03-g06",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-03",
+      "lane": "facts",
+      "item_id": "startup-ideation-03-g07",
+      "kind": "entity",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-03",
+      "lane": "facts",
+      "item_id": "startup-ideation-03-g08",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-03",
+      "lane": "dream",
+      "item_id": "startup-ideation-03-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "startup-ideation-03",
+      "lane": "dream",
+      "item_id": "startup-ideation-03-g02",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "startup-ideation-03",
+      "lane": "dream",
+      "item_id": "startup-ideation-03-g03",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 0
+    },
+    {
+      "transcript_id": "startup-ideation-03",
+      "lane": "dream",
+      "item_id": "startup-ideation-03-g04",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "startup-ideation-03",
+      "lane": "dream",
+      "item_id": "startup-ideation-03-g05",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "startup-ideation-03",
+      "lane": "dream",
+      "item_id": "startup-ideation-03-g06",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "startup-ideation-03",
+      "lane": "dream",
+      "item_id": "startup-ideation-03-g07",
+      "kind": "entity",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 0
+    },
+    {
+      "transcript_id": "startup-ideation-03",
+      "lane": "dream",
+      "item_id": "startup-ideation-03-g08",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 0
+    },
+    {
+      "transcript_id": "startup-ideation-04",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-04-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-04",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-04-g02",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-04",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-04-g03",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-04",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-04-g04",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-04",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-04-g05",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-04",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-04-g06",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-04",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-04-g07",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-04",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-04-g08",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-04",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-04-g09",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-04",
+      "lane": "verbatim",
+      "item_id": "startup-ideation-04-g10",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-04",
+      "lane": "facts",
+      "item_id": "startup-ideation-04-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-04",
+      "lane": "facts",
+      "item_id": "startup-ideation-04-g02",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-04",
+      "lane": "facts",
+      "item_id": "startup-ideation-04-g03",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-04",
+      "lane": "facts",
+      "item_id": "startup-ideation-04-g04",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "PARTIAL",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-04",
+      "lane": "facts",
+      "item_id": "startup-ideation-04-g05",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-04",
+      "lane": "facts",
+      "item_id": "startup-ideation-04-g06",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-04",
+      "lane": "facts",
+      "item_id": "startup-ideation-04-g07",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-04",
+      "lane": "facts",
+      "item_id": "startup-ideation-04-g08",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-04",
+      "lane": "facts",
+      "item_id": "startup-ideation-04-g09",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-04",
+      "lane": "facts",
+      "item_id": "startup-ideation-04-g10",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": null
+    },
+    {
+      "transcript_id": "startup-ideation-04",
+      "lane": "dream",
+      "item_id": "startup-ideation-04-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "startup-ideation-04",
+      "lane": "dream",
+      "item_id": "startup-ideation-04-g02",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "startup-ideation-04",
+      "lane": "dream",
+      "item_id": "startup-ideation-04-g03",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": 0.5
+    },
+    {
+      "transcript_id": "startup-ideation-04",
+      "lane": "dream",
+      "item_id": "startup-ideation-04-g04",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "PARTIAL",
+      "joint": 0.5
+    },
+    {
+      "transcript_id": "startup-ideation-04",
+      "lane": "dream",
+      "item_id": "startup-ideation-04-g05",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "startup-ideation-04",
+      "lane": "dream",
+      "item_id": "startup-ideation-04-g06",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "startup-ideation-04",
+      "lane": "dream",
+      "item_id": "startup-ideation-04-g07",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "startup-ideation-04",
+      "lane": "dream",
+      "item_id": "startup-ideation-04-g08",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "startup-ideation-04",
+      "lane": "dream",
+      "item_id": "startup-ideation-04-g09",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "startup-ideation-04",
+      "lane": "dream",
+      "item_id": "startup-ideation-04-g10",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "FULL",
+      "joint": 1
+    }
+  ],
+  "coverage_by_lane": {
+    "verbatim": {
+      "macro": 0.9314583333333335,
+      "micro": 0.9277456647398844,
+      "strict": 0.861271676300578,
+      "partial_rate": 0.1329479768786127,
+      "ci_lo": 0.8991666666666667,
+      "ci_hi": 0.9625
+    },
+    "facts": {
+      "macro": 0.6075694444444444,
+      "micro": 0.5895953757225434,
+      "strict": 0.5144508670520231,
+      "partial_rate": 0.15028901734104047,
+      "ci_lo": 0.49645833333333333,
+      "ci_hi": 0.7120833333333334
+    },
+    "dream": {
+      "macro": 0.6145833333333334,
+      "micro": 0.615606936416185,
+      "strict": 0.5606936416184971,
+      "partial_rate": 0.10982658959537572,
+      "ci_lo": 0.44951388888888894,
+      "ci_hi": 0.7761111111111112
+    }
+  },
+  "coverage_by_kind": {
+    "fact": {
+      "verbatim": 0.8852459016393442,
+      "facts": 0.6885245901639344,
+      "dream": 0.5245901639344263
+    },
+    "decision": {
+      "verbatim": 0.9545454545454546,
+      "facts": 0.6931818181818182,
+      "dream": 0.6704545454545454
+    },
+    "idea": {
+      "verbatim": 1,
+      "facts": 0.38333333333333336,
+      "dream": 0.6
+    },
+    "entity": {
+      "verbatim": 0.75,
+      "facts": 0.5,
+      "dream": 0.7
+    },
+    "vibe": {
+      "verbatim": 0.9642857142857143,
+      "facts": 0.4642857142857143,
+      "dream": 0.7142857142857143
+    }
+  },
+  "coverage_by_notability": {
+    "high": {
+      "verbatim": 0.9021739130434783,
+      "facts": 0.6630434782608695,
+      "dream": 0.6195652173913043
+    },
+    "medium": {
+      "verbatim": 0.9329268292682927,
+      "facts": 0.5975609756097561,
+      "dream": 0.6341463414634146
+    },
+    "low": {
+      "verbatim": 0.9444444444444444,
+      "facts": 0.5,
+      "dream": 0.5777777777777777
+    }
+  },
+  "coverage_by_depth": {
+    "early": {
+      "verbatim": 0.9,
+      "facts": 0.6909090909090909,
+      "dream": 0.5909090909090909
+    },
+    "middle": {
+      "verbatim": 0.9298245614035088,
+      "facts": 0.5701754385964912,
+      "dream": 0.6578947368421053
+    },
+    "late": {
+      "verbatim": 0.9508196721311475,
+      "facts": 0.5163934426229508,
+      "dream": 0.5983606557377049
+    }
+  },
+  "verbatim_quote_fidelity": {
+    "total": 251,
+    "grounded": 114,
+    "rate": 0.4541832669322709
+  },
+  "hallucination": {
+    "facts": {
+      "claims": 221,
+      "verifiable": 197,
+      "ungrounded": 7,
+      "rate": 0.03553299492385787
+    },
+    "dream": {
+      "claims": 704,
+      "verifiable": 512,
+      "ungrounded": 72,
+      "rate": 0.140625
+    }
+  },
+  "distractor_leakage": {
+    "verbatim": {
+      "hits": 83,
+      "confirmed": 83,
+      "rate": 0.9651162790697675
+    },
+    "facts": {
+      "hits": 0,
+      "confirmed": 0,
+      "rate": 0
+    },
+    "dream": {
+      "hits": 3,
+      "confirmed": 0,
+      "rate": 0
+    }
+  },
+  "usability": {
+    "satisfied": 82,
+    "total": 236,
+    "rate": 0.3474576271186441,
+    "per_transcript": [
+      {
+        "transcript_id": "coding-reflection-01",
+        "lane": "verbatim",
+        "satisfied": 0,
+        "total": 6
+      },
+      {
+        "transcript_id": "coding-reflection-01",
+        "lane": "dream",
+        "satisfied": 4,
+        "total": 6
+      },
+      {
+        "transcript_id": "coding-reflection-02",
+        "lane": "verbatim",
+        "satisfied": 0,
+        "total": 6
+      },
+      {
+        "transcript_id": "coding-reflection-03",
+        "lane": "verbatim",
+        "satisfied": 0,
+        "total": 6
+      },
+      {
+        "transcript_id": "coding-reflection-03",
+        "lane": "dream",
+        "satisfied": 5,
+        "total": 6
+      },
+      {
+        "transcript_id": "coding-reflection-04",
+        "lane": "verbatim",
+        "satisfied": 0,
+        "total": 6
+      },
+      {
+        "transcript_id": "coding-reflection-04",
+        "lane": "dream",
+        "satisfied": 6,
+        "total": 6
+      },
+      {
+        "transcript_id": "emotional-processing-01",
+        "lane": "verbatim",
+        "satisfied": 0,
+        "total": 6
+      },
+      {
+        "transcript_id": "emotional-processing-01",
+        "lane": "dream",
+        "satisfied": 5,
+        "total": 6
+      },
+      {
+        "transcript_id": "emotional-processing-02",
+        "lane": "verbatim",
+        "satisfied": 0,
+        "total": 6
+      },
+      {
+        "transcript_id": "emotional-processing-02",
+        "lane": "dream",
+        "satisfied": 5,
+        "total": 6
+      },
+      {
+        "transcript_id": "emotional-processing-03",
+        "lane": "verbatim",
+        "satisfied": 0,
+        "total": 6
+      },
+      {
+        "transcript_id": "emotional-processing-03",
+        "lane": "dream",
+        "satisfied": 5,
+        "total": 6
+      },
+      {
+        "transcript_id": "emotional-processing-04",
+        "lane": "verbatim",
+        "satisfied": 0,
+        "total": 6
+      },
+      {
+        "transcript_id": "emotional-processing-04",
+        "lane": "dream",
+        "satisfied": 6,
+        "total": 6
+      },
+      {
+        "transcript_id": "mixed-routine-signal-01",
+        "lane": "verbatim",
+        "satisfied": 0,
+        "total": 6
+      },
+      {
+        "transcript_id": "mixed-routine-signal-02",
+        "lane": "verbatim",
+        "satisfied": 0,
+        "total": 6
+      },
+      {
+        "transcript_id": "mixed-routine-signal-02",
+        "lane": "dream",
+        "satisfied": 6,
+        "total": 6
+      },
+      {
+        "transcript_id": "mixed-routine-signal-03",
+        "lane": "verbatim",
+        "satisfied": 0,
+        "total": 6
+      },
+      {
+        "transcript_id": "mixed-routine-signal-04",
+        "lane": "verbatim",
+        "satisfied": 0,
+        "total": 6
+      },
+      {
+        "transcript_id": "people-deal-01",
+        "lane": "verbatim",
+        "satisfied": 0,
+        "total": 6
+      },
+      {
+        "transcript_id": "people-deal-01",
+        "lane": "dream",
+        "satisfied": 5,
+        "total": 6
+      },
+      {
+        "transcript_id": "people-deal-02",
+        "lane": "verbatim",
+        "satisfied": 0,
+        "total": 6
+      },
+      {
+        "transcript_id": "people-deal-02",
+        "lane": "dream",
+        "satisfied": 5,
+        "total": 6
+      },
+      {
+        "transcript_id": "people-deal-03",
+        "lane": "verbatim",
+        "satisfied": 0,
+        "total": 6
+      },
+      {
+        "transcript_id": "people-deal-03",
+        "lane": "dream",
+        "satisfied": 5,
+        "total": 6
+      },
+      {
+        "transcript_id": "people-deal-04",
+        "lane": "verbatim",
+        "satisfied": 0,
+        "total": 6
+      },
+      {
+        "transcript_id": "people-deal-04",
+        "lane": "dream",
+        "satisfied": 5,
+        "total": 6
+      },
+      {
+        "transcript_id": "pure-routine-01",
+        "lane": "verbatim",
+        "satisfied": 0,
+        "total": 5
+      },
+      {
+        "transcript_id": "pure-routine-02",
+        "lane": "verbatim",
+        "satisfied": 0,
+        "total": 5
+      },
+      {
+        "transcript_id": "pure-routine-03",
+        "lane": "verbatim",
+        "satisfied": 0,
+        "total": 5
+      },
+      {
+        "transcript_id": "pure-routine-04",
+        "lane": "verbatim",
+        "satisfied": 0,
+        "total": 5
+      },
+      {
+        "transcript_id": "startup-ideation-01",
+        "lane": "verbatim",
+        "satisfied": 0,
+        "total": 6
+      },
+      {
+        "transcript_id": "startup-ideation-01",
+        "lane": "dream",
+        "satisfied": 5,
+        "total": 6
+      },
+      {
+        "transcript_id": "startup-ideation-02",
+        "lane": "verbatim",
+        "satisfied": 0,
+        "total": 6
+      },
+      {
+        "transcript_id": "startup-ideation-02",
+        "lane": "dream",
+        "satisfied": 6,
+        "total": 6
+      },
+      {
+        "transcript_id": "startup-ideation-03",
+        "lane": "verbatim",
+        "satisfied": 0,
+        "total": 6
+      },
+      {
+        "transcript_id": "startup-ideation-03",
+        "lane": "dream",
+        "satisfied": 4,
+        "total": 6
+      },
+      {
+        "transcript_id": "startup-ideation-04",
+        "lane": "verbatim",
+        "satisfied": 0,
+        "total": 6
+      },
+      {
+        "transcript_id": "startup-ideation-04",
+        "lane": "dream",
+        "satisfied": 5,
+        "total": 6
+      }
+    ]
+  },
+  "emission": {
+    "expected_high": 20,
+    "emitted": 16,
+    "rate": 0.8
+  },
+  "compression_ratio_by_lane": {
+    "verbatim": 1.0585993725552878,
+    "facts": 0.14903712407036737,
+    "dream": 0.6377647669438603
+  },
+  "attribution_hazards": [
+    {
+      "hazard_id": "coding-reflection-01-h01",
+      "transcript_id": "coding-reflection-01",
+      "type": "agent-proposed-user-decided",
+      "violated": false
+    },
+    {
+      "hazard_id": "coding-reflection-02-h01",
+      "transcript_id": "coding-reflection-02",
+      "type": "killed-process-not-completed",
+      "violated": null
+    }
+  ],
+  "triage": {
+    "verdicts": [
+      {
+        "transcript_id": "coding-reflection-01",
+        "score": 0.62,
+        "expected": "high"
+      },
+      {
+        "transcript_id": "coding-reflection-02",
+        "score": 0.42,
+        "expected": "high"
+      },
+      {
+        "transcript_id": "coding-reflection-03",
+        "score": 0.72,
+        "expected": "high"
+      },
+      {
+        "transcript_id": "coding-reflection-04",
+        "score": 0.72,
+        "expected": "high"
+      },
+      {
+        "transcript_id": "emotional-processing-01",
+        "score": 0.82,
+        "expected": "high"
+      },
+      {
+        "transcript_id": "emotional-processing-02",
+        "score": 0.78,
+        "expected": "high"
+      },
+      {
+        "transcript_id": "emotional-processing-03",
+        "score": 0.82,
+        "expected": "high"
+      },
+      {
+        "transcript_id": "emotional-processing-04",
+        "score": 0.78,
+        "expected": "high"
+      },
+      {
+        "transcript_id": "mixed-routine-signal-01",
+        "score": 0.32,
+        "expected": "high"
+      },
+      {
+        "transcript_id": "mixed-routine-signal-02",
+        "score": 0.52,
+        "expected": "high"
+      },
+      {
+        "transcript_id": "mixed-routine-signal-03",
+        "score": 0.42,
+        "expected": "high"
+      },
+      {
+        "transcript_id": "mixed-routine-signal-04",
+        "score": 0.32,
+        "expected": "high"
+      },
+      {
+        "transcript_id": "people-deal-01",
+        "score": 0.76,
+        "expected": "high"
+      },
+      {
+        "transcript_id": "people-deal-02",
+        "score": 0.76,
+        "expected": "high"
+      },
+      {
+        "transcript_id": "people-deal-03",
+        "score": 0.76,
+        "expected": "high"
+      },
+      {
+        "transcript_id": "people-deal-04",
+        "score": 0.62,
+        "expected": "high"
+      },
+      {
+        "transcript_id": "pure-routine-01",
+        "score": 0.12,
+        "expected": "low"
+      },
+      {
+        "transcript_id": "pure-routine-02",
+        "score": 0.08,
+        "expected": "low"
+      },
+      {
+        "transcript_id": "pure-routine-03",
+        "score": 0.15,
+        "expected": "low"
+      },
+      {
+        "transcript_id": "pure-routine-04",
+        "score": 0.12,
+        "expected": "low"
+      },
+      {
+        "transcript_id": "startup-ideation-01",
+        "score": 0.82,
+        "expected": "high"
+      },
+      {
+        "transcript_id": "startup-ideation-02",
+        "score": 0.78,
+        "expected": "high"
+      },
+      {
+        "transcript_id": "startup-ideation-03",
+        "score": 0.78,
+        "expected": "high"
+      },
+      {
+        "transcript_id": "startup-ideation-04",
+        "score": 0.78,
+        "expected": "high"
+      }
+    ],
+    "separation": {
+      "high": {
+        "n": 20,
+        "mean": 0.6659999999999999,
+        "min": 0.32,
+        "max": 0.82
+      },
+      "low": {
+        "n": 4,
+        "mean": 0.1175,
+        "min": 0.08,
+        "max": 0.15
+      }
+    },
+    "threshold_curve": [
+      {
+        "threshold": 0.3,
+        "high_pass_rate": 1,
+        "low_pass_rate": 0,
+        "accuracy": 1
+      },
+      {
+        "threshold": 0.5,
+        "high_pass_rate": 0.8,
+        "low_pass_rate": 0,
+        "accuracy": 0.8333333333333334
+      },
+      {
+        "threshold": 0.7,
+        "high_pass_rate": 0.65,
+        "low_pass_rate": 0,
+        "accuracy": 0.7083333333333334
+      }
+    ]
+  },
+  "judge_failed_rate": 0.006289308176100629,
+  "judge_calibration": null,
+  "prior_run": null,
+  "prior_run_skipped_reason": "mode mismatch (prior=b-pre-validity, current=full)",
+  "deltas": null,
+  "item_flips": [],
+  "facts_budget_exhausted": false,
+  "lane_errors": {},
+  "total_cost_usd": 6.2035,
+  "wall_seconds": 1738,
+  "gates": {
+    "verbatim_coverage": false,
+    "judge_failed_rate": true,
+    "dream_emission": true
+  },
+  "gate_pass": false
+}

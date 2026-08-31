@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "transcript_id": "people-deal-04",
+  "scenario": "people-deal",
+  "variant": "long-noisy",
+  "expected_triage": "high",
+  "session_id": "cat35-people-deal-04",
+  "base_ts": "2026-08-06T15:00:00.000Z",
+  "entities": [
+    "companies/lumopact",
+    "people/anouk-verlinden",
+    "companies/vantabrook"
+  ],
+  "items": [
+    {
+      "item_id": "people-deal-04-g01",
+      "kind": "fact",
+      "statement": "Lumopact's ARR is six hundred forty thousand dollars, growing about eleven percent monthly.",
+      "verbatim_anchor": "six forty ARR growing eleven percent a month",
+      "notability": "high",
+      "planted_turn": 1,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "people-deal-04-g02",
+      "kind": "fact",
+      "statement": "Two customers make up fifty-five percent of Lumopact revenue.",
+      "verbatim_anchor": "two logos are fifty five percent of revenue",
+      "notability": "high",
+      "planted_turn": 5,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "people-deal-04-g03",
+      "kind": "fact",
+      "statement": "Lumopact's largest contract can be terminated for convenience with thirty days notice.",
+      "verbatim_anchor": "the biggest contract can walk with thirty days notice",
+      "notability": "medium",
+      "planted_turn": 7,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "people-deal-04-g04",
+      "kind": "decision",
+      "statement": "The user kept their twenty-five-thousand-dollar Lumopact commitment after seeing the concentration risk.",
+      "verbatim_anchor": "the concentration is scary but I am still in at twenty five",
+      "notability": "high",
+      "planted_turn": 10,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "people-deal-04-g05",
+      "kind": "fact",
+      "statement": "Lumopact gross margin lands at seventy-two percent after data costs.",
+      "verbatim_anchor": "gross margin lands at seventy two after data costs",
+      "notability": "medium",
+      "planted_turn": 13,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "people-deal-04-g06",
+      "kind": "vibe",
+      "statement": "The user felt calmer once the data-room numbers matched Anouk's verbal claims.",
+      "verbatim_anchor": "the numbers matching what Anouk said out loud settles my stomach",
+      "notability": "medium",
+      "planted_turn": 16,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "people-deal-04-g07",
+      "kind": "fact",
+      "statement": "Lumopact lost one logo out of eleven in the trailing year.",
+      "verbatim_anchor": "one logo lost out of eleven in the trailing year",
+      "notability": "medium",
+      "planted_turn": 19,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "people-deal-04-g08",
+      "kind": "idea",
+      "statement": "The user wants a reusable red-flag checklist template built from this diligence pass.",
+      "verbatim_anchor": "turn this pass into a reusable red flag checklist",
+      "notability": "low",
+      "planted_turn": 22,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "people-deal-04-g09",
+      "kind": "decision",
+      "statement": "The user set the wire to go out the day after the reference calls, not before.",
+      "verbatim_anchor": "wire goes out the day after the reference calls, not before",
+      "notability": "low",
+      "planted_turn": 24,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "people-deal-04-g10",
+      "kind": "entity",
+      "statement": "Vantabrook's diligence memo matched the user's independent read of Lumopact.",
+      "verbatim_anchor": "Vantabrook's memo lines up with my own read",
+      "notability": "low",
+      "planted_turn": 26,
+      "depth_bucket": "late"
+    }
+  ],
+  "distractors": [
+    {
+      "distractor_id": "people-deal-04-d01",
+      "statement": "The data-room viewer kept logging the user out.",
+      "anchor": "this data room logs me out every ten minutes, maddening",
+      "planted_turn": 18
+    },
+    {
+      "distractor_id": "people-deal-04-d02",
+      "statement": "The user stretched during a long export.",
+      "anchor": "stretching my back while the export chews",
+      "planted_turn": 10
+    },
+    {
+      "distractor_id": "people-deal-04-d03",
+      "statement": "The assistant normalized CSV headers.",
+      "anchor": "normalized the csv headers so the columns line up",
+      "planted_turn": 9
+    },
+    {
+      "distractor_id": "people-deal-04-d04",
+      "statement": "Rain started mid-session.",
+      "anchor": "rain just started hammering the window",
+      "planted_turn": 6
+    }
+  ],
+  "hazards": []
+}

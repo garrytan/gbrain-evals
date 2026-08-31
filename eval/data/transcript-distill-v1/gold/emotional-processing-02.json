@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "transcript_id": "emotional-processing-02",
+  "scenario": "emotional-processing",
+  "variant": "prose",
+  "expected_triage": "high",
+  "session_id": "cat35-emotional-processing-02",
+  "base_ts": "2026-08-09T15:00:00.000Z",
+  "entities": [
+    "people/casper-hale",
+    "concepts/quartzlane"
+  ],
+  "items": [
+    {
+      "item_id": "emotional-processing-02-g01",
+      "kind": "vibe",
+      "statement": "Casper's review comments stung the user far more than the content warranted.",
+      "verbatim_anchor": "his review comments stung way more than they should have",
+      "notability": "high",
+      "planted_turn": 2,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "emotional-processing-02-g02",
+      "kind": "fact",
+      "statement": "Casper left fourteen comments on the user's quartzlane queue PR.",
+      "verbatim_anchor": "fourteen comments on one pr, a personal record",
+      "notability": "medium",
+      "planted_turn": 4,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "emotional-processing-02-g03",
+      "kind": "vibe",
+      "statement": "Underneath the sting, the user fears being seen as a sloppy engineer.",
+      "verbatim_anchor": "under it all I think I am afraid of looking sloppy",
+      "notability": "medium",
+      "planted_turn": 6,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "emotional-processing-02-g04",
+      "kind": "decision",
+      "statement": "The user plans to talk to Casper directly instead of stewing or replying inline.",
+      "verbatim_anchor": "I will just talk to him directly instead of stewing in the thread",
+      "notability": "high",
+      "planted_turn": 8,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "emotional-processing-02-g05",
+      "kind": "vibe",
+      "statement": "Drafting the direct message already made the whole review feel lighter to the user.",
+      "verbatim_anchor": "drafting that message already makes the whole thing feel lighter",
+      "notability": "medium",
+      "planted_turn": 10,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "emotional-processing-02-g06",
+      "kind": "fact",
+      "statement": "On reflection, about half of Casper's review comments were genuinely useful catches.",
+      "verbatim_anchor": "honestly half those comments are real catches",
+      "notability": "medium",
+      "planted_turn": 12,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "emotional-processing-02-g07",
+      "kind": "idea",
+      "statement": "The user wants written review-tone norms for quartzlane contributors.",
+      "verbatim_anchor": "written review tone norms for the repo would help everyone",
+      "notability": "low",
+      "planted_turn": 14,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "emotional-processing-02-g08",
+      "kind": "decision",
+      "statement": "The user set a new rule that hot review threads get a one-day cooling-off period.",
+      "verbatim_anchor": "new rule, hot threads get a one day cooling off",
+      "notability": "low",
+      "planted_turn": 14,
+      "depth_bucket": "late"
+    }
+  ],
+  "distractors": [
+    {
+      "distractor_id": "emotional-processing-02-d01",
+      "statement": "The user skipped breakfast.",
+      "anchor": "skipped breakfast, probably part of the mood",
+      "planted_turn": 14
+    },
+    {
+      "distractor_id": "emotional-processing-02-d02",
+      "statement": "Rain tapped the window throughout.",
+      "anchor": "rain on the window the whole time we talked",
+      "planted_turn": 8
+    },
+    {
+      "distractor_id": "emotional-processing-02-d03",
+      "statement": "The assistant saved a draft.",
+      "anchor": "draft saved, nothing sent yet",
+      "planted_turn": 13
+    }
+  ],
+  "hazards": []
+}

@@ -144,6 +144,23 @@ const CATEGORIES: readonly Category[] = [
     name: 'BrainBench Memory Conformance (cross-harness: know-to-ask / push / write-back / continuity)',
     script: 'eval/runner/cat34-brainbench-memory.ts',
   },
+  {
+    kind: 'subprocess',
+    num: 35,
+    // Safe-by-default: without CAT35_FULL=1 the runner executes its cheap BPRE
+    // smoke (2 transcripts, Haiku, measured ~$0.10) and the receipt carries
+    // mode:'b-pre-validity' — sweep output must NOT be read as a published
+    // result. Only a CAT35_FULL=1 receipt feeds the benchmark page. Note the
+    // gbrain revision seam: Cat 34 resolves an external gbrain checkout while
+    // Cat 35 runs the SHA pinned in package.json — when they differ, one
+    // sweep report spans two gbrain revisions.
+    name: 'Transcript → Brain-Page Distillation Fidelity (verbatim vs facts vs dream)',
+    script: 'eval/runner/cat35-transcript-distill.ts',
+    // 3h: worst-case dream lane alone is 24 × 600s subagent cap / 2 concurrency
+    // = 7200s; a 2h cap could SIGTERM mid-scoring and discard every paid
+    // verdict (the receipt writes at the end).
+    timeoutMs: 10_800_000,
+  },
 ];
 
 interface CategoryRun {

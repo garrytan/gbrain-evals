@@ -30,6 +30,7 @@ const EXPECTED_SCHEMAS = [
   'transcript.schema.json',
   'scorecard.schema.json',
   'evidence-contract.schema.json',
+  'cat35-receipt.schema.json',
 ];
 
 const EXPECTED_GOLD = [
@@ -151,6 +152,63 @@ describe('schema / template coherence', () => {
       readFileSync(join(SCHEMAS_DIR, 'scorecard.schema.json'), 'utf8')
     );
     expect(scorecard.properties.N.enum).toEqual([1, 5, 10]);
+  });
+
+  test('cat35 receipt schema pins the Cat 35 contract constants', () => {
+    const receipt = JSON.parse(
+      readFileSync(join(SCHEMAS_DIR, 'cat35-receipt.schema.json'), 'utf8')
+    );
+    expect(receipt.properties.schema_version.const).toBe(1);
+    expect(receipt.properties.cat.const).toBe('cat35-transcript-distill');
+    expect(receipt.properties.corpus.const).toBe('transcript-distill-v1');
+    expect(receipt.properties.mode.enum).toEqual(['b-pre-validity', 'partial', 'full']);
+    expect(receipt.properties.lanes.items.enum).toEqual(['verbatim', 'facts', 'dream']);
+    expect(receipt.properties.per_item.items.properties.status.enum).toEqual([
+      'FULL',
+      'PARTIAL',
+      'ABSENT',
+      'JUDGE_FAILED',
+    ]);
+    // Forward compat: the runner writes extra fields (judge_calibration,
+    // lane_errors, prior_run_skipped_reason) — top level must stay open.
+    expect(receipt.additionalProperties).toBe(true);
+    // Every required field must be defined in properties (no phantom requires).
+    for (const field of receipt.required) {
+      expect(receipt.properties[field]).toBeDefined();
+    }
+  });
+
+  test('committed cat35 baseline receipt conforms to the receipt schema contract', () => {
+    // The receipt is the contract the chart generator, the published report,
+    // and the E1 delta path all consume. A field rename in the runner with the
+    // schema left behind renders empty charts with every other test green —
+    // this fixture check catches that drift for $0.
+    const schema = JSON.parse(
+      readFileSync(join(SCHEMAS_DIR, 'cat35-receipt.schema.json'), 'utf8')
+    );
+    const receipt = JSON.parse(
+      readFileSync(
+        join(
+          import.meta.dir,
+          '../../docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill/baseline-receipt.json'
+        ),
+        'utf8'
+      )
+    );
+    for (const field of schema.required) {
+      expect(field in receipt, `receipt missing required field: ${field}`).toBe(true);
+    }
+    expect(receipt.schema_version).toBe(1);
+    expect(receipt.cat).toBe('cat35-transcript-distill');
+    expect(['b-pre-validity', 'partial', 'full']).toContain(receipt.mode);
+    const perItemRequired: string[] = schema.properties.per_item.items.required ?? [];
+    for (const row of receipt.per_item) {
+      for (const f of perItemRequired) {
+        expect(f in row, `per_item row missing ${f}`).toBe(true);
+      }
+      expect(['FULL', 'PARTIAL', 'ABSENT', 'JUDGE_FAILED']).toContain(row.status);
+      expect(['verbatim', 'facts', 'dream']).toContain(row.lane);
+    }
   });
 });
 

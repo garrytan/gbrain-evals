@@ -1,0 +1,375 @@
+{
+  "schema_version": 1,
+  "corpus_seed": 350001,
+  "note": "Blank seeded draw (E2). Fill human_verdict in a COPY under docs/benchmarks/<slug>/judge-calibration-<date>.json; this corpus file never mutates post-run.",
+  "entries": [
+    {
+      "slot": "coverage",
+      "item_id_or_ref": "mixed-routine-signal-01-g01",
+      "transcript_id": "mixed-routine-signal-01",
+      "lane_hint": "dream",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "coverage",
+      "item_id_or_ref": "mixed-routine-signal-02-g05",
+      "transcript_id": "mixed-routine-signal-02",
+      "lane_hint": "facts",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "coverage",
+      "item_id_or_ref": "mixed-routine-signal-03-g08",
+      "transcript_id": "mixed-routine-signal-03",
+      "lane_hint": "verbatim",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "coverage",
+      "item_id_or_ref": "emotional-processing-02-g06",
+      "transcript_id": "emotional-processing-02",
+      "lane_hint": "dream",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "coverage",
+      "item_id_or_ref": "coding-reflection-03-g02",
+      "transcript_id": "coding-reflection-03",
+      "lane_hint": "facts",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "coverage",
+      "item_id_or_ref": "startup-ideation-01-g07",
+      "transcript_id": "startup-ideation-01",
+      "lane_hint": "verbatim",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "coverage",
+      "item_id_or_ref": "mixed-routine-signal-04-g10",
+      "transcript_id": "mixed-routine-signal-04",
+      "lane_hint": "dream",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "coverage",
+      "item_id_or_ref": "people-deal-04-g08",
+      "transcript_id": "people-deal-04",
+      "lane_hint": "facts",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "coverage",
+      "item_id_or_ref": "mixed-routine-signal-04-g02",
+      "transcript_id": "mixed-routine-signal-04",
+      "lane_hint": "verbatim",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "coverage",
+      "item_id_or_ref": "coding-reflection-02-g07",
+      "transcript_id": "coding-reflection-02",
+      "lane_hint": "dream",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "coverage",
+      "item_id_or_ref": "startup-ideation-01-g06",
+      "transcript_id": "startup-ideation-01",
+      "lane_hint": "facts",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "coverage",
+      "item_id_or_ref": "startup-ideation-04-g07",
+      "transcript_id": "startup-ideation-04",
+      "lane_hint": "verbatim",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "coverage",
+      "item_id_or_ref": "people-deal-03-g03",
+      "transcript_id": "people-deal-03",
+      "lane_hint": "dream",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "coverage",
+      "item_id_or_ref": "coding-reflection-04-g04",
+      "transcript_id": "coding-reflection-04",
+      "lane_hint": "facts",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "coverage",
+      "item_id_or_ref": "coding-reflection-03-g03",
+      "transcript_id": "coding-reflection-03",
+      "lane_hint": "verbatim",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "coverage",
+      "item_id_or_ref": "coding-reflection-03-g01",
+      "transcript_id": "coding-reflection-03",
+      "lane_hint": "dream",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "coverage",
+      "item_id_or_ref": "startup-ideation-01-g09",
+      "transcript_id": "startup-ideation-01",
+      "lane_hint": "facts",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "coverage",
+      "item_id_or_ref": "coding-reflection-04-g07",
+      "transcript_id": "coding-reflection-04",
+      "lane_hint": "verbatim",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "coverage",
+      "item_id_or_ref": "people-deal-01-g04",
+      "transcript_id": "people-deal-01",
+      "lane_hint": "dream",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "coverage",
+      "item_id_or_ref": "coding-reflection-03-g07",
+      "transcript_id": "coding-reflection-03",
+      "lane_hint": "facts",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "coverage",
+      "item_id_or_ref": "coding-reflection-02-g01",
+      "transcript_id": "coding-reflection-02",
+      "lane_hint": "verbatim",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "coverage",
+      "item_id_or_ref": "startup-ideation-04-g06",
+      "transcript_id": "startup-ideation-04",
+      "lane_hint": "dream",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "coverage",
+      "item_id_or_ref": "startup-ideation-02-g01",
+      "transcript_id": "startup-ideation-02",
+      "lane_hint": "facts",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "coverage",
+      "item_id_or_ref": "startup-ideation-04-g01",
+      "transcript_id": "startup-ideation-04",
+      "lane_hint": "verbatim",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "grounding",
+      "item_id_or_ref": {
+        "transcript_id": "mixed-routine-signal-01",
+        "slot": "grounding"
+      },
+      "transcript_id": "mixed-routine-signal-01",
+      "lane_hint": "dream",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "grounding",
+      "item_id_or_ref": {
+        "transcript_id": "startup-ideation-01",
+        "slot": "grounding"
+      },
+      "transcript_id": "startup-ideation-01",
+      "lane_hint": "dream",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "grounding",
+      "item_id_or_ref": {
+        "transcript_id": "people-deal-01",
+        "slot": "grounding"
+      },
+      "transcript_id": "people-deal-01",
+      "lane_hint": "dream",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "grounding",
+      "item_id_or_ref": {
+        "transcript_id": "mixed-routine-signal-04",
+        "slot": "grounding"
+      },
+      "transcript_id": "mixed-routine-signal-04",
+      "lane_hint": "dream",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "grounding",
+      "item_id_or_ref": {
+        "transcript_id": "emotional-processing-02",
+        "slot": "grounding"
+      },
+      "transcript_id": "emotional-processing-02",
+      "lane_hint": "dream",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "grounding",
+      "item_id_or_ref": {
+        "transcript_id": "emotional-processing-03",
+        "slot": "grounding"
+      },
+      "transcript_id": "emotional-processing-03",
+      "lane_hint": "dream",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "grounding",
+      "item_id_or_ref": {
+        "transcript_id": "startup-ideation-02",
+        "slot": "grounding"
+      },
+      "transcript_id": "startup-ideation-02",
+      "lane_hint": "dream",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "grounding",
+      "item_id_or_ref": {
+        "transcript_id": "people-deal-04",
+        "slot": "grounding"
+      },
+      "transcript_id": "people-deal-04",
+      "lane_hint": "dream",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "distractor",
+      "item_id_or_ref": {
+        "transcript_id": "people-deal-04",
+        "slot": "distractor"
+      },
+      "transcript_id": "people-deal-04",
+      "lane_hint": "dream",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "distractor",
+      "item_id_or_ref": {
+        "transcript_id": "people-deal-02",
+        "slot": "distractor"
+      },
+      "transcript_id": "people-deal-02",
+      "lane_hint": "dream",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "distractor",
+      "item_id_or_ref": {
+        "transcript_id": "pure-routine-02",
+        "slot": "distractor"
+      },
+      "transcript_id": "pure-routine-02",
+      "lane_hint": "dream",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "distractor",
+      "item_id_or_ref": {
+        "transcript_id": "pure-routine-01",
+        "slot": "distractor"
+      },
+      "transcript_id": "pure-routine-01",
+      "lane_hint": "dream",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "distractor",
+      "item_id_or_ref": {
+        "transcript_id": "people-deal-01",
+        "slot": "distractor"
+      },
+      "transcript_id": "people-deal-01",
+      "lane_hint": "dream",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "distractor",
+      "item_id_or_ref": {
+        "transcript_id": "pure-routine-04",
+        "slot": "distractor"
+      },
+      "transcript_id": "pure-routine-04",
+      "lane_hint": "dream",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "distractor",
+      "item_id_or_ref": {
+        "transcript_id": "pure-routine-03",
+        "slot": "distractor"
+      },
+      "transcript_id": "pure-routine-03",
+      "lane_hint": "dream",
+      "judge_verdict": null,
+      "human_verdict": null
+    },
+    {
+      "slot": "distractor",
+      "item_id_or_ref": {
+        "transcript_id": "startup-ideation-04",
+        "slot": "distractor"
+      },
+      "transcript_id": "startup-ideation-04",
+      "lane_hint": "dream",
+      "judge_verdict": null,
+      "human_verdict": null
+    }
+  ]
+}

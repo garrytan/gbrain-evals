@@ -50,6 +50,7 @@ metric at the expense of the other.
 | **Stability across 20 releases** (v0.20.0 → v0.40.6.0) | **zero regression** | The headline numbers stayed identical, release after release. New features did not quietly make retrieval worse. | [report](docs/benchmarks/2026-05-23-v0.40.6.0-snapshot.md) |
 | **PrecisionMembench** (an outside precision-only test) | **#2, and an honest #1-by-default story** | See the honesty note below. | [report](docs/benchmarks/2026-05-29-precisionmembench.md) |
 | **SkillOpt** (can a skill improve itself, without cheating?) | **4/4 skills 0 → 1.00; cheating blocked; gains transfer** | Deficient skills rewrote themselves to perfect on held-out tasks; a keyword-stuffing cheat is caught by an independent judge; a skill optimized on one model works on another. | [report](docs/benchmarks/2026-06-03-skillopt.md) |
+| **Transcript distillation** (Cat 35: does the important stuff from an agent session survive into a brain page?) | **61.5% salient-unit recall, 85% usable, 0% noise leakage** | The dream distiller keeps about two-thirds of what matters (vs a 93.1% judge ceiling) in pages worth rereading; its failure mode is inventing (14.1%) rather than leaking noise (0%). First benchmark to measure the write path for agent working sessions (HaluMem covers persona-chat memory points), including whether the emotional tenor survives. | [report](docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md) |
 
 A living cross-system comparison lives in
 [docs/comparison-systems.md](docs/comparison-systems.md).
@@ -160,6 +161,13 @@ touching private data.
   facts, and deliberate junk, so we can test whether the brain stays straight when
   the input is realistic and noisy. Regenerate deterministically with
   `bun run eval:generate-amara-life` (seed 42).
+- **24 fictional agent sessions** (committed): coding, ideation, deal,
+  emotional-processing, mixed routine-signal, and pure-routine control
+  conversations with 173 planted salient units (each with a verbatim anchor),
+  86 true-but-routine distractors, and 2 attribution hazards — the Cat 35
+  write-path corpus. Regenerate with
+  `bun run eval:generate-transcript-distill` (seed 350001; ~$6 without the local
+  Opus cache, under $1 with it — the Haiku audit pass always re-runs).
 
 ## Repo layout
 
@@ -167,12 +175,14 @@ touching private data.
 gbrain-evals/
 ├── eval/
 │   ├── data/         the corpora + sealed answer keys + public datasets
+│   ├── generators/   deterministic corpus builders (skeleton + cached LLM prose)
 │   ├── runner/       one file per benchmark (our suite, LongMemEval, ...)
 │   ├── reports/      transient run output (gitignored)
 │   └── cli/          browse + validate the corpus
 ├── docs/
 │   ├── benchmarks/   the published scorecards, with their data and charts
 │   └── comparison-systems.md
+├── scripts/          postinstall shim (links pglite for the pinned gbrain) + runners
 └── test/eval/        unit tests for the harness itself
 ```
 
@@ -200,6 +210,9 @@ vendored precision-test artifacts are MIT (tenurehq); see
 ## Relationship to gbrain
 
 This repo uses gbrain the way you would: it installs gbrain as a library and calls
-its public interface. gbrain is the reference system under test here, but the
+its public interface. (One exception: the Cat 35 write-path runner deep-imports
+three ingest/extract/synthesize internals from `gbrain/src`, which is why the
+dependency is pinned to an exact SHA.) gbrain is the reference system under test
+here, but the
 harness scores anything that implements the adapter interface, so the comparison
 stays fair.

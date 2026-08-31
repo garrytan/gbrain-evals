@@ -1,0 +1,564 @@
+{
+  "schema_version": 1,
+  "corpus_id": "transcript-distill-v1",
+  "generated_at": "2026-08-15T00:00:00.000Z",
+  "generator": {
+    "name": "transcript-distill-gen",
+    "model": "claude-opus-4-5",
+    "model_params": {
+      "max_tokens": 16000,
+      "temperature": 1
+    },
+    "seed": 350001,
+    "template_hash": "46736c8d3c0873e292e30d6b221054c55b0cca12eee58556ed913bc17aa30247"
+  },
+  "license": "MIT",
+  "items": [
+    {
+      "slug": "transcripts/coding-reflection-01",
+      "path": "transcripts/2026-08-01-coding-reflection-01.jsonl",
+      "type": "conversation",
+      "content_sha256": "84c2d295587346e08b3e2c418d0fb064ec3b7e613be29bf021a72c7ec6cd130e",
+      "generator_cache_key": "118723613847ef129bacd9dbea572e9f2b9d779b0e047a097da7b318846aabb0"
+    },
+    {
+      "slug": "transcripts-txt/coding-reflection-01",
+      "path": "transcripts-txt/2026-08-01-coding-reflection-01.txt",
+      "type": "conversation",
+      "content_sha256": "5c2d461cf68aed0229a628a34739e0f6a3d6215aa0e3f4bd26d44f195f48097c",
+      "generator_cache_key": "118723613847ef129bacd9dbea572e9f2b9d779b0e047a097da7b318846aabb0"
+    },
+    {
+      "slug": "gold/coding-reflection-01",
+      "path": "gold/coding-reflection-01.json",
+      "type": "note",
+      "content_sha256": "9b79c9d0d9f028232b7ec973783a343c3db7f56a1613e58a5e9ba257f8498626"
+    },
+    {
+      "slug": "transcripts/coding-reflection-02",
+      "path": "transcripts/2026-08-01-coding-reflection-02.jsonl",
+      "type": "conversation",
+      "content_sha256": "409699110f7e2960c7c42a0cc83d95d271d8d9f6345cfd2228c97e52318fe344",
+      "generator_cache_key": "6bb8f5a29cea8b86f5c4059aa7f0f007249348e0d9d309cad246a5fb00590d84"
+    },
+    {
+      "slug": "transcripts-txt/coding-reflection-02",
+      "path": "transcripts-txt/2026-08-01-coding-reflection-02.txt",
+      "type": "conversation",
+      "content_sha256": "0a844d84f699bf7b1f76a95cd90b73660ec23bb544d005bdd884495c46207ec6",
+      "generator_cache_key": "6bb8f5a29cea8b86f5c4059aa7f0f007249348e0d9d309cad246a5fb00590d84"
+    },
+    {
+      "slug": "gold/coding-reflection-02",
+      "path": "gold/coding-reflection-02.json",
+      "type": "note",
+      "content_sha256": "1afc486df1fa43d8257a5bd5ed1ffed5bc23e4eb8ef1b3454c2a093c59231388"
+    },
+    {
+      "slug": "transcripts/coding-reflection-03",
+      "path": "transcripts/2026-08-02-coding-reflection-03.jsonl",
+      "type": "conversation",
+      "content_sha256": "f165d4d342e2ad452fed8ad73007f4fe3dab2ebfb3df271fb5c5761c3f360c60",
+      "generator_cache_key": "58f6db6c814343259701766e4db455041d6693d2ff33246e2aa5a12781223953"
+    },
+    {
+      "slug": "transcripts-txt/coding-reflection-03",
+      "path": "transcripts-txt/2026-08-02-coding-reflection-03.txt",
+      "type": "conversation",
+      "content_sha256": "6c734ae5e42f1a0a2ac616a111c4858c38048bbc5d1036764d119f110127e31c",
+      "generator_cache_key": "58f6db6c814343259701766e4db455041d6693d2ff33246e2aa5a12781223953"
+    },
+    {
+      "slug": "gold/coding-reflection-03",
+      "path": "gold/coding-reflection-03.json",
+      "type": "note",
+      "content_sha256": "9aacf0c3a496ea6b1e258a579edca09a1804b855dbb19d7bfd3fb0491d30e6a9"
+    },
+    {
+      "slug": "transcripts/coding-reflection-04",
+      "path": "transcripts/2026-08-02-coding-reflection-04.jsonl",
+      "type": "conversation",
+      "content_sha256": "40fe8b76228f950af256b9459e8b4d35883f4158f108fae4d33c585ad320b947",
+      "generator_cache_key": "904fbcdcbe6ab76435d1c9d85314034f46d5feeca8e1a456ad025a7f8235c7c1"
+    },
+    {
+      "slug": "transcripts-txt/coding-reflection-04",
+      "path": "transcripts-txt/2026-08-02-coding-reflection-04.txt",
+      "type": "conversation",
+      "content_sha256": "15323a66676dd03253b9ae18af4ab1309cf78f1108237245a8fb1fa112626ce0",
+      "generator_cache_key": "904fbcdcbe6ab76435d1c9d85314034f46d5feeca8e1a456ad025a7f8235c7c1"
+    },
+    {
+      "slug": "gold/coding-reflection-04",
+      "path": "gold/coding-reflection-04.json",
+      "type": "note",
+      "content_sha256": "4f5398c9a1ae232eee91e93a52ffe9afa079e5688f4c3e9ec3ded3dbcfe80442"
+    },
+    {
+      "slug": "transcripts/startup-ideation-01",
+      "path": "transcripts/2026-08-03-startup-ideation-01.jsonl",
+      "type": "conversation",
+      "content_sha256": "96e98c6c524a246fae106806e56d3b14ab22ddca696b8dc22feb192e3171966e",
+      "generator_cache_key": "914ea1c88560b045fdbcae5034ad4915901adac42748cf654e0c19419f991ca7"
+    },
+    {
+      "slug": "transcripts-txt/startup-ideation-01",
+      "path": "transcripts-txt/2026-08-03-startup-ideation-01.txt",
+      "type": "conversation",
+      "content_sha256": "91992c9aea0e150a8b3ed0638550850f5faf43087db6a7866b49cb70eea86653",
+      "generator_cache_key": "914ea1c88560b045fdbcae5034ad4915901adac42748cf654e0c19419f991ca7"
+    },
+    {
+      "slug": "gold/startup-ideation-01",
+      "path": "gold/startup-ideation-01.json",
+      "type": "note",
+      "content_sha256": "2502c28f39a363788a940e1591a49f62eababab643be27f48e43fce869393185"
+    },
+    {
+      "slug": "transcripts/startup-ideation-02",
+      "path": "transcripts/2026-08-03-startup-ideation-02.jsonl",
+      "type": "conversation",
+      "content_sha256": "b3bbb24c738660a6feaa40f16cbb58984df4915da75f8c324494f0e0e3826f4c",
+      "generator_cache_key": "5f34fb064fab6559f3a4b9b213749c92f5e8879ad54cd3a59655ad4cc943de3a"
+    },
+    {
+      "slug": "transcripts-txt/startup-ideation-02",
+      "path": "transcripts-txt/2026-08-03-startup-ideation-02.txt",
+      "type": "conversation",
+      "content_sha256": "2bd87da296ddc7d56757a8a6545621c17b49000207be7cdff4ad86dc42e4a660",
+      "generator_cache_key": "5f34fb064fab6559f3a4b9b213749c92f5e8879ad54cd3a59655ad4cc943de3a"
+    },
+    {
+      "slug": "gold/startup-ideation-02",
+      "path": "gold/startup-ideation-02.json",
+      "type": "note",
+      "content_sha256": "75abfc7bf6deb7891576495bcefcb484f172dcad253259597e439e369d5999a8"
+    },
+    {
+      "slug": "transcripts/startup-ideation-03",
+      "path": "transcripts/2026-08-04-startup-ideation-03.jsonl",
+      "type": "conversation",
+      "content_sha256": "89abf3da1f341d137f253855bc35a8d7a127dc8a731e55e22840ddfaa85f1bfe",
+      "generator_cache_key": "f7a0bc5b5fa1f47573f66272a7d8b7bb1ab5fd43a6e821b1b8bf8cfa45e290e0"
+    },
+    {
+      "slug": "transcripts-txt/startup-ideation-03",
+      "path": "transcripts-txt/2026-08-04-startup-ideation-03.txt",
+      "type": "conversation",
+      "content_sha256": "e2185c8a212cc93404d8fa7033263d2263f51f2f33adaf45b87f5b638d1d7003",
+      "generator_cache_key": "f7a0bc5b5fa1f47573f66272a7d8b7bb1ab5fd43a6e821b1b8bf8cfa45e290e0"
+    },
+    {
+      "slug": "gold/startup-ideation-03",
+      "path": "gold/startup-ideation-03.json",
+      "type": "note",
+      "content_sha256": "5d25316f6884a8e430a2b9a5c0f8e89f7fb96789ef15f84cca1546dcfbec0ae0"
+    },
+    {
+      "slug": "transcripts/startup-ideation-04",
+      "path": "transcripts/2026-08-04-startup-ideation-04.jsonl",
+      "type": "conversation",
+      "content_sha256": "844026bca80467fe55201835d1a1b4f6e9cbb017f49e786a857e578b3e0070c7",
+      "generator_cache_key": "7b78824c1b06cca782ae513c9ea0a601979e011281513401e707e295461ccb1e"
+    },
+    {
+      "slug": "transcripts-txt/startup-ideation-04",
+      "path": "transcripts-txt/2026-08-04-startup-ideation-04.txt",
+      "type": "conversation",
+      "content_sha256": "b706042b1179588893be11000cf65050adff109c3969f1e76dd5c3cc8616c84b",
+      "generator_cache_key": "7b78824c1b06cca782ae513c9ea0a601979e011281513401e707e295461ccb1e"
+    },
+    {
+      "slug": "gold/startup-ideation-04",
+      "path": "gold/startup-ideation-04.json",
+      "type": "note",
+      "content_sha256": "ae86e8f7aabe0df461fa0ea21abffd775b2577d5e7d35cd28b006a2f05a6b916"
+    },
+    {
+      "slug": "transcripts/people-deal-01",
+      "path": "transcripts/2026-08-05-people-deal-01.jsonl",
+      "type": "conversation",
+      "content_sha256": "e050479a693f2a1f585746fae976bc06d83d89f03870f9bdca2c8130b865a0dc",
+      "generator_cache_key": "3e46e74a852cc5574746b776e95571df87e8081bbda9652c418e6363e6eb5440"
+    },
+    {
+      "slug": "transcripts-txt/people-deal-01",
+      "path": "transcripts-txt/2026-08-05-people-deal-01.txt",
+      "type": "conversation",
+      "content_sha256": "f4208d632921c2b527ee40a103a36305348dc8e7ca17c569d992f26d90410f21",
+      "generator_cache_key": "3e46e74a852cc5574746b776e95571df87e8081bbda9652c418e6363e6eb5440"
+    },
+    {
+      "slug": "gold/people-deal-01",
+      "path": "gold/people-deal-01.json",
+      "type": "note",
+      "content_sha256": "4340f67bc8aa12f2a158872fcd4177a06cf75a80ea77b844f0034c6cdb037049"
+    },
+    {
+      "slug": "transcripts/people-deal-02",
+      "path": "transcripts/2026-08-05-people-deal-02.jsonl",
+      "type": "conversation",
+      "content_sha256": "4e125002bea6700cfdfc35f6d5163420d2a8d91c7f7abf0e75de1b782faef40e",
+      "generator_cache_key": "18c6c17d05cb676596452094f463f3ab22835918352e214d9be30baedfff497c"
+    },
+    {
+      "slug": "transcripts-txt/people-deal-02",
+      "path": "transcripts-txt/2026-08-05-people-deal-02.txt",
+      "type": "conversation",
+      "content_sha256": "9fa01606f2edf012cdb9fd646f794398c2a3986e70de0bbf44c5c7f10682baac",
+      "generator_cache_key": "18c6c17d05cb676596452094f463f3ab22835918352e214d9be30baedfff497c"
+    },
+    {
+      "slug": "gold/people-deal-02",
+      "path": "gold/people-deal-02.json",
+      "type": "note",
+      "content_sha256": "0545f0514f97f0aeb3fe04444ea3583d0c49f07621c338527c5b6aa465d7087b"
+    },
+    {
+      "slug": "transcripts/people-deal-03",
+      "path": "transcripts/2026-08-06-people-deal-03.jsonl",
+      "type": "conversation",
+      "content_sha256": "fb390efed4d929acaeeb05248671a14ffa786f5bf2f582c4be64359927f3ccc3",
+      "generator_cache_key": "cbee6457d0702e4b787737bf4b90b30229cf39024ad3e7b122c7869a343de6ff"
+    },
+    {
+      "slug": "transcripts-txt/people-deal-03",
+      "path": "transcripts-txt/2026-08-06-people-deal-03.txt",
+      "type": "conversation",
+      "content_sha256": "6f52860a8d9d770c79b129a3b1d90ea8d9190de9860ca4fbd3cf7328f5fb8275",
+      "generator_cache_key": "cbee6457d0702e4b787737bf4b90b30229cf39024ad3e7b122c7869a343de6ff"
+    },
+    {
+      "slug": "gold/people-deal-03",
+      "path": "gold/people-deal-03.json",
+      "type": "note",
+      "content_sha256": "3c513e53e9f9297dc7043c36d1bc9c13a0a407ae9ef38dd76ca8ddeb124c27cb"
+    },
+    {
+      "slug": "transcripts/people-deal-04",
+      "path": "transcripts/2026-08-06-people-deal-04.jsonl",
+      "type": "conversation",
+      "content_sha256": "356ba0b7495ed44fd97cd8a3cfc106e94a86017c469b4a14a50594be25f038a7",
+      "generator_cache_key": "24eb06af345d91c241fa91c43cfb6fb97e8fd64fb956a30cae9bb13baee2fd2c"
+    },
+    {
+      "slug": "transcripts-txt/people-deal-04",
+      "path": "transcripts-txt/2026-08-06-people-deal-04.txt",
+      "type": "conversation",
+      "content_sha256": "e1fb48dcda2f6b04818725b13f32429a993a3760cb0e2ea738770d0b585eaa2d",
+      "generator_cache_key": "24eb06af345d91c241fa91c43cfb6fb97e8fd64fb956a30cae9bb13baee2fd2c"
+    },
+    {
+      "slug": "gold/people-deal-04",
+      "path": "gold/people-deal-04.json",
+      "type": "note",
+      "content_sha256": "cf5ec04c87d5cb091b6196a04613649160622d58ccf3e6d2f2597aff8d81c275"
+    },
+    {
+      "slug": "transcripts/mixed-routine-signal-01",
+      "path": "transcripts/2026-08-07-mixed-routine-signal-01.jsonl",
+      "type": "conversation",
+      "content_sha256": "374b1e74a71f9f247956e7914b8f051ebd637584075a90089d4686c4d46e2e6b",
+      "generator_cache_key": "8731556b2fce24034cd6544b07539da210855a581c9be529c8f82f3b08df4977"
+    },
+    {
+      "slug": "transcripts-txt/mixed-routine-signal-01",
+      "path": "transcripts-txt/2026-08-07-mixed-routine-signal-01.txt",
+      "type": "conversation",
+      "content_sha256": "109199baca98bbb5eec6b61868f7fec2cb522e3e7a33d2a326cf22d3441b6a82",
+      "generator_cache_key": "8731556b2fce24034cd6544b07539da210855a581c9be529c8f82f3b08df4977"
+    },
+    {
+      "slug": "gold/mixed-routine-signal-01",
+      "path": "gold/mixed-routine-signal-01.json",
+      "type": "note",
+      "content_sha256": "288c59c885b706ef9e819a60cd1e6bc726dac8bb0e150dcfd1244180bd5bad88"
+    },
+    {
+      "slug": "transcripts/mixed-routine-signal-02",
+      "path": "transcripts/2026-08-07-mixed-routine-signal-02.jsonl",
+      "type": "conversation",
+      "content_sha256": "9267438c1bedde77152c39077c6d59016fb6a726c75e5f13c57efe5157ad8c48",
+      "generator_cache_key": "2e82e0e583e2008b44cb2c2c08c014c642e783e871c6f473d932926fa585f904"
+    },
+    {
+      "slug": "transcripts-txt/mixed-routine-signal-02",
+      "path": "transcripts-txt/2026-08-07-mixed-routine-signal-02.txt",
+      "type": "conversation",
+      "content_sha256": "171b54a4e0f40431d2cfe35a05a27e7090eaddee72827545677ce82894ab11da",
+      "generator_cache_key": "2e82e0e583e2008b44cb2c2c08c014c642e783e871c6f473d932926fa585f904"
+    },
+    {
+      "slug": "gold/mixed-routine-signal-02",
+      "path": "gold/mixed-routine-signal-02.json",
+      "type": "note",
+      "content_sha256": "d0d398a37e5ae2fbb9255d9a016c7f87ec7a916f613be4c6567ca1862a995ed8"
+    },
+    {
+      "slug": "transcripts/mixed-routine-signal-03",
+      "path": "transcripts/2026-08-08-mixed-routine-signal-03.jsonl",
+      "type": "conversation",
+      "content_sha256": "4d7903b78580034d55192b3ae03913f9c0992cdf5897e80c3ee3137061db2541",
+      "generator_cache_key": "0368843b48e7b0db14632f2b41d69f2022a2572aea7d6a1e837fae221bc50d65"
+    },
+    {
+      "slug": "transcripts-txt/mixed-routine-signal-03",
+      "path": "transcripts-txt/2026-08-08-mixed-routine-signal-03.txt",
+      "type": "conversation",
+      "content_sha256": "8ee841db5d20263a8a7b8078c5fa21fb7479bb9219a7a46de11d563f5309670f",
+      "generator_cache_key": "0368843b48e7b0db14632f2b41d69f2022a2572aea7d6a1e837fae221bc50d65"
+    },
+    {
+      "slug": "gold/mixed-routine-signal-03",
+      "path": "gold/mixed-routine-signal-03.json",
+      "type": "note",
+      "content_sha256": "3041f1e6de88e81d0a4fe0aa9bda928d00c643639b9874571f80620494863627"
+    },
+    {
+      "slug": "transcripts/mixed-routine-signal-04",
+      "path": "transcripts/2026-08-08-mixed-routine-signal-04.jsonl",
+      "type": "conversation",
+      "content_sha256": "2cc41edb2783490bbea5200deef4b042bb480668202ef67f85e455dee1d9dfad",
+      "generator_cache_key": "58b13d64ba17dc4cfede70a284e9c86da96787fd8787e836ff77130f98d302be"
+    },
+    {
+      "slug": "transcripts-txt/mixed-routine-signal-04",
+      "path": "transcripts-txt/2026-08-08-mixed-routine-signal-04.txt",
+      "type": "conversation",
+      "content_sha256": "4b75cbc84592fd558a4b378f7f30077fb0eeb58e8f2b383b1e603a7e383959b2",
+      "generator_cache_key": "58b13d64ba17dc4cfede70a284e9c86da96787fd8787e836ff77130f98d302be"
+    },
+    {
+      "slug": "gold/mixed-routine-signal-04",
+      "path": "gold/mixed-routine-signal-04.json",
+      "type": "note",
+      "content_sha256": "750690ca1329074c28bcf80d6fabf28f217b27e658db5bf0561eb047741cd1b5"
+    },
+    {
+      "slug": "transcripts/emotional-processing-01",
+      "path": "transcripts/2026-08-09-emotional-processing-01.jsonl",
+      "type": "conversation",
+      "content_sha256": "8d20bccd069eb24d8437a261c45853986e4e5d89fe8446e9f036c6e8213b23b3",
+      "generator_cache_key": "1d1f5b09d2ce8ab43e4ee3e6bcf160260a4a37be0f432e93549a37534d8df490"
+    },
+    {
+      "slug": "transcripts-txt/emotional-processing-01",
+      "path": "transcripts-txt/2026-08-09-emotional-processing-01.txt",
+      "type": "conversation",
+      "content_sha256": "9784c371258c7b3da588170b2393a9c74429b725c390ba8a767a93a2e48f0000",
+      "generator_cache_key": "1d1f5b09d2ce8ab43e4ee3e6bcf160260a4a37be0f432e93549a37534d8df490"
+    },
+    {
+      "slug": "gold/emotional-processing-01",
+      "path": "gold/emotional-processing-01.json",
+      "type": "note",
+      "content_sha256": "b07ece98ed8b6ee3a57f93f914a574cac978266ac7a66aa9f3660073b255409a"
+    },
+    {
+      "slug": "transcripts/emotional-processing-02",
+      "path": "transcripts/2026-08-09-emotional-processing-02.jsonl",
+      "type": "conversation",
+      "content_sha256": "16f711c62a3e42a3a7ff1d098bd272de8f5beea80b8707afbd9aef52fb00f9f0",
+      "generator_cache_key": "e88eef5fea061251626574309d7549a0dd16ac5f6081bc492c1d83eb1b8af251"
+    },
+    {
+      "slug": "transcripts-txt/emotional-processing-02",
+      "path": "transcripts-txt/2026-08-09-emotional-processing-02.txt",
+      "type": "conversation",
+      "content_sha256": "da8dc4dbdc7a6aaa4a1ec9b2e169a681e3f2156f4bff84007c788c5537bf4679",
+      "generator_cache_key": "e88eef5fea061251626574309d7549a0dd16ac5f6081bc492c1d83eb1b8af251"
+    },
+    {
+      "slug": "gold/emotional-processing-02",
+      "path": "gold/emotional-processing-02.json",
+      "type": "note",
+      "content_sha256": "3c844e5cda3889f24f024feeef7f6dad0e51d11e252460aff8ca8eea8335671c"
+    },
+    {
+      "slug": "transcripts/emotional-processing-03",
+      "path": "transcripts/2026-08-10-emotional-processing-03.jsonl",
+      "type": "conversation",
+      "content_sha256": "94a677bbf80c45654863f16bba42d52f80d3f50dce8be94adc24310cd1f0aba8",
+      "generator_cache_key": "0b768a0e22350ec61d034ee78f1cb27655d204dfb93f247197a72004ffdb3f07"
+    },
+    {
+      "slug": "transcripts-txt/emotional-processing-03",
+      "path": "transcripts-txt/2026-08-10-emotional-processing-03.txt",
+      "type": "conversation",
+      "content_sha256": "51eea84ef5cedaf177c1c2edb2fe8e69eb6c0f75c60b090ca3066b4e2e7ab850",
+      "generator_cache_key": "0b768a0e22350ec61d034ee78f1cb27655d204dfb93f247197a72004ffdb3f07"
+    },
+    {
+      "slug": "gold/emotional-processing-03",
+      "path": "gold/emotional-processing-03.json",
+      "type": "note",
+      "content_sha256": "7c87de1baac210c6e97aa6d69707af74bde559b933c624c0689d49ca3a88cb3b"
+    },
+    {
+      "slug": "transcripts/emotional-processing-04",
+      "path": "transcripts/2026-08-10-emotional-processing-04.jsonl",
+      "type": "conversation",
+      "content_sha256": "19b0e7b5d30c564232ce67ece5b0dfbe5e1be2de3db32327a1a2fe8eb33fdb07",
+      "generator_cache_key": "4f1b76aa0454f3c63e792499fb941b269b553b3b78247c07fc1893e01be4f50f"
+    },
+    {
+      "slug": "transcripts-txt/emotional-processing-04",
+      "path": "transcripts-txt/2026-08-10-emotional-processing-04.txt",
+      "type": "conversation",
+      "content_sha256": "bb5ee28045c0e49a2f13da85f306214c2b3b8b95441c180af6f023afcd656771",
+      "generator_cache_key": "4f1b76aa0454f3c63e792499fb941b269b553b3b78247c07fc1893e01be4f50f"
+    },
+    {
+      "slug": "gold/emotional-processing-04",
+      "path": "gold/emotional-processing-04.json",
+      "type": "note",
+      "content_sha256": "3330e22e3df8bedc8ac198e8cea6cabbb2ad070e9d5ec0568a3a24851160e708"
+    },
+    {
+      "slug": "transcripts/pure-routine-01",
+      "path": "transcripts/2026-08-11-pure-routine-01.jsonl",
+      "type": "conversation",
+      "content_sha256": "6ec43aa1f2a580c80bc4ec20dbba1e6c796cbe099eedbe6c850e1587297047e6",
+      "generator_cache_key": "a515329b38059e80609e1dc158f44928d16ff2021de8fb132466a5db72c0b760"
+    },
+    {
+      "slug": "transcripts-txt/pure-routine-01",
+      "path": "transcripts-txt/2026-08-11-pure-routine-01.txt",
+      "type": "conversation",
+      "content_sha256": "f6de3395e9b56f01f7db2258e334cbdf74b51cfad03170c1ad1f5734cb05dc19",
+      "generator_cache_key": "a515329b38059e80609e1dc158f44928d16ff2021de8fb132466a5db72c0b760"
+    },
+    {
+      "slug": "gold/pure-routine-01",
+      "path": "gold/pure-routine-01.json",
+      "type": "note",
+      "content_sha256": "2fde8f03cb5d18ba2ffbfcb6c1bac7f4011c0d1fd5a5b5c1a5d0118de426e145"
+    },
+    {
+      "slug": "transcripts/pure-routine-02",
+      "path": "transcripts/2026-08-11-pure-routine-02.jsonl",
+      "type": "conversation",
+      "content_sha256": "d507838ca6f3cb12378898c33d27d6758d247b78238c6c7c967281a94dbd0cb8",
+      "generator_cache_key": "57034d3a90bfa7fd2c8566df31d8edd55bb3c7b53231e744386451e008804cbf"
+    },
+    {
+      "slug": "transcripts-txt/pure-routine-02",
+      "path": "transcripts-txt/2026-08-11-pure-routine-02.txt",
+      "type": "conversation",
+      "content_sha256": "dd97cef244d316108a10a270e47c0c4d3639dd0d0324e1e2ef3c0653a51265ad",
+      "generator_cache_key": "57034d3a90bfa7fd2c8566df31d8edd55bb3c7b53231e744386451e008804cbf"
+    },
+    {
+      "slug": "gold/pure-routine-02",
+      "path": "gold/pure-routine-02.json",
+      "type": "note",
+      "content_sha256": "57d03675936b884b1d9611b83646263649129b177bbd30f32612c993e26dceee"
+    },
+    {
+      "slug": "transcripts/pure-routine-03",
+      "path": "transcripts/2026-08-12-pure-routine-03.jsonl",
+      "type": "conversation",
+      "content_sha256": "d7979e8d53a7077258be813a03335ee95a9af3b84dbb2294bfde8267059a5196",
+      "generator_cache_key": "67b9c8529c45d7fb8288d7849ebbec3e07fc388422c8419a0ef6276be9befcae"
+    },
+    {
+      "slug": "transcripts-txt/pure-routine-03",
+      "path": "transcripts-txt/2026-08-12-pure-routine-03.txt",
+      "type": "conversation",
+      "content_sha256": "58ad0905fdb89780272e6584a8975bf2980e0d4655b69f01fe0fecf3a373641e",
+      "generator_cache_key": "67b9c8529c45d7fb8288d7849ebbec3e07fc388422c8419a0ef6276be9befcae"
+    },
+    {
+      "slug": "gold/pure-routine-03",
+      "path": "gold/pure-routine-03.json",
+      "type": "note",
+      "content_sha256": "c6ce0fe96a3f56d8f3a4de13912184cce349496f2d11c4e5e221443f962cb8ad"
+    },
+    {
+      "slug": "transcripts/pure-routine-04",
+      "path": "transcripts/2026-08-12-pure-routine-04.jsonl",
+      "type": "conversation",
+      "content_sha256": "ab4dc9c82b622aa2c2c09f1a9c8284f6890a2c8e8a867581a5bcdcca64216320",
+      "generator_cache_key": "0eb83065049ed1c921c013a7db9b116af3270f63e402bcbb10fd268fac04b39b"
+    },
+    {
+      "slug": "transcripts-txt/pure-routine-04",
+      "path": "transcripts-txt/2026-08-12-pure-routine-04.txt",
+      "type": "conversation",
+      "content_sha256": "8473351af47c2830a17f4160b7f4d737462ffbb0dfa3ce8a3458549c8fd33a76",
+      "generator_cache_key": "0eb83065049ed1c921c013a7db9b116af3270f63e402bcbb10fd268fac04b39b"
+    },
+    {
+      "slug": "gold/pure-routine-04",
+      "path": "gold/pure-routine-04.json",
+      "type": "note",
+      "content_sha256": "f7b92d578aee4eb27a04cb0eb5547f1c285734a2b0954cffa4a826a2b406e749"
+    },
+    {
+      "slug": "people/mira-voss",
+      "path": "brain-scaffold/people/mira-voss.md",
+      "type": "person",
+      "content_sha256": "179d781df6321d7535b3ffb9f04923b69a9220b07c9e5d066fe538b0b7954061"
+    },
+    {
+      "slug": "people/casper-hale",
+      "path": "brain-scaffold/people/casper-hale.md",
+      "type": "person",
+      "content_sha256": "3997011e4f60c4d8fa5f64026aa9a1deee5b952fa7fe9dad7081801c4ed22b85"
+    },
+    {
+      "slug": "people/anouk-verlinden",
+      "path": "brain-scaffold/people/anouk-verlinden.md",
+      "type": "person",
+      "content_sha256": "ad5c4443d213dcc5257e625291e6ec3de05c34bec484f2074c0a7a7b232344ef"
+    },
+    {
+      "slug": "people/tomas-brekke",
+      "path": "brain-scaffold/people/tomas-brekke.md",
+      "type": "person",
+      "content_sha256": "f88bda70704572d8b9c84c51793bc5a4915a70dfc29aa0706e2c8454c28adcff"
+    },
+    {
+      "slug": "companies/lumopact",
+      "path": "brain-scaffold/companies/lumopact.md",
+      "type": "company",
+      "content_sha256": "896ca04de6f5d23334053977984c3655adf666f1e57681e0e49278c385b0bd5f"
+    },
+    {
+      "slug": "companies/vantabrook",
+      "path": "brain-scaffold/companies/vantabrook.md",
+      "type": "company",
+      "content_sha256": "142be1b77b8194501e99a98f3f0a7eee62f6068bdd82f28a4eb1d7efdcd89822"
+    },
+    {
+      "slug": "companies/ostrafell",
+      "path": "brain-scaffold/companies/ostrafell.md",
+      "type": "company",
+      "content_sha256": "74db6e33cfaf2969c0b64cedaee45baf9c98ccfc93a93dc70902fde8655e3331"
+    },
+    {
+      "slug": "concepts/quartzlane",
+      "path": "brain-scaffold/concepts/quartzlane.md",
+      "type": "concept",
+      "content_sha256": "0c0152d42a25658a610b54b1cb20e0fc5207d11bc5e9aa54b047aaa2b42c709a"
+    },
+    {
+      "slug": "concepts/fernpost",
+      "path": "brain-scaffold/concepts/fernpost.md",
+      "type": "concept",
+      "content_sha256": "db694d0aceb8d12cae2746107c4549772461b854535c15d86272acde1971415e"
+    },
+    {
+      "slug": "concepts/driftless-scheduling",
+      "path": "brain-scaffold/concepts/driftless-scheduling.md",
+      "type": "concept",
+      "content_sha256": "6e53e4993ddb9f0973be5f3209b23d910b17e7a16c70d82dc4682c01a1be9be5"
+    },
+    {
+      "slug": "meta/judge-calibration-sample",
+      "path": "judge-calibration-sample.json",
+      "type": "note",
+      "content_sha256": "35b9480075e21c23034d18f29ebaed159f37e6557505b723102cf41e0db1fa26"
+    }
+  ]
+}

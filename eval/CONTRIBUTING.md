@@ -96,7 +96,7 @@ interface Adapter {
 #   ];
 
 # Step 5. Test locally.
-bun run test:eval
+bun run test
 bun run eval:run:dev --adapter=my-adapter
 
 # Step 6. Open a PR.
@@ -109,7 +109,7 @@ bun run eval:run:dev --adapter=my-adapter
 - `query()` returns rank order — `rank: i + 1`, 1-based, no duplicates
 - Tie-breaks documented (e.g. "alphabetical by slug when scores tie")
 - No network calls in unit tests (mock any API dependencies)
-- Pass `bun run test:eval`
+- Pass `bun run test`
 
 ## 3. Reproduce / verify a published scorecard
 

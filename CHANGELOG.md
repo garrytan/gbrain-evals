@@ -4,10 +4,10 @@ All notable changes to gbrain-evals are recorded here. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versions are semver and kept
 in sync with `VERSION` + `package.json`.
 
-## [0.3.0] - 2026-08-31
+## [0.4.0] - 2026-08-31
 
-**Benchmark semantics changed — scores from 0.3.0 are not comparable to
-0.2.x scores.** A 35-agent audit (237 verified findings, committed at
+**Benchmark semantics changed — scores from 0.4.0 are not comparable to
+0.3.x or 0.2.x scores.** A 35-agent audit (237 verified findings, committed at
 `docs/audit/2026-08-31-findings.json`) drove a full remediation:
 
 - **Metric corrections:** shared recall counts unique ids (could exceed 1.0
@@ -44,6 +44,56 @@ in sync with `VERSION` + `package.json`.
   honors `--dataset` and derives its completion target from the dataset, and
   both shootout phases now smoke-gate every cell with a real per-cell
   wall-clock cap in phase 1.
+
+Merge note: 0.3.0 (Cat 35) landed on main mid-remediation; this release sits
+on top of it. The gbrain pin advanced from 0.3.0's v0.46.3.0 to the audited
+v0.47.6.0 (`7b7921d8`) — Cat 35 re-verified against the newer pin.
+
+## [0.3.0] - 2026-08-27
+
+### Added — Cat 35: transcript → brain-page distillation fidelity
+
+The write path finally has a number. When an agent-session transcript goes
+through gbrain, Cat 35 measures what fraction of the salient facts, ideas,
+decisions, and emotional tenor survives into a usable brain page — the first
+benchmark anywhere to score agent-session distillation (HaluMem covers
+persona-chat memory points; nobody else publishes write-path numbers at all).
+
+- **Published result** ([report](docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md)):
+  gbrain's dream distiller keeps **61.5%** of salient content (95% CI
+  45.0-77.6) in pages rated 85% usable with **zero** distractor leakage; its
+  failure mode is inventing (14.1% claim hallucination), never leaking noise.
+  The verbatim-import control measures the judge ceiling at 93.1% and leaks
+  100% of planted noise at 0% usability — the coverage-vs-usability tradeoff,
+  quantified. Vibes survive distillation better than facts (71.4% vs 52.5%);
+  the facts extractor is the mirror image (69% facts, 38% ideas).
+- **Committed planted-gold corpus** (`eval/data/transcript-distill-v1/`):
+  24 fictional agent sessions across six scenarios (incl. long-noisy variants
+  with tool-call noise and a pure-routine triage control), 173 salient units
+  with verbatim anchors, 86 true-noise distractors, 2 attribution hazards.
+  Deterministic skeleton + cached Opus prose; regenerate with
+  `bun run eval:generate-transcript-distill`.
+- **Safe-by-default runner** (`bun run eval:cat35:smoke` ≈ $0.10; the full
+  `bun run eval:cat35` requires an explicit CAT35_FULL and a pre-flight cost
+  cap), with receipts (schema-pinned), regression deltas vs the committed
+  baseline, a triage-separation curve, and a judge-calibration scaffold.
+- gbrain is now **pinned to a SHA** (v0.46.3.0) for reproducibility, with a
+  postinstall shim that repairs bun's pglite hoisting so a fresh clone works.
+
+### Fixed
+
+- Pre-publication adversarial review (two Claude passes + two Codex passes)
+  hardened the harness: case-insensitive anchor scanning (erratum in report
+  §9: verbatim leakage floor corrects 96.5% → 100%; dream stays 0%),
+  publication-eligible receipts now require the whole corpus (cherry-picked
+  subsets are marked `partial`), coverage verdicts without supporting
+  evidence are rejected, judge transport errors degrade to judge-failed
+  instead of crashing paid runs, and corpus transcript files are
+  hash-verified against the manifest at load.
+- `test/eval/all-and-budget.test.ts` (broken on main since Cat 34 landed) and
+  the tool-bridge fake engine (predating gbrain's alias-hop contract) are
+  green again; a PGLite disconnect freeze under `bun test` at the pinned
+  gbrain is worked around and filed upstream (see TODOS.md).
 
 ## [0.2.0] - 2026-05-29
 

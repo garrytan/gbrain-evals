@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "transcript_id": "mixed-routine-signal-02",
+  "scenario": "mixed-routine-signal",
+  "variant": "prose",
+  "expected_triage": "high",
+  "session_id": "cat35-mixed-routine-signal-02",
+  "base_ts": "2026-08-07T15:00:00.000Z",
+  "entities": [
+    "people/mira-voss"
+  ],
+  "items": [
+    {
+      "item_id": "mixed-routine-signal-02-g01",
+      "kind": "decision",
+      "statement": "The user decided to skip the Fogline conference entirely this year.",
+      "verbatim_anchor": "skipping Fogline this year, full stop",
+      "notability": "high",
+      "planted_turn": 2,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "mixed-routine-signal-02-g02",
+      "kind": "fact",
+      "statement": "The Fogline ticket plus travel would have cost about three thousand dollars.",
+      "verbatim_anchor": "ticket plus travel was going to be three grand",
+      "notability": "medium",
+      "planted_turn": 4,
+      "depth_bucket": "early"
+    },
+    {
+      "item_id": "mixed-routine-signal-02-g03",
+      "kind": "decision",
+      "statement": "The user said they would send Mira Voss a one-page update every month instead of conference catch-ups.",
+      "verbatim_anchor": "a one page update to Mira every month instead of hallway catch ups",
+      "notability": "medium",
+      "planted_turn": 6,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "mixed-routine-signal-02-g04",
+      "kind": "vibe",
+      "statement": "Deciding to skip the conference brought the user pure relief and zero fear of missing out.",
+      "verbatim_anchor": "the second I decided, it was pure relief, zero fomo",
+      "notability": "medium",
+      "planted_turn": 8,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "mixed-routine-signal-02-g05",
+      "kind": "idea",
+      "statement": "The user wants to spend the saved conference budget on three small dinners with people they miss.",
+      "verbatim_anchor": "spend the same budget on three tiny dinners with people I actually miss",
+      "notability": "medium",
+      "planted_turn": 10,
+      "depth_bucket": "middle"
+    },
+    {
+      "item_id": "mixed-routine-signal-02-g06",
+      "kind": "fact",
+      "statement": "The user's passport is inside the six-month expiry window and needs renewing before fall.",
+      "verbatim_anchor": "passport is inside the six month window, needs renewing before fall",
+      "notability": "low",
+      "planted_turn": 11,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "mixed-routine-signal-02-g07",
+      "kind": "decision",
+      "statement": "The user booked the aisle seat over the window for the long flight leg.",
+      "verbatim_anchor": "aisle seat on the long leg, window is a trap",
+      "notability": "low",
+      "planted_turn": 14,
+      "depth_bucket": "late"
+    },
+    {
+      "item_id": "mixed-routine-signal-02-g08",
+      "kind": "fact",
+      "statement": "Mira Voss replied that monthly written updates suit her better anyway.",
+      "verbatim_anchor": "Mira wrote back that monthly updates suit her better anyway",
+      "notability": "low",
+      "planted_turn": 14,
+      "depth_bucket": "late"
+    }
+  ],
+  "distractors": [
+    {
+      "distractor_id": "mixed-routine-signal-02-d01",
+      "statement": "Packing cubes were praised.",
+      "anchor": "packing cubes, still undefeated",
+      "planted_turn": 4
+    },
+    {
+      "distractor_id": "mixed-routine-signal-02-d02",
+      "statement": "Laundry had to finish before packing.",
+      "anchor": "laundry needs to finish before I can even pack",
+      "planted_turn": 2
+    },
+    {
+      "distractor_id": "mixed-routine-signal-02-d03",
+      "statement": "The assistant flagged chargers on the list.",
+      "anchor": "chargers are on the list twice for a reason",
+      "planted_turn": 13
+    },
+    {
+      "distractor_id": "mixed-routine-signal-02-d04",
+      "statement": "The destination forecast looked mild.",
+      "anchor": "forecast says mild all week there",
+      "planted_turn": 1
+    }
+  ],
+  "hazards": []
+}

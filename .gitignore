@@ -14,6 +14,9 @@ bin/
 # Opus cache (regenerate via eval:generate-amara-life; 398 items ~1.6MB)
 eval/data/amara-life-v1/_cache/
 
+# Opus cache (regenerate via eval:generate-transcript-distill; 24 transcripts)
+eval/data/transcript-distill-v1/_cache/
+
 # Benchmark run reports (transient — commit baselines to docs/benchmarks/ instead)
 eval/reports/
 

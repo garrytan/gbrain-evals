@@ -1,0 +1,8 @@
+- [fact] Query latency on quartzlane doubled after the tokenizer refactor, going from ~100ms p95 to over 200ms on the standard query set (quartzlane, medium)
+- [event] The tokenizer refactor was merged last week and caused the latency regression (ticket QL-4620) (quartzlane, medium)
+- [fact] Multiple users reported dashboard slowdowns following the tokenizer refactor (quartzlane, medium)
+- [fact] User introduced a strategy interface abstraction during the tokenizer refactor to allow swappable tokenization algorithms, but it was never actually used (medium)
+- [commitment] User decided to revert the strategy interface because it added indirection with no benefit and had only one concrete implementation (medium)
+- [preference] User dislikes the neon green on black profiler theme and finds it unreadable (low)
+- [commitment] User plans to fix the regression by shipping a compiled pattern cache using OnceCell or lazy_static (medium)
+- [fact] EXTRACTION_COMPLETE (low)

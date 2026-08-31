@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="300" viewBox="0 0 880 300">
+  <rect width="880" height="300" fill="#0a0a0a" rx="8"/>
+  <text x="20" y="28" fill="#e5e7eb" font-size="15" font-weight="700" font-family="ui-sans-serif,system-ui">Noise handling</text>
+  <text x="20" y="46" fill="#9ca3af" font-size="11" font-family="ui-sans-serif,system-ui">Left: planted-distractor leakage (verbatim keeps everything by construction — the floor). Right: triage separation, one dot per transcript.</text>
+  <text x="20" y="74" fill="#e5e7eb" font-size="12" font-weight="600" font-family="ui-sans-serif,system-ui">Distractor leakage</text>
+  <text x="470" y="74" fill="#e5e7eb" font-size="12" font-weight="600" font-family="ui-sans-serif,system-ui">Triage separation (score 0..1)</text>
+
+  <text x="120" y="104" text-anchor="end" fill="#e5e7eb" font-size="12" font-family="ui-sans-serif,system-ui">dream</text>
+  <rect x="130" y="90" width="2" height="20" rx="3" fill="#ef4444" opacity="0.9"/>
+  <text x="136" y="104" fill="#e5e7eb" font-size="11" font-family="ui-monospace,SFMono-Regular">0.0%</text>
+  <text x="120" y="148" text-anchor="end" fill="#e5e7eb" font-size="12" font-family="ui-sans-serif,system-ui">facts</text>
+  <rect x="130" y="134" width="2" height="20" rx="3" fill="#ef4444" opacity="0.9"/>
+  <text x="136" y="148" fill="#e5e7eb" font-size="11" font-family="ui-monospace,SFMono-Regular">0.0%</text>
+  <text x="120" y="192" text-anchor="end" fill="#e5e7eb" font-size="12" font-family="ui-sans-serif,system-ui">verbatim</text>
+  <rect x="130" y="178" width="289.5348837209302" height="20" rx="3" fill="#6b7280" opacity="0.5"/>
+  <text x="423.5348837209302" y="192" fill="#e5e7eb" font-size="11" font-family="ui-monospace,SFMono-Regular">96.5%</text>
+
+  <line x1="470" y1="150" x2="800" y2="150" stroke="#404040" stroke-width="1.5"/>
+  <line x1="470" y1="145" x2="470" y2="155" stroke="#404040" stroke-width="1"/>
+  <text x="470" y="172" text-anchor="middle" fill="#9ca3af" font-size="9" font-family="ui-monospace,SFMono-Regular">0</text>
+  <line x1="569" y1="145" x2="569" y2="155" stroke="#404040" stroke-width="1"/>
+  <text x="569" y="172" text-anchor="middle" fill="#9ca3af" font-size="9" font-family="ui-monospace,SFMono-Regular">0.3</text>
+  <line x1="635" y1="145" x2="635" y2="155" stroke="#404040" stroke-width="1"/>
+  <text x="635" y="172" text-anchor="middle" fill="#9ca3af" font-size="9" font-family="ui-monospace,SFMono-Regular">0.5</text>
+  <line x1="701" y1="145" x2="701" y2="155" stroke="#404040" stroke-width="1"/>
+  <text x="701" y="172" text-anchor="middle" fill="#9ca3af" font-size="9" font-family="ui-monospace,SFMono-Regular">0.7</text>
+  <line x1="800" y1="145" x2="800" y2="155" stroke="#404040" stroke-width="1"/>
+  <text x="800" y="172" text-anchor="middle" fill="#9ca3af" font-size="9" font-family="ui-monospace,SFMono-Regular">1</text>
+  <line x1="635" y1="95" x2="635" y2="150" stroke="#9ca3af" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="635" y="88" text-anchor="middle" fill="#9ca3af" font-size="9" font-family="ui-sans-serif,system-ui">gate 0.5</text>
+  <circle cx="674.6" cy="120" r="5" fill="#16a34a" opacity="0.85"/>
+  <circle cx="608.6" cy="120" r="5" fill="#16a34a" opacity="0.85"/>
+  <circle cx="707.6" cy="120" r="5" fill="#16a34a" opacity="0.85"/>
+  <circle cx="707.6" cy="120" r="5" fill="#16a34a" opacity="0.85"/>
+  <circle cx="740.5999999999999" cy="120" r="5" fill="#16a34a" opacity="0.85"/>
+  <circle cx="727.4000000000001" cy="120" r="5" fill="#16a34a" opacity="0.85"/>
+  <circle cx="740.5999999999999" cy="120" r="5" fill="#16a34a" opacity="0.85"/>
+  <circle cx="727.4000000000001" cy="120" r="5" fill="#16a34a" opacity="0.85"/>
+  <circle cx="575.6" cy="120" r="5" fill="#16a34a" opacity="0.85"/>
+  <circle cx="641.6" cy="120" r="5" fill="#16a34a" opacity="0.85"/>
+  <circle cx="608.6" cy="120" r="5" fill="#16a34a" opacity="0.85"/>
+  <circle cx="575.6" cy="120" r="5" fill="#16a34a" opacity="0.85"/>
+  <circle cx="720.8" cy="120" r="5" fill="#16a34a" opacity="0.85"/>
+  <circle cx="720.8" cy="120" r="5" fill="#16a34a" opacity="0.85"/>
+  <circle cx="720.8" cy="120" r="5" fill="#16a34a" opacity="0.85"/>
+  <circle cx="674.6" cy="120" r="5" fill="#16a34a" opacity="0.85"/>
+  <circle cx="509.6" cy="135" r="5" fill="#f59e0b" opacity="0.85"/>
+  <circle cx="496.4" cy="135" r="5" fill="#f59e0b" opacity="0.85"/>
+  <circle cx="519.5" cy="135" r="5" fill="#f59e0b" opacity="0.85"/>
+  <circle cx="509.6" cy="135" r="5" fill="#f59e0b" opacity="0.85"/>
+  <circle cx="740.5999999999999" cy="120" r="5" fill="#16a34a" opacity="0.85"/>
+  <circle cx="727.4000000000001" cy="120" r="5" fill="#16a34a" opacity="0.85"/>
+  <circle cx="727.4000000000001" cy="120" r="5" fill="#16a34a" opacity="0.85"/>
+  <circle cx="727.4000000000001" cy="120" r="5" fill="#16a34a" opacity="0.85"/>
+  <circle cx="470" cy="205" r="5" fill="#16a34a"/>
+  <text x="482" y="209" fill="#e5e7eb" font-size="11" font-family="ui-sans-serif,system-ui">expected-high transcript</text>
+  <circle cx="660" cy="205" r="5" fill="#f59e0b"/>
+  <text x="672" y="209" fill="#e5e7eb" font-size="11" font-family="ui-sans-serif,system-ui">pure-routine</text>
+</svg>

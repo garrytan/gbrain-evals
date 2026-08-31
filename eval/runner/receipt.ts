@@ -1,5 +1,5 @@
 /**
- * Receipt architecture (BrainBench v0.3.0, WS0).
+ * Receipt architecture (BrainBench v0.4.0, WS0).
  *
  * Every category runner writes exactly one receipt JSON per run. The receipt
  * — not the exit code — is the source of truth the umbrella runner (all.ts)
@@ -21,7 +21,7 @@
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 
-export const BENCHMARK_VERSION = '0.3.0';
+export const BENCHMARK_VERSION = '0.4.0';
 export const RECEIPT_SCHEMA_VERSION = 1;
 
 export type RunStatus = 'completed' | 'error' | 'skipped' | 'not_run';
