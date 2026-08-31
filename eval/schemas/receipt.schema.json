@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://brainbench.dev/schemas/receipt.schema.json",
-  "title": "BrainBench category receipt (v0.4.0)",
+  "title": "BrainBench category receipt (v0.5.0)",
   "description": "One receipt per category run. all.ts aggregates receipts, not exit codes. Mirrors eval/runner/receipt.ts validateReceipt(); keep in lockstep.",
   "type": "object",
   "required": [

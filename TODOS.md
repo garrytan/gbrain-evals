@@ -178,17 +178,6 @@ reviews (2026-08-16); each entry names its origin.
   limit); FactScore-style decomposition raises hallucination-metric resolution.
   Tradeoff: costs determinism. From: Codex round 2 (documented limit).
 
-- [ ] **Upstream: PGLite disconnect sync-spin under bun test (gbrain v0.46.3).**
-  Why: `PGLiteEngine.disconnect()` after ops-layer use freezes the bun test
-  runner in a synchronous WASM spin (`execProtocolRawSync`) — timers can't
-  fire, `--timeout` can't interrupt. Plain bun runs are unaffected.
-  Current mitigation: `test/eval/agent-adapter.test.ts` skips teardown
-  (per-test engines die with the process); the adapter keeps a bounded
-  disconnect for real runs. How: check whether gbrain ≥0.47 fixes it; if not,
-  file upstream with the repro (ops call → disconnect under `bun test`).
-  Restore the test teardowns when the pin moves past the fix. Effort: S.
-  From: Cat 35 implementation (2026-08-16).
-
 ## P3
 
 - [ ] **Cross-family (non-Anthropic) coverage judge.** Why: judge and distiller
@@ -198,4 +187,12 @@ reviews (2026-08-16); each entry names its origin.
 
 ## Completed
 
-(none yet — items move here with **Completed:** vX.Y.Z (YYYY-MM-DD))
+- [x] **Upstream: PGLite disconnect sync-spin under bun test (gbrain v0.46.3).**
+  `PGLiteEngine.disconnect()` after ops-layer use froze the bun test runner in
+  a synchronous WASM spin; `test/eval/agent-adapter.test.ts` skipped teardown
+  as the mitigation, with "restore when the pin moves past the fix" as the
+  exit condition. At the v0.47.8.0 pin the spin no longer reproduces (verified
+  with a minimal engine repro AND the full adapter suite under `bun test`
+  behind a kill-switch watchdog); all six skipped teardowns are restored. The
+  adapter's bounded-disconnect race stays, as designed, for real runs.
+  **Completed:** v0.4.0 (2026-08-31)

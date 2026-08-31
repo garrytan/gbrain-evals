@@ -2,7 +2,80 @@
 
 > STATUS: published pending one human step — judge calibration hand-scoring
 > (24 coverage pairs in `./2026-08-16-brainbench-cat35-transcript-distill/judge-calibration-2026-08-25.json`).
-> All numbers below are from the committed baseline receipt.
+> Sections 1–12 below are the original v0.46.3.0 publication, kept intact as
+> the historical record. The current numbers are in the update block that
+> follows.
+
+## Update 2026-08-31 — gbrain v0.47.8.0: dream recall 88.1%, all 20 sessions emit, quote fidelity 82.7%
+
+This benchmark did its job: gbrain ran a write-path fix wave
+([gbrain#4742](https://github.com/garrytan/gbrain/pull/4742), v0.47.8.0)
+aimed at exactly the deficiencies §6 names — the triage misses on
+buried-signal transcripts, the paraphrase-inside-quote-marks failure, the
+missing `idea` concept in the facts taxonomy — and re-ran Cat 35 twice to
+bracket it. Same frozen corpus (manifest hash unchanged), same judge model
+(`claude-sonnet-4-6`) and judge prompt version (`2026-08-16-v1`), nothing
+tuned against the corpus.
+
+Two runs bracket the wave because the published baseline was 62 commits
+stale by the time the wave started: a fresh pre-wave run at the then-current
+gbrain master (`aa820c7f`) re-anchors the comparison so the wave only claims
+what the wave did.
+
+| Metric (dream lane unless noted) | Published v0.46.3.0 (2026-08-25) | Pre-wave master `aa820c7f` | **Post-wave `079941d2` (shipped as v0.47.8.0)** |
+|---|---|---|---|
+| Salient-unit recall (macro) | 61.5% [45.0–77.6] | 70.2% [53.5–85.6] | **88.1% [82.0–93.5]** |
+| Strict (full-credit only) | 56.1% | 64.7% | **82.1%** |
+| Sessions emitting pages (of 20 expected) | 16 | 16 | **20** |
+| Quote fidelity (mechanical substring) | 45.4% | 54.2% (130/240) | **82.7% (115/139)** |
+| Claim hallucination | 14.1% | 14.0% | **7.0%** |
+| Distractor leakage | 0% | 1.2% (1/86) | 1.2% (1/86) |
+| Usability | 85% | 89.6% | **90.8%** |
+| Facts lane (macro) | 60.8% | 58.6% | **64.8%** |
+| Verbatim control (judge ceiling) | 93.1% | 93.3% | 93.0% |
+| Gates | pass (recalibrated, §9) | pass | pass |
+| Measured cost | $6.20 | $6.23 | $6.36 |
+
+Receipts committed next to the baseline:
+[pre-wave](./2026-08-16-brainbench-cat35-transcript-distill/receipt-2026-08-31-prewave-baseline-aa820c7f.json) ·
+[post-wave](./2026-08-16-brainbench-cat35-transcript-distill/receipt-2026-08-31-v0.47.8.0-wave-079941d2.json).
+Both receipts record `gbrain_version: 0.47.7.0` because both runs happened on
+the release branch BEFORE its version bump — the SHAs are the binding
+identity. `079941d2` is the release candidate the wave measured; the shipped
+v0.47.8.0 (`2a56b512`, the current pin) adds only documentation and a
+protocol-conformance widening of the recall response schema on top — the
+write path under test is byte-identical.
+
+**What moved, mechanically.** All four previously-missed transcripts now
+emit pages, and every one of them still scored BELOW the 0.5 triage gate
+(0.45 / 0.35 / 0.42 / 0.42) — they pass through the wave's verified-segment
+rescue (a sub-gate score is admitted only when the triage judge's own quoted
+segments verify as substrings of the transcript), not through score
+inflation. The pure-routine controls (max 0.18) stay far below the 0.30
+rescue floor: zero false fires. Item-level, the wave (post-wave vs pre-wave,
+same judge): dream lane 42 gold items improved / 8 regressed out of 173,
+with 29 of the 42 improvements on the four rescued transcripts; the verbatim
+control moved 2 items up and 3 down, the noise band. Per kind, dream recall now leads on
+every kind: fact 52.5→86.1%, decision 67.0→88.6%, idea 60.0→86.7%, entity
+70.0→95.0%, vibe 71.4→87.5% (published→post-wave). The facts lane's idea
+kind — flagged in §6 as a taxonomy hole — went 38.3→50.0% after gbrain's
+extractor gained an `idea` fact kind.
+
+**Honesty notes.** (1) The judge-scored recall deltas are directional at
+n=1 per configuration; the mechanical counters (emission, quote-substring
+rate, triage scores, item flips) are deterministic and carry the
+attribution. (2) Quote fidelity's denominator dropped from 240 to 139
+quoted spans: the wave's repair pass strips quote marks from spans it
+cannot ground rather than leaving false verbatim claims — fewer quotes,
+mostly-true ones, plus the prompt now permits paraphrase-without-marks.
+(3) The two bracketing runs each record 1/86 confirmed distractor in dream
+pages where the published run recorded 0 — single-item judge variance on a
+borderline passing mention, reported as measured. (4) The judge-calibration
+hand-scoring gate in the STATUS banner remains open; these runs reuse the
+published judge prompt version, so the pending calibration covers them too.
+
+The sections below are the original publication, kept as written; only the
+package.json pin references in §10 and §12 are updated to the current pin.
 
 ## 1. Headline
 
@@ -103,7 +176,8 @@ know of that plants tenor as gold.
 ## 4. Adapters tested — every gbrain feature explained
 
 **`verbatim`** runs `runTranscriptsIngest` only
-(`src/core/transcripts/ingest.ts:139` at the pinned SHA): the cathedral-4
+(`src/core/transcripts/ingest.ts:139` at the original publication pin
+`cc3e2843…`, as are all code refs in this section and §11): the cathedral-4
 importer parses the Claude Code JSONL, redacts, renders anchor-line
 conversation pages, and stops. It is the control lane. Coverage should be
 near-100% by construction (the content is all there, verbatim), which
@@ -285,7 +359,7 @@ export ANTHROPIC_API_KEY=... OPENAI_API_KEY=...
 
 bun test test/eval/                                   # $0, no network
 bun run eval:cat35:smoke                              # BPRE smoke, measured $0.10 / 81 s
-CAT35_HARD_STOP_USD=50 CAT35_JUDGE_MODEL=claude-sonnet-4-6 bun run eval:cat35 # published run, measured $6.20 / 29 min
+CAT35_HARD_STOP_USD=50 CAT35_JUDGE_MODEL=claude-sonnet-4-6 bun run eval:cat35 # at the current pin this reproduces the 2026-08-31 post-wave receipt ($6.36); the $6.20 / 29 min publication ran at cc3e2843… (v0.46.3.0)
 # (eval:cat35 sets CAT35_FULL=1 — full spend; pre-run estimate was $11-18
 #  Haiku-judge / $19-28 Sonnet-judge; the batched judges came in far under.
 #  CAT35_HARD_STOP_USD=50 was set for the published run because the
@@ -297,10 +371,11 @@ bun eval/runner/cat35-transcript-distill-chart.ts \
   --out docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill/
 ```
 
-gbrain is pinned to `cc3e284316d6f0d66a3d73cddb680e8803d914be` (v0.46.3.0) in
-package.json — the benchmark is not valid against other revisions without
-re-verification (master had already moved past this SHA within hours of
-verification). The corpus FIXTURES ship committed — you never need to
+gbrain is pinned to `2a56b51236850f6abcbf2f1ea71981bb9630f6fe` (v0.47.8.0) in
+package.json — the pin the 2026-08-31 post-wave receipt was verified against
+(the original publication ran at `cc3e2843…`, v0.46.3.0, recorded in the
+baseline receipt). The benchmark is not valid against other revisions without
+re-verification. The corpus FIXTURES ship committed — you never need to
 regenerate them. The generator's Opus cache is gitignored, so a from-scratch
 regeneration (`bun run eval:generate-transcript-distill`) costs ~$6 on a fresh
 clone and under $1 on a machine with a warm cache (only the Opus prose is
@@ -310,7 +385,8 @@ receipt is committed next to this report.
 
 ## 11. Methodology details
 
-- **Lane seams** (all at the pin): `runTranscriptsIngest` with
+- **Lane seams** (all at the original publication pin `cc3e2843…`):
+  `runTranscriptsIngest` with
   `embed: false` and a pinned nonexistent `userPatternsPath` (redaction
   determinism); `runExtractConversationFactsCore` with the ingest run's
   `slugsTouched` and `workers: 1`; `runPhaseSynthesize` with `inputFile` per
@@ -368,5 +444,6 @@ receipt is committed next to this report.
   `test/eval/transcript-distill.test.ts`, `test/eval/all-and-budget.test.ts`,
   `test/eval/schemas.test.ts`
 - Install shim: `scripts/postinstall-pglite-link.ts`
-- gbrain: `github:garrytan/gbrain#cc3e284316d6f0d66a3d73cddb680e8803d914be`
-  (v0.46.3.0)
+- gbrain: `github:garrytan/gbrain#2a56b51236850f6abcbf2f1ea71981bb9630f6fe`
+  (v0.47.8.0; the original publication's pin `cc3e2843…` / v0.46.3.0 is
+  recorded in the baseline receipt)

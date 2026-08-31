@@ -1,4 +1,4 @@
-# Hermetic CI gate (WS10, BrainBench v0.4.0).
+# Hermetic CI gate (WS10, BrainBench v0.5.0).
 #
 # Zero secrets by design: everything here runs keyless. API-dependent
 # benchmarks (LongMemEval embeds, judge-based cats) run manually and land

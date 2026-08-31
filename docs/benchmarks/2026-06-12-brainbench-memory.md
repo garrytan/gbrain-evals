@@ -1,10 +1,26 @@
 # BrainBench memory conformance — first published run (Cat 34)
 
-**The verdict in one line: gbrain's production push path volunteers the right
-memory 81% of the time it should, never injects junk (precision 1.0), never
-leaks across sources, and loses zero facts through the write path — while the
-two contract seams quantify exactly what tighter injection budgets cost
-(recall 0.66 at 2 pointers, 0.45 at 1 fragment).**
+> **Update 2026-08-31 (gbrain v0.47.8.0 master, committed CI baseline).**
+> The scorecard below is the first published run and is kept as the
+> historical record; gbrain's CI has been holding and moving these numbers
+> against a committed baseline ever since, and the current baseline reads:
+> know-to-ask failure **0.000 on all three seams** (0/149 — the 9 shared
+> misses below were fixed upstream in v0.46.15.0), false fire **0.000 on all
+> three** (claude-code's 0.023 included), push recall **0.906 (openclaw) /
+> 1.000 (claude-code) / 0.552 (codex)** at precision 1.000 everywhere,
+> write-back and continuity 1.000, isolation violations 0. The gold corpus
+> has also grown since this run (149 know-to-ask / 96 push turns vs 146/94
+> here), so the rows are same-suite but not same-denominator. Source:
+> `evals/brainbench/baselines/main.json` in the gbrain repo at the pinned
+> SHA.
+
+**The first run's verdict in one line: gbrain's production push path
+volunteered the right memory 81% of the time it should (current baseline:
+91% — see the update above), never injected junk (precision 1.0), never
+leaked across sources, and lost zero facts through the write path — while
+the two contract seams quantified what tighter injection budgets cost at the
+time (recall 0.66 at 2 pointers, 0.45 at 1 fragment; both have since moved,
+see banner).**
 
 | harness (seam) | know-to-ask failure ↓ | false fire ↓ | push recall ↑ | push precision ↑ | write-back fidelity ↑ | continuity ↑ | isolation violations |
 |---|---|---|---|---|---|---|---|
@@ -16,8 +32,9 @@ two contract seams quantify exactly what tighter injection budgets cost
 
 What changed: agent memory now has a per-harness scorecard. Before this run, a
 salience or reflex change shipped on vibes; now every gbrain PR must hold or
-move these numbers against a committed baseline that CI compares against
-main's copy — a PR cannot rewrite the thing it's graded by.
+move the committed baseline (currently the numbers in the update banner above)
+that CI compares against main's copy — a PR cannot rewrite the thing it's
+graded by.
 
 ## What is gbrain
 
@@ -99,22 +116,25 @@ the published fixture/result JSON Schemas (`evals/brainbench/schema/`).
 | claude-code | 11/146 | 32/94 | 0/58 | 0/12 |
 | codex | 9/146 | 52/94 | 0/58 | 0/12 |
 
-How the know-to-ask denominators work (the headline 0.150 does NOT equal
-9/146): the 146 kta gold turns split into **60 should-retrieve turns and 86
-stay-silent turns**. The failure rate is misses over the should-retrieve
-subset only — 9/60 = 0.150 — and the false-fire rate is fires over the
-stay-silent subset — claude-code's 2/86 = 0.023 (formula:
+How the know-to-ask denominators worked in this run (the headline 0.150 does
+NOT equal 9/146): the 146 kta gold turns split into **60 should-retrieve
+turns and 86 stay-silent turns**. The failure rate is misses over the
+should-retrieve subset only — 9/60 = 0.150 — and the false-fire rate is fires
+over the stay-silent subset — claude-code's 2/86 = 0.023 (formula:
 `know_to_ask_failure_rate = missed / shouldRetrieve`, gbrain
 `src/eval/brainbench/metrics/know-to-ask.ts`). The failed/gold column above
 sums BOTH failure kinds over both subsets, which is why claude-code shows
-11/146: 9 misses + 2 false fires.
+11/146: 9 misses + 2 false fires. (The 2026-08-31 update banner at the top
+reflects the v0.47.8.0 re-run, where the 9 misses are fixed.)
 
-Three patterns worth pulling out. First, the know-to-ask failure rate is
-0.150 on every seam — those 9 misses (of the 60 should-retrieve turns) are the same 9 gold turns, the corpus's
+Three patterns worth pulling out. First, the know-to-ask failure rate was
+0.150 on every seam — those 9 misses (of the 60 should-retrieve turns) were the same 9 gold turns, the corpus's
 deliberately-hard lowercase and surname-only mentions that the v1 reflex's
-capitalization-biased extractor cannot see (documented limits in
-`entity-salience.ts`). That number is the measured roadmap for the next reflex
-iteration, not noise. Second, claude-code's two extra know-to-ask failures are
+capitalization-biased extractor could not see (documented limits in
+`entity-salience.ts`). That number was the measured roadmap for the next
+reflex iteration, not noise — and the iteration happened: gbrain v0.46.15.0's
+identity wave fixed exactly these turns (know-to-ask failure now 0.000; see
+the update banner). Second, claude-code's two extra know-to-ask failures are
 false fires, not misses: with no conversation memory, the hook contract
 re-injects pointers production suppression would hold — the bench prices the
 missing state, 0.023 per silent turn. Third, push recall is a clean budget
