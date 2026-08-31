@@ -41,11 +41,14 @@ Raise the cap explicitly rather than removing it.
 
 ### `bun test` hangs forever on a file that creates real PGLite engines
 
-At the pinned gbrain (v0.46.3), `PGLiteEngine.disconnect()` after ops-layer use
-enters a synchronous WASM spin that freezes the bun test runner (timers cannot
-fire; `--timeout` cannot interrupt). Plain `bun` runs are unaffected. Tests
-skip teardown for per-test engines (they die with the process); see TODOS.md
-for the upstream item.
+At gbrain v0.46.3 (the pin at first publication), `PGLiteEngine.disconnect()`
+after ops-layer use entered a synchronous WASM spin that froze the bun test
+runner (timers could not fire; `--timeout` could not interrupt). Plain `bun`
+runs were unaffected. Fixed upstream: at the current pin (v0.47.8.0) the spin
+no longer reproduces and the test teardowns are restored (TODOS.md
+"Completed"). If this section brought you here on a NEW hang, re-run the
+suspect file under `timeout N bun test <file>` to confirm before blaming
+teardown.
 
 ## Runner failures
 
