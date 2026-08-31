@@ -5,10 +5,10 @@ title: knowledge graphs
 
 # knowledge graphs
 
-A pattern in embedding-providers.
+A pattern in multimodal-search.
 
-Seen at [[companies/titan-systems]] and [[companies/acme-labs]]. Compare to [[concepts/intent-classification]].
+Seen at [[companies/echo-robotics-18]] and [[companies/pillar-robotics-8]]. Compare to [[concepts/intent-classification]].
 
 ## Notes
 
-The technique relies on eval-frameworks. Reference work in [[concepts/pre-fetched-synopsis]] demonstrates gpu-scheduling as a foundation.
+The technique relies on autonomous-picking. Reference work in [[concepts/pre-fetched-synopsis]] demonstrates agent-orchestration as a foundation.

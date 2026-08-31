@@ -5,11 +5,11 @@ title: Xena Demo
 
 # Xena Demo
 
-CEO at [[companies/pillar-co]]. Previously at [[companies/foundry-cloud]].
+CEO at [[companies/summit-platform-11]]. Previously at [[companies/horizon-tech-6]].
 
-Working on gpu-scheduling and [[concepts/synthesis-layers]] research.
+Working on embedding-providers and [[concepts/graph-traversal]] research.
 
 ## Timeline
 
-- 2024-11-03 joined [[companies/pillar-co]]
-- 2026-01-18 promoted to CEO
+- 2024-02-12 joined [[companies/summit-platform-11]]
+- 2026-03-05 promoted to CEO

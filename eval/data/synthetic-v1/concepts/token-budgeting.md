@@ -5,10 +5,10 @@ title: token budgeting
 
 # token budgeting
 
-A pattern in embedding-providers.
+A pattern in autonomous-picking.
 
-Seen at [[companies/pulse-cloud]] and [[companies/ridge-robotics]]. Compare to [[concepts/sparse-dense-fusion]].
+Seen at [[companies/delta-robotics-17]] and [[companies/widget-systems-1]]. Compare to [[concepts/sparse-dense-fusion]].
 
 ## Notes
 
-The technique relies on developer-tools. Reference work in [[concepts/rag-architectures]] demonstrates eval-frameworks as a foundation.
+The technique relies on agent-orchestration. Reference work in [[concepts/rag-architectures]] demonstrates gpu-scheduling as a foundation.

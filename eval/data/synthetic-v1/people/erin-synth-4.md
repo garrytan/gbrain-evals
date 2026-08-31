@@ -5,11 +5,11 @@ title: Erin Synth
 
 # Erin Synth
 
-VP Eng at [[companies/widget-data]]. Previously at [[companies/widget-labs]].
+CEO at [[companies/lattice-labs-25]]. Previously at [[companies/summit-platform-11]].
 
-Working on ai-infrastructure and [[concepts/source-tier-boost]] research.
+Working on memory-systems and [[concepts/embedding-models]] research.
 
 ## Timeline
 
-- 2024-11-05 joined [[companies/widget-data]]
-- 2026-04-10 promoted to VP Eng
+- 2024-03-13 joined [[companies/lattice-labs-25]]
+- 2026-04-02 promoted to CEO

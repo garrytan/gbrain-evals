@@ -5,4 +5,4 @@ title: Notes on ai infrastructure
 
 # Notes on ai infrastructure
 
-A short writeup. See [[concepts/context-windows]] for background.
+A short writeup. See [[concepts/contextual-retrieval]] for background.

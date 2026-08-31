@@ -5,11 +5,11 @@ title: Vera Example
 
 # Vera Example
 
-CEO at [[companies/foundry-ai]]. Previously at [[companies/jade-cloud]].
+Founder at [[companies/orbit-robotics-3]]. Previously at [[companies/ridge-robotics-10]].
 
-Working on developer-tools and [[concepts/reranker-stacks]] research.
+Working on agent-orchestration and [[concepts/cross-source-corroboration]] research.
 
 ## Timeline
 
-- 2024-07-20 joined [[companies/foundry-ai]]
-- 2026-05-01 promoted to CEO
+- 2024-11-16 joined [[companies/orbit-robotics-3]]
+- 2026-05-13 promoted to Founder

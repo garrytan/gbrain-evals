@@ -5,11 +5,11 @@ title: Paul Example
 
 # Paul Example
 
-Founder at [[companies/forge-robotics]]. Previously at [[companies/beacon-bio]].
+CEO at [[companies/pillar-robotics-8]]. Previously at [[companies/delta-robotics-17]].
 
-Working on eval-frameworks and [[concepts/context-windows]] research.
+Working on gpu-scheduling and [[concepts/intent-classification]] research.
 
 ## Timeline
 
-- 2024-05-09 joined [[companies/forge-robotics]]
-- 2026-04-08 promoted to Founder
+- 2024-07-02 joined [[companies/pillar-robotics-8]]
+- 2026-01-01 promoted to CEO

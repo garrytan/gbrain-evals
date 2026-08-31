@@ -5,11 +5,11 @@ title: Alice Example
 
 # Alice Example
 
-CEO at [[companies/cobalt-platform]]. Previously at [[companies/vector-co]].
+VP Eng at [[companies/cobalt-labs-16]]. Previously at [[companies/delta-robotics-17]].
 
-Working on ai-infrastructure and [[concepts/pre-fetched-synopsis]] research.
+Working on memory-systems and [[concepts/knowledge-graphs]] research.
 
 ## Timeline
 
-- 2024-06-05 joined [[companies/cobalt-platform]]
-- 2026-01-26 promoted to CEO
+- 2024-01-02 joined [[companies/cobalt-labs-16]]
+- 2026-03-05 promoted to VP Eng

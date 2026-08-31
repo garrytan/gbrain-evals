@@ -63,12 +63,16 @@ interface Generated {
   body: string;
 }
 
-function person(i: number, r: () => number): Generated {
+function person(i: number, r: () => number, companySlugs: string[]): Generated {
   const given = PEOPLE_GIVENS[i % PEOPLE_GIVENS.length];
   const surname = PEOPLE_SURNAMES[Math.floor(r() * PEOPLE_SURNAMES.length)];
   const fullSlug = `people/${given}-${surname}-${i}`;
-  const company1 = `companies/${COMPANY_BASES[Math.floor(r() * COMPANY_BASES.length)]}${COMPANY_SUFFIXES[Math.floor(r() * COMPANY_SUFFIXES.length)]}`;
-  const company2 = `companies/${COMPANY_BASES[Math.floor(r() * COMPANY_BASES.length)]}${COMPANY_SUFFIXES[Math.floor(r() * COMPANY_SUFFIXES.length)]}`;
+  // Link to companies that actually exist in the corpus. The old version
+  // invented base+suffix combos, so EVERY person->company wikilink dangled
+  // (generated slugs carry a trailing -<index> the inventions lacked) —
+  // audit finding generators-06.
+  const company1 = companySlugs[Math.floor(r() * companySlugs.length)];
+  const company2 = companySlugs[Math.floor(r() * companySlugs.length)];
   const concept = `concepts/${CONCEPTS[Math.floor(r() * CONCEPTS.length)]}`;
   const role = ROLES[Math.floor(r() * ROLES.length)];
 
@@ -134,10 +138,10 @@ Focus area: [[${concept}]]. Working on ${TOPICS[Math.floor(r() * TOPICS.length)]
   return { slug, body };
 }
 
-function concept(i: number, r: () => number): Generated {
+function concept(i: number, r: () => number, companySlugs: string[]): Generated {
   const slug = `concepts/${CONCEPTS[i % CONCEPTS.length]}`;
-  const c1 = `companies/${COMPANY_BASES[Math.floor(r() * COMPANY_BASES.length)]}${COMPANY_SUFFIXES[Math.floor(r() * COMPANY_SUFFIXES.length)]}`;
-  const c2 = `companies/${COMPANY_BASES[Math.floor(r() * COMPANY_BASES.length)]}${COMPANY_SUFFIXES[Math.floor(r() * COMPANY_SUFFIXES.length)]}`;
+  const c1 = companySlugs[Math.floor(r() * companySlugs.length)];
+  const c2 = companySlugs[Math.floor(r() * companySlugs.length)];
   const body = `---
 type: concept
 title: ${CONCEPTS[i % CONCEPTS.length].replace(/-/g, ' ')}
@@ -183,11 +187,15 @@ Next steps to be coordinated via [[${attendee2}]].
   return { slug, body };
 }
 
-function deal(i: number, r: () => number, companySlugs: string[]): Generated {
+function deal(i: number, r: () => number, companySlugs: string[], usedSlugs: Set<string>): Generated {
   const c1 = companySlugs[Math.floor(r() * companySlugs.length)];
   const c2 = companySlugs[Math.floor(r() * companySlugs.length)];
   const round = ['seed', 'series-a', 'series-b'][Math.floor(r() * 3)];
-  const slug = `deal/${c1.split('/').pop()}-${round}`;
+  // Disambiguate collisions deterministically: two deals for the same
+  // company+round used to share a slug, so one page silently overwrote the
+  // other and the manifest overcounted (audit finding generators-05).
+  let slug = `deal/${c1.split('/').pop()}-${round}`;
+  if (usedSlugs.has(slug)) slug = `${slug}-${i}`;
   const amt = (Math.floor(r() * 50) + 2);
   const body = `---
 type: deal
@@ -256,8 +264,9 @@ A short writeup. See [[concepts/${CONCEPTS[Math.floor(r() * CONCEPTS.length)]}]]
   return { slug, body };
 }
 
-function project(i: number, r: () => number): Generated {
+function project(i: number, r: () => number, peopleSlugs: string[]): Generated {
   const slug = `projects/proj-${i}`;
+  const owner = peopleSlugs[Math.floor(r() * peopleSlugs.length)];
   const body = `---
 type: project
 title: Project ${i}
@@ -265,7 +274,7 @@ title: Project ${i}
 
 # Project ${i}
 
-Internal initiative around ${TOPICS[i % TOPICS.length]}. Owner: [[people/${PEOPLE_GIVENS[i % PEOPLE_GIVENS.length]}-${PEOPLE_SURNAMES[0]}-${i % 30}]].
+Internal initiative around ${TOPICS[i % TOPICS.length]}. Owner: [[${owner}]].
 `;
   return { slug, body };
 }
@@ -284,17 +293,24 @@ function main(): void {
 
   // People reference companies
   const people: Generated[] = [];
-  for (let i = 0; i < 50; i++) people.push(person(i, r));
+  for (let i = 0; i < 50; i++) people.push(person(i, r, companies.map(c => c.slug)));
   pages.push(...people);
 
   // Concepts cross-reference companies + each other
-  for (let i = 0; i < 25; i++) pages.push(concept(i, r));
+  for (let i = 0; i < 25; i++) pages.push(concept(i, r, companies.map(c => c.slug)));
 
   // Meetings reference people
   for (let i = 0; i < 20; i++) pages.push(meeting(i, r, people.map(p => p.slug)));
 
   // Deals reference companies
-  for (let i = 0; i < 15; i++) pages.push(deal(i, r, companies.map(c => c.slug)));
+  {
+    const usedDealSlugs = new Set<string>();
+    for (let i = 0; i < 15; i++) {
+      const d = deal(i, r, companies.map(c => c.slug), usedDealSlugs);
+      usedDealSlugs.add(d.slug);
+      pages.push(d);
+    }
+  }
 
   // Daily notes
   for (let i = 0; i < 10; i++) pages.push(daily(i, r, people.map(p => p.slug)));
@@ -306,7 +322,15 @@ function main(): void {
   for (let i = 0; i < 5; i++) pages.push(writing(i, r));
 
   // Projects
-  for (let i = 0; i < 5; i++) pages.push(project(i, r));
+  for (let i = 0; i < 5; i++) pages.push(project(i, r, people.map(p => p.slug)));
+
+  // Slug uniqueness is a hard invariant: a duplicate means a silent
+  // overwrite and a manifest overcount (audit improvement generators-12).
+  const seen = new Set<string>();
+  for (const p of pages) {
+    if (seen.has(p.slug)) throw new Error(`duplicate slug generated: ${p.slug}`);
+    seen.add(p.slug);
+  }
 
   // Write to disk: <outdir>/<slug>.md (mkdirSync recursive)
   for (const p of pages) {

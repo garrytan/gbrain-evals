@@ -63,16 +63,32 @@ function zeroEmbedding(dim: number): Float32Array {
   return new Float32Array(dim);
 }
 
-// Synthesize a chunk_text for a slug. Uses the slug's last segment as the
-// primary keyword so searchKeyword (FTS) actually returns the page when
-// queried with the query that the qrels says is relevant. The text is
-// intentionally generic so the corpus stays placeholder-only.
-function synthesizeContent(slug: string, query: string): string {
+// Synthesize a chunk_text for a slug — LABEL-FAITHFUL (audit data-integrity-02):
+// the old version embedded keywords from only the FIRST query listing the
+// slug, so a slug labeled relevant to a second query had no matching content
+// and its `first_relevant_slug` label was unreachable by ANY retriever
+// (4 of 12 top-1 labels could never hit). The qrels define the intended
+// world; the corpus generator's job is to make the content match every
+// relevance label. The expected top-1 slug additionally carries a doubled
+// emphasis of its query's keywords so the top-1 label is content-grounded,
+// not an artifact of FTS tie-breaking. Rationale recorded in qrels/README.md.
+function synthesizeContent(slug: string, queries: string[], emphasisQuery: string | null): string {
   const lastSegment = slug.split('/').pop() ?? slug;
   const subject = lastSegment.replace(/-example$/, '').replace(/-/g, ' ');
-  // Include both the slug-subject AND a few query keywords so the FTS index
-  // surfaces the page on a search for the query terms.
-  return `${subject} is a placeholder entity. Context: ${query}. ` +
+  const contexts = queries.map(q => `Context: ${q}.`).join(' ');
+  // The expected top-1 page must carry a DECISIVELY stronger content signal
+  // for its query than sibling relevant pages: gbrain's source-boost map
+  // multiplies scores by directory (writing/ 1.4 vs concepts/ 1.3 — see
+  // gbrain search/source-boost.ts), so a top-1 label on a lower-boost
+  // directory only holds when term relevance clearly dominates. That is the
+  // right bar for a top-1 label: content-grounded, not tie-break luck
+  // (q11: a page titled "retrieval overview" gets free title hits +
+  // a higher directory boost for "retrieval augmented generation ...").
+  const emphasis = emphasisQuery
+    ? ` Primary focus: ${emphasisQuery}. ${subject} leads on ${emphasisQuery}. ` +
+      `This is the canonical page for ${emphasisQuery}. Deep notes on ${emphasisQuery} live here.`
+    : '';
+  return `${subject} is a placeholder entity. ${contexts}${emphasis} ` +
          `This is hermetic-synthetic content for the v0.41-launch BrainBench gate; ` +
          `every name in this baseline is a placeholder per gbrain privacy rules.`;
 }
@@ -109,21 +125,27 @@ async function main(): Promise<void> {
   console.error(`[generate] seeding ${allSlugs.size} placeholder pages…`);
 
   // Seed every slug with a synthesized chunk + basis-vector embedding.
-  // For each slug, pick the first query in qrels that lists it as relevant
-  // to give it sensible search-friendly content.
-  const slugQueryMap = new Map<string, string>();
+  // Content carries keywords from EVERY query that labels the slug relevant
+  // (label-faithful), and the query's expected top-1 slug gets emphasized
+  // keywords so first_relevant_slug is grounded in content.
+  const slugQueriesMap = new Map<string, string[]>();
+  const emphasisMap = new Map<string, string>();
   for (const q of qrels.queries) {
     for (const s of q.relevant_slugs) {
-      if (!slugQueryMap.has(s)) slugQueryMap.set(s, q.query);
+      const list = slugQueriesMap.get(s) ?? [];
+      list.push(q.query);
+      slugQueriesMap.set(s, list);
+    }
+    if (!emphasisMap.has(q.first_relevant_slug)) {
+      emphasisMap.set(q.first_relevant_slug, q.query);
     }
   }
 
   const activeDim = await getActiveDim();
   console.error(`[generate] active embedding dim = ${activeDim}`);
 
-  for (const slug of allSlugs) {
-    const query = slugQueryMap.get(slug)!;
-    const text = synthesizeContent(slug, query);
+  for (const slug of [...allSlugs].sort()) {
+    const text = synthesizeContent(slug, slugQueriesMap.get(slug)!, emphasisMap.get(slug) ?? null);
     await engine.putPage(slug, {
       type: inferType(slug),
       title: slug.split('/').pop() ?? slug,
@@ -144,30 +166,52 @@ async function main(): Promise<void> {
   // Now run each qrels query via engine.searchKeyword and capture the
   // result as an EvalCandidateInput row (matches the shape `gbrain eval
   // export` writes for `tool_name: 'search'`).
-  console.error(`[generate] running ${qrels.queries.length} captures…`);
-  const captured = await Promise.all(
-    qrels.queries.map(async (q) => {
-      const t0 = Date.now();
-      const results = await engine.searchKeyword(q.query);
-      const latency = Date.now() - t0;
-      return {
-        tool_name: 'search' as const,
-        query: q.query,
-        retrieved_slugs: results.map((r: { slug: string }) => r.slug),
-        retrieved_chunk_ids: results.map((r: { chunk_id: number }) => r.chunk_id),
-        source_ids: ['default'],
-        expand_enabled: null,
-        detail: null,
-        detail_resolved: null,
-        vector_enabled: false,
-        expansion_applied: false,
-        latency_ms: latency,
-        remote: false,
-        job_id: null,
-        subagent_id: null,
-      };
-    }),
-  );
+  console.error(`[generate] running ${qrels.queries.length} captures (serial — honest latencies)…`);
+  // SERIAL capture (audit data-integrity-01): the old Promise.all ran all 12
+  // queries concurrently on one PGLite, so each row's wall-clock latency
+  // included time spent queued behind the other 11 (~6x inflation), which
+  // neutered the baseline's latency-regression gate. One warmup query
+  // absorbs first-touch costs before timing starts.
+  await engine.searchKeyword(qrels.queries[0].query);
+  const captured = [] as Array<Record<string, unknown> & { query: string; retrieved_slugs: string[]; latency_ms: number }>;
+  for (const q of qrels.queries) {
+    const t0 = Date.now();
+    const results = await engine.searchKeyword(q.query);
+    const latency = Date.now() - t0;
+    captured.push({
+      tool_name: 'search' as const,
+      query: q.query,
+      retrieved_slugs: results.map((r: { slug: string }) => r.slug),
+      retrieved_chunk_ids: results.map((r: { chunk_id: number }) => r.chunk_id),
+      source_ids: ['default'],
+      expand_enabled: null,
+      detail: null,
+      detail_resolved: null,
+      vector_enabled: false,
+      expansion_applied: false,
+      latency_ms: latency,
+      remote: false,
+      job_id: null,
+      subagent_id: null,
+    });
+  }
+
+  // Label-reachability check: every query's expected top-1 must actually be
+  // retrievable — ideally AT rank 1 — on this corpus. A label no retriever
+  // can hit is a broken gate, not a hard benchmark (data-integrity-02).
+  const unreachable: string[] = [];
+  for (let i = 0; i < qrels.queries.length; i++) {
+    const expected = qrels.queries[i].first_relevant_slug;
+    const got = captured[i].retrieved_slugs;
+    if (got[0] !== expected) {
+      unreachable.push(`${qrels.queries[i].query_id}: expected top-1 ${expected}, got ${got[0] ?? '(none)'}`);
+    }
+  }
+  if (unreachable.length > 0) {
+    console.error(`[generate] FATAL: ${unreachable.length} first_relevant_slug label(s) not at rank 1 on the reference corpus:`);
+    for (const u of unreachable) console.error(`  - ${u}`);
+    process.exit(1);
+  }
 
   // Sanity-check: every capture should have at least one result (else the
   // baseline isn't useful and the gate will report 0 jaccard).
@@ -177,9 +221,12 @@ async function main(): Promise<void> {
     for (const c of empty) console.error(`  - "${c.query}"`);
   }
 
-  // Publish the baseline. Use a deterministic publish timestamp so
-  // re-running the generator produces a byte-stable file (only changes
-  // when input changes — important for clean git diffs on regen).
+  // Publish the baseline with a pinned publish timestamp. HONESTY (audit
+  // data-integrity-04): regeneration is NOT byte-identical — latency_ms
+  // fields are real wall-clock measurements and vary by machine (that is
+  // the point of the latency gate). Content rows (slugs, chunk ids, query
+  // hashes) ARE deterministic; a regen diff should touch only latency
+  // fields and the derived mean.
   const file = buildBaselineFromInput(captured, {
     label: 'v0.41-launch',
     publishedAt: new Date('2026-05-24T00:00:00.000Z'),

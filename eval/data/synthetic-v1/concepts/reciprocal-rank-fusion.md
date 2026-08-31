@@ -5,10 +5,10 @@ title: reciprocal rank fusion
 
 # reciprocal rank fusion
 
-A pattern in gpu-scheduling.
+A pattern in ai-infrastructure.
 
-Seen at [[companies/kite-labs]] and [[companies/delta-platform]]. Compare to [[concepts/embedding-models]].
+Seen at [[companies/iris-tech-22]] and [[companies/beacon-cloud-4]]. Compare to [[concepts/embedding-models]].
 
 ## Notes
 
-The technique relies on multimodal-search. Reference work in [[concepts/temporal-grounding]] demonstrates multimodal-search as a foundation.
+The technique relies on eval-frameworks. Reference work in [[concepts/temporal-grounding]] demonstrates developer-tools as a foundation.

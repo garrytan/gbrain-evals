@@ -7,8 +7,8 @@ title: gap analysis
 
 A pattern in multimodal-search.
 
-Seen at [[companies/grove-robotics]] and [[companies/kite-systems]]. Compare to [[concepts/cross-source-corroboration]].
+Seen at [[companies/delta-robotics-17]] and [[companies/widget-systems-1]]. Compare to [[concepts/cross-source-corroboration]].
 
 ## Notes
 
-The technique relies on embedding-providers. Reference work in [[concepts/matryoshka-embeddings]] demonstrates inference-platforms as a foundation.
+The technique relies on agent-orchestration. Reference work in [[concepts/matryoshka-embeddings]] demonstrates inference-platforms as a foundation.

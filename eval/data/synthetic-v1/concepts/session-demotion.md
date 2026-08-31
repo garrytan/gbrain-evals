@@ -5,10 +5,10 @@ title: session demotion
 
 # session demotion
 
-A pattern in developer-tools.
+A pattern in agent-orchestration.
 
-Seen at [[companies/onyx-robotics]] and [[companies/crater-ai]]. Compare to [[concepts/query-expansion]].
+Seen at [[companies/foundry-co-2]] and [[companies/widget-systems-1]]. Compare to [[concepts/query-expansion]].
 
 ## Notes
 
-The technique relies on memory-systems. Reference work in [[concepts/reciprocal-rank-fusion]] demonstrates inference-platforms as a foundation.
+The technique relies on multimodal-search. Reference work in [[concepts/reciprocal-rank-fusion]] demonstrates autonomous-picking as a foundation.
