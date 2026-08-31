@@ -1,5 +1,33 @@
 # BrainBench: LongMemEval (public benchmark)
 
+> ## ERRATUM (2026-08-31) — metric definition
+>
+> **The recall numbers in this report are ANY-HIT recall@5, not the official
+> LongMemEval `recall_all@5`.** Our runner counted a question as recalled if
+> ANY of its ground-truth sessions appeared in the top-5. The official
+> evaluator ([`src/retrieval/eval_utils.py`](https://github.com/xiaowu0162/LongMemEval))
+> requires ALL ground-truth sessions in the top-k
+> (`all(doc in recalled_docs for doc in correct_docs)`), which is the metric
+> published systems report against. For single-session questions the two are
+> identical; for the 133 multi-session questions (and part of
+> temporal-reasoning) any-hit is strictly looser — the multi-session rows
+> showing 100.0% below are the most inflated, and the head-to-head table's
+> "same metric" claim does not hold for those rows.
+>
+> The runner now computes `recall_all@5` as the headline metric (any-hit is
+> reported separately as a diagnostic). **The corrected full-500 number has
+> not been re-measured yet** — it requires OpenAI embeddings (~$2 first run,
+> free with the local cache) and is tracked in `TODOS.md`. Re-run with:
+>
+> ```sh
+> bun eval/runner/longmemeval.ts --dataset eval/data/longmemeval/longmemeval_s.json
+> ```
+>
+> The historical numbers below are preserved unchanged for the audit trail.
+> Expect the corrected headline to be equal or lower, with multi-session and
+> temporal-reasoning taking the reductions. README.md and
+> docs/comparison-systems.md carry the same annotation until re-measurement.
+
 **Date:** 2026-05-07
 **gbrain version:** v0.28.8
 **Dataset:** [`xiaowu0162/longmemeval`](https://huggingface.co/datasets/xiaowu0162/longmemeval), `_s` split (500 questions, ~50 conversation sessions per haystack)

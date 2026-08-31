@@ -3,7 +3,8 @@
 This directory holds **hermetic-synthetic** baseline files consumed by
 `gbrain eval gate --baseline <FILE>`. Each baseline is a snapshot of the
 retrieval behavior of a known-good gbrain version against a placeholder
-test corpus. CI in this repo gates every PR against the latest baseline
+test corpus. CI in this repo runs the qrels + baseline retrieval gate on
+every PR (see .github/workflows/ci.yml)
 to catch retrieval regressions in gbrain itself.
 
 ## Privacy posture (gbrain D9)

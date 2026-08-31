@@ -4,6 +4,38 @@ All notable changes to gbrain-evals are recorded here. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versions are semver and kept
 in sync with `VERSION` + `package.json`.
 
+## [0.3.0] - 2026-08-31
+
+**Benchmark semantics changed — scores from 0.3.0 are not comparable to
+0.2.x scores.** A 35-agent audit (237 verified findings, committed at
+`docs/audit/2026-08-31-findings.json`) drove a full remediation:
+
+- **Metric corrections:** shared recall counts unique ids (could exceed 1.0
+  on chunk-grained results), precision@k divides by k, LongMemEval headline
+  becomes official `recall_all@k` (was any-hit — erratum published in the
+  2026-05-07 report). LLM judge enforces rubric coverage (partial score sets
+  were silently renormalized), runs at temperature 0.
+- **Outcome contract:** every runner writes a validated receipt
+  (run_status / verdict / failure_origin); `all.ts` aggregates receipts, not
+  exit codes; a skipped category can never count as pass. Unified scoring
+  policy: system-under-test failures score as misses; harness errors are
+  excluded and capped (>10% invalidates a run).
+- **Crash fixes vs pinned gbrain v0.47:** cat13/cat13b (configureGateway),
+  adversarial + type-accuracy (async extractPageLinks), longmemeval imports,
+  17 runners' version stamps. gbrain dependency pinned to an exact SHA;
+  `bun.lock` committed.
+- **Eval integrity:** ~12 previously-unfailable evals got real gates,
+  feature-boundary docs, and negative controls; hidden default-mode reranker
+  removed from embedder A/Bs; judges blinded (cat5/cat14/cat29); shootout
+  shell scripts fixed (env expansion bug killed 4/7 cells silently).
+- **Data integrity:** `eval/runner/validate-data.ts` gate (manifest counts,
+  wikilink resolution, qrels label reachability); synthetic-v1 regenerated
+  (every person→company link was dangling; one deal page silently
+  overwritten); qrels q11 adjudicated with logged rationale; latency
+  baseline regenerated serially (was ~10x inflated by concurrent capture).
+- **CI:** hermetic gate on every PR — typecheck, unit suite, keyless runner
+  subset, data validation, qrels + baseline retrieval gate.
+
 ## [0.2.0] - 2026-05-29
 
 ### Added — PrecisionMemBench (external benchmark)

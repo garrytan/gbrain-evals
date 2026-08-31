@@ -7,9 +7,14 @@ benchmark we should add.
 
 ## LongMemEval (`xiaowu0162/longmemeval` `_s` split, 500 questions)
 
-Metric column key: **R@k** = retrieval recall (does any ground-truth
-session land in top-k?). **QA-acc** = end-to-end answer accuracy via an
-LLM judge. **Different metrics, not directly comparable.**
+Metric column key (corrected 2026-08-31): **R@k** = session-level retrieval
+recall. The OFFICIAL LongMemEval evaluator computes `recall_all@k` — ALL of a
+question's ground-truth sessions must land in top-k — and that is what
+systems using the published evaluator report. The gbrain rows below were
+measured with a looser ANY-HIT variant (>= 1 ground-truth session in top-k)
+and are flagged; corrected recall_all numbers are pending re-measurement
+(see the 2026-05-07 report's erratum). **QA-acc** = end-to-end answer
+accuracy via an LLM judge. **Different metrics, never directly comparable.**
 
 | System | Headline | Metric | k | n | LLM in loop | Source |
 |---|---|---|---|---|---|---|

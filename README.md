@@ -45,7 +45,7 @@ metric at the expense of the other.
 
 | What we measured | Result | Plain English | Report |
 |---|---|---|---|
-| **LongMemEval** (public dataset, 500 questions over long chat histories) | **97.6% recall@5** | The right memory is in the top 5 results 97.6% of the time. Best published score on this test, with no LLM in the retrieval loop. | [report](docs/benchmarks/2026-05-07-longmemeval-s.md) |
+| **LongMemEval** (public dataset, 500 questions over long chat histories) | **97.6% any-hit recall@5** (under re-measurement) | At least one right memory is in the top 5 results 97.6% of the time. **Erratum 2026-08-31:** this is looser than the official `recall_all@5` that other systems publish — multi-answer questions counted as recalled when only one answer surfaced. The runner now reports the official metric; corrected number pending a keyed re-run (see the report's erratum). | [report](docs/benchmarks/2026-05-07-longmemeval-s.md) |
 | **Relational questions** ("who introduced X to Y?") on a 240-page fictional life | **97.9% recall@5, 49.1% precision@5** | Beats plain vector search by 38 points of precision. The graph layer (who-knows-whom) is worth about 30 of those points on its own. | [report](docs/benchmarks/2026-04-23-brainbench-v0.20.0.md) |
 | **Stability across 20 releases** (v0.20.0 → v0.40.6.0) | **zero regression** | The headline numbers stayed identical, release after release. New features did not quietly make retrieval worse. | [report](docs/benchmarks/2026-05-23-v0.40.6.0-snapshot.md) |
 | **PrecisionMembench** (an outside precision-only test) | **#2, and an honest #1-by-default story** | See the honesty note below. | [report](docs/benchmarks/2026-05-29-precisionmembench.md) |
@@ -79,8 +79,10 @@ question order.
 
 ## What we test, end to end
 
-Each row is a real test with a committed pass/fail threshold. "Shipping" means it
-runs in CI and gates releases.
+Each row is a real test with a committed pass/fail threshold. "Shipping" means
+the hermetic form runs in this repo's CI on every PR (typecheck, unit suite,
+keyless runner subset, data-integrity gate, qrels + baseline retrieval gate);
+rows needing API keys run manually and land receipts under `eval/reports/`.
 
 | Area | What it checks | Bar | Status |
 |------|----------------|-----|--------|
@@ -121,13 +123,19 @@ bun eval/runner/longmemeval.ts --stratify 10  # fast 10-per-type sample
 First run costs about $2 in embeddings; later runs hit a local cache and cost
 roughly nothing.
 
-**Our own suite (we call it BrainBench; no API keys, fully offline):**
+**Our own suite (we call it BrainBench):**
 
 ```sh
 bun run eval:run        # the full retrieval + behavior suite, about 15 min
 bun run eval:run:dev    # one-shot smoke test
 bun run eval:world:view # browse the fictional corpus the tests run against
 ```
+
+Honesty note on keys: the keyword/BM25 and graph adapters are fully offline;
+the vector and hybrid adapters embed with OpenAI, so `eval:run` wants
+`OPENAI_API_KEY` (first run ~$2, then the local embedding cache makes reruns
+free). Keyless runs cover the offline subset and say so in their receipts
+instead of silently passing.
 
 **The precision test:**
 
@@ -168,7 +176,12 @@ gbrain-evals/
 ## Contributing
 
 - **Reproduce a result:** every scorecard names the commit it ran on.
-  `git checkout <sha> && bun run eval:run`.
+  `git checkout <sha> && bun install --frozen-lockfile && bun run eval:run`.
+  The gbrain dependency is pinned to an exact SHA in `package.json` and the
+  lockfile is committed, so a checkout resolves the same bits that produced
+  the scorecard. (Scorecards dated before 2026-08-31 predate the pin — the
+  dependency floated on `#master` then, so those runs are reproducible only
+  approximately; each report names the gbrain version it ran against.)
 - **Score your own system:** implement an adapter against our interface, register
   it, run the suite, and open a PR with your scorecard. gbrain is one system under
   test, not the subject of the benchmark.
