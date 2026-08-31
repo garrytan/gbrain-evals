@@ -8,7 +8,9 @@
 import { readFileSync, readdirSync, statSync } from 'fs';
 import { join, relative } from 'path';
 
-const CORPUS_DIR = join(process.cwd(), 'eval/data/synthetic-v1');
+// Resolved relative to this file, not process.cwd(), so runners work from
+// any working directory (audit improvement shared-infra-12).
+const CORPUS_DIR = join(import.meta.dir, '../data/synthetic-v1');
 
 export interface SyntheticPage {
   slug: string;
@@ -20,7 +22,6 @@ export function loadSyntheticV1(): SyntheticPage[] {
   const pages: SyntheticPage[] = [];
   walk(CORPUS_DIR, (file) => {
     if (!file.endsWith('.md')) return;
-    if (file.endsWith('_manifest.json')) return;
     const rel = relative(CORPUS_DIR, file).replace(/\.md$/, '');
     const body = readFileSync(file, 'utf8');
     // Extract type from frontmatter (simple line scan)
@@ -35,7 +36,10 @@ export function loadSyntheticV1(): SyntheticPage[] {
 }
 
 function walk(dir: string, cb: (path: string) => void): void {
-  for (const entry of readdirSync(dir)) {
+  // Sorted: readdirSync returns raw directory order (hash order on ext4),
+  // and syntheticQueries() slices the first N entities — unsorted walks made
+  // the derived query set machine-dependent (audit finding shared-infra-05).
+  for (const entry of readdirSync(dir).sort()) {
     const full = join(dir, entry);
     if (statSync(full).isDirectory()) walk(full, cb);
     else cb(full);

@@ -114,33 +114,33 @@ export interface Query {
 }
 
 /**
- * PublicQuery — the shape adapters SEE at runtime (Day 9 sealed-qrels).
+ * PublicQuery — the shape adapters SEE at runtime (sealed-qrels, tightened
+ * per audit finding shared-infra-04 + outside-voice round 2).
  *
- * Multi-adapter.ts calls `sanitizeQuery()` before passing each query to
- * `adapter.query()`. The sanitized copy strips the `gold` field entirely,
- * so an adapter cannot read `q.gold.relevant` to cheat. Scorers keep the
- * full Query shape and compare adapter output against gold after the call.
- *
- * Adapters that need as_of_date for temporal queries still get it —
- * PublicQuery keeps every field EXCEPT gold.
+ * The minimal operational surface: an adapter needs the query text, a stable
+ * id, and (for temporal queries) the as-of date. EVERYTHING else on Query
+ * leaks classification signal to the system under test:
+ *   - gold / acceptable_variants / known_failure_modes — the answer itself
+ *   - tier — announces "this is an adversarial/fuzzy trap"
+ *   - tags — 'identity-collision', 'contradiction', poison markers
+ *   - expected_output_type — reveals abstention/contradiction expectations
+ *   - author — separates externally-authored probes
+ * None of those are needed to rank documents. Scorers keep the full Query.
  */
-export type PublicQuery = Omit<Query, 'gold'>;
+export interface PublicQuery {
+  id: string;
+  text: string;
+  as_of_date?: string | 'corpus-end' | 'per-source';
+}
 
 export function sanitizeQuery(q: Query): PublicQuery {
-  // Build a new object to sever the reference chain. Using spread + delete
-  // would leave the `gold` key on the prototype-shape in some engines;
-  // explicit enumeration is the safest pattern.
+  // Build a new object with explicit enumeration — never spread + delete —
+  // so no hidden field or shared reference survives the boundary.
   const out: PublicQuery = {
     id: q.id,
-    tier: q.tier,
     text: q.text,
-    expected_output_type: q.expected_output_type,
   };
   if (q.as_of_date !== undefined) out.as_of_date = q.as_of_date;
-  if (q.acceptable_variants !== undefined) out.acceptable_variants = q.acceptable_variants;
-  if (q.known_failure_modes !== undefined) out.known_failure_modes = q.known_failure_modes;
-  if (q.author !== undefined) out.author = q.author;
-  if (q.tags !== undefined) out.tags = q.tags;
   return out;
 }
 
@@ -220,9 +220,13 @@ export interface Adapter {
   /**
    * Answer a single query. Adapters return their top results in rank
    * order. The scorer applies the query's `k` cutoff; adapters are free
-   * to return fewer than k (with a shorter list).
+   * to return fewer than k (with a shorter list) — precision@k still
+   * divides by k, so short lists are not rewarded.
+   *
+   * Takes PublicQuery, not Query: the compiler enforces the sealed-qrels
+   * boundary — an adapter cannot even name `q.gold` or `q.tier`.
    */
-  query(q: Query, state: BrainState): Promise<RankedDoc[]>;
+  query(q: PublicQuery, state: BrainState): Promise<RankedDoc[]>;
 
   /**
    * Persist the brain state to a filesystem path (for reproducibility +
@@ -248,26 +252,32 @@ export interface Adapter {
 }
 
 // ─── Scorer helpers ─────────────────────────────────────────────────
+//
+// The metric implementations live in eval/runner/metrics.ts (one denominator
+// policy, one place to test). These RankedDoc[] wrappers exist for
+// back-compat with existing scorer call sites; they normalize to id lists
+// and delegate. Audit findings shared-infra-02/03: the previous inline
+// implementations double-counted duplicate page_ids (recall could exceed
+// 1.0 on chunk-grained results) and divided precision by the returned-list
+// length instead of k (rewarding adapters that return fewer docs).
+
+import * as metrics from './metrics.ts';
 
 /** Standard top-K slice; helper since every scorer needs it. */
 export function topK(docs: RankedDoc[], k: number): RankedDoc[] {
   return docs.slice(0, k);
 }
 
-/** Precision@k: fraction of top-k that are in relevant set. */
+/** Precision@k with the standard /k denominator, counting each relevant id once. */
 export function precisionAtK(docs: RankedDoc[], relevant: Set<string>, k: number): number {
-  const topDocs = topK(docs, k);
-  if (topDocs.length === 0) return 0;
-  let hits = 0;
-  for (const d of topDocs) if (relevant.has(d.page_id)) hits++;
-  return hits / topDocs.length;
+  return metrics.precisionAtK(docs.map(d => d.page_id), relevant, k);
 }
 
-/** Recall@k: fraction of relevant found in top-k. */
+/**
+ * Recall@k counting each relevant id at most once (never exceeds 1.0).
+ * Returns NaN for an empty relevant set — callers exclude such queries from
+ * means instead of averaging in a fake 0.
+ */
 export function recallAtK(docs: RankedDoc[], relevant: Set<string>, k: number): number {
-  if (relevant.size === 0) return 0;
-  const topDocs = topK(docs, k);
-  let hits = 0;
-  for (const d of topDocs) if (relevant.has(d.page_id)) hits++;
-  return hits / relevant.size;
+  return metrics.recallAtK(docs.map(d => d.page_id), relevant, k);
 }

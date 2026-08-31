@@ -5,10 +5,10 @@ title: rag architectures
 
 # rag architectures
 
-A pattern in eval-frameworks.
+A pattern in embedding-providers.
 
-Seen at [[companies/titan-data]] and [[companies/beacon-ai]]. Compare to [[concepts/hybrid-retrieval]].
+Seen at [[companies/ridge-robotics-10]] and [[companies/kite-bio-24]]. Compare to [[concepts/hybrid-retrieval]].
 
 ## Notes
 
-The technique relies on developer-tools. Reference work in [[concepts/synthesis-layers]] demonstrates ai-infrastructure as a foundation.
+The technique relies on multimodal-search. Reference work in [[concepts/synthesis-layers]] demonstrates gpu-scheduling as a foundation.

@@ -30,7 +30,13 @@
 #     Gated on HuggingFace; one-time setup.
 #
 # Cost: ~$68/cell × 7 = ~$476. Wallclock: ~90min/cell × 7 = ~10.5h serial.
-# Hard cap: $90/cell (wrapper aborts the cell on overrun).
+# Cost control: this wrapper meters WALL CLOCK, not dollars (nothing here
+# reads token counts; the old "$90/cell hard cap" comment described logic
+# that never existed — audit orchestrators-10). Each cell's answer-gen step
+# runs under timeout(1) with PHASE1_CELL_WALL_CAP_SECONDS (default 9000s =
+# ~1.7x the expected ~90min); on overrun the cell is killed, marked FAILED,
+# and stays resumable via --resume-from. If timeout(1) is missing (stock
+# macOS without coreutils) the cap is disabled with a loud warning.
 #
 # Resume:
 #   bash scripts/run-shootout-phase1.sh                # initial run
@@ -72,18 +78,31 @@ if ! command -v gbrain >/dev/null 2>&1; then
   exit 1
 fi
 
-GBRAIN_VERSION="$(gbrain --version 2>&1 | head -1)"
-case "$GBRAIN_VERSION" in
-  *0.35.1.0*|*0.35.2*|*0.36.*) ;; # ok
-  *)
-    echo "[phase1] FATAL: gbrain version is $GBRAIN_VERSION (need v0.35.1.0+ for --resume-from)" >&2
-    exit 1
-    ;;
-esac
+# Minimum-version gate (audit orchestrators-02: the old allowlist accepted
+# only 0.35.x-0.36.x and rejected every NEWER version, including the repo's
+# own pin). --resume-from needs >= 0.35.1.0; anything newer is fine.
+GBRAIN_VERSION_RAW="$(gbrain --version 2>&1 | head -1)"
+GBRAIN_VERSION="$(printf '%s' "$GBRAIN_VERSION_RAW" | grep -oE '[0-9]+(\.[0-9]+)+' | head -1)"
+MIN_VERSION="0.35.1.0"
+if [ -z "$GBRAIN_VERSION" ] || [ "$(printf '%s\n%s\n' "$MIN_VERSION" "$GBRAIN_VERSION" | sort -V | head -1)" != "$MIN_VERSION" ]; then
+  echo "[phase1] FATAL: gbrain version is '$GBRAIN_VERSION_RAW' (need >= $MIN_VERSION for --resume-from)" >&2
+  exit 1
+fi
+
+# Per-cell wall-clock cap (see header). Applied to the answer-gen step only —
+# that is the step that spends money; smoke + scoring are bounded and cheap.
+CELL_WALL_CAP_SECONDS="${PHASE1_CELL_WALL_CAP_SECONDS:-9000}"
+CAP_CMD=()
+if command -v timeout >/dev/null 2>&1; then
+  CAP_CMD=(timeout "$CELL_WALL_CAP_SECONDS")
+else
+  echo "[phase1] WARN: timeout(1) not found — per-cell wall-clock cap DISABLED (install coreutils to enable)" >&2
+fi
 
 # Results land here. Receipts get committed to the PR β branch by the user
-# after the run completes.
-RESULTS_DIR="$REPO_ROOT/results/shootout"
+# after the run completes. Overridable so hermetic tests never touch the
+# repo's committed artifacts under results/shootout/.
+RESULTS_DIR="${SHOOTOUT_RESULTS_DIR:-$REPO_ROOT/results/shootout}"
 mkdir -p "$RESULTS_DIR"
 LOG="$RESULTS_DIR/phase1-run-log.txt"
 : > "$LOG"
@@ -135,47 +154,108 @@ run_cell() {
     return 2
   fi
 
-  # gbrain config via env. File-plane config (~/.gbrain/config.json) is the
-  # other path but env is faster + scoped to this invocation only.
-  local resume_arg=""
+  # Reranker cells: gbrain's CLI has NO way to configure a reranker for
+  # `gbrain eval longmemeval` — the only entry is the programmatic
+  # searchConfigSnapshot (v0.45 #3676), which is not exported. The old
+  # script "configured" it via GBRAIN_RERANKER_MODEL / GBRAIN_SEARCH_MODE /
+  # GBRAIN_SEARCH_RERANKER_ENABLED env vars that NOTHING in gbrain reads
+  # (audit orchestrators-03) — and the ${var:+X=y} prefix expansion made
+  # every such cell die with exit 127 anyway (audit orchestrators-01,
+  # reproduced: expansion words are never treated as assignments). Running
+  # the cell unreranked while labeling it reranked would be worse than not
+  # running it. Abort loudly until upstream ships a --search-config flag
+  # (TODOS.md); note zerank-2's hosted API sunsets 2026-09-04.
+  if [ -n "$reranker" ]; then
+    echo "  -> $cell SKIPPED: reranker cells are not configurable via the gbrain CLI (see TODOS.md); refusing to run unreranked under a reranked label" >&2
+    return 3
+  fi
+
+  local resume_args=()
   if [ -f "$out" ]; then
-    resume_arg="--resume-from $out"
+    resume_args=(--resume-from "$out")
     echo "  resuming from existing $out ($(wc -l <"$out") rows present)"
   fi
 
-  echo "  embed + answer-gen..."
-  GBRAIN_EMBEDDING_MODEL="$embedder" \
-  GBRAIN_EMBEDDING_DIMENSIONS="$dim" \
-  ${reranker:+GBRAIN_RERANKER_MODEL="$reranker"} \
-  ${reranker:+GBRAIN_SEARCH_RERANKER_ENABLED=true} \
-  GBRAIN_SEARCH_MODE=tokenmax \
-    gbrain eval longmemeval "$LONGMEMEVAL_DATASET" \
-      --output "$out" \
-      --mode tokenmax \
-      --expansion \
-      $resume_arg \
-      >>"$LOG" 2>&1
+  if [ ${#CAP_CMD[@]} -gt 0 ]; then
+    echo "  embed + answer-gen... (wall cap: ${CELL_WALL_CAP_SECONDS}s)"
+  else
+    echo "  embed + answer-gen... (wall cap: DISABLED — timeout(1) missing)"
+  fi
+  # env(1) with array args: assignments here are ordinary arguments to env,
+  # so they survive word-splitting rules that broke the old inline-prefix
+  # form. GBRAIN_EMBEDDING_MODEL/DIMENSIONS are genuinely read by gbrain's
+  # config loader (config.ts:712); --mode is the explicit search-mode flag.
+  # ${CAP_CMD[@]+...} keeps set -u happy on an empty array (bash < 4.4);
+  # timeout(1) execs env → gbrain, so config still reaches the child, and an
+  # overrun returns 124 which lands in the same FAILED path (resume-safe).
+  if ! ${CAP_CMD[@]+"${CAP_CMD[@]}"} env \
+      GBRAIN_EMBEDDING_MODEL="$embedder" \
+      GBRAIN_EMBEDDING_DIMENSIONS="$dim" \
+      gbrain eval longmemeval "$LONGMEMEVAL_DATASET" \
+        --output "$out" \
+        --mode tokenmax \
+        --expansion \
+        "${resume_args[@]}" \
+        >>"$LOG" 2>&1; then
+    echo "  -> $cell answer-gen FAILED or exceeded the ${CELL_WALL_CAP_SECONDS}s wall cap (see $LOG)" >&2
+    return 4
+  fi
 
+  # Published evaluator interface: positional <metric_model> <hyp> <ref>
+  # (the old --input/--output flags do not exist upstream — audit
+  # orchestrators-04). Verify against your LongMemEval checkout's README.
   echo "  score via evaluate_qa.py..."
-  (cd "$LONGMEMEVAL_REPO" && \
+  if ! (cd "$LONGMEMEVAL_REPO" && \
     .venv/bin/python src/evaluation/evaluate_qa.py \
-      --input "$out" --output "$scored" \
-      >>"$LOG" 2>&1)
+      gpt-4o "$out" "$LONGMEMEVAL_DATASET" \
+      >"$scored.log" 2>&1); then
+    echo "  -> $cell scoring FAILED (see $scored.log)" >&2
+    return 5
+  fi
+  # evaluate_qa.py writes its results next to the hypothesis file; collect
+  # anything it produced plus the log into the scored artifact.
+  {
+    echo "{\"cell\": \"$cell\", \"embedder\": \"$embedder\", \"dim\": $dim, \"scored_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\","
+    echo " \"evaluator_log\": $(python3 -c 'import json,sys; print(json.dumps(open(sys.argv[1]).read()))' "$scored.log")}"
+  } > "$scored"
 
   echo "  -> $cell done: $scored"
 }
 
 # ─── Sequence ───────────────────────────────────────────────────────
 
+# NOTE on errexit: calling run_cell inside `if` deliberately suspends set -e
+# for the call, but every step INSIDE run_cell now has explicit error
+# handling with distinct return codes — a failed step can no longer fall
+# through to "done" (audit orchestrators-05). Failures are tallied and the
+# script exits non-zero so a partial matrix can never be scored and locked
+# in silently.
+FAILED_CELLS=()
+SKIPPED_CELLS=()
 for entry in "${CELLS[@]}"; do
   IFS='|' read -r cell embedder dim reranker <<<"$entry"
-  run_cell "$cell" "$embedder" "$dim" "$reranker" || {
+  if run_cell "$cell" "$embedder" "$dim" "$reranker"; then
+    :
+  else
     rc=$?
-    echo "[phase1] cell $cell exit=$rc — continuing with next cell" >&2
-  }
+    if [ "$rc" -eq 3 ]; then
+      SKIPPED_CELLS+=("$cell")
+      echo "[phase1] cell $cell SKIPPED (reranker unsupported via CLI) — continuing" >&2
+    else
+      FAILED_CELLS+=("$cell:exit=$rc")
+      echo "[phase1] cell $cell FAILED exit=$rc — continuing with next cell" >&2
+    fi
+  fi
 done
 
 echo
 echo "[phase1] complete. Results: $RESULTS_DIR"
 echo "         Log: $LOG"
+if [ ${#SKIPPED_CELLS[@]} -gt 0 ]; then
+  echo "[phase1] SKIPPED cells (not runnable, see TODOS.md): ${SKIPPED_CELLS[*]}"
+fi
+if [ ${#FAILED_CELLS[@]} -gt 0 ]; then
+  echo "[phase1] FAILED cells: ${FAILED_CELLS[*]}" >&2
+  exit 1
+fi
 echo "         Next: bash scripts/run-shootout-phase2.sh"

@@ -4,27 +4,44 @@
  * Guards:
  *   - Determinism under seed (same seed → byte-identical output)
  *   - Item counts (50/300/20/8/40)
- *   - Perturbation counts (10/5/5/3) exactly per plan
+ *   - Perturbation FIXTURE counts (10/5/5/3) and planted ITEM counts
+ *     (20/10/5/9) — contradictions and stale facts are PAIRED (audit fix
+ *     generators-01), implicit preferences carry >=3 evidence items each
+ *     (audit fix generators-02)
  *   - Slug regex compatibility with eval/runner/queries/validator.ts
- *   - All `contacts[].worldSlug` values are valid slugs
- *   - All perturbation fixture_ids are unique across the corpus
+ *   - Meeting↔calendar coherence (audit fix generators-08)
+ *   - Email thread counterparty coherence (audit fix generators-09)
+ *   - Gold derivation (buildGoldFixtures) references real planted slugs
  *
  * This runs WITHOUT generating Opus prose (Day 3) or world-v1 resolution.
- * The 15 default contacts are internal to amara-life.ts; `links_to`-style
- * cross-corpus validation lives in test/eval/gold-schema.test.ts (Day 3).
  */
 
 import { describe, test, expect } from 'bun:test';
 import {
   buildSkeleton,
+  buildGoldFixtures,
   countPerturbations,
+  CONTRADICTION_FIXTURES,
+  STALE_FACT_FIXTURES,
+  IMPLICIT_PREF_PLACEMENTS,
   DEFAULT_CONTACTS,
   type AmaraLifeSkeleton,
+  type Perturbation,
   type PerturbationKind,
 } from '../../eval/generators/amara-life.ts';
 
 // Regex from eval/runner/queries/validator.ts:131 — pins the slug convention.
 const SLUG_RE = /^[a-z][a-z0-9-]*\/[a-z0-9][a-z0-9-]*$/;
+
+/** All perturbed items across the corpus, with their slugs. */
+function perturbedItems(s: AmaraLifeSkeleton): Array<{ slug: string; p: Perturbation; ts: Date }> {
+  const out: Array<{ slug: string; p: Perturbation; ts: Date }> = [];
+  for (const e of s.emails) if (e.perturbation) out.push({ slug: e.slug, p: e.perturbation, ts: new Date(e.ts) });
+  for (const m of s.slack) if (m.perturbation) out.push({ slug: m.slug, p: m.perturbation, ts: new Date(m.ts) });
+  for (const mt of s.meetings) if (mt.perturbation) out.push({ slug: mt.slug, p: mt.perturbation, ts: new Date(mt.date) });
+  for (const n of s.notes) if (n.perturbation) out.push({ slug: n.slug, p: n.perturbation, ts: new Date(n.date) });
+  return out;
+}
 
 describe('amara-life skeleton', () => {
   test('default buildSkeleton() returns counts matching plan spec', () => {
@@ -37,13 +54,17 @@ describe('amara-life skeleton', () => {
     expect(s.contacts.length).toBe(15);
   });
 
-  test('perturbation counts are exactly 10/5/5/3', () => {
+  test('perturbation fixture counts are exactly 10/5/5/3; item counts 20/10/5/9', () => {
     const s = buildSkeleton();
     const counts = countPerturbations(s);
-    expect(counts.contradiction).toBe(10);
-    expect(counts['stale-fact']).toBe(5);
-    expect(counts.poison).toBe(5);
-    expect(counts['implicit-preference']).toBe(3);
+    expect(counts.fixtures.contradiction).toBe(10);
+    expect(counts.fixtures['stale-fact']).toBe(5);
+    expect(counts.fixtures.poison).toBe(5);
+    expect(counts.fixtures['implicit-preference']).toBe(3);
+    expect(counts.items.contradiction).toBe(20);
+    expect(counts.items['stale-fact']).toBe(10);
+    expect(counts.items.poison).toBe(5);
+    expect(counts.items['implicit-preference']).toBe(9);
   });
 
   test('same seed produces byte-identical output', () => {
@@ -77,34 +98,6 @@ describe('amara-life skeleton', () => {
     for (const c of DEFAULT_CONTACTS) {
       expect(c.worldSlug).toMatch(SLUG_RE);
     }
-  });
-
-  test('perturbation fixture_ids are unique across corpus', () => {
-    const s = buildSkeleton();
-    const ids = new Map<string, number>();
-    const walk = (items: Array<{ perturbation?: { fixture_id: string } }>) => {
-      for (const it of items) {
-        if (it.perturbation) {
-          ids.set(it.perturbation.fixture_id, (ids.get(it.perturbation.fixture_id) ?? 0) + 1);
-        }
-      }
-    };
-    walk(s.emails);
-    walk(s.slack);
-    walk(s.meetings);
-    walk(s.notes);
-    for (const [fixtureId, count] of ids) {
-      expect(count).toBe(1); // each fixture_id appears exactly once across corpus
-      void fixtureId;
-    }
-    // Also assert expected fixture_id sets
-    const sortedIds = [...ids.keys()].sort();
-    expect(sortedIds).toContain('c-001');
-    expect(sortedIds).toContain('c-010');
-    expect(sortedIds).toContain('s-001');
-    expect(sortedIds).toContain('s-005');
-    expect(sortedIds).toContain('poison-001');
-    expect(sortedIds).toContain('poison-005');
   });
 
   test('all email thread_ids and in_reply_to chain correctly', () => {
@@ -156,6 +149,197 @@ describe('amara-life skeleton', () => {
   test('schema_version is 1 (bump invalidates cache per fix #18)', () => {
     const s = buildSkeleton();
     expect(s.schema_version).toBe(1);
+  });
+});
+
+describe('paired fixtures (audit fix generators-01)', () => {
+  const s = buildSkeleton();
+  const planted = perturbedItems(s);
+  const byFixture = new Map<string, Array<{ slug: string; p: Perturbation; ts: Date }>>();
+  for (const it of planted) {
+    const arr = byFixture.get(it.p.fixture_id) ?? [];
+    arr.push(it);
+    byFixture.set(it.p.fixture_id, arr);
+  }
+
+  test('every contradiction fixture c-001..c-010 has exactly 2 items with distinct slugs', () => {
+    for (let n = 1; n <= 10; n++) {
+      const id = `c-${String(n).padStart(3, '0')}`;
+      const items = byFixture.get(id) ?? [];
+      expect(items.length).toBe(2);
+      expect(new Set(items.map(i => i.slug)).size).toBe(2);
+      const roles = items.map(i => i.p.role).sort();
+      expect(roles).toEqual(['counterpart', 'primary']);
+    }
+  });
+
+  test('every stale-fact fixture s-001..s-005 has exactly 2 items with distinct slugs', () => {
+    for (let n = 1; n <= 5; n++) {
+      const id = `s-${String(n).padStart(3, '0')}`;
+      const items = byFixture.get(id) ?? [];
+      expect(items.length).toBe(2);
+      expect(new Set(items.map(i => i.slug)).size).toBe(2);
+      const roles = items.map(i => i.p.role).sort();
+      expect(roles).toEqual(['counterpart', 'primary']);
+    }
+  });
+
+  test('both sides of a paired fixture carry the same machine-readable fact pair', () => {
+    for (const f of [...CONTRADICTION_FIXTURES, ...STALE_FACT_FIXTURES]) {
+      const items = byFixture.get(f.fixture_id) ?? [];
+      expect(items.length).toBe(2);
+      for (const it of items) {
+        expect(it.p.fact).toBeDefined();
+        expect(it.p.fact!.fact_key).toBe(f.fact.fact_key);
+        expect(it.p.fact!.primary_value).toBe(f.fact.primary_value);
+        expect(it.p.fact!.counterpart_value).toBe(f.fact.counterpart_value);
+        expect(it.p.fact!.primary_value).not.toBe(it.p.fact!.counterpart_value);
+      }
+    }
+  });
+
+  test('stale-fact counterpart (superseding fact) always has a later timestamp than its primary', () => {
+    for (const f of STALE_FACT_FIXTURES) {
+      const items = byFixture.get(f.fixture_id) ?? [];
+      const primary = items.find(i => i.p.role === 'primary')!;
+      const counterpart = items.find(i => i.p.role === 'counterpart')!;
+      expect(counterpart.ts.getTime()).toBeGreaterThan(primary.ts.getTime());
+    }
+  });
+
+  test('poison fixtures stay single-item', () => {
+    for (let n = 1; n <= 5; n++) {
+      const id = `poison-${String(n).padStart(3, '0')}`;
+      const items = byFixture.get(id) ?? [];
+      expect(items.length).toBe(1);
+      expect(items[0].p.role).toBeUndefined();
+    }
+  });
+
+  test('no item carries two fixtures (placements never collide)', () => {
+    // buildPerturbationMap throws on collision; this re-checks post-build.
+    expect(new Set(planted.map(i => i.slug)).size).toBe(planted.length);
+  });
+});
+
+describe('implicit-preference evidence (audit fix generators-02)', () => {
+  const s = buildSkeleton();
+  const planted = perturbedItems(s);
+
+  test('every pref-001..003 has >=3 evidence items with distinct slugs and an evidence_hint', () => {
+    for (const pref of s.profile.implicit_preferences) {
+      const evidence = planted.filter(
+        i => i.p.kind === 'implicit-preference' && i.p.fixture_id === pref.fixture_id
+      );
+      expect(evidence.length).toBeGreaterThanOrEqual(3);
+      expect(new Set(evidence.map(i => i.slug)).size).toBe(evidence.length);
+      for (const it of evidence) {
+        expect(it.p.role).toBe('evidence');
+        expect((it.p.evidence_hint ?? '').length).toBeGreaterThan(20);
+      }
+    }
+  });
+
+  test('evidence hints instruct surfacing without stating the preference', () => {
+    for (const placement of IMPLICIT_PREF_PLACEMENTS) {
+      // Every hint must forbid stating the preference directly.
+      expect(placement.evidence_hint).toMatch(/NEVER state|NOT state|Do NOT state/i);
+    }
+  });
+});
+
+describe('meeting↔calendar coherence (audit fix generators-08)', () => {
+  const s = buildSkeleton();
+  const calBySlug = new Map(s.calendar.map(ev => [ev.slug, ev]));
+  const contactBySlug = new Map(s.contacts.map(c => [c.worldSlug, c]));
+
+  test('linked calendar events exist and share the meeting date', () => {
+    for (const m of s.meetings) {
+      if (!m.linked_calendar) continue;
+      const evt = calBySlug.get(m.linked_calendar);
+      expect(evt).toBeDefined();
+      expect(evt!.dtstart.slice(0, 10)).toBe(m.date);
+    }
+  });
+
+  test('linked calendar event counterparty matches the meeting counterparty', () => {
+    for (const m of s.meetings) {
+      if (!m.linked_calendar) continue;
+      const evt = calBySlug.get(m.linked_calendar)!;
+      const meetingContactSlug = m.attendees.find(a => a !== 'user/amara-okafor')!;
+      const contact = contactBySlug.get(meetingContactSlug)!;
+      const evtEmails = evt.attendees.map(a => a.email);
+      expect(evtEmails).toContain(contact.email);
+    }
+  });
+
+  test('no two meetings link the same calendar event', () => {
+    const links = s.meetings.map(m => m.linked_calendar).filter(Boolean);
+    expect(new Set(links).size).toBe(links.length);
+  });
+});
+
+describe('email thread coherence (audit fix generators-09)', () => {
+  const s = buildSkeleton();
+
+  test('replies (odd i) keep the thread counterparty and subject of their parent', () => {
+    const counterpartyOf = (e: (typeof s.emails)[number]) =>
+      e.from.email === 'amara@halfway.vc' ? e.to[0].email : e.from.email;
+    for (let i = 1; i < s.emails.length; i += 2) {
+      const parent = s.emails[i - 1];
+      const reply = s.emails[i];
+      expect(reply.thread_id).toBe(parent.thread_id);
+      expect(counterpartyOf(reply)).toBe(counterpartyOf(parent));
+      expect(reply.subject).toBe(parent.subject);
+    }
+  });
+});
+
+describe('gold derivation (buildGoldFixtures)', () => {
+  const s = buildSkeleton();
+  const gold = buildGoldFixtures(s);
+  const allSlugs = new Set([
+    ...s.emails.map(e => e.slug),
+    ...s.slack.map(x => x.slug),
+    ...s.meetings.map(x => x.slug),
+    ...s.notes.map(x => x.slug),
+  ]);
+
+  test('10 contradiction pairs + 5 stale facts, all refs are real planted slugs', () => {
+    expect(gold.contradictions.pairs.length).toBe(10);
+    expect(gold.contradictions.stale_facts.length).toBe(5);
+    for (const p of [...gold.contradictions.pairs, ...gold.contradictions.stale_facts]) {
+      expect(allSlugs.has(p.source_a.ref)).toBe(true);
+      expect(allSlugs.has(p.source_b.ref)).toBe(true);
+      expect(p.source_a.ref).not.toBe(p.source_b.ref);
+      expect(p.source_a.claim).not.toBe(p.source_b.claim);
+      expect(['source_a', 'source_b']).toContain(p.canonical);
+      expect(p.expected_behavior.length).toBeGreaterThan(10);
+    }
+  });
+
+  test('3 preferences with >=3 evidence pages each, all real slugs', () => {
+    expect(gold.implicitPreferences.preferences.length).toBe(3);
+    for (const pref of gold.implicitPreferences.preferences) {
+      expect(pref.evidence_pages.length).toBeGreaterThanOrEqual(3);
+      for (const ref of pref.evidence_pages) {
+        expect(allSlugs.has(ref)).toBe(true);
+      }
+    }
+  });
+
+  test('gold refs point at items actually marked with the fixture', () => {
+    const perturbationOf = new Map<string, Perturbation>();
+    for (const it of perturbedItems(s)) perturbationOf.set(it.slug, it.p);
+    for (const p of [...gold.contradictions.pairs, ...gold.contradictions.stale_facts]) {
+      expect(perturbationOf.get(p.source_a.ref)?.fixture_id).toBe(p.id);
+      expect(perturbationOf.get(p.source_b.ref)?.fixture_id).toBe(p.id);
+    }
+    for (const pref of gold.implicitPreferences.preferences) {
+      for (const ref of pref.evidence_pages) {
+        expect(perturbationOf.get(ref)?.fixture_id).toBe(pref.id);
+      }
+    }
   });
 });
 

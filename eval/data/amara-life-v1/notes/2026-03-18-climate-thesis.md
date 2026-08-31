@@ -2,13 +2,13 @@
 id: note-0013
 date: 2026-03-18
 topic: climate-thesis
-mentions: [derek-chen, maria-vasquez]
+mentions: [ravi-mehta, chen-wei-lin]
 ---
 
-Spent the morning revisiting our climate thesis with [Derek](people/derek-chen) and I keep coming back to the same tension: the most impactful decarbonization opportunities often sit in sectors with the longest sales cycles and thinnest margins. Industrial heat, cement, steel—these aren't sexy, but they're where the gigatons live.
+Spent the morning revisiting our climate thesis with [Ravi](people/ravi-mehta) and I think we're finally converging on something coherent. The core bet: climate adaptation is going to require an order of magnitude more compute than anyone's modeling right now. Not just for forecasting, but for real-time grid optimization, supply chain rerouting, insurance pricing—all of it.
 
-[Maria](people/maria-vasquez) pushed back in our Monday sync, arguing we should weight toward software-enabled efficiency plays where the deployment friction is lower. She's not wrong about velocity, but I worry we'd be optimizing for fund mechanics over actual climate outcomes.
+[Chen Wei](people/chen-wei-lin) pushed back on whether we're spreading ourselves too thin across the stack. Fair point. But I keep coming back to infrastructure plays as the highest-leverage entry.
 
-My current thinking: we need a barbell approach. A few deep-tech bets with 10+ year horizons where we can be patient capital, balanced against faster-moving AI infrastructure deals that generate the returns to justify that patience.
+For Threshold specifically, we're targeting a $25M Series B. That positions us well for meaningful ownership without overextending the fund. The unit economics finally make sense after their pivot to industrial customers.
 
-The LP base we've built should support this, but I want to stress-test the portfolio construction math again before our April offsite. Need to model what happens if the deep-tech positions take 18 months longer than projected.
+What I can't shake: are we early enough? The majors are waking up to this space faster than I expected. Need to map out competitive moats more rigorously before our next IC meeting.

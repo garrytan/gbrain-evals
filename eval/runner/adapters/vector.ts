@@ -31,20 +31,33 @@
 
 import type { Adapter, AdapterConfig, BrainState, Page, Query, RankedDoc } from '../types.ts';
 import { embed, embedBatch } from 'gbrain/embedding';
-import { configureGateway } from 'gbrain/ai/gateway';
+import { configureGateway, getEmbeddingModel } from 'gbrain/ai/gateway';
 import { assertEvalAdapterConfig, type EvalAdapterConfig } from '../eval-adapter-config.ts';
 
 // ─── Vector math ────────────────────────────────────────────────────
 
 /**
- * Cosine similarity between two dense vectors. Assumes equal length;
- * callers upstream ensure embedder returned consistent-dim vectors.
+ * Cosine similarity between two dense vectors of the SAME dimension.
+ * Throws on a width mismatch instead of truncating to min(len): gbrain's
+ * gateway is process-global module state, so a reconfiguration between
+ * init() and query() (e.g. interleaved shootout cells in one process)
+ * would put query and doc vectors in different embedding spaces. A
+ * truncated-prefix similarity over mismatched embeddings is plausible
+ * garbage that silently corrupts every ranking; failing loud is the
+ * dim-mismatch guard the methodology promises (audit adapters-queries-08).
  */
 function cosine(a: Float32Array, b: Float32Array): number {
+  if (a.length !== b.length) {
+    throw new Error(
+      `cosine: embedding dimension mismatch (${a.length} vs ${b.length}) — `
+      + 'query and document vectors came from different embedder configs; '
+      + 'was the gateway reconfigured between init() and query()?',
+    );
+  }
   let dot = 0;
   let normA = 0;
   let normB = 0;
-  const n = Math.min(a.length, b.length);
+  const n = a.length;
   for (let i = 0; i < n; i++) {
     dot += a[i] * b[i];
     normA += a[i] * a[i];
@@ -135,20 +148,16 @@ export class VectorOnlyAdapter implements Adapter {
       }
     }
 
-    // Embedder identity for the receipt:
-    //   - shootout mode: prefer the explicitly-configured embedder string.
-    //   - default mode: fall back to gbrain's EMBEDDING_MODEL constant.
-    let embeddingModel: string;
-    if (config.shootout) {
-      embeddingModel = config.shootout.embedder;
-    } else {
-      const { EMBEDDING_MODEL } = await import('gbrain/embedding');
-      embeddingModel = EMBEDDING_MODEL;
-    }
+    // Embedder identity for the receipt: read the gateway's LIVE config —
+    // the same source embed()/embedBatch() route through — so the field is
+    // correct in both shootout and default mode. (The old code destructured
+    // a nonexistent EMBEDDING_MODEL constant from 'gbrain/embedding', which
+    // yielded undefined at runtime; the reproducibility field was silently
+    // blank in default mode. Audit adapters-queries-03.)
     return {
       vectors,
       docs,
-      embeddingModel,
+      embeddingModel: getEmbeddingModel(),
     } satisfies VectorOnlyState;
   }
 

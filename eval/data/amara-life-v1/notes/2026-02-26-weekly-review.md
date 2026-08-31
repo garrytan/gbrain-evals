@@ -2,13 +2,16 @@
 id: note-0023
 date: 2026-02-26
 topic: weekly-review
-mentions: [david-chen, priya-sharma, marcus-holloway]
+mentions: [derek-massamba]
 ---
 
-This week felt like three weeks compressed into one. Finally closed the Solaris Grid deal after months of back-and-forth on the governance structure. [David](people/david-chen) pushed hard on the board composition, and I think he was right to hold the line there.
+Spent most of Thursday digging into the [Derek Massamba](people/derek-massamba) situation after his team reached out about us participating in their Series B. I'll be honest—I'm struggling to get comfortable here.
 
-Met with [Priya](people/priya-sharma) on Tuesday about the carbon accounting software space. She's seeing the same consolidation signals I am—three acquisitions announced in February alone. We need to decide if we're buyers or sellers in that market by Q3.
+They closed their A in May. It's February. That's nine months. The deck claims they've hit key milestones, but when I pulled the metrics, the story is murkier. ARR grew, sure, but not at a rate that screams "we've unlocked something fundamental." So why the rush back to market?
 
-The tension I'm sitting with: our climate thesis increasingly depends on AI infrastructure bets, but the compute costs are becoming prohibitive for early-stage companies. [Marcus](people/marcus-holloway) raised this at Monday's partner meeting. Are we inadvertently selecting for teams with deep-pocketed backers already? That feels like it defeats the purpose.
+Questions I need answered before any next steps:
+- What's the actual burn rate vs. plan? Are they running hot and backfilling?
+- Did something change strategically, or is this opportunistic capital because the market's frothy for climate AI?
+- How much runway did they have left when they started this process?
 
-Need to carve out time next week to revisit our stage allocation. Also haven't called my mother in two weeks—she'll remind me soon enough.
+I've seen this pattern before and it rarely signals the kind of operational discipline I want to back at this stage. Will schedule a follow-up call, but my skepticism is high.

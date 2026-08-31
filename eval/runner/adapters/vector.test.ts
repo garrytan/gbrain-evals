@@ -37,15 +37,20 @@ describe('vector adapter (pure helpers)', () => {
     expect(_cosine(a, b)).toBeCloseTo(1.0, 6);
   });
 
-  test('cosine returns 0 on mismatched-length vectors at the tail', () => {
-    // Uses min(len) — shorter vector's dimensions are compared, longer's
-    // extras are implicitly dropped. Produces a sensible number even
-    // when upstream glue has a dim mismatch bug; helps fail-soft rather
-    // than crash the benchmark.
+  test('cosine THROWS on mismatched-length vectors (no silent truncation)', () => {
+    // Regression for audit adapters-queries-08: the old implementation
+    // compared over min(len), so mismatched embedding spaces produced
+    // plausible-looking similarities instead of an error. A dim mismatch
+    // means the query and doc vectors came from different gateway configs;
+    // the only honest behavior is to fail loud.
     const a = new Float32Array([1, 1, 1]);
     const b = new Float32Array([1, 1]);
-    const sim = _cosine(a, b);
-    expect(sim).toBeGreaterThan(0);
-    expect(sim).toBeLessThanOrEqual(1);
+    expect(() => _cosine(a, b)).toThrow(/dimension mismatch \(3 vs 2\)/);
+  });
+
+  test('cosine still works on equal-length vectors after the mismatch guard', () => {
+    const a = new Float32Array([1, 1, 1]);
+    const b = new Float32Array([1, 1, 1]);
+    expect(_cosine(a, b)).toBeCloseTo(1.0, 6);
   });
 });

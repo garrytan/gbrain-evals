@@ -2,13 +2,13 @@
 id: note-0025
 date: 2026-02-22
 topic: climate-thesis
-mentions: [david-chen, maria-santos]
+mentions: [derek-zhou, marina-voskresenskaya]
 ---
 
-Spent the morning revisiting our climate thesis with [David Chen](people/david-chen) and I keep coming back to the same tension: we say we're backing "climate infrastructure" but half our recent deals are really AI companies with a climate veneer.
+Spent three hours today with the Solaris team going through their projections. I kept pushing on the LCOE trajectory — they're claiming $18/MWh by 2028, but when I unpacked their capacity factor assumptions, they were modeling at 32% for West Texas sites. Historical data from ERCOT suggests 28-29% is more realistic for that corridor. That's a meaningful delta on unit economics.
 
-Is that bad? Maybe not. The reality is that pure-play climate hardware is brutal—long cycles, capital-intensive, margins that make my teeth hurt. Meanwhile, the AI-native climate companies (grid optimization, demand forecasting, carbon accounting automation) are showing the velocity metrics that actually make sense for our fund structure.
+Also flagged their offtake structure. They have two PPAs signed, but both are with the same counterparty, and the pricing reset clauses feel aggressive given where merchant power prices might land if storage buildout accelerates. Asked [Derek](people/derek-zhou) to pull comparable contracts from our portfolio companies for reference.
 
-[Maria Santos](people/maria-santos) pushed back in our last LP call, asking whether we're drifting from mandate. Fair question. My answer: the mandate isn't "fund solar panels," it's "accelerate decarbonization through technology leverage." Right now, that leverage comes from intelligence layers more than physical assets.
+[Marina](people/marina-voskresenskaya) mentioned she's seeing similar claims from another solar developer she's tracking. Worth comparing notes — I want to understand if the market is uniformly optimistic on capacity factors or if Solaris is an outlier.
 
-Still, I want us to stay honest about what we're actually doing. Going to propose we formalize a 70/30 split—AI-climate infra vs. deep tech hardware—at next month's offsite. Need to align the team before we drift further without intention.
+Need to request their curtailment data before the next call.

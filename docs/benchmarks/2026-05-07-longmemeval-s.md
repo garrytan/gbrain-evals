@@ -1,5 +1,33 @@
 # BrainBench: LongMemEval (public benchmark)
 
+> ## ERRATUM (2026-08-31) — metric definition
+>
+> **The recall numbers in this report are ANY-HIT recall@5, not the official
+> LongMemEval `recall_all@5`.** Our runner counted a question as recalled if
+> ANY of its ground-truth sessions appeared in the top-5. The official
+> evaluator ([`src/retrieval/eval_utils.py`](https://github.com/xiaowu0162/LongMemEval))
+> requires ALL ground-truth sessions in the top-k
+> (`all(doc in recalled_docs for doc in correct_docs)`), which is the metric
+> published systems report against. For single-session questions the two are
+> identical; for the 133 multi-session questions (and part of
+> temporal-reasoning) any-hit is strictly looser — the multi-session rows
+> showing 100.0% below are the most inflated, and the head-to-head table's
+> "same metric" claim does not hold for those rows.
+>
+> The runner now computes `recall_all@5` as the headline metric (any-hit is
+> reported separately as a diagnostic). **The corrected full-500 number has
+> not been re-measured yet** — it requires OpenAI embeddings (~$2 first run,
+> free with the local cache) and is tracked in `TODOS.md`. Re-run with:
+>
+> ```sh
+> bun eval/runner/longmemeval.ts --dataset eval/data/longmemeval/longmemeval_s.json
+> ```
+>
+> The historical numbers below are preserved unchanged for the audit trail.
+> Expect the corrected headline to be equal or lower, with multi-session and
+> temporal-reasoning taking the reductions. README.md and
+> docs/comparison-systems.md carry the same annotation until re-measurement.
+
 **Date:** 2026-05-07
 **gbrain version:** v0.28.8
 **Dataset:** [`xiaowu0162/longmemeval`](https://huggingface.co/datasets/xiaowu0162/longmemeval), `_s` split (500 questions, ~50 conversation sessions per haystack)
@@ -178,7 +206,7 @@ Charts are inline SVG. GitHub renders them natively, no image host required. Gen
 - OpenAI embeddings: ~$2 (one-time per dataset)
 - Anthropic Haiku (expansion adapter only): ~$1 for 500 questions × 1 Haiku call each at ~$0.002/call
 
-Subsequent runs against the same dataset: **~$0** because the embeddings are cached. The cache file lives at `eval/data/longmemeval/embed-cache/` and ships committed in this repo (~150MB SQLite). On clone you get a warm cache; runs are sub-1-min for keyword + ~2 min for vector + ~5 min for hybrid+expansion (the Haiku call is the only thing left to pay for).
+Subsequent runs against the same dataset on the same machine: **~$0** because the embeddings are cached. **The cache is NOT committed** (this report previously claimed a ~150MB committed fixture — that was wrong): it lives at the gitignored `eval/reports/longmemeval/embed-cache/embed-cache-<model>@<dims>.sqlite`, and the full `_s` cache is ~700MB, too big for plain git. A fresh clone pays the ~$2 cold-embed cost once; after that, runs are sub-1-min for keyword + ~2 min for vector + ~5 min for hybrid+expansion (the Haiku call is the only thing left to pay for). To share a warm cache across machines, copy the SQLite file via `scp`/`s3` — see `eval/data/longmemeval/embed-cache/README.md`.
 
 ## 9. Limits & caveats
 
@@ -229,7 +257,7 @@ bash eval/runner/longmemeval-batch.sh --adapters hybrid
 bun eval/runner/longmemeval.ts --top-k 5
 ```
 
-The cache ships warm at `eval/data/longmemeval/embed-cache/embed-cache-text-embedding-3-large@1536.sqlite`. First-time embedding costs are paid once; subsequent runs hit cache and complete in minutes for ~$0.
+No warm cache ships with the repo (an earlier revision of this section claimed one — see the corrected §8). The first run embeds the dataset (~$2, one-time) and fills the local content-addressed cache at the gitignored `eval/reports/longmemeval/embed-cache/`; subsequent runs hit that cache and complete in minutes for ~$0.
 
 ## 11. Methodology
 
@@ -265,7 +293,7 @@ In this repo:
 - Aggregated JSON + markdown: `eval/reports/longmemeval/longmemeval-s-full-k5-2026-05-07.{json,md}` (gitignored)
 - Committed SVG charts: `docs/benchmarks/2026-05-07-longmemeval-s/`
 - Comparison-systems source-of-truth list: [`docs/comparison-systems.md`](../comparison-systems.md)
-- Embedding cache fixture: `eval/data/longmemeval/embed-cache/embed-cache-text-embedding-3-large@1536.sqlite` (committed, ~150MB)
+- Embedding cache: `eval/reports/longmemeval/embed-cache/embed-cache-text-embedding-3-large@1536.sqlite` (LOCAL only — gitignored, ~700MB for the full `_s` split; built by the first run, ~$2; docs at `eval/data/longmemeval/embed-cache/README.md`)
 
 In gbrain:
 - The retrieval pipeline this benchmark exercises lives at:

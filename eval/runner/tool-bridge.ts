@@ -274,7 +274,7 @@ export function buildToolDefs(): AnthropicToolDef[] {
         slug: { type: 'string' },
         date: { type: 'string', description: 'YYYY-MM-DD.' },
         summary: { type: 'string' },
-        source: { type: 'string', description: 'Citation slug or URL.' },
+        source: { type: 'string', description: 'Optional citation slug or URL. When provided, must be non-blank.' },
       },
       required: ['slug', 'date', 'summary'],
     },
@@ -328,13 +328,28 @@ function extractBackLinks(compiledTruth: string): string[] {
   return hits;
 }
 
-function checkCitationFormat(timeline: string): boolean {
+/**
+ * Validate a timeline section against the required entry format
+ * (skills/_output-rules.md):
+ *
+ *   - **YYYY-MM-DD** | Source — Summary
+ *
+ * EVERY non-empty line must match. The pre-fix implementation only validated
+ * lines that already began with `- `, so a timeline written as
+ * `* **2026-01-01** | X — Y` (or with no bullet at all) produced zero
+ * candidate lines and scored citation_format_ok=true — a wholly wrong-format
+ * timeline passed unchecked (audit agentic-cats-11). An empty timeline is
+ * still fine: no timeline = nothing to validate.
+ *
+ * Exported for direct regression tests.
+ */
+export function checkCitationFormat(timeline: string): boolean {
   if (!timeline || !timeline.trim()) return true; // no timeline = nothing to validate
-  // Required format per skills/_output-rules.md:
-  //   - **YYYY-MM-DD** | Source — Summary
-  const lines = timeline.split('\n').filter(l => l.trim().startsWith('- '));
-  if (lines.length === 0) return true;
   const re = /^- \*\*\d{4}-\d{2}-\d{2}\*\*\s*\|\s*.+?\s*[—-]\s*.+/;
+  const lines = timeline
+    .split('\n')
+    .map(l => l.trim())
+    .filter(l => l.length > 0);
   return lines.every(l => re.test(l));
 }
 
@@ -347,6 +362,17 @@ export interface ToolBridge {
   executeTool(name: string, input: Record<string, unknown>): Promise<ToolResult>;
   /** Mutating state for the structured-evidence judge contract. */
   state: ToolBridgeState;
+}
+
+/**
+ * Pure input-sanitizing seam: the expand=false guard, exported so tests can
+ * prove it BITES (the old test asserted only call_order, which passes with
+ * or without the guard — audit tests-audit-03).
+ */
+export function sanitizeToolInput(name: string, input: Record<string, unknown>): Record<string, unknown> {
+  const safeInput = { ...input };
+  if (name === 'query') safeInput.expand = false;
+  return safeInput;
 }
 
 export function createToolBridge(config: ToolBridgeConfig): ToolBridge {
@@ -367,6 +393,8 @@ export function createToolBridge(config: ToolBridgeConfig): ToolBridge {
     logger: silentLogger(),
     dryRun: false,
     remote: true, // agent loop is untrusted caller — matches MCP posture
+    // v0.34 D4: REQUIRED write-authority scope; 'default' = single-source brain.
+    sourceId: 'default',
   };
 
   const readNames = new Set<string>(EXPOSED_READ_TOOLS);
@@ -409,8 +437,7 @@ export function createToolBridge(config: ToolBridgeConfig): ToolBridge {
     // CRITICAL: force expand=false on query. Belt-and-suspenders with the
     // schema strip — even if the model somehow passes an `expand` field, we
     // overwrite it.
-    const safeInput = { ...input };
-    if (name === 'query') safeInput.expand = false;
+    const safeInput = sanitizeToolInput(name, input);
 
     const raw = await op.handler(ctx, safeInput);
     const serialized = typeof raw === 'string' ? raw : JSON.stringify(raw);
@@ -449,10 +476,18 @@ function executeDryRun(
   } else if (name === 'dry_run_add_timeline_entry') {
     const slug = typeof input.slug === 'string' ? input.slug : undefined;
     const date = typeof input.date === 'string' ? input.date : '';
-    const source = typeof input.source === 'string' ? input.source : '';
     write.slug = slug;
     write.has_back_links = false;
-    write.citation_format_ok = /^\d{4}-\d{2}-\d{2}$/.test(date) && source.length > 0;
+    // Scoring matches the published tool schema (audit agentic-cats-10): the
+    // input_schema declares `source` OPTIONAL (required: slug/date/summary),
+    // so a schema-compliant agent that omits it must not be scored
+    // non-compliant. Date format is always required; a source, WHEN provided,
+    // must be non-blank.
+    const dateOk = /^\d{4}-\d{2}-\d{2}$/.test(date);
+    const sourceOk =
+      input.source === undefined
+      || (typeof input.source === 'string' && input.source.trim().length > 0);
+    write.citation_format_ok = dateOk && sourceOk;
   }
 
   state.made_dry_run_writes.push(write);

@@ -5,11 +5,11 @@ title: Mira Placeholder
 
 # Mira Placeholder
 
-VP Eng at [[companies/echo-robotics]]. Previously at [[companies/vector-platform]].
+Designer at [[companies/echo-robotics-18]]. Previously at [[companies/jade-robotics-23]].
 
-Working on developer-tools and [[concepts/token-budgeting]] research.
+Working on developer-tools and [[concepts/temporal-grounding]] research.
 
 ## Timeline
 
-- 2024-12-13 joined [[companies/echo-robotics]]
-- 2026-02-04 promoted to VP Eng
+- 2024-10-16 joined [[companies/echo-robotics-18]]
+- 2026-05-27 promoted to Designer

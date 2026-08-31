@@ -7,6 +7,14 @@ strictly the "how to actually press Go" companion.
 
 **Cost ceiling:** ~$525 total. **Wallclock:** ~14h total, mostly overnight.
 
+
+> **Reranker cells (A1/B1/C1/C2) — currently refused (2026-08-31).** gbrain's
+> CLI has no way to configure a reranker for `gbrain eval longmemeval`; the
+> old env vars the script set were read by nothing, so those cells would run
+> UNRERANKED under a reranked label. Phase 1 now refuses them loudly until
+> upstream ships a `--search-config` flag (TODOS.md P3). ZeroEntropy's hosted
+> API also sunsets 2026-09-04. Budget accordingly: 3 runnable cells, not 7.
+
 ## One-time prereqs
 
 You only need to do this setup once. After that, both phase scripts are
@@ -51,7 +59,7 @@ python -m venv .venv
 ### 4. gbrain v0.35.1.0+ on PATH
 
 ```bash
-gbrain --version    # must print 0.35.1.0 or higher
+gbrain --version    # must print 0.35.1.0 OR NEWER (the script gates on a sort -V minimum, not an allowlist)
 # If older: bun install -g github:garrytan/gbrain#master
 ```
 

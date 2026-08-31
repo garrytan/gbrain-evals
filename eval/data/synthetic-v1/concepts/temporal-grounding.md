@@ -5,10 +5,10 @@ title: temporal grounding
 
 # temporal grounding
 
-A pattern in inference-platforms.
+A pattern in memory-systems.
 
-Seen at [[companies/pillar-data]] and [[companies/maple-bio]]. Compare to [[concepts/session-demotion]].
+Seen at [[companies/foundry-co-2]] and [[companies/foundry-co-2]]. Compare to [[concepts/session-demotion]].
 
 ## Notes
 
-The technique relies on gpu-scheduling. Reference work in [[concepts/query-expansion]] demonstrates embedding-providers as a foundation.
+The technique relies on eval-frameworks. Reference work in [[concepts/query-expansion]] demonstrates developer-tools as a foundation.

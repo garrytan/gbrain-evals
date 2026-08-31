@@ -16,6 +16,8 @@
  */
 
 import { describe, test, expect } from 'bun:test';
+import { readdirSync, readFileSync } from 'fs';
+import { join } from 'path';
 import {
   sanitizePage,
   sanitizeQuery,
@@ -126,14 +128,12 @@ describe('sanitizePage — strips _facts and frontmatter', () => {
 
 // ─── sanitizeQuery ────────────────────────────────────────────────────
 
-describe('sanitizeQuery — strips gold', () => {
-  test('output has public fields only', () => {
+describe('sanitizeQuery — minimal operational surface', () => {
+  test('output has the operational fields', () => {
     const q = makeQuery();
     const sanitized = sanitizeQuery(q);
     expect(sanitized.id).toBe(q.id);
-    expect(sanitized.tier).toBe(q.tier);
     expect(sanitized.text).toBe(q.text);
-    expect(sanitized.expected_output_type).toBe(q.expected_output_type);
   });
 
   test('output does NOT have gold', () => {
@@ -144,27 +144,40 @@ describe('sanitizeQuery — strips gold', () => {
     expect('gold' in sanitized).toBe(false);
   });
 
-  test('retains optional fields (as_of_date, tags, author)', () => {
+  test('strips EVERY classification signal — tier, tags, author, expected_output_type, variants, failure modes', () => {
+    // Audit finding shared-infra-04 + outside-voice round 2: tier announces
+    // "adversarial trap", tags carry 'identity-collision'/'contradiction',
+    // expected_output_type reveals abstention expectations, and
+    // acceptable_variants are the answer phrasings themselves. None of these
+    // are needed to rank documents.
     const q = makeQuery({
-      as_of_date: '2026-04-20',
-      tags: ['temporal'],
-      author: 'internal',
+      tier: 'adversarial',
+      tags: ['identity-collision', 'contradiction'],
+      author: 'external-researcher',
       acceptable_variants: ['who works at Halfway'],
       known_failure_modes: ['bare-name-collision'],
     });
     const sanitized = sanitizeQuery(q);
-    expect(sanitized.as_of_date).toBe('2026-04-20');
-    expect(sanitized.tags).toEqual(['temporal']);
-    expect(sanitized.author).toBe('internal');
-    expect(sanitized.acceptable_variants).toEqual(['who works at Halfway']);
-    expect(sanitized.known_failure_modes).toEqual(['bare-name-collision']);
+    const keys = Object.keys(sanitized).sort();
+    expect(keys).toEqual(['id', 'text']);
+    expect('tier' in sanitized).toBe(false);
+    expect('tags' in sanitized).toBe(false);
+    expect('author' in sanitized).toBe(false);
+    expect('expected_output_type' in sanitized).toBe(false);
+    expect('acceptable_variants' in sanitized).toBe(false);
+    expect('known_failure_modes' in sanitized).toBe(false);
   });
 
-  test('omits undefined optional fields from the sanitized shape', () => {
-    const q = makeQuery(); // no as_of_date, no tags, etc.
+  test('retains as_of_date (temporal queries need it operationally)', () => {
+    const q = makeQuery({ as_of_date: '2026-04-20' });
+    const sanitized = sanitizeQuery(q);
+    expect(sanitized.as_of_date).toBe('2026-04-20');
+  });
+
+  test('omits undefined as_of_date from the sanitized shape', () => {
+    const q = makeQuery();
     const sanitized = sanitizeQuery(q);
     expect('as_of_date' in sanitized).toBe(false);
-    expect('tags' in sanitized).toBe(false);
   });
 
   test('output is a NEW object', () => {
@@ -209,31 +222,59 @@ describe('adversarial adapter access — Proxy tripwire', () => {
   });
 });
 
-// ─── Honest documentation of the seal's limits ────────────────────────
+// ─── Soft-seal tripwire: adapters must not read gold from disk ─────────
+//
+// The object-level seal (sanitizePage/sanitizeQuery) cannot stop an adapter
+// from readFileSync('eval/data/gold/...') — that limit is documented in
+// types.ts and BrainBench v2's process sandbox is the hard enforcement.
+// Until then, THIS static scan over every adapter source is the checkable
+// contract: "a well-behaved adapter can't accidentally cheat". It replaces
+// two educational assertions that could never fail (audit data-integrity-13:
+// `expect(pseudocode.length).toBeGreaterThan(0)` on a hardcoded literal).
 
-describe('soft-seal documentation', () => {
-  test('sanitize cannot protect against filesystem access', () => {
-    // This test is intentionally EDUCATIONAL — it documents that the seal
-    // is only at the object level. A malicious adapter that does
-    // readFileSync('eval/data/gold/qrels.json') bypasses the seal entirely.
-    // BrainBench v2's Docker sandbox is the real enforcement.
-    const pseudocode =
-      "const gold = JSON.parse(readFileSync('eval/data/gold/qrels.json'))";
-    expect(pseudocode.length).toBeGreaterThan(0);
-    // The defense is deliberate and documented in types.ts.
+const ADAPTERS_DIR = join(import.meta.dir, '../../eval/runner/adapters');
+
+/** Gold-access patterns no adapter source may contain. Returns violations. */
+function findSealViolations(source: string): string[] {
+  const violations: string[] = [];
+  if (/eval[\/\\]data[\/\\]gold/.test(source)) violations.push('reads eval/data/gold');
+  if (/(^|[^\w'"`])_facts\b/.test(source)) violations.push('accesses _facts');
+  if (/\.gold\b/.test(source)) violations.push('accesses .gold');
+  return violations;
+}
+
+describe('soft-seal static tripwire over adapter sources', () => {
+  const adapterFiles = readdirSync(ADAPTERS_DIR)
+    .filter(f => f.endsWith('.ts') && !f.endsWith('.test.ts'))
+    .sort();
+
+  test('adapter sources exist to scan', () => {
+    expect(adapterFiles.length).toBeGreaterThan(0);
   });
 
-  test('sanitize cannot prevent a malicious Proxy setup from the adapter', () => {
-    // Similarly: a malicious adapter could set up its own Proxy to probe
-    // values. The seal is "can a well-behaved adapter accidentally cheat?",
-    // not "can a malicious adapter never cheat?"
-    const sanitized = sanitizePage(makeRichPage());
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const asAny = sanitized as any;
-    expect(asAny._facts).toBeUndefined();
-    // A malicious adapter with network access could still exfiltrate the
-    // page list and correlate externally. Hard enforcement requires
-    // process isolation.
+  for (const file of adapterFiles) {
+    test(`${file} contains no gold-access pattern (gold paths, _facts, .gold)`, () => {
+      const source = readFileSync(join(ADAPTERS_DIR, file), 'utf8');
+      expect(findSealViolations(source)).toEqual([]);
+    });
+  }
+
+  test('the tripwire itself fires on a gold-reading adapter (proof it can fail)', () => {
+    // The exact pseudocode the old educational test quoted as the bypass —
+    // now it must be FLAGGED instead of merely measured for string length.
+    const goldRead = "const gold = JSON.parse(readFileSync('eval/data/gold/qrels.json'))";
+    expect(findSealViolations(goldRead)).toContain('reads eval/data/gold');
+
+    const factsProbe = 'const facts = (page as any)._facts;';
+    expect(findSealViolations(factsProbe)).toContain('accesses _facts');
+
+    const goldProbe = 'const relevant = q.gold.relevant;';
+    expect(findSealViolations(goldProbe)).toContain('accesses .gold');
+  });
+
+  test('the tripwire stays quiet on clean adapter code', () => {
+    const clean = "const results = await engine.searchKeyword(q.text, { limit: 10 });";
+    expect(findSealViolations(clean)).toEqual([]);
   });
 });
 

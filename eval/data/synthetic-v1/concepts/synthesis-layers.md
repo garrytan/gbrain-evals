@@ -5,10 +5,10 @@ title: synthesis layers
 
 # synthesis layers
 
-A pattern in memory-systems.
+A pattern in ai-infrastructure.
 
-Seen at [[companies/delta-data]] and [[companies/iris-labs]]. Compare to [[concepts/token-budgeting]].
+Seen at [[companies/forge-cloud-19]] and [[companies/lattice-labs-25]]. Compare to [[concepts/token-budgeting]].
 
 ## Notes
 
-The technique relies on agent-orchestration. Reference work in [[concepts/sparse-dense-fusion]] demonstrates eval-frameworks as a foundation.
+The technique relies on ai-infrastructure. Reference work in [[concepts/sparse-dense-fusion]] demonstrates ai-infrastructure as a foundation.

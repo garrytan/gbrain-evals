@@ -11,33 +11,78 @@
  * neighborhoods. Cat 13 flips the workload.
  *
  * Corpus: the 30 concepts/ pages in world-v1.
- * Probes: ~500-1000 deterministic, template-generated variants per concept.
+ * Probes: deterministic, template-generated variants per concept.
  * Metric: nDCG@5 (graded gold: target=3, co-occurrence peers=1).
  *
+ * AUDIT REMEDIATIONS baked into this runner:
+ *   - retrieval-cats-08: semantic-neighborhood probes are grounded in the
+ *     QUERY TEXT, not the generating concept. "concepts related to <B>" is
+ *     emitted once (for B itself, gold B=3 + B's neighbors=1), never once
+ *     per neighbor with conflicting golds. Company-seeded probes are
+ *     generated in one global pass (one probe per company, every concept
+ *     that lists the company graded 3, the company page graded 1) and use
+ *     the company page title, not the slug tail. Any probe text that two
+ *     concepts still both claim is DROPPED as ambiguous at generation, and
+ *     `assertUniqueProbeTexts` fails the run on any surviving duplicate.
+ *   - retrieval-cats-13: CAT13_PROBES is validated (`5oo` throws instead of
+ *     silently producing a 0-probe run scored 0.0%), and a 0-probe build
+ *     aborts the run.
+ *   - retrieval-cats-17: probe sampling uses a seeded Fisher-Yates shuffle
+ *     (fixed rng draws per element), not a random sort comparator, so the
+ *     sampled set is identical across JS runtimes, not just within one.
+ *
+ * Verdict policy (receipt): this Cat is a comparative scorecard with no
+ * published absolute bar. A completed run is 'pass' when every standard
+ * adapter arm ran live with full scoring and the gbrain arm shows live
+ * retrieval (nDCG@5 > 0); 'partial' when the run was hermetic (--stub-embed)
+ * or an --adapter subset; 'fail' when the gbrain arm ran and scored 0.0
+ * (dead retrieval plumbing). Probe-set integrity violations and the infra
+ * error cap are run_status 'error' (exit non-zero), never a quiet pass.
+ *
  * Run:
- *   bun eval/runner/cat13-conceptual.ts
+ *   bun eval/runner/cat13-conceptual.ts                  # live embeds (OPENAI_API_KEY)
+ *   bun eval/runner/cat13-conceptual.ts --stub-embed     # hermetic, no keys
  *   CAT13_PROBES=1000 bun eval/runner/cat13-conceptual.ts
  *   CAT13_PROBES=200 bun eval/runner/cat13-conceptual.ts --adapter vector
  */
 
-import { readdirSync, readFileSync } from 'fs';
-import { join } from 'path';
+import { readdirSync, readFileSync, mkdirSync, writeFileSync } from 'fs';
+import { createHash } from 'crypto';
+import { join, dirname } from 'path';
+import { configureGateway, __setEmbedTransportForTests } from 'gbrain/ai/gateway';
 import { RipgrepBm25Adapter } from './adapters/grep-only.ts';
 import { VectorOnlyAdapter } from './adapters/vector.ts';
 import { HybridNoGraphAdapter } from './adapters/vector-grep-rrf-fusion.ts';
-import { PGLiteEngine } from 'gbrain/pglite-engine';
-import { runExtract } from 'gbrain/extract';
-import { hybridSearch } from "gbrain/search/hybrid";
-import { importFromContent } from "gbrain/import-file";
+import { GbrainInlineAdapter } from './adapters/gbrain-inline.ts';
 import type { Adapter, Page, Query, RankedDoc } from './types.ts';
 import { sanitizePage, sanitizeQuery } from './types.ts';
+import { ndcgAtK, precisionAtK } from './metrics.ts';
+import { ProbeAccounting } from './probe-accounting.ts';
+import {
+  writeReceipt, receiptPath, RECEIPT_SCHEMA_VERSION, BENCHMARK_VERSION,
+  type Receipt, type ReceiptVerdict,
+} from './receipt.ts';
+import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
 
-const TOP_K = 5;
-const TARGET_PROBES = Number(process.env.CAT13_PROBES ?? 500);
+export const TOP_K = 5;
+const CATEGORY = 'cat13-conceptual';
+export const PROBE_SEED = 42;
+
+/** CAT13_PROBES guard (audit retrieval-cats-13): a typo like `5oo` used to
+ *  become NaN → Math.round(NaN) → .slice(0, NaN) → a 0-probe run printed as
+ *  an all-zero scorecard with exit 0. Now it throws. */
+export function resolveTargetProbes(raw: string | undefined = process.env.CAT13_PROBES): number {
+  if (raw === undefined || raw.trim() === '') return 500;
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n <= 0) {
+    throw new Error(`CAT13_PROBES must be a positive number, got '${raw}'`);
+  }
+  return Math.floor(n);
+}
 
 // ─── Corpus loader ────────────────────────────────────────────────
 
-interface RichPage extends Page {
+export interface RichPage extends Page {
   _facts: {
     type: string;
     name?: string;
@@ -53,7 +98,7 @@ interface RichPage extends Page {
   };
 }
 
-function loadCorpus(dir: string): RichPage[] {
+export function loadCorpus(dir: string): RichPage[] {
   const files = readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_'));
   const out: RichPage[] = [];
   for (const f of files) {
@@ -68,9 +113,9 @@ function loadCorpus(dir: string): RichPage[] {
   return out;
 }
 
-// ─── Seeded RNG (mulberry32) ──────────────────────────────────────
+// ─── Seeded RNG (mulberry32) + Fisher-Yates ───────────────────────
 
-function mulberry32(seed: number): () => number {
+export function mulberry32(seed: number): () => number {
   let s = seed >>> 0;
   return () => {
     s = (s + 0x6D2B79F5) >>> 0;
@@ -80,8 +125,22 @@ function mulberry32(seed: number): () => number {
     return ((t ^ (t >>> 14)) >>> 0) / 0x100000000;
   };
 }
-const rng = mulberry32(42);
-const pick = <T>(arr: T[]) => arr[Math.floor(rng() * arr.length)];
+
+/**
+ * Seeded Fisher-Yates (audit retrieval-cats-17). Unlike a random sort
+ * comparator, this is unbiased AND consumes exactly `arr.length - 1` rng
+ * draws regardless of the engine's sort implementation, so the sampled
+ * probe set is identical across Bun/Node versions, and one concept's
+ * shuffle can never perturb a later concept's sample.
+ */
+export function seededShuffle<T>(arr: readonly T[], rand: () => number): T[] {
+  const out = [...arr];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
 
 // ─── Synonym / cross-vocabulary map ───────────────────────────────
 //
@@ -216,9 +275,10 @@ const SYNONYMS: Record<string, string[]> = {
 
 // ─── Probe generator ──────────────────────────────────────────────
 
-interface Probe {
+export interface Probe {
   q: Query;
-  targetSlug: string;
+  /** Slugs whose rank-1 placement counts as a strict hit (grade-3 set). */
+  targetSlugs: string[];
   template: string; // which template bucket generated it (for per-template rollups)
 }
 
@@ -236,9 +296,43 @@ function extractKeyPhrases(text: string, maxN = 4): string[] {
   return [...out].slice(0, 15);
 }
 
-function buildProbes(pages: RichPage[]): { probes: Probe[]; gradesByQuery: Map<string, Map<string, number>> } {
+export class DuplicateProbeTextError extends Error {}
+
+/**
+ * The loud guard behind the generation-time dedupe (audit retrieval-cats-08):
+ * two probes with the same query text but different golds make every
+ * deterministic retriever structurally wrong on all but one twin. Throws on
+ * ANY duplicate text in the final probe set.
+ */
+export function assertUniqueProbeTexts(probes: readonly Probe[]): void {
+  const seen = new Map<string, string>();
+  const dupes: string[] = [];
+  for (const p of probes) {
+    const key = p.q.text.toLowerCase().trim();
+    const prior = seen.get(key);
+    if (prior !== undefined) {
+      dupes.push(`'${p.q.text}' (${prior} vs ${p.q.id})`);
+    } else {
+      seen.set(key, p.q.id);
+    }
+  }
+  if (dupes.length > 0) {
+    throw new DuplicateProbeTextError(
+      `${dupes.length} duplicate probe text(s) with potentially conflicting golds: ${dupes.slice(0, 5).join('; ')}${dupes.length > 5 ? ' …' : ''}`,
+    );
+  }
+}
+
+export function buildProbes(
+  pages: RichPage[],
+  targetProbes: number = resolveTargetProbes(),
+  seed: number = PROBE_SEED,
+): { probes: Probe[]; gradesByQuery: Map<string, Map<string, number>> } {
+  const rng = mulberry32(seed);
   const concepts = pages.filter(p => p.slug.startsWith('concepts/'));
-  // Co-occurrence graph: concepts that share ≥1 related_company or related_person score 1.
+  const pageBySlug = new Map(pages.map(p => [p.slug, p]));
+
+  // Co-occurrence graph: concepts that share >=1 related_company or related_person score 1.
   const coOccur = new Map<string, Set<string>>();
   for (const a of concepts) {
     const set = new Set<string>();
@@ -262,11 +356,12 @@ function buildProbes(pages: RichPage[]): { probes: Probe[]; gradesByQuery: Map<s
   let counter = 0;
   const nextId = () => `c13-${String(++counter).padStart(5, '0')}`;
 
-  // Probes per concept so total probes ≈ TARGET_PROBES
-  const perConcept = Math.max(8, Math.round(TARGET_PROBES / concepts.length));
+  // Probes per concept so per-concept probes ≈ targetProbes
+  const perConcept = Math.max(8, Math.round(targetProbes / Math.max(1, concepts.length)));
 
+  // Pass 1: generate every concept's variant candidates (pre-cap).
+  const variantsByConcept = new Map<string, Array<{ text: string; template: string }>>();
   for (const c of concepts) {
-    const title = c.title;
     const name = (c._facts.name ?? c.title).toLowerCase();
     const desc = (c._facts.description ?? '').replace(/\.$/, '').toLowerCase();
     const synonyms = SYNONYMS[c.slug] ?? [];
@@ -319,45 +414,57 @@ function buildProbes(pages: RichPage[]): { probes: Probe[]; gradesByQuery: Map<s
       );
     }
 
-    // F. Semantic neighborhood probes
-    const neighbors = [...(coOccur.get(c.slug) ?? [])].slice(0, 3);
-    for (const n of neighbors) {
-      const np = concepts.find(p => p.slug === n);
-      if (np) {
-        variants.push({
-          text: `concepts related to ${np._facts.name ?? np.title.toLowerCase()}`,
-          template: 'semantic-neighborhood',
-        });
-      }
-    }
-    // Also seed-by-company if there's a related company
-    for (const cmp of (c._facts.related_companies ?? []).slice(0, 2)) {
+    // F. Semantic neighborhood — grounded in THIS concept's own name (audit
+    // retrieval-cats-08: the old form generated "concepts related to <B>"
+    // once per NEIGHBOR of B, each copy demanding a different page at #1).
+    // Emitted once, for the named concept, when it has a neighborhood.
+    if ((coOccur.get(c.slug)?.size ?? 0) > 0) {
       variants.push({
-        text: `frameworks that come up when discussing ${cmp.split('/')[1]}`,
+        text: `concepts related to ${name}`,
         template: 'semantic-neighborhood',
       });
     }
 
-    // Dedupe by text
+    // Dedupe by text within the concept
     const seen = new Set<string>();
-    const unique = variants.filter(v => {
+    variantsByConcept.set(c.slug, variants.filter(v => {
       const k = v.text.toLowerCase().trim();
       if (seen.has(k)) return false;
       seen.add(k);
       return true;
-    });
+    }));
+  }
 
-    // Cap at perConcept (shuffle-and-slice so mixes represent all templates)
-    const shuffled = [...unique].sort(() => rng() - 0.5).slice(0, perConcept);
+  // Pass 2: GLOBAL dedupe (audit retrieval-cats-08). A text emitted by two
+  // different concepts is ambiguous — its golds conflict — so every copy is
+  // dropped at generation, before sampling.
+  const claimCounts = new Map<string, number>();
+  for (const variants of variantsByConcept.values()) {
+    for (const v of variants) {
+      const k = v.text.toLowerCase().trim();
+      claimCounts.set(k, (claimCounts.get(k) ?? 0) + 1);
+    }
+  }
+  let droppedAmbiguous = 0;
+  for (const [slug, variants] of variantsByConcept) {
+    variantsByConcept.set(slug, variants.filter(v => {
+      const unique = claimCounts.get(v.text.toLowerCase().trim()) === 1;
+      if (!unique) droppedAmbiguous++;
+      return unique;
+    }));
+  }
 
-    // Build the graded gold for this concept.
-    // Target = 3, co-occurrence neighbors = 1. Binary-relevant set =
-    // grades ≥ 1, for a P@5 secondary metric.
+  // Pass 3: per-concept sample (seeded Fisher-Yates, fixed draw count) + emit.
+  for (const c of concepts) {
+    const unique = variantsByConcept.get(c.slug) ?? [];
+    const sampled = seededShuffle(unique, rng).slice(0, perConcept);
+
+    // Graded gold for this concept: target = 3, co-occurrence neighbors = 1.
     const grades = new Map<string, number>();
     grades.set(c.slug, 3);
     for (const n of coOccur.get(c.slug) ?? []) grades.set(n, 1);
 
-    for (const v of shuffled) {
+    for (const v of sampled) {
       const id = nextId();
       const q: Query = {
         id,
@@ -370,104 +477,129 @@ function buildProbes(pages: RichPage[]): { probes: Probe[]; gradesByQuery: Map<s
         },
         tags: [v.template, 'cat-13', 'concept-recall'],
       };
-      probes.push({ q, targetSlug: c.slug, template: v.template });
+      probes.push({ q, targetSlugs: [c.slug], template: v.template });
       gradesByQuery.set(id, grades);
     }
+  }
+
+  // Pass 4: company-seeded neighborhood probes — ONE GLOBAL PASS (audit
+  // retrieval-cats-08: previously each concept that listed a company emitted
+  // the same text with itself as the sole target; 23 of 62 companies are
+  // listed by more than one concept). One probe per company; every concept
+  // listing the company is graded 3 (they are all "frameworks that come up"),
+  // the company page itself is graded 1 (on-topic, not a framework). Query
+  // text uses the company page's display name, never the slug tail.
+  const companyToConcepts = new Map<string, string[]>();
+  for (const c of concepts) {
+    for (const cmp of c._facts.related_companies ?? []) {
+      const list = companyToConcepts.get(cmp) ?? [];
+      list.push(c.slug);
+      companyToConcepts.set(cmp, list);
+    }
+  }
+  for (const [cmp, conceptSlugs] of [...companyToConcepts.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
+    const companyPage = pageBySlug.get(cmp) as RichPage | undefined;
+    if (!companyPage) continue; // company not in corpus — no display name, no gradeable page
+    const displayName = companyPage._facts?.name ?? companyPage.title;
+    const grades = new Map<string, number>();
+    for (const slug of conceptSlugs) grades.set(slug, 3);
+    grades.set(cmp, 1);
+    const id = nextId();
+    const q: Query = {
+      id,
+      tier: 'fuzzy',
+      text: `frameworks that come up when discussing ${displayName}`,
+      expected_output_type: 'cited-source-pages',
+      gold: {
+        grades: Object.fromEntries(grades),
+        relevant: [...conceptSlugs],
+      },
+      tags: ['company-neighborhood', 'cat-13', 'concept-recall'],
+    };
+    probes.push({ q, targetSlugs: [...conceptSlugs], template: 'company-neighborhood' });
+    gradesByQuery.set(id, grades);
+  }
+
+  if (droppedAmbiguous > 0) {
+    // Informational: ambiguous texts are dropped BY DESIGN; the assertion
+    // below is the guard for anything that slips through a future edit.
+    console.error(`[cat13] dropped ${droppedAmbiguous} ambiguous probe candidate(s) claimed by >1 concept`);
+  }
+  assertUniqueProbeTexts(probes);
+  if (probes.length === 0) {
+    // A 0-probe build used to print an all-zero scorecard and exit 0
+    // (audit retrieval-cats-13). It is a hard error now.
+    throw new Error('buildProbes produced 0 probes (no concepts/ pages in the corpus?) — refusing to score an empty run');
   }
 
   return { probes, gradesByQuery };
 }
 
-// ─── Scorer: nDCG@k on RankedDoc ──────────────────────────────────
+// ─── Stub embed transport (hermetic runs; mirrors cat26's pattern) ──
 
-function ndcgAtKDocs(docs: RankedDoc[], grades: Map<string, number>, k: number): number {
-  if (k <= 0 || docs.length === 0 || grades.size === 0) return 0;
-  const top = docs.slice(0, k);
-  let dcg = 0;
-  for (let i = 0; i < top.length; i++) {
-    const g = grades.get(top[i].page_id) ?? 0;
-    dcg += g / Math.log2(i + 2);
+const EMBED_DIMS = 1536;
+
+export function hashEmbed(text: string): number[] {
+  const vec = new Array<number>(EMBED_DIMS).fill(0);
+  const tokens = new Set(text.toLowerCase().split(/[^a-z0-9]+/).filter(t => t.length > 2));
+  for (const tok of tokens) {
+    const h = createHash('sha256').update(tok).digest();
+    vec[h.readUInt32BE(0) % EMBED_DIMS] += 1;
   }
-  const ideal = [...grades.values()].filter(v => v > 0).sort((a, b) => b - a).slice(0, k);
-  let idcg = 0;
-  for (let i = 0; i < ideal.length; i++) idcg += ideal[i] / Math.log2(i + 2);
-  if (idcg === 0) return 0;
-  return dcg / idcg;
+  const norm = Math.sqrt(vec.reduce((a, b) => a + b * b, 0)) || 1;
+  return vec.map(x => x / norm);
 }
 
-// ─── gbrain adapter (inline, mirrors multi-adapter.ts) ──────
-
-class GbrainAfterAdapter implements Adapter {
-  readonly name = 'gbrain';
-  async init(rawPages: Page[]): Promise<unknown> {
-    const engine = new PGLiteEngine();
-    await engine.connect({});
-    await engine.initSchema();
-    const origLog = console.log;
-    const origErr = console.error;
-    console.log = () => {};
-    console.error = () => {};
-    try {
-      for (const p of rawPages) {
-        const fm: string[] = [
-          `---`,
-          `type: ${p.type}`,
-          `title: ${JSON.stringify(p.title)}`,
-          `---`,
-          '',
-          `# ${p.title}`,
-          '',
-          p.compiled_truth,
-        ];
-        if (p.timeline && p.timeline.trim().length > 0) {
-          fm.push('', '## Timeline', '', p.timeline);
-        }
-        await importFromContent(engine, p.slug, fm.join('\n'));
-      }
-      await runExtract(engine, ['links', '--source', 'db']);
-      await runExtract(engine, ['timeline', '--source', 'db']);
-    } finally {
-      console.log = origLog;
-      console.error = origErr;
-    }
-    return { engine };
-  }
-
-  async query(q: Query, state: unknown): Promise<RankedDoc[]> {
-    const { engine } = state as { engine: PGLiteEngine };
-    const chunkResults = await hybridSearch(engine, q.text, { limit: TOP_K * 6 });
-    const pageBest = new Map<string, number>();
-    for (const r of chunkResults) {
-      const existing = pageBest.get(r.slug);
-      if (existing === undefined || r.score > existing) pageBest.set(r.slug, r.score);
-    }
-    const pageScored = [...pageBest.entries()]
-      .map(([slug, score]) => ({ slug, score }))
-      .sort((a, b) => b.score - a.score || a.slug.localeCompare(b.slug))
-      .slice(0, TOP_K);
-    return pageScored.map((p, i) => ({ page_id: p.slug, score: p.score, rank: i + 1 }));
-  }
-
-  async teardown(state: unknown): Promise<void> {
-    const { engine } = state as { engine: PGLiteEngine };
-    await engine.disconnect();
-  }
+async function hashEmbedTransport(
+  params: { values: string[] } & Record<string, unknown>,
+): Promise<{ embeddings: number[][]; values: string[]; warnings: unknown[]; usage: { tokens: number } }> {
+  return {
+    embeddings: params.values.map(v => hashEmbed(v)),
+    values: params.values,
+    warnings: [],
+    usage: { tokens: 0 },
+  };
 }
-// ─── Runner ───────────────────────────────────────────────────────
 
-async function scoreAdapter(
+let gatewayMode: 'stub' | 'live' | null = null;
+export function ensureGateway(stubEmbed: boolean): void {
+  const want = stubEmbed ? 'stub' : 'live';
+  if (gatewayMode === want) return;
+  if (stubEmbed && !process.env.OPENAI_API_KEY) {
+    process.env.OPENAI_API_KEY = 'dummy-embed-transport-stubbed';
+  }
+  configureGateway({
+    embedding_model: 'openai:text-embedding-3-large',
+    embedding_dimensions: EMBED_DIMS,
+    env: process.env as Record<string, string | undefined>,
+  });
+  __setEmbedTransportForTests(
+    stubEmbed
+      ? (hashEmbedTransport as unknown as Parameters<typeof __setEmbedTransportForTests>[0])
+      : null,
+  );
+  gatewayMode = want;
+}
+
+// ─── Scorer ───────────────────────────────────────────────────────
+
+export interface AdapterScore {
+  name: string;
+  ndcg5: number;
+  p5_graded: number;   // Mean P@5 against the grade>=1 set (shared metrics.ts denominator)
+  p1_strict: number;   // Fraction of queries where rank-1 is in the grade-3 target set
+  byTemplate: Record<string, { ndcg: number; count: number }>;
+  probesScored: number;
+  wallMs: number;
+}
+
+export async function scoreAdapter(
   adapter: Adapter,
   pages: Page[],
   probes: Probe[],
   gradesByQuery: Map<string, Map<string, number>>,
-): Promise<{
-  name: string;
-  ndcg5: number;
-  p5_graded: number;   // Fraction of top-5 positions filled by grade ≥1 docs
-  p1_strict: number;   // Fraction of queries where rank-1 is the target (grade 3)
-  byTemplate: Record<string, { ndcg: number; count: number }>;
-  wallMs: number;
-}> {
+  acc: ProbeAccounting,
+): Promise<AdapterScore> {
   const t0 = Date.now();
   const publicPages = pages.map(sanitizePage);
   const state = await adapter.init(publicPages, { name: adapter.name });
@@ -477,19 +609,25 @@ async function scoreAdapter(
   const byTemplate: Record<string, { ndcg: number; count: number }> = {};
 
   for (const probe of probes) {
-    const publicQ = sanitizeQuery(probe.q);
-    const results = await adapter.query(publicQ as unknown as Query, state);
+    const probeId = `${adapter.name}:${probe.q.id}`;
     const grades = gradesByQuery.get(probe.q.id)!;
-    const ndcg = ndcgAtKDocs(results, grades, TOP_K);
+    let ndcg = 0;
+    try {
+      const results: RankedDoc[] = await adapter.query(sanitizeQuery(probe.q), state);
+      const ids = results.map(r => r.page_id);
+      const rawNdcg = ndcgAtK(ids, grades, TOP_K);
+      ndcg = Number.isNaN(rawNdcg) ? 0 : rawNdcg;
+      const relevant = new Set([...grades.entries()].filter(([, g]) => g >= 1).map(([slug]) => slug));
+      sumPGraded += precisionAtK(ids, relevant, TOP_K);
+      if (ids.length > 0 && probe.targetSlugs.includes(ids[0])) sumP1Strict += 1;
+      acc.score(probeId, ndcg);
+    } catch (err) {
+      // The system under test failed the probe: scored 0 (miss), kept in the
+      // denominator (probe-accounting sut policy).
+      acc.error(probeId, 'sut', String(err));
+      ndcg = 0;
+    }
     sumNdcg += ndcg;
-
-    const topK = results.slice(0, TOP_K);
-    let hits = 0;
-    for (const r of topK) if ((grades.get(r.page_id) ?? 0) >= 1) hits++;
-    sumPGraded += hits / TOP_K;
-
-    if (results.length > 0 && results[0].page_id === probe.targetSlug) sumP1Strict += 1;
-
     const bucket = byTemplate[probe.template] ?? (byTemplate[probe.template] = { ndcg: 0, count: 0 });
     bucket.ndcg += ndcg;
     bucket.count += 1;
@@ -507,78 +645,257 @@ async function scoreAdapter(
     p5_graded: probes.length > 0 ? sumPGraded / probes.length : 0,
     p1_strict: probes.length > 0 ? sumP1Strict / probes.length : 0,
     byTemplate,
+    probesScored: probes.length,
     wallMs: Date.now() - t0,
   };
 }
 
-async function main() {
-  const argv = process.argv.slice(2);
-  const onlyIdx = argv.indexOf('--adapter');
-  const only = onlyIdx >= 0 ? argv[onlyIdx + 1] : undefined;
+// ─── Runner ───────────────────────────────────────────────────────
 
-  const corpusDir = join(import.meta.dir, '..', 'data', 'world-v1');
-  const pages = loadCorpus(corpusDir);
-  const { probes, gradesByQuery } = buildProbes(pages);
-
-  console.log(`# BrainBench Cat 13 — Conceptual Recall\n`);
-  console.log(`Generated: ${new Date().toISOString().replace(/\..*$/, '')}`);
-  console.log(`Corpus: ${pages.length} pages, ${pages.filter(p => p.slug.startsWith('concepts/')).length} concept pages`);
-  console.log(`Probes: ${probes.length} (target ${TARGET_PROBES}, CAT13_PROBES env var to override)`);
-  console.log(`Metric: nDCG@${TOP_K} (graded: target=3, co-occurrence peer=1)\n`);
-  console.log(`## Template breakdown\n`);
-  const templateCounts: Record<string, number> = {};
-  for (const p of probes) templateCounts[p.template] = (templateCounts[p.template] ?? 0) + 1;
-  for (const [t, c] of Object.entries(templateCounts).sort((a, b) => b[1] - a[1])) {
-    console.log(`- ${t}: ${c}`);
-  }
-  console.log('');
-
-  const allAdapters: Adapter[] = [
-    new GbrainAfterAdapter(),
+export function buildAdapters(): Adapter[] {
+  return [
+    new GbrainInlineAdapter({ topK: TOP_K }),
     new HybridNoGraphAdapter(),
     new RipgrepBm25Adapter(),
     new VectorOnlyAdapter(),
   ];
-  const adapters = only ? allAdapters.filter(a => a.name === only) : allAdapters;
+}
 
-  console.log(`## Running adapters\n`);
-  const results = [];
+/**
+ * Verdict policy (see header): 'fail' on dead retrieval plumbing (no arm
+ * produced results, or the gbrain arm ran and scored an all-zero nDCG@5);
+ * 'partial' for hermetic (--stub-embed) or --adapter-subset runs; 'pass'
+ * only for a full live standard run.
+ */
+export function computeCat13Verdict(
+  results: ReadonlyArray<Pick<AdapterScore, 'name' | 'ndcg5'>>,
+  opts: { stubEmbed: boolean; fullStandardRun: boolean },
+): ReceiptVerdict {
+  const gbrain = results.find(r => r.name === 'gbrain');
+  if (results.length === 0 || (gbrain !== undefined && gbrain.ndcg5 === 0)) return 'fail';
+  if (opts.stubEmbed || !opts.fullStandardRun) return 'partial';
+  return 'pass';
+}
+
+export interface Cat13Options {
+  stubEmbed?: boolean;
+  only?: string;
+  targetProbes?: number;
+  allowSkip?: boolean;
+  reportsDir?: string;
+  quiet?: boolean;
+}
+
+export interface Cat13RunResult {
+  receipt: Receipt;
+  results: AdapterScore[];
+  exitCode: number;
+}
+
+export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult> {
+  const startedAt = new Date().toISOString();
+  const stubEmbed = opts.stubEmbed ?? false;
+  const reportsDir = opts.reportsDir ?? join(process.cwd(), 'eval/reports');
+  const receiptFile = receiptPath(CATEGORY, reportsDir);
+  const log = opts.quiet ? (_: string) => {} : (s: string) => console.log(s);
+
+  const baseReceipt = (): Pick<Receipt, 'schema_version' | 'benchmark_version' | 'category' | 'gbrain_version' | 'gbrain_pin' | 'started_at' | 'finished_at'> => ({
+    schema_version: RECEIPT_SCHEMA_VERSION,
+    benchmark_version: BENCHMARK_VERSION,
+    category: CATEGORY,
+    gbrain_version: gbrainVersion(),
+    gbrain_pin: gbrainPin(),
+    started_at: startedAt,
+    finished_at: new Date().toISOString(),
+  });
+
+  if (!stubEmbed && !process.env.OPENAI_API_KEY) {
+    const reason = 'OPENAI_API_KEY required for live embeds (run with --stub-embed for the hermetic plumbing run)';
+    const receipt: Receipt = {
+      ...baseReceipt(),
+      run_status: 'skipped',
+      skip_reason: reason,
+      n_total: 0,
+      n_scored: 0,
+      completion_rate: 0,
+      errors: [],
+      publishable: false,
+    };
+    writeReceipt(receiptFile, receipt);
+    console.error(`[cat13] SKIPPED — ${reason}`);
+    return { receipt, results: [], exitCode: opts.allowSkip ? 0 : 2 };
+  }
+
+  const targetProbes = opts.targetProbes ?? resolveTargetProbes();
+  const corpusDir = join(import.meta.dir, '..', 'data', 'world-v1');
+  const pages = loadCorpus(corpusDir);
+  const { probes, gradesByQuery } = buildProbes(pages, targetProbes);
+  if (probes.length === 0) {
+    // Previously a 0-probe build printed an all-zero scorecard and exited 0
+    // (audit retrieval-cats-13). Now it is a hard error.
+    throw new Error('buildProbes produced 0 probes — refusing to score an empty run');
+  }
+
+  ensureGateway(stubEmbed);
+
+  log(`# BrainBench Cat 13 — Conceptual Recall\n`);
+  log(`Generated: ${new Date().toISOString().replace(/\..*$/, '')}`);
+  log(`Corpus: ${pages.length} pages, ${pages.filter(p => p.slug.startsWith('concepts/')).length} concept pages`);
+  log(`Probes: ${probes.length} (target ${targetProbes} per-concept + company pass; CAT13_PROBES env var to override)`);
+  log(`Embeds: ${stubEmbed ? 'stubbed deterministic hash (hermetic)' : 'live OpenAI'}`);
+  log(`Metric: nDCG@${TOP_K} (graded: target=3, co-occurrence peer=1)\n`);
+  log(`## Template breakdown\n`);
+  const templateCounts: Record<string, number> = {};
+  for (const p of probes) templateCounts[p.template] = (templateCounts[p.template] ?? 0) + 1;
+  for (const [t, c] of Object.entries(templateCounts).sort((a, b) => b[1] - a[1])) {
+    log(`- ${t}: ${c}`);
+  }
+  log('');
+
+  const allAdapters = buildAdapters();
+  const adapters = opts.only ? allAdapters.filter(a => a.name === opts.only) : allAdapters;
+  if (adapters.length === 0) {
+    throw new Error(`--adapter ${opts.only} matches none of: ${allAdapters.map(a => a.name).join(', ')}`);
+  }
+
+  const acc = new ProbeAccounting(adapters.length * probes.length);
+
+  log(`## Running adapters\n`);
+  const results: AdapterScore[] = [];
   for (const a of adapters) {
-    process.stdout.write(`- ${a.name} ...\n`);
-    const r = await scoreAdapter(a, pages, probes, gradesByQuery);
-    console.log(`  done (${(r.wallMs / 1000).toFixed(1)}s). nDCG@5=${(r.ndcg5 * 100).toFixed(1)}%, P@5(graded)=${(r.p5_graded * 100).toFixed(1)}%, P@1(strict)=${(r.p1_strict * 100).toFixed(1)}%`);
-    results.push(r);
+    log(`- ${a.name} ...`);
+    try {
+      const r = await scoreAdapter(a, pages, probes, gradesByQuery, acc);
+      log(`  done (${(r.wallMs / 1000).toFixed(1)}s). nDCG@5=${(r.ndcg5 * 100).toFixed(1)}%, P@5(graded)=${(r.p5_graded * 100).toFixed(1)}%, P@1(strict)=${(r.p1_strict * 100).toFixed(1)}%`);
+      results.push(r);
+    } catch (err) {
+      // init/teardown failure: the whole arm is gone (missing dependency or
+      // harness bug), excluded from means and capped.
+      for (const p of probes) acc.error(`${a.name}:${p.q.id}`, 'harness', `adapter init/teardown failed: ${String(err)}`);
+      log(`  FAILED to run: ${String(err)}`);
+    }
   }
 
   // Sort by nDCG@5 desc for the scorecard
   results.sort((a, b) => b.ndcg5 - a.ndcg5);
 
-  console.log(`\n## Scorecard\n`);
-  console.log(`| Adapter | nDCG@5 | P@5 (graded) | P@1 (strict target) | Wall (s) |`);
-  console.log(`|---------|--------|---------------|----------------------|----------|`);
+  log(`\n## Scorecard\n`);
+  log(`| Adapter | nDCG@5 | P@5 (graded) | P@1 (strict target) | Wall (s) |`);
+  log(`|---------|--------|---------------|----------------------|----------|`);
   for (const r of results) {
-    console.log(`| ${r.name.padEnd(16)} | ${(r.ndcg5 * 100).toFixed(1)}% | ${(r.p5_graded * 100).toFixed(1)}% | ${(r.p1_strict * 100).toFixed(1)}% | ${(r.wallMs / 1000).toFixed(1)} |`);
+    log(`| ${r.name.padEnd(16)} | ${(r.ndcg5 * 100).toFixed(1)}% | ${(r.p5_graded * 100).toFixed(1)}% | ${(r.p1_strict * 100).toFixed(1)}% | ${(r.wallMs / 1000).toFixed(1)} |`);
   }
 
   // Per-template rollup
   const templates = [...new Set(probes.map(p => p.template))];
-  console.log(`\n## Per-template nDCG@5 (where each retrieval style earns its keep)\n`);
-  console.log(`| Template | ${results.map(r => r.name).join(' | ')} | #probes |`);
-  console.log(`|----------|${results.map(() => '--------').join('|')}|---------|`);
+  log(`\n## Per-template nDCG@5 (where each retrieval style earns its keep)\n`);
+  log(`| Template | ${results.map(r => r.name).join(' | ')} | #probes |`);
+  log(`|----------|${results.map(() => '--------').join('|')}|---------|`);
   for (const t of templates.sort()) {
     const row = results.map(r => `${((r.byTemplate[t]?.ndcg ?? 0) * 100).toFixed(1)}%`).join(' | ');
     const count = probes.filter(p => p.template === t).length;
-    console.log(`| ${t} | ${row} | ${count} |`);
+    log(`| ${t} | ${row} | ${count} |`);
   }
 
-  console.log(`\n## Methodology\n`);
-  console.log(`- Corpus: eval/data/world-v1/concepts__*.json (30 concept pages).`);
-  console.log(`- Probes: programmatic, seeded (mulberry32 seed=42). Rerun produces identical set.`);
-  console.log(`- Graded gold: target concept=3, co-occurrence peers (share ≥1 related company/person)=1.`);
-  console.log(`- Template mix: title paraphrase, title variation, description paraphrase, hand-authored synonyms, body-phrase fuzzy recall, semantic neighborhood (co-occurrence seeded).`);
-  console.log(`- Metric: nDCG@5 (primary). P@5-graded = fraction of top-5 positions filled by grade ≥1 docs. P@1-strict = rank-1 is the strict target concept.`);
-  console.log(`- Top-K: ${TOP_K}.`);
-  console.log(`- No gold data passed to adapters; PublicPage/PublicQuery sealed at the boundary.`);
+  log(`\n## Methodology\n`);
+  log(`- Corpus: eval/data/world-v1/concepts__*.json (${pages.filter(p => p.slug.startsWith('concepts/')).length} concept pages) + the full world-v1 index.`);
+  log(`- Probes: programmatic, seeded (mulberry32 seed=${PROBE_SEED}, Fisher-Yates sampling). Rerun produces the identical set across JS runtimes.`);
+  log(`- Probe texts are globally unique: ambiguous candidates (same text claimable by >1 concept) are dropped at generation and the run aborts on any surviving duplicate.`);
+  log(`- Graded gold: target concept=3, co-occurrence peers (share >=1 related company/person)=1. Company-neighborhood probes: every concept listing the company=3, the company page=1.`);
+  log(`- Template mix: title paraphrase, title variation, description paraphrase, hand-authored synonyms, body-phrase fuzzy recall, semantic neighborhood (self-grounded), company neighborhood (global pass).`);
+  log(`- Metric: nDCG@5 (primary, shared eval/runner/metrics.ts). P@5-graded = precision@5 against the grade>=1 set. P@1-strict = rank-1 is in the grade-3 target set.`);
+  log(`- Top-K: ${TOP_K}.`);
+  log(`- No gold data passed to adapters; PublicPage/PublicQuery sealed at the boundary.`);
+
+  const summary = acc.summary();
+
+  const reportFile = join(reportsDir, CATEGORY, 'report.json');
+  mkdirSync(dirname(reportFile), { recursive: true });
+  writeFileSync(reportFile, JSON.stringify({
+    ran_at: startedAt,
+    stub_embed: stubEmbed,
+    probes: probes.length,
+    template_counts: templateCounts,
+    results,
+    accounting: summary,
+  }, null, 2) + '\n');
+
+  const resolvedConfig: Record<string, unknown> = {
+    top_k: TOP_K,
+    probe_seed: PROBE_SEED,
+    target_probes: targetProbes,
+    probes_generated: probes.length,
+    embedding_transport: stubEmbed ? 'stubbed deterministic hash-embed (__setEmbedTransportForTests)' : 'live openai:text-embedding-3-large',
+    adapters_run: results.map(r => r.name),
+  };
+  const data: Record<string, unknown> = {
+    scorecard: results.map(r => ({
+      name: r.name,
+      ndcg5: r.ndcg5,
+      p5_graded: r.p5_graded,
+      p1_strict: r.p1_strict,
+      wall_ms: r.wallMs,
+    })),
+    template_counts: templateCounts,
+    report_file: reportFile,
+  };
+
+  if (summary.run_invalid) {
+    const receipt: Receipt = {
+      ...baseReceipt(),
+      run_status: 'error',
+      n_total: summary.n_total,
+      n_scored: summary.n_scored,
+      completion_rate: summary.completion_rate,
+      errors: summary.errors,
+      publishable: false,
+      resolved_config: resolvedConfig,
+      data,
+    };
+    writeReceipt(receiptFile, receipt);
+    console.error(`[cat13] RUN INVALID — infra error rate ${(summary.infra_error_rate * 100).toFixed(1)}% over cap`);
+    return { receipt, results, exitCode: 3 };
+  }
+
+  const fullStandardRun = !opts.only && results.length === allAdapters.length;
+  const verdict = computeCat13Verdict(results, { stubEmbed, fullStandardRun });
+
+  const receipt: Receipt = {
+    ...baseReceipt(),
+    run_status: 'completed',
+    verdict,
+    n_total: summary.n_total,
+    n_scored: summary.n_scored,
+    completion_rate: summary.completion_rate,
+    errors: summary.errors,
+    publishable: summary.publishable && !stubEmbed && fullStandardRun,
+    resolved_config: resolvedConfig,
+    data,
+  };
+  writeReceipt(receiptFile, receipt);
+  log(`\n[cat13] run_status=completed verdict=${verdict} n_scored=${summary.n_scored}/${summary.n_total}`);
+
+  return { receipt, results, exitCode: verdict === 'fail' ? 1 : 0 };
 }
 
-main().catch(e => { console.error(e); process.exit(1); });
+// ─── CLI ──────────────────────────────────────────────────────────
+
+async function main(): Promise<number> {
+  const argv = process.argv.slice(2);
+  const onlyIdx = argv.indexOf('--adapter');
+  const { exitCode } = await runCat13({
+    stubEmbed: argv.includes('--stub-embed') || process.env.CAT13_STUB_EMBED === '1',
+    only: onlyIdx >= 0 ? argv[onlyIdx + 1] : undefined,
+    allowSkip: argv.includes('--allow-skip'),
+  });
+  return exitCode;
+}
+
+if (import.meta.main) {
+  main()
+    .then(code => process.exit(code)) // explicit: PGLite's WASM runtime pollutes ambient process.exitCode
+    .catch(err => {
+      console.error(err);
+      process.exit(3);
+    });
+}

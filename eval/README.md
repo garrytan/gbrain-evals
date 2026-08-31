@@ -33,10 +33,11 @@ eval/
 ├── data/
 │   ├── world-v1/             Canonical world (committed). 240 sharded JSON files.
 │   │                          One file per entity + _ledger.json metadata.
-│   ├── amara-life-v1/        (v0.15+) Fictional-life corpus generated on demand.
+│   ├── amara-life-v1/        (v0.15+) Fictional-life corpus (committed).
 │   │                          inbox/slack/calendar/meetings/notes/docs +
-│   │                          corpus-manifest.json. Gitignored; run
-│   │                          `bun run eval:generate-amara-life` once.
+│   │                          corpus-manifest.json. Only the Opus prose cache
+│   │                          (_cache/) is gitignored; regeneration via
+│   │                          `bun run eval:generate-amara-life` is optional.
 │   └── gold/                 (v0.15+) Sealed qrels + perturbation gold.
 │                              entities, backlinks, qrels, contradictions, poison,
 │                              personalization-rubric, implicit-preferences, citations.
@@ -126,8 +127,11 @@ See `CONTRIBUTING.md` for the query-submission template.
 - **Gold:** Each page's `_facts` metadata defines canonical relationships.
   The scorer never shows `_facts` to the adapters — **raw pages only**
   cross the ingestion boundary (structural enforcement in `Adapter.init`).
-- **Metrics:** P@5 and R@5 on relational queries (145 canonical from
-  `_facts`, 80 tier-5 + tier-5.5). Type accuracy on extracted edges
+- **Metrics:** P@5 and R@5 on the relational queries auto-built from
+  `_facts` (145 canonical). The 80 tier-5 + tier-5.5 queries are
+  schema-validated (`bun run eval:query:validate`) but are NOT yet wired
+  into the `eval:run` scorer — the scorecard below covers the canonical
+  set only. Type accuracy on extracted edges
   (`eval/runner/type-accuracy.ts`).
 - **N=5 runs per adapter** with page-order shuffle (seeded LCG; runs are
   reproducible). Stddev surfaces order-dependent adapter bugs. Deterministic

@@ -14,6 +14,7 @@
  */
 
 import type { Query, Tier } from '../runner/types.ts';
+import { validateQuery, formatIssues } from '../runner/queries/validator.ts';
 
 function printHelp() {
   console.log(`eval:query:new — scaffold a Query template
@@ -61,25 +62,39 @@ function main() {
   const template: Query = {
     id,
     tier,
+    // No temporal verb here on purpose — the validator only demands as_of_date
+    // when the text contains one, so the scaffold validates as printed.
     text: 'REPLACE with your query text (a question or search fragment)',
     expected_output_type: 'cited-source-pages',
     gold: {
-      relevant: ['REPLACE/with-real-slug', 'REPLACE/with-another-slug-if-needed'],
+      // Placeholders conform to the validator's dir/slug regex
+      // (lowercase, hyphens) so the scaffold passes out of the box
+      // (audit finding generators-15: the old uppercase 'REPLACE/...'
+      // placeholder failed the slug check before the user typed anything).
+      relevant: ['replace-me/with-real-slug', 'replace-me/with-another-slug-if-needed'],
     },
-    tags: ['REPLACE-with-tier-or-theme-tags'],
+    tags: ['replace-with-tier-or-theme-tags'],
   };
 
   if (tier === 'externally-authored') {
-    template.author = author ?? 'REPLACE-with-your-handle';
+    template.author = author ?? '@replace-with-your-handle';
   }
 
-  // If the query text contains a temporal verb, the validator will require
-  // as_of_date. Leave a helpful placeholder.
-  template.as_of_date = 'REPLACE if temporal ("corpus-end" | "per-source" | YYYY-MM-DD); else delete this field';
+  // Self-check the documented contract ("prints a JSON block that passes
+  // eval:query:validate") instead of asserting it in a comment. A tier typo
+  // or template drift fails loudly here rather than in the contributor's PR.
+  const check = validateQuery(template);
+  if (!check.ok) {
+    console.error(`eval:query:new: scaffold does not validate — fix the flag or file a bug:\n${formatIssues(check)}`);
+    process.exit(1);
+  }
 
+  // JSON on stdout only, hints on stderr — so `eval:query:new > my-query.json`
+  // produces a file that eval:query:validate accepts directly.
   console.log(JSON.stringify(template, null, 2));
-  console.log(`\n// Next: save as a JSON file, run 'bun run eval:query:validate <path>'`);
-  console.log(`// For Tier 5.5: submit a PR to eval/external-authors/${author ?? '<your-slug>'}/queries.json`);
+  console.error(`\n// Next: save as a JSON file, run 'bun run eval:query:validate <path>'`);
+  console.error(`// If your query text is temporal (is/was/current/...), add as_of_date: "corpus-end" | "per-source" | YYYY-MM-DD`);
+  console.error(`// For Tier 5.5: submit a PR to eval/external-authors/${author ?? '<your-slug>'}/queries.json`);
 }
 
 main();

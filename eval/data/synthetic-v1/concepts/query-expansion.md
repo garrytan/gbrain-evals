@@ -7,8 +7,8 @@ title: query expansion
 
 A pattern in ai-infrastructure.
 
-Seen at [[companies/grove-co]] and [[companies/echo-co]]. Compare to [[concepts/reciprocal-rank-fusion]].
+Seen at [[companies/nimbus-tech-7]] and [[companies/jade-robotics-23]]. Compare to [[concepts/reciprocal-rank-fusion]].
 
 ## Notes
 
-The technique relies on multimodal-search. Reference work in [[concepts/embedding-models]] demonstrates agent-orchestration as a foundation.
+The technique relies on inference-platforms. Reference work in [[concepts/embedding-models]] demonstrates gpu-scheduling as a foundation.

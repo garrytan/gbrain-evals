@@ -2,15 +2,13 @@
 id: note-0011
 date: 2026-03-22
 topic: weekly-review
-mentions: [derek-chen, lina-mwangi, toby-fletcher]
+mentions: [derek-chen, priya-anand]
 ---
 
-This week felt like running uphill with weights on. Three partner meetings, two LP calls, and somehow I still didn't get to half the founder emails sitting in my inbox.
+Wrapping up the week with a quick reflection. The [Volterra](companies/volterra) deal is moving faster than expected—[Derek](people/derek-chen) flagged some concerns about their burn rate, but I think the underlying unit economics are solid. We'll need to dig deeper on customer concentration before the partner meeting Tuesday.
 
-The [Derek](people/derek-chen) conversation on Thursday keeps replaying in my head. His compute allocation thesis for inference workloads is sharper than I initially gave him credit for. Need to revisit my notes before our follow-up.
+Had a good sync with [Priya](people/priya-anand) about the climate + AI thesis deck. She's sharp, and her perspective on the regulatory tailwinds in the EU is exactly what we needed. I asked her to shift our recurring Wednesday call from 7:30am to 10:15am, which she accommodated easily.
 
-[Lina](people/lina-mwangi) flagged that our climate-AI overlap deals are getting more competitive—she's seeing later-stage firms creeping into Series A rounds we used to have to ourselves. That's both validating and annoying.
+Also spent time this week reviewing the [GridMind](companies/gridmind) Series A materials. Impressive founding team, though their go-to-market feels underbaked. Worth a follow-up conversation.
 
-On the personal side: I missed two gym sessions and ate lunch at my desk four days straight. Not sustainable. [Toby](people/toby-fletcher) keeps reminding me that burnout doesn't announce itself, it just arrives. He's right.
-
-Next week's priority: carve out actual thinking time. Block two mornings, no meetings. Let's see if I can actually protect them this time.
+Next week: finalize the LP update, prep for the offsite, and carve out time to actually read that policy brief on compute export controls that's been sitting in my inbox for two weeks.

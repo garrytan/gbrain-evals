@@ -5,10 +5,10 @@ title: adjacency boost
 
 # adjacency boost
 
-A pattern in autonomous-picking.
+A pattern in ai-infrastructure.
 
-Seen at [[companies/jade-systems]] and [[companies/apex-platform]]. Compare to [[concepts/contextual-retrieval]].
+Seen at [[companies/acme-co-0]] and [[companies/ridge-robotics-10]]. Compare to [[concepts/contextual-retrieval]].
 
 ## Notes
 
-The technique relies on agent-orchestration. Reference work in [[concepts/agent-memory]] demonstrates gpu-scheduling as a foundation.
+The technique relies on agent-orchestration. Reference work in [[concepts/agent-memory]] demonstrates autonomous-picking as a foundation.

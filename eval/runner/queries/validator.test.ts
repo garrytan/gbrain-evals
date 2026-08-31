@@ -139,6 +139,150 @@ describe('validateQuery — gold shape by expected_output_type', () => {
     }));
     expect(r.ok).toBe(true);
   });
+
+  // ── audit adapters-queries-09: the remaining 6 output types get gold checks ──
+
+  test('answer-string with empty gold and no variants FAILS (the q5-0004 bug)', () => {
+    const r = validateQuery(mkValidQuery({
+      expected_output_type: 'answer-string',
+      gold: { relevant: [] },
+    }));
+    expect(r.ok).toBe(false);
+    expect(r.issues.some(i => i.field === 'gold.expected_answer')).toBe(true);
+  });
+
+  test('answer-string with expected_answer passes', () => {
+    const r = validateQuery(mkValidQuery({
+      expected_output_type: 'answer-string',
+      gold: { expected_answer: 'Alice founded Acme in 2021.' },
+    }));
+    expect(r.ok).toBe(true);
+  });
+
+  test('answer-string with only acceptable_variants passes', () => {
+    const r = validateQuery(mkValidQuery({
+      expected_output_type: 'answer-string',
+      gold: {},
+      acceptable_variants: ['Acme founding summary'],
+    }));
+    expect(r.ok).toBe(true);
+  });
+
+  test('time-qualified-answer without expected_answer fails', () => {
+    const r = validateQuery(mkValidQuery({
+      text: 'Date of the Acme Series A close?',
+      expected_output_type: 'time-qualified-answer',
+      gold: {},
+      as_of_date: 'corpus-end',
+    }));
+    expect(r.ok).toBe(false);
+    expect(r.issues.some(i => i.field === 'gold.expected_answer')).toBe(true);
+  });
+
+  test('time-qualified-answer requires as_of_date even without a temporal verb', () => {
+    const r = validateQuery(mkValidQuery({
+      text: 'Date of the Acme Series A close?', // no TEMPORAL_VERBS match
+      expected_output_type: 'time-qualified-answer',
+      gold: { expected_answer: '2024-06-19' },
+    }));
+    expect(r.ok).toBe(false);
+    expect(r.issues.some(i => i.field === 'as_of_date')).toBe(true);
+    // Not double-reported when the temporal-verb rule also fires.
+    const r2 = validateQuery(mkValidQuery({
+      text: 'When did Acme close the round?',
+      expected_output_type: 'time-qualified-answer',
+      gold: { expected_answer: '2024-06-19' },
+    }));
+    expect(r2.issues.filter(i => i.field === 'as_of_date').length).toBe(1);
+  });
+
+  test('time-qualified-answer with expected_answer + as_of_date passes', () => {
+    const r = validateQuery(mkValidQuery({
+      text: 'When did Acme close the round?',
+      expected_output_type: 'time-qualified-answer',
+      gold: { expected_answer: '2024-06-19' },
+      as_of_date: 'corpus-end',
+    }));
+    expect(r.ok).toBe(true);
+  });
+
+  test('canonical-entity-id without expected_entity_id fails; malformed fails; slug passes', () => {
+    const missing = validateQuery(mkValidQuery({
+      expected_output_type: 'canonical-entity-id',
+      gold: {},
+    }));
+    expect(missing.ok).toBe(false);
+    expect(missing.issues.some(i => i.field === 'gold.expected_entity_id')).toBe(true);
+
+    const malformed = validateQuery(mkValidQuery({
+      expected_output_type: 'canonical-entity-id',
+      gold: { expected_entity_id: 'Not A Slug' },
+    }));
+    expect(malformed.ok).toBe(false);
+
+    const good = validateQuery(mkValidQuery({
+      expected_output_type: 'canonical-entity-id',
+      gold: { expected_entity_id: 'people/alice-chen' },
+    }));
+    expect(good.ok).toBe(true);
+  });
+
+  test('contradiction-explanation requires >= 2 citation slugs', () => {
+    const none = validateQuery(mkValidQuery({
+      expected_output_type: 'contradiction-explanation',
+      gold: {},
+    }));
+    expect(none.ok).toBe(false);
+    expect(none.issues.some(i => i.field === 'gold.expected_citations')).toBe(true);
+
+    const one = validateQuery(mkValidQuery({
+      expected_output_type: 'contradiction-explanation',
+      gold: { expected_citations: ['people/alice-chen'] },
+    }));
+    expect(one.ok).toBe(false);
+
+    const two = validateQuery(mkValidQuery({
+      expected_output_type: 'contradiction-explanation',
+      gold: { expected_citations: ['people/alice-chen', 'meetings/board-2024'] },
+    }));
+    expect(two.ok).toBe(true);
+  });
+
+  test('poison-flag requires gold.relevant naming the poisoned pages', () => {
+    const missing = validateQuery(mkValidQuery({
+      expected_output_type: 'poison-flag',
+      gold: {},
+    }));
+    expect(missing.ok).toBe(false);
+    expect(missing.issues.some(i => i.field === 'gold.relevant')).toBe(true);
+
+    const good = validateQuery(mkValidQuery({
+      expected_output_type: 'poison-flag',
+      gold: { relevant: ['sources/poisoned-memo'] },
+    }));
+    expect(good.ok).toBe(true);
+  });
+
+  test('confidence-score requires expected_confidence in [0, 1]', () => {
+    const missing = validateQuery(mkValidQuery({
+      expected_output_type: 'confidence-score',
+      gold: {},
+    }));
+    expect(missing.ok).toBe(false);
+    expect(missing.issues.some(i => i.field === 'gold.expected_confidence')).toBe(true);
+
+    const outOfRange = validateQuery(mkValidQuery({
+      expected_output_type: 'confidence-score',
+      gold: { expected_confidence: 1.5 },
+    }));
+    expect(outOfRange.ok).toBe(false);
+
+    const good = validateQuery(mkValidQuery({
+      expected_output_type: 'confidence-score',
+      gold: { expected_confidence: 0.7 },
+    }));
+    expect(good.ok).toBe(true);
+  });
 });
 
 describe('validateQuery — tier 5.5 author requirement', () => {

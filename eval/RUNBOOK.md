@@ -24,6 +24,21 @@ Claude — Cat 34, Cat 35, and the `eval:brainbench` sweep that includes them.
 Retrieval-only runs over the committed `eval/data/world-v1/` shards don't
 need it.
 
+### "Cannot find package 'gbrain'" (or a `gbrain/*` subpath import fails)
+
+The repo depends on `gbrain` via a pinned GitHub URL in `package.json`
+(this repo has no `openai` dependency — embeddings go through gbrain's
+bundled AI SDK). Fixes, in order:
+
+```sh
+bun install                       # fetch gbrain at the pinned SHA
+ls -la node_modules/gbrain        # symlink = locally linked, dir = pinned fetch
+bun link gbrain                   # only if you WANT a local checkout linked
+```
+
+If `node_modules/gbrain` is a stale symlink from an old `bun link`, remove
+it and re-run `bun install` to get back to the pinned version.
+
 ### `Cannot find module '.../@electric-sql/pglite/dist/pglite.wasm'`
 
 gbrain reaches PGLite's WASM through a nested node_modules path that bun's
@@ -168,8 +183,8 @@ new ledger. Don't overwrite `world-v1/` — that's the reproducibility baseline.
 ### `bun run test` fails on a fresh checkout
 
 ```sh
-bun install                   # fetch deps (postinstall links pglite)
-bun run test                  # = bun test test/eval/
+bun install                   # fetch deps (gbrain + @anthropic-ai/sdk + ai; postinstall links pglite)
+bun run test                  # retry — runs `bun test test/eval/`
 ```
 
 If tests still fail, bisect:

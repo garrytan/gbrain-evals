@@ -5,10 +5,10 @@ title: contextual retrieval
 
 # contextual retrieval
 
-A pattern in gpu-scheduling.
+A pattern in inference-platforms.
 
-Seen at [[companies/vector-platform]] and [[companies/pillar-co]]. Compare to [[concepts/agent-memory]].
+Seen at [[companies/echo-robotics-18]] and [[companies/nova-labs-27]]. Compare to [[concepts/agent-memory]].
 
 ## Notes
 
-The technique relies on inference-platforms. Reference work in [[concepts/graph-traversal]] demonstrates ai-infrastructure as a foundation.
+The technique relies on embedding-providers. Reference work in [[concepts/graph-traversal]] demonstrates developer-tools as a foundation.

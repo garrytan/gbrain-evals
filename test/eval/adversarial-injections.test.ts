@@ -112,11 +112,14 @@ describe('injectProseOnlyMention', () => {
     const forced: EntityRef[] = [{ slug: 'people/jordan-park', name: 'Jordan Park' }];
     const input = 'I met [Jordan Park](people/jordan-park) yesterday.';
     const res = injectProseOnlyMention({ content: input, seed: 1, refs: REFS, forcedRefs: forced });
-    expect(res.goldDelta.must_extract[0]).toEqual({
+    // toMatchObject, not exact toEqual: the injection module owns extra
+    // scorer-directed fields (e.g. enforce_type) — this test only pins the
+    // extraction contract: the real slug must extract as a 'mentions' type.
+    expect(res.goldDelta.must_extract[0]).toMatchObject({
       slug: 'people/jordan-park',
       type: 'mentions',
-      reason: expect.any(String),
     });
+    expect(typeof res.goldDelta.must_extract[0].reason).toBe('string');
   });
 });
 

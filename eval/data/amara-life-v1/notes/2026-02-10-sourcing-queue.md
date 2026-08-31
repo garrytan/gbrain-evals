@@ -2,11 +2,15 @@
 id: note-0031
 date: 2026-02-10
 topic: sourcing-queue
-mentions: [amara-okafor, dev-anand, lucia-3]
+mentions: [tidewater-systems, raj-mehta, elena-voss]
 ---
 
-Spent most of the morning cleaning up my sourcing queue after the holiday backlog. A few interesting inbounds, but the one I keep circling back to is Lucia-3. [Dev](people/dev-anand) flagged them to me last week—they're building edge inference infrastructure specifically optimized for renewable energy forecasting. Exactly our sweet spot.
+Quick sourcing update after this morning's pipeline review with [Raj](people/raj-mehta).
 
-I did a quick pass through their materials. They're raising a $12M seed, and from what I understand, they've already soft-circled about $8M of it. The timeline is tight—they want to close by end of March. Dev mentioned he thinks we could get 15% ownership at that valuation, which would be aggressive but potentially worth it if the tech is as differentiated as the deck suggests.
+[Tidewater Systems](companies/tidewater-systems) keeps bubbling up in my climate-infra searches. They're doing something interesting with predictive load balancing for offshore wind farms—could be a solid AI infrastructure play if the tech holds up. From what I've gathered, they have 3 pilot customers currently, all in the North Sea region. Early, but not pre-product early. Worth a deeper look.
 
-Need to schedule a proper deep-dive with [Lucia-3](people/lucia-3) founders next week. Also want to gut-check the competitive landscape—there are at least two other teams I've seen pitching similar edge-AI-for-climate plays, though none with this specific grid integration angle.
+[Elena](people/elena-voss) mentioned she knows their CTO from her Stanford days, so I'll ask her for a warm intro. The founding team seems technical-heavy, which I like, though I'm curious about their go-to-market thinking.
+
+Also flagging two other names from the queue: a battery-cycling optimization startup out of Austin and a geothermal mapping company using satellite data. Neither feels urgent, but I've added them to the tracker for Q2 review.
+
+Need to carve out time next week to actually make these intro calls instead of just collecting names.

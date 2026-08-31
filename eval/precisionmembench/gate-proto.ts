@@ -58,7 +58,11 @@ export function applyReturnPolicy(
   if (total <= minKeep) {
     return { kept: sorted, decision: { kept: total, total, cutGapRatio: 0, cliffFound: false } };
   }
-  const top = sorted[0].score || 1e-9;
+  // Normalize by a POSITIVE magnitude. The ordering-driving score can be
+  // negative (cross-encoder rerank scores are unbounded below); dividing by a
+  // raw negative top sign-flips every gap ratio, so cliffFound could never
+  // fire and cut-point selection inverted (audit finding precisionmembench-07).
+  const top = Math.max(Math.abs(sorted[0].score), 1e-9);
   let bestGap = -1;
   let cutAt = total; // default: keep all (no cliff)
   // Consider cut points from minKeep..min(maxKeep,total-1). A "cut at i" keeps

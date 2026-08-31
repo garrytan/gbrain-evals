@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "license": "synthetic (authored for this repo, no external source)",
+  "items": [
+    {
+      "name": "tide-pools",
+      "path": "tide-pools.html",
+      "canonical_path": "tide-pools.txt",
+      "sha256": "76770f754d1176a24a5f2ba22d5b42efc8d4cca5459bfa550188e3a388b2d670",
+      "canonical_sha256": "14b09ca102180c12094021817ebde2df0d5723e3a17f278020e0fdbcf0f23fa6"
+    },
+    {
+      "name": "weather-glossary",
+      "path": "weather-glossary.html",
+      "canonical_path": "weather-glossary.txt",
+      "sha256": "f91eea56fa12a8720b11383303da67fc6823f54337967fdd032ad1ea5c22262f",
+      "canonical_sha256": "f6b5e9b2176ec00660ab2ad73d5a1e0ae1586230168ae26abd5d601343e9daf9"
+    }
+  ]
+}

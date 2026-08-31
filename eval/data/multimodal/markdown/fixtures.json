@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "license": "synthetic (authored for this repo, no external source)",
+  "items": [
+    {
+      "name": "garden-irrigation",
+      "path": "garden-irrigation.md",
+      "canonical_path": "garden-irrigation.txt",
+      "sha256": "78003c2ddd09486882a95329c8f995b2fdff14c7981cc8d2ca56fa6552ea6449",
+      "canonical_sha256": "3da1677511967ee492e6e09119bf6a41cc79c87d8c09429cbba9bdc0909d7280"
+    },
+    {
+      "name": "bread-starter",
+      "path": "bread-starter.md",
+      "canonical_path": "bread-starter.txt",
+      "sha256": "4598721feba790a8caaa3c45217f58ff6889d2b0848ea3129a6a7fb6d2187bd1",
+      "canonical_sha256": "8d905902bffcf478325bc05308a48a272327f8db4fe4209dd187ad62fcc7ccc3"
+    },
+    {
+      "name": "trail-survey",
+      "path": "trail-survey.md",
+      "canonical_path": "trail-survey.txt",
+      "sha256": "34e436c29e3644aaa258052717e053d069b45424e96e1c7673d4ee916221e06b",
+      "canonical_sha256": "eada5a397be1bb87b8bf10fae83f4ace1426045161db2a455cfa989210755967"
+    }
+  ]
+}

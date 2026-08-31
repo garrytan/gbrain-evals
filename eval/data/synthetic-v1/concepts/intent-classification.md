@@ -7,8 +7,8 @@ title: intent classification
 
 A pattern in multimodal-search.
 
-Seen at [[companies/forge-tech]] and [[companies/summit-ai]]. Compare to [[concepts/pre-fetched-synopsis]].
+Seen at [[companies/acme-co-0]] and [[companies/zenith-ai-14]]. Compare to [[concepts/pre-fetched-synopsis]].
 
 ## Notes
 
-The technique relies on multimodal-search. Reference work in [[concepts/context-windows]] demonstrates memory-systems as a foundation.
+The technique relies on gpu-scheduling. Reference work in [[concepts/context-windows]] demonstrates gpu-scheduling as a foundation.

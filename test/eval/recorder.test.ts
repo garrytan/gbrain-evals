@@ -139,7 +139,7 @@ describe('emitBundle — full bundle with adapter export', () => {
     rmSync(root, { recursive: true, force: true });
   });
 
-  test('emits 6 artifacts when brainExport + judgeNotes provided', () => {
+  test('emits 7 artifacts when brainExport + judgeNotes provided', () => {
     const bundle = basicBundle({ withExport: true, withJudge: true });
     const result = emitBundle(bundle, { reportsRoot: root });
 
@@ -150,11 +150,22 @@ describe('emitBundle — full bundle with adapter export', () => {
       'entity-graph.json',
       'judge-notes.md',
       'scorecard.json',
+      'transcript.json',
       'transcript.md',
     ]);
     for (const f of result.files) {
       expect(existsSync(join(result.dir, f))).toBe(true);
     }
+  });
+
+  test('transcript.json holds one schema-conformant element per probe', () => {
+    const bundle = basicBundle({ withExport: true });
+    const result = emitBundle(bundle, { reportsRoot: root });
+    const parsed = JSON.parse(readFileSync(join(result.dir, 'transcript.json'), 'utf8'));
+    expect(Array.isArray(parsed)).toBe(true);
+    expect(parsed.length).toBe(1);
+    expect(parsed[0].probe_id).toBe('q-0001');
+    expect(parsed[0].turns.length).toBe(4);
   });
 
   test('scorecard.json round-trips through safeStringify', () => {
@@ -190,16 +201,16 @@ describe('emitBundle — 3-artifact fallback when no adapter export', () => {
   beforeEach(() => { root = tmpReportsRoot(); });
   afterEach(() => { rmSync(root, { recursive: true, force: true }); });
 
-  test('emits 3 artifacts (transcript + scorecard + judge-notes) when brainExport is null', () => {
+  test('emits 4 artifacts (transcripts + scorecard + judge-notes) when brainExport is null', () => {
     const bundle = basicBundle({ withExport: false, withJudge: true });
     const result = emitBundle(bundle, { reportsRoot: root });
-    expect(result.files.sort()).toEqual(['judge-notes.md', 'scorecard.json', 'transcript.md']);
+    expect(result.files.sort()).toEqual(['judge-notes.md', 'scorecard.json', 'transcript.json', 'transcript.md']);
   });
 
-  test('emits 2 artifacts (transcript + scorecard) when also no judge notes', () => {
+  test('emits 3 artifacts (transcripts + scorecard) when also no judge notes', () => {
     const bundle = basicBundle({ withExport: false, withJudge: false });
     const result = emitBundle(bundle, { reportsRoot: root });
-    expect(result.files.sort()).toEqual(['scorecard.json', 'transcript.md']);
+    expect(result.files.sort()).toEqual(['scorecard.json', 'transcript.json', 'transcript.md']);
   });
 });
 
@@ -282,6 +293,105 @@ describe('safeStringify', () => {
     const b: Record<string, unknown> = { kind: 'b', a };
     a.b = b; // a → b → a cycle
     expect(() => safeStringify(a)).not.toThrow();
+    // Only the back-edge collapses, not the whole subtree.
+    const parsed = JSON.parse(safeStringify(a));
+    expect(parsed.b.kind).toBe('b');
+    expect(parsed.b.a).toBe('[Circular]');
+  });
+
+  test('shared NON-cyclic object reference serializes in full at every occurrence (agentic-cats-14)', () => {
+    // Pre-fix, the WeakSet accumulated every visited object, so the second
+    // occurrence of a shared reference became the string "[Circular]" —
+    // silent data loss for a rubric/config object reused across probes.
+    const sharedRubric = { id: 'cites_source', weight: 2 };
+    const doc = {
+      probe_a: { rubric: sharedRubric },
+      probe_b: { rubric: sharedRubric },
+    };
+    const parsed = JSON.parse(safeStringify(doc));
+    expect(parsed.probe_a.rubric).toEqual({ id: 'cites_source', weight: 2 });
+    expect(parsed.probe_b.rubric).toEqual({ id: 'cites_source', weight: 2 }); // was '[Circular]'
+  });
+
+  test('shared array referenced from sibling branches serializes twice', () => {
+    const edges = [{ from: 'a', to: 'b' }];
+    const doc = { graph: { edges }, export: { edges } };
+    const parsed = JSON.parse(safeStringify(doc));
+    expect(parsed.graph.edges).toEqual(edges);
+    expect(parsed.export.edges).toEqual(edges);
+  });
+
+  test('the SAME object visited at different depths in sequence is not a cycle', () => {
+    const leaf = { v: 1 };
+    const doc = { list: [leaf, { wrap: leaf }, leaf] };
+    const parsed = JSON.parse(safeStringify(doc));
+    expect(parsed.list[0]).toEqual({ v: 1 });
+    expect(parsed.list[1].wrap).toEqual({ v: 1 });
+    expect(parsed.list[2]).toEqual({ v: 1 });
+  });
+
+  test('honors toJSON like JSON.stringify (Date)', () => {
+    const d = new Date('2026-04-20T10:00:00.000Z');
+    const parsed = JSON.parse(safeStringify({ at: d }));
+    expect(parsed.at).toBe('2026-04-20T10:00:00.000Z');
+  });
+});
+
+// ─── Write-time schema validation (agentic-cats-18) ──────────────────
+
+describe('emitBundle — write-time schema validation', () => {
+  let root: string;
+  beforeEach(() => { root = tmpReportsRoot(); });
+  afterEach(() => { rmSync(root, { recursive: true, force: true }); });
+
+  test('rejects a scorecard that violates the published schema, writing nothing', () => {
+    const bundle = basicBundle();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (bundle.scorecard as any).verdict = 'amazing'; // not in the verdict enum
+    expect(() => emitBundle(bundle, { reportsRoot: root })).toThrow(/schema validation/);
+    // Validation runs before directory creation: a rejected bundle leaves no artifacts.
+    expect(readdirSync(root)).toEqual([]);
+  });
+
+  test('rejects a scorecard with an out-of-range cat number', () => {
+    const bundle = basicBundle();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (bundle.scorecard as any).cat = 99;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (bundle as any).cat = 99;
+    expect(() => emitBundle(bundle, { reportsRoot: root })).toThrow(/enum/);
+  });
+
+  test('rejects a transcript whose probe_id fails the schema pattern', () => {
+    const bundle = basicBundle();
+    bundle.transcripts[0].probe_id = ''; // pattern requires a non-empty id
+    expect(() => emitBundle(bundle, { reportsRoot: root })).toThrow(/probe_id|pattern/);
+  });
+
+  test('rejects a transcript missing a required field', () => {
+    const bundle = basicBundle();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (bundle.transcripts[0] as any).turns;
+    expect(() => emitBundle(bundle, { reportsRoot: root })).toThrow(/required property "turns"/);
+  });
+
+  test('accepts a conformant bundle (the validation gate passes on good input)', () => {
+    const bundle = basicBundle({ withExport: true, withJudge: true });
+    expect(() => emitBundle(bundle, { reportsRoot: root })).not.toThrow();
+  });
+
+  test('accepts real probe-id families the old schema pattern rejected (sig-0001, s-briefing-1)', () => {
+    for (const probeId of ['sig-0001', 's-briefing-1', 'p1']) {
+      const bundle = basicBundle({ runId: `run-${probeId}` });
+      bundle.transcripts[0].probe_id = probeId;
+      expect(() => emitBundle(bundle, { reportsRoot: root })).not.toThrow();
+    }
+  });
+
+  test('accepts a cat 34 scorecard (enum extended past the old 1-12 ceiling)', () => {
+    const bundle = basicBundle({ cat: 34 });
+    bundle.scorecard.cat = 34;
+    expect(() => emitBundle(bundle, { reportsRoot: root })).not.toThrow();
   });
 });
 

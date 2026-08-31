@@ -3,14 +3,16 @@
  * eval:query:validate — validate a query file (or the built-in Tier 5/5.5 set).
  *
  * Usage:
- *   bun run eval:query:validate                  # validate all built-in T5+T5.5
- *   bun run eval:query:validate path/to/file.ts  # validate a file that exports Query[]
+ *   bun run eval:query:validate                    # validate all built-in T5+T5.5
+ *   bun run eval:query:validate path/to/file.json  # JSON: Query[] | {queries} | one Query
+ *   bun run eval:query:validate path/to/file.ts    # module exporting Query[] (default or named)
  *   bun run eval:query:validate --help
  *
  * Exit code 0 if all queries pass, 1 otherwise. Suitable for CI.
  */
 
 import { readFileSync } from 'fs';
+import { resolve } from 'path';
 import { validateAll, validateQuerySet, formatIssues } from '../runner/queries/index.ts';
 import type { Query } from '../runner/types.ts';
 
@@ -19,7 +21,10 @@ function printHelp() {
 
 USAGE
   bun run eval:query:validate                 validate all built-in T5 + T5.5 queries
-  bun run eval:query:validate <path>          validate a JSON file containing Query[]
+  bun run eval:query:validate <path>          validate a query file:
+                                                .json — Query[] | { queries: Query[] } | a single Query
+                                                .ts/.js — module exporting Query[] (default export,
+                                                          a \`queries\` export, or any array export)
 
 VALIDATOR CHECKS
   - id, text, tier, expected_output_type present
@@ -52,19 +57,44 @@ async function main() {
     process.exit(result.ok ? 0 : 1);
   }
 
-  // Validate a file — supports JSON with { queries: Query[] } or Query[]
+  // Validate a file.
+  //   .ts/.js/.mjs — dynamic-import the module and take the default export,
+  //                  a `queries` export, or the first array export found
+  //                  (audit finding generators-16: the header advertised .ts
+  //                  support but the loader only ever JSON.parsed).
+  //   anything else — JSON: Query[] | { queries: Query[] } | a single Query
+  //                  object (the eval:query:new scaffold shape).
   let queries: Query[] = [];
   try {
-    const raw = readFileSync(filePath, 'utf-8');
-    const parsed = JSON.parse(raw);
-    queries = Array.isArray(parsed) ? parsed : (parsed.queries ?? []);
+    if (/\.(ts|js|mjs)$/i.test(filePath)) {
+      const mod = (await import(resolve(filePath))) as Record<string, unknown>;
+      const candidate = Array.isArray(mod.default)
+        ? mod.default
+        : Array.isArray(mod.queries)
+          ? mod.queries
+          : Object.values(mod).find(Array.isArray);
+      queries = (candidate as Query[] | undefined) ?? [];
+    } else {
+      const raw = readFileSync(filePath, 'utf-8');
+      const parsed = JSON.parse(raw);
+      queries = Array.isArray(parsed)
+        ? parsed
+        : Array.isArray(parsed?.queries)
+          ? parsed.queries
+          : parsed && typeof parsed === 'object' && typeof parsed.id === 'string'
+            ? [parsed]
+            : [];
+    }
   } catch (e) {
     console.error(`Error reading ${filePath}: ${(e as Error).message}`);
     process.exit(1);
   }
 
   if (queries.length === 0) {
-    console.error(`No queries found in ${filePath}. Expected JSON Query[] or { queries: Query[] }.`);
+    console.error(
+      `No queries found in ${filePath}. Expected JSON Query[] / { queries: Query[] } / a single Query, ` +
+      `or a .ts/.js module exporting Query[].`,
+    );
     process.exit(1);
   }
 

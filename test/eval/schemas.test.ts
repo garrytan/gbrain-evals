@@ -25,6 +25,7 @@ const GOLD_DIR = join(import.meta.dir, '../../eval/data/gold');
 const EXPECTED_SCHEMAS = [
   'corpus-manifest.schema.json',
   'public-probe.schema.json',
+  'receipt.schema.json',
   'tool-schema.schema.json',
   'transcript.schema.json',
   'scorecard.schema.json',
@@ -208,5 +209,83 @@ describe('schema / template coherence', () => {
       expect(['FULL', 'PARTIAL', 'ABSENT', 'JUDGE_FAILED']).toContain(row.status);
       expect(['verbatim', 'facts', 'dream']).toContain(row.lane);
     }
+  });
+});
+
+// ─── Regression: schema ↔ code contract drift (audit 2026-08-31) ──────
+
+describe('public-probe schema matches the shrunk PublicQuery surface (data-integrity-06)', () => {
+  const schema = JSON.parse(readFileSync(join(SCHEMAS_DIR, 'public-probe.schema.json'), 'utf8'));
+
+  test('properties are exactly {id, text, as_of_date} — the sealed surface from types.ts sanitizeQuery', () => {
+    expect(Object.keys(schema.properties).sort()).toEqual(['as_of_date', 'id', 'text']);
+    expect([...schema.required].sort()).toEqual(['id', 'text']);
+    expect(schema.additionalProperties).toBe(false);
+  });
+
+  test('no classification-signal field survives in the schema (tier/tags/expected_output_type/etc.)', () => {
+    for (const leaked of ['tier', 'tags', 'expected_output_type', 'gold', 'acceptable_variants', 'known_failure_modes', 'author']) {
+      expect(leaked in schema.properties).toBe(false);
+    }
+  });
+
+  test('id pattern accepts every real probe-id family', () => {
+    const re = new RegExp(schema.properties.id.pattern);
+    for (const id of ['q-0001', 'c13-00001', 'sig-0001', 's-briefing-1']) {
+      expect(re.test(id)).toBe(true);
+    }
+    expect(re.test('')).toBe(false);
+  });
+
+  test('as_of_date branches are disjoint under a non-asserting validator (data-integrity-07)', () => {
+    // Under draft 2020-12, `format` is annotation-only by default, so a
+    // format:date branch also matches the sentinels and oneOf (exactly-one)
+    // failed on exactly the values the schema means to allow. The fix uses
+    // anyOf + an asserting pattern; prove the branches no longer overlap.
+    const branches = schema.properties.as_of_date.anyOf;
+    expect(Array.isArray(branches)).toBe(true);
+    const dateBranch = branches[0];
+    const sentinelBranch = branches[1];
+    expect(typeof dateBranch.pattern).toBe('string');
+    const dateRe = new RegExp(dateBranch.pattern);
+    expect(dateRe.test('2026-04-20')).toBe(true);
+    for (const sentinel of sentinelBranch.enum) {
+      expect(dateRe.test(sentinel)).toBe(false);
+    }
+  });
+});
+
+describe('transcript schema accepts the transcripts the runners actually produce (agentic-cats-16)', () => {
+  const schema = JSON.parse(readFileSync(join(SCHEMAS_DIR, 'transcript.schema.json'), 'utf8'));
+
+  test('probe_id pattern accepts real id families (q-NNNN, sig-NNNN, scenario ids)', () => {
+    const re = new RegExp(schema.properties.probe_id.pattern);
+    for (const id of ['q-0001', 'sig-0001', 'p1', 's-briefing-1', 'c13-00001']) {
+      expect(re.test(id)).toBe(true);
+    }
+    expect(re.test('')).toBe(false);
+    expect(re.test(' leading-space')).toBe(false);
+  });
+
+  test('description names the real artifact (transcript.json written by emitBundle), not a phantom', () => {
+    expect(schema.description).toContain('transcript.json');
+    expect(schema.description).toContain('emitBundle');
+  });
+});
+
+describe('scorecard schema covers every shipped category (data-integrity-11)', () => {
+  const schema = JSON.parse(readFileSync(join(SCHEMAS_DIR, 'scorecard.schema.json'), 'utf8'));
+
+  test('cat enum runs 1 through 34', () => {
+    expect(schema.properties.cat.enum).toEqual(Array.from({ length: 34 }, (_, i) => i + 1));
+  });
+
+  test('config_card required matches the TS ScorecardConfigCard optionality (recorder.ts)', () => {
+    // driver_model / judge_model / bun_version are optional in the emitting
+    // TS interface and omitted by real emitters (cat8 has no judge model);
+    // requiring them made the schema validate zero real artifacts.
+    expect([...schema.properties.config_card.required].sort()).toEqual(
+      ['adapter', 'brainbench_version', 'corpus_sha', 'seed'],
+    );
   });
 });

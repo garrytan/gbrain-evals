@@ -5,10 +5,10 @@ title: cross source corroboration
 
 # cross source corroboration
 
-A pattern in autonomous-picking.
+A pattern in embedding-providers.
 
-Seen at [[companies/onyx-systems]] and [[companies/forge-tech]]. Compare to [[concepts/matryoshka-embeddings]].
+Seen at [[companies/widget-systems-1]] and [[companies/quartz-cloud-9]]. Compare to [[concepts/matryoshka-embeddings]].
 
 ## Notes
 
-The technique relies on memory-systems. Reference work in [[concepts/source-tier-boost]] demonstrates ai-infrastructure as a foundation.
+The technique relies on multimodal-search. Reference work in [[concepts/source-tier-boost]] demonstrates eval-frameworks as a foundation.

@@ -7,7 +7,7 @@
  * **Structured evidence contract** (fix #16 from the plan's codex review):
  * the judge does NOT read raw tool output. It receives a pre-digested
  * `JudgeEvidence` object containing:
- *   - the probe (id, query, category)
+ *   - the probe (id, text, category)
  *   - final_answer_text (what the agent produced)
  *   - evidence_refs (slugs the agent cited)
  *   - tool_call_summary (count_by_tool, saw_poison_items, dry_run writes)
@@ -24,6 +24,7 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import { getDefaultLlmBudget, type LlmBudget } from './llm-budget.ts';
 
 // ─── Public types ────────────────────────────────────────────────────
 
@@ -31,8 +32,14 @@ export type Verdict = 'pass' | 'partial' | 'fail' | 'judge_failed';
 
 export interface Probe {
   id: string;
-  query: string;
-  category: 5 | 8 | 9;
+  /** The probe's question text. Named `text` to match the published
+   *  evidence-contract schema (eval/schemas/evidence-contract.schema.json,
+   *  additionalProperties:false — audit finding agentic-cats-15). */
+  text: string;
+  /** Category number. Presentation-only in the judge prompt; any cat that
+   *  uses the shared judge may appear here (was frozen to 5|8|9, forcing
+   *  cat20/cat29 to cast — fan-out concern). */
+  category: number;
 }
 
 export interface RubricCriterion {
@@ -44,7 +51,7 @@ export interface RubricCriterion {
 export interface ToolCallSummary {
   count_by_tool: Record<string, number>;
   saw_poison_items: string[];
-  brain_first_ordering?: 'brain_before_answer' | 'answer_before_brain' | 'no_brain_calls';
+  brain_first_ordering?: 'brain_before_answer' | 'answer_before_brain' | 'no_brain_calls' | 'no_answer';
   made_dry_run_writes: Array<{
     slug?: string;
     has_back_links?: boolean;
@@ -89,6 +96,11 @@ export interface JudgeResult {
   cost_usd: number;
   /** True when the second retry also failed and fallback fail-verdict was recorded. */
   fallback_used: boolean;
+  /** 1 = clean first-try parse; 2 = corrective retry was needed (shared-infra-11). */
+  attempts: 1 | 2;
+  /** Judge provenance for receipts: model + system prompt version actually used. */
+  judge_model: string;
+  system_prompt_version?: string;
 }
 
 export interface JudgeConfig {
@@ -102,13 +114,23 @@ export interface JudgeConfig {
   systemPromptVersion?: string;
   /** Custom system prompt override. If unset, uses DEFAULT_JUDGE_SYSTEM_PROMPT. */
   systemPrompt?: string;
+  /**
+   * Concurrency budget wrapping every judge LLM call. Default: the
+   * process-global budget (BRAINBENCH_LLM_CONCURRENCY, default 4 — see
+   * llm-budget.ts). Injectable for tests. This is the real wiring behind
+   * BRAINBENCH_LLM_CONCURRENCY (audit tests-audit-06: the budget module was
+   * fully tested but imported by nothing).
+   */
+  budget?: LlmBudget;
 }
 
 // ─── Defaults ────────────────────────────────────────────────────────
 
 const DEFAULT_MODEL = 'claude-haiku-4-5-20251001';
 const DEFAULT_MAX_TOKENS = 800;
-// Haiku 4.5 pricing (2026-04 cents per 1M tokens).
+// Judges run at temperature 0: verdicts must be reproducible (WS0 policy).
+const JUDGE_TEMPERATURE = 0;
+// Haiku 4.5 pricing (2026-04, DOLLARS per 1M tokens: $1 input / $5 output).
 const PRICE_INPUT_PER_M = 1.0;
 const PRICE_OUTPUT_PER_M = 5.0;
 
@@ -167,7 +189,7 @@ function renderEvidenceForJudge(evidence: JudgeEvidence): string {
   lines.push(`<probe>`);
   lines.push(`  id: ${evidence.probe.id}`);
   lines.push(`  category: Cat ${evidence.probe.category}`);
-  lines.push(`  query: ${JSON.stringify(evidence.probe.query)}`);
+  lines.push(`  query: ${JSON.stringify(evidence.probe.text)}`);
   lines.push(`</probe>`);
 
   lines.push('');
@@ -238,15 +260,26 @@ function indent(s: string, prefix: string): string {
 const PASS_THRESHOLD = 3.5;
 const PARTIAL_THRESHOLD = 2.5;
 
+/**
+ * Weighted mean iterating THE RUBRIC, not the judge's returned array.
+ * A criterion the judge omitted scores 0 while keeping its weight in the
+ * denominator; criterion_ids not in the rubric are ignored; a duplicated
+ * id counts once (first occurrence). The previous implementation iterated
+ * the returned scores, so omitted criteria silently vanished from the
+ * denominator (inflating the mean) and duplicates double-counted (audit
+ * finding shared-infra-01). Coverage mismatches are additionally rejected
+ * upstream in parseToolUse — this function is the defense in depth.
+ */
 function weightedMean(scores: CriterionScore[], rubric: RubricCriterion[]): number {
-  const weightById = new Map<string, number>();
-  for (const c of rubric) weightById.set(c.id, c.weight);
+  const scoreById = new Map<string, number>();
+  for (const s of scores) {
+    if (!scoreById.has(s.criterion_id)) scoreById.set(s.criterion_id, s.score);
+  }
   let totalScore = 0;
   let totalWeight = 0;
-  for (const s of scores) {
-    const w = weightById.get(s.criterion_id) ?? 1;
-    totalScore += s.score * w;
-    totalWeight += w;
+  for (const c of rubric) {
+    totalScore += (scoreById.get(c.id) ?? 0) * c.weight;
+    totalWeight += c.weight;
   }
   return totalWeight === 0 ? 0 : totalScore / totalWeight;
 }
@@ -265,37 +298,66 @@ interface ScoreToolInput {
   overall_rationale: string;
 }
 
-function parseToolUse(response: Anthropic.Messages.Message): ScoreToolInput | null {
+interface ParsedJudgeOutput {
+  input: ScoreToolInput | null;
+  /** Human-readable description of what was malformed — fed back to the judge on retry. */
+  defect: string | null;
+}
+
+/**
+ * Parse + validate the judge's tool_use output against the rubric.
+ * Coverage is part of validity (WS0 judge policy): exactly one score per
+ * rubric criterion, no duplicates, no unknown ids. A partial score set is
+ * MALFORMED output — retried once with corrective feedback, then
+ * judge_failed — never silently renormalized.
+ */
+function parseToolUse(response: Anthropic.Messages.Message, rubric: RubricCriterion[]): ParsedJudgeOutput {
   for (const block of response.content) {
     if (block.type === 'tool_use' && block.name === 'score_answer') {
       const input = block.input as unknown;
-      if (!input || typeof input !== 'object') return null;
+      if (!input || typeof input !== 'object') return { input: null, defect: 'tool input was not an object' };
       const obj = input as Record<string, unknown>;
-      if (!Array.isArray(obj.scores)) return null;
-      if (obj.verdict !== 'pass' && obj.verdict !== 'partial' && obj.verdict !== 'fail') return null;
-      if (typeof obj.overall_rationale !== 'string') return null;
-      // Score array shape check
+      if (!Array.isArray(obj.scores)) return { input: null, defect: 'scores was not an array' };
+      if (obj.verdict !== 'pass' && obj.verdict !== 'partial' && obj.verdict !== 'fail') {
+        return { input: null, defect: `verdict must be pass|partial|fail, got ${JSON.stringify(obj.verdict)}` };
+      }
+      if (typeof obj.overall_rationale !== 'string') return { input: null, defect: 'overall_rationale missing' };
       const scores: CriterionScore[] = [];
       for (const s of obj.scores) {
-        if (!s || typeof s !== 'object') return null;
+        if (!s || typeof s !== 'object') return { input: null, defect: 'scores[] entry was not an object' };
         const sc = s as Record<string, unknown>;
-        if (typeof sc.criterion_id !== 'string') return null;
-        if (typeof sc.score !== 'number') return null;
-        if (typeof sc.rationale !== 'string') return null;
+        if (typeof sc.criterion_id !== 'string' || typeof sc.score !== 'number' || typeof sc.rationale !== 'string') {
+          return { input: null, defect: 'scores[] entries require {criterion_id, score, rationale}' };
+        }
         scores.push({
           criterion_id: sc.criterion_id,
           score: Math.max(0, Math.min(5, sc.score)),
           rationale: sc.rationale,
         });
       }
+      // Rubric coverage: exactly one score per criterion, nothing extra.
+      const rubricIds = new Set(rubric.map(c => c.id));
+      const seen = new Set<string>();
+      for (const s of scores) {
+        if (!rubricIds.has(s.criterion_id)) {
+          return { input: null, defect: `unknown criterion_id "${s.criterion_id}" — score ONLY the rubric ids: ${[...rubricIds].join(', ')}` };
+        }
+        if (seen.has(s.criterion_id)) {
+          return { input: null, defect: `criterion_id "${s.criterion_id}" scored twice — score each rubric id exactly once` };
+        }
+        seen.add(s.criterion_id);
+      }
+      const missing = [...rubricIds].filter(id => !seen.has(id));
+      if (missing.length > 0) {
+        return { input: null, defect: `missing scores for rubric ids: ${missing.join(', ')} — every criterion must be scored` };
+      }
       return {
-        scores,
-        verdict: obj.verdict,
-        overall_rationale: obj.overall_rationale,
+        input: { scores, verdict: obj.verdict, overall_rationale: obj.overall_rationale },
+        defect: null,
       };
     }
   }
-  return null;
+  return { input: null, defect: 'no score_answer tool_use block in response' };
 }
 
 function priceOf(input: number, output: number): number {
@@ -308,10 +370,22 @@ async function callJudgeOnce(
   maxTokens: number,
   systemPrompt: string,
   userContent: string,
-): Promise<{ response: Anthropic.Messages.Message; parsed: ScoreToolInput | null; cost_usd: number }> {
+  rubric: RubricCriterion[],
+  correctiveFeedback?: string,
+): Promise<{ response: Anthropic.Messages.Message; parsed: ParsedJudgeOutput; cost_usd: number }> {
+  const messages: Anthropic.Messages.MessageParam[] = [{ role: 'user', content: userContent }];
+  if (correctiveFeedback) {
+    // Retry carries the specific defect — re-sending the identical request
+    // at temperature 0 would mostly reproduce the identical malformed output.
+    messages.push({
+      role: 'user',
+      content: `Your previous response was malformed: ${correctiveFeedback}. Call score_answer again with a valid, complete score set.`,
+    });
+  }
   const response = await client.messages.create({
     model,
     max_tokens: maxTokens,
+    temperature: JUDGE_TEMPERATURE,
     system: [
       {
         type: 'text',
@@ -321,9 +395,9 @@ async function callJudgeOnce(
     ],
     tools: [SCORE_ANSWER_TOOL],
     tool_choice: { type: 'tool', name: 'score_answer' },
-    messages: [{ role: 'user', content: userContent }],
+    messages,
   });
-  const parsed = parseToolUse(response);
+  const parsed = parseToolUse(response, rubric);
   const cost_usd = priceOf(response.usage.input_tokens, response.usage.output_tokens);
   return { response, parsed, cost_usd };
 }
@@ -338,6 +412,10 @@ export async function scoreAnswer(
   const model = config.model ?? DEFAULT_MODEL;
   const maxTokens = config.maxTokens ?? DEFAULT_MAX_TOKENS;
   const systemPrompt = config.systemPrompt ?? DEFAULT_JUDGE_SYSTEM_PROMPT;
+  // Every judge LLM call takes a slot from the shared budget so concurrent
+  // scoreAnswer callers never exceed BRAINBENCH_LLM_CONCURRENCY in-flight
+  // Anthropic requests (tests-audit-06 wiring).
+  const budget = config.budget ?? getDefaultLlmBudget();
 
   const userContent = renderEvidenceForJudge(evidence);
 
@@ -346,19 +424,26 @@ export async function scoreAnswer(
   let costTotal = 0;
 
   // Attempt 1
-  const attempt1 = await callJudgeOnce(client, model, maxTokens, systemPrompt, userContent);
+  const attempt1 = await budget.withLlmSlot(
+    () => callJudgeOnce(client, model, maxTokens, systemPrompt, userContent, evidence.rubric),
+  );
   inputTokensTotal += attempt1.response.usage.input_tokens;
   outputTokensTotal += attempt1.response.usage.output_tokens;
   costTotal += attempt1.cost_usd;
-  let parsed = attempt1.parsed;
+  let parsed = attempt1.parsed.input;
 
-  // Attempt 2 on malformed
+  // Attempt 2 on malformed — carries corrective feedback naming the defect
   if (parsed === null) {
-    const attempt2 = await callJudgeOnce(client, model, maxTokens, systemPrompt, userContent);
+    const attempt2 = await budget.withLlmSlot(
+      () => callJudgeOnce(
+        client, model, maxTokens, systemPrompt, userContent, evidence.rubric,
+        attempt1.parsed.defect ?? 'invalid structured output',
+      ),
+    );
     inputTokensTotal += attempt2.response.usage.input_tokens;
     outputTokensTotal += attempt2.response.usage.output_tokens;
     costTotal += attempt2.cost_usd;
-    parsed = attempt2.parsed;
+    parsed = attempt2.parsed.input;
   }
 
   // Fallback if both attempts failed to produce valid structured output
@@ -379,13 +464,17 @@ export async function scoreAnswer(
       output_tokens: outputTokensTotal,
       cost_usd: costTotal,
       fallback_used: true,
+      attempts: 2,
+      judge_model: model,
+      system_prompt_version: config.systemPromptVersion,
     };
   }
 
   const overall = weightedMean(parsed.scores, evidence.rubric);
-  // Trust the model's verdict only if it aligns with the computed score
-  // (within ±0.5 band). Otherwise use the computed verdict — the aggregation
-  // rule (pass ≥3.5, partial 2.5-3.5, fail <2.5) is canonical.
+  // Policy: the verdict is ALWAYS computed from the weighted mean via the
+  // canonical thresholds (pass >= 3.5, partial 2.5-3.5, fail < 2.5). The
+  // model's self-reported verdict is parsed only to validate output shape;
+  // trusting it would let the judge contradict its own criterion scores.
   const computedVerdict = verdictFromScore(overall);
 
   return {
@@ -398,6 +487,9 @@ export async function scoreAnswer(
     output_tokens: outputTokensTotal,
     cost_usd: costTotal,
     fallback_used: false,
+    attempts: attempt1.parsed.input !== null ? 1 : 2,
+    judge_model: model,
+    system_prompt_version: config.systemPromptVersion,
   };
 }
 

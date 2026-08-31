@@ -2,19 +2,47 @@
  * BrainBench Category 7: Performance / Latency at scale.
  *
  * Measures gbrain operation latency (P50/P95/P99) and throughput at 1K and 10K
- * page scales. Currently gbrain has zero published performance numbers — this
- * eval changes that.
+ * page scales against PGLite (in-memory).
  *
- * Runs against PGLite (in-memory). A future variant should also run against
- * real Postgres for write-throughput comparison; not in scope today.
+ * Post-audit contract:
+ *   - Workload selection is SEEDED (mulberry32, --seed, default 42): the slug
+ *     sequence each op times is precomputed and identical run-to-run, so a
+ *     latency delta vs a baseline JSON means gbrain changed, not the dice
+ *     (audit misc-runners-08 — unseeded Math.random picked the timed pages).
+ *   - Percentiles use eval/runner/metrics.ts `percentile` (linear
+ *     interpolation, numpy-default). The old local nearest-rank-off-by-one
+ *     reported the MAX sample as p95 at n=20 (audit misc-runners-09).
+ *   - Every op runs WARMUP_RUNS discarded iterations before sampling, so JIT /
+ *     plan-cache cold starts stop dominating small-n tails (misc-runners-12).
+ *   - --scale is validated (positive integer, both `--scale N` and
+ *     `--scale=N`); bad input exits 2 with a message instead of an opaque
+ *     crash on an empty corpus (misc-runners-11).
+ *   - The search_keyword P95 @10K < 200ms threshold is ENFORCED: a breach is
+ *     verdict fail + non-zero exit + receipt, not a console warning
+ *     (misc-runners-13). Runs that skip scale 10000 record zero thresholds
+ *     evaluated in the receipt so nobody mistakes them for a gated pass.
+ *   - Receipt at eval/reports/perf/receipt.json (WS0 contract).
  *
- * Usage: bun run eval/runner/perf.ts [--scale 1000|10000] [--json]
+ * Usage: bun run eval/runner/perf.ts [--scale N | --scale=N] [--seed N] [--json]
  */
 
 import { PGLiteEngine } from 'gbrain/pglite-engine';
 import type { PageInput } from 'gbrain/types';
+import { percentile } from './metrics.ts';
+import {
+  writeReceipt,
+  receiptPath,
+  RECEIPT_SCHEMA_VERSION,
+  BENCHMARK_VERSION,
+  type ProbeError,
+  type Receipt,
+} from './receipt.ts';
+import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
 
-interface LatencySample {
+export const DEFAULT_SEED = 42;
+export const WARMUP_RUNS = 3;
+
+export interface LatencySample {
   op: string;
   scale: number;
   p50_ms: number;
@@ -23,18 +51,65 @@ interface LatencySample {
   count: number;
 }
 
-interface ThroughputSample {
+export interface ThroughputSample {
   op: string;
   scale: number;
   total_seconds: number;
   ops_per_sec: number;
 }
 
-function percentile(sorted: number[], p: number): number {
-  if (sorted.length === 0) return 0;
-  const idx = Math.min(sorted.length - 1, Math.floor((p / 100) * sorted.length));
-  return sorted[idx];
+export interface ThresholdResult {
+  op: string;
+  scale: number;
+  metric: 'p95_ms';
+  limit_ms: number;
+  actual_ms: number;
+  pass: boolean;
 }
+
+// ─── Seeded PRNG (mulberry32 — same pattern as cat13/longmemeval) ─────
+
+export function mulberry32(seed: number): () => number {
+  let state = seed >>> 0;
+  return () => {
+    state = (state + 0x6D2B79F5) | 0;
+    let t = Math.imul(state ^ (state >>> 15), 1 | state);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// ─── CLI parsing (misc-runners-11) ────────────────────────────────────
+
+export interface PerfArgs {
+  scales: number[];
+  seed: number;
+  json: boolean;
+}
+
+/** Throws with a usage message on invalid input; caller maps that to exit 2. */
+export function parsePerfArgs(argv: string[]): PerfArgs {
+  const args: PerfArgs = { scales: [1000, 10000], seed: DEFAULT_SEED, json: false };
+  const parsePositiveInt = (flag: string, raw: string | undefined): number => {
+    const n = Number(raw);
+    if (raw === undefined || raw === '' || !Number.isInteger(n) || n <= 0) {
+      throw new Error(`${flag} requires a positive integer, got ${JSON.stringify(raw)}`);
+    }
+    return n;
+  };
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === '--json') args.json = true;
+    else if (a === '--scale') args.scales = [parsePositiveInt('--scale', argv[++i])];
+    else if (a.startsWith('--scale=')) args.scales = [parsePositiveInt('--scale', a.slice('--scale='.length))];
+    else if (a === '--seed') args.seed = parsePositiveInt('--seed', argv[++i]);
+    else if (a.startsWith('--seed=')) args.seed = parsePositiveInt('--seed', a.slice('--seed='.length));
+    else throw new Error(`unknown arg: ${a} (usage: perf.ts [--scale N | --scale=N] [--seed N] [--json])`);
+  }
+  return args;
+}
+
+// ─── Timing helpers ───────────────────────────────────────────────────
 
 async function timed<T>(fn: () => Promise<T>): Promise<{ result: T; ms: number }> {
   const start = performance.now();
@@ -42,13 +117,26 @@ async function timed<T>(fn: () => Promise<T>): Promise<{ result: T; ms: number }
   return { result, ms: performance.now() - start };
 }
 
-async function timeMany(label: string, scale: number, fn: () => Promise<unknown>, runs: number): Promise<LatencySample> {
+/**
+ * Time `runs` iterations of `fn(i)` after `warmup` DISCARDED iterations
+ * (fn receives the warmup indices first, then 0..runs-1 for the sampled
+ * ones, so a precomputed slug plan indexes deterministically).
+ */
+export async function timeMany(
+  label: string,
+  scale: number,
+  fn: (i: number) => Promise<unknown>,
+  runs: number,
+  warmup = WARMUP_RUNS,
+): Promise<LatencySample> {
+  for (let i = 0; i < warmup; i++) {
+    await fn(i % runs); // warmup: same input domain, samples discarded
+  }
   const samples: number[] = [];
   for (let i = 0; i < runs; i++) {
-    const { ms } = await timed(fn);
+    const { ms } = await timed(() => fn(i));
     samples.push(ms);
   }
-  samples.sort((a, b) => a - b);
   return {
     op: label,
     scale,
@@ -59,12 +147,14 @@ async function timeMany(label: string, scale: number, fn: () => Promise<unknown>
   };
 }
 
+// ─── Seed data ────────────────────────────────────────────────────────
+
 /**
  * Procedural seeder. Power-law connection distribution: 5% of entities are
  * "hub nodes" with many inbound links; the rest are sparsely connected. This
  * matches real-brain shape and stresses the right code paths.
  */
-function generateSeedData(scale: number): { pages: Array<{ slug: string; page: PageInput }>; links: Array<{ from: string; to: string; type: string }> } {
+export function generateSeedData(scale: number): { pages: Array<{ slug: string; page: PageInput }>; links: Array<{ from: string; to: string; type: string }> } {
   const pages: Array<{ slug: string; page: PageInput }> = [];
   const links: Array<{ from: string; to: string; type: string }> = [];
 
@@ -132,14 +222,85 @@ function generateSeedData(scale: number): { pages: Array<{ slug: string; page: P
   return { pages, links };
 }
 
-async function runScale(scale: number, log: (msg: string) => void): Promise<{ latency: LatencySample[]; throughput: ThroughputSample[] }> {
-  log(`\n## Scale: ${scale} pages\n`);
+// ─── Workload plan (misc-runners-08) ──────────────────────────────────
+
+/**
+ * Precomputed, seeded slug sequence: `pick(i)` for the i-th timed call of an
+ * op. Same seed + same corpus → the identical page mix is timed every run.
+ */
+export function buildSlugPlan(
+  slugs: readonly string[],
+  seed: number,
+  length: number,
+): string[] {
+  if (slugs.length === 0) throw new Error('buildSlugPlan: empty slug list');
+  const rng = mulberry32(seed);
+  const plan: string[] = [];
+  for (let i = 0; i < length; i++) {
+    plan.push(slugs[Math.floor(rng() * slugs.length)]);
+  }
+  return plan;
+}
+
+// ─── Thresholds (misc-runners-13) ─────────────────────────────────────
+
+/** Enforced limits, keyed by op+scale. Breach ⇒ verdict fail, non-zero exit. */
+export const THRESHOLDS: ReadonlyArray<{ op: string; scale: number; metric: 'p95_ms'; limit_ms: number }> = [
+  { op: 'search_keyword', scale: 10000, metric: 'p95_ms', limit_ms: 200 },
+];
+
+/** Evaluate every threshold whose (op, scale) is present in the measured set. */
+export function evaluateThresholds(latency: readonly LatencySample[]): ThresholdResult[] {
+  const results: ThresholdResult[] = [];
+  for (const t of THRESHOLDS) {
+    const sample = latency.find(l => l.op === t.op && l.scale === t.scale);
+    if (!sample) continue;
+    results.push({
+      op: t.op,
+      scale: t.scale,
+      metric: t.metric,
+      limit_ms: t.limit_ms,
+      actual_ms: sample[t.metric],
+      pass: sample[t.metric] <= t.limit_ms,
+    });
+  }
+  return results;
+}
+
+export interface PerfOutcome {
+  thresholds: ThresholdResult[];
+  breaches: ThresholdResult[];
+  verdict: 'pass' | 'fail';
+  /** 0 on pass, 1 on any threshold breach — main() exits with exactly this. */
+  exitCode: 0 | 1;
+}
+
+/** The gate main() enforces: breach ⇒ verdict fail + exit 1 (misc-runners-13). */
+export function perfOutcome(latency: readonly LatencySample[]): PerfOutcome {
+  const thresholds = evaluateThresholds(latency);
+  const breaches = thresholds.filter(t => !t.pass);
+  return {
+    thresholds,
+    breaches,
+    verdict: breaches.length === 0 ? 'pass' : 'fail',
+    exitCode: breaches.length === 0 ? 0 : 1,
+  };
+}
+
+// ─── One scale run ────────────────────────────────────────────────────
+
+async function runScale(scale: number, seed: number, log: (msg: string) => void): Promise<{ latency: LatencySample[]; throughput: ThroughputSample[] }> {
+  log(`\n## Scale: ${scale} pages (seed ${seed})\n`);
 
   const engine = new PGLiteEngine();
   await engine.connect({});
   await engine.initSchema();
 
   const { pages, links } = generateSeedData(scale);
+  if (pages.length === 0) {
+    await engine.disconnect();
+    throw new Error(`scale ${scale} generated zero pages — scale too small for the 60/20/10/10 split`);
+  }
 
   // ── Throughput: bulk import via putPage ──
   const importStart = performance.now();
@@ -169,21 +330,24 @@ async function runScale(scale: number, log: (msg: string) => void): Promise<{ la
   };
   log(`Bulk addLink: ${links.length} links in ${linkSecs.toFixed(1)}s = ${linkTput.ops_per_sec.toFixed(1)} links/sec`);
 
-  // ── Latency samples ──
-  // Pick 50 random slugs to query.
-  const sampleSlugs: string[] = [];
-  for (let i = 0; i < 50; i++) {
-    sampleSlugs.push(pages[Math.floor(Math.random() * pages.length)].slug);
-  }
+  // ── Latency samples — precomputed seeded slug plans, one per op so each
+  // op's sequence is independent of how many other ops ran before it. ──
+  const allSlugs = pages.map(p => p.slug);
   const hubSlug = `people/person-0`; // known to have many inbound links
+  const plan = (opIndex: number, runs: number) =>
+    buildSlugPlan(allSlugs, seed * 1000 + opIndex, runs);
 
   const latency: LatencySample[] = [];
 
-  latency.push(await timeMany('get_page', scale, () => engine.getPage(sampleSlugs[Math.floor(Math.random() * sampleSlugs.length)]), 50));
-  latency.push(await timeMany('get_links', scale, () => engine.getLinks(sampleSlugs[Math.floor(Math.random() * sampleSlugs.length)]), 50));
-  latency.push(await timeMany('get_backlinks', scale, () => engine.getBacklinks(sampleSlugs[Math.floor(Math.random() * sampleSlugs.length)]), 50));
+  const getPagePlan = plan(1, 50);
+  latency.push(await timeMany('get_page', scale, i => engine.getPage(getPagePlan[i]), 50));
+  const getLinksPlan = plan(2, 50);
+  latency.push(await timeMany('get_links', scale, i => engine.getLinks(getLinksPlan[i]), 50));
+  const getBacklinksPlan = plan(3, 50);
+  latency.push(await timeMany('get_backlinks', scale, i => engine.getBacklinks(getBacklinksPlan[i]), 50));
   latency.push(await timeMany('get_backlinks_hub', scale, () => engine.getBacklinks(hubSlug), 20));
-  latency.push(await timeMany('get_timeline', scale, () => engine.getTimeline(sampleSlugs[Math.floor(Math.random() * sampleSlugs.length)]), 50));
+  const getTimelinePlan = plan(4, 50);
+  latency.push(await timeMany('get_timeline', scale, i => engine.getTimeline(getTimelinePlan[i]), 50));
   latency.push(await timeMany('get_stats', scale, () => engine.getStats(), 10));
   latency.push(await timeMany('list_pages_50', scale, () => engine.listPages({ limit: 50 }), 20));
   latency.push(await timeMany('search_keyword', scale, () => engine.searchKeyword('person', { limit: 20 }), 30));
@@ -197,45 +361,134 @@ async function runScale(scale: number, log: (msg: string) => void): Promise<{ la
   }), 30));
 
   for (const s of latency) {
-    log(`  ${s.op.padEnd(22)} P50=${s.p50_ms.toFixed(2)}ms  P95=${s.p95_ms.toFixed(2)}ms  P99=${s.p99_ms.toFixed(2)}ms  (n=${s.count})`);
+    log(`  ${s.op.padEnd(22)} P50=${s.p50_ms.toFixed(2)}ms  P95=${s.p95_ms.toFixed(2)}ms  P99=${s.p99_ms.toFixed(2)}ms  (n=${s.count}, warmup=${WARMUP_RUNS} discarded)`);
   }
 
   await engine.disconnect();
   return { latency, throughput: [importTput, linkTput] };
 }
 
-async function main() {
-  const json = process.argv.includes('--json');
-  const log = json ? () => {} : console.log;
+// ─── Entry ────────────────────────────────────────────────────────────
 
-  const scaleArg = process.argv.findIndex(a => a === '--scale');
-  const scales = scaleArg !== -1 ? [Number(process.argv[scaleArg + 1])] : [1000, 10000];
+async function main() {
+  let args: PerfArgs;
+  try {
+    args = parsePerfArgs(process.argv.slice(2));
+  } catch (e) {
+    console.error(`perf: ${e instanceof Error ? e.message : String(e)}`);
+    process.exit(2);
+  }
+  const log = args.json ? () => {} : console.log;
+  const startedAt = new Date().toISOString();
 
   log('# BrainBench Category 7: Performance / Latency\n');
   log(`Generated: ${new Date().toISOString().slice(0, 19)}`);
   log(`Engine: PGLite (in-memory)`);
+  log(`Seed: ${args.seed} (mulberry32; identical workload every run)`);
+  log(`Percentile method: linear interpolation (eval/runner/metrics.ts)`);
+
+  const receiptBase = {
+    schema_version: RECEIPT_SCHEMA_VERSION,
+    benchmark_version: BENCHMARK_VERSION,
+    category: 'perf',
+    gbrain_version: gbrainVersion(),
+    gbrain_pin: gbrainPin(),
+    started_at: startedAt,
+  } as const;
 
   const allLatency: LatencySample[] = [];
   const allThroughput: ThroughputSample[] = [];
+  // Probes = op×scale measurement groups (latency + throughput).
+  const LATENCY_OPS_PER_SCALE = 11;
+  const THROUGHPUT_OPS_PER_SCALE = 2;
+  const nTotal = args.scales.length * (LATENCY_OPS_PER_SCALE + THROUGHPUT_OPS_PER_SCALE);
+  const errors: ProbeError[] = [];
 
-  for (const scale of scales) {
-    const { latency, throughput } = await runScale(scale, log);
-    allLatency.push(...latency);
-    allThroughput.push(...throughput);
+  try {
+    for (const scale of args.scales) {
+      const { latency, throughput } = await runScale(scale, args.seed, log);
+      allLatency.push(...latency);
+      allThroughput.push(...throughput);
+    }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    // Corpus-generation problems (zero pages at a degenerate scale) are the
+    // harness's fault; anything thrown by an engine op is the SUT's.
+    const origin = msg.includes('generated zero pages') ? 'harness' as const : 'sut' as const;
+    errors.push({ probe_id: `scale:${args.scales.join(',')}`, origin, message: msg.slice(0, 500) });
+    const nScored = allLatency.length + allThroughput.length;
+    writeReceipt(receiptPath('perf'), {
+      ...receiptBase,
+      run_status: 'error',
+      n_total: nTotal,
+      n_scored: nScored,
+      completion_rate: nTotal > 0 ? nScored / nTotal : 0,
+      errors,
+      publishable: false,
+      finished_at: new Date().toISOString(),
+    } satisfies Receipt);
+    console.error('Perf benchmark error:', msg);
+    process.exit(1);
   }
 
-  if (json) {
-    process.stdout.write(JSON.stringify({ latency: allLatency, throughput: allThroughput }, null, 2) + '\n');
+  const { thresholds, breaches, verdict, exitCode } = perfOutcome(allLatency);
+  const nScored = allLatency.length + allThroughput.length;
+
+  writeReceipt(receiptPath('perf'), {
+    ...receiptBase,
+    run_status: 'completed',
+    verdict,
+    n_total: nTotal,
+    n_scored: nScored,
+    completion_rate: nTotal > 0 ? nScored / nTotal : 0,
+    errors,
+    publishable: true,
+    resolved_config: {
+      engine: 'pglite-in-memory',
+      scales: args.scales,
+      seed: args.seed,
+      warmup_runs: WARMUP_RUNS,
+      percentile_method: 'linear interpolation (metrics.ts percentile)',
+      thresholds_defined: THRESHOLDS,
+      thresholds_evaluated: thresholds.length,
+    },
+    finished_at: new Date().toISOString(),
+    data: {
+      latency: allLatency,
+      throughput: allThroughput,
+      thresholds,
+    },
+  } satisfies Receipt);
+
+  if (args.json) {
+    process.stdout.write(JSON.stringify({
+      latency: allLatency,
+      throughput: allThroughput,
+      thresholds,
+      verdict,
+      seed: args.seed,
+      warmup_runs: WARMUP_RUNS,
+      percentile_method: 'linear interpolation (metrics.ts percentile)',
+    }, null, 2) + '\n');
   }
 
-  // Threshold check: P95 search latency at 10K pages should be < 200ms.
-  const search10k = allLatency.find(l => l.op === 'search_keyword' && l.scale === 10000);
-  if (search10k && search10k.p95_ms > 200) {
-    console.error(`\n⚠ search_keyword P95 at 10K = ${search10k.p95_ms.toFixed(1)}ms (threshold 200ms)`);
+  if (thresholds.length === 0) {
+    log(`\nNo thresholds evaluated (gated ops are defined at scale 10000; this run used [${args.scales.join(', ')}]). Verdict reflects completion only.`);
   }
+  for (const t of thresholds) {
+    const mark = t.pass ? '✓' : '✗';
+    log(`\n${mark} ${t.op} P95 at ${t.scale} = ${t.actual_ms.toFixed(1)}ms (limit ${t.limit_ms}ms)`);
+  }
+  if (breaches.length > 0) {
+    console.error(`\n✗ perf thresholds FAILED:\n  - ${breaches.map(b => `${b.op}@${b.scale} p95=${b.actual_ms.toFixed(1)}ms > ${b.limit_ms}ms`).join('\n  - ')}`);
+  }
+  // Explicit exit: PGLite's WASM runtime pollutes ambient process.exitCode.
+  process.exit(exitCode);
 }
 
-main().catch(e => {
-  console.error('Perf benchmark error:', e);
-  process.exit(1);
-});
+if (import.meta.main) {
+  main().catch(e => {
+    console.error('Perf benchmark error:', e);
+    process.exit(1);
+  });
+}

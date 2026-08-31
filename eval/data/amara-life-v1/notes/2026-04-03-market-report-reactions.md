@@ -2,13 +2,11 @@
 id: note-0005
 date: 2026-04-03
 topic: market-report-reactions
-mentions: [marcus-chen, elena-vasquez]
+mentions: [amara-okafor, derek-chen, meridian-solar]
 ---
 
-Just finished digesting the Q1 climate-tech market report that [Marcus Chen](people/marcus-chen) circulated this morning. The numbers are more encouraging than I expected—grid-scale storage deployments up 34% YoY, and the AI-for-energy-optimization segment is finally showing real traction beyond pilot programs.
+The Q1 climate infra report from BloombergNEF landed this morning, and I've been digesting it alongside [Derek](people/derek-chen)'s internal analysis. The bullish take on distributed solar is validating, but I keep thinking about execution gaps between market narratives and actual deployment velocity.
 
-What caught my attention: [Elena Vasquez](people/elena-vasquez) is still CEO at Terraform Dynamics, and under her leadership they've captured nearly 18% of the predictive maintenance market for renewable assets. That's a remarkable position given they only closed their Series B fourteen months ago. We passed on that round—something I've been second-guessing since November.
+Case in point: the [Meridian Solar](companies/meridian-solar) situation. Everyone in climate Twitter is buzzing about their tech stack, but the pilot contract is still unsigned. No ink, no timeline, no commitment from the utility partner. I've seen this pattern before—promising technology, great press, stalled commercialization. We need to watch whether they can convert interest into binding agreements before we consider deepening our position.
 
-The report confirms my thesis that inference-heavy climate applications are hitting an infrastructure ceiling. Compute costs remain the bottleneck. Our portfolio companies keep asking about dedicated AI infra for sustainability workloads.
-
-Need to schedule a deeper dive with Marcus next week. If the tailwinds hold through Q2, we should accelerate our fund deployment timeline.
+The report also flags grid interconnection as the primary bottleneck through 2028. This aligns with our thesis on AI-driven grid management. If permitting reform actually moves through Congress this summer, our infra plays could see significant tailwinds. Cautiously optimistic, but keeping powder dry until I see signed contracts, not just LOIs.

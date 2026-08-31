@@ -8,12 +8,27 @@
  * test suite covers happy-path correctness for every op; this benchmark
  * focuses on the contract surface that an attacker probes.
  *
- * Pass criteria:
+ * Pass criteria (each backed by an assertion that CAN fail — audit
+ * agentic-cats-04/05/13 killed the decorative versions):
  *   - Valid input → correct response
  *   - Invalid input → rejected with clear error (not silent corruption)
  *   - Injection attempts → blocked (no SQL injection, no path traversal)
- *   - Trust-boundary differences enforced (ctx.remote=true tighter than false)
- *   - Limit caps enforced (depth, list_pages limit, etc.)
+ *   - Depth cap bites: the seeded chain is LONGER than the traverse cap, so
+ *     an uncapped traversal returns more nodes than the cap allows and the
+ *     assertion fails. (Pre-fix: `pass = r.ok || …` on a 10-node ring —
+ *     deleting gbrain's cap could not fail the check.)
+ *   - Trust boundary actually differential: the same op runs under BOTH
+ *     ctx.remote=false and ctx.remote=true and remote must be strictly
+ *     tighter (list_pages 100-row remote clamp vs local unbounded; per-call
+ *     search `mode` honored locally, silently ignored remotely). (Pre-fix:
+ *     every call used remote=true and the "matrix" was never exercised.)
+ *   - The ~135 always-true "op has a handler" rows are a separate sanity
+ *     walk, no longer diluting the behavioral pass-rate.
+ *
+ * Hermetic: PGLite in-memory, `search.mcp_keyword_only=true` (no embedding
+ * gateway, no API keys). Writes a receipt (WS0) at
+ * eval/reports/mcp-contract/receipt.json; behavioral assertion failures are
+ * 'sut' probe errors (gbrain misbehaved → scored miss), verdict fail.
  *
  * Usage: bun run eval/runner/mcp-contract.ts [--json]
  */
@@ -22,25 +37,77 @@ import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { operations as OPERATIONS } from 'gbrain/operations';
 import type { OperationContext } from 'gbrain/operations';
 import type { GBrainConfig } from 'gbrain/config';
+import { ProbeAccounting } from './probe-accounting.ts';
+import {
+  writeReceipt,
+  receiptPath,
+  RECEIPT_SCHEMA_VERSION,
+  BENCHMARK_VERSION,
+  type Receipt,
+} from './receipt.ts';
+import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
 
-interface TestResult {
+// ─── Documented gbrain limits under test ─────────────────────────────
+// If gbrain changes these, the eval must change WITH the contract — that is
+// the point of pinning them here rather than importing private constants.
+
+/** gbrain src/core/ops/links.ts TRAVERSE_DEPTH_CAP. */
+export const TRAVERSE_DEPTH_CAP = 10;
+/** gbrain src/core/ops/pages.ts remote list_pages clamp. */
+export const REMOTE_LIST_PAGES_CAP = 100;
+
+// ─── Seed geometry ────────────────────────────────────────────────────
+// The fixtures are sized so every cap assertion can fail:
+//   - the chain is LONGER than the traverse cap (uncapped walk returns more)
+//   - the page count EXCEEDS the remote list clamp (unclamped list returns more)
+
+export const CHAIN_LENGTH = 16; // > TRAVERSE_DEPTH_CAP + 1
+const RING_SIZE = 10;
+const NOTE_PAGES = 110;
+/** people ring + chain + filler notes. Must exceed REMOTE_LIST_PAGES_CAP. */
+export const TOTAL_SEEDED_PAGES = RING_SIZE + CHAIN_LENGTH + NOTE_PAGES;
+/** Between the remote cap and the total page count, so local vs remote differ. */
+const MATRIX_LIST_LIMIT = 120;
+
+export interface TestResult {
   name: string;
   pass: boolean;
   detail: string;
 }
 
-async function setup(): Promise<{ engine: PGLiteEngine; cleanup: () => Promise<void> }> {
+export async function setupEngine(): Promise<{ engine: PGLiteEngine; cleanup: () => Promise<void> }> {
   const engine = new PGLiteEngine();
   await engine.connect({});
   await engine.initSchema();
-  // Seed a small graph for traversal tests.
-  for (let i = 0; i < 10; i++) {
+  // Hermetic search path: keyword-only, no embedding gateway, no keys. The
+  // per-call `mode` param is resolved BEFORE this branch in the handler, so
+  // the trust-matrix mode test still exercises resolvePerCallMode.
+  await engine.setConfig('search.mcp_keyword_only', 'true');
+  // Ring for generic traversal sanity.
+  for (let i = 0; i < RING_SIZE; i++) {
     await engine.putPage(`people/p${i}`, {
       type: 'person', title: `P${i}`, compiled_truth: `Person ${i}.`, timeline: '',
     });
   }
-  for (let i = 0; i < 10; i++) {
-    await engine.addLink(`people/p${i}`, `people/p${(i + 1) % 10}`, '', 'mentions');
+  for (let i = 0; i < RING_SIZE; i++) {
+    await engine.addLink(`people/p${i}`, `people/p${(i + 1) % RING_SIZE}`, '', 'mentions');
+  }
+  // Chain LONGER than the traverse cap: c0 → c1 → … → c15 (out-degree 1, no
+  // cycles). An uncapped depth=1000 walk returns all CHAIN_LENGTH nodes; the
+  // capped walk must stop at TRAVERSE_DEPTH_CAP hops.
+  for (let i = 0; i < CHAIN_LENGTH; i++) {
+    await engine.putPage(`chain/c${i}`, {
+      type: 'concept', title: `C${i}`, compiled_truth: `Chain node ${i}.`, timeline: '',
+    });
+  }
+  for (let i = 0; i < CHAIN_LENGTH - 1; i++) {
+    await engine.addLink(`chain/c${i}`, `chain/c${i + 1}`, '', 'mentions');
+  }
+  // Filler pages so the brain holds MORE than the remote list clamp.
+  for (let i = 0; i < NOTE_PAGES; i++) {
+    await engine.putPage(`notes/extra-${String(i).padStart(3, '0')}`, {
+      type: 'note', title: `Extra ${i}`, compiled_truth: `Filler note ${i}.`, timeline: '',
+    });
   }
   return {
     engine,
@@ -51,10 +118,14 @@ async function setup(): Promise<{ engine: PGLiteEngine; cleanup: () => Promise<v
 function ctx(remote: boolean, engine: PGLiteEngine): OperationContext {
   const config: GBrainConfig = { engine: 'pglite', database_path: ':memory:' };
   const logger = { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} };
-  return { engine, config, logger: logger as never, dryRun: false, remote };
+  // v0.34 D4: sourceId is REQUIRED write-authority scope; 'default' matches
+  // buildOperationContext's auto-fill on single-source brains.
+  return { engine, config, logger: logger as never, dryRun: false, remote, sourceId: 'default' };
 }
 
-async function runOp(opName: string, params: Record<string, unknown>, c: OperationContext): Promise<{ ok: true; result: unknown } | { ok: false; error: string }> {
+export type OpOutcome = { ok: true; result: unknown } | { ok: false; error: string };
+
+async function runOp(opName: string, params: Record<string, unknown>, c: OperationContext): Promise<OpOutcome> {
   const op = OPERATIONS.find(o => o.name === opName);
   if (!op) return { ok: false, error: `unknown operation: ${opName}` };
   try {
@@ -65,58 +136,167 @@ async function runOp(opName: string, params: Record<string, unknown>, c: Operati
   }
 }
 
-async function main() {
-  const json = process.argv.includes('--json');
-  const log = json ? () => {} : console.log;
+// ─── Pure assertion helpers (exported so tests can prove they CAN fail) ─
 
-  log('# BrainBench Category 12: MCP Operation Contract\n');
-  log(`Generated: ${new Date().toISOString().slice(0, 19)}`);
-  log(`Operations available: ${OPERATIONS.length}`);
+/**
+ * The traverse depth cap bit iff:
+ *   - the walk actually ran deep (>= cap nodes returned), AND
+ *   - it returned FEWER nodes than the seeded chain holds (an uncapped walk
+ *     over the full chain fails this), AND
+ *   - no returned node sits deeper than the cap.
+ */
+export function checkDepthCap(
+  nodes: Array<{ depth: number }>,
+  chainLength: number,
+  cap: number,
+): { pass: boolean; detail: string } {
+  const maxDepth = nodes.reduce((m, n) => Math.max(m, n.depth), 0);
+  const pass = nodes.length >= cap && nodes.length < chainLength && maxDepth <= cap;
+  return {
+    pass,
+    detail: `returned ${nodes.length} nodes from a ${chainLength}-node chain, max depth ${maxDepth}, cap ${cap}`,
+  };
+}
 
-  const { engine, cleanup } = await setup();
+/**
+ * The remote list clamp bit iff more pages exist than the cap AND no more
+ * than the cap came back. A seed smaller than the cap makes the check
+ * vacuous, so that is a FAIL too (the pre-fix version asserted <= 1000 over
+ * 10 seeded pages — unfailable).
+ */
+export function checkRemoteListClamp(
+  returnedRows: number,
+  totalPages: number,
+  cap: number,
+): { pass: boolean; detail: string } {
+  const pass = totalPages > cap && returnedRows <= cap;
+  return {
+    pass,
+    detail: `remote list_pages returned ${returnedRows} rows with ${totalPages} pages seeded (cap ${cap})`,
+  };
+}
+
+/**
+ * Trust matrix, list_pages: the SAME over-cap limit must be honored locally
+ * (ctx.remote=false) and clamped remotely (ctx.remote=true). Remote must be
+ * strictly tighter.
+ */
+export function checkListPagesTrustMatrix(
+  localRows: number,
+  remoteRows: number,
+  cap: number,
+): { pass: boolean; detail: string } {
+  const pass = localRows > cap && remoteRows <= cap && remoteRows < localRows;
+  return {
+    pass,
+    detail: `local returned ${localRows} rows, remote returned ${remoteRows} (remote cap ${cap})`,
+  };
+}
+
+/**
+ * Trust matrix, search per-call mode (gbrain resolvePerCallMode): an unknown
+ * mode must be LOUDLY rejected locally and silently ignored remotely (a
+ * remote caller cannot select modes, so the param never reaches validation).
+ */
+export function checkModeDifferential(
+  local: { ok: boolean; error?: string },
+  remote: { ok: boolean; error?: string },
+): { pass: boolean; detail: string } {
+  const localRejects = !local.ok && (local.error ?? '').includes('Unknown search mode');
+  const remoteIgnores = remote.ok || !(remote.error ?? '').includes('Unknown search mode');
+  return {
+    pass: localRejects && remoteIgnores,
+    detail: `local: ${local.ok ? 'accepted (BUG — unknown mode must be rejected)' : (local.error ?? '').slice(0, 80)}; `
+      + `remote: ${remote.ok ? 'ok (mode ignored)' : (remote.error ?? '').slice(0, 80)}`,
+  };
+}
+
+// ─── The behavioral contract checks ───────────────────────────────────
+
+export async function runContractChecks(
+  engine: PGLiteEngine,
+  log: (line: string) => void = () => {},
+): Promise<TestResult[]> {
   const results: TestResult[] = [];
+  const push = (r: TestResult) => {
+    results.push(r);
+    log(`  ${r.pass ? '✓' : '✗'} ${r.name} — ${r.detail}`);
+  };
 
-  // ── Trust boundary: traverse_graph depth cap ──
-  // v0.10.3 hard-caps depth at 10 for remote callers (DoS prevention).
-  log('\n## Trust boundary: traverse_graph depth cap');
+  // ── Limit cap: traverse_graph depth (chain longer than the cap) ──
+  log('\n## Limit cap: traverse_graph depth');
   {
-    const r = await runOp('traverse_graph', { slug: 'people/p0', depth: 1000 }, ctx(true, engine));
-    const pass = r.ok || r.error.includes('depth') || r.error.includes('limit');
-    results.push({
-      name: 'traverse_graph depth=1000 from remote should be capped or rejected',
-      pass,
-      detail: r.ok ? 'capped silently (acceptable)' : `rejected: ${r.error}`,
-    });
-    log(`  ${pass ? '✓' : '✗'} ${results[results.length - 1].name}`);
+    const r = await runOp('traverse_graph', { slug: 'chain/c0', depth: 1000 }, ctx(true, engine));
+    if (r.ok) {
+      const nodes = r.result as Array<{ depth: number }>;
+      const check = checkDepthCap(nodes, CHAIN_LENGTH, TRAVERSE_DEPTH_CAP);
+      push({
+        name: `traverse_graph depth=1000 over a ${CHAIN_LENGTH}-node chain stops at the ${TRAVERSE_DEPTH_CAP}-hop cap`,
+        ...check,
+      });
+    } else {
+      // A loud rejection naming the limit is also acceptable cap enforcement.
+      const pass = r.error.includes('depth') || r.error.includes('limit');
+      push({
+        name: `traverse_graph depth=1000 over a ${CHAIN_LENGTH}-node chain stops at the ${TRAVERSE_DEPTH_CAP}-hop cap`,
+        pass,
+        detail: `rejected: ${r.error.slice(0, 100)}`,
+      });
+    }
   }
   {
-    const r = await runOp('traverse_graph', { slug: 'people/p0', depth: 5 }, ctx(true, engine));
-    const pass = r.ok;
-    results.push({
-      name: 'traverse_graph depth=5 from remote should succeed (under cap)',
+    const r = await runOp('traverse_graph', { slug: 'chain/c0', depth: 5 }, ctx(true, engine));
+    const nodes = r.ok ? (r.result as Array<unknown>) : [];
+    const pass = r.ok && nodes.length >= 2;
+    push({
+      name: 'traverse_graph depth=5 (under cap) succeeds and returns nodes',
       pass,
-      detail: r.ok ? 'ok' : `unexpected error: ${r.error}`,
+      detail: r.ok ? `ok, ${nodes.length} nodes` : `unexpected error: ${r.error.slice(0, 100)}`,
     });
-    log(`  ${pass ? '✓' : '✗'} ${results[results.length - 1].name}`);
   }
 
-  // ── Trust boundary: list_pages limit cap ──
-  log('\n## Trust boundary: list_pages limit cap');
+  // ── Limit cap: list_pages remote clamp (seed larger than the cap) ──
+  log('\n## Limit cap: list_pages remote clamp');
   {
     const r = await runOp('list_pages', { limit: 1_000_000 }, ctx(true, engine));
     if (r.ok) {
       const list = r.result as Array<unknown>;
-      const pass = list.length <= 1000;
-      results.push({
-        name: 'list_pages limit=1M from remote should be clamped',
-        pass,
-        detail: `returned ${list.length} pages (cap should be <= 1000)`,
+      push({
+        name: `list_pages limit=1M from remote is clamped to ${REMOTE_LIST_PAGES_CAP} rows`,
+        ...checkRemoteListClamp(list.length, TOTAL_SEEDED_PAGES, REMOTE_LIST_PAGES_CAP),
       });
-      log(`  ${pass ? '✓' : '✗'} returned ${list.length} pages`);
     } else {
-      results.push({ name: 'list_pages limit=1M from remote', pass: false, detail: `errored: ${r.error}` });
-      log(`  ✗ unexpected error: ${r.error}`);
+      push({ name: 'list_pages limit=1M from remote is clamped', pass: false, detail: `errored: ${r.error.slice(0, 100)}` });
     }
+  }
+
+  // ── Trust matrix: the SAME op under remote=false vs remote=true ──
+  log('\n## Trust matrix: trusted local vs untrusted remote');
+  {
+    const local = await runOp('list_pages', { limit: MATRIX_LIST_LIMIT }, ctx(false, engine));
+    const remote = await runOp('list_pages', { limit: MATRIX_LIST_LIMIT }, ctx(true, engine));
+    if (local.ok && remote.ok) {
+      const localRows = (local.result as Array<unknown>).length;
+      const remoteRows = (remote.result as Array<unknown>).length;
+      push({
+        name: `list_pages limit=${MATRIX_LIST_LIMIT}: honored locally, clamped to ${REMOTE_LIST_PAGES_CAP} remotely`,
+        ...checkListPagesTrustMatrix(localRows, remoteRows, REMOTE_LIST_PAGES_CAP),
+      });
+    } else {
+      push({
+        name: `list_pages limit=${MATRIX_LIST_LIMIT}: honored locally, clamped remotely`,
+        pass: false,
+        detail: `local: ${local.ok ? 'ok' : local.error.slice(0, 60)}; remote: ${remote.ok ? 'ok' : remote.error.slice(0, 60)}`,
+      });
+    }
+  }
+  {
+    const local = await runOp('search', { query: 'chain node', mode: 'not-a-real-mode', limit: 5 }, ctx(false, engine));
+    const remote = await runOp('search', { query: 'chain node', mode: 'not-a-real-mode', limit: 5 }, ctx(true, engine));
+    push({
+      name: 'search per-call mode: unknown mode loudly rejected locally, ignored remotely',
+      ...checkModeDifferential(local, remote),
+    });
   }
 
   // ── Input validation: slug format ──
@@ -135,12 +315,11 @@ async function main() {
       // Either rejects with error OR returns null (page not found, no crash, no traversal)
       // The DANGER would be: returns content from outside the brain, or crashes the server.
       const pass = !r.ok || r.result === null || r.result === undefined;
-      results.push({
+      push({
         name: `get_page rejects/null-returns ${label}`,
         pass,
         detail: r.ok ? `returned ${typeof r.result}` : `rejected: ${r.error.slice(0, 80)}`,
       });
-      log(`  ${pass ? '✓' : '✗'} ${label}: ${r.ok ? 'returned ' + typeof r.result : 'rejected'}`);
     }
   }
 
@@ -152,12 +331,11 @@ async function main() {
       const r = await runOp('add_timeline_entry', { slug: 'people/p0', date, summary: 'test' }, ctx(true, engine));
       // Should reject invalid dates with error.
       const pass = !r.ok;
-      results.push({
+      push({
         name: `add_timeline_entry rejects invalid date "${date.slice(0, 30)}"`,
         pass,
         detail: r.ok ? 'silently accepted (BUG)' : `rejected: ${r.error.slice(0, 80)}`,
       });
-      log(`  ${pass ? '✓' : '✗'} "${date.slice(0, 30)}": ${r.ok ? 'accepted (bad)' : 'rejected'}`);
     }
   }
 
@@ -176,12 +354,11 @@ async function main() {
       // Should NOT throw a SQL parse error (which would mean the input reached SQL).
       // Should return empty results or a clean error.
       const pass = r.ok || !r.error.toLowerCase().includes('syntax');
-      results.push({
+      push({
         name: `search resists SQL payload "${payload.slice(0, 30)}"`,
         pass,
         detail: r.ok ? 'parameterized OK' : `error: ${r.error.slice(0, 80)}`,
       });
-      log(`  ${pass ? '✓' : '✗'} "${payload.slice(0, 30)}": ${r.ok ? 'safe' : r.error.slice(0, 60)}`);
     }
   }
 
@@ -193,35 +370,94 @@ async function main() {
     const r = await runOp('search', { query: huge, limit: 5 }, ctx(true, engine));
     const elapsed = Date.now() - start;
     const pass = elapsed < 5000; // under 5s
-    results.push({
+    push({
       name: 'search with 10MB query string returns within 5s',
       pass,
       detail: `${elapsed}ms${r.ok ? ' (returned)' : ` (rejected: ${r.error.slice(0, 60)})`}`,
     });
-    log(`  ${pass ? '✓' : '✗'} 10MB query: ${elapsed}ms`);
   }
 
   // ── Trust boundary: file_upload path confinement ──
   // Skipped — file_upload requires actual filesystem setup. Covered by unit
   // tests in test/file-upload-security.test.ts.
 
-  // ── Sanity: every operation has a handler ──
-  log('\n## Sanity: every operation has a handler');
-  for (const op of OPERATIONS) {
-    const pass = typeof op.handler === 'function';
-    results.push({ name: `${op.name} has handler`, pass, detail: pass ? 'ok' : 'missing handler' });
-    if (!pass) log(`  ✗ ${op.name}`);
-  }
-  log(`  ${OPERATIONS.length}/${OPERATIONS.length} operations have handlers`);
+  return results;
+}
 
+// ─── Handler-presence sanity walk (reported SEPARATELY) ───────────────
+//
+// One trivially-true row per registered op used to sit in the same results
+// array as the ~25 behavioral assertions, so 3 real failures printed as
+// "98% passed" (audit agentic-cats-13). The walk is still worth keeping —
+// a registry entry without a handler is a packaging bug — but it is a
+// single sanity gate now, never part of the behavioral pass-rate.
+
+export function handlerSanityWalk(): { total: number; missing: string[] } {
+  const missing = OPERATIONS.filter(op => typeof op.handler !== 'function').map(op => op.name);
+  return { total: OPERATIONS.length, missing };
+}
+
+// ─── Runner entry ─────────────────────────────────────────────────────
+
+export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
+  const json = argv.includes('--json');
+  const log = json ? () => {} : (line: string) => console.log(line);
+  const startedAt = new Date().toISOString();
+  const receiptFile = receiptPath('mcp-contract');
+
+  log('# BrainBench Category 12: MCP Operation Contract\n');
+  log(`Generated: ${new Date().toISOString().slice(0, 19)}`);
+  log(`Operations available: ${OPERATIONS.length}`);
+
+  let results: TestResult[];
+  let handlerWalk: { total: number; missing: string[] };
+  const { engine, cleanup } = await setupEngine();
+  try {
+    results = await runContractChecks(engine, log);
+    handlerWalk = handlerSanityWalk();
+  } catch (err) {
+    // Harness/dependency crash — write an error receipt so all.ts never
+    // mistakes a dead run for anything else, then exit non-zero.
+    await cleanup().catch(() => {});
+    writeReceipt(receiptFile, {
+      schema_version: RECEIPT_SCHEMA_VERSION,
+      benchmark_version: BENCHMARK_VERSION,
+      category: 'mcp-contract',
+      run_status: 'error',
+      n_total: 0,
+      n_scored: 0,
+      completion_rate: 0,
+      errors: [{ probe_id: 'harness:setup-or-run', origin: 'harness', message: String(err).slice(0, 500) }],
+      publishable: false,
+      gbrain_version: gbrainVersion(),
+      gbrain_pin: gbrainPin(),
+      started_at: startedAt,
+      finished_at: new Date().toISOString(),
+    });
+    console.error('MCP contract eval error:', err);
+    return 3;
+  }
   await cleanup();
 
-  // ── Summary ──
+  // ── Accounting (WS0): behavioral assertion failure = gbrain broke its
+  // contract = sut failure, scored 0 and kept in the denominator. ──
+  const acc = new ProbeAccounting(results.length);
+  for (const r of results) {
+    if (r.pass) acc.score(r.name, 1);
+    else acc.error(r.name, 'sut', r.detail);
+  }
+  const summary = acc.summary();
+
   const passed = results.filter(r => r.pass).length;
   const failed = results.length - passed;
+  const handlerOk = handlerWalk.missing.length === 0;
+
+  log(`\n## Handler sanity walk (separate from behavioral pass-rate)`);
+  log(`  ${handlerOk ? '✓' : '✗'} ${handlerWalk.total - handlerWalk.missing.length}/${handlerWalk.total} operations have handlers`
+    + (handlerOk ? '' : ` — missing: ${handlerWalk.missing.join(', ')}`));
 
   log(`\n## Summary`);
-  log(`Tests: ${results.length}`);
+  log(`Behavioral assertions: ${results.length}`);
   log(`Passed: ${passed} (${((passed / results.length) * 100).toFixed(1)}%)`);
   log(`Failed: ${failed}`);
 
@@ -234,16 +470,57 @@ async function main() {
   }
 
   if (json) {
-    process.stdout.write(JSON.stringify({ results, summary: { passed, failed, total: results.length } }, null, 2) + '\n');
+    process.stdout.write(JSON.stringify({
+      results,
+      handler_walk: handlerWalk,
+      summary: { passed, failed, total: results.length, handler_ok: handlerOk },
+    }, null, 2) + '\n');
   }
 
-  if (failed > 0) {
-    console.error(`\n⚠ ${failed} contract test(s) failed`);
-    process.exit(1);
+  const verdict: 'pass' | 'fail' = failed === 0 && handlerOk ? 'pass' : 'fail';
+  const receipt: Receipt = {
+    schema_version: RECEIPT_SCHEMA_VERSION,
+    benchmark_version: BENCHMARK_VERSION,
+    category: 'mcp-contract',
+    run_status: 'completed',
+    verdict,
+    n_total: summary.n_total,
+    n_scored: summary.n_scored,
+    completion_rate: summary.completion_rate,
+    errors: summary.errors,
+    publishable: summary.publishable,
+    gbrain_version: gbrainVersion(),
+    gbrain_pin: gbrainPin(),
+    resolved_config: {
+      search_mode: 'keyword-only (search.mcp_keyword_only=true — hermetic, no embedding gateway, no keys)',
+      seeded_pages: TOTAL_SEEDED_PAGES,
+      chain_length: CHAIN_LENGTH,
+      traverse_depth_cap: TRAVERSE_DEPTH_CAP,
+      remote_list_pages_cap: REMOTE_LIST_PAGES_CAP,
+      trust_contexts: ['remote=false (trusted local)', 'remote=true (untrusted remote)'],
+    },
+    started_at: startedAt,
+    finished_at: new Date().toISOString(),
+    data: {
+      behavioral: { passed, failed, total: results.length },
+      handler_walk: { total: handlerWalk.total, missing: handlerWalk.missing },
+      failures: results.filter(r => !r.pass).map(r => ({ name: r.name, detail: r.detail })),
+    },
+  };
+  writeReceipt(receiptFile, receipt);
+
+  if (verdict === 'fail') {
+    console.error(`\n⚠ ${failed} contract assertion(s) failed${handlerOk ? '' : `; ${handlerWalk.missing.length} op(s) missing handlers`}`);
+    return 1;
   }
+  return 0;
 }
 
-main().catch(e => {
-  console.error('MCP contract eval error:', e);
-  process.exit(1);
-});
+if (import.meta.main) {
+  main()
+    .then(code => process.exit(code)) // explicit: PGLite's WASM runtime pollutes ambient process.exitCode
+    .catch(e => {
+      console.error('MCP contract eval error:', e);
+      process.exit(1);
+    });
+}

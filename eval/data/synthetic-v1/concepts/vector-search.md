@@ -5,10 +5,10 @@ title: vector search
 
 # vector search
 
-A pattern in ai-infrastructure.
+A pattern in developer-tools.
 
-Seen at [[companies/delta-systems]] and [[companies/zenith-robotics]]. Compare to [[concepts/knowledge-graphs]].
+Seen at [[companies/foundry-co-2]] and [[companies/pulse-cloud-29]]. Compare to [[concepts/knowledge-graphs]].
 
 ## Notes
 
-The technique relies on memory-systems. Reference work in [[concepts/intent-classification]] demonstrates developer-tools as a foundation.
+The technique relies on multimodal-search. Reference work in [[concepts/intent-classification]] demonstrates memory-systems as a foundation.

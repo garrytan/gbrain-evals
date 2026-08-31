@@ -5,10 +5,10 @@ title: pre fetched synopsis
 
 # pre fetched synopsis
 
-A pattern in ai-infrastructure.
+A pattern in autonomous-picking.
 
-Seen at [[companies/cobalt-ai]] and [[companies/grove-bio]]. Compare to [[concepts/context-windows]].
+Seen at [[companies/widget-systems-1]] and [[companies/cobalt-labs-16]]. Compare to [[concepts/context-windows]].
 
 ## Notes
 
-The technique relies on gpu-scheduling. Reference work in [[concepts/vector-search]] demonstrates ai-infrastructure as a foundation.
+The technique relies on eval-frameworks. Reference work in [[concepts/vector-search]] demonstrates inference-platforms as a foundation.

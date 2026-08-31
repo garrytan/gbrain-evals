@@ -7,9 +7,16 @@
  *   - body = canonical_name + aliases + content + why_it_matters, so gbrain's
  *     real FTS matches alias queries ("k8s" → kubernetes) — this is gbrain's
  *     keyword search doing real work, not a bench-specific alias index.
- *   - superseded beliefs (superseded_by != null) are soft-deleted via gbrain's
- *     real soft-delete, so the v0.26.5 search-visibility filter excludes them
- *     (faithful: soft-delete IS gbrain's "this was replaced" mechanism).
+ *   - ALL beliefs are seeded LIVE, including superseded ones (audit finding
+ *     precisionmembench-01). The upstream provider contract sends providers
+ *     only {text, user_id, metadata:{beliefId, scope}, aliases} — never a
+ *     supersession field — so leaderboard systems had to infer supersession
+ *     from in-band prose ("Previously used TSLint... Replaced by ESLint.").
+ *     This harness previously read the fixture's ground-truth `superseded_by`
+ *     and pre-hid those beliefs via engine.softDeletePage — the answer key
+ *     leaking into the index at seed time. That branch is REMOVED: gbrain
+ *     must exclude superseded beliefs itself or fail those cases honestly.
+ *     Scores dropped when the leak was removed; the report doc says so.
  *
  * Fidelity (A6):
  *   - 'body-text'  : the above. The everyday ingest path. Ships now.
@@ -38,7 +45,7 @@ export interface SeedOpts {
 
 /** Configure the AI gateway once (mirrors cli.ts#connectEngine + longmemeval). */
 export function configureGatewayForBench(): void {
-  const cfg = (loadConfig() as Record<string, unknown>) || {};
+  const cfg = (loadConfig() as unknown as Record<string, unknown>) || {};
   configureGateway({
     embedding_model: cfg.embedding_model,
     embedding_dimensions: cfg.embedding_dimensions,
@@ -87,14 +94,17 @@ function bodyTextFor(b: Belief): string {
 }
 
 /**
- * Ingest beliefs into the engine. Returns the count imported + soft-deleted.
+ * Ingest beliefs into the engine. Every belief is seeded LIVE — the fixture's
+ * ground-truth `superseded_by` is never consulted (see header + audit finding
+ * precisionmembench-01). Returns the imported count plus how many superseded
+ * beliefs entered the index live, so runners can report the honest setup.
  * Caller separately calls `adapter.loadFixture(beliefs)` to populate seedIndex.
  */
 export async function seedGbrainEngine(
   engine: BrainEngine,
   beliefs: Belief[],
   opts: SeedOpts = {},
-): Promise<{ imported: number; softDeleted: number }> {
+): Promise<{ imported: number; supersededLive: number }> {
   const fidelity = opts.fidelity ?? 'body-text';
   if (fidelity === 'structured') {
     throw new Error(
@@ -106,7 +116,7 @@ export async function seedGbrainEngine(
   await registerSources(engine, beliefs);
 
   let imported = 0;
-  let softDeleted = 0;
+  let supersededLive = 0;
   for (const b of beliefs) {
     const sourceId = scopeToSourceId((b.scope as string[])[0] ?? 'default');
     await importFromContent(engine, b._id as string, bodyTextFor(b), {
@@ -114,10 +124,7 @@ export async function seedGbrainEngine(
       noEmbed: opts.noEmbed === true,
     });
     imported++;
-    if (b.superseded_by != null) {
-      await engine.softDeletePage(b._id as string, { sourceId });
-      softDeleted++;
-    }
+    if (b.superseded_by != null) supersededLive++;
   }
-  return { imported, softDeleted };
+  return { imported, supersededLive };
 }

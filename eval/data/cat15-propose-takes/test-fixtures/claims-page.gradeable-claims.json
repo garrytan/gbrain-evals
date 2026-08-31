@@ -1,0 +1,18 @@
+{
+  "claims": [
+    {
+      "claim_text": "acme-example closes their seed round by July",
+      "kind": "bet",
+      "domain": "fundraising",
+      "conviction": 0.8,
+      "since_date": "2026-05-03"
+    },
+    {
+      "claim_text": "vertical-agent pricing war compresses margins across the category within 18 months",
+      "kind": "prediction",
+      "domain": "pricing",
+      "conviction": 0.6,
+      "since_date": "2026-05-03"
+    }
+  ]
+}

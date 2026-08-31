@@ -2,13 +2,17 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://brainbench.dev/schemas/transcript.schema.json",
   "title": "BrainBench Flight-Recorder Transcript",
-  "description": "Full tool-call + model-call trace for a single probe run. Written by eval/runner/recorder.ts. Consumed by judge (via evidence-contract) and reviewers.",
+  "description": "Full tool-call + model-call trace for a single probe run. Emitted by eval/runner/recorder.ts emitBundle() as the elements of each bundle's transcript.json array (one element per probe; transcript.md is the human-readable rendering of the same data). emitBundle validates every element against this schema at write time. Consumed by judge (via evidence-contract) and reviewers.",
   "type": "object",
-  "required": ["schema_version", "probe_id", "adapter", "started_at", "ended_at", "turns"],
+  "required": ["schema_version", "probe_id", "adapter", "started_at", "ended_at", "turns", "total_input_tokens", "total_output_tokens", "elapsed_ms"],
   "additionalProperties": false,
   "properties": {
     "schema_version": {"type": "integer", "const": 1},
-    "probe_id": {"type": "string", "pattern": "^q-[0-9]{4}$"},
+    "probe_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$",
+      "description": "Probe/scenario id, copied verbatim from the runner. Real families: q-0001 (world-v1), sig-0001 (cat8), s-briefing-1 (cat9 scenarios). The former ^q-[0-9]{4}$ pattern rejected every cat8/cat9 transcript (audit agentic-cats-16)."
+    },
     "adapter": {
       "type": "object",
       "required": ["name", "stack_id"],

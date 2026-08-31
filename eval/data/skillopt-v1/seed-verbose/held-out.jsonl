@@ -1,6 +1,6 @@
-{"task_id":"hd-001","task":"Analyze the decision of whether a solo founder should take on a technical cofounder.","judge":{"kind":"rule","checks":[{"op":"max_chars","arg":1200}]}}
-{"task_id":"hd-002","task":"Analyze the decision of if a startup should relocate to be near its customers.","judge":{"kind":"rule","checks":[{"op":"max_chars","arg":1200}]}}
-{"task_id":"hd-003","task":"Analyze the decision of whether to deprecate a legacy API with active users.","judge":{"kind":"rule","checks":[{"op":"max_chars","arg":1200}]}}
-{"task_id":"hd-004","task":"Analyze the decision of if a team should switch from REST to GraphQL.","judge":{"kind":"rule","checks":[{"op":"max_chars","arg":1200}]}}
-{"task_id":"hd-005","task":"Analyze the decision of whether to build an internal tool or buy SaaS.","judge":{"kind":"rule","checks":[{"op":"max_chars","arg":1200}]}}
-{"task_id":"hd-006","task":"Analyze the decision of if a startup should enter a regulated market.","judge":{"kind":"rule","checks":[{"op":"max_chars","arg":1200}]}}
+{"task_id":"hd-001","task":"Analyze the decision of whether a solo founder should take on a technical cofounder.","judge":{"kind":"rule","checks":[{"op":"max_chars","arg":900},{"op":"regex","arg":"[\\s\\S]{200,}"}]}}
+{"task_id":"hd-002","task":"Analyze the decision of if a startup should relocate to be near its customers.","judge":{"kind":"rule","checks":[{"op":"max_chars","arg":900},{"op":"regex","arg":"[\\s\\S]{200,}"}]}}
+{"task_id":"hd-003","task":"Analyze the decision of whether to deprecate a legacy API with active users.","judge":{"kind":"rule","checks":[{"op":"max_chars","arg":900},{"op":"regex","arg":"[\\s\\S]{200,}"}]}}
+{"task_id":"hd-004","task":"Analyze the decision of if a team should switch from REST to GraphQL.","judge":{"kind":"rule","checks":[{"op":"max_chars","arg":900},{"op":"regex","arg":"[\\s\\S]{200,}"}]}}
+{"task_id":"hd-005","task":"Analyze the decision of whether to build an internal tool or buy SaaS.","judge":{"kind":"rule","checks":[{"op":"max_chars","arg":900},{"op":"regex","arg":"[\\s\\S]{200,}"}]}}
+{"task_id":"hd-006","task":"Analyze the decision of if a startup should enter a regulated market.","judge":{"kind":"rule","checks":[{"op":"max_chars","arg":900},{"op":"regex","arg":"[\\s\\S]{200,}"}]}}

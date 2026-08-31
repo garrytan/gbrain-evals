@@ -2,13 +2,13 @@
 id: note-0016
 date: 2026-03-12
 topic: jordan-diligence
-mentions: [jordan-mata, amara-okafor]
+mentions: [jordan-akin, carbonloop]
 ---
 
-Wrapped up the first deep-dive on [Jordan Mata](people/jordan-mata)'s technical claims today. Three hours going through their model architecture documentation and I'm genuinely impressed—the efficiency gains they're showing on inference aren't just marketing fluff. The benchmarks hold up against our internal testing.
+Spent the afternoon reviewing [Jordan](people/jordan-akin)'s diligence materials on [CarbonLoop](companies/carbonloop). Their technical approach is solid—the enzymatic capture process addresses the energy penalty issues we've seen in other DAC plays. What caught my attention was the unit economics breakdown Jordan pulled together.
 
-What struck me most was Jordan's transparency about the current limitations. They didn't try to hand-wave past the latency issues at scale. Instead, they walked me through their six-month roadmap with specific milestones. That kind of honesty is rare in founders, especially ones with this much hype around them.
+The burn multiple sitting at 2.4 is higher than I'd like for a Series B, but given the capital intensity of building out capture infrastructure, it's within tolerance. The question is whether their path to 1.5 or lower by end of 2027 is realistic.
 
-Still need to dig into the data center partnerships they're claiming. The Equinix relationship sounds solid on paper, but I've been burned before by "partnerships" that turn out to be preliminary conversations. Will ask [Jordan](people/jordan-mata) for a direct intro to their contact there.
+Jordan flagged some concerns about the team's operational experience scaling hardware deployments. Fair point. The founders came out of academic labs, and the jump from pilot to commercial scale trips up a lot of climate hardware companies.
 
-Next step is having our operating partners stress-test their power consumption projections. Climate infrastructure claims need verification, always.
+I'm inclined to push for a deeper technical session with their engineering leads before we move to term sheet. Want to understand the supply chain dependencies better—particularly on the membrane side.

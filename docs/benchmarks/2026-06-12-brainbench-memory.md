@@ -116,8 +116,19 @@ the published fixture/result JSON Schemas (`evals/brainbench/schema/`).
 | claude-code | 11/146 | 32/94 | 0/58 | 0/12 |
 | codex | 9/146 | 52/94 | 0/58 | 0/12 |
 
+How the know-to-ask denominators worked in this run (the headline 0.150 does
+NOT equal 9/146): the 146 kta gold turns split into **60 should-retrieve
+turns and 86 stay-silent turns**. The failure rate is misses over the
+should-retrieve subset only — 9/60 = 0.150 — and the false-fire rate is fires
+over the stay-silent subset — claude-code's 2/86 = 0.023 (formula:
+`know_to_ask_failure_rate = missed / shouldRetrieve`, gbrain
+`src/eval/brainbench/metrics/know-to-ask.ts`). The failed/gold column above
+sums BOTH failure kinds over both subsets, which is why claude-code shows
+11/146: 9 misses + 2 false fires. (The 2026-08-31 update banner at the top
+reflects the v0.47.8.0 re-run, where the 9 misses are fixed.)
+
 Three patterns worth pulling out. First, the know-to-ask failure rate was
-0.150 on every seam — those 9 misses were the same 9 gold turns, the corpus's
+0.150 on every seam — those 9 misses (of the 60 should-retrieve turns) were the same 9 gold turns, the corpus's
 deliberately-hard lowercase and surname-only mentions that the v1 reflex's
 capitalization-biased extractor could not see (documented limits in
 `entity-salience.ts`). That number was the measured roadmap for the next
@@ -202,7 +213,9 @@ suites seed once and replay all three adapters against the same brain;
 continuity pairs run per ordered (writer ≠ reader) harness pair with the
 writer's decisions persisted through the production
 `extract-conversation-facts` pipeline via its injectable-extractor seam.
-Counts (failed/gold) are the gate; rates are display. Source isolation gates
+Counts (failed/gold) are the gate; rates are display. Know-to-ask rates use
+split denominators: 146 gold turns = 60 should-retrieve + 86 stay-silent;
+failure rate = misses/60, false-fire rate = fires/86, failed/gold sums both. Source isolation gates
 at zero unconditionally. Full formula definitions: gbrain
 `docs/eval/BRAINBENCH.md`; plain-English metric glossary: gbrain
 `docs/eval/METRIC_GLOSSARY.md`.

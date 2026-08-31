@@ -5,11 +5,11 @@ title: Quinn Sample
 
 # Quinn Sample
 
-Lead Engineer at [[companies/nova-labs]]. Previously at [[companies/titan-platform]].
+Co-Founder at [[companies/forge-cloud-19]]. Previously at [[companies/summit-platform-11]].
 
-Working on memory-systems and [[concepts/adjacency-boost]] research.
+Working on autonomous-picking and [[concepts/token-budgeting]] research.
 
 ## Timeline
 
-- 2024-07-18 joined [[companies/nova-labs]]
-- 2026-03-02 promoted to Lead Engineer
+- 2024-04-18 joined [[companies/forge-cloud-19]]
+- 2026-04-15 promoted to Co-Founder

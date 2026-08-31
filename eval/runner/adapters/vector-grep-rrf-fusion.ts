@@ -32,6 +32,11 @@ import { assertEvalAdapterConfig, type EvalAdapterConfig } from '../eval-adapter
 
 interface HybridNoGraphState {
   engine: PGLiteEngine;
+  /** Top-K resolved from HybridNoGraphConfig.limit at init (default 20).
+   *  Stored in state so query() actually honors the knob — the old code
+   *  documented the config field but hardcoded 20 in query(), so a caller
+   *  passing { limit: 50 } silently got 20 (audit adapters-queries-04). */
+  limit: number;
 }
 
 interface HybridNoGraphConfig extends AdapterConfig {
@@ -54,6 +59,12 @@ export class HybridNoGraphAdapter implements Adapter {
   readonly name = 'vector-grep-rrf-fusion';
 
   async init(rawPages: Page[], _config: HybridNoGraphConfig): Promise<BrainState> {
+    // Resolve the top-K knob up front. Invalid values (NaN, 0, negatives)
+    // fall back to the documented default of 20.
+    const limit = typeof _config.limit === 'number' && Number.isFinite(_config.limit) && _config.limit >= 1
+      ? Math.floor(_config.limit)
+      : 20;
+
     // v0.35.1.0 shootout: validate and apply the per-cell provider config
     // BEFORE spinning up the engine so configureGateway is in effect when
     // importFromContent first calls embed().
@@ -122,7 +133,7 @@ export class HybridNoGraphAdapter implements Adapter {
     // links + timeline for the graph layer. Without it, traversePaths
     // would return empty. hybridSearch works entirely off chunks +
     // embeddings, which importFromContent just populated.
-    return { engine } satisfies HybridNoGraphState;
+    return { engine, limit } satisfies HybridNoGraphState;
   }
 
   async teardown(state: BrainState): Promise<void> {
@@ -153,7 +164,7 @@ export class HybridNoGraphAdapter implements Adapter {
 
   async query(q: Query, state: BrainState): Promise<RankedDoc[]> {
     const s = state as HybridNoGraphState;
-    const limit = 20;
+    const limit = s.limit;
 
     // hybridSearch returns chunks with scores. We aggregate to page-level
     // by taking each page's BEST chunk score and ranking pages by that.

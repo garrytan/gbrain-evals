@@ -1,7 +1,7 @@
 {
   "name": "gbrain-evals",
-  "version": "0.4.0",
-  "description": "BrainBench — public benchmark for personal knowledge agent stacks. Consumes gbrain as a library.",
+  "version": "0.5.0",
+  "description": "BrainBench \u2014 public benchmark for personal knowledge agent stacks. Consumes gbrain as a library.",
   "type": "module",
   "license": "MIT",
   "repository": {
@@ -9,7 +9,6 @@
     "url": "git+https://github.com/garrytan/gbrain-evals.git"
   },
   "scripts": {
-    "postinstall": "bun scripts/postinstall-pglite-link.ts",
     "test": "bun test test/eval/",
     "eval:run": "bun eval/runner/multi-adapter.ts",
     "eval:run:dev": "BRAINBENCH_N=1 bun eval/runner/multi-adapter.ts",
@@ -25,18 +24,20 @@
     "eval:brainbench:published": "BRAINBENCH_N=10 BRAINBENCH_CONCURRENCY=2 bun eval/runner/all.ts",
     "eval:cat6": "bun eval/runner/cat6-prose-scale.ts",
     "eval:cat11": "bun eval/runner/cat11-multimodal.ts",
+    "postinstall": "bun scripts/postinstall-pglite-link.ts",
     "eval:cat35": "CAT35_FULL=1 bun eval/runner/cat35-transcript-distill.ts",
     "eval:cat35:smoke": "bun eval/runner/cat35-transcript-distill.ts",
     "eval:generate-transcript-distill": "bun eval/generators/transcript-distill-gen.ts",
     "eval:generate-transcript-distill:dry": "bun eval/generators/transcript-distill-gen.ts --dry-run"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.30.0",
+    "@anthropic-ai/sdk": "^0.122.0",
+    "ai": "^6.0.168",
     "gbrain": "github:garrytan/gbrain#2a56b51236850f6abcbf2f1ea71981bb9630f6fe"
   },
   "devDependencies": {
-    "@types/bun": "latest",
-    "pdf-parse": "^2.4.5"
+    "@types/bun": "1.3.10",
+    "typescript": "5.6.3"
   },
   "keywords": [
     "gbrain",
@@ -45,8 +46,5 @@
     "personal-knowledge-agent",
     "retrieval-eval",
     "rag-benchmark"
-  ],
-  "trustedDependencies": [
-    "gbrain"
   ]
 }

@@ -1,17 +1,39 @@
 {
   "version": 1,
-  "_comment": "3 implicit preferences planted in amara-life-v1. Never stated directly; only inferable from patterns (what Amara says, does, responds to). Cat 9 measures implicit_preference_recall.",
+  "_comment": "Derived from IMPLICIT_PREF_PLACEMENTS in eval/generators/amara-life.ts by amara-life-gen.ts — do not hand-edit. Preferences are never stated in body text; each evidence page surfaces the behavior. Cat 9 measures implicit_preference_recall.",
   "preferences": [
     {
-      "_example": "true",
       "id": "pref-001",
       "label": "hates-morning-meetings",
+      "surface_hint": "Amara reschedules 7-8am slots to 10am+ in 3+ sources; never states it directly",
       "evidence_pages": [
-        "emails/em-0007",
-        "slack/sl-0023",
-        "notes/2026-03-14-calendar-notes"
+        "emails/em-0013",
+        "slack/sl-0045",
+        "note/2026-03-22-weekly-review"
       ],
-      "surface_in_tasks": ["q-0103-schedule-next-week", "q-0201-should-i-take-7am"]
+      "expected_behavior": "infer the preference from the evidence pages; it is never stated verbatim anywhere in the corpus"
+    },
+    {
+      "id": "pref-002",
+      "label": "distrusts-founders-raising-too-fast",
+      "surface_hint": "Skeptical commentary on 3 founders who raised Series B within 10 months of Series A",
+      "evidence_pages": [
+        "slack/sl-0090",
+        "slack/sl-0132",
+        "note/2026-02-26-weekly-review"
+      ],
+      "expected_behavior": "infer the preference from the evidence pages; it is never stated verbatim anywhere in the corpus"
+    },
+    {
+      "id": "pref-003",
+      "label": "strong-preference-climate-deals",
+      "surface_hint": "Asks deeper due-diligence questions on climate deals than on other categories",
+      "evidence_pages": [
+        "meeting/mtg-0003",
+        "note/2026-02-22-climate-thesis",
+        "note/2026-02-14-market-report-reactions"
+      ],
+      "expected_behavior": "infer the preference from the evidence pages; it is never stated verbatim anywhere in the corpus"
     }
   ]
 }

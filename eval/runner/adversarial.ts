@@ -9,8 +9,16 @@
  */
 
 import { PGLiteEngine } from 'gbrain/pglite-engine';
-import { extractPageLinks, parseTimelineEntries } from 'gbrain/link-extraction';
+import { extractPageLinks, parseTimelineEntries, type SlugResolver } from 'gbrain/link-extraction';
 import type { PageInput } from 'gbrain/types';
+
+// Resolver that accepts every explicit slug-shaped target verbatim — Cat
+// adversarial exercises extraction mechanics (within-page dedup, code-fence
+// exclusion), not name resolution, so markdown-link targets pass through and
+// bare-name resolution stays disabled.
+const PASSTHROUGH_RESOLVER: SlugResolver = {
+  resolve: async (name: string) => (name.includes('/') ? name : null),
+};
 
 interface CaseResult {
   name: string;
@@ -108,29 +116,46 @@ const ADVERSARIAL_CASES: AdversarialCase[] = [
     compiled_truth: Array.from({ length: 50 }, () => '[Same](people/same-target)').join(' '),
     timeline: '',
   }, expect: async () => {
-    const candidates = extractPageLinks(
+    const res = await extractPageLinks(
+      'concepts/repeat-1',
       Array.from({ length: 50 }, () => '[Same](people/same-target)').join(' '),
       {},
       'concept',
+      PASSTHROUGH_RESOLVER,
     );
-    const matches = candidates.filter(c => c.targetSlug === 'people/same-target');
+    const matches = res.candidates.filter(c => c.targetSlug === 'people/same-target');
     return { pass: matches.length === 1, note: `expected 1 candidate after within-page dedup, got ${matches.length}` };
   } },
 ];
 
-async function tryOp<T>(name: string, fn: () => Promise<T>): Promise<{ ok: true; result: T } | { ok: false; error: string }> {
+/**
+ * Race an op against a timeout. Audit misc-runners-10: the old version
+ * rejected with a plain object (`String({...})` → '[object Object]', losing
+ * the TIMEOUT_30s diagnosis) and never cleared the timer, so every one of the
+ * ~130 ops left a live 30s timer keeping the event loop alive after a fully
+ * passing run. Now: reject with a real Error, always clearTimeout in finally.
+ * `timeoutMs` is parameterized for tests only; runner call sites use the
+ * 30s default. Exported for test/eval/adversarial-tryop.test.ts.
+ */
+export async function tryOp<T>(
+  name: string,
+  fn: () => Promise<T>,
+  timeoutMs = 30_000,
+): Promise<{ ok: true; result: T } | { ok: false; error: string }> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
-    const r = await Promise.race([
-      fn().then(x => ({ ok: true as const, value: x })),
-      new Promise<{ ok: false; error: string }>((_, reject) =>
-        setTimeout(() => reject({ ok: false, error: 'TIMEOUT_30s' }), 30_000),
-      ),
+    const result = await Promise.race([
+      fn(),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error(`TIMEOUT_${Math.round(timeoutMs / 1000)}s`)), timeoutMs);
+      }),
     ]);
-    if ('value' in r && r.ok) return { ok: true, result: r.value };
-    return { ok: false, error: 'unknown' };
+    return { ok: true, result };
   } catch (e) {
     const err = e instanceof Error ? e.message : String(e);
     return { ok: false, error: `${name}: ${err.slice(0, 200)}` };
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
   }
 }
 
@@ -155,6 +180,10 @@ async function main() {
   for (const tp of targetPages) await engine.putPage(tp.slug, tp.page);
 
   const results: CaseResult[] = [];
+  // API-drift sentinel: if NO case yields a single link candidate, extraction
+  // is running vacuously (the pre-audit 3-arg call silently extracted zero
+  // candidates from every page for months — finding misc-runners-01).
+  let totalLinkCandidates = 0;
 
   for (const c of ADVERSARIAL_CASES) {
     log(`\n## Case: ${c.name}`);
@@ -181,14 +210,17 @@ async function main() {
     const search = await tryOp('searchKeyword', () => engine.searchKeyword('person', { limit: 10 }));
     if (search.ok) result.ops_succeeded++; else result.crashes.push(search.error);
 
-    // 4. extractPageLinks (pure function, code-fence and false-positive checks happen here)
+    // 4. extractPageLinks (code-fence and false-positive checks happen here).
+    // v0.13+ contract: async, (slug, content, frontmatter, pageType, resolver).
     result.ops_attempted++;
-    const extract = await tryOp('extractPageLinks', async () => extractPageLinks(c.page.compiled_truth, {}, c.page.type));
+    const extract = await tryOp('extractPageLinks', () =>
+      extractPageLinks(c.slug, c.page.compiled_truth, {}, c.page.type, PASSTHROUGH_RESOLVER));
     if (extract.ok) {
       result.ops_succeeded++;
+      totalLinkCandidates += extract.result.candidates.length;
       // Check: code fence content should NOT produce link candidates
       if (c.name.includes('code fence') || c.name.includes('inline code')) {
-        const candidates = extract.result;
+        const candidates = extract.result.candidates;
         const leaked = candidates.filter(cand => cand.targetSlug.includes('not-extract') || cand.targetSlug.includes('code-fenced-slug'));
         if (leaked.length > 0) result.silent_corruption.push(`code fence leak: extracted ${leaked.map(l => l.targetSlug).join(', ')}`);
       }
@@ -245,9 +277,15 @@ async function main() {
   log(`Ops succeeded: ${totalSucc} (${((totalSucc / totalOps) * 100).toFixed(1)}%)`);
   log(`Crashes: ${totalCrashes}`);
   log(`Silent corruption: ${totalSilent}`);
+  log(`Link candidates extracted: ${totalLinkCandidates}`);
 
   if (json) {
-    process.stdout.write(JSON.stringify({ results, summary: { totalOps, totalSucc, totalCrashes, totalSilent } }, null, 2) + '\n');
+    process.stdout.write(JSON.stringify({ results, summary: { totalOps, totalSucc, totalCrashes, totalSilent, totalLinkCandidates } }, null, 2) + '\n');
+  }
+
+  if (totalLinkCandidates === 0) {
+    console.error('\n⚠ zero link candidates across every case — extractPageLinks is running vacuously (API drift?)');
+    process.exit(1);
   }
 
   if (totalCrashes > 0 || totalSilent > 0) {
@@ -256,7 +294,10 @@ async function main() {
   }
 }
 
-main().catch(e => {
-  console.error('Adversarial eval error:', e);
-  process.exit(1);
-});
+// Guarded so importing `tryOp` in tests does not launch the whole runner.
+if (import.meta.main) {
+  main().catch(e => {
+    console.error('Adversarial eval error:', e);
+    process.exit(1);
+  });
+}

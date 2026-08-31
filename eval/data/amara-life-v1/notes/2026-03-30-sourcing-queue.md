@@ -2,13 +2,13 @@
 id: note-0007
 date: 2026-03-30
 topic: sourcing-queue
-mentions: [derek-huang, priya-anand]
+mentions: [amara-okafor, elena-voss, voltaic-grid]
 ---
 
-Spent the morning reviewing our Q2 sourcing queue with [Derek](people/derek-huang). We have 47 companies flagged for initial outreach, but I'm noticing a pattern—too many are clustered around the same carbon accounting thesis we've already deployed into twice.
+Busy week on the sourcing front. Finally cleared through the backlog from the Berlin trip and flagged three companies worth a deeper look.
 
-I asked Derek to re-weight toward grid flexibility and demand response. The regulatory tailwinds there are stronger than people realize, especially with FERC's recent signals on distributed resource aggregation.
+[Voltaic Grid](companies/voltaic-grid) keeps coming up in conversations—heard from [Elena](people/elena-voss) that a16z is leading their Series B, which tracks given their recent energy infrastructure push. Need to figure out if there's room for a co-invest or if we're too late. Their grid-balancing approach using predictive load management is exactly the kind of AI-meets-climate play we've been hunting for.
 
-[Priya](people/priya-anand) forwarded three inbound decks from her Stanford network. One caught my attention: a team building inference optimization specifically for weather prediction models. Interesting wedge—could reduce compute costs for forecasting by 40% if their benchmarks hold. Worth a call.
+Also revisiting a few battery recycling startups that came through last quarter. The unit economics still don't work for most of them, but regulatory tailwinds in the EU might change the calculus by Q3.
 
-Note to self: we need to be more disciplined about tracking where our deals actually originate. Too much is still coming through warm intros rather than proactive thesis-driven hunting. That worked at $50M fund size. At $200M, we need systems.
+Note to self: schedule time with the data team to refine our sourcing filters. Too much noise in the renewable energy vertical right now—need sharper signals.

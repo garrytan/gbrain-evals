@@ -2,13 +2,13 @@
 id: note-0008
 date: 2026-03-28
 topic: board-prep
-mentions: [elena-voskresenskaya, marcus-thompson-hw]
+mentions: [amara-okafor, novamind, chen-wei, halfway-capital]
 ---
 
-Spent most of today prepping for the Meridian board meeting next Tuesday. [Elena Voskresenskaya](people/elena-voskresenskaya) sent over the updated cap table, and I want to make sure I have our position straight before we walk in—Halfway holds 14.2% post-Series B, which gives us meaningful leverage on the expansion vote.
+Prepping for the NovaMind board meeting next week. Ran through their latest financials with [Chen Wei](people/chen-wei) this afternoon—the numbers are looking solid. They've got 22 months of runway at current burn, which gives us breathing room to be patient on the Series B timing.
 
-Called [Marcus Thompson](people/marcus-thompson-hw) to align on messaging around the compute partnership. He's more bullish than I am on the timeline, but we agreed to push for quarterly milestone reviews rather than the semi-annual cadence the founders proposed.
+The real question is whether we push them to accelerate hiring for the inference optimization team or let them stay lean through Q3. [Chen Wei](people/chen-wei) thinks they should wait until the enterprise pilot results come in, and I'm inclined to agree. No point scaling headcount before we see real traction signals.
 
-I keep coming back to the governance question. If we greenlight the infrastructure buildout in Southeast Asia, we need stronger reporting mechanisms. The climate impact story is compelling, but I've seen too many portfolio companies lose discipline when they scale fast.
+I need to draft talking points around the competitive landscape—three new entrants since January, though none with NovaMind's vertical integration story. Should also flag the datacenter partnership update for the full board. That deal alone could be transformative if it closes.
 
-Need to finalize my notes on the CFO transition before Monday. That conversation won't be comfortable.
+Note to self: review the climate impact metrics before Monday. The LPs have been asking more pointed questions lately.

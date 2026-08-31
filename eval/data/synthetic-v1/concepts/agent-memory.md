@@ -5,10 +5,10 @@ title: agent memory
 
 # agent memory
 
-A pattern in developer-tools.
+A pattern in multimodal-search.
 
-Seen at [[companies/echo-bio]] and [[companies/pillar-platform]]. Compare to [[concepts/graph-traversal]].
+Seen at [[companies/ridge-robotics-10]] and [[companies/quartz-cloud-9]]. Compare to [[concepts/graph-traversal]].
 
 ## Notes
 
-The technique relies on ai-infrastructure. Reference work in [[concepts/auto-linking]] demonstrates embedding-providers as a foundation.
+The technique relies on inference-platforms. Reference work in [[concepts/auto-linking]] demonstrates developer-tools as a foundation.

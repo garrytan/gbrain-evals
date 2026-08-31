@@ -2,11 +2,15 @@
 id: note-0035
 date: 2026-02-02
 topic: weekly-review
-mentions: [derek-zhang, solunarc, naveen-rao]
+mentions: [amara-okafor, novamind, derek-chen, halfway-capital]
 ---
 
-Exhausting week but productive. Finally closed the Solunarc term sheet after three rounds of negotiation with [Derek Zhang](people/derek-zhang). The valuation landed where we wanted—$85M pre, which feels right for a Series A in the carbon capture monitoring space given current multiples.
+# Weekly Review — Feb 2
 
-Had coffee with [Naveen Rao](people/naveen-rao) on Thursday. He's still CEO at Meridian Compute, and honestly seems energized despite the fundraising headwinds in AI infra right now. He mentioned they're pivoting some resources toward inference optimization, which makes sense given where the market is heading. I floated the idea of a follow-on from our side but want to see Q1 numbers first.
+Busy week with three new decks hitting my inbox, but I keep circling back to the [NovaMind](companies/novamind) situation.
 
-Personal note: I need to actually take a weekend off soon. Three consecutive Saturdays at my laptop isn't sustainable. [Derek](people/derek-zhang) joked that I'm becoming "the partner who never sleeps"—not a badge I want to wear.
+Met with [Derek Chen](people/derek-chen) on Thursday to discuss their Series A timeline. The product roadmap is genuinely exciting—their approach to energy-aware model inference could be transformative for grid-edge compute. But the org structure gives me pause. NovaMind still has no VP of Engineering. Derek is effectively playing founder-CEO and technical lead simultaneously, and it shows in their sprint velocity.
+
+I raised this directly. He acknowledged the gap but seemed confident they can recruit post-funding. I'm less certain. The climate-AI space is heating up fast, and top engineering talent has options. Waiting until after a round closes to fill that seat feels like a sequencing risk.
+
+Still bullish on the thesis. Need to see a hiring plan before I can champion this internally at [Halfway](orgs/halfway-capital). Will follow up mid-month.

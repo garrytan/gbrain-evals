@@ -1,11 +1,25 @@
 /**
- * Shared LLM rate-limit bucket (Day 10 of BrainBench v1 Complete plan).
+ * Shared LLM concurrency bucket.
  *
- * Wraps Anthropic API calls across the agent adapter (Sonnet) and the
- * judge (Haiku) with a single token-bucket rate limiter. A full N=10
- * scorecard run makes ~900 LLM calls (150 Cat 8/9 probes × N=10 + 100
- * Cat 5 claims × N=10); without coordination the concurrent adapters
- * trigger 429s on Anthropic's per-minute limits.
+ * WHAT IS ACTUALLY WIRED (audit tests-audit-06 — the old header claimed this
+ * wrapped "the agent adapter (Sonnet) and the judge (Haiku)" while nothing
+ * imported the module; the tests exercised dead code):
+ *
+ *   - judge.ts `scoreAnswer` — every judge Haiku call runs under
+ *     `withLlmSlot` (default budget unless `JudgeConfig.budget` overrides).
+ *     Every scoreAnswer caller (cat9-workflows, cat20-brainstorm,
+ *     cat25-trajectory-routing, cat29-think-vs-search) therefore shares
+ *     this cap for its JUDGE calls.
+ *
+ * NOT wired (each still calls `client.messages.create` directly with its
+ * own retry/backoff):
+ *   - the Sonnet agent adapter (adapters/claude-sonnet-with-tools.ts)
+ *   - cat5-provenance's claim classifier
+ *   - the corpus generators
+ *
+ * `BRAINBENCH_LLM_CONCURRENCY` (default 4) therefore caps JUDGE concurrency
+ * only. Do not present it as a global LLM cap until the remaining callers
+ * adopt `withLlmSlot`.
  *
  * Design:
  *   - `acquireSlot()` resolves when a slot is free (blocks otherwise).
@@ -92,6 +106,11 @@ export class LlmBudget {
 
 let defaultBudget: LlmBudget | null = null;
 
+/**
+ * Process-global budget, capacity from BRAINBENCH_LLM_CONCURRENCY (default
+ * 4). Consumed by judge.ts scoreAnswer; see the module header for the honest
+ * wiring inventory.
+ */
 export function getDefaultLlmBudget(): LlmBudget {
   if (!defaultBudget) {
     const envCap = process.env.BRAINBENCH_LLM_CONCURRENCY;

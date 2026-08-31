@@ -2,10 +2,13 @@
 
 SHA-256(text) → vector. Filled by `bun eval/runner/longmemeval.ts`.
 
-Cache files land at `eval/reports/longmemeval/embed-cache/embed-cache-<model>@<dimensions>.sqlite`.
-That directory is gitignored: the full `_s` split cache is ~700MB, too big for
-plain git. First-time runs cost ~$2 in OpenAI embeddings; subsequent runs hit
-the local cache and complete in minutes for ~$0.
+Cache files land at `eval/reports/longmemeval/embed-cache/embed-cache-<model>@<dimensions>.sqlite`
+— the runner's default `--cache-dir` (longmemeval.ts `parseOpts`). This
+directory under `eval/data/` holds only this README: no cache fixture ships
+in the repo. The `eval/reports/` location is gitignored because the full `_s`
+split cache is ~700MB, too big for plain git. First-time runs cost ~$2 in
+OpenAI embeddings; subsequent runs hit the local cache and complete in
+minutes for ~$0.
 
 Cache properties:
 

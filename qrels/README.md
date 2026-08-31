@@ -49,6 +49,30 @@ When ranking changes intentionally move expected slugs, edit this file
 and **include a `Why:` line in the commit body** so future maintainers
 can audit the trail.
 
+## Adjudication log (2026-08-31 audit, finding data-integrity-02)
+
+The 2026-08-31 audit found 4 of 12 `first_relevant_slug` labels were
+unreachable by ANY retriever on the reference corpus. Root causes and
+resolutions — labels were corrected by ADJUDICATION (reading content and
+gbrain's documented ranking policy), never by copying retrieval output:
+
+1. **3 labels: corpus generation bug, labels kept.** The reference corpus
+   (synthesized by `scripts/generate-v0.41-launch.ts`) embedded keywords
+   from only the FIRST query listing each slug, so slugs labeled relevant
+   to a second query had no matching content at all. The generator is now
+   label-faithful (content carries every listing query's keywords, and each
+   query's expected top-1 carries decisive emphasis). The generator now
+   FAILS if any top-1 label is not at rank 1 on the reference corpus.
+2. **q11-research-paper: label corrected.** Expected top-1 changed from
+   `concepts/rag-example` to `writing/retrieval-overview-example`. Why:
+   gbrain's keyword relevance saturates near 1.0 for any matching page, so
+   the final ranking between two relevant pages is decided by the
+   documented source-boost policy (`writing/` 1.4 > `concepts/` 1.3 —
+   curated long-form outranks concept stubs by design; see gbrain
+   `src/core/search/source-boost.ts`). Under that intended policy no
+   concepts/ page can outrank a relevant writing/ page, making the old
+   label untestable. Both slugs remain in `relevant_slugs`.
+
 ## Running the gate manually
 
 ```bash
