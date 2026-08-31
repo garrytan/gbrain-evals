@@ -39,6 +39,17 @@ jobs:
             exit 1
           fi
 
+      # scripts/ has its own target (different runtime assumptions than
+      # eval/ + test/; keeping it out of the main include avoids dumping an
+      # unrelated backlog into that gate — outside-voice round 2).
+      - name: Typecheck (scripts)
+        run: |
+          bunx tsc --noEmit -p tsconfig.scripts.json 2>&1 | tee /tmp/tsc-scripts.log || true
+          if grep -v node_modules /tmp/tsc-scripts.log | grep -q 'error TS'; then
+            grep -v node_modules /tmp/tsc-scripts.log | grep 'error TS'
+            exit 1
+          fi
+
       - name: Unit + integration tests
         run: bun test test/eval/
 
