@@ -4,6 +4,44 @@ All notable changes to gbrain-evals are recorded here. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versions are semver and kept
 in sync with `VERSION` + `package.json`.
 
+## [0.4.0] - 2026-08-31
+
+### Changed — Cat 35 republish after the gbrain write-path fix wave; Cat 34 refresh
+
+Cat 35 did what a benchmark is for: gbrain shipped a fix wave
+([gbrain#4742](https://github.com/garrytan/gbrain/pull/4742), v0.47.8.0)
+aimed at the exact deficiencies the published report named, and this release
+republishes the scorecard with two bracketing runs (pre-wave master /
+post-wave) on the frozen corpus, same judge model and prompt version.
+
+- **New headline** ([updated report](docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md)):
+  dream salient-unit recall **88.1%** (95% CI 82.0–93.5; published 61.5%,
+  honest pre-wave re-baseline 70.2%), **all 20** expected sessions emit pages
+  (was 16 — the four misses now pass a verified-segment rescue from BELOW the
+  triage gate, with zero false fires on the routine controls), quote fidelity
+  **82.7%** (was 45.4%), claim hallucination **7.0%** (was 14.1%), facts lane
+  **64.8%** with the idea-kind gap narrowed 38.3→50.0% after gbrain's
+  extractor gained an `idea` fact kind.
+- Both bracketing receipts are committed next to the baseline receipt; the
+  original v0.46.3.0 publication stays intact in the report as the
+  historical record, with an update block on top and honesty notes
+  (n=1 judge variance, the quote-count denominator change, one distractor
+  flip).
+- **Cat 34 refresh** ([report](docs/benchmarks/2026-06-12-brainbench-memory.md)):
+  an update banner records the current committed CI baseline — know-to-ask
+  failure 0.000 on all three seams (was 0.150; fixed upstream in
+  v0.46.15.0), false fire 0.000 everywhere, push recall 0.906 / 1.000 /
+  0.552 at precision 1.000.
+- README "Where gbrain lands today" rows updated for both, including a new
+  memory-conformance row.
+- gbrain pin advanced to `2a56b512` (v0.47.8.0), the SHA the post-wave
+  receipt was verified against.
+- The pin move also closed a harness TODO: the PGLite disconnect sync-spin
+  under `bun test` no longer reproduces at v0.47.8.0, so the six skipped
+  engine teardowns in `test/eval/agent-adapter.test.ts` are restored
+  (verified under a kill-switch watchdog; the bounded-disconnect race for
+  real runs stays).
+
 ## [0.3.0] - 2026-08-27
 
 ### Added — Cat 35: transcript → brain-page distillation fidelity

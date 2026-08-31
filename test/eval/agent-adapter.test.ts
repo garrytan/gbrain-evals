@@ -98,10 +98,7 @@ describe('ClaudeSonnetWithToolsAdapter — Adapter interface', () => {
     expect(state.engine).toBeDefined();
     const page = await state.engine.getPage('people/amara');
     expect(page?.title).toBe('Amara Okafor');
-    // teardown skipped: at the pinned gbrain (v0.46.3) PGLiteEngine.disconnect()
-    // after ops-layer use enters a sync WASM spin that freezes the bun test
-    // runner (even un-awaited). Per-test engines die with the process. See
-    // TODOS.md (gbrain upstream) — restore teardown when the pin moves past it.
+    await adapter.teardown(state); // restored at the v0.47.8.0 pin: the v0.46.3 disconnect() sync-spin under `bun test` no longer reproduces
   });
 
   test('query() throws — agent adapter does not participate in retrieval scorecard', async () => {
@@ -118,10 +115,7 @@ describe('ClaudeSonnetWithToolsAdapter — Adapter interface', () => {
     }
     expect(err).toBeInstanceOf(Error);
     expect((err as Error).message).toContain('intentionally unsupported');
-    // teardown skipped: at the pinned gbrain (v0.46.3) PGLiteEngine.disconnect()
-    // after ops-layer use enters a sync WASM spin that freezes the bun test
-    // runner (even un-awaited). Per-test engines die with the process. See
-    // TODOS.md (gbrain upstream) — restore teardown when the pin moves past it.
+    await adapter.teardown(state); // restored at the v0.47.8.0 pin: the v0.46.3 disconnect() sync-spin under `bun test` no longer reproduces
   });
 });
 
@@ -170,10 +164,7 @@ describe('runAgentLoop — happy path', () => {
     expect(result.total_output_tokens).toBe(70);
     expect(result.total_cost_usd).toBeGreaterThan(0);
 
-    // teardown skipped: at the pinned gbrain (v0.46.3) PGLiteEngine.disconnect()
-    // after ops-layer use enters a sync WASM spin that freezes the bun test
-    // runner (even un-awaited). Per-test engines die with the process. See
-    // TODOS.md (gbrain upstream) — restore teardown when the pin moves past it.
+    await adapter.teardown(state); // restored at the v0.47.8.0 pin: the v0.46.3 disconnect() sync-spin under `bun test` no longer reproduces
   });
 
   test('immediate end_turn (no tool calls) → no_brain_calls ordering', async () => {
@@ -192,10 +183,7 @@ describe('runAgentLoop — happy path', () => {
     expect(result.stop_reason).toBe('end_turn');
     expect(result.brain_first_ordering).toBe('no_brain_calls');
     expect(result.evidence_refs).toEqual([]);
-    // teardown skipped: at the pinned gbrain (v0.46.3) PGLiteEngine.disconnect()
-    // after ops-layer use enters a sync WASM spin that freezes the bun test
-    // runner (even un-awaited). Per-test engines die with the process. See
-    // TODOS.md (gbrain upstream) — restore teardown when the pin moves past it.
+    await adapter.teardown(state); // restored at the v0.47.8.0 pin: the v0.46.3 disconnect() sync-spin under `bun test` no longer reproduces
   });
 });
 
@@ -224,10 +212,7 @@ describe('runAgentLoop — turn cap + error paths', () => {
     expect(lastTurn.kind).toBe('final_answer');
     expect(lastTurn.final_answer?.text).toBe('');
 
-    // teardown skipped: at the pinned gbrain (v0.46.3) PGLiteEngine.disconnect()
-    // after ops-layer use enters a sync WASM spin that freezes the bun test
-    // runner (even un-awaited). Per-test engines die with the process. See
-    // TODOS.md (gbrain upstream) — restore teardown when the pin moves past it.
+    await adapter.teardown(state); // restored at the v0.47.8.0 pin: the v0.46.3 disconnect() sync-spin under `bun test` no longer reproduces
   });
 
   test('agent attempts a mutating op → tool_result records is_error', async () => {
@@ -252,10 +237,7 @@ describe('runAgentLoop — turn cap + error paths', () => {
     // Loop continues; final answer eventually happens
     expect(result.stop_reason).toBe('end_turn');
 
-    // teardown skipped: at the pinned gbrain (v0.46.3) PGLiteEngine.disconnect()
-    // after ops-layer use enters a sync WASM spin that freezes the bun test
-    // runner (even un-awaited). Per-test engines die with the process. See
-    // TODOS.md (gbrain upstream) — restore teardown when the pin moves past it.
+    await adapter.teardown(state); // restored at the v0.47.8.0 pin: the v0.46.3 disconnect() sync-spin under `bun test` no longer reproduces
   });
 });
 
@@ -292,11 +274,11 @@ describe('extractSlugs', () => {
 
 // ─── teardown — bounded disconnect ────────────────────────────────────
 //
-// The real-PGLite teardown path can't run here (see the "teardown skipped"
-// notes above), so these tests pin the bounded-race semantics with a
-// CONSTRUCTED stub engine object (the tool-bridge.test.ts fake-engine
-// convention — never a monkeypatched real engine). This is the behavior the
-// 2026-08 diff changed: a wedged disconnect() must not hang eval teardown.
+// These tests pin the bounded-race semantics with a CONSTRUCTED stub engine
+// object (the tool-bridge.test.ts fake-engine convention — never a
+// monkeypatched real engine): a wedged disconnect() must not hang eval
+// teardown. The real-PGLite teardown path runs in the tests above (restored
+// at the v0.47.8.0 pin; it hung the runner at the original v0.46.3 pin).
 
 describe('ClaudeSonnetWithToolsAdapter — teardown bounded disconnect', () => {
   const adapter = new ClaudeSonnetWithToolsAdapter();
