@@ -74,8 +74,11 @@ We left the honest 0.076 default in the README on purpose. A system you build on
 should optimize for the real distribution of questions, not for topping a narrow
 test, and it should tell you plainly when a number comes from a corner case.
 Anti-gaming is built into the harness itself: sealed answer keys at the boundary,
-tolerance bands from repeated runs, pinned judge versions, and randomized
-question order.
+tolerance bands from repeated runs, pinned judge versions, and seeded
+randomization where order could bias a result (page-ingestion order is shuffled
+per run in the BrainBench scorer; LongMemEval samples are drawn by a seeded
+per-type shuffle via `--seed`, not first-N). Questions themselves run in fixed
+dataset order, so results are reproducible line for line.
 
 ## What we test, end to end
 
@@ -116,8 +119,8 @@ curl -Lo ~/datasets/longmemeval/longmemeval_s.json \
 export OPENAI_API_KEY="sk-..."         # embeddings
 export ANTHROPIC_API_KEY="sk-ant-..."  # only for the query-expansion variant
 
-bash eval/runner/longmemeval-batch.sh         # all variants, parallel, resumable
-bun eval/runner/longmemeval.ts --stratify 10  # fast 10-per-type sample
+bash eval/runner/longmemeval-batch.sh                   # all variants, parallel, resumable (K=5)
+bun eval/runner/longmemeval.ts --top-k 5 --stratify 10  # fast 10-per-type sample at the published K
 ```
 
 First run costs about $2 in embeddings; later runs hit a local cache and cost

@@ -2,48 +2,27 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://brainbench.dev/schemas/public-probe.schema.json",
   "title": "BrainBench Public Probe (PublicQuery)",
-  "description": "The Query shape handed to adapters and agent loops. Scrubbed of gold: no `relevant`, `grades`, `expected_answer`, `expected_citations`, or any other gold field. Scorer retains the full Query shape; adapters see only PublicQuery.",
+  "description": "The Query shape handed to adapters and agent loops — the shrunk sealed surface produced by sanitizeQuery() (eval/runner/types.ts PublicQuery). Scrubbed of every gold and classification field: no `gold`, `tier`, `tags`, `expected_output_type`, `acceptable_variants`, `known_failure_modes`, `author`. Scorers retain the full Query shape; adapters see only {id, text, as_of_date?}.",
   "type": "object",
-  "required": ["id", "tier", "text", "expected_output_type"],
+  "required": ["id", "text"],
   "additionalProperties": false,
   "properties": {
     "id": {
       "type": "string",
-      "pattern": "^q-[0-9]{4}$",
-      "description": "Stable probe id."
-    },
-    "tier": {
-      "type": "string",
-      "enum": ["easy", "medium", "hard", "adversarial", "fuzzy", "externally-authored"]
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$",
+      "description": "Stable probe id. Real families include q-0001 (world-v1), c13-00001 (cat13), sig-0001 (cat8)."
     },
     "text": {
       "type": "string",
       "minLength": 1,
       "description": "Natural-language probe text."
     },
-    "expected_output_type": {
-      "type": "string",
-      "enum": [
-        "answer-string",
-        "canonical-entity-id",
-        "cited-source-pages",
-        "time-qualified-answer",
-        "abstention",
-        "contradiction-explanation",
-        "poison-flag",
-        "confidence-score"
-      ]
-    },
     "as_of_date": {
-      "oneOf": [
-        {"type": "string", "format": "date"},
+      "anyOf": [
+        {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
         {"type": "string", "enum": ["corpus-end", "per-source"]}
       ],
-      "description": "Required for temporal queries."
-    },
-    "tags": {
-      "type": "array",
-      "items": {"type": "string"}
+      "description": "Present for temporal queries: an ISO YYYY-MM-DD date or one of the sentinels. anyOf with a pattern (not format:date + oneOf): under draft 2020-12 `format` is annotation-only by default, so the sentinels matched BOTH former oneOf branches and failed exactly-one validation (audit data-integrity-07)."
     }
   }
 }

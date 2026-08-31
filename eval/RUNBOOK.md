@@ -21,11 +21,20 @@ bun run eval:run
 Only needed if you regenerate the corpus (`eval/generators/gen.ts`). If
 you're using the committed `eval/data/world-v1/` shards, you don't need it.
 
-### `bun install` fails with "Cannot find package 'openai'"
+### "Cannot find package 'gbrain'" (or a `gbrain/*` subpath import fails)
 
-The `openai` package is in `package.json` dependencies. Run `bun install`
-to fetch it. This shouldn't happen post-clone if you followed the normal
-setup; see CLAUDE.md troubleshooting.
+The repo depends on `gbrain` via a pinned GitHub URL in `package.json`
+(this repo has no `openai` dependency — embeddings go through gbrain's
+bundled AI SDK). Fixes, in order:
+
+```sh
+bun install                       # fetch gbrain at the pinned SHA
+ls -la node_modules/gbrain        # symlink = locally linked, dir = pinned fetch
+bun link gbrain                   # only if you WANT a local checkout linked
+```
+
+If `node_modules/gbrain` is a stale symlink from an old `bun link`, remove
+it and re-run `bun install` to get back to the pinned version.
 
 ## Runner failures
 
@@ -142,11 +151,11 @@ new ledger. Don't overwrite `world-v1/` — that's the reproducibility baseline.
 
 ## CI failures
 
-### `bun run test:eval` fails on a fresh checkout
+### `bun run test` fails on a fresh checkout
 
 ```sh
-bun install                   # fetch openai (+ deps)
-bun run test:eval             # retry
+bun install                   # fetch deps (gbrain + @anthropic-ai/sdk + ai)
+bun run test                  # retry — runs `bun test test/eval/`
 ```
 
 If tests still fail, bisect:

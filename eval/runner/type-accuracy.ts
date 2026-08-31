@@ -196,20 +196,34 @@ function score(gold: GoldEdge[], inferred: GoldEdge[]): {
   overallTypeAccuracy: number;
   overallStrictF1: number;
 } {
-  // Index gold by (from, to) pair — regardless of type.
+  // Index gold by (from, to) pair. A duplicate pair with a DIFFERENT type is
+  // a gold-authoring error — fail loudly instead of silently overwriting
+  // (misc-runners-14; currently 0 multi-type pairs in world-v1, latent).
   const goldByPair = new Map<string, string>();  // key: from\u0000to → type
   for (const g of gold) {
-    goldByPair.set(`${g.from}\u0000${g.to}`, g.type);
+    const key = `${g.from}\u0000${g.to}`;
+    const existing = goldByPair.get(key);
+    if (existing !== undefined && existing !== g.type) {
+      throw new Error(`gold carries two types for pair ${g.from} → ${g.to}: ${existing} and ${g.type}`);
+    }
+    goldByPair.set(key, g.type);
   }
 
-  // Index inferred by (from, to, type).
-  const inferredByPair = new Map<string, string>();
+  // Index inferred by (from, to) keeping ALL types per pair: gbrain's
+  // within-page dedup key is (fromSlug, targetSlug, linkType), so one pair
+  // can legitimately carry works_at (markdown pass) AND mentions (bare-slug
+  // pass). First-type-wins scored the extractor on pass ordering, not
+  // capability (misc-runners-14): a correctly-typed candidate was marked
+  // mistyped when a generic 'mentions' happened to be emitted first.
+  const inferredByPair = new Map<string, Set<string>>();
   for (const i of inferred) {
     const key = `${i.from}\u0000${i.to}`;
-    // Keep the first inferred type for each pair; extractPageLinks already dedupes by (targetSlug, linkType).
-    if (!inferredByPair.has(key)) {
-      inferredByPair.set(key, i.type);
+    let set = inferredByPair.get(key);
+    if (!set) {
+      set = new Set();
+      inferredByPair.set(key, set);
     }
+    set.add(i.type);
   }
 
   const linkTypes = new Set<string>();
@@ -221,14 +235,21 @@ function score(gold: GoldEdge[], inferred: GoldEdge[]): {
   for (const t of linkTypes) confusion[t] = {};
 
   for (const [pair, goldType] of goldByPair) {
-    const inferredType = inferredByPair.get(pair) ?? '(missing)';
+    const types = inferredByPair.get(pair);
+    // Correct if ANY inferred type for the pair matches gold; otherwise the
+    // representative wrong type is recorded (sorted, deterministic).
+    const inferredType = types === undefined
+      ? '(missing)'
+      : types.has(goldType) ? goldType : [...types].sort()[0];
     confusion[goldType][inferredType] = (confusion[goldType][inferredType] ?? 0) + 1;
   }
   // Spurious edges (inferred without gold) tracked under '(no-gold)' rows.
   confusion['(no-gold)'] = {};
-  for (const [pair, inferredType] of inferredByPair) {
+  for (const [pair, types] of inferredByPair) {
     if (!goldByPair.has(pair)) {
-      confusion['(no-gold)'][inferredType] = (confusion['(no-gold)'][inferredType] ?? 0) + 1;
+      for (const inferredType of types) {
+        confusion['(no-gold)'][inferredType] = (confusion['(no-gold)'][inferredType] ?? 0) + 1;
+      }
     }
   }
 

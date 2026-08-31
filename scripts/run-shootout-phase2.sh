@@ -26,7 +26,9 @@ for key in OPENAI_API_KEY ANTHROPIC_API_KEY VOYAGE_API_KEY ZEROENTROPY_API_KEY; 
   fi
 done
 
-RESULTS_DIR="$REPO_ROOT/results/shootout"
+# Overridable so hermetic tests never truncate the committed
+# results/shootout/phase2-run-log.txt or delete the committed A0 receipts.
+RESULTS_DIR="${SHOOTOUT_RESULTS_DIR:-$REPO_ROOT/results/shootout}"
 mkdir -p "$RESULTS_DIR"
 LOG="$RESULTS_DIR/phase2-run-log.txt"
 : > "$LOG"
@@ -80,6 +82,25 @@ run_cell() {
   echo
   echo "===== cell $cell  embedder=$embedder dim=$dim ${reranker:+reranker=$reranker}  ====="
   echo "===== cell $cell" >>"$LOG"
+
+  # Fully-resumed cell: nothing left to run, skip the smoke spend too.
+  if [ -f "$out_rel" ] && [ -f "$out_cat" ]; then
+    echo "  -> $cell already done: $out_rel + $out_cat (skipping)"
+    return 0
+  fi
+
+  # Smoke gate — same per-cell pre-flight phase1 runs (audit orchestrators-19:
+  # phase2 skipped it, so a dim typo in CELLS was only caught AFTER the driver
+  # had embedded the full 240-page corpus). smoke.ts aborts the cell before
+  # any corpus-scale embed spend: wiring + dim assert, long-haystack, and (for
+  # reranker cells) a real rerank payload check.
+  echo "  smoke gate..."
+  if ! bun run "$REPO_ROOT/eval/runner/smoke.ts" \
+       --embedder "$embedder" --dim "$dim" ${reranker:+--reranker "$reranker"} \
+       >>"$LOG" 2>&1; then
+    echo "  -> $cell smoke FAILED (see $LOG); aborting cell" >&2
+    return 2
+  fi
 
   # Every step has explicit error handling: set -e is suspended inside
   # functions called under `if`/`||`, so without these guards a failed

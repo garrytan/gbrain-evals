@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://brainbench.dev/schemas/scorecard.schema.json",
   "title": "BrainBench Scorecard",
-  "description": "The canonical output of a BrainBench run. One scorecard per (adapter × category × run_tier). Public baselines aggregate across N runs and publish tolerance bands.",
+  "description": "The canonical output of a BrainBench run. One scorecard per (adapter × category × run_tier). Public baselines aggregate across N runs and publish tolerance bands. Emitted as scorecard.json by eval/runner/recorder.ts emitBundle(), which validates against this schema at write time; the TypeScript Scorecard interface in recorder.ts is the same contract.",
   "type": "object",
   "required": ["schema_version", "config_card", "cat", "metrics", "N"],
   "additionalProperties": false,
@@ -10,7 +10,7 @@
     "schema_version": {"type": "integer", "const": 1},
     "config_card": {
       "type": "object",
-      "required": ["brainbench_version", "adapter", "driver_model", "judge_model", "corpus_sha", "seed", "bun_version"],
+      "required": ["brainbench_version", "adapter", "corpus_sha", "seed"],
       "additionalProperties": false,
       "properties": {
         "brainbench_version": {"type": "string"},
@@ -52,8 +52,8 @@
     },
     "cat": {
       "type": "integer",
-      "enum": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-      "description": "BrainBench category number."
+      "enum": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34],
+      "description": "BrainBench category number. Runs through 34 (cat34-brainbench-memory); the former 1-12 enum predated the cat13+ runners (audit data-integrity-11)."
     },
     "N": {
       "type": "integer",

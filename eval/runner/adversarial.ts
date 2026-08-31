@@ -128,19 +128,34 @@ const ADVERSARIAL_CASES: AdversarialCase[] = [
   } },
 ];
 
-async function tryOp<T>(name: string, fn: () => Promise<T>): Promise<{ ok: true; result: T } | { ok: false; error: string }> {
+/**
+ * Race an op against a timeout. Audit misc-runners-10: the old version
+ * rejected with a plain object (`String({...})` → '[object Object]', losing
+ * the TIMEOUT_30s diagnosis) and never cleared the timer, so every one of the
+ * ~130 ops left a live 30s timer keeping the event loop alive after a fully
+ * passing run. Now: reject with a real Error, always clearTimeout in finally.
+ * `timeoutMs` is parameterized for tests only; runner call sites use the
+ * 30s default. Exported for test/eval/adversarial-tryop.test.ts.
+ */
+export async function tryOp<T>(
+  name: string,
+  fn: () => Promise<T>,
+  timeoutMs = 30_000,
+): Promise<{ ok: true; result: T } | { ok: false; error: string }> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
-    const r = await Promise.race([
-      fn().then(x => ({ ok: true as const, value: x })),
-      new Promise<{ ok: false; error: string }>((_, reject) =>
-        setTimeout(() => reject({ ok: false, error: 'TIMEOUT_30s' }), 30_000),
-      ),
+    const result = await Promise.race([
+      fn(),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error(`TIMEOUT_${Math.round(timeoutMs / 1000)}s`)), timeoutMs);
+      }),
     ]);
-    if ('value' in r && r.ok) return { ok: true, result: r.value };
-    return { ok: false, error: 'unknown' };
+    return { ok: true, result };
   } catch (e) {
     const err = e instanceof Error ? e.message : String(e);
     return { ok: false, error: `${name}: ${err.slice(0, 200)}` };
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
   }
 }
 
@@ -279,7 +294,10 @@ async function main() {
   }
 }
 
-main().catch(e => {
-  console.error('Adversarial eval error:', e);
-  process.exit(1);
-});
+// Guarded so importing `tryOp` in tests does not launch the whole runner.
+if (import.meta.main) {
+  main().catch(e => {
+    console.error('Adversarial eval error:', e);
+    process.exit(1);
+  });
+}

@@ -206,7 +206,7 @@ Charts are inline SVG. GitHub renders them natively, no image host required. Gen
 - OpenAI embeddings: ~$2 (one-time per dataset)
 - Anthropic Haiku (expansion adapter only): ~$1 for 500 questions × 1 Haiku call each at ~$0.002/call
 
-Subsequent runs against the same dataset: **~$0** because the embeddings are cached. The cache file lives at `eval/data/longmemeval/embed-cache/` and ships committed in this repo (~150MB SQLite). On clone you get a warm cache; runs are sub-1-min for keyword + ~2 min for vector + ~5 min for hybrid+expansion (the Haiku call is the only thing left to pay for).
+Subsequent runs against the same dataset on the same machine: **~$0** because the embeddings are cached. **The cache is NOT committed** (this report previously claimed a ~150MB committed fixture — that was wrong): it lives at the gitignored `eval/reports/longmemeval/embed-cache/embed-cache-<model>@<dims>.sqlite`, and the full `_s` cache is ~700MB, too big for plain git. A fresh clone pays the ~$2 cold-embed cost once; after that, runs are sub-1-min for keyword + ~2 min for vector + ~5 min for hybrid+expansion (the Haiku call is the only thing left to pay for). To share a warm cache across machines, copy the SQLite file via `scp`/`s3` — see `eval/data/longmemeval/embed-cache/README.md`.
 
 ## 9. Limits & caveats
 
@@ -257,7 +257,7 @@ bash eval/runner/longmemeval-batch.sh --adapters hybrid
 bun eval/runner/longmemeval.ts --top-k 5
 ```
 
-The cache ships warm at `eval/data/longmemeval/embed-cache/embed-cache-text-embedding-3-large@1536.sqlite`. First-time embedding costs are paid once; subsequent runs hit cache and complete in minutes for ~$0.
+No warm cache ships with the repo (an earlier revision of this section claimed one — see the corrected §8). The first run embeds the dataset (~$2, one-time) and fills the local content-addressed cache at the gitignored `eval/reports/longmemeval/embed-cache/`; subsequent runs hit that cache and complete in minutes for ~$0.
 
 ## 11. Methodology
 
@@ -293,7 +293,7 @@ In this repo:
 - Aggregated JSON + markdown: `eval/reports/longmemeval/longmemeval-s-full-k5-2026-05-07.{json,md}` (gitignored)
 - Committed SVG charts: `docs/benchmarks/2026-05-07-longmemeval-s/`
 - Comparison-systems source-of-truth list: [`docs/comparison-systems.md`](../comparison-systems.md)
-- Embedding cache fixture: `eval/data/longmemeval/embed-cache/embed-cache-text-embedding-3-large@1536.sqlite` (committed, ~150MB)
+- Embedding cache: `eval/reports/longmemeval/embed-cache/embed-cache-text-embedding-3-large@1536.sqlite` (LOCAL only — gitignored, ~700MB for the full `_s` split; built by the first run, ~$2; docs at `eval/data/longmemeval/embed-cache/README.md`)
 
 In gbrain:
 - The retrieval pipeline this benchmark exercises lives at:

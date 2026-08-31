@@ -62,10 +62,26 @@ export const TIER5_FUZZY_QUERIES: Query[] = [
     tier: 'fuzzy',
     text: 'Summarize what we know about founders who raised Series A in 2024.',
     expected_output_type: 'answer-string',
-    gold: { relevant: [] },
+    // Gold verified against world-v1 shards (audit adapters-queries-05: this
+    // item used to ship with relevant: [] and no expected_answer, so it
+    // structurally could not score). Each slug below is a person page with
+    // role=founder in _facts AND an explicit 2024 Series A close on its own
+    // timeline:
+    //   people/adam-lee-19       2024-06-19 "Series A closes at $45M valuation"
+    //   people/carol-wilson-28   2024-02-14 "Series A closes at $18M"
+    //   people/nina-rodriguez-18 2024-02-14 "[Apex] announces Series A"
+    gold: {
+      relevant: ['people/adam-lee-19', 'people/carol-wilson-28', 'people/nina-rodriguez-18'],
+      expected_answer:
+        'Founders with 2024 Series A rounds include Adam Lee (Forge, closed 2024-06-19 at a '
+        + '$45M valuation), Carol Wilson (Anchor, closed 2024-02-14 at $18M on founder-friendly '
+        + 'terms), and Nina Rodriguez (Apex, announced 2024-02-14, valuation rumored around $45M).',
+    },
     acceptable_variants: ['Series A 2024 founders summary'],
-    tags: ['summarization', 'multi-entity'],
-    known_failure_modes: ['accept any top-K that includes actual Series-A-2024 founders'],
+    tags: ['summarization', 'multi-entity', 'partial-gold'],
+    known_failure_modes: [
+      'partial gold: other founders in the corpus also raised Series A in 2024; recall is measured against the three verified founder pages, precision is pessimistic (same pattern as q55-0040)',
+    ],
   },
   {
     id: 'q5-0005',
@@ -303,6 +319,10 @@ export const TIER5_FUZZY_QUERIES: Query[] = [
 ];
 
 export function getTier5FuzzyQueries(): Query[] {
-  // Defensive copy so callers can't mutate the canonical set.
-  return TIER5_FUZZY_QUERIES.map(q => ({ ...q, gold: { ...q.gold }, tags: q.tags ? [...q.tags] : undefined }));
+  // DEEP defensive copy so callers can't mutate the canonical set. The old
+  // shallow spread ({ ...q, gold: { ...q.gold } }) left gold.relevant,
+  // acceptable_variants and known_failure_modes shared by reference, so a
+  // caller's push/splice leaked into every later caller in the same process
+  // (audit adapters-queries-06).
+  return TIER5_FUZZY_QUERIES.map(q => structuredClone(q));
 }

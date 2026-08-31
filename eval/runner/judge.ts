@@ -24,6 +24,7 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import { getDefaultLlmBudget, type LlmBudget } from './llm-budget.ts';
 
 // ─── Public types ────────────────────────────────────────────────────
 
@@ -113,6 +114,14 @@ export interface JudgeConfig {
   systemPromptVersion?: string;
   /** Custom system prompt override. If unset, uses DEFAULT_JUDGE_SYSTEM_PROMPT. */
   systemPrompt?: string;
+  /**
+   * Concurrency budget wrapping every judge LLM call. Default: the
+   * process-global budget (BRAINBENCH_LLM_CONCURRENCY, default 4 — see
+   * llm-budget.ts). Injectable for tests. This is the real wiring behind
+   * BRAINBENCH_LLM_CONCURRENCY (audit tests-audit-06: the budget module was
+   * fully tested but imported by nothing).
+   */
+  budget?: LlmBudget;
 }
 
 // ─── Defaults ────────────────────────────────────────────────────────
@@ -403,6 +412,10 @@ export async function scoreAnswer(
   const model = config.model ?? DEFAULT_MODEL;
   const maxTokens = config.maxTokens ?? DEFAULT_MAX_TOKENS;
   const systemPrompt = config.systemPrompt ?? DEFAULT_JUDGE_SYSTEM_PROMPT;
+  // Every judge LLM call takes a slot from the shared budget so concurrent
+  // scoreAnswer callers never exceed BRAINBENCH_LLM_CONCURRENCY in-flight
+  // Anthropic requests (tests-audit-06 wiring).
+  const budget = config.budget ?? getDefaultLlmBudget();
 
   const userContent = renderEvidenceForJudge(evidence);
 
@@ -411,7 +424,9 @@ export async function scoreAnswer(
   let costTotal = 0;
 
   // Attempt 1
-  const attempt1 = await callJudgeOnce(client, model, maxTokens, systemPrompt, userContent, evidence.rubric);
+  const attempt1 = await budget.withLlmSlot(
+    () => callJudgeOnce(client, model, maxTokens, systemPrompt, userContent, evidence.rubric),
+  );
   inputTokensTotal += attempt1.response.usage.input_tokens;
   outputTokensTotal += attempt1.response.usage.output_tokens;
   costTotal += attempt1.cost_usd;
@@ -419,9 +434,11 @@ export async function scoreAnswer(
 
   // Attempt 2 on malformed — carries corrective feedback naming the defect
   if (parsed === null) {
-    const attempt2 = await callJudgeOnce(
-      client, model, maxTokens, systemPrompt, userContent, evidence.rubric,
-      attempt1.parsed.defect ?? 'invalid structured output',
+    const attempt2 = await budget.withLlmSlot(
+      () => callJudgeOnce(
+        client, model, maxTokens, systemPrompt, userContent, evidence.rubric,
+        attempt1.parsed.defect ?? 'invalid structured output',
+      ),
     );
     inputTokensTotal += attempt2.response.usage.input_tokens;
     outputTokensTotal += attempt2.response.usage.output_tokens;

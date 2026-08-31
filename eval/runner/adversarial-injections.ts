@@ -214,18 +214,41 @@ export function injectSubstringCollision(input: InjectionInput): InjectionResult
 
 export function injectAmbiguousRole(input: InjectionInput): InjectionResult {
   const rng = createRng(input.seed);
-  const realTarget = pick(rng, input.forcedRefs ?? input.refs);
+  const pool = input.forcedRefs ?? input.refs;
   // Replace "works at" → "works with" if present, and ALWAYS append a
   // "works with [realTarget]" sentence so the gold entity actually exists
   // in the content (audit misc-runners-03 / tests-audit-05: the old
   // replace-only branch demanded extraction of a random corpus entity that
   // was never inserted, charging a guaranteed miss to the extractor).
   // "works with" should downgrade to `mentions`, not `works_at`.
+  //
+  // Type enforcement is only fair when the harness controls the typing
+  // context, because gbrain types links from (a) a ±120-char window around
+  // the FIRST occurrence of the display name and (b) a page-role prior that
+  // legitimately upgrades person→`companies/` links to works_at/invested_in
+  // (link-extraction.ts inferLinkType). So prefer a `people/` target whose
+  // name and slug do not already appear in the base content, and pad the
+  // injected sentence so the per-edge window sees only injection-owned text.
+  // When no such target exists (tiny forcedRefs pools), still assert slug
+  // presence but drop enforce_type rather than charge gbrain's documented
+  // prior behavior as a mistype.
+  const isolated = pool.filter(
+    r => r.slug.startsWith('people/')
+      && !input.content.includes(r.slug)
+      && !input.content.includes(r.name),
+  );
+  const typeEnforceable = isolated.length > 0;
+  const realTarget = pick(rng, typeEnforceable ? isolated : pool);
   const hasWorksAt = /works at/i.test(input.content);
   const base = hasWorksAt
     ? input.content.replace(/works at/gi, 'works with')
     : input.content;
-  const content = `${base}\n\nShe regularly works with [${realTarget.name}](${realTarget.slug}) on quarterly reviews.`;
+  // Neutral 130+ char lead-in: fills the type-inference window with text that
+  // matches none of gbrain's verb regexes (works_at/founded/invested/advises).
+  const buffer =
+    'The paragraph below records routine collaboration notes taken verbatim '
+    + 'from the weekly sync log; it makes no claim about titles or employers.';
+  const content = `${base}\n\n${buffer} She regularly works with [${realTarget.name}](${realTarget.slug}) on quarterly reviews.`;
 
   return {
     content,
@@ -235,8 +258,10 @@ export function injectAmbiguousRole(input: InjectionInput): InjectionResult {
         {
           slug: realTarget.slug,
           type: 'mentions',
-          enforce_type: true,
-          reason: 'ambiguous_role: "works with" is loose enough that type must downgrade from works_at to mentions',
+          ...(typeEnforceable ? { enforce_type: true } : {}),
+          reason: typeEnforceable
+            ? 'ambiguous_role: "works with" is loose enough that type must downgrade from works_at to mentions'
+            : 'ambiguous_role: pool too small to isolate typing context; asserting slug presence only',
         },
       ],
       note: `Injected "works with" phrasing for ${realTarget.slug} (must not upgrade to works_at).`,

@@ -2,9 +2,14 @@
  * Flight-recorder — per-run bundle emitter.
  *
  * Every eval run produces a bundle at `eval/reports/YYYY-MM-DD-<cat>-<adapter>-<run>/`
- * with up to 6 artifacts:
+ * with up to 7 artifacts:
  *
- *   transcript.md       — full tool-call + model-call + timing trace
+ *   transcript.md       — full tool-call + model-call + timing trace (human-readable)
+ *   transcript.json     — the same transcripts as machine-readable JSON, one
+ *                         array element per probe, each conforming to
+ *                         eval/schemas/transcript.schema.json (audit
+ *                         data-integrity-10: the schema claimed recorder.ts
+ *                         wrote it, but no JSON transcript existed)
  *   brain-export.json   — final brain state (pages, links, timeline, tags) [optional per adapter]
  *   entity-graph.json   — nodes + edges for backlink F1 scoring [optional per adapter]
  *   citations.json      — claims → source refs (or flagged unsupported) [agent Cats only]
@@ -13,16 +18,27 @@
  *
  * Adapters opt into brain-export / entity-graph / citations by implementing
  * `Adapter.exportState?()`. Adapters that return `null` from that hook get
- * a minimal 3-artifact bundle (transcript + scorecard + judge-notes). This
- * keeps the recorder generic across gbrain and external adapters — no
- * special-casing.
+ * a minimal bundle (transcripts + scorecard + judge-notes). This keeps the
+ * recorder generic across gbrain and external adapters — no special-casing.
+ *
+ * Schema conformance is enforced AT WRITE TIME (audit agentic-cats-18): every
+ * transcript is validated against eval/schemas/transcript.schema.json and the
+ * scorecard against eval/schemas/scorecard.schema.json before anything is
+ * written. A contract drift between the TS types here and the published
+ * schemas throws immediately instead of shipping silently-nonconformant
+ * artifacts. Validation happens before directory creation, so a rejected
+ * bundle leaves nothing on disk.
  *
  * Writes are atomic (tmp + rename) and race-safe (incremental -2, -3 suffix
- * on directory collision). Never throws on JSON.stringify — uses a replacer
- * to handle circular references.
+ * on directory collision). Never throws on JSON.stringify — safeStringify
+ * tracks the ANCESTOR path (not all visited objects), so only true cycles
+ * become "[Circular]" and shared non-cyclic references serialize in full
+ * (audit agentic-cats-14: the old WeakSet-of-everything turned the second
+ * occurrence of any shared rubric/config object into the string
+ * "[Circular]").
  */
 
-import { existsSync, mkdirSync, renameSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 
 // ─── Types ────────────────────────────────────────────────────────────
@@ -147,10 +163,18 @@ export interface EmitResult {
 
 /**
  * Emit a flight-recorder bundle to disk. Non-null adapter state produces the
- * full 6-file bundle; null produces the 3-file fallback. Atomic writes +
+ * full 7-file bundle; null produces the minimal fallback. Atomic writes +
  * collision retry.
+ *
+ * Throws when a transcript or the scorecard fails validation against the
+ * published schemas (eval/schemas/) — BEFORE any directory or file is
+ * created, so contract drift can never ship a half-conformant bundle.
  */
 export function emitBundle(bundle: RunBundle, opts: EmitOptions = {}): EmitResult {
+  // Schema conformance gate (audit agentic-cats-18). Runs first: a rejected
+  // bundle must leave zero artifacts on disk.
+  assertBundleConformsToSchemas(bundle);
+
   const reportsRoot = opts.reportsRoot ?? join(process.cwd(), 'eval/reports');
   const baseDir = pickDirectoryName(reportsRoot, bundle);
   const { finalDir, collisionRetry } = ensureUniqueDir(baseDir);
@@ -159,10 +183,15 @@ export function emitBundle(bundle: RunBundle, opts: EmitOptions = {}): EmitResul
 
   const files: string[] = [];
 
-  // transcript.md (required)
+  // transcript.md (required, human-readable)
   const transcriptMd = renderTranscriptsMarkdown(bundle.transcripts);
   atomicWrite(join(finalDir, 'transcript.md'), transcriptMd);
   files.push('transcript.md');
+
+  // transcript.json (required, machine-readable; one array element per probe,
+  // each element schema-validated above)
+  atomicWrite(join(finalDir, 'transcript.json'), safeStringify(bundle.transcripts));
+  files.push('transcript.json');
 
   // scorecard.json (required)
   atomicWrite(join(finalDir, 'scorecard.json'), safeStringify(bundle.scorecard));
@@ -224,26 +253,183 @@ function atomicWrite(finalPath: string, content: string): void {
 }
 
 /**
- * JSON.stringify with a replacer that handles circular references.
- * Never throws on circular data — replaces with "[Circular]" markers.
+ * JSON.stringify that handles circular references without throwing.
+ *
+ * Cycle detection tracks the CURRENT ANCESTOR PATH, not every object ever
+ * visited: an object is only "[Circular]" when it appears inside its own
+ * subtree. A shared non-cyclic reference (one rubric array referenced from
+ * two probes, a config object reused across metrics) serializes in full at
+ * every occurrence. The pre-fix WeakSet-of-all-visited implementation
+ * replaced every occurrence after the first with the string "[Circular]" —
+ * silent data loss in scorecard.json / brain-export.json (audit
+ * agentic-cats-14).
  */
 export function safeStringify(value: unknown, indent: number = 2): string {
-  const seen = new WeakSet<object>();
-  return JSON.stringify(
-    value,
-    function (_key, v) {
-      if (v !== null && typeof v === 'object') {
-        if (seen.has(v as object)) return '[Circular]';
-        seen.add(v as object);
+  return JSON.stringify(decycle(value, new Set<object>()), null, indent);
+}
+
+function decycle(v: unknown, ancestors: Set<object>): unknown {
+  // Typed arrays (Float32Array from embeddings, etc.) → plain arrays.
+  if (v instanceof Float32Array || v instanceof Float64Array) {
+    return Array.from(v as unknown as number[]);
+  }
+  if (v === null || typeof v !== 'object') return v;
+  if (ancestors.has(v)) return '[Circular]';
+  // Honor toJSON (Date, custom classes) exactly like JSON.stringify would.
+  const withToJson = v as { toJSON?: (key?: string) => unknown };
+  if (typeof withToJson.toJSON === 'function') {
+    return decycle(withToJson.toJSON(), ancestors);
+  }
+  ancestors.add(v);
+  let out: unknown;
+  if (Array.isArray(v)) {
+    out = v.map(item => decycle(item, ancestors));
+  } else {
+    const clone: Record<string, unknown> = {};
+    for (const [key, val] of Object.entries(v as Record<string, unknown>)) {
+      clone[key] = decycle(val, ancestors);
+    }
+    out = clone;
+  }
+  ancestors.delete(v); // ancestor-path semantics: leaving the subtree un-marks it
+  return out;
+}
+
+// ─── Write-time schema validation (audit agentic-cats-18) ─────────────
+//
+// The published schemas under eval/schemas/ are the v1→v2 contract boundary.
+// They had already drifted from the code twice (probe_id pattern, cat enum)
+// without anything failing, because nothing ever validated an instance.
+// emitBundle now refuses to write a nonconformant artifact. The validator is
+// a deliberate minimal subset of JSON Schema draft 2020-12 — exactly the
+// keywords those two schemas use — so the repo stays dependency-free (ajv is
+// not a declared dependency and adding one is out of scope for the eval
+// harness).
+
+interface MiniSchema {
+  type?: string;
+  const?: unknown;
+  enum?: unknown[];
+  pattern?: string;
+  required?: string[];
+  properties?: Record<string, MiniSchema>;
+  additionalProperties?: boolean | MiniSchema;
+  items?: MiniSchema;
+  minimum?: number;
+  minLength?: number;
+  anyOf?: MiniSchema[];
+  oneOf?: MiniSchema[];
+}
+
+/**
+ * Validate `value` against a subset of JSON Schema draft 2020-12: type,
+ * const, enum, pattern, required, properties, additionalProperties (boolean
+ * or schema), items, minimum, minLength, anyOf, oneOf. `format` is
+ * annotation-only per the draft and is ignored. Returns violation strings;
+ * empty array = conformant.
+ */
+export function validateAgainstSchema(value: unknown, schema: MiniSchema, path = '$'): string[] {
+  const v: string[] = [];
+
+  if (schema.type !== undefined && !typeMatches(value, schema.type)) {
+    v.push(`${path}: expected type ${schema.type}, got ${describeType(value)}`);
+    return v; // type mismatch makes the remaining keyword checks meaningless
+  }
+  if (schema.const !== undefined && value !== schema.const) {
+    v.push(`${path}: expected const ${JSON.stringify(schema.const)}, got ${JSON.stringify(value)}`);
+  }
+  if (schema.enum !== undefined && !schema.enum.some(e => e === value)) {
+    v.push(`${path}: value ${JSON.stringify(value)} not in enum`);
+  }
+  if (schema.pattern !== undefined && typeof value === 'string' && !new RegExp(schema.pattern).test(value)) {
+    v.push(`${path}: ${JSON.stringify(value)} does not match pattern ${schema.pattern}`);
+  }
+  if (schema.minLength !== undefined && typeof value === 'string' && value.length < schema.minLength) {
+    v.push(`${path}: string shorter than minLength ${schema.minLength}`);
+  }
+  if (schema.minimum !== undefined && typeof value === 'number' && value < schema.minimum) {
+    v.push(`${path}: ${value} below minimum ${schema.minimum}`);
+  }
+  if (schema.anyOf !== undefined) {
+    const ok = schema.anyOf.some(branch => validateAgainstSchema(value, branch, path).length === 0);
+    if (!ok) v.push(`${path}: matched no anyOf branch`);
+  }
+  if (schema.oneOf !== undefined) {
+    const matches = schema.oneOf.filter(branch => validateAgainstSchema(value, branch, path).length === 0).length;
+    if (matches !== 1) v.push(`${path}: matched ${matches} oneOf branches (need exactly 1)`);
+  }
+  if (Array.isArray(value) && schema.items !== undefined) {
+    value.forEach((item, i) => v.push(...validateAgainstSchema(item, schema.items!, `${path}[${i}]`)));
+  }
+  if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+    const obj = value as Record<string, unknown>;
+    for (const req of schema.required ?? []) {
+      if (!(req in obj)) v.push(`${path}: missing required property "${req}"`);
+    }
+    const props = schema.properties ?? {};
+    for (const [key, sub] of Object.entries(props)) {
+      if (key in obj && obj[key] !== undefined) v.push(...validateAgainstSchema(obj[key], sub, `${path}.${key}`));
+    }
+    if (schema.additionalProperties !== undefined) {
+      for (const key of Object.keys(obj)) {
+        if (key in props || obj[key] === undefined) continue;
+        if (schema.additionalProperties === false) {
+          v.push(`${path}: unexpected property "${key}" (additionalProperties: false)`);
+        } else if (schema.additionalProperties !== true) {
+          v.push(...validateAgainstSchema(obj[key], schema.additionalProperties, `${path}.${key}`));
+        }
       }
-      // Handle typed arrays (Float32Array from embeddings, etc.)
-      if (v instanceof Float32Array || v instanceof Float64Array) {
-        return Array.from(v as unknown as number[]);
-      }
-      return v;
-    },
-    indent,
-  );
+    }
+  }
+  return v;
+}
+
+function typeMatches(value: unknown, type: string): boolean {
+  switch (type) {
+    case 'object': return value !== null && typeof value === 'object' && !Array.isArray(value);
+    case 'array': return Array.isArray(value);
+    case 'string': return typeof value === 'string';
+    case 'integer': return typeof value === 'number' && Number.isInteger(value);
+    case 'number': return typeof value === 'number' && Number.isFinite(value);
+    case 'boolean': return typeof value === 'boolean';
+    case 'null': return value === null;
+    default: return true; // unknown type keyword — do not fail on it
+  }
+}
+
+function describeType(value: unknown): string {
+  if (value === null) return 'null';
+  if (Array.isArray(value)) return 'array';
+  return typeof value;
+}
+
+const SCHEMAS_DIR = join(import.meta.dir, '../schemas');
+const schemaCache = new Map<string, MiniSchema>();
+
+function loadSchema(filename: string): MiniSchema {
+  const cached = schemaCache.get(filename);
+  if (cached) return cached;
+  const parsed = JSON.parse(readFileSync(join(SCHEMAS_DIR, filename), 'utf8')) as MiniSchema;
+  schemaCache.set(filename, parsed);
+  return parsed;
+}
+
+/** Throws with the full violation list when any artifact is nonconformant. */
+function assertBundleConformsToSchemas(bundle: RunBundle): void {
+  const violations: string[] = [];
+  const transcriptSchema = loadSchema('transcript.schema.json');
+  bundle.transcripts.forEach((t, i) => {
+    violations.push(...validateAgainstSchema(t, transcriptSchema, `transcripts[${i}]`));
+  });
+  const scorecardSchema = loadSchema('scorecard.schema.json');
+  violations.push(...validateAgainstSchema(bundle.scorecard, scorecardSchema, 'scorecard'));
+  if (violations.length > 0) {
+    throw new Error(
+      `recorder: bundle failed schema validation against eval/schemas/ — nothing written. ` +
+        `Fix the emitter or (if the contract legitimately changed) the schema. Violations:\n  ` +
+        violations.join('\n  '),
+    );
+  }
 }
 
 // ─── Markdown rendering ────────────────────────────────────────────────

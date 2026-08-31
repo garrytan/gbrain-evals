@@ -30,7 +30,13 @@
 #     Gated on HuggingFace; one-time setup.
 #
 # Cost: ~$68/cell × 7 = ~$476. Wallclock: ~90min/cell × 7 = ~10.5h serial.
-# Hard cap: $90/cell (wrapper aborts the cell on overrun).
+# Cost control: this wrapper meters WALL CLOCK, not dollars (nothing here
+# reads token counts; the old "$90/cell hard cap" comment described logic
+# that never existed — audit orchestrators-10). Each cell's answer-gen step
+# runs under timeout(1) with PHASE1_CELL_WALL_CAP_SECONDS (default 9000s =
+# ~1.7x the expected ~90min); on overrun the cell is killed, marked FAILED,
+# and stays resumable via --resume-from. If timeout(1) is missing (stock
+# macOS without coreutils) the cap is disabled with a loud warning.
 #
 # Resume:
 #   bash scripts/run-shootout-phase1.sh                # initial run
@@ -83,9 +89,20 @@ if [ -z "$GBRAIN_VERSION" ] || [ "$(printf '%s\n%s\n' "$MIN_VERSION" "$GBRAIN_VE
   exit 1
 fi
 
+# Per-cell wall-clock cap (see header). Applied to the answer-gen step only —
+# that is the step that spends money; smoke + scoring are bounded and cheap.
+CELL_WALL_CAP_SECONDS="${PHASE1_CELL_WALL_CAP_SECONDS:-9000}"
+CAP_CMD=()
+if command -v timeout >/dev/null 2>&1; then
+  CAP_CMD=(timeout "$CELL_WALL_CAP_SECONDS")
+else
+  echo "[phase1] WARN: timeout(1) not found — per-cell wall-clock cap DISABLED (install coreutils to enable)" >&2
+fi
+
 # Results land here. Receipts get committed to the PR β branch by the user
-# after the run completes.
-RESULTS_DIR="$REPO_ROOT/results/shootout"
+# after the run completes. Overridable so hermetic tests never touch the
+# repo's committed artifacts under results/shootout/.
+RESULTS_DIR="${SHOOTOUT_RESULTS_DIR:-$REPO_ROOT/results/shootout}"
 mkdir -p "$RESULTS_DIR"
 LOG="$RESULTS_DIR/phase1-run-log.txt"
 : > "$LOG"
@@ -159,12 +176,19 @@ run_cell() {
     echo "  resuming from existing $out ($(wc -l <"$out") rows present)"
   fi
 
-  echo "  embed + answer-gen..."
+  if [ ${#CAP_CMD[@]} -gt 0 ]; then
+    echo "  embed + answer-gen... (wall cap: ${CELL_WALL_CAP_SECONDS}s)"
+  else
+    echo "  embed + answer-gen... (wall cap: DISABLED — timeout(1) missing)"
+  fi
   # env(1) with array args: assignments here are ordinary arguments to env,
   # so they survive word-splitting rules that broke the old inline-prefix
   # form. GBRAIN_EMBEDDING_MODEL/DIMENSIONS are genuinely read by gbrain's
   # config loader (config.ts:712); --mode is the explicit search-mode flag.
-  if ! env \
+  # ${CAP_CMD[@]+...} keeps set -u happy on an empty array (bash < 4.4);
+  # timeout(1) execs env → gbrain, so config still reaches the child, and an
+  # overrun returns 124 which lands in the same FAILED path (resume-safe).
+  if ! ${CAP_CMD[@]+"${CAP_CMD[@]}"} env \
       GBRAIN_EMBEDDING_MODEL="$embedder" \
       GBRAIN_EMBEDDING_DIMENSIONS="$dim" \
       gbrain eval longmemeval "$LONGMEMEVAL_DATASET" \
@@ -173,7 +197,7 @@ run_cell() {
         --expansion \
         "${resume_args[@]}" \
         >>"$LOG" 2>&1; then
-    echo "  -> $cell answer-gen FAILED (see $LOG)" >&2
+    echo "  -> $cell answer-gen FAILED or exceeded the ${CELL_WALL_CAP_SECONDS}s wall cap (see $LOG)" >&2
     return 4
   fi
 

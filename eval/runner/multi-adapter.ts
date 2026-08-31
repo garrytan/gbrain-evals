@@ -2,24 +2,49 @@
  * BrainBench multi-adapter runner (Phase 2).
  *
  * Runs multiple adapter implementations against the same corpus and the
- * same relational query set, emitting a side-by-side scorecard. This is
- * the neutrality unlock — external baselines scored on the same bar as
+ * same query sets, emitting a side-by-side scorecard. This is the
+ * neutrality unlock — external baselines scored on the same bar as
  * gbrain, so the scorecard answers "how does gbrain compare to what any
  * agent could do?" rather than just "what changed between gbrain versions?"
  *
- * v1.1 Phase 2 adapters (shipping in order):
- *   - GBRAIN_AFTER       (gbrain post-v0.10.3: graph+vector-grep-rrf-fusion)
- *   - RIPGREP_BM25       (EXT-1: classic IR baseline, this commit)
- *   - vector RAG    (EXT-2: future)
- *   - vector-grep-rrf-fusion-without-graph (EXT-3: future)
+ * Query families (one scorecard row per adapter x family):
+ *   - relational            auto-built from world-v1 _facts (4 templates,
+ *                           shared with shootout-driver.ts via
+ *                           queries/relational.ts)
+ *   - fuzzy                 Tier 5 hand-authored vague-recall queries
+ *   - externally-authored   Tier 5.5 synthetic-outsider queries
+ * Tier 5/5.5 items whose gold.relevant is empty (abstention, judge-only
+ * answer-string) are excluded from retrieval means per the NaN contract in
+ * types.ts recallAtK and reported as excluded (audit adapters-queries-07:
+ * these 80 queries used to be validated but never executed).
  *
  * Usage:
- *   bun eval/runner/multi-adapter.ts [--adapter grep-only|gbrain|all]
- *   bun eval/runner/multi-adapter.ts --json
+ *   bun eval/runner/multi-adapter.ts [--adapter <name>] [--queries <set>] [--json]
+ *
+ *   --adapter <name>        gbrain | vector-grep-rrf-fusion | grep-only |
+ *                           vector | all (default all). Both `--adapter NAME`
+ *                           and `--adapter=NAME` parse; an unknown name is an
+ *                           error, never a silent run-everything
+ *                           (audit orchestrators-11).
+ *   --queries <set>         relational | tier5 | tier5.5 | all (default all)
+ *   --include-subset=<name> REPLACE all families with the curated subset at
+ *                           eval/data/gold/brainbench-<name>-subset.json
+ *   --json                  machine-readable JSON on stdout
+ *   --receipt-path <path>   override the receipt location (tests)
+ *
+ * Env:
+ *   BRAINBENCH_N            runs per adapter (default 5). Non-numeric / < 1
+ *                           values fall back to 5 with a warning instead of
+ *                           producing zero runs + a crash
+ *                           (audit orchestrators-12).
+ *
+ * Receipt: eval/reports/multi-adapter/receipt.json (WS0 contract). Probe
+ * universe = adapter x applicable gold-bearing query; an adapter crash is a
+ * sut failure — its probes are scored 0 and stay in the denominator
+ * (probe-accounting policy).
  */
 
-import { readdirSync, readFileSync } from 'fs';
-import { join } from 'path';
+import { readFileSync } from 'fs';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { runExtract } from 'gbrain/extract';
 import { RipgrepBm25Adapter } from './adapters/grep-only.ts';
@@ -27,106 +52,69 @@ import { VectorOnlyAdapter } from './adapters/vector.ts';
 import { HybridNoGraphAdapter } from './adapters/vector-grep-rrf-fusion.ts';
 import type { Adapter, Page, Query, RankedDoc } from './types.ts';
 import { precisionAtK, recallAtK, sanitizePage, sanitizeQuery } from './types.ts';
+import { buildRelationalQueries, loadWorldCorpus, type RichPage } from './queries/relational.ts';
+import { getTier5FuzzyQueries, getTier5_5SyntheticQueries } from './queries/index.ts';
+import { ProbeAccounting } from './probe-accounting.ts';
+import { writeReceipt, receiptPath, RECEIPT_SCHEMA_VERSION, BENCHMARK_VERSION } from './receipt.ts';
+import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
 
 const TOP_K = 5;
 
-// ─── Corpus loader ─────────────────────────────────────────────────
+// ─── Query families ─────────────────────────────────────────────────
 
-interface RichPage extends Page {
-  _facts: {
-    type: string;
-    role?: string;
-    primary_affiliation?: string;
-    secondary_affiliations?: string[];
-    founders?: string[];
-    employees?: string[];
-    investors?: string[];
-    advisors?: string[];
-    attendees?: string[];
-  };
+export type QuerySource = 'relational' | 'tier5' | 'tier5.5' | 'all';
+
+export interface QueryFamily {
+  family: string;
+  /** Gold-bearing queries (non-empty gold.relevant) — the scored set. */
+  queries: Query[];
+  /**
+   * Ids excluded from retrieval scoring because gold.relevant is empty
+   * (abstention / judge-only answer-string items). Excluded, not zeroed:
+   * metrics.recallAtK returns NaN on an empty relevant set by contract.
+   */
+  excluded_no_gold: string[];
 }
 
-function loadCorpus(dir: string): RichPage[] {
-  const files = readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_'));
-  const out: RichPage[] = [];
-  for (const f of files) {
-    const p = JSON.parse(readFileSync(join(dir, f), 'utf-8'));
-    if (Array.isArray(p.timeline)) p.timeline = p.timeline.join('\n');
-    if (Array.isArray(p.compiled_truth)) p.compiled_truth = p.compiled_truth.join('\n\n');
-    p.title = String(p.title ?? '');
-    p.compiled_truth = String(p.compiled_truth ?? '');
-    p.timeline = String(p.timeline ?? '');
-    out.push(p as RichPage);
+function splitByGold(family: string, raw: Query[]): QueryFamily {
+  const queries: Query[] = [];
+  const excluded: string[] = [];
+  for (const q of raw) {
+    if ((q.gold.relevant ?? []).length > 0) queries.push(q);
+    else excluded.push(q.id);
+  }
+  return { family, queries, excluded_no_gold: excluded };
+}
+
+/** Assemble the requested query families against the loaded corpus. */
+export function collectFamilies(pages: RichPage[], source: QuerySource): QueryFamily[] {
+  const out: QueryFamily[] = [];
+  if (source === 'relational' || source === 'all') {
+    out.push(splitByGold('relational', buildRelationalQueries(pages)));
+  }
+  if (source === 'tier5' || source === 'all') {
+    out.push(splitByGold('fuzzy', getTier5FuzzyQueries()));
+  }
+  if (source === 'tier5.5' || source === 'all') {
+    out.push(splitByGold('externally-authored', getTier5_5SyntheticQueries()));
   }
   return out;
 }
 
-// ─── Relational query builder (gold from _facts) ─────────────────
+/**
+ * The inline GbrainAfterAdapter below only understands the 4 relational
+ * templates — it parses query text into a graph traversal and returns []
+ * for anything else. Scoring it on fuzzy / externally-authored questions
+ * would publish a 0% row that says nothing about gbrain-the-product (whose
+ * fuzzy path is hybridSearch, represented here by vector-grep-rrf-fusion).
+ * Rows are omitted as "not applicable" instead of shipped as fake zeros.
+ * Curated subsets keep their historical behavior (run on every adapter).
+ */
+const RELATIONAL_ONLY_ADAPTERS = new Set(['gbrain']);
 
-function buildQueries(pages: RichPage[]): Query[] {
-  const existing = new Set(pages.map(p => p.slug));
-  const filter = (slugs: string[]) => slugs.filter(s => existing.has(s));
-  const queries: Query[] = [];
-  let counter = 0;
-  const nextId = () => `q-${String(++counter).padStart(4, '0')}`;
-
-  // "Who attended X?" (meeting → people). Medium tier.
-  for (const p of pages) {
-    if (p._facts.type !== 'meeting') continue;
-    const expected = filter(p._facts.attendees ?? []);
-    if (expected.length === 0) continue;
-    queries.push({
-      id: nextId(),
-      tier: 'medium',
-      text: `Who attended ${p.title}?`,
-      expected_output_type: 'cited-source-pages',
-      gold: { relevant: expected },
-    });
-  }
-
-  // "Who works at X?" (company → people). Medium.
-  for (const p of pages) {
-    if (p._facts.type !== 'company') continue;
-    const expected = filter([...(p._facts.employees ?? []), ...(p._facts.founders ?? [])]);
-    if (expected.length === 0) continue;
-    queries.push({
-      id: nextId(),
-      tier: 'medium',
-      text: `Who works at ${p.title}?`,
-      expected_output_type: 'cited-source-pages',
-      gold: { relevant: [...new Set(expected)] },
-    });
-  }
-
-  // "Who invested in X?" Medium.
-  for (const p of pages) {
-    if (p._facts.type !== 'company') continue;
-    const expected = filter(p._facts.investors ?? []);
-    if (expected.length === 0) continue;
-    queries.push({
-      id: nextId(),
-      tier: 'medium',
-      text: `Who invested in ${p.title}?`,
-      expected_output_type: 'cited-source-pages',
-      gold: { relevant: expected },
-    });
-  }
-
-  // "Who advises X?" Medium.
-  for (const p of pages) {
-    if (p._facts.type !== 'company') continue;
-    const expected = filter(p._facts.advisors ?? []);
-    if (expected.length === 0) continue;
-    queries.push({
-      id: nextId(),
-      tier: 'medium',
-      text: `Who advises ${p.title}?`,
-      expected_output_type: 'cited-source-pages',
-      gold: { relevant: expected },
-    });
-  }
-
-  return queries;
+export function familiesForAdapter(adapterName: string, families: QueryFamily[]): QueryFamily[] {
+  if (!RELATIONAL_ONLY_ADAPTERS.has(adapterName)) return families;
+  return families.filter(f => f.family === 'relational' || f.family.startsWith('subset:'));
 }
 
 // ─── gbrain adapter (inline, wraps existing engine) ─────────
@@ -177,8 +165,8 @@ class GbrainAfterAdapter implements Adapter {
     };
 
     // Parse the relational query text to extract seed + direction + linkTypes.
-    // Format matches what buildQueries() emits; for EXT adapters this parsing
-    // is skipped and they just do text-match on query.text.
+    // Format matches what buildRelationalQueries() emits; for EXT adapters
+    // this parsing is skipped and they just do text-match on query.text.
     const { seed, direction, linkTypes } = parseRelationalQuery(q, contentBySlug);
 
     // Graph-first ranking.
@@ -226,8 +214,9 @@ class GbrainAfterAdapter implements Adapter {
 
 /**
  * Parse a relational query template into (seed, direction, linkTypes).
- * Matches the templates emitted by buildQueries(). Returns empty linkTypes
- * if the query doesn't match a known template (adapter falls back to grep).
+ * Matches the templates emitted by buildRelationalQueries(). Returns empty
+ * linkTypes if the query doesn't match a known template (adapter falls back
+ * to grep).
  */
 function parseRelationalQuery(
   q: Query,
@@ -282,17 +271,41 @@ function parseRelationalQuery(
  * adapter with hidden order-dependence (e.g. a tie-break that favors
  * first-seen slug) shows up as non-zero stddev.
  */
-const RUNS_PER_ADAPTER = Number(process.env.BRAINBENCH_N ?? '5');
 
-interface RunResult {
-  mean_precision_at_k: number;
-  mean_recall_at_k: number;
-  correct_in_top_k: number;
-  total_expected: number;
+/**
+ * Guarded BRAINBENCH_N parse (audit orchestrators-12: Number('') is 0 and
+ * Number('garbage') is NaN — either made the run loop execute zero times and
+ * crash on runResults[0]). Mirrors the all.ts concurrency guard.
+ */
+export function resolveRunsPerAdapter(raw: string | undefined): number {
+  if (raw === undefined) return 5;
+  const n = Number(raw);
+  if (Number.isFinite(n) && n >= 1) return Math.floor(n);
+  console.error(`[multi-adapter] BRAINBENCH_N=${JSON.stringify(raw)} is not a number >= 1; falling back to 5 runs.`);
+  return 5;
 }
 
-interface AdapterScorecard {
+interface PerQueryScore {
+  query_id: string;
+  family: string;
+  precision: number;
+  recall: number;
+  hits: number;
+  expected: number;
+}
+
+interface FamilyRunAggregate {
+  family: string;
+  n: number;
+  mean_precision: number;
+  mean_recall: number;
+  correct: number;
+  expected: number;
+}
+
+export interface AdapterScorecard {
   adapter: string;
+  family: string;
   queries: number;
   runs: number;
   /** Mean across N runs. */
@@ -329,84 +342,128 @@ function shuffleSeeded<T>(arr: T[], seed: number): T[] {
 async function scoreOneRun(
   adapter: Adapter,
   pages: Page[],
-  queries: Query[],
-): Promise<RunResult> {
+  families: QueryFamily[],
+): Promise<PerQueryScore[]> {
   // Day 9 sealed qrels enforcement (codex fix #1, #2, #3):
   // Build sanitized copies with no `_facts` and no `gold` fields before
   // handing them to the adapter. The scorer retains the full Query shape
   // (including gold.relevant) to compute precision/recall below.
   const publicPages = pages.map(sanitizePage);
   const state = await adapter.init(publicPages, { name: adapter.name });
-  let totalP = 0;
-  let totalR = 0;
-  let totalCorrect = 0;
-  let totalExpected = 0;
-  let scored = 0;
-  for (const q of queries) {
-    const publicQ = sanitizeQuery(q);
-    const results = await adapter.query(publicQ, state);
-    const relevant = new Set(q.gold.relevant ?? []);
-    // Gold-less queries are excluded from P/R means (metrics return NaN for
-    // an empty relevant set) instead of averaging in a fake 0.
-    if (relevant.size === 0) continue;
-    scored++;
-    totalP += precisionAtK(results, relevant, TOP_K);
-    totalR += recallAtK(results, relevant, TOP_K);
-    const topK = results.slice(0, TOP_K);
-    const seen = new Set<string>();
-    for (const r of topK) {
-      if (relevant.has(r.page_id) && !seen.has(r.page_id)) {
-        seen.add(r.page_id);
-        totalCorrect++;
+  const out: PerQueryScore[] = [];
+  try {
+    for (const fam of families) {
+      for (const q of fam.queries) {
+        const publicQ = sanitizeQuery(q);
+        const results = await adapter.query(publicQ, state);
+        // collectFamilies already excluded empty-gold queries per the NaN
+        // contract, so relevant is guaranteed non-empty here.
+        const relevant = new Set(q.gold.relevant ?? []);
+        const topK = results.slice(0, TOP_K);
+        const seen = new Set<string>();
+        let hits = 0;
+        for (const r of topK) {
+          if (relevant.has(r.page_id) && !seen.has(r.page_id)) {
+            seen.add(r.page_id);
+            hits++;
+          }
+        }
+        out.push({
+          query_id: q.id,
+          family: fam.family,
+          precision: precisionAtK(results, relevant, TOP_K),
+          recall: recallAtK(results, relevant, TOP_K),
+          hits,
+          expected: relevant.size,
+        });
       }
     }
-    totalExpected += relevant.size;
+  } finally {
+    if (adapter.teardown) await adapter.teardown(state);
   }
-  if (adapter.teardown) await adapter.teardown(state);
-  return {
-    mean_precision_at_k: scored > 0 ? totalP / scored : 0,
-    mean_recall_at_k: scored > 0 ? totalR / scored : 0,
-    correct_in_top_k: totalCorrect,
-    total_expected: totalExpected,
-  };
+  return out;
+}
+
+function aggregateByFamily(perQuery: PerQueryScore[]): Map<string, FamilyRunAggregate> {
+  const acc = new Map<string, { p: number; r: number; n: number; correct: number; expected: number }>();
+  for (const s of perQuery) {
+    let a = acc.get(s.family);
+    if (!a) {
+      a = { p: 0, r: 0, n: 0, correct: 0, expected: 0 };
+      acc.set(s.family, a);
+    }
+    a.p += s.precision;
+    a.r += s.recall;
+    a.n++;
+    a.correct += s.hits;
+    a.expected += s.expected;
+  }
+  const out = new Map<string, FamilyRunAggregate>();
+  for (const [family, a] of acc) {
+    out.set(family, {
+      family,
+      n: a.n,
+      mean_precision: a.n > 0 ? a.p / a.n : 0,
+      mean_recall: a.n > 0 ? a.r / a.n : 0,
+      correct: a.correct,
+      expected: a.expected,
+    });
+  }
+  return out;
+}
+
+function mean(values: number[]): number {
+  return values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0;
 }
 
 function stddev(values: number[]): number {
   const n = values.length;
   if (n < 2) return 0;
-  const mean = values.reduce((a, b) => a + b, 0) / n;
-  const variance = values.reduce((a, b) => a + (b - mean) ** 2, 0) / (n - 1);
+  const m = mean(values);
+  const variance = values.reduce((a, b) => a + (b - m) ** 2, 0) / (n - 1);
   return Math.sqrt(variance);
 }
 
 async function scoreAdapter(
   adapter: Adapter,
   pages: Page[],
-  queries: Query[],
-): Promise<AdapterScorecard> {
-  const runResults: RunResult[] = [];
-  for (let i = 0; i < RUNS_PER_ADAPTER; i++) {
+  families: QueryFamily[],
+  runs: number,
+): Promise<{ scorecards: AdapterScorecard[]; firstRun: PerQueryScore[] }> {
+  const perRunAggregates: Map<string, FamilyRunAggregate>[] = [];
+  let firstRun: PerQueryScore[] = [];
+  for (let i = 0; i < runs; i++) {
     // Shuffle pages per run with a per-run seed. Seed = i + 1 (not 0,
     // since LCG iterates once at start of next()). Run 0 uses the seed
     // that produces a minimally-scrambled permutation; doesn't matter
     // for correctness since we aggregate across runs.
     const shuffled = shuffleSeeded(pages, i + 1);
-    const r = await scoreOneRun(adapter, shuffled, queries);
-    runResults.push(r);
+    const perQuery = await scoreOneRun(adapter, shuffled, families);
+    if (i === 0) firstRun = perQuery;
+    perRunAggregates.push(aggregateByFamily(perQuery));
   }
-  const pVals = runResults.map(r => r.mean_precision_at_k);
-  const rVals = runResults.map(r => r.mean_recall_at_k);
-  return {
-    adapter: adapter.name,
-    queries: queries.length,
-    runs: RUNS_PER_ADAPTER,
-    mean_precision_at_k: pVals.reduce((a, b) => a + b, 0) / pVals.length,
-    mean_recall_at_k: rVals.reduce((a, b) => a + b, 0) / rVals.length,
-    stddev_precision_at_k: stddev(pVals),
-    stddev_recall_at_k: stddev(rVals),
-    correct_in_top_k: runResults[0].correct_in_top_k,
-    total_expected: runResults[0].total_expected,
-  };
+  const scorecards: AdapterScorecard[] = [];
+  for (const fam of families) {
+    const aggs = perRunAggregates
+      .map(m => m.get(fam.family))
+      .filter((a): a is FamilyRunAggregate => a !== undefined);
+    if (aggs.length === 0) continue; // family had zero gold-bearing queries
+    const pVals = aggs.map(a => a.mean_precision);
+    const rVals = aggs.map(a => a.mean_recall);
+    scorecards.push({
+      adapter: adapter.name,
+      family: fam.family,
+      queries: fam.queries.length,
+      runs,
+      mean_precision_at_k: mean(pVals),
+      mean_recall_at_k: mean(rVals),
+      stddev_precision_at_k: stddev(pVals),
+      stddev_recall_at_k: stddev(rVals),
+      correct_in_top_k: aggs[0].correct,
+      total_expected: aggs[0].expected,
+    });
+  }
+  return { scorecards, firstRun };
 }
 
 function pct(n: number, digits = 1): string {
@@ -415,7 +472,7 @@ function pct(n: number, digits = 1): string {
 
 function pctBand(mean: number, sd: number, digits = 1): string {
   if (sd === 0) return pct(mean, digits);
-  return `${pct(mean, digits)} \u00b1${(sd * 100).toFixed(digits)}`;
+  return `${pct(mean, digits)} ±${(sd * 100).toFixed(digits)}`;
 }
 
 // ─── Subset loader (v0.35.1.0 embedder-shootout) ───────────────────
@@ -464,32 +521,92 @@ function loadSubset(name: string): Query[] {
   return out;
 }
 
+// ─── CLI parsing ────────────────────────────────────────────────────
+
+export interface CliArgs {
+  json: boolean;
+  /** undefined or 'all' → run every adapter. */
+  adapter?: string;
+  subset?: string;
+  queries: QuerySource;
+  receiptPathOverride?: string;
+}
+
+const QUERY_SOURCES: readonly QuerySource[] = ['relational', 'tier5', 'tier5.5', 'all'];
+
+/**
+ * Strict argv parsing. Both `--flag value` and `--flag=value` forms are
+ * accepted; unknown tokens throw instead of being silently ignored (audit
+ * orchestrators-11: the documented `--adapter grep-only` space form used to
+ * parse as nothing and run all four adapters, burning embedding spend).
+ */
+export function parseCliArgs(argv: string[]): CliArgs {
+  const out: CliArgs = { json: false, queries: 'all' };
+  const takeValue = (flag: string, i: number): string => {
+    const v = argv[i];
+    if (v === undefined || v.startsWith('--')) throw new Error(`${flag} requires a value`);
+    return v;
+  };
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === '--json') out.json = true;
+    else if (a === '--adapter') out.adapter = takeValue('--adapter', ++i);
+    else if (a.startsWith('--adapter=')) out.adapter = a.slice('--adapter='.length);
+    else if (a === '--queries') out.queries = takeValue('--queries', ++i) as QuerySource;
+    else if (a.startsWith('--queries=')) out.queries = a.slice('--queries='.length) as QuerySource;
+    else if (a === '--include-subset') out.subset = takeValue('--include-subset', ++i);
+    else if (a.startsWith('--include-subset=')) out.subset = a.slice('--include-subset='.length);
+    else if (a === '--receipt-path') out.receiptPathOverride = takeValue('--receipt-path', ++i);
+    else throw new Error(`unknown arg: ${a}`);
+  }
+  if (!QUERY_SOURCES.includes(out.queries)) {
+    throw new Error(`--queries must be one of ${QUERY_SOURCES.join(' | ')}, got "${out.queries}"`);
+  }
+  return out;
+}
+
+/** Resolve --adapter to the adapter list. Unknown names are an error. */
+export function selectAdapters(all: Adapter[], only: string | undefined): Adapter[] {
+  if (only === undefined || only === 'all') return all;
+  const matched = all.filter(a => a.name === only);
+  if (matched.length === 0) {
+    throw new Error(
+      `No adapter named "${only}". Available: ${all.map(a => a.name).join(', ')}, all`,
+    );
+  }
+  return matched;
+}
+
 // ─── Main ──────────────────────────────────────────────────────────
 
-async function main() {
-  const json = process.argv.includes('--json');
-  const only = process.argv.find(a => a.startsWith('--adapter='))?.slice('--adapter='.length);
-  // v0.35.1.0 embedder-shootout: optional curated subset. When set, the
-  // auto-generated relational queries are REPLACED by the JSON subset's
-  // queries. Run twice — once without the flag (relational), once with
-  // (Cat 13 / embedder-sensitive) — to get both numbers on the same cell.
-  const subset = process.argv.find(a => a.startsWith('--include-subset='))?.slice('--include-subset='.length);
-  const log = json ? () => {} : console.log;
+export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
+  const cli = parseCliArgs(argv);
+  const startedAt = new Date().toISOString();
+  const runsPerAdapter = resolveRunsPerAdapter(process.env.BRAINBENCH_N);
+  const log = cli.json ? () => {} : console.log;
 
   log('# BrainBench — multi-adapter side-by-side\n');
   log(`Generated: ${new Date().toISOString().slice(0, 19)}`);
 
-  const pages = loadCorpus('eval/data/world-v1') as Page[];
+  const pages = loadWorldCorpus('eval/data/world-v1');
   log(`Corpus: ${pages.length} rich-prose pages from eval/data/world-v1/`);
 
-  let queries: Query[];
-  if (subset) {
-    queries = loadSubset(subset);
-    log(`Subset queries (${subset}): ${queries.length}\n`);
+  // v0.35.1.0 embedder-shootout: optional curated subset. When set, ALL
+  // query families are REPLACED by the JSON subset's queries. Run twice —
+  // once without the flag, once with — to get both numbers on the same cell.
+  let families: QueryFamily[];
+  if (cli.subset) {
+    families = [splitByGold(`subset:${cli.subset}`, loadSubset(cli.subset))];
   } else {
-    queries = buildQueries(pages as RichPage[]);
-    log(`Relational queries: ${queries.length}\n`);
+    families = collectFamilies(pages, cli.queries);
   }
+  for (const f of families) {
+    const excl = f.excluded_no_gold.length > 0
+      ? ` (+${f.excluded_no_gold.length} excluded: empty gold.relevant — abstention/judge-only items are out of retrieval scope per the NaN contract)`
+      : '';
+    log(`Queries [${f.family}]: ${f.queries.length} scored${excl}`);
+  }
+  log('');
 
   const allAdapters: Adapter[] = [
     new GbrainAfterAdapter(),
@@ -497,35 +614,68 @@ async function main() {
     new RipgrepBm25Adapter(),
     new VectorOnlyAdapter(),
   ];
-  const adapters = only ? allAdapters.filter(a => a.name === only) : allAdapters;
-  if (adapters.length === 0) {
-    console.error(`No adapter matches --adapter=${only}. Available: ${allAdapters.map(a => a.name).join(', ')}`);
-    process.exit(1);
-  }
+  const adapters = selectAdapters(allAdapters, cli.adapter);
 
-  log(`## Running adapters (N=${RUNS_PER_ADAPTER} runs per adapter, page-order shuffled per run)\n`);
-  const scorecards: AdapterScorecard[] = [];
+  // Probe universe: adapter x applicable gold-bearing query.
+  let expectedProbes = 0;
   for (const a of adapters) {
+    for (const f of familiesForAdapter(a.name, families)) expectedProbes += f.queries.length;
+  }
+  const acc = new ProbeAccounting(expectedProbes);
+
+  log(`## Running adapters (N=${runsPerAdapter} runs per adapter, page-order shuffled per run)\n`);
+  const scorecards: AdapterScorecard[] = [];
+  const failedAdapters: string[] = [];
+  for (const a of adapters) {
+    const fams = familiesForAdapter(a.name, families);
+    const skippedFams = families.filter(f => !fams.includes(f)).map(f => f.family);
+    if (skippedFams.length > 0) {
+      log(`- ${a.name}: not applicable to [${skippedFams.join(', ')}] (inline relational wrapper; gbrain's fuzzy path is hybridSearch, see vector-grep-rrf-fusion)`);
+    }
+    if (fams.length === 0 || fams.every(f => f.queries.length === 0)) {
+      log(`- ${a.name}: no applicable gold-bearing queries; skipping init.`);
+      continue;
+    }
     log(`- ${a.name} ...`);
     const t0 = Date.now();
-    const sc = await scoreAdapter(a, pages, queries);
-    const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
-    log(`  done (${elapsed}s). P@${TOP_K} ${pctBand(sc.mean_precision_at_k, sc.stddev_precision_at_k)}, R@${TOP_K} ${pctBand(sc.mean_recall_at_k, sc.stddev_recall_at_k)}, ${sc.correct_in_top_k}/${sc.total_expected} correct (run 1)`);
-    scorecards.push(sc);
+    try {
+      const { scorecards: sc, firstRun } = await scoreAdapter(a, pages, fams, runsPerAdapter);
+      for (const p of firstRun) acc.score(`${a.name}:${p.query_id}`, p.recall);
+      const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+      for (const s of sc) {
+        log(`  ${s.family}: P@${TOP_K} ${pctBand(s.mean_precision_at_k, s.stddev_precision_at_k)}, R@${TOP_K} ${pctBand(s.mean_recall_at_k, s.stddev_recall_at_k)}, ${s.correct_in_top_k}/${s.total_expected} correct (run 1)`);
+      }
+      log(`  done (${elapsed}s).`);
+      scorecards.push(...sc);
+    } catch (err) {
+      // SUT failure: every probe this adapter owned is a scored miss (0),
+      // never silently dropped from the denominator (probe-accounting).
+      failedAdapters.push(a.name);
+      const ids = fams.flatMap(f => f.queries.map(q => q.id));
+      if (ids.length > 0) {
+        acc.error(`${a.name}:${ids[0]}`, 'sut', `adapter run failed: ${String(err)}`);
+        for (const qid of ids.slice(1)) acc.score(`${a.name}:${qid}`, 0);
+      }
+      log(`  FAILED (scored as misses): ${String(err)}`);
+    }
   }
 
-  log('\n## Side-by-side scorecard (mean \u00b1 stddev across N runs)\n');
-  log(`| Adapter             | Runs | Queries | P@${TOP_K} (mean \u00b1 sd)    | R@${TOP_K} (mean \u00b1 sd)    |`);
-  log('|---------------------|------|---------|---------------------|---------------------|');
+  log('\n## Side-by-side scorecard (mean ± stddev across N runs)\n');
+  log(`| Adapter             | Family              | Runs | Queries | P@${TOP_K} (mean ± sd)    | R@${TOP_K} (mean ± sd)    |`);
+  log('|---------------------|---------------------|------|---------|---------------------|---------------------|');
   for (const sc of scorecards) {
-    log(`| ${sc.adapter.padEnd(19)} | ${String(sc.runs).padStart(4)} | ${String(sc.queries).padStart(7)} | ${pctBand(sc.mean_precision_at_k, sc.stddev_precision_at_k).padStart(19)} | ${pctBand(sc.mean_recall_at_k, sc.stddev_recall_at_k).padStart(19)} |`);
+    log(`| ${sc.adapter.padEnd(19)} | ${sc.family.padEnd(19)} | ${String(sc.runs).padStart(4)} | ${String(sc.queries).padStart(7)} | ${pctBand(sc.mean_precision_at_k, sc.stddev_precision_at_k).padStart(19)} | ${pctBand(sc.mean_recall_at_k, sc.stddev_recall_at_k).padStart(19)} |`);
   }
   log('');
   log('*Stddev = 0 means the adapter is deterministic over page ordering. Non-zero stddev surfaces order-dependent bugs (e.g. tie-break that favors first-seen slug). LLM-judge-based metrics will produce non-zero stddev once added.*\n');
 
-  if (scorecards.length >= 2) {
-    const [first, ...rest] = scorecards;
-    log('## Deltas vs ' + first.adapter + '\n');
+  // Per-family deltas vs the first adapter that has a row in that family.
+  const familyNames = [...new Set(scorecards.map(s => s.family))];
+  for (const fam of familyNames) {
+    const rows = scorecards.filter(s => s.family === fam);
+    if (rows.length < 2) continue;
+    const [first, ...rest] = rows;
+    log(`## Deltas vs ${first.adapter} [${fam}]\n`);
     for (const other of rest) {
       const dP = (other.mean_precision_at_k - first.mean_precision_at_k) * 100;
       const dR = (other.mean_recall_at_k - first.mean_recall_at_k) * 100;
@@ -536,16 +686,70 @@ async function main() {
   }
 
   log('## Methodology\n');
-  log(`- Corpus: 240 rich-prose fictional pages (eval/data/world-v1/).`);
-  log(`- Gold: ${queries.length} relational queries derived from _facts metadata.`);
-  log(`- Metrics: mean P@${TOP_K} and R@${TOP_K} across all queries.`);
+  log(`- Corpus: ${pages.length} rich-prose fictional pages (eval/data/world-v1/).`);
+  for (const f of families) {
+    log(`- [${f.family}] ${f.queries.length} gold-bearing queries scored, ${f.excluded_no_gold.length} excluded (empty gold.relevant).`);
+  }
+  log(`- Metrics: mean P@${TOP_K} and R@${TOP_K} per family (eval/runner/metrics.ts denominators).`);
   log(`- Top-K: ${TOP_K} (what agents actually read in ranked results).`);
   log(`- Each adapter reingests raw pages. No gold data visible to adapters.`);
 
-  if (json) console.log(JSON.stringify({ scorecards, queries: queries.length, corpus: pages.length }, null, 2));
+  // ── Receipt (WS0 contract) ──
+  const summary = acc.summary();
+  const verdict: 'pass' | 'partial' | 'fail' = failedAdapters.length === 0
+    ? 'pass'
+    : (scorecards.length > 0 ? 'partial' : 'fail');
+  const receiptFile = cli.receiptPathOverride ?? receiptPath('multi-adapter');
+  writeReceipt(receiptFile, {
+    schema_version: RECEIPT_SCHEMA_VERSION,
+    benchmark_version: BENCHMARK_VERSION,
+    category: 'multi-adapter',
+    run_status: 'completed',
+    verdict,
+    n_total: summary.n_total,
+    n_scored: summary.n_scored,
+    completion_rate: summary.completion_rate,
+    errors: summary.errors,
+    publishable: summary.publishable && failedAdapters.length === 0,
+    gbrain_version: gbrainVersion(),
+    gbrain_pin: gbrainPin(),
+    resolved_config: {
+      adapters: adapters.map(a => a.name),
+      failed_adapters: failedAdapters,
+      runs_per_adapter: runsPerAdapter,
+      top_k: TOP_K,
+      query_source: cli.subset ? `subset:${cli.subset}` : cli.queries,
+      families: families.map(f => ({
+        family: f.family,
+        scored: f.queries.length,
+        excluded_no_gold: f.excluded_no_gold,
+      })),
+      relational_builder: 'eval/runner/queries/relational.ts buildRelationalQueries (shared with shootout-driver.ts)',
+    },
+    started_at: startedAt,
+    finished_at: new Date().toISOString(),
+    data: { scorecards },
+  });
+  log(`\nReceipt: ${receiptFile}`);
+
+  if (cli.json) {
+    console.log(JSON.stringify({
+      scorecards,
+      families: families.map(f => ({ family: f.family, scored: f.queries.length, excluded_no_gold: f.excluded_no_gold })),
+      corpus: pages.length,
+      runs_per_adapter: runsPerAdapter,
+      failed_adapters: failedAdapters,
+      receipt: receiptFile,
+    }, null, 2));
+  }
+  return failedAdapters.length === 0 ? 0 : 1;
 }
 
-main().catch(e => {
-  console.error(e);
-  process.exit(1);
-});
+if (import.meta.main) {
+  main()
+    .then(code => process.exit(code)) // explicit: PGLite's WASM runtime pollutes ambient process.exitCode
+    .catch(e => {
+      console.error(e);
+      process.exit(1);
+    });
+}

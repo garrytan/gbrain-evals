@@ -338,9 +338,8 @@ export const TIER5_5_SYNTHETIC_QUERIES: Query[] = [
 ];
 
 export function getTier5_5SyntheticQueries(): Query[] {
-  return TIER5_5_SYNTHETIC_QUERIES.map(q => ({
-    ...q,
-    gold: { ...q.gold },
-    tags: q.tags ? [...q.tags] : undefined,
-  }));
+  // DEEP defensive copy (see getTier5FuzzyQueries — audit adapters-queries-06:
+  // the shallow spread shared gold.relevant and the other array fields by
+  // reference with the canonical set).
+  return TIER5_5_SYNTHETIC_QUERIES.map(q => structuredClone(q));
 }

@@ -61,6 +61,10 @@ a keyless environment. Each command works from a fresh clone after
   `scripts/run-shootout-phase1.sh` refuses reranker cells rather than
   running them unreranked under a reranked label. File a gbrain PR adding
   the flag, then re-enable cells A1/B1/C1/C2.
+- [ ] **Upstream gbrain: export `./core/skillopt` subpath** (audit
+  skillopt-cats-11): cat30-33 deep-import gbrain's skillopt orchestrator via
+  node_modules paths that work on flat bun installs but break under isolated
+  layouts. One export-map line upstream removes the last four deep imports.
 - [ ] **Upstream gbrain: export a `gbrain/version` subpath** so eval repos
   don't need the resolve-and-walk helper in
   `eval/runner/gbrain-version.ts` (works fine, just inelegant).

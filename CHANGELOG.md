@@ -35,6 +35,15 @@ in sync with `VERSION` + `package.json`.
   baseline regenerated serially (was ~10x inflated by concurrent capture).
 - **CI:** hermetic gate on every PR — typecheck, unit suite, keyless runner
   subset, data validation, qrels + baseline retrieval gate.
+- **SkillOpt held-out semantics:** skillopt-v1 held-out task sets now carry
+  DIFFERENTIATED judge criteria (stricter, differently-phrased checks the
+  optimizer never sees) instead of the training checks verbatim — cat30/cat33
+  "held-out" scores from before this change measured topic transfer only
+  (audit skillopt-cats-09). Wrapper-script gates hardened: the SkillOpt suite
+  driver exits non-zero when any cat fails, the LongMemEval batch wrapper
+  honors `--dataset` and derives its completion target from the dataset, and
+  both shootout phases now smoke-gate every cell with a real per-cell
+  wall-clock cap in phase 1.
 
 ## [0.2.0] - 2026-05-29
 
@@ -67,8 +76,10 @@ harness-computed (identical for every provider), `gbrain-think` is a citation
 lens rather than the `/search` contract, and the adaptive feature stays
 default-off pending a cross-surface recall ablation. PrecisionMemBench measures
 a narrow 35-belief lexical corpus; it is a useful precision probe, not a measure
-of what a personal brain is for. **LongMemEval `_s` (97.60% R@5, SOTA) remains
-the repo's headline retrieval result.**
+of what a personal brain is for. **LongMemEval `_s` (97.60% R@5, best published
+among systems with no LLM in the retrieval loop — MemPal's Haiku-reranked rows
+score higher; see docs/comparison-systems.md) remains the repo's headline
+retrieval result.**
 
 New files: `eval/precisionmembench/` (vendored scorer + fixtures + gbrain
 adapters + seed + attribution), `eval/runner/precisionmembench.ts` (4-mode
@@ -102,6 +113,7 @@ result JSONs).
 ## [0.1.0] - prior
 
 Initial BrainBench: world-v1 + amara-life-v1 corpora, the 12-Cat catalog,
-LongMemEval `_s` public-benchmark integration (97.60% R@5, SOTA vs MemPalace
-96.6%), and the v0.40.6.0 comprehensive snapshot. See `docs/benchmarks/` for
-per-release scorecards.
+LongMemEval `_s` public-benchmark integration (97.60% R@5 vs MemPalace's raw
+96.6% — best among no-LLM-in-the-retrieval-loop systems; MemPal's
+Haiku-reranked rows score higher), and the v0.40.6.0 comprehensive snapshot.
+See `docs/benchmarks/` for per-release scorecards.

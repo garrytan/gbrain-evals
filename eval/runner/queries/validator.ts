@@ -11,8 +11,18 @@
  *   - Temporal `as_of_date` rule: any query with a temporal verb MUST
  *     set as_of_date to ISO-8601 | "corpus-end" | "per-source"
  *   - id uniqueness within a batch
- *   - gold.relevant structure when the expected_output_type is
- *     'cited-source-pages' (most common tier-1/2/3 pattern)
+ *   - Gold shape for EVERY expected_output_type (audit adapters-queries-09:
+ *     only cited-source-pages and abstention used to be checked, which let
+ *     items with structurally unscoreable gold pass CI):
+ *       cited-source-pages        gold.relevant[] non-empty, slug format
+ *       abstention                gold.expected_abstention === true
+ *       answer-string             gold.expected_answer or acceptable_variants
+ *       time-qualified-answer     gold.expected_answer + as_of_date
+ *       canonical-entity-id       gold.expected_entity_id in slug format
+ *       contradiction-explanation gold.expected_citations[] with >= 2 slugs
+ *                                 (a contradiction needs both sides)
+ *       poison-flag               gold.relevant[] naming the poisoned pages
+ *       confidence-score          gold.expected_confidence number in [0, 1]
  *
  * Public functions:
  *   validateQuery(q)      -> ValidationResult single-query
@@ -53,6 +63,9 @@ export const TEMPORAL_VERBS =
   /\b(is|was|were|current|now|at the time|during|as of|when did)\b/i;
 
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}(T.*)?$/;
+
+/** "dir/slug" page-reference format (e.g. "people/alice-chen"). */
+const SLUG_RE = /^[a-z][a-z0-9-]*\/[a-z0-9][a-z0-9-]*$/;
 
 // ─── Types ─────────────────────────────────────────────────────────
 
@@ -117,39 +130,117 @@ export function validateQuery(q: Query): ValidationResult {
     }
   }
 
-  // If expected_output_type is cited-source-pages, gold.relevant should exist
-  // and be a non-empty array of slug-like strings.
-  if (q.expected_output_type === 'cited-source-pages') {
-    const rel = (q.gold as Record<string, unknown>)?.relevant;
-    if (!Array.isArray(rel) || rel.length === 0) {
-      issues.push({
-        queryId: qid,
-        field: 'gold.relevant',
-        reason: 'cited-source-pages queries require gold.relevant[] with at least one slug',
-      });
-    } else {
-      for (const s of rel) {
-        if (typeof s !== 'string' || !/^[a-z][a-z0-9-]*\/[a-z0-9][a-z0-9-]*$/.test(s)) {
-          issues.push({
-            queryId: qid,
-            field: 'gold.relevant',
-            reason: `slug "${s}" does not match "dir/slug" format (e.g. "people/alice-chen")`,
-          });
-          break; // one message per query is enough
-        }
+  // ── Per-output-type gold shape (all 8 types; audit adapters-queries-09) ──
+  const gold = (q.gold ?? {}) as Record<string, unknown>;
+
+  /** Push an issue unless `arr` is a non-empty array of slug-format strings. */
+  const requireSlugArray = (field: string, arr: unknown, reason: string, minLen = 1): void => {
+    if (!Array.isArray(arr) || arr.length < minLen) {
+      issues.push({ queryId: qid, field, reason });
+      return;
+    }
+    for (const s of arr) {
+      if (typeof s !== 'string' || !SLUG_RE.test(s)) {
+        issues.push({
+          queryId: qid,
+          field,
+          reason: `slug "${s}" does not match "dir/slug" format (e.g. "people/alice-chen")`,
+        });
+        break; // one message per query is enough
       }
     }
-  }
+  };
 
-  // Abstention queries MUST set expected_abstention to true.
-  if (q.expected_output_type === 'abstention') {
-    const expAb = (q.gold as Record<string, unknown>)?.expected_abstention;
-    if (expAb !== true) {
-      issues.push({
-        queryId: qid,
-        field: 'gold.expected_abstention',
-        reason: 'abstention queries require gold.expected_abstention === true',
-      });
+  switch (q.expected_output_type) {
+    case 'cited-source-pages':
+      requireSlugArray(
+        'gold.relevant',
+        gold.relevant,
+        'cited-source-pages queries require gold.relevant[] with at least one slug',
+      );
+      break;
+
+    case 'abstention':
+      if (gold.expected_abstention !== true) {
+        issues.push({
+          queryId: qid,
+          field: 'gold.expected_abstention',
+          reason: 'abstention queries require gold.expected_abstention === true',
+        });
+      }
+      break;
+
+    case 'answer-string': {
+      const hasAnswer = typeof gold.expected_answer === 'string' && gold.expected_answer.trim().length > 0;
+      const hasVariants = Array.isArray(q.acceptable_variants) && q.acceptable_variants.length > 0;
+      if (!hasAnswer && !hasVariants) {
+        issues.push({
+          queryId: qid,
+          field: 'gold.expected_answer',
+          reason: 'answer-string queries require gold.expected_answer (or acceptable_variants) — without judgeable gold the item can never score',
+        });
+      }
+      break;
+    }
+
+    case 'time-qualified-answer': {
+      if (typeof gold.expected_answer !== 'string' || gold.expected_answer.trim().length === 0) {
+        issues.push({
+          queryId: qid,
+          field: 'gold.expected_answer',
+          reason: 'time-qualified-answer queries require gold.expected_answer',
+        });
+      }
+      // as_of_date is required for this type even when no temporal verb
+      // triggered the generic rule above (skip if that rule already flagged it).
+      if (!issues.some(i => i.queryId === qid && i.field === 'as_of_date')
+        && (q.as_of_date === undefined || q.as_of_date === null || q.as_of_date === '')) {
+        issues.push({
+          queryId: qid,
+          field: 'as_of_date',
+          reason: 'time-qualified-answer queries require as_of_date ("corpus-end", "per-source", or ISO-8601)',
+        });
+      }
+      break;
+    }
+
+    case 'canonical-entity-id':
+      if (typeof gold.expected_entity_id !== 'string' || !SLUG_RE.test(gold.expected_entity_id)) {
+        issues.push({
+          queryId: qid,
+          field: 'gold.expected_entity_id',
+          reason: 'canonical-entity-id queries require gold.expected_entity_id in "dir/slug" format',
+        });
+      }
+      break;
+
+    case 'contradiction-explanation':
+      requireSlugArray(
+        'gold.expected_citations',
+        gold.expected_citations,
+        'contradiction-explanation queries require gold.expected_citations[] with at least the 2 disagreeing source slugs',
+        2,
+      );
+      break;
+
+    case 'poison-flag':
+      requireSlugArray(
+        'gold.relevant',
+        gold.relevant,
+        'poison-flag queries require gold.relevant[] naming the poisoned page(s) the system must flag',
+      );
+      break;
+
+    case 'confidence-score': {
+      const c = gold.expected_confidence;
+      if (typeof c !== 'number' || Number.isNaN(c) || c < 0 || c > 1) {
+        issues.push({
+          queryId: qid,
+          field: 'gold.expected_confidence',
+          reason: 'confidence-score queries require gold.expected_confidence as a number in [0, 1]',
+        });
+      }
+      break;
     }
   }
 
