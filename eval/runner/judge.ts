@@ -35,7 +35,10 @@ export interface Probe {
    *  evidence-contract schema (eval/schemas/evidence-contract.schema.json,
    *  additionalProperties:false — audit finding agentic-cats-15). */
   text: string;
-  category: 5 | 8 | 9;
+  /** Category number. Presentation-only in the judge prompt; any cat that
+   *  uses the shared judge may appear here (was frozen to 5|8|9, forcing
+   *  cat20/cat29 to cast — fan-out concern). */
+  category: number;
 }
 
 export interface RubricCriterion {
@@ -47,7 +50,7 @@ export interface RubricCriterion {
 export interface ToolCallSummary {
   count_by_tool: Record<string, number>;
   saw_poison_items: string[];
-  brain_first_ordering?: 'brain_before_answer' | 'answer_before_brain' | 'no_brain_calls';
+  brain_first_ordering?: 'brain_before_answer' | 'answer_before_brain' | 'no_brain_calls' | 'no_answer';
   made_dry_run_writes: Array<{
     slug?: string;
     has_back_links?: boolean;

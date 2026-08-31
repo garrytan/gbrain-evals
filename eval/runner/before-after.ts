@@ -404,10 +404,21 @@ async function main() {
 
   log('\n## What this proves');
   log('');
-  log(`PR #188 strictly dominates BEFORE on both top-K metrics — agents see ${afterTotalAtK - beforeTotalAtK}`);
-  log(`more correct answers in their top-${TOP_K} results. Graph hits are surfaced FIRST in`);
-  log(`the ranked list; the agent's first reads are exact-typed answers instead of`);
-  log(`arbitrary text matches. No category goes down.`);
+  // Verdict prose is COMPUTED from this run, never hardcoded — the old text
+  // printed 'strictly dominates' and 'No category goes down' regardless of
+  // the numbers above it (orchestrators-13).
+  const delta = afterTotalAtK - beforeTotalAtK;
+  const regressedTypes = Object.entries(byType).filter(([, v]) => v.aF < v.bF).map(([t]) => t);
+  if (delta > 0 && regressedTypes.length === 0) {
+    log(`PR #188 dominates BEFORE on top-${TOP_K} found (+${delta}); no link type regressed.`);
+  } else if (delta >= 0) {
+    log(`PR #188 is >= BEFORE on top-${TOP_K} found (+${delta})` +
+        (regressedTypes.length ? `, but type(s) regressed: ${regressedTypes.join(', ')}.` : '.'));
+  } else {
+    log(`PR #188 REGRESSED vs BEFORE on top-${TOP_K} found (${delta}). Gates below will fail.`);
+  }
+  log(`Graph hits are surfaced FIRST in the ranked list; the agent's first reads are`);
+  log(`exact-typed answers instead of arbitrary text matches.`);
   log('');
   log(`Set-based metrics (full result sets) are unchanged because graph hits are a`);
   log(`subset of grep hits in this corpus — taking the union doesn't add or remove`);

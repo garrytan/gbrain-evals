@@ -76,7 +76,7 @@ Failure-mode → fix mapping:
 | Counter-prior missing | Positive probe fails; answer mentions bias but doesn't name a counter-direction | `src/core/think/prompt.ts:buildThinkSystemPrompt` — anti-bias rewrite rules need a "name BOTH priors transparently" example |
 | Voice clinical | Voice axis fails; "your Brier in domain X is 0.31" leaks through | `src/core/calibration/voice-gate.ts` — extend rubric examples; OR upstream gate the calibration_profile narrative more aggressively before it reaches think |
 | Recommendation unchanged | `changes_recommendation_meaningfully` fails on relevant-bias probe | Profile context is too weak. Try: pattern_statements rendered as 3-4 short sentences instead of one paragraph; add explicit "Bayesian adjustment: ~X% down" hint |
-| Win rate too low overall | Aggregate metric below 55% across the run | Calibration block is net-negative on user-perceived quality. Likely over-asserting bias. Consider: only mention bias when judge_model_agreement on the profile is high (>=0.8) |
+| Win rate too low overall | Aggregate metric below the 60% gate across the run | Calibration block is net-negative on user-perceived quality. Likely over-asserting bias. Consider: only mention bias when judge_model_agreement on the profile is high (>=0.8) |
 
 ## How to run
 
@@ -85,7 +85,7 @@ Failure-mode → fix mapping:
 bun eval/runner/cat14-calibration.ts
 
 # Smoke (2 probes, judge stubbed, no API spend)
-bun test eval/runner/cat14-calibration.test.ts
+bun test test/eval/cat14-calibration.test.ts
 
 # Single probe (debugging a specific failure mode)
 CAT14_PROBES=cat14-pos-1-geography bun eval/runner/cat14-calibration.ts
@@ -114,8 +114,12 @@ Three explicit choices worth flagging:
 
 **v1 (this PR):**
 - 8 hand-authored probes covering the 4 main scenarios
-- Shell-out runner against `gbrain think` CLI (tests the real user path end-to-end)
-- 5-axis Haiku judge with structured tool-use output
+- In-process runner invoking gbrain's REAL think pipeline via the public
+  `gbrain/think` export (runThink against a seeded in-memory PGLite, LLM
+  client injected at temperature 0) — post-audit 2026-08-31; the runner no
+  longer mirrors prompts, and it never shelled out to the CLI despite what
+  this line used to claim
+- 5-axis Haiku judge with structured tool-use output, blind, both A/B orders judged
 - Per-probe JSON dumps for the fix-feedback loop
 
 **v2 (follow-up):**

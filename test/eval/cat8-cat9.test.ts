@@ -364,12 +364,15 @@ describe('Cat 9 buildEvidence', () => {
     expect(evidence.ground_truth_pages.length).toBe(2);
   });
 
-  test("'no_answer' ordering is omitted from the judge summary (judge enum predates it)", () => {
+  test("'no_answer' ordering passes through to the judge summary as a first-class label", () => {
+    // judge.ts ToolCallSummary + evidence-contract schema both carry
+    // 'no_answer' now — the judge should see that the run produced no
+    // final answer, never a mislabel and never a silent omission.
     const run = mockRunResult({ brainCalls: 2, finalAnswer: '' });
     run.stop_reason = 'turn_cap_exceeded';
     run.brain_first_ordering = 'no_answer';
     const evidence = buildEvidence(SCENARIO, run, PAGES);
-    expect(evidence.tool_call_summary.brain_first_ordering).toBeUndefined();
+    expect(evidence.tool_call_summary.brain_first_ordering).toBe('no_answer');
     expect(evidence.final_answer_text).toBe('');
   });
 

@@ -47,7 +47,7 @@
         },
         "brain_first_ordering": {
           "type": "string",
-          "enum": ["brain_before_answer", "answer_before_brain", "no_brain_calls"],
+          "enum": ["brain_before_answer", "answer_before_brain", "no_brain_calls", "no_answer"],
           "description": "Cat 8 metric: did the agent call search/get_page before producing the final answer?"
         },
         "made_dry_run_writes": {

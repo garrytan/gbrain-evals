@@ -223,11 +223,10 @@ export function buildEvidence(
     throw new GroundTruthResolutionError(scenario.id, missing);
   }
 
-  // judge.ts's ToolCallSummary enum predates the 'no_answer' ordering label;
-  // for no-answer runs we omit the field — the empty final_answer_text is
-  // the honest signal (never map 'no_answer' onto 'answer_before_brain').
-  const ordering = runResult.brain_first_ordering;
-  const judgeOrdering = ordering === 'no_answer' ? undefined : ordering;
+  // 'no_answer' is a first-class ordering label (judge.ts ToolCallSummary +
+  // evidence-contract schema both carry it) — pass it straight through so
+  // the judge sees that the run produced no final answer at all.
+  const judgeOrdering = runResult.brain_first_ordering;
 
   return {
     schema_version: 1,

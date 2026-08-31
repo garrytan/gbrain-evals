@@ -249,8 +249,14 @@ function runCatSubprocess(cat: SubprocessCategory): Promise<CategoryRun> {
       if (settled) return;
       settled = true;
       child.kill('SIGTERM');
+      // SIGKILL escalation: a hung PGLite worker can ignore SIGTERM and keep
+      // its ~400MB resident while the rest of the suite runs (orchestrators-16).
+      const killTimer = setTimeout(() => {
+        try { child.kill('SIGKILL'); } catch { /* already gone */ }
+      }, 10_000);
+      killTimer.unref?.();
       const elapsed = Date.now() - started;
-      output += `\n\n[TIMEOUT] Cat ${cat.num} exceeded ${timeoutMs}ms — SIGTERM sent.`;
+      output += `\n\n[TIMEOUT] Cat ${cat.num} exceeded ${timeoutMs}ms — SIGTERM sent (SIGKILL after 10s).`;
       resolve({
         num: cat.num,
         name: cat.name,
