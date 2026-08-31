@@ -95,6 +95,8 @@ export interface JudgeResult {
   cost_usd: number;
   /** True when the second retry also failed and fallback fail-verdict was recorded. */
   fallback_used: boolean;
+  /** 1 = clean first-try parse; 2 = corrective retry was needed (shared-infra-11). */
+  attempts: 1 | 2;
   /** Judge provenance for receipts: model + system prompt version actually used. */
   judge_model: string;
   system_prompt_version?: string;
@@ -445,6 +447,7 @@ export async function scoreAnswer(
       output_tokens: outputTokensTotal,
       cost_usd: costTotal,
       fallback_used: true,
+      attempts: 2,
       judge_model: model,
       system_prompt_version: config.systemPromptVersion,
     };
@@ -467,6 +470,7 @@ export async function scoreAnswer(
     output_tokens: outputTokensTotal,
     cost_usd: costTotal,
     fallback_used: false,
+    attempts: attempt1.parsed.input !== null ? 1 : 2,
     judge_model: model,
     system_prompt_version: config.systemPromptVersion,
   };

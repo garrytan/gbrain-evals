@@ -3,7 +3,7 @@
  * Generate the v0.41-launch hermetic baseline file for `gbrain eval gate --baseline`.
  *
  * This script is the reproducible recipe for `baselines/v0.41-launch.baseline.ndjson`.
- * Seeds a PGLite in-memory brain with the same 12-page placeholder corpus that backs
+ * Seeds a PGLite in-memory brain with the placeholder corpus derived from
  * `qrels/v0.41-launch.qrels.json`, runs the same 12 queries via `engine.searchKeyword`,
  * captures the retrieval as `EvalCandidateInput` rows, and pipes them through
  * `gbrain bench publish`'s `buildBaselineFromInput` to produce the baseline.
@@ -101,6 +101,8 @@ function inferType(slug: string): string {
   switch (prefix) {
     case 'people': return 'person';
     case 'companies': return 'company';
+    case 'deals': return 'deal';
+    case 'personal': return 'note';
     case 'concepts': return 'concept';
     case 'topics': return 'concept';
     case 'meetings': return 'meeting';
@@ -218,8 +220,9 @@ async function main(): Promise<void> {
   // baseline isn't useful and the gate will report 0 jaccard).
   const empty = captured.filter(c => c.retrieved_slugs.length === 0);
   if (empty.length > 0) {
-    console.error(`[generate] WARN: ${empty.length} query(ies) returned 0 results — corpus may be under-seeded`);
+    console.error(`[generate] FATAL: ${empty.length} query(ies) returned 0 results — an empty capture row makes the baseline gate vacuous (data-integrity-12):`);
     for (const c of empty) console.error(`  - "${c.query}"`);
+    process.exit(1);
   }
 
   // ── --check mode: the CI retrieval-regression gate ──────────────────

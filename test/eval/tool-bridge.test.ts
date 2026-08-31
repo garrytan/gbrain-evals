@@ -18,6 +18,7 @@ import { describe, test, expect } from 'bun:test';
 import {
   buildToolDefs,
   createToolBridge,
+  sanitizeToolInput,
   EXPOSED_READ_TOOLS,
   DRY_RUN_TOOLS,
   ForbiddenOpError,
@@ -143,12 +144,21 @@ describe('executeTool — read ops', () => {
   });
 
   test('forces expand=false on query tool even if agent passes expand=true', async () => {
+    // The falsifiable assertion: the sanitizing seam itself. Remove the
+    // guard in sanitizeToolInput and this fails (audit tests-audit-03 — the
+    // old version asserted only call_order, which passed either way).
+    expect(sanitizeToolInput('query', { query: 'who is amara', expand: true })).toEqual({
+      query: 'who is amara',
+      expand: false,
+    });
+    // Non-query tools pass through untouched.
+    expect(sanitizeToolInput('get_page', { slug: 'x', expand: true })).toEqual({
+      slug: 'x',
+      expand: true,
+    });
+    // And the integration path still runs end-to-end with the guard applied.
     const { engine } = makeFakeEngine();
     const bridge = createToolBridge(cfg(engine));
-    // The query op's handler reads `params.expand !== false`. Our bridge overwrites
-    // expand to false inside executeTool. We can't directly observe the expand value
-    // reaching the handler via the proxy-engine, but we can assert no nested Haiku
-    // call was made by checking call_order only contains 'query'.
     await bridge.executeTool('query', { query: 'who is amara', expand: true });
     expect(bridge.state.call_order).toEqual(['query']);
     expect(bridge.state.count_by_tool['query']).toBe(1);

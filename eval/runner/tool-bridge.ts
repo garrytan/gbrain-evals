@@ -349,6 +349,17 @@ export interface ToolBridge {
   state: ToolBridgeState;
 }
 
+/**
+ * Pure input-sanitizing seam: the expand=false guard, exported so tests can
+ * prove it BITES (the old test asserted only call_order, which passes with
+ * or without the guard — audit tests-audit-03).
+ */
+export function sanitizeToolInput(name: string, input: Record<string, unknown>): Record<string, unknown> {
+  const safeInput = { ...input };
+  if (name === 'query') safeInput.expand = false;
+  return safeInput;
+}
+
 export function createToolBridge(config: ToolBridgeConfig): ToolBridge {
   const maxChars = config.maxCharsPerResult ?? DEFAULT_MAX_CHARS;
   const opsByName = new Map<string, Operation>();
@@ -411,8 +422,7 @@ export function createToolBridge(config: ToolBridgeConfig): ToolBridge {
     // CRITICAL: force expand=false on query. Belt-and-suspenders with the
     // schema strip — even if the model somehow passes an `expand` field, we
     // overwrite it.
-    const safeInput = { ...input };
-    if (name === 'query') safeInput.expand = false;
+    const safeInput = sanitizeToolInput(name, input);
 
     const raw = await op.handler(ctx, safeInput);
     const serialized = typeof raw === 'string' ? raw : JSON.stringify(raw);
