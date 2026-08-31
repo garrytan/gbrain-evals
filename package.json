@@ -26,7 +26,7 @@
     "eval:cat11": "bun eval/runner/cat11-multimodal.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.30.0",
+    "@anthropic-ai/sdk": "^0.122.0",
     "ai": "^6.0.168",
     "gbrain": "github:garrytan/gbrain#7b7921d86141c4e4086e50828de9a867a6814247"
   },

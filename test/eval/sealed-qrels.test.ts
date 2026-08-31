@@ -126,14 +126,12 @@ describe('sanitizePage — strips _facts and frontmatter', () => {
 
 // ─── sanitizeQuery ────────────────────────────────────────────────────
 
-describe('sanitizeQuery — strips gold', () => {
-  test('output has public fields only', () => {
+describe('sanitizeQuery — minimal operational surface', () => {
+  test('output has the operational fields', () => {
     const q = makeQuery();
     const sanitized = sanitizeQuery(q);
     expect(sanitized.id).toBe(q.id);
-    expect(sanitized.tier).toBe(q.tier);
     expect(sanitized.text).toBe(q.text);
-    expect(sanitized.expected_output_type).toBe(q.expected_output_type);
   });
 
   test('output does NOT have gold', () => {
@@ -144,27 +142,40 @@ describe('sanitizeQuery — strips gold', () => {
     expect('gold' in sanitized).toBe(false);
   });
 
-  test('retains optional fields (as_of_date, tags, author)', () => {
+  test('strips EVERY classification signal — tier, tags, author, expected_output_type, variants, failure modes', () => {
+    // Audit finding shared-infra-04 + outside-voice round 2: tier announces
+    // "adversarial trap", tags carry 'identity-collision'/'contradiction',
+    // expected_output_type reveals abstention expectations, and
+    // acceptable_variants are the answer phrasings themselves. None of these
+    // are needed to rank documents.
     const q = makeQuery({
-      as_of_date: '2026-04-20',
-      tags: ['temporal'],
-      author: 'internal',
+      tier: 'adversarial',
+      tags: ['identity-collision', 'contradiction'],
+      author: 'external-researcher',
       acceptable_variants: ['who works at Halfway'],
       known_failure_modes: ['bare-name-collision'],
     });
     const sanitized = sanitizeQuery(q);
-    expect(sanitized.as_of_date).toBe('2026-04-20');
-    expect(sanitized.tags).toEqual(['temporal']);
-    expect(sanitized.author).toBe('internal');
-    expect(sanitized.acceptable_variants).toEqual(['who works at Halfway']);
-    expect(sanitized.known_failure_modes).toEqual(['bare-name-collision']);
+    const keys = Object.keys(sanitized).sort();
+    expect(keys).toEqual(['id', 'text']);
+    expect('tier' in sanitized).toBe(false);
+    expect('tags' in sanitized).toBe(false);
+    expect('author' in sanitized).toBe(false);
+    expect('expected_output_type' in sanitized).toBe(false);
+    expect('acceptable_variants' in sanitized).toBe(false);
+    expect('known_failure_modes' in sanitized).toBe(false);
   });
 
-  test('omits undefined optional fields from the sanitized shape', () => {
-    const q = makeQuery(); // no as_of_date, no tags, etc.
+  test('retains as_of_date (temporal queries need it operationally)', () => {
+    const q = makeQuery({ as_of_date: '2026-04-20' });
+    const sanitized = sanitizeQuery(q);
+    expect(sanitized.as_of_date).toBe('2026-04-20');
+  });
+
+  test('omits undefined as_of_date from the sanitized shape', () => {
+    const q = makeQuery();
     const sanitized = sanitizeQuery(q);
     expect('as_of_date' in sanitized).toBe(false);
-    expect('tags' in sanitized).toBe(false);
   });
 
   test('output is a NEW object', () => {

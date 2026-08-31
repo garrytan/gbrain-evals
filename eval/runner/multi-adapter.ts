@@ -341,20 +341,31 @@ async function scoreOneRun(
   let totalR = 0;
   let totalCorrect = 0;
   let totalExpected = 0;
+  let scored = 0;
   for (const q of queries) {
     const publicQ = sanitizeQuery(q);
-    const results = await adapter.query(publicQ as unknown as Query, state);
+    const results = await adapter.query(publicQ, state);
     const relevant = new Set(q.gold.relevant ?? []);
+    // Gold-less queries are excluded from P/R means (metrics return NaN for
+    // an empty relevant set) instead of averaging in a fake 0.
+    if (relevant.size === 0) continue;
+    scored++;
     totalP += precisionAtK(results, relevant, TOP_K);
     totalR += recallAtK(results, relevant, TOP_K);
     const topK = results.slice(0, TOP_K);
-    for (const r of topK) if (relevant.has(r.page_id)) totalCorrect++;
+    const seen = new Set<string>();
+    for (const r of topK) {
+      if (relevant.has(r.page_id) && !seen.has(r.page_id)) {
+        seen.add(r.page_id);
+        totalCorrect++;
+      }
+    }
     totalExpected += relevant.size;
   }
   if (adapter.teardown) await adapter.teardown(state);
   return {
-    mean_precision_at_k: queries.length > 0 ? totalP / queries.length : 0,
-    mean_recall_at_k: queries.length > 0 ? totalR / queries.length : 0,
+    mean_precision_at_k: scored > 0 ? totalP / scored : 0,
+    mean_recall_at_k: scored > 0 ? totalR / scored : 0,
     correct_in_top_k: totalCorrect,
     total_expected: totalExpected,
   };

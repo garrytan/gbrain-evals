@@ -35,11 +35,12 @@ type StubResponse = {
   stop_reason?: string;
 };
 
-function makeStubClient(responses: StubResponse[]): Anthropic {
+function makeStubClient(responses: StubResponse[], captured: unknown[] = []): Anthropic {
   let i = 0;
   const client = {
     messages: {
-      create: async () => {
+      create: async (params: unknown) => {
+        captured.push(params);
         if (i >= responses.length) {
           throw new Error(`Stub client: out of canned responses (consumed ${i}, configured ${responses.length})`);
         }
@@ -227,6 +228,80 @@ describe('scoreAnswer — retry + fallback', () => {
     }
     expect(result.overall_score).toBe(0);
   });
+
+  test('retry carries corrective feedback naming the defect', async () => {
+    const captured: unknown[] = [];
+    const client = makeStubClient(
+      [
+        // Attempt 1: omits cites_source and no_hallucination → coverage mismatch
+        scoreBlock([['names_entity', 5, '.']], 'pass', '.'),
+        scoreBlock(
+          [
+            ['names_entity', 5, '.'],
+            ['cites_source', 5, '.'],
+            ['no_hallucination', 5, '.'],
+          ],
+          'pass',
+          '.',
+        ),
+      ],
+      captured,
+    );
+    const result = await scoreAnswer(makeEvidence(), { client });
+    expect(result.verdict).toBe('pass');
+    expect(result.fallback_used).toBe(false);
+    expect(captured.length).toBe(2);
+    const retryParams = captured[1] as { messages: Array<{ role: string; content: unknown }>; temperature?: number };
+    expect(retryParams.messages.length).toBe(2);
+    expect(String(retryParams.messages[1].content)).toContain('malformed');
+    expect(String(retryParams.messages[1].content)).toContain('cites_source');
+    // Judges run deterministically.
+    expect(retryParams.temperature).toBe(0);
+  });
+
+  test('partial rubric coverage is malformed — judge_failed after retry, never renormalized', async () => {
+    // Both attempts score only 1 of 3 criteria. The old implementation would
+    // have averaged over the returned subset (5/1 = 5.0 → pass). Policy:
+    // coverage mismatch = malformed → judge_failed (audit shared-infra-01).
+    const partial = scoreBlock([['names_entity', 5, '.']], 'pass', '.');
+    const client = makeStubClient([partial, partial]);
+    const result = await scoreAnswer(makeEvidence(), { client });
+    expect(result.verdict).toBe('judge_failed');
+    expect(result.fallback_used).toBe(true);
+    expect(result.overall_score).toBe(0);
+  });
+
+  test('duplicate criterion ids are malformed', async () => {
+    const dup = scoreBlock(
+      [
+        ['names_entity', 5, '.'],
+        ['names_entity', 5, 'again'],
+        ['cites_source', 5, '.'],
+        ['no_hallucination', 5, '.'],
+      ],
+      'pass',
+      '.',
+    );
+    const client = makeStubClient([dup, dup]);
+    const result = await scoreAnswer(makeEvidence(), { client });
+    expect(result.verdict).toBe('judge_failed');
+  });
+
+  test('unknown criterion ids are malformed', async () => {
+    const unknown = scoreBlock(
+      [
+        ['names_entity', 5, '.'],
+        ['cites_source', 5, '.'],
+        ['no_hallucination', 5, '.'],
+        ['invented_criterion', 5, 'made up'],
+      ],
+      'pass',
+      '.',
+    );
+    const client = makeStubClient([unknown, unknown]);
+    const result = await scoreAnswer(makeEvidence(), { client });
+    expect(result.verdict).toBe('judge_failed');
+  });
 });
 
 // ─── Evidence contract ───────────────────────────────────────────────
@@ -307,12 +382,16 @@ describe('renderEvidenceForJudge', () => {
 
 // ─── Pure helpers ────────────────────────────────────────────────────
 
+const PARSE_RUBRIC: RubricCriterion[] = [{ id: 'c1', criterion: '', weight: 1 }];
+
 describe('parseToolUse', () => {
-  test('rejects messages with no tool_use block', () => {
+  test('rejects messages with no tool_use block, naming the defect', () => {
     const response = {
       content: [{ type: 'text', text: 'just text' }],
     } as unknown as Anthropic.Messages.Message;
-    expect(parseToolUse(response)).toBeNull();
+    const parsed = parseToolUse(response, PARSE_RUBRIC);
+    expect(parsed.input).toBeNull();
+    expect(parsed.defect).toContain('no score_answer tool_use');
   });
 
   test('rejects malformed input shape', () => {
@@ -326,10 +405,12 @@ describe('parseToolUse', () => {
         },
       ],
     } as unknown as Anthropic.Messages.Message;
-    expect(parseToolUse(response)).toBeNull();
+    const parsed = parseToolUse(response, PARSE_RUBRIC);
+    expect(parsed.input).toBeNull();
+    expect(parsed.defect).toContain('scores was not an array');
   });
 
-  test('accepts valid input', () => {
+  test('accepts valid input with full rubric coverage', () => {
     const response = {
       content: [
         {
@@ -344,10 +425,35 @@ describe('parseToolUse', () => {
         },
       ],
     } as unknown as Anthropic.Messages.Message;
-    const parsed = parseToolUse(response);
-    expect(parsed).not.toBeNull();
-    expect(parsed!.scores.length).toBe(1);
-    expect(parsed!.verdict).toBe('partial');
+    const parsed = parseToolUse(response, PARSE_RUBRIC);
+    expect(parsed.input).not.toBeNull();
+    expect(parsed.defect).toBeNull();
+    expect(parsed.input!.scores.length).toBe(1);
+    expect(parsed.input!.verdict).toBe('partial');
+  });
+
+  test('rejects partial coverage, naming the missing criterion', () => {
+    const rubric: RubricCriterion[] = [
+      { id: 'c1', criterion: '', weight: 1 },
+      { id: 'c2', criterion: '', weight: 2 },
+    ];
+    const response = {
+      content: [
+        {
+          type: 'tool_use',
+          id: 'x',
+          name: 'score_answer',
+          input: {
+            scores: [{ criterion_id: 'c1', score: 3, rationale: 'ok' }],
+            verdict: 'partial',
+            overall_rationale: 'fine',
+          },
+        },
+      ],
+    } as unknown as Anthropic.Messages.Message;
+    const parsed = parseToolUse(response, rubric);
+    expect(parsed.input).toBeNull();
+    expect(parsed.defect).toContain('c2');
   });
 });
 
@@ -381,11 +487,34 @@ describe('weightedMean', () => {
     expect(weightedMean([], [])).toBe(0);
   });
 
-  test('missing rubric entry defaults weight=1', () => {
-    const scores = [{ criterion_id: 'unknown', score: 4, rationale: '' }];
-    const rubric: RubricCriterion[] = [];
-    // weight=1 default → 4/1 = 4
-    expect(weightedMean(scores, rubric)).toBe(4);
+  test('omitted criterion scores 0 but KEEPS its weight in the denominator', () => {
+    // The pre-audit implementation dropped omitted criteria from both
+    // numerator and denominator, inflating the mean (5/1 = 5.0 here).
+    const scores = [{ criterion_id: 'a', score: 5, rationale: '' }];
+    const rubric: RubricCriterion[] = [
+      { id: 'a', criterion: '', weight: 1 },
+      { id: 'b', criterion: '', weight: 2 },
+    ];
+    // (5*1 + 0*2) / 3 = 1.667 — NOT 5.0
+    expect(weightedMean(scores, rubric)).toBeCloseTo(1.667, 3);
+  });
+
+  test('criterion ids not in the rubric are ignored, not weight-1 defaulted', () => {
+    const scores = [
+      { criterion_id: 'a', score: 1, rationale: '' },
+      { criterion_id: 'invented', score: 5, rationale: '' },
+    ];
+    const rubric: RubricCriterion[] = [{ id: 'a', criterion: '', weight: 1 }];
+    expect(weightedMean(scores, rubric)).toBe(1);
+  });
+
+  test('duplicated criterion id counts once (first occurrence)', () => {
+    const scores = [
+      { criterion_id: 'a', score: 2, rationale: '' },
+      { criterion_id: 'a', score: 5, rationale: 'again' },
+    ];
+    const rubric: RubricCriterion[] = [{ id: 'a', criterion: '', weight: 1 }];
+    expect(weightedMean(scores, rubric)).toBe(2);
   });
 });
 

@@ -31,12 +31,14 @@ import {
 describe('CATEGORIES catalog', () => {
   test('includes every expected Cat number in ascending order', () => {
     const nums = CATEGORIES.map(c => c.num);
-    expect(nums).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+    // Cat 34 (BrainBench memory conformance) joined the catalog in #16 —
+    // this list is the drift tripwire, keep it exact (audit tests-audit-01).
+    expect(nums).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 34]);
   });
 
-  test('subprocess Cats: 1, 2, 3, 4, 6, 7, 10, 11, 12 (9 total)', () => {
+  test('subprocess Cats: 1, 2, 3, 4, 6, 7, 10, 11, 12, 34 (10 total)', () => {
     const subprocessNums = CATEGORIES.filter(c => c.kind === 'subprocess').map(c => c.num);
-    expect(subprocessNums.sort((a, b) => a - b)).toEqual([1, 2, 3, 4, 6, 7, 10, 11, 12]);
+    expect(subprocessNums.sort((a, b) => a - b)).toEqual([1, 2, 3, 4, 6, 7, 10, 11, 12, 34]);
   });
 
   test('programmatic Cats: 5, 8, 9 (3 total)', () => {

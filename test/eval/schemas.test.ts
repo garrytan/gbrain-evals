@@ -25,6 +25,7 @@ const GOLD_DIR = join(import.meta.dir, '../../eval/data/gold');
 const EXPECTED_SCHEMAS = [
   'corpus-manifest.schema.json',
   'public-probe.schema.json',
+  'receipt.schema.json',
   'tool-schema.schema.json',
   'transcript.schema.json',
   'scorecard.schema.json',

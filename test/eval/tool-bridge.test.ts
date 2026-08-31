@@ -46,6 +46,10 @@ function makeFakeEngine(responses: Record<string, unknown> = {}): {
           calls.push({ method: prop, args });
           if (prop in responses) return responses[prop];
           if ('__default__' in responses) return responses.__default__;
+          // gbrain v0.47's alias hop expects a Map from resolveAliases and
+          // dereferences .get() outside its try/catch — an array here crashes
+          // real hybridSearch code paths exercised through the bridge.
+          if (prop === 'resolveAliases') return new Map();
           return [];
         };
       },

@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://brainbench.dev/schemas/receipt.schema.json",
+  "title": "BrainBench category receipt (v0.3.0)",
+  "description": "One receipt per category run. all.ts aggregates receipts, not exit codes. Mirrors eval/runner/receipt.ts validateReceipt(); keep in lockstep.",
+  "type": "object",
+  "required": [
+    "schema_version", "benchmark_version", "category", "run_status",
+    "n_total", "n_scored", "completion_rate", "errors", "publishable",
+    "gbrain_version", "gbrain_pin", "started_at", "finished_at"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "benchmark_version": { "type": "string" },
+    "category": { "type": "string", "minLength": 1 },
+    "run_status": { "enum": ["completed", "error", "skipped", "not_run"] },
+    "verdict": { "enum": ["pass", "partial", "fail"] },
+    "skip_reason": { "type": "string" },
+    "n_total": { "type": "number", "minimum": 0 },
+    "n_scored": { "type": "number", "minimum": 0 },
+    "completion_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["probe_id", "origin", "message"],
+        "properties": {
+          "probe_id": { "type": "string" },
+          "origin": { "enum": ["sut", "harness", "dependency", "judge"] },
+          "message": { "type": "string" }
+        }
+      }
+    },
+    "publishable": { "type": "boolean" },
+    "gbrain_version": { "type": "string" },
+    "gbrain_pin": { "type": "string" },
+    "resolved_config": { "type": "object" },
+    "judge": {
+      "type": "object",
+      "required": ["model", "temperature"],
+      "properties": {
+        "model": { "type": "string" },
+        "temperature": { "type": "number" },
+        "rubric_version": { "type": "string" },
+        "seed": { "type": "number" }
+      }
+    },
+    "hashes": { "type": "object", "additionalProperties": { "type": "string" } },
+    "started_at": { "type": "string" },
+    "finished_at": { "type": "string" },
+    "data": { "type": "object" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "run_status": { "const": "completed" } } },
+      "then": { "required": ["verdict"] }
+    },
+    {
+      "if": { "properties": { "run_status": { "const": "skipped" } } },
+      "then": { "required": ["skip_reason"] }
+    }
+  ]
+}

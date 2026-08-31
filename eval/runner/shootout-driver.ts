@@ -191,15 +191,24 @@ async function runCell(args: ParsedArgs): Promise<CellReceipt> {
   const publicPages = pages.map(sanitizePage);
   const state = await adapter.init(publicPages, { name: adapter.name, shootout });
 
-  let totalP = 0, totalR = 0, totalCorrect = 0, totalExpected = 0;
+  let totalP = 0, totalR = 0, totalCorrect = 0, totalExpected = 0, scored = 0;
   for (const q of queries) {
     const publicQ = sanitizeQuery(q);
-    const results: RankedDoc[] = await adapter.query(publicQ as unknown as Query, state);
+    const results: RankedDoc[] = await adapter.query(publicQ, state);
     const relevant = new Set(q.gold.relevant ?? []);
+    // Gold-less queries excluded from means (metrics return NaN on empty gold).
+    if (relevant.size === 0) continue;
+    scored++;
     totalP += precisionAtK(results, relevant, TOP_K);
     totalR += recallAtK(results, relevant, TOP_K);
     const topK = results.slice(0, TOP_K);
-    for (const r of topK) if (relevant.has(r.page_id)) totalCorrect++;
+    const seen = new Set<string>();
+    for (const r of topK) {
+      if (relevant.has(r.page_id) && !seen.has(r.page_id)) {
+        seen.add(r.page_id);
+        totalCorrect++;
+      }
+    }
     totalExpected += relevant.size;
   }
   if (adapter.teardown) await adapter.teardown(state);
@@ -213,8 +222,8 @@ async function runCell(args: ParsedArgs): Promise<CellReceipt> {
     subset: args.subset ?? null,
     queries: queries.length,
     top_k: TOP_K,
-    mean_precision_at_k: queries.length ? totalP / queries.length : 0,
-    mean_recall_at_k: queries.length ? totalR / queries.length : 0,
+    mean_precision_at_k: scored ? totalP / scored : 0,
+    mean_recall_at_k: scored ? totalR / scored : 0,
     correct_in_top_k: totalCorrect,
     total_expected: totalExpected,
     wallclock_ms,
