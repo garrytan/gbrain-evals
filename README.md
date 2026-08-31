@@ -1,7 +1,8 @@
 # gbrain-evals
 
 The test suite for [gbrain](https://github.com/garrytan/gbrain), the long-term
-memory an AI agent reads from and writes to.
+memory an AI agent reads from and writes to — and the public record of how it
+stacks up against every memory system that publishes numbers.
 
 Everything here is public, runs on your own machine, and can be reproduced from a
 commit hash. We test the whole surface that an agent's memory has to get right,
@@ -14,6 +15,36 @@ where it is weak.
 
 If you are deciding whether to trust gbrain with your agent's memory, this repo is
 how you check our work instead of taking our word for it.
+
+## Where gbrain beats the field
+
+Head-to-head, against every system with a published number we can find
+(sources + caveats in [docs/comparison-systems.md](docs/comparison-systems.md)):
+
+| Arena | gbrain | Best competitor | The gap |
+|---|---|---|---|
+| **Reading memory back** (LongMemEval, 500 public questions) | **97.6% R@5** with **no LLM in the retrieval loop** | MemPalace raw 96.6% (also no LLM); Stella ~85%; Contriever ~78%; BM25 ~70% | Best published no-LLM retrieval score. MemPal's 98.4% held-out needs a Haiku reranker on every query; gbrain gets within 0.8 points on embeddings + keywords alone, at retrieval cost of ~$0.50 per 1,000 questions. *Metric note: these are any-hit numbers, re-measurement under the stricter official `recall_all@5` is pending — see the [erratum](docs/benchmarks/2026-05-07-longmemeval-s.md).* |
+| **Writing memory down** (Cat 35, agent-session distillation) | **88.1% of salient content survives** into pages rated 91% usable, zero junk leakage, all 20 sessions emit | **Nobody.** No other system publishes write-path numbers for agent working sessions at all (HaluMem, the only other write-path benchmark, covers persona-chat memory points) | gbrain is the only memory system that measures — and publishes — whether the important stuff from a working session actually survives into memory, including whether the emotional tenor survives. First benchmark of its kind. |
+| **Volunteering memory at the right moment** (Cat 34, 149 gold turns) | **0 know-to-ask failures, push precision 1.0, write-back fidelity 1.0, 0 cross-source leaks** | **Nobody publishes comparable numbers.** We can't find another memory system that measures whether the right memory shows up *unprompted* at the right turn | The failure mode users actually feel — "my agent should have known that" — measured and at zero on every harness seam. |
+| **Precision under a hostile metric** (PrecisionMemBench, outside benchmark) | **0.582 precision at ~270ms** with adaptive return-sizing on | supermemory 0.43 at 819ms | Beats the nearest general-purpose system on both axes at a third of the latency; #2 overall behind only the benchmark author's purpose-built belief store. *The audit removed a seed-time shortcut from our adapter; the report carries a scores-drop-on-re-run banner and we'll republish.* |
+| **Relational recall vs the default RAG stack** (240-page corpus) | **97.9% R@5 / 49.1% P@5** | plain vector RAG (same embedder): 38 points less precision | The graph layer is worth ~30 points of precision on its own. This is the gap between gbrain and the vector-store default that most memory products ship. |
+
+Three things nobody else in this space does at all:
+
+- **A measured write path.** Every competitor publishes read-side retrieval
+  scores. gbrain also publishes what fraction of a session's salient content
+  survives *into* memory — the half of the problem that determines whether
+  there's anything worth retrieving later.
+- **A self-auditing benchmark suite.** In August 2026 we ran a 35-agent audit
+  of this suite against itself, published all
+  [239 findings](docs/audit/2026-08-31-eval-audit.md) (236 fixed), issued
+  errata instead of silently editing history, and put falsifiable gates plus
+  hermetic CI behind every number. When you read a gbrain score, you can read
+  the machinery that produced it and every bug that machinery ever had.
+- **Benchmarks that bite back.** Cat 35's first published run scored 61.5%
+  with 4 sessions producing no page at all. gbrain shipped a fix wave aimed at
+  exactly those failures and the re-run hit 88.1%. A benchmark that can't fail
+  can't do that.
 
 ## How these benchmarks work (the 60-second version)
 
@@ -41,7 +72,7 @@ Most questions want high recall (don't miss the answer). Some want high precisio
 proportion for the question being asked. We test for that balance, not for one
 metric at the expense of the other.
 
-## Where gbrain lands today
+## The numbers, report by report
 
 | What we measured | Result | Plain English | Report |
 |---|---|---|---|
@@ -75,6 +106,14 @@ results and lets the model sort them out.
 We left the honest 0.076 default in the README on purpose. A system you build on
 should optimize for the real distribution of questions, not for topping a narrow
 test, and it should tell you plainly when a number comes from a corner case.
+
+The same discipline applies to our own harness: the 2026-08-31 audit
+([full report](docs/audit/2026-08-31-eval-audit.md)) turned 35 agents loose on
+this suite, adversarially verified 239 findings against the code, fixed 236 of
+them, and published the lot — including the metric bug behind the LongMemEval
+erratum above. The head-to-head claims survive because they are scoped to what
+the machinery can actually prove. That is the difference between this table
+and a landing page.
 Anti-gaming is built into the harness itself: sealed answer keys at the boundary,
 tolerance bands from repeated runs, pinned judge versions, and seeded
 randomization where order could bias a result (page-ingestion order is shuffled
