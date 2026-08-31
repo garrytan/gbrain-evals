@@ -21,14 +21,15 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
+// Default to the PINNED install in node_modules — that is what CI has and
+// what the baseline gates. GBRAIN_SRC overrides for local gbrain checkouts
+// during development.
 const GBRAIN_SRC = process.env.GBRAIN_SRC
   ? resolve(process.env.GBRAIN_SRC)
-  : resolve(import.meta.dir, '..', '..', 'gbrain');
+  : resolve(import.meta.dir, '..', 'node_modules', 'gbrain');
 
-// Dynamic imports from the gbrain workspace source. Uses relative file paths
-// instead of the `gbrain` package import so the generator works against a
-// local checkout (the published `gbrain` npm package follows master and may
-// lag behind a development version).
+// Dynamic imports from the gbrain source tree (relative file paths, because
+// bench-publish/baseline-file are not in gbrain's export map).
 const { PGLiteEngine } = await import(join(GBRAIN_SRC, 'src/core/pglite-engine.ts'));
 const { buildBaselineFromInput } = await import(join(GBRAIN_SRC, 'src/commands/bench-publish.ts'));
 const { serializeBaselineFile } = await import(join(GBRAIN_SRC, 'src/core/bench/baseline-file.ts'));
@@ -219,6 +220,55 @@ async function main(): Promise<void> {
   if (empty.length > 0) {
     console.error(`[generate] WARN: ${empty.length} query(ies) returned 0 results — corpus may be under-seeded`);
     for (const c of empty) console.error(`  - "${c.query}"`);
+  }
+
+  // ── --check mode: the CI retrieval-regression gate ──────────────────
+  // Instead of writing a new baseline, compare this run's captures against
+  // the COMMITTED baseline: per-query Jaccard over retrieved slug sets
+  // >= 0.85 mean and expected-top1 hit rate >= 0.8 (same thresholds the
+  // baseline metadata declares). Hermetic — keyword-only, zero API keys —
+  // so `bun scripts/generate-v0.41-launch.ts --check` makes the
+  // baselines/README CI claim true on every PR.
+  if (process.argv.includes('--check')) {
+    const baselinePath = resolve(import.meta.dir, '..', 'baselines', 'v0.41-launch.baseline.ndjson');
+    const rows = readFileSync(baselinePath, 'utf8').split('\n').filter(l => l.trim());
+    const baselineByQuery = new Map<string, string[]>();
+    let thresholds = { jaccard: 0.85, top1: 0.8 };
+    for (const line of rows) {
+      const row = JSON.parse(line) as Record<string, unknown>;
+      if (row._kind === 'baseline_metadata') {
+        thresholds = { ...thresholds, ...(row.thresholds as typeof thresholds) };
+      } else {
+        baselineByQuery.set(String(row.query), row.retrieved_slugs as string[]);
+      }
+    }
+    let jaccardSum = 0;
+    let top1Hits = 0;
+    const problems: string[] = [];
+    for (let i = 0; i < qrels.queries.length; i++) {
+      const q = qrels.queries[i];
+      const now = captured[i].retrieved_slugs;
+      const base = baselineByQuery.get(q.query) ?? [];
+      const a = new Set(now);
+      const b = new Set(base);
+      const inter = [...a].filter(x => b.has(x)).length;
+      const union = new Set([...a, ...b]).size || 1;
+      jaccardSum += inter / union;
+      if (now[0] === q.first_relevant_slug) top1Hits++;
+      else problems.push(`${q.query_id}: top-1 ${now[0] ?? '(none)'} != expected ${q.first_relevant_slug}`);
+    }
+    const meanJaccard = jaccardSum / qrels.queries.length;
+    const top1Rate = top1Hits / qrels.queries.length;
+    console.error(`[gate] mean jaccard vs baseline: ${meanJaccard.toFixed(4)} (threshold ${thresholds.jaccard})`);
+    console.error(`[gate] expected-top1 hit rate:   ${top1Rate.toFixed(4)} (threshold ${thresholds.top1})`);
+    if (meanJaccard < thresholds.jaccard || top1Rate < thresholds.top1) {
+      for (const p of problems) console.error(`  - ${p}`);
+      console.error('[gate] FAIL — retrieval regressed vs the committed baseline/qrels.');
+      process.exit(1);
+    }
+    console.error('[gate] PASS');
+    await engine.disconnect();
+    return;
   }
 
   // Publish the baseline with a pinned publish timestamp. HONESTY (audit
