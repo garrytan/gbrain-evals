@@ -1,0 +1,25 @@
+Walked the north ridge trail with the club on Saturday to map the sections
+that failed during the winter storms. The worst damage is a forty meter
+washout below the second switchback where the old culvert collapsed and the
+runoff cut a channel straight down the tread. Two smaller slumps near the
+overlook can be fixed with rock armoring in a single work day.
+
+We measured grades with a clinometer every fifty meters. The design standard
+for new tread in this district is a ten percent maximum sustained grade, and
+the washed out section was running at nearly eighteen percent, which explains
+why it keeps failing. The reroute we flagged follows a bench to the east and
+stays under eight percent the whole way.
+
+The grade math the crew uses on site is simple enough to keep in a script:
+
+```ts
+export function gradePercent(riseMeters: number, runMeters: number): number {
+  if (runMeters <= 0) throw new Error('run must be positive');
+  return (riseMeters / runMeters) * 100;
+}
+```
+
+Action items: order two culvert sleeves, book the excavator for the third
+week of the month, and file the reroute flags with the district office before
+the volunteer day so the new corridor can be cleared legally. Rough estimate
+is one hundred sixty volunteer hours for the full repair.

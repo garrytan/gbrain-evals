@@ -166,6 +166,54 @@ export function checkBaseline(path = join(REPO_ROOT, 'baselines/v0.41-launch.bas
   return { check: 'baseline', failures, warnings: [] };
 }
 
+// ─── 5b. multimodal fixtures — committed AND git-tracked ────────────
+
+/**
+ * The cat11 fixtures are hermetic and sha256-pinned; every file a
+ * fixtures.json references must exist AND be tracked by git. The
+ * tracked-check exists because a legacy .gitignore rule once kept these
+ * files out of git while local runs passed against the untracked copies —
+ * CI\'s fresh clone had none and cat11 failed with ENOENT (the
+ * works-on-my-machine class this gate now catches before push).
+ */
+export function checkMultimodalFixtures(root = join(REPO_ROOT, 'eval/data/multimodal')): CheckResult {
+  const failures: string[] = [];
+  const warnings: string[] = [];
+  if (!existsSync(root)) return { check: 'multimodal-fixtures', failures: ['eval/data/multimodal missing'], warnings };
+  let tracked: Set<string> | null = null;
+  try {
+    const { execSync } = require('child_process') as typeof import('child_process');
+    const out = execSync('git ls-files eval/data/multimodal', { cwd: REPO_ROOT, encoding: 'utf8' });
+    tracked = new Set(out.split('\n').filter(Boolean));
+  } catch {
+    warnings.push('git unavailable — tracked-in-git check skipped');
+  }
+  for (const modality of readdirSync(root).sort()) {
+    const dir = join(root, modality);
+    if (!statSync(dir).isDirectory()) continue;
+    const manifestPath = join(dir, 'fixtures.json');
+    if (!existsSync(manifestPath)) continue; // modality without a manifest is an honest skip (audio)
+    const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as {
+      fixtures?: Array<{ source?: string; canonical?: string; sha256?: string }>;
+    };
+    const referenced = [relative(REPO_ROOT, manifestPath)];
+    for (const f of manifest.fixtures ?? []) {
+      for (const rel of [f.source, f.canonical]) {
+        if (!rel) continue;
+        const p = join(dir, rel);
+        referenced.push(relative(REPO_ROOT, p));
+        if (!existsSync(p)) failures.push(`${modality}/${rel}: referenced by fixtures.json but missing on disk`);
+      }
+    }
+    if (tracked) {
+      for (const rel of referenced) {
+        if (!tracked.has(rel)) failures.push(`${rel}: exists locally but is NOT tracked by git — a fresh clone (CI) will not have it`);
+      }
+    }
+  }
+  return { check: 'multimodal-fixtures', failures, warnings };
+}
+
 // ─── 5. gold stubs ──────────────────────────────────────────────────
 
 export function checkGold(goldDir = join(REPO_ROOT, 'eval/data/gold')): CheckResult {
@@ -192,7 +240,7 @@ export function checkGold(goldDir = join(REPO_ROOT, 'eval/data/gold')): CheckRes
 // ─── CLI ────────────────────────────────────────────────────────────
 
 export function runAllChecks(): CheckResult[] {
-  return [checkSyntheticV1(), checkAmaraLife(), checkQrels(), checkBaseline(), checkGold()];
+  return [checkSyntheticV1(), checkAmaraLife(), checkQrels(), checkBaseline(), checkMultimodalFixtures(), checkGold()];
 }
 
 if (import.meta.main) {
