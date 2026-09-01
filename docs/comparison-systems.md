@@ -42,6 +42,8 @@ accuracy via an LLM judge. **Different metrics, never directly comparable.**
 | BM25 (sparse) | ~70% | R@5 | 5 | 500 | none | published baseline in the LongMemEval paper |
 | Mastra | 94.87% | QA-acc (NOT R@k) | n/a | 500 | yes (GPT-5-mini) | [mastra.ai/research/observational-memory](https://mastra.ai/research/observational-memory) |
 | Supermemory ASMR | ~99% | QA-acc (NOT R@k) | n/a | 500 | yes (Gemini-2/GPT-4o ensemble) | [their ASMR post](https://supermemory.ai/blog/we-broke-the-frontier-in-agent-memory-introducing-99-sota-memory-system/) — authors flag it as experimental, not production |
+| ContextFit + optional OpenAI fusion | 96.60% (Any@5) / 98.72% (Any@10) | R@k (any-hit, same looser variant as our unfixed gbrain rows) | 5 / 10 | 470 (30 abstention rows excluded) | none (embedding fusion only, no generative call) | [repro report](https://github.com/ContextFit/cf/blob/contextfit-lockin-20260518/benchmarks/longmemeval_fusion_claim_966_987_20260519.md), [raw JSON](https://github.com/ContextFit/cf/blob/contextfit-lockin-20260518/benchmarks/longmemeval_fusion_claim_966_987_20260519.json) — reported in [gbrain-evals#10](https://github.com/garrytan/gbrain-evals/issues/10), accessed 2026-09-01 |
+| ContextFit fusion + GPT-4o | 84.80% (overall) / 86.81% (task-averaged) | QA-acc (NOT R@k) | n/a | 500 | yes (GPT-4o generation + GPT-4o judge) | [QA report](https://github.com/ContextFit/cf/blob/contextfit-lockin-20260518/benchmarks/longmemeval_fusion_source_aware_qa_20260519.md) — reported in [gbrain-evals#10](https://github.com/garrytan/gbrain-evals/issues/10), accessed 2026-09-01 |
 
 gbrain's own rows (97.6% any-hit R@5 hybrid, 97.4% vector-only, 19.8%
 keyword-only; re-measurement under `recall_all@5` pending) live in the
@@ -54,6 +56,15 @@ table are retrieval recall (does the right session land in top-k). A
 system can have 100% retrieval recall and 60% QA accuracy if its answer
 model is bad, and vice versa. Don't compare them head-to-head without
 naming the gap.
+
+**ContextFit caveat (from the reporter, [gbrain-evals#10](https://github.com/garrytan/gbrain-evals/issues/10)):**
+the 96.60%/98.72% row is retrieval/evidence-ranking only, not an official
+LongMemEval QA score — it should not be read as one unless/until ContextFit
+runs through the standard answer-generation + judging harness. The QA row
+(84.80%) is a separate artifact, ContextFit's own pipeline
+(their retrieval → GPT-4o generation → GPT-4o judging), not the harness
+this repo's other QA-acc rows (Mastra, Supermemory) were measured with —
+treat it as directionally informative, not apples-to-apples with those two.
 
 ### vs gbrain (master, v0.47.8.0), row by row
 
@@ -104,6 +115,22 @@ naming the gap.
   read-path number can coexist with losing more than half the salient
   content at write time. gbrain's position is that the write path is where
   memory systems actually die, which is why Cat 35 exists.
+- **ContextFit (96.60% Any@5 retrieval) — gbrain wins narrowly, and the
+  architectural claim is the interesting part.** gbrain's own any-hit R@5
+  (97.6% hybrid, not yet re-measured under `recall_all@5`) edges this out
+  by ~1 point, but ContextFit's headline is *how* it gets there: a "local
+  token-native index" with no vector database, where OpenAI embeddings are
+  an optional fusion signal rather than the primary retrieval mechanism.
+  That's a materially different claim than gbrain's own keyword-only adapter
+  (19.8% on this same dataset) — ContextFit's token-native approach is doing
+  far more than plain keyword matching to reach 96.6% without embeddings as
+  the backbone. We haven't inspected their index design closely enough to
+  name the mechanism precisely; the fair read is "a competitive
+  non-vector-DB architecture," not a like-for-like keyword-arm comparison.
+  The QA row (84.80%) uses a different pipeline (ContextFit retrieval + own
+  GPT-4o generation/judge) than this table's other QA-acc rows, per the
+  reporter's own caveat above — no gbrain QA-acc number exists yet to
+  compare it against (same gap as the Mastra row).
 
 ## ConvoMem (Salesforce, 75K+ QA pairs)
 
@@ -206,6 +233,7 @@ human ceiling 56.1 joint score) is the planted-gold protocol ancestor.
 - [`supermemory.ai/blog/we-broke-the-frontier-in-agent-memory-introducing-99-sota-memory-system/`](https://supermemory.ai/blog/we-broke-the-frontier-in-agent-memory-introducing-99-sota-memory-system/) — Supermemory ASMR. Experimental ensemble, not production.
 - [LongMemEval HuggingFace](https://huggingface.co/datasets/xiaowu0162/longmemeval) — the dataset itself. Three splits: `_oracle` (15MB, ~3 sessions per Q), `_s` (278MB, ~50 sessions per Q), `_m` (2.7GB, more distractors).
 - [HaluMem, arXiv 2511.03506](https://arxiv.org/abs/2511.03506) — the only external write-path benchmark; Table 3 carries the Mem0/Supermemory extraction rows.
+- [ContextFit](https://www.context.fit/longmemeval-fusion-20260519.html) — retrieval/evidence-ranking claim; [QA follow-up](https://www.context.fit/longmemeval-fusion-qa-20260519.html); reported via [gbrain-evals#10](https://github.com/garrytan/gbrain-evals/issues/10) (accessed 2026-09-01).
 
 ## When you add a new comparison row
 
