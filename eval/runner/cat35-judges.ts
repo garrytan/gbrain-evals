@@ -68,6 +68,56 @@ function resolveModel(cfg?: Cat35JudgeCfg): string {
   return cfg?.model ?? process.env.CAT35_JUDGE_MODEL ?? DEFAULT_MODEL;
 }
 
+// ─── Server-reported model accounting (generators-19 pattern) ──────────────
+//
+// The REQUESTED model can be a movable alias (the published Cat 35 runs
+// recorded `claude-sonnet-4-6`, which the registry can repoint silently).
+// `resp.model` is the server's statement of what actually served the call —
+// best-available evidence, not an immutability proof. We count every judge
+// response's resolved model per run; the runner writes the map into the
+// receipt as `judge_models_resolved` and the cross-run comparability guard
+// requires a single identical resolved model on BOTH sides before any delta
+// is trusted.
+
+const resolvedModelCounts = new Map<string, number>();
+let warnedMissingModel = false;
+
+/** Count one judge response under its server-reported model ('null' when absent; warns once per run). */
+function recordResolvedModel(model: unknown): void {
+  const key = typeof model === 'string' && model.length > 0 ? model : 'null';
+  if (key === 'null' && !warnedMissingModel) {
+    warnedMissingModel = true;
+    process.stderr.write(
+      '[cat35-judges] response carried no model field — resolved-model evidence for this run is incomplete (counted under "null")\n',
+    );
+  }
+  resolvedModelCounts.set(key, (resolvedModelCounts.get(key) ?? 0) + 1);
+}
+
+/** Per-run {resolved_model: call_count} map, keys sorted for stable receipts. */
+export function getJudgeModelsResolved(): Record<string, number> {
+  return Object.fromEntries([...resolvedModelCounts.entries()].sort(([a], [b]) => a.localeCompare(b)));
+}
+
+/** Reset the per-run accumulator (runner start / test isolation). */
+export function resetJudgeModelsResolved(): void {
+  resolvedModelCounts.clear();
+  warnedMissingModel = false;
+}
+
+/**
+ * The comparability contract: a judge_models_resolved map is trustworthy for
+ * cross-run deltas ONLY when it names exactly one real model. Returns that
+ * model id, or null when the map is absent, empty, mixed (>1 key), or
+ * null-keyed (calls whose responses carried no model field).
+ */
+export function singleResolvedModel(map: unknown): string | null {
+  if (!map || typeof map !== 'object' || Array.isArray(map)) return null;
+  const keys = Object.keys(map as Record<string, unknown>);
+  if (keys.length !== 1) return null;
+  return keys[0] === 'null' || keys[0] === '' ? null : keys[0];
+}
+
 // ─── Shared call helper ───────────────────────────────────────────────────
 
 interface JudgeTool {
@@ -121,6 +171,9 @@ async function callJudgeOnce(
     );
     return { input: null, input_tokens: 0, output_tokens: 0, cost_usd: 0 };
   }
+  // Server-reported model (generators-19): counted per call; transport
+  // failures above never reach here, so only real responses are evidence.
+  recordResolvedModel((response as { model?: unknown }).model);
   let input: unknown | null = null;
   for (const block of response.content as unknown as Array<Record<string, unknown>>) {
     if (block.type === 'tool_use' && block.name === tool.name) {
