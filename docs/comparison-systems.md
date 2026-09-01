@@ -23,14 +23,17 @@ the default retrieval loop.
 
 ## LongMemEval (`xiaowu0162/longmemeval` `_s` split, 500 questions)
 
-Metric column key (corrected 2026-08-31): **R@k** = session-level retrieval
-recall. The OFFICIAL LongMemEval evaluator computes `recall_all@k` — ALL of a
-question's ground-truth sessions must land in top-k — and that is what
-systems using the published evaluator report. The gbrain rows below were
-measured with a looser ANY-HIT variant (>= 1 ground-truth session in top-k)
-and are flagged; corrected recall_all numbers are pending re-measurement
-(see the 2026-05-07 report's erratum). **QA-acc** = end-to-end answer
-accuracy via an LLM judge. **Different metrics, never directly comparable.**
+Metric column key (corrected 2026-08-31; resolved same day): **R@k** =
+session-level retrieval recall. The OFFICIAL LongMemEval evaluator computes
+`recall_all@k` — ALL of a question's ground-truth sessions must land in
+top-k — and that is what systems using the published evaluator report. The
+gbrain 97.6% was measured with a looser ANY-HIT variant (≥1 ground-truth
+session in top-k); the erratum is now RESOLVED from the original run's raw
+rows: **83.40% official `recall_all@5`** (n=470, `_abs` excluded) alongside
+the exactly-reconciled 97.60% any-hit. NOTE: the competitor rows below do
+NOT state which variant they ran — treat any cross-variant reading as
+non-comparable in both directions. **QA-acc** = end-to-end answer accuracy
+via an LLM judge. **Different metrics, never directly comparable.**
 
 | System | Headline | Metric | k | n | LLM in loop | Source |
 |---|---|---|---|---|---|---|
@@ -43,9 +46,11 @@ accuracy via an LLM judge. **Different metrics, never directly comparable.**
 | Mastra | 94.87% | QA-acc (NOT R@k) | n/a | 500 | yes (GPT-5-mini) | [mastra.ai/research/observational-memory](https://mastra.ai/research/observational-memory) |
 | Supermemory ASMR | ~99% | QA-acc (NOT R@k) | n/a | 500 | yes (Gemini-2/GPT-4o ensemble) | [their ASMR post](https://supermemory.ai/blog/we-broke-the-frontier-in-agent-memory-introducing-99-sota-memory-system/) — authors flag it as experimental, not production |
 
-gbrain's own rows (97.6% any-hit R@5 hybrid, 97.4% vector-only, 19.8%
-keyword-only; re-measurement under `recall_all@5` pending) live in the
-[2026-05-07 report](benchmarks/2026-05-07-longmemeval-s.md).
+gbrain's own rows — any-hit: 97.6% hybrid / 97.4% vector / 19.8% keyword;
+official `recall_all@5` (erratum resolved 2026-08-31 from the same raw
+rows): **83.4% hybrid / 84.3% hybrid+expansion / 79.4% vector / 10.6%
+keyword** — live in the
+[2026-05-07 report + resolution](benchmarks/2026-05-07-longmemeval-s.md).
 
 **Important reading note:** Mastra and Supermemory's numbers are end-to-end
 QA accuracy (does the system produce the right answer string, judged by

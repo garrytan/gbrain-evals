@@ -10,14 +10,19 @@ below re-measure published numbers with the corrected code. None can run in
 a keyless environment. Each command works from a fresh clone after
 `bun install --frozen-lockfile`.
 
-- [ ] **LongMemEval recall_all@5 re-measurement** (finding longmemeval-01;
-  erratum in `docs/benchmarks/2026-05-07-longmemeval-s.md`). The published
-  97.60% was any-hit recall; the runner now reports official `recall_all@5`.
-  Needs `OPENAI_API_KEY` (~$2 first embed, ~$0 with warm cache), dataset at
-  `eval/data/longmemeval/longmemeval_s.json` (HuggingFace, gated):
-  `bun eval/runner/longmemeval.ts --dataset eval/data/longmemeval/longmemeval_s.json`
-  Then update the report table + README row + comparison-systems metric key,
-  and regenerate the two SVGs via `bun eval/runner/longmemeval-chart.ts`.
+- [x] **LongMemEval recall_all@5 re-measurement** (finding longmemeval-01) —
+  **RESOLVED 2026-08-31 at $0**: the May run's archived NDJSON was rescored
+  with the audited aggregator (exact reconciliation 488/500 = 97.60% under
+  old semantics; gt validated 500/500 vs the canonical dataset). Corrected
+  headline **83.40% `recall_all@5`** published in the report's erratum-
+  resolution block + README + comparison-systems; committed artifacts under
+  `docs/benchmarks/2026-05-07-longmemeval-s/`. NOTE the previously
+  documented command here was broken (`--dataset` takes a split NAME, not a
+  path, and the runner defaults to k=8) — correct form:
+  `bun eval/runner/longmemeval.ts --path ~/datasets/longmemeval/longmemeval_s.json --top-k 5`.
+  Remaining (2026-08 fix-wave Phase 6): fresh keyed re-measurement at the
+  current gbrain pin (May ran v0.28.8) + SVG regeneration from the new
+  aggregate via `bun eval/runner/longmemeval-chart.ts`.
 - [ ] **cat13 / cat13b full adapter matrix** (crash-fixed in WS2; the
   configureGateway bug means no honest full run exists post-v0.40). Needs
   `OPENAI_API_KEY`: `bun eval/runner/cat13-conceptual.ts` and

@@ -1,0 +1,261 @@
+{
+  "opts": {
+    "datasetName": "s",
+    "topK": 5
+  },
+  "resolved": {
+    "gbrain_version": "0.47.8.0",
+    "gbrain_pin": "github:garrytan/gbrain#2a56b51236850f6abcbf2f1ea71981bb9630f6fe",
+    "source_ndjson": "eval/reports/longmemeval/rescore-may-copy.ndjson"
+  },
+  "summaries": [
+    {
+      "adapter": "gbrain-keyword",
+      "dataset": "s",
+      "topK": 5,
+      "total": 470,
+      "n_rows": 500,
+      "n_abs": 30,
+      "n_errors_sut": 0,
+      "n_errors_infra": 0,
+      "recall_all_at_k": 0.10638297872340426,
+      "recall_any_at_k": 0.20425531914893616,
+      "ndcg_any_at_k": 0.16224319764151307,
+      "abs_noise_at_k": 0.02666666666666667,
+      "recall_by_type": {
+        "single-session-user": {
+          "total": 64,
+          "hit_all": 30,
+          "recall_all": 0.46875,
+          "hit_any": 30,
+          "recall_any": 0.46875
+        },
+        "multi-session": {
+          "total": 121,
+          "hit_all": 0,
+          "recall_all": 0,
+          "hit_any": 11,
+          "recall_any": 0.09090909090909091
+        },
+        "single-session-preference": {
+          "total": 30,
+          "hit_all": 2,
+          "recall_all": 0.06666666666666667,
+          "hit_any": 2,
+          "recall_any": 0.06666666666666667
+        },
+        "temporal-reasoning": {
+          "total": 127,
+          "hit_all": 8,
+          "recall_all": 0.06299212598425197,
+          "hit_any": 30,
+          "recall_any": 0.23622047244094488
+        },
+        "knowledge-update": {
+          "total": 72,
+          "hit_all": 9,
+          "recall_all": 0.125,
+          "hit_any": 22,
+          "recall_any": 0.3055555555555556
+        },
+        "single-session-assistant": {
+          "total": 56,
+          "hit_all": 1,
+          "recall_all": 0.017857142857142856,
+          "hit_any": 1,
+          "recall_any": 0.017857142857142856
+        }
+      },
+      "avg_latency_ms": 828.824,
+      "p50_latency_ms": 639.5,
+      "p99_latency_ms": 2235.4399999999987,
+      "total_seconds": 414.412
+    },
+    {
+      "adapter": "gbrain-vector",
+      "dataset": "s",
+      "topK": 5,
+      "total": 470,
+      "n_rows": 500,
+      "n_abs": 30,
+      "n_errors_sut": 0,
+      "n_errors_infra": 0,
+      "recall_all_at_k": 0.7936170212765957,
+      "recall_any_at_k": 0.9744680851063829,
+      "ndcg_any_at_k": 0.8866629597324163,
+      "abs_noise_at_k": 0.3266666666666668,
+      "recall_by_type": {
+        "single-session-user": {
+          "total": 64,
+          "hit_all": 62,
+          "recall_all": 0.96875,
+          "hit_any": 62,
+          "recall_any": 0.96875
+        },
+        "multi-session": {
+          "total": 121,
+          "hit_all": 79,
+          "recall_all": 0.6528925619834711,
+          "hit_any": 120,
+          "recall_any": 0.9917355371900827
+        },
+        "single-session-preference": {
+          "total": 30,
+          "hit_all": 28,
+          "recall_all": 0.9333333333333333,
+          "hit_any": 28,
+          "recall_any": 0.9333333333333333
+        },
+        "temporal-reasoning": {
+          "total": 127,
+          "hit_all": 82,
+          "recall_all": 0.6456692913385826,
+          "hit_any": 120,
+          "recall_any": 0.9448818897637795
+        },
+        "knowledge-update": {
+          "total": 72,
+          "hit_all": 66,
+          "recall_all": 0.9166666666666666,
+          "hit_any": 72,
+          "recall_any": 1
+        },
+        "single-session-assistant": {
+          "total": 56,
+          "hit_all": 56,
+          "recall_all": 1,
+          "hit_any": 56,
+          "recall_any": 1
+        }
+      },
+      "avg_latency_ms": 13276.274,
+      "p50_latency_ms": 14455,
+      "p99_latency_ms": 32051.989999999994,
+      "total_seconds": 6638.137
+    },
+    {
+      "adapter": "gbrain-hybrid",
+      "dataset": "s",
+      "topK": 5,
+      "total": 470,
+      "n_rows": 500,
+      "n_abs": 30,
+      "n_errors_sut": 0,
+      "n_errors_infra": 0,
+      "recall_all_at_k": 0.8340425531914893,
+      "recall_any_at_k": 0.9765957446808511,
+      "ndcg_any_at_k": 0.9057580461401864,
+      "abs_noise_at_k": 0.33333333333333354,
+      "recall_by_type": {
+        "single-session-user": {
+          "total": 64,
+          "hit_all": 62,
+          "recall_all": 0.96875,
+          "hit_any": 62,
+          "recall_any": 0.96875
+        },
+        "multi-session": {
+          "total": 121,
+          "hit_all": 87,
+          "recall_all": 0.71900826446281,
+          "hit_any": 121,
+          "recall_any": 1
+        },
+        "single-session-preference": {
+          "total": 30,
+          "hit_all": 28,
+          "recall_all": 0.9333333333333333,
+          "hit_any": 28,
+          "recall_any": 0.9333333333333333
+        },
+        "temporal-reasoning": {
+          "total": 127,
+          "hit_all": 88,
+          "recall_all": 0.6929133858267716,
+          "hit_any": 120,
+          "recall_any": 0.9448818897637795
+        },
+        "knowledge-update": {
+          "total": 72,
+          "hit_all": 71,
+          "recall_all": 0.9861111111111112,
+          "hit_any": 72,
+          "recall_any": 1
+        },
+        "single-session-assistant": {
+          "total": 56,
+          "hit_all": 56,
+          "recall_all": 1,
+          "hit_any": 56,
+          "recall_any": 1
+        }
+      },
+      "avg_latency_ms": 2999.468,
+      "p50_latency_ms": 2243,
+      "p99_latency_ms": 14642.949999999992,
+      "total_seconds": 1499.734
+    },
+    {
+      "adapter": "gbrain-hybrid+expansion",
+      "dataset": "s",
+      "topK": 5,
+      "total": 470,
+      "n_rows": 500,
+      "n_abs": 30,
+      "n_errors_sut": 0,
+      "n_errors_infra": 0,
+      "recall_all_at_k": 0.8425531914893617,
+      "recall_any_at_k": 0.9765957446808511,
+      "ndcg_any_at_k": 0.9083472187245588,
+      "abs_noise_at_k": 0.3533333333333335,
+      "recall_by_type": {
+        "single-session-user": {
+          "total": 64,
+          "hit_all": 62,
+          "recall_all": 0.96875,
+          "hit_any": 62,
+          "recall_any": 0.96875
+        },
+        "multi-session": {
+          "total": 121,
+          "hit_all": 86,
+          "recall_all": 0.7107438016528925,
+          "hit_any": 120,
+          "recall_any": 0.9917355371900827
+        },
+        "single-session-preference": {
+          "total": 30,
+          "hit_all": 28,
+          "recall_all": 0.9333333333333333,
+          "hit_any": 28,
+          "recall_any": 0.9333333333333333
+        },
+        "temporal-reasoning": {
+          "total": 127,
+          "hit_all": 93,
+          "recall_all": 0.7322834645669292,
+          "hit_any": 121,
+          "recall_any": 0.952755905511811
+        },
+        "knowledge-update": {
+          "total": 72,
+          "hit_all": 71,
+          "recall_all": 0.9861111111111112,
+          "hit_any": 72,
+          "recall_any": 1
+        },
+        "single-session-assistant": {
+          "total": 56,
+          "hit_all": 56,
+          "recall_all": 1,
+          "hit_any": 56,
+          "recall_any": 1
+        }
+      },
+      "avg_latency_ms": 3920.346,
+      "p50_latency_ms": 3581,
+      "p99_latency_ms": 7356.989999999999,
+      "total_seconds": 1960.173
+    }
+  ]
+}

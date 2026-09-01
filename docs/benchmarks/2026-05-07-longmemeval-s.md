@@ -15,18 +15,75 @@
 > "same metric" claim does not hold for those rows.
 >
 > The runner now computes `recall_all@5` as the headline metric (any-hit is
-> reported separately as a diagnostic). **The corrected full-500 number has
-> not been re-measured yet** — it requires OpenAI embeddings (~$2 first run,
-> free with the local cache) and is tracked in `TODOS.md`. Re-run with:
+> reported separately as a diagnostic).
+>
+> ## ERRATUM RESOLVED (2026-08-31) — the corrected numbers
+>
+> The original May run's per-question NDJSON stream survived, so the official
+> metric was recomputed from the raw rows at **$0** with the audited
+> aggregator (`longmemeval-aggregate.ts` recomputes every metric from
+> `retrieved` + `ground_truth`; committed artifacts:
+> [`rescore-may-2026-08-31.json`](2026-05-07-longmemeval-s/rescore-may-2026-08-31.json) /
+> [`.md`](2026-05-07-longmemeval-s/rescore-may-2026-08-31.md)). **These are
+> the same retrieval results the 97.60% claim was measured on — only the
+> scoring is corrected.**
+>
+> | Adapter | official `recall_all@5` | any-hit `recall_any@5` (diagnostic) | nDCG_any@5 |
+> |---|---|---|---|
+> | **gbrain-hybrid** | **83.40%** | 97.66% | 90.58% |
+> | gbrain-hybrid+expansion | **84.26%** | 97.66% | 90.83% |
+> | gbrain-vector | 79.36% | 97.45% | 88.67% |
+> | gbrain-keyword | 10.64% | 20.43% | 16.22% |
+>
+> Per question type (`recall_all@5`, hybrid): knowledge-update 98.6%,
+> single-session-assistant 100%, single-session-user 96.9%,
+> single-session-preference 93.3%, **multi-session 71.9%**,
+> **temporal-reasoning 69.3%** — the reductions landed largely where the
+> erratum predicted (multi-session and temporal-reasoning), with one
+> correction to the original erratum's scoping: knowledge-update questions
+> also carry multi-session ground truth, so that row dips too (98.6% vs the
+> historical 100.0% — one question).
+>
+> Validation receipts (all in the committed artifacts + wave PR):
+> - **Reconciliation is exact.** Under the old any-hit-over-500 semantics the
+>   rescored rows reproduce the published number to the digit: 459 non-`_abs`
+>   any-hits + 29 of 30 `_abs` any-hits = 488/500 = **97.60%**.
+> - **Ground truth validated**: every row's `ground_truth` matches the
+>   canonical dataset's `answer_session_ids` exactly (500/500, 0 mismatches;
+>   `longmemeval-validate-ndjson.ts`).
+> - **Denominator change (disclosed)**: the corrected protocol excludes the
+>   30 `_abs` abstention questions from recall denominators (n=470; they
+>   score as `abs_noise@5` = 33.3%). Zero error rows; 696 duplicate
+>   worker-resume rows deduped (non-error preferred).
+> - **Retrieved-list caveat**: the adapter retrieves top-5 CHUNKS then
+>   dedupes to sessions, so a row can hold fewer than 5 distinct sessions —
+>   the corrected number is therefore a LOWER bound on top-5-SESSION
+>   retrieval. This is unchanged from the original run (old and new rows
+>   stay comparable); a separately-disclosed session-diversity row is
+>   pre-registered in the 2026-08 fix wave.
+> - **Comparability warning**: competitor rows (MemPal raw 96.6%, held-out
+>   reranked 98.4%) are labeled "R@5" with the variant UNSTATED — do not
+>   read 83.40% vs 96.6% as same-metric without that caveat. Under any-hit,
+>   gbrain's 97.66% (n=470) / 97.60% (n=500, old protocol) stands as
+>   published.
+> - **Expansion is no longer a null result** under the official metric:
+>   +0.85pp overall (4 of 470 questions) and +3.9pp on temporal-reasoning (73.2% vs 69.3%) — the
+>   §1 "clean null result" claim below was an artifact of the saturated
+>   any-hit metric.
+>
+> Correct re-run commands (the previously documented command was broken —
+> `--dataset` takes a split NAME, the file goes in `--path`, and the runner's
+> default k is 8):
 >
 > ```sh
-> bun eval/runner/longmemeval.ts --dataset eval/data/longmemeval/longmemeval_s.json
+> bun eval/runner/longmemeval.ts --path ~/datasets/longmemeval/longmemeval_s.json --top-k 5
+> # or, the published multi-worker shape (defaults: k=5, dataset s, resume):
+> bash eval/runner/longmemeval-batch.sh
 > ```
 >
 > The historical numbers below are preserved unchanged for the audit trail.
-> Expect the corrected headline to be equal or lower, with multi-session and
-> temporal-reasoning taking the reductions. README.md and
-> docs/comparison-systems.md carry the same annotation until re-measurement.
+> A fresh re-measurement at the current gbrain pin (the May run was v0.28.8)
+> is the 2026-08 fix wave's companion publication.
 
 **Date:** 2026-05-07
 **gbrain version:** v0.28.8

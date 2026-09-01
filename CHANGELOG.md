@@ -4,6 +4,40 @@ All notable changes to gbrain-evals are recorded here. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versions are semver and kept
 in sync with `VERSION` + `package.json`.
 
+## [0.5.1] - 2026-08-31
+
+### Changed — LongMemEval erratum RESOLVED: official `recall_all@5` = 83.40%, published from the original run's raw rows at $0
+
+The 2026-08-31 erratum ("corrected number pending") is closed without a
+paid re-run: the May run's per-question NDJSON stream survived, and the
+audited aggregator recomputes every metric from `retrieved` +
+`ground_truth`. The corrected headline is **83.40% `recall_all@5`**
+(hybrid; expansion 84.26%, vector 79.36%, keyword 10.64%; n=470 with the
+30 `_abs` abstention questions excluded per the official protocol), with
+the loss largely where the erratum predicted: multi-session 71.9%,
+temporal-reasoning 69.3% (plus a one-question knowledge-update dip the
+original erratum's scoping missed — that type also carries multi-session
+ground truth).
+
+Publication gates that ran before the number went in: exact reconciliation
+against the published figure (459 non-abs + 29 abs any-hits = 488/500 =
+97.60% under the old semantics — the same rows, only the scoring
+corrected), ground-truth set-equality vs the canonical dataset (500/500),
+zero error rows, duplicate worker-resume rows deduped (696, non-error
+preferred). Committed artifacts:
+`docs/benchmarks/2026-05-07-longmemeval-s/rescore-may-2026-08-31.{json,md}`.
+
+Also: the erratum's own documented re-run command was broken (`--dataset`
+takes a split name, not a path; the runner defaults to k=8) — fixed in the
+report, README, and TODOS. Notable side-finding: query expansion is NOT a
+null result under the official metric (+0.85pp overall — 4 of 470 questions, +3.9pp on
+temporal-reasoning) — the published "clean null result" was an artifact of
+the saturated any-hit metric.
+
+A fresh keyed re-measurement at the current gbrain pin (May ran v0.28.8)
+plus a pre-registered session-diversity row ship with the 2026-08 fix
+wave's companion publication.
+
 ## [0.5.0] - 2026-08-31
 
 **Benchmark semantics changed — scores from 0.5.0 are not comparable to
