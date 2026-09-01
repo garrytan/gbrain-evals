@@ -115,18 +115,20 @@ treat it as directionally informative, not apples-to-apples with those two.
   read-path number can coexist with losing more than half the salient
   content at write time. gbrain's position is that the write path is where
   memory systems actually die, which is why Cat 35 exists.
-- **ContextFit (96.60% Any@5 retrieval) — gbrain wins narrowly, and the
-  architectural claim is the interesting part.** gbrain's own any-hit R@5
-  (97.6% hybrid, not yet re-measured under `recall_all@5`) edges this out
-  by ~1 point, but ContextFit's headline is *how* it gets there: a "local
-  token-native index" with no vector database, where OpenAI embeddings are
-  an optional fusion signal rather than the primary retrieval mechanism.
-  That's a materially different claim than gbrain's own keyword-only adapter
-  (19.8% on this same dataset) — ContextFit's token-native approach is doing
-  far more than plain keyword matching to reach 96.6% without embeddings as
-  the backbone. We haven't inspected their index design closely enough to
-  name the mechanism precisely; the fair read is "a competitive
-  non-vector-DB architecture," not a like-for-like keyword-arm comparison.
+- **ContextFit (96.60% Any@5 retrieval) — not a clean head-to-head, and
+  the architectural claim is the more interesting part than the score
+  gap.** gbrain's own any-hit R@5 (97.6% hybrid, not yet re-measured under
+  `recall_all@5`) is nominally ~1 point higher, but ContextFit's figure is
+  scored on 470 of 500 questions (30 abstention rows excluded) while
+  gbrain's is scored on all 500 — different denominators, so don't read
+  the ~1-point gap as a settled win. What's worth naming instead is *how*
+  ContextFit gets there: a "local token-native index" with no vector
+  database, where OpenAI embeddings are an optional fusion signal rather
+  than the primary retrieval mechanism. We haven't inspected their index
+  design and have no ContextFit keyword-only ablation to compare against
+  gbrain's own keyword-only adapter (19.8% on this same dataset) — so we
+  can't characterize the mechanism beyond "a non-vector-DB architecture
+  reaching a competitive number," not a like-for-like keyword-arm claim.
   The QA row (84.80%) uses a different pipeline (ContextFit retrieval + own
   GPT-4o generation/judge) than this table's other QA-acc rows, per the
   reporter's own caveat above — no gbrain QA-acc number exists yet to
