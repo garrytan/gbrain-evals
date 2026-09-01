@@ -33,9 +33,15 @@ jobs:
       # our gate is the REPO's files. Fails on any non-node_modules error.
       - name: Typecheck (repo files)
         run: |
-          bunx tsc --noEmit 2>&1 | tee /tmp/tsc.log || true
+          bunx tsc --noEmit 2>&1 | tee /tmp/tsc.log && tsc_status=0 || tsc_status=$?
           if grep -v node_modules /tmp/tsc.log | grep -q 'error TS'; then
             grep -v node_modules /tmp/tsc.log | grep 'error TS'
+            exit 1
+          fi
+          # A tsc crash that prints no 'error TS' line must not pass silently
+          # (issue #24 finding 8a — the old `|| true` swallowed it).
+          if [ "${tsc_status:-0}" -ne 0 ] && ! grep -q 'error TS' /tmp/tsc.log; then
+            echo "tsc exited ${tsc_status} without reporting TS errors (crash?)"
             exit 1
           fi
 
@@ -44,9 +50,13 @@ jobs:
       # unrelated backlog into that gate — outside-voice round 2).
       - name: Typecheck (scripts)
         run: |
-          bunx tsc --noEmit -p tsconfig.scripts.json 2>&1 | tee /tmp/tsc-scripts.log || true
+          bunx tsc --noEmit -p tsconfig.scripts.json 2>&1 | tee /tmp/tsc-scripts.log && tsc_status=0 || tsc_status=$?
           if grep -v node_modules /tmp/tsc-scripts.log | grep -q 'error TS'; then
             grep -v node_modules /tmp/tsc-scripts.log | grep 'error TS'
+            exit 1
+          fi
+          if [ "${tsc_status:-0}" -ne 0 ] && ! grep -q 'error TS' /tmp/tsc-scripts.log; then
+            echo "tsc exited ${tsc_status} without reporting TS errors (crash?)"
             exit 1
           fi
 

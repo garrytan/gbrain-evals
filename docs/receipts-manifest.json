@@ -1,0 +1,180 @@
+{
+  "schema_version": 1,
+  "description": "Machine-checked map from README/report claims to the committed artifacts that back them. Data only \u2014 no executable strings; verification lives in test/eval/receipts-manifest.test.ts (path exists, sha256 matches, expected JSON-pointer values match) and in the golden tests named per entry. Entries without an in-repo artifact carry status 'disclosed-gap' with the reason \u2014 the gate's scope is stated, never faked.",
+  "updated": "2026-09-01",
+  "entries": [
+    {
+      "claim_id": "longmemeval-recall-all",
+      "readme_anchor": "83.4% official `recall_all@5` (LongMemEval head-to-head row + numbers-by-report table)",
+      "artifact_path": "docs/benchmarks/2026-05-07-longmemeval-s/rescore-may-2026-08-31.json",
+      "artifact_sha256": "17d23de0ff27203f37e9e73d79e7fa303742b7a85dd6098010a44753d6d8bc22",
+      "expected": {
+        "/summaries/2/adapter": "gbrain-hybrid",
+        "/summaries/2/recall_all_at_k": 0.8340425531914893,
+        "/summaries/2/recall_any_at_k": 0.9765957446808511,
+        "/summaries/2/total": 470,
+        "/summaries/2/n_abs": 30,
+        "/summaries/3/adapter": "gbrain-hybrid+expansion",
+        "/summaries/3/recall_all_at_k": 0.8425531914893617
+      },
+      "golden_test": "test/eval/longmemeval-golden.test.ts: longmemeval golden regression (committed May NDJSON)",
+      "status": "covered",
+      "note": "Published summary of the 2026-08-31 erratum resolution: the May run's raw rows rescored under the official recall_all@5 metric. The golden test re-derives every number in this file from the committed NDJSON via the same summarizeAdapterRows the runner uses."
+    },
+    {
+      "claim_id": "longmemeval-raw-rows",
+      "readme_anchor": "Erratum resolved 2026-08-31 at $0 from the archived per-question stream",
+      "artifact_path": "docs/benchmarks/2026-05-07-longmemeval-s/rescore-may-copy.ndjson",
+      "artifact_sha256": "a26453188c429347aee0196040b2af1e5c88c0f36bd476af5beccc23669a3d0b",
+      "golden_test": "test/eval/longmemeval-golden.test.ts: longmemeval golden regression (committed May NDJSON)",
+      "status": "covered",
+      "note": "The irreplaceable per-question stream from the May 2026 run: 2,696 raw rows (696 resume dupes), 2,000 unique (adapter, question_id) pairs across 4 adapters, 30 abstention questions each. Integrity-checkable with eval/runner/longmemeval-validate-ndjson.ts."
+    },
+    {
+      "claim_id": "cat35-wave-receipt",
+      "readme_anchor": "88.1% of salient content survives into pages rated 91% usable, zero junk leakage, all 20 sessions emit",
+      "artifact_path": "docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill/receipt-2026-08-31-v0.47.8.0-wave-079941d2.json",
+      "artifact_sha256": "118b60712e02360530b46f4561ec48c2e07a7764a14f6b0a96ad63549101bb7a",
+      "expected": {
+        "/coverage_by_lane/dream/macro": 0.8813888888888888,
+        "/emission/emitted": 20,
+        "/emission/expected_high": 20,
+        "/usability_by_lane/dream/rate": 0.9083333333333333,
+        "/verbatim_quote_fidelity/rate": 0.8273381294964028,
+        "/judge_model": "claude-sonnet-4-6"
+      },
+      "status": "covered",
+      "note": "Post-fix-wave Cat 35 receipt (gbrain 079941d2). judge_model records the movable alias claude-sonnet-4-6, not a dated snapshot \u2014 see the integrity section of the Cat 35 report; receipts written after 2026-09-01 additionally record server-reported per-call model ids in judge_models_resolved."
+    },
+    {
+      "claim_id": "cat35-prewave-receipt",
+      "readme_anchor": "Cat 35 report, Update 2026-08-31: pre-wave bracket run (dream recall 70.2%)",
+      "artifact_path": "docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill/receipt-2026-08-31-prewave-baseline-aa820c7f.json",
+      "artifact_sha256": "069b12d3cbc262dcc14619502b87ad45f7e0edb48180726077d636b99ad49bd4",
+      "expected": {
+        "/coverage_by_lane/dream/macro": 0.7016666666666665,
+        "/emission/emitted": 16,
+        "/judge_model": "claude-sonnet-4-6"
+      },
+      "status": "covered",
+      "note": "Pre-wave bracket receipt (gbrain aa820c7f) isolating the fix wave's effect from judge/prompt drift. Same movable-alias caveat as the wave receipt."
+    },
+    {
+      "claim_id": "cat35-baseline-receipt",
+      "readme_anchor": "the first published run scored 61.5% with 4 sessions never producing pages",
+      "artifact_path": "docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill/baseline-receipt.json",
+      "artifact_sha256": "7538b69fda682bf314c6eb82138b26b5902635b860a5e65031865cc590c9b8c6",
+      "expected": {
+        "/coverage_by_lane/dream/macro": 0.6145833333333334,
+        "/emission/emitted": 16,
+        "/judge_model": "claude-sonnet-4-6"
+      },
+      "status": "covered",
+      "note": "Original 2026-08-25 published baseline receipt, kept as-written (including the pre-fix 96.5% verbatim leakage figure disclosed in the report's erratum). Same movable-alias caveat as the wave receipt."
+    },
+    {
+      "claim_id": "cat35-judge-calibration",
+      "readme_anchor": "Cat 35 report: 40-item stratified human calibration sample; 93% judge ceiling on the verbatim control lane",
+      "artifact_path": "docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill/judge-calibration-2026-08-25.json",
+      "artifact_sha256": "6aefaf365d52c87ea2ef972a73f20b6bd2d5676f209414eb03e307e08488f478",
+      "status": "covered",
+      "note": "Committed judge-calibration annotation artifact for the 2026-08-25 run. Human kappa annotation remains pending (TODOS P1)."
+    },
+    {
+      "claim_id": "precisionmembench-adaptive",
+      "readme_anchor": "0.582 precision at ~270ms with adaptive return-sizing on",
+      "artifact_path": "docs/benchmarks/2026-05-29-precisionmembench/2026-05-30-gbrain-adaptive-body-text.json",
+      "artifact_sha256": "dde8c2b0343040a102be8a52869cdd9586cb6e3b29cc5d17cd894d1a871a5803",
+      "status": "covered",
+      "note": "Raw per-case retrieval dump consumed by the PrecisionMemBench scorer (eval/runner/precisionmembench.ts). Upper bound pending re-run: the 2026-08 audit removed a seed-time shortcut from the adapter, so a fresh keyed run is expected to score at or below what these rows produce; the README carries the same qualifier."
+    },
+    {
+      "claim_id": "precisionmembench-adaptive-default",
+      "readme_anchor": "PrecisionMemBench adaptive mode, default caps",
+      "artifact_path": "docs/benchmarks/2026-05-29-precisionmembench/2026-05-30-gbrain-adaptive-default-body-text.json",
+      "artifact_sha256": "e60a099e364b94b8deb8ffa28bec628714946cac41ff43c47165f6670f0b4541",
+      "status": "covered",
+      "note": "Raw per-case retrieval dump. Upper bound pending re-run (see precisionmembench-adaptive)."
+    },
+    {
+      "claim_id": "precisionmembench-adaptive-tight",
+      "readme_anchor": "PrecisionMemBench adaptive mode, tight caps (entity-max 1, other-max 1)",
+      "artifact_path": "docs/benchmarks/2026-05-29-precisionmembench/2026-05-30-gbrain-adaptive-tight-body-text.json",
+      "artifact_sha256": "46721c11570da653e5f699bcfd720dc9c5edfa7694f07d4caa3df21531ef161f",
+      "status": "covered",
+      "note": "Raw per-case retrieval dump. Upper bound pending re-run (see precisionmembench-adaptive)."
+    },
+    {
+      "claim_id": "precisionmembench-hybrid-default",
+      "readme_anchor": "the honest default precision on PrecisionMemBench (gbrain-hybrid)",
+      "artifact_path": "docs/benchmarks/2026-05-29-precisionmembench/2026-05-30-gbrain-hybrid-body-text.json",
+      "artifact_sha256": "ede87f147cd891ea4c9ec1588a183924f32ac4aec8777df509cf30fba5c2363f",
+      "status": "covered",
+      "note": "Raw per-case retrieval dump for the unmodified default mode. Upper bound pending re-run (see precisionmembench-adaptive)."
+    },
+    {
+      "claim_id": "precisionmembench-keyword",
+      "readme_anchor": "PrecisionMemBench keyword-only ablation",
+      "artifact_path": "docs/benchmarks/2026-05-29-precisionmembench/2026-05-30-gbrain-keyword-body-text.json",
+      "artifact_sha256": "fee10254efa178f5fe182a11665ed429478e91390734a431538cc04b8f3dde80",
+      "status": "covered",
+      "note": "Raw per-case retrieval dump. Upper bound pending re-run (see precisionmembench-adaptive)."
+    },
+    {
+      "claim_id": "precisionmembench-think",
+      "readme_anchor": "PrecisionMemBench think-mode ablation",
+      "artifact_path": "docs/benchmarks/2026-05-29-precisionmembench/2026-05-30-gbrain-think-body-text.json",
+      "artifact_sha256": "b55764ee9859a8f562edee19e496c4d13548b37472719b43347a13aa81c75277",
+      "status": "covered",
+      "note": "Raw per-case retrieval dump. Upper bound pending re-run (see precisionmembench-adaptive)."
+    },
+    {
+      "claim_id": "precisionmembench-instrument",
+      "readme_anchor": "PrecisionMemBench latency/precision instrumentation sweep (~270ms)",
+      "artifact_path": "docs/benchmarks/2026-05-29-precisionmembench/2026-05-30-instrument-hybrid.json",
+      "artifact_sha256": "84905f035e5a8592c292b4ae00571b34b36e1e4f4ae5fce2c1ff4dfeb83eb65d",
+      "status": "covered",
+      "note": "Instrumentation sweep behind the latency claim. Upper bound pending re-run (see precisionmembench-adaptive)."
+    },
+    {
+      "claim_id": "relational-recall",
+      "readme_anchor": "97.9% R@5 / 49.1% P@5 (relational recall vs the default RAG stack, 240-page corpus)",
+      "artifact_path": null,
+      "artifact_sha256": null,
+      "status": "disclosed-gap",
+      "note": "The 2026-04-23 report (docs/benchmarks/2026-04-23-brainbench-v0.20.0.md) cites runner output that landed in the gitignored eval/reports/ and was never hand-copied into docs/benchmarks/; no committed per-query artifact backs these numbers. The run is deterministic (N=1, stddev=0 across re-runs per the report) and regenerable with the multi-adapter runner at the pinned commits, but the original rows were not preserved."
+    },
+    {
+      "claim_id": "cat34-historical",
+      "readme_anchor": "0 know-to-ask failures, push precision 1.0, recall 0.91 on the production seam (Cat 34, 149 gold turns)",
+      "artifact_path": "docs/benchmarks/2026-06-12-brainbench-memory/receipt-2026-06-12-published.json",
+      "artifact_sha256": "b8efe25fffccdd74b8c0a75f17b278fbb3f2dfe061ea5c103e36d0a890712bc6",
+      "status": "covered",
+      "note": "June originals committed 2026-09-01 (they attest the historical 0.81/0.66/0.45 first-run tables, NOT the 0.91 refresh banner, which remains sourced from gbrain's evals/brainbench/baselines/main.json at the pin). Trust boundary: the runner grades pass/fail from SUT-reported counters with no independent gold."
+    },
+    {
+      "claim_id": "cat34-rerun-v0.47.8.0",
+      "readme_anchor": "push recall 0.9063/1.000/0.5521, kta 0/149 (Cat 34 rerun at the pin)",
+      "artifact_path": "docs/benchmarks/2026-06-12-brainbench-memory/receipt-2026-09-01-v0.47.8.0-rerun.json",
+      "artifact_sha256": "a69c14e843fca757c61a1b894b543cfb993d4fd82478910e1a5f2c8a5f085e8f",
+      "status": "covered",
+      "note": "Fresh keyless rerun at pin 2a56b512 (2026-09-01), reproduces gbrain's committed baseline digit-for-digit. Runner's strict all-cells-zero gate returns verdict=fail on budget-capped cells by construction; see the report's Receipts section."
+    },
+    {
+      "claim_id": "skillopt",
+      "readme_anchor": "4/4 skills 0 -> 1.00; cheating blocked; gains transfer (SkillOpt)",
+      "artifact_path": null,
+      "artifact_sha256": null,
+      "status": "disclosed-gap",
+      "note": "Disclosed in the report itself (docs/benchmarks/2026-06-03-skillopt.md, 'A note on getting here'): the cat30-33 receipts were written to the gitignored eval/reports/ and cleaned up before being hand-copied into docs/benchmarks/. A re-run reproduces the gate outcomes but not byte-identical scores (live Haiku/Sonnet calls, ~$16 with keys); queued in TODOS, not load-bearing for any head-to-head row."
+    },
+    {
+      "claim_id": "stability-snapshot",
+      "readme_anchor": "Stability across 20 releases (v0.20.0 -> v0.40.6.0): zero regression",
+      "artifact_path": null,
+      "artifact_sha256": null,
+      "status": "disclosed-gap",
+      "note": "The 2026-05-23 snapshot report's Receipts section points at the gitignored eval/reports/cat*-*/ directories and regeneration steps; no committed JSON backs the zero-regression table. The claim rests on the report's recorded tables plus the deterministic regenerability of the underlying Cats."
+    }
+  ]
+}

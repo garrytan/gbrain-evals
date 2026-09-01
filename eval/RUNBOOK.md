@@ -20,9 +20,11 @@ bun run eval:run
 
 Needed by corpus regeneration (`eval/generators/gen.ts`,
 `eval/generators/transcript-distill-gen.ts`) and by the runners that call
-Claude — Cat 34, Cat 35, and the `eval:brainbench` sweep that includes them.
-Retrieval-only runs over the committed `eval/data/world-v1/` shards don't
-need it.
+Claude: Cat 35, and the `eval:brainbench` sweep that includes it.
+Cat 34 does NOT need it. Its runner strips every provider key from the
+subprocess env (`STRIPPED_ENV_KEYS`, `eval/runner/cat34-brainbench-memory.ts:65-71`)
+so the run is hermetic: no LLM, no network, $0. Retrieval-only runs over
+the committed `eval/data/world-v1/` shards don't need it either.
 
 ### "Cannot find package 'gbrain'" (or a `gbrain/*` subpath import fails)
 

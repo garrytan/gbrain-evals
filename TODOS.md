@@ -34,6 +34,20 @@ a keyless environment. Each command works from a fresh clone after
 - [ ] **API-dependent negative controls** (WS3): each judge-based eval's
   degraded-config control (threshold: degraded <= 0.5x real, fixed seeds)
   needs one keyed run to prove benchmark sensitivity end-to-end.
+- [ ] **Relational (Cats 1+2) re-measurement on the fixed metric helpers**
+  (issue #24 finding 2): the 2026-04-23 scorecard's 97.9%/49.1% predates the
+  shared-infra-02/03 metric fixes and the generators-06 corpus fix; the
+  report now carries an erratum banner and the README qualifies the claim.
+  Needs OPENAI_API_KEY: `BRAINBENCH_N=1 bun eval/runner/multi-adapter.ts`,
+  then commit the receipt next to the report (none exists today).
+- [ ] **LongMemEval fresh keyed re-run at the current pin + sessdiv rows**
+  (2026-08 fix-wave Phase 6, expanded 2026-09-01): pass 1
+  `--adapters hybrid,hybrid+expansion`, pass 2 the sessdiv adapters with
+  `--overfetch-factor 3`; publish side by side with the May 83.40% row,
+  never replacing it. Needs OPENAI_API_KEY (+ANTHROPIC for expansion);
+  ~$2 cold, ~$0 on a warm embed cache. Rerank adapters additionally need a
+  reranker provider key and are pending a successor to zerank-2 (hosted API
+  sunset 2026-09-04).
 
 ## P2
 
@@ -173,6 +187,24 @@ reviews (2026-08-16); each entry names its origin.
   unmeasured. How: N=3 full runs, paired per-item comparison, CI on the macro
   headline. Costs ~3× a full run — do it once to characterize variance, not per
   release. From: Codex round 1 (deferred).
+- [ ] **Held-out Cat 35 transcripts generated after the fix wave** (issue #24
+  finding 7): the 61.5→88.1 story is disclosed honestly, but the verified-
+  segment rescue admits exactly the four transcripts that failed, and no
+  held-out set exists. Generate 5-10 fresh fixtures post-wave (same
+  generator, new seed), score without touching the distiller, publish
+  alongside the frozen-corpus number. ~$3 generation + judge costs.
+- [ ] **Cat 35 hazard checks: `violated: null` on judge failure** (issue #24
+  finding 8d): a judge outage can understate violation counts. Count
+  null-verdict hazards separately in the receipt and fail the hazard gate
+  when nulls exceed 0.
+- [ ] **Template-blind relational variant** (issue #24 finding 6): paraphrase
+  the four relational query templates (Haiku, seeded) and re-run
+  multi-adapter to show how much of the graph-layer lift survives when the
+  adapter can't pattern-match the generator's phrasing.
+- [ ] **nDCG>1 latent guard** (issue #24 finding 8c, refuted-for-now
+  cats26-29-04): if probes ever exceed the 300-word chunk threshold, nDCG
+  over chunk slugs can exceed 1.0. Add a one-line clamp-or-throw guard in
+  the nDCG helper so the hazard is tracked in code, not in memory.
 
 - [ ] **FineSurE-style conciseness alignment.** Why: % of page content units
   aligned to some gold item complements distractor leakage; cut from v1 because

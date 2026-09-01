@@ -309,6 +309,16 @@ the run was launched with an explicit `CAT35_HARD_STOP_USD=50`.
   (40-item stratified sample, linearly weighted kappa) required before
   publication, and full judge prompts pinned at
   `judge_prompt_version 2026-08-16-v1`. A cross-family judge is filed.
+- **The judge model is recorded as a movable alias, not a snapshot.** The
+  published receipts record `judge_model: claude-sonnet-4-6`, and the current
+  Anthropic model registry lists no dated snapshot for that alias, so a silent
+  alias repoint between runs would not have been visible to the old
+  string-equality comparability check. From 2026-09-01 forward, receipts also
+  record the server-reported per-call model ids (`resp.model`) as
+  `judge_models_resolved`, and cross-run deltas are suppressed (receipt marked
+  `comparability: non-comparable`) unless both receipts resolve to exactly one
+  identical model. `resp.model` is best-available evidence of what actually
+  served the judge calls, not an immutability proof.
 - **Planted gold has authoring bias.** Mitigations: fictional specifics
   (pretraining can't help), distractors (the task is discrimination, not
   retrieval), a gold-completeness audit pass, a human skim gate before spend,

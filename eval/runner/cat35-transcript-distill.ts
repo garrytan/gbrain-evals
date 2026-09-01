@@ -67,9 +67,12 @@ import {
 import {
   CAT35_JUDGE_PROMPT_VERSION,
   confirmDistractorLeaks,
+  getJudgeModelsResolved,
+  resetJudgeModelsResolved,
   scoreGrounding,
   scoreSalienceCoverage,
   scoreUsabilityChecklist,
+  singleResolvedModel,
   type CoverageVerdict,
 } from './cat35-judges.ts';
 
@@ -582,6 +585,9 @@ async function main(): Promise<number> {
   const hazardsOut: Array<{ hazard_id: string; transcript_id: string; type: string; violated: boolean | null }> = [];
 
   const jcfg = { model: judgeModel };
+  // Fresh per-run resolved-model accounting: every judge response's
+  // server-reported model lands in the receipt's judge_models_resolved.
+  resetJudgeModelsResolved();
 
   for (const f of fixtures) {
     const tid = f.gold.transcript_id;
@@ -954,12 +960,28 @@ async function main(): Promise<number> {
     const finalPool = localPool.length ? localPool : pool;
     return finalPool[finalPool.length - 1];
   })();
+  const judgeModelsResolved = getJudgeModelsResolved();
+  let comparability: 'comparable' | 'non-comparable' | null = null;
   if (priorFound) {
     const prior = priorFound.receipt as Record<string, any>;
     // Extended comparability (beyond computeDelta's mode/lanes/corpus):
     // deltas across judge models, corpus content, or transcript subsets are
     // noise dressed as signal.
+    //
+    // Strongest layer first: deltas require BOTH receipts to carry
+    // judge_models_resolved with exactly one identical real (non-null-keyed)
+    // server-reported model. The requested-model string equality below stays
+    // as a fallback layer, but it keys on a movable alias (the published
+    // runs recorded `claude-sonnet-4-6`) — a silent alias repoint defeats
+    // it, which is exactly what resolved-model evidence exists to catch.
+    // Absent (all pre-2026-09 receipts), mixed, or null-keyed maps on either
+    // side → non-comparable, deltas suppressed (not warned).
+    const currentResolved = singleResolvedModel(judgeModelsResolved);
+    const priorResolved = singleResolvedModel(prior.judge_models_resolved);
+    const resolvedModelMismatch =
+      currentResolved === null || priorResolved === null || currentResolved !== priorResolved;
     const extendedMismatch =
+      (resolvedModelMismatch && 'judge_models_resolved') ||
       (prior.judge_model && prior.judge_model !== judgeModel && 'judge_model') ||
       (prior.corpus_sha && prior.corpus_sha !== corpusSha && 'corpus_sha') ||
       (Array.isArray(prior.transcripts) &&
@@ -969,6 +991,7 @@ async function main(): Promise<number> {
       null;
     if (extendedMismatch) {
       priorRunSkippedReason = `${extendedMismatch} mismatch vs prior receipt (${priorFound.path})`;
+      comparability = 'non-comparable';
     }
     const deltaRes = computeDelta(
       { mode, lanes: opts.lanes, corpus: 'transcript-distill-v1', headline },
@@ -985,6 +1008,7 @@ async function main(): Promise<number> {
       },
     );
     if (deltaRes.comparable && !extendedMismatch) {
+      comparability = 'comparable';
       priorRun = {
         path: priorFound.path,
         timestamp: String(prior.timestamp ?? ''),
@@ -1002,9 +1026,12 @@ async function main(): Promise<number> {
       }
     } else {
       priorRunSkippedReason = priorRunSkippedReason ?? deltaRes.skipped_reason;
+      comparability = 'non-comparable';
     }
   } else {
     priorRunSkippedReason = 'first run — no prior receipt or committed baseline';
+    // comparability stays null: with no prior receipt there is nothing to
+    // compare against, and the receipt omits the field.
   }
 
   // ── E2: judge-calibration scaffold ──────────────────────────────────────
@@ -1115,6 +1142,14 @@ async function main(): Promise<number> {
     corpus: 'transcript-distill-v1',
     corpus_sha: corpusSha,
     judge_model: judgeModel,
+    // Server-reported model ids across all judge calls this run
+    // ({resolved_model: call_count}; 'null' key = responses without a model
+    // field). Best-available evidence of what actually served the judges —
+    // the requested judge_model above can be a movable alias.
+    judge_models_resolved: judgeModelsResolved,
+    // 'comparable' | 'non-comparable' vs the prior receipt (omitted on first
+    // runs). non-comparable ⇒ deltas below are suppressed.
+    ...(comparability !== null ? { comparability } : {}),
     judge_prompt_version: CAT35_JUDGE_PROMPT_VERSION,
     config_snapshot: {
       dream_model: dreamModel,

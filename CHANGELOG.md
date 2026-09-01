@@ -4,6 +4,62 @@ All notable changes to gbrain-evals are recorded here. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versions are semver and kept
 in sync with `VERSION` + `package.json`.
 
+## [0.6.0] - 2026-09-01
+
+### Added — receipts become machine-gated; session-level measurement lands (outside reviews #26 + #24)
+
+Two independent outside verification passes (issues #26, #24) audited this
+repo against its own standards. Every confirmed gap is closed in this
+release; one sub-claim was refuted with evidence (PR #13 carries no
+benchmark figures).
+
+- **The May raw rows are committed.** docs/benchmarks/2026-05-07-longmemeval-s/
+  rescore-may-copy.ndjson (2,696 rows, sha256 a26453…3d0b) now sits next to
+  the summary it produced. A keyless golden regression test re-derives every
+  published digit — all four adapters, every per-type bucket — on every CI
+  run. The cited-but-missing validator (longmemeval-validate-ndjson.ts) now
+  exists and passes on the committed stream.
+- **Receipts manifest.** docs/receipts-manifest.json maps every README claim
+  to a committed artifact (sha256 + expected values) or an explicit
+  disclosed-gap entry; a test enforces it. Remaining declared gaps:
+  skillopt, relational-recall, stability-snapshot.
+- **Cat 34 receipts committed** (June originals + a labeled $0 rerun at pin
+  2a56b512 reproducing gbrain'''s baseline digit-for-digit: kta 0/149, push
+  recall 0.9063/1.000/0.5521). The report names the pin, discloses the
+  SUT-reported-counters trust boundary, and the historical SVGs are
+  captioned, not overwritten.
+- **Cat 35 judge provenance** (gap 4): receipts now record server-reported
+  per-call model ids ({model: call_count}); cross-run deltas are suppressed
+  as non-comparable unless both receipts resolve to one identical model. No
+  dated snapshot exists for claude-sonnet-4-6 in the current registry — the
+  alias history is disclosed in the report.
+- **Session-level adapters + diagnostics.** The official recall_all@5 wants
+  ALL gold sessions in the top 5; the runner scored top-5 chunks deduped to
+  sessions. The committed May rows averaged 2.68 distinct sessions per
+  top-5 list (99.6% shortfall) — the pre-registered session-diversity
+  diagnostic, now computed retroactively at $0. New disclosed adapters
+  (hybrid-sessdiv, hybrid+expansion-sessdiv, and fail-closed rerank
+  variants) measure top-5 distinct sessions; old adapters stay
+  byte-identical; every row carries run_config_hash and the aggregator
+  rejects mixed-provenance streams.
+
+### Changed — claim hygiene
+
+- MemPalace'''s 96.6% is settled as recall_any@5 (arXiv 2604.21284) — the
+  README'''s 97.66% any-hit comparison is now same-variant. ContextFit'''s
+  current whitepaper numbers (84.3% All@5 token+certificates, 87.45% fused)
+  are disclosed; under recall_all@5 they lead gbrain'''s 83.40/84.26 pending
+  the fresh-pin re-run. LETHE, Memoria, Mem0, and a PrecisionMemBench
+  section (with upstream'''s own unreconciled gbrain row) join
+  comparison-systems.md, all sourced.
+- README: PMB 0.582 marked upper bound pending re-run everywhere; 0.075
+  synced; Cat 35 "zero junk leakage" corrected to 1.2% (1/86); Cat 34 codex
+  seam (0.552) no longer omitted; relational 97.9%/49.1% qualified as
+  pre-audit (erratum banner added to the 2026-04-23 report); "fix wave in
+  flight" replaced with what is actually queued.
+- CI typecheck no longer passes silently on a tsc crash; phase2 smoke gate
+  uses an args array (issue #24 findings 8a/8b).
+
 ## [0.5.1] - 2026-08-31
 
 ### Changed — LongMemEval erratum RESOLVED: official `recall_all@5` = 83.40%, published from the original run's raw rows at $0

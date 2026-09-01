@@ -95,8 +95,13 @@ run_cell() {
   # any corpus-scale embed spend: wiring + dim assert, long-haystack, and (for
   # reranker cells) a real rerank payload check.
   echo "  smoke gate..."
+  # Args array, not ${var:+...} inline expansion — the same fragile form the
+  # driver call below replaced (issue #24 finding 8b; the pattern killed 4/7
+  # cells in phase 1).
+  smoke_args=(--embedder "$embedder" --dim "$dim")
+  [ -n "$reranker" ] && smoke_args+=(--reranker "$reranker")
   if ! bun run "$REPO_ROOT/eval/runner/smoke.ts" \
-       --embedder "$embedder" --dim "$dim" ${reranker:+--reranker "$reranker"} \
+       "${smoke_args[@]}" \
        >>"$LOG" 2>&1; then
     echo "  -> $cell smoke FAILED (see $LOG); aborting cell" >&2
     return 2

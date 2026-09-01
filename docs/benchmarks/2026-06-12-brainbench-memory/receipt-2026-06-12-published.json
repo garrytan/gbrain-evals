@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "cat": "cat34-brainbench-memory",
+  "gbrain_version": "0.44.0.0",
+  "gbrain_sha": "15a9019788d11619329284c3f0bcbc3b7db045df",
+  "timestamp": "2026-06-13T17:44:53.936Z",
+  "fixtures_hash": "76f201590dd3ad7a929e2e12efc9bf1406627b10ef4edbcfe7caf379aafd4090",
+  "include_holdout": false,
+  "llm": false,
+  "exit_code": 0,
+  "seed_failures": 0,
+  "cells": [
+    {
+      "cell": "openclaw/know-to-ask",
+      "seam": "production",
+      "gold_failed": 9,
+      "gold_total": 146,
+      "metrics": {
+        "know_to_ask_failure_rate": 0.15,
+        "false_fire_rate": 0,
+        "source_isolation_violations": 0,
+        "avg_injected_tokens": 33.7945
+      }
+    },
+    {
+      "cell": "openclaw/push",
+      "seam": "production",
+      "gold_failed": 18,
+      "gold_total": 94,
+      "metrics": {
+        "push_precision": 1,
+        "push_recall": 0.8085,
+        "source_isolation_violations": 0,
+        "avg_injected_tokens": 44.1346
+      }
+    },
+    {
+      "cell": "openclaw/write-back",
+      "seam": "production",
+      "gold_failed": 0,
+      "gold_total": 58,
+      "metrics": {
+        "write_back_fidelity": 1,
+        "provenance_accuracy": 1
+      }
+    },
+    {
+      "cell": "openclaw/continuity",
+      "seam": "production",
+      "gold_failed": 0,
+      "gold_total": 12,
+      "metrics": {
+        "continuity_rate": 1,
+        "source_isolation_violations": 0,
+        "avg_injected_tokens": 75.3333
+      }
+    },
+    {
+      "cell": "claude-code/know-to-ask",
+      "seam": "contract",
+      "gold_failed": 11,
+      "gold_total": 146,
+      "metrics": {
+        "know_to_ask_failure_rate": 0.15,
+        "false_fire_rate": 0.0233,
+        "source_isolation_violations": 0,
+        "avg_injected_tokens": 30.9247
+      }
+    },
+    {
+      "cell": "claude-code/push",
+      "seam": "contract",
+      "gold_failed": 32,
+      "gold_total": 94,
+      "metrics": {
+        "push_precision": 1,
+        "push_recall": 0.6596,
+        "source_isolation_violations": 0,
+        "avg_injected_tokens": 38.8077
+      }
+    },
+    {
+      "cell": "claude-code/write-back",
+      "seam": "contract",
+      "gold_failed": 0,
+      "gold_total": 58,
+      "metrics": {
+        "write_back_fidelity": 1,
+        "provenance_accuracy": 1
+      }
+    },
+    {
+      "cell": "claude-code/continuity",
+      "seam": "contract",
+      "gold_failed": 0,
+      "gold_total": 12,
+      "metrics": {
+        "continuity_rate": 1,
+        "source_isolation_violations": 0,
+        "avg_injected_tokens": 75.3333
+      }
+    },
+    {
+      "cell": "codex/know-to-ask",
+      "seam": "contract",
+      "gold_failed": 9,
+      "gold_total": 146,
+      "metrics": {
+        "know_to_ask_failure_rate": 0.15,
+        "false_fire_rate": 0,
+        "source_isolation_violations": 0,
+        "avg_injected_tokens": 40.7123
+      }
+    },
+    {
+      "cell": "codex/push",
+      "seam": "contract",
+      "gold_failed": 52,
+      "gold_total": 94,
+      "metrics": {
+        "push_precision": 1,
+        "push_recall": 0.4468,
+        "source_isolation_violations": 0,
+        "avg_injected_tokens": 48.5865
+      }
+    },
+    {
+      "cell": "codex/write-back",
+      "seam": "contract",
+      "gold_failed": 0,
+      "gold_total": 58,
+      "metrics": {
+        "write_back_fidelity": 1,
+        "provenance_accuracy": 1
+      }
+    },
+    {
+      "cell": "codex/continuity",
+      "seam": "contract",
+      "gold_failed": 0,
+      "gold_total": 12,
+      "metrics": {
+        "continuity_rate": 1,
+        "source_isolation_violations": 0,
+        "avg_injected_tokens": 150.9167
+      }
+    }
+  ]
+}

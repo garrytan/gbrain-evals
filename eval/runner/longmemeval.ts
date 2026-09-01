@@ -43,8 +43,11 @@
  *      across questions. Same architecture as `gbrain eval longmemeval`.
  *
  *   2. **Adapters compared:** keyword-only (no embedding API calls), vector,
- *      hybrid, hybrid+expansion. Search mode/reranker/autocut pinned per
- *      engine (PINNED_SEARCH_CONFIG) and recorded in the receipt.
+ *      hybrid, hybrid+expansion, plus the sessdiv and rerank variants (see
+ *      ADAPTER_SPECS). Search mode/reranker/autocut pinned per engine
+ *      (resolvedSearchConfig — PINNED_SEARCH_CONFIG with the reranker
+ *      overlaid ON for rerank specs) and recorded per adapter in the receipt
+ *      (search_config_by_adapter).
  *
  *   3. **Retrieval recall, not QA accuracy.** No LLM judge required. The
  *      LongMemEval `_s` split labels every question with the session_ids
@@ -57,12 +60,21 @@
  *   bun eval/runner/longmemeval.ts --dataset oracle   # easy split (3 sess/Q)
  *   bun eval/runner/longmemeval.ts --top-k 5          # default 8
  *   bun eval/runner/longmemeval.ts --seed 42          # stratified-sample seed
+ *   bun eval/runner/longmemeval.ts --adapters hybrid-sessdiv --overfetch-factor 3
+ *                                                     # session-diversity methodology row
+ *
+ * Adapter keys: keyword, vector, hybrid, hybrid+expansion (the four legacy
+ * adapters, unchanged behavior), plus hybrid-sessdiv, hybrid+expansion-sessdiv
+ * (over-fetch topK×factor chunks, score top-K DISTINCT sessions) and
+ * hybrid+rerank, hybrid-sessdiv+rerank (cross-encoder reranker pinned ON;
+ * fail-closed preflight — see rerank notes at ADAPTER_SPECS).
  *
  * Dataset: download to ~/datasets/longmemeval/longmemeval_s.json from
  *   https://huggingface.co/datasets/xiaowu0162/longmemeval
  */
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync, appendFileSync } from 'fs';
+import { createHash } from 'node:crypto';
 import { join, dirname } from 'path';
 import { homedir } from 'os';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
@@ -75,7 +87,7 @@ import { loadConfig } from 'gbrain/config';
 // its vector arm, so the standalone vector adapter must too (document-side
 // embed() returns different vectors on asymmetric models; longmemeval-06).
 import { embedQuery } from 'gbrain/embedding';
-import { configureGateway, getEmbeddingModel, getEmbeddingDimensions, __setEmbedTransportForTests } from 'gbrain/ai/gateway';
+import { configureGateway, getEmbeddingModel, getEmbeddingDimensions, getExpansionModel, __setEmbedTransportForTests } from 'gbrain/ai/gateway';
 // `ai` is a direct dependency of this repo (pinned to gbrain's major) — the
 // old deep import into gbrain's nested node_modules broke on any packaged
 // install because bun hoists the dependency (audit finding longmemeval-08).
@@ -110,8 +122,15 @@ export interface Opts {
   /** Seed for the stratified-sample PRNG (recorded in the report). */
   seed: number;
   topK: number;
+  /**
+   * Sessdiv over-fetch multiplier: sessdiv adapters fetch topK × this many
+   * chunks before deduping to top-K distinct sessions. Ignored by
+   * non-sessdiv adapters (they fetch exactly topK, unchanged legacy
+   * behavior). Recorded per row (overfetch_factor) and in the receipt.
+   */
+  overfetchFactor: number;
   keywordOnly: boolean;
-  /** Comma-separated subset of {keyword,vector,hybrid,hybrid+expansion}; default: all four. */
+  /** Comma-separated subset of ADAPTER_SPECS keys; default: the four legacy adapters. */
   adapters: string[];
   cacheDir: string;
   noCache: boolean;
@@ -156,6 +175,7 @@ export function parseOpts(argv: string[] = process.argv.slice(2)): Opts {
     stratify: arg(args, '--stratify') ? Number(arg(args, '--stratify')) : null,
     seed: arg(args, '--seed') ? Number(arg(args, '--seed')) : 42,
     topK: Number(arg(args, '--top-k') ?? '8'),
+    overfetchFactor: Number(arg(args, '--overfetch-factor') ?? '3'),
     keywordOnly: args.includes('--keyword-only'),
     adapters,
     // Default cache lives under eval/reports/ which is gitignored — the
@@ -365,10 +385,110 @@ export const PINNED_SEARCH_CONFIG: Readonly<Record<string, string>> = Object.fre
   'search.autocut': 'false',
 });
 
-async function pinSearchConfig(engine: PGLiteEngine): Promise<void> {
-  for (const [k, v] of Object.entries(PINNED_SEARCH_CONFIG)) {
+// ─── Adapter specs ────────────────────────────────────────────────
+
+/**
+ * One struct per adapter: which retrieval base runs, plus three orthogonal
+ * toggles. The four legacy adapters keep byte-identical behavior (same fetch
+ * limits, same retrieved lists); the new ones compose the same code paths:
+ *
+ *   - expansion  → hybridSearch({expansion: true, expandFn: expandQuery})
+ *   - sessdiv    → over-fetch topK × overfetchFactor chunks, then score the
+ *                  top-K DISTINCT sessions (see sessdivRetrieve). Closes the
+ *                  structural under-measurement where slicing top-K CHUNKS
+ *                  left ~3 distinct sessions in a top-5 list.
+ *   - rerank     → search.reranker.enabled pinned 'true' for this adapter's
+ *                  engine (resolvedSearchConfig overlay). Fail-closed: the
+ *                  provider key is preflighted before question 1 and the
+ *                  first scored result set must carry rerank_score
+ *                  (gbrain's reranker is fail-open — a missing key would
+ *                  silently measure plain hybrid under a "rerank" label).
+ */
+export interface AdapterSpec {
+  name: string;
+  base: 'keyword' | 'vector' | 'hybrid';
+  expansion: boolean;
+  sessdiv: boolean;
+  rerank: boolean;
+}
+
+export const ADAPTER_SPECS: Readonly<Record<string, AdapterSpec>> = Object.freeze({
+  keyword: { name: 'gbrain-keyword', base: 'keyword', expansion: false, sessdiv: false, rerank: false },
+  vector: { name: 'gbrain-vector', base: 'vector', expansion: false, sessdiv: false, rerank: false },
+  hybrid: { name: 'gbrain-hybrid', base: 'hybrid', expansion: false, sessdiv: false, rerank: false },
+  'hybrid+expansion': { name: 'gbrain-hybrid+expansion', base: 'hybrid', expansion: true, sessdiv: false, rerank: false },
+  'hybrid-sessdiv': { name: 'gbrain-hybrid-sessdiv', base: 'hybrid', expansion: false, sessdiv: true, rerank: false },
+  'hybrid+expansion-sessdiv': { name: 'gbrain-hybrid+expansion-sessdiv', base: 'hybrid', expansion: true, sessdiv: true, rerank: false },
+  'hybrid+rerank': { name: 'gbrain-hybrid+rerank', base: 'hybrid', expansion: false, sessdiv: false, rerank: true },
+  'hybrid-sessdiv+rerank': { name: 'gbrain-hybrid-sessdiv+rerank', base: 'hybrid', expansion: false, sessdiv: true, rerank: true },
+});
+
+/**
+ * The search config actually pinned for an adapter: PINNED_SEARCH_CONFIG,
+ * with 'search.reranker.enabled' overlaid to 'true' for rerank specs. This
+ * is what lands per adapter in the receipt (search_config_by_adapter) and in
+ * the run_config_hash preimage.
+ */
+export function resolvedSearchConfig(spec?: Pick<AdapterSpec, 'rerank'>): Record<string, string> {
+  return spec?.rerank
+    ? { ...PINNED_SEARCH_CONFIG, 'search.reranker.enabled': 'true' }
+    : { ...PINNED_SEARCH_CONFIG };
+}
+
+export async function pinSearchConfig(engine: PGLiteEngine, spec?: Pick<AdapterSpec, 'rerank'>): Promise<void> {
+  for (const [k, v] of Object.entries(resolvedSearchConfig(spec))) {
     await engine.setConfig(k, v);
   }
+}
+
+// ─── Rerank preflight (fail-closed) ───────────────────────────────
+
+/**
+ * Reranker provider → env key. FALLBACK MAP: gbrain resolves the reranker
+ * model as per-call override ?? `search.reranker.model` DB config ?? the
+ * mode bundle's default (LEGACY_DEFAULT_RERANKER_MODEL =
+ * 'zeroentropyai:zerank-2'). This runner never sets `search.reranker.model`,
+ * and gbrain's file-plane loadConfig() carries no reranker model field, so
+ * unless a future gbrain exposes one, the zerank default applies and the
+ * provider prefix picks the env key here. Entries mirror the
+ * auth_env.required of gbrain's reranker-capable recipes
+ * (src/core/ai/recipes/{zeroentropyai,voyage,dashscope-rerank,openrouter}.ts).
+ */
+export const RERANKER_PROVIDER_ENV_KEY: Readonly<Record<string, string>> = Object.freeze({
+  zeroentropyai: 'ZEROENTROPY_API_KEY',
+  voyage: 'VOYAGE_API_KEY',
+  dashscope: 'DASHSCOPE_API_KEY',
+  openrouter: 'OPENROUTER_API_KEY',
+});
+
+export interface RerankPreflight {
+  model: string;
+  provider: string;
+  envKey: string | null;
+  keyPresent: boolean;
+}
+
+/**
+ * Resolve the reranker provider + key presence BEFORE question 1. gbrain's
+ * reranker is fail-open (missing/invalid key → results silently unreranked),
+ * so a keyless rerank adapter would measure plain hybrid under a "rerank"
+ * label. Fail closed instead: no key → the adapter is skipped (recorded in
+ * the receipt), zero rows emitted. Providers not in the map (e.g. a local
+ * llama-server reranker) also fail closed — extend the map when they matter.
+ */
+export function rerankPreflight(env: Record<string, string | undefined> = process.env): RerankPreflight {
+  // Best-effort read of gbrain's file-plane config in case a future version
+  // exposes a reranker model there; today it does not, so the documented
+  // fallback (zerank via ZEROENTROPY_API_KEY) is the effective path.
+  let model = 'zeroentropyai:zerank-2';
+  try {
+    const cfg = loadConfig() as Record<string, unknown> | null;
+    const m = cfg?.['reranker_model'];
+    if (typeof m === 'string' && m.includes(':')) model = m;
+  } catch { /* no config file → documented default */ }
+  const provider = model.slice(0, model.indexOf(':'));
+  const envKey = RERANKER_PROVIDER_ENV_KEY[provider] ?? null;
+  return { model, provider, envKey, keyPresent: envKey !== null && Boolean(env[envKey]) };
 }
 
 function sessionIdFromSlug(slug: string): string {
@@ -378,6 +498,99 @@ function sessionIdFromSlug(slug: string): string {
 
 function uniqSessionIds(results: SearchResult[]): string[] {
   return uniqueInOrder(results.map(r => sessionIdFromSlug(r.slug)));
+}
+
+// ─── Session-diversity retrieval (sessdiv adapters) ───────────────
+
+export interface SessdivRetrieval {
+  /** Top-K DISTINCT session ids, best-chunk order. */
+  retrieved: string[];
+  /** Chunks fetched before session dedupe (diagnostic). */
+  candidates_total: number;
+  /** Distinct sessions available before the top-K slice (diagnostic). */
+  distinct_before_slice: number;
+}
+
+/**
+ * Over-fetched chunk list → top-K distinct sessions. The input is one
+ * descending ranked list, so the FIRST occurrence of a session id is that
+ * session's best chunk, and first-occurrence order IS best-chunk-per-session
+ * order — the same equivalence adapters/vector-grep-rrf-fusion.ts:169-183
+ * establishes with an explicit max-score pass over page slugs. uniqSessionIds
+ * (uniqueInOrder) already keeps first occurrences, so slicing its output to
+ * topK yields the K best distinct sessions.
+ */
+export function sessdivRetrieve(results: SearchResult[], topK: number): SessdivRetrieval {
+  const distinct = uniqSessionIds(results);
+  return {
+    retrieved: distinct.slice(0, topK),
+    candidates_total: results.length,
+    distinct_before_slice: distinct.length,
+  };
+}
+
+// ─── run_config_hash ──────────────────────────────────────────────
+
+/**
+ * The preimage of the per-row run_config_hash. Two rows with the same hash
+ * were produced by the same pipeline configuration; the aggregator rejects
+ * mixed hashes within one adapter. The full preimage objects are stored once
+ * per run in the report JSON's resolved.run_config_preimages (keyed by
+ * adapter) so any hash is reversible to the config that produced it.
+ */
+export interface RunConfigPreimage {
+  schema_version: 1;
+  /** The dependency spec from package.json dependencies.gbrain (gbrainPin()). */
+  gbrain_pin: string;
+  dataset: string;
+  top_k: number;
+  adapter: string;
+  /** resolvedSearchConfig(spec) — the pins this adapter's engine actually got. */
+  search_config: Record<string, string>;
+  /** Sessdiv adapters only. */
+  overfetch_factor?: number;
+  /** Embedding-backed adapters only (keyword ingests with noEmbed). */
+  embedding_model?: string;
+  embedding_dimensions?: number;
+  /** Expansion adapters only; null when the gateway default could not be resolved. */
+  expansion_model?: string | null;
+}
+
+export function buildRunConfigPreimage(
+  spec: AdapterSpec,
+  opts: Pick<Opts, 'datasetName' | 'topK' | 'overfetchFactor'>,
+  resolved: { embeddingModel: string | null; embeddingDims: number | null; expansionModel: string | null },
+): RunConfigPreimage {
+  return {
+    schema_version: 1,
+    gbrain_pin: gbrainPin(),
+    dataset: opts.datasetName,
+    top_k: opts.topK,
+    adapter: spec.name,
+    search_config: resolvedSearchConfig(spec),
+    ...(spec.sessdiv ? { overfetch_factor: opts.overfetchFactor } : {}),
+    ...(spec.base !== 'keyword' && resolved.embeddingModel !== null ? { embedding_model: resolved.embeddingModel } : {}),
+    ...(spec.base !== 'keyword' && resolved.embeddingDims !== null ? { embedding_dimensions: resolved.embeddingDims } : {}),
+    ...(spec.expansion ? { expansion_model: resolved.expansionModel } : {}),
+  };
+}
+
+/** Canonical JSON: object keys sorted recursively, undefined values dropped, arrays kept in order. */
+export function canonicalJson(value: unknown): string {
+  if (Array.isArray(value)) return '[' + value.map(canonicalJson).join(',') + ']';
+  if (value !== null && typeof value === 'object') {
+    return '{' + Object.entries(value as Record<string, unknown>)
+      .filter(([, v]) => v !== undefined)
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+      .map(([k, v]) => JSON.stringify(k) + ':' + canonicalJson(v))
+      .join(',') + '}';
+  }
+  return JSON.stringify(value);
+}
+
+/** sha256 hex over the canonical-JSON preimage (node:crypto). */
+export function runConfigHash(preimage: RunConfigPreimage): string {
+  return createHash('sha256').update(canonicalJson(preimage)).digest('hex');
 }
 
 // ─── Scoring ──────────────────────────────────────────────────────
@@ -394,16 +607,26 @@ export interface QuestionMetrics {
 }
 
 /**
- * Score one question. Both sides are lowercased (gbrain slugs are stored
- * lowercase via validateSlug; dataset ids preserve original case) and the
- * retrieved list is de-duplicated before ranking metrics apply.
+ * The ONE id normalization for retrieved lists — lowercase (gbrain slugs are
+ * stored lowercase via validateSlug; dataset ids preserve original case),
+ * dedupe keeping first occurrence. Shared by scoreQuestion and the
+ * session-diversity diagnostics in summarizeAdapterRows so the two can never
+ * count "distinct session" differently (eng finding E2).
+ */
+export function normalizeIds(ids: readonly string[]): string[] {
+  return uniqueInOrder(ids.map(s => s.toLowerCase()));
+}
+
+/**
+ * Score one question. Both sides are lowercased and the retrieved list is
+ * de-duplicated (normalizeIds) before ranking metrics apply.
  */
 export function scoreQuestion(
   retrieved: readonly string[],
   groundTruth: readonly string[],
   k: number,
 ): QuestionMetrics {
-  const ids = uniqueInOrder(retrieved.map(s => s.toLowerCase()));
+  const ids = normalizeIds(retrieved);
   const gt = new Set(groundTruth.map(s => s.toLowerCase()));
   const grades = new Map<string, number>([...gt].map(id => [id, 1]));
   return {
@@ -423,6 +646,11 @@ export function scoreQuestion(
  */
 export function classifyErrorOrigin(msg: string): FailureOrigin {
   if (/^question_timeout_/.test(msg)) return 'harness';
+  // Reranker contract violation: config pinned the reranker ON but gbrain
+  // fail-opened (no rerank_score on any result). The pipeline under the
+  // "rerank" label did not run — that is the SUT misbehaving, checked before
+  // the dependency patterns because the message names the provider key.
+  if (/^rerank_missing_score/.test(msg)) return 'sut';
   if (/rate.?limit|\b(408|425|429|500|502|503|504|529)\b|ECONNRESET|ECONNREFUSED|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|fetch failed|socket|network|overloaded|quota|insufficient_quota|api.?key/i.test(msg)) {
     return 'dependency';
   }
@@ -455,6 +683,18 @@ export interface NdjsonRow {
   latency_ms: number;
   top_k?: number;
   dataset?: string;
+  /** Sessdiv adapters only: chunks fetched before session dedupe. */
+  candidates_total?: number;
+  /** Sessdiv adapters only: distinct sessions available before the top-K slice. */
+  distinct_before_slice?: number;
+  /** Sessdiv adapters only: over-fetch multiplier (fetch limit = top_k × this). */
+  overfetch_factor?: number;
+  /**
+   * sha256 over the canonical run-config preimage (buildRunConfigPreimage).
+   * Same hash ⇔ same pipeline configuration; the aggregator rejects mixed
+   * hashes within one adapter. Absent on legacy rows (pre 2026-09-01).
+   */
+  run_config_hash?: string;
   error?: string;
   error_origin?: FailureOrigin;
 }
@@ -465,6 +705,10 @@ export interface TypeBucket {
   recall_all: number;
   hit_any: number;
   recall_any: number;
+  /** Mean distinct sessions in the scored retrieved lists (normalizeIds — same normalization as scoring). */
+  mean_distinct_sessions: number;
+  /** Fraction of scored rows with fewer than topK distinct sessions available (pre-slice supply for sessdiv rows). */
+  session_shortfall_rate: number;
 }
 
 export interface RunSummary {
@@ -484,6 +728,20 @@ export interface RunSummary {
   ndcg_any_at_k: number | null;
   /** _abs diagnostic: mean fraction of top-k that is claimed evidence for unanswerable questions. */
   abs_noise_at_k: number | null;
+  /**
+   * Session-diversity diagnostic: mean count of DISTINCT sessions in the
+   * scored retrieved lists (normalizeIds — identical normalization to
+   * scoreQuestion). On legacy chunk-sliced rows this exposes how few
+   * distinct sessions a "top-k" list actually held; on sessdiv rows it
+   * should sit at ~topK.
+   */
+  mean_distinct_sessions: number | null;
+  /**
+   * Fraction of scored rows whose distinct session count is < topK. For
+   * sessdiv rows the PRE-SLICE count (distinct_before_slice) is used so the
+   * rate reflects supply after over-fetch, not the slice.
+   */
+  session_shortfall_rate: number | null;
   recall_by_type: Record<string, TypeBucket>;
   avg_latency_ms: number | null;
   p50_latency_ms: number | null;
@@ -529,7 +787,10 @@ export function summarizeAdapterRows(
   const recallAllVals: number[] = [];
   const recallAnyVals: number[] = [];
   const ndcgVals: number[] = [];
+  const distinctVals: number[] = [];
+  const shortfallVals: number[] = [];
   const byType: Record<string, TypeBucket> = {};
+  const divByType: Record<string, { distinctSum: number; shortfalls: number }> = {};
   for (const r of evalRows) {
     const m = scoreQuestion(r.retrieved ?? [], r.ground_truth ?? [], topK);
     // sut-error rows have retrieved=[] → 0 across the board. A non-abs row
@@ -541,14 +802,31 @@ export function summarizeAdapterRows(
     recallAllVals.push(rAll);
     recallAnyVals.push(rAny);
     ndcgVals.push(nd);
-    const b = byType[r.question_type] ?? (byType[r.question_type] = { total: 0, hit_all: 0, recall_all: 0, hit_any: 0, recall_any: 0 });
+    // Session-diversity diagnostics — computable for EVERY row generation
+    // (legacy rows included) from the stored retrieved list, using the SAME
+    // normalization scoreQuestion applies (normalizeIds, eng E2). Shortfall
+    // prefers the sessdiv pre-slice count so it reflects supply after
+    // over-fetch, not the top-K slice.
+    const distinct = normalizeIds(r.retrieved ?? []).length;
+    const supply = typeof r.distinct_before_slice === 'number' ? r.distinct_before_slice : distinct;
+    distinctVals.push(distinct);
+    shortfallVals.push(supply < topK ? 1 : 0);
+    const b = byType[r.question_type] ?? (byType[r.question_type] = {
+      total: 0, hit_all: 0, recall_all: 0, hit_any: 0, recall_any: 0,
+      mean_distinct_sessions: 0, session_shortfall_rate: 0,
+    });
+    const d = divByType[r.question_type] ?? (divByType[r.question_type] = { distinctSum: 0, shortfalls: 0 });
     b.total++;
     if (rAll === 1) b.hit_all++;
     if (rAny === 1) b.hit_any++;
+    d.distinctSum += distinct;
+    if (supply < topK) d.shortfalls++;
   }
   for (const t of Object.keys(byType)) {
     byType[t].recall_all = byType[t].total > 0 ? byType[t].hit_all / byType[t].total : 0;
     byType[t].recall_any = byType[t].total > 0 ? byType[t].hit_any / byType[t].total : 0;
+    byType[t].mean_distinct_sessions = byType[t].total > 0 ? divByType[t].distinctSum / byType[t].total : 0;
+    byType[t].session_shortfall_rate = byType[t].total > 0 ? divByType[t].shortfalls / byType[t].total : 0;
   }
 
   const absNoiseVals = absRows.map(r => {
@@ -574,6 +852,8 @@ export function summarizeAdapterRows(
     recall_any_at_k: finiteOrNull(mean(recallAnyVals)),
     ndcg_any_at_k: finiteOrNull(mean(ndcgVals)),
     abs_noise_at_k: finiteOrNull(mean(absNoiseVals)),
+    mean_distinct_sessions: finiteOrNull(mean(distinctVals)),
+    session_shortfall_rate: finiteOrNull(mean(shortfallVals)),
     recall_by_type: byType,
     avg_latency_ms: finiteOrNull(mean(latencies)),
     p50_latency_ms: finiteOrNull(percentile(latencies, 50)),
@@ -678,20 +958,66 @@ export async function run(opts: Opts): Promise<RunResult> {
     `${opts.stratify ? ` (stratified ${opts.stratify}/type, seed=${opts.seed})` : ''} top_k=${opts.topK}\n`,
   );
 
-  type AdapterMode = 'keyword' | 'vector' | 'hybrid' | 'hybrid+expansion';
-  const adapterMap: Record<string, { name: string; mode: AdapterMode }> = {
-    keyword: { name: 'gbrain-keyword', mode: 'keyword' },
-    vector: { name: 'gbrain-vector', mode: 'vector' },
-    hybrid: { name: 'gbrain-hybrid', mode: 'hybrid' },
-    'hybrid+expansion': { name: 'gbrain-hybrid+expansion', mode: 'hybrid+expansion' },
-  };
   const adapters = opts.adapters.map(k => {
-    const a = adapterMap[k];
+    const a = ADAPTER_SPECS[k];
     if (!a) {
-      throw new Error(`Unknown adapter: "${k}". Allowed: keyword, vector, hybrid, hybrid+expansion`);
+      throw new Error(`Unknown adapter: "${k}". Allowed: ${Object.keys(ADAPTER_SPECS).join(', ')}`);
     }
     return a;
   });
+
+  // Rerank preflight (fail-closed), BEFORE question 1: gbrain's reranker
+  // fail-opens on a missing provider key, which would silently measure plain
+  // hybrid under a "rerank" label. No key → the adapter is SKIPPED (receipt
+  // records skip_reason), zero rows emitted, other adapters continue.
+  const skippedAdapters: Array<{ adapter: string; skip_reason: string }> = [];
+  const runnable: AdapterSpec[] = [];
+  for (const spec of adapters) {
+    if (!spec.rerank) {
+      runnable.push(spec);
+      continue;
+    }
+    const pre = rerankPreflight();
+    if (pre.keyPresent) {
+      runnable.push(spec);
+      continue;
+    }
+    const reason = pre.envKey !== null
+      ? `rerank preflight failed: ${pre.envKey} not set (reranker model ${pre.model})`
+      : `rerank preflight failed: no known env key for reranker provider "${pre.provider}" (model ${pre.model}) — extend RERANKER_PROVIDER_ENV_KEY`;
+    skippedAdapters.push({ adapter: spec.name, skip_reason: reason });
+    process.stderr.write(`[longmemeval] SKIP adapter ${spec.name}: ${reason}\n`);
+  }
+  // Rerank adapters that DO run are still "pending acceptance run" until a
+  // keyed end-to-end run has been published (plan D4c) — recorded in the
+  // receipt so nobody quotes a rerank number without one.
+  const rerankAdaptersPending = adapters.filter(a => a.rerank).map(a => a.name);
+  const searchConfigByAdapter = Object.fromEntries(adapters.map(a => [a.name, resolvedSearchConfig(a)]));
+
+  if (runnable.length === 0 && skippedAdapters.length > 0) {
+    // Skip-only run: nothing measurable was requested-and-runnable. Exit 0 —
+    // a fail-closed skip is the designed response, not a failure.
+    const reason = `all requested adapters skipped: ${skippedAdapters.map(s => `${s.adapter} (${s.skip_reason})`).join('; ')}`;
+    const receipt: Receipt = {
+      ...baseReceipt(startedAt),
+      run_status: 'skipped',
+      skip_reason: reason,
+      n_total: 0,
+      n_scored: 0,
+      completion_rate: 0,
+      errors: [],
+      publishable: false,
+      resolved_config: {
+        search_config_by_adapter: searchConfigByAdapter,
+        adapters_skipped: skippedAdapters,
+        rerank_adapters_pending_acceptance: rerankAdaptersPending,
+      },
+      finished_at: new Date().toISOString(),
+    };
+    writeReceipt(receiptFile, receipt);
+    process.stderr.write(`[longmemeval] SKIPPED (all adapters): ${reason}\n[longmemeval] receipt: ${receiptFile}\n`);
+    return { summaries: [], receipt, receiptFile, reportPath: null, exitCode: 0 };
+  }
 
   const summaries: RunSummary[] = [];
 
@@ -707,10 +1033,11 @@ export async function run(opts: Opts): Promise<RunResult> {
   // Configure the AI gateway once (v0.27+ requires this before embed() works).
   // Mirror cli.ts#connectEngine: read config + env, hand to configureGateway.
   // Used by hybridSearch + importFromContent's chunk-embedding path.
-  const needsEmbeddings = adapters.some(a => a.mode !== 'keyword');
+  const needsEmbeddings = runnable.some(a => a.base !== 'keyword');
   let cache: EmbeddingCache | null = null;
   let resolvedEmbeddingModel: string | null = null;
   let resolvedEmbeddingDims: number | null = null;
+  let resolvedExpansionModel: string | null = null;
   if (needsEmbeddings) {
     const cfg = loadConfig() || ({} as any);
     configureGateway({
@@ -729,6 +1056,9 @@ export async function run(opts: Opts): Promise<RunResult> {
     // vectors and poisoned shared caches).
     resolvedEmbeddingModel = getEmbeddingModel();
     resolvedEmbeddingDims = getEmbeddingDimensions();
+    // Same resolved-not-rederived rule for the expansion model: it goes into
+    // the run_config_hash preimage of expansion adapters.
+    try { resolvedExpansionModel = getExpansionModel(); } catch { resolvedExpansionModel = null; }
     const provider = resolvedEmbeddingModel.includes(':')
       ? resolvedEmbeddingModel.slice(0, resolvedEmbeddingModel.indexOf(':'))
       : 'openai';
@@ -780,8 +1110,10 @@ export async function run(opts: Opts): Promise<RunResult> {
   let timedOut = false;
 
   const inShard = (i: number) => opts.totalWorkers <= 1 || i % opts.totalWorkers === opts.workerId;
+  // Expected probes count RUNNABLE adapters only: a preflight-skipped adapter
+  // is declared skipped in the receipt, not "planned but never attempted".
   let expectedProbes = 0;
-  for (const adapter of adapters) {
+  for (const adapter of runnable) {
     for (let i = 0; i < all.length; i++) {
       if (!inShard(i)) continue;
       if (completed.has(`${adapter.name}::${all[i].question_id}`)) continue;
@@ -789,14 +1121,36 @@ export async function run(opts: Opts): Promise<RunResult> {
     }
   }
   const acc = new ProbeAccounting(expectedProbes);
+  const runConfigPreimages: Record<string, RunConfigPreimage> = {};
+  const abortedAdapters: Array<{ adapter: string; reason: string }> = [];
 
-  for (const adapter of adapters) {
+  for (const adapter of runnable) {
     if (timedOut) break;
-    process.stderr.write(`\n[longmemeval] adapter=${adapter.name} (mode=${adapter.mode})\n`);
+    process.stderr.write(
+      `\n[longmemeval] adapter=${adapter.name} (base=${adapter.base}` +
+      `${adapter.expansion ? ' +expansion' : ''}` +
+      `${adapter.sessdiv ? ` +sessdiv(overfetch=${opts.overfetchFactor})` : ''}` +
+      `${adapter.rerank ? ' +rerank' : ''})\n`,
+    );
+    // Non-sessdiv adapters fetch exactly topK (legacy behavior, unchanged);
+    // sessdiv adapters over-fetch so the session dedupe has supply to fill
+    // K distinct slots.
+    const fetchLimit = adapter.sessdiv ? opts.topK * opts.overfetchFactor : opts.topK;
+    const preimage = buildRunConfigPreimage(adapter, opts, {
+      embeddingModel: resolvedEmbeddingModel,
+      embeddingDims: resolvedEmbeddingDims,
+      expansionModel: resolvedExpansionModel,
+    });
+    runConfigPreimages[adapter.name] = preimage;
+    const rowConfigHash = runConfigHash(preimage);
+    // Rerank contract: the first non-empty scored result set must carry
+    // rerank_score (gbrain stamps it on the reranked head) — otherwise the
+    // reranker fail-opened and this adapter's label would be a lie.
+    let rerankScoreSeen = false;
     let engine = new PGLiteEngine();
     await engine.connect({});
     await engine.initSchema();
-    await pinSearchConfig(engine);
+    await pinSearchConfig(engine, adapter);
     const runStart = Date.now();
     const results: NdjsonRow[] = [];
 
@@ -823,7 +1177,7 @@ export async function run(opts: Opts): Promise<RunResult> {
         engine = new PGLiteEngine();
         await engine.connect({});
         await engine.initSchema();
-        await pinSearchConfig(engine);
+        await pinSearchConfig(engine, adapter);
       }
 
       for (let i = 0; i < all.length; i++) {
@@ -857,33 +1211,57 @@ export async function run(opts: Opts): Promise<RunResult> {
             const slug = `chat/${s.session_id}`.toLowerCase();
             await withTimeout(
               importFromContent(engine, slug, renderSession(s), {
-                noEmbed: adapter.mode === 'keyword',
+                noEmbed: adapter.base === 'keyword',
               }),
               PER_QUESTION_TIMEOUT_MS,
             );
           }
           let searchResults: SearchResult[];
-          if (adapter.mode === 'keyword') {
-            searchResults = await engine.searchKeyword(q.question, { limit: opts.topK });
-          } else if (adapter.mode === 'vector') {
+          if (adapter.base === 'keyword') {
+            searchResults = await engine.searchKeyword(q.question, { limit: fetchLimit });
+          } else if (adapter.base === 'vector') {
             // Vector-only: hybridSearch with the keyword half disabled isn't a
             // direct flag, so call engine.searchVector after embedding the
             // query QUERY-SIDE (embedQuery — what hybridSearch's vector half
             // does). Embedding goes through the cached transport like imports.
             const queryEmb = await embedQuery(q.question);
-            searchResults = await engine.searchVector(queryEmb, { limit: opts.topK });
-          } else if (adapter.mode === 'hybrid') {
-            searchResults = await hybridSearch(engine, q.question, { limit: opts.topK, expansion: false });
+            searchResults = await engine.searchVector(queryEmb, { limit: fetchLimit });
+          } else if (!adapter.expansion) {
+            searchResults = await hybridSearch(engine, q.question, { limit: fetchLimit, expansion: false });
           } else {
             // hybrid + multi-query expansion via Haiku (gbrain's prod default)
             searchResults = await hybridSearch(engine, q.question, {
-              limit: opts.topK,
+              limit: fetchLimit,
               expansion: true,
               expandFn: expandQuery,
             });
           }
 
-          const retrieved = uniqSessionIds(searchResults);
+          // Fail-closed rerank assertion: gbrain's reranker fail-opens
+          // (provider error → results pass through unreranked, no
+          // rerank_score stamped). The first non-empty result set decides:
+          // no rerank_score anywhere → abort this adapter as an SUT error
+          // rather than publish plain-hybrid numbers under a rerank label.
+          if (adapter.rerank && !rerankScoreSeen && searchResults.length > 0) {
+            if (searchResults.some(r => r.rerank_score !== undefined)) {
+              rerankScoreSeen = true;
+            } else {
+              throw new Error(
+                `rerank_missing_score: search.reranker.enabled pinned 'true' for ${adapter.name} ` +
+                `but no result carried rerank_score on ${q.question_id} — the reranker fail-opened ` +
+                `(invalid provider credentials or provider sunset short-circuit)`,
+              );
+            }
+          }
+
+          let retrieved: string[];
+          let sessdiv: SessdivRetrieval | null = null;
+          if (adapter.sessdiv) {
+            sessdiv = sessdivRetrieve(searchResults, opts.topK);
+            retrieved = sessdiv.retrieved;
+          } else {
+            retrieved = uniqSessionIds(searchResults);
+          }
           const m = scoreQuestion(retrieved, q.answer_session_ids, opts.topK);
           const abs = isAbsQuestion(q.question_id);
 
@@ -905,6 +1283,14 @@ export async function run(opts: Opts): Promise<RunResult> {
             latency_ms: Date.now() - qStart,
             top_k: opts.topK,
             dataset: opts.datasetName,
+            ...(sessdiv !== null
+              ? {
+                  candidates_total: sessdiv.candidates_total,
+                  distinct_before_slice: sessdiv.distinct_before_slice,
+                  overfetch_factor: opts.overfetchFactor,
+                }
+              : {}),
+            run_config_hash: rowConfigHash,
           };
           results.push(row);
           acc.score(probeId, abs
@@ -947,6 +1333,7 @@ export async function run(opts: Opts): Promise<RunResult> {
             latency_ms: Date.now() - qStart,
             top_k: opts.topK,
             dataset: opts.datasetName,
+            run_config_hash: rowConfigHash,
             error: msg,
             error_origin: origin,
           };
@@ -955,6 +1342,14 @@ export async function run(opts: Opts): Promise<RunResult> {
             // Error rows stream for observability but readCompletedPairs
             // ignores them — the question re-runs on the next invocation.
             appendFileSync(opts.ndjsonPath, JSON.stringify(errRow) + '\n');
+          }
+          if (msg.startsWith('rerank_missing_score')) {
+            // Contract violation is systemic, not per-question: every later
+            // question would fail identically. Abort this adapter (recorded
+            // in the receipt), continue with the remaining adapters.
+            process.stderr.write(`[${adapter.name}] ABORT adapter: reranker contract violated (fail-closed)\n`);
+            abortedAdapters.push({ adapter: adapter.name, reason: msg });
+            break;
           }
         }
       }
@@ -1003,7 +1398,14 @@ export async function run(opts: Opts): Promise<RunResult> {
     gbrain_pin: gbrainPin(),
     embedding_model: resolvedEmbeddingModel,
     embedding_dimensions: resolvedEmbeddingDims,
-    pinned_search_config: PINNED_SEARCH_CONFIG,
+    expansion_model: resolvedExpansionModel,
+    // Per-adapter search pins (rerank specs overlay reranker.enabled=true) —
+    // one flat pinned_search_config can no longer describe a mixed run.
+    search_config_by_adapter: searchConfigByAdapter,
+    // Full run_config_hash preimages, keyed by adapter: any row hash in the
+    // NDJSON is reversible to the exact configuration that produced it.
+    run_config_preimages: runConfigPreimages,
+    overfetch_factor: opts.overfetchFactor,
     seed: opts.seed,
   };
   const reportDir = join(import.meta.dir, '..', 'reports', 'longmemeval');
@@ -1034,22 +1436,35 @@ export async function run(opts: Opts): Promise<RunResult> {
     n_scored: accSummary.n_scored,
     completion_rate: accSummary.completion_rate,
     errors: accSummary.errors,
-    // Partial invocations (shards, wall-budget exits, resume no-ops) and
-    // subsampled runs are never publishable as full-benchmark numbers.
+    // Partial invocations (shards, wall-budget exits, resume no-ops),
+    // subsampled runs, and runs where any requested adapter was skipped or
+    // aborted are never publishable as full-benchmark numbers.
     publishable: accSummary.publishable && gate.verdict !== 'partial'
-      && opts.limit === null && opts.stratify === null && opts.totalWorkers === 1,
+      && opts.limit === null && opts.stratify === null && opts.totalWorkers === 1
+      && skippedAdapters.length === 0 && abortedAdapters.length === 0,
     resolved_config: {
-      ...PINNED_SEARCH_CONFIG,
+      search_config_by_adapter: searchConfigByAdapter,
       embedding_model: resolvedEmbeddingModel,
       embedding_dimensions: resolvedEmbeddingDims,
+      expansion_model: resolvedExpansionModel,
       dataset: opts.datasetName,
       top_k: opts.topK,
+      overfetch_factor: opts.overfetchFactor,
       seed: opts.seed,
       adapters: opts.adapters,
       min_recall_all_gate: minGate,
       worker_id: opts.workerId,
       total_workers: opts.totalWorkers,
       cache: !opts.noCache,
+      ...(skippedAdapters.length > 0 ? { adapters_skipped: skippedAdapters } : {}),
+      ...(abortedAdapters.length > 0 ? { adapters_aborted: abortedAdapters } : {}),
+      ...(rerankAdaptersPending.length > 0
+        ? {
+            // D4c: rerank adapters ship fail-closed but have no published
+            // keyed acceptance run yet — never quote their numbers as final.
+            rerank_adapters_pending_acceptance: rerankAdaptersPending,
+          }
+        : {}),
     },
     finished_at: new Date().toISOString(),
     data: {
@@ -1084,12 +1499,12 @@ export function fmt(summaries: RunSummary[]): string {
     out.push('Aggregate the NDJSON stream with longmemeval-aggregate.ts for the full picture.');
     return out.join('\n');
   }
-  out.push(`Dataset: \`${summaries[0].dataset}\`  |  Top-K: ${summaries[0].topK}  |  recall_all@k is the official LongMemEval headline; recall_any@k (any-hit) is strictly looser and shown as a diagnostic. \`_abs\` questions are excluded from recall denominators (official protocol) and scored as abs_noise@k.\n`);
-  out.push('| Adapter | n | recall_all@k | recall_any@k | ndcg_any@k | abs_noise@k (n_abs) | errors (sut/infra) | p50 | p99 | Wall |');
-  out.push('|---|---|---|---|---|---|---|---|---|---|');
+  out.push(`Dataset: \`${summaries[0].dataset}\`  |  Top-K: ${summaries[0].topK}  |  recall_all@k is the official LongMemEval headline; recall_any@k (any-hit) is strictly looser and shown as a diagnostic. \`_abs\` questions are excluded from recall denominators (official protocol) and scored as abs_noise@k. div@k = mean DISTINCT sessions in the scored top-k; shortfall = fraction of scored rows with fewer than k distinct sessions available (pre-slice supply for sessdiv rows).\n`);
+  out.push('| Adapter | n | recall_all@k | recall_any@k | ndcg_any@k | div@k | shortfall | abs_noise@k (n_abs) | errors (sut/infra) | p50 | p99 | Wall |');
+  out.push('|---|---|---|---|---|---|---|---|---|---|---|---|');
   for (const s of summaries) {
     out.push(
-      `| ${s.adapter} | ${s.total} | ${pctOrDash(s.recall_all_at_k)} | ${pctOrDash(s.recall_any_at_k)} | ${pctOrDash(s.ndcg_any_at_k)} | ${pctOrDash(s.abs_noise_at_k)} (${s.n_abs}) | ${s.n_errors_sut}/${s.n_errors_infra} | ${msOrDash(s.p50_latency_ms)} | ${msOrDash(s.p99_latency_ms)} | ${s.total_seconds.toFixed(0)}s |`,
+      `| ${s.adapter} | ${s.total} | ${pctOrDash(s.recall_all_at_k)} | ${pctOrDash(s.recall_any_at_k)} | ${pctOrDash(s.ndcg_any_at_k)} | ${s.mean_distinct_sessions === null ? '—' : s.mean_distinct_sessions.toFixed(2)} | ${pctOrDash(s.session_shortfall_rate)} | ${pctOrDash(s.abs_noise_at_k)} (${s.n_abs}) | ${s.n_errors_sut}/${s.n_errors_infra} | ${msOrDash(s.p50_latency_ms)} | ${msOrDash(s.p99_latency_ms)} | ${s.total_seconds.toFixed(0)}s |`,
     );
   }
   out.push('');

@@ -49,8 +49,11 @@
 >   rescored rows reproduce the published number to the digit: 459 non-`_abs`
 >   any-hits + 29 of 30 `_abs` any-hits = 488/500 = **97.60%**.
 > - **Ground truth validated**: every row's `ground_truth` matches the
->   canonical dataset's `answer_session_ids` exactly (500/500, 0 mismatches;
->   `longmemeval-validate-ndjson.ts`).
+>   canonical dataset's `answer_session_ids` exactly (500/500, 0 mismatches).
+>   The validator now lives in-repo at
+>   `eval/runner/longmemeval-validate-ndjson.ts`; re-running the full
+>   500/500 ground-truth check requires the gated HuggingFace dataset
+>   downloaded locally.
 > - **Denominator change (disclosed)**: the corrected protocol excludes the
 >   30 `_abs` abstention questions from recall denominators (n=470; they
 >   score as `abs_noise@5` = 33.3%). Zero error rows; 696 duplicate
@@ -80,6 +83,30 @@
 > # or, the published multi-worker shape (defaults: k=5, dataset s, resume):
 > bash eval/runner/longmemeval-batch.sh
 > ```
+>
+> ## ADDENDUM (2026-09-01) — raw rows committed, resolution re-derivable
+>
+> The per-question NDJSON stream the resolution was computed from is now
+> committed at
+> [`2026-05-07-longmemeval-s/rescore-may-copy.ndjson`](2026-05-07-longmemeval-s/rescore-may-copy.ndjson)
+> (sha256 `a26453188c429347aee0196040b2af1e5c88c0f36bd476af5beccc23669a3d0b`,
+> 2,696 rows including 696 resume-duplicate rows the aggregator dedupes).
+> Anyone can re-derive the resolution without keys or the dataset:
+>
+> ```sh
+> bun eval/runner/longmemeval-aggregate.ts docs/benchmarks/2026-05-07-longmemeval-s/rescore-may-copy.ndjson --top-k 5 --dataset s --output /tmp/rederive
+> ```
+>
+> This reproduces every number in
+> [`rescore-may-2026-08-31.json`](2026-05-07-longmemeval-s/rescore-may-2026-08-31.json)
+> digit-for-digit (verified 2026-09-01: the re-derived summaries object is
+> byte-equal; all 177 numeric fields match).
+>
+> One item in the comparability warning above has since been settled: an
+> independent analysis ([arXiv 2604.21284](https://arxiv.org/abs/2604.21284))
+> identifies MemPalace's 96.6% as `recall_any@5`, so the any-hit rows are a
+> same-variant comparison. Current cross-system status lives in
+> [`docs/comparison-systems.md`](../comparison-systems.md).
 >
 > The historical numbers below are preserved unchanged for the audit trail.
 > A fresh re-measurement at the current gbrain pin (the May run was v0.28.8)

@@ -1,0 +1,204 @@
+{
+  "schema_version": 1,
+  "benchmark_version": "0.5.0",
+  "category": "cat34-brainbench-memory",
+  "gbrain_version": "0.47.8.0",
+  "gbrain_pin": "github:garrytan/gbrain#2a56b51236850f6abcbf2f1ea71981bb9630f6fe",
+  "started_at": "2026-09-01T20:20:38.181Z",
+  "run_status": "completed",
+  "verdict": "fail",
+  "n_total": 12,
+  "n_scored": 12,
+  "completion_rate": 1,
+  "errors": [
+    {
+      "probe_id": "openclaw/push",
+      "origin": "sut",
+      "message": "gold_failed=9/96"
+    },
+    {
+      "probe_id": "codex/push",
+      "origin": "sut",
+      "message": "gold_failed=43/96"
+    }
+  ],
+  "publishable": true,
+  "resolved_config": {
+    "gbrain_repo": "/home/vercel-sandbox/gbrain",
+    "sut_gbrain_version": "0.47.8.0",
+    "harness_sha": "2a56b51236850f6abcbf2f1ea71981bb9630f6fe",
+    "cmd": [
+      "bun",
+      "src/cli.ts",
+      "eval",
+      "brainbench",
+      "--harness",
+      "all",
+      "--suite",
+      "all",
+      "--json",
+      "--out",
+      "/home/vercel-sandbox/gbrain-evals/eval/reports/cat34-brainbench-memory/result-mtj43ixx-1pum.json"
+    ],
+    "include_holdout": false,
+    "llm": false,
+    "env_keys_stripped": [
+      "OPENAI_API_KEY",
+      "VOYAGE_API_KEY",
+      "ZEROENTROPY_API_KEY",
+      "GEMINI_API_KEY",
+      "GOOGLE_API_KEY",
+      "ANTHROPIC_API_KEY"
+    ],
+    "search_mode": "subprocess-owned (BrainBench hermetic PGLite)",
+    "reranker_enabled": false,
+    "result_nonce": "mtj43ixx-1pum"
+  },
+  "hashes": {
+    "fixtures": "509fd20d7cda693350030393b6d54154e2685516d30f017ca219bd25e92c0e57"
+  },
+  "finished_at": "2026-09-01T20:20:59.964Z",
+  "data": {
+    "subprocess_exit": 0,
+    "cells": [
+      {
+        "cell": "openclaw/know-to-ask",
+        "seam": "production",
+        "gold_failed": 0,
+        "gold_total": 149,
+        "metrics": {
+          "know_to_ask_failure_rate": 0,
+          "false_fire_rate": 0,
+          "source_isolation_violations": 0,
+          "avg_injected_tokens": 38.2752
+        }
+      },
+      {
+        "cell": "openclaw/push",
+        "seam": "production",
+        "gold_failed": 9,
+        "gold_total": 96,
+        "metrics": {
+          "push_precision": 1,
+          "push_recall": 0.9063,
+          "source_isolation_violations": 0,
+          "avg_injected_tokens": 50.0841
+        }
+      },
+      {
+        "cell": "openclaw/write-back",
+        "seam": "production",
+        "gold_failed": 0,
+        "gold_total": 58,
+        "metrics": {
+          "write_back_fidelity": 1,
+          "provenance_accuracy": 1
+        }
+      },
+      {
+        "cell": "openclaw/continuity",
+        "seam": "production",
+        "gold_failed": 0,
+        "gold_total": 12,
+        "metrics": {
+          "continuity_rate": 1,
+          "source_isolation_violations": 0,
+          "avg_injected_tokens": 75.3333
+        }
+      },
+      {
+        "cell": "claude-code/know-to-ask",
+        "seam": "production",
+        "gold_failed": 0,
+        "gold_total": 149,
+        "metrics": {
+          "know_to_ask_failure_rate": 0,
+          "false_fire_rate": 0,
+          "source_isolation_violations": 0,
+          "avg_injected_tokens": 37.8389
+        }
+      },
+      {
+        "cell": "claude-code/push",
+        "seam": "production",
+        "gold_failed": 0,
+        "gold_total": 96,
+        "metrics": {
+          "push_precision": 1,
+          "push_recall": 1,
+          "source_isolation_violations": 0,
+          "avg_injected_tokens": 50.1963
+        }
+      },
+      {
+        "cell": "claude-code/write-back",
+        "seam": "production",
+        "gold_failed": 0,
+        "gold_total": 58,
+        "metrics": {
+          "write_back_fidelity": 1,
+          "provenance_accuracy": 1
+        }
+      },
+      {
+        "cell": "claude-code/continuity",
+        "seam": "production",
+        "gold_failed": 0,
+        "gold_total": 12,
+        "metrics": {
+          "continuity_rate": 1,
+          "source_isolation_violations": 0,
+          "avg_injected_tokens": 59.9167
+        }
+      },
+      {
+        "cell": "codex/know-to-ask",
+        "seam": "contract",
+        "gold_failed": 0,
+        "gold_total": 149,
+        "metrics": {
+          "know_to_ask_failure_rate": 0,
+          "false_fire_rate": 0,
+          "source_isolation_violations": 0,
+          "avg_injected_tokens": 45.2215
+        }
+      },
+      {
+        "cell": "codex/push",
+        "seam": "contract",
+        "gold_failed": 43,
+        "gold_total": 96,
+        "metrics": {
+          "push_precision": 1,
+          "push_recall": 0.5521,
+          "source_isolation_violations": 0,
+          "avg_injected_tokens": 54.6449
+        }
+      },
+      {
+        "cell": "codex/write-back",
+        "seam": "contract",
+        "gold_failed": 0,
+        "gold_total": 58,
+        "metrics": {
+          "write_back_fidelity": 1,
+          "provenance_accuracy": 1
+        }
+      },
+      {
+        "cell": "codex/continuity",
+        "seam": "contract",
+        "gold_failed": 0,
+        "gold_total": 12,
+        "metrics": {
+          "continuity_rate": 1,
+          "source_isolation_violations": 0,
+          "avg_injected_tokens": 150.9167
+        }
+      }
+    ],
+    "seed_failures": [],
+    "missing_suites": [],
+    "result_artifact": "/home/vercel-sandbox/gbrain-evals/eval/reports/cat34-brainbench-memory/result.json"
+  }
+}

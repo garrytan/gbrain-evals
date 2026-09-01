@@ -79,7 +79,23 @@
       "description": "SHA256 over the corpus manifest — pins every benchmark input file."
     },
     "judge_model": {
-      "type": "string"
+      "type": "string",
+      "description": "The REQUESTED judge model id. May be a movable alias (the 2026-08 published runs recorded claude-sonnet-4-6); see judge_models_resolved for server-reported evidence of what actually ran."
+    },
+    "judge_models_resolved": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "description": "Optional (receipts written before 2026-09-01 predate it): map of server-reported model id (resp.model) to judge-call count for this run. The key 'null' counts responses that carried no model field. Best-available evidence, not an immutability proof. Cross-run deltas require both receipts to carry exactly one identical real model key."
+    },
+    "comparability": {
+      "type": "string",
+      "enum": [
+        "comparable",
+        "non-comparable"
+      ],
+      "description": "Optional: delta eligibility vs the prior receipt actually found. 'comparable' requires mode/lanes/corpus/corpus_sha/transcript-set equality AND a single identical resolved judge model on both sides (judge_models_resolved). 'non-comparable' means deltas were suppressed. Omitted on first runs (no prior receipt)."
     },
     "judge_prompt_version": {
       "type": "string"

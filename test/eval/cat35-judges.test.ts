@@ -21,14 +21,17 @@
  *     judge driven by the cat35-checks mechanical subset
  */
 
-import { describe, test, expect, afterEach } from 'bun:test';
+import { describe, test, expect, afterEach, beforeEach } from 'bun:test';
 import Anthropic from '@anthropic-ai/sdk';
 import {
   CAT35_JUDGE_PROMPT_VERSION,
   confirmDistractorLeaks,
+  getJudgeModelsResolved,
+  resetJudgeModelsResolved,
   scoreGrounding,
   scoreSalienceCoverage,
   scoreUsabilityChecklist,
+  singleResolvedModel,
 } from '../../eval/runner/cat35-judges.ts';
 import { hasWikilink, selfContainedOpening } from '../../eval/runner/cat35-checks.ts';
 
@@ -40,6 +43,8 @@ type StubResponse = {
     | { type: 'tool_use'; name: string; input: unknown; id: string }
   >;
   usage: { input_tokens: number; output_tokens: number };
+  /** Server-reported model id (resp.model). Omitted = pre-recording stub / degraded gateway. */
+  model?: string;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -561,5 +566,139 @@ describe('usability perturbation (Abridge pattern)', () => {
       { client: b.client },
     );
     expect(degraded.satisfied).toBe(intact.satisfied - 1);
+  });
+});
+
+// ─── judge_models_resolved — server-reported model accounting ──────────────
+//
+// generators-19 propagated to the judges (issue #26 gap 4): the requested
+// judge_model can be a movable alias; resp.model is what the server says
+// actually ran. Every judge response is counted per resolved model; the
+// runner writes the map into the receipt and the comparability guard
+// (singleResolvedModel) refuses cross-run deltas on absent/mixed/null-keyed
+// evidence.
+
+describe('judge_models_resolved accounting', () => {
+  const SNAPSHOT = 'claude-haiku-4-5-20251001';
+
+  function withModel(resp: StubResponse, model: string): StubResponse {
+    return { ...resp, model };
+  }
+
+  beforeEach(() => {
+    resetJudgeModelsResolved();
+  });
+
+  test('resp.model present: counted once per call, accumulating across a retry', async () => {
+    // First call misses i-2 → one retry → 2 calls total, both under SNAPSHOT.
+    const { client } = makeStubClient([
+      withModel(
+        toolUse('score_salient_items', {
+          items: [
+            { item_id: 'i-1', status: 'FULL', evidence: 'e1' },
+            { item_id: 'i-3', status: 'ABSENT', evidence: '' },
+          ],
+        }),
+        SNAPSHOT,
+      ),
+      withModel(
+        toolUse('score_salient_items', { items: [{ item_id: 'i-2', status: 'PARTIAL', evidence: 'e2' }] }),
+        SNAPSHOT,
+      ),
+    ]);
+    await scoreSalienceCoverage(coverageArgs(), { client });
+    expect(getJudgeModelsResolved()).toEqual({ [SNAPSHOT]: 2 });
+  });
+
+  test('accumulates across different judge functions and models', async () => {
+    const cov = makeStubClient([
+      withModel(
+        toolUse('score_salient_items', {
+          items: ITEMS.map((i) => ({ item_id: i.item_id, status: 'FULL', evidence: 'e' })),
+        }),
+        SNAPSHOT,
+      ),
+    ]);
+    await scoreSalienceCoverage(coverageArgs(), { client: cov.client });
+
+    const leaks = makeStubClient([
+      withModel(
+        toolUse('confirm_leaks', { leaks: [{ distractor_id: 'd-1', surfaced_as_salient: false }] }),
+        'claude-sonnet-4-6-20260115',
+      ),
+    ]);
+    await confirmDistractorLeaks(
+      { document: 'doc', hits: [{ distractor_id: 'd-1', statement: 's' }] },
+      { client: leaks.client },
+    );
+
+    expect(getJudgeModelsResolved()).toEqual({
+      [SNAPSHOT]: 1,
+      'claude-sonnet-4-6-20260115': 1,
+    });
+  });
+
+  test('resp.model absent: tolerated, counted under the null key', async () => {
+    const { client } = makeStubClient([
+      toolUse('grade_claims', { claims: [{ index: 0, verifiable: true, grounded: true }] }),
+    ]);
+    const r = await scoreGrounding({ label: 'x', claims: ['a claim'], transcript: 't' }, { client });
+    expect(r.judge_failed).toBe(false); // recording never breaks the verdict path
+    expect(getJudgeModelsResolved()).toEqual({ null: 1 });
+  });
+
+  test('transport failure produces no resolved-model evidence', async () => {
+    // Zero canned responses → every create() throws → both attempts land in
+    // the transport-error branch, which never reaches recording.
+    const { client } = makeStubClient([]);
+    const r = await scoreGrounding({ label: 'x', claims: ['a claim'], transcript: 't' }, { client });
+    expect(r.judge_failed).toBe(true);
+    expect(getJudgeModelsResolved()).toEqual({});
+  });
+
+  test('reset clears the per-run map', async () => {
+    const { client } = makeStubClient([
+      withModel(
+        toolUse('score_salient_items', {
+          items: ITEMS.map((i) => ({ item_id: i.item_id, status: 'ABSENT', evidence: '' })),
+        }),
+        SNAPSHOT,
+      ),
+    ]);
+    await scoreSalienceCoverage(coverageArgs(), { client });
+    expect(getJudgeModelsResolved()).toEqual({ [SNAPSHOT]: 1 });
+    resetJudgeModelsResolved();
+    expect(getJudgeModelsResolved()).toEqual({});
+  });
+});
+
+describe('singleResolvedModel — the delta comparability guard', () => {
+  test('exactly one real model key → that model (deltas allowed when both sides agree)', () => {
+    expect(singleResolvedModel({ 'claude-haiku-4-5-20251001': 412 })).toBe(
+      'claude-haiku-4-5-20251001',
+    );
+  });
+
+  test('absent map (all pre-2026-09 receipts) → null → non-comparable', () => {
+    expect(singleResolvedModel(undefined)).toBeNull();
+    expect(singleResolvedModel(null)).toBeNull();
+  });
+
+  test('empty or non-object evidence → null', () => {
+    expect(singleResolvedModel({})).toBeNull();
+    expect(singleResolvedModel('claude-haiku-4-5-20251001')).toBeNull();
+    expect(singleResolvedModel(['claude-haiku-4-5-20251001'])).toBeNull();
+    expect(singleResolvedModel(42)).toBeNull();
+  });
+
+  test('mixed models within one run → null (a mid-run repoint is exactly the hazard)', () => {
+    expect(
+      singleResolvedModel({ 'claude-sonnet-4-6-20260115': 3, 'claude-sonnet-4-6-20260301': 9 }),
+    ).toBeNull();
+  });
+
+  test('null-keyed map (responses without model fields) → null', () => {
+    expect(singleResolvedModel({ null: 12 })).toBeNull();
+    expect(singleResolvedModel({ '': 2 })).toBeNull();
   });
 });
