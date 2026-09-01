@@ -1,5 +1,25 @@
 # BrainBench v0.20.0 baseline — multi-adapter scorecard
 
+> **Erratum status (2026-09-01): numbers below are pre-audit and pending
+> re-measurement.** This run predates the 2026-08-31 audit's fixes to the
+> shared metric helpers: recall could exceed 1.0 on chunk-grained duplicates
+> (finding shared-infra-02) and precision divided by returned-list length
+> instead of k (shared-infra-03). It also ran on the world-v1 corpus before
+> the dangling person-to-company link fix (generators-06), and v0.5.0
+> declared earlier BrainBench scores not comparable to post-audit runs. No
+> receipt for this run is committed. Read 97.9% R@5 / 49.1% P@5 and the
+> "graph layer worth ~31 points" delta as directional, not exact, until the
+> re-measurement on the fixed helpers lands (queued in TODOS.md).
+>
+> **Methodology caveat (issue #24 finding 6):** the gbrain adapter in
+> `eval/runner/multi-adapter.ts` (~lines 221-258) parses the exact four
+> relational query templates that `buildRelationalQueries()` emits into graph
+> traversals, while the baseline adapters text-match. The code comment is
+> candid about why, and skipping non-applicable families beats shipping fake
+> zeros — but part of the graph-layer delta rests on a parser co-designed
+> with the query generator. A template-blind variant (paraphrased queries) is
+> queued in TODOS.md to show how much of the lift survives.
+
 **Date:** 2026-04-23
 **gbrain commit:** `96852c0` (PR #195 HEAD, v0.20.0)
 **gbrain-evals commit:** `8dab7f7` (post plain-English adapter rename)
