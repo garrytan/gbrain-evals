@@ -50,13 +50,23 @@ import {
   fmt,
   run,
   parseOpts,
+  normalizeIds,
+  sessdivRetrieve,
+  pinSearchConfig,
+  resolvedSearchConfig,
+  rerankPreflight,
+  buildRunConfigPreimage,
+  canonicalJson,
+  runConfigHash,
   PINNED_SEARCH_CONFIG,
+  ADAPTER_SPECS,
+  type AdapterSpec,
   type NdjsonRow,
   type Question,
   type RunSummary,
   type Opts,
 } from '../../eval/runner/longmemeval.ts';
-import { dedupeRows, inferRunParams, aggregateRows } from '../../eval/runner/longmemeval-aggregate.ts';
+import { dedupeRows, inferRunParams, aggregateRows, findMixedRunConfigHashes } from '../../eval/runner/longmemeval-aggregate.ts';
 import { assertChartable, chartTitle, headlineCard, nLabel } from '../../eval/runner/longmemeval-chart.ts';
 import { EmbeddingCache, makeCachingTransport, inputTypeFromParams } from '../../eval/runner/longmemeval-cache.ts';
 import { loadReceipt } from '../../eval/runner/receipt.ts';
@@ -269,6 +279,229 @@ describe('summarizeAdapterRows', () => {
   });
 });
 
+// ─── Adapter specs + sessdiv retrieval (PR B methodology) ────────────
+
+describe('ADAPTER_SPECS', () => {
+  test('legacy keys unchanged; new keys compose the toggles', () => {
+    expect(ADAPTER_SPECS.keyword).toEqual({ name: 'gbrain-keyword', base: 'keyword', expansion: false, sessdiv: false, rerank: false });
+    expect(ADAPTER_SPECS.vector).toEqual({ name: 'gbrain-vector', base: 'vector', expansion: false, sessdiv: false, rerank: false });
+    expect(ADAPTER_SPECS.hybrid).toEqual({ name: 'gbrain-hybrid', base: 'hybrid', expansion: false, sessdiv: false, rerank: false });
+    expect(ADAPTER_SPECS['hybrid+expansion']).toEqual({ name: 'gbrain-hybrid+expansion', base: 'hybrid', expansion: true, sessdiv: false, rerank: false });
+    expect(ADAPTER_SPECS['hybrid-sessdiv']).toEqual({ name: 'gbrain-hybrid-sessdiv', base: 'hybrid', expansion: false, sessdiv: true, rerank: false });
+    expect(ADAPTER_SPECS['hybrid+expansion-sessdiv']).toEqual({ name: 'gbrain-hybrid+expansion-sessdiv', base: 'hybrid', expansion: true, sessdiv: true, rerank: false });
+    expect(ADAPTER_SPECS['hybrid+rerank']).toEqual({ name: 'gbrain-hybrid+rerank', base: 'hybrid', expansion: false, sessdiv: false, rerank: true });
+    expect(ADAPTER_SPECS['hybrid-sessdiv+rerank']).toEqual({ name: 'gbrain-hybrid-sessdiv+rerank', base: 'hybrid', expansion: false, sessdiv: true, rerank: true });
+  });
+});
+
+describe('sessdivRetrieve', () => {
+  // sessdivRetrieve reads only .slug and .length; a slug-only stub is the
+  // whole contract.
+  const chunks = (slugs: string[]) => slugs.map(slug => ({ slug })) as unknown as Parameters<typeof sessdivRetrieve>[0];
+
+  test('8 chunks / 6 sessions → the 5 highest-ranked DISTINCT sessions', () => {
+    // One descending ranked list: the first occurrence of a session id is
+    // its best chunk (the vector-grep-rrf-fusion.ts:169-183 equivalence).
+    const results = chunks([
+      'chat/s1', 'chat/s2', 'chat/s1', 'chat/s3', 'chat/s4', 'chat/s5', 'chat/s2', 'chat/s6',
+    ]);
+    const out = sessdivRetrieve(results, 5);
+    expect(out.retrieved).toEqual(['s1', 's2', 's3', 's4', 's5']); // s6 ranked below the 5 best
+    expect(out.candidates_total).toBe(8);
+    expect(out.distinct_before_slice).toBe(6);
+  });
+
+  test('empty searchResults → retrieved=[] and the question scores 0', () => {
+    const out = sessdivRetrieve(chunks([]), 5);
+    expect(out.retrieved).toEqual([]);
+    expect(out.candidates_total).toBe(0);
+    expect(out.distinct_before_slice).toBe(0);
+    const m = scoreQuestion(out.retrieved, ['g1'], 5);
+    expect(m.recall_all).toBe(0);
+    expect(m.recall_any).toBe(0);
+  });
+
+  test('supply below topK: returns what exists; shortfall visible in distinct_before_slice', () => {
+    const out = sessdivRetrieve(chunks(['chat/a', 'chat/b', 'chat/a']), 5);
+    expect(out.retrieved).toEqual(['a', 'b']);
+    expect(out.distinct_before_slice).toBe(2);
+  });
+});
+
+// ─── Session-diversity diagnostics (amendment 6) ─────────────────────
+
+describe('session-diversity diagnostics', () => {
+  test('mean_distinct_sessions + session_shortfall_rate across row generations', () => {
+    const rows: NdjsonRow[] = [
+      // Legacy row (no sessdiv fields): 3 distinct after normalizeIds ('S1'≡'s1').
+      { adapter: 'a', question_id: 'q1', question_type: 't1', retrieved: ['S1', 's1', 's2', 's3'], ground_truth: ['s1'], hit_at_k: true, num_haystack: 5, latency_ms: 1 },
+      // Sessdiv row sliced to 5 distinct, pre-slice supply 6 → NO shortfall.
+      { ...row('q2', ['a', 'b', 'c', 'd', 'e'], ['a']), question_type: 't1', candidates_total: 15, distinct_before_slice: 6, overfetch_factor: 3 },
+      // Sessdiv row whose pre-slice supply 4 < 5 → shortfall (supply, not slice).
+      { ...row('q3', ['a', 'b', 'c', 'd'], ['a']), question_type: 't2', candidates_total: 15, distinct_before_slice: 4, overfetch_factor: 3 },
+      // sut-error row: retrieved=[] → 0 distinct, shortfall, stays in denominator.
+      { ...row('q4', [], ['g']), question_type: 't2', error: 'Page not found', error_origin: 'sut' },
+      // infra-error row: excluded from the diagnostics denominator entirely.
+      { ...row('q5', [], ['g']), error: 'question_timeout_90000ms', error_origin: 'harness' },
+      // _abs row: excluded from recall AND diversity denominators.
+      row('q6_abs', ['x'], ['e1']),
+    ];
+    const s = summarizeAdapterRows('a', rows, 5, 'test');
+    expect(s.mean_distinct_sessions).toBeCloseTo((3 + 5 + 4 + 0) / 4);
+    // q1 supply 3 <5, q2 supply 6 ok, q3 supply 4 <5, q4 supply 0 <5 → 3/4.
+    expect(s.session_shortfall_rate).toBeCloseTo(3 / 4);
+    expect(s.recall_by_type['t1'].mean_distinct_sessions).toBeCloseTo((3 + 5) / 2);
+    expect(s.recall_by_type['t1'].session_shortfall_rate).toBeCloseTo(1 / 2);
+    expect(s.recall_by_type['t2'].mean_distinct_sessions).toBeCloseTo((4 + 0) / 2);
+    expect(s.recall_by_type['t2'].session_shortfall_rate).toBeCloseTo(1);
+  });
+
+  test('diversity uses the SAME normalization as scoring (shared normalizeIds, eng E2)', () => {
+    expect(normalizeIds(['S1', 's1', 'S2'])).toEqual(['s1', 's2']);
+  });
+
+  test('zero rows → null diagnostics; fmt renders the div@k + shortfall columns', () => {
+    const empty = summarizeAdapterRows('a', [], 5, 'test');
+    expect(empty.mean_distinct_sessions).toBeNull();
+    expect(empty.session_shortfall_rate).toBeNull();
+    expect(() => fmt([empty])).not.toThrow();
+    const s = summarizeAdapterRows('a', [row('q1', ['g1', 'x'], ['g1'])], 5, 'test');
+    const md = fmt([s]);
+    expect(md).toContain('div@k');
+    expect(md).toContain('shortfall');
+    expect(md).toContain('2.00'); // 2 distinct sessions retrieved
+    expect(md).toContain('100.00%'); // shortfall: 2 < 5 on every scored row
+  });
+});
+
+// ─── Opts: sessdiv over-fetch factor ─────────────────────────────────
+
+describe('parseOpts overfetch-factor', () => {
+  test('defaults to 3; --overfetch-factor overrides', () => {
+    expect(parseOpts([]).overfetchFactor).toBe(3);
+    expect(parseOpts(['--overfetch-factor', '5']).overfetchFactor).toBe(5);
+  });
+});
+
+// ─── Search-config pinning per adapter spec ──────────────────────────
+
+describe('pinSearchConfig / resolvedSearchConfig', () => {
+  test('rerank specs overlay reranker.enabled=true; everything else keeps the pin', async () => {
+    expect(resolvedSearchConfig(ADAPTER_SPECS['hybrid+rerank'])['search.reranker.enabled']).toBe('true');
+    expect(resolvedSearchConfig(ADAPTER_SPECS.hybrid)['search.reranker.enabled']).toBe('false');
+    expect(resolvedSearchConfig(ADAPTER_SPECS['hybrid-sessdiv'])['search.reranker.enabled']).toBe('false');
+    expect(resolvedSearchConfig()['search.reranker.enabled']).toBe('false');
+    // The overlay never mutates the frozen base pin.
+    expect(PINNED_SEARCH_CONFIG['search.reranker.enabled']).toBe('false');
+
+    const setConfigCalls = async (spec?: AdapterSpec) => {
+      const seen: Record<string, string> = {};
+      const stub = { setConfig: async (k: string, v: string) => { seen[k] = v; } } as unknown as Parameters<typeof pinSearchConfig>[0];
+      await pinSearchConfig(stub, spec);
+      return seen;
+    };
+    const rerank = await setConfigCalls(ADAPTER_SPECS['hybrid-sessdiv+rerank']);
+    expect(rerank['search.reranker.enabled']).toBe('true');
+    expect(rerank['search.mode']).toBe('balanced');
+    expect(rerank['search.autocut']).toBe('false');
+    const plain = await setConfigCalls(ADAPTER_SPECS['hybrid-sessdiv']);
+    expect(plain['search.reranker.enabled']).toBe('false');
+  });
+});
+
+// ─── Rerank preflight (fail-closed, amendment 7) ─────────────────────
+
+describe('rerankPreflight', () => {
+  test('no provider key → keyPresent false via the documented zerank fallback', () => {
+    const missing = rerankPreflight({});
+    expect(missing.provider).toBe('zeroentropyai');
+    expect(missing.envKey).toBe('ZEROENTROPY_API_KEY');
+    expect(missing.keyPresent).toBe(false);
+    expect(rerankPreflight({ ZEROENTROPY_API_KEY: 'k' }).keyPresent).toBe(true);
+  });
+
+  test('rerank contract violation is typed sut (scored 0, stays in denominator)', () => {
+    expect(classifyErrorOrigin("rerank_missing_score: search.reranker.enabled pinned 'true' but no rerank_score")).toBe('sut');
+  });
+});
+
+// ─── run_config_hash (amendment 5) ───────────────────────────────────
+
+describe('run_config_hash', () => {
+  test('canonicalJson sorts keys recursively and drops undefined', () => {
+    expect(canonicalJson({ b: 1, a: { d: undefined, c: [2, 1] } })).toBe('{"a":{"c":[2,1]},"b":1}');
+  });
+
+  test('preimage reflects the adapter config; hash is deterministic', () => {
+    const optsLike = { datasetName: 's', topK: 5, overfetchFactor: 3 };
+    const resolved = { embeddingModel: 'openai:m', embeddingDims: 64, expansionModel: 'anthropic:haiku' };
+    const hybrid = buildRunConfigPreimage(ADAPTER_SPECS.hybrid, optsLike, resolved);
+    const sessdiv = buildRunConfigPreimage(ADAPTER_SPECS['hybrid-sessdiv'], optsLike, resolved);
+    const rerank = buildRunConfigPreimage(ADAPTER_SPECS['hybrid+rerank'], optsLike, resolved);
+    const keyword = buildRunConfigPreimage(ADAPTER_SPECS.keyword, optsLike, resolved);
+    expect(hybrid.overfetch_factor).toBeUndefined();      // non-sessdiv: factor not in the preimage
+    expect(sessdiv.overfetch_factor).toBe(3);
+    expect(rerank.search_config['search.reranker.enabled']).toBe('true');
+    expect(keyword.embedding_model).toBeUndefined();      // keyword ingests with noEmbed
+    expect(hybrid.embedding_model).toBe('openai:m');
+    expect(hybrid.expansion_model).toBeUndefined();       // expansion_model only for expansion specs
+    expect(buildRunConfigPreimage(ADAPTER_SPECS['hybrid+expansion'], optsLike, resolved).expansion_model).toBe('anthropic:haiku');
+    expect(runConfigHash(hybrid)).toBe(runConfigHash(buildRunConfigPreimage(ADAPTER_SPECS.hybrid, optsLike, resolved)));
+    expect(runConfigHash(hybrid)).not.toBe(runConfigHash(sessdiv));
+    expect(runConfigHash(hybrid)).not.toBe(runConfigHash(rerank));
+    expect(runConfigHash(hybrid)).toMatch(/^[0-9a-f]{64}$/);
+  });
+});
+
+describe('aggregator run_config_hash guard', () => {
+  test('legacy all-absent consistent; mixed hashes or hash+absent rejected per adapter', () => {
+    const legacy = [row('q1', ['g1'], ['g1']), row('q2', ['g2'], ['g2'])];
+    expect(findMixedRunConfigHashes(legacy)).toEqual([]);
+    const consistent = [
+      { ...row('q1', ['g1'], ['g1']), run_config_hash: 'h1' },
+      { ...row('q2', ['g2'], ['g2']), run_config_hash: 'h1' },
+    ];
+    expect(findMixedRunConfigHashes(consistent)).toEqual([]);
+    const mixed = [
+      { ...row('q1', ['g1'], ['g1']), run_config_hash: 'h1' },
+      { ...row('q2', ['g2'], ['g2']), run_config_hash: 'h2' },
+    ];
+    const findings = findMixedRunConfigHashes(mixed);
+    expect(findings).toHaveLength(1);
+    expect(findings[0].adapter).toBe('a');
+    expect(findings[0].hashes).toEqual(['h1', 'h2']);
+    // hash + hash-less within one adapter = two writer generations → mixed.
+    const partial = [
+      { ...row('q1', ['g1'], ['g1']), run_config_hash: 'h1' },
+      row('q2', ['g2'], ['g2']),
+    ];
+    expect(findMixedRunConfigHashes(partial)).toHaveLength(1);
+    expect(findMixedRunConfigHashes(partial)[0].n_without_hash).toBe(1);
+    // Different hashes across DIFFERENT adapters is fine — per-adapter guard.
+    const crossAdapter = [
+      { ...row('q1', ['g1'], ['g1']), adapter: 'a1', run_config_hash: 'h1' },
+      { ...row('q1', ['g1'], ['g1']), adapter: 'a2', run_config_hash: 'h2' },
+    ];
+    expect(findMixedRunConfigHashes(crossAdapter)).toEqual([]);
+  });
+
+  test('CLI: mixed hashes exit non-zero; --allow-mixed prints the banner and proceeds', () => {
+    const p = join(TMP, 'mixed.ndjson');
+    writeFileSync(p, [
+      JSON.stringify({ ...row('q1', ['g1'], ['g1']), top_k: 5, dataset: 's', run_config_hash: 'h1' }),
+      JSON.stringify({ ...row('q2', ['g2'], ['g2']), top_k: 5, dataset: 's', run_config_hash: 'h2' }),
+    ].join('\n'));
+    const script = join(import.meta.dir, '../../eval/runner/longmemeval-aggregate.ts');
+    const rejected = Bun.spawnSync(['bun', script, p, '--output', join(TMP, 'mixed-out.json')], { cwd: TMP });
+    expect(rejected.exitCode).toBe(1);
+    expect(rejected.stderr.toString()).toContain('MIXED run_config_hash');
+    const allowed = Bun.spawnSync(['bun', script, p, '--output', join(TMP, 'mixed-out2.json'), '--allow-mixed'], { cwd: TMP });
+    expect(allowed.exitCode).toBe(0);
+    expect(allowed.stderr.toString()).toContain('--allow-mixed');
+    expect(existsSync(join(TMP, 'mixed-out2.json'))).toBe(true);
+  }, 30_000);
+});
+
 // ─── Verdict gate is real + failable ─────────────────────────────────
 
 describe('computeVerdict', () => {
@@ -276,7 +509,8 @@ describe('computeVerdict', () => {
     adapter: 'gbrain-hybrid', dataset: 's', topK: 5, total, n_rows: total,
     n_abs: 0, n_errors_sut: 0, n_errors_infra: 0,
     recall_all_at_k: recallAll, recall_any_at_k: recallAll, ndcg_any_at_k: recallAll,
-    abs_noise_at_k: null, recall_by_type: {}, avg_latency_ms: 1, p50_latency_ms: 1,
+    abs_noise_at_k: null, mean_distinct_sessions: null, session_shortfall_rate: null,
+    recall_by_type: {}, avg_latency_ms: 1, p50_latency_ms: 1,
     p99_latency_ms: 1, total_seconds: 1,
   });
 
@@ -404,7 +638,8 @@ describe('chart', () => {
     adapter: 'gbrain-hybrid', dataset: 'oracle', topK: 5, total: 42, n_rows: 42,
     n_abs: 0, n_errors_sut: 0, n_errors_infra: 0,
     recall_all_at_k: 0.9, recall_any_at_k: 0.95, ndcg_any_at_k: 0.8,
-    abs_noise_at_k: null, recall_by_type: { t1: { total: 42, hit_all: 38, recall_all: 0.9, hit_any: 40, recall_any: 0.95 } },
+    abs_noise_at_k: null, mean_distinct_sessions: 3.2, session_shortfall_rate: 0.4,
+    recall_by_type: { t1: { total: 42, hit_all: 38, recall_all: 0.9, hit_any: 40, recall_any: 0.95, mean_distinct_sessions: 3.2, session_shortfall_rate: 0.4 } },
     avg_latency_ms: 1, p50_latency_ms: 1, p99_latency_ms: 1, total_seconds: 1,
   };
 
@@ -520,10 +755,11 @@ describe('end-to-end (keyword adapter, hermetic)', () => {
     expect(receipt.verdict).toBe('pass');
     expect(receipt.n_total).toBe(3);
     expect(receipt.n_scored).toBe(3);
-    // WS5: pins recorded in the receipt (finding 12).
-    expect(receipt.resolved_config?.['search.reranker.enabled']).toBe('false');
-    expect(receipt.resolved_config?.['search.mode']).toBe(PINNED_SEARCH_CONFIG['search.mode']);
-    expect(receipt.resolved_config?.['search.autocut']).toBe('false');
+    // WS5: pins recorded PER ADAPTER in the receipt (finding 12 + eng E1).
+    const cfgByAdapter = receipt.resolved_config?.search_config_by_adapter as Record<string, Record<string, string>>;
+    expect(cfgByAdapter['gbrain-keyword']['search.reranker.enabled']).toBe('false');
+    expect(cfgByAdapter['gbrain-keyword']['search.mode']).toBe(PINNED_SEARCH_CONFIG['search.mode']);
+    expect(cfgByAdapter['gbrain-keyword']['search.autocut']).toBe('false');
 
     const s = result.summaries[0];
     expect(s.adapter).toBe('gbrain-keyword');
@@ -547,7 +783,13 @@ describe('end-to-end (keyword adapter, hermetic)', () => {
     // Report JSON is chartable with honest labels.
     const report = JSON.parse(readFileSync(join(dir, 'report.json'), 'utf8'));
     expect(() => assertChartable({ opts: { datasetName: report.opts.datasetName, topK: report.opts.topK }, summaries: report.summaries }, 'report.json')).not.toThrow();
-    expect(report.resolved.pinned_search_config['search.reranker.enabled']).toBe('false');
+    expect(report.resolved.search_config_by_adapter['gbrain-keyword']['search.reranker.enabled']).toBe('false');
+    // run_config provenance: every row hashes to the adapter's recorded
+    // preimage, and the preimage is stored in the report's resolved block.
+    const preimage = report.resolved.run_config_preimages['gbrain-keyword'];
+    expect(preimage.adapter).toBe('gbrain-keyword');
+    expect(preimage.search_config['search.reranker.enabled']).toBe('false');
+    for (const r of ndRows) expect(r.run_config_hash).toBe(runConfigHash(preimage));
   }, 180_000);
 
   test('gate is failable end-to-end: gold absent from haystack → verdict fail, exit 1', async () => {
@@ -632,7 +874,8 @@ describe('end-to-end (keyword adapter, hermetic)', () => {
       expect(receipt.verdict).toBe('pass');
       expect(receipt.resolved_config?.embedding_model).toBe('openai:text-embedding-3-large');
       expect(receipt.resolved_config?.embedding_dimensions).toBe(64);
-      expect(receipt.resolved_config?.['search.reranker.enabled']).toBe('false');
+      const hybridCfg = (receipt.resolved_config?.search_config_by_adapter as Record<string, Record<string, string>>)['gbrain-hybrid'];
+      expect(hybridCfg['search.reranker.enabled']).toBe('false');
       const s = result.summaries[0];
       expect(s.adapter).toBe('gbrain-hybrid');
       expect(s.total).toBe(2);
@@ -671,4 +914,92 @@ describe('end-to-end (keyword adapter, hermetic)', () => {
     expect(agg[0].recall_all_at_k).toBe(1);
     expect(agg[0].n_errors_infra).toBe(0);
   }, 180_000);
+
+  test('sessdiv adapter end-to-end: over-fetch + per-row diagnostics with the stubbed embed transport', async () => {
+    const { __setEmbedTransportForTests, getEmbeddingDimensions } = await import('gbrain/ai/gateway');
+    const hadOpenai = process.env.OPENAI_API_KEY;
+    process.env.OPENAI_API_KEY = 'dummy-stub-key';
+    const hashVec = (text: string, dim: number): number[] => {
+      const v = new Array<number>(dim).fill(0);
+      for (const tok of text.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)) {
+        let h = 0x811c9dc5;
+        for (let i = 0; i < tok.length; i++) {
+          h ^= tok.charCodeAt(i);
+          h = Math.imul(h, 0x01000193) >>> 0;
+        }
+        v[h % dim] += ((h >>> 8) & 1) ? 1 : -1;
+      }
+      let norm = Math.sqrt(v.reduce((a, x) => a + x * x, 0));
+      if (norm === 0) { v[0] = 1; norm = 1; }
+      return v.map(x => x / norm);
+    };
+    __setEmbedTransportForTests((async (params: { values: string[] }) => ({
+      embeddings: params.values.map(t => hashVec(t, getEmbeddingDimensions())),
+      values: params.values,
+      warnings: [],
+    })) as unknown as Parameters<typeof __setEmbedTransportForTests>[0]);
+    try {
+      const dir = mkdtempSync(join(TMP, 'e2e-sessdiv-'));
+      const datasetPath = join(dir, 'dataset.json');
+      writeFileSync(datasetPath, JSON.stringify(makeDataset({ goldInHaystack: true })));
+      const result = await run(e2eOpts(dir, datasetPath, {
+        adapters: ['hybrid-sessdiv'],
+        keywordOnly: false,
+        embeddingModel: 'openai:text-embedding-3-large',
+        embeddingDimensions: 64,
+      }));
+      expect(result.exitCode).toBe(0);
+      const s = result.summaries[0];
+      expect(s.adapter).toBe('gbrain-hybrid-sessdiv');
+      expect(s.recall_all_at_k).toBe(1);
+      // Corpus has ≤3 sessions per question < topK 5 → every row shortfalls.
+      expect(s.session_shortfall_rate).toBe(1);
+      expect(s.mean_distinct_sessions).toBeGreaterThan(0);
+      const rows = dedupeRows(readFileSync(join(dir, 'rows.ndjson'), 'utf8')).rows;
+      for (const r of rows) {
+        expect(r.overfetch_factor).toBe(3);
+        expect(typeof r.candidates_total).toBe('number');
+        expect(typeof r.distinct_before_slice).toBe('number');
+        expect(r.candidates_total!).toBeGreaterThanOrEqual(r.distinct_before_slice!);
+        expect(r.retrieved.length).toBeLessThanOrEqual(5);
+        expect(typeof r.run_config_hash).toBe('string');
+      }
+      // One configuration → one hash: the aggregator guard stays quiet.
+      expect(findMixedRunConfigHashes(rows)).toEqual([]);
+    } finally {
+      __setEmbedTransportForTests(null);
+      if (hadOpenai === undefined) delete process.env.OPENAI_API_KEY;
+      else process.env.OPENAI_API_KEY = hadOpenai;
+    }
+  }, 180_000);
+
+  test('rerank adapter without provider key: fail-closed skip, exit 0, zero rows (amendment 7)', async () => {
+    const dir = mkdtempSync(join(TMP, 'e2e-rerank-skip-'));
+    const datasetPath = join(dir, 'dataset.json');
+    writeFileSync(datasetPath, JSON.stringify(makeDataset({ goldInHaystack: true })));
+    const hadZe = process.env.ZEROENTROPY_API_KEY;
+    delete process.env.ZEROENTROPY_API_KEY;
+    try {
+      const result = await run(e2eOpts(dir, datasetPath, { adapters: ['hybrid+rerank'], keywordOnly: false }));
+      // Skip-only run: fail-closed skip is the designed response, exit 0.
+      expect(result.exitCode).toBe(0);
+      expect(result.summaries).toHaveLength(0);
+      const receipt = loadReceipt(result.receiptFile);
+      expect(receipt.run_status).toBe('skipped');
+      expect(receipt.skip_reason).toContain('ZEROENTROPY_API_KEY');
+      expect(receipt.publishable).toBe(false);
+      const skipped = receipt.resolved_config?.adapters_skipped as Array<{ adapter: string; skip_reason: string }>;
+      expect(skipped).toHaveLength(1);
+      expect(skipped[0].adapter).toBe('gbrain-hybrid+rerank');
+      expect(skipped[0].skip_reason).toContain('rerank preflight failed');
+      expect(receipt.resolved_config?.rerank_adapters_pending_acceptance).toEqual(['gbrain-hybrid+rerank']);
+      // The receipt still records the config the adapter WOULD have pinned.
+      const cfg = (receipt.resolved_config?.search_config_by_adapter as Record<string, Record<string, string>>)['gbrain-hybrid+rerank'];
+      expect(cfg['search.reranker.enabled']).toBe('true');
+      // do NOT emit rows: preflight fires before question 1.
+      expect(existsSync(join(dir, 'rows.ndjson'))).toBe(false);
+    } finally {
+      if (hadZe !== undefined) process.env.ZEROENTROPY_API_KEY = hadZe;
+    }
+  }, 60_000);
 });

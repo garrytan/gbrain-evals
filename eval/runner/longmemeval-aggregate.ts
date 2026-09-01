@@ -17,11 +17,24 @@
  * Run:
  *   bun eval/runner/longmemeval-aggregate.ts <ndjson-path> [--output <out.json>]
  *        [--top-k <k>] [--dataset <name>] [--min-recall-all <x>]
+ *        [--expect-rows <n>] [--allow-mixed]
  *
  * top_k/dataset are read from the NDJSON rows (the runner stamps every row).
  * Legacy streams (pre 2026-08-31) don't carry them — pass --top-k/--dataset
  * explicitly for those; mixed values across rows are an error, never a guess
  * (audit finding longmemeval-04: k=8 runs were published as Recall@5).
+ *
+ * run_config_hash guard: rows written by the current runner carry a
+ * run_config_hash (sha256 over the resolved run configuration). Two different
+ * hashes inside ONE adapter mean the rows came from different pipelines and
+ * must not be averaged into one number — the aggregator REJECTS that (exit
+ * non-zero) unless --allow-mixed is passed, which prints a loud banner and
+ * records the mix in the receipt. Legacy streams where no row carries a hash
+ * are treated as consistent (there is nothing to compare).
+ *
+ * --expect-rows <n> (validation, opt-in): assert every adapter has exactly n
+ * rows after dedupe. Off by default so legacy partial streams keep
+ * aggregating; turn it on when you expect a complete run (500 for `_s`).
  *
  * Writes:
  *   <stem>.json — { opts: {...}, summaries: [...] } same shape as runner output
@@ -120,7 +133,60 @@ export function inferRunParams(
 }
 
 /** Stable preferred adapter order so charts and tables look the same across runs. */
-const ADAPTER_ORDER = ['gbrain-keyword', 'gbrain-vector', 'gbrain-hybrid', 'gbrain-hybrid+expansion'];
+const ADAPTER_ORDER = [
+  'gbrain-keyword',
+  'gbrain-vector',
+  'gbrain-hybrid',
+  'gbrain-hybrid+expansion',
+  'gbrain-hybrid-sessdiv',
+  'gbrain-hybrid+expansion-sessdiv',
+  'gbrain-hybrid+rerank',
+  'gbrain-hybrid-sessdiv+rerank',
+];
+
+export interface MixedHashFinding {
+  adapter: string;
+  /** Distinct run_config_hash values seen (sorted). */
+  hashes: string[];
+  n_with_hash: number;
+  n_without_hash: number;
+}
+
+/**
+ * Flag adapters whose rows carry more than one distinct run_config_hash, or a
+ * mix of hashed and hash-less rows (rows from two runner generations). An
+ * adapter where NO row carries a hash is a legacy stream — consistent by
+ * definition, nothing to compare. Averaging rows produced by different
+ * pipeline configurations into one published number is exactly the class of
+ * error the hash exists to catch, so the CLI treats any finding as fatal
+ * unless --allow-mixed is passed explicitly.
+ */
+export function findMixedRunConfigHashes(rows: NdjsonRow[]): MixedHashFinding[] {
+  const byAdapter = new Map<string, NdjsonRow[]>();
+  for (const r of rows) {
+    if (!byAdapter.has(r.adapter)) byAdapter.set(r.adapter, []);
+    byAdapter.get(r.adapter)!.push(r);
+  }
+  const findings: MixedHashFinding[] = [];
+  for (const [adapter, group] of byAdapter) {
+    const hashes = new Set<string>();
+    let without = 0;
+    for (const r of group) {
+      if (typeof r.run_config_hash === 'string' && r.run_config_hash.length > 0) hashes.add(r.run_config_hash);
+      else without++;
+    }
+    if (hashes.size === 0) continue; // all-absent (legacy) → consistent
+    if (hashes.size > 1 || without > 0) {
+      findings.push({
+        adapter,
+        hashes: [...hashes].sort(),
+        n_with_hash: group.length - without,
+        n_without_hash: without,
+      });
+    }
+  }
+  return findings.sort((a, b) => a.adapter.localeCompare(b.adapter));
+}
 
 export function aggregateRows(rows: NdjsonRow[], topK: number, dataset: string): RunSummary[] {
   const byAdapter = new Map<string, NdjsonRow[]>();
@@ -145,20 +211,25 @@ if (import.meta.main) {
   const startedAt = new Date().toISOString();
   const args = process.argv.slice(2);
   // Positional input path: first arg that is neither a flag nor a flag's value.
+  // Boolean flags take no value — without this set, `--allow-mixed <path>`
+  // would swallow the path as a flag value.
+  const BOOLEAN_FLAGS = new Set(['--allow-mixed']);
   const flagValues = new Set<string>();
   for (let i = 0; i < args.length; i++) {
-    if (args[i].startsWith('--') && i + 1 < args.length && !args[i + 1].startsWith('--')) flagValues.add(args[i + 1]);
+    if (args[i].startsWith('--') && !BOOLEAN_FLAGS.has(args[i]) && i + 1 < args.length && !args[i + 1].startsWith('--')) flagValues.add(args[i + 1]);
   }
   const positional = args.filter(a => !a.startsWith('--') && !flagValues.has(a));
   const input = positional[0];
   if (!input) {
-    console.error('usage: bun longmemeval-aggregate.ts <ndjson-path> [--output <out.json>] [--top-k <k>] [--dataset <name>] [--min-recall-all <x>]');
+    console.error('usage: bun longmemeval-aggregate.ts <ndjson-path> [--output <out.json>] [--top-k <k>] [--dataset <name>] [--min-recall-all <x>] [--expect-rows <n>] [--allow-mixed]');
     process.exit(1);
   }
   const outputArg = argValue(args, '--output');
   const cliTopK = argValue(args, '--top-k');
   const cliDataset = argValue(args, '--dataset');
   const cliMin = argValue(args, '--min-recall-all');
+  const cliExpectRows = argValue(args, '--expect-rows');
+  const allowMixed = args.includes('--allow-mixed');
 
   const receiptFile = receiptPath(AGG_CATEGORY, join(process.cwd(), 'eval/reports'));
   try {
@@ -167,6 +238,47 @@ if (import.meta.main) {
     if (dupes > 0) process.stderr.write(`[aggregate] ${dupes} duplicate (adapter, question_id) rows deduped (non-error rows preferred)\n`);
     if (parseErrors > 0) process.stderr.write(`[aggregate] ${parseErrors} malformed/truncated lines skipped\n`);
     if (rows.length === 0) throw new Error(`no parseable rows in ${input}`);
+
+    // run_config_hash guard: never average rows from two different pipeline
+    // configurations into one number. Legacy all-absent streams pass.
+    const mixed = findMixedRunConfigHashes(rows);
+    if (mixed.length > 0) {
+      const detail = mixed
+        .map(m => `  ${m.adapter}: ${m.hashes.length} distinct run_config_hash value(s)` +
+          `${m.n_without_hash > 0 ? ` plus ${m.n_without_hash} row(s) without a hash` : ''}` +
+          ` [${m.hashes.map(h => h.slice(0, 12)).join(', ')}]`)
+        .join('\n');
+      if (!allowMixed) {
+        throw new Error(
+          `MIXED run_config_hash within adapter(s) — these rows were produced by different runner configurations and must not be aggregated as one number:\n${detail}\n` +
+          `Aggregate each configuration's NDJSON separately, or pass --allow-mixed to override (the mix is recorded in the receipt).`,
+        );
+      }
+      process.stderr.write(
+        `\n${'='.repeat(72)}\n` +
+        `[aggregate] WARNING: --allow-mixed — aggregating rows from DIFFERENT\n` +
+        `[aggregate] runner configurations within one adapter. The resulting\n` +
+        `[aggregate] numbers are NOT publishable as a single-configuration run.\n` +
+        `${detail}\n${'='.repeat(72)}\n\n`,
+      );
+    }
+
+    // Opt-in completeness gate (--expect-rows): every adapter must have
+    // exactly n rows after dedupe. Off by default so legacy partial streams
+    // keep aggregating.
+    if (cliExpectRows !== null) {
+      const want = Number(cliExpectRows);
+      if (!Number.isFinite(want) || want <= 0) throw new Error(`--expect-rows must be a positive number, got "${cliExpectRows}"`);
+      const counts = new Map<string, number>();
+      for (const r of rows) counts.set(r.adapter, (counts.get(r.adapter) ?? 0) + 1);
+      const short = [...counts.entries()].filter(([, n]) => n !== want);
+      if (short.length > 0) {
+        throw new Error(
+          `--expect-rows ${want} violated: ` +
+          short.map(([a, n]) => `${a} has ${n} rows`).join(', '),
+        );
+      }
+    }
 
     const { topK, dataset } = inferRunParams(rows, {
       topK: cliTopK !== null ? Number(cliTopK) : null,
@@ -219,7 +331,9 @@ if (import.meta.main) {
       n_scored: accSummary.n_scored,
       completion_rate: accSummary.completion_rate,
       errors: accSummary.errors,
-      publishable: accSummary.publishable,
+      // A mixed-hash aggregation (--allow-mixed) is diagnostic output, never
+      // a publishable single-configuration number.
+      publishable: accSummary.publishable && mixed.length === 0,
       gbrain_version: gbrainVersion(),
       gbrain_pin: gbrainPin(),
       resolved_config: {
@@ -229,6 +343,9 @@ if (import.meta.main) {
         source_ndjson: input,
         dupes_deduped: dupes,
         parse_errors: parseErrors,
+        ...(cliExpectRows !== null ? { expect_rows: Number(cliExpectRows) } : {}),
+        // --allow-mixed override: the mix is on the record, never silent.
+        ...(mixed.length > 0 ? { allow_mixed: true, mixed_run_config_hashes: mixed } : {}),
       },
       started_at: startedAt,
       finished_at: new Date().toISOString(),
