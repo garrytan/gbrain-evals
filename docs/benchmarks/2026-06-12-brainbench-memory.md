@@ -11,8 +11,10 @@
 > write-back and continuity 1.000, isolation violations 0. The gold corpus
 > has also grown since this run (149 know-to-ask / 96 push turns vs 146/94
 > here), so the rows are same-suite but not same-denominator. Source:
-> `evals/brainbench/baselines/main.json` in the gbrain repo at the pinned
-> SHA.
+> `evals/brainbench/baselines/main.json` in the gbrain repo at pin
+> `2a56b51236850f6abcbf2f1ea71981bb9630f6fe` (v0.47.8.0). A keyless re-run
+> at that exact pin on 2026-09-01 reproduced that committed baseline
+> digit-for-digit; artifacts committed next to this report (see Receipts).
 
 **The first run's verdict in one line: gbrain's production push path
 volunteered the right memory 81% of the time it should (current baseline:
@@ -29,6 +31,11 @@ see banner).**
 | codex (contract) | 0.150 | 0.000 | 0.447 | 1.000 | 1.000 | 1.000 | 0 |
 
 ![Push recall by harness seam](./2026-06-12-brainbench-memory/push-recall.svg)
+
+*Chart: first published run, 2026-06-12 (gbrain 0.44.0.0), push recall
+0.81 / 0.66 / 0.45. The 2026-09-01 re-run at pin `2a56b512` measures
+0.906 / 1.000 / 0.552 (see Receipts). The SVG is hand-authored, kept
+unmodified as the historical record; the numbers on it are superseded.*
 
 What changed: agent memory now has a per-harness scorecard. Before this run, a
 salience or reflex change shipped on vibes; now every gbrain PR must hold or
@@ -109,6 +116,10 @@ the published fixture/result JSON Schemas (`evals/brainbench/schema/`).
 ## Per-suite breakdown
 
 ![Suite matrix](./2026-06-12-brainbench-memory/suite-matrix.svg)
+
+*Chart: first published run (know-to-ask failure 0.15 on every seam). At
+pin `2a56b512` the re-run measures 0.000 on all three (see Receipts). Kept
+unmodified as the historical record.*
 
 | harness | kta failed/gold | push failed/gold | write-back failed/gold | continuity failed/gold |
 |---|---|---|---|---|
@@ -207,7 +218,11 @@ Wall time ~10 s, zero API keys, zero cost. Corpus rebuild (byte-identical):
 
 ## Methodology details
 
-Fixtures hash `76f201590dd3…` (sha256 over every fixture + sealed gold file).
+Fixtures hash
+`76f201590dd3ad7a929e2e12efc9bf1406627b10ef4edbcfe7caf379aafd4090`
+(sha256 over every fixture + sealed gold file; the grown corpus of the
+2026-09-01 re-run hashes
+`509fd20d7cda693350030393b6d54154e2685516d30f017ca219bd25e92c0e57`).
 One in-memory PGLite per run, `TRUNCATE`-reset between fixtures; read-only
 suites seed once and replay all three adapters against the same brain;
 continuity pairs run per ordered (writer ≠ reader) harness pair with the
@@ -220,9 +235,60 @@ at zero unconditionally. Full formula definitions: gbrain
 `docs/eval/BRAINBENCH.md`; plain-English metric glossary: gbrain
 `docs/eval/METRIC_GLOSSARY.md`.
 
+## Receipts
+
+Both runs' artifacts are committed next to this report, in
+`docs/benchmarks/2026-06-12-brainbench-memory/`:
+
+- **Originals (first published run).** `receipt-2026-06-12-published.json`,
+  `result-2026-06-12-published.json`, `scorecard-2026-06-12-published.md`:
+  pulled unmodified from the machine that ran them. They attest gbrain
+  0.44.0.0 (`15a9019788d11619329284c3f0bcbc3b7db045df`), run timestamp
+  2026-06-13T17:44Z (the report carries the corpus-freeze date; the run
+  finished a day later), fixtures hash
+  `76f201590dd3ad7a929e2e12efc9bf1406627b10ef4edbcfe7caf379aafd4090`,
+  exit 0, zero seed failures, and exactly the counters in the tables above
+  (786 per-turn rows in the result document).
+- **Labeled re-run.** `receipt-2026-09-01-v0.47.8.0-rerun.json`,
+  `result-2026-09-01-v0.47.8.0-rerun.json`,
+  `scorecard-2026-09-01-v0.47.8.0-rerun.md`: a fresh keyless run of
+  `eval/runner/cat34-brainbench-memory.ts` on 2026-09-01 against gbrain at
+  pin `2a56b51236850f6abcbf2f1ea71981bb9630f6fe` (v0.47.8.0), ~22 s wall,
+  $0. It reproduces the committed CI baseline
+  (`evals/brainbench/baselines/main.json` at that SHA) digit-for-digit,
+  down to `avg_injected_tokens`: know-to-ask failure 0/149 on all three
+  harnesses, false fire 0.000, push recall 0.9063 / 1.000 / 0.5521 at
+  precision 1.000, write-back and continuity 1.000, isolation violations 0.
+
+Two honesty notes on what the re-run does and does not prove. First, it
+cannot authenticate the historical numbers: the June originals ran a
+different gbrain (0.44.0.0) on a smaller corpus (146/94 gold vs 149/96)
+with a different fixtures hash, and the 0.81 to 0.91 "refresh" happened
+upstream in gbrain CI between those two points, not here. The re-run shows
+the pin reproduces its own committed baseline today; nothing more. Second,
+the trust boundary: this repo's runner grades pass/fail from counters the
+SUT itself reports (`cat34-brainbench-memory.ts:330-365`). It has no
+independent gold, so a dishonest SUT could misreport and the runner would
+not catch it. The receipt records what BrainBench claimed, verbatim.
+
+The re-run receipt says `verdict: fail`, and that label needs a gloss so
+nobody reads it as a regression. The foreign runner's gate is strict:
+every cell must reach `gold_failed === 0`. Two push cells cannot meet that
+by construction (openclaw's 3-pointer budget leaves 9/96 unrecalled,
+codex's 1-fragment budget leaves 43/96), the same pointer-budget gradient
+this report has always documented. gbrain's own CI gates differently, by
+comparing against the committed baseline, and the re-run matches that
+baseline exactly. Every counter moved toward better vs June: know-to-ask
+misses 9 to 0, push failures 18 to 9 (openclaw), 32 to 0 (claude-code),
+52 to 43 (codex), on the grown corpus. One label flipped: claude-code now
+runs as seam `production` (its real integration landed upstream), exactly
+the seam-label flip the Limits section above said would happen.
+
 ## Files
 
-- `eval/runner/cat34-brainbench-memory.ts` — this runner (subprocess contract only)
-- `eval/reports/cat34-brainbench-memory/{receipt.json,scorecard.md,result.json}` — run artifacts
-- gbrain: `src/eval/brainbench/`, `evals/brainbench/` (corpus + schemas + committed baseline), `docs/eval/BRAINBENCH.md` — at the Cathedral 2 release commit (gbrain repo `git log --grep BrainBench` for the exact SHA)
+- `eval/runner/cat34-brainbench-memory.ts`: this runner (subprocess contract only)
+- `docs/benchmarks/2026-06-12-brainbench-memory/{receipt,result,scorecard}-2026-06-12-published.*`: the original run's artifacts, committed (see Receipts)
+- `docs/benchmarks/2026-06-12-brainbench-memory/{receipt,result,scorecard}-2026-09-01-v0.47.8.0-rerun.*`: the labeled 2026-09-01 re-run at pin `2a56b512`
+- `eval/reports/cat34-brainbench-memory/`: where fresh runs land (gitignored, transient; the committed copies above are the durable record)
+- gbrain: `src/eval/brainbench/`, `evals/brainbench/` (corpus + schemas + committed baseline), `docs/eval/BRAINBENCH.md`. Original run at `15a9019788d1` (v0.44.0.0, Cathedral 2); re-run at pin `2a56b51236850f6abcbf2f1ea71981bb9630f6fe` (v0.47.8.0)
 - Read-only disclosure: this run mutates nothing outside `eval/reports/`.
