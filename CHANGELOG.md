@@ -4,6 +4,48 @@ All notable changes to gbrain-evals are recorded here. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versions are semver and kept
 in sync with `VERSION` + `package.json`.
 
+## [0.6.1] - 2026-09-02
+
+Re-run of the public LongMemEval-S (cleaned) split at gbrain v0.48.2.0, plus the
+runner and report changes that make the numbers honest against the new gbrain
+default reranker.
+
+### Changed
+
+- **gbrain pin → `172df271` (v0.48.2.0, PR #4792 branch head).** Re-pointed at
+  the release that moves the reranker default to Voyage `rerank-2.5`; will be
+  re-pinned to the master merge commit when that PR lands.
+- **Rerank specs pin the reranker model.** `resolvedSearchConfig` now sets
+  `search.reranker.model = voyage:rerank-2.5` (`RERANK_MODEL_PIN`) for
+  `hybrid+rerank` / `hybrid-sessdiv+rerank`, and the fail-closed
+  `rerankPreflight` derives the required env key from that pin
+  (`VOYAGE_API_KEY`), so the receipt names the model and the preflight cannot
+  disagree with the engine. Tests updated accordingly.
+- **Chart baselines are strict-metric only.** `longmemeval-chart.ts`
+  `EXTERNAL_BASELINES` replaced MemPalace's published any-hit numbers with the
+  recomputed `recall_all@5` values (85.7% raw, 90.0% with LLM rerank) and
+  ContextFit's self-reported All@5 (87.45%, leakage caveat); any-hit and
+  QA-accuracy numbers are never charted next to the headline.
+- **Report + README + comparison refresh.** New top update block in
+  `docs/benchmarks/2026-05-07-longmemeval-s.md` (hybrid 93.19% `recall_all@5`,
+  438/470, identical to the v0.48.0.0 receipt; pre-fix bracket 51.39% at pin
+  `2a56b512`), artifacts and manifest entries, and `docs/comparison-systems.md`
+  rows that separate strict recall, any-hit recall and LLM-judged answer
+  accuracy (every number source-verified 2026-09-02). Remaining arms
+  (`hybrid+expansion`, `hybrid-sessdiv`, the two reranker-on arms) are marked
+  pending until their rows land in this same report.
+
+### Fixed
+
+- `package.json` version (0.5.1) reconciled with `VERSION`; both read 0.6.1.
+
+### Known
+
+- Two contract tests drift against gbrain 0.48.x behavior changes at this pin
+  (`mcp-contract` traverse_graph cap under the new bidirectional remote
+  default; cat15 runner provenance pin) and are being reconciled in this
+  branch before merge.
+
 ## [0.6.0] - 2026-09-01
 
 ### Added — receipts become machine-gated; session-level measurement lands (outside reviews #26 + #24)

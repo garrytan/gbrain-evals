@@ -412,12 +412,15 @@ describe('pinSearchConfig / resolvedSearchConfig', () => {
 // ─── Rerank preflight (fail-closed, amendment 7) ─────────────────────
 
 describe('rerankPreflight', () => {
-  test('no provider key → keyPresent false via the documented zerank fallback', () => {
+  test('no provider key → keyPresent false via the pinned Voyage model (gbrain ≥ 0.48.2.0 default)', () => {
     const missing = rerankPreflight({});
-    expect(missing.provider).toBe('zeroentropyai');
-    expect(missing.envKey).toBe('ZEROENTROPY_API_KEY');
+    expect(missing.model).toBe('voyage:rerank-2.5');
+    expect(missing.provider).toBe('voyage');
+    expect(missing.envKey).toBe('VOYAGE_API_KEY');
     expect(missing.keyPresent).toBe(false);
-    expect(rerankPreflight({ ZEROENTROPY_API_KEY: 'k' }).keyPresent).toBe(true);
+    expect(rerankPreflight({ VOYAGE_API_KEY: 'pa-k' }).keyPresent).toBe(true);
+    // A ZeroEntropy key alone no longer satisfies the pinned model.
+    expect(rerankPreflight({ ZEROENTROPY_API_KEY: 'k' }).keyPresent).toBe(false);
   });
 
   test('rerank contract violation is typed sut (scored 0, stays in denominator)', () => {
@@ -834,9 +837,12 @@ describe('end-to-end (keyword adapter, hermetic)', () => {
     const { __setEmbedTransportForTests, getEmbeddingDimensions } = await import('gbrain/ai/gateway');
     const hadOpenai = process.env.OPENAI_API_KEY;
     const hadZe = process.env.ZEROENTROPY_API_KEY;
+    const hadVoyage = process.env.VOYAGE_API_KEY;
     process.env.OPENAI_API_KEY = 'dummy-stub-key';
-    // A ZE key present must NOT re-enable the reranker — the pin turns it off.
+    // A reranker key present (ZE historically, Voyage since gbrain 0.48.2.0)
+    // must NOT re-enable the reranker — the pin turns it off.
     process.env.ZEROENTROPY_API_KEY = 'dummy-ze-key';
+    process.env.VOYAGE_API_KEY = 'dummy-voyage-key';
     const hashVec = (text: string, dim: number): number[] => {
       const v = new Array<number>(dim).fill(0);
       for (const tok of text.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)) {
@@ -886,6 +892,8 @@ describe('end-to-end (keyword adapter, hermetic)', () => {
       else process.env.OPENAI_API_KEY = hadOpenai;
       if (hadZe === undefined) delete process.env.ZEROENTROPY_API_KEY;
       else process.env.ZEROENTROPY_API_KEY = hadZe;
+      if (hadVoyage === undefined) delete process.env.VOYAGE_API_KEY;
+      else process.env.VOYAGE_API_KEY = hadVoyage;
     }
   }, 180_000);
 
@@ -977,8 +985,8 @@ describe('end-to-end (keyword adapter, hermetic)', () => {
     const dir = mkdtempSync(join(TMP, 'e2e-rerank-skip-'));
     const datasetPath = join(dir, 'dataset.json');
     writeFileSync(datasetPath, JSON.stringify(makeDataset({ goldInHaystack: true })));
-    const hadZe = process.env.ZEROENTROPY_API_KEY;
-    delete process.env.ZEROENTROPY_API_KEY;
+    const hadZe = process.env.VOYAGE_API_KEY;
+    delete process.env.VOYAGE_API_KEY;
     try {
       const result = await run(e2eOpts(dir, datasetPath, { adapters: ['hybrid+rerank'], keywordOnly: false }));
       // Skip-only run: fail-closed skip is the designed response, exit 0.
@@ -986,7 +994,7 @@ describe('end-to-end (keyword adapter, hermetic)', () => {
       expect(result.summaries).toHaveLength(0);
       const receipt = loadReceipt(result.receiptFile);
       expect(receipt.run_status).toBe('skipped');
-      expect(receipt.skip_reason).toContain('ZEROENTROPY_API_KEY');
+      expect(receipt.skip_reason).toContain('VOYAGE_API_KEY');
       expect(receipt.publishable).toBe(false);
       const skipped = receipt.resolved_config?.adapters_skipped as Array<{ adapter: string; skip_reason: string }>;
       expect(skipped).toHaveLength(1);
@@ -999,7 +1007,8 @@ describe('end-to-end (keyword adapter, hermetic)', () => {
       // do NOT emit rows: preflight fires before question 1.
       expect(existsSync(join(dir, 'rows.ndjson'))).toBe(false);
     } finally {
-      if (hadZe !== undefined) process.env.ZEROENTROPY_API_KEY = hadZe;
+      if (hadZe !== undefined) process.env.VOYAGE_API_KEY = hadZe;
+      else delete process.env.VOYAGE_API_KEY;
     }
   }, 60_000);
 });

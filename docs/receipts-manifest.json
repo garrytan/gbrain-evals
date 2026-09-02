@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "description": "Machine-checked map from README/report claims to the committed artifacts that back them. Data only \u2014 no executable strings; verification lives in test/eval/receipts-manifest.test.ts (path exists, sha256 matches, expected JSON-pointer values match) and in the golden tests named per entry. Entries without an in-repo artifact carry status 'disclosed-gap' with the reason \u2014 the gate's scope is stated, never faked.",
-  "updated": "2026-09-01",
+  "updated": "2026-09-02",
   "entries": [
     {
       "claim_id": "longmemeval-recall-all",
-      "readme_anchor": "83.4% official `recall_all@5` (LongMemEval head-to-head row + numbers-by-report table)",
+      "readme_anchor": "83.4% in May 2026 at v0.28.8 (history clause in the LongMemEval head-to-head row + numbers-by-report table)",
       "artifact_path": "docs/benchmarks/2026-05-07-longmemeval-s/rescore-may-2026-08-31.json",
       "artifact_sha256": "17d23de0ff27203f37e9e73d79e7fa303742b7a85dd6098010a44753d6d8bc22",
       "expected": {
@@ -29,6 +29,43 @@
       "golden_test": "test/eval/longmemeval-golden.test.ts: longmemeval golden regression (committed May NDJSON)",
       "status": "covered",
       "note": "The irreplaceable per-question stream from the May 2026 run: 2,696 raw rows (696 resume dupes), 2,000 unique (adapter, question_id) pairs across 4 adapters, 30 abstention questions each. Integrity-checkable with eval/runner/longmemeval-validate-ndjson.ts."
+    },
+    {
+      "claim_id": "longmemeval-rerun-v0.48.2.0-hybrid",
+      "readme_anchor": "93.19% official `recall_all@5` (438/470; 2026-09-02 re-run at gbrain v0.48.2.0, hybrid, k=5, reranker off) in the LongMemEval head-to-head row + numbers-by-report table",
+      "artifact_path": "docs/benchmarks/2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0-hybrid.json",
+      "artifact_sha256": "33ebd15c66527c065634f67b2a88b4c90cda8abd39b45c7e4edec871eb849e54",
+      "expected": {
+        "/resolved/gbrain_version": "0.48.2.0",
+        "/opts/topK": 5,
+        "/summaries/0/adapter": "gbrain-hybrid",
+        "/summaries/0/recall_all_at_k": 0.9319148936170213,
+        "/summaries/0/recall_any_at_k": 0.9872340425531915,
+        "/summaries/0/total": 470,
+        "/summaries/0/n_abs": 30,
+        "/summaries/0/n_errors_sut": 0,
+        "/summaries/0/n_errors_infra": 0,
+        "/summaries/0/recall_by_type/temporal-reasoning/recall_all": 0.84251968503937,
+        "/summaries/0/recall_by_type/multi-session/recall_all": 0.9256198347107438
+      },
+      "status": "covered",
+      "note": "Aggregator receipt for the 2026-09-02 single run at gbrain v0.48.2.0 (pin 172df271, longmemeval_s cleaned Sept-2025 revision, k=5, search mode balanced with reranker and autocut off, embedder openai:text-embedding-3-large@1536). Reproduces the v0.48.0.0 receipt (gbrain PR #4787) digit for digit. Re-derivable keyless from the committed rows with eval/runner/longmemeval-aggregate.ts. The expansion, sessdiv and reranker-on arms are pending and carry no manifest entry until their receipts exist."
+    },
+    {
+      "claim_id": "longmemeval-rerun-v0.48.2.0-hybrid-rows",
+      "readme_anchor": "2026-09-02 re-run at gbrain v0.48.2.0 (per-question rows behind the 93.19% recall_all@5 receipt)",
+      "artifact_path": "docs/benchmarks/2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0-hybrid.ndjson",
+      "artifact_sha256": "0f9eef7bd1c9cb2d37a32eb40398bc9b8e8058e0d07adc01c789a590b014208d",
+      "status": "covered",
+      "note": "The per-question NDJSON stream for the v0.48.2.0 gbrain-hybrid arm: 500 rows (one per question, 30 abstention rows included, 0 error rows, no resume duplicates). Integrity-checkable with eval/runner/longmemeval-validate-ndjson.ts against the cleaned dataset; the aggregator re-derives the receipt above from these rows alone."
+    },
+    {
+      "claim_id": "longmemeval-prefix-bracket-v0.47.8.0",
+      "readme_anchor": "an unreleased keyword-fallback fusion regression dropped hybrid to 51.3% between v0.28.8 and v0.48.0.0 (re-measured 2026-09-02 at the v0.47.8.0 pin: 51.39%)",
+      "artifact_path": "docs/benchmarks/2026-05-07-longmemeval-s/prefix-bracket-2a56b512-v0.47.8.0.ndjson",
+      "artifact_sha256": "7eea95862e455928bbc9f1c14705b2f9bcd3a26285605bb7ed75ddf076b6dc7f",
+      "status": "covered",
+      "note": "Pre-fix bracket rows measured 2026-09-02 at the previous evals pin 2a56b512 (gbrain v0.47.8.0), same dataset revision, k=5, same embedder: 500 gbrain-hybrid rows (recall_all@5 51.39% = 241/469; one row is an infrastructure error the aggregator excludes from the denominator), 500 gbrain-hybrid+expansion rows, and 8 gbrain-hybrid-sessdiv rows from an incomplete pass that are not scored. Only the hybrid arm is quoted in the README and report; re-derive with eval/runner/longmemeval-aggregate.ts."
     },
     {
       "claim_id": "cat35-wave-receipt",

@@ -1,5 +1,139 @@
 # BrainBench: LongMemEval (public benchmark)
 
+> ## UPDATE (2026-09-02) — re-run at gbrain v0.48.2.0
+>
+> A fresh single run of this benchmark at the current gbrain release, scored
+> under the official metric from the start. **gbrain-hybrid scores 93.19%
+> official `recall_all@5` (438/470)** on `longmemeval_s` (the cleaned
+> Sept-2025 revision of the S split: 500 questions, the 30 abstention
+> questions excluded from recall denominators per the official protocol,
+> 470 scored). This reproduces master's v0.48.0.0 receipt (gbrain PR #4787:
+> 93.19%, identical per-type numbers) digit for digit. v0.48.2.0 changes the
+> reranker default to `voyage:rerank-2.5`; with the reranker off, as in this
+> run, retrieval is unchanged from v0.48.0.0.
+>
+> **What this run pins.** gbrain v0.48.2.0 (merged SHA `172df271`, branch
+> `yaounde`, gbrain PR #4792); the gbrain-evals runner at main `29e9ac9` with
+> the local clone's gbrain pin bumped to that SHA; dataset `longmemeval_s`,
+> cleaned Sept-2025 revision (HF `xiaowu0162/longmemeval-cleaned`), 500
+> questions, n=470 scored; k=5; search mode `balanced` pinned, reranker OFF,
+> autocut OFF; embedder `openai:text-embedding-3-large@1536`; single run in
+> fixed dataset order; 0 error rows.
+>
+> | Adapter | official `recall_all@5` | any-hit `recall_any@5` (diagnostic) | nDCG_any@5 | distinct sessions in top-5 (mean) | p50 / p99 per question | Status |
+> |---|---|---|---|---|---|---|
+> | **gbrain-hybrid** | **93.19%** (438/470) | 98.72% | 93.32% | 4.90 (5 sessions on 422 questions, 4 on 47, 3 on 1) | 3.7 s / 6.3 s | complete, 0 errors |
+> | gbrain-hybrid+expansion (LLM multi-query expansion) | pending, run in progress | pending | pending | pending | pending | v0.48.0.0 receipt: 49.6% at k=5, filed as harmful at small k |
+> | gbrain-hybrid-sessdiv (3x over-fetch, top-5 distinct sessions) | pending, run in progress | pending | pending | pending | pending | the pre-registered session-diversity row, first measurement |
+> | gbrain-hybrid+rerank (`voyage:rerank-2.5` ON, the v0.48.2.0 default) | pending, run in progress | pending | pending | pending | pending | first reranker-on measurement |
+> | gbrain-hybrid-sessdiv+rerank (`voyage:rerank-2.5` ON) | pending, run in progress | pending | pending | pending | pending | first reranker-on measurement |
+>
+> Pending rows are filled only from their own committed NDJSON plus aggregator
+> receipt when each arm finishes. No number appears here before its receipt
+> exists.
+>
+> Per question type, `recall_all@5`, gbrain-hybrid (the May column is the
+> 2026-08-31 resolution below, same metric, same n):
+>
+> | question_type | n | v0.48.2.0 (this run) | May 2026, v0.28.8 |
+> |---|---|---|---|
+> | knowledge-update | 72 | 98.6% (71/72) | 98.6% |
+> | multi-session | 121 | 92.6% (112/121) | 71.9% |
+> | single-session-assistant | 56 | 100.0% (56/56) | 100.0% |
+> | single-session-preference | 30 | 96.7% (29/30) | 93.3% |
+> | single-session-user | 64 | 98.4% (63/64) | 96.9% |
+> | temporal-reasoning | 127 | 84.3% (107/127) | 69.3% |
+> | **all types** | **470** | **93.19% (438/470)** | **83.40%** |
+>
+> Temporal-reasoning is still the weakest type and the next target. The
+> ceiling at k=5 on this dataset is 99.4% (467/470): 3 questions carry 6 gold
+> sessions and cannot fit in a top-5 list. Pure vector on the same corpus
+> scored 93.8% on the v0.48.0.0 receipt, so the hybrid layer is roughly
+> neutral on this benchmark and earns its keep elsewhere.
+>
+> **The regression story, kept public.**
+>
+> - May 2026, v0.28.8: 83.40% `recall_all@5` (392/470). The report below led
+>   with 97.66% any-hit, which is now a diagnostic only.
+> - Between v0.28.8 and v0.48.0.0, an unpublished regression in how hybrid
+>   search fused keyword-fallback rows with vector results dragged hybrid to
+>   51.3%. Re-measured this session at the previous evals pin `2a56b512`
+>   (gbrain v0.47.8.0): **51.39%** (241/469; one question returned an
+>   infrastructure error and the aggregator excludes it from the
+>   denominator). Committed as the pre-fix bracket below.
+> - v0.48.0.0 (2026-09-01, gbrain PR #4787): the fix, 93.19%.
+> - v0.48.2.0 (2026-09-02, this run): 93.19%, identical per type.
+>
+> **What moved mechanically.** The gain from 51.39% to 93.19% comes from one
+> change in the fusion step of hybrid search, shipped in v0.48.0.0, not from
+> any ranker change in v0.48.2.0. Hybrid search runs a keyword arm and a
+> vector arm and fuses them with Reciprocal Rank Fusion. When a query's exact
+> words did not co-occur in any one chunk, the keyword arm fell back from AND
+> to OR matching and returned loose word matches; those fallback rows carried
+> full fusion votes and outvoted the semantically right sessions coming from
+> the vector arm. v0.48.0.0 mutes the fallback rows when the vector arm is
+> healthy (search meta reports the muted count as `relaxed_dropped`); the
+> fallback keeps its rescue role for keyless installs and provider outages.
+> Multi-session and temporal questions, which need several sessions inside
+> the top 5, recovered the most, which is what the per-type table shows.
+> With the reranker off, the v0.48.2.0 reranker succession leaves this path
+> untouched, and the identical receipt is the evidence.
+>
+> **Cross-system reading.** The strict-vs-any-hit and retrieval-vs-answer-
+> accuracy distinctions that decide whether any two LongMemEval numbers can
+> sit side by side live in
+> [`docs/comparison-systems.md`](../comparison-systems.md). On the strict
+> metric on this dataset we found no published score above 93.19%, with
+> stated caveats: the field is thin, and the two closest strict comparisons
+> are our own recomputations of MemPalace's committed per-question rankings
+> (85.7% raw, 88.7% on its tuned held-out subset, 90.0% with an LLM
+> reranking the top 20); ContextFit's self-reported 87.45% All@5 is loosely
+> comparable (its rerank layer reads gold labels). MemPalace's published
+> 96.6% / 98.4% and ContextFit's 98.94% are any-hit figures that sit next to
+> gbrain's 98.72% any-hit, not next to 93.19%.
+>
+> **Receipts (committed in this directory).**
+>
+> - [`rerun-2026-09-02-v0.48.2.0-hybrid.ndjson`](2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0-hybrid.ndjson):
+>   500 per-question rows, one per question, 30 abstention rows included
+>   (sha256 `0f9eef7bd1c9cb2d37a32eb40398bc9b8e8058e0d07adc01c789a590b014208d`,
+>   239,969 bytes).
+> - [`rerun-2026-09-02-v0.48.2.0-hybrid.json`](2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0-hybrid.json):
+>   the aggregator receipt for those rows, recording `gbrain_version`
+>   0.48.2.0 and the pin
+>   (sha256 `33ebd15c66527c065634f67b2a88b4c90cda8abd39b45c7e4edec871eb849e54`,
+>   2,693 bytes).
+> - [`prefix-bracket-2a56b512-v0.47.8.0.ndjson`](2026-05-07-longmemeval-s/prefix-bracket-2a56b512-v0.47.8.0.ndjson):
+>   the pre-fix bracket at the old pin: 500 gbrain-hybrid rows, 500
+>   gbrain-hybrid+expansion rows, and 8 gbrain-hybrid-sessdiv rows from an
+>   incomplete pass (not scored). Only the hybrid arm (51.39%) is quoted
+>   above
+>   (sha256 `7eea95862e455928bbc9f1c14705b2f9bcd3a26285605bb7ed75ddf076b6dc7f`,
+>   461,647 bytes).
+> - Manifest entries: `longmemeval-rerun-v0.48.2.0-hybrid`,
+>   `longmemeval-rerun-v0.48.2.0-hybrid-rows`, and
+>   `longmemeval-prefix-bracket-v0.47.8.0` in
+>   [`docs/receipts-manifest.json`](../receipts-manifest.json).
+>
+> Re-derive every number in the table above keyless, without the dataset:
+>
+> ```sh
+> bun eval/runner/longmemeval-aggregate.ts docs/benchmarks/2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0-hybrid.ndjson --top-k 5 --dataset s --output /tmp/rederive-v0.48.2.0
+> bun eval/runner/longmemeval-aggregate.ts docs/benchmarks/2026-05-07-longmemeval-s/prefix-bracket-2a56b512-v0.47.8.0.ndjson --top-k 5 --dataset s --output /tmp/rederive-prefix
+> ```
+>
+> Reproduce the run itself (keys required; the runner pins mode `balanced`
+> with reranker and autocut off for every adapter, and pins
+> `voyage:rerank-2.5` on for the `rerank` specs; without `--adapters` it runs
+> the four legacy adapters, not the five arms tabled above):
+>
+> ```sh
+> bash eval/runner/longmemeval-batch.sh \
+>   --adapters hybrid,hybrid+expansion,hybrid-sessdiv,hybrid+rerank,hybrid-sessdiv+rerank \
+>   --embedding-model openai:text-embedding-3-large --embedding-dims 1536
+> ```
+>
+
 > ## ERRATUM (2026-08-31) — metric definition
 >
 > **The recall numbers in this report are ANY-HIT recall@5, not the official

@@ -62,11 +62,13 @@ export function chartTitle(data: RunnerOutput): string {
   return `recall_all@${data.opts.topK} on LongMemEval _${data.opts.datasetName} — ${nLabel(data.summaries)}`;
 }
 
-// External published baselines for comparison context. Numbers come from
-// the linked source documents — keep them in sync with the report's
-// `## Comparison vs published systems` section, and re-check the source
-// files quarterly since memory-systems publish frequently. These are
-// recall_all-style session-level numbers, comparable to our headline.
+// External published baselines for comparison context. ONLY strict
+// session-level recall_all@K numbers belong here (every gold session in the
+// top-K distinct sessions) — the metric our headline plots. Published any-hit
+// numbers (MemPalace's 96.6% / 98.4% / "100%" are recall_any@5 per their own
+// script, which computes recall_all but never prints it) and LLM-judged QA
+// accuracy (Mastra, Mem0, MemCog, Zep, …) must NEVER be charted here. Keep in
+// sync with docs/comparison-systems.md and re-check sources quarterly.
 interface ExternalBaseline {
   label: string;
   recall: number;          // recall_all@K, as a fraction
@@ -76,18 +78,30 @@ interface ExternalBaseline {
 }
 const EXTERNAL_BASELINES: ExternalBaseline[] = [
   {
-    label: 'MemPal raw (ChromaDB)',
-    recall: 0.966,
+    // Our recomputation of recall_all@5 from MemPalace's committed per-question
+    // rankings (results_mempal_raw_session_20260414_1629.jsonl) joined to the
+    // official gold labels; their logged any-hit reproduced with 0 mismatches.
+    label: 'MemPalace raw (strict, recomputed)',
+    recall: 0.857,
     topK: 5,
-    questions: 500,
-    source: 'github.com/MemPalace/mempalace BENCHMARKS.md',
+    questions: 470,
+    source: 'github.com/MemPalace/mempalace benchmarks/results_mempal_raw_session_20260414_1629.jsonl (recomputed recall_all@5; published 96.6% is any-hit)',
   },
   {
-    label: 'MemPal hybrid v4 + Haiku',
-    recall: 1.0,
+    label: 'MemPalace hybrid v4 + LLM rerank (strict, recomputed)',
+    recall: 0.900,
     topK: 5,
-    questions: 500,
-    source: 'tuned on 3 specific questions; held-out 450q is 98.4%',
+    questions: 470,
+    source: 'github.com/MemPalace/mempalace benchmarks/results_mempal_hybrid_v4_llmrerank_session_20260414_1659.jsonl (recomputed recall_all@5; LLM reranker in the loop)',
+  },
+  {
+    // Loosely comparable: same All@5 definition on the cleaned split, but the
+    // rerank layer reads gold labels during the run (leakage caveat).
+    label: 'ContextFit fusion All@5 (self-reported, leak caveat)',
+    recall: 0.8745,
+    topK: 5,
+    questions: 470,
+    source: 'context.fit/longmemeval-fusion-20260519.html (All@5 = all gold sessions in top-5 distinct; gold-label-aware rerank)',
   },
 ];
 
