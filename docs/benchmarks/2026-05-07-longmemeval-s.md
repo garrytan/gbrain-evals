@@ -18,7 +18,7 @@
 > `voyage:rerank-2.5`; with the reranker off, retrieval is unchanged from
 > v0.48.0.0.
 >
-> **What this run pins.** gbrain v0.48.2.0 (merged SHA `172df271`, branch
+> **What this run pins.** gbrain v0.48.2.0 (merged SHA `5cfb84f1`, branch
 > `yaounde`, gbrain PR #4792); the gbrain-evals runner at main `29e9ac9` with
 > the local clone's gbrain pin bumped to that SHA; dataset `longmemeval_s`,
 > cleaned Sept-2025 revision (HF `xiaowu0162/longmemeval-cleaned`), 500

@@ -9,7 +9,7 @@ Format: the numbers tables are neutral and cited. The **"vs gbrain"** analysis
 under each table is explicitly our read — what gbrain's pinned master does
 architecturally, and why that wins or loses against each system, with the
 mechanism named. Where gbrain loses, the loss and the reason stay in. The
-current pin is v0.48.2.0 (`172df271`, 2026-09-02); each "vs gbrain" heading
+current pin is v0.48.2.0 (`5cfb84f1`, 2026-09-02); each "vs gbrain" heading
 states the gbrain version its analysis was written against (v0.47.8.0,
 `2a56b512`, where that benchmark has no run at the current pin).
 
@@ -92,7 +92,7 @@ directly comparable.**
 
 gbrain's own rows, all official session-level `recall_all@5` on
 `longmemeval_s` (cleaned Sept-2025 revision, 500 questions, 470 scored, k=5),
-five arms measured 2026-09-02 at v0.48.2.0 (merged SHA `172df271`; embedder
+five arms measured 2026-09-02 at v0.48.2.0 (merged SHA `5cfb84f1`; embedder
 `openai:text-embedding-3-large@1536`, hybrid mode `balanced` pinned, autocut
 off, single run, 0 errors in every arm). Release default path:
 **95.32% gbrain-hybrid+rerank (448/470)**, `voyage:rerank-2.5` on (any-hit@5
@@ -161,7 +161,7 @@ comparable rather than comparable. Below gbrain's 93.19% reranker-off and
 95.32% reranker-on official `recall_all@5`, but not the same instrument, so
 the margin is not a same-instrument margin.
 
-### vs gbrain (v0.48.2.0, `172df271`, 2026-09-02), row by row
+### vs gbrain (v0.48.2.0, `5cfb84f1`, 2026-09-02), row by row
 
 Two yardsticks for every bullet, both official `recall_all@5` on
 `longmemeval_s` cleaned, 470 scored, k=5, single run, 2026-09-02 at

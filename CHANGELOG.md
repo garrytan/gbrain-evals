@@ -12,7 +12,7 @@ default reranker.
 
 ### Changed
 
-- **gbrain pin → `172df271` (v0.48.2.0, PR #4792 branch head).** Re-pointed at
+- **gbrain pin → `5cfb84f1` (v0.48.2.0, PR #4792 branch head).** Re-pointed at
   the release that moves the reranker default to Voyage `rerank-2.5`; will be
   re-pinned to the master merge commit when that PR lands.
 - **Rerank specs pin the reranker model.** `resolvedSearchConfig` now sets
@@ -33,7 +33,7 @@ default reranker.
   rows that separate strict recall, any-hit recall and LLM-judged answer
   accuracy (every number source-verified 2026-09-02). All five arms landed in
   this same report (official session-level `recall_all@5`, `longmemeval_s`
-  cleaned Sept-2025 revision, 470 scored, k=5, gbrain v0.48.2.0 `172df271`,
+  cleaned Sept-2025 revision, 470 scored, k=5, gbrain v0.48.2.0 `5cfb84f1`,
   2026-09-02, single run, 0 errors): `hybrid+rerank` **95.32%** (448/470,
   `voyage:rerank-2.5`, the release default path since `balanced` and `tokenmax`
   run the reranker; +18 / -8 paired vs hybrid; any-hit@5 99.79%),
