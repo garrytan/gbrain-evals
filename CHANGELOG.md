@@ -31,9 +31,32 @@ default reranker.
   438/470, identical to the v0.48.0.0 receipt; pre-fix bracket 51.39% at pin
   `2a56b512`), artifacts and manifest entries, and `docs/comparison-systems.md`
   rows that separate strict recall, any-hit recall and LLM-judged answer
-  accuracy (every number source-verified 2026-09-02). Remaining arms
-  (`hybrid+expansion`, `hybrid-sessdiv`, the two reranker-on arms) are marked
-  pending until their rows land in this same report.
+  accuracy (every number source-verified 2026-09-02). All five arms landed in
+  this same report (official session-level `recall_all@5`, `longmemeval_s`
+  cleaned Sept-2025 revision, 470 scored, k=5, gbrain v0.48.2.0 `172df271`,
+  2026-09-02, single run, 0 errors): `hybrid+rerank` **95.32%** (448/470,
+  `voyage:rerank-2.5`, the release default path since `balanced` and `tokenmax`
+  run the reranker; +18 / -8 paired vs hybrid; any-hit@5 99.79%),
+  `hybrid-sessdiv+rerank` 95.53% (449/470), `hybrid` 93.19% (438/470, the
+  like-for-like row against the May 2026 83.40% and v0.48.0.0 93.19%
+  receipts), `hybrid-sessdiv` 93.40% (439/470, one question over hybrid; slot
+  starvation is not the miss class), `hybrid+expansion` 54.89% (258/470;
+  `tokenmax`'s LLM multi-query expansion is harmful at k=5, -183 / +3 paired
+  vs hybrid, consistent with the 49.6% in the v0.48.0.0 receipt). Reranker per
+  type: temporal-reasoning 84.3% to 89.8% (107 to 114 of 127), knowledge-update
+  and the three single-session types to 100%, multi-session flat at 92.6%
+  (112/121). Comparison reads updated to the two yardsticks: reranker to
+  reranker 95.32% vs MemPalace's recomputed LLM-rerank 90.0%; no-LLM 93.19% vs
+  MemPalace raw 85.7%; ContextFit 87.45% keeps its gold-label leakage caveat.
+- **Charts + manifest for the five-arm run.**
+  `docs/benchmarks/2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0.headline.svg`
+  and `rerun-2026-09-02-v0.48.2.0.per-type.svg` regenerated from the all-arms
+  aggregate (`rerun-2026-09-02-v0.48.2.0-all-arms.json`) with the strict-only
+  external baselines; per-arm `rerun-2026-09-02-v0.48.2.0-<arm>.json` +
+  `.ndjson` receipts for all five arms and the pre-fix bracket
+  `prefix-bracket-2a56b512-v0.47.8.0.ndjson` are listed in
+  `docs/receipts-manifest.json` with sha256 (byte counts in the report's
+  Receipts list).
 
 ### Fixed
 

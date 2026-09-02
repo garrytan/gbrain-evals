@@ -2,54 +2,101 @@
 
 > ## UPDATE (2026-09-02) — re-run at gbrain v0.48.2.0
 >
-> A fresh single run of this benchmark at the current gbrain release, scored
-> under the official metric from the start. **gbrain-hybrid scores 93.19%
-> official `recall_all@5` (438/470)** on `longmemeval_s` (the cleaned
-> Sept-2025 revision of the S split: 500 questions, the 30 abstention
-> questions excluded from recall denominators per the official protocol,
-> 470 scored). This reproduces master's v0.48.0.0 receipt (gbrain PR #4787:
-> 93.19%, identical per-type numbers) digit for digit. v0.48.2.0 changes the
-> reranker default to `voyage:rerank-2.5`; with the reranker off, as in this
-> run, retrieval is unchanged from v0.48.0.0.
+> A fresh single run of this benchmark at the current gbrain release, five
+> arms, scored under the official metric from the start. Two numbers lead,
+> both labelled. **Reranker off, gbrain-hybrid scores 93.19% official
+> `recall_all@5` (438/470)**: this is the like-for-like row against the May
+> 2026 receipt and master's v0.48.0.0 receipt (gbrain PR #4787: 93.19%,
+> identical per-type numbers), reproduced digit for digit. **With the
+> release default reranker `voyage:rerank-2.5` on, gbrain-hybrid+rerank
+> scores 95.32% (448/470)**: this is the release default path, because the
+> `balanced` and `tokenmax` search modes run the reranker. Dataset
+> `longmemeval_s` (the cleaned Sept-2025 revision of the S split: 500
+> questions, the 30 abstention questions excluded from recall denominators
+> per the official protocol, 470 scored), k=5, measured 2026-09-02 at
+> gbrain v0.48.2.0. v0.48.2.0 changes the reranker default to
+> `voyage:rerank-2.5`; with the reranker off, retrieval is unchanged from
+> v0.48.0.0.
 >
 > **What this run pins.** gbrain v0.48.2.0 (merged SHA `172df271`, branch
 > `yaounde`, gbrain PR #4792); the gbrain-evals runner at main `29e9ac9` with
 > the local clone's gbrain pin bumped to that SHA; dataset `longmemeval_s`,
 > cleaned Sept-2025 revision (HF `xiaowu0162/longmemeval-cleaned`), 500
-> questions, n=470 scored; k=5; search mode `balanced` pinned, reranker OFF,
-> autocut OFF; embedder `openai:text-embedding-3-large@1536`; single run in
-> fixed dataset order; 0 error rows.
+> questions, n=470 scored; k=5; search mode `balanced` pinned, autocut OFF,
+> reranker OFF on the three reranker-off arms and `voyage:rerank-2.5` ON on
+> the two rerank arms; embedder `openai:text-embedding-3-large@1536`; single
+> run in fixed dataset order; 0 error rows in every arm.
 >
-> | Adapter | official `recall_all@5` | any-hit `recall_any@5` (diagnostic) | nDCG_any@5 | distinct sessions in top-5 (mean) | p50 / p99 per question | Status |
-> |---|---|---|---|---|---|---|
-> | **gbrain-hybrid** | **93.19%** (438/470) | 98.72% | 93.32% | 4.90 (5 sessions on 422 questions, 4 on 47, 3 on 1) | 3.7 s / 6.3 s | complete, 0 errors |
-> | gbrain-hybrid+expansion (LLM multi-query expansion) | pending, run in progress | pending | pending | pending | pending | v0.48.0.0 receipt: 49.6% at k=5, filed as harmful at small k |
-> | gbrain-hybrid-sessdiv (3x over-fetch, top-5 distinct sessions) | pending, run in progress | pending | pending | pending | pending | the pre-registered session-diversity row, first measurement |
-> | gbrain-hybrid+rerank (`voyage:rerank-2.5` ON, the v0.48.2.0 default) | pending, run in progress | pending | pending | pending | pending | first reranker-on measurement |
-> | gbrain-hybrid-sessdiv+rerank (`voyage:rerank-2.5` ON) | pending, run in progress | pending | pending | pending | pending | first reranker-on measurement |
+> All five arms, `longmemeval_s` cleaned Sept-2025 revision, n=470 scored, k=5,
+> 2026-09-02, gbrain v0.48.2.0. Paired flips count questions whose
+> `recall_all@5` went 0 to 1 (gained) or 1 to 0 (lost) against the
+> reranker-off gbrain-hybrid row on the same question ids. Latency is per
+> question (p50 / p99) and wall is the whole 500-question arm, from the
+> aggregator receipts:
 >
-> Pending rows are filled only from their own committed NDJSON plus aggregator
-> receipt when each arm finishes. No number appears here before its receipt
-> exists.
+> | Adapter | official `recall_all@5` | any-hit `recall_any@5` (diagnostic) | nDCG_any@5 | distinct sessions in top-5 (mean) | paired vs gbrain-hybrid (gained / lost) | p50 / p99 per question, wall | Status |
+> |---|---|---|---|---|---|---|---|
+> | **gbrain-hybrid** (reranker off; the like-for-like row vs May 2026 and v0.48.0.0) | **93.19%** (438/470) | 98.72% | 93.32% | 4.90 (5 sessions on 422 questions, 4 on 47, 3 on 1) | reference | 3,707 ms / 6,348 ms, 1,977 s | complete, 0 errors |
+> | gbrain-hybrid+expansion (tokenmax's LLM multi-query expansion, reranker off) | 54.89% (258/470) | 86.60% | 71.68% | 5.00 | +3 / -183 | 5,079 ms / 8,014 ms, 2,677 s | complete, 0 errors; harmful at k=5 (v0.48.0.0 receipt: 49.6%) |
+> | gbrain-hybrid-sessdiv (3x over-fetch, top-5 distinct sessions, reranker off) | 93.40% (439/470) | 98.72% | 93.38% | 5.00 | +1 / -0 | 3,701 ms / 6,371 ms, 1,987 s | complete, 0 errors; first measurement |
+> | **gbrain-hybrid+rerank** (`voyage:rerank-2.5` ON; the release default path) | **95.32%** (448/470) | 99.79% | 95.77% | 4.89 | +18 / -8 | 3,821 ms / 6,298 ms, 2,029 s | complete, 0 errors; first reranker-on measurement |
+> | gbrain-hybrid-sessdiv+rerank (`voyage:rerank-2.5` ON; release default path plus over-fetch) | 95.53% (449/470) | 99.79% | 95.82% | 5.00 | +19 / -8 | 3,795 ms / 6,317 ms, 2,031 s | complete, 0 errors; first reranker-on measurement |
 >
-> Per question type, `recall_all@5`, gbrain-hybrid (the May column is the
-> 2026-08-31 resolution below, same metric, same n):
+> Every row is derived from its own committed NDJSON plus aggregator receipt
+> (listed under Receipts). Reading the five arms:
 >
-> | question_type | n | v0.48.2.0 (this run) | May 2026, v0.28.8 |
-> |---|---|---|---|
-> | knowledge-update | 72 | 98.6% (71/72) | 98.6% |
-> | multi-session | 121 | 92.6% (112/121) | 71.9% |
-> | single-session-assistant | 56 | 100.0% (56/56) | 100.0% |
-> | single-session-preference | 30 | 96.7% (29/30) | 93.3% |
-> | single-session-user | 64 | 98.4% (63/64) | 96.9% |
-> | temporal-reasoning | 127 | 84.3% (107/127) | 69.3% |
-> | **all types** | **470** | **93.19% (438/470)** | **83.40%** |
+> - **Release default path.** The two reranker-on arms run `voyage:rerank-2.5`,
+>   the v0.48.2.0 default; the `balanced` and `tokenmax` search modes run the
+>   reranker, so 95.32% (gbrain-hybrid+rerank, 448/470) is the number a
+>   default install produces at k=5. Against the reranker-off hybrid row the
+>   reranker flips 18 questions right and 8 wrong, net +10, for +114 ms at
+>   p50 (3,707 to 3,821 ms) and one Voyage rerank call per query, no
+>   generative model in the loop.
+> - **Like-for-like row.** gbrain-hybrid with the reranker off is the row that
+>   compares against the May 2026 v0.28.8 receipt (83.40%) and the v0.48.0.0
+>   receipt (93.19%); it reproduces v0.48.0.0 digit for digit, per type.
+> - **Expansion is harmful at k=5.** tokenmax's LLM multi-query expansion
+>   scores 54.89% strict (258/470) and 86.60% any-hit; against plain hybrid it
+>   loses 183 questions and gains 3, and p50 latency rises from 3,707 ms to
+>   5,079 ms. The v0.48.0.0 receipt measured the same arm at 49.6%. The
+>   `tokenmax` mode turns expansion on; do not pair it with a small k.
+> - **Session-diversity over-fetch adds one question.** hybrid-sessdiv gains 1
+>   and loses 0 against hybrid (439 vs 438 of 470); sessdiv+rerank gains 1
+>   over rerank alone (449 vs 448). Filling all five slots with distinct
+>   sessions (mean 5.00 vs 4.90) is not where the misses are: slot starvation
+>   is not the miss class. The remaining misses are gold sessions ranked
+>   outside the top five, which is why the reranker moves the number and the
+>   over-fetch does not.
 >
-> Temporal-reasoning is still the weakest type and the next target. The
-> ceiling at k=5 on this dataset is 99.4% (467/470): 3 questions carry 6 gold
-> sessions and cannot fit in a top-5 list. Pure vector on the same corpus
-> scored 93.8% on the v0.48.0.0 receipt, so the hybrid layer is roughly
-> neutral on this benchmark and earns its keep elsewhere.
+> ![Headline, five arms, recall_all@5, v0.48.2.0](2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0.headline.svg)
+>
+> Per question type, `recall_all@5`, all five arms (the May column is the
+> 2026-08-31 resolution below, same metric, same n; May ran gbrain-hybrid
+> with no reranker):
+>
+> | question_type | n | gbrain-hybrid (reranker off) | gbrain-hybrid+expansion | gbrain-hybrid-sessdiv | gbrain-hybrid+rerank (release default) | gbrain-hybrid-sessdiv+rerank | May 2026, v0.28.8 |
+> |---|---|---|---|---|---|---|---|
+> | knowledge-update | 72 | 98.6% (71/72) | 62.5% (45/72) | 98.6% (71/72) | 100.0% (72/72) | 100.0% (72/72) | 98.6% |
+> | multi-session | 121 | 92.6% (112/121) | 34.7% (42/121) | 92.6% (112/121) | 92.6% (112/121) | 92.6% (112/121) | 71.9% |
+> | single-session-assistant | 56 | 100.0% (56/56) | 82.1% (46/56) | 100.0% (56/56) | 100.0% (56/56) | 100.0% (56/56) | 100.0% |
+> | single-session-preference | 30 | 96.7% (29/30) | 80.0% (24/30) | 96.7% (29/30) | 100.0% (30/30) | 100.0% (30/30) | 93.3% |
+> | single-session-user | 64 | 98.4% (63/64) | 78.1% (50/64) | 98.4% (63/64) | 100.0% (64/64) | 100.0% (64/64) | 96.9% |
+> | temporal-reasoning | 127 | 84.3% (107/127) | 40.2% (51/127) | 85.0% (108/127) | 89.8% (114/127) | 90.6% (115/127) | 69.3% |
+> | **all types** | **470** | **93.19% (438/470)** | **54.89% (258/470)** | **93.40% (439/470)** | **95.32% (448/470)** | **95.53% (449/470)** | **83.40%** |
+>
+> ![Per-type recall_all@5, five arms, v0.48.2.0](2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0.per-type.svg)
+>
+> Temporal-reasoning is still the weakest type and the next target: 84.3%
+> with the reranker off, 89.8% on the release default path. The reranker's
+> net +10 lands as +7 on temporal-reasoning (107 to 114 of 127) and +1 each
+> on knowledge-update, single-session-preference and single-session-user,
+> which all reach 100%. Multi-session stays at 92.6% (112/121) in every arm
+> except expansion, so the nine multi-session misses are not something the
+> reranker or the over-fetch reaches at k=5. The ceiling at k=5 on this
+> dataset is 99.4% (467/470): 3 questions carry 6 gold sessions and cannot
+> fit in a top-5 list. Pure vector on the same corpus scored 93.8% on the
+> v0.48.0.0 receipt, so the hybrid layer is roughly neutral on this
+> benchmark and earns its keep elsewhere.
 >
 > **The regression story, kept public.**
 >
@@ -62,7 +109,8 @@
 >   infrastructure error and the aggregator excludes it from the
 >   denominator). Committed as the pre-fix bracket below.
 > - v0.48.0.0 (2026-09-01, gbrain PR #4787): the fix, 93.19%.
-> - v0.48.2.0 (2026-09-02, this run): 93.19%, identical per type.
+> - v0.48.2.0 (2026-09-02, this run): 93.19% with the reranker off,
+>   identical per type; 95.32% with the default `voyage:rerank-2.5` on.
 >
 > **What moved mechanically.** The gain from 51.39% to 93.19% comes from one
 > change in the fusion step of hybrid search, shipped in v0.48.0.0, not from
@@ -83,11 +131,13 @@
 > accuracy distinctions that decide whether any two LongMemEval numbers can
 > sit side by side live in
 > [`docs/comparison-systems.md`](../comparison-systems.md). On the strict
-> metric on this dataset we found no published score above 93.19%, with
+> metric on this dataset we found no published score above 93.19% (the
+> reranker-off row; the release default path scores 95.32%), with
 > stated caveats: the field is thin, and the two closest strict comparisons
 > are our own recomputations of MemPalace's committed per-question rankings
 > (85.7% raw, 88.7% on its tuned held-out subset, 90.0% with an LLM
-> reranking the top 20); ContextFit's self-reported 87.45% All@5 is loosely
+> reranking the top 20, the row that sits beside gbrain's 95.32%
+> reranker-on arm); ContextFit's self-reported 87.45% All@5 is loosely
 > comparable (its rerank layer reads gold labels). MemPalace's published
 > 96.6% / 98.4% and ContextFit's 98.94% are any-hit figures that sit next to
 > gbrain's 98.72% any-hit, not next to 93.19%.
@@ -110,15 +160,69 @@
 >   above
 >   (sha256 `7eea95862e455928bbc9f1c14705b2f9bcd3a26285605bb7ed75ddf076b6dc7f`,
 >   461,647 bytes).
+> - [`rerun-2026-09-02-v0.48.2.0-hybrid+expansion.ndjson`](2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0-hybrid+expansion.ndjson):
+>   500 per-question rows for the expansion arm, 30 abstention rows
+>   included, 0 error rows
+>   (sha256 `c9194e9848d6d0498a32bd8babc51c78c2c0818211648ca107069e236a624f0a`,
+>   247,380 bytes), and its aggregator receipt
+>   [`rerun-2026-09-02-v0.48.2.0-hybrid+expansion.json`](2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0-hybrid+expansion.json)
+>   (sha256 `489079b2aa962263157d7476c2a2c14402789c65d8d11d46e1e32c9de1f59184`,
+>   2,547 bytes).
+> - [`rerun-2026-09-02-v0.48.2.0-hybrid-sessdiv.ndjson`](2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0-hybrid-sessdiv.ndjson):
+>   500 rows for the session-diversity arm, 0 error rows
+>   (sha256 `ba62721d6741bea52d0fa9be7d893e7c0133d4e82a7d182b816711f36abd42ab`,
+>   282,753 bytes), and its aggregator receipt
+>   [`rerun-2026-09-02-v0.48.2.0-hybrid-sessdiv.json`](2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0-hybrid-sessdiv.json)
+>   (sha256 `80d6bc7da40fb185ac83cf5d456bbf0618c4125d2c779db42ce585a2bd1813a9`,
+>   2,518 bytes).
+> - [`rerun-2026-09-02-v0.48.2.0-hybrid+rerank.ndjson`](2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0-hybrid+rerank.ndjson):
+>   500 rows for the release default path (`voyage:rerank-2.5` on), 0 error
+>   rows
+>   (sha256 `3b2f7a60d6550a5650d5ad18310203376218811371b58f8771b3ce3526e7e7a7`,
+>   243,725 bytes), and its aggregator receipt
+>   [`rerun-2026-09-02-v0.48.2.0-hybrid+rerank.json`](2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0-hybrid+rerank.json)
+>   (sha256 `7a2220b65bd1b642462e150d8b68f35350a5c564fc2bac992de7f18452ad0507`,
+>   2,644 bytes).
+> - [`rerun-2026-09-02-v0.48.2.0-hybrid-sessdiv+rerank.ndjson`](2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0-hybrid-sessdiv+rerank.ndjson):
+>   500 rows for the reranked session-diversity arm, 0 error rows
+>   (sha256 `2d0b9d132a0fc53099a48144ef44c94a073cad7c9897e66113f7210990eb7155`,
+>   286,623 bytes), and its aggregator receipt
+>   [`rerun-2026-09-02-v0.48.2.0-hybrid-sessdiv+rerank.json`](2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0-hybrid-sessdiv+rerank.json)
+>   (sha256 `cd70679a80445bc2da74f51e7ea0a984c6410816ec625ba4f22b26b170303a4a`,
+>   2,479 bytes).
+> - [`rerun-2026-09-02-v0.48.2.0-all-arms.json`](2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0-all-arms.json):
+>   the five arms aggregated in one receipt, summaries in table order, the
+>   input to the two charts
+>   (sha256 `32d543aa37a2028cb2b5943d673e2c1e57603e2d9dd4d5f17b7db63caba8e473`,
+>   11,703 bytes).
+> - [`rerun-2026-09-02-v0.48.2.0.headline.svg`](2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0.headline.svg)
+>   (sha256 `9e685061f3f5a5fda1c81c052eb2773ab8b549fc3b366401e58eafb102c2eccd`,
+>   6,267 bytes) and
+>   [`rerun-2026-09-02-v0.48.2.0.per-type.svg`](2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0.per-type.svg)
+>   (sha256 `ce84fcf11f692e4995c228ba876a950f96aa50f3bc3d7402dbdd2a20c25591a6`,
+>   11,823 bytes): the two charts inlined above, regenerated 2026-09-02 from
+>   the all-arms receipt.
 > - Manifest entries: `longmemeval-rerun-v0.48.2.0-hybrid`,
->   `longmemeval-rerun-v0.48.2.0-hybrid-rows`, and
+>   `longmemeval-rerun-v0.48.2.0-hybrid-rows`,
+>   `longmemeval-rerun-v0.48.2.0-hybrid+expansion` (+ `-rows`),
+>   `longmemeval-rerun-v0.48.2.0-hybrid-sessdiv` (+ `-rows`),
+>   `longmemeval-rerun-v0.48.2.0-hybrid+rerank` (+ `-rows`),
+>   `longmemeval-rerun-v0.48.2.0-hybrid-sessdiv+rerank` (+ `-rows`),
+>   `longmemeval-rerun-v0.48.2.0-all-arms`,
+>   `longmemeval-rerun-v0.48.2.0-chart-headline`,
+>   `longmemeval-rerun-v0.48.2.0-chart-per-type`, and
 >   `longmemeval-prefix-bracket-v0.47.8.0` in
 >   [`docs/receipts-manifest.json`](../receipts-manifest.json).
 >
-> Re-derive every number in the table above keyless, without the dataset:
+> Re-derive every number in the tables above keyless, without the dataset
+> (one aggregator call per arm):
 >
 > ```sh
-> bun eval/runner/longmemeval-aggregate.ts docs/benchmarks/2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0-hybrid.ndjson --top-k 5 --dataset s --output /tmp/rederive-v0.48.2.0
+> bun eval/runner/longmemeval-aggregate.ts docs/benchmarks/2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0-hybrid.ndjson --top-k 5 --dataset s --output /tmp/rederive-v0.48.2.0-hybrid
+> bun eval/runner/longmemeval-aggregate.ts docs/benchmarks/2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0-hybrid+expansion.ndjson --top-k 5 --dataset s --output /tmp/rederive-v0.48.2.0-hybrid+expansion
+> bun eval/runner/longmemeval-aggregate.ts docs/benchmarks/2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0-hybrid-sessdiv.ndjson --top-k 5 --dataset s --output /tmp/rederive-v0.48.2.0-hybrid-sessdiv
+> bun eval/runner/longmemeval-aggregate.ts docs/benchmarks/2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0-hybrid+rerank.ndjson --top-k 5 --dataset s --output /tmp/rederive-v0.48.2.0-hybrid+rerank
+> bun eval/runner/longmemeval-aggregate.ts docs/benchmarks/2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0-hybrid-sessdiv+rerank.ndjson --top-k 5 --dataset s --output /tmp/rederive-v0.48.2.0-hybrid-sessdiv+rerank
 > bun eval/runner/longmemeval-aggregate.ts docs/benchmarks/2026-05-07-longmemeval-s/prefix-bracket-2a56b512-v0.47.8.0.ndjson --top-k 5 --dataset s --output /tmp/rederive-prefix
 > ```
 >

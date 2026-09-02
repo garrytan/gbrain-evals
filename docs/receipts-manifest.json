@@ -32,7 +32,7 @@
     },
     {
       "claim_id": "longmemeval-rerun-v0.48.2.0-hybrid",
-      "readme_anchor": "93.19% official `recall_all@5` (438/470; 2026-09-02 re-run at gbrain v0.48.2.0, hybrid, k=5, reranker off) in the LongMemEval head-to-head row + numbers-by-report table",
+      "readme_anchor": "93.19% official `recall_all@5` reranker off (438/470; 2026-09-02 re-run at gbrain v0.48.2.0, hybrid, k=5, the like-for-like row) in the LongMemEval head-to-head row + numbers-by-report table",
       "artifact_path": "docs/benchmarks/2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0-hybrid.json",
       "artifact_sha256": "33ebd15c66527c065634f67b2a88b4c90cda8abd39b45c7e4edec871eb849e54",
       "expected": {
@@ -49,7 +49,7 @@
         "/summaries/0/recall_by_type/multi-session/recall_all": 0.9256198347107438
       },
       "status": "covered",
-      "note": "Aggregator receipt for the 2026-09-02 single run at gbrain v0.48.2.0 (pin 172df271, longmemeval_s cleaned Sept-2025 revision, k=5, search mode balanced with reranker and autocut off, embedder openai:text-embedding-3-large@1536). Reproduces the v0.48.0.0 receipt (gbrain PR #4787) digit for digit. Re-derivable keyless from the committed rows with eval/runner/longmemeval-aggregate.ts. The expansion, sessdiv and reranker-on arms are pending and carry no manifest entry until their receipts exist."
+      "note": "Aggregator receipt for the 2026-09-02 single run at gbrain v0.48.2.0 (pin 172df271, longmemeval_s cleaned Sept-2025 revision, k=5, search mode balanced with reranker and autocut off, embedder openai:text-embedding-3-large@1536). Reproduces the v0.48.0.0 receipt (gbrain PR #4787) digit for digit. Re-derivable keyless from the committed rows with eval/runner/longmemeval-aggregate.ts. This is the like-for-like row against the May 2026 and v0.48.0.0 receipts; the release default path (voyage:rerank-2.5 on) is the longmemeval-rerun-v0.48.2.0-hybrid+rerank entry, and the other arms carry their own entries."
     },
     {
       "claim_id": "longmemeval-rerun-v0.48.2.0-hybrid-rows",
@@ -66,6 +66,165 @@
       "artifact_sha256": "7eea95862e455928bbc9f1c14705b2f9bcd3a26285605bb7ed75ddf076b6dc7f",
       "status": "covered",
       "note": "Pre-fix bracket rows measured 2026-09-02 at the previous evals pin 2a56b512 (gbrain v0.47.8.0), same dataset revision, k=5, same embedder: 500 gbrain-hybrid rows (recall_all@5 51.39% = 241/469; one row is an infrastructure error the aggregator excludes from the denominator), 500 gbrain-hybrid+expansion rows, and 8 gbrain-hybrid-sessdiv rows from an incomplete pass that are not scored. Only the hybrid arm is quoted in the README and report; re-derive with eval/runner/longmemeval-aggregate.ts."
+    },
+    {
+      "claim_id": "longmemeval-rerun-v0.48.2.0-hybrid+expansion",
+      "readme_anchor": "54.89% for hybrid+expansion (tokenmax's LLM multi-query expansion), harmful at k=5",
+      "artifact_path": "docs/benchmarks/2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0-hybrid+expansion.json",
+      "artifact_sha256": "489079b2aa962263157d7476c2a2c14402789c65d8d11d46e1e32c9de1f59184",
+      "expected": {
+        "/resolved/gbrain_version": "0.48.2.0",
+        "/opts/topK": 5,
+        "/summaries/0/adapter": "gbrain-hybrid+expansion",
+        "/summaries/0/recall_all_at_k": 0.548936170212766,
+        "/summaries/0/recall_any_at_k": 0.8659574468085106,
+        "/summaries/0/total": 470,
+        "/summaries/0/n_abs": 30,
+        "/summaries/0/n_errors_sut": 0,
+        "/summaries/0/n_errors_infra": 0,
+        "/summaries/0/recall_by_type/temporal-reasoning/recall_all": 0.4015748031496063,
+        "/summaries/0/recall_by_type/multi-session/recall_all": 0.34710743801652894
+      },
+      "status": "covered",
+      "note": "Aggregator receipt for the gbrain-hybrid+expansion arm of the 2026-09-02 single run at gbrain v0.48.2.0 (pin 172df271, longmemeval_s cleaned Sept-2025 revision, 500 questions, 470 scored, k=5, search mode balanced pinned, autocut off, embedder openai:text-embedding-3-large@1536), reranker off. recall_all@5 54.89% (258/470), recall_any@5 86.60%; paired against gbrain-hybrid it gains 3 questions and loses 183. Same arm measured 49.6% on the v0.48.0.0 receipt (gbrain PR #4787). Re-derivable keyless from the committed rows with eval/runner/longmemeval-aggregate.ts."
+    },
+    {
+      "claim_id": "longmemeval-rerun-v0.48.2.0-hybrid+expansion-rows",
+      "readme_anchor": "2026-09-02 re-run at gbrain v0.48.2.0 (per-question rows behind the gbrain-hybrid+expansion receipt)",
+      "artifact_path": "docs/benchmarks/2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0-hybrid+expansion.ndjson",
+      "artifact_sha256": "c9194e9848d6d0498a32bd8babc51c78c2c0818211648ca107069e236a624f0a",
+      "status": "covered",
+      "note": "The per-question NDJSON stream for the v0.48.2.0 gbrain-hybrid+expansion arm: 500 rows (one per question, 30 abstention rows included, 0 error rows, no resume duplicates). Integrity-checkable with eval/runner/longmemeval-validate-ndjson.ts against the cleaned dataset; the aggregator re-derives the receipt above from these rows alone."
+    },
+    {
+      "claim_id": "longmemeval-rerun-v0.48.2.0-hybrid-sessdiv",
+      "readme_anchor": "session-diversity over-fetch 93.40% (adds one question over hybrid; slot starvation is not the miss class)",
+      "artifact_path": "docs/benchmarks/2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0-hybrid-sessdiv.json",
+      "artifact_sha256": "80d6bc7da40fb185ac83cf5d456bbf0618c4125d2c779db42ce585a2bd1813a9",
+      "expected": {
+        "/resolved/gbrain_version": "0.48.2.0",
+        "/opts/topK": 5,
+        "/summaries/0/adapter": "gbrain-hybrid-sessdiv",
+        "/summaries/0/recall_all_at_k": 0.9340425531914893,
+        "/summaries/0/recall_any_at_k": 0.9872340425531915,
+        "/summaries/0/total": 470,
+        "/summaries/0/n_abs": 30,
+        "/summaries/0/n_errors_sut": 0,
+        "/summaries/0/n_errors_infra": 0,
+        "/summaries/0/recall_by_type/temporal-reasoning/recall_all": 0.8503937007874016,
+        "/summaries/0/recall_by_type/multi-session/recall_all": 0.9256198347107438
+      },
+      "status": "covered",
+      "note": "Aggregator receipt for the gbrain-hybrid-sessdiv arm (3x over-fetch, top-5 distinct sessions) of the 2026-09-02 single run at gbrain v0.48.2.0 (pin 172df271, longmemeval_s cleaned Sept-2025 revision, 500 questions, 470 scored, k=5, search mode balanced pinned, autocut off, embedder openai:text-embedding-3-large@1536), reranker off. recall_all@5 93.40% (439/470); paired against gbrain-hybrid it gains 1 question and loses 0. First measurement of the pre-registered session-diversity row. Re-derivable keyless with eval/runner/longmemeval-aggregate.ts."
+    },
+    {
+      "claim_id": "longmemeval-rerun-v0.48.2.0-hybrid-sessdiv-rows",
+      "readme_anchor": "2026-09-02 re-run at gbrain v0.48.2.0 (per-question rows behind the gbrain-hybrid-sessdiv receipt)",
+      "artifact_path": "docs/benchmarks/2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0-hybrid-sessdiv.ndjson",
+      "artifact_sha256": "ba62721d6741bea52d0fa9be7d893e7c0133d4e82a7d182b816711f36abd42ab",
+      "status": "covered",
+      "note": "The per-question NDJSON stream for the v0.48.2.0 gbrain-hybrid-sessdiv arm: 500 rows (one per question, 30 abstention rows included, 0 error rows, no resume duplicates). Integrity-checkable with eval/runner/longmemeval-validate-ndjson.ts against the cleaned dataset; the aggregator re-derives the receipt above from these rows alone."
+    },
+    {
+      "claim_id": "longmemeval-rerun-v0.48.2.0-hybrid+rerank",
+      "readme_anchor": "95.32% with the default Voyage reranker (448/470; voyage:rerank-2.5, the release default path) in the LongMemEval head-to-head row + numbers-by-report table",
+      "artifact_path": "docs/benchmarks/2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0-hybrid+rerank.json",
+      "artifact_sha256": "7a2220b65bd1b642462e150d8b68f35350a5c564fc2bac992de7f18452ad0507",
+      "expected": {
+        "/resolved/gbrain_version": "0.48.2.0",
+        "/opts/topK": 5,
+        "/summaries/0/adapter": "gbrain-hybrid+rerank",
+        "/summaries/0/recall_all_at_k": 0.9531914893617022,
+        "/summaries/0/recall_any_at_k": 0.997872340425532,
+        "/summaries/0/total": 470,
+        "/summaries/0/n_abs": 30,
+        "/summaries/0/n_errors_sut": 0,
+        "/summaries/0/n_errors_infra": 0,
+        "/summaries/0/recall_by_type/temporal-reasoning/recall_all": 0.8976377952755905,
+        "/summaries/0/recall_by_type/multi-session/recall_all": 0.9256198347107438
+      },
+      "status": "covered",
+      "note": "Aggregator receipt for the gbrain-hybrid+rerank arm of the 2026-09-02 single run at gbrain v0.48.2.0 (pin 172df271, longmemeval_s cleaned Sept-2025 revision, 500 questions, 470 scored, k=5, search mode balanced pinned, autocut off, embedder openai:text-embedding-3-large@1536), reranker voyage:rerank-2.5 ON (the v0.48.2.0 default; balanced and tokenmax modes run it, so this is the release default path). recall_all@5 95.32% (448/470), recall_any@5 99.79%; paired against gbrain-hybrid it gains 18 questions and loses 8. Re-derivable keyless with eval/runner/longmemeval-aggregate.ts."
+    },
+    {
+      "claim_id": "longmemeval-rerun-v0.48.2.0-hybrid+rerank-rows",
+      "readme_anchor": "2026-09-02 re-run at gbrain v0.48.2.0 (per-question rows behind the gbrain-hybrid+rerank receipt)",
+      "artifact_path": "docs/benchmarks/2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0-hybrid+rerank.ndjson",
+      "artifact_sha256": "3b2f7a60d6550a5650d5ad18310203376218811371b58f8771b3ce3526e7e7a7",
+      "status": "covered",
+      "note": "The per-question NDJSON stream for the v0.48.2.0 gbrain-hybrid+rerank arm: 500 rows (one per question, 30 abstention rows included, 0 error rows, no resume duplicates). Integrity-checkable with eval/runner/longmemeval-validate-ndjson.ts against the cleaned dataset; the aggregator re-derives the receipt above from these rows alone."
+    },
+    {
+      "claim_id": "longmemeval-rerun-v0.48.2.0-hybrid-sessdiv+rerank",
+      "readme_anchor": "hybrid-sessdiv+rerank 95.53% (release default reranker plus session-diversity over-fetch)",
+      "artifact_path": "docs/benchmarks/2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0-hybrid-sessdiv+rerank.json",
+      "artifact_sha256": "cd70679a80445bc2da74f51e7ea0a984c6410816ec625ba4f22b26b170303a4a",
+      "expected": {
+        "/resolved/gbrain_version": "0.48.2.0",
+        "/opts/topK": 5,
+        "/summaries/0/adapter": "gbrain-hybrid-sessdiv+rerank",
+        "/summaries/0/recall_all_at_k": 0.9553191489361702,
+        "/summaries/0/recall_any_at_k": 0.997872340425532,
+        "/summaries/0/total": 470,
+        "/summaries/0/n_abs": 30,
+        "/summaries/0/n_errors_sut": 0,
+        "/summaries/0/n_errors_infra": 0,
+        "/summaries/0/recall_by_type/temporal-reasoning/recall_all": 0.905511811023622,
+        "/summaries/0/recall_by_type/multi-session/recall_all": 0.9256198347107438
+      },
+      "status": "covered",
+      "note": "Aggregator receipt for the gbrain-hybrid-sessdiv+rerank arm of the 2026-09-02 single run at gbrain v0.48.2.0 (pin 172df271, longmemeval_s cleaned Sept-2025 revision, 500 questions, 470 scored, k=5, search mode balanced pinned, autocut off, embedder openai:text-embedding-3-large@1536), reranker voyage:rerank-2.5 ON. recall_all@5 95.53% (449/470), recall_any@5 99.79%; paired against gbrain-hybrid it gains 19 questions and loses 8 (one question over hybrid+rerank). Re-derivable keyless with eval/runner/longmemeval-aggregate.ts."
+    },
+    {
+      "claim_id": "longmemeval-rerun-v0.48.2.0-hybrid-sessdiv+rerank-rows",
+      "readme_anchor": "2026-09-02 re-run at gbrain v0.48.2.0 (per-question rows behind the gbrain-hybrid-sessdiv+rerank receipt)",
+      "artifact_path": "docs/benchmarks/2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0-hybrid-sessdiv+rerank.ndjson",
+      "artifact_sha256": "2d0b9d132a0fc53099a48144ef44c94a073cad7c9897e66113f7210990eb7155",
+      "status": "covered",
+      "note": "The per-question NDJSON stream for the v0.48.2.0 gbrain-hybrid-sessdiv+rerank arm: 500 rows (one per question, 30 abstention rows included, 0 error rows, no resume duplicates). Integrity-checkable with eval/runner/longmemeval-validate-ndjson.ts against the cleaned dataset; the aggregator re-derives the receipt above from these rows alone."
+    },
+    {
+      "claim_id": "longmemeval-rerun-v0.48.2.0-all-arms",
+      "readme_anchor": "the five-arm table in the 2026-09-02 update block of docs/benchmarks/2026-05-07-longmemeval-s.md (93.19% reranker off / 95.32% with the default Voyage reranker)",
+      "artifact_path": "docs/benchmarks/2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0-all-arms.json",
+      "artifact_sha256": "32d543aa37a2028cb2b5943d673e2c1e57603e2d9dd4d5f17b7db63caba8e473",
+      "expected": {
+        "/resolved/gbrain_version": "0.48.2.0",
+        "/opts/topK": 5,
+        "/summaries/0/adapter": "gbrain-hybrid",
+        "/summaries/0/recall_all_at_k": 0.9319148936170213,
+        "/summaries/0/total": 470,
+        "/summaries/1/adapter": "gbrain-hybrid+expansion",
+        "/summaries/1/recall_all_at_k": 0.548936170212766,
+        "/summaries/1/total": 470,
+        "/summaries/2/adapter": "gbrain-hybrid-sessdiv",
+        "/summaries/2/recall_all_at_k": 0.9340425531914893,
+        "/summaries/2/total": 470,
+        "/summaries/3/adapter": "gbrain-hybrid+rerank",
+        "/summaries/3/recall_all_at_k": 0.9531914893617022,
+        "/summaries/3/total": 470,
+        "/summaries/4/adapter": "gbrain-hybrid-sessdiv+rerank",
+        "/summaries/4/recall_all_at_k": 0.9553191489361702,
+        "/summaries/4/total": 470
+      },
+      "status": "covered",
+      "note": "Aggregator receipt over the five arms of the 2026-09-02 single run at gbrain v0.48.2.0 (pin 172df271, longmemeval_s cleaned Sept-2025 revision, 500 questions, 470 scored, k=5, search mode balanced pinned, autocut off, embedder openai:text-embedding-3-large@1536) together (summaries in table order: hybrid, hybrid+expansion, hybrid-sessdiv, hybrid+rerank, hybrid-sessdiv+rerank). Each per-arm value equals the matching single-arm receipt digit for digit; this file is the input to the two committed charts. Re-derivable keyless by concatenating the five committed NDJSON streams and running eval/runner/longmemeval-aggregate.ts."
+    },
+    {
+      "claim_id": "longmemeval-rerun-v0.48.2.0-chart-headline",
+      "readme_anchor": "the headline chart inlined in the 2026-09-02 update block of docs/benchmarks/2026-05-07-longmemeval-s.md",
+      "artifact_path": "docs/benchmarks/2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0.headline.svg",
+      "artifact_sha256": "9e685061f3f5a5fda1c81c052eb2773ab8b549fc3b366401e58eafb102c2eccd",
+      "status": "covered",
+      "note": "Committed chart (headline recall_all@5 bars, five arms) regenerated 2026-09-02 from the all-arms aggregator receipt for the 2026-09-02 single run at gbrain v0.48.2.0 (pin 172df271, longmemeval_s cleaned Sept-2025 revision, 500 questions, 470 scored, k=5, search mode balanced pinned, autocut off, embedder openai:text-embedding-3-large@1536). A rendering of the receipt, not a source of numbers: every value it shows is checked through the JSON receipts above."
+    },
+    {
+      "claim_id": "longmemeval-rerun-v0.48.2.0-chart-per-type",
+      "readme_anchor": "the per-type chart inlined in the 2026-09-02 update block of docs/benchmarks/2026-05-07-longmemeval-s.md",
+      "artifact_path": "docs/benchmarks/2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0.per-type.svg",
+      "artifact_sha256": "ce84fcf11f692e4995c228ba876a950f96aa50f3bc3d7402dbdd2a20c25591a6",
+      "status": "covered",
+      "note": "Committed chart (per-question-type recall_all@5, five arms) regenerated 2026-09-02 from the all-arms aggregator receipt for the 2026-09-02 single run at gbrain v0.48.2.0 (pin 172df271, longmemeval_s cleaned Sept-2025 revision, 500 questions, 470 scored, k=5, search mode balanced pinned, autocut off, embedder openai:text-embedding-3-large@1536). A rendering of the receipt, not a source of numbers: every value it shows is checked through the JSON receipts above."
     },
     {
       "claim_id": "cat35-wave-receipt",
