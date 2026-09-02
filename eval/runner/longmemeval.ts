@@ -429,9 +429,17 @@ export const ADAPTER_SPECS: Readonly<Record<string, AdapterSpec>> = Object.freez
  * is what lands per adapter in the receipt (search_config_by_adapter) and in
  * the run_config_hash preimage.
  */
+/**
+ * The cross-encoder reranker pinned for rerank specs. gbrain's mode-bundle
+ * default since v0.48.2.0 (Voyage rerank-2.5, same VOYAGE_API_KEY as the
+ * embedding default); pinned here so the receipt names the model and the
+ * fail-closed preflight (rerankPreflight) checks the matching key.
+ */
+export const RERANK_MODEL_PIN = 'voyage:rerank-2.5';
+
 export function resolvedSearchConfig(spec?: Pick<AdapterSpec, 'rerank'>): Record<string, string> {
   return spec?.rerank
-    ? { ...PINNED_SEARCH_CONFIG, 'search.reranker.enabled': 'true' }
+    ? { ...PINNED_SEARCH_CONFIG, 'search.reranker.enabled': 'true', 'search.reranker.model': RERANK_MODEL_PIN }
     : { ...PINNED_SEARCH_CONFIG };
 }
 
@@ -446,11 +454,11 @@ export async function pinSearchConfig(engine: PGLiteEngine, spec?: Pick<AdapterS
 /**
  * Reranker provider → env key. FALLBACK MAP: gbrain resolves the reranker
  * model as per-call override ?? `search.reranker.model` DB config ?? the
- * mode bundle's default (LEGACY_DEFAULT_RERANKER_MODEL =
- * 'zeroentropyai:zerank-2'). This runner never sets `search.reranker.model`,
- * and gbrain's file-plane loadConfig() carries no reranker model field, so
- * unless a future gbrain exposes one, the zerank default applies and the
- * provider prefix picks the env key here. Entries mirror the
+ * mode bundle's default. Since gbrain v0.48.2.0 that default is
+ * `voyage:rerank-2.5` (the ZeroEntropy hosted API ends 2026-09-04); this
+ * runner PINS the same model explicitly for rerank specs
+ * (RERANK_MODEL_PIN, recorded in the receipt) so the preflight and the
+ * engine cannot disagree about which provider's key is required. Entries mirror the
  * auth_env.required of gbrain's reranker-capable recipes
  * (src/core/ai/recipes/{zeroentropyai,voyage,dashscope-rerank,openrouter}.ts).
  */
@@ -477,15 +485,15 @@ export interface RerankPreflight {
  * llama-server reranker) also fail closed — extend the map when they matter.
  */
 export function rerankPreflight(env: Record<string, string | undefined> = process.env): RerankPreflight {
-  // Best-effort read of gbrain's file-plane config in case a future version
-  // exposes a reranker model there; today it does not, so the documented
-  // fallback (zerank via ZEROENTROPY_API_KEY) is the effective path.
-  let model = 'zeroentropyai:zerank-2';
+  // The runner pins the reranker model for rerank specs (RERANK_MODEL_PIN);
+  // a file-plane `reranker_model` override, if a gbrain version exposes one,
+  // wins so the preflight follows whatever the engine will actually call.
+  let model: string = RERANK_MODEL_PIN;
   try {
     const cfg = loadConfig() as Record<string, unknown> | null;
     const m = cfg?.['reranker_model'];
     if (typeof m === 'string' && m.includes(':')) model = m;
-  } catch { /* no config file → documented default */ }
+  } catch { /* no config file → pinned default */ }
   const provider = model.slice(0, model.indexOf(':'));
   const envKey = RERANKER_PROVIDER_ENV_KEY[provider] ?? null;
   return { model, provider, envKey, keyPresent: envKey !== null && Boolean(env[envKey]) };

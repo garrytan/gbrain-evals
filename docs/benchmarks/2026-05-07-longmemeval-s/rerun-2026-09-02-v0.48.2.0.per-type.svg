@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 360" width="880" height="360">
+  <rect width="880" height="360" fill="#0a0a0a" />
+  <text x="200" y="20" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13" fill="#e5e7eb">recall_all@5 by question_type — LongMemEval _s, n=470</text>
+  <line x1="328" y1="32" x2="328" y2="300" stroke="#262626" stroke-width="1" />
+  <text x="328" y="318" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,monospace" font-size="10" fill="#9ca3af">20%</text>
+  <line x1="456" y1="32" x2="456" y2="300" stroke="#262626" stroke-width="1" />
+  <text x="456" y="318" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,monospace" font-size="10" fill="#9ca3af">40%</text>
+  <line x1="584" y1="32" x2="584" y2="300" stroke="#262626" stroke-width="1" />
+  <text x="584" y="318" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,monospace" font-size="10" fill="#9ca3af">60%</text>
+  <line x1="712" y1="32" x2="712" y2="300" stroke="#262626" stroke-width="1" />
+  <text x="712" y="318" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,monospace" font-size="10" fill="#9ca3af">80%</text>
+  <line x1="840" y1="32" x2="840" y2="300" stroke="#262626" stroke-width="1" />
+  <text x="840" y="318" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,monospace" font-size="10" fill="#9ca3af">100%</text>
+  <text x="188" y="62.33333333333333" text-anchor="end" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13" fill="#e5e7eb">single-session-assistant</text>
+  <rect x="200" y="36" width="640" height="7.333333333333333" fill="#16a34a" />
+  <text x="834" y="43.666666666666664" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="11" font-weight="600" fill="#000">100.0%</text>
+  <rect x="200" y="45.33333333333333" width="525.7142857142857" height="7.333333333333333" fill="#16a34a" />
+  <text x="719.7142857142857" y="52.99999999999999" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="11" font-weight="600" fill="#000">82.1%</text>
+  <rect x="200" y="54.666666666666664" width="640" height="7.333333333333333" fill="#16a34a" />
+  <text x="834" y="62.33333333333333" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="11" font-weight="600" fill="#000">100.0%</text>
+  <rect x="200" y="64" width="640" height="7.333333333333333" fill="#16a34a" />
+  <text x="834" y="71.66666666666667" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="11" font-weight="600" fill="#000">100.0%</text>
+  <rect x="200" y="73.33333333333333" width="640" height="7.333333333333333" fill="#16a34a" />
+  <text x="834" y="81" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="11" font-weight="600" fill="#000">100.0%</text>
+  <text x="188" y="106.99999999999999" text-anchor="end" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13" fill="#e5e7eb">knowledge-update</text>
+  <rect x="200" y="80.66666666666666" width="631.1111111111111" height="7.333333333333333" fill="#16a34a" />
+  <text x="825.1111111111111" y="88.33333333333333" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="11" font-weight="600" fill="#000">98.6%</text>
+  <rect x="200" y="89.99999999999999" width="400" height="7.333333333333333" fill="#16a34a" />
+  <text x="594" y="97.66666666666666" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="11" font-weight="600" fill="#000">62.5%</text>
+  <rect x="200" y="99.33333333333331" width="631.1111111111111" height="7.333333333333333" fill="#16a34a" />
+  <text x="825.1111111111111" y="106.99999999999999" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="11" font-weight="600" fill="#000">98.6%</text>
+  <rect x="200" y="108.66666666666666" width="640" height="7.333333333333333" fill="#16a34a" />
+  <text x="834" y="116.33333333333333" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="11" font-weight="600" fill="#000">100.0%</text>
+  <rect x="200" y="117.99999999999999" width="640" height="7.333333333333333" fill="#16a34a" />
+  <text x="834" y="125.66666666666666" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="11" font-weight="600" fill="#000">100.0%</text>
+  <text x="188" y="151.66666666666666" text-anchor="end" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13" fill="#e5e7eb">single-session-user</text>
+  <rect x="200" y="125.33333333333333" width="630" height="7.333333333333333" fill="#16a34a" />
+  <text x="824" y="133" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="11" font-weight="600" fill="#000">98.4%</text>
+  <rect x="200" y="134.66666666666666" width="500" height="7.333333333333333" fill="#16a34a" />
+  <text x="694" y="142.33333333333331" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="11" font-weight="600" fill="#000">78.1%</text>
+  <rect x="200" y="144" width="630" height="7.333333333333333" fill="#16a34a" />
+  <text x="824" y="151.66666666666666" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="11" font-weight="600" fill="#000">98.4%</text>
+  <rect x="200" y="153.33333333333331" width="640" height="7.333333333333333" fill="#16a34a" />
+  <text x="834" y="160.99999999999997" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="11" font-weight="600" fill="#000">100.0%</text>
+  <rect x="200" y="162.66666666666666" width="640" height="7.333333333333333" fill="#16a34a" />
+  <text x="834" y="170.33333333333331" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="11" font-weight="600" fill="#000">100.0%</text>
+  <text x="188" y="196.33333333333334" text-anchor="end" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13" fill="#e5e7eb">single-session-preference</text>
+  <rect x="200" y="170" width="618.6666666666666" height="7.333333333333333" fill="#16a34a" />
+  <text x="812.6666666666666" y="177.66666666666666" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="11" font-weight="600" fill="#000">96.7%</text>
+  <rect x="200" y="179.33333333333334" width="512" height="7.333333333333333" fill="#16a34a" />
+  <text x="706" y="187" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="11" font-weight="600" fill="#000">80.0%</text>
+  <rect x="200" y="188.66666666666666" width="618.6666666666666" height="7.333333333333333" fill="#16a34a" />
+  <text x="812.6666666666666" y="196.33333333333331" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="11" font-weight="600" fill="#000">96.7%</text>
+  <rect x="200" y="198" width="640" height="7.333333333333333" fill="#16a34a" />
+  <text x="834" y="205.66666666666666" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="11" font-weight="600" fill="#000">100.0%</text>
+  <rect x="200" y="207.33333333333331" width="640" height="7.333333333333333" fill="#16a34a" />
+  <text x="834" y="214.99999999999997" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="11" font-weight="600" fill="#000">100.0%</text>
+  <text x="188" y="241" text-anchor="end" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13" fill="#e5e7eb">multi-session</text>
+  <rect x="200" y="214.66666666666666" width="592.3966942148761" height="7.333333333333333" fill="#16a34a" />
+  <text x="786.3966942148761" y="222.33333333333331" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="11" font-weight="600" fill="#000">92.6%</text>
+  <rect x="200" y="224" width="222.1487603305785" height="7.333333333333333" fill="#16a34a" />
+  <text x="416.1487603305785" y="231.66666666666666" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="11" font-weight="600" fill="#000">34.7%</text>
+  <rect x="200" y="233.33333333333331" width="592.3966942148761" height="7.333333333333333" fill="#16a34a" />
+  <text x="786.3966942148761" y="240.99999999999997" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="11" font-weight="600" fill="#000">92.6%</text>
+  <rect x="200" y="242.66666666666666" width="592.3966942148761" height="7.333333333333333" fill="#16a34a" />
+  <text x="786.3966942148761" y="250.33333333333331" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="11" font-weight="600" fill="#000">92.6%</text>
+  <rect x="200" y="252" width="592.3966942148761" height="7.333333333333333" fill="#16a34a" />
+  <text x="786.3966942148761" y="259.66666666666663" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="11" font-weight="600" fill="#000">92.6%</text>
+  <text x="188" y="285.66666666666663" text-anchor="end" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13" fill="#e5e7eb">temporal-reasoning</text>
+  <rect x="200" y="259.3333333333333" width="539.2125984251968" height="7.333333333333333" fill="#16a34a" />
+  <text x="733.2125984251968" y="267" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="11" font-weight="600" fill="#000">84.3%</text>
+  <rect x="200" y="268.66666666666663" width="257.00787401574803" height="7.333333333333333" fill="#16a34a" />
+  <text x="451.00787401574803" y="276.3333333333333" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="11" font-weight="600" fill="#000">40.2%</text>
+  <rect x="200" y="278" width="544.2519685039371" height="7.333333333333333" fill="#16a34a" />
+  <text x="738.2519685039371" y="285.6666666666667" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="11" font-weight="600" fill="#000">85.0%</text>
+  <rect x="200" y="287.3333333333333" width="574.488188976378" height="7.333333333333333" fill="#16a34a" />
+  <text x="768.488188976378" y="295" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="11" font-weight="600" fill="#000">89.8%</text>
+  <rect x="200" y="296.66666666666663" width="579.5275590551181" height="7.333333333333333" fill="#16a34a" />
+  <text x="773.5275590551181" y="304.3333333333333" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="11" font-weight="600" fill="#000">90.6%</text>
+  
+      <line x1="748.48" y1="32" x2="748.48" y2="300" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4,3" />
+      <text x="748.48" y="24" text-anchor="middle" font-family="ui-sans-serif,system-ui,sans-serif" font-size="10" fill="#f59e0b">MemPalace raw (strict, recomputed) 85.7%</text>
+    
+  <rect x="200" y="342" width="14" height="10" fill="#16a34a" />
+  <text x="220" y="352" font-family="ui-sans-serif,system-ui,sans-serif" font-size="11" fill="#e5e7eb">gbrain-hybrid (k=5, n=470)</text>
+  <rect x="420" y="342" width="14" height="10" fill="#16a34a" />
+  <text x="440" y="352" font-family="ui-sans-serif,system-ui,sans-serif" font-size="11" fill="#e5e7eb">gbrain-hybrid+expansion (k=5, n=470)</text>
+  <rect x="640" y="342" width="14" height="10" fill="#16a34a" />
+  <text x="660" y="352" font-family="ui-sans-serif,system-ui,sans-serif" font-size="11" fill="#e5e7eb">gbrain-hybrid-sessdiv (k=5, n=470)</text>
+  <rect x="860" y="342" width="14" height="10" fill="#16a34a" />
+  <text x="880" y="352" font-family="ui-sans-serif,system-ui,sans-serif" font-size="11" fill="#e5e7eb">gbrain-hybrid+rerank (k=5, n=470)</text>
+  <rect x="1080" y="342" width="14" height="10" fill="#16a34a" />
+  <text x="1100" y="352" font-family="ui-sans-serif,system-ui,sans-serif" font-size="11" fill="#e5e7eb">gbrain-hybrid-sessdiv+rerank (k=5, n=470)</text>
+</svg>

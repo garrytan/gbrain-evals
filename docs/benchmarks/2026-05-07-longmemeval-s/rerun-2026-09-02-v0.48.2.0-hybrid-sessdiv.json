@@ -1,0 +1,89 @@
+{
+  "opts": {
+    "datasetName": "s",
+    "topK": 5
+  },
+  "resolved": {
+    "gbrain_version": "0.48.2.0",
+    "gbrain_pin": "github:garrytan/gbrain#172df27131224c8afa0e6c94ea6fe6f7e776fe60",
+    "source_ndjson": "/tmp/lme-phase0-merged/rows-hybrid-sessdiv.ndjson"
+  },
+  "summaries": [
+    {
+      "adapter": "gbrain-hybrid-sessdiv",
+      "dataset": "s",
+      "topK": 5,
+      "total": 470,
+      "n_rows": 500,
+      "n_abs": 30,
+      "n_errors_sut": 0,
+      "n_errors_infra": 0,
+      "recall_all_at_k": 0.9340425531914893,
+      "recall_any_at_k": 0.9872340425531915,
+      "ndcg_any_at_k": 0.933790636192586,
+      "abs_noise_at_k": 0.36666666666666686,
+      "mean_distinct_sessions": 5,
+      "session_shortfall_rate": 0,
+      "recall_by_type": {
+        "single-session-user": {
+          "total": 64,
+          "hit_all": 63,
+          "recall_all": 0.984375,
+          "hit_any": 63,
+          "recall_any": 0.984375,
+          "mean_distinct_sessions": 5,
+          "session_shortfall_rate": 0
+        },
+        "multi-session": {
+          "total": 121,
+          "hit_all": 112,
+          "recall_all": 0.9256198347107438,
+          "hit_any": 121,
+          "recall_any": 1,
+          "mean_distinct_sessions": 5,
+          "session_shortfall_rate": 0
+        },
+        "single-session-preference": {
+          "total": 30,
+          "hit_all": 29,
+          "recall_all": 0.9666666666666667,
+          "hit_any": 29,
+          "recall_any": 0.9666666666666667,
+          "mean_distinct_sessions": 5,
+          "session_shortfall_rate": 0
+        },
+        "temporal-reasoning": {
+          "total": 127,
+          "hit_all": 108,
+          "recall_all": 0.8503937007874016,
+          "hit_any": 123,
+          "recall_any": 0.968503937007874,
+          "mean_distinct_sessions": 5,
+          "session_shortfall_rate": 0
+        },
+        "knowledge-update": {
+          "total": 72,
+          "hit_all": 71,
+          "recall_all": 0.9861111111111112,
+          "hit_any": 72,
+          "recall_any": 1,
+          "mean_distinct_sessions": 5,
+          "session_shortfall_rate": 0
+        },
+        "single-session-assistant": {
+          "total": 56,
+          "hit_all": 56,
+          "recall_all": 1,
+          "hit_any": 56,
+          "recall_any": 1,
+          "mean_distinct_sessions": 5,
+          "session_shortfall_rate": 0
+        }
+      },
+      "avg_latency_ms": 3973.622,
+      "p50_latency_ms": 3701,
+      "p99_latency_ms": 6371.44,
+      "total_seconds": 1986.811
+    }
+  ]
+}

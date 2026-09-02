@@ -4,6 +4,81 @@ All notable changes to gbrain-evals are recorded here. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versions are semver and kept
 in sync with `VERSION` + `package.json`.
 
+## [0.6.1] - 2026-09-02
+
+Re-run of the public LongMemEval-S (cleaned) split at gbrain v0.48.2.0, plus the
+runner and report changes that make the numbers honest against the new gbrain
+default reranker.
+
+### Changed
+
+- **gbrain pin → `5cfb84f1` (v0.48.2.0, PR #4792 branch head).** Re-pointed at
+  the release that moves the reranker default to Voyage `rerank-2.5`; will be
+  re-pinned to the master merge commit when that PR lands.
+- **Rerank specs pin the reranker model.** `resolvedSearchConfig` now sets
+  `search.reranker.model = voyage:rerank-2.5` (`RERANK_MODEL_PIN`) for
+  `hybrid+rerank` / `hybrid-sessdiv+rerank`, and the fail-closed
+  `rerankPreflight` derives the required env key from that pin
+  (`VOYAGE_API_KEY`), so the receipt names the model and the preflight cannot
+  disagree with the engine. Tests updated accordingly.
+- **Chart baselines are strict-metric only.** `longmemeval-chart.ts`
+  `EXTERNAL_BASELINES` replaced MemPalace's published any-hit numbers with the
+  recomputed `recall_all@5` values (85.7% raw, 90.0% with LLM rerank) and
+  ContextFit's self-reported All@5 (87.45%, leakage caveat); any-hit and
+  QA-accuracy numbers are never charted next to the headline.
+- **Report + README + comparison refresh.** New top update block in
+  `docs/benchmarks/2026-05-07-longmemeval-s.md` (hybrid 93.19% `recall_all@5`,
+  438/470, identical to the v0.48.0.0 receipt; pre-fix bracket 51.39% at pin
+  `2a56b512`), artifacts and manifest entries, and `docs/comparison-systems.md`
+  rows that separate strict recall, any-hit recall and LLM-judged answer
+  accuracy (every number source-verified 2026-09-02). All five arms landed in
+  this same report (official session-level `recall_all@5`, `longmemeval_s`
+  cleaned Sept-2025 revision, 470 scored, k=5, gbrain v0.48.2.0 `5cfb84f1`,
+  2026-09-02, single run, 0 errors): `hybrid+rerank` **95.32%** (448/470,
+  `voyage:rerank-2.5`, the release default path since `balanced` and `tokenmax`
+  run the reranker; +18 / -8 paired vs hybrid; any-hit@5 99.79%),
+  `hybrid-sessdiv+rerank` 95.53% (449/470), `hybrid` 93.19% (438/470, the
+  like-for-like row against the May 2026 83.40% and v0.48.0.0 93.19%
+  receipts), `hybrid-sessdiv` 93.40% (439/470, one question over hybrid; slot
+  starvation is not the miss class), `hybrid+expansion` 54.89% (258/470;
+  `tokenmax`'s LLM multi-query expansion is harmful at k=5, -183 / +3 paired
+  vs hybrid, consistent with the 49.6% in the v0.48.0.0 receipt). Reranker per
+  type: temporal-reasoning 84.3% to 89.8% (107 to 114 of 127), knowledge-update
+  and the three single-session types to 100%, multi-session flat at 92.6%
+  (112/121). Comparison reads updated to the two yardsticks: reranker to
+  reranker 95.32% vs MemPalace's recomputed LLM-rerank 90.0%; no-LLM 93.19% vs
+  MemPalace raw 85.7%; ContextFit 87.45% keeps its gold-label leakage caveat.
+- **Charts + manifest for the five-arm run.**
+  `docs/benchmarks/2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0.headline.svg`
+  and `rerun-2026-09-02-v0.48.2.0.per-type.svg` regenerated from the all-arms
+  aggregate (`rerun-2026-09-02-v0.48.2.0-all-arms.json`) with the strict-only
+  external baselines; per-arm `rerun-2026-09-02-v0.48.2.0-<arm>.json` +
+  `.ndjson` receipts for all five arms and the pre-fix bracket
+  `prefix-bracket-2a56b512-v0.47.8.0.ndjson` are listed in
+  `docs/receipts-manifest.json` with sha256 (byte counts in the report's
+  Receipts list).
+
+### Fixed
+
+- `package.json` version (0.5.1) reconciled with `VERSION`; both read 0.6.1.
+
+### Fixed
+
+- **Two contract tests reconciled with gbrain 0.48.x behavior changes at the
+  new pin.** `mcp-contract` traverse_graph: a remote call with no `direction`
+  now returns bidirectional `GraphPath[]` edges (gbrain #4704), so the depth-cap
+  check reads the edge shape and asserts the cap (10), the explicit depth, and
+  the depth-2 default on a real inbound edge, instead of counting legacy nodes.
+  cat15: the `prompt_version` pin now reads gbrain's
+  `PROPOSE_TAKES_PROMPT_VERSION` constant (advanced by gbrain #4736) instead of
+  a stale literal.
+
+### Known
+
+- gbrain #4736 also changed the TEXT of the propose-takes prompt that cat15
+  measures; the published cat15 F1 figures were scored against the previous
+  prompt and need a live re-baseline at v0.48.2.0 (not run here).
+
 ## [0.6.0] - 2026-09-01
 
 ### Added — receipts become machine-gated; session-level measurement lands (outside reviews #26 + #24)

@@ -14,9 +14,13 @@
  *   - Invalid input → rejected with clear error (not silent corruption)
  *   - Injection attempts → blocked (no SQL injection, no path traversal)
  *   - Depth cap bites: the seeded chain is LONGER than the traverse cap, so
- *     an uncapped traversal returns more nodes than the cap allows and the
- *     assertion fails. (Pre-fix: `pass = r.ok || …` on a 10-node ring —
- *     deleting gbrain's cap could not fail the check.)
+ *     an uncapped traversal reaches more chain nodes than the cap allows and
+ *     the assertion fails. Remote callers get GraphPath[] edges (gbrain
+ *     v0.48.1.0, #4704): the check pins that wire shape, a walk frontier
+ *     EXACTLY at the cap for depth=1000 (and at the documented depth-2
+ *     default when depth is omitted), and the direction=both default via an
+ *     edge that points INTO the start page. (Pre-fix: `pass = r.ok || …` on
+ *     a 10-node ring — deleting gbrain's cap could not fail the check.)
  *   - Trust boundary actually differential: the same op runs under BOTH
  *     ctx.remote=false and ctx.remote=true and remote must be strictly
  *     tighter (list_pages 100-row remote clamp vs local unbounded; per-call
@@ -53,6 +57,12 @@ import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
 
 /** gbrain src/core/ops/links.ts TRAVERSE_DEPTH_CAP. */
 export const TRAVERSE_DEPTH_CAP = 10;
+/**
+ * gbrain src/core/ops/links.ts REMOTE_BIDIRECTIONAL_DEFAULT_DEPTH (v0.48.1.0,
+ * #4704): a remote call that leaves BOTH direction and depth to default walks
+ * `both` at this depth; an explicit depth is honored up to TRAVERSE_DEPTH_CAP.
+ */
+export const REMOTE_BIDIRECTIONAL_DEFAULT_DEPTH = 2;
 /** gbrain src/core/ops/pages.ts remote list_pages clamp. */
 export const REMOTE_LIST_PAGES_CAP = 100;
 
@@ -62,10 +72,21 @@ export const REMOTE_LIST_PAGES_CAP = 100;
 //   - the page count EXCEEDS the remote list clamp (unclamped list returns more)
 
 export const CHAIN_LENGTH = 16; // > TRAVERSE_DEPTH_CAP + 1
+export const chainSlug = (i: number): string => `chain/c${i}`;
+/** chain/c0 … chain/c15, in walk order. */
+export const CHAIN_SLUGS: readonly string[] = Array.from({ length: CHAIN_LENGTH }, (_, i) => chainSlug(i));
+/**
+ * One page whose only edge points INTO the chain root (chain/inbound → c0).
+ * A remote no-direction traverse_graph walks `both` (gbrain v0.48.1.0,
+ * #4704; fixes #4666) and must return this edge; the legacy outbound default
+ * never did — the "inbound-only pages read as no links" bug.
+ */
+export const CHAIN_INBOUND_SLUG = 'chain/inbound';
+const CHAIN_INBOUND_PAGES = 1;
 const RING_SIZE = 10;
 const NOTE_PAGES = 110;
-/** people ring + chain + filler notes. Must exceed REMOTE_LIST_PAGES_CAP. */
-export const TOTAL_SEEDED_PAGES = RING_SIZE + CHAIN_LENGTH + NOTE_PAGES;
+/** people ring + chain (+ its inbound page) + filler notes. Must exceed REMOTE_LIST_PAGES_CAP. */
+export const TOTAL_SEEDED_PAGES = RING_SIZE + CHAIN_LENGTH + CHAIN_INBOUND_PAGES + NOTE_PAGES;
 /** Between the remote cap and the total page count, so local vs remote differ. */
 const MATRIX_LIST_LIMIT = 120;
 
@@ -93,16 +114,22 @@ export async function setupEngine(): Promise<{ engine: PGLiteEngine; cleanup: ()
     await engine.addLink(`people/p${i}`, `people/p${(i + 1) % RING_SIZE}`, '', 'mentions');
   }
   // Chain LONGER than the traverse cap: c0 → c1 → … → c15 (out-degree 1, no
-  // cycles). An uncapped depth=1000 walk returns all CHAIN_LENGTH nodes; the
+  // cycles). An uncapped depth=1000 walk reaches all CHAIN_LENGTH nodes; the
   // capped walk must stop at TRAVERSE_DEPTH_CAP hops.
   for (let i = 0; i < CHAIN_LENGTH; i++) {
-    await engine.putPage(`chain/c${i}`, {
+    await engine.putPage(chainSlug(i), {
       type: 'concept', title: `C${i}`, compiled_truth: `Chain node ${i}.`, timeline: '',
     });
   }
   for (let i = 0; i < CHAIN_LENGTH - 1; i++) {
-    await engine.addLink(`chain/c${i}`, `chain/c${i + 1}`, '', 'mentions');
+    await engine.addLink(chainSlug(i), chainSlug(i + 1), '', 'mentions');
   }
+  // Inbound-only neighbour of the chain root: only a bidirectional walk from
+  // c0 can surface chain/inbound → c0.
+  await engine.putPage(CHAIN_INBOUND_SLUG, {
+    type: 'concept', title: 'Inbound', compiled_truth: 'Points into the chain root.', timeline: '',
+  });
+  await engine.addLink(CHAIN_INBOUND_SLUG, chainSlug(0), '', 'mentions');
   // Filler pages so the brain holds MORE than the remote list clamp.
   for (let i = 0; i < NOTE_PAGES; i++) {
     await engine.putPage(`notes/extra-${String(i).padStart(3, '0')}`, {
@@ -138,23 +165,71 @@ async function runOp(opName: string, params: Record<string, unknown>, c: Operati
 
 // ─── Pure assertion helpers (exported so tests can prove they CAN fail) ─
 
+/** The GraphPath edge row gbrain returns to remote traverse_graph callers (v0.48.1.0, #4704). */
+export type GraphEdgeRow = { from_slug: string; to_slug: string; depth: number };
+
+function isGraphEdgeRow(row: unknown): row is GraphEdgeRow {
+  if (typeof row !== 'object' || row === null) return false;
+  const r = row as Record<string, unknown>;
+  return typeof r.from_slug === 'string' && typeof r.to_slug === 'string' && typeof r.depth === 'number';
+}
+
 /**
- * The traverse depth cap bit iff:
- *   - the walk actually ran deep (>= cap nodes returned), AND
- *   - it returned FEWER nodes than the seeded chain holds (an uncapped walk
- *     over the full chain fails this), AND
- *   - no returned node sits deeper than the cap.
+ * Remote traverse_graph depth contract (gbrain v0.48.1.0, #4704): the call
+ * returns GraphPath[] edges, and the walk over a chain LONGER than `hops`
+ * has its frontier EXACTLY at `hops` — the cap for depth=1000, the documented
+ * default when depth is omitted, the literal value for an under-cap depth.
+ * Passes iff:
+ *   - at least one row came back and EVERY row is a GraphPath edge (the
+ *     legacy GraphNode[] shape fails);
+ *   - the deepest edge sits exactly at `hops` (deeper: the cap was ignored;
+ *     shallower: the explicit depth was dropped or the walk broke);
+ *   - the walk touched exactly root + `hops` chain nodes, fewer than the
+ *     chain holds (an uncapped walk reaches the whole chain; a chain that is
+ *     not longer than `hops` makes the check vacuous, so that is a fail).
+ * Bidirectional re-emission of walked edges at depth+1 and edges to pages
+ * outside the chain do not move the verdict.
  */
 export function checkDepthCap(
-  nodes: Array<{ depth: number }>,
-  chainLength: number,
-  cap: number,
+  rows: unknown[],
+  chainSlugs: readonly string[],
+  hops: number,
 ): { pass: boolean; detail: string } {
-  const maxDepth = nodes.reduce((m, n) => Math.max(m, n.depth), 0);
-  const pass = nodes.length >= cap && nodes.length < chainLength && maxDepth <= cap;
+  const edges = rows.filter(isGraphEdgeRow);
+  const wellFormed = rows.length > 0 && edges.length === rows.length;
+  const maxDepth = edges.reduce((m, e) => Math.max(m, e.depth), 0);
+  const touched = new Set(edges.flatMap(e => [e.from_slug, e.to_slug]));
+  const reached = chainSlugs.filter(s => touched.has(s)).length;
+  const pass = wellFormed && maxDepth === hops && reached === hops + 1 && reached < chainSlugs.length;
   return {
     pass,
-    detail: `returned ${nodes.length} nodes from a ${chainLength}-node chain, max depth ${maxDepth}, cap ${cap}`,
+    detail: `${rows.length} rows (${edges.length} GraphPath edges) reached ${reached} nodes of the `
+      + `${chainSlugs.length}-node chain, max depth ${maxDepth}, expected frontier ${hops}`,
+  };
+}
+
+/**
+ * Remote direction default (gbrain v0.48.1.0, #4704; fixes #4666): a remote
+ * traverse_graph call with no `direction` walks `both`, so an edge that
+ * points INTO the start page comes back. The legacy outbound default never
+ * returned it — inbound-only pages read as "no links". Passes iff the
+ * inbound edge AND the outbound chain edge are both present as GraphPath
+ * rows (an `in`-only or `out`-only walk cannot fake a pass).
+ */
+export function checkRemoteDirectionDefault(
+  rows: unknown[],
+  inbound: { from_slug: string; to_slug: string },
+  outbound: { from_slug: string; to_slug: string },
+): { pass: boolean; detail: string } {
+  const edges = rows.filter(isGraphEdgeRow);
+  const has = (e: { from_slug: string; to_slug: string }) =>
+    edges.some(r => r.from_slug === e.from_slug && r.to_slug === e.to_slug);
+  const sawIn = has(inbound);
+  const sawOut = has(outbound);
+  return {
+    pass: sawIn && sawOut,
+    detail: `inbound ${inbound.from_slug}→${inbound.to_slug}: ${sawIn ? 'returned' : 'MISSING'}; `
+      + `outbound ${outbound.from_slug}→${outbound.to_slug}: ${sawOut ? 'returned' : 'MISSING'}`,
   };
 }
 
@@ -224,34 +299,48 @@ export async function runContractChecks(
   };
 
   // ── Limit cap: traverse_graph depth (chain longer than the cap) ──
+  // Remote contract (gbrain v0.48.1.0, #4704): no direction filter → walks
+  // `both` and returns GraphPath[] edges; an explicit depth is honored up to
+  // the cap; depth AND direction both defaulted → REMOTE_BIDIRECTIONAL_DEFAULT_DEPTH.
   log('\n## Limit cap: traverse_graph depth');
+  const capName = `traverse_graph depth=1000 over a ${CHAIN_LENGTH}-node chain stops at the ${TRAVERSE_DEPTH_CAP}-hop cap`;
   {
-    const r = await runOp('traverse_graph', { slug: 'chain/c0', depth: 1000 }, ctx(true, engine));
+    const r = await runOp('traverse_graph', { slug: chainSlug(0), depth: 1000 }, ctx(true, engine));
     if (r.ok) {
-      const nodes = r.result as Array<{ depth: number }>;
-      const check = checkDepthCap(nodes, CHAIN_LENGTH, TRAVERSE_DEPTH_CAP);
-      push({
-        name: `traverse_graph depth=1000 over a ${CHAIN_LENGTH}-node chain stops at the ${TRAVERSE_DEPTH_CAP}-hop cap`,
-        ...check,
-      });
+      push({ name: capName, ...checkDepthCap(r.result as unknown[], CHAIN_SLUGS, TRAVERSE_DEPTH_CAP) });
     } else {
       // A loud rejection naming the limit is also acceptable cap enforcement.
       const pass = r.error.includes('depth') || r.error.includes('limit');
-      push({
-        name: `traverse_graph depth=1000 over a ${CHAIN_LENGTH}-node chain stops at the ${TRAVERSE_DEPTH_CAP}-hop cap`,
-        pass,
-        detail: `rejected: ${r.error.slice(0, 100)}`,
-      });
+      push({ name: capName, pass, detail: `rejected: ${r.error.slice(0, 100)}` });
     }
   }
   {
-    const r = await runOp('traverse_graph', { slug: 'chain/c0', depth: 5 }, ctx(true, engine));
-    const nodes = r.ok ? (r.result as Array<unknown>) : [];
-    const pass = r.ok && nodes.length >= 2;
+    const r = await runOp('traverse_graph', { slug: chainSlug(0), depth: 5 }, ctx(true, engine));
     push({
-      name: 'traverse_graph depth=5 (under cap) succeeds and returns nodes',
-      pass,
-      detail: r.ok ? `ok, ${nodes.length} nodes` : `unexpected error: ${r.error.slice(0, 100)}`,
+      name: 'traverse_graph depth=5 (under cap) is honored exactly: GraphPath frontier at 5 hops',
+      ...(r.ok
+        ? checkDepthCap(r.result as unknown[], CHAIN_SLUGS, 5)
+        : { pass: false, detail: `unexpected error: ${r.error.slice(0, 100)}` }),
+    });
+  }
+  {
+    // The natural no-filter invocation (#4666): direction AND depth defaulted.
+    const r = await runOp('traverse_graph', { slug: chainSlug(0) }, ctx(true, engine));
+    const rows = r.ok ? (r.result as unknown[]) : [];
+    const errored = { pass: false, detail: `unexpected error: ${r.ok ? '' : r.error.slice(0, 100)}` };
+    push({
+      name: `traverse_graph remote call with depth AND direction defaulted walks exactly ${REMOTE_BIDIRECTIONAL_DEFAULT_DEPTH} hops`,
+      ...(r.ok ? checkDepthCap(rows, CHAIN_SLUGS, REMOTE_BIDIRECTIONAL_DEFAULT_DEPTH) : errored),
+    });
+    push({
+      name: 'traverse_graph remote no-direction call defaults to direction=both (inbound edge into the start page is returned)',
+      ...(r.ok
+        ? checkRemoteDirectionDefault(
+          rows,
+          { from_slug: CHAIN_INBOUND_SLUG, to_slug: chainSlug(0) },
+          { from_slug: chainSlug(0), to_slug: chainSlug(1) },
+        )
+        : errored),
     });
   }
 

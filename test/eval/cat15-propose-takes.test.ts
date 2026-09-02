@@ -14,6 +14,7 @@ import { join } from 'path';
 import type Anthropic from '@anthropic-ai/sdk';
 import {
   EXTRACT_TAKES_PROMPT as GBRAIN_PROMPT,
+  PROPOSE_TAKES_PROMPT_VERSION as GBRAIN_PROMPT_VERSION,
 } from '../../node_modules/gbrain/src/core/cycle/propose-takes.ts';
 import {
   PRODUCTION_EXTRACT_TAKES_PROMPT,
@@ -515,7 +516,13 @@ describe('runner end-to-end (hermetic)', () => {
     expect(receipt.n_scored).toBe(8);
     expect(receipt.gbrain_version).not.toBe('unknown');
     expect(receipt.resolved_config.dry_run).toBe(true);
-    expect(receipt.resolved_config.prompt_version).toBe('v0.36.1.0-tuned-cat15');
+    // Provenance is gbrain's own PROPOSE_TAKES_PROMPT_VERSION, read from the
+    // pinned package like the prompt itself rather than mirrored as a literal:
+    // gbrain v0.48.1.0 (#4736, prompt/parser kind-vocabulary fix) advanced it
+    // from 'v0.36.1.0-tuned-cat15' to 'v0.36.1.0-tuned-cat15-kinds4736', and
+    // the old literal pin turned that legitimate bump into a false regression.
+    expect(GBRAIN_PROMPT_VERSION.length).toBeGreaterThan(0);
+    expect(receipt.resolved_config.prompt_version).toBe(GBRAIN_PROMPT_VERSION);
     const summary = JSON.parse(readFileSync(SUMMARY, 'utf-8'));
     expect(summary.overall_gate).toBe('partial');
     expect(summary.provenance.dry_run).toBe(true);
