@@ -4,6 +4,45 @@ All notable changes to gbrain-evals are recorded here. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versions are semver and kept
 in sync with `VERSION` + `package.json`.
 
+## [Unreleased]
+
+### Added — the outside pass's verification scripts, wired next to the manifest gate (issue #26 follow-up)
+
+The 2026-09-01 outside pass (issue #26) ran as ad-hoc agent checks. This
+lands them as keyless CI checks under `eval/verify/`, one per gap class,
+run by `bun run verify` right after the unit suite:
+
+- **`cited-artifacts`** — every path a published surface cites is committed
+  or disclosed; committed receipts' pointer keys (`source_ndjson`, `path`,
+  …) must resolve. Cross-repo citations resolve against gbrain at the pin.
+- **`claim-hygiene`** + `docs/claim-hygiene.json` — retired figures stay
+  retired (0.076, unqualified SOTA) and qualified ones keep their qualifier
+  in the same row or paragraph (0.582 upper bound, 97.9% pre-audit, 97.6%
+  any-hit); historical reports that still print one need an erratum banner.
+  `--ref` checks another ref; `--sweep` walks README.md at every branch and
+  PR head (`.github/workflows/stale-surfaces.yml`, weekly, informational).
+- **`judge-model-evidence`** — enforces the 2026-09-01 contract: an
+  alias-judged receipt dated on/after that day carries `judge_models_resolved`
+  naming exactly one real model.
+- **`pins`** — package.json / bun.lock / CI action pins agree.
+- **`cat34-crossrepo`** — the README's cross-repo pointer is machine-checked:
+  gbrain's `evals/brainbench/baselines/main.json` at the pin reproduces the
+  committed rerun receipt, every cell, digit-for-digit.
+- `docs/receipts-manifest.json`: the Cat 34 rerun entry gains `expected`
+  pointers, so kta 0/149 and push recall 0.9063/1.000/0.5521 are
+  digit-enforced like the LongMemEval row.
+
+Findings on main at landing, all warnings (the gate lands green):
+`rescore-may-2026-08-31.json` still points at the gitignored
+`eval/reports/…` NDJSON although the copy is committed beside it; two Cat 35
+receipts carry `/private/tmp/…` prior-run paths; the 2026-05-23 snapshot
+page and the 2026-04-19 multi-adapter page print retired/unqualified
+figures with no banner; two historical reports cite files that exist in
+neither repo; the judge-calibration artifact's
+manifest note does not name the alias caveat; the CI header cites an
+`engines` pin package.json does not have. 27 of 30 remote refs carry stale
+README claims (sweep, 2026-09-02).
+
 ## [0.6.1] - 2026-09-02
 
 Re-run of the public LongMemEval-S (cleaned) split at gbrain v0.48.2.0, plus the

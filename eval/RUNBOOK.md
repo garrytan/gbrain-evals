@@ -180,6 +180,35 @@ bun run eval:type-accuracy
 The new dataset should be committed as `eval/data/world-vX.Y/` with a
 new ledger. Don't overwrite `world-v1/` — that's the reproducibility baseline.
 
+## Outside-verification gate (`bun run verify`)
+
+`eval/verify/all.ts` runs five keyless checks next to the receipts-manifest
+test. They came out of the 2026-09-01 outside pass (issue #26) and keep its
+five gap classes from coming back between audits:
+
+| Check | Fails when | Warns when |
+|-------|------------|------------|
+| `cited-artifacts` | a live surface (README, docs/*.md) or a committed receipt's pointer key names a path that is missing or gitignored | a historical report cites a missing path; a receipt pointer names `eval/reports/…` but a committed copy sits next to it; a receipt carries a machine-local absolute path |
+| `claim-hygiene` | a live surface prints a retired figure (`0.076`, `SOTA`) or a qualified one (`0.582`, `97.9%`, `97.6%`) without its qualifier in the same row/paragraph — rules in `docs/claim-hygiene.json` | a historical report still prints one with no erratum/correction banner in its first 20 lines |
+| `judge-model-evidence` | a receipt dated on/after 2026-09-01 is judged by a movable alias and `judge_models_resolved` does not name exactly one real model | a legacy alias-judged receipt has no manifest note naming the caveat |
+| `pins` | package.json / bun.lock disagree on the gbrain SHA, or a CI action is not pinned to a 40-hex commit | `bun-version` disagrees with package.json; a workflow comment cites an `engines` pin package.json lacks; a receipt records a short SHA |
+| `cat34-crossrepo` | the committed rerun receipt's pin, fixtures hash, or any cell metric differs from `node_modules/gbrain/evals/brainbench/baselines/main.json` at the pin | a baseline cell is not covered by the receipt |
+
+Exit codes follow the validator contract: 0 clean, 1 any failure, 2 a check
+could not run (e.g. `cat34-crossrepo` before `bun install`). `--strict`
+promotes warnings to failures; `--json` emits the findings; `--skip a,b`
+drops checks. Each check also runs alone: `bun eval/verify/<check>.ts`.
+
+The stale-surface sweep is separate because it needs a fetch:
+
+```sh
+bun run verify:sweep                                  # README.md at every branch + open PR head
+bun eval/verify/claim-hygiene.ts --ref origin/phoenix-v1   # one ref, all surfaces
+```
+
+It runs weekly in `.github/workflows/stale-surfaces.yml` and never blocks a
+merge; the fix for a stale ref is a comment on the PR or a branch deletion.
+
 ## CI failures
 
 ### `bun run test` fails on a fresh checkout

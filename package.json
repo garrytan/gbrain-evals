@@ -10,6 +10,8 @@
   },
   "scripts": {
     "test": "bun test test/eval/",
+    "verify": "bun eval/verify/all.ts",
+    "verify:sweep": "bun eval/verify/claim-hygiene.ts --sweep --fetch-prs",
     "eval:run": "bun eval/runner/multi-adapter.ts",
     "eval:run:dev": "BRAINBENCH_N=1 bun eval/runner/multi-adapter.ts",
     "eval:world:view": "bun eval/cli/world-view.ts",
