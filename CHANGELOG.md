@@ -39,12 +39,22 @@ default reranker.
 
 - `package.json` version (0.5.1) reconciled with `VERSION`; both read 0.6.1.
 
+### Fixed
+
+- **Two contract tests reconciled with gbrain 0.48.x behavior changes at the
+  new pin.** `mcp-contract` traverse_graph: a remote call with no `direction`
+  now returns bidirectional `GraphPath[]` edges (gbrain #4704), so the depth-cap
+  check reads the edge shape and asserts the cap (10), the explicit depth, and
+  the depth-2 default on a real inbound edge, instead of counting legacy nodes.
+  cat15: the `prompt_version` pin now reads gbrain's
+  `PROPOSE_TAKES_PROMPT_VERSION` constant (advanced by gbrain #4736) instead of
+  a stale literal.
+
 ### Known
 
-- Two contract tests drift against gbrain 0.48.x behavior changes at this pin
-  (`mcp-contract` traverse_graph cap under the new bidirectional remote
-  default; cat15 runner provenance pin) and are being reconciled in this
-  branch before merge.
+- gbrain #4736 also changed the TEXT of the propose-takes prompt that cat15
+  measures; the published cat15 F1 figures were scored against the previous
+  prompt and need a live re-baseline at v0.48.2.0 (not run here).
 
 ## [0.6.0] - 2026-09-01
 

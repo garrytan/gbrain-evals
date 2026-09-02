@@ -6,7 +6,8 @@
  *   UNDER TEST: gbrain's production propose_takes extractor prompt.
  *     EXTRACT_TAKES_PROMPT is imported directly from
  *     node_modules/gbrain/src/core/cycle/propose-takes.ts (the module that
- *     stamps PROPOSE_TAKES_PROMPT_VERSION = 'v0.36.1.0-tuned-cat15'), never
+ *     also stamps PROPOSE_TAKES_PROMPT_VERSION, imported the same way rather
+ *     than pinned as a literal — gbrain v0.48.1.0 #4736 bumped it), never
  *     mirrored — so prompt drift between production and this eval is
  *     structurally impossible. The eval measures whether that prompt, run
  *     against the extract model, finds the gradeable claims a human labeled
