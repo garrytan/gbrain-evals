@@ -1,0 +1,34 @@
+# Stale-surface sweep (issue #26 gap 3).
+#
+# A visitor linked to an old branch or an open PR sees that ref's README —
+# and 27 of 30 refs carried retired figures on 2026-09-02. This job runs the
+# claim-hygiene rules (docs/claim-hygiene.json, as of main) against README.md
+# at every remote branch and every open PR head, weekly and on demand, and
+# prints the hits. Informational: it never blocks a merge (no --fail-on-stale),
+# because the fix is a comment on the PR or a branch deletion, not a code
+# change on main. No install step — the sweep is pure Bun stdlib + git.
+name: stale-surfaces
+
+on:
+  schedule:
+    - cron: '17 6 * * 1' # Mondays 06:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: 1.3.10
+
+      - name: Sweep README.md at every branch and PR head
+        run: bun eval/verify/claim-hygiene.ts --sweep --fetch-prs

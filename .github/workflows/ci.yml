@@ -63,6 +63,15 @@ jobs:
       - name: Unit + integration tests
         run: bun test test/eval/
 
+      # Outside-verification gate (issue #26), next to the manifest gate the
+      # unit suite runs: every cited artifact is committed or disclosed,
+      # retired figures stay retired and qualified ones qualified, alias-
+      # judged receipts carry server-reported model ids, package/lock/action
+      # pins agree, and gbrain's Cat 34 baseline at the pin reproduces the
+      # committed receipt digit-for-digit. Keyless; exit 2 = could not run.
+      - name: Outside-verification gate (receipts, claims, pins)
+        run: bun eval/verify/all.ts --quiet
+
       - name: Data referential integrity
         run: bun eval/runner/validate-data.ts
 

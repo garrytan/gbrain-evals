@@ -126,7 +126,10 @@ dataset order, so results are reproducible line for line.
 
 Each row is a real test with a committed pass/fail threshold. "Shipping" means
 the hermetic form runs in this repo's CI on every PR (typecheck, unit suite,
-keyless runner subset, data-integrity gate, qrels + baseline retrieval gate);
+keyless runner subset, data-integrity gate, qrels + baseline retrieval gate,
+and the outside-verification gate `bun run verify` — cited artifacts committed
+or disclosed, retired figures kept retired, pins agreeing, gbrain's Cat 34
+baseline at the pin re-compared against the committed receipt);
 rows needing API keys run manually and land receipts under `eval/reports/`.
 
 | Area | What it checks | Bar | Status |

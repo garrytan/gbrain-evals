@@ -353,8 +353,24 @@
       "readme_anchor": "push recall 0.9063/1.000/0.5521, kta 0/149 (Cat 34 rerun at the pin)",
       "artifact_path": "docs/benchmarks/2026-06-12-brainbench-memory/receipt-2026-09-01-v0.47.8.0-rerun.json",
       "artifact_sha256": "a69c14e843fca757c61a1b894b543cfb993d4fd82478910e1a5f2c8a5f085e8f",
+      "expected": {
+        "/gbrain_pin": "github:garrytan/gbrain#2a56b51236850f6abcbf2f1ea71981bb9630f6fe",
+        "/hashes/fixtures": "509fd20d7cda693350030393b6d54154e2685516d30f017ca219bd25e92c0e57",
+        "/data/cells/0/cell": "openclaw/know-to-ask",
+        "/data/cells/0/gold_failed": 0,
+        "/data/cells/0/gold_total": 149,
+        "/data/cells/4/cell": "claude-code/know-to-ask",
+        "/data/cells/4/gold_failed": 0,
+        "/data/cells/1/cell": "openclaw/push",
+        "/data/cells/1/metrics/push_precision": 1,
+        "/data/cells/1/metrics/push_recall": 0.9063,
+        "/data/cells/5/cell": "claude-code/push",
+        "/data/cells/5/metrics/push_recall": 1,
+        "/data/cells/9/cell": "codex/push",
+        "/data/cells/9/metrics/push_recall": 0.5521
+      },
       "status": "covered",
-      "note": "Fresh keyless rerun at pin 2a56b512 (2026-09-01), reproduces gbrain's committed baseline digit-for-digit. Runner's strict all-cells-zero gate returns verdict=fail on budget-capped cells by construction; see the report's Receipts section."
+      "note": "Fresh keyless rerun at pin 2a56b512 (2026-09-01), reproduces gbrain's committed baseline digit-for-digit. Runner's strict all-cells-zero gate returns verdict=fail on budget-capped cells by construction; see the report's Receipts section. Expected pointers added 2026-09-02 (outside PR): the README's kta 0/149 and push recall 0.9063/1.000/0.5521 now fail this gate if the receipt drifts; eval/verify/cat34-crossrepo.ts additionally re-compares every cell against gbrain's baseline at the pin."
     },
     {
       "claim_id": "skillopt",

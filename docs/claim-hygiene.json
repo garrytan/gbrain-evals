@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "description": "Data-only rules for eval/verify/claim-hygiene.ts: figures that were retired or qualified by the 2026-08-31 audit and its 2026-09-01 follow-ups, and the words that must travel with them. Live surfaces enforce the rules; historical reports under docs/benchmarks/ must carry an erratum/correction banner near the top when they still print a retired or unqualified figure. Verification lives in test/eval/verify-claim-hygiene.test.ts. No executable strings.",
+  "updated": "2026-09-04",
+  "live_surfaces": ["README.md", "docs/comparison-systems.md"],
+  "reports_dir": "docs/benchmarks",
+  "banner": {
+    "pattern": "erratum|correction|superseded|historical|pre-audit|pending re-?(?:run|measurement)|not comparable|UPDATE \\(\\d{4}-\\d{2}-\\d{2}\\)",
+    "within_lines": 20,
+    "severity": "warn",
+    "note": "A historical report that still prints a retired or unqualified figure must say so near the top (the 2026-04-23 and 2026-05-07 reports are the model). A dated `UPDATE (YYYY-MM-DD)` header counts: v0.6.1 put a 238-line re-run block above the May report, which pushed its erratum banner past the window (2026-09-04). Severity starts at warn so the gate lands green; flip to fail once every report carries its banner."
+  },
+  "rules": [
+    {
+      "id": "pmb-default-0.076-retired",
+      "pattern": "\\b0\\.076\\b",
+      "kind": "retired",
+      "severity": "fail",
+      "note": "The PrecisionMemBench default-hybrid figure is 0.075 (2026-05-30-gbrain-hybrid-body-text.json, meanPrecision 0.0752); 0.076 was the instrument sweep's off row. README carried 0.076 until 2026-09-01 (issue #26 gap 5)."
+    },
+    {
+      "id": "pmb-adaptive-0.582-upper-bound",
+      "pattern": "\\b0\\.582\\b",
+      "kind": "qualified",
+      "qualifier": "upper bound|pending",
+      "severity": "fail",
+      "note": "Audit finding precisionmembench-01: 0.582 was measured with a seed-time shortcut and is an upper bound pending re-run on the fixed harness. Every mention on a live surface carries that qualifier in the same table row or paragraph."
+    },
+    {
+      "id": "relational-97.9-pre-audit",
+      "pattern": "\\b97\\.9%",
+      "kind": "qualified",
+      "qualifier": "pre-audit|pending|erratum|directional",
+      "severity": "fail",
+      "note": "Issue #24 finding 2: the 2026-04-23 relational scorecard predates the metric-helper fixes; live surfaces qualify 97.9% R@5 / 49.1% P@5 as pre-audit, re-measure pending."
+    },
+    {
+      "id": "longmemeval-97.6-is-any-hit",
+      "pattern": "\\b97\\.6(?:0|6)?%",
+      "kind": "qualified",
+      "qualifier": "any-hit|any hit|ANY-HIT|recall_any|diagnostic|old semantics|not the official|looser",
+      "severity": "fail",
+      "note": "Erratum 2026-08-31: 97.6% is any-hit recall@5, not the official recall_all@5 (83.4%). A live surface never prints 97.6% without naming the variant in the same row or paragraph."
+    },
+    {
+      "id": "sota-unqualified",
+      "pattern": "\\bSOTA\\b",
+      "kind": "retired",
+      "exempt": "\"[^\"]*\\bSOTA\\b[^\"]*\"",
+      "severity": "fail",
+      "note": "The 2026-08-31 audit removed the unqualified SOTA claim from the README (docs-vs-code-06). Live surfaces do not claim it; historical reports that do must carry the banner. Exempt: SOTA inside double quotes is a quoted third-party claim (v0.6.1 comparison row `Supermemory \"99% SOTA\" post`), not this repo claiming it (2026-09-04)."
+    }
+  ]
+}
