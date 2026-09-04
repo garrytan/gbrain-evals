@@ -50,6 +50,7 @@ import { runExtract } from 'gbrain/extract';
 import { RipgrepBm25Adapter } from './adapters/grep-only.ts';
 import { VectorOnlyAdapter } from './adapters/vector.ts';
 import { HybridNoGraphAdapter } from './adapters/vector-grep-rrf-fusion.ts';
+import { GraphBrainAdapter } from './adapters/graphbrain.ts';
 import type { Adapter, Page, Query, RankedDoc } from './types.ts';
 import { precisionAtK, recallAtK, sanitizePage, sanitizeQuery } from './types.ts';
 import { buildRelationalQueries, loadWorldCorpus, type RichPage } from './queries/relational.ts';
@@ -613,6 +614,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     new HybridNoGraphAdapter(),
     new RipgrepBm25Adapter(),
     new VectorOnlyAdapter(),
+    new GraphBrainAdapter(),
   ];
   const adapters = selectAdapters(allAdapters, cli.adapter);
 
