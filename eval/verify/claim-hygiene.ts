@@ -4,7 +4,9 @@
  *
  * Rules are data (docs/claim-hygiene.json): a regex for the figure, whether
  * it is `retired` (must not appear) or `qualified` (must appear with its
- * qualifier in the same table row or paragraph), and a severity.
+ * qualifier in the same table row or paragraph), a severity, and an optional
+ * `exempt` regex: a line it matches is not a hit (a quoted third-party claim
+ * such as `Supermemory "99% SOTA" post` is that vendor's claim, not ours).
  *
  *   - live surfaces (README.md, docs/comparison-systems.md) enforce every
  *     rule at the rule's severity — issue #26 gap 5 (PMB 0.582 without the
@@ -52,6 +54,8 @@ export interface Rule {
   pattern: string;
   kind: 'retired' | 'qualified';
   qualifier?: string;
+  /** A line matching this regex is not a hit (e.g. a quoted third-party claim). */
+  exempt?: string;
   severity: Severity;
   note?: string;
 }
@@ -71,6 +75,7 @@ export function loadRules(path: string): RulesFile {
     if (r.kind === 'qualified' && !r.qualifier) throw new Error(`rule ${r.id}: kind=qualified needs a qualifier`);
     new RegExp(r.pattern); // throws on a bad regex at load time, not mid-scan
     if (r.qualifier) new RegExp(r.qualifier);
+    if (r.exempt) new RegExp(r.exempt);
   }
   return parsed;
 }
@@ -118,8 +123,10 @@ export function findHits(text: string, rules: Rule[]): Hit[] {
   for (const rule of rules) {
     const re = new RegExp(rule.pattern);
     const q = rule.qualifier ? new RegExp(rule.qualifier, 'i') : null;
+    const ex = rule.exempt ? new RegExp(rule.exempt) : null;
     for (let i = 0; i < lines.length; i++) {
       if (!re.test(lines[i])) continue;
+      if (ex && ex.test(lines[i])) continue;
       if (rule.kind === 'qualified' && q && q.test(unitAround(lines, i))) continue;
       hits.push({ rule, line: i + 1, excerpt: lines[i].trim().slice(0, 140) });
     }

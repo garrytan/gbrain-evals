@@ -32,7 +32,21 @@ run by `bun run verify` right after the unit suite:
   pointers, so kta 0/149 and push recall 0.9063/1.000/0.5521 are
   digit-enforced like the LongMemEval row.
 
-Findings on main at landing, all warnings (the gate lands green):
+Rebased onto v0.6.1 (2026-09-04). Two rule refinements v0.6.1 forced:
+`exempt` on a rule (a quoted third-party claim such as the comparison
+row `Supermemory "99% SOTA" post` is not this repo claiming SOTA), and a
+dated `UPDATE (YYYY-MM-DD)` header counts as a report banner (the May
+LongMemEval report now opens with a 238-line re-run block). One failure
+class on main after v0.6.1, and it is the gap this gate exists for:
+`cat34-crossrepo` — package.json moved the gbrain pin to `5cfb84f1`
+(v0.48.2.0) while the committed Cat 34 rerun receipt ran at `2a56b512`
+(v0.47.8.0), and gbrain's baseline at the new pin differs in three
+openclaw metrics (push_recall 0.9063 → 1, know-to-ask and push
+avg_injected_tokens); the README's "baseline at the pin re-compared
+against the committed receipt" holds again once Cat 34 is re-run at the
+new pin (or the pin is stated as the receipt's).
+
+Other findings on main at landing, all warnings:
 `rescore-may-2026-08-31.json` still points at the gitignored
 `eval/reports/…` NDJSON although the copy is committed beside it; two Cat 35
 receipts carry `/private/tmp/…` prior-run paths; the 2026-05-23 snapshot

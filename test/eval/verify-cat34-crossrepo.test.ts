@@ -5,13 +5,16 @@
  * one metric drifted; a cell missing from the baseline; a baseline cell
  * the receipt does not cover; fixtures-hash mismatch; pin mismatch; no
  * SHA), the UNAVAILABLE path when gbrain is not installed, and the real
- * pair when node_modules/gbrain is present: 12 cells, digit-for-digit.
+ * pair when node_modules/gbrain is present: with the receipt at the
+ * package.json pin, 12 cells digit-for-digit; with the pin moved past the
+ * receipt (v0.6.1 → v0.48.2.0), the check must say so — the gap it exists
+ * to catch, never a silent pass.
  */
 
 import { describe, test, expect } from 'bun:test';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
-import { DEFAULT_BASELINE, checkCat34CrossRepo, compareCat34 } from '../../eval/verify/cat34-crossrepo.ts';
+import { DEFAULT_BASELINE, DEFAULT_RECEIPT, checkCat34CrossRepo, compareCat34 } from '../../eval/verify/cat34-crossrepo.ts';
 import { initRepo, put, commitAll, cleanup, at, severities, runCliFile } from './verify-fixtures.ts';
 
 const SCRIPT = join(import.meta.dir, '../../eval/verify/cat34-crossrepo.ts');
@@ -107,14 +110,26 @@ describe('checkCat34CrossRepo on fixtures', () => {
 });
 
 describe('cat34-crossrepo on this repo', () => {
-  const installed = existsSync(join(import.meta.dir, '../..', DEFAULT_BASELINE));
-  test.if(installed)('the committed rerun receipt reproduces gbrain\'s baseline at the pin, every cell', () => {
+  const REPO = join(import.meta.dir, '../..');
+  const installed = existsSync(join(REPO, DEFAULT_BASELINE));
+  const pkgPin = (JSON.parse(readFileSync(join(REPO, 'package.json'), 'utf8')) as { dependencies: Record<string, string> }).dependencies.gbrain.match(/#([0-9a-f]{40})$/)?.[1];
+  const receiptPin = (JSON.parse(readFileSync(join(REPO, DEFAULT_RECEIPT), 'utf8')) as { gbrain_pin?: string }).gbrain_pin?.match(/#([0-9a-f]+)$/)?.[1];
+  const atPin = pkgPin !== undefined && pkgPin === receiptPin;
+  test.if(installed && atPin)('receipt at the package.json pin: reproduces gbrain\'s baseline, every cell', () => {
     const r = checkCat34CrossRepo();
     expect(r.unavailable).toBeUndefined();
     expect(severities(r).fail).toBe(0);
     expect(severities(r).warn).toBe(0);
     expect(r.findings[r.findings.length - 1].where).toMatch(/12 cell\(s\)/);
     expect(r.findings[r.findings.length - 1].message).toMatch(/39 metric\(s\)/);
+  });
+  test.if(installed && !atPin)('package.json pin moved past the receipt: the check fails on the pin and names every drifted metric', () => {
+    const r = checkCat34CrossRepo();
+    expect(r.unavailable).toBeUndefined();
+    expect(at(r, 'gbrain_pin', 'fail')).toHaveLength(1);
+    expect(at(r, 'gbrain_pin', 'fail')[0].message).toContain('"at the pin" is not true');
+    expect(severities(r).fail).toBeGreaterThanOrEqual(1);
+    expect(r.findings[r.findings.length - 1].message).toMatch(/metric\(s\) compared digit-for-digit/);
   });
   test.if(!installed)('gbrain not installed here: the check reports UNAVAILABLE', () => {
     expect(checkCat34CrossRepo().unavailable).toBeDefined();

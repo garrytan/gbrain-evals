@@ -2,8 +2,9 @@
  * eval/verify/claim-hygiene.ts tests — fixture-driven, keyless, $0.
  *
  * Pure rule engine over synthetic text (retired hit, qualified in the same
- * row / paragraph / table header / table lead-in, unqualified miss, banner
- * detection), rules-file validation, the real repo (zero failures on main;
+ * row / paragraph / table header / table lead-in, unqualified miss, exempt
+ * quoted third-party claims, banner detection incl. a dated UPDATE header),
+ * rules-file validation, the real repo (zero failures on main;
  * the known unbannered historical reports are warnings), a git fixture
  * with a bare origin for `--ref` and the `--sweep` (one clean branch, one
  * stale), and the CLI exit-code contract including exit 2 on an unreadable
@@ -98,6 +99,27 @@ describe('findHits', () => {
   });
 });
 
+describe('exempt', () => {
+  const SOTA = { id: 'retired-sota', pattern: '\\bSOTA\\b', kind: 'retired' as const, severity: 'fail' as const, exempt: '"[^"]*\\bSOTA\\b[^"]*"' };
+  test('a quoted third-party claim is exempt; a bare claim on the same surface still hits', () => {
+    expect(findHits('| Supermemory "99% SOTA" post | ~99% |', [SOTA])).toEqual([]);
+    expect(findHits('gbrain is SOTA at reading memory back', [SOTA]).map(h => h.line)).toEqual([1]);
+    expect(findHits('| Supermemory "99% SOTA" post | our SOTA row |', [SOTA])).toEqual([]);
+  });
+  test('the committed SOTA rule exempts the v0.6.1 Supermemory comparison row', () => {
+    const sota = loadRules(REAL_RULES).rules.find(r => r.id === 'sota-unqualified')!;
+    expect(sota.exempt).toBeDefined();
+    expect(findHits('| Supermemory "99% SOTA" post | ~99%; 98.60% is pass@8 | QA-acc (NOT R@k) |', [sota])).toEqual([]);
+    expect(findHits('gbrain is SOTA', [sota])).toHaveLength(1);
+  });
+  test('a bad exempt regex is rejected at load time', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'verify-rules-'));
+    const bad = join(dir, 'a.json');
+    writeFileSync(bad, JSON.stringify({ ...RULES, rules: [{ id: 'x', pattern: 'a', kind: 'retired', severity: 'fail', exempt: '(' }] }));
+    expect(() => loadRules(bad)).toThrow();
+  });
+});
+
 describe('hasBanner / checkReport / checkLiveSurface', () => {
   test('banner within the window counts; beyond it does not', () => {
     expect(hasBanner('# T\n> **Erratum (2026-08-31)**\nbody', RULES.banner)).toBe(true);
@@ -111,6 +133,11 @@ describe('hasBanner / checkReport / checkLiveSurface', () => {
     expect(f).toHaveLength(1);
     expect(f[0].severity).toBe('warn');
     expect(f[0].message).toMatch(/retired-0\.076/);
+  });
+  test('a dated UPDATE header counts as a banner under the committed rules; an undated one does not', () => {
+    const banner = loadRules(REAL_RULES).banner;
+    expect(hasBanner('# R\n\n> ## UPDATE (2026-09-02) — re-run at gbrain v0.48.2.0\n>\n> fresh numbers', banner)).toBe(true);
+    expect(hasBanner('# R\n\n> ## UPDATE — re-run\n', banner)).toBe(false);
   });
   test('report with no hits produces nothing', () => {
     expect(checkReport('docs/benchmarks/r.md', '# clean', RULES)).toEqual([]);

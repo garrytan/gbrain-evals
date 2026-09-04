@@ -1,14 +1,14 @@
 {
   "schema_version": 1,
   "description": "Data-only rules for eval/verify/claim-hygiene.ts: figures that were retired or qualified by the 2026-08-31 audit and its 2026-09-01 follow-ups, and the words that must travel with them. Live surfaces enforce the rules; historical reports under docs/benchmarks/ must carry an erratum/correction banner near the top when they still print a retired or unqualified figure. Verification lives in test/eval/verify-claim-hygiene.test.ts. No executable strings.",
-  "updated": "2026-09-02",
+  "updated": "2026-09-04",
   "live_surfaces": ["README.md", "docs/comparison-systems.md"],
   "reports_dir": "docs/benchmarks",
   "banner": {
-    "pattern": "erratum|correction|superseded|historical|pre-audit|pending re-?(?:run|measurement)|not comparable",
+    "pattern": "erratum|correction|superseded|historical|pre-audit|pending re-?(?:run|measurement)|not comparable|UPDATE \\(\\d{4}-\\d{2}-\\d{2}\\)",
     "within_lines": 20,
     "severity": "warn",
-    "note": "A historical report that still prints a retired or unqualified figure must say so near the top (the 2026-04-23 and 2026-05-07 reports are the model). Severity starts at warn so the gate lands green; flip to fail once every report carries its banner."
+    "note": "A historical report that still prints a retired or unqualified figure must say so near the top (the 2026-04-23 and 2026-05-07 reports are the model). A dated `UPDATE (YYYY-MM-DD)` header counts: v0.6.1 put a 238-line re-run block above the May report, which pushed its erratum banner past the window (2026-09-04). Severity starts at warn so the gate lands green; flip to fail once every report carries its banner."
   },
   "rules": [
     {
@@ -46,8 +46,9 @@
       "id": "sota-unqualified",
       "pattern": "\\bSOTA\\b",
       "kind": "retired",
+      "exempt": "\"[^\"]*\\bSOTA\\b[^\"]*\"",
       "severity": "fail",
-      "note": "The 2026-08-31 audit removed the unqualified SOTA claim from the README (docs-vs-code-06). Live surfaces do not claim it; historical reports that do must carry the banner."
+      "note": "The 2026-08-31 audit removed the unqualified SOTA claim from the README (docs-vs-code-06). Live surfaces do not claim it; historical reports that do must carry the banner. Exempt: SOTA inside double quotes is a quoted third-party claim (v0.6.1 comparison row `Supermemory \"99% SOTA\" post`), not this repo claiming it (2026-09-04)."
     }
   ]
 }
