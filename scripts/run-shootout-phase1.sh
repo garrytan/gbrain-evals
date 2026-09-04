@@ -185,7 +185,7 @@ run_cell() {
   # so they survive word-splitting rules that broke the old inline-prefix
   # form. GBRAIN_EMBEDDING_MODEL/DIMENSIONS are genuinely read by gbrain's
   # config loader (config.ts:712); --mode is the explicit search-mode flag.
-  # ${CAP_CMD[@]+...} keeps set -u happy on an empty array (bash < 4.4);
+  # ${array[@]+...} keeps set -u happy when either array is empty (bash < 4.4);
   # timeout(1) execs env → gbrain, so config still reaches the child, and an
   # overrun returns 124 which lands in the same FAILED path (resume-safe).
   if ! ${CAP_CMD[@]+"${CAP_CMD[@]}"} env \
@@ -195,7 +195,7 @@ run_cell() {
         --output "$out" \
         --mode tokenmax \
         --expansion \
-        "${resume_args[@]}" \
+        ${resume_args[@]+"${resume_args[@]}"} \
         >>"$LOG" 2>&1; then
     echo "  -> $cell answer-gen FAILED or exceeded the ${CELL_WALL_CAP_SECONDS}s wall cap (see $LOG)" >&2
     return 4
