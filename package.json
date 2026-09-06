@@ -1,6 +1,6 @@
 {
   "name": "gbrain-evals",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "BrainBench \u2014 public benchmark for personal knowledge agent stacks. Consumes gbrain as a library.",
   "type": "module",
   "license": "MIT",

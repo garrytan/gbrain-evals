@@ -6,7 +6,9 @@ in sync with `VERSION` + `package.json`.
 
 ## [Unreleased]
 
-The gbrain v0.48.3.0 ranker wave, reported end to end:
+## [0.7.0] - 2026-09-06
+
+The gbrain v0.48.4.0 ranker wave, reported end to end:
 `docs/benchmarks/2026-09-06-longmemeval-ranker-wave.md` (+ receipts, charts and
 the harness→RunnerOutput converter under its directory). Headline: gbrain's
 release default scores 95.53% strict `recall_all@5` on LongMemEval-S (449/470,

@@ -1,4 +1,4 @@
-# BrainBench: LongMemEval ranker wave (gbrain v0.48.3.0)
+# BrainBench: LongMemEval ranker wave (gbrain v0.48.4.0)
 
 **Status:** receipts complete; the gbrain commit pin below is filled when the gbrain PR opens.
 **Date:** 2026-09-06
@@ -263,7 +263,7 @@ below any rule, so no temporal knob landed. The reranker (A2 vs A1: temporal 108
 
 | System | Judged QA accuracy | Reader / judge | Comparable? |
 |---|---|---|---|
-| **gbrain v0.48.3.0 (this run)** | **86.6% (433/500)** | claude-sonnet-4-6 reader, gpt-4o judge, official prompts | — |
+| **gbrain v0.48.4.0 (this run)** | **86.6% (433/500)** | claude-sonnet-4-6 reader, gpt-4o judge, official prompts | — |
 | OMEGA (2026) | 95.4% (self-reported) | undisclosed reader/judge | no — protocol unmatched |
 | Mastra | 94.87% | GPT-5-mini reader, own architecture | no — protocol unmatched |
 | Mem0 | 93.4% (self-reported) | own reader/judge | no — protocol unmatched |
@@ -289,7 +289,7 @@ The harness runs in bounded resume passes, so wall-clock per arm is the sum of i
 | gbrain-hybrid+expansion@0.25 (A3') | 8.2 s | 4117 s |
 | gbrain-hybrid tokenmax+rerank+autocut, expansion@0.25 (A3'R) | 4.8 s | 2421 s |
 | gbrain-hybrid tokenmax as released (legacy expansion, rerank, no autocut) | 4.8 s | 2417 s |
-| gbrain-hybrid release default v0.48.3.0 (rerank on, autocut off, pin 3, gate lexical) | 4.8 s | 2403 s |
+| gbrain-hybrid release default v0.48.4.0 (rerank on, autocut off, pin 3, gate lexical) | 4.8 s | 2403 s |
 
 Cost (the $75 cap was enforced by `scripts/eval-spend-guard.sh`; the ledger books launch estimates, so real spend is estimated here): building the embedding cache once ≈ $2 (OpenAI text-embedding-3-large); each reranked retrieval arm ≈ $0.50 of Voyage rerank; the legacy expansion arm ≈ $1 of Haiku variants (replayed for free afterwards); Cat 13 + NamedThingBench ≈ $3; the judged lane ≈ $30 (a Sonnet reader over ~64K characters of context per question plus a gpt-4o verdict; about $0.05 per question, plus three dry runs and three partial passes lost to a harness bug fixed mid-wave). Wave total ≈ $55 real, ≈ $60 booked.
 

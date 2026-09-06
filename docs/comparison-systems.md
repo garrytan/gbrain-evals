@@ -43,7 +43,7 @@ ground-truth sessions must land in top-k — and that is what systems using the
 published evaluator report. A looser ANY-HIT variant (≥1 ground-truth session
 in top-k) is also common in vendor pages and is a diagnostic, not the
 official metric. gbrain's figures are **95.53% official `recall_all@5`** on
-the release default path (449/470, 2026-09-06 at v0.48.3.0, hybrid, k=5,
+the release default path (449/470, 2026-09-06 at v0.48.4.0, hybrid, k=5,
 `voyage:rerank-2.5` on, autocut off; any-hit@5 99.79% as a diagnostic) and
 **93.40%** with the reranker off (439/470, same run; any-hit@5 98.72%; the
 2026-09-02 receipt's 438/470 is reproduced row for row on 469 of 470
@@ -90,12 +90,12 @@ directly comparable.**
 | Zep (research page, 2026) | 90.2% (451/500); multi-session 83.5%; retrieval latency 104/162 ms p50/p95 | QA-acc (NOT R@k), gpt-5.4 reader (medium reasoning) + gpt-5.4 judge, cross-encoder reranking; the 2025 paper's gpt-4o reader scored 71.2% (gpt-4o-mini 63.8%) | n/a | 500 incl. abstention | yes | [getzep.com/research](https://www.getzep.com/research/), accessed 2026-09-02; [arXiv 2501.13956](https://arxiv.org/abs/2501.13956) |
 | Hindsight (Vectorize) | 91.4% (Gemini-3 answerer, own repo; per category 97.1 / 96.4 / 80.0 / 94.9 / 91.0 / 87.2); 89.0% (GPT-OSS-120B); 94.6% on the vendor page (backbone undisclosed) | QA-acc (NOT R@k), LLM judge (GPT-OSS-120B judge in the paper); vendor page markets it under non-official category names | n/a | 500 incl. abstention | yes | [vectorize-io/hindsight-benchmarks](https://github.com/vectorize-io/hindsight-benchmarks); [hindsight.vectorize.io](https://hindsight.vectorize.io/blog/2026/03/23/agent-memory-benchmark), accessed 2026-09-02 |
 | ByteRover 2.1.5 | 92.8% (464/500) run 1; 92.2% (461/500) run 2 | QA-acc (NOT R@k), Gemini 3.1 Pro answerer, Gemini 3 Flash or 3.1 Pro judge; competitor rows on their page are copied from vendors with different judges | n/a | 500 incl. abstention | yes | [byterover.dev blog](https://www.byterover.dev/blog/benchmark_ai_agent_memory_real_production_byterover_top_market_accuracy_longmemeval), accessed 2026-09-02 |
-| **gbrain v0.48.3.0 (2026-09-06)** | **86.6% (433/500)**; non-abstention 86.0% (404/470); abstention 29/30; per type SSA 100 / SSU 98.6 / KU 89.7 / MS 83.5 / TR 80.5 / SSP 66.7 | QA-acc (NOT R@k), claude-sonnet-4-6 reader over the FULL text of the top-5 retrieved sessions (abstention instruction added), gpt-4o (2024-08-06) judge with the official `evaluate_qa.py` prompts at temperature 0; 500/500 judged, 0 judge errors; retrieval on the same rows 95.53% recall_all@5 | n/a | 500 incl. abstention | yes — `docs/benchmarks/2026-09-06-longmemeval-ranker-wave.md` | gbrain's first judged row; protocols differ from every vendor row above, so no comparison is claimed in either direction |
+| **gbrain v0.48.4.0 (2026-09-06)** | **86.6% (433/500)**; non-abstention 86.0% (404/470); abstention 29/30; per type SSA 100 / SSU 98.6 / KU 89.7 / MS 83.5 / TR 80.5 / SSP 66.7 | QA-acc (NOT R@k), claude-sonnet-4-6 reader over the FULL text of the top-5 retrieved sessions (abstention instruction added), gpt-4o (2024-08-06) judge with the official `evaluate_qa.py` prompts at temperature 0; 500/500 judged, 0 judge errors; retrieval on the same rows 95.53% recall_all@5 | n/a | 500 incl. abstention | yes — `docs/benchmarks/2026-09-06-longmemeval-ranker-wave.md` | gbrain's first judged row; protocols differ from every vendor row above, so no comparison is claimed in either direction |
 | ContextFit fusion QA | 84.8% overall / 86.81% task-averaged (May note); 81.8% through the official `evaluate_qa.py` with a fresh GPT-4o judge (task-averaged 83.5%); 87.2% with a GPT-5-mini answerer + local GPT-4o judge (85.2% with a GPT-4o answerer) | QA-acc (NOT R@k), their pipeline | n/a | 500 incl. 30 abstention | yes (GPT-4o or GPT-5-mini generation + GPT-4o judge) | [their QA note](https://www.context.fit/longmemeval-fusion-qa-20260519.html), reported in [issue #10](https://github.com/garrytan/gbrain-evals/issues/10); [cf repo QA evidence](https://github.com/ContextFit/cf/blob/master/benchmarks/longmemeval_contextfit_qa_evidence_20260516.md) |
 
 gbrain's own rows, all official session-level `recall_all@5` on
 `longmemeval_s` (cleaned Sept-2025 revision, 500 questions, 470 scored, k=5),
-measured 2026-09-06 at v0.48.3.0 by the in-repo `gbrain eval longmemeval`
+measured 2026-09-06 at v0.48.4.0 by the in-repo `gbrain eval longmemeval`
 harness (embedder `openai:text-embedding-3-large@1536`, one shared embedding
 cache, single run, 0 errors in every arm; decisions on the 430 questions
 outside the seed-42 dev slice). Release default path: **95.53%
@@ -110,7 +110,7 @@ single-session-assistant 100% (56/56), single-session-preference 96.7%
 (108/127); with the reranker on: knowledge-update 100% (72/72), multi-session
 92.6% (112/121, unchanged), single-session-assistant 100%, single-session-
 preference 100% (30/30), single-session-user 100% (64/64), temporal-reasoning
-90.6% (115/127). The default that shipped before v0.48.3.0 (reranker on WITH
+90.6% (115/127). The default that shipped before v0.48.4.0 (reranker on WITH
 autocut 0.35) scored 80.64% (379/470): the cut kept the best session and
 dropped the rest, so autocut is now off. `tokenmax` as released (LLM
 multi-query expansion at the legacy weighting, reranker on, autocut off)
