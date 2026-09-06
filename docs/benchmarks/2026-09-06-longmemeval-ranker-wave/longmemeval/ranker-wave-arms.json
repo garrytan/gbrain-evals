@@ -646,6 +646,220 @@
     "excluded_abstention": 30,
     "errors": 0
    }
+  },
+  {
+   "adapter": "gbrain-hybrid tokenmax as released (legacy expansion, rerank, no autocut)",
+   "dataset": "longmemeval_s_cleaned",
+   "topK": 5,
+   "total": 470,
+   "n_rows": 500,
+   "n_abs": 30,
+   "n_errors_sut": 0,
+   "n_errors_infra": 0,
+   "recall_all_at_k": 0.9276595744680851,
+   "recall_any_at_k": 0.9957446808510638,
+   "ndcg_any_at_k": null,
+   "abs_noise_at_k": null,
+   "mean_distinct_sessions": 4.18936170212766,
+   "session_shortfall_rate": 0.6446808510638298,
+   "recall_by_type": {
+    "knowledge-update": {
+     "total": 72,
+     "hit_all": 72,
+     "recall_all": 1.0,
+     "hit_any": 72,
+     "recall_any": 1.0,
+     "mean_distinct_sessions": 4.25,
+     "session_shortfall_rate": 0.6111111111111112
+    },
+    "multi-session": {
+     "total": 121,
+     "hit_all": 105,
+     "recall_all": 0.8677685950413223,
+     "hit_any": 121,
+     "recall_any": 1.0,
+     "mean_distinct_sessions": 4.12396694214876,
+     "session_shortfall_rate": 0.6611570247933884
+    },
+    "single-session-assistant": {
+     "total": 56,
+     "hit_all": 56,
+     "recall_all": 1.0,
+     "hit_any": 56,
+     "recall_any": 1.0,
+     "mean_distinct_sessions": 4.357142857142857,
+     "session_shortfall_rate": 0.5714285714285714
+    },
+    "single-session-preference": {
+     "total": 30,
+     "hit_all": 29,
+     "recall_all": 0.9666666666666667,
+     "hit_any": 29,
+     "recall_any": 0.9666666666666667,
+     "mean_distinct_sessions": 4.233333333333333,
+     "session_shortfall_rate": 0.6
+    },
+    "single-session-user": {
+     "total": 64,
+     "hit_all": 64,
+     "recall_all": 1.0,
+     "hit_any": 64,
+     "recall_any": 1.0,
+     "mean_distinct_sessions": 4.21875,
+     "session_shortfall_rate": 0.640625
+    },
+    "temporal-reasoning": {
+     "total": 127,
+     "hit_all": 110,
+     "recall_all": 0.8661417322834646,
+     "hit_any": 126,
+     "recall_any": 0.9921259842519685,
+     "mean_distinct_sessions": 4.118110236220472,
+     "session_shortfall_rate": 0.6929133858267716
+    }
+   },
+   "avg_latency_ms": null,
+   "p50_latency_ms": null,
+   "p99_latency_ms": null,
+   "total_seconds": 2417.0,
+   "run_config": {
+    "mode": "tokenmax",
+    "keyword_only": false,
+    "reranker": {
+     "enabled": true,
+     "model": "voyage:rerank-2.5"
+    },
+    "autocut": false,
+    "expansion": true,
+    "expansion_variant_budget": null,
+    "expansion_replay": "/home/vercel-sandbox/gbrain-lme-receipts/A3.ndjson",
+    "embedder": "openai:text-embedding-3-large@1536",
+    "topK": 5,
+    "trajectory": false,
+    "dataset_sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442",
+    "dataset_questions": 500,
+    "question_ids_file": null,
+    "retrieval_config_hash": "f02435b31e4670b694d0ec125710a163ed4ddbd22ac0a693c042600b5f578d34",
+    "knobs_hash": "bd3a9082e104a961",
+    "knobs_hash_version": 29,
+    "cache": null,
+    "cache_skipped": "resume_noop",
+    "reranker_skipped_rows": 0,
+    "vector_degraded_rows": 0,
+    "expansion_failed_rows": 0,
+    "expansion_replay_miss": 0,
+    "gold_missing_from_haystack": 0,
+    "slug_collisions": 0,
+    "excluded_abstention": 30,
+    "errors": 0
+   }
+  },
+  {
+   "adapter": "gbrain-hybrid release default v0.48.3.0 (rerank on, autocut off, pin 3, gate lexical)",
+   "dataset": "longmemeval_s_cleaned",
+   "topK": 5,
+   "total": 470,
+   "n_rows": 500,
+   "n_abs": 30,
+   "n_errors_sut": 0,
+   "n_errors_infra": 0,
+   "recall_all_at_k": 0.9553191489361702,
+   "recall_any_at_k": 0.997872340425532,
+   "ndcg_any_at_k": null,
+   "abs_noise_at_k": null,
+   "mean_distinct_sessions": 4.8936170212765955,
+   "session_shortfall_rate": 0.10425531914893617,
+   "recall_by_type": {
+    "knowledge-update": {
+     "total": 72,
+     "hit_all": 72,
+     "recall_all": 1.0,
+     "hit_any": 72,
+     "recall_any": 1.0,
+     "mean_distinct_sessions": 4.833333333333333,
+     "session_shortfall_rate": 0.16666666666666666
+    },
+    "multi-session": {
+     "total": 121,
+     "hit_all": 112,
+     "recall_all": 0.9256198347107438,
+     "hit_any": 121,
+     "recall_any": 1.0,
+     "mean_distinct_sessions": 4.966942148760331,
+     "session_shortfall_rate": 0.03305785123966942
+    },
+    "single-session-assistant": {
+     "total": 56,
+     "hit_all": 56,
+     "recall_all": 1.0,
+     "hit_any": 56,
+     "recall_any": 1.0,
+     "mean_distinct_sessions": 5.0,
+     "session_shortfall_rate": 0.0
+    },
+    "single-session-preference": {
+     "total": 30,
+     "hit_all": 30,
+     "recall_all": 1.0,
+     "hit_any": 30,
+     "recall_any": 1.0,
+     "mean_distinct_sessions": 4.933333333333334,
+     "session_shortfall_rate": 0.06666666666666667
+    },
+    "single-session-user": {
+     "total": 64,
+     "hit_all": 64,
+     "recall_all": 1.0,
+     "hit_any": 64,
+     "recall_any": 1.0,
+     "mean_distinct_sessions": 4.78125,
+     "session_shortfall_rate": 0.21875
+    },
+    "temporal-reasoning": {
+     "total": 127,
+     "hit_all": 115,
+     "recall_all": 0.905511811023622,
+     "hit_any": 126,
+     "recall_any": 0.9921259842519685,
+     "mean_distinct_sessions": 4.858267716535433,
+     "session_shortfall_rate": 0.13385826771653545
+    }
+   },
+   "avg_latency_ms": null,
+   "p50_latency_ms": null,
+   "p99_latency_ms": null,
+   "total_seconds": 2403.0,
+   "run_config": {
+    "mode": "balanced",
+    "keyword_only": false,
+    "reranker": {
+     "enabled": true,
+     "model": "voyage:rerank-2.5"
+    },
+    "autocut": false,
+    "expansion": false,
+    "expansion_variant_budget": null,
+    "expansion_replay": null,
+    "embedder": "openai:text-embedding-3-large@1536",
+    "topK": 5,
+    "trajectory": false,
+    "dataset_sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442",
+    "dataset_questions": 500,
+    "question_ids_file": null,
+    "retrieval_config_hash": "0d5ee2baf7b5867f37c05e239101be47e5a3155efe9e0df938ad493cc1cf9865",
+    "knobs_hash": "a8a2e8818b34e328",
+    "knobs_hash_version": 29,
+    "cache": null,
+    "cache_skipped": "resume_noop",
+    "reranker_skipped_rows": 0,
+    "vector_degraded_rows": 0,
+    "expansion_failed_rows": 0,
+    "expansion_replay_miss": 0,
+    "gold_missing_from_haystack": 0,
+    "slug_collisions": 0,
+    "excluded_abstention": 30,
+    "errors": 0
+   }
   }
  ]
 }
