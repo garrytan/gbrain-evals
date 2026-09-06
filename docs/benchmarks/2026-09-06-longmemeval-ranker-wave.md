@@ -4,21 +4,79 @@
 **Date:** 2026-09-06
 **gbrain commit:** TBD (PR head SHA; the sibling pin moves to the merge SHA after landing)
 **Dataset:** `xiaowu0162/longmemeval-cleaned`, `longmemeval_s_cleaned.json`, sha256 `d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442`, 500 questions, 30 abstention (`_abs`) excluded from recall denominators → 470 scored.
-**Harness:** `gbrain eval longmemeval` (the in-repo command; this wave made it the receipt producer), one in-memory PGLite per run, TRUNCATE between questions, content-addressed embedding cache (`openai:text-embedding-3-large@1536`), pins recorded per row and in `run_config`.
+**Harness:** `gbrain eval longmemeval` (the in-repo command; this wave made it the receipt producer), one in-memory PGLite per run, TRUNCATE between questions, content-addressed embedding cache (`openai:text-embedding-3-large` @ 1536, every arm sees byte-identical vectors), k = 5 chunk rows, strict `recall_all@5` over the distinct sessions among those rows.
 
 ## 1. Headline
 
 TBD — one sentence per published claim, wins and losses. No SOTA claim is made on judged answer accuracy (protocols are not matched across systems; see §6).
 
+Three things changed in gbrain's ranking pipeline in this wave, each on a
+pre-registered receipt: graph-derived answers are no longer buried by the
+cross-encoder reranker (`search.relational_rerank_pin`), well-connected hub
+pages no longer outrank the page that actually matched on paraphrased
+concept questions (`search.metadata_boost_gate`), and LLM multi-query
+expansion is fused under a fixed weight budget instead of one vote per
+variant (`search.expansion_variant_budget`, outcome TBD). The rest of this
+report is the evidence for each, including the two mechanisms that did NOT
+pass their rules and therefore did not ship as defaults.
+
 ## 2. What is gbrain
 
-gbrain is a personal knowledge brain that runs locally: markdown pages indexed in Postgres or PGLite, hybrid retrieval (keyword + vector + typed-edge relational arm fused by reciprocal rank fusion, then a cross-encoder reranker on the `balanced` and `tokenmax` search modes), served to agents over CLI and MCP. Source: https://github.com/garrytan/gbrain.
+gbrain is a personal knowledge brain that runs locally. Your notes, contacts,
+meeting summaries, decisions and imported chat history live as markdown
+files on disk; gbrain keeps a derived index in Postgres (or embedded PGLite)
+with full-text search, vector embeddings and a typed-edge graph between
+pages. The files are the source of truth; the index can be rebuilt from
+them at any time. There is no cloud lock-in: an agent harness (Claude Code,
+Codex, OpenClaw, Cursor) talks to gbrain over a CLI or MCP server and the
+data never leaves your machine unless you point it at a managed Postgres.
+
+Retrieval is hybrid. A query fans out to a keyword arm (BM25 over
+`tsvector`), a vector arm (HNSW over chunk embeddings), a title-phrase arm
+and, for questions shaped like "who invested in X" or "what connects A and
+B", a relational arm that walks the typed-edge graph. The arms are fused by
+reciprocal rank fusion, re-scored, boosted by metadata (backlinks, recency,
+salience, graph adjacency), de-duplicated, then optionally reranked by a
+cross-encoder and trimmed by a score-discontinuity cut. Each layer is a
+config key with a receipt behind it; this report is about four of those keys.
+
+What it is for: capturing what you learn and whom you meet, and getting it
+back weeks later when the context is gone — the preference you stated in
+March, the two people you met at different events who turn out to work on
+the same problem, the decision you made and the reason you gave. The
+benchmark below is the closest public proxy for that workload.
+
+Repo: <https://github.com/garrytan/gbrain> · CLI README: <https://github.com/garrytan/gbrain#readme>
 
 ## 3. What is the benchmark
 
-LongMemEval (Wu et al.) — 500 questions over haystacks of ~50 chat sessions each, six question types, gold `answer_session_ids`. We report the official retrieval metric `recall_all@5` (every gold session inside the top-5 distinct retrieved sessions) as the headline, `recall_any@5` as a diagnostic, and, new in this wave, LLM-judged answer accuracy with the official `evaluate_qa.py` prompts (gpt-4o judge), published as gbrain's first judged number with its protocol disclosed.
+LongMemEval (Wu et al., 2024; paper <https://arxiv.org/abs/2410.10813>,
+data <https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned>)
+tests long-term interactive memory for chat assistants. Each of the 500
+questions comes with a haystack of ~50 chat sessions (the `_s` split), and
+the answer depends on one or more of those sessions. Six question types:
+single-session-user, single-session-assistant, single-session-preference,
+multi-session, knowledge-update, temporal-reasoning; 30 questions are
+abstention questions (`_abs`) whose gold is "this was never discussed".
+Ground truth for retrieval is `answer_session_ids`; ground truth for answer
+accuracy is a short gold answer scored by an LLM judge with the official
+prompts (`evaluate_qa.py`).
 
-## 4. Arms
+We report the official retrieval metric, **`recall_all@5`**: a question
+counts only when EVERY gold session is among the top-5 distinct sessions
+retrieved. The loose diagnostic `recall_any@5` (any one gold session in the
+top 5) is published alongside because it is the number most systems'
+"retrieval recall" tables actually show. We also publish, for the first
+time, a **judged answer-accuracy** row (§6) — the metric memory vendors
+publish — with the full protocol disclosed and no cross-system claim.
+
+Why this benchmark: it stresses the failure that a personal brain actually
+has — near-duplicate sessions about the same topic where the wrong one
+outranks the right one — and it has six typed slices, so a fix that helps
+temporal questions while hurting knowledge-update questions shows up as
+such instead of washing out in an average.
+
+## 4. Arms — every gbrain configuration explained
 
 | Arm | Configuration | Purpose |
 |---|---|---|
@@ -30,23 +88,157 @@ LongMemEval (Wu et al.) — 500 questions over haystacks of ~50 chat sessions ea
 | A3′ / A3′R | chosen budget, reranker off / `tokenmax` with reranker on | mechanism receipt / the configuration tokenmax users run |
 | final | all receipted flips applied | release-configuration gate |
 
-Decision set: 430 questions (470 minus the seed-42 dev slice of 40; `evals/longmemeval/splits-seed42.json` in gbrain). Rules are integer question counts, pre-registered in the plan.
+Decision set: 430 questions (470 minus the seed-42 dev slice of 40; `evals/longmemeval/splits-seed42.json` in gbrain). Rules are integer question counts, pre-registered in the plan before any run.
+
+**A1 `gbrain-hybrid`** runs `hybridSearch(engine, query, {limit: 5})` with
+`search.mode=balanced`, `search.reranker.enabled=false`, `search.autocut=false`.
+Keyword + vector + title arms fused by RRF, metadata boosts, dedup. This is
+the row every earlier gbrain LongMemEval receipt reports and the parity gate
+for the new harness. *Real-world parallel:* the default answer to "what did
+I say about the dealership visit" when no reranker key is configured.
+
+**A2 `gbrain-hybrid+rerank`** is A1 plus the cross-encoder
+(`applyReranker`, `voyage:rerank-2.5`, `reranker_top_n_in` 25). The
+reranker reads the query and each candidate chunk together and reorders
+the pool. *Why it matters here:* the misses left after fusion are ranking
+misses among sessions that are all in the pool, exactly what a
+cross-encoder fixes. *Real-world parallel:* two meeting notes about the
+same company, only one of which answers the question you asked.
+
+**A3 `gbrain-hybrid+expansion`** is A1 plus `expandQuery` (a Claude Haiku
+call that rewrites the question into alternative phrasings); each variant
+is embedded and fused as its own vector list. Variants are recorded per
+question so later cells can replay them. *Why it matters:* it is what
+`search.mode=tokenmax` does, and on this benchmark it has been the largest
+regression on record.
+
+**A4 `gbrain-default`** is the configuration a fresh `gbrain init` runs:
+reranker on, autocut on (floor 0.35). Its post-rerank candidate pool is
+captured per question (`--capture-pool`) so every autocut floor can be
+replayed offline from ONE reranker pass.
+
+**A3′ / A3′R** replay A3's recorded variants under
+`search.expansion_variant_budget=b`: the variant lists share one total RRF
+weight `b` (`weight_i = b / n_voting_variants`, `fusion-lists.ts`) instead of
+one full vote each. A3′ is balanced with the reranker off (the mechanism
+receipt against A1); A3′R is `tokenmax` with the reranker on (what tokenmax
+users actually run, against A4).
+
+Two more receipts in this report come from other fixtures because the
+mechanism under test never fires on LongMemEval:
+
+**NamedThingBench reranker A/B (rule R1)** — 50 paired questions on an
+entity/graph corpus (`scripts/r1-namedthing-rerank-ab.ts` in gbrain):
+11 entity-core questions and 39 graph-relationship questions ("who invested
+in acme-example"). Arms: reranker off, reranker on, reranker on + relational
+pin, reranker on + pin + autocut, and the metadata gate.
+
+**Cat 13 conceptual recall** (`eval/runner/cat13-conceptual.ts`, this repo)
+— 548 seeded paraphrase probes over 30 concept pages in the world-v1
+corpus, Voyage `voyage-4` @ 1024 for every adapter, 20 tuning / 10 held-out
+concepts (seed 42). Adapters: bare vector, gbrain hybrid, grep-only, and a
+vector+grep RRF reference.
 
 ## 5. Results — retrieval
 
-TBD (arms table, per-type table, paired deltas on the 430 and the 470, parity gate outcome, autocut replay table, R1 relational finding and the relational-pin receipt).
+### 5.1 LongMemEval arms
+
+TBD (arms table with recall_all@5 / recall_any@5 / paired vs A1 on the 470 and the 430; parity gate outcome; per-type table; autocut replay table + top-score histogram; cache receipts).
+
+### 5.2 NamedThingBench reranker A/B (rule R1) and the relational pin
+
+| Arm (balanced) | core hit@1 (11) | core hit@3 (11) | graph-relationship hit@1 (39) | graph-relationship hit@3 (39) | paired losses vs reranker off |
+|---|---|---|---|---|---|
+| reranker off, autocut off | 10/11 | 10/11 | 21/39 | 27/39 | — |
+| reranker on | 11/11 | 11/11 | **3/39** | **5/39** | 19 hit@1, 22 hit@3 |
+| reranker on + `relational_rerank_pin=3` | 11/11 | 11/11 | 21/39 | 27/39 | 0 hit@1, 0 hit@3 |
+| reranker on + pin + autocut on (shipped shape) | 11/11 | 11/11 | 21/39 | 27/39 | 0 hit@1, 0 hit@3 |
+| … + `metadata_boost_gate=lexical` | 11/11 | 11/11 | 21/39 | 27/39 | 0 hit@1, 0 hit@3 | (identical)
+
+The cross-encoder scores chunk TEXT. A graph-derived answer ("fund-a" for
+"who invested in acme-example") is a page whose text need not mention the
+entity in the question, so the reranker demoted the correct investor page
+below pages that merely mention the words. The pin re-inserts up to three
+relational-arm rows above the reranked text rows in their fused order;
+pinned rows survive autocut. Rule R1 ("balanced stays on iff 0 hit@1 and
+≤ 1 hit@3 losses") passes with the pin; balanced reranker stays on.
+Receipts: `namedthing-r1/*.json`.
+
+### 5.3 Cat 13 conceptual recall (held-out concepts, nDCG@5)
+
+| Arm | tuning (359 probes) | held-out (181 probes) | held-out P@1 |
+|---|---|---|---|
+| bare vector (voyage-4) | 59.6 | **60.5** | 65.2 |
+| gbrain, reranker off / autocut off (E0-V1) | 50.6 | 53.0 | 48.1 |
+| gbrain, shipped default (E0-V4) | 53.9 | 55.8 | 63.5 |
+| gbrain + `keyword_arm_confidence_floor=0.6121`, off/off (E2-V1) | 50.8 | 53.0 | 48.1 |
+| gbrain + `metadata_boost_gate=lexical`, off/off (E3-V1) | 57.3 | **57.8** | 56.4 |
+| gbrain + gate, shipped default (E3-V4) | 56.7 | **57.9** | 65.7 |
+
+Pre-registered rules and outcomes:
+
+- **E2 (arm-confidence floor):** held-out hybrid ≥ bare vector. FAILED
+  (53.0 → 53.0). The calibration receipt (`cat13/E2-calibration/`) showed
+  83% of the probes where the keyword top hit was not gold had an EMPTY
+  keyword arm — the keyword-noise hypothesis explains little of the gap.
+  The knob ships off.
+- **E1 localization** (`cat13/E1-localize/localize.md`): re-simulating the
+  pipeline stage by stage on the tuning split put the loss in the
+  post-fusion metadata boosts — hub pages carried 1.03–1.12x backlink /
+  graph-adjacency / recency boosts that the gold concept page never
+  carried, whenever the vector arm was the only voter (73 of 105 gaps,
+  0 collateral when gated).
+- **E3 (metadata boost gate):** held-out ≥ 57.0 (E0-V1 + 4), written before
+  the run. PASSED at 57.8; tuning 57.3 matched the projection exactly;
+  NamedThingBench (50/50), BrainBench, the retrieval canary and the
+  LongMemEval dev slice (40/40) were byte-identical → `lexical` is the
+  default in every bundle. The stretch (bare vector 60.5) is not met: the
+  remaining 2.7 points are the keyword arm's own votes on probes where it
+  does match, and are filed as a follow-up.
+
+### 5.4 Temporal reasoning: located, not fixed
+
+Half-A diagnostics of A1's misses (`longmemeval/phaseB-halfA-miss-diagnostics.md`):
+every missed gold session sits at vector rank 6–15 and its fused rank equals
+its vector rank — the loss is the embedding ranking of near-duplicate
+sessions, not fusion, boost demotion, pre-fusion pool depth or reranker
+depth (both 0). The clause-decomposition signature held on 1 of 10 misses,
+below any rule, so no temporal knob landed. The reranker (A2 vs A1: temporal 108 → 114 of 127) is the lever that moves this class.
 
 ## 6. Results — judged answer accuracy
 
-TBD. Protocol: reader `TBD (provider-reported snapshot)`, reader prompt sha TBD, k=5 sessions, max_tokens 512, judge `openai:gpt-4o` at temperature 0 / max_tokens 10 with the official prompts, gold and hypothesis inside a data boundary; headline scores every ungradable question as incorrect. Comparison rows are labelled "reader-matched, protocol-unmatched" or "unverified"; no SOTA claim.
+TBD. Protocol: reader `TBD (provider-reported snapshot)`, reader prompt sha TBD, k=5 sessions, max_tokens 512, judge `openai:gpt-4o` at temperature 0 / max_tokens 10 with the official prompts, gold and hypothesis inside a data-boundary wrapper (disclosed deviation), `judge_error` rows re-judged until zero and otherwise scored incorrect in the headline. Comparison rows (Mastra 94.87%, Mem0 93.4%, OMEGA 95.4%) are listed as **not directly comparable** — reader, prompts, judge and dataset revision differ — and this row makes **no SOTA claim**.
 
-## 7. How to reproduce
+## 7. Charts
+
+TBD — headline card + per-type grouped bars from `eval/runner/longmemeval-chart.ts`, stored under `docs/benchmarks/2026-09-06-longmemeval-ranker-wave/`.
+
+## 8. Latency + cost
+
+TBD (p50 / p99 per question per arm from the harness rows; embedding cache cold build cost; reranker and Haiku expansion per-1000 cost; judge cost). Wave paid spend so far: about $7 of a $75 cap enforced by `scripts/eval-spend-guard.sh`.
+
+## 9. Limits & caveats
+
+- Retrieval recall ≠ answer accuracy; §6 measures the latter with a disclosed protocol and no cross-system claim.
+- The 40-question dev slice is inside the published 470; read the 430-question decision-set column for any knob that was selected on the dev slice.
+- Expansion variants are non-deterministic; budget cells are compared on ONE recorded draw of variants.
+- Reranker rows depend on a hosted model snapshot (`voyage:rerank-2.5`); the harness records the model and fails a run that silently fell open.
+- Cat 13 is a synthetic probe set over a 30-concept corpus; the held-out split guards against tuning on it but not against the templates themselves.
+- The NamedThingBench relational fixture is small (39 questions); the pin's cost (a wrong edge now lands at the top rather than the end of page 1) is documented, not measured on a noisy graph.
+- Single run per arm; CIs are question-sampling uncertainty only.
+
+## 10. How to reproduce
 
 ```bash
 mkdir -p ~/datasets/longmemeval && curl -Lo ~/datasets/longmemeval/longmemeval_s_cleaned.json \
   https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned/resolve/main/longmemeval_s_cleaned.json
-export OPENAI_API_KEY=… GBRAIN_EMBEDDING_MODEL=openai:text-embedding-3-large GBRAIN_EMBEDDING_DIMENSIONS=1536
-gbrain eval longmemeval ~/datasets/longmemeval/longmemeval_s_cleaned.json \
-  --retrieval-only --top-k 5 --by-type --no-trajectory --mode balanced --reranker off --autocut off \
-  --embed-cache ~/.cache/gbrain-eval/longmemeval-embed.sqlite --output A1.ndjson
+export OPENAI_API_KEY=… VOYAGE_API_KEY=… GBRAIN_EMBEDDING_MODEL=openai:text-embedding-3-large GBRAIN_EMBEDDING_DIMENSIONS=1536
+DS=~/datasets/longmemeval/longmemeval_s_cleaned.json
+COMMON="--retrieval-only --top-k 5 --by-type --no-trajectory --embed-cache ~/.cache/gbrain-eval/longmemeval-embed.sqlite"
+gbrain eval longmemeval $DS $COMMON --mode balanced --reranker off --autocut off --output A1.ndjson
+gbrain eval longmemeval $DS $COMMON --mode balanced --reranker on  --autocut off --output A2.ndjson
+gbrain eval longmemeval $DS $COMMON --mode balanced --reranker off --autocut off --expansion --output A3.ndjson
+gbrain eval longmemeval $DS $COMMON --mode balanced --reranker on  --autocut on --capture-pool --output A4.ndjson
+# Cat 13 (this repo; CAT13_EMBEDDING_MODEL=voyage:voyage-4 CAT13_EMBED_DIMS=1024): bun eval/runner/cat13-conceptual.ts --reranker off --autocut off --search-pin search.metadata_boost_gate=lexical   # E3-V1; E3-V4 = --reranker on --autocut on
+# NamedThingBench R1 (gbrain repo): bun run scripts/r1-namedthing-rerank-ab.ts --autocut on --relational-pin 3
 ```

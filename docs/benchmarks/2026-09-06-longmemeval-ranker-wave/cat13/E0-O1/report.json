@@ -1,0 +1,623 @@
+{
+  "ran_at": "2026-09-06T02:57:55.734Z",
+  "stub_embed": false,
+  "embedder": {
+    "model": "openai:text-embedding-3-large",
+    "dims": 1536
+  },
+  "search_pins": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.autocut": "false"
+  },
+  "concept_split": {
+    "seed": 42,
+    "tuning_n": 20,
+    "holdout_n": 10,
+    "tuning": [
+      "concepts/agentic-workflows",
+      "concepts/ai-first-product",
+      "concepts/carbon-credits",
+      "concepts/churn-cohorts",
+      "concepts/customer-concentration",
+      "concepts/do-things-that-don-t-scale",
+      "concepts/embedded-fintech",
+      "concepts/fine-tuning",
+      "concepts/foundation-models",
+      "concepts/founder-mode",
+      "concepts/inference-cost",
+      "concepts/latency-budget",
+      "concepts/multi-modal",
+      "concepts/plg-motion",
+      "concepts/product-market-fit",
+      "concepts/retrieval-augmented-generation",
+      "concepts/second-time-founder",
+      "concepts/top-down-sales",
+      "concepts/unit-economics",
+      "concepts/usage-based-pricing"
+    ],
+    "holdout": [
+      "concepts/community-led-growth",
+      "concepts/developer-relations",
+      "concepts/enterprise-gtm",
+      "concepts/gross-margin-expansion",
+      "concepts/horizontal-api",
+      "concepts/open-source-distribution",
+      "concepts/permitting-reform",
+      "concepts/revenue-durability",
+      "concepts/vertical-saas",
+      "concepts/wallet-share"
+    ],
+    "probes": {
+      "tuning": 359,
+      "holdout": 181,
+      "mixed": 8,
+      "unassigned": 0
+    }
+  },
+  "probes": 548,
+  "template_counts": {
+    "body-fuzzy": 97,
+    "synonym": 159,
+    "title-paraphrase": 81,
+    "title-variation": 75,
+    "description-paraphrase": 34,
+    "synonym-fuzzy": 49,
+    "semantic-neighborhood": 15,
+    "company-neighborhood": 38
+  },
+  "results": [
+    {
+      "name": "vector",
+      "ndcg5": 0.5749232828456556,
+      "p5_graded": 0.2791970802919705,
+      "p1_strict": 0.656934306569343,
+      "byTemplate": {
+        "body-fuzzy": {
+          "ndcg": 0.17775865628010673,
+          "count": 97
+        },
+        "synonym": {
+          "ndcg": 0.6375047600062197,
+          "count": 159
+        },
+        "title-paraphrase": {
+          "ndcg": 0.7622110962533875,
+          "count": 81
+        },
+        "title-variation": {
+          "ndcg": 0.7581904389985165,
+          "count": 75
+        },
+        "description-paraphrase": {
+          "ndcg": 0.759182649392809,
+          "count": 34
+        },
+        "synonym-fuzzy": {
+          "ndcg": 0.5983766898730265,
+          "count": 49
+        },
+        "semantic-neighborhood": {
+          "ndcg": 0.7519565093674055,
+          "count": 15
+        },
+        "company-neighborhood": {
+          "ndcg": 0.30096619090007076,
+          "count": 38
+        }
+      },
+      "probesScored": 548,
+      "wallMs": 123114,
+      "splits": {
+        "seed": 42,
+        "tuning": {
+          "ndcg5": 0.5722604407054795,
+          "p5_graded": 0.3008356545961013,
+          "p1_strict": 0.6824512534818942,
+          "count": 359,
+          "byTemplate": {
+            "body-fuzzy": {
+              "ndcg": 0.15602946148161326,
+              "count": 63
+            },
+            "synonym": {
+              "ndcg": 0.6292382446236768,
+              "count": 104
+            },
+            "title-paraphrase": {
+              "ndcg": 0.7449651865924535,
+              "count": 58
+            },
+            "title-variation": {
+              "ndcg": 0.7329020674749503,
+              "count": 48
+            },
+            "description-paraphrase": {
+              "ndcg": 0.7512051587804752,
+              "count": 22
+            },
+            "synonym-fuzzy": {
+              "ndcg": 0.6047184169880735,
+              "count": 34
+            },
+            "semantic-neighborhood": {
+              "ndcg": 0.7326924125526499,
+              "count": 11
+            },
+            "company-neighborhood": {
+              "ndcg": 0.3493172857399458,
+              "count": 19
+            }
+          }
+        },
+        "holdout": {
+          "ndcg5": 0.5968755330332128,
+          "p5_graded": 0.23867403314917163,
+          "p1_strict": 0.6353591160220995,
+          "count": 181,
+          "byTemplate": {
+            "synonym": {
+              "ndcg": 0.653135989093207,
+              "count": 55
+            },
+            "synonym-fuzzy": {
+              "ndcg": 0.5840021084122539,
+              "count": 15
+            },
+            "title-variation": {
+              "ndcg": 0.8031475439293002,
+              "count": 27
+            },
+            "body-fuzzy": {
+              "ndcg": 0.2180215760537859,
+              "count": 34
+            },
+            "description-paraphrase": {
+              "ndcg": 0.7738080488487545,
+              "count": 12
+            },
+            "title-paraphrase": {
+              "ndcg": 0.8057007814853078,
+              "count": 23
+            },
+            "semantic-neighborhood": {
+              "ndcg": 0.8049327756079836,
+              "count": 4
+            },
+            "company-neighborhood": {
+              "ndcg": 0.2925179561820212,
+              "count": 11
+            }
+          }
+        },
+        "mixed": 8,
+        "unassigned": 0
+      },
+      "gatewayAfterInit": {
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536
+      }
+    },
+    {
+      "name": "vector-grep-rrf-fusion",
+      "ndcg5": 0.5502515747797019,
+      "p5_graded": 0.27408759124087556,
+      "p1_strict": 0.6003649635036497,
+      "byTemplate": {
+        "body-fuzzy": {
+          "ndcg": 0.2094032973101969,
+          "count": 97
+        },
+        "synonym": {
+          "ndcg": 0.6366748680566257,
+          "count": 159
+        },
+        "title-paraphrase": {
+          "ndcg": 0.7061129495131936,
+          "count": 81
+        },
+        "title-variation": {
+          "ndcg": 0.6971258615014229,
+          "count": 75
+        },
+        "description-paraphrase": {
+          "ndcg": 0.7518151681584382,
+          "count": 34
+        },
+        "synonym-fuzzy": {
+          "ndcg": 0.61745150168253,
+          "count": 49
+        },
+        "semantic-neighborhood": {
+          "ndcg": 0.698488933935442,
+          "count": 15
+        },
+        "company-neighborhood": {
+          "ndcg": 0.1110704549249103,
+          "count": 38
+        }
+      },
+      "probesScored": 548,
+      "wallMs": 242926,
+      "splits": {
+        "seed": 42,
+        "tuning": {
+          "ndcg5": 0.5480011359536935,
+          "p5_graded": 0.2908077994428979,
+          "p1_strict": 0.6323119777158774,
+          "count": 359,
+          "byTemplate": {
+            "body-fuzzy": {
+              "ndcg": 0.18944444413764522,
+              "count": 63
+            },
+            "synonym": {
+              "ndcg": 0.6160239093469536,
+              "count": 104
+            },
+            "title-paraphrase": {
+              "ndcg": 0.7012978746663431,
+              "count": 58
+            },
+            "title-variation": {
+              "ndcg": 0.6829284565497109,
+              "count": 48
+            },
+            "description-paraphrase": {
+              "ndcg": 0.7364841540646878,
+              "count": 22
+            },
+            "synonym-fuzzy": {
+              "ndcg": 0.6252331927194732,
+              "count": 34
+            },
+            "semantic-neighborhood": {
+              "ndcg": 0.6995132446074216,
+              "count": 11
+            },
+            "company-neighborhood": {
+              "ndcg": 0.11157120931685634,
+              "count": 19
+            }
+          }
+        },
+        "holdout": {
+          "ndcg5": 0.5755264849991696,
+          "p5_graded": 0.24530386740331533,
+          "p1_strict": 0.56353591160221,
+          "count": 181,
+          "byTemplate": {
+            "synonym": {
+              "ndcg": 0.6757239536167303,
+              "count": 55
+            },
+            "synonym-fuzzy": {
+              "ndcg": 0.5998130019987921,
+              "count": 15
+            },
+            "title-variation": {
+              "ndcg": 0.7223656925266883,
+              "count": 27
+            },
+            "body-fuzzy": {
+              "ndcg": 0.24638587818874846,
+              "count": 34
+            },
+            "description-paraphrase": {
+              "ndcg": 0.7799220273303139,
+              "count": 12
+            },
+            "title-paraphrase": {
+              "ndcg": 0.7182553121704683,
+              "count": 23
+            },
+            "semantic-neighborhood": {
+              "ndcg": 0.6956720795874981,
+              "count": 4
+            },
+            "company-neighborhood": {
+              "ndcg": 0.13324208391590026,
+              "count": 11
+            }
+          }
+        },
+        "mixed": 8,
+        "unassigned": 0
+      },
+      "resolvedConfig": {
+        "auto_link": "false",
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.autocut": "false"
+      },
+      "gatewayAfterInit": {
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536
+      },
+      "observed": {
+        "queries": 548,
+        "rerank_scored_queries": 0
+      }
+    },
+    {
+      "name": "gbrain",
+      "ndcg5": 0.5291746286240083,
+      "p5_graded": 0.26532846715328445,
+      "p1_strict": 0.5529197080291971,
+      "byTemplate": {
+        "body-fuzzy": {
+          "ndcg": 0.1858191985826703,
+          "count": 97
+        },
+        "synonym": {
+          "ndcg": 0.5992716023282295,
+          "count": 159
+        },
+        "title-paraphrase": {
+          "ndcg": 0.6688623876077063,
+          "count": 81
+        },
+        "title-variation": {
+          "ndcg": 0.6857966640800884,
+          "count": 75
+        },
+        "description-paraphrase": {
+          "ndcg": 0.7518151681584382,
+          "count": 34
+        },
+        "synonym-fuzzy": {
+          "ndcg": 0.6049077517963561,
+          "count": 49
+        },
+        "semantic-neighborhood": {
+          "ndcg": 0.697898531283006,
+          "count": 15
+        },
+        "company-neighborhood": {
+          "ndcg": 0.14199401911487144,
+          "count": 38
+        }
+      },
+      "probesScored": 548,
+      "wallMs": 237678,
+      "splits": {
+        "seed": 42,
+        "tuning": {
+          "ndcg5": 0.5259839795491545,
+          "p5_graded": 0.2802228412256278,
+          "p1_strict": 0.5793871866295265,
+          "count": 359,
+          "byTemplate": {
+            "body-fuzzy": {
+              "ndcg": 0.17247378771436853,
+              "count": 63
+            },
+            "synonym": {
+              "ndcg": 0.5786110050031626,
+              "count": 104
+            },
+            "title-paraphrase": {
+              "ndcg": 0.6579960346063973,
+              "count": 58
+            },
+            "title-variation": {
+              "ndcg": 0.6668933326800159,
+              "count": 48
+            },
+            "description-paraphrase": {
+              "ndcg": 0.7364841540646878,
+              "count": 22
+            },
+            "synonym-fuzzy": {
+              "ndcg": 0.615038654003497,
+              "count": 34
+            },
+            "semantic-neighborhood": {
+              "ndcg": 0.6987081500813728,
+              "count": 11
+            },
+            "company-neighborhood": {
+              "ndcg": 0.14802369787175584,
+              "count": 19
+            }
+          }
+        },
+        "holdout": {
+          "ndcg5": 0.5545045799469208,
+          "p5_graded": 0.23867403314917163,
+          "p1_strict": 0.5248618784530387,
+          "count": 181,
+          "byTemplate": {
+            "synonym": {
+              "ndcg": 0.6383389136338092,
+              "count": 55
+            },
+            "synonym-fuzzy": {
+              "ndcg": 0.5819443734601706,
+              "count": 15
+            },
+            "title-variation": {
+              "ndcg": 0.7194025865691057,
+              "count": 27
+            },
+            "body-fuzzy": {
+              "ndcg": 0.21054745989746457,
+              "count": 34
+            },
+            "description-paraphrase": {
+              "ndcg": 0.7799220273303139,
+              "count": 12
+            },
+            "title-paraphrase": {
+              "ndcg": 0.6962644951762241,
+              "count": 23
+            },
+            "semantic-neighborhood": {
+              "ndcg": 0.6956720795874981,
+              "count": 4
+            },
+            "company-neighborhood": {
+              "ndcg": 0.16265487358035557,
+              "count": 11
+            }
+          }
+        },
+        "mixed": 8,
+        "unassigned": 0
+      },
+      "resolvedConfig": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.autocut": "false"
+      },
+      "gatewayAfterInit": {
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536
+      },
+      "observed": {
+        "queries": 548,
+        "rerank_scored_queries": 0
+      }
+    },
+    {
+      "name": "grep-only",
+      "ndcg5": 0.5084752106729887,
+      "p5_graded": 0.2149635036496366,
+      "p1_strict": 0.5802919708029197,
+      "byTemplate": {
+        "body-fuzzy": {
+          "ndcg": 0.4285621216859127,
+          "count": 97
+        },
+        "synonym": {
+          "ndcg": 0.4206557264677957,
+          "count": 159
+        },
+        "title-paraphrase": {
+          "ndcg": 0.7003226312371458,
+          "count": 81
+        },
+        "title-variation": {
+          "ndcg": 0.7044824745935959,
+          "count": 75
+        },
+        "description-paraphrase": {
+          "ndcg": 0.7010368768060907,
+          "count": 34
+        },
+        "synonym-fuzzy": {
+          "ndcg": 0.3178960348650104,
+          "count": 49
+        },
+        "semantic-neighborhood": {
+          "ndcg": 0.6230934982086757,
+          "count": 15
+        },
+        "company-neighborhood": {
+          "ndcg": 0.3123354847166745,
+          "count": 38
+        }
+      },
+      "probesScored": 548,
+      "wallMs": 159,
+      "splits": {
+        "seed": 42,
+        "tuning": {
+          "ndcg5": 0.5050767138493103,
+          "p5_graded": 0.2245125348189424,
+          "p1_strict": 0.5988857938718662,
+          "count": 359,
+          "byTemplate": {
+            "body-fuzzy": {
+              "ndcg": 0.43265961923873114,
+              "count": 63
+            },
+            "synonym": {
+              "ndcg": 0.42364942583872706,
+              "count": 104
+            },
+            "title-paraphrase": {
+              "ndcg": 0.6642980953126838,
+              "count": 58
+            },
+            "title-variation": {
+              "ndcg": 0.6688842747457121,
+              "count": 48
+            },
+            "description-paraphrase": {
+              "ndcg": 0.665600231982744,
+              "count": 22
+            },
+            "synonym-fuzzy": {
+              "ndcg": 0.3368454732959896,
+              "count": 34
+            },
+            "semantic-neighborhood": {
+              "ndcg": 0.5918230109241647,
+              "count": 11
+            },
+            "company-neighborhood": {
+              "ndcg": 0.355984470571315,
+              "count": 19
+            }
+          }
+        },
+        "holdout": {
+          "ndcg5": 0.52202238664677,
+          "p5_graded": 0.19337016574585608,
+          "p1_strict": 0.5580110497237569,
+          "count": 181,
+          "byTemplate": {
+            "synonym": {
+              "ndcg": 0.4149949131118522,
+              "count": 55
+            },
+            "synonym-fuzzy": {
+              "ndcg": 0.27494397442145757,
+              "count": 15
+            },
+            "title-variation": {
+              "ndcg": 0.7677681632120564,
+              "count": 27
+            },
+            "body-fuzzy": {
+              "ndcg": 0.4209696997498072,
+              "count": 34
+            },
+            "description-paraphrase": {
+              "ndcg": 0.7660040589822262,
+              "count": 12
+            },
+            "title-paraphrase": {
+              "ndcg": 0.791167113133615,
+              "count": 23
+            },
+            "semantic-neighborhood": {
+              "ndcg": 0.7090873382410806,
+              "count": 4
+            },
+            "company-neighborhood": {
+              "ndcg": 0.20629275314076378,
+              "count": 11
+            }
+          }
+        },
+        "mixed": 8,
+        "unassigned": 0
+      },
+      "gatewayAfterInit": {
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536
+      }
+    }
+  ],
+  "accounting": {
+    "n_total": 2192,
+    "n_scored": 2192,
+    "completion_rate": 1,
+    "errors": [],
+    "infra_error_rate": 0,
+    "run_invalid": false,
+    "publishable": true
+  }
+}

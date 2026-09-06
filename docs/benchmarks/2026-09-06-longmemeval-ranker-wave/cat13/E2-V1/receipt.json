@@ -1,0 +1,650 @@
+{
+  "schema_version": 1,
+  "benchmark_version": "0.5.0",
+  "category": "cat13-conceptual",
+  "gbrain_version": "0.48.2.0",
+  "gbrain_pin": "github:garrytan/gbrain#5cfb84f1d3a809c70064c292c23db3d538d5c551",
+  "started_at": "2026-09-06T03:30:08.342Z",
+  "finished_at": "2026-09-06T03:38:07.016Z",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 2192,
+  "n_scored": 2192,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "resolved_config": {
+    "top_k": 5,
+    "probe_seed": 42,
+    "target_probes": 500,
+    "probes_generated": 548,
+    "embedder": {
+      "model": "voyage:voyage-4",
+      "dims": 1024
+    },
+    "pins": {
+      "reranker": "off",
+      "autocut": "off",
+      "expansion_variant_budget": null,
+      "keyword_arm_confidence_floor": "0.6121"
+    },
+    "search_pins": {
+      "search.mode": "balanced",
+      "search.reranker.enabled": "false",
+      "search.autocut": "false",
+      "search.keyword_arm_confidence_floor": "0.6121"
+    },
+    "embedding_transport": "live voyage:voyage-4 @ 1024d",
+    "gateway_after_init_by_adapter": {
+      "vector": {
+        "model": "voyage:voyage-4",
+        "dims": 1024
+      },
+      "vector-grep-rrf-fusion": {
+        "model": "voyage:voyage-4",
+        "dims": 1024
+      },
+      "gbrain": {
+        "model": "voyage:voyage-4",
+        "dims": 1024
+      },
+      "grep-only": {
+        "model": "voyage:voyage-4",
+        "dims": 1024
+      }
+    },
+    "search_config_by_adapter": {
+      "vector": null,
+      "vector-grep-rrf-fusion": {
+        "auto_link": "false",
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.autocut": "false",
+        "search.keyword_arm_confidence_floor": "0.6121"
+      },
+      "gbrain": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.autocut": "false",
+        "search.keyword_arm_confidence_floor": "0.6121"
+      },
+      "grep-only": null
+    },
+    "observed_by_adapter": {
+      "vector": null,
+      "vector-grep-rrf-fusion": {
+        "queries": 548,
+        "rerank_scored_queries": 0,
+        "keyword_arm_confidence_stamped": 547,
+        "keyword_arm_confidence_downweighted": 29
+      },
+      "gbrain": {
+        "queries": 548,
+        "rerank_scored_queries": 0,
+        "keyword_arm_confidence_stamped": 548,
+        "keyword_arm_confidence_downweighted": 29
+      },
+      "grep-only": null
+    },
+    "concept_split": {
+      "seed": 42,
+      "tuning_n": 20,
+      "holdout_n": 10,
+      "tuning": [
+        "concepts/agentic-workflows",
+        "concepts/ai-first-product",
+        "concepts/carbon-credits",
+        "concepts/churn-cohorts",
+        "concepts/customer-concentration",
+        "concepts/do-things-that-don-t-scale",
+        "concepts/embedded-fintech",
+        "concepts/fine-tuning",
+        "concepts/foundation-models",
+        "concepts/founder-mode",
+        "concepts/inference-cost",
+        "concepts/latency-budget",
+        "concepts/multi-modal",
+        "concepts/plg-motion",
+        "concepts/product-market-fit",
+        "concepts/retrieval-augmented-generation",
+        "concepts/second-time-founder",
+        "concepts/top-down-sales",
+        "concepts/unit-economics",
+        "concepts/usage-based-pricing"
+      ],
+      "holdout": [
+        "concepts/community-led-growth",
+        "concepts/developer-relations",
+        "concepts/enterprise-gtm",
+        "concepts/gross-margin-expansion",
+        "concepts/horizontal-api",
+        "concepts/open-source-distribution",
+        "concepts/permitting-reform",
+        "concepts/revenue-durability",
+        "concepts/vertical-saas",
+        "concepts/wallet-share"
+      ],
+      "probes": {
+        "tuning": 359,
+        "holdout": 181,
+        "mixed": 8,
+        "unassigned": 0
+      }
+    },
+    "adapters_run": [
+      "vector",
+      "vector-grep-rrf-fusion",
+      "gbrain",
+      "grep-only"
+    ]
+  },
+  "data": {
+    "scorecard": [
+      {
+        "name": "vector",
+        "ndcg5": 0.5955773773418528,
+        "p5_graded": 0.2649635036496356,
+        "p1_strict": 0.698905109489051,
+        "wall_ms": 125714,
+        "tuning": {
+          "ndcg5": 0.596428429849641,
+          "p5_graded": 0.27910863509749423,
+          "p1_strict": 0.7353760445682451,
+          "count": 359
+        },
+        "holdout": {
+          "ndcg5": 0.6053776630382881,
+          "p5_graded": 0.23314917127071833,
+          "p1_strict": 0.6519337016574586,
+          "count": 181
+        }
+      },
+      {
+        "name": "vector-grep-rrf-fusion",
+        "ndcg5": 0.5610676751686988,
+        "p5_graded": 0.2583941605839416,
+        "p1_strict": 0.6313868613138686,
+        "wall_ms": 189842,
+        "tuning": {
+          "ndcg5": 0.5679368034397012,
+          "p5_graded": 0.2746518105849593,
+          "p1_strict": 0.6796657381615598,
+          "count": 359
+        },
+        "holdout": {
+          "ndcg5": 0.5691764411886956,
+          "p5_graded": 0.23093922651933724,
+          "p1_strict": 0.56353591160221,
+          "count": 181
+        }
+      },
+      {
+        "name": "gbrain",
+        "ndcg5": 0.5093230506158065,
+        "p5_graded": 0.24306569343065784,
+        "p1_strict": 0.5127737226277372,
+        "wall_ms": 162911,
+        "tuning": {
+          "ndcg5": 0.508267661649583,
+          "p5_graded": 0.25682451253482,
+          "p1_strict": 0.5403899721448467,
+          "count": 359
+        },
+        "holdout": {
+          "ndcg5": 0.5295665791541612,
+          "p5_graded": 0.2176795580110499,
+          "p1_strict": 0.48066298342541436,
+          "count": 181
+        }
+      },
+      {
+        "name": "grep-only",
+        "ndcg5": 0.5084752106729887,
+        "p5_graded": 0.2149635036496366,
+        "p1_strict": 0.5802919708029197,
+        "wall_ms": 171,
+        "tuning": {
+          "ndcg5": 0.5050767138493103,
+          "p5_graded": 0.2245125348189424,
+          "p1_strict": 0.5988857938718662,
+          "count": 359
+        },
+        "holdout": {
+          "ndcg5": 0.52202238664677,
+          "p5_graded": 0.19337016574585608,
+          "p1_strict": 0.5580110497237569,
+          "count": 181
+        }
+      }
+    ],
+    "per_template": {
+      "vector": {
+        "overall": {
+          "body-fuzzy": {
+            "ndcg": 0.21511472087470748,
+            "count": 97
+          },
+          "synonym": {
+            "ndcg": 0.6655829891258647,
+            "count": 159
+          },
+          "title-paraphrase": {
+            "ndcg": 0.7317040657096551,
+            "count": 81
+          },
+          "title-variation": {
+            "ndcg": 0.7343442777266277,
+            "count": 75
+          },
+          "description-paraphrase": {
+            "ndcg": 0.7600212495610116,
+            "count": 34
+          },
+          "synonym-fuzzy": {
+            "ndcg": 0.6693806108130977,
+            "count": 49
+          },
+          "semantic-neighborhood": {
+            "ndcg": 0.7155607885043921,
+            "count": 15
+          },
+          "company-neighborhood": {
+            "ndcg": 0.4201301366582811,
+            "count": 38
+          }
+        },
+        "tuning": {
+          "body-fuzzy": {
+            "ndcg": 0.2346742114320215,
+            "count": 63
+          },
+          "synonym": {
+            "ndcg": 0.6656060803299813,
+            "count": 104
+          },
+          "title-paraphrase": {
+            "ndcg": 0.7100778263968631,
+            "count": 58
+          },
+          "title-variation": {
+            "ndcg": 0.7048609563801279,
+            "count": 48
+          },
+          "description-paraphrase": {
+            "ndcg": 0.7430090902102758,
+            "count": 22
+          },
+          "synonym-fuzzy": {
+            "ndcg": 0.6626258380322502,
+            "count": 34
+          },
+          "semantic-neighborhood": {
+            "ndcg": 0.7040299421238969,
+            "count": 11
+          },
+          "company-neighborhood": {
+            "ndcg": 0.44592899805978803,
+            "count": 19
+          }
+        },
+        "holdout": {
+          "synonym": {
+            "ndcg": 0.6655393257580781,
+            "count": 55
+          },
+          "synonym-fuzzy": {
+            "ndcg": 0.6846914291163524,
+            "count": 15
+          },
+          "title-variation": {
+            "ndcg": 0.7867590712315163,
+            "count": 27
+          },
+          "body-fuzzy": {
+            "ndcg": 0.17887213543027292,
+            "count": 34
+          },
+          "description-paraphrase": {
+            "ndcg": 0.7912102083706939,
+            "count": 12
+          },
+          "title-paraphrase": {
+            "ndcg": 0.7862397996288684,
+            "count": 23
+          },
+          "semantic-neighborhood": {
+            "ndcg": 0.747270616050754,
+            "count": 4
+          },
+          "company-neighborhood": {
+            "ndcg": 0.43700497931771076,
+            "count": 11
+          }
+        }
+      },
+      "vector-grep-rrf-fusion": {
+        "overall": {
+          "body-fuzzy": {
+            "ndcg": 0.24794043483009517,
+            "count": 97
+          },
+          "synonym": {
+            "ndcg": 0.6550387185033443,
+            "count": 159
+          },
+          "title-paraphrase": {
+            "ndcg": 0.676799161526244,
+            "count": 81
+          },
+          "title-variation": {
+            "ndcg": 0.6728883684894523,
+            "count": 75
+          },
+          "description-paraphrase": {
+            "ndcg": 0.7638385126898795,
+            "count": 34
+          },
+          "synonym-fuzzy": {
+            "ndcg": 0.6892923946982988,
+            "count": 49
+          },
+          "semantic-neighborhood": {
+            "ndcg": 0.688643849372306,
+            "count": 15
+          },
+          "company-neighborhood": {
+            "ndcg": 0.10265403524484079,
+            "count": 38
+          }
+        },
+        "tuning": {
+          "body-fuzzy": {
+            "ndcg": 0.2606509072372433,
+            "count": 63
+          },
+          "synonym": {
+            "ndcg": 0.6511474433549652,
+            "count": 104
+          },
+          "title-paraphrase": {
+            "ndcg": 0.6681601755866053,
+            "count": 58
+          },
+          "title-variation": {
+            "ndcg": 0.6529047156111011,
+            "count": 48
+          },
+          "description-paraphrase": {
+            "ndcg": 0.7476758536298923,
+            "count": 22
+          },
+          "synonym-fuzzy": {
+            "ndcg": 0.6878303941990557,
+            "count": 34
+          },
+          "semantic-neighborhood": {
+            "ndcg": 0.692272193733852,
+            "count": 11
+          },
+          "company-neighborhood": {
+            "ndcg": 0.11611359594400757,
+            "count": 19
+          }
+        },
+        "holdout": {
+          "synonym": {
+            "ndcg": 0.6623967660566404,
+            "count": 55
+          },
+          "synonym-fuzzy": {
+            "ndcg": 0.692606262496583,
+            "count": 15
+          },
+          "title-variation": {
+            "ndcg": 0.7084148624954099,
+            "count": 27
+          },
+          "body-fuzzy": {
+            "ndcg": 0.2243886771344974,
+            "count": 34
+          },
+          "description-paraphrase": {
+            "ndcg": 0.7934700542998554,
+            "count": 12
+          },
+          "title-paraphrase": {
+            "ndcg": 0.6985844304175074,
+            "count": 23
+          },
+          "semantic-neighborhood": {
+            "ndcg": 0.6786659023780552,
+            "count": 4
+          },
+          "company-neighborhood": {
+            "ndcg": 0.1036233921752395,
+            "count": 11
+          }
+        }
+      },
+      "gbrain": {
+        "overall": {
+          "body-fuzzy": {
+            "ndcg": 0.16012231789914644,
+            "count": 97
+          },
+          "synonym": {
+            "ndcg": 0.5928569442392584,
+            "count": 159
+          },
+          "title-paraphrase": {
+            "ndcg": 0.629566257195305,
+            "count": 81
+          },
+          "title-variation": {
+            "ndcg": 0.6301658387073227,
+            "count": 75
+          },
+          "description-paraphrase": {
+            "ndcg": 0.7521153801336271,
+            "count": 34
+          },
+          "synonym-fuzzy": {
+            "ndcg": 0.6116285554526905,
+            "count": 49
+          },
+          "semantic-neighborhood": {
+            "ndcg": 0.6449211027734874,
+            "count": 15
+          },
+          "company-neighborhood": {
+            "ndcg": 0.1536860354738654,
+            "count": 38
+          }
+        },
+        "tuning": {
+          "body-fuzzy": {
+            "ndcg": 0.1732628752663994,
+            "count": 63
+          },
+          "synonym": {
+            "ndcg": 0.5826445675551842,
+            "count": 104
+          },
+          "title-paraphrase": {
+            "ndcg": 0.6139476636579816,
+            "count": 58
+          },
+          "title-variation": {
+            "ndcg": 0.5998271913658243,
+            "count": 48
+          },
+          "description-paraphrase": {
+            "ndcg": 0.7295582851338659,
+            "count": 22
+          },
+          "synonym-fuzzy": {
+            "ndcg": 0.5998406835490797,
+            "count": 34
+          },
+          "semantic-neighborhood": {
+            "ndcg": 0.6326502665536444,
+            "count": 11
+          },
+          "company-neighborhood": {
+            "ndcg": 0.16593717059218846,
+            "count": 19
+          }
+        },
+        "holdout": {
+          "synonym": {
+            "ndcg": 0.6121676201509605,
+            "count": 55
+          },
+          "synonym-fuzzy": {
+            "ndcg": 0.6383477317675418,
+            "count": 15
+          },
+          "title-variation": {
+            "ndcg": 0.6841012117588747,
+            "count": 27
+          },
+          "body-fuzzy": {
+            "ndcg": 0.1357736380715894,
+            "count": 34
+          },
+          "description-paraphrase": {
+            "ndcg": 0.7934700542998554,
+            "count": 12
+          },
+          "title-paraphrase": {
+            "ndcg": 0.668952275680729,
+            "count": 23
+          },
+          "semantic-neighborhood": {
+            "ndcg": 0.6786659023780552,
+            "count": 4
+          },
+          "company-neighborhood": {
+            "ndcg": 0.17253388439965908,
+            "count": 11
+          }
+        }
+      },
+      "grep-only": {
+        "overall": {
+          "body-fuzzy": {
+            "ndcg": 0.4285621216859127,
+            "count": 97
+          },
+          "synonym": {
+            "ndcg": 0.4206557264677957,
+            "count": 159
+          },
+          "title-paraphrase": {
+            "ndcg": 0.7003226312371458,
+            "count": 81
+          },
+          "title-variation": {
+            "ndcg": 0.7044824745935959,
+            "count": 75
+          },
+          "description-paraphrase": {
+            "ndcg": 0.7010368768060907,
+            "count": 34
+          },
+          "synonym-fuzzy": {
+            "ndcg": 0.3178960348650104,
+            "count": 49
+          },
+          "semantic-neighborhood": {
+            "ndcg": 0.6230934982086757,
+            "count": 15
+          },
+          "company-neighborhood": {
+            "ndcg": 0.3123354847166745,
+            "count": 38
+          }
+        },
+        "tuning": {
+          "body-fuzzy": {
+            "ndcg": 0.43265961923873114,
+            "count": 63
+          },
+          "synonym": {
+            "ndcg": 0.42364942583872706,
+            "count": 104
+          },
+          "title-paraphrase": {
+            "ndcg": 0.6642980953126838,
+            "count": 58
+          },
+          "title-variation": {
+            "ndcg": 0.6688842747457121,
+            "count": 48
+          },
+          "description-paraphrase": {
+            "ndcg": 0.665600231982744,
+            "count": 22
+          },
+          "synonym-fuzzy": {
+            "ndcg": 0.3368454732959896,
+            "count": 34
+          },
+          "semantic-neighborhood": {
+            "ndcg": 0.5918230109241647,
+            "count": 11
+          },
+          "company-neighborhood": {
+            "ndcg": 0.355984470571315,
+            "count": 19
+          }
+        },
+        "holdout": {
+          "synonym": {
+            "ndcg": 0.4149949131118522,
+            "count": 55
+          },
+          "synonym-fuzzy": {
+            "ndcg": 0.27494397442145757,
+            "count": 15
+          },
+          "title-variation": {
+            "ndcg": 0.7677681632120564,
+            "count": 27
+          },
+          "body-fuzzy": {
+            "ndcg": 0.4209696997498072,
+            "count": 34
+          },
+          "description-paraphrase": {
+            "ndcg": 0.7660040589822262,
+            "count": 12
+          },
+          "title-paraphrase": {
+            "ndcg": 0.791167113133615,
+            "count": 23
+          },
+          "semantic-neighborhood": {
+            "ndcg": 0.7090873382410806,
+            "count": 4
+          },
+          "company-neighborhood": {
+            "ndcg": 0.20629275314076378,
+            "count": 11
+          }
+        }
+      }
+    },
+    "template_counts": {
+      "body-fuzzy": 97,
+      "synonym": 159,
+      "title-paraphrase": 81,
+      "title-variation": 75,
+      "description-paraphrase": 34,
+      "synonym-fuzzy": 49,
+      "semantic-neighborhood": 15,
+      "company-neighborhood": 38
+    },
+    "report_file": "/home/vercel-sandbox/gbrain-evals/eval/reports/cat13-conceptual/report.json"
+  }
+}

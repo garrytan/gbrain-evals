@@ -1,0 +1,5485 @@
+{
+  "schema_version": 1,
+  "benchmark": "namedthing",
+  "mode": "live",
+  "fixtures": [
+    "/home/vercel-sandbox/gbrain/test/fixtures/retrieval-quality/namedthing.jsonl",
+    "test/fixtures/retrieval-quality/relational/corpus.ts (RELATIONAL_QUESTIONS)"
+  ],
+  "questions": 50,
+  "embedder": "openai:text-embedding-3-large@1536",
+  "reranker": {
+    "configured": "voyage:rerank-2.5",
+    "api_model": "rerank-2.5",
+    "calls": 50,
+    "request_chars": 104498,
+    "usage_tokens": 22016
+  },
+  "reranker_readiness": {
+    "plane": "gateway",
+    "readiness": {
+      "model": "voyage:rerank-2.5",
+      "provider": "voyage",
+      "modelId": "rerank-2.5",
+      "recipeKnown": true,
+      "hasTouchpoint": true,
+      "modelListed": true,
+      "requiredKey": "VOYAGE_API_KEY",
+      "keyPresent": true,
+      "sunset": null,
+      "sunsetPassed": false,
+      "selfHosted": false,
+      "sunsetBlocks": false,
+      "ready": true
+    }
+  },
+  "embed_cache": {
+    "hits": 104,
+    "misses": 0,
+    "bypassed": 0,
+    "infra_faults": 0,
+    "path": "/tmp/r1-embed-cache.sqlite",
+    "canonical_sha256": "4b28d7e7d5439585b194f896354aafd8448a2585e423793bf2afb5cc23f0d433"
+  },
+  "identical_query_vectors": true,
+  "pins": {
+    "off": {
+      "search.mode": "balanced",
+      "search.reranker.enabled": "false",
+      "search.autocut": "true",
+      "search.metadata_boost_gate": "lexical"
+    },
+    "on": {
+      "search.mode": "balanced",
+      "search.reranker.enabled": "true",
+      "search.reranker.model": "voyage:rerank-2.5",
+      "search.autocut": "true",
+      "search.metadata_boost_gate": "lexical"
+    }
+  },
+  "arms": {
+    "off": {
+      "arm": "off",
+      "records": [
+        {
+          "query": "greek amphitheater",
+          "family": "title-substring",
+          "slugs": [
+            "projects/example-amphitheater",
+            "projects/example-civic-platform",
+            "companies/orbital",
+            "companies/helio",
+            "companies/quanta",
+            "people/ivan-example",
+            "companies/novapay",
+            "people/grace-example",
+            "companies/widget-co",
+            "people/erin-example"
+          ],
+          "top3": [
+            "projects/example-amphitheater",
+            "projects/example-civic-platform",
+            "companies/orbital"
+          ],
+          "top": {
+            "slug": "projects/example-amphitheater",
+            "evidence": "exact_title_match",
+            "create_safety": "exists",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "civic feedback platform",
+          "family": "title-substring",
+          "slugs": [
+            "projects/example-civic-platform",
+            "projects/example-amphitheater",
+            "companies/acme-co",
+            "companies/zenith",
+            "people/ivan-example",
+            "companies/helio",
+            "people/erin-example",
+            "companies/quanta",
+            "people/frank-example",
+            "companies/orbital"
+          ],
+          "top3": [
+            "projects/example-civic-platform",
+            "projects/example-amphitheater",
+            "companies/acme-co"
+          ],
+          "top": {
+            "slug": "projects/example-civic-platform",
+            "evidence": "exact_title_match",
+            "create_safety": "exists",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "hall of light",
+          "family": "alias-synonym",
+          "slugs": [
+            "projects/example-amphitheater",
+            "projects/example-civic-platform",
+            "people/erin-example",
+            "people/frank-example",
+            "companies/orbital",
+            "people/ivan-example",
+            "people/carol-example",
+            "companies/widget-co",
+            "companies/acme-co",
+            "companies/novapay"
+          ],
+          "top3": [
+            "projects/example-amphitheater",
+            "projects/example-civic-platform",
+            "people/erin-example"
+          ],
+          "top": {
+            "slug": "projects/example-amphitheater",
+            "evidence": "alias_hit",
+            "create_safety": "exists",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "the widget tracker",
+          "family": "alias-synonym",
+          "slugs": [
+            "projects/example-civic-platform",
+            "projects/example-amphitheater",
+            "funds/fund-a",
+            "companies/orbital",
+            "companies/widget-co",
+            "people/grace-example",
+            "people/ivan-example",
+            "people/dave-example",
+            "people/erin-example",
+            "people/frank-example"
+          ],
+          "top3": [
+            "projects/example-civic-platform",
+            "projects/example-amphitheater",
+            "funds/fund-a"
+          ],
+          "top": {
+            "slug": "projects/example-civic-platform",
+            "evidence": "alias_hit",
+            "create_safety": "exists",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "indoor amphitheater for debate",
+          "family": "generic-to-named",
+          "slugs": [
+            "projects/example-amphitheater",
+            "projects/example-civic-platform",
+            "companies/novapay",
+            "companies/zenith",
+            "companies/mindbridge",
+            "companies/orbital",
+            "companies/quanta",
+            "people/ivan-example",
+            "people/heidi-example",
+            "companies/widget-co"
+          ],
+          "top3": [
+            "projects/example-amphitheater",
+            "projects/example-civic-platform",
+            "companies/novapay"
+          ],
+          "top": {
+            "slug": "projects/example-amphitheater",
+            "evidence": "keyword_exact",
+            "create_safety": "probable",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "ceiling treatment acoustics amphitheater",
+          "family": "multi-chunk-dilution",
+          "slugs": [
+            "projects/example-amphitheater",
+            "companies/helio",
+            "projects/example-civic-platform",
+            "companies/zenith",
+            "companies/quanta",
+            "people/erin-example",
+            "people/frank-example",
+            "companies/widget-co",
+            "people/grace-example",
+            "people/heidi-example"
+          ],
+          "top3": [
+            "projects/example-amphitheater",
+            "companies/helio",
+            "projects/example-civic-platform"
+          ],
+          "top": {
+            "slug": "projects/example-amphitheater",
+            "evidence": "high_vector_match",
+            "create_safety": "exists",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "amphitheater",
+          "family": "short-vs-rich",
+          "slugs": [
+            "projects/example-amphitheater",
+            "projects/example-civic-platform",
+            "companies/zenith",
+            "companies/helio",
+            "companies/novapay",
+            "companies/quanta",
+            "people/erin-example",
+            "people/frank-example",
+            "companies/orbital",
+            "people/alice-example"
+          ],
+          "top3": [
+            "projects/example-amphitheater",
+            "projects/example-civic-platform",
+            "companies/zenith"
+          ],
+          "top": {
+            "slug": "projects/example-amphitheater",
+            "evidence": "keyword_exact",
+            "create_safety": "probable",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "indoor greek amphitheater for adversarial debate in the city",
+          "family": "short-vs-rich",
+          "slugs": [
+            "projects/example-amphitheater",
+            "projects/example-civic-platform",
+            "companies/novapay",
+            "companies/orbital",
+            "companies/widget-co",
+            "companies/helio",
+            "companies/mindbridge",
+            "people/ivan-example",
+            "people/erin-example",
+            "companies/quanta"
+          ],
+          "top3": [
+            "projects/example-amphitheater",
+            "projects/example-civic-platform",
+            "companies/novapay"
+          ],
+          "top": {
+            "slug": "projects/example-amphitheater",
+            "evidence": "high_vector_match",
+            "create_safety": "exists",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who works on the civic platform",
+          "family": "graph-relationship",
+          "slugs": [
+            "projects/example-civic-platform",
+            "projects/example-amphitheater",
+            "people/ivan-example",
+            "companies/acme-co",
+            "people/grace-example",
+            "people/erin-example",
+            "people/frank-example",
+            "companies/novapay",
+            "companies/quanta",
+            "companies/helio"
+          ],
+          "top3": [
+            "projects/example-civic-platform",
+            "projects/example-amphitheater",
+            "people/ivan-example"
+          ],
+          "top": {
+            "slug": "projects/example-civic-platform",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": false
+        },
+        {
+          "query": "quarterly tax filing checklist",
+          "family": "hard-negative",
+          "slugs": [
+            "projects/example-civic-platform",
+            "companies/acme-co",
+            "companies/orbital",
+            "projects/example-amphitheater",
+            "people/ivan-example",
+            "companies/helio",
+            "people/erin-example",
+            "people/frank-example",
+            "people/grace-example",
+            "people/dave-example"
+          ],
+          "top3": [
+            "projects/example-civic-platform",
+            "companies/acme-co",
+            "companies/orbital"
+          ],
+          "top": {
+            "slug": "projects/example-civic-platform",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": false
+        },
+        {
+          "query": "what is the idea of debating in public forums",
+          "family": "concept-paraphrase",
+          "slugs": [
+            "projects/example-amphitheater",
+            "projects/example-civic-platform",
+            "people/ivan-example",
+            "people/grace-example",
+            "companies/orbital",
+            "companies/widget-co",
+            "companies/novapay",
+            "companies/zenith",
+            "people/dave-example",
+            "companies/mindbridge"
+          ],
+          "top3": [
+            "projects/example-amphitheater",
+            "projects/example-civic-platform",
+            "people/ivan-example"
+          ],
+          "top": {
+            "slug": "projects/example-amphitheater",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "what do i know about civic engagement tooling",
+          "family": "concept-paraphrase",
+          "slugs": [
+            "projects/example-civic-platform",
+            "projects/example-amphitheater",
+            "people/ivan-example",
+            "people/grace-example",
+            "companies/helio",
+            "companies/acme-co",
+            "people/erin-example",
+            "people/frank-example",
+            "funds/fund-a",
+            "companies/orbital"
+          ],
+          "top3": [
+            "projects/example-civic-platform",
+            "projects/example-amphitheater",
+            "people/ivan-example"
+          ],
+          "top": {
+            "slug": "projects/example-civic-platform",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who invested in widget-co",
+          "family": "graph-relationship",
+          "slugs": [
+            "funds/fund-a",
+            "people/alice-example",
+            "people/bob-example",
+            "companies/quanta",
+            "projects/example-civic-platform",
+            "companies/acme-co",
+            "companies/orbital",
+            "projects/example-amphitheater",
+            "companies/mindbridge",
+            "companies/novapay"
+          ],
+          "top3": [
+            "funds/fund-a",
+            "people/alice-example",
+            "people/bob-example"
+          ],
+          "top": {
+            "slug": "funds/fund-a",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who invested in acme-co",
+          "family": "graph-relationship",
+          "slugs": [
+            "funds/fund-b",
+            "people/carol-example",
+            "people/alice-example",
+            "projects/example-amphitheater",
+            "projects/example-civic-platform",
+            "companies/mindbridge",
+            "people/erin-example",
+            "companies/helio",
+            "people/frank-example",
+            "companies/zenith"
+          ],
+          "top3": [
+            "funds/fund-b",
+            "people/carol-example",
+            "people/alice-example"
+          ],
+          "top": {
+            "slug": "funds/fund-b",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who invested in novapay",
+          "family": "graph-relationship",
+          "slugs": [
+            "funds/fund-a",
+            "people/bob-example",
+            "projects/example-civic-platform",
+            "companies/zenith",
+            "companies/helio",
+            "projects/example-amphitheater",
+            "companies/novapay",
+            "companies/acme-co",
+            "people/ivan-example",
+            "people/erin-example"
+          ],
+          "top3": [
+            "funds/fund-a",
+            "people/bob-example",
+            "projects/example-civic-platform"
+          ],
+          "top": {
+            "slug": "funds/fund-a",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who invested in mindbridge",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/carol-example",
+            "people/dave-example",
+            "projects/example-civic-platform",
+            "companies/zenith",
+            "companies/mindbridge",
+            "projects/example-amphitheater",
+            "companies/acme-co",
+            "people/erin-example",
+            "people/frank-example",
+            "companies/quanta"
+          ],
+          "top3": [
+            "people/carol-example",
+            "people/dave-example",
+            "projects/example-civic-platform"
+          ],
+          "top": {
+            "slug": "people/carol-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who invested in helio",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/erin-example",
+            "funds/fund-b",
+            "projects/example-civic-platform",
+            "companies/zenith",
+            "projects/example-amphitheater",
+            "companies/mindbridge",
+            "companies/helio",
+            "companies/novapay",
+            "people/frank-example",
+            "companies/acme-co"
+          ],
+          "top3": [
+            "people/erin-example",
+            "funds/fund-b",
+            "projects/example-civic-platform"
+          ],
+          "top": {
+            "slug": "people/erin-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who invested in quanta",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/frank-example",
+            "people/alice-example",
+            "projects/example-civic-platform",
+            "companies/orbital",
+            "projects/example-amphitheater",
+            "companies/mindbridge",
+            "people/erin-example",
+            "companies/novapay",
+            "companies/quanta",
+            "companies/helio"
+          ],
+          "top3": [
+            "people/frank-example",
+            "people/alice-example",
+            "projects/example-civic-platform"
+          ],
+          "top": {
+            "slug": "people/frank-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who invested in zenith",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/grace-example",
+            "people/heidi-example",
+            "projects/example-amphitheater",
+            "projects/example-civic-platform",
+            "companies/helio",
+            "companies/novapay",
+            "people/erin-example",
+            "companies/zenith",
+            "people/frank-example",
+            "companies/widget-co"
+          ],
+          "top3": [
+            "people/grace-example",
+            "people/heidi-example",
+            "projects/example-amphitheater"
+          ],
+          "top": {
+            "slug": "people/grace-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who invested in orbital",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/ivan-example",
+            "people/alice-example",
+            "projects/example-amphitheater",
+            "projects/example-civic-platform",
+            "companies/zenith",
+            "companies/novapay",
+            "people/erin-example",
+            "companies/quanta",
+            "people/frank-example",
+            "companies/helio"
+          ],
+          "top3": [
+            "people/ivan-example",
+            "people/alice-example",
+            "projects/example-amphitheater"
+          ],
+          "top": {
+            "slug": "people/ivan-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who works at widget-co",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/erin-example",
+            "people/grace-example",
+            "companies/widget-co",
+            "projects/example-civic-platform",
+            "companies/quanta",
+            "companies/acme-co",
+            "projects/example-amphitheater",
+            "people/ivan-example",
+            "companies/orbital",
+            "companies/novapay"
+          ],
+          "top3": [
+            "people/erin-example",
+            "people/grace-example",
+            "companies/widget-co"
+          ],
+          "top": {
+            "slug": "people/erin-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who works at acme-co",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/frank-example",
+            "people/dave-example",
+            "projects/example-amphitheater",
+            "projects/example-civic-platform",
+            "companies/widget-co",
+            "people/ivan-example",
+            "companies/quanta",
+            "people/erin-example",
+            "companies/acme-co",
+            "people/grace-example"
+          ],
+          "top3": [
+            "people/frank-example",
+            "people/dave-example",
+            "projects/example-amphitheater"
+          ],
+          "top": {
+            "slug": "people/frank-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who works at novapay",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/grace-example",
+            "projects/example-civic-platform",
+            "companies/acme-co",
+            "projects/example-amphitheater",
+            "companies/novapay",
+            "companies/zenith",
+            "people/ivan-example",
+            "people/erin-example",
+            "people/frank-example",
+            "companies/quanta"
+          ],
+          "top3": [
+            "people/grace-example",
+            "projects/example-civic-platform",
+            "companies/acme-co"
+          ],
+          "top": {
+            "slug": "people/grace-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who works at helio",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/heidi-example",
+            "projects/example-amphitheater",
+            "companies/widget-co",
+            "projects/example-civic-platform",
+            "companies/novapay",
+            "companies/acme-co",
+            "people/ivan-example",
+            "companies/zenith",
+            "people/erin-example",
+            "people/frank-example"
+          ],
+          "top3": [
+            "people/heidi-example",
+            "projects/example-amphitheater",
+            "companies/widget-co"
+          ],
+          "top": {
+            "slug": "people/heidi-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who works at zenith",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/ivan-example",
+            "projects/example-amphitheater",
+            "companies/widget-co",
+            "projects/example-civic-platform",
+            "people/grace-example",
+            "companies/novapay",
+            "companies/acme-co",
+            "companies/quanta",
+            "people/erin-example",
+            "people/frank-example"
+          ],
+          "top3": [
+            "people/ivan-example",
+            "projects/example-amphitheater",
+            "companies/widget-co"
+          ],
+          "top": {
+            "slug": "people/ivan-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who founded mindbridge",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/carol-example",
+            "projects/example-civic-platform",
+            "projects/example-amphitheater",
+            "companies/zenith",
+            "companies/acme-co",
+            "companies/quanta",
+            "people/erin-example",
+            "people/frank-example",
+            "companies/mindbridge",
+            "people/grace-example"
+          ],
+          "top3": [
+            "people/carol-example",
+            "projects/example-civic-platform",
+            "projects/example-amphitheater"
+          ],
+          "top": {
+            "slug": "people/carol-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who founded quanta",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/frank-example",
+            "projects/example-amphitheater",
+            "companies/orbital",
+            "companies/novapay",
+            "projects/example-civic-platform",
+            "people/grace-example",
+            "companies/mindbridge",
+            "people/erin-example",
+            "companies/widget-co",
+            "people/ivan-example"
+          ],
+          "top3": [
+            "people/frank-example",
+            "projects/example-amphitheater",
+            "companies/orbital"
+          ],
+          "top": {
+            "slug": "people/frank-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who founded widget-co",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/ivan-example",
+            "projects/example-civic-platform",
+            "companies/orbital",
+            "companies/quanta",
+            "projects/example-amphitheater",
+            "companies/acme-co",
+            "funds/fund-a",
+            "companies/novapay",
+            "companies/widget-co",
+            "people/grace-example"
+          ],
+          "top3": [
+            "people/ivan-example",
+            "projects/example-civic-platform",
+            "companies/orbital"
+          ],
+          "top": {
+            "slug": "people/ivan-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who founded orbital",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/grace-example",
+            "projects/example-amphitheater",
+            "projects/example-civic-platform",
+            "companies/novapay",
+            "companies/orbital",
+            "people/ivan-example",
+            "companies/helio",
+            "funds/fund-a",
+            "people/erin-example",
+            "companies/quanta"
+          ],
+          "top3": [
+            "people/grace-example",
+            "projects/example-amphitheater",
+            "projects/example-civic-platform"
+          ],
+          "top": {
+            "slug": "people/grace-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who advises novapay",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/frank-example",
+            "projects/example-civic-platform",
+            "projects/example-amphitheater",
+            "companies/acme-co",
+            "companies/zenith",
+            "companies/orbital",
+            "people/erin-example",
+            "companies/helio",
+            "people/ivan-example",
+            "companies/quanta"
+          ],
+          "top3": [
+            "people/frank-example",
+            "projects/example-civic-platform",
+            "projects/example-amphitheater"
+          ],
+          "top": {
+            "slug": "people/frank-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who advises helio",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/alice-example",
+            "projects/example-amphitheater",
+            "projects/example-civic-platform",
+            "companies/widget-co",
+            "companies/zenith",
+            "companies/helio",
+            "people/ivan-example",
+            "companies/acme-co",
+            "companies/quanta",
+            "people/bob-example"
+          ],
+          "top3": [
+            "people/alice-example",
+            "projects/example-amphitheater",
+            "projects/example-civic-platform"
+          ],
+          "top": {
+            "slug": "people/alice-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "what connects widget-co and acme-co",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/helio",
+            "companies/orbital",
+            "companies/novapay",
+            "people/alice-example",
+            "projects/example-amphitheater",
+            "projects/example-civic-platform",
+            "companies/quanta",
+            "companies/widget-co",
+            "companies/acme-co",
+            "people/erin-example"
+          ],
+          "top3": [
+            "companies/helio",
+            "companies/orbital",
+            "companies/novapay"
+          ],
+          "top": {
+            "slug": "companies/helio",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": false
+        },
+        {
+          "query": "what connects widget-co and novapay",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/zenith",
+            "companies/orbital",
+            "funds/fund-a",
+            "people/grace-example",
+            "people/bob-example",
+            "projects/example-civic-platform",
+            "companies/acme-co",
+            "companies/quanta",
+            "projects/example-amphitheater",
+            "people/ivan-example"
+          ],
+          "top3": [
+            "companies/zenith",
+            "companies/orbital",
+            "funds/fund-a"
+          ],
+          "top": {
+            "slug": "companies/zenith",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": true
+        },
+        {
+          "query": "what connects widget-co and helio",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/zenith",
+            "companies/orbital",
+            "people/erin-example",
+            "people/alice-example",
+            "projects/example-civic-platform",
+            "companies/acme-co",
+            "projects/example-amphitheater",
+            "companies/quanta",
+            "companies/widget-co",
+            "people/frank-example"
+          ],
+          "top3": [
+            "companies/zenith",
+            "companies/orbital",
+            "people/erin-example"
+          ],
+          "top": {
+            "slug": "companies/zenith",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": true
+        },
+        {
+          "query": "what connects widget-co and quanta",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/orbital",
+            "companies/novapay",
+            "companies/helio",
+            "people/alice-example",
+            "projects/example-civic-platform",
+            "companies/quanta",
+            "companies/widget-co",
+            "projects/example-amphitheater",
+            "companies/acme-co",
+            "funds/fund-a"
+          ],
+          "top3": [
+            "companies/orbital",
+            "companies/novapay",
+            "companies/helio"
+          ],
+          "top": {
+            "slug": "companies/orbital",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": false
+        },
+        {
+          "query": "what connects widget-co and zenith",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/orbital",
+            "companies/novapay",
+            "companies/helio",
+            "people/grace-example",
+            "people/ivan-example",
+            "projects/example-civic-platform",
+            "companies/quanta",
+            "projects/example-amphitheater",
+            "companies/acme-co",
+            "companies/widget-co"
+          ],
+          "top3": [
+            "companies/orbital",
+            "companies/novapay",
+            "companies/helio"
+          ],
+          "top": {
+            "slug": "companies/orbital",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": false
+        },
+        {
+          "query": "what connects widget-co and orbital",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/novapay",
+            "companies/zenith",
+            "companies/helio",
+            "people/ivan-example",
+            "people/grace-example",
+            "people/alice-example",
+            "projects/example-civic-platform",
+            "companies/quanta",
+            "companies/acme-co",
+            "projects/example-amphitheater"
+          ],
+          "top3": [
+            "companies/novapay",
+            "companies/zenith",
+            "companies/helio"
+          ],
+          "top": {
+            "slug": "companies/novapay",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": false
+        },
+        {
+          "query": "what connects acme-co and novapay",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/quanta",
+            "people/frank-example",
+            "companies/orbital",
+            "projects/example-amphitheater",
+            "projects/example-civic-platform",
+            "companies/acme-co",
+            "companies/zenith",
+            "people/erin-example",
+            "people/ivan-example",
+            "people/grace-example"
+          ],
+          "top3": [
+            "companies/quanta",
+            "people/frank-example",
+            "companies/orbital"
+          ],
+          "top": {
+            "slug": "companies/quanta",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": true
+        },
+        {
+          "query": "what connects acme-co and mindbridge",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/dave-example",
+            "people/carol-example",
+            "projects/example-amphitheater",
+            "projects/example-civic-platform",
+            "companies/acme-co",
+            "companies/quanta",
+            "people/erin-example",
+            "companies/widget-co",
+            "people/frank-example",
+            "companies/zenith"
+          ],
+          "top3": [
+            "people/dave-example",
+            "people/carol-example",
+            "projects/example-amphitheater"
+          ],
+          "top": {
+            "slug": "people/dave-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "what connects acme-co and helio",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/quanta",
+            "companies/orbital",
+            "funds/fund-b",
+            "people/alice-example",
+            "projects/example-amphitheater",
+            "projects/example-civic-platform",
+            "companies/widget-co",
+            "companies/zenith",
+            "people/erin-example",
+            "companies/acme-co"
+          ],
+          "top3": [
+            "companies/quanta",
+            "companies/orbital",
+            "funds/fund-b"
+          ],
+          "top": {
+            "slug": "companies/quanta",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": true
+        },
+        {
+          "query": "what connects acme-co and quanta",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/novapay",
+            "people/frank-example",
+            "companies/helio",
+            "companies/orbital",
+            "people/alice-example",
+            "projects/example-amphitheater",
+            "projects/example-civic-platform",
+            "companies/widget-co",
+            "companies/quanta",
+            "people/erin-example"
+          ],
+          "top3": [
+            "companies/novapay",
+            "people/frank-example",
+            "companies/helio"
+          ],
+          "top": {
+            "slug": "companies/novapay",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": true
+        },
+        {
+          "query": "what connects acme-co and orbital",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/quanta",
+            "companies/helio",
+            "companies/novapay",
+            "people/alice-example",
+            "projects/example-amphitheater",
+            "projects/example-civic-platform",
+            "companies/acme-co",
+            "people/erin-example",
+            "people/frank-example",
+            "companies/zenith"
+          ],
+          "top3": [
+            "companies/quanta",
+            "companies/helio",
+            "companies/novapay"
+          ],
+          "top": {
+            "slug": "companies/quanta",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": false
+        },
+        {
+          "query": "what connects novapay and quanta",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/acme-co",
+            "companies/orbital",
+            "companies/widget-co",
+            "people/frank-example",
+            "projects/example-civic-platform",
+            "companies/zenith",
+            "projects/example-amphitheater",
+            "people/erin-example",
+            "companies/novapay",
+            "people/grace-example"
+          ],
+          "top3": [
+            "companies/acme-co",
+            "companies/orbital",
+            "companies/widget-co"
+          ],
+          "top": {
+            "slug": "companies/acme-co",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": false
+        },
+        {
+          "query": "what connects novapay and zenith",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/grace-example",
+            "companies/widget-co",
+            "companies/orbital",
+            "companies/acme-co",
+            "projects/example-civic-platform",
+            "projects/example-amphitheater",
+            "companies/zenith",
+            "companies/quanta",
+            "people/erin-example",
+            "people/frank-example"
+          ],
+          "top3": [
+            "people/grace-example",
+            "companies/widget-co",
+            "companies/orbital"
+          ],
+          "top": {
+            "slug": "people/grace-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "what connects novapay and orbital",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/acme-co",
+            "companies/zenith",
+            "companies/quanta",
+            "companies/widget-co",
+            "people/grace-example",
+            "projects/example-civic-platform",
+            "projects/example-amphitheater",
+            "companies/novapay",
+            "people/erin-example",
+            "people/frank-example"
+          ],
+          "top3": [
+            "companies/acme-co",
+            "companies/zenith",
+            "companies/quanta"
+          ],
+          "top": {
+            "slug": "companies/acme-co",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": false
+        },
+        {
+          "query": "what connects helio and quanta",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/widget-co",
+            "companies/acme-co",
+            "companies/orbital",
+            "people/alice-example",
+            "companies/zenith",
+            "projects/example-amphitheater",
+            "projects/example-civic-platform",
+            "companies/novapay",
+            "people/erin-example",
+            "people/frank-example"
+          ],
+          "top3": [
+            "companies/widget-co",
+            "companies/acme-co",
+            "companies/orbital"
+          ],
+          "top": {
+            "slug": "companies/widget-co",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": false
+        },
+        {
+          "query": "what connects helio and zenith",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/widget-co",
+            "companies/orbital",
+            "people/heidi-example",
+            "projects/example-amphitheater",
+            "projects/example-civic-platform",
+            "companies/zenith",
+            "companies/acme-co",
+            "companies/quanta",
+            "people/grace-example",
+            "people/erin-example"
+          ],
+          "top3": [
+            "companies/widget-co",
+            "companies/orbital",
+            "people/heidi-example"
+          ],
+          "top": {
+            "slug": "companies/widget-co",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": true
+        },
+        {
+          "query": "what connects helio and orbital",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/acme-co",
+            "companies/zenith",
+            "companies/widget-co",
+            "companies/quanta",
+            "people/alice-example",
+            "projects/example-amphitheater",
+            "projects/example-civic-platform",
+            "companies/novapay",
+            "companies/helio",
+            "people/erin-example"
+          ],
+          "top3": [
+            "companies/acme-co",
+            "companies/zenith",
+            "companies/widget-co"
+          ],
+          "top": {
+            "slug": "companies/acme-co",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": false
+        },
+        {
+          "query": "what connects quanta and orbital",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/novapay",
+            "companies/helio",
+            "companies/widget-co",
+            "companies/acme-co",
+            "people/alice-example",
+            "projects/example-amphitheater",
+            "companies/zenith",
+            "projects/example-civic-platform",
+            "people/ivan-example",
+            "people/erin-example"
+          ],
+          "top3": [
+            "companies/novapay",
+            "companies/helio",
+            "companies/widget-co"
+          ],
+          "top": {
+            "slug": "companies/novapay",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": false
+        },
+        {
+          "query": "what connects zenith and orbital",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/helio",
+            "companies/novapay",
+            "companies/widget-co",
+            "people/grace-example",
+            "people/ivan-example",
+            "projects/example-amphitheater",
+            "companies/acme-co",
+            "projects/example-civic-platform",
+            "companies/quanta",
+            "companies/zenith"
+          ],
+          "top3": [
+            "companies/helio",
+            "companies/novapay",
+            "companies/widget-co"
+          ],
+          "top": {
+            "slug": "companies/helio",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": null
+          },
+          "reranked_rows": 0,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": false
+        }
+      ],
+      "report": {
+        "schema_version": 1,
+        "k": 3,
+        "total": 50,
+        "families": [
+          {
+            "family": "alias-synonym",
+            "n": 2,
+            "hit_at_1": 1,
+            "hit_at_3": 1,
+            "mrr": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "concept-paraphrase",
+            "n": 2,
+            "hit_at_1": 1,
+            "hit_at_3": 1,
+            "mrr": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "generic-to-named",
+            "n": 1,
+            "hit_at_1": 1,
+            "hit_at_3": 1,
+            "mrr": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "n": 39,
+            "hit_at_1": 0.5384615384615384,
+            "hit_at_3": 0.6923076923076923,
+            "mrr": 0.6649572649572648,
+            "recall_at_k": 0.6367521367521367,
+            "recall_at_10": 0.9743589743589743
+          },
+          {
+            "family": "hard-negative",
+            "n": 1,
+            "hit_at_1": 0,
+            "hit_at_3": 0,
+            "mrr": 0,
+            "recall_at_k": 0,
+            "recall_at_10": 0
+          },
+          {
+            "family": "multi-chunk-dilution",
+            "n": 1,
+            "hit_at_1": 1,
+            "hit_at_3": 1,
+            "mrr": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "short-vs-rich",
+            "n": 2,
+            "hit_at_1": 1,
+            "hit_at_3": 1,
+            "mrr": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "title-substring",
+            "n": 2,
+            "hit_at_1": 1,
+            "hit_at_3": 1,
+            "mrr": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          }
+        ],
+        "questions": [
+          {
+            "family": "title-substring",
+            "query": "greek amphitheater",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "title-substring",
+            "query": "civic feedback platform",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "alias-synonym",
+            "query": "hall of light",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "alias-synonym",
+            "query": "the widget tracker",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "generic-to-named",
+            "query": "indoor amphitheater for debate",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "multi-chunk-dilution",
+            "query": "ceiling treatment acoustics amphitheater",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "short-vs-rich",
+            "query": "amphitheater",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "short-vs-rich",
+            "query": "indoor greek amphitheater for adversarial debate in the city",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who works on the civic platform",
+            "hit_at_1": false,
+            "hit_at_3": false,
+            "reciprocal_rank": 0,
+            "recall_at_k": 0,
+            "recall_at_10": 0
+          },
+          {
+            "family": "hard-negative",
+            "query": "quarterly tax filing checklist",
+            "hit_at_1": false,
+            "hit_at_3": false,
+            "reciprocal_rank": 0,
+            "negative_clean": false,
+            "recall_at_k": 0,
+            "recall_at_10": 0
+          },
+          {
+            "family": "concept-paraphrase",
+            "query": "what is the idea of debating in public forums",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "concept-paraphrase",
+            "query": "what do i know about civic engagement tooling",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who invested in widget-co",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who invested in acme-co",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who invested in novapay",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who invested in mindbridge",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who invested in helio",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who invested in quanta",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who invested in zenith",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who invested in orbital",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who works at widget-co",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who works at acme-co",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who works at novapay",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who works at helio",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who works at zenith",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who founded mindbridge",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who founded quanta",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who founded widget-co",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who founded orbital",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who advises novapay",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who advises helio",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects widget-co and acme-co",
+            "hit_at_1": false,
+            "hit_at_3": false,
+            "reciprocal_rank": 0.25,
+            "recall_at_k": 0,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects widget-co and novapay",
+            "hit_at_1": false,
+            "hit_at_3": true,
+            "reciprocal_rank": 0.3333333333333333,
+            "recall_at_k": 0.3333333333333333,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects widget-co and helio",
+            "hit_at_1": false,
+            "hit_at_3": true,
+            "reciprocal_rank": 0.3333333333333333,
+            "recall_at_k": 0.5,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects widget-co and quanta",
+            "hit_at_1": false,
+            "hit_at_3": false,
+            "reciprocal_rank": 0.25,
+            "recall_at_k": 0,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects widget-co and zenith",
+            "hit_at_1": false,
+            "hit_at_3": false,
+            "reciprocal_rank": 0.25,
+            "recall_at_k": 0,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects widget-co and orbital",
+            "hit_at_1": false,
+            "hit_at_3": false,
+            "reciprocal_rank": 0.25,
+            "recall_at_k": 0,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects acme-co and novapay",
+            "hit_at_1": false,
+            "hit_at_3": true,
+            "reciprocal_rank": 0.5,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects acme-co and mindbridge",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects acme-co and helio",
+            "hit_at_1": false,
+            "hit_at_3": true,
+            "reciprocal_rank": 0.3333333333333333,
+            "recall_at_k": 0.5,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects acme-co and quanta",
+            "hit_at_1": false,
+            "hit_at_3": true,
+            "reciprocal_rank": 0.5,
+            "recall_at_k": 0.5,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects acme-co and orbital",
+            "hit_at_1": false,
+            "hit_at_3": false,
+            "reciprocal_rank": 0.25,
+            "recall_at_k": 0,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects novapay and quanta",
+            "hit_at_1": false,
+            "hit_at_3": false,
+            "reciprocal_rank": 0.25,
+            "recall_at_k": 0,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects novapay and zenith",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects novapay and orbital",
+            "hit_at_1": false,
+            "hit_at_3": false,
+            "reciprocal_rank": 0.2,
+            "recall_at_k": 0,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects helio and quanta",
+            "hit_at_1": false,
+            "hit_at_3": false,
+            "reciprocal_rank": 0.25,
+            "recall_at_k": 0,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects helio and zenith",
+            "hit_at_1": false,
+            "hit_at_3": true,
+            "reciprocal_rank": 0.3333333333333333,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects helio and orbital",
+            "hit_at_1": false,
+            "hit_at_3": false,
+            "reciprocal_rank": 0.2,
+            "recall_at_k": 0,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects quanta and orbital",
+            "hit_at_1": false,
+            "hit_at_3": false,
+            "reciprocal_rank": 0.2,
+            "recall_at_k": 0,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects zenith and orbital",
+            "hit_at_1": false,
+            "hit_at_3": false,
+            "reciprocal_rank": 0.25,
+            "recall_at_k": 0,
+            "recall_at_10": 1
+          }
+        ]
+      },
+      "gate": {
+        "pass": true,
+        "breaches": [],
+        "warnings": [
+          {
+            "family": "graph-relationship",
+            "metric": "hit_at_3",
+            "got": 0.6923076923076923,
+            "floor": 0.8
+          },
+          {
+            "family": "hard-negative",
+            "metric": "hit_at_3",
+            "got": 0,
+            "floor": 0.8
+          }
+        ]
+      }
+    },
+    "on": {
+      "arm": "on",
+      "records": [
+        {
+          "query": "greek amphitheater",
+          "family": "title-substring",
+          "slugs": [
+            "projects/example-amphitheater"
+          ],
+          "top3": [
+            "projects/example-amphitheater"
+          ],
+          "top": {
+            "slug": "projects/example-amphitheater",
+            "evidence": "exact_title_match",
+            "create_safety": "exists",
+            "rerank_score": 0.8359375
+          },
+          "reranked_rows": 1,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "civic feedback platform",
+          "family": "title-substring",
+          "slugs": [
+            "projects/example-civic-platform"
+          ],
+          "top3": [
+            "projects/example-civic-platform"
+          ],
+          "top": {
+            "slug": "projects/example-civic-platform",
+            "evidence": "exact_title_match",
+            "create_safety": "exists",
+            "rerank_score": 0.890625
+          },
+          "reranked_rows": 1,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "hall of light",
+          "family": "alias-synonym",
+          "slugs": [
+            "projects/example-amphitheater",
+            "projects/example-civic-platform",
+            "people/erin-example",
+            "people/frank-example",
+            "companies/orbital",
+            "people/ivan-example",
+            "people/carol-example",
+            "companies/widget-co",
+            "companies/acme-co",
+            "companies/novapay"
+          ],
+          "top3": [
+            "projects/example-amphitheater",
+            "projects/example-civic-platform",
+            "people/erin-example"
+          ],
+          "top": {
+            "slug": "projects/example-amphitheater",
+            "evidence": "alias_hit",
+            "create_safety": "exists",
+            "rerank_score": 0.369140625
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "the widget tracker",
+          "family": "alias-synonym",
+          "slugs": [
+            "projects/example-civic-platform",
+            "projects/example-amphitheater",
+            "funds/fund-a",
+            "companies/orbital",
+            "companies/widget-co",
+            "people/grace-example",
+            "people/ivan-example",
+            "people/dave-example",
+            "people/erin-example",
+            "people/frank-example"
+          ],
+          "top3": [
+            "projects/example-civic-platform",
+            "projects/example-amphitheater",
+            "funds/fund-a"
+          ],
+          "top": {
+            "slug": "projects/example-civic-platform",
+            "evidence": "alias_hit",
+            "create_safety": "exists",
+            "rerank_score": 0.3359375
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "indoor amphitheater for debate",
+          "family": "generic-to-named",
+          "slugs": [
+            "projects/example-amphitheater"
+          ],
+          "top3": [
+            "projects/example-amphitheater"
+          ],
+          "top": {
+            "slug": "projects/example-amphitheater",
+            "evidence": "keyword_exact",
+            "create_safety": "probable",
+            "rerank_score": 0.89453125
+          },
+          "reranked_rows": 1,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "ceiling treatment acoustics amphitheater",
+          "family": "multi-chunk-dilution",
+          "slugs": [
+            "projects/example-amphitheater"
+          ],
+          "top3": [
+            "projects/example-amphitheater"
+          ],
+          "top": {
+            "slug": "projects/example-amphitheater",
+            "evidence": "high_vector_match",
+            "create_safety": "exists",
+            "rerank_score": 0.9140625
+          },
+          "reranked_rows": 1,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "amphitheater",
+          "family": "short-vs-rich",
+          "slugs": [
+            "projects/example-amphitheater"
+          ],
+          "top3": [
+            "projects/example-amphitheater"
+          ],
+          "top": {
+            "slug": "projects/example-amphitheater",
+            "evidence": "keyword_exact",
+            "create_safety": "probable",
+            "rerank_score": 0.79296875
+          },
+          "reranked_rows": 1,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "indoor greek amphitheater for adversarial debate in the city",
+          "family": "short-vs-rich",
+          "slugs": [
+            "projects/example-amphitheater"
+          ],
+          "top3": [
+            "projects/example-amphitheater"
+          ],
+          "top": {
+            "slug": "projects/example-amphitheater",
+            "evidence": "high_vector_match",
+            "create_safety": "exists",
+            "rerank_score": 0.94921875
+          },
+          "reranked_rows": 1,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who works on the civic platform",
+          "family": "graph-relationship",
+          "slugs": [
+            "projects/example-civic-platform"
+          ],
+          "top3": [
+            "projects/example-civic-platform"
+          ],
+          "top": {
+            "slug": "projects/example-civic-platform",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.453125
+          },
+          "reranked_rows": 1,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": false
+        },
+        {
+          "query": "quarterly tax filing checklist",
+          "family": "hard-negative",
+          "slugs": [
+            "companies/zenith",
+            "companies/mindbridge",
+            "companies/quanta",
+            "companies/novapay",
+            "companies/widget-co",
+            "companies/helio",
+            "companies/orbital",
+            "companies/acme-co",
+            "funds/fund-a",
+            "funds/fund-b"
+          ],
+          "top3": [
+            "companies/zenith",
+            "companies/mindbridge",
+            "companies/quanta"
+          ],
+          "top": {
+            "slug": "companies/zenith",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.212890625
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "what is the idea of debating in public forums",
+          "family": "concept-paraphrase",
+          "slugs": [
+            "projects/example-amphitheater",
+            "projects/example-civic-platform"
+          ],
+          "top3": [
+            "projects/example-amphitheater",
+            "projects/example-civic-platform"
+          ],
+          "top": {
+            "slug": "projects/example-amphitheater",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.41796875
+          },
+          "reranked_rows": 2,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "what do i know about civic engagement tooling",
+          "family": "concept-paraphrase",
+          "slugs": [
+            "projects/example-civic-platform"
+          ],
+          "top3": [
+            "projects/example-civic-platform"
+          ],
+          "top": {
+            "slug": "projects/example-civic-platform",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.53515625
+          },
+          "reranked_rows": 1,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who invested in widget-co",
+          "family": "graph-relationship",
+          "slugs": [
+            "funds/fund-a",
+            "people/alice-example",
+            "people/bob-example",
+            "funds/fund-b"
+          ],
+          "top3": [
+            "funds/fund-a",
+            "people/alice-example",
+            "people/bob-example"
+          ],
+          "top": {
+            "slug": "funds/fund-a",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.4765625
+          },
+          "reranked_rows": 4,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who invested in acme-co",
+          "family": "graph-relationship",
+          "slugs": [
+            "funds/fund-b",
+            "people/carol-example",
+            "people/alice-example",
+            "funds/fund-a"
+          ],
+          "top3": [
+            "funds/fund-b",
+            "people/carol-example",
+            "people/alice-example"
+          ],
+          "top": {
+            "slug": "funds/fund-b",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.458984375
+          },
+          "reranked_rows": 4,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who invested in novapay",
+          "family": "graph-relationship",
+          "slugs": [
+            "funds/fund-a",
+            "people/bob-example",
+            "funds/fund-b",
+            "companies/mindbridge",
+            "companies/orbital",
+            "companies/quanta",
+            "companies/acme-co",
+            "companies/novapay",
+            "companies/widget-co",
+            "companies/helio"
+          ],
+          "top3": [
+            "funds/fund-a",
+            "people/bob-example",
+            "funds/fund-b"
+          ],
+          "top": {
+            "slug": "funds/fund-a",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.462890625
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who invested in mindbridge",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/carol-example",
+            "people/dave-example",
+            "funds/fund-b",
+            "funds/fund-a",
+            "companies/orbital",
+            "companies/widget-co",
+            "companies/quanta",
+            "companies/novapay",
+            "companies/helio",
+            "companies/acme-co"
+          ],
+          "top3": [
+            "people/carol-example",
+            "people/dave-example",
+            "funds/fund-b"
+          ],
+          "top": {
+            "slug": "people/carol-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.291015625
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who invested in helio",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/erin-example",
+            "funds/fund-b",
+            "funds/fund-a",
+            "companies/quanta",
+            "companies/widget-co",
+            "companies/acme-co",
+            "companies/orbital",
+            "companies/novapay",
+            "companies/helio",
+            "companies/mindbridge"
+          ],
+          "top3": [
+            "people/erin-example",
+            "funds/fund-b",
+            "funds/fund-a"
+          ],
+          "top": {
+            "slug": "people/erin-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.2890625
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who invested in quanta",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/frank-example",
+            "people/alice-example",
+            "funds/fund-b",
+            "funds/fund-a",
+            "companies/zenith",
+            "companies/widget-co",
+            "companies/helio",
+            "companies/quanta",
+            "companies/acme-co",
+            "companies/novapay"
+          ],
+          "top3": [
+            "people/frank-example",
+            "people/alice-example",
+            "funds/fund-b"
+          ],
+          "top": {
+            "slug": "people/frank-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.27734375
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who invested in zenith",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/grace-example",
+            "people/heidi-example",
+            "funds/fund-b",
+            "funds/fund-a",
+            "companies/widget-co",
+            "companies/quanta",
+            "companies/mindbridge",
+            "companies/orbital",
+            "companies/acme-co",
+            "companies/zenith"
+          ],
+          "top3": [
+            "people/grace-example",
+            "people/heidi-example",
+            "funds/fund-b"
+          ],
+          "top": {
+            "slug": "people/grace-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.287109375
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who invested in orbital",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/ivan-example",
+            "people/alice-example",
+            "funds/fund-b",
+            "funds/fund-a",
+            "companies/acme-co",
+            "companies/helio",
+            "companies/mindbridge",
+            "companies/orbital",
+            "companies/widget-co",
+            "companies/quanta"
+          ],
+          "top3": [
+            "people/ivan-example",
+            "people/alice-example",
+            "funds/fund-b"
+          ],
+          "top": {
+            "slug": "people/ivan-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.267578125
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who works at widget-co",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/erin-example",
+            "people/grace-example",
+            "companies/novapay",
+            "companies/mindbridge",
+            "companies/orbital",
+            "companies/zenith",
+            "companies/helio",
+            "companies/acme-co",
+            "companies/quanta",
+            "companies/widget-co"
+          ],
+          "top3": [
+            "people/erin-example",
+            "people/grace-example",
+            "companies/novapay"
+          ],
+          "top": {
+            "slug": "people/erin-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.2890625
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who works at acme-co",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/frank-example",
+            "people/dave-example",
+            "companies/zenith",
+            "companies/helio",
+            "companies/acme-co",
+            "companies/novapay",
+            "companies/orbital",
+            "companies/mindbridge",
+            "companies/quanta",
+            "companies/widget-co"
+          ],
+          "top3": [
+            "people/frank-example",
+            "people/dave-example",
+            "companies/zenith"
+          ],
+          "top": {
+            "slug": "people/frank-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.318359375
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who works at novapay",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/grace-example",
+            "companies/widget-co",
+            "companies/quanta",
+            "companies/orbital",
+            "companies/mindbridge",
+            "companies/zenith",
+            "companies/helio",
+            "companies/novapay",
+            "companies/acme-co",
+            "funds/fund-b"
+          ],
+          "top3": [
+            "people/grace-example",
+            "companies/widget-co",
+            "companies/quanta"
+          ],
+          "top": {
+            "slug": "people/grace-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.3125
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who works at helio",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/heidi-example",
+            "companies/quanta",
+            "companies/helio",
+            "companies/mindbridge",
+            "companies/orbital",
+            "companies/zenith",
+            "companies/acme-co",
+            "companies/novapay",
+            "companies/widget-co",
+            "funds/fund-a"
+          ],
+          "top3": [
+            "people/heidi-example",
+            "companies/quanta",
+            "companies/helio"
+          ],
+          "top": {
+            "slug": "people/heidi-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.310546875
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who works at zenith",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/ivan-example",
+            "companies/helio",
+            "companies/zenith",
+            "companies/orbital",
+            "companies/quanta",
+            "companies/mindbridge",
+            "companies/acme-co",
+            "companies/novapay",
+            "companies/widget-co",
+            "funds/fund-b"
+          ],
+          "top3": [
+            "people/ivan-example",
+            "companies/helio",
+            "companies/zenith"
+          ],
+          "top": {
+            "slug": "people/ivan-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.310546875
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who founded mindbridge",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/carol-example",
+            "companies/orbital",
+            "companies/novapay",
+            "companies/helio",
+            "companies/widget-co",
+            "companies/mindbridge",
+            "companies/quanta",
+            "companies/acme-co",
+            "companies/zenith",
+            "funds/fund-a"
+          ],
+          "top3": [
+            "people/carol-example",
+            "companies/orbital",
+            "companies/novapay"
+          ],
+          "top": {
+            "slug": "people/carol-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.33203125
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who founded quanta",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/frank-example",
+            "companies/helio",
+            "companies/zenith",
+            "companies/quanta",
+            "companies/widget-co",
+            "companies/acme-co",
+            "companies/mindbridge",
+            "companies/novapay",
+            "companies/orbital",
+            "funds/fund-b"
+          ],
+          "top3": [
+            "people/frank-example",
+            "companies/helio",
+            "companies/zenith"
+          ],
+          "top": {
+            "slug": "people/frank-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.32421875
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who founded widget-co",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/ivan-example",
+            "companies/mindbridge",
+            "companies/quanta",
+            "companies/zenith",
+            "companies/helio",
+            "companies/widget-co",
+            "companies/novapay",
+            "companies/orbital",
+            "companies/acme-co"
+          ],
+          "top3": [
+            "people/ivan-example",
+            "companies/mindbridge",
+            "companies/quanta"
+          ],
+          "top": {
+            "slug": "people/ivan-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.294921875
+          },
+          "reranked_rows": 9,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who founded orbital",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/grace-example",
+            "companies/acme-co",
+            "companies/zenith",
+            "companies/mindbridge",
+            "companies/quanta",
+            "companies/widget-co",
+            "companies/helio",
+            "companies/orbital",
+            "companies/novapay",
+            "funds/fund-b"
+          ],
+          "top3": [
+            "people/grace-example",
+            "companies/acme-co",
+            "companies/zenith"
+          ],
+          "top": {
+            "slug": "people/grace-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.310546875
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who advises novapay",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/frank-example",
+            "funds/fund-a",
+            "funds/fund-b",
+            "companies/novapay",
+            "companies/quanta",
+            "companies/mindbridge",
+            "companies/helio",
+            "companies/widget-co",
+            "companies/orbital",
+            "companies/zenith"
+          ],
+          "top3": [
+            "people/frank-example",
+            "funds/fund-a",
+            "funds/fund-b"
+          ],
+          "top": {
+            "slug": "people/frank-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.255859375
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "who advises helio",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/alice-example",
+            "funds/fund-a",
+            "funds/fund-b",
+            "companies/orbital",
+            "companies/mindbridge",
+            "companies/novapay",
+            "companies/quanta",
+            "companies/acme-co",
+            "companies/helio",
+            "companies/zenith"
+          ],
+          "top3": [
+            "people/alice-example",
+            "funds/fund-a",
+            "funds/fund-b"
+          ],
+          "top": {
+            "slug": "people/alice-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.2412109375
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "what connects widget-co and acme-co",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/helio",
+            "companies/orbital",
+            "companies/novapay",
+            "funds/fund-b",
+            "funds/fund-a",
+            "companies/acme-co",
+            "companies/zenith",
+            "companies/widget-co",
+            "companies/quanta",
+            "companies/mindbridge"
+          ],
+          "top3": [
+            "companies/helio",
+            "companies/orbital",
+            "companies/novapay"
+          ],
+          "top": {
+            "slug": "companies/helio",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.263671875
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": false
+        },
+        {
+          "query": "what connects widget-co and novapay",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/zenith",
+            "companies/orbital",
+            "funds/fund-a",
+            "companies/widget-co",
+            "companies/helio",
+            "companies/mindbridge",
+            "companies/novapay",
+            "companies/quanta",
+            "companies/acme-co",
+            "funds/fund-b"
+          ],
+          "top3": [
+            "companies/zenith",
+            "companies/orbital",
+            "funds/fund-a"
+          ],
+          "top": {
+            "slug": "companies/zenith",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.271484375
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": true
+        },
+        {
+          "query": "what connects widget-co and helio",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/zenith",
+            "companies/orbital",
+            "people/erin-example",
+            "funds/fund-b",
+            "funds/fund-a",
+            "companies/novapay",
+            "companies/widget-co",
+            "companies/mindbridge",
+            "companies/helio",
+            "companies/quanta"
+          ],
+          "top3": [
+            "companies/zenith",
+            "companies/orbital",
+            "people/erin-example"
+          ],
+          "top": {
+            "slug": "companies/zenith",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.25
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": true
+        },
+        {
+          "query": "what connects widget-co and quanta",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/orbital",
+            "companies/novapay",
+            "companies/helio",
+            "funds/fund-b",
+            "funds/fund-a",
+            "companies/zenith",
+            "companies/acme-co",
+            "companies/mindbridge",
+            "companies/widget-co",
+            "companies/quanta"
+          ],
+          "top3": [
+            "companies/orbital",
+            "companies/novapay",
+            "companies/helio"
+          ],
+          "top": {
+            "slug": "companies/orbital",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.263671875
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": false
+        },
+        {
+          "query": "what connects widget-co and zenith",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/orbital",
+            "companies/novapay",
+            "companies/helio",
+            "funds/fund-b",
+            "funds/fund-a",
+            "companies/zenith",
+            "companies/widget-co",
+            "companies/acme-co",
+            "companies/quanta",
+            "companies/mindbridge"
+          ],
+          "top3": [
+            "companies/orbital",
+            "companies/novapay",
+            "companies/helio"
+          ],
+          "top": {
+            "slug": "companies/orbital",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.263671875
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": false
+        },
+        {
+          "query": "what connects widget-co and orbital",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/novapay",
+            "companies/zenith",
+            "companies/helio",
+            "funds/fund-b",
+            "funds/fund-a",
+            "companies/orbital",
+            "companies/mindbridge",
+            "companies/widget-co",
+            "companies/acme-co",
+            "companies/quanta"
+          ],
+          "top3": [
+            "companies/novapay",
+            "companies/zenith",
+            "companies/helio"
+          ],
+          "top": {
+            "slug": "companies/novapay",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.25
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": false
+        },
+        {
+          "query": "what connects acme-co and novapay",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/quanta",
+            "people/frank-example",
+            "companies/orbital",
+            "funds/fund-b",
+            "funds/fund-a",
+            "companies/helio",
+            "companies/widget-co",
+            "companies/mindbridge",
+            "companies/novapay",
+            "companies/zenith"
+          ],
+          "top3": [
+            "companies/quanta",
+            "people/frank-example",
+            "companies/orbital"
+          ],
+          "top": {
+            "slug": "companies/quanta",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.27734375
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": true
+        },
+        {
+          "query": "what connects acme-co and mindbridge",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/dave-example",
+            "people/carol-example",
+            "funds/fund-b",
+            "funds/fund-a",
+            "companies/zenith",
+            "companies/mindbridge",
+            "companies/helio",
+            "companies/widget-co",
+            "companies/orbital",
+            "companies/novapay"
+          ],
+          "top3": [
+            "people/dave-example",
+            "people/carol-example",
+            "funds/fund-b"
+          ],
+          "top": {
+            "slug": "people/dave-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.25
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "what connects acme-co and helio",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/quanta",
+            "funds/fund-b",
+            "companies/orbital",
+            "funds/fund-a",
+            "companies/acme-co",
+            "companies/mindbridge",
+            "companies/helio",
+            "companies/novapay",
+            "companies/zenith",
+            "companies/widget-co"
+          ],
+          "top3": [
+            "companies/quanta",
+            "funds/fund-b",
+            "companies/orbital"
+          ],
+          "top": {
+            "slug": "companies/quanta",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.26171875
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": true
+        },
+        {
+          "query": "what connects acme-co and quanta",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/novapay",
+            "people/frank-example",
+            "companies/helio",
+            "funds/fund-b",
+            "funds/fund-a",
+            "companies/zenith",
+            "companies/acme-co",
+            "companies/quanta",
+            "companies/mindbridge",
+            "companies/widget-co"
+          ],
+          "top3": [
+            "companies/novapay",
+            "people/frank-example",
+            "companies/helio"
+          ],
+          "top": {
+            "slug": "companies/novapay",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.271484375
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": true
+        },
+        {
+          "query": "what connects acme-co and orbital",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/quanta",
+            "companies/helio",
+            "companies/novapay",
+            "funds/fund-b",
+            "funds/fund-a",
+            "companies/widget-co",
+            "companies/zenith",
+            "companies/mindbridge",
+            "companies/acme-co",
+            "companies/orbital"
+          ],
+          "top3": [
+            "companies/quanta",
+            "companies/helio",
+            "companies/novapay"
+          ],
+          "top": {
+            "slug": "companies/quanta",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.263671875
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": false
+        },
+        {
+          "query": "what connects novapay and quanta",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/acme-co",
+            "companies/orbital",
+            "companies/widget-co",
+            "companies/novapay",
+            "companies/quanta",
+            "companies/helio",
+            "companies/zenith",
+            "companies/mindbridge",
+            "funds/fund-b",
+            "funds/fund-a"
+          ],
+          "top3": [
+            "companies/acme-co",
+            "companies/orbital",
+            "companies/widget-co"
+          ],
+          "top": {
+            "slug": "companies/acme-co",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.279296875
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": false
+        },
+        {
+          "query": "what connects novapay and zenith",
+          "family": "graph-relationship",
+          "slugs": [
+            "people/grace-example",
+            "companies/widget-co",
+            "companies/orbital",
+            "companies/novapay",
+            "companies/mindbridge",
+            "companies/helio",
+            "companies/quanta",
+            "companies/zenith",
+            "companies/acme-co",
+            "funds/fund-b"
+          ],
+          "top3": [
+            "people/grace-example",
+            "companies/widget-co",
+            "companies/orbital"
+          ],
+          "top": {
+            "slug": "people/grace-example",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.2451171875
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": true,
+          "hit_at_3": true
+        },
+        {
+          "query": "what connects novapay and orbital",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/acme-co",
+            "companies/zenith",
+            "companies/quanta",
+            "funds/fund-b",
+            "funds/fund-a",
+            "companies/helio",
+            "companies/orbital",
+            "companies/novapay",
+            "companies/widget-co",
+            "companies/mindbridge"
+          ],
+          "top3": [
+            "companies/acme-co",
+            "companies/zenith",
+            "companies/quanta"
+          ],
+          "top": {
+            "slug": "companies/acme-co",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.26953125
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": false
+        },
+        {
+          "query": "what connects helio and quanta",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/widget-co",
+            "companies/acme-co",
+            "companies/orbital",
+            "companies/quanta",
+            "companies/mindbridge",
+            "companies/helio",
+            "companies/novapay",
+            "companies/zenith",
+            "funds/fund-b",
+            "funds/fund-a"
+          ],
+          "top3": [
+            "companies/widget-co",
+            "companies/acme-co",
+            "companies/orbital"
+          ],
+          "top": {
+            "slug": "companies/widget-co",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.2578125
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": false
+        },
+        {
+          "query": "what connects helio and zenith",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/widget-co",
+            "companies/orbital",
+            "people/heidi-example",
+            "companies/helio",
+            "companies/mindbridge",
+            "companies/novapay",
+            "companies/quanta",
+            "companies/acme-co",
+            "companies/zenith",
+            "funds/fund-b"
+          ],
+          "top3": [
+            "companies/widget-co",
+            "companies/orbital",
+            "people/heidi-example"
+          ],
+          "top": {
+            "slug": "companies/widget-co",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.2578125
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": true
+        },
+        {
+          "query": "what connects helio and orbital",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/acme-co",
+            "companies/zenith",
+            "companies/widget-co",
+            "companies/mindbridge",
+            "companies/helio",
+            "companies/novapay",
+            "companies/quanta",
+            "companies/orbital",
+            "funds/fund-b",
+            "funds/fund-a"
+          ],
+          "top3": [
+            "companies/acme-co",
+            "companies/zenith",
+            "companies/widget-co"
+          ],
+          "top": {
+            "slug": "companies/acme-co",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.25
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": false
+        },
+        {
+          "query": "what connects quanta and orbital",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/novapay",
+            "companies/helio",
+            "companies/widget-co",
+            "companies/orbital",
+            "companies/quanta",
+            "companies/zenith",
+            "companies/mindbridge",
+            "companies/acme-co",
+            "funds/fund-b",
+            "funds/fund-a"
+          ],
+          "top3": [
+            "companies/novapay",
+            "companies/helio",
+            "companies/widget-co"
+          ],
+          "top": {
+            "slug": "companies/novapay",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.26953125
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": false
+        },
+        {
+          "query": "what connects zenith and orbital",
+          "family": "graph-relationship",
+          "slugs": [
+            "companies/helio",
+            "companies/novapay",
+            "companies/widget-co",
+            "companies/zenith",
+            "companies/quanta",
+            "companies/orbital",
+            "companies/acme-co",
+            "companies/mindbridge",
+            "funds/fund-b",
+            "funds/fund-a"
+          ],
+          "top3": [
+            "companies/helio",
+            "companies/novapay",
+            "companies/widget-co"
+          ],
+          "top": {
+            "slug": "companies/helio",
+            "evidence": "weak_semantic",
+            "create_safety": "unknown",
+            "rerank_score": 0.2578125
+          },
+          "reranked_rows": 10,
+          "degraded": [],
+          "hit_at_1": false,
+          "hit_at_3": false
+        }
+      ],
+      "report": {
+        "schema_version": 1,
+        "k": 3,
+        "total": 50,
+        "families": [
+          {
+            "family": "alias-synonym",
+            "n": 2,
+            "hit_at_1": 1,
+            "hit_at_3": 1,
+            "mrr": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "concept-paraphrase",
+            "n": 2,
+            "hit_at_1": 1,
+            "hit_at_3": 1,
+            "mrr": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "generic-to-named",
+            "n": 1,
+            "hit_at_1": 1,
+            "hit_at_3": 1,
+            "mrr": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "n": 39,
+            "hit_at_1": 0.5384615384615384,
+            "hit_at_3": 0.6923076923076923,
+            "mrr": 0.6025641025641024,
+            "recall_at_k": 0.6367521367521367,
+            "recall_at_10": 0.6367521367521367
+          },
+          {
+            "family": "hard-negative",
+            "n": 1,
+            "hit_at_1": 1,
+            "hit_at_3": 1,
+            "mrr": 1,
+            "recall_at_k": 0,
+            "recall_at_10": 0
+          },
+          {
+            "family": "multi-chunk-dilution",
+            "n": 1,
+            "hit_at_1": 1,
+            "hit_at_3": 1,
+            "mrr": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "short-vs-rich",
+            "n": 2,
+            "hit_at_1": 1,
+            "hit_at_3": 1,
+            "mrr": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "title-substring",
+            "n": 2,
+            "hit_at_1": 1,
+            "hit_at_3": 1,
+            "mrr": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          }
+        ],
+        "questions": [
+          {
+            "family": "title-substring",
+            "query": "greek amphitheater",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "title-substring",
+            "query": "civic feedback platform",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "alias-synonym",
+            "query": "hall of light",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "alias-synonym",
+            "query": "the widget tracker",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "generic-to-named",
+            "query": "indoor amphitheater for debate",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "multi-chunk-dilution",
+            "query": "ceiling treatment acoustics amphitheater",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "short-vs-rich",
+            "query": "amphitheater",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "short-vs-rich",
+            "query": "indoor greek amphitheater for adversarial debate in the city",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who works on the civic platform",
+            "hit_at_1": false,
+            "hit_at_3": false,
+            "reciprocal_rank": 0,
+            "recall_at_k": 0,
+            "recall_at_10": 0
+          },
+          {
+            "family": "hard-negative",
+            "query": "quarterly tax filing checklist",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "negative_clean": true,
+            "recall_at_k": 0,
+            "recall_at_10": 0
+          },
+          {
+            "family": "concept-paraphrase",
+            "query": "what is the idea of debating in public forums",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "concept-paraphrase",
+            "query": "what do i know about civic engagement tooling",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who invested in widget-co",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who invested in acme-co",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who invested in novapay",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who invested in mindbridge",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who invested in helio",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who invested in quanta",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who invested in zenith",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who invested in orbital",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who works at widget-co",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who works at acme-co",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who works at novapay",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who works at helio",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who works at zenith",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who founded mindbridge",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who founded quanta",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who founded widget-co",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who founded orbital",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who advises novapay",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "who advises helio",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects widget-co and acme-co",
+            "hit_at_1": false,
+            "hit_at_3": false,
+            "reciprocal_rank": 0,
+            "recall_at_k": 0,
+            "recall_at_10": 0
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects widget-co and novapay",
+            "hit_at_1": false,
+            "hit_at_3": true,
+            "reciprocal_rank": 0.3333333333333333,
+            "recall_at_k": 0.3333333333333333,
+            "recall_at_10": 0.3333333333333333
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects widget-co and helio",
+            "hit_at_1": false,
+            "hit_at_3": true,
+            "reciprocal_rank": 0.3333333333333333,
+            "recall_at_k": 0.5,
+            "recall_at_10": 0.5
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects widget-co and quanta",
+            "hit_at_1": false,
+            "hit_at_3": false,
+            "reciprocal_rank": 0,
+            "recall_at_k": 0,
+            "recall_at_10": 0
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects widget-co and zenith",
+            "hit_at_1": false,
+            "hit_at_3": false,
+            "reciprocal_rank": 0,
+            "recall_at_k": 0,
+            "recall_at_10": 0
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects widget-co and orbital",
+            "hit_at_1": false,
+            "hit_at_3": false,
+            "reciprocal_rank": 0,
+            "recall_at_k": 0,
+            "recall_at_10": 0
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects acme-co and novapay",
+            "hit_at_1": false,
+            "hit_at_3": true,
+            "reciprocal_rank": 0.5,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects acme-co and mindbridge",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects acme-co and helio",
+            "hit_at_1": false,
+            "hit_at_3": true,
+            "reciprocal_rank": 0.5,
+            "recall_at_k": 0.5,
+            "recall_at_10": 0.5
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects acme-co and quanta",
+            "hit_at_1": false,
+            "hit_at_3": true,
+            "reciprocal_rank": 0.5,
+            "recall_at_k": 0.5,
+            "recall_at_10": 0.5
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects acme-co and orbital",
+            "hit_at_1": false,
+            "hit_at_3": false,
+            "reciprocal_rank": 0,
+            "recall_at_k": 0,
+            "recall_at_10": 0
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects novapay and quanta",
+            "hit_at_1": false,
+            "hit_at_3": false,
+            "reciprocal_rank": 0,
+            "recall_at_k": 0,
+            "recall_at_10": 0
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects novapay and zenith",
+            "hit_at_1": true,
+            "hit_at_3": true,
+            "reciprocal_rank": 1,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects novapay and orbital",
+            "hit_at_1": false,
+            "hit_at_3": false,
+            "reciprocal_rank": 0,
+            "recall_at_k": 0,
+            "recall_at_10": 0
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects helio and quanta",
+            "hit_at_1": false,
+            "hit_at_3": false,
+            "reciprocal_rank": 0,
+            "recall_at_k": 0,
+            "recall_at_10": 0
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects helio and zenith",
+            "hit_at_1": false,
+            "hit_at_3": true,
+            "reciprocal_rank": 0.3333333333333333,
+            "recall_at_k": 1,
+            "recall_at_10": 1
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects helio and orbital",
+            "hit_at_1": false,
+            "hit_at_3": false,
+            "reciprocal_rank": 0,
+            "recall_at_k": 0,
+            "recall_at_10": 0
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects quanta and orbital",
+            "hit_at_1": false,
+            "hit_at_3": false,
+            "reciprocal_rank": 0,
+            "recall_at_k": 0,
+            "recall_at_10": 0
+          },
+          {
+            "family": "graph-relationship",
+            "query": "what connects zenith and orbital",
+            "hit_at_1": false,
+            "hit_at_3": false,
+            "reciprocal_rank": 0,
+            "recall_at_k": 0,
+            "recall_at_10": 0
+          }
+        ]
+      },
+      "gate": {
+        "pass": true,
+        "breaches": [],
+        "warnings": [
+          {
+            "family": "graph-relationship",
+            "metric": "hit_at_3",
+            "got": 0.6923076923076923,
+            "floor": 0.8
+          }
+        ]
+      }
+    }
+  },
+  "on_skipped": null,
+  "paired": [
+    {
+      "query": "greek amphitheater",
+      "family": "title-substring",
+      "off": {
+        "top3": [
+          "projects/example-amphitheater",
+          "projects/example-civic-platform",
+          "companies/orbital"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "exact_title_match",
+        "create_safety": "exists"
+      },
+      "on": {
+        "top3": [
+          "projects/example-amphitheater"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "exact_title_match",
+        "create_safety": "exists"
+      }
+    },
+    {
+      "query": "civic feedback platform",
+      "family": "title-substring",
+      "off": {
+        "top3": [
+          "projects/example-civic-platform",
+          "projects/example-amphitheater",
+          "companies/acme-co"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "exact_title_match",
+        "create_safety": "exists"
+      },
+      "on": {
+        "top3": [
+          "projects/example-civic-platform"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "exact_title_match",
+        "create_safety": "exists"
+      }
+    },
+    {
+      "query": "hall of light",
+      "family": "alias-synonym",
+      "off": {
+        "top3": [
+          "projects/example-amphitheater",
+          "projects/example-civic-platform",
+          "people/erin-example"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "alias_hit",
+        "create_safety": "exists"
+      },
+      "on": {
+        "top3": [
+          "projects/example-amphitheater",
+          "projects/example-civic-platform",
+          "people/erin-example"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "alias_hit",
+        "create_safety": "exists"
+      }
+    },
+    {
+      "query": "the widget tracker",
+      "family": "alias-synonym",
+      "off": {
+        "top3": [
+          "projects/example-civic-platform",
+          "projects/example-amphitheater",
+          "funds/fund-a"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "alias_hit",
+        "create_safety": "exists"
+      },
+      "on": {
+        "top3": [
+          "projects/example-civic-platform",
+          "projects/example-amphitheater",
+          "funds/fund-a"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "alias_hit",
+        "create_safety": "exists"
+      }
+    },
+    {
+      "query": "indoor amphitheater for debate",
+      "family": "generic-to-named",
+      "off": {
+        "top3": [
+          "projects/example-amphitheater",
+          "projects/example-civic-platform",
+          "companies/novapay"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "keyword_exact",
+        "create_safety": "probable"
+      },
+      "on": {
+        "top3": [
+          "projects/example-amphitheater"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "keyword_exact",
+        "create_safety": "probable"
+      }
+    },
+    {
+      "query": "ceiling treatment acoustics amphitheater",
+      "family": "multi-chunk-dilution",
+      "off": {
+        "top3": [
+          "projects/example-amphitheater",
+          "companies/helio",
+          "projects/example-civic-platform"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "high_vector_match",
+        "create_safety": "exists"
+      },
+      "on": {
+        "top3": [
+          "projects/example-amphitheater"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "high_vector_match",
+        "create_safety": "exists"
+      }
+    },
+    {
+      "query": "amphitheater",
+      "family": "short-vs-rich",
+      "off": {
+        "top3": [
+          "projects/example-amphitheater",
+          "projects/example-civic-platform",
+          "companies/zenith"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "keyword_exact",
+        "create_safety": "probable"
+      },
+      "on": {
+        "top3": [
+          "projects/example-amphitheater"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "keyword_exact",
+        "create_safety": "probable"
+      }
+    },
+    {
+      "query": "indoor greek amphitheater for adversarial debate in the city",
+      "family": "short-vs-rich",
+      "off": {
+        "top3": [
+          "projects/example-amphitheater",
+          "projects/example-civic-platform",
+          "companies/novapay"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "high_vector_match",
+        "create_safety": "exists"
+      },
+      "on": {
+        "top3": [
+          "projects/example-amphitheater"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "high_vector_match",
+        "create_safety": "exists"
+      }
+    },
+    {
+      "query": "who works on the civic platform",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "projects/example-civic-platform",
+          "projects/example-amphitheater",
+          "people/ivan-example"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "projects/example-civic-platform"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "quarterly tax filing checklist",
+      "family": "hard-negative",
+      "off": {
+        "top3": [
+          "projects/example-civic-platform",
+          "companies/acme-co",
+          "companies/orbital"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "companies/zenith",
+          "companies/mindbridge",
+          "companies/quanta"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "what is the idea of debating in public forums",
+      "family": "concept-paraphrase",
+      "off": {
+        "top3": [
+          "projects/example-amphitheater",
+          "projects/example-civic-platform",
+          "people/ivan-example"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "projects/example-amphitheater",
+          "projects/example-civic-platform"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "what do i know about civic engagement tooling",
+      "family": "concept-paraphrase",
+      "off": {
+        "top3": [
+          "projects/example-civic-platform",
+          "projects/example-amphitheater",
+          "people/ivan-example"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "projects/example-civic-platform"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "who invested in widget-co",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "funds/fund-a",
+          "people/alice-example",
+          "people/bob-example"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "funds/fund-a",
+          "people/alice-example",
+          "people/bob-example"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "who invested in acme-co",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "funds/fund-b",
+          "people/carol-example",
+          "people/alice-example"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "funds/fund-b",
+          "people/carol-example",
+          "people/alice-example"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "who invested in novapay",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "funds/fund-a",
+          "people/bob-example",
+          "projects/example-civic-platform"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "funds/fund-a",
+          "people/bob-example",
+          "funds/fund-b"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "who invested in mindbridge",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "people/carol-example",
+          "people/dave-example",
+          "projects/example-civic-platform"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "people/carol-example",
+          "people/dave-example",
+          "funds/fund-b"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "who invested in helio",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "people/erin-example",
+          "funds/fund-b",
+          "projects/example-civic-platform"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "people/erin-example",
+          "funds/fund-b",
+          "funds/fund-a"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "who invested in quanta",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "people/frank-example",
+          "people/alice-example",
+          "projects/example-civic-platform"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "people/frank-example",
+          "people/alice-example",
+          "funds/fund-b"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "who invested in zenith",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "people/grace-example",
+          "people/heidi-example",
+          "projects/example-amphitheater"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "people/grace-example",
+          "people/heidi-example",
+          "funds/fund-b"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "who invested in orbital",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "people/ivan-example",
+          "people/alice-example",
+          "projects/example-amphitheater"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "people/ivan-example",
+          "people/alice-example",
+          "funds/fund-b"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "who works at widget-co",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "people/erin-example",
+          "people/grace-example",
+          "companies/widget-co"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "people/erin-example",
+          "people/grace-example",
+          "companies/novapay"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "who works at acme-co",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "people/frank-example",
+          "people/dave-example",
+          "projects/example-amphitheater"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "people/frank-example",
+          "people/dave-example",
+          "companies/zenith"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "who works at novapay",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "people/grace-example",
+          "projects/example-civic-platform",
+          "companies/acme-co"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "people/grace-example",
+          "companies/widget-co",
+          "companies/quanta"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "who works at helio",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "people/heidi-example",
+          "projects/example-amphitheater",
+          "companies/widget-co"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "people/heidi-example",
+          "companies/quanta",
+          "companies/helio"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "who works at zenith",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "people/ivan-example",
+          "projects/example-amphitheater",
+          "companies/widget-co"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "people/ivan-example",
+          "companies/helio",
+          "companies/zenith"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "who founded mindbridge",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "people/carol-example",
+          "projects/example-civic-platform",
+          "projects/example-amphitheater"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "people/carol-example",
+          "companies/orbital",
+          "companies/novapay"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "who founded quanta",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "people/frank-example",
+          "projects/example-amphitheater",
+          "companies/orbital"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "people/frank-example",
+          "companies/helio",
+          "companies/zenith"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "who founded widget-co",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "people/ivan-example",
+          "projects/example-civic-platform",
+          "companies/orbital"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "people/ivan-example",
+          "companies/mindbridge",
+          "companies/quanta"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "who founded orbital",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "people/grace-example",
+          "projects/example-amphitheater",
+          "projects/example-civic-platform"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "people/grace-example",
+          "companies/acme-co",
+          "companies/zenith"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "who advises novapay",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "people/frank-example",
+          "projects/example-civic-platform",
+          "projects/example-amphitheater"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "people/frank-example",
+          "funds/fund-a",
+          "funds/fund-b"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "who advises helio",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "people/alice-example",
+          "projects/example-amphitheater",
+          "projects/example-civic-platform"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "people/alice-example",
+          "funds/fund-a",
+          "funds/fund-b"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "what connects widget-co and acme-co",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "companies/helio",
+          "companies/orbital",
+          "companies/novapay"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "companies/helio",
+          "companies/orbital",
+          "companies/novapay"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "what connects widget-co and novapay",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "companies/zenith",
+          "companies/orbital",
+          "funds/fund-a"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "companies/zenith",
+          "companies/orbital",
+          "funds/fund-a"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "what connects widget-co and helio",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "companies/zenith",
+          "companies/orbital",
+          "people/erin-example"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "companies/zenith",
+          "companies/orbital",
+          "people/erin-example"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "what connects widget-co and quanta",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "companies/orbital",
+          "companies/novapay",
+          "companies/helio"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "companies/orbital",
+          "companies/novapay",
+          "companies/helio"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "what connects widget-co and zenith",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "companies/orbital",
+          "companies/novapay",
+          "companies/helio"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "companies/orbital",
+          "companies/novapay",
+          "companies/helio"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "what connects widget-co and orbital",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "companies/novapay",
+          "companies/zenith",
+          "companies/helio"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "companies/novapay",
+          "companies/zenith",
+          "companies/helio"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "what connects acme-co and novapay",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "companies/quanta",
+          "people/frank-example",
+          "companies/orbital"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "companies/quanta",
+          "people/frank-example",
+          "companies/orbital"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "what connects acme-co and mindbridge",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "people/dave-example",
+          "people/carol-example",
+          "projects/example-amphitheater"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "people/dave-example",
+          "people/carol-example",
+          "funds/fund-b"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "what connects acme-co and helio",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "companies/quanta",
+          "companies/orbital",
+          "funds/fund-b"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "companies/quanta",
+          "funds/fund-b",
+          "companies/orbital"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "what connects acme-co and quanta",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "companies/novapay",
+          "people/frank-example",
+          "companies/helio"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "companies/novapay",
+          "people/frank-example",
+          "companies/helio"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "what connects acme-co and orbital",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "companies/quanta",
+          "companies/helio",
+          "companies/novapay"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "companies/quanta",
+          "companies/helio",
+          "companies/novapay"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "what connects novapay and quanta",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "companies/acme-co",
+          "companies/orbital",
+          "companies/widget-co"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "companies/acme-co",
+          "companies/orbital",
+          "companies/widget-co"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "what connects novapay and zenith",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "people/grace-example",
+          "companies/widget-co",
+          "companies/orbital"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "people/grace-example",
+          "companies/widget-co",
+          "companies/orbital"
+        ],
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "what connects novapay and orbital",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "companies/acme-co",
+          "companies/zenith",
+          "companies/quanta"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "companies/acme-co",
+          "companies/zenith",
+          "companies/quanta"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "what connects helio and quanta",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "companies/widget-co",
+          "companies/acme-co",
+          "companies/orbital"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "companies/widget-co",
+          "companies/acme-co",
+          "companies/orbital"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "what connects helio and zenith",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "companies/widget-co",
+          "companies/orbital",
+          "people/heidi-example"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "companies/widget-co",
+          "companies/orbital",
+          "people/heidi-example"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": true,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "what connects helio and orbital",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "companies/acme-co",
+          "companies/zenith",
+          "companies/widget-co"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "companies/acme-co",
+          "companies/zenith",
+          "companies/widget-co"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "what connects quanta and orbital",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "companies/novapay",
+          "companies/helio",
+          "companies/widget-co"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "companies/novapay",
+          "companies/helio",
+          "companies/widget-co"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    },
+    {
+      "query": "what connects zenith and orbital",
+      "family": "graph-relationship",
+      "off": {
+        "top3": [
+          "companies/helio",
+          "companies/novapay",
+          "companies/widget-co"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      },
+      "on": {
+        "top3": [
+          "companies/helio",
+          "companies/novapay",
+          "companies/widget-co"
+        ],
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "evidence": "weak_semantic",
+        "create_safety": "unknown"
+      }
+    }
+  ],
+  "verdict": {
+    "pass": true,
+    "n": 50,
+    "hit_at_1": {
+      "wins": 1,
+      "losses": 0,
+      "net": 1,
+      "lost_queries": [],
+      "won_queries": [
+        "quarterly tax filing checklist"
+      ]
+    },
+    "hit_at_3": {
+      "wins": 1,
+      "losses": 0,
+      "net": 1,
+      "lost_queries": [],
+      "won_queries": [
+        "quarterly tax filing checklist"
+      ]
+    },
+    "create_safety": {
+      "downgrades": 0,
+      "upgrades": 0,
+      "downgraded_queries": []
+    },
+    "rule": "balanced reranker stays ON iff, paired per query (ON vs OFF), hit@1 losses == 0 and hit@3 losses <= 1; create_safety downgrades are reported, not gated (TODOS.md:1635-1642).",
+    "reasons": []
+  },
+  "spend_estimate_usd": {
+    "embedding": 0.00006136,
+    "rerank": 0.0014928500000000002,
+    "total": 0.0015542100000000003,
+    "note": "chars/3.5 tokens × list price; embedding chars 1649 (query embeds counted once — cache serves the ON arm), rerank request chars 104498, API-reported rerank tokens 22016"
+  },
+  "_meta": {
+    "metric_glossary": {
+      "hit@1": "Fraction of queries where the right page is the very first result. NamedThingBench hard-gates title-substring Hit@1 >= 0.95 and alias Hit@1 >= 0.98 — a query that is a page's name or title phrase should land it at rank 1, not \"somewhere in the top 10\".",
+      "hit@3": "Fraction of queries where the right page is in the top 3 results. NamedThingBench requires the multi-chunk-dilution family to hit 1.0 — a page with one strong chunk among many weak ones must never be buried.",
+      "mrr": "On average, how far down the unique-page list is the FIRST relevant result? Repeated chunks do not consume ranks. An MRR of 1.0 means the first page is always right; an MRR of 0.5 means it's typically at rank 2.",
+      "create_safety": "A result's answer to \"is this page already in the brain — safe to NOT write a new one?\" Derived from the strongest evidence, NOT a raw score: exists (alias_hit / exact_title_match / high_vector_match — do not duplicate), probable (solid keyword match — prefer updating), unknown (weak match — look closer). An agent keys its don't-duplicate decision off this, which is what prevents the incident's duplicate-stub class."
+    }
+  }
+}
