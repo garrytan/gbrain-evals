@@ -24,6 +24,7 @@ import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { hybridSearch } from 'gbrain/search/hybrid';
 import { importFromContent } from 'gbrain/import-file';
 import { configureGateway } from 'gbrain/ai/gateway';
+import type { HybridSearchMeta } from 'gbrain/types';
 import { assertEvalAdapterConfig, type EvalAdapterConfig } from '../eval-adapter-config.ts';
 
 // Known-safe config: auto_link OFF at the engine layer via direct setConfig
@@ -39,7 +40,17 @@ interface HybridNoGraphState {
   limit: number;
   /** Every engine.setConfig entry init() applied, last write wins (receipt echo). */
   resolvedConfig: Record<string, string>;
-  observed: { queries: number; rerank_scored_queries: number };
+  observed: HybridNoGraphObserved;
+}
+
+/** Per-run observation counters (receipt echo; same shape as GbrainInlineAdapter's). */
+export interface HybridNoGraphObserved {
+  queries: number;
+  rerank_scored_queries: number;
+  /** Phase E2: queries whose hybridSearch meta carried `keyword_arm_confidence`. */
+  keyword_arm_confidence_stamped: number;
+  /** Phase E2: queries where the keyword + title lists fused at half weight. */
+  keyword_arm_confidence_downweighted: number;
 }
 
 interface HybridNoGraphConfig extends AdapterConfig {
@@ -159,7 +170,7 @@ export class HybridNoGraphAdapter implements Adapter {
       engine,
       limit,
       resolvedConfig,
-      observed: { queries: 0, rerank_scored_queries: 0 },
+      observed: { queries: 0, rerank_scored_queries: 0, keyword_arm_confidence_stamped: 0, keyword_arm_confidence_downweighted: 0 },
     } satisfies HybridNoGraphState;
   }
 
@@ -173,8 +184,8 @@ export class HybridNoGraphAdapter implements Adapter {
     return { ...(state as HybridNoGraphState).resolvedConfig };
   }
 
-  /** Query-time observations (rerank_score presence) — the fail-closed check for reranker-pinned cells. */
-  observedStats(state: BrainState): { queries: number; rerank_scored_queries: number } {
+  /** Query-time observations (rerank_score presence, keyword_arm_confidence counts) — the fail-closed checks for pinned cells. */
+  observedStats(state: BrainState): HybridNoGraphObserved {
     return { ...(state as HybridNoGraphState).observed };
   }
 
@@ -205,9 +216,15 @@ export class HybridNoGraphAdapter implements Adapter {
 
     // hybridSearch returns chunks with scores. We aggregate to page-level
     // by taking each page's BEST chunk score and ranking pages by that.
-    const chunkResults = await hybridSearch(s.engine, q.text, { limit: limit * 3 });
+    let meta: HybridSearchMeta | undefined;
+    const chunkResults = await hybridSearch(s.engine, q.text, { limit: limit * 3, onMeta: (m) => { meta = m; } });
     s.observed.queries += 1;
     if (chunkResults.some(r => Number.isFinite(r.rerank_score))) s.observed.rerank_scored_queries += 1;
+    const kacf = meta?.keyword_arm_confidence;
+    if (kacf) {
+      s.observed.keyword_arm_confidence_stamped += 1;
+      if (kacf.downweighted) s.observed.keyword_arm_confidence_downweighted += 1;
+    }
 
     const pageBest = new Map<string, number>();
     for (const r of chunkResults) {

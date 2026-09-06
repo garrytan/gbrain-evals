@@ -44,6 +44,7 @@ import {
   hashEmbed,
   providerKeyEnv,
   parseOnOff,
+  parseKeywordArmConfidenceFloor,
   pinnedSearchConfig,
   buildAdapters,
   GBRAIN_BACKED_ADAPTERS,
@@ -404,6 +405,27 @@ describe('cat13 search pins (Phase E0)', () => {
     expect(() => pinnedSearchConfig({ reranker: 'off', autocut: 'off', expansionVariantBudget: ' ' })).toThrow(/non-empty/);
   });
 
+  test('keyword_arm_confidence_floor (Phase E2) is set ONLY when given; off passes through; out-of-range fails loudly', () => {
+    const base = { reranker: 'off' as const, autocut: 'off' as const };
+    expect('search.keyword_arm_confidence_floor' in pinnedSearchConfig(base)).toBe(false);
+    expect(pinnedSearchConfig({ ...base, keywordArmConfidenceFloor: '0.6' })['search.keyword_arm_confidence_floor']).toBe('0.6');
+    expect(pinnedSearchConfig({ ...base, keywordArmConfidenceFloor: '0.7515' })['search.keyword_arm_confidence_floor']).toBe('0.7515');
+    expect(pinnedSearchConfig({ ...base, keywordArmConfidenceFloor: '1' })['search.keyword_arm_confidence_floor']).toBe('1');
+    expect(pinnedSearchConfig({ ...base, keywordArmConfidenceFloor: 'off' })['search.keyword_arm_confidence_floor']).toBe('off');
+    expect(parseKeywordArmConfidenceFloor(' OFF ')).toBe('off');
+    // gbrain's parser would silently fall through to the bundle (floor off) on these; the runner refuses instead.
+    for (const bad of ['0', '1.5', '-0.2', 'abc', '', ' ', 'true', 'NaN', 'Infinity']) {
+      expect(() => pinnedSearchConfig({ ...base, keywordArmConfidenceFloor: bad })).toThrow(/\(0, 1\]/);
+    }
+    // The other pins are untouched by the floor.
+    expect(pinnedSearchConfig({ ...base, keywordArmConfidenceFloor: '0.6' })).toEqual({
+      'search.mode': 'balanced',
+      'search.reranker.enabled': 'false',
+      'search.autocut': 'false',
+      'search.keyword_arm_confidence_floor': '0.6',
+    });
+  });
+
   test('on|off parsing is strict', () => {
     expect(parseOnOff(undefined, '--reranker')).toBe('off');
     expect(parseOnOff('ON', '--reranker')).toBe('on');
@@ -511,6 +533,15 @@ describe('cat13 CLI parsing (Phase E0)', () => {
     });
   });
 
+  test('--keyword-arm-confidence-floor (Phase E2) parses in both forms and rejects out-of-range values at parse time', () => {
+    expect(parseCat13Argv(['--keyword-arm-confidence-floor', '0.6'], {}).keywordArmConfidenceFloor).toBe('0.6');
+    expect(parseCat13Argv(['--keyword-arm-confidence-floor=off'], {}).keywordArmConfidenceFloor).toBe('off');
+    expect(parseCat13Argv(['--reranker', 'off'], {}).keywordArmConfidenceFloor).toBeUndefined();
+    expect(() => parseCat13Argv(['--keyword-arm-confidence-floor', '1.2'], {})).toThrow(/\(0, 1\]/);
+    expect(() => parseCat13Argv(['--keyword-arm-confidence-floor', '0'], {})).toThrow(/\(0, 1\]/);
+    expect(() => parseCat13Argv(['--keyword-arm-confidence-floor'], {})).toThrow(/requires a value/);
+  });
+
   test('unknown flags, bad on/off values and missing values throw (no silent default cell)', () => {
     expect(() => parseCat13Argv(['--rerankr', 'on'], {})).toThrow(/unknown argument/);
     expect(() => parseCat13Argv(['--reranker', 'yes'], {})).toThrow(/on' or 'off/);
@@ -549,12 +580,14 @@ describe('cat13 Phase E0 receipt (hermetic)', () => {
       const rc = receipt.resolved_config as Record<string, any>;
       expect(rc.search_pins['search.reranker.enabled']).toBe('true');
       expect(rc.search_pins['search.reranker.model']).toBe(CAT13_RERANK_MODEL_PIN);
+      expect(rc.pins.keyword_arm_confidence_floor).toBeNull();
+      expect('search.keyword_arm_confidence_floor' in rc.search_pins).toBe(false);
     } finally {
       if (saved !== undefined) process.env.VOYAGE_API_KEY = saved;
     }
   });
 
-  test('gbrain arm at voyage:voyage-4 @ 1024d (stub): the receipt echoes embedder, per-adapter pins, gateway state and the split', async () => {
+  test('gbrain arm at voyage:voyage-4 @ 1024d (stub): the receipt echoes embedder, per-adapter pins (incl. the Phase E2 floor), gateway state, observed kacf counts and the split', async () => {
     const reportsDir = mkdtempSync(join(tmpdir(), 'cat13-'));
     const { receipt, results, exitCode } = await runCat13({
       stubEmbed: true,
@@ -564,6 +597,7 @@ describe('cat13 Phase E0 receipt (hermetic)', () => {
       embeddingDims: 1024,
       autocut: 'on',
       expansionVariantBudget: '1.0',
+      keywordArmConfidenceFloor: '0.6',
       reportsDir,
       quiet: true,
     });
@@ -576,17 +610,26 @@ describe('cat13 Phase E0 receipt (hermetic)', () => {
     const rc = receipt.resolved_config as Record<string, any>;
     expect(rc.embedder).toEqual({ model: 'voyage:voyage-4', dims: 1024 });
     expect(rc.embedding_transport).toMatch(/1024d/);
-    expect(rc.pins).toEqual({ reranker: 'off', autocut: 'on', expansion_variant_budget: '1.0' });
+    expect(rc.pins).toEqual({ reranker: 'off', autocut: 'on', expansion_variant_budget: '1.0', keyword_arm_confidence_floor: '0.6' });
     expect(rc.search_pins).toEqual({
       'search.mode': 'balanced',
       'search.reranker.enabled': 'false',
       'search.autocut': 'true',
       'search.expansion_variant_budget': '1.0',
+      'search.keyword_arm_confidence_floor': '0.6',
     });
     expect(rc.search_config_by_adapter.gbrain).toEqual(rc.search_pins);
     expect(rc.gateway_after_init_by_adapter.gbrain).toEqual({ model: 'voyage:voyage-4', dims: 1024 });
-    expect(rc.observed_by_adapter.gbrain.queries).toBe(results[0].probesScored);
-    expect(rc.observed_by_adapter.gbrain.rerank_scored_queries).toBe(0);
+    const observed = rc.observed_by_adapter.gbrain;
+    expect(observed.queries).toBe(results[0].probesScored);
+    expect(observed.rerank_scored_queries).toBe(0);
+    // Phase E2 proof the knob reached the engine: every fused query carries
+    // the decision (stub vector arm always votes), and the down-weighted
+    // count is bounded by it. No kacf_missing_meta harness errors.
+    expect(observed.keyword_arm_confidence_stamped).toBe(observed.queries);
+    expect(observed.keyword_arm_confidence_downweighted).toBeGreaterThanOrEqual(0);
+    expect(observed.keyword_arm_confidence_downweighted).toBeLessThanOrEqual(observed.keyword_arm_confidence_stamped);
+    expect(receipt.errors.filter((e: { message?: string }) => /kacf_missing_meta/.test(String(e.message ?? '')))).toEqual([]);
     expect(rc.concept_split).toMatchObject({ seed: 42, tuning_n: 20, holdout_n: 10 });
     expect(rc.concept_split.tuning.length).toBe(20);
     expect(rc.concept_split.holdout.length).toBe(10);

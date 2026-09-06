@@ -13,6 +13,13 @@
  * and echoed back via resolvedConfig() so receipts can prove which mode /
  * reranker state a cell actually ran with (a hidden default-mode reranker
  * confounded cat18/cat21 — never assume the default).
+ *
+ * Phase E2 hook: every query reads hybridSearch's `onMeta` and counts the
+ * `keyword_arm_confidence` decision (stamped / down-weighted) into
+ * observedStats(), so a `search.keyword_arm_confidence_floor` cell can prove
+ * the knob reached the engine and how often it fired. `engineOf()` exposes
+ * the engine for the calibration script (cat13-kacf-calibrate.ts), which
+ * needs the raw keyword arm on the SAME brain the gbrain arm searches.
  */
 
 import { PGLiteEngine } from 'gbrain/pglite-engine';
@@ -20,6 +27,7 @@ import { runExtract } from 'gbrain/extract';
 import { hybridSearch } from 'gbrain/search/hybrid';
 import { importFromContent } from 'gbrain/import-file';
 import { configureGateway } from 'gbrain/ai/gateway';
+import type { HybridSearchMeta } from 'gbrain/types';
 import type { Adapter, AdapterConfig, BrainState, Page, PublicQuery, RankedDoc } from '../types.ts';
 
 export interface GbrainInlineOptions {
@@ -44,6 +52,10 @@ export interface InlineObservedStats {
    * hybrid), so a reranker-pinned cell with 0 here did NOT measure reranking.
    */
   rerank_scored_queries: number;
+  /** Queries whose hybridSearch meta carried `keyword_arm_confidence` (the fused path composed a decision). */
+  keyword_arm_confidence_stamped: number;
+  /** Queries where that decision was `downweighted: true` (keyword + title lists fused at half weight). */
+  keyword_arm_confidence_downweighted: number;
 }
 
 interface InlineState {
@@ -109,14 +121,24 @@ export class GbrainInlineAdapter implements Adapter {
       console.log = origLog;
       console.error = origErr;
     }
-    return { engine, resolvedConfig, observed: { queries: 0, rerank_scored_queries: 0 } } satisfies InlineState;
+    return {
+      engine,
+      resolvedConfig,
+      observed: { queries: 0, rerank_scored_queries: 0, keyword_arm_confidence_stamped: 0, keyword_arm_confidence_downweighted: 0 },
+    } satisfies InlineState;
   }
 
   async query(q: PublicQuery, state: BrainState): Promise<RankedDoc[]> {
     const { engine, observed } = state as InlineState;
-    const chunkResults = await hybridSearch(engine, q.text, { limit: this.opts.topK * 6 });
+    let meta: HybridSearchMeta | undefined;
+    const chunkResults = await hybridSearch(engine, q.text, { limit: this.opts.topK * 6, onMeta: (m) => { meta = m; } });
     observed.queries += 1;
     if (chunkResults.some(r => Number.isFinite(r.rerank_score))) observed.rerank_scored_queries += 1;
+    const kacf = meta?.keyword_arm_confidence;
+    if (kacf) {
+      observed.keyword_arm_confidence_stamped += 1;
+      if (kacf.downweighted) observed.keyword_arm_confidence_downweighted += 1;
+    }
     // Chunk → page normalization: keep the best chunk score per page so
     // downstream metrics see page-grained, duplicate-free ids.
     const pageBest = new Map<string, number>();
@@ -136,9 +158,14 @@ export class GbrainInlineAdapter implements Adapter {
     return (state as InlineState).resolvedConfig;
   }
 
-  /** Query-time observations (rerank_score presence) — the fail-closed check for reranker-pinned cells. */
+  /** Query-time observations (rerank_score presence, keyword_arm_confidence counts) — the fail-closed checks for pinned cells. */
   observedStats(state: BrainState): InlineObservedStats {
     return { ...(state as InlineState).observed };
+  }
+
+  /** The live engine behind a BrainState — for calibration scripts that need the raw arms on the same brain. */
+  engineOf(state: BrainState): PGLiteEngine {
+    return (state as InlineState).engine;
   }
 
   async teardown(state: BrainState): Promise<void> {

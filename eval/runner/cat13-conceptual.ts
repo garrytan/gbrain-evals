@@ -54,6 +54,16 @@
  *     the tuning and held-out concept sets separately. The probe generator
  *     is untouched; the split only partitions the scoring.
  *
+ * Phase E2 (arm-confidence floor) — see README-cat13-phase-e0.md "Phase E2":
+ *   - `--keyword-arm-confidence-floor <f|off>` pins
+ *     `search.keyword_arm_confidence_floor` on the gbrain-backed adapters
+ *     (only written when given; echoed in the receipt). The adapters count
+ *     per-query `keyword_arm_confidence` meta (stamped / down-weighted) into
+ *     `observed_by_adapter`; a numeric floor with zero stamped queries is a
+ *     harness error on every probe (`kacf_missing_meta`) — the knob did not
+ *     fire, so the cell must not publish under a "floor on" label. The floor
+ *     itself comes from eval/runner/cat13-kacf-calibrate.ts (tuning split).
+ *
  * Run:
  *   bun eval/runner/cat13-conceptual.ts                  # live embeds (OPENAI_API_KEY)
  *   bun eval/runner/cat13-conceptual.ts --stub-embed     # hermetic, no keys
@@ -61,6 +71,8 @@
  *   CAT13_PROBES=200 bun eval/runner/cat13-conceptual.ts --adapter vector
  *   CAT13_EMBEDDING_MODEL=voyage:voyage-4 CAT13_EMBED_DIMS=1024 \
  *     bun eval/runner/cat13-conceptual.ts --reranker off --autocut off
+ *   CAT13_EMBEDDING_MODEL=voyage:voyage-4 CAT13_EMBED_DIMS=1024 \
+ *     bun eval/runner/cat13-conceptual.ts --reranker off --autocut off --keyword-arm-confidence-floor 0.65
  */
 
 import { readdirSync, readFileSync, mkdirSync, writeFileSync } from 'fs';
@@ -667,6 +679,12 @@ export interface Cat13Pins {
   autocut: OnOff;
   /** Pass-through string for `search.expansion_variant_budget`; only set when given. */
   expansionVariantBudget?: string;
+  /**
+   * Phase E2: `search.keyword_arm_confidence_floor` — `'off'` or a number in
+   * (0, 1] as a string (validated by parseKeywordArmConfidenceFloor); only
+   * set when given, for the same reason as the budget.
+   */
+  keywordArmConfidenceFloor?: string;
 }
 
 /** Every gbrain-backed arm runs the `balanced` bundle with the two toggles pinned explicitly. */
@@ -686,6 +704,24 @@ export function parseOnOff(raw: string | undefined, flag: string, fallback: OnOf
 }
 
 /**
+ * Phase E2: `--keyword-arm-confidence-floor <f|off>`. Mirrors gbrain's ONE
+ * range contract for the knob (`normalizeKeywordArmConfidenceFloor`: finite
+ * in (0, 1], or off) but FAILS on anything else instead of falling through to
+ * the bundle default — a typo must not silently run the floor-off cell under
+ * a "floor on" label. Returns the string written to config: `'off'` or the
+ * numeric text exactly as given (trimmed), so the receipt echoes the input.
+ */
+export function parseKeywordArmConfidenceFloor(raw: string, flag = '--keyword-arm-confidence-floor'): string {
+  const v = raw.trim();
+  if (v.toLowerCase() === 'off') return 'off';
+  const n = v === '' ? Number.NaN : Number(v);
+  if (!Number.isFinite(n) || n <= 0 || n > 1) {
+    throw new Error(`${flag} must be 'off' or a number in (0, 1], got '${raw}'`);
+  }
+  return v;
+}
+
+/**
  * The engine.setConfig entries applied to every gbrain-backed adapter before
  * ingest. `search.expansion_variant_budget` is only set when the flag was
  * given: gbrain pins that predate the knob ignore unknown keys silently, so
@@ -702,6 +738,9 @@ export function pinnedSearchConfig(pins: Cat13Pins): Record<string, string> {
     const b = pins.expansionVariantBudget.trim();
     if (b === '') throw new Error('--expansion-variant-budget requires a non-empty value');
     cfg['search.expansion_variant_budget'] = b;
+  }
+  if (pins.keywordArmConfidenceFloor !== undefined) {
+    cfg['search.keyword_arm_confidence_floor'] = parseKeywordArmConfidenceFloor(pins.keywordArmConfidenceFloor);
   }
   return cfg;
 }
@@ -775,6 +814,10 @@ export interface SubsetScore {
 export interface ObservedStats {
   queries: number;
   rerank_scored_queries: number;
+  /** Phase E2: queries whose hybridSearch meta carried `keyword_arm_confidence` (the fused path ran). */
+  keyword_arm_confidence_stamped?: number;
+  /** Phase E2: queries where the keyword + title lists fused at half weight (`downweighted: true`). */
+  keyword_arm_confidence_downweighted?: number;
 }
 
 export interface AdapterScore {
@@ -1016,6 +1059,8 @@ export interface Cat13Options {
   autocut?: OnOff;
   /** search.expansion_variant_budget pass-through; only set when given. */
   expansionVariantBudget?: string;
+  /** Phase E2: search.keyword_arm_confidence_floor — 'off' or a number in (0, 1]; only set when given. */
+  keywordArmConfidenceFloor?: string;
   /** Concept split sizes (default 20 / 10 over the 30 concepts) and seed (default PROBE_SEED). */
   tuningConcepts?: number;
   holdoutConcepts?: number;
@@ -1062,6 +1107,7 @@ export function parseCat13Argv(
       case '--reranker': opts.reranker = parseOnOff(value(), '--reranker'); break;
       case '--autocut': opts.autocut = parseOnOff(value(), '--autocut'); break;
       case '--expansion-variant-budget': opts.expansionVariantBudget = value(); break;
+      case '--keyword-arm-confidence-floor': opts.keywordArmConfidenceFloor = parseKeywordArmConfidenceFloor(value()); break;
       case '--tuning-concepts': opts.tuningConcepts = parseNonNegativeInt(value(), '--tuning-concepts'); break;
       case '--holdout-concepts': opts.holdoutConcepts = parseNonNegativeInt(value(), '--holdout-concepts'); break;
       case '--seed': opts.seed = parseNonNegativeInt(value(), '--seed'); break;
@@ -1069,7 +1115,7 @@ export function parseCat13Argv(
         throw new Error(
           `unknown argument '${arg}'. Known: --stub-embed --allow-skip --adapter <name> `
           + `--embedding-model <provider:model> --embedding-dims <N> --reranker on|off --autocut on|off `
-          + `--expansion-variant-budget <b> --tuning-concepts <N> --holdout-concepts <M> --seed <N>`,
+          + `--expansion-variant-budget <b> --keyword-arm-confidence-floor <f|off> --tuning-concepts <N> --holdout-concepts <M> --seed <N>`,
         );
     }
   }
@@ -1107,15 +1153,24 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
     reranker: opts.reranker ?? 'off',
     autocut: opts.autocut ?? 'off',
     ...(opts.expansionVariantBudget !== undefined ? { expansionVariantBudget: opts.expansionVariantBudget } : {}),
+    ...(opts.keywordArmConfidenceFloor !== undefined ? { keywordArmConfidenceFloor: opts.keywordArmConfidenceFloor } : {}),
   };
   const searchConfig = pinnedSearchConfig(pins);
+  // Phase E2: a numeric floor must be PROVEN to have reached the engine (see the kacf_missing_meta check below).
+  const floorPin = searchConfig['search.keyword_arm_confidence_floor'];
+  const floorIsNumeric = floorPin !== undefined && floorPin !== 'off';
   const tuningN = opts.tuningConcepts ?? DEFAULT_TUNING_CONCEPTS;
   const holdoutN = opts.holdoutConcepts ?? DEFAULT_HOLDOUT_CONCEPTS;
   const splitSeed = opts.seed ?? PROBE_SEED;
 
   const cellConfig = (): Record<string, unknown> => ({
     embedder: { model: embedder.model, dims: embedder.dims },
-    pins: { reranker: pins.reranker, autocut: pins.autocut, expansion_variant_budget: pins.expansionVariantBudget ?? null },
+    pins: {
+      reranker: pins.reranker,
+      autocut: pins.autocut,
+      expansion_variant_budget: pins.expansionVariantBudget ?? null,
+      keyword_arm_confidence_floor: searchConfig['search.keyword_arm_confidence_floor'] ?? null,
+    },
     search_pins: searchConfig,
   });
 
@@ -1227,6 +1282,23 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
         }
         log(`  RERANKER DID NOT FIRE: 0/${r.observed.queries} queries carried rerank_score`);
       }
+      if (floorIsNumeric && GBRAIN_BACKED_ADAPTERS.has(a.name) && r.observed && r.observed.queries > 0) {
+        // Phase E2, same shape as rerank_missing_score: the pin said "floor
+        // on" but no query carried keyword_arm_confidence meta — the linked
+        // gbrain never composed the decision (predates the knob, or the
+        // fused path never ran). Harness error on every probe of the arm.
+        const stamped = r.observed.keyword_arm_confidence_stamped ?? 0;
+        const downweighted = r.observed.keyword_arm_confidence_downweighted ?? 0;
+        if (stamped === 0) {
+          for (const p of probes) {
+            acc.error(`${a.name}:${p.q.id}`, 'harness',
+              `kacf_missing_meta: search.keyword_arm_confidence_floor pinned '${floorPin}' for ${a.name} but no query carried keyword_arm_confidence meta`);
+          }
+          log(`  FLOOR NOT OBSERVED: 0/${r.observed.queries} queries carried keyword_arm_confidence`);
+        } else {
+          log(`  keyword_arm_confidence: stamped ${stamped}/${r.observed.queries}, down-weighted ${downweighted}${downweighted === 0 ? ' (the floor never fired — a legal null result)' : ''}`);
+        }
+      }
       results.push(r);
     } catch (err) {
       // init/teardown failure: the whole arm is gone (missing dependency or
@@ -1298,6 +1370,9 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
   log(`- Embedder: ${embedder.model} @ ${embedder.dims}d for EVERY adapter (CAT13_EMBEDDING_MODEL / CAT13_EMBED_DIMS); the receipt records the gateway state after each adapter's init.`);
   log(`- Search pins on gbrain-backed adapters (${[...GBRAIN_BACKED_ADAPTERS].join(', ')}): ${Object.entries(searchConfig).map(([k, v]) => `${k}=${v}`).join(', ')} — set via engine.setConfig before ingest, echoed per adapter.`);
   log(`- Concept split: seeded Fisher-Yates over the sorted concept slugs (seed=${split.seed}, separate rng from the probe generator); ${split.tuning.length} tuning / ${split.holdout.length} held-out. A probe is in a subset only when every grade-3 target is.`);
+  if (floorPin !== undefined) {
+    log(`- Arm-confidence floor (Phase E2): search.keyword_arm_confidence_floor=${floorPin} on the gbrain-backed adapters — keyword + title lists fuse at half weight when the keyword arm's margin_ratio is below the floor (non-relational queries with a voting text vector arm). Per-adapter stamped / down-weighted query counts are in the receipt's observed_by_adapter.`);
+  }
   log(`- No gold data passed to adapters; PublicPage/PublicQuery sealed at the boundary.`);
 
   const summary = acc.summary();
