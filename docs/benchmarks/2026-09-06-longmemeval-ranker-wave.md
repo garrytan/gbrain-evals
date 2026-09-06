@@ -1,6 +1,6 @@
 # BrainBench: LongMemEval ranker wave (gbrain v0.48.3.0)
 
-**Status:** DRAFT — numbers marked TBD are filled from the receipts in `docs/benchmarks/2026-09-06-longmemeval-ranker-wave/` before publication.
+**Status:** receipts complete; the gbrain commit pin below is filled when the gbrain PR opens.
 **Date:** 2026-09-06
 **gbrain commit:** TBD (PR head SHA; the sibling pin moves to the merge SHA after landing)
 **Dataset:** `xiaowu0162/longmemeval-cleaned`, `longmemeval_s_cleaned.json`, sha256 `d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442`, 500 questions, 30 abstention (`_abs`) excluded from recall denominators → 470 scored.
@@ -8,7 +8,17 @@
 
 ## 1. Headline
 
-TBD — one sentence per published claim, wins and losses. No SOTA claim is made on judged answer accuracy (protocols are not matched across systems; see §6).
+**gbrain's release default scores 95.53% strict `recall_all@5` on LongMemEval-S (449/470) — up from 80.64% for the default that shipped before this wave — and publishes its first judged answer-accuracy number, 86.6% (433/500), with no comparison claim.**
+
+![headline](2026-09-06-longmemeval-ranker-wave/longmemeval/ranker-wave-arms.headline.svg)
+
+Three ranking defaults moved, each on a pre-registered receipt, and two candidate mechanisms that failed their rules did not ship as defaults:
+
+- **Autocut off** in `balanced`/`tokenmax`: the post-rerank score cut kept the best session and dropped the rest on multi-part questions (379 → 449 of 470 strict; any-hit unchanged).
+- **Relational pin** (`search.relational_rerank_pin=3`): graph-derived answers no longer sink under the text reranker (NamedThingBench relational hit@1 3/39 → 21/39, zero losses elsewhere).
+- **Metadata boost gate** (`search.metadata_boost_gate=lexical`): hub pages no longer outrank the matching concept page when only the vector arm voted (Cat 13 held-out nDCG@5 53.0 → 57.8).
+- **Not shipped as defaults:** the expansion budget knob (real, 255 → 394 of 470, but still 43 behind plain hybrid on the decision set) and the keyword-arm confidence floor (53.0 → 53.0).
+- **Judged answer accuracy 86.6%** (500/500 judged, 0 judge errors): retrieval delivered every gold session on 449/470 questions and the default reader converted 396 of them; the pre-registered ≥ 92% prediction was missed and the loss is the answering layer.
 
 Three things changed in gbrain's ranking pipeline in this wave, each on a
 pre-registered receipt: graph-derived answers are no longer buried by the
@@ -16,7 +26,7 @@ cross-encoder reranker (`search.relational_rerank_pin`), well-connected hub
 pages no longer outrank the page that actually matched on paraphrased
 concept questions (`search.metadata_boost_gate`), and LLM multi-query
 expansion is fused under a fixed weight budget instead of one vote per
-variant (`search.expansion_variant_budget`, outcome TBD). The rest of this
+variant (`search.expansion_variant_budget`; a real lever that still failed its rule, so it ships as an operator knob). The rest of this
 report is the evidence for each, including the two mechanisms that did NOT
 pass their rules and therefore did not ship as defaults.
 
@@ -153,19 +163,19 @@ Strict `recall_all@5` (every gold session among the top-5 distinct sessions), 47
 | A4 shipped default BEFORE this wave (reranker on, autocut 0.35) | **379/470 (80.64%)** | 467/470 (99.36%) | +16 / −76 | 344/430 (80.00%) | +14 / −73 |
 | A3′ hybrid + expansion at budget 0.25 (reranker off) | **394/470 (83.83%)** | 458/470 (97.45%) | +3 / −48 | 360/430 (83.72%) | +2 / −45 |
 | A3′R tokenmax (expansion at 0.25, reranker on, autocut 0.35 as tokenmax shipped it) | **381/470 (81.06%)** | 466/470 (99.15%) | +12 / −10 vs A4 | 347/430 (80.70%) | +12 / −9 vs A4 |
-| tokenmax as released by this wave (legacy expansion weight, reranker on, autocut off) | TBD | TBD | TBD | TBD | TBD |
-| **final release configuration** (reranker on, autocut off, relational pin 3, metadata gate lexical) | TBD | TBD | TBD | TBD | TBD |
+| tokenmax as released by this wave (legacy expansion weight, reranker on, autocut off) | **436/470 (92.77%)** | 468/470 (99.57%) | +2 / −15 vs A2 | 400/430 (93.02%) | +2 / −14 vs A2 |
+| **final release configuration** (`balanced`: reranker on, autocut off, relational pin 3, metadata gate lexical) | **449/470 (95.53%)** | 469/470 (99.79%) | +18 / −8 | 412/430 (95.81%) | +16 / −7 |
 
 Per type (`recall_all@5`, 470):
 
-| Type | n | A1 | A2 | A3 | A4 | A3′ |
-|---|---|---|---|---|---|---|
-| knowledge-update | 72 | 71 | 72 | 44 | 53 | 65 |
-| multi-session | 121 | 112 | 112 | 46 | 89 | 91 |
-| single-session-assistant | 56 | 56 | 56 | 46 | 56 | 56 |
-| single-session-preference | 30 | 29 | 30 | 20 | 30 | 30 |
-| single-session-user | 64 | 63 | 64 | 49 | 64 | 62 |
-| temporal-reasoning | 127 | 108 | 115 | 50 | 87 | 90 |
+| Type | n | A1 | A2 = release default | A3 | A4 | A3′ | tokenmax as released |
+|---|---|---|---|---|---|---|---|
+| knowledge-update | 72 | 71 | 72 | 44 | 53 | 65 | 72 |
+| multi-session | 121 | 112 | 112 | 46 | 89 | 91 | 105 |
+| single-session-assistant | 56 | 56 | 56 | 46 | 56 | 56 | 56 |
+| single-session-preference | 30 | 29 | 30 | 20 | 30 | 30 | 29 |
+| single-session-user | 64 | 63 | 64 | 49 | 64 | 62 | 64 |
+| temporal-reasoning | 127 | 108 | 115 | 50 | 87 | 90 | 110 |
 
 **Parity gate (A1).** The in-repo harness reproduces the 2026-09-02 sibling receipt (438/470, produced by this repo's runner at gbrain 172df271): 439/470, 469 of 470 rows agree per question, any-hit identical at 464/470, per-type identical except one temporal-reasoning question that flipped to a hit without a shared embedding cache. `gbrain eval longmemeval` is therefore the receipt producer from this wave on. Embedding cache: A2 and every replay arm ran with 0 cache misses (byte-identical vectors); A1 was the cache-building arm; A3 missed once per new Haiku variant string.
 
@@ -184,6 +194,8 @@ Per type (`recall_all@5`, 470):
 The same monotone shape holds on both seeded halves and no floor is within two questions of "off" on either (0.80 still loses 9, all knowledge-update). The pre-registered chain therefore ends at **autocut off in `balanced` and `tokenmax`** (the module default stays for operators who re-enable it; a session-aware cut that never trims below k distinct sessions is the filed follow-up). The token saving autocut delivered was real — half the returned window — and it was paid for with the second gold session.
 
 **Expansion (A3, A3′, rule for the budget knob).** Legacy expansion (one full RRF vote per Haiku variant) reproduces the published regression: 255/470, +3 / −187. Budget-normalized fusion is a real mechanism — the dev-slice sweep on frozen variants climbs monotonically as the variants' share shrinks (24 → 26 → 30 → 34 of 40 at budgets 2.0 → 1.0 → 0.5 → 0.25, plain hybrid 36), and A3′ at the picked budget 0.25 recovers 139 questions over A3. It still fails its pre-registered rule: 360 vs 403 on the 430 (−43; multi-session −20, temporal −17). A3′R, the configuration tokenmax users ran before this wave with the budget applied, scores 381/470 against A4's 379 (+3 on the 430) — the literal rule passes, but both arms sit under autocut 0.35, which trims the returned set to about 2.3 sessions and pins strict recall near 80% whatever fused upstream, so the row says "under the cut, budgeted expansion plus reranker equals no expansion plus reranker", not that expansion earns its keep. With the mechanism receipt (A3′ vs A1) failed, the flip is not justified. The bundles therefore keep the legacy weighting (`expansion_variant_budget: null`), the knob ships for operators who keep expansion on (`gbrain config set search.expansion_variant_budget 0.25` recovers most of the loss), and the honest reading stands: at k=5 on this corpus, LLM multi-query expansion is harmful, and the fix the receipts point at is conditional expansion (expand only when the original query's evidence is weak), filed as the next pre-registered mechanism.
+
+**Final release configuration (gate D11).** All flips applied (reranker on, autocut off, relational pin 3, metadata gate lexical) on the release SHA: 449/470, byte-identical per question to A2 — on this corpus the pin never fires (no relational intent) and the gate changes no top-5 (chat sessions carry no backlinks or graph edges). Against the default that shipped before the wave (A4): +68 / −0 on the 430, every type gains or holds. NamedThingBench in the same shape (`namedthing-r1/r1-namedthing-release-receipt.json`): core hit@1 10 → 11, relational 21/27 in both arms, zero losses; BrainBench and the retrieval canary unchanged. Gate passed on every leg; no flip was reverted. **tokenmax as released** (legacy expansion, reranker on, autocut off) scores 436/470 (+2 / −15 against the balanced release path: multi-session −7, temporal −5): the reranker repairs most of what equal-weight expansion breaks, the budget knob does not close the rest, and `balanced` stays the small-k recommendation.
 
 ### 5.2 NamedThingBench reranker A/B (rule R1) and the relational pin
 
@@ -247,15 +259,39 @@ below any rule, so no temporal knob landed. The reranker (A2 vs A1: temporal 108
 
 ## 6. Results — judged answer accuracy
 
-TBD — number pending the full run. Protocol (fixed before the run, disclosed in full): retrieval = the release default (`balanced`, `voyage:rerank-2.5` on, autocut off, k=5 chunk rows); reader = gbrain's default reader model, provider snapshot `claude-sonnet-4-6`, `max_tokens` 512, system prompt sha `7d991ff3e789…` (adds an abstention instruction — a disclosed deviation from the official reading prompt); reader context = the FULL text of every distinct session among the retrieved rows in `<chat_session>` blocks (each row records `reader_context_chars`, `reader_context_sessions`, `reader_sessions_truncated`); judge = `openai:gpt-4o`, the official `evaluate_qa.py` prompt per question type, temperature 0, `max_tokens` 16 (the OpenAI API's minimum — the official 10 is rejected; a one-token yes/no verdict is unaffected), gold and hypothesis inside a data-boundary wrapper (disclosed deviation); `judge_error` rows are re-judged until zero and any survivor is scored incorrect in the headline. Two dry-run defects were caught before spend and fixed: every judge call failed at max_tokens 10, and the reader saw only the first 4000 characters of each session (an extractor-era sanitizer cap), which made it abstain on 11/25 questions whose gold session was retrieved at rank 1. Comparison rows (Mastra 94.87%, Mem0 93.4%, OMEGA 95.4%) are listed as **not directly comparable** — reader, prompts, judge and dataset revision differ — and this row makes **no SOTA claim**.
+**433/500 = 86.6%** (95% bootstrap CI 83.6–89.6, question-sampling only); 500/500 judged, 0 judge errors, 0 budget skips (`complete: true`); non-abstention 404/470 (86.0%); abstention 29/30 (96.7%). Per type: single-session-assistant 56/56 (100%), single-session-user 69/70 (98.6%), knowledge-update 70/78 (89.7%), multi-session 111/133 (83.5%), temporal-reasoning 107/133 (80.5%), single-session-preference 20/30 (66.7%). Evidence versus verdict on the 470: every gold session retrieved and correct 396; retrieved but judged wrong 53; incomplete evidence but correct 8; incomplete and wrong 13 — the reader converts 88.2% of evidence-complete questions, so the shortfall is the answering layer (preference and temporal questions most of all). Pre-registered prediction ≥ 92%: **missed**. Receipt: `longmemeval/D1-judged-release-config-sonnet46-reader-gpt4o-judge.ndjson`.
+
+| System | Judged QA accuracy | Reader / judge | Comparable? |
+|---|---|---|---|
+| **gbrain v0.48.3.0 (this run)** | **86.6% (433/500)** | claude-sonnet-4-6 reader, gpt-4o judge, official prompts | — |
+| OMEGA (2026) | 95.4% (self-reported) | undisclosed reader/judge | no — protocol unmatched |
+| Mastra | 94.87% | GPT-5-mini reader, own architecture | no — protocol unmatched |
+| Mem0 | 93.4% (self-reported) | own reader/judge | no — protocol unmatched |
+
+Protocol (fixed before the run, disclosed in full): retrieval = the release default (`balanced`, `voyage:rerank-2.5` on, autocut off, k=5 chunk rows); reader = gbrain's default reader model, provider snapshot `claude-sonnet-4-6`, `max_tokens` 512, system prompt sha `7d991ff3e789…` (adds an abstention instruction — a disclosed deviation from the official reading prompt); reader context = the FULL text of every distinct session among the retrieved rows in `<chat_session>` blocks (each row records `reader_context_chars`, `reader_context_sessions`, `reader_sessions_truncated`); judge = `openai:gpt-4o`, the official `evaluate_qa.py` prompt per question type, temperature 0, `max_tokens` 16 (the OpenAI API's minimum — the official 10 is rejected; a one-token yes/no verdict is unaffected), gold and hypothesis inside a data-boundary wrapper (disclosed deviation); `judge_error` rows are re-judged until zero and any survivor is scored incorrect in the headline. Two dry-run defects were caught before spend and fixed: every judge call failed at max_tokens 10, and the reader saw only the first 4000 characters of each session (an extractor-era sanitizer cap), which made it abstain on 11/25 questions whose gold session was retrieved at rank 1. Comparison rows (Mastra 94.87%, Mem0 93.4%, OMEGA 95.4%) are listed as **not directly comparable** — reader, prompts, judge and dataset revision differ — and this row makes **no SOTA claim**.
 
 ## 7. Charts
 
-TBD — headline card + per-type grouped bars from `eval/runner/longmemeval-chart.ts`, stored under `docs/benchmarks/2026-09-06-longmemeval-ranker-wave/`.
+Generated by `eval/runner/longmemeval-chart.ts` from `longmemeval/ranker-wave-arms.json` (the harness receipts converted with `longmemeval/harness-to-runner-output.py`).
+
+![per-type](2026-09-06-longmemeval-ranker-wave/longmemeval/ranker-wave-arms.per-type.svg)
 
 ## 8. Latency + cost
 
-TBD (p50 / p99 per question per arm from the harness rows; embedding cache cold build cost; reranker and Haiku expansion per-1000 cost; judge cost). Wave paid spend so far: about $7 of a $75 cap enforced by `scripts/eval-spend-guard.sh`.
+The harness runs in bounded resume passes, so wall-clock per arm is the sum of its passes (PGLite in-memory, one brain per question, embeddings from the shared cache after the first arm). Per-question latency percentiles are not stamped on rows this release (filed).
+
+| Arm | mean wall / question | arm wall |
+|---|---|---|
+| gbrain-hybrid (A1: reranker off, autocut off) | 15.0 s | 7505 s |
+| gbrain-hybrid+rerank (A2: autocut off) | 4.8 s | 2401 s |
+| gbrain-hybrid+expansion (A3: legacy weight) | 5.9 s | 2974 s |
+| gbrain-hybrid+rerank+autocut (A4: pre-wave default) | 3.8 s | 1909 s |
+| gbrain-hybrid+expansion@0.25 (A3') | 8.2 s | 4117 s |
+| gbrain-hybrid tokenmax+rerank+autocut, expansion@0.25 (A3'R) | 4.8 s | 2421 s |
+| gbrain-hybrid tokenmax as released (legacy expansion, rerank, no autocut) | 4.8 s | 2417 s |
+| gbrain-hybrid release default v0.48.3.0 (rerank on, autocut off, pin 3, gate lexical) | 4.8 s | 2403 s |
+
+Cost (the $75 cap was enforced by `scripts/eval-spend-guard.sh`; the ledger books launch estimates, so real spend is estimated here): building the embedding cache once ≈ $2 (OpenAI text-embedding-3-large); each reranked retrieval arm ≈ $0.50 of Voyage rerank; the legacy expansion arm ≈ $1 of Haiku variants (replayed for free afterwards); Cat 13 + NamedThingBench ≈ $3; the judged lane ≈ $30 (a Sonnet reader over ~64K characters of context per question plus a gpt-4o verdict; about $0.05 per question, plus three dry runs and three partial passes lost to a harness bug fixed mid-wave). Wave total ≈ $55 real, ≈ $60 booked.
 
 ## 9. Limits & caveats
 

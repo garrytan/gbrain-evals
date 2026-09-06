@@ -6,6 +6,31 @@ in sync with `VERSION` + `package.json`.
 
 ## [Unreleased]
 
+The gbrain v0.48.3.0 ranker wave, reported end to end:
+`docs/benchmarks/2026-09-06-longmemeval-ranker-wave.md` (+ receipts, charts and
+the harness→RunnerOutput converter under its directory). Headline: gbrain's
+release default scores 95.53% strict `recall_all@5` on LongMemEval-S (449/470,
+up from 80.64% for the pre-wave default, whose autocut step dropped the second
+gold session on multi-part questions); first judged answer-accuracy row 86.6%
+(433/500) with full protocol disclosure and no comparison claim; Cat 13
+held-out conceptual recall 53.0 → 57.8 nDCG@5 via the metadata boost gate;
+NamedThingBench relational hit@1 3/39 → 21/39 via the relational pin. Two
+mechanisms that failed their pre-registered rules (expansion budget,
+keyword-arm confidence floor) are published as losses. `docs/comparison-systems.md`
+carries the new gbrain rows; the gbrain pin moves to the wave's PR head SHA
+(then to the merge SHA after it lands). The Cat 13 runner gained
+`--reranker`, `--autocut`, `--keyword-arm-confidence-floor` and generic
+`--search-pin KEY=VALUE` pins, the E2 calibration and E1 localization scripts,
+and per-receipt pin echoes (Phase E0 notes below).
+
+### Added (ranker wave)
+
+- `docs/benchmarks/2026-09-06-longmemeval-ranker-wave.md` and its receipt
+  directory: compacted per-question rows for eight LongMemEval arms and the
+  judged run, the autocut floor replay, half-A miss diagnostics, Cat 13 E0/E2/E3
+  receipts, NamedThingBench R1 receipts, `ranker-wave-arms.json` and the two SVG
+  charts, `harness-to-runner-output.py` (in-repo harness ndjson → `RunnerOutput`).
+
 Phase E0 of the gbrain ranker wave: the Cat 13 conceptual-recall runner can
 now produce a receipt that names its embedding space and its search pins, so
 the hybrid-vs-vector comparison is like-for-like and reproducible from `main`.
