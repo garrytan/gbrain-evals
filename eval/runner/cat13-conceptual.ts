@@ -39,21 +39,41 @@
  * (dead retrieval plumbing). Probe-set integrity violations and the infra
  * error cap are run_status 'error' (exit non-zero), never a quiet pass.
  *
+ * Phase E0 (ranker wave) additions — see README-cat13-phase-e0.md:
+ *   - The embedder is configurable (CAT13_EMBEDDING_MODEL / CAT13_EMBED_DIMS,
+ *     or --embedding-model / --embedding-dims) and is applied to EVERY
+ *     adapter's gateway config, so all arms share one embedding space. The
+ *     receipt records the resolved embedder and the gateway state each
+ *     adapter actually embedded with.
+ *   - gbrain-backed adapters never run an unpinned default: search.mode,
+ *     search.reranker.enabled and search.autocut are set explicitly
+ *     (--reranker on|off, --autocut on|off, both default off) and echoed per
+ *     adapter into the receipt.
+ *   - A seeded concept split (--tuning-concepts / --holdout-concepts, default
+ *     20/10 over the 30 concepts, --seed default 42) reports every metric for
+ *     the tuning and held-out concept sets separately. The probe generator
+ *     is untouched; the split only partitions the scoring.
+ *
  * Run:
  *   bun eval/runner/cat13-conceptual.ts                  # live embeds (OPENAI_API_KEY)
  *   bun eval/runner/cat13-conceptual.ts --stub-embed     # hermetic, no keys
  *   CAT13_PROBES=1000 bun eval/runner/cat13-conceptual.ts
  *   CAT13_PROBES=200 bun eval/runner/cat13-conceptual.ts --adapter vector
+ *   CAT13_EMBEDDING_MODEL=voyage:voyage-4 CAT13_EMBED_DIMS=1024 \
+ *     bun eval/runner/cat13-conceptual.ts --reranker off --autocut off
  */
 
 import { readdirSync, readFileSync, mkdirSync, writeFileSync } from 'fs';
 import { createHash } from 'crypto';
 import { join, dirname } from 'path';
-import { configureGateway, __setEmbedTransportForTests } from 'gbrain/ai/gateway';
+import {
+  configureGateway, __setEmbedTransportForTests, getEmbeddingModel, getEmbeddingDimensions,
+} from 'gbrain/ai/gateway';
 import { RipgrepBm25Adapter } from './adapters/grep-only.ts';
 import { VectorOnlyAdapter } from './adapters/vector.ts';
 import { HybridNoGraphAdapter } from './adapters/vector-grep-rrf-fusion.ts';
 import { GbrainInlineAdapter } from './adapters/gbrain-inline.ts';
+import type { EvalAdapterConfig } from './eval-adapter-config.ts';
 import type { Adapter, Page, Query, RankedDoc } from './types.ts';
 import { sanitizePage, sanitizeQuery } from './types.ts';
 import { ndcgAtK, precisionAtK } from './metrics.ts';
@@ -535,53 +555,227 @@ export function buildProbes(
   return { probes, gradesByQuery };
 }
 
+// ─── Embedder (Phase E0: one embedding space for every adapter) ───
+
+/** The historical Cat 13 space (2026-04-23 report). Overridable, never silently swapped. */
+export const DEFAULT_EMBEDDING_MODEL = 'openai:text-embedding-3-large';
+export const DEFAULT_EMBED_DIMS = 1536;
+
+export interface EmbedderConfig {
+  /** `provider:model`, handed to configureGateway({ embedding_model }). */
+  model: string;
+  /** Vector width, handed to configureGateway({ embedding_dimensions }) and used by the hash-embed stub. */
+  dims: number;
+}
+
+/**
+ * Precedence: explicit override (CLI flag) → CAT13_EMBEDDING_MODEL /
+ * CAT13_EMBED_DIMS env → the historical OpenAI defaults. Malformed values
+ * throw (same posture as the CAT13_PROBES guard) instead of falling back to
+ * a default the receipt would then misreport.
+ */
+export function resolveEmbedder(
+  overrides: { model?: string; dims?: string | number } = {},
+  env: Record<string, string | undefined> = process.env,
+): EmbedderConfig {
+  const rawModel = overrides.model ?? env.CAT13_EMBEDDING_MODEL;
+  const model = rawModel === undefined || rawModel.trim() === '' ? DEFAULT_EMBEDDING_MODEL : rawModel.trim();
+  if (!/^[A-Za-z0-9_-]+:\S+$/.test(model)) {
+    throw new Error(`CAT13_EMBEDDING_MODEL / --embedding-model must be 'provider:model', got '${model}'`);
+  }
+  const rawDims = overrides.dims ?? env.CAT13_EMBED_DIMS;
+  let dims = DEFAULT_EMBED_DIMS;
+  if (rawDims !== undefined && String(rawDims).trim() !== '') {
+    const n = Number(rawDims);
+    if (!Number.isInteger(n) || n <= 0) {
+      throw new Error(`CAT13_EMBED_DIMS / --embedding-dims must be a positive integer, got '${rawDims}'`);
+    }
+    dims = n;
+  }
+  return { model, dims };
+}
+
+const PROVIDER_KEY_ENV: Record<string, string> = {
+  openai: 'OPENAI_API_KEY',
+  voyage: 'VOYAGE_API_KEY',
+  zeroentropyai: 'ZEROENTROPY_API_KEY',
+  mistral: 'MISTRAL_API_KEY',
+};
+
+/** The env var a `provider:model` id needs a key in (live runs preflight it; stub runs set a dummy). */
+export function providerKeyEnv(model: string): string {
+  const provider = model.split(':')[0].toLowerCase();
+  return PROVIDER_KEY_ENV[provider] ?? `${provider.toUpperCase().replace(/[^A-Z0-9]/g, '_')}_API_KEY`;
+}
+
 // ─── Stub embed transport (hermetic runs; mirrors cat26's pattern) ──
 
-const EMBED_DIMS = 1536;
-
-export function hashEmbed(text: string): number[] {
-  const vec = new Array<number>(EMBED_DIMS).fill(0);
+export function hashEmbed(text: string, dims: number = DEFAULT_EMBED_DIMS): number[] {
+  const vec = new Array<number>(dims).fill(0);
   const tokens = new Set(text.toLowerCase().split(/[^a-z0-9]+/).filter(t => t.length > 2));
   for (const tok of tokens) {
     const h = createHash('sha256').update(tok).digest();
-    vec[h.readUInt32BE(0) % EMBED_DIMS] += 1;
+    vec[h.readUInt32BE(0) % dims] += 1;
   }
   const norm = Math.sqrt(vec.reduce((a, b) => a + b * b, 0)) || 1;
   return vec.map(x => x / norm);
 }
 
-async function hashEmbedTransport(
-  params: { values: string[] } & Record<string, unknown>,
-): Promise<{ embeddings: number[][]; values: string[]; warnings: unknown[]; usage: { tokens: number } }> {
-  return {
-    embeddings: params.values.map(v => hashEmbed(v)),
+function makeHashEmbedTransport(dims: number) {
+  return async (
+    params: { values: string[] } & Record<string, unknown>,
+  ): Promise<{ embeddings: number[][]; values: string[]; warnings: unknown[]; usage: { tokens: number } }> => ({
+    embeddings: params.values.map(v => hashEmbed(v, dims)),
     values: params.values,
     warnings: [],
     usage: { tokens: 0 },
-  };
+  });
 }
 
-let gatewayMode: 'stub' | 'live' | null = null;
-export function ensureGateway(stubEmbed: boolean): void {
-  const want = stubEmbed ? 'stub' : 'live';
-  if (gatewayMode === want) return;
-  if (stubEmbed && !process.env.OPENAI_API_KEY) {
-    process.env.OPENAI_API_KEY = 'dummy-embed-transport-stubbed';
+let gatewayKey: string | null = null;
+/**
+ * Configure gbrain's process-global gateway for this run's embedder. Keyed on
+ * (transport, model, dims) so a second call with a different embedder in the
+ * same process (tests) reconfigures instead of being skipped.
+ */
+export function ensureGateway(stubEmbed: boolean, embedder: EmbedderConfig = resolveEmbedder()): void {
+  const want = `${stubEmbed ? 'stub' : 'live'}|${embedder.model}|${embedder.dims}`;
+  if (gatewayKey === want) return;
+  if (stubEmbed) {
+    const keyEnv = providerKeyEnv(embedder.model);
+    if (!process.env[keyEnv]) process.env[keyEnv] = 'dummy-embed-transport-stubbed';
   }
   configureGateway({
-    embedding_model: 'openai:text-embedding-3-large',
-    embedding_dimensions: EMBED_DIMS,
+    embedding_model: embedder.model,
+    embedding_dimensions: embedder.dims,
     env: process.env as Record<string, string | undefined>,
   });
   __setEmbedTransportForTests(
     stubEmbed
-      ? (hashEmbedTransport as unknown as Parameters<typeof __setEmbedTransportForTests>[0])
+      ? (makeHashEmbedTransport(embedder.dims) as unknown as Parameters<typeof __setEmbedTransportForTests>[0])
       : null,
   );
-  gatewayMode = want;
+  gatewayKey = want;
+}
+
+// ─── Search pins (Phase E0: no gbrain-backed cell runs an unpinned default) ──
+
+export type OnOff = 'on' | 'off';
+
+export interface Cat13Pins {
+  reranker: OnOff;
+  autocut: OnOff;
+  /** Pass-through string for `search.expansion_variant_budget`; only set when given. */
+  expansionVariantBudget?: string;
+}
+
+/** Every gbrain-backed arm runs the `balanced` bundle with the two toggles pinned explicitly. */
+export const CAT13_SEARCH_MODE = 'balanced';
+/**
+ * The cross-encoder pinned for `--reranker on` — gbrain's mode-bundle default
+ * since v0.48.2.0. Pinned by name so the receipt names the model and the
+ * fail-closed key preflight checks the matching provider key.
+ */
+export const CAT13_RERANK_MODEL_PIN = 'voyage:rerank-2.5';
+
+export function parseOnOff(raw: string | undefined, flag: string, fallback: OnOff = 'off'): OnOff {
+  if (raw === undefined || raw.trim() === '') return fallback;
+  const v = raw.trim().toLowerCase();
+  if (v === 'on' || v === 'off') return v;
+  throw new Error(`${flag} must be 'on' or 'off', got '${raw}'`);
+}
+
+/**
+ * The engine.setConfig entries applied to every gbrain-backed adapter before
+ * ingest. `search.expansion_variant_budget` is only set when the flag was
+ * given: gbrain pins that predate the knob ignore unknown keys silently, so
+ * an always-present entry would be an unverifiable echo.
+ */
+export function pinnedSearchConfig(pins: Cat13Pins): Record<string, string> {
+  const cfg: Record<string, string> = {
+    'search.mode': CAT13_SEARCH_MODE,
+    'search.reranker.enabled': pins.reranker === 'on' ? 'true' : 'false',
+    'search.autocut': pins.autocut === 'on' ? 'true' : 'false',
+  };
+  if (pins.reranker === 'on') cfg['search.reranker.model'] = CAT13_RERANK_MODEL_PIN;
+  if (pins.expansionVariantBudget !== undefined) {
+    const b = pins.expansionVariantBudget.trim();
+    if (b === '') throw new Error('--expansion-variant-budget requires a non-empty value');
+    cfg['search.expansion_variant_budget'] = b;
+  }
+  return cfg;
+}
+
+// ─── Seeded concept split (Phase E0: tuning vs held-out decision set) ──
+
+export interface ConceptSplit {
+  seed: number;
+  tuning: string[];
+  holdout: string[];
+}
+
+/**
+ * Seeded Fisher-Yates over the SORTED concept slugs (input order cannot
+ * perturb the split), then the first N are tuning and the next M held out.
+ * Uses its own rng — the probe generator's stream is untouched.
+ */
+export function splitConcepts(
+  conceptSlugs: readonly string[],
+  tuningN: number,
+  holdoutN: number,
+  seed: number,
+): ConceptSplit {
+  for (const [name, n] of [['--tuning-concepts', tuningN], ['--holdout-concepts', holdoutN]] as const) {
+    if (!Number.isInteger(n) || n < 0) throw new Error(`${name} must be a non-negative integer, got '${n}'`);
+  }
+  if (!Number.isInteger(seed) || seed < 0) throw new Error(`--seed must be a non-negative integer, got '${seed}'`);
+  const sorted = [...new Set(conceptSlugs)].sort();
+  if (tuningN + holdoutN > sorted.length) {
+    throw new Error(`--tuning-concepts + --holdout-concepts (${tuningN} + ${holdoutN}) exceeds the ${sorted.length} concept pages`);
+  }
+  const shuffled = seededShuffle(sorted, mulberry32(seed));
+  return {
+    seed,
+    tuning: shuffled.slice(0, tuningN).sort(),
+    holdout: shuffled.slice(tuningN, tuningN + holdoutN).sort(),
+  };
+}
+
+export type ProbeSubset = 'tuning' | 'holdout' | 'mixed' | 'unassigned';
+
+/**
+ * A probe belongs to a subset only when EVERY grade-3 target is in it —
+ * company-neighborhood probes can name several concepts. A probe whose
+ * targets straddle sets (or a set and the unsplit remainder) is `mixed`:
+ * counted, excluded from both subsets, so the held-out numbers never
+ * include a probe whose gold touches a tuning concept.
+ */
+export function probeSubset(probe: Pick<Probe, 'targetSlugs'>, split: ConceptSplit): ProbeSubset {
+  const t = new Set(split.tuning);
+  const h = new Set(split.holdout);
+  const targets = probe.targetSlugs;
+  if (targets.length > 0 && targets.every(s => t.has(s))) return 'tuning';
+  if (targets.length > 0 && targets.every(s => h.has(s))) return 'holdout';
+  if (targets.some(s => t.has(s) || h.has(s))) return 'mixed';
+  return 'unassigned';
 }
 
 // ─── Scorer ───────────────────────────────────────────────────────
+
+/** Metrics over one probe subset (overall, tuning or held-out). */
+export interface SubsetScore {
+  ndcg5: number;
+  p5_graded: number;   // Mean P@5 against the grade>=1 set (shared metrics.ts denominator)
+  p1_strict: number;   // Fraction of queries where rank-1 is in the grade-3 target set
+  count: number;
+  byTemplate: Record<string, { ndcg: number; count: number }>;
+}
+
+/** What a gbrain-backed adapter observed while answering (see GbrainInlineAdapter.observedStats). */
+export interface ObservedStats {
+  queries: number;
+  rerank_scored_queries: number;
+}
 
 export interface AdapterScore {
   name: string;
@@ -591,6 +785,70 @@ export interface AdapterScore {
   byTemplate: Record<string, { ndcg: number; count: number }>;
   probesScored: number;
   wallMs: number;
+  /** Tuning / held-out rollups when a ConceptSplit was supplied. */
+  splits?: {
+    seed: number;
+    tuning: SubsetScore;
+    holdout: SubsetScore;
+    /** Probes whose targets straddle sets — counted, scored in neither subset. */
+    mixed: number;
+    /** Probes whose targets fall outside both sets (only when tuning+holdout < concept count). */
+    unassigned: number;
+  };
+  /** engine.setConfig entries the adapter applied at init (gbrain-backed adapters only). */
+  resolvedConfig?: Record<string, string>;
+  /** gbrain's live gateway embedder right after this adapter's init() — proves every arm shares one space. */
+  gatewayAfterInit?: { model: string; dims: number };
+  observed?: ObservedStats;
+}
+
+interface Accum {
+  ndcg: number;
+  p5: number;
+  p1: number;
+  count: number;
+  byTemplate: Record<string, { ndcg: number; count: number }>;
+}
+
+function newAccum(): Accum {
+  return { ndcg: 0, p5: 0, p1: 0, count: 0, byTemplate: {} };
+}
+
+function addToAccum(a: Accum, template: string, ndcg: number, p5: number, p1: number): void {
+  a.ndcg += ndcg;
+  a.p5 += p5;
+  a.p1 += p1;
+  a.count += 1;
+  const bucket = a.byTemplate[template] ?? (a.byTemplate[template] = { ndcg: 0, count: 0 });
+  bucket.ndcg += ndcg;
+  bucket.count += 1;
+}
+
+function finalizeAccum(a: Accum): SubsetScore {
+  const byTemplate: Record<string, { ndcg: number; count: number }> = {};
+  for (const [k, b] of Object.entries(a.byTemplate)) {
+    byTemplate[k] = { ndcg: b.count > 0 ? b.ndcg / b.count : 0, count: b.count };
+  }
+  return {
+    ndcg5: a.count > 0 ? a.ndcg / a.count : 0,
+    p5_graded: a.count > 0 ? a.p5 / a.count : 0,
+    p1_strict: a.count > 0 ? a.p1 / a.count : 0,
+    count: a.count,
+    byTemplate,
+  };
+}
+
+export interface ScoreAdapterOptions {
+  /** Extra AdapterConfig fields merged into init() (e.g. `shootout`, `searchConfig`). */
+  initConfig?: Record<string, unknown>;
+  /** When supplied, tuning / held-out rollups are computed alongside the overall numbers. */
+  split?: ConceptSplit;
+}
+
+/** Duck-typed optional adapter hooks (GbrainInlineAdapter / HybridNoGraphAdapter expose them). */
+interface EchoingAdapter {
+  resolvedConfig?: (state: unknown) => Record<string, string>;
+  observedStats?: (state: unknown) => ObservedStats;
 }
 
 export async function scoreAdapter(
@@ -599,67 +857,131 @@ export async function scoreAdapter(
   probes: Probe[],
   gradesByQuery: Map<string, Map<string, number>>,
   acc: ProbeAccounting,
+  opts: ScoreAdapterOptions = {},
 ): Promise<AdapterScore> {
   const t0 = Date.now();
   const publicPages = pages.map(sanitizePage);
-  const state = await adapter.init(publicPages, { name: adapter.name });
-  let sumNdcg = 0;
-  let sumPGraded = 0;
-  let sumP1Strict = 0;
-  const byTemplate: Record<string, { ndcg: number; count: number }> = {};
+  const state = await adapter.init(publicPages, { name: adapter.name, ...(opts.initConfig ?? {}) });
+
+  // Read the gateway AFTER init: adapters that call configureGateway themselves
+  // (vector, vector-grep-rrf-fusion) must land on the run's embedder, and the
+  // receipt should show it rather than assume it.
+  let gatewayAfterInit: AdapterScore['gatewayAfterInit'];
+  try {
+    gatewayAfterInit = { model: getEmbeddingModel(), dims: getEmbeddingDimensions() };
+  } catch {
+    gatewayAfterInit = undefined; // gateway unconfigured (pure unit tests) — nothing to echo
+  }
+
+  const overall = newAccum();
+  const tuning = newAccum();
+  const holdout = newAccum();
+  let mixed = 0;
+  let unassigned = 0;
 
   for (const probe of probes) {
     const probeId = `${adapter.name}:${probe.q.id}`;
     const grades = gradesByQuery.get(probe.q.id)!;
     let ndcg = 0;
+    let p5 = 0;
+    let p1 = 0;
     try {
       const results: RankedDoc[] = await adapter.query(sanitizeQuery(probe.q), state);
       const ids = results.map(r => r.page_id);
       const rawNdcg = ndcgAtK(ids, grades, TOP_K);
       ndcg = Number.isNaN(rawNdcg) ? 0 : rawNdcg;
       const relevant = new Set([...grades.entries()].filter(([, g]) => g >= 1).map(([slug]) => slug));
-      sumPGraded += precisionAtK(ids, relevant, TOP_K);
-      if (ids.length > 0 && probe.targetSlugs.includes(ids[0])) sumP1Strict += 1;
+      p5 = precisionAtK(ids, relevant, TOP_K);
+      if (ids.length > 0 && probe.targetSlugs.includes(ids[0])) p1 = 1;
       acc.score(probeId, ndcg);
     } catch (err) {
       // The system under test failed the probe: scored 0 (miss), kept in the
       // denominator (probe-accounting sut policy).
       acc.error(probeId, 'sut', String(err));
       ndcg = 0;
+      p5 = 0;
+      p1 = 0;
     }
-    sumNdcg += ndcg;
-    const bucket = byTemplate[probe.template] ?? (byTemplate[probe.template] = { ndcg: 0, count: 0 });
-    bucket.ndcg += ndcg;
-    bucket.count += 1;
+    addToAccum(overall, probe.template, ndcg, p5, p1);
+    if (opts.split) {
+      switch (probeSubset(probe, opts.split)) {
+        case 'tuning': addToAccum(tuning, probe.template, ndcg, p5, p1); break;
+        case 'holdout': addToAccum(holdout, probe.template, ndcg, p5, p1); break;
+        case 'mixed': mixed += 1; break;
+        case 'unassigned': unassigned += 1; break;
+      }
+    }
   }
+
+  const hooks = adapter as unknown as EchoingAdapter;
+  const resolvedConfig = typeof hooks.resolvedConfig === 'function' ? hooks.resolvedConfig(state) : undefined;
+  const observed = typeof hooks.observedStats === 'function' ? hooks.observedStats(state) : undefined;
 
   if (adapter.teardown) await adapter.teardown(state);
 
-  for (const k of Object.keys(byTemplate)) {
-    byTemplate[k].ndcg = byTemplate[k].count > 0 ? byTemplate[k].ndcg / byTemplate[k].count : 0;
-  }
-
+  const all = finalizeAccum(overall);
   return {
     name: adapter.name,
-    ndcg5: probes.length > 0 ? sumNdcg / probes.length : 0,
-    p5_graded: probes.length > 0 ? sumPGraded / probes.length : 0,
-    p1_strict: probes.length > 0 ? sumP1Strict / probes.length : 0,
-    byTemplate,
+    ndcg5: all.ndcg5,
+    p5_graded: all.p5_graded,
+    p1_strict: all.p1_strict,
+    byTemplate: all.byTemplate,
     probesScored: probes.length,
     wallMs: Date.now() - t0,
+    ...(opts.split ? {
+      splits: {
+        seed: opts.split.seed,
+        tuning: finalizeAccum(tuning),
+        holdout: finalizeAccum(holdout),
+        mixed,
+        unassigned,
+      },
+    } : {}),
+    ...(resolvedConfig ? { resolvedConfig } : {}),
+    ...(gatewayAfterInit ? { gatewayAfterInit } : {}),
+    ...(observed ? { observed } : {}),
   };
 }
 
 // ─── Runner ───────────────────────────────────────────────────────
 
-export function buildAdapters(): Adapter[] {
+/** An adapter plus the init-time config that puts it on this run's embedder + pins. */
+export interface AdapterPlan {
+  adapter: Adapter;
+  initConfig: Record<string, unknown>;
+}
+
+/**
+ * Every adapter that embeds gets the SAME embedder (vector and
+ * vector-grep-rrf-fusion call configureGateway themselves at init, so without
+ * the `shootout` sidecar they would silently reset the gateway to the OpenAI
+ * default mid-run — the exact confound behind the unreproducible voyage-space
+ * receipt). Both gbrain-backed arms get the same search pins.
+ */
+export function buildAdapters(run: { embedder: EmbedderConfig; searchConfig: Record<string, string> }): AdapterPlan[] {
+  const shootout: EvalAdapterConfig = {
+    embedder: run.embedder.model,
+    dim: run.embedder.dims,
+    searchMode: CAT13_SEARCH_MODE,
+  };
   return [
-    new GbrainInlineAdapter({ topK: TOP_K }),
-    new HybridNoGraphAdapter(),
-    new RipgrepBm25Adapter(),
-    new VectorOnlyAdapter(),
+    {
+      adapter: new GbrainInlineAdapter({
+        topK: TOP_K,
+        searchConfig: run.searchConfig,
+        embeddingModel: run.embedder.model,
+        embeddingDimensions: run.embedder.dims,
+      }),
+      initConfig: {},
+    },
+    { adapter: new HybridNoGraphAdapter(), initConfig: { shootout, searchConfig: run.searchConfig } },
+    { adapter: new RipgrepBm25Adapter(), initConfig: {} },
+    { adapter: new VectorOnlyAdapter(), initConfig: { shootout } },
   ];
 }
+
+/** Adapters whose retrieval runs through gbrain's hybridSearch (the pins apply to these). */
+export const GBRAIN_BACKED_ADAPTERS: ReadonlySet<string> = new Set(['gbrain', 'vector-grep-rrf-fusion']);
 
 /**
  * Verdict policy (see header): 'fail' on dead retrieval plumbing (no arm
@@ -684,6 +1006,75 @@ export interface Cat13Options {
   allowSkip?: boolean;
   reportsDir?: string;
   quiet?: boolean;
+  /** `provider:model`; overrides CAT13_EMBEDDING_MODEL (default openai:text-embedding-3-large). */
+  embeddingModel?: string;
+  /** Vector width; overrides CAT13_EMBED_DIMS (default 1536). */
+  embeddingDims?: string | number;
+  /** search.reranker.enabled pin for gbrain-backed adapters (default off). */
+  reranker?: OnOff;
+  /** search.autocut pin for gbrain-backed adapters (default off). */
+  autocut?: OnOff;
+  /** search.expansion_variant_budget pass-through; only set when given. */
+  expansionVariantBudget?: string;
+  /** Concept split sizes (default 20 / 10 over the 30 concepts) and seed (default PROBE_SEED). */
+  tuningConcepts?: number;
+  holdoutConcepts?: number;
+  seed?: number;
+}
+
+export const DEFAULT_TUNING_CONCEPTS = 20;
+export const DEFAULT_HOLDOUT_CONCEPTS = 10;
+
+function parseNonNegativeInt(raw: string, flag: string): number {
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < 0) throw new Error(`${flag} must be a non-negative integer, got '${raw}'`);
+  return n;
+}
+
+/**
+ * CLI → Cat13Options. Pure (env is injected) so it is unit-testable. Unknown
+ * `--flags` throw: a typo like `--rerankr on` must not silently run the
+ * default cell under the intended label.
+ */
+export function parseCat13Argv(
+  argv: readonly string[],
+  env: Record<string, string | undefined> = process.env,
+): Cat13Options {
+  const opts: Cat13Options = {};
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+    const eq = arg.indexOf('=');
+    const flag = eq >= 0 ? arg.slice(0, eq) : arg;
+    const inline = eq >= 0 ? arg.slice(eq + 1) : undefined;
+    const value = (): string => {
+      if (inline !== undefined) return inline;
+      const v = argv[i + 1];
+      if (v === undefined || v.startsWith('--')) throw new Error(`${flag} requires a value`);
+      i += 1;
+      return v;
+    };
+    switch (flag) {
+      case '--stub-embed': opts.stubEmbed = true; break;
+      case '--allow-skip': opts.allowSkip = true; break;
+      case '--adapter': opts.only = value(); break;
+      case '--embedding-model': opts.embeddingModel = value(); break;
+      case '--embedding-dims': opts.embeddingDims = value(); break;
+      case '--reranker': opts.reranker = parseOnOff(value(), '--reranker'); break;
+      case '--autocut': opts.autocut = parseOnOff(value(), '--autocut'); break;
+      case '--expansion-variant-budget': opts.expansionVariantBudget = value(); break;
+      case '--tuning-concepts': opts.tuningConcepts = parseNonNegativeInt(value(), '--tuning-concepts'); break;
+      case '--holdout-concepts': opts.holdoutConcepts = parseNonNegativeInt(value(), '--holdout-concepts'); break;
+      case '--seed': opts.seed = parseNonNegativeInt(value(), '--seed'); break;
+      default:
+        throw new Error(
+          `unknown argument '${arg}'. Known: --stub-embed --allow-skip --adapter <name> `
+          + `--embedding-model <provider:model> --embedding-dims <N> --reranker on|off --autocut on|off `
+          + `--expansion-variant-budget <b> --tuning-concepts <N> --holdout-concepts <M> --seed <N>`,
+        );
+    }
+  }
+  if (env.CAT13_STUB_EMBED === '1') opts.stubEmbed = true;
+  return opts;
 }
 
 export interface Cat13RunResult {
@@ -709,8 +1100,26 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
     finished_at: new Date().toISOString(),
   });
 
-  if (!stubEmbed && !process.env.OPENAI_API_KEY) {
-    const reason = 'OPENAI_API_KEY required for live embeds (run with --stub-embed for the hermetic plumbing run)';
+  // Resolve the cell BEFORE any key check or embed: a malformed embedder or
+  // pin throws here, never lands in a receipt under a default label.
+  const embedder = resolveEmbedder({ model: opts.embeddingModel, dims: opts.embeddingDims });
+  const pins: Cat13Pins = {
+    reranker: opts.reranker ?? 'off',
+    autocut: opts.autocut ?? 'off',
+    ...(opts.expansionVariantBudget !== undefined ? { expansionVariantBudget: opts.expansionVariantBudget } : {}),
+  };
+  const searchConfig = pinnedSearchConfig(pins);
+  const tuningN = opts.tuningConcepts ?? DEFAULT_TUNING_CONCEPTS;
+  const holdoutN = opts.holdoutConcepts ?? DEFAULT_HOLDOUT_CONCEPTS;
+  const splitSeed = opts.seed ?? PROBE_SEED;
+
+  const cellConfig = (): Record<string, unknown> => ({
+    embedder: { model: embedder.model, dims: embedder.dims },
+    pins: { reranker: pins.reranker, autocut: pins.autocut, expansion_variant_budget: pins.expansionVariantBudget ?? null },
+    search_pins: searchConfig,
+  });
+
+  const skipped = (reason: string): Cat13RunResult => {
     const receipt: Receipt = {
       ...baseReceipt(),
       run_status: 'skipped',
@@ -720,10 +1129,33 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
       completion_rate: 0,
       errors: [],
       publishable: false,
+      resolved_config: cellConfig(),
     };
     writeReceipt(receiptFile, receipt);
     console.error(`[cat13] SKIPPED — ${reason}`);
     return { receipt, results: [], exitCode: opts.allowSkip ? 0 : 2 };
+  };
+
+  // Fail-closed reranker preflight. gbrain's reranker is fail-open (no key →
+  // plain hybrid, no error), so a "reranker on" cell must prove it CAN rerank
+  // before question 1: the stub transport never reaches the cross-encoder, and
+  // a live run needs the pinned model's provider key.
+  if (pins.reranker === 'on') {
+    if (stubEmbed) {
+      throw new Error(
+        `--reranker on cannot run under --stub-embed: the cross-encoder (${CAT13_RERANK_MODEL_PIN}) is not stubbed `
+        + 'and gbrain\'s reranker is fail-open, so the cell would silently measure plain hybrid under a "reranker on" label',
+      );
+    }
+    const rerankKeyEnv = providerKeyEnv(CAT13_RERANK_MODEL_PIN);
+    if (!process.env[rerankKeyEnv]) {
+      return skipped(`${rerankKeyEnv} required for --reranker on (${CAT13_RERANK_MODEL_PIN}); refusing to run a fail-open reranker cell without it`);
+    }
+  }
+
+  const embedKeyEnv = providerKeyEnv(embedder.model);
+  if (!stubEmbed && !process.env[embedKeyEnv]) {
+    return skipped(`${embedKeyEnv} required for live embeds with ${embedder.model} (run with --stub-embed for the hermetic plumbing run)`);
   }
 
   const targetProbes = opts.targetProbes ?? resolveTargetProbes();
@@ -736,13 +1168,20 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
     throw new Error('buildProbes produced 0 probes — refusing to score an empty run');
   }
 
-  ensureGateway(stubEmbed);
+  const conceptSlugs = pages.filter(p => p.slug.startsWith('concepts/')).map(p => p.slug);
+  const split = splitConcepts(conceptSlugs, tuningN, holdoutN, splitSeed);
+  const subsetCounts: Record<ProbeSubset, number> = { tuning: 0, holdout: 0, mixed: 0, unassigned: 0 };
+  for (const p of probes) subsetCounts[probeSubset(p, split)] += 1;
+
+  ensureGateway(stubEmbed, embedder);
 
   log(`# BrainBench Cat 13 — Conceptual Recall\n`);
   log(`Generated: ${new Date().toISOString().replace(/\..*$/, '')}`);
-  log(`Corpus: ${pages.length} pages, ${pages.filter(p => p.slug.startsWith('concepts/')).length} concept pages`);
+  log(`Corpus: ${pages.length} pages, ${conceptSlugs.length} concept pages`);
   log(`Probes: ${probes.length} (target ${targetProbes} per-concept + company pass; CAT13_PROBES env var to override)`);
-  log(`Embeds: ${stubEmbed ? 'stubbed deterministic hash (hermetic)' : 'live OpenAI'}`);
+  log(`Embeds: ${stubEmbed ? 'stubbed deterministic hash (hermetic)' : 'live'} — ${embedder.model} @ ${embedder.dims}d (every adapter, one gateway)`);
+  log(`Search pins (gbrain-backed adapters): ${Object.entries(searchConfig).map(([k, v]) => `${k}=${v}`).join(' ')}`);
+  log(`Concept split: seed=${split.seed} tuning=${split.tuning.length} held-out=${split.holdout.length} → probes tuning=${subsetCounts.tuning} held-out=${subsetCounts.holdout} mixed=${subsetCounts.mixed} unassigned=${subsetCounts.unassigned}`);
   log(`Metric: nDCG@${TOP_K} (graded: target=3, co-occurrence peer=1)\n`);
   log(`## Template breakdown\n`);
   const templateCounts: Record<string, number> = {};
@@ -752,21 +1191,42 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
   }
   log('');
 
-  const allAdapters = buildAdapters();
-  const adapters = opts.only ? allAdapters.filter(a => a.name === opts.only) : allAdapters;
-  if (adapters.length === 0) {
-    throw new Error(`--adapter ${opts.only} matches none of: ${allAdapters.map(a => a.name).join(', ')}`);
+  const allPlans = buildAdapters({ embedder, searchConfig });
+  const plans = opts.only ? allPlans.filter(p => p.adapter.name === opts.only) : allPlans;
+  if (plans.length === 0) {
+    throw new Error(`--adapter ${opts.only} matches none of: ${allPlans.map(p => p.adapter.name).join(', ')}`);
   }
 
-  const acc = new ProbeAccounting(adapters.length * probes.length);
+  const acc = new ProbeAccounting(plans.length * probes.length);
 
   log(`## Running adapters\n`);
   const results: AdapterScore[] = [];
-  for (const a of adapters) {
+  for (const { adapter: a, initConfig } of plans) {
     log(`- ${a.name} ...`);
     try {
-      const r = await scoreAdapter(a, pages, probes, gradesByQuery, acc);
+      const r = await scoreAdapter(a, pages, probes, gradesByQuery, acc, { initConfig, split });
       log(`  done (${(r.wallMs / 1000).toFixed(1)}s). nDCG@5=${(r.ndcg5 * 100).toFixed(1)}%, P@5(graded)=${(r.p5_graded * 100).toFixed(1)}%, P@1(strict)=${(r.p1_strict * 100).toFixed(1)}%`);
+      if (r.gatewayAfterInit && (r.gatewayAfterInit.model !== embedder.model || r.gatewayAfterInit.dims !== embedder.dims)) {
+        // The adapter reconfigured the gateway away from the run's embedder:
+        // its numbers are in a different embedding space than the other arms.
+        for (const p of probes) {
+          acc.error(`${a.name}:${p.q.id}`, 'harness',
+            `embedder drift: gateway after init was ${r.gatewayAfterInit.model}@${r.gatewayAfterInit.dims}, run pinned ${embedder.model}@${embedder.dims}`);
+        }
+        log(`  EMBEDDER DRIFT: ${r.gatewayAfterInit.model}@${r.gatewayAfterInit.dims} != ${embedder.model}@${embedder.dims}`);
+      }
+      if (pins.reranker === 'on' && GBRAIN_BACKED_ADAPTERS.has(a.name) && r.observed
+        && r.observed.queries > 0 && r.observed.rerank_scored_queries === 0) {
+        // Same shape as longmemeval's rerank_missing_score: the pin said
+        // "reranker on" but no result carried a rerank_score — the fail-open
+        // reranker measured plain hybrid. Harness error on every probe of the
+        // arm so the run is invalid, never a quiet "reranker on" row.
+        for (const p of probes) {
+          acc.error(`${a.name}:${p.q.id}`, 'harness',
+            `rerank_missing_score: search.reranker.enabled pinned 'true' for ${a.name} but no result carried rerank_score`);
+        }
+        log(`  RERANKER DID NOT FIRE: 0/${r.observed.queries} queries carried rerank_score`);
+      }
       results.push(r);
     } catch (err) {
       // init/teardown failure: the whole arm is gone (missing dependency or
@@ -786,46 +1246,102 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
     log(`| ${r.name.padEnd(16)} | ${(r.ndcg5 * 100).toFixed(1)}% | ${(r.p5_graded * 100).toFixed(1)}% | ${(r.p1_strict * 100).toFixed(1)}% | ${(r.wallMs / 1000).toFixed(1)} |`);
   }
 
-  // Per-template rollup
-  const templates = [...new Set(probes.map(p => p.template))];
-  log(`\n## Per-template nDCG@5 (where each retrieval style earns its keep)\n`);
-  log(`| Template | ${results.map(r => r.name).join(' | ')} | #probes |`);
-  log(`|----------|${results.map(() => '--------').join('|')}|---------|`);
-  for (const t of templates.sort()) {
-    const row = results.map(r => `${((r.byTemplate[t]?.ndcg ?? 0) * 100).toFixed(1)}%`).join(' | ');
-    const count = probes.filter(p => p.template === t).length;
-    log(`| ${t} | ${row} | ${count} |`);
+  // Per-template rollups: overall, then tuning and held-out.
+  const templates = [...new Set(probes.map(p => p.template))].sort();
+  const templateCountsFor = (subset: ProbeSubset | 'all'): Record<string, number> => {
+    const counts: Record<string, number> = {};
+    for (const p of probes) {
+      if (subset !== 'all' && probeSubset(p, split) !== subset) continue;
+      counts[p.template] = (counts[p.template] ?? 0) + 1;
+    }
+    return counts;
+  };
+  const logTemplateTable = (
+    title: string,
+    byTemplateOf: (r: AdapterScore) => Record<string, { ndcg: number; count: number }> | undefined,
+    counts: Record<string, number>,
+  ): void => {
+    log(`\n## ${title}\n`);
+    log(`| Template | ${results.map(r => r.name).join(' | ')} | #probes |`);
+    log(`|----------|${results.map(() => '--------').join('|')}|---------|`);
+    for (const t of templates) {
+      if (!(counts[t] > 0)) continue;
+      const row = results.map(r => `${((byTemplateOf(r)?.[t]?.ndcg ?? 0) * 100).toFixed(1)}%`).join(' | ');
+      log(`| ${t} | ${row} | ${counts[t]} |`);
+    }
+  };
+  logTemplateTable('Per-template nDCG@5 (where each retrieval style earns its keep)', r => r.byTemplate, templateCountsFor('all'));
+
+  log(`\n## Concept split — tuning vs held-out (seed=${split.seed}, ${split.tuning.length}/${split.holdout.length} concepts)\n`);
+  log(`| Adapter | Subset | #probes | nDCG@5 | P@5 (graded) | P@1 (strict target) |`);
+  log(`|---------|--------|---------|--------|---------------|----------------------|`);
+  for (const r of results) {
+    for (const subset of ['tuning', 'holdout'] as const) {
+      const s = r.splits?.[subset];
+      if (!s) continue;
+      log(`| ${r.name.padEnd(16)} | ${subset === 'holdout' ? 'held-out' : subset} | ${s.count} | ${(s.ndcg5 * 100).toFixed(1)}% | ${(s.p5_graded * 100).toFixed(1)}% | ${(s.p1_strict * 100).toFixed(1)}% |`);
+    }
   }
+  log(`\nMixed-target probes (gold names concepts from both sets) are excluded from both subsets: ${subsetCounts.mixed}. Unassigned (targets outside both sets): ${subsetCounts.unassigned}.`);
+  log(`Held-out concepts: ${split.holdout.join(', ')}`);
+  logTemplateTable('Per-template nDCG@5 — tuning concepts', r => r.splits?.tuning.byTemplate, templateCountsFor('tuning'));
+  logTemplateTable('Per-template nDCG@5 — held-out concepts (decision set)', r => r.splits?.holdout.byTemplate, templateCountsFor('holdout'));
 
   log(`\n## Methodology\n`);
-  log(`- Corpus: eval/data/world-v1/concepts__*.json (${pages.filter(p => p.slug.startsWith('concepts/')).length} concept pages) + the full world-v1 index.`);
+  log(`- Corpus: eval/data/world-v1/concepts__*.json (${conceptSlugs.length} concept pages) + the full world-v1 index.`);
   log(`- Probes: programmatic, seeded (mulberry32 seed=${PROBE_SEED}, Fisher-Yates sampling). Rerun produces the identical set across JS runtimes.`);
   log(`- Probe texts are globally unique: ambiguous candidates (same text claimable by >1 concept) are dropped at generation and the run aborts on any surviving duplicate.`);
   log(`- Graded gold: target concept=3, co-occurrence peers (share >=1 related company/person)=1. Company-neighborhood probes: every concept listing the company=3, the company page=1.`);
   log(`- Template mix: title paraphrase, title variation, description paraphrase, hand-authored synonyms, body-phrase fuzzy recall, semantic neighborhood (self-grounded), company neighborhood (global pass).`);
   log(`- Metric: nDCG@5 (primary, shared eval/runner/metrics.ts). P@5-graded = precision@5 against the grade>=1 set. P@1-strict = rank-1 is in the grade-3 target set.`);
   log(`- Top-K: ${TOP_K}.`);
+  log(`- Embedder: ${embedder.model} @ ${embedder.dims}d for EVERY adapter (CAT13_EMBEDDING_MODEL / CAT13_EMBED_DIMS); the receipt records the gateway state after each adapter's init.`);
+  log(`- Search pins on gbrain-backed adapters (${[...GBRAIN_BACKED_ADAPTERS].join(', ')}): ${Object.entries(searchConfig).map(([k, v]) => `${k}=${v}`).join(', ')} — set via engine.setConfig before ingest, echoed per adapter.`);
+  log(`- Concept split: seeded Fisher-Yates over the sorted concept slugs (seed=${split.seed}, separate rng from the probe generator); ${split.tuning.length} tuning / ${split.holdout.length} held-out. A probe is in a subset only when every grade-3 target is.`);
   log(`- No gold data passed to adapters; PublicPage/PublicQuery sealed at the boundary.`);
 
   const summary = acc.summary();
+
+  const conceptSplitRecord = {
+    seed: split.seed,
+    tuning_n: split.tuning.length,
+    holdout_n: split.holdout.length,
+    tuning: split.tuning,
+    holdout: split.holdout,
+    probes: subsetCounts,
+  };
 
   const reportFile = join(reportsDir, CATEGORY, 'report.json');
   mkdirSync(dirname(reportFile), { recursive: true });
   writeFileSync(reportFile, JSON.stringify({
     ran_at: startedAt,
     stub_embed: stubEmbed,
+    embedder,
+    search_pins: searchConfig,
+    concept_split: conceptSplitRecord,
     probes: probes.length,
     template_counts: templateCounts,
     results,
     accounting: summary,
   }, null, 2) + '\n');
 
+  const subsetRow = (s: SubsetScore | undefined) => s
+    ? { ndcg5: s.ndcg5, p5_graded: s.p5_graded, p1_strict: s.p1_strict, count: s.count }
+    : null;
+
   const resolvedConfig: Record<string, unknown> = {
     top_k: TOP_K,
     probe_seed: PROBE_SEED,
     target_probes: targetProbes,
     probes_generated: probes.length,
-    embedding_transport: stubEmbed ? 'stubbed deterministic hash-embed (__setEmbedTransportForTests)' : 'live openai:text-embedding-3-large',
+    ...cellConfig(),
+    embedding_transport: stubEmbed
+      ? `stubbed deterministic hash-embed (__setEmbedTransportForTests), ${embedder.dims}d`
+      : `live ${embedder.model} @ ${embedder.dims}d`,
+    gateway_after_init_by_adapter: Object.fromEntries(results.map(r => [r.name, r.gatewayAfterInit ?? null])),
+    search_config_by_adapter: Object.fromEntries(results.map(r => [r.name, r.resolvedConfig ?? null])),
+    observed_by_adapter: Object.fromEntries(results.map(r => [r.name, r.observed ?? null])),
+    concept_split: conceptSplitRecord,
     adapters_run: results.map(r => r.name),
   };
   const data: Record<string, unknown> = {
@@ -835,7 +1351,14 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
       p5_graded: r.p5_graded,
       p1_strict: r.p1_strict,
       wall_ms: r.wallMs,
+      tuning: subsetRow(r.splits?.tuning),
+      holdout: subsetRow(r.splits?.holdout),
     })),
+    per_template: Object.fromEntries(results.map(r => [r.name, {
+      overall: r.byTemplate,
+      tuning: r.splits?.tuning.byTemplate ?? null,
+      holdout: r.splits?.holdout.byTemplate ?? null,
+    }])),
     template_counts: templateCounts,
     report_file: reportFile,
   };
@@ -857,7 +1380,7 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
     return { receipt, results, exitCode: 3 };
   }
 
-  const fullStandardRun = !opts.only && results.length === allAdapters.length;
+  const fullStandardRun = !opts.only && results.length === allPlans.length;
   const verdict = computeCat13Verdict(results, { stubEmbed, fullStandardRun });
 
   const receipt: Receipt = {
@@ -881,13 +1404,7 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
 // ─── CLI ──────────────────────────────────────────────────────────
 
 async function main(): Promise<number> {
-  const argv = process.argv.slice(2);
-  const onlyIdx = argv.indexOf('--adapter');
-  const { exitCode } = await runCat13({
-    stubEmbed: argv.includes('--stub-embed') || process.env.CAT13_STUB_EMBED === '1',
-    only: onlyIdx >= 0 ? argv[onlyIdx + 1] : undefined,
-    allowSkip: argv.includes('--allow-skip'),
-  });
+  const { exitCode } = await runCat13(parseCat13Argv(process.argv.slice(2)));
   return exitCode;
 }
 

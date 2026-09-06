@@ -34,9 +34,22 @@ export interface GbrainInlineOptions {
   embeddingDimensions?: number;
 }
 
+/** Per-run observation counters, read back via observedStats() for receipts. */
+export interface InlineObservedStats {
+  /** Queries answered. */
+  queries: number;
+  /**
+   * Queries whose hybridSearch result set carried a finite `rerank_score`.
+   * gbrain's reranker is fail-open (a missing key silently measures plain
+   * hybrid), so a reranker-pinned cell with 0 here did NOT measure reranking.
+   */
+  rerank_scored_queries: number;
+}
+
 interface InlineState {
   engine: PGLiteEngine;
   resolvedConfig: Record<string, string>;
+  observed: InlineObservedStats;
 }
 
 export class GbrainInlineAdapter implements Adapter {
@@ -96,12 +109,14 @@ export class GbrainInlineAdapter implements Adapter {
       console.log = origLog;
       console.error = origErr;
     }
-    return { engine, resolvedConfig } satisfies InlineState;
+    return { engine, resolvedConfig, observed: { queries: 0, rerank_scored_queries: 0 } } satisfies InlineState;
   }
 
   async query(q: PublicQuery, state: BrainState): Promise<RankedDoc[]> {
-    const { engine } = state as InlineState;
+    const { engine, observed } = state as InlineState;
     const chunkResults = await hybridSearch(engine, q.text, { limit: this.opts.topK * 6 });
+    observed.queries += 1;
+    if (chunkResults.some(r => Number.isFinite(r.rerank_score))) observed.rerank_scored_queries += 1;
     // Chunk → page normalization: keep the best chunk score per page so
     // downstream metrics see page-grained, duplicate-free ids.
     const pageBest = new Map<string, number>();
@@ -119,6 +134,11 @@ export class GbrainInlineAdapter implements Adapter {
   /** The setConfig entries this run actually applied — put these in the receipt. */
   resolvedConfig(state: BrainState): Record<string, string> {
     return (state as InlineState).resolvedConfig;
+  }
+
+  /** Query-time observations (rerank_score presence) — the fail-closed check for reranker-pinned cells. */
+  observedStats(state: BrainState): InlineObservedStats {
+    return { ...(state as InlineState).observed };
   }
 
   async teardown(state: BrainState): Promise<void> {

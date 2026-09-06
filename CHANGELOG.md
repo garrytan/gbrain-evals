@@ -4,6 +4,48 @@ All notable changes to gbrain-evals are recorded here. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versions are semver and kept
 in sync with `VERSION` + `package.json`.
 
+## [Unreleased]
+
+Phase E0 of the gbrain ranker wave: the Cat 13 conceptual-recall runner can
+now produce a receipt that names its embedding space and its search pins, so
+the hybrid-vs-vector comparison is like-for-like and reproducible from `main`.
+
+### Added
+
+- **Configurable Cat 13 embedder, applied to every adapter.**
+  `CAT13_EMBEDDING_MODEL` / `CAT13_EMBED_DIMS` (or `--embedding-model` /
+  `--embedding-dims`) flow into the runner's gateway setup AND into each
+  adapter's init, so `vector` and `vector-grep-rrf-fusion` (which call
+  `configureGateway` themselves) can no longer reset the gateway to the
+  OpenAI default mid-run. Defaults are unchanged (`openai:text-embedding-3-large`
+  @ 1536). The stub hash-embed transport produces vectors of the configured
+  width. The receipt records the resolved embedder and the gateway's live
+  `(model, dims)` after each adapter's init; drift is a harness error.
+- **Explicit search pins for the gbrain-backed Cat 13 adapters.** `--reranker
+  on|off` and `--autocut on|off` (both default `off`) set `search.mode=balanced`,
+  `search.reranker.enabled`, `search.autocut` (and `search.reranker.model=
+  voyage:rerank-2.5` when on) on both `gbrain` and `vector-grep-rrf-fusion`
+  before ingest; `--expansion-variant-budget <b>` passes
+  `search.expansion_variant_budget` through only when given. Applied entries
+  are echoed per adapter in `resolved_config.search_config_by_adapter`.
+  Reranker-on cells are fail-closed: refused under `--stub-embed`, skipped
+  without `VOYAGE_API_KEY`, and invalidated (`rerank_missing_score`) when no
+  result carried a `rerank_score`.
+- **Seeded concept split.** `--tuning-concepts N` / `--holdout-concepts M`
+  (default 20 / 10 over the 30 concepts) with `--seed` (default 42; the probe
+  generator's seed is untouched). nDCG@5 / P@5 / P@1 and per-template rollups
+  are reported for the tuning and held-out concept sets alongside the overall
+  numbers, in stdout, `report.json` and the receipt. Mixed-target
+  company-neighborhood probes are excluded from both subsets and counted.
+- `eval/runner/README-cat13-phase-e0.md` — the E0 run recipe (link step,
+  hermetic check, the reranker x autocut arms in the voyage and OpenAI spaces).
+- `HybridNoGraphAdapter` accepts `searchConfig` and exposes `resolvedConfig()`
+  / `observedStats()`; `GbrainInlineAdapter` exposes `observedStats()`.
+
+### Changed
+
+- The Cat 13 CLI parser rejects unknown flags instead of ignoring them.
+
 ## [0.6.1] - 2026-09-02
 
 Re-run of the public LongMemEval-S (cleaned) split at gbrain v0.48.2.0, plus the
