@@ -45,6 +45,9 @@ import {
   providerKeyEnv,
   parseOnOff,
   parseKeywordArmConfidenceFloor,
+  parseSearchPin,
+  validateSearchPin,
+  RESERVED_SEARCH_PIN_KEYS,
   pinnedSearchConfig,
   buildAdapters,
   GBRAIN_BACKED_ADAPTERS,
@@ -426,6 +429,47 @@ describe('cat13 search pins (Phase E0)', () => {
     });
   });
 
+  test('--search-pin entries (generic pass-through) join the pin set after the named pins; shape validated, reserved keys refused', () => {
+    const base = { reranker: 'off' as const, autocut: 'off' as const };
+    expect('search.metadata_boost_gate' in pinnedSearchConfig(base)).toBe(false);
+    expect(pinnedSearchConfig({ ...base, searchPins: { 'search.metadata_boost_gate': 'lexical' } })).toEqual({
+      'search.mode': 'balanced',
+      'search.reranker.enabled': 'false',
+      'search.autocut': 'false',
+      'search.metadata_boost_gate': 'lexical',
+    });
+    // Coexists with the named pins; every generic key is written.
+    const multi = pinnedSearchConfig({
+      ...base, keywordArmConfidenceFloor: '0.6',
+      searchPins: { 'search.metadata_boost_gate': 'lexical', 'search.some_other_knob': '3' },
+    });
+    expect(multi['search.keyword_arm_confidence_floor']).toBe('0.6');
+    expect(multi['search.metadata_boost_gate']).toBe('lexical');
+    expect(multi['search.some_other_knob']).toBe('3');
+    // Parse: split on the FIRST '=', both sides trimmed; values may contain '='.
+    expect(parseSearchPin('search.metadata_boost_gate=lexical')).toEqual(['search.metadata_boost_gate', 'lexical']);
+    expect(parseSearchPin(' search.x = a=b ')).toEqual(['search.x', 'a=b']);
+    expect(validateSearchPin('search.k', 'v')).toEqual(['search.k', 'v']);
+    // Rejected shapes throw (never a silent default cell under a pinned label).
+    expect(() => parseSearchPin('search.metadata_boost_gate')).toThrow(/expects <search.key>=<value>/);
+    expect(() => parseSearchPin('metadata_boost_gate=lexical')).toThrow(/must start with 'search\./);
+    expect(() => parseSearchPin('search.=lexical')).toThrow(/must start with 'search\./);
+    expect(() => parseSearchPin('search.metadata_boost_gate=')).toThrow(/non-empty value/);
+    expect(() => parseSearchPin('search.metadata_boost_gate=   ')).toThrow(/non-empty value/);
+    expect(() => pinnedSearchConfig({ ...base, searchPins: { 'search.metadata_boost_gate': '' } })).toThrow(/non-empty value/);
+    expect(() => pinnedSearchConfig({ ...base, searchPins: { 'metadata_boost_gate': 'x' } })).toThrow(/must start with 'search\./);
+    // Keys a dedicated flag owns are refused on BOTH paths so the fail-closed checks cannot be bypassed generically.
+    expect(Object.keys(RESERVED_SEARCH_PIN_KEYS).sort()).toEqual([
+      'search.autocut', 'search.expansion_variant_budget', 'search.keyword_arm_confidence_floor',
+      'search.mode', 'search.reranker.enabled', 'search.reranker.model',
+    ]);
+    for (const reserved of Object.keys(RESERVED_SEARCH_PIN_KEYS)) {
+      expect(() => parseSearchPin(`${reserved}=x`)).toThrow(/owned by/);
+      expect(() => pinnedSearchConfig({ ...base, searchPins: { [reserved]: 'x' } })).toThrow(/owned by/);
+    }
+    expect(() => parseSearchPin('search.reranker.enabled=true')).toThrow(/--reranker on\|off/);
+  });
+
   test('on|off parsing is strict', () => {
     expect(parseOnOff(undefined, '--reranker')).toBe('off');
     expect(parseOnOff('ON', '--reranker')).toBe('on');
@@ -542,6 +586,29 @@ describe('cat13 CLI parsing (Phase E0)', () => {
     expect(() => parseCat13Argv(['--keyword-arm-confidence-floor'], {})).toThrow(/requires a value/);
   });
 
+  test('--search-pin parses in both forms, repeats accumulate, a repeated key → last wins, bad pins throw at parse time', () => {
+    expect(parseCat13Argv(['--search-pin', 'search.metadata_boost_gate=lexical'], {}).searchPins)
+      .toEqual({ 'search.metadata_boost_gate': 'lexical' });
+    // --flag=value form: the argv parser splits the FLAG on its first '=', the pin on its own first '='.
+    expect(parseCat13Argv(['--search-pin=search.metadata_boost_gate=lexical'], {}).searchPins)
+      .toEqual({ 'search.metadata_boost_gate': 'lexical' });
+    expect(parseCat13Argv([
+      '--search-pin', 'search.metadata_boost_gate=lexical',
+      '--search-pin', 'search.other_knob=1',
+      '--search-pin', 'search.metadata_boost_gate=off',
+    ], {}).searchPins).toEqual({ 'search.metadata_boost_gate': 'off', 'search.other_knob': '1' });
+    expect(parseCat13Argv(['--reranker', 'off'], {}).searchPins).toBeUndefined();
+    expect(() => parseCat13Argv(['--search-pin', 'metadata_boost_gate=lexical'], {})).toThrow(/must start with 'search\./);
+    expect(() => parseCat13Argv(['--search-pin', 'search.metadata_boost_gate'], {})).toThrow(/expects <search.key>=<value>/);
+    expect(() => parseCat13Argv(['--search-pin', 'search.metadata_boost_gate='], {})).toThrow(/non-empty value/);
+    expect(() => parseCat13Argv(['--search-pin', 'search.autocut=true'], {})).toThrow(/owned by --autocut/);
+    expect(() => parseCat13Argv(['--search-pin'], {})).toThrow(/requires a value/);
+    expect(() => parseCat13Argv(['--search-pin', '--stub-embed'], {})).toThrow(/requires a value/);
+    // Composes with the named pins in one argv (the Phase E3 arm shape).
+    expect(parseCat13Argv(['--reranker', 'on', '--autocut', 'on', '--search-pin', 'search.metadata_boost_gate=lexical'], {}))
+      .toEqual({ reranker: 'on', autocut: 'on', searchPins: { 'search.metadata_boost_gate': 'lexical' } });
+  });
+
   test('unknown flags, bad on/off values and missing values throw (no silent default cell)', () => {
     expect(() => parseCat13Argv(['--rerankr', 'on'], {})).toThrow(/unknown argument/);
     expect(() => parseCat13Argv(['--reranker', 'yes'], {})).toThrow(/on' or 'off/);
@@ -582,12 +649,13 @@ describe('cat13 Phase E0 receipt (hermetic)', () => {
       expect(rc.search_pins['search.reranker.model']).toBe(CAT13_RERANK_MODEL_PIN);
       expect(rc.pins.keyword_arm_confidence_floor).toBeNull();
       expect('search.keyword_arm_confidence_floor' in rc.search_pins).toBe(false);
+      expect(rc.pins.extra_search_pins).toBeNull();
     } finally {
       if (saved !== undefined) process.env.VOYAGE_API_KEY = saved;
     }
   });
 
-  test('gbrain arm at voyage:voyage-4 @ 1024d (stub): the receipt echoes embedder, per-adapter pins (incl. the Phase E2 floor), gateway state, observed kacf counts and the split', async () => {
+  test('gbrain arm at voyage:voyage-4 @ 1024d (stub): the receipt echoes embedder, per-adapter pins (incl. the Phase E2 floor and a generic --search-pin), gateway state, observed kacf counts and the split', async () => {
     const reportsDir = mkdtempSync(join(tmpdir(), 'cat13-'));
     const { receipt, results, exitCode } = await runCat13({
       stubEmbed: true,
@@ -598,6 +666,9 @@ describe('cat13 Phase E0 receipt (hermetic)', () => {
       autocut: 'on',
       expansionVariantBudget: '1.0',
       keywordArmConfidenceFloor: '0.6',
+      // Generic pass-through pin: the linked gbrain may not know this key yet;
+      // it must still be written and echoed exactly like the named pins.
+      searchPins: { 'search.metadata_boost_gate': 'lexical' },
       reportsDir,
       quiet: true,
     });
@@ -610,15 +681,21 @@ describe('cat13 Phase E0 receipt (hermetic)', () => {
     const rc = receipt.resolved_config as Record<string, any>;
     expect(rc.embedder).toEqual({ model: 'voyage:voyage-4', dims: 1024 });
     expect(rc.embedding_transport).toMatch(/1024d/);
-    expect(rc.pins).toEqual({ reranker: 'off', autocut: 'on', expansion_variant_budget: '1.0', keyword_arm_confidence_floor: '0.6' });
+    expect(rc.pins).toEqual({
+      reranker: 'off', autocut: 'on', expansion_variant_budget: '1.0', keyword_arm_confidence_floor: '0.6',
+      extra_search_pins: { 'search.metadata_boost_gate': 'lexical' },
+    });
     expect(rc.search_pins).toEqual({
       'search.mode': 'balanced',
       'search.reranker.enabled': 'false',
       'search.autocut': 'true',
       'search.expansion_variant_budget': '1.0',
       'search.keyword_arm_confidence_floor': '0.6',
+      'search.metadata_boost_gate': 'lexical',
     });
+    // The adapter applied (engine.setConfig) and echoed every entry, the generic pin included.
     expect(rc.search_config_by_adapter.gbrain).toEqual(rc.search_pins);
+    expect(rc.search_config_by_adapter.gbrain['search.metadata_boost_gate']).toBe('lexical');
     expect(rc.gateway_after_init_by_adapter.gbrain).toEqual({ model: 'voyage:voyage-4', dims: 1024 });
     const observed = rc.observed_by_adapter.gbrain;
     expect(observed.queries).toBe(results[0].probesScored);

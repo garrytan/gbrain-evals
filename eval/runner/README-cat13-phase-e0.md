@@ -310,3 +310,36 @@ side, and label overall "includes the 20 tuning concepts".
 - `test/eval/cat13-kacf-calibrate.test.ts`, `test/eval/cat13-conceptual.test.ts`
   — hermetic pins (median rule, exclusions, collateral, histogram, CLI,
   receipt echo).
+
+## Arbitrary knob A/B — `--search-pin` (Phase E3 arms and later)
+
+Any `search.*` config knob can be pinned on the gbrain-backed adapters
+without a dedicated flag: `--search-pin <search.key>=<value>` (repeatable;
+`--search-pin=search.key=value` also works; a repeated key → last wins) adds
+the entry to the same `engine.setConfig` pin set as `--reranker` /
+`--autocut` / `--expansion-variant-budget` / `--keyword-arm-confidence-floor`,
+and it is echoed the same way: `resolved_config.search_pins`,
+`resolved_config.pins.extra_search_pins` (just the generic ones), and per
+adapter in `search_config_by_adapter`. The runner validates the shape at
+parse (key must start with `search.` and name a knob, value non-empty) and
+refuses keys a dedicated flag owns (`search.mode`, `search.reranker.*`,
+`search.autocut`, `search.expansion_variant_budget`,
+`search.keyword_arm_confidence_floor`) so their fail-closed checks cannot be
+bypassed generically. Beyond that it is a pass-through with NO `kacf`-style
+proof that the knob fired: gbrain ignores unknown `search.*` keys silently,
+so a misspelled or not-yet-shipped key runs the default cell under the pinned
+label — confirm the key exists in the linked gbrain (`gbrain_version` in the
+receipt) before reading the arm. The Phase E3 metadata-boost-gate arms, in
+the voyage space, are the two cells below (same probes, split, embedder and
+cost as an E0 arm; copy the receipt out between arms); the free plumbing
+check is `CAT13_PROBES=60 bun eval/runner/cat13-conceptual.ts --stub-embed
+--adapter gbrain --search-pin search.metadata_boost_gate=lexical`, after
+which `search_pins["search.metadata_boost_gate"] == "lexical"` and
+`search_config_by_adapter.gbrain` echoes it.
+
+```bash
+export VOYAGE_API_KEY=...
+export CAT13_EMBEDDING_MODEL=voyage:voyage-4 CAT13_EMBED_DIMS=1024
+bun eval/runner/cat13-conceptual.ts --reranker off --autocut off --search-pin search.metadata_boost_gate=lexical   # E3: like-for-like + gate
+bun eval/runner/cat13-conceptual.ts --reranker on  --autocut on  --search-pin search.metadata_boost_gate=lexical   # E3: shipped default + gate
+```

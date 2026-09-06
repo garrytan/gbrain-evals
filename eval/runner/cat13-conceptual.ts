@@ -64,6 +64,22 @@
  *     fire, so the cell must not publish under a "floor on" label. The floor
  *     itself comes from eval/runner/cat13-kacf-calibrate.ts (tuning split).
  *
+ * Generic knob pins (Phase E3 and any later knob A/B):
+ *   - `--search-pin <search.key>=<value>` (repeatable) adds an arbitrary
+ *     `search.*` config entry to the SAME pin set (engine.setConfig before
+ *     ingest on the gbrain-backed adapters; echoed in `search_pins` and per
+ *     adapter in `search_config_by_adapter`, plus `pins.extra_search_pins`).
+ *     Validated at parse: the key must start with `search.` and name a knob,
+ *     the value must be non-empty, and keys owned by a dedicated flag
+ *     (search.mode, search.reranker.*, search.autocut,
+ *     search.expansion_variant_budget, search.keyword_arm_confidence_floor)
+ *     are refused so the fail-closed checks behind those flags cannot be
+ *     bypassed. Repeating a key: last wins. Pure pass-through beyond that —
+ *     gbrain ignores unknown `search.*` keys SILENTLY (no kacf-style
+ *     fail-closed proof), so a misspelled key runs the default cell under
+ *     the pinned label; check the linked gbrain's config surface before
+ *     reading a --search-pin arm.
+ *
  * Run:
  *   bun eval/runner/cat13-conceptual.ts                  # live embeds (OPENAI_API_KEY)
  *   bun eval/runner/cat13-conceptual.ts --stub-embed     # hermetic, no keys
@@ -73,6 +89,8 @@
  *     bun eval/runner/cat13-conceptual.ts --reranker off --autocut off
  *   CAT13_EMBEDDING_MODEL=voyage:voyage-4 CAT13_EMBED_DIMS=1024 \
  *     bun eval/runner/cat13-conceptual.ts --reranker off --autocut off --keyword-arm-confidence-floor 0.65
+ *   CAT13_EMBEDDING_MODEL=voyage:voyage-4 CAT13_EMBED_DIMS=1024 \
+ *     bun eval/runner/cat13-conceptual.ts --reranker off --autocut off --search-pin search.metadata_boost_gate=lexical
  */
 
 import { readdirSync, readFileSync, mkdirSync, writeFileSync } from 'fs';
@@ -685,6 +703,12 @@ export interface Cat13Pins {
    * set when given, for the same reason as the budget.
    */
   keywordArmConfidenceFloor?: string;
+  /**
+   * Generic `--search-pin <search.key>=<value>` entries, applied after the
+   * named pins (validated by validateSearchPin; a key owned by a dedicated
+   * flag is refused). Pass-through only: gbrain ignores unknown keys silently.
+   */
+  searchPins?: Record<string, string>;
 }
 
 /** Every gbrain-backed arm runs the `balanced` bundle with the two toggles pinned explicitly. */
@@ -722,10 +746,59 @@ export function parseKeywordArmConfidenceFloor(raw: string, flag = '--keyword-ar
 }
 
 /**
+ * `search.*` keys a dedicated flag owns. `--search-pin` refuses them so the
+ * fail-closed checks behind those flags (the reranker key preflight,
+ * `kacf_missing_meta`, the strict on|off / range parsers) cannot be bypassed
+ * by spelling the same key generically. Value = the flag to use instead.
+ */
+export const RESERVED_SEARCH_PIN_KEYS: Readonly<Record<string, string>> = {
+  'search.mode': `the runner (fixed at ${CAT13_SEARCH_MODE})`,
+  'search.reranker.enabled': '--reranker on|off',
+  'search.reranker.model': '--reranker on',
+  'search.autocut': '--autocut on|off',
+  'search.expansion_variant_budget': '--expansion-variant-budget <b>',
+  'search.keyword_arm_confidence_floor': '--keyword-arm-confidence-floor <f|off>',
+};
+
+/**
+ * Validate one generic pin: key is `search.<knob>` and value is non-empty
+ * (both trimmed), key not owned by a dedicated flag. Returns the trimmed pair.
+ * Nothing beyond that is checked — gbrain ignores unknown `search.*` keys
+ * silently, so the runner cannot prove the key exists; the receipt echoes
+ * exactly what was written and the reader verifies the key against the
+ * linked gbrain.
+ */
+export function validateSearchPin(key: string, value: string, flag = '--search-pin'): [string, string] {
+  const k = key.trim();
+  const v = value.trim();
+  if (!k.startsWith('search.') || k.length <= 'search.'.length) {
+    throw new Error(`${flag} key must start with 'search.' and name a knob, got '${key}'`);
+  }
+  if (v === '') throw new Error(`${flag} ${k} requires a non-empty value`);
+  const owner = RESERVED_SEARCH_PIN_KEYS[k];
+  if (owner !== undefined) {
+    throw new Error(`${flag} refuses '${k}': it is owned by ${owner} (the dedicated flag keeps its fail-closed check)`);
+  }
+  return [k, v];
+}
+
+/**
+ * `--search-pin <search.key>=<value>` → validated `[key, value]`. Splits on
+ * the FIRST '=' so values may themselves contain '='.
+ */
+export function parseSearchPin(raw: string, flag = '--search-pin'): [string, string] {
+  const eq = raw.indexOf('=');
+  if (eq < 0) throw new Error(`${flag} expects <search.key>=<value>, got '${raw}'`);
+  return validateSearchPin(raw.slice(0, eq), raw.slice(eq + 1), flag);
+}
+
+/**
  * The engine.setConfig entries applied to every gbrain-backed adapter before
  * ingest. `search.expansion_variant_budget` is only set when the flag was
  * given: gbrain pins that predate the knob ignore unknown keys silently, so
- * an always-present entry would be an unverifiable echo.
+ * an always-present entry would be an unverifiable echo. Generic
+ * `--search-pin` entries are appended last (re-validated here so a
+ * programmatic caller gets the same refusals as the CLI).
  */
 export function pinnedSearchConfig(pins: Cat13Pins): Record<string, string> {
   const cfg: Record<string, string> = {
@@ -741,6 +814,10 @@ export function pinnedSearchConfig(pins: Cat13Pins): Record<string, string> {
   }
   if (pins.keywordArmConfidenceFloor !== undefined) {
     cfg['search.keyword_arm_confidence_floor'] = parseKeywordArmConfidenceFloor(pins.keywordArmConfidenceFloor);
+  }
+  for (const [key, value] of Object.entries(pins.searchPins ?? {})) {
+    const [k, v] = validateSearchPin(key, value);
+    cfg[k] = v;
   }
   return cfg;
 }
@@ -1061,6 +1138,11 @@ export interface Cat13Options {
   expansionVariantBudget?: string;
   /** Phase E2: search.keyword_arm_confidence_floor — 'off' or a number in (0, 1]; only set when given. */
   keywordArmConfidenceFloor?: string;
+  /**
+   * Generic `--search-pin <search.key>=<value>` entries (validated; a repeated
+   * key → last wins). Pass-through: gbrain ignores unknown keys silently.
+   */
+  searchPins?: Record<string, string>;
   /** Concept split sizes (default 20 / 10 over the 30 concepts) and seed (default PROBE_SEED). */
   tuningConcepts?: number;
   holdoutConcepts?: number;
@@ -1108,6 +1190,11 @@ export function parseCat13Argv(
       case '--autocut': opts.autocut = parseOnOff(value(), '--autocut'); break;
       case '--expansion-variant-budget': opts.expansionVariantBudget = value(); break;
       case '--keyword-arm-confidence-floor': opts.keywordArmConfidenceFloor = parseKeywordArmConfidenceFloor(value()); break;
+      case '--search-pin': {
+        const [k, v] = parseSearchPin(value());
+        opts.searchPins = { ...(opts.searchPins ?? {}), [k]: v };
+        break;
+      }
       case '--tuning-concepts': opts.tuningConcepts = parseNonNegativeInt(value(), '--tuning-concepts'); break;
       case '--holdout-concepts': opts.holdoutConcepts = parseNonNegativeInt(value(), '--holdout-concepts'); break;
       case '--seed': opts.seed = parseNonNegativeInt(value(), '--seed'); break;
@@ -1115,7 +1202,9 @@ export function parseCat13Argv(
         throw new Error(
           `unknown argument '${arg}'. Known: --stub-embed --allow-skip --adapter <name> `
           + `--embedding-model <provider:model> --embedding-dims <N> --reranker on|off --autocut on|off `
-          + `--expansion-variant-budget <b> --keyword-arm-confidence-floor <f|off> --tuning-concepts <N> --holdout-concepts <M> --seed <N>`,
+          + `--expansion-variant-budget <b> --keyword-arm-confidence-floor <f|off> `
+          + `--search-pin <search.key>=<value> (repeatable; generic pass-through — gbrain ignores unknown search.* keys silently) `
+          + `--tuning-concepts <N> --holdout-concepts <M> --seed <N>`,
         );
     }
   }
@@ -1154,8 +1243,13 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
     autocut: opts.autocut ?? 'off',
     ...(opts.expansionVariantBudget !== undefined ? { expansionVariantBudget: opts.expansionVariantBudget } : {}),
     ...(opts.keywordArmConfidenceFloor !== undefined ? { keywordArmConfidenceFloor: opts.keywordArmConfidenceFloor } : {}),
+    ...(opts.searchPins !== undefined ? { searchPins: opts.searchPins } : {}),
   };
   const searchConfig = pinnedSearchConfig(pins);
+  // Generic --search-pin entries as written (trimmed), for the receipt's pins block.
+  const extraPins: Record<string, string> = Object.fromEntries(
+    Object.entries(pins.searchPins ?? {}).map(([k, v]) => validateSearchPin(k, v)),
+  );
   // Phase E2: a numeric floor must be PROVEN to have reached the engine (see the kacf_missing_meta check below).
   const floorPin = searchConfig['search.keyword_arm_confidence_floor'];
   const floorIsNumeric = floorPin !== undefined && floorPin !== 'off';
@@ -1170,6 +1264,7 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
       autocut: pins.autocut,
       expansion_variant_budget: pins.expansionVariantBudget ?? null,
       keyword_arm_confidence_floor: searchConfig['search.keyword_arm_confidence_floor'] ?? null,
+      extra_search_pins: Object.keys(extraPins).length > 0 ? extraPins : null,
     },
     search_pins: searchConfig,
   });
@@ -1372,6 +1467,9 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
   log(`- Concept split: seeded Fisher-Yates over the sorted concept slugs (seed=${split.seed}, separate rng from the probe generator); ${split.tuning.length} tuning / ${split.holdout.length} held-out. A probe is in a subset only when every grade-3 target is.`);
   if (floorPin !== undefined) {
     log(`- Arm-confidence floor (Phase E2): search.keyword_arm_confidence_floor=${floorPin} on the gbrain-backed adapters — keyword + title lists fuse at half weight when the keyword arm's margin_ratio is below the floor (non-relational queries with a voting text vector arm). Per-adapter stamped / down-weighted query counts are in the receipt's observed_by_adapter.`);
+  }
+  if (Object.keys(extraPins).length > 0) {
+    log(`- Generic pins (--search-pin): ${Object.entries(extraPins).map(([k, v]) => `${k}=${v}`).join(', ')} on the gbrain-backed adapters — pass-through engine.setConfig entries. gbrain ignores unknown search.* keys silently, so confirm each key exists in the linked gbrain (${gbrainVersion()}) before reading this arm.`);
   }
   log(`- No gold data passed to adapters; PublicPage/PublicQuery sealed at the boundary.`);
 
