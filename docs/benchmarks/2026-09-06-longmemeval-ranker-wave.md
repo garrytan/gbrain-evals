@@ -143,7 +143,46 @@ vector+grep RRF reference.
 
 ### 5.1 LongMemEval arms
 
-TBD (arms table with recall_all@5 / recall_any@5 / paired vs A1 on the 470 and the 430; parity gate outcome; per-type table; autocut replay table + top-score histogram; cache receipts).
+Strict `recall_all@5` (every gold session among the top-5 distinct sessions), 470 scored questions; the 430-question column excludes the seed-42 dev slice and is the one every decision was made on. "Paired" is per question against A1.
+
+| Arm | recall_all@5 (470) | recall_any@5 (470) | paired vs A1 (470) | recall_all@5 (430 decision set) | paired vs A1 (430) |
+|---|---|---|---|---|---|
+| A1 hybrid, reranker off, autocut off | **439/470 (93.40%)** | 464/470 (98.72%) | +0 / −0 | 403/430 (93.72%) | +0 / −0 |
+| A2 hybrid + reranker (autocut off) | **449/470 (95.53%)** | 469/470 (99.79%) | +18 / −8 | 412/430 (95.81%) | +16 / −7 |
+| A3 hybrid + LLM expansion (legacy: weight 1 per variant) | **255/470 (54.26%)** | 399/470 (84.89%) | +3 / −187 | 231/430 (53.72%) | +2 / −174 |
+| A4 shipped default BEFORE this wave (reranker on, autocut 0.35) | **379/470 (80.64%)** | 467/470 (99.36%) | +16 / −76 | 344/430 (80.00%) | +14 / −73 |
+| A3′ hybrid + expansion at budget 0.25 (reranker off) | **394/470 (83.83%)** | 458/470 (97.45%) | +3 / −48 | 360/430 (83.72%) | +2 / −45 |
+| A3′R tokenmax (expansion at 0.25, reranker on, autocut as tokenmax shipped it) | TBD | TBD | TBD | TBD | TBD |
+| **final release configuration** (reranker on, autocut off, relational pin 3, metadata gate lexical) | TBD | TBD | TBD | TBD | TBD |
+
+Per type (`recall_all@5`, 470):
+
+| Type | n | A1 | A2 | A3 | A4 | A3′ |
+|---|---|---|---|---|---|---|
+| knowledge-update | 72 | 71 | 72 | 44 | 53 | 65 |
+| multi-session | 121 | 112 | 112 | 46 | 89 | 91 |
+| single-session-assistant | 56 | 56 | 56 | 46 | 56 | 56 |
+| single-session-preference | 30 | 29 | 30 | 20 | 30 | 30 |
+| single-session-user | 64 | 63 | 64 | 49 | 64 | 62 |
+| temporal-reasoning | 127 | 108 | 115 | 50 | 87 | 90 |
+
+**Parity gate (A1).** The in-repo harness reproduces the 2026-09-02 sibling receipt (438/470, produced by this repo's runner at gbrain 172df271): 439/470, 469 of 470 rows agree per question, any-hit identical at 464/470, per-type identical except one temporal-reasoning question that flipped to a hit without a shared embedding cache. `gbrain eval longmemeval` is therefore the receipt producer from this wave on. Embedding cache: A2 and every replay arm ran with 0 cache misses (byte-identical vectors); A1 was the cache-building arm; A3 missed once per new Haiku variant string.
+
+**The reranker (A2 vs A1).** +18 / −8, every gain outside multi-session (112 both ways), the largest in temporal-reasoning (108 → 115). Any-hit 99.79%: the reranker promotes sessions already in the pool.
+
+**Autocut (A4 vs A2, rule R2).** The configuration that shipped before this wave — reranker on, then a cut at the largest rerank-score cliff — scores 379/470 against 449/470 with the cut off: +0 / −68 on the 430, the losses entirely in the three types whose questions need more than one session (multi-session −22, temporal −27, knowledge-update −19). Any-hit is unchanged (99.36%): the cut keeps the best session and drops the rest. Replaying every floor from A4's captured post-rerank pool (`longmemeval/phaseC-autocut-floor-replay.md`; the replay reproduced all 500 live decisions first):
+
+| floor | recall_all (500 captured rows) | autocut applied | mean returned rows | mean returned est. tokens |
+|---|---|---|---|---|
+| off | 475 | 0 | 5.00 | 3256 |
+| 0.10 / 0.20 / 0.35 | 399 | 365 | 2.49 | 1633 |
+| 0.50 | 413 | 307 | 2.88 | 1875 |
+| 0.65 | 444 | 187 | 3.67 | 2382 |
+| 0.80 | 466 | 91 | 4.33 | 2817 |
+
+The same monotone shape holds on both seeded halves and no floor is within two questions of "off" on either (0.80 still loses 9, all knowledge-update). The pre-registered chain therefore ends at **autocut off in `balanced` and `tokenmax`** (the module default stays for operators who re-enable it; a session-aware cut that never trims below k distinct sessions is the filed follow-up). The token saving autocut delivered was real — half the returned window — and it was paid for with the second gold session.
+
+**Expansion (A3, A3′, rule for the budget knob).** Legacy expansion (one full RRF vote per Haiku variant) reproduces the published regression: 255/470, +3 / −187. Budget-normalized fusion is a real mechanism — the dev-slice sweep on frozen variants climbs monotonically as the variants' share shrinks (24 → 26 → 30 → 34 of 40 at budgets 2.0 → 1.0 → 0.5 → 0.25, plain hybrid 36), and A3′ at the picked budget 0.25 recovers 139 questions over A3. It still fails its pre-registered rule: 360 vs 403 on the 430 (−43; multi-session −20, temporal −17). The bundles therefore keep the legacy weighting (`expansion_variant_budget: null`), the knob ships for operators who keep expansion on (`gbrain config set search.expansion_variant_budget 0.25` recovers most of the loss), and the honest reading stands: at k=5 on this corpus, LLM multi-query expansion is harmful, and the fix the receipts point at is conditional expansion (expand only when the original query's evidence is weak), filed as the next pre-registered mechanism.
 
 ### 5.2 NamedThingBench reranker A/B (rule R1) and the relational pin
 
