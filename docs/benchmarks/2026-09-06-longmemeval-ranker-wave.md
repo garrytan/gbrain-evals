@@ -2,7 +2,7 @@
 
 **Status:** receipts complete; the gbrain commit pin below is filled when the gbrain PR opens.
 **Date:** 2026-09-06
-**gbrain commit:** TBD (PR head SHA; the sibling pin moves to the merge SHA after landing)
+**gbrain commit:** `42c47b46` (the v0.48.4.0 PR head, `github:garrytan/gbrain#42c47b4664b7029a6a842e3ec2dbef3cbd4ae2f2`; the pin moves to the merge SHA after landing)
 **Dataset:** `xiaowu0162/longmemeval-cleaned`, `longmemeval_s_cleaned.json`, sha256 `d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442`, 500 questions, 30 abstention (`_abs`) excluded from recall denominators → 470 scored.
 **Harness:** `gbrain eval longmemeval` (the in-repo command; this wave made it the receipt producer), one in-memory PGLite per run, TRUNCATE between questions, content-addressed embedding cache (`openai:text-embedding-3-large` @ 1536, every arm sees byte-identical vectors), k = 5 chunk rows, strict `recall_all@5` over the distinct sessions among those rows.
 

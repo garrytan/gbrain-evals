@@ -33,7 +33,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",
     "ai": "^6.0.168",
-    "gbrain": "github:garrytan/gbrain#5cfb84f1d3a809c70064c292c23db3d538d5c551"
+    "gbrain": "github:garrytan/gbrain#42c47b4664b7029a6a842e3ec2dbef3cbd4ae2f2"
   },
   "devDependencies": {
     "@types/bun": "1.3.10",

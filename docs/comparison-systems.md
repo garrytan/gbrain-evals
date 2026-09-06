@@ -9,7 +9,7 @@ Format: the numbers tables are neutral and cited. The **"vs gbrain"** analysis
 under each table is explicitly our read — what gbrain's pinned master does
 architecturally, and why that wins or loses against each system, with the
 mechanism named. Where gbrain loses, the loss and the reason stay in. The
-current pin is v0.48.2.0 (`5cfb84f1`, 2026-09-02); each "vs gbrain" heading
+current pin is v0.48.4.0 (`42c47b46`, 2026-09-06, PR head); each "vs gbrain" heading
 states the gbrain version its analysis was written against (v0.47.8.0,
 `2a56b512`, where that benchmark has no run at the current pin).
 
