@@ -55,6 +55,17 @@ and per-receipt pin echoes (Phase E0 notes below).
 - **Cat 27 (graph signals) pins the gate to `always`** so the A/B keeps
   exercising the graph-signal stage on every probe rather than only when a
   keyword/title row fused.
+- **Hermetic Cat 13 runs can no longer embed against a live provider.** The
+  gateway and its test embed transport are process-global and shared by every
+  file in one `bun test` process (bun runs files in a hash order, not the
+  order given). `ensureGateway` memoized its install keyed on
+  (transport, model, dims); when another runner's cleanup reset the transport
+  between two Cat 13 files with the same key, the second run skipped the
+  re-install and its brain build embedded live — invisible with a real key in
+  the environment, a 401 in CI. The memo is gone (both calls are idempotent),
+  the inline adapters refuse to init or query a hermetic run unless the stub
+  transport is active (`expectStubTransport`), and the three Cat 13 runners
+  restore the transport in their cleanup like every other runner.
 - **Hermetic e2e tests no longer exhaust the kernel's memory-map limit.** One
   PGLite brain keeps ~1 GB of WebAssembly memory live, which inflates JSC's
   garbage-collection trigger; the Cat 13 e2e runs then piled up 1-2 GB of

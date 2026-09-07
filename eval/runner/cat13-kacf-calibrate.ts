@@ -58,6 +58,7 @@ import { hybridSearch } from 'gbrain/search/hybrid';
 import type { HybridSearchMeta, SearchResult } from 'gbrain/types';
 import type { PGLiteEngine } from 'gbrain/pglite-engine';
 import { GbrainInlineAdapter, gcNow } from './adapters/gbrain-inline.ts';
+import { __setEmbedTransportForTests } from 'gbrain/ai/gateway';
 import {
   TOP_K, PROBE_SEED, DEFAULT_TUNING_CONCEPTS, DEFAULT_HOLDOUT_CONCEPTS,
   loadCorpus, buildProbes, splitConcepts, probeSubset,
@@ -546,6 +547,7 @@ export async function runCalibration(opts: CalibrateOptions = {}): Promise<Calib
     topK: TOP_K,
     searchConfig: searchPins,
     embeddingModel: embedder.model,
+    expectStubTransport: stubEmbed,
     embeddingDimensions: embedder.dims,
   });
   const t0 = Date.now();
@@ -566,6 +568,9 @@ export async function runCalibration(opts: CalibrateOptions = {}): Promise<Calib
     }
   } finally {
     await adapter.teardown(state);
+    // Leave the process-global gateway the way the other runners do: a stub
+    // installed here must not leak into a later file's live run.
+    if (stubEmbed) __setEmbedTransportForTests(null);
   }
 
   const summary = calibrate(records);

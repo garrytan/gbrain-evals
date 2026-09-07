@@ -26,7 +26,7 @@ import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { runExtract } from 'gbrain/extract';
 import { hybridSearch } from 'gbrain/search/hybrid';
 import { importFromContent } from 'gbrain/import-file';
-import { configureGateway } from 'gbrain/ai/gateway';
+import { configureGateway, diagnoseEmbedding } from 'gbrain/ai/gateway';
 import type { HybridSearchMeta } from 'gbrain/types';
 import type { Adapter, AdapterConfig, BrainState, Page, PublicQuery, RankedDoc } from '../types.ts';
 
@@ -40,6 +40,27 @@ export interface GbrainInlineOptions {
   /** Embedding model for the gateway. Defaults to the pre-v0.40 baseline behavior. */
   embeddingModel?: string;
   embeddingDimensions?: number;
+  /**
+   * Hermetic runs set this: init() and query() then refuse to proceed unless
+   * gbrain's test embed transport is the active one. The gateway is
+   * process-global and shared by every test file in one `bun test` process,
+   * and other runners reset the transport when they finish — without this
+   * guard a "stub" run whose stub was silently dropped embeds against the live
+   * provider (spending with a real key, a 401 with the dummy key).
+   */
+  expectStubTransport?: boolean;
+}
+
+/** Throw unless gbrain's test embed transport is installed (see GbrainInlineOptions.expectStubTransport). */
+export function assertStubEmbedTransport(where: string): void {
+  const d = diagnoseEmbedding();
+  if (!d.ok || d.provider !== '<test-transport>') {
+    throw new Error(
+      `[gbrain-inline] ${where}: hermetic run but the stub embed transport is not active ` +
+      `(diagnoseEmbedding → ${d.ok ? `provider=${d.provider}` : `reason=${(d as { reason: string }).reason}`}). ` +
+      `Re-run ensureGateway(stubEmbed=true, …) right before building the brain; another runner may have reset the transport.`,
+    );
+  }
 }
 
 /** Per-run observation counters, read back via observedStats() for receipts. */
@@ -103,6 +124,7 @@ export class GbrainInlineAdapter implements Adapter {
       embedding_dimensions: this.opts.embeddingDimensions ?? 1536,
       env: process.env as Record<string, string | undefined>,
     });
+    if (this.opts.expectStubTransport) assertStubEmbedTransport('init');
 
     const engine = new PGLiteEngine();
     await engine.connect({});
@@ -157,6 +179,7 @@ export class GbrainInlineAdapter implements Adapter {
 
   async query(q: PublicQuery, state: BrainState): Promise<RankedDoc[]> {
     const { engine, observed } = state as InlineState;
+    if (this.opts.expectStubTransport && observed.queries === 0) assertStubEmbedTransport('query');
     let meta: HybridSearchMeta | undefined;
     const chunkResults = await hybridSearch(engine, q.text, { limit: this.opts.topK * 6, onMeta: (m) => { meta = m; } });
     observed.queries += 1;

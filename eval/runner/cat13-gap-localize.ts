@@ -104,6 +104,7 @@ import { enforceTokenBudget } from '../../node_modules/gbrain/src/core/search/to
 import { applyExactLookupTier } from '../../node_modules/gbrain/src/core/search/exact-lookup.ts';
 import { loadSearchModeConfig, resolveSearchMode } from '../../node_modules/gbrain/src/core/search/mode.ts';
 import { GbrainInlineAdapter, gcNow } from './adapters/gbrain-inline.ts';
+import { __setEmbedTransportForTests } from 'gbrain/ai/gateway';
 import { VectorOnlyAdapter } from './adapters/vector.ts';
 import {
   TOP_K, PROBE_SEED, DEFAULT_TUNING_CONCEPTS, DEFAULT_HOLDOUT_CONCEPTS, CAT13_SEARCH_MODE,
@@ -1508,6 +1509,7 @@ export async function runLocalize(opts: LocalizeOptions = {}): Promise<LocalizeR
     topK: TOP_K,
     searchConfig: searchPins,
     embeddingModel: embedder.model,
+    expectStubTransport: stubEmbed,
     embeddingDimensions: embedder.dims,
   });
   const publicPages = pages.map(sanitizePage);
@@ -1545,6 +1547,9 @@ export async function runLocalize(opts: LocalizeOptions = {}): Promise<LocalizeR
     }
   } finally {
     await adapter.teardown(state);
+    // Leave the process-global gateway the way the other runners do: a stub
+    // installed here must not leak into a later file's live run.
+    if (stubEmbed) __setEmbedTransportForTests(null);
   }
 
   const e0 = readE0Receipt(opts.e0Receipt);

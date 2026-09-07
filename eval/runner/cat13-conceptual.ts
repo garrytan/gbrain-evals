@@ -663,15 +663,18 @@ function makeHashEmbedTransport(dims: number) {
   });
 }
 
-let gatewayKey: string | null = null;
 /**
- * Configure gbrain's process-global gateway for this run's embedder. Keyed on
- * (transport, model, dims) so a second call with a different embedder in the
- * same process (tests) reconfigures instead of being skipped.
+ * Configure gbrain's process-global gateway for this run's embedder and
+ * (re)install the stub transport when asked. Deliberately NOT memoized: the
+ * gateway and its test transport are process-global, and other runners in the
+ * same `bun test` process reset the transport (`__setEmbedTransportForTests(null)`)
+ * when they finish. An earlier memo skipped the re-install whenever the
+ * (transport, model, dims) key matched a previous call, so a "hermetic" run that
+ * followed such a reset embedded against the live provider — invisible with a
+ * real key in the environment, a 401 in CI. Both calls below are cheap and
+ * idempotent, so every run re-asserts its own transport.
  */
 export function ensureGateway(stubEmbed: boolean, embedder: EmbedderConfig = resolveEmbedder()): void {
-  const want = `${stubEmbed ? 'stub' : 'live'}|${embedder.model}|${embedder.dims}`;
-  if (gatewayKey === want) return;
   if (stubEmbed) {
     const keyEnv = providerKeyEnv(embedder.model);
     if (!process.env[keyEnv]) process.env[keyEnv] = 'dummy-embed-transport-stubbed';
@@ -686,7 +689,6 @@ export function ensureGateway(stubEmbed: boolean, embedder: EmbedderConfig = res
       ? (makeHashEmbedTransport(embedder.dims) as unknown as Parameters<typeof __setEmbedTransportForTests>[0])
       : null,
   );
-  gatewayKey = want;
 }
 
 // ─── Search pins (Phase E0: no gbrain-backed cell runs an unpinned default) ──
@@ -1079,7 +1081,7 @@ export interface AdapterPlan {
  * default mid-run — the exact confound behind the unreproducible voyage-space
  * receipt). Both gbrain-backed arms get the same search pins.
  */
-export function buildAdapters(run: { embedder: EmbedderConfig; searchConfig: Record<string, string> }): AdapterPlan[] {
+export function buildAdapters(run: { embedder: EmbedderConfig; searchConfig: Record<string, string>; stubEmbed?: boolean }): AdapterPlan[] {
   const shootout: EvalAdapterConfig = {
     embedder: run.embedder.model,
     dim: run.embedder.dims,
@@ -1092,6 +1094,7 @@ export function buildAdapters(run: { embedder: EmbedderConfig; searchConfig: Rec
         searchConfig: run.searchConfig,
         embeddingModel: run.embedder.model,
         embeddingDimensions: run.embedder.dims,
+        expectStubTransport: run.stubEmbed === true,
       }),
       initConfig: {},
     },
@@ -1361,7 +1364,7 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
   }
   log('');
 
-  const allPlans = buildAdapters({ embedder, searchConfig });
+  const allPlans = buildAdapters({ embedder, searchConfig, stubEmbed });
   const plans = opts.only ? allPlans.filter(p => p.adapter.name === opts.only) : allPlans;
   if (plans.length === 0) {
     throw new Error(`--adapter ${opts.only} matches none of: ${allPlans.map(p => p.adapter.name).join(', ')}`);
@@ -1521,6 +1524,10 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
   const subsetRow = (s: SubsetScore | undefined) => s
     ? { ndcg5: s.ndcg5, p5_graded: s.p5_graded, p1_strict: s.p1_strict, count: s.count }
     : null;
+
+  // Leave the process-global gateway the way the other runners do: a stub
+  // installed by ensureGateway must not leak into a later file's live run.
+  if (stubEmbed) __setEmbedTransportForTests(null);
 
   const resolvedConfig: Record<string, unknown> = {
     top_k: TOP_K,
