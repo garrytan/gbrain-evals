@@ -1,8 +1,8 @@
 # BrainBench: LongMemEval ranker wave (gbrain v0.48.4.0)
 
-**Status:** receipts complete; the gbrain commit pin below is the open PR's head and moves to the merge SHA after landing.
+**Status:** receipts complete; the gbrain PR (#4946) has landed and the pin below is its merge commit on master.
 **Date:** 2026-09-06
-**gbrain commit:** `fd7e7fd9` (the v0.48.4.0 PR head, `github:garrytan/gbrain#fd7e7fd9238b2f7f2096f741e635c830b173a602`; the pin moves to the merge SHA after landing)
+**gbrain commit:** `2efaaf8f` (the v0.48.4.0 merge commit on master, `github:garrytan/gbrain#2efaaf8f8a817b5b82e023383618fdcdb1cc5f7d`; receipts were produced on the PR branch whose head `fd7e7fd9` squash-merged into it)
 **Dataset:** `xiaowu0162/longmemeval-cleaned`, `longmemeval_s_cleaned.json`, sha256 `d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442`, 500 questions, 30 abstention (`_abs`) excluded from recall denominators → 470 scored.
 **Harness:** `gbrain eval longmemeval` (the in-repo command; this wave made it the receipt producer), one in-memory PGLite per run, TRUNCATE between questions, content-addressed embedding cache (`openai:text-embedding-3-large` @ 1536, every arm sees byte-identical vectors), k = 5 chunk rows, strict `recall_all@5` over the distinct sessions among those rows.
 

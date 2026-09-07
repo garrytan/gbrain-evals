@@ -19,8 +19,8 @@ held-out conceptual recall 53.0 → 57.8 nDCG@5 via the metadata boost gate;
 NamedThingBench relational hit@1 3/39 → 21/39 via the relational pin. Two
 mechanisms that failed their pre-registered rules (expansion budget,
 keyword-arm confidence floor) are published as losses. `docs/comparison-systems.md`
-carries the new gbrain rows; the gbrain pin moves to the wave's PR head SHA
-(then to the merge SHA after it lands). The Cat 13 runner gained
+carries the new gbrain rows; the gbrain pin is the wave's merge commit on
+master (`2efaaf8f`). The Cat 13 runner gained
 `--reranker`, `--autocut`, `--keyword-arm-confidence-floor` and generic
 `--search-pin KEY=VALUE` pins, the E2 calibration and E1 localization scripts,
 and per-receipt pin echoes (Phase E0 notes below).
