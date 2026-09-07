@@ -33,6 +33,42 @@ and per-receipt pin echoes (Phase E0 notes below).
   receipts, NamedThingBench R1 receipts, `ranker-wave-arms.json` and the two SVG
   charts, `harness-to-runner-output.py` (in-repo harness ndjson → `RunnerOutput`).
 
+### Changed (installed pin is now the wave itself)
+
+- **`bun.lock` follows the `package.json` pin.** The earlier re-pin moved
+  `package.json` alone, so `bun install --frozen-lockfile` failed and every
+  local run still executed gbrain 0.48.2.0. Both now name the v0.48.4.0 PR head
+  and `node_modules/gbrain/src` is byte-identical to that commit.
+- **Cat 13 receipts echo the knobs the gbrain arm actually ran under.**
+  `resolved_config.resolved_bundle` resolves the installed pin's `balanced`
+  bundle with the cell's explicit pins layered on top (metadata boost gate,
+  autocut, reranker, relational pin, expansion budget, keyword-arm floor,
+  knobs-hash version), so two cells that differ only by a bundle default are
+  distinguishable after the fact.
+- **The E1 gap-localization runner pins `search.metadata_boost_gate=always`**
+  on its live call. It re-simulates the UNGATED post-fusion boost pipeline stage
+  by stage (the gate is the mechanism it motivated), and with `lexical` now the
+  shipped default the sim-vs-live parity check failed until the live side ran
+  ungated too. Each probe record also stamps hybrid's gate decision
+  (`meta.metadata_boost_gate`, reason `gate_always`) so the receipt is
+  self-verifying.
+- **Cat 27 (graph signals) pins the gate to `always`** so the A/B keeps
+  exercising the graph-signal stage on every probe rather than only when a
+  keyword/title row fused.
+- **Hermetic e2e tests no longer exhaust the kernel's memory-map limit.** One
+  PGLite brain keeps ~1 GB of WebAssembly memory live, which inflates JSC's
+  garbage-collection trigger; the Cat 13 e2e runs then piled up 1-2 GB of
+  garbage and the eventual one-shot sweep fragmented the address space into
+  50k+ mappings (default `vm.max_map_count` is 65,530), so a single
+  `bun test test/eval/` process could spin or die. The shared inline gbrain
+  adapter now paces the collector (every 40 imported pages, every 25 queries,
+  and after teardown once PGLite has finalized its close); the two
+  direct-engine probe loops do the same. Full-suite peak: ~55k → ~16k
+  mappings; assertions unchanged.
+- **README recipe:** the ungated E0-V1 like-for-like cell now needs
+  `--search-pin search.metadata_boost_gate=always`; a bare `--reranker off
+  --autocut off` cell runs the gated pipeline (the E3-V1 row).
+
 Phase E0 of the gbrain ranker wave: the Cat 13 conceptual-recall runner can
 now produce a receipt that names its embedding space and its search pins, so
 the hybrid-vs-vector comparison is like-for-like and reproducible from `main`.

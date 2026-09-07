@@ -105,15 +105,19 @@ arms, the same key for `voyage:rerank-2.5`.
 
 ```bash
 export CAT13_EMBEDDING_MODEL=voyage:voyage-4 CAT13_EMBED_DIMS=1024
-bun eval/runner/cat13-conceptual.ts --reranker off --autocut off   # E0-V1: like-for-like vs bare vector
+bun eval/runner/cat13-conceptual.ts --reranker off --autocut off --search-pin search.metadata_boost_gate=always   # E0-V1: like-for-like vs bare vector (ungated boosts)
 bun eval/runner/cat13-conceptual.ts --reranker off --autocut on    # E0-V2
 bun eval/runner/cat13-conceptual.ts --reranker on  --autocut off   # E0-V3
 bun eval/runner/cat13-conceptual.ts --reranker on  --autocut on    # E0-V4: the shipped balanced default
 ```
 
-E0-V1 (off/off) is the like-for-like row: the gbrain arm and the `vector`
-arm see the same embeddings and the gbrain side runs neither the reranker nor
-autocut, so the only difference is fusion. This is the row the earlier 35.6
+E0-V1 (off/off, boost gate `always`) is the like-for-like row: the gbrain arm
+and the `vector` arm see the same embeddings and the gbrain side runs neither
+the reranker nor autocut, so the only difference is fusion. The gate pin is
+required since gbrain v0.48.4.0: `search.metadata_boost_gate` defaults to
+`lexical` in every bundle, so a bare off/off cell now runs the GATED pipeline
+(it is the E3-V1 cell below, not E0-V1). The receipt's `resolved_config`
+echoes the gate the cell actually ran under (`resolved_bundle`). This is the row the earlier 35.6
 vs 49.5 claim maps to, now with pins in the receipt. If E0-V1 does not
 reproduce a hybrid-below-vector gap on the held-out concepts, Phase E1/E2
 have nothing to fix and stop there.
@@ -342,4 +346,7 @@ export VOYAGE_API_KEY=...
 export CAT13_EMBEDDING_MODEL=voyage:voyage-4 CAT13_EMBED_DIMS=1024
 bun eval/runner/cat13-conceptual.ts --reranker off --autocut off --search-pin search.metadata_boost_gate=lexical   # E3: like-for-like + gate
 bun eval/runner/cat13-conceptual.ts --reranker on  --autocut on  --search-pin search.metadata_boost_gate=lexical   # E3: shipped default + gate
+# Since gbrain v0.48.4.0 `lexical` IS the bundle default, so these pins are
+# explicit no-ops kept for receipt clarity; the ungated E0 cells now need
+# `--search-pin search.metadata_boost_gate=always` (see Voyage space above).
 ```

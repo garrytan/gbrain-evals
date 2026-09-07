@@ -1,8 +1,8 @@
 # BrainBench: LongMemEval ranker wave (gbrain v0.48.4.0)
 
-**Status:** receipts complete; the gbrain commit pin below is filled when the gbrain PR opens.
+**Status:** receipts complete; the gbrain commit pin below is the open PR's head and moves to the merge SHA after landing.
 **Date:** 2026-09-06
-**gbrain commit:** `42c47b46` (the v0.48.4.0 PR head, `github:garrytan/gbrain#42c47b4664b7029a6a842e3ec2dbef3cbd4ae2f2`; the pin moves to the merge SHA after landing)
+**gbrain commit:** `fd7e7fd9` (the v0.48.4.0 PR head, `github:garrytan/gbrain#fd7e7fd9238b2f7f2096f741e635c830b173a602`; the pin moves to the merge SHA after landing)
 **Dataset:** `xiaowu0162/longmemeval-cleaned`, `longmemeval_s_cleaned.json`, sha256 `d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442`, 500 questions, 30 abstention (`_abs`) excluded from recall denominators → 470 scored.
 **Harness:** `gbrain eval longmemeval` (the in-repo command; this wave made it the receipt producer), one in-memory PGLite per run, TRUNCATE between questions, content-addressed embedding cache (`openai:text-embedding-3-large` @ 1536, every arm sees byte-identical vectors), k = 5 chunk rows, strict `recall_all@5` over the distinct sessions among those rows.
 
@@ -239,7 +239,10 @@ Pre-registered rules and outcomes:
   post-fusion metadata boosts — hub pages carried 1.03–1.12x backlink /
   graph-adjacency / recency boosts that the gold concept page never
   carried, whenever the vector arm was the only voter (73 of 105 gaps,
-  0 collateral when gated).
+  0 collateral when gated). The E1 runner pins
+  `search.metadata_boost_gate=always` on its live call so it keeps measuring
+  the ungated pipeline it re-simulates now that `lexical` is the shipped
+  default.
 - **E3 (metadata boost gate):** held-out ≥ 57.0 (E0-V1 + 4), written before
   the run. PASSED at 57.8; tuning 57.3 matched the projection exactly;
   NamedThingBench (50/50), BrainBench, the retrieval canary and the

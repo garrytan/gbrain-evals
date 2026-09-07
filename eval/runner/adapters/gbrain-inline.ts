@@ -58,6 +58,28 @@ export interface InlineObservedStats {
   keyword_arm_confidence_downweighted: number;
 }
 
+/**
+ * Force a full JSC collection now (no-op off Bun). One in-memory PGLite brain
+ * pins ~1 GB of WebAssembly memory that JSC counts as "extra memory", which
+ * inflates its heap-growth trigger to 2-3 GB: a 240-page import or a few
+ * hundred hybridSearch calls then pile up 1-1.5 GB of pure garbage between
+ * collections, and the eventual one-shot sweep decommits tens of thousands
+ * of 16 KB heap blocks (each its own VMA). Three cat13 e2e files in one
+ * `bun test` process crossed the kernel's vm.max_map_count (65,530) and the
+ * process spun in the allocator. Pacing the GC at the allocation sites keeps
+ * the live floor (~1 GB) as the steady state instead of the peak. Exported so
+ * runners that drive the engine directly (bypassing query()) can pace their
+ * probe loops the same way.
+ */
+export function gcNow(): void {
+  if (typeof Bun !== 'undefined' && typeof Bun.gc === 'function') Bun.gc(true);
+}
+
+/** Import-loop GC cadence: every N pages (~0.5 MB JSC-visible + several MB native garbage per page). */
+const GC_EVERY_PAGES = 40;
+/** Query-loop GC cadence: every N hybridSearch calls (~5 MB garbage per call at innerLimit 60). */
+const GC_EVERY_QUERIES = 25;
+
 interface InlineState {
   engine: PGLiteEngine;
   resolvedConfig: Record<string, string>;
@@ -97,6 +119,7 @@ export class GbrainInlineAdapter implements Adapter {
     console.log = () => {};
     console.error = () => {};
     try {
+      let imported = 0;
       for (const p of rawPages) {
         const fm: string[] = [
           `---`,
@@ -112,10 +135,14 @@ export class GbrainInlineAdapter implements Adapter {
           fm.push('', '## Timeline', '', p.timeline);
         }
         await importFromContent(engine, p.slug, fm.join('\n'));
+        imported += 1;
+        if (imported % GC_EVERY_PAGES === 0) gcNow();
       }
+      gcNow();
       if (this.opts.extract !== false) {
         await runExtract(engine, ['links', '--source', 'db']);
         await runExtract(engine, ['timeline', '--source', 'db']);
+        gcNow();
       }
     } finally {
       console.log = origLog;
@@ -133,6 +160,7 @@ export class GbrainInlineAdapter implements Adapter {
     let meta: HybridSearchMeta | undefined;
     const chunkResults = await hybridSearch(engine, q.text, { limit: this.opts.topK * 6, onMeta: (m) => { meta = m; } });
     observed.queries += 1;
+    if (observed.queries % GC_EVERY_QUERIES === 0) gcNow();
     if (chunkResults.some(r => Number.isFinite(r.rerank_score))) observed.rerank_scored_queries += 1;
     const kacf = meta?.keyword_arm_confidence;
     if (kacf) {
@@ -170,5 +198,11 @@ export class GbrainInlineAdapter implements Adapter {
 
   async teardown(state: BrainState): Promise<void> {
     await (state as InlineState).engine.disconnect();
+    // PGlite finalizes its close one microtask after disconnect() resolves;
+    // only then is the ~1 GB WebAssembly.Memory unreachable. Yield one
+    // event-loop turn, then collect, so the memory is returned BEFORE the
+    // next test/file builds its brain instead of two brains overlapping.
+    await new Promise<void>(resolve => setTimeout(resolve, 0));
+    gcNow();
   }
 }

@@ -99,6 +99,7 @@ import { join, dirname } from 'path';
 import {
   configureGateway, __setEmbedTransportForTests, getEmbeddingModel, getEmbeddingDimensions,
 } from 'gbrain/ai/gateway';
+import { loadOverridesFromConfig, resolveSearchMode, KNOBS_HASH_VERSION } from '../../node_modules/gbrain/src/core/search/mode.ts';
 import { RipgrepBm25Adapter } from './adapters/grep-only.ts';
 import { VectorOnlyAdapter } from './adapters/vector.ts';
 import { HybridNoGraphAdapter } from './adapters/vector-grep-rrf-fusion.ts';
@@ -1257,8 +1258,27 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
   const holdoutN = opts.holdoutConcepts ?? DEFAULT_HOLDOUT_CONCEPTS;
   const splitSeed = opts.seed ?? PROBE_SEED;
 
+  // The knobs the gbrain arm ACTUALLY runs under: the mode bundle of the
+  // installed gbrain pin with this cell's explicit search pins layered on top.
+  // Distinguishes cells that differ only by a bundle default (e.g. the E0-V1
+  // ungated row vs the E3-V1 gated row once `lexical` became the default).
+  const resolvedBundle = (() => {
+    const m = resolveSearchMode({ mode: CAT13_SEARCH_MODE, overrides: loadOverridesFromConfig(searchConfig), perCall: {} });
+    return {
+      mode: m.resolved_mode,
+      metadata_boost_gate: m.metadata_boost_gate,
+      autocut: m.autocut,
+      reranker_enabled: m.reranker_enabled,
+      relational_rerank_pin: m.relational_rerank_pin,
+      expansion: m.expansion,
+      expansion_variant_budget: m.expansion_variant_budget,
+      keyword_arm_confidence_floor: m.keyword_arm_confidence_floor,
+      knobs_hash_version: KNOBS_HASH_VERSION,
+    };
+  })();
   const cellConfig = (): Record<string, unknown> => ({
     embedder: { model: embedder.model, dims: embedder.dims },
+    resolved_bundle: resolvedBundle,
     pins: {
       reranker: pins.reranker,
       autocut: pins.autocut,

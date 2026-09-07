@@ -57,7 +57,7 @@ import { join } from 'path';
 import { hybridSearch } from 'gbrain/search/hybrid';
 import type { HybridSearchMeta, SearchResult } from 'gbrain/types';
 import type { PGLiteEngine } from 'gbrain/pglite-engine';
-import { GbrainInlineAdapter } from './adapters/gbrain-inline.ts';
+import { GbrainInlineAdapter, gcNow } from './adapters/gbrain-inline.ts';
 import {
   TOP_K, PROBE_SEED, DEFAULT_TUNING_CONCEPTS, DEFAULT_HOLDOUT_CONCEPTS,
   loadCorpus, buildProbes, splitConcepts, probeSubset,
@@ -505,6 +505,10 @@ export async function runCalibration(opts: CalibrateOptions = {}): Promise<Calib
   // The E0-V1 like-for-like cell: balanced, reranker off, autocut off. The
   // floor knob is NOT pinned here (bundle default null = off) and is forced
   // off per call as well, so the stamped margins are the knob-off truth.
+  // `search.metadata_boost_gate` is deliberately left at the installed
+  // default: every stamped quantity here (strict keyword-arm rows and their
+  // scores, hybrid's keyword_arm_confidence meta) is computed BEFORE the
+  // post-fusion boost stage the gate controls, so the gate cannot move them.
   const searchPins = pinnedSearchConfig({ reranker: 'off', autocut: 'off' });
   if ('search.keyword_arm_confidence_floor' in searchPins) {
     throw new Error('calibration must run with the floor OFF; pinnedSearchConfig unexpectedly set search.keyword_arm_confidence_floor');
@@ -555,6 +559,9 @@ export async function runCalibration(opts: CalibrateOptions = {}): Promise<Calib
     for (const probe of measured) {
       records.push(await measureProbe(engine, probe));
       i += 1;
+      // Direct-engine loop (bypasses adapter.query): pace the GC the same way
+      // the adapter does, or the full 179-probe run piles up GBs of garbage.
+      if (i % 25 === 0) gcNow();
       if (i % 50 === 0) log(`  ${i}/${measured.length} probes`);
     }
   } finally {

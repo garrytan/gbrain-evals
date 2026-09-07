@@ -26,6 +26,7 @@ import { importFromContent } from 'gbrain/import-file';
 import { configureGateway } from 'gbrain/ai/gateway';
 import type { HybridSearchMeta } from 'gbrain/types';
 import { assertEvalAdapterConfig, type EvalAdapterConfig } from '../eval-adapter-config.ts';
+import { gcNow } from './gbrain-inline.ts';
 
 // Known-safe config: auto_link OFF at the engine layer via direct setConfig
 // call. Does NOT run `extract --source db`, so typed links stay empty even
@@ -153,9 +154,13 @@ export class HybridNoGraphAdapter implements Adapter {
     console.log = () => {};
     console.error = () => {};
     try {
+      let imported = 0;
       for (const p of rawPages) {
         const content = this.buildContentMarkdown(p);
         await importFromContent(engine, p.slug, content);
+        // Same GC pacing as GbrainInlineAdapter: one PGLite brain inflates JSC's
+        // collection trigger, so unpaced import garbage fragments the address space.
+        if (++imported % 40 === 0) gcNow();
       }
     } finally {
       console.log = origLog;
@@ -177,6 +182,10 @@ export class HybridNoGraphAdapter implements Adapter {
   async teardown(state: BrainState): Promise<void> {
     const s = state as HybridNoGraphState;
     await s.engine.disconnect();
+    // PGlite finalizes close one microtask later; yield, then return the
+    // ~1 GB WebAssembly memory before the next brain is built.
+    await new Promise<void>(r => setTimeout(r, 0));
+    gcNow();
   }
 
   /** The setConfig entries init() actually applied — put these in the receipt. */

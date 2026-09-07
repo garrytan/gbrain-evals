@@ -3,7 +3,7 @@
  * below where gbrain's own vector arm ranked it?
  *
  * The finding this answers (ranker wave, Phase E1): on the voyage-4 Cat 13
- * corpus, gbrain hybrid (balanced, reranker off, autocut off) trails bare
+ * corpus, gbrain hybrid (balanced, reranker off, autocut off, boost gate `always`) trails bare
  * vector by ~7.5 nDCG@5 on the held-out concepts (E0-V1: 53.0 vs 60.5), yet
  * the E2 calibration shows 83% of non-gold-top tuning probes have an EMPTY
  * strict keyword arm. So for most probes hybrid fuses the vector list plus
@@ -12,7 +12,8 @@
  * ranking. This script localizes the damage per probe, on the TUNING split
  * only (held-out concepts are never queried).
  *
- * What one run does (one PGLite brain, the E0-V1 pins):
+ * What one run does (one PGLite brain, the E0-V1 pins plus
+ * `search.metadata_boost_gate=always`, see step 2d):
  *   1. Same corpus, probe generator, seed and concept split as the runner.
  *      Tuning-subset probes only.
  *   2. Per probe, ONE query embedding (query-side, `embedQuery`) is shared by
@@ -35,7 +36,9 @@
  *            (rrfFusionWeighted → cosineReScore → runPostFusionStages →
  *            exact-match boost → dedupResults → alias hop → exact-lookup tier
  *            → slice → enforceTokenBudget), validated against (b) on every
- *            probe, then re-run with ONE stage neutralized at a time (title
+ *            probe (the live call pins `search.metadata_boost_gate=always`
+ *            so both sides run the ungated pipeline this runner models),
+ *            then re-run with ONE stage neutralized at a time (title
  *            arm, keyword arm, both, cosine blend, post-fusion boosts,
  *            compiled-truth 2x, dedup). A neutralization that restores the
  *            gold rank to <= its vector-arm rank "fixes" the probe.
@@ -100,7 +103,7 @@ import { classifyQueryWithBrainPatterns } from '../../node_modules/gbrain/src/co
 import { enforceTokenBudget } from '../../node_modules/gbrain/src/core/search/token-budget.ts';
 import { applyExactLookupTier } from '../../node_modules/gbrain/src/core/search/exact-lookup.ts';
 import { loadSearchModeConfig, resolveSearchMode } from '../../node_modules/gbrain/src/core/search/mode.ts';
-import { GbrainInlineAdapter } from './adapters/gbrain-inline.ts';
+import { GbrainInlineAdapter, gcNow } from './adapters/gbrain-inline.ts';
 import { VectorOnlyAdapter } from './adapters/vector.ts';
 import {
   TOP_K, PROBE_SEED, DEFAULT_TUNING_CONCEPTS, DEFAULT_HOLDOUT_CONCEPTS, CAT13_SEARCH_MODE,
@@ -384,6 +387,8 @@ export interface ProbeGapRecord {
     token_budget_dropped: number;
     keyword_arm_margin: number | null;
     embedding_column: string | null;
+    /** hybrid's metadata-boost-gate stamp for the live call (self-verifies the `always` pin: reason `gate_always`). */
+    metadata_boost_gate?: { gate: string; lexical_voted: boolean; boosts_applied: boolean; reason: string } | null;
   };
   hybrid_top: PageStamp[];
   vector_top: string[];
@@ -1059,6 +1064,7 @@ export async function measureProbe(engine: PGLiteEngine, probe: Probe, ctx: Meas
       token_budget_dropped: tokenDropped,
       keyword_arm_margin: meta?.keyword_arm_confidence?.margin_ratio ?? null,
       embedding_column: meta?.embedding_column ?? null,
+      metadata_boost_gate: meta?.metadata_boost_gate ?? null,
     },
     hybrid_top: hybridTop,
     vector_top: vectorOrder.slice(0, RECORD_TOP_N),
@@ -1243,7 +1249,7 @@ export function summarize(records: readonly ProbeGapRecord[], e0: LocalizeReport
   for (const name of ['vector_only', 'no_lexical_no_boosts', 'no_lexical_arms', 'no_title_arm', 'no_keyword_arm', 'no_cosine_blend', 'no_post_fusion_boosts', 'no_backlink_boost', 'no_graph_signals', 'no_recency_boost', 'no_salience_boost', 'no_title_phrase_boost', 'no_exact_match_boost', 'no_compiled_truth_boost', 'no_dedup', 'full'] as AblationName[]) {
     ladder.push({ ranking: `re-simulated: ${name}`, tuning_ndcg5: mean(records.map(r => r.ablations[name].ndcg5)), p1_strict: p1(r => r.ablations[name].gold_rank), note: MECHANISM_TEXT[name].stage });
   }
-  ladder.push({ ranking: 'gbrain hybrid live (this run)', tuning_ndcg5: mean(records.map(r => r.live.hybrid_ndcg5)), p1_strict: p1(r => r.live.hybrid_gold_rank), note: 'hybridSearch, balanced, reranker off, autocut off, limit 30' });
+  ladder.push({ ranking: 'gbrain hybrid live (this run)', tuning_ndcg5: mean(records.map(r => r.live.hybrid_ndcg5)), p1_strict: p1(r => r.live.hybrid_gold_rank), note: 'hybridSearch, balanced, reranker off, autocut off, metadata_boost_gate=always (ungated, as re-simulated), limit 30' });
   if (e0) ladder.push({ ranking: 'E0-V1 `gbrain` adapter (receipt, tuning)', tuning_ndcg5: e0.gbrain_tuning_ndcg5, p1_strict: e0.gbrain_tuning_p1, note: 'should match the live row above within embedding noise' });
 
   const templates = [...new Set(records.map(r => r.template))].sort();
@@ -1462,7 +1468,14 @@ export async function runLocalize(opts: LocalizeOptions = {}): Promise<LocalizeR
   const reportsDir = opts.reportsDir ?? join(process.cwd(), 'eval/reports');
 
   const embedder = resolveEmbedder({ model: opts.embeddingModel, dims: opts.embeddingDims });
-  const searchPins = pinnedSearchConfig({ reranker: 'off', autocut: 'off' }); // the E0-V1 cell
+  // The E0-V1 cell, plus the metadata boost gate pinned to `always`: this
+  // runner re-simulates the UNGATED boost pipeline stage by stage (the gate is
+  // the mechanism E1 motivated, and `lexical` is now the shipped default), so
+  // the live call must run ungated for the sim-vs-live parity check to hold.
+  const searchPins = pinnedSearchConfig({
+    reranker: 'off', autocut: 'off',
+    searchPins: { 'search.metadata_boost_gate': 'always' },
+  });
   const embedKeyEnv = providerKeyEnv(embedder.model);
   if (!stubEmbed && !process.env[embedKeyEnv]) {
     throw new Error(`${embedKeyEnv} required for live embeds with ${embedder.model} (run with --stub-embed for the hermetic plumbing run)`);
@@ -1525,6 +1538,9 @@ export async function runLocalize(opts: LocalizeOptions = {}): Promise<LocalizeR
       const grades = gradesByQuery.get(probe.q.id) ?? new Map<string, number>();
       records.push(await measureProbe(engine, probe, { knobs, grades, pageVectors }));
       i += 1;
+      // Direct-engine loop (bypasses adapter.query; ~12 ablation re-simulations
+      // per probe): pace the GC the same way the adapter does.
+      if (i % 25 === 0) gcNow();
       if (i % 25 === 0) log(`  ${i}/${measured.length} probes`);
     }
   } finally {

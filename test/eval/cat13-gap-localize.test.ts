@@ -371,9 +371,13 @@ describe('gap localization e2e (hermetic, stub embeds, one PGLite brain)', () =>
     expect(report.records.length).toBe(6);
     expect(report.knobs.mode).toBe('balanced');
     expect(report.knobs.limit).toBe(HYBRID_LIMIT);
+    // The live call must run the UNGATED boost pipeline the re-simulation models.
+    expect(report.search_pins['search.metadata_boost_gate']).toBe('always');
     for (const r of report.records) {
       expect(r.vector_enabled).toBe(true);
       expect(r.meta.embedding_column).not.toBeNull();
+      expect(r.meta.metadata_boost_gate?.reason).toBe('gate_always');
+      expect(r.meta.metadata_boost_gate?.boosts_applied).toBe(true);
       expect(Object.keys(r.ablations).sort()).toEqual([...ABLATIONS].sort());
       expect(r.arms.vector_rows).toBeGreaterThan(0);
       expect(r.simulation.top5_match).toBe(true);
