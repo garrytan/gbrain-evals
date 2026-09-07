@@ -9,7 +9,7 @@ Format: the numbers tables are neutral and cited. The **"vs gbrain"** analysis
 under each table is explicitly our read — what gbrain's pinned master does
 architecturally, and why that wins or loses against each system, with the
 mechanism named. Where gbrain loses, the loss and the reason stay in. The
-current pin is v0.48.2.0 (`5cfb84f1`, 2026-09-02); each "vs gbrain" heading
+current pin is v0.48.4.0 (`2efaaf8f`, 2026-09-07, the merge commit on master); each "vs gbrain" heading
 states the gbrain version its analysis was written against (v0.47.8.0,
 `2a56b512`, where that benchmark has no run at the current pin).
 
@@ -42,12 +42,14 @@ LongMemEval evaluator computes `recall_all@k` — ALL of a question's
 ground-truth sessions must land in top-k — and that is what systems using the
 published evaluator report. A looser ANY-HIT variant (≥1 ground-truth session
 in top-k) is also common in vendor pages and is a diagnostic, not the
-official metric. gbrain's figures are **95.32% official `recall_all@5`** on
-the default path (448/470, 2026-09-02 at v0.48.2.0, hybrid, k=5,
-`voyage:rerank-2.5` on; any-hit@5 99.79% as a diagnostic) and **93.19%** with
-the reranker off (438/470, same run date and version; any-hit@5 98.72%), both
-on the same cleaned dataset revision and the same n=470 denominator; the
-gbrain rows note under the table carries all five arms. VARIANT STATUS
+official metric. gbrain's figures are **95.53% official `recall_all@5`** on
+the release default path (449/470, 2026-09-06 at v0.48.4.0, hybrid, k=5,
+`voyage:rerank-2.5` on, autocut off; any-hit@5 99.79% as a diagnostic) and
+**93.40%** with the reranker off (439/470, same run; any-hit@5 98.72%; the
+2026-09-02 receipt's 438/470 is reproduced row for row on 469 of 470
+questions), both on the same cleaned dataset revision and the same n=470
+denominator; the gbrain rows note under the table carries every arm of the
+2026-09-06 ranker wave (`docs/benchmarks/2026-09-06-longmemeval-ranker-wave.md`). VARIANT STATUS
 (checked 2026-09-02):
 MemPalace's 96.6%, 98.4% and 100% rows are all ANY-HIT (their script computes
 `recall_all` but never prints it); we recomputed the strict metric from their
@@ -88,51 +90,37 @@ directly comparable.**
 | Zep (research page, 2026) | 90.2% (451/500); multi-session 83.5%; retrieval latency 104/162 ms p50/p95 | QA-acc (NOT R@k), gpt-5.4 reader (medium reasoning) + gpt-5.4 judge, cross-encoder reranking; the 2025 paper's gpt-4o reader scored 71.2% (gpt-4o-mini 63.8%) | n/a | 500 incl. abstention | yes | [getzep.com/research](https://www.getzep.com/research/), accessed 2026-09-02; [arXiv 2501.13956](https://arxiv.org/abs/2501.13956) |
 | Hindsight (Vectorize) | 91.4% (Gemini-3 answerer, own repo; per category 97.1 / 96.4 / 80.0 / 94.9 / 91.0 / 87.2); 89.0% (GPT-OSS-120B); 94.6% on the vendor page (backbone undisclosed) | QA-acc (NOT R@k), LLM judge (GPT-OSS-120B judge in the paper); vendor page markets it under non-official category names | n/a | 500 incl. abstention | yes | [vectorize-io/hindsight-benchmarks](https://github.com/vectorize-io/hindsight-benchmarks); [hindsight.vectorize.io](https://hindsight.vectorize.io/blog/2026/03/23/agent-memory-benchmark), accessed 2026-09-02 |
 | ByteRover 2.1.5 | 92.8% (464/500) run 1; 92.2% (461/500) run 2 | QA-acc (NOT R@k), Gemini 3.1 Pro answerer, Gemini 3 Flash or 3.1 Pro judge; competitor rows on their page are copied from vendors with different judges | n/a | 500 incl. abstention | yes | [byterover.dev blog](https://www.byterover.dev/blog/benchmark_ai_agent_memory_real_production_byterover_top_market_accuracy_longmemeval), accessed 2026-09-02 |
+| **gbrain v0.48.4.0 (2026-09-06)** | **86.6% (433/500)**; non-abstention 86.0% (404/470); abstention 29/30; per type SSA 100 / SSU 98.6 / KU 89.7 / MS 83.5 / TR 80.5 / SSP 66.7 | QA-acc (NOT R@k), claude-sonnet-4-6 reader over the FULL text of the top-5 retrieved sessions (abstention instruction added), gpt-4o (2024-08-06) judge with the official `evaluate_qa.py` prompts at temperature 0; 500/500 judged, 0 judge errors; retrieval on the same rows 95.53% recall_all@5 | n/a | 500 incl. abstention | yes — `docs/benchmarks/2026-09-06-longmemeval-ranker-wave.md` | gbrain's first judged row; protocols differ from every vendor row above, so no comparison is claimed in either direction |
 | ContextFit fusion QA | 84.8% overall / 86.81% task-averaged (May note); 81.8% through the official `evaluate_qa.py` with a fresh GPT-4o judge (task-averaged 83.5%); 87.2% with a GPT-5-mini answerer + local GPT-4o judge (85.2% with a GPT-4o answerer) | QA-acc (NOT R@k), their pipeline | n/a | 500 incl. 30 abstention | yes (GPT-4o or GPT-5-mini generation + GPT-4o judge) | [their QA note](https://www.context.fit/longmemeval-fusion-qa-20260519.html), reported in [issue #10](https://github.com/garrytan/gbrain-evals/issues/10); [cf repo QA evidence](https://github.com/ContextFit/cf/blob/master/benchmarks/longmemeval_contextfit_qa_evidence_20260516.md) |
 
 gbrain's own rows, all official session-level `recall_all@5` on
 `longmemeval_s` (cleaned Sept-2025 revision, 500 questions, 470 scored, k=5),
-five arms measured 2026-09-02 at v0.48.2.0 (merged SHA `5cfb84f1`; embedder
-`openai:text-embedding-3-large@1536`, hybrid mode `balanced` pinned, autocut
-off, single run, 0 errors in every arm). Release default path:
-**95.32% gbrain-hybrid+rerank (448/470)**, `voyage:rerank-2.5` on (any-hit@5
-99.79%, nDCG_any@5 95.77%, 4.89 distinct sessions in the top-5, p50 3.8 s /
-p99 6.3 s per question, 2029 s wall for the 500-question arm); paired against
-reranker-off hybrid it gains 18 questions and loses 8. Like-for-like row
-against systems that run no reranker: **93.19% gbrain-hybrid (438/470)**,
-reranker off (any-hit@5 98.72% and nDCG_any@5 93.32% as diagnostics; distinct
-sessions in the top-5 averaged 4.90; p50 3.7 s / p99 6.3 s per question;
-1977 s wall). Per type: knowledge-update 98.6%
-(71/72), multi-session 92.6% (112/121), single-session-assistant 100%
-(56/56), single-session-preference 96.7% (29/30), single-session-user 98.4%
-(63/64), temporal-reasoning 84.3% (107/127). Per type with the reranker on
-(hybrid+rerank, 448/470, same run): knowledge-update 100% (72/72),
-multi-session 92.6% (112/121, unchanged), single-session-assistant 100%
-(56/56), single-session-preference 100% (30/30), single-session-user 100%
-(64/64), temporal-reasoning 89.8% (114/127); the reranker's whole gain lands
-on temporal and the single-session and knowledge-update types, and
-multi-session does not move. Pure vector on the same corpus scores 93.8%
-(v0.48.0.0 receipt, same dataset and k), so hybrid is roughly neutral on this
-benchmark. Ceiling at k=5 is 99.4% (3 questions carry 6 gold sessions).
-The other three arms, same run (2026-09-02, v0.48.2.0, 470 scored, k=5):
-**gbrain-hybrid+expansion 54.89% (258/470)**, the LLM multi-query expansion
-that `tokenmax` turns on, is harmful at k=5, losing 183 questions paired
-against reranker-off hybrid and gaining 3 (any-hit@5 86.60%, p50 5.1 s / p99
-8.0 s, 2677 s wall). **gbrain-hybrid-sessdiv
-93.40% (439/470)** (3x over-fetch, top-5 distinct sessions; any-hit@5 98.72%,
-5.00 distinct sessions, p50 3.7 s / p99 6.4 s, 1987 s wall) adds exactly one
-question over hybrid: the 10.21% of hybrid queries whose top-5 held fewer
-than five distinct sessions drop to 0%, but slot starvation is not the miss
-class. **gbrain-hybrid-sessdiv+rerank 95.53% (449/470)** (any-hit@5 99.79%,
-nDCG_any@5 95.82%, p50 3.8 s / p99 6.3 s, 2031 s wall; +19 / -8 paired
-against hybrid) is one question above hybrid+rerank, with temporal-reasoning
-at 90.6% (115/127) and every other type equal to hybrid+rerank. Rows,
-receipts (per-arm `.json` + `.ndjson`, the all-arms aggregate
-`rerun-2026-09-02-v0.48.2.0-all-arms.json`, sha256 in
-`docs/receipts-manifest.json`, byte counts in the report's Receipts list)
-and the two charts (`rerun-2026-09-02-v0.48.2.0.headline.svg`,
-`rerun-2026-09-02-v0.48.2.0.per-type.svg`) live in the
-[2026-05-07 report](benchmarks/2026-05-07-longmemeval-s.md).
+measured 2026-09-06 at v0.48.4.0 by the in-repo `gbrain eval longmemeval`
+harness (embedder `openai:text-embedding-3-large@1536`, one shared embedding
+cache, single run, 0 errors in every arm; decisions on the 430 questions
+outside the seed-42 dev slice). Release default path: **95.53%
+gbrain-hybrid+rerank (449/470)**, `voyage:rerank-2.5` on, autocut off (any-hit@5
+99.79%, 4.89 distinct sessions in the top-5); paired against reranker-off
+hybrid it gains 18 questions and loses 8. Like-for-like row against systems
+that run no reranker: **93.40% gbrain-hybrid (439/470)**, reranker off
+(any-hit@5 98.72%; 4.90 distinct sessions). Per type with the reranker off:
+knowledge-update 98.6% (71/72), multi-session 92.6% (112/121),
+single-session-assistant 100% (56/56), single-session-preference 96.7%
+(29/30), single-session-user 98.4% (63/64), temporal-reasoning 85.0%
+(108/127); with the reranker on: knowledge-update 100% (72/72), multi-session
+92.6% (112/121, unchanged), single-session-assistant 100%, single-session-
+preference 100% (30/30), single-session-user 100% (64/64), temporal-reasoning
+90.6% (115/127). The default that shipped before v0.48.4.0 (reranker on WITH
+autocut 0.35) scored 80.64% (379/470): the cut kept the best session and
+dropped the rest, so autocut is now off. `tokenmax` as released (LLM
+multi-query expansion at the legacy weighting, reranker on, autocut off)
+scores 92.77% (436/470); at equal variant weight without the reranker,
+expansion drops strict recall to 54.26% (255/470), and the new
+`search.expansion_variant_budget` knob at its smallest pre-registered value
+recovers to 83.83% (394/470) — still below plain hybrid, so the bundles keep
+the legacy weighting. The 2026-09-02 sibling-runner rows (438 / 448 / 258 and
+the two session-diverse arms at 439 / 449) remain in the 2026-05-07 report as
+the prior receipt.
 
 **Important reading note:** Mastra, both Supermemory rows, Memoria, Mem0
 (both rows), MemCog, Zep, Hindsight, ByteRover, and the ContextFit QA row

@@ -39,6 +39,24 @@ import {
   computeCat13Verdict,
   runCat13,
   TOP_K,
+  // Phase E0
+  resolveEmbedder,
+  hashEmbed,
+  providerKeyEnv,
+  parseOnOff,
+  parseKeywordArmConfidenceFloor,
+  parseSearchPin,
+  validateSearchPin,
+  RESERVED_SEARCH_PIN_KEYS,
+  pinnedSearchConfig,
+  buildAdapters,
+  GBRAIN_BACKED_ADAPTERS,
+  splitConcepts,
+  probeSubset,
+  parseCat13Argv,
+  DEFAULT_EMBEDDING_MODEL,
+  DEFAULT_EMBED_DIMS,
+  CAT13_RERANK_MODEL_PIN,
   type Probe,
   type RichPage,
 } from '../../eval/runner/cat13-conceptual.ts';
@@ -318,4 +336,392 @@ describe('cat13 runner e2e (hermetic, grep-only arm)', () => {
     expect(report.results.length).toBe(1);
     expect(existsSync(join(reportsDir, 'cat13-conceptual', 'report.json'))).toBe(true);
   }, 120_000);
+});
+
+// ─── Phase E0: embedder resolution ───────────────────────────────────
+
+describe('cat13 embedder resolution (Phase E0)', () => {
+  test('defaults to the historical OpenAI space when nothing is set', () => {
+    expect(resolveEmbedder({}, {})).toEqual({ model: DEFAULT_EMBEDDING_MODEL, dims: DEFAULT_EMBED_DIMS });
+    expect(resolveEmbedder({}, { CAT13_EMBEDDING_MODEL: '', CAT13_EMBED_DIMS: ' ' })).toEqual({ model: DEFAULT_EMBEDDING_MODEL, dims: DEFAULT_EMBED_DIMS });
+  });
+
+  test('env overrides the default; an explicit (CLI) override beats env', () => {
+    const env = { CAT13_EMBEDDING_MODEL: 'voyage:voyage-4', CAT13_EMBED_DIMS: '1024' };
+    expect(resolveEmbedder({}, env)).toEqual({ model: 'voyage:voyage-4', dims: 1024 });
+    expect(resolveEmbedder({ model: 'openai:text-embedding-3-small', dims: '512' }, env))
+      .toEqual({ model: 'openai:text-embedding-3-small', dims: 512 });
+    expect(resolveEmbedder({ dims: 256 }, env)).toEqual({ model: 'voyage:voyage-4', dims: 256 });
+  });
+
+  test('malformed values throw instead of silently falling back', () => {
+    expect(() => resolveEmbedder({}, { CAT13_EMBEDDING_MODEL: 'voyage-4' })).toThrow(/provider:model/);
+    expect(() => resolveEmbedder({}, { CAT13_EMBED_DIMS: '1o24' })).toThrow(/positive integer/);
+    expect(() => resolveEmbedder({}, { CAT13_EMBED_DIMS: '0' })).toThrow(/positive integer/);
+    expect(() => resolveEmbedder({ dims: '1.5' }, {})).toThrow(/positive integer/);
+  });
+
+  test('the hash-embed stub produces deterministic unit vectors of the configured width', () => {
+    expect(hashEmbed('unit economics').length).toBe(DEFAULT_EMBED_DIMS);
+    const v = hashEmbed('unit economics', 1024);
+    expect(v.length).toBe(1024);
+    expect(Math.sqrt(v.reduce((a, b) => a + b * b, 0))).toBeCloseTo(1, 6);
+    expect(hashEmbed('unit economics', 1024)).toEqual(v);
+  });
+
+  test('the provider key env derives from the model prefix', () => {
+    expect(providerKeyEnv('openai:text-embedding-3-large')).toBe('OPENAI_API_KEY');
+    expect(providerKeyEnv('voyage:voyage-4')).toBe('VOYAGE_API_KEY');
+    expect(providerKeyEnv(CAT13_RERANK_MODEL_PIN)).toBe('VOYAGE_API_KEY');
+    expect(providerKeyEnv('acme-ai:foo')).toBe('ACME_AI_API_KEY');
+  });
+});
+
+// ─── Phase E0: search pins ───────────────────────────────────────────
+
+describe('cat13 search pins (Phase E0)', () => {
+  test('the default cell is balanced / reranker off / autocut off and nothing else', () => {
+    expect(pinnedSearchConfig({ reranker: 'off', autocut: 'off' })).toEqual({
+      'search.mode': 'balanced',
+      'search.reranker.enabled': 'false',
+      'search.autocut': 'false',
+    });
+  });
+
+  test('reranker on pins the model by name; autocut on flips only autocut', () => {
+    expect(pinnedSearchConfig({ reranker: 'on', autocut: 'off' })).toEqual({
+      'search.mode': 'balanced',
+      'search.reranker.enabled': 'true',
+      'search.reranker.model': CAT13_RERANK_MODEL_PIN,
+      'search.autocut': 'false',
+    });
+    const ac = pinnedSearchConfig({ reranker: 'off', autocut: 'on' });
+    expect(ac['search.autocut']).toBe('true');
+    expect(ac['search.reranker.enabled']).toBe('false');
+    expect('search.reranker.model' in ac).toBe(false);
+  });
+
+  test('expansion_variant_budget is set ONLY when given, as a pass-through string', () => {
+    expect('search.expansion_variant_budget' in pinnedSearchConfig({ reranker: 'off', autocut: 'off' })).toBe(false);
+    expect(pinnedSearchConfig({ reranker: 'off', autocut: 'off', expansionVariantBudget: '1.0' })['search.expansion_variant_budget']).toBe('1.0');
+    expect(pinnedSearchConfig({ reranker: 'off', autocut: 'off', expansionVariantBudget: 'legacy' })['search.expansion_variant_budget']).toBe('legacy');
+    expect(() => pinnedSearchConfig({ reranker: 'off', autocut: 'off', expansionVariantBudget: ' ' })).toThrow(/non-empty/);
+  });
+
+  test('keyword_arm_confidence_floor (Phase E2) is set ONLY when given; off passes through; out-of-range fails loudly', () => {
+    const base = { reranker: 'off' as const, autocut: 'off' as const };
+    expect('search.keyword_arm_confidence_floor' in pinnedSearchConfig(base)).toBe(false);
+    expect(pinnedSearchConfig({ ...base, keywordArmConfidenceFloor: '0.6' })['search.keyword_arm_confidence_floor']).toBe('0.6');
+    expect(pinnedSearchConfig({ ...base, keywordArmConfidenceFloor: '0.7515' })['search.keyword_arm_confidence_floor']).toBe('0.7515');
+    expect(pinnedSearchConfig({ ...base, keywordArmConfidenceFloor: '1' })['search.keyword_arm_confidence_floor']).toBe('1');
+    expect(pinnedSearchConfig({ ...base, keywordArmConfidenceFloor: 'off' })['search.keyword_arm_confidence_floor']).toBe('off');
+    expect(parseKeywordArmConfidenceFloor(' OFF ')).toBe('off');
+    // gbrain's parser would silently fall through to the bundle (floor off) on these; the runner refuses instead.
+    for (const bad of ['0', '1.5', '-0.2', 'abc', '', ' ', 'true', 'NaN', 'Infinity']) {
+      expect(() => pinnedSearchConfig({ ...base, keywordArmConfidenceFloor: bad })).toThrow(/\(0, 1\]/);
+    }
+    // The other pins are untouched by the floor.
+    expect(pinnedSearchConfig({ ...base, keywordArmConfidenceFloor: '0.6' })).toEqual({
+      'search.mode': 'balanced',
+      'search.reranker.enabled': 'false',
+      'search.autocut': 'false',
+      'search.keyword_arm_confidence_floor': '0.6',
+    });
+  });
+
+  test('--search-pin entries (generic pass-through) join the pin set after the named pins; shape validated, reserved keys refused', () => {
+    const base = { reranker: 'off' as const, autocut: 'off' as const };
+    expect('search.metadata_boost_gate' in pinnedSearchConfig(base)).toBe(false);
+    expect(pinnedSearchConfig({ ...base, searchPins: { 'search.metadata_boost_gate': 'lexical' } })).toEqual({
+      'search.mode': 'balanced',
+      'search.reranker.enabled': 'false',
+      'search.autocut': 'false',
+      'search.metadata_boost_gate': 'lexical',
+    });
+    // Coexists with the named pins; every generic key is written.
+    const multi = pinnedSearchConfig({
+      ...base, keywordArmConfidenceFloor: '0.6',
+      searchPins: { 'search.metadata_boost_gate': 'lexical', 'search.some_other_knob': '3' },
+    });
+    expect(multi['search.keyword_arm_confidence_floor']).toBe('0.6');
+    expect(multi['search.metadata_boost_gate']).toBe('lexical');
+    expect(multi['search.some_other_knob']).toBe('3');
+    // Parse: split on the FIRST '=', both sides trimmed; values may contain '='.
+    expect(parseSearchPin('search.metadata_boost_gate=lexical')).toEqual(['search.metadata_boost_gate', 'lexical']);
+    expect(parseSearchPin(' search.x = a=b ')).toEqual(['search.x', 'a=b']);
+    expect(validateSearchPin('search.k', 'v')).toEqual(['search.k', 'v']);
+    // Rejected shapes throw (never a silent default cell under a pinned label).
+    expect(() => parseSearchPin('search.metadata_boost_gate')).toThrow(/expects <search.key>=<value>/);
+    expect(() => parseSearchPin('metadata_boost_gate=lexical')).toThrow(/must start with 'search\./);
+    expect(() => parseSearchPin('search.=lexical')).toThrow(/must start with 'search\./);
+    expect(() => parseSearchPin('search.metadata_boost_gate=')).toThrow(/non-empty value/);
+    expect(() => parseSearchPin('search.metadata_boost_gate=   ')).toThrow(/non-empty value/);
+    expect(() => pinnedSearchConfig({ ...base, searchPins: { 'search.metadata_boost_gate': '' } })).toThrow(/non-empty value/);
+    expect(() => pinnedSearchConfig({ ...base, searchPins: { 'metadata_boost_gate': 'x' } })).toThrow(/must start with 'search\./);
+    // Keys a dedicated flag owns are refused on BOTH paths so the fail-closed checks cannot be bypassed generically.
+    expect(Object.keys(RESERVED_SEARCH_PIN_KEYS).sort()).toEqual([
+      'search.autocut', 'search.expansion_variant_budget', 'search.keyword_arm_confidence_floor',
+      'search.mode', 'search.reranker.enabled', 'search.reranker.model',
+    ]);
+    for (const reserved of Object.keys(RESERVED_SEARCH_PIN_KEYS)) {
+      expect(() => parseSearchPin(`${reserved}=x`)).toThrow(/owned by/);
+      expect(() => pinnedSearchConfig({ ...base, searchPins: { [reserved]: 'x' } })).toThrow(/owned by/);
+    }
+    expect(() => parseSearchPin('search.reranker.enabled=true')).toThrow(/--reranker on\|off/);
+  });
+
+  test('on|off parsing is strict', () => {
+    expect(parseOnOff(undefined, '--reranker')).toBe('off');
+    expect(parseOnOff('ON', '--reranker')).toBe('on');
+    expect(() => parseOnOff('true', '--reranker')).toThrow(/--reranker must be 'on' or 'off'/);
+  });
+
+  test('both gbrain-backed adapters get the same pins; every embedding arm gets the run embedder', () => {
+    const embedder = { model: 'voyage:voyage-4', dims: 1024 };
+    const searchConfig = pinnedSearchConfig({ reranker: 'off', autocut: 'on' });
+    const plans = buildAdapters({ embedder, searchConfig });
+    expect(plans.map(p => p.adapter.name)).toEqual(['gbrain', 'vector-grep-rrf-fusion', 'grep-only', 'vector']);
+    const byName = Object.fromEntries(plans.map(p => [p.adapter.name, p.initConfig]));
+    expect(byName['vector-grep-rrf-fusion'].searchConfig).toEqual(searchConfig);
+    expect(byName['vector-grep-rrf-fusion'].shootout).toMatchObject({ embedder: 'voyage:voyage-4', dim: 1024, searchMode: 'balanced' });
+    expect(byName['vector'].shootout).toMatchObject({ embedder: 'voyage:voyage-4', dim: 1024 });
+    expect(byName['grep-only']).toEqual({});
+    for (const n of GBRAIN_BACKED_ADAPTERS) expect(plans.some(p => p.adapter.name === n)).toBe(true);
+  });
+});
+
+// ─── Phase E0: seeded concept split ──────────────────────────────────
+
+describe('cat13 concept split (Phase E0)', () => {
+  const pages = loadCorpus(CORPUS_DIR);
+  const concepts = pages.filter(p => p.slug.startsWith('concepts/')).map(p => p.slug);
+
+  test('default 20/10 over the 30 concepts is disjoint, exhaustive, seed-deterministic and order-independent', () => {
+    expect(concepts.length).toBe(30);
+    const a = splitConcepts(concepts, 20, 10, 42);
+    const b = splitConcepts([...concepts].reverse(), 20, 10, 42);
+    expect(a).toEqual(b);
+    expect(a.tuning.length).toBe(20);
+    expect(a.holdout.length).toBe(10);
+    expect(new Set([...a.tuning, ...a.holdout]).size).toBe(30);
+    expect(splitConcepts(concepts, 20, 10, 7).holdout).not.toEqual(a.holdout);
+  });
+
+  test('sizes over the concept count, negatives, fractions and bad seeds throw', () => {
+    expect(() => splitConcepts(concepts, 25, 10, 42)).toThrow(/exceeds/);
+    expect(() => splitConcepts(concepts, -1, 10, 42)).toThrow(/non-negative/);
+    expect(() => splitConcepts(concepts, 20, 1.5, 42)).toThrow(/non-negative integer/);
+    expect(() => splitConcepts(concepts, 20, 10, -1)).toThrow(/--seed/);
+  });
+
+  test('the split does not perturb the probe generator (separate rng stream)', () => {
+    const before = buildProbes(pages, 500);
+    splitConcepts(concepts, 20, 10, 42);
+    const after = buildProbes(pages, 500);
+    expect(JSON.stringify(after.probes.map(p => p.q.text))).toBe(JSON.stringify(before.probes.map(p => p.q.text)));
+  });
+
+  test('probe membership: every target in one set, else mixed / unassigned', () => {
+    const split = { seed: 1, tuning: ['concepts/a', 'concepts/b'], holdout: ['concepts/c'] };
+    expect(probeSubset({ targetSlugs: ['concepts/a'] }, split)).toBe('tuning');
+    expect(probeSubset({ targetSlugs: ['concepts/a', 'concepts/b'] }, split)).toBe('tuning');
+    expect(probeSubset({ targetSlugs: ['concepts/c'] }, split)).toBe('holdout');
+    expect(probeSubset({ targetSlugs: ['concepts/a', 'concepts/c'] }, split)).toBe('mixed');
+    expect(probeSubset({ targetSlugs: ['concepts/c', 'concepts/z'] }, split)).toBe('mixed');
+    expect(probeSubset({ targetSlugs: ['concepts/z'] }, split)).toBe('unassigned');
+  });
+
+  test('on the real probes only company-neighborhood probes can be mixed, and every other probe lands in a subset', () => {
+    const { probes } = buildProbes(pages, 500);
+    const split = splitConcepts(concepts, 20, 10, 42);
+    for (const p of probes) {
+      const s = probeSubset(p, split);
+      expect(s).not.toBe('unassigned');
+      if (s === 'mixed') expect(p.template).toBe('company-neighborhood');
+    }
+  });
+
+  test('scoreAdapter reports tuning / held-out rollups that partition the scored probes', async () => {
+    const { probes, gradesByQuery } = syntheticProbes(); // p1 → concepts/a, p2 → concepts/b
+    const split = { seed: 1, tuning: ['concepts/a'], holdout: ['concepts/b'] };
+    const acc = new ProbeAccounting(probes.length);
+    const adapter = new FixedAdapter({ p1: ['concepts/a', 'concepts/n'], p2: ['concepts/x'] });
+    const r = await scoreAdapter(adapter, [], probes, gradesByQuery, acc, { split });
+    expect(r.splits?.seed).toBe(1);
+    expect(r.splits?.tuning.count).toBe(1);
+    expect(r.splits?.tuning.ndcg5).toBeCloseTo(1, 6);
+    expect(r.splits?.tuning.p1_strict).toBe(1);
+    expect(r.splits?.tuning.byTemplate.test.count).toBe(1);
+    expect(r.splits?.holdout.count).toBe(1);
+    expect(r.splits?.holdout.ndcg5).toBe(0);
+    expect(r.splits?.holdout.p1_strict).toBe(0);
+    expect(r.splits?.mixed).toBe(0);
+    expect(r.ndcg5).toBeCloseTo(0.5, 6); // overall is unchanged by the split
+  });
+});
+
+// ─── Phase E0: CLI parsing ───────────────────────────────────────────
+
+describe('cat13 CLI parsing (Phase E0)', () => {
+  test('flags map to options in both --flag value and --flag=value forms', () => {
+    const o = parseCat13Argv([
+      '--stub-embed', '--adapter', 'gbrain', '--embedding-model=voyage:voyage-4', '--embedding-dims', '1024',
+      '--reranker', 'on', '--autocut=off', '--expansion-variant-budget', '1.0',
+      '--tuning-concepts', '20', '--holdout-concepts=10', '--seed', '7', '--allow-skip',
+    ], {});
+    expect(o).toEqual({
+      stubEmbed: true, allowSkip: true, only: 'gbrain',
+      embeddingModel: 'voyage:voyage-4', embeddingDims: '1024',
+      reranker: 'on', autocut: 'off', expansionVariantBudget: '1.0',
+      tuningConcepts: 20, holdoutConcepts: 10, seed: 7,
+    });
+  });
+
+  test('--keyword-arm-confidence-floor (Phase E2) parses in both forms and rejects out-of-range values at parse time', () => {
+    expect(parseCat13Argv(['--keyword-arm-confidence-floor', '0.6'], {}).keywordArmConfidenceFloor).toBe('0.6');
+    expect(parseCat13Argv(['--keyword-arm-confidence-floor=off'], {}).keywordArmConfidenceFloor).toBe('off');
+    expect(parseCat13Argv(['--reranker', 'off'], {}).keywordArmConfidenceFloor).toBeUndefined();
+    expect(() => parseCat13Argv(['--keyword-arm-confidence-floor', '1.2'], {})).toThrow(/\(0, 1\]/);
+    expect(() => parseCat13Argv(['--keyword-arm-confidence-floor', '0'], {})).toThrow(/\(0, 1\]/);
+    expect(() => parseCat13Argv(['--keyword-arm-confidence-floor'], {})).toThrow(/requires a value/);
+  });
+
+  test('--search-pin parses in both forms, repeats accumulate, a repeated key → last wins, bad pins throw at parse time', () => {
+    expect(parseCat13Argv(['--search-pin', 'search.metadata_boost_gate=lexical'], {}).searchPins)
+      .toEqual({ 'search.metadata_boost_gate': 'lexical' });
+    // --flag=value form: the argv parser splits the FLAG on its first '=', the pin on its own first '='.
+    expect(parseCat13Argv(['--search-pin=search.metadata_boost_gate=lexical'], {}).searchPins)
+      .toEqual({ 'search.metadata_boost_gate': 'lexical' });
+    expect(parseCat13Argv([
+      '--search-pin', 'search.metadata_boost_gate=lexical',
+      '--search-pin', 'search.other_knob=1',
+      '--search-pin', 'search.metadata_boost_gate=off',
+    ], {}).searchPins).toEqual({ 'search.metadata_boost_gate': 'off', 'search.other_knob': '1' });
+    expect(parseCat13Argv(['--reranker', 'off'], {}).searchPins).toBeUndefined();
+    expect(() => parseCat13Argv(['--search-pin', 'metadata_boost_gate=lexical'], {})).toThrow(/must start with 'search\./);
+    expect(() => parseCat13Argv(['--search-pin', 'search.metadata_boost_gate'], {})).toThrow(/expects <search.key>=<value>/);
+    expect(() => parseCat13Argv(['--search-pin', 'search.metadata_boost_gate='], {})).toThrow(/non-empty value/);
+    expect(() => parseCat13Argv(['--search-pin', 'search.autocut=true'], {})).toThrow(/owned by --autocut/);
+    expect(() => parseCat13Argv(['--search-pin'], {})).toThrow(/requires a value/);
+    expect(() => parseCat13Argv(['--search-pin', '--stub-embed'], {})).toThrow(/requires a value/);
+    // Composes with the named pins in one argv (the Phase E3 arm shape).
+    expect(parseCat13Argv(['--reranker', 'on', '--autocut', 'on', '--search-pin', 'search.metadata_boost_gate=lexical'], {}))
+      .toEqual({ reranker: 'on', autocut: 'on', searchPins: { 'search.metadata_boost_gate': 'lexical' } });
+  });
+
+  test('unknown flags, bad on/off values and missing values throw (no silent default cell)', () => {
+    expect(() => parseCat13Argv(['--rerankr', 'on'], {})).toThrow(/unknown argument/);
+    expect(() => parseCat13Argv(['--reranker', 'yes'], {})).toThrow(/on' or 'off/);
+    expect(() => parseCat13Argv(['--adapter'], {})).toThrow(/requires a value/);
+    expect(() => parseCat13Argv(['--adapter', '--stub-embed'], {})).toThrow(/requires a value/);
+    expect(() => parseCat13Argv(['--tuning-concepts', 'x'], {})).toThrow(/non-negative integer/);
+  });
+
+  test('CAT13_STUB_EMBED=1 still forces the stub transport', () => {
+    expect(parseCat13Argv([], { CAT13_STUB_EMBED: '1' }).stubEmbed).toBe(true);
+    expect(parseCat13Argv([], {}).stubEmbed).toBeUndefined();
+  });
+});
+
+// ─── Phase E0: fail-closed reranker + receipt echo (hermetic) ────────
+
+describe('cat13 Phase E0 receipt (hermetic)', () => {
+  test('--reranker on under --stub-embed is refused: the fail-open reranker would mislabel the cell', async () => {
+    const reportsDir = mkdtempSync(join(tmpdir(), 'cat13-'));
+    await expect(runCat13({ stubEmbed: true, only: 'grep-only', targetProbes: 30, reranker: 'on', reportsDir, quiet: true }))
+      .rejects.toThrow(/--reranker on cannot run under --stub-embed/);
+  });
+
+  test('a live reranker-on cell without the provider key is a skipped receipt (exit 2), never a run', async () => {
+    const saved = process.env.VOYAGE_API_KEY;
+    delete process.env.VOYAGE_API_KEY;
+    try {
+      const reportsDir = mkdtempSync(join(tmpdir(), 'cat13-'));
+      const { receipt, results, exitCode } = await runCat13({
+        stubEmbed: false, only: 'grep-only', targetProbes: 30, reranker: 'on', reportsDir, quiet: true,
+      });
+      expect(exitCode).toBe(2);
+      expect(results.length).toBe(0);
+      expect(receipt.run_status).toBe('skipped');
+      expect(receipt.skip_reason).toMatch(/VOYAGE_API_KEY/);
+      const rc = receipt.resolved_config as Record<string, any>;
+      expect(rc.search_pins['search.reranker.enabled']).toBe('true');
+      expect(rc.search_pins['search.reranker.model']).toBe(CAT13_RERANK_MODEL_PIN);
+      expect(rc.pins.keyword_arm_confidence_floor).toBeNull();
+      expect('search.keyword_arm_confidence_floor' in rc.search_pins).toBe(false);
+      expect(rc.pins.extra_search_pins).toBeNull();
+    } finally {
+      if (saved !== undefined) process.env.VOYAGE_API_KEY = saved;
+    }
+  });
+
+  test('gbrain arm at voyage:voyage-4 @ 1024d (stub): the receipt echoes embedder, per-adapter pins (incl. the Phase E2 floor and a generic --search-pin), gateway state, observed kacf counts and the split', async () => {
+    const reportsDir = mkdtempSync(join(tmpdir(), 'cat13-'));
+    const { receipt, results, exitCode } = await runCat13({
+      stubEmbed: true,
+      only: 'gbrain',
+      targetProbes: 30,
+      embeddingModel: 'voyage:voyage-4',
+      embeddingDims: 1024,
+      autocut: 'on',
+      expansionVariantBudget: '1.0',
+      keywordArmConfidenceFloor: '0.6',
+      // Generic pass-through pin: the linked gbrain may not know this key yet;
+      // it must still be written and echoed exactly like the named pins.
+      searchPins: { 'search.metadata_boost_gate': 'lexical' },
+      reportsDir,
+      quiet: true,
+    });
+    expect(exitCode).toBe(0);
+    expect(receipt.run_status).toBe('completed');
+    expect(receipt.verdict).toBe('partial');
+    expect(results.length).toBe(1);
+    expect(results[0].ndcg5).toBeGreaterThan(0);
+
+    const rc = receipt.resolved_config as Record<string, any>;
+    expect(rc.embedder).toEqual({ model: 'voyage:voyage-4', dims: 1024 });
+    expect(rc.embedding_transport).toMatch(/1024d/);
+    expect(rc.pins).toEqual({
+      reranker: 'off', autocut: 'on', expansion_variant_budget: '1.0', keyword_arm_confidence_floor: '0.6',
+      extra_search_pins: { 'search.metadata_boost_gate': 'lexical' },
+    });
+    expect(rc.search_pins).toEqual({
+      'search.mode': 'balanced',
+      'search.reranker.enabled': 'false',
+      'search.autocut': 'true',
+      'search.expansion_variant_budget': '1.0',
+      'search.keyword_arm_confidence_floor': '0.6',
+      'search.metadata_boost_gate': 'lexical',
+    });
+    // The adapter applied (engine.setConfig) and echoed every entry, the generic pin included.
+    expect(rc.search_config_by_adapter.gbrain).toEqual(rc.search_pins);
+    expect(rc.search_config_by_adapter.gbrain['search.metadata_boost_gate']).toBe('lexical');
+    expect(rc.gateway_after_init_by_adapter.gbrain).toEqual({ model: 'voyage:voyage-4', dims: 1024 });
+    const observed = rc.observed_by_adapter.gbrain;
+    expect(observed.queries).toBe(results[0].probesScored);
+    expect(observed.rerank_scored_queries).toBe(0);
+    // Phase E2 proof the knob reached the engine: every fused query carries
+    // the decision (stub vector arm always votes), and the down-weighted
+    // count is bounded by it. No kacf_missing_meta harness errors.
+    expect(observed.keyword_arm_confidence_stamped).toBe(observed.queries);
+    expect(observed.keyword_arm_confidence_downweighted).toBeGreaterThanOrEqual(0);
+    expect(observed.keyword_arm_confidence_downweighted).toBeLessThanOrEqual(observed.keyword_arm_confidence_stamped);
+    expect(receipt.errors.filter((e: { message?: string }) => /kacf_missing_meta/.test(String(e.message ?? '')))).toEqual([]);
+    expect(rc.concept_split).toMatchObject({ seed: 42, tuning_n: 20, holdout_n: 10 });
+    expect(rc.concept_split.tuning.length).toBe(20);
+    expect(rc.concept_split.holdout.length).toBe(10);
+
+    const s = results[0].splits!;
+    expect(s.tuning.count + s.holdout.count + s.mixed + s.unassigned).toBe(results[0].probesScored);
+    expect(s.unassigned).toBe(0);
+    const row = (receipt.data as Record<string, any>).scorecard[0];
+    expect(row.tuning.count).toBe(s.tuning.count);
+    expect(row.holdout.count).toBe(s.holdout.count);
+    expect((receipt.data as Record<string, any>).per_template.gbrain.holdout).toEqual(s.holdout.byTemplate);
+
+    const report = JSON.parse(readFileSync(join(reportsDir, 'cat13-conceptual', 'report.json'), 'utf8'));
+    expect(report.embedder).toEqual({ model: 'voyage:voyage-4', dims: 1024 });
+    expect(report.search_pins).toEqual(rc.search_pins);
+    expect(report.concept_split.holdout_n).toBe(10);
+  }, 240_000);
 });

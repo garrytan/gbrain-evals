@@ -74,8 +74,12 @@ export const CAT27_CATEGORY = 'cat27-graph-signals';
  * and echoed into the receipt's resolved_config. Both A/B cells share these;
  * only graph_signals differs. Never rely on mode defaults: gbrain's
  * 'balanced' bundle silently enables the zerank-2 reranker when
- * ZEROENTROPY_API_KEY is set, plus autocut + relational retrieval — any of
- * which would confound a graph-signal-only A/B.
+ * ZEROENTROPY_API_KEY is set, plus relational retrieval (autocut is off in
+ * balanced since v0.48.4.0 but stays pinned so older pins read the same) —
+ * any of which would confound a graph-signal-only A/B. The metadata boost
+ * gate is pinned to `always`: under the v0.48.4.0 default (`lexical`) the
+ * graph-signal stage only runs when a keyword/title/relational row fused, so
+ * the A/B would silently measure "graph signals given a lexical vote".
  */
 export const PINNED_CONFIG: Record<string, string> = {
   'search.mode': 'balanced',
@@ -84,6 +88,7 @@ export const PINNED_CONFIG: Record<string, string> = {
   'search.autocut': 'false',
   'search.cache.enabled': 'false',
   'search.relational_retrieval': 'false',
+  'search.metadata_boost_gate': 'always',
 };
 
 // ─── Deterministic hash embedding (hermetic transport) ────────────────

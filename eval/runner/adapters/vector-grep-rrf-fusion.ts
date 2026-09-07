@@ -24,7 +24,9 @@ import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { hybridSearch } from 'gbrain/search/hybrid';
 import { importFromContent } from 'gbrain/import-file';
 import { configureGateway } from 'gbrain/ai/gateway';
+import type { HybridSearchMeta } from 'gbrain/types';
 import { assertEvalAdapterConfig, type EvalAdapterConfig } from '../eval-adapter-config.ts';
+import { gcNow } from './gbrain-inline.ts';
 
 // Known-safe config: auto_link OFF at the engine layer via direct setConfig
 // call. Does NOT run `extract --source db`, so typed links stay empty even
@@ -37,6 +39,19 @@ interface HybridNoGraphState {
    *  documented the config field but hardcoded 20 in query(), so a caller
    *  passing { limit: 50 } silently got 20 (audit adapters-queries-04). */
   limit: number;
+  /** Every engine.setConfig entry init() applied, last write wins (receipt echo). */
+  resolvedConfig: Record<string, string>;
+  observed: HybridNoGraphObserved;
+}
+
+/** Per-run observation counters (receipt echo; same shape as GbrainInlineAdapter's). */
+export interface HybridNoGraphObserved {
+  queries: number;
+  rerank_scored_queries: number;
+  /** Phase E2: queries whose hybridSearch meta carried `keyword_arm_confidence`. */
+  keyword_arm_confidence_stamped: number;
+  /** Phase E2: queries where the keyword + title lists fused at half weight. */
+  keyword_arm_confidence_downweighted: number;
 }
 
 interface HybridNoGraphConfig extends AdapterConfig {
@@ -53,6 +68,13 @@ interface HybridNoGraphConfig extends AdapterConfig {
    *   - Threads search.mode (default 'tokenmax' for the shootout).
    */
   shootout?: EvalAdapterConfig;
+  /**
+   * Explicit engine.setConfig pins applied AFTER the shootout block (so they
+   * win) and before ingest — the same hook GbrainInlineAdapter exposes, so a
+   * runner can pin search.mode / reranker / autocut identically on both
+   * gbrain-backed arms and read them back via resolvedConfig().
+   */
+  searchConfig?: Record<string, string>;
 }
 
 export class HybridNoGraphAdapter implements Adapter {
@@ -90,25 +112,37 @@ export class HybridNoGraphAdapter implements Adapter {
     const engine = new PGLiteEngine();
     await engine.connect({});
     await engine.initSchema();
+    // Every setConfig this init applies is recorded (last write wins) so the
+    // receipt echoes what the engine actually ran with, not what was intended.
+    const resolvedConfig: Record<string, string> = {};
+    const pin = async (key: string, value: string): Promise<void> => {
+      await engine.setConfig(key, value);
+      resolvedConfig[key] = value;
+    };
     // Belt: turn off auto_link at the engine config level. Suspenders below:
     // we also skip extract --source db, so even if auto_link did fire, no
     // typed edges would exist in the graph layer. This adapter doesn't call
     // traversePaths at all, so graph state is doubly-ignored.
-    await engine.setConfig('auto_link', 'false');
+    await pin('auto_link', 'false');
 
     // v0.35.1.0 shootout: thread reranker + search-lite mode through engine
     // config so hybridSearch picks them up via the normal resolution chain.
     if (_config.shootout) {
       const mode = _config.shootout.searchMode ?? 'tokenmax';
-      await engine.setConfig('search.mode', mode);
+      await pin('search.mode', mode);
       if (_config.shootout.reranker) {
-        await engine.setConfig('search.reranker.enabled', 'true');
-        await engine.setConfig('search.reranker.model', _config.shootout.reranker);
+        await pin('search.reranker.enabled', 'true');
+        await pin('search.reranker.model', _config.shootout.reranker);
       } else {
         // Explicit disable so the tokenmax mode bundle's default reranker=on
         // doesn't silently fire for "no-rerank" cells.
-        await engine.setConfig('search.reranker.enabled', 'false');
+        await pin('search.reranker.enabled', 'false');
       }
+    }
+
+    // Explicit pins win over the shootout defaults above.
+    for (const [key, value] of Object.entries(_config.searchConfig ?? {})) {
+      await pin(key, value);
     }
 
     // importFromContent does the chunking + embedding that hybridSearch needs.
@@ -120,9 +154,13 @@ export class HybridNoGraphAdapter implements Adapter {
     console.log = () => {};
     console.error = () => {};
     try {
+      let imported = 0;
       for (const p of rawPages) {
         const content = this.buildContentMarkdown(p);
         await importFromContent(engine, p.slug, content);
+        // Same GC pacing as GbrainInlineAdapter: one PGLite brain inflates JSC's
+        // collection trigger, so unpaced import garbage fragments the address space.
+        if (++imported % 40 === 0) gcNow();
       }
     } finally {
       console.log = origLog;
@@ -133,12 +171,31 @@ export class HybridNoGraphAdapter implements Adapter {
     // links + timeline for the graph layer. Without it, traversePaths
     // would return empty. hybridSearch works entirely off chunks +
     // embeddings, which importFromContent just populated.
-    return { engine, limit } satisfies HybridNoGraphState;
+    return {
+      engine,
+      limit,
+      resolvedConfig,
+      observed: { queries: 0, rerank_scored_queries: 0, keyword_arm_confidence_stamped: 0, keyword_arm_confidence_downweighted: 0 },
+    } satisfies HybridNoGraphState;
   }
 
   async teardown(state: BrainState): Promise<void> {
     const s = state as HybridNoGraphState;
     await s.engine.disconnect();
+    // PGlite finalizes close one microtask later; yield, then return the
+    // ~1 GB WebAssembly memory before the next brain is built.
+    await new Promise<void>(r => setTimeout(r, 0));
+    gcNow();
+  }
+
+  /** The setConfig entries init() actually applied — put these in the receipt. */
+  resolvedConfig(state: BrainState): Record<string, string> {
+    return { ...(state as HybridNoGraphState).resolvedConfig };
+  }
+
+  /** Query-time observations (rerank_score presence, keyword_arm_confidence counts) — the fail-closed checks for pinned cells. */
+  observedStats(state: BrainState): HybridNoGraphObserved {
+    return { ...(state as HybridNoGraphState).observed };
   }
 
   /** Build a markdown string importFromContent can parse.
@@ -168,7 +225,15 @@ export class HybridNoGraphAdapter implements Adapter {
 
     // hybridSearch returns chunks with scores. We aggregate to page-level
     // by taking each page's BEST chunk score and ranking pages by that.
-    const chunkResults = await hybridSearch(s.engine, q.text, { limit: limit * 3 });
+    let meta: HybridSearchMeta | undefined;
+    const chunkResults = await hybridSearch(s.engine, q.text, { limit: limit * 3, onMeta: (m) => { meta = m; } });
+    s.observed.queries += 1;
+    if (chunkResults.some(r => Number.isFinite(r.rerank_score))) s.observed.rerank_scored_queries += 1;
+    const kacf = meta?.keyword_arm_confidence;
+    if (kacf) {
+      s.observed.keyword_arm_confidence_stamped += 1;
+      if (kacf.downweighted) s.observed.keyword_arm_confidence_downweighted += 1;
+    }
 
     const pageBest = new Map<string, number>();
     for (const r of chunkResults) {

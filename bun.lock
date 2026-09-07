@@ -7,7 +7,7 @@
       "dependencies": {
         "@anthropic-ai/sdk": "^0.122.0",
         "ai": "^6.0.168",
-        "gbrain": "github:garrytan/gbrain#5cfb84f1d3a809c70064c292c23db3d538d5c551",
+        "gbrain": "github:garrytan/gbrain#2efaaf8f8a817b5b82e023383618fdcdb1cc5f7d",
       },
       "devDependencies": {
         "@types/bun": "1.3.10",
@@ -214,7 +214,7 @@
 
     "function-bind": ["function-bind@1.1.2", "", {}, "sha512-7XHNxH7qX9xG5mIwxkhumTox/MIRNcOgDrxWsMt2pAr23WHp6MrRlN7FBSFpCpr+oVO0F744iUgR82nJMfG2SA=="],
 
-    "gbrain": ["gbrain@github:garrytan/gbrain#5cfb84f", { "dependencies": { "@ai-sdk/anthropic": "^3.0.71", "@ai-sdk/google": "^3.0.64", "@ai-sdk/openai": "^3.0.53", "@ai-sdk/openai-compatible": "^2.0.41", "@anthropic-ai/sdk": "^0.30.0", "@aws-sdk/client-s3": "^3.1028.0", "@dqbd/tiktoken": "^1.0.22", "@electric-sql/pglite": "0.4.3", "@jsquash/avif": "^2.1.1", "@jsquash/png": "^3.1.1", "@modelcontextprotocol/sdk": "1.29.0", "ai": "^6.0.168", "chokidar": "^4.0.3", "cookie-parser": "^1.4.7", "cors": "^2.8.5", "eventsource-parser": "^3.0.8", "exifr": "^7.1.3", "express": "^5.1.0", "express-rate-limit": "^7.5.0", "gray-matter": "^4.0.3", "heic-decode": "^2.1.0", "js-yaml": "^3.15.1", "jsonc-parser": "^3.3.1", "marked": "^18.0.2", "openai": "^4.0.0", "pgvector": "^0.2.0", "postgres": "^3.4.0", "tree-sitter-wasms": "0.1.13", "web-tree-sitter": "0.22.6", "zod": "^4.3.6" }, "bin": { "gbrain": "src/cli.ts" } }, "garrytan-gbrain-5cfb84f", "sha512-1pxgwU7kyXCxqNVoLgTDJNllzTjOe2NH3XX1D8LB3sSSHQAVdTE04zOA/3Mrhti+f5VOg6yKiLCoudwfnDXVsA=="],
+    "gbrain": ["gbrain@github:garrytan/gbrain#2efaaf8", { "dependencies": { "@ai-sdk/anthropic": "^3.0.71", "@ai-sdk/google": "^3.0.64", "@ai-sdk/openai": "^3.0.53", "@ai-sdk/openai-compatible": "^2.0.41", "@anthropic-ai/sdk": "^0.30.0", "@aws-sdk/client-s3": "^3.1028.0", "@dqbd/tiktoken": "^1.0.22", "@electric-sql/pglite": "0.4.3", "@jsquash/avif": "^2.1.1", "@jsquash/png": "^3.1.1", "@modelcontextprotocol/sdk": "1.29.0", "ai": "^6.0.168", "chokidar": "^4.0.3", "cookie-parser": "^1.4.7", "cors": "^2.8.5", "eventsource-parser": "^3.0.8", "exifr": "^7.1.3", "express": "^5.1.0", "express-rate-limit": "^7.5.0", "gray-matter": "^4.0.3", "heic-decode": "^2.1.0", "js-yaml": "^3.15.1", "jsonc-parser": "^3.3.1", "marked": "^18.0.2", "openai": "^4.0.0", "pgvector": "^0.2.0", "postgres": "^3.4.0", "tree-sitter-wasms": "0.1.13", "web-tree-sitter": "0.22.6", "zod": "^4.3.6" }, "bin": { "gbrain": "src/cli.ts" } }, "garrytan-gbrain-2efaaf8", "sha512-XuuJQVtngDIiIYO+XvFWzjH0CqqduZ76EkhgZSdLGclocD3e9dAivpWSxO4rn2Eip43007aqVLr82LsfPshIOA=="],
 
     "get-intrinsic": ["get-intrinsic@1.3.0", "", { "dependencies": { "call-bind-apply-helpers": "^1.0.2", "es-define-property": "^1.0.1", "es-errors": "^1.3.0", "es-object-atoms": "^1.1.1", "function-bind": "^1.1.2", "get-proto": "^1.0.1", "gopd": "^1.2.0", "has-symbols": "^1.1.0", "hasown": "^2.0.2", "math-intrinsics": "^1.1.0" } }, "sha512-9fSjSaos/fRIVIp+xSJlE6lfwhES7LNtKaCBIamHsjr2na1BiABJPo0mOjjz8GJDURarmCPGqaiVg5mfjb98CQ=="],
 

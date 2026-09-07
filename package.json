@@ -1,6 +1,6 @@
 {
   "name": "gbrain-evals",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "BrainBench \u2014 public benchmark for personal knowledge agent stacks. Consumes gbrain as a library.",
   "type": "module",
   "license": "MIT",
@@ -33,7 +33,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",
     "ai": "^6.0.168",
-    "gbrain": "github:garrytan/gbrain#5cfb84f1d3a809c70064c292c23db3d538d5c551"
+    "gbrain": "github:garrytan/gbrain#2efaaf8f8a817b5b82e023383618fdcdb1cc5f7d"
   },
   "devDependencies": {
     "@types/bun": "1.3.10",

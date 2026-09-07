@@ -4,6 +4,122 @@ All notable changes to gbrain-evals are recorded here. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versions are semver and kept
 in sync with `VERSION` + `package.json`.
 
+## [Unreleased]
+
+## [0.7.0] - 2026-09-06
+
+The gbrain v0.48.4.0 ranker wave, reported end to end:
+`docs/benchmarks/2026-09-06-longmemeval-ranker-wave.md` (+ receipts, charts and
+the harness→RunnerOutput converter under its directory). Headline: gbrain's
+release default scores 95.53% strict `recall_all@5` on LongMemEval-S (449/470,
+up from 80.64% for the pre-wave default, whose autocut step dropped the second
+gold session on multi-part questions); first judged answer-accuracy row 86.6%
+(433/500) with full protocol disclosure and no comparison claim; Cat 13
+held-out conceptual recall 53.0 → 57.8 nDCG@5 via the metadata boost gate;
+NamedThingBench relational hit@1 3/39 → 21/39 via the relational pin. Two
+mechanisms that failed their pre-registered rules (expansion budget,
+keyword-arm confidence floor) are published as losses. `docs/comparison-systems.md`
+carries the new gbrain rows; the gbrain pin is the wave's merge commit on
+master (`2efaaf8f`). The Cat 13 runner gained
+`--reranker`, `--autocut`, `--keyword-arm-confidence-floor` and generic
+`--search-pin KEY=VALUE` pins, the E2 calibration and E1 localization scripts,
+and per-receipt pin echoes (Phase E0 notes below).
+
+### Added (ranker wave)
+
+- `docs/benchmarks/2026-09-06-longmemeval-ranker-wave.md` and its receipt
+  directory: compacted per-question rows for eight LongMemEval arms and the
+  judged run, the autocut floor replay, half-A miss diagnostics, Cat 13 E0/E2/E3
+  receipts, NamedThingBench R1 receipts, `ranker-wave-arms.json` and the two SVG
+  charts, `harness-to-runner-output.py` (in-repo harness ndjson → `RunnerOutput`).
+
+### Changed (installed pin is now the wave itself)
+
+- **`bun.lock` follows the `package.json` pin.** The earlier re-pin moved
+  `package.json` alone, so `bun install --frozen-lockfile` failed and every
+  local run still executed gbrain 0.48.2.0. Both now name the v0.48.4.0 PR head
+  and `node_modules/gbrain/src` is byte-identical to that commit.
+- **Cat 13 receipts echo the knobs the gbrain arm actually ran under.**
+  `resolved_config.resolved_bundle` resolves the installed pin's `balanced`
+  bundle with the cell's explicit pins layered on top (metadata boost gate,
+  autocut, reranker, relational pin, expansion budget, keyword-arm floor,
+  knobs-hash version), so two cells that differ only by a bundle default are
+  distinguishable after the fact.
+- **The E1 gap-localization runner pins `search.metadata_boost_gate=always`**
+  on its live call. It re-simulates the UNGATED post-fusion boost pipeline stage
+  by stage (the gate is the mechanism it motivated), and with `lexical` now the
+  shipped default the sim-vs-live parity check failed until the live side ran
+  ungated too. Each probe record also stamps hybrid's gate decision
+  (`meta.metadata_boost_gate`, reason `gate_always`) so the receipt is
+  self-verifying.
+- **Cat 27 (graph signals) pins the gate to `always`** so the A/B keeps
+  exercising the graph-signal stage on every probe rather than only when a
+  keyword/title row fused.
+- **Hermetic Cat 13 runs can no longer embed against a live provider.** The
+  gateway and its test embed transport are process-global and shared by every
+  file in one `bun test` process (bun runs files in a hash order, not the
+  order given). `ensureGateway` memoized its install keyed on
+  (transport, model, dims); when another runner's cleanup reset the transport
+  between two Cat 13 files with the same key, the second run skipped the
+  re-install and its brain build embedded live — invisible with a real key in
+  the environment, a 401 in CI. The memo is gone (both calls are idempotent),
+  the inline adapters refuse to init or query a hermetic run unless the stub
+  transport is active (`expectStubTransport`), and the three Cat 13 runners
+  restore the transport in their cleanup like every other runner.
+- **Hermetic e2e tests no longer exhaust the kernel's memory-map limit.** One
+  PGLite brain keeps ~1 GB of WebAssembly memory live, which inflates JSC's
+  garbage-collection trigger; the Cat 13 e2e runs then piled up 1-2 GB of
+  garbage and the eventual one-shot sweep fragmented the address space into
+  50k+ mappings (default `vm.max_map_count` is 65,530), so a single
+  `bun test test/eval/` process could spin or die. The shared inline gbrain
+  adapter now paces the collector (every 40 imported pages, every 25 queries,
+  and after teardown once PGLite has finalized its close); the two
+  direct-engine probe loops do the same. Full-suite peak: ~55k → ~16k
+  mappings; assertions unchanged.
+- **README recipe:** the ungated E0-V1 like-for-like cell now needs
+  `--search-pin search.metadata_boost_gate=always`; a bare `--reranker off
+  --autocut off` cell runs the gated pipeline (the E3-V1 row).
+
+Phase E0 of the gbrain ranker wave: the Cat 13 conceptual-recall runner can
+now produce a receipt that names its embedding space and its search pins, so
+the hybrid-vs-vector comparison is like-for-like and reproducible from `main`.
+
+### Added
+
+- **Configurable Cat 13 embedder, applied to every adapter.**
+  `CAT13_EMBEDDING_MODEL` / `CAT13_EMBED_DIMS` (or `--embedding-model` /
+  `--embedding-dims`) flow into the runner's gateway setup AND into each
+  adapter's init, so `vector` and `vector-grep-rrf-fusion` (which call
+  `configureGateway` themselves) can no longer reset the gateway to the
+  OpenAI default mid-run. Defaults are unchanged (`openai:text-embedding-3-large`
+  @ 1536). The stub hash-embed transport produces vectors of the configured
+  width. The receipt records the resolved embedder and the gateway's live
+  `(model, dims)` after each adapter's init; drift is a harness error.
+- **Explicit search pins for the gbrain-backed Cat 13 adapters.** `--reranker
+  on|off` and `--autocut on|off` (both default `off`) set `search.mode=balanced`,
+  `search.reranker.enabled`, `search.autocut` (and `search.reranker.model=
+  voyage:rerank-2.5` when on) on both `gbrain` and `vector-grep-rrf-fusion`
+  before ingest; `--expansion-variant-budget <b>` passes
+  `search.expansion_variant_budget` through only when given. Applied entries
+  are echoed per adapter in `resolved_config.search_config_by_adapter`.
+  Reranker-on cells are fail-closed: refused under `--stub-embed`, skipped
+  without `VOYAGE_API_KEY`, and invalidated (`rerank_missing_score`) when no
+  result carried a `rerank_score`.
+- **Seeded concept split.** `--tuning-concepts N` / `--holdout-concepts M`
+  (default 20 / 10 over the 30 concepts) with `--seed` (default 42; the probe
+  generator's seed is untouched). nDCG@5 / P@5 / P@1 and per-template rollups
+  are reported for the tuning and held-out concept sets alongside the overall
+  numbers, in stdout, `report.json` and the receipt. Mixed-target
+  company-neighborhood probes are excluded from both subsets and counted.
+- `eval/runner/README-cat13-phase-e0.md` — the E0 run recipe (link step,
+  hermetic check, the reranker x autocut arms in the voyage and OpenAI spaces).
+- `HybridNoGraphAdapter` accepts `searchConfig` and exposes `resolvedConfig()`
+  / `observedStats()`; `GbrainInlineAdapter` exposes `observedStats()`.
+
+### Changed
+
+- The Cat 13 CLI parser rejects unknown flags instead of ignoring them.
+
 ## [0.6.1] - 2026-09-02
 
 Re-run of the public LongMemEval-S (cleaned) split at gbrain v0.48.2.0, plus the

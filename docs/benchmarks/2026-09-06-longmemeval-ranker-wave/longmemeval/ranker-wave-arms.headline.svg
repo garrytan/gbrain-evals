@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 500" width="880" height="500">
+  <rect width="880" height="500" fill="#0a0a0a" />
+  <text x="220" y="16" font-family="ui-sans-serif,system-ui,sans-serif" font-size="12" fill="#9ca3af">recall_all@5 on LongMemEval _s — n=470</text>
+  <line x1="334" y1="24" x2="334" y2="464" stroke="#262626" stroke-width="1" />
+  <text x="334" y="482" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,monospace" font-size="10" fill="#9ca3af">20%</text>
+  <line x1="448" y1="24" x2="448" y2="464" stroke="#262626" stroke-width="1" />
+  <text x="448" y="482" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,monospace" font-size="10" fill="#9ca3af">40%</text>
+  <line x1="562" y1="24" x2="562" y2="464" stroke="#262626" stroke-width="1" />
+  <text x="562" y="482" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,monospace" font-size="10" fill="#9ca3af">60%</text>
+  <line x1="676" y1="24" x2="676" y2="464" stroke="#262626" stroke-width="1" />
+  <text x="676" y="482" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,monospace" font-size="10" fill="#9ca3af">80%</text>
+  <line x1="790" y1="24" x2="790" y2="464" stroke="#262626" stroke-width="1" />
+  <text x="790" y="482" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,monospace" font-size="10" fill="#9ca3af">100%</text>
+  
+      <text x="208" y="48" text-anchor="end" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13" font-weight="600" fill="#e5e7eb">gbrain-hybrid+rerank (A2: autocut off)</text>
+      <rect x="220" y="33" width="544.531914893617" height="22" rx="3" fill="#16a34a" opacity="1" />
+      <text x="772.531914893617" y="48" text-anchor="start" font-family="ui-monospace,SFMono-Regular,monospace" font-size="13" font-weight="700" fill="#16a34a">95.5%</text>
+      <text x="208" y="62" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="10" fill="#9ca3af">n=470 · k=5</text>
+    
+      <text x="208" y="88" text-anchor="end" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13" font-weight="600" fill="#e5e7eb">gbrain-hybrid release default v0.48.3.0 (rerank on, autocut off, pin 3, gate lexical)</text>
+      <rect x="220" y="73" width="544.531914893617" height="22" rx="3" fill="#16a34a" opacity="1" />
+      <text x="772.531914893617" y="88" text-anchor="start" font-family="ui-monospace,SFMono-Regular,monospace" font-size="13" font-weight="700" fill="#16a34a">95.5%</text>
+      <text x="208" y="102" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="10" fill="#9ca3af">n=470 · k=5</text>
+    
+      <text x="208" y="128" text-anchor="end" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13" font-weight="600" fill="#e5e7eb">gbrain-hybrid (A1: reranker off, autocut off)</text>
+      <rect x="220" y="113" width="532.4042553191489" height="22" rx="3" fill="#16a34a" opacity="1" />
+      <text x="760.4042553191489" y="128" text-anchor="start" font-family="ui-monospace,SFMono-Regular,monospace" font-size="13" font-weight="700" fill="#16a34a">93.4%</text>
+      <text x="208" y="142" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="10" fill="#9ca3af">n=470 · k=5</text>
+    
+      <text x="208" y="168" text-anchor="end" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13" font-weight="600" fill="#e5e7eb">gbrain-hybrid tokenmax as released (legacy expansion, rerank, no autocut)</text>
+      <rect x="220" y="153" width="528.7659574468086" height="22" rx="3" fill="#16a34a" opacity="1" />
+      <text x="756.7659574468086" y="168" text-anchor="start" font-family="ui-monospace,SFMono-Regular,monospace" font-size="13" font-weight="700" fill="#16a34a">92.8%</text>
+      <text x="208" y="182" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="10" fill="#9ca3af">n=470 · k=5</text>
+    
+      <text x="208" y="208" text-anchor="end" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13" font-weight="400" fill="#9ca3af">MemPalace hybrid v4 + LLM rerank (strict, recomputed)</text>
+      <rect x="220" y="193" width="513" height="22" rx="3" fill="#f59e0b" opacity="0.7" />
+      <text x="741" y="208" text-anchor="start" font-family="ui-monospace,SFMono-Regular,monospace" font-size="13" font-weight="700" fill="#f59e0b">90.0%</text>
+      <text x="208" y="222" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="10" fill="#9ca3af">n=470 · k=5 · published</text>
+    
+      <text x="208" y="248" text-anchor="end" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13" font-weight="400" fill="#9ca3af">ContextFit fusion All@5 (self-reported, leak caveat)</text>
+      <rect x="220" y="233" width="498.46500000000003" height="22" rx="3" fill="#f59e0b" opacity="0.7" />
+      <text x="726.465" y="248" text-anchor="start" font-family="ui-monospace,SFMono-Regular,monospace" font-size="13" font-weight="700" fill="#f59e0b">87.5%</text>
+      <text x="208" y="262" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="10" fill="#9ca3af">n=470 · k=5 · published</text>
+    
+      <text x="208" y="288" text-anchor="end" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13" font-weight="400" fill="#9ca3af">MemPalace raw (strict, recomputed)</text>
+      <rect x="220" y="273" width="488.49" height="22" rx="3" fill="#f59e0b" opacity="0.7" />
+      <text x="716.49" y="288" text-anchor="start" font-family="ui-monospace,SFMono-Regular,monospace" font-size="13" font-weight="700" fill="#f59e0b">85.7%</text>
+      <text x="208" y="302" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="10" fill="#9ca3af">n=470 · k=5 · published</text>
+    
+      <text x="208" y="328" text-anchor="end" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13" font-weight="600" fill="#e5e7eb">gbrain-hybrid+expansion@0.25 (A3')</text>
+      <rect x="220" y="313" width="477.82978723404256" height="22" rx="3" fill="#16a34a" opacity="1" />
+      <text x="705.8297872340426" y="328" text-anchor="start" font-family="ui-monospace,SFMono-Regular,monospace" font-size="13" font-weight="700" fill="#16a34a">83.8%</text>
+      <text x="208" y="342" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="10" fill="#9ca3af">n=470 · k=5</text>
+    
+      <text x="208" y="368" text-anchor="end" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13" font-weight="600" fill="#e5e7eb">gbrain-hybrid tokenmax+rerank+autocut, expansion@0.25 (A3'R)</text>
+      <rect x="220" y="353" width="462.06382978723406" height="22" rx="3" fill="#16a34a" opacity="1" />
+      <text x="690.063829787234" y="368" text-anchor="start" font-family="ui-monospace,SFMono-Regular,monospace" font-size="13" font-weight="700" fill="#16a34a">81.1%</text>
+      <text x="208" y="382" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="10" fill="#9ca3af">n=470 · k=5</text>
+    
+      <text x="208" y="408" text-anchor="end" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13" font-weight="600" fill="#e5e7eb">gbrain-hybrid+rerank+autocut (A4: pre-wave default)</text>
+      <rect x="220" y="393" width="459.63829787234044" height="22" rx="3" fill="#16a34a" opacity="1" />
+      <text x="687.6382978723404" y="408" text-anchor="start" font-family="ui-monospace,SFMono-Regular,monospace" font-size="13" font-weight="700" fill="#16a34a">80.6%</text>
+      <text x="208" y="422" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="10" fill="#9ca3af">n=470 · k=5</text>
+    
+      <text x="208" y="448" text-anchor="end" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13" font-weight="600" fill="#e5e7eb">gbrain-hybrid+expansion (A3: legacy weight)</text>
+      <rect x="220" y="433" width="309.25531914893617" height="22" rx="3" fill="#16a34a" opacity="1" />
+      <text x="537.2553191489362" y="448" text-anchor="start" font-family="ui-monospace,SFMono-Regular,monospace" font-size="13" font-weight="700" fill="#16a34a">54.3%</text>
+      <text x="208" y="462" text-anchor="end" font-family="ui-monospace,SFMono-Regular,monospace" font-size="10" fill="#9ca3af">n=470 · k=5</text>
+    
+</svg>

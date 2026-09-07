@@ -13,13 +13,21 @@
  * and echoed back via resolvedConfig() so receipts can prove which mode /
  * reranker state a cell actually ran with (a hidden default-mode reranker
  * confounded cat18/cat21 — never assume the default).
+ *
+ * Phase E2 hook: every query reads hybridSearch's `onMeta` and counts the
+ * `keyword_arm_confidence` decision (stamped / down-weighted) into
+ * observedStats(), so a `search.keyword_arm_confidence_floor` cell can prove
+ * the knob reached the engine and how often it fired. `engineOf()` exposes
+ * the engine for the calibration script (cat13-kacf-calibrate.ts), which
+ * needs the raw keyword arm on the SAME brain the gbrain arm searches.
  */
 
 import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { runExtract } from 'gbrain/extract';
 import { hybridSearch } from 'gbrain/search/hybrid';
 import { importFromContent } from 'gbrain/import-file';
-import { configureGateway } from 'gbrain/ai/gateway';
+import { configureGateway, diagnoseEmbedding } from 'gbrain/ai/gateway';
+import type { HybridSearchMeta } from 'gbrain/types';
 import type { Adapter, AdapterConfig, BrainState, Page, PublicQuery, RankedDoc } from '../types.ts';
 
 export interface GbrainInlineOptions {
@@ -32,11 +40,71 @@ export interface GbrainInlineOptions {
   /** Embedding model for the gateway. Defaults to the pre-v0.40 baseline behavior. */
   embeddingModel?: string;
   embeddingDimensions?: number;
+  /**
+   * Hermetic runs set this: init() and query() then refuse to proceed unless
+   * gbrain's test embed transport is the active one. The gateway is
+   * process-global and shared by every test file in one `bun test` process,
+   * and other runners reset the transport when they finish — without this
+   * guard a "stub" run whose stub was silently dropped embeds against the live
+   * provider (spending with a real key, a 401 with the dummy key).
+   */
+  expectStubTransport?: boolean;
 }
+
+/** Throw unless gbrain's test embed transport is installed (see GbrainInlineOptions.expectStubTransport). */
+export function assertStubEmbedTransport(where: string): void {
+  const d = diagnoseEmbedding();
+  if (!d.ok || d.provider !== '<test-transport>') {
+    throw new Error(
+      `[gbrain-inline] ${where}: hermetic run but the stub embed transport is not active ` +
+      `(diagnoseEmbedding → ${d.ok ? `provider=${d.provider}` : `reason=${(d as { reason: string }).reason}`}). ` +
+      `Re-run ensureGateway(stubEmbed=true, …) right before building the brain; another runner may have reset the transport.`,
+    );
+  }
+}
+
+/** Per-run observation counters, read back via observedStats() for receipts. */
+export interface InlineObservedStats {
+  /** Queries answered. */
+  queries: number;
+  /**
+   * Queries whose hybridSearch result set carried a finite `rerank_score`.
+   * gbrain's reranker is fail-open (a missing key silently measures plain
+   * hybrid), so a reranker-pinned cell with 0 here did NOT measure reranking.
+   */
+  rerank_scored_queries: number;
+  /** Queries whose hybridSearch meta carried `keyword_arm_confidence` (the fused path composed a decision). */
+  keyword_arm_confidence_stamped: number;
+  /** Queries where that decision was `downweighted: true` (keyword + title lists fused at half weight). */
+  keyword_arm_confidence_downweighted: number;
+}
+
+/**
+ * Force a full JSC collection now (no-op off Bun). One in-memory PGLite brain
+ * pins ~1 GB of WebAssembly memory that JSC counts as "extra memory", which
+ * inflates its heap-growth trigger to 2-3 GB: a 240-page import or a few
+ * hundred hybridSearch calls then pile up 1-1.5 GB of pure garbage between
+ * collections, and the eventual one-shot sweep decommits tens of thousands
+ * of 16 KB heap blocks (each its own VMA). Three cat13 e2e files in one
+ * `bun test` process crossed the kernel's vm.max_map_count (65,530) and the
+ * process spun in the allocator. Pacing the GC at the allocation sites keeps
+ * the live floor (~1 GB) as the steady state instead of the peak. Exported so
+ * runners that drive the engine directly (bypassing query()) can pace their
+ * probe loops the same way.
+ */
+export function gcNow(): void {
+  if (typeof Bun !== 'undefined' && typeof Bun.gc === 'function') Bun.gc(true);
+}
+
+/** Import-loop GC cadence: every N pages (~0.5 MB JSC-visible + several MB native garbage per page). */
+const GC_EVERY_PAGES = 40;
+/** Query-loop GC cadence: every N hybridSearch calls (~5 MB garbage per call at innerLimit 60). */
+const GC_EVERY_QUERIES = 25;
 
 interface InlineState {
   engine: PGLiteEngine;
   resolvedConfig: Record<string, string>;
+  observed: InlineObservedStats;
 }
 
 export class GbrainInlineAdapter implements Adapter {
@@ -56,6 +124,7 @@ export class GbrainInlineAdapter implements Adapter {
       embedding_dimensions: this.opts.embeddingDimensions ?? 1536,
       env: process.env as Record<string, string | undefined>,
     });
+    if (this.opts.expectStubTransport) assertStubEmbedTransport('init');
 
     const engine = new PGLiteEngine();
     await engine.connect({});
@@ -72,6 +141,7 @@ export class GbrainInlineAdapter implements Adapter {
     console.log = () => {};
     console.error = () => {};
     try {
+      let imported = 0;
       for (const p of rawPages) {
         const fm: string[] = [
           `---`,
@@ -87,21 +157,39 @@ export class GbrainInlineAdapter implements Adapter {
           fm.push('', '## Timeline', '', p.timeline);
         }
         await importFromContent(engine, p.slug, fm.join('\n'));
+        imported += 1;
+        if (imported % GC_EVERY_PAGES === 0) gcNow();
       }
+      gcNow();
       if (this.opts.extract !== false) {
         await runExtract(engine, ['links', '--source', 'db']);
         await runExtract(engine, ['timeline', '--source', 'db']);
+        gcNow();
       }
     } finally {
       console.log = origLog;
       console.error = origErr;
     }
-    return { engine, resolvedConfig } satisfies InlineState;
+    return {
+      engine,
+      resolvedConfig,
+      observed: { queries: 0, rerank_scored_queries: 0, keyword_arm_confidence_stamped: 0, keyword_arm_confidence_downweighted: 0 },
+    } satisfies InlineState;
   }
 
   async query(q: PublicQuery, state: BrainState): Promise<RankedDoc[]> {
-    const { engine } = state as InlineState;
-    const chunkResults = await hybridSearch(engine, q.text, { limit: this.opts.topK * 6 });
+    const { engine, observed } = state as InlineState;
+    if (this.opts.expectStubTransport && observed.queries === 0) assertStubEmbedTransport('query');
+    let meta: HybridSearchMeta | undefined;
+    const chunkResults = await hybridSearch(engine, q.text, { limit: this.opts.topK * 6, onMeta: (m) => { meta = m; } });
+    observed.queries += 1;
+    if (observed.queries % GC_EVERY_QUERIES === 0) gcNow();
+    if (chunkResults.some(r => Number.isFinite(r.rerank_score))) observed.rerank_scored_queries += 1;
+    const kacf = meta?.keyword_arm_confidence;
+    if (kacf) {
+      observed.keyword_arm_confidence_stamped += 1;
+      if (kacf.downweighted) observed.keyword_arm_confidence_downweighted += 1;
+    }
     // Chunk → page normalization: keep the best chunk score per page so
     // downstream metrics see page-grained, duplicate-free ids.
     const pageBest = new Map<string, number>();
@@ -121,7 +209,23 @@ export class GbrainInlineAdapter implements Adapter {
     return (state as InlineState).resolvedConfig;
   }
 
+  /** Query-time observations (rerank_score presence, keyword_arm_confidence counts) — the fail-closed checks for pinned cells. */
+  observedStats(state: BrainState): InlineObservedStats {
+    return { ...(state as InlineState).observed };
+  }
+
+  /** The live engine behind a BrainState — for calibration scripts that need the raw arms on the same brain. */
+  engineOf(state: BrainState): PGLiteEngine {
+    return (state as InlineState).engine;
+  }
+
   async teardown(state: BrainState): Promise<void> {
     await (state as InlineState).engine.disconnect();
+    // PGlite finalizes its close one microtask after disconnect() resolves;
+    // only then is the ~1 GB WebAssembly.Memory unreachable. Yield one
+    // event-loop turn, then collect, so the memory is returned BEFORE the
+    // next test/file builds its brain instead of two brains overlapping.
+    await new Promise<void>(resolve => setTimeout(resolve, 0));
+    gcNow();
   }
 }
