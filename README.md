@@ -252,6 +252,11 @@ gbrain-evals/
 - **Score your own system:** implement an adapter against our interface, register
   it, run the suite, and open a PR with your scorecard. gbrain is one system under
   test, not the subject of the benchmark.
+- **Score your own distiller on the write path:** write one
+  `<transcript_id>.md` file per Cat 35 transcript, then run
+  `bun eval/runner/cat35-transcript-distill.ts --lanes verbatim --external-lane mytool --external-dir DIR`.
+  The verbatim lane in the same run is the judge's ceiling for salient-unit
+  recall.
 - **Add a test:** new benchmark file, wire it in, add a unit test, commit a
   baseline.
 

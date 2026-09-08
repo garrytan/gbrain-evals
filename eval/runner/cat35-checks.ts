@@ -12,9 +12,48 @@
  *   - page shape: hasWikilink / slugDisciplineOk / selfContainedOpening
  *   - claim decomposition: segmentClaims (hallucination denominator)
  *   - scaffold contamination: addedContent (line-level diff)
+ *   - external lanes: externalLaneNameError / loadExternalLaneDocs
  *   - stats: compressionRatio / thresholdCurve / weightedKappa /
  *     bootstrapCI / seededSample / computeDelta
  */
+
+// ─── External lanes ──────────────────────────────────────────────────────
+
+export interface ExternalLaneSpec {
+  name: string;
+  dir: string;
+}
+
+export interface ExternalLaneLoad {
+  docs: Map<string, string>;
+  missing: string[];
+}
+
+/** Return a user-facing validation error, or null when the lane name is safe. */
+export function externalLaneNameError(name: string, builtinLanes: readonly string[]): string | null {
+  if (!/^[a-z][a-z0-9-]{0,31}$/.test(name)) {
+    return `external lane name '${name}' must match ^[a-z][a-z0-9-]{0,31}$`;
+  }
+  if (builtinLanes.includes(name)) {
+    return `external lane name '${name}' collides with a built-in lane`;
+  }
+  return null;
+}
+
+/** Load external documents in corpus order. Empty strings count as present. */
+export function loadExternalLaneDocs(
+  transcriptIds: string[],
+  read: (tid: string) => string | null,
+): ExternalLaneLoad {
+  const docs = new Map<string, string>();
+  const missing: string[] = [];
+  for (const tid of transcriptIds) {
+    const body = read(tid);
+    if (body === null) missing.push(tid);
+    else docs.set(tid, body);
+  }
+  return { docs, missing };
+}
 
 // ─── Whitespace normalization + anchor checks ────────────────────────────
 
