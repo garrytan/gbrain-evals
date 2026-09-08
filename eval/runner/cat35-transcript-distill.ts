@@ -3,16 +3,19 @@
  *
  * What % of the planted salient units (facts / ideas / decisions / vibes /
  * entities) in an agent-conversation transcript survive into gbrain's output,
- * across three write-path lanes:
+ * across three built-in write-path lanes and one optional external lane:
  *
  *   verbatim — runTranscriptsIngest only (control/floor; calibrates gold+judge)
  *   facts    — ingest → runExtractConversationFactsCore (memory-write lane)
  *   dream    — triage → runPhaseSynthesize (THE headline distillation feature)
+ *   external - read one <transcript_id>.md document from another system
  *
  * Run:
  *   bun eval/runner/cat35-transcript-distill.ts              # BPRE smoke (default): 2 transcripts, Haiku — measured $0.10 / 81s
  *   CAT35_FULL=1 bun eval/runner/cat35-transcript-distill.ts # full 24 × 3 lanes — measured $6.20 / 29 min (Sonnet judge)
  *   ... --lanes verbatim,dream --transcripts coding-reflection-01 --json --judge-calibration
+ *   ... --lanes verbatim --external-lane mytool --external-dir DIR
+ *   ... --lanes none --external-lane mytool --external-dir DIR
  *
  * Safe-by-default: the runner DEFAULTS to BPRE so `eval:brainbench` sweeps can
  * never accidentally launch a full-spend run. Env:
@@ -57,11 +60,15 @@ import {
   bootstrapCI,
   compressionRatio,
   computeDelta,
+  externalLaneNameError,
+  loadExternalLaneDocs,
   quoteFidelity,
   scanDistractors,
   segmentClaims,
   thresholdCurve,
   weightedKappa,
+  type ExternalLaneLoad,
+  type ExternalLaneSpec,
   type TriageVerdictRow,
 } from './cat35-checks.ts';
 import {
@@ -78,8 +85,13 @@ import {
 
 // ─── Types over the committed fixtures ────────────────────────────────────
 
-type Lane = 'verbatim' | 'facts' | 'dream';
-const ALL_LANES: Lane[] = ['verbatim', 'facts', 'dream'];
+type BuiltinLane = 'verbatim' | 'facts' | 'dream';
+type Lane = BuiltinLane | (string & {});
+const ALL_LANES: BuiltinLane[] = ['verbatim', 'facts', 'dream'];
+
+function isBuiltinLane(lane: string): lane is BuiltinLane {
+  return (ALL_LANES as string[]).includes(lane);
+}
 
 interface GoldFile {
   schema_version: number;
@@ -127,6 +139,7 @@ interface Opts {
   limit: number | null;
   json: boolean;
   lanes: Lane[];
+  externalLane: ExternalLaneSpec | null;
   transcripts: string[] | null;
   judgeCalibration: boolean;
   /** Optional explicit annotation file after --judge-calibration. */
@@ -140,20 +153,62 @@ function parseOpts(): Opts {
     return i >= 0 ? a[i + 1] : undefined;
   };
   const lanesRaw = get('--lanes');
-  const lanes = lanesRaw
-    ? (lanesRaw.split(',').map((s) => s.trim()) as Lane[])
+  const requestedLanes = lanesRaw
+    ? lanesRaw.split(',').map((s) => s.trim())
     : [...ALL_LANES];
-  for (const l of lanes) {
-    if (!ALL_LANES.includes(l)) {
-      process.stderr.write(`[cat35] unknown lane '${l}' (valid: ${ALL_LANES.join(',')})\n`);
+  const noneSelected = requestedLanes.length === 1 && requestedLanes[0] === 'none';
+  if (requestedLanes.includes('none') && !noneSelected) {
+    process.stderr.write('[cat35] --lanes none cannot be combined with built-in lanes\n');
+    process.exit(2);
+  }
+  const lanes: Lane[] = noneSelected ? [] : requestedLanes;
+  for (const lane of lanes) {
+    if (!isBuiltinLane(lane)) {
+      process.stderr.write(`[cat35] unknown lane '${lane}' (valid: ${ALL_LANES.join(',')},none)\n`);
       process.exit(2);
     }
+  }
+
+  const hasExternalName = a.includes('--external-lane');
+  const hasExternalDir = a.includes('--external-dir');
+  if (hasExternalName !== hasExternalDir) {
+    process.stderr.write('[cat35] --external-lane and --external-dir must be provided together\n');
+    process.exit(2);
+  }
+  let externalLane: ExternalLaneSpec | null = null;
+  if (hasExternalName && hasExternalDir) {
+    const name = get('--external-lane') ?? '';
+    const dirRaw = get('--external-dir');
+    const nameError = externalLaneNameError(name, ALL_LANES);
+    if (nameError) {
+      process.stderr.write(`[cat35] ${nameError}\n`);
+      process.exit(2);
+    }
+    if (!dirRaw || dirRaw.startsWith('--')) {
+      process.stderr.write('[cat35] --external-dir requires a directory path\n');
+      process.exit(2);
+    }
+    const dir = resolve(dirRaw);
+    if (!existsSync(dir)) {
+      process.stderr.write(`[cat35] external directory not found: ${dir}\n`);
+      process.exit(2);
+    }
+    if (!lstatSync(dir).isDirectory()) {
+      process.stderr.write(`[cat35] external path is not a directory: ${dir}\n`);
+      process.exit(2);
+    }
+    externalLane = { name, dir };
+    lanes.push(name);
+  } else if (noneSelected) {
+    process.stderr.write('[cat35] --lanes none requires --external-lane and --external-dir\n');
+    process.exit(2);
   }
   return {
     full: process.env.CAT35_FULL === '1',
     limit: get('--limit') ? Number(get('--limit')) : null,
     json: a.includes('--json'),
     lanes,
+    externalLane,
     transcripts: get('--transcripts') ? get('--transcripts')!.split(',').map((s) => s.trim()) : null,
     judgeCalibration: a.includes('--judge-calibration'),
     judgeCalibrationPath:
@@ -285,6 +340,9 @@ async function makeEngine(scaffold: Array<{ slug: string; body: string }>): Prom
 
 async function main(): Promise<number> {
   const opts = parseOpts();
+  const builtinLanes = opts.lanes.filter(isBuiltinLane);
+  const distilledLane = (lane: Lane): boolean =>
+    lane === 'dream' || lane === opts.externalLane?.name;
   const wallStart = Date.now();
 
   // Setup gates (exit 2 = setup failure).
@@ -368,7 +426,8 @@ async function main(): Promise<number> {
   // must never masquerade as the published benchmark).
   const isWholeRun =
     fixtures.length === allFixtureCount &&
-    opts.lanes.length === ALL_LANES.length &&
+    builtinLanes.length === ALL_LANES.length &&
+    ALL_LANES.every((lane) => builtinLanes.includes(lane)) &&
     !opts.limit &&
     !opts.transcripts;
   const mode = opts.full ? (isWholeRun ? 'full' : 'partial') : 'b-pre-validity';
@@ -385,7 +444,9 @@ async function main(): Promise<number> {
   // 3 = grounding + leakage-confirm + usability per transcript (pessimistic;
   // hazard + joint-fallback calls ride inside the per-batch price).
   const EXTRA_JUDGE_BATCHES_PER_TRANSCRIPT = 3;
-  const judgeBatches = nSignal * opts.lanes.length + fixtures.length * EXTRA_JUDGE_BATCHES_PER_TRANSCRIPT;
+  const judgeBatches =
+    nSignal * opts.lanes.length +
+    fixtures.length * EXTRA_JUDGE_BATCHES_PER_TRANSCRIPT * (opts.externalLane ? 2 : 1);
   const judgeEst =
     // Unknown judge models estimate at the EXPENSIVE rate (only haiku earns
     // the cheap estimate) — a pricier model must not sneak past pre-flight.
@@ -400,6 +461,7 @@ async function main(): Promise<number> {
   const scaffold = loadScaffold();
   const scaffoldBySlug = new Map(scaffold.map((p) => [p.slug, p.body]));
   let totalCost = 0;
+  let externalLaneLoad: ExternalLaneLoad | null = null;
 
   // Per-transcript state.
   interface TState {
@@ -574,6 +636,34 @@ async function main(): Promise<number> {
     );
   }
 
+  // ── External lane: one markdown document per selected transcript ───────
+  if (opts.externalLane) {
+    const { name, dir } = opts.externalLane;
+    externalLaneLoad = loadExternalLaneDocs(
+      fixtures.map((f) => f.gold.transcript_id),
+      (tid) => {
+        const path = join(dir, `${tid}.md`);
+        return existsSync(path) ? readFileSync(path, 'utf8') : null;
+      },
+    );
+    if (externalLaneLoad.docs.size === 0) {
+      err(`external lane '${name}': no documents found in ${dir}`);
+      return 2;
+    }
+    for (const f of fixtures) {
+      const tid = f.gold.transcript_id;
+      const st = states.get(tid)!;
+      const body = externalLaneLoad.docs.get(tid);
+      if (body === undefined) {
+        st.laneError[name] = `no document at ${join(dir, `${tid}.md`)}`;
+      } else {
+        st.laneDocs[name] = body;
+        st.lanePages[name] = [{ slug: `${name}/${tid}`, body }];
+      }
+    }
+    err(`external[${name}]: documents=${externalLaneLoad.docs.size} missing=${externalLaneLoad.missing.length}`);
+  }
+
   // ── Scoring ──────────────────────────────────────────────────────────────
   const perItem: PerItemRow[] = [];
   const itemVerdicts = new Map<string, CoverageVerdict>(); // `${lane}:${tid}:${item_id}`
@@ -582,7 +672,7 @@ async function main(): Promise<number> {
   const halluc: Record<string, { claims: number; verifiable: number; ungrounded: number }> = {};
   const leakage: Record<string, { hits: number; confirmed: number }> = {};
   const usabilityPerTranscript: Array<{ transcript_id: string; lane: Lane; satisfied: number; total: number }> = [];
-  const hazardsOut: Array<{ hazard_id: string; transcript_id: string; type: string; violated: boolean | null }> = [];
+  const hazardsOut: Array<{ lane: Lane; hazard_id: string; transcript_id: string; type: string; violated: boolean | null }> = [];
 
   const jcfg = { model: judgeModel };
   // Fresh per-run resolved-model accounting: every judge response's
@@ -608,7 +698,7 @@ async function main(): Promise<number> {
               notability: it.notability,
               depth_bucket: it.depth_bucket,
               status: 'ABSENT',
-              joint: lane === 'dream' ? 0 : null,
+              joint: distilledLane(lane) ? 0 : null,
             });
           }
         } else {
@@ -625,7 +715,7 @@ async function main(): Promise<number> {
           totalCost += cov.cost_usd;
           if (cov.judge_failed_ids.length) judgeFailures++;
           const byId = new Map(cov.verdicts.map((v) => [v.item_id, v]));
-          // Per-item joint (dream lane): evidence must appear in the doc AND
+          // Per-item joint (distilled lanes): evidence must appear in the doc AND
           // trace to the transcript; paraphrase evidence falls back to the
           // grounding judge.
           const jointFallback: Array<{ item_id: string; evidence: string }> = [];
@@ -634,7 +724,7 @@ async function main(): Promise<number> {
             const failed = cov.judge_failed_ids.includes(it.item_id) || !v;
             const status = failed ? 'JUDGE_FAILED' : v!.status;
             let joint: number | null = null;
-            if (lane === 'dream' && !failed && v) {
+            if (distilledLane(lane) && !failed && v) {
               const credit = v.status === 'FULL' ? 1 : v.status === 'PARTIAL' ? 0.5 : 0;
               if (credit === 0) joint = 0;
               else {
@@ -659,9 +749,9 @@ async function main(): Promise<number> {
               joint,
             });
           }
-          if (jointFallback.length && lane === 'dream') {
+          if (jointFallback.length && distilledLane(lane)) {
             const g = await scoreGrounding(
-              { label: `joint:${tid}`, claims: jointFallback.map((x) => x.evidence), transcript: f.transcriptText },
+              { label: lane === 'dream' ? `joint:${tid}` : `joint:${lane}:${tid}`, claims: jointFallback.map((x) => x.evidence), transcript: f.transcriptText },
               jcfg,
             );
             judgeCalls++;
@@ -678,8 +768,8 @@ async function main(): Promise<number> {
         }
       }
 
-      // Hallucination / claim precision (facts + dream lanes; ALL claims).
-      if ((lane === 'facts' || lane === 'dream') && doc && !errored) {
+      // Hallucination / claim precision (facts + distilled lanes; ALL claims).
+      if ((lane === 'facts' || distilledLane(lane)) && doc && !errored) {
         const claims =
           lane === 'facts'
             ? doc.split('\n').filter((l) => l.trim().startsWith('- ')).map((l) => l.replace(/^- \[[a-z]+\] /, '').trim())
@@ -726,7 +816,7 @@ async function main(): Promise<number> {
       }
 
       // Usability (page-producing lanes, conditional on emission).
-      if ((lane === 'verbatim' || lane === 'dream') && !errored) {
+      if ((lane === 'verbatim' || distilledLane(lane)) && !errored) {
         const pages = st.lanePages[lane] ?? [];
         if (pages.length) {
           const u = await scoreUsabilityChecklist(
@@ -745,31 +835,38 @@ async function main(): Promise<number> {
       }
     }
 
-    // Attribution hazards (dream lane): does the page-set assert the wrong claim?
-    if (opts.lanes.includes('dream') && f.gold.hazards.length) {
-      const doc = st.laneDocs.dream;
-      for (const h of f.gold.hazards) {
-        if (!doc || st.laneError.dream) {
-          hazardsOut.push({ hazard_id: h.hazard_id, transcript_id: tid, type: h.type, violated: null });
-          continue;
-        }
-        const g = await scoreGrounding(
-          { label: `hazard:${h.hazard_id}`, claims: [h.wrong_claim], transcript: doc },
-          jcfg,
-        );
-        judgeCalls++;
-        totalCost += g.cost_usd;
-        if (g.judge_failed) {
-          judgeFailures++;
-          hazardsOut.push({ hazard_id: h.hazard_id, transcript_id: tid, type: h.type, violated: null });
-        } else {
-          // grounded==true means the DREAM OUTPUT asserts the wrong claim → violation.
-          hazardsOut.push({
-            hazard_id: h.hazard_id,
-            transcript_id: tid,
-            type: h.type,
-            violated: Boolean(g.results[0]?.verifiable && g.results[0]?.grounded),
-          });
+    // Attribution hazards: does a distilled page-set assert the wrong claim?
+    if (f.gold.hazards.length) {
+      for (const lane of opts.lanes.filter(distilledLane)) {
+        const doc = st.laneDocs[lane];
+        for (const h of f.gold.hazards) {
+          if (!doc || st.laneError[lane]) {
+            hazardsOut.push({ lane, hazard_id: h.hazard_id, transcript_id: tid, type: h.type, violated: null });
+            continue;
+          }
+          const g = await scoreGrounding(
+            {
+              label: lane === 'dream' ? `hazard:${h.hazard_id}` : `hazard:${lane}:${h.hazard_id}`,
+              claims: [h.wrong_claim],
+              transcript: doc,
+            },
+            jcfg,
+          );
+          judgeCalls++;
+          totalCost += g.cost_usd;
+          if (g.judge_failed) {
+            judgeFailures++;
+            hazardsOut.push({ lane, hazard_id: h.hazard_id, transcript_id: tid, type: h.type, violated: null });
+          } else {
+            // grounded==true means the distilled output asserts the wrong claim.
+            hazardsOut.push({
+              lane,
+              hazard_id: h.hazard_id,
+              transcript_id: tid,
+              type: h.type,
+              violated: Boolean(g.results[0]?.verifiable && g.results[0]?.grounded),
+            });
+          }
         }
       }
     }
@@ -835,7 +932,7 @@ async function main(): Promise<number> {
       const doc = st.laneDocs[lane];
       if (doc === undefined || st.laneError[lane]) continue;
       (compression[lane] ??= []).push(compressionRatio(doc, f.transcriptText));
-      if (lane === 'dream' && doc) {
+      if (distilledLane(lane) && doc) {
         const qf = quoteFidelity(doc, f.transcriptText);
         const bucket = (quoteFid[lane] ??= { total: 0, grounded: 0, rate: 0 });
         bucket.total += qf.total;
@@ -886,7 +983,7 @@ async function main(): Promise<number> {
   // incompatible populations — the blended aggregate alone misleads any
   // consumer reading usability.rate.
   const usabilityByLane: Record<string, { satisfied: number; total: number; rate: number | null }> = {};
-  for (const lane of ['verbatim', 'dream'] as const) {
+  for (const lane of opts.lanes) {
     const rows = usabilityPerTranscript.filter((u) => u.lane === lane);
     const satisfied = rows.reduce((a, u) => a + u.satisfied, 0);
     const total = rows.reduce((a, u) => a + u.total, 0);
@@ -899,7 +996,7 @@ async function main(): Promise<number> {
     hallucination[lane] = { ...b, rate: b.verifiable ? b.ungrounded / b.verifiable : 0 };
   }
   const distractorLeakage: Record<string, { hits: number; confirmed: number; denominator: number; rate: number }> = {};
-  for (const lane of ALL_LANES) {
+  for (const lane of opts.lanes) {
     if (!leakage[lane]) continue;
     // Denominator excludes transcripts whose lane errored — a crashed lane
     // never had its distractors scanned, and counting them would bias the
@@ -994,7 +1091,7 @@ async function main(): Promise<number> {
       comparability = 'non-comparable';
     }
     const deltaRes = computeDelta(
-      { mode, lanes: opts.lanes, corpus: 'transcript-distill-v1', headline },
+      { mode, lanes: builtinLanes, corpus: 'transcript-distill-v1', headline },
       {
         mode: prior.mode,
         lanes: prior.lanes,
@@ -1160,7 +1257,15 @@ async function main(): Promise<number> {
       subagent_timeout_ms: 600000,
       dream_concurrency: DREAM_CONCURRENCY,
     },
-    lanes: opts.lanes,
+    lanes: builtinLanes,
+    external_lanes: opts.externalLane
+      ? [{
+          name: opts.externalLane.name,
+          dir: opts.externalLane.dir,
+          documents: externalLaneLoad!.docs.size,
+          missing: externalLaneLoad!.missing.length,
+        }]
+      : [],
     transcripts: fixtures.map((f) => f.gold.transcript_id),
     signal_transcripts: signalFixtures.length,
     per_item: perItem,
@@ -1169,6 +1274,7 @@ async function main(): Promise<number> {
     coverage_by_notability: coverageByNotability,
     coverage_by_depth: coverageByDepth,
     verbatim_quote_fidelity: quoteFid.dream ?? { total: 0, grounded: 0, rate: 1 },
+    quote_fidelity_by_lane: quoteFid,
     hallucination,
     distractor_leakage: distractorLeakage,
     usability: {
@@ -1237,6 +1343,9 @@ async function main(): Promise<number> {
   }
   for (const [lane, l] of Object.entries(distractorLeakage)) {
     err(`${lane.padEnd(8)} distractor leakage: ${(l.rate * 100).toFixed(1)}% (${l.confirmed} confirmed)`);
+  }
+  for (const [lane, q] of Object.entries(quoteFid)) {
+    err(`${lane} quote fidelity: ${(q.rate * 100).toFixed(1)}% (${q.grounded}/${q.total} quoted spans verbatim in the transcript)`);
   }
   if (usabAgg.total) err(`usability checklist: ${usabAgg.satisfied}/${usabAgg.total} (${((usabAgg.satisfied / usabAgg.total) * 100).toFixed(0)}%)`);
   err(`emission: ${emission.emitted}/${emission.expected_high} expected-high produced pages`);

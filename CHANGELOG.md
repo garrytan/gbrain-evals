@@ -6,6 +6,15 @@ in sync with `VERSION` + `package.json`.
 
 ## [Unreleased]
 
+### Added
+
+- Cat 35 can score one outside system's markdown documents as an external
+  distillation lane via `--external-lane NAME --external-dir DIR`. Use
+  `--lanes none` to run only that lane. Receipts now include `external_lanes`,
+  `quote_fidelity_by_lane`, and lane-tagged `attribution_hazards`. The pure
+  `externalLaneNameError` and `loadExternalLaneDocs` helpers cover name safety
+  and corpus-ordered loading without file I/O.
+
 ## [0.7.0] - 2026-09-06
 
 The gbrain v0.48.4.0 ranker wave, reported end to end:
