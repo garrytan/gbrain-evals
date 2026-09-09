@@ -2,7 +2,7 @@
 
 **Historical run: April 19, 2026.** Branch `garrytan/gbrain-evals`, commit `b81373d`, in-memory PGLite. Corpus: 240 fictional pages in `eval/data/world-v1/`. Runner: `bun run eval:run`, five runs with seeded page-order shuffling. Total wall time: about 11.5 minutes.
 
-The graph-first gbrain adapter found more of the required people, companies, and meetings than the text-search adapters in this fixture. For questions such as “Who invested in this company?”, an explicit investment edge is a useful clue that similarity alone does not supply.
+The graph-first gbrain adapter found more of the required person pages than the text-search adapters in this fixture. For questions such as “Who invested in this company?”, an explicit investment edge is a useful clue that similarity alone does not supply.
 
 These are historical adapter comparisons. The adapters differ in retrieval strategy, extraction, and result handling. The **31.4-point precision difference cannot be attributed to the graph alone**. See the [retrieval refresh](2026-09-09-retrieval-refresh.md) for current measurements and settings.
 

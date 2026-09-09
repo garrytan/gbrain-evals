@@ -74,6 +74,9 @@ records missing evidence explicitly. A **receipt** is a machine-readable record
 of what ran, under which configuration, and what it measured. A report explains
 that record; the two should agree.
 
+The [September 6 evidence guide](benchmarks/2026-09-06-longmemeval-ranker-wave/longmemeval/README.md)
+explains the saved LongMemEval files and what their compacted records retain.
+
 The [August audit](audit/2026-08-31-eval-audit.md) describes earlier problems in
 scoring and execution. [Open work](../TODOS.md) distinguishes unfinished
 experiments from completed fixes. [The changelog](../CHANGELOG.md) records changes

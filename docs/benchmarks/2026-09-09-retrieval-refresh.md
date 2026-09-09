@@ -380,6 +380,12 @@ gbrain figures with readable labels and their original measured values. The
 original charts remain available, and unmatched external protocols stay in the
 comparison tables.
 
+The wrapper runs one cell at a time by default. Add `--jobs 2` or `--jobs 3`
+to run cells concurrently under the same aggregate budget. Its tight precision
+cells pass `--entity-max 1 --other-max 1 --min-keep 1` to the runner: the first
+two flags cap results by query type, and the third keeps at least one result
+when candidates exist.
+
 Every invocation creates a new attempt directory. A process lock protects the
 shared budget ledger. Before each cell, the wrapper reserves $25 against the
 aggregate ceiling. Before each API request, including retries, a preload checks
