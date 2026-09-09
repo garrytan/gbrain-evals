@@ -1,48 +1,45 @@
-# source-swamp-v1 — corpus for BrainBench Cat 13b
+# Cat13b: can a short useful note beat a long chat dump?
 
-A 20-page corpus engineered to expose the **source-swamp** failure mode that
-real personal brains suffer from but `world-v1` does not.
+A personal knowledge base may contain one careful explanation of a topic and many chat messages that mention it. Ordinary keyword frequency can favor the chat simply because it repeats the topic more often.
 
-**The shape:**
-- **10 short, opinionated `originals/` pages** ... ~1KB each. The author's own
-  writing on a specific topic. Title and lead phrase appear once or twice.
-- **10 long, dense `openclaw/chat/YYYY-MM-DD` pages** ... 3-5KB each.
-  Synthesized chat-dump style: each chat page name-drops 3-4 of the
-  curated topics in passing, repeating each phrase 3-8x with discussion
-  filler around it.
+This corpus makes that problem small enough to inspect: ten short articles compete with ten longer chat pages. Cat13b tests whether gbrain's source weights help the intended article rank first.
 
-**Why `openclaw/chat/`:** the corpus swamp prefix MUST be a prefix the
-CURRENT gbrain `DEFAULT_SOURCE_BOOSTS` map actually demotes, or the eval
-silently tests nothing (audit finding retrieval-cats-07: the original
-`wintermute/chat/` key was renamed to `openclaw/chat/` in gbrain v0.24.0
-and every swamp page ranked at the neutral 1.0 factor for months). The
-runner asserts at startup that the swamp prefix resolves to a < 1.0
-factor in `node_modules/gbrain/src/core/search/source-boost.ts`, so the
-next rename fails loudly instead of silently.
+## The twenty pages
 
-**Why this corpus exists:**
-`world-v1` has zero `openclaw/chat/`, `daily/`, or `media/x/` content.
-The default boost map in `gbrain` dampens those bulk directories,
-but `world-v1` can't measure the effect. This corpus has the swamp shape
-embedded so Cat 13b can score it.
+The `originals/` pages are about 1 KB each and explain one topic. Their titles and main phrases appear once or twice. The `openclaw/chat/YYYY-MM-DD` pages are about 3–5 KB each, mention three or four topics, and repeat phrases three to eight times.
 
-**Without source-aware ranking:** chat pages dominate multi-word topic queries
-because they have higher per-byte keyword density than the curated articles
-that should win.
+There are 30 hand-written questions. Each phrase occurs in the intended article and at least one competing chat page. The article is the strict answer, with relevance grade 3; the plausible chat distractors have grade 0.
 
-**With source-aware ranking:** the curated `originals/` pages get
-a 1.5x boost; chat pages get a 0.5x dampener (gbrain v0.47.6.0 defaults).
-The curated page that actually wrote the topic up rises to #1 while chat
-references stay findable for date-framed queries (`detail=high` bypasses
-the gate).
+That answer policy is specific to this experiment. A question asking what someone said on a particular date could reasonably prefer a chat page.
 
-**What Cat 13b measures:** 30 hand-curated source-swamp queries, each
-pairing a curated page with >=1 competing chat page that shares the same
-multi-word phrase. Qrel: curated page is the strict target (grade 3),
-chat pages are wrong-but-plausible distractors (grade 0). Pass criterion:
-top-1 is the curated page. A paired `gbrain-no-source-boost` ablation arm
-(same pipeline, boost map neutralized to 1.0 via `GBRAIN_SOURCE_BOOST`)
-isolates the source-boost effect.
+## What the comparison isolates
 
-**Reproducibility:** all content is committed JSON. No regeneration script
-... if you change anything, edit the JSON directly.
+A source weight multiplies relevance according to where a page came from. The v0.47.6.0 defaults gave `originals/` a 1.5 weight and `openclaw/chat/` a 0.5 weight.
+
+The runner compares normal gbrain search with `gbrain-no-source-boost`, which uses the same hybrid pipeline but sets source weights to 1.0 through `GBRAIN_SOURCE_BOOST`. Reranking and expansion are explicitly disabled for this comparison. The paired difference asks whether source weights helped on these questions.
+
+The primary score is **top1_hit_rate**: the fraction of questions whose intended article ranks first. The runner also records whether the article appears in the top three and whether a chat page outranks it. The normal gbrain arm must reach 80% first-place hits to pass.
+
+The runner rejects a result if the two source-weight arms return identical rankings on every question, because that would not demonstrate that the intended comparison took effect.
+
+## Why the directory name matters
+
+The old corpus used `wintermute/chat/`. gbrain renamed that demoted prefix to `openclaw/chat/` at v0.24.0, leaving the old test at a neutral source weight and preventing it from exercising the intended feature.
+
+The runner now checks that its chat prefix resolves to a weight below 1.0. A later prefix change should produce an explicit failure instead of an apparently valid test of nothing.
+
+## Run it
+
+From the repository root:
+
+```sh
+# Real retrieval; requires OPENAI_API_KEY.
+bun eval/runner/cat13b-source-swamp.ts
+
+# Free setup check with deterministic fake vectors.
+bun eval/runner/cat13b-source-swamp.ts --stub-embed
+```
+
+Fake-vector scores test the plumbing and are not publication results. The full live run writes per-question results and a receipt under `eval/reports/cat13b-source-swamp/`.
+
+The corpus is committed JSON and has no regeneration script. Preserve it when rewriting documentation; intentional content changes alter the benchmark and need their own reviewed revision.

@@ -17,11 +17,12 @@
 
 import type { BrainEngine } from 'gbrain/engine';
 import { hybridSearch } from 'gbrain/search/hybrid';
-import type { SearchResult } from 'gbrain/types';
+import type { HybridSearchMeta, SearchResult } from 'gbrain/types';
 import type { Belief } from './scorer/belief.ts';
 import { BaseAdapter } from './scorer/baseAdapter.ts';
 import { federatedSourceIds } from './scope.ts';
 import { applyReturnPolicy, type ReturnPolicy, type Scored } from './gate-proto.ts';
+import { searchObservation, type SearchObservation } from '../runner/retrieval-pins.ts';
 import { classifyQueryIntent } from '../../node_modules/gbrain/src/core/search/query-intent.ts';
 
 export type GbrainSearchMode = 'hybrid' | 'keyword';
@@ -38,6 +39,8 @@ export type AdapterReturnPolicy =
   | { kind: 'intent'; single: ReturnPolicy; multi: ReturnPolicy };
 
 export interface GbrainAdapterOpts {
+  /** Record an execution failure if a nonempty answer bypassed the requested reranker. */
+  requireReranker?: boolean;
   /** Return-sizing policy (default topk = gbrain's current behavior). */
   returnPolicy?: AdapterReturnPolicy;
   /** Instrumentation hook: per-query ordering-driving scores (desc) + decision. */
@@ -52,6 +55,8 @@ export interface GbrainAdapterOpts {
 }
 
 export class GbrainBeliefAdapter extends BaseAdapter {
+  readonly observations: Array<SearchObservation & { case_id?: string; scope?: string; ranked_ids: string[]; kept_ids: string[] }> = [];
+  private readonly requireReranker: boolean;
   private readonly returnPolicy: AdapterReturnPolicy;
   private readonly onScores?: GbrainAdapterOpts['onScores'];
   private readonly extraHybridOpts: Record<string, unknown>;
@@ -65,6 +70,7 @@ export class GbrainBeliefAdapter extends BaseAdapter {
     this.returnPolicy = opts.returnPolicy ?? { kind: 'topk' };
     this.onScores = opts.onScores;
     this.extraHybridOpts = opts.extraHybridOpts ?? {};
+    this.requireReranker = opts.requireReranker ?? false;
   }
 
   /**
@@ -78,27 +84,52 @@ export class GbrainBeliefAdapter extends BaseAdapter {
     query: string,
     opts?: { limit?: number; excludeIds?: Set<string>; scope?: string },
   ): Promise<Belief[]> {
-    if (!query.trim()) return [];
+    if (!query.trim()) {
+      this.observations.push({
+        ...searchObservation({ query, mode: this.mode, emptyQuerySkipped: true }),
+        scope: opts?.scope, ranked_ids: [], kept_ids: [],
+      });
+      return [];
+    }
 
     const limit = opts?.limit ?? 20;
     const sourceIds = federatedSourceIds(opts?.scope);
 
-    let results: SearchResult[];
-    if (this.mode === 'keyword') {
-      // Honest no-embedding-key fallback: pure FTS (BM25-style ts_rank).
-      results = await this.engine.searchKeyword(query, { limit, sourceIds });
-    } else {
-      // gbrain's real default retrieval path (vector + keyword + RRF).
-      // useCache:false — the federated-sourceIds cache-key gap (T10 TODO)
-      // means cached rows could collide across scopes; the benchmark wants
-      // fresh deterministic retrieval regardless.
-      results = await hybridSearch(this.engine, query, {
-        limit,
-        sourceIds,
-        expansion: false,
-        useCache: false,
-        ...this.extraHybridOpts,
-      });
+    let results: SearchResult[] = [];
+    let searchMeta: HybridSearchMeta | undefined;
+    let relationalMeta: unknown;
+    let error: unknown;
+    let observation: (typeof this.observations)[number];
+    try {
+      if (this.mode === 'keyword') {
+        // The keyword comparison intentionally uses FTS alone.
+        results = await this.engine.searchKeyword(query, { limit, sourceIds });
+      } else {
+        // gbrain's real retrieval path (vector + keyword + RRF). Disable
+        // cache reuse so one scope cannot inherit another scope's result.
+        results = await hybridSearch(this.engine, query, {
+          limit,
+          sourceIds,
+          expansion: false,
+          useCache: false,
+          ...this.extraHybridOpts,
+          onMeta: (meta) => { searchMeta = meta; },
+          onRelationalMeta: meta => { relationalMeta = meta; },
+        });
+      }
+    } catch (err) {
+      error = err;
+      throw err;
+    } finally {
+      observation = {
+        ...searchObservation({
+          query, mode: this.mode, results, meta: searchMeta, relationalMeta, error,
+          requireReranker: this.requireReranker,
+          expectedExpansion: this.extraHybridOpts.expansion === undefined ? false : undefined,
+        }),
+        scope: opts?.scope, ranked_ids: results.map(r => r.slug), kept_ids: [],
+      };
+      this.observations.push(observation);
     }
 
     // Dedup by slug, preserve gbrain's final ranked order, drop excludeIds.
@@ -128,6 +159,7 @@ export class GbrainBeliefAdapter extends BaseAdapter {
     }
 
     const { kept } = applyReturnPolicy(scored, effective);
+    observation.kept_ids = kept.map(k => k.id);
     if (this.onScores) {
       this.onScores({
         query,

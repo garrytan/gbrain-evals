@@ -55,6 +55,7 @@ import {
 import { ProbeAccounting } from './probe-accounting.ts';
 import { writeReceipt, receiptPath, RECEIPT_SCHEMA_VERSION, BENCHMARK_VERSION, type Receipt } from './receipt.ts';
 import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
+import { retrievalPins, RETRIEVAL_EMBEDDER, RETRIEVAL_DIMENSIONS } from './retrieval-pins.ts';
 
 const PMB_DIR = join(import.meta.dir, '..', 'precisionmembench');
 const FIXTURE_BELIEFS = join(PMB_DIR, 'fixtures', 'beliefs.seed.json');
@@ -86,6 +87,11 @@ export interface Opts {
   noEmbed: boolean;
   entityMax: number | null;
   otherMax: number | null;
+  minKeep: number;
+  embeddingModel: string;
+  embeddingDimensions: number;
+  reranker: 'on' | 'off';
+  autocut: 'on' | 'off';
   allowSkip: boolean;
   reportDir: string;
   receiptFile: string;
@@ -106,6 +112,11 @@ export function parseOpts(argv: string[]): Opts {
     noEmbed: false,
     entityMax: null,
     otherMax: null,
+    minKeep: 1,
+    embeddingModel: RETRIEVAL_EMBEDDER,
+    embeddingDimensions: RETRIEVAL_DIMENSIONS,
+    reranker: 'off',
+    autocut: 'off',
     allowSkip: false,
     reportDir: DEFAULT_REPORT_DIR,
     receiptFile: receiptPath('precisionmembench'),
@@ -128,8 +139,13 @@ export function parseOpts(argv: string[]): Opts {
     else if (a === '--limit') opts.limit = nextInt(1);
     else if (a === '--json') opts.json = true;
     else if (a === '--no-embed') opts.noEmbed = true;
-    else if (a === '--entity-max') opts.entityMax = nextInt(0);
-    else if (a === '--other-max') opts.otherMax = nextInt(0);
+    else if (a === '--entity-max') opts.entityMax = nextInt(1);
+    else if (a === '--other-max') opts.otherMax = nextInt(1);
+    else if (a === '--min-keep') opts.minKeep = nextInt(1);
+    else if (a === '--embedding-model') opts.embeddingModel = next();
+    else if (a === '--embedding-dims') opts.embeddingDimensions = nextInt(1);
+    else if (a === '--reranker') opts.reranker = next() as 'on' | 'off';
+    else if (a === '--autocut') opts.autocut = next() as 'on' | 'off';
     else if (a === '--allow-skip') opts.allowSkip = true;
     else if (a === '--report-dir') opts.reportDir = next();
     else if (a === '--receipt-path') opts.receiptFile = next();
@@ -142,6 +158,16 @@ export function parseOpts(argv: string[]): Opts {
     throw new Error(`--fidelity must be one of ${FIDELITIES.join(' | ')}, got '${opts.fidelity}'`);
   }
   if (opts.mode === 'gbrain-keyword') opts.noEmbed = true;
+  for (const key of ['reranker', 'autocut'] as const) {
+    if (!['on', 'off'].includes(opts[key])) throw new Error(`--${key} must be on or off`);
+  }
+  if (!/^(openai|voyage):\S+$/.test(opts.embeddingModel)) throw new Error('--embedding-model must name an openai: or voyage: model');
+  if (opts.mode === 'gbrain-keyword' && (opts.reranker === 'on' || opts.autocut === 'on')) {
+    throw new Error('keyword mode does not run reranking or autocut');
+  }
+  if (opts.mode === 'gbrain-think' && (opts.reranker === 'on' || opts.autocut === 'on')) {
+    throw new Error('gbrain-think supports only --reranker off --autocut off: think forces autocut off and does not expose reranker execution telemetry');
+  }
   return opts;
 }
 
@@ -153,7 +179,7 @@ export function parseOpts(argv: string[]): Opts {
  */
 export function reportFileName(
   date: string,
-  opts: Pick<Opts, 'mode' | 'fidelity' | 'limit' | 'noEmbed' | 'entityMax' | 'otherMax'>,
+  opts: Pick<Opts, 'mode' | 'fidelity' | 'limit' | 'noEmbed' | 'entityMax' | 'otherMax'> & Partial<Pick<Opts, 'reranker' | 'autocut' | 'embeddingModel' | 'embeddingDimensions' | 'minKeep'>>,
 ): string {
   const provider = `${opts.mode}-${opts.fidelity}`;
   const parts: string[] = [];
@@ -161,6 +187,10 @@ export function reportFileName(
   if (opts.otherMax != null) parts.push(`o${opts.otherMax}`);
   if (opts.noEmbed && opts.mode !== 'gbrain-keyword') parts.push('noembed');
   if (opts.limit != null) parts.push(`limit${opts.limit}`);
+  if (opts.reranker === 'on') parts.push('rerank');
+  if (opts.autocut === 'on') parts.push('autocut');
+  if (opts.embeddingModel && opts.mode !== 'gbrain-keyword') parts.push(`${opts.embeddingModel.replace(':', '-')}-${opts.embeddingDimensions}`);
+  if (opts.minKeep != null && opts.mode === 'gbrain-adaptive') parts.push(`min${opts.minKeep}`);
   return `${date}-${provider}${parts.length > 0 ? '-' + parts.join('-') : ''}.json`;
 }
 
@@ -218,9 +248,11 @@ export function missEntryForCrash(tc: RetrievalCase, pinnedInSeed: Set<string>, 
   };
 }
 
-function missingKeys(mode: BenchMode): string[] {
+export function missingKeys(mode: BenchMode, opts = parseOpts(['--mode', mode])): string[] {
   const missing: string[] = [];
-  if (mode !== 'gbrain-keyword' && !process.env.OPENAI_API_KEY) missing.push('OPENAI_API_KEY');
+  const embedKey = opts.embeddingModel.startsWith('voyage:') ? 'VOYAGE_API_KEY' : 'OPENAI_API_KEY';
+  if (mode !== 'gbrain-keyword' && !process.env[embedKey]) missing.push(embedKey);
+  if (opts.reranker === 'on' && !process.env.VOYAGE_API_KEY && !missing.includes('VOYAGE_API_KEY')) missing.push('VOYAGE_API_KEY');
   if (mode === 'gbrain-think' && !process.env.ANTHROPIC_API_KEY) missing.push('ANTHROPIC_API_KEY');
   return missing;
 }
@@ -244,6 +276,11 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     no_embed: opts.noEmbed,
     entity_max: opts.entityMax,
     other_max: opts.otherMax,
+    min_keep: opts.minKeep,
+    embedding_model: opts.embeddingModel,
+    embedding_dimensions: opts.embeddingDimensions,
+    search_config: retrievalPins(opts.reranker === 'on', opts.autocut === 'on'),
+    adaptive_return: { enabled: opts.mode === 'gbrain-adaptive', entityMax: opts.entityMax ?? 2, otherMax: opts.otherMax ?? 6, minKeep: opts.minKeep },
     partial,
     full_case_count: fullCaseCount,
     supersession_seeding: 'live — all beliefs seeded, no ground-truth soft-delete (audit precisionmembench-01)',
@@ -266,7 +303,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
 
   // Missing key for an embedding/LLM mode: skip receipt, non-zero exit unless
   // acknowledged (WS0 contract — a skip must never look like a pass).
-  const missing = missingKeys(opts.mode);
+  const missing = missingKeys(opts.mode, opts);
   if (missing.length > 0) {
     const reason = `mode '${opts.mode}' requires ${missing.join(' + ')}; not set. Use --mode gbrain-keyword for the hermetic no-key fallback.`;
     writeReceipt(opts.receiptFile, {
@@ -285,7 +322,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
   try {
     // hybrid + adaptive + think all need embeddings (think's gather uses hybridSearch).
     const needsEmbed = opts.mode !== 'gbrain-keyword';
-    if (needsEmbed) configureGatewayForBench();
+    if (needsEmbed) configureGatewayForBench({ embeddingModel: opts.embeddingModel, embeddingDimensions: opts.embeddingDimensions });
 
     // Silence gbrain's chatty import/extract logs so the scorecard is readable.
     const origLog = console.log;
@@ -294,7 +331,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
       console.log = () => {};
       console.error = () => {};
     }
-    const engine = await createBenchEngine();
+    const engine = await createBenchEngine(retrievalPins(opts.reranker === 'on', opts.autocut === 'on'));
     let seedStats: { imported: number; supersededLive: number };
     try {
       seedStats = await seedGbrainEngine(engine, beliefs, {
@@ -314,12 +351,14 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     } else if (opts.mode === 'gbrain-adaptive') {
       // Drive gbrain's REAL adaptive-return core feature via hybridSearch opts.
       // Default to the shipped recall-preserving caps unless overridden.
-      const adaptiveReturn: Record<string, unknown> = { enabled: true };
+      const adaptiveReturn: Record<string, unknown> = { enabled: true, minKeep: opts.minKeep, entityMax: opts.entityMax ?? 2, otherMax: opts.otherMax ?? 6 };
       if (opts.entityMax != null) adaptiveReturn.entityMax = opts.entityMax;
       if (opts.otherMax != null) adaptiveReturn.otherMax = opts.otherMax;
-      adapter = new GbrainBeliefAdapter(engine, 'hybrid', { extraHybridOpts: { adaptiveReturn } });
+      adapter = new GbrainBeliefAdapter(engine, 'hybrid', { extraHybridOpts: { adaptiveReturn }, requireReranker: opts.reranker === 'on' });
     } else {
-      adapter = new GbrainBeliefAdapter(engine, opts.mode === 'gbrain-keyword' ? 'keyword' : 'hybrid');
+      adapter = new GbrainBeliefAdapter(engine, opts.mode === 'gbrain-keyword' ? 'keyword' : 'hybrid', {
+        extraHybridOpts: { adaptiveReturn: { enabled: false } }, requireReranker: opts.reranker === 'on',
+      });
     }
     adapter.loadFixture(beliefs);
 
@@ -330,6 +369,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     // per-case scoring is unchanged: scoreCases iterates cases independently.
     const report: ReportEntry[] = [];
     for (const tc of cases) {
+      const observationStart = adapter instanceof GbrainBeliefAdapter ? adapter.observations.length : 0;
       try {
         const [entry] = await scoreCases(adapter, [tc], pinnedInSeed);
         report.push(entry);
@@ -338,11 +378,30 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         const msg = String(err);
         acc.error(tc.caseId, 'sut', msg);
         report.push(missEntryForCrash(tc, pinnedInSeed, msg));
+      } finally {
+        if (adapter instanceof GbrainBeliefAdapter) {
+          for (const observation of adapter.observations.slice(observationStart)) observation.case_id = tc.caseId;
+        }
       }
     }
 
+    const observations = adapter instanceof GbrainBeliefAdapter ? adapter.observations : [];
+    const searchFailures = observations.filter(o => o.failures.length > 0);
+    const executionIncomplete = searchFailures.length > 0;
+    // Reranking an empty result pool is a valid no-op. Nonempty pools are
+    // checked per query by the adapter, so a single fallback cannot hide in an average.
+    const rerankIncomplete = opts.reranker === 'on' &&
+      observations.some(o => o.failures.some(f => f.startsWith('rerank')));
+    for (const observation of searchFailures) {
+      acc.error(observation.case_id ?? observation.query, 'dependency', `search incomplete: ${observation.failures.join(', ')}`);
+    }
+    resolvedConfig.reranker_observed = observations.filter(o => o.rerank_scored).length;
+    resolvedConfig.reranker_incomplete = rerankIncomplete;
+    resolvedConfig.search_failed_queries = searchFailures.length;
+    resolvedConfig.execution_incomplete = executionIncomplete;
     const payload: Record<string, unknown> = {
       ...buildReportPayload({ provider, entries: report, caseCount: cases.length }, report),
+      search_observations: observations,
       // Audit finding precisionmembench-03: the resolved run config rides in
       // the payload so a committed JSON can never lose its provenance.
       config: {
@@ -374,16 +433,16 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
 
     const summary = acc.summary();
     // A prefix-slice partial run is never publishable as a benchmark result.
-    const verdict: Receipt['verdict'] = partial ? 'partial' : summary.n_scored === summary.n_total ? 'pass' : 'fail';
+    const verdict: Receipt['verdict'] = executionIncomplete ? 'fail' : partial ? 'partial' : summary.n_scored === summary.n_total ? 'pass' : 'fail';
     writeReceipt(opts.receiptFile, {
       ...receiptBase,
-      run_status: 'completed',
-      verdict,
+      run_status: executionIncomplete ? 'error' : 'completed',
+      ...(executionIncomplete ? {} : { verdict }),
       n_total: summary.n_total,
       n_scored: summary.n_scored,
       completion_rate: summary.completion_rate,
       errors: summary.errors,
-      publishable: summary.publishable && !partial,
+      publishable: summary.publishable && !partial && !executionIncomplete,
       finished_at: new Date().toISOString(),
       data: {
         report_path: reportPath,
@@ -392,12 +451,13 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         total_passed: r.totalPassed,
         total_cases: r.totalCases,
         active_retrieval_passes: r.activeRetrievalPasses,
+        search_failed_queries: searchFailures.length,
       },
     });
 
     if (opts.json) {
       origLog(JSON.stringify(payload, null, 2));
-      return summary.run_invalid ? 3 : 0;
+      return summary.run_invalid || executionIncomplete ? 3 : 0;
     }
 
     // Scorecard
@@ -428,8 +488,8 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
       origLog(`  ${c.category.padEnd(34)} ${c.passed}/${c.caseCount}  prec=${c.meanPrecision ?? '—'}  recall=${c.meanRecall ?? '—'}`);
     }
     origLog(`\nReport:  ${reportPath}`);
-    origLog(`Receipt: ${opts.receiptFile} (run_status=completed verdict=${verdict}${partial ? ', publishable=false' : ''})`);
-    return summary.run_invalid ? 3 : 0;
+    origLog(`Receipt: ${opts.receiptFile} (run_status=${executionIncomplete ? 'error' : 'completed'} verdict=${verdict}${partial ? ', publishable=false' : ''})`);
+    return summary.run_invalid || executionIncomplete ? 3 : 0;
   } catch (err) {
     const summary = acc.summary();
     writeReceipt(opts.receiptFile, {

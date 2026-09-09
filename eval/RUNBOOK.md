@@ -1,201 +1,134 @@
-# BrainBench runbook
+# Running the benchmarks without surprises
 
-Operational troubleshooting for the most common failures. One fix per entry.
+Use this guide when setting up a run or investigating a failure. For choosing a benchmark, start with [eval/README.md](README.md). Run the commands below from the repository root.
 
-## Generation failures
-
-### "OPENAI_API_KEY environment variable is missing"
-
-The embedding adapter (`vector`) and any run of `eval/generators/gen.ts`
-calls the OpenAI API. You need an API key.
+## Install the code being tested
 
 ```sh
-export OPENAI_API_KEY=sk-proj-...
-# or source from a dotenv file
-source ~/.zshrc   # if the key is in your shell profile
-bun run eval:run
+bun install --frozen-lockfile
+ls -ld node_modules/gbrain
 ```
 
-### "ANTHROPIC_API_KEY environment variable is missing"
+The dependency is pinned to a GitHub commit in `package.json`. A symlink means a local checkout is linked instead. Record the actual loaded revision before comparing results.
 
-Needed by corpus regeneration (`eval/generators/gen.ts`,
-`eval/generators/transcript-distill-gen.ts`) and by the runners that call
-Claude: Cat 35, and the `eval:brainbench` sweep that includes it.
-Cat 34 does NOT need it. Its runner strips every provider key from the
-subprocess env (`STRIPPED_ENV_KEYS`, `eval/runner/cat34-brainbench-memory.ts:65-71`)
-so the run is hermetic: no LLM, no network, $0. Retrieval-only runs over
-the committed `eval/data/world-v1/` shards don't need it either.
+If a `gbrain/*` import fails, check the installation and whether a stale local link points to an incompatible checkout. Use `bun link gbrain` only after registering the intended checkout with `bun link` in that checkout.
 
-### "Cannot find package 'gbrain'" (or a `gbrain/*` subpath import fails)
+If PGLite reports a missing `pglite.wasm`, the dependency layout may lack the nested path gbrain expects. This repository's postinstall script creates that link. Re-run installation, or inspect and run `bun scripts/postinstall-pglite-link.ts`.
 
-The repo depends on `gbrain` via a pinned GitHub URL in `package.json`
-(this repo has no `openai` dependency — embeddings go through gbrain's
-bundled AI SDK). Fixes, in order:
+## Know which APIs the command calls
+
+| Work | Keys or services |
+|---|---|
+| Query validation, receipt checks, keyword baseline, graph-template retrieval, type accuracy | No model API required |
+| Vector and hybrid retrieval in the multi-adapter runner | `OPENAI_API_KEY` |
+| LongMemEval retrieval | Key for the selected embedder; `ANTHROPIC_API_KEY` for generative expansion; `VOYAGE_API_KEY` for Voyage reranking |
+| Cat14 calibration and Cat15 claim extraction | `ANTHROPIC_API_KEY`; their embedding setup is handled by the runner |
+| Cat30–33 SkillOpt | `ANTHROPIC_API_KEY` |
+| Cat34 memory conformance | No model API; the subprocess removes provider keys |
+| Cat35 transcript distillation | `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` |
+| Regenerating model-written corpora | Usually `ANTHROPIC_API_KEY`; read the particular generator first |
+
+Set keys in your environment using your normal secret-management method. Do not put real keys in commands saved to reports.
+
+A skipped adapter or incomplete receipt is not a measured pass. Some runners accept `--allow-skip` to acknowledge missing prerequisites, but the skip remains part of the result.
+
+## Start with a narrow run
 
 ```sh
-bun install                       # fetch gbrain at the pinned SHA
-ls -la node_modules/gbrain        # symlink = locally linked, dir = pinned fetch
-bun link gbrain                   # only if you WANT a local checkout linked
+bun run eval:query:validate
+bun eval/runner/validate-data.ts --quiet
+BRAINBENCH_N=1 bun eval/runner/multi-adapter.ts --adapter grep-only --queries relational
 ```
 
-If `node_modules/gbrain` is a stale symlink from an old `bun link`, remove
-it and re-run `bun install` to get back to the pinned version.
-
-### `Cannot find module '.../@electric-sql/pglite/dist/pglite.wasm'`
-
-gbrain reaches PGLite's WASM through a nested node_modules path that bun's
-hoisting breaks when gbrain is installed from the pinned GitHub SHA. The
-`postinstall` script (`scripts/postinstall-pglite-link.ts`) creates the
-symlink automatically — if you see this error, re-run `bun install` (or run
-the script directly).
-
-### Cat 35 pre-flight refuses to start ("projected worst-case $X exceeds CAT35_HARD_STOP_USD")
-
-Working as designed: the runner computes a deliberately pessimistic worst-case
-cost before spending and refuses when it exceeds the cap (default $40). The
-published run needed `CAT35_HARD_STOP_USD=50` (projection $45; measured $6.20).
-Raise the cap explicitly rather than removing it.
-
-### `bun test` hangs forever on a file that creates real PGLite engines
-
-At gbrain v0.46.3 (the pin at first publication), `PGLiteEngine.disconnect()`
-after ops-layer use entered a synchronous WASM spin that froze the bun test
-runner (timers could not fire; `--timeout` could not interrupt). Plain `bun`
-runs were unaffected. Fixed upstream: at the current pin (v0.47.8.0) the spin
-no longer reproduces and the test teardowns are restored (TODOS.md
-"Completed"). If this section brought you here on a NEW hang, re-run the
-suspect file under `timeout N bun test <file>` to confirm before blaming
-teardown.
-
-## Runner failures
-
-### `multi-adapter.ts` times out on vector-grep-rrf-fusion
-
-vector-grep-rrf-fusion embeds all 240 pages per run (via `importFromContent`). At
-N=5, that's 5 re-embeddings. Typical wall clock: ~10 minutes.
-
-If you're iterating, use the dev mode:
-```sh
-BRAINBENCH_N=1 bun run eval:run:dev
-```
-
-Or skip embedding-based adapters for focused runs:
-```sh
-bun run eval:run -- --adapter=gbrain
-bun run eval:run -- --adapter=grep-only
-```
-
-### "vector-grep-rrf-fusion returned P@5 0.0%"
-
-Likely the adapter is calling `hybridSearch()` on an engine that doesn't
-have chunks/embeddings populated. This shouldn't happen with current code
-— `importFromContent` populates them. If it does happen:
-
-1. Check the adapter uses `importFromContent(engine, slug, content)`,
-   not bare `engine.putPage(...)`. The latter skips chunking.
-2. Check `auto_link` is OFF (the adapter sets it, but if someone edits
-   the engine's default, verify).
-
-### "grep-only crashes on a query"
-
-The adapter has no query-size ceiling by design. If a specific query crashes,
-run it in isolation:
+For the full four-adapter relational comparison:
 
 ```sh
-# Drop other adapters temporarily and bisect the query list.
-bun run eval:run -- --adapter=grep-only
+BRAINBENCH_N=1 bun eval/runner/multi-adapter.ts --queries relational
 ```
 
-## Query validation failures
+`BRAINBENCH_N` changes the number of runs in this scorer; its default is 5. It is not a universal repeat count for every category. The vector and hybrid adapters build fresh state per run, so repeated runs can repeat embedding work.
 
-### `validateAll()` fails with "temporal verb detected; as_of_date required"
+`bun run eval:brainbench` launches many different categories. The default is two subprocess slots. `BRAINBENCH_LLM_CONCURRENCY` limits participating judge calls within a process; it is not a global provider-call or spending limit. Read category-specific budgets before launching the sweep.
 
-The query text matches the temporal verb regex. Pick one:
+## Search returns no useful results
 
-1. **The query is actually temporal.** Add `as_of_date: 'corpus-end' |
-   'per-source' | '2024-01-15'` (ISO-8601).
-2. **The query isn't really temporal.** Rephrase to avoid the trigger verb.
-   "Where is Sarah working?" → "Sarah's current employer" (adjective-form
-   doesn't trigger).
-3. **Edge case bug in the regex.** File an issue; the regex lives at
-   `eval/runner/queries/validator.ts:TEMPORAL_VERBS`.
+For a hybrid adapter, verify that ingestion created chunks and embeddings. Calling `engine.putPage` alone does not populate everything `hybridSearch` needs; the comparison adapter uses `importFromContent`.
 
-### `validateAll()` fails with "slug does not match 'dir/slug' format"
+For a graph comparison, inspect whether the question family is supported. The multi-adapter graph baseline recognizes specific relational templates. It does not provide a general natural-language graph parser.
 
-Gold slugs must be `dir/slug` — e.g. `people/alice-chen`, not just
-`alice-chen` or `people/Alice Chen`. Lowercase, hyphens, no spaces.
+For a configuration experiment, inspect the resolved settings and observed behavior in the receipt. A value echoed into configuration does not prove an unknown key affected search. Cat13's reranker and keyword-confidence checks add explicit observations for those features.
 
-### `validateAll()` fails with "duplicate id in batch"
+Keep a low score separate from a harness failure. A valid run in which gbrain misses the answer is useful evidence; a run whose adapter never initialized is not a clean comparison.
 
-Two queries share an `id`. Renumber. Convention:
-- Tier 5 (fuzzy): `q5-NNNN`
-- Tier 5.5 (externally-authored): `q55-NNNN`
-- Scaffolder default: `q-<timestamp-suffix>` (via `eval:query:new`)
+## LongMemEval takes longer or costs more than expected
 
-## World.html rendering
-
-### "world.html doesn't open automatically"
-
-`eval:world:view` tries `open` (macOS), `xdg-open` (Linux), `start`
-(Windows). If none work:
+The full dataset and embedding cache do not ship with the repository. Download the revision named in the report, and pass its path explicitly.
 
 ```sh
-bun run eval:world:render              # generate only
-# then open manually in your browser
-open eval/data/world-v1/world.html    # or xdg-open, start, etc.
+bun eval/runner/longmemeval.ts \
+  --path ~/datasets/longmemeval/longmemeval_s.json \
+  --top-k 5 --stratify 2 --adapters hybrid \
+  --embedding-model openai:text-embedding-3-large --embedding-dims 1536
 ```
 
-### "world.html looks weird / broken"
+The small stratified sample checks setup; it is not the published full score. The runner's default top-k is 8, so five-result comparisons must specify 5.
 
-Regenerate from scratch — shard files might have drifted since last render:
+The default cache directory is `eval/reports/longmemeval/embed-cache/`. Reuse only a cache for the matching model and dimensions. Warm embeddings remove repeated embedding charges, not expansion, reranking or answer-generation charges. Historical cold embedding cost was about $2; measure the present run instead of treating that as a cap.
+
+Use the runner's `--ndjson` option for resumable per-question output. Preserve that stream as well as the aggregate if the result will be published. [Cache details](data/longmemeval/embed-cache/README.md).
+
+## Cat35 refuses its cost preflight
+
+The default `CAT35_HARD_STOP_USD` is $40. The historical full run projected $45 and required an explicitly chosen $50 cap, despite measuring about $6.20 in judge and fact-extraction costs.
+
+This preflight is deliberately conservative. More importantly, the measured receipt excludes dream-subagent spend because the underlying phase API does not expose it. A receipt total is therefore not a complete invoice.
+
+The default Cat35 command runs two transcripts as a paid setup check. `CAT35_FULL=1` selects the full corpus. Match the task's authorized budget before increasing a cap.
+
+## Query validation fails
+
+**A temporal question needs a date.** Set `as_of_date` to `"corpus-end"`, `"per-source"`, or a specific ISO date. If the question is not temporal, clarify its wording. The trigger rules live in `eval/runner/queries/validator.ts`.
+
+**A slug has the wrong shape.** Use a lowercase `directory/page-name` identifier. Then verify that it names an actual page; syntax validation alone cannot establish that.
+
+**An ID is repeated.** Give each question a unique ID. Built-in fuzzy questions use `q5-`, and externally authored placeholders use `q55-`. The scaffolder generates a `q-` identifier.
+
+**An answer-only or abstention item is absent from the retrieval score.** The multi-adapter scorer excludes questions without document relevance labels and records those exclusions. They need a different scoring task.
+
+## Tests hang or fail
 
 ```sh
-rm eval/data/world-v1/world.html
-bun run eval:world:view
+bun run test
+bun test test/eval/query-cli.test.ts test/eval/receipts-manifest.test.ts
 ```
 
-### "I see unescaped HTML in world.html"
-
-That's a security regression. Open an issue IMMEDIATELY with the specific
-entity slug. Every string should route through `escapeHtml()` in
-`eval/generators/world-html.ts`.
-
-## Dataset regeneration (advanced)
-
-Don't regenerate unless you know why. The committed corpus is the stable
-baseline everyone benchmarks against. Regenerating produces a DIFFERENT
-dataset (Opus isn't byte-deterministic), which becomes a new version.
-
-If you need to regenerate (e.g. for a v1.2 dataset):
+The first command runs the repository suite. The second isolates inexpensive checks. Other useful focused tests include:
 
 ```sh
-# Clean slate
-rm -rf eval/data/world-v1
-# Regenerate (~$3 Opus cost, 30 min)
-bun eval/generators/gen.ts --max 240 --concurrency 6
-# Validate
-bun run eval:type-accuracy
+bun test eval/runner/queries/validator.test.ts
+bun test eval/runner/adapters/grep-only.test.ts
+bun test eval/runner/adapters/vector.test.ts
+bun test eval/generators/world-html.test.ts
 ```
 
-The new dataset should be committed as `eval/data/world-vX.Y/` with a
-new ledger. Don't overwrite `world-v1/` — that's the reproducibility baseline.
+Those older colocated tests exist, but `bun run test` does not include them automatically.
 
-## CI failures
+At gbrain v0.46.3, PGLite teardown could freeze Bun's test runner in a synchronous WASM loop. That particular problem stopped reproducing at the v0.47.8.0 pin. If it recurs, use an external process timeout to isolate it; a frozen runtime may not service Bun's own timeout.
 
-### `bun run test` fails on a fresh checkout
+## Browse the fictional world
 
 ```sh
-bun install                   # fetch deps (gbrain + @anthropic-ai/sdk + ai; postinstall links pglite)
-bun run test                  # retry — runs `bun test test/eval/`
+bun run eval:world:render
 ```
 
-If tests still fail, bisect:
+Open the generated `eval/data/world-v1/world.html` in a browser. `eval:world:view` also tries to open it automatically using the platform's desktop command. A cloud machine may have no desktop to open.
 
-```sh
-bun test eval/runner/queries/validator.test.ts         # pure functions
-bun test eval/runner/adapters/grep-only.test.ts     # pure functions
-bun test eval/runner/adapters/vector.test.ts      # pure functions (cosine math only)
-bun test eval/generators/world-html.test.ts            # HTML rendering + XSS
-```
+If the rendered page is stale, run the renderer again. Unexpected unescaped HTML should be reported with the fictional entity slug and the input that produced it.
 
-One of these should fail deterministically — report it.
+## Preserve the experiment
+
+The committed corpora are the shared test inputs. Model-backed regeneration changes their bytes and can change the answers. Do not delete or overwrite `world-v1/` merely to troubleshoot a runner.
+
+For an intentional dataset revision, choose a new corpus version, update the generator/output location and labels together, and validate the new data. A seeded generator can choose the same cases while a model still writes different prose.
+
+Save a worthwhile run under a dated path in `docs/benchmarks/`, including its raw results, settings and code identities. Default files under `eval/reports/` may be overwritten by the next run. The [artifact manifest](../docs/receipts-manifest.json) and its tests check selected saved results; they do not validate every documentation claim.

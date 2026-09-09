@@ -1,0 +1,47 @@
+  Setting up brain schema (v145)...
+  140 migration(s) applied
+
+# PrecisionMemBench — gbrain (gbrain-adaptive-body-text)
+
+Seeded: 35 beliefs (4 superseded beliefs seeded LIVE — gbrain must exclude them itself)
+Cases:  77  |  embed: ON
+
+  mean precision : 0.5859
+  mean recall    : 0.825
+  pass rate      : 41/77 (0.5325)
+  active passes  : 29
+  passTypes      : active=29 structural=9 triviallyEmpty=3
+  p50 latency    : 400.42ms
+
+## vs published leaderboard (mean precision)
+
+| System | Precision | Active | Pass |
+|--------|-----------|--------|------|
+| tenure (author)      | 1.000 | 43 | 77/77 |
+| >> gbrain (gbrain-adaptive-body-text) | 0.586 | 29 | 41/77 |
+| supermemory          | 0.430 | 17 | 44/77 |
+| agentmemory          | 0.170 |  0 | 7/77 |
+| yourmemory           | 0.170 |  0 | 21/77 |
+| atomicmemory         | 0.150 |  0 | 9/77 |
+| zep                  | 0.090 |  0 | 9/77 |
+| vector baseline      | 0.088 |  0 | 9/77 |
+| mem0                 | 0.056 |  0 | 9/77 |
+
+## per-category mean precision
+
+  Alias resolution                   16/23  prec=0.9091  recall=0.7489
+  Scope disambiguation               6/12  prec=0.4444  recall=0.875
+  Fuzzy matching and prefix guards   5/7  prec=0.7143  recall=1
+  Type routing and open questions    0/6  prec=0  recall=0
+  Design boundary cases              3/6  prec=0.25  recall=1
+  Budget eviction and capacity       5/5  prec=1  recall=1
+  Persona prelude content            1/4  prec=0  recall=—
+  Relation expansion                 0/4  prec=0.6667  recall=1
+  Supersession chain exclusion       0/3  prec=0  recall=—
+  Ranking stability                  2/3  prec=1  recall=0.75
+  Counter-signal retrieval           2/2  prec=1  recall=1
+  Cross-user isolation               1/1  prec=0  recall=—
+  Cold start behavior                0/1  prec=0  recall=—
+
+Report:  /home/vercel-sandbox/gbrain-evals/docs/benchmarks/2026-09-09-retrieval-refresh/precision-adaptive-rerank/attempt-1/2026-09-09-gbrain-adaptive-body-text-e1-o1-rerank-openai-text-embedding-3-large-1536-min1.json
+Receipt: /home/vercel-sandbox/gbrain-evals/docs/benchmarks/2026-09-09-retrieval-refresh/precision-adaptive-rerank/attempt-1/receipt.json (run_status=completed verdict=pass)

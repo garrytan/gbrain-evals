@@ -257,6 +257,13 @@ describe('cat13 scoreAdapter accounting', () => {
     const r = await scoreAdapter(adapter, pages, probes, gradesByQuery, acc);
     expect(r.ndcg5).toBeCloseTo(1, 6);
     expect(r.p1_strict).toBe(1);
+    expect(r.per_query.map(q => q.id)).toEqual(['p1', 'p2']);
+    expect(r.per_query[0]).toMatchObject({
+      index: 0, text: 'query one', subset: 'all',
+      graded_gold: { 'concepts/a': 3, 'concepts/n': 1 },
+      ranked_pages: [{ page_id: 'concepts/a', rank: 1 }, { page_id: 'concepts/n', rank: 2 }],
+      ndcg5: 1, p5_graded: 0.4, p1_strict: 1,
+    });
     const s = acc.summary();
     expect(s.n_scored).toBe(2);
     expect(s.errors.length).toBe(0);
@@ -710,6 +717,11 @@ describe('cat13 Phase E0 receipt (hermetic)', () => {
     expect(rc.concept_split).toMatchObject({ seed: 42, tuning_n: 20, holdout_n: 10 });
     expect(rc.concept_split.tuning.length).toBe(20);
     expect(rc.concept_split.holdout.length).toBe(10);
+    const perQuery = (receipt.data as Record<string, any>).per_query.gbrain;
+    expect(perQuery.length).toBe(results[0].probesScored);
+    expect(perQuery[0].search_observation.query_id).toBe(perQuery[0].id);
+    expect(perQuery[0].search_observation.search_meta.vector_enabled).toBe(true);
+    expect(perQuery.filter((q: { subset: string }) => q.subset === 'holdout').length).toBe(results[0].splits!.holdout.count);
 
     const s = results[0].splits!;
     expect(s.tuning.count + s.holdout.count + s.mixed + s.unassigned).toBe(results[0].probesScored);

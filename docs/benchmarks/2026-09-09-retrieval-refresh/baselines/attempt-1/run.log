@@ -1,0 +1,267 @@
+# BrainBench — multi-adapter side-by-side
+
+Generated: 2026-09-09T04:57:06
+Corpus: 240 rich-prose pages from eval/data/world-v1/
+Queries [relational]: 145 scored
+Queries [fuzzy]: 24 scored (+6 excluded: empty gold.relevant — abstention/judge-only items are out of retrieval scope per the NaN contract)
+Queries [externally-authored]: 47 scored (+3 excluded: empty gold.relevant — abstention/judge-only items are out of retrieval scope per the NaN contract)
+
+## Running adapters (N=3 runs per adapter, page-order shuffled per run)
+
+- gbrain: not applicable to [fuzzy, externally-authored] (inline relational wrapper; gbrain's fuzzy path is hybridSearch, see vector-grep-rrf-fusion)
+- gbrain ...
+  Setting up brain schema (v145)...
+  v142: takes.embedding resized to vector(1280); existing take vectors cleared
+  140 migration(s) applied
+[extract.links_db] start
+[extract.links_db] 10/240 (4%)
+[extract.links_db] 20/240 (8%)
+[extract.links_db] 30/240 (12%)
+[extract.links_db] 40/240 (16%)
+[extract.links_db] 50/240 (20%)
+[extract.links_db] 60/240 (25%)
+[extract.links_db] 70/240 (29%)
+[extract.links_db] 80/240 (33%)
+[extract.links_db] 90/240 (37%)
+[extract.links_db] 100/240 (41%)
+[extract.links_db] 110/240 (45%)
+[extract.links_db] 120/240 (50%)
+[extract.links_db] 130/240 (54%)
+[extract.links_db] 140/240 (58%)
+[extract.links_db] 150/240 (62%)
+[extract.links_db] 160/240 (66%)
+[extract.links_db] 170/240 (70%)
+[extract.links_db] 180/240 (75%)
+[extract.links_db] 190/240 (79%)
+[extract.links_db] 200/240 (83%)
+[extract.links_db] 210/240 (87%)
+[extract.links_db] 220/240 (91%)
+[extract.links_db] 230/240 (95%)
+[extract.links_db] 240/240 (100%)
+[extract.links_db] 240/240 (100%) done
+Links: created 499 from 240 pages (db source)
+Skipped 214 candidate(s) whose target page doesn't exist (references to non-pages are never persisted).
+
+Done: 499 links, 0 timeline entries from 240 pages
+[extract.timeline_db] start
+[extract.timeline_db] 10/240 (4%)
+[extract.timeline_db] 20/240 (8%)
+[extract.timeline_db] 30/240 (12%)
+[extract.timeline_db] 40/240 (16%)
+[extract.timeline_db] 50/240 (20%)
+[extract.timeline_db] 60/240 (25%)
+[extract.timeline_db] 70/240 (29%)
+[extract.timeline_db] 80/240 (33%)
+[extract.timeline_db] 90/240 (37%)
+[extract.timeline_db] 100/240 (41%)
+[extract.timeline_db] 110/240 (45%)
+[extract.timeline_db] 120/240 (50%)
+[extract.timeline_db] 130/240 (54%)
+[extract.timeline_db] 140/240 (58%)
+[extract.timeline_db] 150/240 (62%)
+[extract.timeline_db] 160/240 (66%)
+[extract.timeline_db] 170/240 (70%)
+[extract.timeline_db] 180/240 (75%)
+[extract.timeline_db] 190/240 (79%)
+[extract.timeline_db] 200/240 (83%)
+[extract.timeline_db] 210/240 (87%)
+[extract.timeline_db] 220/240 (91%)
+[extract.timeline_db] 230/240 (95%)
+[extract.timeline_db] 240/240 (100%)
+[extract.timeline_db] 240/240 (100%) done
+Timeline: created 2208 entries from 240 pages (db source)
+
+Done: 0 links, 2208 timeline entries from 240 pages
+  Setting up brain schema (v145)...
+  v142: takes.embedding resized to vector(1280); existing take vectors cleared
+  140 migration(s) applied
+[extract.links_db] start
+[extract.links_db] 10/240 (4%)
+[extract.links_db] 20/240 (8%)
+[extract.links_db] 30/240 (12%)
+[extract.links_db] 40/240 (16%)
+[extract.links_db] 50/240 (20%)
+[extract.links_db] 60/240 (25%)
+[extract.links_db] 70/240 (29%)
+[extract.links_db] 80/240 (33%)
+[extract.links_db] 90/240 (37%)
+[extract.links_db] 100/240 (41%)
+[extract.links_db] 110/240 (45%)
+[extract.links_db] 120/240 (50%)
+[extract.links_db] 130/240 (54%)
+[extract.links_db] 140/240 (58%)
+[extract.links_db] 150/240 (62%)
+[extract.links_db] 160/240 (66%)
+[extract.links_db] 170/240 (70%)
+[extract.links_db] 180/240 (75%)
+[extract.links_db] 190/240 (79%)
+[extract.links_db] 200/240 (83%)
+[extract.links_db] 210/240 (87%)
+[extract.links_db] 220/240 (91%)
+[extract.links_db] 230/240 (95%)
+[extract.links_db] 240/240 (100%)
+[extract.links_db] 240/240 (100%) done
+Links: created 499 from 240 pages (db source)
+Skipped 214 candidate(s) whose target page doesn't exist (references to non-pages are never persisted).
+
+Done: 499 links, 0 timeline entries from 240 pages
+[extract.timeline_db] start
+[extract.timeline_db] 10/240 (4%)
+[extract.timeline_db] 20/240 (8%)
+[extract.timeline_db] 30/240 (12%)
+[extract.timeline_db] 40/240 (16%)
+[extract.timeline_db] 50/240 (20%)
+[extract.timeline_db] 60/240 (25%)
+[extract.timeline_db] 70/240 (29%)
+[extract.timeline_db] 80/240 (33%)
+[extract.timeline_db] 90/240 (37%)
+[extract.timeline_db] 100/240 (41%)
+[extract.timeline_db] 110/240 (45%)
+[extract.timeline_db] 120/240 (50%)
+[extract.timeline_db] 130/240 (54%)
+[extract.timeline_db] 140/240 (58%)
+[extract.timeline_db] 150/240 (62%)
+[extract.timeline_db] 160/240 (66%)
+[extract.timeline_db] 170/240 (70%)
+[extract.timeline_db] 180/240 (75%)
+[extract.timeline_db] 190/240 (79%)
+[extract.timeline_db] 200/240 (83%)
+[extract.timeline_db] 210/240 (87%)
+[extract.timeline_db] 220/240 (91%)
+[extract.timeline_db] 230/240 (95%)
+[extract.timeline_db] 240/240 (100%)
+[extract.timeline_db] 240/240 (100%) done
+Timeline: created 2208 entries from 240 pages (db source)
+
+Done: 0 links, 2208 timeline entries from 240 pages
+  Setting up brain schema (v145)...
+  v142: takes.embedding resized to vector(1280); existing take vectors cleared
+  140 migration(s) applied
+[extract.links_db] start
+[extract.links_db] 10/240 (4%)
+[extract.links_db] 20/240 (8%)
+[extract.links_db] 30/240 (12%)
+[extract.links_db] 40/240 (16%)
+[extract.links_db] 50/240 (20%)
+[extract.links_db] 60/240 (25%)
+[extract.links_db] 70/240 (29%)
+[extract.links_db] 80/240 (33%)
+[extract.links_db] 90/240 (37%)
+[extract.links_db] 100/240 (41%)
+[extract.links_db] 110/240 (45%)
+[extract.links_db] 120/240 (50%)
+[extract.links_db] 130/240 (54%)
+[extract.links_db] 140/240 (58%)
+[extract.links_db] 150/240 (62%)
+[extract.links_db] 160/240 (66%)
+[extract.links_db] 170/240 (70%)
+[extract.links_db] 180/240 (75%)
+[extract.links_db] 190/240 (79%)
+[extract.links_db] 200/240 (83%)
+[extract.links_db] 210/240 (87%)
+[extract.links_db] 220/240 (91%)
+[extract.links_db] 230/240 (95%)
+[extract.links_db] 240/240 (100%)
+[extract.links_db] 240/240 (100%) done
+Links: created 499 from 240 pages (db source)
+Skipped 214 candidate(s) whose target page doesn't exist (references to non-pages are never persisted).
+
+Done: 499 links, 0 timeline entries from 240 pages
+[extract.timeline_db] start
+[extract.timeline_db] 10/240 (4%)
+[extract.timeline_db] 20/240 (8%)
+[extract.timeline_db] 30/240 (12%)
+[extract.timeline_db] 40/240 (16%)
+[extract.timeline_db] 50/240 (20%)
+[extract.timeline_db] 60/240 (25%)
+[extract.timeline_db] 70/240 (29%)
+[extract.timeline_db] 80/240 (33%)
+[extract.timeline_db] 90/240 (37%)
+[extract.timeline_db] 100/240 (41%)
+[extract.timeline_db] 110/240 (45%)
+[extract.timeline_db] 120/240 (50%)
+[extract.timeline_db] 130/240 (54%)
+[extract.timeline_db] 140/240 (58%)
+[extract.timeline_db] 150/240 (62%)
+[extract.timeline_db] 160/240 (66%)
+[extract.timeline_db] 170/240 (70%)
+[extract.timeline_db] 180/240 (75%)
+[extract.timeline_db] 190/240 (79%)
+[extract.timeline_db] 200/240 (83%)
+[extract.timeline_db] 210/240 (87%)
+[extract.timeline_db] 220/240 (91%)
+[extract.timeline_db] 230/240 (95%)
+[extract.timeline_db] 240/240 (100%)
+[extract.timeline_db] 240/240 (100%) done
+Timeline: created 2208 entries from 240 pages (db source)
+
+Done: 0 links, 2208 timeline entries from 240 pages
+  relational: P@5 34.2%, R@5 97.9%, 248/261 correct (run 1)
+  done (11.8s).
+- vector-grep-rrf-fusion ...
+  Setting up brain schema (v145)...
+  140 migration(s) applied
+  Setting up brain schema (v145)...
+  140 migration(s) applied
+[gbrain] 1/1 query embeds failed (salvaging survivors): query embed deadline 6000ms exceeded
+  Setting up brain schema (v145)...
+  140 migration(s) applied
+  relational: P@5 19.2% ±0.0, R@5 68.7%, 139/261 correct (run 1)
+  fuzzy: P@5 11.7%, R@5 58.3%, 14/26 correct (run 1)
+  externally-authored: P@5 19.6%, R@5 84.0%, 46/55 correct (run 1)
+  done (424.7s).
+- grep-only ...
+  relational: P@5 17.1%, R@5 62.4%, 124/261 correct (run 1)
+  fuzzy: P@5 15.8%, R@5 79.2%, 19/26 correct (run 1)
+  externally-authored: P@5 19.6%, R@5 85.1%, 46/55 correct (run 1)
+  done (0.3s).
+- vector ...
+  relational: P@5 10.8%, R@5 40.7%, 78/261 correct (run 1)
+  fuzzy: P@5 11.7%, R@5 58.3%, 14/26 correct (run 1)
+  externally-authored: P@5 20.9% ±0.0, R@5 89.4% ±0.0, 49/55 correct (run 1)
+  done (148.2s).
+
+## Side-by-side scorecard (mean ± stddev across N runs)
+
+| Adapter             | Family              | Runs | Queries | P@5 (mean ± sd)    | R@5 (mean ± sd)    |
+|---------------------|---------------------|------|---------|---------------------|---------------------|
+| gbrain              | relational          |    3 |     145 |               34.2% |               97.9% |
+| vector-grep-rrf-fusion | relational          |    3 |     145 |          19.2% ±0.0 |               68.7% |
+| vector-grep-rrf-fusion | fuzzy               |    3 |      24 |               11.7% |               58.3% |
+| vector-grep-rrf-fusion | externally-authored |    3 |      47 |               19.6% |               84.0% |
+| grep-only           | relational          |    3 |     145 |               17.1% |               62.4% |
+| grep-only           | fuzzy               |    3 |      24 |               15.8% |               79.2% |
+| grep-only           | externally-authored |    3 |      47 |               19.6% |               85.1% |
+| vector              | relational          |    3 |     145 |               10.8% |               40.7% |
+| vector              | fuzzy               |    3 |      24 |               11.7% |               58.3% |
+| vector              | externally-authored |    3 |      47 |          20.9% ±0.0 |          89.4% ±0.0 |
+
+*Stddev = 0 means the adapter is deterministic over page ordering. Non-zero stddev surfaces order-dependent bugs (e.g. tie-break that favors first-seen slug). LLM-judge-based metrics will produce non-zero stddev once added.*
+
+## Deltas vs gbrain [relational]
+
+- vector-grep-rrf-fusion: P@5 -15.0pts, R@5 -29.2pts, correct-in-top-5 -109
+- grep-only: P@5 -17.1pts, R@5 -35.5pts, correct-in-top-5 -124
+- vector: P@5 -23.4pts, R@5 -57.2pts, correct-in-top-5 -170
+
+## Deltas vs vector-grep-rrf-fusion [fuzzy]
+
+- grep-only: P@5 +4.2pts, R@5 +20.8pts, correct-in-top-5 +5
+- vector: P@5 +0.0pts, R@5 +0.0pts, correct-in-top-5 +0
+
+## Deltas vs vector-grep-rrf-fusion [externally-authored]
+
+- grep-only: P@5 +0.0pts, R@5 +1.1pts, correct-in-top-5 +0
+- vector: P@5 +1.3pts, R@5 +5.3pts, correct-in-top-5 +3
+
+## Methodology
+
+- Corpus: 240 rich-prose fictional pages (eval/data/world-v1/).
+- [relational] 145 gold-bearing queries scored, 0 excluded (empty gold.relevant).
+- [fuzzy] 24 gold-bearing queries scored, 6 excluded (empty gold.relevant).
+- [externally-authored] 47 gold-bearing queries scored, 3 excluded (empty gold.relevant).
+- Metrics: mean P@5 and R@5 per family (eval/runner/metrics.ts denominators).
+- Top-K: 5 (what agents actually read in ranked results).
+- Each adapter reingests raw pages. No gold data visible to adapters.
+
+Receipt: /home/vercel-sandbox/gbrain-evals/docs/benchmarks/2026-09-09-retrieval-refresh/baselines/attempt-1/receipt.json

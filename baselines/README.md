@@ -1,65 +1,51 @@
-# Published baselines for `gbrain eval gate`
+# Saved retrieval baselines
 
-This directory holds **hermetic-synthetic** baseline files consumed by
-`gbrain eval gate --baseline <FILE>`. Each baseline is a snapshot of the
-retrieval behavior of a known-good gbrain version against a placeholder
-test corpus. CI in this repo runs the qrels + baseline retrieval gate on
-every PR (see .github/workflows/ci.yml)
-to catch retrieval regressions in gbrain itself.
+A baseline records what a known version returned for a fixed set of questions. Comparing a new run with it catches unintended changes. It does not, by itself, prove the old results were correct; the [qrels](../qrels/README.md) supply the intended answers.
 
-## Privacy posture (gbrain D9)
+This directory contains `v0.41-launch.baseline.ndjson`, captured from a small fictional corpus. It contains placeholder names and no private user queries. Personal captures belong on the user's own machine, not in this repository.
 
-**These files contain placeholder names only.** No real user queries.
-No real people. No real companies. Every slug is a `*-example` form
-(`people/alice-example`, `companies/widget-co-example`, etc.) per
-gbrain's `CLAUDE.md` privacy rule. The published BrainBench-Real surface
-is hermetic by construction; real-user captures stay local in
-`~/.gbrain/baselines/` on each user's machine.
+## Check the committed baseline
 
-## Files
+From this repository's root:
 
-| File | Purpose |
-|---|---|
-| `v0.41-launch.baseline.ndjson` | First baseline. Generated when v0.41 closed the eval LOOP. |
+```sh
+bun install --frozen-lockfile
+bun scripts/generate-v0.41-launch.ts --check
+```
 
-## File format
+Despite its filename, `--check` does not regenerate the saved file. It builds the reference corpus, runs 12 keyword queries and checks the captured result sets against the baseline. It also verifies each expected first result. This is the offline check run in CI.
 
-NDJSON. First line is a metadata header with `_kind: 'baseline_metadata'`
-that carries the label, embedded thresholds, `source_hash`, `row_count`,
-and `baseline_mean_latency_ms`. Subsequent lines are raw captured rows
-in the `EvalCandidateInput` shape that `gbrain eval export` produces, each
-stamped with a stable `query_hash`. `gbrain eval replay` knows to skip
-the metadata header.
+## Read the file
 
-## Regenerating a baseline
+NDJSON means one JSON object per line. The first line has `_kind: "baseline_metadata"` and identifies the baseline, its thresholds, source hash, row count and measured mean latency. The remaining lines are captured query/results records with stable query hashes.
 
-```bash
-# From the gbrain-evals repo root, with gbrain checked out as a sibling
-# directory (or set GBRAIN_SRC to the gbrain source path):
+The baseline's result sets and the qrels' intended answers serve different purposes. A result can change without becoming wrong; an unchanged result can still have a bad answer label.
+
+## Regenerate deliberately
+
+```sh
+# Uses the installed gbrain dependency.
+bun scripts/generate-v0.41-launch.ts
+
+# Test an explicitly selected local gbrain checkout instead.
 GBRAIN_SRC=/path/to/gbrain bun scripts/generate-v0.41-launch.ts
 ```
 
-The generator is deterministic: same input → byte-identical output (uses
-a fixed `published_at` timestamp and stable row sort). A baseline only
-changes when the underlying corpus or retrieval semantics change.
+The command without `--check` replaces the committed baseline. Review its diff and explain intentional ranking or corpus changes with a `Why:` line in the commit body.
 
-## Refresh discipline (gbrain D4)
+The content ordering, identifiers and fixed publication timestamp are deterministic. Measured latency is real wall-clock time and can change by machine or run, so regeneration is not byte-identical.
 
-When a ranking change intentionally moves expected slugs, edit the qrels
-or regenerate the baseline, then **include a `Why:` line in the commit
-body** so future maintainers can audit the trail. Without that
-discipline, the gate degrades to rubber-stamp within months.
+## Use the gbrain CLI
 
-## Running the gate manually
+The public CLI can compare a brain against these files:
 
-```bash
-# Gate against the baseline only (regression gate):
-gbrain eval gate --baseline gbrain-evals/baselines/v0.41-launch.baseline.ndjson
-
-# Gate against both regression + correctness (both must pass):
+```sh
+gbrain eval gate --baseline baselines/v0.41-launch.baseline.ndjson
 gbrain eval gate \
-  --baseline gbrain-evals/baselines/v0.41-launch.baseline.ndjson \
-  --qrels gbrain-evals/qrels/v0.41-launch.qrels.json
+  --baseline baselines/v0.41-launch.baseline.ndjson \
+  --qrels qrels/v0.41-launch.qrels.json
 ```
 
-Exit codes: 0 pass, 1 any breach, 2 usage error.
+These paths assume this repository is the current directory. The selected brain must contain the matching corpus; merely pointing the CLI at a baseline does not create it. For the self-contained reference-corpus check, use the script above.
+
+CLI exit codes are 0 for pass, 1 for a failed gate and 2 for incorrect usage.

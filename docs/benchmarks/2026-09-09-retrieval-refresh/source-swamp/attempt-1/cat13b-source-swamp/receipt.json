@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "benchmark_version": "0.5.0",
+  "category": "cat13b-source-swamp",
+  "gbrain_version": "0.48.4.0",
+  "gbrain_pin": "github:garrytan/gbrain#2efaaf8f8a817b5b82e023383618fdcdb1cc5f7d",
+  "started_at": "2026-09-09T05:06:52.025Z",
+  "finished_at": "2026-09-09T05:07:47.223Z",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 150,
+  "n_scored": 150,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "resolved_config": {
+    "top_k": 5,
+    "pass_criterion": "gbrain top1_hit_rate >= 0.8",
+    "curated_prefix": "originals/",
+    "swamp_prefix": "openclaw/chat/",
+    "boost_factors": {
+      "curated_factor": 1.5,
+      "swamp_factor": 0.5
+    },
+    "gbrain_search_config": {
+      "search.mode": "balanced",
+      "search.reranker.enabled": "false",
+      "search.expansion": "false",
+      "search.cache.enabled": "false",
+      "search.autocut": "false",
+      "search.metadata_boost_gate": "lexical",
+      "search.relational_rerank_pin": "3",
+      "search.adaptive_return": "false"
+    },
+    "ablation_env": "GBRAIN_SOURCE_BOOST=<every resolved prefix>:1.0 (query-time only)",
+    "embedding_transport": "live openai:text-embedding-3-large",
+    "ambient_source_boost_cleared": false,
+    "adapters_run": [
+      "vector",
+      "gbrain",
+      "vector-grep-rrf-fusion",
+      "gbrain-no-source-boost",
+      "grep-only"
+    ]
+  },
+  "data": {
+    "scorecard": [
+      {
+        "name": "vector",
+        "top1_hit_rate": 0.9666666666666667,
+        "top3_hit_rate": 1,
+        "swamp_at_top": 0.03333333333333333,
+        "wall_ms": 5579
+      },
+      {
+        "name": "gbrain",
+        "top1_hit_rate": 0.9,
+        "top3_hit_rate": 1,
+        "swamp_at_top": 0.1,
+        "wall_ms": 15712
+      },
+      {
+        "name": "vector-grep-rrf-fusion",
+        "top1_hit_rate": 0.9,
+        "top3_hit_rate": 1,
+        "swamp_at_top": 0.1,
+        "wall_ms": 13043
+      },
+      {
+        "name": "gbrain-no-source-boost",
+        "top1_hit_rate": 0.8666666666666667,
+        "top3_hit_rate": 1,
+        "swamp_at_top": 0.13333333333333333,
+        "wall_ms": 20849
+      },
+      {
+        "name": "grep-only",
+        "top1_hit_rate": 0.8,
+        "top3_hit_rate": 0.9666666666666667,
+        "swamp_at_top": 0.2,
+        "wall_ms": 5
+      }
+    ],
+    "source_boost_effect": {
+      "top1_delta": 0.033333333333333326,
+      "top3_delta": 0,
+      "swamp_delta": -0.033333333333333326,
+      "queries_reranked": 23
+    },
+    "report_file": "/home/vercel-sandbox/gbrain-evals/docs/benchmarks/2026-09-09-retrieval-refresh/source-swamp/attempt-1/cat13b-source-swamp/report.json",
+    "gate_pass": true
+  }
+}

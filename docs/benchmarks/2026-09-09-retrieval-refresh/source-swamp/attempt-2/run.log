@@ -1,0 +1,106 @@
+# BrainBench Cat 13b — Source Swamp Resistance
+
+Generated: 2026-09-09T05:31:03
+Corpus: 20 pages (10 originals/, 10 openclaw/chat/)
+Boost premise: originals/ ×1.5, openclaw/chat/ ×0.5
+Queries: 30 hand-curated source-swamp queries
+Embeds: live OpenAI
+Top-K: 5
+
+## Running adapters
+
+- gbrain ...
+  Setting up brain schema (v145)...
+  140 migration(s) applied
+[extract.links_db] start
+[extract.links_db] 10/20 (50%)
+[extract.links_db] 20/20 (100%)
+[extract.links_db] 20/20 (100%) done
+[extract.timeline_db] start
+[extract.timeline_db] 10/20 (50%)
+[extract.timeline_db] 20/20 (100%)
+[extract.timeline_db] 20/20 (100%) done
+  done (17.2s). top1=90.0%, top3=100.0%, swamp=10.0%
+- gbrain-no-source-boost ...
+  Setting up brain schema (v145)...
+  140 migration(s) applied
+[extract.links_db] start
+[extract.links_db] 10/20 (50%)
+[extract.links_db] 20/20 (100%)
+[extract.links_db] 20/20 (100%) done
+[extract.timeline_db] start
+[extract.timeline_db] 10/20 (50%)
+[extract.timeline_db] 20/20 (100%)
+[extract.timeline_db] 20/20 (100%) done
+  done (19.5s). top1=86.7%, top3=100.0%, swamp=13.3%
+- vector-grep-rrf-fusion ...
+  Setting up brain schema (v145)...
+  140 migration(s) applied
+  done (14.6s). top1=90.0%, top3=100.0%, swamp=10.0%
+- grep-only ...
+  done (0.0s). top1=80.0%, top3=96.7%, swamp=20.0%
+- vector ...
+  done (6.6s). top1=96.7%, top3=100.0%, swamp=3.3%
+
+## Scorecard
+
+| Adapter | Top-1 hit | Top-3 hit | Swamp@top (lower=better) | Wall (s) |
+|---------|-----------|-----------|--------------------------|----------|
+| vector                 | 96.7% | 100.0% | 3.3% | 6.6 |
+| gbrain                 | 90.0% | 100.0% | 10.0% | 17.2 |
+| vector-grep-rrf-fusion | 90.0% | 100.0% | 10.0% | 14.6 |
+| gbrain-no-source-boost | 86.7% | 100.0% | 13.3% | 19.5 |
+| grep-only              | 80.0% | 96.7% | 20.0% | 0.0 |
+
+## Per-query breakdown (gbrain only)
+
+| Query | Top slug | Target rank | Chat above target |
+|-------|----------|-------------|-------------------|
+| q01 Y | `orig/talks/article-outline-fat-code` | 1 | 0 |
+| q02 Y | `orig/talks/article-outline-fat-code` | 1 | 0 |
+| q03 Y | `orig/talks/article-outline-fat-code` | 1 | 0 |
+| q04 Y | `orig/essays/do-things-that-don-t-scale-revisited` | 1 | 0 |
+| q05 Y | `orig/essays/do-things-that-don-t-scale-revisited` | 1 | 0 |
+| q06 Y | `orig/essays/do-things-that-don-t-scale-revisited` | 1 | 0 |
+| q07 Y | `orig/essays/product-market-fit-trap` | 1 | 0 |
+| q08 Y | `orig/essays/product-market-fit-trap` | 1 | 0 |
+| q09 Y | `orig/essays/product-market-fit-trap` | 1 | 0 |
+| q10 Y | `orig/talks/founder-mode-reality-check` | 1 | 0 |
+| q11 Y | `orig/talks/founder-mode-reality-check` | 1 | 0 |
+| q12 N | `chat/2026-04-10` | 3 | 2 |
+| q13 Y | `orig/essays/agentic-workflows-overhyped` | 1 | 0 |
+| q14 Y | `orig/essays/agentic-workflows-overhyped` | 1 | 0 |
+| q15 Y | `orig/essays/agentic-workflows-overhyped` | 1 | 0 |
+| q16 Y | `orig/essays/unit-economics-late-stage` | 1 | 0 |
+| q17 Y | `orig/essays/unit-economics-late-stage` | 1 | 0 |
+| q18 Y | `orig/essays/unit-economics-late-stage` | 1 | 0 |
+| q19 Y | `orig/talks/usage-based-pricing-yc` | 1 | 0 |
+| q20 N | `chat/2026-04-22` | 2 | 1 |
+| q21 Y | `orig/talks/usage-based-pricing-yc` | 1 | 0 |
+| q22 Y | `orig/essays/vertical-saas-thesis` | 1 | 0 |
+| q23 Y | `orig/essays/vertical-saas-thesis` | 1 | 0 |
+| q24 Y | `orig/essays/vertical-saas-thesis` | 1 | 0 |
+| q25 Y | `orig/essays/foundation-models-as-utilities` | 1 | 0 |
+| q26 Y | `orig/essays/foundation-models-as-utilities` | 1 | 0 |
+| q27 N | `chat/2026-04-17` | 3 | 2 |
+| q28 Y | `orig/talks/rag-pattern-anti-patterns` | 1 | 0 |
+| q29 Y | `orig/talks/rag-pattern-anti-patterns` | 1 | 0 |
+| q30 Y | `orig/talks/rag-pattern-anti-patterns` | 1 | 0 |
+
+## Source-boost effect (gbrain minus gbrain-no-source-boost, same pipeline)
+
+- top-1 delta: 3.3pt
+- top-3 delta: 0.0pt
+- swamp@top delta: -3.3pt (negative = boost suppresses swamp)
+- queries whose top-5 changed: 23/30
+
+## Methodology
+
+- Corpus: 10 short curated `originals/` pages + 10 long `openclaw/chat/` pages.
+- Each query is a multi-word phrase appearing in BOTH the curated target AND >=1 chat distractor.
+- Strict target: the curated `originals/` page. Chat pages: distractors.
+- Pass criterion (gbrain adapter): top1_hit_rate >= 80%. Drives verdict + exit code.
+- gbrain arms pin {"search.mode":"balanced","search.reranker.enabled":"false","search.expansion":"false","search.cache.enabled":"false","search.autocut":"false","search.metadata_boost_gate":"lexical","search.relational_rerank_pin":"3","search.adaptive_return":"false"}; the ablation arm additionally sets GBRAIN_SOURCE_BOOST to neutralize every prefix to 1.0 at query time.
+- The grep-only and vector adapters do not use source preferences; their measured results appear in the scorecard.
+
+**PASS**: gbrain top-1 hit rate 90.0% >= 80%.

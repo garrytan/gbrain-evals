@@ -1,235 +1,91 @@
-# gbrain-evals — repo guide
+# Working on gbrain-evals
 
-This repo runs benchmarks against gbrain. It depends on `gbrain` as a library
-(via the GitHub URL in `package.json`). Eval corpora and adapters live here so
-gbrain itself stays small and benchmarks evolve independently.
+This repository tests [gbrain](https://github.com/garrytan/gbrain), a memory system for agents. gbrain stores the original notes as Markdown and builds a database index for search and relationships. This repository contains the test data, comparison adapters, scoring code and published results.
 
-## Repo layout
+The dependency in `package.json` pins the gbrain code under test. A local `bun link` overrides that installation. Record both the declared pin and the code actually loaded when they differ.
 
-- `eval/runner/` — one `.ts` per benchmark family (cat13b-source-swamp,
-  longmemeval, etc). Each runner produces a JSON in `eval/reports/` and an
-  optional markdown summary.
-- `eval/data/` — committed corpora (world-v1, source-swamp-v1, gold qrels,
-  amara-life-v1) + content-addressed embedding caches. Anyone who clones gets
-  warm fixtures.
-- `eval/reports/` — gitignored. Transient run output. Baselines worth keeping
-  get hand-copied into `docs/benchmarks/<slug>/`.
-- `docs/benchmarks/` — published reports + the SVG charts they reference.
-- `node_modules/gbrain` — symlink (when locally linked) or npm fetch (when
-  pinned to a SHA in package.json). Link a local checkout for development:
-  `cd ~/git/gbrain && bun link && cd ~/git/gbrain-evals && bun link gbrain`.
+## Write for the engineer deciding whether to try gbrain
 
-## When you write a benchmark report — the platonic ideal
+Explain why a feature could help, then show the evidence. A reader should understand the problem, the setting that changes the outcome, and the limits of the result without knowing our internal names.
 
-The published report at `docs/benchmarks/<date>-<slug>.md` is the artifact a
-reader stumbles into who has never heard of gbrain or the benchmark we're
-running. **It must stand on its own.** No "see our docs," no "as we explained
-in PR #X," no internal jargon without a gloss.
+Use ordinary words and concrete cases. “Find both conversations needed to compare two dates” explains more than “improve multi-session recall.” Define technical terms when they first matter. A graph is a set of stored relationships; a graph database is a way to store and query them. Do not treat a database choice as proof of better retrieval.
 
-Every benchmark report MUST have these sections, in this order:
+Be positively disposed toward the product and exact about the experiment. Show the cases where gbrain earns consideration. Explain failures as useful information about when and how to use it. Avoid claims such as “only system,” “best,” or “beats the field” unless the comparison actually establishes them.
 
-### 1. Headline (one viewport)
+Use short paragraphs, active verbs and plain English. No marketing slogans, em dashes or inflated vocabulary. Preserve useful technical names in code formatting so readers can find the implementation.
 
-- Bold one-sentence verdict with the comparison: "gbrain hits 99.X% on the
-  public LongMemEval `_s` split, X points above [closest published system]."
-- A single SVG card showing the head-to-head numbers across systems.
-- A short paragraph (2-3 sentences) naming what changed and why a reader
-  should care.
+## Repository map
 
-### 2. What is gbrain
+- `eval/runner/`: benchmark runners, scoring helpers and adapters.
+- `eval/data/`: committed corpora and answer labels. Many Markdown files here are test inputs, including deliberately flawed skills.
+- `eval/reports/`: temporary run output, ignored by Git.
+- `docs/benchmarks/`: published explanations and the measurements supporting them.
+- `docs/receipts-manifest.json`: artifact paths, hashes and selected expected values checked by tests.
+- `test/eval/`: the suite run by `bun run test`.
+- `node_modules/gbrain`: the installed dependency, or a linked checkout.
 
-3-4 paragraphs of plain prose. Write for someone who has not heard of gbrain
-before and has 60 seconds. Cover:
+The LongMemEval embedding cache is local and uncommitted. Its default location is under `eval/reports/longmemeval/embed-cache/`. A fresh clone has no warm cache. Never describe repeated API work as free unless the particular runner caches it.
 
-- Personal-knowledge brain that runs locally, no cloud lock-in, files on
-  disk + Postgres index. Markdown source of truth, derived index.
-- Hybrid retrieval: keyword + vector with RRF fusion + source-aware boost
-  + optional Haiku query expansion. Each layer earns its keep on real
-  retrieval workloads.
-- "What's it for" — capturing notes, contacts, deals, decisions; recalling
-  them weeks later when the context is gone; never losing the connection
-  between two things you wrote down apart.
+## Shape of a benchmark report
 
-Link to the gbrain repo. Link to the gbrain CLI README. Don't repeat the
-README; just give a reader enough to know whether they're in the right
-neighborhood.
+Use the structure that makes the result easiest to assess. The default is:
 
-### 3. What is the benchmark
+1. **The finding.** State the useful conclusion, the tested configuration, the date and the main measurement. Distinguish a result we recommend from an experiment that remains inconclusive.
+2. **The concrete case.** Show the sort of question or input involved, explain what the system has to do, and define unfamiliar terms. Clearly label invented examples.
+3. **The experiment and results.** Describe the corpus, comparison arms, metric and sample size. Include the head-to-head table, relevant breakdowns and the settings that changed behavior. Explain what each important number means.
+4. **What to use and what to avoid.** Connect the evidence to a workload. Report losses, errors, tuning, weak controls and incomplete measurements beside the claims they qualify.
+5. **Reproduce and inspect.** Give repository-root commands, dependency and dataset identities, required keys, output paths and observed time/cost. Link the raw results and any charts.
 
-For LongMemEval and ConvoMem and any future public benchmark we support:
+A report must make sense on its own. Introduce gbrain and any external benchmark briefly, with links to their primary sources. Explain each compared adapter in terms of what it does, the feature it exercises, and the practical reason to test it.
 
-- Who built it. Link to the paper / HuggingFace / GitHub.
-- What's in the dataset. Question count. Question types. Ground-truth shape.
-- What metric we report (Recall@k, R@k, QA accuracy, etc.) and why we
-  picked it. If we picked retrieval recall over end-to-end QA, say so and
-  link the published QA evaluator.
-- "Why this benchmark" — what failure mode does it stress that other
-  benchmarks don't.
+Use tables and charts when they improve understanding. Keep original charts with historical results. New charts must come from identified measurements; do not redraw an old chart to imply a new run.
 
-### 4. Adapters tested — every gbrain feature explained
+## Evidence rules
 
-For EVERY gbrain configuration in the comparison table, write a short
-section that includes:
+- **Do not rewrite the experiment.** Preserve benchmark inputs, model-produced output, raw receipts, frozen prompt text, labels, dates and historical measurements. Rewrite the explanation around them.
+- **Name the denominator.** Recall of all required sessions, recall of any required session, document recall, precision and answer accuracy answer different questions. Never combine them under one “accuracy” number.
+- **Compare matching conditions.** Identify dataset revision, top-k, configuration, model, dimensions, version and any tuning. Different metrics or datasets may provide context but do not establish a ranking.
+- **Separate control from capability.** Hash embeddings and scripted models can prove the harness works. Their scores cannot prove real search or model quality.
+- **Treat errors explicitly.** Follow the runner's accounting rules. A missing key or a partial run is not a passing full benchmark. Never hide a failed adapter from the results.
+- **Keep provenance.** Copy worthwhile receipts out of `eval/reports/` before a later run overwrites them. Include per-question results when available.
+- **Disclose missing evidence.** A historical table without raw results stays historical. New measurements belong beside it, with their own date and code identity.
+- **Protect private data.** Public examples use the fictional corpora or generic placeholders. Do not publish real personal notes, names or secrets.
 
-- **What this adapter is.** One sentence describing the retrieval pipeline.
-- **What gbrain feature it exercises.** Name the actual code path:
-  `engine.searchKeyword`, `hybridSearch`, `expandQuery`, the source-boost
-  CASE expression in `sql-ranking.ts`, etc.
-- **Why it would matter on this benchmark.** Tie it to the kind of
-  question that exercises this layer.
-- **Real-world use case.** What does this look like in a user's actual
-  workflow? "Recalling a preference you stated three months ago" is a
-  better example than "single-session-user question type."
+The artifact manifest checks selected hashes and values; it does not verify every sentence in the docs. Review prose claims and links separately.
 
-Example for hybrid+expansion:
+## Running and publishing work
 
-> **`gbrain-hybrid+expansion`** runs `hybridSearch(engine, query, {expansion: true, expandFn: expandQuery})`. The keyword + vector RRF stack from `gbrain-hybrid` plus a Claude Haiku call that rewrites the user's question into 2 alternative phrasings. All 3 phrasings hit the index; results fuse via RRF. This is gbrain's CLI default (`gbrain query` ships with expansion on).
->
-> **Why it helps:** the question often uses different vocabulary than the answer. "What car issue did I mention?" doesn't share words with "the GPS isn't working right after my dealership visit." Vector embedding closes some of that gap; query expansion closes more by generating alternative phrasings the vector model can match.
->
-> **Real-world parallel:** when you ask gbrain "who do I know who works in vertical AI" it doesn't just match "vertical AI" verbatim. Haiku expands to alternative phrasings like "AI for specific industries," "applied AI startups in narrow domains" — then RRF-fuses. Without expansion, narrow phrasings hide what's in the brain.
+Start with the smallest check that can catch a broken setup. Read the runner's flags before starting a paid run; there is no universal smoke or cost-limit flag. `BRAINBENCH_N` controls only runners that read it, and the LLM semaphore is not a global spending cap.
 
-### 5. Results — head-to-head table
+Use the task's authorized budget and scope. Preserve failed and partial measurements. Do not regenerate benchmark corpora as part of a documentation change or to obtain a better score.
 
-Required columns:
-| System | Recall@k | k | n | LLM in retrieval loop | Source |
+For a new report:
 
-Include EVERY published system we can find at the same metric. MemPalace,
-Stella, Contriever, BM25 all publish numbers on LongMemEval R@5;
-they belong in the table. Mastra and Supermemory publish QA accuracy not
-R@k — flag them as "different metric, not directly comparable" but keep
-them in the table as context.
+1. Write down the question, comparison and decision rule before running.
+2. Verify the scorer and a small setup run.
+3. Run the agreed comparison with explicit configuration.
+4. Save the raw output, resolved settings and code identities.
+5. Write the report from the results, including unsuccessful candidates.
+6. Run the relevant artifact, data and documentation checks.
 
-Bold the gbrain row(s).
+Follow the current task's branch and review instructions. This guide does not authorize pushing, merging or publishing.
 
-### 6. Per-question-type breakdown
+## Match a change to a useful test
 
-Required: a table with one row per question type, one column per gbrain
-adapter. If competing systems published per-type breakdowns (MemPal does),
-include those columns too. Identify the rows where gbrain wins by a wide
-margin AND the rows where gbrain doesn't (1.7% of LongMemEval Q's land in
-"temporal-reasoning slipped past top-K" — say so).
+| Change | Relevant experiment |
+|---|---|
+| Source ranking or bulk chat dominating notes | Cat13b source swamp |
+| Retrieval, expansion, reranking or answer generation over conversations | LongMemEval |
+| Conceptual search and paraphrases | Cat13 |
+| Relationship ranking | Relational queries and graph-specific controls |
+| Source separation | Source-isolation and multi-source tests |
+| Transcript ingestion, fact extraction or synthesis | Cat35 |
+| Automatic memory injection and continuity | Cat34 |
 
-Always include a paragraph below the table picking out 1-3 illustrative
-patterns. "Single-session-assistant goes from keyword 0% to hybrid 100% —
-this is where vector retrieval pays for itself." Don't just dump tables.
+A feature change should have evidence on the behavior it changes. A benchmark that stays flat can still provide a useful regression check. For changes outside the current task, record follow-up work rather than silently expanding scope.
 
-### 7. Charts — committed SVG
+## Comparisons and historical documents
 
-Two charts minimum, generated by `eval/runner/longmemeval-chart.ts`:
-- **Headline card** — head-to-head against published systems.
-- **Per-type grouped bar chart** — one bar per adapter per question_type.
+Maintain the dated source list in [comparison-systems.md](docs/comparison-systems.md). Prefer published artifacts and primary sources. State when we recomputed another system's score rather than quoting its authors.
 
-Inline SVG so GitHub renders without an image host. Both stored under
-`docs/benchmarks/<date>-<slug>/`. Reference with relative paths.
-
-### 8. Latency + cost
-
-A small table:
-| Adapter | p50 / question | p99 / question | per-1000 questions wall | per-1000 cost |
-
-Be honest about cost. If the user can run gbrain-hybrid for $0.50 with the
-embedding cache warm, and the headline number is 99%+, that's the story.
-If the warm cache costs $50 to build the first time, say so. Don't hide it.
-
-### 9. Limits & caveats
-
-What this benchmark DOESN'T measure. Always include:
-
-- Retrieval recall ≠ QA accuracy. The user model still has to write a
-  correct answer from the retrieved context. We don't measure that here
-  unless we ran the published QA judge.
-- Sample size and K differences vs other published systems.
-- Whether tuning happened (be explicit if any adapter was tuned on the
-  benchmark vs held out).
-- What's "not in scope" for this run that the user might ask about.
-
-### 10. Reproduction
-
-Exact commands. Verified to work on a fresh machine. Include:
-- Repo clone
-- `bun link gbrain` if pointing at a local checkout
-- Dataset download URLs and target paths
-- Required env vars (OPENAI_API_KEY, ANTHROPIC_API_KEY)
-- The runner command(s) to reproduce the table
-- Where the JSON + SVG land
-- Roughly how long it takes and how much it costs
-
-If we ship a warm embedding cache as a fixture (we do — see
-`eval/data/longmemeval/embed-cache/README.md`), make this clear: the user
-gets sub-1-min retrieval-only runs without paying $5 for first embedding.
-
-### 11. Methodology details
-
-- Adapter implementations (what gbrain code path each exercises).
-- Whether expansion was on or off (and why).
-- Top-K rationale.
-- Engine recycling, reset semantics, dim mismatch guards.
-- Stratification rules if applied.
-- Determinism notes (cache, seeded sampling, embedding model
-  determinism).
-
-### 12. Files
-
-Bullet list of exactly which files in this repo + which gbrain commit are
-involved. Read-only; nothing the reader has to do, just full disclosure.
-
-## Voice rules (carried from gbrain CLAUDE.md)
-
-- Lead with the point. Real numbers. Concrete files + line numbers.
-- No em dashes. No AI vocabulary (delve, robust, comprehensive, nuanced,
-  fundamental, etc.). No marketing copy.
-- Tie technical choices to user outcomes. "The agent does ~3x less reading"
-  beats "improved precision."
-- Be direct about quality and limits. If gbrain loses on a question type,
-  say so; don't bury it in caveats.
-- Sound like a builder talking to a builder.
-- Privacy rule: no real names from the brain in any public artifact. Use
-  generic placeholders for examples. (Public benchmarks like LongMemEval
-  use synthesized question_ids; those are fine to quote as-is.)
-
-## Workflow when running a new benchmark
-
-1. **Spec first.** Write the report skeleton at
-   `docs/benchmarks/<date>-<slug>.md` with all 12 sections marked
-   "[pending]". This forces you to think about every section before any
-   numbers exist.
-2. **Build the runner** at `eval/runner/<slug>.ts`. One file. Imports from
-   `gbrain/*` subpath exports. Outputs JSON to `eval/reports/<slug>/`.
-   Stratified-sample support if the dataset is too big for full runs.
-3. **Smoke first.** Run with `--limit 10` or `--stratify 2`. Verify the
-   adapters work and the output JSON is well-formed. Cheap.
-4. **Build a chart generator** at `eval/runner/<slug>-chart.ts` (or extend
-   `longmemeval-chart.ts` if the shape generalizes). Inline SVG only.
-5. **Run the full thing** with all adapters. If embedding-heavy, warm the
-   cache once on a smoke run, then commit it as a fixture.
-6. **Fill in the report** against the spec above. Every section. No
-   placeholders shipped.
-7. **Commit + push to main.** Solo repo, direct commits OK. No branch
-   protection rules to dance around.
-
-## When you ADD a gbrain feature that affects retrieval
-
-You owe a benchmark. Pick the right one:
-- Source-boost-related → cat13b-source-swamp-v1
-- Query expansion / model routing → longmemeval-s (six question types
-  stress retrieval differently)
-- Code-aware retrieval → cat13 conceptual-recall + a code-corpus follow-up
-- Cross-source federation → world-v1 multi-source mode
-- Write path (transcripts ingest / facts extraction / dream synthesis) →
-  cat35 transcript-distill-v1 (salient-unit recall, hallucination, leakage,
-  usability). If you touch the distiller or extractor, you owe a Cat 35 line.
-
-Don't ship the gbrain feature without an updated benchmark line. Even if
-the number doesn't move, the regression test is the deliverable.
-
-## Comparing against other systems
-
-Keep a running list at `docs/comparison-systems.md` (create if missing):
-which systems published which numbers on which benchmarks, with link to
-source. Update whenever a new system publishes a relevant number.
-
-When MemPalace ships v3.5 (or whatever) and re-publishes a R@5 number,
-update the head-to-head table in the relevant report — don't quietly let
-old numbers stay. The benchmark page is a living artifact, not a one-time
-publication.
+When a claim changes, keep the old result identifiable and explain the new evidence. Keep changelog dates, attribution, audit identifiers and unfinished work intact while making their descriptions easier to read.

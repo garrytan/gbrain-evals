@@ -1,0 +1,129 @@
+{
+  "source_run_date": "2026-09-06",
+  "verification": "Recomputed sets from saved rankings and saved gold session IDs",
+  "limitation": "Does not validate against a new dataset download or re-judge omitted answer strings",
+  "arms": [
+    {
+      "artifact": "docs/benchmarks/2026-09-06-longmemeval-ranker-wave/longmemeval/A1-hybrid-rerank-off-autocut-off.ndjson",
+      "sha256": "121594c39a3654891c7cda7bf786ae3a5455786592100fe6b34ea73d71fef75e",
+      "questions": 500,
+      "scored": 470,
+      "all_hits": 439,
+      "any_hits": 464,
+      "mismatches": 0
+    },
+    {
+      "artifact": "docs/benchmarks/2026-09-06-longmemeval-ranker-wave/longmemeval/A2-hybrid-rerank-on-autocut-off.ndjson",
+      "sha256": "a6df7da4c1ca6662aae730c4577e394581bea165913cef0da3a5b07f50dd55d7",
+      "questions": 500,
+      "scored": 470,
+      "all_hits": 449,
+      "any_hits": 469,
+      "mismatches": 0
+    },
+    {
+      "artifact": "docs/benchmarks/2026-09-06-longmemeval-ranker-wave/longmemeval/A3-hybrid-expansion-rerank-off-autocut-off.ndjson",
+      "sha256": "36adbab8c61e826514b31ac3e1b3f79073e474f6baa0f666d8d1c778b43c17f3",
+      "questions": 500,
+      "scored": 470,
+      "all_hits": 255,
+      "any_hits": 399,
+      "mismatches": 0
+    },
+    {
+      "artifact": "docs/benchmarks/2026-09-06-longmemeval-ranker-wave/longmemeval/A3prime-hybrid-expansion-budget0.25-rerank-off.ndjson",
+      "sha256": "aa8f9c511075e10ca282341d2a743d1197352aef51cae8211eb952c5f24898d6",
+      "questions": 500,
+      "scored": 470,
+      "all_hits": 394,
+      "any_hits": 458,
+      "mismatches": 0
+    },
+    {
+      "artifact": "docs/benchmarks/2026-09-06-longmemeval-ranker-wave/longmemeval/A3primeR-tokenmax-expansion-budget0.25-rerank-on-autocut-on.ndjson",
+      "sha256": "f4fa72f1cbe8957bcb1dc435c0a0c67258c978fd8abcf9161fe9db8e49878273",
+      "questions": 500,
+      "scored": 470,
+      "all_hits": 381,
+      "any_hits": 466,
+      "mismatches": 0
+    },
+    {
+      "artifact": "docs/benchmarks/2026-09-06-longmemeval-ranker-wave/longmemeval/A4-default-rerank-on-autocut-on.ndjson",
+      "sha256": "4b07aac2168b625bd7399ed224062b0c1763eb4f1b6c88bd8656efbfd59a69dc",
+      "questions": 500,
+      "scored": 470,
+      "all_hits": 379,
+      "any_hits": 467,
+      "mismatches": 0
+    },
+    {
+      "artifact": "docs/benchmarks/2026-09-06-longmemeval-ranker-wave/longmemeval/D1-judged-release-config-sonnet46-reader-gpt4o-judge.ndjson",
+      "sha256": "65ffeaa8299586e5a1dd6a9e10f269bab33462ab5470a95e329fbf189a703140",
+      "questions": 500,
+      "scored": 470,
+      "all_hits": 449,
+      "any_hits": 469,
+      "mismatches": 0
+    },
+    {
+      "artifact": "docs/benchmarks/2026-09-06-longmemeval-ranker-wave/longmemeval/FINAL-release-config-rerank-on-autocut-off-pin3-gate-lexical.ndjson",
+      "sha256": "d8a1ee33c9d8075e981d236bc617b5e31bed5f6301484fd702718a652be11a14",
+      "questions": 500,
+      "scored": 470,
+      "all_hits": 449,
+      "any_hits": 469,
+      "mismatches": 0
+    },
+    {
+      "artifact": "docs/benchmarks/2026-09-06-longmemeval-ranker-wave/longmemeval/TMXR-tokenmax-as-released-legacy-expansion-rerank-on-autocut-off.ndjson",
+      "sha256": "4e07f4a7f9e4844d7cdc2d0aeed226e48fb2af7e3941fda99f44c8f1cc9c64c6",
+      "questions": 500,
+      "scored": 470,
+      "all_hits": 436,
+      "any_hits": 468,
+      "mismatches": 0
+    },
+    {
+      "artifact": "docs/benchmarks/2026-09-06-longmemeval-ranker-wave/longmemeval/devslice40-budget0.25.ndjson",
+      "sha256": "6b2c2064fc0c7f7b6790e9d0660853dd40d929b7c36898d865a28743a6712851",
+      "questions": 40,
+      "scored": 40,
+      "all_hits": 34,
+      "any_hits": 40,
+      "mismatches": 0
+    },
+    {
+      "artifact": "docs/benchmarks/2026-09-06-longmemeval-ranker-wave/longmemeval/devslice40-budget0.5.ndjson",
+      "sha256": "829f8515630f731af35b26ec078f14e2deaf6916293e0d093aa3262636f13284",
+      "questions": 40,
+      "scored": 40,
+      "all_hits": 30,
+      "any_hits": 40,
+      "mismatches": 0
+    },
+    {
+      "artifact": "docs/benchmarks/2026-09-06-longmemeval-ranker-wave/longmemeval/devslice40-budget1.0.ndjson",
+      "sha256": "0cd6af841db8bfe3cfab74deb3f63e624d6b17766af4ae5bc17fcba066b30956",
+      "questions": 40,
+      "scored": 40,
+      "all_hits": 26,
+      "any_hits": 38,
+      "mismatches": 0
+    },
+    {
+      "artifact": "docs/benchmarks/2026-09-06-longmemeval-ranker-wave/longmemeval/devslice40-budget2.0.ndjson",
+      "sha256": "e6a99851370a381e7d99d0c4c9651d59fb3a6d9e519901a0aa867a914bf7dac5",
+      "questions": 40,
+      "scored": 40,
+      "all_hits": 24,
+      "any_hits": 37,
+      "mismatches": 0
+    }
+  ],
+  "judged": {
+    "questions": 500,
+    "correct": 433,
+    "note": "Recount of stored judge booleans; answer text and raw judge output were not retained"
+  }
+}

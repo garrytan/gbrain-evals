@@ -44,11 +44,11 @@ export interface SeedOpts {
 }
 
 /** Configure the AI gateway once (mirrors cli.ts#connectEngine + longmemeval). */
-export function configureGatewayForBench(): void {
+export function configureGatewayForBench(overrides: { embeddingModel?: string; embeddingDimensions?: number } = {}): void {
   const cfg = (loadConfig() as unknown as Record<string, unknown>) || {};
   configureGateway({
-    embedding_model: cfg.embedding_model,
-    embedding_dimensions: cfg.embedding_dimensions,
+    embedding_model: overrides.embeddingModel ?? cfg.embedding_model,
+    embedding_dimensions: overrides.embeddingDimensions ?? cfg.embedding_dimensions,
     expansion_model: cfg.expansion_model,
     chat_model: cfg.chat_model,
     chat_fallback_chain: cfg.chat_fallback_chain,
@@ -58,10 +58,11 @@ export function configureGatewayForBench(): void {
 }
 
 /** Fresh in-memory PGLite brain. */
-export async function createBenchEngine(): Promise<PGLiteEngine> {
+export async function createBenchEngine(searchConfig: Record<string, string> = {}): Promise<PGLiteEngine> {
   const engine = new PGLiteEngine();
   await engine.connect({});
   await engine.initSchema();
+  for (const [key, value] of Object.entries(searchConfig)) await engine.setConfig(key, value);
   return engine;
 }
 

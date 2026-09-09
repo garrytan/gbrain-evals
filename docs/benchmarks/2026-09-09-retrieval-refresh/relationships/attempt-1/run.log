@@ -1,0 +1,214 @@
+Relational OFF/ON: ingestion seed 1, 145 paired queries
+  Setting up brain schema (v145)...
+  140 migration(s) applied
+[extract.links_db] start
+[extract.links_db] 10/240 (4%)
+[extract.links_db] 20/240 (8%)
+[extract.links_db] 30/240 (12%)
+[extract.links_db] 40/240 (16%)
+[extract.links_db] 50/240 (20%)
+[extract.links_db] 60/240 (25%)
+[extract.links_db] 70/240 (29%)
+[extract.links_db] 80/240 (33%)
+[extract.links_db] 90/240 (37%)
+[extract.links_db] 100/240 (41%)
+[extract.links_db] 110/240 (45%)
+[extract.links_db] 120/240 (50%)
+[extract.links_db] 130/240 (54%)
+[extract.links_db] 140/240 (58%)
+[extract.links_db] 150/240 (62%)
+[extract.links_db] 160/240 (66%)
+[extract.links_db] 170/240 (70%)
+[extract.links_db] 180/240 (75%)
+[extract.links_db] 190/240 (79%)
+[extract.links_db] 200/240 (83%)
+[extract.links_db] 210/240 (87%)
+[extract.links_db] 220/240 (91%)
+[extract.links_db] 230/240 (95%)
+[extract.links_db] 240/240 (100%)
+[extract.links_db] 240/240 (100%) done
+[extract.timeline_db] start
+[extract.timeline_db] 10/240 (4%)
+[extract.timeline_db] 20/240 (8%)
+[extract.timeline_db] 30/240 (12%)
+[extract.timeline_db] 40/240 (16%)
+[extract.timeline_db] 50/240 (20%)
+[extract.timeline_db] 60/240 (25%)
+[extract.timeline_db] 70/240 (29%)
+[extract.timeline_db] 80/240 (33%)
+[extract.timeline_db] 90/240 (37%)
+[extract.timeline_db] 100/240 (41%)
+[extract.timeline_db] 110/240 (45%)
+[extract.timeline_db] 120/240 (50%)
+[extract.timeline_db] 130/240 (54%)
+[extract.timeline_db] 140/240 (58%)
+[extract.timeline_db] 150/240 (62%)
+[extract.timeline_db] 160/240 (66%)
+[extract.timeline_db] 170/240 (70%)
+[extract.timeline_db] 180/240 (75%)
+[extract.timeline_db] 190/240 (79%)
+[extract.timeline_db] 200/240 (83%)
+[extract.timeline_db] 210/240 (87%)
+[extract.timeline_db] 220/240 (91%)
+[extract.timeline_db] 230/240 (95%)
+[extract.timeline_db] 240/240 (100%)
+[extract.timeline_db] 240/240 (100%) done
+Relational OFF/ON: ingestion seed 2, 145 paired queries
+  Setting up brain schema (v145)...
+  140 migration(s) applied
+[extract.links_db] start
+[extract.links_db] 10/240 (4%)
+[extract.links_db] 20/240 (8%)
+[extract.links_db] 30/240 (12%)
+[extract.links_db] 40/240 (16%)
+[extract.links_db] 50/240 (20%)
+[extract.links_db] 60/240 (25%)
+[extract.links_db] 70/240 (29%)
+[extract.links_db] 80/240 (33%)
+[extract.links_db] 90/240 (37%)
+[extract.links_db] 100/240 (41%)
+[extract.links_db] 110/240 (45%)
+[extract.links_db] 120/240 (50%)
+[extract.links_db] 130/240 (54%)
+[extract.links_db] 140/240 (58%)
+[extract.links_db] 150/240 (62%)
+[extract.links_db] 160/240 (66%)
+[extract.links_db] 170/240 (70%)
+[extract.links_db] 180/240 (75%)
+[extract.links_db] 190/240 (79%)
+[extract.links_db] 200/240 (83%)
+[extract.links_db] 210/240 (87%)
+[extract.links_db] 220/240 (91%)
+[extract.links_db] 230/240 (95%)
+[extract.links_db] 240/240 (100%)
+[extract.links_db] 240/240 (100%) done
+[extract.timeline_db] start
+[extract.timeline_db] 10/240 (4%)
+[extract.timeline_db] 20/240 (8%)
+[extract.timeline_db] 30/240 (12%)
+[extract.timeline_db] 40/240 (16%)
+[extract.timeline_db] 50/240 (20%)
+[extract.timeline_db] 60/240 (25%)
+[extract.timeline_db] 70/240 (29%)
+[extract.timeline_db] 80/240 (33%)
+[extract.timeline_db] 90/240 (37%)
+[extract.timeline_db] 100/240 (41%)
+[extract.timeline_db] 110/240 (45%)
+[extract.timeline_db] 120/240 (50%)
+[extract.timeline_db] 130/240 (54%)
+[extract.timeline_db] 140/240 (58%)
+[extract.timeline_db] 150/240 (62%)
+[extract.timeline_db] 160/240 (66%)
+[extract.timeline_db] 170/240 (70%)
+[extract.timeline_db] 180/240 (75%)
+[extract.timeline_db] 190/240 (79%)
+[extract.timeline_db] 200/240 (83%)
+[extract.timeline_db] 210/240 (87%)
+[extract.timeline_db] 220/240 (91%)
+[extract.timeline_db] 230/240 (95%)
+[extract.timeline_db] 240/240 (100%)
+[extract.timeline_db] 240/240 (100%) done
+Relational OFF/ON: ingestion seed 3, 145 paired queries
+  Setting up brain schema (v145)...
+  140 migration(s) applied
+[extract.links_db] start
+[extract.links_db] 10/240 (4%)
+[extract.links_db] 20/240 (8%)
+[extract.links_db] 30/240 (12%)
+[extract.links_db] 40/240 (16%)
+[extract.links_db] 50/240 (20%)
+[extract.links_db] 60/240 (25%)
+[extract.links_db] 70/240 (29%)
+[extract.links_db] 80/240 (33%)
+[extract.links_db] 90/240 (37%)
+[extract.links_db] 100/240 (41%)
+[extract.links_db] 110/240 (45%)
+[extract.links_db] 120/240 (50%)
+[extract.links_db] 130/240 (54%)
+[extract.links_db] 140/240 (58%)
+[extract.links_db] 150/240 (62%)
+[extract.links_db] 160/240 (66%)
+[extract.links_db] 170/240 (70%)
+[extract.links_db] 180/240 (75%)
+[extract.links_db] 190/240 (79%)
+[extract.links_db] 200/240 (83%)
+[extract.links_db] 210/240 (87%)
+[extract.links_db] 220/240 (91%)
+[extract.links_db] 230/240 (95%)
+[extract.links_db] 240/240 (100%)
+[extract.links_db] 240/240 (100%) done
+[extract.timeline_db] start
+[extract.timeline_db] 10/240 (4%)
+[extract.timeline_db] 20/240 (8%)
+[extract.timeline_db] 30/240 (12%)
+[extract.timeline_db] 40/240 (16%)
+[extract.timeline_db] 50/240 (20%)
+[extract.timeline_db] 60/240 (25%)
+[extract.timeline_db] 70/240 (29%)
+[extract.timeline_db] 80/240 (33%)
+[extract.timeline_db] 90/240 (37%)
+[extract.timeline_db] 100/240 (41%)
+[extract.timeline_db] 110/240 (45%)
+[extract.timeline_db] 120/240 (50%)
+[extract.timeline_db] 130/240 (54%)
+[extract.timeline_db] 140/240 (58%)
+[extract.timeline_db] 150/240 (62%)
+[extract.timeline_db] 160/240 (66%)
+[extract.timeline_db] 170/240 (70%)
+[extract.timeline_db] 180/240 (75%)
+[extract.timeline_db] 190/240 (79%)
+[extract.timeline_db] 200/240 (83%)
+[extract.timeline_db] 210/240 (87%)
+[extract.timeline_db] 220/240 (91%)
+[extract.timeline_db] 230/240 (95%)
+[extract.timeline_db] 240/240 (100%)
+[extract.timeline_db] 240/240 (100%) done
+{
+  "off": {
+    "n_scored": 435,
+    "precision_at_5": 0.18068965517241467,
+    "recall_at_5": 0.6626436781609195,
+    "hit_at_1": 0.1425287356321839,
+    "hit_at_5": 0.7379310344827587,
+    "relational_fired_queries": 0,
+    "mean_returned_chunks": 5,
+    "mean_distinct_pages": 4.742528735632184
+  },
+  "on": {
+    "n_scored": 435,
+    "precision_at_5": 0.20275862068965617,
+    "recall_at_5": 0.7241379310344828,
+    "hit_at_1": 0.23908045977011494,
+    "hit_at_5": 0.7724137931034483,
+    "relational_fired_queries": 141,
+    "mean_returned_chunks": 5,
+    "mean_distinct_pages": 4.659770114942528
+  },
+  "paired": {
+    "precision_at_5": {
+      "n": 435,
+      "gains": 45,
+      "losses": 0,
+      "ties": 390
+    },
+    "recall_at_5": {
+      "n": 435,
+      "gains": 45,
+      "losses": 0,
+      "ties": 390
+    },
+    "hit_at_1": {
+      "n": 435,
+      "gains": 42,
+      "losses": 0,
+      "ties": 393
+    },
+    "hit_at_5": {
+      "n": 435,
+      "gains": 15,
+      "losses": 0,
+      "ties": 420
+    }
+  }
+}
+Receipt: /home/vercel-sandbox/gbrain-evals/docs/benchmarks/2026-09-09-retrieval-refresh/relationships/attempt-1/relational-ab/receipt.json

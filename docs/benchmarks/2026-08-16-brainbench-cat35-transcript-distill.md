@@ -1,26 +1,16 @@
-# Cat 35 — Transcript → Brain-Page Distillation Fidelity
+# Cat 35: what survives when a transcript becomes memory?
 
-> STATUS: published pending one human step — judge calibration hand-scoring
-> (24 coverage pairs in `./2026-08-16-brainbench-cat35-transcript-distill/judge-calibration-2026-08-25.json`).
-> Sections 1–12 below are the original v0.46.3.0 publication, kept intact as
-> the historical record. The current numbers are in the update block that
-> follows.
+Corpus dated August 16, 2026. Baseline measured August 25 on gbrain v0.46.3.0; two August 31 runs bracket the changes released in v0.47.8.0.
 
-## Update 2026-08-31 — gbrain v0.47.8.0: dream recall 88.1%, all 20 sessions emit, quote fidelity 82.7%
+A two-hour coding session contains many things worth forgetting and a few things worth keeping. Three weeks later, you may need the decision about the database, an idea for a product, or the name of someone you promised to contact. This benchmark asks whether gbrain saves those things accurately in a readable page.
 
-This benchmark did its job: gbrain ran a write-path fix wave
-([gbrain#4742](https://github.com/garrytan/gbrain/pull/4742), v0.47.8.0)
-aimed at exactly the deficiencies §6 names — the triage misses on
-buried-signal transcripts, the paraphrase-inside-quote-marks failure, the
-missing `idea` concept in the facts taxonomy — and re-ran Cat 35 twice to
-bracket it. Same frozen corpus (manifest hash unchanged), same judge model
-(`claude-sonnet-4-6`) and judge prompt version (`2026-08-16-v1`), nothing
-tuned against the corpus.
+The first run found two clear problems. Four useful transcripts never reached the writer because triage rejected them. And the writer often put paraphrases inside quotation marks. The August 31 changes addressed both: all 20 signal-bearing sessions emitted pages, judged recall rose to 88.1%, and mechanically verified quote fidelity rose to 82.7%.
 
-Two runs bracket the wave because the published baseline was 62 commits
-stale by the time the wave started: a fresh pre-wave run at the then-current
-gbrain master (`aa820c7f`) re-anchors the comparison so the wave only claims
-what the wave did.
+Human judge calibration is still pending. The published calibration file has 24 coverage pairs awaiting human scores. These results are useful machine-judged evidence, with mechanical checks alongside; they have not passed that human validation step.
+
+## The before-and-after result
+
+The baseline was 62 commits behind master when the fix work began. We therefore ran the then-current master before the changes, then the candidate after them, on the same frozen corpus and judge prompt.
 
 | Metric (dream lane unless noted) | Published v0.46.3.0 (2026-08-25) | Pre-wave master `aa820c7f` | **Post-wave `079941d2` (shipped as v0.47.8.0)** |
 |---|---|---|---|
@@ -33,180 +23,52 @@ what the wave did.
 | Usability | 85% | 89.6% | **90.8%** |
 | Facts lane (macro) | 60.8% | 58.6% | **64.8%** |
 | Verbatim control (judge ceiling) | 93.1% | 93.3% | 93.0% |
-| Gates | pass (recalibrated, §9) | pass | pass |
+| Gates | pass ([recalibrated](#corrections-and-limits)) | pass | pass |
 | Measured cost | $6.20 | $6.23 | $6.36 |
 
-Receipts committed next to the baseline:
-[pre-wave](./2026-08-16-brainbench-cat35-transcript-distill/receipt-2026-08-31-prewave-baseline-aa820c7f.json) ·
-[post-wave](./2026-08-16-brainbench-cat35-transcript-distill/receipt-2026-08-31-v0.47.8.0-wave-079941d2.json).
-Both receipts record `gbrain_version: 0.47.7.0` because both runs happened on
-the release branch BEFORE its version bump — the SHAs are the binding
-identity. `079941d2` is the release candidate the wave measured; the shipped
-v0.47.8.0 (`2a56b512`, the current pin) adds only documentation and a
-protocol-conformance widening of the recall response schema on top — the
-write path under test is byte-identical.
+The relevant comparison for the change is `aa820c7f` to `079941d2`: 70.2% to 88.1% judged recall, and 16 to 20 sessions emitting pages. The older 61.5% baseline helps show the history but includes intervening changes.
 
-**What moved, mechanically.** All four previously-missed transcripts now
-emit pages, and every one of them still scored BELOW the 0.5 triage gate
-(0.45 / 0.35 / 0.42 / 0.42) — they pass through the wave's verified-segment
-rescue (a sub-gate score is admitted only when the triage judge's own quoted
-segments verify as substrings of the transcript), not through score
-inflation. The pure-routine controls (max 0.18) stay far below the 0.30
-rescue floor: zero false fires. Item-level, the wave (post-wave vs pre-wave,
-same judge): dream lane 42 gold items improved / 8 regressed out of 173,
-with 29 of the 42 improvements on the four rescued transcripts; the verbatim
-control moved 2 items up and 3 down, the noise band. Per kind, dream recall now leads on
-every kind: fact 52.5→86.1%, decision 67.0→88.6%, idea 60.0→86.7%, entity
-70.0→95.0%, vibe 71.4→87.5% (published→post-wave). The facts lane's idea
-kind — flagged in §6 as a taxonomy hole — went 38.3→50.0% after gbrain's
-extractor gained an `idea` fact kind.
+Both August 31 receipts say `gbrain_version: 0.47.7.0` because they preceded the version bump. Their SHAs identify the tested code. The [pre-change receipt](2026-08-16-brainbench-cat35-transcript-distill/receipt-2026-08-31-prewave-baseline-aa820c7f.json) and [post-change receipt](2026-08-16-brainbench-cat35-transcript-distill/receipt-2026-08-31-v0.47.8.0-wave-079941d2.json) record those identities. The release at `2a56b512` added documentation and a response-schema widening; the tested write path was unchanged. The relevant implementation is [gbrain PR 4742](https://github.com/garrytan/gbrain/pull/4742).
 
-**Honesty notes.** (1) The judge-scored recall deltas are directional at
-n=1 per configuration; the mechanical counters (emission, quote-substring
-rate, triage scores, item flips) are deterministic and carry the
-attribution. (2) Quote fidelity's denominator dropped from 240 to 139
-quoted spans: the wave's repair pass strips quote marks from spans it
-cannot ground rather than leaving false verbatim claims — fewer quotes,
-mostly-true ones, plus the prompt now permits paraphrase-without-marks.
-(3) The two bracketing runs each record 1/86 confirmed distractor in dream
-pages where the published run recorded 0 — single-item judge variance on a
-borderline passing mention, reported as measured. (4) The judge-calibration
-hand-scoring gate in the STATUS banner remains open; these runs reuse the
-published judge prompt version, so the pending calibration covers them too.
+## What changed in the writer
 
-The sections below are the original publication, kept as written; only the
-package.json pin references in §10 and §12 are updated to the current pin.
+Triage normally lets a transcript through at a score of 0.5. The four formerly missed transcripts still scored below that threshold after the changes: 0.45, 0.35, 0.42, and 0.42. They were admitted by a new rescue rule. A score above 0.30 can qualify when the triage model identifies signal-bearing quotations that actually appear in the transcript. The routine controls remained at or below 0.18, and none emitted pages.
 
-## 1. Headline
+This matters because a useful decision can be buried inside logs and routine discussion. Lowering the threshold indiscriminately could save that decision while also admitting noise. The rescue rule uses an additional piece of evidence. On this corpus it recovered the four sessions without triggering the routine controls; larger and repeated tests are still needed.
 
-**gbrain's dream distillation keeps 61.5% of a session's salient content
-(95% CI 45.0-77.6) in pages rated 85% usable, with zero distractor leakage —
-against a verbatim-import control that keeps 93.1% but leaks 96.5% of the
-noise and scores 0% usable.**
+The writer also began removing quotation marks from text it could not verify as a quote. Verified spans rose from 130/240 to 115/139. The percentage improved partly because there were fewer quoted spans, not because more verbatim quotations were produced. A supported paraphrase without quotation marks is preferable to pretending it is a direct quote.
 
-![headline](./2026-08-16-brainbench-cat35-transcript-distill/2026-08-25-155618-cat35.headline.svg)
+The facts extractor gained an `idea` kind. Its idea recall rose from the original 38.3% to 50.0%. The dream lane's original-to-post-change recall by kind was fact 52.5→86.1%, decision 67.0→88.6%, idea 60.0→86.7%, entity 70.0→95.0%, and emotional tenor 71.4→87.5%.
 
-The write path finally has a number. Verbatim import maximizes recall and is
-unreadable as a knowledge base; the distiller trades a third of the salient
-content for pages you'd actually reread, and its failure mode is inventing
-(14.1% hallucination rate on page claims) rather than leaking noise (0%).
-That tradeoff — and where each lane drops which KIND of content — is what
-this page measures. Run: 24 transcripts × 3 lanes, 29 minutes, $6.20 in
-judge+extraction spend (dream-synthesis tokens not surfaced by gbrain's phase
-API — see §8), Sonnet judge, gbrain v0.46.3.0 pinned.
+Against the immediate pre-change run, 42 of 173 gold items improved and eight regressed; 29 improvements came from the four recovered sessions. These item credits depend on model judgments. They are reproducible recounts of saved verdicts, not deterministic evidence of how another generation or judge run would behave. The verbatim control moved two items up and three down, a reminder that judging itself varies.
 
-## 2. What is gbrain
+## The three ways of saving a session
 
-gbrain is a personal knowledge brain that runs locally. Your notes, contacts,
-meetings, and decisions live as markdown files on disk; a Postgres index
-(embedded PGLite by default, real Postgres for big brains) makes them
-searchable. The markdown is the source of truth and the index is derived, so
-there is no cloud lock-in and nothing to export your data out of.
+The verbatim lane imports the transcript and stops. It is a searchable archive, preserving both useful content and noise. The facts lane imports it and extracts short typed statements. The dream lane first judges whether the session contains durable signal, then asks a synthesis agent to write pages.
 
-Retrieval is hybrid: keyword and vector search fused with RRF, plus
-source-aware boosts and optional query expansion. That read path is measured
-elsewhere ([LongMemEval](./2026-05-07-longmemeval-s.md),
-[PrecisionMemBench](./2026-05-29-precisionmembench.md)). This benchmark
-measures the WRITE path, which gbrain grew substantially in v0.46:
+The dream prompt asks for a self-contained opening, grounded quotations, links into existing content, and no page for routine work. Each transcript gets a fresh PGLite database and a ten-page fictional scaffold so links can point to something. Modified scaffold pages contribute only the added or changed lines to the scored output.
 
-- `gbrain transcripts ingest` (v0.46.0.0) imports agent sessions from six
-  harness formats (Claude Code, Codex, OpenClaw, and others) into
-  `type: conversation` pages, deterministically.
-- Dream synthesis (v0.46.2.0) is a two-stage cascade: a cheap triage model
-  scores each transcript for durable signal, and transcripts above the gate
-  get distilled by a synthesis agent into brain pages under
-  `wiki/personal/reflections/` and `wiki/originals/ideas/`, with wikilinks
-  into the existing brain.
-- Conversation-facts extraction pulls typed facts (events, preferences,
-  commitments, beliefs) out of conversation pages into a queryable facts table.
+The original baseline used Haiku for triage and Sonnet for synthesis and judging. `runTranscriptsIngest`, `runExtractConversationFactsCore`, and `runPhaseSynthesize` are the production functions called at the original `cc3e2843…` pin. Facts are scored as facts, not as a polished page; their usability column is therefore not applicable.
 
-What it's for: you have a two-hour working session with an agent, the
-transcript scrolls away, and three weeks later you need the decision you made,
-the idea you almost had, and the person you said you'd follow up with. The
-write path decides whether those survive. Repo:
-[github.com/garrytan/gbrain](https://github.com/garrytan/gbrain).
+## What the corpus contains
 
-## 3. What is the benchmark
+There are 24 synthetic transcripts: four examples in each of six scenarios. These cover coding with reflection, startup ideas, people and deals, mixed routine work and signal, emotional processing, and purely routine work. One example per scenario is a longer noisy transcript of 10,000–30,000 characters with logs, code, and tool calls.
 
-Cat 35 asks one question: when an agent-session transcript goes through
-gbrain's write path, what percentage of its salient content comes back in a
-satisfactory, usable brain page?
+The fixture plants 173 statements worth preserving, 86 true but routine distractions, and two attribution hazards. One hazard asks whether an agent's proposal is incorrectly recorded as the user's decision. The other concerns a killed process whose completion must not be asserted. Fictional details reduce the usefulness of answering from general knowledge, but they do not remove authoring bias.
 
-**The corpus** is 24 synthetic agent-session transcripts we built for this
-benchmark (`eval/data/transcript-distill-v1/`): six scenarios (coding session
-with embedded reflection, startup ideation, people/deal discussion, mixed
-routine+signal, emotional processing, pure-routine negative control) times
-four instances, one of which per scenario is a long-noisy variant (10-30K
-chars with tool-call blocks, log dumps, and code snippets as realistic agent
-noise). Into these we PLANT 173 gold salient units — each an atomic statement
-(one predicate, RoSE-style) of kind fact / idea / decision / vibe / entity,
-with a verbatim anchor phrase that provably appears in the transcript — plus
-86 true-but-routine distractors that should NOT surface, and 2 attribution
-hazards (agent-proposed-vs-user-decided; a killed process whose completion a
-page must not assert). All specifics are fictional so a distiller can't answer
-from pretraining. Gold is known by construction: the skeleton is deterministic
-(seeded PRNG), Opus writes the surrounding prose, and a validation gate
-verifies every anchor landed verbatim.
+Each gold statement has one proposition and a phrase that appears in the transcript. A seeded skeleton and cached Opus-generated prose make the corpus repeatable. Before the full run, an audit found 26/173 statements overstated what their supporting phrases established; those statements were softened. No gold was changed after full-run scores existed.
 
-**The metric** is salient-unit recall: an LLM judge scores each gold item
-FULL / PARTIAL / ABSENT against the lane's output, mapped 1 / 0.5 / 0 — the
-same partial-credit scale as SummHay ([arXiv 2407.01370](https://arxiv.org/abs/2407.01370))
-and HaluMem ([arXiv 2511.03506](https://arxiv.org/abs/2511.03506)), so our
-numbers read against published precedent. The headline is the macro average
-over signal transcripts with a transcript-level bootstrap CI; strict
-(full-credit-only) recall is reported alongside. Mechanical checks the judge
-cannot fudge run underneath: verbatim anchors ground the corpus, quote
-fidelity is a substring test, distractor leakage starts from anchor scans.
+## How to read the scores
 
-**Why this benchmark exists.** Every published memory benchmark measures the
-read path (retrieval recall or end-to-end QA). The write path is almost
-entirely unmeasured: HaluMem is the single published write-path benchmark, and
-it measured Mem0 at 42.9% extraction recall while the same product self-reports
-92.5% on read-path QA (see [comparison-systems.md](../comparison-systems.md)).
-No public benchmark measures whether the salient content of an AI-agent
-working session survives distillation into a knowledge-base page — HaluMem
-scores persona chit-chat memory points, not a distilled artifact; SummHay
-plants insights in 100-doc haystacks for query-focused summaries. Cat 35
-covers that intersection, and adds the axis with no precedent at all: whether
-the emotional tenor of a session (the "vibes") survives distillation.
-PSentScore ([arXiv 2307.12371](https://arxiv.org/abs/2307.12371)) showed
-summarizers drop affective content by default; ours is the first benchmark we
-know of that plants tenor as gold.
+A model judge marks each gold statement fully preserved, partly preserved, or absent, worth 1, 0.5, or 0 points. The headline averages recall within each signal transcript, then across transcripts. The bootstrap interval resamples transcripts; it does not measure repeated model-run variation. Strict recall counts only full credit.
 
-## 4. Adapters tested — every gbrain feature explained
+A quoted span must pass a substring check to count as verbatim. Hallucination scoring asks whether a page's claims are supported. The joint dream score multiplies coverage by evidence grounding. A page can mention the right subject yet misstate it, so coverage alone is insufficient.
 
-**`verbatim`** runs `runTranscriptsIngest` only
-(`src/core/transcripts/ingest.ts:139` at the original publication pin
-`cc3e2843…`, as are all code refs in this section and §11): the cathedral-4
-importer parses the Claude Code JSONL, redacts, renders anchor-line
-conversation pages, and stops. It is the control lane. Coverage should be
-near-100% by construction (the content is all there, verbatim), which
-calibrates the gold set and the coverage judge simultaneously; distractor
-leakage is 100% by the same construction; usability as a distilled artifact is
-expected to be poor. Real-world parallel: `gbrain transcripts ingest --all`
-with no downstream processing — a searchable raw archive.
+This approach draws on partial-credit coverage scoring in [SummHay](https://arxiv.org/abs/2407.01370) and operation-level memory evaluation in [HaluMem](https://arxiv.org/html/2511.03506). HaluMem's Table 3 reports 42.91% extraction recall for Mem0 and 41.53% for Supermemory on its Medium corpus. Those are different tasks, data, and judges; they do not establish a win or loss against Cat 35. Emotional-content preservation is also related to [PSentScore](https://arxiv.org/abs/2307.12371). We make no claim that Cat 35 is the first or only benchmark of these broader problems.
 
-**`facts`** chains ingest into `runExtractConversationFactsCore`
-(`src/commands/extract-conversation-facts.ts:1179`), gbrain's memory-write
-lane: a Sonnet-tier extractor with an explicit notability filter (high =
-extract now, low = skip entirely) writes typed facts into the facts table.
-This lane produces facts, not a page — we grade its rendered fact list for
-recall, grounding (every extracted fact is judged against the transcript), and
-leakage, but not page usability. Real-world parallel: the `--facts` flag on
-transcript ingest; what `gbrain recall` reads later.
+## The original August 25 measurements
 
-**`dream`** is the headline lane: `runPhaseSynthesize`
-(`src/core/cycle/synthesize.ts:614`) with the transcript as an ad-hoc input.
-Stage 1, a Haiku triage judge scores 0-1 for durable signal (gate at the
-shipped default 0.5); stage 2, a synthesis subagent (Sonnet in the published
-run) reads the transcript with an advisory triage map and writes brain pages
-via put_page under an allow-list, with mandates for verbatim quotes, at least
-one wikilink into existing content, a self-contained opening, and "write
-nothing" for routine content. We grade exactly what that prompt promises.
-Real-world parallel: the nightly dream cycle distilling the day's sessions
-into pages you'll actually reread.
-
-## 5. Results — head-to-head table
+These tables and charts preserve the first run. The later results above supersede them for the tested newer write path.
 
 | System | Salient-unit recall (1/0.5/0) | Strict | Halluc. | Leakage | Usable | n | Source |
 |---|---|---|---|---|---|---|---|
@@ -216,18 +78,9 @@ into pages you'll actually reread.
 | Mem0 (HaluMem-Medium) | 42.9% | — | — | — | — | different corpus | arXiv 2511.03506 — NOT directly comparable |
 | Supermemory (HaluMem-Medium) | 41.5% | — | — | — | — | different corpus | arXiv 2511.03506 — NOT directly comparable |
 
-Read the control row first: 93.1% is the JUDGE CEILING (the content is all
-there verbatim; a conservative judge still marks ~1 item per transcript
-PARTIAL). Against that ceiling, dream retains about two-thirds of measurable
-salient content. Micro averages sit within 2pp of macro on every lane. Dream's
-per-item joint score (coverage × evidence-grounding) is 51.5%. No external
-system publishes a directly comparable agent-session distillation number; the
-HaluMem rows are write-path context on a persona-chat corpus, kept because
-they are the only published write-path measurements anywhere.
+![Original distillation results](2026-08-16-brainbench-cat35-transcript-distill/2026-08-25-155618-cat35.headline.svg)
 
-## 6. Per-question-type breakdown
-
-Salient-unit recall by kind × lane (descriptive, single run):
+The verbatim control's 93.1% is a measured score on content known to be present, not a universal judge ceiling. Its failure to reach 100% tells us the judge or its coverage protocol can under-credit present material. Dream's original joint coverage-and-grounding score was 51.5%, below its 61.5% coverage alone. Micro averages were within two percentage points of macro averages in this run.
 
 | Kind | verbatim | facts | dream |
 |---|---|---|---|
@@ -237,48 +90,31 @@ Salient-unit recall by kind × lane (descriptive, single run):
 | entity | 75.0% | 50.0% | 70.0% |
 | vibe | 96.4% | 46.4% | **71.4%** |
 
-By notability: dream high 62.0% / medium 63.4% / low 57.8%; facts high 66.3% /
-medium 59.8% / low 50.0%. By depth: dream early 59.1% / middle 65.8% / late
-59.8% (no mid-transcript dip — counter to the DIAL-SUMMER expectation at
-these lengths). Triage separation: expected-high mean 0.666 (min 0.32), pure-
-routine mean 0.118 (max 0.15); descriptive pass-rates — 0.3: 100% high, 0%
-low; 0.5 (shipped default): 80% high, 0% low; 0.7: 65% high, 0% low.
+The original dream writer preserved emotional tenor and decisions more often than literal facts. The facts extractor did better on facts and decisions but poorly on ideas. That suggests complementary uses, but a combined-lane benefit was not measured here.
 
-Three patterns worth naming:
+By notability, original dream recall was 62.0% / 63.4% / 57.8% for high / medium / low items; facts recall was 66.3% / 59.8% / 50.0%. By position in the transcript, dream recall was 59.1% early, 65.8% in the middle, and 59.8% late. This sample did not show a middle-position dip; it does not disprove that effect at other lengths or on other data.
 
-1. **The distiller keeps vibes and decisions, drops facts; the extractor is
-   the mirror image.** Dream's best kinds are vibe (71.4%) and entity (70%);
-   its worst is fact (52.5%). The facts lane is strongest exactly there
-   (facts/decisions ~69%) and collapses on ideas (38.3%) — its extraction
-   taxonomy (event/preference/commitment/belief/fact) has no concept of an
-   idea. The two write paths have complementary blind spots, which is an
-   argument for running both.
-2. **Every emission miss is a triage miss, and three of four are the
-   mixed-routine-signal scenario.** Four expected-high transcripts produced
-   no pages; all four scored below the 0.5 triage gate (0.32-0.42), and three
-   were transcripts that bury real signal inside routine chatter — the
-   scenario built to stress triage did exactly that. Their gold items score
-   zero in the dream lane, which is the honest accounting: a distiller that
-   never fires retained nothing.
-3. **Quote fidelity is the dream lane's weakest promise: 45.4%.** The
-   synthesis prompt mandates verbatim quotes; measured mechanically, fewer
-   than half of quoted spans in the pages are substrings of the transcript —
-   the model paraphrases inside quotation marks. This is most of the gap
-   between coverage (61.5%) and the joint score (51.5%), and it is the
-   clearest single upstream improvement this benchmark points at.
+Original triage scores averaged 0.666 for expected-signal sessions (minimum 0.32) and 0.118 for routine sessions (maximum 0.15). Thresholds of 0.3, 0.5, and 0.7 would have admitted 100%, 80%, and 65% of signal sessions, with no routine sessions admitted in this sample. This was a descriptive sweep, not an independent validation of a new threshold.
 
-Attribution hazards: the agent-proposed-vs-user-decided hazard was NOT
-violated (the page correctly attributes the user's decision); the
-killed-process hazard landed on a triage-missed transcript and is unmeasured
-in this run (null).
+The original decision-attribution hazard passed. The killed-process hazard was in a transcript rejected by triage, so it was unmeasured. An omitted page is not evidence that a writer handled a hazard correctly.
 
-## 7. Charts
+![Original recall by kind](2026-08-16-brainbench-cat35-transcript-distill/2026-08-25-155618-cat35.by-kind.svg)
 
-![by kind](./2026-08-16-brainbench-cat35-transcript-distill/2026-08-25-155618-cat35.by-kind.svg)
+![Original noise measurements](2026-08-16-brainbench-cat35-transcript-distill/2026-08-25-155618-cat35.noise.svg)
 
-![noise](./2026-08-16-brainbench-cat35-transcript-distill/2026-08-25-155618-cat35.noise.svg)
+## Corrections and limits
 
-## 8. Latency + cost
+An August 26, 2026 pre-publication erratum found that the first leakage scanner was case-sensitive, while corpus validation accepted case differences. Fourteen of 261 anchors, including three distractions, were invisible to that scan. The saved baseline therefore records verbatim leakage of 83/86 = 96.5%; a corrected mechanical recount is 86/86 = 100%. Dream and facts leakage remained zero in that baseline. The chart retains the old 96.5% label. Both August 31 dream runs recorded one confirmed distraction out of 86, or 1.2%; we have not isolated whether that difference reflects generation, judging, or both.
+
+The original validity threshold required verbatim recall of at least 0.95. After seeing 0.931, it was lowered to 0.90. The baseline receipt correctly keeps `gate_pass: false` under the original rule; the table's later “pass” uses the changed rule. This was a disclosed post-result gate change, not a pre-registered pass.
+
+Judge and writer come from the same model family. Mechanical quote checks provide an independent constraint, but the coverage headline still depends on the judge. The judge prompt did not neutralize document delimiters in these runs. Human calibration of coverage remains unfinished, and usability and emotional-tenor judgments are uncalibrated.
+
+The judge is recorded as the alias `claude-sonnet-4-6`, not an immutable snapshot. Since September 1, receipts also capture server-reported model IDs and suppress cross-run deltas unless both runs resolve to one matching model ID. Even matching server IDs do not prove weights were immutable.
+
+The corpus was frozen before the first full run. The later fixes were informed by its failures, so the same-corpus improvements are regression evidence, not untouched holdout generalization. The baseline used the shipped triage threshold; that narrower fact should not be expanded into “nothing was tuned on this corpus.”
+
+## Cost and reproduction
 
 | Item | Value |
 |---|---|
@@ -286,81 +122,13 @@ in this run (null).
 | Full run measured cost — judges + facts extraction | $6.20 |
 | Dream-lane synthesis spend | not surfaced by gbrain's phase API (estimated $2-6 additional; see receipt `cost_note`) |
 | BPRE smoke | $0.10, 81 s |
-| Judge failure rate (published run) | 0.6% (retry-then-judge-failed policy, §11) |
+| Judge failure rate (published run) | 0.6% ([retry policy](#cost-and-reproduction)) |
 | Corpus generation (one-time, now cached) | $6.60 |
 | Compression ratio (output/transcript, chars) | verbatim 1.06× · facts 0.15× · dream 0.64× |
 
-The $6.20 published run came in far under the pre-run estimate ($11-18 with a
-Haiku judge / $19-28 with the Sonnet judge used here) — batched judging (one
-call per lane × transcript) is the difference. The pre-flight
-worst-case model projected $45 and initially refused at the default $40 cap;
-the run was launched with an explicit `CAT35_HARD_STOP_USD=50`.
+The measured $6.20 excludes dream synthesis spend, which the phase API did not expose; the estimate was another $2–$6. The later $6.23 and $6.36 figures have the same accounting limit. The original worst-case preflight estimate was $45, so the run used a $50 cap instead of the $40 default. These are historical costs, not a current price quote.
 
-## 9. Limits & caveats
-
-- **Recall here ≠ QA accuracy.** We measure what survives into the artifact,
-  not whether a downstream model answers questions from it.
-- **Single run.** The bootstrap CI covers item/transcript variance, not
-  run-to-run variance of the distiller. Repeated-run CIs are filed in
-  TODOS.md. Regression deltas in the receipt are informational only.
-- **Judge and distiller share a family.** Both are Anthropic models (G-Eval
-  documents self-preference bias). Mitigations: the verbatim control lane, the
-  mechanical anchor/quote checks that outrank the judge, human calibration
-  (40-item stratified sample, linearly weighted kappa) required before
-  publication, and full judge prompts pinned at
-  `judge_prompt_version 2026-08-16-v1`. A cross-family judge is filed.
-- **The judge model is recorded as a movable alias, not a snapshot.** The
-  published receipts record `judge_model: claude-sonnet-4-6`, and the current
-  Anthropic model registry lists no dated snapshot for that alias, so a silent
-  alias repoint between runs would not have been visible to the old
-  string-equality comparability check. From 2026-09-01 forward, receipts also
-  record the server-reported per-call model ids (`resp.model`) as
-  `judge_models_resolved`, and cross-run deltas are suppressed (receipt marked
-  `comparability: non-comparable`) unless both receipts resolve to exactly one
-  identical model. `resp.model` is best-available evidence of what actually
-  served the judge calls, not an immutability proof.
-- **Planted gold has authoring bias.** Mitigations: fictional specifics
-  (pretraining can't help), distractors (the task is discrimination, not
-  retrieval), a gold-completeness audit pass, a human skim gate before spend,
-  and one measured incident worth disclosing: the first smoke run caught 2
-  gold statements claiming more than their anchors support; a systematic scan
-  found 26/173 such modal overshoots, all softened BEFORE the full run. No
-  gold was edited after full-run numbers existed.
-- **Mechanical claim segmentation** leaves compound sentences atomic
-  (deterministic beats FactScore-style LLM decomposition for reproducibility;
-  the tradeoff is coarser hallucination resolution).
-- **Coverage verdicts are judge-trusting.** The mechanical anchor and quote
-  checks verify the dream lane's joint score and quote fidelity; the headline
-  FULL/PARTIAL credit itself comes from the judge, and judged documents are
-  embedded in the judge prompt without delimiter neutralization. On this
-  self-authored synthetic corpus that is a benchmark-integrity note, not an
-  exploit; hardening (escaped delimiters, a judge-prompt version bump, and a
-  re-run) is filed in TODOS.md.
-- **Usability and tenor judgments are human-uncalibrated in v1** (the
-  calibration sample stratifies coverage/grounding/distractor slots).
-- **Nothing was tuned on this corpus.** Triage threshold is the shipped 0.5
-  default; the threshold curve in section 6 is descriptive and recommends
-  nothing. The corpus was frozen (manifest hash in the receipt) before the
-  full run.
-- **†Erratum (2026-08-26, pre-publication adversarial review):** the leakage
-  scanner was case-sensitive while the corpus generator validated anchors
-  case-insensitively, leaving 14/261 committed anchors (3 of them distractors)
-  invisible to the scan. The baseline receipt therefore records verbatim
-  leakage as 96.5% (83/86); a mechanical recount over the committed artifacts
-  with the fixed scanner gives exactly 100% (86/86) — the floor the design
-  promises. Dream-lane hits are unchanged (the same 3, judge-confirmed as
-  benign passing mentions → dream leakage stays 0%), facts unchanged (0%).
-  The receipt is kept as-written; the noise-panel SVG's verbatim bar shows the
-  pre-fix 96.5%.
-- **One gate was recalibrated after the run, at the gate level, with this
-  disclosure.** The original verbatim validity gate was ≥0.95, set assuming a
-  near-literal judge; the control lane measured the judge's actual ceiling at
-  93.1% (conservative PARTIALs against the full verbatim transcript). The gate
-  is now 0.90. No gold item was edited after full-run numbers existed; the
-  committed baseline receipt records `gate_pass: false` against the original
-  threshold as the honest record.
-
-## 10. Reproduction
+These are the original commands. Their comment about the “current pin” refers to the report's former v0.47.8.0 dependency. To repeat a historical configuration, check out its recorded SHA; the repository's current dependency has moved.
 
 ```bash
 git clone https://github.com/garrytan/gbrain-evals && cd gbrain-evals
@@ -381,79 +149,10 @@ bun eval/runner/cat35-transcript-distill-chart.ts \
   --out docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill/
 ```
 
-gbrain is pinned to `2a56b51236850f6abcbf2f1ea71981bb9630f6fe` (v0.47.8.0) in
-package.json — the pin the 2026-08-31 post-wave receipt was verified against
-(the original publication ran at `cc3e2843…`, v0.46.3.0, recorded in the
-baseline receipt). The benchmark is not valid against other revisions without
-re-verification. The corpus FIXTURES ship committed — you never need to
-regenerate them. The generator's Opus cache is gitignored, so a from-scratch
-regeneration (`bun run eval:generate-transcript-distill`) costs ~$6 on a fresh
-clone and under $1 on a machine with a warm cache (only the Opus prose is
-cached; the Haiku audit pass always re-runs). Receipts land in
-`eval/reports/cat35-transcript-distill/` (gitignored); the published baseline
-receipt is committed next to this report.
+The committed fixtures are sufficient to run the benchmark. Regenerating them is optional and changes the work being reproduced; the original one-time generation cost was $6.60, with roughly $6 estimated on a fresh clone and under $1 with its prose cache. Smoke mode uses two transcripts. Full mode requires `CAT35_FULL=1` and passes a worst-case cost check.
 
-## 11. Methodology details
+At the original pin, ingestion disabled embeddings and fixed the redaction-pattern path. Facts extraction used one worker. Dream calls used a fresh brain per transcript, concurrency two, `max_turns=16`, a 600,000 ms timeout, and zero cooldown. Seed 350001, fixed 45-second timestamps, 1,000 seeded bootstrap draws, a manifest, and a judge prompt version identify the protocol.
 
-- **Lane seams** (all at the original publication pin `cc3e2843…`):
-  `runTranscriptsIngest` with
-  `embed: false` and a pinned nonexistent `userPatternsPath` (redaction
-  determinism); `runExtractConversationFactsCore` with the ingest run's
-  `slugsTouched` and `workers: 1`; `runPhaseSynthesize` with `inputFile` per
-  transcript, a fresh PGLite engine + 10-page scaffold + per-transcript
-  `brainDir` per call (p-limit 2 — each call owns its brain, so concurrency
-  is safe and cross-transcript page contamination is structurally impossible),
-  config pins `models.dream.synthesize`, `models.dream.triage`,
-  `max_turns 16`, `subagent_timeout_ms 600000`, `cooldown_hours 0`.
-- **Scaffold**: 10 fictional people/company/concept pages seeded into every
-  engine instance via `importFromContent` (noEmbed) so the synthesis prompt's
-  wikilink mandate is satisfiable; scaffold pages a synthesis run modifies
-  contribute only added/changed lines (line diff vs the seeded fixture body).
-- **The coverage judge never sees anchors** — it grades paraphrase-level
-  statements; anchors serve only mechanical grounding. Batched: one forced
-  tool-use call per (lane, transcript); missing item ids retry once, then
-  count as judge-failed (never silently full or absent).
-- **Per-item joint score** (dream lane): coverage credit × mechanical
-  verification that the judge's evidence quote appears in the page AND traces
-  to the transcript; paraphrase evidence falls back to the grounding judge.
-- **Verifiability triage**: only the page's own editorial voice is exempt
-  from grounding; user-attributed affect ("the user felt X") stays in the
-  denominator — invented emotions count as hallucination.
-- **Lane-scoped failure policy**: a per-session ingest error zeroes lanes
-  1+2 for that transcript only; a dream throw/timeout zeroes the dream lane
-  only. Failures never remove a transcript from other lanes' denominators.
-- **Determinism**: Mulberry32 skeleton (seed 350001), content-addressed Opus
-  cache, fixed 45s inter-turn timestamps, seeded bootstrap (1000 draws) and
-  seeded calibration draw; the receipt records corpus_sha (manifest binds
-  every input file), config snapshot, and judge prompt version.
-- **Safe-by-default execution**: the runner defaults to the 2-transcript BPRE
-  smoke; `CAT35_FULL=1` is required for full spend; a pre-flight worst-case
-  cost check refuses to start a phase that could exceed
-  `CAT35_HARD_STOP_USD` (default 40).
-- Judge-vs-human agreement: [pending hand-scoring of the 24 filled coverage
-  pairs in `./2026-08-16-brainbench-cat35-transcript-distill/judge-calibration-2026-08-25.json`;
-  linearly weighted kappa reported here once the human column is filled.
-  Grounding/distractor slots require artifact-side grading and are disclosed
-  as uncalibrated in v1.]
+Judges receive statements without their anchor phrases. Missing item IDs retry once, then count as judge failures. Ingest failure affects the ingest and facts lanes for that transcript; a dream timeout affects the dream lane. Failed work remains in the denominator. These rules prevent a failure from improving the score by removing a hard example.
 
-## 12. Files
-
-- Runner: `eval/runner/cat35-transcript-distill.ts` (+ registration in
-  `eval/runner/all.ts`, timeout 3h)
-- Mechanical checks: `eval/runner/cat35-checks.ts`
-- Judges: `eval/runner/cat35-judges.ts` (prompt version 2026-08-16-v1)
-- Chart: `eval/runner/cat35-transcript-distill-chart.ts`
-- Generator: `eval/generators/transcript-distill.ts` (skeleton),
-  `eval/generators/transcript-distill-gen.ts` (Opus expansion + audit)
-- Corpus: `eval/data/transcript-distill-v1/` (24 transcripts × 2 renderings,
-  173 gold units, 86 distractors, 2 hazards, 10 scaffold pages, manifest,
-  calibration draw)
-- Schemas: `eval/schemas/cat35-receipt.schema.json`,
-  `eval/schemas/corpus-manifest.schema.json` (+`conversation` type)
-- Tests: `test/eval/cat35-checks.test.ts`, `test/eval/cat35-judges.test.ts`,
-  `test/eval/transcript-distill.test.ts`, `test/eval/all-and-budget.test.ts`,
-  `test/eval/schemas.test.ts`
-- Install shim: `scripts/postinstall-pglite-link.ts`
-- gbrain: `github:garrytan/gbrain#2a56b51236850f6abcbf2f1ea71981bb9630f6fe`
-  (v0.47.8.0; the original publication's pin `cc3e2843…` / v0.46.3.0 is
-  recorded in the baseline receipt)
+The [evidence directory](2026-08-16-brainbench-cat35-transcript-distill/) holds the baseline, paired reruns, charts, and pending `judge-calibration-2026-08-25.json`. The runner is `eval/runner/cat35-transcript-distill.ts`, checks are in `cat35-checks.ts`, and prompts are in `cat35-judges.ts` with version `2026-08-16-v1`. Corpus and manifest are in `eval/data/transcript-distill-v1/`; schemas and tests document the artifact contract.

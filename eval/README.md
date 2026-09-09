@@ -1,155 +1,102 @@
-# BrainBench
+# Running and understanding BrainBench
 
-Public benchmark for personal knowledge brain agent stacks. Ships 4 adapter
-configurations scored side-by-side on a 240-page rich-prose fictional corpus
-(`twin-amara`). Measures retrieval, extraction quality, and per-link-type
-accuracy.
+BrainBench is our collection of tests for gbrain. Each test asks a narrower question than “does memory work?” One checks whether search finds a relationship. Another checks whether an important decision survives when a conversation becomes a note.
 
-**What this answers:** "Does the knowledge graph layer do useful work, or is
-gbrain just a thin wrapper over vector+keyword vector-grep-rrf-fusion?" Headline: gbrain
-beats the closest external baseline (vector-grep-rrf-fusion-without-graph, same embedder,
-same chunking) by **+31 points P@5**. The graph layer is load-bearing.
+Start with the [main guide](../README.md) for the findings and recommended reading, or the [September 2026 retrieval refresh](../docs/benchmarks/2026-09-09-retrieval-refresh.md) for the new comparison. This page explains the test machinery and how to work with it.
 
-## 5-minute quickstart
+## Start with a free check
+
+From the repository root:
 
 ```sh
-# 1. Run the full benchmark (4 adapters × 5 runs, ~15 min wall clock)
-bun run eval:run
-
-# 2. Fast iteration (N=1 single run)
-bun run eval:run:dev
-
-# 3. Just the type-accuracy report
-bun run eval:type-accuracy
-
-# 4. Explore the canonical world (contributor-facing UI)
-bun run eval:world:view
+bun install --frozen-lockfile
+bun run eval:query:validate
+bun eval/runner/validate-data.ts --quiet
+bun test test/eval/receipts-manifest.test.ts test/eval/query-cli.test.ts
 ```
 
-## What's in the box
+These commands check query structure, dataset references and selected published artifacts. They do not call a model API. To run the repository's full unit and integration suite, use `bun run test`.
 
-```
-eval/
-├── data/
-│   ├── world-v1/             Canonical world (committed). 240 sharded JSON files.
-│   │                          One file per entity + _ledger.json metadata.
-│   ├── amara-life-v1/        (v0.15+) Fictional-life corpus (committed).
-│   │                          inbox/slack/calendar/meetings/notes/docs +
-│   │                          corpus-manifest.json. Only the Opus prose cache
-│   │                          (_cache/) is gitignored; regeneration via
-│   │                          `bun run eval:generate-amara-life` is optional.
-│   └── gold/                 (v0.15+) Sealed qrels + perturbation gold.
-│                              entities, backlinks, qrels, contradictions, poison,
-│                              personalization-rubric, implicit-preferences, citations.
-│                              Empty templates in v0.15; filled in v1 Complete.
-├── schemas/                  (v0.15+) Portable JSON Schema contracts.
-│                              corpus-manifest, public-probe (PublicQuery with gold
-│                              stripped), tool-schema (12 read + 3 dry_run, 32K cap),
-│                              transcript, scorecard (N ∈ {1,5,10}), evidence-contract.
-│                              Pins the v1→v2 Inspect AI driver-swap boundary.
-├── generators/
-│   ├── gen.ts                Opus-backed world-v1 generator (cached, $80 cap)
-│   ├── world.ts              World-schema scaffolder
-│   ├── world-html.ts         World explorer HTML renderer (XSS-safe)
-│   ├── amara-life.ts         (v0.15+) Deterministic amara-life skeleton.
-│   │                          Mulberry32 PRNG, 15 contacts, 50+300+20+8+40 items,
-│   │                          plants 10/5/5/3 perturbations at fixed positions.
-│   └── amara-life-gen.ts     (v0.15+) Opus prose expansion. Structured cache key
-│                              (schema_version + template_hash + item_spec_hash),
-│                              $20 hard-stop, --dry-run for smoke tests.
-├── runner/
-│   ├── multi-adapter.ts      4-adapter side-by-side scorer (N=5, seeded order)
-│   ├── type-accuracy.ts      Per-link-type accuracy vs gold from _facts (Cat 2)
-│   ├── adversarial.ts        Cat 10 robustness — 22 hand-crafted edge cases
-│   ├── all.ts                Master runner (current: sequential execSync;
-│                              v1 Complete Day 10: rewrites to async + p-limit(2))
-│   ├── before-after.ts       Original v1 BEFORE/AFTER retrieval run
-│   ├── types.ts              Adapter, Page (extended with email|slack|cal|note),
-│                              Query, RankedDoc. PublicPage/PublicQuery land here
-│                              when sealed qrels enforcement ships (v1 Complete Day 9).
-│   ├── adapters/
-│   │   ├── grep-only.ts         EXT-1: classic IR baseline (Grep-only over grep hits)
-│   │   ├── vector.ts          EXT-2: pure cosine similarity, same embedder
-│   │   └── vector-grep-rrf-fusion.ts       EXT-3: gbrain vector-grep-rrf-fusion with graph disabled
-│   └── queries/
-│       ├── tier5-fuzzy.ts          30 vague-recall queries (hand-authored)
-│       ├── tier5_5-synthetic.ts    50 synthetic outsider queries (AI-authored, labeled)
-│       ├── validator.ts            Schema + temporal as_of_date + one-slash slug rule
-│       └── index.ts                Aggregator + validateAll()
-├── cli/
-│   ├── world-view.ts         Render + open world.html
-│   ├── query-validate.ts     Validate a Query[] file
-│   └── query-new.ts          Scaffold a Query template
-└── reports/                  Benchmark scorecards (gitignored)
-```
-
-## Three contributor paths
-
-### Path 1: Reproduce a published scorecard
+A small offline retrieval run is:
 
 ```sh
-# 1. Check out the specific gbrain commit referenced in the scorecard
-git checkout <commit-sha>
-# 2. Run the full benchmark
-bun run eval:run
-# 3. Compare your numbers to the scorecard. Deterministic adapters should
-#    match exactly. Embedding-based adapters should land within tolerance bands.
+BRAINBENCH_N=1 bun eval/runner/multi-adapter.ts --adapter grep-only --queries relational
 ```
 
-### Path 2: Submit a new external adapter
+It searches the committed fictional corpus and writes a receipt under `eval/reports/multi-adapter/`. A receipt is the machine-readable record of what ran, what was scored and what failed.
 
-See `CONTRIBUTING.md` for the adapter submission flow. Short version:
+## Choose the test that answers your question
 
-1. Implement `eval/runner/adapters/<your-adapter>.ts` conforming to the
-   `Adapter` interface in `eval/runner/types.ts`.
-2. Add a unit test file alongside.
-3. Wire your adapter into `eval/runner/multi-adapter.ts` (one line).
-4. `bun run eval:run:dev` to verify.
-5. Open a PR.
+| Question | Entry point | What to know |
+|---|---|---|
+| Do relationships help search? | `multi-adapter.ts --queries relational` | Four adapters; the graph adapter recognizes four known question templates. |
+| Can search find a concept under different wording? | `cat13-conceptual.ts` | Keyword, vector and hybrid comparisons; explicit settings and held-out concepts. |
+| Do long chat dumps bury a useful short note? | `cat13b-source-swamp.ts` | Compares normal source ranking with the same search whose source weights are neutral. |
+| Can search recover old conversation evidence? | `longmemeval.ts` | External dataset; specify `--top-k 5` for the published five-result comparison. |
+| Does search return too much irrelevant material? | `precisionmembench.ts` | External 77-case benchmark; result limits matter. |
+| Do conversations become useful notes? | `cat35-transcript-distill.ts` | Model-backed write-path test; the default is a small paid setup run. |
+| Does the right memory appear without asking? | `cat34-brainbench-memory.ts` | Offline conformance test with separate production and integration-contract rows. |
 
-### Path 3: Write Tier 5.5 externally-authored queries
+Paths in the table are relative to `eval/runner/`. A “Cat” number is simply a historical category identifier.
 
-The T5.5 queries currently in the repo are AI-authored (`author:
-"synthetic-outsider-v1"`) as a placeholder. Real outside researchers should:
+`bun run eval:run` launches the multi-adapter retrieval comparison. It does not launch every behavior test. `bun run eval:brainbench` starts the much broader category runner, which can call paid APIs. Its categories run in separate subprocesses with two slots by default; some categories require their own runtime inputs and are not included.
 
-1. `bun run eval:world:view` to understand the canonical world
-2. `bun run eval:query:new --tier externally-authored --author "@your-handle"`
-3. Edit the scaffolded template with a real query + gold slugs
-4. `bun run eval:query:validate path/to/your.json`
-5. Submit via `eval/external-authors/<your-handle>/queries.json` in a PR
+## The four retrieval adapters
 
-See `CONTRIBUTING.md` for the query-submission template.
+An adapter gives one search method the same pages and asks it to return ranked results.
 
-## Methodology one-pager
+| Adapter name | What it does |
+|---|---|
+| `grep-only` | Scores words in the pages using BM25, a keyword-ranking formula. It is an in-memory implementation, not a shell call to `grep`. |
+| `vector` | Embeds each page and the question as lists of numbers, then ranks pages by similarity. |
+| `vector-grep-rrf-fusion` | Combines gbrain's keyword and vector rankings with graph traversal disabled. |
+| `gbrain` | Extracts relationships and answers the supported relational templates through graph traversal. |
 
-- **Corpus:** 240 Opus-generated fictional biographical pages. Fixed,
-  committed, zero private data. Reproducibility baseline for any run.
-- **Gold:** Each page's `_facts` metadata defines canonical relationships.
-  The scorer never shows `_facts` to the adapters — **raw pages only**
-  cross the ingestion boundary (structural enforcement in `Adapter.init`).
-- **Metrics:** P@5 and R@5 on the relational queries auto-built from
-  `_facts` (145 canonical). The 80 tier-5 + tier-5.5 queries are
-  schema-validated (`bun run eval:query:validate`) but are NOT yet wired
-  into the `eval:run` scorer — the scorecard below covers the canonical
-  set only. Type accuracy on extracted edges
-  (`eval/runner/type-accuracy.ts`).
-- **N=5 runs per adapter** with page-order shuffle (seeded LCG; runs are
-  reproducible). Stddev surfaces order-dependent adapter bugs. Deterministic
-  adapters correctly show stddev=0.
-- **Temporal queries** require explicit `as_of_date` (validated at query
-  authoring time; rejected at load if a temporal verb is present without it).
+The long hybrid adapter name is a stable identifier in commands and saved results. In prose we call it **hybrid without graph traversal**.
 
-## Adapter scorecard (most recent, N=5)
+The vector and hybrid adapters need `OPENAI_API_KEY`. Each run builds its own state. Do not assume LongMemEval's persistent embedding cache also exists in this runner.
 
-See `docs/benchmarks/2026-04-18-brainbench-v1.md` for the full report.
-Quick summary from `bun run eval:run`:
+```sh
+# One complete comparison of the relational question family.
+BRAINBENCH_N=1 bun eval/runner/multi-adapter.ts --queries relational
 
-| Adapter         | P@5    | R@5    |
-|-----------------|--------|--------|
-| gbrain    | 49.1%  | 97.9%  |
-| vector-grep-rrf-fusion  | 17.8%  | 65.1%  |
-| grep-only    | 17.1%  | 62.4%  |
-| vector     | 10.8%  | 40.7%  |
+# All applicable families: relational, fuzzy and externally authored.
+bun run eval:run
 
-The graph layer beats vector+keyword vector-grep-rrf-fusion on relational queries by ~31
-points; vector-grep-rrf-fusion-without-graph barely edges Grep-only. That's the story.
+# One run of a single baseline on fuzzy questions.
+BRAINBENCH_N=1 bun eval/runner/multi-adapter.ts --adapter grep-only --queries tier5
+```
+
+The default is five runs with seeded page-order shuffling. This checks sensitivity to ingestion order; it does not turn five deterministic runs into five independent datasets. The graph-template adapter only runs on question families it supports.
+
+## Read the score correctly
+
+**Precision@5** asks how many of five result slots contain relevant pages. Two relevant pages means 2/5, even if the adapter returned only two pages.
+
+**Recall@5** asks what fraction of the relevant pages appeared in those five slots. If a question needs two pages and both appear, its recall is 100%.
+
+LongMemEval's strict **recall_all@5** asks a different question: did *every* required conversation session appear? Getting one of two required sessions earns no credit on that question. These measures must be named explicitly when comparing results.
+
+The scorer builds relational questions from the fictional world's relationship labels. It also scores the applicable built-in fuzzy and externally authored question families. Items without document relevance labels, such as answer-only or abstention cases, are excluded from this retrieval metric and listed in the receipt.
+
+Adapters receive sanitized copies without the hidden relationship facts or answer labels. This is an API boundary and a reviewed coding rule, not operating-system isolation against malicious code reading files.
+
+The old 49.1% precision / 97.9% recall graph result is a historical pre-audit measurement. Its missing raw receipt and template-specific parser limit what it establishes. Read the [original report](../docs/benchmarks/2026-04-23-brainbench-v0.20.0.md) and the dated refresh together.
+
+## Find the files
+
+- `data/world-v1/`: the 240-page fictional world.
+- `data/amara-life-v1/`: emails, chats, calendar entries and notes with planted events.
+- `data/gold/`: answer labels; some files remain explicitly incomplete.
+- `runner/types.ts`: the adapter and query interfaces.
+- `runner/queries/`: built-in questions and their validator.
+- `schemas/`: saved-data and tool contracts.
+- `reports/`: temporary output, ignored by Git.
+
+Some Markdown files under `data/` are the text being tested. Editing them changes the experiment. Dataset READMEs explain those fixtures without changing their contents.
+
+## Contribute or reproduce
+
+Use [CONTRIBUTING.md](CONTRIBUTING.md) to add questions or an adapter, and [RUNBOOK.md](RUNBOOK.md) for setup failures and reproducibility. Browse the fictional world with `bun run eval:world:view`; on a machine without a desktop, `bun run eval:world:render` produces the HTML without opening a browser.
+
+To reproduce an old result, match both the gbrain-evals revision and the gbrain code named in the report. Checking out a gbrain commit inside this repository does not select that dependency.

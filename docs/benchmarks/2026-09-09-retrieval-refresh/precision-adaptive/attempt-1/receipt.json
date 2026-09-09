@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "benchmark_version": "0.5.0",
+  "category": "precisionmembench",
+  "n_total": 77,
+  "n_scored": 77,
+  "completion_rate": 1,
+  "errors": [],
+  "gbrain_version": "0.48.4.0",
+  "gbrain_pin": "github:garrytan/gbrain#2efaaf8f8a817b5b82e023383618fdcdb1cc5f7d",
+  "resolved_config": {
+    "mode": "gbrain-adaptive",
+    "fidelity": "body-text",
+    "limit": null,
+    "no_embed": false,
+    "entity_max": 1,
+    "other_max": 1,
+    "min_keep": 1,
+    "embedding_model": "openai:text-embedding-3-large",
+    "embedding_dimensions": 1536,
+    "search_config": {
+      "search.mode": "balanced",
+      "search.reranker.enabled": "false",
+      "search.reranker.model": "voyage:rerank-2.5",
+      "search.autocut": "false",
+      "search.expansion": "false",
+      "search.cache.enabled": "false",
+      "search.metadata_boost_gate": "lexical",
+      "search.relational_rerank_pin": "3",
+      "search.adaptive_return": "false"
+    },
+    "adaptive_return": {
+      "enabled": true,
+      "entityMax": 1,
+      "otherMax": 1,
+      "minKeep": 1
+    },
+    "partial": false,
+    "full_case_count": 77,
+    "supersession_seeding": "live — all beliefs seeded, no ground-truth soft-delete (audit precisionmembench-01)",
+    "reranker_observed": 0,
+    "reranker_incomplete": false
+  },
+  "started_at": "2026-09-09T04:55:11.946Z",
+  "finished_at": "2026-09-09T04:55:39.385Z",
+  "run_status": "completed",
+  "verdict": "pass",
+  "publishable": true,
+  "data": {
+    "report_path": "/home/vercel-sandbox/gbrain-evals/docs/benchmarks/2026-09-09-retrieval-refresh/precision-adaptive/attempt-1/2026-09-09-gbrain-adaptive-body-text-e1-o1-openai-text-embedding-3-large-1536-min1.json",
+    "mean_precision": 0.5333,
+    "mean_recall": 0.732,
+    "total_passed": 38,
+    "total_cases": 77,
+    "active_retrieval_passes": 25
+  }
+}

@@ -1,21 +1,14 @@
-# BrainBench Cat 13 — Conceptual Recall baseline (v0.20.0)
+# When remembering the idea works better than remembering the words
 
-**Date:** 2026-04-23
-**gbrain commit:** `96852c0` (PR #195 HEAD, v0.20.0)
-**gbrain-evals commit:** `8dab7f7` (post plain-English adapter rename)
-**Run:** `CAT13_PROBES=500 bun eval/runner/cat13-conceptual.ts`
-**Probes:** 500 (seeded, deterministic)
-**Metric:** nDCG@5 (graded gold: target=3, co-occurrence peer=1)
-**Wall clock:** ~11 min (4 adapters sequential)
-**API cost:** ~$0.03 (vector embed per probe, no agent loop, no judge)
+**Historical run: April 23, 2026.** gbrain `96852c0` (PR #195 HEAD, v0.20.0); gbrain-evals `8dab7f7`. Command: `CAT13_PROBES=500 bun eval/runner/cat13-conceptual.ts`. Five hundred seeded probes, about eleven minutes across four adapters, estimated API cost $0.03.
 
-## Why this Cat exists
+Someone may ask for “that essay about unscalable founder work” when the note is titled “Do Things That Don't Scale.” Keyword search needs overlapping words. Vector search compares representations of meaning, so it has another way to find the note. This test was built to measure that difference.
 
-BrainBench's Cats 1+2 run 145 **relational** queries — "who works at X", "what did Bob invest in". That workload demands exact entity matching and typed-edge traversal, which is why `vector` lands dead last at P@5 10.8% despite using the same embedder as gbrain. Relational queries are structurally hostile to vector similarity.
+These April figures predate corrections to probe generation and shared metrics. They are historical evidence, not directly comparable to the corrected [September retrieval refresh](2026-09-09-retrieval-refresh.md). The September 6 report also found that the old adapters re-sorted results after reranking; affected reranker-on results are historical until rerun with final order preserved.
 
-"Vector retrieval is useless" is the wrong reading of that scorecard. The right reading is "the benchmark is measuring a workload where vectors are weakest." Cat 13 flips the workload to conceptual recall — paraphrase, synonym, fuzzy, semantic neighborhood — and measures every adapter on the 30 concept pages in `world-v1/`.
+## The four search methods
 
-## Scorecard
+`grep-only` used an inverted word index with BM25 ranking; it was not a shell grep command. `vector` used OpenAI `text-embedding-3-large` and cosine similarity. `vector-grep-rrf-fusion` used gbrain's hybrid search without graph-first traversal. `gbrain` used the full adapter.
 
 | Adapter                 | nDCG@5    | P@5 (graded ≥1) | P@1 (strict target) | Wall (s) |
 |-------------------------|-----------|------------------|----------------------|----------|
@@ -24,9 +17,9 @@ BrainBench's Cats 1+2 run 145 **relational** queries — "who works at X", "what
 | gbrain                  |     47.0% |     24.4%        |     49.4%            |   220    |
 | grep-only               |     46.2% |     21.6%        |     49.4%            |     0    |
 
-**Vector wins.** The ordering from Cats 1+2 flips. Total spread is only 3 points, which says "all four adapters are competent at conceptual recall on this corpus"; the interesting signal is in the per-template breakdown below.
+The score is nDCG@5: it rewards putting the most relevant page near the top of five results. The intended concept had relevance grade 3; related concepts had grade 1. The recorded vector score was 49.1%, versus 47.0% for gbrain and 46.2% for keyword search. That narrow overall difference hides larger differences between kinds of question.
 
-## Per-template nDCG@5 (the real story)
+## Which questions separated the methods?
 
 | Template                 | vector      | vector-grep-rrf-fusion | gbrain    | grep-only   | #probes |
 |--------------------------|-------------|------------------------|-----------|-------------|---------|
@@ -38,7 +31,7 @@ BrainBench's Cats 1+2 run 145 **relational** queries — "who works at X", "what
 | body-fuzzy               |  16.8%      | 17.0%                  | 15.0%     | **33.3%**   | 156     |
 | semantic-neighborhood    |  25.0%      | 24.4%                  | 24.6%     | **29.7%**   | 53      |
 
-### The `synonym-fuzzy` row is the whole case for vectors
+“Synonym-fuzzy” means a question combines alternate vocabulary with an imprecise reference such as “that essay.” It was the clearest vector advantage:
 
 | Adapter   | nDCG@5      |
 |-----------|-------------|
@@ -47,9 +40,9 @@ BrainBench's Cats 1+2 run 145 **relational** queries — "who works at X", "what
 | vector-grep-rrf-fusion | 63.6% |
 | grep-only | **29.5%**   |
 
-A query like **"that essay arguing unscalable founder work"** should resolve to `concepts/do-things-that-dont-scale`. Vector nails it at 66%; grep-only drops 37 points because the literal string "do things that don't scale" never appears in the query. This is the canonical vector win and exactly what Cats 1+2 misses.
+The 66.2% and 29.5% values are averages across this question family, not probabilities for one example. They support using semantic search when the user has forgotten the wording.
 
-### The `body-fuzzy` row is the whole case against vectors
+The reverse happened when the generator reused a distinctive phrase from a page body:
 
 | Adapter   | nDCG@5      |
 |-----------|-------------|
@@ -58,39 +51,20 @@ A query like **"that essay arguing unscalable founder work"** should resolve to 
 | vector    | 16.8%       |
 | gbrain    | 15.0%       |
 
-When the probe literally quotes a phrase from the page body ("the framework I wrote about manual onboarding") keyword dominates — the phrase is a substring of the page, BM25 finds it trivially, and vectors diffuse the signal across every page that talks about similar concepts. Caveat: these probes are slightly advantaged for grep-only because the generator pulls key phrases *from* the target page body. A more adversarial version would rephrase those phrases into synonyms. Tracked as a v2 improvement.
+For “the framework I wrote about manual onboarding,” exact words can be a strong clue. Grep's 33.3% beat vector's 16.8% in this family. Because these phrases were drawn from the target pages, the fixture made exact matching particularly useful.
 
-### The graph layer is neutral on conceptual queries
+The historical full and hybrid-reference scores, 47.0% and 47.5%, were close. That does not isolate a graph effect. The broader lesson is that relationship questions and concept questions need different evidence, and a useful search system should be tested on both.
 
-`gbrain` (47.0%) ≈ `vector-grep-rrf-fusion` (47.5%). The +31-point graph advantage from Cats 1+2 disappears here, because conceptual queries don't involve typed-edge traversal. This is a feature, not a bug: **the graph layer is precision tooling for relational queries, not a universal retrieval booster.** Cat 13 confirms it stays out of the way when it isn't the right tool.
+## How the questions were made
 
-## What this changes
+The fixture draws on thirty concept pages in `world-v1`, including agent workflows, unit economics, product-market fit, and founder mode. Its seeded generator used mulberry32 with seed 42: five title paraphrases, four title variations, two description paraphrases, three or four authored synonyms used in four forms, body phrases, and related-concept questions.
 
-1. **Vector retrieval earns its place in the benchmark.** The "vectors are useless" read of Cats 1+2 was a workload artifact. On conceptual queries, vectors are the single strongest adapter.
-2. **Hybrid fusion (vector-grep-rrf-fusion) is the robustness story, not the precision story.** It's never top-ranked on any template, but it also never falls to grep-only's `synonym-fuzzy` floor (29.5%) or vector's `body-fuzzy` floor (16.8%). Average-case wins the release notes; worst-case wins production.
-3. **Cats 1+2 + Cat 13 is a two-axis scorecard.** Anyone publishing a new personal-knowledge adapter should report both. Relational-only or conceptual-only is misleading; the workload mix in real agent use is both, constantly interleaved.
+A thirty-entry synonym map supplied alternate wording. Related concepts were inferred from shared companies or people in `_facts`. The adapters received sanitized prose; the answer-key fields were removed before retrieval.
 
-## Methodology
+Later audit corrections matter here: some generated questions had identical text with conflicting answers, and random-sort sampling was replaced with a seeded shuffle. A small difference between old and new scores can therefore reflect a better test rather than a changed search engine.
 
-- **Corpus:** `eval/data/world-v1/concepts__*.json` (30 concept pages: agentic-workflows, unit-economics, PMF, founder-mode, etc.)
-- **Probe generator:** deterministic, mulberry32 seed=42. Re-running produces the identical probe set.
-- **Template mix per concept:** 5 title paraphrases + 4 title variations + 2 description paraphrases + 3-4 hand-authored synonyms × 4 templates each + body-phrase fuzzies + semantic-neighborhood (co-occurrence-seeded).
-- **Graded gold:** target concept = 3. Concepts sharing ≥1 `_facts.related_companies` or `_facts.related_people` with the target = 1. Approximates a peer-group cluster.
-- **Hand-authored synonym map:** 30 entries in `eval/runner/cat13-conceptual.ts` `SYNONYMS` covering each concept. These are the load-bearing fairness anchors — without them, synonym queries degenerate to title strings.
-- **Sealed qrels:** `PublicPage` / `PublicQuery` at the adapter boundary. No adapter sees `_facts` or `gold`.
-- **Adapters:** `grep-only` (inverted index + BM25), `vector` (`text-embedding-3-large` + cosine), `vector-grep-rrf-fusion` (full gbrain hybrid with graph disabled), `gbrain` (full stack).
-- **Reproduction:** `bun install && bun link gbrain && OPENAI_API_KEY=... CAT13_PROBES=500 bun eval/runner/cat13-conceptual.ts`
+## Running the historical version
 
-## Cost + runtime
+The original command was `bun install && bun link gbrain`, followed by `OPENAI_API_KEY=... CAT13_PROBES=500 bun eval/runner/cat13-conceptual.ts` against the historical pins. Estimated vector cost was $0.01 for five hundred query embeddings, and about $0.03 for all four adapters. There was no answer model or judge, but embedding API calls still occurred.
 
-- vector: 500 queries × 1 embed = ~$0.01 at text-embedding-3-large rates
-- gbrain + vector-grep-rrf-fusion: same embedding cost + PGLite ingest overhead
-- Total: **~$0.03 per 4-adapter run**. No LLM calls, no judge.
-- Cat 13 is effectively free to rerun on every PR that touches search / ranking.
-
-## Known gaps to close in v2
-
-1. `body-fuzzy` is unfair to vectors (probes use literal body phrases). Rephrase via synonym substitution.
-2. Probes cap at 500 today. Scaling to 1000+ showed diminishing returns on template variation — would need a more diverse generator (e.g. Opus-authored queries) to cross that threshold meaningfully.
-3. The synonym map is hand-authored per concept. An Opus-generated synonym layer would broaden coverage and remove author-bias about "how people would phrase this."
-4. Neighborhood co-occurrence is derived from shared `related_companies` / `related_people`. A stronger signal would be pairwise mutual information across meeting transcripts in the same corpus.
+The original follow-ups were to paraphrase copied body phrases, diversify beyond 1,000 template probes, broaden the authored synonym map, and improve related-concept labels beyond simple co-occurrence. They remain separate questions from whether a particular search setting wins on this small fixture.
