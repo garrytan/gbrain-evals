@@ -1,235 +1,83 @@
-# TODOS
+# Work that would strengthen the evidence
 
-Deferred work with enough context to pick up cold. Each item names its
-audit-finding lineage (see `docs/audit/2026-08-31-eval-audit.md`).
+These items record unfinished work and its origin. An open box means the work has not been verified complete here. Historical cost estimates are planning context, not spending authorization.
 
-## P1 — keyed re-runs (blocked on API keys, not on code)
+The [August 31 audit](docs/audit/2026-08-31-eval-audit.md) explains the finding identifiers. The [September 9 retrieval refresh](docs/benchmarks/2026-09-09-retrieval-refresh.md) records the focused reruns accompanying the documentation rewrite. Do not treat that work as a rerun of every category below.
 
-The 2026-08-31 audit fixed metric definitions and eval harnesses; the runs
-below re-measure published numbers with the corrected code. None can run in
-a keyless environment. Each command works from a fresh clone after
-`bun install --frozen-lockfile`.
+## Retrieval measurements
 
-- [x] **LongMemEval recall_all@5 re-measurement** (finding longmemeval-01) —
-  **RESOLVED 2026-08-31 at $0**: the May run's archived NDJSON was rescored
-  with the audited aggregator (exact reconciliation 488/500 = 97.60% under
-  old semantics; gt validated 500/500 vs the canonical dataset). Corrected
-  headline **83.40% `recall_all@5`** published in the report's erratum-
-  resolution block + README + comparison-systems; committed artifacts under
-  `docs/benchmarks/2026-05-07-longmemeval-s/`. NOTE the previously
-  documented command here was broken (`--dataset` takes a split NAME, not a
-  path, and the runner defaults to k=8) — correct form:
-  `bun eval/runner/longmemeval.ts --path ~/datasets/longmemeval/longmemeval_s.json --top-k 5`.
-  Remaining (2026-08 fix-wave Phase 6): fresh keyed re-measurement at the
-  current gbrain pin (May ran v0.28.8) + SVG regeneration from the new
-  aggregate via `bun eval/runner/longmemeval-chart.ts`.
-- [ ] **cat13 / cat13b full adapter matrix** (crash-fixed in WS2; the
-  configureGateway bug means no honest full run exists post-v0.40). Needs
-  `OPENAI_API_KEY`: `bun eval/runner/cat13-conceptual.ts` and
-  `bun eval/runner/cat13b-source-swamp.ts`.
-- [ ] **cat18 / cat18b provider matrix with pinned cells** (WS5 fix removed
-  the hidden zerank-2 reranker from embedder-only cells; published numbers
-  predate the pin). Needs OPENAI + VOYAGE keys. Note: ZeroEntropy's hosted
-  API sunsets 2026-09-04 — zerank-2 cells are historical-only after that.
-- [ ] **API-dependent negative controls** (WS3): each judge-based eval's
-  degraded-config control (threshold: degraded <= 0.5x real, fixed seeds)
-  needs one keyed run to prove benchmark sensitivity end-to-end.
-- [ ] **Relational (Cats 1+2) re-measurement on the fixed metric helpers**
-  (issue #24 finding 2): the 2026-04-23 scorecard's 97.9%/49.1% predates the
-  shared-infra-02/03 metric fixes and the generators-06 corpus fix; the
-  report now carries an erratum banner and the README qualifies the claim.
-  Needs OPENAI_API_KEY: `BRAINBENCH_N=1 bun eval/runner/multi-adapter.ts`,
-  then commit the receipt next to the report (none exists today).
-- [ ] **LongMemEval fresh keyed re-run at the current pin + sessdiv rows**
-  (2026-08 fix-wave Phase 6, expanded 2026-09-01): pass 1
-  `--adapters hybrid,hybrid+expansion`, pass 2 the sessdiv adapters with
-  `--overfetch-factor 3`; publish side by side with the May 83.40% row,
-  never replacing it. Needs OPENAI_API_KEY (+ANTHROPIC for expansion);
-  ~$2 cold, ~$0 on a warm embed cache. Rerank adapters additionally need a
-  reranker provider key and are pending a successor to zerank-2 (hosted API
-  sunset 2026-09-04).
+- [x] **Correct the May LongMemEval score** (`longmemeval-01`). Completed 2026-08-31 without new API calls. Rescoring the original rows produced 83.40% strict `recall_all@5`; the old scoring reconciled to 488/500 = 97.60%, and all 500 answer sets matched the reference dataset. Keep the corrected score and old metric identifiable in the [report](docs/benchmarks/2026-05-07-longmemeval-s.md).
 
-## P2
+- [x] **Fresh LongMemEval and session-diversity measurements** (fix-wave Phase 6, expanded 2026-09-01). The September 2 five-arm run and September 6 ranker-wave receipts now exist. They supersede the old note that a reranker successor was still needed: the measured reranker is Voyage `rerank-2.5`. A future run must name its own pin and settings. The local runner uses `--path` for the dataset file and `--top-k 5` for the published cutoff; `--dataset` takes a split name.
 
-- [ ] **Populate the remaining `eval/data/gold/` stubs** (critic finding:
-  7 files were single-`_example` stubs while their _comments claimed real
-  content; 4 have zero consumers). `contradictions.json` and
-  `implicit-preferences.json` are now generated from planted fixtures;
-  remaining: `backlinks.json`, `citations.json`, `entities.json`,
-  `personalization-rubric.json`, `poison.json`, `qrels.json` — either
-  populate from amara-life fixtures or delete the zero-consumer ones.
-  `eval/runner/validate-data.ts` warns on every remaining stub.
-- [ ] **PrecisionMemBench vendored-fixture byte-diff** (critic finding): the
-  leaderboard-comparability claim rests on ATTRIBUTION.md's "byte-for-byte
-  from upstream tenurehq/precisionmembench @ c9689ca6" — nobody has diffed
-  it. `git clone` the upstream at that SHA and diff
-  `eval/precisionmembench/fixtures/` + scorer files; record the result in
-  ATTRIBUTION.md.
-- [ ] **world-v1 regeneration with the fixed cache key** (finding
-  generators-04): `eval/generators/gen.ts` now content-addresses its cache,
-  but the committed 240-page world-v1 corpus predates the fix. Regeneration
-  churns qrels/gold downstream, so batch it with the next intentional
-  corpus change. Needs `ANTHROPIC_API_KEY` (Opus generation, ~$40 cold).
+- [x] **Finish the post-audit Cat13/Cat13b comparison follow-up** (WS2). Completed September 9 with all six concept configurations and all five source-swamp adapters. The [fresh report](docs/benchmarks/2026-09-09-retrieval-refresh.md) includes explicit settings, execution observations, per-question rankings, and paired gains and losses. It keeps the vector-only source-swamp win and the one-question source-boost gain visible.
 
-- [ ] **Cat 35: adopt the WS0 receipt conventions** (merged from main
-  mid-remediation, predates them): on missing OPENAI_API_KEY it exits 2
-  loudly but writes no receipt — should write run_status 'skipped' +
-  skip_reason and honor --allow-skip / BRAINBENCH_ALLOW_SKIP like every
-  other cat, so all.ts aggregates it from the receipt rather than the
-  exit-code fallback. Its 135 tests and smoke pre-flight are already green
-  against the v0.47.6.0 pin.
+- [x] **Re-measure the historical relational result** (issue #24 finding 2). Completed September 9 with all four existing adapters and three ingestion orders. The specialized adapter measured 97.91% mean recall and 34.21% fixed-denominator precision at five. The [fresh report](docs/benchmarks/2026-09-09-retrieval-refresh.md#keep-the-historical-relationship-adapter-separate) preserves the rankings and separates this comparison from the controlled production relationship experiment. The April 23 97.9% recall / 49.1% precision table remains historical; its original per-query receipt is still missing.
 
-## P3
+- [ ] **Test relational wording the parser did not help design** (issue #24 finding 6). Paraphrase the four relational templates, using a fixed generated set, and test how much benefit remains when wording changes. The existing graph adapter recognizes the original templates. A fresh run of those same templates cannot close this gap.
 
-- [ ] **Upstream gbrain: search-config surface for `gbrain eval longmemeval`**
-  (WS7): the CLI has no way to set a reranker for benchmark runs — the
-  programmatic `searchConfigSnapshot` (v0.45 #3676) is not exported and no
-  `--search-config KEY=VAL` flag exists. Until then,
-  `scripts/run-shootout-phase1.sh` refuses reranker cells rather than
-  running them unreranked under a reranked label. File a gbrain PR adding
-  the flag, then re-enable cells A1/B1/C1/C2.
-- [ ] **Upstream gbrain: export `./core/skillopt` subpath** (audit
-  skillopt-cats-11): cat30-33 deep-import gbrain's skillopt orchestrator via
-  node_modules paths that work on flat bun installs but break under isolated
-  layouts. One export-map line upstream removes the last four deep imports.
-- [ ] **Upstream gbrain: export a `gbrain/version` subpath** so eval repos
-  don't need the resolve-and-walk helper in
-  `eval/runner/gbrain-version.ts` (works fine, just inelegant).
+- [ ] **Repeat the embedding-provider matrix with explicit settings** (Cat18/18b, WS5). The older runs could inherit an unintended reranker. Use supported provider cells and record their real configuration. The historical plan recorded ZeroEntropy's hosted API sunset as 2026-09-04; its old `zerank-2` cells cannot be treated as a current reproduction recipe.
 
----
+- [ ] **Run live negative controls** (WS3). For model-backed categories, confirm that deliberately degraded configurations score at most half as well as the real ones under the fixed-seed rule. Scripted-model tests show that the checks can fail; live runs test whether they detect actual model-quality differences.
 
-## Cat 35 items (from the 2026-08-16 plan reviews, merged from main)
-reviews (2026-08-16); each entry names its origin.
+## Data and benchmark fidelity
 
-## P1 — publication gate
+- [ ] **Finish the answer-label stubs.** The audit identified seven single-example placeholders, four without consumers. `contradictions.json` and `implicit-preferences.json` are now generated from planted data. Review `backlinks.json`, `citations.json`, `entities.json`, `personalization-rubric.json`, `poison.json` and `qrels.json`; populate useful files or deliberately remove unused ones. The data validator reports remaining stubs.
 
-- [ ] **Cat 35 judge-calibration hand-scoring (the open publication gate).**
-  Why: the published report's §11 kappa line is `[pending]` until a human fills
-  the `human_verdict` column for the 24 judge-filled coverage pairs in
-  `docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill/judge-calibration-2026-08-25.json`
-  (~45 min; each pair = gold statement vs the lane's artifact in `artifacts/`).
-  Then `--judge-calibration` (parse fixed for the object-wrapped sample this
-  ship) computes raw agreement + linearly weighted kappa; drop both into
-  report §11 and remove the status banner. Deferred from plan step 6b by the
-  explicit ship command; the report discloses the pending state. From: /ship
-  plan-completion audit (2026-08-26).
+- [ ] **Compare copied PrecisionMemBench files with upstream.** Check the fixtures and scorer against tenurehq/precisionmembench commit `c9689ca6`, accounting for the documented wrapper and path changes. Record the result in [ATTRIBUTION.md](eval/precisionmembench/ATTRIBUTION.md). Scorer parity tests and an upstream byte comparison answer different questions.
 
-## P2 — Cat 35 v1.1 candidates
+- [ ] **Regenerate world-v1 only with an intentional corpus revision** (`generators-04`). The generator's cache key is fixed, but the committed 240-page corpus predates it. Regeneration also changes downstream labels, so it should not be bundled into an ordinary docs or ranking change. The historical cold Opus estimate was about $40 and needs `ANTHROPIC_API_KEY`.
 
-- [ ] **Runner wall-clock bundle: parallelize the scoring loop + facts workers +
-  lane overlap.** Why: the scoring phase is a fully serial await chain (~130
-  judge calls one at a time — the llm-budget semaphore never holds more than 1
-  slot), the facts lane pins `workers: 1`, and the dream lane waits for Engine A
-  to finish; together plausibly half of the 29-minute full run. How: wrap
-  per-(fixture, lane) scoring blocks in the existing `makeLimiter` (merge into
-  perItem in deterministic order post-await), raise facts workers to 2-4,
-  Promise.all Engine A with the dream lane. Deferred from ship: restructuring
-  the pipeline that produced the committed baseline mid-ship risks subtle
-  accounting drift; do it with a fresh BPRE + delta check. Also swap the
-  `perItem.find()` linear re-scan in jointFallback for a keyed Map first —
-  it becomes load-bearing under parallelism. From: /ship performance
-  specialist (2026-08-26).
-- [ ] **Judge prompt-cache layout.** Why: `cache_control: ephemeral` on the
-  small judge system prompts is below Anthropic's minimum cacheable prefix
-  (1024+ tokens), so nothing caches, while the large transcript/document is
-  re-sent per call. How: move the shared transcript into a cacheable system
-  block reused across the 2-4 calls per transcript. Bundle with the wall-clock
-  item (same re-baseline). From: /ship performance specialist.
-- [ ] **Judge delimiter neutralization (needs judge_prompt_version bump +
-  re-run).** Why: judged documents are embedded in pseudo-XML judge prompts
-  without escaping closing tags; distiller output containing `</document>`
-  could steer verdicts (benchmark-integrity on synthetic corpora, disclosed in
-  report §9). How: neutralize `</document>`/`</transcript>` in embedded
-  bodies or use per-call random tag names; bump CAT35_JUDGE_PROMPT_VERSION;
-  re-run and re-baseline. From: /ship security specialist.
-- [ ] **Wire the mechanical page-shape checks into the receipt.** Why:
-  `hasWikilink` / `selfContainedOpening` / `slugDisciplineOk` are unit-tested
-  but nothing in production calls them (imports removed from the runner this
-  ship); the usability checklist is judge-only for page shape. How: compute a
-  `usability_mechanical` cross-check per dream page-set and record
-  judge-vs-mechanical disagreements. Also give `seededSample` a caller or
-  drop it. From: /ship testing + maintainability specialists.
-- [ ] **Generator helper unit tests + export.** Why: `checkTranscript`
-  (tolerance band that killed the first full run), `parseTurns`, and
-  `buildCalibrationSample` are deterministic and $0-testable but unexported
-  and untested; a regression surfaces as a failed multi-dollar generation run
-  instead of a red test. How: export the helpers, add
-  test/eval/transcript-distill-gen.test.ts; dedupe the copy-pasted Mulberry32 +
-  BANNED_RE into exports from transcript-distill.ts while there. From: /ship
-  testing + maintainability specialists.
+- [ ] **Guard a possible nDCG overflow** (issue #24 finding 8c; `cats26-29-04` was refuted for the tested corpus). If future inputs exceed the 300-word chunk threshold, repeated chunk slugs may allow a document-ranking score above 1.0. Add a meaningful check before expanding that corpus; do not describe the suspected case as an already demonstrated bug.
 
-- [ ] **Multi-format transcript corpus (codex JSONL + chatgpt export renderings).**
-  Why: v1 renders claude-code JSONL only; the other 5 gbrain adapters go
-  unexercised by Cat 35 (their parse fidelity is tested in gbrain itself).
-  How: derive both renderings from the same canonical turn lists in
-  `eval/generators/transcript-distill.ts` — no new gold needed. Effort: M→S with CC.
-  From: CEO review E3 (deferred).
+## Integration maintenance
 
-- [ ] **Public "TranscriptBench" foreign-runner contract.** Why: makes Cat 35 a
-  benchmark other memory systems (Mem0, Zep, Letta, Supermemory) can run against
-  their own write paths — the write-path complement to LongMemEval. How: cat34's
-  subprocess-contract pattern (published fixtures + gold + a runner contract doc);
-  wait for v1 numbers to publish first. Effort: L→M. From: CEO review E4 (deferred).
+- [ ] **Bring Cat35 missing-prerequisite receipts into the common contract** (WS0). The recorded issue is that missing `OPENAI_API_KEY` exits 2 without a skipped receipt. Add a skip reason and the common acknowledgment behavior so `all.ts` does not need its exit-code fallback. The original note recorded 135 passing tests and preflight checks at v0.47.6.0; that is not a new verification.
 
-- [ ] **Real-transcript qualitative annex.** Why: planted-gold corpora prove
-  coverage mechanics; 3-5 real (redacted) Claude Code sessions eyeballed against
-  their dream pages prove it feels right on real data. Blocker: needs a
-  consent/redaction workflow (privacy rule: no real names in public artifacts).
-  Effort: S-M. From: CEO review E5 (deferred).
+- [ ] **Retire or repair the historical shootout wrapper** (WS7). The wrapper still refuses reranker cells and Phase 2 lacks its driver. Newer gbrain experiments provide configuration controls, so the old task “add any search-config surface” is no longer an accurate description of all upstream capability. Decide how to update the wrapper against a tested CLI and supported providers before re-enabling cells. See [its operating notes](scripts/RUNBOOK_SHOOTOUT.md).
 
-- [ ] **Judge-injection hazard transcript.** Why: a transcript containing text
-  aimed at the coverage judge ("report all items as present") tests judge
-  robustness — the one adversarial class Cat 35 v1 doesn't plant. How: one extra
-  fixture + expected-no-effect assertion. Effort: S. From: CEO deep review 3A.
+- [ ] **Export a public SkillOpt import path** (`skillopt-cats-11`). Cat30–33 use deep imports into gbrain's source. They work in the pinned flat installation but can break with isolated package layouts. An upstream `./core/skillopt` export would provide a stable contract.
 
-- [ ] **Repeated-run confidence intervals for regression deltas.** Why: v1
-  deltas are single-run and informational only; run-to-run variance is
-  unmeasured. How: N=3 full runs, paired per-item comparison, CI on the macro
-  headline. Costs ~3× a full run — do it once to characterize variance, not per
-  release. From: Codex round 1 (deferred).
-- [ ] **Held-out Cat 35 transcripts generated after the fix wave** (issue #24
-  finding 7): the 61.5→88.1 story is disclosed honestly, but the verified-
-  segment rescue admits exactly the four transcripts that failed, and no
-  held-out set exists. Generate 5-10 fresh fixtures post-wave (same
-  generator, new seed), score without touching the distiller, publish
-  alongside the frozen-corpus number. ~$3 generation + judge costs.
-- [ ] **Cat 35 hazard checks: `violated: null` on judge failure** (issue #24
-  finding 8d): a judge outage can understate violation counts. Count
-  null-verdict hazards separately in the receipt and fail the hazard gate
-  when nulls exceed 0.
-- [ ] **Template-blind relational variant** (issue #24 finding 6): paraphrase
-  the four relational query templates (Haiku, seeded) and re-run
-  multi-adapter to show how much of the graph-layer lift survives when the
-  adapter can't pattern-match the generator's phrasing.
-- [ ] **nDCG>1 latent guard** (issue #24 finding 8c, refuted-for-now
-  cats26-29-04): if probes ever exceed the 300-word chunk threshold, nDCG
-  over chunk slugs can exceed 1.0. Add a one-line clamp-or-throw guard in
-  the nDCG helper so the hazard is tracked in code, not in memory.
+- [ ] **Export gbrain's version.** A `gbrain/version` subpath would replace the path-resolution helper in `eval/runner/gbrain-version.ts`. The helper currently works; this is maintenance work.
 
-- [ ] **FineSurE-style conciseness alignment.** Why: % of page content units
-  aligned to some gold item complements distractor leakage; cut from v1 because
-  it overlaps leakage + compression ratio. From: CEO review (deferred).
+## Cat35 publication and measurement
 
-- [ ] **LLM claim decomposition for compound sentences.** Why: v1's
-  `segmentClaims()` is mechanical and leaves compound claims atomic (disclosed
-  limit); FactScore-style decomposition raises hallucination-metric resolution.
-  Tradeoff: costs determinism. From: Codex round 2 (documented limit).
+These items came from the August 16 plan reviews and the August 26 publication review.
 
-## P3
+- [ ] **Complete human judge calibration** (publication review, plan step 6b). A person must fill `human_verdict` for the 24 coverage pairs in `docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill/judge-calibration-2026-08-25.json`. The estimate is about 45 minutes. Then compute agreement and linearly weighted kappa with `--judge-calibration`, publish them and remove the pending banner. Do not use an agent's annotations as the missing human check.
 
-- [ ] **Cross-family (non-Anthropic) coverage judge.** Why: judge and distiller
-  are both Anthropic in v1 (G-Eval self-preference risk, disclosed in the report).
-  OPENAI_API_KEY is already required for embeddings, so a GPT-class judge needs
-  no new secret. From: CEO deep review (disclosed limit).
+- [ ] **Measure repeated-run variation** (Codex round 1). Run three full repetitions and compute paired per-item intervals for the headline. Current single-run deltas do not measure run-to-run variation. This costs roughly three full runs and is separate from the focused retrieval refresh.
 
-## Completed
+- [ ] **Add held-out transcripts generated after the fix wave** (issue #24 finding 7). The 61.5% to 88.1% story includes rescue of the four transcripts that failed before the change. Generate 5–10 fresh cases with a new seed, freeze them, and score without changing the distiller. The old estimate was about $3 for generation plus judging.
 
-- [x] **Upstream: PGLite disconnect sync-spin under bun test (gbrain v0.46.3).**
-  `PGLiteEngine.disconnect()` after ops-layer use froze the bun test runner in
-  a synchronous WASM spin; `test/eval/agent-adapter.test.ts` skipped teardown
-  as the mitigation, with "restore when the pin moves past the fix" as the
-  exit condition. At the v0.47.8.0 pin the spin no longer reproduces (verified
-  with a minimal engine repro AND the full adapter suite under `bun test`
-  behind a kill-switch watchdog); all six skipped teardowns are restored. The
-  adapter's bounded-disconnect race stays, as designed, for real runs.
-  **Completed:** v0.4.0 (2026-08-31)
+- [ ] **Count missing hazard verdicts explicitly** (issue #24 finding 8d). A judge failure can leave `violated: null`, understating known violations. Record unknown verdicts separately and fail the hazard gate when any remain.
+
+- [ ] **Try a coverage judge from another model family** (CEO review). The original distiller and judge both use Anthropic models, which may share preferences. An OpenAI judge can test that dependence; it requires a separately identified comparison.
+
+## Cat35 implementation follow-ups
+
+- [ ] **Reduce serial waiting** (performance review, 2026-08-26). The original full run took 29 minutes with about 130 judge calls processed serially, facts workers set to 1, and separate ingestion and dream phases. Try bounded parallel scoring, 2–4 facts workers and overlapping independent lanes. Merge outputs deterministically, replace repeated `perItem.find()` scans with a map, and recheck accounting and results.
+
+- [ ] **Improve judge prompt caching** (performance review). Small system prompts were below the documented 1024-token caching threshold, while the same transcript was sent two to four times. Test a cacheable shared prefix and verify actual cache hits and cost. Bundle measurement with the scheduling change.
+
+- [ ] **Prevent input text from closing judge delimiters** (security review). Documents containing `</document>` or `</transcript>` can interfere with the judge prompt. Escape or change the delimiters, bump `CAT35_JUDGE_PROMPT_VERSION`, and rerun before comparing scores.
+
+- [ ] **Record mechanical page-shape checks** (testing review). `hasWikilink`, `selfContainedOpening` and `slugDisciplineOk` are tested but not part of the production receipt. Add a `usability_mechanical` cross-check and report disagreements with the model judge. Give `seededSample` a real caller or remove it.
+
+- [ ] **Test generator helpers directly** (testing review). Export and test `checkTranscript`, `parseTurns` and `buildCalibrationSample`; share the duplicated Mulberry32 generator and `BANNED_RE` definitions. These deterministic checks should fail before a paid generation run.
+
+- [ ] **Add more transcript formats** (CEO review E3). Derive Codex JSONL and ChatGPT export renderings from the same canonical turns. The original Cat35 corpus exercises Claude Code JSONL, leaving five other gbrain adapters outside this test. Existing labels can be reused.
+
+- [ ] **Define an external TranscriptBench runner contract** (CEO review E4). Publish fixtures, labels and an input/output contract so other memory systems can test their write paths. Cat34's subprocess contract is a useful starting point.
+
+- [ ] **Add a real-transcript qualitative appendix** (CEO review E5). Inspect three to five consented, redacted working sessions beside their generated notes. This requires a consent and redaction process; public synthetic results do not provide that permission.
+
+- [ ] **Add an input aimed at manipulating the judge** (CEO review 3A). Include a transcript telling the judge to report everything as present, with a labeled expectation that this instruction has no effect.
+
+- [ ] **Measure unnecessary content directly** (CEO review). A FineSurE-style measure would count how much of each generated page corresponds to a labeled useful item. It overlaps with leakage and compression metrics but could clarify why a page feels too long.
+
+- [ ] **Split compound claims more carefully** (Codex round 2). Mechanical `segmentClaims` treats some compound sentences as one claim. Model-based decomposition could sharpen hallucination measurement while adding cost and nondeterminism.
+
+## Completed infrastructure work
+
+- [x] **PGLite teardown freeze under Bun tests** (gbrain v0.46.3). The synchronous WASM loop stopped reproducing at v0.47.8.0. A minimal reproduction and the adapter suite were checked with an external watchdog, and all six skipped teardowns were restored. The bounded disconnect handling for real runs remains. Completed in gbrain-evals v0.4.0, 2026-08-31.
