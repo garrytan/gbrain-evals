@@ -1,0 +1,153 @@
+[cat13] dropped 190 ambiguous probe candidate(s) claimed by >1 concept
+# BrainBench Cat 13 — Conceptual Recall
+
+Generated: 2026-09-09T05:19:35
+Corpus: 240 pages, 30 concept pages
+Probes: 548 (target 500 per-concept + company pass; CAT13_PROBES env var to override)
+Embeds: live — voyage:voyage-4 @ 1024d (every adapter, one gateway)
+Search pins (gbrain-backed adapters): search.mode=balanced search.reranker.enabled=true search.autocut=false search.reranker.model=voyage:rerank-2.5 search.metadata_boost_gate=lexical search.expansion=false search.cache.enabled=false search.relational_rerank_pin=3 search.adaptive_return=false
+Concept split: seed=42 tuning=20 held-out=10 → probes tuning=359 held-out=181 mixed=8 unassigned=0
+Metric: nDCG@5 (graded: target=3, co-occurrence peer=1)
+
+## Template breakdown
+
+- synonym: 159
+- body-fuzzy: 97
+- title-paraphrase: 81
+- title-variation: 75
+- synonym-fuzzy: 49
+- company-neighborhood: 38
+- description-paraphrase: 34
+- semantic-neighborhood: 15
+
+## Running adapters
+
+- gbrain ...
+  Setting up brain schema (v145)...
+  v142: takes.embedding resized to vector(1024); existing take vectors cleared
+  140 migration(s) applied
+[extract.links_db] start
+[extract.links_db] 10/240 (4%)
+[extract.links_db] 20/240 (8%)
+[extract.links_db] 30/240 (12%)
+[extract.links_db] 40/240 (16%)
+[extract.links_db] 50/240 (20%)
+[extract.links_db] 60/240 (25%)
+[extract.links_db] 70/240 (29%)
+[extract.links_db] 80/240 (33%)
+[extract.links_db] 90/240 (37%)
+[extract.links_db] 100/240 (41%)
+[extract.links_db] 110/240 (45%)
+[extract.links_db] 120/240 (50%)
+[extract.links_db] 130/240 (54%)
+[extract.links_db] 140/240 (58%)
+[extract.links_db] 150/240 (62%)
+[extract.links_db] 160/240 (66%)
+[extract.links_db] 170/240 (70%)
+[extract.links_db] 180/240 (75%)
+[extract.links_db] 190/240 (79%)
+[extract.links_db] 200/240 (83%)
+[extract.links_db] 210/240 (87%)
+[extract.links_db] 220/240 (91%)
+[extract.links_db] 230/240 (95%)
+[extract.links_db] 240/240 (100%)
+[extract.links_db] 240/240 (100%) done
+[extract.timeline_db] start
+[extract.timeline_db] 10/240 (4%)
+[extract.timeline_db] 20/240 (8%)
+[extract.timeline_db] 30/240 (12%)
+[extract.timeline_db] 40/240 (16%)
+[extract.timeline_db] 50/240 (20%)
+[extract.timeline_db] 60/240 (25%)
+[extract.timeline_db] 70/240 (29%)
+[extract.timeline_db] 80/240 (33%)
+[extract.timeline_db] 90/240 (37%)
+[extract.timeline_db] 100/240 (41%)
+[extract.timeline_db] 110/240 (45%)
+[extract.timeline_db] 120/240 (50%)
+[extract.timeline_db] 130/240 (54%)
+[extract.timeline_db] 140/240 (58%)
+[extract.timeline_db] 150/240 (62%)
+[extract.timeline_db] 160/240 (66%)
+[extract.timeline_db] 170/240 (70%)
+[extract.timeline_db] 180/240 (75%)
+[extract.timeline_db] 190/240 (79%)
+[extract.timeline_db] 200/240 (83%)
+[extract.timeline_db] 210/240 (87%)
+[extract.timeline_db] 220/240 (91%)
+[extract.timeline_db] 230/240 (95%)
+[extract.timeline_db] 240/240 (100%)
+[extract.timeline_db] 240/240 (100%) done
+  done (304.6s). nDCG@5=63.8%, P@5(graded)=26.5%, P@1(strict)=76.8%
+
+## Scorecard
+
+| Adapter | nDCG@5 | P@5 (graded) | P@1 (strict target) | Wall (s) |
+|---------|--------|---------------|----------------------|----------|
+| gbrain           | 63.8% | 26.5% | 76.8% | 304.6 |
+
+## Per-template nDCG@5 (where each retrieval style earns its keep)
+
+| Template | gbrain | #probes |
+|----------|--------|---------|
+| body-fuzzy | 40.3% | 97 |
+| company-neighborhood | 73.7% | 38 |
+| description-paraphrase | 74.4% | 34 |
+| semantic-neighborhood | 70.8% | 15 |
+| synonym | 64.7% | 159 |
+| synonym-fuzzy | 65.0% | 49 |
+| title-paraphrase | 71.1% | 81 |
+| title-variation | 72.5% | 75 |
+
+## Concept split — tuning vs held-out (seed=42, 20/10 concepts)
+
+| Adapter | Subset | #probes | nDCG@5 | P@5 (graded) | P@1 (strict target) |
+|---------|--------|---------|--------|---------------|----------------------|
+| gbrain           | tuning | 359 | 62.3% | 26.5% | 79.9% |
+| gbrain           | held-out | 181 | 66.2% | 25.5% | 71.8% |
+
+Mixed-target probes (gold names concepts from both sets) are excluded from both subsets: 8. Unassigned (targets outside both sets): 0.
+Held-out concepts: concepts/community-led-growth, concepts/developer-relations, concepts/enterprise-gtm, concepts/gross-margin-expansion, concepts/horizontal-api, concepts/open-source-distribution, concepts/permitting-reform, concepts/revenue-durability, concepts/vertical-saas, concepts/wallet-share
+
+## Per-template nDCG@5 — tuning concepts
+
+| Template | gbrain | #probes |
+|----------|--------|---------|
+| body-fuzzy | 39.4% | 63 |
+| company-neighborhood | 77.6% | 19 |
+| description-paraphrase | 71.0% | 22 |
+| semantic-neighborhood | 69.4% | 11 |
+| synonym | 64.2% | 104 |
+| synonym-fuzzy | 66.2% | 34 |
+| title-paraphrase | 67.3% | 58 |
+| title-variation | 67.8% | 48 |
+
+## Per-template nDCG@5 — held-out concepts (decision set)
+
+| Template | gbrain | #probes |
+|----------|--------|---------|
+| body-fuzzy | 42.0% | 34 |
+| company-neighborhood | 64.4% | 11 |
+| description-paraphrase | 80.5% | 12 |
+| semantic-neighborhood | 74.7% | 4 |
+| synonym | 65.5% | 55 |
+| synonym-fuzzy | 62.3% | 15 |
+| title-paraphrase | 80.6% | 23 |
+| title-variation | 80.9% | 27 |
+
+## Methodology
+
+- Corpus: eval/data/world-v1/concepts__*.json (30 concept pages) + the full world-v1 index.
+- Probes: programmatic, seeded (mulberry32 seed=42, Fisher-Yates sampling). Rerun produces the identical set across JS runtimes.
+- Probe texts are globally unique: ambiguous candidates (same text claimable by >1 concept) are dropped at generation and the run aborts on any surviving duplicate.
+- Graded gold: target concept=3, co-occurrence peers (share >=1 related company/person)=1. Company-neighborhood probes: every concept listing the company=3, the company page=1.
+- Template mix: title paraphrase, title variation, description paraphrase, hand-authored synonyms, body-phrase fuzzy recall, semantic neighborhood (self-grounded), company neighborhood (global pass).
+- Metric: nDCG@5 (primary, shared eval/runner/metrics.ts). P@5-graded = precision@5 against the grade>=1 set. P@1-strict = rank-1 is in the grade-3 target set.
+- Top-K: 5.
+- Embedder: voyage:voyage-4 @ 1024d for EVERY adapter (CAT13_EMBEDDING_MODEL / CAT13_EMBED_DIMS); the receipt records the gateway state after each adapter's init.
+- Search pins on gbrain-backed adapters (gbrain, vector-grep-rrf-fusion): search.mode=balanced, search.reranker.enabled=true, search.autocut=false, search.reranker.model=voyage:rerank-2.5, search.metadata_boost_gate=lexical, search.expansion=false, search.cache.enabled=false, search.relational_rerank_pin=3, search.adaptive_return=false — set via engine.setConfig before ingest, echoed per adapter.
+- Concept split: seeded Fisher-Yates over the sorted concept slugs (seed=42, separate rng from the probe generator); 20 tuning / 10 held-out. A probe is in a subset only when every grade-3 target is.
+- Generic pins (--search-pin): search.metadata_boost_gate=lexical, search.expansion=false, search.cache.enabled=false, search.relational_rerank_pin=3, search.adaptive_return=false on the gbrain-backed adapters — pass-through engine.setConfig entries. gbrain ignores unknown search.* keys silently, so confirm each key exists in the linked gbrain (0.48.4.0) before reading this arm.
+- No gold data passed to adapters; PublicPage/PublicQuery sealed at the boundary.
+
+[cat13] run_status=completed verdict=partial n_scored=548/548

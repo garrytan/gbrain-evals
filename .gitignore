@@ -28,3 +28,6 @@ eval/reports/
 # System files
 .DS_Store
 *.log
+!docs/benchmarks/2026-09-09-retrieval-refresh/**/run.log
+__pycache__/
+.budget.lock

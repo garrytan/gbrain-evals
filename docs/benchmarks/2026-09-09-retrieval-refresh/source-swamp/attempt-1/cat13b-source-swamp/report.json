@@ -1,0 +1,2067 @@
+{
+  "ran_at": "2026-09-09T05:06:52.025Z",
+  "stub_embed": false,
+  "boost_factors": {
+    "curated_factor": 1.5,
+    "swamp_factor": 0.5
+  },
+  "results": [
+    {
+      "name": "vector",
+      "top1_hit_rate": 0.9666666666666667,
+      "top3_hit_rate": 1,
+      "swamp_at_top": 0.03333333333333333,
+      "per_query": [
+        {
+          "id": "q01",
+          "topSlug": "originals/talks/article-outline-fat-code",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/article-outline-fat-code",
+            "openclaw/chat/2026-04-17",
+            "openclaw/chat/2026-04-08",
+            "openclaw/chat/2026-04-01",
+            "originals/talks/rag-pattern-anti-patterns"
+          ]
+        },
+        {
+          "id": "q02",
+          "topSlug": "originals/talks/article-outline-fat-code",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/article-outline-fat-code",
+            "openclaw/chat/2026-04-08",
+            "openclaw/chat/2026-04-17",
+            "openclaw/chat/2026-04-01",
+            "openclaw/chat/2026-04-03"
+          ]
+        },
+        {
+          "id": "q03",
+          "topSlug": "originals/talks/article-outline-fat-code",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/article-outline-fat-code",
+            "openclaw/chat/2026-04-17",
+            "openclaw/chat/2026-04-01",
+            "openclaw/chat/2026-04-08",
+            "originals/talks/founder-mode-reality-check"
+          ]
+        },
+        {
+          "id": "q04",
+          "topSlug": "originals/essays/do-things-that-don-t-scale-revisited",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "openclaw/chat/2026-04-15",
+            "openclaw/chat/2026-04-03",
+            "openclaw/chat/2026-04-17",
+            "openclaw/chat/2026-04-08"
+          ]
+        },
+        {
+          "id": "q05",
+          "topSlug": "originals/essays/do-things-that-don-t-scale-revisited",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "originals/talks/founder-mode-reality-check",
+            "openclaw/chat/2026-04-15",
+            "originals/essays/agentic-workflows-overhyped",
+            "openclaw/chat/2026-04-10"
+          ]
+        },
+        {
+          "id": "q06",
+          "topSlug": "originals/essays/do-things-that-don-t-scale-revisited",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "openclaw/chat/2026-04-15",
+            "openclaw/chat/2026-04-03",
+            "originals/essays/agentic-workflows-overhyped",
+            "originals/essays/vertical-saas-thesis"
+          ]
+        },
+        {
+          "id": "q07",
+          "topSlug": "originals/essays/product-market-fit-trap",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/product-market-fit-trap",
+            "openclaw/chat/2026-04-05",
+            "originals/essays/unit-economics-late-stage",
+            "originals/talks/usage-based-pricing-yc",
+            "originals/essays/vertical-saas-thesis"
+          ]
+        },
+        {
+          "id": "q08",
+          "topSlug": "originals/essays/product-market-fit-trap",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/product-market-fit-trap",
+            "openclaw/chat/2026-04-05",
+            "openclaw/chat/2026-04-15",
+            "originals/talks/founder-mode-reality-check",
+            "openclaw/chat/2026-04-20"
+          ]
+        },
+        {
+          "id": "q09",
+          "topSlug": "originals/essays/product-market-fit-trap",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/product-market-fit-trap",
+            "openclaw/chat/2026-04-05",
+            "openclaw/chat/2026-04-01",
+            "openclaw/chat/2026-04-20",
+            "originals/talks/founder-mode-reality-check"
+          ]
+        },
+        {
+          "id": "q10",
+          "topSlug": "originals/talks/founder-mode-reality-check",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/founder-mode-reality-check",
+            "openclaw/chat/2026-04-10",
+            "openclaw/chat/2026-04-20",
+            "openclaw/chat/2026-04-01",
+            "originals/essays/product-market-fit-trap"
+          ]
+        },
+        {
+          "id": "q11",
+          "topSlug": "originals/talks/founder-mode-reality-check",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/founder-mode-reality-check",
+            "openclaw/chat/2026-04-10",
+            "openclaw/chat/2026-04-20",
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "openclaw/chat/2026-04-01"
+          ]
+        },
+        {
+          "id": "q12",
+          "topSlug": "originals/talks/founder-mode-reality-check",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/founder-mode-reality-check",
+            "openclaw/chat/2026-04-10",
+            "openclaw/chat/2026-04-20",
+            "openclaw/chat/2026-04-01",
+            "openclaw/chat/2026-04-15"
+          ]
+        },
+        {
+          "id": "q13",
+          "topSlug": "originals/essays/agentic-workflows-overhyped",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/agentic-workflows-overhyped",
+            "openclaw/chat/2026-04-12",
+            "openclaw/chat/2026-04-08",
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "openclaw/chat/2026-04-20"
+          ]
+        },
+        {
+          "id": "q14",
+          "topSlug": "originals/essays/agentic-workflows-overhyped",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/agentic-workflows-overhyped",
+            "originals/talks/article-outline-fat-code",
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "openclaw/chat/2026-04-08",
+            "openclaw/chat/2026-04-12"
+          ]
+        },
+        {
+          "id": "q15",
+          "topSlug": "originals/essays/agentic-workflows-overhyped",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/agentic-workflows-overhyped",
+            "openclaw/chat/2026-04-12",
+            "openclaw/chat/2026-04-08",
+            "openclaw/chat/2026-04-20",
+            "originals/talks/article-outline-fat-code"
+          ]
+        },
+        {
+          "id": "q16",
+          "topSlug": "originals/essays/unit-economics-late-stage",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/unit-economics-late-stage",
+            "openclaw/chat/2026-04-22",
+            "openclaw/chat/2026-04-05",
+            "openclaw/chat/2026-04-15",
+            "originals/talks/usage-based-pricing-yc"
+          ]
+        },
+        {
+          "id": "q17",
+          "topSlug": "originals/essays/unit-economics-late-stage",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/unit-economics-late-stage",
+            "openclaw/chat/2026-04-22",
+            "openclaw/chat/2026-04-05",
+            "originals/talks/usage-based-pricing-yc",
+            "openclaw/chat/2026-04-01"
+          ]
+        },
+        {
+          "id": "q18",
+          "topSlug": "originals/essays/unit-economics-late-stage",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/unit-economics-late-stage",
+            "openclaw/chat/2026-04-05",
+            "openclaw/chat/2026-04-22",
+            "originals/talks/usage-based-pricing-yc",
+            "openclaw/chat/2026-04-15"
+          ]
+        },
+        {
+          "id": "q19",
+          "topSlug": "originals/talks/usage-based-pricing-yc",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/usage-based-pricing-yc",
+            "openclaw/chat/2026-04-22",
+            "openclaw/chat/2026-04-05",
+            "openclaw/chat/2026-04-15",
+            "originals/essays/unit-economics-late-stage"
+          ]
+        },
+        {
+          "id": "q20",
+          "topSlug": "originals/talks/usage-based-pricing-yc",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/usage-based-pricing-yc",
+            "openclaw/chat/2026-04-22",
+            "openclaw/chat/2026-04-05",
+            "openclaw/chat/2026-04-01",
+            "originals/essays/unit-economics-late-stage"
+          ]
+        },
+        {
+          "id": "q21",
+          "topSlug": "originals/talks/usage-based-pricing-yc",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/usage-based-pricing-yc",
+            "openclaw/chat/2026-04-05",
+            "openclaw/chat/2026-04-22",
+            "originals/essays/unit-economics-late-stage",
+            "originals/essays/foundation-models-as-utilities"
+          ]
+        },
+        {
+          "id": "q22",
+          "topSlug": "originals/essays/vertical-saas-thesis",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/vertical-saas-thesis",
+            "openclaw/chat/2026-04-22",
+            "originals/essays/unit-economics-late-stage",
+            "openclaw/chat/2026-04-10",
+            "openclaw/chat/2026-04-05"
+          ]
+        },
+        {
+          "id": "q23",
+          "topSlug": "originals/essays/vertical-saas-thesis",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/vertical-saas-thesis",
+            "originals/essays/foundation-models-as-utilities",
+            "originals/talks/usage-based-pricing-yc",
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "openclaw/chat/2026-04-15"
+          ]
+        },
+        {
+          "id": "q24",
+          "topSlug": "openclaw/chat/2026-04-22",
+          "targetRank": 2,
+          "chatBeforeTarget": 1,
+          "top_slugs": [
+            "openclaw/chat/2026-04-22",
+            "originals/essays/vertical-saas-thesis",
+            "openclaw/chat/2026-04-10",
+            "openclaw/chat/2026-04-15",
+            "openclaw/chat/2026-04-05"
+          ]
+        },
+        {
+          "id": "q25",
+          "topSlug": "originals/essays/foundation-models-as-utilities",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/foundation-models-as-utilities",
+            "originals/talks/article-outline-fat-code",
+            "openclaw/chat/2026-04-10",
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "openclaw/chat/2026-04-17"
+          ]
+        },
+        {
+          "id": "q26",
+          "topSlug": "originals/essays/foundation-models-as-utilities",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/foundation-models-as-utilities",
+            "openclaw/chat/2026-04-10",
+            "originals/talks/usage-based-pricing-yc",
+            "originals/essays/unit-economics-late-stage",
+            "openclaw/chat/2026-04-17"
+          ]
+        },
+        {
+          "id": "q27",
+          "topSlug": "originals/essays/foundation-models-as-utilities",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/foundation-models-as-utilities",
+            "openclaw/chat/2026-04-10",
+            "originals/talks/founder-mode-reality-check",
+            "originals/essays/vertical-saas-thesis",
+            "openclaw/chat/2026-04-15"
+          ]
+        },
+        {
+          "id": "q28",
+          "topSlug": "originals/talks/rag-pattern-anti-patterns",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/rag-pattern-anti-patterns",
+            "openclaw/chat/2026-04-17",
+            "openclaw/chat/2026-04-12",
+            "openclaw/chat/2026-04-03",
+            "openclaw/chat/2026-04-08"
+          ]
+        },
+        {
+          "id": "q29",
+          "topSlug": "originals/talks/rag-pattern-anti-patterns",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/rag-pattern-anti-patterns",
+            "openclaw/chat/2026-04-17",
+            "openclaw/chat/2026-04-12",
+            "openclaw/chat/2026-04-03",
+            "originals/talks/article-outline-fat-code"
+          ]
+        },
+        {
+          "id": "q30",
+          "topSlug": "originals/talks/rag-pattern-anti-patterns",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/rag-pattern-anti-patterns",
+            "openclaw/chat/2026-04-12",
+            "openclaw/chat/2026-04-17",
+            "openclaw/chat/2026-04-03",
+            "originals/essays/agentic-workflows-overhyped"
+          ]
+        }
+      ],
+      "wallMs": 5579
+    },
+    {
+      "name": "gbrain",
+      "top1_hit_rate": 0.9,
+      "top3_hit_rate": 1,
+      "swamp_at_top": 0.1,
+      "per_query": [
+        {
+          "id": "q01",
+          "topSlug": "originals/talks/article-outline-fat-code",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/article-outline-fat-code",
+            "openclaw/chat/2026-04-17",
+            "openclaw/chat/2026-04-01",
+            "openclaw/chat/2026-04-08",
+            "openclaw/chat/2026-04-03"
+          ]
+        },
+        {
+          "id": "q02",
+          "topSlug": "originals/talks/article-outline-fat-code",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/article-outline-fat-code",
+            "openclaw/chat/2026-04-08",
+            "originals/essays/agentic-workflows-overhyped",
+            "originals/talks/rag-pattern-anti-patterns",
+            "openclaw/chat/2026-04-17"
+          ]
+        },
+        {
+          "id": "q03",
+          "topSlug": "originals/talks/article-outline-fat-code",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/article-outline-fat-code",
+            "originals/talks/founder-mode-reality-check",
+            "openclaw/chat/2026-04-17",
+            "originals/essays/unit-economics-late-stage",
+            "originals/essays/foundation-models-as-utilities"
+          ]
+        },
+        {
+          "id": "q04",
+          "topSlug": "originals/essays/do-things-that-don-t-scale-revisited",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "originals/talks/article-outline-fat-code",
+            "originals/essays/agentic-workflows-overhyped",
+            "openclaw/chat/2026-04-15",
+            "originals/talks/rag-pattern-anti-patterns"
+          ]
+        },
+        {
+          "id": "q05",
+          "topSlug": "originals/essays/do-things-that-don-t-scale-revisited",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "originals/talks/founder-mode-reality-check",
+            "originals/essays/agentic-workflows-overhyped",
+            "originals/essays/vertical-saas-thesis",
+            "originals/essays/foundation-models-as-utilities"
+          ]
+        },
+        {
+          "id": "q06",
+          "topSlug": "originals/essays/do-things-that-don-t-scale-revisited",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "openclaw/chat/2026-04-15",
+            "openclaw/chat/2026-04-03",
+            "originals/essays/vertical-saas-thesis",
+            "originals/essays/foundation-models-as-utilities"
+          ]
+        },
+        {
+          "id": "q07",
+          "topSlug": "originals/essays/product-market-fit-trap",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/product-market-fit-trap",
+            "originals/talks/usage-based-pricing-yc",
+            "originals/essays/unit-economics-late-stage",
+            "originals/essays/vertical-saas-thesis",
+            "originals/essays/do-things-that-don-t-scale-revisited"
+          ]
+        },
+        {
+          "id": "q08",
+          "topSlug": "originals/essays/product-market-fit-trap",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/product-market-fit-trap",
+            "openclaw/chat/2026-04-05",
+            "openclaw/chat/2026-04-15",
+            "openclaw/chat/2026-04-20",
+            "originals/talks/founder-mode-reality-check"
+          ]
+        },
+        {
+          "id": "q09",
+          "topSlug": "originals/essays/product-market-fit-trap",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/product-market-fit-trap",
+            "openclaw/chat/2026-04-20",
+            "openclaw/chat/2026-04-01",
+            "openclaw/chat/2026-04-15",
+            "originals/essays/unit-economics-late-stage"
+          ]
+        },
+        {
+          "id": "q10",
+          "topSlug": "originals/talks/founder-mode-reality-check",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/founder-mode-reality-check",
+            "openclaw/chat/2026-04-10",
+            "openclaw/chat/2026-04-01",
+            "openclaw/chat/2026-04-20",
+            "originals/essays/product-market-fit-trap"
+          ]
+        },
+        {
+          "id": "q11",
+          "topSlug": "originals/talks/founder-mode-reality-check",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/founder-mode-reality-check",
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "originals/essays/product-market-fit-trap",
+            "originals/essays/foundation-models-as-utilities",
+            "originals/talks/article-outline-fat-code"
+          ]
+        },
+        {
+          "id": "q12",
+          "topSlug": "openclaw/chat/2026-04-10",
+          "targetRank": 3,
+          "chatBeforeTarget": 2,
+          "top_slugs": [
+            "openclaw/chat/2026-04-10",
+            "openclaw/chat/2026-04-01",
+            "originals/talks/founder-mode-reality-check",
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "originals/talks/rag-pattern-anti-patterns"
+          ]
+        },
+        {
+          "id": "q13",
+          "topSlug": "originals/essays/agentic-workflows-overhyped",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/agentic-workflows-overhyped",
+            "openclaw/chat/2026-04-08",
+            "openclaw/chat/2026-04-20",
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "originals/talks/article-outline-fat-code"
+          ]
+        },
+        {
+          "id": "q14",
+          "topSlug": "originals/essays/agentic-workflows-overhyped",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/agentic-workflows-overhyped",
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "originals/talks/article-outline-fat-code",
+            "originals/talks/rag-pattern-anti-patterns",
+            "originals/essays/foundation-models-as-utilities"
+          ]
+        },
+        {
+          "id": "q15",
+          "topSlug": "originals/essays/agentic-workflows-overhyped",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/agentic-workflows-overhyped",
+            "openclaw/chat/2026-04-08",
+            "openclaw/chat/2026-04-03",
+            "originals/talks/article-outline-fat-code",
+            "originals/essays/do-things-that-don-t-scale-revisited"
+          ]
+        },
+        {
+          "id": "q16",
+          "topSlug": "originals/essays/unit-economics-late-stage",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/unit-economics-late-stage",
+            "openclaw/chat/2026-04-22",
+            "openclaw/chat/2026-04-05",
+            "originals/essays/vertical-saas-thesis",
+            "originals/talks/usage-based-pricing-yc"
+          ]
+        },
+        {
+          "id": "q17",
+          "topSlug": "originals/essays/unit-economics-late-stage",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/unit-economics-late-stage",
+            "originals/talks/usage-based-pricing-yc",
+            "originals/essays/vertical-saas-thesis",
+            "originals/talks/rag-pattern-anti-patterns",
+            "originals/talks/article-outline-fat-code"
+          ]
+        },
+        {
+          "id": "q18",
+          "topSlug": "originals/essays/unit-economics-late-stage",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/unit-economics-late-stage",
+            "openclaw/chat/2026-04-05",
+            "originals/talks/usage-based-pricing-yc",
+            "originals/essays/vertical-saas-thesis",
+            "originals/essays/product-market-fit-trap"
+          ]
+        },
+        {
+          "id": "q19",
+          "topSlug": "originals/talks/usage-based-pricing-yc",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/usage-based-pricing-yc",
+            "originals/essays/unit-economics-late-stage",
+            "originals/essays/foundation-models-as-utilities",
+            "openclaw/chat/2026-04-22",
+            "originals/essays/do-things-that-don-t-scale-revisited"
+          ]
+        },
+        {
+          "id": "q20",
+          "topSlug": "openclaw/chat/2026-04-22",
+          "targetRank": 2,
+          "chatBeforeTarget": 1,
+          "top_slugs": [
+            "openclaw/chat/2026-04-22",
+            "originals/talks/usage-based-pricing-yc",
+            "originals/essays/unit-economics-late-stage",
+            "originals/essays/foundation-models-as-utilities",
+            "originals/essays/vertical-saas-thesis"
+          ]
+        },
+        {
+          "id": "q21",
+          "topSlug": "originals/talks/usage-based-pricing-yc",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/usage-based-pricing-yc",
+            "openclaw/chat/2026-04-05",
+            "originals/essays/unit-economics-late-stage",
+            "originals/essays/foundation-models-as-utilities",
+            "openclaw/chat/2026-04-22"
+          ]
+        },
+        {
+          "id": "q22",
+          "topSlug": "originals/essays/vertical-saas-thesis",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/vertical-saas-thesis",
+            "originals/essays/unit-economics-late-stage",
+            "originals/talks/usage-based-pricing-yc",
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "openclaw/chat/2026-04-22"
+          ]
+        },
+        {
+          "id": "q23",
+          "topSlug": "originals/essays/vertical-saas-thesis",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/vertical-saas-thesis",
+            "originals/essays/foundation-models-as-utilities",
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "originals/talks/usage-based-pricing-yc",
+            "originals/essays/agentic-workflows-overhyped"
+          ]
+        },
+        {
+          "id": "q24",
+          "topSlug": "originals/essays/vertical-saas-thesis",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/vertical-saas-thesis",
+            "openclaw/chat/2026-04-22",
+            "openclaw/chat/2026-04-10",
+            "originals/talks/usage-based-pricing-yc",
+            "originals/essays/unit-economics-late-stage"
+          ]
+        },
+        {
+          "id": "q25",
+          "topSlug": "originals/essays/foundation-models-as-utilities",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/foundation-models-as-utilities",
+            "openclaw/chat/2026-04-12",
+            "originals/talks/article-outline-fat-code",
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "originals/essays/agentic-workflows-overhyped"
+          ]
+        },
+        {
+          "id": "q26",
+          "topSlug": "originals/essays/foundation-models-as-utilities",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/foundation-models-as-utilities",
+            "openclaw/chat/2026-04-10",
+            "originals/talks/usage-based-pricing-yc",
+            "originals/essays/unit-economics-late-stage",
+            "originals/essays/do-things-that-don-t-scale-revisited"
+          ]
+        },
+        {
+          "id": "q27",
+          "topSlug": "openclaw/chat/2026-04-17",
+          "targetRank": 3,
+          "chatBeforeTarget": 2,
+          "top_slugs": [
+            "openclaw/chat/2026-04-17",
+            "openclaw/chat/2026-04-12",
+            "originals/essays/foundation-models-as-utilities",
+            "originals/talks/founder-mode-reality-check",
+            "originals/essays/vertical-saas-thesis"
+          ]
+        },
+        {
+          "id": "q28",
+          "topSlug": "originals/talks/rag-pattern-anti-patterns",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/rag-pattern-anti-patterns",
+            "openclaw/chat/2026-04-17",
+            "openclaw/chat/2026-04-12",
+            "originals/talks/article-outline-fat-code",
+            "openclaw/chat/2026-04-03"
+          ]
+        },
+        {
+          "id": "q29",
+          "topSlug": "originals/talks/rag-pattern-anti-patterns",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/rag-pattern-anti-patterns",
+            "openclaw/chat/2026-04-17",
+            "openclaw/chat/2026-04-03",
+            "originals/talks/article-outline-fat-code",
+            "originals/essays/do-things-that-don-t-scale-revisited"
+          ]
+        },
+        {
+          "id": "q30",
+          "topSlug": "originals/talks/rag-pattern-anti-patterns",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/rag-pattern-anti-patterns",
+            "openclaw/chat/2026-04-12",
+            "openclaw/chat/2026-04-17",
+            "openclaw/chat/2026-04-03",
+            "originals/essays/do-things-that-don-t-scale-revisited"
+          ]
+        }
+      ],
+      "wallMs": 15712,
+      "resolved_config": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.expansion": "false",
+        "search.cache.enabled": "false",
+        "search.autocut": "false",
+        "search.metadata_boost_gate": "lexical",
+        "search.relational_rerank_pin": "3",
+        "search.adaptive_return": "false"
+      },
+      "observed": {
+        "queries": 30,
+        "rerank_scored_queries": 0,
+        "keyword_arm_confidence_stamped": 30,
+        "keyword_arm_confidence_downweighted": 0
+      }
+    },
+    {
+      "name": "vector-grep-rrf-fusion",
+      "top1_hit_rate": 0.9,
+      "top3_hit_rate": 1,
+      "swamp_at_top": 0.1,
+      "per_query": [
+        {
+          "id": "q01",
+          "topSlug": "originals/talks/article-outline-fat-code",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/article-outline-fat-code",
+            "openclaw/chat/2026-04-17",
+            "openclaw/chat/2026-04-01",
+            "openclaw/chat/2026-04-08",
+            "openclaw/chat/2026-04-03"
+          ]
+        },
+        {
+          "id": "q02",
+          "topSlug": "originals/talks/article-outline-fat-code",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/article-outline-fat-code",
+            "openclaw/chat/2026-04-08",
+            "originals/essays/agentic-workflows-overhyped",
+            "originals/talks/rag-pattern-anti-patterns",
+            "openclaw/chat/2026-04-17"
+          ]
+        },
+        {
+          "id": "q03",
+          "topSlug": "originals/talks/article-outline-fat-code",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/article-outline-fat-code",
+            "originals/talks/founder-mode-reality-check",
+            "openclaw/chat/2026-04-17",
+            "originals/essays/unit-economics-late-stage",
+            "originals/essays/foundation-models-as-utilities"
+          ]
+        },
+        {
+          "id": "q04",
+          "topSlug": "originals/essays/do-things-that-don-t-scale-revisited",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "originals/talks/article-outline-fat-code",
+            "originals/essays/agentic-workflows-overhyped",
+            "openclaw/chat/2026-04-15",
+            "originals/talks/rag-pattern-anti-patterns"
+          ]
+        },
+        {
+          "id": "q05",
+          "topSlug": "originals/essays/do-things-that-don-t-scale-revisited",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "originals/talks/founder-mode-reality-check",
+            "originals/essays/agentic-workflows-overhyped",
+            "originals/essays/vertical-saas-thesis",
+            "originals/essays/foundation-models-as-utilities"
+          ]
+        },
+        {
+          "id": "q06",
+          "topSlug": "originals/essays/do-things-that-don-t-scale-revisited",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "openclaw/chat/2026-04-15",
+            "openclaw/chat/2026-04-03",
+            "originals/essays/vertical-saas-thesis",
+            "originals/essays/foundation-models-as-utilities"
+          ]
+        },
+        {
+          "id": "q07",
+          "topSlug": "originals/essays/product-market-fit-trap",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/product-market-fit-trap",
+            "originals/talks/usage-based-pricing-yc",
+            "originals/essays/unit-economics-late-stage",
+            "originals/essays/vertical-saas-thesis",
+            "originals/essays/do-things-that-don-t-scale-revisited"
+          ]
+        },
+        {
+          "id": "q08",
+          "topSlug": "originals/essays/product-market-fit-trap",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/product-market-fit-trap",
+            "openclaw/chat/2026-04-05",
+            "openclaw/chat/2026-04-15",
+            "openclaw/chat/2026-04-20",
+            "originals/talks/founder-mode-reality-check"
+          ]
+        },
+        {
+          "id": "q09",
+          "topSlug": "originals/essays/product-market-fit-trap",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/product-market-fit-trap",
+            "openclaw/chat/2026-04-20",
+            "openclaw/chat/2026-04-15",
+            "openclaw/chat/2026-04-01",
+            "originals/essays/unit-economics-late-stage"
+          ]
+        },
+        {
+          "id": "q10",
+          "topSlug": "originals/talks/founder-mode-reality-check",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/founder-mode-reality-check",
+            "openclaw/chat/2026-04-10",
+            "openclaw/chat/2026-04-01",
+            "openclaw/chat/2026-04-20",
+            "originals/essays/product-market-fit-trap"
+          ]
+        },
+        {
+          "id": "q11",
+          "topSlug": "originals/talks/founder-mode-reality-check",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/founder-mode-reality-check",
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "originals/essays/product-market-fit-trap",
+            "originals/essays/foundation-models-as-utilities",
+            "originals/talks/article-outline-fat-code"
+          ]
+        },
+        {
+          "id": "q12",
+          "topSlug": "openclaw/chat/2026-04-10",
+          "targetRank": 3,
+          "chatBeforeTarget": 2,
+          "top_slugs": [
+            "openclaw/chat/2026-04-10",
+            "openclaw/chat/2026-04-01",
+            "originals/talks/founder-mode-reality-check",
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "originals/talks/rag-pattern-anti-patterns"
+          ]
+        },
+        {
+          "id": "q13",
+          "topSlug": "originals/essays/agentic-workflows-overhyped",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/agentic-workflows-overhyped",
+            "openclaw/chat/2026-04-08",
+            "openclaw/chat/2026-04-20",
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "originals/talks/article-outline-fat-code"
+          ]
+        },
+        {
+          "id": "q14",
+          "topSlug": "originals/essays/agentic-workflows-overhyped",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/agentic-workflows-overhyped",
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "originals/talks/article-outline-fat-code",
+            "originals/talks/rag-pattern-anti-patterns",
+            "originals/essays/foundation-models-as-utilities"
+          ]
+        },
+        {
+          "id": "q15",
+          "topSlug": "originals/essays/agentic-workflows-overhyped",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/agentic-workflows-overhyped",
+            "openclaw/chat/2026-04-08",
+            "openclaw/chat/2026-04-03",
+            "originals/talks/article-outline-fat-code",
+            "originals/essays/do-things-that-don-t-scale-revisited"
+          ]
+        },
+        {
+          "id": "q16",
+          "topSlug": "originals/essays/unit-economics-late-stage",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/unit-economics-late-stage",
+            "openclaw/chat/2026-04-22",
+            "openclaw/chat/2026-04-05",
+            "originals/essays/vertical-saas-thesis",
+            "originals/talks/usage-based-pricing-yc"
+          ]
+        },
+        {
+          "id": "q17",
+          "topSlug": "originals/essays/unit-economics-late-stage",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/unit-economics-late-stage",
+            "originals/talks/usage-based-pricing-yc",
+            "originals/essays/vertical-saas-thesis",
+            "originals/talks/rag-pattern-anti-patterns",
+            "originals/talks/article-outline-fat-code"
+          ]
+        },
+        {
+          "id": "q18",
+          "topSlug": "originals/essays/unit-economics-late-stage",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/unit-economics-late-stage",
+            "openclaw/chat/2026-04-05",
+            "originals/talks/usage-based-pricing-yc",
+            "originals/essays/vertical-saas-thesis",
+            "originals/essays/product-market-fit-trap"
+          ]
+        },
+        {
+          "id": "q19",
+          "topSlug": "originals/talks/usage-based-pricing-yc",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/usage-based-pricing-yc",
+            "originals/essays/unit-economics-late-stage",
+            "originals/essays/foundation-models-as-utilities",
+            "openclaw/chat/2026-04-22",
+            "originals/essays/do-things-that-don-t-scale-revisited"
+          ]
+        },
+        {
+          "id": "q20",
+          "topSlug": "openclaw/chat/2026-04-22",
+          "targetRank": 2,
+          "chatBeforeTarget": 1,
+          "top_slugs": [
+            "openclaw/chat/2026-04-22",
+            "originals/talks/usage-based-pricing-yc",
+            "originals/essays/unit-economics-late-stage",
+            "originals/essays/foundation-models-as-utilities",
+            "originals/essays/vertical-saas-thesis"
+          ]
+        },
+        {
+          "id": "q21",
+          "topSlug": "originals/talks/usage-based-pricing-yc",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/usage-based-pricing-yc",
+            "openclaw/chat/2026-04-05",
+            "originals/essays/unit-economics-late-stage",
+            "originals/essays/foundation-models-as-utilities",
+            "openclaw/chat/2026-04-22"
+          ]
+        },
+        {
+          "id": "q22",
+          "topSlug": "originals/essays/vertical-saas-thesis",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/vertical-saas-thesis",
+            "originals/essays/unit-economics-late-stage",
+            "originals/talks/usage-based-pricing-yc",
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "openclaw/chat/2026-04-22"
+          ]
+        },
+        {
+          "id": "q23",
+          "topSlug": "originals/essays/vertical-saas-thesis",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/vertical-saas-thesis",
+            "originals/essays/foundation-models-as-utilities",
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "originals/talks/usage-based-pricing-yc",
+            "originals/essays/agentic-workflows-overhyped"
+          ]
+        },
+        {
+          "id": "q24",
+          "topSlug": "originals/essays/vertical-saas-thesis",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/vertical-saas-thesis",
+            "openclaw/chat/2026-04-22",
+            "openclaw/chat/2026-04-10",
+            "originals/talks/usage-based-pricing-yc",
+            "originals/essays/unit-economics-late-stage"
+          ]
+        },
+        {
+          "id": "q25",
+          "topSlug": "originals/essays/foundation-models-as-utilities",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/foundation-models-as-utilities",
+            "openclaw/chat/2026-04-12",
+            "originals/talks/article-outline-fat-code",
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "originals/essays/agentic-workflows-overhyped"
+          ]
+        },
+        {
+          "id": "q26",
+          "topSlug": "originals/essays/foundation-models-as-utilities",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/foundation-models-as-utilities",
+            "openclaw/chat/2026-04-10",
+            "originals/talks/usage-based-pricing-yc",
+            "originals/essays/unit-economics-late-stage",
+            "originals/essays/do-things-that-don-t-scale-revisited"
+          ]
+        },
+        {
+          "id": "q27",
+          "topSlug": "openclaw/chat/2026-04-17",
+          "targetRank": 3,
+          "chatBeforeTarget": 2,
+          "top_slugs": [
+            "openclaw/chat/2026-04-17",
+            "openclaw/chat/2026-04-12",
+            "originals/essays/foundation-models-as-utilities",
+            "originals/talks/founder-mode-reality-check",
+            "originals/essays/vertical-saas-thesis"
+          ]
+        },
+        {
+          "id": "q28",
+          "topSlug": "originals/talks/rag-pattern-anti-patterns",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/rag-pattern-anti-patterns",
+            "openclaw/chat/2026-04-17",
+            "openclaw/chat/2026-04-12",
+            "originals/talks/article-outline-fat-code",
+            "openclaw/chat/2026-04-03"
+          ]
+        },
+        {
+          "id": "q29",
+          "topSlug": "originals/talks/rag-pattern-anti-patterns",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/rag-pattern-anti-patterns",
+            "openclaw/chat/2026-04-17",
+            "openclaw/chat/2026-04-03",
+            "originals/talks/article-outline-fat-code",
+            "originals/essays/do-things-that-don-t-scale-revisited"
+          ]
+        },
+        {
+          "id": "q30",
+          "topSlug": "originals/talks/rag-pattern-anti-patterns",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/rag-pattern-anti-patterns",
+            "openclaw/chat/2026-04-12",
+            "openclaw/chat/2026-04-17",
+            "openclaw/chat/2026-04-03",
+            "originals/essays/do-things-that-don-t-scale-revisited"
+          ]
+        }
+      ],
+      "wallMs": 13043,
+      "resolved_config": {
+        "auto_link": "false",
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.expansion": "false",
+        "search.cache.enabled": "false",
+        "search.autocut": "false",
+        "search.metadata_boost_gate": "lexical",
+        "search.relational_rerank_pin": "3",
+        "search.adaptive_return": "false"
+      },
+      "observed": {
+        "queries": 30,
+        "rerank_scored_queries": 0,
+        "keyword_arm_confidence_stamped": 30,
+        "keyword_arm_confidence_downweighted": 0
+      }
+    },
+    {
+      "name": "gbrain-no-source-boost",
+      "top1_hit_rate": 0.8666666666666667,
+      "top3_hit_rate": 1,
+      "swamp_at_top": 0.13333333333333333,
+      "per_query": [
+        {
+          "id": "q01",
+          "topSlug": "originals/talks/article-outline-fat-code",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/article-outline-fat-code",
+            "openclaw/chat/2026-04-17",
+            "openclaw/chat/2026-04-01",
+            "openclaw/chat/2026-04-08",
+            "openclaw/chat/2026-04-03"
+          ]
+        },
+        {
+          "id": "q02",
+          "topSlug": "originals/talks/article-outline-fat-code",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/article-outline-fat-code",
+            "openclaw/chat/2026-04-08",
+            "openclaw/chat/2026-04-17",
+            "openclaw/chat/2026-04-01",
+            "openclaw/chat/2026-04-03"
+          ]
+        },
+        {
+          "id": "q03",
+          "topSlug": "originals/talks/article-outline-fat-code",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/article-outline-fat-code",
+            "openclaw/chat/2026-04-17",
+            "openclaw/chat/2026-04-01",
+            "openclaw/chat/2026-04-08",
+            "originals/talks/founder-mode-reality-check"
+          ]
+        },
+        {
+          "id": "q04",
+          "topSlug": "originals/essays/do-things-that-don-t-scale-revisited",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "openclaw/chat/2026-04-15",
+            "openclaw/chat/2026-04-03",
+            "originals/talks/article-outline-fat-code",
+            "originals/essays/agentic-workflows-overhyped"
+          ]
+        },
+        {
+          "id": "q05",
+          "topSlug": "originals/essays/do-things-that-don-t-scale-revisited",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "originals/talks/founder-mode-reality-check",
+            "openclaw/chat/2026-04-15",
+            "originals/essays/agentic-workflows-overhyped",
+            "originals/essays/vertical-saas-thesis"
+          ]
+        },
+        {
+          "id": "q06",
+          "topSlug": "originals/essays/do-things-that-don-t-scale-revisited",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "openclaw/chat/2026-04-15",
+            "openclaw/chat/2026-04-03",
+            "originals/essays/vertical-saas-thesis",
+            "originals/essays/foundation-models-as-utilities"
+          ]
+        },
+        {
+          "id": "q07",
+          "topSlug": "originals/essays/product-market-fit-trap",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/product-market-fit-trap",
+            "originals/talks/usage-based-pricing-yc",
+            "originals/essays/unit-economics-late-stage",
+            "openclaw/chat/2026-04-05",
+            "originals/essays/vertical-saas-thesis"
+          ]
+        },
+        {
+          "id": "q08",
+          "topSlug": "originals/essays/product-market-fit-trap",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/product-market-fit-trap",
+            "openclaw/chat/2026-04-05",
+            "openclaw/chat/2026-04-15",
+            "openclaw/chat/2026-04-20",
+            "originals/talks/founder-mode-reality-check"
+          ]
+        },
+        {
+          "id": "q09",
+          "topSlug": "originals/essays/product-market-fit-trap",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/product-market-fit-trap",
+            "openclaw/chat/2026-04-20",
+            "openclaw/chat/2026-04-01",
+            "openclaw/chat/2026-04-15",
+            "openclaw/chat/2026-04-05"
+          ]
+        },
+        {
+          "id": "q10",
+          "topSlug": "originals/talks/founder-mode-reality-check",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/founder-mode-reality-check",
+            "openclaw/chat/2026-04-10",
+            "openclaw/chat/2026-04-01",
+            "openclaw/chat/2026-04-20",
+            "originals/essays/product-market-fit-trap"
+          ]
+        },
+        {
+          "id": "q11",
+          "topSlug": "originals/talks/founder-mode-reality-check",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/founder-mode-reality-check",
+            "openclaw/chat/2026-04-10",
+            "openclaw/chat/2026-04-20",
+            "openclaw/chat/2026-04-01",
+            "originals/essays/do-things-that-don-t-scale-revisited"
+          ]
+        },
+        {
+          "id": "q12",
+          "topSlug": "openclaw/chat/2026-04-10",
+          "targetRank": 3,
+          "chatBeforeTarget": 2,
+          "top_slugs": [
+            "openclaw/chat/2026-04-10",
+            "openclaw/chat/2026-04-01",
+            "originals/talks/founder-mode-reality-check",
+            "openclaw/chat/2026-04-20",
+            "openclaw/chat/2026-04-03"
+          ]
+        },
+        {
+          "id": "q13",
+          "topSlug": "originals/essays/agentic-workflows-overhyped",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/agentic-workflows-overhyped",
+            "openclaw/chat/2026-04-08",
+            "openclaw/chat/2026-04-20",
+            "openclaw/chat/2026-04-12",
+            "originals/essays/do-things-that-don-t-scale-revisited"
+          ]
+        },
+        {
+          "id": "q14",
+          "topSlug": "originals/essays/agentic-workflows-overhyped",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/agentic-workflows-overhyped",
+            "openclaw/chat/2026-04-03",
+            "openclaw/chat/2026-04-12",
+            "openclaw/chat/2026-04-20",
+            "openclaw/chat/2026-04-08"
+          ]
+        },
+        {
+          "id": "q15",
+          "topSlug": "originals/essays/agentic-workflows-overhyped",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/agentic-workflows-overhyped",
+            "openclaw/chat/2026-04-08",
+            "openclaw/chat/2026-04-03",
+            "openclaw/chat/2026-04-12",
+            "originals/talks/article-outline-fat-code"
+          ]
+        },
+        {
+          "id": "q16",
+          "topSlug": "originals/essays/unit-economics-late-stage",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/unit-economics-late-stage",
+            "openclaw/chat/2026-04-22",
+            "openclaw/chat/2026-04-05",
+            "originals/essays/vertical-saas-thesis",
+            "originals/talks/usage-based-pricing-yc"
+          ]
+        },
+        {
+          "id": "q17",
+          "topSlug": "originals/essays/unit-economics-late-stage",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/unit-economics-late-stage",
+            "originals/talks/usage-based-pricing-yc",
+            "openclaw/chat/2026-04-22",
+            "openclaw/chat/2026-04-05",
+            "originals/essays/vertical-saas-thesis"
+          ]
+        },
+        {
+          "id": "q18",
+          "topSlug": "originals/essays/unit-economics-late-stage",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/unit-economics-late-stage",
+            "openclaw/chat/2026-04-05",
+            "originals/talks/usage-based-pricing-yc",
+            "originals/essays/vertical-saas-thesis",
+            "openclaw/chat/2026-04-22"
+          ]
+        },
+        {
+          "id": "q19",
+          "topSlug": "originals/talks/usage-based-pricing-yc",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/usage-based-pricing-yc",
+            "openclaw/chat/2026-04-22",
+            "openclaw/chat/2026-04-05",
+            "openclaw/chat/2026-04-15",
+            "originals/essays/unit-economics-late-stage"
+          ]
+        },
+        {
+          "id": "q20",
+          "topSlug": "openclaw/chat/2026-04-22",
+          "targetRank": 2,
+          "chatBeforeTarget": 1,
+          "top_slugs": [
+            "openclaw/chat/2026-04-22",
+            "originals/talks/usage-based-pricing-yc",
+            "openclaw/chat/2026-04-05",
+            "openclaw/chat/2026-04-01",
+            "originals/essays/unit-economics-late-stage"
+          ]
+        },
+        {
+          "id": "q21",
+          "topSlug": "originals/talks/usage-based-pricing-yc",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/usage-based-pricing-yc",
+            "openclaw/chat/2026-04-05",
+            "openclaw/chat/2026-04-22",
+            "originals/essays/unit-economics-late-stage",
+            "originals/essays/foundation-models-as-utilities"
+          ]
+        },
+        {
+          "id": "q22",
+          "topSlug": "originals/essays/vertical-saas-thesis",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/vertical-saas-thesis",
+            "openclaw/chat/2026-04-22",
+            "openclaw/chat/2026-04-10",
+            "openclaw/chat/2026-04-05",
+            "originals/essays/unit-economics-late-stage"
+          ]
+        },
+        {
+          "id": "q23",
+          "topSlug": "originals/essays/vertical-saas-thesis",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/vertical-saas-thesis",
+            "originals/essays/foundation-models-as-utilities",
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "originals/talks/usage-based-pricing-yc",
+            "openclaw/chat/2026-04-22"
+          ]
+        },
+        {
+          "id": "q24",
+          "topSlug": "openclaw/chat/2026-04-22",
+          "targetRank": 2,
+          "chatBeforeTarget": 1,
+          "top_slugs": [
+            "openclaw/chat/2026-04-22",
+            "originals/essays/vertical-saas-thesis",
+            "openclaw/chat/2026-04-10",
+            "openclaw/chat/2026-04-15",
+            "openclaw/chat/2026-04-05"
+          ]
+        },
+        {
+          "id": "q25",
+          "topSlug": "originals/essays/foundation-models-as-utilities",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/foundation-models-as-utilities",
+            "openclaw/chat/2026-04-12",
+            "originals/talks/article-outline-fat-code",
+            "openclaw/chat/2026-04-10",
+            "openclaw/chat/2026-04-17"
+          ]
+        },
+        {
+          "id": "q26",
+          "topSlug": "originals/essays/foundation-models-as-utilities",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/foundation-models-as-utilities",
+            "openclaw/chat/2026-04-10",
+            "originals/talks/usage-based-pricing-yc",
+            "originals/essays/unit-economics-late-stage",
+            "openclaw/chat/2026-04-17"
+          ]
+        },
+        {
+          "id": "q27",
+          "topSlug": "openclaw/chat/2026-04-17",
+          "targetRank": 3,
+          "chatBeforeTarget": 2,
+          "top_slugs": [
+            "openclaw/chat/2026-04-17",
+            "openclaw/chat/2026-04-12",
+            "originals/essays/foundation-models-as-utilities",
+            "originals/talks/founder-mode-reality-check",
+            "originals/essays/vertical-saas-thesis"
+          ]
+        },
+        {
+          "id": "q28",
+          "topSlug": "originals/talks/rag-pattern-anti-patterns",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/rag-pattern-anti-patterns",
+            "openclaw/chat/2026-04-17",
+            "openclaw/chat/2026-04-12",
+            "openclaw/chat/2026-04-03",
+            "originals/talks/article-outline-fat-code"
+          ]
+        },
+        {
+          "id": "q29",
+          "topSlug": "originals/talks/rag-pattern-anti-patterns",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/rag-pattern-anti-patterns",
+            "openclaw/chat/2026-04-17",
+            "openclaw/chat/2026-04-03",
+            "originals/talks/article-outline-fat-code",
+            "openclaw/chat/2026-04-12"
+          ]
+        },
+        {
+          "id": "q30",
+          "topSlug": "originals/talks/rag-pattern-anti-patterns",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/rag-pattern-anti-patterns",
+            "openclaw/chat/2026-04-12",
+            "openclaw/chat/2026-04-17",
+            "openclaw/chat/2026-04-03",
+            "originals/essays/do-things-that-don-t-scale-revisited"
+          ]
+        }
+      ],
+      "wallMs": 20849,
+      "resolved_config": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.expansion": "false",
+        "search.cache.enabled": "false",
+        "search.autocut": "false",
+        "search.metadata_boost_gate": "lexical",
+        "search.relational_rerank_pin": "3",
+        "search.adaptive_return": "false"
+      },
+      "observed": {
+        "queries": 30,
+        "rerank_scored_queries": 0,
+        "keyword_arm_confidence_stamped": 29,
+        "keyword_arm_confidence_downweighted": 0
+      }
+    },
+    {
+      "name": "grep-only",
+      "top1_hit_rate": 0.8,
+      "top3_hit_rate": 0.9666666666666667,
+      "swamp_at_top": 0.2,
+      "per_query": [
+        {
+          "id": "q01",
+          "topSlug": "openclaw/chat/2026-04-08",
+          "targetRank": 2,
+          "chatBeforeTarget": 1,
+          "top_slugs": [
+            "openclaw/chat/2026-04-08",
+            "originals/talks/article-outline-fat-code",
+            "openclaw/chat/2026-04-17",
+            "openclaw/chat/2026-04-01",
+            "originals/essays/agentic-workflows-overhyped"
+          ]
+        },
+        {
+          "id": "q02",
+          "topSlug": "originals/talks/article-outline-fat-code",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/article-outline-fat-code",
+            "openclaw/chat/2026-04-08",
+            "openclaw/chat/2026-04-17",
+            "openclaw/chat/2026-04-01",
+            "originals/essays/agentic-workflows-overhyped"
+          ]
+        },
+        {
+          "id": "q03",
+          "topSlug": "originals/talks/article-outline-fat-code",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/article-outline-fat-code",
+            "openclaw/chat/2026-04-08",
+            "openclaw/chat/2026-04-17",
+            "openclaw/chat/2026-04-01",
+            "originals/essays/agentic-workflows-overhyped"
+          ]
+        },
+        {
+          "id": "q04",
+          "topSlug": "originals/essays/do-things-that-don-t-scale-revisited",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "openclaw/chat/2026-04-15",
+            "openclaw/chat/2026-04-03",
+            "originals/essays/unit-economics-late-stage",
+            "openclaw/chat/2026-04-12"
+          ]
+        },
+        {
+          "id": "q05",
+          "topSlug": "originals/essays/do-things-that-don-t-scale-revisited",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "openclaw/chat/2026-04-03",
+            "openclaw/chat/2026-04-15",
+            "openclaw/chat/2026-04-20",
+            "originals/essays/vertical-saas-thesis"
+          ]
+        },
+        {
+          "id": "q06",
+          "topSlug": "originals/essays/do-things-that-don-t-scale-revisited",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/do-things-that-don-t-scale-revisited",
+            "openclaw/chat/2026-04-15",
+            "openclaw/chat/2026-04-03",
+            "originals/essays/vertical-saas-thesis",
+            "originals/talks/usage-based-pricing-yc"
+          ]
+        },
+        {
+          "id": "q07",
+          "topSlug": "originals/essays/product-market-fit-trap",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/product-market-fit-trap",
+            "openclaw/chat/2026-04-20",
+            "openclaw/chat/2026-04-05",
+            "openclaw/chat/2026-04-15",
+            "openclaw/chat/2026-04-01"
+          ]
+        },
+        {
+          "id": "q08",
+          "topSlug": "originals/essays/product-market-fit-trap",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/product-market-fit-trap",
+            "openclaw/chat/2026-04-05",
+            "openclaw/chat/2026-04-15",
+            "openclaw/chat/2026-04-20",
+            "openclaw/chat/2026-04-01"
+          ]
+        },
+        {
+          "id": "q09",
+          "topSlug": "originals/essays/product-market-fit-trap",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/product-market-fit-trap",
+            "openclaw/chat/2026-04-20",
+            "openclaw/chat/2026-04-15",
+            "openclaw/chat/2026-04-01",
+            "openclaw/chat/2026-04-05"
+          ]
+        },
+        {
+          "id": "q10",
+          "topSlug": "originals/talks/founder-mode-reality-check",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/founder-mode-reality-check",
+            "openclaw/chat/2026-04-10",
+            "openclaw/chat/2026-04-20",
+            "openclaw/chat/2026-04-01",
+            "openclaw/chat/2026-04-15"
+          ]
+        },
+        {
+          "id": "q11",
+          "topSlug": "originals/talks/founder-mode-reality-check",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/founder-mode-reality-check",
+            "openclaw/chat/2026-04-10",
+            "openclaw/chat/2026-04-20",
+            "openclaw/chat/2026-04-01",
+            "openclaw/chat/2026-04-15"
+          ]
+        },
+        {
+          "id": "q12",
+          "topSlug": "openclaw/chat/2026-04-10",
+          "targetRank": 2,
+          "chatBeforeTarget": 1,
+          "top_slugs": [
+            "openclaw/chat/2026-04-10",
+            "originals/talks/founder-mode-reality-check",
+            "openclaw/chat/2026-04-01",
+            "openclaw/chat/2026-04-20",
+            "openclaw/chat/2026-04-15"
+          ]
+        },
+        {
+          "id": "q13",
+          "topSlug": "originals/essays/agentic-workflows-overhyped",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/agentic-workflows-overhyped",
+            "openclaw/chat/2026-04-20",
+            "openclaw/chat/2026-04-08",
+            "openclaw/chat/2026-04-12",
+            "openclaw/chat/2026-04-03"
+          ]
+        },
+        {
+          "id": "q14",
+          "topSlug": "openclaw/chat/2026-04-03",
+          "targetRank": 4,
+          "chatBeforeTarget": 2,
+          "top_slugs": [
+            "openclaw/chat/2026-04-03",
+            "openclaw/chat/2026-04-08",
+            "originals/talks/article-outline-fat-code",
+            "originals/essays/agentic-workflows-overhyped",
+            "originals/essays/do-things-that-don-t-scale-revisited"
+          ]
+        },
+        {
+          "id": "q15",
+          "topSlug": "originals/essays/agentic-workflows-overhyped",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/agentic-workflows-overhyped",
+            "openclaw/chat/2026-04-08",
+            "openclaw/chat/2026-04-03",
+            "openclaw/chat/2026-04-20",
+            "openclaw/chat/2026-04-12"
+          ]
+        },
+        {
+          "id": "q16",
+          "topSlug": "originals/essays/unit-economics-late-stage",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/unit-economics-late-stage",
+            "openclaw/chat/2026-04-22",
+            "openclaw/chat/2026-04-05",
+            "openclaw/chat/2026-04-15",
+            "originals/talks/usage-based-pricing-yc"
+          ]
+        },
+        {
+          "id": "q17",
+          "topSlug": "originals/essays/unit-economics-late-stage",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/unit-economics-late-stage",
+            "openclaw/chat/2026-04-05",
+            "openclaw/chat/2026-04-22",
+            "openclaw/chat/2026-04-20",
+            "originals/talks/article-outline-fat-code"
+          ]
+        },
+        {
+          "id": "q18",
+          "topSlug": "originals/essays/unit-economics-late-stage",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/unit-economics-late-stage",
+            "openclaw/chat/2026-04-05",
+            "originals/essays/agentic-workflows-overhyped",
+            "openclaw/chat/2026-04-01"
+          ]
+        },
+        {
+          "id": "q19",
+          "topSlug": "originals/talks/usage-based-pricing-yc",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/usage-based-pricing-yc",
+            "openclaw/chat/2026-04-22",
+            "openclaw/chat/2026-04-05",
+            "openclaw/chat/2026-04-15",
+            "openclaw/chat/2026-04-12"
+          ]
+        },
+        {
+          "id": "q20",
+          "topSlug": "originals/talks/usage-based-pricing-yc",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/usage-based-pricing-yc",
+            "openclaw/chat/2026-04-22",
+            "openclaw/chat/2026-04-05",
+            "openclaw/chat/2026-04-12",
+            "originals/essays/foundation-models-as-utilities"
+          ]
+        },
+        {
+          "id": "q21",
+          "topSlug": "originals/talks/usage-based-pricing-yc",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/usage-based-pricing-yc",
+            "openclaw/chat/2026-04-22",
+            "openclaw/chat/2026-04-05",
+            "openclaw/chat/2026-04-15",
+            "originals/essays/agentic-workflows-overhyped"
+          ]
+        },
+        {
+          "id": "q22",
+          "topSlug": "originals/essays/vertical-saas-thesis",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/vertical-saas-thesis",
+            "openclaw/chat/2026-04-10",
+            "openclaw/chat/2026-04-22",
+            "openclaw/chat/2026-04-15",
+            "originals/talks/article-outline-fat-code"
+          ]
+        },
+        {
+          "id": "q23",
+          "topSlug": "originals/essays/vertical-saas-thesis",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/vertical-saas-thesis",
+            "openclaw/chat/2026-04-10",
+            "openclaw/chat/2026-04-15",
+            "openclaw/chat/2026-04-01",
+            "originals/essays/do-things-that-don-t-scale-revisited"
+          ]
+        },
+        {
+          "id": "q24",
+          "topSlug": "openclaw/chat/2026-04-22",
+          "targetRank": 2,
+          "chatBeforeTarget": 1,
+          "top_slugs": [
+            "openclaw/chat/2026-04-22",
+            "originals/essays/vertical-saas-thesis",
+            "openclaw/chat/2026-04-10",
+            "openclaw/chat/2026-04-15",
+            "openclaw/chat/2026-04-08"
+          ]
+        },
+        {
+          "id": "q25",
+          "topSlug": "originals/essays/foundation-models-as-utilities",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/foundation-models-as-utilities",
+            "openclaw/chat/2026-04-12",
+            "openclaw/chat/2026-04-17",
+            "openclaw/chat/2026-04-10",
+            "originals/essays/agentic-workflows-overhyped"
+          ]
+        },
+        {
+          "id": "q26",
+          "topSlug": "originals/essays/foundation-models-as-utilities",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/essays/foundation-models-as-utilities",
+            "openclaw/chat/2026-04-10",
+            "openclaw/chat/2026-04-12",
+            "openclaw/chat/2026-04-17",
+            "openclaw/chat/2026-04-08"
+          ]
+        },
+        {
+          "id": "q27",
+          "topSlug": "openclaw/chat/2026-04-12",
+          "targetRank": 3,
+          "chatBeforeTarget": 2,
+          "top_slugs": [
+            "openclaw/chat/2026-04-12",
+            "openclaw/chat/2026-04-17",
+            "originals/essays/foundation-models-as-utilities",
+            "openclaw/chat/2026-04-10",
+            "openclaw/chat/2026-04-01"
+          ]
+        },
+        {
+          "id": "q28",
+          "topSlug": "originals/talks/rag-pattern-anti-patterns",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/rag-pattern-anti-patterns",
+            "openclaw/chat/2026-04-17",
+            "openclaw/chat/2026-04-12",
+            "openclaw/chat/2026-04-03",
+            "originals/talks/article-outline-fat-code"
+          ]
+        },
+        {
+          "id": "q29",
+          "topSlug": "originals/talks/rag-pattern-anti-patterns",
+          "targetRank": 1,
+          "chatBeforeTarget": 0,
+          "top_slugs": [
+            "originals/talks/rag-pattern-anti-patterns",
+            "openclaw/chat/2026-04-17",
+            "openclaw/chat/2026-04-03",
+            "openclaw/chat/2026-04-12",
+            "originals/talks/article-outline-fat-code"
+          ]
+        },
+        {
+          "id": "q30",
+          "topSlug": "openclaw/chat/2026-04-17",
+          "targetRank": 2,
+          "chatBeforeTarget": 1,
+          "top_slugs": [
+            "openclaw/chat/2026-04-17",
+            "originals/talks/rag-pattern-anti-patterns",
+            "openclaw/chat/2026-04-12",
+            "openclaw/chat/2026-04-03"
+          ]
+        }
+      ],
+      "wallMs": 5
+    }
+  ],
+  "source_boost_effect": {
+    "top1_delta": 0.033333333333333326,
+    "top3_delta": 0,
+    "swamp_delta": -0.033333333333333326,
+    "queries_reranked": 23
+  },
+  "accounting": {
+    "n_total": 150,
+    "n_scored": 150,
+    "completion_rate": 1,
+    "errors": [],
+    "infra_error_rate": 0,
+    "run_invalid": false,
+    "publishable": true
+  }
+}

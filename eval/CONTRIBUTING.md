@@ -1,150 +1,77 @@
 # Contributing to BrainBench
 
-Three contribution paths. Each has a separate workflow.
+Useful contributions make it easier to tell when gbrain helps. You can contribute naturally worded questions, a competing search implementation, or a reproduction of a published result.
 
-## 1. Write Tier 5.5 externally-authored queries
+Work from the repository root. Install with `bun install --frozen-lockfile`, and run `bun run test` for the tests under `test/eval/`.
 
-Tier 5.5 exists to neutralize the "gbrain wrote its own exam" critique. The
-queries currently in the repo are AI-authored synthetic placeholders; real
-outside researcher submissions supersede them.
+## Write questions in your own words
 
-### Workflow
+The built-in “Tier 5.5” set contains 50 AI-authored placeholder questions. The name means externally authored questions; it does not mean those placeholders were submitted by independent researchers. Human submissions add wording the benchmark authors may not anticipate.
+
+First inspect the fictional world:
 
 ```sh
-# Step 1. Understand the canonical world.
 bun run eval:world:view
-# Browser opens. Click through entities. Note down what's real.
-
-# Step 2. Scaffold a query.
-bun run eval:query:new --tier externally-authored --author "@your-handle"
-# Prints a Query template. Save to a file.
-
-# Step 3. Edit the template.
-# - Replace text with your actual question
-# - Replace gold.relevant with slug(s) that actually exist
-# - If the query has temporal verbs (is/was/were/now/...), set as_of_date
-#   to "corpus-end", "per-source", or ISO-8601
-# - Fill in tags
-
-# Step 4. Validate before submitting.
-bun run eval:query:validate path/to/your-queries.json
-
-# Step 5. Submit a PR.
-# File location: eval/external-authors/<your-handle>/queries.json
-# PR template: .github/PULL_REQUEST_TEMPLATE/tier5-queries.md
+# Without a desktop browser:
+bun run eval:world:render
 ```
 
-### Query-authoring guidelines
+Then create and validate a question:
 
-- **Write like you'd naturally ask.** Don't adapt your voice to an "AI
-  benchmark style." Fragments, typos, comparisons, follow-ups, imperatives
-  — all welcome. Variety is the value.
-- **Gold must be real slugs.** Every slug in `gold.relevant` must exist in
-  `eval/data/world-v1/`. The validator checks format; you verify existence.
-- **Abstention is a valid answer.** If your query has no answer in the
-  corpus (e.g. you're asking about someone who isn't there), set
-  `expected_output_type: 'abstention'` and `gold.expected_abstention: true`.
-- **Temporal queries need `as_of_date`.** The validator will reject
-  "Where is Sarah now?" without it. Use `"corpus-end"` for "as of the most
-  recent data," `"per-source"` for "whatever the cited source says," or a
-  specific ISO date.
-- **Partial answers are OK** if you flag them via `known_failure_modes`.
+```sh
+bun run eval:query:new --tier externally-authored --author "@your-handle"
+bun run eval:query:validate path/to/your-queries.json
+```
 
-### Query quality bar
+The scaffolder prints JSON. Save it, replace the example text and page identifiers, and validate again. The validator accepts a single question, a JSON array, or an object with a `queries` array.
 
-We'll merge your PR if:
-- `bun run eval:query:validate` passes
-- Slugs resolve to real entities
-- At least 20 queries (one batch)
-- Queries have genuine phrasing variety
+A **slug** identifies a page, such as `people/alice-example`. A question's `gold.relevant` list is its answer key: the pages search should find. Verify that these pages exist in `eval/data/world-v1/`; correct slug syntax alone does not prove that.
 
-## 2. Submit an external adapter
+For time-sensitive wording, set `as_of_date` to `"corpus-end"`, `"per-source"`, or an ISO date. This makes “where does this person work?” answerable at a defined point in time. If the question has no answer in the corpus, use `expected_output_type: "abstention"` and `gold.expected_abstention: true`.
 
-The `Adapter` interface is `eval/runner/types.ts`. Three methods:
+Submit a batch of at least 20 questions at `eval/external-authors/<handle>/queries.json`. Use the [query PR template](../.github/PULL_REQUEST_TEMPLATE/tier5-queries.md). We review whether the questions validate, their answer pages exist, and their wording varies naturally. Use only the fictional world; do not contribute private notes or real personal data.
+
+## Add a search adapter
+
+An adapter ingests pages once, then returns a ranked list for each question. The current contract lives in [runner/types.ts](runner/types.ts):
 
 ```typescript
 interface Adapter {
   readonly name: string;
   init(rawPages: Page[], config: AdapterConfig): Promise<BrainState>;
-  query(q: Query, state: BrainState): Promise<RankedDoc[]>;
+  query(q: PublicQuery, state: BrainState): Promise<RankedDoc[]>;
   snapshot?(state: BrainState): Promise<string>;
+  teardown?(state: BrainState): Promise<void>;
 }
 ```
 
-### Workflow
+This excerpt shows the methods needed for a retrieval adapter; the source also defines optional poison-handling reporting. `BrainState` is opaque to the runner, so the adapter chooses its internal representation.
+
+The runner strips hidden facts and answer labels before calling the adapter. `PublicQuery` provides the question without its answer key or internal family metadata. Never read the gold directory or infer answers from benchmark identifiers. This boundary is enforced by types, sanitization and reviewed tests, not by a separate process sandbox.
+
+Implement the adapter under `eval/runner/adapters/`, then register it in `multi-adapter.ts`. Put tests under `test/eval/` so `bun run test` includes them. Test ingestion, useful ranked output and stable tie-breaking; mock API calls in unit tests.
+
+Results use ranks starting at 1 and contain no duplicate pages. Explain how equal scores are ordered. Implement `teardown` if the adapter holds a database, worker or file handle.
 
 ```sh
-# Step 1. Create your adapter file.
-#   eval/runner/adapters/my-adapter.ts
-
-# Step 2. Write it.
-#   - import types from '../types.ts'
-#   - export class MyAdapter implements Adapter { ... }
-#   - BrainState is opaque to the runner. Internal shape is yours.
-#   - `rawPages: Page[]` is all you get. Never read from gold/ — the
-#     runner doesn't give you that path on purpose.
-
-# Step 3. Write a unit test.
-#   eval/runner/adapters/my-adapter.test.ts
-#   Cover at minimum: init, query, deterministic tie-break.
-
-# Step 4. Wire into multi-adapter.ts.
-#   import { MyAdapter } from './adapters/my-adapter.ts';
-#   const allAdapters: Adapter[] = [
-#     ...existing,
-#     new MyAdapter(),
-#   ];
-
-# Step 5. Test locally.
 bun run test
-bun run eval:run:dev --adapter=my-adapter
-
-# Step 6. Open a PR.
+BRAINBENCH_N=1 bun eval/runner/multi-adapter.ts --adapter my-adapter --queries relational
 ```
 
-### Adapter quality bar
+Document the model, embedding dimensions, graph behavior, network use and any limits. An adapter name must describe the behavior that actually ran. A missing provider key must not silently turn a reranked comparison into ordinary hybrid search.
 
-- Deterministic over sorted input (stddev=0 across N=5 runs is the
-  expected default; non-zero is a signal worth understanding)
-- `query()` returns rank order — `rank: i + 1`, 1-based, no duplicates
-- Tie-breaks documented (e.g. "alphabetical by slug when scores tie")
-- No network calls in unit tests (mock any API dependencies)
-- Pass `bun run test`
+## Reproduce a result
 
-## 3. Reproduce / verify a published scorecard
+A report identifies two pieces of code: this repository's runner and the gbrain dependency it tested. Use the corresponding gbrain-evals revision, then install its pinned dependency. If the report used a local gbrain checkout, select the specified revision in that separate checkout before linking it.
 
-```sh
-# Step 1. Check the scorecard's commit hash.
-# Reports in docs/benchmarks/ include the gbrain version + commit.
+Run the report's exact command, including question family, top-k, model and settings. Current runner defaults may differ from the original run. Save the fresh receipt alongside the historical result under a new date.
 
-# Step 2. Pin the same commit.
-git checkout <commit-sha>
+A repeated deterministic result can match exactly. API-backed results can vary with model behavior, and measured latency varies by machine. Do not promise that a historical result without raw output can be recreated byte for byte.
 
-# Step 3. Run the full benchmark.
-bun run eval:run
+When reporting a discrepancy, include Bun version, operating system, both code identities, resolved model/settings, the command and the receipt. Exclude API keys and private content.
 
-# Step 4. Compare to the published scorecard.
-# For deterministic adapters, numbers should match exactly.
-# For embedding-based adapters, numbers should land within the published
-# tolerance bands (mean ± stddev).
-```
+## Documentation and credit
 
-If your numbers drift outside tolerance, file an issue with:
-- Your `bun --version`
-- Your `uname -sr`
-- Your OpenAI model ID (for embedding-model drift)
-- A diff of the scorecard
+Explain a feature with a concrete case before using its internal name. Keep measurements, benchmark inputs, frozen prompts and generated results intact. Use plain English and avoid em dashes. Commit prefixes such as `docs(eval):`, `fix(eval):` and `test(eval):` make the history easier to scan.
 
-## Code style
-
-- Match existing gbrain patterns (hand-rolled where appropriate, no new
-  deps unless genuinely needed)
-- Bun's built-in test runner (`bun:test`), not jest/vitest
-- No em dashes in prose (`—`, `–`); use parentheses or sentences
-- Commit messages: `feat(eval):`, `fix(eval):`, `docs(eval):`, `test(eval):`
-
-## Contributors
-
-See `eval/CREDITS.md` for the full list. All Tier 5.5 external-author
-submissions credited there + in the scorecard. Synthetic placeholders are
-labeled `synthetic-outsider-v1`.
+See [CREDITS.md](CREDITS.md) for attribution. Contributions to external questions and adapters should add the author's credit and clearly identify which material is synthetic.

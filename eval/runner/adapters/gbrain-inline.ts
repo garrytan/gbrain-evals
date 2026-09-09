@@ -27,8 +27,10 @@ import { runExtract } from 'gbrain/extract';
 import { hybridSearch } from 'gbrain/search/hybrid';
 import { importFromContent } from 'gbrain/import-file';
 import { configureGateway, diagnoseEmbedding } from 'gbrain/ai/gateway';
-import type { HybridSearchMeta } from 'gbrain/types';
+import type { HybridSearchMeta, SearchResult } from 'gbrain/types';
 import type { Adapter, AdapterConfig, BrainState, Page, PublicQuery, RankedDoc } from '../types.ts';
+import { pagesInResultOrder } from './page-results.ts';
+import { recordSearchObservation, searchObservation, type SearchObservedStats } from '../retrieval-pins.ts';
 
 export interface GbrainInlineOptions {
   /** Top-K page results returned per query. */
@@ -64,15 +66,19 @@ export function assertStubEmbedTransport(where: string): void {
 }
 
 /** Per-run observation counters, read back via observedStats() for receipts. */
-export interface InlineObservedStats {
-  /** Queries answered. */
+export interface InlineObservedStats extends SearchObservedStats {
+  /** Queries attempted, including failures retained in search_observations. */
   queries: number;
   /**
    * Queries whose hybridSearch result set carried a finite `rerank_score`.
    * gbrain's reranker is fail-open (a missing key silently measures plain
-   * hybrid), so a reranker-pinned cell with 0 here did NOT measure reranking.
+   * hybrid). Per-query observations distinguish a clean empty pool from a
+   * nonempty answer that bypassed the requested reranker.
    */
   rerank_scored_queries: number;
+  /** Present only when the product reports a reranker fallback. */
+  rerank_failed_queries?: number;
+  rerank_failures?: Array<{ query_id: string; reasons: string[] }>;
   /** Queries whose hybridSearch meta carried `keyword_arm_confidence` (the fused path composed a decision). */
   keyword_arm_confidence_stamped: number;
   /** Queries where that decision was `downweighted: true` (keyword + title lists fused at half weight). */
@@ -178,30 +184,29 @@ export class GbrainInlineAdapter implements Adapter {
   }
 
   async query(q: PublicQuery, state: BrainState): Promise<RankedDoc[]> {
-    const { engine, observed } = state as InlineState;
+    const { engine, observed, resolvedConfig } = state as InlineState;
     if (this.opts.expectStubTransport && observed.queries === 0) assertStubEmbedTransport('query');
     let meta: HybridSearchMeta | undefined;
-    const chunkResults = await hybridSearch(engine, q.text, { limit: this.opts.topK * 6, onMeta: (m) => { meta = m; } });
-    observed.queries += 1;
-    if (observed.queries % GC_EVERY_QUERIES === 0) gcNow();
-    if (chunkResults.some(r => Number.isFinite(r.rerank_score))) observed.rerank_scored_queries += 1;
-    const kacf = meta?.keyword_arm_confidence;
-    if (kacf) {
-      observed.keyword_arm_confidence_stamped += 1;
-      if (kacf.downweighted) observed.keyword_arm_confidence_downweighted += 1;
+    let relationalMeta: unknown;
+    let chunkResults: SearchResult[] = [];
+    let error: unknown;
+    try {
+      chunkResults = await hybridSearch(engine, q.text, {
+        limit: this.opts.topK * 6, onMeta: m => { meta = m; },
+        onRelationalMeta: m => { relationalMeta = m; },
+      });
+    } catch (err) {
+      error = err;
+      throw err;
+    } finally {
+      recordSearchObservation(observed, searchObservation({
+        query: q.text, queryId: q.id, results: chunkResults, meta, relationalMeta, error,
+        expectedReranker: resolvedConfig['search.reranker.enabled'] === undefined ? undefined : resolvedConfig['search.reranker.enabled'] === 'true',
+        expectedExpansion: resolvedConfig['search.expansion'] === undefined ? undefined : resolvedConfig['search.expansion'] === 'true',
+      }));
+      if (observed.queries % GC_EVERY_QUERIES === 0) gcNow();
     }
-    // Chunk → page normalization: keep the best chunk score per page so
-    // downstream metrics see page-grained, duplicate-free ids.
-    const pageBest = new Map<string, number>();
-    for (const r of chunkResults) {
-      const existing = pageBest.get(r.slug);
-      if (existing === undefined || r.score > existing) pageBest.set(r.slug, r.score);
-    }
-    return [...pageBest.entries()]
-      .map(([slug, score]) => ({ slug, score }))
-      .sort((a, b) => b.score - a.score || a.slug.localeCompare(b.slug))
-      .slice(0, this.opts.topK)
-      .map((p, i) => ({ page_id: p.slug, score: p.score, rank: i + 1 }));
+    return pagesInResultOrder(chunkResults, this.opts.topK);
   }
 
   /** The setConfig entries this run actually applied — put these in the receipt. */

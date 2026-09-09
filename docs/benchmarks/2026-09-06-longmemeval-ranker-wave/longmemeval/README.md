@@ -1,18 +1,26 @@
-# Receipts — LongMemEval ranker wave (2026-09-06)
+# Evidence from the September 6 ranking experiment
 
-Per-question rows from `gbrain eval longmemeval` (in-repo harness), compacted with `compact-harness-rows.py`
-(keeps question_id, type, strict/any hits, retrieved + gold session ids, search meta and the summary line; drops the
-full `retrieved[]` chunk rows and captured pools, which are 7 MB per arm).
+These files record the LongMemEval runs behind the [ranker-wave report](../../2026-09-06-longmemeval-ranker-wave.md). The report explains what changed and which settings earned a place in the defaults.
 
-- `A1-hybrid-rerank-off-autocut-off.ndjson` — parity arm (like-for-like with the 2026-09-02 receipt)
-- `A2-hybrid-rerank-on-autocut-off.ndjson` — reranker on, cross-check
-- `A3-hybrid-expansion-rerank-off-autocut-off.ndjson` — legacy expansion; `expansion_variants` recorded per row (the frozen variants every later expansion cell replays)
-- `A4-default-rerank-on-autocut-on.ndjson` — the default that shipped before this wave; the autocut replay source (`phaseC-autocut-floor-replay.md`)
-- `devslice40-budget*.ndjson` — the 40-question dev-slice budget sweep on A3's variants
-- `A3prime-*.ndjson`, `A3primeR-*.ndjson` — the Phase A decision arms at the picked budget
-- `phaseB-halfA-miss-diagnostics.md` — temporal/multi-session miss classes (half A of the decision set)
-- `ranker-wave-arms.json` — all arms in the `RunnerOutput` shape (`harness-to-runner-output.py`), charted by
-  `bun eval/runner/longmemeval-chart.ts ranker-wave-arms.json` → `ranker-wave-arms.headline.svg`, `ranker-wave-arms.per-type.svg`
+The per-question NDJSON files came from `gbrain eval longmemeval`, the harness in the gbrain repository. `compact-harness-rows.py` retained question IDs and types, strict and any-session hits, returned and expected session IDs, search metadata and the summary. It removed the full chunk rows and captured candidate pools, which occupied about 7 MB per arm. These files therefore preserve the scored decisions but not every intermediate piece of retrieved text.
 
-Reproduce any arm with the commands in the report's "How to reproduce" section; the embedding cache makes every arm
-after the first see byte-identical vectors.
+| Files | What they record |
+|---|---|
+| `A1-hybrid-rerank-off-autocut-off.ndjson` | Ordinary hybrid search, matching the September 2 comparison settings |
+| `A2-hybrid-rerank-on-autocut-off.ndjson` | The effect of enabling the reranker |
+| `A3-hybrid-expansion-rerank-off-autocut-off.ndjson` | The old query-expansion behavior; saved alternative phrasings are reused by later expansion runs |
+| `A4-default-rerank-on-autocut-on.ndjson` | The default before this change; source for replaying different result-cutoff thresholds |
+| `devslice40-budget*.ndjson` | A 40-question development sample used to choose an expansion-weight budget |
+| `A3prime-*.ndjson`, `A3primeR-*.ndjson` | The decision runs using that chosen budget |
+| `phaseB-halfA-miss-diagnostics.md` | A generated explanation of where temporal and multi-session questions lost their evidence |
+| `phaseC-autocut-floor-replay.md` | A generated replay of the result-cutoff rule |
+| `ranker-wave-arms.json` | Aggregated measurements in the chart generator's input format |
+
+The aggregate was converted with `harness-to-runner-output.py`. From the repository root, its charts can be generated with:
+
+```sh
+bun eval/runner/longmemeval-chart.ts \
+  docs/benchmarks/2026-09-06-longmemeval-ranker-wave/longmemeval/ranker-wave-arms.json
+```
+
+See the parent report for exact run commands and code identities. The shared embedding cache gave the comparison arms identical vectors. Preserve these historical files; a fresh run should receive its own dated output path.

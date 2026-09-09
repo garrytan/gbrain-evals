@@ -1,0 +1,208 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-09",
+  "gbrain_pin": "2efaaf8f8a817b5b82e023383618fdcdb1cc5f7d",
+  "bun_version": "1.3.10",
+  "checks": [
+    {
+      "command": "bun test test/eval/",
+      "status": "pass",
+      "passed": 1471,
+      "failed": 0,
+      "assertions": 18670,
+      "test_files": 69,
+      "elapsed_seconds": 345.59,
+      "note": "Complete suite after shipping fixes, new regression tests, and the harness-source archive. Figure whitespace normalization and this validation record were checked separately afterward."
+    },
+    {
+      "command": "python3 -m unittest discover -s test -p 'retrieval_refresh_orchestrator_test.py'",
+      "status": "pass",
+      "passed": 25,
+      "failed": 0
+    },
+    {
+      "command": "bunx tsc --noEmit",
+      "status": "dependency-diagnostics",
+      "exit_code": 2,
+      "repository_diagnostics": 0,
+      "dependency_diagnostics": 26,
+      "note": "All diagnostics are in node_modules. The existing CI gate for repository files passes; unrestricted TypeScript compilation does not."
+    },
+    {
+      "command": "bunx tsc --noEmit -p tsconfig.scripts.json",
+      "status": "pass",
+      "exit_code": 0
+    },
+    {
+      "command": "bun eval/runner/validate-data.ts",
+      "status": "pass",
+      "note": "All referential-integrity checks pass. Four pre-existing single-example stubs remain: entities, personalization-rubric, poison, and qrels."
+    },
+    {
+      "command": "bun run eval:query:validate",
+      "status": "pass",
+      "valid_queries": 80
+    },
+    {
+      "command": "bun scripts/generate-v0.41-launch.ts --check",
+      "status": "pass",
+      "captures": 12,
+      "mean_jaccard": 1.0,
+      "expected_top1_hit_rate": 1.0
+    },
+    {
+      "command": "timeout 180 bun eval/runner/adversarial.ts",
+      "status": "pass",
+      "operations": 133,
+      "crashes": 0,
+      "silent_corruption": 0
+    },
+    {
+      "command": "timeout 240 bun eval/runner/type-accuracy.ts",
+      "status": "pass",
+      "exit_code": 0,
+      "note": "Runner execution succeeded; its relationship classification scores remain descriptive measurements."
+    },
+    {
+      "command": "timeout 240 bun eval/runner/temporal.ts",
+      "status": "pass",
+      "exit_code": 0
+    },
+    {
+      "command": "timeout 180 bun eval/runner/identity.ts",
+      "status": "pass",
+      "exit_code": 0,
+      "note": "Runner execution succeeded. It still measures only 31.0% recall for undocumented aliases."
+    },
+    {
+      "command": "BRAINBENCH_N=1 bun eval/runner/multi-adapter.ts --adapter grep-only",
+      "status": "pass",
+      "note": "README starting command ran without provider calls."
+    },
+    {
+      "command": "python3 scripts/verify-published-longmemeval.py",
+      "status": "pass",
+      "saved_arms": 13,
+      "note": "Recounts stored retrieval rows and answer-judgment booleans. Missing answer strings prevent independent re-judging."
+    },
+    {
+      "command": "python3 scripts/summarize-retrieval-refresh.py",
+      "status": "pass",
+      "valid_selected_cells": 11,
+      "retained_attempts": 19,
+      "raw_artifact_hashes": 72,
+      "note": "Revalidates every attempt, selects latest complete valid attempt per planned cell, rejects missing/changed question sets. Summary and tables reproduce byte-for-byte."
+    },
+    {
+      "command": "python3 scripts/plot-retrieval-refresh.py",
+      "status": "pass",
+      "figures": 3,
+      "note": "Standalone SVGs rendered in Chrome and visually checked; regenerate byte-for-byte."
+    },
+    {
+      "command": "python3 scripts/correct-historical-chart-labels.py",
+      "status": "pass",
+      "figures": 4,
+      "note": "Corrected readable figure labels preserve historical data and the original images; regenerated SVG bytes match."
+    },
+    {
+      "command": "python3 scripts/verify-documentation-refresh.py",
+      "status": "pass",
+      "original_authored_documents": 42,
+      "documents_checked": 47,
+      "protected_inputs": 238,
+      "protected_generated_evidence": 79,
+      "tested_prompt_blocks": 3,
+      "note": "Local file targets and heading anchors checked. Separate audit against origin/main confirms all protected bytes and prompt fences, and retains 401 original numeric rows across 18 dated reports."
+    },
+    {
+      "command": "git diff --check && git diff --cached --check",
+      "status": "pass"
+    },
+    {
+      "command": "timeout 300 bun eval/runner/before-after.ts",
+      "status": "pass",
+      "exit_code": 0,
+      "note": "All gates passed."
+    },
+    {
+      "command": "timeout 300 bun eval/runner/mcp-contract.ts",
+      "status": "pass",
+      "exit_code": 0,
+      "assertions_passed": 24,
+      "assertions_total": 24,
+      "handlers_present": 136,
+      "handlers_total": 136
+    },
+    {
+      "command": "timeout 300 bun eval/runner/cat6-prose-scale.ts",
+      "status": "pass",
+      "exit_code": 0,
+      "variants": 250,
+      "precision": 1.0,
+      "recall": 1.0,
+      "type_match": 1.0,
+      "negative_controls_fired": 2
+    },
+    {
+      "command": "bun test test/eval/receipts-manifest.test.ts",
+      "status": "pass",
+      "covered_artifacts": 92,
+      "disclosed_gaps": 5,
+      "note": "Expanded manifest checks each covered artifact hash and declared JSON-pointer value. Includes this validation record."
+    }
+  ],
+  "budget": {
+    "ceiling_usd": 1000,
+    "reserved_usd": 475,
+    "gross_usage_estimate_usd": 0.7132559700000011,
+    "conservative_request_cost_usd": 4.793830530000011,
+    "api_attempts": 12835,
+    "requests_without_usage": 2
+  },
+  "editorial_review": {
+    "status": "pass",
+    "reviewer": "Separate documentation and evidence agent",
+    "builder_outcome": "Readers can understand why and when to evaluate gbrain, with workload-specific starting settings and visible tradeoffs.",
+    "researcher_outcome": "Fresh headline claims trace to methods, selected attempts, per-question rankings, settings, and paired gains/losses.",
+    "independent_checks": {
+      "concept_rows_recomputed": 3288,
+      "relationship_rows_recomputed": 870,
+      "baseline_repetitions_recomputed": 2379,
+      "precision_cases_per_arm": 77,
+      "precision_arms": 5,
+      "source_arms": 5,
+      "cost_events_recounted": true
+    },
+    "unresolved_substantive_issues": [],
+    "note": "Review is independent of the root writer, within the same agent team. It is not an independent lab replication or human judge calibration."
+  },
+  "limitations": [
+    "These are local validation results, not a remote CI run.",
+    "The receipt manifest pins artifact bytes and declared values; it does not parse all prose or prove every scorer correct.",
+    "Historical missing answer strings, original relational receipts, SkillOpt receipts, and release-stability receipts remain disclosed gaps.",
+    "Editorial review by a separate agent is not the unfinished human calibration of the historical Cat35 judge."
+  ],
+  "shipping_review": {
+    "status": "pass",
+    "reviewers": [
+      "Separate code review agent",
+      "Separate adversarial review agent",
+      "Separate plan and coverage review agent"
+    ],
+    "plan_items_done": 38,
+    "plan_items_total": 38,
+    "resolved_findings": [
+      "Multi-adapter failures omit the completed-run verdict from error receipts.",
+      "PrecisionMemBench failures omit the completed-run verdict from error receipts.",
+      "Think mode rejects enabled reranker and autocut controls without supported execution observations.",
+      "Saved report references remain valid after moving the checkout and cannot select decoy reports.",
+      "Relationship publication validates the full paired evidence and execution contract.",
+      "Interrupted reserved HTTP requests count as requests without reported usage."
+    ],
+    "moved_checkout_reproduction": "Passed with original checkout reads blocked and three decoy reports present; scores, settings, selected attempts, and costs matched.",
+    "measurement_harness_archive": "harness-source.json preserves the exact 17 measured source files and their launch fingerprint before shipping fixes.",
+    "saved_raw_receipts_unchanged": 19,
+    "new_provider_requests": 0
+  }
+}

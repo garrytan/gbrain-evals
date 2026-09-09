@@ -1,17 +1,18 @@
-## Tier 5.5 externally-authored queries
+## Externally authored questions
 
-<!-- Thanks for contributing queries! Tier 5.5 exists precisely to
-     neutralize the benchmark authors' blind spots — your phrasing is the
-     value. See eval/CONTRIBUTING.md for the full flow. -->
+<!-- Natural phrasing is the contribution. Use the fictional world and follow eval/CONTRIBUTING.md. -->
 
-**Handle:** <!-- matches eval/external-authors/<handle>/ -->
-**Query count:**
-**Validator output:** <!-- paste the tail of `bun run eval:query:validate eval/external-authors/<handle>/queries.json` -->
+**Author handle:** <!-- matches eval/external-authors/<handle>/ -->
+**Number of questions:** <!-- at least 20 -->
+**Validator result:** <!-- output of bun run eval:query:validate eval/external-authors/<handle>/queries.json -->
 
-### Checklist
+Briefly describe the kinds of questions in this batch and any ambiguous answers.
 
-- [ ] Every query validated with `bun run eval:query:validate` (zero errors)
-- [ ] Every slug in `gold.relevant` exists in `eval/data/world-v1/`
-- [ ] Queries are my own natural phrasing (not adapted to "benchmark style")
-- [ ] No real people, companies, or private data — placeholder world only
-- [ ] `author` field set on every query
+### Checks
+
+- [ ] Every question passes the validator.
+- [ ] Every page in `gold.relevant` exists in `eval/data/world-v1/`.
+- [ ] Time-sensitive questions specify `as_of_date`.
+- [ ] These are my own naturally worded questions.
+- [ ] The batch uses the fictional world and contains no private data.
+- [ ] Every question includes an `author` field.

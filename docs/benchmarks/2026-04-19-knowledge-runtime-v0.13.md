@@ -1,25 +1,14 @@
-# Knowledge Runtime v0.13 — Benchmark Deltas
+# Making a timeline searchable as soon as a page is saved
 
-What this branch actually changes, measured. All numbers are reproducible from
-the scripts in `test/`. No real-world traffic, no API keys, no private data.
+**Historical report: April 19, 2026.** Compared master v0.12.1 (`c0b6219`) with branch v0.13.0.0. All tests used synthetic data and in-process PGLite, without private data, external databases, API keys, or network calls.
 
-**Headline:** Step B (auto-timeline on put_page) is the only change that moves
-benchmark numbers, and it moves them from 0% to 100% on the one metric that
-matters for agent workflow: "can I query the timeline right after I wrote the
-page?"
+Before this change, saving a page through the operation API did not necessarily make its dated events available to timeline queries. A separate extraction step was needed. After the change, the fixture's **40 expected events were queryable immediately**, up from zero.
 
-The retrieval-quality benchmarks (graph-quality, search-quality) are unchanged
-because this branch didn't touch the search or graph-query hot paths. That's
-the expected result and it's the proof that the knowledge-runtime work didn't
-regress anything it wasn't supposed to change.
+The cost was additional write work. Average write latency rose from 2.00ms to 2.58ms. That is small in this test, but it is not free.
 
----
+## Write latency
 
-## Benchmark 1: put_page latency
-
-**Script:** `bun run test/benchmark-put-page-latency.ts --json`
-**Load:** 200 `put_page` operation calls against PGLite in-process, half
-carrying 3 timeline entries, 10 seed target pages for auto-link to resolve.
+The test made 200 `put_page` operation calls. Half the pages contained three timeline entries; ten seed pages supplied targets for automatic links. Script: `test/benchmark-put-page-latency.ts --json` in the historical gbrain checkout.
 
 |  | master (v0.12.1, c0b6219) | branch (v0.13.0.0) | Δ |
 |---|---:|---:|---:|
@@ -30,41 +19,22 @@ carrying 3 timeline entries, 10 seed target pages for auto-link to resolve.
 | max | 10.89 ms | 14.34 ms | +3.45 ms |
 | timeline entries extracted | **0** | **300** | +300 |
 
-**Read:** Step B adds ~0.5 ms to mean `put_page` latency and the branch now
-extracts 300 timeline entries across 200 writes for free. Master does zero.
-The absolute cost is invisible in any practical workflow. The p99 tail
-doubled (3.5 → 13.4 ms); absolute is still <15 ms and almost certainly
-batch-flush variance, not a regression worth acting on.
+The new path created 300 timeline entries. Median latency rose by 0.39ms and P95 by 1.01ms. P99 rose from 3.46ms to 13.44ms, nearly fourfold, not twofold. The original report suggested batch-flush variation as a cause, but did not isolate it. The measurements show the tail change; they do not establish its cause.
 
----
+## Can a user query what they just wrote?
 
-## Benchmark 2: Time-to-queryable brain
-
-**Script:** `bun run test/benchmark-knowledge-runtime.ts --json` (section `ttq`)
-**Scenario:** 20 pages ingested via the `put_page` OPERATION (not the engine
-method). 40 expected timeline entries across them. Immediately after ingest,
-query `engine.getTimeline(slug)` for each expected entry.
+The `ttq` part of `test/benchmark-knowledge-runtime.ts` wrote twenty pages through the operation API and immediately queried each page's timeline for forty expected events.
 
 |  | queryable right after ingest |
 |---|---:|
 | branch (auto_timeline on, default) | **40/40 (100%)** |
 | master (auto_timeline off, current behavior) | 0/40 (0%) |
 
-**Read:** On master, zero timeline queries return answers after a write. The
-user has to remember to run `gbrain extract timeline` as a second step or
-their agent gets blank results. On branch, every timeline query works the
-moment the page lands. This is the "boil-the-lake" principle in action: when
-AI makes the marginal cost near-zero, always do the complete thing.
+This is a concrete improvement in the write workflow: an agent can save a dated note and ask about that date without remembering a second command. It says nothing about whether every date in arbitrary prose will be extracted correctly.
 
----
+## Repair decisions with a simulated resolver
 
-## Benchmark 3: Integrity repair rate (mocked resolver)
-
-**Script:** `bun run test/benchmark-knowledge-runtime.ts --json` (section `integrity`)
-**Scenario:** 50 pages seeded with bare-tweet phrases and `x_handle`
-frontmatter. Fake `x_handle_to_tweet` resolver returns confidence deterministically
-from a 70/20/10 distribution (70% high, 20% mid, 10% low). Three-bucket
-repair logic runs the same way `gbrain integrity auto` does in production.
+The integrity test supplied fifty pages with social-post phrases and `x_handle` metadata. Its fake resolver was deliberately programmed to return 70% high-confidence, 20% medium-confidence, and 10% low-confidence matches.
 
 |  | count | % |
 |---|---:|---:|
@@ -72,22 +42,11 @@ repair logic runs the same way `gbrain integrity auto` does in production.
 | review queue (0.5 ≤ c < 0.8) | 10 | 20% |
 | skip (c < 0.5) | 5 | 10% |
 
-**Read:** Master has no integrity repair at all — this feature is new in
-v0.13. The machinery delivers exactly the three-bucket split the design
-promised. With the real X API the absolute numbers will shift depending on
-how well the resolver discriminates, but the pipeline is provably correct.
-Zero phrases slip through without a confidence-bucketed decision.
+A score of at least 0.8 triggered automatic repair; 0.5–0.8 sent the item for review; lower scores skipped it. Getting 35/10/5 verifies the routing rules against the fake inputs. It does not measure the accuracy of a real API resolver or show that its confidence scores are calibrated.
 
----
+## What the health check found
 
-## Benchmark 4: Doctor signal completeness
-
-**Script:** `bun run test/benchmark-knowledge-runtime.ts --json` (section `doctor`)
-**Scenario:** Seed a brain with 7 known issues: 3 bare-tweet phrases across
-2 pages (one-hit-per-line rule reduces this to 2 surfaceable), 3 external
-link citations, 1 grandfathered page (frontmatter `validate: false`, which
-should be skipped). Run the `scanIntegrity` helper that doctor now invokes
-in non-fast mode.
+The doctor test planted seven issues: three social-post phrases over two pages, three external-link citations, and one page with `validate: false` that should be skipped. The scanner reports at most one phrase issue per line.
 
 |  | count |
 |---|---:|
@@ -99,21 +58,11 @@ in non-fast mode.
 | external links caught | 3/3 |
 | grandfathered page respected | 1/1 |
 
-**Read:** Master's `gbrain doctor` catches zero of these — doctor had no
-integrity awareness before this branch. Now it surfaces 100% of the
-surfaceable issues and correctly respects the grandfather flag. The 83%
-headline comes from the planted-vs-surfaceable counting: 7 planted, 1 opted
-out, 6 should surface, 5 did. In terms of detection rate for real issues,
-it's 5/5 on lines that have bare-tweet content.
+The recorded table says five of six expected issues surfaced, or 83%. The accompanying procedure counts two reportable phrase lines plus three external links, which gives five reportable items and five found. These are different denominators. Keep the original table, but describe the result as “all five reportable lines/links found, with one opted-out page respected,” rather than claiming an unexplained universal 100% completeness rate.
 
----
+## Checks that stayed the same
 
-## Benchmarks that did NOT move (proof of no regression)
-
-### Graph quality benchmark
-
-**Script:** `bun run test/benchmark-graph-quality.ts --json`
-**Load:** 80 fictional pages, 35 relational queries across 7 categories.
+The graph test used eighty fictional pages and thirty-five relationship questions across seven categories:
 
 | metric | master | branch | Δ |
 |---|---:|---:|---|
@@ -127,16 +76,9 @@ it's 5/5 on lines that have bare-tweet content.
 | idempotent_links | true | true | = |
 | idempotent_timeline | true | true | = |
 
-**Read:** Identical. The benchmark uses `engine.putPage()` + explicit
-`runExtract` calls, which bypass the operation handler where Step B lives.
-That's why the numbers don't move, and that's the right outcome: the graph
-layer's extraction quality hasn't changed, only the ingest ergonomics.
+Those values were identical across versions. The test called `engine.putPage()` and explicit extraction, bypassing the operation handler changed here. It is a useful check on the paths exercised, not proof that every other feature was unaffected. “Idempotent” means that repeating extraction did not add duplicates.
 
-### Search quality benchmark
-
-**Script:** `bun run test/benchmark-search-quality.ts`
-**Load:** 30 pages, 20 queries with graded relevance. Modes A (baseline),
-B (boost only), C (boost + intent classifier).
+The search test used thirty pages, twenty graded questions, and three settings: baseline, boost only, and boost plus intent classification.
 
 | metric | A (baseline) | B (boost) | C (full) | Δ master→branch |
 |---|---:|---:|---:|---|
@@ -145,12 +87,11 @@ B (boost only), C (boost + intent classifier).
 | MRR | 0.974 | 0.939 | 0.974 | 0 |
 | nDCG@5 | 1.191 | 1.028 | 1.069 | 0 |
 
-**Read:** Identical across all three modes. Search scoring is decided by
-vector-grep-rrf-fusion search + RRF + dedup, none of which this branch touched.
+The historical nDCG values above exceed 1.0. A correctly normalized nDCG is bounded by 1.0, so these values should be retained only as historical output, not interpreted as valid normalized quality scores. The unchanged table records what the old helper emitted.
 
----
+## Reproduction and historical summary
 
-## Reproducing these numbers
+The four original scripts completed in under thirty seconds combined:
 
 ```bash
 # From this branch
@@ -168,12 +109,7 @@ bun run test/benchmark-graph-quality.ts --json
 bun run test/benchmark-search-quality.ts
 ```
 
-All four scripts run in-process against PGLite. No network, no external DB,
-no API keys. They complete in under 30 seconds combined.
-
----
-
-## Bottom line
+The original summary is preserved here. Read “free,” “100%,” and “unchanged” with the measurement limits explained above.
 
 | benchmark | moves? | direction |
 |---|---|---|
@@ -184,7 +120,4 @@ no API keys. They complete in under 30 seconds combined.
 | graph quality | no | unchanged, as designed |
 | search quality | no | unchanged, as designed |
 
-The branch does what it said it would do. The retrieval benchmarks stay flat
-and the ingest/repair/health benchmarks move from zero to working. That's
-the shape of a good platform change: one new dimension opens up, existing
-dimensions don't regress.
+The useful result is immediate availability of extracted dates after a page write. Repair accuracy with a real resolver, wider prose coverage, and the write-latency tail each need their own measurements.

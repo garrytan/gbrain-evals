@@ -1,0 +1,48 @@
+  Setting up brain schema (v145)...
+  v142: takes.embedding resized to vector(1280); existing take vectors cleared
+  140 migration(s) applied
+
+# PrecisionMemBench — gbrain (gbrain-keyword-body-text)
+
+Seeded: 35 beliefs (4 superseded beliefs seeded LIVE — gbrain must exclude them itself)
+Cases:  77  |  embed: OFF (keyword-only)
+
+  mean precision : 0.1361
+  mean recall    : 0.1744
+  pass rate      : 34/77 (0.4416)
+  active passes  : 5
+  passTypes      : active=5 structural=20 triviallyEmpty=9
+  p50 latency    : 2.47ms
+
+## vs published leaderboard (mean precision)
+
+| System | Precision | Active | Pass |
+|--------|-----------|--------|------|
+| tenure (author)      | 1.000 | 43 | 77/77 |
+| supermemory          | 0.430 | 17 | 44/77 |
+| agentmemory          | 0.170 |  0 | 7/77 |
+| yourmemory           | 0.170 |  0 | 21/77 |
+| atomicmemory         | 0.150 |  0 | 9/77 |
+| >> gbrain (gbrain-keyword-body-text) | 0.136 |  5 | 34/77 |
+| zep                  | 0.090 |  0 | 9/77 |
+| vector baseline      | 0.088 |  0 | 9/77 |
+| mem0                 | 0.056 |  0 | 9/77 |
+
+## per-category mean precision
+
+  Alias resolution                   3/23  prec=0.0909  recall=0.0909
+  Scope disambiguation               9/12  prec=0.4667  recall=0.625
+  Fuzzy matching and prefix guards   2/7  prec=0  recall=0
+  Type routing and open questions    2/6  prec=0  recall=0
+  Design boundary cases              5/6  prec=0  recall=0
+  Budget eviction and capacity       4/5  prec=0.5  recall=0.5
+  Persona prelude content            3/4  prec=0  recall=—
+  Relation expansion                 0/4  prec=0.3333  recall=0.5
+  Supersession chain exclusion       3/3  prec=—  recall=—
+  Ranking stability                  1/3  prec=0  recall=0
+  Counter-signal retrieval           0/2  prec=0  recall=0
+  Cross-user isolation               1/1  prec=0  recall=—
+  Cold start behavior                1/1  prec=—  recall=—
+
+Report:  /home/vercel-sandbox/gbrain-evals/docs/benchmarks/2026-09-09-retrieval-refresh/precision-keyword/attempt-2/2026-09-09-gbrain-keyword-body-text.json
+Receipt: /home/vercel-sandbox/gbrain-evals/docs/benchmarks/2026-09-09-retrieval-refresh/precision-keyword/attempt-2/receipt.json (run_status=completed verdict=pass)

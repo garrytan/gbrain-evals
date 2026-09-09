@@ -1,47 +1,35 @@
 # BrainBench credits
 
-## Core team
+BrainBench combines project-authored tests, public benchmark material and comparison implementations. Attribution matters because a test written by a project's authors supplies different evidence from an independent submission.
 
-- **garrytan** — BrainBench v1 + v1.1 architecture, adapter interface,
-  extraction regex residuals (v0.10.5), multi-axis type-accuracy runner
-- **Claude Opus 4.7** — pair programming, test coverage, documentation
+## Project work
 
-## External query authors (Tier 5.5)
+- **garrytan:** BrainBench v1 and v1.1 architecture, adapter interface, extraction work at v0.10.5, and the per-link-type accuracy runner.
+- **Claude Opus 4.7:** pair programming, tests and documentation.
 
-No human external authors yet. The Tier 5.5 query set currently comprises
-50 synthetic queries labeled `author: "synthetic-outsider-v1"` as a
-placeholder. Real submissions via `eval/external-authors/<handle>/queries.json`
-PRs supersede synthetic entries.
+## Questions and adapters
 
-**Want to be credited here?** See `eval/CONTRIBUTING.md`.
+There are no human external query contributors recorded here yet. The 50 built-in Tier 5.5 questions use `author: "synthetic-outsider-v1"`; they are AI-authored placeholders, not independent researcher submissions. See [CONTRIBUTING.md](CONTRIBUTING.md) to contribute a question batch.
 
-## External adapters
+The four current comparison adapters were implemented within this project:
 
-No third-party adapters yet. The shipping adapter set:
+| Adapter | Role |
+|---|---|
+| `gbrain` | The graph-based relational system under test |
+| `vector-grep-rrf-fusion` | gbrain's hybrid search with graph traversal disabled |
+| `grep-only` | BM25 keyword-ranking baseline |
+| `vector` | Vector-similarity baseline using the same embedding model |
 
-- `gbrain` — gbrain v0.10.3+ (internal; the system under test)
-- `vector-grep-rrf-fusion` — gbrain vector-grep-rrf-fusion search with graph layer disabled
-  (internal comparator; closest apples-to-apples to `gbrain`)
-- `grep-only` — classic IR baseline built in an afternoon
-- `vector` — commodity vector RAG, same embedder as gbrain
+These are useful controls, but they are not third-party implementations submitted by competing vendors. External adapters should record their author and implementation assumptions here.
 
-Third-party submissions (supermemory, Letta, Cognee, etc.) via
-`eval/runner/adapters/<adapter>.ts` PRs. See `eval/CONTRIBUTING.md` for
-the adapter interface and submission flow.
+## Data and upstream work
 
-## Data
+The committed `eval/data/world-v1/` corpus contains 240 fictional entities. Claude Opus wrote the generated prose. Its historical one-time generation cost was approximately $3.14; that is a recorded cost, not a current regeneration quote.
 
-- Corpus generator: Claude Opus
-- Canonical world: `eval/data/world-v1/` (committed, 240 entities)
-- Generation cost: ~$3.14 USD (one-time)
+The [PrecisionMemBench attribution](precisionmembench/ATTRIBUTION.md) names the upstream author, license, pinned revision and local adaptations. Other external benchmark sources are identified in their individual reports.
 
-## Inspiration
+## Influences
 
-- **SWE-bench** — taught us that a benchmark's credibility comes from real
-  baselines, not from the authoring team saying nice things about their
-  own stack
-- **Codex** — cold-read critique that "this isn't a standard, it's an
-  internal test" drove the Phase 2 external-baselines work that became
-  the headline of this PR
-- **MTEB** — embedding-model reproducibility card pattern; we copy the
-  "pin every version in every scorecard" discipline
+**SWE-bench** helped establish the value of real comparison baselines. **MTEB** supplied a useful pattern for identifying models and versions in an experiment.
+
+A **Codex** review challenged whether the early suite established anything beyond an internal test. That critique prompted the external-baseline work. The resulting controls make it easier for another engineer to decide what the evidence does and does not show.

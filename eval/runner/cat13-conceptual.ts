@@ -103,6 +103,7 @@ import { loadOverridesFromConfig, resolveSearchMode, KNOBS_HASH_VERSION } from '
 import { RipgrepBm25Adapter } from './adapters/grep-only.ts';
 import { VectorOnlyAdapter } from './adapters/vector.ts';
 import { HybridNoGraphAdapter } from './adapters/vector-grep-rrf-fusion.ts';
+import { observedSearchFailures, type SearchObservedStats, type SearchObservation } from './retrieval-pins.ts';
 import { GbrainInlineAdapter } from './adapters/gbrain-inline.ts';
 import type { EvalAdapterConfig } from './eval-adapter-config.ts';
 import type { Adapter, Page, Query, RankedDoc } from './types.ts';
@@ -891,9 +892,10 @@ export interface SubsetScore {
 }
 
 /** What a gbrain-backed adapter observed while answering (see GbrainInlineAdapter.observedStats). */
-export interface ObservedStats {
+export interface ObservedStats extends SearchObservedStats {
   queries: number;
   rerank_scored_queries: number;
+  rerank_failed_queries?: number;
   /** Phase E2: queries whose hybridSearch meta carried `keyword_arm_confidence` (the fused path ran). */
   keyword_arm_confidence_stamped?: number;
   /** Phase E2: queries where the keyword + title lists fused at half weight (`downweighted: true`). */
@@ -923,6 +925,14 @@ export interface AdapterScore {
   /** gbrain's live gateway embedder right after this adapter's init() — proves every arm shares one space. */
   gatewayAfterInit?: { model: string; dims: number };
   observed?: ObservedStats;
+  /** Stable question IDs and final page order for paired comparisons and case studies. */
+  per_query: Array<{
+    index: number; id: string; text: string; template: string;
+    subset: ProbeSubset | 'all'; graded_gold: Record<string, number>;
+    ranked_pages: RankedDoc[]; ndcg5: number; p5_graded: number; p1_strict: number;
+    error?: string;
+    search_observation?: SearchObservation;
+  }>;
 }
 
 interface Accum {
@@ -1001,15 +1011,19 @@ export async function scoreAdapter(
   const holdout = newAccum();
   let mixed = 0;
   let unassigned = 0;
+  const perQuery: AdapterScore['per_query'] = [];
 
-  for (const probe of probes) {
+  for (const [index, probe] of probes.entries()) {
     const probeId = `${adapter.name}:${probe.q.id}`;
     const grades = gradesByQuery.get(probe.q.id)!;
     let ndcg = 0;
     let p5 = 0;
     let p1 = 0;
+    let rankedPages: RankedDoc[] = [];
+    let error: string | undefined;
     try {
       const results: RankedDoc[] = await adapter.query(sanitizeQuery(probe.q), state);
+      rankedPages = results.slice(0, TOP_K);
       const ids = results.map(r => r.page_id);
       const rawNdcg = ndcgAtK(ids, grades, TOP_K);
       ndcg = Number.isNaN(rawNdcg) ? 0 : rawNdcg;
@@ -1021,10 +1035,17 @@ export async function scoreAdapter(
       // The system under test failed the probe: scored 0 (miss), kept in the
       // denominator (probe-accounting sut policy).
       acc.error(probeId, 'sut', String(err));
+      error = String(err);
       ndcg = 0;
       p5 = 0;
       p1 = 0;
     }
+    perQuery.push({
+      index, id: probe.q.id, text: probe.q.text, template: probe.template,
+      subset: opts.split ? probeSubset(probe, opts.split) : 'all',
+      graded_gold: Object.fromEntries(grades), ranked_pages: rankedPages,
+      ndcg5: ndcg, p5_graded: p5, p1_strict: p1, ...(error ? { error } : {}),
+    });
     addToAccum(overall, probe.template, ndcg, p5, p1);
     if (opts.split) {
       switch (probeSubset(probe, opts.split)) {
@@ -1039,6 +1060,11 @@ export async function scoreAdapter(
   const hooks = adapter as unknown as EchoingAdapter;
   const resolvedConfig = typeof hooks.resolvedConfig === 'function' ? hooks.resolvedConfig(state) : undefined;
   const observed = typeof hooks.observedStats === 'function' ? hooks.observedStats(state) : undefined;
+  const observationsById = new Map(observed?.search_observations?.map(o => [o.query_id, o]));
+  for (const row of perQuery) {
+    const observation = observationsById.get(row.id);
+    if (observation) row.search_observation = observation;
+  }
 
   if (adapter.teardown) await adapter.teardown(state);
 
@@ -1051,6 +1077,7 @@ export async function scoreAdapter(
     byTemplate: all.byTemplate,
     probesScored: probes.length,
     wallMs: Date.now() - t0,
+    per_query: perQuery,
     ...(opts.split ? {
       splits: {
         seed: opts.split.seed,
@@ -1374,10 +1401,21 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
 
   log(`## Running adapters\n`);
   const results: AdapterScore[] = [];
+  let executionIncomplete = false;
   for (const { adapter: a, initConfig } of plans) {
     log(`- ${a.name} ...`);
     try {
       const r = await scoreAdapter(a, pages, probes, gradesByQuery, acc, { initConfig, split });
+      if (GBRAIN_BACKED_ADAPTERS.has(a.name)) {
+        const failures = observedSearchFailures(r.observed, probes.length);
+        if (failures.length) {
+          executionIncomplete = true;
+          for (const failure of failures) {
+            acc.error(`${a.name}:${failure.query_id}`, 'dependency', `search incomplete: ${failure.reasons.join(', ')}`);
+          }
+          log(`  SEARCH INCOMPLETE: ${failures.length} query execution/observation failures; scores are diagnostic only.`);
+        }
+      }
       log(`  done (${(r.wallMs / 1000).toFixed(1)}s). nDCG@5=${(r.ndcg5 * 100).toFixed(1)}%, P@5(graded)=${(r.p5_graded * 100).toFixed(1)}%, P@1(strict)=${(r.p1_strict * 100).toFixed(1)}%`);
       if (r.gatewayAfterInit && (r.gatewayAfterInit.model !== embedder.model || r.gatewayAfterInit.dims !== embedder.dims)) {
         // The adapter reconfigured the gateway away from the run's embedder:
@@ -1389,16 +1427,16 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
         log(`  EMBEDDER DRIFT: ${r.gatewayAfterInit.model}@${r.gatewayAfterInit.dims} != ${embedder.model}@${embedder.dims}`);
       }
       if (pins.reranker === 'on' && GBRAIN_BACKED_ADAPTERS.has(a.name) && r.observed
-        && r.observed.queries > 0 && r.observed.rerank_scored_queries === 0) {
+        && r.observed.queries > 0 && (r.observed.rerank_failed_queries ?? 0) > 0) {
         // Same shape as longmemeval's rerank_missing_score: the pin said
         // "reranker on" but no result carried a rerank_score — the fail-open
         // reranker measured plain hybrid. Harness error on every probe of the
         // arm so the run is invalid, never a quiet "reranker on" row.
         for (const p of probes) {
           acc.error(`${a.name}:${p.q.id}`, 'harness',
-            `rerank_missing_score: search.reranker.enabled pinned 'true' for ${a.name} but no result carried rerank_score`);
+            `rerank_incomplete: ${a.name} scored ${r.observed.rerank_scored_queries}/${r.observed.queries} queries; failed ${r.observed.rerank_failed_queries ?? 0}`);
         }
-        log(`  RERANKER DID NOT FIRE: 0/${r.observed.queries} queries carried rerank_score`);
+        log(`  RERANKER INCOMPLETE: ${r.observed.rerank_failed_queries}/${r.observed.queries} queries failed.`);
       }
       if (floorIsNumeric && GBRAIN_BACKED_ADAPTERS.has(a.name) && r.observed && r.observed.queries > 0) {
         // Phase E2, same shape as rerank_missing_score: the pin said "floor
@@ -1541,6 +1579,7 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
     gateway_after_init_by_adapter: Object.fromEntries(results.map(r => [r.name, r.gatewayAfterInit ?? null])),
     search_config_by_adapter: Object.fromEntries(results.map(r => [r.name, r.resolvedConfig ?? null])),
     observed_by_adapter: Object.fromEntries(results.map(r => [r.name, r.observed ?? null])),
+    execution_incomplete: executionIncomplete,
     concept_split: conceptSplitRecord,
     adapters_run: results.map(r => r.name),
   };
@@ -1560,10 +1599,11 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
       holdout: r.splits?.holdout.byTemplate ?? null,
     }])),
     template_counts: templateCounts,
+    per_query: Object.fromEntries(results.map(r => [r.name, r.per_query])),
     report_file: reportFile,
   };
 
-  if (summary.run_invalid) {
+  if (summary.run_invalid || executionIncomplete) {
     const receipt: Receipt = {
       ...baseReceipt(),
       run_status: 'error',
@@ -1576,7 +1616,7 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
       data,
     };
     writeReceipt(receiptFile, receipt);
-    console.error(`[cat13] RUN INVALID — infra error rate ${(summary.infra_error_rate * 100).toFixed(1)}% over cap`);
+    console.error(`[cat13] RUN INVALID — ${executionIncomplete ? 'search execution incomplete' : `infra error rate ${(summary.infra_error_rate * 100).toFixed(1)}% over cap`}`);
     return { receipt, results, exitCode: 3 };
   }
 

@@ -1,27 +1,14 @@
-# Production Benchmark: Minions vs OpenClaw Sub-agents (Real Deployment)
+# Running a known import as a job instead of an agent task
 
-**Date:** 2026-04-18
-**Environment:** Wintermute on Render (ephemeral container, Supabase Postgres)
-**GBrain:** v0.11.0 (minions-jobs branch)
-**OpenClaw:** 2026.4.10
-**Brain:** 45,798 pages, 98K chunks, 25K links, 79K timeline entries
-**Task:** Pull and ingest one month of social posts from an external API into the brain
+**Historical run: April 18, 2026.** Wintermute on Render, ephemeral container, Supabase Postgres. GBrain v0.11.0 on `minions-jobs`; OpenClaw 2026.4.10. The brain contained 45,798 pages, 98K chunks, 25K links, and 79K timeline entries.
 
-## Context
+The import steps were already known: fetch a month of social posts, write a Markdown page, commit it, and queue a sync. A model did not need to decide what to do. In this single production attempt, the scripted path reached the queued-sync stage in **753ms**, while the subagent spawn timed out after more than **10,000ms**.
 
-This is a **production benchmark**, not a lab test. The existing lab benchmark
-([2026-04-18-minions-vs-openclaw-subagents.md](2026-04-18-minions-vs-openclaw-subagents.md))
-uses trivial prompts on localhost Postgres. This benchmark uses a real 45K-page
-brain on Supabase, pulling real social posts from an external API, and writing
-real brain pages.
+This complements the [local dispatch experiment](2026-04-18-minions-vs-openclaw-subagents.md). It is a record of one deployment and one failed spawn, not a general reliability rate for OpenClaw.
 
-## The Task
+## The completed path
 
-Pull a month (May 2020) of my social posts from an external API, parse them
-into a structured brain page with frontmatter, engagement metrics, and
-links, commit to the brain repo, and submit a sync job to gbrain.
-
-## Method 1: Minions (deterministic pipeline)
+The scripted path imported May 2020: 99 posts fetched, one page written and committed, and a sync job queued. The 753ms measurement stops at queue submission; it does not time completion of the background sync.
 
 ```bash
 # 1. Pull posts from the external API (curl → JSON)
@@ -39,17 +26,11 @@ cd /data/brain && git add media/social/2020-05.md && git commit -m "archive: 202
 gbrain jobs submit sync --params '{"repo":"/data/brain","noPull":true}'
 ```
 
-**Result: 753ms total.** 99 posts pulled, page written, committed, sync job queued.
+The approximate breakdown was 300ms for the external API, 50ms to parse and write, 100ms for the commit, and 300ms to submit the job. LLM-token cost was $0.00. That excludes API, hosting, and database costs.
 
-Breakdown:
-- External API call: ~300ms
-- Python parse + write: ~50ms
-- Git commit: ~100ms
-- gbrain jobs submit: ~300ms
+## The failed spawn
 
-Cost: $0.00 (no LLM tokens)
-
-## Method 2: OpenClaw Sub-agent (sessions_spawn)
+The agent request used June 2020, so the two attempts did not fetch the same month:
 
 ```javascript
 sessions_spawn({
@@ -60,23 +41,13 @@ sessions_spawn({
 })
 ```
 
-**Result: GATEWAY TIMEOUT (>10,000ms).** The sub-agent could not even spawn
-within the 10-second gateway timeout. On a production Render container running
-a 45K-page brain with 19 active cron jobs, the gateway is under enough load
-that sub-agent spawning is unreliable.
+The gateway exceeded its ten-second timeout before the task started. The container also had 19 active cron jobs. Load is a plausible explanation; this one attempt does not isolate the cause.
 
-When sub-agents DO successfully spawn (off-peak), the expected path is:
-1. Gateway receives spawn request (~500ms)
-2. Create session, load context (~2-3s) — AGENTS.md, SOUL.md, skills, memory
-3. Model reads task, plans approach (~2-3s)
-4. Model calls `exec` tool for curl (~1s)
-5. Model calls `exec` tool for python (~1s)
-6. Model calls `exec` tool for git (~1s)
-7. Model reports result (~1s)
+The original report estimated a successful off-peak agent invocation at 10–15 seconds and about $0.03 in tokens: roughly 500ms to receive the request, 2–3 seconds for session setup, 2–3 seconds for model planning, and about one second each for fetch, parse, commit, and reporting. Those are estimates, not measurements from the failed attempt.
 
-**Estimated: 10-15s + ~$0.03 in tokens per invocation**
+## Recorded comparison
 
-## Comparison
+The table preserves the original figures and deployment descriptions. “100%” and “0%” mean one successful scripted attempt and one failed spawn. Memory, retry, and persistence entries describe the tested architecture; they were not all separately measured here. The subagent token estimate is not a charge observed for the timed-out attempt.
 
 | Metric | Minions | Sub-agent |
 |--------|---------|-----------|
@@ -91,36 +62,12 @@ When sub-agents DO successfully spawn (off-peak), the expected path is:
 | **Results persisted** | job record | lost on compaction |
 | **Memory** | ~2MB per in-flight job | ~80MB per spawned session |
 
-## The Scaling Story
+A persistent queue keeps work in Postgres so another worker can claim it after a restart. In this version, claims used `FOR UPDATE SKIP LOCKED` to keep workers from taking the same job. Agent-session behavior depends on the execution mode; the table's broad labels should not be applied to every OpenClaw deployment.
 
-We pulled 19,240 posts across 36 months (2021-2023) using the Minions
-approach in a single bash loop. Total time: ~15 minutes. Cost: $0.00 in
-LLM tokens.
+## What the longer backfill tells us
 
-The same task via sub-agents would require 36 spawns × ~$0.03 = ~$1.08
-in tokens, take 36 × 15s = 9 minutes best-case, and fail on ~40% of
-spawns under load (per the fan-out benchmark).
+The scripted path also pulled 19,240 posts across 36 months (2021–2023) in about 15 minutes with no LLM-token spend. The original extrapolation for agents was 36 × $0.03 = $1.08, and 36 × 15 seconds = nine minutes before retries. Its roughly 40% failure assumption came from a separate fan-out experiment. It is not a measured 36-month agent run.
 
-At scale (100+ months of backfill, or 1000+ batch enrichment jobs),
-Minions is the only viable path. Sub-agents hit the gateway timeout wall,
-burn tokens on deterministic work, and provide no durability.
+These figures support putting repeatable imports in code. They do not prove that every workload with 100+ months or 1,000+ jobs requires this queue, or that the same failure rate would persist after tuning.
 
-## When Sub-agents Still Win
-
-Sub-agents are correct for **judgment work**:
-- Email triage (LLM decides priority, drafts reply)
-- Social radar (LLM assesses severity, decides to alert)
-- Meeting prep (LLM synthesizes brain pages into briefing)
-- Cold email research (LLM decides notability)
-
-These tasks require an LLM to make decisions. Minions can't do that —
-its handlers are code, not models. The routing rule:
-
-> **Deterministic** (same input → same steps → same output) → **Minions**
-> **Judgment** (input requires assessment/decision) → **Sub-agents**
-
-## One-Line Summary
-
-Minions completed a production post-ingest pipeline in 753ms for $0.
-Sub-agents couldn't even spawn. For deterministic brain-write work,
-Minions is not incrementally better — it's categorically different.
+Use an agent when deciding is part of the work: prioritizing email, judging whether news deserves an alert, preparing a meeting brief, or researching a prospective contact. Use a persistent job for a known sequence of operations. An agent can choose a job and let the job execute it.

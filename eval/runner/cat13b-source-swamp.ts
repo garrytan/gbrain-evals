@@ -71,6 +71,7 @@ import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
 import { RipgrepBm25Adapter } from './adapters/grep-only.ts';
 import { VectorOnlyAdapter } from './adapters/vector.ts';
 import { HybridNoGraphAdapter } from './adapters/vector-grep-rrf-fusion.ts';
+import { observedSearchFailures, type SearchObservedStats, type SearchObservation } from './retrieval-pins.ts';
 import { GbrainInlineAdapter } from './adapters/gbrain-inline.ts';
 
 export const TOP_K = 5;
@@ -328,6 +329,10 @@ export const GBRAIN_SEARCH_CONFIG: Record<string, string> = {
   'search.reranker.enabled': 'false',
   'search.expansion': 'false',
   'search.cache.enabled': 'false',
+  'search.autocut': 'false',
+  'search.metadata_boost_gate': 'lexical',
+  'search.relational_rerank_pin': '3',
+  'search.adaptive_return': 'false',
 };
 
 /**
@@ -364,6 +369,9 @@ export class GbrainNoSourceBoostAdapter implements Adapter {
   teardown(state: BrainState): Promise<void> {
     return this.inner.teardown(state);
   }
+
+  resolvedConfig(state: BrainState): Record<string, string> { return this.inner.resolvedConfig(state); }
+  observedStats(state: BrainState) { return this.inner.observedStats(state); }
 }
 
 export function buildAdapters(): Adapter[] {
@@ -385,6 +393,7 @@ export interface SwampPerQuery {
   chatBeforeTarget: number;
   top_slugs: string[];
   error?: string;
+  search_observation?: SearchObservation;
 }
 
 export interface SwampResult {
@@ -394,6 +403,8 @@ export interface SwampResult {
   swamp_at_top: number;
   per_query: SwampPerQuery[];
   wallMs: number;
+  resolved_config?: unknown;
+  observed?: unknown;
 }
 
 export async function scoreAdapter(
@@ -404,7 +415,7 @@ export async function scoreAdapter(
 ): Promise<SwampResult> {
   const t0 = Date.now();
   const publicPages = pages.map(sanitizePage);
-  const state = await adapter.init(publicPages, { name: adapter.name });
+  const state = await adapter.init(publicPages, { name: adapter.name, searchConfig: GBRAIN_SEARCH_CONFIG });
   let top1 = 0, top3 = 0, swamp = 0;
   const perQuery: SwampPerQuery[] = [];
 
@@ -446,6 +457,14 @@ export async function scoreAdapter(
     perQuery.push({ id: sq.id, topSlug, targetRank, chatBeforeTarget: chatBefore, top_slugs: topIds });
   }
 
+  const hooks = adapter as Adapter & { resolvedConfig?: (state: unknown) => unknown; observedStats?: (state: unknown) => unknown };
+  const resolved_config = hooks.resolvedConfig?.(state);
+  const observed = hooks.observedStats?.(state);
+  const observationsById = new Map((observed as SearchObservedStats | undefined)?.search_observations?.map(o => [o.query_id, o]));
+  for (const row of perQuery) {
+    const observation = observationsById.get(row.id);
+    if (observation) row.search_observation = observation;
+  }
   if (adapter.teardown) await adapter.teardown(state);
   const n = queries.length;
   return {
@@ -455,6 +474,8 @@ export async function scoreAdapter(
     swamp_at_top: swamp / n,
     per_query: perQuery,
     wallMs: Date.now() - t0,
+    resolved_config,
+    observed,
   };
 }
 
@@ -576,10 +597,20 @@ export async function runCat13b(opts: Cat13bOptions = {}): Promise<Cat13bRunResu
 
   log(`## Running adapters\n`);
   const results: SwampResult[] = [];
+  let executionIncomplete = false;
   for (const a of adapters) {
     log(`- ${a.name} ...`);
     try {
       const r = await scoreAdapter(a, pages, QUERIES, acc);
+      const expectsHybrid = ['gbrain', 'gbrain-no-source-boost', 'vector-grep-rrf-fusion'].includes(a.name);
+      const failures = observedSearchFailures(r.observed, expectsHybrid ? QUERIES.length : undefined);
+      if (failures.length) {
+        executionIncomplete = true;
+        for (const failure of failures) {
+          acc.error(`${a.name}:${failure.query_id}`, 'dependency', `search incomplete: ${failure.reasons.join(', ')}`);
+        }
+        log(`  SEARCH INCOMPLETE: ${failures.length} query execution/observation failures; scores are diagnostic only.`);
+      }
       log(`  done (${(r.wallMs / 1000).toFixed(1)}s). top1=${(r.top1_hit_rate * 100).toFixed(1)}%, top3=${(r.top3_hit_rate * 100).toFixed(1)}%, swamp=${(r.swamp_at_top * 100).toFixed(1)}%`);
       results.push(r);
     } catch (err) {
@@ -644,7 +675,7 @@ export async function runCat13b(opts: Cat13bOptions = {}): Promise<Cat13bRunResu
   log(`- Strict target: the curated \`${CURATED_PREFIX}\` page. Chat pages: distractors.`);
   log(`- Pass criterion (gbrain adapter): top1_hit_rate >= ${(PASS_TOP1 * 100).toFixed(0)}%. Drives verdict + exit code.`);
   log(`- gbrain arms pin ${JSON.stringify(GBRAIN_SEARCH_CONFIG)}; the ablation arm additionally sets GBRAIN_SOURCE_BOOST to neutralize every prefix to 1.0 at query time.`);
-  log(`- Source-blind adapters (grep-only, vector) are EXPECTED to lose — that is the point of the corpus.`);
+  log(`- The grep-only and vector adapters do not use source preferences; their measured results appear in the scorecard.`);
 
   const summary = acc.summary();
 
@@ -672,6 +703,8 @@ export async function runCat13b(opts: Cat13bOptions = {}): Promise<Cat13bRunResu
     embedding_transport: stubEmbed ? 'stubbed deterministic hash-embed (__setEmbedTransportForTests)' : 'live openai:text-embedding-3-large',
     ambient_source_boost_cleared: ambientBoost !== undefined,
     adapters_run: results.map(r => r.name),
+    execution_incomplete: executionIncomplete,
+    observed_by_adapter: Object.fromEntries(results.map(r => [r.name, r.observed ?? null])),
   };
   const data: Record<string, unknown> = {
     scorecard: results.map(r => ({
@@ -685,7 +718,7 @@ export async function runCat13b(opts: Cat13bOptions = {}): Promise<Cat13bRunResu
     report_file: reportFile,
   };
 
-  if (summary.run_invalid || ablationDead) {
+  if (summary.run_invalid || ablationDead || executionIncomplete) {
     const receipt: Receipt = {
       ...baseReceipt(),
       run_status: 'error',
@@ -698,7 +731,7 @@ export async function runCat13b(opts: Cat13bOptions = {}): Promise<Cat13bRunResu
       data,
     };
     writeReceipt(receiptFile, receipt);
-    console.error(`[cat13b] RUN INVALID — ${ablationDead ? 'ablation control failed (arms identical)' : `infra error rate ${(summary.infra_error_rate * 100).toFixed(1)}% over cap`}`);
+    console.error(`[cat13b] RUN INVALID — ${ablationDead ? 'ablation control failed (arms identical)' : executionIncomplete ? 'search execution incomplete' : `infra error rate ${(summary.infra_error_rate * 100).toFixed(1)}% over cap`}`);
     return { receipt, results, exitCode: 3 };
   }
 

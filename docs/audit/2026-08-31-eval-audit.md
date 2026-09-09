@@ -1,84 +1,48 @@
-# The eval-suite audit — 2026-08-31
+# What the August 31, 2026 audit changed
 
-Every part of this repo's eval suite was audited for bugs, then remediated.
-This page is the deliverable: what was found, what was fixed, what was
-deferred, and what the numbers mean now. The machine-readable findings with
-per-finding evidence, line numbers, and adversarial-verification verdicts
-live next to this file in [`2026-08-31-findings.json`](2026-08-31-findings.json).
+The audit made gbrain's evaluation suite more useful by finding cases where a good-looking score did not mean what it appeared to mean. This report records the investigation and its fixes. The detailed evidence, code locations and verification decisions remain in [2026-08-31-findings.json](2026-08-31-findings.json).
 
-## How the audit ran
+A benchmark is software too. A broken denominator, an ignored setting or a missing input can make an apparent improvement disappear when checked. Fixing these problems made it possible to compare later gbrain changes on a clearer basis.
 
-A 35-agent workflow: 17 subsystem auditors (one per area — shared scoring
-infra, every cat runner family, LongMemEval, PrecisionMemBench, generators,
-adapters, shell scripts, committed data, the test suite itself, and the
-published docs), each finding then adversarially re-verified by an
-independent agent instructed to refute it against the actual code and the
-pinned gbrain v0.47.6.0 source, plus a completeness critic that swept for
-coverage gaps. Two outside-model (Codex) review rounds hardened the
-remediation plan.
+## How the investigation worked
 
-**Result: 237 confirmed findings, 2 refuted (239 total):**
+The workflow used 35 agents: 17 examined separate areas, independent reviewers tried to refute each finding against the code and pinned gbrain v0.47.6.0 source, and a final reviewer checked coverage. Two Codex review rounds examined the remediation plan.
+
+The result was **237 confirmed findings and two refuted findings, 239 in total**. Confirmation means the reviewers found supporting code evidence; it does not mean every historical score was rerun.
 
 | Class | Count |
 |---|---|
-| Critical bugs (scores wrong / eval measures nothing / crashes) | 17 |
-| Major bugs (misleading metrics, silent skips, integrity leaks) | 95 |
+| Critical: wrong scores, ineffective tests or crashes | 17 |
+| Major: misleading metrics, silent skips or information leaks | 95 |
 | Minor bugs | 81 |
-| Improvements (eval-design upgrades) | 44 |
-| Refuted in verification | 2 |
+| Evaluation-design improvements | 44 |
+| Refuted during verification | 2 |
 
-## The headline problems, in plain terms
+## The four most useful lessons
 
-1. **The flagship LongMemEval number used the wrong metric.** Our runner
-   scored a question as recalled if ANY of its ground-truth sessions was in
-   the top-5; the official benchmark requires ALL of them. The published
-   97.60% head-to-head against systems reporting the official metric was
-   not apples-to-apples. An erratum is published in the report; the runner
-   now computes `recall_all@5`; re-measurement is tracked in TODOS.md.
-2. **The shared metric helpers were wrong for everyone.** Recall could
-   exceed 1.0 (duplicate chunk rows double-counted), precision divided by
-   the returned-list length instead of k (rewarding adapters that return
-   less), and the LLM judge silently renormalized over whichever rubric
-   criteria it happened to return.
-3. **Four runners crashed outright** against the pinned gbrain, having
-   drifted from its API while the dependency floated on `#master` — and
-   roughly a dozen evals structurally could not fail: fixtures that did not
-   exist counted as pass, A/B knobs set under config keys nothing read,
-   corpora smaller than K, gates that printed but never affected exit codes.
-4. **Confounded comparisons.** gbrain's default search mode silently enables
-   a reranker when an unrelated env var is set, so "embedder-only" A/B cells
-   were quietly reranked; the shootout shell script's env-prefix expansion
-   bug killed 4 of 7 cells with exit 127 while printing "done".
+**Finding one required source is not finding all the evidence.** The LongMemEval runner counted a question as recalled when any required session appeared in the top five. The official metric requires every required session. That made the published 97.60% comparison incorrect under the strict metric. The later offline rescore produced 83.40% for the same hybrid run; see the [dated report](../benchmarks/2026-05-07-longmemeval-s.md).
 
-## What changed (BrainBench v0.5.0 — scores not comparable to earlier versions)
+**The denominator is part of the result.** Duplicate chunks could be counted as separate recalled pages, allowing recall above 1.0. Precision divided by the number of returned items rather than k, rewarding an adapter for returning a shorter list. A model judge could omit rubric criteria and have the remaining scores silently rescaled. These were shared scoring problems, not evidence that one search method was better.
 
-- **Contracts:** every runner writes a validated receipt
-  (`run_status` / `verdict` / typed `failure_origin`); the umbrella runner
-  aggregates receipts, not exit codes; skipped never counts as pass. One
-  scoring policy: system-under-test failures score as misses, harness
-  errors are excluded but capped (>10% invalidates the run).
-- **One metrics module** (`eval/runner/metrics.ts`) with the standard
-  denominators, replacing seven divergent local implementations; the
-  official `recall_all@k`; judge rubric-coverage enforcement at temperature 0.
-- **Every previously-unfailable eval got a reachable fail state**, a
-  feature-boundary header (what is under test vs legitimately stubbed), and
-  a negative control (a deliberately degraded configuration must score
-  ≤ 0.5x the real one).
-- **Data integrity is now a gate** (`eval/runner/validate-data.ts`, run in
-  CI): the audit's manual cross-checks — dangling wikilinks, manifest
-  overcounts, unreachable qrels labels — are permanent checks. The
-  synthetic corpus was regenerated (every person→company link had been
-  dangling); one qrels label was corrected by documented adjudication.
-- **Hermetic CI on every PR**: typecheck, the unit suite, data validation,
-  a keyword-only retrieval-regression gate, and five real end-to-end
-  runners — all keyless, all receipt-checked.
+**A test must have a reachable failure.** Four runners crashed against the pinned dependency. Roughly a dozen other tests could not meaningfully fail: missing fixtures counted as success, corpora were smaller than the retrieval cutoff, or a printed threshold did not affect the exit code. A negative control deliberately weakens the tested behavior so we can check that the score falls.
 
-## Finding status
+**A named configuration must actually run.** Ambient credentials could enable reranking inside an “embedder-only” comparison. Other settings were written under names no code read. A shell-expansion bug killed four of seven shootout cells with exit 127 while the wrapper still printed completion. Configuration records and observed behavior are both needed.
 
-Every confirmed finding ends in exactly one state — `fixed`,
-`deferred` (with a TODOS.md entry), or `rejected` (with a reason recorded in
-the findings JSON). No finding silently disappears. The per-finding status
-table is generated from the findings JSON:
+## Changes recorded for BrainBench v0.5.0
+
+The shared metrics moved into one implementation. LongMemEval gained explicit all-session recall, and model judges had to return the complete required rubric. The resulting scores are not directly comparable with pre-audit scoring.
+
+A common receipt format distinguishes completed, failed, skipped and invalid runs. System-under-test failures remain scored misses; harness errors are recorded and excluded only within the defined limit. A skipped category must not become a pass merely because a wrapper completed. Cat35's separate receipt-convention follow-up is tracked in [TODOS.md](../../TODOS.md).
+
+Tests gained stated feature boundaries and negative controls. The degraded configuration rule was a score at most half the real configuration's score; live API-dependent confirmation remained separate work.
+
+Data checks became repeatable: page counts, file references, answer-label consistency and saved baselines are checked in CI. The synthetic corpus's broken person-to-company links were repaired, and a first-result qrel was corrected with a written explanation.
+
+CI gained type checks, unit tests, data validation, the keyword baseline check and selected real offline runners. This is a check of the harness and selected behaviors; it does not mean every paid benchmark runs on every PR.
+
+## Recorded disposition of the findings
+
+The table below is the audit's recorded status, preserved from its findings data. “Fixed” describes the code or documentation remediation. For some findings, confirming the new live model score remained a separate task.
 
 | Unit | Findings | Fixed | Deferred | Refuted |
 |---|---|---|---|---|
@@ -101,10 +65,9 @@ table is generated from the findings JSON:
 | docs-vs-code | 15 | 15 | 0 | 0 |
 | **total** | **239** | **236** | **1** | **2** |
 
-Deferred items (each carries a TODOS.md entry):
-- `skillopt-cats-11` — cat30-33's deep node_modules imports need an upstream
-  `./core/skillopt` export in gbrain's package.json (works on this repo's
-  pinned flat bun install; breaks under isolated layouts) — TODOS.md P3.
+The deferred finding, `skillopt-cats-11`, concerns deep imports into gbrain's source. A public SkillOpt export would let these runners work across more package-installation layouts.
+
+The detailed titles below are retained as identifiers from the machine-readable audit. They name the original problems, not claims that those bugs still exist.
 
 <details><summary>Full per-finding status (239 rows)</summary>
 
@@ -352,11 +315,10 @@ Deferred items (each carries a TODOS.md entry):
 
 </details>
 
-## What is still open
+## What remained after the audit
 
-The keyed re-runs (P1 in [TODOS.md](../../TODOS.md)): the corrected
-LongMemEval `recall_all@5` number, the post-fix cat13/cat18 matrices, and
-the API-dependent negative controls. This environment had no OpenAI key, so
-those re-measurements carry exact commands and cost estimates instead of
-numbers. Published pages affected by the metric correction carry errata
-rather than silently updated figures.
+The original audit environment lacked the OpenAI key needed for several fresh measurements. Rather than changing historical scores without a run, the reports carried corrections and pending statuses.
+
+Subsequent evidence includes the August 31 offline LongMemEval rescore, the September 2 five-arm run and the [September 6 ranking experiment](../benchmarks/2026-09-06-longmemeval-ranker-wave.md). The [September 9 retrieval refresh](../benchmarks/2026-09-09-retrieval-refresh.md) records the new focused comparisons. Those later results do not rewrite this audit's finding counts.
+
+Provider-matrix reruns, some live negative controls and other unfinished work remain in [TODOS.md](../../TODOS.md). Review the evidence for the particular feature you intend to use; an audit improves the measurement process but cannot establish universal product quality.

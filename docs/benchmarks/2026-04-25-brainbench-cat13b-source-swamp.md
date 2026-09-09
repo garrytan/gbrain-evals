@@ -1,19 +1,12 @@
-# BrainBench Cat 13b — Source Swamp Resistance
+# Keeping a useful note above a large chat archive
 
-**Date:** 2026-04-25
-**Corpus:** `eval/data/source-swamp-v1` (10 short curated `originals/` + 10 long `wintermute/chat/` pages, all committed JSON)
-**Queries:** 30 hand-curated multi-word phrases, each appearing in ≥1 chat distractor
-**Top-K:** 5
-**Wall clock:** ~50s for full 4-adapter run
-**API cost:** ~$0 (embeddings cached after first run)
+**Historical run: April 25, 2026.** Thirty queries, top five results, about fifty seconds for four adapters. The original corpus had ten short `originals/` pages and ten long `wintermute/chat/` pages. Estimated additional API cost was about $0 with warm embeddings.
 
-## Why this Cat exists
+A chat archive can mention the same topic many more times than a short, carefully written note. Search then faces a practical choice: return the page with more matching text, or prefer the source where the user keeps their considered answer. This fixture deliberately makes those two pages compete.
 
-`world-v1` (the 240-page rich-prose corpus driving Cats 1+2 and Cat 13) has zero `wintermute/chat/`, `daily/`, or `media/x/` content. The default boost map in `gbrain` v0.22.0 dampens those bulk directories, but `world-v1` can't measure the effect ... every page is curated.
+**The original scores below are historical.** They do not isolate source weighting from the rest of the search pipeline. The old chat prefix was renamed to `openclaw/chat/` in gbrain v0.24.0, which stopped the old fixture from exercising chat demotion. The corrected runner uses the matching prefix and compares the same search with source weighting on and off. See the [retrieval refresh](2026-09-09-retrieval-refresh.md).
 
-Cat 13b ships a corpus deliberately shaped around the swamp pattern: short opinionated articles compete against long dense chat dumps that mention the same multi-word phrases. Without source-aware ranking, chat pages dominate (higher per-byte keyword density). With it, the curated article wins.
-
-## Three-way scorecard (same corpus, same 30 queries)
+## The original version comparison
 
 | gbrain version           | Top-1 hit | Top-3 hit | Swamp@top (lower=better) |
 |--------------------------|-----------|-----------|--------------------------|
@@ -21,12 +14,11 @@ Cat 13b ships a corpus deliberately shaped around the swamp pattern: short opini
 | v0.21.0 master (two-pass retrieval)      | 90.0%     | 100.0%    | 10.0%                    |
 | v0.20.4 master (pre-two-pass)            | 90.0%     | 100.0%    | 10.0%                    |
 
-**Δ v0.22 vs v0.20.4:** +3.3pts top-1, −3.3pts swamp.
-**Δ v0.22 vs v0.21.0:** +3.3pts top-1, −3.3pts swamp.
+The recorded change from either v0.20.4 or v0.21.0 to v0.22.0 was 3.3 points at rank one, and 3.3 fewer points of chat-before-target results. This was one additional correct first result out of thirty. It should not be presented as a large or isolated causal effect.
 
-v0.21.0's two-pass retrieval is orthogonal to source-swamp resistance ... it's about call-graph edges and parent-scope chunking, which doesn't reach the directory-level ranking signal that source-boost provides.
+The v0.21 two-pass work concerned code relationships and parent-scope chunks. This test concerns a different signal: a page's source directory.
 
-## Adapter scorecard (v0.22.0 source-boost branch)
+## The original adapter comparison
 
 | Adapter                | Top-1 hit | Top-3 hit | Swamp@top | Notes                                     |
 |------------------------|-----------|-----------|-----------|-------------------------------------------|
@@ -35,41 +27,36 @@ v0.21.0's two-pass retrieval is orthogonal to source-swamp resistance ... it's a
 | vector                 | 96.7%     | 100.0%    | 3.3%      | Vector wins on conceptual recall as expected |
 | grep-only              | 80.0%     | 96.7%     | 20.0%     | Source-blind ... 20% of queries return chat at #1 |
 
-Vector edges out gbrain at top-1 because Cat 13b is fundamentally a topic-recall workload, which favors vector similarity. The headline read: every gbrain-using adapter matches or beats grep-only by 13+ points top-1 and dramatically reduces swamp-at-top.
+Both gbrain-backed adapters used source weighting, so their agreement does not tell us what happens when that weighting is removed. Bare vector search actually had the highest rank-one hit rate here: 96.7% versus gbrain's 93.3%. Grep's 80.0% shows that exact words alone sometimes preferred the chat, but the comparison also changes more than source weighting.
 
-## What "swamp@top" means
+“Swamp@top” counts a question when at least one chat page appears before the intended curated page. It is a failure measure for this fixture's chosen target, not a claim that chat archives are inherently irrelevant.
 
-For each query, `swamp@top` counts queries where ≥1 chat page ranked above the curated target. v0.20.4 and v0.21.0 both surface chat at #1 for 3/30 queries. v0.22.0 reduces that to 2/30. The two stubborn cases (q12, q27) involve queries where the chat page genuinely contains more direct discussion of the phrase than the curated article ... legitimately hard signal, not a defect.
+## The two misses
 
-## Per-query breakdown (v0.22.0 gbrain)
-
-28/30 queries return the curated `originals/` page at rank 1. The two misses:
+Twenty-eight of thirty questions put the curated page first. These two put it third:
 
 | Query | Phrase | Why it missed |
 |-------|--------|---------------|
 | q12 | "founder default-mode organizational drag" | Chat 04-10 has the most direct per-byte discussion of "organizational drag" as a phrase. Curated page mentions it once. Target ranks #3 (still in top-3). |
 | q27 | "foundation models substitutability vendor diversification" | Chat 04-17 explicitly debates "vendor diversification". Curated page mentions it once. Target ranks #3. |
 
-Both targets stay in top-3, so an agent reading top-3 results will see the curated answer.
+The chats discussed the phrases more directly. The target note remained in the first three results, so a reader willing to inspect three pages could still find it. This is why a source preference should be treated as a useful prior, not proof that a particular page answers the question.
 
-## Methodology
+## What source weighting means
 
-- **Corpus:** 10 curated `originals/` pages (1KB each, single-topic, opinionated) + 10 `wintermute/chat/` pages (3-5KB each, multi-topic, dense). Committed JSON ... no regeneration.
-- **Queries:** 30 multi-word phrases, hand-curated. Each query appears in BOTH the strict target (curated page) AND ≥1 chat distractor.
-- **Qrel:** strict target = grade 3, chat distractors = grade 0.
-- **Adapters:** gbrain (full hybrid pipeline), vector-grep-rrf-fusion (gbrain with graph disabled), vector (cosine-only), grep-only (BM25). Source-blind adapters expected to lose ... that's the corpus design.
-- **No gold leakage:** queries don't reproduce `_facts` or compiled_truth content. Phrasing is paraphrased.
-- **Determinism:** seed=42 mulberry32 for any randomized templates. The 30 queries are hand-written, not generated.
+At publication, the default factors were `originals/` ×1.5 and `wintermute/chat/` ×0.5. A factor adjusts the search score based on the longest matching page-path prefix. The current pinned implementation uses `openclaw/chat/` for the latter. A factor below one lowers a source's rank; it does not remove it from search.
 
-## Reproduction
+The twenty-page fixture used approximately 1KB curated notes and 3–5KB chats. Each of the thirty hand-written phrases occurred in both a target note and at least one distractor. The answer key gave the target grade 3 and chats grade 0. That is an intentional product preference in the test, not an independently established judgment about which prose is better.
+
+## Historical reproduction
+
+These commands belong to the old versions and fixture. The second block changes a dependency and deletes a lockfile; it is retained as historical procedure, not a recommended current setup command.
 
 ```sh
 # In gbrain-evals/
 bun link gbrain                        # link a local gbrain checkout
 bun eval/runner/cat13b-source-swamp.ts
 ```
-
-To compare against a specific gbrain version:
 
 ```sh
 # Pin gbrain to a specific commit hash in package.json:
@@ -78,10 +65,4 @@ rm -rf node_modules/gbrain bun.lock && bun install
 bun eval/runner/cat13b-source-swamp.ts
 ```
 
-## What this Cat does NOT cover
-
-- **Real-world swamp at scale.** This corpus has 20 pages. A real personal brain has 10K+. The shape is right; the scale is small.
-- **Temporal-bypass correctness.** The `detail=high` gate that lets chat surface for date-framed queries isn't tested here. Cat 4 (Temporal) is the right home for that.
-- **Tuning sensitivity.** Default boost map (`originals/` 1.5×, `wintermute/chat/` 0.5×) was used. Per-deployment tuning via `GBRAIN_SOURCE_BOOST` env var isn't exercised.
-
-These belong in Cat 13b v2 if usage signal motivates them.
+The original report did not test a 10,000-page store, per-deployment `GBRAIN_SOURCE_BOOST` tuning, or the date/detail behavior that can allow archive material to rank normally for temporal questions. Its fixtures were committed rather than regenerated. The corrected on/off comparison is the appropriate evidence for a present-day source-weighting recommendation.

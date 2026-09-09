@@ -57,6 +57,10 @@ import { getTier5FuzzyQueries, getTier5_5SyntheticQueries } from './queries/inde
 import { ProbeAccounting } from './probe-accounting.ts';
 import { writeReceipt, receiptPath, RECEIPT_SCHEMA_VERSION, BENCHMARK_VERSION } from './receipt.ts';
 import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
+import { retrievalPins, RETRIEVAL_EMBEDDER, RETRIEVAL_DIMENSIONS, observedSearchFailures } from './retrieval-pins.ts';
+import { createHash } from 'crypto';
+
+export const BASELINE_SEARCH_CONFIG = retrievalPins();
 
 const TOP_K = 5;
 
@@ -292,6 +296,10 @@ interface PerQueryScore {
   recall: number;
   hits: number;
   expected: number;
+  query_text: string;
+  ranked: RankedDoc[];
+  relevant: string[];
+  error?: string;
 }
 
 interface FamilyRunAggregate {
@@ -343,19 +351,31 @@ async function scoreOneRun(
   adapter: Adapter,
   pages: Page[],
   families: QueryFamily[],
-): Promise<PerQueryScore[]> {
+): Promise<{ perQuery: PerQueryScore[]; config: unknown; observed: unknown }> {
   // Day 9 sealed qrels enforcement (codex fix #1, #2, #3):
   // Build sanitized copies with no `_facts` and no `gold` fields before
   // handing them to the adapter. The scorer retains the full Query shape
   // (including gold.relevant) to compute precision/recall below.
   const publicPages = pages.map(sanitizePage);
-  const state = await adapter.init(publicPages, { name: adapter.name });
+  const state = await adapter.init(publicPages, {
+    name: adapter.name,
+    searchConfig: BASELINE_SEARCH_CONFIG,
+    shootout: { embedder: RETRIEVAL_EMBEDDER, dim: RETRIEVAL_DIMENSIONS, searchMode: 'balanced' },
+  });
   const out: PerQueryScore[] = [];
   try {
     for (const fam of families) {
       for (const q of fam.queries) {
         const publicQ = sanitizeQuery(q);
-        const results = await adapter.query(publicQ, state);
+        let results: RankedDoc[] = [];
+        let error: string | undefined;
+        try {
+          results = await adapter.query(publicQ, state);
+        } catch (err) {
+          // Keep the failed question and its observation in the run receipt.
+          // Aborting here used to discard all rankings saved before the throw.
+          error = String(err);
+        }
         // collectFamilies already excluded empty-gold queries per the NaN
         // contract, so relevant is guaranteed non-empty here.
         const relevant = new Set(q.gold.relevant ?? []);
@@ -375,13 +395,18 @@ async function scoreOneRun(
           recall: recallAtK(results, relevant, TOP_K),
           hits,
           expected: relevant.size,
+          query_text: q.text,
+          ranked: topK,
+          relevant: [...relevant],
+          ...(error === undefined ? {} : { error }),
         });
       }
     }
+    const hooks = adapter as Adapter & { resolvedConfig?: (state: unknown) => unknown; observedStats?: (state: unknown) => unknown };
+    return { perQuery: out, config: hooks.resolvedConfig?.(state) ?? null, observed: hooks.observedStats?.(state) ?? null };
   } finally {
     if (adapter.teardown) await adapter.teardown(state);
   }
-  return out;
 }
 
 function aggregateByFamily(perQuery: PerQueryScore[]): Map<string, FamilyRunAggregate> {
@@ -429,16 +454,19 @@ async function scoreAdapter(
   pages: Page[],
   families: QueryFamily[],
   runs: number,
-): Promise<{ scorecards: AdapterScorecard[]; firstRun: PerQueryScore[] }> {
+): Promise<{ scorecards: AdapterScorecard[]; firstRun: PerQueryScore[]; runDetails: Array<{ seed: number; perQuery: PerQueryScore[]; config: unknown; observed: unknown }> }> {
   const perRunAggregates: Map<string, FamilyRunAggregate>[] = [];
   let firstRun: PerQueryScore[] = [];
+  const runDetails: Array<{ seed: number; perQuery: PerQueryScore[]; config: unknown; observed: unknown }> = [];
   for (let i = 0; i < runs; i++) {
     // Shuffle pages per run with a per-run seed. Seed = i + 1 (not 0,
     // since LCG iterates once at start of next()). Run 0 uses the seed
     // that produces a minimally-scrambled permutation; doesn't matter
     // for correctness since we aggregate across runs.
     const shuffled = shuffleSeeded(pages, i + 1);
-    const perQuery = await scoreOneRun(adapter, shuffled, families);
+    const detail = await scoreOneRun(adapter, shuffled, families);
+    const perQuery = detail.perQuery;
+    runDetails.push({ seed: i + 1, ...detail });
     if (i === 0) firstRun = perQuery;
     perRunAggregates.push(aggregateByFamily(perQuery));
   }
@@ -463,7 +491,7 @@ async function scoreAdapter(
       total_expected: aggs[0].expected,
     });
   }
-  return { scorecards, firstRun };
+  return { scorecards, firstRun, runDetails };
 }
 
 function pct(n: number, digits = 1): string {
@@ -625,6 +653,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
 
   log(`## Running adapters (N=${runsPerAdapter} runs per adapter, page-order shuffled per run)\n`);
   const scorecards: AdapterScorecard[] = [];
+  const runsByAdapter: Record<string, unknown> = {};
   const failedAdapters: string[] = [];
   for (const a of adapters) {
     const fams = familiesForAdapter(a.name, families);
@@ -639,8 +668,23 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     log(`- ${a.name} ...`);
     const t0 = Date.now();
     try {
-      const { scorecards: sc, firstRun } = await scoreAdapter(a, pages, fams, runsPerAdapter);
-      for (const p of firstRun) acc.score(`${a.name}:${p.query_id}`, p.recall);
+      const { scorecards: sc, firstRun, runDetails } = await scoreAdapter(a, pages, fams, runsPerAdapter);
+      runsByAdapter[a.name] = runDetails;
+      for (const p of firstRun) {
+        if (p.error) acc.error(`${a.name}:${p.query_id}`, 'sut', p.error);
+        else acc.score(`${a.name}:${p.query_id}`, p.recall);
+      }
+      for (const run of runDetails) {
+        if (run.perQuery.some(p => p.error) && !failedAdapters.includes(a.name)) failedAdapters.push(a.name);
+        const failures = observedSearchFailures(run.observed, a.name === 'vector-grep-rrf-fusion' ? run.perQuery.length : undefined);
+        if (failures.length) {
+          if (!failedAdapters.includes(a.name)) failedAdapters.push(a.name);
+          for (const failure of failures) {
+            acc.error(`${a.name}:${failure.query_id}`, 'dependency', `seed ${run.seed}: search incomplete: ${failure.reasons.join(', ')}`);
+          }
+          log(`  SEARCH INCOMPLETE (seed ${run.seed}): ${failures.length} query execution/observation failures; scores are diagnostic only.`);
+        }
+      }
       const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
       for (const s of sc) {
         log(`  ${s.family}: P@${TOP_K} ${pctBand(s.mean_precision_at_k, s.stddev_precision_at_k)}, R@${TOP_K} ${pctBand(s.mean_recall_at_k, s.stddev_recall_at_k)}, ${s.correct_in_top_k}/${s.total_expected} correct (run 1)`);
@@ -704,8 +748,8 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,
     category: 'multi-adapter',
-    run_status: 'completed',
-    verdict,
+    run_status: failedAdapters.length > 0 ? 'error' : 'completed',
+    ...(failedAdapters.length === 0 ? { verdict } : {}),
     n_total: summary.n_total,
     n_scored: summary.n_scored,
     completion_rate: summary.completion_rate,
@@ -718,6 +762,12 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
       failed_adapters: failedAdapters,
       runs_per_adapter: runsPerAdapter,
       top_k: TOP_K,
+      result_unit: 'first five ranked page results from each adapter; adapter retrieval pools differ',
+      embedding_model: RETRIEVAL_EMBEDDER,
+      embedding_dimensions: RETRIEVAL_DIMENSIONS,
+      hybrid_search_config: BASELINE_SEARCH_CONFIG,
+      corpus_sha256: createHash('sha256').update(JSON.stringify(pages)).digest('hex'),
+      queries_sha256: createHash('sha256').update(JSON.stringify(families)).digest('hex'),
       query_source: cli.subset ? `subset:${cli.subset}` : cli.queries,
       families: families.map(f => ({
         family: f.family,
@@ -728,7 +778,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     },
     started_at: startedAt,
     finished_at: new Date().toISOString(),
-    data: { scorecards },
+    data: { scorecards, runs_by_adapter: runsByAdapter },
   });
   log(`\nReceipt: ${receiptFile}`);
 

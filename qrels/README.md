@@ -1,89 +1,62 @@
-# Published qrels for `gbrain eval gate --qrels`
+# Answer labels for retrieval
 
-This directory holds **hermetic-synthetic** qrels (query relevance
-labels) consumed by `gbrain eval gate --qrels <FILE>`. Each qrels file
-is a hand-curated list of queries with their known-right answers; CI
-in this repo gates every PR against the latest qrels to catch retrieval
-*correctness* drops (not just regressions).
+“Qrels” is information-retrieval shorthand for **query relevance judgments**. In plain English, these files say which pages a question should find.
 
-## Privacy posture (gbrain D9)
+A [baseline](../baselines/README.md) records what an earlier version returned. Qrels describe the intended answers. Using both lets us catch a changed ranking and check whether the new result is correct.
 
-**Placeholder names only.** Same rule as `../baselines/`: every slug
-referenced in a qrels file is a `*-example` form. No real people,
-companies, queries, or meeting names.
+The committed `v0.41-launch.qrels.json` contains 12 hand-reviewed queries. It was promoted from gbrain's `test/fixtures/eval-baselines/qrels-search.json` when v0.41 added the evaluation loop. Its people, companies and page names are fictional placeholders.
 
-## Files
+## What each field means
 
-| File | Purpose |
+The file contains `schema_version`, `_description` and a `queries` array.
+
+| Field | Meaning |
 |---|---|
-| `v0.41-launch.qrels.json` | First published qrels. Promoted from gbrain's `test/fixtures/eval-baselines/qrels-search.json` when v0.41 closed the eval LOOP. 12 queries. |
+| `query_id` | Stable identifier used to follow the same question across runs |
+| `query` | The text sent to search |
+| `relevant_slugs` | Pages that should appear in the results |
+| `first_relevant_slug` | The expected first result |
+| `embedding_dim` | Optional vector width for gbrain's deterministic test embeddings |
 
-## File format
+For a question that requires two pages, returning only one loses recall. Returning the second page first may satisfy recall while failing the expected-first-result check.
 
-JSON object `{schema_version, _description, queries: [...]}`. Each
-entry has:
-
-- `query_id` — stable identifier
-- `query` — the search query string
-- `relevant_slugs` — slugs that should appear in the retrieved set (drives `mean_recall_at_k`)
-- `first_relevant_slug` — the slug that should be top-1 (drives `expected_top1_hit_rate`)
-- `embedding_dim` — optional; the basis-vector dimension for hermetic embedding (used by gbrain's internal unit-test runner)
-
-For federated brains, an alternative shape carries explicit `source_id`:
+The public gbrain gate also accepts source-qualified labels for a brain spanning multiple sources:
 
 ```json
 {
   "query_id": "q1",
   "query": "...",
-  "relevant": [{"source_id": "host", "slug": "people/alice"}],
-  "expected_top1": {"source_id": "host", "slug": "people/alice"}
+  "relevant": [{"source_id": "host", "slug": "people/alice-example"}],
+  "expected_top1": {"source_id": "host", "slug": "people/alice-example"}
 }
 ```
 
-Both shapes are parsed by `gbrain eval gate`; the legacy slug-only shape
-auto-promotes to `source_id='default'`.
+The slug-only format is interpreted as `source_id: "default"`.
 
-## Refresh discipline (gbrain D4)
+## Run the reference check
 
-When ranking changes intentionally move expected slugs, edit this file
-and **include a `Why:` line in the commit body** so future maintainers
-can audit the trail.
+From the repository root:
 
-## Adjudication log (2026-08-31 audit, finding data-integrity-02)
-
-The 2026-08-31 audit found 4 of 12 `first_relevant_slug` labels were
-unreachable by ANY retriever on the reference corpus. Root causes and
-resolutions — labels were corrected by ADJUDICATION (reading content and
-gbrain's documented ranking policy), never by copying retrieval output:
-
-1. **3 labels: corpus generation bug, labels kept.** The reference corpus
-   (synthesized by `scripts/generate-v0.41-launch.ts`) embedded keywords
-   from only the FIRST query listing each slug, so slugs labeled relevant
-   to a second query had no matching content at all. The generator is now
-   label-faithful (content carries every listing query's keywords, and each
-   query's expected top-1 carries decisive emphasis). The generator now
-   FAILS if any top-1 label is not at rank 1 on the reference corpus.
-2. **q11-research-paper: label corrected.** Expected top-1 changed from
-   `concepts/rag-example` to `writing/retrieval-overview-example`. Why:
-   gbrain's keyword relevance saturates near 1.0 for any matching page, so
-   the final ranking between two relevant pages is decided by the
-   documented source-boost policy (`writing/` 1.4 > `concepts/` 1.3 —
-   curated long-form outranks concept stubs by design; see gbrain
-   `src/core/search/source-boost.ts`). Under that intended policy no
-   concepts/ page can outrank a relevant writing/ page, making the old
-   label untestable. Both slugs remain in `relevant_slugs`.
-
-## Running the gate manually
-
-```bash
-gbrain eval gate --qrels gbrain-evals/qrels/v0.41-launch.qrels.json
+```sh
+bun scripts/generate-v0.41-launch.ts --check
 ```
 
-For best signal, pair with the regression baseline (both gates run; both
-must pass):
+This builds the fictional reference corpus and checks the 12 queries without a model API. It is the qrels-plus-baseline check used in this repository's CI.
 
-```bash
+For a separately prepared brain containing the matching corpus, the public CLI is:
+
+```sh
 gbrain eval gate \
-  --baseline gbrain-evals/baselines/v0.41-launch.baseline.ndjson \
-  --qrels gbrain-evals/qrels/v0.41-launch.qrels.json
+  --baseline baselines/v0.41-launch.baseline.ndjson \
+  --qrels qrels/v0.41-launch.qrels.json
 ```
+
+## Why labels changed on 2026-08-31
+
+The audit found that four expected first results were unreachable on the generated reference corpus. We investigated the content and intended ranking policy rather than copying the search output into the answer key.
+
+For three labels, the label was right and the generator was wrong. It inserted only the first query's words into pages shared by several queries. The generator now includes every associated query and emphasizes its expected first result. It fails if an expected first result is not actually first on the reference corpus.
+
+For `q11-research-paper`, the first-result label changed from `concepts/rag-example` to `writing/retrieval-overview-example`. Both remain relevant. Under the documented policy, relevant `writing/` pages receive a 1.4 weight and `concepts/` pages 1.3; matching keyword scores saturated near 1.0, so that policy decided their order. The previous first-result label contradicted the behavior the test intended to preserve.
+
+Future changes to answer labels must include the reason. Use a `Why:` line in the commit body so readers can distinguish an intentional correction from making a test agree with a regression.

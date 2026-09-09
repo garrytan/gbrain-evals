@@ -1,10 +1,12 @@
-# cat14 prompt iteration log
+# Cat14: three prompt revisions on May 17, 2026
 
-Evidence that the failure-loop methodology works. Three prompt variants
-tested on the same 8-probe set on the same day (2026-05-17). Same model,
-same judge model, same fixtures. The eval caught real regressions.
+This experiment tested whether more detailed instructions improved advice informed by a person's track record. All three versions used the same eight probes, model, judge and fixtures on 2026-05-17.
 
-## v1 — original (5 short rules, single "name both priors" rule for all bias mentions)
+The useful result was a failed improvement: instructions that seemed more careful made the answers sound more commanding or caused irrelevant bias claims. The team returned to the original prompt. These are historical measurements from that harness, not a fresh comparison of today's model.
+
+The three tested prompt blocks below are preserved exactly.
+
+## Version 1: one counterargument rule
 
 ```
 Rules:
@@ -15,23 +17,11 @@ Rules:
 5. If no bias is relevant, answer as you would without the profile. Don't manufacture a counter-prior.
 ```
 
-**Results:**
-- Win calibrated: **75%** (baseline 0%, ties 25%)
-- mentions_relevant_bias_tag: 100%
-- presents_counter_prior: 75% (2 misses)
-- changes_recommendation_meaningfully: 63% (3 misses)
-- voice_conversational: **100%**
-- doesnt_force_fit_irrelevant_bias: **100%**
-- Gate: **PASS**
+The calibrated answer won 75% of comparisons; baseline won 0% and 25% tied. Relevant-bias mentions scored 100%, appropriate counterarguments 75% (two misses), meaningful recommendation changes 63% (three misses), conversational voice 100%, and avoidance of irrelevant bias 100%. The recorded gate passed.
 
-**Diagnosis:** The two soft-axis misses were both confidence-boost probes
-(positive track record). The prompt rule "name BOTH priors" fires
-unconditionally, so even when the user's track record is *confirming* the
-gut, the model manufactures a fake counter-prior. The judge correctly
-flagged this as failure on probes where `expected.presents_counter_prior:
-false`.
+The two counterargument misses involved a good track record. The instruction to name both a prior and a counter-prior could produce an invented objection even when the history supported the person's judgment. Those probes expected no counter-prior.
 
-## v2 — split bias-tag direction into two cases
+## Version 2: distinguish a good record from a bad one
 
 ```
 2. Bias tags come in two flavors:
@@ -39,18 +29,11 @@ false`.
    - "well-calibrated-X" tags signal the gut has been RIGHT in domain X. Reinforce the gut WITHOUT manufacturing a counter-prior.
 ```
 
-**Results:**
-- Win calibrated: 63% (baseline 25%, ties 13%) ← REGRESSION
-- voice_conversational: 88% ← REGRESSION (95% gate fail)
-- Counter-prior 88%, recommendation 63%, force-fit 100%
-- Gate: **FAIL** (voice_conversational below threshold)
+This version tried to fix that mistake directly. The calibrated win rate fell to 63%, with baseline wins at 25% and ties at 13%. Conversational voice fell to 88%, below the 95% gate. Counterarguments scored 88%, recommendation changes 63%, and irrelevant-bias avoidance 100%. The recorded gate failed.
 
-**Diagnosis:** Removing the counter-prior on well-calibrated tags caused
-the model to slide into oracle voice — "trust the pattern. Don't write
-the check." Over-correction. The eval caught it because the voice axis is
-strict at 95%.
+Removing the counterargument instruction also let the model become too certain. Some answers sounded like commands, including “trust the pattern. Don't write the check.” The intended improvement in reasoning harmed the way the advice was delivered.
 
-## v3 — restore epistemic humility on well-calibrated tags
+## Version 3: add explicit humility
 
 ```
 Rules:
@@ -69,39 +52,14 @@ Rules:
 5. If no bias is relevant, don't manufacture a counter-prior.
 ```
 
-**Results:**
-- Win calibrated: 75% (baseline 25%, ties 0%)
-- voice_conversational: **75%** ← REGRESSION (95% gate fail)
-- doesnt_force_fit_irrelevant_bias: **75%** ← REGRESSION (90% gate fail)
-- Gate: **FAIL** (voice AND force-fit below thresholds)
+The calibrated win rate returned to 75%, with baseline wins at 25% and no ties. But voice fell to 75%, below the 95% gate, and irrelevant-bias avoidance fell to 75%, below the 90% gate. The recorded gate failed on both.
 
-**Diagnosis:** The longer, more detailed prompt caused the model to leak
-meta-instructions into the answer ("Friend, not doctor" — the actual
-phrase appeared in some outputs). And the detailed sub-rules created
-ambiguity the model resolved by hedging more aggressively, which the
-judge marked as voice failure.
+The longer prompt sometimes appeared in the output itself: the answer repeated “Friend, not doctor.” Additional sub-rules also produced awkward hedging. More instructions had not produced more useful advice.
 
-## Reverted to v1; iteration log preserved.
+## Decision and limits
 
-**Final state:** v1 with 75% win rate, 100% voice, 100% force-fit
-prevention, gate **PASS**. Two soft-axis misses on confidence-boost
-probes remain — those are the v0.37 follow-up. Each iteration here
-took ~$0.05 in API spend and ~3 minutes wallclock.
+The experiment reverted to version 1: 75% calibrated wins, 100% conversational voice, 100% irrelevant-bias avoidance, and a passing gate. The two positive-track-record misses remained a v0.37 follow-up. Each iteration cost about $0.05 and took about three minutes.
 
-## What this proves about the methodology
+This small experiment shows why a prompt change needs several checks. A better score on one reasoning criterion can coincide with worse tone or more irrelevant advice. It does not prove that longer prompts always perform worse, or that version 1 is best on every workload.
 
-The eval design surfaced THREE distinct prompt regressions in three
-iterations, with detailed per-probe rationale at every step. The
-strictness of the negative-axis gates (voice 95%, force-fit 90%) caught
-exactly the failure modes that would make calibration annoying instead
-of useful — the over-correction problems that less-strict eval gates
-would have missed.
-
-**Lesson for future prompt iteration:**
-- Don't extend the prompt to fix a regression unless the regression
-  *can't* be fixed by other means (e.g., upstream profile filtering).
-  Longer prompts leak meta-language.
-- The 95% voice gate is real; iterations that lose ground on voice
-  should not ship even if they win on other axes.
-- Over-correction in either direction (force-fit OR under-claim) is
-  worse than the original issue. Keep the simplest working prompt.
+For the next revision, inspect whether the profile can be filtered more precisely before adding instructions. Keep the fixed negative-case thresholds, examine individual answers, and retain the simplest version that meets the measured requirements. The [current Cat14 guide](README.md) describes the runner after subsequent audit changes.

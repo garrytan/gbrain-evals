@@ -1,22 +1,14 @@
 /**
  * BrainBench EXT-3: Vector-Grep-RRF-Fusion-without-graph adapter.
  *
- * gbrain's full vector-grep-rrf-fusion search (vector + keyword + RRF fusion + dedup) but
- * with the knowledge-graph layer explicitly disabled. No auto_link, no
- * typed edges, no traverse_graph, no backlink boost. Just:
- *   - putPage each page
- *   - chunking + embedding (via existing put_page pipeline)
- *   - hybridSearch(engine, query) to answer queries
+ * Import and embed each page, then call the product's hybrid search. This
+ * adapter disables auto_link and skips the separate extraction pass.
  *
- * This is the closest-to-gbrain external comparator. If gbrain beats
- * EXT-3 significantly, the delta MUST come from the graph layer (auto_link
- * typed edges + traversePaths + backlink boost), not from better vector
- * retrieval or vector-grep-rrf-fusion fusion.
- *
- * It's also the MOST HONEST baseline — "gbrain without the new knowledge
- * graph layer" answers the question "does the graph do useful work?"
- * directly. Critics can't dismiss this as "you disabled a feature you knew
- * they'd want." Everyone already knows vector+keyword vector-grep-rrf-fusion is strong.
+ * The historical name is broader than the actual control: this does not
+ * disable every graph-related search stage. Import can retain link metadata,
+ * and this adapter's retrieval pool also differs from GbrainInlineAdapter's.
+ * Treat its score as a comparison of these complete configurations. Use
+ * relational-ab.ts to isolate the relational-retrieval switch on one index.
  */
 
 import type { Adapter, AdapterConfig, BrainState, Page, Query, RankedDoc } from '../types.ts';
@@ -24,9 +16,11 @@ import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { hybridSearch } from 'gbrain/search/hybrid';
 import { importFromContent } from 'gbrain/import-file';
 import { configureGateway } from 'gbrain/ai/gateway';
-import type { HybridSearchMeta } from 'gbrain/types';
+import type { HybridSearchMeta, SearchResult } from 'gbrain/types';
 import { assertEvalAdapterConfig, type EvalAdapterConfig } from '../eval-adapter-config.ts';
 import { gcNow } from './gbrain-inline.ts';
+import { pagesInResultOrder } from './page-results.ts';
+import { recordSearchObservation, searchObservation, type SearchObservedStats } from '../retrieval-pins.ts';
 
 // Known-safe config: auto_link OFF at the engine layer via direct setConfig
 // call. Does NOT run `extract --source db`, so typed links stay empty even
@@ -45,9 +39,12 @@ interface HybridNoGraphState {
 }
 
 /** Per-run observation counters (receipt echo; same shape as GbrainInlineAdapter's). */
-export interface HybridNoGraphObserved {
+export interface HybridNoGraphObserved extends SearchObservedStats {
   queries: number;
   rerank_scored_queries: number;
+  /** Present only when the product reports a reranker fallback. */
+  rerank_failed_queries?: number;
+  rerank_failures?: Array<{ query_id: string; reasons: string[] }>;
   /** Phase E2: queries whose hybridSearch meta carried `keyword_arm_confidence`. */
   keyword_arm_confidence_stamped: number;
   /** Phase E2: queries where the keyword + title lists fused at half weight. */
@@ -119,10 +116,8 @@ export class HybridNoGraphAdapter implements Adapter {
       await engine.setConfig(key, value);
       resolvedConfig[key] = value;
     };
-    // Belt: turn off auto_link at the engine config level. Suspenders below:
-    // we also skip extract --source db, so even if auto_link did fire, no
-    // typed edges would exist in the graph layer. This adapter doesn't call
-    // traversePaths at all, so graph state is doubly-ignored.
+    // Disable automatic linking and skip the extraction pass below.
+    // The product's own search stages remain enabled unless explicitly pinned.
     await pin('auto_link', 'false');
 
     // v0.35.1.0 shootout: thread reranker + search-lite mode through engine
@@ -167,10 +162,8 @@ export class HybridNoGraphAdapter implements Adapter {
       console.error = origErr;
     }
 
-    // INTENTIONALLY do NOT call runExtract — that's what populates typed
-    // links + timeline for the graph layer. Without it, traversePaths
-    // would return empty. hybridSearch works entirely off chunks +
-    // embeddings, which importFromContent just populated.
+    // Skip the separate link/timeline extraction pass. Import's chunks,
+    // embeddings, and any link metadata it retained remain available to search.
     return {
       engine,
       limit,
@@ -223,35 +216,29 @@ export class HybridNoGraphAdapter implements Adapter {
     const s = state as HybridNoGraphState;
     const limit = s.limit;
 
-    // hybridSearch returns chunks with scores. We aggregate to page-level
-    // by taking each page's BEST chunk score and ranking pages by that.
+    // Preserve product ranking when collapsing chunks to pages. Scores can
+    // describe the pre-rerank order and must not override the returned order.
     let meta: HybridSearchMeta | undefined;
-    const chunkResults = await hybridSearch(s.engine, q.text, { limit: limit * 3, onMeta: (m) => { meta = m; } });
-    s.observed.queries += 1;
-    if (chunkResults.some(r => Number.isFinite(r.rerank_score))) s.observed.rerank_scored_queries += 1;
-    const kacf = meta?.keyword_arm_confidence;
-    if (kacf) {
-      s.observed.keyword_arm_confidence_stamped += 1;
-      if (kacf.downweighted) s.observed.keyword_arm_confidence_downweighted += 1;
+    let relationalMeta: unknown;
+    let chunkResults: SearchResult[] = [];
+    let error: unknown;
+    try {
+      chunkResults = await hybridSearch(s.engine, q.text, {
+        limit: limit * 3, onMeta: m => { meta = m; },
+        onRelationalMeta: m => { relationalMeta = m; },
+      });
+    } catch (err) {
+      error = err;
+      throw err;
+    } finally {
+      recordSearchObservation(s.observed, searchObservation({
+        query: q.text, queryId: q.id, results: chunkResults, meta, relationalMeta, error,
+        expectedReranker: s.resolvedConfig['search.reranker.enabled'] === undefined ? undefined : s.resolvedConfig['search.reranker.enabled'] === 'true',
+        expectedExpansion: s.resolvedConfig['search.expansion'] === undefined ? undefined : s.resolvedConfig['search.expansion'] === 'true',
+      }));
     }
 
-    const pageBest = new Map<string, number>();
-    for (const r of chunkResults) {
-      const existing = pageBest.get(r.slug);
-      if (existing === undefined || r.score > existing) {
-        pageBest.set(r.slug, r.score);
-      }
-    }
-    const pageScored = Array.from(pageBest.entries())
-      .map(([slug, score]) => ({ slug, score }))
-      .sort((a, b) => b.score - a.score || a.slug.localeCompare(b.slug))
-      .slice(0, limit);
-
-    return pageScored.map((p, i) => ({
-      page_id: p.slug,
-      score: p.score,
-      rank: i + 1,
-    }));
+    return pagesInResultOrder(chunkResults, limit);
   }
 
   async snapshot(_state: BrainState): Promise<string> {
