@@ -135,7 +135,7 @@ Save a worthwhile run under a dated path in `docs/benchmarks/`, including its ra
 
 ## Cat36 situation-aware recall and the all-category release gate
 
-Cat36 asks whether generated situation cues help retrieve original evidence for indirect questions. The [2026-09-23 protocol](../docs/benchmarks/2026-09-23-situation-recall-protocol.md) defines the experiment, profiles, budgets, source-only construction boundary, and exact reproduction commands. It is not a published capability result. The declared candidate is `ca314d8af825308190cbe13dd08949d564a994a3` (v0.54.0.0), verified in a separate clean packaged install. Independent corpus relevance review, credentials, external budget enforcement, and complete live comparisons remain prerequisites.
+Cat36 asks whether generated situation cues help retrieve original evidence for indirect questions. The [2026-09-23 protocol](../docs/benchmarks/2026-09-23-situation-recall-protocol.md) defines the experiment, profiles, budgets, source-only construction boundary, and exact reproduction commands. It is not a published capability result. The declared candidate is `e51e21c076dd63e6e5948303eb2c355ddba21da4` (v0.54.0.0), paired with fresh baseline `c008902313b334b8a827dd9046b704d090d0197e` (v0.53.0.0). Earlier clean-package evidence remains separately identified in the protocol. Independent corpus relevance review, credentials, external budget enforcement, and complete live comparisons remain prerequisites.
 
 Start keyless:
 

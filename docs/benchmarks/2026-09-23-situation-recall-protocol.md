@@ -59,7 +59,7 @@ The runtime builder receives only pre-cutoff source content, source identity, vi
 
 Live capability arms must use production import, generated cues, real embeddings, and the exported retrieval path. Receipts must show actual generation and read-arm observations. Requesting a setting without generating a usable index or attempting the recall arm is unexercised, not a successful capability run. An observed, functioning arm that finds no relevant cue is a measured outcome. The summary control must run the real background summary path; Cat26's inline title fallback is not an equal-budget enrichment control.
 
-**Current integration boundary:** [cat36-production.ts](../../eval/runner/cat36-production.ts) uses public production import, durable cue construction, raw search, and real per-chunk synopsis services. The declared dependency now pins candidate `ca314d8af825308190cbe13dd08949d564a994a3` (v0.54.0.0), not the historical dependency that predates these exports. A separate clean consumer installed that archive from the frozen lockfile, without `bun link`, and imported both new public modules. Candidate-only tests exercise the paths with explicit provider stubs; they do not establish semantic quality. Missing support still blocks the corresponding live cell rather than substituting handcrafted cues or title summaries.
+**Current integration boundary:** [cat36-production.ts](../../eval/runner/cat36-production.ts) uses public production import, durable cue construction, raw search, and real per-chunk synopsis services. The declared dependency now pins candidate `e51e21c076dd63e6e5948303eb2c355ddba21da4` (v0.54.0.0), refreshed against master `c008902313b334b8a827dd9046b704d090d0197e` (v0.53.0.0). The code-identity section separates current verification from the earlier candidate's evidence. Candidate-only tests exercise the paths with explicit provider stubs; they do not establish semantic quality. Missing support still blocks the corresponding live cell rather than substituting handcrafted cues or title summaries.
 
 Fixture source IDs remain the cross-run evidence identity. The adapter maps each one to a distinct valid product source ID using `c36-` plus 28 SHA-256 hex characters, records both IDs in `build.json`, and maps raw chunks back for scoring. It does not merge sources to fit an enrollment bound or let a namesake earn another source's span. Only public fixture sources are enrolled for cue generation; private and withdrawn pages remain unavailable retrieval controls.
 
@@ -174,12 +174,24 @@ The code identities for this change are explicit:
 | Identity | Product revision | Role |
 |---|---|---|
 | Historical H | `2efaaf8f8a817b5b82e023383618fdcdb1cc5f7d` | The previous declared dependency and preserved historical measurements. |
-| Fresh baseline B | `b272cf23464007a3d9fdd9daaef93e76e2651546` | Current-product baseline before this feature; live measurements remain pending. |
-| Declared candidate C0/C1 | `ca314d8af825308190cbe13dd08949d564a994a3`, v0.54.0.0 | Candidate-off/on comparison, linked to [product PR #5374](https://github.com/garrytan/gbrain/pull/5374). |
+| Fresh baseline B | `c008902313b334b8a827dd9046b704d090d0197e`, v0.53.0.0 | Refreshed current-product baseline; live measurements remain pending. |
+| Declared candidate C0/C1 | `e51e21c076dd63e6e5948303eb2c355ddba21da4`, v0.54.0.0 | Candidate-off/on comparison after integrating that baseline, linked to [product PR #5374](https://github.com/garrytan/gbrain/pull/5374). |
+| Earlier baseline reference | `b272cf23464007a3d9fdd9daaef93e76e2651546` | Baseline reference before the master refresh; no live score is reassigned to the new baseline. |
+| Earlier candidate verification | `ca314d8af825308190cbe13dd08949d564a994a3`, v0.54.0.0 | The dated clean-package and hermetic evidence below applies to this earlier candidate. |
+
+### Earlier verification before the master refresh
+
+The following September 23 evidence belongs to `ca314d8`, not the refreshed candidate. It remains historical plumbing evidence rather than being relabeled as a new run.
 
 On September 23, a separate clean consumer ran `bun install --frozen-lockfile --ignore-scripts`, followed only by the inspected PGLite asset-link helper. The installed package was a normal archive directory, not a local link; its `regressionPackageHash` was `ad34debb686dfbe0f6276651a8eeedd492d7c75bad0433e6a91e3be185fde228`, and both `gbrain/memory-cues` and `gbrain/contextual-retrieval` imported successfully. This is package plumbing evidence, not a paid quality measurement. Earlier WIP snapshots are not the final pin and cannot supply release receipts.
 
 On supported Bun 1.3.13, the final hermetic consumer suite passed 1,773 tests with no failures or skips, including identity fixture liveness and rejected-capture receipt preservation. All eight keyless CI runner commands also completed. These checks validate the harness and deterministic contracts; they are not live B/C0/C1 quality comparisons. Project-file and script type gates pass under the existing CI policy; raw repository typechecking still reports diagnostics inside the installed dependency.
+
+### Refreshed candidate verification
+
+After integrating master `c0089023`, a new clean Bun 1.3.13 consumer installed `e51e21c` with `--frozen-lockfile --ignore-scripts`, followed only by the inspected PGLite asset-link helper. The archive is not locally linked, reports gbrain v0.54.0.0, and imports both public feature modules. Its independently computed `regressionPackageHash` is `dd91c8739cb72b3435196671e65c29c33c133fb5967054822746d2db87e2230e`. The fresh schema initializes through version 165, preserving the shared-skills migration at 164. This verification is separate from the earlier archive and does not establish a live retrieval gain or no-regression result.
+
+The refreshed package passed 1,773 hermetic tests across 87 files, with no failures or skips, on Bun 1.3.13. All eight keyless CI runner commands completed, and the unchanged keyword guard retained Jaccard 1.0000 and top-1 1.0000. Data, documentation and redacted diff secret checks passed. Project-file and script type gates passed under the existing CI policy; raw repository typechecking reported 45 diagnostics inside the installed dependency and none in project files. No paid call was made for this refresh.
 
 The shared identity check separately records the resolved package path/version, available commit/tree and dirty state, and verified package content hash. It checks `GBRAIN_SRC` and `GBRAIN_REPO` bindings against that package. A local `bun link` must not silently change which product an arm runs. The final release gate still needs complete live measurements at these exact registered identities.
 
