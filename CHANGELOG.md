@@ -2,6 +2,62 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.9.0] - 2026-09-23
+
+Engineers can now test whether situation cues help retrieve the original notes
+needed by an indirectly worded question, and inspect the evidence required to
+reject a regression. This release adds the
+[evaluation protocol and harness](docs/benchmarks/2026-09-23-situation-recall-protocol.md),
+not a measured retrieval gain. No paid comparison or all-category no-regression
+result is published here.
+
+### Added
+
+- Cat36 Associative Retrieval: 120 fictional scenario families across five
+  domains, with 160 development and 320 holdout probes. Its primary metric
+  requires all labeled source spans in the five actual production chunks,
+  rather than crediting a correct page with the wrong passage.
+- Production cue-build receipts, frozen-index Scene/Horizon read-time
+  comparisons, separate Bridge construction, and a real contextual-summary
+  control. Deterministic provider stubs remain nonpublishable plumbing checks.
+- A complete category inventory and paired release gate covering native metric
+  denominators, floors, slices, source identity, execution observations and
+  critical case losses. Missing, partial, stale or unsupported cells block release.
+- Explicit programmatic category drivers, a native Cat13b pilot, source and
+  reminder replays, and separate answer-grounding replays that retain original
+  outputs and judge attempts. The LongMemEval secondary check is not official
+  answer accuracy.
+
+### Changed
+
+- Pin the candidate product to `ca314d8af825308190cbe13dd08949d564a994a3`
+  (gbrain v0.54.0.0), while keeping the historical dependency and fresh baseline
+  identities distinct. CI uses supported Bun 1.3.13.
+- Retain previously omitted native per-item observations without changing
+  benchmark inputs, scoring formulas or published historical artifacts.
+- Add opt-in LongMemEval evidence capture and isolated HOME/configuration paths,
+  with exact loaded-code, model, source and build identities.
+
+### Fixed
+
+- Keep the existing keyword and identity fixtures readable through current,
+  revision-bound projections while preserving their original text and labels.
+- Distinguish a valid zero-score judge control from an unavailable judge, and
+  update tool-bridge test fixtures for atomic page snapshots without relaxing
+  their behavior assertions.
+- Preserve malformed or over-budget raw responses and existing LongMemEval
+  receipts on rejected capture, score legitimate bounded search misses, and
+  verify the product's actual configuration-file resolver.
+
+### Not yet measured
+
+Independent corpus and recipe review, real input catalogs, supported transport
+and protocol coverage, enforced external provider allowances, and complete live
+B/C0/C1 receipts remain prerequisites. The cue builder's durable cap does not
+create a whole-cell spending limit. Unattributable traversal results and other
+missing evidence remain blocked; hermetic checks do not prove semantic quality,
+privacy, reminder precision or release readiness.
+
 ## [0.8.0] - 2026-09-09
 
 Engineers can now choose a retrieval configuration by the questions they need to

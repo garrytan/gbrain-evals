@@ -132,3 +132,88 @@ The committed corpora are the shared test inputs. Model-backed regeneration chan
 For an intentional dataset revision, choose a new corpus version, update the generator/output location and labels together, and validate the new data. A seeded generator can choose the same cases while a model still writes different prose.
 
 Save a worthwhile run under a dated path in `docs/benchmarks/`, including its raw results, settings and code identities. Default files under `eval/reports/` may be overwritten by the next run. The [artifact manifest](../docs/receipts-manifest.json) and its tests check selected saved results; they do not validate every documentation claim.
+
+## Cat36 situation-aware recall and the all-category release gate
+
+Cat36 asks whether generated situation cues help retrieve original evidence for indirect questions. The [2026-09-23 protocol](../docs/benchmarks/2026-09-23-situation-recall-protocol.md) defines the experiment, profiles, budgets, source-only construction boundary, and exact reproduction commands. It is not a published capability result. The declared candidate is `ca314d8af825308190cbe13dd08949d564a994a3` (v0.54.0.0), verified in a separate clean packaged install. Independent corpus relevance review, credentials, external budget enforcement, and complete live comparisons remain prerequisites.
+
+Start keyless:
+
+```sh
+bun run eval:cat36:smoke
+bun run eval:cat36
+bun eval/runner/situation-recall-regression.ts inventory
+```
+
+The first command scores one development family's four probes; the second scores all 160 development probes. Both explicitly run offline keyword plumbing, with no live generation or embedding calls, and write nonpublishable receipts. The source corpus is still constructed in smoke mode. CI bounds the smoke subprocess to 180 seconds. The inventory command does not run benchmarks; exit 2 lists unresolved required prerequisites rather than a pass.
+
+Cat36's default output is a new `eval/reports/cat36-associative-retrieval/<timestamp>-<pid>/` directory with `build.json`, `probes.ndjson`, and `receipt.json`. Choose another new directory with `--output`. Keep the build and per-probe evidence beside the receipt. An offline `verdict: pass` means the plumbing ran, not that situation cues improve retrieval. `all.ts` also runs only this explicitly labeled Cat36 offline smoke; its other categories retain their existing, potentially paid defaults.
+
+The primary is `all_evidence_in_top5_chunks`, not page recall or answer accuracy. All required original source spans must occur in the five production chunks actually returned. The corpus has 120 families across five domains: 160 development and 320 holdout probes. Negative probes are excluded from positive recall means and receive separate cue false-fire accounting. Do not tune on holdout or treat unreviewed fixture labels as validated capability gold.
+
+Live runs require an approved `Cat36Profile`, exact product SHA, a verified package-content hash for archive installs, matching baseline/candidate settings, configured provider credentials, and an externally enforced isolated budget covering every paid lane. Do not infer a spending cap from `BRAINBENCH_N`, concurrency, or a number written into a profile. After all prerequisites are ready:
+
+```sh
+bun eval/runner/cat36-associative-retrieval.ts \
+  --profile /absolute/path/to/approved-profile.json \
+  --output /absolute/path/to/new-run-output
+```
+
+Do not append `--profile` to `eval:cat36`, which explicitly selects offline mode. Missing public cue or real contextual-summary execution support blocks the corresponding live arm; a config echo or Cat26 title fallback cannot replace it. Separate source-only builds and fresh output/DB/config/HOME namespaces prevent candidate artifacts from leaking into B or C0. The live embedding cache is keyed by source/model/dimensions/construction identity and input side, with distinct construction-arm namespaces and observed hit/miss counts. A fresh clone has no warm cache; generation, reranking, judging, and cache misses can still repeat paid work.
+
+### Grounded-answer replay is a separate secondary measurement
+
+The [grounded-answer replay](runner/cat36-grounded-answers.ts) consumes the existing retrieval run's `receipt.json`, `build.json`, and `probes.ndjson`. It leaves them unchanged and sends the answer model only the frozen question and actually returned original excerpts. Gold evidence goes only to the judge. Exact source matching rejects cue prose and inaccessible content; a fluent answer cannot make up for missing required evidence.
+
+Start with validation only, which makes no provider calls and writes no output:
+
+```sh
+bun eval/runner/cat36-grounded-answers.ts \
+  --input /absolute/path/to/existing-C1-dev-output
+bun test test/eval/cat36-grounded-answers.test.ts
+```
+
+After separately approving the answer and judge budgets and configuring their external enforcement, use a `GroundedProfile` rather than a retrieval `Cat36Profile`. It names both models and output-token limits, the exact product identity matching the retrieval build, and separate `answer_budget`/`judge_budget` approvals. The judge currently supports only `claude-haiku-4-5-20251001`; answer models use the public OpenAI, Anthropic, or Google gateway routes. The [protocol's grounded-answer section](../docs/benchmarks/2026-09-23-situation-recall-protocol.md#replay-grounded-answers-as-a-separate-secondary-check) lists every field and provider prerequisite.
+
+```sh
+bun eval/runner/cat36-grounded-answers.ts \
+  --execute --input /absolute/path/to/existing-C1-dev-output \
+  --profile /absolute/path/to/approved-grounded-profile.json \
+  --output /absolute/path/to/new-grounded-output \
+  --answer-max-usd "$APPROVED_ANSWER_MAX_USD" \
+  --judge-max-usd "$APPROVED_JUDGE_MAX_USD"
+```
+
+The explicit amounts must equal the two approved profile caps. Neither these flags nor output-token limits enforce a local dollar budget. The driver verifies product bindings before stripping ambient state, then imports the gateway under fresh recorded HOME/config/XDG/database paths. Only the approved answer/judge credentials survive; other provider, source, and database settings do not. It restores the environment even after failures. Parallel replays need separate processes.
+
+The new `cat36-grounded-answers` receipt and `answers.ndjson` preserve original answers, token usage, raw judge responses, retries, and failures. SUT failures are misses; judge failures are excluded and keep incomplete runs nonpublishable. Failed-call usage can be unknown, and the shared judge's dollar figure is an estimate, not a billing ledger. Offline injected runs remain plumbing-only. No grounded-answer score replaces the retrieval primary, and no live result is claimed here.
+
+### Native operation conformance and release comparison
+
+Native operation conformance is a separate keyless replay:
+
+```sh
+bun eval/runner/cat36-operation-conformance.ts --offline --smoke
+```
+
+It calls native `search`, `query`, and `recall`, retaining their raw responses instead of imposing the raw-five primary. Offline `query` disables expansion; live operation replay retains the native default. It checks explicit cue-prose fields, original chunk text, and source-policy serialization, not answer quality or every possible paraphrase. A missing required operation blocks before paid import. Use `--surfaces search,query` only for a clearly labeled subset diagnostic. Its separate output directory contains `build.json`, `operations.ndjson`, and `receipt.json`; all offline outputs remain nonpublishable.
+
+The all-category comparator is stricter than the legacy `all.ts` report. It requires every registered cell, complete matched probe IDs and denominators, actual feature observations where applicable, native floors, correct loaded product identity, a publishable receipt, and successful child termination. Required unsupported categories remain blocked. Cats5/8/9 need real reviewed runtime catalogs; their templates and default native baseline-only verdicts are not full release evidence. Cat34's official keyless tests and its separately budgeted semantic-delivery profile remain distinct.
+
+Compare only collected strict receipts against the preregistered run manifest:
+
+```sh
+bun eval/runner/situation-recall-regression.ts compare \
+  /absolute/path/to/frozen-run-manifest.json \
+  /absolute/path/to/collected-cell-results.json
+```
+
+Every category/slice must be non-worse, with zero allowed observed decline and no lost critical known-correct case. Cat36 also targets at least a 10-point indirect recall gain with a positive family-clustered interval. A broader retrieval claim additionally requires a preregistered, multiplicity-corrected gain on an existing opportunity benchmark. Incomplete, noisy, partial, or skipped results cannot promote the feature. Preserve them rather than changing the corpus, relaxing floors, or repeating until a favorable result appears.
+
+For a smaller existing-retrieval development check, `situation-recall-cat13b.ts --profile <file> --output <new-dir>` validates a separate native gbrain-cohort pilot; add `--execute` only after explicit budget approval and verified external caps. It preserves the 30-query, 20-page source-swamp inputs and native five-page protocol, with `token_budget: 12000`. It is not full Cat13b release coverage and does not share Cat36's exact-span primary. See the protocol's [bounded pilot instructions](../docs/benchmarks/2026-09-23-situation-recall-protocol.md#a-bounded-existing-benchmark-pilot).
+
+LongMemEval answer replay requires new retrieval artifacts collected with `--retain-evidence`; it will not fetch extra text to repair historical ID-only rows. `longmemeval-answers.ts --dataset <file> --rows <ndjson> --receipt <file> --adapter <name>` validates those inputs without providers. The separately approved live path uses hash-pinned models/data, fresh output and independent external answer/judge allowances. Its shared-judge grounding result is not the official LongMemEval answer-accuracy protocol; see the [replay contract](../docs/benchmarks/2026-09-23-situation-recall-protocol.md#retain-longmemeval-evidence-before-answer-replay).
+
+For capture itself, `--retain-evidence` also requires a fresh `--ndjson <file>`, an explicit fresh `--output <file.json>` (and its derived Markdown path), and a fresh receipt path selected by `--reports-dir <dir>`. It does not resume into old artifacts. The protocol provides a complete capture command; do not merely append the flag to an old run command. Capture may make provider calls and requires its own authorization and enforced allowance.
+
+`situation-recall-regression.ts collect <frozen-profile.json> <native-artifact.json>` normalizes retained observations for Cats2/4/6/18/18b/24/35. It explicitly returns `release_eligible: false`; it is not the paired release decision. `situation-recall-associative.ts --profile <json> --output <fresh-dir> [--corpus <dir>]` validates the separate development recipes by default. Its live path requires `--live --allow-paid`, exact recipe/corpus review and external cap admission. See the protocol's [native collection](../docs/benchmarks/2026-09-23-situation-recall-protocol.md#collect-retained-native-observations) and [associative replay](../docs/benchmarks/2026-09-23-situation-recall-protocol.md#exercise-separate-associative-development-recipes) contracts, including the blocked traversal and transport cases.

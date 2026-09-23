@@ -4,17 +4,16 @@
  * Tests whether gbrain can resolve aliases ("Sarah Chen", "S. Chen", "@schen",
  * "sarah.chen@example.com") to one canonical entity.
  *
- * gbrain currently has NO alias table. The benchmark measures what's possible
- * with searchKeyword (tsvector) + slug-based getPage. Numbers will be honest:
- * documented aliases (in canonical body) findable; undocumented not.
- *
- * The point is to surface the gap. A good v1 number on undocumented aliases
- * would mean we have an alias table; a poor number proves we should build one.
+ * This protocol measures searchKeyword (tsvector), not the product's explicit
+ * alias resolver. Documented aliases occur in the fixture body; undocumented
+ * variants do not. These numbers do not establish whether other alias or
+ * fuzzy-resolution capabilities exist.
  *
  * Usage: bun run eval/runner/identity.ts [--json]
  */
 
 import { PGLiteEngine } from 'gbrain/pglite-engine';
+import { installPageProjection, readProjectionSnapshot } from '../../node_modules/gbrain/src/core/page-state/projections.ts';
 
 interface Entity {
   canonicalSlug: string;
@@ -85,9 +84,17 @@ async function main() {
       timeline: '',
     });
     // Also chunk for searchKeyword.
-    await engine.upsertChunks(e.canonicalSlug, [
-      { chunk_index: 0, chunk_text: `${e.fullName} ${e.documentedAliases.join(' ')}`, chunk_source: 'compiled_truth' },
-    ]);
+    const snapshot = await readProjectionSnapshot(engine, e.canonicalSlug, 'default', { allowUnsealed: true });
+    if (!snapshot) throw new Error(`identity fixture snapshot missing: ${e.canonicalSlug}`);
+    const chunkText = `${e.fullName} ${e.documentedAliases.join(' ')}`;
+    await installPageProjection(engine, snapshot, [
+      { chunk_index: 0, chunk_text: chunkText, chunk_source: 'compiled_truth' },
+    ], { seal: true });
+    const stored = await engine.getPage(e.canonicalSlug, { sourceId: 'default' });
+    const chunks = await engine.getChunks(e.canonicalSlug, { sourceId: 'default' });
+    if (stored?.compiled_truth !== snapshot.snapshot.page.compiled_truth || chunks.length !== 1 || chunks[0].chunk_text !== chunkText) {
+      throw new Error(`identity fixture text/chunk contract changed: ${e.canonicalSlug}`);
+    }
   }
 
   // Run queries.
@@ -159,12 +166,11 @@ async function main() {
 
   log('\n## Interpretation');
   log('Documented aliases (full name, handle, email mentioned in canonical body):');
-  log(`  Recall ${(docRecall * 100).toFixed(1)}% — what current gbrain can do via tsvector keyword match.`);
+  log(`  Recall ${(docRecall * 100).toFixed(1)}% through this fixture's tsvector keyword path.`);
   log('Undocumented aliases (initials, typos, handle without @):');
-  log(`  Recall ${(undocRecall * 100).toFixed(1)}% — what current gbrain CAN'T do without an alias table.`);
+  log(`  Recall ${(undocRecall * 100).toFixed(1)}% through the same keyword path, without invoking the alias resolver.`);
   log('');
-  log('Gap: gbrain has no alias table, no fuzzy match, no nickname dictionary.');
-  log('Suggested v0.11 feature: explicit aliases + Levenshtein/phonetic match.');
+  log('Scope: this keyword-only protocol does not measure the explicit alias resolver, fuzzy matching, or nickname lookup.');
 
   if (json) {
     process.stdout.write(JSON.stringify({

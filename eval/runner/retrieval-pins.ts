@@ -75,7 +75,9 @@ export function searchObservation(opts: SearchObservationOptions): SearchObserva
     else {
       if (opts.meta.vector_enabled !== true) failures.push('vector_not_enabled');
       for (const d of opts.meta.degraded ?? []) {
-        if (!MEASURED_DEGRADATIONS.has(d.stage)) failures.push(`${d.stage}:${d.reason ?? 'unknown'}`);
+        const boundedVectorSearch = String(d.stage) === 'vector_candidates_incomplete'
+          && ['candidate_budget', 'iterative_scan_unavailable'].includes(d.reason ?? '');
+        if (!MEASURED_DEGRADATIONS.has(d.stage) && !boundedVectorSearch) failures.push(`${d.stage}:${d.reason ?? 'unknown'}`);
       }
       if (opts.expectedExpansion === false && opts.meta.expansion_applied) {
         failures.push('expansion_setting_mismatch');

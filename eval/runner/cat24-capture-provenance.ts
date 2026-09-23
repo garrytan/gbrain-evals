@@ -58,10 +58,20 @@ import { importFromContent, importFromFile } from 'gbrain/import-file';
 import { configureGateway } from 'gbrain/ai/gateway';
 import { operationsByName, type OperationContext } from 'gbrain/operations';
 import { ProbeAccounting } from './probe-accounting.ts';
-import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt } from './receipt.ts';
+import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt, type ProbeError } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 
 export const CAT24_CATEGORY = 'cat24-capture-provenance';
+
+export const CAT24_PROBE_IDS = [
+  'provenance-columns-present',
+  'content-import',
+  'file-import-no-channel-provenance',
+  'op-put-page-local-trusted',
+  'op-put-page-remote-spoof-override',
+  'dedup-hash-short-circuit',
+  'provenance-preserved-on-reimport',
+] as const;
 
 const PROVIDER_KEYS = [
   'OPENAI_API_KEY', 'VOYAGE_API_KEY', 'ZEROENTROPY_API_KEY',
@@ -84,6 +94,25 @@ export interface PathProbe {
   actual: ProvenanceRow | null;
   pass: boolean;
   fail_reason: string | null;
+}
+
+export interface ProvenanceProbeEvidence {
+  probe_id: string;
+  score: 0 | 1;
+  pass: boolean;
+  error: ProbeError | null;
+}
+
+export interface SchemaProbeEvidence extends ProvenanceProbeEvidence {
+  selected_columns: string[];
+  select_succeeded: boolean;
+}
+
+export interface PreservationProbeEvidence extends ProvenanceProbeEvidence {
+  before: ProvenanceRow | null;
+  after: ProvenanceRow | null;
+  at_before: string | null;
+  at_after: string | null;
 }
 
 async function readProvenance(engine: any, slug: string): Promise<ProvenanceRow | null> {
@@ -171,18 +200,23 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
   await engine.connect({});
   await engine.initSchema();
 
-  const PROBE_IDS = [
-    'provenance-columns-present',
-    'content-import',
-    'file-import-no-channel-provenance',
-    'op-put-page-local-trusted',
-    'op-put-page-remote-spoof-override',
-    'dedup-hash-short-circuit',
-    'provenance-preserved-on-reimport',
-  ];
+  const PROBE_IDS = CAT24_PROBE_IDS;
   const acc = new ProbeAccounting(PROBE_IDS.length);
+  const outcomes = new Map<string, ProvenanceProbeEvidence>();
+  const scoreProbe = (probeId: string): void => {
+    acc.score(probeId, 1);
+    outcomes.set(probeId, { probe_id: probeId, score: 1, pass: true, error: null });
+  };
+  const failProbe = (probeId: string, message: string): void => {
+    acc.error(probeId, 'sut', message);
+    outcomes.set(probeId, { probe_id: probeId, score: 0, pass: false, error: acc.summary().errors.at(-1)! });
+  };
   const probes: PathProbe[] = [];
   const dedup = { before_rows: -1, after_rows: -1, distinct_page_ids: -1, reimport_status: '' };
+  const schema = { selected_columns: ['source_kind', 'source_uri', 'ingested_via', 'ingested_at'], select_succeeded: false };
+  const preservation: Omit<PreservationProbeEvidence, keyof ProvenanceProbeEvidence> = {
+    before: null, after: null, at_before: null, at_after: null,
+  };
 
   const origLog = console.log;
   const origErr = console.error;
@@ -193,14 +227,15 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
     let columnsPresent = true;
     try {
       await engine.executeRaw(`SELECT source_kind, source_uri, ingested_via, ingested_at FROM pages LIMIT 0`, []);
-      acc.score('provenance-columns-present', 1);
+      schema.select_succeeded = true;
+      scoreProbe('provenance-columns-present');
     } catch (e: any) {
       columnsPresent = false;
-      acc.error('provenance-columns-present', 'sut', `provenance columns missing from pages: ${e?.message ?? e}`);
+      failProbe('provenance-columns-present', `provenance columns missing from pages: ${e?.message ?? e}`);
     }
     if (!columnsPresent) {
       // Nothing downstream can be measured; every path probe fails as SUT.
-      for (const id of PROBE_IDS.slice(1)) acc.error(id, 'sut', 'provenance columns missing — path unmeasurable');
+      for (const id of PROBE_IDS.slice(1)) failProbe(id, 'provenance columns missing — path unmeasurable');
     } else {
       const runPathProbe = async (
         probeId: string,
@@ -219,8 +254,8 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
           failReason = `ingestion path threw: ${String(e?.message ?? e).slice(0, 300)}`;
         }
         probes.push({ probe_id: probeId, path, slug, expected, actual, pass: failReason === null, fail_reason: failReason });
-        if (failReason === null) acc.score(probeId, 1);
-        else acc.error(probeId, 'sut', `${probeId} (${slug}): ${failReason}`);
+        if (failReason === null) scoreProbe(probeId);
+        else failProbe(probeId, `${probeId} (${slug}): ${failReason}`);
       };
 
       // ── Probe 1: importFromContent with provenance write-through ──
@@ -265,7 +300,7 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
       if (fileProbe && fileProbe.pass && fileRow?.source_path !== relPath) {
         fileProbe.pass = false;
         fileProbe.fail_reason = `source_path: expected ${JSON.stringify(relPath)}, got ${JSON.stringify(fileRow?.source_path ?? null)}`;
-        acc.error('file-import-no-channel-provenance', 'sut', fileProbe.fail_reason);
+        failProbe('file-import-no-channel-provenance', fileProbe.fail_reason);
       }
 
       const putPage = operationsByName['put_page'];
@@ -314,7 +349,7 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
         if (before.length !== 1) {
           // First import failed or duplicated — the dedup check would be
           // vacuous (audit cats22-25-10). Fail loudly instead.
-          acc.error('dedup-hash-short-circuit', 'sut', `expected exactly 1 pre-existing row for ${contentSlug}, found ${before.length}`);
+          failProbe('dedup-hash-short-circuit', `expected exactly 1 pre-existing row for ${contentSlug}, found ${before.length}`);
         } else {
           const res = await importFromContent(engine, contentSlug, contentBody, {
             noEmbed: true,
@@ -330,37 +365,42 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
           dedup.after_rows = after.length;
           dedup.distinct_page_ids = new Set([...before, ...after].map(r => Number(r.id))).size;
           if (dedup.distinct_page_ids === 1 && after.length === 1) {
-            acc.score('dedup-hash-short-circuit', 1);
+            scoreProbe('dedup-hash-short-circuit');
           } else {
-            acc.error('dedup-hash-short-circuit', 'sut', `re-import produced ${dedup.distinct_page_ids} distinct page id(s), ${after.length} row(s)`);
+            failProbe('dedup-hash-short-circuit', `re-import produced ${dedup.distinct_page_ids} distinct page id(s), ${after.length} row(s)`);
           }
         }
       } catch (e: any) {
-        acc.error('dedup-hash-short-circuit', 'sut', `dedup probe threw: ${e?.message ?? e}`);
+        failProbe('dedup-hash-short-circuit', `dedup probe threw: ${e?.message ?? e}`);
       }
 
       // ── Probe 6: CV12 — NULL-provenance rewrite preserves first-write stamps ──
       try {
         const beforeRow = await readProvenance(engine, contentSlug);
+        preservation.before = beforeRow;
+        preservation.at_before = beforeRow?.ingested_at instanceof Date ? beforeRow.ingested_at.toISOString() : beforeRow ? String(beforeRow.ingested_at) : null;
         if (!beforeRow || beforeRow.source_kind !== 'capture-cli') {
-          acc.error('provenance-preserved-on-reimport', 'sut', 'precondition failed: content-import row missing its provenance');
+          failProbe('provenance-preserved-on-reimport', 'precondition failed: content-import row missing its provenance');
         } else {
           // Different body, NO provenance opts: COALESCE must preserve.
           await importFromContent(engine, contentSlug, contentBody + '\nEdited later by a plain writer.\n', { noEmbed: true });
           const afterRow = await readProvenance(engine, contentSlug);
+          preservation.after = afterRow;
           const drift = checkProvenance(afterRow, {
             source_kind: 'capture-cli', source_uri: 'file:///tmp/probe.md', ingested_via: 'capture-cli', ingested_at_null: false,
           });
           const atBefore = beforeRow.ingested_at instanceof Date ? beforeRow.ingested_at.toISOString() : String(beforeRow.ingested_at);
           const atAfter = afterRow?.ingested_at instanceof Date ? afterRow.ingested_at.toISOString() : String(afterRow?.ingested_at);
+          preservation.at_before = atBefore;
+          preservation.at_after = atAfter;
           if (drift === null && atBefore === atAfter) {
-            acc.score('provenance-preserved-on-reimport', 1);
+            scoreProbe('provenance-preserved-on-reimport');
           } else {
-            acc.error('provenance-preserved-on-reimport', 'sut', drift ?? `ingested_at drifted: ${atBefore} → ${atAfter}`);
+            failProbe('provenance-preserved-on-reimport', drift ?? `ingested_at drifted: ${atBefore} → ${atAfter}`);
           }
         }
       } catch (e: any) {
-        acc.error('provenance-preserved-on-reimport', 'sut', `preservation probe threw: ${e?.message ?? e}`);
+        failProbe('provenance-preserved-on-reimport', `preservation probe threw: ${e?.message ?? e}`);
       }
     }
   } finally {
@@ -404,6 +444,9 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
     data: {
       per_path: probes,
       dedup_test: dedup,
+      per_probe: [...outcomes.values()],
+      schema_test: { ...outcomes.get('provenance-columns-present')!, ...schema } satisfies SchemaProbeEvidence,
+      preservation_test: { ...outcomes.get('provenance-preserved-on-reimport')!, ...preservation } satisfies PreservationProbeEvidence,
     },
   };
   writeReceipt(receiptFile, receipt);

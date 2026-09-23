@@ -75,7 +75,7 @@
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync, appendFileSync } from 'fs';
 import { createHash } from 'node:crypto';
-import { join, dirname } from 'path';
+import { join, dirname, resolve } from 'path';
 import { homedir } from 'os';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { importFromContent } from 'gbrain/import-file';
@@ -111,6 +111,7 @@ import {
 } from './receipt.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
+import { createLmeCapture, retainLmeEvidence, type LmeEvidence } from './longmemeval-answers.ts';
 
 // ─── CLI ──────────────────────────────────────────────────────────
 
@@ -151,6 +152,7 @@ export interface Opts {
   embeddingDimensions: number | null;
   /** Where receipt.json lands (receiptPath(category, reportsDir)). */
   reportsDir: string;
+  retainEvidence?: boolean;
 }
 
 export function parseOpts(argv: string[] = process.argv.slice(2)): Opts {
@@ -201,6 +203,7 @@ export function parseOpts(argv: string[] = process.argv.slice(2)): Opts {
     embeddingModel: arg(args, '--embedding-model'),
     embeddingDimensions: arg(args, '--embedding-dims') ? Number(arg(args, '--embedding-dims')) : null,
     reportsDir: arg(args, '--reports-dir') ?? join(process.cwd(), 'eval/reports'),
+    ...(args.includes('--retain-evidence') ? { retainEvidence: true } : {}),
   };
 }
 
@@ -320,7 +323,7 @@ export function isAbsQuestion(questionId: string): boolean {
 // LongMemEval _s shape uses array of arrays for haystack_sessions (each
 // inner array is the turns of that session). Oracle uses {session_id, turns}.
 // Normalize to {session_id, turns}.
-function normalizeSessions(q: Question): Array<{ session_id: string; turns: Turn[]; date?: string }> {
+export function normalizeSessions(q: Question): Array<{ session_id: string; turns: Turn[]; date?: string }> {
   const sessions: Array<{ session_id: string; turns: Turn[]; date?: string }> = [];
   const ids = q.haystack_session_ids ?? [];
   const dates = q.haystack_dates ?? [];
@@ -343,7 +346,7 @@ function normalizeSessions(q: Question): Array<{ session_id: string; turns: Turn
   return sessions;
 }
 
-function renderSession(session: { session_id: string; turns: Turn[]; date?: string }): string {
+export function renderSession(session: { session_id: string; turns: Turn[]; date?: string }): string {
   const fm: string[] = ['---', 'type: note'];
   if (session.date) fm.push(`date: ${session.date}`);
   fm.push(`session_id: ${session.session_id}`, '---', '');
@@ -705,6 +708,7 @@ export interface NdjsonRow {
   run_config_hash?: string;
   error?: string;
   error_origin?: FailureOrigin;
+  evidence?: LmeEvidence;
 }
 
 export interface TypeBucket {
@@ -932,6 +936,11 @@ const PROVIDER_ENV_KEY: Record<string, string> = {
 export async function run(opts: Opts): Promise<RunResult> {
   const startedAt = new Date().toISOString();
   const receiptFile = receiptPath(LME_CATEGORY, opts.reportsDir);
+  const evidencePaths = [opts.ndjsonPath, opts.output, opts.output.replace(/\.json$/, '.md'), receiptFile];
+  if (opts.retainEvidence && (!opts.ndjsonPath || !opts.output.endsWith('.json') || evidencePaths.some(path => existsSync(path))
+    || new Set(evidencePaths.map(path => resolve(path))).size !== evidencePaths.length)) {
+    throw new Error('evidence capture requires fresh, distinct --ndjson, JSON --output, and receipt paths');
+  }
 
   const skip = (reason: string): RunResult => {
     const receipt: Receipt = {
@@ -956,7 +965,8 @@ export async function run(opts: Opts): Promise<RunResult> {
     );
   }
   process.stderr.write(`[longmemeval] loading ${opts.datasetPath}...\n`);
-  const raw: Question[] = JSON.parse(readFileSync(opts.datasetPath, 'utf8'));
+  const datasetBytes = readFileSync(opts.datasetPath);
+  const raw: Question[] = JSON.parse(datasetBytes.toString('utf8'));
   let all = raw;
   if (opts.stratify) all = stratifiedSample(raw, opts.stratify, opts.seed);
   if (opts.limit) all = all.slice(0, opts.limit);
@@ -1111,6 +1121,7 @@ export async function run(opts: Opts): Promise<RunResult> {
   const completed = readCompletedPairs(opts.ndjsonPath);
   if (opts.ndjsonPath) {
     mkdirSync(dirname(opts.ndjsonPath) || '.', { recursive: true });
+    if (opts.retainEvidence) writeFileSync(opts.ndjsonPath, '', { flag: 'wx' });
     process.stderr.write(`[longmemeval] ndjson stream: ${opts.ndjsonPath} (${completed.size} pairs already complete)\n`);
   }
   const wallStart = Date.now();
@@ -1129,6 +1140,7 @@ export async function run(opts: Opts): Promise<RunResult> {
     }
   }
   const acc = new ProbeAccounting(expectedProbes);
+  const evidenceCapture = opts.retainEvidence ? createLmeCapture(datasetBytes, all.filter((_, i) => inShard(i)), runnable.map(adapter => adapter.name)) : undefined;
   const runConfigPreimages: Record<string, RunConfigPreimage> = {};
   const abortedAdapters: Array<{ adapter: string; reason: string }> = [];
 
@@ -1299,6 +1311,7 @@ export async function run(opts: Opts): Promise<RunResult> {
                 }
               : {}),
             run_config_hash: rowConfigHash,
+            ...(evidenceCapture ? { evidence: retainLmeEvidence(q, searchResults, adapter, opts.topK, retrieved) } : {}),
           };
           results.push(row);
           acc.score(probeId, abs
@@ -1344,6 +1357,7 @@ export async function run(opts: Opts): Promise<RunResult> {
             run_config_hash: rowConfigHash,
             error: msg,
             error_origin: origin,
+            ...(evidenceCapture ? { evidence: retainLmeEvidence(q, [], adapter, opts.topK, []) } : {}),
           };
           results.push(errRow);
           if (opts.ndjsonPath) {
@@ -1451,6 +1465,7 @@ export async function run(opts: Opts): Promise<RunResult> {
       && opts.limit === null && opts.stratify === null && opts.totalWorkers === 1
       && skippedAdapters.length === 0 && abortedAdapters.length === 0,
     resolved_config: {
+      ...(evidenceCapture ? { evidence_capture: { ...evidenceCapture, run_config_preimages: runConfigPreimages } } : {}),
       search_config_by_adapter: searchConfigByAdapter,
       embedding_model: resolvedEmbeddingModel,
       embedding_dimensions: resolvedEmbeddingDims,
@@ -1475,6 +1490,7 @@ export async function run(opts: Opts): Promise<RunResult> {
         : {}),
     },
     finished_at: new Date().toISOString(),
+    ...(evidenceCapture ? { hashes: { dataset: evidenceCapture.dataset_sha256, evidence_rows: createHash('sha256').update(readFileSync(opts.ndjsonPath)).digest('hex') } } : {}),
     data: {
       headline_metric: 'recall_all_at_k',
       verdict_reason: gate.reason,
@@ -1542,7 +1558,10 @@ if (import.meta.main) {
     process.exit(result.exitCode);
   } catch (e: any) {
     try {
-      writeReceipt(receiptPath(LME_CATEGORY, opts.reportsDir), {
+      const errorReceipt = receiptPath(LME_CATEGORY, opts.reportsDir);
+      if (opts.retainEvidence && existsSync(errorReceipt)) {
+        process.stderr.write(`[longmemeval] existing receipt preserved: ${errorReceipt}\n`);
+      } else writeReceipt(errorReceipt, {
         schema_version: RECEIPT_SCHEMA_VERSION,
         benchmark_version: BENCHMARK_VERSION,
         category: LME_CATEGORY,

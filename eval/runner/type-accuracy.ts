@@ -30,7 +30,7 @@ import { join } from 'path';
 import { extractPageLinks } from 'gbrain/link-extraction';
 import type { PageType } from 'gbrain/types';
 
-interface RichPage {
+export interface RichPage {
   slug: string;
   type: 'person' | 'company' | 'meeting' | 'concept';
   title: string;
@@ -52,7 +52,7 @@ interface RichPage {
   };
 }
 
-interface GoldEdge {
+export interface GoldEdge {
   from: string;
   to: string;
   type: string;
@@ -152,8 +152,52 @@ function buildGoldEdges(pages: RichPage[]): GoldEdge[] {
   return dedup;
 }
 
+export interface TypeAccuracyAttempt {
+  probe_id: string;
+  slug: string;
+  status: 'completed' | 'error';
+  inferred: GoldEdge[];
+  error?: string;
+}
+
+export interface TypeAccuracyCounts {
+  linkType: string;
+  gold: number;
+  correctly_typed: number;
+  mistyped: number;
+  missed: number;
+  spurious: number;
+}
+
+export interface TypeAccuracyRow {
+  probe_id: string;
+  from: string;
+  to: string;
+  goldType: string | null;
+  inferredTypes: string[];
+  inferredType: string | null;
+  classification: 'correctly_typed' | 'mistyped' | 'missed' | 'spurious';
+}
+
+export function typeAccuracyCounts(row: TypeAccuracyRow): TypeAccuracyCounts[] {
+  const types = new Set([...row.inferredTypes, ...(row.goldType === null ? [] : [row.goldType])]);
+  return [...types].map(linkType => ({
+    linkType,
+    gold: Number(row.goldType === linkType),
+    correctly_typed: Number(row.goldType === linkType && row.classification === 'correctly_typed'),
+    mistyped: Number(row.goldType === linkType && row.classification === 'mistyped'),
+    missed: Number(row.goldType === linkType && row.classification === 'missed'),
+    spurious: Number(row.goldType === null ? row.inferredTypes.includes(linkType)
+      : row.goldType !== linkType && row.inferredType === linkType),
+  }));
+}
+
 /** Run extractPageLinks on every page; return flat list of inferred edges. */
-async function inferAllEdges(pages: RichPage[]): Promise<GoldEdge[]> {
+export async function inferAllEdges(
+  pages: RichPage[],
+  attempts: TypeAccuracyAttempt[] = [],
+  extractor: typeof extractPageLinks = extractPageLinks,
+): Promise<GoldEdge[]> {
   // v0.13+ contract: async (slug, content, frontmatter, pageType, resolver).
   // The pre-audit 3-arg sync call put content in the slug slot and iterated
   // a Promise — the runner crashed before scoring anything (finding
@@ -163,10 +207,20 @@ async function inferAllEdges(pages: RichPage[]): Promise<GoldEdge[]> {
   const resolver = { resolve: async (name: string) => (known.has(name) ? name : null) };
   const edges: GoldEdge[] = [];
   for (const p of pages) {
-    const content = `${p.title}\n\n${p.compiled_truth}\n\n${p.timeline}`;
-    const res = await extractPageLinks(p.slug, content, {}, p.type as PageType, resolver);
-    for (const c of res.candidates) {
-      edges.push({ from: p.slug, to: c.targetSlug, type: c.linkType });
+    const attempt: TypeAccuracyAttempt = { probe_id: `page:${p.slug}`, slug: p.slug, status: 'completed', inferred: [] };
+    attempts.push(attempt);
+    try {
+      const content = `${p.title}\n\n${p.compiled_truth}\n\n${p.timeline}`;
+      const res = await extractor(p.slug, content, {}, p.type as PageType, resolver);
+      for (const c of res.candidates) {
+        const edge = { from: p.slug, to: c.targetSlug, type: c.linkType };
+        edges.push(edge);
+        attempt.inferred.push(edge);
+      }
+    } catch (error) {
+      attempt.status = 'error';
+      attempt.error = String(error);
+      throw error;
     }
   }
   return edges;
@@ -190,11 +244,12 @@ interface ConfusionMatrix {
   [goldType: string]: Record<string, number>;
 }
 
-function score(gold: GoldEdge[], inferred: GoldEdge[]): {
+export function score(gold: GoldEdge[], inferred: GoldEdge[]): {
   perType: PerTypeResult[];
   confusion: ConfusionMatrix;
   overallTypeAccuracy: number;
   overallStrictF1: number;
+  rows: Array<TypeAccuracyRow & { contributed: true; counts: TypeAccuracyCounts[] }>;
 } {
   // Index gold by (from, to) pair. A duplicate pair with a DIFFERENT type is
   // a gold-authoring error — fail loudly instead of silently overwriting
@@ -232,6 +287,7 @@ function score(gold: GoldEdge[], inferred: GoldEdge[]): {
 
   // Build confusion matrix: gold type → inferred type counts.
   const confusion: ConfusionMatrix = {};
+  const rows: TypeAccuracyRow[] = [];
   for (const t of linkTypes) confusion[t] = {};
 
   for (const [pair, goldType] of goldByPair) {
@@ -242,11 +298,31 @@ function score(gold: GoldEdge[], inferred: GoldEdge[]): {
       ? '(missing)'
       : types.has(goldType) ? goldType : [...types].sort()[0];
     confusion[goldType][inferredType] = (confusion[goldType][inferredType] ?? 0) + 1;
+    const [from, to] = pair.split('\u0000');
+    rows.push({
+      probe_id: `edge:${JSON.stringify([from, to])}`,
+      from,
+      to,
+      goldType,
+      inferredTypes: [...(types ?? [])].sort(),
+      inferredType: types === undefined ? null : inferredType,
+      classification: types === undefined ? 'missed' : types.has(goldType) ? 'correctly_typed' : 'mistyped',
+    });
   }
   // Spurious edges (inferred without gold) tracked under '(no-gold)' rows.
   confusion['(no-gold)'] = {};
   for (const [pair, types] of inferredByPair) {
     if (!goldByPair.has(pair)) {
+      const [from, to] = pair.split('\u0000');
+      rows.push({
+        probe_id: `edge:${JSON.stringify([from, to])}`,
+        from,
+        to,
+        goldType: null,
+        inferredTypes: [...types].sort(),
+        inferredType: null,
+        classification: 'spurious',
+      });
       for (const inferredType of types) {
         confusion['(no-gold)'][inferredType] = (confusion['(no-gold)'][inferredType] ?? 0) + 1;
       }
@@ -328,7 +404,10 @@ function score(gold: GoldEdge[], inferred: GoldEdge[]): {
   // Sort perType by gold count descending (most common first).
   perType.sort((a, b) => b.gold - a.gold);
 
-  return { perType, confusion, overallTypeAccuracy, overallStrictF1 };
+  return {
+    perType, confusion, overallTypeAccuracy, overallStrictF1,
+    rows: rows.map(row => ({ ...row, contributed: true, counts: typeAccuracyCounts(row) })),
+  };
 }
 
 function pct(n: number, digits = 1): string {
@@ -349,12 +428,28 @@ async function main() {
   log(`Loaded ${pages.length} pages.\n`);
 
   const gold = buildGoldEdges(pages);
-  const inferred = await inferAllEdges(pages);
+  const attempts: TypeAccuracyAttempt[] = [];
+  let inferred: GoldEdge[];
+  let scored: ReturnType<typeof score>;
+  try {
+    inferred = await inferAllEdges(pages, attempts);
+    scored = score(gold, inferred);
+  } catch (error) {
+    if (json) console.log(JSON.stringify({
+      run_status: 'error',
+      goldEdges: gold,
+      inferredEdges: attempts.flatMap(a => a.inferred),
+      attempts,
+      rows: [],
+      errors: [{ probe_id: attempts.at(-1)?.status === 'error' ? attempts.at(-1)!.probe_id : 'score', message: String(error) }],
+    }, null, 2));
+    throw error;
+  }
 
   log(`Gold edges (from _facts):     ${gold.length}`);
   log(`Inferred edges (extractPageLinks): ${inferred.length}\n`);
 
-  const { perType, confusion, overallTypeAccuracy, overallStrictF1 } = score(gold, inferred);
+  const { perType, confusion, overallTypeAccuracy, overallStrictF1, rows } = scored;
 
   log('## Per-link-type results\n');
   log('| Link type    | Gold | Correct | Mistyped | Missed | Spurious | Type acc | Recall | Prec   | F1 (strict) |');
@@ -402,11 +497,17 @@ async function main() {
       confusion,
       goldTotal: gold.length,
       inferredTotal: inferred.length,
+      goldEdges: gold,
+      inferredEdges: inferred,
+      attempts,
+      rows,
     }, null, 2));
   }
 }
 
-main().catch(e => {
-  console.error(e);
-  process.exit(1);
-});
+if (import.meta.main) {
+  main().catch(e => {
+    console.error(e);
+    process.exit(1);
+  });
+}

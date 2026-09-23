@@ -56,6 +56,19 @@ export interface Cat35JudgeCfg {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   client?: any;
   maxTokens?: number;
+  evidence?: Cat35JudgeAttempt[];
+}
+
+export interface Cat35JudgeAttempt {
+  tool: string;
+  requested_model: string;
+  resolved_model: string | null;
+  status: 'tool_input' | 'missing_tool_input' | 'transport_error';
+  tool_input: unknown | null;
+  error: { name: string; status: number | null } | null;
+  input_tokens: number;
+  output_tokens: number;
+  cost_usd: number;
 }
 
 let defaultClient: Anthropic | null = null;
@@ -169,6 +182,21 @@ async function callJudgeOnce(
     process.stderr.write(
       `[cat35-judges] transport error (attempt counts toward retry): ${e instanceof Error ? e.message : String(e)}\n`,
     );
+    cfg?.evidence?.push({
+      tool: tool.name,
+      requested_model: model,
+      resolved_model: null,
+      status: 'transport_error',
+      tool_input: null,
+      error: {
+        name: e instanceof Error ? e.name : typeof e,
+        status: typeof (e as { status?: unknown } | null)?.status === 'number'
+          ? (e as { status: number }).status : null,
+      },
+      input_tokens: 0,
+      output_tokens: 0,
+      cost_usd: 0,
+    });
     return { input: null, input_tokens: 0, output_tokens: 0, cost_usd: 0 };
   }
   // Server-reported model (generators-19): counted per call; transport
@@ -196,6 +224,17 @@ async function callJudgeOnce(
       (usage.cache_creation_input_tokens ?? 0) * 1.25 +
       (usage.cache_read_input_tokens ?? 0) * 0.1,
   );
+  cfg?.evidence?.push({
+    tool: tool.name,
+    requested_model: model,
+    resolved_model: typeof response.model === 'string' && response.model.length > 0 ? response.model : null,
+    status: input === null ? 'missing_tool_input' : 'tool_input',
+    tool_input: input,
+    error: null,
+    input_tokens,
+    output_tokens,
+    cost_usd: priceOf(model, input_tokens, output_tokens),
+  });
   return { input, input_tokens, output_tokens, cost_usd: priceOf(model, input_tokens, output_tokens) };
 }
 

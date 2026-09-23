@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "normalization": "nfc-lf-v1",
+  "family_count": 120,
+  "probe_count": 480,
+  "hashes": {
+    "sources.json": "c99a5419b87aa92d095d0d22297237937fc66b064207d64ceff6eb4c1053be2a",
+    "probes.json": "d0493d9724ca3075c6137d61c82d0055e9bc79ac2f401c18ddbe53af973e45ee",
+    "qrels.json": "ab04627e4cdecea22a55f6205ef29ffd3f3b99b1335b720f78839c9bb66cb08e",
+    "splits.json": "aa8a5d215e5996f544b505db5c7151f50080a215dc1e5c4fdba10808c7660b30",
+    "counterfactuals.json": "686994c5df67c28dfb7e7f608279ddb3f455a897dd84460c3955e2ce77cc3de0"
+  },
+  "review": {
+    "status": "pending-independent-relevance-review"
+  }
+}

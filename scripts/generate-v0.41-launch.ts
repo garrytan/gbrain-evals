@@ -31,6 +31,7 @@ const GBRAIN_SRC = process.env.GBRAIN_SRC
 // Dynamic imports from the gbrain source tree (relative file paths, because
 // bench-publish/baseline-file are not in gbrain's export map).
 const { PGLiteEngine } = await import(join(GBRAIN_SRC, 'src/core/pglite-engine.ts'));
+const { importFromContent } = await import(join(GBRAIN_SRC, 'src/core/import-file.ts'));
 const { buildBaselineFromInput } = await import(join(GBRAIN_SRC, 'src/commands/bench-publish.ts'));
 const { serializeBaselineFile } = await import(join(GBRAIN_SRC, 'src/core/bench/baseline-file.ts'));
 
@@ -47,10 +48,7 @@ const qrels: {
 } = JSON.parse(readFileSync(QRELS_PATH, 'utf-8'));
 
 // We capture via engine.searchKeyword (keyword-only / FTS path) so we
-// don't need real vector embeddings. Using a zero-vector placeholder
-// matched to the active default dim (1280 for zeroentropy:zembed-1; the
-// pre-v0.36 default was 1536). Read from the gateway accessor so future
-// dim changes don't break the generator.
+// don't need real vector embeddings.
 async function getActiveDim(): Promise<number> {
   const { configureGateway, getEmbeddingDimensions } = await import(
     join(GBRAIN_SRC, 'src/core/ai/gateway.ts')
@@ -58,10 +56,6 @@ async function getActiveDim(): Promise<number> {
   // Configure with empty options so defaults apply.
   configureGateway({});
   return getEmbeddingDimensions();
-}
-
-function zeroEmbedding(dim: number): Float32Array {
-  return new Float32Array(dim);
 }
 
 // Synthesize a chunk_text for a slug — LABEL-FAITHFUL (audit data-integrity-02):
@@ -127,7 +121,7 @@ async function main(): Promise<void> {
   }
   console.error(`[generate] seeding ${allSlugs.size} placeholder pages…`);
 
-  // Seed every slug with a synthesized chunk + basis-vector embedding.
+  // Seed every slug with the unchanged synthesized content.
   // Content carries keywords from EVERY query that labels the slug relevant
   // (label-faithful), and the query's expected top-1 slug gets emphasized
   // keywords so first_relevant_slug is grounded in content.
@@ -149,21 +143,15 @@ async function main(): Promise<void> {
 
   for (const slug of [...allSlugs].sort()) {
     const text = synthesizeContent(slug, slugQueriesMap.get(slug)!, emphasisMap.get(slug) ?? null);
-    await engine.putPage(slug, {
-      type: inferType(slug),
-      title: slug.split('/').pop() ?? slug,
-      compiled_truth: text,
-      timeline: '',
-    });
-    await engine.upsertChunks(slug, [
-      {
-        chunk_index: 0,
-        chunk_text: text,
-        chunk_source: 'compiled_truth',
-        embedding: zeroEmbedding(activeDim),
-        token_count: Math.ceil(text.length / 4),
-      },
-    ]);
+    const result = await importFromContent(engine, slug,
+      `---\ntype: ${inferType(slug)}\ntitle: ${JSON.stringify(slug.split('/').pop() ?? slug)}\n---\n\n${text}`,
+      { noEmbed: true, sourceId: 'default' });
+    if (result.status === 'error') throw new Error(`reference corpus import failed: ${slug}`);
+    const page = await engine.getPage(slug, { sourceId: 'default' });
+    const chunks = await engine.getChunks(slug, { sourceId: 'default' });
+    if (page?.compiled_truth !== text || chunks.length !== 1 || chunks[0].chunk_text !== text) {
+      throw new Error(`reference corpus text/chunk contract changed: ${slug}`);
+    }
   }
 
   // Now run each qrels query via engine.searchKeyword and capture the

@@ -46,6 +46,10 @@ function makeFakeEngine(responses: Record<string, unknown> = {}): {
         return async (...args: unknown[]) => {
           calls.push({ method: prop, args });
           if (prop in responses) return responses[prop];
+          if (prop === 'readPageSnapshot' && ('getPage' in responses || '__default__' in responses)) {
+            const page = 'getPage' in responses ? responses.getPage : responses.__default__;
+            return page ? { page: { id: 1, slug: args[0], source_id: 'default', frontmatter: {}, compiled_truth: '', timeline: '', ...(page as Record<string, unknown>) }, tags: responses.getTags ?? [], revision: null } : null;
+          }
           if ('__default__' in responses) return responses.__default__;
           // gbrain's alias hop (v0.46+) expects a Map from resolveAliases
           // and dereferences .get() outside its try/catch — an array here
@@ -387,9 +391,9 @@ describe('executeTool — dry_run tools', () => {
 describe('tool-bridge state tracking', () => {
   test('count_by_tool + call_order reflect every invocation in order', async () => {
     const { engine } = makeFakeEngine({
-      search: [],
-      get_page: { slug: 'x' },
-      list_pages: [],
+      searchKeyword: [],
+      getPage: { slug: 'x' },
+      listPages: [],
     });
     const bridge = createToolBridge(cfg(engine));
     await bridge.executeTool('search', { query: 'a' });

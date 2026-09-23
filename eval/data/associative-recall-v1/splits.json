@@ -1,0 +1,605 @@
+{
+  "schema_version": 1,
+  "families": [
+    {
+      "id": "constraints/kiln-clearance",
+      "domain": "constraints",
+      "split": "dev"
+    },
+    {
+      "id": "constraints/freight-elevator",
+      "domain": "constraints",
+      "split": "dev"
+    },
+    {
+      "id": "constraints/captioned-webinar",
+      "domain": "constraints",
+      "split": "dev"
+    },
+    {
+      "id": "constraints/archive-humidity",
+      "domain": "constraints",
+      "split": "dev"
+    },
+    {
+      "id": "constraints/night-generator",
+      "domain": "constraints",
+      "split": "dev"
+    },
+    {
+      "id": "constraints/grant-invoices",
+      "domain": "constraints",
+      "split": "dev"
+    },
+    {
+      "id": "constraints/cellar-radio",
+      "domain": "constraints",
+      "split": "dev"
+    },
+    {
+      "id": "constraints/seed-export",
+      "domain": "constraints",
+      "split": "dev"
+    },
+    {
+      "id": "constraints/battery-flight",
+      "domain": "constraints",
+      "split": "holdout"
+    },
+    {
+      "id": "constraints/shared-oven",
+      "domain": "constraints",
+      "split": "holdout"
+    },
+    {
+      "id": "constraints/river-bridge",
+      "domain": "constraints",
+      "split": "holdout"
+    },
+    {
+      "id": "constraints/museum-flash",
+      "domain": "constraints",
+      "split": "holdout"
+    },
+    {
+      "id": "constraints/cashless-stall",
+      "domain": "constraints",
+      "split": "holdout"
+    },
+    {
+      "id": "constraints/mural-wall",
+      "domain": "constraints",
+      "split": "holdout"
+    },
+    {
+      "id": "constraints/loan-laptop",
+      "domain": "constraints",
+      "split": "holdout"
+    },
+    {
+      "id": "constraints/animal-ferry",
+      "domain": "constraints",
+      "split": "holdout"
+    },
+    {
+      "id": "constraints/embargo-photos",
+      "domain": "constraints",
+      "split": "holdout"
+    },
+    {
+      "id": "constraints/quiet-exam",
+      "domain": "constraints",
+      "split": "holdout"
+    },
+    {
+      "id": "constraints/frozen-samples",
+      "domain": "constraints",
+      "split": "holdout"
+    },
+    {
+      "id": "constraints/lift-certification",
+      "domain": "constraints",
+      "split": "holdout"
+    },
+    {
+      "id": "constraints/taxi-child-seat",
+      "domain": "constraints",
+      "split": "holdout"
+    },
+    {
+      "id": "constraints/offline-ballot",
+      "domain": "constraints",
+      "split": "holdout"
+    },
+    {
+      "id": "constraints/darkroom-drain",
+      "domain": "constraints",
+      "split": "holdout"
+    },
+    {
+      "id": "constraints/translation-license",
+      "domain": "constraints",
+      "split": "holdout"
+    },
+    {
+      "id": "preferences/tea-roast",
+      "domain": "preferences",
+      "split": "dev"
+    },
+    {
+      "id": "preferences/meeting-agenda",
+      "domain": "preferences",
+      "split": "dev"
+    },
+    {
+      "id": "preferences/hotel-courtyard",
+      "domain": "preferences",
+      "split": "dev"
+    },
+    {
+      "id": "preferences/repair-visible",
+      "domain": "preferences",
+      "split": "dev"
+    },
+    {
+      "id": "preferences/audio-speed",
+      "domain": "preferences",
+      "split": "dev"
+    },
+    {
+      "id": "preferences/route-shade",
+      "domain": "preferences",
+      "split": "dev"
+    },
+    {
+      "id": "preferences/feedback-private",
+      "domain": "preferences",
+      "split": "dev"
+    },
+    {
+      "id": "preferences/software-keyboard",
+      "domain": "preferences",
+      "split": "dev"
+    },
+    {
+      "id": "preferences/gift-consumable",
+      "domain": "preferences",
+      "split": "holdout"
+    },
+    {
+      "id": "preferences/map-paper",
+      "domain": "preferences",
+      "split": "holdout"
+    },
+    {
+      "id": "preferences/bread-crust",
+      "domain": "preferences",
+      "split": "holdout"
+    },
+    {
+      "id": "preferences/workshop-size",
+      "domain": "preferences",
+      "split": "holdout"
+    },
+    {
+      "id": "preferences/garden-fragrance",
+      "domain": "preferences",
+      "split": "holdout"
+    },
+    {
+      "id": "preferences/news-digest",
+      "domain": "preferences",
+      "split": "holdout"
+    },
+    {
+      "id": "preferences/photo-candid",
+      "domain": "preferences",
+      "split": "holdout"
+    },
+    {
+      "id": "preferences/puzzle-coop",
+      "domain": "preferences",
+      "split": "holdout"
+    },
+    {
+      "id": "preferences/report-charts",
+      "domain": "preferences",
+      "split": "holdout"
+    },
+    {
+      "id": "preferences/train-direction",
+      "domain": "preferences",
+      "split": "holdout"
+    },
+    {
+      "id": "preferences/music-silence",
+      "domain": "preferences",
+      "split": "holdout"
+    },
+    {
+      "id": "preferences/meal-sharing",
+      "domain": "preferences",
+      "split": "holdout"
+    },
+    {
+      "id": "preferences/tool-grip",
+      "domain": "preferences",
+      "split": "holdout"
+    },
+    {
+      "id": "preferences/book-ending",
+      "domain": "preferences",
+      "split": "holdout"
+    },
+    {
+      "id": "preferences/cafe-table",
+      "domain": "preferences",
+      "split": "holdout"
+    },
+    {
+      "id": "preferences/museum-pace",
+      "domain": "preferences",
+      "split": "holdout"
+    },
+    {
+      "id": "commitments/seedlings-pickup",
+      "domain": "commitments",
+      "split": "dev"
+    },
+    {
+      "id": "commitments/minutes-redaction",
+      "domain": "commitments",
+      "split": "dev"
+    },
+    {
+      "id": "commitments/keys-return",
+      "domain": "commitments",
+      "split": "dev"
+    },
+    {
+      "id": "commitments/budget-quote",
+      "domain": "commitments",
+      "split": "dev"
+    },
+    {
+      "id": "commitments/choir-score",
+      "domain": "commitments",
+      "split": "dev"
+    },
+    {
+      "id": "commitments/ramp-test",
+      "domain": "commitments",
+      "split": "dev"
+    },
+    {
+      "id": "commitments/oral-history",
+      "domain": "commitments",
+      "split": "dev"
+    },
+    {
+      "id": "commitments/shelter-rota",
+      "domain": "commitments",
+      "split": "dev"
+    },
+    {
+      "id": "commitments/pump-maintenance",
+      "domain": "commitments",
+      "split": "holdout"
+    },
+    {
+      "id": "commitments/exhibit-labels",
+      "domain": "commitments",
+      "split": "holdout"
+    },
+    {
+      "id": "commitments/beehive-notice",
+      "domain": "commitments",
+      "split": "holdout"
+    },
+    {
+      "id": "commitments/film-subtitles",
+      "domain": "commitments",
+      "split": "holdout"
+    },
+    {
+      "id": "commitments/bike-return",
+      "domain": "commitments",
+      "split": "holdout"
+    },
+    {
+      "id": "commitments/tree-followup",
+      "domain": "commitments",
+      "split": "holdout"
+    },
+    {
+      "id": "commitments/quiet-rehearsal",
+      "domain": "commitments",
+      "split": "holdout"
+    },
+    {
+      "id": "commitments/market-refund",
+      "domain": "commitments",
+      "split": "holdout"
+    },
+    {
+      "id": "commitments/science-demo",
+      "domain": "commitments",
+      "split": "holdout"
+    },
+    {
+      "id": "commitments/water-test",
+      "domain": "commitments",
+      "split": "holdout"
+    },
+    {
+      "id": "commitments/archive-scan",
+      "domain": "commitments",
+      "split": "holdout"
+    },
+    {
+      "id": "commitments/compost-rota",
+      "domain": "commitments",
+      "split": "holdout"
+    },
+    {
+      "id": "commitments/basket-payment",
+      "domain": "commitments",
+      "split": "holdout"
+    },
+    {
+      "id": "commitments/stage-inventory",
+      "domain": "commitments",
+      "split": "holdout"
+    },
+    {
+      "id": "commitments/snow-call",
+      "domain": "commitments",
+      "split": "holdout"
+    },
+    {
+      "id": "commitments/festival-lost",
+      "domain": "commitments",
+      "split": "holdout"
+    },
+    {
+      "id": "changing-decisions/picnic-location",
+      "domain": "changing-decisions",
+      "split": "dev"
+    },
+    {
+      "id": "changing-decisions/newsletter-frequency",
+      "domain": "changing-decisions",
+      "split": "dev"
+    },
+    {
+      "id": "changing-decisions/bench-material",
+      "domain": "changing-decisions",
+      "split": "dev"
+    },
+    {
+      "id": "changing-decisions/class-capacity",
+      "domain": "changing-decisions",
+      "split": "dev"
+    },
+    {
+      "id": "changing-decisions/walk-start",
+      "domain": "changing-decisions",
+      "split": "dev"
+    },
+    {
+      "id": "changing-decisions/archive-format",
+      "domain": "changing-decisions",
+      "split": "dev"
+    },
+    {
+      "id": "changing-decisions/menu-switch",
+      "domain": "changing-decisions",
+      "split": "dev"
+    },
+    {
+      "id": "changing-decisions/repair-or-replace",
+      "domain": "changing-decisions",
+      "split": "dev"
+    },
+    {
+      "id": "changing-decisions/badge-names",
+      "domain": "changing-decisions",
+      "split": "holdout"
+    },
+    {
+      "id": "changing-decisions/chess-rating",
+      "domain": "changing-decisions",
+      "split": "holdout"
+    },
+    {
+      "id": "changing-decisions/fund-matching",
+      "domain": "changing-decisions",
+      "split": "holdout"
+    },
+    {
+      "id": "changing-decisions/shuttle-timetable",
+      "domain": "changing-decisions",
+      "split": "holdout"
+    },
+    {
+      "id": "changing-decisions/pond-depth",
+      "domain": "changing-decisions",
+      "split": "holdout"
+    },
+    {
+      "id": "changing-decisions/concert-recording",
+      "domain": "changing-decisions",
+      "split": "holdout"
+    },
+    {
+      "id": "changing-decisions/garden-lock",
+      "domain": "changing-decisions",
+      "split": "holdout"
+    },
+    {
+      "id": "changing-decisions/workshop-online",
+      "domain": "changing-decisions",
+      "split": "holdout"
+    },
+    {
+      "id": "changing-decisions/delivery-entrance",
+      "domain": "changing-decisions",
+      "split": "holdout"
+    },
+    {
+      "id": "changing-decisions/library-fines",
+      "domain": "changing-decisions",
+      "split": "holdout"
+    },
+    {
+      "id": "changing-decisions/art-jury",
+      "domain": "changing-decisions",
+      "split": "holdout"
+    },
+    {
+      "id": "changing-decisions/ticket-transfer",
+      "domain": "changing-decisions",
+      "split": "holdout"
+    },
+    {
+      "id": "changing-decisions/volunteer-contact",
+      "domain": "changing-decisions",
+      "split": "holdout"
+    },
+    {
+      "id": "changing-decisions/loan-duration",
+      "domain": "changing-decisions",
+      "split": "holdout"
+    },
+    {
+      "id": "changing-decisions/rehearsal-order",
+      "domain": "changing-decisions",
+      "split": "holdout"
+    },
+    {
+      "id": "changing-decisions/canopy-cancel",
+      "domain": "changing-decisions",
+      "split": "holdout"
+    },
+    {
+      "id": "causal-context/ink-smear",
+      "domain": "causal-context",
+      "split": "dev"
+    },
+    {
+      "id": "causal-context/bread-scale",
+      "domain": "causal-context",
+      "split": "dev"
+    },
+    {
+      "id": "causal-context/sensor-shadow",
+      "domain": "causal-context",
+      "split": "dev"
+    },
+    {
+      "id": "causal-context/door-wedge",
+      "domain": "causal-context",
+      "split": "dev"
+    },
+    {
+      "id": "causal-context/pollinator-mow",
+      "domain": "causal-context",
+      "split": "dev"
+    },
+    {
+      "id": "causal-context/ticket-double",
+      "domain": "causal-context",
+      "split": "dev"
+    },
+    {
+      "id": "causal-context/salt-corrosion",
+      "domain": "causal-context",
+      "split": "dev"
+    },
+    {
+      "id": "causal-context/audio-loop",
+      "domain": "causal-context",
+      "split": "dev"
+    },
+    {
+      "id": "causal-context/label-bleach",
+      "domain": "causal-context",
+      "split": "holdout"
+    },
+    {
+      "id": "causal-context/seedling-light",
+      "domain": "causal-context",
+      "split": "holdout"
+    },
+    {
+      "id": "causal-context/email-bounce",
+      "domain": "causal-context",
+      "split": "holdout"
+    },
+    {
+      "id": "causal-context/rain-tank",
+      "domain": "causal-context",
+      "split": "holdout"
+    },
+    {
+      "id": "causal-context/screen-glare",
+      "domain": "causal-context",
+      "split": "holdout"
+    },
+    {
+      "id": "causal-context/flour-delivery",
+      "domain": "causal-context",
+      "split": "holdout"
+    },
+    {
+      "id": "causal-context/survey-bias",
+      "domain": "causal-context",
+      "split": "holdout"
+    },
+    {
+      "id": "causal-context/refrigerator-gap",
+      "domain": "causal-context",
+      "split": "holdout"
+    },
+    {
+      "id": "causal-context/footpath-erosion",
+      "domain": "causal-context",
+      "split": "holdout"
+    },
+    {
+      "id": "causal-context/projection-cable",
+      "domain": "causal-context",
+      "split": "holdout"
+    },
+    {
+      "id": "causal-context/moth-quarantine",
+      "domain": "causal-context",
+      "split": "holdout"
+    },
+    {
+      "id": "causal-context/clock-drift",
+      "domain": "causal-context",
+      "split": "holdout"
+    },
+    {
+      "id": "causal-context/translation-context",
+      "domain": "causal-context",
+      "split": "holdout"
+    },
+    {
+      "id": "causal-context/flooded-pot",
+      "domain": "causal-context",
+      "split": "holdout"
+    },
+    {
+      "id": "causal-context/queue-sign",
+      "domain": "causal-context",
+      "split": "holdout"
+    },
+    {
+      "id": "causal-context/sail-telltale",
+      "domain": "causal-context",
+      "split": "holdout"
+    }
+  ]
+}
