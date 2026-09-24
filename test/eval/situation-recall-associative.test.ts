@@ -222,8 +222,10 @@ test.skipIf(!hasCandidate)('real candidate engine builds source-only cues and ex
             if(Object.keys(payload).sort().join(',')!=='evidence,includeBridge')throw new Error('non-source construction fields');
             const evidence=payload.evidence;
             const phrase='The choir accompanist prefers smoky black tea without added perfume or fruit flavor.';
-            const quote=evidence.includes(phrase)?phrase:evidence.slice(0,Math.min(160,evidence.length));
-            return {text:JSON.stringify([{family:'scene',relation:'situation_description',quote,text:'CUE_ONLY_SENTINEL '+quote}]),blocks:[],stopReason:'end',model:options.model,providerId:'anthropic',usage:{input_tokens:20,output_tokens:20,cache_read_tokens:0,cache_creation_tokens:0}};
+            const excerpt=evidence.find(value=>value.text.includes(phrase))??evidence[0];
+            if(payload.includeBridge!==false || !excerpt || !Number.isInteger(excerpt.id))throw new Error('source-selected construction fields missing');
+            const situation=excerpt.text.includes(phrase)?phrase:excerpt.text.slice(0,160);
+            return {text:JSON.stringify([{family:'scene',relation:'situation_description',evidence_ref:excerpt.id,text:'CUE_ONLY_SENTINEL '+situation}]),blocks:[],stopReason:'end',model:options.model,providerId:'anthropic',usage:{input_tokens:20,output_tokens:20,cache_read_tokens:0,cache_creation_tokens:0}};
           });
           gateway.__setEmbedTransportForTests(async({values})=>{embedded++;return {values,embeddings:values.map(vector),warnings:[],usage:{tokens:20},response:{headers:{}}};});
           return ()=>{gateway.__setChatTransportForTests(null);gateway.__setEmbedTransportForTests(null);};

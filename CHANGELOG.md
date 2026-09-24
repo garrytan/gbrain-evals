@@ -33,10 +33,14 @@ result is published here.
   preparatory infrastructure, not a new dataset or measured capability result.
   Operator-controlled diagnostics remain nonpublishable and do not claim an
   external provider credit cap.
+- A separately registered v2 source-only policy for the v4 source-reference
+  formatter. It checks the actual installed formatter's canonical wire content
+  without treating internal excerpt metadata as a public request shape. The
+  historical v1/v3 contract and all financial and output ceilings remain intact.
 
 ### Changed
 
-- Pin the candidate product to `470ccc49c33b44c4a4be4e60bc606c0ad04a4427`
+- Pin the candidate product to `f3249d1703772573006141224a4d06d9b8df7b41`
   (gbrain v0.55.0.0), while keeping the historical dependency and fresh baseline
   identities distinct. CI uses supported Bun 1.3.13.
 - Retain previously omitted native per-item observations without changing

@@ -5,7 +5,7 @@ import { pathToFileURL } from 'node:url';
 import { closeSync, constants, fsyncSync, mkdirSync, openSync, realpathSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { resolveRegressionProduct } from './situation-recall-provenance.ts';
-import { resolveSourceOnlyDevelopmentPolicy, type SourceOnlyDevelopmentProfile } from './situation-recall-experiment-policy.ts';
+import { SOURCE_ONLY_REFERENCE_EXPERIMENT, resolveSourceOnlyDevelopmentPolicy, type SourceOnlyDevelopmentProfile } from './situation-recall-experiment-policy.ts';
 
 const CHAT_PRICES: Record<string, { input: number; output: number }> = {
   'openrouter:qwen/qwen3.7-flash': { input: 0.03, output: 0.13 },
@@ -61,6 +61,7 @@ export async function startSourceOnlyDevelopmentGuard(input: SourceOnlyDevelopme
   const embedding = lookupEmbeddingPrice(policy.embedding_model);
   if (embedding.kind !== 'known' || embedding.pricePerMTok !== 0.13) throw new Error('source-only embedding pricing unavailable or changed');
   let cuePrompt: string | undefined;
+  let cueEvidenceFormatter: ((source: string) => unknown) | undefined;
   if (profile.arm === 'C1') {
     const { canonicalLookup } = await import(pathToFileURL(join(product.package_path, 'src/core/model-pricing.ts')).href);
     const price = canonicalLookup(policy.generation_model);
@@ -70,12 +71,17 @@ export async function startSourceOnlyDevelopmentGuard(input: SourceOnlyDevelopme
     if (MEMORY_CUE_PROMPT_VERSION !== profile.cue_pipeline_version || typeof CUE_SYSTEM_PROMPT !== 'string'
       || createHash('sha256').update(CUE_SYSTEM_PROMPT).digest('hex') !== profile.cue_prompt_sha256) throw new Error('source-only cue pipeline or prompt identity mismatch');
     cuePrompt = CUE_SYSTEM_PROMPT;
+    if (profile.experiment === SOURCE_ONLY_REFERENCE_EXPERIMENT) {
+      const { formatCueEvidence } = await import(pathToFileURL(join(product.package_path, 'src/core/memory-cues/evidence.ts')).href);
+      if (typeof formatCueEvidence !== 'function') throw new Error('registered v4 cue evidence formatter unavailable');
+      cueEvidenceFormatter = source => formatCueEvidence(source, false);
+    }
   }
   const guard = installRequestGuard({
     limits: { max_usd: profile.allocation.usd, max_requests: policy.max_requests, max_request_bytes: policy.max_request_bytes,
       max_output_tokens: policy.max_output_tokens, cell_timeout_ms: policy.stage_timeout_ms },
     generationModel: policy.generation_model, chatAllowed: profile.arm === 'C1' && profile.stage === 'construction',
-    chatBodyMaxBytes: policy.max_chat_request_bytes, cuePrompt,
+    chatBodyMaxBytes: policy.max_chat_request_bytes, cuePrompt, cueEvidenceFormatter,
     policyContext: { profile, policy, product, publishable: false, release_coverage: false, authorization_verified: false,
       allocation_authority: 'root-owned leaf allocation; policy ceilings do not authorize spending', deadline_scope: 'leaf-stage; root enforces the outer case deadline' },
   }, options.journalPath);
@@ -91,10 +97,11 @@ interface GuardConfiguration {
   chatAllowed: boolean;
   chatBodyMaxBytes: number;
   cuePrompt?: string;
+  cueEvidenceFormatter?: (source: string) => unknown;
   policyContext?: Record<string, unknown>;
 }
 
-function sourceOnlyCuePayload(payload: Record<string, unknown>, prompt: string): boolean {
+function sourceOnlyCuePayload(payload: Record<string, unknown>, prompt: string, formatter?: (source: string) => unknown): boolean {
   if (Object.keys(payload).some(key => !['model', 'messages', 'max_tokens', 'temperature', 'reasoning', 'provider'].includes(key))
     || payload.temperature !== 0 || payload.max_tokens !== 1200 || !Array.isArray(payload.messages) || payload.messages.length !== 2) return false;
   const text = (message: unknown, role: string): string | undefined => {
@@ -108,10 +115,25 @@ function sourceOnlyCuePayload(payload: Record<string, unknown>, prompt: string):
   if (user === undefined) return false;
   try {
     const data = JSON.parse(user);
-    return data !== null && typeof data === 'object' && !Array.isArray(data)
-      && Object.keys(data).length === 2 && Object.keys(data).every(key => ['includeBridge', 'evidence'].includes(key))
-      && data.includeBridge === false && typeof data.evidence === 'string' && Buffer.byteLength(data.evidence) > 0 && Buffer.byteLength(data.evidence) <= 8192
-      && user === JSON.stringify({ includeBridge: false, evidence: data.evidence });
+    if (formatter === undefined) {
+      return data !== null && typeof data === 'object' && !Array.isArray(data)
+        && Object.keys(data).length === 2 && Object.keys(data).every(key => ['includeBridge', 'evidence'].includes(key))
+        && data.includeBridge === false && typeof data.evidence === 'string' && Buffer.byteLength(data.evidence) > 0 && Buffer.byteLength(data.evidence) <= 8192
+        && user === JSON.stringify({ includeBridge: false, evidence: data.evidence });
+    }
+    if (data === null || typeof data !== 'object' || Array.isArray(data) || Object.keys(data).length !== 2
+      || Object.keys(data).some(key => !['includeBridge', 'evidence'].includes(key)) || data.includeBridge !== false
+      || !Array.isArray(data.evidence) || data.evidence.length < 1 || data.evidence.length > 64) return false;
+    for (const [index, excerpt] of data.evidence.entries()) {
+      if (!excerpt || typeof excerpt !== 'object' || Array.isArray(excerpt) || Object.keys(excerpt).length !== 2
+        || Object.keys(excerpt).some(key => !['id', 'text'].includes(key)) || !Number.isInteger(excerpt.id) || excerpt.id !== index + 1
+        || typeof excerpt.text !== 'string' || excerpt.text.length < 1 || excerpt.text.length > 640) return false;
+    }
+    const source = data.evidence.map((excerpt: { text: string }) => excerpt.text).join('');
+    if (Buffer.byteLength(source) > 8192) return false;
+    const expected = formatter(source);
+    return expected !== null && typeof expected === 'object' && !Array.isArray(expected)
+      && 'content' in expected && typeof expected.content === 'string' && user === expected.content;
   } catch { return false; }
 }
 
@@ -212,7 +234,7 @@ function installRequestGuard(configuration: GuardConfiguration, journalPath?: st
       || !isDeepStrictEqual(payload.reasoning, chatOptions.reasoning)
       || !isDeepStrictEqual(payload.provider, chatOptions.provider)
       || Buffer.byteLength(body) > configuration.chatBodyMaxBytes
-      || (configuration.cuePrompt !== undefined && !sourceOnlyCuePayload(payload, configuration.cuePrompt))) return reject();
+      || (configuration.cuePrompt !== undefined && !sourceOnlyCuePayload(payload, configuration.cuePrompt, configuration.cueEvidenceFormatter))) return reject();
     const reservation = Math.ceil((Buffer.byteLength(body) * (embedding ? 0.13 : chatPrice.input) + (embedding ? 0 : Number(payload.max_tokens) * chatPrice.output))) / 1e6;
     if (stopped || usage.dispatched_requests >= admission.max_requests
       || usage.provider_reported_usd + usage.byok_upstream_usd + usage.reserved_usd + reservation > admission.max_usd) return reject();
