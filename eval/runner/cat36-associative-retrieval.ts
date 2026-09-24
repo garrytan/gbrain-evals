@@ -7,6 +7,8 @@ import { gbrainPin, gbrainVersion } from './gbrain-version.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import { executedCueLookup } from './situation-recall-observations.ts';
 import type { Cat36IndexSnapshot } from './cat36-snapshot.ts';
+import { developmentChatOptions, type DevelopmentAdmission } from './situation-recall-development.ts';
+import { isDeepStrictEqual } from 'node:util';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, receiptPath, writeReceipt, type FailureOrigin, type Receipt } from './receipt.ts';
 
 export const CAT36_CATEGORY = 'cat36-associative-retrieval';
@@ -28,9 +30,10 @@ export interface Cat36Profile {
   cue_min_similarity?: number;
   cue_weight: number;
   generation_model?: string;
+  provider_chat_options?: ReturnType<typeof developmentChatOptions>;
   expansion_model?: string;
   build_max_usd?: number;
-  provider_budget?: { kind: 'isolated-provider-cap'; approval_id: string; max_usd: number };
+  provider_budget?: { kind: 'isolated-provider-cap'; approval_id: string; max_usd: number } | DevelopmentAdmission;
 }
 export interface Cat36BuildReceipt {
   runtime_kind?: 'production' | 'test';
@@ -58,6 +61,7 @@ export interface Cat36Runtime {
     metadata: unknown;
   }>;
   close(): Promise<void>;
+  developmentUsage?(): Record<string, unknown> | null;
 }
 export interface Cat36Row {
   probe_id: string;
@@ -89,7 +93,7 @@ export function cueFamilies(arm: Cat36Arm): string[] {
 }
 
 export function validateCat36Profile(p: Cat36Profile): void {
-  const allowed = new Set(['id', 'mode', 'arm', 'split', 'counterfactual', 'required_operations', 'reuse_build_dir', 'expected_product_sha', 'expected_package_sha256', 'embedding_model', 'embedding_dimensions', 'search_config', 'token_budget', 'cue_min_similarity', 'cue_weight', 'generation_model', 'expansion_model', 'build_max_usd', 'provider_budget']);
+  const allowed = new Set(['id', 'mode', 'arm', 'split', 'counterfactual', 'required_operations', 'reuse_build_dir', 'expected_product_sha', 'expected_package_sha256', 'embedding_model', 'embedding_dimensions', 'search_config', 'token_budget', 'cue_min_similarity', 'cue_weight', 'generation_model', 'provider_chat_options', 'expansion_model', 'build_max_usd', 'provider_budget']);
   if (!p || Object.keys(p).some(k => !allowed.has(k))) throw new Error('unknown Cat36 profile field');
   if (!p.id || !['offline', 'live'].includes(p.mode) || !['B', 'C0', 'C1', 'scene', 'horizon', 'scene-horizon-bridge', 'summary'].includes(p.arm)
     || !['dev', 'holdout'].includes(p.split)) throw new Error('invalid Cat36 profile identity');
@@ -111,13 +115,32 @@ export function validateCat36Profile(p: Cat36Profile): void {
     if (!['true', 'false'].includes(p.search_config[key])) throw new Error(`invalid boolean setting ${key}`);
   }
   if (p.mode === 'offline' && (p.arm !== 'B' || p.search_config['search.reranker.enabled'] !== 'false' || p.search_config['search.expansion'] !== 'false')) throw new Error('offline profile is keyless baseline plumbing only');
+  if (p.mode !== 'live' && p.provider_budget?.kind === 'operator-authorized-development') throw new Error('development admission requires explicit live dev mode');
+  if (p.provider_chat_options !== undefined && (!p.generation_model
+    || !isDeepStrictEqual(p.provider_chat_options, developmentChatOptions(p.generation_model)))) throw new Error('only frozen non-thinking allowlisted OpenRouter provider options are supported; request overrides forbidden');
   if (p.mode === 'live') {
     if (!/^[a-f0-9]{40}$/.test(p.expected_product_sha ?? '')) throw new Error('live profile needs exact product SHA');
     if (p.expected_package_sha256 !== undefined && !/^[a-f0-9]{64}$/.test(p.expected_package_sha256)) throw new Error('invalid package content hash');
     if ((p.search_config['search.expansion'] === 'true' || p.required_operations?.includes('query')) && !p.expansion_model?.includes(':')) throw new Error('live expansion requires an explicit model');
     const b = p.provider_budget;
-    if (!b || b.kind !== 'isolated-provider-cap' || !b.approval_id || !Number.isFinite(b.max_usd) || b.max_usd <= 0
-      || Object.keys(b).some(k => !['kind', 'approval_id', 'max_usd'].includes(k))) throw new Error('live work requires approved isolated provider cap, not a concurrency limit');
+    if (!b || !['isolated-provider-cap', 'operator-authorized-development'].includes(b.kind) || !b.approval_id || !Number.isFinite(b.max_usd) || b.max_usd <= 0) throw new Error('live work requires approved provider cap or explicit development admission, not a concurrency limit');
+    const budgetKeys = ['kind', 'approval_id', 'max_usd'];
+    if (b.kind === 'operator-authorized-development') {
+      budgetKeys.push('max_requests', 'max_request_bytes', 'max_output_tokens', 'build_timeout_ms', 'cell_timeout_ms');
+      if (p.split !== 'dev' || !['B', 'C0', 'C1'].includes(p.arm) || b.max_usd > 100 || p.counterfactual || p.required_operations || p.reuse_build_dir
+        || p.embedding_model !== 'openrouter:openai/text-embedding-3-large' || p.embedding_dimensions !== 1536
+        || !p.generation_model || p.expansion_model
+        || !p.provider_chat_options
+        || p.search_config['search.reranker.enabled'] !== 'false' || p.search_config['search.expansion'] !== 'false'
+        || p.search_config['search.contextual_retrieval'] !== 'none'
+        || !Number.isInteger(b.max_requests) || b.max_requests < 1 || b.max_requests > 1500
+        || !Number.isInteger(b.max_request_bytes) || b.max_request_bytes < 1 || b.max_request_bytes > 65536
+        || !Number.isInteger(b.max_output_tokens) || b.max_output_tokens < 1 || b.max_output_tokens > 1200
+        || !Number.isInteger(b.build_timeout_ms) || b.build_timeout_ms < 1000 || b.build_timeout_ms > 1_800_000
+        || !Number.isInteger(b.cell_timeout_ms) || b.cell_timeout_ms < b.build_timeout_ms || b.cell_timeout_ms > 3_600_000
+        || (p.arm === 'C1' && (b.max_output_tokens !== 1200 || !Number.isFinite(p.build_max_usd) || p.build_max_usd! > 10))) throw new Error('development admission requires bounded OpenRouter B/C0/C1 dev profiles; no holdout or release coverage');
+    }
+    if (Object.keys(b).some(k => !budgetKeys.includes(k))) throw new Error('unknown provider budget field');
     if (readOnlyAblation && !p.generation_model?.includes(':')) throw new Error('read-time ablation must name the original generation model');
     if ((!readOnlyAblation && cueFamilies(p.arm).length) || p.arm === 'summary') {
       if (!p.generation_model?.includes(':') || !Number.isFinite(p.build_max_usd) || p.build_max_usd! < 0.01 || p.build_max_usd! > 10000 || p.build_max_usd! > b.max_usd) throw new Error('invalid generation budget/model');
@@ -181,7 +204,8 @@ export async function runCat36(options: { corpusDir: string; outputDir: string; 
       corpus_loader: cat36Hash(readFileSync(join(import.meta.dir, 'cat36-corpus.ts'))),
       scorer: cat36Hash(readFileSync(join(import.meta.dir, 'cat36-scorer.ts'))),
       models: cat36Hash(JSON.stringify({ embedding: profile.embedding_model, dimensions: profile.embedding_dimensions,
-        reranker: profile.search_config['search.reranker.model'], generation: profile.generation_model ?? null, expansion: profile.expansion_model ?? null })),
+        reranker: profile.search_config['search.reranker.model'], generation: profile.generation_model ?? null, expansion: profile.expansion_model ?? null,
+        ...(profile.provider_chat_options ? { provider_chat_options: profile.provider_chat_options } : {}) })),
       prompts: cat36Hash(JSON.stringify({ protocol: 'source-only-build-raw-probe-query-v1', build_input: 'canonical source text only', query_input: 'unchanged probe.text', product_generation_prompt: 'recorded separately in build.generation' })),
       source_timestamps: cat36Hash(JSON.stringify(sourceInput.map(s => [s.source_id, s.slug, s.created_at, s.updated_at]))),
     };
@@ -267,11 +291,12 @@ export async function runCat36(options: { corpusDir: string; outputDir: string; 
     schema_version: RECEIPT_SCHEMA_VERSION, benchmark_version: BENCHMARK_VERSION, category: CAT36_CATEGORY,
     run_status: blocked ? 'error' : 'completed', ...(!blocked ? { verdict: complete ? safe ? 'pass' as const : 'fail' as const : 'partial' as const } : {}),
     n_total: summary.n_total, n_scored: summary.n_scored, completion_rate: summary.completion_rate, errors: summary.errors,
-    publishable: runtime.kind === 'production' && profile.mode === 'live' && !options.smoke && !profile.counterfactual && complete && safe && reviewed,
+    publishable: runtime.kind === 'production' && profile.mode === 'live' && profile.provider_budget?.kind === 'isolated-provider-cap' && !options.smoke && !profile.counterfactual && complete && safe && reviewed,
     gbrain_version: gbrainVersion(), gbrain_pin: gbrainPin(), started_at: started, finished_at: new Date().toISOString(),
     resolved_config: { profile, scorer: CAT36_SCORER, raw_chunk_limit: 5, evidence_token_estimator: 'ceil(original_text_utf16_length/4)', construction: build?.resolved_config }, hashes,
     data: { mode: profile.mode, runtime_kind: runtime.kind, counterfactual: profile.counterfactual ?? null,
-      label: profile.mode === 'offline' || runtime.kind !== 'production' ? 'plumbing-only; not semantic retrieval evidence' : profile.counterfactual ? 'supplementary same-query counterfactual; not primary release evidence' : 'live capability measurement',
+      development_usage: runtime.developmentUsage?.() ?? null,
+      label: profile.provider_budget?.kind === 'operator-authorized-development' ? 'operator-authorized development diagnostic; no provider hard cap; not publishable' : profile.mode === 'offline' || runtime.kind !== 'production' ? 'plumbing-only; not semantic retrieval evidence' : profile.counterfactual ? 'supplementary same-query counterfactual; not primary release evidence' : 'live capability measurement',
       blocked_reason: blocked ?? null, relevance_review_approved: reviewed, build: build ?? null, rows, summary: summarize(rows) },
   };
   writeFileSync(join(outputDir, 'probes.ndjson'), rows.map(r => JSON.stringify(r)).join('\n') + '\n', { flag: 'wx' });

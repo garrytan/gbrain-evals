@@ -1,5 +1,6 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 import { configureGateway, diagnoseEmbedding, isAvailable, __setEmbedTransportForTests } from 'gbrain/ai/gateway';
 import { configPath as gbrainConfigPath, loadConfig } from 'gbrain/config';
 import {
@@ -17,6 +18,7 @@ import { executedCueLookup } from './situation-recall-observations.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import { BENCHMARK_VERSION, writeReceipt, type Receipt } from './receipt.ts';
 import { gbrainPin, gbrainVersion } from './gbrain-version.ts';
+import { assertDevelopmentPricing, startDevelopmentRequestGuard } from './situation-recall-development.ts';
 
 export const CAT13B_PILOT_CATEGORY = 'cat13b-situation-recall-pilot';
 export const CAT13B_PILOT_TIMESTAMP = '2026-05-01T00:00:00.000Z';
@@ -118,7 +120,7 @@ class PreparedCat13bAdapter implements Adapter {
 }
 
 let active = false;
-const PROVIDER_KEYS = ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY', 'GOOGLE_API_KEY', 'GOOGLE_GENERATIVE_AI_API_KEY', 'GEMINI_API_KEY', 'COHERE_API_KEY'];
+const PROVIDER_KEYS = ['OPENAI_API_KEY', 'OPENROUTER_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY', 'GOOGLE_API_KEY', 'GOOGLE_GENERATIVE_AI_API_KEY', 'GEMINI_API_KEY', 'COHERE_API_KEY'];
 
 export async function runSituationRecallCat13b(options: Cat13bPilotOptions, dependencies?: Cat13bPilotDependencies): Promise<Receipt> {
   if (active) throw new Error('Cat13b pilot executions require separate processes');
@@ -137,6 +139,7 @@ export async function runSituationRecallCat13b(options: Cat13bPilotOptions, depe
   let wrapper: PreparedCat13bAdapter | undefined;
   let originalEnv: NodeJS.ProcessEnv | undefined;
   let factors: ReturnType<typeof assertBoostPremise> | undefined;
+  let developmentGuard: ReturnType<typeof startDevelopmentRequestGuard>;
   const hashes: Record<string, string> = {
     driver: cat36Hash(readFileSync(import.meta.path)), native_runner: cat36Hash(readFileSync(join(import.meta.dir, 'cat13b-source-swamp.ts'))),
     profile: cat36Hash(JSON.stringify(profile)), gold: cat36Hash(JSON.stringify(QUERIES)),
@@ -147,7 +150,11 @@ export async function runSituationRecallCat13b(options: Cat13bPilotOptions, depe
     if (pages.length !== 20 || QUERIES.length !== 30 || new Set(pages.map(page => page.slug)).size !== 20) throw new Error('native Cat13b pilot requires the unchanged 20-page/30-query cohort');
     hashes.corpus = cat36Hash(JSON.stringify(pages.map(sanitizePage)));
     if (options.execute) {
-      if (!offline) identity = resolveRegressionProduct({ evalRoot: resolve(import.meta.dir, '../..'), expectedProductSha: profile.expected_product_sha, expectedPackageSha256: profile.expected_package_sha256, importerPath: import.meta.path });
+      if (!offline) {
+        const product = resolveRegressionProduct({ evalRoot: resolve(import.meta.dir, '../..'), expectedProductSha: profile.expected_product_sha, expectedPackageSha256: profile.expected_package_sha256, importerPath: import.meta.path });
+        identity = product;
+        await assertDevelopmentPricing(profile, product.package_path);
+      }
       originalEnv = { ...process.env };
       active = true;
       const preserved = Object.fromEntries(['PATH', 'LANG', 'TZ', ...(!offline ? PROVIDER_KEYS : [])].filter(key => originalEnv![key]).map(key => [key, originalEnv![key]!]));
@@ -158,14 +165,16 @@ export async function runSituationRecallCat13b(options: Cat13bPilotOptions, depe
       Object.assign(process.env, preserved, { HOME: home, GBRAIN_HOME: home, XDG_CONFIG_HOME: join(home, '.config'), GBRAIN_CONFIG: configPath, GBRAIN_DB_PATH: join(outputDir, 'brain') });
       mkdirSync(dirname(configPath));
       writeFileSync(configPath, JSON.stringify({ engine: 'pglite', embedding_model: profile.embedding_model,
-        embedding_dimensions: profile.embedding_dimensions, chat_model: profile.generation_model }) + '\n', { flag: 'wx', mode: 0o600 });
+        embedding_dimensions: profile.embedding_dimensions, chat_model: profile.generation_model, provider_chat_options: profile.provider_chat_options }) + '\n', { flag: 'wx', mode: 0o600 });
       const loadedConfig = loadConfig();
       if (gbrainConfigPath() !== configPath || loadedConfig?.embedding_model !== profile.embedding_model
-        || loadedConfig.embedding_dimensions !== profile.embedding_dimensions) throw new Cat36Failure('public config resolver did not load the pilot embedding profile', 'harness');
+        || loadedConfig.embedding_dimensions !== profile.embedding_dimensions
+        || !isDeepStrictEqual(loadedConfig.provider_chat_options, profile.provider_chat_options)) throw new Cat36Failure('public config resolver did not load the pilot embedding profile and frozen provider options', 'harness');
       hashes.config = cat36Hash(readFileSync(configPath));
       factors = assertBoostPremise();
       if (!dependencies) {
-        configureGateway({ embedding_model: profile.embedding_model, embedding_dimensions: profile.embedding_dimensions, chat_model: profile.generation_model, env: process.env });
+        developmentGuard = startDevelopmentRequestGuard(profile, join(outputDir, 'development-requests.ndjson'));
+        configureGateway({ embedding_model: profile.embedding_model, embedding_dimensions: profile.embedding_dimensions, chat_model: profile.generation_model, provider_chat_options: profile.provider_chat_options, env: process.env });
         if (offline) {
           process.env.OPENAI_API_KEY = 'dummy-embed-transport-stubbed';
           __setEmbedTransportForTests(async params => ({ embeddings: params.values.map(hashEmbed), values: params.values, warnings: [], usage: { tokens: 0 } }));
@@ -186,7 +195,7 @@ export async function runSituationRecallCat13b(options: Cat13bPilotOptions, depe
         embeddingModel: profile.embedding_model, embeddingDimensions: profile.embedding_dimensions, expectStubTransport: offline });
       if (inner.name !== 'gbrain') throw new Error('pilot must retain the native gbrain adapter identity');
       wrapper = new PreparedCat13bAdapter(inner, profile, outputDir, hashes.corpus, dependencies?.buildCueIndex ?? (async (engine, sourceIds, settings) => {
-        configureGateway({ embedding_model: settings.embedding_model, embedding_dimensions: settings.embedding_dimensions, chat_model: settings.generation_model, env: process.env });
+        configureGateway({ embedding_model: settings.embedding_model, embedding_dimensions: settings.embedding_dimensions, chat_model: settings.generation_model, provider_chat_options: settings.provider_chat_options, env: process.env });
         return buildProductionCueIndex(engine, sourceIds, settings);
       }), value => { build = value; });
       result = await (dependencies?.score ?? scoreAdapter)(wrapper, pages, QUERIES, acc);
@@ -200,6 +209,7 @@ export async function runSituationRecallCat13b(options: Cat13bPilotOptions, depe
   } finally {
     try { await wrapper?.close(); }
     catch (error) { blocked = `native adapter teardown failed: ${String(error)}`; acc.error('cleanup', 'harness', blocked); }
+    developmentGuard?.restore();
     if (!dependencies && options.execute) __setEmbedTransportForTests(null);
     if (originalEnv) {
       for (const key of Object.keys(process.env)) delete process.env[key];
@@ -217,15 +227,16 @@ export async function runSituationRecallCat13b(options: Cat13bPilotOptions, depe
     ...(!options.execute && !blocked ? { skip_reason: 'validation only; --execute is required' } : {}),
     ...(!blocked && options.execute ? { verdict: !complete && nativeVerdict.verdict === 'pass' ? 'partial' as const : nativeVerdict.verdict } : {}),
     n_total: summary.n_total, n_scored: summary.n_scored, completion_rate: summary.completion_rate, errors: summary.errors,
-    publishable: !offline && complete && !blocked, gbrain_pin: gbrainPin(), gbrain_version: gbrainVersion(), started_at: started, finished_at: new Date().toISOString(), hashes,
+    publishable: !offline && profile.provider_budget?.kind === 'isolated-provider-cap' && complete && !blocked, gbrain_pin: gbrainPin(), gbrain_version: gbrainVersion(), started_at: started, finished_at: new Date().toISOString(), hashes,
     resolved_config: { profile, cohort: 'native gbrain only; 20 pages / 30 queries', native_top_k_pages: TOP_K, native_requested_chunks: TOP_K * 6,
       native_floor: { top1_hit_rate: PASS_TOP1 }, source_timestamp: CAT13B_PILOT_TIMESTAMP, query_recency: 'native automatic behavior; source timestamps fixed, wall clock not frozen',
       split: 'native 30-query catalog; Cat36 family split does not apply', embedding_cache: 'no pilot-level cache; native import runs for every cell',
       search_config: { ...GBRAIN_SEARCH_CONFIG, 'search.tokenBudget': String(profile.token_budget) }, source_boost_premise: factors,
       execution_mode: offline ? 'offline-plumbing' : 'live', isolated_home: options.execute ? join(outputDir, 'home') : null,
       config_path: options.execute ? join(outputDir, 'home', '.gbrain', 'config.json') : null,
-      budget_enforcement: 'operator-provided isolated provider cap; no driver dollar limiter', product_identity: identity },
-    data: { label: 'Cat13b gbrain pilot cohort; not full all-adapter Cat13b release coverage', release_coverage: false,
+      budget_enforcement: profile.provider_budget?.kind === 'operator-authorized-development' ? 'operator-authorized development; local request and reservation limits, no provider hard cap' : 'operator-provided isolated provider cap; no driver dollar limiter', product_identity: identity },
+    data: { label: profile.provider_budget?.kind === 'operator-authorized-development' ? 'operator-authorized development diagnostic; not publishable' : 'Cat13b gbrain pilot cohort; not full all-adapter Cat13b release coverage', release_coverage: false,
+      development_usage: developmentGuard?.snapshot() ?? null,
       blocked_reason: blocked ?? null, build: build ?? null, result: result ?? null, native_gate_pass: nativeVerdict.gatePass,
       receipt_path: join(outputDir, 'receipt.json'), result_path: join(outputDir, 'result.json') },
   };

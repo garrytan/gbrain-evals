@@ -135,7 +135,7 @@ Save a worthwhile run under a dated path in `docs/benchmarks/`, including its ra
 
 ## Cat36 situation-aware recall and the all-category release gate
 
-Cat36 asks whether generated situation cues help retrieve original evidence for indirect questions. The [2026-09-23 protocol](../docs/benchmarks/2026-09-23-situation-recall-protocol.md) defines the experiment, profiles, budgets, source-only construction boundary, and exact reproduction commands. It is not a published capability result. The declared candidate is `e51e21c076dd63e6e5948303eb2c355ddba21da4` (v0.54.0.0), paired with fresh baseline `c008902313b334b8a827dd9046b704d090d0197e` (v0.53.0.0). Earlier clean-package evidence remains separately identified in the protocol. Independent corpus relevance review, credentials, external budget enforcement, and complete live comparisons remain prerequisites.
+Cat36 asks whether generated situation cues help retrieve original evidence for indirect questions. The [2026-09-23 protocol](../docs/benchmarks/2026-09-23-situation-recall-protocol.md) defines the experiment, profiles, budgets, source-only construction boundary, and exact reproduction commands. It is not a published capability result. The declared candidate is `470ccc49c33b44c4a4be4e60bc606c0ad04a4427` (v0.55.0.0), paired with fresh baseline `6040075c6cb95be5881cc2e1b76ef7d71f4e5d29` (v0.54.1.0). Earlier clean-package evidence remains separately identified in the protocol. Publishable comparisons still require independent corpus relevance review, credentials, external budget enforcement, and complete live comparisons.
 
 Start keyless:
 
@@ -151,7 +151,7 @@ Cat36's default output is a new `eval/reports/cat36-associative-retrieval/<times
 
 The primary is `all_evidence_in_top5_chunks`, not page recall or answer accuracy. All required original source spans must occur in the five production chunks actually returned. The corpus has 120 families across five domains: 160 development and 320 holdout probes. Negative probes are excluded from positive recall means and receive separate cue false-fire accounting. Do not tune on holdout or treat unreviewed fixture labels as validated capability gold.
 
-Live runs require an approved `Cat36Profile`, exact product SHA, a verified package-content hash for archive installs, matching baseline/candidate settings, configured provider credentials, and an externally enforced isolated budget covering every paid lane. Do not infer a spending cap from `BRAINBENCH_N`, concurrency, or a number written into a profile. After all prerequisites are ready:
+Publishable and held-out live runs require an approved `Cat36Profile`, exact product SHA, a verified package-content hash for archive installs, matching baseline/candidate settings, configured provider credentials, and an externally enforced isolated budget covering every paid lane. Do not infer a spending cap from `BRAINBENCH_N`, concurrency, or a number written into a profile. After all prerequisites are ready:
 
 ```sh
 bun eval/runner/cat36-associative-retrieval.ts \
@@ -160,6 +160,8 @@ bun eval/runner/cat36-associative-retrieval.ts \
 ```
 
 Do not append `--profile` to `eval:cat36`, which explicitly selects offline mode. Missing public cue or real contextual-summary execution support blocks the corresponding live arm; a config echo or Cat26 title fallback cannot replace it. Separate source-only builds and fresh output/DB/config/HOME namespaces prevent candidate artifacts from leaking into B or C0. The live embedding cache is keyed by source/model/dimensions/construction identity and input side, with distinct construction-arm namespaces and observed hit/miss counts. A fresh clone has no warm cache; generation, reranking, judging, and cache misses can still repeat paid work.
+
+Explicitly authorized development diagnostics can instead use the protocol's [OpenRouter operator controls](../docs/benchmarks/2026-09-23-situation-recall-protocol.md#openrouter-development-only-pilot). Those local controls do not claim an external provider limit and always produce nonpublishable receipts. The separate [source-only experiment policy](../docs/benchmarks/2026-09-23-situation-recall-protocol.md#source-only-development-policy) fixes construction/replay stage ceilings and forbids replay chat. It does not supply a new runner, approve a dataset or authorize spending. Its C1 path requires a registered `situation-v3` product, which the current 470 pin does not provide.
 
 ### Grounded-answer replay is a separate secondary measurement
 

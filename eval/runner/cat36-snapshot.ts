@@ -40,11 +40,11 @@ export function loadCat36FrozenConstruction(directory: string, profile: Cat36Pro
   if (receipt.category !== 'cat36-associative-retrieval' || receipt.hashes?.build !== cat36Hash(raw)
     || JSON.stringify(build) !== JSON.stringify(receipt.data?.build) || receipt.data?.runtime_kind !== 'production'
     || !Number.isFinite(Date.parse(frozen_at)) || build.runtime_kind !== 'production' || build.mode !== 'live'
-    || !build.complete || !build.generation_observed || !original || original.arm !== 'C1'
+    || !build.complete || !build.generation_observed || !original || original.arm !== 'C1' || original.provider_budget?.kind !== 'isolated-provider-cap'
     || profile_hash !== cat36Hash(JSON.stringify(original)) || !build.index_snapshot
     || JSON.stringify([...build.families].sort()) !== JSON.stringify(['horizon', 'scene'])) throw new Error('read-time ablation requires verified production C1 construction');
   if (build.source_hash !== sourceHash || build.provenance.package_sha256 !== packageHash || typeof packageHash !== 'string') throw new Error('frozen construction source/product identity mismatch');
-  for (const field of ['expected_product_sha', 'embedding_model', 'embedding_dimensions', 'generation_model', 'expansion_model', 'cue_min_similarity', 'cue_weight', 'token_budget', 'search_config'] as const) {
+  for (const field of ['expected_product_sha', 'embedding_model', 'embedding_dimensions', 'generation_model', 'provider_chat_options', 'expansion_model', 'cue_min_similarity', 'cue_weight', 'token_budget', 'search_config'] as const) {
     if (JSON.stringify(original[field]) !== JSON.stringify(profile[field])) throw new Error(`read-time ablation changed ${field}`);
   }
   const path = realpathSync(resolve(root, build.index_snapshot.path));

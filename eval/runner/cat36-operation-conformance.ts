@@ -140,7 +140,7 @@ export async function runCat36OperationConformance(options: {
     schema_version: 1, benchmark_version: BENCHMARK_VERSION, category: CAT36_OPERATION_CATEGORY,
     run_status: blocked ? 'error' : 'completed', ...(!blocked ? { verdict: passed ? 'pass' as const : complete ? 'fail' as const : 'partial' as const } : {}),
     n_total: summary.n_total, n_scored: summary.n_scored, completion_rate: summary.completion_rate, errors: summary.errors,
-    publishable: passed && reviewed && !options.smoke && profile.mode === 'live' && options.runtime.kind === 'production',
+    publishable: passed && reviewed && !options.smoke && profile.mode === 'live' && profile.provider_budget?.kind === 'isolated-provider-cap' && options.runtime.kind === 'production',
     gbrain_pin: gbrainPin(), gbrain_version: gbrainVersion(), started_at: startedAt, finished_at: new Date().toISOString(), hashes,
     resolved_config: { profile, surfaces, native_response_preserved: true, raw_five_primary: false, answer_quality_scored: false,
       query_expansion: profile.mode === 'offline' ? 'disabled for keyless replay' : 'native operation default',

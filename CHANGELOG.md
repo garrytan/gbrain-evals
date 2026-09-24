@@ -27,11 +27,17 @@ result is published here.
   reminder replays, and separate answer-grounding replays that retain original
   outputs and judge attempts. The LongMemEval secondary check is not official
   answer accuracy.
+- OpenRouter development controls with fixed model routes, local request and
+  reservation limits, and fsynced, sanitized request/response evidence. A closed
+  source-only policy separates construction from embedding-only replay; it is
+  preparatory infrastructure, not a new dataset or measured capability result.
+  Operator-controlled diagnostics remain nonpublishable and do not claim an
+  external provider credit cap.
 
 ### Changed
 
-- Pin the candidate product to `e51e21c076dd63e6e5948303eb2c355ddba21da4`
-  (gbrain v0.54.0.0), while keeping the historical dependency and fresh baseline
+- Pin the candidate product to `470ccc49c33b44c4a4be4e60bc606c0ad04a4427`
+  (gbrain v0.55.0.0), while keeping the historical dependency and fresh baseline
   identities distinct. CI uses supported Bun 1.3.13.
 - Retain previously omitted native per-item observations without changing
   benchmark inputs, scoring formulas or published historical artifacts.
@@ -51,12 +57,12 @@ result is published here.
 
 ### Not yet measured
 
-Independent corpus and recipe review, real input catalogs, supported transport
-and protocol coverage, enforced external provider allowances, and complete live
-B/C0/C1 receipts remain prerequisites. The cue builder's durable cap does not
-create a whole-cell spending limit. Unattributable traversal results and other
-missing evidence remain blocked; hermetic checks do not prove semantic quality,
-privacy, reminder precision or release readiness.
+For publishable comparisons, independent corpus and recipe review, real input
+catalogs, supported transport and protocol coverage, enforced external provider
+allowances, and complete live B/C0/C1 receipts remain prerequisites. The cue
+builder's durable cap does not create a whole-cell spending limit. Unattributable
+traversal results and other missing evidence remain blocked; hermetic checks do
+not prove semantic quality, privacy, reminder precision or release readiness.
 
 ## [0.8.0] - 2026-09-09
 

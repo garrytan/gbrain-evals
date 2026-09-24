@@ -80,7 +80,7 @@ export function toCat36RegressionData(receipt: Receipt, context: {
     || build.provenance.fixed_source_timestamps !== true) throw new Error('Cat36 actual product provenance does not match frozen cell');
   if (build.provenance.isolated_home !== cell.runtime.home || build.provenance.database !== cell.runtime.database) throw new Error('Cat36 actual home/database namespace differs from registration');
   if (!build.provenance.file_config || regressionHash(build.provenance.file_config) !== regressionHash(provenance.file_config)) throw new Error('Cat36 actual product file-plane observation is missing or mismatched');
-  if (native.provider_budget?.approval_id !== spend.enforcement_id || native.provider_budget.max_usd !== spend.reserved_usd) throw new Error('Cat36 provider admission does not match collected spend');
+  if (native.provider_budget?.kind !== 'isolated-provider-cap' || native.provider_budget.approval_id !== spend.enforcement_id || native.provider_budget.max_usd !== spend.reserved_usd) throw new Error('Cat36 provider admission does not match collected spend');
   const effective = effectiveRegressionConfig(profile, cell.arm);
   if (regressionHash(provenance.config) !== regressionHash(effective)) throw new Error('collector config does not match registered effective config');
   for (const [key, value] of Object.entries(effective)) {

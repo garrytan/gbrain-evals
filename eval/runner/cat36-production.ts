@@ -1,6 +1,7 @@
 import { cpSync, existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 import type { BrainEngine } from 'gbrain/engine';
 import type { OperationContext } from 'gbrain/operations';
 import type { HybridSearchMeta, ResolvedColumn, SearchResult } from 'gbrain/types';
@@ -12,8 +13,9 @@ import { resolveRegressionProduct } from './situation-recall-provenance.ts';
 import { searchObservation } from './retrieval-pins.ts';
 import { EmbeddingCache, makeCachingTransport } from './longmemeval-cache.ts';
 import { cat36SnapshotHash, copyCat36Snapshot, loadCat36FrozenConstruction, type Cat36IndexSnapshot } from './cat36-snapshot.ts';
+import { assertDevelopmentPricing, startDevelopmentRequestGuard } from './situation-recall-development.ts';
 
-const PROVIDER_KEYS = ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY', 'ZEROENTROPY_API_KEY', 'GOOGLE_GENERATIVE_AI_API_KEY', 'GEMINI_API_KEY', 'COHERE_API_KEY'];
+const PROVIDER_KEYS = ['OPENAI_API_KEY', 'OPENROUTER_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY', 'ZEROENTROPY_API_KEY', 'GOOGLE_GENERATIVE_AI_API_KEY', 'GEMINI_API_KEY', 'COHERE_API_KEY'];
 let activeRuntime: symbol | null = null;
 interface IndexedChunk {
   source: Cat36BuildSource;
@@ -60,7 +62,7 @@ async function publicModule(specifier: string): Promise<PublicModule> {
 export function cat36EmbeddingCacheKey(profile: Cat36Profile, sources: readonly Cat36BuildSource[]): string {
   return cat36Hash(JSON.stringify({ schema: 1, sources: cat36Hash(JSON.stringify(sources)), model: profile.embedding_model,
     dimensions: profile.embedding_dimensions, construction: profile.arm === 'B' || profile.arm === 'C0' ? 'off' : profile.arm === 'scene' || profile.arm === 'horizon' ? 'C1' : profile.arm,
-    generation_model: profile.generation_model ?? null, contextual_retrieval: profile.search_config['search.contextual_retrieval'],
+    generation_model: profile.generation_model ?? null, ...(profile.provider_chat_options ? { provider_chat_options: profile.provider_chat_options } : {}), contextual_retrieval: profile.search_config['search.contextual_retrieval'],
     normalization: 'nfc-lf-v1', transport: 'real-ai-sdk-embedMany' }));
 }
 
@@ -131,6 +133,7 @@ export async function createCat36ProductionRuntime(profile: Cat36Profile, option
   let operationsByName: typeof import('gbrain/operations').operationsByName;
   let cache: EmbeddingCache | undefined;
   let resetTransport: (() => void) | undefined;
+  let developmentGuard: ReturnType<typeof startDevelopmentRequestGuard>;
   const indexed = new Map<number, IndexedChunk>();
   const runtimeSourceIds = new Map<string, string>();
   return {
@@ -147,6 +150,7 @@ export async function createCat36ProductionRuntime(profile: Cat36Profile, option
       const provenance = settings.mode === 'live'
         ? resolveRegressionProduct({ expectedProductSha: settings.expected_product_sha, expectedPackageSha256: settings.expected_package_sha256 })
         : { declared_pin: gbrainPin(), package_version: gbrainVersion(), verified_live_identity: false };
+      if ('package_path' in provenance) await assertDevelopmentPricing(settings, provenance.package_path);
       if (settings.mode === 'live' && !options.artifactDir) throw new Cat36Failure('live construction requires a fresh persistent artifact directory');
       const reused = settings.reuse_build_dir ? loadCat36FrozenConstruction(settings.reuse_build_dir, settings, cat36Hash(JSON.stringify(sources)),
         'package_sha256' in provenance ? provenance.package_sha256 : undefined) : undefined;
@@ -173,11 +177,13 @@ export async function createCat36ProductionRuntime(profile: Cat36Profile, option
       mkdirSync(dirname(configPath), { recursive: true });
       const fileConfig = JSON.parse(JSON.stringify({ engine: 'pglite', embedding_model: settings.embedding_model,
         embedding_dimensions: settings.embedding_dimensions, ...(settings.mode === 'offline' ? { embedding_disabled: true } : {}),
-        chat_model: settings.generation_model, expansion_model: settings.expansion_model, ...(databasePath ? { database_path: databasePath } : {}) }));
+        chat_model: settings.generation_model, provider_chat_options: settings.provider_chat_options, expansion_model: settings.expansion_model, ...(databasePath ? { database_path: databasePath } : {}) }));
       if (existsSync(configPath)) {
         const actual = JSON.parse(readFileSync(configPath, 'utf8'));
-        if (Object.keys(actual).length !== Object.keys(fileConfig).length || Object.entries(fileConfig).some(([key, value]) => actual[key] !== value)) throw new Cat36Failure('prepared file-plane config differs from the profile');
+        if (!isDeepStrictEqual(actual, fileConfig)) throw new Cat36Failure('prepared file-plane config differs from the profile');
       } else writeFileSync(configPath, JSON.stringify(fileConfig) + '\n', { flag: 'wx' });
+      const providerOptions = productConfig.loadConfig()?.provider_chat_options;
+      if (!isDeepStrictEqual(providerOptions, settings.provider_chat_options)) throw new Cat36Failure('public config resolver changed the frozen provider options');
       const families = cueFamilies(settings.arm);
       let feature: PublicModule | undefined;
       if (families.length) feature = await requireCueSupport();
@@ -203,8 +209,9 @@ export async function createCat36ProductionRuntime(profile: Cat36Profile, option
       gateway.__setSunsetClockForTests(null);
       const providerEnv = settings.mode === 'live' ? Object.fromEntries(PROVIDER_KEYS.filter(k => process.env[k]).map(k => [k, process.env[k]])) : {};
       gateway.configureGateway({ embedding_model: settings.embedding_model, embedding_dimensions: settings.embedding_dimensions,
-        chat_model: settings.generation_model, expansion_model: settings.expansion_model,
+        chat_model: settings.generation_model, provider_chat_options: settings.provider_chat_options, expansion_model: settings.expansion_model,
         reranker_model: settings.search_config['search.reranker.model'], env: providerEnv });
+      developmentGuard = startDevelopmentRequestGuard(settings, join(scratch, 'development-requests.ndjson'));
       const embeddingDiagnosis = gateway.diagnoseEmbedding();
       assertCat36ProviderReadiness(settings, { embedding: embeddingDiagnosis.ok,
         reranker: gateway.isAvailable('reranker', settings.search_config['search.reranker.model']),
@@ -337,6 +344,7 @@ export async function createCat36ProductionRuntime(profile: Cat36Profile, option
       }
       resolved.expansion_model = gateway.getExpansionModel();
       resolved.generation_model = gateway.getChatModel();
+      if (providerOptions) resolved.provider_chat_options = structuredClone(providerOptions);
       return { runtime_kind: 'production', construction_profile: structuredClone(settings), ...(snapshot ? { index_snapshot: snapshot } : {}),
         mode: settings.mode, complete: enrichment.complete, feature_supported: Boolean(feature), generation_observed: enrichment.observed,
         families: enrichment.families, source_hash: cat36Hash(JSON.stringify(sources)), resolved_config: resolved,
@@ -371,6 +379,7 @@ export async function createCat36ProductionRuntime(profile: Cat36Profile, option
       try { await engine?.disconnect(); }
       finally {
         try {
+          developmentGuard?.restore();
           resetTransport?.();
           cache?.close();
         } finally {
@@ -384,6 +393,7 @@ export async function createCat36ProductionRuntime(profile: Cat36Profile, option
         }
       }
     },
+    developmentUsage() { return developmentGuard?.snapshot() ?? null; },
   };
 }
 
@@ -410,7 +420,8 @@ async function buildCues(module: PublicModule, admin: typeof import('gbrain/oper
   if (typeof api.MEMORY_CUE_PROMPT_VERSION !== 'string' || !api.MEMORY_CUE_PROMPT_VERSION) throw new Cat36Failure('public cue prompt identity unavailable', 'dependency');
   const admission = await api.submitMemoryCueBuild(ctx.engine, { ...options, trustedLocal: true, maxUsd: profile.build_max_usd! });
   const passes: Array<{ status: string; windowsProcessed: number; reason?: string }> = [];
-  const signal = AbortSignal.timeout(600_000);
+  const buildTimeout = profile.provider_budget?.kind === 'operator-authorized-development' ? profile.provider_budget.build_timeout_ms : 600_000;
+  const signal = AbortSignal.timeout(buildTimeout);
   let executionError: string | null = null;
   try {
     for (let pass = 0; pass < 1000; pass++) {
@@ -439,7 +450,7 @@ async function buildCues(module: PublicModule, admin: typeof import('gbrain/oper
       prompt_version: api.MEMORY_CUE_PROMPT_VERSION, generated: coverageValid ? count('ready') : 0, generated_unit: 'completed nonempty windows, not cue count',
       empty_windows: coverageValid ? count('empty') : 0, rejected_windows: passes.filter(p => ['invalid_output', 'unsupported_cue', 'unsupported_relation', 'provider_refusal', 'incomplete_output'].includes(p.reason ?? '')).length,
       construction_families: families, read_families: families, covered_sources: complete ? [...sourceIds] : [], max_usd: profile.build_max_usd, remaining_cents: owner?.remaining_cents ?? null,
-      budget_accounting: 'remaining durable allowance includes charged or reserved work; not an invoice', wall_timeout_ms: 600_000, maximum_passes: 1000,
+      budget_accounting: 'remaining durable allowance includes charged or reserved work; not an invoice', wall_timeout_ms: buildTimeout, maximum_passes: 1000,
       execution_error: executionError, provider_mode: 'production gateway defaults; no injected providers' } };
 }
 

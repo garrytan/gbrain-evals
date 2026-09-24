@@ -643,7 +643,7 @@ describe('loaded package provenance and native Cat36 collector', () => {
     receipt.hashes = { ...profile.native_hashes, build: HASH };
     receipt.resolved_config = { raw_chunk_limit: 5, profile: {
       mode: 'live', split: 'holdout', arm: 'C1', expected_product_sha: CANDIDATE,
-      provider_budget: { approval_id: d.spend.enforcement_id, max_usd: 1 },
+      provider_budget: { kind: 'isolated-provider-cap', approval_id: d.spend.enforcement_id, max_usd: 1 },
       search_config: profile.config, token_budget: 4096,
     } };
     receipt.data = {
@@ -671,6 +671,13 @@ describe('loaded package provenance and native Cat36 collector', () => {
     expect(collected.feature.covered_sources).toEqual(['fixture-source']);
     expect(collected.feature.generated_unit).toBe('ready_windows');
     expect(Object.keys(collected.rows[0].metrics)).not.toContain('matched_span_ids');
+    const nativeBudget = (receipt.resolved_config.profile as { provider_budget: { kind?: string } }).provider_budget;
+    for (const kind of ['operator-authorized-development', undefined]) {
+      if (kind === undefined) delete nativeBudget.kind;
+      else nativeBudget.kind = kind;
+      expect(() => toCat36RegressionData(receipt, context)).toThrow('provider admission');
+    }
+    nativeBudget.kind = 'isolated-provider-cap';
     for (const index of [0, 3]) {
       const bounded = (receipt.data.rows as Cat36Row[])[index];
       const metrics = bounded.metrics;

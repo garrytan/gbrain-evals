@@ -59,7 +59,7 @@ The runtime builder receives only pre-cutoff source content, source identity, vi
 
 Live capability arms must use production import, generated cues, real embeddings, and the exported retrieval path. Receipts must show actual generation and read-arm observations. Requesting a setting without generating a usable index or attempting the recall arm is unexercised, not a successful capability run. An observed, functioning arm that finds no relevant cue is a measured outcome. The summary control must run the real background summary path; Cat26's inline title fallback is not an equal-budget enrichment control.
 
-**Current integration boundary:** [cat36-production.ts](../../eval/runner/cat36-production.ts) uses public production import, durable cue construction, raw search, and real per-chunk synopsis services. The declared dependency now pins candidate `e51e21c076dd63e6e5948303eb2c355ddba21da4` (v0.54.0.0), refreshed against master `c008902313b334b8a827dd9046b704d090d0197e` (v0.53.0.0). The code-identity section separates current verification from the earlier candidate's evidence. Candidate-only tests exercise the paths with explicit provider stubs; they do not establish semantic quality. Missing support still blocks the corresponding live cell rather than substituting handcrafted cues or title summaries.
+**Current integration boundary:** [cat36-production.ts](../../eval/runner/cat36-production.ts) uses public production import, durable cue construction, raw search, and real per-chunk synopsis services. The declared dependency now pins candidate `470ccc49c33b44c4a4be4e60bc606c0ad04a4427` (v0.55.0.0), paired with baseline `6040075c6cb95be5881cc2e1b76ef7d71f4e5d29` (v0.54.1.0). The code-identity section separates current verification from the earlier candidate's evidence. Candidate-only tests exercise the paths with explicit provider stubs; they do not establish semantic quality. Missing support still blocks the corresponding live cell rather than substituting handcrafted cues or title summaries.
 
 Fixture source IDs remain the cross-run evidence identity. The adapter maps each one to a distinct valid product source ID using `c36-` plus 28 SHA-256 hex characters, records both IDs in `build.json`, and maps raw chunks back for scoring. It does not merge sources to fit an enrollment bound or let a namesake earn another source's span. Only public fixture sources are enrolled for cue generation; private and withdrawn pages remain unavailable retrieval controls.
 
@@ -137,7 +137,7 @@ Exit 2 with listed blockers is expected while required prerequisites are unavail
 
 ## Prepare an authorized live run
 
-Do not start this phase until the corpus review, public runtime integration, explicit budget, credentials, and exact baseline/candidate identities are ready. The commands below describe execution of an already approved profile, not approval to spend.
+For publishable comparisons, do not start this phase until the corpus review, public runtime integration, explicit budget, credentials, and exact baseline/candidate identities are ready. The commands below describe execution of an already approved profile, not approval to spend. The narrower development-only pilot below does not require completion of the 49-profile release gate.
 
 [Cat36Profile](../../eval/runner/cat36-associative-retrieval.ts) requires these settings:
 
@@ -150,6 +150,7 @@ Do not start this phase until the corpus review, public runtime integration, exp
 | `token_budget`, `cue_weight` | Fixed output budget and bounded cue weight. Freeze before holdout. |
 | `cue_min_similarity` | Explicit encoder-calibrated cosine threshold for cue-enabled arms. There is no portable threshold recommendation here. |
 | `generation_model`, `build_max_usd` | Required for cue/summary construction; provider-qualified model and positive build allowance no larger than the approved provider cap. |
+| `provider_chat_options` | Optional, narrowly validated non-thinking options for an allowlisted OpenRouter model. Required for the operator-authorized development variant below; request-field overrides are forbidden. |
 | `reuse_build_dir` | Required only for Scene/Horizon read-time ablations. Reuse verified C1 construction, name its original generation model, and omit a new build allowance. |
 | `expansion_model` | Explicit model required for live native `query` conformance. Raw expansion-enabled quality profiles currently block before paid work because the public expander cannot distinguish a successful no-op from a swallowed provider failure. |
 | `provider_budget` | `{ "kind": "isolated-provider-cap", "approval_id": "<real approval reference>", "max_usd": <approved amount> }`. This records an externally enforced allowance, not a budget created by writing JSON. |
@@ -174,8 +175,11 @@ The code identities for this change are explicit:
 | Identity | Product revision | Role |
 |---|---|---|
 | Historical H | `2efaaf8f8a817b5b82e023383618fdcdb1cc5f7d` | The previous declared dependency and preserved historical measurements. |
-| Fresh baseline B | `c008902313b334b8a827dd9046b704d090d0197e`, v0.53.0.0 | Refreshed current-product baseline; live measurements remain pending. |
-| Declared candidate C0/C1 | `e51e21c076dd63e6e5948303eb2c355ddba21da4`, v0.54.0.0 | Candidate-off/on comparison after integrating that baseline, linked to [product PR #5374](https://github.com/garrytan/gbrain/pull/5374). |
+| Fresh baseline B | `6040075c6cb95be5881cc2e1b76ef7d71f4e5d29`, v0.54.1.0 | Baseline for the current candidate; no capability result is published here. |
+| Declared candidate C0/C1 | `470ccc49c33b44c4a4be4e60bc606c0ad04a4427`, v0.55.0.0 | Published candidate checkpoint with explicit Sonnet router pricing and full-response JSON-fence normalization, linked to [product PR #5374](https://github.com/garrytan/gbrain/pull/5374). |
+| Earlier refreshed baseline | `c008902313b334b8a827dd9046b704d090d0197e`, v0.53.0.0 | Baseline associated with the preserved e51 verification below. |
+| Earlier refreshed candidate | `e51e21c076dd63e6e5948303eb2c355ddba21da4`, v0.54.0.0 | The earlier clean Git-package evidence below remains attached to this revision. |
+| Intermediate archive checkpoint | `0ccb47ba5e6b7058a5aeeedf590753268d931276`, v0.55.0.0 | Separately verified archive before the format-only parser fix; not the current declared pin. |
 | Earlier baseline reference | `b272cf23464007a3d9fdd9daaef93e76e2651546` | Baseline reference before the master refresh; no live score is reassigned to the new baseline. |
 | Earlier candidate verification | `ca314d8af825308190cbe13dd08949d564a994a3`, v0.54.0.0 | The dated clean-package and hermetic evidence below applies to this earlier candidate. |
 
@@ -187,11 +191,19 @@ On September 23, a separate clean consumer ran `bun install --frozen-lockfile --
 
 On supported Bun 1.3.13, the final hermetic consumer suite passed 1,773 tests with no failures or skips, including identity fixture liveness and rejected-capture receipt preservation. All eight keyless CI runner commands also completed. These checks validate the harness and deterministic contracts; they are not live B/C0/C1 quality comparisons. Project-file and script type gates pass under the existing CI policy; raw repository typechecking still reports diagnostics inside the installed dependency.
 
-### Refreshed candidate verification
+### Earlier e51 refresh verification
 
 After integrating master `c0089023`, a new clean Bun 1.3.13 consumer installed `e51e21c` with `--frozen-lockfile --ignore-scripts`, followed only by the inspected PGLite asset-link helper. The archive is not locally linked, reports gbrain v0.54.0.0, and imports both public feature modules. Its independently computed `regressionPackageHash` is `dd91c8739cb72b3435196671e65c29c33c133fb5967054822746d2db87e2230e`. The fresh schema initializes through version 165, preserving the shared-skills migration at 164. This verification is separate from the earlier archive and does not establish a live retrieval gain or no-regression result.
 
 The refreshed package passed 1,773 hermetic tests across 87 files, with no failures or skips, on Bun 1.3.13. All eight keyless CI runner commands completed, and the unchanged keyword guard retained Jaccard 1.0000 and top-1 1.0000. Data, documentation and redacted diff secret checks passed. Project-file and script type gates passed under the existing CI policy; raw repository typechecking reported 45 diagnostics inside the installed dependency and none in project files. No paid call was made for this refresh.
+
+### Published 470 Git-package verification
+
+On September 24, a new Bun 1.3.13 consumer installed the declared `470ccc49` dependency directly with `bun install --frozen-lockfile --ignore-scripts`, followed only by the inspected PGLite asset-link helper. This was not an archive replacement or `bun link`. The loaded package reports v0.55.0.0, imports both feature modules, and has `regressionPackageHash` `b302290974571ae846e26587cd37ecf6299b74c3bfe0d401aa22935ca3a84c97`.
+
+The earlier immutable 470 archive checkpoint has package hash `d8cb6ef017ba85a4ffa3d6194cc42ab2f31557f434c4821adb281efe06d725bb`. Every source-file byte matched; the Git installation adds only Bun's `.bun-tag` metadata. Keep these package identities distinct rather than disabling that check or reusing an archive hash for a Git install. The intermediate 0ccb archive, with hash `bb3177608bff9ccf5949b13eab394637b745a62c4437c2acb4f931b22ba663cf`, remains an earlier checkpoint rather than evidence for the parser-fixed pin.
+
+The clean Git consumer passed 1,822 hermetic tests across 90 files with no failures or skips. All eight keyless CI commands completed, and the keyword guard retained Jaccard and top-1 1.0000. Project and script type gates passed under the existing policy; raw repository typechecking retained 45 installed-dependency diagnostics and none in project files. These are consumer and harness checks with provider credentials removed, not retrieval-gain measurements or a full semantic no-regression result. Source-only v3 positive-path tests use synthetic registered-v3 modules; they do not establish compatibility with a future product build.
 
 The shared identity check separately records the resolved package path/version, available commit/tree and dirty state, and verified package content hash. It checks `GBRAIN_SRC` and `GBRAIN_REPO` bindings against that package. A local `bun link` must not silently change which product an arm runs. The final release gate still needs complete live measurements at these exact registered identities.
 
@@ -206,6 +218,96 @@ bun eval/runner/cat36-associative-retrieval.ts \
 Use separate fresh outputs and databases for B, C0, C1, and every ablation. The live runtime uses a local embedding cache under `eval/reports/cat36-associative-retrieval/embed-cache/`, backed by the existing cache module and real provider transport. Its identity includes source content, encoder, dimensions, construction/context mode, and generation model; individual entries distinguish input side. B and C0 can reuse unchanged off-arm embeddings. Different construction arms have separate cache namespaces, so a candidate cue artifact cannot silently warm the baseline.
 
 A fresh clone has no warm cache. Build and query observations record cache hit/miss information. Cache hits avoid only the corresponding embedding call: repeated generation, reranking, judging, and other uncached provider work can still cost money. Do not compare a development smoke with full holdout, or a different model/configuration with the frozen primary. A full holdout run omits `--smoke` and uses `split: "holdout"` in its approved profile.
+
+### OpenRouter development-only pilot
+
+The embedding route is `openrouter:openai/text-embedding-3-large` at 1536 dimensions. The primary pilot generator is `openrouter:anthropic/claude-sonnet-4.6`; the explicit control allowlist also includes `openrouter:qwen/qwen3.7-flash` and `openrouter:openai/gpt-4o-mini`. Freeze the selection after a source-only liveness check using the unchanged production prompt; transport compatibility or an empty cue array does not show useful cue generation. All routes use `OPENROUTER_API_KEY`; a native OpenAI key does not satisfy them. Reranking, expansion, answer generation and judging stay off. The isolated runners preserve the OpenRouter credential only for live execution, discard ambient endpoint overrides, and use the product's public gateway. They do not print or save credentials.
+
+On September 23, the unauthenticated [OpenRouter embedding catalogue](https://openrouter.ai/api/v1/embeddings/models) listed `openai/text-embedding-3-large` at $0.13 per million input tokens. This matches the product's nested embedding-price lookup. The [chat catalogue](https://openrouter.ai/api/v1/models) listed Qwen at $0.03/M input and $0.13/M output below the 32,000-token prompt tier, GPT-4o-mini at $0.15/M input and $0.60/M output, and Sonnet 4.6 at $3/M input and $15/M output. Operator-admitted C1 runs check that the verified installed product has an exact OpenRouter canonical price matching the selected route before source ingestion. The 470 pin has exact rows for Qwen and Sonnet; GPT-4o-mini remains an explicit control route whose cue construction blocks without its own canonical price. This protocol does not alias router chat prices to native vendors. This pinned cue pipeline uses 800-byte source evidence and a 1,200-token output limit. Prices and model availability must be rechecked before spending.
+
+Keyless wire tests exercise both production runners with synthetic credentials and intercepted HTTP requests. They check the OpenRouter hostname, authorization isolation, exact model IDs, `dimensions: 1536`, durable cue construction, package provenance, and positive bounded cost previews. A native-provider decoy credential cannot replace a missing OpenRouter key. These checks do not establish live availability or actual returned dimensions. The embedding catalogue does not establish dimension support either. After explicit spending approval, verify a single real embedding response has 1536 finite values and a tiny generation call uses the selected model before starting corpus ingestion. Keep successful and failed smoke responses with their usage records.
+
+An externally capped run continues to use `isolated-provider-cap`. An uncapped key must never carry that label. For an explicitly authorized diagnostic pilot only, `operator-authorized-development` instead records the operator's approval and per-cell allocation, plus locally enforced request-count, body-byte and output-token bounds. It is restricted to dev B/C0/C1 on the explicit embedding and generation allowlists, with no expansion, reranker, summary, operation replay or holdout. Its receipts are always nonpublishable, and its cue snapshots cannot supply release ablations. Holdout and release collection still require external-cap admission.
+
+The scoped request guard counts every dispatched attempt, including retries and failed responses, rejects other hosts/models and redirects, and admits no request after its count is exhausted. Limits may be no larger than 1,500 requests, 65,536 bytes per request and 1,200 output tokens per chat request; chat request bodies also stay below 8,192 bytes. Before dispatch it reserves against a per-cell allocation of at most $100 using request bytes as a conservative input-token bound and the explicit model prices above. Known charges settle that reservation; missing accounting, a changed response model or a charge above the priced reservation retains the reservation and stops further dispatch. Cue construction also has its own durable allowance of at most $10. These controls are not a provider credit cap or an invoice guarantee. The operator owns the shared total across cells, failures and retries, and must not reset that total with each profile.
+
+Freeze `build_timeout_ms` and `cell_timeout_ms` as well. Development builds may use up to 30 minutes, and the whole cell up to 60 minutes, without changing the lifetime build allowance or request limits. The guard aborts in-flight inference at the cell deadline and retains uncertain reservations. The operator's process launcher must use the same cell timeout to cover non-network stalls, retaining partial artifacts on termination. External-cap release builds keep the existing ten-minute build deadline; a longer diagnostic budget does not pass a native performance gate.
+
+Use a separate process for each cell. Normal completion restores the previous transport. A rejected, uncertain or still-pending request leaves a closed transport until process exit so delayed SDK work cannot escape the guard after cleanup; do not reuse that process for another cell.
+
+The frozen model-specific options disable reasoning and fallback routing and set the selected endpoint's advertised price ceilings. For Sonnet: `provider_chat_options["openrouter:anthropic/claude-sonnet-4.6"] = { reasoning: { enabled: false }, provider: { allow_fallbacks: false, max_price: { prompt: 3, completion: 15, request: 0 } } }`. `developmentChatOptions(model)` supplies the allowlisted model's own prices. Validators reject extra fields such as `model`, `messages` or `max_tokens`; the request guard checks the actual wire values as well. Profiles, effective configuration and cache identities record these options.
+
+`development_usage` retains per-request status and available token/cost fields without prompts or credentials. It reports router charges and BYOK upstream charges separately. BYOK means OpenRouter used an upstream credential: router cost zero does not imply free work. `known_attributed_usd` adds upstream cost only when `usage.is_byok` is true, so a non-BYOK upstream price is not double-counted. Missing usage, unknown BYOK status and missing BYOK upstream cost remain explicit unknowns, not zero-cost claims. This is partial accounting for the operator, not an invoice or a spending guarantee.
+
+Keep `development-requests.ndjson` and `development-http/` with the run. Cat36 writes them under `runtime/`; Cat13b writes them at the output root. Each reservation is appended and fsynced before network dispatch, followed by a sanitized settlement or uncertainty record. A process killed before settlement leaves its reservation unresolved rather than losing that possible charge. Per-request JSON artifacts preserve request bodies, response bodies and errors with hashes, removing headers, credential fields and known secret values; hashes identify the sanitized bytes, not an unredacted wire capture. This keeps invalid cue output inspectable without saving authorization. Embedding responses explicitly accept and record either `openai/text-embedding-3-large` or the provider's equivalent bare `text-embedding-3-large`; chat response IDs must match exactly.
+
+Prepare diagnostic profiles without making provider calls. Set `EXPECTED_PRODUCT_SHA` and `EXPECTED_PACKAGE_SHA256` to independently verified candidate identities, `APPROVED_CELL_USD` and `OPERATOR_APPROVAL_ID` to the operator's per-cell allocation and approval reference, and `APPROVED_CUE_BUILD_USD` to the approved construction sub-budget. Set `GENERATION_MODEL` to the selected allowlisted route, `DEV_MAX_REQUESTS` to the chosen per-cell request ceiling and `DEV_CUE_MIN_SIMILARITY` to an explicitly recorded development hypothesis, not a claimed calibrated threshold. `PILOT_PROFILE_DIR` must name a new directory. None of these variables contains a credential. Six cells allocated $100 each reserve $600 of the operator's total, not six independent spending authorizations.
+
+```sh
+bun --no-env-file -e '
+import { mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { offlineCat36Profile, validateCat36Profile } from "./eval/runner/cat36-associative-retrieval.ts";
+import { validateCat13bPilotProfile } from "./eval/runner/situation-recall-cat13b.ts";
+import { resolveRegressionProduct } from "./eval/runner/situation-recall-provenance.ts";
+import { developmentChatOptions } from "./eval/runner/situation-recall-development.ts";
+const required = ["EXPECTED_PRODUCT_SHA", "EXPECTED_PACKAGE_SHA256", "APPROVED_CELL_USD", "OPERATOR_APPROVAL_ID", "APPROVED_CUE_BUILD_USD", "GENERATION_MODEL", "DEV_MAX_REQUESTS", "DEV_CUE_MIN_SIMILARITY", "PILOT_PROFILE_DIR"];
+if (required.some(k => !process.env[k])) throw new Error("explicit verified identity, allowance and development settings required");
+const e = process.env;
+if (!["B", "C0,C1"].includes(e.PILOT_ARMS ?? "C0,C1")) throw new Error("choose baseline B or candidate C0,C1");
+resolveRegressionProduct({ expectedProductSha: e.EXPECTED_PRODUCT_SHA, expectedPackageSha256: e.EXPECTED_PACKAGE_SHA256 });
+const profiles = [];
+for (const category of ["cat36", "cat13b"]) for (const arm of (e.PILOT_ARMS ?? "C0,C1").split(",")) {
+  const p = { ...offlineCat36Profile(), id: `dev-openrouter-${category}-${arm}`, mode: "live", arm, split: "dev",
+    embedding_model: "openrouter:openai/text-embedding-3-large", embedding_dimensions: 1536,
+    generation_model: e.GENERATION_MODEL, token_budget: category === "cat13b" ? 12000 : 4096,
+    provider_chat_options: developmentChatOptions(e.GENERATION_MODEL),
+    expected_product_sha: e.EXPECTED_PRODUCT_SHA, expected_package_sha256: e.EXPECTED_PACKAGE_SHA256,
+    provider_budget: { kind: "operator-authorized-development", approval_id: e.OPERATOR_APPROVAL_ID, max_usd: Number(e.APPROVED_CELL_USD),
+      max_requests: Number(e.DEV_MAX_REQUESTS), max_request_bytes: 65536, max_output_tokens: 1200, build_timeout_ms: 1800000, cell_timeout_ms: 3600000 },
+    ...(arm === "C1" ? { cue_min_similarity: Number(e.DEV_CUE_MIN_SIMILARITY), build_max_usd: Number(e.APPROVED_CUE_BUILD_USD) } : {}) };
+  validateCat36Profile(p);
+  if (category === "cat13b") validateCat13bPilotProfile(p);
+  profiles.push(p);
+}
+mkdirSync(e.PILOT_PROFILE_DIR);
+for (const p of profiles) writeFileSync(join(e.PILOT_PROFILE_DIR, p.id + ".json"), JSON.stringify(p, null, 2) + "\n", { flag: "wx" });
+'
+```
+
+After approval and the tiny route smoke, run one cell at a time, substituting `C1` only after inspecting `C0` and confirming remaining authorization:
+
+```sh
+bun --no-env-file eval/runner/cat36-associative-retrieval.ts \
+  --profile "$PILOT_PROFILE_DIR/dev-openrouter-cat36-C0.json" --smoke \
+  --output /absolute/path/to/new-cat36-C0-dev
+bun --no-env-file eval/runner/situation-recall-cat13b.ts \
+  --profile "$PILOT_PROFILE_DIR/dev-openrouter-cat13b-C0.json" --execute \
+  --output /absolute/path/to/new-cat13b-C0-dev
+```
+
+Cat36 `--smoke` scores four development probes but still builds the source corpus; it is not a cheap four-document ingestion. Omit `--smoke` only for an approved 160-probe development run. Cat13b always retains its native 20 pages and 30 questions; `split: "dev"` does not partition that catalog. Its CLI retains exit 2 for a nonpublishable diagnostic, so inspect the receipt rather than relabeling the run as release-ready. No pilot command uses held-out probes, changes labels, or runs a judge. C0/C1 share the candidate installation. For B, run the generator in the separate verified baseline consumer with its own SHA/hash, a fresh profile directory and `PILOT_ARMS=B`; never relabel a candidate run as the baseline.
+
+Unreviewed Cat36 labels and exploratory cue thresholds permit diagnostic plumbing, error analysis and development calibration, not publishable retrieval-gain claims. The independent human relevance review remains pending, including the ink-smear, library-fines and concert-recording negatives. Both runners force operator-authorized receipts nonpublishable even when all probes complete. A separately externally capped Cat13b component receipt still does not establish a full release pass. Preserve all failures, freeze threshold/weight/model choices after development, and obtain independent label approval before a new held-out evaluation. Missing audio assets, other categories' attribution/IPC coverage, full LongMemEval data and the other release-gate profiles are separate release prerequisites, not blockers for this narrow development pilot.
+
+### Source-only development policy
+
+[situation-recall-experiment-policy.ts](../../eval/runner/situation-recall-experiment-policy.ts) defines one closed policy, `longmemeval-m-source-only-dev-v1`, for a separately registered source-only experiment. It is a financial guard contract, not a dataset, runner, source-provenance approval or authorization to spend. Its C1 path requires an exact registered `situation-v3` pipeline and cue-prompt hash. The current 470 pin still supplies `situation-v2`, so C1 preflight deliberately blocks until a separately verified v3 product is registered. The existing Cat36/Cat13b protocols keep their smaller limits unchanged.
+
+The typed `SourceOnlyDevelopmentProfile` binds an opaque question ID, arm, attempt, immutable stage, registration/source hashes, exact product SHA/package hash, and a root-provided leaf allocation. Replay also records the successful construction receipt hash. The guard verifies package resolution and prices, but the caller must verify source-history membership, effective cues-off configuration for B/C0, construction completion and the linked receipt before admitting replay. The source builder must not receive question artifacts; query replay runs in a separate process.
+
+| Arm | Stage | Maximum allocation | Requests including retries | Stage timeout |
+|---|---|---:|---:|---:|
+| B/C0 | Construction | $9 | 1,968 | 55 minutes |
+| B/C0 | Replay | $1 | 32 | 5 minutes |
+| C1 | Construction | $95 | 5,968 | 90 minutes |
+| C1 | Replay | $5 | 32 | 30 minutes |
+
+These ceilings sum to $10/2,000 requests/60 minutes per B/C0 question and $100/6,000 requests/120 minutes per C1 question. The orchestrator records two distinct leaf allocations, does not reserve the parent amount again, and enforces the outer paired-process deadline. Failed or uncertain construction blocks replay; a retry gets a new recorded attempt without erasing earlier charges. A supplied leaf allocation may tighten its stage's dollar ceiling, but caller-defined request, body, token and timeout ceilings are rejected.
+
+All stages allow at most a 1 MiB embedding request. B/C0 and every replay stage reject all chat. C1 construction permits only Sonnet 4.6 with the exact production cue system prompt and SDK payload shape, temperature zero, `includeBridge: false`, and at most 8,192 UTF-8 evidence bytes. Its 64 KiB chat-wire limit accounts for JSON escaping, not larger evidence; output remains capped at 1,200 tokens. Reader, answer, judge, tool and alternate-model requests are not admitted. The hard-corpus experiment is not an allowed policy ID.
+
+The entrypoint is `startSourceOnlyDevelopmentGuard(profile, { journalPath, verifiedPackagePath })` in [situation-recall-development.ts](../../eval/runner/situation-recall-development.ts). It returns `sealConstruction()`, `snapshot()` and `restore()`. Sealing irreversibly disables construction chat without changing the stage or resetting counters; it is not a continuation into another process. Use a fresh directory and journal for each stage. The existing accounting implementation supplies fsynced reservations, sanitized artifacts, BYOK attribution and uncertain-charge retention. Snapshots explicitly remain nonpublishable, outside release coverage, and do not claim verified authorization or a provider hard cap.
 
 ## Replay grounded answers as a separate secondary check
 
