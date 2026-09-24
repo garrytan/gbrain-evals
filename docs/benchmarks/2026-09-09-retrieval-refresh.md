@@ -337,8 +337,12 @@ Shipping review subsequently tightened failed-run receipts, relationship
 completeness checks, interrupted-request accounting, and report-path handling
 for a checkout in a different directory. These changes do not alter successful
 search rankings. The [archived harness source](2026-09-09-retrieval-refresh/harness-source.json)
-preserves the exact 17 files behind the fingerprint recorded for the eight
-confirmation attempts; the original receipts and launch hashes remain intact.
+preserves 16 exact source files and one explicitly redacted source file behind
+the fingerprint recorded for the eight confirmation attempts. On September 23,
+2026, one retired provider-map identity in the archived Cat13 source was redacted.
+Its original source hash and original archive commit/path/hash remain recorded
+separately from the redacted-content hash. The redacted bytes were not executed;
+the original launch fingerprint and all measured results remain unchanged.
 
 The [validation record](2026-09-09-retrieval-refresh/validation.json) records the
 tests, data checks, document checks, and separate editorial review. It also

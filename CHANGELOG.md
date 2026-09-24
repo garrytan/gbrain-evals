@@ -2,6 +2,33 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.9.1] - 2026-09-24
+
+Current benchmark runners no longer offer the retired hosted provider or its
+removed commands. Historical reports retain their dates, measurements and
+original-revision provenance; archival labels are not supported configuration
+and do not assign old results to a replacement provider.
+
+### Changed
+
+- Pin GBrain's data-safety revision and adapt fixtures to its supported page
+  projection, snapshot and judge-result contracts without changing the benchmark
+  corpora, answer labels, scoring thresholds or saved reference rankings.
+- Use the supported Bun runtime in keyless CI, disable dependency lifecycle
+  scripts, and run the existing local PGLite-link helper explicitly.
+
+### Fixed
+
+- Restore gateway configuration after synthetic runs and explicitly disable
+  reranking in the limit-only fixture so offline tests do not inherit provider
+  configuration from another test.
+- Prevent child fixtures from loading local environment files. Distinguish a
+  valid zero judge score from malformed output rather than treating both as a
+  successful result.
+
+These changes preserve harness compatibility. They do not establish a new
+retrieval-quality improvement or rerun historical paid benchmarks.
+
 ## [0.8.0] - 2026-09-09
 
 Engineers can now choose a retrieval configuration by the questions they need to

@@ -14,7 +14,7 @@
  *   - longmemeval-04: aggregate reads top_k/dataset from rows; mixed values
  *     or missing-without-CLI is an error, never a hardcoded 5/'s'.
  *   - longmemeval-05: cache key comes from the gateway's RESOLVED
- *     model/dims, whose configless fallback is zembed-1@1280 — not the old
+ *     model/dims, including asymmetric embedders — not the old
  *     hand-rolled 'text-embedding-3-large@1536'.
  *   - longmemeval-06: cache key includes the embedding input_type so
  *     query-side and document-side vectors never alias.
@@ -419,8 +419,8 @@ describe('rerankPreflight', () => {
     expect(missing.envKey).toBe('VOYAGE_API_KEY');
     expect(missing.keyPresent).toBe(false);
     expect(rerankPreflight({ VOYAGE_API_KEY: 'pa-k' }).keyPresent).toBe(true);
-    // A ZeroEntropy key alone no longer satisfies the pinned model.
-    expect(rerankPreflight({ ZEROENTROPY_API_KEY: 'k' }).keyPresent).toBe(false);
+    // An unrelated provider key does not satisfy the pinned model.
+    expect(rerankPreflight({ OPENAI_API_KEY: 'k' }).keyPresent).toBe(false);
   });
 
   test('rerank contract violation is typed sut (scored 0, stays in denominator)', () => {
@@ -575,13 +575,12 @@ describe('embedding cache', () => {
 
   test('cache key derives from the gateway resolved model, not a local fallback', async () => {
     const { configureGateway, getEmbeddingModel, getEmbeddingDimensions } = await import('gbrain/ai/gateway');
-    // Configless machine: gbrain's OWN fallback applies. The old hand-rolled
-    // 'text-embedding-3-large'/1536 fallback (finding 05) diverged from it
-    // and mislabeled cached vectors.
-    configureGateway({ env: {} });
+    // The old hand-rolled 'text-embedding-3-large'/1536 fallback (finding 05)
+    // diverged from the gateway's resolved model and mislabeled cached vectors.
+    configureGateway({ embedding_model: 'voyage:voyage-4', embedding_dimensions: 1024, env: {} });
     expect(`${getEmbeddingModel()}@${getEmbeddingDimensions()}`).not.toBe('text-embedding-3-large@1536');
-    expect(getEmbeddingModel()).toBe('zeroentropyai:zembed-1');
-    expect(getEmbeddingDimensions()).toBe(1280);
+    expect(getEmbeddingModel()).toBe('voyage:voyage-4');
+    expect(getEmbeddingDimensions()).toBe(1024);
     // Explicit config resolves verbatim (what run() records in the receipt).
     configureGateway({ embedding_model: 'openai:text-embedding-3-large', embedding_dimensions: 1536, env: {} });
     expect(`${getEmbeddingModel()}@${getEmbeddingDimensions()}`).toBe('openai:text-embedding-3-large@1536');
@@ -745,6 +744,31 @@ function e2eOpts(dir: string, datasetPath: string, overrides: Partial<Opts> = {}
 }
 
 describe('end-to-end (keyword adapter, hermetic)', () => {
+  test('configless embedding runs resolve the supported default and fail closed without its key', async () => {
+    const { getEmbeddingModel, getEmbeddingDimensions } = await import('gbrain/ai/gateway');
+    const savedHome = process.env.GBRAIN_HOME;
+    const savedKey = process.env.VOYAGE_API_KEY;
+    process.env.GBRAIN_HOME = mkdtempSync(join(TMP, 'default-home-'));
+    delete process.env.VOYAGE_API_KEY;
+    try {
+      const dir = mkdtempSync(join(TMP, 'default-preflight-'));
+      const datasetPath = join(dir, 'dataset.json');
+      writeFileSync(datasetPath, JSON.stringify(makeDataset({ goldInHaystack: true })));
+      const result = await run(e2eOpts(dir, datasetPath, { adapters: ['hybrid'], keywordOnly: false }));
+      expect(result.receipt.run_status).toBe('skipped');
+      expect(result.receipt.skip_reason).toContain('VOYAGE_API_KEY');
+      expect(result.receipt.n_scored).toBe(0);
+      expect(result.exitCode).toBe(1);
+      expect(getEmbeddingModel()).toBe('voyage:voyage-4');
+      expect(getEmbeddingDimensions()).toBe(1024);
+    } finally {
+      if (savedHome === undefined) delete process.env.GBRAIN_HOME;
+      else process.env.GBRAIN_HOME = savedHome;
+      if (savedKey === undefined) delete process.env.VOYAGE_API_KEY;
+      else process.env.VOYAGE_API_KEY = savedKey;
+    }
+  });
+
   test('good corpus: recall_all counted right, _abs excluded, receipt pass', async () => {
     const dir = mkdtempSync(join(TMP, 'e2e-pass-'));
     const datasetPath = join(dir, 'dataset.json');
@@ -836,12 +860,10 @@ describe('end-to-end (keyword adapter, hermetic)', () => {
     // without any provider key or network call.
     const { __setEmbedTransportForTests, getEmbeddingDimensions } = await import('gbrain/ai/gateway');
     const hadOpenai = process.env.OPENAI_API_KEY;
-    const hadZe = process.env.ZEROENTROPY_API_KEY;
     const hadVoyage = process.env.VOYAGE_API_KEY;
     process.env.OPENAI_API_KEY = 'dummy-stub-key';
-    // A reranker key present (ZE historically, Voyage since gbrain 0.48.2.0)
+    // A reranker key present
     // must NOT re-enable the reranker — the pin turns it off.
-    process.env.ZEROENTROPY_API_KEY = 'dummy-ze-key';
     process.env.VOYAGE_API_KEY = 'dummy-voyage-key';
     const hashVec = (text: string, dim: number): number[] => {
       const v = new Array<number>(dim).fill(0);
@@ -890,8 +912,6 @@ describe('end-to-end (keyword adapter, hermetic)', () => {
       __setEmbedTransportForTests(null);
       if (hadOpenai === undefined) delete process.env.OPENAI_API_KEY;
       else process.env.OPENAI_API_KEY = hadOpenai;
-      if (hadZe === undefined) delete process.env.ZEROENTROPY_API_KEY;
-      else process.env.ZEROENTROPY_API_KEY = hadZe;
       if (hadVoyage === undefined) delete process.env.VOYAGE_API_KEY;
       else process.env.VOYAGE_API_KEY = hadVoyage;
     }

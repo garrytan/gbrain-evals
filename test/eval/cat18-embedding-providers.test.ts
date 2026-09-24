@@ -24,6 +24,8 @@ import {
   computeVerdict,
   runCat18,
   PINNED_CONFIG,
+  PROVIDERS_DEFAULT,
+  providerConfig,
   CAT18_CATEGORY,
   K,
   type ProviderCell,
@@ -48,6 +50,15 @@ const QUERIES: SyntheticQuery[] = [
   { id: 'q1', text: 'Who founded Acme AI dental agents?', relevant_slugs: ['people/alice-example', 'companies/acme-ai'] },
   { id: 'q2', text: 'Who invests in fintech payment rails?', relevant_slugs: ['people/bob-example'] },
 ];
+
+test('default provider cells retain the supported embedding identities', () => {
+  expect(PROVIDERS_DEFAULT).toEqual(['openai', 'voyage']);
+  expect(PROVIDERS_DEFAULT.map(providerConfig)).toEqual([
+    { embedder: 'openai:text-embedding-3-large', dim: 1536 },
+    { embedder: 'voyage:voyage-3-large', dim: 1024 },
+  ]);
+  expect(() => providerConfig('retired-provider-fixture')).toThrow('unknown provider');
+});
 
 // ─── hashEmbedVector (stub determinism) ──────────────────────────────
 

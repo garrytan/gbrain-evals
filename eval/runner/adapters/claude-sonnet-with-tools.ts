@@ -65,7 +65,7 @@ export interface AgentAdapterState {
    * WS5: the engine.setConfig entries pinned in init() BEFORE ingest
    * (search mode + reranker state). Cat 8/9 receipts record these so a run
    * can never silently depend on gbrain's default 'balanced' mode enabling
-   * the zerank-2 reranker when ZEROENTROPY_API_KEY happens to be set.
+   * a reranker when an ambient provider key happens to be set.
    * Optional because tests may construct minimal states by hand.
    */
   resolved_search_config?: Record<string, string>;
@@ -236,8 +236,8 @@ export class ClaudeSonnetWithToolsAdapter implements Adapter {
     await engine.connect({});
     await engine.initSchema();
     // WS5: pin search mode + reranker BEFORE ingest. gbrain's default
-    // 'balanced' mode silently enables the zerank-2 reranker when
-    // ZEROENTROPY_API_KEY is set — the agent's `search`/`query` tools would
+    // 'balanced' mode can enable reranking with an ambient provider key;
+    // the agent's `search`/`query` tools would
     // then behave differently across machines. Never rely on defaults.
     // Keys verified against node_modules/gbrain/src/core/search/mode.ts.
     const searchConfig: Record<string, string> = {

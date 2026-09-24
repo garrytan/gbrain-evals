@@ -13,7 +13,7 @@
  *     recall_at_5 is provably <= 1.
  *   - audit cats18-21-07: search mode + reranker pinned per cell and
  *     recorded in the receipt; no result may carry a rerank_score even
- *     when ZEROENTROPY_API_KEY is set in the environment.
+ *     when VOYAGE_API_KEY is set in the environment.
  *
  * Hermetic: hash-embed transport via gbrain's gateway test seam (installed
  * by the runner in stubEmbed mode). No API keys used.
@@ -60,10 +60,10 @@ describe('cat21 corpus construction (unit)', () => {
 describe('cat21 runner', () => {
   test('gold files ingested + asserted, pins verified, metrics page-normalized', async () => {
     const reportsDir = mkdtempSync(join(tmpdir(), 'cat21-good-'));
-    // ZE key present must NOT let the reranker touch results (cats18-21-07):
+    // A reranker key must NOT let the reranker touch results (cats18-21-07):
     // the per-cell pin turns it off and every query verifies no rerank_score.
-    const hadZe = process.env.ZEROENTROPY_API_KEY;
-    process.env.ZEROENTROPY_API_KEY = 'dummy-ze-key-for-pin-test';
+    const hadVoyage = process.env.VOYAGE_API_KEY;
+    process.env.VOYAGE_API_KEY = 'dummy-voyage-key-for-pin-test';
     let result;
     try {
       result = await runCat21({
@@ -75,8 +75,8 @@ describe('cat21 runner', () => {
         reportsDir,
       });
     } finally {
-      if (hadZe === undefined) delete process.env.ZEROENTROPY_API_KEY;
-      else process.env.ZEROENTROPY_API_KEY = hadZe;
+      if (hadVoyage === undefined) delete process.env.VOYAGE_API_KEY;
+      else process.env.VOYAGE_API_KEY = hadVoyage;
     }
 
     expect(result.exitCode).toBe(0);

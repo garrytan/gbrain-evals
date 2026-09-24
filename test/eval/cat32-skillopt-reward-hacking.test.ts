@@ -13,7 +13,7 @@
  *   - adversarial fixture (HACKED_SKILL) fires the detector end-to-end:
  *     gameable rule bench HIGH, real-quality held-out LOW
  *   - negative control: the HONEST skill does NOT fire it — a judge signal
- *     that flags every skill (breakJudge) FAILS Part A instead of passing
+ *     that flags every skill (zeroJudge) FAILS Part A instead of passing
  *   - Part B fails when the optimizer regresses held-out or crashes
  */
 
@@ -113,7 +113,7 @@ describe('runCat32 Part A end-to-end (stub transport, real scoreSkillOnTasks)', 
     const r = await runCat32({
       bpre: true,
       stubLlm: true,
-      stubBehavior: { breakJudge: true },
+      stubBehavior: { zeroJudge: true },
       reportsDir: tmpReports(),
       quiet: true,
       engineFactory: async () => fakeEngine(),
@@ -123,6 +123,27 @@ describe('runCat32 Part A end-to-end (stub transport, real scoreSkillOnTasks)', 
     expect(r.partA!.hack_fires).toBe(true);
     expect(r.partA!.control_quiet).toBe(false);
     expect(r.receipt.verdict).toBe('fail');
+    expect(r.exitCode).toBe(1);
+  }, RUN_TIMEOUT);
+
+  test('malformed judge responses are dependency errors, not zero-quality measurements', async () => {
+    const r = await runCat32({
+      bpre: true,
+      stubLlm: true,
+      stubBehavior: { breakJudge: true },
+      reportsDir: tmpReports(),
+      quiet: true,
+      engineFactory: async () => fakeEngine(),
+    });
+    expect(r.partA).toBeNull();
+    expect(r.receipt.run_status).toBe('completed');
+    expect(r.receipt.verdict).toBe('fail');
+    expect(r.receipt.publishable).toBe(false);
+    expect(r.receipt.n_scored).toBe(0);
+    expect(r.receipt.errors).toHaveLength(1);
+    expect(r.receipt.errors[0]).toMatchObject({ probe_id: 'part-a', origin: 'dependency' });
+    expect(r.receipt.errors[0]!.message).toContain('skillopt_all_judge_errors');
+    expect(r.receipt.errors[0]!.message).toContain('llm_parse_failed');
     expect(r.exitCode).toBe(1);
   }, RUN_TIMEOUT);
 });

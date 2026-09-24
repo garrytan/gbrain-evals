@@ -630,7 +630,6 @@ export function resolveEmbedder(
 const PROVIDER_KEY_ENV: Record<string, string> = {
   openai: 'OPENAI_API_KEY',
   voyage: 'VOYAGE_API_KEY',
-  zeroentropyai: 'ZEROENTROPY_API_KEY',
   mistral: 'MISTRAL_API_KEY',
 };
 

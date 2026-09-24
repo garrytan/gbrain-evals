@@ -16,7 +16,7 @@ The [August 31 audit](docs/audit/2026-08-31-eval-audit.md) explains the finding 
 
 - [ ] **Test relational wording the parser did not help design** (issue #24 finding 6). Paraphrase the four relational templates, using a fixed generated set, and test how much benefit remains when wording changes. The existing graph adapter recognizes the original templates. A fresh run of those same templates cannot close this gap.
 
-- [ ] **Repeat the embedding-provider matrix with explicit settings** (Cat18/18b, WS5). The older runs could inherit an unintended reranker. Use supported provider cells and record their real configuration. The historical plan recorded ZeroEntropy's hosted API sunset as 2026-09-04; its old `zerank-2` cells cannot be treated as a current reproduction recipe.
+- [ ] **Repeat the embedding-provider matrix with explicit settings** (Cat18/18b, WS5). The older runs could inherit an unintended reranker. Use supported provider cells and record their real configuration. The historical provider stack is retired; its old cells cannot be treated as a current reproduction recipe or relabeled as new measurements.
 
 - [ ] **Run live negative controls** (WS3). For model-backed categories, confirm that deliberately degraded configurations score at most half as well as the real ones under the fixed-seed rule. Scripted-model tests show that the checks can fail; live runs test whether they detect actual model-quality differences.
 

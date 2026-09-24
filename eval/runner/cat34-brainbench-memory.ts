@@ -15,8 +15,8 @@
  *   PGLite, scoring) is BrainBench's own and is the SUT.
  *   Seeded/stubbed: nothing on our side. Provider API keys are STRIPPED from
  *   the subprocess env so the run is hermetic (llm:false) and gbrain's
- *   'balanced' search mode cannot silently enable the zerank-2 reranker off
- *   an ambient ZEROENTROPY_API_KEY. No LLM, no network, ~15s.
+ *   'balanced' search mode cannot silently enable reranking with an
+ *   ambient provider key. No LLM, no network, ~15s.
  *
  * Pass criteria (real, failable — graded HERE, not from the subprocess exit
  * code, which is 0 even for gold failures when no --compare is given):
@@ -61,14 +61,6 @@ export const CAT34_CATEGORY = 'cat34-brainbench-memory';
 
 /** The published matrix: all four suites must appear or the gate narrowed. */
 const EXPECTED_SUITES = ['know-to-ask', 'push', 'write-back', 'continuity'] as const;
-
-/** Stripped from the subprocess env: hermetic run, and gbrain's default
- * 'balanced' mode silently enables the zerank-2 reranker when
- * ZEROENTROPY_API_KEY is set — never rely on ambient keys. */
-const STRIPPED_ENV_KEYS = [
-  'OPENAI_API_KEY', 'VOYAGE_API_KEY', 'ZEROENTROPY_API_KEY',
-  'GEMINI_API_KEY', 'GOOGLE_API_KEY', 'ANTHROPIC_API_KEY',
-];
 
 interface ResultCell {
   harness: string;
@@ -255,7 +247,8 @@ export async function runCat34(options: Cat34Options = {}): Promise<Cat34RunResu
     ...(includeHoldout ? ['--include-holdout'] : []),
   ];
   const subprocessEnv: Record<string, string | undefined> = { ...process.env };
-  for (const k of STRIPPED_ENV_KEYS) delete subprocessEnv[k];
+  const strippedEnvKeys = Object.keys(subprocessEnv).filter(k => /(?:_API_KEY|_AUTH_TOKEN)$/i.test(k));
+  for (const k of strippedEnvKeys) delete subprocessEnv[k];
 
   log(`[cat34] bun ${args.join(' ')}  (cwd ${repo})\n`);
   const proc = Bun.spawnSync(['bun', ...args], {
@@ -389,10 +382,10 @@ export async function runCat34(options: Cat34Options = {}): Promise<Cat34RunResu
       cmd: ['bun', ...args],
       include_holdout: result.receipt.include_holdout,
       llm: result.receipt.llm,
-      env_keys_stripped: STRIPPED_ENV_KEYS,
+      env_keys_stripped: strippedEnvKeys,
       // Search config is subprocess-owned: BrainBench brings its own hermetic
       // in-memory PGLite. With provider keys stripped, the balanced-mode
-      // zerank-2 reranker cannot silently enable.
+      // reranker cannot silently enable.
       search_mode: 'subprocess-owned (BrainBench hermetic PGLite)',
       reranker_enabled: false,
       result_nonce: nonce,

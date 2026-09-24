@@ -23,7 +23,7 @@
  *   - adapters-queries-04: HybridNoGraphConfig.limit is honored by query().
  */
 
-import { describe, test, expect, beforeAll, afterAll } from 'bun:test';
+import { describe, test, expect, beforeAll, afterAll, mock, spyOn } from 'bun:test';
 import { spawnSync } from 'child_process';
 import { mkdtempSync, rmSync, writeFileSync, mkdirSync, existsSync, readFileSync } from 'fs';
 import { join } from 'path';
@@ -319,23 +319,35 @@ describe('VectorOnlyAdapter (audit adapters-queries-03 / -08)', () => {
 
 describe('HybridNoGraphAdapter honors config.limit (audit adapters-queries-04)', () => {
   test('limit: 2 caps query() output; default returns more on a broad query', async () => {
-    await withEmbedSeam(async () => {
-      const pages: Page[] = templateCorpus().map(({ _facts, ...pub }) => pub as Page);
-      // All 6 fixture pages mention "quantum" → a broad query matches all.
-      const q = { id: 'q-broad', text: 'quantum' };
+    const hadVoyage = process.env.VOYAGE_API_KEY;
+    process.env.VOYAGE_API_KEY = 'dummy-limit-test-key';
+    const outbound = mock(() => { throw new Error('Unexpected outbound request from a limit-only fixture'); });
+    const fetchSpy = spyOn(globalThis, 'fetch').mockImplementation(Object.assign(async () => outbound(), { preconnect: outbound }));
+    try {
+      await withEmbedSeam(async () => {
+        const pages: Page[] = templateCorpus().map(({ _facts, ...pub }) => pub as Page);
+        // All 6 fixture pages mention "quantum" → a broad query matches all.
+        const q = { id: 'q-broad', text: 'quantum' };
+        const searchConfig = { 'search.reranker.enabled': 'false' };
 
-      const capped: Adapter = new HybridNoGraphAdapter();
-      const cappedState = await capped.init(pages, { name: 'vector-grep-rrf-fusion', limit: 2 });
-      const cappedResults = await capped.query(q, cappedState);
-      await capped.teardown?.(cappedState);
-      expect(cappedResults.length).toBe(2);
+        const capped: Adapter = new HybridNoGraphAdapter();
+        const cappedState = await capped.init(pages, { name: 'vector-grep-rrf-fusion', limit: 2, searchConfig });
+        const cappedResults = await capped.query(q, cappedState);
+        await capped.teardown?.(cappedState);
+        expect(cappedResults.length).toBe(2);
 
-      const dflt: Adapter = new HybridNoGraphAdapter();
-      const dfltState = await dflt.init(pages, { name: 'vector-grep-rrf-fusion' });
-      const dfltResults = await dflt.query(q, dfltState);
-      await dflt.teardown?.(dfltState);
-      expect(dfltResults.length).toBeGreaterThan(2);
-    });
+        const dflt: Adapter = new HybridNoGraphAdapter();
+        const dfltState = await dflt.init(pages, { name: 'vector-grep-rrf-fusion', searchConfig });
+        const dfltResults = await dflt.query(q, dfltState);
+        await dflt.teardown?.(dfltState);
+        expect(dfltResults.length).toBeGreaterThan(2);
+      });
+      expect(outbound).not.toHaveBeenCalled();
+    } finally {
+      fetchSpy.mockRestore();
+      if (hadVoyage === undefined) delete process.env.VOYAGE_API_KEY;
+      else process.env.VOYAGE_API_KEY = hadVoyage;
+    }
   }, 240_000);
 });
 

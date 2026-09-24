@@ -82,7 +82,7 @@ export const RUBRIC_VERSION = 'cat29-v2';
  * WS5 pin — applied via engine.setConfig BEFORE ingest and echoed into
  * resolved_config. Both systems (think's gather and the raw search arm)
  * retrieve under the identical pinned mode; the default 'balanced' bundle
- * would silently enable the zerank-2 reranker when ZEROENTROPY_API_KEY is
+ * would silently enable reranking when an ambient provider key is
  * set.
  */
 export const PINNED_CONFIG: Record<string, string> = {

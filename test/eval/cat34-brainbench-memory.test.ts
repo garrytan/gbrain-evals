@@ -45,6 +45,7 @@ const argv = process.argv.slice(2);
 const outIdx = argv.indexOf('--out');
 const out = outIdx >= 0 ? argv[outIdx + 1] : null;
 const mode = readFileSync('mode.txt', 'utf-8').trim();
+if (process.env.UNRECOGNIZED_API_KEY || process.env.UNRECOGNIZED_AUTH_TOKEN) process.exit(9);
 
 const suites = ['know-to-ask', 'push', 'write-back', 'continuity'];
 const harnesses = ['openclaw', 'claude-code', 'codex'];
@@ -163,6 +164,27 @@ describe('validateResultDoc', () => {
 // ─── End-to-end: good path ─────────────────────────────────────────────
 
 describe('runCat34 good path', () => {
+  test('credentials are stripped without needing a provider-name denylist', async () => {
+    const savedKey = process.env.UNRECOGNIZED_API_KEY;
+    const savedToken = process.env.UNRECOGNIZED_AUTH_TOKEN;
+    process.env.UNRECOGNIZED_API_KEY = 'dummy-provider-key';
+    process.env.UNRECOGNIZED_AUTH_TOKEN = 'dummy-provider-token';
+    try {
+      const { run } = await runWithMode('good');
+      expect(run.exitCode).toBe(0);
+      expect(run.receipt.n_scored).toBe(12);
+      expect(run.receipt.resolved_config?.env_keys_stripped).toContain('UNRECOGNIZED_API_KEY');
+      expect(run.receipt.resolved_config?.env_keys_stripped).toContain('UNRECOGNIZED_AUTH_TOKEN');
+      expect(process.env.UNRECOGNIZED_API_KEY).toBe('dummy-provider-key');
+      expect(process.env.UNRECOGNIZED_AUTH_TOKEN).toBe('dummy-provider-token');
+    } finally {
+      if (savedKey === undefined) delete process.env.UNRECOGNIZED_API_KEY;
+      else process.env.UNRECOGNIZED_API_KEY = savedKey;
+      if (savedToken === undefined) delete process.env.UNRECOGNIZED_AUTH_TOKEN;
+      else process.env.UNRECOGNIZED_AUTH_TOKEN = savedToken;
+    }
+  }, RUN_TIMEOUT);
+
   test('all-pass matrix → completed/pass, exit 0, fresh canonical artifact', async () => {
     const { run, reportDir } = await runWithMode('good');
     expect(run.exitCode).toBe(0);

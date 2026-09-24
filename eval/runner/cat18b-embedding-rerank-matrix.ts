@@ -1,8 +1,8 @@
 /**
  * BrainBench Cat 18b — embedding × reranker matrix on synthetic-v1.
  *
- * Six cells: {OpenAI 1536d, Voyage 1024d, ZeroEntropy zembed-1 2560d} ×
- * {reranker off, zerank-2 on}. Cat 18 (parent) is the embedder-only
+ * Four cells: {OpenAI 1536d, Voyage 1024d} ×
+ * {reranker off, Voyage rerank-2.5 on}. Cat 18 (parent) is the embedder-only
  * baseline; this matrix isolates what the cross-encoder reranker adds on
  * top of each embedder.
  *
@@ -19,9 +19,7 @@
  * Every '+rerank' query is checked for stamped rerank_score; a query where
  * the reranker verifiably did not run is recorded as a dependency failure
  * and the cell is marked invalid — a broken key can no longer publish
- * unreranked numbers under a '+rerank' label (audit cats18-21-06). Note:
- * zerank-2's hosted API sunsets 2026-09-04; live runs after that date will
- * correctly report every '+rerank' cell as degraded.
+ * unreranked numbers under a reranked label (audit cats18-21-06).
  * LEGITIMATELY SEEDED/STUBBED: the synthetic-v1 corpus + derived queries
  * (fixtures); under --stub, the embed transport (deterministic feature-hash
  * vectors) AND the rerank HTTP transport (deterministic token-overlap
@@ -45,7 +43,7 @@
  *
  * Run:
  *   bun eval/runner/cat18b-embedding-rerank-matrix.ts
- *   CAT18B_CELLS=openai-1536,openai-1536+rerank bun eval/runner/cat18b-embedding-rerank-matrix.ts
+ *   CAT18B_CELLS=openai-1536,openai-1536+voyage-rerank-2.5 bun eval/runner/cat18b-embedding-rerank-matrix.ts
  *   bun eval/runner/cat18b-embedding-rerank-matrix.ts --stub   # hermetic, no keys
  */
 
@@ -81,7 +79,6 @@ export const CAT18B_CATEGORY = 'cat18b-embedding-rerank-matrix';
 export const PRICING: Record<string, number> = {
   'openai:text-embedding-3-large': 0.13,
   'voyage:voyage-3-large': 0.18,
-  'zeroentropyai:zembed-1': 0.05,
 };
 
 /**
@@ -106,11 +103,9 @@ export interface ProviderSpec {
 
 export const CELLS: ProviderSpec[] = [
   { name: 'openai-1536',        embedder: 'openai:text-embedding-3-large', embed_dim: 1536, reranker: null },
-  { name: 'openai-1536+rerank', embedder: 'openai:text-embedding-3-large', embed_dim: 1536, reranker: 'zeroentropyai:zerank-2' },
+  { name: 'openai-1536+voyage-rerank-2.5', embedder: 'openai:text-embedding-3-large', embed_dim: 1536, reranker: 'voyage:rerank-2.5' },
   { name: 'voyage-1024',        embedder: 'voyage:voyage-3-large',         embed_dim: 1024, reranker: null },
-  { name: 'voyage-1024+rerank', embedder: 'voyage:voyage-3-large',         embed_dim: 1024, reranker: 'zeroentropyai:zerank-2' },
-  { name: 'ze-2560',            embedder: 'zeroentropyai:zembed-1',        embed_dim: 2560, reranker: null },
-  { name: 'ze-2560+rerank',     embedder: 'zeroentropyai:zembed-1',        embed_dim: 2560, reranker: 'zeroentropyai:zerank-2' },
+  { name: 'voyage-1024+voyage-rerank-2.5', embedder: 'voyage:voyage-3-large', embed_dim: 1024, reranker: 'voyage:rerank-2.5' },
 ];
 
 /** The reranker-axis keys — the ONLY config that differs between ± pairs. */
@@ -128,7 +123,6 @@ export function rerankAxisConfig(spec: ProviderSpec): Record<string, string> {
 const EMBEDDER_ENV_KEY: Record<string, string> = {
   'openai:text-embedding-3-large': 'OPENAI_API_KEY',
   'voyage:voyage-3-large': 'VOYAGE_API_KEY',
-  'zeroentropyai:zembed-1': 'ZEROENTROPY_API_KEY',
 };
 
 // ─── Hermetic rerank stub ────────────────────────────────────────────
@@ -207,9 +201,6 @@ const DEGRADED_VECTOR_STAGES = new Set(['embed_unavailable', 'embed_timeout', 'v
 export interface RunMatrixCellOptions {
   k?: number;
   chunkFetch?: number;
-  /** Stub mode: suppress the zerank-2 sunset short-circuit via base_urls so
-   *  hermetic runs stay stable past the provider's shutdown date. */
-  stub?: boolean;
 }
 
 export async function runMatrixCell(
@@ -244,11 +235,6 @@ export async function runMatrixCell(
     embedding_model: spec.embedder,
     embedding_dimensions: spec.embed_dim,
     reranker_model: spec.reranker ?? undefined,
-    // Stub runs set a base-URL override for the reranker recipe: the rerank
-    // transport is stubbed (never fetches), and the override suppresses the
-    // post-sunset short-circuit so hermetic runs don't start failing on
-    // 2026-09-04. Live runs keep real sunset behavior (detected as fail-open).
-    ...(opts.stub ? { base_urls: { zeroentropyai: 'http://cat18b-stub.invalid' } } : {}),
     env: process.env as Record<string, string | undefined>,
   });
 
@@ -439,6 +425,8 @@ export interface Cat18bRunResult {
 
 export function optionsFromEnv(argv: string[] = process.argv.slice(2)): Cat18bOptions {
   const filter = process.env.CAT18B_CELLS?.split(',').map(s => s.trim()).filter(Boolean);
+  const unknown = filter?.filter(name => !CELLS.some(cell => cell.name === name));
+  if (unknown?.length) throw new Error(`unknown matrix cells: ${unknown.join(', ')}`);
   return {
     cells: filter ? CELLS.filter(c => filter.includes(c.name)) : undefined,
     stub: argv.includes('--stub') || process.env.CAT18B_STUB === '1',
@@ -482,7 +470,6 @@ export async function runCat18b(options: Cat18bOptions = {}): Promise<Cat18bRunR
     for (const s of specs) {
       const embedKey = EMBEDDER_ENV_KEY[s.embedder];
       if (embedKey) needed.add(embedKey);
-      if (s.reranker?.startsWith('zeroentropyai:')) needed.add('ZEROENTROPY_API_KEY');
       if (s.reranker?.startsWith('voyage:')) needed.add('VOYAGE_API_KEY');
     }
     const missing = [...needed].filter(k => !process.env[k]);
@@ -503,7 +490,7 @@ export async function runCat18b(options: Cat18bOptions = {}): Promise<Cat18bRunR
       return { receipt, cells: [], exitCode: options.allowSkip ? 0 : 1, receiptFile };
     }
   } else {
-    for (const k of ['OPENAI_API_KEY', 'VOYAGE_API_KEY', 'ZEROENTROPY_API_KEY']) {
+    for (const k of ['OPENAI_API_KEY', 'VOYAGE_API_KEY']) {
       if (!process.env[k]) process.env[k] = 'dummy-stub';
     }
     __setEmbedTransportForTests(makeHashEmbedTransport(options.stubEmbedFailOn));
@@ -518,7 +505,7 @@ export async function runCat18b(options: Cat18bOptions = {}): Promise<Cat18bRunR
     for (const spec of specs) {
       log(`[cat18b] cell=${spec.name}...\n`);
       try {
-        const c = await runMatrixCell(spec, pages, queries, acc, { stub: options.stub });
+        const c = await runMatrixCell(spec, pages, queries, acc);
         cells.push(c);
         log(`[cat18b]   ${spec.name.padEnd(22)} valid=${c.valid} MRR=${c.mrr?.toFixed(3) ?? 'n/a'} R@${K}=${c.recall_at_10 !== null ? (c.recall_at_10 * 100).toFixed(1) + '%' : 'n/a'} rerank_fired=${c.rerank_scored_queries}/${c.queries_total} errors=${c.query_errors}\n`);
       } catch (e: any) {

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "description": "Map from published claims to their saved evidence. The manifest test checks artifact paths, SHA-256 hashes, and declared JSON-pointer values. It does not parse report prose or independently validate every scorer. Separate golden tests and recount scripts are named where available. Entries marked disclosed-gap identify missing evidence; a fresh run cannot restore a missing historical receipt.",
-  "updated": "2026-09-09",
+  "updated": "2026-09-23",
   "entries": [
     {
       "claim_id": "longmemeval-recall-all",
@@ -393,9 +393,9 @@
       "claim_id": "cat34-rerun-v0.47.8.0",
       "readme_anchor": "docs/benchmarks/2026-06-12-brainbench-memory.md: September 1 push recall 0.9063 / 1.000 / 0.5521 and zero missed or false triggers on the larger corpus",
       "artifact_path": "docs/benchmarks/2026-06-12-brainbench-memory/receipt-2026-09-01-v0.47.8.0-rerun.json",
-      "artifact_sha256": "a69c14e843fca757c61a1b894b543cfb993d4fd82478910e1a5f2c8a5f085e8f",
+      "artifact_sha256": "bd2622e1075228a1216cf544aacddb840cf6fb4e49c430c3aee743cf4ba510c7",
       "status": "covered",
-      "note": "Keyless September 1 rerun at pin 2a56b512. It matches that release's committed regression baseline on a larger corpus. This repository's stricter zero-failed-items rule returns verdict fail because OpenClaw and Codex still miss push items. The result is not a paired single-change comparison with June, and its counters are reported by the system under test.",
+      "note": "Keyless September 1 rerun at pin 2a56b512. It matches that release's committed regression baseline on a larger corpus. This repository's stricter zero-failed-items rule returns verdict fail because OpenClaw and Codex still miss push items. The result is not a paired single-change comparison with June, and its counters are reported by the system under test. The retired credential name in env_keys_stripped is explicitly redacted, preserving list cardinality. artifact_sha256 attests this disclosed redacted receipt; original_artifact identifies the immutable original bytes. All expected measurement values are unchanged.",
       "expected": {
         "/data/cells/0/cell": "openclaw/know-to-ask",
         "/data/cells/0/seam": "production",
@@ -434,6 +434,11 @@
         "/data/cells/9/metrics/push_precision": 1,
         "/data/cells/9/metrics/push_recall": 0.5521,
         "/verdict": "fail"
+      },
+      "original_artifact": {
+        "commit": "9238ec8456bc94c3c082db105d7d8169a10a0b0f",
+        "path": "docs/benchmarks/2026-06-12-brainbench-memory/receipt-2026-09-01-v0.47.8.0-rerun.json",
+        "sha256": "a69c14e843fca757c61a1b894b543cfb993d4fd82478910e1a5f2c8a5f085e8f"
       }
     },
     {
@@ -2553,15 +2558,20 @@
     },
     {
       "claim_id": "retrieval-refresh-harness-source",
-      "readme_anchor": "docs/benchmarks/2026-09-09-retrieval-refresh.md: exact harness source behind eight confirmation attempts",
+      "readme_anchor": "docs/benchmarks/2026-09-09-retrieval-refresh.md: historical harness source behind eight confirmation attempts, with one disclosed identity redaction",
       "artifact_path": "docs/benchmarks/2026-09-09-retrieval-refresh/harness-source.json",
-      "artifact_sha256": "467533cd7d5461edbb9e52f2d36f8063f2ef4d4044e17013e517b25d26063811",
+      "artifact_sha256": "29a0bb901240005ed26e7622a30920927e8c9a0dacbac9394a97ab0bae69b608",
       "expected": {
         "/harness_sha256": "0f6417b2e9398cf6b784b849378367a8d42f5b2a7790e75e9a738d79ffe27a7b",
         "/schema_version": 1
       },
       "status": "covered",
-      "note": "Archives all 17 source files, each with its launch SHA-256 and exact UTF-8 contents. Subsequent shipping changes fix failed-run receipts, reject unobserved think controls, strengthen offline evidence validation, and relocate saved report paths. Original results and launch fingerprints remain unchanged."
+      "note": "Archives 17 source files with their original launch fingerprints. Sixteen retain exact UTF-8 contents; the Cat13 provider-map identity is redacted and carries original_sha256 and redacted_sha256 separately. artifact_sha256 attests the disclosed redacted archive, not the original executed bytes. original_artifact records the immutable original. All launch fingerprints and measured results are unchanged.",
+      "original_artifact": {
+        "commit": "9238ec8456bc94c3c082db105d7d8169a10a0b0f",
+        "path": "docs/benchmarks/2026-09-09-retrieval-refresh/harness-source.json",
+        "sha256": "467533cd7d5461edbb9e52f2d36f8063f2ef4d4044e17013e517b25d26063811"
+      }
     }
   ]
 }

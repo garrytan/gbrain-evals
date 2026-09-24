@@ -93,8 +93,8 @@ export const EMBED_MODEL = 'openai:text-embedding-3-large';
 export const EMBED_DIM = 1536;
 
 /** WS5: pin the retrieval knobs runBrainstorm's close-set hybridSearch reads.
- *  gbrain's default 'balanced' mode silently enables the zerank-2 reranker
- *  when ZEROENTROPY_API_KEY is set — never rely on defaults. */
+ *  gbrain's default 'balanced' mode can enable reranking with an ambient
+ *  provider key — never rely on defaults. */
 export const PINNED_CONFIG: Record<string, string> = {
   'search.mode': 'balanced',
   'search.reranker.enabled': 'false',

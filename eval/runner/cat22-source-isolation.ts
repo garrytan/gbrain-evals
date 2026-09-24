@@ -51,7 +51,7 @@ export const PAGES_PER_SOURCE = 10;
 /**
  * WS5 pin — applied via engine.setConfig BEFORE ingest and echoed into the
  * receipt's resolved_config. gbrain's default 'balanced' mode silently
- * enables the zerank-2 reranker when ZEROENTROPY_API_KEY is set; never rely
+ * enables reranking with an ambient provider key; never rely
  * on defaults. Expansion/autocut off: no LLM in the loop, no result trimming
  * confounding the presence assertions.
  */
@@ -61,12 +61,6 @@ export const PINNED_CONFIG: Record<string, string> = {
   'search.expansion': 'false',
   'search.autocut': 'false',
 };
-
-/** Embedding/LLM provider keys stripped from the gateway env for hermeticity. */
-const PROVIDER_KEYS = [
-  'OPENAI_API_KEY', 'VOYAGE_API_KEY', 'ZEROENTROPY_API_KEY',
-  'GEMINI_API_KEY', 'GOOGLE_API_KEY', 'ANTHROPIC_API_KEY',
-];
 
 export interface SurfaceProbe {
   surface: string;
@@ -235,12 +229,10 @@ export async function runCat22(options: Cat22Options = {}): Promise<Cat22RunResu
   // Hermetic: strip every provider key from the gateway env so hybridSearch's
   // keyword-only path falls out of the documented no-provider short-circuit
   // (hybrid.ts: `!isAvailable('embedding', ...)`), not out of an invalid opt.
-  const sanitizedEnv: Record<string, string | undefined> = { ...process.env } as Record<string, string | undefined>;
-  for (const k of PROVIDER_KEYS) delete sanitizedEnv[k];
   configureGateway({
     embedding_model: 'openai:text-embedding-3-large',
     embedding_dimensions: 1536,
-    env: sanitizedEnv,
+    env: {},
   });
 
   const engine: any = new PGLiteEngine();

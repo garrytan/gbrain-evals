@@ -375,7 +375,7 @@ export function ensureGateway(stubEmbed: boolean): void {
 
 // ─── WS5 config pinning + conformance ────────────────────────────────
 // Pinned per cell BEFORE ingest. 'balanced' would silently enable the
-// zerank-2 reranker when ZEROENTROPY_API_KEY is set — never rely on defaults.
+// reranker with an ambient provider key — never rely on defaults.
 
 const BASE_SEARCH_CONFIG: Record<string, string> = {
   'search.mode': 'balanced',

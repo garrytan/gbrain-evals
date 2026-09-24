@@ -113,7 +113,7 @@ describe('ClaudeSonnetWithToolsAdapter — Adapter interface', () => {
     const adapter = new ClaudeSonnetWithToolsAdapter();
     const state = (await adapter.init(SAMPLE_PAGES, { name: 'test' })) as AgentAdapterState;
     // Never rely on gbrain defaults: 'balanced' silently enables the
-    // zerank-2 reranker when ZEROENTROPY_API_KEY is set.
+    // reranker when an ambient provider key is set.
     expect(state.resolved_search_config).toEqual({
       'search.mode': 'balanced',
       'search.reranker.enabled': 'false',
