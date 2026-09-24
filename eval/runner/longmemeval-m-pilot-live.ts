@@ -303,6 +303,8 @@ export async function runPilotLiveStage(options: StageOptions, testOnlyMockTrans
       }
     };
     phase = options.stage;
+    const gateway = await import(pathToFileURL(join(realpathSync(options.productRoot), 'src/core/ai/gateway.ts')).href);
+    gateway.resetGateway();
     if (options.stage === 'construction') {
       const indexed = join(directory, 'indexed');
       const built = await buildPilotIndex({ sourcePath: source.source_file, expectedSourceSha256: source.source_sha256,

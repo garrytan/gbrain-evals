@@ -68,6 +68,8 @@ test.each(['C0', 'C1'] as const)('current v5 %s public construction closes a sna
   };
   const wire: string[] = [];
   let replaying = false;
+  let staleEmbeddingCalls = 0;
+  let restoreEmbedTransport: (() => void) | undefined;
   process.env.OPENROUTER_API_KEY = 'synthetic-v5-only';
   globalThis.fetch = (async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
     const request = new Request(input as Request, init);
@@ -111,6 +113,18 @@ test.each(['C0', 'C1'] as const)('current v5 %s public construction closes a sna
       expect(wire).toHaveLength(0);
     }
     writeFileSync(construction.profilePath, originalProfile);
+    if (arm === 'C0') {
+      const gateway = await import('gbrain/ai/gateway');
+      gateway.__setEmbedTransportForTests((async ({ values }: { values: string[] }) => {
+        staleEmbeddingCalls++;
+        return { values, embeddings: values.map(() => {
+          const vector = Array(1536).fill(0);
+          vector[0] = 1;
+          return vector;
+        }), warnings: [], usage: { tokens: 20 }, response: { headers: {} } };
+      }) as Parameters<typeof gateway.__setEmbedTransportForTests>[0]);
+      restoreEmbedTransport = () => gateway.__setEmbedTransportForTests(null);
+    }
     const built = await runPilotLiveStage(construction, true);
     expect(built.status).toBe('complete');
     expect(built.transport).toBe('test-mock');
@@ -118,6 +132,8 @@ test.each(['C0', 'C1'] as const)('current v5 %s public construction closes a sna
     expect(built.guard?.failed_or_unreported_requests).toBe(0);
     expect(built.guard?.reserved_usd).toBe(0);
     expect(built.guard?.known_attributed_usd).toBeGreaterThan(0);
+    expect(staleEmbeddingCalls).toBe(0);
+    expect(wire.filter(path => path === '/api/v1/embeddings').length).toBeGreaterThan(0);
     const manifest = JSON.parse(readFileSync(join(construction.stageDir, 'indexed/index-manifest.json'), 'utf8'));
     expect(manifest.sources).toHaveLength(1);
     expect(manifest.sources[0].chunks.length).toBeGreaterThan(0);
@@ -154,6 +170,7 @@ test.each(['C0', 'C1'] as const)('current v5 %s public construction closes a sna
     expect(existsSync(join(replay.stageDir, 'case-outcome.json'))).toBe(false);
     expect(wire.filter(path => path === '/api/v1/chat/completions')).toHaveLength(arm === 'C1' ? 1 : 0);
   } finally {
+    restoreEmbedTransport?.();
     globalThis.fetch = originalFetch;
     if (originalKey === undefined) delete process.env.OPENROUTER_API_KEY;
     else process.env.OPENROUTER_API_KEY = originalKey;
