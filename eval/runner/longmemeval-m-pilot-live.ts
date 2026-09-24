@@ -7,7 +7,7 @@ import { buildPilotIndex, PILOT_SONNET_MODEL, runPilotBoundedCueBuild } from './
 import { replayPilotCase } from './longmemeval-m-pilot-replay.ts';
 import { writePilotCaseOutcome, type PilotCaseOutcome } from './longmemeval-m-pilot-outcomes.ts';
 import { developmentChatOptions, startSourceOnlyDevelopmentGuard } from './situation-recall-development.ts';
-import { resolveSourceOnlyDevelopmentPolicy, SOURCE_ONLY_EMBEDDING_MODEL, SOURCE_ONLY_REFERENCE_EXPERIMENT,
+import { resolveSourceOnlyDevelopmentPolicy, SOURCE_ONLY_EMBEDDING_MODEL, SOURCE_ONLY_REFERENCE_EXPERIMENT, SOURCE_ONLY_V5_EXPERIMENT,
   type SourceOnlyDevelopmentProfile } from './situation-recall-experiment-policy.ts';
 import { regressionPackageHash } from './situation-recall-provenance.ts';
 import type { BrainEngine } from 'gbrain/engine';
@@ -18,6 +18,8 @@ const BASELINE_PACKAGE = '78bbe78af2fac33a278740e84877e9c6c9f7a0f6a161113b124054
 const HISTORICAL_V2_SHA = '470ccc49c33b44c4a4be4e60bc606c0ad04a4427';
 const HISTORICAL_V2_PACKAGE = 'b302290974571ae846e26587cd37ecf6299b74c3bfe0d401aa22935ca3a84c97';
 const REFERENCE_PRODUCT_SHA = 'f3249d1703772573006141224a4d06d9b8df7b41';
+const V5_PRODUCT_SHA = '939232f1746381b4e932d620d6c709e29198f14c';
+const V5_PROMPT_SHA = '44506bb8d722adb75fd4a0b1ec3a3265d71bb77de7e9a2db07214caee97c94d0';
 
 export function assertMatchedProductDeclaration(declared: unknown, productSha: string): void {
   if (declared !== `github:garrytan/gbrain#${productSha}`) throw new Error('matched C0/C1 declared product pin mismatch');
@@ -178,7 +180,10 @@ export async function runPilotLiveStage(options: StageOptions, testOnlyMockTrans
   const productSha = profile.arm === 'B' ? BASELINE_SHA : profile.expected_product_sha;
   const packageSha = profile.arm === 'B' ? BASELINE_PACKAGE : profile.expected_package_sha256;
   const reference = profile.experiment === SOURCE_ONLY_REFERENCE_EXPERIMENT;
+  const v5 = profile.experiment === SOURCE_ONLY_V5_EXPERIMENT;
   if ((reference && profile.arm !== 'B' && productSha !== REFERENCE_PRODUCT_SHA)
+    || (v5 && (profile.arm === 'B' || productSha !== V5_PRODUCT_SHA
+      || profile.arm === 'C1' && profile.cue_prompt_sha256 !== V5_PROMPT_SHA))
     || (profile.arm !== 'B' && ([BASELINE_SHA, HISTORICAL_V2_SHA].includes(productSha)
       || [BASELINE_PACKAGE, HISTORICAL_V2_PACKAGE].includes(packageSha)))
     || profile.stage !== options.stage
@@ -208,9 +213,12 @@ export async function runPilotLiveStage(options: StageOptions, testOnlyMockTrans
     const { buildCueWindows } = await import(pathToFileURL(join(root, 'src/core/memory-cues/windows.ts')).href);
     const probe = buildCueWindows([{ id: 1, chunk_text: 'x'.repeat(7800), modality: 'text' }]);
     assertMatchedProductDeclaration(declared, productSha);
-    if (MEMORY_CUE_PROMPT_VERSION !== (reference ? 'situation-v4' : 'situation-v3')
+    const { CUE_SYSTEM_PROMPT } = await import(pathToFileURL(join(root, 'src/core/memory-cues/providers.ts')).href);
+    if (MEMORY_CUE_PROMPT_VERSION !== (v5 ? 'situation-v5' : reference ? 'situation-v4' : 'situation-v3')
+      || (v5 && (hash(CUE_SYSTEM_PROMPT) !== V5_PROMPT_SHA || Buffer.byteLength(CUE_SYSTEM_PROMPT) !== 1822))
       || probe.length !== 1 || Buffer.byteLength(probe[0].text) !== 7800) {
-      throw new Error(reference ? 'matched C0/C1 require verified f324 v4 product and 8192-byte windows'
+      throw new Error(v5 ? 'matched C0/C1 require verified 939 v5 product, prompt and 8192-byte windows'
+        : reference ? 'matched C0/C1 require verified f324 v4 product and 8192-byte windows'
         : 'matched C0/C1 require the same newly pinned 8192-byte v3 product, not historical 470');
     }
   }
@@ -233,12 +241,15 @@ export async function runPilotLiveStage(options: StageOptions, testOnlyMockTrans
       || construction.transport !== (testOnlyMockTransport ? 'test-mock' : 'provider') || construction.profile.stage !== 'construction'
       || construction.profile.arm !== profile.arm || construction.profile.question_id !== profile.question_id
       || construction.profile.attempt_id !== profile.attempt_id
+      || construction.profile.experiment !== profile.experiment
       || construction.profile.registration_sha256 !== profile.registration_sha256
       || construction.profile.source_manifest_sha256 !== profile.source_manifest_sha256
       || construction.profile.expected_product_sha !== profile.expected_product_sha
       || construction.profile.expected_package_sha256 !== profile.expected_package_sha256
       || construction.source_sha256 !== source.source_sha256
       || (profile.arm === 'C1' && (construction.cue_readback_status !== 'uncalibrated-diagnostic'
+        || construction.profile.arm !== 'C1' || construction.profile.cue_pipeline_version !== profile.cue_pipeline_version
+        || construction.profile.cue_prompt_sha256 !== profile.cue_prompt_sha256
         || construction.cue_build?.final_status !== 'complete'
         || construction.cue_build.windows_pending !== 0))
       || !construction.indexed_manifest_sha256 || !construction.index_snapshot_sha256) {

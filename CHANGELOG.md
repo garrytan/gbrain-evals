@@ -40,7 +40,7 @@ result is published here.
 
 ### Changed
 
-- Pin the candidate product to `f3249d1703772573006141224a4d06d9b8df7b41`
+- Pin the candidate product to `939232f1746381b4e932d620d6c709e29198f14c`
   (gbrain v0.55.0.0), while keeping the historical dependency and fresh baseline
   identities distinct. CI uses supported Bun 1.3.13.
 - Retain previously omitted native per-item observations without changing

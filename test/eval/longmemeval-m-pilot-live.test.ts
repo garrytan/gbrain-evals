@@ -11,7 +11,11 @@ const productRoot = realpathSync(resolve(import.meta.dir, '../../node_modules/gb
 const packageSha = regressionPackageHash(productRoot);
 const baseline = packageSha === '78bbe78af2fac33a278740e84877e9c6c9f7a0f6a161113b1240549adf993b2b';
 const reference = packageSha === '7fc21cee0cc08169c2bbbbb05e137b5b26e885beb24fd9f6275808d2cf162e67';
-const candidate = reference || !baseline && packageSha !== 'b302290974571ae846e26587cd37ecf6299b74c3bfe0d401aa22935ca3a84c97'
+const v5 = packageSha === '74974a32d4bfa34f26ed7e15d5eb3c301cb9000d8e90a1667041cbbde8587aa0'
+  && JSON.parse(readFileSync(resolve(import.meta.dir, '../../package.json'), 'utf8')).dependencies.gbrain
+    === 'github:garrytan/gbrain#939232f1746381b4e932d620d6c709e29198f14c'
+  && readFileSync(join(productRoot, 'src/core/memory-cues/types.ts'), 'utf8').includes("MEMORY_CUE_PROMPT_VERSION = 'situation-v5'");
+const candidate = v5 || reference || !baseline && packageSha !== 'b302290974571ae846e26587cd37ecf6299b74c3bfe0d401aa22935ca3a84c97'
   && readFileSync(join(productRoot, 'src/core/memory-cues/types.ts'), 'utf8').includes("MEMORY_CUE_PROMPT_VERSION = 'situation-v3'");
 const arm = baseline ? 'B' : 'C0';
 
@@ -40,7 +44,8 @@ describe.skipIf(!baseline && !candidate)('matched B/C0 construction and replay w
   const registrationSha = hash(readFileSync(selectionPath));
   const sourceManifestSha = hash(readFileSync(sourceManifestPath));
   const profile = (stage: 'construction' | 'replay', constructionReceiptSha?: string) => ({
-    schema_version: 1, kind: 'source-only-development', experiment: reference ? 'longmemeval-m-source-only-dev-v2' : 'longmemeval-m-source-only-dev-v1',
+    schema_version: 1, kind: 'source-only-development', experiment: v5 ? 'longmemeval-m-source-only-dev-v3'
+      : reference ? 'longmemeval-m-source-only-dev-v2' : 'longmemeval-m-source-only-dev-v1',
     question_id: questionId, attempt_id: 'attempt-1', registration_sha256: registrationSha,
     source_manifest_sha256: sourceManifestSha,
     expected_product_sha: baseline ? '6040075c6cb95be5881cc2e1b76ef7d71f4e5d29'

@@ -94,6 +94,7 @@ export function aggregatePilotCases(selectionPath: string, selectedDatasetPath: 
       || build.profile?.question_id !== outcome.question_id || replay.profile?.question_id !== outcome.question_id
       || build.profile?.arm !== outcome.arm || replay.profile?.arm !== outcome.arm
       || build.profile?.attempt_id !== replay.profile?.attempt_id
+      || build.profile?.experiment !== replay.profile?.experiment
       || build.profile?.expected_product_sha !== outcome.product_sha
       || replay.profile?.expected_product_sha !== outcome.product_sha
       || build.profile?.expected_package_sha256 !== outcome.product_package_sha256
@@ -123,7 +124,13 @@ export function aggregatePilotCases(selectionPath: string, selectedDatasetPath: 
       || build.guard?.stage_deadline_exceeded || replay.guard?.stage_deadline_exceeded
       || (outcome.arm === 'C1' && (build.cue_readback_status !== 'uncalibrated-diagnostic'
         || build.cue_build?.final_status !== 'complete' || build.cue_build.windows_pending !== 0
-        || build.profile?.cue_pipeline_version !== 'situation-v3'
+        || !(build.profile?.experiment === 'longmemeval-m-source-only-dev-v1' && build.profile?.cue_pipeline_version === 'situation-v3'
+          || build.profile?.experiment === 'longmemeval-m-source-only-dev-v2' && build.profile?.cue_pipeline_version === 'situation-v4'
+            && build.profile?.expected_product_sha === 'f3249d1703772573006141224a4d06d9b8df7b41'
+          || build.profile?.experiment === 'longmemeval-m-source-only-dev-v3' && build.profile?.cue_pipeline_version === 'situation-v5'
+            && build.profile?.expected_product_sha === '939232f1746381b4e932d620d6c709e29198f14c'
+            && build.profile?.cue_prompt_sha256 === '44506bb8d722adb75fd4a0b1ec3a3265d71bb77de7e9a2db07214caee97c94d0')
+        || replay.profile?.cue_pipeline_version !== build.profile?.cue_pipeline_version
         || replay.profile?.cue_prompt_sha256 !== build.profile?.cue_prompt_sha256))) {
       throw new Error('pilot stage receipt hash, outcome or construction-replay linkage changed');
     }

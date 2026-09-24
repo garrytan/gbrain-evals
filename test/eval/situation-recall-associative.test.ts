@@ -225,7 +225,7 @@ test.skipIf(!hasCandidate)('real candidate engine builds source-only cues and ex
             const excerpt=evidence.find(value=>value.text.includes(phrase))??evidence[0];
             if(payload.includeBridge!==false || !excerpt || !Number.isInteger(excerpt.id))throw new Error('source-selected construction fields missing');
             const situation=excerpt.text.includes(phrase)?phrase:excerpt.text.slice(0,160);
-            return {text:JSON.stringify([{family:'scene',relation:'situation_description',evidence_ref:excerpt.id,text:'CUE_ONLY_SENTINEL '+situation}]),blocks:[],stopReason:'end',model:options.model,providerId:'anthropic',usage:{input_tokens:20,output_tokens:20,cache_read_tokens:0,cache_creation_tokens:0}};
+            return {text:JSON.stringify({scene:{evidence_ref:excerpt.id,text:'CUE_ONLY_SENTINEL '+situation},association_1:null,association_2:null,association_3:null}),blocks:[],stopReason:'end',model:options.model,providerId:'anthropic',usage:{input_tokens:20,output_tokens:20,cache_read_tokens:0,cache_creation_tokens:0}};
           });
           gateway.__setEmbedTransportForTests(async({values})=>{embedded++;return {values,embeddings:values.map(vector),warnings:[],usage:{tokens:20},response:{headers:{}}};});
           return ()=>{gateway.__setChatTransportForTests(null);gateway.__setEmbedTransportForTests(null);};

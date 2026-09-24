@@ -10,23 +10,21 @@ import { regressionPackageHash } from '../../eval/runner/situation-recall-proven
 
 const hash = (value: Buffer | string) => createHash('sha256').update(value).digest('hex');
 const productRoot = realpathSync(resolve(import.meta.dir, '../../node_modules/gbrain'));
-const packageSha = regressionPackageHash(productRoot);
-const productSha = 'f3249d1703772573006141224a4d06d9b8df7b41';
-const expectedPackageSha = '7fc21cee0cc08169c2bbbbb05e137b5b26e885beb24fd9f6275808d2cf162e67';
+const productSha = '939232f1746381b4e932d620d6c709e29198f14c';
+const packageSha = '74974a32d4bfa34f26ed7e15d5eb3c301cb9000d8e90a1667041cbbde8587aa0';
+const promptSha = '44506bb8d722adb75fd4a0b1ec3a3265d71bb77de7e9a2db07214caee97c94d0';
 
-test.skipIf(packageSha !== expectedPackageSha)('historical v4 rejects a historical or otherwise wrong declared pin before admission', () => {
+test('current v5 consumer is the exact Git-installed 939 package, not the archive or old control', () => {
   const declared = JSON.parse(readFileSync(resolve(import.meta.dir, '../../package.json'), 'utf8')).dependencies.gbrain;
   expect(declared).toBe(`github:garrytan/gbrain#${productSha}`);
+  expect(regressionPackageHash(productRoot)).toBe(packageSha);
   expect(() => assertMatchedProductDeclaration(declared, productSha)).not.toThrow();
-  expect(() => assertMatchedProductDeclaration('github:garrytan/gbrain#470ccc49c33b44c4a4be4e60bc606c0ad04a4427', productSha))
-    .toThrow('declared product pin mismatch');
-  expect(() => assertMatchedProductDeclaration('github:other/gbrain#f3249d1703772573006141224a4d06d9b8df7b41', productSha))
-    .toThrow('declared product pin mismatch');
+  expect(() => assertMatchedProductDeclaration('github:garrytan/gbrain#f3249d1703772573006141224a4d06d9b8df7b41', productSha)).toThrow();
+  expect(() => assertMatchedProductDeclaration('file:./vendor/gbrain', productSha)).toThrow();
 });
 
-test.skipIf(packageSha !== expectedPackageSha)('historical v4 C1 public cue construction and separate replay retain a grounded cue', async () => {
-  expect(packageSha).toBe(expectedPackageSha);
-  const folder = mkdtempSync(join(tmpdir(), 'lme-c1-public-stage-'));
+test.each(['C0', 'C1'] as const)('current v5 %s public construction closes a snapshot before separate embedding-only replay', async arm => {
+  const folder = mkdtempSync(join(tmpdir(), 'lme-v5-public-'));
   const originalFetch = globalThis.fetch;
   const originalKey = process.env.OPENROUTER_API_KEY;
   const questionId = 'c960da58';
@@ -51,92 +49,110 @@ test.skipIf(packageSha !== expectedPackageSha)('historical v4 C1 public cue cons
   writeFileSync(sourceManifestPath, JSON.stringify({ selected_ids: selected.selected_ids,
     selected_source_details: { [questionId]: { source_file: sourcePath, source_sha256: sourceSha } } }) + '\n');
   const { CUE_SYSTEM_PROMPT } = await import(pathToFileURL(join(productRoot, 'src/core/memory-cues/providers.ts')).href);
-  const promptSha = hash(CUE_SYSTEM_PROMPT);
-  const profile = (stage: 'construction' | 'replay', constructionReceiptSha?: string) => ({
-    schema_version: 1, kind: 'source-only-development', experiment: 'longmemeval-m-source-only-dev-v2',
-    question_id: questionId, attempt_id: 'synthetic-1', registration_sha256: hash(readFileSync(selectionPath)),
-    source_manifest_sha256: hash(readFileSync(sourceManifestPath)), expected_product_sha: productSha,
-    expected_package_sha256: expectedPackageSha, allocation: { id: `C1-${questionId}-${stage}`, usd: stage === 'construction' ? 95 : 5 },
-    arm: 'C1', cue_mode: 'on', cue_pipeline_version: 'situation-v4', cue_prompt_sha256: promptSha,
-    stage, ...(constructionReceiptSha ? { construction_receipt_sha256: constructionReceiptSha } : {}),
-  });
+  expect(hash(CUE_SYSTEM_PROMPT)).toBe(promptSha);
+  expect(Buffer.byteLength(CUE_SYSTEM_PROMPT)).toBe(1822);
   const inputs = (stage: 'construction' | 'replay', constructionReceiptSha?: string) => {
-    const p = profile(stage, constructionReceiptSha);
+    const p = { schema_version: 1, kind: 'source-only-development', experiment: 'longmemeval-m-source-only-dev-v3',
+      question_id: questionId, attempt_id: 'synthetic-1', registration_sha256: hash(readFileSync(selectionPath)),
+      source_manifest_sha256: hash(readFileSync(sourceManifestPath)), expected_product_sha: productSha,
+      expected_package_sha256: packageSha, allocation: { id: `${arm}-${questionId}-${stage}`,
+        usd: stage === 'construction' ? arm === 'C1' ? 95 : 9 : arm === 'C1' ? 5 : 1 }, arm,
+      ...(arm === 'C1' ? { cue_mode: 'on', cue_pipeline_version: 'situation-v5', cue_prompt_sha256: promptSha } : { cue_mode: 'off' }),
+      stage, ...(constructionReceiptSha ? { construction_receipt_sha256: constructionReceiptSha } : {}) };
     const profilePath = join(folder, `${stage}-profile.json`);
     const leafLedgerEntryPath = join(folder, `${stage}-ledger.json`);
     writeFileSync(profilePath, JSON.stringify(p));
     writeFileSync(leafLedgerEntryPath, JSON.stringify({ schema_version: 1, question_id: questionId,
-      attempt_id: p.attempt_id, arm: 'C1', stage, profile_sha256: hash(readFileSync(profilePath)), allocation: p.allocation }));
-    return { stage, profilePath, leafLedgerEntryPath, selectionPath, sourceManifestPath, productRoot,
-      stageDir: join(folder, stage) };
+      attempt_id: p.attempt_id, arm, stage, profile_sha256: hash(readFileSync(profilePath)), allocation: p.allocation }));
+    return { stage, profilePath, leafLedgerEntryPath, selectionPath, sourceManifestPath, productRoot, stageDir: join(folder, stage) };
   };
-  const wire: Array<{ path: string; model: string }> = [];
-  process.env.OPENROUTER_API_KEY = 'synthetic-openrouter-only';
+  const wire: string[] = [];
+  let replaying = false;
+  process.env.OPENROUTER_API_KEY = 'synthetic-v5-only';
   globalThis.fetch = (async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
     const request = new Request(input as Request, init);
     const body = await request.json() as Record<string, any>;
     const path = new URL(request.url).pathname;
-    expect(request.headers.get('authorization')).toBe('Bearer synthetic-openrouter-only');
-    wire.push({ path, model: body.model });
+    expect(request.headers.get('authorization')).toBe('Bearer synthetic-v5-only');
+    wire.push(path);
     if (path === '/api/v1/embeddings') {
       expect(body.model).toBe('openai/text-embedding-3-large');
+      expect(body.dimensions).toBe(1536);
       const inputs = Array.isArray(body.input) ? body.input : [body.input];
       return Response.json({ object: 'list', model: 'text-embedding-3-large',
         data: inputs.map((_: unknown, index: number) => ({ object: 'embedding', index,
           embedding: Array.from({ length: 1536 }, (__, i) => i === 0 ? 1 : 0) })),
         usage: { prompt_tokens: 1, total_tokens: 1, cost: 0.00000013, is_byok: false } });
     }
+    expect(arm).toBe('C1');
+    expect(replaying).toBe(false);
     expect(path).toBe('/api/v1/chat/completions');
     expect(body.model).toBe('anthropic/claude-sonnet-4.6');
     expect(body.reasoning).toEqual({ enabled: false });
     expect(body.provider).toEqual(developmentChatOptions(model)[model].provider);
     expect(body.max_tokens).toBe(1200);
-    const cost = 0.00009;
-    return Response.json({ id: 'synthetic-chat', object: 'chat.completion', created: 1, model: body.model,
-      choices: [{ index: 0, message: { role: 'assistant', content: JSON.stringify([
-        { family: 'scene', relation: 'situation_description', evidence_ref: 1,
-          text: 'When choosing packaging for the fictional project, its stated blue label matters.' },
-      ]) }, finish_reason: 'stop' }],
-      usage: { prompt_tokens: 20, completion_tokens: 2, total_tokens: 22, cost, is_byok: false,
-        cost_details: { upstream_inference_cost: cost } } });
+    expect(body.messages[0].content).toBe(CUE_SYSTEM_PROMPT);
+    const content = JSON.parse(body.messages[1].content);
+    expect(content.includeBridge).toBe(false);
+    expect(content.evidence[0].id).toBe(1);
+    return Response.json({ id: 'synthetic-v5-chat', object: 'chat.completion', created: 1, model: body.model,
+      choices: [{ index: 0, message: { role: 'assistant', content: JSON.stringify({ scene: { evidence_ref: 1,
+        text: 'When choosing packaging for the fictional project, its stated blue label matters.' },
+        association_1: null, association_2: null, association_3: null }) }, finish_reason: 'stop' }],
+      usage: { prompt_tokens: 20, completion_tokens: 2, total_tokens: 22, cost: 0.00009, is_byok: false } });
   }) as typeof fetch;
   try {
     const construction = inputs('construction');
+    const originalProfile = readFileSync(construction.profilePath);
+    for (const expected_product_sha of ['f3249d1703772573006141224a4d06d9b8df7b41', '1def241df4a10bcbe2563113dbdc3cb601d588ee']) {
+      writeFileSync(construction.profilePath, JSON.stringify({ ...JSON.parse(originalProfile.toString()), expected_product_sha }));
+      await expect(runPilotLiveStage(construction, true)).rejects.toThrow('matched arm');
+      expect(existsSync(construction.stageDir)).toBe(false);
+      expect(wire).toHaveLength(0);
+    }
+    writeFileSync(construction.profilePath, originalProfile);
     const built = await runPilotLiveStage(construction, true);
     expect(built.status).toBe('complete');
     expect(built.transport).toBe('test-mock');
-    expect(built.cue_build?.final_status).toBe('complete');
-    expect(built.cue_build?.windows_pending).toBe(0);
-    expect(built.cue_build?.ready).toBeGreaterThan(0);
-    expect(built.cue_build?.empty).toBe(0);
     expect(built.guard?.chat_sealed).toBe(true);
     expect(built.guard?.failed_or_unreported_requests).toBe(0);
+    expect(built.guard?.reserved_usd).toBe(0);
     expect(built.guard?.known_attributed_usd).toBeGreaterThan(0);
-    expect(wire.filter(request => request.path === '/api/v1/chat/completions')).toHaveLength(1);
-    const submission = JSON.parse(readFileSync(join(construction.stageDir, 'cue-submission.json'), 'utf8'));
-    expect(submission.build_id).toBe(built.cue_build?.build_id);
-    expect(submission.budget_owner_job_id).toBe(built.cue_build?.budget_owner_job_id);
-    const passes = readFileSync(join(construction.stageDir, 'cue-passes.ndjson'), 'utf8');
-    expect(passes).toContain('"event":"pass"');
-    expect(passes).toContain('"event":"readback"');
     const manifest = JSON.parse(readFileSync(join(construction.stageDir, 'indexed/index-manifest.json'), 'utf8'));
-    expect(manifest.cue_readback.status).toBe('uncalibrated-diagnostic');
-    expect(manifest.cue_readback.embedding_signature).toBe(built.cue_build?.preview_signature);
-    expect(manifest.resolved_config.cues.readMode).toBe('on');
-    expect(manifest.resolved_config.cues.generationEnabled).toBe(false);
-    expect(manifest.resolved_config.cues.pushEnabled).toBe(false);
-    expect(manifest.resolved_config.cues.minSimilarity).toBe(-1);
-    expect(manifest.resolved_config.cues.weight).toBe(0.25);
-    expect(manifest.resolved_config.provider_chat_options).toEqual(developmentChatOptions(model));
+    expect(manifest.sources).toHaveLength(1);
+    expect(manifest.sources[0].chunks.length).toBeGreaterThan(0);
+    expect(manifest.cue_mode).toBe(arm === 'C1' ? 'on' : 'off');
+    if (arm === 'C1') {
+      expect(built.cue_build?.final_status).toBe('complete');
+      expect(built.cue_build?.windows_pending).toBe(0);
+      expect(built.cue_build?.ready).toBeGreaterThan(0);
+      expect(built.cue_build?.empty).toBe(0);
+      const submission = JSON.parse(readFileSync(join(construction.stageDir, 'cue-submission.json'), 'utf8'));
+      expect(submission.build_id).toBe(built.cue_build?.build_id);
+      expect(submission.budget_owner_job_id).toBe(built.cue_build?.budget_owner_job_id);
+      expect(readFileSync(join(construction.stageDir, 'cue-passes.ndjson'), 'utf8')).toContain('"event":"readback"');
+      expect(manifest.cue_readback.status).toBe('uncalibrated-diagnostic');
+      expect(manifest.resolved_config.cues.readMode).toBe('on');
+      expect(manifest.resolved_config.cues.generationEnabled).toBe(false);
+      expect(manifest.resolved_config.cues.pushEnabled).toBe(false);
+      expect(manifest.resolved_config.cues.minSimilarity).toBe(-1);
+      expect(manifest.resolved_config.cues.weight).toBe(0.25);
+      expect(manifest.resolved_config.provider_chat_options).toEqual(developmentChatOptions(model));
+      const persisted = JSON.parse(readFileSync(join(construction.stageDir, 'c1-home/.gbrain/config.json'), 'utf8'));
+      expect(persisted.provider_chat_options).toEqual(developmentChatOptions(model));
+    } else expect(built.cue_build).toBeUndefined();
     const constructionReceiptPath = join(construction.stageDir, 'stage-receipt.json');
     const replay = inputs('replay', hash(readFileSync(constructionReceiptPath)));
+    replaying = true;
     const result = await runPilotLiveStage({ ...replay, constructionReceiptPath, selectedDatasetPath: questionsPath }, true);
     expect(result.status).toBe('complete');
-    expect(result.transport).toBe('test-mock');
     expect(result.index_snapshot_sha256).toBe(built.index_snapshot_sha256);
-    expect(JSON.parse(readFileSync(join(replay.stageDir, 'query-row.json'), 'utf8')).top_k).toBe(5);
+    const row = JSON.parse(readFileSync(join(replay.stageDir, 'query-row.json'), 'utf8'));
+    expect(row.top_k).toBe(5);
+    expect(row.retrieved).toEqual(['fictional-demo']);
+    expect(row.indexed_evidence.returned_chunks.length).toBeLessThanOrEqual(5);
     expect(existsSync(join(replay.stageDir, 'case-outcome.json'))).toBe(false);
-    expect(wire.filter(request => request.path === '/api/v1/chat/completions')).toHaveLength(1);
+    expect(wire.filter(path => path === '/api/v1/chat/completions')).toHaveLength(arm === 'C1' ? 1 : 0);
   } finally {
     globalThis.fetch = originalFetch;
     if (originalKey === undefined) delete process.env.OPENROUTER_API_KEY;

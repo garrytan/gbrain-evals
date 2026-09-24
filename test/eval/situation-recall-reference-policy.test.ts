@@ -105,7 +105,7 @@ test.each(['B', 'C0', 'C1'] as const)('%s v2 preserves every existing stage ceil
 test('experiment and pipeline versions cannot be interchanged or caller-extended', () => {
   for (const patch of [
     { experiment: 'longmemeval-m-source-only-dev-v1' }, { cue_pipeline_version: 'situation-v3' },
-    { experiment: 'longmemeval-m-source-only-dev-v3', cue_pipeline_version: 'situation-v5' },
+    { experiment: 'longmemeval-m-source-only-dev-v3', cue_pipeline_version: 'situation-v4' },
     { evidence_max_excerpts: 65 }, { excerpt_max_utf16_units: 641 }, { max_chat_request_bytes: 131072 },
   ]) expect(() => resolveSourceOnlyDevelopmentPolicy({ ...profile(), ...patch } as SourceOnlyDevelopmentProfile)).toThrow();
 });
@@ -266,7 +266,7 @@ test.each([
   `, { formatter });
 });
 
-test('the pinned v4 package formatter and production provider pass through the closed guard with mocked SDK transport', () => {
+test.skipIf(regressionPackageHash(resolve('node_modules/gbrain')) !== '7fc21cee0cc08169c2bbbbb05e137b5b26e885beb24fd9f6275808d2cf162e67')('historical v4 package formatter and production provider pass through the closed guard with mocked SDK transport', () => {
   const script = `
     import {strict as assert} from 'node:assert';
     import {mkdtempSync,readFileSync,rmSync} from 'node:fs';

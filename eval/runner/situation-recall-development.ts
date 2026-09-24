@@ -5,7 +5,7 @@ import { pathToFileURL } from 'node:url';
 import { closeSync, constants, fsyncSync, mkdirSync, openSync, realpathSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { resolveRegressionProduct } from './situation-recall-provenance.ts';
-import { SOURCE_ONLY_REFERENCE_EXPERIMENT, resolveSourceOnlyDevelopmentPolicy, type SourceOnlyDevelopmentProfile } from './situation-recall-experiment-policy.ts';
+import { SOURCE_ONLY_EXPERIMENT, SOURCE_ONLY_V5_EXPERIMENT, resolveSourceOnlyDevelopmentPolicy, type SourceOnlyDevelopmentProfile } from './situation-recall-experiment-policy.ts';
 
 const CHAT_PRICES: Record<string, { input: number; output: number }> = {
   'openrouter:qwen/qwen3.7-flash': { input: 0.03, output: 0.13 },
@@ -50,9 +50,11 @@ export function startDevelopmentRequestGuard(profile: Cat36Profile, journalPath?
   return guard;
 }
 
-export async function startSourceOnlyDevelopmentGuard(input: SourceOnlyDevelopmentProfile, options: { journalPath: string; verifiedPackagePath: string }) {
+export async function startSourceOnlyDevelopmentGuard(input: SourceOnlyDevelopmentProfile, options: { journalPath: string; verifiedPackagePath: string; sourceSmoke?: true }) {
   const profile = structuredClone(input);
   const policy = resolveSourceOnlyDevelopmentPolicy(profile);
+  if (options?.sourceSmoke && (profile.experiment !== SOURCE_ONLY_V5_EXPERIMENT || profile.arm !== 'C1' || profile.stage !== 'construction'
+    || profile.allocation.usd > 1)) throw new Error('v5 source smoke requires one C1 construction leaf of at most $1');
   if (!options?.journalPath || !options.verifiedPackagePath) throw new Error('source-only guard requires a fresh journal and verified package path');
   const product = resolveRegressionProduct({ expectedProductSha: profile.expected_product_sha,
     expectedPackageSha256: profile.expected_package_sha256, importerPath: import.meta.path });
@@ -71,18 +73,18 @@ export async function startSourceOnlyDevelopmentGuard(input: SourceOnlyDevelopme
     if (MEMORY_CUE_PROMPT_VERSION !== profile.cue_pipeline_version || typeof CUE_SYSTEM_PROMPT !== 'string'
       || createHash('sha256').update(CUE_SYSTEM_PROMPT).digest('hex') !== profile.cue_prompt_sha256) throw new Error('source-only cue pipeline or prompt identity mismatch');
     cuePrompt = CUE_SYSTEM_PROMPT;
-    if (profile.experiment === SOURCE_ONLY_REFERENCE_EXPERIMENT) {
+    if (profile.experiment !== SOURCE_ONLY_EXPERIMENT) {
       const { formatCueEvidence } = await import(pathToFileURL(join(product.package_path, 'src/core/memory-cues/evidence.ts')).href);
       if (typeof formatCueEvidence !== 'function') throw new Error('registered v4 cue evidence formatter unavailable');
       cueEvidenceFormatter = source => formatCueEvidence(source, false);
     }
   }
   const guard = installRequestGuard({
-    limits: { max_usd: profile.allocation.usd, max_requests: policy.max_requests, max_request_bytes: policy.max_request_bytes,
-      max_output_tokens: policy.max_output_tokens, cell_timeout_ms: policy.stage_timeout_ms },
+    limits: { max_usd: profile.allocation.usd, max_requests: options.sourceSmoke ? 1 : policy.max_requests, max_request_bytes: policy.max_request_bytes,
+      max_output_tokens: policy.max_output_tokens, cell_timeout_ms: options.sourceSmoke ? 30_000 : policy.stage_timeout_ms },
     generationModel: policy.generation_model, chatAllowed: profile.arm === 'C1' && profile.stage === 'construction',
     chatBodyMaxBytes: policy.max_chat_request_bytes, cuePrompt, cueEvidenceFormatter,
-    policyContext: { profile, policy, product, publishable: false, release_coverage: false, authorization_verified: false,
+    policyContext: { profile, policy, product, source_smoke: options.sourceSmoke === true, publishable: false, release_coverage: false, authorization_verified: false,
       allocation_authority: 'root-owned leaf allocation; policy ceilings do not authorize spending', deadline_scope: 'leaf-stage; root enforces the outer case deadline' },
   }, options.journalPath);
   return { sealConstruction: guard.sealConstruction, restore: guard.restore, snapshot() {
@@ -167,7 +169,11 @@ function installRequestGuard(configuration: GuardConfiguration, journalPath?: st
     per_request: [] as Array<Record<string, unknown>>,
   };
   let stopped = false;
-  if (journalPath) writeFileSync(journalPath, JSON.stringify({ event: configuration.policyContext ? 'policy-stage' : 'admission', generation_model: generationModel, ...usage }) + '\n', { flag: 'wx', mode: 0o600 });
+  if (journalPath) {
+    const fd = openSync(journalPath, constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY, 0o600);
+    try { writeFileSync(fd, JSON.stringify({ event: configuration.policyContext ? 'policy-stage' : 'admission', generation_model: generationModel, ...usage }) + '\n'); fsyncSync(fd); }
+    finally { closeSync(fd); }
+  }
   const artifactDir = journalPath ? join(dirname(journalPath), 'development-http') : undefined;
   if (artifactDir) mkdirSync(artifactDir);
   const secrets = [...new Set(Object.entries(process.env).filter(([key, value]) => /(?:KEY|TOKEN|PASSWORD|SECRET|CREDENTIAL)$/i.test(key) && value).map(([, value]) => value!))].sort((a, b) => b.length - a.length);

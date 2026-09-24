@@ -38,7 +38,7 @@ test('C1 prepared config and actual SDK wire retain frozen Sonnet provider optio
       assert.equal(body.max_tokens, 1200);
       const cost = (20 * 3 + 2 * 15) / 1e6;
       return Response.json({ id: 'synthetic-chat', object: 'chat.completion', created: 1, model: body.model,
-        choices: [{ index: 0, message: { role: 'assistant', content: '[]' }, finish_reason: 'stop' }],
+        choices: [{ index: 0, message: { role: 'assistant', content: '{"scene":null,"association_1":null,"association_2":null,"association_3":null}' }, finish_reason: 'stop' }],
         usage: { prompt_tokens: 20, completion_tokens: 2, total_tokens: 22, cost, is_byok: false,
           cost_details: { upstream_inference_cost: cost } } });
     };

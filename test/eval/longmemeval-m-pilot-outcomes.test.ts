@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { aggregatePilotCases, writePilotCaseOutcome, type PilotCaseOutcome } from '../../eval/runner/longmemeval-m-pilot-outcomes.ts';
+import { developmentChatOptions } from '../../eval/runner/situation-recall-development.ts';
 
 const folder = mkdtempSync(join(tmpdir(), 'lme-m-outcomes-'));
 afterAll(() => rmSync(folder, { recursive: true, force: true }));
@@ -144,6 +145,51 @@ describe('pilot per-case outcomes and strict aggregate', () => {
     const result = aggregatePilotCases(selectionPath, questionsPath, [path, ...paths.slice(1)]);
     expect(result.native_summary.total).toBe(24);
     expect(result.native_summary.n_errors_sut).toBe(1);
+  });
+
+  test('v5 aggregate keeps exact experiment, product and prompt linkage closed', () => {
+    const sha = (path: string) => createHash('sha256').update(readFileSync(path)).digest('hex');
+    const v5Paths = paths.map((path: string, index: number) => {
+      const base = JSON.parse(readFileSync(path, 'utf8'));
+      const writeStage = (stage: 'construction' | 'replay', linked?: string) => {
+        const directory = join(folder, `v5-${index}-${stage}`);
+        const configPath = join(directory, 'c1-home/.gbrain/config.json');
+        mkdirSync(join(directory, 'c1-home/.gbrain'), { recursive: true });
+        writeFileSync(configPath, JSON.stringify({ chat_model: 'openrouter:anthropic/claude-sonnet-4.6',
+          provider_chat_options: developmentChatOptions('openrouter:anthropic/claude-sonnet-4.6') }));
+        const receipt = JSON.parse(readFileSync(stage === 'construction' ? base.construction_stage_receipt_path : base.replay_stage_receipt_path, 'utf8'));
+        receipt.profile = { ...receipt.profile, experiment: 'longmemeval-m-source-only-dev-v3', arm: 'C1',
+          expected_product_sha: '939232f1746381b4e932d620d6c709e29198f14c', cue_pipeline_version: 'situation-v5',
+          cue_prompt_sha256: '44506bb8d722adb75fd4a0b1ec3a3265d71bb77de7e9a2db07214caee97c94d0',
+          allocation: { ...receipt.profile.allocation, usd: stage === 'construction' ? 95 : 5 },
+          ...(linked ? { construction_receipt_sha256: linked } : {}) };
+        receipt.prepared_gateway_config_sha256 = sha(configPath);
+        receipt.cue_readback_status = 'uncalibrated-diagnostic';
+        receipt.cue_build = { final_status: 'complete', windows_pending: 0 };
+        receipt.guard.policy_context.profile = receipt.profile;
+        receipt.guard.limits = { max_usd: receipt.profile.allocation.usd, max_requests: stage === 'construction' ? 5968 : 32 };
+        if (linked) receipt.construction_receipt_sha256 = linked;
+        const receiptPath = join(directory, 'stage-receipt.json');
+        writeFileSync(receiptPath, JSON.stringify(receipt));
+        return receiptPath;
+      };
+      const construction = writeStage('construction');
+      const replay = writeStage('replay', sha(construction));
+      const outcomePath = join(folder, `v5-${index}-outcome.json`);
+      writeFileSync(outcomePath, JSON.stringify({ ...base, arm: 'C1', product_sha: '939232f1746381b4e932d620d6c709e29198f14c',
+        construction_stage_receipt_path: construction, replay_stage_receipt_path: replay,
+        build_guard_receipt_sha256: sha(construction), replay_guard_receipt_sha256: sha(replay) }));
+      return outcomePath;
+    });
+    expect(aggregatePilotCases(selectionPath, questionsPath, v5Paths).completion.outcomes).toBe(28);
+    const first = JSON.parse(readFileSync(v5Paths[0], 'utf8'));
+    const receipt = JSON.parse(readFileSync(first.replay_stage_receipt_path, 'utf8'));
+    receipt.profile.cue_pipeline_version = 'situation-v4';
+    receipt.guard.policy_context.profile = receipt.profile;
+    writeFileSync(first.replay_stage_receipt_path, JSON.stringify(receipt));
+    first.replay_guard_receipt_sha256 = sha(first.replay_stage_receipt_path);
+    writeFileSync(v5Paths[0], JSON.stringify(first));
+    expect(() => aggregatePilotCases(selectionPath, questionsPath, v5Paths)).toThrow('stage receipt');
   });
 
   test('never overwrites a settled case outcome', () => {

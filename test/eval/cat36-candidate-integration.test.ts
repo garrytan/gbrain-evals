@@ -39,7 +39,7 @@ test.skipIf(!hasCandidate)('candidate public durable build uses source-only gate
       const input=JSON.parse(String(options.messages[0].content));
       const excerpt=input.evidence.find(value=>value.text.includes(phrase));
       if(input.includeBridge!==false || !excerpt) throw new Error('source-selected evidence missing');
-      return {text:JSON.stringify([{family:'horizon',relation:'explicit_constraint_applies',evidence_ref:excerpt.id,text:'Scheduling an early meeting'}]),
+      return {text:JSON.stringify({scene:null,association_1:{kind:'horizon:explicit_constraint_applies',evidence_ref:excerpt.id,text:'Scheduling an early meeting'},association_2:null,association_3:null}),
         blocks:[],stopReason:'end',usage:{input_tokens:20,output_tokens:20,cache_read_tokens:0,cache_creation_tokens:0},model:options.model,providerId:'anthropic'};
     });
     gateway.__setEmbedTransportForTests(async ({values}) => { embedded++; return {values,embeddings:values.map(vector),usage:{tokens:20},warnings:[],response:{headers:{}}}; });

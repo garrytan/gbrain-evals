@@ -69,7 +69,7 @@ test.each([['cat36', 'isolated-provider-cap', 'openrouter:qwen/qwen3.7-flash'], 
           const content = JSON.stringify(body.messages);
           assert.ok(Buffer.byteLength(content) < 32000);
           response = { id: 'synthetic-chat', model: body.model, object: 'chat.completion', created: 1,
-            choices: [{ index: 0, message: { role: 'assistant', content: '[]' }, finish_reason: 'stop' }],
+            choices: [{ index: 0, message: { role: 'assistant', content: '{"scene":null,"association_1":null,"association_2":null,"association_3":null}' }, finish_reason: 'stop' }],
             usage: { prompt_tokens: 20, completion_tokens: 2, total_tokens: 22, cost: (20 * price.prompt + 2 * price.completion) / 1e6, is_byok: false,
               cost_details: { upstream_inference_cost: (20 * price.prompt + 2 * price.completion) / 1e6 } } };
         }
