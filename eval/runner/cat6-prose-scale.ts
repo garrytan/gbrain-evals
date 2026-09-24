@@ -168,6 +168,25 @@ export interface VariantResult {
   sut_error?: string;
 }
 
+export interface VariantEvidenceRow extends VariantResult {
+  probe_id: string;
+  contributed: boolean;
+  baseSlug: string;
+  baseType: PageType;
+  goldDelta: GoldDelta;
+}
+
+export function variantEvidence(variant: VariantCase, result: VariantResult): VariantEvidenceRow {
+  return {
+    ...result,
+    probe_id: variant.variantId,
+    contributed: true,
+    baseSlug: variant.baseSlug,
+    baseType: variant.baseType,
+    goldDelta: variant.goldDelta,
+  };
+}
+
 export interface PerKindReport {
   kind: InjectionKind;
   variants: number;
@@ -219,6 +238,7 @@ export interface Cat6Report {
   gates: GateResult[];
   negative_controls: NegativeControlResult[];
   verdict: 'pass' | 'fail';
+  rows: VariantEvidenceRow[];
 }
 
 // ─── Corpus loading ──────────────────────────────────────────────────
@@ -621,6 +641,7 @@ export function aggregate(variants: VariantCase[], results: VariantResult[]): Ca
     gates,
     negative_controls: [],
     verdict: gates.every(g => g.pass) ? 'pass' : 'fail',
+    rows: variants.map((variant, i) => variantEvidence(variant, results[i])),
   };
 }
 
@@ -639,7 +660,11 @@ export interface Cat6RunOutcome {
   control_failures: string[];
 }
 
-export async function runCat6(opts: RunCat6Options = {}): Promise<Cat6RunOutcome> {
+export async function runCat6(
+  opts: RunCat6Options = {},
+  rows: VariantEvidenceRow[] = [],
+  extractor: typeof extractOne = extractOne,
+): Promise<Cat6RunOutcome> {
   const corpusDir = opts.corpusDir ?? resolve(process.cwd(), 'eval/data/world-v1');
   const pages = loadWorldV1(corpusDir);
   const variants = generateVariants(pages, {
@@ -653,20 +678,23 @@ export async function runCat6(opts: RunCat6Options = {}): Promise<Cat6RunOutcome
   for (const v of variants) {
     let extracted: ExtractedLink[] | null = null;
     try {
-      extracted = await extractOne(v, resolver);
+      extracted = await extractor(v, resolver);
     } catch (err) {
       // The SUT (gbrain's extractor) threw on valid content: scored miss —
       // every must_extract counts missed, and the probe scores 0.
       const msg = String(err);
       acc.error(v.variantId, 'sut', msg);
-      results.push({
+      const result = {
         ...scoreExtraction(v, []),
         sut_error: msg,
-      });
+      };
+      results.push(result);
+      rows.push(variantEvidence(v, result));
       continue;
     }
     const r = scoreExtraction(v, extracted);
     results.push(r);
+    rows.push(variantEvidence(v, r));
     const clean = r.missed.length + r.mistyped.length + r.false_positives.length === 0;
     acc.score(v.variantId, clean ? 1 : 0);
   }
@@ -742,12 +770,13 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
   }
 
   let outcome: Cat6RunOutcome;
+  const rows: VariantEvidenceRow[] = [];
   try {
     outcome = await runCat6({
       corpusDir,
       perKind: cli.perKind,
       baseSeed: cli.baseSeed,
-    });
+    }, rows);
   } catch (err) {
     // Corpus/aggregation failure before scoring completed: our bug, not the SUT's.
     writeReceipt(receiptFile, {
@@ -759,6 +788,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
       errors: [{ probe_id: 'run', origin: 'harness', message: String(err) }],
       publishable: false,
       finished_at: new Date().toISOString(),
+      data: { rows: rows.map(row => ({ ...row, contributed: false })) },
     });
     console.error(`[cat6] HARNESS ERROR — ${String(err)}`);
     return 3;
@@ -797,6 +827,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
       }])),
       gates: report.gates,
       negative_controls: report.negative_controls,
+      rows: report.rows,
     },
   };
 

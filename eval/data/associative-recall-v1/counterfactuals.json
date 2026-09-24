@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "variants": [
+    {
+      "id": "constraints/kiln-clearance/counterfactual",
+      "family_id": "constraints/kiln-clearance",
+      "base_probe_id": "constraints/kiln-clearance/indirect-a",
+      "source_id": "constraints/kiln-clearance/history",
+      "slug": "kiln-clearance/episode-1",
+      "replacement_text": "The studio checked a different kiln configuration before the winter firing. The community kiln needs six centimeters of clear air above every pot when its tall vented shelf system is installed; this configuration cannot use the four-centimeter spacing from the standard shelves. The loading team has installed the tall vented system for this run.",
+      "required_spans": [
+        {
+          "id": "constraints/kiln-clearance/counterfactual/span-1",
+          "start": 76,
+          "end": 278,
+          "text": "The community kiln needs six centimeters of clear air above every pot when its tall vented shelf system is installed; this configuration cannot use the four-centimeter spacing from the standard shelves."
+        }
+      ]
+    },
+    {
+      "id": "preferences/tea-roast/counterfactual",
+      "family_id": "preferences/tea-roast",
+      "base_probe_id": "preferences/tea-roast/indirect-a",
+      "source_id": "preferences/tea-roast/history",
+      "slug": "tea-roast/episode-1",
+      "replacement_text": "The choir host compared refreshments after a tasting session. The choir accompanist prefers plain roasted barley tea and dislikes smoky black tea or perfumed blends. The accompanist said the toasted grain flavor was the appealing part, not a request for a fruit syrup.",
+      "required_spans": [
+        {
+          "id": "preferences/tea-roast/counterfactual/span-1",
+          "start": 62,
+          "end": 165,
+          "text": "The choir accompanist prefers plain roasted barley tea and dislikes smoky black tea or perfumed blends."
+        }
+      ]
+    },
+    {
+      "id": "commitments/keys-return/counterfactual",
+      "family_id": "commitments/keys-return",
+      "base_probe_id": "commitments/keys-return/indirect-a",
+      "source_id": "commitments/keys-return/history",
+      "slug": "keys-return/episode-1",
+      "replacement_text": "The repair team borrowed the workshop key for an evening session. The caretaker will be away during the normal return window. The repair team lead will place the workshop key in the caretaker coded lockbox by 17:00 on January 3 instead of handing over a sealed envelope at noon. The caretaker rejected leaving it under the mat.",
+      "required_spans": [
+        {
+          "id": "commitments/keys-return/counterfactual/span-1",
+          "start": 126,
+          "end": 278,
+          "text": "The repair team lead will place the workshop key in the caretaker coded lockbox by 17:00 on January 3 instead of handing over a sealed envelope at noon."
+        }
+      ]
+    },
+    {
+      "id": "changing-decisions/picnic-location/counterfactual",
+      "family_id": "changing-decisions/picnic-location",
+      "base_probe_id": "changing-decisions/picnic-location/indirect-a",
+      "source_id": "changing-decisions/picnic-location/history",
+      "slug": "picnic-location/episode-1",
+      "replacement_text": "The reading group initially chose the riverside lawn. The flood warning closed the low path, and the station courtyard was already booked by another event. The reading group moved its picnic to the library reading room, replacing the riverside lawn plan. The library confirmed that packed lunches are allowed in the reserved room.",
+      "required_spans": [
+        {
+          "id": "changing-decisions/picnic-location/counterfactual/span-1",
+          "start": 156,
+          "end": 254,
+          "text": "The reading group moved its picnic to the library reading room, replacing the riverside lawn plan."
+        }
+      ]
+    },
+    {
+      "id": "causal-context/clock-drift/counterfactual",
+      "family_id": "causal-context/clock-drift",
+      "base_probe_id": "causal-context/clock-drift/indirect-b",
+      "source_id": "causal-context/clock-drift/history",
+      "slug": "clock-drift/episode-1",
+      "replacement_text": "The telescope group compared winter images with the reference log. The observatory laptop retained a summer-time offset, placing its winter image timestamps one hour ahead of the event log. The tracking motor and image exposure were correct.\n\nThe observing coordinator updated preparation. The telescope laptop clock will be synchronized against the observatory reference before each recording session. Adjusting the tracking motor would not correct the timestamp offset.",
+      "required_spans": [
+        {
+          "id": "causal-context/clock-drift/counterfactual/span-1",
+          "start": 67,
+          "end": 189,
+          "text": "The observatory laptop retained a summer-time offset, placing its winter image timestamps one hour ahead of the event log."
+        },
+        {
+          "id": "causal-context/clock-drift/counterfactual/span-2",
+          "start": 290,
+          "end": 402,
+          "text": "The telescope laptop clock will be synchronized against the observatory reference before each recording session."
+        }
+      ]
+    }
+  ]
+}

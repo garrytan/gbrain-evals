@@ -24,9 +24,43 @@ def anchors(text):
     return found
 
 
+def candidate_references(root=ROOT):
+    pin = json.loads((root / "package.json").read_text())["dependencies"]["gbrain"]
+    match = re.fullmatch(r"github:garrytan/gbrain#([a-f0-9]{40})", pin)
+    if not match:
+        return [["package.json", "Current candidate must have an exact 40-character Git pin"]]
+    sha = match.group(1)
+    errors = []
+    markers = {
+        "CHANGELOG.md": [r"Pin the candidate product to `([^`]+)`"],
+        "eval/RUNBOOK.md": [r"The declared candidate is `([^`]+)`"],
+        "docs/benchmarks/2026-09-23-situation-recall-protocol.md": [
+            r"The declared dependency now pins candidate `([^`]+)`",
+            r"\| Declared candidate C0/C1 \| `([^`]+)`",
+        ],
+    }
+    for file, patterns in markers.items():
+        text = (root / file).read_text()
+        for pattern in patterns:
+            reference = re.search(pattern, text)
+            if not reference or reference.group(1) != sha:
+                errors.append([file, "Current candidate reference differs from package.json pin"])
+    lock = re.search(r'"gbrain"\s*:\s*"([^\"]+)"', (root / "bun.lock").read_text())
+    if not lock or lock.group(1) != pin:
+        errors.append(["bun.lock", "Declared candidate differs from package.json pin"])
+    files = [root / file for file in ["package.json", "bun.lock", *markers]]
+    files += list((root / "eval/runner").rglob("*.ts"))
+    files += list((root / "test/eval").rglob("*.ts"))
+    for path in files:
+        for reference in re.findall(r"\b" + re.escape(sha[:7]) + r"[a-f0-9]*\b", path.read_text(), re.I):
+            if not sha.startswith(reference):
+                errors.append([str(path.relative_to(root)), reference, "Malformed current-candidate reference"])
+    return errors
+
+
 def verify():
     manifest = json.loads(MANIFEST.read_text())
-    errors = []
+    errors = candidate_references()
     for file, expected in manifest["protected_sha256"].items():
         path = ROOT / file
         if not path.exists() or hashlib.sha256(path.read_bytes()).hexdigest() != expected:

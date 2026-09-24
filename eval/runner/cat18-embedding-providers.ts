@@ -62,7 +62,7 @@ import type { SearchResult, HybridSearchMeta } from 'gbrain/types';
 import { loadSyntheticV1, syntheticQueries, type SyntheticPage, type SyntheticQuery } from './synthetic-corpus-loader.ts';
 import { uniqueInOrder, recallAtK, reciprocalRank, percentile } from './metrics.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
-import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt } from './receipt.ts';
+import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt, type ProbeError, type FailureOrigin } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 
 export const CAT18_CATEGORY = 'cat18-embedding-providers';
@@ -182,6 +182,60 @@ export function scoreQuery(resultSlugs: string[], relevantSlugs: string[], k: nu
   };
 }
 
+export interface QueryEvidence {
+  probe_id: string;
+  query_id: string;
+  status: 'scored' | 'error';
+  scored: boolean;
+  ranked_ids: string[] | null;
+  relevant_ids: string[];
+  k: number;
+  recall_at_10: number | null;
+  mrr: number | null;
+  top1_hit_rate: 0 | 1 | null;
+  query_ms: number | null;
+  error: ProbeError | null;
+}
+
+export function queryEvidence(
+  cell: string,
+  query: SyntheticQuery,
+  k: number,
+  rankedIds: string[] | null,
+  queryMs: number | null,
+  outcome: QueryScore | ProbeError,
+): QueryEvidence {
+  const score = 'recall' in outcome ? outcome : null;
+  return {
+    probe_id: `${cell}:${query.id}`,
+    query_id: query.id,
+    status: score ? 'scored' : 'error',
+    scored: score !== null,
+    ranked_ids: rankedIds === null ? null : uniqueInOrder(rankedIds).slice(0, k),
+    relevant_ids: uniqueInOrder(query.relevant_slugs),
+    k,
+    recall_at_10: score?.recall ?? null,
+    mrr: score?.rr ?? null,
+    top1_hit_rate: score ? (score.top1 ? 1 : 0) : null,
+    query_ms: queryMs,
+    error: 'origin' in outcome ? outcome : null,
+  };
+}
+
+export function recordQueryFailure(
+  acc: ProbeAccounting,
+  cell: string,
+  query: SyntheticQuery,
+  k: number,
+  origin: FailureOrigin,
+  message: string,
+  rankedIds: string[] | null = null,
+  queryMs: number | null = null,
+): QueryEvidence {
+  acc.error(`${cell}:${query.id}`, origin, message);
+  return queryEvidence(cell, query, k, rankedIds, queryMs, acc.summary().errors.at(-1)!);
+}
+
 // ─── Cell report ─────────────────────────────────────────────────────
 
 export interface ProviderCell {
@@ -202,6 +256,7 @@ export interface ProviderCell {
   queries_total: number;
   queries_scored: number;
   query_errors: number;
+  per_query?: QueryEvidence[];
   degraded_queries: number;
   rerank_scored_queries: number;
   // Metrics over scored queries (null when nothing scored).
@@ -241,6 +296,7 @@ export async function runProviderCell(
   const pinned = opts.pinned ?? PINNED_CONFIG;
   const { embedder, dim } = providerConfig(name);
   const probeId = (q: SyntheticQuery): string => `${name}:${q.id}`;
+  const perQuery: QueryEvidence[] = [];
 
   const cell: ProviderCell = {
     cell: name, embedder, dim,
@@ -248,6 +304,7 @@ export async function runProviderCell(
     pages_total: 0, pages_embedded: 0, chunks_total: 0, chunks_embedded: 0,
     embedding_column: null,
     queries_total: queries.length, queries_scored: 0, query_errors: 0,
+    per_query: perQuery,
     degraded_queries: 0, rerank_scored_queries: 0,
     mrr: null, recall_at_10: null, top1_hit_rate: null,
     mean_query_ms: null, p50_query_ms: null, embed_ingest_ms: 0,
@@ -318,7 +375,7 @@ export async function runProviderCell(
         (cell.first_ingest_error ? ` (first error: ${cell.first_ingest_error})` : ''),
       );
       for (const q of queries) {
-        acc.error(probeId(q), 'dependency', `cell ${name}: ${cell.invalid_reasons[0]}`);
+        perQuery.push(recordQueryFailure(acc, name, q, k, 'dependency', `cell ${name}: ${cell.invalid_reasons[0]}`));
       }
       cell.query_errors = queries.length;
       return cell;
@@ -341,7 +398,7 @@ export async function runProviderCell(
         });
       } catch (e: any) {
         cell.query_errors++;
-        acc.error(probeId(q), 'dependency', `cell ${name} query ${q.id}: hybridSearch failed: ${e?.message ?? e}`);
+        perQuery.push(recordQueryFailure(acc, name, q, k, 'dependency', `cell ${name} query ${q.id}: hybridSearch failed: ${e?.message ?? e}`, null, Date.now() - t));
         continue;
       } finally {
         console.log = origLog;
@@ -354,7 +411,7 @@ export async function runProviderCell(
       // reranker must NOT have fired (this is an embedder-only comparison).
       if (meta?.mode && meta.mode !== pinned['search.mode']) {
         cell.query_errors++;
-        acc.error(probeId(q), 'harness', `cell ${name} query ${q.id}: resolved mode '${meta.mode}' != pinned '${pinned['search.mode']}'`);
+        perQuery.push(recordQueryFailure(acc, name, q, k, 'harness', `cell ${name} query ${q.id}: resolved mode '${meta.mode}' != pinned '${pinned['search.mode']}'`, results.map(r => r.slug), ms));
         cell.invalid_reasons.push(`mode pin failed on ${q.id}`);
         continue;
       }
@@ -362,7 +419,7 @@ export async function runProviderCell(
       if (rerankFired) {
         cell.rerank_scored_queries++;
         cell.query_errors++;
-        acc.error(probeId(q), 'harness', `cell ${name} query ${q.id}: reranker fired despite search.reranker.enabled=false pin`);
+        perQuery.push(recordQueryFailure(acc, name, q, k, 'harness', `cell ${name} query ${q.id}: reranker fired despite search.reranker.enabled=false pin`, results.map(r => r.slug), ms));
         cell.invalid_reasons.push(`reranker pin failed on ${q.id}`);
         continue;
       }
@@ -374,10 +431,11 @@ export async function runProviderCell(
       if (vectorDegraded) {
         cell.degraded_queries++;
         cell.query_errors++;
-        acc.error(
-          probeId(q), 'dependency',
+        perQuery.push(recordQueryFailure(
+          acc, name, q, k, 'dependency',
           `cell ${name} query ${q.id}: vector arm degraded (${stages.join(',') || 'vector_enabled=false'}) — keyword-only result under an embedder label`,
-        );
+          results.map(r => r.slug), ms,
+        ));
         continue;
       }
 
@@ -385,10 +443,11 @@ export async function runProviderCell(
       if (Number.isNaN(s.recall)) {
         // Empty gold set — harness bug in query derivation, not a miss.
         cell.query_errors++;
-        acc.error(probeId(q), 'harness', `cell ${name} query ${q.id}: empty relevant set`);
+        perQuery.push(recordQueryFailure(acc, name, q, k, 'harness', `cell ${name} query ${q.id}: empty relevant set`, results.map(r => r.slug), ms));
         continue;
       }
       acc.score(probeId(q), s.recall);
+      perQuery.push(queryEvidence(name, q, k, s.page_ids, ms, s));
       cell.queries_scored++;
       recalls.push(s.recall);
       rrs.push(s.rr);
@@ -558,13 +617,14 @@ export async function runCat18(options: Cat18Options = {}): Promise<Cat18RunResu
         log(`[cat18]   ${name}: valid=${cell.valid} MRR=${cell.mrr?.toFixed(3) ?? 'n/a'} R@${K}=${cell.recall_at_10 !== null ? (cell.recall_at_10 * 100).toFixed(1) + '%' : 'n/a'} errors=${cell.query_errors} coverage=${cell.chunks_embedded}/${cell.chunks_total}\n`);
       } catch (e: any) {
         // Cell-level crash (engine/schema/config) — our bug, typed harness.
-        for (const q of queries) acc.error(`${name}:${q.id}`, 'harness', `cell ${name} crashed: ${e?.message ?? e}`);
+        const perQuery = queries.map(q => recordQueryFailure(acc, name, q, K, 'harness', `cell ${name} crashed: ${e?.message ?? e}`));
         cells.push({
           cell: name, embedder: providerConfig(name).embedder, dim: providerConfig(name).dim,
           ingest_ok: 0, ingest_fail: 0, first_ingest_error: null,
           pages_total: 0, pages_embedded: 0, chunks_total: 0, chunks_embedded: 0,
           embedding_column: null,
           queries_total: queries.length, queries_scored: 0, query_errors: queries.length,
+          per_query: perQuery,
           degraded_queries: 0, rerank_scored_queries: 0,
           mrr: null, recall_at_10: null, top1_hit_rate: null,
           mean_query_ms: null, p50_query_ms: null, embed_ingest_ms: 0,

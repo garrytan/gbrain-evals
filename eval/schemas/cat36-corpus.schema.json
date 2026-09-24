@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://brainbench.dev/schemas/cat36-corpus.schema.json",
+  "title": "Cat36 assembled source-span retrieval corpus",
+  "type": "object",
+  "required": ["manifest", "cutoff", "sources", "spans", "probes", "families"],
+  "additionalProperties": false,
+  "properties": {
+    "manifest": {
+      "type": "object",
+      "required": ["schema_version", "normalization", "family_count", "probe_count", "hashes", "review"],
+      "properties": {
+        "schema_version": { "const": 1 },
+        "normalization": { "const": "nfc-lf-v1" },
+        "family_count": { "const": 120 },
+        "probe_count": { "const": 480 },
+        "hashes": {
+          "type": "object",
+          "required": ["sources.json", "probes.json", "qrels.json", "splits.json", "counterfactuals.json"],
+          "additionalProperties": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+        },
+        "review": {
+          "type": "object",
+          "required": ["status"],
+          "properties": {
+            "status": { "enum": ["pending-independent-relevance-review", "approved"] },
+            "reviewer": { "type": "string", "minLength": 1 },
+            "reviewed_hashes": { "type": "object", "additionalProperties": { "type": "string", "pattern": "^[a-f0-9]{64}$" } }
+          }
+        }
+      }
+    },
+    "cutoff": { "type": "string", "format": "date-time" },
+    "families": { "type": "array", "minItems": 120, "maxItems": 120, "items": { "$ref": "#/$defs/family" } },
+    "sources": { "type": "array", "minItems": 240, "items": { "$ref": "#/$defs/source" } },
+    "spans": { "type": "array", "minItems": 120, "items": { "$ref": "#/$defs/span" } },
+    "probes": { "type": "array", "minItems": 480, "maxItems": 480, "items": { "$ref": "#/$defs/probe" } }
+  },
+  "$defs": {
+    "id": { "type": "string", "minLength": 1 },
+    "family": {
+      "type": "object", "additionalProperties": false, "required": ["id", "domain", "split"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "domain": { "enum": ["constraints", "preferences", "commitments", "changing-decisions", "causal-context"] },
+        "split": { "enum": ["dev", "holdout"] }
+      }
+    },
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["family_id", "source_id", "slug", "title", "text", "created_at", "updated_at", "visibility", "role"],
+      "properties": {
+        "family_id": { "$ref": "#/$defs/id" }, "source_id": { "$ref": "#/$defs/id" }, "slug": { "$ref": "#/$defs/id" },
+        "title": { "type": "string", "minLength": 1 }, "text": { "type": "string", "minLength": 1 },
+        "created_at": { "type": "string", "format": "date-time" }, "updated_at": { "type": "string", "format": "date-time" },
+        "visibility": { "enum": ["public", "private", "withdrawn"] }, "role": { "enum": ["evidence", "distractor"] }
+      }
+    },
+    "span": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "family_id", "source_id", "slug", "start", "end", "text"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" }, "family_id": { "$ref": "#/$defs/id" }, "source_id": { "$ref": "#/$defs/id" }, "slug": { "$ref": "#/$defs/id" },
+        "start": { "type": "integer", "minimum": 0 }, "end": { "type": "integer", "minimum": 1 }, "text": { "type": "string", "minLength": 1 }
+      }
+    },
+    "probe": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "family_id", "kind", "text", "required_span_ids", "tags"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" }, "family_id": { "$ref": "#/$defs/id" }, "kind": { "enum": ["indirect", "direct", "negative"] },
+        "text": { "type": "string", "minLength": 1 },
+        "required_span_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+        "tags": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } }
+      },
+      "allOf": [{
+        "if": { "properties": { "kind": { "const": "negative" } } },
+        "then": { "properties": { "required_span_ids": { "maxItems": 0 } } },
+        "else": { "properties": { "required_span_ids": { "minItems": 1 } } }
+      }]
+    }
+  }
+}

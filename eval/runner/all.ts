@@ -37,6 +37,7 @@
  */
 
 import { spawn } from 'child_process';
+import { randomUUID } from 'node:crypto';
 import { writeFileSync, mkdirSync, existsSync, statSync } from 'fs';
 import { basename, join } from 'path';
 import { loadReceipt, receiptPath, type Receipt } from './receipt.ts';
@@ -48,6 +49,8 @@ interface SubprocessCategory {
   num: number;
   name: string;
   script: string;
+  args?: string[];
+  freshOutput?: boolean;
   /** Bounded timeout per cat. Default 600s (10 min) — long enough for
    *  N=5 at moderate corpus sizes, short enough to surface hung runs. */
   timeoutMs?: number;
@@ -161,6 +164,15 @@ const CATEGORIES: readonly Category[] = [
     // verdict (the receipt writes at the end).
     timeoutMs: 10_800_000,
   },
+  {
+    kind: 'subprocess',
+    num: 36,
+    name: 'Associative Retrieval (offline keyword plumbing only; not capability evidence)',
+    script: 'eval/runner/cat36-associative-retrieval.ts',
+    args: ['--offline', '--smoke'],
+    freshOutput: true,
+    timeoutMs: 180_000,
+  },
 ];
 
 interface CategoryRun {
@@ -225,8 +237,8 @@ export function deriveStatusFromReceipt(
   }
 }
 
-function loadFreshReceipt(script: string, startedAtMs: number): Receipt | null {
-  const path = receiptPath(receiptSlugFor(script));
+function loadFreshReceipt(script: string, startedAtMs: number, outputDir?: string): Receipt | null {
+  const path = outputDir ? join(outputDir, 'receipt.json') : receiptPath(receiptSlugFor(script));
   try {
     const mtime = statSync(path).mtimeMs;
     if (mtime < startedAtMs) return null; // stale — from a previous run
@@ -245,12 +257,13 @@ function runCatSubprocess(cat: SubprocessCategory): Promise<CategoryRun> {
   return new Promise(resolve => {
     const timeoutMs = cat.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     const started = Date.now();
+    const outputDir = cat.freshOutput ? join('eval/reports', receiptSlugFor(cat.script), `sweep-${randomUUID()}`) : undefined;
     // eslint-disable-next-line no-console
     console.log(`  [start] Cat ${cat.num}: ${cat.name}`);
 
     let output = '';
     let settled = false;
-    const child = spawn('bun', [cat.script], {
+    const child = spawn('bun', [cat.script, ...(cat.args ?? []), ...(outputDir ? ['--output', outputDir] : [])], {
       stdio: ['ignore', 'pipe', 'pipe'],
       env: process.env,
     });
@@ -294,8 +307,10 @@ function runCatSubprocess(cat: SubprocessCategory): Promise<CategoryRun> {
       clearTimeout(timer);
       const exitCode = code ?? 1;
       const elapsedMs = Date.now() - started;
-      const receipt = loadFreshReceipt(cat.script, started);
-      const derived = deriveStatusFromReceipt(receipt, exitCode);
+      const receipt = loadFreshReceipt(cat.script, started, outputDir);
+      const derived = cat.freshOutput && (!receipt || exitCode !== 0)
+        ? { status: 'fail' as const, statusSource: 'exit-code' as const, statusNote: 'fresh receipt and successful child required' }
+        : deriveStatusFromReceipt(receipt, exitCode);
       const lastLines = output.split('\n').slice(-3).join('\n').trim();
       // eslint-disable-next-line no-console
       console.log(

@@ -68,6 +68,9 @@ import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, t
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 import {
   scoreQuery,
+  queryEvidence,
+  recordQueryFailure,
+  type QueryEvidence,
   makeHashEmbedTransport,
   computeVerdict,
   K,
@@ -179,6 +182,7 @@ export interface MatrixCell {
   queries_total: number;
   queries_scored: number;
   query_errors: number;
+  per_query?: QueryEvidence[];
   degraded_queries: number;
   /** Queries where >=1 result carried a rerank_score (reranker verifiably ran). */
   rerank_scored_queries: number;
@@ -224,6 +228,7 @@ export async function runMatrixCell(
   const pinned = { ...PINNED_BASE, ...rerankAxisConfig(spec) };
   const expectRerank = spec.reranker !== null;
   const probeId = (q: SyntheticQuery): string => `${spec.name}:${q.id}`;
+  const perQuery: QueryEvidence[] = [];
   const pricePerMTok = PRICING[spec.embedder] ?? 0;
 
   const cell: MatrixCell = {
@@ -233,6 +238,7 @@ export async function runMatrixCell(
     pages_total: 0, pages_embedded: 0, chunks_total: 0, chunks_embedded: 0,
     embedding_column: null,
     queries_total: queries.length, queries_scored: 0, query_errors: 0,
+    per_query: perQuery,
     degraded_queries: 0, rerank_scored_queries: 0, rerank_failopen_queries: 0,
     mrr: null, recall_at_10: null, top1_hit_rate: null,
     mean_query_ms: null, p50_query_ms: null, ingest_ms: 0,
@@ -307,7 +313,7 @@ export async function runMatrixCell(
         (cell.first_ingest_error ? ` (first error: ${cell.first_ingest_error})` : ''),
       );
       for (const q of queries) {
-        acc.error(probeId(q), 'dependency', `cell ${spec.name}: ${cell.invalid_reasons[0]}`);
+        perQuery.push(recordQueryFailure(acc, spec.name, q, k, 'dependency', `cell ${spec.name}: ${cell.invalid_reasons[0]}`));
       }
       cell.query_errors = queries.length;
       return cell;
@@ -330,7 +336,7 @@ export async function runMatrixCell(
         });
       } catch (e: any) {
         cell.query_errors++;
-        acc.error(probeId(q), 'dependency', `cell ${spec.name} query ${q.id}: hybridSearch failed: ${e?.message ?? e}`);
+        perQuery.push(recordQueryFailure(acc, spec.name, q, k, 'dependency', `cell ${spec.name} query ${q.id}: hybridSearch failed: ${e?.message ?? e}`, null, Date.now() - t));
         continue;
       } finally {
         console.log = origLog;
@@ -341,7 +347,7 @@ export async function runMatrixCell(
 
       if (meta?.mode && meta.mode !== pinned['search.mode']) {
         cell.query_errors++;
-        acc.error(probeId(q), 'harness', `cell ${spec.name} query ${q.id}: resolved mode '${meta.mode}' != pinned '${pinned['search.mode']}'`);
+        perQuery.push(recordQueryFailure(acc, spec.name, q, k, 'harness', `cell ${spec.name} query ${q.id}: resolved mode '${meta.mode}' != pinned '${pinned['search.mode']}'`, results.map(r => r.slug), ms));
         cell.invalid_reasons.push(`mode pin failed on ${q.id}`);
         continue;
       }
@@ -354,15 +360,16 @@ export async function runMatrixCell(
       if (expectRerank && results.length > 0 && !rerankFired) {
         cell.rerank_failopen_queries++;
         cell.query_errors++;
-        acc.error(
-          probeId(q), 'dependency',
+        perQuery.push(recordQueryFailure(
+          acc, spec.name, q, k, 'dependency',
           `cell ${spec.name} query ${q.id}: reranker did not run (fail-open) — unreranked result under a '+rerank' label`,
-        );
+          results.map(r => r.slug), ms,
+        ));
         continue;
       }
       if (!expectRerank && rerankFired) {
         cell.query_errors++;
-        acc.error(probeId(q), 'harness', `cell ${spec.name} query ${q.id}: reranker fired despite search.reranker.enabled=false pin`);
+        perQuery.push(recordQueryFailure(acc, spec.name, q, k, 'harness', `cell ${spec.name} query ${q.id}: reranker fired despite search.reranker.enabled=false pin`, results.map(r => r.slug), ms));
         cell.invalid_reasons.push(`reranker pin failed on ${q.id}`);
         continue;
       }
@@ -372,20 +379,22 @@ export async function runMatrixCell(
       if (vectorDegraded) {
         cell.degraded_queries++;
         cell.query_errors++;
-        acc.error(
-          probeId(q), 'dependency',
+        perQuery.push(recordQueryFailure(
+          acc, spec.name, q, k, 'dependency',
           `cell ${spec.name} query ${q.id}: vector arm degraded (${stages.join(',') || 'vector_enabled=false'}) — keyword-only result under an embedder label`,
-        );
+          results.map(r => r.slug), ms,
+        ));
         continue;
       }
 
       const s = scoreQuery(results.map(r => r.slug), q.relevant_slugs, k);
       if (Number.isNaN(s.recall)) {
         cell.query_errors++;
-        acc.error(probeId(q), 'harness', `cell ${spec.name} query ${q.id}: empty relevant set`);
+        perQuery.push(recordQueryFailure(acc, spec.name, q, k, 'harness', `cell ${spec.name} query ${q.id}: empty relevant set`, results.map(r => r.slug), ms));
         continue;
       }
       acc.score(probeId(q), s.recall);
+      perQuery.push(queryEvidence(spec.name, q, k, s.page_ids, ms, s));
       cell.queries_scored++;
       recalls.push(s.recall);
       rrs.push(s.rr);
@@ -522,7 +531,7 @@ export async function runCat18b(options: Cat18bOptions = {}): Promise<Cat18bRunR
         cells.push(c);
         log(`[cat18b]   ${spec.name.padEnd(22)} valid=${c.valid} MRR=${c.mrr?.toFixed(3) ?? 'n/a'} R@${K}=${c.recall_at_10 !== null ? (c.recall_at_10 * 100).toFixed(1) + '%' : 'n/a'} rerank_fired=${c.rerank_scored_queries}/${c.queries_total} errors=${c.query_errors}\n`);
       } catch (e: any) {
-        for (const q of queries) acc.error(`${spec.name}:${q.id}`, 'harness', `cell ${spec.name} crashed: ${e?.message ?? e}`);
+        const perQuery = queries.map(q => recordQueryFailure(acc, spec.name, q, K, 'harness', `cell ${spec.name} crashed: ${e?.message ?? e}`));
         cells.push({
           cell: spec.name, embedder: spec.embedder, embed_dim: spec.embed_dim, reranker: spec.reranker,
           pinned_config: { ...PINNED_BASE, ...rerankAxisConfig(spec) },
@@ -530,6 +539,7 @@ export async function runCat18b(options: Cat18bOptions = {}): Promise<Cat18bRunR
           pages_total: 0, pages_embedded: 0, chunks_total: 0, chunks_embedded: 0,
           embedding_column: null,
           queries_total: queries.length, queries_scored: 0, query_errors: queries.length,
+          per_query: perQuery,
           degraded_queries: 0, rerank_scored_queries: 0, rerank_failopen_queries: 0,
           mrr: null, recall_at_10: null, top1_hit_rate: null,
           mean_query_ms: null, p50_query_ms: null, ingest_ms: 0,

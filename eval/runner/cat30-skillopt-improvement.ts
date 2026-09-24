@@ -100,6 +100,7 @@ export interface SkilloptStubBehavior {
   failRollouts?: boolean;
   /** Return unparseable judge output → llm-judge scores 0 with judge_error. */
   breakJudge?: boolean;
+  constantZeroJudge?: boolean;
 }
 
 /** The structure mandate the scripted optimizer adds (satisfies the skillopt-v1 rule judges). */
@@ -172,6 +173,7 @@ export function makeSkilloptStubTransport(behavior: SkilloptStubBehavior = {}): 
     // 1) LLM judge (score.ts LLM_JUDGE_SYSTEM).
     if (system.includes('strict, fair judge')) {
       if (behavior.breakJudge) return mk('the judge model refused to answer with JSON today');
+      if (behavior.constantZeroJudge) return mk(JSON.stringify({ score: 0, rationale: 'stub judge: valid constant-zero signal' }));
       const outMatch = userText.match(/AGENT OUTPUT:\n([\s\S]*?)\n\nScore the output/);
       const out = outMatch ? outMatch[1]! : userText;
       let score = 0.35;

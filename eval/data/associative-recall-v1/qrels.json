@@ -1,0 +1,1337 @@
+{
+  "schema_version": 1,
+  "spans": [
+    {
+      "id": "constraints/kiln-clearance/episode-1/span-1",
+      "family_id": "constraints/kiln-clearance",
+      "source_id": "constraints/kiln-clearance/history",
+      "slug": "kiln-clearance/episode-1",
+      "start": 2283,
+      "end": 2410,
+      "text": "The community kiln needs four centimeters of clear air above every pot; the shelf spacing cannot be reduced to fit another row."
+    },
+    {
+      "id": "constraints/freight-elevator/episode-1/span-1",
+      "family_id": "constraints/freight-elevator",
+      "source_id": "constraints/freight-elevator/history",
+      "slug": "freight-elevator/episode-1",
+      "start": 137,
+      "end": 234,
+      "text": "The cooperative freight elevator has a 700-kilogram total limit, including the operator and cart."
+    },
+    {
+      "id": "constraints/captioned-webinar/episode-1/span-1",
+      "family_id": "constraints/captioned-webinar",
+      "source_id": "constraints/captioned-webinar/history",
+      "slug": "captioned-webinar/episode-1",
+      "start": 99,
+      "end": 240,
+      "text": "The public astronomy lecture cannot go live unless a human captioner is connected; automatic captions alone do not meet its access agreement."
+    },
+    {
+      "id": "constraints/archive-humidity/episode-1/span-1",
+      "family_id": "constraints/archive-humidity",
+      "source_id": "constraints/archive-humidity/history",
+      "slug": "archive-humidity/episode-1",
+      "start": 122,
+      "end": 238,
+      "text": "The town map collection must stay between 40 and 50 percent relative humidity, and the annex cannot hold that range."
+    },
+    {
+      "id": "constraints/night-generator/episode-1/span-1",
+      "family_id": "constraints/night-generator",
+      "source_id": "constraints/night-generator/history",
+      "slug": "night-generator/episode-1",
+      "start": 148,
+      "end": 256,
+      "text": "The park screening permit forbids running any generator after 21:30; battery-powered equipment may continue."
+    },
+    {
+      "id": "constraints/grant-invoices/episode-1/span-1",
+      "family_id": "constraints/grant-invoices",
+      "source_id": "constraints/grant-invoices/history",
+      "slug": "grant-invoices/episode-1",
+      "start": 147,
+      "end": 263,
+      "text": "Only parts purchased after the repair grant award date of January 1, 2025 are eligible; older inventory is excluded."
+    },
+    {
+      "id": "constraints/cellar-radio/episode-1/span-1",
+      "family_id": "constraints/cellar-radio",
+      "source_id": "constraints/cellar-radio/history",
+      "slug": "cellar-radio/episode-1",
+      "start": 116,
+      "end": 231,
+      "text": "Valve chamber inspections require a wired communications line because radio contact fails below the second landing."
+    },
+    {
+      "id": "constraints/seed-export/episode-1/span-1",
+      "family_id": "constraints/seed-export",
+      "source_id": "constraints/seed-export/history",
+      "slug": "seed-export/episode-1",
+      "start": 142,
+      "end": 260,
+      "text": "The donated red bean accession may be distributed only inside the country; its donor agreement does not permit export."
+    },
+    {
+      "id": "constraints/battery-flight/episode-1/span-1",
+      "family_id": "constraints/battery-flight",
+      "source_id": "constraints/battery-flight/history",
+      "slug": "battery-flight/episode-1",
+      "start": 138,
+      "end": 264,
+      "text": "The survey drone spare batteries must travel in cabin baggage with insulated terminals, not inside the checked equipment case."
+    },
+    {
+      "id": "constraints/shared-oven/episode-1/span-1",
+      "family_id": "constraints/shared-oven",
+      "source_id": "constraints/shared-oven/history",
+      "slug": "shared-oven/episode-1",
+      "start": 138,
+      "end": 260,
+      "text": "The shared bakery cannot label anything gluten-free because airborne wheat flour is present during every production shift."
+    },
+    {
+      "id": "constraints/river-bridge/episode-1/span-1",
+      "family_id": "constraints/river-bridge",
+      "source_id": "constraints/river-bridge/history",
+      "slug": "river-bridge/episode-1",
+      "start": 143,
+      "end": 264,
+      "text": "The footbridge on the wetland route is restricted to pedestrians; carts and trailers are prohibited regardless of weight."
+    },
+    {
+      "id": "constraints/museum-flash/episode-1/span-1",
+      "family_id": "constraints/museum-flash",
+      "source_id": "constraints/museum-flash/history",
+      "slug": "museum-flash/episode-1",
+      "start": 129,
+      "end": 257,
+      "text": "No flash photography is allowed for the borrowed tapestries, including low-power flashes; continuous gallery light is permitted."
+    },
+    {
+      "id": "constraints/cashless-stall/episode-1/span-1",
+      "family_id": "constraints/cashless-stall",
+      "source_id": "constraints/cashless-stall/history",
+      "slug": "cashless-stall/episode-1",
+      "start": 150,
+      "end": 256,
+      "text": "The orchard-gate stall must accept cash because neither mobile data nor venue Wi-Fi reaches that location."
+    },
+    {
+      "id": "constraints/mural-wall/episode-1/span-1",
+      "family_id": "constraints/mural-wall",
+      "source_id": "constraints/mural-wall/history",
+      "slug": "mural-wall/episode-1",
+      "start": 133,
+      "end": 268,
+      "text": "The underpass mural must leave the two-meter strip around the drainage access panel unpainted so inspectors can read the crack markers."
+    },
+    {
+      "id": "constraints/loan-laptop/episode-1/span-1",
+      "family_id": "constraints/loan-laptop",
+      "source_id": "constraints/loan-laptop/history",
+      "slug": "loan-laptop/episode-1",
+      "start": 126,
+      "end": 238,
+      "text": "The digital inclusion laptop may be used by the named borrower only and cannot be lent onward, even for one day."
+    },
+    {
+      "id": "constraints/animal-ferry/episode-1/span-1",
+      "family_id": "constraints/animal-ferry",
+      "source_id": "constraints/animal-ferry/history",
+      "slug": "animal-ferry/episode-1",
+      "start": 134,
+      "end": 258,
+      "text": "The rescue rabbits must stay inside a closed carrier on the outer vehicle deck; the passenger lounge does not admit animals."
+    },
+    {
+      "id": "constraints/embargo-photos/episode-1/span-1",
+      "family_id": "constraints/embargo-photos",
+      "source_id": "constraints/embargo-photos/history",
+      "slug": "embargo-photos/episode-1",
+      "start": 117,
+      "end": 235,
+      "text": "Images revealing the excavation location cannot be published before the heritage office releases the site coordinates."
+    },
+    {
+      "id": "constraints/quiet-exam/episode-1/span-1",
+      "family_id": "constraints/quiet-exam",
+      "source_id": "constraints/quiet-exam/history",
+      "slug": "quiet-exam/episode-1",
+      "start": 134,
+      "end": 280,
+      "text": "The learner taking the accounting assessment needs all procedural instructions in writing; spoken-only changes are not accessible to this learner."
+    },
+    {
+      "id": "constraints/frozen-samples/episode-1/span-1",
+      "family_id": "constraints/frozen-samples",
+      "source_id": "constraints/frozen-samples/history",
+      "slug": "frozen-samples/episode-1",
+      "start": 65,
+      "end": 168,
+      "text": "The creek nutrient samples must reach the laboratory below four degrees Celsius and must not be frozen."
+    },
+    {
+      "id": "constraints/frozen-samples/episode-2/span-1",
+      "family_id": "constraints/frozen-samples",
+      "source_id": "constraints/frozen-samples/history",
+      "slug": "frozen-samples/episode-2",
+      "start": 97,
+      "end": 202,
+      "text": "Creek nutrient samples are invalid if more than six hours pass between collection and laboratory receipt."
+    },
+    {
+      "id": "constraints/lift-certification/episode-1/span-1",
+      "family_id": "constraints/lift-certification",
+      "source_id": "constraints/lift-certification/history",
+      "slug": "lift-certification/episode-1",
+      "start": 126,
+      "end": 262,
+      "text": "Only a currently certified platform operator may drive the theater lift; past experience without an in-date certificate is insufficient."
+    },
+    {
+      "id": "constraints/taxi-child-seat/episode-1/span-1",
+      "family_id": "constraints/taxi-child-seat",
+      "source_id": "constraints/taxi-child-seat/history",
+      "slug": "taxi-child-seat/episode-1",
+      "start": 126,
+      "end": 266,
+      "text": "The family will ride only in a vehicle with a rear-facing seat already installed for the toddler; a booster is not an acceptable substitute."
+    },
+    {
+      "id": "constraints/offline-ballot/episode-1/span-1",
+      "family_id": "constraints/offline-ballot",
+      "source_id": "constraints/offline-ballot/history",
+      "slug": "offline-ballot/episode-1",
+      "start": 146,
+      "end": 279,
+      "text": "A roof-spending vote requires signed paper ballots from cooperative members; anonymous online responses cannot authorize the expense."
+    },
+    {
+      "id": "constraints/darkroom-drain/episode-1/span-1",
+      "family_id": "constraints/darkroom-drain",
+      "source_id": "constraints/darkroom-drain/history",
+      "slug": "darkroom-drain/episode-1",
+      "start": 131,
+      "end": 260,
+      "text": "Used photographic fixer must be collected in the labeled silver-recovery container and cannot be poured into any classroom drain."
+    },
+    {
+      "id": "constraints/translation-license/episode-1/span-1",
+      "family_id": "constraints/translation-license",
+      "source_id": "constraints/translation-license/history",
+      "slug": "translation-license/episode-1",
+      "start": 145,
+      "end": 254,
+      "text": "The translated booklet may be distributed without charge but may not be sold, even to recover printing costs."
+    },
+    {
+      "id": "preferences/tea-roast/episode-1/span-1",
+      "family_id": "preferences/tea-roast",
+      "source_id": "preferences/tea-roast/history",
+      "slug": "tea-roast/episode-1",
+      "start": 154,
+      "end": 238,
+      "text": "The choir accompanist prefers smoky black tea without added perfume or fruit flavor."
+    },
+    {
+      "id": "preferences/meeting-agenda/episode-1/span-1",
+      "family_id": "preferences/meeting-agenda",
+      "source_id": "preferences/meeting-agenda/history",
+      "slug": "meeting-agenda/episode-1",
+      "start": 98,
+      "end": 210,
+      "text": "The plot steward prefers a written agenda the previous evening so they can check measurements before discussion."
+    },
+    {
+      "id": "preferences/hotel-courtyard/episode-1/span-1",
+      "family_id": "preferences/hotel-courtyard",
+      "source_id": "preferences/hotel-courtyard/history",
+      "slug": "hotel-courtyard/episode-1",
+      "start": 131,
+      "end": 252,
+      "text": "For future stays, the walking trip coordinator prefers a courtyard-facing room over a street view, even on a lower floor."
+    },
+    {
+      "id": "preferences/repair-visible/episode-1/span-1",
+      "family_id": "preferences/repair-visible",
+      "source_id": "preferences/repair-visible/history",
+      "slug": "repair-visible/episode-1",
+      "start": 133,
+      "end": 236,
+      "text": "The rehearsal jacket owner prefers visible patches in contrasting cloth instead of an invisible repair."
+    },
+    {
+      "id": "preferences/audio-speed/episode-1/span-1",
+      "family_id": "preferences/audio-speed",
+      "source_id": "preferences/audio-speed/history",
+      "slug": "audio-speed/episode-1",
+      "start": 147,
+      "end": 256,
+      "text": "The listening club facilitator prefers audiobooks at their original recorded speed, not accelerated playback."
+    },
+    {
+      "id": "preferences/route-shade/episode-1/span-1",
+      "family_id": "preferences/route-shade",
+      "source_id": "preferences/route-shade/history",
+      "slug": "route-shade/episode-1",
+      "start": 113,
+      "end": 206,
+      "text": "The lunchtime walking partner prefers a shaded route over the shortest route in warm weather."
+    },
+    {
+      "id": "preferences/feedback-private/episode-1/span-1",
+      "family_id": "preferences/feedback-private",
+      "source_id": "preferences/feedback-private/history",
+      "slug": "feedback-private/episode-1",
+      "start": 180,
+      "end": 279,
+      "text": "The new museum guide prefers corrective feedback in a private conversation after the practice tour."
+    },
+    {
+      "id": "preferences/software-keyboard/episode-1/span-1",
+      "family_id": "preferences/software-keyboard",
+      "source_id": "preferences/software-keyboard/history",
+      "slug": "software-keyboard/episode-1",
+      "start": 146,
+      "end": 278,
+      "text": "The archive cataloger prefers an interface that can be operated entirely with keyboard shortcuts instead of repeated pointer clicks."
+    },
+    {
+      "id": "preferences/gift-consumable/episode-1/span-1",
+      "family_id": "preferences/gift-consumable",
+      "source_id": "preferences/gift-consumable/history",
+      "slug": "gift-consumable/episode-1",
+      "start": 107,
+      "end": 217,
+      "text": "The tool library coordinator prefers consumable thank-you gifts rather than ornaments or additional equipment."
+    },
+    {
+      "id": "preferences/map-paper/episode-1/span-1",
+      "family_id": "preferences/map-paper",
+      "source_id": "preferences/map-paper/history",
+      "slug": "map-paper/episode-1",
+      "start": 102,
+      "end": 237,
+      "text": "The volunteer trail leader prefers a paper topographic map for planning the full route, while using the phone only to confirm position."
+    },
+    {
+      "id": "preferences/bread-crust/episode-1/span-1",
+      "family_id": "preferences/bread-crust",
+      "source_id": "preferences/bread-crust/history",
+      "slug": "bread-crust/episode-1",
+      "start": 141,
+      "end": 229,
+      "text": "The breakfast guest prefers crusty rolls with a chewy interior over soft sandwich bread."
+    },
+    {
+      "id": "preferences/workshop-size/episode-1/span-1",
+      "family_id": "preferences/workshop-size",
+      "source_id": "preferences/workshop-size/history",
+      "slug": "workshop-size/episode-1",
+      "start": 147,
+      "end": 249,
+      "text": "For learning a new practical skill, the community learner prefers a small workshop to a large lecture."
+    },
+    {
+      "id": "preferences/garden-fragrance/episode-1/span-1",
+      "family_id": "preferences/garden-fragrance",
+      "source_id": "preferences/garden-fragrance/history",
+      "slug": "garden-fragrance/episode-1",
+      "start": 120,
+      "end": 209,
+      "text": "The balcony gardener prefers fragrant evening flowers over showier flowers without scent."
+    },
+    {
+      "id": "preferences/news-digest/episode-1/span-1",
+      "family_id": "preferences/news-digest",
+      "source_id": "preferences/news-digest/history",
+      "slug": "news-digest/episode-1",
+      "start": 103,
+      "end": 288,
+      "text": "The association member prefers one weekly digest of nonurgent notices rather than separate messages for every update. Emergency water or access warnings should still arrive immediately."
+    },
+    {
+      "id": "preferences/photo-candid/episode-1/span-1",
+      "family_id": "preferences/photo-candid",
+      "source_id": "preferences/photo-candid/history",
+      "slug": "photo-candid/episode-1",
+      "start": 141,
+      "end": 251,
+      "text": "The soup kitchen volunteer prefers a candid photograph while preparing vegetables instead of a posed headshot."
+    },
+    {
+      "id": "preferences/puzzle-coop/episode-1/span-1",
+      "family_id": "preferences/puzzle-coop",
+      "source_id": "preferences/puzzle-coop/history",
+      "slug": "puzzle-coop/episode-1",
+      "start": 122,
+      "end": 220,
+      "text": "The game afternoon regular prefers cooperative games where the whole table wins or loses together."
+    },
+    {
+      "id": "preferences/report-charts/episode-1/span-1",
+      "family_id": "preferences/report-charts",
+      "source_id": "preferences/report-charts/history",
+      "slug": "report-charts/episode-1",
+      "start": 144,
+      "end": 256,
+      "text": "The community fund treasurer prefers a short chart-led summary with the underlying numbers in an attached table."
+    },
+    {
+      "id": "preferences/train-direction/episode-1/span-1",
+      "family_id": "preferences/train-direction",
+      "source_id": "preferences/train-direction/history",
+      "slug": "train-direction/episode-1",
+      "start": 119,
+      "end": 218,
+      "text": "The regional rail passenger prefers a forward-facing aisle seat over a backward-facing window seat."
+    },
+    {
+      "id": "preferences/music-silence/episode-1/span-1",
+      "family_id": "preferences/music-silence",
+      "source_id": "preferences/music-silence/history",
+      "slug": "music-silence/episode-1",
+      "start": 138,
+      "end": 251,
+      "text": "The bookbinder prefers no background music while sewing signatures because counting stitches takes concentration."
+    },
+    {
+      "id": "preferences/meal-sharing/episode-1/span-1",
+      "family_id": "preferences/meal-sharing",
+      "source_id": "preferences/meal-sharing/history",
+      "slug": "meal-sharing/episode-1",
+      "start": 100,
+      "end": 219,
+      "text": "The community supper guest prefers small shared dishes that let them choose portions rather than one large plated meal."
+    },
+    {
+      "id": "preferences/tool-grip/episode-1/span-1",
+      "family_id": "preferences/tool-grip",
+      "source_id": "preferences/tool-grip/history",
+      "slug": "tool-grip/episode-1",
+      "start": 130,
+      "end": 233,
+      "text": "The sewing circle member prefers lightweight scissors with a soft grip over heavier all-metal scissors."
+    },
+    {
+      "id": "preferences/book-ending/episode-1/span-1",
+      "family_id": "preferences/book-ending",
+      "source_id": "preferences/book-ending/history",
+      "slug": "book-ending/episode-1",
+      "start": 161,
+      "end": 287,
+      "text": "The reading exchange regular prefers novels that resolve the central story, even when some character motives remain ambiguous."
+    },
+    {
+      "id": "preferences/cafe-table/episode-1/span-1",
+      "family_id": "preferences/cafe-table",
+      "source_id": "preferences/cafe-table/history",
+      "slug": "cafe-table/episode-1",
+      "start": 125,
+      "end": 233,
+      "text": "The writing group member prefers a small table near a wall, away from the main walkway, when drafting alone."
+    },
+    {
+      "id": "preferences/museum-pace/episode-1/span-1",
+      "family_id": "preferences/museum-pace",
+      "source_id": "preferences/museum-pace/history",
+      "slug": "museum-pace/episode-1",
+      "start": 2212,
+      "end": 2324,
+      "text": "The history outing guest prefers fewer galleries with time to read labels rather than seeing every room quickly."
+    },
+    {
+      "id": "preferences/museum-pace/episode-2/span-1",
+      "family_id": "preferences/museum-pace",
+      "source_id": "preferences/museum-pace/history",
+      "slug": "museum-pace/episode-2",
+      "start": 55,
+      "end": 158,
+      "text": "The history outing guest prefers a self-guided visit so they can pause without holding up a tour group."
+    },
+    {
+      "id": "commitments/seedlings-pickup/episode-1/span-1",
+      "family_id": "commitments/seedlings-pickup",
+      "source_id": "commitments/seedlings-pickup/history",
+      "slug": "seedlings-pickup/episode-1",
+      "start": 140,
+      "end": 263,
+      "text": "The nursery volunteer promised to collect the school seedlings at 08:00 on January 6 and leave them inside the garden shed."
+    },
+    {
+      "id": "commitments/minutes-redaction/episode-1/span-1",
+      "family_id": "commitments/minutes-redaction",
+      "source_id": "commitments/minutes-redaction/history",
+      "slug": "minutes-redaction/episode-1",
+      "start": 130,
+      "end": 248,
+      "text": "The residents secretary will remove personal phone numbers from the minutes and publish the cleaned copy by January 7."
+    },
+    {
+      "id": "commitments/keys-return/episode-1/span-1",
+      "family_id": "commitments/keys-return",
+      "source_id": "commitments/keys-return/history",
+      "slug": "keys-return/episode-1",
+      "start": 121,
+      "end": 231,
+      "text": "The repair team lead will return the workshop key to the caretaker sealed in an envelope by noon on January 3."
+    },
+    {
+      "id": "commitments/budget-quote/episode-1/span-1",
+      "family_id": "commitments/budget-quote",
+      "source_id": "commitments/budget-quote/history",
+      "slug": "budget-quote/episode-1",
+      "start": 137,
+      "end": 285,
+      "text": "The maintenance liaison committed to getting two written climbing-net quotes, each separating materials and installation, before the January 9 vote."
+    },
+    {
+      "id": "commitments/choir-score/episode-1/span-1",
+      "family_id": "commitments/choir-score",
+      "source_id": "commitments/choir-score/history",
+      "slug": "choir-score/episode-1",
+      "start": 135,
+      "end": 249,
+      "text": "The choir librarian will obtain written arrangement permission before any altered score is distributed to singers."
+    },
+    {
+      "id": "commitments/ramp-test/episode-1/span-1",
+      "family_id": "commitments/ramp-test",
+      "source_id": "commitments/ramp-test/history",
+      "slug": "ramp-test/episode-1",
+      "start": 138,
+      "end": 264,
+      "text": "The access volunteer will test the hall ramp with an occupied wheelchair and record the slope before the January 5 open house."
+    },
+    {
+      "id": "commitments/oral-history/episode-1/span-1",
+      "family_id": "commitments/oral-history",
+      "source_id": "commitments/oral-history/history",
+      "slug": "oral-history/episode-1",
+      "start": 132,
+      "end": 244,
+      "text": "The interviewer promised to send the shopkeeper the proposed excerpt for approval before making any clip public."
+    },
+    {
+      "id": "commitments/shelter-rota/episode-1/span-1",
+      "family_id": "commitments/shelter-rota",
+      "source_id": "commitments/shelter-rota/history",
+      "slug": "shelter-rota/episode-1",
+      "start": 128,
+      "end": 235,
+      "text": "The trained helper committed to the shelter desk from 18:00 to 20:00 on January 4, not the overnight shift."
+    },
+    {
+      "id": "commitments/pump-maintenance/episode-1/span-1",
+      "family_id": "commitments/pump-maintenance",
+      "source_id": "commitments/pump-maintenance/history",
+      "slug": "pump-maintenance/episode-1",
+      "start": 156,
+      "end": 290,
+      "text": "The equipment steward will inspect the irrigation pump filter before the next watering round and report whether replacement is needed."
+    },
+    {
+      "id": "commitments/exhibit-labels/episode-1/span-1",
+      "family_id": "commitments/exhibit-labels",
+      "source_id": "commitments/exhibit-labels/history",
+      "slug": "exhibit-labels/episode-1",
+      "start": 127,
+      "end": 277,
+      "text": "The volunteer translator will deliver translated label text by January 8; the exhibition coordinator remains responsible for printing and mounting it."
+    },
+    {
+      "id": "commitments/beehive-notice/episode-1/span-1",
+      "family_id": "commitments/beehive-notice",
+      "source_id": "commitments/beehive-notice/history",
+      "slug": "beehive-notice/episode-1",
+      "start": 139,
+      "end": 238,
+      "text": "The beekeeper will notify adjacent plot holders at least one day before opening the allotment hive."
+    },
+    {
+      "id": "commitments/film-subtitles/episode-1/span-1",
+      "family_id": "commitments/film-subtitles",
+      "source_id": "commitments/film-subtitles/history",
+      "slug": "film-subtitles/episode-1",
+      "start": 145,
+      "end": 268,
+      "text": "The projection volunteer will check subtitle synchronization from beginning to end before the film club opens ticket sales."
+    },
+    {
+      "id": "commitments/bike-return/episode-1/span-1",
+      "family_id": "commitments/bike-return",
+      "source_id": "commitments/bike-return/history",
+      "slug": "bike-return/episode-1",
+      "start": 123,
+      "end": 234,
+      "text": "The tandem borrower promised to return the bicycle by 16:00 on January 5 with both panniers and the repair kit."
+    },
+    {
+      "id": "commitments/tree-followup/episode-1/span-1",
+      "family_id": "commitments/tree-followup",
+      "source_id": "commitments/tree-followup/history",
+      "slug": "tree-followup/episode-1",
+      "start": 118,
+      "end": 248,
+      "text": "The block representative committed to checking the new street tree soil twice a week during the first month and watering when dry."
+    },
+    {
+      "id": "commitments/quiet-rehearsal/episode-1/span-1",
+      "family_id": "commitments/quiet-rehearsal",
+      "source_id": "commitments/quiet-rehearsal/history",
+      "slug": "quiet-rehearsal/episode-1",
+      "start": 150,
+      "end": 280,
+      "text": "The choir coordinator promised that singing and equipment packing will finish by 19:15 so the dance class can enter an empty hall."
+    },
+    {
+      "id": "commitments/market-refund/episode-1/span-1",
+      "family_id": "commitments/market-refund",
+      "source_id": "commitments/market-refund/history",
+      "slug": "market-refund/episode-1",
+      "start": 133,
+      "end": 254,
+      "text": "The organizer promised to refund all prepaid stall fees automatically by January 10; sellers do not need to file a claim."
+    },
+    {
+      "id": "commitments/science-demo/episode-1/span-1",
+      "family_id": "commitments/science-demo",
+      "source_id": "commitments/science-demo/history",
+      "slug": "science-demo/episode-1",
+      "start": 134,
+      "end": 252,
+      "text": "The science club lead will return the lenses individually wrapped and count them with the lab technician on January 7."
+    },
+    {
+      "id": "commitments/water-test/episode-1/span-1",
+      "family_id": "commitments/water-test",
+      "source_id": "commitments/water-test/history",
+      "slug": "water-test/episode-1",
+      "start": 2483,
+      "end": 2582,
+      "text": "The well committee chair promised to arrange a repeat water test after the system has been flushed."
+    },
+    {
+      "id": "commitments/water-test/episode-2/span-1",
+      "family_id": "commitments/water-test",
+      "source_id": "commitments/water-test/history",
+      "slug": "water-test/episode-2",
+      "start": 48,
+      "end": 164,
+      "text": "The well committee chair will send the laboratory result to every connected household, even if the retest is normal."
+    },
+    {
+      "id": "commitments/archive-scan/episode-1/span-1",
+      "family_id": "commitments/archive-scan",
+      "source_id": "commitments/archive-scan/history",
+      "slug": "archive-scan/episode-1",
+      "start": 122,
+      "end": 243,
+      "text": "The scanning volunteer promised to return the intact album and give the donor full-resolution image files on a USB drive."
+    },
+    {
+      "id": "commitments/compost-rota/episode-1/span-1",
+      "family_id": "commitments/compost-rota",
+      "source_id": "commitments/compost-rota/history",
+      "slug": "compost-rota/episode-1",
+      "start": 112,
+      "end": 245,
+      "text": "The substitute volunteer agreed to unlock the compost gate at 09:00 on January 6 but did not agree to supervise the drop-off session."
+    },
+    {
+      "id": "commitments/basket-payment/episode-1/span-1",
+      "family_id": "commitments/basket-payment",
+      "source_id": "commitments/basket-payment/history",
+      "slug": "basket-payment/episode-1",
+      "start": 123,
+      "end": 236,
+      "text": "The produce treasurer will place the basket order only after all participating households have paid their shares."
+    },
+    {
+      "id": "commitments/stage-inventory/episode-1/span-1",
+      "family_id": "commitments/stage-inventory",
+      "source_id": "commitments/stage-inventory/history",
+      "slug": "stage-inventory/episode-1",
+      "start": 123,
+      "end": 260,
+      "text": "The props volunteer will compare returned items against the lending inventory and report any missing pieces to the troupe before storage."
+    },
+    {
+      "id": "commitments/snow-call/episode-1/span-1",
+      "family_id": "commitments/snow-call",
+      "source_id": "commitments/snow-call/history",
+      "slug": "snow-call/episode-1",
+      "start": 128,
+      "end": 266,
+      "text": "The shovel-owning neighbor promised to clear the shared front path when snowfall reaches five centimeters, after receiving a morning call."
+    },
+    {
+      "id": "commitments/festival-lost/episode-1/span-1",
+      "family_id": "commitments/festival-lost",
+      "source_id": "commitments/festival-lost/history",
+      "slug": "festival-lost/episode-1",
+      "start": 129,
+      "end": 263,
+      "text": "The welcome-desk lead will log and hold festival lost property for thirty days, then transfer unclaimed items to the community office."
+    },
+    {
+      "id": "changing-decisions/picnic-location/episode-1/span-1",
+      "family_id": "changing-decisions/picnic-location",
+      "source_id": "changing-decisions/picnic-location/history",
+      "slug": "picnic-location/episode-1",
+      "start": 111,
+      "end": 214,
+      "text": "The reading group moved its picnic to the covered station courtyard, replacing the riverside lawn plan."
+    },
+    {
+      "id": "changing-decisions/newsletter-frequency/episode-1/span-1",
+      "family_id": "changing-decisions/newsletter-frequency",
+      "source_id": "changing-decisions/newsletter-frequency/history",
+      "slug": "newsletter-frequency/episode-1",
+      "start": 125,
+      "end": 231,
+      "text": "The community newsletter will now appear on the first Monday of each month, replacing the weekly schedule."
+    },
+    {
+      "id": "changing-decisions/bench-material/episode-1/span-1",
+      "family_id": "changing-decisions/bench-material",
+      "source_id": "changing-decisions/bench-material/history",
+      "slug": "bench-material/episode-1",
+      "start": 128,
+      "end": 228,
+      "text": "The park committee selected recycled plastic benches instead of the earlier untreated timber choice."
+    },
+    {
+      "id": "changing-decisions/class-capacity/episode-1/span-1",
+      "family_id": "changing-decisions/class-capacity",
+      "source_id": "changing-decisions/class-capacity/history",
+      "slug": "class-capacity/episode-1",
+      "start": 131,
+      "end": 238,
+      "text": "The beginner pottery class is capped at eight participants; the draft twelve-seat offer has been withdrawn."
+    },
+    {
+      "id": "changing-decisions/walk-start/episode-1/span-1",
+      "family_id": "changing-decisions/walk-start",
+      "source_id": "changing-decisions/walk-start/history",
+      "slug": "walk-start/episode-1",
+      "start": 131,
+      "end": 206,
+      "text": "The bird walk now assembles at the visitor-center steps, not the east gate."
+    },
+    {
+      "id": "changing-decisions/archive-format/episode-1/span-1",
+      "family_id": "changing-decisions/archive-format",
+      "source_id": "changing-decisions/archive-format/history",
+      "slug": "archive-format/episode-1",
+      "start": 129,
+      "end": 255,
+      "text": "The archive will retain lossless TIFF master scans and make JPEG copies for browsing; JPEG-only storage is no longer the plan."
+    },
+    {
+      "id": "changing-decisions/menu-switch/episode-1/span-1",
+      "family_id": "changing-decisions/menu-switch",
+      "source_id": "changing-decisions/menu-switch/history",
+      "slug": "menu-switch/episode-1",
+      "start": 133,
+      "end": 222,
+      "text": "The supper main course is now lentil stew, replacing the mushroom soup in the draft menu."
+    },
+    {
+      "id": "changing-decisions/repair-or-replace/episode-1/span-1",
+      "family_id": "changing-decisions/repair-or-replace",
+      "source_id": "changing-decisions/repair-or-replace/history",
+      "slug": "repair-or-replace/episode-1",
+      "start": 162,
+      "end": 257,
+      "text": "The hall committee canceled heater replacement and approved repair of the control unit instead."
+    },
+    {
+      "id": "changing-decisions/badge-names/episode-1/span-1",
+      "family_id": "changing-decisions/badge-names",
+      "source_id": "changing-decisions/badge-names/history",
+      "slug": "badge-names/episode-1",
+      "start": 127,
+      "end": 224,
+      "text": "Fair volunteer badges will show first names and roles only, replacing the full-name badge design."
+    },
+    {
+      "id": "changing-decisions/chess-rating/episode-1/span-1",
+      "family_id": "changing-decisions/chess-rating",
+      "source_id": "changing-decisions/chess-rating/history",
+      "slug": "chess-rating/episode-1",
+      "start": 123,
+      "end": 252,
+      "text": "The friendly chess afternoon is now open to unrated players as well as rated players; the earlier rating requirement was removed."
+    },
+    {
+      "id": "changing-decisions/fund-matching/episode-1/span-1",
+      "family_id": "changing-decisions/fund-matching",
+      "source_id": "changing-decisions/fund-matching/history",
+      "slug": "fund-matching/episode-1",
+      "start": 122,
+      "end": 260,
+      "text": "The sponsor will match community fundraiser donations only up to a total of 2,000 currency units; the unlimited-match draft was incorrect."
+    },
+    {
+      "id": "changing-decisions/shuttle-timetable/episode-1/span-1",
+      "family_id": "changing-decisions/shuttle-timetable",
+      "source_id": "changing-decisions/shuttle-timetable/history",
+      "slug": "shuttle-timetable/episode-1",
+      "start": 131,
+      "end": 247,
+      "text": "The village shuttle pilot will leave every two hours from 08:00 through 16:00, replacing the hourly draft timetable."
+    },
+    {
+      "id": "changing-decisions/pond-depth/episode-1/span-1",
+      "family_id": "changing-decisions/pond-depth",
+      "source_id": "changing-decisions/pond-depth/history",
+      "slug": "pond-depth/episode-1",
+      "start": 139,
+      "end": 262,
+      "text": "The approved wildlife pond maximum depth is 0.5 meters; the 1.5-meter value in the first drawing was a transcription error."
+    },
+    {
+      "id": "changing-decisions/concert-recording/episode-1/span-1",
+      "family_id": "changing-decisions/concert-recording",
+      "source_id": "changing-decisions/concert-recording/history",
+      "slug": "concert-recording/episode-1",
+      "start": 127,
+      "end": 273,
+      "text": "The community concert will not be livestreamed; only performances with separate written approval may be included in an edited recording afterward."
+    },
+    {
+      "id": "changing-decisions/garden-lock/episode-1/span-1",
+      "family_id": "changing-decisions/garden-lock",
+      "source_id": "changing-decisions/garden-lock/history",
+      "slug": "garden-lock/episode-1",
+      "start": 130,
+      "end": 238,
+      "text": "The allotment will replace the shared keypad code with individually issued keys; the keypad trial is ending."
+    },
+    {
+      "id": "changing-decisions/workshop-online/episode-1/span-1",
+      "family_id": "changing-decisions/workshop-online",
+      "source_id": "changing-decisions/workshop-online/history",
+      "slug": "workshop-online/episode-1",
+      "start": 151,
+      "end": 254,
+      "text": "The sewing repair class will be held in person at the community workroom, replacing the online session."
+    },
+    {
+      "id": "changing-decisions/delivery-entrance/episode-1/span-1",
+      "family_id": "changing-decisions/delivery-entrance",
+      "source_id": "changing-decisions/delivery-entrance/history",
+      "slug": "delivery-entrance/episode-1",
+      "start": 142,
+      "end": 239,
+      "text": "Book fair deliveries must now use the rear loading door, replacing the front-step unloading plan."
+    },
+    {
+      "id": "changing-decisions/library-fines/episode-1/span-1",
+      "family_id": "changing-decisions/library-fines",
+      "source_id": "changing-decisions/library-fines/history",
+      "slug": "library-fines/episode-1",
+      "start": 141,
+      "end": 263,
+      "text": "The toy library has ended daily late fines and will send reminders instead; replacement charges for lost toys still apply."
+    },
+    {
+      "id": "changing-decisions/art-jury/episode-1/span-1",
+      "family_id": "changing-decisions/art-jury",
+      "source_id": "changing-decisions/art-jury/history",
+      "slug": "art-jury/episode-1",
+      "start": 152,
+      "end": 270,
+      "text": "The community art jury will review numbered entries without artist names; the named-entry procedure has been replaced."
+    },
+    {
+      "id": "changing-decisions/ticket-transfer/episode-1/span-1",
+      "family_id": "changing-decisions/ticket-transfer",
+      "source_id": "changing-decisions/ticket-transfer/history",
+      "slug": "ticket-transfer/episode-1",
+      "start": 137,
+      "end": 281,
+      "text": "Lecture ticket holders may now transfer a reservation through the organizer, but may not resell it privately; the no-transfer rule was replaced."
+    },
+    {
+      "id": "changing-decisions/volunteer-contact/episode-1/span-1",
+      "family_id": "changing-decisions/volunteer-contact",
+      "source_id": "changing-decisions/volunteer-contact/history",
+      "slug": "volunteer-contact/episode-1",
+      "start": 142,
+      "end": 239,
+      "text": "The beach cleanup first-aid lead, not the equipment steward, is the designated emergency contact."
+    },
+    {
+      "id": "changing-decisions/loan-duration/episode-1/span-1",
+      "family_id": "changing-decisions/loan-duration",
+      "source_id": "changing-decisions/loan-duration/history",
+      "slug": "loan-duration/episode-1",
+      "start": 119,
+      "end": 237,
+      "text": "New seed microscope loans are limited to one week; the earlier month-long limit remains only for loans already signed."
+    },
+    {
+      "id": "changing-decisions/rehearsal-order/episode-1/span-1",
+      "family_id": "changing-decisions/rehearsal-order",
+      "source_id": "changing-decisions/rehearsal-order/history",
+      "slug": "rehearsal-order/episode-1",
+      "start": 118,
+      "end": 261,
+      "text": "The next theater rehearsal will start with the two-person kitchen scene and move the crowd scene to the end, replacing the first running order."
+    },
+    {
+      "id": "changing-decisions/canopy-cancel/episode-1/span-1",
+      "family_id": "changing-decisions/canopy-cancel",
+      "source_id": "changing-decisions/canopy-cancel/history",
+      "slug": "canopy-cancel/episode-1",
+      "start": 2469,
+      "end": 2570,
+      "text": "The fair team canceled the courtyard canopy because the supplier could not provide certified ballast."
+    },
+    {
+      "id": "changing-decisions/canopy-cancel/episode-2/span-1",
+      "family_id": "changing-decisions/canopy-cancel",
+      "source_id": "changing-decisions/canopy-cancel/history",
+      "slug": "canopy-cancel/episode-2",
+      "start": 87,
+      "end": 152,
+      "text": "The fair stalls will use the civic hall instead of the courtyard."
+    },
+    {
+      "id": "causal-context/ink-smear/episode-1/span-1",
+      "family_id": "causal-context/ink-smear",
+      "source_id": "causal-context/ink-smear/history",
+      "slug": "ink-smear/episode-1",
+      "start": 2321,
+      "end": 2424,
+      "text": "Ink transferred between the posters because the sheets were stacked before the oil-based ink had dried."
+    },
+    {
+      "id": "causal-context/ink-smear/episode-2/span-1",
+      "family_id": "causal-context/ink-smear",
+      "source_id": "causal-context/ink-smear/history",
+      "slug": "ink-smear/episode-2",
+      "start": 76,
+      "end": 166,
+      "text": "The print collective will leave each poster on a drying rack overnight before stacking it."
+    },
+    {
+      "id": "causal-context/bread-scale/episode-1/span-1",
+      "family_id": "causal-context/bread-scale",
+      "source_id": "causal-context/bread-scale/history",
+      "slug": "bread-scale/episode-1",
+      "start": 132,
+      "end": 243,
+      "text": "The bakery scale was reading 80 grams too high, so each dough portion contained less than the displayed weight."
+    },
+    {
+      "id": "causal-context/bread-scale/episode-2/span-1",
+      "family_id": "causal-context/bread-scale",
+      "source_id": "causal-context/bread-scale/history",
+      "slug": "bread-scale/episode-2",
+      "start": 73,
+      "end": 178,
+      "text": "The cooperative bakery will check its scale with the reference weight before dividing dough each morning."
+    },
+    {
+      "id": "causal-context/sensor-shadow/episode-1/span-1",
+      "family_id": "causal-context/sensor-shadow",
+      "source_id": "causal-context/sensor-shadow/history",
+      "slug": "sensor-shadow/episode-1",
+      "start": 81,
+      "end": 185,
+      "text": "The orchard alarm missed the coldest air because its sensor was mounted against a sun-warmed brick wall."
+    },
+    {
+      "id": "causal-context/sensor-shadow/episode-2/span-1",
+      "family_id": "causal-context/sensor-shadow",
+      "source_id": "causal-context/sensor-shadow/history",
+      "slug": "sensor-shadow/episode-2",
+      "start": 55,
+      "end": 148,
+      "text": "The orchard frost sensor will be moved into a shaded ventilated shield at tree-canopy height."
+    },
+    {
+      "id": "causal-context/door-wedge/episode-1/span-1",
+      "family_id": "causal-context/door-wedge",
+      "source_id": "causal-context/door-wedge/history",
+      "slug": "door-wedge/episode-1",
+      "start": 83,
+      "end": 183,
+      "text": "A door wedge kept the community center fire door from latching, which triggered the open-door alarm."
+    },
+    {
+      "id": "causal-context/door-wedge/episode-2/span-1",
+      "family_id": "causal-context/door-wedge",
+      "source_id": "causal-context/door-wedge/history",
+      "slug": "door-wedge/episode-2",
+      "start": 55,
+      "end": 169,
+      "text": "Community center instructors will remove door wedges before class and use the approved ventilation system instead."
+    },
+    {
+      "id": "causal-context/pollinator-mow/episode-1/span-1",
+      "family_id": "causal-context/pollinator-mow",
+      "source_id": "causal-context/pollinator-mow/history",
+      "slug": "pollinator-mow/episode-1",
+      "start": 66,
+      "end": 142,
+      "text": "The early full-field mowing removed the meadow flowers before they set seed."
+    },
+    {
+      "id": "causal-context/pollinator-mow/episode-2/span-1",
+      "family_id": "causal-context/pollinator-mow",
+      "source_id": "causal-context/pollinator-mow/history",
+      "slug": "pollinator-mow/episode-2",
+      "start": 52,
+      "end": 149,
+      "text": "The meadow will be cut in alternating sections after seed set, leaving an uncut refuge each time."
+    },
+    {
+      "id": "causal-context/ticket-double/episode-1/span-1",
+      "family_id": "causal-context/ticket-double",
+      "source_id": "causal-context/ticket-double/history",
+      "slug": "ticket-double/episode-1",
+      "start": 87,
+      "end": 210,
+      "text": "Duplicate theater bookings occurred because phone volunteers and online volunteers kept separate unsynchronized seat lists."
+    },
+    {
+      "id": "causal-context/ticket-double/episode-2/span-1",
+      "family_id": "causal-context/ticket-double",
+      "source_id": "causal-context/ticket-double/history",
+      "slug": "ticket-double/episode-2",
+      "start": 44,
+      "end": 151,
+      "text": "All theater reservations will be entered into one shared seat ledger before a volunteer confirms a booking."
+    },
+    {
+      "id": "causal-context/salt-corrosion/episode-1/span-1",
+      "family_id": "causal-context/salt-corrosion",
+      "source_id": "causal-context/salt-corrosion/history",
+      "slug": "salt-corrosion/episode-1",
+      "start": 86,
+      "end": 179,
+      "text": "Road salt spray reached the entrance rack and corroded the cooperative bicycles stored there."
+    },
+    {
+      "id": "causal-context/salt-corrosion/episode-2/span-1",
+      "family_id": "causal-context/salt-corrosion",
+      "source_id": "causal-context/salt-corrosion/history",
+      "slug": "salt-corrosion/episode-2",
+      "start": 44,
+      "end": 163,
+      "text": "Cooperative bicycles will be stored on the inner racks during gritting season, and the entrance rack will remain empty."
+    },
+    {
+      "id": "causal-context/audio-loop/episode-1/span-1",
+      "family_id": "causal-context/audio-loop",
+      "source_id": "causal-context/audio-loop/history",
+      "slug": "audio-loop/episode-1",
+      "start": 79,
+      "end": 175,
+      "text": "The guest speaker fed the live broadcast back into the open microphone, creating the radio echo."
+    },
+    {
+      "id": "causal-context/audio-loop/episode-2/span-1",
+      "family_id": "causal-context/audio-loop",
+      "source_id": "causal-context/audio-loop/history",
+      "slug": "audio-loop/episode-2",
+      "start": 75,
+      "end": 177,
+      "text": "Remote village radio guests will monitor through headphones and mute any nearby broadcast loudspeaker."
+    },
+    {
+      "id": "causal-context/label-bleach/episode-1/span-1",
+      "family_id": "causal-context/label-bleach",
+      "source_id": "causal-context/label-bleach/history",
+      "slug": "label-bleach/episode-1",
+      "start": 70,
+      "end": 148,
+      "text": "Cleaning solvent dissolved the marker ink on the workshop spray-bottle labels."
+    },
+    {
+      "id": "causal-context/label-bleach/episode-2/span-1",
+      "family_id": "causal-context/label-bleach",
+      "source_id": "causal-context/label-bleach/history",
+      "slug": "label-bleach/episode-2",
+      "start": 54,
+      "end": 147,
+      "text": "Workshop spray bottles will use chemical-resistant printed labels protected by clear sleeves."
+    },
+    {
+      "id": "causal-context/seedling-light/episode-1/span-1",
+      "family_id": "causal-context/seedling-light",
+      "source_id": "causal-context/seedling-light/history",
+      "slug": "seedling-light/episode-1",
+      "start": 93,
+      "end": 205,
+      "text": "The weak nursery seedlings were stretched toward a distant light because illumination at their tray was too low."
+    },
+    {
+      "id": "causal-context/seedling-light/episode-2/span-1",
+      "family_id": "causal-context/seedling-light",
+      "source_id": "causal-context/seedling-light/history",
+      "slug": "seedling-light/episode-2",
+      "start": 43,
+      "end": 154,
+      "text": "The indoor nursery will lower the grow lamps closer to seedling trays while keeping the manufacturer clearance."
+    },
+    {
+      "id": "causal-context/email-bounce/episode-1/span-1",
+      "family_id": "causal-context/email-bounce",
+      "source_id": "causal-context/email-bounce/history",
+      "slug": "email-bounce/episode-1",
+      "start": 81,
+      "end": 211,
+      "text": "The mailing export dropped leading zeros from numeric-looking address fields, corrupting several heritage society email addresses."
+    },
+    {
+      "id": "causal-context/email-bounce/episode-2/span-1",
+      "family_id": "causal-context/email-bounce",
+      "source_id": "causal-context/email-bounce/history",
+      "slug": "email-bounce/episode-2",
+      "start": 46,
+      "end": 165,
+      "text": "Heritage society email fields will be exported as text and checked against the original member register before mailing."
+    },
+    {
+      "id": "causal-context/rain-tank/episode-1/span-1",
+      "family_id": "causal-context/rain-tank",
+      "source_id": "causal-context/rain-tank/history",
+      "slug": "rain-tank/episode-1",
+      "start": 59,
+      "end": 158,
+      "text": "Leaves blocked the rain tank overflow mesh, so rising water escaped around the greenhouse tank lid."
+    },
+    {
+      "id": "causal-context/rain-tank/episode-2/span-1",
+      "family_id": "causal-context/rain-tank",
+      "source_id": "causal-context/rain-tank/history",
+      "slug": "rain-tank/episode-2",
+      "start": 58,
+      "end": 135,
+      "text": "The greenhouse rain tank overflow mesh will be cleared after heavy leaf fall."
+    },
+    {
+      "id": "causal-context/screen-glare/episode-1/span-1",
+      "family_id": "causal-context/screen-glare",
+      "source_id": "causal-context/screen-glare/history",
+      "slug": "screen-glare/episode-1",
+      "start": 80,
+      "end": 173,
+      "text": "Afternoon sun reflected off the display glass and made the local history captions unreadable."
+    },
+    {
+      "id": "causal-context/screen-glare/episode-2/span-1",
+      "family_id": "causal-context/screen-glare",
+      "source_id": "causal-context/screen-glare/history",
+      "slug": "screen-glare/episode-2",
+      "start": 42,
+      "end": 138,
+      "text": "The local history display will be angled away from the west window and fitted with a matte hood."
+    },
+    {
+      "id": "causal-context/flour-delivery/episode-1/span-1",
+      "family_id": "causal-context/flour-delivery",
+      "source_id": "causal-context/flour-delivery/history",
+      "slug": "flour-delivery/episode-1",
+      "start": 133,
+      "end": 220,
+      "text": "The mill could not dispatch flour because it had run out of food-grade bags, not grain."
+    },
+    {
+      "id": "causal-context/flour-delivery/episode-2/span-1",
+      "family_id": "causal-context/flour-delivery",
+      "source_id": "causal-context/flour-delivery/history",
+      "slug": "flour-delivery/episode-2",
+      "start": 44,
+      "end": 137,
+      "text": "The mill will reorder food-grade bags when stock falls to one week of normal dispatch volume."
+    },
+    {
+      "id": "causal-context/survey-bias/episode-1/span-1",
+      "family_id": "causal-context/survey-bias",
+      "source_id": "causal-context/survey-bias/history",
+      "slug": "survey-bias/episode-1",
+      "start": 99,
+      "end": 200,
+      "text": "The crossing survey missed many older residents because the only response method was a phone QR code."
+    },
+    {
+      "id": "causal-context/survey-bias/episode-2/span-1",
+      "family_id": "causal-context/survey-bias",
+      "source_id": "causal-context/survey-bias/history",
+      "slug": "survey-bias/episode-2",
+      "start": 46,
+      "end": 146,
+      "text": "The crossing consultation will add paper forms and staffed drop-in sessions alongside the QR survey."
+    },
+    {
+      "id": "causal-context/refrigerator-gap/episode-1/span-1",
+      "family_id": "causal-context/refrigerator-gap",
+      "source_id": "causal-context/refrigerator-gap/history",
+      "slug": "refrigerator-gap/episode-1",
+      "start": 65,
+      "end": 174,
+      "text": "A carton wedged behind a shelf kept the pantry refrigerator door slightly open, causing the temperature rise."
+    },
+    {
+      "id": "causal-context/refrigerator-gap/episode-2/span-1",
+      "family_id": "causal-context/refrigerator-gap",
+      "source_id": "causal-context/refrigerator-gap/history",
+      "slug": "refrigerator-gap/episode-2",
+      "start": 52,
+      "end": 168,
+      "text": "The closing volunteer will check the refrigerator seal and remove any item that blocks the door after every restock."
+    },
+    {
+      "id": "causal-context/footpath-erosion/episode-1/span-1",
+      "family_id": "causal-context/footpath-erosion",
+      "source_id": "causal-context/footpath-erosion/history",
+      "slug": "footpath-erosion/episode-1",
+      "start": 99,
+      "end": 219,
+      "text": "Water from an uphill drainage ditch was being directed onto the woodland footpath, washing out each fresh gravel repair."
+    },
+    {
+      "id": "causal-context/footpath-erosion/episode-2/span-1",
+      "family_id": "causal-context/footpath-erosion",
+      "source_id": "causal-context/footpath-erosion/history",
+      "slug": "footpath-erosion/episode-2",
+      "start": 38,
+      "end": 126,
+      "text": "The woodland team will redirect the ditch outlet before placing more gravel on the path."
+    },
+    {
+      "id": "causal-context/projection-cable/episode-1/span-1",
+      "family_id": "causal-context/projection-cable",
+      "source_id": "causal-context/projection-cable/history",
+      "slug": "projection-cable/episode-1",
+      "start": 88,
+      "end": 166,
+      "text": "A loose cable adapter disconnected the lecture projector when the table moved."
+    },
+    {
+      "id": "causal-context/projection-cable/episode-2/span-1",
+      "family_id": "causal-context/projection-cable",
+      "source_id": "causal-context/projection-cable/history",
+      "slug": "projection-cable/episode-2",
+      "start": 52,
+      "end": 160,
+      "text": "The lecture projector adapter will be secured with strain relief and tested while the table is gently moved."
+    },
+    {
+      "id": "causal-context/moth-quarantine/episode-1/span-1",
+      "family_id": "causal-context/moth-quarantine",
+      "source_id": "causal-context/moth-quarantine/history",
+      "slug": "moth-quarantine/episode-1",
+      "start": 91,
+      "end": 193,
+      "text": "Clothes moth larvae arrived in the donated coat before it was checked and spread to adjacent costumes."
+    },
+    {
+      "id": "causal-context/moth-quarantine/episode-2/span-1",
+      "family_id": "causal-context/moth-quarantine",
+      "source_id": "causal-context/moth-quarantine/history",
+      "slug": "moth-quarantine/episode-2",
+      "start": 41,
+      "end": 148,
+      "text": "New textile donations will be isolated and inspected for pests before entering the community costume store."
+    },
+    {
+      "id": "causal-context/clock-drift/episode-1/span-1",
+      "family_id": "causal-context/clock-drift",
+      "source_id": "causal-context/clock-drift/history",
+      "slug": "clock-drift/episode-1",
+      "start": 115,
+      "end": 220,
+      "text": "The observatory laptop clock was seven minutes slow, so its image timestamps did not match the event log."
+    },
+    {
+      "id": "causal-context/clock-drift/episode-1/span-2",
+      "family_id": "causal-context/clock-drift",
+      "source_id": "causal-context/clock-drift/history",
+      "slug": "clock-drift/episode-1",
+      "start": 325,
+      "end": 437,
+      "text": "The telescope laptop clock will be synchronized against the observatory reference before each recording session."
+    },
+    {
+      "id": "causal-context/translation-context/episode-1/span-1",
+      "family_id": "causal-context/translation-context",
+      "source_id": "causal-context/translation-context/history",
+      "slug": "translation-context/episode-1",
+      "start": 81,
+      "end": 203,
+      "text": "The translator interpreted bank as a financial institution because the draft omitted that the sign described a river bank."
+    },
+    {
+      "id": "causal-context/translation-context/episode-2/span-1",
+      "family_id": "causal-context/translation-context",
+      "source_id": "causal-context/translation-context/history",
+      "slug": "translation-context/episode-2",
+      "start": 53,
+      "end": 173,
+      "text": "Future community sign requests will include a photograph of the location and a sentence explaining the intended meaning."
+    },
+    {
+      "id": "causal-context/flooded-pot/episode-1/span-1",
+      "family_id": "causal-context/flooded-pot",
+      "source_id": "causal-context/flooded-pot/history",
+      "slug": "flooded-pot/episode-1",
+      "start": 63,
+      "end": 177,
+      "text": "Decorative outer pots with no drain holes trapped water around the herb nursery pots, keeping the roots submerged."
+    },
+    {
+      "id": "causal-context/flooded-pot/episode-2/span-1",
+      "family_id": "causal-context/flooded-pot",
+      "source_id": "causal-context/flooded-pot/history",
+      "slug": "flooded-pot/episode-2",
+      "start": 43,
+      "end": 146,
+      "text": "Plant sale herbs will stand on draining trays without water-holding outer pots when displayed outdoors."
+    },
+    {
+      "id": "causal-context/queue-sign/episode-1/span-1",
+      "family_id": "causal-context/queue-sign",
+      "source_id": "causal-context/queue-sign/history",
+      "slug": "queue-sign/episode-1",
+      "start": 67,
+      "end": 191,
+      "text": "The clinic signs grouped people by tool type, but visitors knew their broken object rather than which repair tool it needed."
+    },
+    {
+      "id": "causal-context/queue-sign/episode-2/span-1",
+      "family_id": "causal-context/queue-sign",
+      "source_id": "causal-context/queue-sign/history",
+      "slug": "queue-sign/episode-2",
+      "start": 57,
+      "end": 162,
+      "text": "The repair clinic will use one welcome desk to assign visitors to repair stations based on their objects."
+    },
+    {
+      "id": "causal-context/sail-telltale/episode-1/span-1",
+      "family_id": "causal-context/sail-telltale",
+      "source_id": "causal-context/sail-telltale/history",
+      "slug": "sail-telltale/episode-1",
+      "start": 88,
+      "end": 188,
+      "text": "The beginners watched a loose decorative pennant instead of the sail telltales when judging airflow."
+    },
+    {
+      "id": "causal-context/sail-telltale/episode-2/span-1",
+      "family_id": "causal-context/sail-telltale",
+      "source_id": "causal-context/sail-telltale/history",
+      "slug": "sail-telltale/episode-2",
+      "start": 45,
+      "end": 190,
+      "text": "Before steering practice, the instructor will identify the sail telltales and demonstrate how their movement differs from the decorative pennant."
+    }
+  ]
+}

@@ -31,6 +31,7 @@ const EXPECTED_SCHEMAS = [
   'scorecard.schema.json',
   'evidence-contract.schema.json',
   'cat35-receipt.schema.json',
+  'cat36-corpus.schema.json',
 ];
 
 const EXPECTED_GOLD = [

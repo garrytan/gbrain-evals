@@ -73,6 +73,7 @@ import {
   scoreSalienceCoverage,
   scoreUsabilityChecklist,
   singleResolvedModel,
+  type Cat35JudgeAttempt,
   type CoverageVerdict,
 } from './cat35-judges.ts';
 
@@ -584,7 +585,49 @@ async function main(): Promise<number> {
   const usabilityPerTranscript: Array<{ transcript_id: string; lane: Lane; satisfied: number; total: number }> = [];
   const hazardsOut: Array<{ hazard_id: string; transcript_id: string; type: string; violated: boolean | null }> = [];
 
-  const jcfg = { model: judgeModel };
+  const judgeEvents: Array<{
+    event_id: string;
+    transcript_id: string;
+    lane: Lane;
+    purpose: 'coverage' | 'joint_grounding' | 'hallucination' | 'distractor_confirmation' | 'usability' | 'hazard';
+    subject_ids: string[];
+    judge_failed: boolean;
+    result: object;
+  }> = [];
+  const judgeAttempts: Array<Cat35JudgeAttempt & { event_id: string; attempt: number }> = [];
+  const groundingEvidence: Array<{
+    transcript_id: string;
+    lane: Lane;
+    status: 'judged' | 'judge_failed' | 'lane_error' | 'missing_output' | 'empty_output' | 'no_claims';
+    judge_event_id: string | null;
+    claims: string[];
+    results: Awaited<ReturnType<typeof scoreGrounding>>['results'];
+  }> = [];
+  const distractorEvidence: Array<{
+    transcript_id: string;
+    lane: Lane;
+    distractor_id: string;
+    anchor: string;
+    denominator_eligible: boolean;
+    scan_status: 'scanned' | 'lane_error' | 'missing_output' | 'empty_output';
+    anchor_hit: boolean | null;
+    confirmation: 'verbatim_hit' | 'confirmed' | 'rejected' | 'judge_failed' | 'not_candidate' | 'not_scanned';
+    judge_event_id: string | null;
+  }> = [];
+  const jcfg = { model: judgeModel, evidence: [] as Cat35JudgeAttempt[] };
+  const recordJudgeEvent = (
+    transcript_id: string,
+    lane: Lane,
+    purpose: (typeof judgeEvents)[number]['purpose'],
+    subject_ids: string[],
+    result: object,
+    judge_failed: boolean,
+  ): string => {
+    const event_id = `judge-${judgeEvents.length + 1}`;
+    judgeEvents.push({ event_id, transcript_id, lane, purpose, subject_ids, result, judge_failed });
+    judgeAttempts.push(...jcfg.evidence.splice(0).map((row, i) => ({ ...row, event_id, attempt: i + 1 })));
+    return event_id;
+  };
   // Fresh per-run resolved-model accounting: every judge response's
   // server-reported model lands in the receipt's judge_models_resolved.
   resetJudgeModelsResolved();
@@ -624,6 +667,7 @@ async function main(): Promise<number> {
           judgeCalls++;
           totalCost += cov.cost_usd;
           if (cov.judge_failed_ids.length) judgeFailures++;
+          recordJudgeEvent(tid, lane, 'coverage', f.gold.items.map((i) => i.item_id), cov, cov.judge_failed_ids.length > 0);
           const byId = new Map(cov.verdicts.map((v) => [v.item_id, v]));
           // Per-item joint (dream lane): evidence must appear in the doc AND
           // trace to the transcript; paraphrase evidence falls back to the
@@ -667,6 +711,7 @@ async function main(): Promise<number> {
             judgeCalls++;
             totalCost += g.cost_usd;
             if (g.judge_failed) judgeFailures++;
+            recordJudgeEvent(tid, lane, 'joint_grounding', jointFallback.map((i) => i.item_id), g, g.judge_failed);
             for (let i = 0; i < jointFallback.length; i++) {
               const row = perItem.find(
                 (r) => r.lane === lane && r.transcript_id === tid && r.item_id === jointFallback[i].item_id,
@@ -689,6 +734,11 @@ async function main(): Promise<number> {
           judgeCalls++;
           totalCost += g.cost_usd;
           if (g.judge_failed) judgeFailures++;
+          const eventId = recordJudgeEvent(tid, lane, 'hallucination', claims.map((_, i) => String(i)), g, g.judge_failed);
+          groundingEvidence.push({
+            transcript_id: tid, lane, status: g.judge_failed ? 'judge_failed' : 'judged',
+            judge_event_id: eventId, claims, results: g.results,
+          });
           const bucket = (halluc[lane] ??= { claims: 0, verifiable: 0, ungrounded: 0 });
           if (!g.judge_failed) {
             bucket.claims += claims.length;
@@ -699,10 +749,24 @@ async function main(): Promise<number> {
               }
             }
           }
+        } else {
+          groundingEvidence.push({ transcript_id: tid, lane, status: 'no_claims', judge_event_id: null, claims, results: [] });
         }
+      } else if (lane === 'facts' || lane === 'dream') {
+        groundingEvidence.push({
+          transcript_id: tid, lane,
+          status: errored ? 'lane_error' : doc == null ? 'missing_output' : 'empty_output',
+          judge_event_id: null, claims: [], results: [],
+        });
       }
 
       // Distractor leakage (mechanical scan; judge confirm on facts + dream).
+      const distractorRows: typeof distractorEvidence = f.gold.distractors.map((d) => ({
+        transcript_id: tid, lane, distractor_id: d.distractor_id, anchor: d.anchor,
+        denominator_eligible: !errored && doc !== undefined,
+        scan_status: errored ? 'lane_error' : doc == null ? 'missing_output' : doc ? 'scanned' : 'empty_output',
+        anchor_hit: null, confirmation: 'not_scanned', judge_event_id: null,
+      }));
       if (doc && !errored && f.gold.distractors.length) {
         const hits = scanDistractors(
           f.gold.distractors.map((d) => ({ id: d.distractor_id, anchor: d.anchor })),
@@ -710,6 +774,10 @@ async function main(): Promise<number> {
         );
         const bucket = (leakage[lane] ??= { hits: 0, confirmed: 0 });
         bucket.hits += hits.length;
+        for (const row of distractorRows) {
+          row.anchor_hit = hits.includes(row.distractor_id);
+          row.confirmation = row.anchor_hit && lane === 'verbatim' ? 'verbatim_hit' : 'not_candidate';
+        }
         if (lane === 'verbatim') {
           bucket.confirmed += hits.length; // the floor — verbatim keeps everything by construction
         } else if (hits.length) {
@@ -722,8 +790,15 @@ async function main(): Promise<number> {
           totalCost += conf.cost_usd;
           if (conf.judge_failed) judgeFailures++;
           else bucket.confirmed += conf.confirmed.length;
+          const eventId = recordJudgeEvent(tid, lane, 'distractor_confirmation', hits, conf, conf.judge_failed);
+          for (const row of distractorRows.filter((r) => r.anchor_hit)) {
+            row.judge_event_id = eventId;
+            row.confirmation = conf.judge_failed ? 'judge_failed'
+              : conf.confirmed.includes(row.distractor_id) ? 'confirmed' : 'rejected';
+          }
         }
       }
+      distractorEvidence.push(...distractorRows);
 
       // Usability (page-producing lanes, conditional on emission).
       if ((lane === 'verbatim' || lane === 'dream') && !errored) {
@@ -741,6 +816,7 @@ async function main(): Promise<number> {
           totalCost += u.cost_usd;
           if (u.judge_failed) judgeFailures++;
           else usabilityPerTranscript.push({ transcript_id: tid, lane, satisfied: u.satisfied, total: u.total });
+          recordJudgeEvent(tid, lane, 'usability', u.checks.map((c) => c.id), u, u.judge_failed);
         }
       }
     }
@@ -759,6 +835,7 @@ async function main(): Promise<number> {
         );
         judgeCalls++;
         totalCost += g.cost_usd;
+        recordJudgeEvent(tid, 'dream', 'hazard', [h.hazard_id], g, g.judge_failed);
         if (g.judge_failed) {
           judgeFailures++;
           hazardsOut.push({ hazard_id: h.hazard_id, transcript_id: tid, type: h.type, violated: null });
@@ -1187,6 +1264,17 @@ async function main(): Promise<number> {
       threshold_curve: curve,
     },
     judge_failed_rate: judgeFailedRate,
+    native_evidence: {
+      schema_version: 1,
+      judge_accounting_unit: 'runner_judge_invocation_after_retries',
+      judge_attempt_unit: 'provider_client_messages_create_attempt',
+      judge_calls: judgeCalls,
+      judge_failures: judgeFailures,
+      judge_events: judgeEvents,
+      judge_attempts: judgeAttempts,
+      grounding: groundingEvidence,
+      distractors: distractorEvidence,
+    },
     judge_calibration: judgeCalibration,
     prior_run: priorRun,
     prior_run_skipped_reason: priorRunSkippedReason,
