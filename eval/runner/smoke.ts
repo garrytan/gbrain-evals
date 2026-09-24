@@ -16,7 +16,7 @@
  *                            stay below provider caps.
  *   Phase 3 — rerank payload: only when --reranker is set. 30 ~400-token
  *                            documents → asserts the body stays under the
- *                            recipe's max_payload_bytes (ZE: 5MB cap).
+ *                            recipe's max_payload_bytes (5MB cap).
  *                            Verifies a real reranker call succeeds end-
  *                            to-end against the live API.
  *
@@ -24,7 +24,7 @@
  *   bun run eval/runner/smoke.ts \
  *     --embedder openai:text-embedding-3-large \
  *     --dim 1536
- *     [--reranker zeroentropyai:zerank-2]
+ *     [--reranker voyage:rerank-2.5]
  */
 
 import { configureGateway, embed } from 'gbrain/ai/gateway';
@@ -56,10 +56,10 @@ function printHelp(): void {
     '  --embedder <provider:model>     e.g. openai:text-embedding-3-large\n' +
     '  --dim <N>                       Configured vector width\n\n' +
     'Optional:\n' +
-    '  --reranker <provider:model>     e.g. zeroentropyai:zerank-2\n' +
+    '  --reranker <provider:model>     e.g. voyage:rerank-2.5\n' +
     '                                  Enables Phase 3 (skipped otherwise).\n\n' +
     'Env (fail-loud at run start if any required key is missing):\n' +
-    '  OPENAI_API_KEY  | VOYAGE_API_KEY  | ZEROENTROPY_API_KEY\n',
+    '  OPENAI_API_KEY  | VOYAGE_API_KEY\n',
   );
 }
 
@@ -138,7 +138,7 @@ async function phaseRerankerPayload(cfg: EvalAdapterConfig): Promise<void> {
     return;
   }
   const { rerank } = await import('gbrain/ai/gateway');
-  // 30 docs × ~400 tokens each = ~12K tokens (well under ZE's 5MB cap
+  // 30 docs × ~400 tokens each = ~12K tokens (well under the 5MB cap
   // but exercising the topNIn=30 path the production search uses).
   const para = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. ';
   const docs = Array.from({ length: 30 }, (_, i) => `Doc ${i + 1}: ${para.repeat(2)}`);
@@ -166,7 +166,6 @@ function detectMissingKey(provider: string): string | null {
   const p = provider.toLowerCase();
   if (p === 'openai' && !process.env.OPENAI_API_KEY) return 'OPENAI_API_KEY';
   if (p === 'voyage' && !process.env.VOYAGE_API_KEY) return 'VOYAGE_API_KEY';
-  if (p === 'zeroentropyai' && !process.env.ZEROENTROPY_API_KEY) return 'ZEROENTROPY_API_KEY';
   return null;
 }
 

@@ -455,15 +455,14 @@ export async function pinSearchConfig(engine: PGLiteEngine, spec?: Pick<AdapterS
  * Reranker provider → env key. FALLBACK MAP: gbrain resolves the reranker
  * model as per-call override ?? `search.reranker.model` DB config ?? the
  * mode bundle's default. Since gbrain v0.48.2.0 that default is
- * `voyage:rerank-2.5` (the ZeroEntropy hosted API ends 2026-09-04); this
+ * `voyage:rerank-2.5`; this
  * runner PINS the same model explicitly for rerank specs
  * (RERANK_MODEL_PIN, recorded in the receipt) so the preflight and the
  * engine cannot disagree about which provider's key is required. Entries mirror the
  * auth_env.required of gbrain's reranker-capable recipes
- * (src/core/ai/recipes/{zeroentropyai,voyage,dashscope-rerank,openrouter}.ts).
+ * (src/core/ai/recipes/{voyage,dashscope-rerank,openrouter}.ts).
  */
 export const RERANKER_PROVIDER_ENV_KEY: Readonly<Record<string, string>> = Object.freeze({
-  zeroentropyai: 'ZEROENTROPY_API_KEY',
   voyage: 'VOYAGE_API_KEY',
   dashscope: 'DASHSCOPE_API_KEY',
   openrouter: 'OPENROUTER_API_KEY',
@@ -926,7 +925,6 @@ function baseReceipt(startedAt: string) {
 const PROVIDER_ENV_KEY: Record<string, string> = {
   openai: 'OPENAI_API_KEY',
   voyage: 'VOYAGE_API_KEY',
-  zeroentropyai: 'ZEROENTROPY_API_KEY',
 };
 
 export async function run(opts: Opts): Promise<RunResult> {
@@ -1049,8 +1047,8 @@ export async function run(opts: Opts): Promise<RunResult> {
   if (needsEmbeddings) {
     const cfg = loadConfig() || ({} as any);
     configureGateway({
-      embedding_model: opts.embeddingModel ?? cfg.embedding_model,
-      embedding_dimensions: opts.embeddingDimensions ?? cfg.embedding_dimensions,
+      embedding_model: opts.embeddingModel ?? cfg.embedding_model ?? 'voyage:voyage-4',
+      embedding_dimensions: opts.embeddingDimensions ?? cfg.embedding_dimensions ?? 1024,
       expansion_model: cfg.expansion_model,
       chat_model: cfg.chat_model,
       chat_fallback_chain: cfg.chat_fallback_chain,
@@ -1060,7 +1058,7 @@ export async function run(opts: Opts): Promise<RunResult> {
     // Read back what the gateway RESOLVED (config value or gbrain's own
     // fallback default) — never re-derive with local fallbacks that can
     // drift from gbrain's (audit finding longmemeval-05: the old
-    // 'text-embedding-3-large@1536' fallback mislabeled zembed-1@1280
+    // 'text-embedding-3-large@1536' fallback mislabeled other providers'
     // vectors and poisoned shared caches).
     resolvedEmbeddingModel = getEmbeddingModel();
     resolvedEmbeddingDims = getEmbeddingDimensions();

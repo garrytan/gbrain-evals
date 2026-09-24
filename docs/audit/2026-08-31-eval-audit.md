@@ -1,5 +1,7 @@
 # What the August 31, 2026 audit changed
 
+> Historical identity redaction (2026-09-23): retired provider, model and credential identifiers are explicitly redacted in this copy. Measurements, dimensions, dates and audit IDs have not been reassigned to another provider. Original: commit 9238ec8456bc94c3c082db105d7d8169a10a0b0f, path docs/audit/2026-08-31-eval-audit.md. This redacted copy is not byte-identical to the original.
+
 The audit made gbrain's evaluation suite more useful by finding cases where a good-looking score did not mean what it appeared to mean. This report records the investigation and its fixes. The detailed evidence, code locations and verification decisions remain in [2026-08-31-findings.json](2026-08-31-findings.json).
 
 A benchmark is software too. A broken denominator, an ignored setting or a missing input can make an apparent improvement disappear when checked. Fixing these problems made it possible to compare later gbrain changes on a clearer basis.
@@ -179,11 +181,11 @@ The detailed titles below are retained as identifiers from the machine-readable 
 | calibration-cats-14 | minor | improvement | fixed | _summary.json carries no run provenance: dry-run and filtered partial runs overwrite the authoritative summary as a clean gate verdict |
 | cats18-21-01 | critical | bug | fixed | slice(0, 60) of 857 files excludes 11 of 12 gold-target files, so both cells score ~0 |
 | cats18-21-02 | critical | bug | fixed | Recall@10 numerator counts duplicate chunk rows per relevant page; recall can exceed 100% |
-| cats18-21-03 | critical | bug | fixed | Every 'embedding provider' cell silently runs the ZeroEntropy zerank-2 reranker (default balanced mode), so the A/B does not measure embedders |
+| cats18-21-03 | critical | bug | fixed | Every 'embedding provider' cell silently runs the retired provider retired-reranker-model reranker (default balanced mode), so the A/B does not measure embedders |
 | cats18-21-04 | critical | bug | fixed | Recall@10 counts duplicate chunk rows per relevant page (same inflation as cat18) |
 | cats18-21-05 | major | bug | fixed | '± reranker' axis is confounded with a full mode-bundle switch (balanced vs tokenmax) |
 | cats18-21-06 | major | bug | fixed | Ingest and query errors swallowed with bare catch and rerank is fail-open; a broken cell reports zeros/unreranked numbers indistinguishable from a real result |
-| cats18-21-07 | major | bug | fixed | Hidden zerank-2 reranker in both cells (default balanced mode) reshuffles exactly the top-1 metric being compared, conditional on an unrelated env var |
+| cats18-21-07 | major | bug | fixed | Hidden retired-reranker-model reranker in both cells (default balanced mode) reshuffles exactly the top-1 metric being compared, conditional on an unrelated env var |
 | cats18-21-08 | major | bug | fixed | captureHealth reads BrainHealth fields that don't exist (chunk_count, link_count) — receipt always shows 0 links before AND after the link-extraction step |
 | cats18-21-09 | major | bug | fixed | No assertion, threshold, or doctor code path despite the header's claims — the eval can never fail |
 | cats18-21-10 | major | bug | fixed | Grounding axis is satisfied by construction: the runner injects close/far slugs into every idea line before asking the judge whether ideas 'cite a slug' |

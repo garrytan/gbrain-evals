@@ -85,7 +85,6 @@ function runPhase1(extraEnv: Record<string, string> = {}) {
       OPENAI_API_KEY: 'k',
       ANTHROPIC_API_KEY: 'k',
       VOYAGE_API_KEY: 'k',
-      ZEROENTROPY_API_KEY: 'k',
       LONGMEMEVAL_REPO: fakeLmeRepo,
       LONGMEMEVAL_DATASET: fakeDataset,
       ...extraEnv,
@@ -114,10 +113,10 @@ describe('run-shootout-phase1.sh with stub gbrain', () => {
     // Version gate accepts a NEWER gbrain than the old 0.35-0.36 allowlist.
     expect(stdout).not.toContain('need >= 0.35.1.0');
 
-    // The three no-reranker cells (A0, B0, C0) invoked gbrain...
+    // The two no-reranker cells (A0, B0) invoked gbrain...
     const argv = readFileSync(join(recordDir, 'gbrain.argv'), 'utf8');
     const invocations = argv.trim().split('\n');
-    expect(invocations.length).toBe(3);
+    expect(invocations.length).toBe(2);
     expect(argv).toContain('--mode tokenmax');
     expect(argv).toContain('--expansion');
 
@@ -126,9 +125,8 @@ describe('run-shootout-phase1.sh with stub gbrain', () => {
     const env = readFileSync(join(recordDir, 'gbrain.env'), 'utf8');
     expect(env).toContain('model=openai:text-embedding-3-large dims=1536');
     expect(env).toContain('model=voyage:voyage-4-large dims=2048');
-    expect(env).toContain('model=zeroentropyai:zembed-1 dims=2560');
     // The dead reranker env var is never set for any cell.
-    expect(env).not.toContain('dead_reranker=zeroentropyai');
+    expect(env.trim().split('\n').every(line => line.endsWith('dead_reranker=unset'))).toBe(true);
 
     // Reranker cells refused loudly (labeled SKIPPED), not run unreranked.
     expect(stdout).toContain('SKIPPED');

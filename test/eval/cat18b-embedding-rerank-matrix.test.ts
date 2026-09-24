@@ -24,6 +24,7 @@ import {
   PINNED_BASE,
   rerankAxisConfig,
   makeOverlapRerankTransport,
+  optionsFromEnv,
   runCat18b,
   CAT18B_CATEGORY,
   type ProviderSpec,
@@ -54,6 +55,28 @@ const OPENAI_PAIR: ProviderSpec[] = CELLS.filter(c => c.embedder === 'openai:tex
 // ─── The ± axis is minimal (cats18-21-05) ────────────────────────────
 
 describe('reranker axis config', () => {
+  test('supported matrix uses new reranker identities without relabeling historical cells', () => {
+    expect(CELLS).toEqual([
+      { name: 'openai-1536', embedder: 'openai:text-embedding-3-large', embed_dim: 1536, reranker: null },
+      { name: 'openai-1536+voyage-rerank-2.5', embedder: 'openai:text-embedding-3-large', embed_dim: 1536, reranker: 'voyage:rerank-2.5' },
+      { name: 'voyage-1024', embedder: 'voyage:voyage-3-large', embed_dim: 1024, reranker: null },
+      { name: 'voyage-1024+voyage-rerank-2.5', embedder: 'voyage:voyage-3-large', embed_dim: 1024, reranker: 'voyage:rerank-2.5' },
+    ]);
+  });
+
+  test('unknown cells are refused rather than silently dropped from the comparison', () => {
+    const saved = process.env.CAT18B_CELLS;
+    try {
+      process.env.CAT18B_CELLS = 'openai-1536,retired-provider-fixture';
+      expect(() => optionsFromEnv([])).toThrow('unknown matrix cells: retired-provider-fixture');
+      process.env.CAT18B_CELLS = 'openai-1536,openai-1536+voyage-rerank-2.5';
+      expect(optionsFromEnv([]).cells).toEqual(OPENAI_PAIR);
+    } finally {
+      if (saved === undefined) delete process.env.CAT18B_CELLS;
+      else process.env.CAT18B_CELLS = saved;
+    }
+  });
+
   test('± pairs differ ONLY in search.reranker.* keys; mode constant', () => {
     for (const base of CELLS.filter(c => c.reranker === null)) {
       const plus = CELLS.find(c => c.embedder === base.embedder && c.reranker !== null)!;
@@ -78,13 +101,13 @@ describe('reranker axis config', () => {
 // ─── Stub rerank transport ───────────────────────────────────────────
 
 describe('makeOverlapRerankTransport', () => {
-  test('deterministic overlap scoring in ZE response dialect', async () => {
+  test('deterministic overlap scoring in the reranker response dialect', async () => {
     const transport = makeOverlapRerankTransport() as unknown as (u: string, init: { body: string }) => Promise<Response>;
     const body = JSON.stringify({
       query: 'dental agents',
       documents: ['payment rails move money', 'dental agents for clinics', 'dental things'],
     });
-    const resp = await transport('http://stub.invalid/models/rerank', { body });
+    const resp = await transport('http://stub.invalid/rerank', { body });
     expect(resp.status).toBe(200);
     const json = await resp.json() as { results: Array<{ index: number; relevance_score: number }> };
     expect(json.results[0].index).toBe(1); // both query tokens overlap
@@ -180,9 +203,9 @@ describe('runCat18b (hermetic, stubbed embed + rerank transports)', () => {
   }, RUN_TIMEOUT);
 
   test('missing provider keys: skipped receipt, non-zero exit unless allow-skip', async () => {
-    const savedZe = process.env.ZEROENTROPY_API_KEY;
+    const savedVoyage = process.env.VOYAGE_API_KEY;
     const savedOpenai = process.env.OPENAI_API_KEY;
-    delete process.env.ZEROENTROPY_API_KEY;
+    delete process.env.VOYAGE_API_KEY;
     delete process.env.OPENAI_API_KEY;
     try {
       const reportsDir = tmpReports();
@@ -195,7 +218,7 @@ describe('runCat18b (hermetic, stubbed embed + rerank transports)', () => {
       });
       expect(r.receipt.run_status).toBe('skipped');
       expect(r.receipt.skip_reason).toContain('OPENAI_API_KEY');
-      expect(r.receipt.skip_reason).toContain('ZEROENTROPY_API_KEY');
+      expect(r.receipt.skip_reason).toContain('VOYAGE_API_KEY');
       expect(r.exitCode).toBe(1);
 
       const r2 = await runCat18b({
@@ -209,8 +232,8 @@ describe('runCat18b (hermetic, stubbed embed + rerank transports)', () => {
       expect(r2.exitCode).toBe(0);
       expect(r2.receipt.run_status).toBe('skipped');
     } finally {
-      if (savedZe !== undefined) process.env.ZEROENTROPY_API_KEY = savedZe;
-      else delete process.env.ZEROENTROPY_API_KEY;
+      if (savedVoyage !== undefined) process.env.VOYAGE_API_KEY = savedVoyage;
+      else delete process.env.VOYAGE_API_KEY;
       if (savedOpenai !== undefined) process.env.OPENAI_API_KEY = savedOpenai;
       else delete process.env.OPENAI_API_KEY;
     }

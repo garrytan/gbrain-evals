@@ -5,7 +5,7 @@ import { join } from 'path';
 import type { HybridSearchMeta } from 'gbrain/types';
 import type { PGLiteEngine } from 'gbrain/pglite-engine';
 import type { Page, Query } from '../../eval/runner/types.ts';
-import { __setEmbedTransportForTests } from 'gbrain/ai/gateway';
+import { resetGateway } from 'gbrain/ai/gateway';
 import { GbrainInlineAdapter, type InlineObservedStats } from '../../eval/runner/adapters/gbrain-inline.ts';
 import { HybridNoGraphAdapter } from '../../eval/runner/adapters/vector-grep-rrf-fusion.ts';
 import { ensureGateway, runCat13 } from '../../eval/runner/cat13-conceptual.ts';
@@ -107,7 +107,7 @@ describe('real adapter fail-open observations with local hash embeddings', () =>
       expect(empty.receipt.n_scored).toBe(empty.receipt.n_total);
     } finally {
       querySpy.mockRestore();
-      __setEmbedTransportForTests(null);
+      resetGateway();
       rmSync(directory, { recursive: true, force: true });
     }
   }, 120_000);
@@ -155,7 +155,7 @@ describe('real adapter fail-open observations with local hash embeddings', () =>
       } finally {
         engine.searchVector = originalVector;
         await adapter.teardown!(state);
-        __setEmbedTransportForTests(null);
+        resetGateway();
       }
     }, 60_000);
   }

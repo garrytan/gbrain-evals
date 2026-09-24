@@ -1,3 +1,4 @@
+[redaction notice] Historical identity redaction (2026-09-23): retired provider, model and credential identifiers are explicitly redacted in this copy. Measurements, dimensions, dates and audit IDs have not been reassigned to another provider. Original: commit 9238ec8456bc94c3c082db105d7d8169a10a0b0f, path results/shootout/phase2-run-log.txt. This redacted copy is not byte-identical to the original.
 ===== cell A0
 [shootout-driver] cell=? embedder=openai:text-embedding-3-large dim=1536 subset=(relational)
 [shootout-driver] corpus=240 pages, queries=90
@@ -362,7 +363,7 @@
   88 migration(s) applied
 [shootout-driver] wrote /Users/garrytan/git/gbrain-evals/results/shootout/brainbench-A0-cat13.json: P@5=18.8%  R@5=94.0%  47/50 correct  98782ms
 ===== cell A1
-[shootout-driver] cell=? embedder=openai:text-embedding-3-large dim=1536 reranker=zeroentropyai:zerank-2 subset=(relational)
+[shootout-driver] cell=? embedder=openai:text-embedding-3-large dim=1536 reranker=retired-provider:retired-reranker-model subset=(relational)
 [shootout-driver] corpus=240 pages, queries=90
   Schema version 1 → 92 (88 migration(s) pending)
   [2] slugify_existing_pages...

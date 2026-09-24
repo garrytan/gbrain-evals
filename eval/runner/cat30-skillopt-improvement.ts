@@ -73,8 +73,8 @@ export const BPRE_BASELINE_CEILING = 0.95;
 /**
  * WS5 pin — applied via engine.setConfig BEFORE any rollout and echoed in
  * resolved_config. SkillOpt rollouts can call brain search tools, and
- * gbrain's default 'balanced' bundle silently enables the zerank-2 reranker
- * when ZEROENTROPY_API_KEY is set — never rely on defaults.
+ * gbrain's default 'balanced' bundle can enable reranking with an ambient
+ * provider key — never rely on defaults.
  */
 export const PINNED_CONFIG: Record<string, string> = {
   'search.mode': 'balanced',
@@ -98,8 +98,9 @@ export interface SkilloptStubBehavior {
    * design and never propagate).
    */
   failRollouts?: boolean;
-  /** Return unparseable judge output → llm-judge scores 0 with judge_error. */
+  /** Return unparseable judge output so failed judging remains an error. */
   breakJudge?: boolean;
+  zeroJudge?: boolean;
 }
 
 /** The structure mandate the scripted optimizer adds (satisfies the skillopt-v1 rule judges). */
@@ -172,6 +173,7 @@ export function makeSkilloptStubTransport(behavior: SkilloptStubBehavior = {}): 
     // 1) LLM judge (score.ts LLM_JUDGE_SYSTEM).
     if (system.includes('strict, fair judge')) {
       if (behavior.breakJudge) return mk('the judge model refused to answer with JSON today');
+      if (behavior.zeroJudge) return mk(JSON.stringify({ score: 0, rationale: 'stub judge: valid zero score' }));
       const outMatch = userText.match(/AGENT OUTPUT:\n([\s\S]*?)\n\nScore the output/);
       const out = outMatch ? outMatch[1]! : userText;
       let score = 0.35;

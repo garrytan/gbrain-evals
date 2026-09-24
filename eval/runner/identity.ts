@@ -15,6 +15,7 @@
  */
 
 import { PGLiteEngine } from 'gbrain/pglite-engine';
+import { readProjectionSnapshot, installPageProjection } from '../../node_modules/gbrain/src/core/page-state/projections.ts';
 
 interface Entity {
   canonicalSlug: string;
@@ -85,9 +86,11 @@ async function main() {
       timeline: '',
     });
     // Also chunk for searchKeyword.
-    await engine.upsertChunks(e.canonicalSlug, [
+    const projection = await readProjectionSnapshot(engine, e.canonicalSlug, 'default', { allowUnsealed: true });
+    if (!projection) throw new Error(`Missing seeded page: ${e.canonicalSlug}`);
+    await installPageProjection(engine, projection, [
       { chunk_index: 0, chunk_text: `${e.fullName} ${e.documentedAliases.join(' ')}`, chunk_source: 'compiled_truth' },
-    ]);
+    ], { seal: true });
   }
 
   // Run queries.

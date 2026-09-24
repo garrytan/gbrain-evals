@@ -30,6 +30,7 @@ interface ManifestEntry {
   readme_anchor: string;
   artifact_path: string | null;
   artifact_sha256: string | null;
+  original_artifact?: { commit: string; path: string; sha256: string };
   expected?: Record<string, unknown>;
   golden_test?: string;
   status: 'covered' | 'disclosed-gap';
@@ -65,6 +66,66 @@ const manifest = JSON.parse(readFileSync(MANIFEST_PATH, 'utf8')) as {
   schema_version: number;
   entries: ManifestEntry[];
 };
+
+describe('disclosed historical identity redactions', () => {
+  test('redacted artifact attestations retain distinct immutable-original provenance', () => {
+    const redacted = manifest.entries.filter(e => e.original_artifact);
+    expect(redacted.map(e => e.claim_id).sort()).toEqual([
+      'cat34-rerun-v0.47.8.0', 'retrieval-refresh-harness-source',
+    ]);
+    for (const entry of redacted) {
+      const original = entry.original_artifact!;
+      expect(original.commit).toBe('9238ec8456bc94c3c082db105d7d8169a10a0b0f');
+      expect(original.path).toBe(entry.artifact_path!);
+      expect(original.sha256).toMatch(/^[a-f0-9]{64}$/);
+      expect(original.sha256).not.toBe(entry.artifact_sha256);
+      const artifact = JSON.parse(readFileSync(join(REPO_ROOT, entry.artifact_path!), 'utf8'));
+      expect(artifact.redaction.original_commit).toBe(original.commit);
+      expect(artifact.redaction.original_path).toBe(original.path);
+      expect(artifact.redaction.original_artifact_sha256).toBe(original.sha256);
+      expect(entry.note).toContain('redacted');
+    }
+  });
+
+  test('archived source distinguishes original fingerprints from redacted bytes', () => {
+    const entry = manifest.entries.find(e => e.claim_id === 'retrieval-refresh-harness-source')!;
+    const archive = JSON.parse(readFileSync(join(REPO_ROOT, entry.artifact_path!), 'utf8')) as {
+      harness_sha256: string;
+      files: Record<string, { source_utf8: string; sha256?: string; original_sha256?: string; redacted_sha256?: string; redaction_note?: string }>;
+    };
+    const names = Object.keys(archive.files).sort();
+    expect(names).toHaveLength(17);
+    expect(names.filter(name => archive.files[name].original_sha256)).toEqual(['eval/runner/cat13-conceptual.ts']);
+    const launchHashes: Record<string, string> = {};
+    for (const name of names) {
+      const file = archive.files[name];
+      const actual = createHash('sha256').update(file.source_utf8).digest('hex');
+      if (file.original_sha256) {
+        expect(file.sha256).toBeUndefined();
+        expect(actual).toBe(file.redacted_sha256!);
+        expect(actual).not.toBe(file.original_sha256);
+        expect(file.redaction_note).toContain('not the bytes executed');
+        launchHashes[name] = file.original_sha256;
+      } else {
+        expect(actual).toBe(file.sha256!);
+        expect(file.redacted_sha256).toBeUndefined();
+        launchHashes[name] = file.sha256!;
+      }
+    }
+    expect(createHash('sha256').update(JSON.stringify(launchHashes)).digest('hex')).toBe(archive.harness_sha256);
+  });
+
+  test('historical stripped-key receipt preserves cardinality and explicit redaction', () => {
+    const entry = manifest.entries.find(e => e.claim_id === 'cat34-rerun-v0.47.8.0')!;
+    const receipt = JSON.parse(readFileSync(join(REPO_ROOT, entry.artifact_path!), 'utf8'));
+    expect(receipt.resolved_config.env_keys_stripped).toEqual([
+      'OPENAI_API_KEY', 'VOYAGE_API_KEY', 'RETIRED_PROVIDER_API_KEY',
+      'GEMINI_API_KEY', 'GOOGLE_API_KEY', 'ANTHROPIC_API_KEY',
+    ]);
+    expect(receipt.redaction.original_artifact_sha256).toBe('a69c14e843fca757c61a1b894b543cfb993d4fd82478910e1a5f2c8a5f085e8f');
+    expect(receipt.verdict).toBe('fail');
+  });
+});
 
 describe('docs/receipts-manifest.json — structure', () => {
   test('manifest parses with schema_version 1 and a non-empty entries array', () => {

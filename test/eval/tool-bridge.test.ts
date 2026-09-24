@@ -14,7 +14,8 @@
  *   - count_by_tool and call_order reflect trace
  */
 
-import { describe, test, expect } from 'bun:test';
+import { afterEach, beforeEach, describe, test, expect, spyOn } from 'bun:test';
+import { configureGateway, resetGateway, __setEmbedTransportForTests } from 'gbrain/ai/gateway';
 import {
   buildToolDefs,
   createToolBridge,
@@ -27,6 +28,22 @@ import {
   type PoisonFixture,
 } from '../../eval/runner/tool-bridge.ts';
 import type { BrainEngine } from 'gbrain/engine';
+
+let embeddedValues = 0;
+beforeEach(() => {
+  resetGateway();
+  embeddedValues = 0;
+  configureGateway({
+    embedding_model: 'openai:text-embedding-3-small',
+    embedding_dimensions: 1536,
+    env: { OPENAI_API_KEY: 'dummy-test-key' },
+  });
+  __setEmbedTransportForTests(async ({ values }) => {
+    embeddedValues += values.length;
+    return { embeddings: values.map(() => new Array<number>(1536).fill(0)), values, warnings: [], usage: { tokens: 0 } };
+  });
+});
+afterEach(() => resetGateway());
 
 // ─── Fake engine — records op calls so tests can assert dispatch ──
 
@@ -46,6 +63,27 @@ function makeFakeEngine(responses: Record<string, unknown> = {}): {
         return async (...args: unknown[]) => {
           calls.push({ method: prop, args });
           if (prop in responses) return responses[prop];
+          if (prop === 'readPageSnapshot') {
+            const page = responses.getPage ?? responses.__default__;
+            if (!page) return null;
+            return {
+              page: {
+                id: 1,
+                slug: args[0],
+                source_id: 'default',
+                type: 'note',
+                title: '',
+                compiled_truth: '',
+                timeline: '',
+                frontmatter: {},
+                ...(page as object),
+              },
+              tags: [],
+              revision: '00000000-0000-4000-8000-000000000001',
+              sourceIncarnation: '00000000-0000-4000-8000-000000000002',
+              withdrawals: [],
+            };
+          }
           if ('__default__' in responses) return responses.__default__;
           // gbrain's alias hop (v0.46+) expects a Map from resolveAliases
           // and dereferences .get() outside its try/catch — an array here
@@ -136,11 +174,9 @@ describe('executeTool — read ops', () => {
     const res = await bridge.executeTool('get_page', { slug: 'people/amara' });
     expect(res.truncated).toBe(false);
     expect(res.content).toContain('Amara');
-    // The real dispatch goes through operations.ts handlers, so we can't assert the
-    // exact engine method name. But we can assert the bridge updated its state.
     expect(bridge.state.count_by_tool['get_page']).toBe(1);
     expect(bridge.state.call_order).toEqual(['get_page']);
-    void calls;
+    expect(calls.some(call => call.method === 'readPageSnapshot')).toBe(true);
   });
 
   test('forces expand=false on query tool even if agent passes expand=true', async () => {
@@ -162,6 +198,21 @@ describe('executeTool — read ops', () => {
     await bridge.executeTool('query', { query: 'who is amara', expand: true });
     expect(bridge.state.call_order).toEqual(['query']);
     expect(bridge.state.count_by_tool['query']).toBe(1);
+  });
+
+  test('query embedding uses the local transport without outbound fetches', async () => {
+    const fetchSpy = spyOn(globalThis, 'fetch').mockImplementation(Object.assign(async () => {
+      throw new Error('Unexpected outbound fetch from a keyless bridge test');
+    }, { preconnect: () => { throw new Error('Unexpected outbound preconnect from a keyless bridge test'); } }));
+    try {
+      const { engine } = makeFakeEngine();
+      const bridge = createToolBridge(cfg(engine));
+      await bridge.executeTool('query', { query: 'local transport regression example' });
+      expect(embeddedValues).toBeGreaterThan(0);
+      expect(fetchSpy).not.toHaveBeenCalled();
+    } finally {
+      fetchSpy.mockRestore();
+    }
   });
 
   test('throws ForbiddenOpError for mutating ops (put_page)', async () => {
@@ -387,9 +438,9 @@ describe('executeTool — dry_run tools', () => {
 describe('tool-bridge state tracking', () => {
   test('count_by_tool + call_order reflect every invocation in order', async () => {
     const { engine } = makeFakeEngine({
-      search: [],
-      get_page: { slug: 'x' },
-      list_pages: [],
+      searchKeyword: [],
+      getPage: { slug: 'x' },
+      listPages: [],
     });
     const bridge = createToolBridge(cfg(engine));
     await bridge.executeTool('search', { query: 'a' });

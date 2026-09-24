@@ -1,19 +1,16 @@
 /**
  * BrainBench Cat 18 — embedding-provider A/B on the synthetic-v1 corpus.
  *
- * Headline question: how do OpenAI, Voyage, and ZeroEntropy EMBEDDERS rank
- * against the same query set on the same corpus? Backs the v0.36.2.0 README
- * claim that ZeroEntropy beats OpenAI/Voyage on price + speed.
+ * Headline question: how do OpenAI and Voyage EMBEDDERS rank
+ * against the same query set on the same corpus?
  *
  * ── Feature boundary ─────────────────────────────────────────────────
  * UNDER TEST: gbrain's embedding pipeline end to end — configureGateway per
  * provider, importFromContent inline embeds, and hybridSearch's keyword +
  * vector RRF retrieval. Search mode is pinned to 'balanced' and the reranker
  * is pinned OFF in EVERY cell (WS5): cells differ ONLY by embedder. The
- * previous version of this runner relied on gbrain's default mode, which
- * silently enabled the zerank-2 reranker whenever ZEROENTROPY_API_KEY was
- * set — the "embedder A/B" was actually embedder+ZE-reranker (audit
- * cats18-21-03).
+ * previous version relied on the default mode and could silently enable
+ * reranking with an ambient provider key (audit cats18-21-03).
  * LEGITIMATELY SEEDED/STUBBED: the synthetic-v1 corpus + auto-derived query
  * set (committed fixtures), and — under --stub-embed only — the embed HTTP
  * transport (deterministic feature-hash vectors via the gateway test seam).
@@ -43,7 +40,7 @@
  *
  * Run:
  *   bun eval/runner/cat18-embedding-providers.ts
- *   CAT18_PROVIDERS=openai,zeroentropy bun eval/runner/cat18-embedding-providers.ts
+ *   CAT18_PROVIDERS=openai,voyage bun eval/runner/cat18-embedding-providers.ts
  *   bun eval/runner/cat18-embedding-providers.ts --stub-embed   # hermetic, no keys
  */
 
@@ -86,8 +83,8 @@ export const DEFAULT_MIN_RECALL = 0.2;
 /**
  * WS5 pin — applied via engine.setConfig BEFORE ingest in every cell and
  * echoed into the receipt's resolved_config. Never rely on mode defaults:
- * gbrain's default 'balanced' bundle enables the zerank-2 reranker when
- * ZEROENTROPY_API_KEY is set. expansion/autocut off for determinism (no LLM
+ * gbrain's default 'balanced' bundle can enable reranking with an ambient
+ * provider key. expansion/autocut off for determinism (no LLM
  * in the loop, no score-cliff trimming confounding recall); tokenBudget
  * effectively unbounded so payload packing never drops ranked results.
  */
@@ -102,16 +99,14 @@ export const PINNED_CONFIG: Record<string, string> = {
 const PROVIDER_ENV_KEY: Record<string, string> = {
   openai: 'OPENAI_API_KEY',
   voyage: 'VOYAGE_API_KEY',
-  zeroentropy: 'ZEROENTROPY_API_KEY',
 };
 
-export const PROVIDERS_DEFAULT = ['openai', 'voyage', 'zeroentropy'];
+export const PROVIDERS_DEFAULT = ['openai', 'voyage'];
 
 export function providerConfig(name: string): { embedder: string; dim: number } {
   switch (name) {
     case 'openai': return { embedder: 'openai:text-embedding-3-large', dim: 1536 };
     case 'voyage': return { embedder: 'voyage:voyage-3-large', dim: 1024 };
-    case 'zeroentropy': return { embedder: 'zeroentropyai:zembed-1', dim: 1280 };
     default: throw new Error(`unknown provider: ${name}`);
   }
 }
@@ -474,7 +469,7 @@ function isolateGbrainHome(prefix: string): string {
   mkdirSync(home, { recursive: true });
   // The embedding-column registry reads file-plane config FIRST and falls
   // back to gateway state; without isolation the user's ~/.gbrain pin would
-  // override the per-cell gateway setup and mis-resolve Voyage/ZE columns.
+  // override the per-cell gateway setup and mis-resolve embedding columns.
   process.env.GBRAIN_HOME = home;
   return home;
 }

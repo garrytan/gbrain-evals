@@ -11,11 +11,11 @@ describe('assertEvalAdapterConfig — accepts valid shapes', () => {
 
   test('with reranker and search mode', () => {
     const c = {
-      embedder: 'zeroentropyai:zembed-1',
-      dim: 2560,
-      reranker: 'zeroentropyai:zerank-2',
+      embedder: 'voyage:voyage-4',
+      dim: 1024,
+      reranker: 'voyage:rerank-2.5',
       searchMode: 'tokenmax',
-      cell: 'C1',
+      cell: 'voyage-1024+voyage-rerank-2.5',
     };
     expect(() => assertEvalAdapterConfig(c)).not.toThrow();
   });

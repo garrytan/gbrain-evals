@@ -31,6 +31,7 @@ const GBRAIN_SRC = process.env.GBRAIN_SRC
 // Dynamic imports from the gbrain source tree (relative file paths, because
 // bench-publish/baseline-file are not in gbrain's export map).
 const { PGLiteEngine } = await import(join(GBRAIN_SRC, 'src/core/pglite-engine.ts'));
+const { readProjectionSnapshot, installPageProjection } = await import(join(GBRAIN_SRC, 'src/core/page-state/projections.ts'));
 const { buildBaselineFromInput } = await import(join(GBRAIN_SRC, 'src/commands/bench-publish.ts'));
 const { serializeBaselineFile } = await import(join(GBRAIN_SRC, 'src/core/bench/baseline-file.ts'));
 
@@ -48,15 +49,13 @@ const qrels: {
 
 // We capture via engine.searchKeyword (keyword-only / FTS path) so we
 // don't need real vector embeddings. Using a zero-vector placeholder
-// matched to the active default dim (1280 for zeroentropy:zembed-1; the
-// pre-v0.36 default was 1536). Read from the gateway accessor so future
+// matched to the active default dim. Read from the gateway accessor so future
 // dim changes don't break the generator.
 async function getActiveDim(): Promise<number> {
   const { configureGateway, getEmbeddingDimensions } = await import(
     join(GBRAIN_SRC, 'src/core/ai/gateway.ts')
   );
-  // Configure with empty options so defaults apply.
-  configureGateway({});
+  configureGateway({ embedding_model: 'voyage:voyage-4', embedding_dimensions: 1024, env: {} });
   return getEmbeddingDimensions();
 }
 
@@ -116,6 +115,7 @@ function inferType(slug: string): string {
 }
 
 async function main(): Promise<void> {
+  const activeDim = await getActiveDim();
   const engine = new PGLiteEngine();
   await engine.connect({});
   await engine.initSchema();
@@ -144,7 +144,6 @@ async function main(): Promise<void> {
     }
   }
 
-  const activeDim = await getActiveDim();
   console.error(`[generate] active embedding dim = ${activeDim}`);
 
   for (const slug of [...allSlugs].sort()) {
@@ -155,7 +154,9 @@ async function main(): Promise<void> {
       compiled_truth: text,
       timeline: '',
     });
-    await engine.upsertChunks(slug, [
+    const projection = await readProjectionSnapshot(engine, slug, 'default', { allowUnsealed: true });
+    if (!projection) throw new Error(`Missing seeded page: ${slug}`);
+    await installPageProjection(engine, projection, [
       {
         chunk_index: 0,
         chunk_text: text,
@@ -163,7 +164,7 @@ async function main(): Promise<void> {
         embedding: zeroEmbedding(activeDim),
         token_count: Math.ceil(text.length / 4),
       },
-    ]);
+    ], { seal: true });
   }
 
   // Now run each qrels query via engine.searchKeyword and capture the

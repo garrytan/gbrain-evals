@@ -273,8 +273,8 @@ export function ensureStubbedGateway(): void {
 
 // ─── Brain seeding ──────────────────────────────────────────────────
 // WS5: search mode + reranker pinned explicitly BEFORE ingest — never rely
-// on gbrain defaults ('balanced' silently enables the zerank-2 reranker when
-// ZEROENTROPY_API_KEY is set). Echoed into the receipt's resolved_config.
+// on gbrain defaults ('balanced' can enable reranking with an ambient
+// provider key). Echoed into the receipt's resolved_config.
 
 const SEARCH_CONFIG: Record<string, string> = {
   'search.mode': 'balanced',

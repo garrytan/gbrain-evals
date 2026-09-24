@@ -63,11 +63,6 @@ import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-vers
 
 export const CAT24_CATEGORY = 'cat24-capture-provenance';
 
-const PROVIDER_KEYS = [
-  'OPENAI_API_KEY', 'VOYAGE_API_KEY', 'ZEROENTROPY_API_KEY',
-  'GEMINI_API_KEY', 'GOOGLE_API_KEY', 'ANTHROPIC_API_KEY',
-];
-
 export interface ProvenanceRow {
   source_kind: string | null;
   source_uri: string | null;
@@ -159,12 +154,10 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
   mkdirSync(home, { recursive: true });
   process.env.GBRAIN_HOME = home;
 
-  const sanitizedEnv: Record<string, string | undefined> = { ...process.env } as Record<string, string | undefined>;
-  for (const k of PROVIDER_KEYS) delete sanitizedEnv[k];
   configureGateway({
     embedding_model: 'openai:text-embedding-3-large',
     embedding_dimensions: 1536,
-    env: sanitizedEnv,
+    env: {},
   });
 
   const engine: any = new PGLiteEngine();
