@@ -1,8 +1,46 @@
 {
   "schema_version": 1,
   "description": "Map from published claims to their saved evidence. The manifest test checks artifact paths, SHA-256 hashes, and declared JSON-pointer values. It does not parse report prose or independently validate every scorer. Separate golden tests and recount scripts are named where available. Entries marked disclosed-gap identify missing evidence; a fresh run cannot restore a missing historical receipt.",
-  "updated": "2026-09-09",
+  "updated": "2026-09-25",
   "entries": [
+    {
+      "claim_id": "reading-notes-transfer-labels",
+      "readme_anchor": "docs/benchmarks/2026-09-25-reading-notes.md: fixed retrieved sessions, original transfer labels 308/361 to 324/361",
+      "artifact_path": "docs/benchmarks/2026-09-25-reading-notes/reading-notes-transfer.ndjson",
+      "artifact_sha256": "fe54ecf5193aab80005d330fa9173961f6c62da31b374e3a75159fa2fa296a9d",
+      "golden_test": "test/eval/reading-notes-recount.test.ts: strict paired labels and controls",
+      "status": "covered",
+      "note": "361 original pairs, 12 repeats and 28 discordance regrades. The keyless recount checks structure and every score without changing labels. Private answer text is excluded."
+    },
+    {
+      "claim_id": "reading-notes-oracle-labels",
+      "readme_anchor": "docs/benchmarks/2026-09-25-reading-notes.md: paper replication four cells, 424/425/461/463 of 500",
+      "artifact_path": "docs/benchmarks/2026-09-25-reading-notes/reading-notes-oracle.ndjson",
+      "artifact_sha256": "f411f222d003f71240d8fcccc6c1677baad67971dba9618a8789797bc0e70cb3",
+      "golden_test": "test/eval/reading-notes-recount.test.ts: factorial contrasts and controls",
+      "status": "covered",
+      "note": "500 four-arm original pairs, 12 repeats and 59 discordance regrades. Oracle inputs and answer text are private."
+    },
+    {
+      "claim_id": "reading-notes-cost-accounting",
+      "readme_anchor": "docs/benchmarks/2026-09-25-reading-notes.md: 6014 calls and $79.1460305 including failed pilot",
+      "artifact_path": "docs/benchmarks/2026-09-25-reading-notes/cost-provenance.json",
+      "artifact_sha256": "79bb41c0b2fc170893b83062c0646f0144d0bf5717ccd5bf165bd7fb9c4db1c1",
+      "expected": { "/total_settled_calls": 6014, "/total_usage_priced_usd": 79.1460305 },
+      "golden_test": "test/eval/reading-notes-recount.test.ts: aggregate token repricing and phase counts",
+      "status": "covered",
+      "note": "Public phase/model/role token aggregates reprice 5666 follow-up calls, with separate primary baseline/notes reader token totals. The 348-call failed pilot remains an aggregate from a private ledger; private per-call receipts and conversations are not published."
+    },
+    {
+      "claim_id": "reading-notes-release-completion-smoke",
+      "readme_anchor": "docs/benchmarks/2026-09-25-reading-notes.md: separate 1024-token release smoke of nine prior cutoff cases",
+      "artifact_path": "docs/benchmarks/2026-09-25-reading-notes/completion-smoke.json",
+      "artifact_sha256": "08b38e0e5e5bd39c96336aca81c0c4f8ccee4b046325e54fa5b0b8df248b4fbd",
+      "expected": { "/n": 9, "/completed": 9, "/max_tokens": 1024, "/cost_usd": 0.562143 },
+      "golden_test": "test/eval/reading-notes-recount.test.ts: cutoff IDs and accounted smoke totals",
+      "status": "covered",
+      "note": "Separate selected-case live completion check on the forthcoming GBrain default reader and gateway, not a fresh accuracy study. Public-safe finish metadata and hashes only; raw prompts and responses remain private. Its spend is additional to the historical $79.1460305."
+    },
     {
       "claim_id": "longmemeval-recall-all",
       "readme_anchor": "docs/benchmarks/2026-05-07-longmemeval-s.md: August 31 correction, May hybrid strict recall 392/470 = 83.40% and expansion 84.26%",

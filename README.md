@@ -24,6 +24,15 @@ answered **433 of 500 questions correctly, or 86.6%**, including questions whose
 correct response was to abstain. Those are separate measurements with separate
 denominators. [Read the experiment](docs/benchmarks/2026-09-06-longmemeval-ranker-wave.md).
 
+**Keeping the conversations intact can help the answer model use them.** In a
+separate September 24 matched reading study, asking Sonnet 4.6 to take brief
+notes before answering raised judged correct answers from 308/361 to 324/361
+on fixed retrieved sessions. Nine notes responses hit the output limit, and
+manual review found grading artifacts. This measures answer reading, not a
+retrieval gain. A later reader release defaults to notes with a larger output
+limit; that new default has only a selected-case completion check here, not a
+fresh accuracy comparison. [Read the study](docs/benchmarks/2026-09-25-reading-notes.md).
+
 **It can find an idea described in different words.** On our held-out concept
 questions, gbrain put an exact target first on **130/181 questions**, versus
 **118/181** for vector search alone. That configuration used a reranker, which
@@ -51,7 +60,7 @@ a database index for searching it. Its retrieval pipeline exposes configuration
 and diagnostics. This suite keeps dated results and the records used to calculate
 them. Hosted embedding and reranking services receive the text they process;
 local storage does not make those API calls local. See the
-[pinned gbrain implementation](https://github.com/garrytan/gbrain/tree/2efaaf8f8a817b5b82e023383618fdcdb1cc5f7d)
+[pinned gbrain implementation](https://github.com/garrytan/gbrain/tree/939232f1746381b4e932d620d6c709e29198f14c)
 and [how to reproduce a run](eval/README.md).
 
 ## What should you learn here?
