@@ -2,6 +2,56 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.0] - 2026-09-25
+
+Taking brief notes before answering helped the tested readers use intact
+conversations. On 361 fixed-retrieval questions, the historical Sonnet 4.6
+reader rose from 308 to 324 judged correct answers; the separate 500-question
+GPT-4o oracle replication found gains with notes in both natural-language and
+JSON presentation. This measures answer reading, not retrieval or production
+readiness. Nine historical notes answers hit the 512-token output limit, and
+source audits exposed grading artifacts.
+
+In a separate release smoke, all nine selected prior cutoff responses ended
+naturally at the new 1,024-token limit. That is a completion check, not a
+new accuracy measurement, and its $0.562143 spend is outside the study total.
+
+### Added
+
+- A dated standalone report with original public per-question labels, repeat
+  controls, regrades, cost aggregates and private-source provenance. It keeps
+  the earlier failed excerpt approach identifiable and does not publish
+  conversations, prompts or model-generated answers.
+- A keyless, fail-closed recount that reproduces every paired score and
+  category breakdown, rejects incomplete/mismatched streams, and checks
+  aggregate token-priced spend including the earlier failed pilot. No model
+  call runs from the report, recount or tests.
+- An offline paired-request preparer through the GBrain sanitizer and an
+  explicitly opt-in gateway execution lane with a finite spend cap and
+  per-attempt accounting. The new lane reports completion and cost; it does
+  not claim new answer accuracy without graded responses.
+
+### Changed
+
+- Document the companion GBrain notes-first reader default and direct
+  override separately from the immutable historical 512-token study. The
+  packaged 1,024-token default is a new setting that needs its own measured
+  comparison; this release does not claim its performance was tested here.
+- Keep the established `gbrain` pin for historical runners and add a separate
+  immutable `gbrain-reader` pin only for the new comparison path. Retain its required
+  `postgres@3.4.9` patch at the repository root so Bun's frozen lockfile
+  install can resolve the transitive patch from a clean checkout.
+- Restrict CI TypeScript filtering to diagnostics whose path begins with
+  `node_modules/`, so a repo-owned error mentioning a dependency path still
+  fails instead of disappearing.
+
+### Limits
+
+The public labels and token aggregates support a keyless recount, not
+generation of the private historical responses or an independent per-call
+audit. The two study phases share questions and differ in dates and reader
+models, so they are not independent confirmations.
+
 ## [0.9.0] - 2026-09-23
 
 Engineers can now test whether situation cues help retrieve the original notes

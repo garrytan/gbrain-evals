@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "source": "Private follow-up calls.ndjson, SHA-256 effa6227e63abc1c07342cbd7f8e40f3c9e8cd6903dcfcfcf21e48d4b5b45680; 5666 admit/settle/accepted-response triples, no errors. Aggregates only, not a public per-call audit.",
+  "pricing": "GBrain canonical model-pricing.ts and scripts/eval-answer-packet.ts usageCost at historical commit c8423e4; USD per million input/output tokens; no cache tokens reported",
+  "groups": [
+    { "phase": "transfer", "role": "reader", "model": "anthropic:claude-sonnet-4-6", "calls": 734, "input_tokens": 11353285, "output_tokens": 120824, "input_usd_per_million": 3, "output_usd_per_million": 15 },
+    { "phase": "transfer", "role": "judge", "model": "openai:gpt-4o", "calls": 790, "input_tokens": 291746, "output_tokens": 802, "input_usd_per_million": 2.5, "output_usd_per_million": 10 },
+    { "phase": "oracle", "role": "reader", "model": "openai:gpt-4o", "calls": 2012, "input_tokens": 11999487, "output_tokens": 290772, "input_usd_per_million": 2.5, "output_usd_per_million": 10 },
+    { "phase": "oracle", "role": "judge", "model": "openai:gpt-4o", "calls": 2130, "input_tokens": 632017, "output_tokens": 3722, "input_usd_per_million": 2.5, "output_usd_per_million": 10 }
+  ],
+  "transfer_primary_readers": [
+    { "mode": "baseline", "calls": 361, "input_tokens": 5582556, "output_tokens": 31517 },
+    { "mode": "notes", "calls": 361, "input_tokens": 5588332, "output_tokens": 88093 }
+  ],
+  "previous_failed_excerpt_pilot": { "settled_calls": 348, "usage_priced_usd": 8.0127305, "source": "Historical private pilot ledger; no public per-call token breakdown" },
+  "total_settled_calls": 6014,
+  "total_usage_priced_usd": 79.1460305
+}

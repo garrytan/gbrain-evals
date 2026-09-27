@@ -30,12 +30,13 @@ jobs:
         run: bun install --frozen-lockfile
 
       # gbrain ships raw .ts sources with its own loose internal typings;
-      # our gate is the REPO's files. Fails on any non-node_modules error.
+      # our gate is the REPO's files. Only diagnostics whose path STARTS
+      # node_modules/ are ignored; a repo error mentioning that path fails.
       - name: Typecheck (repo files)
         run: |
           bunx tsc --noEmit 2>&1 | tee /tmp/tsc.log && tsc_status=0 || tsc_status=$?
-          if grep -v node_modules /tmp/tsc.log | grep -q 'error TS'; then
-            grep -v node_modules /tmp/tsc.log | grep 'error TS'
+          if grep -v '^node_modules/' /tmp/tsc.log | grep -q 'error TS'; then
+            grep -v '^node_modules/' /tmp/tsc.log | grep 'error TS'
             exit 1
           fi
           # A tsc crash that prints no 'error TS' line must not pass silently
@@ -51,8 +52,8 @@ jobs:
       - name: Typecheck (scripts)
         run: |
           bunx tsc --noEmit -p tsconfig.scripts.json 2>&1 | tee /tmp/tsc-scripts.log && tsc_status=0 || tsc_status=$?
-          if grep -v node_modules /tmp/tsc-scripts.log | grep -q 'error TS'; then
-            grep -v node_modules /tmp/tsc-scripts.log | grep 'error TS'
+          if grep -v '^node_modules/' /tmp/tsc-scripts.log | grep -q 'error TS'; then
+            grep -v '^node_modules/' /tmp/tsc-scripts.log | grep 'error TS'
             exit 1
           fi
           if [ "${tsc_status:-0}" -ne 0 ] && ! grep -q 'error TS' /tmp/tsc-scripts.log; then
