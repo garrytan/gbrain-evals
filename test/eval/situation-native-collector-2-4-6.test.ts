@@ -99,13 +99,13 @@ describe('Cat2 retained native count collector', () => {
     }
   });
 
-  test('retains zero contributions for ignored wrong types, inferred-only native types, and empty gold', () => {
+  test('charges extra wrong types on a correctly typed pair, keeps inferred-only native types and empty gold (C-05)', () => {
     const native = cat2Artifact(['a', 'b', 'c'], [{ from: 'a', to: 'b', type: 'works_at' }], [
       { from: 'a', to: 'b', type: 'works_at' }, { from: 'a', to: 'b', type: 'mentions' },
       { from: 'c', to: 'b', type: 'advises' },
     ]);
     const rows = collectNativeRows246('cat2', native);
-    expect(rows.find(row => row.slices.includes('mentions'))!.metrics.f1_strict).toEqual({ numerator: 0, denominator: 0 });
+    expect(rows.find(row => row.slices.includes('mentions'))!.metrics.f1_strict).toEqual({ numerator: 0, denominator: 1 });
     expect(rows.find(row => row.family_id === 'c' && row.slices.includes('advises'))!.metrics.precision).toEqual({ numerator: 0, denominator: 1 });
     expect(aggregateMetric('cat2', rows, 'f1_strict')).toBeCloseTo(native.overallStrictF1, 14);
     expect(collectNativeRows246('cat2', cat2Artifact([], [], []))).toEqual([]);
