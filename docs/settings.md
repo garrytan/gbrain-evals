@@ -1,14 +1,19 @@
 # Which retrieval settings should I use?
 
 For an agent searching long conversation histories with a small result budget,
-start by evaluating gbrain's `balanced` mode. At this repository's pinned version,
+start by evaluating gbrain's `balanced` mode. In the measured version,
 it combines search methods, uses the Voyage reranker when available, and leaves
 query expansion and autocut off. That setup retrieved all labeled conversations
 for 449/470 answerable LongMemEval questions. It is a useful starting point backed
 by a specific experiment. [September 6 results](benchmarks/2026-09-06-longmemeval-ranker-wave.md).
 
-These recommendations refer to **gbrain v0.48.4.0, commit `2efaaf8f`**, the library
-installed by this repository. Existing per-key overrides can take precedence over
+These recommendations refer to **gbrain v0.48.4.0, commit `2efaaf8f`**, the code
+measured in the September 6 and September 9 experiments. This repository currently
+installs a different commit, `939232f` (v0.55.0.0, declared in `package.json`), which
+is on a gbrain side branch rather than master. The `balanced`, `conservative` and
+`tokenmax` mode definitions (`MODE_BUNDLES` in `src/core/search/mode.ts`) are
+byte-identical at the two commits, so the recommendations still describe the installed
+modes; other code differs. Existing per-key overrides can take precedence over
 a mode. A mode name alone is not a complete description of an experiment.
 
 ## Choose by the questions you need to answer
