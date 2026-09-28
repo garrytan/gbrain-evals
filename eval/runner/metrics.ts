@@ -117,11 +117,17 @@ export function recallAnyAtK(ids: readonly string[], relevant: ReadonlySet<strin
 /**
  * DCG@k over graded relevance. `grades` maps id → gain (missing id = 0).
  * Uses the standard log2 discount: sum(grade_i / log2(i + 1)), 1-based i.
+ * Only the first occurrence of an id earns gain; a repeat keeps its rank
+ * slot but scores 0, so nDCG stays <= 1 (C-16), matching the first-occurrence
+ * dedup in recallAtK and precisionAtK.
  */
 export function dcgAtK(ids: readonly string[], grades: ReadonlyMap<string, number>, k: number): number {
   let dcg = 0;
   const top = ids.slice(0, k);
+  const seen = new Set<string>();
   for (let i = 0; i < top.length; i++) {
+    if (seen.has(top[i])) continue;
+    seen.add(top[i]);
     const g = grades.get(top[i]) ?? 0;
     if (g !== 0) dcg += g / Math.log2(i + 2);
   }
