@@ -21,7 +21,7 @@ Use short paragraphs, active verbs and plain English. No marketing slogans, em d
 - `eval/reports/`: temporary run output, ignored by Git.
 - `docs/benchmarks/`: published explanations and the measurements supporting them.
 - `docs/receipts-manifest.json`: artifact paths, hashes and selected expected values checked by tests.
-- `test/eval/`: the suite run by `bun run test`.
+- `test/eval/`: the main suite run by `bun run test`, which also runs the unit tests colocated under `eval/`, the Python orchestrator tests and the validators.
 - `node_modules/gbrain`: the installed dependency, or a linked checkout.
 
 The LongMemEval embedding cache is local and uncommitted. Its default location is under `eval/reports/longmemeval/embed-cache/`. A fresh clone has no warm cache. Never describe repeated API work as free unless the particular runner caches it.

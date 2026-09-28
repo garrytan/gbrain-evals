@@ -13,7 +13,7 @@ The dependency is pinned to a GitHub commit in `package.json`. A symlink means a
 
 If a `gbrain/*` import fails, check the installation and whether a stale local link points to an incompatible checkout. Use `bun link gbrain` only after registering the intended checkout with `bun link` in that checkout.
 
-If PGLite reports a missing `pglite.wasm`, the dependency layout may lack the nested path gbrain expects. This repository's postinstall script creates that link. Re-run installation, or inspect and run `bun scripts/postinstall-pglite-link.ts`.
+If PGLite reports a missing `pglite.wasm`, check that `@electric-sql/pglite` is installed and that no stale local link points at an old gbrain checkout. gbrain's embedded-asset resolver finds the hoisted PGLite copy at the current pins, so v0.10.2 removed the old postinstall link script. A quick check is `bun -e "await import('gbrain/pglite-engine')"`.
 
 ## Know which APIs the command calls
 
@@ -102,7 +102,7 @@ bun run test
 bun test test/eval/query-cli.test.ts test/eval/receipts-manifest.test.ts
 ```
 
-The first command runs the repository suite. The second isolates inexpensive checks. Other useful focused tests include:
+The first command runs the repository suite: the Bun tests under `test/eval/` and `eval/` in parallel workers, the Python orchestrator tests and the validators. `bun run test:serial` runs the Bun tests in one process, which is slower but easier to debug. In-memory test brains load a pre-migrated PGLite snapshot per embedding shape from `node_modules/.cache/gbrain-evals/pglite/`; set `GBRAIN_EVALS_PGLITE_SNAPSHOT=0` to replay migrations cold. The second command isolates inexpensive checks. Other useful focused tests include:
 
 ```sh
 bun test eval/runner/queries/validator.test.ts
@@ -111,7 +111,7 @@ bun test eval/runner/adapters/vector.test.ts
 bun test eval/generators/world-html.test.ts
 ```
 
-Those older colocated tests exist, but `bun run test` does not include them automatically.
+Since v0.10.2, `bun run test` and CI include these colocated tests.
 
 At gbrain v0.46.3, PGLite teardown could freeze Bun's test runner in a synchronous WASM loop. That particular problem stopped reproducing at the v0.47.8.0 pin. If it recurs, use an external process timeout to isolate it; a frozen runtime may not service Bun's own timeout.
 

@@ -2,10 +2,12 @@
 #
 # Zero secrets by design: everything here runs keyless. API-dependent
 # benchmarks (LongMemEval embeds, judge-based cats) run manually and land
-# receipts — see TODOS.md P1 and eval/RUNBOOK.md. Actions are pinned to
-# commit SHAs; bun is pinned to the version in package.json engines;
-# installs are frozen-lockfile. Per-job timeout enforces the <10 min budget
-# rather than hoping for it.
+# receipts; see TODOS.md and eval/RUNBOOK.md. Actions are pinned to commit
+# SHAs; bun is pinned by `bun-version` below; installs are frozen-lockfile.
+# The unit suite is split across two shard jobs, each running its files in
+# parallel workers against a shared pre-migrated PGLite snapshot
+# (test/support/pglite-snapshot.ts). Per-job timeouts bound every job well
+# above its observed runtime rather than hoping for it.
 name: ci
 
 on:
@@ -14,65 +16,44 @@ on:
     branches: [main]
 
 jobs:
-  hermetic:
+  checks:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          bun-version: 1.3.13
+          bun-version: 1.3.14
 
-      # Installs gbrain from the pinned SHA in package.json — this is the
+      # Installs gbrain from the pinned SHA in package.json: the
       # packaged-install proof (no bun link anywhere in CI).
       - name: Install (frozen lockfile)
         run: bun install --frozen-lockfile
 
-      # gbrain ships raw .ts sources with its own loose internal typings;
-      # our gate is the REPO's files. Only diagnostics whose path STARTS
-      # node_modules/ are ignored; a repo error mentioning that path fails.
-      - name: Typecheck (repo files)
-        run: |
-          bunx tsc --noEmit 2>&1 | tee /tmp/tsc.log && tsc_status=0 || tsc_status=$?
-          if grep -v '^node_modules/' /tmp/tsc.log | grep -q 'error TS'; then
-            grep -v '^node_modules/' /tmp/tsc.log | grep 'error TS'
-            exit 1
-          fi
-          # A tsc crash that prints no 'error TS' line must not pass silently
-          # (issue #24 finding 8a — the old `|| true` swallowed it).
-          if [ "${tsc_status:-0}" -ne 0 ] && ! grep -q 'error TS' /tmp/tsc.log; then
-            echo "tsc exited ${tsc_status} without reporting TS errors (crash?)"
-            exit 1
-          fi
+      # Unfiltered: dependency sources are type-checked too. Ambient shims
+      # for Bun text imports and untyped modules live in types/.
+      - name: Typecheck
+        run: bunx tsc --noEmit
 
-      # scripts/ has its own target (different runtime assumptions than
-      # eval/ + test/; keeping it out of the main include avoids dumping an
-      # unrelated backlog into that gate — outside-voice round 2).
       - name: Typecheck (scripts)
-        run: |
-          bunx tsc --noEmit -p tsconfig.scripts.json 2>&1 | tee /tmp/tsc-scripts.log && tsc_status=0 || tsc_status=$?
-          if grep -v '^node_modules/' /tmp/tsc-scripts.log | grep -q 'error TS'; then
-            grep -v '^node_modules/' /tmp/tsc-scripts.log | grep 'error TS'
-            exit 1
-          fi
-          if [ "${tsc_status:-0}" -ne 0 ] && ! grep -q 'error TS' /tmp/tsc-scripts.log; then
-            echo "tsc exited ${tsc_status} without reporting TS errors (crash?)"
-            exit 1
-          fi
+        run: bunx tsc --noEmit -p tsconfig.scripts.json
 
-      - name: Unit + integration tests
-        run: bun test test/eval/
+      - name: Python harness tests
+        run: python3 test/retrieval_refresh_orchestrator_test.py
 
-      - name: Data referential integrity
-        run: bun eval/runner/validate-data.ts
+      - name: Validators (published LongMemEval recount, documentation, queries, data)
+        run: bun run validate
 
       - name: Retrieval regression gate (qrels + baseline, keyword-only)
         run: bun scripts/generate-v0.41-launch.ts --check
 
-      # Hermetic runner subset — each is a REAL end-to-end run (PGLite,
+      # Hermetic runner subset: each is a REAL end-to-end run (PGLite,
       # extraction, ranking) needing no API keys. Individually bounded so
-      # one hang can't eat the job budget.
+      # one hang can't eat the job budget. Every step fails on the runner's
+      # own nonzero exit code, the same signal all.ts falls back to, so a
+      # score gate added inside a runner (Cat 2 and Cat 3 have none yet)
+      # fails CI without further workflow changes.
       - name: "Runner: adversarial (Cat 10)"
         run: timeout 180 bun eval/runner/adversarial.ts
       - name: "Runner: type-accuracy (Cat 2)"
@@ -95,8 +76,27 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: eval-reports
-          path: |
-            eval/reports/
-            /tmp/tsc.log
+          path: eval/reports/
           if-no-files-found: ignore
           retention-days: 14
+
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: 1.3.14
+
+      - name: Install (frozen lockfile)
+        run: bun install --frozen-lockfile
+
+      # test/eval/ plus the unit tests colocated under eval/.
+      - name: Unit + integration tests (shard ${{ matrix.shard }}/2)
+        run: bun test --parallel --shard=${{ matrix.shard }}/2 test/eval/ eval/
