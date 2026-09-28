@@ -2,6 +2,77 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.2] - 2026-09-28
+
+A September 28 audit found published numbers that were invalid or overstated.
+This release corrects them in place, keeping every original figure visible
+beside a dated erratum, and makes the README state where gbrain actually
+leads: strict `recall_all@5` of 95.53% (449/470) on LongMemEval, against
+90.0% and 85.7% for our strict recounts of MemPalace's saved rankings and
+87.45% self-reported by ContextFit. Answer accuracy is not a matched
+comparison yet, and the README now says so.
+
+### Corrected
+
+- **Cat14 calibration (May 18): retracted.** The 75% win rate (6 of 8) and
+  100% axis scores came from a judge that saw each probe's expected behavior
+  and knew which answer was calibrated.
+- **Cat 3 undocumented alias recall (April 18): 31.0% becomes 13.75%
+  (55/400).** The handle without `@` is in the indexed page text and scored
+  100/100. Verified by re-running `eval/runner/identity.ts`.
+- **Cat 1 precision at five (April 18): 39.2% to 44.7% becomes 29.9% to
+  35.4%** when divided by five slots per question (145 × 5 = 725), against a
+  ceiling of 36.0%. Verified by re-running `eval/runner/before-after.ts`.
+- **Cat 35 retention (August 31): 88.1% is judge-only.** Evidence-verified
+  retention, recomputed from the committed receipts, is 74.9% (58.2% before
+  the change). The README now also says the result is in-sample.
+- **May snapshot, Cats 18b to 29:** every row is marked with the defect of
+  the pre-audit runner that produced it.
+- **LongMemEval answer accuracy (433/500) and reading notes (308/361 to
+  324/361): pending re-runs.** The answer model saw the `answer_` prefix that
+  marks every labeled evidence session id. A 30-question check found no effect
+  on retrieval.
+- The README concept claim now compares like with like (102/181 for gbrain
+  against 118/181 for vectors without a reranker; 130/181 with one), and the
+  relationship claim reports the overall result (first-place hits 14% to 24%)
+  and attendance (0/50) beside the investor example. It discloses that the
+  95.53% configuration was chosen on the same 470 questions and that the
+  pre-registered 92% answer target was missed.
+- `docs/settings.md` and `docs/comparison-systems.md` no longer say that
+  gbrain `2efaaf8f` is the installed library; a test now checks such claims
+  against the `package.json` pin.
+
+### Changed
+
+- `bun run test` now runs the 77 colocated unit tests under `eval/`, the 25
+  Python orchestrator tests and the validators (published LongMemEval
+  recount, documentation, queries, data). CI runs all of them.
+- The suite runs in about 2 minutes 40 seconds instead of about 9 minutes 20
+  seconds on a 4-core machine. A test preload builds one pre-migrated PGLite
+  snapshot per embedding shape through gbrain's own snapshot loader, and Bun
+  runs test files in parallel workers. CI splits the tests into two shard
+  jobs and moves type checks, validators and hermetic runners into a
+  separate job, each with its own timeout.
+- `tsc` passes with no output filtering: DOM libraries, `@types/js-yaml` and
+  `@types/express`, TypeScript 5.9, and small shims for Bun text imports and
+  one image encoder signature. CI gates both type checks unfiltered.
+- The `postgres@3.4.9` patch is now declared in `patchedDependencies`, so the
+  cancellation-capable driver `gbrain-reader` expects is actually installed.
+- Removed the PGLite postinstall link. gbrain finds the hoisted PGLite assets
+  at both pins without it.
+- Cat30 to Cat33 import SkillOpt through gbrain's public `./core/skillopt`
+  export.
+- The built-in Tier 5.5 family is labeled `synthetic-outsider` in new
+  scorecards; no outside author wrote those questions.
+- The docs index lists the September 23 and September 24 protocols, and
+  TODOS closes the ZeroEntropy and SkillOpt items and records the audit's
+  open work.
+
+### Limits
+
+No paid benchmark was re-run for this release. Cat 2 and Cat 3 still have no
+score gates; CI already fails on their exit codes, so gates added inside the
+runners will take effect without workflow changes.
 ## [0.10.1] - 2026-09-28
 
 Several published numbers were measured by code that could not fail, or that
@@ -124,7 +195,10 @@ new accuracy measurement, and its $0.562143 spend is outside the study total.
 - Keep the established `gbrain` pin for historical runners and add a separate
   immutable `gbrain-reader` pin only for the new comparison path. Retain its required
   `postgres@3.4.9` patch at the repository root so Bun's frozen lockfile
-  install can resolve the transitive patch from a clean checkout.
+  install can resolve the transitive patch from a clean checkout. (September 28, 2026 correction: this patch was never applied, because
+  `package.json` did not declare `patchedDependencies`; v0.10.2 declares it.
+  The "historical runners" results also came from gbrain `2efaaf8f`, not
+  from the `939232f` pin kept here.)
 - Restrict CI TypeScript filtering to diagnostics whose path begins with
   `node_modules/`, so a repo-owned error mentioning a dependency path still
   fails instead of disappearing.
