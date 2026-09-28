@@ -17,7 +17,7 @@
  * Run:
  *   bun eval/runner/longmemeval-aggregate.ts <ndjson-path> [--output <out.json>]
  *        [--top-k <k>] [--dataset <name>] [--min-recall-all <x>]
- *        [--expect-rows <n>] [--allow-mixed]
+ *        [--expect-rows <n>] [--path <dataset.json>] [--allow-mixed]
  *
  * top_k/dataset are read from the NDJSON rows (the runner stamps every row).
  * Legacy streams (pre 2026-08-31) don't carry them — pass --top-k/--dataset
@@ -32,9 +32,17 @@
  * records the mix in the receipt. Legacy streams where no row carries a hash
  * are treated as consistent (there is nothing to compare).
  *
- * --expect-rows <n> (validation, opt-in): assert every adapter has exactly n
- * rows after dedupe. Off by default so legacy partial streams keep
- * aggregating; turn it on when you expect a complete run (500 for `_s`).
+ * Completeness (PD-01): a receipt is publishable only when every adapter has
+ * exactly the expected number of rows after dedupe. The expected count per
+ * adapter is --expect-rows <n> when given (a mismatch is then fatal), else the
+ * question count of --path <dataset>, else the known size of the named split
+ * (500 for `s`, `m` and `oracle`). An incomplete or unsized run still
+ * aggregates for inspection, with verdict partial and publishable false.
+ *
+ * Version provenance (PD-02): gbrain_version/gbrain_pin come from the rows
+ * (the runner stamps every row). Rows without a stamp report 'unknown'; mixed
+ * values are fatal. The gbrain installed where the aggregator runs is recorded
+ * separately as aggregator_gbrain_version/aggregator_gbrain_pin.
  *
  * Writes:
  *   <stem>.json — { opts: {...}, summaries: [...] } same shape as runner output
@@ -188,6 +196,42 @@ export function findMixedRunConfigHashes(rows: NdjsonRow[]): MixedHashFinding[] 
   return findings.sort((a, b) => a.adapter.localeCompare(b.adapter));
 }
 
+/** Question counts of the published LongMemEval splits, used when neither --expect-rows nor --path is given. */
+export const KNOWN_DATASET_QUESTIONS: Readonly<Record<string, number>> = Object.freeze({ s: 500, m: 500, oracle: 500 });
+
+export interface Completeness {
+  expected_rows_per_adapter: number | null;
+  rows_by_adapter: Record<string, number>;
+  complete: boolean;
+  reason: string;
+}
+
+/** Every adapter present must carry exactly `expectedPerAdapter` deduped rows; unknown expectation is never complete. */
+export function checkCompleteness(rows: NdjsonRow[], expectedPerAdapter: number | null): Completeness {
+  const counts: Record<string, number> = {};
+  for (const r of rows) counts[r.adapter] = (counts[r.adapter] ?? 0) + 1;
+  const rowsByAdapter = Object.fromEntries(Object.entries(counts).sort(([a], [b]) => a.localeCompare(b)));
+  if (expectedPerAdapter === null) {
+    return { expected_rows_per_adapter: null, rows_by_adapter: rowsByAdapter, complete: false,
+      reason: 'expected row count unknown for this dataset; pass --expect-rows or --path' };
+  }
+  const off = Object.entries(rowsByAdapter).filter(([, n]) => n !== expectedPerAdapter);
+  return { expected_rows_per_adapter: expectedPerAdapter, rows_by_adapter: rowsByAdapter, complete: off.length === 0,
+    reason: off.length === 0
+      ? `every adapter has ${expectedPerAdapter} rows`
+      : `incomplete: expected ${expectedPerAdapter} rows per adapter, ${off.map(([a, n]) => `${a} has ${n}`).join(', ')}` };
+}
+
+/** The gbrain identity that produced the rows. Unstamped rows count as 'unknown'; more than one value is an error. */
+export function rowGbrainIdentity(rows: NdjsonRow[]): { gbrain_version: string; gbrain_pin: string } {
+  const pick = (field: 'gbrain_version' | 'gbrain_pin') => {
+    const values = [...new Set(rows.map(r => r[field] ?? 'unknown'))].sort();
+    if (values.length > 1) throw new Error(`mixed ${field} values in NDJSON: ${values.join(', ')}; aggregate each version separately`);
+    return values[0] ?? 'unknown';
+  };
+  return { gbrain_version: pick('gbrain_version'), gbrain_pin: pick('gbrain_pin') };
+}
+
 export function aggregateRows(rows: NdjsonRow[], topK: number, dataset: string): RunSummary[] {
   const byAdapter = new Map<string, NdjsonRow[]>();
   for (const r of rows) {
@@ -221,7 +265,7 @@ if (import.meta.main) {
   const positional = args.filter(a => !a.startsWith('--') && !flagValues.has(a));
   const input = positional[0];
   if (!input) {
-    console.error('usage: bun longmemeval-aggregate.ts <ndjson-path> [--output <out.json>] [--top-k <k>] [--dataset <name>] [--min-recall-all <x>] [--expect-rows <n>] [--allow-mixed]');
+    console.error('usage: bun longmemeval-aggregate.ts <ndjson-path> [--output <out.json>] [--top-k <k>] [--dataset <name>] [--min-recall-all <x>] [--expect-rows <n>] [--path <dataset.json>] [--allow-mixed]');
     process.exit(1);
   }
   const outputArg = argValue(args, '--output');
@@ -229,6 +273,7 @@ if (import.meta.main) {
   const cliDataset = argValue(args, '--dataset');
   const cliMin = argValue(args, '--min-recall-all');
   const cliExpectRows = argValue(args, '--expect-rows');
+  const cliPath = argValue(args, '--path');
   const allowMixed = args.includes('--allow-mixed');
 
   const receiptFile = receiptPath(AGG_CATEGORY, join(process.cwd(), 'eval/reports'));
@@ -263,9 +308,8 @@ if (import.meta.main) {
       );
     }
 
-    // Opt-in completeness gate (--expect-rows): every adapter must have
-    // exactly n rows after dedupe. Off by default so legacy partial streams
-    // keep aggregating.
+    // Strict completeness gate (--expect-rows): every adapter must have
+    // exactly n rows after dedupe, or the aggregation fails.
     if (cliExpectRows !== null) {
       const want = Number(cliExpectRows);
       if (!Number.isFinite(want) || want <= 0) throw new Error(`--expect-rows must be a positive number, got "${cliExpectRows}"`);
@@ -285,10 +329,20 @@ if (import.meta.main) {
       dataset: cliDataset,
     });
     const summaries = aggregateRows(rows, topK, dataset);
+    const producer = rowGbrainIdentity(rows);
+    const expectedPerAdapter = cliExpectRows !== null
+      ? Number(cliExpectRows)
+      : cliPath !== null
+        ? (JSON.parse(readFileSync(cliPath, 'utf8')) as unknown[]).length
+        : KNOWN_DATASET_QUESTIONS[dataset] ?? null;
+    const completeness = checkCompleteness(rows, expectedPerAdapter);
+    if (!completeness.complete) process.stderr.write(`[aggregate] NOT publishable: ${completeness.reason}\n`);
 
     // Accounting over deduped rows: sut errors scored 0, infra errors
-    // excluded + capped (probe-accounting policy).
-    const acc = new ProbeAccounting(rows.length);
+    // excluded + capped (probe-accounting policy). Planned probes = expected
+    // rows × adapters present, so missing questions lower completion_rate.
+    const nAdapters = Object.keys(completeness.rows_by_adapter).length;
+    const acc = new ProbeAccounting(expectedPerAdapter === null ? rows.length : Math.max(rows.length, expectedPerAdapter * nAdapters));
     for (const r of rows) {
       const id = `${r.adapter}::${r.question_id}`;
       if (r.error !== undefined) {
@@ -303,14 +357,16 @@ if (import.meta.main) {
       : process.env.LME_MIN_RECALL_ALL
         ? Number(process.env.LME_MIN_RECALL_ALL)
         : defaultMinRecallAll(summaries.map(s => s.adapter));
-    const gate = computeVerdict(summaries, minGate);
+    const gate = completeness.complete
+      ? computeVerdict(summaries, minGate)
+      : { verdict: 'partial' as const, reason: completeness.reason };
     const runInvalid = accSummary.run_invalid;
 
     const stem = outputArg || input.replace(/\.ndjson$/, '');
     const outJson = stem.endsWith('.json') ? stem : stem + '.json';
     writeFileSync(outJson, JSON.stringify({
       opts: { datasetName: dataset, topK },
-      resolved: { gbrain_version: gbrainVersion(), gbrain_pin: gbrainPin(), source_ndjson: input },
+      resolved: { ...producer, aggregator_gbrain_version: gbrainVersion(), aggregator_gbrain_pin: gbrainPin(), source_ndjson: input },
       summaries,
     }, null, 2) + '\n');
     process.stderr.write(`wrote ${outJson}\n`);
@@ -333,10 +389,12 @@ if (import.meta.main) {
       errors: accSummary.errors,
       // A mixed-hash aggregation (--allow-mixed) is diagnostic output, never
       // a publishable single-configuration number.
-      publishable: accSummary.publishable && mixed.length === 0,
-      gbrain_version: gbrainVersion(),
-      gbrain_pin: gbrainPin(),
+      publishable: accSummary.publishable && mixed.length === 0 && completeness.complete,
+      ...producer,
       resolved_config: {
+        aggregator_gbrain_version: gbrainVersion(),
+        aggregator_gbrain_pin: gbrainPin(),
+        completeness,
         dataset,
         top_k: topK,
         min_recall_all_gate: minGate,
@@ -371,8 +429,9 @@ if (import.meta.main) {
         completion_rate: 0,
         errors: [{ probe_id: 'aggregate', origin: 'harness', message: String(e?.message ?? e).slice(0, 500) }],
         publishable: false,
-        gbrain_version: gbrainVersion(),
-        gbrain_pin: gbrainPin(),
+        gbrain_version: 'unknown',
+        gbrain_pin: 'unknown',
+        resolved_config: { aggregator_gbrain_version: gbrainVersion(), aggregator_gbrain_pin: gbrainPin() },
         started_at: startedAt,
         finished_at: new Date().toISOString(),
       });

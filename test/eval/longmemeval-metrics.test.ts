@@ -793,6 +793,13 @@ describe('end-to-end (keyword adapter, hermetic)', () => {
     expect(preimage.adapter).toBe('gbrain-keyword');
     expect(preimage.search_config['search.reranker.enabled']).toBe('false');
     for (const r of ndRows) expect(r.run_config_hash).toBe(runConfigHash(preimage));
+    // PD-02: every row names the gbrain that produced it, so re-aggregation
+    // later never borrows the aggregator's local install.
+    expect(preimage.gbrain_version).toMatch(/^\d+\.\d+/);
+    for (const r of ndRows) {
+      expect(r.gbrain_version).toBe(preimage.gbrain_version);
+      expect(r.gbrain_pin).toBe(preimage.gbrain_pin);
+    }
   }, 180_000);
 
   test('gate is failable end-to-end: gold absent from haystack → verdict fail, exit 1', async () => {

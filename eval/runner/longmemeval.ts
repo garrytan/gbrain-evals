@@ -550,9 +550,11 @@ export function sessdivRetrieve(results: SearchResult[], topK: number): SessdivR
  * adapter) so any hash is reversible to the config that produced it.
  */
 export interface RunConfigPreimage {
-  schema_version: 1;
+  schema_version: 2;
   /** The dependency spec from package.json dependencies.gbrain (gbrainPin()). */
   gbrain_pin: string;
+  /** The installed gbrain version (gbrainVersion()); differs from the pin's version under bun link. */
+  gbrain_version: string;
   dataset: string;
   top_k: number;
   adapter: string;
@@ -573,8 +575,9 @@ export function buildRunConfigPreimage(
   resolved: { embeddingModel: string | null; embeddingDims: number | null; expansionModel: string | null },
 ): RunConfigPreimage {
   return {
-    schema_version: 1,
+    schema_version: 2,
     gbrain_pin: gbrainPin(),
+    gbrain_version: gbrainVersion(),
     dataset: opts.datasetName,
     top_k: opts.topK,
     adapter: spec.name,
@@ -706,6 +709,9 @@ export interface NdjsonRow {
    * hashes within one adapter. Absent on legacy rows (pre 2026-09-01).
    */
   run_config_hash?: string;
+  /** gbrain version and declared pin that produced this row. Absent on rows written before 2026-09-28. */
+  gbrain_version?: string;
+  gbrain_pin?: string;
   error?: string;
   error_origin?: FailureOrigin;
   evidence?: LmeEvidence;
@@ -1311,6 +1317,8 @@ export async function run(opts: Opts): Promise<RunResult> {
                 }
               : {}),
             run_config_hash: rowConfigHash,
+            gbrain_version: preimage.gbrain_version,
+            gbrain_pin: preimage.gbrain_pin,
             ...(evidenceCapture ? { evidence: retainLmeEvidence(q, searchResults, adapter, opts.topK, retrieved) } : {}),
           };
           results.push(row);
@@ -1355,6 +1363,8 @@ export async function run(opts: Opts): Promise<RunResult> {
             top_k: opts.topK,
             dataset: opts.datasetName,
             run_config_hash: rowConfigHash,
+            gbrain_version: preimage.gbrain_version,
+            gbrain_pin: preimage.gbrain_pin,
             error: msg,
             error_origin: origin,
             ...(evidenceCapture ? { evidence: retainLmeEvidence(q, [], adapter, opts.topK, []) } : {}),
