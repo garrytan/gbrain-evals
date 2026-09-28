@@ -5,7 +5,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { SearchResult } from 'gbrain/types';
 import type { ChatResult } from 'gbrain/ai/gateway';
-import type { AdapterSpec, NdjsonRow, Question, RunConfigPreimage } from './longmemeval.ts';
+import { classifyErrorOrigin, type AdapterSpec, type NdjsonRow, type Question, type RunConfigPreimage } from './longmemeval.ts';
 import { DEFAULT_JUDGE_SYSTEM_PROMPT, scoreAnswer, type JudgeEvidence, type JudgeResult } from './judge.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import { BENCHMARK_VERSION, loadReceipt, writeReceipt, type Receipt } from './receipt.ts';
@@ -260,7 +260,10 @@ export async function runLongMemEvalAnswers(options: { datasetPath: string; rows
       if (item.row.error) { failure(item.row.error_origin!, 'retained retrieval failure'); continue; }
       if (item.safety.length) { failure('sut', 'non-original evidence blocked before answer generation'); continue; }
       try { row.answer = await runtime.generate(structuredClone(item.input)); }
-      catch { failure('sut', 'answer generation failed; usage may be unavailable'); continue; }
+      catch (error) {
+        const origin = classifyErrorOrigin(error instanceof Error ? error.message : String(error)) === 'dependency' ? 'dependency' : 'sut';
+        failure(origin, `answer generation failed (${origin}); usage may be unavailable`); continue;
+      }
       const answer = row.answer;
       if (!answer || typeof answer.text !== 'string' || !answer.text.trim() || answer.model !== p.answer_model || answer.providerId !== p.answer_model.split(':')[0] || !Array.isArray(answer.blocks)
         || !['end', 'tool_calls', 'length', 'refusal', 'content_filter', 'other'].includes(answer.stopReason) || !answer.usage

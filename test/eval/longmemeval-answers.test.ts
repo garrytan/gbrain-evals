@@ -142,6 +142,14 @@ describe('LongMemEval retained evidence and secondary grounding', () => {
     for (const row of judge.data!.rows as Array<{ answer: ChatResult; judge_outputs: unknown[] }>) { expect(row.answer.text).toBe('SCRIPTED_ANSWER'); expect(row.judge_outputs).toHaveLength(2); }
   });
 
+  test('answer provider outages are dependency errors, excluded from the mean rather than scored as misses (PD-06)', async () => {
+    const f = fixture();
+    const outage = await runLongMemEvalAnswers({ ...f, testRuntime: { async generate() { throw new Error('429 rate limit exceeded'); }, judgeClient: client() } });
+    expect(outage.n_scored).toBe(0); expect(outage.data!.grounding_success).toEqual({ mean: null, n: 0 });
+    expect(outage.errors.map(error => error.origin)).toEqual(['dependency', 'dependency', 'dependency']);
+    expect(outage.publishable).toBe(false);
+  });
+
   test('source contamination is a miss without exposing it to generation', async () => {
     const f = fixture(); changeRows(f, rows => { for (const row of rows) row.evidence!.returned_chunks[0].text = 'CUE_ONLY_SENTINEL'; });
     let calls = 0;
