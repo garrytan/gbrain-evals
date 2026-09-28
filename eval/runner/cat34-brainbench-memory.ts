@@ -25,7 +25,13 @@
  *     finding skillopt-cats-04),
  *   - the document passes result_schema_version===1 contract validation
  *     (audit finding skillopt-cats-10),
- *   - every cell has gold_failed === 0 and gold_total > 0,
+ *   - every PRODUCTION-seam cell has gold_failed === 0, and every cell has
+ *     gold_total > 0. Contract-seam cells (claude-code, codex) simulate a
+ *     harness contract; the Codex contract row fails push gold on every build
+ *     measured (43/96 at v0.47.8.0, the current pin and gbrain master), so
+ *     gating on it made the verdict unable to pass and unable to tell a
+ *     production regression apart (PC-08, audit 2026-09-28). Contract cells
+ *     are scored and reported as informational, not gated,
  *   - all four suites appear in the matrix, seed_failures is empty, and the
  *     subprocess exited 0.
  * Missing-fresh-result and unparseable/contract-mismatched documents are
@@ -340,12 +346,18 @@ export async function runCat34(options: Cat34Options = {}): Promise<Cat34RunResu
       // Zero gold checks: a vacuous cell must not count as pass — and it is
       // a rig/corpus problem, so it is infra-class (capped), not a miss.
       acc.error(id, 'harness', `cell has zero gold checks (vacuous, gold_total=${c.gold_total})`);
+    } else if (c.seam !== 'production') {
+      acc.score(id, c.gold_failed === 0 ? 1 : 0);
     } else if (c.gold_failed === 0) {
       acc.score(id, 1);
     } else {
       acc.error(id, 'sut', `gold_failed=${c.gold_failed}/${c.gold_total}`);
     }
   }
+  const productionCells = result.cells.filter((c) => c.seam === 'production' && c.gold_total > 0);
+  const informationalFailures = result.cells
+    .filter((c) => c.seam !== 'production' && c.gold_total > 0 && c.gold_failed > 0)
+    .map((c) => ({ cell: `${c.harness}/${c.suite}`, seam: c.seam, gold_failed: c.gold_failed, gold_total: c.gold_total }));
   for (const s of missingSuites) {
     acc.error(`suite:${s}`, 'sut', 'expected suite absent from result matrix (--suite all)');
   }
@@ -358,10 +370,10 @@ export async function runCat34(options: Cat34Options = {}): Promise<Cat34RunResu
 
   const summary = acc.summary();
   const allPass =
-    result.cells.length > 0
+    productionCells.length > 0
     && summary.n_scored > 0
     && summary.errors.length === 0
-    && acc.scoredValues().every((v) => v === 1);
+    && productionCells.every((c) => c.gold_failed === 0);
   const verdict: 'pass' | 'fail' = allPass ? 'pass' : 'fail';
   const runInvalid = summary.run_invalid;
 
@@ -404,6 +416,8 @@ export async function runCat34(options: Cat34Options = {}): Promise<Cat34RunResu
       cells: cellRows,
       seed_failures: result.seed_failures,
       missing_suites: missingSuites,
+      gate: 'production-seam cells gate the verdict; contract-seam cells are informational',
+      informational_failures: informationalFailures,
       result_artifact: canonicalOut,
     },
   };

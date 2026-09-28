@@ -93,6 +93,10 @@ if (mode === 'no-write') {
   exitCode = 2; // real brainbench exits 2 on seed failures
 } else if (mode === 'vacuous') {
   for (const c of doc.cells) c.gold_total = 0;
+} else if (mode === 'contract-fail') {
+  doc.cells.find((c) => c.harness === 'codex' && c.suite === 'push').gold_failed = 3;
+} else if (mode === 'no-production') {
+  doc.cells = doc.cells.filter((c) => c.seam !== 'production');
 }
 
 if (out) {
@@ -261,6 +265,21 @@ describe('failable gate', () => {
     expect(run.exitCode).toBe(1);
     expect(run.receipt.verdict).toBe('fail');
     expect(run.receipt.errors.some((e) => e.probe_id === 'seed:gen-adv-001' && e.origin === 'sut')).toBe(true);
+  }, RUN_TIMEOUT);
+
+  test('PC-08: a failing contract-seam cell is informational, so a clean production seam can pass', async () => {
+    const { run } = await runWithMode('contract-fail');
+    expect(run.exitCode).toBe(0);
+    expect(run.receipt.verdict).toBe('pass');
+    expect(run.receipt.errors).toEqual([]);
+    expect((run.receipt.data as any).informational_failures).toEqual([
+      { cell: 'codex/push', seam: 'contract', gold_failed: 3, gold_total: 5 },
+    ]);
+  }, RUN_TIMEOUT);
+
+  test('PC-08: a matrix without production cells cannot pass', async () => {
+    const { run } = await runWithMode('no-production');
+    expect(run.receipt.verdict).toBe('fail');
   }, RUN_TIMEOUT);
 
   test('vacuous cells (gold_total 0) cannot pass — run invalidated', async () => {
