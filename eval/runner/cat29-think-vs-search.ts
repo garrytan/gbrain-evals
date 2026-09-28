@@ -12,7 +12,10 @@
  * hybridSearch payload an agent would otherwise dump into context. Search
  * mode + reranker are pinned (WS5) and the think model is pinned via
  * `models.think` config — never left to tier defaults (audit cats26-29-12:
- * the old runner silently ran Opus while claiming Sonnet).
+ * the old runner silently ran Opus while claiming Sonnet). gbrain's think
+ * sets no temperature, so live runs call the model through runThink's
+ * `client` seam at temperature 0 (audit B-29-03), recorded in
+ * resolved_config.
  * LEGITIMATELY SEEDED/STUBBED: the synthetic-v1 corpus (committed fixture,
  * deterministic seed). Under --stub (hermetic, no keys): the embed HTTP
  * transport (deterministic hash vectors), the think LLM (runThink's
@@ -56,6 +59,7 @@
  *   CAT29_QUESTIONS=2 bun eval/runner/cat29-think-vs-search.ts --stub
  */
 
+import Anthropic from '@anthropic-ai/sdk';
 import { writeFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
@@ -63,7 +67,7 @@ import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { importFromContent } from 'gbrain/import-file';
 import { configureGateway, __setEmbedTransportForTests } from 'gbrain/ai/gateway';
 import { hybridSearch } from 'gbrain/search/hybrid';
-import { runThink, type ThinkResponse } from 'gbrain/think';
+import { runThink, type ThinkLLMClient, type ThinkResponse } from 'gbrain/think';
 import { loadSyntheticV1, type SyntheticPage } from './synthetic-corpus-loader.ts';
 import { extractUntrusted, scoreAnswer, type JudgeEvidence, type JudgeConfig, type RubricCriterion } from './judge.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
@@ -77,6 +81,7 @@ export const CAT29_CATEGORY = 'cat29-think-vs-search';
 export const THINK_MODEL = 'anthropic:claude-sonnet-4-6';
 export const JUDGE_MODEL = 'claude-haiku-4-5-20251001';
 export const RUBRIC_VERSION = 'cat29-v2';
+export const THINK_TEMPERATURE = 0;
 
 /**
  * WS5 pin — applied via engine.setConfig BEFORE ingest and echoed into
@@ -339,6 +344,18 @@ async function judgePair(
   return { a: sums.a / orders.length, b: sums.b / orders.length, by_order: byOrder, cost_usd: cost };
 }
 
+// ─── Think LLM client (temperature pinned) ───────────────────────────────
+
+/** runThink client seam: forwards gbrain's request to Anthropic at THINK_TEMPERATURE. */
+export function makeThinkClient(anthropic: Pick<Anthropic, 'messages'>): ThinkLLMClient {
+  return {
+    create: (params: Anthropic.MessageCreateParamsNonStreaming, opts?: { signal?: AbortSignal }) => anthropic.messages.create(
+      { ...params, model: String(params.model).replace(/^anthropic[:/]/, ''), temperature: THINK_TEMPERATURE },
+      opts,
+    ),
+  } as unknown as ThinkLLMClient;
+}
+
 // ─── Hermetic stubs (plumbing verification, publishable:false) ─────────
 
 /** Default stub think response: expected facts + citations (a "good" synthesis). */
@@ -428,6 +445,8 @@ export interface Cat29Options {
   judgeClient?: JudgeConfig['client'];
   /** Injected stub think response builder (tests / --stub). */
   thinkResponseFor?: (q: Cat29Question) => ThinkResponse;
+  /** Injected Anthropic client for the think LLM (tests). Default: stub response under --stub, a real client live. */
+  thinkAnthropic?: Pick<Anthropic, 'messages'>;
 }
 
 export interface Cat29RunResult {
@@ -501,7 +520,8 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
     model: JUDGE_MODEL,
     systemPromptVersion: RUBRIC_VERSION,
   };
-  const thinkResponseFor = options.thinkResponseFor ?? (stub ? defaultStubThinkResponse : undefined);
+  const thinkResponseFor = options.thinkResponseFor ?? (stub && !options.thinkAnthropic ? defaultStubThinkResponse : undefined);
+  const thinkClient = thinkResponseFor ? undefined : makeThinkClient(options.thinkAnthropic ?? new Anthropic());
 
   // ── Seed one brain with the corpus (pinned config BEFORE ingest) ──
   const pages = options.pages ?? loadSyntheticV1();
@@ -556,7 +576,7 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
         const r = await runThink(engine, {
           question: q.text,
           remote: false,
-          ...(thinkResponseFor ? { stubResponse: thinkResponseFor(q) } : {}),
+          ...(thinkResponseFor ? { stubResponse: thinkResponseFor(q) } : { client: thinkClient }),
         });
         thinkModelUsed = thinkModelUsed ?? r.modelUsed;
         thinkAns = r.answer && r.answer.trim().length > 0 ? r.answer : null;
@@ -645,7 +665,8 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
       'models.think': THINK_MODEL,
       think_model_used: thinkModelUsed,
       embed_transport: stub ? 'stubbed-hash' : 'live',
-      think_llm: stub || options.thinkResponseFor ? 'stubbed' : 'live',
+      think_llm: thinkResponseFor ? 'stubbed' : options.thinkAnthropic ? 'injected' : 'live',
+      think_temperature: THINK_TEMPERATURE,
       judge_mode: options.judgeClient || stub ? 'injected/stub' : 'live',
       judge_blind: true,
       judge_both_orders: true,

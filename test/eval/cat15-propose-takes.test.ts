@@ -22,6 +22,8 @@ import {
   buildExtractionPrompt,
   validateMatchResult,
   computeCounts,
+  extractClaims,
+  EXTRACT_TEMPERATURE,
   matchClaims,
   runProbe,
   aggregate,
@@ -551,4 +553,17 @@ describe('runner end-to-end (hermetic)', () => {
     expect(receipt.run_status).toBe('skipped');
     expect(receipt.skip_reason).toMatch(/matched nothing/);
   }, 30000);
+});
+
+describe('cat15 extraction temperature (audit A-03)', () => {
+  test('the extraction call is sent at temperature 0', async () => {
+    const seen: Array<Record<string, unknown>> = [];
+    const client = {
+      messages: { create: async (params: Record<string, unknown>) => { seen.push(params); return { content: [{ type: 'text', text: '[]' }] }; } },
+    } as any;
+    const out = await extractClaims('A page body.', client);
+    expect(out.parse_failed).toBe(false);
+    expect(seen[0].temperature).toBe(0);
+    expect(EXTRACT_TEMPERATURE).toBe(0);
+  });
 });

@@ -24,6 +24,7 @@ import { tmpdir } from 'os';
 import {
   CAT29_CATEGORY,
   THINK_MODEL,
+  THINK_TEMPERATURE,
   PINNED_CONFIG,
   buildQuestions,
   arrReadings,
@@ -294,5 +295,33 @@ describe('runCat29 skip path', () => {
       if (savedAnthropic !== undefined) process.env.ANTHROPIC_API_KEY = savedAnthropic;
       if (savedOpenai !== undefined) process.env.OPENAI_API_KEY = savedOpenai;
     }
+  }, RUN_TIMEOUT);
+});
+
+// ─── Think LLM temperature (audit B-29-03) ──────────────────────────────
+
+describe('runCat29 think LLM temperature', () => {
+  test('the think call goes through the injected client at temperature 0 and the receipt records it', async () => {
+    const seen: Array<Record<string, any>> = [];
+    const thinkAnthropic = {
+      messages: {
+        create: async (params: Record<string, any>) => {
+          seen.push(params);
+          return {
+            id: 'm', type: 'message', role: 'assistant', model: params.model,
+            content: [{ type: 'text', text: JSON.stringify({ answer: 'ARR is $120K as of 2025-01-15. ARR is $502K as of 2025-08-20. (companies/acme-co-0)', citations: [], gaps: [] }) }],
+            stop_reason: 'end_turn', stop_sequence: null, usage: { input_tokens: 1, output_tokens: 1 },
+          };
+        },
+      },
+    } as any;
+    const r = await runCat29({ stub: true, pages: MINI_PAGES, questions: [MINI_QUESTION], reportsDir: tmpReports(), quiet: true, thinkAnthropic });
+    expect(seen.length).toBe(1);
+    expect(seen[0].temperature).toBe(0);
+    expect(seen[0].model).toBe(THINK_MODEL.replace(/^anthropic:/, ''));
+    expect(THINK_TEMPERATURE).toBe(0);
+    expect(r.receipt.resolved_config?.think_temperature).toBe(0);
+    expect(r.receipt.resolved_config?.think_llm).toBe('injected');
+    expect(r.rows[0].think_answer).toContain('ARR is $502K');
   }, RUN_TIMEOUT);
 });

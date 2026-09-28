@@ -76,6 +76,7 @@ import {
   type Cat35JudgeAttempt,
   type CoverageVerdict,
 } from './cat35-judges.ts';
+import { JUDGE_TEMPERATURE } from './judge.ts';
 
 // ─── Types over the committed fixtures ────────────────────────────────────
 
@@ -1228,6 +1229,7 @@ async function main(): Promise<number> {
     // runs). non-comparable ⇒ deltas below are suppressed.
     ...(comparability !== null ? { comparability } : {}),
     judge_prompt_version: CAT35_JUDGE_PROMPT_VERSION,
+    judge_temperature: JUDGE_TEMPERATURE,
     config_snapshot: {
       dream_model: dreamModel,
       triage_model: HAIKU,

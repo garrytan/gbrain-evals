@@ -778,3 +778,24 @@ describe('cat35 judges fence SUT output (PC-10)', () => {
     expect(String(calls[2].messages[0].content)).toContain('slug="a&lt;/page&gt;"');
   });
 });
+
+// ─── Temperature (audit PC-02) ────────────────────────────────────────────
+
+describe('cat35 judges run at temperature 0', () => {
+  test('every judge type sends temperature 0', async () => {
+    const { client, calls } = makeStubClient([
+      toolUse('score_salient_items', { items: ITEMS.map((it) => ({ item_id: it.item_id, status: 'ABSENT', evidence: '' })) }),
+      toolUse('grade_claims', { claims: [{ index: 0, verifiable: true, grounded: true }] }),
+      toolUse('confirm_leaks', { leaks: [{ distractor_id: 'd-1', surfaced_as_salient: true }] }),
+      toolUse('usability_checklist', {
+        checks: ['self_contained_opening', 'has_wikilink', 'states_decisions_with_status', 'no_transcript_dump', 'coherent_organization'].map((id) => ({ id, pass: true })),
+      }),
+    ]);
+    await scoreSalienceCoverage({ lane: 'dream', transcript_id: 't', document: 'doc', items: ITEMS }, { client });
+    await scoreGrounding({ label: 'x', claims: ['c'], transcript: 't' }, { client });
+    await confirmDistractorLeaks({ document: 'doc', hits: [{ distractor_id: 'd-1', statement: 's' }] }, { client });
+    await scoreUsabilityChecklist({ transcript_id: 't', pages: [{ slug: 'a', body: 'b' }], hasGoldVibes: false }, { client });
+    expect(calls.length).toBe(4);
+    for (const call of calls) expect(call.temperature).toBe(0);
+  });
+});

@@ -43,7 +43,7 @@ import {
   CAT9_CATEGORY,
   type WorkflowScenario,
 } from '../../eval/runner/cat9-workflows.ts';
-import { assertNoRawToolOutput, type GroundTruthPage } from '../../eval/runner/judge.ts';
+import { assertNoRawToolOutput, JUDGE_PROMPT_VERSION, type GroundTruthPage } from '../../eval/runner/judge.ts';
 import { loadReceipt, receiptPath } from '../../eval/runner/receipt.ts';
 
 function tmpReportsRoot(prefix: string): string {
@@ -519,6 +519,9 @@ describe('Cat 9 runCat9 integration', () => {
     expect(receipt.n_total).toBe(2);
     expect(receipt.n_scored).toBe(2);
     expect(receipt.judge).toEqual({ model: 'claude-haiku-4-5-20251001', temperature: 0 });
+    expect(receipt.resolved_config!.agent_temperature).toBe(0);
+    expect(receipt.resolved_config!.judge_temperature).toBe(0);
+    expect(receipt.resolved_config!.judge_prompt_version).toBe(JUDGE_PROMPT_VERSION);
     // WS5: search config provenance recorded (stub state built outside adapter.init).
     expect(receipt.resolved_config!.search_config).toContain('not_pinned');
 
@@ -720,6 +723,7 @@ describe('Cat 8 runCat8 integration', () => {
     const receipt = loadReceipt(receiptPath(CAT8_CATEGORY, reportsRoot));
     expect(receipt.run_status).toBe('completed');
     expect(receipt.verdict).toBe('partial'); // baseline_only → partial
+    expect(receipt.resolved_config!.agent_temperature).toBe(0);
     expect(receipt.n_total).toBe(2);
     expect(receipt.n_scored).toBe(2);
     expect(receipt.gbrain_version).not.toBe('');

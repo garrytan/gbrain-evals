@@ -50,6 +50,7 @@ import {
   runAgentLoop,
   classifyAgentError,
   DEFAULT_AGENT_MODEL,
+  AGENT_TEMPERATURE,
   type AgentAdapterState,
   type AgentRunConfig,
   type AgentRunResult,
@@ -406,6 +407,7 @@ function writeCat8Artifacts(
   const model = opts.model ?? DEFAULT_AGENT_MODEL;
   const resolvedConfig: Record<string, unknown> = {
     agent_model: model,
+    agent_temperature: AGENT_TEMPERATURE,
     turn_cap: opts.turnCap ?? 10,
     max_retries: opts.maxRetries ?? 3,
     // WS5: search mode + reranker state the adapter pinned before ingest.

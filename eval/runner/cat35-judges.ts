@@ -8,6 +8,7 @@
  *   - ONE retry on malformed tool_use, then a STRUCTURED failure — these
  *     functions never throw for malformed model output
  *   - injectable `client` for $0 stub-driven tests
+ *   - temperature 0 (judge.ts JUDGE_TEMPERATURE), recorded in the receipt
  *   - per-call token + cost accounting (haiku-4-5 $1/$5 per M,
  *     sonnet-4-6 $3/$15 per M; unknown models priced at sonnet rates as a
  *     conservative overestimate)
@@ -32,14 +33,15 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { getDefaultLlmBudget } from './llm-budget.ts';
-import { UNTRUSTED_DATA_INSTRUCTION, escapeUntrusted, fenceUntrusted, newJudgeNonce, unescapeUntrusted } from './judge.ts';
+import { JUDGE_TEMPERATURE, UNTRUSTED_DATA_INSTRUCTION, escapeUntrusted, fenceUntrusted, newJudgeNonce, unescapeUntrusted } from './judge.ts';
 
 // ─── Version + pricing ────────────────────────────────────────────────────
 
 /**
- * Pinned prompt version — recorded in the receipt for comparability.
+ * Pinned prompt version, recorded in the receipt for comparability.
  * 2026-09-28-v2: nonce-fenced, escaped SUT output and an untrusted-data
- * instruction in every system prompt (audit PC-10).
+ * instruction in every system prompt (audit PC-10); judges pinned at
+ * temperature 0 (audit PC-02; earlier runs sampled at the provider default).
  */
 export const CAT35_JUDGE_PROMPT_VERSION = '2026-09-28-v2';
 
@@ -173,6 +175,7 @@ async function callJudgeOnce(
       client.messages.create({
         model,
         max_tokens: maxTokens,
+        temperature: JUDGE_TEMPERATURE,
         system: [
           {
             type: 'text',

@@ -203,6 +203,8 @@ export function buildExtractionPrompt(pageBody: string): string {
 const EXTRACT_MODEL = process.env.CAT15_MODEL ?? 'claude-sonnet-4-6';
 const JUDGE_MODEL = process.env.CAT15_JUDGE_MODEL ?? 'claude-haiku-4-5-20251001';
 const JUDGE_TEMPERATURE = 0;
+/** Extraction runs at temperature 0 so the scored extraction is reproducible (audit A-03). */
+export const EXTRACT_TEMPERATURE = 0;
 
 let _anthropic: Anthropic | null = null;
 function getAnthropic(): Anthropic {
@@ -227,6 +229,7 @@ async function extractClaims(pageBody: string, client?: Anthropic): Promise<Extr
   const res = await (client ?? getAnthropic()).messages.create({
     model: EXTRACT_MODEL,
     max_tokens: PROPOSE_TAKES_MAX_TOKENS,
+    temperature: EXTRACT_TEMPERATURE,
     messages: [{ role: 'user', content: prompt }],
   });
   const block = res.content.find((b): b is Anthropic.Messages.TextBlock => b.type === 'text');
@@ -638,6 +641,7 @@ interface RunProvenance {
   probes_scored: number;
   probes_in_fixture: number;
   extract_model: string;
+  extract_temperature: number;
   judge_model: string;
   prompt_version: string;
   prompt_source: string;
@@ -745,6 +749,7 @@ function baseReceipt(startedAt: string): Omit<Receipt, 'run_status' | 'n_total' 
 function resolvedConfig(dryRun: boolean, filter: string | null): Record<string, unknown> {
   return {
     extract_model: EXTRACT_MODEL,
+    extract_temperature: EXTRACT_TEMPERATURE,
     judge_model: JUDGE_MODEL,
     judge_temperature: JUDGE_TEMPERATURE,
     prompt_version: PROPOSE_TAKES_PROMPT_VERSION,
@@ -842,6 +847,7 @@ async function main(): Promise<void> {
     probes_scored: accSummary.n_scored,
     probes_in_fixture: probes.length,
     extract_model: EXTRACT_MODEL,
+    extract_temperature: EXTRACT_TEMPERATURE,
     judge_model: JUDGE_MODEL,
     prompt_version: PROPOSE_TAKES_PROMPT_VERSION,
     prompt_source: 'node_modules/gbrain/src/core/cycle/propose-takes.ts',
