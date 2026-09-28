@@ -56,7 +56,7 @@ export function inspectRegressionRunnerTree(root = process.cwd()): string[] {
   const known = new Set([...inventory.categories.flatMap(c => c.runner ? [c.runner] : []), ...inventory.auxiliary_category_files]);
   const issues: string[] = [];
   if (!existsSync(join(root, 'eval/runner'))) return [`runner tree unavailable: ${root}`];
-  for (const name of readdirSync(join(root, 'eval/runner'))) {
+  for (const name of readdirSync(join(root, 'eval/runner')).sort()) {
     const path = `eval/runner/${name}`;
     if (/^cat\d+[a-z]?-.*\.ts$/.test(name) && !known.has(path)) issues.push(`untriaged category runner: ${path}`);
   }
