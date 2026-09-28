@@ -4,10 +4,11 @@
 # benchmarks (LongMemEval embeds, judge-based cats) run manually and land
 # receipts; see TODOS.md and eval/RUNBOOK.md. Actions are pinned to commit
 # SHAs; bun is pinned by `bun-version` below; installs are frozen-lockfile.
-# The unit suite is split across two shard jobs, each running its files in
-# parallel workers against a shared pre-migrated PGLite snapshot
-# (test/support/pglite-snapshot.ts). Per-job timeouts bound every job well
-# above its observed runtime rather than hoping for it.
+# The unit suite is split across four shard jobs (ordinary `bun test
+# --shard`, not the experimental parallel worker mode), all loading a
+# shared pre-migrated PGLite snapshot (test/support/pglite-snapshot.ts).
+# Per-job timeouts bound every job well above its observed runtime rather
+# than hoping for it.
 name: ci
 
 on:
@@ -48,28 +49,13 @@ jobs:
       - name: Retrieval regression gate (qrels + baseline, keyword-only)
         run: bun scripts/generate-v0.41-launch.ts --check
 
-      # Hermetic runner subset: each is a REAL end-to-end run (PGLite,
-      # extraction, ranking) needing no API keys. Individually bounded so
-      # one hang can't eat the job budget. Every step fails on the runner's
-      # own nonzero exit code, the same signal all.ts falls back to, so a
-      # score gate added inside a runner (Cat 2 and Cat 3 have none yet)
-      # fails CI without further workflow changes.
-      - name: "Runner: adversarial (Cat 10)"
-        run: timeout 180 bun eval/runner/adversarial.ts
-      - name: "Runner: type-accuracy (Cat 2)"
-        run: timeout 240 bun eval/runner/type-accuracy.ts
-      - name: "Runner: temporal (Cat 4)"
-        run: timeout 240 bun eval/runner/temporal.ts
-      - name: "Runner: identity (Cat 3)"
-        run: timeout 180 bun eval/runner/identity.ts
-      - name: "Runner: before-after (Cat 1)"
-        run: timeout 300 bun eval/runner/before-after.ts
-      - name: "Runner: mcp-contract (Cat 12)"
-        run: timeout 300 bun eval/runner/mcp-contract.ts
-      - name: "Runner: cat6 prose-scale (Cat 6)"
-        run: timeout 300 bun eval/runner/cat6-prose-scale.ts
-      - name: "Runner: Cat36 offline plumbing (not capability evidence)"
-        run: timeout 180 bun eval/runner/cat36-associative-retrieval.ts --offline --smoke
+      # Every keyless category through all.ts (--tier offline). Status comes
+      # from each runner's receipt and gate (Cats 1, 2, 3 and 10 gate on
+      # regressions), so a score regression fails this step through all.ts's
+      # exit code. Cat 34 needs an external gbrain checkout and records a
+      # skip here; BRAINBENCH_ALLOW_SKIP acknowledges receipt-declared skips.
+      - name: "BrainBench offline tier (all.ts --tier offline)"
+        run: BRAINBENCH_ALLOW_SKIP=1 timeout 900 bun run eval:brainbench
 
       - name: Upload reports on failure
         if: failure()
@@ -86,7 +72,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2]
+        shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -98,5 +84,5 @@ jobs:
         run: bun install --frozen-lockfile
 
       # test/eval/ plus the unit tests colocated under eval/.
-      - name: Unit + integration tests (shard ${{ matrix.shard }}/2)
-        run: bun test --parallel --shard=${{ matrix.shard }}/2 test/eval/ eval/
+      - name: Unit + integration tests (shard ${{ matrix.shard }}/4)
+        run: bun test --shard=${{ matrix.shard }}/4 test/eval/ eval/

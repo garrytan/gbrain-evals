@@ -102,7 +102,7 @@ bun run test
 bun test test/eval/query-cli.test.ts test/eval/receipts-manifest.test.ts
 ```
 
-The first command runs the repository suite: the Bun tests under `test/eval/` and `eval/` in parallel workers, the Python orchestrator tests and the validators. `bun run test:serial` runs the Bun tests in one process, which is slower but easier to debug. In-memory test brains load a pre-migrated PGLite snapshot per embedding shape from `node_modules/.cache/gbrain-evals/pglite/`; set `GBRAIN_EVALS_PGLITE_SNAPSHOT=0` to replay migrations cold. The second command isolates inexpensive checks. Other useful focused tests include:
+The first command runs the repository suite: the Bun tests under `test/eval/` and `eval/` as four concurrent `bun test --shard` processes (`TEST_SHARDS` changes the count), the Python orchestrator tests and the validators. `bun run test:serial` runs the Bun tests in one process, which is slower but easier to debug. In-memory test brains load a pre-migrated PGLite snapshot per embedding shape from `node_modules/.cache/gbrain-evals/pglite/`; set `GBRAIN_EVALS_PGLITE_SNAPSHOT=0` to replay migrations cold. The second command isolates inexpensive checks. Other useful focused tests include:
 
 ```sh
 bun test eval/runner/queries/validator.test.ts

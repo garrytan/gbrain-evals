@@ -9,8 +9,8 @@
     "url": "git+https://github.com/garrytan/gbrain-evals.git"
   },
   "scripts": {
-    "test": "bun test --parallel test/eval/ eval/ && bun run test:py && bun run validate",
-    "test:unit": "bun test --parallel test/eval/ eval/",
+    "test": "bun scripts/test-shards.ts && bun run test:py && bun run validate",
+    "test:unit": "bun scripts/test-shards.ts",
     "test:serial": "bun test test/eval/ eval/",
     "test:py": "python3 test/retrieval_refresh_orchestrator_test.py",
     "validate": "python3 scripts/verify-published-longmemeval.py && python3 scripts/verify-documentation-refresh.py && bun run eval:query:validate && bun eval/runner/validate-data.ts",
