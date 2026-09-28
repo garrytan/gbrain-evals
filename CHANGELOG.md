@@ -2,6 +2,90 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.1] - 2026-09-28
+
+Several published numbers were measured by code that could not fail, or that
+let the system under test see the answer. This release fixes the runners and
+scorers named in the 2026-09-28 measurement-integrity audit. It changes no
+committed receipt and runs no paid benchmark. Where a fix moves a published
+number, the old number stays in its dated report and the new value below is a
+recomputation or a keyless rerun at the current pin (`939232f`).
+
+### Fixed
+
+- LongMemEval runners no longer show the gold label. Every gold session id
+  starts with `answer_` and no other session does. The retrieval runner, the
+  answer check, the reading-notes request builder and the M-pilot build now
+  give the system and the reader opaque ids (`s-` plus 10 hex characters) and
+  translate back before scoring. A test asserts that no system or reader input
+  contains `answer_` (C-01, PD-05, PD-08). The published 433/500 judged
+  answers and the 308 to 324 of 361 reading-notes result came from readers
+  that saw raw ids; they need a paid rerun before they can be treated as
+  clean.
+- The LongMemEval aggregator marks a run publishable only when every adapter
+  has the expected row count, and stamps the gbrain version recorded in the
+  rows rather than the local install (PD-01, PD-02). Resume and batch
+  completion are keyed on `run_config_hash` (PD-03). The NDJSON validator
+  rejects residual error rows unless `--allow-errors` is passed (PD-04).
+  Answer-generation outages count as dependency errors (PD-06).
+- `all.ts` now requires a fresh, valid receipt from every runner it
+  dispatches. A missing or invalid receipt is a failure, never an exit-code
+  pass (C-06, C-07). It lists every category in the repository with a tier,
+  runs `--tier offline` (default), `paid` or `all`, and prints each category it
+  did not run with the reason (C-09). Latency categories run alone (C-11).
+  The `eval:brainbench:published` script, which claimed N=10 while no
+  dispatched runner read N, is removed (C-08). A keyless `--tier offline`
+  sweep at the current pin passed 17 of 17 dispatched categories.
+- Cat 2 type accuracy charges every inferred type that differs from gold, so
+  an extractor that emits every type can no longer score 100% (C-05). At the
+  current pin, overall type accuracy is 86.6% (240/277 found pairs; 97.1%
+  under the old any-type rule, still reported as a diagnostic) and strict F1
+  is 41.3% (48.1% before). Cat 2 and Cat 3 now write receipts and gate on
+  regression floors.
+- Cat 3 scores the handle without `@` as documented, because the keyword
+  index strips the `@`. Undocumented alias recall is 13.75% (55/400), not the
+  published 31.0% (C-03).
+- Cat 1 reports Precision@5 with the standard /5 denominator: 29.9% before
+  and 35.4% after graph traversal, against a ceiling of 36.0%. The legacy
+  /min(5, returned) value (39.2% to 46.5% at this pin) is kept beside it
+  (C-04).
+- The Cat 36 offline smoke fails when search crashes on every probe or finds
+  no evidence (PC-05). Cat 34 gates on production-seam cells and reports
+  contract-seam cells as informational, so it can pass (PC-08).
+- Cat 35 reports the evidence-verified joint score next to the judge-only
+  score and excludes judge failures instead of counting them as misses
+  (PC-01, PC-03). Recomputed from the committed receipts (dream lane macro):
+  88.1% judge-only is 74.9% joint; the earlier 70.2% is 58.2% joint; the
+  Aug-25 baseline is 64.7% judge-only (61.5% published) with 8 of 173 failed
+  items excluded. Cat 35 writes a common receipt and skips cleanly without
+  keys (PC-09).
+- Cat 29 judges both answers in one blind prompt in both orders and flags
+  position-inconsistent pairs; the earlier "both orders" made the same
+  single-answer call twice (B-29-01).
+- The multi-adapter `gbrain` row now runs the product path (hybrid search
+  with relational retrieval). The regex parser for the four query templates
+  stays as `graph-oracle-parse`, labeled as an upper bound (C-10).
+- Cat 13 reports probes that copy the target page's title, description or
+  body as a lexical control beside the conceptual probes. Recomputed from the
+  2026-09-09 receipt, gbrain scores 61.5% nDCG@5 on the 246 conceptual probes
+  and 53.6% on the 302 lexical-control probes (A-14).
+- Every `readdirSync` enumeration is sorted, with a repository-wide test
+  (A-06). The Cat 13 probe set is unchanged; Cat 6 injects different mentions
+  in some cases with every gated rate unchanged.
+- Judges and direct model calls run at temperature 0 where the SDK allows it
+  (PC-02, B-29-03, A-03). Judge prompts escape system output, fence it in a
+  per-call nonce block, and state that block content is data. Judge prompt
+  versions moved, so new judged receipts do not compare with older ones
+  (C-13, A-20, B-JDG-01, PC-10).
+- `dcgAtK` counts each id once, so nDCG cannot exceed 1 (C-16).
+
+### Limits
+
+Cat 30 to 33 model calls and the Cat 35 dream and facts lanes run inside
+gbrain and still use the provider default temperature. The reading-notes
+reader keeps its published default temperature so that an opaque-id rerun
+changes one variable. The historical reports are annotated separately.
+
 ## [0.10.0] - 2026-09-25
 
 Taking brief notes before answering helped the tested readers use intact
