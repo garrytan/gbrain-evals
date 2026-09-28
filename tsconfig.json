@@ -1,6 +1,10 @@
 {
   "compilerOptions": {
-    "lib": ["ESNext"],
+    "lib": [
+      "ESNext",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",
@@ -10,7 +14,16 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "paths": {
+      "@jsquash/png/encode.js": [
+        "./types/jsquash-png-encode.d.ts"
+      ]
+    }
   },
-  "include": ["eval/**/*", "test/**/*"]
+  "include": [
+    "eval/**/*",
+    "test/**/*",
+    "types/**/*"
+  ]
 }

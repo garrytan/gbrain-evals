@@ -1,6 +1,6 @@
 {
   "name": "gbrain-evals",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "description": "BrainBench — public benchmark for personal knowledge agent stacks. Consumes gbrain as a library.",
   "type": "module",
   "license": "MIT",
@@ -9,7 +9,12 @@
     "url": "git+https://github.com/garrytan/gbrain-evals.git"
   },
   "scripts": {
-    "test": "bun test test/eval/",
+    "test": "bun test --parallel test/eval/ eval/ && bun run test:py && bun run validate",
+    "test:unit": "bun test --parallel test/eval/ eval/",
+    "test:serial": "bun test test/eval/ eval/",
+    "test:py": "python3 test/retrieval_refresh_orchestrator_test.py",
+    "validate": "python3 scripts/verify-published-longmemeval.py && python3 scripts/verify-documentation-refresh.py && bun run eval:query:validate && bun eval/runner/validate-data.ts",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json",
     "eval:run": "bun eval/runner/multi-adapter.ts",
     "eval:run:dev": "BRAINBENCH_N=1 bun eval/runner/multi-adapter.ts",
     "eval:world:view": "bun eval/cli/world-view.ts",
@@ -24,7 +29,6 @@
     "eval:brainbench:all": "bun eval/runner/all.ts --tier all",
     "eval:cat6": "bun eval/runner/cat6-prose-scale.ts",
     "eval:cat11": "bun eval/runner/cat11-multimodal.ts",
-    "postinstall": "bun scripts/postinstall-pglite-link.ts",
     "eval:cat35": "CAT35_FULL=1 bun eval/runner/cat35-transcript-distill.ts",
     "eval:cat35:smoke": "bun eval/runner/cat35-transcript-distill.ts",
     "eval:cat36": "bun eval/runner/cat36-associative-retrieval.ts --offline",
@@ -40,7 +44,9 @@
   },
   "devDependencies": {
     "@types/bun": "1.3.10",
-    "typescript": "5.6.3"
+    "@types/express": "^5.0.6",
+    "@types/js-yaml": "^3.12.10",
+    "typescript": "5.9.3"
   },
   "keywords": [
     "gbrain",
@@ -49,5 +55,8 @@
     "personal-knowledge-agent",
     "retrieval-eval",
     "rag-benchmark"
-  ]
+  ],
+  "patchedDependencies": {
+    "postgres@3.4.9": "patches/postgres@3.4.9.patch"
+  }
 }
