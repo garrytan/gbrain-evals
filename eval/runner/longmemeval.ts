@@ -62,6 +62,7 @@
  *   bun eval/runner/longmemeval.ts --seed 42          # stratified-sample seed
  *   bun eval/runner/longmemeval.ts --adapters hybrid-sessdiv --overfetch-factor 3
  *                                                     # session-diversity methodology row
+ *   bun eval/runner/longmemeval.ts --print-plan       # run_config_hash per adapter + question ids, no run
  *
  * Adapter keys: keyword, vector, hybrid, hybrid+expansion (the four legacy
  * adapters, unchanged behavior), plus hybrid-sessdiv, hybrid+expansion-sessdiv
@@ -153,6 +154,8 @@ export interface Opts {
   /** Where receipt.json lands (receiptPath(category, reportsDir)). */
   reportsDir: string;
   retainEvidence?: boolean;
+  /** Print the run plan (per-adapter run_config_hash + selected question ids) as JSON and exit without running. */
+  printPlan?: boolean;
 }
 
 export function parseOpts(argv: string[] = process.argv.slice(2)): Opts {
@@ -204,12 +207,20 @@ export function parseOpts(argv: string[] = process.argv.slice(2)): Opts {
     embeddingDimensions: arg(args, '--embedding-dims') ? Number(arg(args, '--embedding-dims')) : null,
     reportsDir: arg(args, '--reports-dir') ?? join(process.cwd(), 'eval/reports'),
     ...(args.includes('--retain-evidence') ? { retainEvidence: true } : {}),
+    ...(args.includes('--print-plan') ? { printPlan: true } : {}),
   };
 }
 
+/** Resume key: a row is reused only by a run with the same adapter, question and run configuration (PD-03). */
+export function resumeKey(adapter: string, questionId: string, runConfigHash: string | undefined): string {
+  return `${adapter}::${questionId}::${runConfigHash ?? ''}`;
+}
+
 /**
- * Read an existing NDJSON stream and return the set of (adapter, question_id)
- * pairs already completed. The wrapper loop relies on this for resume.
+ * Read an existing NDJSON stream and return the resumeKey of every
+ * (adapter, question_id, run_config_hash) already completed. The wrapper loop
+ * relies on this for resume; a row written under another configuration never
+ * satisfies the current run.
  *
  * Rows with an `error` field are NOT completed — they are re-queued on the
  * next invocation instead of becoming permanent misses (audit finding
@@ -225,7 +236,7 @@ export function readCompletedPairs(path: string): Set<string> {
     try {
       const obj = JSON.parse(line);
       if (obj?.adapter && obj?.question_id && obj.error === undefined) {
-        done.add(`${obj.adapter}::${obj.question_id}`);
+        done.add(resumeKey(obj.adapter, obj.question_id, obj.run_config_hash));
       }
     } catch { /* truncated/malformed line → treat as not completed, re-run */ }
   }
@@ -911,12 +922,21 @@ export function computeVerdict(
 
 // ─── Run ──────────────────────────────────────────────────────────
 
+export interface RunPlan {
+  /** Adapter name → run_config_hash for every runnable adapter. */
+  run_config_hashes: Record<string, string>;
+  /** Selected question ids after --stratify/--limit, in dataset order (all shards). */
+  question_ids: string[];
+  adapters_skipped: Array<{ adapter: string; skip_reason: string }>;
+}
+
 export interface RunResult {
   summaries: RunSummary[];
   receipt: Receipt;
   receiptFile: string;
   reportPath: string | null;
   exitCode: number;
+  plan?: RunPlan;
 }
 
 const LME_CATEGORY = 'longmemeval';
@@ -1093,6 +1113,20 @@ export async function run(opts: Opts): Promise<RunResult> {
         `Run --keyword-only, set the key, or stub the embed transport for hermetic runs.`,
       );
     }
+  }
+
+  const runConfigPreimages: Record<string, RunConfigPreimage> = Object.fromEntries(runnable.map(adapter => [adapter.name,
+    buildRunConfigPreimage(adapter, opts, { embeddingModel: resolvedEmbeddingModel, embeddingDims: resolvedEmbeddingDims, expansionModel: resolvedExpansionModel })]));
+  const runConfigHashes = Object.fromEntries(Object.entries(runConfigPreimages).map(([name, preimage]) => [name, runConfigHash(preimage)]));
+  if (opts.printPlan) {
+    const plan: RunPlan = { run_config_hashes: runConfigHashes, question_ids: all.map(q => q.question_id), adapters_skipped: skippedAdapters };
+    process.stdout.write(JSON.stringify(plan) + '\n');
+    const receipt: Receipt = { ...baseReceipt(startedAt), run_status: 'skipped', skip_reason: 'plan only (--print-plan); nothing ran and no receipt was written',
+      n_total: 0, n_scored: 0, completion_rate: 0, errors: [], publishable: false, finished_at: new Date().toISOString() };
+    return { summaries: [], receipt, receiptFile, reportPath: null, exitCode: 0, plan };
+  }
+
+  if (needsEmbeddings) {
     if (!opts.noCache) {
       // Wire the content-addressed cache. Hits skip the provider API
       // entirely; misses fall through to the original ai-sdk embedMany.
@@ -1121,10 +1155,19 @@ export async function run(opts: Opts): Promise<RunResult> {
 
   // Resume support: when --ndjson is given, every per-question result is
   // appended immediately. On restart we read it back and skip already-done
-  // (adapter, question_id) pairs — error rows are NOT skipped; they re-run
-  // (audit finding longmemeval-03). Pair this with --max-wall-seconds and a
+  // (adapter, question_id, run_config_hash) rows; error rows are NOT
+  // skipped; they re-run (audit finding longmemeval-03). Clean rows for a
+  // requested adapter under another configuration stop the run instead of
+  // being mixed in (PD-03). Pair this with --max-wall-seconds and a
   // wrapper bash loop to chip through the full run in 10-min batches.
   const completed = readCompletedPairs(opts.ndjsonPath);
+  const stale = [...completed].map(key => key.split('::')).filter(([adapter, , hash]) => adapter in runConfigHashes && hash !== runConfigHashes[adapter]);
+  if (stale.length > 0) {
+    const adaptersStale = [...new Set(stale.map(([adapter]) => adapter))].sort();
+    throw new Error(`NDJSON ${opts.ndjsonPath} already holds ${stale.length} completed row(s) for ${adaptersStale.join(', ')} ` +
+      `from a different run configuration (run_config_hash differs from ${adaptersStale.map(a => runConfigHashes[a].slice(0, 12)).join(', ')}); ` +
+      'resuming would mix configurations. Use a fresh --ndjson path.');
+  }
   if (opts.ndjsonPath) {
     mkdirSync(dirname(opts.ndjsonPath) || '.', { recursive: true });
     if (opts.retainEvidence) writeFileSync(opts.ndjsonPath, '', { flag: 'wx' });
@@ -1141,13 +1184,12 @@ export async function run(opts: Opts): Promise<RunResult> {
   for (const adapter of runnable) {
     for (let i = 0; i < all.length; i++) {
       if (!inShard(i)) continue;
-      if (completed.has(`${adapter.name}::${all[i].question_id}`)) continue;
+      if (completed.has(resumeKey(adapter.name, all[i].question_id, runConfigHashes[adapter.name]))) continue;
       expectedProbes++;
     }
   }
   const acc = new ProbeAccounting(expectedProbes);
   const evidenceCapture = opts.retainEvidence ? createLmeCapture(datasetBytes, all.filter((_, i) => inShard(i)), runnable.map(adapter => adapter.name)) : undefined;
-  const runConfigPreimages: Record<string, RunConfigPreimage> = {};
   const abortedAdapters: Array<{ adapter: string; reason: string }> = [];
 
   for (const adapter of runnable) {
@@ -1162,13 +1204,8 @@ export async function run(opts: Opts): Promise<RunResult> {
     // sessdiv adapters over-fetch so the session dedupe has supply to fill
     // K distinct slots.
     const fetchLimit = adapter.sessdiv ? opts.topK * opts.overfetchFactor : opts.topK;
-    const preimage = buildRunConfigPreimage(adapter, opts, {
-      embeddingModel: resolvedEmbeddingModel,
-      embeddingDims: resolvedEmbeddingDims,
-      expansionModel: resolvedExpansionModel,
-    });
-    runConfigPreimages[adapter.name] = preimage;
-    const rowConfigHash = runConfigHash(preimage);
+    const preimage = runConfigPreimages[adapter.name];
+    const rowConfigHash = runConfigHashes[adapter.name];
     // Rerank contract: the first non-empty scored result set must carry
     // rerank_score (gbrain stamps it on the reranked head) — otherwise the
     // reranker fail-opened and this adapter's label would be a lie.
@@ -1212,7 +1249,7 @@ export async function run(opts: Opts): Promise<RunResult> {
         // Deterministic by index so workers don't fight over the same row.
         if (!inShard(i)) continue;
         // Skip pairs already streamed to NDJSON (resume + cross-worker dedup).
-        if (completed.has(`${adapter.name}::${q.question_id}`)) continue;
+        if (completed.has(resumeKey(adapter.name, q.question_id, rowConfigHash))) continue;
         // Wall-budget exit: clean exit lets the wrapper restart cleanly.
         if (Date.now() - wallStart > wallBudgetMs) {
           process.stderr.write(`[longmemeval] wall budget reached (${opts.maxWallSeconds}s); exiting for restart\n`);

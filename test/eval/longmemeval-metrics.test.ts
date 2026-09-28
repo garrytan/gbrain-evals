@@ -41,6 +41,7 @@ import {
   scoreQuestion,
   isAbsQuestion,
   readCompletedPairs,
+  resumeKey,
   stratifiedSample,
   mulberry32,
   classifyErrorOrigin,
@@ -153,11 +154,23 @@ describe('readCompletedPairs', () => {
       '{"adapter":"a","question_id":"q4","hit_at', // kill -9 mid-append
     ].join('\n'));
     const done = readCompletedPairs(p);
-    expect(done.has('a::q1')).toBe(true);
-    expect(done.has('a::q3')).toBe(true);
-    expect(done.has('a::q2')).toBe(false); // errored → re-run
-    expect(done.has('a::q4')).toBe(false); // truncated → re-run
+    expect(done.has(resumeKey('a', 'q1', undefined))).toBe(true);
+    expect(done.has(resumeKey('a', 'q3', undefined))).toBe(true);
+    expect(done.has(resumeKey('a', 'q2', undefined))).toBe(false); // errored → re-run
+    expect(done.has(resumeKey('a', 'q4', undefined))).toBe(false); // truncated → re-run
     expect(done.size).toBe(2);
+  });
+
+  test('resume is keyed on run_config_hash: a row from another configuration never counts (PD-03)', () => {
+    const p = join(TMP, 'resume-hash.ndjson');
+    writeFileSync(p, [
+      JSON.stringify({ adapter: 'a', question_id: 'q1', hit_at_k: true, run_config_hash: 'h-old' }),
+      JSON.stringify({ adapter: 'a', question_id: 'q2', hit_at_k: true, run_config_hash: 'h-new' }),
+    ].join('\n'));
+    const done = readCompletedPairs(p);
+    expect(done.has(resumeKey('a', 'q1', 'h-new'))).toBe(false);
+    expect(done.has(resumeKey('a', 'q1', 'h-old'))).toBe(true);
+    expect(done.has(resumeKey('a', 'q2', 'h-new'))).toBe(true);
   });
 
   test('missing file → empty set', () => {
@@ -833,6 +846,28 @@ describe('end-to-end (keyword adapter, hermetic)', () => {
     // Old code crashed before writing markdown; now the report + md exist.
     expect(existsSync(join(dir, 'report2.json'))).toBe(true);
     expect(readFileSync(join(dir, 'report2.md'), 'utf8')).toContain('No adapter processed any question');
+  }, 180_000);
+
+  test('stale rows from another configuration stop the run; --print-plan names the hashes and questions (PD-03)', async () => {
+    const dir = mkdtempSync(join(TMP, 'e2e-stale-'));
+    const datasetPath = join(dir, 'dataset.json');
+    writeFileSync(datasetPath, JSON.stringify(makeDataset({ goldInHaystack: true })));
+    const planned = await run(e2eOpts(dir, datasetPath, { printPlan: true, limit: 2 }));
+    expect(planned.plan!.question_ids).toEqual(['e2e_q1', 'e2e_q2_multi']);
+    const hash = planned.plan!.run_config_hashes['gbrain-keyword'];
+    expect(hash).toMatch(/^[0-9a-f]{64}$/);
+    expect(existsSync(join(dir, 'rows.ndjson'))).toBe(false);
+    expect(existsSync(planned.receiptFile)).toBe(false);
+    const nd = join(dir, 'rows.ndjson');
+    appendFileSync(nd, JSON.stringify({ adapter: 'gbrain-keyword', question_id: 'e2e_q1', question_type: 'single-session-user',
+      retrieved: ['sess-gold-1'], ground_truth: ['sess-gold-1'], hit_at_k: true, num_haystack: 2, latency_ms: 1, top_k: 5,
+      dataset: 'e2emini', run_config_hash: '0'.repeat(64) }) + '\n');
+    await expect(run(e2eOpts(dir, datasetPath))).rejects.toThrow('different run configuration');
+    writeFileSync(nd, '');
+    const fresh = await run(e2eOpts(dir, datasetPath));
+    expect(fresh.receipt.n_total).toBe(3);
+    const rows = dedupeRows(readFileSync(nd, 'utf8')).rows;
+    expect(rows.every(r => r.run_config_hash === hash)).toBe(true);
   }, 180_000);
 
   test('hybrid adapter runs the pinned pipeline with a stubbed embed transport', async () => {
