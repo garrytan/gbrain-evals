@@ -22,7 +22,7 @@ The [August 31 audit](docs/audit/2026-08-31-eval-audit.md) explains the finding 
 
 - [ ] **Run live negative controls** (WS3). For model-backed categories, confirm that deliberately degraded configurations score at most half as well as the real ones under the fixed-seed rule. Scripted-model tests show that the checks can fail; live runs test whether they detect actual model-quality differences.
 
-- [ ] **Re-run LongMemEval answers with opaque session ids** (September 28 audit, C-01). Every labeled evidence session id starts with `answer_`, and the answer model saw those ids. Map ids to opaque values before indexing and reading, add a test that no system or reader input contains `answer_`, then re-run the judged answers (433/500) and the reading-notes transfer (308/361 to 324/361). Retrieval was unaffected in a 30-question check, but the full retrieval arms should be recounted with opaque ids too.
+- [ ] **Re-run LongMemEval answers with opaque session ids** (September 28 audit, C-01). Every labeled evidence session id starts with `answer_`, and the answer model saw those ids. v0.10.1 maps ids to opaque values in this repository's runners, with a test that no system or reader input contains `answer_`. Still to do: the paid re-run of the judged answers (433/500, which came from gbrain's own evaluator) and the reading-notes transfer (308/361 to 324/361). Retrieval was unaffected in a 30-question check, but the full retrieval arms should be recounted with opaque ids too.
 
 - [ ] **Confirm the LongMemEval release configuration on held-out data** (September 28 audit, B4). Autocut off was chosen by comparing arms on the same 470 questions. Complete the preregistered [LongMemEval-M pilot](docs/benchmarks/2026-09-24-longmemeval-m-pilot-preregistration.md) (4 of 28 B cases done; C0/C1 not run) or score a fresh split.
 
@@ -58,7 +58,7 @@ The [August 31 audit](docs/audit/2026-08-31-eval-audit.md) explains the finding 
 
 - [ ] **Export gbrain's version.** A `gbrain/version` subpath would replace the path-resolution helper in `eval/runner/gbrain-version.ts`. The helper currently works; this is maintenance work.
 
-- [ ] **Add score gates to Cat 2 and Cat 3** (September 28 audit, C-06/C7). Both runners exit 0 at any score. CI and `all.ts` already fail on a runner's nonzero exit code, so a gate inside the runner is enough.
+- [x] **Add score gates to Cat 2 and Cat 3** (September 28 audit, C-06/C7). Completed in v0.10.1: both runners write receipts and gate on regression floors, and CI runs them through `all.ts --tier offline`.
 
 ## Cat35 publication and measurement
 
@@ -100,6 +100,6 @@ These items came from the August 16 plan reviews and the August 26 publication r
 
 ## Completed infrastructure work
 
-- [x] **Run every hermetic check in CI** (September 28 audit, C5 to C9). CI now runs the unit tests under `eval/`, the Python orchestrator tests, the LongMemEval recount, documentation and query validators, and an unfiltered `tsc`. The unit suite reuses a pre-migrated PGLite snapshot per embedding shape and runs in parallel across two shard jobs. The inert `postgres@3.4.9` patch and the unneeded PGLite postinstall link were removed. Completed in gbrain-evals v0.10.2, 2026-09-28.
+- [x] **Run every hermetic check in CI** (September 28 audit, C5 to C9). CI now runs the unit tests under `eval/`, the Python orchestrator tests, the LongMemEval recount, documentation and query validators, and an unfiltered `tsc`. The unit suite reuses a pre-migrated PGLite snapshot per embedding shape and runs as four concurrent shards, locally and in CI. The inert `postgres@3.4.9` patch and the unneeded PGLite postinstall link were removed. Completed in gbrain-evals v0.10.2, 2026-09-28.
 
 - [x] **PGLite teardown freeze under Bun tests** (gbrain v0.46.3). The synchronous WASM loop stopped reproducing at v0.47.8.0. A minimal reproduction and the adapter suite were checked with an external watchdog, and all six skipped teardowns were restored. The bounded disconnect handling for real runs remains. Completed in gbrain-evals v0.4.0, 2026-08-31.

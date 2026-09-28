@@ -20,14 +20,25 @@ comparison yet, and the README now says so.
 - **Cat 3 undocumented alias recall (April 18): 31.0% becomes 13.75%
   (55/400).** The handle without `@` is in the indexed page text and scored
   100/100. Verified by re-running `eval/runner/identity.ts`.
+- **Cat 2 link type accuracy (April 18): 70.7% to 88.5% came from a lenient
+  scorer.** A strict re-run at the current pin gives 86.6% (240/277) and
+  strict F1 41.3% (48.1% before the scorer fix).
+- **The multi-adapter `gbrain` row (April 19, April 23, May 23):** it came
+  from a regular-expression template parser, now `graph-oracle-parse`, and is
+  marked invalid as a product score. The September 9 concept report gains a
+  split of conceptual and lexical-control probes.
 - **Cat 1 precision at five (April 18): 39.2% to 44.7% becomes 29.9% to
   35.4%** when divided by five slots per question (145 × 5 = 725), against a
-  ceiling of 36.0%. Verified by re-running `eval/runner/before-after.ts`.
+  ceiling of 36.0%. Verified by re-running `eval/runner/before-after.ts`; the
+  legacy denominator now gives 46.5% after, against 44.7% published.
 - **Cat 35 retention (August 31): 88.1% is judge-only.** Evidence-verified
   retention, recomputed from the committed receipts, is 74.9% (58.2% before
-  the change). The README now also says the result is in-sample.
+  the change). The August 25 baseline is 64.7% with judge failures excluded
+  (61.5% published) and 51.2% evidence-verified. The README now also says the
+  result is in-sample.
 - **May snapshot, Cats 18b to 29:** every row is marked with the defect of
-  the pre-audit runner that produced it.
+  the pre-audit runner that produced it, including Cat 29's duplicate-call
+  "both orders" scoring.
 - **LongMemEval answer accuracy (433/500) and reading notes (308/361 to
   324/361): pending re-runs.** The answer model saw the `answer_` prefix that
   marks every labeled evidence session id. A 30-question check found no effect
@@ -47,12 +58,22 @@ comparison yet, and the README now says so.
 - `bun run test` now runs the 77 colocated unit tests under `eval/`, the 25
   Python orchestrator tests and the validators (published LongMemEval
   recount, documentation, queries, data). CI runs all of them.
-- The suite runs in about 2 minutes 40 seconds instead of about 9 minutes 20
-  seconds on a 4-core machine. A test preload builds one pre-migrated PGLite
-  snapshot per embedding shape through gbrain's own snapshot loader, and Bun
-  runs test files in parallel workers. CI splits the tests into two shard
-  jobs and moves type checks, validators and hermetic runners into a
-  separate job, each with its own timeout.
+- The Bun suite runs in about 2 minutes 25 seconds instead of about 9
+  minutes 20 seconds on a 4-core machine. A test preload builds one
+  pre-migrated PGLite snapshot per embedding shape through gbrain's own
+  snapshot loader, and `scripts/test-shards.ts` runs four ordinary
+  `bun test --shard` processes at once. (Bun's `--parallel` worker mode was
+  tried and rejected: tests that call `Bun.spawnSync` hung in 2 of 4 full
+  runs.) CI splits the tests into four shard jobs and moves type checks,
+  validators and hermetic runners into a separate job, each with its own
+  timeout. That job runs every keyless
+  category through `bun run eval:brainbench` (`all.ts --tier offline`), so
+  the Cat 1, 2, 3 and 10 gates fail CI on a regression.
+- Documentation follows v0.10.1's opaque session ids: the LongMemEval-M
+  preregistration describes the `indexed-projection-v3` build, the
+  reading-notes report describes request schema 2, and the May LongMemEval
+  report shows how to validate the prefix-bracket stream with
+  `--allow-errors`.
 - `tsc` passes with no output filtering: DOM libraries, `@types/js-yaml` and
   `@types/express`, TypeScript 5.9, and small shims for Bun text imports and
   one image encoder signature. CI gates both type checks unfiltered.
@@ -70,9 +91,11 @@ comparison yet, and the README now says so.
 
 ### Limits
 
-No paid benchmark was re-run for this release. Cat 2 and Cat 3 still have no
-score gates; CI already fails on their exit codes, so gates added inside the
-runners will take effect without workflow changes.
+No paid benchmark was re-run for this release. The LongMemEval answer and
+reading-notes results stay flagged until the opaque-id re-runs, and the
+retracted Cat14, Cat 29 and multi-adapter figures stay invalid until paid
+re-runs. Cat 34 records a skip in CI because it needs an external gbrain
+checkout.
 ## [0.10.1] - 2026-09-28
 
 Several published numbers were measured by code that could not fail, or that
