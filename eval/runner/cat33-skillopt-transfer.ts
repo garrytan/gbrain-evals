@@ -56,10 +56,10 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { configureGateway, __setChatTransportForTests } from 'gbrain/ai/gateway';
-// Deep src imports: no skillopt subpath in gbrain's export map yet (audit skillopt-cats-11).
-import { runSkillOpt } from '../../node_modules/gbrain/src/core/skillopt/orchestrator.ts';
-import { scoreSkillOnTasks } from '../../node_modules/gbrain/src/core/skillopt/validate-gate.ts';
-import { loadHeldOut } from '../../node_modules/gbrain/src/core/skillopt/held-out.ts';
+// SkillOpt entry points via gbrain's public `./core/skillopt` export (audit skillopt-cats-11).
+import {
+  runSkillOpt, scoreSkillOnTasks, loadHeldOut,
+} from 'gbrain/core/skillopt';
 import { ProbeAccounting } from './probe-accounting.ts';
 import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
