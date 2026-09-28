@@ -4,7 +4,9 @@
 
 An assistant can remember facts and still miss a useful pattern in them. Suppose a user repeatedly dismissed companies outside coastal cities, then watched those companies succeed. When the next similar decision arrives, recalling that track record may improve the advice.
 
-This report tested two parts of that idea. Given a hand-written track-record profile, the assistant's advice was preferred in six of eight cases, tied in two, and lost in none. On a separate claim-extraction test, average held-out F1 was 0.922. That is **not 92.2% answer accuracy**, and these two tests do not validate the complete calibration workflow.
+**September 28, 2026 erratum: the Category 14 advice result in this report is invalid.** The judge that produced the 75% win rate (6 of 8), the 100% axis scores and the v1/v2/v3 prompt comparison was not blind. Its prompt included each probe's `notes` field, which spells out the expected behavior (for example, "Calibrated answer MUST NOT fabricate a bias mention"), plus the probe category, and it labeled the two answers `BASELINE ANSWER` and `CALIBRATED ANSWER`. That harness also used the provider's default temperature, judged in one order only, and built its own prompt instead of calling gbrain's `runThink`. The code is preserved at `git show 89445dd:eval/runner/cat14-calibration.ts`. The current runner is blind, judges both orders at temperature 0 and calls `runThink`, but it has not been run for publication. The historical numbers stay below, marked, as a record of what was published. They are not evidence that track-record memory improves advice. The Category 15 extraction F1 is a separate test that this judge defect does not touch; its own caveat is that gbrain's extraction prompt was re-tuned after this run, so 0.922 describes the May prompt only.
+
+This report tested two parts of that idea. Given a hand-written track-record profile, the assistant's advice was reported as preferred in six of eight cases, tied in two, and lost in none (invalid; see the erratum above). On a separate claim-extraction test, average held-out F1 was 0.922. That is **not 92.2% answer accuracy**, and these two tests do not validate the complete calibration workflow.
 
 ## What “calibration” means here
 
@@ -14,7 +16,7 @@ Category 15 tested extraction. Category 14 tested advice after a profile was sup
 
 | Configuration | cat14 win rate (calibrated vs plain) | cat15 F1 (training / unseen) | Cost per 100 test cases |
 |---|---|---|---|
-| **gbrain v0.36.1.0 (this wave)** | **75% / 0% / 25% tie** | **0.952 / 0.922** | ~$1.50 |
+| **gbrain v0.36.1.0 (this wave)** | 75% / 0% / 25% tie (invalid: unblinded judge saw the expected behavior) | **0.952 / 0.922** | ~$1.50 |
 | Plain `think` (no track-record memory) | reference point | not applicable | n/a |
 | Other AI memory systems | never published numbers for this metric | never published numbers for this metric | n/a |
 
@@ -46,13 +48,15 @@ The rubric checked five things: using a relevant pattern, explaining the initial
 | Recommendation changes meaningfully | 75% | Same 2 cases as above — the manufactured counter-prior changed the recommendation in cases where it shouldn't have. |
 | Voice stays friendly | **100%** | No clinical jargon leaked through in any of the 8 answers. |
 | Does NOT mention irrelevant bias | **100%** | The "force-fit" failure mode — where the AI shoehorns the wrong bias into an answer — never happened. This is the most important negative-case safety axis. |
-| **Overall: calibrated wins vs plain** | **75% (6 of 8)** | Calibrated never lost outright. Remaining 2 cases tied. |
+| **Overall: calibrated wins vs plain** | 75% (6 of 8), invalid | Calibrated never lost outright. Remaining 2 cases tied. The judge saw the expected behavior and which answer was which. |
 
 The raw scorecard's phrase “all 8 cases where bias was relevant” is imprecise: the fixture includes empty-memory and irrelevant-bias cases. Read those rows as reported rubric scores across the eight-case test, with applicability handled by the rubric. The two positive-track-record cases exposed a specific problem: the assistant invented a caution when the profile supported confidence.
 
-The preselected gates were at least 55% wins, 95% natural voice, and 90% avoidance of irrelevant bias. The original run passed. Eight cases are too few to establish a stable win rate, a universal quality bar, or the absence of rare harmful advice.
+The preselected gates were at least 55% wins, 95% natural voice, and 90% avoidance of irrelevant bias. The original run passed them under the unblinded judge described in the erratum, so the pass does not count as evidence. Eight cases are too few to establish a stable win rate, a universal quality bar, or the absence of rare harmful advice.
 
 ## More prompt instructions did not help
+
+The same unblinded judge scored every row in this table, so these comparisons are invalid too (September 28, 2026 erratum).
 
 | Prompt version | Win rate | Voice | Force-fit safety | Verdict |
 |--------|-----|-------|-----------|------|

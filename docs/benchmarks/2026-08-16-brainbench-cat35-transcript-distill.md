@@ -6,6 +6,8 @@ A two-hour coding session contains many things worth forgetting and a few things
 
 The first run found two clear problems. Four useful transcripts never reached the writer because triage rejected them. And the writer often put paraphrases inside quotation marks. The August 31 changes addressed both: all 20 signal-bearing sessions emitted pages, judged recall rose to 88.1%, and mechanically verified quote fidelity rose to 82.7%.
 
+**September 28, 2026 addendum: evidence-verified recall.** The 88.1% headline gives credit whenever the model judge says a gold item is fully or partly present. The runner also computes a stricter per-item `joint` score, which keeps that credit only when the judge's quoted evidence actually appears in the page and traces back to the transcript. It was saved in every receipt but never reported for these two runs. Recomputed from the committed receipts with the same macro average over the 20 signal transcripts, evidence-verified recall is **74.9% after the change (`079941d2`) and 58.2% before it (`aa820c7f`)**. In the post-change run, 27 of 173 judge-credited items fail the evidence check. Both measures improved by about 17 to 18 points. Three further limits apply: the judges ran at the provider's default temperature rather than 0; a judge failure counts as a miss; and the fixes were developed on this same 24-transcript corpus, so the gain is in-sample regression evidence from a single run, not a held-out result.
+
 Human judge calibration is still pending. The published calibration file has 24 coverage pairs awaiting human scores. These results are useful machine-judged evidence, with mechanical checks alongside; they have not passed that human validation step.
 
 ## The before-and-after result
@@ -16,6 +18,7 @@ The baseline was 62 commits behind master when the fix work began. We therefore 
 |---|---|---|---|
 | Salient-unit recall (macro) | 61.5% [45.0–77.6] | 70.2% [53.5–85.6] | **88.1% [82.0–93.5]** |
 | Strict (full-credit only) | 56.1% | 64.7% | **82.1%** |
+| Evidence-verified recall (`joint`, macro; added September 28, 2026) | 51.5% | 58.2% | **74.9%** |
 | Sessions emitting pages (of 20 expected) | 16 | 16 | **20** |
 | Quote fidelity (mechanical substring) | 45.4% | 54.2% (130/240) | **82.7% (115/139)** |
 | Claim hallucination | 14.1% | 14.0% | **7.0%** |
@@ -132,7 +135,7 @@ These are the original commands. Their comment about the “current pin” refer
 
 ```bash
 git clone https://github.com/garrytan/gbrain-evals && cd gbrain-evals
-bun install        # postinstall links the nested pglite path gbrain expects
+bun install        # at this run, a postinstall linked a nested pglite path; removed in v0.10.2 as unneeded
 export ANTHROPIC_API_KEY=... OPENAI_API_KEY=...
 
 bun test test/eval/                                   # $0, no network

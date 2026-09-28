@@ -2,13 +2,21 @@
 
 **Historical run: April 18, 2026.** Branch `garrytan/link-timeline-extract`, PR #188; in-memory PGLite. The original run took about 3 minutes without API keys or network access. These are the measurements from that run, not a score for the current release. See the [retrieval refresh](2026-09-09-retrieval-refresh.md) for current results.
 
+**September 28, 2026 erratum: two numbers in this report are corrected below.**
+
+- **Precision@5 (Category 1).** The published 39.2% to 44.7% divided each question's hits by the number of results returned in its first five, not by five. A September 28 re-run of `eval/runner/before-after.ts` on the committed corpus reproduces the BEFORE side exactly: 217 correct in 553 returned slots, which is 39.2% on that lenient denominator. That run has 145 questions, not the 196 described below. Dividing by five slots per question (145 × 5 = 725) gives **29.9% before (217/725) and 35.4% after (257/725)** in the re-run. The historical AFTER count of 247 would give 34.1% (247/725). The best possible score is 36.0% (261/725), because most questions have fewer than five correct answers. Recall@5 (83.1% to 94.6%, out of 261 required answers) is unaffected. The AFTER system returned every BEFORE result plus graph results, so the set-level table cannot show AFTER losing; and BEFORE was sorted alphabetically, which no real retriever does.
+- **Undocumented alias recall (Category 3).** The published 31.0% counted a handle written without its `@`, such as `schen`, as undocumented. The page text includes `@schen`, and the full-text index drops the `@`, so that alias is in the page. It scored 100 of 100. A September 28 re-run gives `initial` 15/100, `no-period` 15/100 and typos 25/200. Without the misclassified handle, **undocumented alias recall is 55/400 = 13.75%**. The initial-letter hits are partly luck: 20 entities share each surname, so `S. Chen` finds the target only by tie order.
+
+The original tables stay below, labeled with these corrections.
+
 A note can mention a company without saying that its author works there. Keyword search finds the mention. A typed relationship records what the mention means: employee, founder, investor, or advisor. This experiment asked whether using those relationships first helped gbrain find the right people.
 
 The combined graph-first search and text fallback returned more correct answers in its first five results:
 
 | Metric              | BEFORE PR #188 | AFTER PR #188 | Δ            |
 |---------------------|----------------|---------------|--------------|
-| **Precision@5**     | 39.2%          | **44.7%**     | **+5.4 pts** |
+| Precision@5, as published (lenient denominator; see erratum) | 39.2% | 44.7% | +5.4 pts |
+| **Precision@5, standard denominator (September 28 re-run)** | **29.9%** | **35.4%** | **+5.5 pts** (ceiling 36.0%) |
 | **Recall@5**        | 83.1%          | **94.6%**     | **+11.5 pts**|
 | Correct in top-5    | 217            | 247           | **+30**      |
 
@@ -28,7 +36,8 @@ For “Who works at Acme?”, a text match may return investors, advisors, and o
 
 | Metric              | BEFORE | AFTER  | Δ             |
 |---------------------|--------|--------|---------------|
-| **Precision@5**     | 39.2%  | 44.7%  | **+5.4 pts**  |
+| Precision@5, as published (lenient) | 39.2%  | 44.7%  | +5.4 pts  |
+| **Precision@5, standard (September 28 re-run)** | **29.9%** | **35.4%** | **+5.5 pts** |
 | **Recall@5**        | 83.1%  | 94.6%  | **+11.5 pts** |
 | Correct in top-5    | 217    | 247    | **+30**       |
 
@@ -69,7 +78,8 @@ Identity resolution tested 100 entities with eight alias forms each. An alias is
 | Alias category | Recall (top-10) |
 |----------------|-----------------|
 | Documented (in canonical body)     | 100.0% |
-| Undocumented (initials, typos)     | 31.0%  |
+| Undocumented (initials, typos), as published | 31.0% (counted `schen` for `@schen` as undocumented) |
+| **Undocumented, corrected (September 28 re-run)** | **13.75% (55/400)** |
 
 The 50-entity timeline fixture contained 10–20 dated events per entity over five years:
 

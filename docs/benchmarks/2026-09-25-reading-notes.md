@@ -8,6 +8,8 @@ assistant can answer questions about old conversations; its section 5.5 tests
 extracting brief notes before an answer, using the original supporting
 conversations rather than a lossy replacement summary.
 
+**September 28, 2026 notice: the GBrain transfer result (308/361 to 324/361) is pending a re-run.** The answer model in both arms saw each LongMemEval session's raw id, and every labeled evidence session's id starts with `answer_` while no other session's does. The model could therefore tell which sessions were the labeled ones. Both arms saw the same ids, so the comparison is matched, but the size of the notes effect with opaque ids has not been measured. This concerns reading only; retrieval was fixed in this study, and a separate 30-question check found no measurable effect of the prefix on vector retrieval. The four-condition paper replication was not assessed for this issue.
+
 **Keeping the evidence intact and asking for notes helped in both completed
 comparisons.** We reproduced the paper's positive reading effect and measured
 a smaller positive transfer to the existing GBrain reader. Source inspection
