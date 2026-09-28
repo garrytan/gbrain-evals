@@ -282,7 +282,7 @@ export async function runLongMemEvalAnswers(options: { datasetPath: string; rows
         return response;
       } } } as unknown as Anthropic;
       try {
-        row.judge_result = await scoreAnswer(row.judge_evidence, { client, model: p.judge_model, maxTokens: p.judge_max_tokens, systemPrompt: JUDGE_SYSTEM, systemPromptVersion: 'lme-secondary-grounding-v1' });
+        row.judge_result = await scoreAnswer(row.judge_evidence, { client, model: p.judge_model, maxTokens: p.judge_max_tokens, systemPrompt: JUDGE_SYSTEM, systemPromptVersion: 'lme-secondary-grounding-v2' });
         const judge = row.judge_result;
         if (judge.verdict === 'judge_failed' || !Number.isFinite(judge.overall_score) || !Number.isFinite(judge.cost_usd) || judge.scores.some(s => !Number.isFinite(s.score))) { failure('judge', 'invalid judge score; retained raw outputs'); continue; }
         row.score = Number(answer.stopReason === 'end' && (abs || item.input.evidence.length > 0) && judge.scores.every(s => s.score === 5));
@@ -303,7 +303,7 @@ export async function runLongMemEvalAnswers(options: { datasetPath: string; rows
     publishable: p.mode === 'live' && !options.testRuntime && replay.primary.publishable && replay.questions.length === 500 && replay.rows.length === replay.questions.length && complete && safe && summary.publishable,
     gbrain_pin: replay.primary.gbrain_pin, gbrain_version: replay.primary.gbrain_version, started_at: started, finished_at: new Date().toISOString(),
     hashes: { ...replay.hashes, evaluator: hash(readFileSync(fileURLToPath(import.meta.url))), answer_profile: lmeArtifactHash(p) },
-    judge: { model: p.judge_model, temperature: 0, rubric_version: 'lme-secondary-grounding-v1' },
+    judge: { model: p.judge_model, temperature: 0, rubric_version: 'lme-secondary-grounding-v2' },
     resolved_config: { profile: p, product, isolated_runtime: namespace, answer_system: ANSWER_SYSTEM, judge_system: JUDGE_SYSTEM,
       budget_enforcement: 'separate externally enforced provider caps; approval attestations are not a local spending meter',
       methodology: 'secondary grounding check, not official LongMemEval answer accuracy; shared rubric judge/category-0 standalone presentation, no official temporal tolerance or preference scoring protocol',
