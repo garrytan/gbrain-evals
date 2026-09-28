@@ -133,7 +133,7 @@ interface SwampPage extends Page {
 }
 
 export function loadCorpus(dir: string): SwampPage[] {
-  const files = readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_'));
+  const files = readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_')).sort();
   const out: SwampPage[] = [];
   for (const f of files) {
     const raw = JSON.parse(readFileSync(join(dir, f), 'utf-8'));

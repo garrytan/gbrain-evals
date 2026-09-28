@@ -151,7 +151,7 @@ export interface RichPage extends Page {
 }
 
 export function loadCorpus(dir: string): RichPage[] {
-  const files = readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_'));
+  const files = readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_')).sort();
   const out: RichPage[] = [];
   for (const f of files) {
     const p = JSON.parse(readFileSync(join(dir, f), 'utf-8'));
@@ -327,6 +327,45 @@ const SYNONYMS: Record<string, string[]> = {
 
 // ─── Probe generator ──────────────────────────────────────────────
 
+/**
+ * Templates whose query text copies the grade-3 target's own title,
+ * description or body phrases (A-14, audit 2026-09-28): title paraphrase and
+ * variation embed the concept name, description paraphrase embeds its
+ * description, body-fuzzy embeds phrases extracted from its compiled truth,
+ * and semantic-neighborhood names the concept it grades 3. They favor
+ * lexical retrieval, so they are reported as a lexical control beside the
+ * conceptual probes (synonym and company-neighborhood templates), never
+ * mixed into a "conceptual" headline.
+ */
+export const GOLD_TEXT_TEMPLATES: ReadonlySet<string> = new Set([
+  'title-paraphrase', 'title-variation', 'description-paraphrase', 'body-fuzzy', 'semantic-neighborhood',
+]);
+
+export type ProbeClass = 'conceptual' | 'lexical_control';
+
+export function probeClass(template: string): ProbeClass {
+  return GOLD_TEXT_TEMPLATES.has(template) ? 'lexical_control' : 'conceptual';
+}
+
+export interface ClassScore { ndcg5: number; p1_strict: number; count: number }
+
+/** nDCG@5 and strict P@1 split by probe class, over an optional subset. */
+export function scoreByProbeClass(
+  rows: ReadonlyArray<{ template: string; subset: string; ndcg5: number; p1_strict: number }>,
+  subset?: string,
+): Record<ProbeClass, ClassScore> {
+  const out = {} as Record<ProbeClass, ClassScore>;
+  for (const cls of ['conceptual', 'lexical_control'] as const) {
+    const picked = rows.filter(r => probeClass(r.template) === cls && (subset === undefined || r.subset === subset));
+    out[cls] = {
+      ndcg5: picked.length ? picked.reduce((a, r) => a + r.ndcg5, 0) / picked.length : 0,
+      p1_strict: picked.length ? picked.reduce((a, r) => a + r.p1_strict, 0) / picked.length : 0,
+      count: picked.length,
+    };
+  }
+  return out;
+}
+
 export interface Probe {
   q: Query;
   /** Slugs whose rank-1 placement counts as a strict hit (grade-3 set). */
@@ -381,7 +420,10 @@ export function buildProbes(
   seed: number = PROBE_SEED,
 ): { probes: Probe[]; gradesByQuery: Map<string, Map<string, number>> } {
   const rng = mulberry32(seed);
-  const concepts = pages.filter(p => p.slug.startsWith('concepts/'));
+  // The shared rng is consumed per concept, so enumeration order must not
+  // depend on the caller or the filesystem (A-06: Bun readdirSync is unsorted).
+  const concepts = pages.filter(p => p.slug.startsWith('concepts/'))
+    .sort((a, b) => (a.slug < b.slug ? -1 : a.slug > b.slug ? 1 : 0));
   const pageBySlug = new Map(pages.map(p => [p.slug, p]));
 
   // Co-occurrence graph: concepts that share >=1 related_company or related_person score 1.
@@ -1512,6 +1554,16 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
   }
   log(`\nMixed-target probes (gold names concepts from both sets) are excluded from both subsets: ${subsetCounts.mixed}. Unassigned (targets outside both sets): ${subsetCounts.unassigned}.`);
   log(`Held-out concepts: ${split.holdout.join(', ')}`);
+  log(`\n## Conceptual probes vs lexical control (A-14)\n`);
+  log(`Lexical-control templates copy the target page's own title, description or body phrases: ${[...GOLD_TEXT_TEMPLATES].join(', ')}. Conceptual probes use hand-authored synonyms or company neighborhoods.\n`);
+  log(`| Adapter | Subset | Conceptual n | Conceptual nDCG@5 | Conceptual P@1 | Lexical-control n | Lexical-control nDCG@5 | Lexical-control P@1 |`);
+  log(`|---------|--------|--------------|-------------------|----------------|-------------------|------------------------|---------------------|`);
+  for (const r of results) {
+    for (const subset of [undefined, 'holdout'] as const) {
+      const c = scoreByProbeClass(r.per_query, subset);
+      log(`| ${r.name.padEnd(16)} | ${subset === 'holdout' ? 'held-out' : 'all'} | ${c.conceptual.count} | ${(c.conceptual.ndcg5 * 100).toFixed(1)}% | ${(c.conceptual.p1_strict * 100).toFixed(1)}% | ${c.lexical_control.count} | ${(c.lexical_control.ndcg5 * 100).toFixed(1)}% | ${(c.lexical_control.p1_strict * 100).toFixed(1)}% |`);
+    }
+  }
   logTemplateTable('Per-template nDCG@5 — tuning concepts', r => r.splits?.tuning.byTemplate, templateCountsFor('tuning'));
   logTemplateTable('Per-template nDCG@5 — held-out concepts (decision set)', r => r.splits?.holdout.byTemplate, templateCountsFor('holdout'));
 
@@ -1599,6 +1651,11 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
       holdout: r.splits?.holdout.byTemplate ?? null,
     }])),
     template_counts: templateCounts,
+    gold_text_templates: [...GOLD_TEXT_TEMPLATES],
+    by_probe_class: Object.fromEntries(results.map(r => [r.name, {
+      all: scoreByProbeClass(r.per_query),
+      holdout: scoreByProbeClass(r.per_query, 'holdout'),
+    }])),
     per_query: Object.fromEntries(results.map(r => [r.name, r.per_query])),
     report_file: reportFile,
   };
