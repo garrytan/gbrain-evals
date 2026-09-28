@@ -12,6 +12,7 @@ import { developmentChatOptions } from '../../eval/runner/situation-recall-devel
 import { assertCompletePilotRows, loadPilotIndex, pilotQueryErrorDisposition, pilotSources, replayPilotCase, replayPilotQuestion, scorePilotResults } from '../../eval/runner/longmemeval-m-pilot-replay.ts';
 import { loadLmeAnswerReplay } from '../../eval/runner/longmemeval-answers.ts';
 import { regressionPackageHash } from '../../eval/runner/situation-recall-provenance.ts';
+import { opaqueSessionId } from '../../eval/runner/longmemeval-session-ids.ts';
 import { PINNED_SEARCH_CONFIG, type Question } from '../../eval/runner/longmemeval.ts';
 
 const hash = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
@@ -24,8 +25,8 @@ const turns = [{ role: 'user' as const, content: 'The sample project used a blue
   { role: 'assistant' as const, content: 'I will keep that detail in mind.' }];
 const dates = ['2023/05/28 (Sun) 05:21', '2023/05/28 (Sun) 00:46'];
 const question: Question = { question_id: 'pilot-test-1', question_type: 'single-session-user',
-  question: 'Which label did the sample project use?', answer: 'blue', answer_session_ids: ['repeat-id'],
-  haystack_session_ids: ['repeat-id', 'repeat-id'], haystack_dates: dates,
+  question: 'Which label did the sample project use?', answer: 'blue', answer_session_ids: ['answer_repeat-id'],
+  haystack_session_ids: ['answer_repeat-id', 'answer_repeat-id'], haystack_dates: dates,
   haystack_sessions: [turns, turns] };
 
 describe('source-only LongMemEval-M pilot snapshot and replay', () => {
@@ -38,7 +39,7 @@ describe('source-only LongMemEval-M pilot snapshot and replay', () => {
     expectedPackageSha256: productHash, expectedSourceSha256: sourceHash, expectedManifestSha256: manifestHash,
     workingDatabase: join(directory, `replay-${crypto.randomUUID()}`), mode: 'offline' as const });
   const result = () => {
-    const source = pilotSources(question)[1];
+    const source = pilotSources(question, sourceHash)[1];
     const chunk = manifest.sources[1].chunks[0];
     return [{ source_id: 'default', slug: source.slug, chunk_id: chunk.id,
       chunk_source: chunk.chunk_source, chunk_text: chunk.text } as SearchResult];
@@ -46,7 +47,7 @@ describe('source-only LongMemEval-M pilot snapshot and replay', () => {
 
   beforeAll(async () => {
     directory = mkdtempSync(join(tmpdir(), 'lme-m-pilot-'));
-    const source = dates.map((date, occurrence_index) => ({ occurrence_index, session_id: 'repeat-id', date, turns }));
+    const source = dates.map((date, occurrence_index) => ({ occurrence_index, session_id: 'answer_repeat-id', date, turns }));
     const path = join(directory, 'source-only.json');
     writeFileSync(path, JSON.stringify(source) + '\n');
     sourceHash = hash(readFileSync(path));
@@ -62,15 +63,18 @@ describe('source-only LongMemEval-M pilot snapshot and replay', () => {
 
   test('seals two dated occurrences with distinct slugs before reading a question', async () => {
     expect(manifest.sources).toHaveLength(2);
-    expect(manifest.sources.map(s => s.slug)).toEqual(['chat/repeat-id-occ-0', 'chat/repeat-id-occ-1']);
+    const opaque = opaqueSessionId(sourceHash, 'answer_repeat-id');
+    expect(manifest.sources.map(s => s.slug)).toEqual([`chat/${opaque}-occ-0`, `chat/${opaque}-occ-1`]);
+    expect(JSON.stringify(manifest.sources.map(s => [s.slug, s.chunks.map(c => c.text)]))).not.toContain('answer_');
+    expect(manifest.sources.map(s => s.session_id)).toEqual(['answer_repeat-id', 'answer_repeat-id']);
     expect(manifest.sources.map(s => s.date)).toEqual(dates);
     expect(manifest.cue_hook).toBe('off');
     expect(loadPilotIndex(options()).index_snapshot.sha256).toBe(manifest.index_snapshot.sha256);
     const row = await replayPilotQuestion(question, options(), { search: async () => result() });
     expect(row.recall_all).toBe(1);
-    expect(row.retrieved).toEqual(['repeat-id']);
-    expect(row.indexed_evidence.returned_chunks[0].slug).toBe('chat/repeat-id-occ-1');
-    expect(row.indexed_evidence.returned_chunks[0].session_id).toBe('repeat-id');
+    expect(row.retrieved).toEqual(['answer_repeat-id']);
+    expect(row.indexed_evidence.returned_chunks[0].slug).toBe(`chat/${opaque}-occ-1`);
+    expect(row.indexed_evidence.returned_chunks[0].session_id).toBe('answer_repeat-id');
     expect(row.indexed_evidence.returned_chunks[0].start).toBeGreaterThanOrEqual(0);
     expect(row.latency_source).toBe('mock');
     expect(row.latency_ms).toBe(0);
@@ -84,7 +88,7 @@ describe('source-only LongMemEval-M pilot snapshot and replay', () => {
     const first = manifest.sources[0].chunks[0];
     const repeated = scorePilotResults(question, manifest, [{ ...result()[0], slug: manifest.sources[0].slug, chunk_id: first.id,
       chunk_source: first.chunk_source as SearchResult['chunk_source'], chunk_text: first.text }, ...result()]);
-    expect(repeated.retrieved).toEqual(['repeat-id']);
+    expect(repeated.retrieved).toEqual(['answer_repeat-id']);
     expect(repeated.indexed_evidence.returned_chunks).toHaveLength(2);
   });
 
@@ -101,7 +105,7 @@ describe('source-only LongMemEval-M pilot snapshot and replay', () => {
   test('retains all four indexed alignment classes and blocks strict raw grounding on nulls', () => {
     const q: Question = { ...question, haystack_session_ids: ['sample'], haystack_dates: [dates[0]],
       haystack_sessions: [[{ role: 'user', content: 'alpha \n beta alpha' }]], answer_session_ids: ['sample'] };
-    const source = pilotSources(q)[0];
+    const source = pilotSources(q, sourceHash)[0];
     const values = [
       { text: 'beta', raw_alignment: 'exact' as const, start: source.text.indexOf('beta'), end: source.text.indexOf('beta') + 4 },
       { text: 'alpha beta', raw_alignment: 'whitespace_reflow' as const, start: null, end: null },

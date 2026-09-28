@@ -21,7 +21,7 @@ export function pilotQueryErrorDisposition(message: string): 'sut-miss' | 'incom
   return /guard|budget|billing|approval|reservation|spend|cap.exceed/i.test(message)
     || classifyErrorOrigin(message) !== 'sut' ? 'incomplete' : 'sut-miss';
 }
-export const pilotSources = (question: Question) => longMemEvalSources(question).map((source, i) =>
+export const pilotSources = (question: Question, sourceSha256: string) => longMemEvalSources(question, sourceSha256).map((source, i) =>
   ({ ...source, slug: `${source.slug}-occ-${i}` }));
 
 export interface PilotIndexedEvidence {
@@ -57,7 +57,7 @@ export function loadPilotIndex(options: PilotReplayOptions): PilotIndexManifest 
   const bytes = readFileSync(join(root, 'index-manifest.json'));
   if (hash(bytes) !== options.expectedManifestSha256) throw new Error('frozen indexed-projection manifest changed');
   const manifest = JSON.parse(bytes.toString()) as PilotIndexManifest;
-  if (manifest.schema_version !== 2 || manifest.evidence_protocol !== 'indexed-projection-v2'
+  if (manifest.schema_version !== 3 || manifest.evidence_protocol !== 'indexed-projection-v3'
     || manifest.source_sha256 !== options.expectedSourceSha256
     || manifest.product_sha !== options.expectedProductSha || manifest.product_package_sha256 !== options.expectedPackageSha256
     || manifest.embedding_model !== 'openrouter:openai/text-embedding-3-large' || manifest.embedding_dimensions !== 1536
@@ -98,7 +98,7 @@ export function loadPilotIndex(options: PilotReplayOptions): PilotIndexManifest 
 }
 
 export function validatePilotSourceMap(question: Question, manifest: PilotIndexManifest): void {
-  const sources = pilotSources(question);
+  const sources = pilotSources(question, manifest.source_sha256);
   if (sources.length !== manifest.sources.length) throw new Error('question history differs from frozen index');
   const ids = new Set<number>();
   for (const [i, source] of sources.entries()) {

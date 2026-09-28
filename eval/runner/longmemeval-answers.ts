@@ -10,6 +10,7 @@ import { DEFAULT_JUDGE_SYSTEM_PROMPT, scoreAnswer, type JudgeEvidence, type Judg
 import { ProbeAccounting } from './probe-accounting.ts';
 import { BENCHMARK_VERSION, loadReceipt, writeReceipt, type Receipt } from './receipt.ts';
 import { regressionPackageHash, resolveRegressionProduct, type ResolvedRegressionProduct } from './situation-recall-provenance.ts';
+import { opaqueSessionId, SESSION_ID_POLICY } from './longmemeval-session-ids.ts';
 
 export const LME_ANSWERS_CATEGORY = 'longmemeval-answers';
 const JUDGE_MODEL = 'claude-haiku-4-5-20251001';
@@ -39,6 +40,8 @@ export interface LmeEvidence {
 }
 export interface LmeCapture {
   schema_version: 1;
+  /** Captures made before opaque session ids lack this field and are rejected by the replay loader. */
+  session_ids: typeof SESSION_ID_POLICY;
   dataset_sha256: string;
   source_manifest_sha256: string;
   source_manifest: Array<{ question_id: string; source_sha256: string }>;
@@ -47,16 +50,18 @@ export interface LmeCapture {
   run_config_preimages?: Record<string, RunConfigPreimage>;
 }
 
-export function longMemEvalSources(q: Pick<Question, 'question_id' | 'haystack_session_ids' | 'haystack_dates' | 'haystack_sessions'>): LmeSource[] {
+/** Sources as the system under test imported them: opaque slug and frontmatter id, with session_id kept as the lowercased dataset id for scoring. */
+export function longMemEvalSources(q: Pick<Question, 'question_id' | 'haystack_session_ids' | 'haystack_dates' | 'haystack_sessions'>, salt = q.question_id): LmeSource[] {
   return q.haystack_sessions.flatMap((raw, i) => {
     const turns = Array.isArray(raw) ? raw : raw.turns;
     if (!Array.isArray(turns)) return [];
     const sessionId = (Array.isArray(raw) ? q.haystack_session_ids?.[i] : raw.session_id) ?? `lme_${q.question_id}_${i}`;
     if (typeof sessionId !== 'string' || !sessionId || turns.some(turn => !turn || !['user', 'assistant'].includes(turn.role) || typeof turn.content !== 'string')
       || (q.haystack_dates?.[i] !== undefined && typeof q.haystack_dates[i] !== 'string')) throw new Error('unsupported conversation source schema');
-    const frontmatter = ['---', 'type: note', ...(q.haystack_dates?.[i] ? [`date: ${q.haystack_dates[i]}`] : []), `session_id: ${sessionId}`, '---', ''];
+    const opaque = opaqueSessionId(salt, sessionId);
+    const frontmatter = ['---', 'type: note', ...(q.haystack_dates?.[i] ? [`date: ${q.haystack_dates[i]}`] : []), `session_id: ${opaque}`, '---', ''];
     const text = frontmatter.join('\n') + turns.flatMap(turn => [`**${turn.role}:** ${turn.content}`, '']).join('\n');
-    return [{ source_id: 'default', slug: `chat/${sessionId}`.toLowerCase(), session_id: sessionId.toLowerCase(), text: normalize(text) }];
+    return [{ source_id: 'default', slug: `chat/${opaque}`, session_id: sessionId.toLowerCase(), text: normalize(text) }];
   });
 }
 
@@ -65,7 +70,7 @@ export function createLmeCapture(datasetBytes: Buffer, questions: Question[], ad
   while (!existsSync(join(root, 'package.json')) && dirname(root) !== root) root = dirname(root);
   const product = resolveRegressionProduct({ expectedPackageSha256: regressionPackageHash(root), requireClean: false });
   const source_manifest = questions.map(q => ({ question_id: q.question_id, source_sha256: lmeArtifactHash(longMemEvalSources(q)) }));
-  return { schema_version: 1, dataset_sha256: hash(datasetBytes), source_manifest_sha256: lmeArtifactHash(source_manifest), source_manifest,
+  return { schema_version: 1, session_ids: SESSION_ID_POLICY, dataset_sha256: hash(datasetBytes), source_manifest_sha256: lmeArtifactHash(source_manifest), source_manifest,
     planned_pairs: adapters.flatMap(adapter => questions.map(q => ({ adapter, question_id: q.question_id }))), product };
 }
 
@@ -77,7 +82,7 @@ export function retainLmeEvidence(q: Question, results: SearchResult[], adapter:
     const text = normalize(result.chunk_text);
     const offset = source && text ? source.text.indexOf(text) : -1;
     const start = source && offset >= 0 && source.text.indexOf(text, offset + 1) < 0 ? offset : null;
-    return { source_id: sourceId, slug: result.slug, session_id: result.slug.replace(/^chat\//, '').toLowerCase(), text, start,
+    return { source_id: sourceId, slug: result.slug, session_id: source?.session_id ?? result.slug.replace(/^chat\//, '').toLowerCase(), text, start,
       end: start === null ? null : start + text.length, source_sha256: source ? hash(source.text) : null };
   });
   const seen = new Set<string>();
@@ -139,7 +144,7 @@ export function loadLmeAnswerReplay(paths: { datasetPath: string; rowsPath: stri
   const datasetBytes = readFileSync(paths.datasetPath), rowBytes = readFileSync(paths.rowsPath), receiptBytes = readFileSync(paths.receiptPath);
   const primary = loadReceipt(paths.receiptPath);
   const capture = primary.resolved_config?.evidence_capture as LmeCapture | undefined;
-  if (primary.category !== 'longmemeval' || !['completed', 'error'].includes(primary.run_status) || capture?.schema_version !== 1) throw new Error('retained native evidence is required; legacy session IDs cannot be expanded into replay evidence');
+  if (primary.category !== 'longmemeval' || !['completed', 'error'].includes(primary.run_status) || capture?.schema_version !== 1 || capture.session_ids !== SESSION_ID_POLICY) throw new Error('retained native evidence is required; legacy session IDs cannot be expanded into replay evidence, and captures without opaque session ids cannot be replayed');
   if (hash(datasetBytes) !== capture.dataset_sha256 || primary.hashes?.dataset !== capture.dataset_sha256 || hash(rowBytes) !== primary.hashes?.evidence_rows) throw new Error('frozen dataset or retained row hash mismatch');
   const questions = JSON.parse(datasetBytes.toString()) as LmeAnswerQuestion[];
   if (!Array.isArray(questions) || !questions.length || new Set(questions.map(q => q.question_id)).size !== questions.length) throw new Error('dataset questions must be nonempty and unique');

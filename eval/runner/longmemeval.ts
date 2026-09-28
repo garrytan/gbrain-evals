@@ -14,7 +14,9 @@
  *   gbrain's default 'balanced' bundle silently enables the reranker when a
  *   provider key is present).
  *   Legitimately seeded: the haystack sessions themselves (they come from the
- *   public dataset, rendered to markdown), and the content-addressed embedding
+ *   public dataset, rendered to markdown under opaque session ids so the
+ *   `answer_` prefix of gold ids never reaches gbrain; rows keep the dataset
+ *   ids, see longmemeval-session-ids.ts), and the content-addressed embedding
  *   cache (remembers past provider calls; keyed by model+dims+input_type so it
  *   can never substitute a different pipeline's vectors). In hermetic test
  *   runs the embed TRANSPORT may be stubbed via gbrain's
@@ -113,6 +115,7 @@ import {
 import { ProbeAccounting } from './probe-accounting.ts';
 import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
 import { createLmeCapture, retainLmeEvidence, type LmeEvidence } from './longmemeval-answers.ts';
+import { opaqueSessionId, opaqueSessionMap, SESSION_ID_POLICY } from './longmemeval-session-ids.ts';
 
 // ─── CLI ──────────────────────────────────────────────────────────
 
@@ -369,6 +372,21 @@ export function renderSession(session: { session_id: string; turns: Turn[]; date
   return fm.join('\n') + body.join('\n');
 }
 
+/**
+ * The pages the system under test imports for one question: one per haystack
+ * session, whose slug and frontmatter carry only the opaque session id (C-01).
+ * originalByOpaque maps retrieved ids back to dataset ids for scoring.
+ */
+export function sutPages(q: Question): { pages: Array<{ slug: string; content: string }>; originalByOpaque: Map<string, string> } {
+  const sessions = normalizeSessions(q);
+  const originalByOpaque = opaqueSessionMap(q.question_id, sessions.map(s => s.session_id));
+  const pages = sessions.map(s => {
+    const id = opaqueSessionId(q.question_id, s.session_id);
+    return { slug: `chat/${id}`, content: renderSession({ ...s, session_id: id }) };
+  });
+  return { pages, originalByOpaque };
+}
+
 // ─── Harness ──────────────────────────────────────────────────────
 
 const PRESERVE_TABLES = new Set(['sources', 'config', 'gbrain_cycle_locks', 'subagent_rate_leases']);
@@ -561,11 +579,13 @@ export function sessdivRetrieve(results: SearchResult[], topK: number): SessdivR
  * adapter) so any hash is reversible to the config that produced it.
  */
 export interface RunConfigPreimage {
-  schema_version: 2;
+  schema_version: 3;
   /** The dependency spec from package.json dependencies.gbrain (gbrainPin()). */
   gbrain_pin: string;
   /** The installed gbrain version (gbrainVersion()); differs from the pin's version under bun link. */
   gbrain_version: string;
+  /** How dataset session ids are hidden from the system under test (SESSION_ID_POLICY). */
+  session_ids: typeof SESSION_ID_POLICY;
   dataset: string;
   top_k: number;
   adapter: string;
@@ -586,9 +606,10 @@ export function buildRunConfigPreimage(
   resolved: { embeddingModel: string | null; embeddingDims: number | null; expansionModel: string | null },
 ): RunConfigPreimage {
   return {
-    schema_version: 2,
+    schema_version: 3,
     gbrain_pin: gbrainPin(),
     gbrain_version: gbrainVersion(),
+    session_ids: SESSION_ID_POLICY,
     dataset: opts.datasetName,
     top_k: opts.topK,
     adapter: spec.name,
@@ -1264,21 +1285,16 @@ export async function run(opts: Opts): Promise<RunResult> {
           } else {
             await resetTables(engine);
           }
-          const sessions = normalizeSessions(q);
-          for (const s of sessions) {
-            // gbrain's putPage lowercases via validateSlug, but upsertChunks
-            // (also called by importFromContent) does NOT lowercase — passing
-            // a mixed-case slug throws "Page not found" on the chunk write.
-            // Normalize at the boundary so the dataset's mixed-case session_ids
-            // (e.g. "sharegpt_yywfIrx_0") work end-to-end.
-            const slug = `chat/${s.session_id}`.toLowerCase();
+          const { pages, originalByOpaque } = sutPages(q);
+          for (const page of pages) {
             await withTimeout(
-              importFromContent(engine, slug, renderSession(s), {
+              importFromContent(engine, page.slug, page.content, {
                 noEmbed: adapter.base === 'keyword',
               }),
               PER_QUESTION_TIMEOUT_MS,
             );
           }
+          const toOriginal = (ids: string[]) => ids.map(id => originalByOpaque.get(id) ?? id);
           let searchResults: SearchResult[];
           if (adapter.base === 'keyword') {
             searchResults = await engine.searchKeyword(q.question, { limit: fetchLimit });
@@ -1321,9 +1337,9 @@ export async function run(opts: Opts): Promise<RunResult> {
           let sessdiv: SessdivRetrieval | null = null;
           if (adapter.sessdiv) {
             sessdiv = sessdivRetrieve(searchResults, opts.topK);
-            retrieved = sessdiv.retrieved;
+            retrieved = toOriginal(sessdiv.retrieved);
           } else {
-            retrieved = uniqSessionIds(searchResults);
+            retrieved = toOriginal(uniqSessionIds(searchResults));
           }
           const m = scoreQuestion(retrieved, q.answer_session_ids, opts.topK);
           const abs = isAbsQuestion(q.question_id);
@@ -1342,7 +1358,7 @@ export async function run(opts: Opts): Promise<RunResult> {
                   recall_any: Number.isFinite(m.recall_any) ? m.recall_any : 0,
                   ndcg_any: Number.isFinite(m.ndcg_any) ? m.ndcg_any : 0,
                 }),
-            num_haystack: sessions.length,
+            num_haystack: pages.length,
             latency_ms: Date.now() - qStart,
             top_k: opts.topK,
             dataset: opts.datasetName,
