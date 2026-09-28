@@ -65,7 +65,7 @@ import { configureGateway, __setEmbedTransportForTests } from 'gbrain/ai/gateway
 import { hybridSearch } from 'gbrain/search/hybrid';
 import { runThink, type ThinkResponse } from 'gbrain/think';
 import { loadSyntheticV1, type SyntheticPage } from './synthetic-corpus-loader.ts';
-import { scoreAnswer, type JudgeEvidence, type JudgeConfig, type RubricCriterion } from './judge.ts';
+import { extractUntrusted, scoreAnswer, type JudgeEvidence, type JudgeConfig, type RubricCriterion } from './judge.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
@@ -368,8 +368,8 @@ export function makeStubJudgeClient(hooks?: {
         hooks?.onRequest?.(userContent);
         if (hooks?.failOn?.(userContent)) throw new Error('stub judge: forced failure (test hook)');
         const rubricIds = [...userContent.matchAll(/- id=(\S+) weight=/g)].map(m => m[1]);
-        const answer = userContent.split('<final_answer>')[1]?.split('</final_answer>')[0] ?? '';
-        const factsBlock = userContent.split('title="Expected facts"')[1]?.split('</page>')[0] ?? '';
+        const answer = extractUntrusted(userContent, 'untrusted_answer') ?? '';
+        const factsBlock = extractUntrusted(userContent.split('title="Expected facts"')[1] ?? '', 'untrusted_page') ?? '';
         const facts = factsBlock.split('\n').map(l => l.trim()).filter(l => l.startsWith('- ')).map(l => l.slice(2));
         const factScore = facts.length === 0 ? 0
           : Math.round((facts.filter(f => answer.includes(f.slice(0, Math.min(40, f.length)))).length / facts.length) * 5);

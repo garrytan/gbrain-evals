@@ -88,7 +88,7 @@ import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { importFromContent } from 'gbrain/import-file';
 import { configureGateway, __setEmbedTransportForTests } from 'gbrain/ai/gateway';
 import { runThink, type ThinkLLMClient, type ThinkResult } from 'gbrain/think';
-import { scoreAnswer, type JudgeEvidence, type RubricCriterion } from './judge.ts';
+import { JUDGE_PROMPT_VERSION, scoreAnswer, type JudgeEvidence, type RubricCriterion } from './judge.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import {
   writeReceipt,
@@ -487,7 +487,7 @@ export const hermeticComplete: CompleteFn = async (_params, extracted) => {
   return JSON.stringify({ answer, citations: [], gaps: [] });
 };
 
-function makeLiveComplete(anthropic: Anthropic): CompleteFn {
+export function makeLiveComplete(anthropic: Anthropic): CompleteFn {
   return async (params) => {
     const model = String(params.model).replace(/^anthropic[:/]/, '');
     const res = await anthropic.messages.create({
@@ -523,7 +523,7 @@ const TEMPORAL_RUBRIC: RubricCriterion[] = [
 
 /** Live: judge.ts scoreAnswer, absolute scoring per arm. The judge sees the
  *  dated readings as world-of-facts — never the gold answer or arm labels. */
-function makeScoreAnswerJudge(client?: Anthropic): ArmJudgeFn {
+export function makeScoreAnswerJudge(client?: Anthropic): ArmJudgeFn {
   return async (probe, answer) => {
     const groundTruth = probe.facts.map(group => ({
       slug: group.entity_slug,
@@ -821,6 +821,7 @@ function resolvedConfig(hermetic: boolean): Record<string, unknown> {
     'models.think': THINK_MODEL,
     think_temperature: THINK_TEMPERATURE,
     judge: hermetic ? 'deterministic-marker-judge' : `judge.ts scoreAnswer (${JUDGE_MODEL}, temperature 0)`,
+    judge_prompt_version: hermetic ? null : JUDGE_PROMPT_VERSION,
     embedding_transport: 'stubbed deterministic hash-embed (__setEmbedTransportForTests)',
     fact_seeding: 'engine.insertFact typed-claim rows (direct; extraction is out of boundary)',
     pipeline: "gbrain runThink ('gbrain/think' subpath export), client-injected LLM, remote:false",

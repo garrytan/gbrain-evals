@@ -230,7 +230,7 @@ export async function runCat36GroundedAnswers(options: { primaryDir: string; cor
         return result;
       } } } as unknown as Anthropic;
       try {
-        row.judge_result = await scoreAnswer(row.judge_evidence, { client, model: options.profile.judge_model, maxTokens: options.profile.judge_max_tokens, systemPrompt: JUDGE_SYSTEM, systemPromptVersion: 'cat36-grounded-v1' });
+        row.judge_result = await scoreAnswer(row.judge_evidence, { client, model: options.profile.judge_model, maxTokens: options.profile.judge_max_tokens, systemPrompt: JUDGE_SYSTEM, systemPromptVersion: 'cat36-grounded-v2' });
         const judge = row.judge_result;
         if (judge.verdict === 'judge_failed' || !Number.isFinite(judge.overall_score) || !Number.isFinite(judge.cost_usd)
           || judge.scores.some(score => !Number.isFinite(score.score))) { failure('judge', 'judge failed to produce a finite complete score'); continue; }
@@ -261,7 +261,7 @@ export async function runCat36GroundedAnswers(options: { primaryDir: string; cor
     n_total: summary.n_total, n_scored: summary.n_scored, completion_rate: summary.completion_rate, errors: summary.errors,
     publishable: options.profile.mode === 'live' && !options.testRuntime && replay.primary.publishable && complete && safe && summary.publishable,
     gbrain_version: replay.primary.gbrain_version, gbrain_pin: replay.primary.gbrain_pin, started_at: started, finished_at: new Date().toISOString(),
-    judge: { model: options.profile.judge_model, temperature: 0, rubric_version: 'cat36-grounded-v1' },
+    judge: { model: options.profile.judge_model, temperature: 0, rubric_version: 'cat36-grounded-v2' },
     resolved_config: { profile: options.profile, loaded_product: provenance, isolated_runtime: isolatedRuntime ?? null, answer_system: SYSTEM, judge_system: JUDGE_SYSTEM,
       budget_enforcement: 'externally configured isolated provider caps; approvals are operator attestations, not verified local spend caps',
       cost_accounting: 'answer: raw gateway token usage, no invented dollar estimate; judge: shared helper estimate plus raw provider usage; failed-call usage may be unavailable' },

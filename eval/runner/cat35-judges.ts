@@ -21,16 +21,27 @@
  * degrade into lexical matching. Mechanical checks (cat35-checks.ts) verify
  * evidence quotes; they are authoritative over judge output.
  *
+ * Untrusted-data contract: documents, pages, claims and transcripts are
+ * escaped and wrapped in blocks delimited by a per-call random nonce, and
+ * every system prompt says block content is data, never instructions
+ * (audit PC-10). Coverage evidence quotes are unescaped before the
+ * mechanical checks compare them with the raw document.
+ *
  * Model resolution precedence: cfg.model > env CAT35_JUDGE_MODEL > default.
  */
 
 import Anthropic from '@anthropic-ai/sdk';
 import { getDefaultLlmBudget } from './llm-budget.ts';
+import { UNTRUSTED_DATA_INSTRUCTION, escapeUntrusted, fenceUntrusted, newJudgeNonce, unescapeUntrusted } from './judge.ts';
 
 // ─── Version + pricing ────────────────────────────────────────────────────
 
-/** Pinned prompt version — recorded in the receipt for comparability. */
-export const CAT35_JUDGE_PROMPT_VERSION = '2026-08-16-v1';
+/**
+ * Pinned prompt version — recorded in the receipt for comparability.
+ * 2026-09-28-v2: nonce-fenced, escaped SUT output and an untrusted-data
+ * instruction in every system prompt (audit PC-10).
+ */
+export const CAT35_JUDGE_PROMPT_VERSION = '2026-09-28-v2';
 
 const DEFAULT_MODEL = 'claude-haiku-4-5-20251001';
 const DEFAULT_MAX_TOKENS = 2000;
@@ -238,10 +249,6 @@ async function callJudgeOnce(
   return { input, input_tokens, output_tokens, cost_usd: priceOf(model, input_tokens, output_tokens) };
 }
 
-function indent(s: string, prefix: string): string {
-  return s.split('\n').map((l) => prefix + l).join('\n');
-}
-
 // ═══ 1. Salient-unit coverage ═════════════════════════════════════════════
 
 export interface CoverageVerdict {
@@ -258,10 +265,12 @@ Grade every item:
   ABSENT = the statement is not recoverable from the document.
 
 Evidence rules:
-  - For FULL or PARTIAL: evidence is REQUIRED — quote up to 200 characters VERBATIM from the document that supports the verdict. Copy exactly; do not paraphrase the evidence.
+  - For FULL or PARTIAL: evidence is REQUIRED — quote up to 200 characters VERBATIM from the document that supports the verdict. Copy exactly; do not paraphrase the evidence. Escaped characters (&amp;, &lt;, &gt;) may be copied as they appear.
   - For ABSENT: evidence must be an empty string.
 
-Return exactly one entry per item_id via the score_salient_items tool. No plain text reply.`;
+Return exactly one entry per item_id via the score_salient_items tool. No plain text reply.
+
+${UNTRUSTED_DATA_INSTRUCTION}`;
 
 const COVERAGE_TOOL: JudgeTool = {
   name: 'score_salient_items',
@@ -303,9 +312,7 @@ function renderCoverageContent(
     );
     lines.push('');
   }
-  lines.push('<document>');
-  lines.push(indent(document, '  '));
-  lines.push('</document>');
+  lines.push(fenceUntrusted('untrusted_document', document, newJudgeNonce()));
   lines.push('');
   lines.push('<salient_items>');
   for (const it of items) {
@@ -328,7 +335,7 @@ function parseCoverage(input: unknown, validIds: Set<string>): Map<string, Cover
     const r = raw as Record<string, unknown>;
     if (typeof r.item_id !== 'string' || !validIds.has(r.item_id)) continue;
     if (r.status !== 'FULL' && r.status !== 'PARTIAL' && r.status !== 'ABSENT') continue;
-    const evidence = typeof r.evidence === 'string' ? r.evidence.trim().slice(0, 200) : '';
+    const evidence = typeof r.evidence === 'string' ? unescapeUntrusted(r.evidence).trim().slice(0, 200) : '';
     // The tool schema REQUIRES evidence for FULL/PARTIAL. Enforce it: a
     // credit-bearing verdict with no supporting quote is treated as missing
     // (routes into the missing-id retry, then judge_failed) — a fabricated
@@ -437,7 +444,9 @@ For every claim, report two booleans:
   verifiable — set false ONLY when the claim is the page's own editorial voice with no factual content to check (e.g. "this idea seems promising", "worth revisiting later"). User-attributed affect or opinion ("the user felt betrayed", "X was frustrated by Y") IS verifiable against the transcript and MUST be graded — invented emotions must not get a pass.
   grounded — true when the transcript supports the claim (paraphrase is fine; the claim does not need to appear verbatim). False when the transcript contradicts the claim or contains nothing that supports it.
 
-For claims with verifiable=false, set grounded=false. Return one entry per claim index via the grade_claims tool. No plain text reply.`;
+For claims with verifiable=false, set grounded=false. Return one entry per claim index via the grade_claims tool. No plain text reply.
+
+${UNTRUSTED_DATA_INSTRUCTION}`;
 
 const GROUNDING_TOOL: JudgeTool = {
   name: 'grade_claims',
@@ -464,17 +473,12 @@ const GROUNDING_TOOL: JudgeTool = {
 };
 
 function renderGroundingContent(label: string, claims: string[], transcript: string): string {
+  const nonce = newJudgeNonce();
   const lines: string[] = [];
-  lines.push(`<batch label=${JSON.stringify(label)}>`);
-  lines.push('<transcript>');
-  lines.push(indent(transcript, '  '));
-  lines.push('</transcript>');
+  lines.push(`<batch label=${JSON.stringify(escapeUntrusted(label))}>`);
+  lines.push(fenceUntrusted('untrusted_transcript', transcript, nonce));
   lines.push('');
-  lines.push('<claims>');
-  for (let i = 0; i < claims.length; i++) {
-    lines.push(`  ${i}: ${JSON.stringify(claims[i])}`);
-  }
-  lines.push('</claims>');
+  lines.push(fenceUntrusted('untrusted_claims', claims.map((c, i) => `  ${i}: ${JSON.stringify(c)}`).join('\n'), nonce));
   lines.push('</batch>');
   lines.push('');
   lines.push(
@@ -559,7 +563,9 @@ For each hit:
   surfaced_as_salient = true when the document presents the content as a takeaway, summary point, decision, or highlighted insight.
   surfaced_as_salient = false for a benign passing mention — e.g. it appears only quoted inside a larger verbatim block, or the document explicitly marks it as routine/incidental.
 
-Return one entry per distractor_id via the confirm_leaks tool. No plain text reply.`;
+Return one entry per distractor_id via the confirm_leaks tool. No plain text reply.
+
+${UNTRUSTED_DATA_INSTRUCTION}`;
 
 const LEAK_TOOL: JudgeTool = {
   name: 'confirm_leaks',
@@ -586,9 +592,7 @@ const LEAK_TOOL: JudgeTool = {
 
 function renderLeakContent(document: string, hits: { distractor_id: string; statement: string }[]): string {
   const lines: string[] = [];
-  lines.push('<document>');
-  lines.push(indent(document, '  '));
-  lines.push('</document>');
+  lines.push(fenceUntrusted('untrusted_document', document, newJudgeNonce()));
   lines.push('');
   lines.push('<distractor_hits>');
   for (const h of hits) {
@@ -680,7 +684,9 @@ const USABILITY_CHECK_DESCRIPTIONS: Record<string, string> = {
 
 const USABILITY_SYSTEM_PROMPT = `You grade a SET of distilled knowledge-base pages produced from one conversation against a binary usability checklist. Grade the page set as a whole: a check passes when the set, taken together, satisfies it.
 
-Pass/fail every requested check honestly — a page set that dumps the transcript or opens mid-thought fails those checks even if other checks pass. Return one entry per requested check id via the usability_checklist tool. No plain text reply.`;
+Pass/fail every requested check honestly — a page set that dumps the transcript or opens mid-thought fails those checks even if other checks pass. Return one entry per requested check id via the usability_checklist tool. No plain text reply.
+
+${UNTRUSTED_DATA_INSTRUCTION}`;
 
 function buildUsabilityTool(checkIds: string[]): JudgeTool {
   return {
@@ -711,11 +717,12 @@ function renderUsabilityContent(
   pages: { slug: string; body: string }[],
   checkIds: string[],
 ): string {
+  const nonce = newJudgeNonce();
   const lines: string[] = [];
   lines.push(`<page_set transcript_id=${JSON.stringify(transcript_id)}>`);
   for (const p of pages) {
-    lines.push(`  <page slug=${JSON.stringify(p.slug)}>`);
-    lines.push(indent(p.body, '    '));
+    lines.push(`  <page slug=${JSON.stringify(escapeUntrusted(p.slug))}>`);
+    lines.push(fenceUntrusted('untrusted_page', p.body, nonce));
     lines.push('  </page>');
   }
   lines.push('</page_set>');

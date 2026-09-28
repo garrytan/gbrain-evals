@@ -69,7 +69,9 @@ describe('Cat35 observed judge attempts', () => {
       const evidence: Cat35JudgeAttempt[] = [];
       expect(await c.run({ model: MODEL, client: observed.client, evidence }))
         .toEqual(await c.run({ model: MODEL, client: plain.client }));
-      expect(observed.calls).toEqual(plain.calls);
+      // Judge prompts draw a fresh random nonce per call (audit PC-10); compare the requests with nonces normalized.
+      const withoutNonces = (calls: unknown[]) => JSON.parse(JSON.stringify(calls).replace(/nonce=\\"[0-9a-f]+\\"/g, 'nonce=\\"N\\"'));
+      expect(withoutNonces(observed.calls)).toEqual(withoutNonces(plain.calls));
       expect(evidence).toHaveLength(observed.calls.length);
       expect(evidence.map((a) => a.tool_input)).toEqual(c.responses.map((r: any) => r.content[0].input));
       expect(evidence.every((a) => a.requested_model === MODEL)).toBe(true);
