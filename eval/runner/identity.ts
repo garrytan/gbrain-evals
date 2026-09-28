@@ -9,18 +9,31 @@
  * variants do not. These numbers do not establish whether other alias or
  * fuzzy-resolution capabilities exist.
  *
+ * The handle without its @ ("schen") is scored as DOCUMENTED: the tsvector
+ * parser strips the @ from the indexed "@schen", so the bare handle is present
+ * in the indexed text. Counting it as undocumented inflated the published
+ * undocumented recall from 13.75% (55/400) to 31.0% (C-03, audit 2026-09-28).
+ *
+ * Receipt: eval/reports/identity/receipt.json. Verdict gates on documented
+ * recall (an exact-token contract) and a documented MRR floor; undocumented
+ * recall is reported as a capability-gap measurement, not gated.
+ *
  * Usage: bun run eval/runner/identity.ts [--json]
  */
 
 import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { installPageProjection, readProjectionSnapshot } from '../../node_modules/gbrain/src/core/page-state/projections.ts';
+import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, receiptPath, writeReceipt, type Receipt, type ReceiptVerdict } from './receipt.ts';
+import { gbrainPin, gbrainVersion } from './gbrain-version.ts';
 
-interface Entity {
+export interface Entity {
   canonicalSlug: string;
   fullName: string;
-  /** Aliases mentioned IN the canonical page body (should be keyword-findable). */
+  /** Aliases written into the canonical page body and chunk: full name, @handle, email. */
+  indexedAliases: string[];
+  /** Query aliases present in the indexed text: the indexed aliases plus the handle without @. */
   documentedAliases: string[];
-  /** Aliases that exist (handles, emails, typos) but are NOT in any page. */
+  /** Aliases whose tokens are NOT in any page (initials, typos). */
   undocumentedAliases: string[];
 }
 
@@ -28,7 +41,7 @@ const FIRST_NAMES = ['Sarah', 'Alice', 'Bob', 'Carol', 'David', 'Eve', 'Frank', 
 const LAST_NAMES = ['Chen', 'Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson', 'Thomas', 'Taylor', 'Moore', 'Jackson'];
 const COMPANIES = ['stripe.com', 'acme.io', 'beta.co', 'gamma.dev', 'delta.ai'];
 
-function generateEntities(n: number): Entity[] {
+export function generateEntities(n: number): Entity[] {
   const entities: Entity[] = [];
   for (let i = 0; i < n; i++) {
     const first = FIRST_NAMES[i % FIRST_NAMES.length];
@@ -45,8 +58,9 @@ function generateEntities(n: number): Entity[] {
     entities.push({
       canonicalSlug: `people/${first.toLowerCase()}-${last.toLowerCase()}-${i}`,
       fullName,
-      documentedAliases: [fullName, handle, email],
-      undocumentedAliases: [initial, noSpace, typo1, typo2, handlePlain],
+      indexedAliases: [fullName, handle, email],
+      documentedAliases: [fullName, handle, email, handlePlain],
+      undocumentedAliases: [initial, noSpace, typo1, typo2],
     });
   }
   return entities;
@@ -60,9 +74,28 @@ interface QueryResult {
   rankPosition: number; // 1-indexed; 0 = not in top-10
 }
 
-async function main() {
+/** Documented aliases are exact tokens in the page, so recall must be complete. */
+export const CAT3_GATES = { min_documented_recall: 1, min_documented_mrr: 0.95 } as const;
+
+export function cat3Verdict(summary: { docRecall: number; docMrr: number }): ReceiptVerdict {
+  return summary.docRecall >= CAT3_GATES.min_documented_recall && summary.docMrr >= CAT3_GATES.min_documented_mrr ? 'pass' : 'fail';
+}
+
+export function aliasType(alias: string, category: 'documented' | 'undocumented'): string {
+  if (category === 'documented') {
+    if (alias.startsWith('@')) return 'handle';
+    if (alias.includes('@')) return 'email';
+    return alias.includes(' ') ? 'fullname' : 'handle-plain';
+  }
+  if (/^[A-Z]\. /.test(alias)) return 'initial';
+  if (/^[A-Z] /.test(alias)) return 'no-period';
+  return 'typo';
+}
+
+export async function main() {
   const json = process.argv.includes('--json');
   const log = json ? () => {} : console.log;
+  const startedAt = new Date().toISOString();
 
   log('# BrainBench Category 3: Identity Resolution\n');
   log(`Generated: ${new Date().toISOString().slice(0, 19)}`);
@@ -80,13 +113,13 @@ async function main() {
     await engine.putPage(e.canonicalSlug, {
       type: 'person',
       title: e.fullName,
-      compiled_truth: `${e.fullName} (also known as ${e.documentedAliases.slice(1).join(', ')}) is a person in our network. Reach them at ${e.documentedAliases[2]}.`,
+      compiled_truth: `${e.fullName} (also known as ${e.indexedAliases.slice(1).join(', ')}) is a person in our network. Reach them at ${e.indexedAliases[2]}.`,
       timeline: '',
     });
     // Also chunk for searchKeyword.
     const snapshot = await readProjectionSnapshot(engine, e.canonicalSlug, 'default', { allowUnsealed: true });
     if (!snapshot) throw new Error(`identity fixture snapshot missing: ${e.canonicalSlug}`);
-    const chunkText = `${e.fullName} ${e.documentedAliases.join(' ')}`;
+    const chunkText = `${e.fullName} ${e.indexedAliases.join(' ')}`;
     await installPageProjection(engine, snapshot, [
       { chunk_index: 0, chunk_text: chunkText, chunk_source: 'compiled_truth' },
     ], { seal: true });
@@ -138,7 +171,7 @@ async function main() {
   log('\n## Per-alias-type breakdown (documented)');
   const docByType: Record<string, { found: number; total: number }> = {};
   for (const r of documented) {
-    const type = r.alias.startsWith('@') ? 'handle' : r.alias.includes('@') ? 'email' : 'fullname';
+    const type = aliasType(r.alias, 'documented');
     docByType[type] ??= { found: 0, total: 0 };
     docByType[type].total++;
     if (r.found) docByType[type].found++;
@@ -150,12 +183,7 @@ async function main() {
   log('\n## Per-alias-type breakdown (undocumented)');
   const undocByType: Record<string, { found: number; total: number }> = {};
   for (const r of undocumented) {
-    let type: string;
-    if (r.alias.match(/^[A-Z]\. /)) type = 'initial';
-    else if (r.alias.match(/^[A-Z] /)) type = 'no-period';
-    else if (r.alias.match(/[A-Z][a-z]+n$/)) type = 'typo';
-    else if (r.alias.match(/[a-z][a-z]+ /)) type = 'typo';
-    else type = 'handle-plain';
+    const type = aliasType(r.alias, 'undocumented');
     undocByType[type] ??= { found: 0, total: 0 };
     undocByType[type].total++;
     if (r.found) undocByType[type].found++;
@@ -165,19 +193,39 @@ async function main() {
   }
 
   log('\n## Interpretation');
-  log('Documented aliases (full name, handle, email mentioned in canonical body):');
+  log('Documented aliases (full name, handle, email mentioned in canonical body, plus the handle without @, which the tsvector index also holds):');
   log(`  Recall ${(docRecall * 100).toFixed(1)}% through this fixture's tsvector keyword path.`);
-  log('Undocumented aliases (initials, typos, handle without @):');
+  log('Undocumented aliases (initials, typos):');
   log(`  Recall ${(undocRecall * 100).toFixed(1)}% through the same keyword path, without invoking the alias resolver.`);
   log('');
   log('Scope: this keyword-only protocol does not measure the explicit alias resolver, fuzzy matching, or nickname lookup.');
 
+  const summary = { docRecall, undocRecall, docMrr, undocMrr, docByType, undocByType };
+  const verdict = cat3Verdict(summary);
+  log(`\nVerdict: ${verdict} (documented recall >= ${CAT3_GATES.min_documented_recall * 100}%, documented MRR >= ${CAT3_GATES.min_documented_mrr})`);
+  writeReceipt(receiptPath('identity'), {
+    schema_version: RECEIPT_SCHEMA_VERSION,
+    benchmark_version: BENCHMARK_VERSION,
+    category: 'identity',
+    run_status: 'completed',
+    verdict,
+    n_total: results.length,
+    n_scored: results.length,
+    completion_rate: 1,
+    errors: [],
+    publishable: true,
+    gbrain_version: gbrainVersion(),
+    gbrain_pin: gbrainPin(),
+    resolved_config: { entities: entities.length, search: 'searchKeyword limit 10', gates: CAT3_GATES },
+    started_at: startedAt,
+    finished_at: new Date().toISOString(),
+    data: { summary, results },
+  } satisfies Receipt);
+
   if (json) {
-    process.stdout.write(JSON.stringify({
-      results,
-      summary: { docRecall, undocRecall, docMrr, undocMrr, docByType, undocByType },
-    }, null, 2) + '\n');
+    process.stdout.write(JSON.stringify({ results, summary, verdict }, null, 2) + '\n');
   }
+  if (verdict !== 'pass') process.exitCode = 1;
 }
 
-main().catch(e => { console.error(e); process.exit(1); });
+if (import.meta.main) main().catch(e => { console.error(e); process.exit(1); });
