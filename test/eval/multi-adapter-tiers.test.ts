@@ -239,11 +239,13 @@ describe('relational query builder is shared and complete (audit orchestrators-1
 // ─── adapters-queries-07: tier families wired into multi-adapter ─────
 
 describe('collectFamilies / familiesForAdapter (audit adapters-queries-07)', () => {
-  test('"all" yields relational + fuzzy + externally-authored with 80 tier queries accounted for', () => {
+  test('"all" yields relational + fuzzy + synthetic-outsider with 80 tier queries accounted for', () => {
     const fams = collectFamilies(templateCorpus(), 'all');
-    expect(fams.map(f => f.family)).toEqual(['relational', 'fuzzy', 'externally-authored']);
+    expect(fams.map(f => f.family)).toEqual(['relational', 'fuzzy', 'synthetic-outsider']);
     const fuzzy = fams.find(f => f.family === 'fuzzy')!;
-    const ext = fams.find(f => f.family === 'externally-authored')!;
+    const ext = fams.find(f => f.family === 'synthetic-outsider')!;
+    // The family is the built-in AI-authored placeholder set, not outside submissions (audit B8).
+    expect(ext.queries.every(q => q.author?.startsWith('synthetic-outsider'))).toBe(true);
     // Every authored query is either scored or explicitly excluded — none vanish.
     expect(fuzzy.queries.length + fuzzy.excluded_no_gold.length).toBe(30);
     expect(ext.queries.length + ext.excluded_no_gold.length).toBe(50);
@@ -265,10 +267,10 @@ describe('collectFamilies / familiesForAdapter (audit adapters-queries-07)', () 
     const fams = collectFamilies(templateCorpus(), 'all');
     expect(familiesForAdapter('graph-oracle-parse', fams).map(f => f.family)).toEqual(['relational']);
     expect(familiesForAdapter('gbrain', fams).map(f => f.family)).toEqual([
-      'relational', 'fuzzy', 'externally-authored',
+      'relational', 'fuzzy', 'synthetic-outsider',
     ]);
     expect(familiesForAdapter('grep-only', fams).map(f => f.family)).toEqual([
-      'relational', 'fuzzy', 'externally-authored',
+      'relational', 'fuzzy', 'synthetic-outsider',
     ]);
   });
 });
@@ -394,7 +396,7 @@ describe('multi-adapter end-to-end (grep-only, BRAINBENCH_N=1)', () => {
 
     // Tier 5/5.5 actually executed as families (audit adapters-queries-07).
     const families = out.scorecards.map((s: { family: string }) => s.family).sort();
-    expect(families).toEqual(['externally-authored', 'fuzzy', 'relational']);
+    expect(families).toEqual(['fuzzy', 'relational', 'synthetic-outsider']);
     const fuzzyFam = out.families.find((f: { family: string }) => f.family === 'fuzzy');
     expect(fuzzyFam.scored + fuzzyFam.excluded_no_gold.length).toBe(30);
 

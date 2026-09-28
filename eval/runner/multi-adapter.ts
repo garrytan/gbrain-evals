@@ -12,7 +12,8 @@
  *                           shared with shootout-driver.ts via
  *                           queries/relational.ts)
  *   - fuzzy                 Tier 5 hand-authored vague-recall queries
- *   - externally-authored   Tier 5.5 synthetic-outsider queries
+ *   - synthetic-outsider    Tier 5.5 AI-authored placeholder queries (tier id
+ *                           `externally-authored`; no outside author wrote them)
  * Tier 5/5.5 items whose gold.relevant is empty (abstention, judge-only
  * answer-string) are excluded from retrieval means per the NaN contract in
  * types.ts recallAtK and reported as excluded (audit adapters-queries-07:
@@ -124,7 +125,7 @@ export function collectFamilies(pages: RichPage[], source: QuerySource): QueryFa
     out.push(splitByGold('fuzzy', getTier5FuzzyQueries()));
   }
   if (source === 'tier5.5' || source === 'all') {
-    out.push(splitByGold('externally-authored', getTier5_5SyntheticQueries()));
+    out.push(splitByGold('synthetic-outsider', getTier5_5SyntheticQueries()));
   }
   return out;
 }
@@ -132,7 +133,7 @@ export function collectFamilies(pages: RichPage[], source: QuerySource): QueryFa
 /**
  * The graph-oracle-parse adapter below only understands the 4 relational
  * templates: it parses query text into a graph traversal and returns []
- * for anything else. Scoring it on fuzzy / externally-authored questions
+ * for anything else. Scoring it on fuzzy / synthetic-outsider questions
  * would publish a 0% row that says nothing. Rows are omitted as "not
  * applicable" instead of shipped as fake zeros. Curated subsets keep their
  * historical behavior (run on every adapter).
