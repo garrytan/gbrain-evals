@@ -8,8 +8,13 @@
  */
 
 import { describe, test, expect } from 'bun:test';
-import { deriveStatusFromReceipt } from '../../eval/runner/all.ts';
+import { mkdtempSync, rmSync, utimesSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
+import { deriveStatus, loadFreshReceipt } from '../../eval/runner/all.ts';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt } from '../../eval/runner/receipt.ts';
+
+const ok = (r: Receipt) => deriveStatus({ kind: 'ok', receipt: r });
 
 function receipt(overrides: Partial<Receipt>): Receipt {
   return {
@@ -31,47 +36,75 @@ function receipt(overrides: Partial<Receipt>): Receipt {
   };
 }
 
-describe('deriveStatusFromReceipt', () => {
-  test('REGRESSION: skipped receipt + exit 0 is SKIPPED, never pass', () => {
-    const r = receipt({ run_status: 'skipped', skip_reason: 'fixtures missing', verdict: undefined });
-    const derived = deriveStatusFromReceipt(r, 0);
+describe('deriveStatus', () => {
+  test('REGRESSION: skipped receipt is SKIPPED, never pass', () => {
+    const derived = ok(receipt({ run_status: 'skipped', skip_reason: 'fixtures missing', verdict: undefined }));
     expect(derived.status).toBe('skipped');
-    expect(derived.status).not.toBe('pass');
     expect(derived.statusSource).toBe('receipt');
     expect(derived.statusNote).toContain('fixtures missing');
   });
 
-  test('completed + verdict pass → pass, even if exit code is nonzero noise', () => {
-    const derived = deriveStatusFromReceipt(receipt({}), 1);
-    expect(derived.status).toBe('pass');
-    expect(derived.statusSource).toBe('receipt');
+  test('completed + verdict pass → pass', () => {
+    expect(ok(receipt({})).status).toBe('pass');
   });
 
-  test('completed + verdict fail → fail even with exit 0', () => {
-    const derived = deriveStatusFromReceipt(receipt({ verdict: 'fail' }), 0);
-    expect(derived.status).toBe('fail');
+  test('completed + verdict fail → fail', () => {
+    expect(ok(receipt({ verdict: 'fail' })).status).toBe('fail');
   });
 
   test('completed + verdict partial does not meet the bar → fail', () => {
-    const derived = deriveStatusFromReceipt(receipt({ verdict: 'partial' }), 0);
+    expect(ok(receipt({ verdict: 'partial' })).status).toBe('fail');
+  });
+
+  test('run_status error → fail', () => {
+    expect(ok(receipt({ run_status: 'error', verdict: undefined })).status).toBe('fail');
+  });
+
+  test('C-06: no receipt is a FAIL, never an exit-code pass', () => {
+    const derived = deriveStatus({ kind: 'missing' });
     expect(derived.status).toBe('fail');
+    expect(derived.statusSource).toBe('no-receipt');
+    expect(deriveStatus({ kind: 'stale', mtime: 't' }).status).toBe('fail');
   });
 
-  test('run_status error → fail regardless of exit code', () => {
-    const r = receipt({ run_status: 'error', verdict: undefined });
-    expect(deriveStatusFromReceipt(r, 0).status).toBe('fail');
-  });
-
-  test('no receipt falls back to exit code with an explicit legacy note', () => {
-    const ok = deriveStatusFromReceipt(null, 0);
-    expect(ok.status).toBe('pass');
-    expect(ok.statusSource).toBe('exit-code');
-    expect(ok.statusNote).toContain('no fresh receipt');
-    expect(deriveStatusFromReceipt(null, 1).status).toBe('fail');
+  test('C-07: an invalid receipt is a FAIL with the reason', () => {
+    const derived = deriveStatus({ kind: 'invalid', reason: 'completed receipt requires verdict pass|partial|fail' });
+    expect(derived.status).toBe('fail');
+    expect(derived.statusNote).toContain('invalid receipt');
+    expect(derived.statusNote).toContain('requires verdict');
   });
 
   test('unpublishable completed run is noted', () => {
-    const derived = deriveStatusFromReceipt(receipt({ publishable: false }), 0);
-    expect(derived.statusNote).toContain('not publishable');
+    expect(ok(receipt({ publishable: false })).statusNote).toContain('not publishable');
+  });
+});
+
+describe('loadFreshReceipt', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'all-receipt-'));
+  const path = join(dir, 'receipt.json');
+
+  test('missing file is missing', () => {
+    expect(loadFreshReceipt(join(dir, 'nope.json'), 0).kind).toBe('missing');
+  });
+
+  test('C-07: a malformed receipt is invalid, not missing', () => {
+    writeFileSync(path, JSON.stringify({ ...receipt({}), verdict: undefined }));
+    const load = loadFreshReceipt(path, 0);
+    expect(load.kind).toBe('invalid');
+    writeFileSync(path, '{not json');
+    expect(loadFreshReceipt(path, 0).kind).toBe('invalid');
+  });
+
+  test('a receipt older than the run start is stale', () => {
+    writeFileSync(path, JSON.stringify(receipt({})));
+    utimesSync(path, new Date(1000), new Date(1000));
+    expect(loadFreshReceipt(path, Date.now()).kind).toBe('stale');
+  });
+
+  test('a fresh valid receipt loads', () => {
+    writeFileSync(path, JSON.stringify(receipt({})));
+    const load = loadFreshReceipt(path, Date.now() - 60_000);
+    expect(load.kind).toBe('ok');
+    rmSync(dir, { recursive: true, force: true });
   });
 });
