@@ -198,11 +198,18 @@ a dated correction:
 - The April relationship precision at five was 39.2% to 44.7% on a lenient
   denominator; divided by five slots it is 29.9% to 35.4%, against a best
   possible 36.0%. The same report's undocumented alias recall falls from 31.0%
-  to 13.75%. [Report](docs/benchmarks/2026-04-18-brainbench-v1.md).
+  to 13.75%, and its link type accuracy of 70.7% to 88.5% came from a lenient
+  scorer; a strict re-run at the current pin gives 86.6% (240/277).
+  [Report](docs/benchmarks/2026-04-18-brainbench-v1.md).
+- The April and May relationship tables' `gbrain` row (49.1% precision at
+  five) came from a regular-expression parser of the four question templates,
+  now named `graph-oracle-parse`; it is not a product score.
+  [Report](docs/benchmarks/2026-04-19-brainbench-multi-adapter.md).
 - The Cat 35 88.1% is judge-only; evidence-verified retention is 74.9%.
   [Report](docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md).
 - The May snapshot's Category 18b to 29 rows came from runners written before
-  the August audit. [Report](docs/benchmarks/2026-05-23-v0.40.6.0-snapshot.md).
+  the August audit; Cat 29's +4.00 synthesis lift also scored the same
+  single-answer call twice. [Report](docs/benchmarks/2026-05-23-v0.40.6.0-snapshot.md).
 - The LongMemEval answer accuracy (433/500) and the reading-notes result
   (308/361 to 324/361) are pending re-runs because the answer model saw
   `answer_` session ids. Retrieval numbers are unaffected as far as a

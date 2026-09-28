@@ -50,7 +50,8 @@ An adapter gives one search method the same pages and asks it to return ranked r
 | `grep-only` | Scores words in the pages using BM25, a keyword-ranking formula. It is an in-memory implementation, not a shell call to `grep`. |
 | `vector` | Embeds each page and the question as lists of numbers, then ranks pages by similarity. |
 | `vector-grep-rrf-fusion` | Combines gbrain's keyword and vector rankings with graph traversal disabled. |
-| `gbrain` | Extracts relationships and answers the supported relational templates through graph traversal. |
+| `gbrain` | Since v0.10.1: the product path, gbrain's hybrid search with relationship retrieval on, answering every question family. |
+| `graph-oracle-parse` | Parses the four generator question templates with regular expressions and follows the fixture's graph. It knows the question form in advance, so treat it as an upper bound, not a product score. Before v0.10.1 this adapter was named `gbrain`. |
 
 The long hybrid adapter name is a stable identifier in commands and saved results. In prose we call it **hybrid without graph traversal**.
 

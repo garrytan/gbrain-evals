@@ -139,7 +139,7 @@ than source weights, so its gap was not the isolated effect of source boosting.
 
 The existing comparison has an adapter named `gbrain` that recognizes four
 question templates and follows the fixture's graph. It is a useful specialized
-system. It is different from the production hybrid pipeline exercised below.
+system. It is different from the production hybrid pipeline exercised below. September 28, 2026: because it knows the four question forms in advance, this adapter is now named `graph-oracle-parse` and treated as an upper bound; from v0.10.1 the `gbrain` adapter name runs the product's hybrid search with relationship retrieval.
 
 We ran all four existing adapters, over their applicable question families, with
 three ingestion orders. The specialized adapter handles relationship questions;
@@ -147,7 +147,7 @@ it is not included in fuzzy or externally authored families it cannot answer.
 
 | Family | Adapter | Mean P@5 | Mean R@5 |
 |---|---|---:|---:|
-| Relationships | Specialized `gbrain` | 0.3421 | 0.9791 |
+| Relationships | Specialized `gbrain` (now `graph-oracle-parse`) | 0.3421 | 0.9791 |
 | Relationships | Reference hybrid | 0.1917 | 0.6874 |
 | Relationships | Keyword ranker | 0.1710 | 0.6244 |
 | Relationships | Vector only | 0.1076 | 0.4069 |
@@ -274,6 +274,14 @@ things from binary recall.
 | gbrain, lexical gate + reranking | 0.6381 | 0.6619 | 130/181 |
 
 ![Concept configurations on the held-out questions](2026-09-09-retrieval-refresh/concept.svg)
+
+September 28, 2026 note: 302 of the 548 probes copy words from the target page's title, description or body, so they partly test word matching rather than concept search. Recomputed from this receipt over all 548 probes, nDCG@5 splits as follows. The split explains why the keyword ranker looks competitive overall.
+
+| Configuration | 246 conceptual probes | 302 lexical-control probes |
+|---|---:|---:|
+| gbrain, lexical gate (no reranker) | 0.615 | 0.536 |
+| Vector only | 0.628 | 0.569 |
+| Keyword ranker | 0.383 | 0.610 |
 
 The complete reranked gbrain configuration leads this comparison. Without
 reranking, vector search leads both hybrid configurations. That is useful guidance
