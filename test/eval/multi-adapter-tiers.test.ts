@@ -34,6 +34,8 @@ import {
   resolveRunsPerAdapter,
   collectFamilies,
   familiesForAdapter,
+  createGbrainProductAdapter,
+  GBRAIN_PRODUCT_SEARCH_CONFIG,
 } from '../../eval/runner/multi-adapter.ts';
 import { buildRelationalQueries, loadWorldCorpus, type RichPage } from '../../eval/runner/queries/relational.ts';
 import { buildCellQueries, runCell } from '../../eval/runner/shootout-driver.ts';
@@ -259,9 +261,12 @@ describe('collectFamilies / familiesForAdapter (audit adapters-queries-07)', () 
     expect(fams.map(f => f.family)).toEqual(['fuzzy']);
   });
 
-  test('the inline gbrain wrapper only gets the relational family (no fake 0% fuzzy rows)', () => {
+  test('the oracle template parser only gets the relational family; the gbrain product row gets every family (C-10)', () => {
     const fams = collectFamilies(templateCorpus(), 'all');
-    expect(familiesForAdapter('gbrain', fams).map(f => f.family)).toEqual(['relational']);
+    expect(familiesForAdapter('graph-oracle-parse', fams).map(f => f.family)).toEqual(['relational']);
+    expect(familiesForAdapter('gbrain', fams).map(f => f.family)).toEqual([
+      'relational', 'fuzzy', 'externally-authored',
+    ]);
     expect(familiesForAdapter('grep-only', fams).map(f => f.family)).toEqual([
       'relational', 'fuzzy', 'externally-authored',
     ]);
@@ -313,6 +318,30 @@ describe('VectorOnlyAdapter (audit adapters-queries-03 / -08)', () => {
     expect(() => _cosine(new Float32Array([1, 2, 3]), new Float32Array([1, 2]))).toThrow(/dimension mismatch/);
     expect(_cosine(new Float32Array([1, 0]), new Float32Array([1, 0]))).toBe(1);
   });
+});
+
+// ─── C-10: the gbrain row is the product path, not a template oracle ───
+
+describe('gbrain product adapter (C-10)', () => {
+  test('uses hybridSearch with relational retrieval on and answers queries outside the template grammar', async () => {
+    expect(GBRAIN_PRODUCT_SEARCH_CONFIG['search.relational_retrieval']).toBe('true');
+    await withEmbedSeam(async () => {
+      const pages: Page[] = templateCorpus().map(({ _facts, ...pub }) => pub as Page);
+      const adapter = createGbrainProductAdapter();
+      expect(adapter.name).toBe('gbrain');
+      const state = await adapter.init(pages, { name: 'gbrain' });
+      try {
+        expect(adapter.resolvedConfig(state)['search.relational_retrieval']).toBe('true');
+        const paraphrase = await adapter.query({ id: 'q-para', text: 'Which people are on the Rocketry Labs payroll?' }, state);
+        expect(paraphrase.length).toBeGreaterThan(0);
+        const template = await adapter.query({ id: 'q-tmpl', text: 'Who works at Rocketry Labs?' }, state);
+        expect(template.length).toBeGreaterThan(0);
+        expect(adapter.observedStats(state).queries).toBe(2);
+      } finally {
+        await adapter.teardown(state);
+      }
+    });
+  }, 120_000);
 });
 
 // ─── adapters-queries-04: hybrid limit knob ───────────────────────────
