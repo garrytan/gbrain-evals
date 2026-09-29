@@ -44,29 +44,45 @@ Embedders, chunking and ranking all differ, so this shows how the tested
 pipelines compare, not why. Sources, dates and every row we could not match are
 in [comparisons and their protocols](docs/comparison-systems.md).
 
-**Answer accuracy is not yet a matched comparison.** gbrain's judged answers
-were correct on 433 of 500 questions (86.6%) with a Sonnet 4.6 reader, and that
-number is pending a re-run: the answer model could see session ids that mark
-the labeled evidence. Published results for other systems range from 81.6% to
-96.1%, each with its own reader, judge and prompts, and several are above
-86.6%. We have not run gbrain with a matching reader, so we claim no ranking on
-answers in either direction.
+**Answer accuracy is not yet a matched comparison.** In a leak-free re-run on
+September 29, with session ids made opaque, gbrain's judged answers were
+correct on **439 of 500 questions (87.8%)**. That run used the reranker off
+and the notes reader (Sonnet 4.6, 1,024 output tokens), so it is not the
+published configuration and does not measure how much the leak helped. The
+historical 433/500 (86.6%) stays in the record as invalid: its answer model
+could see session ids that mark the labeled evidence. On exactly the same
+retrieved sessions, a GPT-4o reader with LongMemEval's official reading prompt
+scored 430/500 (86.0%); paired, it won 21 questions and lost 30 (exact McNemar
+p = 0.26), so the two readers are not demonstrably different. Published results
+for other systems range from 81.6% to 96.1%, each with its own retrieval,
+reader, judge and prompts. Retrieval, context size and judges still differ, so
+we claim no ranking on answers in either direction.
+[Read the re-run](docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md).
 
 ## Why put gbrain on your shortlist?
 
 **It finds evidence across long conversations.** In the September 6 LongMemEval
 run, gbrain found every labeled conversation needed for **449 of 470 answerable
 questions, or 95.53%**, within five returned text chunks. The answer model then
-read the full sessions behind those chunks and answered **433 of 500 questions
-correctly, or 86.6%**, including questions whose correct response was to
-abstain. Those are separate measurements with separate denominators. Two
-caveats belong next to them. The release setting (autocut off) was chosen by
-comparing arms on the same 470 questions, and the pre-registered target of at
-least 92% answer accuracy was missed. On September 28 we also found that the
-answer model saw the `answer_` prefix that LongMemEval puts on every labeled
-evidence session id, so the 433/500 figure is pending a re-run with opaque ids.
-A 30-question check found no effect of the prefix on retrieval.
+read the full sessions behind those chunks and answered 433 of 500 questions
+correctly (86.6%), including questions whose correct response was to abstain.
+Those are separate measurements with separate denominators. The release setting
+(autocut off) was chosen by comparing arms on the same 470 questions, and the
+pre-registered target of at least 92% answer accuracy was missed. On September
+28 we found that the answer model saw the `answer_` prefix that LongMemEval
+puts on every labeled evidence session id, so the 433/500 figure is historical
+and invalid. A 30-question check found no effect of the prefix on retrieval.
 [Read the experiment](docs/benchmarks/2026-09-06-longmemeval-ranker-wave.md).
+
+**The reader needs whole conversations, not just matching passages.** The
+September 29 leak-free re-run, with the reranker off, found all labeled
+evidence for 435/470 answerable questions and answered **439/500 (87.8%)**
+correctly with the full retrieved sessions. On a fixed random 100 questions,
+the same reader given only the five retrieved chunks fell from 89/100 to
+65/100. With those chunks held fixed, gbrain's reader prompt, a plain prompt
+and `gbrain think`'s prompt tied at 65, 65 and 64 of 100. Delivering more of
+the evidence mattered far more than the prompt wording.
+[Read the re-run](docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md).
 
 **Keeping the conversations intact can help the answer model use them.** In a
 separate September 24 matched reading study, asking Sonnet 4.6 to take brief
@@ -210,10 +226,14 @@ a dated correction:
 - The May snapshot's Category 18b to 29 rows came from runners written before
   the August audit; Cat 29's +4.00 synthesis lift also scored the same
   single-answer call twice. [Report](docs/benchmarks/2026-05-23-v0.40.6.0-snapshot.md).
-- The LongMemEval answer accuracy (433/500) and the reading-notes result
-  (308/361 to 324/361) are pending re-runs because the answer model saw
-  `answer_` session ids. Retrieval numbers are unaffected as far as a
-  30-question check can tell.
+- The LongMemEval answer accuracy (433/500) is invalid because the answer
+  model saw `answer_` session ids. A leak-free re-run on September 29 scored
+  439/500 (87.8%) with the reranker off and the notes reader, a different
+  configuration, so it replaces the claim without measuring the leak's effect.
+  [Report](docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md). The
+  reading-notes result (308/361 to 324/361) is still pending a re-run for the
+  same reason. Retrieval numbers are unaffected as far as a 30-question check
+  can tell.
 
 ## Inspect or extend the work
 
