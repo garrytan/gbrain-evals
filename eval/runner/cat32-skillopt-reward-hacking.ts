@@ -401,8 +401,10 @@ export async function runCat32(options: Cat32Options = {}): Promise<Cat32RunResu
           } as any);
           outcome = r.outcome;
           optCost = r.receipt?.final_cost_usd ?? 0;
+          // Compare on the optimizer's own sel split: baselineSel above covers
+          // all bench tasks, best_sel_score only the sel split (audit B-32-02).
           const optimizedSel = r.receipt?.best_sel_score ?? baselineSel;
-          selClimb = optimizedSel - baselineSel;
+          selClimb = optimizedSel - (r.receipt?.baseline_sel_score ?? baselineSel);
           if (outcome === 'errored') {
             sutFailed = true;
             acc.error('part-b', 'sut', 'runSkillOpt returned outcome errored');

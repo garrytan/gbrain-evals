@@ -189,7 +189,8 @@ export function computeCat33Gate(results: PairResult[], bpre: boolean): boolean 
       && (r.y_outcome === 'skipped_bpre' || CLEAN_OUTCOMES.has(r.y_outcome)));
   }
   const scored = results.filter((r) => r.error_origin !== 'dependency');
-  if (scored.length === 0) return false;
+  // At most one pair may drop out on a dependency error (audit B-30-04).
+  if (scored.length === 0 || scored.length < results.length - 1) return false;
   const transferred = scored.filter((r) => r.transferred).length;
   return transferred >= Math.ceil(scored.length * 0.75);
 }

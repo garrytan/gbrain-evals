@@ -1142,7 +1142,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
   for (const [lane, b] of Object.entries(halluc)) {
     hallucination[lane] = { ...b, rate: b.verifiable ? b.ungrounded / b.verifiable : 0 };
   }
-  const distractorLeakage: Record<string, { hits: number; confirmed: number; denominator: number; rate: number }> = {};
+  const distractorLeakage: Record<string, { hits: number; confirmed: number; denominator: number; judge_failed: number; rate: number }> = {};
   for (const lane of ALL_LANES) {
     if (!leakage[lane]) continue;
     // Denominator excludes transcripts whose lane errored — a crashed lane
@@ -1154,10 +1154,16 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
       if (st.laneError[lane] || st.laneDocs[lane] === undefined) return a;
       return a + fx.gold.distractors.length;
     }, 0);
+    // A mechanical hit whose confirmation judge failed can never count as
+    // confirmed, so it leaves the denominator and is reported apart (audit
+    // PC-04: it used to bias leakage toward zero).
+    const judgeFailed = distractorEvidence.filter((r) => r.lane === lane && r.confirmation === 'judge_failed').length;
+    const scoredDenominator = denominator - judgeFailed;
     distractorLeakage[lane] = {
       ...leakage[lane],
-      denominator,
-      rate: denominator ? leakage[lane].confirmed / denominator : 0,
+      denominator: scoredDenominator,
+      judge_failed: judgeFailed,
+      rate: scoredDenominator ? leakage[lane].confirmed / scoredDenominator : 0,
     };
   }
 

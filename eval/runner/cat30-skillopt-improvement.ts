@@ -290,7 +290,9 @@ export function computeCat30Gate(results: SeedResult[], bpre: boolean): boolean 
       && r.baseline_heldout < BPRE_BASELINE_CEILING);
   }
   const scored = results.filter((r) => r.error_origin !== 'dependency');
-  if (scored.length === 0) return false;
+  // At most one seed may drop out on a dependency error; otherwise one
+  // improved seed out of one scored could pass (audit B-30-04).
+  if (scored.length === 0 || scored.length < results.length - 1) return false;
   const improved = scored.filter((r) => r.improved).length;
   return improved >= Math.ceil(scored.length * 0.75);
 }

@@ -48,6 +48,7 @@
 
 import { writeFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
+import { tmpdir } from 'os';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { importFromContent } from 'gbrain/import-file';
 import { configureGateway } from 'gbrain/ai/gateway';
@@ -239,6 +240,10 @@ export async function runCat28(options: Cat28Options = {}): Promise<Cat28RunResu
   const log = options.quiet ? (_: string) => {} : (s: string) => process.stderr.write(s);
   const importFn: ImportFn = options.importFn
     ?? ((engine, slug, body, opts) => importFromContent(engine, slug, body, opts));
+  // Isolate GBRAIN_HOME like every sibling runner, so a user's config cannot change the run (audit B-28-01).
+  const home = join(tmpdir(), `cat28-gbrain-home-${process.pid}-${Date.now()}`);
+  mkdirSync(home, { recursive: true });
+  process.env.GBRAIN_HOME = home;
 
   // initSchema resolves embedding dims through the gateway even when the
   // workload never embeds (noEmbed: true) — configure it with env passthrough.
