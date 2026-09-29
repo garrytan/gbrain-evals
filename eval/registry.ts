@@ -100,12 +100,12 @@ export const REGISTRY: readonly CategoryEntry[] = [
     contract: 'Runs extractPageLinks on every world-v1 page and compares the typed edges with gold derived from _facts. Edges are oriented the way gbrain stores them (attendance person -> meeting). Every inferred type that differs from gold is charged as spurious, so emitting every type cannot score well. It measures extraction on generator-written prose; it says nothing about prose the generator did not write.',
   },
   {
-    id: 'alias-keyword-lookup', legacy_alias: '3', name: 'Identity resolution through keyword search',
+    id: 'alias-keyword-lookup', legacy_alias: '3', name: 'Alias lookup through keyword search',
     family: 'retrieval', tier: 'H', script: 'eval/runner/identity.ts', run: { kind: 'dispatched' },
     cost_estimate: FREE, receipt_path: receipt('identity'),
     headline: { metric: 'documented and undocumented alias recall through searchKeyword', denominator: '800 alias lookups (400 undocumented)' },
     gate: 'gate', evidence_maturity: 'regression-only',
-    contract: 'Looks people up by aliases (handles, nicknames, misspellings) through keyword search and checks the canonical page ranks first. An alias counts as documented when its text appears on the page. It measures lexical identity lookup only, not entity resolution or merging.',
+    contract: 'Looks people up by aliases (handles, nicknames, misspellings) through keyword search and checks the canonical page ranks first. An alias counts as documented when its text appears on the page. It measures lexical lookup only. gbrain\'s entity resolver, write-time alias resolution and identity groups are not exercised.',
   },
   {
     id: 'timeline-round-trip', legacy_alias: '4', name: 'Timeline storage round-trip',
@@ -113,7 +113,7 @@ export const REGISTRY: readonly CategoryEntry[] = [
     cost_estimate: FREE, receipt_path: receipt('temporal'),
     headline: { metric: 'pass rate of point, range, recency and as-of timeline checks', denominator: '114 timeline probes' },
     gate: 'gate', evidence_maturity: 'regression-only',
-    contract: 'Writes timeline entries and reads them back by point, range, recency and as-of filters (the as-of filter is applied by the harness). It proves storage and retrieval of dated entries, not temporal reasoning over natural-language questions.',
+    contract: 'Writes timeline entries and reads them back by point, range, recency and as-of filters (the as-of filter is applied by the harness). It proves storage and retrieval of dated entries. gbrain\'s own temporal features (chronicle operations, search date bounds, fact validity windows) are not exercised.',
   },
   {
     id: 'source-attribution', legacy_alias: '5', name: 'Source attribution / provenance',
@@ -128,9 +128,9 @@ export const REGISTRY: readonly CategoryEntry[] = [
     id: 'prose-autolink-precision', legacy_alias: '6', name: 'Auto-link precision under prose',
     family: 'extraction', tier: 'H', script: 'eval/runner/cat6-prose-scale.ts', run: { kind: 'dispatched' },
     cost_estimate: FREE, receipt_path: receipt('cat6-prose-scale'),
-    headline: { metric: 'extractor recall and labeled precision under injected prose traps', denominator: '250 injection probes (code fences, substring traps, ambiguous roles)' },
+    headline: { metric: 'extractor recall and labeled precision under injected prose traps', denominator: '250 injection probes (code fences, substring traps, ambiguous roles) plus 50 bare-name mentions in the gazetteer arm' },
     gate: 'gate', evidence_maturity: 'regression-only',
-    contract: 'Injects prose that should or should not create links (code fences, substring traps, ambiguous roles) and scores the extracted links. Precision is measured on labeled injections only, and one known capability-gap kind is excluded, so a pass is a regression result.',
+    contract: 'Injects prose that should or should not create links (code fences, substring traps, ambiguous roles) and scores the extracted links. Precision is measured on labeled injections only. Bare-name mentions are scored separately in a gazetteer arm that runs gbrain\'s by-mention extract pass over a PGLite brain. A pass is a regression result.',
   },
   {
     id: 'pglite-latency', legacy_alias: '7', name: 'Performance / latency',
