@@ -103,6 +103,16 @@ root because Bun resolves that transitive patch path there (SHA-256
 identical to the alias checkout's patch). Passing the
 legacy suite does not validate the new reader globally.
 
+Update, 2026-09-29 (gbrain-evals 0.10.7): `a9de062` is not on any gbrain
+branch, so a fresh install depended on GitHub still serving an orphaned
+commit. The `gbrain-reader` alias now pins gbrain master
+[`e78f1c3`](https://github.com/garrytan/gbrain/tree/e78f1c38b947b053f3a46881340f74f316be855a)
+(v0.59.0.0, "default LongMemEval reader to notes-first"). Its `src/` tree and
+`package.json` are byte-identical to `a9de062`'s, so the request builder and
+run path execute the same reader code; the 22 reading-notes tests pass at the
+new pin. Since 0.10.3 the main `gbrain` dependency is master `b80cad6`, and
+the `postgres@3.4.9` patch mirror mentioned above was removed in 0.10.2.
+
 From the repository root, `bun eval/runner/reading-notes-recount.ts` rechecks
 all public label pairs, repeats and regrades without keys, network or paid
 calls. `bun test test/eval/reading-notes-recount.test.ts` additionally
