@@ -12,7 +12,7 @@
 set -u
 cd "$(dirname "$0")/../.." || exit 2
 SENTINEL="${SKILLOPT_SENTINEL:-/tmp/skillopt-cats.done}"
-rm -f "$SENTINEL"
+rm -f "$SENTINEL" "$SENTINEL.partial"
 
 OVERALL=0
 

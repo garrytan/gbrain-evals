@@ -84,7 +84,8 @@ export interface ValidationResult {
 
 // ─── Individual query validation ───────────────────────────────────
 
-export function validateQuery(q: Query): ValidationResult {
+/** `allowPlaceholders`: accept the query:new scaffold's placeholder text (its structural self-check only). */
+export function validateQuery(q: Query, opts: { allowPlaceholders?: boolean } = {}): ValidationResult {
   const issues: ValidationIssue[] = [];
   const qid = q.id || '(missing id)';
 
@@ -106,6 +107,11 @@ export function validateQuery(q: Query): ValidationResult {
   }
   if (!q.gold || typeof q.gold !== 'object') {
     issues.push({ queryId: qid, field: 'gold', reason: 'gold must be an object' });
+  }
+  // Unfilled `query:new` scaffold placeholders are not a contribution (audit PD-17).
+  const placeholder = /replace-me\/|\bREPLACE\b|@replace-with-/;
+  if (!opts.allowPlaceholders && placeholder.test(JSON.stringify(q))) {
+    issues.push({ queryId: qid, field: 'text', reason: 'contains an unfilled query:new placeholder (replace-me/, REPLACE, @replace-with-)' });
   }
 
   // Temporal as-of-date rule (eng pass 2).

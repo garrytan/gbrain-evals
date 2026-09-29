@@ -112,8 +112,9 @@ export interface PairResult {
   yopt_on_y: number | null;
   transfer_lift: number | null;
   transfer_ratio: number | null;
-  band_ok: boolean;
-  transferred: boolean;
+  /** null in B-pre, where no ceiling runs and a ratio would be 1 by construction (audit B-33-01). */
+  band_ok: boolean | null;
+  transferred: boolean | null;
   cost_usd: number;
   /** Outcome of the optimize-on-X step ('accepted' | 'no_improvement' | 'aborted' | 'errored'). */
   x_outcome: string;
@@ -297,6 +298,19 @@ async function runPair(deps: PairDeps, seed: string, x: string, y: string): Prom
     };
   }
 
+  if (yOutcome === 'skipped_bpre') {
+    // B-pre skips the Y ceiling, so Yopt_on_Y would just be Xopt_on_Y and the
+    // ratio 1 by construction (audit B-33-01). Report the lift only; the
+    // B-pre gate checks that both steps ran cleanly.
+    deps.acc.score(pairId, 1);
+    deps.log(`[cat33]   seed_on_Y=${seedOnY.toFixed(2)} Xopt_on_Y=${xoptOnY.toFixed(2)} lift=${(xoptOnY - seedOnY).toFixed(2)} ratio=n/a (B-pre: no ceiling run)\n`);
+    return {
+      seed, x, y, seed_on_y: seedOnY, xopt_on_y: xoptOnY, yopt_on_y: null,
+      transfer_lift: xoptOnY - seedOnY, transfer_ratio: null, band_ok: null,
+      transferred: null, cost_usd: totalCost,
+      x_outcome: xopt.outcome, y_outcome: yOutcome,
+    };
+  }
   const m = computeTransfer(seedOnY, xoptOnY, yoptOnY);
   deps.acc.score(pairId, m.transferred ? 1 : 0);
   deps.log(`[cat33]   seed_on_Y=${seedOnY.toFixed(2)} Xopt_on_Y=${xoptOnY.toFixed(2)} Yopt_on_Y=${yoptOnY.toFixed(2)} lift=${m.transfer_lift >= 0 ? '+' : ''}${m.transfer_lift.toFixed(2)} ratio=${m.transfer_ratio === null ? 'n/a (ceiling flat)' : m.transfer_ratio.toFixed(2)} band_ok=${m.band_ok}\n`);

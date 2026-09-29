@@ -222,12 +222,14 @@ export async function runCell(args: ParsedArgs): Promise<CellReceipt> {
     benchmark_version: BENCHMARK_VERSION,
     category: 'shootout-driver',
     run_status: 'completed',
-    verdict: scored > 0 ? 'pass' : 'fail',
+    // No quality threshold exists for a single cell, so a scored cell is
+    // `partial` (ran, no gate), never `pass` (audit PD-15).
+    verdict: scored > 0 ? 'partial' : 'fail',
     n_total: queries.length,
     n_scored: scored,
     completion_rate: queries.length > 0 ? scored / queries.length : 0,
     errors: [],
-    publishable: scored > 0,
+    publishable: scored === queries.length && queries.length > 0,
     gbrain_version: gbrainVersion(),
     gbrain_pin: gbrainPin(),
     resolved_config: {

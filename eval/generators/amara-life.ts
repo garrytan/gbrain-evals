@@ -27,7 +27,7 @@
  *   emails/em-NNNN, slack/sl-NNNN, cal/evt-NNNN, meeting/mtg-NNNN,
  *   doc/<name>, note/<date>-<topic>
  *
- * Determinism: seeded LCG (Lehmer / MINSTD). Same `seed` → byte-identical
+ * Determinism: seeded Mulberry32 PRNG. Same `seed` → byte-identical
  * output. Regeneration is free; no LLM calls in this file.
  */
 

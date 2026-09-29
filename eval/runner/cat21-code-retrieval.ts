@@ -68,7 +68,7 @@ import type { SearchResult, HybridSearchMeta } from 'gbrain/types';
 import { makeHashEmbedTransport } from './cat18-embedding-providers.ts';
 import { uniqueInOrder, reciprocalRank, recallAnyAtK, rankOfFirstHit, percentile } from './metrics.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
-import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt } from './receipt.ts';
+import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, gateFromEnv, type Receipt } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 
 export const CAT21_CATEGORY = 'cat21-code-retrieval';
@@ -468,7 +468,7 @@ export function optionsFromEnv(argv: string[] = process.argv.slice(2)): Cat21Opt
     stubEmbed: argv.includes('--stub-embed') || process.env.CAT21_STUB_EMBED === '1',
     allowSkip: argv.includes('--allow-skip') || process.env.BRAINBENCH_ALLOW_SKIP === '1',
     distractors: process.env.CAT21_DISTRACTORS ? parseInt(process.env.CAT21_DISTRACTORS, 10) : undefined,
-    minMrr: process.env.CAT21_MIN_MRR ? parseFloat(process.env.CAT21_MIN_MRR) : undefined,
+    minMrr: gateFromEnv('CAT21_MIN_MRR'),
   };
 }
 
@@ -577,6 +577,7 @@ export async function runCat21(options: Cat21Options = {}): Promise<Cat21RunResu
   const runInvalid = summary.run_invalid;
   const publishable = summary.publishable
     && !options.stubEmbed
+    && options.minMrr === undefined
     && validCells.length === cellNames.length;
 
   const receipt: Receipt = {

@@ -818,8 +818,10 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
             preferred: o.preferred === 'tie' ? 'tie' : SYSTEM_OF[o.preferred],
           })),
         });
-        // Probe score = think - search delta on the 0-5 judge scale.
-        acc.score(q.id, pair.b - pair.a);
+        // Probe score = think - search delta on the 0-5 judge scale. A side
+        // that crashed already recorded a sut error (scored 0); do not
+        // overwrite it with a delta (audit B-29-04).
+        if (sutErrors.length === 0) acc.score(q.id, pair.b - pair.a);
         log(`[cat29]   ${q.id}: search=${pair.a.toFixed(2)} think=${pair.b.toFixed(2)} Δ=${(pair.b - pair.a).toFixed(2)} preference=${pair.preference ?? 'n/a'}\n`);
       } catch (e: any) {
         if (e instanceof JudgeFailure) {
@@ -858,7 +860,9 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
     judged.length === 0 ? NaN : judged.reduce((a, r) => a + (r[key] ?? 0), 0) / judged.length;
   const sMean = mean('search_score');
   const tMean = mean('think_score');
-  const verdict = computeVerdict(rows, questions.length);
+  // A stub run checks plumbing: never a pass (audit B-29-04), like Cats 25 and 26.
+  const measured = computeVerdict(rows, questions.length);
+  const verdict = stub && measured === 'pass' ? 'partial' : measured;
   const inconsistent = judged.filter(r => r.position_consistent === false);
   const summary = acc.summary();
 
@@ -925,7 +929,8 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
   log(`[cat29]   verdict:          ${verdict} (run_invalid=${summary.run_invalid}, publishable=${receipt.publishable})\n`);
   log(`[cat29]   receipt:          ${receiptFile}\n`);
 
-  const exitCode = summary.run_invalid ? 1 : (verdict === 'pass' ? 0 : 1);
+  // A stub run whose gate held exits 0: plumbing verified, reported as partial.
+  const exitCode = summary.run_invalid ? 1 : (measured === 'pass' ? 0 : 1);
   return { receipt, rows, exitCode, receiptFile };
 }
 

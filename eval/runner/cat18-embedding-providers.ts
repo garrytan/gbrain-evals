@@ -59,7 +59,7 @@ import type { SearchResult, HybridSearchMeta } from 'gbrain/types';
 import { loadSyntheticV1, syntheticQueries, type SyntheticPage, type SyntheticQuery } from './synthetic-corpus-loader.ts';
 import { uniqueInOrder, recallAtK, reciprocalRank, percentile } from './metrics.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
-import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt, type ProbeError, type FailureOrigin } from './receipt.ts';
+import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, gateFromEnv, type Receipt, type ProbeError, type FailureOrigin } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 
 export const CAT18_CATEGORY = 'cat18-embedding-providers';
@@ -458,7 +458,8 @@ export async function runProviderCell(
     if (cell.query_errors > 0 && cell.invalid_reasons.length === 0) {
       cell.invalid_reasons.push(`${cell.query_errors} query error(s): ${cell.degraded_queries} degraded-to-keyword, rest thrown`);
     }
-    cell.valid = cell.query_errors === 0 && cell.queries_scored === queries.length;
+    // A cell with zero queries measured nothing (audit A-24: CAT18_LIMIT_PAGES=30 left every cell valid with null recall).
+    cell.valid = queries.length > 0 && cell.query_errors === 0 && cell.queries_scored === queries.length;
     return cell;
   } finally {
     await engine.disconnect();
@@ -539,7 +540,7 @@ export function optionsFromEnv(argv: string[] = process.argv.slice(2)): Cat18Opt
     stubEmbed: argv.includes('--stub-embed') || process.env.CAT18_STUB_EMBED === '1',
     allowSkip: argv.includes('--allow-skip') || process.env.BRAINBENCH_ALLOW_SKIP === '1',
     limitPages: process.env.CAT18_LIMIT_PAGES ? parseInt(process.env.CAT18_LIMIT_PAGES, 10) : undefined,
-    minRecall: process.env.CAT18_MIN_RECALL ? parseFloat(process.env.CAT18_MIN_RECALL) : undefined,
+    minRecall: gateFromEnv('CAT18_MIN_RECALL'),
   };
 }
 
@@ -645,6 +646,7 @@ export async function runCat18(options: Cat18Options = {}): Promise<Cat18RunResu
   const publishable = summary.publishable
     && !options.stubEmbed
     && !options.limitPages
+    && minRecall === DEFAULT_MIN_RECALL
     && validCells.length === providers.length;
 
   const resolvedConfig: Record<string, unknown> = {

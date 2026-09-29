@@ -41,7 +41,7 @@ describe('eval:query:new → eval:query:validate contract (generators-15)', () =
   const TIERS = ['easy', 'medium', 'hard', 'adversarial', 'fuzzy', 'externally-authored'];
 
   for (const tier of TIERS) {
-    test(`--tier ${tier} scaffold passes validation end-to-end`, () => {
+    test(`--tier ${tier} scaffold is structurally valid, and query:validate refuses it until the placeholders are filled (PD-17)`, () => {
       const gen = run([QUERY_NEW, '--tier', tier, '--id', `q-test-${tier}`]);
       expect(gen.status).toBe(0);
       // stdout must be pure JSON (hints go to stderr) so `> file.json` works.
@@ -49,7 +49,17 @@ describe('eval:query:new → eval:query:validate contract (generators-15)', () =
       expect(parsed.id).toBe(`q-test-${tier}`);
       const file = join(sandbox, `scaffold-${tier}.json`);
       writeFileSync(file, gen.stdout);
-      const val = run([QUERY_VALIDATE, file]);
+      const unfilled = run([QUERY_VALIDATE, file]);
+      expect(unfilled.status).toBe(1);
+      expect(unfilled.stdout + unfilled.stderr).toContain('placeholder');
+      const filled = JSON.parse(JSON.stringify(parsed)
+        .replace(/replace-me\/with-real-slug/g, 'people/alice-example')
+        .replace(/replace-me\/with-another-slug-if-needed/g, 'companies/acme-example')
+        .replace(/@replace-with-your-handle/g, '@alice-example')
+        .replace(/REPLACE/g, 'Filled'));
+      const filledFile = join(sandbox, `filled-${tier}.json`);
+      writeFileSync(filledFile, JSON.stringify(filled));
+      const val = run([QUERY_VALIDATE, filledFile]);
       expect(val.stdout).toContain('valid');
       expect(val.status).toBe(0);
     });

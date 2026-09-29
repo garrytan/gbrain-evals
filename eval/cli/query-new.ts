@@ -83,7 +83,7 @@ function main() {
   // Self-check the documented contract ("prints a JSON block that passes
   // eval:query:validate") instead of asserting it in a comment. A tier typo
   // or template drift fails loudly here rather than in the contributor's PR.
-  const check = validateQuery(template);
+  const check = validateQuery(template, { allowPlaceholders: true });
   if (!check.ok) {
     console.error(`eval:query:new: scaffold does not validate — fix the flag or file a bug:\n${formatIssues(check)}`);
     process.exit(1);

@@ -317,6 +317,19 @@ export function noModelSpend(basis: string): { cost: CostSummary; delivered_toke
   return { cost: { usd: 0, input_tokens: 0, output_tokens: 0, basis }, delivered_tokens: { tokens: 0, basis } };
 }
 
+/**
+ * A gate override from the environment: a number in (0, 1], or undefined when
+ * unset. Anything else throws, so `CAT18_MIN_RECALL=abc` can no longer become
+ * NaN and pass every comparison (audit A-23).
+ */
+export function gateFromEnv(name: string, env: Record<string, string | undefined> = process.env): number | undefined {
+  const raw = env[name];
+  if (raw === undefined || raw === '') return undefined;
+  const value = Number(raw);
+  if (!Number.isFinite(value) || value <= 0 || value > 1) throw new Error(`${name} must be a number in (0, 1], got ${JSON.stringify(raw)}`);
+  return value;
+}
+
 /** Nearest-rank percentile summary; null for an empty sample. */
 export function latencySummary(samplesMs: readonly number[], basis: string): LatencySummary | null {
   const sorted = samplesMs.filter(Number.isFinite).slice().sort((a, b) => a - b);

@@ -218,8 +218,10 @@ describe('runCat29 blind judging', () => {
     expect(r.rows[0].judge_preference).toBe('think');
     expect(r.rows[0].judge_orders.map(o => o.first).sort()).toEqual(['search', 'think']);
     expect((r.receipt.data as Record<string, any>).position_inconsistent).toBe(0);
-    // fact-rich stub think beats the raw dump → gate passes on good input
-    expect(r.receipt.verdict).toBe('pass');
+    // fact-rich stub think beats the raw dump → the gate itself passes on
+    // good input, but a stub run reports partial, never pass (audit B-29-04)
+    expect(computeVerdict(r.rows, r.rows.length)).toBe('pass');
+    expect(r.receipt.verdict).toBe('partial');
     expect(r.exitCode).toBe(0);
     expect(r.receipt.publishable).toBe(false); // stub + injected fixtures
 
