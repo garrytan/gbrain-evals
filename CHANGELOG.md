@@ -2,6 +2,64 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.4] - 2026-09-29
+
+Two pieces of evaluation machinery from amendments 4 and 6 of the September 28
+plan. No benchmark was re-run and no published number changes.
+
+### Added
+
+- **Paired comparator: `bun eval/runner/compare.ts <A> <B>`.** It pairs two runs
+  question by question and refuses duplicate ids, missing pairs and questions
+  that are eligible on one side only. It reports the absolute change with a
+  clustered 95% bootstrap interval, a clustered sign-flip test, the exact
+  McNemar test and a power note (the smallest change detectable at 80% power).
+  Items share a cluster id, so ten paraphrases of one concept count once. The
+  statistics generalize the situation-recall regression gate's bootstrap,
+  sign-flip and Holm code (`eval/runner/stats/`), and a test holds the two to
+  identical results. Recounting the committed September 6 rows reproduces the
+  published reranker comparison: 18 wins and 8 losses over 470 answerable
+  LongMemEval-S questions, +2.13 points (interval 0.00 to +4.26), McNemar
+  p = 0.0755.
+- **Three gates over a preregistered family** (`--family`). Exact correctness
+  and safety assertions fail at once with no significance test. Noisy quality
+  metrics pass only when non-inferiority within a stated tolerance is shown after
+  Holm correction; a wide interval is inconclusive, not a pass. Exploratory
+  metrics never gate.
+- **Independent evaluator** (`eval/runner/evaluator/`). A gold store keeps labels
+  in a private field and hands out scores. The LongMemEval runner keeps only
+  gold-free question views and scores through a gold store loaded by a separate
+  read of the dataset, checked byte for byte. Cat13 gold comes from a separate
+  corpus read and must match the runner's probes id for id and text for text. A
+  reference scorer reimplements the metrics without importing the product.
+- **Input allowlist** for every payload sent to the system under test or the
+  reader in the LongMemEval retrieval, LongMemEval answer and Cat13 runners. It
+  refuses undeclared fields, non-plain objects and any raw dataset session id
+  beyond what the conversation text accounts for, whether or not the id starts
+  with `answer_`. A violation voids the run. Receipts record the gold-store
+  fingerprint, scorer version and boundary names under
+  `resolved_config.evaluator`.
+- **Adversarial tests** the evaluator must catch: known rankings, permuted
+  labels, removed metadata, duplicate ids, an empty system, wrong answers, and
+  adapters that leak gold, return nothing or return duplicates
+  (`test/eval/evaluator-adversarial.test.ts`).
+- [Comparing runs](docs/comparing-runs.md) explains all of the above.
+
+### Changed
+
+- Cat13 per-question rows gain `cluster_id` (the target concept) and, when an
+  adapter repeats a page, `duplicate_results`. Scores are unchanged: repeated
+  pages already earned nothing.
+
+### Known limits
+
+- The separation is in-process; a product in the same process could still read
+  dataset files. Other runners that call readers or judges (reading notes, Cat29,
+  Cat35) do not use the allowlist yet.
+- gbrain's own `gbrain eval compare` still prints a bootstrap methodology string
+  without computing a bootstrap (`src/commands/eval-compare.ts:243`); a separate
+  gbrain change owns that fix.
+
 ## [0.10.2] - 2026-09-28
 
 A September 28 audit found published numbers that were invalid or overstated.
