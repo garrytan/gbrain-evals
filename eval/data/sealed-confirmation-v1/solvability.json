@@ -1,0 +1,55 @@
+{
+  "set": "sealed-confirmation-v1",
+  "run_date": "2026-09-29",
+  "purpose": "pre-seal solvability control; reported, never used to drop items",
+  "reader_prompt": "LongMemEval oracle-session chain-of-thought reader prompt (src/generation/run_generation.py), json history format, sessions sorted by date",
+  "reader_settings": {
+    "model": "claude-sonnet-4-6",
+    "temperature": 0,
+    "max_tokens": 2048
+  },
+  "judge_settings": {
+    "model": "gpt-4o-2024-08-06",
+    "temperature": 0,
+    "max_output_tokens": 16,
+    "prompts": "LongMemEval evaluate_qa.py get_anscheck_prompt; abstention items use the unanswerable template"
+  },
+  "arms": {
+    "oracle_evidence": "the reader sees only the ledger's gold sessions (for abstention items, the related sessions)",
+    "no_memory": "the same prompt with an empty history"
+  },
+  "n": 150,
+  "oracle_correct": 150,
+  "no_memory_correct": 30,
+  "truncated_reader_outputs": 0,
+  "by_type": {
+    "multi-session": {
+      "n": 30,
+      "oracle_correct": 30,
+      "no_memory_correct": 0
+    },
+    "temporal-reasoning": {
+      "n": 30,
+      "oracle_correct": 30,
+      "no_memory_correct": 0
+    },
+    "single-session-user": {
+      "n": 30,
+      "oracle_correct": 30,
+      "no_memory_correct": 0
+    },
+    "knowledge-update": {
+      "n": 30,
+      "oracle_correct": 30,
+      "no_memory_correct": 0
+    },
+    "abstention": {
+      "n": 30,
+      "oracle_correct": 30,
+      "no_memory_correct": 30
+    }
+  },
+  "paid_calls": 600,
+  "cost_usd": 2.0031,
+  "labels_sha256": "4990a7e234cf6aed37c64f424ec3d7b319f6556e2c4652f04bfad771d2cdafc9"
+}
