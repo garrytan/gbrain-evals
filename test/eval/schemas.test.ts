@@ -37,7 +37,7 @@ const EXPECTED_SCHEMAS = [
 
 // Every canonical gold file is generated from the amara-life skeleton. The
 // single-example stubs (backlinks, citations, entities, personalization-rubric,
-// qrels) had no generator and no runnable consumer and were removed in 0.10.7.
+// qrels) had no generator and no runnable consumer and were removed in 0.10.1.
 const EXPECTED_GOLD = [
   'contradictions.json',
   'poison.json',

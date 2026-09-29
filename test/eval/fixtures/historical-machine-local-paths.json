@@ -1,5 +1,5 @@
 {
-  "_comment": "Committed receipts recorded before 0.10.7 that contain machine-local paths (docs audit B11). They are kept byte-for-byte as historical evidence. No other receipt may contain such a path, and these files may not change.",
+  "_comment": "Committed receipts that contain machine-local paths (docs audit B11): those recorded before the 0.10.1 scrub, and the two 2026-09-29 lifecycle receipts, whose hashes the manifest pins. They are kept byte-for-byte as historical evidence. No other receipt may contain such a path, and these files may not change.",
   "files": {
     "docs/benchmarks/2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0-all-arms.json": "32d543aa37a2028cb2b5943d673e2c1e57603e2d9dd4d5f17b7db63caba8e473",
     "docs/benchmarks/2026-05-07-longmemeval-s/rerun-2026-09-02-v0.48.2.0-hybrid+expansion.json": "489079b2aa962263157d7476c2a2c14402789c65d8d11d46e1e32c9de1f59184",

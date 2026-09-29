@@ -96,9 +96,10 @@ function provenanceReceipt(): ProvenanceReceipt {
   const stamp = '2026-09-23T00:00:00.000Z';
   const per_probe: ProvenanceProbeEvidence[] = CAT24_PROBE_IDS.map(probe_id => ({ probe_id, score: 1, pass: true, error: null }));
   const content = { source_kind: 'capture-cli', source_uri: 'file:///tmp/probe.md', ingested_via: 'capture-cli', ingested_at: stamp, source_path: null };
+  const fileOrigin = 'file:///tmp/cat24-files-fixture/inbox/2026-05-23-file-import.md';
   const per_path: PathProbe[] = [
     { probe_id: 'content-import', path: 'fixture content', slug: 'inbox/2026-05-23-content-import', expected: { source_kind: 'capture-cli', source_uri: 'file:///tmp/probe.md', ingested_via: 'capture-cli', ingested_at_null: false }, actual: { ...content }, pass: true, fail_reason: null },
-    { probe_id: 'file-import-no-channel-provenance', path: 'fixture file', slug: 'inbox/2026-05-23-file-import', expected: { source_kind: null, source_uri: null, ingested_via: null, ingested_at_null: true }, actual: { source_kind: null, source_uri: null, ingested_via: null, ingested_at: null, source_path: 'inbox/2026-05-23-file-import.md' }, pass: true, fail_reason: null },
+    { probe_id: 'file-import-no-channel-provenance', path: 'fixture file', slug: 'inbox/2026-05-23-file-import', expected: { source_kind: null, source_uri: fileOrigin, ingested_via: null, ingested_at_null: false }, actual: { source_kind: null, source_uri: fileOrigin, ingested_via: null, ingested_at: stamp, source_path: 'inbox/2026-05-23-file-import.md' }, pass: true, fail_reason: null },
     { probe_id: 'op-put-page-local-trusted', path: 'fixture local', slug: 'inbox/2026-05-23-op-local', expected: { source_kind: 'capture-cli', source_uri: 'stdin', ingested_via: 'capture-cli', ingested_at_null: false }, actual: { ...content, source_uri: 'stdin' }, pass: true, fail_reason: null },
     { probe_id: 'op-put-page-remote-spoof-override', path: 'fixture remote', slug: 'inbox/2026-05-23-op-remote', expected: { source_kind: 'mcp:put_page', source_uri: null, ingested_via: 'mcp:put_page', ingested_at_null: false }, actual: { ...content, source_kind: 'mcp:put_page', source_uri: null, ingested_via: 'mcp:put_page' }, pass: true, fail_reason: null },
   ];

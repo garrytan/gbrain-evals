@@ -8,7 +8,13 @@
       "readme_anchor": "docs/benchmarks/2026-09-29-lifecycle.md: forget collateral in 18/18 cells of builds a, b0, b and 0/6 with #5666; get_tags private leak on a and b0 only",
       "artifact_path": "docs/benchmarks/2026-09-29-lifecycle/primary/receipt.json",
       "artifact_sha256": "faaa0a4cf15d9a7ba5a5dfdbb4d3ef127a24a102d933003f7c80b227c9c2726c",
-      "expected": { "/cost_usd": 0, "/cells/0/fact_events/4/status": "error", "/cells/12/fact_events/4/status": "error", "/cells/18/fact_events/4/status": "inserted", "/builds/3/verified/tree_matches": true },
+      "expected": {
+        "/cost_usd": 0,
+        "/cells/0/fact_events/4/status": "error",
+        "/cells/12/fact_events/4/status": "error",
+        "/cells/18/fact_events/4/status": "inserted",
+        "/builds/3/verified/tree_matches": true
+      },
       "golden_test": "test/eval/lifecycle-experiment.test.ts: published 2026-09-29 receipts recount",
       "status": "covered",
       "note": "24 cells (4 builds x 2 engines x 3 interfaces), hermetic hash embedder, $0. The recount test rescores every cell from the raw snapshots with the committed scorer."
@@ -18,7 +24,10 @@
       "readme_anchor": "docs/benchmarks/2026-09-29-lifecycle.md: repeat run matched 21 of 24 cell summaries",
       "artifact_path": "docs/benchmarks/2026-09-29-lifecycle/repeat/receipt.json",
       "artifact_sha256": "bba022b8f056a5512577e9e87b845733e8ca46848586140cf39c60e245ee28f2",
-      "expected": { "/cost_usd": 0, "/cells/18/fact_events/4/status": "inserted" },
+      "expected": {
+        "/cost_usd": 0,
+        "/cells/18/fact_events/4/status": "inserted"
+      },
       "golden_test": "test/eval/lifecycle-experiment.test.ts: the repeat run differs only in timing-dependent fields",
       "status": "covered",
       "note": "Same matrix and harness commit as the primary run. The three differing cells differ only in timing-dependent fields: a search count on build a and one delegated-sync edge on b/pglite/mcp-stdio."
@@ -2935,6 +2944,24 @@
       "artifact_sha256": "599dac69fc790566b1c381493f6cad3997b8b523eaf4c620a179f3695f76af05",
       "status": "covered",
       "note": "Machine-local paths replaced by placeholders; no other bytes changed. The dataset (sha256 d6f21ea9...) and the embedding cache are not committed; provenance.json records their hashes."
+    },
+    {
+      "claim_id": "relational-paraphrase-firing-608a174",
+      "readme_anchor": "docs/benchmarks/2026-09-29-relational-paraphrase.md: at 608a174 the keyless check fires on 33 of 145 paraphrases (0 at b80cad6)",
+      "artifact_path": "docs/benchmarks/2026-09-29-relational-paraphrase/relational-ab.608a174-stub-smoke.receipt.json",
+      "artifact_sha256": "b25d1ce67d72b7f6bebb7d04d167dd7eeb899f99705ce21ddb32de0eb381aad7",
+      "expected": {
+        "/category": "relational-ab",
+        "/publishable": false,
+        "/gbrain_version": "0.60.10.0",
+        "/gbrain_pin": "github:garrytan/gbrain#608a174dcfa1d39d5ea2d8fb5b296122b1cc78c5",
+        "/hashes/runner": "7bdda5ec9440db38ba6d362227caa0deaf572d12718cc5b77991b44ab4cb254a",
+        "/resolved_config/paraphrase_grammar/sha256": "29ac7cfd8be73a5964bd9ad2680d395a8f8e126cdba4e4b755204cd155593b4d",
+        "/data/by_split/template/on/relational_fired_queries": 58,
+        "/data/by_split/paraphrase/on/relational_fired_queries": 33
+      },
+      "status": "covered",
+      "note": "Keyless stub-embedding check (one ingestion seed). Firing counts are parser behavior; its recall and hit numbers come from hash embeddings and are not search-quality evidence."
     }
   ]
 }

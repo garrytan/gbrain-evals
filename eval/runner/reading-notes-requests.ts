@@ -7,7 +7,7 @@
  * session_map (opaque id → dataset id) in the private plan. Schema 1 plans
  * showed raw ids and are no longer produced or executed.
  *
- * Since 0.10.7 both the reader input and the captured request pass the input
+ * Since 0.10.1 both the reader input and the captured request pass the input
  * allowlist (evaluator/judge-inputs.ts, boundaries reading-notes.reader.input@1
  * and reading-notes.reader.request@1): declared fields only, opaque slugs, and
  * no raw dataset session id beyond what the conversations themselves mention.

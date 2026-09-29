@@ -31,7 +31,7 @@
  * writeReceipt upgrades whatever a runner builds to v2. v1 files stay
  * readable: validateReceipt and loadReceipt accept both versions.
  *
- * Since 0.10.7 writeReceipt rewrites paths under this checkout to
+ * Since 0.10.1 writeReceipt rewrites paths under this checkout to
  * repo-relative ones in every string (docs audit B11), so they still resolve
  * from the repository root but no longer name the machine. Home and temp
  * paths are left alone because local tooling reads them back; before

@@ -18,7 +18,7 @@
  *   4. baselines ndjson: every line parses; metadata row_count matches
  *      data rows; no capture row with zero retrieved slugs.
  *   5. gold/*.json: parse; a single-`_example` stub fails (every gold file is
- *      generated since 0.10.7).
+ *      generated since 0.10.1).
  *
  * Usage: bun eval/runner/validate-data.ts [--quiet]
  */

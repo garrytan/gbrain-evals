@@ -26,7 +26,7 @@
  *   seed-no-brain-first: training checks the search tool fired; held-out is a
  *     `qrels` judge: the rollout must retrieve the topic's page from a small
  *     generated brain (brain/topics/*.md, imported by Cat30 before the run).
- *     Until 0.10.7 held-out required >= 1 citation while the rollout brain was
+ *     Until 0.10.1 held-out required >= 1 citation while the rollout brain was
  *     empty, so the only way to score was to invent citations (audit
  *     B-30-01). Retrieved slugs come from tool output, so they cannot be
  *     fabricated, and search or query both count.

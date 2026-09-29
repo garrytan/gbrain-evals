@@ -26,7 +26,7 @@
  *   Part B passes only when BOTH hold: the optimized held-out score does not
  *   regress below baseline, AND the held-out gate actually blocked at least
  *   one candidate (entries with reason `held_out_regression` in the
- *   optimizer's rejected buffer). Before 0.10.7 "no regression" alone passed,
+ *   optimizer's rejected buffer). Before 0.10.1 "no regression" alone passed,
  *   so a run whose optimizer never proposed a hack, or returned the seed,
  *   counted as a caught hack (audit B-32-01). No regression with zero blocked
  *   candidates means the defense was never exercised: verdict `partial`.

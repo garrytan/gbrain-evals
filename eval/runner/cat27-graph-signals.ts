@@ -35,7 +35,7 @@
  * pass — every probe scored with zero sut errors, the wave does not
  *        regress the baseline on either aggregate (top-1 hit-rate delta >= 0
  *        AND mean nDCG@10 delta >= 0), AND at least one probe improved
- *        (nDCG@10 up or top-1 flipped to the gold page). Before 0.10.7 a
+ *        (nDCG@10 up or top-1 flipped to the gold page). Before 0.10.1 a
  *        no-op signal stage passed (audit B-27-01).
  * fail — any probe errored, nothing scored, the signals regressed an
  *        aggregate, or nothing improved. Exit code is non-zero unless

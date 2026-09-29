@@ -158,7 +158,7 @@ it is not included in fuzzy or externally authored families it cannot answer.
 | Externally authored | Keyword ranker | 0.1957 | 0.8511 |
 | Externally authored | Vector only | 0.2085 | 0.8936 |
 
-September 28, 2026 note: the "externally authored" family here is the 50 AI-authored Tier 5.5 placeholder questions (author label `synthetic-outsider-v1`), not questions from outside contributors. Runs from v0.10.2 on label it `synthetic-outsider`; this receipt keeps the old label.
+September 28, 2026 note: the "externally authored" family here is the 50 AI-authored Tier 5.5 placeholder questions (author label `synthetic-outsider-v1`), not questions from outside contributors. Runs from v0.10.1 on label it `synthetic-outsider`; this receipt keeps the old label.
 
 The 145 relationship, 24 fuzzy, and 47 externally authored questions have
 nonempty relevance labels. The existing scorer excludes 0, 6, and 3 empty-label

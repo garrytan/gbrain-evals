@@ -50,7 +50,7 @@
  *
  * Gold input: a reviewed `{version, claims: [...]}` catalog passed in by the
  * caller. None exists: the one-claim `eval/data/gold/citations.json` template
- * was removed in 0.10.7 because nothing could generate its labels. Until a
+ * was removed in 0.10.1 because nothing could generate its labels. Until a
  * reviewed catalog exists, this runner is validated on synthetic fixtures.
  */
 

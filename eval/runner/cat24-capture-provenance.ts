@@ -16,8 +16,11 @@
  *      plumbing (capture, sync auto-writes) funnels into.
  *   2. importFromFile (core/import-file.ts) — the disk-file path used by
  *      sync/import. It accepts NO channel-provenance opts BY DESIGN: file
- *      imports stamp pages.source_path and leave source_kind / source_uri /
- *      ingested_via / ingested_at NULL. That boundary is pinned here.
+ *      imports stamp pages.source_path and leave source_kind / ingested_via
+ *      NULL. Since gbrain v0.60.6.0 (#5675) a file import also records its
+ *      file:// origin (the canonical absolute path) in source_uri, which
+ *      server-stamps ingested_at; before that pin source_uri and ingested_at
+ *      stayed NULL (probe changed 2026-09-29 on the re-pin to 608a174).
  *   3. The put_page OP (core/ops/pages.ts) with ctx.remote === false —
  *      the exact call `gbrain capture` makes on a local install
  *      (src/commands/capture.ts drives operations['put_page'].handler with
@@ -54,7 +57,7 @@
  *   bun eval/runner/cat24-capture-provenance.ts
  */
 
-import { writeFileSync, mkdirSync } from 'fs';
+import { writeFileSync, mkdirSync, realpathSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
@@ -281,10 +284,11 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
       );
 
       // ── Probe 2: importFromFile — no channel provenance BY DESIGN ──
-      // The file path stamps source_path; source_kind/source_uri/ingested_via
-      // stay NULL and ingested_at is only server-stamped when a provenance
-      // field is written. This pins the boundary honestly instead of
-      // relabeling importFromContent as an 'inbox folder' surface.
+      // The file path stamps source_path and its file:// origin in
+      // source_uri (gbrain #5675); source_kind/ingested_via stay NULL and
+      // ingested_at is server-stamped because a provenance field is written.
+      // This pins the boundary honestly instead of relabeling
+      // importFromContent as an 'inbox folder' surface.
       const fileDir = join(tmpdir(), `cat24-files-${process.pid}-${Date.now()}`);
       mkdirSync(join(fileDir, 'inbox'), { recursive: true });
       const relPath = 'inbox/2026-05-23-file-import.md';
@@ -292,7 +296,7 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
       writeFileSync(absPath, '# File import probe\n\nImported from disk via importFromFile.\n', 'utf8');
       await runPathProbe(
         'file-import-no-channel-provenance', 'importFromFile (disk file — sync/import path)', 'inbox/2026-05-23-file-import',
-        { source_kind: null, source_uri: null, ingested_via: null, ingested_at_null: true },
+        { source_kind: null, source_uri: `file://${realpathSync(absPath)}`, ingested_via: null, ingested_at_null: false },
         async () => {
           const res = await importFromFile(engine, absPath, relPath, { noEmbed: true });
           if (res.status === 'error' || res.status === 'skipped') {
@@ -450,7 +454,7 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
       embed_transport: 'none (provider keys stripped; noEmbed + ctx.deferEmbeds)',
       distinct_ingestion_paths: [
         'importFromContent (content import, provenance opts)',
-        'importFromFile (disk file — no channel provenance by design)',
+        'importFromFile (disk file — no channel provenance by design; file:// origin in source_uri)',
         'put_page op ctx.remote=false (capture-cli local shape)',
         'put_page op ctx.remote=true (MCP posture, spoof override)',
       ],

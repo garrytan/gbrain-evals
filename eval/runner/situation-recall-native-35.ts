@@ -366,7 +366,7 @@ export function collectNativeRows35(artifact: unknown): NativeRegressionObservat
     b.denominator = source.filter((d) => d.denominator_eligible).length - judgeFailed;
     b.judge_failed = judgeFailed;
     b.rate = b.denominator ? b.confirmed / b.denominator : 0;
-    // Receipts before 0.10.7 carry no judge_failed field; they recorded no failed confirmation.
+    // Receipts before 0.10.1 carry no judge_failed field; they recorded no failed confirmation.
     const recorded = (receipt.distractor_leakage as Record<string, Record<string, unknown>> | undefined)?.[lane];
     if (recorded && !('judge_failed' in recorded) && judgeFailed === 0) delete b.judge_failed;
   }

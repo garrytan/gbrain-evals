@@ -327,7 +327,7 @@ const SPLIT: [number, number, number] = [1, 1, 1];
 /**
  * Import a seed's generated brain pages (`<seed>/brain/<dir>/<name>.md`) into
  * the rollout engine. seed-no-brain-first's held-out judge scores retrieval of
- * these pages; before 0.10.7 the rollout brain was empty and the held-out
+ * these pages; before 0.10.1 the rollout brain was empty and the held-out
  * rewarded fabricated citations (audit B-30-01). Keyword search suffices, so
  * pages import without embeddings.
  */

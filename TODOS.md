@@ -16,7 +16,7 @@ The [August 31 audit](docs/audit/2026-08-31-eval-audit.md) explains the finding 
 
 - [x] **Test relational wording the parser did not help design** (issue #24 finding 6, September 28 audit B-RAB-01). Done 2026-09-29: a seeded paraphrase grammar, frozen before scoring, rewords the 145 questions. At `b80cad6` relationship retrieval fired on 174/435 template runs and 0/435 paraphrase runs, and paraphrase metrics were identical in both arms (recall at five 0.411). [Report](docs/benchmarks/2026-09-29-relational-paraphrase.md).
 
-- [ ] **Make relationship retrieval work on reworded questions.** The paraphrase split in `relational-ab.ts` is the test: a parser or intent step that accepts ordinary wording should move its recall and first-place hits, which were flat on 2026-09-29.
+- [ ] **Measure relationship retrieval on reworded questions at the current pin.** The paraphrase split in `relational-ab.ts` is the test: a parser or intent step that accepts ordinary wording should move its recall and first-place hits, which were flat at `b80cad6` on 2026-09-29. gbrain v0.60.6.0 widened the parser, and at `608a174` a keyless check fires on 33/145 paraphrases (0/50 attendance). Repeat the paid run (`relational-ab.ts --budget-usd 2`, about $0.06) to measure the effect.
 
 - [x] **Repeat the ZeroEntropy cells of the embedding-provider matrix** (Cat18/18b, WS5). Closed as obsolete on 2026-09-28: ZeroEntropy's hosted API was retired on 2026-09-04 and gbrain master no longer ships its recipe, so the `zembed-1` and `zerank-2` cells cannot be re-run. The May numbers stay historical and are marked invalid in the [May snapshot](docs/benchmarks/2026-05-23-v0.40.6.0-snapshot.md).
 
@@ -26,9 +26,9 @@ The [August 31 audit](docs/audit/2026-08-31-eval-audit.md) explains the finding 
 
 - [ ] **Re-run LongMemEval answers with opaque session ids** (September 28 audit, C-01). Every labeled evidence session id starts with `answer_`, and the answer model saw those ids. v0.10.1 maps ids to opaque values in this repository's runners, with a test that no system or reader input contains `answer_`. The judged answers were re-run on 2026-09-29 in gbrain's own evaluator with opaque ids: 439/500 with the reranker off and the notes reader ([report](docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md)). Still to do: the reading-notes transfer (308/361 to 324/361), and a reranker-on answer run, which needs a Voyage key. Retrieval was unaffected in a 30-question check, but the full retrieval arms should be recounted with opaque ids too.
 
-- [ ] **Confirm the LongMemEval release configuration on held-out data** (September 28 audit, B4). Autocut off was chosen by comparing arms on the same 470 questions. Complete the preregistered [LongMemEval-M pilot](docs/benchmarks/2026-09-24-longmemeval-m-pilot-preregistration.md) (4 of 28 B cases done; C0/C1 not run) or score a fresh split. Since v0.10.6 the fresh set exists: the [sealed confirmation set](docs/benchmarks/2026-09-29-sealed-confirmation-protocol.md) (150 questions, 30 personas) is frozen and unopened; LongMemEval-S and M count as development data (plan amendment 1).
+- [ ] **Confirm the LongMemEval release configuration on held-out data** (September 28 audit, B4). Autocut off was chosen by comparing arms on the same 470 questions. Complete the preregistered [LongMemEval-M pilot](docs/benchmarks/2026-09-24-longmemeval-m-pilot-preregistration.md) (4 of 28 B cases done; C0/C1 not run) or score a fresh split. Since v0.10.1 the fresh set exists: the [sealed confirmation set](docs/benchmarks/2026-09-29-sealed-confirmation-protocol.md) (150 questions, 30 personas) is frozen and unopened; LongMemEval-S and M count as development data (plan amendment 1).
 
-- [ ] **Preregister the first sealed-set release decision** (plan amendment 1). The [sealed confirmation set](docs/benchmarks/2026-09-29-sealed-confirmation-protocol.md) may be opened at most three times, each after a committed preregistration naming the candidate, the frozen comparison release, the metric and the decision rule. The paired clustered comparator now exists (`eval/runner/compare.ts`, v0.10.4) but is not wired to this runner yet; the first decision should compare the two score reports with it, clustered by persona, under a family file committed with the preregistration.
+- [ ] **Preregister the first sealed-set release decision** (plan amendment 1). The [sealed confirmation set](docs/benchmarks/2026-09-29-sealed-confirmation-protocol.md) may be opened at most three times, each after a committed preregistration naming the candidate, the frozen comparison release, the metric and the decision rule. The paired clustered comparator now exists (`eval/runner/compare.ts`, v0.10.1) but is not wired to this runner yet; the first decision should compare the two score reports with it, clustered by persona, under a family file committed with the preregistration.
 
 - [ ] **Author a second, independently generated confirmation set** (plan amendment 1). v1 has one generator family, narrow temporal questions (29 of 30 ask for days between two events) and no assistant-said or preference questions. A v2 from a different model family, with a human-reviewed sample, would test whether v1's results depend on its author.
 
@@ -36,17 +36,17 @@ The [August 31 audit](docs/audit/2026-08-31-eval-audit.md) explains the finding 
 
 - [ ] **Add a vector-plus-reranker concept cell** (September 28 audit, B2). The README concept comparison is 102/181 for gbrain against 118/181 for vectors without reranking; gbrain with reranking scored 130/181, but vectors with the same reranker were never run.
 
-- [x] **Fix the attendance link direction in the relationship fixture** (September 28 audit, B3). Done in 0.10.3 for the Cat 2 answer key (now `person → meeting`, gbrain's stored orientation).
+- [x] **Fix the attendance link direction in the relationship fixture** (September 28 audit, B3). Done in 0.10.1 for the Cat 2 answer key (now `person → meeting`, gbrain's stored orientation).
 
-- [ ] **Find out why relationship retrieval never fires on "who attended" questions.** At `b80cad6` the keyless smoke (`relational-ab.ts --stub-embed --seeds 1`) still fires on 0/50 attendance questions against 13/40, 31/39 and 14/16 for the other templates. World-v1 meetings name attendees in prose, which current gbrain does not type as attendance.
+- [ ] **Find out why relationship retrieval never fires on "who attended" questions.** At `b80cad6` and again at `608a174` the keyless smoke (`relational-ab.ts --stub-embed --seeds 1`) still fires on 0/50 attendance questions against 13/40, 31/39 and 14/16 for the other templates. World-v1 meetings name attendees in prose, which current gbrain does not type as attendance.
 
 - [ ] **Re-run Cat14 with the current blind runner** (September 28 audit, A-01). The May 75% result is retracted. The current runner is blind, judges both orders at temperature 0 and calls `runThink`; the historical cost was about $0.05.
 
 - [ ] **Re-run the May snapshot categories with current runners** (September 28 audit, A-09 and Part B). Cats 19, 20 and 21 have hermetic or cheap live modes. Until receipts exist, the May rows stay marked invalid.
 
-- [x] **Re-pin gbrain to a master commit or release tag** (September 28 audit, C1/C2). Done in 0.10.3: `gbrain` pins master `b80cad6`, the cue experiments use the `gbrain-cues` alias at `939232f`, and pins are read from `package.json`. `gbrain-reader` moved in 0.10.7 from `a9de062` (on no branch) to master `e78f1c3`, whose `src/` tree is byte-identical.
+- [x] **Re-pin gbrain to a master commit or release tag** (September 28 audit, C1/C2). Done in 0.10.1: `gbrain` pins master `b80cad6`, the cue experiments use the `gbrain-cues` alias at `939232f`, and pins are read from `package.json`. `gbrain-reader` moved in 0.10.1 from `a9de062` (on no branch) to master `e78f1c3`, whose `src/` tree is byte-identical.
 
-- [x] **Give the LongMemEval batch wrapper one shared budget.** Done in 0.10.7: `longmemeval-batch.sh` opens one budget-ledger run and passes its id to every worker as `--budget-run-id`, so `--budget-usd` caps all workers and restarted batches together.
+- [x] **Give the LongMemEval batch wrapper one shared budget.** Done in 0.10.1: `longmemeval-batch.sh` opens one budget-ledger run and passes its id to every worker as `--budget-run-id`, so `--budget-usd` caps all workers and restarted batches together.
 
 ## Memory lifecycle experiment (plan amendment 8)
 
@@ -62,7 +62,7 @@ The [September 29 lifecycle report](docs/benchmarks/2026-09-29-lifecycle.md) is 
 
 ## Data and benchmark fidelity
 
-- [x] **Finish the answer-label stubs.** Done in 0.10.7. `poison.json` is now generated from the planted skeleton fixtures, like `contradictions.json` and `implicit-preferences.json`, and a test holds all three byte-identical to the generator. `backlinks.json`, `citations.json`, `entities.json`, `personalization-rubric.json` and `qrels.json` had no generator and no runnable consumer and were removed rather than filled by hand. `validate-data.ts` now fails on a template row.
+- [x] **Finish the answer-label stubs.** Done in 0.10.1. `poison.json` is now generated from the planted skeleton fixtures, like `contradictions.json` and `implicit-preferences.json`, and a test holds all three byte-identical to the generator. `backlinks.json`, `citations.json`, `entities.json`, `personalization-rubric.json` and `qrels.json` had no generator and no runnable consumer and were removed rather than filled by hand. `validate-data.ts` now fails on a template row.
 
 - [ ] **Score contradiction surfacing (N2) on the planted amara-life fixtures** (coverage audit F6). `gold/contradictions.json` (10 contradiction pairs, 5 stale facts) is generated but no runner reads it; its comment now says it is reserved for N2. Check each premise first: on 2026-09-29 both claims appeared verbatim in their generated source text for 9 of 15 fixtures (22 of 30 source sides); the other six may be paraphrased or missing.
 
@@ -80,7 +80,7 @@ The [September 29 lifecycle report](docs/benchmarks/2026-09-29-lifecycle.md) is 
 
 - [x] **Export a public SkillOpt import path** (`skillopt-cats-11`). Completed upstream: gbrain exports `./core/skillopt` (`runSkillOpt`, `scoreSkillOnTasks`, `loadHeldOut`) at the current pin and on master. Cat30–33 switched from deep source imports to that export on 2026-09-28.
 
-- [ ] **Move the gold store out of the product's process** (plan amendment 6). Since 0.10.7 the input allowlist covers LongMemEval retrieval and answers, Cat13, the reading-notes reader, Cat29's question and pairwise judge, and Cat35's system-under-test sources and coverage, leak and usability judges. The separation is still in-process: a product in the same process could open dataset files. Move the gold store out of process before calling any holdout sealed.
+- [ ] **Move the gold store out of the product's process** (plan amendment 6). Since 0.10.1 the input allowlist covers LongMemEval retrieval and answers, Cat13, the reading-notes reader, Cat29's question and pairwise judge, and Cat35's system-under-test sources and coverage, leak and usability judges. The separation is still in-process: a product in the same process could open dataset files. Move the gold store out of process before calling any holdout sealed.
 
 - [ ] **Preregister comparison families before the next paired runs** (plan amendment 4). `eval/runner/compare.ts --family` gates only when the family file predates the runs; commit each family with its run plan, including tolerances and cluster ids.
 
@@ -128,6 +128,6 @@ These items came from the August 16 plan reviews and the August 26 publication r
 
 ## Completed infrastructure work
 
-- [x] **Run every hermetic check in CI** (September 28 audit, C5 to C9). CI now runs the unit tests under `eval/`, the Python orchestrator tests, the LongMemEval recount, documentation and query validators, and an unfiltered `tsc`. The unit suite reuses a pre-migrated PGLite snapshot per embedding shape and runs as four concurrent shards, locally and in CI. The inert `postgres@3.4.9` patch and the unneeded PGLite postinstall link were removed. Completed in gbrain-evals v0.10.2, 2026-09-28.
+- [x] **Run every hermetic check in CI** (September 28 audit, C5 to C9). CI now runs the unit tests under `eval/`, the Python orchestrator tests, the LongMemEval recount, documentation and query validators, and an unfiltered `tsc`. The unit suite reuses a pre-migrated PGLite snapshot per embedding shape and runs as four concurrent shards, locally and in CI. The inert `postgres@3.4.9` patch and the unneeded PGLite postinstall link were removed. Completed in gbrain-evals v0.10.1, 2026-09-28.
 
 - [x] **PGLite teardown freeze under Bun tests** (gbrain v0.46.3). The synchronous WASM loop stopped reproducing at v0.47.8.0. A minimal reproduction and the adapter suite were checked with an external watchdog, and all six skipped teardowns were restored. The bounded disconnect handling for real runs remains. Completed in gbrain-evals v0.4.0, 2026-08-31.

@@ -1,6 +1,6 @@
 /**
  * Input allowlists on the reading-notes reader, Cat29 and Cat35 (plan
- * amendment 6 follow-up, v0.10.7). Each boundary must accept what the runner
+ * amendment 6 follow-up, v0.10.1). Each boundary must accept what the runner
  * legitimately sends and reject an evaluator-only value or an undeclared
  * field.
  */

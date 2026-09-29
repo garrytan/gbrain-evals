@@ -118,7 +118,11 @@ vectors. [Read the controlled comparison](docs/benchmarks/2026-09-09-retrieval-r
 Those questions use the exact verbs gbrain's relationship parser recognizes. On
 September 29 (gbrain `b80cad6`) the same 145 questions, reworded by a fixed
 paraphrase grammar, never triggered relationship retrieval, and recall at five
-stayed at 0.411 in both arms, so the gain depends on that wording.
+stayed at 0.411 in both arms, so the gain depended on that wording. gbrain
+v0.60.6.0 widened the parser: at the current pin `608a174` a keyless check
+fires relationship retrieval on 33 of the 145 reworded questions (0 at
+`b80cad6`). The paid run has not been repeated there, so the benefit on
+reworded questions is not yet measured.
 [Read the paraphrase check](docs/benchmarks/2026-09-29-relational-paraphrase.md).
 
 **You can see what each setting buys you.** Returning fewer results saves reading,
@@ -135,8 +139,8 @@ them. Hosted embedding and reranking services receive the text they process;
 local storage does not make those API calls local. The retrieval results above
 were measured at gbrain [`2efaaf8f`](https://github.com/garrytan/gbrain/tree/2efaaf8f8a817b5b82e023383618fdcdb1cc5f7d)
 (v0.48.4.0). This repository currently installs gbrain master
-[`b80cad6`](https://github.com/garrytan/gbrain/tree/b80cad61e4725e62531439c027053387c98e23f8)
-(v0.59.13.0), whose search mode definitions are identical. See
+[`608a174`](https://github.com/garrytan/gbrain/tree/608a174dcfa1d39d5ea2d8fb5b296122b1cc78c5)
+(v0.60.10.0), whose search mode definitions are identical. See
 [how to reproduce a run](eval/README.md).
 
 ## What should you learn here?

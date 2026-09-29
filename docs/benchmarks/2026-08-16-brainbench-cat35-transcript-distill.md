@@ -135,7 +135,7 @@ These are the original commands. Their comment about the “current pin” refer
 
 ```bash
 git clone https://github.com/garrytan/gbrain-evals && cd gbrain-evals
-bun install        # at this run, a postinstall linked a nested pglite path; removed in v0.10.2 as unneeded
+bun install        # at this run, a postinstall linked a nested pglite path; removed in v0.10.1 as unneeded
 export ANTHROPIC_API_KEY=... OPENAI_API_KEY=...
 
 bun test test/eval/                                   # $0, no network

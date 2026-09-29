@@ -33,7 +33,7 @@
 # Budget: paid runs pass --budget-usd <dollars> (or BRAINBENCH_BUDGET_USD).
 # The wrapper opens ONE budget-ledger run with that budget and hands its id to
 # every worker as --budget-run-id, so the cap covers all workers and all
-# restarted batches together. Before 0.10.7 each worker opened its own run
+# restarted batches together. Before 0.10.1 each worker opened its own run
 # with the full --budget-usd, so N workers could spend N times the cap.
 # --budget-ledger and --program-cap-usd pass through to the ledger and workers.
 #

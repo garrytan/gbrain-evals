@@ -1,7 +1,7 @@
 /**
  * Input allowlists for the reading-notes reader, the Cat29 answerer and
  * pairwise judge, and the Cat35 system under test and judges (plan amendment
- * 6, v0.10.4 follow-up; v0.10.7).
+ * 6, v0.10.1).
  *
  * Each boundary declares the exact fields a payload may carry (allowlist.ts
  * rejects anything else, at any depth) plus the evaluator-only values that

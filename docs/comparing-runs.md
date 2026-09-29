@@ -1,6 +1,6 @@
 # Comparing two runs, and keeping the answer key away from the system
 
-This page explains two pieces of evaluation machinery added in v0.10.4. The
+This page explains two pieces of evaluation machinery added in v0.10.1. The
 first answers "did change B make gbrain better or worse than A, on the same
 questions?" with paired statistics and a preregistered decision rule. The second
 makes sure the system under test never sees the answer key while it is being

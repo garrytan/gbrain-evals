@@ -81,9 +81,13 @@ describe('runCat24 end to end (hermetic)', () => {
     const byId = new Map(result.probes.map(p => [p.probe_id, p]));
     expect(byId.get('content-import')?.actual?.source_kind).toBe('capture-cli');
     // File import: no channel provenance by design; source_path carries it.
+    // Since gbrain v0.60.6.0 (#5675) it also records its file:// origin in
+    // source_uri, which server-stamps ingested_at (updated 2026-09-29, re-pin to 608a174).
     const fileProbe = byId.get('file-import-no-channel-provenance');
     expect(fileProbe?.actual?.source_kind).toBeNull();
-    expect(fileProbe?.actual?.ingested_at).toBeNull();
+    expect(fileProbe?.actual?.ingested_via).toBeNull();
+    expect(fileProbe?.actual?.source_uri).toMatch(/^file:\/\/\/.+\/inbox\/2026-05-23-file-import\.md$/);
+    expect(fileProbe?.actual?.ingested_at).not.toBeNull();
     // Op layer, trusted local: client values land.
     expect(byId.get('op-put-page-local-trusted')?.actual?.source_kind).toBe('capture-cli');
     // Op layer, remote: the CV6 trust gate server-stamps despite the spoof.

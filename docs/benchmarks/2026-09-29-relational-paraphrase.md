@@ -6,6 +6,8 @@ gbrain's relationship retrieval helps only when a question uses the wording its 
 
 This is a measured limit, not a verdict on the idea. It says the current benefit comes from the parser matching a small set of verbs, and that a reworded question falls back to ordinary hybrid search. Measured on gbrain master `b80cad6` (v0.59.13.0) with the gbrain-evals runner at commit `da02f97`.
 
+**Update, 2026-09-29, after the re-pin to gbrain master `608a174` (v0.60.10.0).** gbrain v0.60.6.0 widened its relationship parser to accept ordinary wording. The keyless check above, rerun at `608a174` with the same runner (hash `7bdda5ec…4cb254a`), now fires relationship retrieval on 33 of 145 paraphrases (10/40 works_at, 15/39 invested_in, 8/16 advises, 0/50 attended), against 0 of 145 at `b80cad6`. Template firing is unchanged at 58 of 145. Firing counts come from the parser, so they carry over to a live run; the recall and first-place numbers in that check come from hash embeddings and are not evidence. The tables above remain the measurement for `b80cad6`. The paid paraphrase run has not been repeated at `608a174`, so how much of the benefit now survives rewording is unmeasured. Receipt: [relational-ab.608a174-stub-smoke.receipt.json](2026-09-29-relational-paraphrase/relational-ab.608a174-stub-smoke.receipt.json).
+
 ## The concrete case
 
 gbrain stores links between pages, such as "person invested in company". When relationship retrieval is on, the search step tries to read a question as a relationship ("who invested in X"), finds the page for X, and adds the pages linked to it by that relationship. The parser recognizes a fixed list of verbs: "invested in", "backed", "advises", "works at", "attended" and a few others.
@@ -63,6 +65,6 @@ bun eval/generators/relational-paraphrase-gen.ts --check
 bun eval/runner/relational-ab.ts --budget-usd 2
 ```
 
-The run took 6 minutes 37 seconds and the budget ledger recorded $0.0645 for 1,010 embedding requests (496,198 input tokens). A keyless plumbing check is `bun eval/runner/relational-ab.ts --stub-embed --seeds 1`; its scores come from hash embeddings and say nothing about search quality, but its firing counts are real parser behavior (58/145 template questions, 0/145 paraphrases).
+The run took 6 minutes 37 seconds and the budget ledger recorded $0.0645 for 1,010 embedding requests (496,198 input tokens). A keyless plumbing check is `bun eval/runner/relational-ab.ts --stub-embed --seeds 1`; its scores come from hash embeddings and say nothing about search quality, but its firing counts are real parser behavior (at `b80cad6`, 58/145 template questions and 0/145 paraphrases; at `608a174`, 58/145 and 33/145).
 
 The committed receipt is [relational-ab.receipt.json](2026-09-29-relational-paraphrase/relational-ab.receipt.json). It holds every paired run (`data.per_query`, with `split`), the per-split and per-template summaries (`data.by_split`, `data.by_split_template`), the paraphrase file hash and the runner hash (`7bdda5ec…4cb254a`, identical to `eval/runner/relational-ab.ts` at `da02f97`). Its `execution.source_tree` hash was taken when the receipt was written, while unrelated files in the working tree were being edited, so use the runner hash to identify the code that ran.

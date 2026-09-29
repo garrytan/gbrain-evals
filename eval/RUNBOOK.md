@@ -13,7 +13,7 @@ The dependency is pinned to a GitHub commit in `package.json`. A symlink means a
 
 If a `gbrain/*` import fails, check the installation and whether a stale local link points to an incompatible checkout. Use `bun link gbrain` only after registering the intended checkout with `bun link` in that checkout.
 
-If PGLite reports a missing `pglite.wasm`, check that `@electric-sql/pglite` is installed and that no stale local link points at an old gbrain checkout. gbrain's embedded-asset resolver finds the hoisted PGLite copy at the current pins, so v0.10.2 removed the old postinstall link script. A quick check is `bun -e "await import('gbrain/pglite-engine')"`.
+If PGLite reports a missing `pglite.wasm`, check that `@electric-sql/pglite` is installed and that no stale local link points at an old gbrain checkout. gbrain's embedded-asset resolver finds the hoisted PGLite copy at the current pins, so v0.10.1 removed the old postinstall link script. A quick check is `bun -e "await import('gbrain/pglite-engine')"`.
 
 ## Know which APIs the command calls
 
@@ -124,7 +124,7 @@ bun test eval/runner/adapters/vector.test.ts
 bun test eval/generators/world-html.test.ts
 ```
 
-Since v0.10.2, `bun run test` and CI include these colocated tests.
+Since v0.10.1, `bun run test` and CI include these colocated tests.
 
 At gbrain v0.46.3, PGLite teardown could freeze Bun's test runner in a synchronous WASM loop. That particular problem stopped reproducing at the v0.47.8.0 pin. If it recurs, use an external process timeout to isolate it; a frozen runtime may not service Bun's own timeout.
 
