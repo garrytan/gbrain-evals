@@ -1770,7 +1770,7 @@
       },
       "golden_test": "scripts/run-retrieval-refresh.py: validate_attempt; test/retrieval_refresh_orchestrator_test.py",
       "status": "covered",
-      "note": "The controlled production comparison uses one extracted index per seed, shared query-vector bytes, and five returned chunks with stable first-page deduplication and no refill. All 435 pairs preserve their rankings and metadata. Enabling relational retrieval raises mean recall from 0.6626 to 0.7241, with 45 improved pairs and no losses; graph metadata remains fixed in both arms."
+      "note": "The controlled production comparison uses one extracted index per seed, shared query-vector bytes, and five returned chunks with stable first-page deduplication and no refill. All 435 pairs preserve their rankings and metadata. Enabling relational retrieval raises mean recall from 0.6626 to 0.7241, with 45 improved pairs and no losses; graph metadata remains fixed in both arms. The questions are phrased in the parser's own verbs, so the lift is an in-grammar upper bound; the 2026-09-29 paraphrase check (relational-paraphrase-2026-09-29) found no effect on reworded questions."
     },
     {
       "claim_id": "retrieval-refresh-2026-09-09-baselines-receipt",
@@ -2706,6 +2706,45 @@
       },
       "status": "covered",
       "note": "Keyless re-run; see the report for the metric table."
+    },
+    {
+      "claim_id": "relational-paraphrase-2026-09-29",
+      "readme_anchor": "docs/benchmarks/2026-09-29-relational-paraphrase.md: template vs paraphrase split",
+      "artifact_path": "docs/benchmarks/2026-09-29-relational-paraphrase/relational-ab.receipt.json",
+      "artifact_sha256": "5415482fa23c25457eee84688a6a44ebdb3b9636a62d47426d1baaa402fdaa50",
+      "expected": {
+        "/category": "relational-ab",
+        "/run_status": "completed",
+        "/verdict": "pass",
+        "/publishable": true,
+        "/gbrain_version": "0.59.13.0",
+        "/gbrain_pin": "github:garrytan/gbrain#b80cad61e4725e62531439c027053387c98e23f8",
+        "/n_total": 1740,
+        "/n_scored": 1740,
+        "/errors": [],
+        "/resolved_config/splits": [
+          "template",
+          "paraphrase"
+        ],
+        "/resolved_config/ingestion_seeds": [
+          1,
+          2,
+          3
+        ],
+        "/resolved_config/paraphrase_grammar/sha256": "29ac7cfd8be73a5964bd9ad2680d395a8f8e126cdba4e4b755204cd155593b4d",
+        "/hashes/runner": "7bdda5ec9440db38ba6d362227caa0deaf572d12718cc5b77991b44ab4cb254a",
+        "/data/by_split/template/off/recall_at_5": 0.7367816091954023,
+        "/data/by_split/template/on/recall_at_5": 0.7632183908045979,
+        "/data/by_split/template/off/hit_at_1": 0.27586206896551724,
+        "/data/by_split/template/on/hit_at_1": 0.42758620689655175,
+        "/data/by_split/template/on/relational_fired_queries": 174,
+        "/data/by_split/paraphrase/off/recall_at_5": 0.41091954022988514,
+        "/data/by_split/paraphrase/on/recall_at_5": 0.41091954022988514,
+        "/data/by_split/paraphrase/on/relational_fired_queries": 0,
+        "/cost/usd": 0.064506
+      },
+      "status": "covered",
+      "note": "Template questions use the relationship parser's verbs; the paraphrase split rewords the same 145 questions with a grammar frozen in f2270ac before scoring. Relationship retrieval fired on 174/435 template runs and 0/435 paraphrase runs; paraphrase metrics are identical in both arms."
     }
   ]
 }

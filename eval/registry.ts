@@ -384,11 +384,11 @@ export const REGISTRY: readonly CategoryEntry[] = [
   },
   {
     id: 'relational-ab', legacy_alias: 'relational-ab', name: 'Relational retrieval off vs on',
-    family: 'relationships', tier: 'P', script: 'eval/runner/relational-ab.ts', run: { kind: 'dispatched', outputFlag: '--output-dir', timeoutMs: 2 * HOUR },
-    cost_estimate: UNMEASURED, receipt_path: 'eval/reports/relational-ab/<output>/receipt.json',
-    headline: { metric: 'Recall@5 and hit@1 with relational retrieval off vs on over one index', denominator: '145 questions x 3 seeds' },
+    family: 'relationships', tier: 'K', script: 'eval/runner/relational-ab.ts', run: { kind: 'dispatched', outputFlag: '--output-dir', timeoutMs: 2 * HOUR },
+    cost_estimate: { usd: 0.07, basis: 'measured 2026-09-29: $0.0645 of OpenAI embeddings in the budget ledger for 3 seeds x 2 splits (docs/benchmarks/2026-09-29-relational-paraphrase)' }, receipt_path: 'eval/reports/relational-ab/<output>/receipt.json',
+    headline: { metric: 'Recall@5 and hit@1 with relational retrieval off vs on over one index, template vs paraphrase wording', denominator: '145 questions x 2 wordings x 3 seeds' },
     gate: 'report-only', evidence_maturity: 'synthetic-production-path',
-    contract: 'Toggles only relational retrieval over a shared index and pairs outcomes per question. Report distinct-question gains beside pair gains.',
+    contract: 'Toggles only relational retrieval over a shared index and pairs outcomes per question, on the template questions (the parser\'s own verbs) and on a frozen paraphrase of each. Report distinct-question gains beside pair gains, and the paraphrase split beside the template split.',
   },
   {
     id: 'precisionmembench', legacy_alias: 'precisionmembench', name: 'PrecisionMemBench',
