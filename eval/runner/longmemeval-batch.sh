@@ -30,6 +30,13 @@
 #     OS-level kill cleans up the abort regime cleanly. The NDJSON is the
 #     resume state.
 #
+# Budget: paid runs pass --budget-usd <dollars> (or BRAINBENCH_BUDGET_USD).
+# The wrapper opens ONE budget-ledger run with that budget and hands its id to
+# every worker as --budget-run-id, so the cap covers all workers and all
+# restarted batches together. Before 0.10.7 each worker opened its own run
+# with the full --budget-usd, so N workers could spend N times the cap.
+# --budget-ledger and --program-cap-usd pass through to the ledger and workers.
+#
 # Run:
 #   bash eval/runner/longmemeval-batch.sh
 #   bash eval/runner/longmemeval-batch.sh --top-k 8
@@ -47,6 +54,7 @@ cd "$(dirname "$0")/../.."
 # Test seam: point LME_RUNNER at a stub to exercise this wrapper hermetically.
 RUNNER="${LME_RUNNER:-eval/runner/longmemeval.ts}"
 AGGREGATOR="${LME_AGGREGATOR:-eval/runner/longmemeval-aggregate.ts}"
+LEDGER_CLI=eval/runner/budget-ledger.ts
 
 BUDGET_SECONDS=600
 MAX_BATCHES=50
@@ -61,8 +69,15 @@ STRATIFY=""
 EXPECTED_QUESTIONS="${LME_EXPECTED_QUESTIONS:-}"
 
 EXTRA_ARGS=()
+BUDGET_USD="${BRAINBENCH_BUDGET_USD:-}"
+BUDGET_RUN_ID=""
+LEDGER_ARGS=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --budget-usd) BUDGET_USD="$2"; shift 2 ;;
+    --budget-usd=*) BUDGET_USD="${1#--budget-usd=}"; shift ;;
+    --budget-run-id) BUDGET_RUN_ID="$2"; shift 2 ;;
+    --budget-ledger|--program-cap-usd) LEDGER_ARGS+=("$1" "$2"); EXTRA_ARGS+=("$1" "$2"); shift 2 ;;
     --top-k) TOP_K="$2"; shift 2 ;;
     --adapters) ADAPTERS="$2"; shift 2 ;;
     --budget) BUDGET_SECONDS="$2"; shift 2 ;;
@@ -159,6 +174,22 @@ count_rows() {
 
 echo "[longmemeval-batch] dataset=$DATASET ($DATASET_PATH) expected=$EXPECTED_QUESTIONS questions × $EXPECTED_ADAPTERS adapters = $EXPECTED_TOTAL pairs"
 
+# One shared budget run for every worker in every batch (see the header).
+OPENED_RUN=0
+close_budget_run() {
+  if [[ "$OPENED_RUN" -eq 1 ]]; then
+    bun "$LEDGER_CLI" close --budget-run-id "$BUDGET_RUN_ID" ${LEDGER_ARGS[@]+"${LEDGER_ARGS[@]}"} >&2 || true
+  fi
+}
+trap 'rm -f "$PLAN_FILE"; close_budget_run' EXIT
+open_budget_run() {
+  if [[ -z "$BUDGET_RUN_ID" && -n "$BUDGET_USD" ]]; then
+    BUDGET_RUN_ID="$(bun "$LEDGER_CLI" open --runner longmemeval-batch --budget-usd "$BUDGET_USD" ${LEDGER_ARGS[@]+"${LEDGER_ARGS[@]}"})"
+    OPENED_RUN=1
+    echo "[longmemeval-batch] shared budget run $BUDGET_RUN_ID (\$$BUDGET_USD across all workers)"
+  fi
+}
+
 COMPLETE=0
 read -r DONE FOREIGN < <(count_rows)
 if [[ "$FOREIGN" -ne 0 ]]; then
@@ -171,6 +202,7 @@ if [[ "$DONE" -eq "$EXPECTED_TOTAL" ]]; then
 fi
 
 if [[ "$COMPLETE" -ne 1 ]]; then
+  open_budget_run
   for batch in $(seq 1 $MAX_BATCHES); do
     echo "=== batch $batch — $(date +%H:%M:%S) — completed $DONE/$EXPECTED_TOTAL pairs (workers=$WORKERS, budget=${BUDGET_SECONDS}s) ==="
 
@@ -179,7 +211,8 @@ if [[ "$COMPLETE" -ne 1 ]]; then
     # starts so the migration boilerplate doesn't all hit at once.
     pids=()
     for w in $(seq 0 $((WORKERS - 1))); do
-      bun "$RUNNER" "${RUNNER_ARGS[@]}" \
+      env -u BRAINBENCH_BUDGET_USD bun "$RUNNER" "${RUNNER_ARGS[@]}" \
+        ${BUDGET_RUN_ID:+--budget-run-id "$BUDGET_RUN_ID"} \
         --ndjson "$NDJSON" \
         --max-wall-seconds "$BUDGET_SECONDS" \
         --worker-id "$w" \

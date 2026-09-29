@@ -210,4 +210,26 @@ describe('longmemeval-batch.sh (longmemeval-10)', () => {
     expect(res.stderr).toContain('dataset not found');
     expect(res.stderr).toContain('longmemeval_nonexistent-split.json');
   }, 120_000);
+
+  test('workers share ONE budget run: the cap covers all workers together', () => {
+    rmSync(join(recordDir, 'runner.argv'), { force: true });
+    const ndjson = join(sandbox, 'run-shared-budget.ndjson');
+    const ledger = join(sandbox, 'shared-ledger.json');
+    const res = runBatch(['--path', datasetPath, '--adapters', 'keyword', '--workers', '3', '--budget', '5', '--budget-usd', '2', '--budget-ledger', ledger, '--ndjson', ndjson]);
+    expect(res.status).toBe(0);
+    const workers = readFileSync(join(recordDir, 'runner.argv'), 'utf8').trim().split('\n').filter(l => !l.includes('--print-plan'));
+    expect(workers.length).toBe(3);
+    const ids = workers.map(l => /--budget-run-id (\S+)/.exec(l)?.[1]);
+    expect(new Set(ids).size).toBe(1);
+    expect(ids[0]).toMatch(/^longmemeval-batch-/);
+    for (const l of workers) {
+      expect(l).not.toContain('--budget-usd');
+      expect(l).toContain(`--budget-ledger ${ledger}`);
+    }
+    const file = JSON.parse(readFileSync(ledger, 'utf8'));
+    expect(file.runs.length).toBe(1);
+    expect(file.runs[0]).toMatchObject({ run_id: ids[0], budget_usd: 2 });
+    expect(file.runs[0].finished_at).not.toBeNull();
+  }, 120_000);
 });
+

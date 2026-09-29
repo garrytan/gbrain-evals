@@ -40,7 +40,7 @@ The [August 31 audit](docs/audit/2026-08-31-eval-audit.md) explains the finding 
 
 - [x] **Re-pin gbrain to a master commit or release tag** (September 28 audit, C1/C2). Done in 0.10.3: `gbrain` pins master `b80cad6`, the cue experiments use the `gbrain-cues` alias at `939232f`, and pins are read from `package.json`. `gbrain-reader` moved in 0.10.7 from `a9de062` (on no branch) to master `e78f1c3`, whose `src/` tree is byte-identical.
 
-- [ ] **Give the LongMemEval batch wrapper one shared budget.** `longmemeval-batch.sh` starts several workers; each opens its own ledger run with the same `--budget-usd`, so the run cap applies per worker while the program cap still applies to all of them.
+- [x] **Give the LongMemEval batch wrapper one shared budget.** Done in 0.10.7: `longmemeval-batch.sh` opens one budget-ledger run and passes its id to every worker as `--budget-run-id`, so `--budget-usd` caps all workers and restarted batches together.
 
 ## Data and benchmark fidelity
 

@@ -27,7 +27,16 @@
  * through a temp file and rename, so concurrent runners and crashes cannot
  * lose or corrupt entries.
  *
+ * Shared runs: a wrapper that starts several worker processes (for example
+ * longmemeval-batch.sh) opens ONE run with `open` and passes its id to every
+ * worker as --budget-run-id (or BRAINBENCH_BUDGET_RUN_ID). Each worker joins
+ * that run instead of opening its own, so --budget-usd caps the workers
+ * together, across restarted batches too. A joined worker's summary covers
+ * only its own requests; only the opener closes the run.
+ *
  *   bun eval/runner/budget-ledger.ts status [--budget-ledger <path>]
+ *   bun eval/runner/budget-ledger.ts open --runner <name> --budget-usd <n> [--estimate-usd <n>]
+ *   bun eval/runner/budget-ledger.ts close --budget-run-id <id>
  */
 
 import { randomUUID } from 'node:crypto';
@@ -59,6 +68,8 @@ export interface LedgerEntry {
   output_tokens: number | null;
   created_at: string;
   settled_at: string | null;
+  /** Process that made the request, when several processes share one run. */
+  participant?: string;
 }
 
 export interface LedgerRun {
@@ -154,7 +165,24 @@ export interface RunSummary {
 }
 
 export class BudgetRun {
-  private constructor(readonly runId: string, readonly budgetUsd: number, private ledgerPath: string, private programCapUsd: number) {}
+  private constructor(
+    readonly runId: string,
+    readonly budgetUsd: number,
+    private ledgerPath: string,
+    private programCapUsd: number,
+    /** Set when this process joined a run another process opened. */
+    readonly participant: string | null = null,
+  ) {}
+
+  /** Join an open run another process started; reservations count against that run's budget. */
+  static join(options: { runId: string; ledgerPath?: string; programCapUsd?: number }): BudgetRun {
+    const programCapUsd = options.programCapUsd ?? DEFAULT_PROGRAM_CAP_USD;
+    const ledgerPath = resolve(options.ledgerPath ?? DEFAULT_LEDGER_PATH);
+    const run = readLedger(ledgerPath, programCapUsd).runs.find(r => r.run_id === options.runId);
+    if (!run) throw new BudgetExceededError(`no budget run ${options.runId} in ${ledgerPath}`);
+    if (run.finished_at !== null) throw new BudgetExceededError(`budget run ${options.runId} already finished`);
+    return new BudgetRun(run.run_id, run.budget_usd, ledgerPath, programCapUsd, `${process.pid}-${randomUUID().slice(0, 8)}`);
+  }
 
   /** Open a run, refusing when its budget exceeds what is left of the program cap. */
   static open(options: { runner: string; budgetUsd: number; estimateUsd?: number | null; ledgerPath?: string; programCapUsd?: number }): BudgetRun {
@@ -192,7 +220,8 @@ export class BudgetRun {
         throw new BudgetExceededError(`${description}: reserving $${usd.toFixed(4)} would take the program to $${(programCommitted + usd).toFixed(4)}, over its $${this.programCapUsd.toFixed(2)} cap`);
       }
       ledger.entries.push({ id, run_id: this.runId, description, reserved_usd: usd, actual_usd: null, status: 'reserved',
-        input_tokens: null, output_tokens: null, created_at: new Date().toISOString(), settled_at: null });
+        input_tokens: null, output_tokens: null, created_at: new Date().toISOString(), settled_at: null,
+        ...(this.participant ? { participant: this.participant } : {}) });
       writeLedger(this.ledgerPath, ledger);
     });
     return id;
@@ -219,7 +248,7 @@ export class BudgetRun {
 
   summary(): RunSummary {
     const ledger = readLedger(this.ledgerPath, this.programCapUsd);
-    const entries = ledger.entries.filter(e => e.run_id === this.runId);
+    const entries = ledger.entries.filter(e => e.run_id === this.runId && (this.participant === null || e.participant === this.participant));
     return {
       run_id: this.runId, budget_usd: this.budgetUsd,
       reserved_usd: sum(entries.map(e => e.reserved_usd)),
@@ -232,6 +261,7 @@ export class BudgetRun {
   }
 
   close(): RunSummary {
+    if (this.participant !== null) return this.summary();
     withLock(this.ledgerPath, () => {
       const ledger = readLedger(this.ledgerPath, this.programCapUsd);
       const run = ledger.runs.find(r => r.run_id === this.runId);
@@ -401,6 +431,8 @@ export interface BudgetOptions {
   budgetUsd: number | null;
   ledgerPath: string;
   programCapUsd: number;
+  /** Join this already-open run instead of opening one (--budget-run-id / BRAINBENCH_BUDGET_RUN_ID). */
+  runId?: string | null;
 }
 
 /** Read --budget-usd, --budget-ledger and --program-cap-usd, falling back to BRAINBENCH_* env vars. */
@@ -421,6 +453,7 @@ export function budgetOptionsFrom(argv: readonly string[], env: Record<string, s
     budgetUsd: number(flag('--budget-usd') ?? env.BRAINBENCH_BUDGET_USD, '--budget-usd'),
     ledgerPath: resolve(flag('--budget-ledger') ?? env.BRAINBENCH_BUDGET_LEDGER ?? DEFAULT_LEDGER_PATH),
     programCapUsd: number(flag('--program-cap-usd') ?? env.BRAINBENCH_PROGRAM_CAP_USD, '--program-cap-usd') ?? DEFAULT_PROGRAM_CAP_USD,
+    runId: flag('--budget-run-id') ?? env.BRAINBENCH_BUDGET_RUN_ID ?? null,
   };
 }
 
@@ -431,6 +464,11 @@ export function budgetOptionsFrom(argv: readonly string[], env: Record<string, s
 export function startPaidRun(runner: string, options: BudgetOptions & { estimateUsd: number | null; log?: (line: string) => void }): { run: BudgetRun; guard: PaidRequestGuard } {
   const log = options.log ?? ((line: string) => process.stderr.write(line + '\n'));
   log(`[budget] ${runner}: estimated cost ${options.estimateUsd === null ? 'unmeasured' : `$${options.estimateUsd.toFixed(2)}`}; ledger ${options.ledgerPath}`);
+  if (options.runId) {
+    const run = BudgetRun.join({ runId: options.runId, ledgerPath: options.ledgerPath, programCapUsd: options.programCapUsd });
+    log(`[budget] ${runner}: joined shared run ${run.runId} ($${run.budgetUsd.toFixed(2)} across all of its workers)`);
+    return { run, guard: installPaidRequestGuard(run) };
+  }
   if (options.budgetUsd === null) throw new BudgetExceededError(`${runner} makes paid requests; pass --budget-usd <dollars> (or BRAINBENCH_BUDGET_USD) to authorize a cap`);
   const run = BudgetRun.open({ runner, budgetUsd: options.budgetUsd, estimateUsd: options.estimateUsd, ledgerPath: options.ledgerPath, programCapUsd: options.programCapUsd });
   return { run, guard: installPaidRequestGuard(run) };
@@ -445,13 +483,31 @@ export function receiptCost(summary: RunSummary): { usd: number; input_tokens: n
 }
 
 if (import.meta.main) {
-  const [command] = process.argv.slice(2);
-  const options = budgetOptionsFrom(process.argv.slice(2));
-  if (command !== 'status') {
-    console.error('usage: bun eval/runner/budget-ledger.ts status [--budget-ledger <path>] [--program-cap-usd <n>]');
+  const argv = process.argv.slice(2);
+  const [command] = argv;
+  const options = budgetOptionsFrom(argv);
+  const flag = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
+  if (command === 'status') {
+    const ledger = readLedger(options.ledgerPath, options.programCapUsd);
+    console.log(JSON.stringify({ ledger: options.ledgerPath, ...ledgerTotals(ledger), runs: ledger.runs.length }, null, 2));
+  } else if (command === 'open' && flag('--runner') && options.budgetUsd !== null) {
+    const estimate = flag('--estimate-usd');
+    const run = BudgetRun.open({ runner: flag('--runner')!, budgetUsd: options.budgetUsd, estimateUsd: estimate === undefined ? null : Number(estimate), ledgerPath: options.ledgerPath, programCapUsd: options.programCapUsd });
+    console.log(run.runId);
+  } else if (command === 'close' && options.runId) {
+    const ledger = readLedger(options.ledgerPath, options.programCapUsd);
+    const record = ledger.runs.find(r => r.run_id === options.runId);
+    if (!record) throw new Error(`no budget run ${options.runId} in ${options.ledgerPath}`);
+    withLock(options.ledgerPath, () => {
+      const fresh = readLedger(options.ledgerPath, options.programCapUsd);
+      const run = fresh.runs.find(r => r.run_id === options.runId)!;
+      run.finished_at ??= new Date().toISOString();
+      writeLedger(options.ledgerPath, fresh);
+    });
+    const entries = readLedger(options.ledgerPath, options.programCapUsd).entries.filter(e => e.run_id === options.runId);
+    console.log(JSON.stringify({ run_id: options.runId, budget_usd: record.budget_usd, requests: entries.length, actual_usd: sum(entries.map(committed)) }));
+  } else {
+    console.error('usage: bun eval/runner/budget-ledger.ts status | open --runner <name> --budget-usd <n> [--estimate-usd <n>] | close --budget-run-id <id>   [--budget-ledger <path>] [--program-cap-usd <n>]');
     process.exit(2);
   }
-  const ledger = readLedger(options.ledgerPath, options.programCapUsd);
-  console.log(JSON.stringify({ ledger: options.ledgerPath, ...ledgerTotals(ledger), runs: ledger.runs.length }, null, 2));
 }
-
