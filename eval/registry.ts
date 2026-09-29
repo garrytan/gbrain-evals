@@ -477,3 +477,85 @@ export function tiersFor(selection: TierSelection): ReadonlySet<RegistryTier> {
 export function registryEntry(idOrAlias: string): CategoryEntry | undefined {
   return REGISTRY.find(entry => entry.id === idOrAlias || entry.legacy_alias === idOrAlias);
 }
+
+/**
+ * Every other file directly under eval/runner/ (tests excepted), with its
+ * role. A file is either a registry entry's script or listed here;
+ * test/eval/registry.test.ts fails on anything else, so a new runner cannot
+ * land without a registry row or an explicit helper classification.
+ * `part_of` names the registry entry the file belongs to, when it has one.
+ */
+export interface RunnerHelper { role: string; part_of?: string }
+
+export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
+  'README-cat13-phase-e0.md': { role: 'protocol notes for the Cat13 ranker-wave phases', part_of: 'concept-search' },
+  'adversarial-injections.ts': { role: 'injection generator and scorer used by Cat6', part_of: 'prose-autolink-precision' },
+  'all.ts': { role: 'umbrella runner that dispatches registry entries' },
+  'budget-ledger.ts': { role: 'shared paid-run reservation ledger' },
+  'cat13-gap-localize.ts': { role: 'Phase E1 diagnostic over Cat13 hybrid stages', part_of: 'concept-search' },
+  'cat13-kacf-calibrate.ts': { role: 'Phase E2 keyword-floor calibration over Cat13', part_of: 'concept-search' },
+  'cat30-skillopt-improvement.ts': { role: 'Cat30 runner, driven by run-skillopt-cats.sh', part_of: 'skillopt' },
+  'cat31-skillopt-ablation.ts': { role: 'Cat31 runner, driven by run-skillopt-cats.sh', part_of: 'skillopt' },
+  'cat32-skillopt-reward-hacking.ts': { role: 'Cat32 runner, driven by run-skillopt-cats.sh', part_of: 'skillopt' },
+  'cat33-skillopt-transfer.ts': { role: 'Cat33 runner, driven by run-skillopt-cats.sh', part_of: 'skillopt' },
+  'cat35-checks.ts': { role: 'mechanical Cat35 checks', part_of: 'transcript-distillation' },
+  'cat35-judges.ts': { role: 'Cat35 judge prompts and calls', part_of: 'transcript-distillation' },
+  'cat35-transcript-distill-chart.ts': { role: 'Cat35 chart renderer', part_of: 'transcript-distillation' },
+  'cat36-corpus.ts': { role: 'Cat36 corpus loader', part_of: 'associative-retrieval-smoke' },
+  'cat36-grounded-answers.ts': { role: 'Cat36 grounded-answer lane', part_of: 'associative-retrieval-live' },
+  'cat36-operation-conformance.ts': { role: 'Cat36 operation-surface replay', part_of: 'associative-retrieval-live' },
+  'cat36-production.ts': { role: 'Cat36 production runtime', part_of: 'associative-retrieval-smoke' },
+  'cat36-scorer.ts': { role: 'Cat36 span-coverage scorer', part_of: 'associative-retrieval-smoke' },
+  'cat36-snapshot.ts': { role: 'Cat36 index snapshot hashing', part_of: 'associative-retrieval-live' },
+  'compare.ts': { role: 'paired run comparator CLI' },
+  'eval-adapter-config.ts': { role: 'typed adapter config for matrix cells' },
+  'gbrain-version.ts': { role: 'resolves the loaded gbrain version' },
+  'import-embedded.ts': { role: 'embedding-required import wrapper' },
+  'judge.ts': { role: 'shared rubric judge' },
+  'llm-budget.ts': { role: 'shared LLM concurrency bucket' },
+  'longmemeval-aggregate.ts': { role: 'LongMemEval receipt aggregator', part_of: 'longmemeval-retrieval' },
+  'longmemeval-batch.sh': { role: 'LongMemEval multi-worker batch wrapper', part_of: 'longmemeval-retrieval' },
+  'longmemeval-cache.ts': { role: 'LongMemEval embedding cache', part_of: 'longmemeval-retrieval' },
+  'longmemeval-chart.ts': { role: 'LongMemEval chart renderer', part_of: 'longmemeval-retrieval' },
+  'longmemeval-m-pilot-batch-payload.ts': { role: 'LongMemEval-M pilot batch payload builder', part_of: 'longmemeval-m-pilot' },
+  'longmemeval-m-pilot-build.ts': { role: 'LongMemEval-M pilot index build', part_of: 'longmemeval-m-pilot' },
+  'longmemeval-m-pilot-feasibility.ts': { role: 'LongMemEval-M pilot feasibility check', part_of: 'longmemeval-m-pilot' },
+  'longmemeval-m-pilot-hypothetical-cost.ts': { role: 'LongMemEval-M pilot cost estimate', part_of: 'longmemeval-m-pilot' },
+  'longmemeval-m-pilot-import-check.ts': { role: 'LongMemEval-M pilot import check', part_of: 'longmemeval-m-pilot' },
+  'longmemeval-m-pilot-manifest.py': { role: 'LongMemEval-M pilot selection manifest', part_of: 'longmemeval-m-pilot' },
+  'longmemeval-m-pilot-offset-audit.ts': { role: 'LongMemEval-M pilot offset audit', part_of: 'longmemeval-m-pilot' },
+  'longmemeval-m-pilot-outcomes.ts': { role: 'LongMemEval-M pilot outcome recorder', part_of: 'longmemeval-m-pilot' },
+  'longmemeval-m-pilot-replay.ts': { role: 'LongMemEval-M pilot replay', part_of: 'longmemeval-m-pilot' },
+  'longmemeval-session-ids.ts': { role: 'opaque LongMemEval session ids', part_of: 'longmemeval-retrieval' },
+  'longmemeval-validate-ndjson.ts': { role: 'LongMemEval NDJSON validator', part_of: 'longmemeval-retrieval' },
+  'metrics.ts': { role: 'shared retrieval metrics' },
+  'pins.ts': { role: 'declared gbrain pins from package.json' },
+  'precisionmembench-instrument.ts': { role: 'PrecisionMemBench instrumentation sweep', part_of: 'precisionmembench' },
+  'probe-accounting.ts': { role: 'shared probe accounting' },
+  'reading-notes-recount.ts': { role: 'keyless recount of the reading-notes artifacts', part_of: 'reading-notes' },
+  'reading-notes-requests.ts': { role: 'offline reading-notes request builder', part_of: 'reading-notes' },
+  'receipt.ts': { role: 'receipt schema, writer and validator' },
+  'recorder.ts': { role: 'flight-recorder bundle emitter' },
+  'retrieval-pins.ts': { role: 'pinned retrieval config' },
+  'situation-recall-associative.ts': { role: 'situation-recall associative lane', part_of: 'situation-recall' },
+  'situation-recall-cat36.ts': { role: 'situation-recall Cat36 lane', part_of: 'situation-recall' },
+  'situation-recall-contract.ts': { role: 'situation-recall contract', part_of: 'situation-recall' },
+  'situation-recall-development.ts': { role: 'situation-recall development profile', part_of: 'situation-recall' },
+  'situation-recall-experiment-policy.ts': { role: 'situation-recall experiment policy', part_of: 'situation-recall' },
+  'situation-recall-native-18-24.ts': { role: 'situation-recall native collectors for Cats 18-24', part_of: 'situation-recall' },
+  'situation-recall-native-2-4-6.ts': { role: 'situation-recall native collectors for Cats 2, 4, 6', part_of: 'situation-recall' },
+  'situation-recall-native-35.ts': { role: 'situation-recall native collector for Cat35', part_of: 'situation-recall' },
+  'situation-recall-native.ts': { role: 'situation-recall native observation types', part_of: 'situation-recall' },
+  'situation-recall-observations.ts': { role: 'situation-recall observation helpers', part_of: 'situation-recall' },
+  'situation-recall-programmatic.ts': { role: 'programmatic driver for Cats 5, 8 and 9', part_of: 'situation-recall' },
+  'situation-recall-provenance.ts': { role: 'situation-recall provenance hashing', part_of: 'situation-recall' },
+  'situation-recall-regression.ts': { role: 'situation-recall regression comparator', part_of: 'situation-recall' },
+  'smoke.ts': { role: 'embedder-shootout pre-flight smoke', part_of: 'shootout-cell' },
+  'synthetic-corpus-loader.ts': { role: 'synthetic-v1 corpus loader' },
+  'tool-bridge.ts': { role: 'agent tool bridge' },
+  'types.ts': { role: 'shared types' },
+  'validate-data.ts': { role: 'committed data integrity validator' },
+};
+
+/** Subdirectories of eval/runner/ holding helper modules only. */
+export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'evaluator', 'queries', 'stats'];
