@@ -320,7 +320,7 @@ export async function runCat28(options: Cat28Options = {}): Promise<Cat28RunResu
 
   const receipt: Receipt = {
     ...noModelSpend('hermetic: no model and no paid request'),
-    latency_ms: latencySummary(passes.map(p => p.wallclock_ms), 'wall time of each measured pass (serial and interleaved), setup included, warmup excluded'),
+    latency_ms: latencySummary(passes.filter(p => p.ok).map(p => p.wallclock_ms), 'wall time of each successful measured pass (serial and interleaved), setup included, warmup excluded'),
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,
     category: CAT28_CATEGORY,

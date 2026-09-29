@@ -85,9 +85,11 @@ keyless. Published numbers from earlier releases keep their dates.
 
 ### Added
 
-- Receipts no longer record machine-local paths: `writeReceipt` rewrites
-  checkout, home and temp paths, and a test fails on any committed receipt
-  with one, except 63 historical receipts frozen by hash (B11).
+- Receipts stop recording machine-local paths: `writeReceipt` makes paths
+  under the checkout repo-relative, `bun eval/runner/receipt.ts scrub <file>`
+  also rewrites home and temp paths before a receipt is committed, and a test
+  fails on any committed receipt with such a path, except 63 historical
+  receipts frozen by hash (B11).
 - `scripts/check-links.py` checks every link and heading anchor in the
   repository's Markdown on each `bun run validate`; a weekly workflow also
   fetches external links (B12).
