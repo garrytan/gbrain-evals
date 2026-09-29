@@ -62,7 +62,7 @@ import { importFromContent, importFromFile } from 'gbrain/import-file';
 import { configureGateway } from 'gbrain/ai/gateway';
 import { operationsByName, type OperationContext } from 'gbrain/operations';
 import { ProbeAccounting } from './probe-accounting.ts';
-import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt, type ProbeError } from './receipt.ts';
+import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt, type ProbeError, noModelSpend } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 
 export const CAT24_CATEGORY = 'cat24-capture-provenance';
@@ -433,6 +433,7 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
   const runInvalid = summary.run_invalid;
 
   const receipt: Receipt = {
+    ...noModelSpend('hermetic: no model and no paid request'),
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,
     category: CAT24_CATEGORY,

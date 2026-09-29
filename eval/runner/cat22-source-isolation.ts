@@ -40,7 +40,7 @@ import { importFromContent } from 'gbrain/import-file';
 import { configureGateway } from 'gbrain/ai/gateway';
 import { hybridSearch } from 'gbrain/search/hybrid';
 import { ProbeAccounting } from './probe-accounting.ts';
-import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt } from './receipt.ts';
+import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt, noModelSpend } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 
 export const CAT22_CATEGORY = 'cat22-source-isolation';
@@ -457,6 +457,7 @@ export async function runCat22(options: Cat22Options = {}): Promise<Cat22RunResu
   const runInvalid = summary.run_invalid;
 
   const receipt: Receipt = {
+    ...noModelSpend('hermetic: no model and no paid request'),
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,
     category: CAT22_CATEGORY,

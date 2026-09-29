@@ -36,6 +36,7 @@ import {
   BENCHMARK_VERSION,
   type ProbeError,
   type Receipt,
+  noModelSpend,
 } from './receipt.ts';
 import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
 
@@ -317,18 +318,21 @@ async function runScale(scale: number, seed: number, log: (msg: string) => void)
   log(`Bulk putPage: ${pages.length} pages in ${importSecs.toFixed(1)}s = ${importTput.ops_per_sec.toFixed(1)} pages/sec`);
 
   // ── Throughput: bulk addLink ──
+  // Only successful writes count toward throughput (audit C-11: failed
+  // addLinks used to be swallowed and still counted as completed ops).
   const linkStart = performance.now();
+  let linksWritten = 0;
   for (const l of links) {
-    try { await engine.addLink(l.from, l.to, '', l.type); } catch { /* skip if either page missing */ }
+    try { await engine.addLink(l.from, l.to, '', l.type); linksWritten++; } catch { /* a missing endpoint page is not a completed write */ }
   }
   const linkSecs = (performance.now() - linkStart) / 1000;
   const linkTput: ThroughputSample = {
     op: 'addLink_bulk',
     scale,
     total_seconds: linkSecs,
-    ops_per_sec: links.length / linkSecs,
+    ops_per_sec: linksWritten / linkSecs,
   };
-  log(`Bulk addLink: ${links.length} links in ${linkSecs.toFixed(1)}s = ${linkTput.ops_per_sec.toFixed(1)} links/sec`);
+  log(`Bulk addLink: ${linksWritten}/${links.length} links written in ${linkSecs.toFixed(1)}s = ${linkTput.ops_per_sec.toFixed(1)} links/sec`);
 
   // ── Latency samples — precomputed seeded slug plans, one per op so each
   // op's sequence is independent of how many other ops ran before it. ──
@@ -435,6 +439,7 @@ async function main() {
   const nScored = allLatency.length + allThroughput.length;
 
   writeReceipt(receiptPath('perf'), {
+    ...noModelSpend('hermetic: no model and no paid request'),
     ...receiptBase,
     run_status: 'completed',
     verdict,
@@ -442,7 +447,8 @@ async function main() {
     n_scored: nScored,
     completion_rate: nTotal > 0 ? nScored / nTotal : 0,
     errors,
-    publishable: true,
+    // A run below the 10K scale evaluates no threshold and proves nothing publishable (audit C-11).
+    publishable: thresholds.length > 0,
     resolved_config: {
       engine: 'pglite-in-memory',
       scales: args.scales,

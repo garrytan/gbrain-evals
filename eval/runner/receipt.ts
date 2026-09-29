@@ -308,6 +308,15 @@ export function productIdentity(pkg: ProductIdentity['package'] = 'gbrain', root
   return identity;
 }
 
+/**
+ * v2 cost and delivered-token blocks for a run the runner KNOWS sent no paid
+ * request and ran no model (hermetic runners, stub transports). Measured
+ * zero, not unknown: use null when spend was possible but not recorded.
+ */
+export function noModelSpend(basis: string): { cost: CostSummary; delivered_tokens: DeliveredTokens } {
+  return { cost: { usd: 0, input_tokens: 0, output_tokens: 0, basis }, delivered_tokens: { tokens: 0, basis } };
+}
+
 /** Nearest-rank percentile summary; null for an empty sample. */
 export function latencySummary(samplesMs: readonly number[], basis: string): LatencySummary | null {
   const sorted = samplesMs.filter(Number.isFinite).slice().sort((a, b) => a - b);
@@ -341,7 +350,6 @@ export function receiptPath(category: string, reportsDir = join(process.cwd(), '
   return join(reportsDir, category, 'receipt.json');
 }
 
-/** Atomic write: upgrade to v2, validate, write temp file in the same dir, rename over target. */
 /** Machine-local path prefixes a committed receipt must not carry. */
 export const MACHINE_LOCAL_PATH = /(?:^|[\s"'=(:,\[])(?:\/home\/[^/\s"']+\/|\/Users\/[^/\s"']+\/|\/root\/|\/private\/var\/|\/var\/folders\/|\/tmp\/|[A-Za-z]:\\Users\\)/;
 
@@ -364,6 +372,7 @@ export function scrubMachinePaths<T>(value: T, root = REPO_ROOT, home = homedir(
   return visit(value) as T;
 }
 
+/** Atomic write: upgrade to v2, scrub machine-local paths, validate, write temp file in the same dir, rename over target. */
 export function writeReceipt(path: string, input: Receipt): void {
   const receipt = scrubMachinePaths(upgradeReceipt(input));
   const violations = validateStoredReceipt(receipt);

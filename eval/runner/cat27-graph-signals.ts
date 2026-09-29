@@ -72,7 +72,7 @@ import {
 } from 'gbrain/ai/gateway';
 import { uniqueInOrder, ndcgAtK } from './metrics.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
-import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt } from './receipt.ts';
+import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt, noModelSpend } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 
 export const CAT27_CATEGORY = 'cat27-graph-signals';
@@ -561,6 +561,7 @@ export async function runCat27(options: Cat27Options = {}): Promise<Cat27RunResu
   const verdict = computeVerdict(agg, sutErrors, subset.length);
 
   const receipt: Receipt = {
+    ...noModelSpend('hash embedding stub: no model and no paid request'),
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,
     category: CAT27_CATEGORY,

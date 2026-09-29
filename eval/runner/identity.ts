@@ -29,7 +29,7 @@
 
 import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { installPageProjection, readProjectionSnapshot } from '../../node_modules/gbrain/src/core/page-state/projections.ts';
-import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, receiptPath, writeReceipt, type Receipt, type ReceiptVerdict } from './receipt.ts';
+import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, receiptPath, writeReceipt, type Receipt, type ReceiptVerdict, noModelSpend } from './receipt.ts';
 import { gbrainPin, gbrainVersion } from './gbrain-version.ts';
 
 export interface Entity {
@@ -210,6 +210,7 @@ export async function main() {
   const verdict = cat3Verdict(summary);
   log(`\nVerdict: ${verdict} (documented recall >= ${CAT3_GATES.min_documented_recall * 100}%, documented MRR >= ${CAT3_GATES.min_documented_mrr})`);
   writeReceipt(receiptPath('identity'), {
+    ...noModelSpend('hermetic: no model and no paid request'),
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,
     category: 'identity',

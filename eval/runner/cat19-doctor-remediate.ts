@@ -62,7 +62,7 @@ import { computeRecommendations } from '../../node_modules/gbrain/src/core/brain
 import { runEmbedCore } from '../../node_modules/gbrain/src/commands/embed.ts';
 import { makeHashEmbedTransport } from './cat18-embedding-providers.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
-import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt } from './receipt.ts';
+import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt, noModelSpend } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 
 export const CAT19_CATEGORY = 'cat19-doctor-remediate';
@@ -421,6 +421,7 @@ export async function runCat19(options: Cat19Options = {}): Promise<Cat19RunResu
 
   const receipt: Receipt = {
     ...baseReceipt,
+    ...(stubEmbed ? noModelSpend('hash embedding stub: no model and no paid request') : {}),
     run_status: runInvalid ? 'error' : 'completed',
     ...(runInvalid ? {} : { verdict }),
     n_total: summary.n_total,

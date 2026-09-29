@@ -88,6 +88,7 @@ import {
   receiptPath,
   writeReceipt,
   type Receipt,
+  noModelSpend,
 } from './receipt.ts';
 import { gbrainPin, gbrainVersion } from './gbrain-version.ts';
 
@@ -936,6 +937,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
 
   const base = {
     ...receiptBase,
+    ...noModelSpend('hermetic: no model and no paid request (pure extractor and in-memory PGLite by-mention pass)'),
     n_total: accounting.n_total,
     n_scored: accounting.n_scored,
     completion_rate: accounting.completion_rate,

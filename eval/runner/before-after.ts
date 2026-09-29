@@ -18,7 +18,7 @@
 
 import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { runExtract } from 'gbrain/extract';
-import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION } from './receipt.ts';
+import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend } from './receipt.ts';
 import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
 import { readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
@@ -481,6 +481,7 @@ async function main() {
 
   const finishedAt = new Date().toISOString();
   writeReceipt(receiptPath('before-after'), {
+    ...noModelSpend('hermetic: no model and no paid request'),
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,
     category: 'before-after',

@@ -53,7 +53,7 @@ import { importFromContent } from 'gbrain/import-file';
 import { configureGateway } from 'gbrain/ai/gateway';
 import { percentile } from './metrics.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
-import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt } from './receipt.ts';
+import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt, noModelSpend, latencySummary } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 
 export const CAT28_CATEGORY = 'cat28-federated-sync-latency';
@@ -314,6 +314,8 @@ export async function runCat28(options: Cat28Options = {}): Promise<Cat28RunResu
   const summary = acc.summary();
 
   const receipt: Receipt = {
+    ...noModelSpend('hermetic: no model and no paid request'),
+    latency_ms: latencySummary(passes.map(p => p.wallclock_ms), 'wall time of each measured pass (serial and interleaved), setup included, warmup excluded'),
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,
     category: CAT28_CATEGORY,

@@ -8,7 +8,7 @@ import { hybridSearch } from 'gbrain/search/hybrid';
 import { pagesInResultOrder } from '../../eval/runner/adapters/page-results.ts';
 import {
   parseRelationalArgs, RELATIONAL_EMBEDDER, RELATIONAL_LIMIT,
-  runRelationalAB, scoreRelationalArm, searchRelationalPair, summarizeRelationalRows, vectorHash,
+  runRelationalAB, scoreRelationalArm, searchRelationalPair, stratifiedLimit, summarizeRelationalRows, vectorHash,
   type PairedRow, type RelationalSearch,
 } from '../../eval/runner/relational-ab.ts';
 import { validateReceipt } from '../../eval/runner/receipt.ts';
@@ -109,7 +109,7 @@ describe('paired retrieval boundary', () => {
     expect(pair.on.error?.origin).toBe('sut');
     expect(scoreRelationalArm(pair.on, relevant).metrics?.recall_at_5).toBe(0);
     const summary = summarizeRelationalRows([{
-      seed: 1, index_id: 'shared', query_id: query.id, text: query.text, template: 'invested_in', relevant: [...relevant],
+      seed: 1, index_id: 'shared', query_id: query.id, text: query.text, template: 'invested_in', split: 'template', relevant: [...relevant],
       off: scoreRelationalArm(pair.off, relevant), on: scoreRelationalArm(pair.on, relevant),
     }]);
     expect(summary.paired.recall_at_5.losses).toBe(1);
@@ -158,7 +158,7 @@ describe('real import, extraction and receipt (hash embeddings, no provider)', (
   test('one extracted index serves both arms, reports live product telemetry, and never publishes hash scores', async () => {
     const reportsDir = join(temp, 'good');
     let nonrelational: Awaited<ReturnType<typeof searchRelationalPair>> | undefined;
-    const { receipt, exitCode } = await runRelationalAB({ corpusDir: corpus, reportsDir, seeds: [1], stubEmbed: true, quiet: true }, async (engine, text, opts) => {
+    const { receipt, exitCode } = await runRelationalAB({ corpusDir: corpus, reportsDir, seeds: [1], split: 'template', stubEmbed: true, quiet: true }, async (engine, text, opts) => {
       const results = await hybridSearch(engine, text, opts);
       if (opts.relationalRetrieval) {
         nonrelational = await searchRelationalPair(engine, { id: 'content-example', text: 'payment software research notes' }, vector());
@@ -187,7 +187,7 @@ describe('real import, extraction and receipt (hash embeddings, no provider)', (
   }, 120_000);
 
   test('a fail-open ON query leaves an invalid receipt instead of a plausible comparison', async () => {
-    const { receipt, exitCode } = await runRelationalAB({ corpusDir: corpus, outputDir: join(temp, 'failed'), seeds: [1], stubEmbed: true, quiet: true }, async (_engine, text, opts) => {
+    const { receipt, exitCode } = await runRelationalAB({ corpusDir: corpus, outputDir: join(temp, 'failed'), seeds: [1], split: 'template', stubEmbed: true, quiet: true }, async (_engine, text, opts) => {
       await opts.queryEmbedFn!(text); opts.onMeta!(metadata());
       if (opts.relationalRetrieval) opts.onRelationalMeta!({ fired: false, kind: 'who_rel', seeds_resolved: 1, candidates: 0, errored: true, duration_ms: 0 });
       return [];
@@ -200,4 +200,42 @@ describe('real import, extraction and receipt (hash embeddings, no provider)', (
     expect(receipt.errors[0].origin).toBe('sut');
     expect(validateReceipt(receipt)).toEqual([]);
   }, 120_000);
+
+  test('the paraphrase split reuses gold and index, and is reported beside the template split (B-RAB-01)', async () => {
+    const { receipt, exitCode } = await runRelationalAB({ corpusDir: corpus, outputDir: join(temp, 'both'), seeds: [1], stubEmbed: true, quiet: true });
+    expect(exitCode).toBe(0);
+    const rows = receipt.data!.per_query as PairedRow[];
+    expect(rows.map(r => r.split)).toEqual(['template', 'paraphrase']);
+    expect(rows[1].query_id).toBe(`${rows[0].query_id}-p`);
+    expect(rows[1].relevant).toEqual(rows[0].relevant);
+    expect(rows[1].template).toBe('invested_in');
+    expect(rows[1].text).not.toBe(rows[0].text);
+    expect(rows[1].text).toContain('Acme Example');
+    expect(rows[1].index_id).toBe(rows[0].index_id);
+    const bySplit = receipt.data!.by_split as Record<string, { on: { n_scored: number } }>;
+    expect(Object.keys(bySplit)).toEqual(['template', 'paraphrase']);
+    expect(bySplit.paraphrase.on.n_scored).toBe(1);
+    expect((receipt.resolved_config as { splits: string[] }).splits).toEqual(['template', 'paraphrase']);
+  }, 120_000);
 });
+
+describe('paraphrase grammar (B-RAB-01) and stratified --limit (B-RAB-02)', () => {
+  test('the committed paraphrase file is frozen: byte-identical to the generator, one per template query', async () => {
+    const { renderParaphraseFile, PARAPHRASE_PATH, PARAPHRASE_FRAMES } = await import('../../eval/generators/relational-paraphrase-gen.ts');
+    expect(readFileSync(PARAPHRASE_PATH, 'utf8')).toBe(renderParaphraseFile());
+    const file = JSON.parse(readFileSync(PARAPHRASE_PATH, 'utf8'));
+    expect(file.paraphrases).toHaveLength(145);
+    for (const p of file.paraphrases) {
+      expect(PARAPHRASE_FRAMES[p.template as keyof typeof PARAPHRASE_FRAMES][p.frame]).toBeDefined();
+      expect(p.text).not.toMatch(/^Who (attended|works at|invested in|advises) /);
+    }
+  });
+
+  test('--limit takes queries round-robin across templates', () => {
+    const qs = ['attended', 'attended', 'attended', 'works_at', 'invested_in', 'advises'].map((template, i) => ({ id: `q${i}`, template }));
+    expect(stratifiedLimit(qs, 4).map(q => q.template)).toEqual(['attended', 'works_at', 'invested_in', 'advises']);
+    expect(stratifiedLimit(qs, 5).map(q => q.id)).toEqual(['q0', 'q3', 'q4', 'q5', 'q1']);
+    expect(stratifiedLimit(qs, undefined)).toHaveLength(6);
+  });
+});
+
