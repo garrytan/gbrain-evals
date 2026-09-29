@@ -11,6 +11,8 @@ import { ProbeAccounting } from './probe-accounting.ts';
 import { BENCHMARK_VERSION, loadReceipt, writeReceipt, type Receipt } from './receipt.ts';
 import { regressionPackageHash, resolveRegressionProduct, type ResolvedRegressionProduct } from './situation-recall-provenance.ts';
 import { opaqueSessionId, SESSION_ID_POLICY } from './longmemeval-session-ids.ts';
+import { assertPayload, withPermitted } from './evaluator/allowlist.ts';
+import { lmeQuestionMaterial, rawSessionIds, LME_READER_INPUT } from './evaluator/longmemeval.ts';
 
 export const LME_ANSWERS_CATEGORY = 'longmemeval-answers';
 const JUDGE_MODEL = 'claude-haiku-4-5-20251001';
@@ -65,7 +67,9 @@ export function longMemEvalSources(q: Pick<Question, 'question_id' | 'haystack_s
   });
 }
 
-export function createLmeCapture(datasetBytes: Buffer, questions: Question[], adapters: string[]): LmeCapture {
+type LmeQuestionSources = Pick<Question, 'question_id' | 'haystack_session_ids' | 'haystack_dates' | 'haystack_sessions'>;
+
+export function createLmeCapture(datasetBytes: Buffer, questions: LmeQuestionSources[], adapters: string[]): LmeCapture {
   let root = dirname(fileURLToPath(import.meta.resolve('gbrain')));
   while (!existsSync(join(root, 'package.json')) && dirname(root) !== root) root = dirname(root);
   const product = resolveRegressionProduct({ expectedPackageSha256: regressionPackageHash(root), requireClean: false });
@@ -74,7 +78,7 @@ export function createLmeCapture(datasetBytes: Buffer, questions: Question[], ad
     planned_pairs: adapters.flatMap(adapter => questions.map(q => ({ adapter, question_id: q.question_id }))), product };
 }
 
-export function retainLmeEvidence(q: Question, results: SearchResult[], adapter: Pick<AdapterSpec, 'sessdiv'>, topK: number, selectedSessions: string[]): LmeEvidence {
+export function retainLmeEvidence(q: LmeQuestionSources, results: SearchResult[], adapter: Pick<AdapterSpec, 'sessdiv'>, topK: number, selectedSessions: string[]): LmeEvidence {
   const sources = longMemEvalSources(q);
   const returned_chunks = results.map(result => {
     const sourceId = result.source_id ?? 'default';
@@ -259,7 +263,10 @@ export async function runLongMemEvalAnswers(options: { datasetPath: string; rows
       const failure = (origin: 'sut' | 'judge' | 'harness' | 'dependency', message: string) => { accounting.error(q.question_id, origin, message); row.error = { origin, message }; row.score = origin === 'sut' ? 0 : null; };
       if (item.row.error) { failure(item.row.error_origin!, 'retained retrieval failure'); continue; }
       if (item.safety.length) { failure('sut', 'non-original evidence blocked before answer generation'); continue; }
-      try { row.answer = await runtime.generate(structuredClone(item.input)); }
+      // Every field the reader receives is allowlisted, and no raw dataset session id may appear in it. A violation blocks the whole replay.
+      const readerInput = structuredClone(item.input);
+      assertPayload(LME_READER_INPUT, readerInput, withPermitted([...new Set([...rawSessionIds(q), ...q.answer_session_ids])].map(value => ({ value, label: 'raw session id' })), lmeQuestionMaterial(q)));
+      try { row.answer = await runtime.generate(readerInput); }
       catch (error) {
         const origin = classifyErrorOrigin(error instanceof Error ? error.message : String(error)) === 'dependency' ? 'dependency' : 'sut';
         failure(origin, `answer generation failed (${origin}); usage may be unavailable`); continue;
@@ -304,7 +311,7 @@ export async function runLongMemEvalAnswers(options: { datasetPath: string; rows
     gbrain_pin: replay.primary.gbrain_pin, gbrain_version: replay.primary.gbrain_version, started_at: started, finished_at: new Date().toISOString(),
     hashes: { ...replay.hashes, evaluator: hash(readFileSync(fileURLToPath(import.meta.url))), answer_profile: lmeArtifactHash(p) },
     judge: { model: p.judge_model, temperature: 0, rubric_version: 'lme-secondary-grounding-v2' },
-    resolved_config: { profile: p, product, isolated_runtime: namespace, answer_system: ANSWER_SYSTEM, judge_system: JUDGE_SYSTEM,
+    resolved_config: { profile: p, product, isolated_runtime: namespace, answer_system: ANSWER_SYSTEM, judge_system: JUDGE_SYSTEM, reader_input_allowlist: LME_READER_INPUT.name,
       budget_enforcement: 'separate externally enforced provider caps; approval attestations are not a local spending meter',
       methodology: 'secondary grounding check, not official LongMemEval answer accuracy; shared rubric judge/category-0 standalone presentation, no official temporal tolerance or preference scoring protocol',
       scorer_availability: 'upstream evaluate_qa.py unavailable; internal gbrain port is not a public export and has documented protocol/accounting deviations',

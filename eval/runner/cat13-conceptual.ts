@@ -108,13 +108,18 @@ import { GbrainInlineAdapter } from './adapters/gbrain-inline.ts';
 import type { EvalAdapterConfig } from './eval-adapter-config.ts';
 import type { Adapter, Page, Query, RankedDoc } from './types.ts';
 import { sanitizePage, sanitizeQuery } from './types.ts';
-import { ndcgAtK, precisionAtK } from './metrics.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import {
   writeReceipt, receiptPath, RECEIPT_SCHEMA_VERSION, BENCHMARK_VERSION,
   type Receipt, type ReceiptVerdict,
 } from './receipt.ts';
 import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
+import { assertPayload, InputAllowlistError } from './evaluator/allowlist.ts';
+import {
+  assertCat13Alignment, cat13ForbiddenValues, cat13GoldFromProbes, scoreCat13, CAT13_BOUNDARIES, CAT13_SUT_PAGE, CAT13_SUT_QUERY, type Cat13Gold,
+} from './evaluator/cat13.ts';
+import type { GoldStore } from './evaluator/gold-store.ts';
+import { REFERENCE_SCORER_VERSION } from './evaluator/reference-scorer.ts';
 
 export const TOP_K = 5;
 const CATEGORY = 'cat13-conceptual';
@@ -972,6 +977,10 @@ export interface AdapterScore {
     index: number; id: string; text: string; template: string;
     subset: ProbeSubset | 'all'; graded_gold: Record<string, number>;
     ranked_pages: RankedDoc[]; ndcg5: number; p5_graded: number; p1_strict: number;
+    /** Paired-comparison cluster: the target concept (the first, sorted, for multi-target probes). */
+    cluster_id: string;
+    /** Returned page ids that repeated an earlier one (a broken adapter; repeats earn nothing). */
+    duplicate_results?: number;
     error?: string;
     search_observation?: SearchObservation;
   }>;
@@ -1018,6 +1027,8 @@ export interface ScoreAdapterOptions {
   initConfig?: Record<string, unknown>;
   /** When supplied, tuning / held-out rollups are computed alongside the overall numbers. */
   split?: ConceptSplit;
+  /** Evaluator-side gold from the separate loader. Defaults to a store built from gradesByQuery. */
+  gold?: GoldStore<Cat13Gold>;
 }
 
 /** Duck-typed optional adapter hooks (GbrainInlineAdapter / HybridNoGraphAdapter expose them). */
@@ -1035,7 +1046,10 @@ export async function scoreAdapter(
   opts: ScoreAdapterOptions = {},
 ): Promise<AdapterScore> {
   const t0 = Date.now();
+  const gold = opts.gold ?? cat13GoldFromProbes(probes, gradesByQuery);
+  assertCat13Alignment(gold, probes);
   const publicPages = pages.map(sanitizePage);
+  for (const page of publicPages) assertPayload(CAT13_SUT_PAGE, page);
   const state = await adapter.init(publicPages, { name: adapter.name, ...(opts.initConfig ?? {}) });
 
   // Read the gateway AFTER init: adapters that call configureGateway themselves
@@ -1057,21 +1071,22 @@ export async function scoreAdapter(
 
   for (const [index, probe] of probes.entries()) {
     const probeId = `${adapter.name}:${probe.q.id}`;
-    const grades = gradesByQuery.get(probe.q.id)!;
     let ndcg = 0;
     let p5 = 0;
     let p1 = 0;
+    let duplicates = 0;
     let rankedPages: RankedDoc[] = [];
     let error: string | undefined;
+    const publicQuery = sanitizeQuery(probe.q);
+    assertPayload(CAT13_SUT_QUERY, publicQuery, cat13ForbiddenValues(gold, probe.q.id));
     try {
-      const results: RankedDoc[] = await adapter.query(sanitizeQuery(probe.q), state);
+      const results: RankedDoc[] = await adapter.query(publicQuery, state);
       rankedPages = results.slice(0, TOP_K);
-      const ids = results.map(r => r.page_id);
-      const rawNdcg = ndcgAtK(ids, grades, TOP_K);
-      ndcg = Number.isNaN(rawNdcg) ? 0 : rawNdcg;
-      const relevant = new Set([...grades.entries()].filter(([, g]) => g >= 1).map(([slug]) => slug));
-      p5 = precisionAtK(ids, relevant, TOP_K);
-      if (ids.length > 0 && probe.targetSlugs.includes(ids[0])) p1 = 1;
+      const reference = scoreCat13(gold, probe.q.id, results.map(r => r.page_id), TOP_K);
+      ndcg = Number.isNaN(reference.ndcg) ? 0 : reference.ndcg;
+      p5 = reference.precision;
+      p1 = reference.top1_strict;
+      duplicates = reference.duplicates;
       acc.score(probeId, ndcg);
     } catch (err) {
       // The system under test failed the probe: scored 0 (miss), kept in the
@@ -1085,8 +1100,9 @@ export async function scoreAdapter(
     perQuery.push({
       index, id: probe.q.id, text: probe.q.text, template: probe.template,
       subset: opts.split ? probeSubset(probe, opts.split) : 'all',
-      graded_gold: Object.fromEntries(grades), ranked_pages: rankedPages,
-      ndcg5: ndcg, p5_graded: p5, p1_strict: p1, ...(error ? { error } : {}),
+      graded_gold: gold.read(probe.q.id).grades, ranked_pages: rankedPages,
+      ndcg5: ndcg, p5_graded: p5, p1_strict: p1, cluster_id: [...probe.targetSlugs].sort()[0] ?? probe.q.id,
+      ...(duplicates ? { duplicate_results: duplicates } : {}), ...(error ? { error } : {}),
     });
     addToAccum(overall, probe.template, ndcg, p5, p1);
     if (opts.split) {
@@ -1409,6 +1425,12 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
     // (audit retrieval-cats-13). Now it is a hard error.
     throw new Error('buildProbes produced 0 probes — refusing to score an empty run');
   }
+  // Evaluator-side gold from a separate read of the corpus (plan amendment 6):
+  // the probes handed to adapters must be exactly the probes it labels.
+  const { loadCat13Gold } = await import('./evaluator/cat13-gold-loader.ts');
+  const gold = loadCat13Gold(corpusDir, targetProbes);
+  assertCat13Alignment(gold, probes);
+  if (gold.fingerprint !== cat13GoldFromProbes(probes, gradesByQuery).fingerprint) throw new Error('cat13 gold from the separate loader differs from the runner\'s grades');
 
   const conceptSlugs = pages.filter(p => p.slug.startsWith('concepts/')).map(p => p.slug);
   const split = splitConcepts(conceptSlugs, tuningN, holdoutN, splitSeed);
@@ -1447,7 +1469,7 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
   for (const { adapter: a, initConfig } of plans) {
     log(`- ${a.name} ...`);
     try {
-      const r = await scoreAdapter(a, pages, probes, gradesByQuery, acc, { initConfig, split });
+      const r = await scoreAdapter(a, pages, probes, gradesByQuery, acc, { initConfig, split, gold });
       if (GBRAIN_BACKED_ADAPTERS.has(a.name)) {
         const failures = observedSearchFailures(r.observed, probes.length);
         if (failures.length) {
@@ -1499,6 +1521,9 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
       }
       results.push(r);
     } catch (err) {
+      // An input allowlist violation means gold or unlisted data was about to
+      // reach an adapter: the whole run is void, not one arm.
+      if (err instanceof InputAllowlistError) throw err;
       // init/teardown failure: the whole arm is gone (missing dependency or
       // harness bug), excluded from means and capped.
       for (const p of probes) acc.error(`${a.name}:${p.q.id}`, 'harness', `adapter init/teardown failed: ${String(err)}`);
@@ -1632,6 +1657,13 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
     search_config_by_adapter: Object.fromEntries(results.map(r => [r.name, r.resolvedConfig ?? null])),
     observed_by_adapter: Object.fromEntries(results.map(r => [r.name, r.observed ?? null])),
     execution_incomplete: executionIncomplete,
+    evaluator: {
+      gold_store: gold.toJSON(),
+      gold_loader: 'separate corpus read (eval/runner/evaluator/cat13-gold-loader.ts), aligned id for id and text for text',
+      reference_scorer: REFERENCE_SCORER_VERSION,
+      input_allowlist: CAT13_BOUNDARIES,
+      isolation: 'in-process: adapters receive allowlisted plain data only; no process sandbox',
+    },
     concept_split: conceptSplitRecord,
     adapters_run: results.map(r => r.name),
   };

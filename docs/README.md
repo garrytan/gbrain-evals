@@ -84,6 +84,10 @@ records missing evidence explicitly. A **receipt** is a machine-readable record
 of what ran, under which configuration, and what it measured. A report explains
 that record; the two should agree.
 
+[Comparing runs](comparing-runs.md) explains the paired comparator
+(`eval/runner/compare.ts`), the three decision gates, and how the evaluator keeps
+the answer key away from the system under test.
+
 The [September 6 evidence guide](benchmarks/2026-09-06-longmemeval-ranker-wave/longmemeval/README.md)
 explains the saved LongMemEval files and what their compacted records retain.
 

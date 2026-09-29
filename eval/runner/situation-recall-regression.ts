@@ -5,6 +5,7 @@ import { isAbsolute, join, relative, resolve } from 'node:path';
 import inventory from '../regression/situation-recall-v1.json';
 import { ProbeAccounting } from './probe-accounting.ts';
 import { percentile } from './metrics.ts';
+import { holmAdjusted, seededRandom } from './stats/paired.ts';
 import { validateReceipt } from './receipt.ts';
 import { executedCueLookup } from './situation-recall-observations.ts';
 import type {
@@ -416,16 +417,7 @@ function violatesBound(value: number, bound: { floor?: number; ceiling?: number;
     || (bound.ceiling !== undefined && (bound.ceiling_exclusive ? value >= bound.ceiling : value > bound.ceiling));
 }
 
-function random(seed: number): () => number {
-  let state = seed >>> 0;
-  return () => {
-    state += 0x6D2B79F5;
-    let t = state;
-    t = Math.imul(t ^ t >>> 15, t | 1);
-    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-    return ((t ^ t >>> 14) >>> 0) / 4294967296;
-  };
-}
+const random = seededRandom;
 
 export function aggregateRegressionMetric(values: RegressionObservationValue[], metric: RegressionMetricSpec): number {
   if (!values.length) return NaN;
@@ -506,17 +498,7 @@ export function clusteredRegressionStatistics(
   };
 }
 
-export function holmAdjusted(pValues: number[]): number[] {
-  if (!pValues.every(p => finite(p) && p >= 0 && p <= 1)) throw new Error('invalid Holm p-value');
-  const order = pValues.map((p, index) => ({ p, index })).sort((a, b) => a.p - b.p);
-  const adjusted = new Array<number>(pValues.length);
-  let previous = 0;
-  order.forEach(({ p, index }, rank) => {
-    previous = Math.max(previous, Math.min(1, p * (order.length - rank)));
-    adjusted[index] = previous;
-  });
-  return adjusted;
-}
+export { holmAdjusted };
 
 export function compareSituationRecall(manifest: RegressionManifest, results: RegressionCellResult[], options: { evalRoot?: string } = {}): RegressionDecision {
   const nativeErrors = validateRegressionManifest(manifest, options);
