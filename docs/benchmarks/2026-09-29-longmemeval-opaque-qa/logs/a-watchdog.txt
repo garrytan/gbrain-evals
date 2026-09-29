@@ -1,0 +1,8 @@
+2026-09-29T11:53:50Z manual kill of pid 1902: 100% CPU spin since 09:35:55Z on question 6c49646a after 37 embed calls (no paid call for 2h17m)
+2026-09-29T12:51:25Z attempt=1 stall 620s; last log: [longmemeval] gpt4_e414231f 31116ms; killing
+2026-09-29T12:51:30Z attempt=1 ended: rc=137
+2026-09-29T13:49:31Z attempt=2 stall 629s; last log: [longmemeval] 618f13b2 30289ms; killing
+2026-09-29T13:49:36Z attempt=2 ended: rc=137
+2026-09-29T14:48:37Z attempt=3 stall 615s; last log: [longmemeval] 41275add 33944ms; killing
+2026-09-29T14:48:42Z attempt=3 ended: rc=137
+2026-09-29T14:56:12Z finished rc=0
