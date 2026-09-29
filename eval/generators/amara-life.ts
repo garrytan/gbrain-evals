@@ -678,7 +678,9 @@ export function buildGoldFixtures(skeleton: AmaraLifeSkeleton): GoldFiles {
         'Derived from CONTRADICTION_FIXTURES/STALE_FACT_FIXTURES in eval/generators/amara-life.ts ' +
         'by amara-life-gen.ts — do not hand-edit. `pairs` are contradictions (same fact, two values, '
         + 'no ordering); `stale_facts` are supersessions (source_b is later and wins). `canonical` marks '
-        + 'the side the scorer trusts.',
+        + 'the side the scorer trusts. No runner consumes this file yet: it is reserved for the planned N2 '
+        + 'contradiction-surfacing category, which must first check that each claim actually appears in '
+        + 'its generated source text.',
       pairs: CONTRADICTION_FIXTURES.map(f => toEntry(f,
         'surface both claims, cite both sources, and prefer the canonical source when asked for the fact')),
       stale_facts: STALE_FACT_FIXTURES.map(f => toEntry(f,
