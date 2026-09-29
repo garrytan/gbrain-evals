@@ -467,7 +467,9 @@ describe('shootout-driver runCell (shared relational set + receipts)', () => {
       const receipt = loadReceipt(receiptFile);
       expect(receipt.category).toBe('shootout-driver');
       expect(receipt.run_status).toBe('completed');
-      expect(receipt.verdict).toBe('pass');
+      // A single cell has no quality threshold: partial, never pass (audit PD-15).
+      expect(receipt.verdict).toBe('partial');
+      expect(receipt.publishable).toBe(true);
       expect(receipt.n_total).toBe(4);
       expect(receipt.n_scored).toBe(4);
       expect(receipt.resolved_config?.relational_builder).toContain('queries/relational.ts');

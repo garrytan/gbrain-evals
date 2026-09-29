@@ -100,12 +100,12 @@ export const REGISTRY: readonly CategoryEntry[] = [
     contract: 'Runs extractPageLinks on every world-v1 page and compares the typed edges with gold derived from _facts. Edges are oriented the way gbrain stores them (attendance person -> meeting). Every inferred type that differs from gold is charged as spurious, so emitting every type cannot score well. It measures extraction on generator-written prose; it says nothing about prose the generator did not write.',
   },
   {
-    id: 'alias-keyword-lookup', legacy_alias: '3', name: 'Identity resolution through keyword search',
+    id: 'alias-keyword-lookup', legacy_alias: '3', name: 'Alias lookup through keyword search',
     family: 'retrieval', tier: 'H', script: 'eval/runner/identity.ts', run: { kind: 'dispatched' },
     cost_estimate: FREE, receipt_path: receipt('identity'),
     headline: { metric: 'documented and undocumented alias recall through searchKeyword', denominator: '800 alias lookups (400 undocumented)' },
     gate: 'gate', evidence_maturity: 'regression-only',
-    contract: 'Looks people up by aliases (handles, nicknames, misspellings) through keyword search and checks the canonical page ranks first. An alias counts as documented when its text appears on the page. It measures lexical identity lookup only, not entity resolution or merging.',
+    contract: 'Looks people up by aliases (handles, nicknames, misspellings) through keyword search and checks the canonical page ranks first. An alias counts as documented when its text appears on the page. It measures lexical lookup only. gbrain\'s entity resolver, write-time alias resolution and identity groups are not exercised.',
   },
   {
     id: 'timeline-round-trip', legacy_alias: '4', name: 'Timeline storage round-trip',
@@ -113,12 +113,12 @@ export const REGISTRY: readonly CategoryEntry[] = [
     cost_estimate: FREE, receipt_path: receipt('temporal'),
     headline: { metric: 'pass rate of point, range, recency and as-of timeline checks', denominator: '114 timeline probes' },
     gate: 'gate', evidence_maturity: 'regression-only',
-    contract: 'Writes timeline entries and reads them back by point, range, recency and as-of filters (the as-of filter is applied by the harness). It proves storage and retrieval of dated entries, not temporal reasoning over natural-language questions.',
+    contract: 'Writes timeline entries and reads them back by point, range, recency and as-of filters (the as-of filter is applied by the harness). It proves storage and retrieval of dated entries. gbrain\'s own temporal features (chronicle operations, search date bounds, fact validity windows) are not exercised.',
   },
   {
     id: 'source-attribution', legacy_alias: '5', name: 'Source attribution / provenance',
     family: 'reasoning', tier: 'none', script: 'eval/runner/cat5-provenance.ts',
-    run: { kind: 'listed', reason: 'not implemented: no reviewed claim catalog exists (gold/citations.json is a one-claim template), and the runner has no gbrain in the loop' },
+    run: { kind: 'listed', reason: 'not implemented: no reviewed claim catalog exists (the one-claim gold/citations.json template was removed in 0.10.7), and the runner has no gbrain in the loop' },
     cost_estimate: UNMEASURED, receipt_path: receipt('cat5-provenance'),
     headline: { metric: 'none until a reviewed claim catalog exists', denominator: 'none' },
     gate: 'report-only', evidence_maturity: 'regression-only',
@@ -128,9 +128,9 @@ export const REGISTRY: readonly CategoryEntry[] = [
     id: 'prose-autolink-precision', legacy_alias: '6', name: 'Auto-link precision under prose',
     family: 'extraction', tier: 'H', script: 'eval/runner/cat6-prose-scale.ts', run: { kind: 'dispatched' },
     cost_estimate: FREE, receipt_path: receipt('cat6-prose-scale'),
-    headline: { metric: 'extractor recall and labeled precision under injected prose traps', denominator: '250 injection probes (code fences, substring traps, ambiguous roles)' },
+    headline: { metric: 'extractor recall and labeled precision under injected prose traps', denominator: '250 injection probes (code fences, substring traps, ambiguous roles) plus 50 bare-name mentions in the gazetteer arm' },
     gate: 'gate', evidence_maturity: 'regression-only',
-    contract: 'Injects prose that should or should not create links (code fences, substring traps, ambiguous roles) and scores the extracted links. Precision is measured on labeled injections only, and one known capability-gap kind is excluded, so a pass is a regression result.',
+    contract: 'Injects prose that should or should not create links (code fences, substring traps, ambiguous roles) and scores the extracted links. Precision is measured on labeled injections only. Bare-name mentions are scored separately in a gazetteer arm that runs gbrain\'s by-mention extract pass over a PGLite brain. A pass is a regression result.',
   },
   {
     id: 'pglite-latency', legacy_alias: '7', name: 'Performance / latency',
@@ -384,11 +384,11 @@ export const REGISTRY: readonly CategoryEntry[] = [
   },
   {
     id: 'relational-ab', legacy_alias: 'relational-ab', name: 'Relational retrieval off vs on',
-    family: 'relationships', tier: 'P', script: 'eval/runner/relational-ab.ts', run: { kind: 'dispatched', outputFlag: '--output-dir', timeoutMs: 2 * HOUR },
-    cost_estimate: UNMEASURED, receipt_path: 'eval/reports/relational-ab/<output>/receipt.json',
-    headline: { metric: 'Recall@5 and hit@1 with relational retrieval off vs on over one index', denominator: '145 questions x 3 seeds' },
+    family: 'relationships', tier: 'K', script: 'eval/runner/relational-ab.ts', run: { kind: 'dispatched', outputFlag: '--output-dir', timeoutMs: 2 * HOUR },
+    cost_estimate: { usd: 0.07, basis: 'measured 2026-09-29: $0.0645 of OpenAI embeddings in the budget ledger for 3 seeds x 2 splits (docs/benchmarks/2026-09-29-relational-paraphrase)' }, receipt_path: 'eval/reports/relational-ab/<output>/receipt.json',
+    headline: { metric: 'Recall@5 and hit@1 with relational retrieval off vs on over one index, template vs paraphrase wording', denominator: '145 questions x 2 wordings x 3 seeds' },
     gate: 'report-only', evidence_maturity: 'synthetic-production-path',
-    contract: 'Toggles only relational retrieval over a shared index and pairs outcomes per question. Report distinct-question gains beside pair gains.',
+    contract: 'Toggles only relational retrieval over a shared index and pairs outcomes per question, on the template questions (the parser\'s own verbs) and on a frozen paraphrase of each. Report distinct-question gains beside pair gains, and the paraphrase split beside the template split.',
   },
   {
     id: 'precisionmembench', legacy_alias: 'precisionmembench', name: 'PrecisionMemBench',
@@ -477,3 +477,85 @@ export function tiersFor(selection: TierSelection): ReadonlySet<RegistryTier> {
 export function registryEntry(idOrAlias: string): CategoryEntry | undefined {
   return REGISTRY.find(entry => entry.id === idOrAlias || entry.legacy_alias === idOrAlias);
 }
+
+/**
+ * Every other file directly under eval/runner/ (tests excepted), with its
+ * role. A file is either a registry entry's script or listed here;
+ * test/eval/registry.test.ts fails on anything else, so a new runner cannot
+ * land without a registry row or an explicit helper classification.
+ * `part_of` names the registry entry the file belongs to, when it has one.
+ */
+export interface RunnerHelper { role: string; part_of?: string }
+
+export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
+  'README-cat13-phase-e0.md': { role: 'protocol notes for the Cat13 ranker-wave phases', part_of: 'concept-search' },
+  'adversarial-injections.ts': { role: 'injection generator and scorer used by Cat6', part_of: 'prose-autolink-precision' },
+  'all.ts': { role: 'umbrella runner that dispatches registry entries' },
+  'budget-ledger.ts': { role: 'shared paid-run reservation ledger' },
+  'cat13-gap-localize.ts': { role: 'Phase E1 diagnostic over Cat13 hybrid stages', part_of: 'concept-search' },
+  'cat13-kacf-calibrate.ts': { role: 'Phase E2 keyword-floor calibration over Cat13', part_of: 'concept-search' },
+  'cat30-skillopt-improvement.ts': { role: 'Cat30 runner, driven by run-skillopt-cats.sh', part_of: 'skillopt' },
+  'cat31-skillopt-ablation.ts': { role: 'Cat31 runner, driven by run-skillopt-cats.sh', part_of: 'skillopt' },
+  'cat32-skillopt-reward-hacking.ts': { role: 'Cat32 runner, driven by run-skillopt-cats.sh', part_of: 'skillopt' },
+  'cat33-skillopt-transfer.ts': { role: 'Cat33 runner, driven by run-skillopt-cats.sh', part_of: 'skillopt' },
+  'cat35-checks.ts': { role: 'mechanical Cat35 checks', part_of: 'transcript-distillation' },
+  'cat35-judges.ts': { role: 'Cat35 judge prompts and calls', part_of: 'transcript-distillation' },
+  'cat35-transcript-distill-chart.ts': { role: 'Cat35 chart renderer', part_of: 'transcript-distillation' },
+  'cat36-corpus.ts': { role: 'Cat36 corpus loader', part_of: 'associative-retrieval-smoke' },
+  'cat36-grounded-answers.ts': { role: 'Cat36 grounded-answer lane', part_of: 'associative-retrieval-live' },
+  'cat36-operation-conformance.ts': { role: 'Cat36 operation-surface replay', part_of: 'associative-retrieval-live' },
+  'cat36-production.ts': { role: 'Cat36 production runtime', part_of: 'associative-retrieval-smoke' },
+  'cat36-scorer.ts': { role: 'Cat36 span-coverage scorer', part_of: 'associative-retrieval-smoke' },
+  'cat36-snapshot.ts': { role: 'Cat36 index snapshot hashing', part_of: 'associative-retrieval-live' },
+  'compare.ts': { role: 'paired run comparator CLI' },
+  'eval-adapter-config.ts': { role: 'typed adapter config for matrix cells' },
+  'gbrain-version.ts': { role: 'resolves the loaded gbrain version' },
+  'import-embedded.ts': { role: 'embedding-required import wrapper' },
+  'judge.ts': { role: 'shared rubric judge' },
+  'llm-budget.ts': { role: 'shared LLM concurrency bucket' },
+  'longmemeval-aggregate.ts': { role: 'LongMemEval receipt aggregator', part_of: 'longmemeval-retrieval' },
+  'longmemeval-batch.sh': { role: 'LongMemEval multi-worker batch wrapper', part_of: 'longmemeval-retrieval' },
+  'longmemeval-cache.ts': { role: 'LongMemEval embedding cache', part_of: 'longmemeval-retrieval' },
+  'longmemeval-chart.ts': { role: 'LongMemEval chart renderer', part_of: 'longmemeval-retrieval' },
+  'longmemeval-m-pilot-batch-payload.ts': { role: 'LongMemEval-M pilot batch payload builder', part_of: 'longmemeval-m-pilot' },
+  'longmemeval-m-pilot-build.ts': { role: 'LongMemEval-M pilot index build', part_of: 'longmemeval-m-pilot' },
+  'longmemeval-m-pilot-feasibility.ts': { role: 'LongMemEval-M pilot feasibility check', part_of: 'longmemeval-m-pilot' },
+  'longmemeval-m-pilot-hypothetical-cost.ts': { role: 'LongMemEval-M pilot cost estimate', part_of: 'longmemeval-m-pilot' },
+  'longmemeval-m-pilot-import-check.ts': { role: 'LongMemEval-M pilot import check', part_of: 'longmemeval-m-pilot' },
+  'longmemeval-m-pilot-manifest.py': { role: 'LongMemEval-M pilot selection manifest', part_of: 'longmemeval-m-pilot' },
+  'longmemeval-m-pilot-offset-audit.ts': { role: 'LongMemEval-M pilot offset audit', part_of: 'longmemeval-m-pilot' },
+  'longmemeval-m-pilot-outcomes.ts': { role: 'LongMemEval-M pilot outcome recorder', part_of: 'longmemeval-m-pilot' },
+  'longmemeval-m-pilot-replay.ts': { role: 'LongMemEval-M pilot replay', part_of: 'longmemeval-m-pilot' },
+  'longmemeval-session-ids.ts': { role: 'opaque LongMemEval session ids', part_of: 'longmemeval-retrieval' },
+  'longmemeval-validate-ndjson.ts': { role: 'LongMemEval NDJSON validator', part_of: 'longmemeval-retrieval' },
+  'metrics.ts': { role: 'shared retrieval metrics' },
+  'pins.ts': { role: 'declared gbrain pins from package.json' },
+  'precisionmembench-instrument.ts': { role: 'PrecisionMemBench instrumentation sweep', part_of: 'precisionmembench' },
+  'probe-accounting.ts': { role: 'shared probe accounting' },
+  'reading-notes-recount.ts': { role: 'keyless recount of the reading-notes artifacts', part_of: 'reading-notes' },
+  'reading-notes-requests.ts': { role: 'offline reading-notes request builder', part_of: 'reading-notes' },
+  'receipt.ts': { role: 'receipt schema, writer and validator' },
+  'recorder.ts': { role: 'flight-recorder bundle emitter' },
+  'retrieval-pins.ts': { role: 'pinned retrieval config' },
+  'situation-recall-associative.ts': { role: 'situation-recall associative lane', part_of: 'situation-recall' },
+  'situation-recall-cat36.ts': { role: 'situation-recall Cat36 lane', part_of: 'situation-recall' },
+  'situation-recall-contract.ts': { role: 'situation-recall contract', part_of: 'situation-recall' },
+  'situation-recall-development.ts': { role: 'situation-recall development profile', part_of: 'situation-recall' },
+  'situation-recall-experiment-policy.ts': { role: 'situation-recall experiment policy', part_of: 'situation-recall' },
+  'situation-recall-native-18-24.ts': { role: 'situation-recall native collectors for Cats 18-24', part_of: 'situation-recall' },
+  'situation-recall-native-2-4-6.ts': { role: 'situation-recall native collectors for Cats 2, 4, 6', part_of: 'situation-recall' },
+  'situation-recall-native-35.ts': { role: 'situation-recall native collector for Cat35', part_of: 'situation-recall' },
+  'situation-recall-native.ts': { role: 'situation-recall native observation types', part_of: 'situation-recall' },
+  'situation-recall-observations.ts': { role: 'situation-recall observation helpers', part_of: 'situation-recall' },
+  'situation-recall-programmatic.ts': { role: 'programmatic driver for Cats 5, 8 and 9', part_of: 'situation-recall' },
+  'situation-recall-provenance.ts': { role: 'situation-recall provenance hashing', part_of: 'situation-recall' },
+  'situation-recall-regression.ts': { role: 'situation-recall regression comparator', part_of: 'situation-recall' },
+  'smoke.ts': { role: 'embedder-shootout pre-flight smoke', part_of: 'shootout-cell' },
+  'synthetic-corpus-loader.ts': { role: 'synthetic-v1 corpus loader' },
+  'tool-bridge.ts': { role: 'agent tool bridge' },
+  'types.ts': { role: 'shared types' },
+  'validate-data.ts': { role: 'committed data integrity validator' },
+};
+
+/** Subdirectories of eval/runner/ holding helper modules only. */
+export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'evaluator', 'queries', 'stats'];

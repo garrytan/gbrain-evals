@@ -108,7 +108,7 @@ describe('ClaudeSonnetWithToolsAdapter — Adapter interface', () => {
     const page = await state.engine.getPage('people/amara');
     expect(page?.title).toBe('Amara Okafor');
     await adapter.teardown(state); // restored at the v0.47.8.0 pin: the v0.46.3 disconnect() sync-spin under `bun test` no longer reproduces
-  });
+  }, 30_000); // PGLite schema setup; the 5s default is exceeded under four concurrent shards
 
   test('init() pins search mode + reranker BEFORE ingest and records them (WS5)', async () => {
     const adapter = new ClaudeSonnetWithToolsAdapter();

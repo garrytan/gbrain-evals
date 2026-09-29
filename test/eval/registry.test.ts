@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
-import { existsSync } from 'node:fs';
-import { REGISTRY, registryEntry, tiersFor } from '../../eval/registry.ts';
+import { existsSync, readdirSync, statSync } from 'node:fs';
+import { REGISTRY, RUNNER_HELPER_DIRS, RUNNER_HELPERS, registryEntry, tiersFor } from '../../eval/registry.ts';
 import { CATEGORIES, parseTier, selectCategories } from '../../eval/runner/all.ts';
 
 const MATURITY = ['regression-only', 'synthetic-production-path', 'independently-labeled-held-out', 'externally-replicated'];
@@ -53,5 +53,30 @@ describe('category registry', () => {
     const paid = selectCategories('paid').dispatch.map(c => c.id);
     expect([...selectCategories('K').dispatch, ...selectCategories('P').dispatch].map(c => c.id).sort()).toEqual([...paid].sort());
     expect(selectCategories('P').dispatch.map(c => c.id)).toContain('35');
+  });
+
+  test('every file under eval/runner/ is a registry script or a classified helper', () => {
+    const scripts = new Set(REGISTRY.map(e => e.script));
+    const unclassified: string[] = [];
+    for (const name of readdirSync('eval/runner').sort()) {
+      const path = `eval/runner/${name}`;
+      if (statSync(path).isDirectory()) {
+        if (!RUNNER_HELPER_DIRS.includes(name)) unclassified.push(`${path}/`);
+        continue;
+      }
+      if (name.endsWith('.test.ts')) continue;
+      if (!scripts.has(path) && !(name in RUNNER_HELPERS)) unclassified.push(path);
+    }
+    expect(unclassified).toEqual([]);
+  });
+
+  test('helper entries exist, are not also registry scripts, and name real registry entries', () => {
+    for (const [name, helper] of Object.entries(RUNNER_HELPERS)) {
+      expect([name, existsSync(`eval/runner/${name}`)]).toEqual([name, true]);
+      expect([name, REGISTRY.some(e => e.script === `eval/runner/${name}`)]).toEqual([name, false]);
+      expect(helper.role.length).toBeGreaterThan(0);
+      if (helper.part_of) expect([name, registryEntry(helper.part_of)?.id]).toEqual([name, helper.part_of]);
+    }
+    for (const dir of RUNNER_HELPER_DIRS) expect([dir, existsSync(`eval/runner/${dir}`)]).toEqual([dir, true]);
   });
 });

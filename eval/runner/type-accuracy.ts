@@ -33,7 +33,7 @@ import { readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { extractPageLinks } from 'gbrain/link-extraction';
 import type { PageType } from 'gbrain/types';
-import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, receiptPath, writeReceipt, type Receipt, type ReceiptVerdict } from './receipt.ts';
+import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, receiptPath, writeReceipt, type Receipt, type ReceiptVerdict, noModelSpend } from './receipt.ts';
 import { gbrainPin, gbrainVersion } from './gbrain-version.ts';
 import { declaredPin } from './pins.ts';
 
@@ -547,6 +547,7 @@ async function main() {
     rows,
   };
   writeReceipt(receiptPath('type-accuracy'), {
+    ...noModelSpend('hermetic: no model and no paid request'),
     ...receiptBase,
     run_status: 'completed',
     verdict,

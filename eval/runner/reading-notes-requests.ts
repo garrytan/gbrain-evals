@@ -6,6 +6,11 @@
  * id whose `answer_` prefix marks gold sessions (audit C-01). Each row keeps
  * session_map (opaque id → dataset id) in the private plan. Schema 1 plans
  * showed raw ids and are no longer produced or executed.
+ *
+ * Since 0.10.7 both the reader input and the captured request pass the input
+ * allowlist (evaluator/judge-inputs.ts, boundaries reading-notes.reader.input@1
+ * and reading-notes.reader.request@1): declared fields only, opaque slugs, and
+ * no raw dataset session id beyond what the conversations themselves mention.
  */
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -14,6 +19,8 @@ import { fileURLToPath } from 'node:url';
 import { generateAnswer, readerConfigHash, resolveReaderConfig, READER_MAX_SESSION_CHARS } from 'gbrain-reader/eval/longmemeval/reader';
 import type { SearchResult } from 'gbrain-reader/types';
 import { opaqueSessionId } from './longmemeval-session-ids.ts';
+import { assertPayload } from './evaluator/allowlist.ts';
+import { READING_NOTES_READER_INPUT, READING_NOTES_READER_REQUEST, readingNotesForbidden } from './evaluator/judge-inputs.ts';
 
 const hash = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
 const date = /^(?:\d{4}-\d{2}-\d{2}|\d{4}\/\d{2}\/\d{2} \((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)\) \d{2}:\d{2})$/;
@@ -53,6 +60,13 @@ export async function prepareRequests(cases: FrozenReadingInput[], model: string
     const results: SearchResult[] = opaque.map((s, index) => ({ slug: `chat/${s.id}`, page_id: index + 1, title: s.id, type: 'note', chunk_text: s.body,
       chunk_source: 'compiled_truth', chunk_id: index + 1, chunk_index: 0, score: 1, stale: false }));
     const pages = opaque.map(s => ({ slug: `chat/${s.id}`, content: s.body, date: s.date }));
+    const material = [c.question, ...(c.question_date ? [c.question_date] : []), ...c.sources.flatMap(s => [s.body, ...(s.date ? [s.date] : [])])];
+    const forbidden = readingNotesForbidden(c.sources.map(s => s.session_id), material);
+    assertPayload(READING_NOTES_READER_INPUT, {
+      question: c.question,
+      ...(c.question_date !== undefined ? { question_date: c.question_date } : {}),
+      evidence: pages.map(p => ({ slug: p.slug, ...(p.date !== undefined ? { date: p.date } : {}), text: p.content })),
+    }, forbidden);
     const mapping = new Map(opaque.map(s => [`chat/${s.id}`, [s.id]]));
     for (const [mode, config] of [['direct', direct], ['notes', notes]] as const) {
       let request: PreparedRequest | undefined;
@@ -62,6 +76,7 @@ export async function prepareRequests(cases: FrozenReadingInput[], model: string
       } };
       const result = await generateAnswer(client, { question: c.question, question_date: c.question_date }, results, pages, mapping, model, '', config);
       if (!request || result.sessions_truncated !== 0 || result.context_sessions !== c.sources.length) throw new Error('native reader truncated or omitted frozen evidence');
+      assertPayload(READING_NOTES_READER_REQUEST, request, forbidden);
       rows.push({ question_id: c.question_id, mode, request, source_sha256: hash(JSON.stringify(c.sources)), context_chars: result.context_chars, session_map: sessionMap });
     }
     const [baseline, treatment] = rows.slice(-2);

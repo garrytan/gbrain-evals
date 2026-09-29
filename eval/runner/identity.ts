@@ -1,13 +1,19 @@
 /**
- * BrainBench Category 3: Identity Resolution.
+ * BrainBench Category 3: Alias lookup through keyword search (formerly
+ * "Identity Resolution").
  *
- * Tests whether gbrain can resolve aliases ("Sarah Chen", "S. Chen", "@schen",
- * "sarah.chen@example.com") to one canonical entity.
+ * Tests whether keyword search ranks one canonical page first for an alias
+ * ("Sarah Chen", "S. Chen", "@schen", "sarah.chen@example.com").
  *
- * This protocol measures searchKeyword (tsvector), not the product's explicit
- * alias resolver. Documented aliases occur in the fixture body; undocumented
- * variants do not. These numbers do not establish whether other alias or
- * fuzzy-resolution capabilities exist.
+ * This protocol measures searchKeyword (tsvector) only. It never calls
+ * gbrain's identity features, which exist and go untested here (coverage
+ * audit F5): the entity resolver (`resolveEntitySlugWithSource`, fuzzy title
+ * and prefix expansion, src/core/entities/resolve.ts), write-time alias
+ * resolution (resolve-on-save.ts), cross-source identity groups
+ * (entity-identity.ts) and the exact slug/title/alias lookup floor
+ * (search/exact-lookup.ts). Documented aliases occur in the fixture body;
+ * undocumented variants do not, so undocumented recall measures how far
+ * lexical search alone gets, not gbrain's alias resolution.
  *
  * The handle without its @ ("schen") is scored as DOCUMENTED: the tsvector
  * parser strips the @ from the indexed "@schen", so the bare handle is present
@@ -23,7 +29,7 @@
 
 import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { installPageProjection, readProjectionSnapshot } from '../../node_modules/gbrain/src/core/page-state/projections.ts';
-import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, receiptPath, writeReceipt, type Receipt, type ReceiptVerdict } from './receipt.ts';
+import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, receiptPath, writeReceipt, type Receipt, type ReceiptVerdict, noModelSpend } from './receipt.ts';
 import { gbrainPin, gbrainVersion } from './gbrain-version.ts';
 
 export interface Entity {
@@ -204,6 +210,7 @@ export async function main() {
   const verdict = cat3Verdict(summary);
   log(`\nVerdict: ${verdict} (documented recall >= ${CAT3_GATES.min_documented_recall * 100}%, documented MRR >= ${CAT3_GATES.min_documented_mrr})`);
   writeReceipt(receiptPath('identity'), {
+    ...noModelSpend('hermetic: no model and no paid request'),
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,
     category: 'identity',

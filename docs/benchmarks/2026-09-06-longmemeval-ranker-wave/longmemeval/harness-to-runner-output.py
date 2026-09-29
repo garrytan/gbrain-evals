@@ -4,6 +4,16 @@
 usage: harness-to-runner-output.py OUT.json LABEL=path.ndjson [LABEL=path.ndjson ...]"""
 import json, sys, os, re
 from datetime import datetime
+
+def scrub(value):
+    """Since 2026-09-29: replace machine-local absolute paths with <external>/<basename> (docs audit B11). Receipts written before then keep their original paths."""
+    if isinstance(value, str):
+        return re.sub(r"(?:/home/[^/\s\"']+|/Users/[^/\s\"']+|/root|/private/var|/var/folders|/tmp)(?:/[^\s\"']*)?/([^/\s\"']+)", r"<external>/\1", value)
+    if isinstance(value, list):
+        return [scrub(v) for v in value]
+    if isinstance(value, dict):
+        return {k: scrub(v) for k, v in value.items()}
+    return value
 out = sys.argv[1]; specs = sys.argv[2:]
 R = os.path.dirname(os.path.abspath(__file__))
 def passes_seconds(name):
@@ -45,7 +55,7 @@ for spec in specs:
         'mean_distinct_sessions': dist, 'session_shortfall_rate': sum(1 for r in scored if (r.get('distinct_sessions_in_top_k') or 0) < 5) / n,
         'recall_by_type': by_type, 'avg_latency_ms': None, 'p50_latency_ms': None, 'p99_latency_ms': None,
         'total_seconds': passes_seconds(arm),
-        'run_config': (summ or {}).get('run_config'),
+        'run_config': scrub((summ or {}).get('run_config')),
     })
     print(f"{label}: {ha}/{n} recall_all, {hy}/{n} any, wall {passes_seconds(arm):.0f}s")
 json.dump({'opts': {'datasetName': 's', 'topK': 5, 'source': 'gbrain eval longmemeval (in-repo harness), 2026-09-06 ranker wave'}, 'summaries': summaries}, open(out, 'w'), indent=1)

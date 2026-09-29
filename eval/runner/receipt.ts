@@ -30,11 +30,22 @@
  *                     measured (0 only when the runner knows no model ran).
  * writeReceipt upgrades whatever a runner builds to v2. v1 files stay
  * readable: validateReceipt and loadReceipt accept both versions.
+ *
+ * Since 0.10.7 writeReceipt rewrites paths under this checkout to
+ * repo-relative ones in every string (docs audit B11), so they still resolve
+ * from the repository root but no longer name the machine. Home and temp
+ * paths are left alone because local tooling reads them back; before
+ * committing a receipt written outside the checkout, run
+ * `bun eval/runner/receipt.ts scrub <receipt.json>`, which also rewrites the
+ * home directory to `~` and the temp directory to `<tmp>`.
+ * test/eval/receipt-machine-paths.test.ts fails on a committed receipt that
+ * still carries a machine-local path.
  */
 
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, lstatSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'fs';
+import { homedir, tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'path';
 import { regressionPackageHash } from './situation-recall-provenance.ts';
 
@@ -302,6 +313,28 @@ export function productIdentity(pkg: ProductIdentity['package'] = 'gbrain', root
   return identity;
 }
 
+/**
+ * v2 cost and delivered-token blocks for a run the runner KNOWS sent no paid
+ * request and ran no model (hermetic runners, stub transports). Measured
+ * zero, not unknown: use null when spend was possible but not recorded.
+ */
+export function noModelSpend(basis: string): { cost: CostSummary; delivered_tokens: DeliveredTokens } {
+  return { cost: { usd: 0, input_tokens: 0, output_tokens: 0, basis }, delivered_tokens: { tokens: 0, basis } };
+}
+
+/**
+ * A gate override from the environment: a number in (0, 1], or undefined when
+ * unset. Anything else throws, so `CAT18_MIN_RECALL=abc` can no longer become
+ * NaN and pass every comparison (audit A-23).
+ */
+export function gateFromEnv(name: string, env: Record<string, string | undefined> = process.env): number | undefined {
+  const raw = env[name];
+  if (raw === undefined || raw === '') return undefined;
+  const value = Number(raw);
+  if (!Number.isFinite(value) || value <= 0 || value > 1) throw new Error(`${name} must be a number in (0, 1], got ${JSON.stringify(raw)}`);
+  return value;
+}
+
 /** Nearest-rank percentile summary; null for an empty sample. */
 export function latencySummary(samplesMs: readonly number[], basis: string): LatencySummary | null {
   const sorted = samplesMs.filter(Number.isFinite).slice().sort((a, b) => a - b);
@@ -335,9 +368,35 @@ export function receiptPath(category: string, reportsDir = join(process.cwd(), '
   return join(reportsDir, category, 'receipt.json');
 }
 
-/** Atomic write: upgrade to v2, validate, write temp file in the same dir, rename over target. */
+/** Machine-local path prefixes a committed receipt must not carry. */
+export const MACHINE_LOCAL_PATH = /(?:^|[\s"'=(:,\[])(?:\/home\/[^/\s"']+\/|\/Users\/[^/\s"']+\/|\/root\/|\/private\/var\/|\/var\/folders\/|\/tmp\/|[A-Za-z]:\\Users\\)/;
+
+function scrubString(value: string, prefixes: ReadonlyArray<readonly [string, string]>): string {
+  let out = value;
+  for (const [prefix, replacement] of prefixes) out = out.split(prefix).join(replacement);
+  return out;
+}
+
+/** Rewrite checkout, home and temp paths in every string of a JSON value. */
+export function scrubMachinePaths<T>(value: T, root = REPO_ROOT, home = homedir(), tmp = tmpdir()): T {
+  const pairs: Array<[string, string]> = [[`${root}/`, ''], [root, '.']];
+  if (tmp) pairs.push([`${tmp}/`, '<tmp>/'], ['/tmp/', '<tmp>/']);
+  if (home) pairs.push([`${home}/`, '~/']);
+  const prefixes = pairs.filter(([prefix]) => prefix.length > 1);
+  const visit = (value: unknown): unknown => {
+    // Serialize first (Dates and other toJSON values), exactly as JSON.stringify will.
+    const v = value && typeof value === 'object' && typeof (value as { toJSON?: unknown }).toJSON === 'function' ? (value as { toJSON: () => unknown }).toJSON() : value;
+    if (typeof v === 'string') return scrubString(v, prefixes);
+    if (Array.isArray(v)) return v.map(visit);
+    if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).map(([k, child]) => [k, visit(child)]));
+    return v;
+  };
+  return visit(value) as T;
+}
+
+/** Atomic write: upgrade to v2, scrub machine-local paths, validate, write temp file in the same dir, rename over target. */
 export function writeReceipt(path: string, input: Receipt): void {
-  const receipt = upgradeReceipt(input);
+  const receipt = scrubMachinePaths(upgradeReceipt(input), REPO_ROOT, '', '');
   const violations = validateStoredReceipt(receipt);
   if (violations.length > 0) {
     throw new Error(`refusing to write invalid receipt (${receipt.category}): ${violations.join('; ')}`);
@@ -354,4 +413,13 @@ export function loadReceipt(path: string): Receipt {
   const violations = validateStoredReceipt(parsed);
   if (violations.length > 0) throw new Error(`invalid receipt at ${path}: ${violations.join('; ')}`);
   return parsed as Receipt;
+}
+
+if (import.meta.main) {
+  const [command, file] = process.argv.slice(2);
+  if (command !== 'scrub' || !file) {
+    console.error('usage: bun eval/runner/receipt.ts scrub <receipt.json>');
+    process.exit(2);
+  }
+  writeFileSync(file, JSON.stringify(scrubMachinePaths(JSON.parse(readFileSync(file, 'utf8'))), null, 2) + '\n');
 }

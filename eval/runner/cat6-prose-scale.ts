@@ -12,16 +12,27 @@
  *   bare dir/slug paths, code-fence + inline-code stripping, and link-type
  *   inference. No DB, no LLM, no embeddings — the run is fully hermetic.
  *
- *   NOT EXERCISED (and therefore NOT scored — audit retrieval-cats-05):
- *   bare-prose-name linking. gbrain v0.47.6.0 has no extraction pass that
- *   turns an unmarked name ("Adam Lee has been a familiar figure…") into a
- *   link candidate; `resolver.resolve` is consulted only for frontmatter
+ *   Bare-prose-name linking ("Adam Lee has been a familiar figure…" becomes
+ *   a link to people/adam-lee) is not something `extractPageLinks` does: it
+ *   takes no entity list, consults `resolver.resolve` only for frontmatter
  *   (Cat 6 passes `{}`) and `resolveBasenameMatches` only for `[[wikilink]]`
- *   text, which no injection produces. The `prose_only_mention` injection
- *   kind demands exactly that capability, so its must_extract entries were
- *   structurally unmatched — a guaranteed 0 charged to the extractor on 1/6
- *   of all variants. It is now EXCLUDED from variant generation and every
- *   denominator, and reported under `kinds_not_exercised` with this note.
+ *   text. So `prose_only_mention` is excluded from the pure-extractor arm's
+ *   variants and denominators and listed under `kinds_not_exercised`.
+ *
+ *   gbrain DOES link bare names, through a different entry point: the
+ *   by-mention pass (`gbrain extract links --by-mention --source db`,
+ *   src/core/by-mention.ts, since v0.42.0.0) builds a gazetteer from the
+ *   brain's person and company pages and links each first mention of a
+ *   known title. An earlier version of this header said gbrain had no such
+ *   pass at all; that was wrong (coverage audit F3). The GAZETTEER ARM
+ *   (`runGazetteerArm`, run by main()) imports the corpus's person and
+ *   company pages plus the prose_only_mention variants into an in-memory
+ *   PGLite brain, runs `runExtract(engine, ['links', '--by-mention',
+ *   '--source', 'db'])`, and scores each variant's must_extract link
+ *   (type `mentions` enforced) from the links table. As a control it first
+ *   runs the ordinary links pass, which lacks the gazetteer; its recall on
+ *   the same variants is recorded so the capability can be attributed to
+ *   the by-mention pass.
  *
  * SCORING (audit retrieval-cats-04 / -14):
  *   `scoreGoldDelta` (adversarial-injections.ts) is the canonical scorer —
@@ -77,19 +88,20 @@ import {
   receiptPath,
   writeReceipt,
   type Receipt,
+  noModelSpend,
 } from './receipt.ts';
 import { gbrainPin, gbrainVersion } from './gbrain-version.ts';
 
 // ─── Scored kinds + boundary note ─────────────────────────────────────
 
 export const PROSE_ONLY_BOUNDARY_NOTE =
-  'prose_only_mention requires bare-prose-name linking, which no gbrain '
-  + 'v0.47.6.0 extraction pass implements (extractPageLinks emits candidates '
+  'prose_only_mention requires bare-prose-name linking, which the pure '
+  + 'extractor under test here does not do (extractPageLinks emits candidates '
   + 'only for markdown refs, wikilinks, bare dir/slug paths, and frontmatter; '
-  + 'the resolver is never consulted for prose). Its must_extract gold is '
-  + 'structurally unmatchable by the pipeline under test, so the kind is '
-  + 'excluded from generation and all denominators instead of charging a '
-  + 'guaranteed miss to the extractor (audit retrieval-cats-05).';
+  + 'it takes no entity list). The kind is excluded from this arm\'s '
+  + 'generation and denominators (audit retrieval-cats-05) and scored instead '
+  + 'by the gazetteer arm, which runs gbrain\'s by-mention extract pass over a '
+  + 'PGLite brain (see gazetteer_arm in the receipt).';
 
 /** Kinds whose gold the exercised pipeline can actually satisfy or violate. */
 export const SCORED_INJECTION_KINDS: readonly InjectionKind[] =
@@ -121,6 +133,15 @@ export const GATES = {
   link_recall_min: 0.95,
   link_precision_min: 0.95,
   ambiguous_role_type_match_min: 0.8,
+} as const;
+
+/**
+ * Gazetteer-arm floors. First measurement (world-v1, 50 variants, seed 1000,
+ * gbrain master b80cad6): recall 50/50, every link typed `mentions`.
+ */
+export const GAZETTEER_GATES = {
+  prose_only_mention_gazetteer_recall_min: 0.95,
+  prose_only_mention_gazetteer_type_match_min: 0.95,
 } as const;
 
 export interface GateResult {
@@ -709,6 +730,112 @@ export async function runCat6(
   return { report, accounting: acc.summary(), control_failures };
 }
 
+// ─── Gazetteer arm (bare-prose-name linking through by-mention) ───────
+
+export interface GazetteerArmRow {
+  variant_id: string;
+  page_slug: string;
+  target_slug: string;
+  /** Link types found from the variant page to the target after the by-mention pass. */
+  link_types: string[];
+  /** Same, after only the ordinary links pass (control). */
+  default_pass_link_types: string[];
+}
+
+export interface GazetteerArmReport {
+  entry_point: string;
+  variants: number;
+  matched: number;
+  mistyped: number;
+  missed: number;
+  recall: number | null;
+  type_match_rate: number | null;
+  /** Recall of the ordinary links pass (no gazetteer) on the same variants. */
+  default_pass_recall: number | null;
+  /** by-mention links from variant pages to entities the gold does not label. Diagnostic only. */
+  unlabeled_mention_links: number;
+  gates: GateResult[];
+  rows: GazetteerArmRow[];
+}
+
+const GAZETTEER_PAGE_PREFIX = 'notes/cat6-prose-only-';
+
+function frontmatterPage(type: string, title: string, body: string): string {
+  return `---\ntype: ${type}\ntitle: ${JSON.stringify(title)}\n---\n\n${body}\n`;
+}
+
+/**
+ * Score prose_only_mention through gbrain's by-mention pass. Imports every
+ * person/company page (the gazetteer's source) and each variant as its own
+ * note page into a fresh in-memory PGLite brain, runs the ordinary links
+ * pass (control), then the by-mention pass, and reads links back.
+ */
+export async function runGazetteerArm(
+  pages: BasePage[],
+  opts: { perKind?: number; baseSeed?: number } = {},
+): Promise<GazetteerArmReport> {
+  const variants = generateVariants(pages, { perKind: opts.perKind, baseSeed: opts.baseSeed, kinds: ['prose_only_mention'] });
+  const { PGLiteEngine } = await import('gbrain/pglite-engine');
+  const { importFromContent } = await import('gbrain/import-file');
+  const { runExtract } = await import('gbrain/extract');
+  const engine: any = new PGLiteEngine();
+  const origLog = console.log;
+  console.log = () => {};
+  const linksFrom = async () => await engine.executeRaw(
+    `SELECT f.slug AS from_slug, t.slug AS to_slug, l.link_type FROM links l
+       JOIN pages f ON f.id = l.from_page_id JOIN pages t ON t.id = l.to_page_id
+      WHERE f.slug LIKE $1`,
+    [`${GAZETTEER_PAGE_PREFIX}%`],
+  ) as Array<{ from_slug: string; to_slug: string; link_type: string }>;
+  let defaultLinks: Array<{ from_slug: string; to_slug: string; link_type: string }>;
+  let mentionLinks: Array<{ from_slug: string; to_slug: string; link_type: string }>;
+  const pageSlugs = variants.map((_, i) => `${GAZETTEER_PAGE_PREFIX}${String(i).padStart(3, '0')}`);
+  try {
+    await engine.connect({});
+    await engine.initSchema();
+    for (const p of pages.filter(p => p.type === 'person' || p.type === 'company')) {
+      await importFromContent(engine, p.slug, frontmatterPage(p.type, p.title, p.content), { noEmbed: true });
+    }
+    for (const [i, v] of variants.entries()) {
+      await importFromContent(engine, pageSlugs[i], frontmatterPage('note', `Prose variant ${i}`, v.content), { noEmbed: true });
+    }
+    await runExtract(engine, ['links', '--source', 'db']);
+    defaultLinks = await linksFrom();
+    await runExtract(engine, ['links', '--by-mention', '--source', 'db']);
+    mentionLinks = (await linksFrom()).filter(l => !defaultLinks.some(d => d.from_slug === l.from_slug && d.to_slug === l.to_slug && d.link_type === l.link_type));
+  } finally {
+    console.log = origLog;
+    try { await engine.disconnect(); } catch { /* already closed */ }
+  }
+  const rows: GazetteerArmRow[] = variants.map((v, i) => {
+    const target = v.goldDelta.must_extract[0]!.slug;
+    const typesIn = (links: typeof defaultLinks) => [...new Set(links.filter(l => l.from_slug === pageSlugs[i] && l.to_slug === target).map(l => l.link_type))].sort();
+    return { variant_id: v.variantId, page_slug: pageSlugs[i]!, target_slug: target, link_types: typesIn(mentionLinks), default_pass_link_types: typesIn(defaultLinks) };
+  });
+  const matched = rows.filter(r => r.link_types.includes('mentions')).length;
+  const mistyped = rows.filter(r => r.link_types.length > 0 && !r.link_types.includes('mentions')).length;
+  const labeled = new Set(rows.map(r => `${r.page_slug}>${r.target_slug}`));
+  const recall = ratio(matched + mistyped, rows.length);
+  const typeMatch = ratio(matched, matched + mistyped);
+  const gates: GateResult[] = [
+    { gate: 'prose_only_mention_gazetteer_recall_min', value: recall, bound: GAZETTEER_GATES.prose_only_mention_gazetteer_recall_min, op: 'min', pass: recall !== null && recall >= GAZETTEER_GATES.prose_only_mention_gazetteer_recall_min },
+    { gate: 'prose_only_mention_gazetteer_type_match_min', value: typeMatch, bound: GAZETTEER_GATES.prose_only_mention_gazetteer_type_match_min, op: 'min', pass: typeMatch !== null && typeMatch >= GAZETTEER_GATES.prose_only_mention_gazetteer_type_match_min },
+  ];
+  return {
+    entry_point: "runExtract(engine, ['links', '--by-mention', '--source', 'db']) after ['links', '--source', 'db']",
+    variants: rows.length,
+    matched,
+    mistyped,
+    missed: rows.length - matched - mistyped,
+    recall,
+    type_match_rate: typeMatch,
+    default_pass_recall: ratio(rows.filter(r => r.default_pass_link_types.length > 0).length, rows.length),
+    unlabeled_mention_links: mentionLinks.filter(l => !labeled.has(`${l.from_slug}>${l.to_slug}`)).length,
+    gates,
+    rows,
+  };
+}
+
 // ─── CLI ──────────────────────────────────────────────────────────────
 
 interface CliOpts {
@@ -795,6 +922,14 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
   }
 
   const { report, accounting, control_failures } = outcome;
+  let gazetteer: GazetteerArmReport | null = null;
+  let gazetteerError: string | null = null;
+  try {
+    gazetteer = await runGazetteerArm(loadWorldV1(corpusDir), { perKind: cli.perKind, baseSeed: cli.baseSeed });
+  } catch (err) {
+    gazetteerError = String(err);
+  }
+  const verdict: 'pass' | 'fail' = report.verdict === 'pass' && gazetteer !== null && gazetteer.gates.every(g => g.pass) ? 'pass' : 'fail';
 
   mkdirSync(dirname(reportFile), { recursive: true });
   writeFileSync(reportFile, JSON.stringify(report, null, 2) + '\n');
@@ -802,6 +937,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
 
   const base = {
     ...receiptBase,
+    ...noModelSpend('hermetic: no model and no paid request (pure extractor and in-memory PGLite by-mention pass)'),
     n_total: accounting.n_total,
     n_scored: accounting.n_scored,
     completion_rate: accounting.completion_rate,
@@ -814,7 +950,9 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
       kinds_scored: [...SCORED_INJECTION_KINDS],
       kinds_not_exercised: [...KINDS_NOT_EXERCISED],
       gates: GATES,
+      gazetteer_gates: GAZETTEER_GATES,
       extraction_path: 'extractPageLinks (gbrain/link-extraction), frontmatter {}, no LLM/DB',
+      gazetteer_arm_path: gazetteer?.entry_point ?? "runExtract(engine, ['links', '--by-mention', '--source', 'db'])",
     },
     finished_at: new Date().toISOString(),
     data: {
@@ -825,8 +963,9 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         type_match_rate: p.type_match_rate,
         false_positive_rate: p.false_positive_rate,
       }])),
-      gates: report.gates,
+      gates: [...report.gates, ...(gazetteer?.gates ?? [])],
       negative_controls: report.negative_controls,
+      gazetteer_arm: gazetteer,
       rows: report.rows,
     },
   };
@@ -859,15 +998,27 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     return 3;
   }
 
+  if (gazetteerError !== null) {
+    writeReceipt(receiptFile, {
+      ...base,
+      errors: [...accounting.errors, { probe_id: 'gazetteer-arm', origin: 'sut', message: gazetteerError }],
+      run_status: 'completed',
+      verdict: 'fail',
+      publishable: false,
+    });
+    console.error(`[cat6] gazetteer arm failed — ${gazetteerError}`);
+    return 1;
+  }
+
   writeReceipt(receiptFile, {
     ...base,
     run_status: 'completed',
-    verdict: report.verdict,
+    verdict,
     publishable: accounting.publishable,
   });
-  const failing = report.gates.filter(g => !g.pass).map(g => g.gate);
-  console.error(`[cat6] verdict=${report.verdict}${failing.length > 0 ? ` (failing gates: ${failing.join(', ')})` : ''} — ${report.variants} variants, recall=${fmt(report.overall.link_recall)}, precision=${fmt(report.overall.link_precision)}, type_match=${fmt(report.overall.ambiguous_role_type_match_rate)}`);
-  return report.verdict === 'pass' ? 0 : 1;
+  const failing = [...report.gates, ...gazetteer!.gates].filter(g => !g.pass).map(g => g.gate);
+  console.error(`[cat6] verdict=${verdict}${failing.length > 0 ? ` (failing gates: ${failing.join(', ')})` : ''} — ${report.variants} variants, recall=${fmt(report.overall.link_recall)}, precision=${fmt(report.overall.link_precision)}, type_match=${fmt(report.overall.ambiguous_role_type_match_rate)}; gazetteer arm ${gazetteer!.matched}/${gazetteer!.variants} prose-only mentions linked (ordinary pass ${fmt(gazetteer!.default_pass_recall)})`);
+  return verdict === 'pass' ? 0 : 1;
 }
 
 function variantsEmpty(report: Cat6Report): boolean {

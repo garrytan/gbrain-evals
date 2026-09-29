@@ -2,6 +2,110 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.7] - 2026-09-29
+
+The last fix wave on the September 28 audits. One paid measurement (the
+relationship paraphrase check, $0.0645 of OpenAI embeddings); everything else is
+keyless. Published numbers from earlier releases keep their dates.
+
+### Measured
+
+- **Relationship retrieval does not help on reworded questions.** A seeded
+  paraphrase grammar, committed before scoring, rewords the 145 world-v1
+  relationship questions without changing their answers. At gbrain `b80cad6`,
+  over three ingestion orders (435 paired runs per wording), relationship
+  retrieval fired on 174 template runs and 0 paraphrase runs. Template wording:
+  first-place hits 27.6% to 42.8% (72 runs better, 6 worse), recall at five
+  0.737 to 0.763 (18 better, 0 worse, 6 distinct questions). Paraphrased: 0.411
+  recall at five and 4.8% first-place hits in both arms, no run changed
+  (audit B-RAB-01, issue #24 finding 6).
+  [Report](docs/benchmarks/2026-09-29-relational-paraphrase.md).
+- **Cat 6 bare-name mentions: 50/50 linked** by gbrain's by-mention pass (a new
+  gazetteer arm), 0/50 by the ordinary links pass. The pure-extractor gates are
+  unchanged (250 probes, recall and labeled precision 1.0).
+
+### Fixed
+
+- **Gates that could pass on nothing.** Cat 27 fails when no probe improves;
+  it currently passes because one of four probes gains 3.1 points of nDCG@10,
+  and every probe's ranking changes (B-27-01). Cat 24's dedup probe now
+  requires the hash short-circuit itself (status `skipped`, unchanged
+  `updated_at` and chunk ids); a forced re-chunk fails it (B-24-01). Cat 32
+  Part B needs at least one candidate the held-out gate blocked; no regression
+  with zero blocks is `partial` (B-32-01). Cat 30's `seed-no-brain-first`
+  held-out now scores retrieval of a generated topic page from a brain Cat 30
+  imports, instead of citations an empty brain could only invent (B-30-01).
+- **Unpublishable stub receipts.** Cat 19 and Cat 27 hash-embedding runs are no
+  longer publishable (A-22, B-27-01); Cat 29 stub runs report `partial` and no
+  longer overwrite a crashed side's zero (B-29-04); perf is unpublishable when
+  no threshold was evaluated and counts only successful link writes (C-11).
+- **Input allowlist** now covers the reading-notes reader input and captured
+  request, Cat 29's question and pairwise judge, and Cat 35's transcripts and
+  scaffold (no gold id), coverage judge (no verbatim anchor beyond the judged
+  document), leak judge and usability judge (no gold statement beyond the pages).
+- **Shared LongMemEval budget.** `longmemeval-batch.sh` opens one budget-ledger
+  run and passes `--budget-run-id` to every worker, so `--budget-usd` caps all
+  workers and batches together instead of each worker.
+- **Data integrity.** `validate-data.ts` checks amara-life hashes under the
+  generator's scheme (per record for JSONL and calendar entries, per file
+  otherwise): 424 of 424 manifest items verify, and a mismatch now fails
+  instead of warning (C10). `poison.json` is generated from the planted
+  fixtures; the five gold stubs with no generator or runnable consumer
+  (`backlinks`, `citations`, `entities`, `personalization-rubric`, `qrels`) are
+  removed, and a hand-written template row fails validation.
+- Smaller audit items: Cat 13 gap localizer withholds its proposal above a 5%
+  re-simulation mismatch and reads the committed E0 receipt (A-16); malformed
+  `CAT18_MIN_RECALL` / `CAT21_MIN_MRR` throw and overrides are unpublishable
+  (A-23); a zero-query Cat 18 cell is invalid (A-24); situation-recall Cat 13b
+  over its infra cap is an error (A-25); Cat 13b drops its gateway memo and
+  restores `GBRAIN_SOURCE_BOOST` (A-17); Cat 22's presence floor is the seeded
+  count minus two (B-22-01); Cat 33 B-pre reports no transfer ratio (B-33-01);
+  Cat 30/33 gates need all but one seed scored (B-30-04); Cat 32 `sel_climb`
+  compares like splits (B-32-02); Cat 28 isolates `GBRAIN_HOME` (B-28-01); Cat
+  35 leakage leaves judge-failed hits out of the denominator (PC-04); the
+  shootout driver reports `partial` (PD-15); `query:validate` rejects unfilled
+  scaffold placeholders (PD-17); the skillopt sentinel clears stale partial
+  results (B-SH-01); relational-ab `--limit` samples across templates (B-RAB-02).
+
+### Changed
+
+- **`gbrain-reader` pins gbrain master `e78f1c3`** (v0.59.0.0), replacing
+  `a9de062`, which is on no branch. The two commits' `src/` trees and
+  `package.json` are byte-identical; the 22 reading-notes tests pass.
+- Cat 6's header said gbrain has no bare-name linking; it does, through the
+  by-mention pass. Cat 3 and Cat 4 headers and registry names now say they test
+  keyword alias lookup and timeline storage, and name the gbrain features they
+  leave untested (F3, F4, F5).
+- `gold/contradictions.json` is documented as reserved for the planned N2
+  category. Both claims appear verbatim in their source text for 9 of 15
+  fixtures, which N2 must check first (F6).
+- The PrecisionMemBench comparison table shows the September 9 corrected gbrain
+  rows with their non-null case counts; the invalid May rows are struck
+  through, no longer bold (B10).
+
+### Added
+
+- Receipts stop recording machine-local paths: `writeReceipt` makes paths
+  under the checkout repo-relative, `bun eval/runner/receipt.ts scrub <file>`
+  also rewrites home and temp paths before a receipt is committed, and a test
+  fails on any committed receipt with such a path, except 63 historical
+  receipts frozen by hash (B11).
+- `scripts/check-links.py` checks every link and heading anchor in the
+  repository's Markdown on each `bun run validate`; a weekly workflow also
+  fetches external links (B12).
+- `test/eval/registry.test.ts` fails when a file under `eval/runner/` is
+  neither a registry script nor listed in `RUNNER_HELPERS`.
+- Receipt v2 cost and delivered tokens are recorded as a measured zero in 16
+  keyless runners and stub modes, from the budget ledger in relational-ab live
+  runs, and latency in Cats 13b, 28 and relational-ab.
+
+### Known limits
+
+- Receipt v2 cost stays null in paid runners not yet wired to the budget ledger
+  (Cats 14, 15, 18, 18b, 20, 21, 25, 26, 29 live, multi-adapter,
+  PrecisionMemBench).
+- The evaluator separation is still in-process.
+
 ## [0.10.4] - 2026-09-29
 
 Two pieces of evaluation machinery from amendments 4 and 6 of the September 28

@@ -143,19 +143,25 @@ The useful common lesson is that material can be lost or distorted before search
 
 [PrecisionMemBench](https://github.com/tenurehq/precisionmembench) has 35 stored beliefs, 77 single-query cases, and 12 session cases. Gbrain's published runs cover the 77 single-query cases. The upstream scorer returns null for some metrics, so reported means use metric-specific denominators.
 
-The table below preserves the September 1 source snapshot. Its two local May gbrain rows used a seeding defect: four superseded beliefs were hidden using ground-truth metadata unavailable to other providers. They are historical, invalid comparison rows, not current upper-bound forecasts.
+The table below preserves the September 1 source snapshot, with gbrain's own rows replaced by the September 9 corrected run. The two local May gbrain rows used a seeding defect: four superseded beliefs were hidden using ground-truth metadata unavailable to other providers. They stay in the table, struck through, as historical invalid rows. They are not current upper-bound forecasts.
+
+The corrected rows use this repository's wrapper around the upstream scorer on the 77 single-query cases, with all 35 beliefs indexed live. Their mean precision counts only cases where upstream returns a non-null precision (66 of 77 for tight adaptive with reranking, 70 of 77 for broad hybrid, 49 of 77 for keyword). The upstream rows come from the upstream README and may use different denominators. Latencies were measured on different machines and are not comparable across rows.
 
 | System | Mean precision (single-turn) | p50 | Source |
 |---|---|---|---|
 | tenure (author's belief store) | 1.00 | 9.8ms | [upstream README](https://github.com/tenurehq/precisionmembench), accessed 2026-09-01 |
-| **gbrain adaptive (tight)** | **0.582** (May result with flawed seeding; superseded) | ~270ms | [our report](benchmarks/2026-05-29-precisionmembench.md) |
+| gbrain tight adaptive + Voyage rerank, corrected 2026-09-09 | 0.5859 (66 non-null cases; recall 0.8250) | 373ms | [September 9 refresh](benchmarks/2026-09-09-retrieval-refresh.md) |
+| gbrain tight adaptive, corrected 2026-09-09 | 0.5333 (65 non-null cases; recall 0.7320) | 229ms | [September 9 refresh](benchmarks/2026-09-09-retrieval-refresh.md) |
+| gbrain broad hybrid, corrected 2026-09-09 | 0.0565 (70 non-null cases; recall 0.9884) | 214ms | [September 9 refresh](benchmarks/2026-09-09-retrieval-refresh.md) |
+| gbrain keyword, corrected 2026-09-09 | 0.1361 (49 non-null cases; recall 0.1744) | 2ms | [September 9 refresh](benchmarks/2026-09-09-retrieval-refresh.md) |
+| ~~gbrain adaptive (tight), May 2026~~ | ~~0.582~~ (invalid: flawed seeding; superseded by the corrected rows above) | ~270ms | [our report](benchmarks/2026-05-29-precisionmembench.md) |
 | supermemory | 0.22 | 69ms | upstream README, accessed 2026-09-01 |
 | yourmemory / agentmemory | 0.17 | 313ms / 82ms | upstream README, accessed 2026-09-01 |
 | atomicmemory | 0.15 | 71ms | upstream README, accessed 2026-09-01 |
 | gbrain (author's own integration) | 0.14 | 544ms | upstream README, accessed 2026-09-01; see note below |
 | zep | 0.09 | 124ms | upstream README, accessed 2026-09-01 |
 | vector baseline | 0.09 | 72ms | upstream README, accessed 2026-09-01 |
-| **gbrain hybrid, historical May setup** | **0.075** (flawed seeding) | ~270ms | [our report](benchmarks/2026-05-29-precisionmembench.md) |
+| ~~gbrain hybrid, historical May setup~~ | ~~0.075~~ (invalid: flawed seeding) | ~270ms | [our report](benchmarks/2026-05-29-precisionmembench.md) |
 | mem0 | 0.06 | 65ms | upstream README, accessed 2026-09-01 |
 
 The [September 9 corrected run](benchmarks/2026-09-09-retrieval-refresh.md) indexes all 35 beliefs live. Broad hybrid recorded precision 0.0565 and recall 0.9884, with or without reranking. Tight adaptive limits recorded 0.5333 / 0.7320 without reranking and 0.5859 / 0.8250 with it. Keyword search recorded 0.1361 / 0.1744. All five runs completed 77 cases with zero execution errors.

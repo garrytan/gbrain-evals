@@ -58,7 +58,7 @@ describe('source-only LongMemEval-M pilot snapshot and replay', () => {
       embeddingModel: 'openrouter:openai/text-embedding-3-large', embeddingDimensions: 1536,
       outputDir: join(directory, 'build'), mode: 'offline' });
     manifestHash = hash(readFileSync(join(directory, 'build/index-manifest.json')));
-  });
+  }, 60_000); // builds a PGLite index; the 5s default is exceeded under four concurrent shards
   afterAll(() => { globalThis.fetch = previousFetch; if (directory) rmSync(directory, { recursive: true, force: true }); });
 
   test('seals two dated occurrences with distinct slugs before reading a question', async () => {

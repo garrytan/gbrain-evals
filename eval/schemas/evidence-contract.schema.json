@@ -84,7 +84,7 @@
     },
     "rubric": {
       "type": "array",
-      "description": "Per-criterion rubric from gold/personalization-rubric.json.",
+      "description": "Per-criterion rubric from the reviewed probe or scenario catalog.",
       "items": {
         "type": "object",
         "required": ["id", "criterion", "weight"],

@@ -137,6 +137,39 @@ describe('ledger', () => {
   });
 });
 
+describe('shared runs (longmemeval-batch workers)', () => {
+  test('joined workers share one run budget, report only their own spend, and cannot close the run', () => {
+    const path = ledgerPath();
+    const owner = BudgetRun.open({ runner: 'batch', budgetUsd: 1, ledgerPath: path });
+    const a = BudgetRun.join({ runId: owner.runId, ledgerPath: path });
+    const b = BudgetRun.join({ runId: owner.runId, ledgerPath: path });
+    a.settle(a.reserve(0.6, 'worker a'), { usd: 0.6 });
+    expect(() => b.reserve(0.6, 'worker b')).toThrow(BudgetExceededError);
+    b.settle(b.reserve(0.3, 'worker b'), { usd: 0.3 });
+    expect(a.summary().actual_usd).toBeCloseTo(0.6, 9);
+    expect(b.summary().actual_usd).toBeCloseTo(0.3, 9);
+    expect(owner.summary().actual_usd).toBeCloseTo(0.9, 9);
+    a.close();
+    expect(read(path).runs[0].finished_at).toBeNull();
+    owner.close();
+    expect(read(path).runs[0].finished_at).not.toBeNull();
+    expect(() => BudgetRun.join({ runId: owner.runId, ledgerPath: path })).toThrow('already finished');
+    expect(() => BudgetRun.join({ runId: 'missing', ledgerPath: path })).toThrow('no budget run');
+  });
+
+  test('--budget-run-id makes startPaidRun join instead of opening a run of its own', () => {
+    const path = ledgerPath();
+    const owner = BudgetRun.open({ runner: 'batch', budgetUsd: 2, ledgerPath: path });
+    const options = budgetOptionsFrom(['--budget-run-id', owner.runId, '--budget-ledger', path], {});
+    expect(options.runId).toBe(owner.runId);
+    const { run, guard } = startPaidRun('worker', { ...options, estimateUsd: 0.1, log: () => {} });
+    guard.uninstall();
+    expect(run.runId).toBe(owner.runId);
+    expect(run.budgetUsd).toBe(2);
+    expect(read(path).runs.length).toBe(1);
+  });
+});
+
 describe('runner flags', () => {
   test('--budget-usd is required for paid work; flags override env', () => {
     const path = ledgerPath();

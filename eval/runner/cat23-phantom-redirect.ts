@@ -48,7 +48,7 @@ import { tmpdir } from 'os';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { importFromContent } from 'gbrain/import-file';
 import { ProbeAccounting } from './probe-accounting.ts';
-import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt } from './receipt.ts';
+import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt, noModelSpend } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 
 // Deep import via the relative path inside node_modules (gbrain doesn't
@@ -295,6 +295,7 @@ export async function runCat23(options: Cat23Options = {}): Promise<Cat23RunResu
   const runInvalid = summary.run_invalid;
 
   const receipt: Receipt = {
+    ...noModelSpend('hermetic: no model and no paid request'),
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,
     category: CAT23_CATEGORY,

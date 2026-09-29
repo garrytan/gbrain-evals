@@ -16,7 +16,7 @@ import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { extractPageLinks, parseTimelineEntries, type SlugResolver } from 'gbrain/link-extraction';
 import type { PageInput } from 'gbrain/types';
 import { ProbeAccounting } from './probe-accounting.ts';
-import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, receiptPath, writeReceipt, type Receipt } from './receipt.ts';
+import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, receiptPath, writeReceipt, type Receipt, noModelSpend } from './receipt.ts';
 import { gbrainPin, gbrainVersion } from './gbrain-version.ts';
 
 // Resolver that accepts every explicit slug-shaped target verbatim — Cat
@@ -177,6 +177,7 @@ export function buildAdversarialReceipt(results: CaseResult[], totalLinkCandidat
   const a = acc.summary();
   const clean = results.length > 0 && a.errors.length === 0;
   return {
+    ...noModelSpend('hermetic: no model and no paid request'),
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,
     category: 'adversarial',

@@ -43,7 +43,8 @@
  *   SKILLOPT_BPRE=1 bun eval/runner/cat30-skillopt-improvement.ts --stub-llm  # hermetic, no keys
  */
 
-import { writeFileSync, mkdirSync, readFileSync, cpSync, rmSync } from 'fs';
+import { writeFileSync, mkdirSync, readFileSync, cpSync, rmSync, existsSync, readdirSync } from 'fs';
+import { importFromContent } from 'gbrain/import-file';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
@@ -289,7 +290,9 @@ export function computeCat30Gate(results: SeedResult[], bpre: boolean): boolean 
       && r.baseline_heldout < BPRE_BASELINE_CEILING);
   }
   const scored = results.filter((r) => r.error_origin !== 'dependency');
-  if (scored.length === 0) return false;
+  // At most one seed may drop out on a dependency error; otherwise one
+  // improved seed out of one scored could pass (audit B-30-04).
+  if (scored.length === 0 || scored.length < results.length - 1) return false;
   const improved = scored.filter((r) => r.improved).length;
   return improved >= Math.ceil(scored.length * 0.75);
 }
@@ -321,9 +324,31 @@ interface SeedRunDeps {
 // fires.
 const SPLIT: [number, number, number] = [1, 1, 1];
 
+/**
+ * Import a seed's generated brain pages (`<seed>/brain/<dir>/<name>.md`) into
+ * the rollout engine. seed-no-brain-first's held-out judge scores retrieval of
+ * these pages; before 0.10.7 the rollout brain was empty and the held-out
+ * rewarded fabricated citations (audit B-30-01). Keyword search suffices, so
+ * pages import without embeddings.
+ */
+export async function importSeedBrain(engine: any, seedDir: string): Promise<number> {
+  const brain = join(seedDir, 'brain');
+  if (!existsSync(brain)) return 0;
+  let n = 0;
+  for (const dir of readdirSync(brain).sort()) {
+    for (const file of readdirSync(join(brain, dir)).sort().filter(f => f.endsWith('.md'))) {
+      await importFromContent(engine, `${dir}/${file.slice(0, -3)}`, readFileSync(join(brain, dir, file), 'utf8'), { noEmbed: true });
+      n++;
+    }
+  }
+  return n;
+}
+
 async function runSeed(deps: SeedRunDeps, seed: string): Promise<SeedResult> {
   const { engine, acc, log } = deps;
   const seedDir = join(deps.dataDir, seed);
+  const brainPages = await importSeedBrain(engine, seedDir);
+  if (brainPages) log(`[cat30] ${seed}: imported ${brainPages} brain pages for rollouts\n`);
   const seedBody = readFileSync(join(seedDir, 'SKILL.md'), 'utf8');
   const benchmarkPath = join(seedDir, 'benchmark.jsonl');
   const heldOutTasks = loadHeldOut(join(seedDir, 'held-out.jsonl'));

@@ -114,4 +114,17 @@ describe('runCat24 end to end (hermetic)', () => {
     // A gate-bypass simulation is never publishable.
     expect(result.receipt.publishable).toBe(false);
   }, RUN_TIMEOUT);
+
+  test('bypassed hash short-circuit → dedup probe fails (audit B-24-01 negative control)', async () => {
+    const reportsDir = tmpReports();
+    const result = await runCat24({ reportsDir, quiet: true, bypassDedupShortCircuit: true });
+    expect(result.receipt.verdict).toBe('fail');
+    expect(result.exitCode).not.toBe(0);
+    expect(result.receipt.errors.some(e => e.origin === 'sut' && e.probe_id === 'dedup-hash-short-circuit')).toBe(true);
+    const data = result.receipt.data as { dedup_test: { reimport_status: string; distinct_page_ids: number } };
+    // The single-row check alone would still have passed: the upsert keeps one row.
+    expect(data.dedup_test.distinct_page_ids).toBe(1);
+    expect(data.dedup_test.reimport_status).toBe('imported');
+    expect(result.receipt.publishable).toBe(false);
+  }, RUN_TIMEOUT);
 });

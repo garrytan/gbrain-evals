@@ -23,9 +23,13 @@
  *   seed-verbose: training caps at 1200 chars; held-out caps at 900 AND
  *     requires >= 200 chars of substance — a degenerate near-empty answer
  *     that games max_chars fails held-out.
- *   seed-no-brain-first: training checks the search tool fired; held-out also
- *     requires >= 1 citation in the answer — calling search without grounding
- *     the answer in what it found fails held-out.
+ *   seed-no-brain-first: training checks the search tool fired; held-out is a
+ *     `qrels` judge: the rollout must retrieve the topic's page from a small
+ *     generated brain (brain/topics/*.md, imported by Cat30 before the run).
+ *     Until 0.10.7 held-out required >= 1 citation while the rollout brain was
+ *     empty, so the only way to score was to invent citations (audit
+ *     B-30-01). Retrieved slugs come from tool output, so they cannot be
+ *     fabricated, and search or query both count.
  *   seed-no-verdict: training checks for recommendation/confidence tokens;
  *     held-out requires a Recommendation line with >= 10 chars of actual
  *     verdict and a stated confidence level.
@@ -42,6 +46,7 @@ import { join } from 'path';
 const ROOT = join(process.cwd(), 'eval/data/skillopt-v1');
 
 type Check = { op: string; arg: string | number };
+type Judge = { kind: 'rule'; checks: Check[] } | { kind: 'qrels'; expected_slugs: string[]; k: number };
 interface Seed {
   name: string;
   skill: string;
@@ -52,7 +57,7 @@ interface Seed {
    * criteria the optimizer is never shown (skillopt-cats-09). MUST NOT be
    * byte-identical to `checks`.
    */
-  heldChecks: Check[];
+  heldChecks: Check[] | 'topic-page-qrels';
   benchTopics: string[];
   heldTopics: string[];
 }
@@ -136,12 +141,9 @@ const SEEDS: Seed[] = [
     skill: frontmatter('quick-answerer-example', 'answer the question',
       `# Quick Answerer\n\nAnswer immediately from your own knowledge. Do NOT look anything up, search, or use any tools — just reply directly and concisely from memory.`),
     checks: [{ op: 'tool_called', arg: 'search' }],
-    // Held-out: brain-first means USING what the search returned, not just
-    // firing the tool — the answer must also carry at least one citation.
-    heldChecks: [
-      { op: 'tool_called', arg: 'search' },
-      { op: 'min_citations', arg: 1 },
-    ],
+    // Held-out: brain-first means actually retrieving the page about the
+    // question from the brain, on topics the optimizer never trained on.
+    heldChecks: 'topic-page-qrels',
     benchTopics: DECISION_TOPICS,
     heldTopics: HELD_TOPICS,
   },
@@ -172,11 +174,21 @@ const VERB: Record<string, string> = {
   'seed-no-verdict': 'Advise on',
 };
 
-function jsonl(prefix: string, topics: string[], verb: string, checks: Check[]): string {
+/** Slug of the generated brain page for a topic. */
+export function topicSlug(topic: string): string {
+  return `topics/${topic.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`;
+}
+
+function topicPage(topic: string): string {
+  return `# ${topic[0]!.toUpperCase()}${topic.slice(1)}\n\nTeam decision notes on ${topic}. No final call has been made. `
+    + `Logged considerations: cost, timing, reversibility and the main risk if the decision is wrong.\n`;
+}
+
+function jsonl(prefix: string, topics: string[], verb: string, judgeFor: (topic: string) => Judge): string {
   return topics.map((t, i) => JSON.stringify({
     task_id: `${prefix}-${String(i + 1).padStart(3, '0')}`,
     task: `${verb} ${t}.`,
-    judge: { kind: 'rule', checks },
+    judge: judgeFor(t),
   })).join('\n') + '\n';
 }
 
@@ -192,8 +204,16 @@ for (const seed of SEEDS) {
   mkdirSync(dir, { recursive: true });
   writeFileSync(join(dir, 'SKILL.md'), seed.skill, 'utf8');
   const verb = VERB[seed.name]!;
-  writeFileSync(join(dir, 'benchmark.jsonl'), jsonl('bm', seed.benchTopics, verb, seed.checks), 'utf8');
-  writeFileSync(join(dir, 'held-out.jsonl'), jsonl('hd', seed.heldTopics, verb, seed.heldChecks), 'utf8');
+  writeFileSync(join(dir, 'benchmark.jsonl'), jsonl('bm', seed.benchTopics, verb, () => ({ kind: 'rule', checks: seed.checks })), 'utf8');
+  const held = seed.heldChecks;
+  writeFileSync(join(dir, 'held-out.jsonl'), jsonl('hd', seed.heldTopics, verb, held === 'topic-page-qrels'
+    ? t => ({ kind: 'qrels', expected_slugs: [topicSlug(t)], k: 5 })
+    : () => ({ kind: 'rule', checks: held })), 'utf8');
+  if (held === 'topic-page-qrels') {
+    // One page per topic the seed's tasks ask about, so the brain has an answer to retrieve.
+    mkdirSync(join(dir, 'brain/topics'), { recursive: true });
+    for (const t of [...seed.benchTopics, ...seed.heldTopics]) writeFileSync(join(dir, 'brain', `${topicSlug(t)}.md`), topicPage(t), 'utf8');
+  }
   process.stderr.write(`[skillopt-v1-gen] ${seed.name}: 15 bench + 6 held-out, train-judge=${JSON.stringify(seed.checks)} heldout-judge=${JSON.stringify(seed.heldChecks)}\n`);
   total += 1;
 }

@@ -6,7 +6,27 @@
  * This measures the effect of enabling relational retrieval in that pipeline;
  * it does not compare graph databases or remove every use of graph data.
  *
- * Live: bun eval/runner/relational-ab.ts
+ * Two query splits run against the same index (--split template|paraphrase|both,
+ * default both):
+ *   template    the four world-v1 templates ("Who works at X?"), phrased in
+ *               gbrain's relational-intent verbs, so their lift is an
+ *               in-grammar upper bound (audit B-RAB-01);
+ *   paraphrase  the same questions and gold reworded by a fixed seeded
+ *               grammar (eval/generators/relational-paraphrase-gen.ts), frozen
+ *               and committed before any scoring run. The runner refuses a
+ *               paraphrase file that differs from the generator's output.
+ * `by_split` reports each split's OFF/ON summary; `by_split_template`
+ * breaks each split down by template.
+ *
+ * --limit N takes N queries round-robin across the four templates (audit
+ * B-RAB-02: the first N were all "attended", which never fires relational
+ * retrieval, so the documented smoke never exercised the treatment).
+ *
+ * Live runs embed through OpenAI and go through the budget ledger: pass
+ * --budget-usd <dollars> (or BRAINBENCH_BUDGET_USD). The receipt's cost and
+ * delivered_tokens come from the ledger; latency_ms summarizes arm wall time.
+ *
+ * Live: bun eval/runner/relational-ab.ts --budget-usd 1
  * Keyless plumbing: bun eval/runner/relational-ab.ts --stub-embed --limit 8 --seeds 1
  * Receipts: eval/reports/relational-ab/{receipt,report}.json
  */
@@ -21,10 +41,12 @@ import { configureGateway, getEmbeddingModel, getEmbeddingDimensions, __setEmbed
 import { GbrainInlineAdapter, assertStubEmbedTransport, gcNow } from './adapters/gbrain-inline.ts';
 import { pagesInResultOrder } from './adapters/page-results.ts';
 import { buildRelationalQueries, loadWorldCorpus } from './queries/relational.ts';
+import { PARAPHRASE_PATH, renderParaphraseFile, templateOfText, type ParaphraseFile } from '../generators/relational-paraphrase-gen.ts';
 import { sanitizePage, sanitizeQuery, type PublicQuery, type Query } from './types.ts';
 import { precisionAtK, recallAtK, recallAnyAtK } from './metrics.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
-import { writeReceipt, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt, type FailureOrigin } from './receipt.ts';
+import { writeReceipt, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, latencySummary, noModelSpend, type Receipt, type FailureOrigin } from './receipt.ts';
+import { BudgetExceededError, budgetOptionsFrom, receiptCost, startPaidRun, type BudgetOptions, type BudgetRun, type PaidRequestGuard } from './budget-ledger.ts';
 import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
 import { searchObservation } from './retrieval-pins.ts';
 
@@ -64,10 +86,16 @@ export interface PairedRow {
   query_id: string;
   text: string;
   template: string;
+  split: QuerySplit;
   relevant: string[];
   off: ScoredArm;
   on: ScoredArm;
 }
+
+export type QuerySplit = 'template' | 'paraphrase';
+export const QUERY_SPLITS: readonly QuerySplit[] = ['template', 'paraphrase'];
+const TEMPLATES = ['attended', 'works_at', 'invested_in', 'advises'] as const;
+type SplitQuery = Query & { split: QuerySplit; template: string };
 
 function sha256(value: string | Uint8Array): string {
   return createHash('sha256').update(value).digest('hex');
@@ -195,11 +223,37 @@ function shuffle<T>(items: readonly T[], seed: number): T[] {
   return out;
 }
 
-/** Reporting only. This never controls query parsing or retrieval. */
-function templateOf(q: Query): string {
-  return q.text.startsWith('Who attended ') ? 'attended'
-    : q.text.startsWith('Who works at ') ? 'works_at'
-    : q.text.startsWith('Who invested in ') ? 'invested_in' : 'advises';
+/**
+ * The paraphrase split: every template query reworded by the frozen grammar,
+ * with the template query's id suffix, gold and template kept. Refuses a
+ * committed file that differs from the generator (paraphrases are fixed
+ * before scoring) or that does not cover the template queries one-to-one.
+ */
+export function paraphraseQueries(templateQueries: readonly Query[], corpusDir?: string): SplitQuery[] {
+  const committed = readFileSync(PARAPHRASE_PATH, 'utf8');
+  if (corpusDir === undefined && committed !== renderParaphraseFile()) {
+    throw new ObservationError('harness', `${PARAPHRASE_PATH} differs from eval/generators/relational-paraphrase-gen.ts output; paraphrases must be frozen before scoring`);
+  }
+  const file = JSON.parse(corpusDir === undefined ? committed : renderParaphraseFile(corpusDir)) as ParaphraseFile;
+  const byId = new Map(file.paraphrases.map(p => [p.query_id, p]));
+  if (byId.size !== templateQueries.length || templateQueries.some(q => !byId.has(q.id))) {
+    throw new ObservationError('harness', 'paraphrase set does not cover the template queries one-to-one');
+  }
+  return templateQueries.map(q => {
+    const p = byId.get(q.id)!;
+    return { ...q, id: `${q.id}-p`, text: p.text, split: 'paraphrase' as const, template: p.template };
+  });
+}
+
+/** --limit N: N queries taken round-robin across templates, in query order. */
+export function stratifiedLimit<T extends { template: string }>(queries: readonly T[], limit: number | undefined): T[] {
+  if (limit === undefined) return [...queries];
+  const buckets = TEMPLATES.map(t => queries.filter(q => q.template === t));
+  const out: T[] = [];
+  for (let i = 0; out.length < limit && buckets.some(b => i < b.length); i++) {
+    for (const b of buckets) if (i < b.length && out.length < limit) out.push(b[i]!);
+  }
+  return out;
 }
 
 function hashEmbedding(text: string): number[] {
@@ -218,6 +272,10 @@ export interface RelationalABOptions {
   corpusDir?: string;
   seeds?: number[];
   limit?: number;
+  /** Which query splits to run. Default both. */
+  split?: QuerySplit | 'both';
+  /** --budget-usd / --budget-ledger / --program-cap-usd (live runs only). */
+  budget?: BudgetOptions;
   stubEmbed?: boolean;
   allowSkip?: boolean;
   quiet?: boolean;
@@ -225,6 +283,7 @@ export interface RelationalABOptions {
 
 export function parseRelationalArgs(args: string[]): RelationalABOptions {
   const options: RelationalABOptions = {};
+  if (args.some(a => /^--(budget-usd|budget-ledger|program-cap-usd|budget-run-id)(=|$)/.test(a))) options.budget = budgetOptionsFrom(args);
   for (let i = 0; i < args.length; i++) {
     const flag = args[i];
     const value = () => {
@@ -238,6 +297,8 @@ export function parseRelationalArgs(args: string[]): RelationalABOptions {
     else if (flag === '--reports-dir') options.reportsDir = value();
     else if (flag === '--seeds') options.seeds = value().split(',').map(Number);
     else if (flag === '--limit') options.limit = Number(value());
+    else if (flag === '--split') options.split = value() as RelationalABOptions['split'];
+    else if (['--budget-usd', '--budget-ledger', '--program-cap-usd', '--budget-run-id'].includes(flag)) value();
     else throw new Error(`unknown option: ${flag}`);
   }
   validateOptions(options);
@@ -251,6 +312,9 @@ function validateOptions(options: RelationalABOptions): void {
   }
   if (options.limit !== undefined && (!Number.isInteger(options.limit) || options.limit < 1)) {
     throw new Error('--limit must be a positive integer');
+  }
+  if (options.split !== undefined && !['template', 'paraphrase', 'both'].includes(options.split)) {
+    throw new Error('--split must be template, paraphrase or both');
   }
 }
 
@@ -278,8 +342,28 @@ export async function runRelationalAB(
   }
   const pages = loadWorldCorpus(options.corpusDir ?? join(import.meta.dir, '../data/world-v1'));
   const allQueries = buildRelationalQueries(pages);
-  const queries = options.limit === undefined ? allQueries : allQueries.slice(0, options.limit);
+  const templateQueries: SplitQuery[] = allQueries.map(q => ({ ...q, split: 'template' as const, template: templateOfText(q.text) }));
+  const split = options.split ?? 'both';
+  const selectedTemplates = stratifiedLimit(templateQueries, options.limit);
+  const queries: SplitQuery[] = [
+    ...(split === 'paraphrase' ? [] : selectedTemplates),
+    ...(split === 'template' ? [] : paraphraseQueries(selectedTemplates, options.corpusDir)),
+  ];
   if (!pages.length || !queries.length) throw new Error('relational corpus/query set is empty');
+  let paid: { run: BudgetRun; guard: PaidRequestGuard } | null = null;
+  if (!stub) {
+    try {
+      paid = startPaidRun('relational-ab', { ...(options.budget ?? budgetOptionsFrom([])), estimateUsd: null });
+    } catch (error) {
+      if (!(error instanceof BudgetExceededError)) throw error;
+      const receipt: Receipt = {
+        ...base, finished_at: new Date().toISOString(), run_status: 'skipped', skip_reason: `budget: ${error.message}`,
+        n_total: 0, n_scored: 0, completion_rate: 0, errors: [], publishable: false,
+      };
+      writeReceipt(join(outputDir, 'receipt.json'), receipt);
+      return { receipt, exitCode: options.allowSkip ? 0 : 2 };
+    }
+  }
   const accounting = new ProbeAccounting(seeds.length * queries.length * 2);
   const rows: PairedRow[] = [];
   const indices: Array<Record<string, unknown>> = [];
@@ -343,6 +427,7 @@ export async function runRelationalAB(
       }
     }
   } finally {
+    paid?.guard.uninstall();
     if (stub) {
       __setEmbedTransportForTests(null);
       if (oldKey === undefined) delete process.env.OPENAI_API_KEY;
@@ -350,12 +435,15 @@ export async function runRelationalAB(
     }
   }
   const summary = accounting.summary();
-  const incompleteRecipe = options.limit !== undefined || JSON.stringify(seeds) !== JSON.stringify(RELATIONAL_SEEDS) || options.corpusDir !== undefined;
+  const incompleteRecipe = options.limit !== undefined || JSON.stringify(seeds) !== JSON.stringify(RELATIONAL_SEEDS) || options.corpusDir !== undefined || split !== 'both';
   const valid = summary.errors.length === 0 && summary.completion_rate === 1;
   const data = {
     summary: summarizeRelationalRows(rows),
     by_seed: Object.fromEntries(seeds.map(seed => [seed, summarizeRelationalRows(rows.filter(r => r.seed === seed))])),
-    by_template: Object.fromEntries(['attended', 'works_at', 'invested_in', 'advises'].map(template => [template, summarizeRelationalRows(rows.filter(r => r.template === template))])),
+    by_template: Object.fromEntries(TEMPLATES.map(template => [template, summarizeRelationalRows(rows.filter(r => r.template === template))])),
+    by_split: Object.fromEntries(QUERY_SPLITS.filter(s => rows.some(r => r.split === s)).map(s => [s, summarizeRelationalRows(rows.filter(r => r.split === s))])),
+    by_split_template: Object.fromEntries(QUERY_SPLITS.filter(s => rows.some(r => r.split === s)).map(s => [s,
+      Object.fromEntries(TEMPLATES.map(template => [template, summarizeRelationalRows(rows.filter(r => r.split === s && r.template === template))]))])),
     indices, per_query: rows,
   };
   const receipt: Receipt = {
@@ -370,6 +458,10 @@ export async function runRelationalAB(
       product_limit: RELATIONAL_LIMIT, ranking_unit: 'chunk rows', scoring_unit: 'first occurrence of each page, no refill',
       precision_denominator: RELATIONAL_LIMIT, corpus_pages: pages.length,
       queries_per_seed: queries.length, available_queries: allQueries.length,
+      splits: split === 'both' ? [...QUERY_SPLITS] : [split],
+      paraphrase_grammar: split === 'template' ? null : { path: 'eval/data/relational-paraphrase-v1/paraphrases.json', generator: 'eval/generators/relational-paraphrase-gen.ts',
+        sha256: sha256(readFileSync(PARAPHRASE_PATH)) },
+      limit_selection: options.limit === undefined ? null : 'round-robin across templates',
       repeat_interpretation: 'ingestion-order sensitivity, not independent question samples',
       comparison: 'effect of enabling relational retrieval under fixed graph metadata settings',
     },
@@ -379,7 +471,15 @@ export async function runRelationalAB(
       runner: sha256(readFileSync(import.meta.path)),
     },
     data,
+    ...(stub ? noModelSpend('hash embedding stub: no model and no paid request') : {}),
+    latency_ms: latencySummary(rows.flatMap(r => [r.off, r.on]).filter(a => !a.error).map(a => a.wall_ms), 'wall time of each successful hybridSearch arm call (shared query embedding precomputed, index build excluded)'),
   };
+  if (paid) {
+    const spend = paid.run.close();
+    receipt.cost = receiptCost(spend);
+    receipt.delivered_tokens = { tokens: spend.input_tokens, basis: 'provider-reported input tokens of every paid embedding request (corpus pages per seed plus distinct questions), from the budget ledger' };
+    paid = null;
+  }
   mkdirSync(outputDir, { recursive: true });
   writeFileSync(join(outputDir, 'report.json'), JSON.stringify({ ...data, resolved_config: receipt.resolved_config, hashes: receipt.hashes }, null, 2) + '\n');
   writeReceipt(join(outputDir, 'receipt.json'), receipt);
@@ -387,10 +487,10 @@ export async function runRelationalAB(
   log(`Receipt: ${join(outputDir, 'receipt.json')}`);
   return { receipt, exitCode: valid ? 0 : 1 };
 
-  function appendRow(seed: number, indexId: string, query: Query, pair: { off: ArmResult; on: ArmResult }): void {
+  function appendRow(seed: number, indexId: string, query: SplitQuery, pair: { off: ArmResult; on: ArmResult }): void {
     const relevant = new Set(query.gold.relevant ?? []);
     const row: PairedRow = {
-      seed, index_id: indexId, query_id: query.id, text: query.text, template: templateOf(query), relevant: [...relevant],
+      seed, index_id: indexId, query_id: query.id, text: query.text, template: query.template, split: query.split, relevant: [...relevant],
       off: scoreRelationalArm(pair.off, relevant), on: scoreRelationalArm(pair.on, relevant),
     };
     rows.push(row);

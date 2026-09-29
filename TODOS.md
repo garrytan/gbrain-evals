@@ -14,7 +14,9 @@ The [August 31 audit](docs/audit/2026-08-31-eval-audit.md) explains the finding 
 
 - [x] **Re-measure the historical relational result** (issue #24 finding 2). Completed September 9 with all four existing adapters and three ingestion orders. The specialized adapter measured 97.91% mean recall and 34.21% fixed-denominator precision at five. The [fresh report](docs/benchmarks/2026-09-09-retrieval-refresh.md#keep-the-historical-relationship-adapter-separate) preserves the rankings and separates this comparison from the controlled production relationship experiment. The April 23 97.9% recall / 49.1% precision table remains historical; its original per-query receipt is still missing.
 
-- [ ] **Test relational wording the parser did not help design** (issue #24 finding 6). Paraphrase the four relational templates, using a fixed generated set, and test how much benefit remains when wording changes. The existing graph adapter recognizes the original templates. A fresh run of those same templates cannot close this gap.
+- [x] **Test relational wording the parser did not help design** (issue #24 finding 6, September 28 audit B-RAB-01). Done 2026-09-29: a seeded paraphrase grammar, frozen before scoring, rewords the 145 questions. At `b80cad6` relationship retrieval fired on 174/435 template runs and 0/435 paraphrase runs, and paraphrase metrics were identical in both arms (recall at five 0.411). [Report](docs/benchmarks/2026-09-29-relational-paraphrase.md).
+
+- [ ] **Make relationship retrieval work on reworded questions.** The paraphrase split in `relational-ab.ts` is the test: a parser or intent step that accepts ordinary wording should move its recall and first-place hits, which were flat on 2026-09-29.
 
 - [x] **Repeat the ZeroEntropy cells of the embedding-provider matrix** (Cat18/18b, WS5). Closed as obsolete on 2026-09-28: ZeroEntropy's hosted API was retired on 2026-09-04 and gbrain master no longer ships its recipe, so the `zembed-1` and `zerank-2` cells cannot be re-run. The May numbers stay historical and are marked invalid in the [May snapshot](docs/benchmarks/2026-05-23-v0.40.6.0-snapshot.md).
 
@@ -38,19 +40,21 @@ The [August 31 audit](docs/audit/2026-08-31-eval-audit.md) explains the finding 
 
 - [ ] **Re-run the May snapshot categories with current runners** (September 28 audit, A-09 and Part B). Cats 19, 20 and 21 have hermetic or cheap live modes. Until receipts exist, the May rows stay marked invalid.
 
-- [x] **Re-pin gbrain to a master commit or release tag** (September 28 audit, C1/C2). Done in 0.10.3: `gbrain` pins master `b80cad6`, the cue experiments use the `gbrain-cues` alias at `939232f`, and pins are read from `package.json`. `gbrain-reader`'s `a9de062` is still on no branch.
+- [x] **Re-pin gbrain to a master commit or release tag** (September 28 audit, C1/C2). Done in 0.10.3: `gbrain` pins master `b80cad6`, the cue experiments use the `gbrain-cues` alias at `939232f`, and pins are read from `package.json`. `gbrain-reader` moved in 0.10.7 from `a9de062` (on no branch) to master `e78f1c3`, whose `src/` tree is byte-identical.
 
-- [ ] **Give the LongMemEval batch wrapper one shared budget.** `longmemeval-batch.sh` starts several workers; each opens its own ledger run with the same `--budget-usd`, so the run cap applies per worker while the program cap still applies to all of them.
+- [x] **Give the LongMemEval batch wrapper one shared budget.** Done in 0.10.7: `longmemeval-batch.sh` opens one budget-ledger run and passes its id to every worker as `--budget-run-id`, so `--budget-usd` caps all workers and restarted batches together.
 
 ## Data and benchmark fidelity
 
-- [ ] **Finish the answer-label stubs.** The audit identified seven single-example placeholders, four without consumers. `contradictions.json` and `implicit-preferences.json` are now generated from planted data. Review `backlinks.json`, `citations.json`, `entities.json`, `personalization-rubric.json`, `poison.json` and `qrels.json`; populate useful files or deliberately remove unused ones. The data validator reports remaining stubs.
+- [x] **Finish the answer-label stubs.** Done in 0.10.7. `poison.json` is now generated from the planted skeleton fixtures, like `contradictions.json` and `implicit-preferences.json`, and a test holds all three byte-identical to the generator. `backlinks.json`, `citations.json`, `entities.json`, `personalization-rubric.json` and `qrels.json` had no generator and no runnable consumer and were removed rather than filled by hand. `validate-data.ts` now fails on a template row.
+
+- [ ] **Score contradiction surfacing (N2) on the planted amara-life fixtures** (coverage audit F6). `gold/contradictions.json` (10 contradiction pairs, 5 stale facts) is generated but no runner reads it; its comment now says it is reserved for N2. Check each premise first: on 2026-09-29 both claims appeared verbatim in their generated source text for 9 of 15 fixtures (22 of 30 source sides); the other six may be paraphrased or missing.
 
 - [ ] **Compare copied PrecisionMemBench files with upstream.** Check the fixtures and scorer against tenurehq/precisionmembench commit `c9689ca6`, accounting for the documented wrapper and path changes. Record the result in [ATTRIBUTION.md](eval/precisionmembench/ATTRIBUTION.md). Scorer parity tests and an upstream byte comparison answer different questions.
 
 - [ ] **Regenerate world-v1 only with an intentional corpus revision** (`generators-04`). The generator's cache key is fixed, but the committed 240-page corpus predates it. Regeneration also changes downstream labels, so it should not be bundled into an ordinary docs or ranking change. The historical cold Opus estimate was about $40 and needs `ANTHROPIC_API_KEY`.
 
-- [ ] **Guard a possible nDCG overflow** (issue #24 finding 8c; `cats26-29-04` was refuted for the tested corpus). If future inputs exceed the 300-word chunk threshold, repeated chunk slugs may allow a document-ranking score above 1.0. Add a meaningful check before expanding that corpus; do not describe the suspected case as an already demonstrated bug.
+- [x] **Guard a possible nDCG overflow** (issue #24 finding 8c, September 28 audit C-16). Done in 0.10.1 (`7f3f276`): `dcgAtK` credits each id once, so nDCG cannot exceed 1, and `test/eval/metrics.test.ts` holds it with a duplicate-id case.
 
 ## Integration maintenance
 
@@ -60,7 +64,7 @@ The [August 31 audit](docs/audit/2026-08-31-eval-audit.md) explains the finding 
 
 - [x] **Export a public SkillOpt import path** (`skillopt-cats-11`). Completed upstream: gbrain exports `./core/skillopt` (`runSkillOpt`, `scoreSkillOnTasks`, `loadHeldOut`) at the current pin and on master. Cat30–33 switched from deep source imports to that export on 2026-09-28.
 
-- [ ] **Extend the independent evaluator** (plan amendment 6, v0.10.4 follow-up). The input allowlist and gold store cover the LongMemEval retrieval and answer runners and Cat13. The reading-notes, Cat29 and Cat35 runners still build reader and judge inputs without it, and the separation is in-process: a product in the same process could open dataset files. Move the gold store out of the product's process before calling any holdout sealed.
+- [ ] **Move the gold store out of the product's process** (plan amendment 6). Since 0.10.7 the input allowlist covers LongMemEval retrieval and answers, Cat13, the reading-notes reader, Cat29's question and pairwise judge, and Cat35's system-under-test sources and coverage, leak and usability judges. The separation is still in-process: a product in the same process could open dataset files. Move the gold store out of process before calling any holdout sealed.
 
 - [ ] **Preregister comparison families before the next paired runs** (plan amendment 4). `eval/runner/compare.ts --family` gates only when the family file predates the runs; commit each family with its run plan, including tolerances and cluster ids.
 

@@ -7,7 +7,9 @@
  *                  exists only on the gbrain branch capy/situation-aware-recall,
  *                  so it is installed under its own alias instead of holding
  *                  the product pin back.
- *   gbrain-reader  the reading-notes reader A/B.
+ *   gbrain-reader  the reading-notes reader A/B, pinned to gbrain master
+ *                  e78f1c3 (v0.59.0.0), whose src/ tree is byte-identical to
+ *                  the orphaned a9de062 the study first installed.
  *
  * Code that needs a pin reads it from package.json through declaredPin, so a
  * re-pin is a package.json edit, not a hunt for copies of the SHA.

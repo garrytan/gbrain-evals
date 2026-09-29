@@ -65,7 +65,7 @@ import { rankOfFirstHit } from './metrics.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import {
   writeReceipt, receiptPath, RECEIPT_SCHEMA_VERSION, BENCHMARK_VERSION,
-  type Receipt, type ReceiptVerdict,
+  type Receipt, type ReceiptVerdict, latencySummary, noModelSpend,
 } from './receipt.ts';
 import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
 import { RipgrepBm25Adapter } from './adapters/grep-only.ts';
@@ -296,10 +296,13 @@ async function hashEmbedTransport(
   };
 }
 
-let gatewayMode: 'stub' | 'live' | null = null;
+/**
+ * Configure the gateway for this run. No memo (audit A-17): another runner in
+ * the same process can reset the embed transport, and a remembered "stub"
+ * would then embed against the live provider. Cat13 dropped its memo for the
+ * same reason.
+ */
 export function ensureGateway(stubEmbed: boolean): void {
-  const want = stubEmbed ? 'stub' : 'live';
-  if (gatewayMode === want) return;
   if (stubEmbed && !process.env.OPENAI_API_KEY) {
     // ai-sdk model construction needs a non-empty key even when the transport
     // is stubbed; the dummy never reaches the network.
@@ -315,7 +318,6 @@ export function ensureGateway(stubEmbed: boolean): void {
       ? (hashEmbedTransport as unknown as Parameters<typeof __setEmbedTransportForTests>[0])
       : null,
   );
-  gatewayMode = want;
 }
 
 // ─── Adapters ─────────────────────────────────────────────────────
@@ -392,6 +394,8 @@ export interface SwampPerQuery {
   targetRank: number;
   chatBeforeTarget: number;
   top_slugs: string[];
+  /** Wall time of the adapter's query call. */
+  latency_ms?: number;
   error?: string;
   search_observation?: SearchObservation;
 }
@@ -430,6 +434,7 @@ export async function scoreAdapter(
       tags: ['cat-13b', 'source-swamp'],
     };
     let results: RankedDoc[];
+    const queryStarted = performance.now();
     try {
       results = await adapter.query(sanitizeQuery(q), state);
     } catch (err) {
@@ -454,7 +459,7 @@ export async function scoreAdapter(
     if (targetRank > 0 && targetRank <= 3) top3++;
     if (chatBefore > 0) swamp++;
     acc.score(probeId, hitTop1 ? 1 : 0);
-    perQuery.push({ id: sq.id, topSlug, targetRank, chatBeforeTarget: chatBefore, top_slugs: topIds });
+    perQuery.push({ id: sq.id, topSlug, targetRank, chatBeforeTarget: chatBefore, top_slugs: topIds, latency_ms: performance.now() - queryStarted });
   }
 
   const hooks = adapter as Adapter & { resolvedConfig?: (state: unknown) => unknown; observedStats?: (state: unknown) => unknown };
@@ -532,6 +537,18 @@ export interface Cat13bRunResult {
 }
 
 export async function runCat13b(opts: Cat13bOptions = {}): Promise<Cat13bRunResult> {
+  // An ambient GBRAIN_SOURCE_BOOST is cleared for the run and restored after
+  // it, including when the run throws (audit A-17).
+  const ambientBoost = process.env.GBRAIN_SOURCE_BOOST;
+  try {
+    return await runCat13bWithClearedBoost(opts, ambientBoost);
+  } finally {
+    if (ambientBoost === undefined) delete process.env.GBRAIN_SOURCE_BOOST;
+    else process.env.GBRAIN_SOURCE_BOOST = ambientBoost;
+  }
+}
+
+async function runCat13bWithClearedBoost(opts: Cat13bOptions, ambientBoost: string | undefined): Promise<Cat13bRunResult> {
   const startedAt = new Date().toISOString();
   const stubEmbed = opts.stubEmbed ?? false;
   const reportsDir = opts.reportsDir ?? join(process.cwd(), 'eval/reports');
@@ -567,7 +584,6 @@ export async function runCat13b(opts: Cat13bOptions = {}): Promise<Cat13bRunResu
 
   // Determinism: an ambient GBRAIN_SOURCE_BOOST would skew the boost-ON arm
   // and double-neutralize the ablation arm. Clear it for the run.
-  const ambientBoost = process.env.GBRAIN_SOURCE_BOOST;
   if (ambientBoost !== undefined) delete process.env.GBRAIN_SOURCE_BOOST;
 
   // Premises fail LOUDLY (audit retrieval-cats-07): a boost-map rename or a
@@ -740,6 +756,8 @@ export async function runCat13b(opts: Cat13bOptions = {}): Promise<Cat13bRunResu
 
   const receipt: Receipt = {
     ...baseReceipt(),
+    ...(stubEmbed ? noModelSpend('stub embedding transport: no model and no paid request') : {}),
+    latency_ms: latencySummary(results.flatMap(r => r.per_query.flatMap(q => q.latency_ms === undefined ? [] : [q.latency_ms])), 'wall time of each successful query call, every adapter (query embedding included, index build excluded)'),
     run_status: 'completed',
     verdict,
     n_total: summary.n_total,

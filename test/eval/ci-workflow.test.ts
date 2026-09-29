@@ -34,7 +34,7 @@ describe('CI workflow gates (audit C5 to C8)', () => {
     for (const line of runLines()) expect(line).not.toContain('--parallel');
     expect(workflow).toContain('python3 test/retrieval_refresh_orchestrator_test.py');
     expect(runLines()).toContain('bun run validate');
-    for (const check of ['verify-published-longmemeval.py', 'verify-documentation-refresh.py', 'eval:query:validate', 'validate-data.ts']) {
+    for (const check of ['verify-published-longmemeval.py', 'verify-documentation-refresh.py', 'check-links.py', 'eval:query:validate', 'validate-data.ts']) {
       expect(pkg.scripts.validate).toContain(check);
     }
     expect(pkg.scripts['test:unit']).toBe('bun scripts/test-shards.ts');
@@ -53,6 +53,15 @@ describe('CI workflow gates (audit C5 to C8)', () => {
   test('the Bun version CI installs supports --shard', () => {
     const version = /bun-version: (\d+)\.(\d+)\.(\d+)/.exec(workflow)!.slice(1).map(Number);
     expect(version[0] * 1e6 + version[1] * 1e3 + version[2]).toBeGreaterThanOrEqual(1_003_014);
+  });
+});
+
+describe('link check (docs audit B12)', () => {
+  test('a weekly job fetches external links as well as local ones', () => {
+    const links = readFileSync(new URL('../../.github/workflows/links.yml', import.meta.url), 'utf8');
+    expect(links).toMatch(/schedule:/);
+    expect(links).toContain('run: python3 scripts/check-links.py --external');
+    expect(links).toMatch(/timeout-minutes: \d+/);
   });
 });
 

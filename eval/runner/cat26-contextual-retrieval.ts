@@ -679,7 +679,7 @@ async function main(): Promise<void> {
       process.stderr.write(`R@${K}=${(r.mean_recall_at_k * 100).toFixed(1)}% MRR=${r.mrr.toFixed(3)} (resolved cr=${r.config.contextual_retrieval}, effective inline=${r.config.mode_effective_inline})\n`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      const origin = e instanceof ConfigConformanceError || e instanceof CorpusPremiseError ? 'harness' : 'harness';
+      const origin = 'harness';
       console.error(`\n[cat26] CELL ABORT (${mode}): ${msg}`);
       for (const q of queries) acc.error(`${mode}:${q.id}`, origin, msg);
       const s = acc.summary();

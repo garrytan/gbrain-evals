@@ -21,8 +21,9 @@
  *   - sync
  *
  * Each scenario carries its own rubric (3-5 criteria, weights 1-2). The
- * rubric lives in `eval/data/gold/personalization-rubric.json` alongside
- * ground-truth slugs. The runner resolves slugs to full
+ * rubric travels in the caller's reviewed scenario catalog alongside
+ * ground-truth slugs (no catalog is committed; the one-probe
+ * `gold/personalization-rubric.json` template was removed in 0.10.7). The runner resolves slugs to full
  * GroundTruthPage[] before handing evidence to the judge.
  *
  * Gold-resolution policy (audit agentic-cats-09): a ground_truth_slug that

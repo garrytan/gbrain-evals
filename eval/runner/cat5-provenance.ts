@@ -48,10 +48,10 @@
  * Every run writes a receipt (eval/reports/cat5-provenance/receipt.json by
  * default).
  *
- * Gold input: `eval/data/gold/citations.json` with `{version, claims: [...]}`.
- * v1 ships with a template. Day 3b corpus generation + hand-authoring fills
- * in real claims sampled from the amara-life-v1 brain-export. Until then,
- * this runner is validated on synthetic test fixtures.
+ * Gold input: a reviewed `{version, claims: [...]}` catalog passed in by the
+ * caller. None exists: the one-claim `eval/data/gold/citations.json` template
+ * was removed in 0.10.7 because nothing could generate its labels. Until a
+ * reviewed catalog exists, this runner is validated on synthetic fixtures.
  */
 
 import Anthropic from '@anthropic-ai/sdk';
@@ -396,7 +396,7 @@ export function aggregate(
 // ─── Runner entry ─────────────────────────────────────────────────────
 
 export interface RunCat5Options extends Cat5Config {
-  /** Claims to evaluate. Typically loaded from eval/data/gold/citations.json. */
+  /** Claims to evaluate, from a reviewed catalog (none is committed). */
   claims: Claim[];
   /**
    * Source pages indexed by slug. The runner resolves each claim's

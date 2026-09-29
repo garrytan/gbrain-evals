@@ -20,7 +20,7 @@
 
 import { describe, test, expect, beforeAll, afterAll } from 'bun:test';
 import { spawnSync } from 'child_process';
-import { mkdtempSync, readFileSync, rmSync } from 'fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 
@@ -31,7 +31,7 @@ let sandbox: string;
 let root: string;
 
 interface Check { op: string; arg: string | number }
-interface TaskRow { task_id: string; task: string; judge: { kind: string; checks: Check[] } }
+interface TaskRow { task_id: string; task: string; judge: { kind: string; checks: Check[]; expected_slugs?: string[]; k?: number } }
 
 function readJsonl(path: string): TaskRow[] {
   return readFileSync(path, 'utf8').trim().split('\n').map((l) => JSON.parse(l));
@@ -93,11 +93,16 @@ describe('skillopt-v1-gen held-out differentiation (skillopt-cats-09)', () => {
       expect(bench.length).toBe(15);
       expect(held.length).toBe(6);
       const trainChecks = JSON.stringify(bench[0]!.judge.checks);
+      for (const row of bench) expect(JSON.stringify(row.judge.checks)).toBe(trainChecks);
+      if (seed === 'seed-no-brain-first') {
+        // Held-out is a per-topic retrieval judge, not a rule list (audit B-30-01).
+        for (const row of held) expect(row.judge.kind).toBe('qrels');
+        return;
+      }
       const heldChecks = JSON.stringify(held[0]!.judge.checks);
       // The core regression: the old generator wrote the same array to both.
       expect(heldChecks).not.toBe(trainChecks);
       // Every row within a file carries the same judge (split determinism).
-      for (const row of bench) expect(JSON.stringify(row.judge.checks)).toBe(trainChecks);
       for (const row of held) expect(JSON.stringify(row.judge.checks)).toBe(heldChecks);
     });
 
@@ -111,6 +116,7 @@ describe('skillopt-v1-gen held-out differentiation (skillopt-cats-09)', () => {
     test(`${seed}: every judge op is implemented by gbrain's rule judge`, () => {
       for (const file of ['benchmark.jsonl', 'held-out.jsonl']) {
         for (const row of readJsonl(join(root, seed, file))) {
+          if (row.judge.kind === 'qrels') continue;
           expect(row.judge.kind).toBe('rule');
           for (const c of row.judge.checks) expect(GBRAIN_RULE_OPS.has(c.op)).toBe(true);
         }
@@ -171,7 +177,20 @@ describe('skillopt-v1-gen held-out differentiation (skillopt-cats-09)', () => {
     });
   });
 
+  test('seed-no-brain-first: every held-out task expects one generated brain page that exists (audit B-30-01)', () => {
+    for (const row of readJsonl(join(root, 'seed-no-brain-first', 'held-out.jsonl'))) {
+      expect(row.judge.expected_slugs?.length).toBe(1);
+      expect(row.judge.k).toBe(5);
+      expect(existsSync(join(root, 'seed-no-brain-first', 'brain', `${row.judge.expected_slugs![0]}.md`))).toBe(true);
+    }
+  });
+
   test('committed fixtures match a fresh generator run (no drift)', () => {
+    const brain = (base: string) => {
+      const dir = join(base, 'seed-no-brain-first', 'brain', 'topics');
+      return readdirSync(dir).sort().map(f => [f, readFileSync(join(dir, f), 'utf8')]);
+    };
+    expect(brain(join(REPO, 'eval/data/skillopt-v1'))).toEqual(brain(root));
     for (const s of SEEDS) {
       for (const f of ['benchmark.jsonl', 'held-out.jsonl', 'SKILL.md']) {
         const generated = readFileSync(join(root, s, f), 'utf8');
@@ -180,4 +199,29 @@ describe('skillopt-v1-gen held-out differentiation (skillopt-cats-09)', () => {
       }
     }
   });
+});
+
+describe('seed-no-brain-first held-out cannot be satisfied by invented citations (audit B-30-01)', () => {
+  test('keyword search over the imported brain retrieves each expected page; a fabricated answer with no retrieval scores 0', async () => {
+    const { PGLiteEngine } = await import('gbrain/pglite-engine');
+    const { importSeedBrain } = await import('../../eval/runner/cat30-skillopt-improvement.ts');
+    const { scoreQrels } = await import('../../node_modules/gbrain/src/core/skillopt/score.ts');
+    const seedDir = join(REPO, 'eval/data/skillopt-v1/seed-no-brain-first');
+    const engine = new PGLiteEngine();
+    await engine.connect({});
+    await engine.initSchema();
+    try {
+      expect(await importSeedBrain(engine, seedDir)).toBeGreaterThan(0);
+      for (const row of readJsonl(join(seedDir, 'held-out.jsonl'))) {
+        const topic = row.task.replace(/^Answer: should we decide /, '').replace(/\.$/, '');
+        const results = await engine.searchKeyword(topic, { limit: 5 });
+        const trajectory = { final_text: 'See [1].', tool_calls: [{ name: 'search', input: { query: topic }, output: results, failed: false }] };
+        expect(scoreQrels(trajectory as never, row.judge.expected_slugs!, 5)).toBeGreaterThan(0);
+        const fabricated = { final_text: 'Per people/alice-example and [the memo](companies/acme-example) [1][2].', tool_calls: [] };
+        expect(scoreQrels(fabricated as never, row.judge.expected_slugs!, 5)).toBe(0);
+      }
+    } finally {
+      await engine.disconnect();
+    }
+  }, 120_000);
 });

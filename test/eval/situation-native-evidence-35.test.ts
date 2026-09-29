@@ -334,14 +334,16 @@ describe('Cat35 native receipt reconstruction', () => {
       if (!rows.some((d: any) => d.scan_status === 'scanned')) continue;
       const hits = rows.filter((d: any) => d.anchor_hit === true).length;
       const confirmed = rows.filter((d: any) => ['verbatim_hit', 'confirmed'].includes(d.confirmation)).length;
-      const denominator = rows.filter((d: any) => d.denominator_eligible).length;
-      leakage[lane] = { hits, confirmed, denominator, rate: denominator ? confirmed / denominator : 0 };
+      // A hit whose confirmation judge failed leaves the denominator (audit PC-04).
+      const judge_failed = rows.filter((d: any) => d.confirmation === 'judge_failed').length;
+      const denominator = rows.filter((d: any) => d.denominator_eligible).length - judge_failed;
+      leakage[lane] = { hits, confirmed, denominator, judge_failed, rate: denominator ? confirmed / denominator : 0 };
     }
     expect(leakage).toEqual(r.distractor_leakage);
     expect(r.distractor_leakage).toEqual({
-      verbatim: { hits: 12, confirmed: 12, denominator: 12, rate: 1 },
-      facts: { hits: 3, confirmed: 2, denominator: 12, rate: 2 / 12 },
-      dream: { hits: 3, confirmed: 1, denominator: 12, rate: 1 / 12 },
+      verbatim: { hits: 12, confirmed: 12, denominator: 12, judge_failed: 0, rate: 1 },
+      facts: { hits: 3, confirmed: 2, denominator: 12, judge_failed: 0, rate: 2 / 12 },
+      dream: { hits: 3, confirmed: 1, denominator: 11, judge_failed: 1, rate: 1 / 11 },
     });
     expect(e.distractors).toHaveLength(48);
     expect(new Set(e.distractors.map((d: any) => [d.transcript_id, d.lane, d.distractor_id].join(':'))).size).toBe(48);

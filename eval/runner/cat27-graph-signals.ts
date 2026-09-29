@@ -32,11 +32,19 @@
  * cats26-29-05).
  *
  * ── Verdict (real + failable) ────────────────────────────────────────
- * pass — every probe scored with zero sut errors AND the wave does not
+ * pass — every probe scored with zero sut errors, the wave does not
  *        regress the baseline on either aggregate (top-1 hit-rate delta >= 0
- *        AND mean nDCG@10 delta >= 0).
- * fail — any probe errored, nothing scored, or the signals regressed an
- *        aggregate. Exit code is non-zero unless verdict === 'pass'.
+ *        AND mean nDCG@10 delta >= 0), AND at least one probe improved
+ *        (nDCG@10 up or top-1 flipped to the gold page). Before 0.10.7 a
+ *        no-op signal stage passed (audit B-27-01).
+ * fail — any probe errored, nothing scored, the signals regressed an
+ *        aggregate, or nothing improved. Exit code is non-zero unless
+ *        verdict === 'pass'.
+ * Every run uses the hash embedding stub, so no receipt is publishable.
+ * Each probe also records `signals_changed_ranking`: whether the wave's
+ * ranked slugs or scores differ from the baseline's at all. gbrain does not
+ * pass its graph-signal counters (adjacency_fires and so on) out through
+ * hybridSearch, so this is the observable evidence that the stage acted.
  *
  * Per-probe flow:
  *   1. Seed a federated PGLite brain with the probe's pages distributed
@@ -64,7 +72,7 @@ import {
 } from 'gbrain/ai/gateway';
 import { uniqueInOrder, ndcgAtK } from './metrics.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
-import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt } from './receipt.ts';
+import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt, noModelSpend } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 
 export const CAT27_CATEGORY = 'cat27-graph-signals';
@@ -164,8 +172,12 @@ export interface Probe {
 //
 // Design discipline: the GOLD page must NOT contain the literal query
 // keywords. If it did, keyword + title matching alone would win and the
-// signal's contribution would be invisible. Every probe is designed so
-// the baseline picks the WRONG page, and the signal flips the ranking.
+// signal's contribution would be invisible. The probes were meant to make
+// the baseline pick the wrong page, but at gbrain master only some do: the
+// adjacency-close baseline already ranks the gold first, and on the
+// adjacency-hub probe the hub never enters the candidate pool, so there is
+// nothing for the boost to lift (audit B-27-01). Page titles are derived
+// from slugs, not from the `title` field below.
 export const PROBES: Probe[] = [
   // ── adjacency: hub page surfaces because peer pages linking to it dominate ─
   {
@@ -281,6 +293,8 @@ export interface ProbeResult {
   ndcg10_baseline: number;
   ndcg10_with_signals: number;
   ndcg_delta: number;
+  /** Wave ranking (slugs or scores) differs from the baseline's. */
+  signals_changed_ranking?: boolean;
 }
 
 async function ensureSource(engine: any, source_id: string): Promise<void> {
@@ -383,6 +397,7 @@ async function runProbe(probe: Probe, log: (s: string) => void): Promise<ProbeRe
       ndcg10_baseline: base.ndcg10,
       ndcg10_with_signals: withSignals.ndcg10,
       ndcg_delta: withSignals.ndcg10 - base.ndcg10,
+      signals_changed_ranking: JSON.stringify(baseline.map((r: any) => [r.slug, r.score])) !== JSON.stringify(wave.map((r: any) => [r.slug, r.score])),
     };
   } finally {
     console.log = origLog;
@@ -414,7 +429,14 @@ export interface Cat27Aggregate {
   probes_improved: number;
   probes_unchanged: number;
   probes_regressed: number;
+  /** Probes whose wave ranking or scores differ from the baseline's. */
+  probes_ranking_changed: number;
   by_family: FamilyBreakdown[];
+}
+
+/** A probe improved when nDCG@10 rose or top-1 flipped from a miss to the gold page. */
+function improved(p: ProbeResult): boolean {
+  return p.ndcg_delta > 0 || (!p.top1_correct_baseline && p.top1_correct_with_signals);
 }
 
 export function aggregate(probes: ProbeResult[]): Cat27Aggregate {
@@ -448,24 +470,26 @@ export function aggregate(probes: ProbeResult[]): Cat27Aggregate {
     mean_ndcg10_baseline: ndcgBase,
     mean_ndcg10_with_signals: ndcgWave,
     mean_ndcg10_delta: ndcgWave - ndcgBase,
-    probes_improved: probes.filter(p => p.ndcg_delta > 0).length,
+    probes_improved: probes.filter(improved).length,
     probes_unchanged: probes.filter(p => p.ndcg_delta === 0).length,
     probes_regressed: probes.filter(p => p.ndcg_delta < 0).length,
+    probes_ranking_changed: probes.filter(p => p.signals_changed_ranking === true).length,
     by_family: byFamily,
   };
 }
 
 /**
- * The gate. pass = every probe scored with no sut errors AND the wave does
- * not regress either aggregate. A run where graph signals HURT retrieval, or
- * where any probe crashed the engine, fails — this is a real, failable gate
- * (the pre-audit version always exited 0, even on an empty scorecard).
+ * The gate. pass = every probe scored with no sut errors, the wave does not
+ * regress either aggregate, and at least one probe improved. A run where
+ * graph signals HURT retrieval, did nothing at all (audit B-27-01), or where
+ * any probe crashed the engine, fails.
  */
 export function computeVerdict(agg: Cat27Aggregate, sutErrors: number, nExpected: number): 'pass' | 'fail' {
   if (agg.n_probes === 0 || agg.n_probes < nExpected) return 'fail';
   if (sutErrors > 0) return 'fail';
   if (agg.top1_hit_rate_delta < 0) return 'fail';
   if (agg.mean_ndcg10_delta < 0) return 'fail';
+  if (agg.probes_improved === 0) return 'fail';
   return 'pass';
 }
 
@@ -537,6 +561,7 @@ export async function runCat27(options: Cat27Options = {}): Promise<Cat27RunResu
   const verdict = computeVerdict(agg, sutErrors, subset.length);
 
   const receipt: Receipt = {
+    ...noModelSpend('hash embedding stub: no model and no paid request'),
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,
     category: CAT27_CATEGORY,
@@ -546,13 +571,15 @@ export async function runCat27(options: Cat27Options = {}): Promise<Cat27RunResu
     n_scored: summary.n_scored,
     completion_rate: summary.completion_rate,
     errors: summary.errors,
-    publishable: summary.publishable && !options.stubFailOn && subset.length === PROBES.length,
+    // Always a hash-embedding run: a regression gate, never a publishable result.
+    publishable: false,
     gbrain_version: gbrainVersionResolved(),
     gbrain_pin: gbrainPin(),
     resolved_config: {
       ...PINNED_CONFIG,
       embed_transport: 'stubbed-hash',
       ab_toggle: 'search.graph_signals + SearchOpts.graph_signals (false → true)',
+      gate: 'no aggregate regression and at least one improved probe',
     },
     started_at: startedAt,
     finished_at: new Date().toISOString(),
@@ -577,6 +604,7 @@ export async function runCat27(options: Cat27Options = {}): Promise<Cat27RunResu
     log(`[cat27]   ${f.family.padEnd(14)} top1 ${f.top1_hits_baseline}/${f.n_probes} → ${f.top1_hits_with_signals}/${f.n_probes}  nDCG ${(f.mean_ndcg10_baseline * 100).toFixed(1)}% → ${(f.mean_ndcg10_with_signals * 100).toFixed(1)}%\n`);
   }
   log(`[cat27]   probes ↑/·/↓:   ${agg.probes_improved}/${agg.probes_unchanged}/${agg.probes_regressed}\n`);
+  log(`[cat27]   ranking changed: ${agg.probes_ranking_changed}/${agg.n_probes}\n`);
   log(`[cat27]   verdict:        ${verdict} (run_invalid=${summary.run_invalid})\n`);
   log(`[cat27]   receipt:        ${receiptFile}\n`);
 

@@ -103,6 +103,17 @@ describe('computeVerdict', () => {
   test('FAILS when fewer probes scored than planned', () => {
     expect(computeVerdict(aggregate([probeResult()]), 0, 4)).toBe('fail');
   });
+
+  test('FAILS when the signal stage is a no-op: identical arms (audit B-27-01)', () => {
+    const rows = [probeResult(), probeResult({ probe_id: 'p2', top1_correct_baseline: false, top1_correct_with_signals: false, ndcg10_baseline: 0.3, ndcg10_with_signals: 0.3 })];
+    expect(aggregate(rows).probes_improved).toBe(0);
+    expect(computeVerdict(aggregate(rows), 0, 2)).toBe('fail');
+  });
+
+  test('a top-1 flip to the gold page counts as an improvement', () => {
+    const rows = [probeResult({ top1_correct_baseline: false, top1_correct_with_signals: true })];
+    expect(computeVerdict(aggregate(rows), 0, 1)).toBe('pass');
+  });
 });
 
 // ─── Per-family breakdown (cats26-29-17) ──────────────────────────────

@@ -70,7 +70,6 @@
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
-import { homedir } from 'os';
 import type { PGLiteEngine } from 'gbrain/pglite-engine';
 import { embed, embedQuery } from 'gbrain/embedding';
 import { MAX_SEARCH_LIMIT } from 'gbrain/engine';
@@ -122,7 +121,10 @@ export const HYBRID_LIMIT = TOP_K * 6;
 /** How many hybrid / vector pages a record keeps for the write-up. */
 export const RECORD_TOP_N = 10;
 /** Default E0-V1 receipt (the paired "before" numbers for the ladder). */
-export const DEFAULT_E0_RECEIPT = join(homedir(), 'gbrain-lme-receipts', 'cat13', 'E0-V1', 'receipt.json');
+/** The committed E0-V1 receipt (audit A-16: the default used to be a file under $HOME that most machines lack). */
+export const DEFAULT_E0_RECEIPT = join(import.meta.dir, '../../docs/benchmarks/2026-09-06-longmemeval-ranker-wave/cat13/E0-V1/receipt.json');
+/** Above this top-5 mismatch rate between the re-simulation and live hybrid, ablation attributions are not trusted and no proposal is emitted (audit A-16). */
+export const MAX_SIMULATION_MISMATCH_RATE = 0.05;
 
 // ─── Pure helpers ─────────────────────────────────────────────────
 
@@ -1313,7 +1315,7 @@ export function summarize(records: readonly ProbeGapRecord[], e0: LocalizeReport
     top_intruders: topIntruders(records, 10),
     mechanisms,
     policies,
-    proposal: top && top.fixed > 0
+    proposal: top && top.fixed > 0 && mismatched.length <= MAX_SIMULATION_MISMATCH_RATE * n
       ? {
         ablation: top.ablation, stage: top.stage, proposal: top.proposal, fixed: top.fixed, collateral: top.collateral, tuning_ndcg5: top.tuning_ndcg5,
         block: block ? { fixed: block.fixed, collateral: block.collateral, tuning_ndcg5: block.tuning_ndcg5 } : null,
@@ -1418,6 +1420,8 @@ export function renderMarkdown(report: LocalizeReport): string {
       L.push('');
       L.push(`Best implementable gate by net fixes: **${bp.policy}** — ${bp.description}; applies to ${bp.applies_to_probes} probes, fixes ${bp.fixed}, collateral ${bp.collateral}, tuning nDCG@5 ${pct(bp.tuning_ndcg5)} (${bp.ndcg5_delta_vs_live_hybrid >= 0 ? '+' : ''}${pct(bp.ndcg5_delta_vs_live_hybrid)}).`);
     }
+  } else if (s.simulation.top5_mismatches > MAX_SIMULATION_MISMATCH_RATE * s.simulation.probes) {
+    L.push(`_No proposal: the re-simulation disagreed with live hybrid at top-5 on ${s.simulation.top5_mismatches} / ${s.simulation.probes} probes, above the ${MAX_SIMULATION_MISMATCH_RATE * 100}% limit, so ablation attributions are not trusted._`);
   } else {
     L.push(`_No single-stage neutralization fixes any gap probe; see the classes table (vector_arm_mismatch / unexplained) and the ladder — the gap is not in fusion._`);
   }
@@ -1450,7 +1454,10 @@ export interface LocalizeRunResult {
 
 function readE0Receipt(path: string | undefined): LocalizeReport['e0_receipt'] {
   const p = path ?? DEFAULT_E0_RECEIPT;
-  if (!existsSync(p)) return null;
+  if (!existsSync(p)) {
+    process.stderr.write(`[cat13-gap-localize] WARNING: E0 receipt not found at ${p}; the report omits the E0 ladder rows\n`);
+    return null;
+  }
   try {
     const j = JSON.parse(readFileSync(p, 'utf8')) as { data?: { scorecard?: Array<{ name: string; tuning?: { ndcg5: number; p1_strict: number } }> } };
     const sc = j.data?.scorecard ?? [];

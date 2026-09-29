@@ -226,9 +226,10 @@ export async function runSituationRecallCat13b(options: Cat13bPilotOptions, depe
   const complete = Boolean(build && result && summary.n_total === summary.n_scored && !summary.errors.length);
   const receipt: Receipt = {
     schema_version: 1, benchmark_version: BENCHMARK_VERSION, category: CAT13B_PILOT_CATEGORY,
-    run_status: blocked ? 'error' : !options.execute ? 'skipped' : 'completed',
-    ...(!options.execute && !blocked ? { skip_reason: 'validation only; --execute is required' } : {}),
-    ...(!blocked && options.execute ? { verdict: !complete && nativeVerdict.verdict === 'pass' ? 'partial' as const : nativeVerdict.verdict } : {}),
+    // An exceeded infra error cap (for example an unexercised cue arm) is a run error, not a product result (audit A-25).
+    run_status: blocked || summary.run_invalid ? 'error' : !options.execute ? 'skipped' : 'completed',
+    ...(!options.execute && !blocked && !summary.run_invalid ? { skip_reason: 'validation only; --execute is required' } : {}),
+    ...(!blocked && !summary.run_invalid && options.execute ? { verdict: !complete && nativeVerdict.verdict === 'pass' ? 'partial' as const : nativeVerdict.verdict } : {}),
     n_total: summary.n_total, n_scored: summary.n_scored, completion_rate: summary.completion_rate, errors: summary.errors,
     publishable: !offline && profile.provider_budget?.kind === 'isolated-provider-cap' && complete && !blocked, gbrain_pin: gbrainPin(), gbrain_version: gbrainVersion(), started_at: started, finished_at: new Date().toISOString(), hashes,
     resolved_config: { profile, cohort: 'native gbrain only; 20 pages / 30 queries', native_top_k_pages: TOP_K, native_requested_chunks: TOP_K * 6,

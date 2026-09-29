@@ -99,6 +99,11 @@ concentrated: investor questions rose from 9/39 to 21/39 first-place hits,
 while attendance questions stayed at 0/50 because the fixture's link direction
 did not match the parser's expectation. The calls shared their index and query
 vectors. [Read the controlled comparison](docs/benchmarks/2026-09-09-retrieval-refresh.md#production-relationship-retrieval-one-switch).
+Those questions use the exact verbs gbrain's relationship parser recognizes. On
+September 29 (gbrain `b80cad6`) the same 145 questions, reworded by a fixed
+paraphrase grammar, never triggered relationship retrieval, and recall at five
+stayed at 0.411 in both arms, so the gain depends on that wording.
+[Read the paraphrase check](docs/benchmarks/2026-09-29-relational-paraphrase.md).
 
 **You can see what each setting buys you.** Returning fewer results saves reading,
 but a question about two events may need two old conversations. On LongMemEval,
