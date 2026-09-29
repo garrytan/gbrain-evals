@@ -42,17 +42,23 @@ import { randomUUID } from 'node:crypto';
 import { writeFileSync, mkdirSync, existsSync, statSync } from 'fs';
 import { basename, join } from 'path';
 import { loadReceipt, receiptPath, type Receipt } from './receipt.ts';
+import { REGISTRY, tiersFor, type CategoryEntry, type RegistryTier, type TierSelection } from '../registry.ts';
 
 // ─── Category registry ───────────────────────────────────────────────
+// The rows live in eval/registry.ts. all.ts keeps each row's legacy alias
+// as its display id ("Cat 13b") and maps registry tiers onto the older
+// offline/paid names: H is offline, K and P are paid.
 
 export type Tier = 'offline' | 'paid';
-export type TierSelection = Tier | 'all';
+export type { TierSelection };
 
 interface DispatchedCategory {
   kind: 'dispatched';
   id: string;
+  registryId: string;
   name: string;
   tier: Tier;
+  registryTier: RegistryTier;
   script: string;
   args?: string[];
   env?: Record<string, string>;
@@ -67,129 +73,29 @@ interface DispatchedCategory {
 interface ListedCategory {
   kind: 'listed';
   id: string;
+  registryId: string;
   name: string;
   /** What running it would need; 'none' when it cannot run at all today. */
   tier: Tier | 'none';
+  registryTier: RegistryTier | 'none';
   reason: string;
   command?: string;
 }
 
 type Category = DispatchedCategory | ListedCategory;
 
-const HOUR = 3_600_000;
+function toCategory(entry: CategoryEntry): Category {
+  const base = { id: entry.legacy_alias, registryId: entry.id, name: entry.name };
+  if (entry.run.kind === 'listed') {
+    return { ...base, kind: 'listed', tier: entry.tier === 'none' ? 'none' : entry.tier === 'H' ? 'offline' : 'paid',
+      registryTier: entry.tier, reason: entry.run.reason, command: entry.run.command };
+  }
+  if (entry.tier === 'none') throw new Error(`registry entry ${entry.id} is dispatched but has no tier`);
+  const { kind: _kind, ...run } = entry.run;
+  return { ...base, ...run, kind: 'dispatched', tier: entry.tier === 'H' ? 'offline' : 'paid', registryTier: entry.tier, script: entry.script };
+}
 
-const CATEGORIES: readonly Category[] = [
-  { kind: 'dispatched', id: '1', tier: 'offline', name: 'Relational retrieval before/after graph traversal (world-v1)', script: 'eval/runner/before-after.ts' },
-  { kind: 'dispatched', id: '2', tier: 'offline', name: 'Link type accuracy (world-v1)', script: 'eval/runner/type-accuracy.ts' },
-  { kind: 'dispatched', id: '3', tier: 'offline', name: 'Identity resolution through keyword search', script: 'eval/runner/identity.ts' },
-  { kind: 'dispatched', id: '4', tier: 'offline', name: 'Timeline storage round-trip', script: 'eval/runner/temporal.ts' },
-  {
-    kind: 'listed', id: '5', tier: 'none', name: 'Source attribution / provenance',
-    reason: 'not implemented: no reviewed claim catalog exists (gold/citations.json is a one-claim template), and the runner has no gbrain in the loop',
-  },
-  { kind: 'dispatched', id: '6', tier: 'offline', name: 'Auto-link precision under prose', script: 'eval/runner/cat6-prose-scale.ts' },
-  { kind: 'dispatched', id: '7', tier: 'offline', name: 'Performance / latency', script: 'eval/runner/perf.ts', exclusive: true },
-  {
-    kind: 'listed', id: '8', tier: 'none', name: 'Skill behavior compliance',
-    reason: 'not implemented: no reviewed probe catalog in the repository',
-  },
-  {
-    kind: 'listed', id: '9', tier: 'none', name: 'End-to-end workflows',
-    reason: 'not implemented: no reviewed scenario catalog in the repository',
-  },
-  { kind: 'dispatched', id: '10', tier: 'offline', name: 'Robustness / adversarial input', script: 'eval/runner/adversarial.ts' },
-  { kind: 'dispatched', id: '11', tier: 'offline', name: 'Text ingestion fidelity (md/html; audio needs a key)', script: 'eval/runner/cat11-multimodal.ts' },
-  { kind: 'dispatched', id: '12', tier: 'offline', name: 'MCP operation contract', script: 'eval/runner/mcp-contract.ts' },
-  { kind: 'dispatched', id: '13', tier: 'paid', name: 'Conceptual search (live embeddings)', script: 'eval/runner/cat13-conceptual.ts', timeoutMs: 2 * HOUR },
-  { kind: 'dispatched', id: '13b', tier: 'paid', name: 'Source swamp: curated notes vs bulk chat (live embeddings)', script: 'eval/runner/cat13b-source-swamp.ts', timeoutMs: HOUR },
-  {
-    kind: 'listed', id: '13b-sit', tier: 'paid', name: 'Situation recall on Cat 13b (memory-cue arms)',
-    reason: 'release protocol run, not a sweep category; needs the memory-cue build and an explicit protocol',
-    command: 'bun eval/runner/situation-recall-cat13b.ts',
-  },
-  { kind: 'dispatched', id: '14', tier: 'paid', name: 'Calibration A/B of think (live model and judge)', script: 'eval/runner/cat14-calibration.ts', timeoutMs: HOUR },
-  { kind: 'dispatched', id: '15', tier: 'paid', name: 'propose_takes extraction (live model)', script: 'eval/runner/cat15-propose-takes.ts', timeoutMs: HOUR },
-  {
-    kind: 'listed', id: '18', tier: 'none', name: 'Embedding providers',
-    reason: 'dead: the default provider set includes ZeroEntropy, which was shut down on 2026-09-04',
-    command: 'bun eval/runner/cat18-embedding-providers.ts',
-  },
-  {
-    kind: 'listed', id: '18b', tier: 'none', name: 'Embedder x reranker matrix',
-    reason: 'dead: four of six cells use ZeroEntropy, which was shut down on 2026-09-04',
-    command: 'bun eval/runner/cat18b-embedding-rerank-matrix.ts',
-  },
-  { kind: 'dispatched', id: '19', tier: 'offline', name: 'Sick-brain remediation loop (hash embeddings)', script: 'eval/runner/cat19-doctor-remediate.ts' },
-  { kind: 'dispatched', id: '20', tier: 'paid', name: 'Brainstorm grounding (live model and judge)', script: 'eval/runner/cat20-brainstorm.ts', timeoutMs: HOUR },
-  { kind: 'dispatched', id: '21', tier: 'paid', name: 'Code retrieval (live embeddings)', script: 'eval/runner/cat21-code-retrieval.ts', timeoutMs: HOUR },
-  { kind: 'dispatched', id: '22', tier: 'offline', name: 'Source isolation', script: 'eval/runner/cat22-source-isolation.ts' },
-  { kind: 'dispatched', id: '23', tier: 'offline', name: 'Phantom to canonical redirect', script: 'eval/runner/cat23-phantom-redirect.ts' },
-  { kind: 'dispatched', id: '24', tier: 'offline', name: 'Capture provenance', script: 'eval/runner/cat24-capture-provenance.ts' },
-  { kind: 'dispatched', id: '25', tier: 'paid', name: 'Trajectory routing in think (live model)', script: 'eval/runner/cat25-trajectory-routing.ts', timeoutMs: HOUR },
-  { kind: 'dispatched', id: '26', tier: 'paid', name: 'Contextual retrieval modes (live embeddings)', script: 'eval/runner/cat26-contextual-retrieval.ts', timeoutMs: HOUR },
-  { kind: 'dispatched', id: '27', tier: 'offline', name: 'Graph signals on/off', script: 'eval/runner/cat27-graph-signals.ts' },
-  { kind: 'dispatched', id: '28', tier: 'offline', name: 'Federated sync latency', script: 'eval/runner/cat28-federated-sync-latency.ts', exclusive: true },
-  { kind: 'dispatched', id: '29', tier: 'paid', name: 'think vs raw search payload (live model and judge)', script: 'eval/runner/cat29-think-vs-search.ts', timeoutMs: HOUR },
-  {
-    kind: 'listed', id: '30-33', tier: 'paid', name: 'SkillOpt improvement, ablation, reward hacking, transfer',
-    reason: 'multi-hour paid optimizer runs; dispatched by their own script',
-    command: 'bash eval/runner/run-skillopt-cats.sh',
-  },
-  { kind: 'dispatched', id: '34', tier: 'offline', name: 'BrainBench memory conformance (external gbrain checkout)', script: 'eval/runner/cat34-brainbench-memory.ts' },
-  {
-    kind: 'dispatched', id: '35', tier: 'paid', name: 'Transcript to brain-page distillation fidelity (full mode)',
-    script: 'eval/runner/cat35-transcript-distill.ts', env: { CAT35_FULL: '1' },
-    // Worst-case dream lane alone is 24 x 600s subagent cap / 2 concurrency.
-    timeoutMs: 3 * HOUR,
-  },
-  {
-    kind: 'dispatched', id: '36', tier: 'offline', name: 'Associative retrieval (offline keyword plumbing only; not capability evidence)',
-    script: 'eval/runner/cat36-associative-retrieval.ts', args: ['--offline', '--smoke'], outputFlag: '--output', timeoutMs: 180_000,
-  },
-  {
-    kind: 'listed', id: '36-live', tier: 'paid', name: 'Associative retrieval (live cue arms)',
-    reason: 'needs an approved provider budget profile and the memory-cue build',
-    command: 'bun eval/runner/cat36-associative-retrieval.ts --profile <approved-profile.json>',
-  },
-  { kind: 'dispatched', id: 'multi-adapter', tier: 'paid', name: 'Multi-adapter relational, fuzzy and external query families', script: 'eval/runner/multi-adapter.ts', timeoutMs: 2 * HOUR },
-  { kind: 'dispatched', id: 'relational-ab', tier: 'paid', name: 'Relational retrieval off vs on', script: 'eval/runner/relational-ab.ts', outputFlag: '--output-dir', timeoutMs: 2 * HOUR },
-  { kind: 'dispatched', id: 'precisionmembench', tier: 'paid', name: 'PrecisionMemBench', script: 'eval/runner/precisionmembench.ts', timeoutMs: 2 * HOUR },
-  {
-    kind: 'listed', id: 'longmemeval', tier: 'paid', name: 'LongMemEval retrieval',
-    reason: 'needs the downloaded LongMemEval dataset path and a multi-hour batch',
-    command: 'bash eval/runner/longmemeval-batch.sh --dataset <longmemeval_s_cleaned.json>',
-  },
-  {
-    kind: 'listed', id: 'longmemeval-answers', tier: 'paid', name: 'LongMemEval answer grounding check',
-    reason: 'needs a retained LongMemEval evidence stream from a retrieval run',
-    command: 'bun eval/runner/longmemeval-answers.ts',
-  },
-  {
-    kind: 'listed', id: 'longmemeval-m-pilot', tier: 'paid', name: 'LongMemEval-M paired pilot',
-    reason: 'preregistered paid protocol with frozen package identities; run by its own scripts',
-    command: 'bun eval/runner/longmemeval-m-pilot-live.ts',
-  },
-  {
-    kind: 'listed', id: 'reading-notes', tier: 'paid', name: 'Reading notes reader A/B',
-    reason: 'paid protocol with frozen request payloads; the offline recount runs in bun run test',
-    command: 'bun eval/runner/reading-notes-run.ts',
-  },
-  {
-    kind: 'listed', id: 'situation-recall', tier: 'paid', name: 'Situation-recall release comparator',
-    reason: 'release protocol, run against registered baselines rather than as a sweep category',
-    command: 'bun eval/runner/situation-recall-orchestration.ts',
-  },
-  {
-    kind: 'listed', id: 'shootout', tier: 'paid', name: 'Embedder x reranker shootout cell',
-    reason: 'single-cell driver parameterized per run',
-    command: 'bun eval/runner/shootout-driver.ts',
-  },
-  {
-    kind: 'listed', id: 'qrels', tier: 'offline', name: 'qrels / baseline regression fixture',
-    reason: 'checked in CI; the corpus is synthesized from the queries, so it is a regression smoke only',
-    command: 'bun scripts/generate-v0.41-launch.ts --check',
-  },
-];
+const CATEGORIES: readonly Category[] = REGISTRY.map(toCategory);
 
 interface CategoryRun {
   id: string;
@@ -216,21 +122,22 @@ export function parseTier(argv: string[]): TierSelection {
   const i = argv.indexOf('--tier');
   if (i < 0) return 'offline';
   const value = argv[i + 1];
-  if (value === 'offline' || value === 'paid' || value === 'all') return value;
-  throw new Error(`--tier must be offline, paid or all (got ${JSON.stringify(value)})`);
+  if (value === 'offline' || value === 'paid' || value === 'all' || value === 'H' || value === 'K' || value === 'P') return value;
+  throw new Error(`--tier must be H, K, P, offline (H), paid (K and P) or all (got ${JSON.stringify(value)})`);
 }
 
 /** Split the registry into what runs in this tier and what does not, with a reason for each omission. */
 export function selectCategories(tier: TierSelection): { dispatch: DispatchedCategory[]; notRun: NotRun[] } {
   const dispatch: DispatchedCategory[] = [];
   const notRun: NotRun[] = [];
+  const selected = tiersFor(tier);
   for (const c of CATEGORIES) {
     if (c.kind === 'listed') {
       notRun.push({ id: c.id, name: c.name, tier: c.tier, reason: c.reason, command: c.command });
-    } else if (tier === 'all' || c.tier === tier) {
+    } else if (selected.has(c.registryTier)) {
       dispatch.push(c);
     } else {
-      notRun.push({ id: c.id, name: c.name, tier: c.tier, reason: `tier ${c.tier} not selected`, command: `bun ${[c.script, ...(c.args ?? [])].join(' ')}` });
+      notRun.push({ id: c.id, name: c.name, tier: c.tier, reason: `tier ${c.registryTier} not selected`, command: `bun ${[c.script, ...(c.args ?? [])].join(' ')}` });
     }
   }
   return { dispatch, notRun };

@@ -1,63 +1,431 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://brainbench.dev/schemas/receipt.schema.json",
-  "title": "BrainBench category receipt (v0.5.0)",
+  "title": "BrainBench category receipt (schema v2; v1 still readable)",
   "description": "One receipt per category run. all.ts aggregates receipts, not exit codes. Mirrors eval/runner/receipt.ts validateReceipt(); keep in lockstep.",
   "type": "object",
   "required": [
-    "schema_version", "benchmark_version", "category", "run_status",
-    "n_total", "n_scored", "completion_rate", "errors", "publishable",
-    "gbrain_version", "gbrain_pin", "started_at", "finished_at"
+    "schema_version",
+    "benchmark_version",
+    "category",
+    "run_status",
+    "n_total",
+    "n_scored",
+    "completion_rate",
+    "errors",
+    "publishable",
+    "gbrain_version",
+    "gbrain_pin",
+    "started_at",
+    "finished_at"
   ],
   "properties": {
-    "schema_version": { "const": 1 },
-    "benchmark_version": { "type": "string" },
-    "category": { "type": "string", "minLength": 1 },
-    "run_status": { "enum": ["completed", "error", "skipped", "not_run"] },
-    "verdict": { "enum": ["pass", "partial", "fail"] },
-    "skip_reason": { "type": "string" },
-    "n_total": { "type": "number", "minimum": 0 },
-    "n_scored": { "type": "number", "minimum": 0 },
-    "completion_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+    "schema_version": {
+      "enum": [
+        1,
+        2
+      ]
+    },
+    "benchmark_version": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run_status": {
+      "enum": [
+        "completed",
+        "error",
+        "skipped",
+        "not_run"
+      ]
+    },
+    "verdict": {
+      "enum": [
+        "pass",
+        "partial",
+        "fail"
+      ]
+    },
+    "skip_reason": {
+      "type": "string"
+    },
+    "n_total": {
+      "type": "number",
+      "minimum": 0
+    },
+    "n_scored": {
+      "type": "number",
+      "minimum": 0
+    },
+    "completion_rate": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
     "errors": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["probe_id", "origin", "message"],
+        "required": [
+          "probe_id",
+          "origin",
+          "message"
+        ],
         "properties": {
-          "probe_id": { "type": "string" },
-          "origin": { "enum": ["sut", "harness", "dependency", "judge"] },
-          "message": { "type": "string" }
+          "probe_id": {
+            "type": "string"
+          },
+          "origin": {
+            "enum": [
+              "sut",
+              "harness",
+              "dependency",
+              "judge"
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
         }
       }
     },
-    "publishable": { "type": "boolean" },
-    "gbrain_version": { "type": "string" },
-    "gbrain_pin": { "type": "string" },
-    "resolved_config": { "type": "object" },
+    "publishable": {
+      "type": "boolean"
+    },
+    "gbrain_version": {
+      "type": "string"
+    },
+    "gbrain_pin": {
+      "type": "string"
+    },
+    "resolved_config": {
+      "type": "object"
+    },
     "judge": {
       "type": "object",
-      "required": ["model", "temperature"],
+      "required": [
+        "model",
+        "temperature"
+      ],
       "properties": {
-        "model": { "type": "string" },
-        "temperature": { "type": "number" },
-        "rubric_version": { "type": "string" },
-        "seed": { "type": "number" }
+        "model": {
+          "type": "string"
+        },
+        "temperature": {
+          "type": "number"
+        },
+        "rubric_version": {
+          "type": "string"
+        },
+        "seed": {
+          "type": "number"
+        }
       }
     },
-    "hashes": { "type": "object", "additionalProperties": { "type": "string" } },
-    "started_at": { "type": "string" },
-    "finished_at": { "type": "string" },
-    "data": { "type": "object" }
+    "hashes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "started_at": {
+      "type": "string"
+    },
+    "finished_at": {
+      "type": "string"
+    },
+    "data": {
+      "type": "object"
+    },
+    "product_package": {
+      "enum": [
+        "gbrain",
+        "gbrain-cues",
+        "gbrain-reader"
+      ]
+    },
+    "execution": {
+      "type": "object",
+      "required": [
+        "source_tree",
+        "product"
+      ],
+      "properties": {
+        "source_tree": {
+          "type": "object",
+          "required": [
+            "sha256",
+            "files",
+            "git_head",
+            "dirty"
+          ],
+          "properties": {
+            "sha256": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "files": {
+              "type": "number",
+              "minimum": 0
+            },
+            "git_head": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "dirty": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "error": {
+              "type": "string"
+            }
+          }
+        },
+        "product": {
+          "type": "object",
+          "required": [
+            "package",
+            "declared_pin",
+            "declared_sha",
+            "version",
+            "package_sha256",
+            "loaded_git_head"
+          ],
+          "properties": {
+            "package": {
+              "enum": [
+                "gbrain",
+                "gbrain-cues",
+                "gbrain-reader"
+              ]
+            },
+            "declared_pin": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "declared_sha": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "version": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "package_sha256": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "loaded_git_head": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "error": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "accounting": {
+      "type": "object",
+      "required": [
+        "planned",
+        "attempted",
+        "scored",
+        "errors",
+        "misses",
+        "source"
+      ],
+      "properties": {
+        "planned": {
+          "type": "number",
+          "minimum": 0
+        },
+        "attempted": {
+          "type": "number",
+          "minimum": 0
+        },
+        "scored": {
+          "type": "number",
+          "minimum": 0
+        },
+        "errors": {
+          "type": "number",
+          "minimum": 0
+        },
+        "misses": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "source": {
+          "enum": [
+            "runner",
+            "derived"
+          ]
+        }
+      }
+    },
+    "cost": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "usd",
+            "input_tokens",
+            "output_tokens",
+            "basis"
+          ],
+          "properties": {
+            "usd": {
+              "type": "number",
+              "minimum": 0
+            },
+            "input_tokens": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "output_tokens": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "basis": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "latency_ms": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "p50",
+            "p95",
+            "n",
+            "basis"
+          ],
+          "properties": {
+            "p50": {
+              "type": "number",
+              "minimum": 0
+            },
+            "p95": {
+              "type": "number",
+              "minimum": 0
+            },
+            "n": {
+              "type": "number",
+              "minimum": 0
+            },
+            "basis": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "delivered_tokens": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "tokens",
+            "basis"
+          ],
+          "properties": {
+            "tokens": {
+              "type": "number",
+              "minimum": 0
+            },
+            "basis": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    }
   },
   "allOf": [
     {
-      "if": { "properties": { "run_status": { "const": "completed" } } },
-      "then": { "required": ["verdict"] }
+      "if": {
+        "properties": {
+          "run_status": {
+            "const": "completed"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "verdict"
+        ]
+      }
     },
     {
-      "if": { "properties": { "run_status": { "const": "skipped" } } },
-      "then": { "required": ["skip_reason"] }
+      "if": {
+        "properties": {
+          "run_status": {
+            "const": "skipped"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "skip_reason"
+        ]
+      }
     }
-  ]
+  ],
+  "if": {
+    "properties": {
+      "schema_version": {
+        "const": 2
+      }
+    }
+  },
+  "then": {
+    "required": [
+      "execution",
+      "accounting",
+      "cost",
+      "latency_ms",
+      "delivered_tokens"
+    ]
+  }
 }

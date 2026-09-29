@@ -68,7 +68,7 @@ import { writeFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
-import { importFromContent } from 'gbrain/import-file';
+import { importFromContentEmbedded } from './import-embedded.ts';
 import { configureGateway, __setEmbedTransportForTests } from 'gbrain/ai/gateway';
 import { hybridSearch } from 'gbrain/search/hybrid';
 import { runThink, type ThinkLLMClient, type ThinkResponse } from 'gbrain/think';
@@ -106,7 +106,7 @@ export const THINK_TEMPERATURE = 0;
  * WS5 pin — applied via engine.setConfig BEFORE ingest and echoed into
  * resolved_config. Both systems (think's gather and the raw search arm)
  * retrieve under the identical pinned mode; the default 'balanced' bundle
- * would silently enable the zerank-2 reranker when ZEROENTROPY_API_KEY is
+ * would silently enable reranking when an ambient provider key is
  * set.
  */
 export const PINNED_CONFIG: Record<string, string> = {
@@ -720,7 +720,7 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
     for (const [key, value] of Object.entries(PINNED_CONFIG)) await engine.setConfig(key, value);
     await engine.setConfig('models.think', THINK_MODEL);
     for (const p of pages) {
-      await importFromContent(engine, p.slug, p.body, { noEmbed: false });
+      await importFromContentEmbedded(engine, p.slug, p.body, { noEmbed: false });
     }
     console.log = origLog;
     log(`[cat29] seeded ${pages.length} pages${stub ? ' [STUB — hash embeds, stub think, stub judge]' : ''}\n`);

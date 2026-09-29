@@ -60,6 +60,61 @@ plan. No benchmark was re-run and no published number changes.
   without computing a bootstrap (`src/commands/eval-compare.ts:243`); a separate
   gbrain change owns that fix.
 
+## [0.10.3] - 2026-09-29
+
+This release moves the suite onto gbrain master and adds the bookkeeping
+the 10x plan needs before any new quality claim: a category registry,
+receipts that record exactly what ran, and a spending ledger that every
+paid runner must reserve against.
+
+### Changed
+
+- **gbrain is pinned to master `b80cad6` (v0.59.13.0).** The memory-cue
+  experiments (situation recall, the LongMemEval-M pilot and Cat 36 cue
+  arms) need code that exists only on gbrain's `capy/situation-aware-recall`
+  branch, so they now load a separate package alias, `gbrain-cues`, pinned
+  to `939232f`, the previous pin. Cat 36 and situation-recall runtimes pick
+  the package from the arm: cue and summary arms use `gbrain-cues`, every
+  other arm measures the pinned product.
+- **ZeroEntropy cells are retired** (supersedes PR #35). Cat 18 compares
+  OpenAI and Voyage embedders; Cat 18b pairs each with `voyage:rerank-2.5`.
+  Both are dispatchable paid categories again.
+- gbrain v0.59.10.0 saves a page's text when embedding fails instead of
+  throwing. Runners that measure vector or hybrid search now treat such a
+  deferred embedding as an error, so a provider outage can no longer be
+  scored as keyword-only retrieval under an embedding label.
+
+### Corrected
+
+- **Cat 2 link type accuracy: 86.6% becomes 74.7% (109/146), strict F1
+  41.3% becomes 18.8%.** The answer key pointed attendance edges from the
+  meeting to the person; gbrain stores them the other way. The 86.6% counted
+  131 reversed edges as correct. The corrected scorer gives the same numbers
+  at `939232f` and `b80cad6`, and its regression floors moved to 70% / 15%.
+  Cats 1 and 6 are unchanged between the two commits.
+  [Report](docs/benchmarks/2026-09-29-repin-cats-1-2-6.md).
+
+### Added
+
+- `eval/registry.ts`: one row per category with its legacy alias, family,
+  tier (H hermetic, K keyed under $1, P paid), cost estimate and its basis,
+  receipt path, headline metric and denominator, gate status, evidence
+  maturity and a short statement of what it measures. `all.ts` reads it and
+  accepts `--tier H|K|P`. No category was renumbered.
+- **Receipt schema v2.** Every receipt now records the content hash of the
+  evals tree that ran (uncommitted edits included), the declared pin and
+  content hash of the gbrain package actually loaded, planned, attempted,
+  scored and errored probes with errors kept apart from misses, and cost,
+  p50/p95 latency and tokens delivered to models when a runner measures
+  them. v1 receipts remain readable.
+- **Budget ledger** (`eval/runner/budget-ledger.ts`). LongMemEval, Cat 13
+  and Cat 35 refuse to start without `--budget-usd`, print their estimate,
+  and reserve every provider request (retries and gbrain's internal calls
+  included) against the run budget and a $500 program cap before sending
+  it. Reservations reconcile to provider-reported usage. The ledger is a
+  gitignored JSON file (`.budget/ledger.json`). No paid run was made for
+  this release; the ledger is tested with mocked providers.
+
 ## [0.10.2] - 2026-09-28
 
 A September 28 audit found published numbers that were invalid or overstated.

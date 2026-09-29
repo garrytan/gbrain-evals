@@ -14,7 +14,7 @@
  *   - longmemeval-04: aggregate reads top_k/dataset from rows; mixed values
  *     or missing-without-CLI is an error, never a hardcoded 5/'s'.
  *   - longmemeval-05: cache key comes from the gateway's RESOLVED
- *     model/dims, whose configless fallback is zembed-1@1280 — not the old
+ *     model/dims, including asymmetric embedders — not the old
  *     hand-rolled 'text-embedding-3-large@1536'.
  *   - longmemeval-06: cache key includes the embedding input_type so
  *     query-side and document-side vectors never alias.
@@ -71,6 +71,7 @@ import { dedupeRows, inferRunParams, aggregateRows, findMixedRunConfigHashes } f
 import { assertChartable, chartTitle, headlineCard, nLabel } from '../../eval/runner/longmemeval-chart.ts';
 import { EmbeddingCache, makeCachingTransport, inputTypeFromParams } from '../../eval/runner/longmemeval-cache.ts';
 import { loadReceipt } from '../../eval/runner/receipt.ts';
+import { budgetOptionsFrom } from '../../eval/runner/budget-ledger.ts';
 
 const TMP = mkdtempSync(join(tmpdir(), 'lme-test-'));
 
@@ -432,8 +433,8 @@ describe('rerankPreflight', () => {
     expect(missing.envKey).toBe('VOYAGE_API_KEY');
     expect(missing.keyPresent).toBe(false);
     expect(rerankPreflight({ VOYAGE_API_KEY: 'pa-k' }).keyPresent).toBe(true);
-    // A ZeroEntropy key alone no longer satisfies the pinned model.
-    expect(rerankPreflight({ ZEROENTROPY_API_KEY: 'k' }).keyPresent).toBe(false);
+    // An unrelated provider key does not satisfy the pinned model.
+    expect(rerankPreflight({ OPENAI_API_KEY: 'k' }).keyPresent).toBe(false);
   });
 
   test('rerank contract violation is typed sut (scored 0, stays in denominator)', () => {
@@ -588,13 +589,12 @@ describe('embedding cache', () => {
 
   test('cache key derives from the gateway resolved model, not a local fallback', async () => {
     const { configureGateway, getEmbeddingModel, getEmbeddingDimensions } = await import('gbrain/ai/gateway');
-    // Configless machine: gbrain's OWN fallback applies. The old hand-rolled
-    // 'text-embedding-3-large'/1536 fallback (finding 05) diverged from it
-    // and mislabeled cached vectors.
-    configureGateway({ env: {} });
+    // The old hand-rolled 'text-embedding-3-large'/1536 fallback (finding 05)
+    // diverged from the gateway's resolved model and mislabeled cached vectors.
+    configureGateway({ embedding_model: 'voyage:voyage-4', embedding_dimensions: 1024, env: {} });
     expect(`${getEmbeddingModel()}@${getEmbeddingDimensions()}`).not.toBe('text-embedding-3-large@1536');
-    expect(getEmbeddingModel()).toBe('zeroentropyai:zembed-1');
-    expect(getEmbeddingDimensions()).toBe(1280);
+    expect(getEmbeddingModel()).toBe('voyage:voyage-4');
+    expect(getEmbeddingDimensions()).toBe(1024);
     // Explicit config resolves verbatim (what run() records in the receipt).
     configureGateway({ embedding_model: 'openai:text-embedding-3-large', embedding_dimensions: 1536, env: {} });
     expect(`${getEmbeddingModel()}@${getEmbeddingDimensions()}`).toBe('openai:text-embedding-3-large@1536');
@@ -758,6 +758,31 @@ function e2eOpts(dir: string, datasetPath: string, overrides: Partial<Opts> = {}
 }
 
 describe('end-to-end (keyword adapter, hermetic)', () => {
+  test('configless embedding runs resolve the supported default and fail closed without its key', async () => {
+    const { getEmbeddingModel, getEmbeddingDimensions } = await import('gbrain/ai/gateway');
+    const savedHome = process.env.GBRAIN_HOME;
+    const savedKey = process.env.VOYAGE_API_KEY;
+    process.env.GBRAIN_HOME = mkdtempSync(join(TMP, 'default-home-'));
+    delete process.env.VOYAGE_API_KEY;
+    try {
+      const dir = mkdtempSync(join(TMP, 'default-preflight-'));
+      const datasetPath = join(dir, 'dataset.json');
+      writeFileSync(datasetPath, JSON.stringify(makeDataset({ goldInHaystack: true })));
+      const result = await run(e2eOpts(dir, datasetPath, { adapters: ['hybrid'], keywordOnly: false }));
+      expect(result.receipt.run_status).toBe('skipped');
+      expect(result.receipt.skip_reason).toContain('VOYAGE_API_KEY');
+      expect(result.receipt.n_scored).toBe(0);
+      expect(result.exitCode).toBe(1);
+      expect(getEmbeddingModel()).toBe('voyage:voyage-4');
+      expect(getEmbeddingDimensions()).toBe(1024);
+    } finally {
+      if (savedHome === undefined) delete process.env.GBRAIN_HOME;
+      else process.env.GBRAIN_HOME = savedHome;
+      if (savedKey === undefined) delete process.env.VOYAGE_API_KEY;
+      else process.env.VOYAGE_API_KEY = savedKey;
+    }
+  });
+
   test('good corpus: recall_all counted right, _abs excluded, receipt pass', async () => {
     const dir = mkdtempSync(join(TMP, 'e2e-pass-'));
     const datasetPath = join(dir, 'dataset.json');
@@ -878,12 +903,10 @@ describe('end-to-end (keyword adapter, hermetic)', () => {
     // without any provider key or network call.
     const { __setEmbedTransportForTests, getEmbeddingDimensions } = await import('gbrain/ai/gateway');
     const hadOpenai = process.env.OPENAI_API_KEY;
-    const hadZe = process.env.ZEROENTROPY_API_KEY;
     const hadVoyage = process.env.VOYAGE_API_KEY;
     process.env.OPENAI_API_KEY = 'dummy-stub-key';
-    // A reranker key present (ZE historically, Voyage since gbrain 0.48.2.0)
+    // A reranker key present
     // must NOT re-enable the reranker — the pin turns it off.
-    process.env.ZEROENTROPY_API_KEY = 'dummy-ze-key';
     process.env.VOYAGE_API_KEY = 'dummy-voyage-key';
     const hashVec = (text: string, dim: number): number[] => {
       const v = new Array<number>(dim).fill(0);
@@ -932,8 +955,6 @@ describe('end-to-end (keyword adapter, hermetic)', () => {
       __setEmbedTransportForTests(null);
       if (hadOpenai === undefined) delete process.env.OPENAI_API_KEY;
       else process.env.OPENAI_API_KEY = hadOpenai;
-      if (hadZe === undefined) delete process.env.ZEROENTROPY_API_KEY;
-      else process.env.ZEROENTROPY_API_KEY = hadZe;
       if (hadVoyage === undefined) delete process.env.VOYAGE_API_KEY;
       else process.env.VOYAGE_API_KEY = hadVoyage;
     }
@@ -1053,4 +1074,69 @@ describe('end-to-end (keyword adapter, hermetic)', () => {
       else delete process.env.VOYAGE_API_KEY;
     }
   }, 60_000);
+});
+
+describe('paid-run budget ledger (plan item 11)', () => {
+  const vectorOpts = (dir: string, datasetPath: string, argv: string[]) => e2eOpts(dir, datasetPath, {
+    adapters: ['vector'], keywordOnly: false, minRecallAll: null,
+    embeddingModel: 'openai:text-embedding-3-large', embeddingDimensions: 1536, budget: budgetOptionsFrom(argv, {}),
+  });
+
+  test('a real provider path refuses to start without --budget-usd, before any request', async () => {
+    const dir = mkdtempSync(join(TMP, 'budget-refuse-'));
+    const datasetPath = join(dir, 'dataset.json');
+    writeFileSync(datasetPath, JSON.stringify(makeDataset({ goldInHaystack: true })));
+    const savedKey = process.env.OPENAI_API_KEY;
+    const savedFetch = globalThis.fetch;
+    let requests = 0;
+    process.env.OPENAI_API_KEY = 'dummy-never-sent';
+    globalThis.fetch = (async () => { requests++; throw new Error('network forbidden'); }) as unknown as typeof fetch;
+    try {
+      const result = await run(vectorOpts(dir, datasetPath, ['--budget-ledger', join(dir, 'ledger.json')]));
+      expect(result.receipt.run_status).toBe('skipped');
+      expect(result.receipt.skip_reason).toContain('--budget-usd');
+      expect(requests).toBe(0);
+      expect(existsSync(join(dir, 'ledger.json'))).toBe(false);
+    } finally {
+      globalThis.fetch = savedFetch;
+      if (savedKey === undefined) delete process.env.OPENAI_API_KEY; else process.env.OPENAI_API_KEY = savedKey;
+    }
+  }, 120_000);
+
+  test('every embedding request is reserved and reconciled, and the receipt carries cost and delivered tokens', async () => {
+    const dir = mkdtempSync(join(TMP, 'budget-mock-'));
+    const datasetPath = join(dir, 'dataset.json');
+    const ledger = join(dir, 'ledger.json');
+    writeFileSync(datasetPath, JSON.stringify(makeDataset({ goldInHaystack: true })));
+    const savedKey = process.env.OPENAI_API_KEY;
+    const savedFetch = globalThis.fetch;
+    let requests = 0;
+    process.env.OPENAI_API_KEY = 'dummy-mocked-provider';
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = input instanceof Request ? input.url : String(input);
+      if (!url.startsWith('https://api.openai.com/')) throw new Error(`unexpected request ${url}`);
+      requests++;
+      const body = JSON.parse(String(init?.body ?? await (input as Request).text()));
+      const inputs: string[] = Array.isArray(body.input) ? body.input : [body.input];
+      return Response.json({ object: 'list', model: body.model, usage: { prompt_tokens: 7 * inputs.length, total_tokens: 7 * inputs.length },
+        data: inputs.map((text, index) => ({ object: 'embedding', index, embedding: Array.from({ length: 1536 }, (_, i) => ((text.length + i) % 7) / 7) })) });
+    }) as unknown as typeof fetch;
+    try {
+      const result = await run(vectorOpts(dir, datasetPath, ['--budget-usd', '0.5', '--budget-ledger', ledger]));
+      expect([result.receipt.run_status, result.receipt.skip_reason]).toEqual(['completed', undefined]);
+      expect(requests).toBeGreaterThan(0);
+      const entries = JSON.parse(readFileSync(ledger, 'utf8')).entries as Array<{ status: string; actual_usd: number; input_tokens: number }>;
+      expect(entries).toHaveLength(requests);
+      expect(entries.every(e => e.status === 'reconciled')).toBe(true);
+      const written = loadReceipt(result.receiptFile);
+      const tokens = entries.reduce((sum, e) => sum + e.input_tokens, 0);
+      expect(written.cost).toMatchObject({ input_tokens: tokens, output_tokens: 0 });
+      expect(written.cost!.usd).toBeCloseTo(tokens * 0.13 / 1e6, 6);
+      expect(written.delivered_tokens!.tokens).toBe(tokens);
+      expect(written.latency_ms!.n).toBe(result.receipt.n_scored);
+    } finally {
+      globalThis.fetch = savedFetch;
+      if (savedKey === undefined) delete process.env.OPENAI_API_KEY; else process.env.OPENAI_API_KEY = savedKey;
+    }
+  }, 120_000);
 });

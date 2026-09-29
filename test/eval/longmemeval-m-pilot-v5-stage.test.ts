@@ -9,13 +9,13 @@ import { developmentChatOptions } from '../../eval/runner/situation-recall-devel
 import { regressionPackageHash } from '../../eval/runner/situation-recall-provenance.ts';
 
 const hash = (value: Buffer | string) => createHash('sha256').update(value).digest('hex');
-const productRoot = realpathSync(resolve(import.meta.dir, '../../node_modules/gbrain'));
+const productRoot = realpathSync(resolve(import.meta.dir, '../../node_modules/gbrain-cues'));
 const productSha = '939232f1746381b4e932d620d6c709e29198f14c';
 const packageSha = '74974a32d4bfa34f26ed7e15d5eb3c301cb9000d8e90a1667041cbbde8587aa0';
 const promptSha = '44506bb8d722adb75fd4a0b1ec3a3265d71bb77de7e9a2db07214caee97c94d0';
 
 test('current v5 consumer is the exact Git-installed 939 package, not the archive or old control', () => {
-  const declared = JSON.parse(readFileSync(resolve(import.meta.dir, '../../package.json'), 'utf8')).dependencies.gbrain;
+  const declared = JSON.parse(readFileSync(resolve(import.meta.dir, '../../package.json'), 'utf8')).dependencies['gbrain-cues'];
   expect(declared).toBe(`github:garrytan/gbrain#${productSha}`);
   expect(regressionPackageHash(productRoot)).toBe(packageSha);
   expect(() => assertMatchedProductDeclaration(declared, productSha)).not.toThrow();
@@ -114,7 +114,7 @@ test.each(['C0', 'C1'] as const)('current v5 %s public construction closes a sna
     }
     writeFileSync(construction.profilePath, originalProfile);
     if (arm === 'C0') {
-      const gateway = await import('gbrain/ai/gateway');
+      const gateway = await import('gbrain-cues/ai/gateway');
       gateway.__setEmbedTransportForTests((async ({ values }: { values: string[] }) => {
         staleEmbeddingCalls++;
         return { values, embeddings: values.map(() => {

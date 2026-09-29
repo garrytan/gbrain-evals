@@ -3,7 +3,7 @@ import { dirname, join, resolve } from 'node:path';
 import type { BrainEngine } from 'gbrain/engine';
 import type { OperationContext } from 'gbrain/operations';
 import type { HybridSearchMeta } from 'gbrain/types';
-import { Cat36Failure, validateCat36Profile, type Cat36Profile } from './cat36-associative-retrieval.ts';
+import { Cat36Failure, cat36ProductPackage, validateCat36Profile, type Cat36Profile } from './cat36-associative-retrieval.ts';
 import { cat36Hash, canonicalText, constructionSources, fixturePageId, loadCat36Corpus, type Cat36BuildSource, type Cat36Corpus } from './cat36-corpus.ts';
 import { assertCat36ProviderReadiness, buildProductionCueIndex, cat36RuntimeSourceId, requireCueSupport, validateCat36RerankerModel, type EnrichmentResult } from './cat36-production.ts';
 import { gbrainPin, gbrainVersion } from './gbrain-version.ts';
@@ -311,7 +311,8 @@ export async function createAssociativeProductionRuntime(root: string, testProvi
       env = { ...process.env };
       profile = structuredClone(settings);
       sources = structuredClone([...input]);
-      const provenance = testProviders ? { test_providers: true, verified_live_identity: false } : resolveRegressionProduct({ expectedProductSha: profile.sut.expected_product_sha, expectedPackageSha256: profile.sut.expected_package_sha256 });
+      const productPackage = cat36ProductPackage(profile.sut.arm);
+      const provenance = testProviders ? { test_providers: true, product_package: productPackage, verified_live_identity: false } : resolveRegressionProduct({ expectedProductSha: profile.sut.expected_product_sha, expectedPackageSha256: profile.sut.expected_package_sha256, packageName: productPackage });
       mkdirSync(root, { recursive: true });
       const home = join(resolve(root), 'home');
       const configPath = join(home, '.gbrain', 'config.json');
@@ -320,14 +321,16 @@ export async function createAssociativeProductionRuntime(root: string, testProvi
       const inherited = Object.fromEntries(['PATH', 'LANG', 'TZ', ...(testProviders ? [] : providerKeys)].filter(k => env![k] !== undefined).map(k => [k, env![k]! ]));
       for (const key of Object.keys(process.env)) delete process.env[key];
       Object.assign(process.env, inherited, { HOME: home, GBRAIN_HOME: home, XDG_CONFIG_HOME: join(home, '.config') });
-      const productConfig = await import('gbrain/config');
+      const productConfig = await (import(`${productPackage}/config`) as Promise<typeof import('gbrain/config')>);
       if (productConfig.configPath() !== configPath) throw new Cat36Failure('product resolved another file-plane configuration path');
       const fileConfig = { engine: 'pglite', embedding_model: profile.sut.embedding_model, embedding_dimensions: profile.sut.embedding_dimensions, chat_model: profile.sut.generation_model };
       writeFileSync(configPath, JSON.stringify(fileConfig), { flag: 'wx' });
       const loadedConfig = productConfig.loadConfig();
       if (!loadedConfig || loadedConfig.engine !== fileConfig.engine || loadedConfig.embedding_model !== fileConfig.embedding_model
         || loadedConfig.embedding_dimensions !== fileConfig.embedding_dimensions || (fileConfig.chat_model !== undefined && loadedConfig.chat_model !== fileConfig.chat_model)) throw new Cat36Failure('product file-plane model or dimensions differ from the declared profile');
-      const loaded = await Promise.all([import('gbrain/pglite-engine'), import('gbrain/ai/gateway'), import('gbrain/import-file'), import('gbrain/search/hybrid'), import('gbrain/operations')]);
+      const loaded = await Promise.all([import(`${productPackage}/pglite-engine`) as Promise<typeof import('gbrain/pglite-engine')>, import(`${productPackage}/ai/gateway`) as Promise<Gateway>,
+        import(`${productPackage}/import-file`) as Promise<typeof import('gbrain/import-file')>, import(`${productPackage}/search/hybrid`) as Promise<typeof import('gbrain/search/hybrid')>,
+        import(`${productPackage}/operations`) as Promise<typeof import('gbrain/operations')>]);
       const [{ PGLiteEngine }, gw, importer, search, ops] = loaded;
       gateway = gw; hybrid = search.hybridSearch; operations = ops.operationsByName;
       if (profile.sut.arm === 'C1') {
@@ -362,6 +365,7 @@ export async function createAssociativeProductionRuntime(root: string, testProvi
         const content = `---\ntype: note\ntitle: ${JSON.stringify(source.title)}\nvisibility: ${source.visibility === 'private' ? 'private' : 'world'}\n---\n\n${source.text}`;
         const result = await importer.importFromContent(engine, source.slug, content, { sourceId: id });
         if (result.status === 'error') throw new Cat36Failure('source import failed', 'sut');
+        if (result.embedding_deferred) throw new Cat36Failure('source embedding failed', 'dependency');
         const page = await engine.getPage(source.slug, { sourceId: id });
         if (!page || canonicalText(page.compiled_truth).trim() !== source.text.trim()) throw new Cat36Failure('canonical replay source changed during import');
         await engine.executeRaw('UPDATE pages SET created_at=$1,updated_at=$2 WHERE id=$3', [source.created_at, source.updated_at, page.id]);
@@ -400,7 +404,7 @@ export async function createAssociativeProductionRuntime(root: string, testProvi
         else if (mutation.kind === 'private') {
           const source = sources.find(s => fixturePageId(s) === fixturePageId(mutation.page));
           if (!source) throw new Cat36Failure('private mutation names an unknown fixture source');
-          const { importFromContent } = await import('gbrain/import-file');
+          const { importFromContent } = await (import(`${cat36ProductPackage(profile.sut.arm)}/import-file`) as Promise<typeof import('gbrain/import-file')>);
           const result = await importFromContent(engine, source.slug, `---\ntype: note\ntitle: ${JSON.stringify(source.title)}\nvisibility: private\n---\n\n${source.text}`, { sourceId: page.source_id });
           if (result.status === 'error') throw new Cat36Failure('private transition failed', 'sut');
         }
@@ -450,7 +454,7 @@ export async function createAssociativeProductionRuntime(root: string, testProvi
       let diagnostic: unknown = null;
       if (profile.sut.arm === 'C1') {
         const api = await requireCueSupport();
-        const { embedQuery } = await import('gbrain/embedding');
+        const { embedQuery } = await (import(`${cat36ProductPackage(profile.sut.arm)}/embedding`) as Promise<typeof import('gbrain/embedding')>);
         let embedding: Float32Array;
         try { embedding = await embedQuery(action.query!); }
         catch (error) { throw new Cat36Failure(`push diagnostic embedding failed: ${String(error)}`, 'dependency'); }

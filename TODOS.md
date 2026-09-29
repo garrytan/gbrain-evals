@@ -30,13 +30,17 @@ The [August 31 audit](docs/audit/2026-08-31-eval-audit.md) explains the finding 
 
 - [ ] **Add a vector-plus-reranker concept cell** (September 28 audit, B2). The README concept comparison is 102/181 for gbrain against 118/181 for vectors without reranking; gbrain with reranking scored 130/181, but vectors with the same reranker were never run.
 
-- [ ] **Fix the attendance link direction in the relationship fixture** (September 28 audit, B3). The fixture stores `meeting → person`, while gbrain's parser expects `person → meeting`, so attendance questions stayed at 0/50 first-place hits.
+- [x] **Fix the attendance link direction in the relationship fixture** (September 28 audit, B3). Done in 0.10.3 for the Cat 2 answer key (now `person → meeting`, gbrain's stored orientation).
+
+- [ ] **Find out why relationship retrieval never fires on "who attended" questions.** At `b80cad6` the keyless smoke (`relational-ab.ts --stub-embed --seeds 1`) still fires on 0/50 attendance questions against 13/40, 31/39 and 14/16 for the other templates. World-v1 meetings name attendees in prose, which current gbrain does not type as attendance.
 
 - [ ] **Re-run Cat14 with the current blind runner** (September 28 audit, A-01). The May 75% result is retracted. The current runner is blind, judges both orders at temperature 0 and calls `runThink`; the historical cost was about $0.05.
 
 - [ ] **Re-run the May snapshot categories with current runners** (September 28 audit, A-09 and Part B). Cats 19, 20 and 21 have hermetic or cheap live modes. Until receipts exist, the May rows stay marked invalid.
 
-- [ ] **Re-pin gbrain to a master commit or release tag** (September 28 audit, C1/C2). The current pin `939232f` sits on a side branch, and `gbrain-reader`'s `a9de062` is on no branch. Against master, 21 tests fail: `memory-cues` is unmerged, ZeroEntropy was removed, the default embedder changed, a test hook was removed, and many tests hard-code the pin. Put the pin in one constant, gate `memory-cues` tests on a capability probe, and add a non-blocking weekly canary against master.
+- [x] **Re-pin gbrain to a master commit or release tag** (September 28 audit, C1/C2). Done in 0.10.3: `gbrain` pins master `b80cad6`, the cue experiments use the `gbrain-cues` alias at `939232f`, and pins are read from `package.json`. `gbrain-reader`'s `a9de062` is still on no branch.
+
+- [ ] **Give the LongMemEval batch wrapper one shared budget.** `longmemeval-batch.sh` starts several workers; each opens its own ledger run with the same `--budget-usd`, so the run cap applies per worker while the program cap still applies to all of them.
 
 ## Data and benchmark fidelity
 

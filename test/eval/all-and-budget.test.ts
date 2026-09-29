@@ -113,8 +113,8 @@ describe('tiers', () => {
       expect(sel.dispatch.length + sel.notRun.length).toBe(CATEGORIES.length);
       expect(sel.notRun.every(n => n.reason.length > 0)).toBe(true);
     }
-    expect(offline.notRun.find(n => n.id === '13')?.reason).toBe('tier paid not selected');
-    expect(paid.notRun.find(n => n.id === '2')?.reason).toBe('tier offline not selected');
+    expect(offline.notRun.find(n => n.id === '13')?.reason).toBe('tier P not selected');
+    expect(paid.notRun.find(n => n.id === '2')?.reason).toBe('tier H not selected');
     expect(offline.dispatch.map(c => c.id)).toEqual(['1', '2', '3', '4', '6', '7', '10', '11', '12', '19', '22', '23', '24', '27', '28', '34', '36']);
   });
 
@@ -124,7 +124,8 @@ describe('tiers', () => {
     printNotRun(notRun, l => lines.push(l));
     expect(lines[0]).toBe(`Not run in this invocation (${notRun.length}):`);
     expect(lines).toHaveLength(notRun.length + 1);
-    expect(lines.some(l => l.includes('Cat 18b') && l.includes('ZeroEntropy'))).toBe(true);
+    expect(lines.some(l => l.includes('Cat 5') && l.includes('not implemented'))).toBe(true);
+    expect(lines.some(l => l.includes('Cat 18b') && l.includes('tier P not selected'))).toBe(true);
   });
 
   test('package.json has no fake N=10 published script (C-08)', () => {

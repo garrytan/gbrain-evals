@@ -58,7 +58,7 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import type Anthropic from '@anthropic-ai/sdk';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
-import { importFromContent } from 'gbrain/import-file';
+import { importFromContentEmbedded } from './import-embedded.ts';
 import { configureGateway, __setEmbedTransportForTests, type ChatResult, type ChatOpts } from 'gbrain/ai/gateway';
 import {
   runBrainstorm,
@@ -93,8 +93,8 @@ export const EMBED_MODEL = 'openai:text-embedding-3-large';
 export const EMBED_DIM = 1536;
 
 /** WS5: pin the retrieval knobs runBrainstorm's close-set hybridSearch reads.
- *  gbrain's default 'balanced' mode silently enables the zerank-2 reranker
- *  when ZEROENTROPY_API_KEY is set — never rely on defaults. */
+ *  gbrain's default 'balanced' mode can enable reranking with an ambient
+ *  provider key — never rely on defaults. */
 export const PINNED_CONFIG: Record<string, string> = {
   'search.mode': 'balanced',
   'search.reranker.enabled': 'false',
@@ -362,7 +362,7 @@ export async function runCat20(options: Cat20Options = {}): Promise<Cat20RunResu
     const origLog = console.log;
     console.log = () => {};
     try {
-      for (const p of pages) await importFromContent(engine, p.slug, p.body, { noEmbed: false });
+      for (const p of pages) await importFromContentEmbedded(engine, p.slug, p.body, { noEmbed: false });
     } finally {
       console.log = origLog;
     }

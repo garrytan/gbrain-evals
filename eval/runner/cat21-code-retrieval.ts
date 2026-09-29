@@ -10,8 +10,8 @@
  * UNDER TEST: gbrain's embedding + hybridSearch pipeline over a code corpus
  * (gbrain's own src/core .ts files). Search mode is pinned to 'balanced'
  * and the reranker pinned OFF in EVERY cell (WS5): the previous version
- * relied on the default mode, whose zerank-2 reranker silently fires when
- * ZEROENTROPY_API_KEY is set — reshuffling exactly the top-1 metric under
+ * relied on the default mode, whose reranker can fire with an ambient
+ * provider key — reshuffling exactly the top-1 metric under
  * comparison (audit cats18-21-07). Cells differ ONLY by embedder.
  * LEGITIMATELY SEEDED/STUBBED: files are ingested as markdown-wrapped
  * code bodies via importFromContent (NOT the tree-sitter importCodeFile
@@ -61,7 +61,7 @@ import { writeFileSync, mkdirSync, readdirSync, statSync, readFileSync } from 'f
 import { join, relative, basename } from 'path';
 import { tmpdir } from 'os';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
-import { importFromContent } from 'gbrain/import-file';
+import { importFromContentEmbedded } from './import-embedded.ts';
 import { configureGateway, __setEmbedTransportForTests } from 'gbrain/ai/gateway';
 import { hybridSearch } from 'gbrain/search/hybrid';
 import type { SearchResult, HybridSearchMeta } from 'gbrain/types';
@@ -91,7 +91,7 @@ export const DEFAULT_MIN_MRR_STUB = 0.2;
 export const K_RECALL = 5;
 
 /** WS5 pin — engine.setConfig'd BEFORE ingest in every cell, echoed into the
- *  receipt. Reranker OFF: top-1 must reflect the embedder, not zerank-2. */
+ *  receipt. Reranker OFF: top-1 must reflect the embedder, not a reranker. */
 export const PINNED_CONFIG: Record<string, string> = {
   'search.mode': 'balanced',
   'search.reranker.enabled': 'false',
@@ -280,7 +280,7 @@ export async function runCell(args: RunCellArgs): Promise<ProviderCell> {
         const slug = fileSlug(f);
         const body = `# ${rel}\n\n\`\`\`typescript\n${readFileSync(f, 'utf8').slice(0, MAX_FILE_CHARS)}\n\`\`\`\n`;
         try {
-          await importFromContent(engine, slug, body, { noEmbed: false });
+          await importFromContentEmbedded(engine, slug, body, { noEmbed: false });
           cell.files_ok++;
         } catch (e: any) {
           cell.files_failed++;

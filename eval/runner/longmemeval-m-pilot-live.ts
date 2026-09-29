@@ -10,7 +10,7 @@ import { developmentChatOptions, startSourceOnlyDevelopmentGuard } from './situa
 import { resolveSourceOnlyDevelopmentPolicy, SOURCE_ONLY_EMBEDDING_MODEL, SOURCE_ONLY_REFERENCE_EXPERIMENT, SOURCE_ONLY_V5_EXPERIMENT,
   type SourceOnlyDevelopmentProfile } from './situation-recall-experiment-policy.ts';
 import { regressionPackageHash } from './situation-recall-provenance.ts';
-import type { BrainEngine } from 'gbrain/engine';
+import type { BrainEngine } from 'gbrain-cues/engine';
 
 const hash = (bytes: Buffer | string) => createHash('sha256').update(bytes).digest('hex');
 const BASELINE_SHA = '6040075c6cb95be5881cc2e1b76ef7d71f4e5d29';
@@ -207,7 +207,7 @@ export async function runPilotLiveStage(options: StageOptions, testOnlyMockTrans
     throw new Error('frozen registration, source-only history or selected product package mismatch');
   }
   if (profile.arm !== 'B') {
-    const declared = JSON.parse(readFileSync(join(import.meta.dir, '../../package.json'), 'utf8')).dependencies?.gbrain;
+    const declared = JSON.parse(readFileSync(join(import.meta.dir, '../../package.json'), 'utf8')).dependencies?.['gbrain-cues'];
     const root = realpathSync(options.productRoot);
     const { MEMORY_CUE_PROMPT_VERSION } = await import(pathToFileURL(join(root, 'src/core/memory-cues/types.ts')).href);
     const { buildCueWindows } = await import(pathToFileURL(join(root, 'src/core/memory-cues/windows.ts')).href);
@@ -289,7 +289,7 @@ export async function runPilotLiveStage(options: StageOptions, testOnlyMockTrans
         database_path: options.stage === 'construction' ? join(directory, 'indexed', 'index') : join(directory, 'query-db') });
     }
     phase = 'guard_start';
-    guard = await startSourceOnlyDevelopmentGuard(profile, { journalPath, verifiedPackagePath: options.productRoot });
+    guard = await startSourceOnlyDevelopmentGuard(profile, { journalPath, verifiedPackagePath: options.productRoot, packageName: 'gbrain-cues' });
     const assertGuard = async () => {
       const snapshot = guard!.snapshot();
       const guardedProfile = snapshot.policy_context?.profile as SourceOnlyDevelopmentProfile | undefined;

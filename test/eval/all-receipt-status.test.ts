@@ -12,7 +12,7 @@ import { mkdtempSync, rmSync, utimesSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { deriveStatus, loadFreshReceipt } from '../../eval/runner/all.ts';
-import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt } from '../../eval/runner/receipt.ts';
+import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, upgradeReceipt, type Receipt } from '../../eval/runner/receipt.ts';
 
 const ok = (r: Receipt) => deriveStatus({ kind: 'ok', receipt: r });
 
@@ -101,10 +101,16 @@ describe('loadFreshReceipt', () => {
     expect(loadFreshReceipt(path, Date.now()).kind).toBe('stale');
   });
 
-  test('a fresh valid receipt loads', () => {
+  test('a fresh valid receipt loads, in schema v2 or legacy v1', () => {
+    writeFileSync(path, JSON.stringify(upgradeReceipt(receipt({}))));
+    expect(loadFreshReceipt(path, Date.now() - 60_000).kind).toBe('ok');
+    writeFileSync(path, JSON.stringify({ ...receipt({}), schema_version: 1 }));
+    expect(loadFreshReceipt(path, Date.now() - 60_000).kind).toBe('ok');
+  });
+
+  test('a v2 receipt on disk without its v2 blocks is invalid', () => {
     writeFileSync(path, JSON.stringify(receipt({})));
-    const load = loadFreshReceipt(path, Date.now() - 60_000);
-    expect(load.kind).toBe('ok');
+    expect(loadFreshReceipt(path, Date.now() - 60_000).kind).toBe('invalid');
     rmSync(dir, { recursive: true, force: true });
   });
 });

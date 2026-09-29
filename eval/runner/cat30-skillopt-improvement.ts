@@ -73,8 +73,8 @@ export const BPRE_BASELINE_CEILING = 0.95;
 /**
  * WS5 pin — applied via engine.setConfig BEFORE any rollout and echoed in
  * resolved_config. SkillOpt rollouts can call brain search tools, and
- * gbrain's default 'balanced' bundle silently enables the zerank-2 reranker
- * when ZEROENTROPY_API_KEY is set — never rely on defaults.
+ * gbrain's default 'balanced' bundle can enable reranking with an ambient
+ * provider key — never rely on defaults.
  */
 export const PINNED_CONFIG: Record<string, string> = {
   'search.mode': 'balanced',

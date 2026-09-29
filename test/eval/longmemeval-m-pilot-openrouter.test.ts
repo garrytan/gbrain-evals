@@ -13,9 +13,9 @@ test('C1 prepared config and actual SDK wire retain frozen Sonnet provider optio
     process.env.GBRAIN_HOME = root;
     process.env.XDG_CONFIG_HOME = join(root, '.config');
     process.env.OPENROUTER_API_KEY = 'synthetic-openrouter-only';
-    const product = resolve('node_modules/gbrain');
-    const gateway = await import('gbrain/ai/gateway');
-    const config = await import('gbrain/config');
+    const product = resolve('node_modules/gbrain-cues');
+    const gateway = await import('gbrain-cues/ai/gateway');
+    const config = await import('gbrain-cues/config');
     const path = config.configPath();
     mkdirSync(dirname(path), { recursive: true });
     const opts = developmentChatOptions(PILOT_SONNET_MODEL);
@@ -47,7 +47,7 @@ test('C1 prepared config and actual SDK wire retain frozen Sonnet provider optio
       assert.deepEqual(bound.provider_chat_options, opts);
       assert.deepEqual(config.loadConfig().provider_chat_options, opts);
       assert.deepEqual(gateway.requireConfig().provider_chat_options, opts);
-      const { liveMemoryCueProviders } = await import('./node_modules/gbrain/src/core/memory-cues/providers.ts');
+      const { liveMemoryCueProviders } = await import('./node_modules/gbrain-cues/src/core/memory-cues/providers.ts');
       const generated = await liveMemoryCueProviders.generate({ evidence: 'Synthetic blue label.',
         includeBridge: false, model: PILOT_SONNET_MODEL, signal: AbortSignal.timeout(30000) });
       assert.deepEqual(generated.output, []);

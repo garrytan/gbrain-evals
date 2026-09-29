@@ -49,20 +49,23 @@ export function resolveRegressionProduct(options: {
   requireClean?: boolean;
   env?: Record<string, string | undefined>;
   importerPath?: string;
+  /** Installed alias holding the product: gbrain, or gbrain-cues for memory-cue experiments. */
+  packageName?: 'gbrain' | 'gbrain-cues';
 } = {}): ResolvedRegressionProduct {
+  const packageName = options.packageName ?? 'gbrain';
   const evalRoot = resolve(options.evalRoot ?? process.cwd());
   const declared = JSON.parse(readFileSync(join(evalRoot, 'package.json'), 'utf8'));
   const resolvePackage = (from: string): string => {
     for (let directory = dirname(from); ; directory = dirname(directory)) {
-      const installed = join(directory, 'node_modules/gbrain');
+      const installed = join(directory, 'node_modules', packageName);
       if (existsSync(installed)) return realpathSync(installed);
       if (dirname(directory) === directory) break;
     }
     const require = createRequire(from);
     let installed: string;
-    try { installed = dirname(require.resolve('gbrain/package.json')); }
+    try { installed = dirname(require.resolve(`${packageName}/package.json`)); }
     catch {
-      installed = dirname(require.resolve('gbrain'));
+      installed = dirname(require.resolve(packageName));
       while (!existsSync(join(installed, 'package.json')) && dirname(installed) !== installed) installed = dirname(installed);
     }
     return realpathSync(installed);
@@ -73,14 +76,14 @@ export function resolveRegressionProduct(options: {
   for (const from of importers) {
     const require = createRequire(from);
     const pkg = JSON.parse(readFileSync(join(packagePath, 'package.json'), 'utf8'));
-    for (const specifier of ['gbrain/search/hybrid', 'gbrain/operations', 'gbrain/pglite-engine']) {
-      if (!pkg.exports?.[`./${specifier.slice('gbrain/'.length)}`]) continue;
-      const deep = realpathSync(require.resolve(specifier));
+    for (const subpath of ['search/hybrid', 'operations', 'pglite-engine']) {
+      if (!pkg.exports?.[`./${subpath}`]) continue;
+      const deep = realpathSync(require.resolve(`${packageName}/${subpath}`));
       if (!deep.startsWith(packagePath + '/')) throw new Error('deep import resolves outside the verified package');
     }
   }
   const pkg = JSON.parse(readFileSync(join(packagePath, 'package.json'), 'utf8'));
-  if (pkg.name !== 'gbrain' || typeof pkg.version !== 'string' || typeof declared.dependencies?.gbrain !== 'string') {
+  if (pkg.name !== 'gbrain' || typeof pkg.version !== 'string' || typeof declared.dependencies?.[packageName] !== 'string') {
     throw new Error('gbrain package name, version or declared pin missing');
   }
   const exactGitRoot = git(packagePath, ['rev-parse', '--show-toplevel']);
@@ -108,7 +111,7 @@ export function resolveRegressionProduct(options: {
     bindings[key] = { path, sha, tree, package_sha256: digest };
   }
   return {
-    declared_pin: declared.dependencies.gbrain, package_version: pkg.version, package_path: packagePath,
+    declared_pin: declared.dependencies[packageName], package_version: pkg.version, package_path: packagePath,
     product_sha: sha, product_tree: tree, package_sha256: digest, dirty, bindings,
   };
 }

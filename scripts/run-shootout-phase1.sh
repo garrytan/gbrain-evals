@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Phase 1 of the embedder shootout: 7 LongMemEval cells.
+# Phase 1 of the embedder shootout: 4 LongMemEval cells.
 #
 # Per cell:
 #   1. Configure gbrain via env vars (file-plane stays stable; gateway
@@ -9,7 +9,7 @@
 #   4. Score the hypothesis JSONL via LongMemEval's published evaluate_qa.py.
 #
 # Serial across cells per docs/designs/2026_05_EVAL_PLAN.md D6 (clean
-# rate-limit profile; first-contact run on ZE wants debuggable signal).
+# rate-limit profile; first-contact runs need debuggable signal).
 #
 # Each cell is independently resumable via gbrain's --resume-from flag
 # (added in v0.35.1.0). If a cell aborts mid-run, re-running the script
@@ -19,7 +19,6 @@
 #   OPENAI_API_KEY       gpt-4o judge + OpenAI cells
 #   ANTHROPIC_API_KEY    Sonnet answer-gen
 #   VOYAGE_API_KEY       Voyage cells
-#   ZEROENTROPY_API_KEY  ZE cells
 #
 # Required tooling:
 #   - gbrain CLI on PATH (v0.35.1.0+) — verify with `gbrain --version`
@@ -29,7 +28,7 @@
 #   - Dataset at $LONGMEMEVAL_DATASET (default ~/datasets/longmemeval/longmemeval_s.json)
 #     Gated on HuggingFace; one-time setup.
 #
-# Cost: ~$68/cell × 7 = ~$476. Wallclock: ~90min/cell × 7 = ~10.5h serial.
+# Cost and wall time for this supported-provider matrix are not measured.
 # Cost control: this wrapper meters WALL CLOCK, not dollars (nothing here
 # reads token counts; the old "$90/cell hard cap" comment described logic
 # that never existed — audit orchestrators-10). Each cell's answer-gen step
@@ -50,7 +49,7 @@ REPO_ROOT="$(pwd)"
 
 # ─── Env validation ─────────────────────────────────────────────────
 
-for key in OPENAI_API_KEY ANTHROPIC_API_KEY VOYAGE_API_KEY ZEROENTROPY_API_KEY; do
+for key in OPENAI_API_KEY ANTHROPIC_API_KEY VOYAGE_API_KEY; do
   if [ -z "${!key:-}" ]; then
     echo "[phase1] FATAL: $key is not set in env" >&2
     exit 1
@@ -113,19 +112,14 @@ echo "[phase1] gbrain $GBRAIN_VERSION" >>"$LOG"
 # ─── Cell matrix ────────────────────────────────────────────────────
 
 # Cell : (embedder, dim, reranker)
-# A0/A1: openai:text-embedding-3-large @ 1536  (no rerank / +zerank-2)
-# B0/B1: voyage:voyage-4-large         @ 2048  (no rerank / +zerank-2)
-# C0/C1: zeroentropyai:zembed-1        @ 2560  (no rerank / +zerank-2)
-# C2:    zeroentropyai:zembed-1        @ 1280  (+zerank-2, Matryoshka ablation)
+# A0/A1-voyage-rerank-2.5: openai:text-embedding-3-large @ 1536
+# B0/B1-voyage-rerank-2.5: voyage:voyage-4-large @ 2048
 
 CELLS=(
   "A0|openai:text-embedding-3-large|1536|"
-  "A1|openai:text-embedding-3-large|1536|zeroentropyai:zerank-2"
+  "A1-voyage-rerank-2.5|openai:text-embedding-3-large|1536|voyage:rerank-2.5"
   "B0|voyage:voyage-4-large|2048|"
-  "B1|voyage:voyage-4-large|2048|zeroentropyai:zerank-2"
-  "C0|zeroentropyai:zembed-1|2560|"
-  "C1|zeroentropyai:zembed-1|2560|zeroentropyai:zerank-2"
-  "C2|zeroentropyai:zembed-1|1280|zeroentropyai:zerank-2"
+  "B1-voyage-rerank-2.5|voyage:voyage-4-large|2048|voyage:rerank-2.5"
 )
 
 # ─── Per-cell runner ────────────────────────────────────────────────
@@ -164,7 +158,7 @@ run_cell() {
   # reproduced: expansion words are never treated as assignments). Running
   # the cell unreranked while labeling it reranked would be worse than not
   # running it. Abort loudly until upstream ships a --search-config flag
-  # (TODOS.md); note zerank-2's hosted API sunsets 2026-09-04.
+  # (TODOS.md).
   if [ -n "$reranker" ]; then
     echo "  -> $cell SKIPPED: reranker cells are not configurable via the gbrain CLI (see TODOS.md); refusing to run unreranked under a reranked label" >&2
     return 3

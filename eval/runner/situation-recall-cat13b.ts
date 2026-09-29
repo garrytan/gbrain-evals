@@ -1,15 +1,13 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
-import { configureGateway, diagnoseEmbedding, isAvailable, __setEmbedTransportForTests } from 'gbrain/ai/gateway';
-import { configPath as gbrainConfigPath, loadConfig } from 'gbrain/config';
 import {
   loadCorpus, QUERIES, assertCorpusPremise, assertBoostPremise, scoreAdapter, computeVerdict13b,
   GBRAIN_SEARCH_CONFIG, TOP_K, PASS_TOP1, hashEmbed, type SwampResult,
 } from './cat13b-source-swamp.ts';
 import { GbrainInlineAdapter } from './adapters/gbrain-inline.ts';
 import { sanitizePage, type Adapter, type AdapterConfig, type BrainState, type Page, type PublicQuery } from './types.ts';
-import { Cat36Failure, validateCat36Profile, type Cat36Profile } from './cat36-associative-retrieval.ts';
+import { Cat36Failure, cat36ProductPackage, validateCat36Profile, type Cat36Profile } from './cat36-associative-retrieval.ts';
 import { assertCat36ProviderReadiness, buildProductionCueIndex, requireCueSupport } from './cat36-production.ts';
 import { cat36Hash } from './cat36-corpus.ts';
 import { observedSearchFailures, type SearchObservation } from './retrieval-pins.ts';
@@ -136,6 +134,8 @@ export async function runSituationRecallCat13b(options: Cat13bPilotOptions, depe
   let result: SwampResult | undefined;
   let blocked: string | undefined;
   let identity: unknown = { verified: false, reason: 'validation-only or offline' };
+  const productPackage = cat36ProductPackage(profile.arm);
+  let gateway: typeof import('gbrain/ai/gateway') | undefined;
   let wrapper: PreparedCat13bAdapter | undefined;
   let originalEnv: NodeJS.ProcessEnv | undefined;
   let factors: ReturnType<typeof assertBoostPremise> | undefined;
@@ -150,8 +150,10 @@ export async function runSituationRecallCat13b(options: Cat13bPilotOptions, depe
     if (pages.length !== 20 || QUERIES.length !== 30 || new Set(pages.map(page => page.slug)).size !== 20) throw new Error('native Cat13b pilot requires the unchanged 20-page/30-query cohort');
     hashes.corpus = cat36Hash(JSON.stringify(pages.map(sanitizePage)));
     if (options.execute) {
+      gateway = await (import(`${productPackage}/ai/gateway`) as Promise<typeof import('gbrain/ai/gateway')>);
+      const { configureGateway, diagnoseEmbedding, isAvailable, __setEmbedTransportForTests } = gateway;
       if (!offline) {
-        const product = resolveRegressionProduct({ evalRoot: resolve(import.meta.dir, '../..'), expectedProductSha: profile.expected_product_sha, expectedPackageSha256: profile.expected_package_sha256, importerPath: import.meta.path });
+        const product = resolveRegressionProduct({ evalRoot: resolve(import.meta.dir, '../..'), expectedProductSha: profile.expected_product_sha, expectedPackageSha256: profile.expected_package_sha256, importerPath: import.meta.path, packageName: productPackage });
         identity = product;
         await assertDevelopmentPricing(profile, product.package_path);
       }
@@ -166,8 +168,9 @@ export async function runSituationRecallCat13b(options: Cat13bPilotOptions, depe
       mkdirSync(dirname(configPath));
       writeFileSync(configPath, JSON.stringify({ engine: 'pglite', embedding_model: profile.embedding_model,
         embedding_dimensions: profile.embedding_dimensions, chat_model: profile.generation_model, provider_chat_options: profile.provider_chat_options }) + '\n', { flag: 'wx', mode: 0o600 });
-      const loadedConfig = loadConfig();
-      if (gbrainConfigPath() !== configPath || loadedConfig?.embedding_model !== profile.embedding_model
+      const productConfig = await (import(`${productPackage}/config`) as Promise<typeof import('gbrain/config')>);
+      const loadedConfig = productConfig.loadConfig();
+      if (productConfig.configPath() !== configPath || loadedConfig?.embedding_model !== profile.embedding_model
         || loadedConfig.embedding_dimensions !== profile.embedding_dimensions
         || !isDeepStrictEqual(loadedConfig.provider_chat_options, profile.provider_chat_options)) throw new Cat36Failure('public config resolver did not load the pilot embedding profile and frozen provider options', 'harness');
       hashes.config = cat36Hash(readFileSync(configPath));
@@ -185,14 +188,14 @@ export async function runSituationRecallCat13b(options: Cat13bPilotOptions, depe
         if (profile.arm === 'C1') {
           const feature = await requireCueSupport();
           if (typeof feature.runMemoryCueBuild !== 'function') throw new Cat36Failure('public durable cue execution unavailable before source import', 'dependency');
-          const admin = (await import('gbrain/operations')).operationsByName.memory_cues;
+          const admin = (await (import(`${productPackage}/operations`) as Promise<typeof import('gbrain/operations')>)).operationsByName.memory_cues;
           if (!admin || admin.localOnly !== true || admin.scope !== 'admin') throw new Cat36Failure('trusted cue enrollment operation unavailable before source import', 'dependency');
         }
       } else if (profile.arm === 'C1' && !dependencies.buildCueIndex) throw new Cat36Failure('injected C1 requires an injected cue builder; no live fallback', 'harness');
       const inner = dependencies?.adapter ?? new GbrainInlineAdapter({ topK: TOP_K, searchConfig: { ...GBRAIN_SEARCH_CONFIG, 'search.tokenBudget': String(profile.token_budget),
         embedding_model: profile.embedding_model, embedding_dimensions: String(profile.embedding_dimensions),
         'memory.cues.generation_enabled': 'false', 'memory.cues.read': 'off', 'memory.cues.push': 'false' },
-        embeddingModel: profile.embedding_model, embeddingDimensions: profile.embedding_dimensions, expectStubTransport: offline });
+        embeddingModel: profile.embedding_model, embeddingDimensions: profile.embedding_dimensions, expectStubTransport: offline, productPackage });
       if (inner.name !== 'gbrain') throw new Error('pilot must retain the native gbrain adapter identity');
       wrapper = new PreparedCat13bAdapter(inner, profile, outputDir, hashes.corpus, dependencies?.buildCueIndex ?? (async (engine, sourceIds, settings) => {
         configureGateway({ embedding_model: settings.embedding_model, embedding_dimensions: settings.embedding_dimensions, chat_model: settings.generation_model, provider_chat_options: settings.provider_chat_options, env: process.env });
@@ -210,7 +213,7 @@ export async function runSituationRecallCat13b(options: Cat13bPilotOptions, depe
     try { await wrapper?.close(); }
     catch (error) { blocked = `native adapter teardown failed: ${String(error)}`; acc.error('cleanup', 'harness', blocked); }
     developmentGuard?.restore();
-    if (!dependencies && options.execute) __setEmbedTransportForTests(null);
+    if (!dependencies && options.execute) gateway?.__setEmbedTransportForTests(null);
     if (originalEnv) {
       for (const key of Object.keys(process.env)) delete process.env[key];
       Object.assign(process.env, originalEnv);

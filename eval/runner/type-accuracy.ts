@@ -22,7 +22,11 @@
  * the identity — (src, tgt, type) triple must match. Catches both the
  * extraction-recall problem and the type-accuracy problem in one number.
  *
- * Usage: bun eval/runner/type-accuracy.ts [--json]
+ * Usage: bun eval/runner/type-accuracy.ts [--json] [--package=gbrain-cues]
+ *
+ * --package runs the same scorer against another installed gbrain alias.
+ * gbrain-cues is 939232f, the pin before 2026-09-29, so the two runs form a
+ * matched old-pin / new-pin comparison on one scorer.
  */
 
 import { readdirSync, readFileSync } from 'fs';
@@ -31,6 +35,7 @@ import { extractPageLinks } from 'gbrain/link-extraction';
 import type { PageType } from 'gbrain/types';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, receiptPath, writeReceipt, type Receipt, type ReceiptVerdict } from './receipt.ts';
 import { gbrainPin, gbrainVersion } from './gbrain-version.ts';
+import { declaredPin } from './pins.ts';
 
 export interface RichPage {
   slug: string;
@@ -92,7 +97,7 @@ function loadCorpus(dir: string): RichPage[] {
  *   person.primary_affiliation + role=investor/partner -> invested_in
  *   person.secondary_affiliations + role=advisor    -> advises
  */
-function buildGoldEdges(pages: RichPage[]): GoldEdge[] {
+export function buildGoldEdges(pages: RichPage[]): GoldEdge[] {
   const existing = new Set(pages.map(p => p.slug));
   const edges: GoldEdge[] = [];
   const push = (from: string, to: string, type: string) => {
@@ -114,11 +119,12 @@ function buildGoldEdges(pages: RichPage[]): GoldEdge[] {
       for (const a of p._facts.advisors ?? []) push(a, p.slug, 'advises');
     }
     if (p._facts.type === 'meeting') {
-      // Direction: extractPageLinks on a meeting page produces
-      // (meeting_slug, person_slug, 'attended') because the person slugs
-      // appear as entity refs inside the meeting page's content. Match that
-      // direction in the gold so (from, to) pairs align with the inferred set.
-      for (const a of p._facts.attendees ?? []) push(p.slug, a, 'attended');
+      // Direction: gbrain stores attendance as person -> meeting, both for
+      // frontmatter `attendees:` and for body references it marks as
+      // canonical attendance (orientCanonicalAttendance in
+      // src/core/link-extraction.ts). The gold used meeting -> person until
+      // 2026-09-29, which never matched a canonical attendance edge.
+      for (const a of p._facts.attendees ?? []) push(a, p.slug, 'attended');
     }
   }
 
@@ -237,7 +243,12 @@ export async function inferAllEdges(
       const content = `${p.title}\n\n${p.compiled_truth}\n\n${p.timeline}`;
       const res = await extractor(p.slug, content, {}, p.type as PageType, resolver);
       for (const c of res.candidates) {
-        const edge = { from: p.slug, to: c.targetSlug, type: c.linkType };
+        // Orient each candidate the way gbrain persists it: canonical
+        // attendance flips to person -> meeting, and frontmatter incoming
+        // edges carry their own source page.
+        const edge = c.canonicalAttendance
+          ? { from: c.targetSlug, to: p.slug, type: c.linkType }
+          : { from: c.fromSlug ?? p.slug, to: c.targetSlug, type: c.linkType };
         edges.push(edge);
         attempt.inferred.push(edge);
       }
@@ -397,11 +408,17 @@ export function score(gold: GoldEdge[], inferred: GoldEdge[]): {
 }
 
 /**
- * Regression floors, set on 2026-09-28 below the values measured at the
- * current pin (overall type accuracy 86.6%, strict F1 41.3% on world-v1).
- * They catch an extraction regression; they are not a quality claim.
+ * Regression floors. They catch an extraction regression; they are not a
+ * quality claim. History:
+ *   2026-09-28: 0.80 / 0.35, below 86.6% / 41.3% measured with gold
+ *     `attended` edges oriented meeting -> person.
+ *   2026-09-29: 0.70 / 0.15, below 74.7% (109/146) / 18.8% measured after the
+ *     gold was corrected to person -> meeting, gbrain's stored orientation.
+ *     The corrected scorer gives the same numbers at 939232f and b80cad6;
+ *     only where the 134 attendance edges go differs (see
+ *     docs/benchmarks/2026-09-29-repin-cats-1-2-6.md).
  */
-export const CAT2_GATES = { min_type_accuracy: 0.80, min_strict_f1: 0.35 } as const;
+export const CAT2_GATES = { min_type_accuracy: 0.70, min_strict_f1: 0.15 } as const;
 
 export function cat2Verdict(scored: { overallTypeAccuracy: number; overallStrictF1: number }): ReceiptVerdict {
   return scored.overallTypeAccuracy >= CAT2_GATES.min_type_accuracy && scored.overallStrictF1 >= CAT2_GATES.min_strict_f1
@@ -416,6 +433,10 @@ async function main() {
   const json = process.argv.includes('--json');
   const dir = process.argv.find(a => a.startsWith('--dir='))?.slice('--dir='.length) ??
     'eval/data/world-v1';
+  const productPackage = process.argv.find(a => a.startsWith('--package='))?.slice('--package='.length) ?? 'gbrain';
+  if (productPackage !== 'gbrain' && productPackage !== 'gbrain-cues') throw new Error('--package must be gbrain or gbrain-cues');
+  const extractor = productPackage === 'gbrain' ? extractPageLinks
+    : (await (import(`${productPackage}/link-extraction`) as Promise<typeof import('gbrain/link-extraction')>)).extractPageLinks;
   const log = json ? () => {} : console.log;
 
   log('# BrainBench — type accuracy on rich-prose corpus\n');
@@ -430,15 +451,17 @@ async function main() {
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,
     category: 'type-accuracy',
-    gbrain_version: gbrainVersion(),
-    gbrain_pin: gbrainPin(),
+    gbrain_version: productPackage === 'gbrain' ? gbrainVersion()
+      : JSON.parse(readFileSync(join('node_modules', productPackage, 'package.json'), 'utf8')).version as string,
+    gbrain_pin: productPackage === 'gbrain' ? gbrainPin() : declaredPin(productPackage),
+    product_package: productPackage,
     started_at: new Date().toISOString(),
   } as const;
   const attempts: TypeAccuracyAttempt[] = [];
   let inferred: GoldEdge[];
   let scored: ReturnType<typeof score>;
   try {
-    inferred = await inferAllEdges(pages, attempts);
+    inferred = await inferAllEdges(pages, attempts, extractor);
     scored = score(gold, inferred);
   } catch (error) {
     const errors = [{ probe_id: attempts.at(-1)?.status === 'error' ? attempts.at(-1)!.probe_id : 'score', origin: 'sut' as const, message: String(error) }];

@@ -92,6 +92,15 @@ export function cueFamilies(arm: Cat36Arm): string[] {
   return [];
 }
 
+/**
+ * Cue and summary arms exercise code that exists only on the memory-cue
+ * branch, installed as the gbrain-cues alias; every other arm measures the
+ * pinned product. One construction loads every module from one package.
+ */
+export function cat36ProductPackage(arm: Cat36Arm): 'gbrain' | 'gbrain-cues' {
+  return cueFamilies(arm).length || arm === 'summary' ? 'gbrain-cues' : 'gbrain';
+}
+
 export function validateCat36Profile(p: Cat36Profile): void {
   const allowed = new Set(['id', 'mode', 'arm', 'split', 'counterfactual', 'required_operations', 'reuse_build_dir', 'expected_product_sha', 'expected_package_sha256', 'embedding_model', 'embedding_dimensions', 'search_config', 'token_budget', 'cue_min_similarity', 'cue_weight', 'generation_model', 'provider_chat_options', 'expansion_model', 'build_max_usd', 'provider_budget']);
   if (!p || Object.keys(p).some(k => !allowed.has(k))) throw new Error('unknown Cat36 profile field');

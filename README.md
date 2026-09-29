@@ -113,9 +113,9 @@ and diagnostics. This suite keeps dated results and the records used to calculat
 them. Hosted embedding and reranking services receive the text they process;
 local storage does not make those API calls local. The retrieval results above
 were measured at gbrain [`2efaaf8f`](https://github.com/garrytan/gbrain/tree/2efaaf8f8a817b5b82e023383618fdcdb1cc5f7d)
-(v0.48.4.0). This repository currently installs
-[`939232f`](https://github.com/garrytan/gbrain/tree/939232f1746381b4e932d620d6c709e29198f14c)
-(v0.55.0.0), whose search modes are identical. See
+(v0.48.4.0). This repository currently installs gbrain master
+[`b80cad6`](https://github.com/garrytan/gbrain/tree/b80cad61e4725e62531439c027053387c98e23f8)
+(v0.59.13.0), whose search mode definitions are identical. See
 [how to reproduce a run](eval/README.md).
 
 ## What should you learn here?
@@ -199,8 +199,11 @@ a dated correction:
   denominator; divided by five slots it is 29.9% to 35.4%, against a best
   possible 36.0%. The same report's undocumented alias recall falls from 31.0%
   to 13.75%, and its link type accuracy of 70.7% to 88.5% came from a lenient
-  scorer; a strict re-run at the current pin gives 86.6% (240/277).
-  [Report](docs/benchmarks/2026-04-18-brainbench-v1.md).
+  scorer. A strict re-run gave 86.6% (240/277), but that count relied on
+  attendance edges pointing the wrong way; with the direction corrected, both
+  the old pin and gbrain master score 74.7% (109/146).
+  [Report](docs/benchmarks/2026-04-18-brainbench-v1.md),
+  [September 29 re-run](docs/benchmarks/2026-09-29-repin-cats-1-2-6.md).
 - The April and May relationship tables' `gbrain` row (49.1% precision at
   five) came from a regular-expression parser of the four question templates,
   now named `graph-oracle-parse`; it is not a product score.

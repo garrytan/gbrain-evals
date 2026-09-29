@@ -16,13 +16,31 @@
  *
  * Writes are atomic (temp file + rename) so a crash mid-write can never leave
  * a half-receipt that parses as a result. Readers validate before trusting.
+ *
+ * Schema v2 (2026-09-29, plan item 4) adds, on every written receipt:
+ *   execution         the executed evals source tree (content hash of every
+ *                     tracked and untracked non-ignored file as it sat on
+ *                     disk, so dirty edits count) and the gbrain package
+ *                     actually loaded (declared pin, version, content hash);
+ *   accounting        planned / attempted / scored / errors / misses, with
+ *                     errors kept apart from misses;
+ *   cost              USD and tokens, or null when not measured;
+ *   latency_ms        p50 / p95, or null when not measured;
+ *   delivered_tokens  tokens actually sent to any model, or null when not
+ *                     measured (0 only when the runner knows no model ran).
+ * writeReceipt upgrades whatever a runner builds to v2. v1 files stay
+ * readable: validateReceipt and loadReceipt accept both versions.
  */
 
-import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'fs';
-import { dirname, join } from 'path';
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { existsSync, lstatSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'fs';
+import { dirname, join, resolve } from 'path';
+import { regressionPackageHash } from './situation-recall-provenance.ts';
 
 export const BENCHMARK_VERSION = '0.5.0';
-export const RECEIPT_SCHEMA_VERSION = 1;
+export const RECEIPT_SCHEMA_VERSION = 2;
+export const LEGACY_RECEIPT_SCHEMA_VERSION = 1;
 
 export type RunStatus = 'completed' | 'error' | 'skipped' | 'not_run';
 export type ReceiptVerdict = 'pass' | 'partial' | 'fail';
@@ -41,8 +59,67 @@ export interface JudgeProvenance {
   seed?: number;
 }
 
+export interface SourceTreeIdentity {
+  /** sha256 over (name, size, bytes) of every file in `git ls-files -co --exclude-standard`, read from disk. */
+  sha256: string | null;
+  files: number;
+  git_head: string | null;
+  /** True when the working tree differs from git_head; the hash covers the dirty content. */
+  dirty: boolean | null;
+  error?: string;
+}
+
+export interface ProductIdentity {
+  /** Installed alias whose code the runner loaded. */
+  package: 'gbrain' | 'gbrain-cues' | 'gbrain-reader';
+  declared_pin: string | null;
+  declared_sha: string | null;
+  version: string | null;
+  /** Content hash of the installed package directory (regressionPackageHash). */
+  package_sha256: string | null;
+  /** HEAD of the loaded package when it is a git checkout (bun link); null for a packaged install. */
+  loaded_git_head: string | null;
+  error?: string;
+}
+
+export interface ExecutionIdentity {
+  source_tree: SourceTreeIdentity;
+  product: ProductIdentity;
+}
+
+export interface RunAccounting {
+  planned: number;
+  attempted: number;
+  scored: number;
+  /** Probes that could not be scored (provider, harness, judge or product failure). Never counted as misses. */
+  errors: number;
+  /** Scored probes answered wrong; null when the runner does not classify misses. */
+  misses: number | null;
+  source: 'runner' | 'derived';
+}
+
+export interface CostSummary {
+  usd: number;
+  input_tokens: number | null;
+  output_tokens: number | null;
+  basis: string;
+}
+
+export interface LatencySummary {
+  p50: number;
+  p95: number;
+  n: number;
+  /** What was timed, e.g. per-question import plus search wall time. */
+  basis: string;
+}
+
+export interface DeliveredTokens {
+  tokens: number;
+  basis: string;
+}
+
 export interface Receipt {
-  schema_version: typeof RECEIPT_SCHEMA_VERSION;
+  schema_version: typeof RECEIPT_SCHEMA_VERSION | typeof LEGACY_RECEIPT_SCHEMA_VERSION;
   benchmark_version: string;
   category: string;
   run_status: RunStatus;
@@ -65,6 +142,13 @@ export interface Receipt {
   finished_at: string;
   /** Category-specific payload (metric tables, per-probe rows). */
   data?: Record<string, unknown>;
+  /** v2: which installed alias the runner measured. Default gbrain. */
+  product_package?: ProductIdentity['package'];
+  accounting?: RunAccounting;
+  cost?: CostSummary | null;
+  latency_ms?: LatencySummary | null;
+  delivered_tokens?: DeliveredTokens | null;
+  execution?: ExecutionIdentity;
 }
 
 const RUN_STATUSES: RunStatus[] = ['completed', 'error', 'skipped', 'not_run'];
@@ -79,7 +163,9 @@ export function validateReceipt(obj: unknown): string[] {
   const v: string[] = [];
   if (!obj || typeof obj !== 'object') return ['receipt is not an object'];
   const r = obj as Record<string, unknown>;
-  if (r.schema_version !== RECEIPT_SCHEMA_VERSION) v.push(`schema_version must be ${RECEIPT_SCHEMA_VERSION}`);
+  if (r.schema_version !== RECEIPT_SCHEMA_VERSION && r.schema_version !== LEGACY_RECEIPT_SCHEMA_VERSION) {
+    v.push(`schema_version must be ${LEGACY_RECEIPT_SCHEMA_VERSION} or ${RECEIPT_SCHEMA_VERSION}`);
+  }
   if (typeof r.benchmark_version !== 'string') v.push('benchmark_version missing');
   if (typeof r.category !== 'string' || r.category === '') v.push('category missing');
   if (!RUN_STATUSES.includes(r.run_status as RunStatus)) v.push(`run_status must be one of ${RUN_STATUSES.join('|')}`);
@@ -108,7 +194,140 @@ export function validateReceipt(obj: unknown): string[] {
     }
   }
   if (typeof r.started_at !== 'string' || typeof r.finished_at !== 'string') v.push('started_at/finished_at missing');
+  if (r.schema_version === RECEIPT_SCHEMA_VERSION) v.push(...validateV2(r, false));
   return v;
+}
+
+/**
+ * Validation for a receipt on disk: a v2 file must carry every v2 block.
+ * validateReceipt alone checks a runner-built receipt, whose missing v2
+ * blocks writeReceipt fills in.
+ */
+export function validateStoredReceipt(obj: unknown): string[] {
+  const v = validateReceipt(obj);
+  const r = obj as Record<string, unknown> | null;
+  if (v.length === 0 && r?.schema_version === RECEIPT_SCHEMA_VERSION) v.push(...validateV2(r, true));
+  return v;
+}
+
+const nonNegative = (value: unknown) => typeof value === 'number' && Number.isFinite(value) && value >= 0;
+const nullableString = (value: unknown) => value === null || typeof value === 'string';
+
+function validateV2(r: Record<string, unknown>, requireAll: boolean): string[] {
+  const v: string[] = [];
+  const check = (key: string) => requireAll || r[key] !== undefined;
+  const execution = r.execution as Record<string, Record<string, unknown>> | undefined;
+  const tree = execution?.source_tree;
+  const product = execution?.product;
+  if (check('execution') && (!tree || !nullableString(tree.sha256) || !nonNegative(tree.files) || !nullableString(tree.git_head)
+    || !(tree.dirty === null || typeof tree.dirty === 'boolean'))) v.push('v2 execution.source_tree requires sha256, files, git_head, dirty');
+  if (check('execution') && (!product || !['gbrain', 'gbrain-cues', 'gbrain-reader'].includes(product.package as string) || !nullableString(product.declared_pin)
+    || !nullableString(product.declared_sha) || !nullableString(product.version) || !nullableString(product.package_sha256)
+    || !nullableString(product.loaded_git_head))) v.push('v2 execution.product requires package, declared_pin, declared_sha, version, package_sha256, loaded_git_head');
+  const a = r.accounting as Record<string, unknown> | undefined;
+  if (check('accounting') && (!a || !['planned', 'attempted', 'scored', 'errors'].every(k => nonNegative(a[k])) || !(a.misses === null || nonNegative(a.misses))
+    || !['runner', 'derived'].includes(a.source as string))) {
+    v.push('v2 accounting requires planned, attempted, scored, errors (numbers), misses (number or null), source');
+  } else if (a) {
+    if ((a.attempted as number) > (a.planned as number)) v.push('v2 accounting: attempted exceeds planned');
+    if ((a.scored as number) + (a.errors as number) > (a.attempted as number)) v.push('v2 accounting: scored + errors exceeds attempted');
+    if (a.misses !== null && (a.misses as number) > (a.scored as number)) v.push('v2 accounting: misses exceed scored');
+  }
+  const cost = r.cost as Record<string, unknown> | null | undefined;
+  if (check('cost') && (cost === undefined || (cost !== null && (!nonNegative(cost.usd) || !(cost.input_tokens === null || nonNegative(cost.input_tokens))
+    || !(cost.output_tokens === null || nonNegative(cost.output_tokens)) || typeof cost.basis !== 'string')))) v.push('v2 cost must be null or {usd, input_tokens, output_tokens, basis}');
+  const latency = r.latency_ms as Record<string, unknown> | null | undefined;
+  if (check('latency_ms') && (latency === undefined || (latency !== null && (!nonNegative(latency.p50) || !nonNegative(latency.p95) || !nonNegative(latency.n)
+    || (latency.p95 as number) < (latency.p50 as number) || typeof latency.basis !== 'string')))) v.push('v2 latency_ms must be null or {p50 <= p95, n, basis}');
+  const delivered = r.delivered_tokens as Record<string, unknown> | null | undefined;
+  if (check('delivered_tokens') && (delivered === undefined || (delivered !== null && (!nonNegative(delivered.tokens) || typeof delivered.basis !== 'string')))) {
+    v.push('v2 delivered_tokens must be null or {tokens, basis}');
+  }
+  return v;
+}
+
+const REPO_ROOT = resolve(import.meta.dir, '../..');
+const identityCache = new Map<string, unknown>();
+
+function gitText(cwd: string, args: string[]): string | null {
+  try { return execFileSync('git', ['-C', cwd, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim(); }
+  catch { return null; }
+}
+
+/** Hash the evals tree as it sits on disk: tracked plus untracked non-ignored files, dirty edits included. */
+export function sourceTreeIdentity(root = REPO_ROOT): SourceTreeIdentity {
+  const key = `tree:${root}`;
+  if (identityCache.has(key)) return identityCache.get(key) as SourceTreeIdentity;
+  let identity: SourceTreeIdentity;
+  const listing = gitText(root, ['ls-files', '-z', '-co', '--exclude-standard']);
+  if (listing === null) {
+    identity = { sha256: null, files: 0, git_head: null, dirty: null, error: 'not a git checkout; source tree not hashed' };
+  } else {
+    const hash = createHash('sha256');
+    const files = [...new Set(listing.split('\0').filter(Boolean))].sort();
+    for (const name of files) {
+      const path = join(root, name);
+      if (!existsSync(path) || !lstatSync(path).isFile()) { hash.update(`${Buffer.byteLength(name)}:${name}:deleted:`); continue; }
+      const bytes = readFileSync(path);
+      hash.update(`${Buffer.byteLength(name)}:${name}:${bytes.length}:`);
+      hash.update(bytes);
+    }
+    const status = gitText(root, ['status', '--porcelain', '--untracked-files=normal']);
+    identity = { sha256: hash.digest('hex'), files: files.length, git_head: gitText(root, ['rev-parse', 'HEAD']), dirty: status === null ? null : status !== '' };
+  }
+  identityCache.set(key, identity);
+  return identity;
+}
+
+/** Identity of an installed gbrain alias: declared pin, version and content hash of what is on disk. */
+export function productIdentity(pkg: ProductIdentity['package'] = 'gbrain', root = REPO_ROOT): ProductIdentity {
+  const key = `product:${root}:${pkg}`;
+  if (identityCache.has(key)) return identityCache.get(key) as ProductIdentity;
+  const identity: ProductIdentity = { package: pkg, declared_pin: null, declared_sha: null, version: null, package_sha256: null, loaded_git_head: null };
+  const errors: string[] = [];
+  try {
+    identity.declared_pin = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).dependencies?.[pkg] ?? null;
+    identity.declared_sha = /#([a-f0-9]{40})$/.exec(identity.declared_pin ?? '')?.[1] ?? null;
+  } catch (error) { errors.push(`declared pin unreadable: ${String(error)}`); }
+  const packagePath = join(root, 'node_modules', pkg);
+  try {
+    identity.version = JSON.parse(readFileSync(join(packagePath, 'package.json'), 'utf8')).version ?? null;
+    const top = gitText(packagePath, ['rev-parse', '--show-toplevel']);
+    if (top !== null && resolve(top) === resolve(packagePath)) identity.loaded_git_head = gitText(packagePath, ['rev-parse', 'HEAD']);
+  } catch (error) { errors.push(`package unreadable: ${String(error)}`); }
+  try { identity.package_sha256 = regressionPackageHash(packagePath); }
+  catch (error) { errors.push(`package not hashed: ${String(error)}`); }
+  if (errors.length) identity.error = errors.join('; ');
+  identityCache.set(key, identity);
+  return identity;
+}
+
+/** Nearest-rank percentile summary; null for an empty sample. */
+export function latencySummary(samplesMs: readonly number[], basis: string): LatencySummary | null {
+  const sorted = samplesMs.filter(Number.isFinite).slice().sort((a, b) => a - b);
+  if (!sorted.length) return null;
+  const rank = (p: number) => sorted[Math.min(sorted.length - 1, Math.max(0, Math.ceil(p * sorted.length) - 1))];
+  return { p50: rank(0.5), p95: rank(0.95), n: sorted.length, basis };
+}
+
+/** Default accounting from the v1 core: every distinct errored probe counts once, never as a miss. */
+export function deriveAccounting(receipt: Pick<Receipt, 'n_total' | 'n_scored' | 'errors'>): RunAccounting {
+  const errors = new Set(receipt.errors.map(e => e.probe_id)).size;
+  const attempted = Math.min(receipt.n_total, receipt.n_scored + errors);
+  return { planned: receipt.n_total, attempted, scored: receipt.n_scored, errors: Math.min(errors, attempted - receipt.n_scored), misses: null, source: 'derived' };
+}
+
+/** Fill every v2 block a runner did not supply. Idempotent on a v2 receipt. */
+export function upgradeReceipt(input: Receipt): Receipt {
+  return {
+    ...input,
+    schema_version: RECEIPT_SCHEMA_VERSION,
+    accounting: input.accounting ?? deriveAccounting(input),
+    cost: input.cost ?? null,
+    latency_ms: input.latency_ms ?? null,
+    delivered_tokens: input.delivered_tokens ?? null,
+    execution: input.execution ?? { source_tree: sourceTreeIdentity(), product: productIdentity(input.product_package ?? 'gbrain') },
+  };
 }
 
 /** Canonical receipt location for a category run. */
@@ -116,9 +335,10 @@ export function receiptPath(category: string, reportsDir = join(process.cwd(), '
   return join(reportsDir, category, 'receipt.json');
 }
 
-/** Atomic write: validate, write temp file in the same dir, rename over target. */
-export function writeReceipt(path: string, receipt: Receipt): void {
-  const violations = validateReceipt(receipt);
+/** Atomic write: upgrade to v2, validate, write temp file in the same dir, rename over target. */
+export function writeReceipt(path: string, input: Receipt): void {
+  const receipt = upgradeReceipt(input);
+  const violations = validateStoredReceipt(receipt);
   if (violations.length > 0) {
     throw new Error(`refusing to write invalid receipt (${receipt.category}): ${violations.join('; ')}`);
   }
@@ -131,7 +351,7 @@ export function writeReceipt(path: string, receipt: Receipt): void {
 /** Read + validate. Throws with the violation list on an invalid receipt. */
 export function loadReceipt(path: string): Receipt {
   const parsed = JSON.parse(readFileSync(path, 'utf8')) as unknown;
-  const violations = validateReceipt(parsed);
+  const violations = validateStoredReceipt(parsed);
   if (violations.length > 0) throw new Error(`invalid receipt at ${path}: ${violations.join('; ')}`);
   return parsed as Receipt;
 }

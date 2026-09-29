@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Phase 2 of the embedder shootout: 7 BrainBench cells.
+# Phase 2 of the embedder shootout: 4 BrainBench cells.
 #
 # Per cell, runs the multi-adapter BrainBench scorer TWICE:
 #   - Once on the auto-built relational queries (P@5 / R@5)
@@ -11,7 +11,7 @@
 # This is the only adapter under test for the shootout — the existing
 # RipgrepBm25/VectorOnly/GbrainAfterAdapter rows would just be noise.
 #
-# Cost: ~$8/cell × 7 = ~$56. Wallclock: ~30min/cell × 7 = ~3.5h serial.
+# Cost and wall time for this supported-provider matrix are not measured.
 # Required env: same as Phase 1.
 
 set -euo pipefail
@@ -19,7 +19,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 REPO_ROOT="$(pwd)"
 
-for key in OPENAI_API_KEY ANTHROPIC_API_KEY VOYAGE_API_KEY ZEROENTROPY_API_KEY; do
+for key in OPENAI_API_KEY ANTHROPIC_API_KEY VOYAGE_API_KEY; do
   if [ -z "${!key:-}" ]; then
     echo "[phase2] FATAL: $key is not set in env" >&2
     exit 1
@@ -36,12 +36,9 @@ LOG="$RESULTS_DIR/phase2-run-log.txt"
 # Cells: same matrix as Phase 1.
 CELLS=(
   "A0|openai:text-embedding-3-large|1536|"
-  "A1|openai:text-embedding-3-large|1536|zeroentropyai:zerank-2"
+  "A1-voyage-rerank-2.5|openai:text-embedding-3-large|1536|voyage:rerank-2.5"
   "B0|voyage:voyage-4-large|2048|"
-  "B1|voyage:voyage-4-large|2048|zeroentropyai:zerank-2"
-  "C0|zeroentropyai:zembed-1|2560|"
-  "C1|zeroentropyai:zembed-1|2560|zeroentropyai:zerank-2"
-  "C2|zeroentropyai:zembed-1|1280|zeroentropyai:zerank-2"
+  "B1-voyage-rerank-2.5|voyage:voyage-4-large|2048|voyage:rerank-2.5"
 )
 
 # BrainBench multi-adapter currently picks adapter set from CLI; the

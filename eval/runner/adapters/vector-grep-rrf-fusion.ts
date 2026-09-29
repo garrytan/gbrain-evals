@@ -14,7 +14,7 @@
 import type { Adapter, AdapterConfig, BrainState, Page, Query, RankedDoc } from '../types.ts';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { hybridSearch } from 'gbrain/search/hybrid';
-import { importFromContent } from 'gbrain/import-file';
+import { importFromContentEmbedded } from '../import-embedded.ts';
 import { configureGateway } from 'gbrain/ai/gateway';
 import type { HybridSearchMeta, SearchResult } from 'gbrain/types';
 import { assertEvalAdapterConfig, type EvalAdapterConfig } from '../eval-adapter-config.ts';
@@ -152,7 +152,7 @@ export class HybridNoGraphAdapter implements Adapter {
       let imported = 0;
       for (const p of rawPages) {
         const content = this.buildContentMarkdown(p);
-        await importFromContent(engine, p.slug, content);
+        await importFromContentEmbedded(engine, p.slug, content);
         // Same GC pacing as GbrainInlineAdapter: one PGLite brain inflates JSC's
         // collection trigger, so unpaced import garbage fragments the address space.
         if (++imported % 40 === 0) gcNow();

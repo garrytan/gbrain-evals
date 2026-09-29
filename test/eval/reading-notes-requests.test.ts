@@ -22,8 +22,9 @@ describe('offline paired reader requests', () => {
     const legacy = resolve(root, 'node_modules/gbrain');
     const reader = resolve(root, 'node_modules/gbrain-reader');
     const declared = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8')).dependencies;
-    expect(declared.gbrain).toBe('github:garrytan/gbrain#939232f1746381b4e932d620d6c709e29198f14c');
+    expect(declared.gbrain).toMatch(/^github:garrytan\/gbrain#[0-9a-f]{40}$/);
     expect(declared['gbrain-reader']).toMatch(/^github:garrytan\/gbrain#[0-9a-f]{40}$/);
+    expect(declared['gbrain-reader']).not.toBe(declared.gbrain);
     expect(realpathSync(reader)).not.toBe(realpathSync(legacy));
     expect(lstatSync(reader).isSymbolicLink()).toBe(false);
     expect(lstatSync(legacy).isSymbolicLink()).toBe(false);

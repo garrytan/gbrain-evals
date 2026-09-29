@@ -97,7 +97,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
-import { importFromContent } from 'gbrain/import-file';
+import { importFromContentEmbedded } from './import-embedded.ts';
 import { configureGateway, __setEmbedTransportForTests } from 'gbrain/ai/gateway';
 import { runThink, type ThinkLLMClient, type ThinkResult } from 'gbrain/think';
 import { ProbeAccounting } from './probe-accounting.ts';
@@ -276,8 +276,8 @@ export function ensureStubbedGateway(): void {
 
 // ─── Brain seeding ──────────────────────────────────────────────────
 // WS5: search mode + reranker pinned explicitly BEFORE ingest — never rely
-// on gbrain defaults ('balanced' silently enables the zerank-2 reranker when
-// ZEROENTROPY_API_KEY is set). Echoed into the receipt's resolved_config.
+// on gbrain defaults ('balanced' can enable reranking with an ambient
+// provider key). Echoed into the receipt's resolved_config.
 
 const SEARCH_CONFIG: Record<string, string> = {
   'search.mode': 'balanced',
@@ -322,7 +322,7 @@ async function seedEngine(probe: Probe): Promise<{ engine: PGLiteEngine; profile
 
     for (let i = 0; i < probe.brain_setup.resolved_takes.length; i++) {
       const take = probe.brain_setup.resolved_takes[i]!;
-      await importFromContent(engine, `cat14/${probe.id}/take-${i + 1}`, takePageContent(probe, take));
+      await importFromContentEmbedded(engine, `cat14/${probe.id}/take-${i + 1}`, takePageContent(probe, take));
     }
   } finally {
     console.log = origLog;

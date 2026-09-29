@@ -3,9 +3,9 @@ import { createHash } from 'node:crypto';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import type { SearchResult } from 'gbrain/types';
-import { PGLiteEngine } from 'gbrain/pglite-engine';
-import { operationsByName } from 'gbrain/operations';
+import type { SearchResult } from 'gbrain-cues/types';
+import { PGLiteEngine } from 'gbrain-cues/pglite-engine';
+import { operationsByName } from 'gbrain-cues/operations';
 import { buildPilotIndex, configurePilotC1Gateway, PILOT_CUE_OFF_CONFIG, PILOT_SONNET_MODEL,
   readPilotResolvedConfig } from '../../eval/runner/longmemeval-m-pilot-build.ts';
 import { developmentChatOptions } from '../../eval/runner/situation-recall-development.ts';
@@ -16,11 +16,11 @@ import { opaqueSessionId } from '../../eval/runner/longmemeval-session-ids.ts';
 import { PINNED_SEARCH_CONFIG, type Question } from '../../eval/runner/longmemeval.ts';
 
 const hash = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
-const productRoot = resolve(import.meta.dir, '../../node_modules/gbrain');
+const productRoot = resolve(import.meta.dir, '../../node_modules/gbrain-cues');
 const productHash = regressionPackageHash(productRoot);
 const baseline604 = productHash === '78bbe78af2fac33a278740e84877e9c6c9f7a0f6a161113b1240549adf993b2b';
 const productSha = baseline604 ? '6040075c6cb95be5881cc2e1b76ef7d71f4e5d29'
-  : JSON.parse(readFileSync(resolve(import.meta.dir, '../../package.json'), 'utf8')).dependencies.gbrain.split('#')[1];
+  : JSON.parse(readFileSync(resolve(import.meta.dir, '../../package.json'), 'utf8')).dependencies['gbrain-cues'].split('#')[1];
 const turns = [{ role: 'user' as const, content: 'The sample project used a blue label.' },
   { role: 'assistant' as const, content: 'I will keep that detail in mind.' }];
 const dates = ['2023/05/28 (Sun) 05:21', '2023/05/28 (Sun) 00:46'];
@@ -181,12 +181,12 @@ describe('source-only LongMemEval-M pilot snapshot and replay', () => {
     const engine = new PGLiteEngine();
     await engine.connect({ database_path: join(directory, 'cue-config-test') });
     try {
-      await configurePilotC1Gateway(await import('gbrain/ai/gateway'), productRoot, preparedConfigPath, process.env);
+      await configurePilotC1Gateway(await import('gbrain-cues/ai/gateway'), productRoot, preparedConfigPath, process.env);
       await engine.initSchema();
       for (const [key, value] of Object.entries({ ...PINNED_SEARCH_CONFIG, ...PILOT_CUE_OFF_CONFIG,
         embedding_model: 'openrouter:openai/text-embedding-3-large', embedding_dimensions: '1536' })) await engine.setConfig(key, value);
       await engine.setConfig('chat_model', PILOT_SONNET_MODEL);
-      const { cueSignature, memoryCueColumn } = await import('gbrain/memory-cues');
+      const { cueSignature, memoryCueColumn } = await import('gbrain-cues/memory-cues');
       const signature = cueSignature(await memoryCueColumn(engine));
       await operationsByName.memory_cues.handler({ engine, config: { engine: 'pglite', embedding_model: 'openrouter:openai/text-embedding-3-large',
         embedding_dimensions: 1536 }, sourceId: 'default', remote: false, dryRun: false,

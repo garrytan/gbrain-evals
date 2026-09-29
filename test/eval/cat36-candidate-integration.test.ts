@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const hasCandidate = Boolean(JSON.parse(readFileSync(resolve('node_modules/gbrain/package.json'), 'utf8')).exports?.['./memory-cues']);
+const hasCandidate = Boolean(JSON.parse(readFileSync(resolve('node_modules/gbrain-cues/package.json'), 'utf8')).exports?.['./memory-cues']);
 
 test.skipIf(!hasCandidate)('candidate public durable build uses source-only gateway defaults and invalidates withdrawn or rotated evidence', () => {
   const script = `
@@ -17,14 +17,14 @@ test.skipIf(!hasCandidate)('candidate public durable build uses source-only gate
     writeFileSync(join(home,'.gbrain','config.json'), JSON.stringify({engine:'pglite',embedding_model:'openai:text-embedding-3-large',embedding_dimensions:1536,chat_model:model}));
     let network = 0;
     globalThis.fetch = async () => { network++; throw new Error('network prohibited in candidate plumbing'); };
-    const { PGLiteEngine } = await import('gbrain/pglite-engine');
-    const { importFromContent } = await import('gbrain/import-file');
-    const gateway = await import('gbrain/ai/gateway');
-    const config = await import('gbrain/config');
+    const { PGLiteEngine } = await import('gbrain-cues/pglite-engine');
+    const { importFromContent } = await import('gbrain-cues/import-file');
+    const gateway = await import('gbrain-cues/ai/gateway');
+    const config = await import('gbrain-cues/config');
     if(config.configPath()!==join(home,'.gbrain','config.json') || config.loadConfig()?.embedding_model!=='openai:text-embedding-3-large') throw new Error('actual file-plane model missing');
-    const api = await import('gbrain/memory-cues');
-    const { operationsByName } = await import('gbrain/operations');
-    const { hybridSearch } = await import('gbrain/search/hybrid');
+    const api = await import('gbrain-cues/memory-cues');
+    const { operationsByName } = await import('gbrain-cues/operations');
+    const { hybridSearch } = await import('gbrain-cues/search/hybrid');
     const { buildProductionCueIndex } = await import('./eval/runner/cat36-production.ts');
     const { offlineCat36Profile } = await import('./eval/runner/cat36-associative-retrieval.ts');
     const vector = () => { const v = new Array(1536).fill(0); v[0] = 1; return v; };
@@ -111,9 +111,9 @@ test.skipIf(!hasCandidate)('candidate summary control executes the public real s
     writeFileSync(join(home,'.gbrain','config.json'),JSON.stringify({engine:'pglite',embedding_model:'openai:text-embedding-3-large',embedding_dimensions:1536,chat_model:model}));
     let network=0,summaryCalls=0;
     globalThis.fetch=async()=>{network++;throw new Error('network forbidden');};
-    const {PGLiteEngine}=await import('gbrain/pglite-engine');
-    const {importFromContent}=await import('gbrain/import-file');
-    const gateway=await import('gbrain/ai/gateway');
+    const {PGLiteEngine}=await import('gbrain-cues/pglite-engine');
+    const {importFromContent}=await import('gbrain-cues/import-file');
+    const gateway=await import('gbrain-cues/ai/gateway');
     const {buildProductionSummaryIndex,cat36RuntimeSourceId}=await import('./eval/runner/cat36-production.ts');
     const {offlineCat36Profile}=await import('./eval/runner/cat36-associative-retrieval.ts');
     gateway.configureGateway({embedding_model:'openai:text-embedding-3-large',embedding_dimensions:1536,chat_model:model,env:{OPENAI_API_KEY:'test-fixture-not-a-key'}});

@@ -95,7 +95,6 @@ function runPhase(script: string, extraEnv: Record<string, string> = {}) {
       OPENAI_API_KEY: 'k',
       ANTHROPIC_API_KEY: 'k',
       VOYAGE_API_KEY: 'k',
-      ZEROENTROPY_API_KEY: 'k',
       LONGMEMEVAL_REPO: fakeLmeRepo,
       LONGMEMEVAL_DATASET: fakeDataset,
       SHOOTOUT_RESULTS_DIR: resultsDir,
@@ -162,8 +161,8 @@ describe('run-shootout-phase2.sh smoke gate (orchestrators-19)', () => {
     // Smoke gets the cell's embedder + dim (dim-typo class caught pre-spend),
     // and reranker cells pass the reranker through to smoke's phase-3 check.
     expect(argv).toMatch(/smoke\.ts --embedder openai:text-embedding-3-large --dim 1536\b/);
-    expect(argv).toMatch(/smoke\.ts --embedder zeroentropyai:zembed-1 --dim 1280 --reranker zeroentropyai:zerank-2/);
-    // Driver still runs both scorer passes per cell (7 cells × 2).
-    expect(lines.filter((l) => l.includes('shootout-driver.ts')).length).toBe(14);
+    expect(argv).toMatch(/smoke\.ts --embedder voyage:voyage-4-large --dim 2048 --reranker voyage:rerank-2\.5/);
+    // Driver still runs both scorer passes per cell (4 cells × 2).
+    expect(lines.filter((l) => l.includes('shootout-driver.ts')).length).toBe(8);
   }, 120_000);
 });

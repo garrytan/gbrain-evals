@@ -1,9 +1,9 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { PGLiteEngine } from 'gbrain/pglite-engine';
-import { importFromContent } from 'gbrain/import-file';
-import { buildCueWindows } from '../../node_modules/gbrain/src/core/memory-cues/windows.ts';
+import { PGLiteEngine } from 'gbrain-cues/pglite-engine';
+import { importFromContent } from 'gbrain-cues/import-file';
+import { buildCueWindows } from '../../node_modules/gbrain-cues/src/core/memory-cues/windows.ts';
 import { renderSession } from './longmemeval.ts';
 
 const hash = (data: Buffer) => createHash('sha256').update(data).digest('hex');

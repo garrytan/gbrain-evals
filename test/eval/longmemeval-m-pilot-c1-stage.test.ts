@@ -9,7 +9,7 @@ import { developmentChatOptions } from '../../eval/runner/situation-recall-devel
 import { regressionPackageHash } from '../../eval/runner/situation-recall-provenance.ts';
 
 const hash = (value: Buffer | string) => createHash('sha256').update(value).digest('hex');
-const productRoot = realpathSync(resolve(import.meta.dir, '../../node_modules/gbrain'));
+const productRoot = realpathSync(resolve(import.meta.dir, '../../node_modules/gbrain-cues'));
 const packageSha = regressionPackageHash(productRoot);
 const productSha = 'e559fd70ae9528cee477f1971f7b57f73ac69398';
 const expectedPackageSha = '286435f60312fb3eb481b8616b8af125687690ef3324d8609587d02be7be0878';
