@@ -199,8 +199,11 @@ a dated correction:
   denominator; divided by five slots it is 29.9% to 35.4%, against a best
   possible 36.0%. The same report's undocumented alias recall falls from 31.0%
   to 13.75%, and its link type accuracy of 70.7% to 88.5% came from a lenient
-  scorer; a strict re-run at the current pin gives 86.6% (240/277).
-  [Report](docs/benchmarks/2026-04-18-brainbench-v1.md).
+  scorer. A strict re-run gave 86.6% (240/277), but that count relied on
+  attendance edges pointing the wrong way; with the direction corrected, both
+  the old pin and gbrain master score 74.7% (109/146).
+  [Report](docs/benchmarks/2026-04-18-brainbench-v1.md),
+  [September 29 re-run](docs/benchmarks/2026-09-29-repin-cats-1-2-6.md).
 - The April and May relationship tables' `gbrain` row (49.1% precision at
   five) came from a regular-expression parser of the four question templates,
   now named `graph-oracle-parse`; it is not a product score.

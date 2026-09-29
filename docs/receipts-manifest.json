@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "description": "Map from published claims to their saved evidence. The manifest test checks artifact paths, SHA-256 hashes, and declared JSON-pointer values. It does not parse report prose or independently validate every scorer. Separate golden tests and recount scripts are named where available. Entries marked disclosed-gap identify missing evidence; a fresh run cannot restore a missing historical receipt.",
-  "updated": "2026-09-25",
+  "updated": "2026-09-29",
   "entries": [
     {
       "claim_id": "reading-notes-transfer-labels",
@@ -26,7 +26,10 @@
       "readme_anchor": "docs/benchmarks/2026-09-25-reading-notes.md: 6014 calls and $79.1460305 including failed pilot",
       "artifact_path": "docs/benchmarks/2026-09-25-reading-notes/cost-provenance.json",
       "artifact_sha256": "79bb41c0b2fc170893b83062c0646f0144d0bf5717ccd5bf165bd7fb9c4db1c1",
-      "expected": { "/total_settled_calls": 6014, "/total_usage_priced_usd": 79.1460305 },
+      "expected": {
+        "/total_settled_calls": 6014,
+        "/total_usage_priced_usd": 79.1460305
+      },
       "golden_test": "test/eval/reading-notes-recount.test.ts: aggregate token repricing and phase counts",
       "status": "covered",
       "note": "Public phase/model/role token aggregates reprice 5666 follow-up calls, with separate primary baseline/notes reader token totals. The 348-call failed pilot remains an aggregate from a private ledger; private per-call receipts and conversations are not published."
@@ -36,7 +39,12 @@
       "readme_anchor": "docs/benchmarks/2026-09-25-reading-notes.md: separate 1024-token release smoke of nine prior cutoff cases",
       "artifact_path": "docs/benchmarks/2026-09-25-reading-notes/completion-smoke.json",
       "artifact_sha256": "08b38e0e5e5bd39c96336aca81c0c4f8ccee4b046325e54fa5b0b8df248b4fbd",
-      "expected": { "/n": 9, "/completed": 9, "/max_tokens": 1024, "/cost_usd": 0.562143 },
+      "expected": {
+        "/n": 9,
+        "/completed": 9,
+        "/max_tokens": 1024,
+        "/cost_usd": 0.562143
+      },
       "golden_test": "test/eval/reading-notes-recount.test.ts: cutoff IDs and accounted smoke totals",
       "status": "covered",
       "note": "Separate selected-case live completion check on the forthcoming GBrain default reader and gateway, not a fresh accuracy study. Public-safe finish metadata and hashes only; raw prompts and responses remain private. Its spend is additional to the historical $79.1460305."
@@ -2600,6 +2608,104 @@
       },
       "status": "covered",
       "note": "Archives all 17 source files, each with its launch SHA-256 and exact UTF-8 contents. Subsequent shipping changes fix failed-run receipts, reject unobserved think controls, strengthen offline evidence validation, and relocate saved report paths. Original results and launch fingerprints remain unchanged."
+    },
+    {
+      "claim_id": "cat2-type-accuracy-b80cad6",
+      "readme_anchor": "docs/benchmarks/2026-09-29-repin-cats-1-2-6.md: 74.7% type accuracy and 18.8% strict F1 at b80cad6",
+      "artifact_path": "docs/benchmarks/2026-09-29-repin-cats-1-2-6/type-accuracy.b80cad6.receipt.json",
+      "artifact_sha256": "dd087f41b1cfeb9d03f7ab6228d31c738feca7dde3181d99cb1687654a9b78a2",
+      "expected": {
+        "/data/overallTypeAccuracy": 0.7465753424657534,
+        "/data/overallStrictF1": 0.18776916451335057,
+        "/gbrain_version": "0.59.13.0",
+        "/execution/source_tree/dirty": false,
+        "/execution/product/package": "gbrain"
+      },
+      "status": "covered",
+      "note": "Corrected attendance orientation (person -> meeting). Schema v2 receipt from gbrain-evals c3ec550 with a clean tree."
+    },
+    {
+      "claim_id": "cat2-type-accuracy-939232f-corrected",
+      "readme_anchor": "docs/benchmarks/2026-09-29-repin-cats-1-2-6.md: the corrected scorer gives the same 74.7% at 939232f",
+      "artifact_path": "docs/benchmarks/2026-09-29-repin-cats-1-2-6/type-accuracy.939232f-corrected-scorer.receipt.json",
+      "artifact_sha256": "c407ce341676a1955711aebf0b1997f82dc93ad2f4262bb8d00b6b6eec4337d8",
+      "expected": {
+        "/data/overallTypeAccuracy": 0.7465753424657534,
+        "/data/overallStrictF1": 0.18776916451335057,
+        "/gbrain_version": "0.55.0.0",
+        "/execution/product/package": "gbrain-cues"
+      },
+      "status": "covered",
+      "note": "Same scorer run on the gbrain-cues alias (939232f), the pin before 2026-09-29."
+    },
+    {
+      "claim_id": "cat2-type-accuracy-939232f-v0.10.2-scorer",
+      "readme_anchor": "docs/benchmarks/2026-09-29-repin-cats-1-2-6.md: the September 28 scorer gave 86.6% at 939232f",
+      "artifact_path": "docs/benchmarks/2026-09-29-repin-cats-1-2-6/type-accuracy.939232f-v0.10.2-runner.receipt.json",
+      "artifact_sha256": "969997aee269deaf2ad43012f36b9e1c1f0b58704c1295946833fe4693844c1c",
+      "expected": {
+        "/data/overallTypeAccuracy": 0.8664259927797834,
+        "/data/overallStrictF1": 0.4134366925064599,
+        "/gbrain_version": "0.55.0.0"
+      },
+      "status": "covered",
+      "note": "Re-run of the v0.10.2 runner from a clean c9e90ad checkout; its attendance gold points meeting -> person."
+    },
+    {
+      "claim_id": "cat1-before-after-b80cad6",
+      "readme_anchor": "docs/benchmarks/2026-09-29-repin-cats-1-2-6.md: Cat 1 unchanged between 939232f and b80cad6",
+      "artifact_path": "docs/benchmarks/2026-09-29-repin-cats-1-2-6/before-after.b80cad6.receipt.json",
+      "artifact_sha256": "14055a4ea560a52cae1b82e29b6a16af49d8bea34dc5a230fcd67baca6ff6162",
+      "expected": {
+        "/verdict": "pass",
+        "/n_total": 145,
+        "/n_scored": 145,
+        "/gbrain_version": "0.59.13.0"
+      },
+      "status": "covered",
+      "note": "Keyless re-run; see the report for the metric table."
+    },
+    {
+      "claim_id": "cat6-prose-scale-b80cad6",
+      "readme_anchor": "docs/benchmarks/2026-09-29-repin-cats-1-2-6.md: Cat 6 unchanged between 939232f and b80cad6",
+      "artifact_path": "docs/benchmarks/2026-09-29-repin-cats-1-2-6/cat6-prose-scale.b80cad6.receipt.json",
+      "artifact_sha256": "6bfb489a22edced150042d7d337b7e2937f1320be9546585cf389958a1023435",
+      "expected": {
+        "/verdict": "pass",
+        "/n_total": 250,
+        "/n_scored": 250,
+        "/gbrain_version": "0.59.13.0"
+      },
+      "status": "covered",
+      "note": "Keyless re-run; see the report for the metric table."
+    },
+    {
+      "claim_id": "cat1-before-after-939232f",
+      "readme_anchor": "docs/benchmarks/2026-09-29-repin-cats-1-2-6.md: Cat 1 unchanged between 939232f and b80cad6",
+      "artifact_path": "docs/benchmarks/2026-09-29-repin-cats-1-2-6/before-after.939232f-v0.10.2-runner.receipt.json",
+      "artifact_sha256": "9f76ccc399425499de1390a3f1ad319db72ac3a0ea05d7846b771a6035bea3ce",
+      "expected": {
+        "/verdict": "pass",
+        "/n_total": 145,
+        "/n_scored": 145,
+        "/gbrain_version": "0.55.0.0"
+      },
+      "status": "covered",
+      "note": "Keyless re-run; see the report for the metric table."
+    },
+    {
+      "claim_id": "cat6-prose-scale-939232f",
+      "readme_anchor": "docs/benchmarks/2026-09-29-repin-cats-1-2-6.md: Cat 6 unchanged between 939232f and b80cad6",
+      "artifact_path": "docs/benchmarks/2026-09-29-repin-cats-1-2-6/cat6-prose-scale.939232f-v0.10.2-runner.receipt.json",
+      "artifact_sha256": "5738eb03c5469e2ced6af682c3fb1434d66b3086dd4d611df540d3f38a27f383",
+      "expected": {
+        "/verdict": "pass",
+        "/n_total": 250,
+        "/n_scored": 250,
+        "/gbrain_version": "0.55.0.0"
+      },
+      "status": "covered",
+      "note": "Keyless re-run; see the report for the metric table."
     }
   ]
 }
