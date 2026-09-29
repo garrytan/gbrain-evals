@@ -14,39 +14,91 @@ or add the questions your application needs to answer.
 For a working configuration, read [the settings guide](docs/settings.md).
 For datasets, methods, and every report, use [the documentation index](docs/README.md).
 
+## Where gbrain stands
+
+gbrain's clearest comparative result is retrieval: finding every conversation a
+question needs. On [LongMemEval](https://arxiv.org/abs/2410.10813)'s cleaned
+small split, gbrain found all labeled evidence sessions for **449 of 470
+answerable questions (95.53%)** in its first five returned chunks. That is
+higher than every other system we can score on the same strict metric from
+its saved per-question rankings.
+
+| System | Strict `recall_all@5` | Where the number comes from |
+|---|---|---|
+| **gbrain v0.48.4.0**, `balanced` with Voyage reranker | **95.53% (449/470)** | our run, September 6 |
+| gbrain v0.48.4.0, same without the reranker | 93.40% (439/470) | our run, September 6 |
+| MemPalace hybrid v4 + LLM rerank | 90.0% (423/470) | our strict recount of their saved rankings |
+| MemPalace hybrid v4, held-out subset | 88.7% (376/424) | our strict recount; different denominator |
+| MemPalace raw (ChromaDB) | 85.7% (403/470) | our strict recount of their saved rankings |
+| ContextFit + embedding fusion | 87.45% (411/470) All@5 | self-reported, their own harness |
+
+A question counts only if every required session is found, so finding one of
+two needed conversations earns nothing. Many published LongMemEval "R@5" scores
+of 95% to 100% count a question as found when any one required session appears.
+MemPalace's raw rankings find at least one required session for 454/470
+questions (96.6%) but all of them for only 403/470 (85.7%). Three limits
+apply. gbrain's five results are chunks, which can cover fewer than five
+sessions, while MemPalace returns five whole sessions. The gbrain configuration
+was chosen on these same 470 questions, with no held-out confirmation yet.
+Embedders, chunking and ranking all differ, so this shows how the tested
+pipelines compare, not why. Sources, dates and every row we could not match are
+in [comparisons and their protocols](docs/comparison-systems.md).
+
+**Answer accuracy is not yet a matched comparison.** gbrain's judged answers
+were correct on 433 of 500 questions (86.6%) with a Sonnet 4.6 reader, and that
+number is pending a re-run: the answer model could see session ids that mark
+the labeled evidence. Published results for other systems range from 81.6% to
+96.1%, each with its own reader, judge and prompts, and several are above
+86.6%. We have not run gbrain with a matching reader, so we claim no ranking on
+answers in either direction.
+
 ## Why put gbrain on your shortlist?
 
 **It finds evidence across long conversations.** In the September 6 LongMemEval
 run, gbrain found every labeled conversation needed for **449 of 470 answerable
-questions, or 95.53%**, within five returned text chunks. A question can require
-several conversations, so finding just one does not count. The answer model then
-answered **433 of 500 questions correctly, or 86.6%**, including questions whose
-correct response was to abstain. Those are separate measurements with separate
-denominators. [Read the experiment](docs/benchmarks/2026-09-06-longmemeval-ranker-wave.md).
+questions, or 95.53%**, within five returned text chunks. The answer model then
+read the full sessions behind those chunks and answered **433 of 500 questions
+correctly, or 86.6%**, including questions whose correct response was to
+abstain. Those are separate measurements with separate denominators. Two
+caveats belong next to them. The release setting (autocut off) was chosen by
+comparing arms on the same 470 questions, and the pre-registered target of at
+least 92% answer accuracy was missed. On September 28 we also found that the
+answer model saw the `answer_` prefix that LongMemEval puts on every labeled
+evidence session id, so the 433/500 figure is pending a re-run with opaque ids.
+A 30-question check found no effect of the prefix on retrieval.
+[Read the experiment](docs/benchmarks/2026-09-06-longmemeval-ranker-wave.md).
 
 **Keeping the conversations intact can help the answer model use them.** In a
 separate September 24 matched reading study, asking Sonnet 4.6 to take brief
 notes before answering raised judged correct answers from 308/361 to 324/361
 on fixed retrieved sessions. Nine notes responses hit the output limit, and
 manual review found grading artifacts. This measures answer reading, not a
-retrieval gain. A later reader release defaults to notes with a larger output
-limit; that new default has only a selected-case completion check here, not a
-fresh accuracy comparison. [Read the study](docs/benchmarks/2026-09-25-reading-notes.md).
+retrieval gain. Both arms saw the same `answer_` session ids, so the
+comparison is matched, but the result is pending a re-run with opaque ids. A
+later reader release defaults to notes with a larger output limit; that new
+default has only a selected-case completion check here, not a fresh accuracy
+comparison. [Read the study](docs/benchmarks/2026-09-25-reading-notes.md).
 
-**It can find an idea described in different words.** On our held-out concept
-questions, gbrain put an exact target first on **130/181 questions**, versus
-**118/181** for vector search alone. That configuration used a reranker, which
-reads candidate passages again with the question, and a rule limiting when page
-metadata can affect rank. The extra model call helped the overall score, though
-some questions got worse. [Compare all six configurations](docs/benchmarks/2026-09-09-retrieval-refresh.md#concept-search-order-meaning-and-popularity).
+**It can find an idea described in different words, with a reranker.** On our
+held-out concept questions, gbrain with a reranker put an exact target first
+on **130/181 questions**. A reranker reads candidate passages again together
+with the question. Without it, gbrain scored 102/181, below vector search
+alone at 118/181. We have not yet run vector search with the same reranker, so
+the like-for-like comparison is 102 against 118 without reranking. The
+reranker gained 37 questions and lost 9. For concept questions, test gbrain
+with reranking and keep vector search as a serious alternative.
+[Compare all six configurations](docs/benchmarks/2026-09-09-retrieval-refresh.md#concept-search-order-meaning-and-popularity).
 
 **It has a way to use relationships as evidence.** Suppose you ask who invested
 in Acme. Searching for “Acme” finds pages that mention the company. Following an
-“invested in” connection finds its investor. In our controlled production test,
-enabling relationship retrieval raised first-place hits from **9/39 to 21/39**
-on investor questions. The calls shared their index and query vectors. Attendance
-questions did not improve because the fixture's link direction did not match
-the parser's expectation. [Read the controlled comparison](docs/benchmarks/2026-09-09-retrieval-refresh.md#production-relationship-retrieval-one-switch).
+“invested in” connection finds its investor. In our controlled production test
+over 145 relationship questions, enabling relationship retrieval raised
+first-place hits from **14% to 24%** and recall at five from 0.663 to 0.724,
+improving recall on 45 question runs and worsening none. The gain was
+concentrated: investor questions rose from 9/39 to 21/39 first-place hits,
+while attendance questions stayed at 0/50 because the fixture's link direction
+did not match the parser's expectation. The calls shared their index and query
+vectors. [Read the controlled comparison](docs/benchmarks/2026-09-09-retrieval-refresh.md#production-relationship-retrieval-one-switch).
 
 **You can see what each setting buys you.** Returning fewer results saves reading,
 but a question about two events may need two old conversations. On LongMemEval,
@@ -59,9 +111,12 @@ five-result limit. These experiments produced practical defaults:
 a database index for searching it. Its retrieval pipeline exposes configuration
 and diagnostics. This suite keeps dated results and the records used to calculate
 them. Hosted embedding and reranking services receive the text they process;
-local storage does not make those API calls local. See the
-[pinned gbrain implementation](https://github.com/garrytan/gbrain/tree/939232f1746381b4e932d620d6c709e29198f14c)
-and [how to reproduce a run](eval/README.md).
+local storage does not make those API calls local. The retrieval results above
+were measured at gbrain [`2efaaf8f`](https://github.com/garrytan/gbrain/tree/2efaaf8f8a817b5b82e023383618fdcdb1cc5f7d)
+(v0.48.4.0). This repository currently installs
+[`939232f`](https://github.com/garrytan/gbrain/tree/939232f1746381b4e932d620d6c709e29198f14c)
+(v0.55.0.0), whose search modes are identical. See
+[how to reproduce a run](eval/README.md).
 
 ## What should you learn here?
 
@@ -119,14 +174,46 @@ questions and their relevant documents before comparing systems. The
 Retrieval can only find information that was saved. Our
 [transcript-distillation experiment](docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md)
 measures how much useful material survives when an agent session becomes a memory
-page. The recorded repair improved retention from **70.2% to 88.1%**, and all
-20 sessions expected to produce pages did so. The same run measured **7.0% claim
-hallucination**; human calibration of the judge remains unfinished. These results
-help evaluate the write path without treating retention as correctness.
+page. The recorded repair improved judged retention from **70.2% to 88.1%**,
+and all 20 sessions expected to produce pages did so. When a retained item must
+also have its quoted evidence present in the page, the scores are **58.2% to
+74.9%**. The same run measured **7.0% claim hallucination**. These are in-sample
+results: the repair was developed on this same 24-transcript corpus, from a
+single run, and human calibration of the judge remains unfinished. They help
+evaluate the write path without treating retention as correctness.
 
 We also test [when memory should surface during a conversation](docs/benchmarks/2026-06-12-brainbench-memory.md),
 source isolation, identities, dates, and other behaviors. The
 [full index](docs/README.md) explains each benchmark in ordinary terms.
+
+## Corrections
+
+On September 28, 2026 an audit found several published numbers that were
+invalid or overstated. Each report keeps its original figures, labeled, beside
+a dated correction:
+
+- The May calibration result (75% wins) is invalid: the judge saw the expected
+  behavior and knew which answer was which.
+  [Report](docs/benchmarks/2026-05-18-brainbench-cat14-cat15-calibration.md).
+- The April relationship precision at five was 39.2% to 44.7% on a lenient
+  denominator; divided by five slots it is 29.9% to 35.4%, against a best
+  possible 36.0%. The same report's undocumented alias recall falls from 31.0%
+  to 13.75%, and its link type accuracy of 70.7% to 88.5% came from a lenient
+  scorer; a strict re-run at the current pin gives 86.6% (240/277).
+  [Report](docs/benchmarks/2026-04-18-brainbench-v1.md).
+- The April and May relationship tables' `gbrain` row (49.1% precision at
+  five) came from a regular-expression parser of the four question templates,
+  now named `graph-oracle-parse`; it is not a product score.
+  [Report](docs/benchmarks/2026-04-19-brainbench-multi-adapter.md).
+- The Cat 35 88.1% is judge-only; evidence-verified retention is 74.9%.
+  [Report](docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md).
+- The May snapshot's Category 18b to 29 rows came from runners written before
+  the August audit; Cat 29's +4.00 synthesis lift also scored the same
+  single-answer call twice. [Report](docs/benchmarks/2026-05-23-v0.40.6.0-snapshot.md).
+- The LongMemEval answer accuracy (433/500) and the reading-notes result
+  (308/361 to 324/361) are pending re-runs because the answer model saw
+  `answer_` session ids. Retrieval numbers are unaffected as far as a
+  30-question check can tell.
 
 ## Inspect or extend the work
 

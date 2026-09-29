@@ -129,8 +129,9 @@ The answer may be established by a link from another page. In the saved
 preferred `funds/fund-a`. The relational pin restored the correct first result.
 
 A **relational pin** preserves a bounded number of relationship-derived results
-near the top after text reranking. In the September fixture it restored
-first-place relationship hits from 3/39 to 21/39. This is evidence for preserving
+near the top after text reranking. In the September 6 fixture, with the text
+reranker on in both arms, turning the pin on restored first-place relationship
+hits from 3/39 to 21/39. This is evidence for preserving
 a useful kind of evidence through a later stage. It is not a clean graph-versus-
 vector comparison. [Ranking experiment](benchmarks/2026-09-06-longmemeval-ranker-wave.md).
 
@@ -138,7 +139,9 @@ The [new controlled relationship experiment](benchmarks/2026-09-09-retrieval-ref
 asks a different question: what changes when production relationship retrieval is
 switched on while the index and query vectors stay the same? It improved recall
 on 15 of 145 questions and worsened none, with the same gains in three ingestion
-orders. For investor questions, first-place hits rose from 9/39 to 21/39.
+orders. For investor questions, with reranking off in both arms, first-place
+hits rose from 9/39 to 21/39. The two experiments end at the same count from
+different starting points and settings.
 
 The test also keeps cases that the parser handles differently from the old
 specialized wrapper. Attendance questions did not improve: the fixture stores

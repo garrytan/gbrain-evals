@@ -16,9 +16,27 @@ The [August 31 audit](docs/audit/2026-08-31-eval-audit.md) explains the finding 
 
 - [ ] **Test relational wording the parser did not help design** (issue #24 finding 6). Paraphrase the four relational templates, using a fixed generated set, and test how much benefit remains when wording changes. The existing graph adapter recognizes the original templates. A fresh run of those same templates cannot close this gap.
 
-- [ ] **Repeat the embedding-provider matrix with explicit settings** (Cat18/18b, WS5). The older runs could inherit an unintended reranker. Use supported provider cells and record their real configuration. The historical plan recorded ZeroEntropy's hosted API sunset as 2026-09-04; its old `zerank-2` cells cannot be treated as a current reproduction recipe.
+- [x] **Repeat the ZeroEntropy cells of the embedding-provider matrix** (Cat18/18b, WS5). Closed as obsolete on 2026-09-28: ZeroEntropy's hosted API was retired on 2026-09-04 and gbrain master no longer ships its recipe, so the `zembed-1` and `zerank-2` cells cannot be re-run. The May numbers stay historical and are marked invalid in the [May snapshot](docs/benchmarks/2026-05-23-v0.40.6.0-snapshot.md).
+
+- [ ] **Rebuild the embedding-provider matrix on supported providers** (Cat18/18b, WS5). Use cells such as `voyage-4`, OpenAI `text-embedding-3-large` and a local embedder, with and without the Voyage reranker, and record each cell's real configuration. The older runs counted chunk rows and could inherit an unintended reranker; `eval/runner/cat18b-embedding-rerank-matrix.ts` still hard-codes ZeroEntropy cells.
 
 - [ ] **Run live negative controls** (WS3). For model-backed categories, confirm that deliberately degraded configurations score at most half as well as the real ones under the fixed-seed rule. Scripted-model tests show that the checks can fail; live runs test whether they detect actual model-quality differences.
+
+- [ ] **Re-run LongMemEval answers with opaque session ids** (September 28 audit, C-01). Every labeled evidence session id starts with `answer_`, and the answer model saw those ids. v0.10.1 maps ids to opaque values in this repository's runners, with a test that no system or reader input contains `answer_`. Still to do: the paid re-run of the judged answers (433/500, which came from gbrain's own evaluator) and the reading-notes transfer (308/361 to 324/361). Retrieval was unaffected in a 30-question check, but the full retrieval arms should be recounted with opaque ids too.
+
+- [ ] **Confirm the LongMemEval release configuration on held-out data** (September 28 audit, B4). Autocut off was chosen by comparing arms on the same 470 questions. Complete the preregistered [LongMemEval-M pilot](docs/benchmarks/2026-09-24-longmemeval-m-pilot-preregistration.md) (4 of 28 B cases done; C0/C1 not run) or score a fresh split.
+
+- [ ] **Run matched-reader answer accuracy** (September 28 audit, B6). Run gbrain retrieval with a GPT-4o reader and a frontier reader, notes first, so answer accuracy can be compared with published results that used the same reader. Until then README claims no answer-accuracy ranking.
+
+- [ ] **Add a vector-plus-reranker concept cell** (September 28 audit, B2). The README concept comparison is 102/181 for gbrain against 118/181 for vectors without reranking; gbrain with reranking scored 130/181, but vectors with the same reranker were never run.
+
+- [ ] **Fix the attendance link direction in the relationship fixture** (September 28 audit, B3). The fixture stores `meeting → person`, while gbrain's parser expects `person → meeting`, so attendance questions stayed at 0/50 first-place hits.
+
+- [ ] **Re-run Cat14 with the current blind runner** (September 28 audit, A-01). The May 75% result is retracted. The current runner is blind, judges both orders at temperature 0 and calls `runThink`; the historical cost was about $0.05.
+
+- [ ] **Re-run the May snapshot categories with current runners** (September 28 audit, A-09 and Part B). Cats 19, 20 and 21 have hermetic or cheap live modes. Until receipts exist, the May rows stay marked invalid.
+
+- [ ] **Re-pin gbrain to a master commit or release tag** (September 28 audit, C1/C2). The current pin `939232f` sits on a side branch, and `gbrain-reader`'s `a9de062` is on no branch. Against master, 21 tests fail: `memory-cues` is unmerged, ZeroEntropy was removed, the default embedder changed, a test hook was removed, and many tests hard-code the pin. Put the pin in one constant, gate `memory-cues` tests on a capability probe, and add a non-blocking weekly canary against master.
 
 ## Data and benchmark fidelity
 
@@ -32,13 +50,15 @@ The [August 31 audit](docs/audit/2026-08-31-eval-audit.md) explains the finding 
 
 ## Integration maintenance
 
-- [ ] **Bring Cat35 missing-prerequisite receipts into the common contract** (WS0). The recorded issue is that missing `OPENAI_API_KEY` exits 2 without a skipped receipt. Add a skip reason and the common acknowledgment behavior so `all.ts` does not need its exit-code fallback. The original note recorded 135 passing tests and preflight checks at v0.47.6.0; that is not a new verification.
+- [ ] **Bring Cat35 missing-prerequisite receipts into the common contract** (WS0). The recorded issue is that missing `OPENAI_API_KEY` exits 2 without a skipped receipt, and the runner writes `<stamp>-cat35[-bpre].json` rather than `receipt.json`, so `all.ts` records its smoke run through the exit-code fallback. Add a skip reason, the common receipt name and the acknowledgment behavior. (A historical note recorded 135 passing tests at v0.47.6.0; that predates the current pin.)
 
 - [ ] **Retire or repair the historical shootout wrapper** (WS7). The wrapper still refuses reranker cells and Phase 2 lacks its driver. Newer gbrain experiments provide configuration controls, so the old task “add any search-config surface” is no longer an accurate description of all upstream capability. Decide how to update the wrapper against a tested CLI and supported providers before re-enabling cells. See [its operating notes](scripts/RUNBOOK_SHOOTOUT.md).
 
-- [ ] **Export a public SkillOpt import path** (`skillopt-cats-11`). Cat30–33 use deep imports into gbrain's source. They work in the pinned flat installation but can break with isolated package layouts. An upstream `./core/skillopt` export would provide a stable contract.
+- [x] **Export a public SkillOpt import path** (`skillopt-cats-11`). Completed upstream: gbrain exports `./core/skillopt` (`runSkillOpt`, `scoreSkillOnTasks`, `loadHeldOut`) at the current pin and on master. Cat30–33 switched from deep source imports to that export on 2026-09-28.
 
 - [ ] **Export gbrain's version.** A `gbrain/version` subpath would replace the path-resolution helper in `eval/runner/gbrain-version.ts`. The helper currently works; this is maintenance work.
+
+- [x] **Add score gates to Cat 2 and Cat 3** (September 28 audit, C-06/C7). Completed in v0.10.1: both runners write receipts and gate on regression floors, and CI runs them through `all.ts --tier offline`.
 
 ## Cat35 publication and measurement
 
@@ -79,5 +99,7 @@ These items came from the August 16 plan reviews and the August 26 publication r
 - [ ] **Split compound claims more carefully** (Codex round 2). Mechanical `segmentClaims` treats some compound sentences as one claim. Model-based decomposition could sharpen hallucination measurement while adding cost and nondeterminism.
 
 ## Completed infrastructure work
+
+- [x] **Run every hermetic check in CI** (September 28 audit, C5 to C9). CI now runs the unit tests under `eval/`, the Python orchestrator tests, the LongMemEval recount, documentation and query validators, and an unfiltered `tsc`. The unit suite reuses a pre-migrated PGLite snapshot per embedding shape and runs as four concurrent shards, locally and in CI. The inert `postgres@3.4.9` patch and the unneeded PGLite postinstall link were removed. Completed in gbrain-evals v0.10.2, 2026-09-28.
 
 - [x] **PGLite teardown freeze under Bun tests** (gbrain v0.46.3). The synchronous WASM loop stopped reproducing at v0.47.8.0. A minimal reproduction and the adapter suite were checked with an external watchdog, and all six skipped teardowns were restored. The bounded disconnect handling for real runs remains. Completed in gbrain-evals v0.4.0, 2026-08-31.

@@ -229,6 +229,13 @@ bun eval/runner/longmemeval-aggregate.ts docs/benchmarks/2026-05-07-longmemeval-
 bun eval/runner/longmemeval-aggregate.ts docs/benchmarks/2026-05-07-longmemeval-s/prefix-bracket-2a56b512-v0.47.8.0.ndjson --top-k 5 --dataset s --output /tmp/rederive-prefix
 ```
 
+Since v0.10.1 the NDJSON validator rejects residual error rows unless told otherwise. The prefix bracket keeps one harness error row in its hybrid arm and eight unscored rows from an incomplete `gbrain-hybrid-sessdiv` pass, so validate its two scored arms with `--allow-errors`:
+
+```sh
+grep -v '"adapter":"gbrain-hybrid-sessdiv"' docs/benchmarks/2026-05-07-longmemeval-s/prefix-bracket-2a56b512-v0.47.8.0.ndjson > /tmp/prefix-scored.ndjson
+bun eval/runner/longmemeval-validate-ndjson.ts /tmp/prefix-scored.ndjson --adapters gbrain-hybrid,gbrain-hybrid+expansion --allow-errors
+```
+
 The historical runner used three worker shards, ten-minute resumable invocations, a 90-second per-question timeout, and database recycling every 25 questions. This bounded earlier long-running PGLite hangs. Workers shared a WAL-mode SQLite embedding cache with a ten-second busy timeout and wrote NDJSON resume records. Session IDs were normalized to lowercase before page and chunk writes to avoid a mismatch between those paths.
 
 There was one run per configuration. Query expansion can vary between calls; the old claimed limit of 0.2-point variation was not established by repeated trials. A wider result budget can improve recall and increase cost or noise, so it is a useful additional experiment, not a meaningless one. This report did not run `_m`, an answering model, or takes-search. Answer quality was finally measured in the [September 6 report](2026-09-06-longmemeval-ranker-wave.md).

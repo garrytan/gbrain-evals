@@ -50,7 +50,8 @@ An adapter gives one search method the same pages and asks it to return ranked r
 | `grep-only` | Scores words in the pages using BM25, a keyword-ranking formula. It is an in-memory implementation, not a shell call to `grep`. |
 | `vector` | Embeds each page and the question as lists of numbers, then ranks pages by similarity. |
 | `vector-grep-rrf-fusion` | Combines gbrain's keyword and vector rankings with graph traversal disabled. |
-| `gbrain` | Extracts relationships and answers the supported relational templates through graph traversal. |
+| `gbrain` | Since v0.10.1: the product path, gbrain's hybrid search with relationship retrieval on, answering every question family. |
+| `graph-oracle-parse` | Parses the four generator question templates with regular expressions and follows the fixture's graph. It knows the question form in advance, so treat it as an upper bound, not a product score. Before v0.10.1 this adapter was named `gbrain`. |
 
 The long hybrid adapter name is a stable identifier in commands and saved results. In prose we call it **hybrid without graph traversal**.
 
@@ -60,7 +61,7 @@ The vector and hybrid adapters need `OPENAI_API_KEY`. Each run builds its own st
 # One complete comparison of the relational question family.
 BRAINBENCH_N=1 bun eval/runner/multi-adapter.ts --queries relational
 
-# All applicable families: relational, fuzzy and externally authored.
+# All applicable families: relational, fuzzy and synthetic-outsider.
 bun run eval:run
 
 # One run of a single baseline on fuzzy questions.
@@ -77,7 +78,7 @@ The default is five runs with seeded page-order shuffling. This checks sensitivi
 
 LongMemEval's strict **recall_all@5** asks a different question: did *every* required conversation session appear? Getting one of two required sessions earns no credit on that question. These measures must be named explicitly when comparing results.
 
-The scorer builds relational questions from the fictional world's relationship labels. It also scores the applicable built-in fuzzy and externally authored question families. Items without document relevance labels, such as answer-only or abstention cases, are excluded from this retrieval metric and listed in the receipt.
+The scorer builds relational questions from the fictional world's relationship labels. It also scores the applicable built-in fuzzy and synthetic-outsider question families. The synthetic-outsider family is the 50 AI-authored Tier 5.5 placeholder questions; it uses the `externally-authored` tier id reserved for outside submissions, but no outside author wrote it. Receipts before v0.10.2 label this family `externally-authored`. Items without document relevance labels, such as answer-only or abstention cases, are excluded from this retrieval metric and listed in the receipt.
 
 Adapters receive sanitized copies without the hidden relationship facts or answer labels. This is an API boundary and a reviewed coding rule, not operating-system isolation against malicious code reading files.
 

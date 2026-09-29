@@ -2,13 +2,22 @@
 
 **Historical run: April 18, 2026.** Branch `garrytan/link-timeline-extract`, PR #188; in-memory PGLite. The original run took about 3 minutes without API keys or network access. These are the measurements from that run, not a score for the current release. See the [retrieval refresh](2026-09-09-retrieval-refresh.md) for current results.
 
+**September 28, 2026 erratum: three numbers in this report are corrected below.**
+
+- **Precision@5 (Category 1).** The published 39.2% to 44.7% divided each question's hits by the number of results returned in its first five, not by five. A September 28 re-run of `eval/runner/before-after.ts` on the committed corpus reproduces the BEFORE side exactly: 217 correct in 553 returned slots, which is 39.2% on that lenient denominator. That run has 145 questions, not the 196 described below. Dividing by five slots per question (145 × 5 = 725) gives **29.9% before (217/725) and 35.4% after (257/725)** in the re-run. The historical AFTER count of 247 would give 34.1% (247/725). On the legacy denominator the re-run gives 46.5% after, against the 44.7% published. The best possible score is 36.0% (261/725), because most questions have fewer than five correct answers. Recall@5 (83.1% to 94.6%, out of 261 required answers) is unaffected. The AFTER system returned every BEFORE result plus graph results, so the set-level table cannot show AFTER losing; and BEFORE was sorted alphabetically, which no real retriever does.
+- **Undocumented alias recall (Category 3).** The published 31.0% counted a handle written without its `@`, such as `schen`, as undocumented. The page text includes `@schen`, and the full-text index drops the `@`, so that alias is in the page. It scored 100 of 100. A September 28 re-run gives `initial` 15/100, `no-period` 15/100 and typos 25/200. Without the misclassified handle, **undocumented alias recall is 55/400 = 13.75%**. The initial-letter hits are partly luck: 20 entities share each surname, so `S. Chen` finds the target only by tie order.
+- **Link type accuracy (Category 2).** The published 70.7% to 88.5% came from an older scorer that gave a pair full credit if any inferred type matched, so an extractor that emitted every type could score 100%. Scored so that every wrong inferred type counts against it, a September 28 re-run at the current pin gives **86.6% type accuracy (240/277 found pairs)** and strict F1 of 41.3% (48.1% under the old rule). The historical before and after values cannot be re-scored because their extractor versions were not preserved.
+
+The original tables stay below, labeled with these corrections.
+
 A note can mention a company without saying that its author works there. Keyword search finds the mention. A typed relationship records what the mention means: employee, founder, investor, or advisor. This experiment asked whether using those relationships first helped gbrain find the right people.
 
 The combined graph-first search and text fallback returned more correct answers in its first five results:
 
 | Metric              | BEFORE PR #188 | AFTER PR #188 | Δ            |
 |---------------------|----------------|---------------|--------------|
-| **Precision@5**     | 39.2%          | **44.7%**     | **+5.4 pts** |
+| Precision@5, as published (lenient denominator; see erratum) | 39.2% | 44.7% | +5.4 pts |
+| **Precision@5, standard denominator (September 28 re-run)** | **29.9%** | **35.4%** | **+5.5 pts** (ceiling 36.0%) |
 | **Recall@5**        | 83.1%          | **94.6%**     | **+11.5 pts**|
 | Correct in top-5    | 217            | 247           | **+30**      |
 
@@ -28,7 +37,8 @@ For “Who works at Acme?”, a text match may return investors, advisors, and o
 
 | Metric              | BEFORE | AFTER  | Δ             |
 |---------------------|--------|--------|---------------|
-| **Precision@5**     | 39.2%  | 44.7%  | **+5.4 pts**  |
+| Precision@5, as published (lenient) | 39.2%  | 44.7%  | +5.4 pts  |
+| **Precision@5, standard (September 28 re-run)** | **29.9%** | **35.4%** | **+5.5 pts** |
 | **Recall@5**        | 83.1%  | 94.6%  | **+11.5 pts** |
 | Correct in top-5    | 217    | 247    | **+30**       |
 
@@ -59,7 +69,7 @@ Attendance was easier than advice. The graph found 97.8% of expected attendance 
 
 - Code examples containing page-like strings were being turned into links. Blanking fenced and inline code before matching reduced the measured code-fence leak rate to 0%.
 - Timeline writes accepted a year such as 99999. The fix required a real `YYYY-MM-DD` date, a year from 1900–2199, and a round-trip date check that rejects February 30.
-- Investment prose such as “led the Series A” was missed by rules looking for “invested in.” All 60 detected investment links initially had the wrong type. Broader phrases, a 240-character context window instead of 80, more careful advisor rules, a person-role prior, and investment-before-advisor matching moved overall type accuracy from 70.7% to 88.5%, and investment accuracy from 0% to 91.7%.
+- Investment prose such as “led the Series A” was missed by rules looking for “invested in.” All 60 detected investment links initially had the wrong type. Broader phrases, a 240-character context window instead of 80, more careful advisor rules, a person-role prior, and investment-before-advisor matching moved overall type accuracy from 70.7% to 88.5% under the older lenient scorer (see the erratum), and investment accuracy from 0% to 91.7%.
 - “Founder of” was missed by a rule that recognized only “founded.” Adding noun forms and treating founder links as acceptable answers to this fixture's employment questions moved graph recall from 53.8% to 93.1%. That employment rule is a benchmark convention, not a claim that every founder remains an employee.
 
 ## Other checks in this run
@@ -69,7 +79,8 @@ Identity resolution tested 100 entities with eight alias forms each. An alias is
 | Alias category | Recall (top-10) |
 |----------------|-----------------|
 | Documented (in canonical body)     | 100.0% |
-| Undocumented (initials, typos)     | 31.0%  |
+| Undocumented (initials, typos), as published | 31.0% (counted `schen` for `@schen` as undocumented) |
+| **Undocumented, corrected (September 28 re-run)** | **13.75% (55/400)** |
 
 The 50-entity timeline fixture contained 10–20 dated events per entity over five years:
 

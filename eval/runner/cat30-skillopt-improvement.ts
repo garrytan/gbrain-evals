@@ -53,12 +53,12 @@ import {
   type ChatOpts,
   type ChatResult,
 } from 'gbrain/ai/gateway';
-// Deep src imports: gbrain's export map has no skillopt subpath yet (audit
-// skillopt-cats-11). Works on the pinned flat bun/npm install this repo uses;
-// requesting a proper `./core/skillopt` export upstream.
-import { runSkillOpt } from '../../node_modules/gbrain/src/core/skillopt/orchestrator.ts';
-import { scoreSkillOnTasks } from '../../node_modules/gbrain/src/core/skillopt/validate-gate.ts';
-import { loadHeldOut } from '../../node_modules/gbrain/src/core/skillopt/held-out.ts';
+// SkillOpt entry points via gbrain's public `./core/skillopt` export (audit
+// skillopt-cats-11; the export exists at the pin and on gbrain master).
+import {
+  runSkillOpt, scoreSkillOnTasks,
+  loadHeldOut,
+} from 'gbrain/core/skillopt';
 import { ProbeAccounting } from './probe-accounting.ts';
 import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
