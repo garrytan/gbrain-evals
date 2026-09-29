@@ -10,8 +10,12 @@
  *   dream    — triage → runPhaseSynthesize (THE headline distillation feature)
  *
  * Run:
- *   bun eval/runner/cat35-transcript-distill.ts              # BPRE smoke (default): 2 transcripts, Haiku — measured $0.10 / 81s
- *   CAT35_FULL=1 bun eval/runner/cat35-transcript-distill.ts # full 24 × 3 lanes — measured $6.20 / 29 min (Sonnet judge)
+ *   bun eval/runner/cat35-transcript-distill.ts --budget-usd 1              # BPRE smoke (default): 2 transcripts, Haiku — measured $0.10 / 81s
+ *   CAT35_FULL=1 bun eval/runner/cat35-transcript-distill.ts --budget-usd 20 # full 24 × 3 lanes — measured $6.20 / 29 min (Sonnet judge)
+ *
+ * Every provider request is reserved in the budget ledger first
+ * (budget-ledger.ts); without --budget-usd (or BRAINBENCH_BUDGET_USD) the
+ * runner refuses to start after the pre-flight estimate.
  *   ... --lanes verbatim,dream --transcripts coding-reflection-01 --json --judge-calibration
  *
  * Safe-by-default: the runner DEFAULTS to BPRE so `eval:brainbench` sweeps can
@@ -32,6 +36,9 @@
  * full mode (audit PC-09).
  */
 
+// First import: the budget ledger replaces globalThis.fetch with its
+// delegating fetch before any gbrain or SDK module can capture fetch.
+import { BudgetExceededError, budgetOptionsFrom, receiptCost, startPaidRun, type BudgetRun, type PaidRequestGuard } from './budget-ledger.ts';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -456,6 +463,15 @@ export function completedWs0Receipt(args: {
 
 // ─── Main ─────────────────────────────────────────────────────────────────
 
+/** The budget-ledger run for this process's paid work; closed by main or its exit handlers. */
+let paidRun: { run: BudgetRun; guard: PaidRequestGuard } | null = null;
+
+function closePaidRun(): void {
+  paidRun?.guard.uninstall();
+  paidRun?.run.close();
+  paidRun = null;
+}
+
 async function main(runTmp: string, runStamp: Date): Promise<number> {
   const opts = parseOpts();
   const wallStart = Date.now();
@@ -569,6 +585,16 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
     return setupError(`pre-flight: projected worst-case $${projected.toFixed(2)} exceeds CAT35_HARD_STOP_USD=$${HARD_STOP_USD} — refusing to start`);
   }
   err(`pre-flight: projected worst-case $${projected.toFixed(2)} (cap $${HARD_STOP_USD})`);
+  // Every provider request from here on (judges, fact extraction, dream
+  // synthesis and its subagents) is reserved in the budget ledger first.
+  try {
+    paidRun = startPaidRun('cat35-transcript-distill', { ...budgetOptionsFrom(process.argv.slice(2)), estimateUsd: projected, log: err });
+  } catch (error) {
+    if (!(error instanceof BudgetExceededError)) throw error;
+    writeReceipt(WS0_RECEIPT_PATH, skippedWs0Receipt(`budget: ${error.message}`, startedAt));
+    err(`REFUSED: ${error.message}`);
+    return 1;
+  }
 
   const scaffold = loadScaffold();
   const scaffoldBySlug = new Map(scaffold.map((p) => [p.slug, p.body]));
@@ -1425,34 +1451,39 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
   };
   const receiptPath = join(REPORT_DIR, `${stamp}-cat35${opts.full ? '' : '-bpre'}.json`);
   writeFileSync(receiptPath, JSON.stringify(receipt, null, 2) + '\n');
-  writeReceipt(
-    WS0_RECEIPT_PATH,
-    completedWs0Receipt({
+  const completed = completedWs0Receipt({
+    mode,
+    gatePass,
+    perItem,
+    errors: [
+      ...judgeEvents
+        .filter((e) => e.judge_failed)
+        .map((e) => ({ probe_id: `${e.transcript_id}:${e.lane}:${e.purpose}`, origin: 'judge' as const, message: `judge failed after retry (${e.event_id})` })),
+      ...[...states.entries()].flatMap(([tid, st]) =>
+        Object.entries(st.laneError).map(([lane, msg]) => ({ probe_id: `${tid}:${lane}`, origin: 'sut' as const, message: String(msg).slice(0, 500) })),
+      ),
+    ],
+    resolvedConfig: {
       mode,
-      gatePass,
-      perItem,
-      errors: [
-        ...judgeEvents
-          .filter((e) => e.judge_failed)
-          .map((e) => ({ probe_id: `${e.transcript_id}:${e.lane}:${e.purpose}`, origin: 'judge' as const, message: `judge failed after retry (${e.event_id})` })),
-        ...[...states.entries()].flatMap(([tid, st]) =>
-          Object.entries(st.laneError).map(([lane, msg]) => ({ probe_id: `${tid}:${lane}`, origin: 'sut' as const, message: String(msg).slice(0, 500) })),
-        ),
-      ],
-      resolvedConfig: {
-        mode,
-        lanes: opts.lanes,
-        transcripts: fixtures.length,
-        corpus_sha: corpusSha,
-        judge_prompt_version: CAT35_JUDGE_PROMPT_VERSION,
-        ...receipt.config_snapshot,
-        detailed_receipt: receiptPath,
-      },
-      judge: { model: judgeModel, temperature: JUDGE_TEMPERATURE, rubric_version: CAT35_JUDGE_PROMPT_VERSION },
-      data: { coverage_by_lane: coverageByLane, gates, judge_failed_rate: judgeFailedRate, detailed_receipt: receiptPath },
-      startedAt,
-    }),
-  );
+      lanes: opts.lanes,
+      transcripts: fixtures.length,
+      corpus_sha: corpusSha,
+      judge_prompt_version: CAT35_JUDGE_PROMPT_VERSION,
+      ...receipt.config_snapshot,
+      detailed_receipt: receiptPath,
+    },
+    judge: { model: judgeModel, temperature: JUDGE_TEMPERATURE, rubric_version: CAT35_JUDGE_PROMPT_VERSION },
+    data: { coverage_by_lane: coverageByLane, gates, judge_failed_rate: judgeFailedRate, detailed_receipt: receiptPath },
+    startedAt,
+  });
+  if (paidRun) {
+    paidRun.guard.uninstall();
+    const spend = paidRun.run.close();
+    paidRun = null;
+    completed.cost = receiptCost(spend);
+    completed.delivered_tokens = { tokens: spend.input_tokens, basis: 'provider-reported input tokens of every paid request (judges, fact extraction, dream synthesis and subagents), from the budget ledger' };
+  }
+  writeReceipt(WS0_RECEIPT_PATH, completed);
 
   const artifactsDir = join(REPORT_DIR, `${stamp}-artifacts`);
   mkdirSync(artifactsDir, { recursive: true });
@@ -1525,11 +1556,13 @@ if (import.meta.main) {
   process.env.GBRAIN_HOME = join(runTmp, 'gbrain-home');
   main(runTmp, runStamp).then(
     (code) => {
+      closePaidRun();
       cleanupRunTmp(runTmp);
       process.exit(code);
     },
     (e) => {
       const message = e instanceof Error ? (e.stack ?? e.message) : String(e);
+      closePaidRun();
       err(`fatal: ${message}`);
       try {
         writeReceipt(WS0_RECEIPT_PATH, errorWs0Receipt(`fatal: ${message}`, runStamp.toISOString()));

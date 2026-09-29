@@ -218,10 +218,14 @@ function runHermeticRunner(
       transcripts, '--lanes', lanes,
     ], {
       cwd: dir,
-      env: { PATH: process.env.PATH, HOME: dir, ANTHROPIC_API_KEY: 'stub-only', OPENAI_API_KEY: 'stub-only', CAT35_JUDGE_MODEL: MODEL },
+      // The runner requires a budget authorization; the stubbed transports
+      // must leave the ledger with zero paid requests.
+      env: { PATH: process.env.PATH, HOME: dir, ANTHROPIC_API_KEY: 'stub-only', OPENAI_API_KEY: 'stub-only', CAT35_JUDGE_MODEL: MODEL,
+        BRAINBENCH_BUDGET_USD: '5', BRAINBENCH_BUDGET_LEDGER: join(dir, 'ledger.json') },
       timeout: 30_000,
     });
     expect(proc.exitCode, proc.stderr.toString()).toBe(1);
+    expect(JSON.parse(readFileSync(join(dir, 'ledger.json'), 'utf8')).entries).toEqual([]);
     const receipt = JSON.parse(proc.stdout.toString());
     const reports = join(dir, 'eval/reports/cat35-transcript-distill');
     const saved = readdirSync(reports).find(p => p.endsWith('-cat35-bpre.json'))!;

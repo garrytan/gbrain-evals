@@ -81,7 +81,7 @@
  *     reading a --search-pin arm.
  *
  * Run:
- *   bun eval/runner/cat13-conceptual.ts                  # live embeds (OPENAI_API_KEY)
+ *   bun eval/runner/cat13-conceptual.ts --budget-usd 5   # live embeds (OPENAI_API_KEY); every request reserved in the budget ledger
  *   bun eval/runner/cat13-conceptual.ts --stub-embed     # hermetic, no keys
  *   CAT13_PROBES=1000 bun eval/runner/cat13-conceptual.ts
  *   CAT13_PROBES=200 bun eval/runner/cat13-conceptual.ts --adapter vector
@@ -114,6 +114,8 @@ import {
   writeReceipt, receiptPath, RECEIPT_SCHEMA_VERSION, BENCHMARK_VERSION,
   type Receipt, type ReceiptVerdict,
 } from './receipt.ts';
+import { BudgetExceededError, budgetOptionsFrom, receiptCost, startPaidRun, type BudgetOptions, type BudgetRun, type PaidRequestGuard } from './budget-ledger.ts';
+import { registryEntry } from '../registry.ts';
 import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
 
 export const TOP_K = 5;
@@ -1219,6 +1221,8 @@ export interface Cat13Options {
   tuningConcepts?: number;
   holdoutConcepts?: number;
   seed?: number;
+  /** Paid-run budget (--budget-usd, --budget-ledger, --program-cap-usd); defaults to the BRAINBENCH_* env vars. */
+  budget?: BudgetOptions;
 }
 
 export const DEFAULT_TUNING_CONCEPTS = 20;
@@ -1240,6 +1244,7 @@ export function parseCat13Argv(
   env: Record<string, string | undefined> = process.env,
 ): Cat13Options {
   const opts: Cat13Options = {};
+  const budgetArgv: string[] = [];
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     const eq = arg.indexOf('=');
@@ -1270,13 +1275,19 @@ export function parseCat13Argv(
       case '--tuning-concepts': opts.tuningConcepts = parseNonNegativeInt(value(), '--tuning-concepts'); break;
       case '--holdout-concepts': opts.holdoutConcepts = parseNonNegativeInt(value(), '--holdout-concepts'); break;
       case '--seed': opts.seed = parseNonNegativeInt(value(), '--seed'); break;
+      case '--budget-usd': case '--budget-ledger': case '--program-cap-usd': {
+        const flagValue = value();
+        opts.budget = budgetOptionsFrom([...budgetArgv, flag, flagValue], env);
+        budgetArgv.push(flag, flagValue);
+        break;
+      }
       default:
         throw new Error(
           `unknown argument '${arg}'. Known: --stub-embed --allow-skip --adapter <name> `
           + `--embedding-model <provider:model> --embedding-dims <N> --reranker on|off --autocut on|off `
           + `--expansion-variant-budget <b> --keyword-arm-confidence-floor <f|off> `
           + `--search-pin <search.key>=<value> (repeatable; generic pass-through — gbrain ignores unknown search.* keys silently) `
-          + `--tuning-concepts <N> --holdout-concepts <M> --seed <N>`,
+          + `--tuning-concepts <N> --holdout-concepts <M> --seed <N> --budget-usd <dollars> --budget-ledger <path> --program-cap-usd <dollars>`,
         );
     }
   }
@@ -1414,6 +1425,27 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
   const subsetCounts: Record<ProbeSubset, number> = { tuning: 0, holdout: 0, mixed: 0, unassigned: 0 };
   for (const p of probes) subsetCounts[probeSubset(p, split)] += 1;
 
+  // Live embeds go through the budget ledger, which refuses to start without
+  // --budget-usd; the hermetic stub makes no provider request.
+  let paid: { run: BudgetRun; guard: PaidRequestGuard } | null = null;
+  if (!stubEmbed) {
+    try {
+      paid = startPaidRun(CATEGORY, { ...(opts.budget ?? budgetOptionsFrom([])), estimateUsd: registryEntry('concept-search')!.cost_estimate.usd });
+    } catch (error) {
+      if (error instanceof BudgetExceededError) return skipped(`budget: ${error.message}`);
+      throw error;
+    }
+  }
+  const settlePaid = (receipt: Receipt) => {
+    if (!paid) return;
+    paid.guard.uninstall();
+    const spend = paid.run.close();
+    paid = null;
+    receipt.cost = receiptCost(spend);
+    receipt.delivered_tokens = { tokens: spend.input_tokens, basis: 'provider-reported input tokens of every paid embedding request, from the budget ledger' };
+  };
+
+  try {
   ensureGateway(stubEmbed, embedder);
 
   log(`# BrainBench Cat 13 — Conceptual Recall\n`);
@@ -1671,6 +1703,7 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
       resolved_config: resolvedConfig,
       data,
     };
+    settlePaid(receipt);
     writeReceipt(receiptFile, receipt);
     console.error(`[cat13] RUN INVALID — ${executionIncomplete ? 'search execution incomplete' : `infra error rate ${(summary.infra_error_rate * 100).toFixed(1)}% over cap`}`);
     return { receipt, results, exitCode: 3 };
@@ -1691,10 +1724,15 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
     resolved_config: resolvedConfig,
     data,
   };
+  settlePaid(receipt);
   writeReceipt(receiptFile, receipt);
   log(`\n[cat13] run_status=completed verdict=${verdict} n_scored=${summary.n_scored}/${summary.n_total}`);
 
   return { receipt, results, exitCode: verdict === 'fail' ? 1 : 0 };
+  } finally {
+    paid?.guard.uninstall();
+    paid?.run.close();
+  }
 }
 
 // ─── CLI ──────────────────────────────────────────────────────────

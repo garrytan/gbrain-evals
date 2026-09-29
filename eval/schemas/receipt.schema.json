@@ -335,7 +335,8 @@
           "required": [
             "p50",
             "p95",
-            "n"
+            "n",
+            "basis"
           ],
           "properties": {
             "p50": {
@@ -349,6 +350,9 @@
             "n": {
               "type": "number",
               "minimum": 0
+            },
+            "basis": {
+              "type": "string"
             }
           }
         }

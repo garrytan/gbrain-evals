@@ -270,12 +270,12 @@ describe('receipt schema v2', () => {
   test('cost, latency and delivered tokens are null until measured, and validated when present', () => {
     const upgraded = upgradeReceipt(makeReceipt());
     expect([upgraded.cost, upgraded.latency_ms, upgraded.delivered_tokens]).toEqual([null, null, null]);
-    expect(latencySummary([])).toBeNull();
-    expect(latencySummary([5, 1, 3, 2, 4])).toEqual({ p50: 3, p95: 5, n: 5 });
+    expect(latencySummary([], 'x')).toBeNull();
+    expect(latencySummary([5, 1, 3, 2, 4], 'per-query search')).toEqual({ p50: 3, p95: 5, n: 5, basis: 'per-query search' });
     const measured = upgradeReceipt(makeReceipt({ cost: { usd: 0.25, input_tokens: 1000, output_tokens: 50, basis: 'provider usage' },
-      latency_ms: { p50: 10, p95: 40, n: 20 }, delivered_tokens: { tokens: 1000, basis: 'provider-reported input tokens' } }));
+      latency_ms: { p50: 10, p95: 40, n: 20, basis: 'per-query search' }, delivered_tokens: { tokens: 1000, basis: 'provider-reported input tokens' } }));
     expect(validateStoredReceipt(measured)).toEqual([]);
-    expect(validateStoredReceipt({ ...measured, latency_ms: { p50: 50, p95: 40, n: 2 } })).toContain('v2 latency_ms must be null or {p50 <= p95, n}');
+    expect(validateStoredReceipt({ ...measured, latency_ms: { p50: 50, p95: 40, n: 2, basis: 'x' } })).toContain('v2 latency_ms must be null or {p50 <= p95, n, basis}');
   });
 
   test('legacy v1 receipts stay readable', () => {

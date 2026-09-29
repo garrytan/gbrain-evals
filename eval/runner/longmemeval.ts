@@ -56,8 +56,8 @@
  *      that contain the answer. recall_all@k against that set is unambiguous.
  *
  * Run:
- *   bun eval/runner/longmemeval.ts                    # full 500-Q run
- *   bun eval/runner/longmemeval.ts --limit 25         # smoke test
+ *   bun eval/runner/longmemeval.ts --budget-usd 5     # full 500-Q run; provider requests reserved in the budget ledger
+ *   bun eval/runner/longmemeval.ts --limit 25 --budget-usd 1   # smoke test
  *   bun eval/runner/longmemeval.ts --keyword-only     # skip embeddings
  *   bun eval/runner/longmemeval.ts --dataset oracle   # easy split (3 sess/Q)
  *   bun eval/runner/longmemeval.ts --top-k 5          # default 8
@@ -90,7 +90,9 @@ import { loadConfig } from 'gbrain/config';
 // its vector arm, so the standalone vector adapter must too (document-side
 // embed() returns different vectors on asymmetric models; longmemeval-06).
 import { embedQuery } from 'gbrain/embedding';
-import { configureGateway, getEmbeddingModel, getEmbeddingDimensions, getExpansionModel, __setEmbedTransportForTests } from 'gbrain/ai/gateway';
+import { configureGateway, diagnoseEmbedding, getEmbeddingModel, getEmbeddingDimensions, getExpansionModel, __setEmbedTransportForTests } from 'gbrain/ai/gateway';
+import { BudgetExceededError, budgetOptionsFrom, receiptCost, startPaidRun, type BudgetOptions, type BudgetRun, type PaidRequestGuard } from './budget-ledger.ts';
+import { registryEntry } from '../registry.ts';
 // `ai` is a direct dependency of this repo (pinned to gbrain's major) — the
 // old deep import into gbrain's nested node_modules broke on any packaged
 // install because bun hoists the dependency (audit finding longmemeval-08).
@@ -106,6 +108,7 @@ import {
 } from './metrics.ts';
 import {
   writeReceipt,
+  latencySummary,
   receiptPath,
   RECEIPT_SCHEMA_VERSION,
   BENCHMARK_VERSION,
@@ -159,6 +162,8 @@ export interface Opts {
   retainEvidence?: boolean;
   /** Print the run plan (per-adapter run_config_hash + selected question ids) as JSON and exit without running. */
   printPlan?: boolean;
+  /** Paid-run budget (--budget-usd, --budget-ledger, --program-cap-usd); defaults to the BRAINBENCH_* env vars. */
+  budget?: BudgetOptions;
 }
 
 export function parseOpts(argv: string[] = process.argv.slice(2)): Opts {
@@ -211,6 +216,7 @@ export function parseOpts(argv: string[] = process.argv.slice(2)): Opts {
     reportsDir: arg(args, '--reports-dir') ?? join(process.cwd(), 'eval/reports'),
     ...(args.includes('--retain-evidence') ? { retainEvidence: true } : {}),
     ...(args.includes('--print-plan') ? { printPlan: true } : {}),
+    budget: budgetOptionsFrom(args),
   };
 }
 
@@ -1145,6 +1151,24 @@ export async function run(opts: Opts): Promise<RunResult> {
     return { summaries: [], receipt, receiptFile, reportPath: null, exitCode: 0, plan };
   }
 
+  // Every provider request goes through the budget ledger, which refuses to
+  // start without --budget-usd. A stubbed embed transport (hermetic runs)
+  // makes no provider request, so it needs no budget.
+  let paid: { run: BudgetRun; guard: PaidRequestGuard } | null = null;
+  const embedDiagnosis = diagnoseEmbedding();
+  if (needsEmbeddings && !(embedDiagnosis.ok && embedDiagnosis.provider === '<test-transport>')) {
+    try {
+      // The registry estimate is for a cold run over all 500 LongMemEval-S
+      // questions; scale it to the questions this invocation plans.
+      const fullRunUsd = registryEntry('longmemeval-retrieval')!.cost_estimate.usd!;
+      paid = startPaidRun(LME_CATEGORY, { ...(opts.budget ?? budgetOptionsFrom([])), estimateUsd: fullRunUsd * all.length / 500 });
+    } catch (error) {
+      if (error instanceof BudgetExceededError) return skip(`budget: ${error.message}`);
+      throw error;
+    }
+  }
+
+  try {
   if (needsEmbeddings) {
     if (!opts.noCache) {
       // Wire the content-addressed cache. Hits skip the provider API
@@ -1211,6 +1235,7 @@ export async function run(opts: Opts): Promise<RunResult> {
   const evidenceCapture = opts.retainEvidence ? createLmeCapture(datasetBytes, all.filter((_, i) => inShard(i)), runnable.map(adapter => adapter.name)) : undefined;
   const abortedAdapters: Array<{ adapter: string; reason: string }> = [];
 
+  const allRows: NdjsonRow[] = [];
   for (const adapter of runnable) {
     if (timedOut) break;
     process.stderr.write(
@@ -1440,6 +1465,7 @@ export async function run(opts: Opts): Promise<RunResult> {
       await engine.disconnect();
     }
 
+    allRows.push(...results);
     if (results.length === 0) {
       // Resume-complete shard (or wall budget hit before the first question):
       // nothing to summarize. Guard instead of emitting NaN/undefined summaries
@@ -1559,11 +1585,24 @@ export async function run(opts: Opts): Promise<RunResult> {
       summaries,
     },
   };
+  if (paid) {
+    paid.guard.uninstall();
+    const spend = paid.run.close();
+    receipt.cost = receiptCost(spend);
+    receipt.delivered_tokens = { tokens: spend.input_tokens, basis: 'provider-reported input tokens of every paid request (embeddings and chat), from the budget ledger' };
+    paid = null;
+  }
+  const questionLatencies = allRows.filter(row => row.error === undefined).map(row => row.latency_ms);
+  receipt.latency_ms = latencySummary(questionLatencies, 'per-question wall time (reset, import, search), every adapter, errors excluded');
   writeReceipt(receiptFile, receipt);
   process.stderr.write(`[longmemeval] receipt: ${receiptFile} (run_status=${receipt.run_status} verdict=${receipt.verdict ?? 'n/a'})\n`);
 
   const exitCode = runInvalid ? 1 : gate.verdict === 'fail' ? 1 : 0;
   return { summaries, receipt, receiptFile, reportPath, exitCode };
+  } finally {
+    paid?.guard.uninstall();
+    paid?.run.close();
+  }
 }
 
 // ─── Output ───────────────────────────────────────────────────────

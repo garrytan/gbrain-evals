@@ -32,6 +32,19 @@ Set keys in your environment using your normal secret-management method. Do not 
 
 A skipped adapter or incomplete receipt is not a measured pass. Some runners accept `--allow-skip` to acknowledge missing prerequisites, but the skip remains part of the result.
 
+## Authorize spending with the budget ledger
+
+LongMemEval, Cat13 and Cat35 refuse to make provider requests until you pass `--budget-usd <dollars>` (or set `BRAINBENCH_BUDGET_USD`). Each run prints its cost estimate first and refuses when the estimate is above the budget.
+
+Every request to a paid provider host is reserved in a ledger before it is sent, including SDK retries and the requests gbrain makes internally during extraction and synthesis. After the response, the reservation is reconciled to the provider-reported usage. A request whose usage cannot be read is charged at its full reservation. A reservation that would take the run past `--budget-usd`, or all runs together past the program cap, is refused and the request is never sent.
+
+- The ledger lives at `.budget/ledger.json` (gitignored). Override it with `--budget-ledger <path>` or `BRAINBENCH_BUDGET_LEDGER`.
+- The program cap defaults to $500 across every run in the ledger. Override it with `--program-cap-usd` or `BRAINBENCH_PROGRAM_CAP_USD`.
+- Reservations left open by a crash stay counted against both caps until someone checks the provider usage page and edits the entry in the ledger.
+- `bun eval/runner/budget-ledger.ts status` prints committed spend, open reservations and what is left of the cap.
+
+The receipt's `cost` and `delivered_tokens` fields come from this ledger.
+
 ## Start with a narrow run
 
 ```sh

@@ -109,6 +109,8 @@ export interface LatencySummary {
   p50: number;
   p95: number;
   n: number;
+  /** What was timed, e.g. per-question import plus search wall time. */
+  basis: string;
 }
 
 export interface DeliveredTokens {
@@ -236,7 +238,7 @@ function validateV2(r: Record<string, unknown>, requireAll: boolean): string[] {
     || !(cost.output_tokens === null || nonNegative(cost.output_tokens)) || typeof cost.basis !== 'string')))) v.push('v2 cost must be null or {usd, input_tokens, output_tokens, basis}');
   const latency = r.latency_ms as Record<string, unknown> | null | undefined;
   if (check('latency_ms') && (latency === undefined || (latency !== null && (!nonNegative(latency.p50) || !nonNegative(latency.p95) || !nonNegative(latency.n)
-    || (latency.p95 as number) < (latency.p50 as number))))) v.push('v2 latency_ms must be null or {p50 <= p95, n}');
+    || (latency.p95 as number) < (latency.p50 as number) || typeof latency.basis !== 'string')))) v.push('v2 latency_ms must be null or {p50 <= p95, n, basis}');
   const delivered = r.delivered_tokens as Record<string, unknown> | null | undefined;
   if (check('delivered_tokens') && (delivered === undefined || (delivered !== null && (!nonNegative(delivered.tokens) || typeof delivered.basis !== 'string')))) {
     v.push('v2 delivered_tokens must be null or {tokens, basis}');
@@ -301,11 +303,11 @@ export function productIdentity(pkg: ProductIdentity['package'] = 'gbrain', root
 }
 
 /** Nearest-rank percentile summary; null for an empty sample. */
-export function latencySummary(samplesMs: readonly number[]): LatencySummary | null {
+export function latencySummary(samplesMs: readonly number[], basis: string): LatencySummary | null {
   const sorted = samplesMs.filter(Number.isFinite).slice().sort((a, b) => a - b);
   if (!sorted.length) return null;
   const rank = (p: number) => sorted[Math.min(sorted.length - 1, Math.max(0, Math.ceil(p * sorted.length) - 1))];
-  return { p50: rank(0.5), p95: rank(0.95), n: sorted.length };
+  return { p50: rank(0.5), p95: rank(0.95), n: sorted.length, basis };
 }
 
 /** Default accounting from the v1 core: every distinct errored probe counts once, never as a miss. */
