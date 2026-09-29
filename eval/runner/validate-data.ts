@@ -11,12 +11,14 @@
  *   1. synthetic-v1: manifest page count == .md files on disk; every
  *      [[wikilink]] target resolves to an existing page.
  *   2. amara-life-v1: every corpus-manifest item's path exists and its
- *      content_sha256 matches the bytes on disk; item slugs unique.
+ *      content_sha256 matches its content under the generator's hash scheme
+ *      (per record for container files, per file otherwise); item slugs
+ *      unique; every container record has a manifest item. Mismatches fail.
  *   3. qrels: first_relevant_slug ∈ relevant_slugs; query_ids unique.
  *   4. baselines ndjson: every line parses; metadata row_count matches
  *      data rows; no capture row with zero retrieved slugs.
- *   5. gold/*.json: parse; files that are single-`_example` stubs are
- *      reported as warnings (tracked in TODOS.md), not failures.
+ *   5. gold/*.json: parse; a single-`_example` stub fails (every gold file is
+ *      generated since 0.10.1).
  *
  * Usage: bun eval/runner/validate-data.ts [--quiet]
  */
@@ -24,6 +26,10 @@
 import { createHash } from 'crypto';
 import { existsSync, readFileSync, readdirSync, statSync } from 'fs';
 import { join, relative } from 'path';
+import { canonicalJson, renderCalendarIcs } from '../generators/amara-life-gen.ts';
+import { buildSkeleton } from '../generators/amara-life.ts';
+
+const sha256Hex = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
 
 const REPO_ROOT = join(import.meta.dir, '../..');
 
@@ -86,9 +92,34 @@ export function checkAmaraLife(corpusDir = join(REPO_ROOT, 'eval/data/amara-life
   };
   const items = manifest.items ?? [];
   const seenSlugs = new Set<string>();
-  // Multiple items may share one container file (calendar.ics holds every
-  // cal/ event) — hash each distinct file once.
-  const hashed = new Map<string, string>();
+  // Container files hold many items, so an item hash covers its own record,
+  // never the whole file (the scheme amara-life-gen.ts writes):
+  //   *.jsonl       sha256(canonicalJson(parsed line)), matched by the line's slug
+  //   calendar.ics  sha256(canonicalJson(skeleton event)); the file itself must
+  //                 equal the rendering of the rebuilt skeleton calendar
+  //   anything else sha256(file bytes)
+  const recordHashes = new Map<string, Map<string, string>>();
+  const containerHashes = (path: string): Map<string, string> => {
+    let hashes = recordHashes.get(path);
+    if (hashes) return hashes;
+    hashes = new Map();
+    const full = join(corpusDir, path);
+    if (path.endsWith('.jsonl')) {
+      for (const line of readFileSync(full, 'utf8').split('\n').filter(Boolean)) {
+        const record = JSON.parse(line) as { slug?: string };
+        if (typeof record.slug !== 'string') { failures.push(`${path}: line without a slug`); continue; }
+        if (hashes.has(record.slug)) failures.push(`${path}: duplicate record slug ${record.slug}`);
+        hashes.set(record.slug, sha256Hex(canonicalJson(record)));
+      }
+    } else if (path === 'calendar.ics') {
+      const events = buildSkeleton().calendar;
+      if (readFileSync(full, 'utf8') !== renderCalendarIcs(events)) failures.push('calendar.ics: bytes differ from the rendering of the seeded skeleton calendar');
+      for (const e of events) hashes.set(e.slug, sha256Hex(canonicalJson(e)));
+    }
+    recordHashes.set(path, hashes);
+    return hashes;
+  };
+  const itemsByPath = new Map<string, Set<string>>();
   for (const item of items) {
     if (seenSlugs.has(item.slug)) failures.push(`duplicate manifest slug: ${item.slug}`);
     seenSlugs.add(item.slug);
@@ -97,24 +128,24 @@ export function checkAmaraLife(corpusDir = join(REPO_ROOT, 'eval/data/amara-life
       failures.push(`manifest item ${item.slug}: path ${item.path} does not exist`);
       continue;
     }
-    if (item.content_sha256) {
-      if (!hashed.has(item.path)) {
-        hashed.set(item.path, createHash('sha256').update(readFileSync(p)).digest('hex'));
-      }
-      // Container files (many slugs → one file) legitimately share a hash;
-      // an item hash matching NEITHER the whole file nor any recorded value
-      // means the file drifted from the manifest.
-      if (hashed.get(item.path) !== item.content_sha256) {
-        // Per-item hashes may cover a SLICE of a container file; only flag
-        // when no item for this path matches the file hash at all.
-        warnings.push(`manifest item ${item.slug}: content_sha256 does not match whole-file hash of ${item.path} (per-slice hash?)`);
-      }
+    if (!item.content_sha256) {
+      failures.push(`manifest item ${item.slug}: no content_sha256`);
+      continue;
+    }
+    const container = item.path.endsWith('.jsonl') || item.path === 'calendar.ics';
+    const actual = container ? containerHashes(item.path).get(item.slug) : sha256Hex(readFileSync(p));
+    if (actual === undefined) failures.push(`manifest item ${item.slug}: no record with this slug in ${item.path}`);
+    else if (actual !== item.content_sha256) failures.push(`manifest item ${item.slug}: content_sha256 does not match its ${container ? 'record' : 'file'} in ${item.path}`);
+    if (container) {
+      const set = itemsByPath.get(item.path) ?? new Set<string>();
+      set.add(item.slug);
+      itemsByPath.set(item.path, set);
     }
   }
-  // Collapse slice-hash warnings: if EVERY item for a path mismatches AND
-  // at least one item was expected to match, keep one warning per path.
-  const collapsed = [...new Set(warnings.map(w => w.replace(/manifest item [^:]+: /, '')))];
-  return { check: 'amara-life-v1', failures, warnings: collapsed };
+  for (const [path, hashes] of recordHashes) {
+    for (const slug of hashes.keys()) if (!itemsByPath.get(path)?.has(slug)) failures.push(`${path}: record ${slug} has no manifest item`);
+  }
+  return { check: 'amara-life-v1', failures, warnings };
 }
 
 // ─── 3. qrels ───────────────────────────────────────────────────────
@@ -228,11 +259,7 @@ export function checkGold(goldDir = join(REPO_ROOT, 'eval/data/gold')): CheckRes
       failures.push(`${f}: not valid JSON`);
       continue;
     }
-    // Single-`_example` stubs are honest-but-empty scaffolds (TODOS.md #2).
-    const text = JSON.stringify(parsed);
-    if (text.includes('"_example"')) {
-      warnings.push(`${f}: single-example stub (content pending, tracked in TODOS.md)`);
-    }
+    if (JSON.stringify(parsed).includes('"_example"')) failures.push(`${f}: template stub with an \`_example\` row; gold files must be generated`);
   }
   return { check: 'gold', failures, warnings };
 }

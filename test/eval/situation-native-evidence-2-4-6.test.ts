@@ -71,7 +71,7 @@ describe('Cat2 native edge evidence', () => {
     const mistyped = sum(counts, count => count.mistyped);
     const missed = sum(counts, count => count.missed);
     const spurious = sum(counts, count => count.spurious);
-    expect([correct, mistyped, missed, spurious]).toEqual([1, 1, 1, 3]);
+    expect([correct, mistyped, missed, spurious]).toEqual([1, 1, 1, 5]);
     expect(native.overallTypeAccuracy).toBe(ratio(correct, correct + mistyped));
     expect(native.overallStrictF1).toBeCloseTo(ratio(2 * correct, 2 * correct + mistyped + missed + spurious), 14);
     expect(score(gold, [...inferred].reverse()).rows).toEqual(rows);
@@ -94,7 +94,7 @@ describe('Cat2 native edge evidence', () => {
     const attempts: TypeAccuracyAttempt[] = [];
     await expect(inferAllEdges(pages, attempts, async slug => {
       if (slug === 'b') throw new Error('injected extraction failure');
-      return { candidates: [], unresolved: [] };
+      return { candidates: [], unresolved: [], attendanceComplete: true };
     })).rejects.toThrow('injected extraction failure');
     expect(attempts).toEqual([
       { probe_id: 'page:a', slug: 'a', status: 'completed', inferred: [] },

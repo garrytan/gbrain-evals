@@ -25,7 +25,9 @@ def anchors(text):
 
 
 def candidate_references(root=ROOT):
-    pin = json.loads((root / "package.json").read_text())["dependencies"]["gbrain"]
+    # The situation-recall candidate is the memory-cue build, installed as
+    # the gbrain-cues alias since 2026-09-29; `gbrain` is the product pin.
+    pin = json.loads((root / "package.json").read_text())["dependencies"]["gbrain-cues"]
     match = re.fullmatch(r"github:garrytan/gbrain#([a-f0-9]{40})", pin)
     if not match:
         return [["package.json", "Current candidate must have an exact 40-character Git pin"]]
@@ -45,7 +47,7 @@ def candidate_references(root=ROOT):
             reference = re.search(pattern, text)
             if not reference or reference.group(1) != sha:
                 errors.append([file, "Current candidate reference differs from package.json pin"])
-    lock = re.search(r'"gbrain"\s*:\s*"([^\"]+)"', (root / "bun.lock").read_text())
+    lock = re.search(r'"gbrain-cues"\s*:\s*"([^\"]+)"', (root / "bun.lock").read_text())
     if not lock or lock.group(1) != pin:
         errors.append(["bun.lock", "Declared candidate differs from package.json pin"])
     files = [root / file for file in ["package.json", "bun.lock", *markers]]

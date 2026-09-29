@@ -4,6 +4,8 @@
 
 **September 1 erratum:** these numbers predate the August 31 audit, and no receipt for this run is committed. Older recall could double-count chunk duplicates; older precision divided by the number returned instead of five; the corpus also contained a dangling person-to-company link. The v0.5.0 evaluation release declared earlier results non-comparable to corrected runs. Use the [retrieval refresh](2026-09-09-retrieval-refresh.md) for current figures.
 
+**September 28, 2026 note:** the `gbrain` row below came from an adapter that parsed the four generator question templates with regular expressions and then followed the fixture's graph. It knew the question form in advance, so it is an upper bound for template parsing, not a measurement of gbrain's product search. The adapter is now named `graph-oracle-parse`, and the `gbrain` row in current runs is the product's hybrid search with relationship retrieval. Treat this row as invalid as a product score until a paid re-run.
+
 The historical experiment asked whether extraction and graph-first search helped answer questions like “Who works at this company?” It recorded a clear advantage for the full adapter, but its query parser recognized the same four templates used by the question generator. That makes this a narrow test of those relationship paths.
 
 ## Recorded scorecard

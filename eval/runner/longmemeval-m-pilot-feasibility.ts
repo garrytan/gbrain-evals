@@ -1,12 +1,12 @@
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { parseMarkdown } from '../../node_modules/gbrain/src/core/markdown.ts';
-import { prepareMarkdownChunks } from '../../node_modules/gbrain/src/core/markdown-chunks.ts';
-import { buildCueWindows } from '../../node_modules/gbrain/src/core/memory-cues/windows.ts';
-import { CUE_SYSTEM_PROMPT } from '../../node_modules/gbrain/src/core/memory-cues/providers.ts';
-import { sanitizeText } from '../../node_modules/gbrain/src/core/batch-rows.ts';
-import { buildContextualPrefix, sanitizeTitle, wrapChunkForEmbedding } from '../../node_modules/gbrain/src/core/embedding-context.ts';
+import { parseMarkdown } from '../../node_modules/gbrain-cues/src/core/markdown.ts';
+import { prepareMarkdownChunks } from '../../node_modules/gbrain-cues/src/core/markdown-chunks.ts';
+import { buildCueWindows } from '../../node_modules/gbrain-cues/src/core/memory-cues/windows.ts';
+import { CUE_SYSTEM_PROMPT } from '../../node_modules/gbrain-cues/src/core/memory-cues/providers.ts';
+import { sanitizeText } from '../../node_modules/gbrain-cues/src/core/batch-rows.ts';
+import { buildContextualPrefix, sanitizeTitle, wrapChunkForEmbedding } from '../../node_modules/gbrain-cues/src/core/embedding-context.ts';
 import { renderSession } from './longmemeval.ts';
 
 const hash = (text: string | Buffer) => createHash('sha256').update(text).digest('hex');
@@ -24,7 +24,7 @@ async function main() {
   const embeddingOnly = process.argv[3] === '--embedding-only';
   if (!manifestPath || process.argv.length !== (embeddingOnly ? 4 : 3)) throw new Error('usage: bun eval/runner/longmemeval-m-pilot-feasibility.ts <frozen-manifest.json> [--embedding-only]');
   const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
-  const product = resolve(import.meta.dir, '../../node_modules/gbrain');
+  const product = resolve(import.meta.dir, '../../node_modules/gbrain-cues');
   const version = JSON.parse(readFileSync(resolve(product, 'package.json'), 'utf8'));
   const windowImplementation = readFileSync(resolve(product, 'src/core/memory-cues/windows.ts'));
   const chunkImplementation = readFileSync(resolve(product, 'src/core/chunkers/recursive.ts'));
@@ -99,7 +99,7 @@ async function main() {
     calculation: embeddingOnly ? 'renderSession -> parseMarkdown -> prepareMarkdownChunks(maxTokens=2000), no database or provider'
       : 'renderSession -> parseMarkdown -> prepareMarkdownChunks(maxTokens=2000) -> buildCueWindows(compiled_truth/timeline), no database or provider',
     input_ceiling_calculation: 'sum(Buffer.byteLength(CUE_SYSTEM_PROMPT + JSON.stringify({ includeBridge: false, evidence: window.text })) + 1024); output limit 1200 tokens/window',
-    declared_gbrain_dependency: JSON.parse(readFileSync(resolve(import.meta.dir, '../../package.json'), 'utf8')).dependencies.gbrain,
+    declared_gbrain_dependency: JSON.parse(readFileSync(resolve(import.meta.dir, '../../package.json'), 'utf8')).dependencies['gbrain-cues'],
     loaded_gbrain_version: version.version,
     loaded_gbrain_commit: version.gitHead ?? null,
     window_implementation_sha256: hash(windowImplementation),

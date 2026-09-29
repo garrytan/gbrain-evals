@@ -34,6 +34,8 @@ import {
   resolveRunsPerAdapter,
   collectFamilies,
   familiesForAdapter,
+  createGbrainProductAdapter,
+  GBRAIN_PRODUCT_SEARCH_CONFIG,
 } from '../../eval/runner/multi-adapter.ts';
 import { buildRelationalQueries, loadWorldCorpus, type RichPage } from '../../eval/runner/queries/relational.ts';
 import { buildCellQueries, runCell } from '../../eval/runner/shootout-driver.ts';
@@ -237,11 +239,13 @@ describe('relational query builder is shared and complete (audit orchestrators-1
 // ─── adapters-queries-07: tier families wired into multi-adapter ─────
 
 describe('collectFamilies / familiesForAdapter (audit adapters-queries-07)', () => {
-  test('"all" yields relational + fuzzy + externally-authored with 80 tier queries accounted for', () => {
+  test('"all" yields relational + fuzzy + synthetic-outsider with 80 tier queries accounted for', () => {
     const fams = collectFamilies(templateCorpus(), 'all');
-    expect(fams.map(f => f.family)).toEqual(['relational', 'fuzzy', 'externally-authored']);
+    expect(fams.map(f => f.family)).toEqual(['relational', 'fuzzy', 'synthetic-outsider']);
     const fuzzy = fams.find(f => f.family === 'fuzzy')!;
-    const ext = fams.find(f => f.family === 'externally-authored')!;
+    const ext = fams.find(f => f.family === 'synthetic-outsider')!;
+    // The family is the built-in AI-authored placeholder set, not outside submissions (audit B8).
+    expect(ext.queries.every(q => q.author?.startsWith('synthetic-outsider'))).toBe(true);
     // Every authored query is either scored or explicitly excluded — none vanish.
     expect(fuzzy.queries.length + fuzzy.excluded_no_gold.length).toBe(30);
     expect(ext.queries.length + ext.excluded_no_gold.length).toBe(50);
@@ -259,11 +263,14 @@ describe('collectFamilies / familiesForAdapter (audit adapters-queries-07)', () 
     expect(fams.map(f => f.family)).toEqual(['fuzzy']);
   });
 
-  test('the inline gbrain wrapper only gets the relational family (no fake 0% fuzzy rows)', () => {
+  test('the oracle template parser only gets the relational family; the gbrain product row gets every family (C-10)', () => {
     const fams = collectFamilies(templateCorpus(), 'all');
-    expect(familiesForAdapter('gbrain', fams).map(f => f.family)).toEqual(['relational']);
+    expect(familiesForAdapter('graph-oracle-parse', fams).map(f => f.family)).toEqual(['relational']);
+    expect(familiesForAdapter('gbrain', fams).map(f => f.family)).toEqual([
+      'relational', 'fuzzy', 'synthetic-outsider',
+    ]);
     expect(familiesForAdapter('grep-only', fams).map(f => f.family)).toEqual([
-      'relational', 'fuzzy', 'externally-authored',
+      'relational', 'fuzzy', 'synthetic-outsider',
     ]);
   });
 });
@@ -313,6 +320,30 @@ describe('VectorOnlyAdapter (audit adapters-queries-03 / -08)', () => {
     expect(() => _cosine(new Float32Array([1, 2, 3]), new Float32Array([1, 2]))).toThrow(/dimension mismatch/);
     expect(_cosine(new Float32Array([1, 0]), new Float32Array([1, 0]))).toBe(1);
   });
+});
+
+// ─── C-10: the gbrain row is the product path, not a template oracle ───
+
+describe('gbrain product adapter (C-10)', () => {
+  test('uses hybridSearch with relational retrieval on and answers queries outside the template grammar', async () => {
+    expect(GBRAIN_PRODUCT_SEARCH_CONFIG['search.relational_retrieval']).toBe('true');
+    await withEmbedSeam(async () => {
+      const pages: Page[] = templateCorpus().map(({ _facts, ...pub }) => pub as Page);
+      const adapter = createGbrainProductAdapter();
+      expect(adapter.name).toBe('gbrain');
+      const state = await adapter.init(pages, { name: 'gbrain' });
+      try {
+        expect(adapter.resolvedConfig(state)['search.relational_retrieval']).toBe('true');
+        const paraphrase = await adapter.query({ id: 'q-para', text: 'Which people are on the Rocketry Labs payroll?' }, state);
+        expect(paraphrase.length).toBeGreaterThan(0);
+        const template = await adapter.query({ id: 'q-tmpl', text: 'Who works at Rocketry Labs?' }, state);
+        expect(template.length).toBeGreaterThan(0);
+        expect(adapter.observedStats(state).queries).toBe(2);
+      } finally {
+        await adapter.teardown(state);
+      }
+    });
+  }, 120_000);
 });
 
 // ─── adapters-queries-04: hybrid limit knob ───────────────────────────
@@ -365,7 +396,7 @@ describe('multi-adapter end-to-end (grep-only, BRAINBENCH_N=1)', () => {
 
     // Tier 5/5.5 actually executed as families (audit adapters-queries-07).
     const families = out.scorecards.map((s: { family: string }) => s.family).sort();
-    expect(families).toEqual(['externally-authored', 'fuzzy', 'relational']);
+    expect(families).toEqual(['fuzzy', 'relational', 'synthetic-outsider']);
     const fuzzyFam = out.families.find((f: { family: string }) => f.family === 'fuzzy');
     expect(fuzzyFam.scored + fuzzyFam.excluded_no_gold.length).toBe(30);
 
@@ -436,7 +467,9 @@ describe('shootout-driver runCell (shared relational set + receipts)', () => {
       const receipt = loadReceipt(receiptFile);
       expect(receipt.category).toBe('shootout-driver');
       expect(receipt.run_status).toBe('completed');
-      expect(receipt.verdict).toBe('pass');
+      // A single cell has no quality threshold: partial, never pass (audit PD-15).
+      expect(receipt.verdict).toBe('partial');
+      expect(receipt.publishable).toBe(true);
       expect(receipt.n_total).toBe(4);
       expect(receipt.n_scored).toBe(4);
       expect(receipt.resolved_config?.relational_builder).toContain('queries/relational.ts');

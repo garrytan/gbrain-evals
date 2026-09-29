@@ -30,6 +30,7 @@ interface RowOverrides {
   ground_truth?: string[];
   error?: string;
   retrieved?: string[];
+  extra?: Record<string, unknown>;
 }
 
 function row(o: RowOverrides): string {
@@ -43,6 +44,7 @@ function row(o: RowOverrides): string {
     num_haystack: 3,
     latency_ms: 10,
     ...(o.error !== undefined ? { error: o.error } : {}),
+    ...o.extra,
   });
 }
 
@@ -200,6 +202,40 @@ describe('longmemeval-validate-ndjson CLI', () => {
     const r = run([p, ...BASE_ARGS, '--path', 'bad-dataset.json']);
     expect(r.code).toBe(2);
     expect(r.stderr).toContain('dataset unreadable');
+  });
+
+  test('a residual error row after dedup fails; --allow-errors accepts it and prints counts by origin', () => {
+    const lines = goodLines().map(l =>
+      l.includes('"adapter":"a"') && l.includes('"q2"')
+        ? row({ adapter: 'a', question_id: 'q2', ground_truth: ['answer_s2', 'answer_s3'], error: 'question_timeout_90000ms', extra: { error_origin: 'harness' } })
+        : l,
+    );
+    const p = writeFixture('residual-error.ndjson', lines);
+    const r = run([p, ...BASE_ARGS]);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toContain('a: 1 residual error row(s) after dedup (harness: 1)');
+    expect(r.stdout).not.toContain('OK');
+    const allowed = run([p, '--allow-errors', ...BASE_ARGS]);
+    expect(allowed.code).toBe(0);
+    expect(allowed.stdout).toContain('--allow-errors: a: 1 residual error row(s) after dedup (harness: 1)');
+  });
+
+  test('mixed top_k, dataset or run_config_hash within one adapter fails', () => {
+    const withField = (field: string, value: unknown, other: unknown) => goodLines().map(l => {
+      const o = JSON.parse(l);
+      return JSON.stringify({ ...o, [field]: o.adapter === 'a' && o.question_id === 'q1' ? other : value });
+    });
+    for (const [field, value, other] of [['top_k', 5, 8], ['dataset', 's', 'oracle'], ['run_config_hash', 'a'.repeat(64), 'b'.repeat(64)]] as const) {
+      const clean = run([writeFixture(`consistent-${field}.ndjson`, withField(field, value, value)), ...BASE_ARGS]);
+      expect(clean.code).toBe(0);
+      const mixed = run([writeFixture(`mixed-${field}.ndjson`, withField(field, value, other)), ...BASE_ARGS]);
+      expect(mixed.code).toBe(1);
+      expect(mixed.stderr).toContain(`a: mixed ${field} values`);
+    }
+    const partial = goodLines().map(l => (l.includes('"adapter":"a"') && l.includes('"q1"') ? JSON.stringify({ ...JSON.parse(l), run_config_hash: 'c'.repeat(64) }) : l));
+    const r = run([writeFixture('partial-hash.ndjson', partial), ...BASE_ARGS]);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toContain('a: mixed run_config_hash values [(absent)');
   });
 
   test('no positional NDJSON arg → usage on exit 2', () => {

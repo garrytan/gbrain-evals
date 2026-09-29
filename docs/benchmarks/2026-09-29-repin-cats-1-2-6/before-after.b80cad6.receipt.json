@@ -1,0 +1,66 @@
+{
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "before-after",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 145,
+  "n_scored": 145,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "gbrain_version": "0.59.13.0",
+  "gbrain_pin": "github:garrytan/gbrain#b80cad61e4725e62531439c027053387c98e23f8",
+  "started_at": "2026-09-29T03:15:06.419Z",
+  "finished_at": "2026-09-29T03:15:13.118Z",
+  "data": {
+    "top_k": 5,
+    "precision_denominators": {
+      "precision_at_k": "standard: correct in top-5 / (5 x queries)",
+      "precision_at_k_legacy": "legacy, pre-2026-09-28 headline: correct in top-5 / sum(min(5, returned))",
+      "precision_at_k_ceiling": "best achievable standard value: sum(min(5, expected)) / (5 x queries)"
+    },
+    "before": {
+      "recall_at_k": 0.8314176245210728,
+      "precision_at_k": 0.2993103448275862,
+      "precision_at_k_legacy": 0.3924050632911392,
+      "precision_at_k_ceiling": 0.36,
+      "found_at_k": 217
+    },
+    "after": {
+      "recall_at_k": 0.9846743295019157,
+      "precision_at_k": 0.3544827586206897,
+      "precision_at_k_legacy": 0.46473779385171793,
+      "precision_at_k_ceiling": 0.36,
+      "found_at_k": 257
+    },
+    "gate_failures": []
+  },
+  "accounting": {
+    "planned": 145,
+    "attempted": 145,
+    "scored": 145,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "cost": null,
+  "latency_ms": null,
+  "delivered_tokens": null,
+  "execution": {
+    "source_tree": {
+      "sha256": "46dbdf7f07798a0f8eb5cf520e8e88d2e3f7276f06427e00ee7d0e04bf38fff4",
+      "files": 1227,
+      "git_head": "c3ec550da52b263b2759d2ddd44ed20f431d2e66",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#b80cad61e4725e62531439c027053387c98e23f8",
+      "declared_sha": "b80cad61e4725e62531439c027053387c98e23f8",
+      "version": "0.59.13.0",
+      "package_sha256": "740db8d8d1dcff452a82729373d8d7ad80f9d09c98fa4642d705b63786ee8519",
+      "loaded_git_head": null
+    }
+  }
+}

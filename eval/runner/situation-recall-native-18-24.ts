@@ -83,7 +83,7 @@ function queryCells(category: 'cat18' | 'cat18b', data: Record<string, unknown>,
     if (!knownCells.includes(id) || cells.some(existing => existing.id === id)) throw new Error(`unknown/duplicate native cell: ${id}`);
     text(cell.embedder, `${id}.embedder`);
     if (count(category === 'cat18' ? cell.dim : cell.embed_dim, `${id}.embedding dimensions`) === 0) throw new Error(`missing native embedding dimensions: ${id}`);
-    if (category === 'cat18b' && (id.endsWith('+rerank') ? typeof cell.reranker !== 'string' || !cell.reranker : cell.reranker !== null)) throw new Error(`native reranker axis mismatch: ${id}`);
+    if (category === 'cat18b' && cell.reranker !== CELLS.find(spec => spec.name === id)!.reranker) throw new Error(`native reranker axis mismatch: ${id}`);
     const queries: CollectedCell['queries'] = new Map();
     for (const query of nativeEvidenceRows(cell.per_query, `${id}.per_query`)) {
       const queryId = text(query.query_id, `${id}.query_id`);
@@ -137,7 +137,7 @@ function queryCells(category: 'cat18' | 'cat18b', data: Record<string, unknown>,
       const base = cells.find(cell => cell.id === pair.baseline);
       const reranked = cells.find(cell => cell.id === pair.rerank);
       if (!base || !reranked || base.raw.reranker !== null || typeof reranked.raw.reranker !== 'string'
-        || !reranked.id.endsWith('+rerank') || reranked.id !== `${base.id}+rerank` || paired.has(reranked.id)
+        || !reranked.id.startsWith(`${base.id}+`) || paired.has(reranked.id)
         || pair.embedder !== base.raw.embedder || base.raw.embedder !== reranked.raw.embedder || base.raw.embed_dim !== reranked.raw.embed_dim) {
         throw new Error('broken or duplicate native reranker pair lookup');
       }
@@ -167,7 +167,7 @@ function queryCells(category: 'cat18' | 'cat18b', data: Record<string, unknown>,
 
 const PATHS: Record<string, { slug: string; expected: Parameters<typeof checkProvenance>[1] }> = {
   'content-import': { slug: 'inbox/2026-05-23-content-import', expected: { source_kind: 'capture-cli', source_uri: 'file:///tmp/probe.md', ingested_via: 'capture-cli', ingested_at_null: false } },
-  'file-import-no-channel-provenance': { slug: 'inbox/2026-05-23-file-import', expected: { source_kind: null, source_uri: null, ingested_via: null, ingested_at_null: true } },
+  'file-import-no-channel-provenance': { slug: 'inbox/2026-05-23-file-import', expected: { source_kind: null, source_uri: 'file://<import root>/inbox/2026-05-23-file-import.md', ingested_via: null, ingested_at_null: false } },
   'op-put-page-local-trusted': { slug: 'inbox/2026-05-23-op-local', expected: { source_kind: 'capture-cli', source_uri: 'stdin', ingested_via: 'capture-cli', ingested_at_null: false } },
   'op-put-page-remote-spoof-override': { slug: 'inbox/2026-05-23-op-remote', expected: { source_kind: 'mcp:put_page', source_uri: null, ingested_via: 'mcp:put_page', ingested_at_null: false } },
 };
@@ -219,9 +219,13 @@ function provenanceRows(data: Record<string, unknown>, errors: Map<string, Probe
     seenPaths.add(id);
     const fixture = PATHS[id];
     const expected = nativeEvidenceObject(path.expected, `${id}.expected`);
-    if (path.slug !== fixture.slug || Object.entries(fixture.expected).some(([key, value]) => expected[key] !== value)) throw new Error(`Cat24 path fixture mismatch: ${id}`);
+    const fileOrigin = id === 'file-import-no-channel-provenance';
+    const fixtureMismatch = Object.entries(fixture.expected).some(([key, value]) => fileOrigin && key === 'source_uri'
+      ? typeof expected.source_uri !== 'string' || !/^file:\/\/\/.+\/inbox\/2026-05-23-file-import\.md$/.test(expected.source_uri)
+      : expected[key] !== value);
+    if (path.slug !== fixture.slug || fixtureMismatch) throw new Error(`Cat24 path fixture mismatch: ${id}`);
     const actual = provenance(path.actual, `${id}.actual`);
-    const pass = checkProvenance(actual, fixture.expected) === null
+    const pass = checkProvenance(actual, fileOrigin ? { ...fixture.expected, source_uri: expected.source_uri as string } : fixture.expected) === null
       && (id !== 'file-import-no-channel-provenance' || actual?.source_path === `${fixture.slug}.md`);
     if (path.pass !== pass || outcomes.get(id)!.pass !== pass || (pass ? path.fail_reason !== null : typeof path.fail_reason !== 'string')) throw new Error(`Cat24 stored provenance contradicts path outcome: ${id}`);
     rows.get(id)!.metrics.provenance_fields_correct = Number(pass);

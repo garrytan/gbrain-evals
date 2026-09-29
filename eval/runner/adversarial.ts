@@ -5,12 +5,19 @@
  * Currently zero coverage of edge cases. Pass = no exceptions, no hangs > 30s,
  * no silent wrong-data outputs.
  *
+ * Receipt: eval/reports/adversarial/receipt.json. Each case is one probe; a
+ * crash or silent corruption is a scored SUT miss, and the verdict is pass
+ * only when every case is clean and extraction produced link candidates.
+ *
  * Usage: bun run eval/runner/adversarial.ts [--json]
  */
 
 import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { extractPageLinks, parseTimelineEntries, type SlugResolver } from 'gbrain/link-extraction';
 import type { PageInput } from 'gbrain/types';
+import { ProbeAccounting } from './probe-accounting.ts';
+import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, receiptPath, writeReceipt, type Receipt, noModelSpend } from './receipt.ts';
+import { gbrainPin, gbrainVersion } from './gbrain-version.ts';
 
 // Resolver that accepts every explicit slug-shaped target verbatim — Cat
 // adversarial exercises extraction mechanics (within-page dedup, code-fence
@@ -20,7 +27,7 @@ const PASSTHROUGH_RESOLVER: SlugResolver = {
   resolve: async (name: string) => (name.includes('/') ? name : null),
 };
 
-interface CaseResult {
+export interface CaseResult {
   name: string;
   ops_attempted: number;
   ops_succeeded: number;
@@ -159,9 +166,41 @@ export async function tryOp<T>(
   }
 }
 
+export function buildAdversarialReceipt(results: CaseResult[], totalLinkCandidates: number, startedAt: string): Receipt {
+  const acc = new ProbeAccounting(results.length);
+  for (const r of results) {
+    const problems = [...r.crashes.map(c => `crash: ${c}`), ...r.silent_corruption.map(c => `silent: ${c}`)];
+    if (problems.length > 0) acc.error(`case:${r.name}`, 'sut', problems.join('; '));
+    else acc.score(`case:${r.name}`, 1);
+  }
+  if (totalLinkCandidates === 0) acc.error('extraction-sentinel', 'harness', 'zero link candidates across every case (API drift?)');
+  const a = acc.summary();
+  const clean = results.length > 0 && a.errors.length === 0;
+  return {
+    ...noModelSpend('hermetic: no model and no paid request'),
+    schema_version: RECEIPT_SCHEMA_VERSION,
+    benchmark_version: BENCHMARK_VERSION,
+    category: 'adversarial',
+    run_status: totalLinkCandidates === 0 ? 'error' : 'completed',
+    ...(totalLinkCandidates === 0 ? {} : { verdict: clean ? 'pass' as const : 'fail' as const }),
+    n_total: a.n_total,
+    n_scored: a.n_scored,
+    completion_rate: a.completion_rate,
+    errors: a.errors,
+    publishable: a.publishable && totalLinkCandidates > 0,
+    gbrain_version: gbrainVersion(),
+    gbrain_pin: gbrainPin(),
+    resolved_config: { engine: 'pglite-in-memory', cases: results.length },
+    started_at: startedAt,
+    finished_at: new Date().toISOString(),
+    data: { results, total_link_candidates: totalLinkCandidates },
+  };
+}
+
 async function main() {
   const json = process.argv.includes('--json');
   const log = json ? () => {} : console.log;
+  const startedAt = new Date().toISOString();
 
   log('# BrainBench Category 10: Robustness / Adversarial\n');
   log(`Generated: ${new Date().toISOString().slice(0, 19)}`);
@@ -278,6 +317,8 @@ async function main() {
   log(`Crashes: ${totalCrashes}`);
   log(`Silent corruption: ${totalSilent}`);
   log(`Link candidates extracted: ${totalLinkCandidates}`);
+
+  writeReceipt(receiptPath('adversarial'), buildAdversarialReceipt(results, totalLinkCandidates, startedAt));
 
   if (json) {
     process.stdout.write(JSON.stringify({ results, summary: { totalOps, totalSucc, totalCrashes, totalSilent, totalLinkCandidates } }, null, 2) + '\n');

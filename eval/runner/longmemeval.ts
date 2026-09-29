@@ -14,7 +14,9 @@
  *   gbrain's default 'balanced' bundle silently enables the reranker when a
  *   provider key is present).
  *   Legitimately seeded: the haystack sessions themselves (they come from the
- *   public dataset, rendered to markdown), and the content-addressed embedding
+ *   public dataset, rendered to markdown under opaque session ids so the
+ *   `answer_` prefix of gold ids never reaches gbrain; rows keep the dataset
+ *   ids, see longmemeval-session-ids.ts), and the content-addressed embedding
  *   cache (remembers past provider calls; keyed by model+dims+input_type so it
  *   can never substitute a different pipeline's vectors). In hermetic test
  *   runs the embed TRANSPORT may be stubbed via gbrain's
@@ -54,14 +56,15 @@
  *      that contain the answer. recall_all@k against that set is unambiguous.
  *
  * Run:
- *   bun eval/runner/longmemeval.ts                    # full 500-Q run
- *   bun eval/runner/longmemeval.ts --limit 25         # smoke test
+ *   bun eval/runner/longmemeval.ts --budget-usd 5     # full 500-Q run; provider requests reserved in the budget ledger
+ *   bun eval/runner/longmemeval.ts --limit 25 --budget-usd 1   # smoke test
  *   bun eval/runner/longmemeval.ts --keyword-only     # skip embeddings
  *   bun eval/runner/longmemeval.ts --dataset oracle   # easy split (3 sess/Q)
  *   bun eval/runner/longmemeval.ts --top-k 5          # default 8
  *   bun eval/runner/longmemeval.ts --seed 42          # stratified-sample seed
  *   bun eval/runner/longmemeval.ts --adapters hybrid-sessdiv --overfetch-factor 3
  *                                                     # session-diversity methodology row
+ *   bun eval/runner/longmemeval.ts --print-plan       # run_config_hash per adapter + question ids, no run
  *
  * Adapter keys: keyword, vector, hybrid, hybrid+expansion (the four legacy
  * adapters, unchanged behavior), plus hybrid-sessdiv, hybrid+expansion-sessdiv
@@ -78,7 +81,7 @@ import { createHash } from 'node:crypto';
 import { join, dirname, resolve } from 'path';
 import { homedir } from 'os';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
-import { importFromContent } from 'gbrain/import-file';
+import { importFromContentEmbedded } from './import-embedded.ts';
 import { hybridSearch } from 'gbrain/search/hybrid';
 import { expandQuery } from 'gbrain/search/expansion';
 import type { SearchResult } from 'gbrain/types';
@@ -87,7 +90,9 @@ import { loadConfig } from 'gbrain/config';
 // its vector arm, so the standalone vector adapter must too (document-side
 // embed() returns different vectors on asymmetric models; longmemeval-06).
 import { embedQuery } from 'gbrain/embedding';
-import { configureGateway, getEmbeddingModel, getEmbeddingDimensions, getExpansionModel, __setEmbedTransportForTests } from 'gbrain/ai/gateway';
+import { configureGateway, diagnoseEmbedding, getEmbeddingModel, getEmbeddingDimensions, getExpansionModel, __setEmbedTransportForTests } from 'gbrain/ai/gateway';
+import { BudgetExceededError, budgetOptionsFrom, receiptCost, startPaidRun, type BudgetOptions, type BudgetRun, type PaidRequestGuard } from './budget-ledger.ts';
+import { registryEntry } from '../registry.ts';
 // `ai` is a direct dependency of this repo (pinned to gbrain's major) — the
 // old deep import into gbrain's nested node_modules broke on any packaged
 // install because bun hoists the dependency (audit finding longmemeval-08).
@@ -103,6 +108,7 @@ import {
 } from './metrics.ts';
 import {
   writeReceipt,
+  latencySummary,
   receiptPath,
   RECEIPT_SCHEMA_VERSION,
   BENCHMARK_VERSION,
@@ -112,6 +118,12 @@ import {
 import { ProbeAccounting } from './probe-accounting.ts';
 import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
 import { createLmeCapture, retainLmeEvidence, type LmeEvidence } from './longmemeval-answers.ts';
+import { opaqueSessionId, opaqueSessionMap, SESSION_ID_POLICY } from './longmemeval-session-ids.ts';
+import { assertPayload, InputAllowlistError, withPermitted } from './evaluator/allowlist.ts';
+import {
+  lmeForbiddenValues, lmeSessionMaterial, loadLongMemEvalGold, longMemEvalSutView, scoreLmeRetrieval, LME_SUT_PAGE, LME_SUT_QUERY,
+} from './evaluator/longmemeval.ts';
+import { REFERENCE_SCORER_VERSION } from './evaluator/reference-scorer.ts';
 
 // ─── CLI ──────────────────────────────────────────────────────────
 
@@ -153,6 +165,10 @@ export interface Opts {
   /** Where receipt.json lands (receiptPath(category, reportsDir)). */
   reportsDir: string;
   retainEvidence?: boolean;
+  /** Print the run plan (per-adapter run_config_hash + selected question ids) as JSON and exit without running. */
+  printPlan?: boolean;
+  /** Paid-run budget (--budget-usd, --budget-ledger, --program-cap-usd); defaults to the BRAINBENCH_* env vars. */
+  budget?: BudgetOptions;
 }
 
 export function parseOpts(argv: string[] = process.argv.slice(2)): Opts {
@@ -204,12 +220,21 @@ export function parseOpts(argv: string[] = process.argv.slice(2)): Opts {
     embeddingDimensions: arg(args, '--embedding-dims') ? Number(arg(args, '--embedding-dims')) : null,
     reportsDir: arg(args, '--reports-dir') ?? join(process.cwd(), 'eval/reports'),
     ...(args.includes('--retain-evidence') ? { retainEvidence: true } : {}),
+    ...(args.includes('--print-plan') ? { printPlan: true } : {}),
+    budget: budgetOptionsFrom(args),
   };
 }
 
+/** Resume key: a row is reused only by a run with the same adapter, question and run configuration (PD-03). */
+export function resumeKey(adapter: string, questionId: string, runConfigHash: string | undefined): string {
+  return `${adapter}::${questionId}::${runConfigHash ?? ''}`;
+}
+
 /**
- * Read an existing NDJSON stream and return the set of (adapter, question_id)
- * pairs already completed. The wrapper loop relies on this for resume.
+ * Read an existing NDJSON stream and return the resumeKey of every
+ * (adapter, question_id, run_config_hash) already completed. The wrapper loop
+ * relies on this for resume; a row written under another configuration never
+ * satisfies the current run.
  *
  * Rows with an `error` field are NOT completed — they are re-queued on the
  * next invocation instead of becoming permanent misses (audit finding
@@ -225,7 +250,7 @@ export function readCompletedPairs(path: string): Set<string> {
     try {
       const obj = JSON.parse(line);
       if (obj?.adapter && obj?.question_id && obj.error === undefined) {
-        done.add(`${obj.adapter}::${obj.question_id}`);
+        done.add(resumeKey(obj.adapter, obj.question_id, obj.run_config_hash));
       }
     } catch { /* truncated/malformed line → treat as not completed, re-run */ }
   }
@@ -263,12 +288,12 @@ function fnv1a(s: string): number {
  * shift another type's draw. Selected questions are returned in original
  * dataset order so worker sharding by index stays deterministic.
  */
-export function stratifiedSample(questions: Question[], perType: number, seed: number): Question[] {
-  const buckets: Record<string, Array<{ q: Question; idx: number }>> = {};
+export function stratifiedSample<Q extends Pick<Question, 'question_type'>>(questions: Q[], perType: number, seed: number): Q[] {
+  const buckets: Record<string, Array<{ q: Q; idx: number }>> = {};
   questions.forEach((q, idx) => {
     (buckets[q.question_type] ??= []).push({ q, idx });
   });
-  const picked: Array<{ q: Question; idx: number }> = [];
+  const picked: Array<{ q: Q; idx: number }> = [];
   for (const t of Object.keys(buckets).sort()) {
     const rand = mulberry32((seed ^ fnv1a(t)) >>> 0);
     const pool = [...buckets[t]];
@@ -323,7 +348,9 @@ export function isAbsQuestion(questionId: string): boolean {
 // LongMemEval _s shape uses array of arrays for haystack_sessions (each
 // inner array is the turns of that session). Oracle uses {session_id, turns}.
 // Normalize to {session_id, turns}.
-export function normalizeSessions(q: Question): Array<{ session_id: string; turns: Turn[]; date?: string }> {
+export type QuestionSessions = Pick<Question, 'question_id' | 'haystack_session_ids' | 'haystack_dates' | 'haystack_sessions'>;
+
+export function normalizeSessions(q: QuestionSessions): Array<{ session_id: string; turns: Turn[]; date?: string }> {
   const sessions: Array<{ session_id: string; turns: Turn[]; date?: string }> = [];
   const ids = q.haystack_session_ids ?? [];
   const dates = q.haystack_dates ?? [];
@@ -356,6 +383,21 @@ export function renderSession(session: { session_id: string; turns: Turn[]; date
     body.push('');
   }
   return fm.join('\n') + body.join('\n');
+}
+
+/**
+ * The pages the system under test imports for one question: one per haystack
+ * session, whose slug and frontmatter carry only the opaque session id (C-01).
+ * originalByOpaque maps retrieved ids back to dataset ids for scoring.
+ */
+export function sutPages(q: QuestionSessions): { pages: Array<{ slug: string; content: string }>; originalByOpaque: Map<string, string> } {
+  const sessions = normalizeSessions(q);
+  const originalByOpaque = opaqueSessionMap(q.question_id, sessions.map(s => s.session_id));
+  const pages = sessions.map(s => {
+    const id = opaqueSessionId(q.question_id, s.session_id);
+    return { slug: `chat/${id}`, content: renderSession({ ...s, session_id: id }) };
+  });
+  return { pages, originalByOpaque };
 }
 
 // ─── Harness ──────────────────────────────────────────────────────
@@ -458,15 +500,14 @@ export async function pinSearchConfig(engine: PGLiteEngine, spec?: Pick<AdapterS
  * Reranker provider → env key. FALLBACK MAP: gbrain resolves the reranker
  * model as per-call override ?? `search.reranker.model` DB config ?? the
  * mode bundle's default. Since gbrain v0.48.2.0 that default is
- * `voyage:rerank-2.5` (the ZeroEntropy hosted API ends 2026-09-04); this
+ * `voyage:rerank-2.5`; this
  * runner PINS the same model explicitly for rerank specs
  * (RERANK_MODEL_PIN, recorded in the receipt) so the preflight and the
  * engine cannot disagree about which provider's key is required. Entries mirror the
  * auth_env.required of gbrain's reranker-capable recipes
- * (src/core/ai/recipes/{zeroentropyai,voyage,dashscope-rerank,openrouter}.ts).
+ * (src/core/ai/recipes/{voyage,dashscope-rerank,openrouter}.ts).
  */
 export const RERANKER_PROVIDER_ENV_KEY: Readonly<Record<string, string>> = Object.freeze({
-  zeroentropyai: 'ZEROENTROPY_API_KEY',
   voyage: 'VOYAGE_API_KEY',
   dashscope: 'DASHSCOPE_API_KEY',
   openrouter: 'OPENROUTER_API_KEY',
@@ -550,9 +591,13 @@ export function sessdivRetrieve(results: SearchResult[], topK: number): SessdivR
  * adapter) so any hash is reversible to the config that produced it.
  */
 export interface RunConfigPreimage {
-  schema_version: 1;
+  schema_version: 3;
   /** The dependency spec from package.json dependencies.gbrain (gbrainPin()). */
   gbrain_pin: string;
+  /** The installed gbrain version (gbrainVersion()); differs from the pin's version under bun link. */
+  gbrain_version: string;
+  /** How dataset session ids are hidden from the system under test (SESSION_ID_POLICY). */
+  session_ids: typeof SESSION_ID_POLICY;
   dataset: string;
   top_k: number;
   adapter: string;
@@ -573,8 +618,10 @@ export function buildRunConfigPreimage(
   resolved: { embeddingModel: string | null; embeddingDims: number | null; expansionModel: string | null },
 ): RunConfigPreimage {
   return {
-    schema_version: 1,
+    schema_version: 3,
     gbrain_pin: gbrainPin(),
+    gbrain_version: gbrainVersion(),
+    session_ids: SESSION_ID_POLICY,
     dataset: opts.datasetName,
     top_k: opts.topK,
     adapter: spec.name,
@@ -706,6 +753,9 @@ export interface NdjsonRow {
    * hashes within one adapter. Absent on legacy rows (pre 2026-09-01).
    */
   run_config_hash?: string;
+  /** gbrain version and declared pin that produced this row. Absent on rows written before 2026-09-28. */
+  gbrain_version?: string;
+  gbrain_pin?: string;
   error?: string;
   error_origin?: FailureOrigin;
   evidence?: LmeEvidence;
@@ -905,12 +955,21 @@ export function computeVerdict(
 
 // ─── Run ──────────────────────────────────────────────────────────
 
+export interface RunPlan {
+  /** Adapter name → run_config_hash for every runnable adapter. */
+  run_config_hashes: Record<string, string>;
+  /** Selected question ids after --stratify/--limit, in dataset order (all shards). */
+  question_ids: string[];
+  adapters_skipped: Array<{ adapter: string; skip_reason: string }>;
+}
+
 export interface RunResult {
   summaries: RunSummary[];
   receipt: Receipt;
   receiptFile: string;
   reportPath: string | null;
   exitCode: number;
+  plan?: RunPlan;
 }
 
 const LME_CATEGORY = 'longmemeval';
@@ -930,7 +989,6 @@ function baseReceipt(startedAt: string) {
 const PROVIDER_ENV_KEY: Record<string, string> = {
   openai: 'OPENAI_API_KEY',
   voyage: 'VOYAGE_API_KEY',
-  zeroentropyai: 'ZEROENTROPY_API_KEY',
 };
 
 export async function run(opts: Opts): Promise<RunResult> {
@@ -966,9 +1024,13 @@ export async function run(opts: Opts): Promise<RunResult> {
   }
   process.stderr.write(`[longmemeval] loading ${opts.datasetPath}...\n`);
   const datasetBytes = readFileSync(opts.datasetPath);
-  const raw: Question[] = JSON.parse(datasetBytes.toString('utf8'));
-  let all = raw;
-  if (opts.stratify) all = stratifiedSample(raw, opts.stratify, opts.seed);
+  // The runner keeps only gold-free question views. Evidence labels and
+  // answers come from the evaluator's own read of the same bytes (plan
+  // amendment 6), and scoring goes through that gold store.
+  const gold = loadLongMemEvalGold(opts.datasetPath, createHash('sha256').update(datasetBytes).digest('hex'));
+  const questions = (JSON.parse(datasetBytes.toString('utf8')) as Question[]).map(longMemEvalSutView);
+  let all = questions;
+  if (opts.stratify) all = stratifiedSample(questions, opts.stratify, opts.seed);
   if (opts.limit) all = all.slice(0, opts.limit);
   const nAbs = all.filter(q => isAbsQuestion(q.question_id)).length;
   process.stderr.write(
@@ -1087,6 +1149,38 @@ export async function run(opts: Opts): Promise<RunResult> {
         `Run --keyword-only, set the key, or stub the embed transport for hermetic runs.`,
       );
     }
+  }
+
+  const runConfigPreimages: Record<string, RunConfigPreimage> = Object.fromEntries(runnable.map(adapter => [adapter.name,
+    buildRunConfigPreimage(adapter, opts, { embeddingModel: resolvedEmbeddingModel, embeddingDims: resolvedEmbeddingDims, expansionModel: resolvedExpansionModel })]));
+  const runConfigHashes = Object.fromEntries(Object.entries(runConfigPreimages).map(([name, preimage]) => [name, runConfigHash(preimage)]));
+  if (opts.printPlan) {
+    const plan: RunPlan = { run_config_hashes: runConfigHashes, question_ids: all.map(q => q.question_id), adapters_skipped: skippedAdapters };
+    process.stdout.write(JSON.stringify(plan) + '\n');
+    const receipt: Receipt = { ...baseReceipt(startedAt), run_status: 'skipped', skip_reason: 'plan only (--print-plan); nothing ran and no receipt was written',
+      n_total: 0, n_scored: 0, completion_rate: 0, errors: [], publishable: false, finished_at: new Date().toISOString() };
+    return { summaries: [], receipt, receiptFile, reportPath: null, exitCode: 0, plan };
+  }
+
+  // Every provider request goes through the budget ledger, which refuses to
+  // start without --budget-usd. A stubbed embed transport (hermetic runs)
+  // makes no provider request, so it needs no budget.
+  let paid: { run: BudgetRun; guard: PaidRequestGuard } | null = null;
+  const embedDiagnosis = diagnoseEmbedding();
+  if (needsEmbeddings && !(embedDiagnosis.ok && embedDiagnosis.provider === '<test-transport>')) {
+    try {
+      // The registry estimate is for a cold run over all 500 LongMemEval-S
+      // questions; scale it to the questions this invocation plans.
+      const fullRunUsd = registryEntry('longmemeval-retrieval')!.cost_estimate.usd!;
+      paid = startPaidRun(LME_CATEGORY, { ...(opts.budget ?? budgetOptionsFrom([])), estimateUsd: fullRunUsd * all.length / 500 });
+    } catch (error) {
+      if (error instanceof BudgetExceededError) return skip(`budget: ${error.message}`);
+      throw error;
+    }
+  }
+
+  try {
+  if (needsEmbeddings) {
     if (!opts.noCache) {
       // Wire the content-addressed cache. Hits skip the provider API
       // entirely; misses fall through to the original ai-sdk embedMany.
@@ -1115,10 +1209,19 @@ export async function run(opts: Opts): Promise<RunResult> {
 
   // Resume support: when --ndjson is given, every per-question result is
   // appended immediately. On restart we read it back and skip already-done
-  // (adapter, question_id) pairs — error rows are NOT skipped; they re-run
-  // (audit finding longmemeval-03). Pair this with --max-wall-seconds and a
+  // (adapter, question_id, run_config_hash) rows; error rows are NOT
+  // skipped; they re-run (audit finding longmemeval-03). Clean rows for a
+  // requested adapter under another configuration stop the run instead of
+  // being mixed in (PD-03). Pair this with --max-wall-seconds and a
   // wrapper bash loop to chip through the full run in 10-min batches.
   const completed = readCompletedPairs(opts.ndjsonPath);
+  const stale = [...completed].map(key => key.split('::')).filter(([adapter, , hash]) => adapter in runConfigHashes && hash !== runConfigHashes[adapter]);
+  if (stale.length > 0) {
+    const adaptersStale = [...new Set(stale.map(([adapter]) => adapter))].sort();
+    throw new Error(`NDJSON ${opts.ndjsonPath} already holds ${stale.length} completed row(s) for ${adaptersStale.join(', ')} ` +
+      `from a different run configuration (run_config_hash differs from ${adaptersStale.map(a => runConfigHashes[a].slice(0, 12)).join(', ')}); ` +
+      'resuming would mix configurations. Use a fresh --ndjson path.');
+  }
   if (opts.ndjsonPath) {
     mkdirSync(dirname(opts.ndjsonPath) || '.', { recursive: true });
     if (opts.retainEvidence) writeFileSync(opts.ndjsonPath, '', { flag: 'wx' });
@@ -1135,15 +1238,15 @@ export async function run(opts: Opts): Promise<RunResult> {
   for (const adapter of runnable) {
     for (let i = 0; i < all.length; i++) {
       if (!inShard(i)) continue;
-      if (completed.has(`${adapter.name}::${all[i].question_id}`)) continue;
+      if (completed.has(resumeKey(adapter.name, all[i].question_id, runConfigHashes[adapter.name]))) continue;
       expectedProbes++;
     }
   }
   const acc = new ProbeAccounting(expectedProbes);
   const evidenceCapture = opts.retainEvidence ? createLmeCapture(datasetBytes, all.filter((_, i) => inShard(i)), runnable.map(adapter => adapter.name)) : undefined;
-  const runConfigPreimages: Record<string, RunConfigPreimage> = {};
   const abortedAdapters: Array<{ adapter: string; reason: string }> = [];
 
+  const allRows: NdjsonRow[] = [];
   for (const adapter of runnable) {
     if (timedOut) break;
     process.stderr.write(
@@ -1156,13 +1259,8 @@ export async function run(opts: Opts): Promise<RunResult> {
     // sessdiv adapters over-fetch so the session dedupe has supply to fill
     // K distinct slots.
     const fetchLimit = adapter.sessdiv ? opts.topK * opts.overfetchFactor : opts.topK;
-    const preimage = buildRunConfigPreimage(adapter, opts, {
-      embeddingModel: resolvedEmbeddingModel,
-      embeddingDims: resolvedEmbeddingDims,
-      expansionModel: resolvedExpansionModel,
-    });
-    runConfigPreimages[adapter.name] = preimage;
-    const rowConfigHash = runConfigHash(preimage);
+    const preimage = runConfigPreimages[adapter.name];
+    const rowConfigHash = runConfigHashes[adapter.name];
     // Rerank contract: the first non-empty scored result set must carry
     // rerank_score (gbrain stamps it on the reranked head) — otherwise the
     // reranker fail-opened and this adapter's label would be a lie.
@@ -1206,7 +1304,7 @@ export async function run(opts: Opts): Promise<RunResult> {
         // Deterministic by index so workers don't fight over the same row.
         if (!inShard(i)) continue;
         // Skip pairs already streamed to NDJSON (resume + cross-worker dedup).
-        if (completed.has(`${adapter.name}::${q.question_id}`)) continue;
+        if (completed.has(resumeKey(adapter.name, q.question_id, rowConfigHash))) continue;
         // Wall-budget exit: clean exit lets the wrapper restart cleanly.
         if (Date.now() - wallStart > wallBudgetMs) {
           process.stderr.write(`[longmemeval] wall budget reached (${opts.maxWallSeconds}s); exiting for restart\n`);
@@ -1221,21 +1319,20 @@ export async function run(opts: Opts): Promise<RunResult> {
           } else {
             await resetTables(engine);
           }
+          const { pages, originalByOpaque } = sutPages(q);
+          const forbidden = lmeForbiddenValues(gold, q.question_id);
           const sessions = normalizeSessions(q);
-          for (const s of sessions) {
-            // gbrain's putPage lowercases via validateSlug, but upsertChunks
-            // (also called by importFromContent) does NOT lowercase — passing
-            // a mixed-case slug throws "Page not found" on the chunk write.
-            // Normalize at the boundary so the dataset's mixed-case session_ids
-            // (e.g. "sharegpt_yywfIrx_0") work end-to-end.
-            const slug = `chat/${s.session_id}`.toLowerCase();
+          pages.forEach((page, p) => assertPayload(LME_SUT_PAGE, page, withPermitted(forbidden, lmeSessionMaterial(sessions[p]))));
+          assertPayload(LME_SUT_QUERY, { text: q.question }, withPermitted(forbidden, [q.question]));
+          for (const page of pages) {
             await withTimeout(
-              importFromContent(engine, slug, renderSession(s), {
+              importFromContentEmbedded(engine, page.slug, page.content, {
                 noEmbed: adapter.base === 'keyword',
               }),
               PER_QUESTION_TIMEOUT_MS,
             );
           }
+          const toOriginal = (ids: string[]) => ids.map(id => originalByOpaque.get(id) ?? id);
           let searchResults: SearchResult[];
           if (adapter.base === 'keyword') {
             searchResults = await engine.searchKeyword(q.question, { limit: fetchLimit });
@@ -1278,11 +1375,11 @@ export async function run(opts: Opts): Promise<RunResult> {
           let sessdiv: SessdivRetrieval | null = null;
           if (adapter.sessdiv) {
             sessdiv = sessdivRetrieve(searchResults, opts.topK);
-            retrieved = sessdiv.retrieved;
+            retrieved = toOriginal(sessdiv.retrieved);
           } else {
-            retrieved = uniqSessionIds(searchResults);
+            retrieved = toOriginal(uniqSessionIds(searchResults));
           }
-          const m = scoreQuestion(retrieved, q.answer_session_ids, opts.topK);
+          const m = scoreLmeRetrieval(gold, q.question_id, retrieved, opts.topK);
           const abs = isAbsQuestion(q.question_id);
 
           const row: NdjsonRow = {
@@ -1290,7 +1387,7 @@ export async function run(opts: Opts): Promise<RunResult> {
             question_id: q.question_id,
             question_type: q.question_type,
             retrieved,
-            ground_truth: q.answer_session_ids,
+            ground_truth: gold.read(q.question_id).answer_session_ids,
             hit_at_k: m.recall_any === 1,
             ...(abs
               ? { is_abs: true, abs_noise: m.abs_noise }
@@ -1299,7 +1396,7 @@ export async function run(opts: Opts): Promise<RunResult> {
                   recall_any: Number.isFinite(m.recall_any) ? m.recall_any : 0,
                   ndcg_any: Number.isFinite(m.ndcg_any) ? m.ndcg_any : 0,
                 }),
-            num_haystack: sessions.length,
+            num_haystack: pages.length,
             latency_ms: Date.now() - qStart,
             top_k: opts.topK,
             dataset: opts.datasetName,
@@ -1311,6 +1408,8 @@ export async function run(opts: Opts): Promise<RunResult> {
                 }
               : {}),
             run_config_hash: rowConfigHash,
+            gbrain_version: preimage.gbrain_version,
+            gbrain_pin: preimage.gbrain_pin,
             ...(evidenceCapture ? { evidence: retainLmeEvidence(q, searchResults, adapter, opts.topK, retrieved) } : {}),
           };
           results.push(row);
@@ -1331,6 +1430,8 @@ export async function run(opts: Opts): Promise<RunResult> {
             );
           }
         } catch (err: any) {
+          // Gold or unlisted data was about to reach the product: void the run.
+          if (err instanceof InputAllowlistError) throw err;
           const msg = String(err?.message ?? err);
           process.stderr.write(`[${adapter.name}] ${q.question_id} error: ${msg}\n`);
           if (i === 0) process.stderr.write(`stack: ${err?.stack ?? ''}\n`);
@@ -1348,13 +1449,15 @@ export async function run(opts: Opts): Promise<RunResult> {
             question_id: q.question_id,
             question_type: q.question_type,
             retrieved: [],
-            ground_truth: q.answer_session_ids,
+            ground_truth: gold.read(q.question_id).answer_session_ids,
             hit_at_k: false,
             num_haystack: 0,
             latency_ms: Date.now() - qStart,
             top_k: opts.topK,
             dataset: opts.datasetName,
             run_config_hash: rowConfigHash,
+            gbrain_version: preimage.gbrain_version,
+            gbrain_pin: preimage.gbrain_pin,
             error: msg,
             error_origin: origin,
             ...(evidenceCapture ? { evidence: retainLmeEvidence(q, [], adapter, opts.topK, []) } : {}),
@@ -1379,6 +1482,7 @@ export async function run(opts: Opts): Promise<RunResult> {
       await engine.disconnect();
     }
 
+    allRows.push(...results);
     if (results.length === 0) {
       // Resume-complete shard (or wall budget hit before the first question):
       // nothing to summarize. Guard instead of emitting NaN/undefined summaries
@@ -1479,6 +1583,13 @@ export async function run(opts: Opts): Promise<RunResult> {
       worker_id: opts.workerId,
       total_workers: opts.totalWorkers,
       cache: !opts.noCache,
+      evaluator: {
+        gold_store: gold.toJSON(),
+        gold_loader: 'separate dataset read (eval/runner/evaluator/longmemeval.ts), byte hash checked against the runner',
+        reference_scorer: REFERENCE_SCORER_VERSION,
+        input_allowlist: [LME_SUT_PAGE.name, LME_SUT_QUERY.name],
+        isolation: 'in-process: the product receives allowlisted plain data only; no process sandbox',
+      },
       ...(skippedAdapters.length > 0 ? { adapters_skipped: skippedAdapters } : {}),
       ...(abortedAdapters.length > 0 ? { adapters_aborted: abortedAdapters } : {}),
       ...(rerankAdaptersPending.length > 0
@@ -1498,11 +1609,24 @@ export async function run(opts: Opts): Promise<RunResult> {
       summaries,
     },
   };
+  if (paid) {
+    paid.guard.uninstall();
+    const spend = paid.run.close();
+    receipt.cost = receiptCost(spend);
+    receipt.delivered_tokens = { tokens: spend.input_tokens, basis: 'provider-reported input tokens of every paid request (embeddings and chat), from the budget ledger' };
+    paid = null;
+  }
+  const questionLatencies = allRows.filter(row => row.error === undefined).map(row => row.latency_ms);
+  receipt.latency_ms = latencySummary(questionLatencies, 'per-question wall time (reset, import, search), every adapter, errors excluded');
   writeReceipt(receiptFile, receipt);
   process.stderr.write(`[longmemeval] receipt: ${receiptFile} (run_status=${receipt.run_status} verdict=${receipt.verdict ?? 'n/a'})\n`);
 
   const exitCode = runInvalid ? 1 : gate.verdict === 'fail' ? 1 : 0;
   return { summaries, receipt, receiptFile, reportPath, exitCode };
+  } finally {
+    paid?.guard.uninstall();
+    paid?.run.close();
+  }
 }
 
 // ─── Output ───────────────────────────────────────────────────────

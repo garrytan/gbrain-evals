@@ -3,7 +3,7 @@ import { mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } fro
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { ChatResult } from 'gbrain/ai/gateway';
-import { CAT36_CATEGORY, validateCat36Profile, type Cat36BuildReceipt, type Cat36Profile, type Cat36Row } from './cat36-associative-retrieval.ts';
+import { CAT36_CATEGORY, cat36ProductPackage, validateCat36Profile, type Cat36BuildReceipt, type Cat36Profile, type Cat36Row } from './cat36-associative-retrieval.ts';
 import { cat36Hash, constructionSources, fixturePageId, loadCat36Corpus, loadCat36Counterfactual, type Cat36Probe } from './cat36-corpus.ts';
 import { scoreCat36Probe } from './cat36-scorer.ts';
 import { DEFAULT_JUDGE_SYSTEM_PROMPT, scoreAnswer, type JudgeEvidence, type JudgeResult } from './judge.ts';
@@ -108,18 +108,19 @@ export function loadGroundedReplay(primaryDir: string, corpusDir: string) {
 
 function verifyGroundedProduct(profile: GroundedProfile, replay: ReturnType<typeof loadGroundedReplay>) {
   if (replay.build.mode !== 'live' || replay.primary.data?.runtime_kind !== 'production') throw new Error('live answers require production live retrieval');
-  const provenance = resolveRegressionProduct({ expectedProductSha: profile.expected_product_sha, expectedPackageSha256: profile.expected_package_sha256 });
+  const productPackage = cat36ProductPackage((replay.primary.resolved_config?.profile as Cat36Profile).arm);
+  const provenance = resolveRegressionProduct({ expectedProductSha: profile.expected_product_sha, expectedPackageSha256: profile.expected_package_sha256, packageName: productPackage });
   if (provenance.package_sha256 !== replay.build.provenance.package_sha256 || provenance.product_sha !== replay.build.provenance.product_sha
     || (replay.primary.resolved_config?.profile as Cat36Profile).expected_product_sha !== profile.expected_product_sha) throw new Error('loaded answer product differs from retrieval build');
-  const gatewayPath = realpathSync(fileURLToPath(import.meta.resolve('gbrain/ai/gateway')));
+  const gatewayPath = realpathSync(fileURLToPath(import.meta.resolve(`${productPackage}/ai/gateway`)));
   if (!gatewayPath.startsWith(provenance.package_path + '/')) throw new Error('gateway resolves outside the verified product');
-  return provenance;
+  return { ...provenance, product_package: productPackage };
 }
 
-async function liveRuntime(profile: GroundedProfile) {
+async function liveRuntime(profile: GroundedProfile, productPackage: string) {
   const providerKey = ANSWER_PROVIDER_KEYS[profile.answer_model.split(':')[0]];
   if (!providerKey || !process.env[providerKey] || !process.env.ANTHROPIC_API_KEY) throw new Error('answer and judge provider credentials are not ready');
-  const gateway = await import('gbrain/ai/gateway');
+  const gateway = await (import(`${productPackage}/ai/gateway`) as Promise<typeof import('gbrain/ai/gateway')>);
   gateway.__setChatTransportForTests(null);
   gateway.configureGateway({ chat_model: profile.answer_model, env: { [providerKey]: process.env[providerKey], ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY } });
   if (!gateway.validateModelId(profile.answer_model, 'chat').ok || !gateway.isAvailable('chat', profile.answer_model)) throw new Error('answer provider model is not ready');
@@ -161,6 +162,7 @@ export async function runCat36GroundedAnswers(options: { primaryDir: string; cor
   let provenance: Record<string, unknown> = { injected: Boolean(options.testRuntime), verified_live_identity: false };
   let originalEnv: NodeJS.ProcessEnv | undefined;
   let isolatedRuntime: Record<string, unknown> | undefined;
+  const productPackage = cat36ProductPackage((replay.primary.resolved_config?.profile as Cat36Profile | undefined)?.arm ?? 'B');
   const enterNamespace = async (providerKeys: string[]) => {
     if (environmentActive) throw new Error('concurrent grounded runtimes require separate processes');
     const namespace = { home: resolve(options.outputDir, 'runtime/home'), config: resolve(options.outputDir, 'runtime/home/.gbrain/config.json'), database: resolve(options.outputDir, 'runtime/brain') };
@@ -176,7 +178,7 @@ export async function runCat36GroundedAnswers(options: { primaryDir: string; cor
       XDG_CONFIG_HOME: join(namespace.home, '.config'), XDG_CACHE_HOME: join(namespace.home, '.cache'),
       XDG_DATA_HOME: join(namespace.home, '.local/share'), XDG_STATE_HOME: join(namespace.home, '.local/state'),
     });
-    const productConfig = await import('gbrain/config');
+    const productConfig = await (import(`${productPackage}/config`) as Promise<typeof import('gbrain/config')>);
     const loaded = productConfig.loadConfig();
     if (productConfig.configPath() !== namespace.config || loaded?.engine !== 'pglite' || loaded.database_path !== namespace.database || loaded.database_url) throw new Error('product resolved another replay configuration or database path');
     isolatedRuntime = { ...namespace, approved_provider_keys: approvedKeys, database_usage: 'no database opened by replay; path isolates gateway side effects' };
@@ -190,7 +192,7 @@ export async function runCat36GroundedAnswers(options: { primaryDir: string; cor
     else {
       provenance = { ...verifyGroundedProduct(options.profile, replay), readiness: 'pending' };
       await enterNamespace([ANSWER_PROVIDER_KEYS[options.profile.answer_model.split(':')[0]], 'ANTHROPIC_API_KEY']);
-      const live = await liveRuntime(options.profile);
+      const live = await liveRuntime(options.profile, productPackage);
       provenance.readiness = live.readiness;
       runtime = live;
     }
@@ -230,7 +232,7 @@ export async function runCat36GroundedAnswers(options: { primaryDir: string; cor
         return result;
       } } } as unknown as Anthropic;
       try {
-        row.judge_result = await scoreAnswer(row.judge_evidence, { client, model: options.profile.judge_model, maxTokens: options.profile.judge_max_tokens, systemPrompt: JUDGE_SYSTEM, systemPromptVersion: 'cat36-grounded-v1' });
+        row.judge_result = await scoreAnswer(row.judge_evidence, { client, model: options.profile.judge_model, maxTokens: options.profile.judge_max_tokens, systemPrompt: JUDGE_SYSTEM, systemPromptVersion: 'cat36-grounded-v2' });
         const judge = row.judge_result;
         if (judge.verdict === 'judge_failed' || !Number.isFinite(judge.overall_score) || !Number.isFinite(judge.cost_usd)
           || judge.scores.some(score => !Number.isFinite(score.score))) { failure('judge', 'judge failed to produce a finite complete score'); continue; }
@@ -261,7 +263,7 @@ export async function runCat36GroundedAnswers(options: { primaryDir: string; cor
     n_total: summary.n_total, n_scored: summary.n_scored, completion_rate: summary.completion_rate, errors: summary.errors,
     publishable: options.profile.mode === 'live' && !options.testRuntime && replay.primary.publishable && complete && safe && summary.publishable,
     gbrain_version: replay.primary.gbrain_version, gbrain_pin: replay.primary.gbrain_pin, started_at: started, finished_at: new Date().toISOString(),
-    judge: { model: options.profile.judge_model, temperature: 0, rubric_version: 'cat36-grounded-v1' },
+    judge: { model: options.profile.judge_model, temperature: 0, rubric_version: 'cat36-grounded-v2' },
     resolved_config: { profile: options.profile, loaded_product: provenance, isolated_runtime: isolatedRuntime ?? null, answer_system: SYSTEM, judge_system: JUDGE_SYSTEM,
       budget_enforcement: 'externally configured isolated provider caps; approvals are operator attestations, not verified local spend caps',
       cost_accounting: 'answer: raw gateway token usage, no invented dollar estimate; judge: shared helper estimate plus raw provider usage; failed-call usage may be unavailable' },

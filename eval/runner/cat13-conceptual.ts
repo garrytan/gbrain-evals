@@ -81,7 +81,7 @@
  *     reading a --search-pin arm.
  *
  * Run:
- *   bun eval/runner/cat13-conceptual.ts                  # live embeds (OPENAI_API_KEY)
+ *   bun eval/runner/cat13-conceptual.ts --budget-usd 5   # live embeds (OPENAI_API_KEY); every request reserved in the budget ledger
  *   bun eval/runner/cat13-conceptual.ts --stub-embed     # hermetic, no keys
  *   CAT13_PROBES=1000 bun eval/runner/cat13-conceptual.ts
  *   CAT13_PROBES=200 bun eval/runner/cat13-conceptual.ts --adapter vector
@@ -108,13 +108,20 @@ import { GbrainInlineAdapter } from './adapters/gbrain-inline.ts';
 import type { EvalAdapterConfig } from './eval-adapter-config.ts';
 import type { Adapter, Page, Query, RankedDoc } from './types.ts';
 import { sanitizePage, sanitizeQuery } from './types.ts';
-import { ndcgAtK, precisionAtK } from './metrics.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import {
   writeReceipt, receiptPath, RECEIPT_SCHEMA_VERSION, BENCHMARK_VERSION,
   type Receipt, type ReceiptVerdict,
 } from './receipt.ts';
+import { BudgetExceededError, budgetOptionsFrom, receiptCost, startPaidRun, type BudgetOptions, type BudgetRun, type PaidRequestGuard } from './budget-ledger.ts';
+import { registryEntry } from '../registry.ts';
 import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
+import { assertPayload, InputAllowlistError } from './evaluator/allowlist.ts';
+import {
+  assertCat13Alignment, cat13ForbiddenValues, cat13GoldFromProbes, scoreCat13, CAT13_BOUNDARIES, CAT13_SUT_PAGE, CAT13_SUT_QUERY, type Cat13Gold,
+} from './evaluator/cat13.ts';
+import type { GoldStore } from './evaluator/gold-store.ts';
+import { REFERENCE_SCORER_VERSION } from './evaluator/reference-scorer.ts';
 
 export const TOP_K = 5;
 const CATEGORY = 'cat13-conceptual';
@@ -151,7 +158,7 @@ export interface RichPage extends Page {
 }
 
 export function loadCorpus(dir: string): RichPage[] {
-  const files = readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_'));
+  const files = readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_')).sort();
   const out: RichPage[] = [];
   for (const f of files) {
     const p = JSON.parse(readFileSync(join(dir, f), 'utf-8'));
@@ -327,6 +334,45 @@ const SYNONYMS: Record<string, string[]> = {
 
 // ─── Probe generator ──────────────────────────────────────────────
 
+/**
+ * Templates whose query text copies the grade-3 target's own title,
+ * description or body phrases (A-14, audit 2026-09-28): title paraphrase and
+ * variation embed the concept name, description paraphrase embeds its
+ * description, body-fuzzy embeds phrases extracted from its compiled truth,
+ * and semantic-neighborhood names the concept it grades 3. They favor
+ * lexical retrieval, so they are reported as a lexical control beside the
+ * conceptual probes (synonym and company-neighborhood templates), never
+ * mixed into a "conceptual" headline.
+ */
+export const GOLD_TEXT_TEMPLATES: ReadonlySet<string> = new Set([
+  'title-paraphrase', 'title-variation', 'description-paraphrase', 'body-fuzzy', 'semantic-neighborhood',
+]);
+
+export type ProbeClass = 'conceptual' | 'lexical_control';
+
+export function probeClass(template: string): ProbeClass {
+  return GOLD_TEXT_TEMPLATES.has(template) ? 'lexical_control' : 'conceptual';
+}
+
+export interface ClassScore { ndcg5: number; p1_strict: number; count: number }
+
+/** nDCG@5 and strict P@1 split by probe class, over an optional subset. */
+export function scoreByProbeClass(
+  rows: ReadonlyArray<{ template: string; subset: string; ndcg5: number; p1_strict: number }>,
+  subset?: string,
+): Record<ProbeClass, ClassScore> {
+  const out = {} as Record<ProbeClass, ClassScore>;
+  for (const cls of ['conceptual', 'lexical_control'] as const) {
+    const picked = rows.filter(r => probeClass(r.template) === cls && (subset === undefined || r.subset === subset));
+    out[cls] = {
+      ndcg5: picked.length ? picked.reduce((a, r) => a + r.ndcg5, 0) / picked.length : 0,
+      p1_strict: picked.length ? picked.reduce((a, r) => a + r.p1_strict, 0) / picked.length : 0,
+      count: picked.length,
+    };
+  }
+  return out;
+}
+
 export interface Probe {
   q: Query;
   /** Slugs whose rank-1 placement counts as a strict hit (grade-3 set). */
@@ -381,7 +427,10 @@ export function buildProbes(
   seed: number = PROBE_SEED,
 ): { probes: Probe[]; gradesByQuery: Map<string, Map<string, number>> } {
   const rng = mulberry32(seed);
-  const concepts = pages.filter(p => p.slug.startsWith('concepts/'));
+  // The shared rng is consumed per concept, so enumeration order must not
+  // depend on the caller or the filesystem (A-06: Bun readdirSync is unsorted).
+  const concepts = pages.filter(p => p.slug.startsWith('concepts/'))
+    .sort((a, b) => (a.slug < b.slug ? -1 : a.slug > b.slug ? 1 : 0));
   const pageBySlug = new Map(pages.map(p => [p.slug, p]));
 
   // Co-occurrence graph: concepts that share >=1 related_company or related_person score 1.
@@ -630,7 +679,6 @@ export function resolveEmbedder(
 const PROVIDER_KEY_ENV: Record<string, string> = {
   openai: 'OPENAI_API_KEY',
   voyage: 'VOYAGE_API_KEY',
-  zeroentropyai: 'ZEROENTROPY_API_KEY',
   mistral: 'MISTRAL_API_KEY',
 };
 
@@ -930,6 +978,10 @@ export interface AdapterScore {
     index: number; id: string; text: string; template: string;
     subset: ProbeSubset | 'all'; graded_gold: Record<string, number>;
     ranked_pages: RankedDoc[]; ndcg5: number; p5_graded: number; p1_strict: number;
+    /** Paired-comparison cluster: the target concept (the first, sorted, for multi-target probes). */
+    cluster_id: string;
+    /** Returned page ids that repeated an earlier one (a broken adapter; repeats earn nothing). */
+    duplicate_results?: number;
     error?: string;
     search_observation?: SearchObservation;
   }>;
@@ -976,6 +1028,8 @@ export interface ScoreAdapterOptions {
   initConfig?: Record<string, unknown>;
   /** When supplied, tuning / held-out rollups are computed alongside the overall numbers. */
   split?: ConceptSplit;
+  /** Evaluator-side gold from the separate loader. Defaults to a store built from gradesByQuery. */
+  gold?: GoldStore<Cat13Gold>;
 }
 
 /** Duck-typed optional adapter hooks (GbrainInlineAdapter / HybridNoGraphAdapter expose them). */
@@ -993,7 +1047,10 @@ export async function scoreAdapter(
   opts: ScoreAdapterOptions = {},
 ): Promise<AdapterScore> {
   const t0 = Date.now();
+  const gold = opts.gold ?? cat13GoldFromProbes(probes, gradesByQuery);
+  assertCat13Alignment(gold, probes);
   const publicPages = pages.map(sanitizePage);
+  for (const page of publicPages) assertPayload(CAT13_SUT_PAGE, page);
   const state = await adapter.init(publicPages, { name: adapter.name, ...(opts.initConfig ?? {}) });
 
   // Read the gateway AFTER init: adapters that call configureGateway themselves
@@ -1015,21 +1072,22 @@ export async function scoreAdapter(
 
   for (const [index, probe] of probes.entries()) {
     const probeId = `${adapter.name}:${probe.q.id}`;
-    const grades = gradesByQuery.get(probe.q.id)!;
     let ndcg = 0;
     let p5 = 0;
     let p1 = 0;
+    let duplicates = 0;
     let rankedPages: RankedDoc[] = [];
     let error: string | undefined;
+    const publicQuery = sanitizeQuery(probe.q);
+    assertPayload(CAT13_SUT_QUERY, publicQuery, cat13ForbiddenValues(gold, probe.q.id));
     try {
-      const results: RankedDoc[] = await adapter.query(sanitizeQuery(probe.q), state);
+      const results: RankedDoc[] = await adapter.query(publicQuery, state);
       rankedPages = results.slice(0, TOP_K);
-      const ids = results.map(r => r.page_id);
-      const rawNdcg = ndcgAtK(ids, grades, TOP_K);
-      ndcg = Number.isNaN(rawNdcg) ? 0 : rawNdcg;
-      const relevant = new Set([...grades.entries()].filter(([, g]) => g >= 1).map(([slug]) => slug));
-      p5 = precisionAtK(ids, relevant, TOP_K);
-      if (ids.length > 0 && probe.targetSlugs.includes(ids[0])) p1 = 1;
+      const reference = scoreCat13(gold, probe.q.id, results.map(r => r.page_id), TOP_K);
+      ndcg = Number.isNaN(reference.ndcg) ? 0 : reference.ndcg;
+      p5 = reference.precision;
+      p1 = reference.top1_strict;
+      duplicates = reference.duplicates;
       acc.score(probeId, ndcg);
     } catch (err) {
       // The system under test failed the probe: scored 0 (miss), kept in the
@@ -1043,8 +1101,9 @@ export async function scoreAdapter(
     perQuery.push({
       index, id: probe.q.id, text: probe.q.text, template: probe.template,
       subset: opts.split ? probeSubset(probe, opts.split) : 'all',
-      graded_gold: Object.fromEntries(grades), ranked_pages: rankedPages,
-      ndcg5: ndcg, p5_graded: p5, p1_strict: p1, ...(error ? { error } : {}),
+      graded_gold: gold.read(probe.q.id).grades, ranked_pages: rankedPages,
+      ndcg5: ndcg, p5_graded: p5, p1_strict: p1, cluster_id: [...probe.targetSlugs].sort()[0] ?? probe.q.id,
+      ...(duplicates ? { duplicate_results: duplicates } : {}), ...(error ? { error } : {}),
     });
     addToAccum(overall, probe.template, ndcg, p5, p1);
     if (opts.split) {
@@ -1178,6 +1237,8 @@ export interface Cat13Options {
   tuningConcepts?: number;
   holdoutConcepts?: number;
   seed?: number;
+  /** Paid-run budget (--budget-usd, --budget-ledger, --program-cap-usd); defaults to the BRAINBENCH_* env vars. */
+  budget?: BudgetOptions;
 }
 
 export const DEFAULT_TUNING_CONCEPTS = 20;
@@ -1199,6 +1260,7 @@ export function parseCat13Argv(
   env: Record<string, string | undefined> = process.env,
 ): Cat13Options {
   const opts: Cat13Options = {};
+  const budgetArgv: string[] = [];
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     const eq = arg.indexOf('=');
@@ -1229,13 +1291,19 @@ export function parseCat13Argv(
       case '--tuning-concepts': opts.tuningConcepts = parseNonNegativeInt(value(), '--tuning-concepts'); break;
       case '--holdout-concepts': opts.holdoutConcepts = parseNonNegativeInt(value(), '--holdout-concepts'); break;
       case '--seed': opts.seed = parseNonNegativeInt(value(), '--seed'); break;
+      case '--budget-usd': case '--budget-ledger': case '--program-cap-usd': {
+        const flagValue = value();
+        opts.budget = budgetOptionsFrom([...budgetArgv, flag, flagValue], env);
+        budgetArgv.push(flag, flagValue);
+        break;
+      }
       default:
         throw new Error(
           `unknown argument '${arg}'. Known: --stub-embed --allow-skip --adapter <name> `
           + `--embedding-model <provider:model> --embedding-dims <N> --reranker on|off --autocut on|off `
           + `--expansion-variant-budget <b> --keyword-arm-confidence-floor <f|off> `
           + `--search-pin <search.key>=<value> (repeatable; generic pass-through — gbrain ignores unknown search.* keys silently) `
-          + `--tuning-concepts <N> --holdout-concepts <M> --seed <N>`,
+          + `--tuning-concepts <N> --holdout-concepts <M> --seed <N> --budget-usd <dollars> --budget-ledger <path> --program-cap-usd <dollars>`,
         );
     }
   }
@@ -1367,12 +1435,39 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
     // (audit retrieval-cats-13). Now it is a hard error.
     throw new Error('buildProbes produced 0 probes — refusing to score an empty run');
   }
+  // Evaluator-side gold from a separate read of the corpus (plan amendment 6):
+  // the probes handed to adapters must be exactly the probes it labels.
+  const { loadCat13Gold } = await import('./evaluator/cat13-gold-loader.ts');
+  const gold = loadCat13Gold(corpusDir, targetProbes);
+  assertCat13Alignment(gold, probes);
+  if (gold.fingerprint !== cat13GoldFromProbes(probes, gradesByQuery).fingerprint) throw new Error('cat13 gold from the separate loader differs from the runner\'s grades');
 
   const conceptSlugs = pages.filter(p => p.slug.startsWith('concepts/')).map(p => p.slug);
   const split = splitConcepts(conceptSlugs, tuningN, holdoutN, splitSeed);
   const subsetCounts: Record<ProbeSubset, number> = { tuning: 0, holdout: 0, mixed: 0, unassigned: 0 };
   for (const p of probes) subsetCounts[probeSubset(p, split)] += 1;
 
+  // Live embeds go through the budget ledger, which refuses to start without
+  // --budget-usd; the hermetic stub makes no provider request.
+  let paid: { run: BudgetRun; guard: PaidRequestGuard } | null = null;
+  if (!stubEmbed) {
+    try {
+      paid = startPaidRun(CATEGORY, { ...(opts.budget ?? budgetOptionsFrom([])), estimateUsd: registryEntry('concept-search')!.cost_estimate.usd });
+    } catch (error) {
+      if (error instanceof BudgetExceededError) return skipped(`budget: ${error.message}`);
+      throw error;
+    }
+  }
+  const settlePaid = (receipt: Receipt) => {
+    if (!paid) return;
+    paid.guard.uninstall();
+    const spend = paid.run.close();
+    paid = null;
+    receipt.cost = receiptCost(spend);
+    receipt.delivered_tokens = { tokens: spend.input_tokens, basis: 'provider-reported input tokens of every paid embedding request, from the budget ledger' };
+  };
+
+  try {
   ensureGateway(stubEmbed, embedder);
 
   log(`# BrainBench Cat 13 — Conceptual Recall\n`);
@@ -1405,7 +1500,7 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
   for (const { adapter: a, initConfig } of plans) {
     log(`- ${a.name} ...`);
     try {
-      const r = await scoreAdapter(a, pages, probes, gradesByQuery, acc, { initConfig, split });
+      const r = await scoreAdapter(a, pages, probes, gradesByQuery, acc, { initConfig, split, gold });
       if (GBRAIN_BACKED_ADAPTERS.has(a.name)) {
         const failures = observedSearchFailures(r.observed, probes.length);
         if (failures.length) {
@@ -1457,6 +1552,9 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
       }
       results.push(r);
     } catch (err) {
+      // An input allowlist violation means gold or unlisted data was about to
+      // reach an adapter: the whole run is void, not one arm.
+      if (err instanceof InputAllowlistError) throw err;
       // init/teardown failure: the whole arm is gone (missing dependency or
       // harness bug), excluded from means and capped.
       for (const p of probes) acc.error(`${a.name}:${p.q.id}`, 'harness', `adapter init/teardown failed: ${String(err)}`);
@@ -1512,6 +1610,16 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
   }
   log(`\nMixed-target probes (gold names concepts from both sets) are excluded from both subsets: ${subsetCounts.mixed}. Unassigned (targets outside both sets): ${subsetCounts.unassigned}.`);
   log(`Held-out concepts: ${split.holdout.join(', ')}`);
+  log(`\n## Conceptual probes vs lexical control (A-14)\n`);
+  log(`Lexical-control templates copy the target page's own title, description or body phrases: ${[...GOLD_TEXT_TEMPLATES].join(', ')}. Conceptual probes use hand-authored synonyms or company neighborhoods.\n`);
+  log(`| Adapter | Subset | Conceptual n | Conceptual nDCG@5 | Conceptual P@1 | Lexical-control n | Lexical-control nDCG@5 | Lexical-control P@1 |`);
+  log(`|---------|--------|--------------|-------------------|----------------|-------------------|------------------------|---------------------|`);
+  for (const r of results) {
+    for (const subset of [undefined, 'holdout'] as const) {
+      const c = scoreByProbeClass(r.per_query, subset);
+      log(`| ${r.name.padEnd(16)} | ${subset === 'holdout' ? 'held-out' : 'all'} | ${c.conceptual.count} | ${(c.conceptual.ndcg5 * 100).toFixed(1)}% | ${(c.conceptual.p1_strict * 100).toFixed(1)}% | ${c.lexical_control.count} | ${(c.lexical_control.ndcg5 * 100).toFixed(1)}% | ${(c.lexical_control.p1_strict * 100).toFixed(1)}% |`);
+    }
+  }
   logTemplateTable('Per-template nDCG@5 — tuning concepts', r => r.splits?.tuning.byTemplate, templateCountsFor('tuning'));
   logTemplateTable('Per-template nDCG@5 — held-out concepts (decision set)', r => r.splits?.holdout.byTemplate, templateCountsFor('holdout'));
 
@@ -1580,6 +1688,13 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
     search_config_by_adapter: Object.fromEntries(results.map(r => [r.name, r.resolvedConfig ?? null])),
     observed_by_adapter: Object.fromEntries(results.map(r => [r.name, r.observed ?? null])),
     execution_incomplete: executionIncomplete,
+    evaluator: {
+      gold_store: gold.toJSON(),
+      gold_loader: 'separate corpus read (eval/runner/evaluator/cat13-gold-loader.ts), aligned id for id and text for text',
+      reference_scorer: REFERENCE_SCORER_VERSION,
+      input_allowlist: CAT13_BOUNDARIES,
+      isolation: 'in-process: adapters receive allowlisted plain data only; no process sandbox',
+    },
     concept_split: conceptSplitRecord,
     adapters_run: results.map(r => r.name),
   };
@@ -1599,6 +1714,11 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
       holdout: r.splits?.holdout.byTemplate ?? null,
     }])),
     template_counts: templateCounts,
+    gold_text_templates: [...GOLD_TEXT_TEMPLATES],
+    by_probe_class: Object.fromEntries(results.map(r => [r.name, {
+      all: scoreByProbeClass(r.per_query),
+      holdout: scoreByProbeClass(r.per_query, 'holdout'),
+    }])),
     per_query: Object.fromEntries(results.map(r => [r.name, r.per_query])),
     report_file: reportFile,
   };
@@ -1615,6 +1735,7 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
       resolved_config: resolvedConfig,
       data,
     };
+    settlePaid(receipt);
     writeReceipt(receiptFile, receipt);
     console.error(`[cat13] RUN INVALID — ${executionIncomplete ? 'search execution incomplete' : `infra error rate ${(summary.infra_error_rate * 100).toFixed(1)}% over cap`}`);
     return { receipt, results, exitCode: 3 };
@@ -1635,10 +1756,15 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
     resolved_config: resolvedConfig,
     data,
   };
+  settlePaid(receipt);
   writeReceipt(receiptFile, receipt);
   log(`\n[cat13] run_status=completed verdict=${verdict} n_scored=${summary.n_scored}/${summary.n_total}`);
 
   return { receipt, results, exitCode: verdict === 'fail' ? 1 : 0 };
+  } finally {
+    paid?.guard.uninstall();
+    paid?.run.close();
+  }
 }
 
 // ─── CLI ──────────────────────────────────────────────────────────

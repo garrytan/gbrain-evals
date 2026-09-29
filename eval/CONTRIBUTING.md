@@ -2,11 +2,11 @@
 
 Useful contributions make it easier to tell when gbrain helps. You can contribute naturally worded questions, a competing search implementation, or a reproduction of a published result.
 
-Work from the repository root. Install with `bun install --frozen-lockfile`, and run `bun run test` for the tests under `test/eval/`.
+Work from the repository root. Install with `bun install --frozen-lockfile`, and run `bun run test` for the tests under `test/eval/` and `eval/`, the Python tests and the validators.
 
 ## Write questions in your own words
 
-The built-in “Tier 5.5” set contains 50 AI-authored placeholder questions. The name means externally authored questions; it does not mean those placeholders were submitted by independent researchers. Human submissions add wording the benchmark authors may not anticipate.
+The built-in “Tier 5.5” set contains 50 AI-authored placeholder questions. They use the `externally-authored` tier id reserved for outside submissions, but no independent researcher wrote them, so scorecards label the family `synthetic-outsider` (earlier receipts say `externally-authored`). Human submissions add wording the benchmark authors may not anticipate.
 
 First inspect the fictional world:
 

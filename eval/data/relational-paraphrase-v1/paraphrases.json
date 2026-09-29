@@ -1,0 +1,878 @@
+{
+  "grammar_version": "relational-paraphrase-v1",
+  "seed": 20260929,
+  "frames_sha256": "3ff76636ff267104d8b383ba67c23c11bb89f380c7cfed5e390cd1165ae3c1a3",
+  "template_queries_sha256": "4c8dba8c8204a83fce76676f9a1173722cb9c27c0232470c9fedd21bc5f9f369",
+  "paraphrases": [
+    {
+      "query_id": "q-0001",
+      "template": "attended",
+      "frame": 1,
+      "text": "Who was in the room for Acme Board Meeting Q1 2025?"
+    },
+    {
+      "query_id": "q-0002",
+      "template": "attended",
+      "frame": 2,
+      "text": "Who took part in Beta Board Meeting Q2 2025?"
+    },
+    {
+      "query_id": "q-0003",
+      "template": "attended",
+      "frame": 1,
+      "text": "Who was in the room for Delta Board Meeting Q4 2025?"
+    },
+    {
+      "query_id": "q-0004",
+      "template": "attended",
+      "frame": 1,
+      "text": "Who was in the room for Epsilon Board Meeting Q1 2025?"
+    },
+    {
+      "query_id": "q-0005",
+      "template": "attended",
+      "frame": 2,
+      "text": "Who took part in Gamma Board Meeting Q3 2025?"
+    },
+    {
+      "query_id": "q-0006",
+      "template": "attended",
+      "frame": 1,
+      "text": "Who was in the room for Helix Board Meeting Q2 2025?"
+    },
+    {
+      "query_id": "q-0007",
+      "template": "attended",
+      "frame": 2,
+      "text": "Who took part in Nimbus Board Meeting Q2 2025?"
+    },
+    {
+      "query_id": "q-0008",
+      "template": "attended",
+      "frame": 0,
+      "text": "Which people were present at Pulse Board Meeting Q1 2025?"
+    },
+    {
+      "query_id": "q-0009",
+      "template": "attended",
+      "frame": 2,
+      "text": "Who took part in Quantum Board Meeting Q4 2025?"
+    },
+    {
+      "query_id": "q-0010",
+      "template": "attended",
+      "frame": 0,
+      "text": "Which people were present at Vector Board Meeting Q3 2025?"
+    },
+    {
+      "query_id": "q-0011",
+      "template": "attended",
+      "frame": 2,
+      "text": "Who took part in Demo Day W24 — Acme?"
+    },
+    {
+      "query_id": "q-0012",
+      "template": "attended",
+      "frame": 3,
+      "text": "List the participants of Demo Day W25 - Beta Cybersecurity Pitch."
+    },
+    {
+      "query_id": "q-0013",
+      "template": "attended",
+      "frame": 2,
+      "text": "Who took part in Demo Day W26 – Gamma Presentation?"
+    },
+    {
+      "query_id": "q-0014",
+      "template": "attended",
+      "frame": 1,
+      "text": "Who was in the room for Demo Day W27 - Delta Biotech Presentation?"
+    },
+    {
+      "query_id": "q-0015",
+      "template": "attended",
+      "frame": 0,
+      "text": "Which people were present at Demo Day W28 – Epsilon Pitch?"
+    },
+    {
+      "query_id": "q-0016",
+      "template": "attended",
+      "frame": 1,
+      "text": "Who was in the room for Demo Day W29 – Nimbus Pitch?"
+    },
+    {
+      "query_id": "q-0017",
+      "template": "attended",
+      "frame": 3,
+      "text": "List the participants of Demo Day W30."
+    },
+    {
+      "query_id": "q-0018",
+      "template": "attended",
+      "frame": 3,
+      "text": "List the participants of Demo Day W31 – Quantum."
+    },
+    {
+      "query_id": "q-0019",
+      "template": "attended",
+      "frame": 3,
+      "text": "List the participants of Demo Day W32 – Pulse."
+    },
+    {
+      "query_id": "q-0020",
+      "template": "attended",
+      "frame": 3,
+      "text": "List the participants of Demo Day W33 – Helix Pitch."
+    },
+    {
+      "query_id": "q-0021",
+      "template": "attended",
+      "frame": 2,
+      "text": "Who took part in Demo Day W34 – Beacon Pitch?"
+    },
+    {
+      "query_id": "q-0022",
+      "template": "attended",
+      "frame": 0,
+      "text": "Which people were present at Demo Day W35 – Compass?"
+    },
+    {
+      "query_id": "q-0023",
+      "template": "attended",
+      "frame": 3,
+      "text": "List the participants of Demo Day W36 — Lumen (Batch 12)."
+    },
+    {
+      "query_id": "q-0024",
+      "template": "attended",
+      "frame": 2,
+      "text": "Who took part in Demo Day W37 – Cipher Batch 13 Presentation?"
+    },
+    {
+      "query_id": "q-0025",
+      "template": "attended",
+      "frame": 0,
+      "text": "Which people were present at Demo Day W38 – Mosaic Pitch?"
+    },
+    {
+      "query_id": "q-0026",
+      "template": "attended",
+      "frame": 0,
+      "text": "Which people were present at 1:1 Wendy Hernandez + Mia Brown?"
+    },
+    {
+      "query_id": "q-0027",
+      "template": "attended",
+      "frame": 3,
+      "text": "List the participants of 1:1 Carol Jackson + Victor Taylor."
+    },
+    {
+      "query_id": "q-0028",
+      "template": "attended",
+      "frame": 0,
+      "text": "Which people were present at 1:1 Rosa Jackson + David Wang?"
+    },
+    {
+      "query_id": "q-0029",
+      "template": "attended",
+      "frame": 3,
+      "text": "List the participants of 1:1 Chris Jackson + Mark Thomas."
+    },
+    {
+      "query_id": "q-0030",
+      "template": "attended",
+      "frame": 2,
+      "text": "Who took part in 1:1 Sarah Williams + Henry Johnson?"
+    },
+    {
+      "query_id": "q-0031",
+      "template": "attended",
+      "frame": 2,
+      "text": "Who took part in 1:1 Eric Martinez + Mia Lee – February 2025?"
+    },
+    {
+      "query_id": "q-0032",
+      "template": "attended",
+      "frame": 0,
+      "text": "Which people were present at 1:1 Rosa Nakamura + Vera Chen?"
+    },
+    {
+      "query_id": "q-0033",
+      "template": "attended",
+      "frame": 0,
+      "text": "Which people were present at 1:1 Rachel Brown + Noah Kapoor?"
+    },
+    {
+      "query_id": "q-0034",
+      "template": "attended",
+      "frame": 1,
+      "text": "Who was in the room for 1:1 Chris Singh + Ulrich Wang?"
+    },
+    {
+      "query_id": "q-0035",
+      "template": "attended",
+      "frame": 2,
+      "text": "Who took part in 1:1 Tina Hernandez + Quinten Wang?"
+    },
+    {
+      "query_id": "q-0036",
+      "template": "attended",
+      "frame": 0,
+      "text": "Which people were present at 1:1 Rosa Miller + Nina Rodriguez?"
+    },
+    {
+      "query_id": "q-0037",
+      "template": "attended",
+      "frame": 1,
+      "text": "Who was in the room for 1:1 Kate Lopez + Adam Lee?"
+    },
+    {
+      "query_id": "q-0038",
+      "template": "attended",
+      "frame": 0,
+      "text": "Which people were present at 1:1 Iris Lee + Mark Jones?"
+    },
+    {
+      "query_id": "q-0039",
+      "template": "attended",
+      "frame": 2,
+      "text": "Who took part in 1:1 Zoe Gonzalez + Vera Singh?"
+    },
+    {
+      "query_id": "q-0040",
+      "template": "attended",
+      "frame": 2,
+      "text": "Who took part in 1:1 Chris Miller + Eric Lee?"
+    },
+    {
+      "query_id": "q-0041",
+      "template": "attended",
+      "frame": 3,
+      "text": "List the participants of 1:1 Kevin Taylor + Quinten Rodriguez."
+    },
+    {
+      "query_id": "q-0042",
+      "template": "attended",
+      "frame": 1,
+      "text": "Who was in the room for 1:1 Vera Gonzalez + Paul Anderson?"
+    },
+    {
+      "query_id": "q-0043",
+      "template": "attended",
+      "frame": 3,
+      "text": "List the participants of 1:1 Sarah Wang + Quinten Lee."
+    },
+    {
+      "query_id": "q-0044",
+      "template": "attended",
+      "frame": 1,
+      "text": "Who was in the room for 1:1 David Zhang + Victor Wilson?"
+    },
+    {
+      "query_id": "q-0045",
+      "template": "attended",
+      "frame": 1,
+      "text": "Who was in the room for 1:1 Sarah Lopez + Paul Rodriguez?"
+    },
+    {
+      "query_id": "q-0046",
+      "template": "attended",
+      "frame": 3,
+      "text": "List the participants of 1:1 Priya Taylor + Mia Anderson."
+    },
+    {
+      "query_id": "q-0047",
+      "template": "attended",
+      "frame": 1,
+      "text": "Who was in the room for 1:1 Julia Davis + Uma Brown?"
+    },
+    {
+      "query_id": "q-0048",
+      "template": "attended",
+      "frame": 0,
+      "text": "Which people were present at 1:1 Helen Martinez + Ulrich Johnson?"
+    },
+    {
+      "query_id": "q-0049",
+      "template": "attended",
+      "frame": 3,
+      "text": "List the participants of 1:1 Fiona Moore + Yara Johnson."
+    },
+    {
+      "query_id": "q-0050",
+      "template": "attended",
+      "frame": 1,
+      "text": "Who was in the room for 1:1 Jack Davis + Rachel Garcia?"
+    },
+    {
+      "query_id": "q-0051",
+      "template": "works_at",
+      "frame": 1,
+      "text": "Which people are on the team at Acme?"
+    },
+    {
+      "query_id": "q-0052",
+      "template": "works_at",
+      "frame": 2,
+      "text": "List the staff of Anchor - Data Infrastructure Startup."
+    },
+    {
+      "query_id": "q-0053",
+      "template": "works_at",
+      "frame": 3,
+      "text": "Who is part of Apex?"
+    },
+    {
+      "query_id": "q-0054",
+      "template": "works_at",
+      "frame": 3,
+      "text": "Who is part of Beacon?"
+    },
+    {
+      "query_id": "q-0055",
+      "template": "works_at",
+      "frame": 0,
+      "text": "Who is employed by Beta - Cybersecurity Startup?"
+    },
+    {
+      "query_id": "q-0056",
+      "template": "works_at",
+      "frame": 3,
+      "text": "Who is part of Brink?"
+    },
+    {
+      "query_id": "q-0057",
+      "template": "works_at",
+      "frame": 0,
+      "text": "Who is employed by Cascade?"
+    },
+    {
+      "query_id": "q-0058",
+      "template": "works_at",
+      "frame": 2,
+      "text": "List the staff of Cipher."
+    },
+    {
+      "query_id": "q-0059",
+      "template": "works_at",
+      "frame": 1,
+      "text": "Which people are on the team at Compass?"
+    },
+    {
+      "query_id": "q-0060",
+      "template": "works_at",
+      "frame": 0,
+      "text": "Who is employed by Delta?"
+    },
+    {
+      "query_id": "q-0061",
+      "template": "works_at",
+      "frame": 1,
+      "text": "Which people are on the team at Drift?"
+    },
+    {
+      "query_id": "q-0062",
+      "template": "works_at",
+      "frame": 2,
+      "text": "List the staff of Echo - Robotics Startup."
+    },
+    {
+      "query_id": "q-0063",
+      "template": "works_at",
+      "frame": 2,
+      "text": "List the staff of Epsilon."
+    },
+    {
+      "query_id": "q-0064",
+      "template": "works_at",
+      "frame": 0,
+      "text": "Who is employed by Forge?"
+    },
+    {
+      "query_id": "q-0065",
+      "template": "works_at",
+      "frame": 3,
+      "text": "Who is part of Foundry?"
+    },
+    {
+      "query_id": "q-0066",
+      "template": "works_at",
+      "frame": 0,
+      "text": "Who is employed by Gamma - Fintech Startup?"
+    },
+    {
+      "query_id": "q-0067",
+      "template": "works_at",
+      "frame": 0,
+      "text": "Who is employed by Gravity?"
+    },
+    {
+      "query_id": "q-0068",
+      "template": "works_at",
+      "frame": 2,
+      "text": "List the staff of Gust."
+    },
+    {
+      "query_id": "q-0069",
+      "template": "works_at",
+      "frame": 3,
+      "text": "Who is part of Hatch?"
+    },
+    {
+      "query_id": "q-0070",
+      "template": "works_at",
+      "frame": 1,
+      "text": "Which people are on the team at Helix?"
+    },
+    {
+      "query_id": "q-0071",
+      "template": "works_at",
+      "frame": 1,
+      "text": "Which people are on the team at Iris?"
+    },
+    {
+      "query_id": "q-0072",
+      "template": "works_at",
+      "frame": 0,
+      "text": "Who is employed by Jolt - AI Applications Startup?"
+    },
+    {
+      "query_id": "q-0073",
+      "template": "works_at",
+      "frame": 3,
+      "text": "Who is part of Keel?"
+    },
+    {
+      "query_id": "q-0074",
+      "template": "works_at",
+      "frame": 2,
+      "text": "List the staff of Kindle - Climate Tech Startup."
+    },
+    {
+      "query_id": "q-0075",
+      "template": "works_at",
+      "frame": 3,
+      "text": "Who is part of Lattice - Enterprise SaaS Startup?"
+    },
+    {
+      "query_id": "q-0076",
+      "template": "works_at",
+      "frame": 1,
+      "text": "Which people are on the team at Lucid?"
+    },
+    {
+      "query_id": "q-0077",
+      "template": "works_at",
+      "frame": 1,
+      "text": "Which people are on the team at Lumen - Biotech Startup?"
+    },
+    {
+      "query_id": "q-0078",
+      "template": "works_at",
+      "frame": 1,
+      "text": "Which people are on the team at Mantle?"
+    },
+    {
+      "query_id": "q-0079",
+      "template": "works_at",
+      "frame": 1,
+      "text": "Which people are on the team at Mosaic - Consumer Social Startup?"
+    },
+    {
+      "query_id": "q-0080",
+      "template": "works_at",
+      "frame": 2,
+      "text": "List the staff of Nimbus."
+    },
+    {
+      "query_id": "q-0081",
+      "template": "works_at",
+      "frame": 0,
+      "text": "Who is employed by Pulse - EdTech Startup?"
+    },
+    {
+      "query_id": "q-0082",
+      "template": "works_at",
+      "frame": 3,
+      "text": "Who is part of Quantum?"
+    },
+    {
+      "query_id": "q-0083",
+      "template": "works_at",
+      "frame": 3,
+      "text": "Who is part of Ranger?"
+    },
+    {
+      "query_id": "q-0084",
+      "template": "works_at",
+      "frame": 0,
+      "text": "Who is employed by Sentinel?"
+    },
+    {
+      "query_id": "q-0085",
+      "template": "works_at",
+      "frame": 1,
+      "text": "Which people are on the team at Tempo?"
+    },
+    {
+      "query_id": "q-0086",
+      "template": "works_at",
+      "frame": 1,
+      "text": "Which people are on the team at Tessera?"
+    },
+    {
+      "query_id": "q-0087",
+      "template": "works_at",
+      "frame": 2,
+      "text": "List the staff of Vector."
+    },
+    {
+      "query_id": "q-0088",
+      "template": "works_at",
+      "frame": 3,
+      "text": "Who is part of Vox - AI Applications Startup?"
+    },
+    {
+      "query_id": "q-0089",
+      "template": "works_at",
+      "frame": 2,
+      "text": "List the staff of Wisp."
+    },
+    {
+      "query_id": "q-0090",
+      "template": "works_at",
+      "frame": 2,
+      "text": "List the staff of Zenith."
+    },
+    {
+      "query_id": "q-0091",
+      "template": "invested_in",
+      "frame": 1,
+      "text": "Who holds a stake in Acme?"
+    },
+    {
+      "query_id": "q-0092",
+      "template": "invested_in",
+      "frame": 1,
+      "text": "Who holds a stake in Acme Labs?"
+    },
+    {
+      "query_id": "q-0093",
+      "template": "invested_in",
+      "frame": 0,
+      "text": "Which investors put money into Anchor - Data Infrastructure Startup?"
+    },
+    {
+      "query_id": "q-0094",
+      "template": "invested_in",
+      "frame": 3,
+      "text": "Who provided capital to Apex?"
+    },
+    {
+      "query_id": "q-0095",
+      "template": "invested_in",
+      "frame": 1,
+      "text": "Who holds a stake in Beacon?"
+    },
+    {
+      "query_id": "q-0096",
+      "template": "invested_in",
+      "frame": 3,
+      "text": "Who provided capital to Beta Labs?"
+    },
+    {
+      "query_id": "q-0097",
+      "template": "invested_in",
+      "frame": 0,
+      "text": "Which investors put money into Delta?"
+    },
+    {
+      "query_id": "q-0098",
+      "template": "invested_in",
+      "frame": 3,
+      "text": "Who provided capital to Delta Labs?"
+    },
+    {
+      "query_id": "q-0099",
+      "template": "invested_in",
+      "frame": 0,
+      "text": "Which investors put money into Drift?"
+    },
+    {
+      "query_id": "q-0100",
+      "template": "invested_in",
+      "frame": 3,
+      "text": "Who provided capital to Echo - Robotics Startup?"
+    },
+    {
+      "query_id": "q-0101",
+      "template": "invested_in",
+      "frame": 2,
+      "text": "List the investors in Epsilon."
+    },
+    {
+      "query_id": "q-0102",
+      "template": "invested_in",
+      "frame": 0,
+      "text": "Which investors put money into Epsilon Labs?"
+    },
+    {
+      "query_id": "q-0103",
+      "template": "invested_in",
+      "frame": 2,
+      "text": "List the investors in Forge."
+    },
+    {
+      "query_id": "q-0104",
+      "template": "invested_in",
+      "frame": 2,
+      "text": "List the investors in Foundry."
+    },
+    {
+      "query_id": "q-0105",
+      "template": "invested_in",
+      "frame": 0,
+      "text": "Which investors put money into Gamma Labs?"
+    },
+    {
+      "query_id": "q-0106",
+      "template": "invested_in",
+      "frame": 3,
+      "text": "Who provided capital to Gravity?"
+    },
+    {
+      "query_id": "q-0107",
+      "template": "invested_in",
+      "frame": 0,
+      "text": "Which investors put money into Gust?"
+    },
+    {
+      "query_id": "q-0108",
+      "template": "invested_in",
+      "frame": 1,
+      "text": "Who holds a stake in Helix Labs?"
+    },
+    {
+      "query_id": "q-0109",
+      "template": "invested_in",
+      "frame": 0,
+      "text": "Which investors put money into Iris?"
+    },
+    {
+      "query_id": "q-0110",
+      "template": "invested_in",
+      "frame": 3,
+      "text": "Who provided capital to Jolt - AI Applications Startup?"
+    },
+    {
+      "query_id": "q-0111",
+      "template": "invested_in",
+      "frame": 2,
+      "text": "List the investors in Keel."
+    },
+    {
+      "query_id": "q-0112",
+      "template": "invested_in",
+      "frame": 2,
+      "text": "List the investors in Lucid."
+    },
+    {
+      "query_id": "q-0113",
+      "template": "invested_in",
+      "frame": 3,
+      "text": "Who provided capital to Lumen - Biotech Startup?"
+    },
+    {
+      "query_id": "q-0114",
+      "template": "invested_in",
+      "frame": 0,
+      "text": "Which investors put money into Meridian?"
+    },
+    {
+      "query_id": "q-0115",
+      "template": "invested_in",
+      "frame": 1,
+      "text": "Who holds a stake in Mosaic - Consumer Social Startup?"
+    },
+    {
+      "query_id": "q-0116",
+      "template": "invested_in",
+      "frame": 2,
+      "text": "List the investors in Orbit - Biotech Startup."
+    },
+    {
+      "query_id": "q-0117",
+      "template": "invested_in",
+      "frame": 1,
+      "text": "Who holds a stake in Prism?"
+    },
+    {
+      "query_id": "q-0118",
+      "template": "invested_in",
+      "frame": 3,
+      "text": "Who provided capital to Pulse - EdTech Startup?"
+    },
+    {
+      "query_id": "q-0119",
+      "template": "invested_in",
+      "frame": 3,
+      "text": "Who provided capital to Pulse Labs?"
+    },
+    {
+      "query_id": "q-0120",
+      "template": "invested_in",
+      "frame": 3,
+      "text": "Who provided capital to Quantum Labs?"
+    },
+    {
+      "query_id": "q-0121",
+      "template": "invested_in",
+      "frame": 2,
+      "text": "List the investors in Quasar."
+    },
+    {
+      "query_id": "q-0122",
+      "template": "invested_in",
+      "frame": 1,
+      "text": "Who holds a stake in Ranger?"
+    },
+    {
+      "query_id": "q-0123",
+      "template": "invested_in",
+      "frame": 3,
+      "text": "Who provided capital to Spire?"
+    },
+    {
+      "query_id": "q-0124",
+      "template": "invested_in",
+      "frame": 2,
+      "text": "List the investors in Talon."
+    },
+    {
+      "query_id": "q-0125",
+      "template": "invested_in",
+      "frame": 0,
+      "text": "Which investors put money into Tessera?"
+    },
+    {
+      "query_id": "q-0126",
+      "template": "invested_in",
+      "frame": 3,
+      "text": "Who provided capital to Vector?"
+    },
+    {
+      "query_id": "q-0127",
+      "template": "invested_in",
+      "frame": 2,
+      "text": "List the investors in Vector Labs."
+    },
+    {
+      "query_id": "q-0128",
+      "template": "invested_in",
+      "frame": 0,
+      "text": "Which investors put money into Vellum?"
+    },
+    {
+      "query_id": "q-0129",
+      "template": "invested_in",
+      "frame": 0,
+      "text": "Which investors put money into Vox - AI Applications Startup?"
+    },
+    {
+      "query_id": "q-0130",
+      "template": "advises",
+      "frame": 3,
+      "text": "List the advisors of Acme Labs."
+    },
+    {
+      "query_id": "q-0131",
+      "template": "advises",
+      "frame": 2,
+      "text": "Who sits on the advisory board of Apex?"
+    },
+    {
+      "query_id": "q-0132",
+      "template": "advises",
+      "frame": 2,
+      "text": "Who sits on the advisory board of Delta Labs?"
+    },
+    {
+      "query_id": "q-0133",
+      "template": "advises",
+      "frame": 3,
+      "text": "List the advisors of Epsilon."
+    },
+    {
+      "query_id": "q-0134",
+      "template": "advises",
+      "frame": 2,
+      "text": "Who sits on the advisory board of Forge?"
+    },
+    {
+      "query_id": "q-0135",
+      "template": "advises",
+      "frame": 3,
+      "text": "List the advisors of Foundry."
+    },
+    {
+      "query_id": "q-0136",
+      "template": "advises",
+      "frame": 3,
+      "text": "List the advisors of Gravity."
+    },
+    {
+      "query_id": "q-0137",
+      "template": "advises",
+      "frame": 1,
+      "text": "Which people give advice to Keel?"
+    },
+    {
+      "query_id": "q-0138",
+      "template": "advises",
+      "frame": 0,
+      "text": "Who serves as an advisor to Lucid?"
+    },
+    {
+      "query_id": "q-0139",
+      "template": "advises",
+      "frame": 2,
+      "text": "Who sits on the advisory board of Prism?"
+    },
+    {
+      "query_id": "q-0140",
+      "template": "advises",
+      "frame": 1,
+      "text": "Which people give advice to Ranger?"
+    },
+    {
+      "query_id": "q-0141",
+      "template": "advises",
+      "frame": 1,
+      "text": "Which people give advice to Tempo?"
+    },
+    {
+      "query_id": "q-0142",
+      "template": "advises",
+      "frame": 0,
+      "text": "Who serves as an advisor to Umbra?"
+    },
+    {
+      "query_id": "q-0143",
+      "template": "advises",
+      "frame": 2,
+      "text": "Who sits on the advisory board of Vector?"
+    },
+    {
+      "query_id": "q-0144",
+      "template": "advises",
+      "frame": 2,
+      "text": "Who sits on the advisory board of Vector Labs?"
+    },
+    {
+      "query_id": "q-0145",
+      "template": "advises",
+      "frame": 1,
+      "text": "Which people give advice to Vellum?"
+    }
+  ]
+}

@@ -6,11 +6,9 @@
  * each adapter. Constructed by the matrix runner and passed in via
  * `AdapterConfig.shootout`.
  *
- * Cells under test (per docs/designs/2026_05_EVAL_PLAN.md in gbrain):
- *   A0/A1: openai:text-embedding-3-large @ 1536, ±zerank-2
- *   B0/B1: voyage:voyage-4-large       @ 2048, ±zerank-2
- *   C0/C1: zeroentropyai:zembed-1      @ 2560, ±zerank-2
- *   C2:    zeroentropyai:zembed-1      @ 1280, +zerank-2 (Matryoshka ablation)
+ * Current cells use OpenAI 1536d and Voyage 2048d, without reranking or
+ * with voyage:rerank-2.5. Reranked cells carry the model in their names
+ * so historical results cannot be reused for the new configurations.
  *
  * Adapters read this and call `gbrain/ai/gateway`'s `configureGateway()`
  * at the top of `init()` so every `embed*` + `hybridSearch` downstream
@@ -37,7 +35,7 @@ export interface EvalAdapterConfig {
    */
   searchMode?: 'conservative' | 'balanced' | 'tokenmax';
   /**
-   * Human-readable cell label for receipts / scorecards (e.g. "B1", "C2").
+   * Human-readable cell label for receipts / scorecards (e.g. "A0", "B0").
    * Optional; runner uses it for filename templates if set.
    */
   cell?: string;

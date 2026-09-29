@@ -67,7 +67,7 @@
           "content_sha256": {
             "type": "string",
             "pattern": "^[a-f0-9]{64}$",
-            "description": "SHA256 of the item's canonical content (for reproducibility verification)."
+            "description": "SHA256 of the item's canonical content. For a container file (JSONL, calendar.ics) it covers the item's own record: sha256 of canonicalJson(parsed JSONL line), or of canonicalJson(skeleton event) for calendar.ics. For any other file it is sha256 of the file bytes. eval/runner/validate-data.ts checks every item."
           },
           "generator_cache_key": {
             "type": "string",

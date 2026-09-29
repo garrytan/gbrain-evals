@@ -65,7 +65,7 @@ export interface AgentAdapterState {
    * WS5: the engine.setConfig entries pinned in init() BEFORE ingest
    * (search mode + reranker state). Cat 8/9 receipts record these so a run
    * can never silently depend on gbrain's default 'balanced' mode enabling
-   * the zerank-2 reranker when ZEROENTROPY_API_KEY happens to be set.
+   * a reranker when an ambient provider key happens to be set.
    * Optional because tests may construct minimal states by hand.
    */
   resolved_search_config?: Record<string, string>;
@@ -131,6 +131,8 @@ export interface AgentRunResult {
 export const DEFAULT_AGENT_MODEL = 'claude-sonnet-4-6';
 const DEFAULT_MODEL = DEFAULT_AGENT_MODEL;
 const DEFAULT_MAX_TOKENS = 1024;
+/** The agent under test samples at temperature 0 so Cat 8/9 transcripts are reproducible. */
+export const AGENT_TEMPERATURE = 0;
 const DEFAULT_TURN_CAP = 10;
 const DEFAULT_MAX_RETRIES = 3;
 
@@ -236,8 +238,8 @@ export class ClaudeSonnetWithToolsAdapter implements Adapter {
     await engine.connect({});
     await engine.initSchema();
     // WS5: pin search mode + reranker BEFORE ingest. gbrain's default
-    // 'balanced' mode silently enables the zerank-2 reranker when
-    // ZEROENTROPY_API_KEY is set — the agent's `search`/`query` tools would
+    // 'balanced' mode can enable reranking with an ambient provider key;
+    // the agent's `search`/`query` tools would
     // then behave differently across machines. Never rely on defaults.
     // Keys verified against node_modules/gbrain/src/core/search/mode.ts.
     const searchConfig: Record<string, string> = {
@@ -368,6 +370,7 @@ export async function runAgentLoop(
         response = await client.messages.create({
           model,
           max_tokens: maxTokens,
+          temperature: AGENT_TEMPERATURE,
           system: [
             {
               type: 'text',

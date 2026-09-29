@@ -1,6 +1,16 @@
 #!/usr/bin/env python3
 """Compact a LongMemEval harness ndjson (full retrieved[] rows) into a receipt-sized ndjson: per-question hits + session ids only."""
-import json, sys
+import json, re, sys
+
+def scrub(value):
+    """Since 2026-09-29: replace machine-local absolute paths with <external>/<basename> (docs audit B11). Receipts written before then keep their original paths."""
+    if isinstance(value, str):
+        return re.sub(r"(?:/home/[^/\s\"']+|/Users/[^/\s\"']+|/root|/private/var|/var/folders|/tmp)(?:/[^\s\"']*)?/([^/\s\"']+)", r"<external>/\1", value)
+    if isinstance(value, list):
+        return [scrub(v) for v in value]
+    if isinstance(value, dict):
+        return {k: scrub(v) for k, v in value.items()}
+    return value
 KEEP = ["question_id","question_type","recall_all_hit","recall_any_hit","abstention","distinct_sessions_in_top_k","retrieved_session_ids","answer_session_ids","gold_missing_from_haystack","expansion_variants","search_meta","error","judge_correct","judge_error","judge_model","retrieval_config_hash"]
 src, dst = sys.argv[1], sys.argv[2]
 n=0
@@ -10,6 +20,6 @@ with open(src) as f, open(dst,"w") as o:
         if not line: continue
         row=json.loads(line)
         if row.get("schema_version") or "by_type_summary" in row or "summary" in row or row.get("kind")=="summary":
-            o.write(json.dumps(row, separators=(",",":"))+"\n"); continue
-        o.write(json.dumps({k:row[k] for k in KEEP if k in row}, separators=(",",":"))+"\n"); n+=1
+            o.write(json.dumps(scrub(row), separators=(",",":"))+"\n"); continue
+        o.write(json.dumps(scrub({k:row[k] for k in KEEP if k in row}), separators=(",",":"))+"\n"); n+=1
 print(f"{dst}: {n} question rows")

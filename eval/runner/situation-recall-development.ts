@@ -50,14 +50,14 @@ export function startDevelopmentRequestGuard(profile: Cat36Profile, journalPath?
   return guard;
 }
 
-export async function startSourceOnlyDevelopmentGuard(input: SourceOnlyDevelopmentProfile, options: { journalPath: string; verifiedPackagePath: string; sourceSmoke?: true }) {
+export async function startSourceOnlyDevelopmentGuard(input: SourceOnlyDevelopmentProfile, options: { journalPath: string; verifiedPackagePath: string; sourceSmoke?: true; packageName?: 'gbrain' | 'gbrain-cues' }) {
   const profile = structuredClone(input);
   const policy = resolveSourceOnlyDevelopmentPolicy(profile);
   if (options?.sourceSmoke && (profile.experiment !== SOURCE_ONLY_V5_EXPERIMENT || profile.arm !== 'C1' || profile.stage !== 'construction'
     || profile.allocation.usd > 1)) throw new Error('v5 source smoke requires one C1 construction leaf of at most $1');
   if (!options?.journalPath || !options.verifiedPackagePath) throw new Error('source-only guard requires a fresh journal and verified package path');
   const product = resolveRegressionProduct({ expectedProductSha: profile.expected_product_sha,
-    expectedPackageSha256: profile.expected_package_sha256, importerPath: import.meta.path });
+    expectedPackageSha256: profile.expected_package_sha256, importerPath: import.meta.path, packageName: options.packageName });
   if (product.package_path !== realpathSync(options.verifiedPackagePath)) throw new Error('source-only guard package binding mismatch');
   const { lookupEmbeddingPrice } = await import(pathToFileURL(join(product.package_path, 'src/core/embedding-pricing.ts')).href);
   const embedding = lookupEmbeddingPrice(policy.embedding_model);

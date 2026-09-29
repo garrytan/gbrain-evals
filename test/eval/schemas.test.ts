@@ -18,6 +18,7 @@
 import { describe, test, expect } from 'bun:test';
 import { readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
+import { buildGoldFixtures, buildSkeleton } from '../../eval/generators/amara-life.ts';
 
 const SCHEMAS_DIR = join(import.meta.dir, '../../eval/schemas');
 const GOLD_DIR = join(import.meta.dir, '../../eval/data/gold');
@@ -34,15 +35,13 @@ const EXPECTED_SCHEMAS = [
   'cat36-corpus.schema.json',
 ];
 
+// Every canonical gold file is generated from the amara-life skeleton. The
+// single-example stubs (backlinks, citations, entities, personalization-rubric,
+// qrels) had no generator and no runnable consumer and were removed in 0.10.1.
 const EXPECTED_GOLD = [
-  'entities.json',
-  'backlinks.json',
-  'qrels.json',
   'contradictions.json',
   'poison.json',
-  'personalization-rubric.json',
   'implicit-preferences.json',
-  'citations.json',
 ];
 
 // Files that colocate in eval/data/gold/ but are NOT canonical gold templates
@@ -118,6 +117,17 @@ describe('eval/data/gold — template files', () => {
       });
     });
   }
+});
+
+describe('eval/data/gold — generated, never hand-edited', () => {
+  const gold = buildGoldFixtures(buildSkeleton());
+  test.each([
+    ['contradictions.json', gold.contradictions],
+    ['implicit-preferences.json', gold.implicitPreferences],
+    ['poison.json', gold.poison],
+  ] as const)('%s is byte-identical to the generator output', (file, value) => {
+    expect(readFileSync(join(GOLD_DIR, file), 'utf8')).toBe(JSON.stringify(value, null, 2) + '\n');
+  });
 });
 
 describe('schema / template coherence', () => {

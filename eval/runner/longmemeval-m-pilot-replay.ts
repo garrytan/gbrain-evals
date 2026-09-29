@@ -2,10 +2,10 @@ import { createHash } from 'node:crypto';
 import { cpSync, existsSync, readFileSync, realpathSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { PGLiteEngine } from 'gbrain/pglite-engine';
-import { hybridSearch } from 'gbrain/search/hybrid';
-import { configureGateway } from 'gbrain/ai/gateway';
-import type { SearchResult } from 'gbrain/types';
+import { PGLiteEngine } from 'gbrain-cues/pglite-engine';
+import { hybridSearch } from 'gbrain-cues/search/hybrid';
+import { configureGateway } from 'gbrain-cues/ai/gateway';
+import type { SearchResult } from 'gbrain-cues/types';
 import { cat36SnapshotHash } from './cat36-snapshot.ts';
 import { regressionPackageHash } from './situation-recall-provenance.ts';
 import { longMemEvalSources } from './longmemeval-answers.ts';
@@ -21,7 +21,7 @@ export function pilotQueryErrorDisposition(message: string): 'sut-miss' | 'incom
   return /guard|budget|billing|approval|reservation|spend|cap.exceed/i.test(message)
     || classifyErrorOrigin(message) !== 'sut' ? 'incomplete' : 'sut-miss';
 }
-export const pilotSources = (question: Question) => longMemEvalSources(question).map((source, i) =>
+export const pilotSources = (question: Question, sourceSha256: string) => longMemEvalSources(question, sourceSha256).map((source, i) =>
   ({ ...source, slug: `${source.slug}-occ-${i}` }));
 
 export interface PilotIndexedEvidence {
@@ -57,7 +57,7 @@ export function loadPilotIndex(options: PilotReplayOptions): PilotIndexManifest 
   const bytes = readFileSync(join(root, 'index-manifest.json'));
   if (hash(bytes) !== options.expectedManifestSha256) throw new Error('frozen indexed-projection manifest changed');
   const manifest = JSON.parse(bytes.toString()) as PilotIndexManifest;
-  if (manifest.schema_version !== 2 || manifest.evidence_protocol !== 'indexed-projection-v2'
+  if (manifest.schema_version !== 3 || manifest.evidence_protocol !== 'indexed-projection-v3'
     || manifest.source_sha256 !== options.expectedSourceSha256
     || manifest.product_sha !== options.expectedProductSha || manifest.product_package_sha256 !== options.expectedPackageSha256
     || manifest.embedding_model !== 'openrouter:openai/text-embedding-3-large' || manifest.embedding_dimensions !== 1536
@@ -83,7 +83,7 @@ export function loadPilotIndex(options: PilotReplayOptions): PilotIndexManifest 
   }
   const product = realpathSync(resolve(options.productRoot));
   if (regressionPackageHash(product) !== manifest.product_package_sha256
-    || ['gbrain/pglite-engine', 'gbrain/search/hybrid', 'gbrain/ai/gateway'].some(specifier =>
+    || ['gbrain-cues/pglite-engine', 'gbrain-cues/search/hybrid', 'gbrain-cues/ai/gateway'].some(specifier =>
       !realpathSync(fileURLToPath(import.meta.resolve(specifier))).startsWith(product + '/'))) {
     throw new Error('loaded product changed or resolves outside verified package');
   }
@@ -98,7 +98,7 @@ export function loadPilotIndex(options: PilotReplayOptions): PilotIndexManifest 
 }
 
 export function validatePilotSourceMap(question: Question, manifest: PilotIndexManifest): void {
-  const sources = pilotSources(question);
+  const sources = pilotSources(question, manifest.source_sha256);
   if (sources.length !== manifest.sources.length) throw new Error('question history differs from frozen index');
   const ids = new Set<number>();
   for (const [i, source] of sources.entries()) {
@@ -179,7 +179,7 @@ export async function replayPilotQuestion(question: Question, options: PilotRepl
   const engine = new PGLiteEngine();
   await engine.connect({ database_path: options.workingDatabase });
   try {
-    if (manifest.cue_mode === 'on') await configurePilotC1Gateway(await import('gbrain/ai/gateway'),
+    if (manifest.cue_mode === 'on') await configurePilotC1Gateway(await import('gbrain-cues/ai/gateway'),
       realpathSync(resolve(options.productRoot)), options.preparedConfigPath!, process.env);
     const resolved = await readPilotResolvedConfig(engine, realpathSync(resolve(options.productRoot)), manifest.cue_mode, manifest.cue_readback);
     if (JSON.stringify(resolved) !== JSON.stringify(manifest.resolved_config)) throw new Error('query resolved configuration differs from frozen construction');

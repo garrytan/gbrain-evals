@@ -48,6 +48,7 @@ import {
   RECEIPT_SCHEMA_VERSION,
   BENCHMARK_VERSION,
   type Receipt,
+  noModelSpend,
 } from './receipt.ts';
 import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
 
@@ -568,6 +569,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
 
   const verdict: 'pass' | 'fail' = failed === 0 && handlerOk ? 'pass' : 'fail';
   const receipt: Receipt = {
+    ...noModelSpend('hermetic: no model and no paid request'),
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,
     category: 'mcp-contract',

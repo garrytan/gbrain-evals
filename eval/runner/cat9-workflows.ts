@@ -21,8 +21,9 @@
  *   - sync
  *
  * Each scenario carries its own rubric (3-5 criteria, weights 1-2). The
- * rubric lives in `eval/data/gold/personalization-rubric.json` alongside
- * ground-truth slugs. The runner resolves slugs to full
+ * rubric travels in the caller's reviewed scenario catalog alongside
+ * ground-truth slugs (no catalog is committed; the one-probe
+ * `gold/personalization-rubric.json` template was removed in 0.10.1). The runner resolves slugs to full
  * GroundTruthPage[] before handing evidence to the judge.
  *
  * Gold-resolution policy (audit agentic-cats-09): a ground_truth_slug that
@@ -49,11 +50,14 @@ import {
   runAgentLoop,
   classifyAgentError,
   DEFAULT_AGENT_MODEL,
+  AGENT_TEMPERATURE,
   type AgentAdapterState,
   type AgentRunConfig,
   type AgentRunResult,
 } from './adapters/claude-sonnet-with-tools.ts';
 import {
+  JUDGE_PROMPT_VERSION,
+  JUDGE_TEMPERATURE,
   scoreAnswer,
   type JudgeEvidence,
   type JudgeResult,
@@ -417,7 +421,10 @@ function writeCat9Artifacts(
   const judgeModel = opts.judge?.model ?? DEFAULT_JUDGE_MODEL;
   const resolvedConfig: Record<string, unknown> = {
     agent_model: agentModel,
+    agent_temperature: AGENT_TEMPERATURE,
     judge_model: judgeModel,
+    judge_temperature: JUDGE_TEMPERATURE,
+    judge_prompt_version: JUDGE_PROMPT_VERSION,
     turn_cap: opts.turnCap ?? 10,
     max_retries: opts.maxRetries ?? 3,
     pass_rate_threshold: opts.passRateThreshold ?? 0.8,

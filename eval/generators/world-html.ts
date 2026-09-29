@@ -81,7 +81,8 @@ interface Ledger {
 
 function loadCorpus(dir: string): { pages: Page[]; ledger: Ledger } {
   const files = readdirSync(dir)
-    .filter(f => f.endsWith('.json'));
+    .filter(f => f.endsWith('.json'))
+    .sort();
   const pages: Page[] = [];
   let ledger: Ledger = {};
   for (const f of files) {

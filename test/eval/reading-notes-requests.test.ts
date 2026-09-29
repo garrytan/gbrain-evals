@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { prepareRequests } from '../../eval/runner/reading-notes-requests.ts';
 import { runComparison } from '../../eval/runner/reading-notes-run.ts';
+import { opaqueSessionId } from '../../eval/runner/longmemeval-session-ids.ts';
 import { resolveReaderConfig, readerConfigHash } from 'gbrain-reader/eval/longmemeval/reader';
 import { invokeAI } from 'gbrain-reader/ai/invocation-guard';
 import type { ChatResult } from 'gbrain-reader/ai/gateway';
@@ -21,8 +22,9 @@ describe('offline paired reader requests', () => {
     const legacy = resolve(root, 'node_modules/gbrain');
     const reader = resolve(root, 'node_modules/gbrain-reader');
     const declared = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8')).dependencies;
-    expect(declared.gbrain).toBe('github:garrytan/gbrain#939232f1746381b4e932d620d6c709e29198f14c');
+    expect(declared.gbrain).toMatch(/^github:garrytan\/gbrain#[0-9a-f]{40}$/);
     expect(declared['gbrain-reader']).toMatch(/^github:garrytan\/gbrain#[0-9a-f]{40}$/);
+    expect(declared['gbrain-reader']).not.toBe(declared.gbrain);
     expect(realpathSync(reader)).not.toBe(realpathSync(legacy));
     expect(lstatSync(reader).isSymbolicLink()).toBe(false);
     expect(lstatSync(legacy).isSymbolicLink()).toBe(false);
@@ -40,7 +42,10 @@ describe('offline paired reader requests', () => {
     const [direct, notes] = run.rows.map(r => r.request as { messages: unknown; system: string; max_tokens: number });
     expect(direct.messages).toEqual(notes.messages);
     expect(direct.system).not.toEqual(notes.system);
-    expect(direct.messages).toEqual([{ role: 'user', content: 'Question:\nWhich happened first?\n\nCurrent Date: 2026-09-25\n\nRetrieved sessions:\n<chat_session id="fictional_1" date="2026-09-20">\n**user:** Event A.\n**assistant:** Noted.\n</chat_session>\n\n<chat_session id="fictional_2" date="2026-09-21">\n**user:** Event B.\n**assistant:** Noted.\n</chat_session>' }]);
+    const [id1, id2] = ['fictional_1', 'fictional_2'].map(id => opaqueSessionId('invented_case', id));
+    expect(direct.messages).toEqual([{ role: 'user', content: `Question:\nWhich happened first?\n\nCurrent Date: 2026-09-25\n\nRetrieved sessions:\n<chat_session id="${id1}" date="2026-09-20">\n**user:** Event A.\n**assistant:** Noted.\n</chat_session>\n\n<chat_session id="${id2}" date="2026-09-21">\n**user:** Event B.\n**assistant:** Noted.\n</chat_session>` }]);
+    expect(run.schema).toBe(2);
+    expect(run.rows[0].session_map).toEqual({ [id1]: 'fictional_1', [id2]: 'fictional_2' });
     expect(run.rows.map(r => (r.request as { max_tokens: number }).max_tokens)).toEqual([1024, 1024]);
     for (const mode of ['direct', 'notes'] as const) {
       const config = resolveReaderConfig({ mode, maxTokens: 1024 });

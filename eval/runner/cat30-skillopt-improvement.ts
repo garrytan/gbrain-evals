@@ -43,7 +43,8 @@
  *   SKILLOPT_BPRE=1 bun eval/runner/cat30-skillopt-improvement.ts --stub-llm  # hermetic, no keys
  */
 
-import { writeFileSync, mkdirSync, readFileSync, cpSync, rmSync } from 'fs';
+import { writeFileSync, mkdirSync, readFileSync, cpSync, rmSync, existsSync, readdirSync } from 'fs';
+import { importFromContent } from 'gbrain/import-file';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
@@ -53,12 +54,12 @@ import {
   type ChatOpts,
   type ChatResult,
 } from 'gbrain/ai/gateway';
-// Deep src imports: gbrain's export map has no skillopt subpath yet (audit
-// skillopt-cats-11). Works on the pinned flat bun/npm install this repo uses;
-// requesting a proper `./core/skillopt` export upstream.
-import { runSkillOpt } from '../../node_modules/gbrain/src/core/skillopt/orchestrator.ts';
-import { scoreSkillOnTasks } from '../../node_modules/gbrain/src/core/skillopt/validate-gate.ts';
-import { loadHeldOut } from '../../node_modules/gbrain/src/core/skillopt/held-out.ts';
+// SkillOpt entry points via gbrain's public `./core/skillopt` export (audit
+// skillopt-cats-11; the export exists at the pin and on gbrain master).
+import {
+  runSkillOpt, scoreSkillOnTasks,
+  loadHeldOut,
+} from 'gbrain/core/skillopt';
 import { ProbeAccounting } from './probe-accounting.ts';
 import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
@@ -73,8 +74,8 @@ export const BPRE_BASELINE_CEILING = 0.95;
 /**
  * WS5 pin — applied via engine.setConfig BEFORE any rollout and echoed in
  * resolved_config. SkillOpt rollouts can call brain search tools, and
- * gbrain's default 'balanced' bundle silently enables the zerank-2 reranker
- * when ZEROENTROPY_API_KEY is set — never rely on defaults.
+ * gbrain's default 'balanced' bundle can enable reranking with an ambient
+ * provider key — never rely on defaults.
  */
 export const PINNED_CONFIG: Record<string, string> = {
   'search.mode': 'balanced',
@@ -289,7 +290,9 @@ export function computeCat30Gate(results: SeedResult[], bpre: boolean): boolean 
       && r.baseline_heldout < BPRE_BASELINE_CEILING);
   }
   const scored = results.filter((r) => r.error_origin !== 'dependency');
-  if (scored.length === 0) return false;
+  // At most one seed may drop out on a dependency error; otherwise one
+  // improved seed out of one scored could pass (audit B-30-04).
+  if (scored.length === 0 || scored.length < results.length - 1) return false;
   const improved = scored.filter((r) => r.improved).length;
   return improved >= Math.ceil(scored.length * 0.75);
 }
@@ -321,9 +324,31 @@ interface SeedRunDeps {
 // fires.
 const SPLIT: [number, number, number] = [1, 1, 1];
 
+/**
+ * Import a seed's generated brain pages (`<seed>/brain/<dir>/<name>.md`) into
+ * the rollout engine. seed-no-brain-first's held-out judge scores retrieval of
+ * these pages; before 0.10.1 the rollout brain was empty and the held-out
+ * rewarded fabricated citations (audit B-30-01). Keyword search suffices, so
+ * pages import without embeddings.
+ */
+export async function importSeedBrain(engine: any, seedDir: string): Promise<number> {
+  const brain = join(seedDir, 'brain');
+  if (!existsSync(brain)) return 0;
+  let n = 0;
+  for (const dir of readdirSync(brain).sort()) {
+    for (const file of readdirSync(join(brain, dir)).sort().filter(f => f.endsWith('.md'))) {
+      await importFromContent(engine, `${dir}/${file.slice(0, -3)}`, readFileSync(join(brain, dir, file), 'utf8'), { noEmbed: true });
+      n++;
+    }
+  }
+  return n;
+}
+
 async function runSeed(deps: SeedRunDeps, seed: string): Promise<SeedResult> {
   const { engine, acc, log } = deps;
   const seedDir = join(deps.dataDir, seed);
+  const brainPages = await importSeedBrain(engine, seedDir);
+  if (brainPages) log(`[cat30] ${seed}: imported ${brainPages} brain pages for rollouts\n`);
   const seedBody = readFileSync(join(seedDir, 'SKILL.md'), 'utf8');
   const benchmarkPath = join(seedDir, 'benchmark.jsonl');
   const heldOutTasks = loadHeldOut(join(seedDir, 'held-out.jsonl'));

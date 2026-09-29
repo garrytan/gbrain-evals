@@ -40,7 +40,7 @@ import { importFromContent } from 'gbrain/import-file';
 import { configureGateway } from 'gbrain/ai/gateway';
 import { hybridSearch } from 'gbrain/search/hybrid';
 import { ProbeAccounting } from './probe-accounting.ts';
-import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt } from './receipt.ts';
+import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt, noModelSpend } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 
 export const CAT22_CATEGORY = 'cat22-source-isolation';
@@ -51,7 +51,7 @@ export const PAGES_PER_SOURCE = 10;
 /**
  * WS5 pin — applied via engine.setConfig BEFORE ingest and echoed into the
  * receipt's resolved_config. gbrain's default 'balanced' mode silently
- * enables the zerank-2 reranker when ZEROENTROPY_API_KEY is set; never rely
+ * enables reranking with an ambient provider key; never rely
  * on defaults. Expansion/autocut off: no LLM in the loop, no result trimming
  * confounding the presence assertions.
  */
@@ -61,12 +61,6 @@ export const PINNED_CONFIG: Record<string, string> = {
   'search.expansion': 'false',
   'search.autocut': 'false',
 };
-
-/** Embedding/LLM provider keys stripped from the gateway env for hermeticity. */
-const PROVIDER_KEYS = [
-  'OPENAI_API_KEY', 'VOYAGE_API_KEY', 'ZEROENTROPY_API_KEY',
-  'GEMINI_API_KEY', 'GOOGLE_API_KEY', 'ANTHROPIC_API_KEY',
-];
 
 export interface SurfaceProbe {
   surface: string;
@@ -235,12 +229,10 @@ export async function runCat22(options: Cat22Options = {}): Promise<Cat22RunResu
   // Hermetic: strip every provider key from the gateway env so hybridSearch's
   // keyword-only path falls out of the documented no-provider short-circuit
   // (hybrid.ts: `!isAvailable('embedding', ...)`), not out of an invalid opt.
-  const sanitizedEnv: Record<string, string | undefined> = { ...process.env } as Record<string, string | undefined>;
-  for (const k of PROVIDER_KEYS) delete sanitizedEnv[k];
   configureGateway({
     embedding_model: 'openai:text-embedding-3-large',
     embedding_dimensions: 1536,
-    env: sanitizedEnv,
+    env: {},
   });
 
   const engine: any = new PGLiteEngine();
@@ -323,7 +315,9 @@ export async function runCat22(options: Cat22Options = {}): Promise<Cat22RunResu
     const results = await hybridSearch(engine, 'AI', { limit: 100, sourceId: scope });
     return probeResult(
       'hybridSearch', scope,
-      1, // presence floor: the corpus has 20 alpha pages matching 'AI'
+      // Presence floor: nearly every seeded alpha page matches 'AI'; a floor of 1
+      // let a scoped search that returned 1 of 20 pass (audit B-22-01).
+      alphaCount - 2,
       (results as any[]).map(r => ({ slug: r.slug as string, source_id: r.source_id as string | undefined })),
       scopeAllowed,
     );
@@ -428,7 +422,8 @@ export async function runCat22(options: Cat22Options = {}): Promise<Cat22RunResu
 
   await runControl('control-hybridSearch', async () => {
     const results = await hybridSearch(engine, 'AI', { limit: 100 });
-    const cross = (results as any[]).filter(r => (r.source_id ?? 'default') !== scope).length;
+    // Only rows that name another source count; a row without source_id is unattributable, not a detected leak (audit B-22-01).
+    const cross = (results as any[]).filter(r => r.source_id !== undefined && r.source_id !== null && r.source_id !== scope).length;
     return { surface: 'hybridSearch-unscoped', total_results: results.length, cross_source_rows: cross, detected_leak: cross > 0 };
   });
 
@@ -465,6 +460,7 @@ export async function runCat22(options: Cat22Options = {}): Promise<Cat22RunResu
   const runInvalid = summary.run_invalid;
 
   const receipt: Receipt = {
+    ...noModelSpend('hermetic: no model and no paid request'),
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,
     category: CAT22_CATEGORY,

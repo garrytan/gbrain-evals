@@ -68,3 +68,29 @@ describe('tryOp', () => {
     expect(cleared).toBeGreaterThanOrEqual(1);
   });
 });
+
+describe('buildAdversarialReceipt (C-06)', () => {
+  const { buildAdversarialReceipt } = require('../../eval/runner/adversarial.ts') as typeof import('../../eval/runner/adversarial.ts');
+  const { validateReceipt } = require('../../eval/runner/receipt.ts') as typeof import('../../eval/runner/receipt.ts');
+  const clean = { name: 'clean', ops_attempted: 3, ops_succeeded: 3, crashes: [], silent_corruption: [] };
+
+  test('clean cases with link candidates pass and validate', () => {
+    const r = buildAdversarialReceipt([clean], 4, 't0');
+    expect(validateReceipt(r)).toEqual([]);
+    expect(r.run_status).toBe('completed');
+    expect(r.verdict).toBe('pass');
+  });
+
+  test('a crash or silent corruption fails the verdict and is recorded as a SUT error', () => {
+    const r = buildAdversarialReceipt([clean, { ...clean, name: 'bad', silent_corruption: ['roundtrip differs'] }], 4, 't0');
+    expect(r.verdict).toBe('fail');
+    expect(r.errors).toEqual([{ probe_id: 'case:bad', origin: 'sut', message: 'silent: roundtrip differs' }]);
+  });
+
+  test('zero link candidates is a harness error, never a pass', () => {
+    const r = buildAdversarialReceipt([clean], 0, 't0');
+    expect(validateReceipt(r)).toEqual([]);
+    expect(r.run_status).toBe('error');
+    expect(r.verdict).toBeUndefined();
+  });
+});

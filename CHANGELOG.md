@@ -2,6 +2,485 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.1] - 2026-09-29
+
+One release for all of the work that followed the September 28 audits and the
+approved 10x plan. It was built on eight branches (numbered 0.10.1 to 0.10.8
+while in review) and ships as a single patch release. Several published
+numbers had been measured by code that could not fail, or that let the system
+under test see the answer. This release fixes those runners and scorers,
+corrects the published claims in place beside dated errata, runs the whole
+suite in CI, adds an independent evaluator, a category registry, receipt v2
+and a paid-run budget ledger, freezes a sealed confirmation set, adds a memory
+lifecycle experiment, and replaces the invalid LongMemEval answer score with a
+leak-free re-run. Historical scores keep their original dates; where a fix
+moves a number, the old number stays in its dated report.
+
+Paid work in this release: the LongMemEval opaque-id answer re-run (about
+$59.6), the sealed confirmation set ($17.83) and the relationship paraphrase
+check ($0.0645 of OpenAI embeddings). Everything else is keyless.
+
+### Measurement integrity (audited 2026-09-28)
+
+Keyless reruns and recomputations in this section were made at the pin of the
+day, `939232f`.
+
+- **LongMemEval runners no longer show the gold label.** Every gold session id
+  starts with `answer_` and no other session does. The retrieval runner, the
+  answer check, the reading-notes request builder and the M-pilot build now
+  give the system and the reader opaque ids (`s-` plus 10 hex characters) and
+  translate back before scoring. A test asserts that no system or reader input
+  contains `answer_` (C-01, PD-05, PD-08). The published 433/500 judged answers
+  and the 308 to 324 of 361 reading-notes result came from readers that saw raw
+  ids (see the leak-free re-run below).
+- The LongMemEval aggregator marks a run publishable only when every adapter
+  has the expected row count, and stamps the gbrain version recorded in the
+  rows rather than the local install (PD-01, PD-02). Resume and batch
+  completion are keyed on `run_config_hash` (PD-03). The NDJSON validator
+  rejects residual error rows unless `--allow-errors` is passed (PD-04).
+  Answer-generation outages count as dependency errors (PD-06).
+- `all.ts` requires a fresh, valid receipt from every runner it dispatches. A
+  missing or invalid receipt is a failure, never an exit-code pass (C-06,
+  C-07). It lists every category in the repository with a tier, runs
+  `--tier offline` (default), `paid` or `all`, and prints each category it did
+  not run with the reason (C-09). Latency categories run alone (C-11). The
+  `eval:brainbench:published` script, which claimed N=10 while no dispatched
+  runner read N, is removed (C-08). A keyless `--tier offline` sweep at
+  `939232f` passed 17 of 17 dispatched categories.
+- Cat 2 type accuracy charges every inferred type that differs from gold, so an
+  extractor that emits every type can no longer score 100% (C-05). At
+  `939232f` this scorer gave 86.6% (240/277 found pairs; 97.1% under the old
+  any-type rule, still reported as a diagnostic) and strict F1 41.3% (48.1%
+  before); the attendance-direction correction below later replaced both.
+  Cat 2 and Cat 3 write receipts and gate on regression floors.
+- Cat 3 scores the handle without `@` as documented, because the keyword index
+  strips the `@`. Undocumented alias recall is 13.75% (55/400), not the
+  published 31.0% (C-03).
+- Cat 1 reports Precision@5 with the standard /5 denominator: 29.9% before and
+  35.4% after graph traversal, against a ceiling of 36.0%. The legacy
+  /min(5, returned) value (39.2% to 46.5% at this pin) is kept beside it
+  (C-04).
+- The Cat 36 offline smoke fails when search crashes on every probe or finds no
+  evidence (PC-05). Cat 34 gates on production-seam cells and reports
+  contract-seam cells as informational, so it can pass (PC-08).
+- Cat 35 reports the evidence-verified joint score next to the judge-only score
+  and excludes judge failures instead of counting them as misses (PC-01,
+  PC-03). Recomputed from the committed receipts (dream lane macro): 88.1%
+  judge-only is 74.9% joint; the earlier 70.2% is 58.2% joint; the Aug-25
+  baseline is 64.7% judge-only (61.5% published) with 8 of 173 failed items
+  excluded. Cat 35 writes a common receipt and skips cleanly without keys
+  (PC-09).
+- Cat 29 judges both answers in one blind prompt in both orders and flags
+  position-inconsistent pairs; the earlier "both orders" made the same
+  single-answer call twice (B-29-01).
+- The multi-adapter `gbrain` row runs the product path (hybrid search with
+  relational retrieval). The regex parser for the four query templates stays as
+  `graph-oracle-parse`, labeled as an upper bound (C-10).
+- Cat 13 reports probes that copy the target page's title, description or body
+  as a lexical control beside the conceptual probes. Recomputed from the
+  2026-09-09 receipt, gbrain scores 61.5% nDCG@5 on the 246 conceptual probes
+  and 53.6% on the 302 lexical-control probes (A-14).
+- Every `readdirSync` enumeration is sorted, with a repository-wide test
+  (A-06). The Cat 13 probe set is unchanged; Cat 6 injects different mentions
+  in some cases with every gated rate unchanged.
+- Judges and direct model calls run at temperature 0 where the SDK allows it
+  (PC-02, B-29-03, A-03). Judge prompts escape system output, fence it in a
+  per-call nonce block, and state that block content is data. Judge prompt
+  versions moved, so new judged receipts do not compare with older ones (C-13,
+  A-20, B-JDG-01, PC-10).
+- `dcgAtK` counts each id once, so nDCG cannot exceed 1 (C-16).
+
+### Corrections to published claims
+
+Every original figure stays visible beside a dated erratum. The README now
+states where gbrain actually leads: strict `recall_all@5` of 95.53% (449/470)
+on LongMemEval, against 90.0% and 85.7% for our strict recounts of MemPalace's
+saved rankings and 87.45% self-reported by ContextFit. Answer accuracy is not a
+matched comparison yet, and the README says so.
+
+- **Cat14 calibration (May 18): retracted.** The 75% win rate (6 of 8) and 100%
+  axis scores came from a judge that saw each probe's expected behavior and
+  knew which answer was calibrated.
+- **Cat 3 undocumented alias recall (April 18): 31.0% becomes 13.75%
+  (55/400).** The handle without `@` is in the indexed page text and scored
+  100/100. Verified by re-running `eval/runner/identity.ts`.
+- **Cat 2 link type accuracy (April 18): 70.7% to 88.5% came from a lenient
+  scorer.** A strict re-run at `939232f` gave 86.6% (240/277) and strict F1
+  41.3% (48.1% before the scorer fix). That count was itself wrong: the answer
+  key pointed attendance edges from the meeting to the person, and gbrain
+  stores them the other way, so the 86.6% counted 131 reversed edges as
+  correct. **With the direction corrected, type accuracy is 74.7% (109/146) and
+  strict F1 18.8%** at both `939232f` and `b80cad6`; the regression floors
+  moved to 70% / 15%. Cats 1 and 6 are unchanged between the two commits.
+  [Report](docs/benchmarks/2026-09-29-repin-cats-1-2-6.md).
+- **The multi-adapter `gbrain` row (April 19, April 23, May 23)** came from a
+  regular-expression template parser, now `graph-oracle-parse`, and is marked
+  invalid as a product score. The September 9 concept report gains a split of
+  conceptual and lexical-control probes.
+- **Cat 1 precision at five (April 18): 39.2% to 44.7% becomes 29.9% to
+  35.4%** when divided by five slots per question (145 × 5 = 725), against a
+  ceiling of 36.0%. Verified by re-running `eval/runner/before-after.ts`; the
+  legacy denominator now gives 46.5% after, against 44.7% published.
+- **Cat 35 retention (August 31): 88.1% is judge-only.** Evidence-verified
+  retention, recomputed from the committed receipts, is 74.9% (58.2% before the
+  change). The August 25 baseline is 64.7% with judge failures excluded (61.5%
+  published) and 51.2% evidence-verified. The README also says the result is
+  in-sample.
+- **May snapshot, Cats 18b to 29:** every row is marked with the defect of the
+  pre-audit runner that produced it, including Cat 29's duplicate-call "both
+  orders" scoring.
+- **LongMemEval answer accuracy (433/500): invalid.** The answer model saw the
+  `answer_` prefix that marks every labeled evidence session id. The README,
+  the comparison page and the September 6 report point to the leak-free
+  September 29 re-run below and say that the answer comparison with vendor
+  self-reports is still not matched. **The reading-notes transfer result
+  (308/361 to 324/361) was not re-run and stays pending.** A 30-question check
+  found no effect of the prefix on retrieval.
+- The README concept claim compares like with like (102/181 for gbrain against
+  118/181 for vectors without a reranker; 130/181 with one), and the
+  relationship claim reports the overall result (first-place hits 14% to 24%)
+  and attendance (0/50) beside the investor example. It discloses that the
+  95.53% configuration was chosen on the same 470 questions and that the
+  pre-registered 92% answer target was missed.
+- The PrecisionMemBench comparison table shows the September 9 corrected gbrain
+  rows with their non-null case counts; the invalid May rows are struck
+  through, no longer bold (B10).
+- `docs/settings.md` and `docs/comparison-systems.md` no longer say that gbrain
+  `2efaaf8f` is the installed library; a test checks such claims against the
+  `package.json` pin.
+
+### CI and the test suite
+
+- `bun run test` runs the 77 colocated unit tests under `eval/` (counted on
+  2026-09-28), the 25 Python orchestrator tests and the validators (published
+  LongMemEval recount, LongMemEval opaque-id recount, documentation, links,
+  queries, data). CI runs all of them.
+- The Bun suite ran in about 2 minutes 25 seconds instead of about 9 minutes
+  20 seconds on a 4-core machine when this was measured on 2026-09-28. A test
+  preload builds one pre-migrated PGLite snapshot per embedding shape through
+  gbrain's own snapshot loader, and `scripts/test-shards.ts` runs four
+  ordinary `bun test --shard` processes at once. (Bun's `--parallel` worker
+  mode was tried and rejected: tests that call `Bun.spawnSync` hung in 2 of 4
+  full runs.) CI splits the tests into four shard jobs and moves type checks,
+  validators and hermetic runners into a separate job, each with its own
+  timeout. That job runs every keyless category through
+  `bun run eval:brainbench` (`all.ts --tier offline`), so the Cat 1, 2, 3 and
+  10 gates fail CI on a regression. Two PGLite-building tests carry explicit
+  timeouts because they exceed 5 seconds under four shards.
+- `tsc` passes with no output filtering: DOM libraries, `@types/js-yaml` and
+  `@types/express`, TypeScript 5.9, and small shims for Bun text imports and
+  one image encoder signature. CI gates both type checks unfiltered.
+- The `postgres@3.4.9` patch is declared in `patchedDependencies`, so the
+  cancellation-capable driver `gbrain-reader` expects is actually installed.
+- Removed the PGLite postinstall link. gbrain finds the hoisted PGLite assets
+  without it.
+- Cat30 to Cat33 import SkillOpt through gbrain's public `./core/skillopt`
+  export.
+- The built-in Tier 5.5 family is labeled `synthetic-outsider` in new
+  scorecards; no outside author wrote those questions.
+- Documentation follows the opaque session ids: the LongMemEval-M
+  preregistration describes the `indexed-projection-v3` build, the
+  reading-notes report describes request schema 2, and the May LongMemEval
+  report shows how to validate the prefix-bracket stream with
+  `--allow-errors`.
+- `scripts/check-links.py` checks every link and heading anchor in the
+  repository's Markdown on each `bun run validate`; a weekly workflow also
+  fetches external links (B12).
+
+### Independent evaluator and paired comparisons (plan amendments 4 and 6)
+
+- **Paired comparator: `bun eval/runner/compare.ts <A> <B>`.** It pairs two runs
+  question by question and refuses duplicate ids, missing pairs and questions
+  that are eligible on one side only. It reports the absolute change with a
+  clustered 95% bootstrap interval, a clustered sign-flip test, the exact
+  McNemar test and a power note (the smallest change detectable at 80% power).
+  Items share a cluster id, so ten paraphrases of one concept count once. The
+  statistics generalize the situation-recall regression gate's bootstrap,
+  sign-flip and Holm code (`eval/runner/stats/`), and a test holds the two to
+  identical results. Recounting the committed September 6 rows reproduces the
+  published reranker comparison: 18 wins and 8 losses over 470 answerable
+  LongMemEval-S questions, +2.13 points (interval 0.00 to +4.26), McNemar
+  p = 0.0755.
+- **Three gates over a preregistered family** (`--family`). Exact correctness
+  and safety assertions fail at once with no significance test. Noisy quality
+  metrics pass only when non-inferiority within a stated tolerance is shown
+  after Holm correction; a wide interval is inconclusive, not a pass.
+  Exploratory metrics never gate.
+- **Independent evaluator** (`eval/runner/evaluator/`). A gold store keeps
+  labels in a private field and hands out scores. The LongMemEval runner keeps
+  only gold-free question views and scores through a gold store loaded by a
+  separate read of the dataset, checked byte for byte. Cat13 gold comes from a
+  separate corpus read and must match the runner's probes id for id and text
+  for text. A reference scorer reimplements the metrics without importing the
+  product.
+- **Input allowlist** for every payload sent to the system under test or a
+  reader or judge. It refuses undeclared fields, non-plain objects and any raw
+  dataset session id beyond what the conversation text accounts for, whether or
+  not the id starts with `answer_`. A violation voids the run. It covers
+  LongMemEval retrieval and answers and Cat13, and in the final fix wave also
+  the reading-notes reader input and captured request, Cat 29's question and
+  pairwise judge, and Cat 35's transcripts and scaffold (no gold id), coverage
+  judge (no verbatim anchor beyond the judged document), leak judge and
+  usability judge (no gold statement beyond the pages). Receipts record the
+  gold-store fingerprint, scorer version and boundary names under
+  `resolved_config.evaluator`.
+- **Adversarial tests** the evaluator must catch: known rankings, permuted
+  labels, removed metadata, duplicate ids, an empty system, wrong answers, and
+  adapters that leak gold, return nothing or return duplicates
+  (`test/eval/evaluator-adversarial.test.ts`).
+- Cat13 per-question rows gain `cluster_id` (the target concept) and, when an
+  adapter repeats a page, `duplicate_results`. Scores are unchanged: repeated
+  pages already earned nothing.
+- [Comparing runs](docs/comparing-runs.md) explains all of the above.
+
+### gbrain pins, category registry, receipt v2 and the budget ledger
+
+- **gbrain is pinned to master.** On 2026-09-29 the pin moved from `939232f`
+  (a side branch) to master `b80cad6` (v0.59.13.0), and at integration it moved
+  again to master `608a174` (v0.60.10.0). The memory-cue experiments
+  (situation recall, the LongMemEval-M pilot and Cat 36 cue arms) need code
+  that exists only on gbrain's `capy/situation-aware-recall` branch, so they
+  load a separate package alias, `gbrain-cues`, pinned to `939232f`. Cat 36 and
+  situation-recall runtimes pick the package from the arm: cue and summary
+  arms use `gbrain-cues`, every other arm measures the pinned product. Pins
+  are read from `package.json` (`eval/runner/pins.ts`).
+- **Re-pin check at `608a174` (2026-09-29).** Cats 1, 2 and 6 give the same
+  data as their committed `b80cad6` receipts (Cat 2 still 74.7% type accuracy,
+  18.8% strict F1), so no published number moves. The offline tier passes
+  every dispatched category, and Cat 34 passes 12 of 12 against a gbrain
+  checkout at the same commit. Two behavior changes in gbrain surfaced:
+  - gbrain v0.60.6.0 (#5675) records a file import's `file://` origin in
+    `source_uri`, which also server-stamps `ingested_at`. Cat 24's file-import
+    probe and its native collector now expect that origin, and still require
+    `source_kind` and `ingested_via` to stay empty. Before this pin the probe
+    expected all four fields empty.
+  - gbrain v0.60.6.0 widened its relationship parser. The keyless
+    relational-ab check fires on 33 of 145 paraphrased questions at `608a174`,
+    against 0 at `b80cad6`; template firing is unchanged at 58. The paid
+    paraphrase measurement stays dated to `b80cad6`, and the README, the report
+    and TODOS carry a dated note.
+- **`gbrain-reader` pins gbrain master `e78f1c3`** (v0.59.0.0), replacing
+  `a9de062`, which is on no branch. The two commits' `src/` trees and
+  `package.json` are byte-identical; the 22 reading-notes tests pass.
+- **ZeroEntropy cells are retired** (supersedes PR #35). Cat 18 compares OpenAI
+  and Voyage embedders; Cat 18b pairs each with `voyage:rerank-2.5`. Both are
+  dispatchable paid categories again.
+- gbrain v0.59.10.0 saves a page's text when embedding fails instead of
+  throwing. Runners that measure vector or hybrid search treat such a deferred
+  embedding as an error, so a provider outage can no longer be scored as
+  keyword-only retrieval under an embedding label.
+- **`eval/registry.ts`**: one row per category with its legacy alias, family,
+  tier (H hermetic, K keyed under $1, P paid), cost estimate and its basis,
+  receipt path, headline metric and denominator, gate status, evidence
+  maturity and a short statement of what it measures. `all.ts` reads it and
+  accepts `--tier H|K|P`. No category was renumbered. The registry lists the
+  lifecycle experiment and the sealed confirmation set, and
+  `test/eval/registry.test.ts` fails when a file under `eval/runner/` is
+  neither a registry script nor listed in `RUNNER_HELPERS`.
+- **Receipt schema v2.** Every receipt records the content hash of the evals
+  tree that ran (uncommitted edits included), the declared pin and content
+  hash of the gbrain package actually loaded, planned, attempted, scored and
+  errored probes with errors kept apart from misses, and cost, p50/p95 latency
+  and tokens delivered to models when a runner measures them. v1 receipts
+  remain readable. Cost and delivered tokens are recorded as a measured zero
+  in 16 keyless runners and stub modes, from the budget ledger in
+  relational-ab live runs, and latency in Cats 13b, 28 and relational-ab.
+- **Budget ledger** (`eval/runner/budget-ledger.ts`). LongMemEval, Cat 13, Cat
+  35 and relational-ab live runs refuse to start without `--budget-usd`, print
+  their estimate, and reserve every provider request (retries and gbrain's
+  internal calls included) against the run budget and a $500 program cap
+  before sending it. Reservations reconcile to provider-reported usage. The
+  ledger is a gitignored JSON file (`.budget/ledger.json`), tested with mocked
+  providers. `longmemeval-batch.sh` opens one ledger run and passes
+  `--budget-run-id` to every worker, so `--budget-usd` caps all workers and
+  restarted batches together.
+- Receipts stop recording machine-local paths: `writeReceipt` makes paths under
+  the checkout repo-relative, `bun eval/runner/receipt.ts scrub <file>` also
+  rewrites home and temp paths before a receipt is committed, and a test fails
+  on any committed receipt with such a path, except historical receipts frozen
+  by hash (B11). The frozen list holds the 63 receipts recorded before the fix
+  wave plus the two lifecycle receipts, which are kept byte-for-byte because
+  the manifest and the recount test pin them.
+
+### Sealed confirmation set (plan amendment 1)
+
+The LongMemEval-S questions and the Cat13 held-out concepts were used to
+choose gbrain's settings, so they are now development data. This release
+freezes a separately written confirmation set for future release decisions and
+publishes only its method, counts and SHA-256 commitments. No gbrain run has
+touched it.
+
+- **Sealed confirmation set v1.** 30 fictional personas, each with a 55-chat
+  history (20 personal chats, 35 general-help chats), and 150 questions: 30
+  each of single-session fact, multi-session aggregation, temporal reasoning,
+  knowledge update and abstention. Written by OpenAI `gpt-6-sol`, a model not
+  used for LongMemEval or any earlier corpus here. Personas share no
+  occupation, hobby or life arc. Labels come from the generation ledger. The
+  questions, chats and labels stay private;
+  `eval/data/sealed-confirmation-v1/manifest.json` holds their commitments.
+  Protocol:
+  [`2026-09-29-sealed-confirmation-protocol.md`](docs/benchmarks/2026-09-29-sealed-confirmation-protocol.md).
+- **Solvability controls, reported and never used to drop items.** With only
+  the gold chats, a Claude Sonnet 4.6 reader answered 150/150 (GPT-4o judge,
+  official LongMemEval prompts). With no chats it answered 0/120 answerable
+  questions and, as expected, 30/30 abstention questions.
+- **Overlap audit.** Against LongMemEval S and M: 0 of 150 questions identical,
+  highest word-set similarity 0.33, 0 persona full names, 0 of 1,650 chats
+  sharing a 13-word run of text. All 500 M questions are S questions.
+- **`eval/runner/sealed-confirmation.ts`.** Runs gbrain through the LongMemEval
+  runner's code path on a questions file that passes an input allowlist, then
+  scores with the private labels path given only at scoring time. Scoring
+  refuses a labels file that does not match its commitment and logs every
+  access with its purpose and decision id.
+- **`eval/generators/sealed-confirmation-gen.ts`** with frozen prompts, and a
+  durable spend-reservation ledger checked before every paid request.
+- Cost: $17.83 in paid API calls, $15.82 generation (including two one-persona
+  pilots) and $2.00 solvability.
+
+### Memory lifecycle experiment (plan amendment 8)
+
+A new experiment follows one small vault through a full memory lifecycle
+(ingest, query, an ingest during an embedding outage, corrections, a full
+reconcile, a forget, a restart) and scores what an agent can read against a
+ledger the evaluator writes itself. It compares four gbrain builds on PGLite
+and Postgres through the local CLI, MCP stdio and MCP HTTP, twice, at $0.
+
+- **`eval/runner/lifecycle-experiment.ts`** and `eval/runner/lifecycle/`: the
+  scenario and ground-truth ledger, drivers for the three interfaces, a
+  hermetic OpenAI-compatible hash embedder with fault injection, the scorer,
+  and copied-overlay build preparation. A build runs only if its copied files
+  hash to the requested commit's tree, no symlink exists under `src/`, and
+  `gbrain --version` matches its `VERSION`.
+- **`eval/runner/lifecycle-report.ts`**: tables from a receipt, and a
+  cell-by-cell comparison of repeat runs.
+- **[Lifecycle report](docs/benchmarks/2026-09-29-lifecycle.md)** with a
+  primary run and a repeat.
+- Measured 2026-09-29: forgetting one entity's fact expired the identical claim
+  on another entity, and refused the same claim for a third, in 18 of 18 cells
+  on v0.59.3.0, v0.59.11.0 and master v0.59.13.0. Master plus #5666 fixed both
+  in 6 of 6. A remote caller read a private page's tags in 4 of 4 remote cells
+  on v0.59.3.0 and v0.59.11.0, and 0 of 4 from master (#5676) on. Still failing
+  on every build: a slug collision stops its source's sync, so files after it
+  are never imported; a renamed page loses its inbound link and its old slug;
+  on PGLite with a live MCP server, delegated syncs extract 0 or 1 of 8 links,
+  and `gbrain extract --stale` was refused in 240 of 240 attempts.
+
+### Leak-free LongMemEval answer re-run (2026-09-29)
+
+With session ids made opaque, gbrain's house reader answered **439/500
+(87.8%)**. A GPT-4o reader using LongMemEval's official reading prompt, on
+exactly the same retrieved sessions, answered 430/500 (86.0%); paired, that is
+21 wins and 30 losses, exact McNemar p = 0.26, so the readers are not
+demonstrably different. The run used the reranker off and the notes reader
+with 1,024 output tokens, measured on gbrain PR 5676 at `a7cb37b`. That is not
+the September 6 configuration, so it does not measure how much the leak
+helped.
+
+- **Report: [LongMemEval answers without the answer key](docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md).**
+  Strict retrieval on the same rows was 435/470. A 100-question component
+  study with the reader and evidence held fixed found that the evidence budget
+  matters far more than the prompt. Full retrieved sessions (about 15,800
+  input tokens) gave 89/100. The five retrieved chunks alone (about 3,400
+  tokens) gave 65/100 with gbrain's reader prompt, 65/100 with a plain prompt
+  and 64/100 with `gbrain think`'s prompt; each prompt against gbrain's was
+  p = 1.0. The report lists four harness stalls, a machine restart and the
+  paid cost (about $59.6).
+- Receipts under `docs/benchmarks/2026-09-29-longmemeval-opaque-qa/`: summary,
+  per-question table, and rows for all five arms; the official-judge files;
+  the full reader and judge prompts (gzip); chunk texts, logs, scripts, and
+  provenance with dataset and cache hashes. Twelve manifest entries pin their
+  hashes and the counts 439/500, 430/500, 65, 65 and 64 of 100, and 435/470.
+- `scripts/verify-longmemeval-opaque-qa.py`, a keyless recount run by
+  `bun run validate`. It re-derives every arm's verdict counts, the paired
+  tests and the strict recall count, and checks that none of the 1,300 saved
+  reader prompts contains `answer_` or a retrieved raw session id.
+
+### Final fix wave on the September 28 audits
+
+- **Relationship retrieval does not help on reworded questions.** A seeded
+  paraphrase grammar, committed before scoring, rewords the 145 world-v1
+  relationship questions without changing their answers. At gbrain `b80cad6`,
+  over three ingestion orders (435 paired runs per wording), relationship
+  retrieval fired on 174 template runs and 0 paraphrase runs. Template
+  wording: first-place hits 27.6% to 42.8% (72 runs better, 6 worse), recall
+  at five 0.737 to 0.763 (18 better, 0 worse, 6 distinct questions).
+  Paraphrased: 0.411 recall at five and 4.8% first-place hits in both arms, no
+  run changed (audit B-RAB-01, issue #24 finding 6).
+  [Report](docs/benchmarks/2026-09-29-relational-paraphrase.md).
+- **Cat 6 bare-name mentions: 50/50 linked** by gbrain's by-mention pass (a new
+  gazetteer arm), 0/50 by the ordinary links pass. The pure-extractor gates are
+  unchanged (250 probes, recall and labeled precision 1.0).
+- **Gates that could pass on nothing.** Cat 27 fails when no probe improves; it
+  currently passes because one of four probes gains 3.1 points of nDCG@10, and
+  every probe's ranking changes (B-27-01). Cat 24's dedup probe requires the
+  hash short-circuit itself (status `skipped`, unchanged `updated_at` and chunk
+  ids); a forced re-chunk fails it (B-24-01). Cat 32 Part B needs at least one
+  candidate the held-out gate blocked; no regression with zero blocks is
+  `partial` (B-32-01). Cat 30's `seed-no-brain-first` held-out scores
+  retrieval of a generated topic page from a brain Cat 30 imports, instead of
+  citations an empty brain could only invent (B-30-01).
+- **Unpublishable stub receipts.** Cat 19 and Cat 27 hash-embedding runs are no
+  longer publishable (A-22, B-27-01); Cat 29 stub runs report `partial` and no
+  longer overwrite a crashed side's zero (B-29-04); perf is unpublishable when
+  no threshold was evaluated and counts only successful link writes (C-11).
+- **Data integrity.** `validate-data.ts` checks amara-life hashes under the
+  generator's scheme (per record for JSONL and calendar entries, per file
+  otherwise): 424 of 424 manifest items verify, and a mismatch fails instead
+  of warning (C10). `poison.json` is generated from the planted fixtures; the
+  five gold stubs with no generator or runnable consumer (`backlinks`,
+  `citations`, `entities`, `personalization-rubric`, `qrels`) are removed, and
+  a hand-written template row fails validation.
+- Smaller audit items: Cat 13 gap localizer withholds its proposal above a 5%
+  re-simulation mismatch and reads the committed E0 receipt (A-16); malformed
+  `CAT18_MIN_RECALL` / `CAT21_MIN_MRR` throw and overrides are unpublishable
+  (A-23); a zero-query Cat 18 cell is invalid (A-24); situation-recall Cat 13b
+  over its infra cap is an error (A-25); Cat 13b drops its gateway memo and
+  restores `GBRAIN_SOURCE_BOOST` (A-17); Cat 22's presence floor is the seeded
+  count minus two (B-22-01); Cat 33 B-pre reports no transfer ratio (B-33-01);
+  Cat 30/33 gates need all but one seed scored (B-30-04); Cat 32 `sel_climb`
+  compares like splits (B-32-02); Cat 28 isolates `GBRAIN_HOME` and records
+  failed-pass latency (B-28-01); Cat 35 leakage leaves judge-failed hits out of
+  the denominator, including in the native Cat 35 reconstruction (PC-04); the
+  shootout driver reports `partial` (PD-15); `query:validate` rejects unfilled
+  scaffold placeholders (PD-17); the skillopt sentinel clears stale partial
+  results (B-SH-01); relational-ab `--limit` samples across templates
+  (B-RAB-02).
+- Cat 6's header said gbrain has no bare-name linking; it does, through the
+  by-mention pass. Cat 3 and Cat 4 headers and registry names say they test
+  keyword alias lookup and timeline storage, and name the gbrain features they
+  leave untested (F3, F4, F5).
+- `gold/contradictions.json` is documented as reserved for the planned N2
+  category. Both claims appear verbatim in their source text for 9 of 15
+  fixtures, which N2 must check first (F6).
+
+### Plan documents
+
+- `docs/plans/2026-09-28-gbrain-10x/` records the approved gbrain 10x plan, its
+  outside review and the five September 28 audits (evals correctness, evals
+  docs and infrastructure, coverage and categories, gbrain read path, gbrain
+  write path). The docs index links them.
+
+### Limits
+
+- Cat 30 to 33 model calls and the Cat 35 dream and facts lanes run inside
+  gbrain and still use the provider default temperature. The reading-notes
+  reader keeps its published default temperature so that an opaque-id rerun
+  changes one variable.
+- The reading-notes result stays pending until its opaque-id re-run, and the
+  retracted Cat14, Cat 29 and multi-adapter figures stay invalid until paid
+  re-runs. A reranker-on LongMemEval answer run needs a Voyage key.
+- Receipt v2 cost stays null in paid runners not yet wired to the budget
+  ledger (Cats 14, 15, 18, 18b, 20, 21, 25, 26, 29 live, multi-adapter,
+  PrecisionMemBench).
+- The evaluator separation is still in-process; a product in the same process
+  could still read dataset files. The sealed confirmation set is not yet wired
+  to the paired comparator.
+- On 2026-09-29 gbrain's own `gbrain eval compare` printed a bootstrap
+  methodology string without computing a bootstrap
+  (`src/commands/eval-compare.ts:243`). gbrain v0.59.18.0 (#5685), included in
+  the `608a174` pin, replaced it with a paired cluster bootstrap.
+- Cat 34 records a skip in CI because it needs an external gbrain checkout.
+
 ## [0.10.0] - 2026-09-25
 
 Taking brief notes before answering helped the tested readers use intact
@@ -40,7 +519,10 @@ new accuracy measurement, and its $0.562143 spend is outside the study total.
 - Keep the established `gbrain` pin for historical runners and add a separate
   immutable `gbrain-reader` pin only for the new comparison path. Retain its required
   `postgres@3.4.9` patch at the repository root so Bun's frozen lockfile
-  install can resolve the transitive patch from a clean checkout.
+  install can resolve the transitive patch from a clean checkout. (September 28, 2026 correction: this patch was never applied, because
+  `package.json` did not declare `patchedDependencies`; v0.10.2 declares it.
+  The "historical runners" results also came from gbrain `2efaaf8f`, not
+  from the `939232f` pin kept here.)
 - Restrict CI TypeScript filtering to diagnostics whose path begins with
   `node_modules/`, so a repo-owned error mentioning a dependency path still
   fails instead of disappearing.

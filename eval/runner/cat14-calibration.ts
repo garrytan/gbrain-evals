@@ -97,7 +97,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
-import { importFromContent } from 'gbrain/import-file';
+import { importFromContentEmbedded } from './import-embedded.ts';
 import { configureGateway, __setEmbedTransportForTests } from 'gbrain/ai/gateway';
 import { runThink, type ThinkLLMClient, type ThinkResult } from 'gbrain/think';
 import { ProbeAccounting } from './probe-accounting.ts';
@@ -111,6 +111,7 @@ import {
   type FailureOrigin,
 } from './receipt.ts';
 import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
+import { UNTRUSTED_DATA_INSTRUCTION, fenceUntrusted, newJudgeNonce } from './judge.ts';
 
 // ─── Fixture types ──────────────────────────────────────────────────
 
@@ -200,6 +201,8 @@ const JUDGE_MODEL = process.env.CAT14_JUDGE_MODEL ?? 'claude-haiku-4-5-20251001'
 export const THINK_TEMPERATURE = 0;
 export const JUDGE_TEMPERATURE = 0;
 const JUDGE_MAX_TOKENS = 700;
+/** Blind A/B judge prompt version. 2026-09-28: answers escaped and nonce-fenced, untrusted-data instruction (audit A-20). */
+export const JUDGE_PROMPT_VERSION = 'cat14-ab-2026-09-28-untrusted-v1';
 
 // ─── Paths ──────────────────────────────────────────────────────────
 
@@ -273,8 +276,8 @@ export function ensureStubbedGateway(): void {
 
 // ─── Brain seeding ──────────────────────────────────────────────────
 // WS5: search mode + reranker pinned explicitly BEFORE ingest — never rely
-// on gbrain defaults ('balanced' silently enables the zerank-2 reranker when
-// ZEROENTROPY_API_KEY is set). Echoed into the receipt's resolved_config.
+// on gbrain defaults ('balanced' can enable reranking with an ambient
+// provider key). Echoed into the receipt's resolved_config.
 
 const SEARCH_CONFIG: Record<string, string> = {
   'search.mode': 'balanced',
@@ -319,7 +322,7 @@ async function seedEngine(probe: Probe): Promise<{ engine: PGLiteEngine; profile
 
     for (let i = 0; i < probe.brain_setup.resolved_takes.length; i++) {
       const take = probe.brain_setup.resolved_takes[i]!;
-      await importFromContent(engine, `cat14/${probe.id}/take-${i + 1}`, takePageContent(probe, take));
+      await importFromContentEmbedded(engine, `cat14/${probe.id}/take-${i + 1}`, takePageContent(probe, take));
     }
   } finally {
     console.log = origLog;
@@ -532,6 +535,7 @@ export function buildJudgePrompts(
   probe: Probe,
   answerA: string,
   answerB: string,
+  nonce: string = newJudgeNonce(),
 ): { system: string; user: string } {
   const prof = probe.brain_setup.calibration_profile;
   const system = `You are a blind A/B judge for answer quality. You will see a question a user asked their personal knowledge assistant, the user's calibration profile (bias patterns extracted from their resolved prediction track record), and two candidate answers labeled Answer A and Answer B. You do NOT know which system produced which answer; evaluate each answer on its own merits, then compare.
@@ -543,7 +547,9 @@ Definitions:
 - "conversational voice": friend-not-doctor language throughout.
 - "clinical phrasing": raw statistics jargon aimed at the user (e.g. quoting a Brier score without translation).
 
-Score conservatively. Force-fitting an irrelevant bias is worse than missing a relevant one. Call the answers meaningfully different only when the substance of the recommendation differs, not mere wording. Return your evaluation via the judge_ab tool only.`;
+Score conservatively. Force-fitting an irrelevant bias is worse than missing a relevant one. Call the answers meaningfully different only when the substance of the recommendation differs, not mere wording. Return your evaluation via the judge_ab tool only.
+
+${UNTRUSTED_DATA_INSTRUCTION}`;
   const user = `Question: ${probe.question}
 
 Calibration profile:
@@ -551,10 +557,10 @@ Calibration profile:
 - Pattern statements: ${prof.pattern_statements.join(' | ') || '(none)'}
 
 [ANSWER A]
-${answerA}
+${fenceUntrusted('untrusted_answer_a', answerA, nonce)}
 
 [ANSWER B]
-${answerB}
+${fenceUntrusted('untrusted_answer_b', answerB, nonce)}
 
 Evaluate via the judge_ab tool.`;
   return { system, user };
@@ -1053,6 +1059,7 @@ function resolvedConfig(hermetic: boolean, filter: string | null): Record<string
     think_temperature: THINK_TEMPERATURE,
     judge_model: hermetic ? 'heuristic-string-judge' : JUDGE_MODEL,
     judge_temperature: JUDGE_TEMPERATURE,
+    judge_prompt_version: hermetic ? null : JUDGE_PROMPT_VERSION,
     judge_orders: hermetic ? 1 : 2,
     embedding_transport: 'stubbed deterministic hash-embed (__setEmbedTransportForTests)',
     pipeline: "gbrain runThink ('gbrain/think' subpath export), client-injected LLM",

@@ -58,7 +58,7 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import type Anthropic from '@anthropic-ai/sdk';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
-import { importFromContent } from 'gbrain/import-file';
+import { importFromContentEmbedded } from './import-embedded.ts';
 import { configureGateway, __setEmbedTransportForTests, type ChatResult, type ChatOpts } from 'gbrain/ai/gateway';
 import {
   runBrainstorm,
@@ -71,7 +71,7 @@ import { makeHashEmbedTransport } from './cat18-embedding-providers.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
-import { scoreAnswer, type JudgeEvidence, type RubricCriterion } from './judge.ts';
+import { JUDGE_PROMPT_VERSION, scoreAnswer, type JudgeEvidence, type RubricCriterion } from './judge.ts';
 
 export const CAT20_CATEGORY = 'cat20-brainstorm';
 
@@ -93,8 +93,8 @@ export const EMBED_MODEL = 'openai:text-embedding-3-large';
 export const EMBED_DIM = 1536;
 
 /** WS5: pin the retrieval knobs runBrainstorm's close-set hybridSearch reads.
- *  gbrain's default 'balanced' mode silently enables the zerank-2 reranker
- *  when ZEROENTROPY_API_KEY is set — never rely on defaults. */
+ *  gbrain's default 'balanced' mode can enable reranking with an ambient
+ *  provider key — never rely on defaults. */
 export const PINNED_CONFIG: Record<string, string> = {
   'search.mode': 'balanced',
   'search.reranker.enabled': 'false',
@@ -247,7 +247,7 @@ const NOVELTY_USEFULNESS_RUBRIC: RubricCriterion[] = [
   { id: 'usefulness', criterion: 'Ideas are actionable for a founder/operator: concrete next steps grounded in the cited pages, not generic platitudes.', weight: 1 },
 ];
 
-async function judgeNoveltyUsefulness(
+export async function judgeNoveltyUsefulness(
   question: string,
   qid: string,
   ideas: BrainstormIdea[],
@@ -362,7 +362,7 @@ export async function runCat20(options: Cat20Options = {}): Promise<Cat20RunResu
     const origLog = console.log;
     console.log = () => {};
     try {
-      for (const p of pages) await importFromContent(engine, p.slug, p.body, { noEmbed: false });
+      for (const p of pages) await importFromContentEmbedded(engine, p.slug, p.body, { noEmbed: false });
     } finally {
       console.log = origLog;
     }
@@ -494,7 +494,7 @@ export async function runCat20(options: Cat20Options = {}): Promise<Cat20RunResu
       min_grounding: minGrounding,
       min_ideas: minIdeas,
       live_judge: liveJudge,
-      ...(liveJudge ? { min_judge_score: minJudgeScore } : {}),
+      ...(liveJudge ? { min_judge_score: minJudgeScore, judge_prompt_version: JUDGE_PROMPT_VERSION } : {}),
     },
     ...(liveJudge ? { judge: { model: 'claude-haiku-4-5-20251001', temperature: 0, rubric_version: 'cat20-novelty-usefulness-v1' } } : {}),
     finished_at: new Date().toISOString(),

@@ -21,15 +21,15 @@ test.each([['cat36', 'isolated-provider-cap', 'openrouter:qwen/qwen3.7-flash'], 
     const { regressionPackageHash } = await import('./eval/runner/situation-recall-provenance.ts');
     const { developmentChatOptions } = await import('./eval/runner/situation-recall-development.ts');
     const OPENROUTER_DEVELOPMENT_CHAT_OPTIONS = developmentChatOptions(${JSON.stringify(selectedModel)});
-    const { canonicalLookup } = await import('./node_modules/gbrain/src/core/model-pricing.ts');
-    const { lookupEmbeddingPrice } = await import('./node_modules/gbrain/src/core/embedding-pricing.ts');
+    const { canonicalLookup } = await import('./node_modules/gbrain-cues/src/core/model-pricing.ts');
+    const { lookupEmbeddingPrice } = await import('./node_modules/gbrain-cues/src/core/embedding-pricing.ts');
     const embedding = 'openrouter:openai/text-embedding-3-large';
     const generation = ${JSON.stringify(selectedModel)};
     const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
     const profile = { ...offlineCat36Profile(), id: 'synthetic-openrouter-development', mode: 'live', arm: 'C1',
       embedding_model: embedding, generation_model: generation, embedding_dimensions: 1536,
       provider_chat_options: structuredClone(OPENROUTER_DEVELOPMENT_CHAT_OPTIONS),
-      expected_product_sha: pkg.dependencies.gbrain.split('#')[1], expected_package_sha256: regressionPackageHash('node_modules/gbrain'),
+      expected_product_sha: pkg.dependencies['gbrain-cues'].split('#')[1], expected_package_sha256: regressionPackageHash('node_modules/gbrain-cues'),
       cue_min_similarity: 0.5, build_max_usd: 10,
       provider_budget: { kind: ${JSON.stringify(admission)}, approval_id: 'synthetic-not-spend-authorization', max_usd: 10,
         ...(${JSON.stringify(admission)} === 'operator-authorized-development' ? { max_requests: 1000, max_request_bytes: 65536, max_output_tokens: 1200, build_timeout_ms: 60000, cell_timeout_ms: 120000 } : {}) } };

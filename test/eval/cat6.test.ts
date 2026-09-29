@@ -33,6 +33,7 @@ import {
   main,
   makeCorpusResolver,
   noCodeStripExtraction,
+  runGazetteerArm,
   runNegativeControls,
   scoreExtraction,
   scoreVariant,
@@ -463,4 +464,30 @@ describe('main()', () => {
     expect(receipt.run_status).toBe('skipped');
     expect(receipt.skip_reason).toContain('0 variants');
   });
+});
+
+// ─── Coverage audit F3: gazetteer arm scores prose_only_mention ───────
+
+describe('gazetteer arm (by-mention pass)', () => {
+  test('bare prose names link through the by-mention pass, not the ordinary links pass', async () => {
+    const arm = await runGazetteerArm(TINY_CORPUS, { perKind: 3 });
+    expect(arm.variants).toBe(3);
+    expect(arm.matched).toBe(3);
+    expect(arm.recall).toBe(1);
+    expect(arm.type_match_rate).toBe(1);
+    expect(arm.default_pass_recall).toBe(0);
+    expect(arm.gates.every(g => g.pass)).toBe(true);
+  }, 120_000);
+
+  test('the arm can fail: names the gazetteer drops (under 4 characters) score 0 and fail the gates', async () => {
+    const shortNames: BasePage[] = [
+      { slug: 'people/al', type: 'person', title: 'Al', content: 'Al works with [Bo](people/bo).' },
+      { slug: 'people/bo', type: 'person', title: 'Bo', content: 'Bo works with [Al](people/al).' },
+    ];
+    const arm = await runGazetteerArm(shortNames, { perKind: 2 });
+    expect(arm.variants).toBe(2);
+    expect(arm.matched).toBe(0);
+    expect(arm.recall).toBe(0);
+    expect(arm.gates.find(g => g.gate === 'prose_only_mention_gazetteer_recall_min')?.pass).toBe(false);
+  }, 120_000);
 });

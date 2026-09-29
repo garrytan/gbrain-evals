@@ -27,6 +27,7 @@ import {
   extractSlugs,
   classifyAgentError,
   setTeardownDisconnectBoundMs,
+  AGENT_TEMPERATURE,
   type AgentAdapterState,
 } from '../../eval/runner/adapters/claude-sonnet-with-tools.ts';
 import type { Page } from '../../eval/runner/types.ts';
@@ -107,13 +108,13 @@ describe('ClaudeSonnetWithToolsAdapter — Adapter interface', () => {
     const page = await state.engine.getPage('people/amara');
     expect(page?.title).toBe('Amara Okafor');
     await adapter.teardown(state); // restored at the v0.47.8.0 pin: the v0.46.3 disconnect() sync-spin under `bun test` no longer reproduces
-  });
+  }, 30_000); // PGLite schema setup; the 5s default is exceeded under four concurrent shards
 
   test('init() pins search mode + reranker BEFORE ingest and records them (WS5)', async () => {
     const adapter = new ClaudeSonnetWithToolsAdapter();
     const state = (await adapter.init(SAMPLE_PAGES, { name: 'test' })) as AgentAdapterState;
     // Never rely on gbrain defaults: 'balanced' silently enables the
-    // zerank-2 reranker when ZEROENTROPY_API_KEY is set.
+    // reranker when an ambient provider key is set.
     expect(state.resolved_search_config).toEqual({
       'search.mode': 'balanced',
       'search.reranker.enabled': 'false',
@@ -546,5 +547,22 @@ describe('ClaudeSonnetWithToolsAdapter — teardown bounded disconnect', () => {
       threw = true;
     }
     expect(threw).toBe(false);
+  });
+});
+
+describe('runAgentLoop temperature', () => {
+  test('every agent model call is sent at temperature 0', async () => {
+    const adapter = new ClaudeSonnetWithToolsAdapter();
+    const state = (await adapter.init(SAMPLE_PAGES, { name: 'test' })) as AgentAdapterState;
+    const seen: Array<Record<string, unknown>> = [];
+    const responses = [toolResp('get_page', { slug: 'people/amara' }), textResp('Amara is a Partner. Source: people/amara.')];
+    const client = {
+      messages: { create: async (params: Record<string, unknown>) => { seen.push(params); return responses[seen.length - 1]; } },
+    } as unknown as Anthropic;
+    await runAgentLoop('q-temp', 'Who is Amara?', state, { client, maxRetries: 1 });
+    expect(seen.length).toBe(2);
+    expect(seen.every(p => p.temperature === 0)).toBe(true);
+    expect(AGENT_TEMPERATURE).toBe(0);
+    await adapter.teardown(state);
   });
 });

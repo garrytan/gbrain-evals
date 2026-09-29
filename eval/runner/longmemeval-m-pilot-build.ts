@@ -7,6 +7,7 @@ import { cat36SnapshotHash } from './cat36-snapshot.ts';
 import { regressionPackageHash } from './situation-recall-provenance.ts';
 import { renderSession, PINNED_SEARCH_CONFIG } from './longmemeval.ts';
 import { developmentChatOptions } from './situation-recall-development.ts';
+import { opaqueSessionId } from './longmemeval-session-ids.ts';
 
 const hash = (data: Buffer | string) => createHash('sha256').update(data).digest('hex');
 
@@ -18,8 +19,8 @@ export interface PilotSource {
 }
 
 export interface PilotIndexManifest {
-  schema_version: 2;
-  evidence_protocol: 'indexed-projection-v2';
+  schema_version: 3;
+  evidence_protocol: 'indexed-projection-v3';
   source_sha256: string;
   product_sha: string;
   product_package_sha256: string;
@@ -61,7 +62,7 @@ const BASELINE_604_PACKAGE_SHA256 = '78bbe78af2fac33a278740e84877e9c6c9f7a0f6a16
 export const PILOT_SONNET_MODEL = 'openrouter:anthropic/claude-sonnet-4.6';
 const RESUMABLE_CUE_FAILURES = new Set(['invalid_output', 'unsupported_cue', 'unsupported_relation', 'incomplete_output']);
 
-export async function configurePilotC1Gateway(gateway: Pick<typeof import('gbrain/ai/gateway'),
+export async function configurePilotC1Gateway(gateway: Pick<typeof import('gbrain-cues/ai/gateway'),
   'configureGateway' | 'requireConfig' | 'getChatModel'>, productRoot: string,
   preparedConfigPath: string, env: NodeJS.ProcessEnv) {
   const productConfig = await import(pathToFileURL(join(productRoot, 'src/core/config.ts')).href);
@@ -213,11 +214,13 @@ export async function buildPilotIndex(options: PilotBuildOptions, admission?: {
           || typeof turn.content !== 'string' || Object.keys(turn).sort().join(',') !== 'content,role')) {
         throw new Error('invalid source-only occurrence');
       }
-      const slug = `chat/${source.session_id}-occ-${index}`.toLowerCase();
-      const text = renderSession(source);
+      const opaque = opaqueSessionId(options.expectedSourceSha256, source.session_id);
+      const slug = `chat/${opaque}-occ-${index}`;
+      const text = renderSession({ ...source, session_id: opaque });
       const canonical = text.replace(/\r\n?/g, '\n').normalize('NFC');
       const result = await importModule.importFromContent(engine, slug, text, { noEmbed: options.mode === 'offline' });
       if (result.status === 'error') throw new Error(`source import rejected occurrence ${index}`);
+      if (result.embedding_deferred) throw new Error(`source embedding failed for occurrence ${index}`);
       const chunks = await engine.getChunks(slug);
       const mapped = chunks.map((chunk: { id: number; chunk_text: string; chunk_source: string }) => {
         const chunkText = chunk.chunk_text.replace(/\r\n?/g, '\n').normalize('NFC');
@@ -240,7 +243,7 @@ export async function buildPilotIndex(options: PilotBuildOptions, admission?: {
   } finally {
     await engine.disconnect();
   }
-  const manifest: PilotIndexManifest = { schema_version: 2, evidence_protocol: 'indexed-projection-v2', source_sha256: options.expectedSourceSha256,
+  const manifest: PilotIndexManifest = { schema_version: 3, evidence_protocol: 'indexed-projection-v3', source_sha256: options.expectedSourceSha256,
     product_sha: options.expectedProductSha, product_package_sha256: options.expectedPackageSha256, product_version: product.version,
     embedding_model: options.embeddingModel, embedding_dimensions: options.embeddingDimensions,
     search_config: { ...PINNED_SEARCH_CONFIG }, cue_config: cueMode === 'on'

@@ -1,19 +1,16 @@
 /**
  * BrainBench Cat 18 — embedding-provider A/B on the synthetic-v1 corpus.
  *
- * Headline question: how do OpenAI, Voyage, and ZeroEntropy EMBEDDERS rank
- * against the same query set on the same corpus? Backs the v0.36.2.0 README
- * claim that ZeroEntropy beats OpenAI/Voyage on price + speed.
+ * Headline question: how do OpenAI and Voyage EMBEDDERS rank
+ * against the same query set on the same corpus?
  *
  * ── Feature boundary ─────────────────────────────────────────────────
  * UNDER TEST: gbrain's embedding pipeline end to end — configureGateway per
  * provider, importFromContent inline embeds, and hybridSearch's keyword +
  * vector RRF retrieval. Search mode is pinned to 'balanced' and the reranker
  * is pinned OFF in EVERY cell (WS5): cells differ ONLY by embedder. The
- * previous version of this runner relied on gbrain's default mode, which
- * silently enabled the zerank-2 reranker whenever ZEROENTROPY_API_KEY was
- * set — the "embedder A/B" was actually embedder+ZE-reranker (audit
- * cats18-21-03).
+ * previous version relied on the default mode and could silently enable
+ * reranking with an ambient provider key (audit cats18-21-03).
  * LEGITIMATELY SEEDED/STUBBED: the synthetic-v1 corpus + auto-derived query
  * set (committed fixtures), and — under --stub-embed only — the embed HTTP
  * transport (deterministic feature-hash vectors via the gateway test seam).
@@ -43,7 +40,7 @@
  *
  * Run:
  *   bun eval/runner/cat18-embedding-providers.ts
- *   CAT18_PROVIDERS=openai,zeroentropy bun eval/runner/cat18-embedding-providers.ts
+ *   CAT18_PROVIDERS=openai,voyage bun eval/runner/cat18-embedding-providers.ts
  *   bun eval/runner/cat18-embedding-providers.ts --stub-embed   # hermetic, no keys
  */
 
@@ -51,7 +48,7 @@ import { writeFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
-import { importFromContent } from 'gbrain/import-file';
+import { importFromContentEmbedded } from './import-embedded.ts';
 import {
   configureGateway,
   getEmbeddingDimensions,
@@ -62,7 +59,7 @@ import type { SearchResult, HybridSearchMeta } from 'gbrain/types';
 import { loadSyntheticV1, syntheticQueries, type SyntheticPage, type SyntheticQuery } from './synthetic-corpus-loader.ts';
 import { uniqueInOrder, recallAtK, reciprocalRank, percentile } from './metrics.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
-import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt, type ProbeError, type FailureOrigin } from './receipt.ts';
+import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, gateFromEnv, type Receipt, type ProbeError, type FailureOrigin } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 
 export const CAT18_CATEGORY = 'cat18-embedding-providers';
@@ -86,8 +83,8 @@ export const DEFAULT_MIN_RECALL = 0.2;
 /**
  * WS5 pin — applied via engine.setConfig BEFORE ingest in every cell and
  * echoed into the receipt's resolved_config. Never rely on mode defaults:
- * gbrain's default 'balanced' bundle enables the zerank-2 reranker when
- * ZEROENTROPY_API_KEY is set. expansion/autocut off for determinism (no LLM
+ * gbrain's default 'balanced' bundle can enable reranking with an ambient
+ * provider key. expansion/autocut off for determinism (no LLM
  * in the loop, no score-cliff trimming confounding recall); tokenBudget
  * effectively unbounded so payload packing never drops ranked results.
  */
@@ -102,16 +99,14 @@ export const PINNED_CONFIG: Record<string, string> = {
 const PROVIDER_ENV_KEY: Record<string, string> = {
   openai: 'OPENAI_API_KEY',
   voyage: 'VOYAGE_API_KEY',
-  zeroentropy: 'ZEROENTROPY_API_KEY',
 };
 
-export const PROVIDERS_DEFAULT = ['openai', 'voyage', 'zeroentropy'];
+export const PROVIDERS_DEFAULT = ['openai', 'voyage'];
 
 export function providerConfig(name: string): { embedder: string; dim: number } {
   switch (name) {
     case 'openai': return { embedder: 'openai:text-embedding-3-large', dim: 1536 };
     case 'voyage': return { embedder: 'voyage:voyage-3-large', dim: 1024 };
-    case 'zeroentropy': return { embedder: 'zeroentropyai:zembed-1', dim: 1280 };
     default: throw new Error(`unknown provider: ${name}`);
   }
 }
@@ -336,7 +331,7 @@ export async function runProviderCell(
     try {
       for (const p of pages) {
         try {
-          await importFromContent(engine, p.slug, p.body, { noEmbed: false });
+          await importFromContentEmbedded(engine, p.slug, p.body, { noEmbed: false });
           cell.ingest_ok++;
         } catch (e: any) {
           cell.ingest_fail++;
@@ -463,7 +458,8 @@ export async function runProviderCell(
     if (cell.query_errors > 0 && cell.invalid_reasons.length === 0) {
       cell.invalid_reasons.push(`${cell.query_errors} query error(s): ${cell.degraded_queries} degraded-to-keyword, rest thrown`);
     }
-    cell.valid = cell.query_errors === 0 && cell.queries_scored === queries.length;
+    // A cell with zero queries measured nothing (audit A-24: CAT18_LIMIT_PAGES=30 left every cell valid with null recall).
+    cell.valid = queries.length > 0 && cell.query_errors === 0 && cell.queries_scored === queries.length;
     return cell;
   } finally {
     await engine.disconnect();
@@ -533,7 +529,7 @@ function isolateGbrainHome(prefix: string): string {
   mkdirSync(home, { recursive: true });
   // The embedding-column registry reads file-plane config FIRST and falls
   // back to gateway state; without isolation the user's ~/.gbrain pin would
-  // override the per-cell gateway setup and mis-resolve Voyage/ZE columns.
+  // override the per-cell gateway setup and mis-resolve embedding columns.
   process.env.GBRAIN_HOME = home;
   return home;
 }
@@ -544,7 +540,7 @@ export function optionsFromEnv(argv: string[] = process.argv.slice(2)): Cat18Opt
     stubEmbed: argv.includes('--stub-embed') || process.env.CAT18_STUB_EMBED === '1',
     allowSkip: argv.includes('--allow-skip') || process.env.BRAINBENCH_ALLOW_SKIP === '1',
     limitPages: process.env.CAT18_LIMIT_PAGES ? parseInt(process.env.CAT18_LIMIT_PAGES, 10) : undefined,
-    minRecall: process.env.CAT18_MIN_RECALL ? parseFloat(process.env.CAT18_MIN_RECALL) : undefined,
+    minRecall: gateFromEnv('CAT18_MIN_RECALL'),
   };
 }
 
@@ -650,6 +646,7 @@ export async function runCat18(options: Cat18Options = {}): Promise<Cat18RunResu
   const publishable = summary.publishable
     && !options.stubEmbed
     && !options.limitPages
+    && minRecall === DEFAULT_MIN_RECALL
     && validCells.length === providers.length;
 
   const resolvedConfig: Record<string, unknown> = {

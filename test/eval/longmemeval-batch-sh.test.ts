@@ -14,7 +14,10 @@
  *   - the completion target derives from the dataset (with --limit and
  *     --stratify applied);
  *   - a zero-progress batch aborts non-zero instead of looping;
- *   - a missing dataset fails loudly.
+ *   - a missing dataset fails loudly;
+ *   - completion counts only planned (adapter, question, run_config_hash)
+ *     rows with exact equality, a stale or foreign NDJSON is refused, and the
+ *     aggregator gets --expect-rows (PD-03).
  */
 
 import { describe, test, expect, beforeAll, afterAll } from 'bun:test';
@@ -46,7 +49,9 @@ beforeAll(() => {
     { question_id: 'q4', question_type: 'multi-session' },
   ]));
 
-  // Stub runner: records argv, then appends one completed NDJSON row per
+  // Stub runner: records argv. With --print-plan it prints the plan the real
+  // runner prints (hash per adapter = "hash-<adapter>" unless STUB_HASH is
+  // set); otherwise it appends one completed NDJSON row per
   // (adapter × question) pair, honoring --limit the way the real runner does.
   stubRunner = join(sandbox, 'stub-runner.ts');
   writeFileSync(stubRunner, `
@@ -54,13 +59,20 @@ beforeAll(() => {
     const args = process.argv.slice(2);
     const arg = (n: string) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : null; };
     appendFileSync(${JSON.stringify(join(recordDir, 'runner.argv'))}, args.join(' ') + '\\n');
-    if (process.env.STUB_NO_PROGRESS === '1') process.exit(0);
     const qs = JSON.parse(readFileSync(arg('--path')!, 'utf8'));
     const limit = arg('--limit') ? Number(arg('--limit')) : qs.length;
     const adapters = (arg('--adapters') ?? 'keyword').split(',');
+    const hash = (a: string) => process.env.STUB_HASH ?? 'hash-' + a;
+    if (args.includes('--print-plan')) {
+      console.log('gbrain chatter on stdout before the plan');
+      console.log(JSON.stringify({ run_config_hashes: Object.fromEntries(adapters.map(a => [a, hash(a)])),
+        question_ids: qs.slice(0, limit).map((q: { question_id: string }) => q.question_id), adapters_skipped: [] }));
+      process.exit(0);
+    }
+    if (process.env.STUB_NO_PROGRESS === '1') process.exit(0);
     for (const a of adapters) {
       for (const q of qs.slice(0, limit)) {
-        appendFileSync(arg('--ndjson')!, JSON.stringify({ adapter: a, question_id: q.question_id }) + '\\n');
+        appendFileSync(arg('--ndjson')!, JSON.stringify({ adapter: a, question_id: q.question_id, run_config_hash: hash(a) }) + '\\n');
       }
     }
   `);
@@ -106,15 +118,17 @@ describe('longmemeval-batch.sh (longmemeval-10)', () => {
     expect(res.status).toBe(0);
     // Completion target = 4 questions × 1 adapter, derived from the file.
     expect(res.stdout).toContain('expected=4 questions × 1 adapters = 4 pairs');
-    const argv = readFileSync(join(recordDir, 'runner.argv'), 'utf8');
+    const invocations = readFileSync(join(recordDir, 'runner.argv'), 'utf8').trim().split('\n');
+    expect(invocations[0]).toContain('--print-plan');
+    const argv = invocations[1];
     // The user's dataset choice reaches the worker...
     expect(argv).toContain('--dataset oracle');
     // ...exactly once — no wrapper-default duplicate ahead of it for the
     // runner's first-occurrence arg() to pick instead.
     expect(argv.split('--dataset').length - 1).toBe(1);
     expect(argv).not.toContain('--dataset s');
-    // Completion detected → aggregator ran on the ndjson.
-    expect(readFileSync(join(recordDir, 'aggregator.argv'), 'utf8')).toContain('run1.ndjson');
+    // Completion detected → aggregator ran on the ndjson with the exact row count.
+    expect(readFileSync(join(recordDir, 'aggregator.argv'), 'utf8')).toContain('run1.ndjson --expect-rows 4');
   }, 120_000);
 
   test('--limit shrinks the completion target instead of stranding it at the full count', () => {
@@ -159,10 +173,63 @@ describe('longmemeval-batch.sh (longmemeval-10)', () => {
     expect(existsSync(join(recordDir, 'aggregator.argv'))).toBe(false);
   }, 120_000);
 
+  test('rows from another adapter never satisfy the requested adapter (PD-03)', () => {
+    rmSync(join(recordDir, 'aggregator.argv'), { force: true });
+    const ndjson = join(sandbox, 'run-other-adapter.ndjson');
+    writeFileSync(ndjson, ['q1', 'q2', 'q3', 'q4'].map(q => JSON.stringify({ adapter: 'hybrid', question_id: q, run_config_hash: 'hash-hybrid' })).join('\n') + '\n');
+    const res = runBatch(['--path', datasetPath, '--adapters', 'hybrid+rerank', '--workers', '1', '--budget', '5', '--ndjson', ndjson]);
+    expect(res.status).not.toBe(0);
+    expect(res.stdout).not.toContain('already complete');
+    expect(res.stderr).toContain('4 row(s) outside this run');
+    expect(existsSync(join(recordDir, 'aggregator.argv'))).toBe(false);
+  }, 120_000);
+
+  test('a complete stream from an earlier configuration is refused, not re-published (PD-03)', () => {
+    rmSync(join(recordDir, 'aggregator.argv'), { force: true });
+    const ndjson = join(sandbox, 'run-stale.ndjson');
+    expect(runBatch(['--path', datasetPath, '--adapters', 'keyword', '--workers', '1', '--budget', '5', '--ndjson', ndjson], { STUB_HASH: 'old-config' }).status).toBe(0);
+    rmSync(join(recordDir, 'aggregator.argv'), { force: true });
+    const stale = runBatch(['--path', datasetPath, '--adapters', 'keyword', '--workers', '1', '--budget', '5', '--ndjson', ndjson], { STUB_HASH: 'new-config' });
+    expect(stale.status).not.toBe(0);
+    expect(stale.stderr).toContain('outside this run');
+    expect(existsSync(join(recordDir, 'aggregator.argv'))).toBe(false);
+    const again = runBatch(['--path', datasetPath, '--adapters', 'keyword', '--workers', '1', '--budget', '5', '--ndjson', ndjson], { STUB_HASH: 'old-config' });
+    expect(again.status).toBe(0);
+    expect(again.stdout).toContain('All 4 pairs already complete.');
+  }, 120_000);
+
+  test('--expected-questions must agree with the runner plan', () => {
+    const res = runBatch(['--path', datasetPath, '--adapters', 'keyword', '--workers', '1', '--expected-questions', '5', '--ndjson', join(sandbox, 'run-expect.ndjson')]);
+    expect(res.status).not.toBe(0);
+    expect(res.stderr).toContain('runner plans 4 questions');
+  }, 120_000);
+
   test('missing dataset fails loudly with the download hint', () => {
     const res = runBatch(['--dataset', 'nonexistent-split']);
     expect(res.status).not.toBe(0);
     expect(res.stderr).toContain('dataset not found');
     expect(res.stderr).toContain('longmemeval_nonexistent-split.json');
   }, 120_000);
+
+  test('workers share ONE budget run: the cap covers all workers together', () => {
+    rmSync(join(recordDir, 'runner.argv'), { force: true });
+    const ndjson = join(sandbox, 'run-shared-budget.ndjson');
+    const ledger = join(sandbox, 'shared-ledger.json');
+    const res = runBatch(['--path', datasetPath, '--adapters', 'keyword', '--workers', '3', '--budget', '5', '--budget-usd', '2', '--budget-ledger', ledger, '--ndjson', ndjson]);
+    expect(res.status).toBe(0);
+    const workers = readFileSync(join(recordDir, 'runner.argv'), 'utf8').trim().split('\n').filter(l => !l.includes('--print-plan'));
+    expect(workers.length).toBe(3);
+    const ids = workers.map(l => /--budget-run-id (\S+)/.exec(l)?.[1]);
+    expect(new Set(ids).size).toBe(1);
+    expect(ids[0]).toMatch(/^longmemeval-batch-/);
+    for (const l of workers) {
+      expect(l).not.toContain('--budget-usd');
+      expect(l).toContain(`--budget-ledger ${ledger}`);
+    }
+    const file = JSON.parse(readFileSync(ledger, 'utf8'));
+    expect(file.runs.length).toBe(1);
+    expect(file.runs[0]).toMatchObject({ run_id: ids[0], budget_usd: 2 });
+    expect(file.runs[0].finished_at).not.toBeNull();
+  }, 120_000);
 });
+

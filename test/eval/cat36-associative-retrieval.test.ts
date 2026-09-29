@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { cat36Hash, canonicalText, constructionSources, loadCat36Corpus, loadCat36Counterfactual, validateCat36Corpus, type Cat36Source, type Cat36Span, type Cat36Probe } from '../../eval/runner/cat36-corpus.ts';
 import { alignSourceChunks, scoreCat36Probe, type Cat36Chunk, type Cat36CueObservation } from '../../eval/runner/cat36-scorer.ts';
-import { Cat36Failure, cueFamilies, offlineCat36Profile, runCat36, validateCat36Profile, type Cat36Runtime, type Cat36Profile } from '../../eval/runner/cat36-associative-retrieval.ts';
+import { Cat36Failure, cat36PlumbingGate, cueFamilies, offlineCat36Profile, runCat36, validateCat36Profile, type Cat36Runtime, type Cat36Profile } from '../../eval/runner/cat36-associative-retrieval.ts';
 import { assertCat36ProviderReadiness, cat36EmbeddingCacheKey, cat36RuntimeSourceId, mapReturnedChunk, requireCueSupport, validateCat36RerankerModel } from '../../eval/runner/cat36-production.ts';
 import { loadReceipt } from '../../eval/runner/receipt.ts';
 import { executedCueLookup } from '../../eval/runner/situation-recall-observations.ts';
@@ -209,6 +209,28 @@ describe('Cat36 receipts and actual arm execution', () => {
       expect(receipt.data?.summary).toBeDefined();
     } finally { rmSync(outputDir, { recursive: true, force: true }); }
   });
+  test('PC-05: offline smoke fails when search crashes on every probe or returns nothing', async () => {
+    const runtimes = [
+      fakeRuntime({ async search() { throw new TypeError('search is not a function'); } }),
+      fakeRuntime({ async search() { return { chunks: [], cue: off, failures: [], metadata: null }; } }),
+    ];
+    for (const runtime of runtimes) {
+      const outputDir = mkdtempSync(join(tmpdir(), 'cat36-allfail-'));
+      try {
+        const r = await runCat36({ corpusDir: dir, outputDir, profile: offlineCat36Profile(), smoke: true, runtime });
+        expect(r.run_status).toBe('completed');
+        expect(r.verdict).toBe('fail');
+        expect((r.data?.plumbing_gate as { pass: boolean }).pass).toBe(false);
+      } finally { rmSync(outputDir, { recursive: true, force: true }); }
+    }
+  });
+  test('PC-05: plumbing gate needs zero SUT errors and some evidence in the top five', () => {
+    const rollup = (mean: number | null) => ({ all: { all_evidence_in_top5_chunks: { mean, n: 4 } } });
+    expect(cat36PlumbingGate([], rollup(0.25)).pass).toBe(true);
+    expect(cat36PlumbingGate([], rollup(0)).pass).toBe(false);
+    expect(cat36PlumbingGate([], rollup(null)).pass).toBe(false);
+    expect(cat36PlumbingGate([{ probe_id: 'p', origin: 'sut', message: 'x' }], rollup(0.5)).pass).toBe(false);
+  });
   test('source/mode mismatch and incomplete build block all queries', async () => {
     for (const field of [{ complete: false }, { source_hash: 'wrong' }, { mode: 'live' as const }]) {
       const outputDir = mkdtempSync(join(tmpdir(), 'cat36-blocked-'));
@@ -309,7 +331,7 @@ describe('Cat36 receipts and actual arm execution', () => {
     await expect(validateCat36RerankerModel(p)).resolves.toBeUndefined();
   });
   test('missing candidate API is detected without making provider calls', async () => {
-    const pkg = JSON.parse(readFileSync(resolve('node_modules/gbrain/package.json'), 'utf8'));
+    const pkg = JSON.parse(readFileSync(resolve('node_modules/gbrain-cues/package.json'), 'utf8'));
     if (!pkg.exports['./memory-cues']) await expect(requireCueSupport()).rejects.toThrow('public feature module unavailable');
     else expect(await requireCueSupport()).toHaveProperty('getMemoryCueStatus');
   });

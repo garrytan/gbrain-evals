@@ -10,7 +10,8 @@ import { describe, test, expect, beforeAll, afterAll } from 'bun:test';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import { checkSyntheticV1, checkQrels, checkBaseline, runAllChecks } from '../../eval/runner/validate-data.ts';
+import { checkSyntheticV1, checkQrels, checkBaseline, checkAmaraLife, checkGold, runAllChecks } from '../../eval/runner/validate-data.ts';
+import { canonicalJson, sha256 } from '../../eval/generators/amara-life-gen.ts';
 
 let dir: string;
 
@@ -95,10 +96,47 @@ describe('checkBaseline', () => {
   });
 });
 
+describe('checkAmaraLife hash scheme (audit C10)', () => {
+  function lifeCorpus(name: string, records: Array<Record<string, unknown>>, manifestHash: (r: Record<string, unknown>) => string): string {
+    const root = join(dir, name);
+    mkdirSync(join(root, 'inbox'), { recursive: true });
+    writeFileSync(join(root, 'inbox/emails.jsonl'), records.map(r => JSON.stringify(r)).join('\n') + '\n');
+    writeFileSync(join(root, 'corpus-manifest.json'), JSON.stringify({ items: records.map(r => ({ slug: r.slug, path: 'inbox/emails.jsonl', content_sha256: manifestHash(r) })) }));
+    return root;
+  }
+  const records = [{ slug: 'emails/em-0000', body_text: 'hello' }, { slug: 'emails/em-0001', body_text: 'world' }];
+
+  test('per-record hashes of a container file pass', () => {
+    expect(checkAmaraLife(lifeCorpus('life-ok', records, r => sha256(canonicalJson(r))))).toEqual({ check: 'amara-life-v1', failures: [], warnings: [] });
+  });
+
+  test('an edited record FAILS instead of warning', () => {
+    const root = lifeCorpus('life-edited', records, r => sha256(canonicalJson(r)));
+    writeFileSync(join(root, 'inbox/emails.jsonl'), JSON.stringify(records[0]) + '\n' + JSON.stringify({ ...records[1], body_text: 'edited' }) + '\n');
+    const r = checkAmaraLife(root);
+    expect(r.failures).toEqual(['manifest item emails/em-0001: content_sha256 does not match its record in inbox/emails.jsonl']);
+  });
+
+  test('a record without a manifest item FAILS', () => {
+    const root = lifeCorpus('life-extra', records, r => sha256(canonicalJson(r)));
+    writeFileSync(join(root, 'inbox/emails.jsonl'), [...records, { slug: 'emails/em-0002', body_text: 'x' }].map(r => JSON.stringify(r)).join('\n') + '\n');
+    expect(checkAmaraLife(root).failures).toEqual(['inbox/emails.jsonl: record emails/em-0002 has no manifest item']);
+  });
+});
+
+describe('checkGold', () => {
+  test('a template stub FAILS', () => {
+    const goldDir = join(dir, 'gold-stub');
+    mkdirSync(goldDir, { recursive: true });
+    writeFileSync(join(goldDir, 'x.json'), JSON.stringify({ version: 1, items: [{ _example: 'true' }] }));
+    expect(checkGold(goldDir).failures.length).toBe(1);
+  });
+});
+
 describe('committed data', () => {
-  test('all checks pass on the committed corpora right now', () => {
+  test('all checks pass on the committed corpora right now, with no warnings', () => {
     for (const r of runAllChecks()) {
-      expect({ check: r.check, failures: r.failures }).toEqual({ check: r.check, failures: [] });
+      expect({ check: r.check, failures: r.failures, warnings: r.warnings }).toEqual({ check: r.check, failures: [], warnings: [] });
     }
   });
 });

@@ -1,0 +1,600 @@
+{
+  "arms": {
+    "a_house_full500": {
+      "arm": "a_house_full500",
+      "denominator": 500,
+      "rows_present": 500,
+      "correct_gbrain_judge": 439,
+      "correct_official_judge": 443,
+      "accuracy_gbrain_judge": 0.878,
+      "accuracy_official_judge": 0.886,
+      "reader_errors": 0,
+      "reader_error_ids": [],
+      "reader_provider_failed_attempts": 0,
+      "gbrain_judge_errors": 0,
+      "official_judge_unjudged": 0,
+      "judge_provider_failed_attempts": 0,
+      "delivered_input_tokens": {
+        "mean": 15798.458,
+        "median": 16080.0,
+        "p95": 19654.8,
+        "total": 7899229
+      },
+      "output_tokens": {
+        "mean": 247.204,
+        "total": 123602
+      },
+      "context_chars_mean": 64694.004,
+      "context_sessions_mean": 4.908,
+      "reader_latency_ms": {
+        "p50": 7074.0,
+        "p95": 12153.15
+      },
+      "cost_usd": {
+        "reader": 25.551717000000004,
+        "gbrain_judge": 0.5557275,
+        "official_judge": 0.47035750000000004,
+        "other": 7.58796155,
+        "total": 34.16576355
+      },
+      "by_type": {
+        "abstention": {
+          "n": 30,
+          "correct_gbrain_judge": 28,
+          "correct_official_judge": 28
+        },
+        "knowledge-update": {
+          "n": 72,
+          "correct_gbrain_judge": 67,
+          "correct_official_judge": 69
+        },
+        "multi-session": {
+          "n": 121,
+          "correct_gbrain_judge": 95,
+          "correct_official_judge": 97
+        },
+        "single-session-assistant": {
+          "n": 56,
+          "correct_gbrain_judge": 55,
+          "correct_official_judge": 56
+        },
+        "single-session-preference": {
+          "n": 30,
+          "correct_gbrain_judge": 24,
+          "correct_official_judge": 22
+        },
+        "single-session-user": {
+          "n": 64,
+          "correct_gbrain_judge": 62,
+          "correct_official_judge": 62
+        },
+        "temporal-reasoning": {
+          "n": 127,
+          "correct_gbrain_judge": 108,
+          "correct_official_judge": 109
+        }
+      },
+      "end_to_end_ms": {
+        "p50": 29398.5,
+        "p95": 36349.899999999994,
+        "n": 500,
+        "note": "import+embed(cold cache)+search+reader+judge per question"
+      },
+      "embedding": {
+        "tokens": 58368935,
+        "calls": 24450,
+        "cost_usd": 7.58796155
+      }
+    },
+    "b_gpt4o_official": {
+      "arm": "b_gpt4o_official",
+      "denominator": 500,
+      "rows_present": 500,
+      "correct_gbrain_judge": 430,
+      "correct_official_judge": 432,
+      "accuracy_gbrain_judge": 0.86,
+      "accuracy_official_judge": 0.864,
+      "reader_errors": 0,
+      "reader_error_ids": [],
+      "reader_provider_failed_attempts": 0,
+      "gbrain_judge_errors": 0,
+      "official_judge_unjudged": 0,
+      "judge_provider_failed_attempts": 0,
+      "delivered_input_tokens": {
+        "mean": 14774.594,
+        "median": 15003.0,
+        "p95": 18529.4,
+        "total": 7387297
+      },
+      "output_tokens": {
+        "mean": 240.504,
+        "total": 120252
+      },
+      "context_chars_mean": 66674.528,
+      "context_sessions_mean": 4.908,
+      "reader_latency_ms": {
+        "p50": 3220.0,
+        "p95": 7703.999999999999
+      },
+      "cost_usd": {
+        "reader": 19.670762500000002,
+        "gbrain_judge": 0.5806575,
+        "official_judge": 0.49626750000000003,
+        "other": 0.0,
+        "total": 20.7476875
+      },
+      "by_type": {
+        "abstention": {
+          "n": 30,
+          "correct_gbrain_judge": 28,
+          "correct_official_judge": 27
+        },
+        "knowledge-update": {
+          "n": 72,
+          "correct_gbrain_judge": 67,
+          "correct_official_judge": 69
+        },
+        "multi-session": {
+          "n": 121,
+          "correct_gbrain_judge": 87,
+          "correct_official_judge": 88
+        },
+        "single-session-assistant": {
+          "n": 56,
+          "correct_gbrain_judge": 55,
+          "correct_official_judge": 56
+        },
+        "single-session-preference": {
+          "n": 30,
+          "correct_gbrain_judge": 23,
+          "correct_official_judge": 22
+        },
+        "single-session-user": {
+          "n": 64,
+          "correct_gbrain_judge": 62,
+          "correct_official_judge": 62
+        },
+        "temporal-reasoning": {
+          "n": 127,
+          "correct_gbrain_judge": 108,
+          "correct_official_judge": 108
+        }
+      }
+    },
+    "a_house_subset100": {
+      "arm": "a_house_subset100",
+      "denominator": 100,
+      "rows_present": 100,
+      "correct_gbrain_judge": 89,
+      "correct_official_judge": 90,
+      "accuracy_gbrain_judge": 0.89,
+      "accuracy_official_judge": 0.9,
+      "reader_errors": 0,
+      "reader_error_ids": [],
+      "reader_provider_failed_attempts": 0,
+      "gbrain_judge_errors": 0,
+      "official_judge_unjudged": 0,
+      "judge_provider_failed_attempts": 0,
+      "delivered_input_tokens": {
+        "mean": 15538.07,
+        "median": 15713.5,
+        "p95": 18998.05,
+        "total": 1553807
+      },
+      "output_tokens": {
+        "mean": 233.08,
+        "total": 23308
+      },
+      "context_chars_mean": 63500.85,
+      "context_sessions_mean": 4.89,
+      "reader_latency_ms": {
+        "p50": 6825.5,
+        "p95": 11809.05
+      },
+      "cost_usd": {
+        "reader": 5.011041,
+        "gbrain_judge": 0.10714000000000001,
+        "official_judge": 0.09011500000000001,
+        "other": 0.0,
+        "total": 5.208296
+      },
+      "by_type": {
+        "abstention": {
+          "n": 4,
+          "correct_gbrain_judge": 4,
+          "correct_official_judge": 4
+        },
+        "knowledge-update": {
+          "n": 21,
+          "correct_gbrain_judge": 18,
+          "correct_official_judge": 20
+        },
+        "multi-session": {
+          "n": 19,
+          "correct_gbrain_judge": 18,
+          "correct_official_judge": 18
+        },
+        "single-session-assistant": {
+          "n": 12,
+          "correct_gbrain_judge": 12,
+          "correct_official_judge": 12
+        },
+        "single-session-preference": {
+          "n": 5,
+          "correct_gbrain_judge": 3,
+          "correct_official_judge": 2
+        },
+        "single-session-user": {
+          "n": 16,
+          "correct_gbrain_judge": 14,
+          "correct_official_judge": 14
+        },
+        "temporal-reasoning": {
+          "n": 23,
+          "correct_gbrain_judge": 20,
+          "correct_official_judge": 20
+        }
+      },
+      "end_to_end_ms": {
+        "p50": 29687.5,
+        "p95": 35367.45,
+        "n": 100,
+        "note": "import+embed(cold cache)+search+reader+judge per question"
+      }
+    },
+    "c1_prod_reader_chunks": {
+      "arm": "c1_prod_reader_chunks",
+      "denominator": 100,
+      "rows_present": 100,
+      "correct_gbrain_judge": 65,
+      "correct_official_judge": 65,
+      "accuracy_gbrain_judge": 0.65,
+      "accuracy_official_judge": 0.65,
+      "reader_errors": 0,
+      "reader_error_ids": [],
+      "reader_provider_failed_attempts": 0,
+      "gbrain_judge_errors": 0,
+      "official_judge_unjudged": 0,
+      "judge_provider_failed_attempts": 0,
+      "delivered_input_tokens": {
+        "mean": 3439.11,
+        "median": 3503.0,
+        "p95": 3946.55,
+        "total": 343911
+      },
+      "output_tokens": {
+        "mean": 186.92,
+        "total": 18692
+      },
+      "context_chars_mean": 12769.08,
+      "context_sessions_mean": null,
+      "reader_latency_ms": {
+        "p50": 5771.0,
+        "p95": 11559.05
+      },
+      "cost_usd": {
+        "reader": 1.312113,
+        "gbrain_judge": 0.09701,
+        "official_judge": 0.07990500000000002,
+        "other": 0.0,
+        "total": 1.4890280000000002
+      },
+      "by_type": {
+        "abstention": {
+          "n": 4,
+          "correct_gbrain_judge": 4,
+          "correct_official_judge": 4
+        },
+        "knowledge-update": {
+          "n": 21,
+          "correct_gbrain_judge": 15,
+          "correct_official_judge": 15
+        },
+        "multi-session": {
+          "n": 19,
+          "correct_gbrain_judge": 7,
+          "correct_official_judge": 7
+        },
+        "single-session-assistant": {
+          "n": 12,
+          "correct_gbrain_judge": 12,
+          "correct_official_judge": 12
+        },
+        "single-session-preference": {
+          "n": 5,
+          "correct_gbrain_judge": 3,
+          "correct_official_judge": 2
+        },
+        "single-session-user": {
+          "n": 16,
+          "correct_gbrain_judge": 12,
+          "correct_official_judge": 13
+        },
+        "temporal-reasoning": {
+          "n": 23,
+          "correct_gbrain_judge": 12,
+          "correct_official_judge": 12
+        }
+      }
+    },
+    "c2_plain_rag_chunks": {
+      "arm": "c2_plain_rag_chunks",
+      "denominator": 100,
+      "rows_present": 100,
+      "correct_gbrain_judge": 65,
+      "correct_official_judge": 64,
+      "accuracy_gbrain_judge": 0.65,
+      "accuracy_official_judge": 0.64,
+      "reader_errors": 0,
+      "reader_error_ids": [],
+      "reader_provider_failed_attempts": 0,
+      "gbrain_judge_errors": 0,
+      "official_judge_unjudged": 0,
+      "judge_provider_failed_attempts": 0,
+      "delivered_input_tokens": {
+        "mean": 3219.7,
+        "median": 3281.0,
+        "p95": 3724.65,
+        "total": 321970
+      },
+      "output_tokens": {
+        "mean": 115.53,
+        "total": 11553
+      },
+      "context_chars_mean": 12769.08,
+      "context_sessions_mean": null,
+      "reader_latency_ms": {
+        "p50": 4991.5,
+        "p95": 10771.65
+      },
+      "cost_usd": {
+        "reader": 1.139205,
+        "gbrain_judge": 0.0809575,
+        "official_judge": 0.06381500000000001,
+        "other": 0.0,
+        "total": 1.2839775
+      },
+      "by_type": {
+        "abstention": {
+          "n": 4,
+          "correct_gbrain_judge": 4,
+          "correct_official_judge": 4
+        },
+        "knowledge-update": {
+          "n": 21,
+          "correct_gbrain_judge": 15,
+          "correct_official_judge": 15
+        },
+        "multi-session": {
+          "n": 19,
+          "correct_gbrain_judge": 6,
+          "correct_official_judge": 6
+        },
+        "single-session-assistant": {
+          "n": 12,
+          "correct_gbrain_judge": 12,
+          "correct_official_judge": 12
+        },
+        "single-session-preference": {
+          "n": 5,
+          "correct_gbrain_judge": 5,
+          "correct_official_judge": 4
+        },
+        "single-session-user": {
+          "n": 16,
+          "correct_gbrain_judge": 12,
+          "correct_official_judge": 13
+        },
+        "temporal-reasoning": {
+          "n": 23,
+          "correct_gbrain_judge": 11,
+          "correct_official_judge": 10
+        }
+      }
+    },
+    "c3_think_prompt_chunks": {
+      "arm": "c3_think_prompt_chunks",
+      "denominator": 100,
+      "rows_present": 100,
+      "correct_gbrain_judge": 64,
+      "correct_official_judge": 64,
+      "accuracy_gbrain_judge": 0.64,
+      "accuracy_official_judge": 0.64,
+      "reader_errors": 0,
+      "reader_error_ids": [],
+      "reader_provider_failed_attempts": 0,
+      "gbrain_judge_errors": 0,
+      "official_judge_unjudged": 0,
+      "judge_provider_failed_attempts": 0,
+      "delivered_input_tokens": {
+        "mean": 3891.58,
+        "median": 3955.5,
+        "p95": 4396.55,
+        "total": 389158
+      },
+      "output_tokens": {
+        "mean": 309.32,
+        "total": 30932
+      },
+      "context_chars_mean": 12769.08,
+      "context_sessions_mean": null,
+      "reader_latency_ms": {
+        "p50": 8364.0,
+        "p95": 14932.9
+      },
+      "cost_usd": {
+        "reader": 1.6314540000000002,
+        "gbrain_judge": 0.10474750000000001,
+        "official_judge": 0.08763750000000001,
+        "other": 0.0,
+        "total": 1.8238390000000002
+      },
+      "by_type": {
+        "abstention": {
+          "n": 4,
+          "correct_gbrain_judge": 4,
+          "correct_official_judge": 4
+        },
+        "knowledge-update": {
+          "n": 21,
+          "correct_gbrain_judge": 13,
+          "correct_official_judge": 14
+        },
+        "multi-session": {
+          "n": 19,
+          "correct_gbrain_judge": 9,
+          "correct_official_judge": 9
+        },
+        "single-session-assistant": {
+          "n": 12,
+          "correct_gbrain_judge": 12,
+          "correct_official_judge": 12
+        },
+        "single-session-preference": {
+          "n": 5,
+          "correct_gbrain_judge": 2,
+          "correct_official_judge": 2
+        },
+        "single-session-user": {
+          "n": 16,
+          "correct_gbrain_judge": 12,
+          "correct_official_judge": 12
+        },
+        "temporal-reasoning": {
+          "n": 23,
+          "correct_gbrain_judge": 12,
+          "correct_official_judge": 11
+        }
+      },
+      "think_envelope_unparsed": 0
+    }
+  },
+  "paired": {
+    "b_vs_a_gbrain_judge": {
+      "n_paired": 500,
+      "a_correct": 439,
+      "b_correct": 430,
+      "gains": 21,
+      "losses": 30,
+      "exact_mcnemar_p": 0.2624375357110438
+    },
+    "c1_vs_a_gbrain_judge": {
+      "n_paired": 100,
+      "a_correct": 89,
+      "b_correct": 65,
+      "gains": 4,
+      "losses": 28,
+      "exact_mcnemar_p": 1.9301194697618484e-05
+    },
+    "c2_vs_a_gbrain_judge": {
+      "n_paired": 100,
+      "a_correct": 89,
+      "b_correct": 65,
+      "gains": 5,
+      "losses": 29,
+      "exact_mcnemar_p": 3.8558151572942734e-05
+    },
+    "c3_vs_a_gbrain_judge": {
+      "n_paired": 100,
+      "a_correct": 89,
+      "b_correct": 64,
+      "gains": 3,
+      "losses": 28,
+      "exact_mcnemar_p": 4.649162292480469e-06
+    },
+    "c2_vs_c1_gbrain_judge": {
+      "n_paired": 100,
+      "a_correct": 65,
+      "b_correct": 65,
+      "gains": 3,
+      "losses": 3,
+      "exact_mcnemar_p": 1.0
+    },
+    "c3_vs_c1_gbrain_judge": {
+      "n_paired": 100,
+      "a_correct": 65,
+      "b_correct": 64,
+      "gains": 3,
+      "losses": 4,
+      "exact_mcnemar_p": 1.0
+    },
+    "b_vs_a_official_judge": {
+      "n_paired": 500,
+      "a_correct": 443,
+      "b_correct": 432,
+      "gains": 16,
+      "losses": 27,
+      "exact_mcnemar_p": 0.12628947438543037
+    },
+    "c1_vs_a_official_judge": {
+      "n_paired": 100,
+      "a_correct": 90,
+      "b_correct": 65,
+      "gains": 3,
+      "losses": 28,
+      "exact_mcnemar_p": 4.649162292480469e-06
+    },
+    "c2_vs_a_official_judge": {
+      "n_paired": 100,
+      "a_correct": 90,
+      "b_correct": 64,
+      "gains": 4,
+      "losses": 30,
+      "exact_mcnemar_p": 6.16488978266716e-06
+    },
+    "c3_vs_a_official_judge": {
+      "n_paired": 100,
+      "a_correct": 90,
+      "b_correct": 64,
+      "gains": 2,
+      "losses": 28,
+      "exact_mcnemar_p": 8.67992639541626e-07
+    },
+    "c2_vs_c1_official_judge": {
+      "n_paired": 100,
+      "a_correct": 65,
+      "b_correct": 64,
+      "gains": 3,
+      "losses": 4,
+      "exact_mcnemar_p": 1.0
+    },
+    "c3_vs_c1_official_judge": {
+      "n_paired": 100,
+      "a_correct": 65,
+      "b_correct": 64,
+      "gains": 3,
+      "losses": 4,
+      "exact_mcnemar_p": 1.0
+    }
+  },
+  "judge_agreement": {
+    "a": {
+      "n": 500,
+      "agree": 490
+    },
+    "b": {
+      "n": 500,
+      "agree": 492
+    },
+    "c1": {
+      "n": 100,
+      "agree": 98
+    },
+    "c2": {
+      "n": 100,
+      "agree": 97
+    },
+    "c3": {
+      "n": 100,
+      "agree": 98
+    }
+  },
+  "evidence": {
+    "non_abstention": 470,
+    "recall_all_hit_at5": 435,
+    "a_correct_given_complete_gbrain_judge": 403,
+    "b_correct_given_complete_gbrain_judge": 395,
+    "a_correct_given_complete_official_judge": 407,
+    "b_correct_given_complete_official_judge": 399
+  }
+}

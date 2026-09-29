@@ -3,7 +3,7 @@
  * fixed-corpus benchmark). Keyed by (model, input_type, sha256(text)) so:
  *
  *   - The cache is correct: different content → different embedding → cache miss.
- *   - The cache is side-aware: asymmetric providers (zembed-1, Voyage v3+)
+ *   - The cache is side-aware: asymmetric providers (Voyage v3+)
  *     return DIFFERENT vectors for the same text depending on whether it is
  *     embedded as a query or as a document. gbrain threads that discriminator
  *     through `providerOptions.openaiCompatible.input_type` (see gateway.ts

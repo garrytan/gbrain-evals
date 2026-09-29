@@ -7,8 +7,9 @@ import type { OperationContext } from 'gbrain/operations';
 import type { HybridSearchMeta, ResolvedColumn, SearchResult } from 'gbrain/types';
 import { cat36Hash, canonicalText, fixturePageId, type Cat36BuildSource } from './cat36-corpus.ts';
 import { alignSourceChunks, type Cat36Chunk, type Cat36CueObservation } from './cat36-scorer.ts';
-import { Cat36Failure, cueFamilies, validateCat36Profile, type Cat36Profile, type Cat36Runtime } from './cat36-associative-retrieval.ts';
+import { Cat36Failure, cat36ProductPackage, cueFamilies, validateCat36Profile, type Cat36Profile, type Cat36Runtime } from './cat36-associative-retrieval.ts';
 import { gbrainPin, gbrainVersion } from './gbrain-version.ts';
+import { declaredPin } from './pins.ts';
 import { resolveRegressionProduct } from './situation-recall-provenance.ts';
 import { searchObservation } from './retrieval-pins.ts';
 import { EmbeddingCache, makeCachingTransport } from './longmemeval-cache.ts';
@@ -80,7 +81,7 @@ export function assertCat36ProviderReadiness(profile: Cat36Profile, ready: { emb
 
 export async function validateCat36RerankerModel(profile: Cat36Profile): Promise<void> {
   if (profile.search_config['search.reranker.enabled'] !== 'true') return;
-  const { validateModelId } = await import('gbrain/ai/gateway');
+  const { validateModelId } = await (import(`${cat36ProductPackage(profile.arm)}/ai/gateway`) as Promise<typeof import('gbrain/ai/gateway')>);
   const model = validateModelId(profile.search_config['search.reranker.model'], 'reranker');
   if (!model.ok) throw new Cat36Failure('unsupported configured reranker model', 'dependency');
   const supported = model.recipe.touchpoints.reranker?.models;
@@ -88,7 +89,7 @@ export async function validateCat36RerankerModel(profile: Cat36Profile): Promise
 }
 
 export async function requireCueSupport(): Promise<PublicModule> {
-  const mod = await publicModule('gbrain/memory-cues');
+  const mod = await publicModule('gbrain-cues/memory-cues');
   for (const name of ['loadMemoryCueSettings', 'memoryCueColumn', 'previewMemoryCueBuild', 'submitMemoryCueBuild', 'runMemoryCueBuild', 'getMemoryCueStatus']) {
     if (typeof mod[name] !== 'function') throw new Cat36Failure(`missing public memory-cues API: ${name}`, 'dependency');
   }
@@ -147,9 +148,10 @@ export async function createCat36ProductionRuntime(profile: Cat36Profile, option
       if (JSON.stringify(requestedProfile) !== JSON.stringify(frozenProfile)
         || (frozenOperations && JSON.stringify(requestedOperations) !== JSON.stringify(frozenOperations))) throw new Cat36Failure('runtime profile changed before construction');
       profile = structuredClone(settings);
+      const productPackage = cat36ProductPackage(settings.arm);
       const provenance = settings.mode === 'live'
-        ? resolveRegressionProduct({ expectedProductSha: settings.expected_product_sha, expectedPackageSha256: settings.expected_package_sha256 })
-        : { declared_pin: gbrainPin(), package_version: gbrainVersion(), verified_live_identity: false };
+        ? resolveRegressionProduct({ expectedProductSha: settings.expected_product_sha, expectedPackageSha256: settings.expected_package_sha256, packageName: productPackage })
+        : { product_package: productPackage, declared_pin: productPackage === 'gbrain' ? gbrainPin() : declaredPin(productPackage), package_version: gbrainVersion(), verified_live_identity: false };
       if ('package_path' in provenance) await assertDevelopmentPricing(settings, provenance.package_path);
       if (settings.mode === 'live' && !options.artifactDir) throw new Cat36Failure('live construction requires a fresh persistent artifact directory');
       const reused = settings.reuse_build_dir ? loadCat36FrozenConstruction(settings.reuse_build_dir, settings, cat36Hash(JSON.stringify(sources)),
@@ -172,7 +174,7 @@ export async function createCat36ProductionRuntime(profile: Cat36Profile, option
       process.env.HOME = home;
       process.env.GBRAIN_HOME = home;
       process.env.XDG_CONFIG_HOME = join(home, '.config');
-      const productConfig = await import('gbrain/config');
+      const productConfig = await (import(`${productPackage}/config`) as Promise<typeof import('gbrain/config')>);
       if (productConfig.configPath() !== configPath) throw new Cat36Failure('product resolved another file-plane configuration path');
       mkdirSync(dirname(configPath), { recursive: true });
       const fileConfig = JSON.parse(JSON.stringify({ engine: 'pglite', embedding_model: settings.embedding_model,
@@ -187,8 +189,8 @@ export async function createCat36ProductionRuntime(profile: Cat36Profile, option
       const families = cueFamilies(settings.arm);
       let feature: PublicModule | undefined;
       if (families.length) feature = await requireCueSupport();
-      if (settings.arm === 'summary') await publicModule('gbrain/contextual-retrieval');
-      const operations = await import('gbrain/operations');
+      if (settings.arm === 'summary') await publicModule(`${productPackage}/contextual-retrieval`);
+      const operations = await (import(`${productPackage}/operations`) as Promise<typeof import('gbrain/operations')>);
       operationsByName = operations.operationsByName;
       for (const surface of settings.required_operations ?? []) {
         if (!operationsByName[surface]?.params.query) throw new Cat36Failure(`native ${surface} query operation unsupported`, 'dependency');
@@ -198,7 +200,8 @@ export async function createCat36ProductionRuntime(profile: Cat36Profile, option
       if (feature && typeof feature.runMemoryCueBuild !== 'function') throw new Cat36Failure('public durable cue build execution API unavailable', 'dependency');
       if (families.length === 1 && !admin.params.families) throw new Cat36Failure('production Scene-only/Horizon-only family selection unavailable', 'dependency');
       const [{ PGLiteEngine }, gateway, importer, search] = await Promise.all([
-        import('gbrain/pglite-engine'), import('gbrain/ai/gateway'), import('gbrain/import-file'), import('gbrain/search/hybrid'),
+        import(`${productPackage}/pglite-engine`) as Promise<typeof import('gbrain/pglite-engine')>, import(`${productPackage}/ai/gateway`) as Promise<typeof import('gbrain/ai/gateway') & { __setSunsetClockForTests?: (clock: null) => void }>,
+        import(`${productPackage}/import-file`) as Promise<typeof import('gbrain/import-file')>, import(`${productPackage}/search/hybrid`) as Promise<typeof import('gbrain/search/hybrid')>,
       ]);
       hybrid = search.hybridSearch;
       gateway.__setEmbedTransportForTests(null);
@@ -206,7 +209,7 @@ export async function createCat36ProductionRuntime(profile: Cat36Profile, option
       gateway.__setRerankTransportForTests(null);
       gateway.__setGenerateTextTransportForTests(null);
       gateway.__setGenerateObjectTransportForTests(null);
-      gateway.__setSunsetClockForTests(null);
+      gateway.__setSunsetClockForTests?.(null);
       const providerEnv = settings.mode === 'live' ? Object.fromEntries(PROVIDER_KEYS.filter(k => process.env[k]).map(k => [k, process.env[k]])) : {};
       gateway.configureGateway({ embedding_model: settings.embedding_model, embedding_dimensions: settings.embedding_dimensions,
         chat_model: settings.generation_model, provider_chat_options: settings.provider_chat_options, expansion_model: settings.expansion_model,
@@ -267,6 +270,7 @@ export async function createCat36ProductionRuntime(profile: Cat36Profile, option
         const content = `---\ntype: note\ntitle: ${JSON.stringify(source.title)}\nvisibility: ${source.visibility === 'private' ? 'private' : 'world'}\n---\n\n${source.text}`;
         const result = await importer.importFromContent(engine, source.slug, content, { sourceId: runtimeSourceId, noEmbed: settings.mode === 'offline' });
         if (result.status === 'error') throw new Cat36Failure(`source import failed: ${fixturePageId(source)}`, 'sut');
+        if (result.embedding_deferred) throw new Cat36Failure(`source embedding failed: ${fixturePageId(source)}`, 'dependency');
         const page = await engine.getPage(source.slug, { sourceId: runtimeSourceId });
         if (!page || canonicalText(page.compiled_truth).trim() !== source.text.trim()) throw new Cat36Failure(`canonical text changed on import: ${fixturePageId(source)}`);
         await engine.executeRaw('UPDATE pages SET created_at=$1,updated_at=$2 WHERE id=$3', [source.created_at, source.updated_at, page.id]);
@@ -457,7 +461,7 @@ async function buildCues(module: PublicModule, admin: typeof import('gbrain/oper
 export async function buildProductionCueIndex(engine: BrainEngine, sourceIds: string[], profile: Cat36Profile): Promise<EnrichmentResult> {
   validateCat36Profile(profile);
   const module = await requireCueSupport();
-  const { operationsByName } = await import('gbrain/operations');
+  const { operationsByName } = await (import('gbrain-cues/operations') as Promise<typeof import('gbrain/operations')>);
   const admin = operationsByName.memory_cues;
   if (!admin || admin.localOnly !== true || admin.scope !== 'admin') throw new Cat36Failure('trusted memory_cues admin operation unavailable', 'dependency');
   const ctx: OperationContext = { engine, config: { engine: 'pglite', embedding_model: profile.embedding_model, embedding_dimensions: profile.embedding_dimensions },
@@ -468,7 +472,7 @@ export async function buildProductionCueIndex(engine: BrainEngine, sourceIds: st
 export async function buildProductionSummaryIndex(engine: BrainEngine, sources: readonly Cat36BuildSource[], profile: Cat36Profile): Promise<EnrichmentResult> {
   validateCat36Profile(profile);
   if (profile.arm !== 'summary' || profile.mode !== 'live') throw new Cat36Failure('real summary construction requires the explicit live summary arm');
-  const module = await publicModule('gbrain/contextual-retrieval');
+  const module = await publicModule('gbrain-cues/contextual-retrieval');
   if (typeof module.reembedPageWithContextualRetrieval !== 'function') throw new Cat36Failure('public real contextual-summary service unavailable', 'dependency');
   if (profile.provider_budget?.max_usd !== profile.build_max_usd) throw new Cat36Failure('summary control requires its external whole-cell hard cap to equal the build allowance', 'dependency');
   if (profile.search_config['search.contextual_retrieval'] !== 'per_chunk_synopsis') throw new Cat36Failure('summary control must explicitly select per_chunk_synopsis', 'dependency');

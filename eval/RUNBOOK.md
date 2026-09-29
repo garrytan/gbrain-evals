@@ -13,7 +13,7 @@ The dependency is pinned to a GitHub commit in `package.json`. A symlink means a
 
 If a `gbrain/*` import fails, check the installation and whether a stale local link points to an incompatible checkout. Use `bun link gbrain` only after registering the intended checkout with `bun link` in that checkout.
 
-If PGLite reports a missing `pglite.wasm`, the dependency layout may lack the nested path gbrain expects. This repository's postinstall script creates that link. Re-run installation, or inspect and run `bun scripts/postinstall-pglite-link.ts`.
+If PGLite reports a missing `pglite.wasm`, check that `@electric-sql/pglite` is installed and that no stale local link points at an old gbrain checkout. gbrain's embedded-asset resolver finds the hoisted PGLite copy at the current pins, so v0.10.1 removed the old postinstall link script. A quick check is `bun -e "await import('gbrain/pglite-engine')"`.
 
 ## Know which APIs the command calls
 
@@ -31,6 +31,19 @@ If PGLite reports a missing `pglite.wasm`, the dependency layout may lack the ne
 Set keys in your environment using your normal secret-management method. Do not put real keys in commands saved to reports.
 
 A skipped adapter or incomplete receipt is not a measured pass. Some runners accept `--allow-skip` to acknowledge missing prerequisites, but the skip remains part of the result.
+
+## Authorize spending with the budget ledger
+
+LongMemEval, Cat13 and Cat35 refuse to make provider requests until you pass `--budget-usd <dollars>` (or set `BRAINBENCH_BUDGET_USD`). Each run prints its cost estimate first and refuses when the estimate is above the budget.
+
+Every request to a paid provider host is reserved in a ledger before it is sent, including SDK retries and the requests gbrain makes internally during extraction and synthesis. After the response, the reservation is reconciled to the provider-reported usage. A request whose usage cannot be read is charged at its full reservation. A reservation that would take the run past `--budget-usd`, or all runs together past the program cap, is refused and the request is never sent.
+
+- The ledger lives at `.budget/ledger.json` (gitignored). Override it with `--budget-ledger <path>` or `BRAINBENCH_BUDGET_LEDGER`.
+- The program cap defaults to $500 across every run in the ledger. Override it with `--program-cap-usd` or `BRAINBENCH_PROGRAM_CAP_USD`.
+- Reservations left open by a crash stay counted against both caps until someone checks the provider usage page and edits the entry in the ledger.
+- `bun eval/runner/budget-ledger.ts status` prints committed spend, open reservations and what is left of the cap.
+
+The receipt's `cost` and `delivered_tokens` fields come from this ledger.
 
 ## Start with a narrow run
 
@@ -102,7 +115,7 @@ bun run test
 bun test test/eval/query-cli.test.ts test/eval/receipts-manifest.test.ts
 ```
 
-The first command runs the repository suite. The second isolates inexpensive checks. Other useful focused tests include:
+The first command runs the repository suite: the Bun tests under `test/eval/` and `eval/` as four concurrent `bun test --shard` processes (`TEST_SHARDS` changes the count), the Python orchestrator tests and the validators. `bun run test:serial` runs the Bun tests in one process, which is slower but easier to debug. In-memory test brains load a pre-migrated PGLite snapshot per embedding shape from `node_modules/.cache/gbrain-evals/pglite/`; set `GBRAIN_EVALS_PGLITE_SNAPSHOT=0` to replay migrations cold. The second command isolates inexpensive checks. Other useful focused tests include:
 
 ```sh
 bun test eval/runner/queries/validator.test.ts
@@ -111,7 +124,7 @@ bun test eval/runner/adapters/vector.test.ts
 bun test eval/generators/world-html.test.ts
 ```
 
-Those older colocated tests exist, but `bun run test` does not include them automatically.
+Since v0.10.1, `bun run test` and CI include these colocated tests.
 
 At gbrain v0.46.3, PGLite teardown could freeze Bun's test runner in a synchronous WASM loop. That particular problem stopped reproducing at the v0.47.8.0 pin. If it recurs, use an external process timeout to isolate it; a frozen runtime may not service Bun's own timeout.
 
@@ -133,9 +146,13 @@ For an intentional dataset revision, choose a new corpus version, update the gen
 
 Save a worthwhile run under a dated path in `docs/benchmarks/`, including its raw results, settings and code identities. Default files under `eval/reports/` may be overwritten by the next run. The [artifact manifest](../docs/receipts-manifest.json) and its tests check selected saved results; they do not validate every documentation claim.
 
+## Sealed confirmation set
+
+The [sealed confirmation set](../docs/benchmarks/2026-09-29-sealed-confirmation-protocol.md) is private. `bun eval/runner/sealed-confirmation.ts validate|run|answer` never read labels; `score` and `solvability` take the private labels path, refuse a file that does not match the commitment in `eval/data/sealed-confirmation-v1/manifest.json`, and append to the access log first. Do not run it for development: every run is a release decision and needs a committed preregistration. The unit tests use a small fixture built in code.
+
 ## Cat36 situation-aware recall and the all-category release gate
 
-Cat36 asks whether generated situation cues help retrieve original evidence for indirect questions. The [2026-09-23 protocol](../docs/benchmarks/2026-09-23-situation-recall-protocol.md) defines the experiment, profiles, budgets, source-only construction boundary, and exact reproduction commands. It is not a published capability result. The declared candidate is `939232f1746381b4e932d620d6c709e29198f14c` (v0.55.0.0), integrating upstream `31f257a0a7b218b40e03d302bc6913c99f26f0ec` (v0.54.1.1). The previous 470 and f324 candidates and registered 604 baseline keep their own identities and receipts. Publishable comparisons still require independent corpus relevance review, credentials, external budget enforcement, and complete live comparisons.
+Cat36 asks whether generated situation cues help retrieve original evidence for indirect questions. The [2026-09-23 protocol](../docs/benchmarks/2026-09-23-situation-recall-protocol.md) defines the experiment, profiles, budgets, source-only construction boundary, and exact reproduction commands. It is not a published capability result. The declared candidate is `939232f1746381b4e932d620d6c709e29198f14c` (v0.55.0.0, installed as the `gbrain-cues` package alias since 2026-09-29), integrating upstream `31f257a0a7b218b40e03d302bc6913c99f26f0ec` (v0.54.1.1). The previous 470 and f324 candidates and registered 604 baseline keep their own identities and receipts. Publishable comparisons still require independent corpus relevance review, credentials, external budget enforcement, and complete live comparisons.
 
 Start keyless:
 

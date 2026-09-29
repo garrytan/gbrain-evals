@@ -75,11 +75,11 @@ function printHelp(): void {
   process.stderr.write(
     'shootout-driver — score one cell × one adapter × one query set\n\n' +
     'Required:\n' +
-    '  --embedder <provider:model>     e.g. zeroentropyai:zembed-1\n' +
+    '  --embedder <provider:model>     e.g. voyage:voyage-4\n' +
     '  --dim <N>                       Configured vector width\n' +
     '  --output <path>                 Output receipt JSON path\n\n' +
     'Optional:\n' +
-    '  --reranker <provider:model>     e.g. zeroentropyai:zerank-2\n' +
+    '  --reranker <provider:model>     e.g. voyage:rerank-2.5\n' +
     '  --subset <name>                 Load eval/data/gold/brainbench-<name>-subset.json\n' +
     '                                  instead of building relational queries\n' +
     '  --cell <label>                  Cell label (A0, B1, C2, ...) for the receipt\n' +
@@ -222,12 +222,14 @@ export async function runCell(args: ParsedArgs): Promise<CellReceipt> {
     benchmark_version: BENCHMARK_VERSION,
     category: 'shootout-driver',
     run_status: 'completed',
-    verdict: scored > 0 ? 'pass' : 'fail',
+    // No quality threshold exists for a single cell, so a scored cell is
+    // `partial` (ran, no gate), never `pass` (audit PD-15).
+    verdict: scored > 0 ? 'partial' : 'fail',
     n_total: queries.length,
     n_scored: scored,
     completion_rate: queries.length > 0 ? scored / queries.length : 0,
     errors: [],
-    publishable: scored > 0,
+    publishable: scored === queries.length && queries.length > 0,
     gbrain_version: gbrainVersion(),
     gbrain_pin: gbrainPin(),
     resolved_config: {

@@ -1,8 +1,37 @@
 {
   "schema_version": 1,
   "description": "Map from published claims to their saved evidence. The manifest test checks artifact paths, SHA-256 hashes, and declared JSON-pointer values. It does not parse report prose or independently validate every scorer. Separate golden tests and recount scripts are named where available. Entries marked disclosed-gap identify missing evidence; a fresh run cannot restore a missing historical receipt.",
-  "updated": "2026-09-25",
+  "updated": "2026-09-29",
   "entries": [
+    {
+      "claim_id": "lifecycle-2026-09-29-primary",
+      "readme_anchor": "docs/benchmarks/2026-09-29-lifecycle.md: forget collateral in 18/18 cells of builds a, b0, b and 0/6 with #5666; get_tags private leak on a and b0 only",
+      "artifact_path": "docs/benchmarks/2026-09-29-lifecycle/primary/receipt.json",
+      "artifact_sha256": "faaa0a4cf15d9a7ba5a5dfdbb4d3ef127a24a102d933003f7c80b227c9c2726c",
+      "expected": {
+        "/cost_usd": 0,
+        "/cells/0/fact_events/4/status": "error",
+        "/cells/12/fact_events/4/status": "error",
+        "/cells/18/fact_events/4/status": "inserted",
+        "/builds/3/verified/tree_matches": true
+      },
+      "golden_test": "test/eval/lifecycle-experiment.test.ts: published 2026-09-29 receipts recount",
+      "status": "covered",
+      "note": "24 cells (4 builds x 2 engines x 3 interfaces), hermetic hash embedder, $0. The recount test rescores every cell from the raw snapshots with the committed scorer."
+    },
+    {
+      "claim_id": "lifecycle-2026-09-29-repeat",
+      "readme_anchor": "docs/benchmarks/2026-09-29-lifecycle.md: repeat run matched 21 of 24 cell summaries",
+      "artifact_path": "docs/benchmarks/2026-09-29-lifecycle/repeat/receipt.json",
+      "artifact_sha256": "bba022b8f056a5512577e9e87b845733e8ca46848586140cf39c60e245ee28f2",
+      "expected": {
+        "/cost_usd": 0,
+        "/cells/18/fact_events/4/status": "inserted"
+      },
+      "golden_test": "test/eval/lifecycle-experiment.test.ts: the repeat run differs only in timing-dependent fields",
+      "status": "covered",
+      "note": "Same matrix and harness commit as the primary run. The three differing cells differ only in timing-dependent fields: a search count on build a and one delegated-sync edge on b/pglite/mcp-stdio."
+    },
     {
       "claim_id": "reading-notes-transfer-labels",
       "readme_anchor": "docs/benchmarks/2026-09-25-reading-notes.md: fixed retrieved sessions, original transfer labels 308/361 to 324/361",
@@ -26,7 +55,10 @@
       "readme_anchor": "docs/benchmarks/2026-09-25-reading-notes.md: 6014 calls and $79.1460305 including failed pilot",
       "artifact_path": "docs/benchmarks/2026-09-25-reading-notes/cost-provenance.json",
       "artifact_sha256": "79bb41c0b2fc170893b83062c0646f0144d0bf5717ccd5bf165bd7fb9c4db1c1",
-      "expected": { "/total_settled_calls": 6014, "/total_usage_priced_usd": 79.1460305 },
+      "expected": {
+        "/total_settled_calls": 6014,
+        "/total_usage_priced_usd": 79.1460305
+      },
       "golden_test": "test/eval/reading-notes-recount.test.ts: aggregate token repricing and phase counts",
       "status": "covered",
       "note": "Public phase/model/role token aggregates reprice 5666 follow-up calls, with separate primary baseline/notes reader token totals. The 348-call failed pilot remains an aggregate from a private ledger; private per-call receipts and conversations are not published."
@@ -36,7 +68,12 @@
       "readme_anchor": "docs/benchmarks/2026-09-25-reading-notes.md: separate 1024-token release smoke of nine prior cutoff cases",
       "artifact_path": "docs/benchmarks/2026-09-25-reading-notes/completion-smoke.json",
       "artifact_sha256": "08b38e0e5e5bd39c96336aca81c0c4f8ccee4b046325e54fa5b0b8df248b4fbd",
-      "expected": { "/n": 9, "/completed": 9, "/max_tokens": 1024, "/cost_usd": 0.562143 },
+      "expected": {
+        "/n": 9,
+        "/completed": 9,
+        "/max_tokens": 1024,
+        "/cost_usd": 0.562143
+      },
       "golden_test": "test/eval/reading-notes-recount.test.ts: cutoff IDs and accounted smoke totals",
       "status": "covered",
       "note": "Separate selected-case live completion check on the forthcoming GBrain default reader and gateway, not a fresh accuracy study. Public-safe finish metadata and hashes only; raw prompts and responses remain private. Its spend is additional to the historical $79.1460305."
@@ -1762,7 +1799,7 @@
       },
       "golden_test": "scripts/run-retrieval-refresh.py: validate_attempt; test/retrieval_refresh_orchestrator_test.py",
       "status": "covered",
-      "note": "The controlled production comparison uses one extracted index per seed, shared query-vector bytes, and five returned chunks with stable first-page deduplication and no refill. All 435 pairs preserve their rankings and metadata. Enabling relational retrieval raises mean recall from 0.6626 to 0.7241, with 45 improved pairs and no losses; graph metadata remains fixed in both arms."
+      "note": "The controlled production comparison uses one extracted index per seed, shared query-vector bytes, and five returned chunks with stable first-page deduplication and no refill. All 435 pairs preserve their rankings and metadata. Enabling relational retrieval raises mean recall from 0.6626 to 0.7241, with 45 improved pairs and no losses; graph metadata remains fixed in both arms. The questions are phrased in the parser's own verbs, so the lift is an in-grammar upper bound; the 2026-09-29 paraphrase check (relational-paraphrase-2026-09-29) found no effect on reworded questions."
     },
     {
       "claim_id": "retrieval-refresh-2026-09-09-baselines-receipt",
@@ -2600,6 +2637,331 @@
       },
       "status": "covered",
       "note": "Archives all 17 source files, each with its launch SHA-256 and exact UTF-8 contents. Subsequent shipping changes fix failed-run receipts, reject unobserved think controls, strengthen offline evidence validation, and relocate saved report paths. Original results and launch fingerprints remain unchanged."
+    },
+    {
+      "claim_id": "cat2-type-accuracy-b80cad6",
+      "readme_anchor": "docs/benchmarks/2026-09-29-repin-cats-1-2-6.md: 74.7% type accuracy and 18.8% strict F1 at b80cad6",
+      "artifact_path": "docs/benchmarks/2026-09-29-repin-cats-1-2-6/type-accuracy.b80cad6.receipt.json",
+      "artifact_sha256": "dd087f41b1cfeb9d03f7ab6228d31c738feca7dde3181d99cb1687654a9b78a2",
+      "expected": {
+        "/data/overallTypeAccuracy": 0.7465753424657534,
+        "/data/overallStrictF1": 0.18776916451335057,
+        "/gbrain_version": "0.59.13.0",
+        "/execution/source_tree/dirty": false,
+        "/execution/product/package": "gbrain"
+      },
+      "status": "covered",
+      "note": "Corrected attendance orientation (person -> meeting). Schema v2 receipt from gbrain-evals c3ec550 with a clean tree."
+    },
+    {
+      "claim_id": "cat2-type-accuracy-939232f-corrected",
+      "readme_anchor": "docs/benchmarks/2026-09-29-repin-cats-1-2-6.md: the corrected scorer gives the same 74.7% at 939232f",
+      "artifact_path": "docs/benchmarks/2026-09-29-repin-cats-1-2-6/type-accuracy.939232f-corrected-scorer.receipt.json",
+      "artifact_sha256": "c407ce341676a1955711aebf0b1997f82dc93ad2f4262bb8d00b6b6eec4337d8",
+      "expected": {
+        "/data/overallTypeAccuracy": 0.7465753424657534,
+        "/data/overallStrictF1": 0.18776916451335057,
+        "/gbrain_version": "0.55.0.0",
+        "/execution/product/package": "gbrain-cues"
+      },
+      "status": "covered",
+      "note": "Same scorer run on the gbrain-cues alias (939232f), the pin before 2026-09-29."
+    },
+    {
+      "claim_id": "cat2-type-accuracy-939232f-v0.10.2-scorer",
+      "readme_anchor": "docs/benchmarks/2026-09-29-repin-cats-1-2-6.md: the September 28 scorer gave 86.6% at 939232f",
+      "artifact_path": "docs/benchmarks/2026-09-29-repin-cats-1-2-6/type-accuracy.939232f-v0.10.2-runner.receipt.json",
+      "artifact_sha256": "969997aee269deaf2ad43012f36b9e1c1f0b58704c1295946833fe4693844c1c",
+      "expected": {
+        "/data/overallTypeAccuracy": 0.8664259927797834,
+        "/data/overallStrictF1": 0.4134366925064599,
+        "/gbrain_version": "0.55.0.0"
+      },
+      "status": "covered",
+      "note": "Re-run of the v0.10.2 runner from a clean c9e90ad checkout; its attendance gold points meeting -> person."
+    },
+    {
+      "claim_id": "cat1-before-after-b80cad6",
+      "readme_anchor": "docs/benchmarks/2026-09-29-repin-cats-1-2-6.md: Cat 1 unchanged between 939232f and b80cad6",
+      "artifact_path": "docs/benchmarks/2026-09-29-repin-cats-1-2-6/before-after.b80cad6.receipt.json",
+      "artifact_sha256": "14055a4ea560a52cae1b82e29b6a16af49d8bea34dc5a230fcd67baca6ff6162",
+      "expected": {
+        "/verdict": "pass",
+        "/n_total": 145,
+        "/n_scored": 145,
+        "/gbrain_version": "0.59.13.0"
+      },
+      "status": "covered",
+      "note": "Keyless re-run; see the report for the metric table."
+    },
+    {
+      "claim_id": "cat6-prose-scale-b80cad6",
+      "readme_anchor": "docs/benchmarks/2026-09-29-repin-cats-1-2-6.md: Cat 6 unchanged between 939232f and b80cad6",
+      "artifact_path": "docs/benchmarks/2026-09-29-repin-cats-1-2-6/cat6-prose-scale.b80cad6.receipt.json",
+      "artifact_sha256": "6bfb489a22edced150042d7d337b7e2937f1320be9546585cf389958a1023435",
+      "expected": {
+        "/verdict": "pass",
+        "/n_total": 250,
+        "/n_scored": 250,
+        "/gbrain_version": "0.59.13.0"
+      },
+      "status": "covered",
+      "note": "Keyless re-run; see the report for the metric table."
+    },
+    {
+      "claim_id": "cat1-before-after-939232f",
+      "readme_anchor": "docs/benchmarks/2026-09-29-repin-cats-1-2-6.md: Cat 1 unchanged between 939232f and b80cad6",
+      "artifact_path": "docs/benchmarks/2026-09-29-repin-cats-1-2-6/before-after.939232f-v0.10.2-runner.receipt.json",
+      "artifact_sha256": "9f76ccc399425499de1390a3f1ad319db72ac3a0ea05d7846b771a6035bea3ce",
+      "expected": {
+        "/verdict": "pass",
+        "/n_total": 145,
+        "/n_scored": 145,
+        "/gbrain_version": "0.55.0.0"
+      },
+      "status": "covered",
+      "note": "Keyless re-run; see the report for the metric table."
+    },
+    {
+      "claim_id": "cat6-prose-scale-939232f",
+      "readme_anchor": "docs/benchmarks/2026-09-29-repin-cats-1-2-6.md: Cat 6 unchanged between 939232f and b80cad6",
+      "artifact_path": "docs/benchmarks/2026-09-29-repin-cats-1-2-6/cat6-prose-scale.939232f-v0.10.2-runner.receipt.json",
+      "artifact_sha256": "5738eb03c5469e2ced6af682c3fb1434d66b3086dd4d611df540d3f38a27f383",
+      "expected": {
+        "/verdict": "pass",
+        "/n_total": 250,
+        "/n_scored": 250,
+        "/gbrain_version": "0.55.0.0"
+      },
+      "status": "covered",
+      "note": "Keyless re-run; see the report for the metric table."
+    },
+    {
+      "claim_id": "relational-paraphrase-2026-09-29",
+      "readme_anchor": "docs/benchmarks/2026-09-29-relational-paraphrase.md: template vs paraphrase split",
+      "artifact_path": "docs/benchmarks/2026-09-29-relational-paraphrase/relational-ab.receipt.json",
+      "artifact_sha256": "5415482fa23c25457eee84688a6a44ebdb3b9636a62d47426d1baaa402fdaa50",
+      "expected": {
+        "/category": "relational-ab",
+        "/run_status": "completed",
+        "/verdict": "pass",
+        "/publishable": true,
+        "/gbrain_version": "0.59.13.0",
+        "/gbrain_pin": "github:garrytan/gbrain#b80cad61e4725e62531439c027053387c98e23f8",
+        "/n_total": 1740,
+        "/n_scored": 1740,
+        "/errors": [],
+        "/resolved_config/splits": [
+          "template",
+          "paraphrase"
+        ],
+        "/resolved_config/ingestion_seeds": [
+          1,
+          2,
+          3
+        ],
+        "/resolved_config/paraphrase_grammar/sha256": "29ac7cfd8be73a5964bd9ad2680d395a8f8e126cdba4e4b755204cd155593b4d",
+        "/hashes/runner": "7bdda5ec9440db38ba6d362227caa0deaf572d12718cc5b77991b44ab4cb254a",
+        "/data/by_split/template/off/recall_at_5": 0.7367816091954023,
+        "/data/by_split/template/on/recall_at_5": 0.7632183908045979,
+        "/data/by_split/template/off/hit_at_1": 0.27586206896551724,
+        "/data/by_split/template/on/hit_at_1": 0.42758620689655175,
+        "/data/by_split/template/on/relational_fired_queries": 174,
+        "/data/by_split/paraphrase/off/recall_at_5": 0.41091954022988514,
+        "/data/by_split/paraphrase/on/recall_at_5": 0.41091954022988514,
+        "/data/by_split/paraphrase/on/relational_fired_queries": 0,
+        "/cost/usd": 0.064506
+      },
+      "status": "covered",
+      "note": "Template questions use the relationship parser's verbs; the paraphrase split rewords the same 145 questions with a grammar frozen in f2270ac before scoring. Relationship retrieval fired on 174/435 template runs and 0/435 paraphrase runs; paraphrase metrics are identical in both arms."
+    },
+    {
+      "claim_id": "sealed-confirmation-v1-commitments",
+      "readme_anchor": "docs/benchmarks/2026-09-29-sealed-confirmation-protocol.md: SHA-256 commitments of the private questions, labels and ledger; 150 questions over 30 personas",
+      "artifact_path": "eval/data/sealed-confirmation-v1/manifest.json",
+      "artifact_sha256": "f494039ec822675f3946f9ce95e269163af6dd32fc514dc7762d82f1d46148e8",
+      "expected": {
+        "/commitments/questions.json/sha256": "c382f438ab80d745151613e1a5b9f6daec31b74c03cc4757702a35caaca78a1d",
+        "/commitments/labels.json/sha256": "4990a7e234cf6aed37c64f424ec3d7b319f6556e2c4652f04bfad771d2cdafc9",
+        "/commitments/ledger.json/sha256": "09d18ee375f24f12d8a1b532c72df65a747247b72162811048cf69f3379b4101",
+        "/counts/questions": 150,
+        "/counts/personas": 30,
+        "/generation_date": "2026-09-29"
+      },
+      "golden_test": "test/eval/sealed-confirmation.test.ts: commitment refusal and access logging on a fixture",
+      "status": "covered",
+      "note": "The labels and questions are private; this entry pins the commitments the runner checks before opening them."
+    },
+    {
+      "claim_id": "sealed-confirmation-v1-solvability",
+      "readme_anchor": "docs/benchmarks/2026-09-29-sealed-confirmation-protocol.md: oracle-evidence reader 150/150, no-memory reader 30/150 (0/120 answerable)",
+      "artifact_path": "eval/data/sealed-confirmation-v1/solvability.json",
+      "artifact_sha256": "05495836478270d2d6f8ae2d7117cd341379dcd2d0cb4e918b9d213af667200f",
+      "expected": {
+        "/n": 150,
+        "/oracle_correct": 150,
+        "/no_memory_correct": 30,
+        "/by_type/abstention/no_memory_correct": 30
+      },
+      "status": "covered",
+      "note": "Aggregate only. Per-question rows stay with the sealed files."
+    },
+    {
+      "claim_id": "sealed-confirmation-v1-overlap",
+      "readme_anchor": "docs/benchmarks/2026-09-29-sealed-confirmation-protocol.md: zero exact question matches, zero persona full names and zero 13-word shingles shared with LongMemEval S/M",
+      "artifact_path": "eval/data/sealed-confirmation-v1/overlap-audit.json",
+      "artifact_sha256": "36596c1a5196a3579b6076edc784f81fabefc7f086d79505b8c24df1d9ef809e",
+      "expected": {
+        "/datasets/longmemeval_s_cleaned/exact_question_matches": 0,
+        "/datasets/longmemeval_m_cleaned/exact_question_matches": 0,
+        "/datasets/longmemeval_s_cleaned/persona_full_name_matches": 0,
+        "/datasets/longmemeval_m_cleaned/persona_full_name_matches": 0,
+        "/datasets/longmemeval_s_cleaned/sealed_sessions_sharing_a_13_word_shingle": 0,
+        "/datasets/longmemeval_m_cleaned/sealed_sessions_sharing_a_13_word_shingle": 0,
+        "/datasets/longmemeval_m_cleaned/m_questions_absent_from_s": 0
+      },
+      "status": "covered",
+      "note": "Counts only; the matched items are listed in a private file kept with the sealed set."
+    },
+    {
+      "claim_id": "longmemeval-opaque-qa-summary",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: 439/500 house reader, 430/500 GPT-4o reader, 65/65/64 of 100 on fixed chunks, 435/470 strict retrieval",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/summary.json",
+      "artifact_sha256": "44cc95f82191dda8ee69d1f33871f2784cab190f3e52dd1b5cb744a647fc9ca6",
+      "expected": {
+        "/arms/a_house_full500/correct_gbrain_judge": 439,
+        "/arms/a_house_full500/denominator": 500,
+        "/arms/a_house_full500/correct_official_judge": 443,
+        "/arms/b_gpt4o_official/correct_gbrain_judge": 430,
+        "/arms/b_gpt4o_official/correct_official_judge": 432,
+        "/arms/a_house_subset100/correct_gbrain_judge": 89,
+        "/arms/c1_prod_reader_chunks/correct_gbrain_judge": 65,
+        "/arms/c2_plain_rag_chunks/correct_gbrain_judge": 65,
+        "/arms/c3_think_prompt_chunks/correct_gbrain_judge": 64,
+        "/arms/c1_prod_reader_chunks/denominator": 100,
+        "/paired/b_vs_a_gbrain_judge/gains": 21,
+        "/paired/b_vs_a_gbrain_judge/losses": 30,
+        "/evidence/recall_all_hit_at5": 435,
+        "/evidence/non_abstention": 470
+      },
+      "golden_test": "scripts/verify-longmemeval-opaque-qa.py: keyless recount of saved verdicts, paired tests, strict recall and the prompt leak check",
+      "status": "covered",
+      "note": "Measured 2026-09-29 on gbrain a7cb37b (PR 5676), reranker off, notes reader with 1024 output tokens, opaque session ids. Not the published September 6 configuration, and it does not measure the answer_ leak by itself. Counts use all 500 questions (100 for the component subset); errors would score incorrect and there were none."
+    },
+    {
+      "claim_id": "longmemeval-opaque-qa-a-rows",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: Arm a harness rows (house reader, 500 questions) with answers, verdicts and retrieved chunk ids",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/a/rows.ndjson",
+      "artifact_sha256": "e4b640098bd11b8a799c816dccee38c27e03540e22d858cd307665a590cb5a36",
+      "status": "covered",
+      "note": "Machine-local paths replaced by placeholders; no other bytes changed. The dataset (sha256 d6f21ea9...) and the embedding cache are not committed; provenance.json records their hashes.",
+      "golden_test": "scripts/verify-longmemeval-opaque-qa.py: keyless recount of saved verdicts, paired tests, strict recall and the prompt leak check"
+    },
+    {
+      "claim_id": "longmemeval-opaque-qa-a-official-judge",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: Verbatim official LongMemEval judge over arm a, with prompts and replies",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/a/official-judge.ndjson",
+      "artifact_sha256": "93205ad6d450cc5a02be42aa53ea60dc0c2522676cada6305319631d36043936",
+      "status": "covered",
+      "note": "Machine-local paths replaced by placeholders; no other bytes changed. The dataset (sha256 d6f21ea9...) and the embedding cache are not committed; provenance.json records their hashes.",
+      "golden_test": "scripts/verify-longmemeval-opaque-qa.py: keyless recount of saved verdicts, paired tests, strict recall and the prompt leak check"
+    },
+    {
+      "claim_id": "longmemeval-opaque-qa-a-calls",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: Every paid call of arm a with full reader and judge prompts, answers, usage and latency (gzip)",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/a/calls.ndjson.gz",
+      "artifact_sha256": "b9b1d6de7df03a7d71810e5c636ccd5738728b8c375b13823d01d351fa530c91",
+      "status": "covered",
+      "note": "Machine-local paths replaced by placeholders; no other bytes changed. The dataset (sha256 d6f21ea9...) and the embedding cache are not committed; provenance.json records their hashes.",
+      "golden_test": "scripts/verify-longmemeval-opaque-qa.py: keyless recount of saved verdicts, paired tests, strict recall and the prompt leak check"
+    },
+    {
+      "claim_id": "longmemeval-opaque-qa-b-rows",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: Arm b (GPT-4o, official reading prompt) prompts, answers and both judges (gzip)",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/b/rows.ndjson.gz",
+      "artifact_sha256": "f7f1550109048793c6ff11e742530b136d2baef4d856455e40702544fee002cc",
+      "status": "covered",
+      "note": "Machine-local paths replaced by placeholders; no other bytes changed. The dataset (sha256 d6f21ea9...) and the embedding cache are not committed; provenance.json records their hashes.",
+      "golden_test": "scripts/verify-longmemeval-opaque-qa.py: keyless recount of saved verdicts, paired tests, strict recall and the prompt leak check"
+    },
+    {
+      "claim_id": "longmemeval-opaque-qa-c-c1",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: Component arm c1, production reader prompt over five chunks",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/c/c1.ndjson",
+      "artifact_sha256": "7ee3429c0bf0e93a406b4ab104a9413a2a2aa50439aba5586e5c4c6523a274aa",
+      "status": "covered",
+      "note": "Machine-local paths replaced by placeholders; no other bytes changed. The dataset (sha256 d6f21ea9...) and the embedding cache are not committed; provenance.json records their hashes.",
+      "golden_test": "scripts/verify-longmemeval-opaque-qa.py: keyless recount of saved verdicts, paired tests, strict recall and the prompt leak check"
+    },
+    {
+      "claim_id": "longmemeval-opaque-qa-c-c2",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: Component arm c2, plain retrieval prompt over five chunks",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/c/c2.ndjson",
+      "artifact_sha256": "f8a3f06bcd942544a79ef3079994ea47562652d68101ad5af29cdf9ed3c61af7",
+      "status": "covered",
+      "note": "Machine-local paths replaced by placeholders; no other bytes changed. The dataset (sha256 d6f21ea9...) and the embedding cache are not committed; provenance.json records their hashes.",
+      "golden_test": "scripts/verify-longmemeval-opaque-qa.py: keyless recount of saved verdicts, paired tests, strict recall and the prompt leak check"
+    },
+    {
+      "claim_id": "longmemeval-opaque-qa-c-c3",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: Component arm c3, think synthesis prompt over five chunks",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/c/c3.ndjson",
+      "artifact_sha256": "96131c56ea7af97676ea3658a720bf6667aac7c495842dd969b968d84995cf6d",
+      "status": "covered",
+      "note": "Machine-local paths replaced by placeholders; no other bytes changed. The dataset (sha256 d6f21ea9...) and the embedding cache are not committed; provenance.json records their hashes.",
+      "golden_test": "scripts/verify-longmemeval-opaque-qa.py: keyless recount of saved verdicts, paired tests, strict recall and the prompt leak check"
+    },
+    {
+      "claim_id": "longmemeval-opaque-qa-c-chunks",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: The five chunk texts per subset question, each list matched to arm a (100/100)",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/c/chunks.ndjson",
+      "artifact_sha256": "e49bdbed527877946e231f250c7af2cf106bd8de738ad2f2419524f6960f7b24",
+      "status": "covered",
+      "note": "Machine-local paths replaced by placeholders; no other bytes changed. The dataset (sha256 d6f21ea9...) and the embedding cache are not committed; provenance.json records their hashes.",
+      "golden_test": "scripts/verify-longmemeval-opaque-qa.py: keyless recount of saved verdicts, paired tests, strict recall and the prompt leak check"
+    },
+    {
+      "claim_id": "longmemeval-opaque-qa-per-question",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: Per-question correctness for every arm under both judges",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/per_question.csv",
+      "artifact_sha256": "ad09d960b2e99347ef17e8cd8093dc3ea50d364fecc2c6918d8d3e4b1f0cc4ed",
+      "status": "covered",
+      "note": "Machine-local paths replaced by placeholders; no other bytes changed. The dataset (sha256 d6f21ea9...) and the embedding cache are not committed; provenance.json records their hashes.",
+      "golden_test": "scripts/verify-longmemeval-opaque-qa.py: keyless recount of saved verdicts, paired tests, strict recall and the prompt leak check"
+    },
+    {
+      "claim_id": "longmemeval-opaque-qa-subset100-seed20260929",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: The seeded 100-question component subset",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/subset100_seed20260929.txt",
+      "artifact_sha256": "84e6f8d3a760346ea8f670854a8ab886f060e46cb398ed09044bacca586644b3",
+      "status": "covered",
+      "note": "Machine-local paths replaced by placeholders; no other bytes changed. The dataset (sha256 d6f21ea9...) and the embedding cache are not committed; provenance.json records their hashes."
+    },
+    {
+      "claim_id": "longmemeval-opaque-qa-provenance",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: Code, dataset and cache identities, prices, compute, and executed script hashes",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/provenance.json",
+      "artifact_sha256": "599dac69fc790566b1c381493f6cad3997b8b523eaf4c620a179f3695f76af05",
+      "status": "covered",
+      "note": "Machine-local paths replaced by placeholders; no other bytes changed. The dataset (sha256 d6f21ea9...) and the embedding cache are not committed; provenance.json records their hashes."
+    },
+    {
+      "claim_id": "relational-paraphrase-firing-608a174",
+      "readme_anchor": "docs/benchmarks/2026-09-29-relational-paraphrase.md: at 608a174 the keyless check fires on 33 of 145 paraphrases (0 at b80cad6)",
+      "artifact_path": "docs/benchmarks/2026-09-29-relational-paraphrase/relational-ab.608a174-stub-smoke.receipt.json",
+      "artifact_sha256": "b25d1ce67d72b7f6bebb7d04d167dd7eeb899f99705ce21ddb32de0eb381aad7",
+      "expected": {
+        "/category": "relational-ab",
+        "/publishable": false,
+        "/gbrain_version": "0.60.10.0",
+        "/gbrain_pin": "github:garrytan/gbrain#608a174dcfa1d39d5ea2d8fb5b296122b1cc78c5",
+        "/hashes/runner": "7bdda5ec9440db38ba6d362227caa0deaf572d12718cc5b77991b44ab4cb254a",
+        "/resolved_config/paraphrase_grammar/sha256": "29ac7cfd8be73a5964bd9ad2680d395a8f8e126cdba4e4b755204cd155593b4d",
+        "/data/by_split/template/on/relational_fired_queries": 58,
+        "/data/by_split/paraphrase/on/relational_fired_queries": 33
+      },
+      "status": "covered",
+      "note": "Keyless stub-embedding check (one ingestion seed). Firing counts are parser behavior; its recall and hit numbers come from hash embeddings and are not search-quality evidence."
     }
   ]
 }

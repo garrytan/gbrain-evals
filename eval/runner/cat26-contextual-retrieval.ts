@@ -71,7 +71,7 @@ import { join, dirname } from 'path';
 import { tmpdir } from 'os';
 import { fileURLToPath } from 'url';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
-import { importFromContent } from 'gbrain/import-file';
+import { importFromContentEmbedded } from './import-embedded.ts';
 import { configureGateway, __setEmbedTransportForTests } from 'gbrain/ai/gateway';
 import { hybridSearch } from 'gbrain/search/hybrid';
 // Not in gbrain's export map (unlike 'gbrain/think'); deep import is the only
@@ -375,7 +375,7 @@ export function ensureGateway(stubEmbed: boolean): void {
 
 // ─── WS5 config pinning + conformance ────────────────────────────────
 // Pinned per cell BEFORE ingest. 'balanced' would silently enable the
-// zerank-2 reranker when ZEROENTROPY_API_KEY is set — never rely on defaults.
+// reranker with an ambient provider key — never rely on defaults.
 
 const BASE_SEARCH_CONFIG: Record<string, string> = {
   'search.mode': 'balanced',
@@ -504,7 +504,7 @@ export async function runMode(mode: Mode, opts: RunModeOpts): Promise<ModeResult
     }
 
     for (const p of pages) {
-      await importFromContent(engine, p.slug, p.body, { noEmbed: false });
+      await importFromContentEmbedded(engine, p.slug, p.body, { noEmbed: false });
     }
 
     await assertCorpusPremises(engine);
@@ -679,7 +679,7 @@ async function main(): Promise<void> {
       process.stderr.write(`R@${K}=${(r.mean_recall_at_k * 100).toFixed(1)}% MRR=${r.mrr.toFixed(3)} (resolved cr=${r.config.contextual_retrieval}, effective inline=${r.config.mode_effective_inline})\n`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      const origin = e instanceof ConfigConformanceError || e instanceof CorpusPremiseError ? 'harness' : 'harness';
+      const origin = 'harness';
       console.error(`\n[cat26] CELL ABORT (${mode}): ${msg}`);
       for (const q of queries) acc.error(`${mode}:${q.id}`, origin, msg);
       const s = acc.summary();

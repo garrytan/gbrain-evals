@@ -16,8 +16,11 @@
  *      plumbing (capture, sync auto-writes) funnels into.
  *   2. importFromFile (core/import-file.ts) — the disk-file path used by
  *      sync/import. It accepts NO channel-provenance opts BY DESIGN: file
- *      imports stamp pages.source_path and leave source_kind / source_uri /
- *      ingested_via / ingested_at NULL. That boundary is pinned here.
+ *      imports stamp pages.source_path and leave source_kind / ingested_via
+ *      NULL. Since gbrain v0.60.6.0 (#5675) a file import also records its
+ *      file:// origin (the canonical absolute path) in source_uri, which
+ *      server-stamps ingested_at; before that pin source_uri and ingested_at
+ *      stayed NULL (probe changed 2026-09-29 on the re-pin to 608a174).
  *   3. The put_page OP (core/ops/pages.ts) with ctx.remote === false —
  *      the exact call `gbrain capture` makes on a local install
  *      (src/commands/capture.ts drives operations['put_page'].handler with
@@ -36,9 +39,13 @@
  *
  * Plus two semantics probes on the engine's putPage upsert:
  *   5. dedup: re-importing identical content on the same slug hash-matches
- *      and creates no second row (asserts the BEFORE state has exactly one
- *      row — a failed first import can no longer pass vacuously, audit
- *      cats22-25-10).
+ *      and short-circuits: importFromContent returns status 'skipped' and
+ *      the page's row id, updated_at and chunk ids stay the same. (Asserts
+ *      the BEFORE state has exactly one row, audit cats22-25-10.) A single
+ *      row alone proved nothing: pages upsert on (source_id, slug), so a
+ *      re-import that bypasses the short-circuit also leaves one row (audit
+ *      B-24-01). `bypassDedupShortCircuit` re-imports with forceRechunk and
+ *      must fail this probe.
  *   6. CV12 preservation: a later write with NULL provenance (plain
  *      importFromContent) COALESCE-preserves the first-write provenance and
  *      ingested_at.
@@ -50,7 +57,7 @@
  *   bun eval/runner/cat24-capture-provenance.ts
  */
 
-import { writeFileSync, mkdirSync } from 'fs';
+import { writeFileSync, mkdirSync, realpathSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
@@ -58,7 +65,7 @@ import { importFromContent, importFromFile } from 'gbrain/import-file';
 import { configureGateway } from 'gbrain/ai/gateway';
 import { operationsByName, type OperationContext } from 'gbrain/operations';
 import { ProbeAccounting } from './probe-accounting.ts';
-import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt, type ProbeError } from './receipt.ts';
+import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt, type ProbeError, noModelSpend } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 
 export const CAT24_CATEGORY = 'cat24-capture-provenance';
@@ -166,6 +173,8 @@ export interface Cat24Options {
    * must then FAIL — proving the gate assertion is not vacuous.
    */
   simulateBrokenTrustGate?: boolean;
+  /** Test hook: re-import with forceRechunk, bypassing the hash short-circuit. The dedup probe must then FAIL. */
+  bypassDedupShortCircuit?: boolean;
 }
 
 export interface Cat24RunResult {
@@ -212,7 +221,7 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
     outcomes.set(probeId, { probe_id: probeId, score: 0, pass: false, error: acc.summary().errors.at(-1)! });
   };
   const probes: PathProbe[] = [];
-  const dedup = { before_rows: -1, after_rows: -1, distinct_page_ids: -1, reimport_status: '' };
+  const dedup = { before_rows: -1, after_rows: -1, distinct_page_ids: -1, reimport_status: '', updated_at_unchanged: false, chunk_ids_unchanged: false };
   const schema = { selected_columns: ['source_kind', 'source_uri', 'ingested_via', 'ingested_at'], select_succeeded: false };
   const preservation: Omit<PreservationProbeEvidence, keyof ProvenanceProbeEvidence> = {
     before: null, after: null, at_before: null, at_after: null,
@@ -275,10 +284,11 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
       );
 
       // ── Probe 2: importFromFile — no channel provenance BY DESIGN ──
-      // The file path stamps source_path; source_kind/source_uri/ingested_via
-      // stay NULL and ingested_at is only server-stamped when a provenance
-      // field is written. This pins the boundary honestly instead of
-      // relabeling importFromContent as an 'inbox folder' surface.
+      // The file path stamps source_path and its file:// origin in
+      // source_uri (gbrain #5675); source_kind/ingested_via stay NULL and
+      // ingested_at is server-stamped because a provenance field is written.
+      // This pins the boundary honestly instead of relabeling
+      // importFromContent as an 'inbox folder' surface.
       const fileDir = join(tmpdir(), `cat24-files-${process.pid}-${Date.now()}`);
       mkdirSync(join(fileDir, 'inbox'), { recursive: true });
       const relPath = 'inbox/2026-05-23-file-import.md';
@@ -286,7 +296,7 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
       writeFileSync(absPath, '# File import probe\n\nImported from disk via importFromFile.\n', 'utf8');
       await runPathProbe(
         'file-import-no-channel-provenance', 'importFromFile (disk file — sync/import path)', 'inbox/2026-05-23-file-import',
-        { source_kind: null, source_uri: null, ingested_via: null, ingested_at_null: true },
+        { source_kind: null, source_uri: `file://${realpathSync(absPath)}`, ingested_via: null, ingested_at_null: false },
         async () => {
           const res = await importFromFile(engine, absPath, relPath, { noEmbed: true });
           if (res.status === 'error' || res.status === 'skipped') {
@@ -341,34 +351,45 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
 
       // ── Probe 5: dedup — identical re-import creates no second row ──
       try {
-        const before = await engine.executeRaw(
-          `SELECT id FROM pages WHERE slug = $1 AND source_id = 'default' AND deleted_at IS NULL`,
-          [contentSlug],
-        ) as Array<{ id: number }>;
-        dedup.before_rows = before.length;
-        if (before.length !== 1) {
+        const pageState = async () => {
+          const rows = await engine.executeRaw(
+            `SELECT id, updated_at FROM pages WHERE slug = $1 AND source_id = 'default' AND deleted_at IS NULL`,
+            [contentSlug],
+          ) as Array<{ id: number; updated_at: unknown }>;
+          const chunks = rows.length === 1 ? await engine.executeRaw(
+            `SELECT id FROM content_chunks WHERE page_id = $1 ORDER BY id`,
+            [rows[0].id],
+          ) as Array<{ id: number }> : [];
+          return { rows, updated: rows.map(r => String(r.updated_at instanceof Date ? r.updated_at.toISOString() : r.updated_at)), chunkIds: chunks.map(c => Number(c.id)) };
+        };
+        const before = await pageState();
+        dedup.before_rows = before.rows.length;
+        if (before.rows.length !== 1 || before.chunkIds.length === 0) {
           // First import failed or duplicated — the dedup check would be
           // vacuous (audit cats22-25-10). Fail loudly instead.
-          failProbe('dedup-hash-short-circuit', `expected exactly 1 pre-existing row for ${contentSlug}, found ${before.length}`);
+          failProbe('dedup-hash-short-circuit', `expected exactly 1 pre-existing row with chunks for ${contentSlug}, found ${before.rows.length} row(s), ${before.chunkIds.length} chunk(s)`);
         } else {
           const res = await importFromContent(engine, contentSlug, contentBody, {
             noEmbed: true,
             source_kind: 'capture-cli',
             source_uri: 'file:///tmp/probe.md',
             ingested_via: 'capture-cli',
+            ...(options.bypassDedupShortCircuit ? { forceRechunk: true } : {}),
           });
           dedup.reimport_status = res.status;
-          const after = await engine.executeRaw(
-            `SELECT id FROM pages WHERE slug = $1 AND source_id = 'default' AND deleted_at IS NULL`,
-            [contentSlug],
-          ) as Array<{ id: number }>;
-          dedup.after_rows = after.length;
-          dedup.distinct_page_ids = new Set([...before, ...after].map(r => Number(r.id))).size;
-          if (dedup.distinct_page_ids === 1 && after.length === 1) {
-            scoreProbe('dedup-hash-short-circuit');
-          } else {
-            failProbe('dedup-hash-short-circuit', `re-import produced ${dedup.distinct_page_ids} distinct page id(s), ${after.length} row(s)`);
-          }
+          const after = await pageState();
+          dedup.after_rows = after.rows.length;
+          dedup.distinct_page_ids = new Set([...before.rows, ...after.rows].map(r => Number(r.id))).size;
+          dedup.updated_at_unchanged = JSON.stringify(before.updated) === JSON.stringify(after.updated);
+          dedup.chunk_ids_unchanged = JSON.stringify(before.chunkIds) === JSON.stringify(after.chunkIds);
+          const problems = [
+            res.status !== 'skipped' && `re-import status ${res.status}, expected skipped`,
+            (dedup.distinct_page_ids !== 1 || after.rows.length !== 1) && `${dedup.distinct_page_ids} distinct page id(s), ${after.rows.length} row(s)`,
+            !dedup.updated_at_unchanged && 'updated_at changed',
+            !dedup.chunk_ids_unchanged && 'chunk ids changed',
+          ].filter(Boolean);
+          if (problems.length === 0) scoreProbe('dedup-hash-short-circuit');
+          else failProbe('dedup-hash-short-circuit', `identical re-import was not short-circuited: ${problems.join('; ')}`);
         }
       } catch (e: any) {
         failProbe('dedup-hash-short-circuit', `dedup probe threw: ${e?.message ?? e}`);
@@ -416,6 +437,7 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
   const runInvalid = summary.run_invalid;
 
   const receipt: Receipt = {
+    ...noModelSpend('hermetic: no model and no paid request'),
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,
     category: CAT24_CATEGORY,
@@ -425,14 +447,14 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
     n_scored: summary.n_scored,
     completion_rate: summary.completion_rate,
     errors: summary.errors,
-    publishable: summary.publishable && verdict === 'pass' && !options.simulateBrokenTrustGate,
+    publishable: summary.publishable && verdict === 'pass' && !options.simulateBrokenTrustGate && !options.bypassDedupShortCircuit,
     gbrain_version: gbrainVersionResolved(),
     gbrain_pin: gbrainPin(),
     resolved_config: {
       embed_transport: 'none (provider keys stripped; noEmbed + ctx.deferEmbeds)',
       distinct_ingestion_paths: [
         'importFromContent (content import, provenance opts)',
-        'importFromFile (disk file — no channel provenance by design)',
+        'importFromFile (disk file — no channel provenance by design; file:// origin in source_uri)',
         'put_page op ctx.remote=false (capture-cli local shape)',
         'put_page op ctx.remote=true (MCP posture, spoof override)',
       ],

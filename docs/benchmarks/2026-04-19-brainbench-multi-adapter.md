@@ -6,6 +6,8 @@ The graph-first gbrain adapter found more of the required person pages than the 
 
 These are historical adapter comparisons. The adapters differ in retrieval strategy, extraction, and result handling. The **31.4-point precision difference cannot be attributed to the graph alone**. See the [retrieval refresh](2026-09-09-retrieval-refresh.md) for current measurements and settings.
 
+**September 28, 2026 note:** the `gbrain` row below came from an adapter that parsed the four generator question templates with regular expressions and then followed the fixture's graph. It knew the question form in advance, so it is an upper bound for template parsing, not a measurement of gbrain's product search. The adapter is now named `graph-oracle-parse`, and the `gbrain` row in current runs is the product's hybrid search with relationship retrieval. Treat this row as invalid as a product score until a paid re-run.
+
 ## Results and what the measures mean
 
 Current Precision@5 measures how many of the first five result slots are relevant; current Recall@5 measures how much required evidence appears there. The table below predates the metric audit: older code could reward short result lists and count duplicate hits, and the original per-query receipts are unavailable. Its 49.1% / 97.9% figures cannot be interpreted as freshly verified scores under the corrected definitions. A count of correct results is also a different aggregation from averaging per-question scores.

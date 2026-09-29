@@ -18,7 +18,7 @@
 
 import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { runExtract } from 'gbrain/extract';
-import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION } from './receipt.ts';
+import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend } from './receipt.ts';
 import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
 import { readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
@@ -46,7 +46,7 @@ interface RichPage {
 }
 
 function loadCorpus(dir: string): RichPage[] {
-  const files = readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_'));
+  const files = readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_')).sort();
   const out: RichPage[] = [];
   for (const f of files) {
     const p = JSON.parse(readFileSync(join(dir, f), 'utf-8'));
@@ -144,6 +144,25 @@ function buildRelationalQueries(pages: RichPage[]): RelationalQuery[] {
   }
 
   return queries;
+}
+
+/**
+ * Top-K precision over a query set. `standard` is the repository metric
+ * contract (metrics.precisionAtK): correct in top-k / k per query, so a short
+ * list is charged for its empty slots. `legacy` divides by min(k, returned);
+ * the published 2026-04-18 "Precision@5 39.2% to 44.7%" used it, and it is
+ * kept beside the standard number so that table stays traceable (C-04).
+ * `ceiling` is the best standard value possible given the gold set sizes.
+ */
+export function topKPrecision(rows: Array<{ foundAtK: number; returned: number; expected: number }>, k: number): { standard: number; legacy: number; ceiling: number } {
+  const found = rows.reduce((s, r) => s + r.foundAtK, 0);
+  const legacyDenominator = rows.reduce((s, r) => s + Math.min(k, r.returned), 0);
+  const slots = k * rows.length;
+  return {
+    standard: slots > 0 ? found / slots : 0,
+    legacy: legacyDenominator > 0 ? found / legacyDenominator : 0,
+    ceiling: slots > 0 ? rows.reduce((s, r) => s + Math.min(k, r.expected), 0) / slots : 0,
+  };
 }
 
 interface QueryResult {
@@ -353,11 +372,10 @@ async function main() {
   // Top-K aggregates: the metrics that match real agent behavior.
   const beforeTotalAtK = results.reduce((s, r) => s + r.beforeFoundAtK, 0);
   const afterTotalAtK = results.reduce((s, r) => s + r.afterFoundAtK, 0);
-  // Each query contributes min(K, returnedSize) to the precision denominator.
-  const beforeReturnedAtK = results.reduce((s, r) => s + Math.min(TOP_K, r.beforeReturned), 0);
-  const afterReturnedAtK = results.reduce((s, r) => s + Math.min(TOP_K, r.afterReturned), 0);
-  const beforePrecAtK = beforeReturnedAtK > 0 ? beforeTotalAtK / beforeReturnedAtK : 0;
-  const afterPrecAtK = afterReturnedAtK > 0 ? afterTotalAtK / afterReturnedAtK : 0;
+  const beforeP = topKPrecision(results.map(r => ({ foundAtK: r.beforeFoundAtK, returned: r.beforeReturned, expected: r.expected })), TOP_K);
+  const afterP = topKPrecision(results.map(r => ({ foundAtK: r.afterFoundAtK, returned: r.afterReturned, expected: r.expected })), TOP_K);
+  const beforePrecAtK = beforeP.standard;
+  const afterPrecAtK = afterP.standard;
   // Recall@K = correct in top-K / total expected.
   const beforeRecAtK = totalExpected > 0 ? beforeTotalAtK / totalExpected : 0;
   const afterRecAtK = totalExpected > 0 ? afterTotalAtK / totalExpected : 0;
@@ -375,7 +393,9 @@ async function main() {
   log('');
   log('| Metric                       | BEFORE PR #188 | AFTER PR #188 | Δ                |');
   log('|------------------------------|----------------|---------------|------------------|');
-  log(`| **Precision@${TOP_K}**                | **${pct(beforePrecAtK)}**         | **${pct(afterPrecAtK)}**        | **${sign((afterPrecAtK - beforePrecAtK) * 100)}pts**         |`);
+  log(`| **Precision@${TOP_K}** (/${TOP_K})           | **${pct(beforePrecAtK)}**         | **${pct(afterPrecAtK)}**        | **${sign((afterPrecAtK - beforePrecAtK) * 100)}pts**         |`);
+  log(`| Precision@${TOP_K}, legacy /min(${TOP_K}, returned) | ${pct(beforeP.legacy)}          | ${pct(afterP.legacy)}         | ${sign((afterP.legacy - beforeP.legacy) * 100)}pts           |`);
+  log(`| Precision@${TOP_K} ceiling (/${TOP_K})         | ${pct(beforeP.ceiling)}          | ${pct(afterP.ceiling)}         |                  |`);
   log(`| **Recall@${TOP_K}**                   | **${pct(beforeRecAtK)}**         | **${pct(afterRecAtK)}**        | **${sign((afterRecAtK - beforeRecAtK) * 100)}pts**         |`);
   log(`| Correct in top-${TOP_K} (total)       | ${String(beforeTotalAtK).padEnd(14)} | ${String(afterTotalAtK).padEnd(13)} | ${sign(afterTotalAtK - beforeTotalAtK).replace('.0','')}              |`);
   log('');
@@ -461,6 +481,7 @@ async function main() {
 
   const finishedAt = new Date().toISOString();
   writeReceipt(receiptPath('before-after'), {
+    ...noModelSpend('hermetic: no model and no paid request'),
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,
     category: 'before-after',
@@ -477,8 +498,13 @@ async function main() {
     finished_at: finishedAt,
     data: {
       top_k: TOP_K,
-      before: { recall_at_k: beforeRecAtK, precision_at_k: beforePrecAtK, found_at_k: beforeTotalAtK },
-      after: { recall_at_k: afterRecAtK, precision_at_k: afterPrecAtK, found_at_k: afterTotalAtK },
+      precision_denominators: {
+        precision_at_k: `standard: correct in top-${TOP_K} / (${TOP_K} x queries)`,
+        precision_at_k_legacy: `legacy, pre-2026-09-28 headline: correct in top-${TOP_K} / sum(min(${TOP_K}, returned))`,
+        precision_at_k_ceiling: `best achievable standard value: sum(min(${TOP_K}, expected)) / (${TOP_K} x queries)`,
+      },
+      before: { recall_at_k: beforeRecAtK, precision_at_k: beforePrecAtK, precision_at_k_legacy: beforeP.legacy, precision_at_k_ceiling: beforeP.ceiling, found_at_k: beforeTotalAtK },
+      after: { recall_at_k: afterRecAtK, precision_at_k: afterPrecAtK, precision_at_k_legacy: afterP.legacy, precision_at_k_ceiling: afterP.ceiling, found_at_k: afterTotalAtK },
       gate_failures: gateFailures,
     },
   });
@@ -490,4 +516,4 @@ async function main() {
   log(`\n✓ gates passed: AFTER >= BEFORE on top-${TOP_K} found/recall/precision, no type regressed.`);
 }
 
-main().catch(e => { console.error(e); process.exit(1); });
+if (import.meta.main) main().catch(e => { console.error(e); process.exit(1); });

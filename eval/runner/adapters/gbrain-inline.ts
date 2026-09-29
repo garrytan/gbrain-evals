@@ -22,11 +22,12 @@
  * needs the raw keyword arm on the SAME brain the gbrain arm searches.
  */
 
-import { PGLiteEngine } from 'gbrain/pglite-engine';
-import { runExtract } from 'gbrain/extract';
-import { hybridSearch } from 'gbrain/search/hybrid';
-import { importFromContent } from 'gbrain/import-file';
-import { configureGateway, diagnoseEmbedding } from 'gbrain/ai/gateway';
+import * as enginePackage from 'gbrain/pglite-engine';
+import * as extractPackage from 'gbrain/extract';
+import * as searchPackage from 'gbrain/search/hybrid';
+import * as importPackage from 'gbrain/import-file';
+import * as gatewayPackage from 'gbrain/ai/gateway';
+import { assertEmbedded } from '../import-embedded.ts';
 import type { HybridSearchMeta, SearchResult } from 'gbrain/types';
 import type { Adapter, AdapterConfig, BrainState, Page, PublicQuery, RankedDoc } from '../types.ts';
 import { pagesInResultOrder } from './page-results.ts';
@@ -51,10 +52,37 @@ export interface GbrainInlineOptions {
    * provider (spending with a real key, a 401 with the dummy key).
    */
   expectStubTransport?: boolean;
+  /**
+   * Installed alias to load every gbrain module from. Memory-cue experiments
+   * pass 'gbrain-cues' so the engine, search, import and gateway all come
+   * from the cue build; everything else measures the pinned 'gbrain'.
+   */
+  productPackage?: 'gbrain' | 'gbrain-cues';
+}
+
+interface ProductModules {
+  PGLiteEngine: typeof enginePackage.PGLiteEngine;
+  runExtract: typeof extractPackage.runExtract;
+  hybridSearch: typeof searchPackage.hybridSearch;
+  importFromContent: typeof importPackage.importFromContent;
+  configureGateway: typeof gatewayPackage.configureGateway;
+  diagnoseEmbedding: typeof gatewayPackage.diagnoseEmbedding;
+}
+
+async function loadProduct(pkg: 'gbrain' | 'gbrain-cues'): Promise<ProductModules> {
+  const [engine, extract, search, importer, gateway] = pkg === 'gbrain'
+    ? [enginePackage, extractPackage, searchPackage, importPackage, gatewayPackage]
+    : await Promise.all([
+      import(`${pkg}/pglite-engine`) as Promise<typeof enginePackage>, import(`${pkg}/extract`) as Promise<typeof extractPackage>,
+      import(`${pkg}/search/hybrid`) as Promise<typeof searchPackage>, import(`${pkg}/import-file`) as Promise<typeof importPackage>,
+      import(`${pkg}/ai/gateway`) as Promise<typeof gatewayPackage>,
+    ]);
+  return { PGLiteEngine: engine.PGLiteEngine, runExtract: extract.runExtract, hybridSearch: search.hybridSearch,
+    importFromContent: importer.importFromContent, configureGateway: gateway.configureGateway, diagnoseEmbedding: gateway.diagnoseEmbedding };
 }
 
 /** Throw unless gbrain's test embed transport is installed (see GbrainInlineOptions.expectStubTransport). */
-export function assertStubEmbedTransport(where: string): void {
+export function assertStubEmbedTransport(where: string, diagnoseEmbedding = gatewayPackage.diagnoseEmbedding): void {
   const d = diagnoseEmbedding();
   if (!d.ok || d.provider !== '<test-transport>') {
     throw new Error(
@@ -108,7 +136,8 @@ const GC_EVERY_PAGES = 40;
 const GC_EVERY_QUERIES = 25;
 
 interface InlineState {
-  engine: PGLiteEngine;
+  engine: enginePackage.PGLiteEngine;
+  product: ProductModules;
   resolvedConfig: Record<string, string>;
   observed: InlineObservedStats;
 }
@@ -124,15 +153,16 @@ export class GbrainInlineAdapter implements Adapter {
 
   async init(rawPages: Page[], _config: AdapterConfig): Promise<BrainState> {
     // v0.40+ requires the gateway configured before any embed call —
-    // importFromContent embeds inline and its failure PROPAGATES.
-    configureGateway({
+    // Imports embed inline; assertEmbedded turns a deferred embedding into a throw.
+    const product = await loadProduct(this.opts.productPackage ?? 'gbrain');
+    product.configureGateway({
       embedding_model: this.opts.embeddingModel ?? 'openai:text-embedding-3-large',
       embedding_dimensions: this.opts.embeddingDimensions ?? 1536,
       env: process.env as Record<string, string | undefined>,
     });
-    if (this.opts.expectStubTransport) assertStubEmbedTransport('init');
+    if (this.opts.expectStubTransport) assertStubEmbedTransport('init', product.diagnoseEmbedding);
 
-    const engine = new PGLiteEngine();
+    const engine = new product.PGLiteEngine();
     await engine.connect({});
     await engine.initSchema();
 
@@ -162,14 +192,14 @@ export class GbrainInlineAdapter implements Adapter {
         if (p.timeline && p.timeline.trim().length > 0) {
           fm.push('', '## Timeline', '', p.timeline);
         }
-        await importFromContent(engine, p.slug, fm.join('\n'));
+        assertEmbedded(await product.importFromContent(engine, p.slug, fm.join('\n')), p.slug);
         imported += 1;
         if (imported % GC_EVERY_PAGES === 0) gcNow();
       }
       gcNow();
       if (this.opts.extract !== false) {
-        await runExtract(engine, ['links', '--source', 'db']);
-        await runExtract(engine, ['timeline', '--source', 'db']);
+        await product.runExtract(engine, ['links', '--source', 'db']);
+        await product.runExtract(engine, ['timeline', '--source', 'db']);
         gcNow();
       }
     } finally {
@@ -178,20 +208,21 @@ export class GbrainInlineAdapter implements Adapter {
     }
     return {
       engine,
+      product,
       resolvedConfig,
       observed: { queries: 0, rerank_scored_queries: 0, keyword_arm_confidence_stamped: 0, keyword_arm_confidence_downweighted: 0 },
     } satisfies InlineState;
   }
 
   async query(q: PublicQuery, state: BrainState): Promise<RankedDoc[]> {
-    const { engine, observed, resolvedConfig } = state as InlineState;
-    if (this.opts.expectStubTransport && observed.queries === 0) assertStubEmbedTransport('query');
+    const { engine, product, observed, resolvedConfig } = state as InlineState;
+    if (this.opts.expectStubTransport && observed.queries === 0) assertStubEmbedTransport('query', product.diagnoseEmbedding);
     let meta: HybridSearchMeta | undefined;
     let relationalMeta: unknown;
     let chunkResults: SearchResult[] = [];
     let error: unknown;
     try {
-      chunkResults = await hybridSearch(engine, q.text, {
+      chunkResults = await product.hybridSearch(engine, q.text, {
         limit: this.opts.topK * 6, onMeta: m => { meta = m; },
         onRelationalMeta: m => { relationalMeta = m; },
       });
@@ -220,7 +251,7 @@ export class GbrainInlineAdapter implements Adapter {
   }
 
   /** The live engine behind a BrainState — for calibration scripts that need the raw arms on the same brain. */
-  engineOf(state: BrainState): PGLiteEngine {
+  engineOf(state: BrainState): enginePackage.PGLiteEngine {
     return (state as InlineState).engine;
   }
 

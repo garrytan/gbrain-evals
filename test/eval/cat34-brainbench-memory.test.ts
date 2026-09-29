@@ -45,6 +45,7 @@ const argv = process.argv.slice(2);
 const outIdx = argv.indexOf('--out');
 const out = outIdx >= 0 ? argv[outIdx + 1] : null;
 const mode = readFileSync('mode.txt', 'utf-8').trim();
+if (process.env.UNRECOGNIZED_API_KEY || process.env.UNRECOGNIZED_AUTH_TOKEN) process.exit(9);
 
 const suites = ['know-to-ask', 'push', 'write-back', 'continuity'];
 const harnesses = ['openclaw', 'claude-code', 'codex'];
@@ -93,6 +94,10 @@ if (mode === 'no-write') {
   exitCode = 2; // real brainbench exits 2 on seed failures
 } else if (mode === 'vacuous') {
   for (const c of doc.cells) c.gold_total = 0;
+} else if (mode === 'contract-fail') {
+  doc.cells.find((c) => c.harness === 'codex' && c.suite === 'push').gold_failed = 3;
+} else if (mode === 'no-production') {
+  doc.cells = doc.cells.filter((c) => c.seam !== 'production');
 }
 
 if (out) {
@@ -163,6 +168,27 @@ describe('validateResultDoc', () => {
 // ─── End-to-end: good path ─────────────────────────────────────────────
 
 describe('runCat34 good path', () => {
+  test('credentials are stripped without needing a provider-name denylist', async () => {
+    const savedKey = process.env.UNRECOGNIZED_API_KEY;
+    const savedToken = process.env.UNRECOGNIZED_AUTH_TOKEN;
+    process.env.UNRECOGNIZED_API_KEY = 'dummy-provider-key';
+    process.env.UNRECOGNIZED_AUTH_TOKEN = 'dummy-provider-token';
+    try {
+      const { run } = await runWithMode('good');
+      expect(run.exitCode).toBe(0);
+      expect(run.receipt.n_scored).toBe(12);
+      expect(run.receipt.resolved_config?.env_keys_stripped).toContain('UNRECOGNIZED_API_KEY');
+      expect(run.receipt.resolved_config?.env_keys_stripped).toContain('UNRECOGNIZED_AUTH_TOKEN');
+      expect(process.env.UNRECOGNIZED_API_KEY).toBe('dummy-provider-key');
+      expect(process.env.UNRECOGNIZED_AUTH_TOKEN).toBe('dummy-provider-token');
+    } finally {
+      if (savedKey === undefined) delete process.env.UNRECOGNIZED_API_KEY;
+      else process.env.UNRECOGNIZED_API_KEY = savedKey;
+      if (savedToken === undefined) delete process.env.UNRECOGNIZED_AUTH_TOKEN;
+      else process.env.UNRECOGNIZED_AUTH_TOKEN = savedToken;
+    }
+  }, RUN_TIMEOUT);
+
   test('all-pass matrix → completed/pass, exit 0, fresh canonical artifact', async () => {
     const { run, reportDir } = await runWithMode('good');
     expect(run.exitCode).toBe(0);
@@ -261,6 +287,21 @@ describe('failable gate', () => {
     expect(run.exitCode).toBe(1);
     expect(run.receipt.verdict).toBe('fail');
     expect(run.receipt.errors.some((e) => e.probe_id === 'seed:gen-adv-001' && e.origin === 'sut')).toBe(true);
+  }, RUN_TIMEOUT);
+
+  test('PC-08: a failing contract-seam cell is informational, so a clean production seam can pass', async () => {
+    const { run } = await runWithMode('contract-fail');
+    expect(run.exitCode).toBe(0);
+    expect(run.receipt.verdict).toBe('pass');
+    expect(run.receipt.errors).toEqual([]);
+    expect((run.receipt.data as any).informational_failures).toEqual([
+      { cell: 'codex/push', seam: 'contract', gold_failed: 3, gold_total: 5 },
+    ]);
+  }, RUN_TIMEOUT);
+
+  test('PC-08: a matrix without production cells cannot pass', async () => {
+    const { run } = await runWithMode('no-production');
+    expect(run.receipt.verdict).toBe('fail');
   }, RUN_TIMEOUT);
 
   test('vacuous cells (gold_total 0) cannot pass — run invalidated', async () => {

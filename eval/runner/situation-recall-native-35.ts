@@ -142,7 +142,7 @@ export function collectNativeRows35(artifact: unknown): NativeRegressionObservat
   };
   const checkEventLink = (row: RecordRow, event: RecordRow | undefined, label: string) => same(row.judge_event_id, event?.event_id ?? null, label);
   const hallucinationTotals: Record<string, { claims: number; verifiable: number; ungrounded: number; rate: number }> = {};
-  const leakage: Record<string, { hits: number; confirmed: number; denominator: number; rate: number }> = {};
+  const leakage: Record<string, { hits: number; confirmed: number; denominator: number; judge_failed?: number; rate: number }> = {};
   const usable: Record<string, { satisfied: number; total: number; rate: number }> = {};
   const coverage: Record<string, Array<{ credit: number; full: number; total: number; partial: number }>> = {};
   const breakdown: Record<string, Record<string, { credit: number; total: number }>> = {};
@@ -277,6 +277,8 @@ export function collectNativeRows35(artifact: unknown): NativeRegressionObservat
         same(row.confirmation, outcome, 'distractor confirmation outcome');
         checkEventLink(row, hit && lane !== 'verbatim' ? confirmation : undefined, 'distractor event link');
         confirmed += Number(outcome === 'confirmed' || outcome === 'verbatim_hit');
+        // A failed confirmation can never be confirmed: out of the denominator (audit PC-04).
+        denominator -= Number(outcome === 'judge_failed');
       }
       requireEvidence(lane !== 'verbatim' && hits > 0 ? !!confirmation : !confirmation, 'distractor judge eligibility disagrees');
       if (confirmation) {
@@ -360,8 +362,13 @@ export function collectNativeRows35(artifact: unknown): NativeRegressionObservat
     const b = leakage[lane];
     b.hits = source.filter((d) => d.anchor_hit === true).length;
     b.confirmed = source.filter((d) => d.confirmation === 'confirmed' || d.confirmation === 'verbatim_hit').length;
-    b.denominator = source.filter((d) => d.denominator_eligible).length;
+    const judgeFailed = source.filter((d) => d.confirmation === 'judge_failed').length;
+    b.denominator = source.filter((d) => d.denominator_eligible).length - judgeFailed;
+    b.judge_failed = judgeFailed;
     b.rate = b.denominator ? b.confirmed / b.denominator : 0;
+    // Receipts before 0.10.1 carry no judge_failed field; they recorded no failed confirmation.
+    const recorded = (receipt.distractor_leakage as Record<string, Record<string, unknown>> | undefined)?.[lane];
+    if (recorded && !('judge_failed' in recorded) && judgeFailed === 0) delete b.judge_failed;
   }
   same(leakage, receipt.distractor_leakage, 'distractor aggregates');
   for (const lane of lanes) requireEvidence(leakage[lane], `distractor leakage ${lane} has no native aggregate because no output was scanned; cannot manufacture a zero`);

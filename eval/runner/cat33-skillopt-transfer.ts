@@ -56,10 +56,10 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { configureGateway, __setChatTransportForTests } from 'gbrain/ai/gateway';
-// Deep src imports: no skillopt subpath in gbrain's export map yet (audit skillopt-cats-11).
-import { runSkillOpt } from '../../node_modules/gbrain/src/core/skillopt/orchestrator.ts';
-import { scoreSkillOnTasks } from '../../node_modules/gbrain/src/core/skillopt/validate-gate.ts';
-import { loadHeldOut } from '../../node_modules/gbrain/src/core/skillopt/held-out.ts';
+// SkillOpt entry points via gbrain's public `./core/skillopt` export (audit skillopt-cats-11).
+import {
+  runSkillOpt, scoreSkillOnTasks, loadHeldOut,
+} from 'gbrain/core/skillopt';
 import { ProbeAccounting } from './probe-accounting.ts';
 import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
@@ -112,8 +112,9 @@ export interface PairResult {
   yopt_on_y: number | null;
   transfer_lift: number | null;
   transfer_ratio: number | null;
-  band_ok: boolean;
-  transferred: boolean;
+  /** null in B-pre, where no ceiling runs and a ratio would be 1 by construction (audit B-33-01). */
+  band_ok: boolean | null;
+  transferred: boolean | null;
   cost_usd: number;
   /** Outcome of the optimize-on-X step ('accepted' | 'no_improvement' | 'aborted' | 'errored'). */
   x_outcome: string;
@@ -188,7 +189,8 @@ export function computeCat33Gate(results: PairResult[], bpre: boolean): boolean 
       && (r.y_outcome === 'skipped_bpre' || CLEAN_OUTCOMES.has(r.y_outcome)));
   }
   const scored = results.filter((r) => r.error_origin !== 'dependency');
-  if (scored.length === 0) return false;
+  // At most one pair may drop out on a dependency error (audit B-30-04).
+  if (scored.length === 0 || scored.length < results.length - 1) return false;
   const transferred = scored.filter((r) => r.transferred).length;
   return transferred >= Math.ceil(scored.length * 0.75);
 }
@@ -297,6 +299,19 @@ async function runPair(deps: PairDeps, seed: string, x: string, y: string): Prom
     };
   }
 
+  if (yOutcome === 'skipped_bpre') {
+    // B-pre skips the Y ceiling, so Yopt_on_Y would just be Xopt_on_Y and the
+    // ratio 1 by construction (audit B-33-01). Report the lift only; the
+    // B-pre gate checks that both steps ran cleanly.
+    deps.acc.score(pairId, 1);
+    deps.log(`[cat33]   seed_on_Y=${seedOnY.toFixed(2)} Xopt_on_Y=${xoptOnY.toFixed(2)} lift=${(xoptOnY - seedOnY).toFixed(2)} ratio=n/a (B-pre: no ceiling run)\n`);
+    return {
+      seed, x, y, seed_on_y: seedOnY, xopt_on_y: xoptOnY, yopt_on_y: null,
+      transfer_lift: xoptOnY - seedOnY, transfer_ratio: null, band_ok: null,
+      transferred: null, cost_usd: totalCost,
+      x_outcome: xopt.outcome, y_outcome: yOutcome,
+    };
+  }
   const m = computeTransfer(seedOnY, xoptOnY, yoptOnY);
   deps.acc.score(pairId, m.transferred ? 1 : 0);
   deps.log(`[cat33]   seed_on_Y=${seedOnY.toFixed(2)} Xopt_on_Y=${xoptOnY.toFixed(2)} Yopt_on_Y=${yoptOnY.toFixed(2)} lift=${m.transfer_lift >= 0 ? '+' : ''}${m.transfer_lift.toFixed(2)} ratio=${m.transfer_ratio === null ? 'n/a (ceiling flat)' : m.transfer_ratio.toFixed(2)} band_ok=${m.band_ok}\n`);

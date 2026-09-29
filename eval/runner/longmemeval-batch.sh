@@ -7,10 +7,14 @@
 # (adapter × question) pairs have been written to the shared NDJSON, and
 # restarts the pool until all pairs land.
 #
-# Completion target: derived from the ACTUAL dataset (question count, minus
-# whatever --stratify/--limit trims), not a hardcoded 500 (audit finding
-# longmemeval-10). A batch that makes zero progress aborts the loop instead
-# of burning all MAX_BATCHES on no-op workers.
+# Completion target: the runner's own plan (`longmemeval.ts --print-plan`):
+# the selected question ids after --stratify/--limit and the run_config_hash
+# of every requested adapter (audit findings longmemeval-10 and PD-03). Only
+# clean rows for a planned (adapter, question) with the planned hash count,
+# and completion needs exact equality. An NDJSON that already holds rows from
+# another adapter set, configuration or question set is refused rather than
+# resumed. A batch that makes zero progress aborts the loop instead of
+# burning all MAX_BATCHES on no-op workers.
 #
 # Why parallel:
 #   - Each worker is independent. Worker N takes questions where i % 3 == N.
@@ -25,6 +29,13 @@
 #     long sessions. Bounding each invocation with a wall budget plus
 #     OS-level kill cleans up the abort regime cleanly. The NDJSON is the
 #     resume state.
+#
+# Budget: paid runs pass --budget-usd <dollars> (or BRAINBENCH_BUDGET_USD).
+# The wrapper opens ONE budget-ledger run with that budget and hands its id to
+# every worker as --budget-run-id, so the cap covers all workers and all
+# restarted batches together. Before 0.10.1 each worker opened its own run
+# with the full --budget-usd, so N workers could spend N times the cap.
+# --budget-ledger and --program-cap-usd pass through to the ledger and workers.
 #
 # Run:
 #   bash eval/runner/longmemeval-batch.sh
@@ -43,6 +54,7 @@ cd "$(dirname "$0")/../.."
 # Test seam: point LME_RUNNER at a stub to exercise this wrapper hermetically.
 RUNNER="${LME_RUNNER:-eval/runner/longmemeval.ts}"
 AGGREGATOR="${LME_AGGREGATOR:-eval/runner/longmemeval-aggregate.ts}"
+LEDGER_CLI=eval/runner/budget-ledger.ts
 
 BUDGET_SECONDS=600
 MAX_BATCHES=50
@@ -55,11 +67,17 @@ NDJSON=""
 LIMIT=""
 STRATIFY=""
 EXPECTED_QUESTIONS="${LME_EXPECTED_QUESTIONS:-}"
-EXPECTED_ADAPTERS=4
 
 EXTRA_ARGS=()
+BUDGET_USD="${BRAINBENCH_BUDGET_USD:-}"
+BUDGET_RUN_ID=""
+LEDGER_ARGS=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --budget-usd) BUDGET_USD="$2"; shift 2 ;;
+    --budget-usd=*) BUDGET_USD="${1#--budget-usd=}"; shift ;;
+    --budget-run-id) BUDGET_RUN_ID="$2"; shift 2 ;;
+    --budget-ledger|--program-cap-usd) LEDGER_ARGS+=("$1" "$2"); EXTRA_ARGS+=("$1" "$2"); shift 2 ;;
     --top-k) TOP_K="$2"; shift 2 ;;
     --adapters) ADAPTERS="$2"; shift 2 ;;
     --budget) BUDGET_SECONDS="$2"; shift 2 ;;
@@ -70,9 +88,6 @@ while [[ $# -gt 0 ]]; do
     --limit) LIMIT="$2"; shift 2 ;;
     --stratify) STRATIFY="$2"; shift 2 ;;
     --expected-questions) EXPECTED_QUESTIONS="$2"; shift 2 ;;
-    # Runner-side single-adapter mode: keep the completion target honest.
-    # (--adapters still overrides below, matching the runner's precedence.)
-    --keyword-only) EXTRA_ARGS+=("$1"); EXPECTED_ADAPTERS=1; shift ;;
     *) EXTRA_ARGS+=("$1"); shift ;;
   esac
 done
@@ -88,68 +103,106 @@ fi
 
 NDJSON="${NDJSON:-eval/reports/longmemeval/longmemeval-${DATASET}-k${TOP_K}.ndjson}"
 
-if [[ -n "$ADAPTERS" ]]; then
-  EXPECTED_ADAPTERS=$(echo "$ADAPTERS" | tr ',' '\n' | wc -l | tr -d ' ')
-fi
+RUNNER_ARGS=(
+  --top-k "$TOP_K"
+  --dataset "$DATASET"
+  --path "$DATASET_PATH"
+  ${ADAPTERS:+--adapters "$ADAPTERS"}
+  ${LIMIT:+--limit "$LIMIT"}
+  ${STRATIFY:+--stratify "$STRATIFY"}
+  ${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"}
+)
 
-# Derive the completion target from the dataset, applying the same
-# --stratify (min(perType, bucket) per question_type) then --limit
-# truncation the runner applies. --expected-questions overrides.
-if [[ -z "$EXPECTED_QUESTIONS" ]]; then
-  EXPECTED_QUESTIONS=$(bun -e '
-    const fs = require("fs");
-    const qs = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
-    const stratify = Number(process.argv[2] || 0);
-    const limit = Number(process.argv[3] || 0);
-    let n;
-    if (stratify > 0) {
-      const buckets = {};
-      for (const q of qs) buckets[q.question_type] = (buckets[q.question_type] ?? 0) + 1;
-      n = Object.values(buckets).reduce((a, b) => a + Math.min(stratify, b), 0);
-    } else {
-      n = qs.length;
-    }
-    if (limit > 0) n = Math.min(n, limit);
-    console.log(n);
-  ' "$DATASET_PATH" "${STRATIFY:-0}" "${LIMIT:-0}")
-fi
-
-EXPECTED_TOTAL=$((EXPECTED_QUESTIONS * EXPECTED_ADAPTERS))
+# The plan names what this run must produce: per-adapter run_config_hash and
+# the selected question ids. The runner derives both, so the wrapper never
+# re-implements adapter naming, sampling or hashing.
 mkdir -p "$(dirname "$NDJSON")"
+PLAN_FILE="$(mktemp)"
+trap 'rm -f "$PLAN_FILE"' EXIT
+if ! bun "$RUNNER" --print-plan "${RUNNER_ARGS[@]}" > "$PLAN_FILE"; then
+  echo "[longmemeval-batch] FATAL: the runner could not resolve a run plan (see its output above)" >&2
+  exit 1
+fi
 
-# Count UNIQUE completed (adapter, question_id) pairs, not raw lines.
-# Concurrent workers can write the same pair twice when their
-# resume-skip-set was read before the other worker's write landed; dedup
-# before checking completion. Rows with an `error` field are re-queued by
-# the runner, so they don't count as completed here either.
-count_done() {
+# Prints "<question count> <adapter count> <skipped adapters>" from the plan.
+read -r PLAN_QUESTIONS PLAN_ADAPTERS PLAN_SKIPPED < <(bun -e '
+  const fs = require("fs");
+  const lines = fs.readFileSync(process.argv[1], "utf8").split("\n").filter(l => l.trim());
+  const plan = JSON.parse(lines[lines.length - 1]);
+  const skipped = plan.adapters_skipped.map(s => s.adapter).join(",");
+  console.log(plan.question_ids.length, Object.keys(plan.run_config_hashes).length, skipped || "-");
+' "$PLAN_FILE")
+if [[ "$PLAN_SKIPPED" != "-" ]]; then
+  echo "[longmemeval-batch] FATAL: adapter(s) skipped by preflight can never complete: $PLAN_SKIPPED" >&2
+  exit 1
+fi
+if [[ -n "$EXPECTED_QUESTIONS" && "$EXPECTED_QUESTIONS" -ne "$PLAN_QUESTIONS" ]]; then
+  echo "[longmemeval-batch] FATAL: --expected-questions $EXPECTED_QUESTIONS but the runner plans $PLAN_QUESTIONS questions" >&2
+  exit 1
+fi
+EXPECTED_QUESTIONS="$PLAN_QUESTIONS"
+EXPECTED_ADAPTERS="$PLAN_ADAPTERS"
+EXPECTED_TOTAL=$((EXPECTED_QUESTIONS * EXPECTED_ADAPTERS))
+
+# Prints "<done> <foreign>": done = UNIQUE clean (adapter, question_id) rows
+# that match the plan's adapter, question set and run_config_hash (concurrent
+# workers can write the same pair twice, so dedup first; error rows are
+# re-queued by the runner and never count). foreign = rows of any kind that
+# fall outside the plan.
+count_rows() {
   if [[ -f "$NDJSON" ]]; then
     bun -e '
-      const fs = require("fs"); const seen = new Set();
-      for (const l of fs.readFileSync(process.argv[1], "utf8").split("\n")) {
+      const fs = require("fs");
+      const lines = fs.readFileSync(process.argv[1], "utf8").split("\n").filter(l => l.trim());
+      const plan = JSON.parse(lines[lines.length - 1]);
+      const questions = new Set(plan.question_ids);
+      const seen = new Set();
+      let foreign = 0;
+      for (const l of fs.readFileSync(process.argv[2], "utf8").split("\n")) {
         if (!l.trim()) continue;
-        try {
-          const o = JSON.parse(l);
-          if (o.error === undefined) seen.add(`${o.adapter}::${o.question_id}`);
-        } catch {}
+        let o;
+        try { o = JSON.parse(l); } catch { continue; }
+        if (plan.run_config_hashes[o.adapter] === undefined || o.run_config_hash !== plan.run_config_hashes[o.adapter] || !questions.has(o.question_id)) foreign++;
+        else if (o.error === undefined) seen.add(`${o.adapter}::${o.question_id}`);
       }
-      console.log(seen.size);
-    ' "$NDJSON"
+      console.log(seen.size, foreign);
+    ' "$PLAN_FILE" "$NDJSON"
   else
-    echo 0
+    echo 0 0
   fi
 }
 
 echo "[longmemeval-batch] dataset=$DATASET ($DATASET_PATH) expected=$EXPECTED_QUESTIONS questions × $EXPECTED_ADAPTERS adapters = $EXPECTED_TOTAL pairs"
 
+# One shared budget run for every worker in every batch (see the header).
+OPENED_RUN=0
+close_budget_run() {
+  if [[ "$OPENED_RUN" -eq 1 ]]; then
+    bun "$LEDGER_CLI" close --budget-run-id "$BUDGET_RUN_ID" ${LEDGER_ARGS[@]+"${LEDGER_ARGS[@]}"} >&2 || true
+  fi
+}
+trap 'rm -f "$PLAN_FILE"; close_budget_run' EXIT
+open_budget_run() {
+  if [[ -z "$BUDGET_RUN_ID" && -n "$BUDGET_USD" ]]; then
+    BUDGET_RUN_ID="$(bun "$LEDGER_CLI" open --runner longmemeval-batch --budget-usd "$BUDGET_USD" ${LEDGER_ARGS[@]+"${LEDGER_ARGS[@]}"})"
+    OPENED_RUN=1
+    echo "[longmemeval-batch] shared budget run $BUDGET_RUN_ID (\$$BUDGET_USD across all workers)"
+  fi
+}
+
 COMPLETE=0
-DONE=$(count_done)
-if [[ "$DONE" -ge "$EXPECTED_TOTAL" ]]; then
+read -r DONE FOREIGN < <(count_rows)
+if [[ "$FOREIGN" -ne 0 ]]; then
+  echo "[longmemeval-batch] FATAL: $NDJSON holds $FOREIGN row(s) outside this run's plan (another adapter set, run configuration or question set); resuming would mix runs. Use a fresh --ndjson path." >&2
+  exit 1
+fi
+if [[ "$DONE" -eq "$EXPECTED_TOTAL" ]]; then
   COMPLETE=1
   echo "All $EXPECTED_TOTAL pairs already complete."
 fi
 
 if [[ "$COMPLETE" -ne 1 ]]; then
+  open_budget_run
   for batch in $(seq 1 $MAX_BATCHES); do
     echo "=== batch $batch — $(date +%H:%M:%S) — completed $DONE/$EXPECTED_TOTAL pairs (workers=$WORKERS, budget=${BUDGET_SECONDS}s) ==="
 
@@ -158,18 +211,12 @@ if [[ "$COMPLETE" -ne 1 ]]; then
     # starts so the migration boilerplate doesn't all hit at once.
     pids=()
     for w in $(seq 0 $((WORKERS - 1))); do
-      bun "$RUNNER" \
-        --top-k "$TOP_K" \
-        --dataset "$DATASET" \
-        --path "$DATASET_PATH" \
+      env -u BRAINBENCH_BUDGET_USD bun "$RUNNER" "${RUNNER_ARGS[@]}" \
+        ${BUDGET_RUN_ID:+--budget-run-id "$BUDGET_RUN_ID"} \
         --ndjson "$NDJSON" \
         --max-wall-seconds "$BUDGET_SECONDS" \
         --worker-id "$w" \
         --total-workers "$WORKERS" \
-        ${ADAPTERS:+--adapters "$ADAPTERS"} \
-        ${LIMIT:+--limit "$LIMIT"} \
-        ${STRATIFY:+--stratify "$STRATIFY"} \
-        ${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"} \
         > "/tmp/lme-worker-$w.log" 2>&1 &
       pids+=($!)
       sleep 0.5
@@ -186,8 +233,12 @@ if [[ "$COMPLETE" -ne 1 ]]; then
     # main file on next open; this is a no-op now but worth the comment.
     sleep 1
 
-    NEW_DONE=$(count_done)
-    if [[ "$NEW_DONE" -ge "$EXPECTED_TOTAL" ]]; then
+    read -r NEW_DONE FOREIGN < <(count_rows)
+    if [[ "$FOREIGN" -ne 0 ]]; then
+      echo "[longmemeval-batch] FATAL: batch $batch wrote $FOREIGN row(s) outside the plan; not aggregating" >&2
+      exit 1
+    fi
+    if [[ "$NEW_DONE" -eq "$EXPECTED_TOTAL" ]]; then
       DONE=$NEW_DONE
       COMPLETE=1
       echo "All pairs complete after batch $batch."
@@ -209,4 +260,4 @@ fi
 
 echo
 echo "=== aggregating final results ==="
-bun "$AGGREGATOR" "$NDJSON"
+bun "$AGGREGATOR" "$NDJSON" --expect-rows "$EXPECTED_QUESTIONS"

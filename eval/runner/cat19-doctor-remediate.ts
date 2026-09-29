@@ -36,7 +36,8 @@
  *                                     zero embed failures
  *   g4 links_extracted              — link_count grew by >= minLinksInserted
  *   g5 brain_score_climbs           — brain_score delta >= minScoreDelta
- * verdict 'pass' iff every gate scores 1; otherwise 'fail'. Exit code is
+ * verdict 'pass' iff every gate scores 1; otherwise 'fail'. A stub-embed
+ * run is never publishable (audit A-22). Exit code is
  * non-zero unless verdict === 'pass'. brain_score_delta is always computed
  * from real getHealth scores — the old null-scored fallback path (which made
  * delta read 0 when unmeasurable, audit cats18-21-17) is gone; a getHealth
@@ -61,7 +62,7 @@ import { computeRecommendations } from '../../node_modules/gbrain/src/core/brain
 import { runEmbedCore } from '../../node_modules/gbrain/src/commands/embed.ts';
 import { makeHashEmbedTransport } from './cat18-embedding-providers.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
-import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt } from './receipt.ts';
+import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt, noModelSpend } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 
 export const CAT19_CATEGORY = 'cat19-doctor-remediate';
@@ -420,13 +421,16 @@ export async function runCat19(options: Cat19Options = {}): Promise<Cat19RunResu
 
   const receipt: Receipt = {
     ...baseReceipt,
+    ...(stubEmbed ? noModelSpend('hash embedding stub: no model and no paid request') : {}),
     run_status: runInvalid ? 'error' : 'completed',
     ...(runInvalid ? {} : { verdict }),
     n_total: summary.n_total,
     n_scored: summary.n_scored,
     completion_rate: summary.completion_rate,
     errors: summary.errors,
-    publishable: summary.publishable,
+    // A hash-stub run checks the remediation loop, not embedding quality, so
+    // it is never publishable (audit A-22), matching every other stub runner.
+    publishable: summary.publishable && !stubEmbed,
     resolved_config: {
       embed_transport: stubEmbed ? 'stubbed-hash' : 'live',
       embedding_model: EMBED_MODEL,
