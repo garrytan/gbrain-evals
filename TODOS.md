@@ -62,7 +62,7 @@ The [August 31 audit](docs/audit/2026-08-31-eval-audit.md) explains the finding 
 
 - [x] **Export a public SkillOpt import path** (`skillopt-cats-11`). Completed upstream: gbrain exports `./core/skillopt` (`runSkillOpt`, `scoreSkillOnTasks`, `loadHeldOut`) at the current pin and on master. Cat30–33 switched from deep source imports to that export on 2026-09-28.
 
-- [ ] **Extend the independent evaluator** (plan amendment 6, v0.10.4 follow-up). The input allowlist and gold store cover the LongMemEval retrieval and answer runners and Cat13. The reading-notes, Cat29 and Cat35 runners still build reader and judge inputs without it, and the separation is in-process: a product in the same process could open dataset files. Move the gold store out of the product's process before calling any holdout sealed.
+- [ ] **Move the gold store out of the product's process** (plan amendment 6). Since 0.10.7 the input allowlist covers LongMemEval retrieval and answers, Cat13, the reading-notes reader, Cat29's question and pairwise judge, and Cat35's system-under-test sources and coverage, leak and usability judges. The separation is still in-process: a product in the same process could open dataset files. Move the gold store out of process before calling any holdout sealed.
 
 - [ ] **Preregister comparison families before the next paired runs** (plan amendment 4). `eval/runner/compare.ts --family` gates only when the family file predates the runs; commit each family with its run plan, including tolerances and cluster ids.
 

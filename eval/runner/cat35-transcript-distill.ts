@@ -86,6 +86,9 @@ import {
   type Receipt,
 } from './receipt.ts';
 import { gbrainPin, gbrainVersion } from './gbrain-version.ts';
+import {
+  assertCat35CoverageInput, assertCat35LeakInput, assertCat35SutSource, assertCat35UsabilityInput, CAT35_BOUNDARIES,
+} from './evaluator/judge-inputs.ts';
 
 // ─── Types over the committed fixtures ────────────────────────────────────
 
@@ -552,6 +555,20 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
   if (fixtures.length === 0) {
     return setupError('no fixtures selected');
   }
+  // Input allowlist (evaluator/judge-inputs.ts): no gold item, distractor or
+  // hazard id may reach the system under test through a transcript or the
+  // brain scaffold.
+  {
+    const gold = fixtures.map((f) => f.gold);
+    try {
+      for (const f of fixtures) {
+        assertCat35SutSource({ slug: f.jsonlPath.slice(CORPUS_DIR.length + 1), content: readFileSync(f.jsonlPath, 'utf8') }, gold);
+      }
+      for (const p of loadScaffold()) assertCat35SutSource({ slug: p.slug, content: p.body }, gold);
+    } catch (error) {
+      return setupError(`input allowlist: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
   // Mode integrity: 'full' is publication-eligible and therefore requires the
   // WHOLE corpus and ALL lanes. CAT35_FULL=1 plus any narrowing flag is a
   // deliberate partial run — receipts must say so (a cherry-picked subset
@@ -852,15 +869,12 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
             });
           }
         } else {
-          const cov = await scoreSalienceCoverage(
-            {
-              lane,
-              transcript_id: tid,
-              document: doc || '(empty output)',
-              items: f.gold.items.map((i) => ({ item_id: i.item_id, statement: i.statement })),
-            },
-            jcfg,
-          );
+          const coverageInput = {
+            document: doc || '(empty output)',
+            items: f.gold.items.map((i) => ({ item_id: i.item_id, statement: i.statement })),
+          };
+          assertCat35CoverageInput(coverageInput, f.gold);
+          const cov = await scoreSalienceCoverage({ lane, transcript_id: tid, ...coverageInput }, jcfg);
           judgeCalls++;
           totalCost += cov.cost_usd;
           if (cov.judge_failed_ids.length) judgeFailures++;
@@ -979,10 +993,9 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
           bucket.confirmed += hits.length; // the floor — verbatim keeps everything by construction
         } else if (hits.length) {
           const byId = new Map(f.gold.distractors.map((d) => [d.distractor_id, d]));
-          const conf = await confirmDistractorLeaks(
-            { document: doc, hits: hits.map((h) => ({ distractor_id: h, statement: byId.get(h)!.statement })) },
-            jcfg,
-          );
+          const leakInput = { document: doc, hits: hits.map((h) => ({ distractor_id: h, statement: byId.get(h)!.statement })) };
+          assertCat35LeakInput(leakInput, f.gold);
+          const conf = await confirmDistractorLeaks(leakInput, jcfg);
           judgeCalls++;
           totalCost += conf.cost_usd;
           if (conf.judge_failed) judgeFailures++;
@@ -1001,14 +1014,13 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
       if ((lane === 'verbatim' || lane === 'dream') && !errored) {
         const pages = st.lanePages[lane] ?? [];
         if (pages.length) {
-          const u = await scoreUsabilityChecklist(
-            {
-              transcript_id: tid,
-              pages,
-              hasGoldVibes: f.gold.items.some((i) => i.kind === 'vibe'),
-            },
-            jcfg,
-          );
+          const usabilityInput = {
+            transcript_id: tid,
+            pages: pages.map((p) => ({ slug: p.slug, body: p.body })),
+            hasGoldVibes: f.gold.items.some((i) => i.kind === 'vibe'),
+          };
+          assertCat35UsabilityInput(usabilityInput, f.gold);
+          const u = await scoreUsabilityChecklist(usabilityInput, jcfg);
           judgeCalls++;
           totalCost += u.cost_usd;
           if (u.judge_failed) judgeFailures++;
@@ -1469,6 +1481,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
       transcripts: fixtures.length,
       corpus_sha: corpusSha,
       judge_prompt_version: CAT35_JUDGE_PROMPT_VERSION,
+      input_allowlist: CAT35_BOUNDARIES,
       ...receipt.config_snapshot,
       detailed_receipt: receiptPath,
     },

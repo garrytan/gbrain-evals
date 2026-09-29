@@ -90,6 +90,7 @@ import {
 import { getDefaultLlmBudget } from './llm-budget.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt } from './receipt.ts';
+import { assertCat29JudgeInput, assertCat29SutQuestion, CAT29_JUDGE_PAIR, CAT29_SUT_QUESTION, type Cat29JudgeInput } from './evaluator/judge-inputs.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 import { installStubEmbed } from './cat27-graph-signals.ts';
 
@@ -337,6 +338,21 @@ export const NO_ANSWER_TEXT = '(no answer: the system returned nothing)';
  * truth and rubric. No system identity or expected verdict, ever. Answers
  * and page bodies are escaped and fenced with the per-call nonce.
  */
+/**
+ * The structured judge input: question, ground truth, rubric and two answers
+ * under neutral labels. renderPairPrompt checks it against the input
+ * allowlist (evaluator/judge-inputs.ts) and renders only these fields.
+ */
+export function pairJudgeInput(q: Cat29Question, answer1: string, answer2: string, pages: SyntheticPage[]): Cat29JudgeInput {
+  return {
+    question: { id: q.id, text: q.text },
+    ground_truth: groundTruthFor(q, pages),
+    rubric: rubricFor(q).map(c => ({ id: c.id, weight: c.weight, criterion: c.criterion })),
+    answer_1: answer1,
+    answer_2: answer2,
+  };
+}
+
 export function renderPairPrompt(
   q: Cat29Question,
   answer1: string,
@@ -344,14 +360,16 @@ export function renderPairPrompt(
   pages: SyntheticPage[],
   nonce: string = newJudgeNonce(),
 ): string {
+  const input = pairJudgeInput(q, answer1, answer2, pages);
+  assertCat29JudgeInput(input);
   const lines: string[] = [];
   lines.push('<question>');
-  lines.push(`  id: ${q.id}`);
-  lines.push(`  text: ${JSON.stringify(q.text)}`);
+  lines.push(`  id: ${input.question.id}`);
+  lines.push(`  text: ${JSON.stringify(input.question.text)}`);
   lines.push('</question>');
   lines.push('');
   lines.push('<ground_truth_pages>');
-  for (const p of groundTruthFor(q, pages)) {
+  for (const p of input.ground_truth) {
     lines.push(`  <page slug=${JSON.stringify(escapeUntrusted(p.slug))} title=${JSON.stringify(escapeUntrusted(p.title))}>`);
     lines.push(fenceUntrusted('untrusted_page', p.content, nonce));
     lines.push('  </page>');
@@ -359,13 +377,13 @@ export function renderPairPrompt(
   lines.push('</ground_truth_pages>');
   lines.push('');
   lines.push('Answer 1:');
-  lines.push(fenceUntrusted('untrusted_answer_1', answer1, nonce));
+  lines.push(fenceUntrusted('untrusted_answer_1', input.answer_1, nonce));
   lines.push('');
   lines.push('Answer 2:');
-  lines.push(fenceUntrusted('untrusted_answer_2', answer2, nonce));
+  lines.push(fenceUntrusted('untrusted_answer_2', input.answer_2, nonce));
   lines.push('');
   lines.push('<rubric>');
-  for (const c of rubricFor(q)) lines.push(`  - id=${c.id} weight=${c.weight}: ${c.criterion}`);
+  for (const c of input.rubric) lines.push(`  - id=${c.id} weight=${c.weight}: ${c.criterion}`);
   lines.push('</rubric>');
   lines.push('');
   lines.push('Score both answers on every rubric criterion and state your preference via the score_pair tool. No plain text reply.');
@@ -734,6 +752,9 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
     for (const q of questions) {
       log(`[cat29] running ${q.id}...\n`);
       const sutErrors: string[] = [];
+      // Input allowlist: both systems get the question text only, never the
+      // expected facts or gold slugs. A violation is a harness bug and aborts.
+      assertCat29SutQuestion(q.text, q.expected_facts, q.gold_slugs);
 
       // SEARCH side: raw retrieved payload (what an agent would dump).
       let searchAns: string | null = null;
@@ -857,6 +878,7 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
     gbrain_pin: gbrainPin(),
     resolved_config: {
       ...PINNED_CONFIG,
+      input_allowlist: [CAT29_SUT_QUESTION.name, CAT29_JUDGE_PAIR.name],
       'models.think': THINK_MODEL,
       think_model_used: thinkModelUsed,
       embed_transport: stub ? 'stubbed-hash' : 'live',
