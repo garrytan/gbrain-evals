@@ -125,6 +125,7 @@ were measured at gbrain [`2efaaf8f`](https://github.com/garrytan/gbrain/tree/2ef
 | When do words, vectors, or relationships find the right answer? | [Retrieval lessons](docs/retrieval-lessons.md) |
 | Which configuration should I try? | [Settings by workload](docs/settings.md) |
 | What changed after fixing the benchmark adapters? | [September retrieval refresh](docs/benchmarks/2026-09-09-retrieval-refresh.md) |
+| Does memory stay correct after edits, forgetting and restarts? | [Lifecycle experiment](docs/benchmarks/2026-09-29-lifecycle.md) |
 | How do retrieval scores differ from answer accuracy? | [What the scores mean](docs/retrieval-lessons.md#what-the-scores-mean) |
 | How does gbrain compare with other memory systems? | [Comparisons and their protocols](docs/comparison-systems.md) |
 | Can I reproduce a result or test my own system? | [Run the suite](eval/README.md), [contribute an adapter](eval/CONTRIBUTING.md) |

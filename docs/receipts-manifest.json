@@ -1,8 +1,28 @@
 {
   "schema_version": 1,
   "description": "Map from published claims to their saved evidence. The manifest test checks artifact paths, SHA-256 hashes, and declared JSON-pointer values. It does not parse report prose or independently validate every scorer. Separate golden tests and recount scripts are named where available. Entries marked disclosed-gap identify missing evidence; a fresh run cannot restore a missing historical receipt.",
-  "updated": "2026-09-25",
+  "updated": "2026-09-29",
   "entries": [
+    {
+      "claim_id": "lifecycle-2026-09-29-primary",
+      "readme_anchor": "docs/benchmarks/2026-09-29-lifecycle.md: forget collateral in 18/18 cells of builds a, b0, b and 0/6 with #5666; get_tags private leak on a and b0 only",
+      "artifact_path": "docs/benchmarks/2026-09-29-lifecycle/primary/receipt.json",
+      "artifact_sha256": "faaa0a4cf15d9a7ba5a5dfdbb4d3ef127a24a102d933003f7c80b227c9c2726c",
+      "expected": { "/cost_usd": 0, "/cells/0/fact_events/4/status": "error", "/cells/12/fact_events/4/status": "error", "/cells/18/fact_events/4/status": "inserted", "/builds/3/verified/tree_matches": true },
+      "golden_test": "test/eval/lifecycle-experiment.test.ts: published 2026-09-29 receipts recount",
+      "status": "covered",
+      "note": "24 cells (4 builds x 2 engines x 3 interfaces), hermetic hash embedder, $0. The recount test rescores every cell from the raw snapshots with the committed scorer."
+    },
+    {
+      "claim_id": "lifecycle-2026-09-29-repeat",
+      "readme_anchor": "docs/benchmarks/2026-09-29-lifecycle.md: repeat run matched 21 of 24 cell summaries",
+      "artifact_path": "docs/benchmarks/2026-09-29-lifecycle/repeat/receipt.json",
+      "artifact_sha256": "bba022b8f056a5512577e9e87b845733e8ca46848586140cf39c60e245ee28f2",
+      "expected": { "/cost_usd": 0, "/cells/18/fact_events/4/status": "inserted" },
+      "golden_test": "test/eval/lifecycle-experiment.test.ts: the repeat run differs only in timing-dependent fields",
+      "status": "covered",
+      "note": "Same matrix and harness commit as the primary run. The three differing cells differ only in timing-dependent fields: a search count on build a and one delegated-sync edge on b/pglite/mcp-stdio."
+    },
     {
       "claim_id": "reading-notes-transfer-labels",
       "readme_anchor": "docs/benchmarks/2026-09-25-reading-notes.md: fixed retrieved sessions, original transfer labels 308/361 to 324/361",
