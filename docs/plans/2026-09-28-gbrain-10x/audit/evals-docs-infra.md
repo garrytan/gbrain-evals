@@ -67,7 +67,7 @@ Evidence:
 - `docs/settings.md:3-4`: "At this repository's pinned version, it combines search methods…"
 - `docs/comparison-systems.md:28`: "Gbrain v0.48.4.0 is pinned at `2efaaf8f8a817b5b82e023383618fdcdb1cc5f7d`."
 - `package.json:38`: `"gbrain": "github:garrytan/gbrain#939232f1746381b4e932d620d6c709e29198f14c"`, i.e. v0.55.0.0, changed in v0.9.0 (commit `70bf934`; `git log -p package.json` shows `2efaaf8f` → `939232f`).
-- `README.md:62-64`: "See the [pinned gbrain implementation](…/tree/939232f…)". This sits in the paragraph that presents results produced at `2efaaf8f` (Sep 6/9), `a9de062` (reading notes) and `079941d2` (Cat35).
+- `README.md:62-64`: `"See the [pinned gbrain implementation](…/tree/939232f…)"`. This sits in the paragraph that presents results produced at `2efaaf8f` (Sep 6/9), `a9de062` (reading notes) and `079941d2` (Cat35).
 - `CHANGELOG.md` 0.10.0: "Keep the established `gbrain` pin for historical runners". But the historical runners' results came from `2efaaf8f`, not the current pin.
 - `docs/benchmarks/2026-09-06-longmemeval-ranker-wave/longmemeval/ranker-wave-arms.json` labels the release arm "v0.48.3.0", while the report says v0.48.4.0. This is disclosed in the report (receipts came from pre-squash branch `fd7e7fd9`), but the JSON label remains.
 

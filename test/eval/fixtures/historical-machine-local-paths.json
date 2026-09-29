@@ -63,6 +63,8 @@
     "docs/benchmarks/2026-09-09-retrieval-refresh/relationships/attempt-1/run.log": "1d95c32c6b1027f11bfb7ddbcef1fc1afcca29d36ec084010902a43d2916c6c5",
     "docs/benchmarks/2026-09-09-retrieval-refresh/source-swamp/attempt-1/cat13b-source-swamp/receipt.json": "53cd3db45d13d4db18e4d58b93e3491f16752a7cb2dd1a12991b5d898a0276dc",
     "docs/benchmarks/2026-09-09-retrieval-refresh/source-swamp/attempt-2/cat13b-source-swamp/receipt.json": "e39b3a634a5357059ac632e7703fadab631e11b15c3601932d1a2631e5c5dbed",
+    "docs/benchmarks/2026-09-29-lifecycle/primary/receipt.json": "faaa0a4cf15d9a7ba5a5dfdbb4d3ef127a24a102d933003f7c80b227c9c2726c",
+    "docs/benchmarks/2026-09-29-lifecycle/repeat/receipt.json": "bba022b8f056a5512577e9e87b845733e8ca46848586140cf39c60e245ee28f2",
     "docs/benchmarks/2026-09-29-repin-cats-1-2-6/cat6-prose-scale.939232f-v0.10.2-runner.receipt.json": "5738eb03c5469e2ced6af682c3fb1434d66b3086dd4d611df540d3f38a27f383"
   }
 }

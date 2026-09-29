@@ -436,6 +436,25 @@ export const REGISTRY: readonly CategoryEntry[] = [
     contract: 'Compares a direct reader with a notes-first reader on frozen request payloads. The reader saw labeled session ids, so the published result awaits a re-run.',
   },
   {
+    id: 'memory-lifecycle', legacy_alias: 'lifecycle', name: 'Memory lifecycle across builds, engines and interfaces',
+    family: 'maintenance', tier: 'H', script: 'eval/runner/lifecycle-experiment.ts',
+    run: { kind: 'listed', reason: 'needs a gbrain checkout to build each compared revision, and Postgres for the postgres cells', command: 'bun eval/runner/lifecycle-experiment.ts --gbrain-repo <gbrain checkout>' },
+    cost_estimate: { usd: 0, basis: 'local hash embedder; the runner strips provider keys from every child process' },
+    receipt_path: 'docs/benchmarks/2026-09-29-lifecycle/primary/',
+    headline: { metric: 'per-contract failure counts (acknowledged writes lost, forget scope, links and slugs after rename, private-page leaks)', denominator: '24 cells (4 builds x 2 engines x 3 interfaces), run twice' },
+    gate: 'report-only', evidence_maturity: 'synthetic-production-path',
+    contract: 'Follows one small vault through ingest, query, an embedding outage, corrections, reconcile, forget and restart, and scores what an agent can read at each checkpoint against the evaluator\'s own ledger. gbrain\'s doctor, integrity and invariant checks are never the answer key. It covers the scripted scenario only; timing-dependent counts can differ between repeat runs.',
+  },
+  {
+    id: 'sealed-confirmation', legacy_alias: 'sealed-confirmation', name: 'Sealed confirmation set (release decisions only)',
+    family: 'retrieval', tier: 'P', script: 'eval/runner/sealed-confirmation.ts',
+    run: { kind: 'listed', reason: 'private questions and labels; every run is a release decision that needs a committed preregistration', command: 'bun eval/runner/sealed-confirmation.ts run --questions <q.json> --out-dir <dir>' },
+    cost_estimate: UNMEASURED, receipt_path: 'the score --out report path (aggregates only)',
+    headline: { metric: 'recall of ledger gold sessions, optional official-prompt judged answer accuracy', denominator: '150 questions over 30 personas (120 answerable, 30 abstention)' },
+    gate: 'report-only', evidence_maturity: 'independently-labeled-held-out',
+    contract: 'Runs gbrain through the LongMemEval runner\'s code path on a separately written, frozen question set that no configuration was chosen on. Labels come from the generation ledger and open only at scoring time, after their bytes match the published SHA-256 commitment; every open is logged. It has not been opened yet, so no gbrain result exists.',
+  },
+  {
     id: 'situation-recall', legacy_alias: 'situation-recall', name: 'Situation-recall release comparator',
     family: 'retrieval', tier: 'P', script: 'eval/runner/situation-recall-orchestration.ts',
     run: { kind: 'listed', reason: 'release protocol, run against registered baselines rather than as a sweep category', command: 'bun eval/runner/situation-recall-orchestration.ts' },
@@ -512,6 +531,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'gbrain-version.ts': { role: 'resolves the loaded gbrain version' },
   'import-embedded.ts': { role: 'embedding-required import wrapper' },
   'judge.ts': { role: 'shared rubric judge' },
+  'lifecycle-report.ts': { role: 'Markdown summary of lifecycle receipts', part_of: 'memory-lifecycle' },
   'llm-budget.ts': { role: 'shared LLM concurrency bucket' },
   'longmemeval-aggregate.ts': { role: 'LongMemEval receipt aggregator', part_of: 'longmemeval-retrieval' },
   'longmemeval-batch.sh': { role: 'LongMemEval multi-worker batch wrapper', part_of: 'longmemeval-retrieval' },
@@ -537,6 +557,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'receipt.ts': { role: 'receipt schema, writer and validator' },
   'recorder.ts': { role: 'flight-recorder bundle emitter' },
   'retrieval-pins.ts': { role: 'pinned retrieval config' },
+  'sealed-confirmation-lib.ts': { role: 'sealed-set contracts, commitments, access log and spend ledger', part_of: 'sealed-confirmation' },
   'situation-recall-associative.ts': { role: 'situation-recall associative lane', part_of: 'situation-recall' },
   'situation-recall-cat36.ts': { role: 'situation-recall Cat36 lane', part_of: 'situation-recall' },
   'situation-recall-contract.ts': { role: 'situation-recall contract', part_of: 'situation-recall' },
@@ -558,4 +579,4 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
 };
 
 /** Subdirectories of eval/runner/ holding helper modules only. */
-export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'evaluator', 'queries', 'stats'];
+export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'evaluator', 'lifecycle', 'queries', 'stats'];
