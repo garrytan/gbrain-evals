@@ -454,6 +454,7 @@ async function main() {
     gbrain_version: productPackage === 'gbrain' ? gbrainVersion()
       : JSON.parse(readFileSync(join('node_modules', productPackage, 'package.json'), 'utf8')).version as string,
     gbrain_pin: productPackage === 'gbrain' ? gbrainPin() : declaredPin(productPackage),
+    product_package: productPackage,
     started_at: new Date().toISOString(),
   } as const;
   const attempts: TypeAccuracyAttempt[] = [];
