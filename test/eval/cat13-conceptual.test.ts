@@ -737,3 +737,52 @@ describe('cat13 Phase E0 receipt (hermetic)', () => {
     expect(report.concept_split.holdout_n).toBe(10);
   }, 240_000);
 });
+
+describe('A-06 / A-14: deterministic probe set and gold-text flagging', () => {
+  const { loadCorpus: load, buildProbes: build, probeClass, scoreByProbeClass, GOLD_TEXT_TEMPLATES } =
+    require('../../eval/runner/cat13-conceptual.ts') as typeof import('../../eval/runner/cat13-conceptual.ts');
+  const worldPages = load('eval/data/world-v1');
+  const key = (pages: typeof worldPages) => JSON.stringify(build(pages).probes.map(p => [p.q.id, p.q.text, p.q.gold]));
+
+  test('reversed or shuffled page order yields the identical probe set', () => {
+    const base = key(worldPages);
+    expect(key([...worldPages].reverse())).toBe(base);
+    const rotated = [...worldPages.slice(97), ...worldPages.slice(0, 97)];
+    expect(key(rotated)).toBe(base);
+  });
+
+  test('lexical-control probes contain the target page text; conceptual synonym probes do not name the target', () => {
+    const { probes } = build(worldPages);
+    const bySlug = new Map(worldPages.map(p => [p.slug, p]));
+    let lexical = 0;
+    for (const p of probes) {
+      if (p.template === 'company-neighborhood') { expect(probeClass(p.template)).toBe('conceptual'); continue; }
+      const target = bySlug.get(p.targetSlugs[0])!;
+      const name = String((target as { _facts?: { name?: string } })._facts?.name ?? target.title).toLowerCase();
+      const desc = String((target as { _facts?: { description?: string } })._facts?.description ?? '').replace(/\.$/, '').toLowerCase();
+      const text = p.q.text.toLowerCase();
+      if (probeClass(p.template) === 'lexical_control') {
+        lexical++;
+        const tail = text.replace(/^(that thing about|the framework i wrote about) /, '');
+        const copies = text.includes(name) || (desc !== '' && text.includes(desc)) || target.compiled_truth.toLowerCase().includes(tail);
+        expect([p.q.id, copies]).toEqual([p.q.id, true]);
+      } else {
+        expect([p.q.id, text.includes(name)]).toEqual([p.q.id, false]);
+      }
+    }
+    expect(lexical).toBeGreaterThan(probes.length / 3);
+    expect(GOLD_TEXT_TEMPLATES.has('synonym')).toBe(false);
+  });
+
+  test('scoreByProbeClass separates the classes and honors the subset', () => {
+    const rows = [
+      { template: 'synonym', subset: 'holdout', ndcg5: 0.5, p1_strict: 1 },
+      { template: 'title-paraphrase', subset: 'holdout', ndcg5: 1, p1_strict: 1 },
+      { template: 'synonym', subset: 'tuning', ndcg5: 0, p1_strict: 0 },
+    ];
+    const all = scoreByProbeClass(rows);
+    expect(all.conceptual).toEqual({ ndcg5: 0.25, p1_strict: 0.5, count: 2 });
+    expect(all.lexical_control).toEqual({ ndcg5: 1, p1_strict: 1, count: 1 });
+    expect(scoreByProbeClass(rows, 'holdout').conceptual).toEqual({ ndcg5: 0.5, p1_strict: 1, count: 1 });
+  });
+});

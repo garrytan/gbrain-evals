@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import type { SearchResult } from 'gbrain/types';
 import type { ChatResult } from 'gbrain/ai/gateway';
-import { ADAPTER_SPECS, buildRunConfigPreimage, normalizeSessions, parseOpts, renderSession, run, runConfigHash, scoreQuestion, summarizeAdapterRows, type NdjsonRow, type Question } from '../../eval/runner/longmemeval.ts';
+import { ADAPTER_SPECS, buildRunConfigPreimage, normalizeSessions, parseOpts, run, runConfigHash, scoreQuestion, summarizeAdapterRows, sutPages, type NdjsonRow, type Question } from '../../eval/runner/longmemeval.ts';
 import { createLmeCapture, lmeArtifactHash, loadLmeAnswerReplay, longMemEvalSources, retainLmeEvidence, runLongMemEvalAnswers, validateLmeAnswerProfile, type LmeAnswerInput, type LmeAnswerProfile, type LmeAnswerQuestion } from '../../eval/runner/longmemeval-answers.ts';
 import { BENCHMARK_VERSION, loadReceipt, writeReceipt } from '../../eval/runner/receipt.ts';
 
@@ -55,7 +55,7 @@ function fixture() {
   const capture = createLmeCapture(Buffer.from(questionData), questions as Question[], ['gbrain-keyword']);
   capture.run_config_preimages = { 'gbrain-keyword': config };
   const rows: NdjsonRow[] = questions.map(q => {
-    const result = searchResult(q), retrieved = [result.slug.slice(5)];
+    const result = searchResult(q), retrieved = [longMemEvalSources(q)[0].session_id];
     const m = scoreQuestion(retrieved, q.answer_session_ids, 1);
     return { adapter: 'gbrain-keyword', question_id: q.question_id, question_type: q.question_type, retrieved, ground_truth: q.answer_session_ids, hit_at_k: m.recall_any === 1,
       num_haystack: q.haystack_sessions.length, latency_ms: 1, top_k: 1, dataset: 'synthetic-test', run_config_hash: runConfigHash(config),
@@ -91,7 +91,12 @@ function changeRows(f: ReturnType<typeof fixture>, edit: (rows: NdjsonRow[]) => 
 
 describe('LongMemEval retained evidence and secondary grounding', () => {
   test('source rendering matches the existing producer and drops per-turn answer labels', () => {
-    for (const q of questions) expect(longMemEvalSources(q).map(s => s.text)).toEqual(normalizeSessions(q as Question).map(s => renderSession(s).replace(/\r\n?/g, '\n').normalize('NFC')));
+    for (const q of questions) {
+      const sut = sutPages(q as Question).pages;
+      expect(longMemEvalSources(q).map(s => s.text)).toEqual(sut.map(page => page.content.replace(/\r\n?/g, '\n').normalize('NFC')));
+      expect(longMemEvalSources(q).map(s => s.slug)).toEqual(sut.map(page => page.slug));
+      expect(longMemEvalSources(q).map(s => s.session_id)).toEqual(normalizeSessions(q as Question).map(s => s.session_id.toLowerCase()));
+    }
     expect(JSON.stringify(longMemEvalSources(questions[0]))).not.toContain('has_answer');
     expect(parseOpts([]).retainEvidence).toBeUndefined();
     expect(parseOpts(['--retain-evidence']).retainEvidence).toBe(true);
@@ -135,6 +140,14 @@ describe('LongMemEval retained evidence and secondary grounding', () => {
     expect(judge.n_scored).toBe(0); expect(judge.data!.grounding_success).toEqual({ mean: null, n: 0 });
     expect(judge.errors.every(error => error.origin === 'judge')).toBe(true);
     for (const row of judge.data!.rows as Array<{ answer: ChatResult; judge_outputs: unknown[] }>) { expect(row.answer.text).toBe('SCRIPTED_ANSWER'); expect(row.judge_outputs).toHaveLength(2); }
+  });
+
+  test('answer provider outages are dependency errors, excluded from the mean rather than scored as misses (PD-06)', async () => {
+    const f = fixture();
+    const outage = await runLongMemEvalAnswers({ ...f, testRuntime: { async generate() { throw new Error('429 rate limit exceeded'); }, judgeClient: client() } });
+    expect(outage.n_scored).toBe(0); expect(outage.data!.grounding_success).toEqual({ mean: null, n: 0 });
+    expect(outage.errors.map(error => error.origin)).toEqual(['dependency', 'dependency', 'dependency']);
+    expect(outage.publishable).toBe(false);
   });
 
   test('source contamination is a miss without exposing it to generation', async () => {

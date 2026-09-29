@@ -180,6 +180,19 @@ function summarize(rows: Cat36Row[]): Record<string, unknown> {
   };
 }
 
+/**
+ * Offline and smoke runs are plumbing checks. SUT errors there are scored as
+ * misses, so completeness alone let a run where search crashed on every probe
+ * report pass (PC-05). Plumbing passes only with no SUT error and some
+ * required evidence in the top five chunks (the pinned offline smoke covers
+ * all evidence for one of its four probes).
+ */
+export function cat36PlumbingGate(errors: Receipt['errors'], rollup: Record<string, unknown>): { pass: boolean; sut_errors: number; all_evidence_mean: number | null } {
+  const sutErrors = errors.filter(e => e.origin === 'sut').length;
+  const mean = (rollup.all as Record<string, { mean: number | null }>).all_evidence_in_top5_chunks.mean;
+  return { pass: sutErrors === 0 && mean !== null && mean > 0, sut_errors: sutErrors, all_evidence_mean: mean };
+}
+
 export async function runCat36(options: { corpusDir: string; outputDir: string; profile: Cat36Profile; runtime: Cat36Runtime; smoke?: boolean }): Promise<Receipt> {
   const { corpusDir, outputDir, profile, runtime } = options;
   validateCat36Profile(profile);
@@ -287,9 +300,11 @@ export async function runCat36(options: { corpusDir: string; outputDir: string; 
   const summary = accounting.summary();
   const complete = !blocked && summary.n_total === summary.n_scored && rows.length === summary.n_total && summary.errors.every(e => e.origin === 'sut');
   const safe = rows.every(r => r.metrics?.safety_violations === 0 && !r.observation_failures.includes('output_budget_violation'));
+  const rollup = summarize(rows);
+  const plumbingGate = profile.mode === 'offline' || options.smoke ? cat36PlumbingGate(summary.errors, rollup) : null;
   const receipt: Receipt = {
     schema_version: RECEIPT_SCHEMA_VERSION, benchmark_version: BENCHMARK_VERSION, category: CAT36_CATEGORY,
-    run_status: blocked ? 'error' : 'completed', ...(!blocked ? { verdict: complete ? safe ? 'pass' as const : 'fail' as const : 'partial' as const } : {}),
+    run_status: blocked ? 'error' : 'completed', ...(!blocked ? { verdict: complete ? safe && (plumbingGate?.pass ?? true) ? 'pass' as const : 'fail' as const : 'partial' as const } : {}),
     n_total: summary.n_total, n_scored: summary.n_scored, completion_rate: summary.completion_rate, errors: summary.errors,
     publishable: runtime.kind === 'production' && profile.mode === 'live' && profile.provider_budget?.kind === 'isolated-provider-cap' && !options.smoke && !profile.counterfactual && complete && safe && reviewed,
     gbrain_version: gbrainVersion(), gbrain_pin: gbrainPin(), started_at: started, finished_at: new Date().toISOString(),
@@ -297,7 +312,7 @@ export async function runCat36(options: { corpusDir: string; outputDir: string; 
     data: { mode: profile.mode, runtime_kind: runtime.kind, counterfactual: profile.counterfactual ?? null,
       development_usage: runtime.developmentUsage?.() ?? null,
       label: profile.provider_budget?.kind === 'operator-authorized-development' ? 'operator-authorized development diagnostic; no provider hard cap; not publishable' : profile.mode === 'offline' || runtime.kind !== 'production' ? 'plumbing-only; not semantic retrieval evidence' : profile.counterfactual ? 'supplementary same-query counterfactual; not primary release evidence' : 'live capability measurement',
-      blocked_reason: blocked ?? null, relevance_review_approved: reviewed, build: build ?? null, rows, summary: summarize(rows) },
+      blocked_reason: blocked ?? null, relevance_review_approved: reviewed, build: build ?? null, plumbing_gate: plumbingGate, rows, summary: rollup },
   };
   writeFileSync(join(outputDir, 'probes.ndjson'), rows.map(r => JSON.stringify(r)).join('\n') + '\n', { flag: 'wx' });
   writeReceipt(join(outputDir, 'receipt.json'), receipt);

@@ -131,6 +131,8 @@ export interface AgentRunResult {
 export const DEFAULT_AGENT_MODEL = 'claude-sonnet-4-6';
 const DEFAULT_MODEL = DEFAULT_AGENT_MODEL;
 const DEFAULT_MAX_TOKENS = 1024;
+/** The agent under test samples at temperature 0 so Cat 8/9 transcripts are reproducible. */
+export const AGENT_TEMPERATURE = 0;
 const DEFAULT_TURN_CAP = 10;
 const DEFAULT_MAX_RETRIES = 3;
 
@@ -368,6 +370,7 @@ export async function runAgentLoop(
         response = await client.messages.create({
           model,
           max_tokens: maxTokens,
+          temperature: AGENT_TEMPERATURE,
           system: [
             {
               type: 'text',

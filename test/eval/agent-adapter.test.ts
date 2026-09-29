@@ -27,6 +27,7 @@ import {
   extractSlugs,
   classifyAgentError,
   setTeardownDisconnectBoundMs,
+  AGENT_TEMPERATURE,
   type AgentAdapterState,
 } from '../../eval/runner/adapters/claude-sonnet-with-tools.ts';
 import type { Page } from '../../eval/runner/types.ts';
@@ -546,5 +547,22 @@ describe('ClaudeSonnetWithToolsAdapter — teardown bounded disconnect', () => {
       threw = true;
     }
     expect(threw).toBe(false);
+  });
+});
+
+describe('runAgentLoop temperature', () => {
+  test('every agent model call is sent at temperature 0', async () => {
+    const adapter = new ClaudeSonnetWithToolsAdapter();
+    const state = (await adapter.init(SAMPLE_PAGES, { name: 'test' })) as AgentAdapterState;
+    const seen: Array<Record<string, unknown>> = [];
+    const responses = [toolResp('get_page', { slug: 'people/amara' }), textResp('Amara is a Partner. Source: people/amara.')];
+    const client = {
+      messages: { create: async (params: Record<string, unknown>) => { seen.push(params); return responses[seen.length - 1]; } },
+    } as unknown as Anthropic;
+    await runAgentLoop('q-temp', 'Who is Amara?', state, { client, maxRetries: 1 });
+    expect(seen.length).toBe(2);
+    expect(seen.every(p => p.temperature === 0)).toBe(true);
+    expect(AGENT_TEMPERATURE).toBe(0);
+    await adapter.teardown(state);
   });
 });

@@ -21,8 +21,8 @@
  * Usage:
  *   bun eval/runner/multi-adapter.ts [--adapter <name>] [--queries <set>] [--json]
  *
- *   --adapter <name>        gbrain | vector-grep-rrf-fusion | grep-only |
- *                           vector | all (default all). Both `--adapter NAME`
+ *   --adapter <name>        gbrain | graph-oracle-parse | vector-grep-rrf-fusion |
+ *                           grep-only | vector | all (default all). Both `--adapter NAME`
  *                           and `--adapter=NAME` parse; an unknown name is an
  *                           error, never a silent run-everything
  *                           (audit orchestrators-11).
@@ -50,6 +50,7 @@ import { runExtract } from 'gbrain/extract';
 import { RipgrepBm25Adapter } from './adapters/grep-only.ts';
 import { VectorOnlyAdapter } from './adapters/vector.ts';
 import { HybridNoGraphAdapter } from './adapters/vector-grep-rrf-fusion.ts';
+import { GbrainInlineAdapter } from './adapters/gbrain-inline.ts';
 import type { Adapter, Page, Query, RankedDoc } from './types.ts';
 import { precisionAtK, recallAtK, sanitizePage, sanitizeQuery } from './types.ts';
 import { buildRelationalQueries, loadWorldCorpus, type RichPage } from './queries/relational.ts';
@@ -61,6 +62,29 @@ import { retrievalPins, RETRIEVAL_EMBEDDER, RETRIEVAL_DIMENSIONS, observedSearch
 import { createHash } from 'crypto';
 
 export const BASELINE_SEARCH_CONFIG = retrievalPins();
+
+/**
+ * The "gbrain" row is the product path: hybridSearch over an imported and
+ * link-extracted brain, with relational retrieval on. It answers every query
+ * family from the question text alone (C-10, audit 2026-09-28).
+ */
+export const GBRAIN_PRODUCT_SEARCH_CONFIG: Readonly<Record<string, string>> = {
+  ...BASELINE_SEARCH_CONFIG,
+  'search.relational_retrieval': 'true',
+};
+
+/** Adapters that record one search observation per query and must account for every one. */
+const OBSERVED_ADAPTERS = new Set(['gbrain', 'vector-grep-rrf-fusion']);
+
+export function createGbrainProductAdapter(): GbrainInlineAdapter {
+  return new GbrainInlineAdapter({
+    topK: TOP_K,
+    extract: true,
+    searchConfig: { ...GBRAIN_PRODUCT_SEARCH_CONFIG },
+    embeddingModel: RETRIEVAL_EMBEDDER,
+    embeddingDimensions: RETRIEVAL_DIMENSIONS,
+  }, 'gbrain');
+}
 
 const TOP_K = 5;
 
@@ -106,32 +130,33 @@ export function collectFamilies(pages: RichPage[], source: QuerySource): QueryFa
 }
 
 /**
- * The inline GbrainAfterAdapter below only understands the 4 relational
- * templates — it parses query text into a graph traversal and returns []
+ * The graph-oracle-parse adapter below only understands the 4 relational
+ * templates: it parses query text into a graph traversal and returns []
  * for anything else. Scoring it on fuzzy / externally-authored questions
- * would publish a 0% row that says nothing about gbrain-the-product (whose
- * fuzzy path is hybridSearch, represented here by vector-grep-rrf-fusion).
- * Rows are omitted as "not applicable" instead of shipped as fake zeros.
- * Curated subsets keep their historical behavior (run on every adapter).
+ * would publish a 0% row that says nothing. Rows are omitted as "not
+ * applicable" instead of shipped as fake zeros. Curated subsets keep their
+ * historical behavior (run on every adapter).
  */
-const RELATIONAL_ONLY_ADAPTERS = new Set(['gbrain']);
+const RELATIONAL_ONLY_ADAPTERS = new Set(['graph-oracle-parse']);
 
 export function familiesForAdapter(adapterName: string, families: QueryFamily[]): QueryFamily[] {
   if (!RELATIONAL_ONLY_ADAPTERS.has(adapterName)) return families;
   return families.filter(f => f.family === 'relational' || f.family.startsWith('subset:'));
 }
 
-// ─── gbrain adapter (inline, wraps existing engine) ─────────
+// ─── Graph traversal with oracle query parsing ─────────
 
 /**
- * Minimal gbrain adapter for the side-by-side run. Wraps PGLiteEngine +
- * extract + the same graph-first-then-grep strategy used in before-after.ts.
- *
- * When the dedicated GbrainAdapter class ships (separate commit), this
- * inline wrapper is the bridge — same semantics, different surface.
+ * NOT the product path. This adapter regex-parses exactly the four query
+ * templates that queries/relational.ts emits, maps each to the link types
+ * the gold was built from, resolves the named entity through an exact title
+ * map, and then traverses the graph. It measures traversePaths given oracle
+ * parsing, so it is an upper-bound diagnostic for the relational family.
+ * Until 2026-09-28 this row was published as "gbrain" (C-10); the "gbrain"
+ * row is now createGbrainProductAdapter().
  */
-class GbrainAfterAdapter implements Adapter {
-  readonly name = 'gbrain';
+class GraphOracleParseAdapter implements Adapter {
+  readonly name = 'graph-oracle-parse';
 
   async init(rawPages: Page[]): Promise<unknown> {
     const engine = new PGLiteEngine();
@@ -637,7 +662,8 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
   log('');
 
   const allAdapters: Adapter[] = [
-    new GbrainAfterAdapter(),
+    createGbrainProductAdapter(),
+    new GraphOracleParseAdapter(),
     new HybridNoGraphAdapter(),
     new RipgrepBm25Adapter(),
     new VectorOnlyAdapter(),
@@ -659,7 +685,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     const fams = familiesForAdapter(a.name, families);
     const skippedFams = families.filter(f => !fams.includes(f)).map(f => f.family);
     if (skippedFams.length > 0) {
-      log(`- ${a.name}: not applicable to [${skippedFams.join(', ')}] (inline relational wrapper; gbrain's fuzzy path is hybridSearch, see vector-grep-rrf-fusion)`);
+      log(`- ${a.name}: not applicable to [${skippedFams.join(', ')}] (oracle template parser; the gbrain row covers every family)`);
     }
     if (fams.length === 0 || fams.every(f => f.queries.length === 0)) {
       log(`- ${a.name}: no applicable gold-bearing queries; skipping init.`);
@@ -676,7 +702,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
       }
       for (const run of runDetails) {
         if (run.perQuery.some(p => p.error) && !failedAdapters.includes(a.name)) failedAdapters.push(a.name);
-        const failures = observedSearchFailures(run.observed, a.name === 'vector-grep-rrf-fusion' ? run.perQuery.length : undefined);
+        const failures = observedSearchFailures(run.observed, OBSERVED_ADAPTERS.has(a.name) ? run.perQuery.length : undefined);
         if (failures.length) {
           if (!failedAdapters.includes(a.name)) failedAdapters.push(a.name);
           for (const failure of failures) {

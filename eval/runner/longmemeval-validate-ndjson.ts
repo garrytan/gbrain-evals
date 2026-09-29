@@ -17,7 +17,7 @@
  * Usage:
  *   bun eval/runner/longmemeval-validate-ndjson.ts <ndjson> \
  *     [--path <dataset json>] [--expected-rows 500] [--expected-abs 30] \
- *     [--adapters a,b,c] [--expected-dataset-sha <hex>]
+ *     [--adapters a,b,c] [--expected-dataset-sha <hex>] [--allow-errors]
  *
  * Checks (defaults parameterized for the LongMemEval `_s` split):
  *   1. every line parses and carries adapter + question_id (parse errors fail)
@@ -32,6 +32,12 @@
  *      answer_session_ids (reported N/N), question coverage equals the
  *      dataset's question ids, and the dataset file's sha256 is printed
  *      (compared when --expected-dataset-sha is given)
+ *   7. no error rows remain after dedup (a residual error row is a question
+ *      that never produced a clean result); --allow-errors downgrades this to
+ *      a printed count per adapter split by error_origin
+ *   8. per adapter, top_k, dataset and run_config_hash each take one value
+ *      (a row that lacks the field counts as its own value, so a mix of two
+ *      runner generations fails too)
  *
  * Exit codes:
  *   0 — all checks pass
@@ -55,6 +61,10 @@ export interface ValidatorRow {
   question_id: string;
   ground_truth?: string[];
   error?: string;
+  error_origin?: string;
+  top_k?: number;
+  dataset?: string;
+  run_config_hash?: string;
 }
 
 /**
@@ -141,6 +151,7 @@ export interface ValidateOpts {
   adapters: string[];
   dataset?: { questions: DatasetQuestion[]; sha256: string };
   expectedDatasetSha?: string;
+  allowErrors?: boolean;
 }
 
 export interface ValidateResult {
@@ -195,6 +206,24 @@ export function validateRows(
     const nAbs = aRows.filter(r => isAbsQuestion(r.question_id)).length;
     if (nAbs !== opts.expectedAbs) {
       mismatches.push(`${adapter}: ${nAbs} abstention (_abs) questions, expected ${opts.expectedAbs}`);
+    }
+  }
+
+  for (const [adapter, aRows] of [...byAdapter.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+    const errorRows = aRows.filter(r => r.error !== undefined);
+    if (errorRows.length > 0) {
+      const byOrigin = new Map<string, number>();
+      for (const r of errorRows) byOrigin.set(r.error_origin ?? 'unclassified', (byOrigin.get(r.error_origin ?? 'unclassified') ?? 0) + 1);
+      const split = [...byOrigin.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([o, n]) => `${o}: ${n}`).join(', ');
+      const line = `${adapter}: ${errorRows.length} residual error row(s) after dedup (${split})`;
+      if (opts.allowErrors) info.push(`--allow-errors: ${line}`);
+      else mismatches.push(`${line}; pass --allow-errors to accept them`);
+    }
+    for (const field of ['top_k', 'dataset', 'run_config_hash'] as const) {
+      const values = new Set(aRows.map(r => (r[field] === undefined ? '(absent)' : String(r[field]))));
+      if (values.size > 1) {
+        mismatches.push(`${adapter}: mixed ${field} values [${[...values].sort().map(v => v.slice(0, 16)).join(', ')}]; validate each run separately`);
+      }
     }
   }
 
@@ -286,7 +315,7 @@ if (import.meta.main) {
   const args = process.argv.slice(2);
   const flagValues = new Set<string>();
   for (let i = 0; i < args.length; i++) {
-    if (args[i].startsWith('--') && i + 1 < args.length && !args[i + 1].startsWith('--')) {
+    if (args[i].startsWith('--') && args[i] !== '--allow-errors' && i + 1 < args.length && !args[i + 1].startsWith('--')) {
       flagValues.add(args[i + 1]);
     }
   }
@@ -296,7 +325,7 @@ if (import.meta.main) {
     console.error(
       'usage: bun eval/runner/longmemeval-validate-ndjson.ts <ndjson> ' +
         '[--path <dataset json>] [--expected-rows 500] [--expected-abs 30] ' +
-        '[--adapters a,b,c] [--expected-dataset-sha <hex>]',
+        '[--adapters a,b,c] [--expected-dataset-sha <hex>] [--allow-errors]',
     );
     process.exit(2);
   }
@@ -342,6 +371,7 @@ if (import.meta.main) {
     adapters,
     dataset,
     expectedDatasetSha,
+    allowErrors: args.includes('--allow-errors'),
   });
 
   for (const line of info) console.log(`[validate] ${line}`);

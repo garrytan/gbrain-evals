@@ -12,7 +12,10 @@
  * hybridSearch payload an agent would otherwise dump into context. Search
  * mode + reranker are pinned (WS5) and the think model is pinned via
  * `models.think` config — never left to tier defaults (audit cats26-29-12:
- * the old runner silently ran Opus while claiming Sonnet).
+ * the old runner silently ran Opus while claiming Sonnet). gbrain's think
+ * sets no temperature, so live runs call the model through runThink's
+ * `client` seam at temperature 0 (audit B-29-03), recorded in
+ * resolved_config.
  * LEGITIMATELY SEEDED/STUBBED: the synthetic-v1 corpus (committed fixture,
  * deterministic seed). Under --stub (hermetic, no keys): the embed HTTP
  * transport (deterministic hash vectors), the think LLM (runThink's
@@ -22,13 +25,16 @@
  *
  * ── Judging policy (WS0, audit cats26-29-10/11/18) ───────────────────
  * - BLIND: the judge never learns which answer came from think vs search.
- *   Each answer is scored independently via eval/runner/judge.ts
- *   scoreAnswer (temperature 0, rubric-coverage enforced) with zero system
- *   identity in the evidence.
- * - BOTH ORDERS: every question runs two judging passes with the two
- *   answers in opposite orders (first-pass order fixed by a seed derived
- *   from the question id — no unseeded randomness); per-answer scores are
- *   averaged across passes.
+ *   Both answers go into ONE pairwise prompt under neutral labels (Answer 1,
+ *   Answer 2) with zero system identity. The judge scores each answer on
+ *   the rubric (judge.ts rubric-coverage and weighting rules, temperature
+ *   0) and states a preference.
+ * - BOTH ORDERS: every question is judged twice with the two answers in
+ *   opposite positions (first order fixed by a seed derived from the
+ *   question id, so no unseeded randomness); per-answer scores are averaged
+ *   across orders, and a pair whose preference flips with the order is
+ *   reported as position-inconsistent (audit B-29-01: the old runner
+ *   scored each answer alone, so "both orders" was a duplicate call).
  * - EXPECTED FACTS: every question carries expected_facts extracted from
  *   the committed corpus (real ARR readings, attendee slugs, link counts),
  *   passed to the judge as ground truth + rubric criteria — a hallucinated
@@ -46,8 +52,9 @@
  * Exit code is non-zero unless verdict === 'pass'. Missing keys without
  * --stub → receipt run_status 'skipped' + non-zero exit unless --allow-skip.
  *
- * Cost: live run ≈ $0.40 (5 pinned-Sonnet think calls + up to 20 Haiku
- * judge calls at ~$0.01 each) plus one-time OpenAI embeds for 165 pages.
+ * Cost: live run ≈ $0.40, an unmeasured estimate (5 pinned-Sonnet think
+ * calls + 10 pairwise Haiku judge calls, up to 20 with malformed-output
+ * retries) plus one-time OpenAI embeds for 165 pages.
  * Stub run: $0, no keys.
  *
  * Run:
@@ -56,6 +63,7 @@
  *   CAT29_QUESTIONS=2 bun eval/runner/cat29-think-vs-search.ts --stub
  */
 
+import Anthropic from '@anthropic-ai/sdk';
 import { writeFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
@@ -63,9 +71,23 @@ import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { importFromContent } from 'gbrain/import-file';
 import { configureGateway, __setEmbedTransportForTests } from 'gbrain/ai/gateway';
 import { hybridSearch } from 'gbrain/search/hybrid';
-import { runThink, type ThinkResponse } from 'gbrain/think';
+import { runThink, type ThinkLLMClient, type ThinkResponse } from 'gbrain/think';
 import { loadSyntheticV1, type SyntheticPage } from './synthetic-corpus-loader.ts';
-import { scoreAnswer, type JudgeEvidence, type JudgeConfig, type RubricCriterion } from './judge.ts';
+import {
+  JUDGE_TEMPERATURE,
+  UNTRUSTED_DATA_INSTRUCTION,
+  escapeUntrusted,
+  extractUntrusted,
+  fenceUntrusted,
+  newJudgeNonce,
+  parseCriterionScores,
+  priceOf,
+  weightedMean,
+  type GroundTruthPage,
+  type JudgeConfig,
+  type RubricCriterion,
+} from './judge.ts';
+import { getDefaultLlmBudget } from './llm-budget.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
@@ -76,7 +98,9 @@ export const CAT29_CATEGORY = 'cat29-think-vs-search';
 /** Pinned think model — recorded in resolved_config; ThinkResult.modelUsed is echoed back. */
 export const THINK_MODEL = 'anthropic:claude-sonnet-4-6';
 export const JUDGE_MODEL = 'claude-haiku-4-5-20251001';
-export const RUBRIC_VERSION = 'cat29-v2';
+/** v3 (2026-09-28): pairwise prompt, nonce-fenced answers (audit B-29-01, B-JDG-01). */
+export const RUBRIC_VERSION = 'cat29-v3';
+export const THINK_TEMPERATURE = 0;
 
 /**
  * WS5 pin — applied via engine.setConfig BEFORE ingest and echoed into
@@ -228,7 +252,7 @@ export function buildQuestions(pages: SyntheticPage[]): Cat29Question[] {
   return out;
 }
 
-// ─── Blind judge (both orders, via judge.ts scoreAnswer) ───────────────
+// ─── Blind pairwise judge (both answers in one prompt, both orders) ───
 
 /** FNV-1a → deterministic coin per question id (rule: no unseeded randomness). */
 export function seededCoin(id: string): boolean {
@@ -240,13 +264,6 @@ export function seededCoin(id: string): boolean {
   return (h & 1) === 1;
 }
 
-function extractSlugRefs(answer: string): string[] {
-  return [...new Set(
-    [...answer.matchAll(/\b(?:people|companies|concepts|meetings|deal|projects|daily|writing)\/[a-z0-9][a-z0-9/-]*/g)]
-      .map(m => m[0]),
-  )];
-}
-
 export function rubricFor(q: Cat29Question): RubricCriterion[] {
   return [
     { id: 'facts', weight: 2, criterion: `States the expected facts (see the _gold/expected-facts page): ${q.expected_facts.join('; ')}` },
@@ -256,11 +273,8 @@ export function rubricFor(q: Cat29Question): RubricCriterion[] {
   ];
 }
 
-/**
- * Build BLIND judge evidence: the answer text and ground truth only. No
- * system identity ('think'/'search'), no expected verdict, ever.
- */
-export function evidenceFor(q: Cat29Question, answerText: string, pages: SyntheticPage[]): JudgeEvidence {
+/** Ground truth for the judge: gold pages plus the expected-facts digest. Never a verdict label. */
+export function groundTruthFor(q: Cat29Question, pages: SyntheticPage[]): GroundTruthPage[] {
   const groundTruth = q.gold_slugs
     .map(slug => pageBySlug(pages, slug))
     .filter((p): p is SyntheticPage => p !== undefined)
@@ -270,73 +284,243 @@ export function evidenceFor(q: Cat29Question, answerText: string, pages: Synthet
     title: 'Expected facts',
     content: q.expected_facts.map(f => `- ${f}`).join('\n'),
   });
-  return {
-    schema_version: 1,
-    // Category is a presentation-only field in the judge prompt; Cat 29 is
-    // not in judge.ts's frozen 5|8|9 union (shared module, read-only for
-    // this runner), so it is threaded through as-is.
-    probe: { id: q.id, text: q.text, category: 29 as unknown as JudgeEvidence['probe']['category'] },
-    final_answer_text: answerText,
-    evidence_refs: extractSlugRefs(answerText),
-    tool_call_summary: { count_by_tool: {}, saw_poison_items: [], made_dry_run_writes: [] },
-    ground_truth_pages: groundTruth,
-    rubric: rubricFor(q),
-  };
+  return groundTruth;
+}
+
+export const PAIRWISE_JUDGE_SYSTEM_PROMPT = `You compare two candidate answers to the same question about a personal knowledge base. You see the question, the ground_truth_pages (the world of facts, including an expected-facts page), a rubric, and two answers labeled Answer 1 and Answer 2. You do not know which system produced which answer, and the order of presentation carries no information.
+
+Score EACH answer on EVERY rubric criterion 0-5 where:
+  5 = fully satisfied
+  3-4 = mostly satisfied with minor gaps
+  1-2 = partially satisfied, significant gaps or hedging
+  0 = absent, contradicted by ground truth, or invented
+Anything in an answer not grounded in ground_truth_pages is a hallucination and must lose points. Then state which answer is better overall, or tie when they are substantively equivalent.
+
+Be terse: one sentence per rationale. Return your evaluation via the score_pair tool. Do not reply with plain text.
+
+${UNTRUSTED_DATA_INSTRUCTION}`;
+
+const SCORE_ITEMS = {
+  type: 'array',
+  items: {
+    type: 'object',
+    properties: {
+      criterion_id: { type: 'string' },
+      score: { type: 'number', minimum: 0, maximum: 5 },
+      rationale: { type: 'string' },
+    },
+    required: ['criterion_id', 'score', 'rationale'],
+  },
+};
+
+export const SCORE_PAIR_TOOL = {
+  name: 'score_pair',
+  description: 'Score Answer 1 and Answer 2 on every rubric criterion (0-5, one terse rationale each) and state which answer is better overall.',
+  input_schema: {
+    type: 'object' as const,
+    properties: {
+      answer_1_scores: SCORE_ITEMS,
+      answer_2_scores: SCORE_ITEMS,
+      preferred: { type: 'string', enum: ['answer_1', 'answer_2', 'tie'] },
+      rationale: { type: 'string' },
+    },
+    required: ['answer_1_scores', 'answer_2_scores', 'preferred', 'rationale'],
+  },
+};
+
+const PAIR_MAX_TOKENS = 1200;
+/** Shown in place of an answer whose system crashed; that side is scored 0 regardless. */
+export const NO_ANSWER_TEXT = '(no answer: the system returned nothing)';
+
+/**
+ * BLIND pairwise judge prompt: both answers, neutral position labels, ground
+ * truth and rubric. No system identity or expected verdict, ever. Answers
+ * and page bodies are escaped and fenced with the per-call nonce.
+ */
+export function renderPairPrompt(
+  q: Cat29Question,
+  answer1: string,
+  answer2: string,
+  pages: SyntheticPage[],
+  nonce: string = newJudgeNonce(),
+): string {
+  const lines: string[] = [];
+  lines.push('<question>');
+  lines.push(`  id: ${q.id}`);
+  lines.push(`  text: ${JSON.stringify(q.text)}`);
+  lines.push('</question>');
+  lines.push('');
+  lines.push('<ground_truth_pages>');
+  for (const p of groundTruthFor(q, pages)) {
+    lines.push(`  <page slug=${JSON.stringify(escapeUntrusted(p.slug))} title=${JSON.stringify(escapeUntrusted(p.title))}>`);
+    lines.push(fenceUntrusted('untrusted_page', p.content, nonce));
+    lines.push('  </page>');
+  }
+  lines.push('</ground_truth_pages>');
+  lines.push('');
+  lines.push('Answer 1:');
+  lines.push(fenceUntrusted('untrusted_answer_1', answer1, nonce));
+  lines.push('');
+  lines.push('Answer 2:');
+  lines.push(fenceUntrusted('untrusted_answer_2', answer2, nonce));
+  lines.push('');
+  lines.push('<rubric>');
+  for (const c of rubricFor(q)) lines.push(`  - id=${c.id} weight=${c.weight}: ${c.criterion}`);
+  lines.push('</rubric>');
+  lines.push('');
+  lines.push('Score both answers on every rubric criterion and state your preference via the score_pair tool. No plain text reply.');
+  return lines.join('\n');
 }
 
 export class JudgeFailure extends Error {}
 
-interface PairScores {
-  /** Mean overall_score (0-5) per side across both orders; null = side sut-failed (scored 0). */
+interface OrderVerdict {
+  /** Weighted rubric mean (0-5) for the answer shown first / second. */
+  first: number;
+  second: number;
+  preferred: 'first' | 'second' | 'tie';
+}
+
+function parsePairOutput(response: Anthropic.Messages.Message, rubric: RubricCriterion[]): { verdict: OrderVerdict | null; defect: string | null } {
+  const block = response.content.find(b => b.type === 'tool_use' && b.name === SCORE_PAIR_TOOL.name) as Anthropic.Messages.ToolUseBlock | undefined;
+  if (!block || !block.input || typeof block.input !== 'object') return { verdict: null, defect: 'no score_pair tool_use block in response' };
+  const input = block.input as Record<string, unknown>;
+  const one = parseCriterionScores(input.answer_1_scores, rubric);
+  if (one.scores === null) return { verdict: null, defect: `answer_1_scores: ${one.defect}` };
+  const two = parseCriterionScores(input.answer_2_scores, rubric);
+  if (two.scores === null) return { verdict: null, defect: `answer_2_scores: ${two.defect}` };
+  if (input.preferred !== 'answer_1' && input.preferred !== 'answer_2' && input.preferred !== 'tie') {
+    return { verdict: null, defect: `preferred must be answer_1|answer_2|tie, got ${JSON.stringify(input.preferred)}` };
+  }
+  if (typeof input.rationale !== 'string') return { verdict: null, defect: 'rationale missing' };
+  return {
+    verdict: {
+      first: weightedMean(one.scores, rubric),
+      second: weightedMean(two.scores, rubric),
+      preferred: input.preferred === 'answer_1' ? 'first' : input.preferred === 'answer_2' ? 'second' : 'tie',
+    },
+    defect: null,
+  };
+}
+
+/**
+ * One pairwise judge call for one presentation order, at temperature 0 under
+ * the shared LLM budget. Malformed output gets one corrective retry (the
+ * judge.ts policy); an API error or a second malformed output throws
+ * JudgeFailure.
+ */
+async function judgeOrder(
+  q: Cat29Question,
+  answer1: string,
+  answer2: string,
+  pages: SyntheticPage[],
+  judgeConfig: JudgeConfig,
+): Promise<{ verdict: OrderVerdict; cost_usd: number }> {
+  const client = judgeConfig.client ?? new Anthropic();
+  const budget = judgeConfig.budget ?? getDefaultLlmBudget();
+  const rubric = rubricFor(q);
+  const messages: Anthropic.Messages.MessageParam[] = [{ role: 'user', content: renderPairPrompt(q, answer1, answer2, pages) }];
+  let cost = 0;
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    let response: Anthropic.Messages.Message;
+    try {
+      response = await budget.withLlmSlot(() => client.messages.create({
+        model: judgeConfig.model ?? JUDGE_MODEL,
+        max_tokens: judgeConfig.maxTokens ?? PAIR_MAX_TOKENS,
+        temperature: JUDGE_TEMPERATURE,
+        system: [{ type: 'text', text: PAIRWISE_JUDGE_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
+        tools: [SCORE_PAIR_TOOL],
+        tool_choice: { type: 'tool', name: SCORE_PAIR_TOOL.name },
+        messages,
+      }));
+    } catch (e: any) {
+      throw new JudgeFailure(`judge call failed for ${q.id}: ${e?.message ?? e}`);
+    }
+    cost += priceOf(response.usage?.input_tokens ?? 0, response.usage?.output_tokens ?? 0);
+    const parsed = parsePairOutput(response, rubric);
+    if (parsed.verdict) return { verdict: parsed.verdict, cost_usd: cost };
+    messages.splice(1, 1, {
+      role: 'user',
+      content: `Your previous response was malformed: ${parsed.defect}. Call score_pair again with complete score sets for both answers.`,
+    });
+  }
+  throw new JudgeFailure(`judge_failed (malformed output after retry) for ${q.id}`);
+}
+
+type Side = 'a' | 'b';
+
+export interface OrderRow {
+  order: [Side, Side];
   a: number;
   b: number;
-  by_order: Array<{ order: ['a' | 'b', 'a' | 'b']; a?: number; b?: number }>;
+  preferred: Side | 'tie';
+}
+
+export interface PairScores {
+  /** Mean rubric score (0-5) per side across both orders; a crashed side scores 0. */
+  a: number;
+  b: number;
+  by_order: OrderRow[];
+  /** Both orders preferred the same side (or both tie); null when no judge call ran. */
+  position_consistent: boolean | null;
+  preference: Side | 'tie' | 'inconsistent' | null;
   cost_usd: number;
 }
 
 /**
- * Judge two blind answers in BOTH presentation orders and average per side.
- * Any judge API error or judge_failed verdict throws JudgeFailure — the
- * caller excludes the question via probe-accounting origin 'judge'.
- * A null answer (its system crashed) is a sut MISS: scored 0 without
- * consulting the judge.
+ * Judge two blind answers side by side in BOTH presentation orders (first
+ * order fixed by a seed from the question id). Per-side scores average over
+ * the orders, which cancels a constant position bias; a pair whose
+ * preferred side flips with the order is reported as position-inconsistent.
+ * Any judge failure throws JudgeFailure, and the caller excludes the question
+ * via probe-accounting origin 'judge'. A null answer (its system crashed)
+ * is a sut MISS: shown as NO_ANSWER_TEXT and scored 0.
  */
-async function judgePair(
+export async function judgePair(
   q: Cat29Question,
   answers: { a: string | null; b: string | null },
   pages: SyntheticPage[],
   judgeConfig: JudgeConfig,
 ): Promise<PairScores> {
-  const firstIsB = seededCoin(q.id);
-  const orders: Array<['a' | 'b', 'a' | 'b']> = firstIsB ? [['b', 'a'], ['a', 'b']] : [['a', 'b'], ['b', 'a']];
-  const sums: Record<'a' | 'b', number> = { a: 0, b: 0 };
-  const byOrder: PairScores['by_order'] = [];
-  let cost = 0;
-  for (const order of orders) {
-    const row: PairScores['by_order'][number] = { order };
-    for (const side of order) {
-      const answer = answers[side];
-      if (answer === null) {
-        row[side] = 0; // sut miss — no judge call for a crashed system
-        continue;
-      }
-      let result;
-      try {
-        result = await scoreAnswer(evidenceFor(q, answer, pages), judgeConfig);
-      } catch (e: any) {
-        throw new JudgeFailure(`judge call failed for ${q.id}: ${e?.message ?? e}`);
-      }
-      cost += result.cost_usd;
-      if (result.verdict === 'judge_failed') {
-        throw new JudgeFailure(`judge_failed (malformed output after retry) for ${q.id}`);
-      }
-      row[side] = result.overall_score;
-    }
-    sums.a += row.a ?? 0;
-    sums.b += row.b ?? 0;
-    byOrder.push(row);
+  if (answers.a === null && answers.b === null) {
+    return { a: 0, b: 0, by_order: [], position_consistent: null, preference: null, cost_usd: 0 };
   }
-  return { a: sums.a / orders.length, b: sums.b / orders.length, by_order: byOrder, cost_usd: cost };
+  const text = (side: Side) => answers[side] ?? NO_ANSWER_TEXT;
+  const orders: Array<[Side, Side]> = seededCoin(q.id) ? [['b', 'a'], ['a', 'b']] : [['a', 'b'], ['b', 'a']];
+  const byOrder: OrderRow[] = [];
+  let cost = 0;
+  for (const [first, second] of orders) {
+    const { verdict, cost_usd } = await judgeOrder(q, text(first), text(second), pages, judgeConfig);
+    cost += cost_usd;
+    const score = { [first]: verdict.first, [second]: verdict.second } as Record<Side, number>;
+    byOrder.push({
+      order: [first, second],
+      a: answers.a === null ? 0 : score.a,
+      b: answers.b === null ? 0 : score.b,
+      preferred: verdict.preferred === 'first' ? first : verdict.preferred === 'second' ? second : 'tie',
+    });
+  }
+  const consistent = byOrder[0].preferred === byOrder[1].preferred;
+  return {
+    a: (byOrder[0].a + byOrder[1].a) / 2,
+    b: (byOrder[0].b + byOrder[1].b) / 2,
+    by_order: byOrder,
+    position_consistent: consistent,
+    preference: consistent ? byOrder[0].preferred : 'inconsistent',
+    cost_usd: cost,
+  };
+}
+
+// ─── Think LLM client (temperature pinned) ───────────────────────────────
+
+/** runThink client seam: forwards gbrain's request to Anthropic at THINK_TEMPERATURE. */
+export function makeThinkClient(anthropic: Pick<Anthropic, 'messages'>): ThinkLLMClient {
+  return {
+    create: (params: Anthropic.MessageCreateParamsNonStreaming, opts?: { signal?: AbortSignal }) => anthropic.messages.create(
+      { ...params, model: String(params.model).replace(/^anthropic[:/]/, ''), temperature: THINK_TEMPERATURE },
+      opts,
+    ),
+  } as unknown as ThinkLLMClient;
 }
 
 // ─── Hermetic stubs (plumbing verification, publishable:false) ─────────
@@ -351,15 +535,18 @@ export function defaultStubThinkResponse(q: Cat29Question): ThinkResponse {
 }
 
 /**
- * Deterministic judge client for --stub runs: scores the `facts` criterion
- * by expected-fact substring coverage in the blind answer, `cites` by slug
- * presence, fixed midpoints elsewhere. Injected through scoreAnswer's
- * sanctioned JudgeConfig.client seam — rubric coverage, weighting and
- * verdict thresholds still run through the real judge.ts code path.
+ * Deterministic pairwise judge client for --stub runs: scores each answer's
+ * `facts` criterion by expected-fact substring coverage, `cites` by slug
+ * presence, fixed midpoints elsewhere, and prefers the higher total. It
+ * reads both answers and the expected facts from their nonce-fenced blocks.
+ * `prefer` overrides the preference (tests use it to simulate a
+ * position-biased judge). Injected through JudgeConfig.client; rubric
+ * coverage, weighting and order bookkeeping still run through the real code.
  */
 export function makeStubJudgeClient(hooks?: {
   failOn?: (userContent: string) => boolean;
   onRequest?: (userContent: string) => void;
+  prefer?: (userContent: string) => 'answer_1' | 'answer_2' | 'tie';
 }): { messages: { create: (params: any) => Promise<any> } } {
   return {
     messages: {
@@ -368,19 +555,25 @@ export function makeStubJudgeClient(hooks?: {
         hooks?.onRequest?.(userContent);
         if (hooks?.failOn?.(userContent)) throw new Error('stub judge: forced failure (test hook)');
         const rubricIds = [...userContent.matchAll(/- id=(\S+) weight=/g)].map(m => m[1]);
-        const answer = userContent.split('<final_answer>')[1]?.split('</final_answer>')[0] ?? '';
-        const factsBlock = userContent.split('title="Expected facts"')[1]?.split('</page>')[0] ?? '';
+        const factsBlock = extractUntrusted(userContent.split('title="Expected facts"')[1] ?? '', 'untrusted_page') ?? '';
         const facts = factsBlock.split('\n').map(l => l.trim()).filter(l => l.startsWith('- ')).map(l => l.slice(2));
-        const factScore = facts.length === 0 ? 0
-          : Math.round((facts.filter(f => answer.includes(f.slice(0, Math.min(40, f.length)))).length / facts.length) * 5);
-        const hasCite = /\b(?:people|companies|concepts|meetings|deal)\//.test(answer);
-        const scores = rubricIds.map(id => ({
-          criterion_id: id,
-          score: id === 'facts' ? factScore : id === 'cites' ? (hasCite ? 5 : 0) : 3,
-          rationale: 'stub judge (deterministic substring coverage)',
-        }));
+        const scoresFor = (answer: string) => {
+          const factScore = facts.length === 0 ? 0
+            : Math.round((facts.filter(f => answer.includes(f.slice(0, Math.min(40, f.length)))).length / facts.length) * 5);
+          const hasCite = /\b(?:people|companies|concepts|meetings|deal)\//.test(answer);
+          return rubricIds.map(id => ({
+            criterion_id: id,
+            score: id === 'facts' ? factScore : id === 'cites' ? (hasCite ? 5 : 0) : 3,
+            rationale: 'stub judge (deterministic substring coverage)',
+          }));
+        };
+        const one = scoresFor(extractUntrusted(userContent, 'untrusted_answer_1') ?? '');
+        const two = scoresFor(extractUntrusted(userContent, 'untrusted_answer_2') ?? '');
+        const total = (xs: Array<{ score: number }>) => xs.reduce((a, x) => a + x.score, 0);
+        const preferred = hooks?.prefer?.(userContent)
+          ?? (total(one) > total(two) ? 'answer_1' : total(two) > total(one) ? 'answer_2' : 'tie');
         return {
-          content: [{ type: 'tool_use', id: 'stub', name: 'score_answer', input: { scores, verdict: 'partial', overall_rationale: 'stub judge' } }],
+          content: [{ type: 'tool_use', id: 'stub', name: 'score_pair', input: { answer_1_scores: one, answer_2_scores: two, preferred, rationale: 'stub judge' } }],
           usage: { input_tokens: 0, output_tokens: 0 },
         };
       },
@@ -396,13 +589,19 @@ export interface QuestionResult {
   expected_facts: string[];
   search_answer: string | null;
   think_answer: string | null;
-  /** Mean judge overall_score (0-5) across both orders; null when the question was judge-excluded. */
+  /** Mean rubric score (0-5) across both orders; null when the question was judge-excluded. */
   search_score: number | null;
   think_score: number | null;
   think_wins: boolean | null;
   judge_excluded: boolean;
   sut_errors: string[];
+  /** Pairwise preference; 'inconsistent' when it flipped with the presentation order. */
+  judge_preference: 'search' | 'think' | 'tie' | 'inconsistent' | null;
+  position_consistent: boolean | null;
+  judge_orders: Array<{ first: 'search' | 'think'; search_score: number; think_score: number; preferred: 'search' | 'think' | 'tie' }>;
 }
+
+const SYSTEM_OF: Record<'a' | 'b', 'search' | 'think'> = { a: 'search', b: 'think' };
 
 export function computeVerdict(rows: QuestionResult[], nTotal: number): 'pass' | 'partial' | 'fail' {
   const judged = rows.filter(r => !r.judge_excluded && r.search_score !== null && r.think_score !== null);
@@ -428,6 +627,8 @@ export interface Cat29Options {
   judgeClient?: JudgeConfig['client'];
   /** Injected stub think response builder (tests / --stub). */
   thinkResponseFor?: (q: Cat29Question) => ThinkResponse;
+  /** Injected Anthropic client for the think LLM (tests). Default: stub response under --stub, a real client live. */
+  thinkAnthropic?: Pick<Anthropic, 'messages'>;
 }
 
 export interface Cat29RunResult {
@@ -499,9 +700,9 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
   const judgeConfig: JudgeConfig = {
     client: options.judgeClient ?? (stub ? makeStubJudgeClient() as unknown as JudgeConfig['client'] : undefined),
     model: JUDGE_MODEL,
-    systemPromptVersion: RUBRIC_VERSION,
   };
-  const thinkResponseFor = options.thinkResponseFor ?? (stub ? defaultStubThinkResponse : undefined);
+  const thinkResponseFor = options.thinkResponseFor ?? (stub && !options.thinkAnthropic ? defaultStubThinkResponse : undefined);
+  const thinkClient = thinkResponseFor ? undefined : makeThinkClient(options.thinkAnthropic ?? new Anthropic());
 
   // ── Seed one brain with the corpus (pinned config BEFORE ingest) ──
   const pages = options.pages ?? loadSyntheticV1();
@@ -556,7 +757,7 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
         const r = await runThink(engine, {
           question: q.text,
           remote: false,
-          ...(thinkResponseFor ? { stubResponse: thinkResponseFor(q) } : {}),
+          ...(thinkResponseFor ? { stubResponse: thinkResponseFor(q) } : { client: thinkClient }),
         });
         thinkModelUsed = thinkModelUsed ?? r.modelUsed;
         thinkAns = r.answer && r.answer.trim().length > 0 ? r.answer : null;
@@ -569,8 +770,8 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
         acc.error(q.id, 'sut', `think failed: ${e?.message ?? e}`);
       }
 
-      // BLIND judging, both orders. 'a' = search, 'b' = think — labels never
-      // reach the judge; the mapping exists only in this runner.
+      // BLIND pairwise judging, both orders. 'a' = search, 'b' = think; the
+      // labels never reach the judge and the mapping exists only in this runner.
       try {
         const pair = await judgePair(q, { a: searchAns, b: thinkAns }, pages, judgeConfig);
         judgeCost += pair.cost_usd;
@@ -585,10 +786,20 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
           think_wins: pair.b > pair.a,
           judge_excluded: false,
           sut_errors: sutErrors,
+          judge_preference: pair.preference === null || pair.preference === 'tie' || pair.preference === 'inconsistent'
+            ? pair.preference
+            : SYSTEM_OF[pair.preference],
+          position_consistent: pair.position_consistent,
+          judge_orders: pair.by_order.map(o => ({
+            first: SYSTEM_OF[o.order[0]],
+            search_score: o.a,
+            think_score: o.b,
+            preferred: o.preferred === 'tie' ? 'tie' : SYSTEM_OF[o.preferred],
+          })),
         });
         // Probe score = think - search delta on the 0-5 judge scale.
         acc.score(q.id, pair.b - pair.a);
-        log(`[cat29]   ${q.id}: search=${pair.a.toFixed(2)} think=${pair.b.toFixed(2)} Δ=${(pair.b - pair.a).toFixed(2)}\n`);
+        log(`[cat29]   ${q.id}: search=${pair.a.toFixed(2)} think=${pair.b.toFixed(2)} Δ=${(pair.b - pair.a).toFixed(2)} preference=${pair.preference ?? 'n/a'}\n`);
       } catch (e: any) {
         if (e instanceof JudgeFailure) {
           // Judge infra failure: EXCLUDED from means, recorded, capped —
@@ -605,6 +816,9 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
             think_wins: null,
             judge_excluded: true,
             sut_errors: sutErrors,
+            judge_preference: null,
+            position_consistent: null,
+            judge_orders: [],
           });
           log(`[cat29]   ${q.id}: JUDGE EXCLUDED (${e.message})\n`);
         } else {
@@ -624,6 +838,7 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
   const sMean = mean('search_score');
   const tMean = mean('think_score');
   const verdict = computeVerdict(rows, questions.length);
+  const inconsistent = judged.filter(r => r.position_consistent === false);
   const summary = acc.summary();
 
   const receipt: Receipt = {
@@ -645,12 +860,14 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
       'models.think': THINK_MODEL,
       think_model_used: thinkModelUsed,
       embed_transport: stub ? 'stubbed-hash' : 'live',
-      think_llm: stub || options.thinkResponseFor ? 'stubbed' : 'live',
+      think_llm: thinkResponseFor ? 'stubbed' : options.thinkAnthropic ? 'injected' : 'live',
+      think_temperature: THINK_TEMPERATURE,
       judge_mode: options.judgeClient || stub ? 'injected/stub' : 'live',
       judge_blind: true,
+      judge_pairwise: true,
       judge_both_orders: true,
     },
-    judge: { model: stub ? 'stub-judge' : JUDGE_MODEL, temperature: 0, rubric_version: RUBRIC_VERSION },
+    judge: { model: stub ? 'stub-judge' : JUDGE_MODEL, temperature: JUDGE_TEMPERATURE, rubric_version: RUBRIC_VERSION },
     started_at: startedAt,
     finished_at: new Date().toISOString(),
     data: {
@@ -663,6 +880,8 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
       think_wins: judged.filter(r => (r.think_score ?? 0) > (r.search_score ?? 0)).length,
       search_wins: judged.filter(r => (r.search_score ?? 0) > (r.think_score ?? 0)).length,
       ties: judged.filter(r => r.search_score === r.think_score).length,
+      position_inconsistent: inconsistent.length,
+      position_inconsistent_question_ids: inconsistent.map(r => r.question_id),
       judge_cost_usd: judgeCost,
       per_question: rows,
     },
@@ -680,6 +899,7 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
   log(`[cat29]   search mean:      ${Number.isNaN(sMean) ? 'n/a' : sMean.toFixed(2)}/5\n`);
   log(`[cat29]   think mean:       ${Number.isNaN(tMean) ? 'n/a' : tMean.toFixed(2)}/5\n`);
   log(`[cat29]   think model:      ${thinkModelUsed ?? 'n/a'} (pinned ${THINK_MODEL})\n`);
+  log(`[cat29]   position flips:   ${inconsistent.length}/${judged.length} judged pairs\n`);
   log(`[cat29]   verdict:          ${verdict} (run_invalid=${summary.run_invalid}, publishable=${receipt.publishable})\n`);
   log(`[cat29]   receipt:          ${receiptFile}\n`);
 

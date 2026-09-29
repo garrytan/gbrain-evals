@@ -126,6 +126,13 @@ describe('ndcgAtK — hand-computed values', () => {
     expect(Number.isNaN(ndcgAtK(['a'], new Map(), 5))).toBe(true);
   });
 
+  test('C-16: duplicate ids earn gain once, so nDCG never exceeds 1', () => {
+    const grades = new Map([['d1', 3], ['d2', 1]]);
+    expect(ndcgAtK(['d1', 'd1', 'd1'], grades, 3)).toBeLessThanOrEqual(1);
+    expect(dcgAtK(['d1', 'd1', 'd1'], grades, 3)).toBeCloseTo(3, 10);
+    expect(dcgAtK(['d1', 'd1', 'd2'], grades, 3)).toBeCloseTo(3 + 1 / 2, 10);
+  });
+
   test('dcgAtK respects the k cutoff', () => {
     const grades = new Map([['a', 3]]);
     expect(dcgAtK(['x', 'a'], grades, 1)).toBe(0);

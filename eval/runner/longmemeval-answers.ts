@@ -5,11 +5,12 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { SearchResult } from 'gbrain/types';
 import type { ChatResult } from 'gbrain/ai/gateway';
-import type { AdapterSpec, NdjsonRow, Question, RunConfigPreimage } from './longmemeval.ts';
+import { classifyErrorOrigin, type AdapterSpec, type NdjsonRow, type Question, type RunConfigPreimage } from './longmemeval.ts';
 import { DEFAULT_JUDGE_SYSTEM_PROMPT, scoreAnswer, type JudgeEvidence, type JudgeResult } from './judge.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import { BENCHMARK_VERSION, loadReceipt, writeReceipt, type Receipt } from './receipt.ts';
 import { regressionPackageHash, resolveRegressionProduct, type ResolvedRegressionProduct } from './situation-recall-provenance.ts';
+import { opaqueSessionId, SESSION_ID_POLICY } from './longmemeval-session-ids.ts';
 
 export const LME_ANSWERS_CATEGORY = 'longmemeval-answers';
 const JUDGE_MODEL = 'claude-haiku-4-5-20251001';
@@ -39,6 +40,8 @@ export interface LmeEvidence {
 }
 export interface LmeCapture {
   schema_version: 1;
+  /** Captures made before opaque session ids lack this field and are rejected by the replay loader. */
+  session_ids: typeof SESSION_ID_POLICY;
   dataset_sha256: string;
   source_manifest_sha256: string;
   source_manifest: Array<{ question_id: string; source_sha256: string }>;
@@ -47,16 +50,18 @@ export interface LmeCapture {
   run_config_preimages?: Record<string, RunConfigPreimage>;
 }
 
-export function longMemEvalSources(q: Pick<Question, 'question_id' | 'haystack_session_ids' | 'haystack_dates' | 'haystack_sessions'>): LmeSource[] {
+/** Sources as the system under test imported them: opaque slug and frontmatter id, with session_id kept as the lowercased dataset id for scoring. */
+export function longMemEvalSources(q: Pick<Question, 'question_id' | 'haystack_session_ids' | 'haystack_dates' | 'haystack_sessions'>, salt = q.question_id): LmeSource[] {
   return q.haystack_sessions.flatMap((raw, i) => {
     const turns = Array.isArray(raw) ? raw : raw.turns;
     if (!Array.isArray(turns)) return [];
     const sessionId = (Array.isArray(raw) ? q.haystack_session_ids?.[i] : raw.session_id) ?? `lme_${q.question_id}_${i}`;
     if (typeof sessionId !== 'string' || !sessionId || turns.some(turn => !turn || !['user', 'assistant'].includes(turn.role) || typeof turn.content !== 'string')
       || (q.haystack_dates?.[i] !== undefined && typeof q.haystack_dates[i] !== 'string')) throw new Error('unsupported conversation source schema');
-    const frontmatter = ['---', 'type: note', ...(q.haystack_dates?.[i] ? [`date: ${q.haystack_dates[i]}`] : []), `session_id: ${sessionId}`, '---', ''];
+    const opaque = opaqueSessionId(salt, sessionId);
+    const frontmatter = ['---', 'type: note', ...(q.haystack_dates?.[i] ? [`date: ${q.haystack_dates[i]}`] : []), `session_id: ${opaque}`, '---', ''];
     const text = frontmatter.join('\n') + turns.flatMap(turn => [`**${turn.role}:** ${turn.content}`, '']).join('\n');
-    return [{ source_id: 'default', slug: `chat/${sessionId}`.toLowerCase(), session_id: sessionId.toLowerCase(), text: normalize(text) }];
+    return [{ source_id: 'default', slug: `chat/${opaque}`, session_id: sessionId.toLowerCase(), text: normalize(text) }];
   });
 }
 
@@ -65,7 +70,7 @@ export function createLmeCapture(datasetBytes: Buffer, questions: Question[], ad
   while (!existsSync(join(root, 'package.json')) && dirname(root) !== root) root = dirname(root);
   const product = resolveRegressionProduct({ expectedPackageSha256: regressionPackageHash(root), requireClean: false });
   const source_manifest = questions.map(q => ({ question_id: q.question_id, source_sha256: lmeArtifactHash(longMemEvalSources(q)) }));
-  return { schema_version: 1, dataset_sha256: hash(datasetBytes), source_manifest_sha256: lmeArtifactHash(source_manifest), source_manifest,
+  return { schema_version: 1, session_ids: SESSION_ID_POLICY, dataset_sha256: hash(datasetBytes), source_manifest_sha256: lmeArtifactHash(source_manifest), source_manifest,
     planned_pairs: adapters.flatMap(adapter => questions.map(q => ({ adapter, question_id: q.question_id }))), product };
 }
 
@@ -77,7 +82,7 @@ export function retainLmeEvidence(q: Question, results: SearchResult[], adapter:
     const text = normalize(result.chunk_text);
     const offset = source && text ? source.text.indexOf(text) : -1;
     const start = source && offset >= 0 && source.text.indexOf(text, offset + 1) < 0 ? offset : null;
-    return { source_id: sourceId, slug: result.slug, session_id: result.slug.replace(/^chat\//, '').toLowerCase(), text, start,
+    return { source_id: sourceId, slug: result.slug, session_id: source?.session_id ?? result.slug.replace(/^chat\//, '').toLowerCase(), text, start,
       end: start === null ? null : start + text.length, source_sha256: source ? hash(source.text) : null };
   });
   const seen = new Set<string>();
@@ -139,7 +144,7 @@ export function loadLmeAnswerReplay(paths: { datasetPath: string; rowsPath: stri
   const datasetBytes = readFileSync(paths.datasetPath), rowBytes = readFileSync(paths.rowsPath), receiptBytes = readFileSync(paths.receiptPath);
   const primary = loadReceipt(paths.receiptPath);
   const capture = primary.resolved_config?.evidence_capture as LmeCapture | undefined;
-  if (primary.category !== 'longmemeval' || !['completed', 'error'].includes(primary.run_status) || capture?.schema_version !== 1) throw new Error('retained native evidence is required; legacy session IDs cannot be expanded into replay evidence');
+  if (primary.category !== 'longmemeval' || !['completed', 'error'].includes(primary.run_status) || capture?.schema_version !== 1 || capture.session_ids !== SESSION_ID_POLICY) throw new Error('retained native evidence is required; legacy session IDs cannot be expanded into replay evidence, and captures without opaque session ids cannot be replayed');
   if (hash(datasetBytes) !== capture.dataset_sha256 || primary.hashes?.dataset !== capture.dataset_sha256 || hash(rowBytes) !== primary.hashes?.evidence_rows) throw new Error('frozen dataset or retained row hash mismatch');
   const questions = JSON.parse(datasetBytes.toString()) as LmeAnswerQuestion[];
   if (!Array.isArray(questions) || !questions.length || new Set(questions.map(q => q.question_id)).size !== questions.length) throw new Error('dataset questions must be nonempty and unique');
@@ -255,7 +260,10 @@ export async function runLongMemEvalAnswers(options: { datasetPath: string; rows
       if (item.row.error) { failure(item.row.error_origin!, 'retained retrieval failure'); continue; }
       if (item.safety.length) { failure('sut', 'non-original evidence blocked before answer generation'); continue; }
       try { row.answer = await runtime.generate(structuredClone(item.input)); }
-      catch { failure('sut', 'answer generation failed; usage may be unavailable'); continue; }
+      catch (error) {
+        const origin = classifyErrorOrigin(error instanceof Error ? error.message : String(error)) === 'dependency' ? 'dependency' : 'sut';
+        failure(origin, `answer generation failed (${origin}); usage may be unavailable`); continue;
+      }
       const answer = row.answer;
       if (!answer || typeof answer.text !== 'string' || !answer.text.trim() || answer.model !== p.answer_model || answer.providerId !== p.answer_model.split(':')[0] || !Array.isArray(answer.blocks)
         || !['end', 'tool_calls', 'length', 'refusal', 'content_filter', 'other'].includes(answer.stopReason) || !answer.usage
@@ -274,7 +282,7 @@ export async function runLongMemEvalAnswers(options: { datasetPath: string; rows
         return response;
       } } } as unknown as Anthropic;
       try {
-        row.judge_result = await scoreAnswer(row.judge_evidence, { client, model: p.judge_model, maxTokens: p.judge_max_tokens, systemPrompt: JUDGE_SYSTEM, systemPromptVersion: 'lme-secondary-grounding-v1' });
+        row.judge_result = await scoreAnswer(row.judge_evidence, { client, model: p.judge_model, maxTokens: p.judge_max_tokens, systemPrompt: JUDGE_SYSTEM, systemPromptVersion: 'lme-secondary-grounding-v2' });
         const judge = row.judge_result;
         if (judge.verdict === 'judge_failed' || !Number.isFinite(judge.overall_score) || !Number.isFinite(judge.cost_usd) || judge.scores.some(s => !Number.isFinite(s.score))) { failure('judge', 'invalid judge score; retained raw outputs'); continue; }
         row.score = Number(answer.stopReason === 'end' && (abs || item.input.evidence.length > 0) && judge.scores.every(s => s.score === 5));
@@ -295,7 +303,7 @@ export async function runLongMemEvalAnswers(options: { datasetPath: string; rows
     publishable: p.mode === 'live' && !options.testRuntime && replay.primary.publishable && replay.questions.length === 500 && replay.rows.length === replay.questions.length && complete && safe && summary.publishable,
     gbrain_pin: replay.primary.gbrain_pin, gbrain_version: replay.primary.gbrain_version, started_at: started, finished_at: new Date().toISOString(),
     hashes: { ...replay.hashes, evaluator: hash(readFileSync(fileURLToPath(import.meta.url))), answer_profile: lmeArtifactHash(p) },
-    judge: { model: p.judge_model, temperature: 0, rubric_version: 'lme-secondary-grounding-v1' },
+    judge: { model: p.judge_model, temperature: 0, rubric_version: 'lme-secondary-grounding-v2' },
     resolved_config: { profile: p, product, isolated_runtime: namespace, answer_system: ANSWER_SYSTEM, judge_system: JUDGE_SYSTEM,
       budget_enforcement: 'separate externally enforced provider caps; approval attestations are not a local spending meter',
       methodology: 'secondary grounding check, not official LongMemEval answer accuracy; shared rubric judge/category-0 standalone presentation, no official temporal tolerance or preference scoring protocol',

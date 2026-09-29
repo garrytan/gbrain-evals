@@ -1,22 +1,27 @@
 /**
- * all.ts + llm-budget.ts tests — Day 10 of BrainBench v1 Complete.
+ * all.ts + llm-budget.ts tests.
  *
  * Covers:
- *   - CATEGORIES has every expected Cat number (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
- *   - Subprocess vs programmatic classification matches the plan:
- *       subprocess: 1, 2, 3, 4, 6, 7, 10, 11, 12 (9 Cats)
- *       programmatic: 5, 8, 9 (3 Cats)
- *   - runConcurrently respects the concurrency cap (observable via peak in-flight count)
- *   - LlmBudget.acquireSlot blocks when at capacity, releases in order
- *   - LlmBudget.withLlmSlot always releases on success AND on throw
- *   - LlmBudget respects BRAINBENCH_LLM_CONCURRENCY env var
- *   - buildReport includes every Cat + programmatic-only section
+ *   - CATEGORIES lists every category in the repository, each with a tier
+ *     and either a dispatchable script or a stated reason (C-09)
+ *   - offline and paid tiers partition the dispatched categories, and every
+ *     category not run is reported with a reason
+ *   - runConcurrently respects the concurrency cap
+ *   - runSchedule never overlaps an exclusive latency category with any
+ *     other category (C-11)
+ *   - LlmBudget semaphore behavior
+ *   - buildReport renders all three statuses and the not-run list
  */
 
 import { describe, test, expect, afterEach } from 'bun:test';
+import { existsSync, readdirSync, readFileSync } from 'fs';
 import {
   CATEGORIES,
+  parseTier,
+  printNotRun,
   runConcurrently,
+  runSchedule,
+  selectCategories,
   buildReport,
   type CategoryRun,
 } from '../../eval/runner/all.ts';
@@ -29,49 +34,107 @@ import {
 // ─── CATEGORIES catalog shape ────────────────────────────────────────
 
 describe('CATEGORIES catalog', () => {
-  test('includes every expected Cat number in ascending order', () => {
-    const nums = CATEGORIES.map(c => c.num);
-    // 34 = BrainBench memory conformance, 35 = transcript distillation
-    // fidelity. This list is the drift tripwire — keep it exact
-    // (audit tests-audit-01).
-    expect(nums).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 34, 35, 36]);
+  test('lists every category in the repository (drift tripwire, audit tests-audit-01 and C-09)', () => {
+    expect(CATEGORIES.map(c => c.id)).toEqual([
+      '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '13b', '13b-sit', '14', '15', '18', '18b',
+      '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30-33', '34', '35', '36', '36-live',
+      'multi-adapter', 'relational-ab', 'precisionmembench', 'longmemeval', 'longmemeval-answers',
+      'longmemeval-m-pilot', 'reading-notes', 'situation-recall', 'shootout', 'qrels',
+    ]);
   });
 
-  test('subprocess Cats: 1, 2, 3, 4, 6, 7, 10, 11, 12, 34, 35, 36 (12 total)', () => {
-    const subprocessNums = CATEGORIES.filter(c => c.kind === 'subprocess').map(c => c.num);
-    expect(subprocessNums.sort((a, b) => a - b)).toEqual([1, 2, 3, 4, 6, 7, 10, 11, 12, 34, 35, 36]);
+  test('every category runner script in eval/runner is listed', () => {
+    const referenced = new Set(CATEGORIES.flatMap(c => c.kind === 'dispatched' ? [c.script] : (c.command?.match(/eval\/runner\/[\w.-]+\.ts/g) ?? [])));
+    const helpers = new Set([
+      'cat13-gap-localize.ts', 'cat13-kacf-calibrate.ts', 'cat35-checks.ts', 'cat35-judges.ts', 'cat35-transcript-distill-chart.ts',
+      'cat36-corpus.ts', 'cat36-scorer.ts', 'cat36-production.ts', 'cat36-snapshot.ts', 'cat36-grounded-answers.ts', 'cat36-operation-conformance.ts',
+      // Listed without a command: not implemented (5, 8, 9) or run by run-skillopt-cats.sh (30-33).
+      'cat5-provenance.ts', 'cat8-skill-compliance.ts', 'cat9-workflows.ts',
+      'cat30-skillopt-improvement.ts', 'cat31-skillopt-ablation.ts', 'cat32-skillopt-reward-hacking.ts', 'cat33-skillopt-transfer.ts',
+    ]);
+    const runners = readdirSync('eval/runner').filter(f => /^cat\d+b?-.*\.ts$/.test(f) && !helpers.has(f)).sort();
+    expect(runners.length).toBeGreaterThan(20);
+    for (const f of runners) expect([f, referenced.has(`eval/runner/${f}`)]).toEqual([f, true]);
+  });
+
+  test('dispatched entries point at real scripts; listed entries give a reason', () => {
+    for (const c of CATEGORIES) {
+      expect(c.name.length).toBeGreaterThan(0);
+      if (c.kind === 'dispatched') {
+        expect(c.script).toMatch(/^eval\/runner\/.*\.ts$/);
+        expect(existsSync(c.script)).toBe(true);
+      } else {
+        expect(c.reason.length).toBeGreaterThan(20);
+        const script = c.command?.match(/(eval\/runner|scripts)\/[\w.-]+/)?.[0];
+        if (script) expect(existsSync(script)).toBe(true);
+      }
+    }
   });
 
   test('Cat36 explicitly runs bounded offline smoke with a fresh receipt path', () => {
-    const cat = CATEGORIES.find(c => c.num === 36);
-    expect(cat?.kind).toBe('subprocess');
-    if (!cat || cat.kind !== 'subprocess') throw new Error('Cat36 subprocess registration missing');
+    const cat = CATEGORIES.find(c => c.id === '36');
+    if (!cat || cat.kind !== 'dispatched') throw new Error('Cat36 registration missing');
+    expect(cat.tier).toBe('offline');
     expect(cat.args).toEqual(['--offline', '--smoke']);
-    expect(cat.freshOutput).toBe(true);
+    expect(cat.outputFlag).toBe('--output');
     expect(cat.timeoutMs).toBe(180_000);
     expect(cat.name).toContain('plumbing');
   });
 
-  test('programmatic Cats: 5, 8, 9 (3 total)', () => {
-    const progNums = CATEGORIES.filter(c => c.kind === 'programmatic').map(c => c.num);
-    expect(progNums.sort((a, b) => a - b)).toEqual([5, 8, 9]);
+  test('perf and sync-latency runners are exclusive (C-11)', () => {
+    const exclusive = CATEGORIES.filter(c => c.kind === 'dispatched' && c.exclusive).map(c => c.id);
+    expect(exclusive).toEqual(['7', '28']);
   });
 
-  test('every subprocess Cat has a script + name', () => {
-    for (const c of CATEGORIES) {
-      if (c.kind === 'subprocess') {
-        expect(c.script).toMatch(/^eval\/runner\/.*\.ts$/);
-        expect(c.name.length).toBeGreaterThan(0);
-      }
-    }
+  test('Cat 35 runs only in the paid tier, in full mode', () => {
+    const cat = CATEGORIES.find(c => c.id === '35');
+    if (!cat || cat.kind !== 'dispatched') throw new Error('Cat35 registration missing');
+    expect(cat.tier).toBe('paid');
+    expect(cat.env).toEqual({ CAT35_FULL: '1' });
+  });
+});
+
+describe('tiers', () => {
+  test('default tier is offline; bad values are rejected', () => {
+    expect(parseTier([])).toBe('offline');
+    expect(parseTier(['--tier', 'paid'])).toBe('paid');
+    expect(parseTier(['--tier', 'all'])).toBe('all');
+    expect(() => parseTier(['--tier', 'published'])).toThrow('--tier');
   });
 
-  test('every programmatic Cat has a non-empty reason', () => {
-    for (const c of CATEGORIES) {
-      if (c.kind === 'programmatic') {
-        expect(c.reason.length).toBeGreaterThan(20);
-      }
+  test('offline and paid partition the dispatched categories; every other category is reported as not run', () => {
+    const offline = selectCategories('offline');
+    const paid = selectCategories('paid');
+    const all = selectCategories('all');
+    expect(offline.dispatch.every(c => c.tier === 'offline')).toBe(true);
+    expect(paid.dispatch.every(c => c.tier === 'paid')).toBe(true);
+    expect(offline.dispatch.length + paid.dispatch.length).toBe(all.dispatch.length);
+    for (const sel of [offline, paid, all]) {
+      expect(sel.dispatch.length + sel.notRun.length).toBe(CATEGORIES.length);
+      expect(sel.notRun.every(n => n.reason.length > 0)).toBe(true);
     }
+    expect(offline.notRun.find(n => n.id === '13')?.reason).toBe('tier paid not selected');
+    expect(paid.notRun.find(n => n.id === '2')?.reason).toBe('tier offline not selected');
+    expect(offline.dispatch.map(c => c.id)).toEqual(['1', '2', '3', '4', '6', '7', '10', '11', '12', '19', '22', '23', '24', '27', '28', '34', '36']);
+  });
+
+  test('the not-run list is printed with every category and its reason', () => {
+    const lines: string[] = [];
+    const { notRun } = selectCategories('offline');
+    printNotRun(notRun, l => lines.push(l));
+    expect(lines[0]).toBe(`Not run in this invocation (${notRun.length}):`);
+    expect(lines).toHaveLength(notRun.length + 1);
+    expect(lines.some(l => l.includes('Cat 18b') && l.includes('ZeroEntropy'))).toBe(true);
+  });
+
+  test('package.json has no fake N=10 published script (C-08)', () => {
+    const scripts = JSON.parse(readFileSync('package.json', 'utf8')).scripts as Record<string, string>;
+    expect(scripts['eval:brainbench:published']).toBeUndefined();
+    for (const cmd of Object.values(scripts)) {
+      if (cmd.includes('all.ts')) expect(cmd).not.toContain('BRAINBENCH_N');
+    }
+    expect(scripts['eval:brainbench']).toBe('bun eval/runner/all.ts --tier offline');
+    expect(scripts['eval:brainbench:paid']).toBe('bun eval/runner/all.ts --tier paid');
   });
 });
 
@@ -115,6 +178,26 @@ describe('runConcurrently', () => {
       return null;
     });
     expect(order).toEqual([0, 1, 2]);
+  });
+});
+
+describe('runSchedule (C-11)', () => {
+  test('an exclusive item never runs while another item is in flight', async () => {
+    let inFlight = 0;
+    const overlaps: string[] = [];
+    const items = [
+      { id: 'a' }, { id: 'perf', exclusive: true }, { id: 'b' }, { id: 'c' }, { id: 'lat', exclusive: true }, { id: 'd' },
+    ];
+    const out = await runSchedule(items, 3, async item => {
+      inFlight++;
+      if (item.exclusive && inFlight > 1) overlaps.push(item.id);
+      await new Promise(r => setTimeout(r, 5));
+      if (item.exclusive && inFlight > 1) overlaps.push(item.id);
+      inFlight--;
+      return item.id;
+    });
+    expect(overlaps).toEqual([]);
+    expect(out).toEqual(['a', 'perf', 'b', 'c', 'lat', 'd']);
   });
 });
 
@@ -250,46 +333,30 @@ describe('getDefaultLlmBudget', () => {
 // ─── buildReport ──────────────────────────────────────────────────────
 
 describe('buildReport', () => {
-  test('includes every Cat + programmatic-only section', async () => {
-    const runs: CategoryRun[] = [
-      { num: 1, name: 'Cat 1', kind: 'subprocess', script: 'a.ts', status: 'pass', statusSource: 'exit-code', output: 'output1', exitCode: 0, elapsedMs: 1500 },
-      { num: 5, name: 'Cat 5', kind: 'programmatic', status: 'programmatic', statusSource: 'n/a', output: 'Run via harness.', exitCode: 0, elapsedMs: 0 },
-      { num: 6, name: 'Cat 6', kind: 'subprocess', script: 'cat6.ts', status: 'pass', statusSource: 'exit-code', output: 'output6', exitCode: 0, elapsedMs: 800 },
-    ];
-    const report = await buildReport(runs);
+  const run = (over: Partial<CategoryRun>): CategoryRun => ({
+    id: '1', name: 'x', tier: 'offline', script: 'a.ts', status: 'pass', statusSource: 'receipt', output: '', exitCode: 0, elapsedMs: 0, ...over,
+  });
+
+  test('renders pass, fail and skipped distinctly (C-18) and lists categories not run', () => {
+    const report = buildReport('offline', [
+      run({ id: '1', status: 'pass' }),
+      run({ id: '2', status: 'fail', statusSource: 'no-receipt', statusNote: 'no receipt written by this run' }),
+      run({ id: '3', status: 'skipped', statusNote: 'fixtures missing' }),
+    ], [{ id: '13', name: 'Conceptual', tier: 'paid', reason: 'tier paid not selected', command: 'bun eval/runner/cat13-conceptual.ts' }]);
     expect(report).toContain('# BrainBench');
-    expect(report).toContain('Cat 1');
-    expect(report).toContain('Cat 5');
-    expect(report).toContain('Cat 6');
-    expect(report).toContain('Programmatic-only Cats');
-    expect(report).toContain('Run via harness');
+    expect(report).toContain('**Tier:** offline');
+    expect(report).toContain('1 passed, 1 failed, 1 skipped');
+    expect(report).toContain('**Status:** ⤼ SKIPPED');
+    expect(report).toContain('**Status:** ✗ FAIL');
+    expect(report).toContain('**Status:** ✓ PASS');
+    expect(report).toContain('## Not run in this invocation');
+    expect(report).toContain('| 13 | Conceptual | paid | tier paid not selected |');
+    expect(report).toContain('read only by multi-adapter.ts');
+    expect(report).not.toContain('~$200');
   });
 
-  test('summary correctly counts passed/failed/programmatic', async () => {
-    const runs: CategoryRun[] = [
-      { num: 1, name: 'x', kind: 'subprocess', script: 'a.ts', status: 'pass', statusSource: 'exit-code', output: '', exitCode: 0, elapsedMs: 0 },
-      { num: 2, name: 'x', kind: 'subprocess', script: 'a.ts', status: 'fail', statusSource: 'exit-code', output: '', exitCode: 1, elapsedMs: 0 },
-      { num: 5, name: 'x', kind: 'programmatic', status: 'programmatic', statusSource: 'n/a', output: 'r', exitCode: 0, elapsedMs: 0 },
-    ];
-    const report = await buildReport(runs);
-    expect(report).toContain('2 subprocess Cats ran. 1 passed, 1 failed, 0 SKIPPED');
-  });
-
-  test('strips migration noise from subprocess output', async () => {
-    const runs: CategoryRun[] = [
-      {
-        num: 1,
-        name: 'x',
-        kind: 'subprocess',
-        script: 'a.ts',
-        status: 'pass',
-        statusSource: 'exit-code',
-        output: 'Migration 5 applied: foo\n12 migration(s) applied\nreal output line',
-        exitCode: 0,
-        elapsedMs: 0,
-      },
-    ];
-    const report = await buildReport(runs);
+  test('strips migration noise from subprocess output', () => {
+    const report = buildReport('offline', [run({ output: 'Migration 5 applied: foo\n12 migration(s) applied\nreal output line' })], []);
     expect(report).not.toContain('Migration 5 applied');
     expect(report).not.toContain('12 migration(s) applied');
     expect(report).toContain('real output line');

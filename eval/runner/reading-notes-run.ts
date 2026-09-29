@@ -11,13 +11,13 @@ import { prepareRequests, type FrozenReadingInput, type PreparedRequest } from '
 
 const sha = (value: string | Buffer) => createHash('sha256').update(value).digest('hex');
 const MODEL = 'anthropic:claude-sonnet-4-6';
-type Planned = { question_id: string; mode: 'direct' | 'notes'; request: PreparedRequest; source_sha256: string; context_chars: number };
+type Planned = { question_id: string; mode: 'direct' | 'notes'; request: PreparedRequest; source_sha256: string; context_chars: number; session_map: Record<string, string> };
 type Plan = { schema: number; model: string; max_tokens: number; configs: Record<'direct' | 'notes', { mode: string; prompt_version: string; prompt_sha256: string; config_sha256: string }>;
   rows: Planned[]; identity: { input_sha256: string; installed_reader_sha256: string; installed_package_sha256: string; declared_reader_pin: string } };
 const digest = /^[a-f0-9]{64}$/;
 
 function validatePlan(plan: Plan) {
-  if (plan?.schema !== 1 || plan.model !== MODEL || !Number.isSafeInteger(plan.max_tokens) || plan.max_tokens < 1 || plan.max_tokens > 4096
+  if (plan?.schema !== 2 || plan.model !== MODEL || !Number.isSafeInteger(plan.max_tokens) || plan.max_tokens < 1 || plan.max_tokens > 4096
     || !Array.isArray(plan.rows) || !plan.rows.length || plan.rows.length % 2) throw new Error('invalid paired request plan');
   const sourcePath = fileURLToPath(import.meta.resolve('gbrain-reader/eval/longmemeval/reader'));
   const packageJson = readFileSync(resolve(dirname(sourcePath), '../../../package.json'));

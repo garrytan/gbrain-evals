@@ -260,7 +260,7 @@ export function loadWorldV1(
 ): BasePage[] {
   const files = readdirSync(corpusDir).filter(
     f => f.endsWith('.json') && !f.startsWith('_'),
-  );
+  ).sort();
   const pages: BasePage[] = [];
   for (const f of files) {
     const raw = readFileSync(join(corpusDir, f), 'utf8');

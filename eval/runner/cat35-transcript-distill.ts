@@ -25,23 +25,16 @@
  *
  * Receipt: eval/reports/cat35-transcript-distill/<date>-<HHMMSS>-cat35[-bpre].json
  * (schema: eval/schemas/cat35-receipt.schema.json). Judged artifacts persist to
- * <date>-<HHMMSS>-artifacts/ so verdicts stay reconstructable.
+ * <date>-<HHMMSS>-artifacts/ so verdicts stay reconstructable. Every run also
+ * writes the WS0 receipt (receipt.ts) to
+ * eval/reports/cat35-transcript-distill/receipt.json, which all.ts grades:
+ * run_status 'skipped' (exit 0) when a key is missing, publishable only in
+ * full mode (audit PC-09).
  */
 
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { mkdtempSync } from 'node:fs';
-
-// Isolated HOME set at module scope (cat30 idiom). ESM hoisting means the
-// gbrain imports below EVALUATE first — this works because gbrain reads
-// GBRAIN_HOME lazily at call time (config.ts configDir), long after main()
-// starts. mkdtempSync (not a predictable epoch name): owner-only creation,
-// immune to pre-created/symlinked paths in a shared /tmp (CWE-377).
-const RUN_STAMP = new Date();
-const RUN_TMP = mkdtempSync(join(tmpdir(), 'cat35-'));
-process.env.GBRAIN_HOME = join(RUN_TMP, 'gbrain-home');
-
-import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { configureGateway } from 'gbrain/ai/gateway';
@@ -76,10 +69,20 @@ import {
   type Cat35JudgeAttempt,
   type CoverageVerdict,
 } from './cat35-judges.ts';
+import { JUDGE_TEMPERATURE } from './judge.ts';
+import {
+  BENCHMARK_VERSION,
+  RECEIPT_SCHEMA_VERSION,
+  writeReceipt,
+  type JudgeProvenance,
+  type ProbeError,
+  type Receipt,
+} from './receipt.ts';
+import { gbrainPin, gbrainVersion } from './gbrain-version.ts';
 
 // ─── Types over the committed fixtures ────────────────────────────────────
 
-type Lane = 'verbatim' | 'facts' | 'dream';
+export type Lane = 'verbatim' | 'facts' | 'dream';
 const ALL_LANES: Lane[] = ['verbatim', 'facts', 'dream'];
 
 interface GoldFile {
@@ -110,7 +113,7 @@ interface GoldFile {
   }>;
 }
 
-interface PerItemRow {
+export interface PerItemRow {
   transcript_id: string;
   lane: Lane;
   item_id: string;
@@ -256,7 +259,8 @@ function loadScaffold(): Array<{ slug: string; body: string }> {
   const dir = join(CORPUS_DIR, 'brain-scaffold');
   const out: Array<{ slug: string; body: string }> = [];
   const walk = (d: string, prefix: string) => {
-    for (const entry of readdirSync(d, { withFileTypes: true })) {
+    const entries = readdirSync(d, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name));
+    for (const entry of entries) {
       if (entry.isDirectory()) walk(join(d, entry.name), `${prefix}${entry.name}/`);
       else if (entry.name.endsWith('.md')) {
         out.push({
@@ -282,24 +286,197 @@ async function makeEngine(scaffold: Array<{ slug: string; body: string }>): Prom
   return engine;
 }
 
+// ─── Coverage aggregation (pure) ──────────────────────────────────────────
+
+export interface LaneCoverage {
+  /** Judge-only salient-unit recall: mean of per-transcript FULL=1 / PARTIAL=0.5 credit. */
+  macro: number;
+  micro: number;
+  strict: number;
+  partial_rate: number;
+  ci_lo: number;
+  ci_hi: number;
+  /** Items with a judge verdict (the denominator of micro/strict/partial_rate). */
+  n_items: number;
+  /** JUDGE_FAILED items left out of every aggregate. */
+  judge_failed_excluded: number;
+  /** Evidence-verified macro (lanes with a per-item joint score, i.e. dream). */
+  joint_macro?: number;
+  joint_ci_lo?: number;
+  joint_ci_hi?: number;
+  joint_n_items?: number;
+  /** Items left out of joint: JUDGE_FAILED plus failed joint-grounding checks. */
+  joint_excluded?: number;
+}
+
+export interface CoverageAggregate {
+  coverage_by_lane: Record<string, LaneCoverage>;
+  coverage_by_kind: Record<string, Record<string, number>>;
+  coverage_by_notability: Record<string, Record<string, number>>;
+  coverage_by_depth: Record<string, Record<string, number>>;
+}
+
+const BOOTSTRAP_SEED = 35;
+const credit = (s: PerItemRow['status']) => (s === 'FULL' ? 1 : s === 'PARTIAL' ? 0.5 : 0);
+const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+
+/**
+ * Salient-unit coverage aggregates over per-item rows.
+ *
+ * A JUDGE_FAILED row is unknown, not a miss (WS0 probe-accounting policy,
+ * audit PC-03): it leaves the numerator and denominator of every aggregate,
+ * including by kind, notability and depth, and each lane reports how many
+ * rows it excluded. Lanes whose rows carry a per-item joint score (dream)
+ * also report joint_macro, which credits an item only when the judge's
+ * evidence quote is in the document and traces to the transcript (audit
+ * PC-01), with the same seeded transcript-level bootstrap interval as
+ * macro. A null joint (coverage or joint-grounding judge failed) is
+ * excluded from joint and counted in joint_excluded.
+ */
+export function aggregateCoverage(perItem: PerItemRow[], lanes: Lane[], signalTranscriptIds: string[]): CoverageAggregate {
+  const coverage_by_lane: Record<string, LaneCoverage> = {};
+  for (const lane of lanes) {
+    const laneRows = perItem.filter((r) => r.lane === lane);
+    const scored = laneRows.filter((r) => r.status !== 'JUDGE_FAILED');
+    if (!scored.length) continue;
+    const perT: number[] = [];
+    const jointPerT: number[] = [];
+    for (const tid of signalTranscriptIds) {
+      const rows = scored.filter((r) => r.transcript_id === tid);
+      if (rows.length) perT.push(mean(rows.map((r) => credit(r.status))));
+      const jointRows = rows.filter((r) => r.joint !== null);
+      if (jointRows.length) jointPerT.push(mean(jointRows.map((r) => r.joint as number)));
+    }
+    const macro = perT.length ? mean(perT) : 0;
+    const ci = perT.length > 1 ? bootstrapCI(perT, BOOTSTRAP_SEED, 1000) : { lo: macro, hi: macro };
+    const entry: LaneCoverage = {
+      macro,
+      micro: mean(scored.map((r) => credit(r.status))),
+      strict: scored.filter((r) => r.status === 'FULL').length / scored.length,
+      partial_rate: scored.filter((r) => r.status === 'PARTIAL').length / scored.length,
+      ci_lo: ci.lo,
+      ci_hi: ci.hi,
+      n_items: scored.length,
+      judge_failed_excluded: laneRows.length - scored.length,
+    };
+    if (jointPerT.length) {
+      const jointMacro = mean(jointPerT);
+      const jci = jointPerT.length > 1 ? bootstrapCI(jointPerT, BOOTSTRAP_SEED, 1000) : { lo: jointMacro, hi: jointMacro };
+      const jointN = scored.filter((r) => r.joint !== null).length;
+      entry.joint_macro = jointMacro;
+      entry.joint_ci_lo = jci.lo;
+      entry.joint_ci_hi = jci.hi;
+      entry.joint_n_items = jointN;
+      entry.joint_excluded = laneRows.length - jointN;
+    }
+    coverage_by_lane[lane] = entry;
+  }
+
+  const groupBy = (key: (r: PerItemRow) => string) => {
+    const out: Record<string, Record<string, number>> = {};
+    for (const lane of lanes) {
+      const groups = new Map<string, PerItemRow[]>();
+      for (const r of perItem) {
+        if (r.lane !== lane || r.status === 'JUDGE_FAILED') continue;
+        const k = key(r);
+        if (!groups.has(k)) groups.set(k, []);
+        groups.get(k)!.push(r);
+      }
+      for (const [k, g] of groups) (out[k] ??= {})[lane] = mean(g.map((r) => credit(r.status)));
+    }
+    return out;
+  };
+  return {
+    coverage_by_lane,
+    coverage_by_kind: groupBy((r) => r.kind),
+    coverage_by_notability: groupBy((r) => r.notability),
+    coverage_by_depth: groupBy((r) => r.depth_bucket),
+  };
+}
+
+// ─── WS0 receipt (receipt.ts contract, graded by all.ts) ─────────────────
+
+const WS0_CATEGORY = 'cat35-transcript-distill';
+const WS0_RECEIPT_PATH = join(REPORT_DIR, 'receipt.json');
+
+function ws0Base(startedAt: string): Pick<Receipt, 'schema_version' | 'benchmark_version' | 'category' | 'gbrain_version' | 'gbrain_pin' | 'started_at' | 'finished_at'> {
+  return {
+    schema_version: RECEIPT_SCHEMA_VERSION,
+    benchmark_version: BENCHMARK_VERSION,
+    category: WS0_CATEGORY,
+    gbrain_version: gbrainVersion(),
+    gbrain_pin: gbrainPin(),
+    started_at: startedAt,
+    finished_at: new Date().toISOString(),
+  };
+}
+
+export function skippedWs0Receipt(reason: string, startedAt: string): Receipt {
+  return { ...ws0Base(startedAt), run_status: 'skipped', skip_reason: reason, n_total: 0, n_scored: 0, completion_rate: 0, errors: [], publishable: false };
+}
+
+export function errorWs0Receipt(message: string, startedAt: string): Receipt {
+  return {
+    ...ws0Base(startedAt),
+    run_status: 'error',
+    n_total: 0,
+    n_scored: 0,
+    completion_rate: 0,
+    errors: [{ probe_id: 'setup', origin: 'harness', message: message.slice(0, 500) }],
+    publishable: false,
+  };
+}
+
+/** Completed run: the unit is one salient item judged in one lane; only a whole-corpus, all-lane full run is publishable. */
+export function completedWs0Receipt(args: {
+  mode: string;
+  gatePass: boolean;
+  perItem: PerItemRow[];
+  errors: ProbeError[];
+  resolvedConfig: Record<string, unknown>;
+  judge: JudgeProvenance;
+  data: Record<string, unknown>;
+  startedAt: string;
+}): Receipt {
+  const nScored = args.perItem.filter((r) => r.status !== 'JUDGE_FAILED').length;
+  return {
+    ...ws0Base(args.startedAt),
+    run_status: 'completed',
+    verdict: args.gatePass ? 'pass' : 'fail',
+    n_total: args.perItem.length,
+    n_scored: nScored,
+    completion_rate: args.perItem.length ? nScored / args.perItem.length : 0,
+    errors: args.errors,
+    publishable: args.mode === 'full',
+    resolved_config: args.resolvedConfig,
+    judge: args.judge,
+    data: args.data,
+  };
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────
 
-async function main(): Promise<number> {
+async function main(runTmp: string, runStamp: Date): Promise<number> {
   const opts = parseOpts();
   const wallStart = Date.now();
+  const startedAt = runStamp.toISOString();
+  const setupError = (msg: string): number => {
+    err(msg);
+    writeReceipt(WS0_RECEIPT_PATH, errorWs0Receipt(msg, startedAt));
+    return 2;
+  };
 
-  // Setup gates (exit 2 = setup failure).
-  if (!process.env.ANTHROPIC_API_KEY) {
-    err('ANTHROPIC_API_KEY is required');
-    return 2;
+  // Missing keys: an honest skip (exit 0), never a FAIL and never a pass.
+  const missingKeys = ['ANTHROPIC_API_KEY', 'OPENAI_API_KEY'].filter((k) => !process.env[k]);
+  if (missingKeys.length) {
+    const reason = `missing keys: ${missingKeys.join(', ')} (ANTHROPIC_API_KEY drives the judges and write lanes; OPENAI_API_KEY is the gateway embedding config, which the dream subagent search path may use)`;
+    writeReceipt(WS0_RECEIPT_PATH, skippedWs0Receipt(reason, startedAt));
+    err(`SKIPPED: ${reason}`);
+    return 0;
   }
-  if (!process.env.OPENAI_API_KEY) {
-    err('OPENAI_API_KEY is required (gateway embedding config; corpus runs noEmbed but the dream subagent search path may embed queries)');
-    return 2;
-  }
+  // Other setup gates (exit 2 = setup failure, WS0 receipt run_status 'error').
   if (!existsSync(ALLOW_LIST_PATH)) {
-    err(`gbrain allow-list missing at ${ALLOW_LIST_PATH} — bun install broken?`);
-    return 2;
+    return setupError(`gbrain allow-list missing at ${ALLOW_LIST_PATH} — bun install broken?`);
   }
 
   const judgeModel =
@@ -334,22 +511,19 @@ async function main(): Promise<number> {
         const rel = p.slice(CORPUS_DIR.length + 1);
         const expected = hashByPath.get(rel);
         if (expected && sha256(readFileSync(p)) !== expected) {
-          err(`corpus integrity: ${rel} does not match its manifest content_sha256 — regenerate the corpus or restore the file`);
-          return 2;
+          return setupError(`corpus integrity: ${rel} does not match its manifest content_sha256 — regenerate the corpus or restore the file`);
         }
       }
     }
   }
   if (opts.limit !== null && (!Number.isFinite(opts.limit) || opts.limit <= 0)) {
-    err(`--limit must be a positive integer`);
-    return 2;
+    return setupError(`--limit must be a positive integer`);
   }
   if (opts.transcripts) {
     const known = new Set(fixtures.map((f) => f.gold.transcript_id));
     const unknown = opts.transcripts.filter((t) => !known.has(t));
     if (unknown.length) {
-      err(`--transcripts unknown id(s): ${unknown.join(', ')}`);
-      return 2;
+      return setupError(`--transcripts unknown id(s): ${unknown.join(', ')}`);
     }
     fixtures = fixtures.filter((f) => opts.transcripts!.includes(f.gold.transcript_id));
   } else if (!opts.full) {
@@ -360,8 +534,7 @@ async function main(): Promise<number> {
   }
   if (opts.limit) fixtures = fixtures.slice(0, opts.limit);
   if (fixtures.length === 0) {
-    err('no fixtures selected');
-    return 2;
+    return setupError('no fixtures selected');
   }
   // Mode integrity: 'full' is publication-eligible and therefore requires the
   // WHOLE corpus and ALL lanes. CAT35_FULL=1 plus any narrowing flag is a
@@ -393,8 +566,7 @@ async function main(): Promise<number> {
     judgeBatches * (judgeModel.includes('haiku') ? EST.judgePerBatchHaiku : EST.judgePerBatchSonnet);
   const projected = dreamEst + factsEst + judgeEst;
   if (projected > HARD_STOP_USD) {
-    err(`pre-flight: projected worst-case $${projected.toFixed(2)} exceeds CAT35_HARD_STOP_USD=$${HARD_STOP_USD} — refusing to start`);
-    return 2;
+    return setupError(`pre-flight: projected worst-case $${projected.toFixed(2)} exceeds CAT35_HARD_STOP_USD=$${HARD_STOP_USD} — refusing to start`);
   }
   err(`pre-flight: projected worst-case $${projected.toFixed(2)} (cap $${HARD_STOP_USD})`);
 
@@ -438,7 +610,7 @@ async function main(): Promise<number> {
         format: 'claude-code',
         sourceId: SOURCE_ID,
         embed: false,
-        userPatternsPath: join(RUN_TMP, 'no-user-patterns.txt'),
+        userPatternsPath: join(runTmp, 'no-user-patterns.txt'),
       });
       err(`ingest: ${ingest.pages.imported} pages, ${ingest.sessionsImported}/${ingest.sessionsSeen} sessions, cleanScan=${ingest.cleanScan}`);
 
@@ -462,8 +634,7 @@ async function main(): Promise<number> {
       // Cross-check: every selected transcript must have been seen (silent-drop guard).
       for (const [tid, st] of states) {
         if (!slugsByTranscript.has(tid) && !st.laneError.verbatim) {
-          err(`setup error: transcript ${tid} not seen by ingest — silent drop`);
-          return 2;
+          return setupError(`setup error: transcript ${tid} not seen by ingest — silent drop`);
         }
       }
       if (opts.lanes.includes('verbatim')) {
@@ -530,7 +701,7 @@ async function main(): Promise<number> {
             await engine.setConfig('dream.synthesize.max_turns', String(maxTurns));
             await engine.setConfig('dream.synthesize.subagent_timeout_ms', '600000');
             await engine.setConfig('dream.synthesize.cooldown_hours', '0');
-            const brainDir = join(RUN_TMP, `brain-${tid}`);
+            const brainDir = join(runTmp, `brain-${tid}`);
             mkdirSync(brainDir, { recursive: true });
             err(`dream[${tid}]: synthesize start`);
             const res = await runPhaseSynthesize(engine, {
@@ -717,7 +888,7 @@ async function main(): Promise<number> {
                 (r) => r.lane === lane && r.transcript_id === tid && r.item_id === jointFallback[i].item_id,
               )!;
               const credit = row.status === 'FULL' ? 1 : row.status === 'PARTIAL' ? 0.5 : 0;
-              row.joint = g.judge_failed ? 0 : g.results[i]?.grounded ? credit : 0;
+              row.joint = g.judge_failed ? null : g.results[i]?.grounded ? credit : 0;
             }
           }
         }
@@ -854,54 +1025,12 @@ async function main(): Promise<number> {
 
   // ── Aggregation ──────────────────────────────────────────────────────────
   const signalFixtures = fixtures.filter((f) => f.gold.items.length > 0);
-  const credit = (s: PerItemRow['status']) => (s === 'FULL' ? 1 : s === 'PARTIAL' ? 0.5 : 0);
-
-  const coverageByLane: Record<string, Record<string, number>> = {};
-  const perTranscriptRecall: Record<string, number[]> = {};
-  for (const lane of opts.lanes) {
-    const laneRows = perItem.filter((r) => r.lane === lane);
-    if (!laneRows.length) continue;
-    const perT: number[] = [];
-    for (const f of signalFixtures) {
-      const rows = laneRows.filter((r) => r.transcript_id === f.gold.transcript_id);
-      if (!rows.length) continue;
-      perT.push(rows.reduce((a, r) => a + credit(r.status), 0) / rows.length);
-    }
-    perTranscriptRecall[lane] = perT;
-    const macro = perT.length ? perT.reduce((a, b) => a + b, 0) / perT.length : 0;
-    const micro = laneRows.reduce((a, r) => a + credit(r.status), 0) / laneRows.length;
-    const strict = laneRows.filter((r) => r.status === 'FULL').length / laneRows.length;
-    const partialRate = laneRows.filter((r) => r.status === 'PARTIAL').length / laneRows.length;
-    const ci = perT.length > 1 ? bootstrapCI(perT, 35, 1000) : { lo: macro, hi: macro, mean: macro };
-    coverageByLane[lane] = {
-      macro,
-      micro,
-      strict,
-      partial_rate: partialRate,
-      ci_lo: ci.lo,
-      ci_hi: ci.hi,
-    };
-  }
-
-  const groupBy = (key: (r: PerItemRow) => string) => {
-    const out: Record<string, Record<string, number>> = {};
-    for (const lane of opts.lanes) {
-      const rows = perItem.filter((r) => r.lane === lane);
-      const groups = new Map<string, PerItemRow[]>();
-      for (const r of rows) {
-        const k = key(r);
-        if (!groups.has(k)) groups.set(k, []);
-        groups.get(k)!.push(r);
-      }
-      for (const [k, g] of groups) {
-        (out[k] ??= {})[lane] = g.reduce((a, r) => a + credit(r.status), 0) / g.length;
-      }
-    }
-    return out;
-  };
-  const coverageByKind = groupBy((r) => r.kind);
-  const coverageByNotability = groupBy((r) => r.notability);
-  const coverageByDepth = groupBy((r) => r.depth_bucket);
+  const {
+    coverage_by_lane: coverageByLane,
+    coverage_by_kind: coverageByKind,
+    coverage_by_notability: coverageByNotability,
+    coverage_by_depth: coverageByDepth,
+  } = aggregateCoverage(perItem, opts.lanes, signalFixtures.map((f) => f.gold.transcript_id));
 
   // Quote fidelity + compression + emission.
   const quoteFid: Record<string, { total: number; grounded: number; rate: number }> = {};
@@ -1128,8 +1257,7 @@ async function main(): Promise<number> {
   if (opts.judgeCalibration && opts.judgeCalibrationPath && !existsSync(opts.judgeCalibrationPath)) {
     // A typo'd explicit path must fail loudly, not silently degrade to
     // "no calibration" in the receipt.
-    err(`--judge-calibration file not found: ${opts.judgeCalibrationPath}`);
-    return 2;
+    return setupError(`--judge-calibration file not found: ${opts.judgeCalibrationPath}`);
   }
   if (opts.judgeCalibration && existsSync(calibPath)) {
     // The generator writes {schema_version, corpus_seed, note, entries: [...]};
@@ -1208,14 +1336,14 @@ async function main(): Promise<number> {
   const gbrainSha = gbrainLinked
     ? 'linked-local'
     : (repoPkg.dependencies?.gbrain?.split('#')[1] ?? 'unpinned');
-  const stamp = `${RUN_STAMP.toISOString().slice(0, 10)}-${RUN_STAMP.toISOString().slice(11, 19).replace(/:/g, '')}`;
+  const stamp = `${startedAt.slice(0, 10)}-${startedAt.slice(11, 19).replace(/:/g, '')}`;
   const receipt = {
     schema_version: 1,
     cat: 'cat35-transcript-distill',
     mode,
     gbrain_version: gbrainPkg.version ?? 'unknown',
     gbrain_sha: gbrainSha,
-    timestamp: RUN_STAMP.toISOString(),
+    timestamp: startedAt,
     corpus: 'transcript-distill-v1',
     corpus_sha: corpusSha,
     judge_model: judgeModel,
@@ -1228,6 +1356,7 @@ async function main(): Promise<number> {
     // runs). non-comparable ⇒ deltas below are suppressed.
     ...(comparability !== null ? { comparability } : {}),
     judge_prompt_version: CAT35_JUDGE_PROMPT_VERSION,
+    judge_temperature: JUDGE_TEMPERATURE,
     config_snapshot: {
       dream_model: dreamModel,
       triage_model: HAIKU,
@@ -1296,6 +1425,34 @@ async function main(): Promise<number> {
   };
   const receiptPath = join(REPORT_DIR, `${stamp}-cat35${opts.full ? '' : '-bpre'}.json`);
   writeFileSync(receiptPath, JSON.stringify(receipt, null, 2) + '\n');
+  writeReceipt(
+    WS0_RECEIPT_PATH,
+    completedWs0Receipt({
+      mode,
+      gatePass,
+      perItem,
+      errors: [
+        ...judgeEvents
+          .filter((e) => e.judge_failed)
+          .map((e) => ({ probe_id: `${e.transcript_id}:${e.lane}:${e.purpose}`, origin: 'judge' as const, message: `judge failed after retry (${e.event_id})` })),
+        ...[...states.entries()].flatMap(([tid, st]) =>
+          Object.entries(st.laneError).map(([lane, msg]) => ({ probe_id: `${tid}:${lane}`, origin: 'sut' as const, message: String(msg).slice(0, 500) })),
+        ),
+      ],
+      resolvedConfig: {
+        mode,
+        lanes: opts.lanes,
+        transcripts: fixtures.length,
+        corpus_sha: corpusSha,
+        judge_prompt_version: CAT35_JUDGE_PROMPT_VERSION,
+        ...receipt.config_snapshot,
+        detailed_receipt: receiptPath,
+      },
+      judge: { model: judgeModel, temperature: JUDGE_TEMPERATURE, rubric_version: CAT35_JUDGE_PROMPT_VERSION },
+      data: { coverage_by_lane: coverageByLane, gates, judge_failed_rate: judgeFailedRate, detailed_receipt: receiptPath },
+      startedAt,
+    }),
+  );
 
   const artifactsDir = join(REPORT_DIR, `${stamp}-artifacts`);
   mkdirSync(artifactsDir, { recursive: true });
@@ -1317,8 +1474,13 @@ async function main(): Promise<number> {
   err(`mode=${mode}${opts.full ? '' : ' (BPRE smoke — not a published result)'}  gbrain=${receipt.gbrain_version}`);
   for (const [lane, c] of Object.entries(coverageByLane)) {
     err(
-      `${lane.padEnd(8)} salient-unit recall: macro=${(c.macro * 100).toFixed(1)}% [${(c.ci_lo * 100).toFixed(1)}-${(c.ci_hi * 100).toFixed(1)}] micro=${(c.micro * 100).toFixed(1)}% strict=${(c.strict * 100).toFixed(1)}%`,
+      `${lane.padEnd(8)} salient-unit recall: macro=${(c.macro * 100).toFixed(1)}% [${(c.ci_lo * 100).toFixed(1)}-${(c.ci_hi * 100).toFixed(1)}] micro=${(c.micro * 100).toFixed(1)}% strict=${(c.strict * 100).toFixed(1)}% (judge only; ${c.judge_failed_excluded} judge-failed items excluded)`,
     );
+    if (c.joint_macro !== undefined) {
+      err(
+        `${lane.padEnd(8)} evidence-verified joint: macro=${(c.joint_macro * 100).toFixed(1)}% [${(c.joint_ci_lo! * 100).toFixed(1)}-${(c.joint_ci_hi! * 100).toFixed(1)}] over ${c.joint_n_items} items (${c.joint_excluded} excluded)`,
+      );
+    }
   }
   for (const [lane, h] of Object.entries(hallucination)) {
     err(`${lane.padEnd(8)} hallucination: ${(h.rate * 100).toFixed(1)}% (${h.ungrounded}/${h.verifiable} verifiable claims)`);
@@ -1343,24 +1505,39 @@ async function main(): Promise<number> {
   return gatePass ? 0 : 1;
 }
 
-function cleanupRunTmp(): void {
+function cleanupRunTmp(runTmp: string): void {
   // Best-effort: a full run leaves GBRAIN_HOME + 24 brain dirs + PGLite state
-  // under RUN_TMP; without cleanup every run leaks tens of MB into /tmp.
+  // under runTmp; without cleanup every run leaks tens of MB into /tmp.
   try {
-    rmSync(RUN_TMP, { recursive: true, force: true });
+    rmSync(runTmp, { recursive: true, force: true });
   } catch {
     // never let cleanup mask the run's exit code
   }
 }
 
-main().then(
-  (code) => {
-    cleanupRunTmp();
-    process.exit(code);
-  },
-  (e) => {
-    err(`fatal: ${e instanceof Error ? (e.stack ?? e.message) : String(e)}`);
-    cleanupRunTmp();
-    process.exit(2);
-  },
-);
+if (import.meta.main) {
+  // Isolated HOME (cat30 idiom): gbrain reads GBRAIN_HOME lazily at call
+  // time (config.ts configDir), so setting it before main() is enough.
+  // mkdtempSync (not a predictable epoch name): owner-only creation, immune
+  // to pre-created/symlinked paths in a shared /tmp (CWE-377).
+  const runStamp = new Date();
+  const runTmp = mkdtempSync(join(tmpdir(), 'cat35-'));
+  process.env.GBRAIN_HOME = join(runTmp, 'gbrain-home');
+  main(runTmp, runStamp).then(
+    (code) => {
+      cleanupRunTmp(runTmp);
+      process.exit(code);
+    },
+    (e) => {
+      const message = e instanceof Error ? (e.stack ?? e.message) : String(e);
+      err(`fatal: ${message}`);
+      try {
+        writeReceipt(WS0_RECEIPT_PATH, errorWs0Receipt(`fatal: ${message}`, runStamp.toISOString()));
+      } catch {
+        // the exit code still carries the failure
+      }
+      cleanupRunTmp(runTmp);
+      process.exit(2);
+    },
+  );
+}
