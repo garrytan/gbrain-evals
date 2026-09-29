@@ -2,6 +2,49 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.8] - 2026-09-29
+
+A leak-free LongMemEval answer re-run replaces the invalid 433/500. With
+session ids made opaque, gbrain's house reader answered **439/500 (87.8%)**.
+A GPT-4o reader using LongMemEval's official reading prompt, on exactly the
+same retrieved sessions, answered 430/500 (86.0%); paired, that is 21 wins
+and 30 losses, exact McNemar p = 0.26, so the readers are not demonstrably
+different. The run used the reranker off and the notes reader with 1,024
+output tokens, measured on gbrain PR 5676 at `a7cb37b`. That is not the
+September 6 configuration, so it does not measure how much the leak helped.
+
+### Added
+
+- **Report: [LongMemEval answers without the answer key](docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md).**
+  Strict retrieval on the same rows was 435/470. A 100-question component
+  study with the reader and evidence held fixed found that the evidence
+  budget matters far more than the prompt. Full retrieved sessions (about
+  15,800 input tokens) gave 89/100. The five retrieved chunks alone (about
+  3,400 tokens) gave 65/100 with gbrain's reader prompt, 65/100 with a plain
+  prompt and 64/100 with `gbrain think`'s prompt; each prompt against
+  gbrain's was p = 1.0. The report lists four harness stalls, a machine restart and the
+  paid cost (about $59.6).
+- Receipts under `docs/benchmarks/2026-09-29-longmemeval-opaque-qa/`:
+  - summary, per-question table, and rows for all five arms;
+  - the official-judge files;
+  - the full reader and judge prompts (gzip);
+  - chunk texts, logs, scripts, and provenance with dataset and cache hashes.
+
+  Twelve manifest entries pin their hashes and the counts 439/500,
+  430/500, 65, 65 and 64 of 100, and 435/470.
+- `scripts/verify-longmemeval-opaque-qa.py`, a keyless recount run by
+  `bun run validate`. It re-derives every arm's verdict counts, the paired
+  tests and the strict recall count, and checks that none of the 1,300 saved
+  reader prompts contains `answer_` or a retrieved raw session id.
+
+### Corrected
+
+- **LongMemEval answer accuracy (433/500): invalid, no longer "pending".**
+  The README, the comparison page and the September 6 report now point to
+  the September 29 re-run. They say that the answer comparison with vendor
+  self-reports is still not matched. The reading-notes transfer result
+  (308/361 to 324/361) was not re-run and stays pending.
+
 ## [0.10.2] - 2026-09-28
 
 A September 28 audit found published numbers that were invalid or overstated.
