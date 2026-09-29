@@ -11,6 +11,7 @@ what you are trying to do.
 | How do I run the benchmarks? | [Evaluation guide](../eval/README.md), [troubleshooting](../eval/RUNBOOK.md) |
 | How can I contribute a competing system or new questions? | [Contributor guide](../eval/CONTRIBUTING.md) |
 | Which outside scores are actually comparable? | [Cross-system comparison](comparison-systems.md) |
+| What is the plan for improving gbrain and proving it? | [September 28 plan and audits](plans/2026-09-28-gbrain-10x/README.md) |
 
 ## Retrieval experiments
 
