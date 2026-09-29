@@ -18,7 +18,7 @@
  */
 
 import { describe, test, expect, beforeAll, afterAll } from 'bun:test';
-import { mkdtempSync } from 'fs';
+import { mkdirSync, mkdtempSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import {
@@ -198,14 +198,39 @@ describe('runCat32 Part B gate', () => {
     expect(r.receipt.errors.some((e) => e.origin === 'sut' && e.probe_id === 'part-b')).toBe(true);
   }, RUN_TIMEOUT);
 
-  test('gate holds: optimizer output preserves held-out quality → pass, exit 0', async () => {
+  /** Write the optimizer's rejected buffer the way gbrain does when its held-out gate refuses a candidate. */
+  const recordHeldOutBlock = (opts: { skillsDir: string; skillName: string }) => {
+    const dir = join(opts.skillsDir, opts.skillName, 'skillopt');
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, 'rejected.json'), JSON.stringify({ schema: 1, entries: [{ key: 'k', skill_sha8: 'abcd1234', edits: [], reason: 'held_out_regression', ts: '2026-09-29T00:00:00.000Z' }] }));
+  };
+
+  test('no regression but the held-out gate never blocked anything → partial, not pass (audit B-32-01)', async () => {
     const r = await runCat32({
       bpre: false,
       reportsDir: tmpReports(),
       quiet: true,
       engineFactory: async () => fakeEngine(),
       scoreFn: scoreFake,
-      runSkillOptFn: (async () => ({
+      // The optimizer found nothing and returned the seed: held-out cannot regress.
+      runSkillOptFn: (async () => ({ outcome: 'no_improvement', finalText: SEED_SKILL, receipt: { best_sel_score: 0, final_cost_usd: 0.01 }, mutatedSkillFile: false })) as any,
+    });
+    expect(r.receipt.verdict).toBe('partial');
+    expect(r.exitCode).toBe(1);
+    const partB = (r.receipt.data as any).part_b;
+    expect(partB.no_regression).toBe(true);
+    expect(partB.held_out_blocked).toBe(0);
+    expect(partB.pass).toBe(false);
+  }, RUN_TIMEOUT);
+
+  test('gate holds: a candidate was blocked and the output preserves held-out quality → pass, exit 0', async () => {
+    const r = await runCat32({
+      bpre: false,
+      reportsDir: tmpReports(),
+      quiet: true,
+      engineFactory: async () => fakeEngine(),
+      scoreFn: scoreFake,
+      runSkillOptFn: (async (opts: { skillsDir: string; skillName: string }) => (recordHeldOutBlock(opts), {
         outcome: 'accepted',
         finalText: HONEST_SKILL + '\nSTUB-HONEST',
         receipt: { best_sel_score: 1.0, final_cost_usd: 0.01 },
@@ -215,6 +240,7 @@ describe('runCat32 Part B gate', () => {
     expect(r.receipt.verdict).toBe('pass');
     expect(r.exitCode).toBe(0);
     expect((r.receipt.data as any).part_b.pass).toBe(true);
+    expect((r.receipt.data as any).part_b.held_out_blocked).toBe(1);
     expect(r.receipt.gbrain_version).toMatch(/^\d+\.\d+\.\d+/);
     // Fixture skills stay distinct on purpose — the adversarial one demands
     // hollow output, the seed demands nothing.

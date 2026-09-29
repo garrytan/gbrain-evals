@@ -31,6 +31,8 @@ describe('cat19 doctor-remediate', () => {
     expect(result.receipt.verdict).toBe('pass');
     expect(result.receipt.n_scored).toBe(5);
     expect(result.receipt.errors).toHaveLength(0);
+    expect(result.receipt.publishable).toBe(false);
+    expect((result.receipt.resolved_config as { embed_transport: string }).embed_transport).toBe('stubbed-hash');
 
     // cats18-21-08: the link metric measures something real now.
     expect(result.baseline?.link_count).toBe(0);
