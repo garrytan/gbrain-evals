@@ -88,7 +88,7 @@ The old 49.1% precision / 97.9% recall graph result is a historical pre-audit me
 
 - `data/world-v1/`: the 240-page fictional world.
 - `data/amara-life-v1/`: emails, chats, calendar entries and notes with planted events.
-- `data/gold/`: answer labels; some files remain explicitly incomplete.
+- `data/gold/`: answer labels generated from the amara-life skeleton (`contradictions.json`, `implicit-preferences.json`, `poison.json`); `validate-data.ts` fails on a hand-written template row.
 - `runner/types.ts`: the adapter and query interfaces.
 - `runner/queries/`: built-in questions and their validator.
 - `schemas/`: saved-data and tool contracts.

@@ -44,7 +44,7 @@ The [August 31 audit](docs/audit/2026-08-31-eval-audit.md) explains the finding 
 
 ## Data and benchmark fidelity
 
-- [ ] **Finish the answer-label stubs.** The audit identified seven single-example placeholders, four without consumers. `contradictions.json` and `implicit-preferences.json` are now generated from planted data. Review `backlinks.json`, `citations.json`, `entities.json`, `personalization-rubric.json`, `poison.json` and `qrels.json`; populate useful files or deliberately remove unused ones. The data validator reports remaining stubs.
+- [x] **Finish the answer-label stubs.** Done in 0.10.7. `poison.json` is now generated from the planted skeleton fixtures, like `contradictions.json` and `implicit-preferences.json`, and a test holds all three byte-identical to the generator. `backlinks.json`, `citations.json`, `entities.json`, `personalization-rubric.json` and `qrels.json` had no generator and no runnable consumer and were removed rather than filled by hand. `validate-data.ts` now fails on a template row.
 
 - [ ] **Compare copied PrecisionMemBench files with upstream.** Check the fixtures and scorer against tenurehq/precisionmembench commit `c9689ca6`, accounting for the documented wrapper and path changes. Record the result in [ATTRIBUTION.md](eval/precisionmembench/ATTRIBUTION.md). Scorer parity tests and an upstream byte comparison answer different questions.
 

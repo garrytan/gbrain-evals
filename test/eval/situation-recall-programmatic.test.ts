@@ -74,8 +74,9 @@ describe('programmatic runtime input contract', () => {
     expect(validateProgrammaticCatalog(catalog(category), category).category).toBe(category);
   });
 
-  test('the committed template gold is not a runnable catalog', () => {
-    const template = JSON.parse(readFileSync('eval/data/gold/citations.json', 'utf8'));
+  test('a template catalog (the shape of the removed gold/citations.json stub) is not runnable', () => {
+    const template = { version: 1, claims: [{ _example: 'true', id: 'claim-001', source_page: 'people/jordan-park', claim_text: 'Jordan Park co-founded NovaMind in 2024.',
+      expected_label: 'supported', expected_evidence: ['doc/novamind-investor-update'], reason: 'template row' }] };
     expect(() => validateProgrammaticCatalog(template, 'cat5')).toThrow('Template/example');
     const value = catalog('cat5');
     (value as unknown as Record<string, unknown>).claims = template.claims;

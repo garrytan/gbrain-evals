@@ -120,7 +120,7 @@ export interface JudgeConfig {
   model?: string;
   /** Max tokens for judge output. Default 800. */
   maxTokens?: number;
-  /** System prompt version for reproducibility. Pinned via gold/personalization-rubric.json. */
+  /** System prompt version for reproducibility, recorded in the scorecard config. */
   systemPromptVersion?: string;
   /** Custom system prompt override. If unset, uses DEFAULT_JUDGE_SYSTEM_PROMPT. */
   systemPrompt?: string;

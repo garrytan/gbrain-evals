@@ -118,7 +118,7 @@ export const REGISTRY: readonly CategoryEntry[] = [
   {
     id: 'source-attribution', legacy_alias: '5', name: 'Source attribution / provenance',
     family: 'reasoning', tier: 'none', script: 'eval/runner/cat5-provenance.ts',
-    run: { kind: 'listed', reason: 'not implemented: no reviewed claim catalog exists (gold/citations.json is a one-claim template), and the runner has no gbrain in the loop' },
+    run: { kind: 'listed', reason: 'not implemented: no reviewed claim catalog exists (the one-claim gold/citations.json template was removed in 0.10.7), and the runner has no gbrain in the loop' },
     cost_estimate: UNMEASURED, receipt_path: receipt('cat5-provenance'),
     headline: { metric: 'none until a reviewed claim catalog exists', denominator: 'none' },
     gate: 'report-only', evidence_maturity: 'regression-only',

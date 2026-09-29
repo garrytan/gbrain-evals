@@ -472,7 +472,7 @@ function icalStamp(iso: string): string {
   return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
 }
 
-function writeCalendarIcs(outRoot: string, events: CalendarSkeleton[]): void {
+export function renderCalendarIcs(events: CalendarSkeleton[]): string {
   const lines: string[] = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
@@ -492,9 +492,13 @@ function writeCalendarIcs(outRoot: string, events: CalendarSkeleton[]): void {
     lines.push('END:VEVENT');
   }
   lines.push('END:VCALENDAR');
+  return lines.join('\r\n') + '\r\n';
+}
+
+function writeCalendarIcs(outRoot: string, events: CalendarSkeleton[]): void {
   const path = join(outRoot, 'calendar.ics');
   ensureDir(dirname(path));
-  writeFileSync(path, lines.join('\r\n') + '\r\n');
+  writeFileSync(path, renderCalendarIcs(events));
 }
 
 // ─── Docs (templated reference material — no LLM) ────────────────────
@@ -691,6 +695,8 @@ function writeGoldFiles(skeleton: AmaraLifeSkeleton): void {
     JSON.stringify(gold.contradictions, null, 2) + '\n');
   writeFileSync(join(GOLD_DIR, 'implicit-preferences.json'),
     JSON.stringify(gold.implicitPreferences, null, 2) + '\n');
+  writeFileSync(join(GOLD_DIR, 'poison.json'),
+    JSON.stringify(gold.poison, null, 2) + '\n');
 }
 
 // ─── CLI args + output routing (audit fix generators-07) ─────────────
