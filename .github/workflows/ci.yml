@@ -43,7 +43,7 @@ jobs:
       - name: Python harness tests
         run: python3 test/retrieval_refresh_orchestrator_test.py
 
-      - name: Validators (published LongMemEval recount, documentation, queries, data)
+      - name: Validators (published LongMemEval recount, documentation, links, queries, data)
         run: bun run validate
 
       - name: Retrieval regression gate (qrels + baseline, keyword-only)

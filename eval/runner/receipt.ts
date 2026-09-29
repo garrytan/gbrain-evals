@@ -30,11 +30,17 @@
  *                     measured (0 only when the runner knows no model ran).
  * writeReceipt upgrades whatever a runner builds to v2. v1 files stay
  * readable: validateReceipt and loadReceipt accept both versions.
+ *
+ * Since 0.10.7 writeReceipt also rewrites machine-local paths in every
+ * string (docs audit B11): paths under this checkout become repo-relative,
+ * the home directory becomes `~` and the temp directory `<tmp>`, so a
+ * committed receipt does not record the machine that produced it.
  */
 
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, lstatSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'fs';
+import { homedir, tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'path';
 import { regressionPackageHash } from './situation-recall-provenance.ts';
 
@@ -336,8 +342,30 @@ export function receiptPath(category: string, reportsDir = join(process.cwd(), '
 }
 
 /** Atomic write: upgrade to v2, validate, write temp file in the same dir, rename over target. */
+/** Machine-local path prefixes a committed receipt must not carry. */
+export const MACHINE_LOCAL_PATH = /(?:^|[\s"'=(:,\[])(?:\/home\/[^/\s"']+\/|\/Users\/[^/\s"']+\/|\/root\/|\/private\/var\/|\/var\/folders\/|\/tmp\/|[A-Za-z]:\\Users\\)/;
+
+function scrubString(value: string, prefixes: ReadonlyArray<readonly [string, string]>): string {
+  let out = value;
+  for (const [prefix, replacement] of prefixes) out = out.split(prefix).join(replacement);
+  return out;
+}
+
+/** Rewrite checkout, home and temp paths in every string of a JSON value. */
+export function scrubMachinePaths<T>(value: T, root = REPO_ROOT, home = homedir(), tmp = tmpdir()): T {
+  const prefixes = ([[`${root}/`, ''], [root, '.'], [`${tmp}/`, '<tmp>/'], ['/tmp/', '<tmp>/'], [`${home}/`, '~/']] as const)
+    .filter(([prefix]) => prefix.length > 1);
+  const visit = (v: unknown): unknown => {
+    if (typeof v === 'string') return scrubString(v, prefixes);
+    if (Array.isArray(v)) return v.map(visit);
+    if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).map(([k, child]) => [k, visit(child)]));
+    return v;
+  };
+  return visit(value) as T;
+}
+
 export function writeReceipt(path: string, input: Receipt): void {
-  const receipt = upgradeReceipt(input);
+  const receipt = scrubMachinePaths(upgradeReceipt(input));
   const violations = validateStoredReceipt(receipt);
   if (violations.length > 0) {
     throw new Error(`refusing to write invalid receipt (${receipt.category}): ${violations.join('; ')}`);
