@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "description": "Map from published claims to their saved evidence. The manifest test checks artifact paths, SHA-256 hashes, and declared JSON-pointer values. It does not parse report prose or independently validate every scorer. Separate golden tests and recount scripts are named where available. Entries marked disclosed-gap identify missing evidence; a fresh run cannot restore a missing historical receipt.",
-  "updated": "2026-09-25",
+  "updated": "2026-09-29",
   "entries": [
     {
       "claim_id": "reading-notes-transfer-labels",
@@ -2600,6 +2600,128 @@
       },
       "status": "covered",
       "note": "Archives all 17 source files, each with its launch SHA-256 and exact UTF-8 contents. Subsequent shipping changes fix failed-run receipts, reject unobserved think controls, strengthen offline evidence validation, and relocate saved report paths. Original results and launch fingerprints remain unchanged."
+    },
+    {
+      "claim_id": "longmemeval-opaque-qa-summary",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: 439/500 house reader, 430/500 GPT-4o reader, 65/65/64 of 100 on fixed chunks, 435/470 strict retrieval",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/summary.json",
+      "artifact_sha256": "44cc95f82191dda8ee69d1f33871f2784cab190f3e52dd1b5cb744a647fc9ca6",
+      "expected": {
+        "/arms/a_house_full500/correct_gbrain_judge": 439,
+        "/arms/a_house_full500/denominator": 500,
+        "/arms/a_house_full500/correct_official_judge": 443,
+        "/arms/b_gpt4o_official/correct_gbrain_judge": 430,
+        "/arms/b_gpt4o_official/correct_official_judge": 432,
+        "/arms/a_house_subset100/correct_gbrain_judge": 89,
+        "/arms/c1_prod_reader_chunks/correct_gbrain_judge": 65,
+        "/arms/c2_plain_rag_chunks/correct_gbrain_judge": 65,
+        "/arms/c3_think_prompt_chunks/correct_gbrain_judge": 64,
+        "/arms/c1_prod_reader_chunks/denominator": 100,
+        "/paired/b_vs_a_gbrain_judge/gains": 21,
+        "/paired/b_vs_a_gbrain_judge/losses": 30,
+        "/evidence/recall_all_hit_at5": 435,
+        "/evidence/non_abstention": 470
+      },
+      "golden_test": "scripts/verify-longmemeval-opaque-qa.py: keyless recount of saved verdicts, paired tests, strict recall and the prompt leak check",
+      "status": "covered",
+      "note": "Measured 2026-09-29 on gbrain a7cb37b (PR 5676), reranker off, notes reader with 1024 output tokens, opaque session ids. Not the published September 6 configuration, and it does not measure the answer_ leak by itself. Counts use all 500 questions (100 for the component subset); errors would score incorrect and there were none."
+    },
+    {
+      "claim_id": "longmemeval-opaque-qa-a-rows",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: Arm a harness rows (house reader, 500 questions) with answers, verdicts and retrieved chunk ids",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/a/rows.ndjson",
+      "artifact_sha256": "e4b640098bd11b8a799c816dccee38c27e03540e22d858cd307665a590cb5a36",
+      "status": "covered",
+      "note": "Machine-local paths replaced by placeholders; no other bytes changed. The dataset (sha256 d6f21ea9...) and the embedding cache are not committed; provenance.json records their hashes.",
+      "golden_test": "scripts/verify-longmemeval-opaque-qa.py: keyless recount of saved verdicts, paired tests, strict recall and the prompt leak check"
+    },
+    {
+      "claim_id": "longmemeval-opaque-qa-a-official-judge",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: Verbatim official LongMemEval judge over arm a, with prompts and replies",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/a/official-judge.ndjson",
+      "artifact_sha256": "93205ad6d450cc5a02be42aa53ea60dc0c2522676cada6305319631d36043936",
+      "status": "covered",
+      "note": "Machine-local paths replaced by placeholders; no other bytes changed. The dataset (sha256 d6f21ea9...) and the embedding cache are not committed; provenance.json records their hashes.",
+      "golden_test": "scripts/verify-longmemeval-opaque-qa.py: keyless recount of saved verdicts, paired tests, strict recall and the prompt leak check"
+    },
+    {
+      "claim_id": "longmemeval-opaque-qa-a-calls",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: Every paid call of arm a with full reader and judge prompts, answers, usage and latency (gzip)",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/a/calls.ndjson.gz",
+      "artifact_sha256": "b9b1d6de7df03a7d71810e5c636ccd5738728b8c375b13823d01d351fa530c91",
+      "status": "covered",
+      "note": "Machine-local paths replaced by placeholders; no other bytes changed. The dataset (sha256 d6f21ea9...) and the embedding cache are not committed; provenance.json records their hashes.",
+      "golden_test": "scripts/verify-longmemeval-opaque-qa.py: keyless recount of saved verdicts, paired tests, strict recall and the prompt leak check"
+    },
+    {
+      "claim_id": "longmemeval-opaque-qa-b-rows",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: Arm b (GPT-4o, official reading prompt) prompts, answers and both judges (gzip)",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/b/rows.ndjson.gz",
+      "artifact_sha256": "f7f1550109048793c6ff11e742530b136d2baef4d856455e40702544fee002cc",
+      "status": "covered",
+      "note": "Machine-local paths replaced by placeholders; no other bytes changed. The dataset (sha256 d6f21ea9...) and the embedding cache are not committed; provenance.json records their hashes.",
+      "golden_test": "scripts/verify-longmemeval-opaque-qa.py: keyless recount of saved verdicts, paired tests, strict recall and the prompt leak check"
+    },
+    {
+      "claim_id": "longmemeval-opaque-qa-c-c1",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: Component arm c1, production reader prompt over five chunks",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/c/c1.ndjson",
+      "artifact_sha256": "7ee3429c0bf0e93a406b4ab104a9413a2a2aa50439aba5586e5c4c6523a274aa",
+      "status": "covered",
+      "note": "Machine-local paths replaced by placeholders; no other bytes changed. The dataset (sha256 d6f21ea9...) and the embedding cache are not committed; provenance.json records their hashes.",
+      "golden_test": "scripts/verify-longmemeval-opaque-qa.py: keyless recount of saved verdicts, paired tests, strict recall and the prompt leak check"
+    },
+    {
+      "claim_id": "longmemeval-opaque-qa-c-c2",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: Component arm c2, plain retrieval prompt over five chunks",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/c/c2.ndjson",
+      "artifact_sha256": "f8a3f06bcd942544a79ef3079994ea47562652d68101ad5af29cdf9ed3c61af7",
+      "status": "covered",
+      "note": "Machine-local paths replaced by placeholders; no other bytes changed. The dataset (sha256 d6f21ea9...) and the embedding cache are not committed; provenance.json records their hashes.",
+      "golden_test": "scripts/verify-longmemeval-opaque-qa.py: keyless recount of saved verdicts, paired tests, strict recall and the prompt leak check"
+    },
+    {
+      "claim_id": "longmemeval-opaque-qa-c-c3",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: Component arm c3, think synthesis prompt over five chunks",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/c/c3.ndjson",
+      "artifact_sha256": "96131c56ea7af97676ea3658a720bf6667aac7c495842dd969b968d84995cf6d",
+      "status": "covered",
+      "note": "Machine-local paths replaced by placeholders; no other bytes changed. The dataset (sha256 d6f21ea9...) and the embedding cache are not committed; provenance.json records their hashes.",
+      "golden_test": "scripts/verify-longmemeval-opaque-qa.py: keyless recount of saved verdicts, paired tests, strict recall and the prompt leak check"
+    },
+    {
+      "claim_id": "longmemeval-opaque-qa-c-chunks",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: The five chunk texts per subset question, each list matched to arm a (100/100)",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/c/chunks.ndjson",
+      "artifact_sha256": "e49bdbed527877946e231f250c7af2cf106bd8de738ad2f2419524f6960f7b24",
+      "status": "covered",
+      "note": "Machine-local paths replaced by placeholders; no other bytes changed. The dataset (sha256 d6f21ea9...) and the embedding cache are not committed; provenance.json records their hashes.",
+      "golden_test": "scripts/verify-longmemeval-opaque-qa.py: keyless recount of saved verdicts, paired tests, strict recall and the prompt leak check"
+    },
+    {
+      "claim_id": "longmemeval-opaque-qa-per-question",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: Per-question correctness for every arm under both judges",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/per_question.csv",
+      "artifact_sha256": "ad09d960b2e99347ef17e8cd8093dc3ea50d364fecc2c6918d8d3e4b1f0cc4ed",
+      "status": "covered",
+      "note": "Machine-local paths replaced by placeholders; no other bytes changed. The dataset (sha256 d6f21ea9...) and the embedding cache are not committed; provenance.json records their hashes.",
+      "golden_test": "scripts/verify-longmemeval-opaque-qa.py: keyless recount of saved verdicts, paired tests, strict recall and the prompt leak check"
+    },
+    {
+      "claim_id": "longmemeval-opaque-qa-subset100-seed20260929",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: The seeded 100-question component subset",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/subset100_seed20260929.txt",
+      "artifact_sha256": "84e6f8d3a760346ea8f670854a8ab886f060e46cb398ed09044bacca586644b3",
+      "status": "covered",
+      "note": "Machine-local paths replaced by placeholders; no other bytes changed. The dataset (sha256 d6f21ea9...) and the embedding cache are not committed; provenance.json records their hashes."
+    },
+    {
+      "claim_id": "longmemeval-opaque-qa-provenance",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: Code, dataset and cache identities, prices, compute, and executed script hashes",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/provenance.json",
+      "artifact_sha256": "599dac69fc790566b1c381493f6cad3997b8b523eaf4c620a179f3695f76af05",
+      "status": "covered",
+      "note": "Machine-local paths replaced by placeholders; no other bytes changed. The dataset (sha256 d6f21ea9...) and the embedding cache are not committed; provenance.json records their hashes."
     }
   ]
 }

@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "run_dates_utc": {
+    "pilot": "2026-09-29T02:34Z",
+    "arm_a_start": "2026-09-29T02:44Z",
+    "arm_a_end": "2026-09-29T14:56Z",
+    "arms_b_c_end": "2026-09-29T16:05Z"
+  },
+  "gbrain": {
+    "branch": "capy/v059130-fixsearch-page-grain (gbrain PR 5676)",
+    "commit": "a7cb37b7884ca4a6dba8bb82a4cd430e6a6e806f",
+    "tree_state": "clean, unmodified",
+    "merged_as": "b80cad6 on gbrain master (squash, v0.59.13.0)",
+    "bun": "1.3.14"
+  },
+  "dataset": {
+    "file": "longmemeval_s_cleaned.json",
+    "source": "https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned",
+    "license": "MIT",
+    "sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442",
+    "questions": 500,
+    "committed": false
+  },
+  "embed_cache": {
+    "model": "openai:text-embedding-3-large@1536",
+    "final_sha256": "7beac2aa2b2d28d5ed28ecc11832aa79207580ccf3fa9ba0ee4f7907cb301350",
+    "canonical_sha256_at_arm_a_end": "322dc4e6ba4e664db7cc0b1f7663288ccfaf8ce477ebc452d6efe575ace76d8a",
+    "size_bytes": 945369088,
+    "committed": false,
+    "note": "One cache shared by every arm, never opened by two processes at once. Unchanged by the component-study retrieval rerun (file hash identical before and after)."
+  },
+  "official_upstream": {
+    "reader_prompt": "xiaowu0162/LongMemEval src/generation/run_generation.py (flat-session, json history, useronly false, reading_method con -> cot true, gen_length 800, temperature 0)",
+    "judge_prompt": "xiaowu0162/LongMemEval src/evaluation/evaluate_qa.py get_anscheck_prompt, temperature 0, max_tokens 10",
+    "reader_prompt_check": "TypeScript builder matched a Python reimplementation of prepare_prompt byte for byte on 24 of 24 questions checked"
+  },
+  "prices_usd_per_million_tokens": {
+    "anthropic:claude-sonnet-4-6": {
+      "input": 3.0,
+      "output": 15.0
+    },
+    "openai:gpt-4o / gpt-4o-2024-08-06": {
+      "input": 2.5,
+      "output": 10.0
+    },
+    "openai:text-embedding-3-large": {
+      "input": 0.13
+    }
+  },
+  "compute": [
+    {
+      "where": "Capy cloud machine",
+      "what": "pilot and questions 1-114 of arm (a); arms b and c; analysis",
+      "note": "machine restarted at about 03:27Z, killing the run after 114 rows"
+    },
+    {
+      "where": "Ubicloud standard-4, us-east-a2",
+      "what": "arm (a) questions 115-500",
+      "hours": 6.2,
+      "note": "destroyed after the run"
+    }
+  ],
+  "executed_script_sha256": {
+    "driver-a.ts": "eebc6772881629ffd71c13d404794962938120d27d24974e360580de643005af",
+    "run-a-full.sh": "7d944e3222b64ece12bc325b82011af89831b1adcb91deb37cf5c24e50e208ac",
+    "watchdog.sh": "9140319dc9fd9eebe414bea694684e3f422fa8f81ad3fe5af7287787362e9b6f",
+    "lib.ts": "db2d5ed71eb6ad9215eb2cf3c7bacf736cf3d605eded6641a2148cd22e6b57d6",
+    "official.ts": "0a734cc9b200b2c8ce944b2817463974dffd4ba0665cfaf7510ec016a8be9b8b",
+    "arm-b.ts": "2a08f2a5b01f58ff1ad8b0172c69d62cf12ea6722b9a26b1f219e857f2c302d5",
+    "c-retrieve.ts": "d296874967eba5e0ee3c2cbd8de03271f69d8c5fd7b2913710bf4cd23e2efd64",
+    "arm-c.ts": "bf7fc09870c5c469978decacb35c6baf210f262a9f486756b14cbbc61f496f4d",
+    "analyze.py": "d8b79e663c070a9cb9e89342f664efe2b18737c7d4da29d67692fac11e84f143"
+  },
+  "scrub": "Committed scripts, logs and receipts replace machine-local paths only: the run directory becomes $M6_DIR, the gbrain checkout becomes GBRAIN_DIR, home directories become $HOME. lib.ts and analyze.py read M6_DIR from the environment instead of a fixed home-relative path. No other bytes changed."
+}
