@@ -38,6 +38,18 @@ The [August 31 audit](docs/audit/2026-08-31-eval-audit.md) explains the finding 
 
 - [ ] **Re-pin gbrain to a master commit or release tag** (September 28 audit, C1/C2). The current pin `939232f` sits on a side branch, and `gbrain-reader`'s `a9de062` is on no branch. Against master, 21 tests fail: `memory-cues` is unmerged, ZeroEntropy was removed, the default embedder changed, a test hook was removed, and many tests hard-code the pin. Put the pin in one constant, gate `memory-cues` tests on a capability probe, and add a non-blocking weekly canary against master.
 
+## Memory lifecycle experiment (plan amendment 8)
+
+The [September 29 lifecycle report](docs/benchmarks/2026-09-29-lifecycle.md) is the first slice. These items extend it.
+
+- [ ] **Run the lifecycle on the library write path.** The published run uses a fresh `gbrain init` brain (managed persistence). The September 28 audit reproduced moved-page deletion, stale edges and stale timeline rows on the library path without the coordinator; none appeared on the managed path, even at v0.59.3.0. Add a cell that drives the same ledger through that path so #5668's replace-on-sync fixes get their own before/after.
+
+- [ ] **Add the remaining amendment 8 injections.** Kill-9 between the database, file and projection steps; duplicate delivery; concurrent edit, sync and forget; stale checkpoint replay; migration and full backup/restore; grant revocation on the HTTP client; same-slug data across sources.
+
+- [ ] **Give the near-name edge test a working control.** No tested build resolves `[[Exa Cheng]]` title links, so zero wrong near-name edges carries no signal. Use a link form the build resolves (slug links with a near-name slug, or frontmatter entity fields) and keep the title pair as a documented control.
+
+- [ ] **Speed up the local-CLI arm.** Each read is a new process, so a CLI cell takes 8 to 14 minutes against about 1 minute over MCP. A batched read path (one process per checkpoint) would let the matrix run on every gbrain PR.
+
 ## Data and benchmark fidelity
 
 - [ ] **Finish the answer-label stubs.** The audit identified seven single-example placeholders, four without consumers. `contradictions.json` and `implicit-preferences.json` are now generated from planted data. Review `backlinks.json`, `citations.json`, `entities.json`, `personalization-rubric.json`, `poison.json` and `qrels.json`; populate useful files or deliberately remove unused ones. The data validator reports remaining stubs.

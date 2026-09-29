@@ -2,6 +2,39 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.5] - 2026-09-29
+
+A new experiment follows one small vault through a full memory lifecycle
+(ingest, query, an ingest during an embedding outage, corrections, a full
+reconcile, a forget, a restart) and scores what an agent can read against a
+ledger the evaluator writes itself. It compares four gbrain builds on PGLite
+and Postgres through the local CLI, MCP stdio and MCP HTTP, twice, at $0.
+
+### Added
+
+- **`eval/runner/lifecycle-experiment.ts`** and `eval/runner/lifecycle/`: the
+  scenario and ground-truth ledger, drivers for the three interfaces, a
+  hermetic OpenAI-compatible hash embedder with fault injection, the scorer,
+  and copied-overlay build preparation. A build runs only if its copied files
+  hash to the requested commit's tree, no symlink exists under `src/`, and
+  `gbrain --version` matches its `VERSION`.
+- **`eval/runner/lifecycle-report.ts`**: tables from a receipt, and a
+  cell-by-cell comparison of repeat runs.
+- **[Lifecycle report](docs/benchmarks/2026-09-29-lifecycle.md)** with three
+  receipts (a primary run and a repeat).
+
+### Measured
+
+- Forgetting one entity's fact expired the identical claim on another entity,
+  and refused the same claim for a third, in 18 of 18 cells on v0.59.3.0,
+  v0.59.11.0 and master v0.59.13.0. Master plus #5666 fixed both in 6 of 6.
+- A remote caller read a private page's tags in 4 of 4 remote cells on
+  v0.59.3.0 and v0.59.11.0, and 0 of 4 from master (#5676) on.
+- Still failing on every build: a slug collision stops its source's sync, so
+  files after it are never imported; a renamed page loses its inbound link and
+  its old slug; on PGLite with a live MCP server, delegated syncs extract 0 or 1
+  of 8 links, and `gbrain extract --stale` was refused in 240 of 240 attempts.
+
 ## [0.10.2] - 2026-09-28
 
 A September 28 audit found published numbers that were invalid or overstated.
