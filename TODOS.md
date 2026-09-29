@@ -52,7 +52,7 @@ The [August 31 audit](docs/audit/2026-08-31-eval-audit.md) explains the finding 
 
 - [ ] **Regenerate world-v1 only with an intentional corpus revision** (`generators-04`). The generator's cache key is fixed, but the committed 240-page corpus predates it. Regeneration also changes downstream labels, so it should not be bundled into an ordinary docs or ranking change. The historical cold Opus estimate was about $40 and needs `ANTHROPIC_API_KEY`.
 
-- [ ] **Guard a possible nDCG overflow** (issue #24 finding 8c; `cats26-29-04` was refuted for the tested corpus). If future inputs exceed the 300-word chunk threshold, repeated chunk slugs may allow a document-ranking score above 1.0. Add a meaningful check before expanding that corpus; do not describe the suspected case as an already demonstrated bug.
+- [x] **Guard a possible nDCG overflow** (issue #24 finding 8c, September 28 audit C-16). Done in 0.10.1 (`7f3f276`): `dcgAtK` credits each id once, so nDCG cannot exceed 1, and `test/eval/metrics.test.ts` holds it with a duplicate-id case.
 
 ## Integration maintenance
 
