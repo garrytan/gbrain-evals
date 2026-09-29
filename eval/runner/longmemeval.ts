@@ -119,6 +119,11 @@ import { ProbeAccounting } from './probe-accounting.ts';
 import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
 import { createLmeCapture, retainLmeEvidence, type LmeEvidence } from './longmemeval-answers.ts';
 import { opaqueSessionId, opaqueSessionMap, SESSION_ID_POLICY } from './longmemeval-session-ids.ts';
+import { assertPayload, InputAllowlistError, withPermitted } from './evaluator/allowlist.ts';
+import {
+  lmeForbiddenValues, lmeSessionMaterial, loadLongMemEvalGold, longMemEvalSutView, scoreLmeRetrieval, LME_SUT_PAGE, LME_SUT_QUERY,
+} from './evaluator/longmemeval.ts';
+import { REFERENCE_SCORER_VERSION } from './evaluator/reference-scorer.ts';
 
 // ─── CLI ──────────────────────────────────────────────────────────
 
@@ -283,12 +288,12 @@ function fnv1a(s: string): number {
  * shift another type's draw. Selected questions are returned in original
  * dataset order so worker sharding by index stays deterministic.
  */
-export function stratifiedSample(questions: Question[], perType: number, seed: number): Question[] {
-  const buckets: Record<string, Array<{ q: Question; idx: number }>> = {};
+export function stratifiedSample<Q extends Pick<Question, 'question_type'>>(questions: Q[], perType: number, seed: number): Q[] {
+  const buckets: Record<string, Array<{ q: Q; idx: number }>> = {};
   questions.forEach((q, idx) => {
     (buckets[q.question_type] ??= []).push({ q, idx });
   });
-  const picked: Array<{ q: Question; idx: number }> = [];
+  const picked: Array<{ q: Q; idx: number }> = [];
   for (const t of Object.keys(buckets).sort()) {
     const rand = mulberry32((seed ^ fnv1a(t)) >>> 0);
     const pool = [...buckets[t]];
@@ -343,7 +348,9 @@ export function isAbsQuestion(questionId: string): boolean {
 // LongMemEval _s shape uses array of arrays for haystack_sessions (each
 // inner array is the turns of that session). Oracle uses {session_id, turns}.
 // Normalize to {session_id, turns}.
-export function normalizeSessions(q: Question): Array<{ session_id: string; turns: Turn[]; date?: string }> {
+export type QuestionSessions = Pick<Question, 'question_id' | 'haystack_session_ids' | 'haystack_dates' | 'haystack_sessions'>;
+
+export function normalizeSessions(q: QuestionSessions): Array<{ session_id: string; turns: Turn[]; date?: string }> {
   const sessions: Array<{ session_id: string; turns: Turn[]; date?: string }> = [];
   const ids = q.haystack_session_ids ?? [];
   const dates = q.haystack_dates ?? [];
@@ -383,7 +390,7 @@ export function renderSession(session: { session_id: string; turns: Turn[]; date
  * session, whose slug and frontmatter carry only the opaque session id (C-01).
  * originalByOpaque maps retrieved ids back to dataset ids for scoring.
  */
-export function sutPages(q: Question): { pages: Array<{ slug: string; content: string }>; originalByOpaque: Map<string, string> } {
+export function sutPages(q: QuestionSessions): { pages: Array<{ slug: string; content: string }>; originalByOpaque: Map<string, string> } {
   const sessions = normalizeSessions(q);
   const originalByOpaque = opaqueSessionMap(q.question_id, sessions.map(s => s.session_id));
   const pages = sessions.map(s => {
@@ -1017,9 +1024,13 @@ export async function run(opts: Opts): Promise<RunResult> {
   }
   process.stderr.write(`[longmemeval] loading ${opts.datasetPath}...\n`);
   const datasetBytes = readFileSync(opts.datasetPath);
-  const raw: Question[] = JSON.parse(datasetBytes.toString('utf8'));
-  let all = raw;
-  if (opts.stratify) all = stratifiedSample(raw, opts.stratify, opts.seed);
+  // The runner keeps only gold-free question views. Evidence labels and
+  // answers come from the evaluator's own read of the same bytes (plan
+  // amendment 6), and scoring goes through that gold store.
+  const gold = loadLongMemEvalGold(opts.datasetPath, createHash('sha256').update(datasetBytes).digest('hex'));
+  const questions = (JSON.parse(datasetBytes.toString('utf8')) as Question[]).map(longMemEvalSutView);
+  let all = questions;
+  if (opts.stratify) all = stratifiedSample(questions, opts.stratify, opts.seed);
   if (opts.limit) all = all.slice(0, opts.limit);
   const nAbs = all.filter(q => isAbsQuestion(q.question_id)).length;
   process.stderr.write(
@@ -1309,6 +1320,10 @@ export async function run(opts: Opts): Promise<RunResult> {
             await resetTables(engine);
           }
           const { pages, originalByOpaque } = sutPages(q);
+          const forbidden = lmeForbiddenValues(gold, q.question_id);
+          const sessions = normalizeSessions(q);
+          pages.forEach((page, p) => assertPayload(LME_SUT_PAGE, page, withPermitted(forbidden, lmeSessionMaterial(sessions[p]))));
+          assertPayload(LME_SUT_QUERY, { text: q.question }, withPermitted(forbidden, [q.question]));
           for (const page of pages) {
             await withTimeout(
               importFromContentEmbedded(engine, page.slug, page.content, {
@@ -1364,7 +1379,7 @@ export async function run(opts: Opts): Promise<RunResult> {
           } else {
             retrieved = toOriginal(uniqSessionIds(searchResults));
           }
-          const m = scoreQuestion(retrieved, q.answer_session_ids, opts.topK);
+          const m = scoreLmeRetrieval(gold, q.question_id, retrieved, opts.topK);
           const abs = isAbsQuestion(q.question_id);
 
           const row: NdjsonRow = {
@@ -1372,7 +1387,7 @@ export async function run(opts: Opts): Promise<RunResult> {
             question_id: q.question_id,
             question_type: q.question_type,
             retrieved,
-            ground_truth: q.answer_session_ids,
+            ground_truth: gold.read(q.question_id).answer_session_ids,
             hit_at_k: m.recall_any === 1,
             ...(abs
               ? { is_abs: true, abs_noise: m.abs_noise }
@@ -1415,6 +1430,8 @@ export async function run(opts: Opts): Promise<RunResult> {
             );
           }
         } catch (err: any) {
+          // Gold or unlisted data was about to reach the product: void the run.
+          if (err instanceof InputAllowlistError) throw err;
           const msg = String(err?.message ?? err);
           process.stderr.write(`[${adapter.name}] ${q.question_id} error: ${msg}\n`);
           if (i === 0) process.stderr.write(`stack: ${err?.stack ?? ''}\n`);
@@ -1432,7 +1449,7 @@ export async function run(opts: Opts): Promise<RunResult> {
             question_id: q.question_id,
             question_type: q.question_type,
             retrieved: [],
-            ground_truth: q.answer_session_ids,
+            ground_truth: gold.read(q.question_id).answer_session_ids,
             hit_at_k: false,
             num_haystack: 0,
             latency_ms: Date.now() - qStart,
@@ -1566,6 +1583,13 @@ export async function run(opts: Opts): Promise<RunResult> {
       worker_id: opts.workerId,
       total_workers: opts.totalWorkers,
       cache: !opts.noCache,
+      evaluator: {
+        gold_store: gold.toJSON(),
+        gold_loader: 'separate dataset read (eval/runner/evaluator/longmemeval.ts), byte hash checked against the runner',
+        reference_scorer: REFERENCE_SCORER_VERSION,
+        input_allowlist: [LME_SUT_PAGE.name, LME_SUT_QUERY.name],
+        isolation: 'in-process: the product receives allowlisted plain data only; no process sandbox',
+      },
       ...(skippedAdapters.length > 0 ? { adapters_skipped: skippedAdapters } : {}),
       ...(abortedAdapters.length > 0 ? { adapters_aborted: abortedAdapters } : {}),
       ...(rerankAdaptersPending.length > 0
