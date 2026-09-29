@@ -1,0 +1,146 @@
+{
+  "set": "sealed-confirmation-v1",
+  "status": "sealed",
+  "generation_date": "2026-09-29",
+  "generator_version": "sealed-confirmation-gen-v1",
+  "generator_git_head": "1bc841ebe39bab3d732f7ba20502110fe4f89cdc",
+  "generator_source_sha256": {
+    "eval/generators/sealed-confirmation-gen.ts": "9fa3ccf7461dcd52ccdc8e521f6f8e9472f9f8268b08264db9dfc00ea5fe99da",
+    "eval/generators/sealed-confirmation-prompts.ts": "8ce249001f2cc8d7cabc82ad7d336389b18c25e3082d7d80508fcf8eb1172641",
+    "eval/runner/sealed-confirmation-lib.ts": "caeaf9271900e331673fafb55bcb009a072798edeb163e386d34afc2db2919e9"
+  },
+  "prompt_sha256": {
+    "PLAN_SYSTEM": "d658465c6a574aa1cda57805d4f7d511cc61ff3f6305f2b26aa99a4274c40375",
+    "plan_user_template": "92cc767867a5ffe1b7bb0dbc1efa6434a829eecb9e031f06a821bb952cb052af",
+    "SESSION_SYSTEM": "a4cd439987cc7b65f0da644b77c9473cef8955b2e68404427d17c2b2d5149b48",
+    "session_user_template": "cfbda55e4d19ff2cdc233f528219e23f63ebbcd68e6e8253e522691eced2a61d",
+    "AUDIT_SYSTEM": "229d66f49e1ff3fd4e1ad0302d16c928f2d1b260e05a08dd7843985d94a888d7",
+    "audit_user_template": "3b7e329c7b7b8d2dbeabd105a3f4505d1dc7b34db0b7c3e64b14522888547a05",
+    "FILLER_SYSTEM": "d51dc05cdf62fecb882cb9a5b2b95aeef2d545d96b97cc1cab9642b8235961a2",
+    "filler_user_template": "223e5fe14d1b19048a373dbe82c27b206d6e5ce052e791e0e2dc7a3a8912d2dc",
+    "FILLER_VARIANTS": "c14dee5837350f36e6a3f5e617c82dd995943d927b391fa1c46d11e496ecf13f",
+    "PLAN_SCHEMA": "3e862ed68081dd0402b178bd9397767d3e909df3718f75f9e96aaf573922ca04",
+    "TURNS_SCHEMA": "1da48359fdfc24ca800ceefc9b04d4960abccc0f93733a8c5388d8c09708b8c1",
+    "AUDIT_SCHEMA": "37119c25446102262792f6e4606be8ab0b1ed66abdef1c497a2c9fbcea8c45d3"
+  },
+  "models": {
+    "generator": "gpt-6-sol",
+    "audit": "gpt-6-sol"
+  },
+  "seed": 20260929,
+  "counts": {
+    "personas": 30,
+    "questions": 150,
+    "answerable_questions": 120,
+    "by_type": {
+      "single-session-user": 30,
+      "multi-session": 30,
+      "temporal-reasoning": 30,
+      "knowledge-update": 30,
+      "abstention": 30
+    },
+    "gold_sessions_per_question": {
+      "single-session-user": {
+        "min": 1,
+        "median": 1,
+        "max": 1
+      },
+      "multi-session": {
+        "min": 2,
+        "median": 3,
+        "max": 3
+      },
+      "temporal-reasoning": {
+        "min": 2,
+        "median": 2,
+        "max": 2
+      },
+      "knowledge-update": {
+        "min": 2,
+        "median": 2,
+        "max": 2
+      },
+      "abstention": {
+        "min": 1,
+        "median": 2,
+        "max": 2
+      }
+    },
+    "sessions_per_haystack": {
+      "min": 55,
+      "median": 55,
+      "max": 55
+    },
+    "persona_sessions_per_haystack": {
+      "min": 20,
+      "median": 20,
+      "max": 20
+    },
+    "characters_per_haystack": {
+      "min": 240096,
+      "median": 259356,
+      "max": 272633
+    },
+    "approx_tokens_per_haystack_chars_div_4": {
+      "min": 60024,
+      "median": 64839,
+      "max": 68158
+    },
+    "filler_pool": 176,
+    "fillers_per_haystack": 35
+  },
+  "generation_quality": {
+    "plan_attempts": [
+      1,
+      1,
+      2,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "persona_sessions_written": 600,
+    "persona_sessions_passing_audit": 598,
+    "session_attempts_total": 610,
+    "questions_with_audit_flags": 2,
+    "dropped_personas": []
+  },
+  "generation_cost_usd": 15.8235,
+  "commitments": {
+    "questions.json": {
+      "sha256": "c382f438ab80d745151613e1a5b9f6daec31b74c03cc4757702a35caaca78a1d",
+      "bytes": 9131657
+    },
+    "labels.json": {
+      "sha256": "4990a7e234cf6aed37c64f424ec3d7b319f6556e2c4652f04bfad771d2cdafc9",
+      "bytes": 42943
+    },
+    "ledger.json": {
+      "sha256": "09d18ee375f24f12d8a1b532c72df65a747247b72162811048cf69f3379b4101",
+      "bytes": 8200812
+    }
+  }
+}

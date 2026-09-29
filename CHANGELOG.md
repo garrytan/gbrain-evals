@@ -219,6 +219,22 @@ paid runner must reserve against.
   gitignored JSON file (`.budget/ledger.json`). No paid run was made for
   this release; the ledger is tested with mocked providers.
 
+## [0.10.6] - 2026-09-29
+
+The LongMemEval-S questions and the Cat13 held-out concepts were used to choose gbrain's settings, so they are now development data (plan amendment 1). This release freezes a separately written confirmation set for future release decisions and publishes only its method, counts and SHA-256 commitments. No gbrain run has touched it.
+
+### Added
+
+- **Sealed confirmation set v1.** 30 fictional personas, each with a 55-chat history (20 personal chats, 35 general-help chats), and 150 questions: 30 each of single-session fact, multi-session aggregation, temporal reasoning, knowledge update and abstention. Written by OpenAI `gpt-6-sol`, a model not used for LongMemEval or any earlier corpus here. Personas share no occupation, hobby or life arc. Labels come from the generation ledger. The questions, chats and labels stay private; `eval/data/sealed-confirmation-v1/manifest.json` holds their commitments. Protocol: [`2026-09-29-sealed-confirmation-protocol.md`](docs/benchmarks/2026-09-29-sealed-confirmation-protocol.md).
+- **Solvability controls, reported and never used to drop items.** With only the gold chats, a Claude Sonnet 4.6 reader answered 150/150 (GPT-4o judge, official LongMemEval prompts). With no chats it answered 0/120 answerable questions and, as expected, 30/30 abstention questions.
+- **Overlap audit.** Against LongMemEval S and M: 0 of 150 questions identical, highest word-set similarity 0.33, 0 persona full names, 0 of 1,650 chats sharing a 13-word run of text. All 500 M questions are S questions.
+- **`eval/runner/sealed-confirmation.ts`.** Runs gbrain through the LongMemEval runner's code path on a questions file that passes an input allowlist, then scores with the private labels path given only at scoring time. Scoring refuses a labels file that does not match its commitment and logs every access with its purpose and decision id.
+- **`eval/generators/sealed-confirmation-gen.ts`** with frozen prompts, and a durable spend-reservation ledger checked before every paid request.
+
+### Cost
+
+$17.83 in paid API calls: $15.82 generation (including two one-persona pilots), $2.00 solvability.
+
 ## [0.10.2] - 2026-09-28
 
 A September 28 audit found published numbers that were invalid or overstated.

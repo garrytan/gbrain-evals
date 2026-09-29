@@ -2745,6 +2745,54 @@
       },
       "status": "covered",
       "note": "Template questions use the relationship parser's verbs; the paraphrase split rewords the same 145 questions with a grammar frozen in f2270ac before scoring. Relationship retrieval fired on 174/435 template runs and 0/435 paraphrase runs; paraphrase metrics are identical in both arms."
+    },
+    {
+      "claim_id": "sealed-confirmation-v1-commitments",
+      "readme_anchor": "docs/benchmarks/2026-09-29-sealed-confirmation-protocol.md: SHA-256 commitments of the private questions, labels and ledger; 150 questions over 30 personas",
+      "artifact_path": "eval/data/sealed-confirmation-v1/manifest.json",
+      "artifact_sha256": "f494039ec822675f3946f9ce95e269163af6dd32fc514dc7762d82f1d46148e8",
+      "expected": {
+        "/commitments/questions.json/sha256": "c382f438ab80d745151613e1a5b9f6daec31b74c03cc4757702a35caaca78a1d",
+        "/commitments/labels.json/sha256": "4990a7e234cf6aed37c64f424ec3d7b319f6556e2c4652f04bfad771d2cdafc9",
+        "/commitments/ledger.json/sha256": "09d18ee375f24f12d8a1b532c72df65a747247b72162811048cf69f3379b4101",
+        "/counts/questions": 150,
+        "/counts/personas": 30,
+        "/generation_date": "2026-09-29"
+      },
+      "golden_test": "test/eval/sealed-confirmation.test.ts: commitment refusal and access logging on a fixture",
+      "status": "covered",
+      "note": "The labels and questions are private; this entry pins the commitments the runner checks before opening them."
+    },
+    {
+      "claim_id": "sealed-confirmation-v1-solvability",
+      "readme_anchor": "docs/benchmarks/2026-09-29-sealed-confirmation-protocol.md: oracle-evidence reader 150/150, no-memory reader 30/150 (0/120 answerable)",
+      "artifact_path": "eval/data/sealed-confirmation-v1/solvability.json",
+      "artifact_sha256": "05495836478270d2d6f8ae2d7117cd341379dcd2d0cb4e918b9d213af667200f",
+      "expected": {
+        "/n": 150,
+        "/oracle_correct": 150,
+        "/no_memory_correct": 30,
+        "/by_type/abstention/no_memory_correct": 30
+      },
+      "status": "covered",
+      "note": "Aggregate only. Per-question rows stay with the sealed files."
+    },
+    {
+      "claim_id": "sealed-confirmation-v1-overlap",
+      "readme_anchor": "docs/benchmarks/2026-09-29-sealed-confirmation-protocol.md: zero exact question matches, zero persona full names and zero 13-word shingles shared with LongMemEval S/M",
+      "artifact_path": "eval/data/sealed-confirmation-v1/overlap-audit.json",
+      "artifact_sha256": "36596c1a5196a3579b6076edc784f81fabefc7f086d79505b8c24df1d9ef809e",
+      "expected": {
+        "/datasets/longmemeval_s_cleaned/exact_question_matches": 0,
+        "/datasets/longmemeval_m_cleaned/exact_question_matches": 0,
+        "/datasets/longmemeval_s_cleaned/persona_full_name_matches": 0,
+        "/datasets/longmemeval_m_cleaned/persona_full_name_matches": 0,
+        "/datasets/longmemeval_s_cleaned/sealed_sessions_sharing_a_13_word_shingle": 0,
+        "/datasets/longmemeval_m_cleaned/sealed_sessions_sharing_a_13_word_shingle": 0,
+        "/datasets/longmemeval_m_cleaned/m_questions_absent_from_s": 0
+      },
+      "status": "covered",
+      "note": "Counts only; the matched items are listed in a private file kept with the sealed set."
     }
   ]
 }

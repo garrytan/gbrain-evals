@@ -146,6 +146,10 @@ For an intentional dataset revision, choose a new corpus version, update the gen
 
 Save a worthwhile run under a dated path in `docs/benchmarks/`, including its raw results, settings and code identities. Default files under `eval/reports/` may be overwritten by the next run. The [artifact manifest](../docs/receipts-manifest.json) and its tests check selected saved results; they do not validate every documentation claim.
 
+## Sealed confirmation set
+
+The [sealed confirmation set](../docs/benchmarks/2026-09-29-sealed-confirmation-protocol.md) is private. `bun eval/runner/sealed-confirmation.ts validate|run|answer` never read labels; `score` and `solvability` take the private labels path, refuse a file that does not match the commitment in `eval/data/sealed-confirmation-v1/manifest.json`, and append to the access log first. Do not run it for development: every run is a release decision and needs a committed preregistration. The unit tests use a small fixture built in code.
+
 ## Cat36 situation-aware recall and the all-category release gate
 
 Cat36 asks whether generated situation cues help retrieve original evidence for indirect questions. The [2026-09-23 protocol](../docs/benchmarks/2026-09-23-situation-recall-protocol.md) defines the experiment, profiles, budgets, source-only construction boundary, and exact reproduction commands. It is not a published capability result. The declared candidate is `939232f1746381b4e932d620d6c709e29198f14c` (v0.55.0.0, installed as the `gbrain-cues` package alias since 2026-09-29), integrating upstream `31f257a0a7b218b40e03d302bc6913c99f26f0ec` (v0.54.1.1). The previous 470 and f324 candidates and registered 604 baseline keep their own identities and receipts. Publishable comparisons still require independent corpus relevance review, credentials, external budget enforcement, and complete live comparisons.
