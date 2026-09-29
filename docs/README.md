@@ -41,6 +41,7 @@ gap does not isolate the effect of a graph alone.
 
 | Engineering question | Report |
 |---|---|
+| Does the index stay correct after moves, renames, corrections, forgetting, an embedding outage and a restart? | [September 29 lifecycle experiment](benchmarks/2026-09-29-lifecycle.md) |
 | Does important material from a working session survive into saved pages? | [Transcript distillation](benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md) |
 | Does useful memory arrive at the right moment in a conversation? | [Memory conformance](benchmarks/2026-06-12-brainbench-memory.md) |
 | Can a skill improve on held-out tasks, and can the judge detect cheating? | [Skill optimization](benchmarks/2026-06-03-skillopt.md) |

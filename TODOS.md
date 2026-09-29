@@ -48,6 +48,18 @@ The [August 31 audit](docs/audit/2026-08-31-eval-audit.md) explains the finding 
 
 - [x] **Give the LongMemEval batch wrapper one shared budget.** Done in 0.10.7: `longmemeval-batch.sh` opens one budget-ledger run and passes its id to every worker as `--budget-run-id`, so `--budget-usd` caps all workers and restarted batches together.
 
+## Memory lifecycle experiment (plan amendment 8)
+
+The [September 29 lifecycle report](docs/benchmarks/2026-09-29-lifecycle.md) is the first slice. These items extend it.
+
+- [ ] **Run the lifecycle on the library write path.** The published run uses a fresh `gbrain init` brain (managed persistence). The September 28 audit reproduced moved-page deletion, stale edges and stale timeline rows on the library path without the coordinator; none appeared on the managed path, even at v0.59.3.0. Add a cell that drives the same ledger through that path so #5668's replace-on-sync fixes get their own before/after.
+
+- [ ] **Add the remaining amendment 8 injections.** Kill-9 between the database, file and projection steps; duplicate delivery; concurrent edit, sync and forget; stale checkpoint replay; migration and full backup/restore; grant revocation on the HTTP client; same-slug data across sources.
+
+- [ ] **Give the near-name edge test a working control.** No tested build resolves `[[Exa Cheng]]` title links, so zero wrong near-name edges carries no signal. Use a link form the build resolves (slug links with a near-name slug, or frontmatter entity fields) and keep the title pair as a documented control.
+
+- [ ] **Speed up the local-CLI arm.** Each read is a new process, so a CLI cell takes 8 to 14 minutes against about 1 minute over MCP. A batched read path (one process per checkpoint) would let the matrix run on every gbrain PR.
+
 ## Data and benchmark fidelity
 
 - [x] **Finish the answer-label stubs.** Done in 0.10.7. `poison.json` is now generated from the planted skeleton fixtures, like `contradictions.json` and `implicit-preferences.json`, and a test holds all three byte-identical to the generator. `backlinks.json`, `citations.json`, `entities.json`, `personalization-rubric.json` and `qrels.json` had no generator and no runnable consumer and were removed rather than filled by hand. `validate-data.ts` now fails on a template row.
