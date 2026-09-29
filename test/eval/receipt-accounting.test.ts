@@ -10,6 +10,7 @@ import { describe, test, expect } from 'bun:test';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
+import { execFileSync } from 'node:child_process';
 import {
   BENCHMARK_VERSION,
   RECEIPT_SCHEMA_VERSION,
@@ -17,6 +18,12 @@ import {
   writeReceipt,
   loadReceipt,
   receiptPath,
+  deriveAccounting,
+  latencySummary,
+  productIdentity,
+  sourceTreeIdentity,
+  upgradeReceipt,
+  validateStoredReceipt,
   type Receipt,
 } from '../../eval/runner/receipt.ts';
 import { ProbeAccounting } from '../../eval/runner/probe-accounting.ts';
@@ -83,7 +90,7 @@ describe('writeReceipt / loadReceipt', () => {
       const receipt = makeReceipt();
       writeReceipt(path, receipt);
       const loaded = loadReceipt(path);
-      expect(loaded).toEqual(receipt);
+      expect(loaded).toEqual(upgradeReceipt(receipt));
       expect(existsSync(`${path}.tmp-${process.pid}`)).toBe(false);
     } finally {
       rmSync(dir, { recursive: true, force: true });
@@ -192,5 +199,87 @@ describe('ProbeAccounting — WS0 scoring policy', () => {
     acc.score('p1', 1);
     const s = acc.summary();
     expect(s.completion_rate).toBeCloseTo(0.25, 6);
+  });
+});
+
+describe('receipt schema v2', () => {
+  test('writeReceipt stores the executed source tree and loaded gbrain identity', () => {
+    const upgraded = upgradeReceipt(makeReceipt());
+    expect(upgraded.schema_version).toBe(2);
+    const tree = upgraded.execution!.source_tree;
+    expect(tree.sha256).toMatch(/^[a-f0-9]{64}$/);
+    expect(tree.files).toBeGreaterThan(100);
+    expect(typeof tree.dirty).toBe('boolean');
+    const product = upgraded.execution!.product;
+    expect(product.package).toBe('gbrain');
+    expect(product.declared_pin).toBe(JSON.parse(readFileSync('package.json', 'utf8')).dependencies.gbrain);
+    expect(product.declared_sha).toMatch(/^[a-f0-9]{40}$/);
+    expect(product.package_sha256).toMatch(/^[a-f0-9]{64}$/);
+    expect(validateStoredReceipt(upgraded)).toEqual([]);
+    expect(upgradeReceipt(upgraded)).toEqual(upgraded);
+  });
+
+  test('the source-tree hash covers uncommitted edits', () => {
+    const root = mkdtempSync(join(tmpdir(), 'receipt-tree-'));
+    try {
+      execFileSync('git', ['init', '-q', root]);
+      writeFileSync(join(root, 'a.ts'), 'one');
+      execFileSync('git', ['-C', root, 'add', '.']);
+      execFileSync('git', ['-C', root, '-c', 'user.name=t', '-c', 'user.email=t@example.invalid', 'commit', '-qm', 'x']);
+      const clean = sourceTreeIdentity(root);
+      expect(clean.dirty).toBe(false);
+      writeFileSync(join(root, 'a.ts'), 'two');
+      writeFileSync(join(root, 'b.ts'), 'new');
+      const other = mkdtempSync(join(tmpdir(), 'receipt-tree-copy-'));
+      execFileSync('cp', ['-r', `${root}/.`, other]);
+      const dirty = sourceTreeIdentity(other);
+      expect(dirty.dirty).toBe(true);
+      expect(dirty.files).toBe(2);
+      expect(dirty.sha256).not.toBe(clean.sha256);
+      expect(dirty.git_head).toBe(clean.git_head);
+      rmSync(other, { recursive: true, force: true });
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+
+  test('outside a git checkout the tree is reported unhashed, not faked', () => {
+    const root = mkdtempSync(join(tmpdir(), 'receipt-nogit-'));
+    try {
+      const tree = sourceTreeIdentity(root);
+      expect(tree.sha256).toBeNull();
+      expect(tree.error).toContain('not a git checkout');
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+
+  test('a cue receipt records the gbrain-cues package', () => {
+    expect(productIdentity('gbrain-cues').declared_sha).toBe('939232f1746381b4e932d620d6c709e29198f14c');
+    expect(upgradeReceipt(makeReceipt({ product_package: 'gbrain-cues' })).execution!.product.package).toBe('gbrain-cues');
+  });
+
+  test('errors stay separate from misses in derived accounting', () => {
+    const accounting = deriveAccounting({ n_total: 10, n_scored: 7, errors: [
+      { probe_id: 'q1', origin: 'dependency', message: 'x' }, { probe_id: 'q1', origin: 'judge', message: 'y' },
+      { probe_id: 'q2', origin: 'harness', message: 'z' },
+    ] });
+    expect(accounting).toEqual({ planned: 10, attempted: 9, scored: 7, errors: 2, misses: null, source: 'derived' });
+    const bad = upgradeReceipt(makeReceipt({ accounting: { planned: 10, attempted: 10, scored: 9, errors: 2, misses: null, source: 'runner' } }));
+    expect(validateStoredReceipt(bad)).toContain('v2 accounting: scored + errors exceeds attempted');
+    const tooManyMisses = upgradeReceipt(makeReceipt({ accounting: { planned: 10, attempted: 10, scored: 10, errors: 0, misses: 11, source: 'runner' } }));
+    expect(validateStoredReceipt(tooManyMisses)).toContain('v2 accounting: misses exceed scored');
+  });
+
+  test('cost, latency and delivered tokens are null until measured, and validated when present', () => {
+    const upgraded = upgradeReceipt(makeReceipt());
+    expect([upgraded.cost, upgraded.latency_ms, upgraded.delivered_tokens]).toEqual([null, null, null]);
+    expect(latencySummary([])).toBeNull();
+    expect(latencySummary([5, 1, 3, 2, 4])).toEqual({ p50: 3, p95: 5, n: 5 });
+    const measured = upgradeReceipt(makeReceipt({ cost: { usd: 0.25, input_tokens: 1000, output_tokens: 50, basis: 'provider usage' },
+      latency_ms: { p50: 10, p95: 40, n: 20 }, delivered_tokens: { tokens: 1000, basis: 'provider-reported input tokens' } }));
+    expect(validateStoredReceipt(measured)).toEqual([]);
+    expect(validateStoredReceipt({ ...measured, latency_ms: { p50: 50, p95: 40, n: 2 } })).toContain('v2 latency_ms must be null or {p50 <= p95, n}');
+  });
+
+  test('legacy v1 receipts stay readable', () => {
+    const v1 = { ...makeReceipt(), schema_version: 1 };
+    expect(validateStoredReceipt(v1)).toEqual([]);
   });
 });
