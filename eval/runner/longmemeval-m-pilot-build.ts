@@ -62,7 +62,7 @@ const BASELINE_604_PACKAGE_SHA256 = '78bbe78af2fac33a278740e84877e9c6c9f7a0f6a16
 export const PILOT_SONNET_MODEL = 'openrouter:anthropic/claude-sonnet-4.6';
 const RESUMABLE_CUE_FAILURES = new Set(['invalid_output', 'unsupported_cue', 'unsupported_relation', 'incomplete_output']);
 
-export async function configurePilotC1Gateway(gateway: Pick<typeof import('gbrain/ai/gateway'),
+export async function configurePilotC1Gateway(gateway: Pick<typeof import('gbrain-cues/ai/gateway'),
   'configureGateway' | 'requireConfig' | 'getChatModel'>, productRoot: string,
   preparedConfigPath: string, env: NodeJS.ProcessEnv) {
   const productConfig = await import(pathToFileURL(join(productRoot, 'src/core/config.ts')).href);
@@ -220,6 +220,7 @@ export async function buildPilotIndex(options: PilotBuildOptions, admission?: {
       const canonical = text.replace(/\r\n?/g, '\n').normalize('NFC');
       const result = await importModule.importFromContent(engine, slug, text, { noEmbed: options.mode === 'offline' });
       if (result.status === 'error') throw new Error(`source import rejected occurrence ${index}`);
+      if (result.embedding_deferred) throw new Error(`source embedding failed for occurrence ${index}`);
       const chunks = await engine.getChunks(slug);
       const mapped = chunks.map((chunk: { id: number; chunk_text: string; chunk_source: string }) => {
         const chunkText = chunk.chunk_text.replace(/\r\n?/g, '\n').normalize('NFC');

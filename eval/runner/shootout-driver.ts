@@ -75,11 +75,11 @@ function printHelp(): void {
   process.stderr.write(
     'shootout-driver — score one cell × one adapter × one query set\n\n' +
     'Required:\n' +
-    '  --embedder <provider:model>     e.g. zeroentropyai:zembed-1\n' +
+    '  --embedder <provider:model>     e.g. voyage:voyage-4\n' +
     '  --dim <N>                       Configured vector width\n' +
     '  --output <path>                 Output receipt JSON path\n\n' +
     'Optional:\n' +
-    '  --reranker <provider:model>     e.g. zeroentropyai:zerank-2\n' +
+    '  --reranker <provider:model>     e.g. voyage:rerank-2.5\n' +
     '  --subset <name>                 Load eval/data/gold/brainbench-<name>-subset.json\n' +
     '                                  instead of building relational queries\n' +
     '  --cell <label>                  Cell label (A0, B1, C2, ...) for the receipt\n' +

@@ -7,12 +7,12 @@ import { runPilotLiveStage } from '../../eval/runner/longmemeval-m-pilot-live.ts
 import { regressionPackageHash } from '../../eval/runner/situation-recall-provenance.ts';
 
 const hash = (value: Buffer | string) => createHash('sha256').update(value).digest('hex');
-const productRoot = realpathSync(resolve(import.meta.dir, '../../node_modules/gbrain'));
+const productRoot = realpathSync(resolve(import.meta.dir, '../../node_modules/gbrain-cues'));
 const packageSha = regressionPackageHash(productRoot);
 const baseline = packageSha === '78bbe78af2fac33a278740e84877e9c6c9f7a0f6a161113b1240549adf993b2b';
 const reference = packageSha === '7fc21cee0cc08169c2bbbbb05e137b5b26e885beb24fd9f6275808d2cf162e67';
 const v5 = packageSha === '74974a32d4bfa34f26ed7e15d5eb3c301cb9000d8e90a1667041cbbde8587aa0'
-  && JSON.parse(readFileSync(resolve(import.meta.dir, '../../package.json'), 'utf8')).dependencies.gbrain
+  && JSON.parse(readFileSync(resolve(import.meta.dir, '../../package.json'), 'utf8')).dependencies['gbrain-cues']
     === 'github:garrytan/gbrain#939232f1746381b4e932d620d6c709e29198f14c'
   && readFileSync(join(productRoot, 'src/core/memory-cues/types.ts'), 'utf8').includes("MEMORY_CUE_PROMPT_VERSION = 'situation-v5'");
 const candidate = v5 || reference || !baseline && packageSha !== 'b302290974571ae846e26587cd37ecf6299b74c3bfe0d401aa22935ca3a84c97'
@@ -49,7 +49,7 @@ describe.skipIf(!baseline && !candidate)('matched B/C0 construction and replay w
     question_id: questionId, attempt_id: 'attempt-1', registration_sha256: registrationSha,
     source_manifest_sha256: sourceManifestSha,
     expected_product_sha: baseline ? '6040075c6cb95be5881cc2e1b76ef7d71f4e5d29'
-      : JSON.parse(readFileSync(resolve(import.meta.dir, '../../package.json'), 'utf8')).dependencies.gbrain.split('#')[1],
+      : JSON.parse(readFileSync(resolve(import.meta.dir, '../../package.json'), 'utf8')).dependencies['gbrain-cues'].split('#')[1],
     expected_package_sha256: packageSha,
     allocation: { id: `${arm}-${questionId}-attempt-1-${stage}`, usd: stage === 'construction' ? 9 : 1 },
     arm, cue_mode: 'off', stage, ...(constructionReceiptSha ? { construction_receipt_sha256: constructionReceiptSha } : {}),

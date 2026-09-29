@@ -81,7 +81,7 @@ import { createHash } from 'node:crypto';
 import { join, dirname, resolve } from 'path';
 import { homedir } from 'os';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
-import { importFromContent } from 'gbrain/import-file';
+import { importFromContentEmbedded } from './import-embedded.ts';
 import { hybridSearch } from 'gbrain/search/hybrid';
 import { expandQuery } from 'gbrain/search/expansion';
 import type { SearchResult } from 'gbrain/types';
@@ -487,15 +487,14 @@ export async function pinSearchConfig(engine: PGLiteEngine, spec?: Pick<AdapterS
  * Reranker provider → env key. FALLBACK MAP: gbrain resolves the reranker
  * model as per-call override ?? `search.reranker.model` DB config ?? the
  * mode bundle's default. Since gbrain v0.48.2.0 that default is
- * `voyage:rerank-2.5` (the ZeroEntropy hosted API ends 2026-09-04); this
+ * `voyage:rerank-2.5`; this
  * runner PINS the same model explicitly for rerank specs
  * (RERANK_MODEL_PIN, recorded in the receipt) so the preflight and the
  * engine cannot disagree about which provider's key is required. Entries mirror the
  * auth_env.required of gbrain's reranker-capable recipes
- * (src/core/ai/recipes/{zeroentropyai,voyage,dashscope-rerank,openrouter}.ts).
+ * (src/core/ai/recipes/{voyage,dashscope-rerank,openrouter}.ts).
  */
 export const RERANKER_PROVIDER_ENV_KEY: Readonly<Record<string, string>> = Object.freeze({
-  zeroentropyai: 'ZEROENTROPY_API_KEY',
   voyage: 'VOYAGE_API_KEY',
   dashscope: 'DASHSCOPE_API_KEY',
   openrouter: 'OPENROUTER_API_KEY',
@@ -977,7 +976,6 @@ function baseReceipt(startedAt: string) {
 const PROVIDER_ENV_KEY: Record<string, string> = {
   openai: 'OPENAI_API_KEY',
   voyage: 'VOYAGE_API_KEY',
-  zeroentropyai: 'ZEROENTROPY_API_KEY',
 };
 
 export async function run(opts: Opts): Promise<RunResult> {
@@ -1288,7 +1286,7 @@ export async function run(opts: Opts): Promise<RunResult> {
           const { pages, originalByOpaque } = sutPages(q);
           for (const page of pages) {
             await withTimeout(
-              importFromContent(engine, page.slug, page.content, {
+              importFromContentEmbedded(engine, page.slug, page.content, {
                 noEmbed: adapter.base === 'keyword',
               }),
               PER_QUESTION_TIMEOUT_MS,

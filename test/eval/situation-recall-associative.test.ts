@@ -194,7 +194,7 @@ describe('associative replay admission and receipts', () => {
   }));
 });
 
-const hasCandidate = Boolean(JSON.parse(readFileSync(resolve('node_modules/gbrain/package.json'), 'utf8')).exports?.['./memory-cues']);
+const hasCandidate = Boolean(JSON.parse(readFileSync(resolve('node_modules/gbrain-cues/package.json'), 'utf8')).exports?.['./memory-cues']);
 
 test.skipIf(!hasCandidate)('real candidate engine builds source-only cues and exercises public replay without network', () => {
   const script = `
@@ -213,7 +213,7 @@ test.skipIf(!hasCandidate)('real candidate engine builds source-only cues and ex
         const p={...base,id:category+'-associative-dev-v1',category};
         const outputDir=join(root,category);
         const runtime=await createAssociativeProductionRuntime(join(outputDir,'runtime'),async gateway=>{
-          const config=await import('gbrain/config');
+          const config=await import('gbrain-cues/config');
           if(config.configPath()!==join(outputDir,'runtime','home','.gbrain','config.json') || config.loadConfig()?.embedding_model!==p.sut.embedding_model || config.loadConfig()?.embedding_dimensions!==p.sut.embedding_dimensions || config.loadConfig()?.chat_model!==p.sut.generation_model)throw new Error('actual file-plane configuration mismatch before providers');
           gateway.configureGateway({embedding_model:p.sut.embedding_model,embedding_dimensions:p.sut.embedding_dimensions,chat_model:p.sut.generation_model,env:{OPENAI_API_KEY:'dummy-hermetic-not-a-key'}});
           gateway.__setChatTransportForTests(async options=>{

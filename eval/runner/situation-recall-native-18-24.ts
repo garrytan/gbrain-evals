@@ -83,7 +83,7 @@ function queryCells(category: 'cat18' | 'cat18b', data: Record<string, unknown>,
     if (!knownCells.includes(id) || cells.some(existing => existing.id === id)) throw new Error(`unknown/duplicate native cell: ${id}`);
     text(cell.embedder, `${id}.embedder`);
     if (count(category === 'cat18' ? cell.dim : cell.embed_dim, `${id}.embedding dimensions`) === 0) throw new Error(`missing native embedding dimensions: ${id}`);
-    if (category === 'cat18b' && (id.endsWith('+rerank') ? typeof cell.reranker !== 'string' || !cell.reranker : cell.reranker !== null)) throw new Error(`native reranker axis mismatch: ${id}`);
+    if (category === 'cat18b' && cell.reranker !== CELLS.find(spec => spec.name === id)!.reranker) throw new Error(`native reranker axis mismatch: ${id}`);
     const queries: CollectedCell['queries'] = new Map();
     for (const query of nativeEvidenceRows(cell.per_query, `${id}.per_query`)) {
       const queryId = text(query.query_id, `${id}.query_id`);
@@ -137,7 +137,7 @@ function queryCells(category: 'cat18' | 'cat18b', data: Record<string, unknown>,
       const base = cells.find(cell => cell.id === pair.baseline);
       const reranked = cells.find(cell => cell.id === pair.rerank);
       if (!base || !reranked || base.raw.reranker !== null || typeof reranked.raw.reranker !== 'string'
-        || !reranked.id.endsWith('+rerank') || reranked.id !== `${base.id}+rerank` || paired.has(reranked.id)
+        || !reranked.id.startsWith(`${base.id}+`) || paired.has(reranked.id)
         || pair.embedder !== base.raw.embedder || base.raw.embedder !== reranked.raw.embedder || base.raw.embed_dim !== reranked.raw.embed_dim) {
         throw new Error('broken or duplicate native reranker pair lookup');
       }

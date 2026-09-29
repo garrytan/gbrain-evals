@@ -85,7 +85,7 @@ import { join, dirname } from 'path';
 import { tmpdir } from 'os';
 import { fileURLToPath } from 'url';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
-import { importFromContent } from 'gbrain/import-file';
+import { importFromContentEmbedded } from './import-embedded.ts';
 import { configureGateway, __setEmbedTransportForTests } from 'gbrain/ai/gateway';
 import { runThink, type ThinkLLMClient, type ThinkResult } from 'gbrain/think';
 import { JUDGE_PROMPT_VERSION, scoreAnswer, type JudgeEvidence, type RubricCriterion } from './judge.ts';
@@ -323,8 +323,8 @@ export function ensureStubbedGateway(): void {
 
 // ─── Brain seeding ───────────────────────────────────────────────────
 // WS5: search mode + reranker + expansion pinned explicitly BEFORE ingest —
-// never rely on gbrain defaults ('balanced' silently enables the zerank-2
-// reranker when ZEROENTROPY_API_KEY is set). Echoed into resolved_config.
+// never rely on gbrain defaults ('balanced' can enable reranking with an
+// ambient provider key). Echoed into resolved_config.
 
 const SEARCH_CONFIG: Record<string, string> = {
   'search.mode': 'balanced',
@@ -376,7 +376,7 @@ export async function seedProbeEngine(probe: Probe, opts: SeedOptions = {}): Pro
       const body = seedViaInsert || !factsForPage
         ? p.body
         : `${p.body}\n${legacyFactsTable(factsForPage.rows)}\n`;
-      await importFromContent(engine, p.slug, body, { noEmbed: false });
+      await importFromContentEmbedded(engine, p.slug, body, { noEmbed: false });
     }
 
     if (seedViaInsert) {

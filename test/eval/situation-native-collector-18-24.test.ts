@@ -70,7 +70,7 @@ function queryReceipt(category: 'cat18' | 'cat18b'): QueryReceipt {
   const names = category === 'cat18' ? ['openai'] : ['openai-1536', 'openai-1536+rerank'];
   const cells: CellFixture[] = names.map((name, index) => ({
     cell: name, embedder: 'openai:text-embedding-3-large',
-    ...(category === 'cat18' ? { dim: 1536 } : { embed_dim: 1536, reranker: index ? 'zeroentropyai:zerank-2' : null }),
+    ...(category === 'cat18' ? { dim: 1536 } : { embed_dim: 1536, reranker: index ? 'voyage:rerank-2.5' : null }),
     per_query: QUERIES.map((query, i) => {
       const ranked = index ? [...query.relevant_slugs] : ['fixture/unrelated', query.relevant_slugs[0]];
       return queryEvidence(name, query, 10, ranked, [11, 31, 101][i] + index, scoreQuery(ranked, query.relevant_slugs, 10));
@@ -269,6 +269,9 @@ describe('Cat18/18b native collection and frozen materialization', () => {
     const duplicate = queryReceipt('cat18b');
     duplicate.data.pairs.push({ ...duplicate.data.pairs[0] });
     expect(() => collectNativeRows1824('cat18b', duplicate)).toThrow('pair lookup');
+    const retired = queryReceipt('cat18b');
+    retired.data.cells[1].reranker = 'zeroentropyai:zerank-2';
+    expect(() => collectNativeRows1824('cat18b', retired)).toThrow('native reranker axis mismatch');
     const missingPair = queryReceipt('cat18b');
     missingPair.data.pairs = [];
     expect(() => collectNativeRows1824('cat18b', missingPair)).toThrow('missing native reranker pair');

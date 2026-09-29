@@ -1,10 +1,10 @@
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { parseMarkdown } from '../../node_modules/gbrain/src/core/markdown.ts';
-import { prepareMarkdownChunks } from '../../node_modules/gbrain/src/core/markdown-chunks.ts';
-import { sanitizeText } from '../../node_modules/gbrain/src/core/batch-rows.ts';
-import { buildContextualPrefix, sanitizeTitle, wrapChunkForEmbedding } from '../../node_modules/gbrain/src/core/embedding-context.ts';
+import { parseMarkdown } from '../../node_modules/gbrain-cues/src/core/markdown.ts';
+import { prepareMarkdownChunks } from '../../node_modules/gbrain-cues/src/core/markdown-chunks.ts';
+import { sanitizeText } from '../../node_modules/gbrain-cues/src/core/batch-rows.ts';
+import { buildContextualPrefix, sanitizeTitle, wrapChunkForEmbedding } from '../../node_modules/gbrain-cues/src/core/embedding-context.ts';
 import { renderSession } from './longmemeval.ts';
 
 const hash = (value: string | Buffer) => createHash('sha256').update(value).digest('hex');

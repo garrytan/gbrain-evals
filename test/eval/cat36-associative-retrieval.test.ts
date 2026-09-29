@@ -331,7 +331,7 @@ describe('Cat36 receipts and actual arm execution', () => {
     await expect(validateCat36RerankerModel(p)).resolves.toBeUndefined();
   });
   test('missing candidate API is detected without making provider calls', async () => {
-    const pkg = JSON.parse(readFileSync(resolve('node_modules/gbrain/package.json'), 'utf8'));
+    const pkg = JSON.parse(readFileSync(resolve('node_modules/gbrain-cues/package.json'), 'utf8'));
     if (!pkg.exports['./memory-cues']) await expect(requireCueSupport()).rejects.toThrow('public feature module unavailable');
     else expect(await requireCueSupport()).toHaveProperty('getMemoryCueStatus');
   });

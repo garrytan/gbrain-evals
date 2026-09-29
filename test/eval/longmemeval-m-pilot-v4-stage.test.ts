@@ -9,13 +9,13 @@ import { developmentChatOptions } from '../../eval/runner/situation-recall-devel
 import { regressionPackageHash } from '../../eval/runner/situation-recall-provenance.ts';
 
 const hash = (value: Buffer | string) => createHash('sha256').update(value).digest('hex');
-const productRoot = realpathSync(resolve(import.meta.dir, '../../node_modules/gbrain'));
+const productRoot = realpathSync(resolve(import.meta.dir, '../../node_modules/gbrain-cues'));
 const packageSha = regressionPackageHash(productRoot);
 const productSha = 'f3249d1703772573006141224a4d06d9b8df7b41';
 const expectedPackageSha = '7fc21cee0cc08169c2bbbbb05e137b5b26e885beb24fd9f6275808d2cf162e67';
 
 test.skipIf(packageSha !== expectedPackageSha)('historical v4 rejects a historical or otherwise wrong declared pin before admission', () => {
-  const declared = JSON.parse(readFileSync(resolve(import.meta.dir, '../../package.json'), 'utf8')).dependencies.gbrain;
+  const declared = JSON.parse(readFileSync(resolve(import.meta.dir, '../../package.json'), 'utf8')).dependencies['gbrain-cues'];
   expect(declared).toBe(`github:garrytan/gbrain#${productSha}`);
   expect(() => assertMatchedProductDeclaration(declared, productSha)).not.toThrow();
   expect(() => assertMatchedProductDeclaration('github:garrytan/gbrain#470ccc49c33b44c4a4be4e60bc606c0ad04a4427', productSha))

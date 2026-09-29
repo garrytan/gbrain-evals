@@ -54,7 +54,7 @@ import { writeFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
-import { importFromContent } from 'gbrain/import-file';
+import { importFromContentEmbedded } from './import-embedded.ts';
 import { extractEntityRefs } from 'gbrain/link-extraction';
 import { hybridSearch } from 'gbrain/search/hybrid';
 import {
@@ -73,8 +73,8 @@ export const CAT27_CATEGORY = 'cat27-graph-signals';
  * WS5 pin — applied via engine.setConfig BEFORE ingest in every probe brain
  * and echoed into the receipt's resolved_config. Both A/B cells share these;
  * only graph_signals differs. Never rely on mode defaults: gbrain's
- * 'balanced' bundle silently enables the zerank-2 reranker when
- * ZEROENTROPY_API_KEY is set, plus relational retrieval (autocut is off in
+ * 'balanced' bundle can enable reranking with an ambient provider key,
+ * plus relational retrieval (autocut is off in
  * balanced since v0.48.4.0 but stays pinned so older pins read the same) —
  * any of which would confound a graph-signal-only A/B. The metadata boost
  * gate is pinned to `always`: under the v0.48.4.0 default (`lexical`) the
@@ -309,7 +309,7 @@ async function seedBrain(engine: any, probe: Probe, log: (s: string) => void): P
   // stubbed transport). Session-demote uses `sessionPrefix(slug)` to detect
   // chat sessions from slug shape (`chat/2026-04-15-alpha/...`).
   for (const p of probe.pages) {
-    await importFromContent(engine, p.slug, `${p.body}\n`, { sourceId: p.source_id });
+    await importFromContentEmbedded(engine, p.slug, `${p.body}\n`, { sourceId: p.source_id });
   }
 
   // Populate the links graph directly from `[[wiki/...]]` refs.
