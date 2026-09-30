@@ -2,6 +2,39 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.3] - 2026-09-30
+
+The auto v2 follow-up: gbrain's new default returns whole conversation pages
+automatically. A preregistered release check on the sealed set.
+
+### Added
+
+- **Sealed release decision (E2): `fail`.** On the 150-question sealed
+  confirmation set, auto v2 at the product default (16,000 tokens) answered
+  149 against 147 for the chunk default (+2/−0, exact McNemar p = 0.50,
+  persona-clustered p = 0.49). Chunks were already at 98%, so the set could
+  not show a gain: no demonstrated benefit, no demonstrated harm. This was
+  the sealed set's first release decision; labels opened once with decision id
+  `evidence-auto-v2-2026-09-30:e2:auto`, and every sealed file was deleted
+  after scoring.
+- **LongMemEval sanity check (development data): missed by two questions.**
+  auto 445, page 457, chunk 312 of 500 (auto against chunk +145/−12,
+  p = 4e-30). The bar was page − 10 = 447. On 419 questions auto's request was
+  byte-identical to page's and the reader still differed on 20 (377 against
+  385); on the 81 questions the budget cut, auto scored 68 against 72.
+- Decision manifest v2, committed before any paid call and pinned to gbrain
+  `e9b580c5` in its own commit, with the sanity and sealed superiority rules
+  (`eval/runner/evidence-delivery/decision-v2.ts`), a keyless test suite, a
+  power analysis and the runner `eval/runner/evidence-auto-v2.ts`. Report:
+  `docs/benchmarks/2026-09-30-evidence-auto-v2.md`. Cost $73.92 through one
+  ledger run (cap $150).
+
+### Changed
+
+- The paid guard and the sealed scorer take a manifest path, campaign runner
+  and E2 rule, so later decision manifests reuse them.
+- The watchdog measures staleness from each attempt's start.
+
 ## [0.10.2] - 2026-09-30
 
 One release for three pieces of work that followed v0.10.1: the LongMemEval

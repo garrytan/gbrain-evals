@@ -1,0 +1,111 @@
+{
+  "decision_manifest_sha256": "b41011c22af62fa7ab0b360fd01344c4fcd99dfd4ca0e2b010c549357a905dca",
+  "frozen_manifest_sha256": "ae590e8d5d26c21f87d4c6803e4fc62cc09fd9b2961eb41bc7cb225401f03462",
+  "gbrain_commit": "e9b580c5b9f9ac2e6ad069ea45ee5a6ac52c5761",
+  "sanity": {
+    "n": 500,
+    "chunk": 312,
+    "auto": 445,
+    "page": 457,
+    "threshold": 447,
+    "pass": false,
+    "auto_vs_page": {
+      "wins": 7,
+      "losses": 19,
+      "p": 0.028959274291992188
+    },
+    "auto_vs_chunk": {
+      "wins": 145,
+      "losses": 12,
+      "p": 3.62680006611446e-30
+    },
+    "confirmation": {
+      "chunk": 314,
+      "auto": 443,
+      "page": 458
+    },
+    "problems": []
+  },
+  "auto_delivery": {
+    "blocks": 2451,
+    "page": 2451,
+    "chunk": 0,
+    "truncated": 85,
+    "conversation_over_budget": 0,
+    "not_conversation": 0,
+    "fallback": 0,
+    "questions_with_cut_or_over_budget": 81,
+    "questions_auto_equals_page": 419,
+    "delivery_fallbacks": {}
+  },
+  "truncated_subset": {
+    "n": 81,
+    "chunk": 37,
+    "auto": 68,
+    "page": 72
+  },
+  "untruncated_subset": {
+    "n": 419,
+    "chunk": 275,
+    "auto": 377,
+    "page": 385
+  },
+  "by_type": {
+    "single-session-user": {
+      "n": 70,
+      "chunk": 51,
+      "auto": 68,
+      "page": 69
+    },
+    "single-session-assistant": {
+      "n": 56,
+      "chunk": 50,
+      "auto": 56,
+      "page": 56
+    },
+    "single-session-preference": {
+      "n": 30,
+      "chunk": 20,
+      "auto": 27,
+      "page": 26
+    },
+    "multi-session": {
+      "n": 133,
+      "chunk": 64,
+      "auto": 105,
+      "page": 109
+    },
+    "temporal-reasoning": {
+      "n": 133,
+      "chunk": 68,
+      "auto": 117,
+      "page": 121
+    },
+    "knowledge-update": {
+      "n": 78,
+      "chunk": 59,
+      "auto": 72,
+      "page": 76
+    }
+  },
+  "tokens": {
+    "chunk": {
+      "product_encoding": 2796,
+      "serialized_tool": 3434,
+      "provider_input": 3517
+    },
+    "auto": {
+      "product_encoding": 13471,
+      "serialized_tool": 14952,
+      "provider_input": 15125
+    },
+    "page": {
+      "product_encoding": 13656,
+      "serialized_tool": 15104,
+      "provider_input": 15327
+    }
+  },
+  "r1_agreement": {
+    "identical_slug_chunk_rank": 409
+  }
+}
