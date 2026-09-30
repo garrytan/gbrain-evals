@@ -3,7 +3,7 @@
  * of a local checkout.
  *
  * `--gbrain <checkout>[@<ref>]` (or GBRAIN_UNDER_TEST) extracts `<ref>`
- * (default HEAD) with `git archive` into eval/reports/gbrain-overlays/, runs
+ * (default HEAD) with `git archive` into .gbrain-overlays/ (ignored, outside every tsc and test root), runs
  * `bun install --frozen-lockfile` there and verifies the copy (lifecycle
  * builds.ts: tree hash equals the commit's tree, no symlink under src/, the
  * CLI prints the copy's VERSION). Bun resolves symlinks back to their real
@@ -24,7 +24,7 @@ import { productIdentity, type ProductIdentity } from './receipt.ts';
 import { regressionPackageHash } from './situation-recall-provenance.ts';
 
 const REPO_ROOT = resolve(import.meta.dir, '../..');
-export const OVERLAY_ROOT = join(REPO_ROOT, 'eval/reports/gbrain-overlays');
+export const OVERLAY_ROOT = join(REPO_ROOT, '.gbrain-overlays');
 
 export interface GbrainOverlay {
   requested: string;

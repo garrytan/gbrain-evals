@@ -34,3 +34,6 @@ __pycache__/
 
 # Paid-run budget ledger (eval/runner/budget-ledger.ts)
 .budget/
+
+# Copied gbrain overlays for --gbrain / GBRAIN_UNDER_TEST (eval/runner/gbrain-under-test.ts)
+.gbrain-overlays/
