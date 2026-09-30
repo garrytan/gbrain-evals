@@ -528,6 +528,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'cat36-snapshot.ts': { role: 'Cat36 index snapshot hashing', part_of: 'associative-retrieval-live' },
   'compare.ts': { role: 'paired run comparator CLI' },
   'eval-adapter-config.ts': { role: 'typed adapter config for matrix cells' },
+  'gbrain-under-test.ts': { role: 'pinned gbrain or a copied --gbrain overlay, with receipt identity' },
   'gbrain-version.ts': { role: 'resolves the loaded gbrain version' },
   'import-embedded.ts': { role: 'embedding-required import wrapper' },
   'judge.ts': { role: 'shared rubric judge' },
