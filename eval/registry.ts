@@ -375,6 +375,14 @@ export const REGISTRY: readonly CategoryEntry[] = [
     contract: 'Compares B, C0 and cue arms on indirect questions; cue and summary arms run on gbrain-cues. A preregistered protocol, not a published result.',
   },
   {
+    id: 'temporal-asof', legacy_alias: 'N3', name: 'Temporal and as-of questions through gbrain\'s temporal features',
+    family: 'temporal', tier: 'H', script: 'eval/runner/n3-temporal-asof.ts', run: { kind: 'dispatched' },
+    cost_estimate: FREE, receipt_path: receipt('n3-temporal-asof'),
+    headline: { metric: 'as-of accuracy (ontology_get over fact validity windows), range set-F1, last-seen MAE in days, per-feature pass rates', denominator: 'seed 3: 492 ledger probes (104 as-of per arm, 179 range probes with the clock-relative ones, 83 last-seen) plus 15 clock-relative probes; 155 negative controls' },
+    gate: 'report-only', evidence_maturity: 'synthetic-production-path',
+    contract: 'Writes a seeded ledger (job changes with separate valid and recorded dates, timestamped chronicle events, competing date signals, time-zone and DST edges, metric trajectories) through gbrain operation handlers on in-memory PGLite, then scores chronicle_day/since/on_this_day/last_seen, query since/until on the keyword path, effective-date precedence and recorded-time fallback, relative durations, ontology_get and get_timeline as-of, and find_trajectory against gold the generator derives from the ledger with independent oracles. Page-date filtering is scored as a filter and reported separately from true as-of state. It does not measure chronicle extraction from prose (a scripted judge feeds events), natural-language dates, a pinned "now", or think. A gbrain operation that throws where an answer is expected is a scored miss; a failed presence assertion is a harness error and voids the run.',
+  },
+  {
     id: 'multi-adapter', legacy_alias: 'multi-adapter', name: 'Multi-adapter relational, fuzzy and external query families',
     family: 'relationships', tier: 'P', script: 'eval/runner/multi-adapter.ts', run: { kind: 'dispatched', timeoutMs: 2 * HOUR },
     cost_estimate: UNMEASURED, receipt_path: receipt('multi-adapter'),
