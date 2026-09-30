@@ -375,6 +375,14 @@ export const REGISTRY: readonly CategoryEntry[] = [
     contract: 'Compares B, C0 and cue arms on indirect questions; cue and summary arms run on gbrain-cues. A preregistered protocol, not a published result.',
   },
   {
+    id: 'entity-resolution', legacy_alias: 'N4', name: 'Entity resolution: variants, namesakes and cross-source identity',
+    family: 'relationships', tier: 'H', script: 'eval/runner/n4-entity-resolution.ts', run: { kind: 'dispatched' },
+    cost_estimate: FREE, receipt_path: receipt('n4-entity-resolution'),
+    headline: { metric: 'B-cubed F1, wrong-merge rate, correct-refusal rate and exact-lookup floor of the read-time resolver, beside singleton, merge-everything and exact-only baselines', denominator: '136 single-source mentions (119 solvable, 17 refusals) at the default seed; recall adds 8 two-source-grant mentions' },
+    gate: 'report-only', evidence_maturity: 'synthetic-production-path',
+    contract: 'Seeds a generated world of people and companies (nicknames, typos, handles, initials, former names, namesakes, the same person in two sources linked by an identity group, and two different people sharing a slug across sources) into PGLite, then resolves mentions through gbrain\'s resolver cascade, the recall and remember operations, the resolve-on-save path, the search exact-lookup tier and the identity-group operations. Gold comes from an oracle over the written pages; ambiguous, unreadable and no-referent mentions must be refused. Metrics are B-cubed over mention clusters, wrong merges, fragmentation, unresolved and correct refusals. It does not test context-aware disambiguation, names declared only in prose as a gbrain feature, or LLM extraction. A product exception is a scored miss; a failed presence assertion is a harness error.',
+  },
+  {
     id: 'multi-adapter', legacy_alias: 'multi-adapter', name: 'Multi-adapter relational, fuzzy and external query families',
     family: 'relationships', tier: 'P', script: 'eval/runner/multi-adapter.ts', run: { kind: 'dispatched', timeoutMs: 2 * HOUR },
     cost_estimate: UNMEASURED, receipt_path: receipt('multi-adapter'),
