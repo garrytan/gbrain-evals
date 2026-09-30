@@ -46,8 +46,12 @@ Measured on the pinned gbrain (`608a174`, 0.60.10.0) and on master (`f8d1e39`,
   `context_pack` show remote callers inbound links from private pages, with
   the private slug and a sentence of its body. It also runs against the
   `capy/evidence-delivery` branch (c0a72ab, same result); that head documents
-  `return_unit` and `assemble_evidence` but does not implement them yet, and N6
-  fuzzes both automatically once they exist.
+  `return_unit` and `assemble_evidence` but does not implement them yet. A
+  later run against the branch head with the code (732ee81) fuzzed every
+  `return_unit` value on `search`, `query`, `recall` and `assemble_evidence`,
+  with new presence controls for expansion (an expanded `delivered` block, and
+  delivered text spanning the stripped Takes and Facts rows): no expansion
+  path leaked.
 - **`--gbrain <checkout>[@ref]` / `GBRAIN_UNDER_TEST`** for the new runners
   (`eval/runner/gbrain-under-test.ts`): extracts the ref with `git archive`
   into `.gbrain-overlays/`, installs it, verifies the copy (tree hash, no

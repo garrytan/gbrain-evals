@@ -16,6 +16,32 @@ Verdict: `fail` (the target is zero leaks). The category is report-only, so this
 
 The evidence-expansion paths are not measured yet: the evidence-delivery branch carries `docs/evidence-delivery.md` but no `return_unit` parameter or `assemble_evidence` op at c0a72ab. The receipt records them as documented but missing, and N6 will fuzz them automatically when they land (see "Reproduce").
 
+## Update, 2026-09-30: the evidence-expansion code (`capy/evidence-delivery` at 732ee81)
+
+The expansion stage landed on the gbrain branch at `732ee81` (0.60.13.0): `return_unit` and `return_window` on `search`, `query` and `recall`, and the new read op `assemble_evidence`. N6 ran against it as a copied overlay (clean checkout; gbrain-evals commit `7635759`, clean tree). **No expansion path leaked.** The only findings are the same 8 `entity` / `context_pack` probes as before (bug 1), which the branch does not touch.
+
+N6 picked the new surface up without configuration: `return_unit` is an enum on all four ops, so every probe runs once per unit (`chunk`, `window`, `section`, `page`, `auto`), and `assemble_evidence` gets hit lists that name each protected target (the private note, the atom, the beta-only page) and each public twin. Every response, including the twin and ghost responses, is scanned for protected markers.
+
+Two presence controls were added for expansion, because the usual local-replay control cannot see fenced rows: sealed chunks keep held Takes and private Facts out for every caller, the owner included.
+
+- **applied**: the response carries a `delivered` block whose unit is `window`, `section` or `page`, so the stage actually expanded rather than falling back to the chunk.
+- **fence span reached**: the twin response carries both the person page's first sentence (written above the Takes fence) and its public Facts row (inside the Facts fence), so the delivered text spans the rows the protected Take and Fact were stripped from. A leak would put the protected row right there.
+
+| Unit (search + query + recall + assemble_evidence) | Probes | Signal | Expanded | Fence probes | Fence span reached | Leaks |
+|---|---|---|---|---|---|---|
+| `chunk` | 120 | 72 | 0 | 40 | 20 | 0 |
+| `window` | 120 | 72 | 104 | 40 | 24 | 0 |
+| `section` | 120 | 72 | 104 | 40 | 24 | 0 |
+| `page` | 120 | 72 | 104 | 40 | 24 | 0 |
+| `auto` | 120 | 72 | 104 | 40 | 24 | 0 |
+| `assemble_evidence`, unit from config | 96 | 32 | 96 | 32 | 32 | 0 |
+
+The 16 non-expanded probes per unit are all the held-Take target: a search for a held Take's text finds nothing, because Takes are not indexed, so there is nothing to expand. The fence span is reached on every fence probe that has a hit. Takes-twin searches find nothing for the same reason, which is why the search, query and recall rows reach it on half their fence probes. `assemble_evidence` is exposed to the four MCP callers; it is not on the subagent allow-list.
+
+Whole run at 732ee81: 74 read ops (one new), 26 covered (every content-reachable op, now including `assemble_evidence`), 3,854 exposed probes, 1,546 with signal, 8 leaking (bug 1 only), 0 existence oracles, 0 of 90 access gates bypassed, 0 sealed-chunk violations. Receipt: [receipt-evidence-delivery-732ee81.json](2026-09-30-n6-visibility-fuzz/receipt-evidence-delivery-732ee81.json). Per-op, per-unit counts are in `data.expansion_paths.per_unit`; `data.expansion_paths.not_applied` lists each probe that requested an expanded unit and got none.
+
+Reproduce: `bun eval/runner/n6-visibility-fuzz.ts --gbrain ../gbrain@732ee8116b6fd7d2de38824a54d35f57e4ea35c4`.
+
 ## The concrete case
 
 Invented placeholders throughout. The world holds a public hub page `notes/hub-suxuq` and a private note that links to it:
