@@ -66,6 +66,8 @@ export interface E3ArmRecord {
   page_parity?: Record<PageParityClass, number>;
   serialized_query_sha256: string | null;
   serialized_query_tool_tokens: number | null;
+  /** When query and assemble_evidence disagree over the same live hits: where the first difference is. */
+  mismatch?: { index: number; query: unknown; assemble: unknown };
   errors: string[];
 }
 
@@ -119,6 +121,13 @@ export async function checkQuestion(t: E3Transport, q: FrozenQuestion, question:
         pageParity[r ? classifyPageBlock(r.chunk_text, bodies.get(slug) ?? '', !!r.delivered?.truncated) : 'missing']++;
       }
     }
+    const liveResults = resultsOf(liveAssemble.data);
+    let mismatch: E3ArmRecord['mismatch'];
+    if (query.ok && liveAssemble.ok && fingerprint(queryResults) !== fingerprint(liveResults)) {
+      const brief = (r: any) => r && { slug: r.slug, chunk_id: r.chunk_id, chars: String(r.chunk_text ?? '').length, text_sha256: sha256(String(r.chunk_text ?? '')), delivered: r.delivered };
+      const index = Math.max(0, Array.from({ length: Math.max(queryResults.length, liveResults.length) }, (_, i) => i).find(i => JSON.stringify(brief(queryResults[i])) !== JSON.stringify(brief(liveResults[i]))) ?? 0);
+      mismatch = { index, query: queryResults.map(brief), assemble: liveResults.map(brief) };
+    }
     records.push({
       arm: spec.id, frozen_fingerprint: frozenArm?.product_fingerprint ?? null, remote_assemble_fingerprint: remoteFp,
       remote_assemble_spec_fingerprint: remote.ok ? specFingerprint(remoteResults) : null,
@@ -127,7 +136,7 @@ export async function checkQuestion(t: E3Transport, q: FrozenQuestion, question:
       product_path_match: query.ok && liveAssemble.ok ? fingerprint(queryResults) === fingerprint(resultsOf(liveAssemble.data)) : null,
       frozen_tokens: frozenTokens, remote_tokens: remoteTokens, tokens_match: frozenTokens !== null && remoteTokens !== null ? frozenTokens === remoteTokens : null,
       uncontained_segments: uncontained, ...(pageParity ? { page_parity: pageParity } : {}),
-      serialized_query_sha256: query.ok ? sha256(query.raw) : null, serialized_query_tool_tokens: query.ok ? count(query.raw) : null, errors,
+      serialized_query_sha256: query.ok ? sha256(query.raw) : null, serialized_query_tool_tokens: query.ok ? count(query.raw) : null, ...(mismatch ? { mismatch } : {}), errors,
     });
   }
   return { question_id: q.question_id, live_hits_match_frozen: liveSig === frozenSig, live_sig: liveSig, frozen_sig: frozenSig, arms: records };

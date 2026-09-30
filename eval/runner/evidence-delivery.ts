@@ -514,8 +514,35 @@ async function cmdE2Score(a: Args) {
   } finally { guard.uninstall(); }
 }
 
+/** Keyless E3 summary against the manifest's pass rule, with the E1 frozen-evidence answers for the same questions. */
+async function cmdE3Summary(a: Args) {
+  const records = readJsonl(a.need('--e3')) as Array<E3QuestionRecord & { scored?: Array<{ arm: string; primary: 0 | 1 | null; confirmation: 0 | 1 | null; provider_input: number }> }>;
+  const arms = [...new Set(records.flatMap(r => r.arms.map(x => x.arm)))];
+  const count = (f: (x: any) => unknown, arm: string, v: unknown) => records.filter(r => f(r.arms.find(x => x.arm === arm)) === v).length;
+  const perArm = Object.fromEntries(arms.map(arm => {
+    const scored = records.map(r => r.scored?.find(x => x.arm === arm)).filter(Boolean) as Array<{ primary: 0 | 1 | null; confirmation: 0 | 1 | null; provider_input: number; question_id?: string }>;
+    const e1 = a.get('--rows-dir') ? new Map(readRows(rowsPath(a.get('--rows-dir')!, 'pilot', arm, SONNET)).map(r => [r.question_id, r])) : null;
+    const agree = e1 ? records.filter(r => { const s = r.scored?.find(x => x.arm === arm); const e = e1.get(r.question_id); return s && e && s.primary === e.primary; }).length : null;
+    const pageParity = arm === 'page' ? records.reduce((acc: Record<string, number>, r) => { for (const [k, v] of Object.entries(r.arms.find(x => x.arm === arm)?.page_parity ?? {})) acc[k] = (acc[k] ?? 0) + (v as number); return acc; }, {}) : undefined;
+    return [arm, {
+      local_remote_match: { true: count(x => x?.local_remote_match, arm, true), false: count(x => x?.local_remote_match, arm, false), null: count(x => x?.local_remote_match, arm, null) },
+      product_path_match: { true: count(x => x?.product_path_match, arm, true), false: count(x => x?.product_path_match, arm, false), null: count(x => x?.product_path_match, arm, null) },
+      tokens_match: { true: count(x => x?.tokens_match, arm, true), false: count(x => x?.tokens_match, arm, false), null: count(x => x?.tokens_match, arm, null) },
+      uncontained_segments: records.reduce((n, r) => n + (r.arms.find(x => x.arm === arm)?.uncontained_segments ?? 0), 0),
+      errors: records.reduce((n, r) => n + (r.arms.find(x => x.arm === arm)?.errors.length ?? 0), 0),
+      ...(pageParity ? { page_parity: pageParity } : {}),
+      scored: { n: scored.length, primary: scored.filter(x => x.primary === 1).length, confirmation: scored.filter(x => x.confirmation === 1).length, mean_provider_input: scored.length ? scored.reduce((t, x) => t + x.provider_input, 0) / scored.length : null },
+      ...(agree !== null ? { primary_agrees_with_e1_frozen_answer: agree } : {}),
+    }];
+  }));
+  const pass = records.length > 0 && arms.every(arm => (perArm[arm] as any).local_remote_match.true === records.length && (perArm[arm] as any).product_path_match.true === records.length && (perArm[arm] as any).tokens_match.true === records.length && (perArm[arm] as any).uncontained_segments === 0);
+  const out = { questions: records.length, live_hits_match_frozen: records.filter(r => r.live_hits_match_frozen).length, arms: perArm, pass };
+  if (a.get('--out')) writeJson(a.get('--out')!, out);
+  process.stdout.write(JSON.stringify(out, null, 2) + '\n');
+}
+
 const COMMANDS: Record<string, (a: Args) => Promise<void>> = {
-  'cluster-map': cmdClusterMap, power: cmdPower, parity: cmdParity, analyze: cmdAnalyze, costs: cmdCosts,
+  'cluster-map': cmdClusterMap, power: cmdPower, 'e3-summary': cmdE3Summary, parity: cmdParity, analyze: cmdAnalyze, costs: cmdCosts,
   'campaign-open': cmdCampaignOpen, freeze: cmdFreeze, 'merge-frozen': cmdMergeFrozen, e1: cmdE1, e3: cmdE3, 'e2-freeze': cmdE2Freeze, 'e2-answer': cmdE2Answer, 'e2-score': cmdE2Score,
 };
 
