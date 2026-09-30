@@ -735,7 +735,7 @@ async function main(): Promise<void> {
     log(`last-seen MAE: ${s.last_seen_mae_days === null ? 'n/a' : s.last_seen_mae_days.toFixed(2)} days (n=${s.last_seen_mae_n}), exact ${(s.last_seen_exact_rate * 100).toFixed(1)}%`);
     log(`negative controls: ${(s.negative_control_pass_rate * 100).toFixed(1)}% of ${s.negative_controls}`);
     log(`page-date as-of: matches recorded-time gold ${s.pagedate_asof.vs_recorded_time}, valid-time gold ${s.pagedate_asof.vs_valid_time}`);
-    log(`verdict: ${r.verdict} (report-only category)`);
+    log(`verdict: ${r.verdict}`);
   } else {
     log(`run error: ${r.harnessError}`);
   }

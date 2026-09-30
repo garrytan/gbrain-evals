@@ -379,7 +379,7 @@ export const REGISTRY: readonly CategoryEntry[] = [
     family: 'temporal', tier: 'H', script: 'eval/runner/n3-temporal-asof.ts', run: { kind: 'dispatched' },
     cost_estimate: FREE, receipt_path: receipt('n3-temporal-asof'),
     headline: { metric: 'as-of accuracy (ontology_get over fact validity windows), range set-F1, last-seen MAE in days, per-feature pass rates', denominator: 'seed 3: 513 probes (492 from the ledger, 21 clock-relative): 104 as-of probes per arm, 179 range probes, 83 last-seen probes; 155 of the 513 are negative controls' },
-    gate: 'report-only', evidence_maturity: 'synthetic-production-path',
+    gate: 'gate', evidence_maturity: 'synthetic-production-path',
     contract: 'Writes a seeded ledger (job changes with separate valid and recorded dates, timestamped chronicle events, competing date signals, time-zone and DST edges, metric trajectories) through gbrain operation handlers on in-memory PGLite, then scores chronicle_day/since/on_this_day/last_seen, query since/until on the keyword path, effective-date precedence and recorded-time fallback, relative durations, ontology_get and get_timeline as-of, and find_trajectory against gold the generator derives from the ledger with independent oracles. Page-date filtering is scored as a filter and reported separately from true as-of state. It does not measure chronicle extraction from prose (a scripted judge feeds events), natural-language dates, a pinned "now", or think. A gbrain operation that throws where an answer is expected is a scored miss; a failed presence assertion is a harness error and voids the run.',
   },
   {
@@ -395,7 +395,7 @@ export const REGISTRY: readonly CategoryEntry[] = [
     family: 'safety', tier: 'H', script: 'eval/runner/n6-visibility-fuzz.ts', run: { kind: 'dispatched' },
     cost_estimate: FREE, receipt_path: receipt('n6-visibility-fuzz'),
     headline: { metric: 'leaking probes (content, existence, existence-oracle; target 0), access-gate bypasses, and read-op coverage', denominator: 'every read op enumerated from gbrain operations at run time x 6 remote callers x targets and variants (3,158 exposed probes and 73 read ops at 0.60.11.0)' },
-    gate: 'report-only', evidence_maturity: 'synthetic-production-path',
+    gate: 'gate', evidence_maturity: 'synthetic-production-path',
     contract: 'Seeds a brain holding protected content (visibility: private pages with body, tag and timeline markers, held Takes rows, private Facts rows, derived atoms, an ungranted source) beside public twins, then calls every read op in gbrain operations as stdio, serve-http read/write/slug-bound clients and remote/local subagents scoped to one source. Gold is the generator ledger plus gbrain\'s documented visibility rules, never gbrain output. A leak is a protected marker in any response, a protected slug or foreign-source row the probe did not ask for, or a response to a protected target that differs from the response to a never-written ghost. Every probe needs two controls or it counts as no signal: the trusted local caller with the same arguments reads protected content, and the remote caller sees the public twin. Coverage counts read ops with at least one signal-bearing probe. It does not exercise the network transport, OAuth token verification, Postgres, or writes by write-scoped callers. Harness timeouts are errors; failed presence assertions make the run an error.',
   },
   {
