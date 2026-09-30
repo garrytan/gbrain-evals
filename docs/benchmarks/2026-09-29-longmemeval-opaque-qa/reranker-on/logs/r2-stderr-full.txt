@@ -1,0 +1,1082 @@
+[longmemeval] resume: 0 already done; 500/500 remaining
+[longmemeval] judge backfill: 0 row(s) to judge from their stored hypothesis; 0 verdict(s) stand
+[longmemeval] judge: openai:gpt-4o, 500 live + 0 backfill question(s), estimated judge spend ~$1.1100 (cap $10.00)
+[longmemeval] estimated 20-60 minutes for 500 questions; use --limit N for shorter runs
+[longmemeval] connecting in-memory brain...
+[longmemeval] starting (questions: 500, model: anthropic:claude-sonnet-4-6, mode: balanced, reranker: on, autocut: off, expansion: off, budget: legacy, embedder: openai:text-embedding-3-large@1536, top-k: 5, trajectory: off, retrieval_config_hash: 0d5ee2baf7b5)
+  Setting up brain schema (v166)...
+  161 migration(s) applied
+[longmemeval] embed cache: $M6_DIR/embed-cache.sqlite (openai:text-embedding-3-large@1536, 107606 rows)
+[eval.longmemeval] start
+[eval.longmemeval] 1/500 (0%) e47becba
+[longmemeval] e47becba 8677ms
+[eval.longmemeval] 2/500 (0%) 118b2229
+[longmemeval] 118b2229 13041ms
+[eval.longmemeval] 3/500 (0%) 51a45a95
+[longmemeval] 51a45a95 12706ms
+[eval.longmemeval] 4/500 (0%) 58bf7951
+[longmemeval] 58bf7951 9173ms
+[eval.longmemeval] 5/500 (1%) 1e043500
+[longmemeval] 1e043500 10362ms
+[eval.longmemeval] 6/500 (1%) c5e8278d
+[longmemeval] c5e8278d 10530ms
+[eval.longmemeval] 7/500 (1%) 6ade9755
+[longmemeval] 6ade9755 9711ms
+[eval.longmemeval] 8/500 (1%) 6f9b354f
+[longmemeval] 6f9b354f 9684ms
+[eval.longmemeval] 9/500 (1%) 58ef2f1c
+[longmemeval] 58ef2f1c 8387ms
+[eval.longmemeval] 10/500 (2%) f8c5f88b
+[longmemeval] f8c5f88b 8134ms
+[eval.longmemeval] 11/500 (2%) 5d3d2817
+[longmemeval] 5d3d2817 8381ms
+[eval.longmemeval] 12/500 (2%) 7527f7e2
+[longmemeval] 7527f7e2 6855ms
+[eval.longmemeval] 13/500 (2%) c960da58
+[longmemeval] c960da58 9234ms
+[eval.longmemeval] 14/500 (2%) 3b6f954b
+[longmemeval] 3b6f954b 8795ms
+[eval.longmemeval] 15/500 (3%) 726462e0
+[longmemeval] 726462e0 8403ms
+[eval.longmemeval] 16/500 (3%) 94f70d80
+[longmemeval] 94f70d80 7887ms
+[eval.longmemeval] 17/500 (3%) 66f24dbb
+[longmemeval] 66f24dbb 7521ms
+[eval.longmemeval] 18/500 (3%) ad7109d1
+[longmemeval] ad7109d1 8643ms
+[eval.longmemeval] 19/500 (3%) af8d2e46
+[longmemeval] af8d2e46 8482ms
+[eval.longmemeval] 20/500 (4%) dccbc061
+[longmemeval] dccbc061 11048ms
+[eval.longmemeval] 21/500 (4%) c8c3f81d
+[longmemeval] c8c3f81d 8318ms
+[eval.longmemeval] 22/500 (4%) 8ebdbe50
+[longmemeval] 8ebdbe50 7744ms
+[eval.longmemeval] 23/500 (4%) 6b168ec8
+[longmemeval] 6b168ec8 7772ms
+[eval.longmemeval] 24/500 (4%) 75499fd8
+[longmemeval] 75499fd8 10011ms
+[eval.longmemeval] 25/500 (5%) 21436231
+[longmemeval] 21436231 8896ms
+[eval.longmemeval] 26/500 (5%) 95bcc1c8
+[longmemeval] 95bcc1c8 8654ms
+[eval.longmemeval] 27/500 (5%) 0862e8bf
+[longmemeval] 0862e8bf 7029ms
+[eval.longmemeval] 28/500 (5%) 853b0a1d
+[longmemeval] 853b0a1d 8555ms
+[eval.longmemeval] 29/500 (5%) a06e4cfe
+[longmemeval] a06e4cfe 8766ms
+[eval.longmemeval] 30/500 (6%) 37d43f65
+[longmemeval] 37d43f65 7871ms
+[eval.longmemeval] 31/500 (6%) b86304ba
+[longmemeval] b86304ba 10405ms
+[eval.longmemeval] 32/500 (6%) d52b4f67
+[longmemeval] d52b4f67 10145ms
+[eval.longmemeval] 33/500 (6%) 25e5aa4f
+[longmemeval] 25e5aa4f 8692ms
+[eval.longmemeval] 34/500 (6%) caf9ead2
+[longmemeval] caf9ead2 7810ms
+[eval.longmemeval] 35/500 (7%) 8550ddae
+[longmemeval] 8550ddae 9555ms
+[eval.longmemeval] 36/500 (7%) 60d45044
+[longmemeval] 60d45044 12761ms
+[eval.longmemeval] 37/500 (7%) 3f1e9474
+[longmemeval] 3f1e9474 10112ms
+[eval.longmemeval] 38/500 (7%) 86b68151
+[longmemeval] 86b68151 8765ms
+[eval.longmemeval] 39/500 (7%) 577d4d32
+[longmemeval] 577d4d32 8420ms
+[eval.longmemeval] 40/500 (8%) ec81a493
+[longmemeval] ec81a493 10428ms
+[eval.longmemeval] 41/500 (8%) 15745da0
+[longmemeval] 15745da0 8631ms
+[eval.longmemeval] 42/500 (8%) e01b8e2f
+[longmemeval] e01b8e2f 9038ms
+[eval.longmemeval] 43/500 (8%) bc8a6e93
+[longmemeval] bc8a6e93 11518ms
+[eval.longmemeval] 44/500 (8%) ccb36322
+[longmemeval] ccb36322 9903ms
+[eval.longmemeval] 45/500 (9%) 001be529
+[longmemeval] 001be529 9632ms
+[eval.longmemeval] 46/500 (9%) b320f3f8
+[longmemeval] b320f3f8 8543ms
+[eval.longmemeval] 47/500 (9%) 19b5f2b3
+[longmemeval] 19b5f2b3 10409ms
+[eval.longmemeval] 48/500 (9%) 4fd1909e
+[longmemeval] 4fd1909e 9348ms
+[eval.longmemeval] 49/500 (9%) 545bd2b5
+[longmemeval] 545bd2b5 8934ms
+[eval.longmemeval] 50/500 (10%) 8a137a7f
+[longmemeval] 8a137a7f 8443ms
+[eval.longmemeval] 51/500 (10%) 76d63226
+[longmemeval] 76d63226 8732ms
+[eval.longmemeval] 52/500 (10%) 86f00804
+[longmemeval] 86f00804 8398ms
+[eval.longmemeval] 53/500 (10%) 8e9d538c
+[longmemeval] 8e9d538c 10595ms
+[eval.longmemeval] 54/500 (10%) 311778f1
+[longmemeval] 311778f1 7992ms
+[eval.longmemeval] 55/500 (11%) c19f7a0b
+[longmemeval] c19f7a0b 8732ms
+[eval.longmemeval] 56/500 (11%) 4100d0a0
+[longmemeval] 4100d0a0 7774ms
+[eval.longmemeval] 57/500 (11%) 29f2956b
+[longmemeval] 29f2956b 8908ms
+[eval.longmemeval] 58/500 (11%) 1faac195
+[longmemeval] 1faac195 9346ms
+[eval.longmemeval] 59/500 (11%) faba32e5
+[longmemeval] faba32e5 9600ms
+[eval.longmemeval] 60/500 (12%) f4f1d8a4
+[longmemeval] f4f1d8a4 9919ms
+[eval.longmemeval] 61/500 (12%) c14c00dd
+[longmemeval] c14c00dd 8836ms
+[eval.longmemeval] 62/500 (12%) 36580ce8
+[longmemeval] 36580ce8 8909ms
+[eval.longmemeval] 63/500 (12%) 3d86fd0a
+[longmemeval] 3d86fd0a 7640ms
+[eval.longmemeval] 64/500 (12%) a82c026e
+[longmemeval] a82c026e 8284ms
+[eval.longmemeval] 65/500 (13%) 0862e8bf_abs
+[longmemeval] 0862e8bf_abs 9494ms
+[eval.longmemeval] 66/500 (13%) 15745da0_abs
+[longmemeval] 15745da0_abs 11953ms
+[eval.longmemeval] 67/500 (13%) bc8a6e93_abs
+[longmemeval] bc8a6e93_abs 11194ms
+[eval.longmemeval] 68/500 (13%) 19b5f2b3_abs
+[longmemeval] 19b5f2b3_abs 8615ms
+[eval.longmemeval] 69/500 (13%) 29f2956b_abs
+[longmemeval] 29f2956b_abs 8548ms
+[eval.longmemeval] 70/500 (14%) f4f1d8a4_abs
+[longmemeval] f4f1d8a4_abs 8021ms
+[eval.longmemeval] 71/500 (14%) 0a995998
+[longmemeval] 0a995998 8722ms
+[eval.longmemeval] 72/500 (14%) 6d550036
+[longmemeval] 6d550036 10061ms
+[eval.longmemeval] 73/500 (14%) gpt4_59c863d7
+[longmemeval] gpt4_59c863d7 11033ms
+[eval.longmemeval] 74/500 (14%) b5ef892d
+[longmemeval] b5ef892d 11068ms
+[eval.longmemeval] 75/500 (15%) e831120c
+[longmemeval] e831120c 6967ms
+[eval.longmemeval] 76/500 (15%) 3a704032
+[longmemeval] 3a704032 10220ms
+[eval.longmemeval] 77/500 (15%) gpt4_d84a3211
+[longmemeval] gpt4_d84a3211 9592ms
+[eval.longmemeval] 78/500 (15%) aae3761f
+[longmemeval] aae3761f 12604ms
+[eval.longmemeval] 79/500 (15%) gpt4_f2262a51
+[longmemeval] gpt4_f2262a51 8525ms
+[eval.longmemeval] 80/500 (16%) dd2973ad
+[longmemeval] dd2973ad 10039ms
+[eval.longmemeval] 81/500 (16%) c4a1ceb8
+[longmemeval] c4a1ceb8 10597ms
+[eval.longmemeval] 82/500 (16%) gpt4_a56e767c
+[longmemeval] gpt4_a56e767c 12534ms
+[eval.longmemeval] 83/500 (16%) 6cb6f249
+[longmemeval] 6cb6f249 10048ms
+[eval.longmemeval] 84/500 (16%) 46a3abf7
+[longmemeval] 46a3abf7 9250ms
+[eval.longmemeval] 85/500 (17%) 36b9f61e
+[longmemeval] 36b9f61e 9601ms
+[eval.longmemeval] 86/500 (17%) 28dc39ac
+[longmemeval] 28dc39ac 10401ms
+[eval.longmemeval] 87/500 (17%) gpt4_2f8be40d
+[longmemeval] gpt4_2f8be40d 11574ms
+[eval.longmemeval] 88/500 (17%) 2e6d26dc
+[longmemeval] 2e6d26dc 10968ms
+[eval.longmemeval] 89/500 (17%) gpt4_15e38248
+[longmemeval] gpt4_15e38248 9314ms
+[eval.longmemeval] 90/500 (18%) 88432d0a
+[longmemeval] 88432d0a 12285ms
+[eval.longmemeval] 91/500 (18%) 80ec1f4f
+[longmemeval] 80ec1f4f 11253ms
+[eval.longmemeval] 92/500 (18%) d23cf73b
+[longmemeval] d23cf73b 11186ms
+[eval.longmemeval] 93/500 (18%) gpt4_7fce9456
+[longmemeval] gpt4_7fce9456 11427ms
+rc=137
+[longmemeval] resume: 93 already done; 407/500 remaining
+[longmemeval] judge backfill: 0 row(s) to judge from their stored hypothesis; 93 verdict(s) stand
+[longmemeval] judge: openai:gpt-4o, 407 live + 0 backfill question(s), estimated judge spend ~$0.9069 (cap $10.00)
+[longmemeval] estimated 20-60 minutes for 407 questions; use --limit N for shorter runs
+[longmemeval] connecting in-memory brain...
+[longmemeval] starting (questions: 407, model: anthropic:claude-sonnet-4-6, mode: balanced, reranker: on, autocut: off, expansion: off, budget: legacy, embedder: openai:text-embedding-3-large@1536, top-k: 5, trajectory: off, retrieval_config_hash: 0d5ee2baf7b5)
+  Setting up brain schema (v166)...
+  161 migration(s) applied
+[longmemeval] embed cache: $M6_DIR/embed-cache.sqlite (openai:text-embedding-3-large@1536, 107606 rows)
+[eval.longmemeval] start
+[eval.longmemeval] 1/407 (0%) d682f1a2
+[longmemeval] d682f1a2 9503ms
+[eval.longmemeval] 2/407 (0%) 7024f17c
+[longmemeval] 7024f17c 9392ms
+[eval.longmemeval] 3/407 (0%) gpt4_5501fe77
+[longmemeval] gpt4_5501fe77 9788ms
+[eval.longmemeval] 4/407 (0%) gpt4_2ba83207
+[longmemeval] gpt4_2ba83207 13004ms
+[eval.longmemeval] 5/407 (1%) 2318644b
+[longmemeval] 2318644b 11054ms
+[eval.longmemeval] 6/407 (1%) 2ce6a0f2
+[longmemeval] 2ce6a0f2 11652ms
+[eval.longmemeval] 7/407 (1%) gpt4_d12ceb0e
+[longmemeval] gpt4_d12ceb0e 11207ms
+[eval.longmemeval] 8/407 (1%) 00ca467f
+[longmemeval] 00ca467f 11864ms
+[eval.longmemeval] 9/407 (2%) b3c15d39
+[longmemeval] b3c15d39 10002ms
+[eval.longmemeval] 10/407 (2%) gpt4_31ff4165
+[longmemeval] gpt4_31ff4165 10328ms
+[eval.longmemeval] 11/407 (2%) eeda8a6d
+[longmemeval] eeda8a6d 10779ms
+[eval.longmemeval] 12/407 (2%) 2788b940
+[longmemeval] 2788b940 9349ms
+[eval.longmemeval] 13/407 (3%) 60bf93ed
+[longmemeval] 60bf93ed 7961ms
+[eval.longmemeval] 14/407 (3%) 9d25d4e0
+[longmemeval] 9d25d4e0 10422ms
+[eval.longmemeval] 15/407 (3%) 129d1232
+[longmemeval] 129d1232 9727ms
+[eval.longmemeval] 16/407 (3%) 60472f9c
+[longmemeval] 60472f9c 8247ms
+[eval.longmemeval] 17/407 (4%) gpt4_194be4b3
+[longmemeval] gpt4_194be4b3 10745ms
+[eval.longmemeval] 18/407 (4%) a9f6b44c
+[longmemeval] a9f6b44c 9039ms
+[eval.longmemeval] 19/407 (4%) d851d5ba
+[longmemeval] d851d5ba 11729ms
+[eval.longmemeval] 20/407 (4%) 5a7937c8
+[longmemeval] 5a7937c8 9684ms
+[eval.longmemeval] 21/407 (5%) gpt4_ab202e7f
+[longmemeval] gpt4_ab202e7f 10640ms
+[eval.longmemeval] 22/407 (5%) gpt4_e05b82a6
+[longmemeval] gpt4_e05b82a6 9685ms
+[eval.longmemeval] 23/407 (5%) gpt4_731e37d7
+[longmemeval] gpt4_731e37d7 10151ms
+[eval.longmemeval] 24/407 (5%) edced276
+[longmemeval] edced276 8302ms
+[eval.longmemeval] 25/407 (6%) 10d9b85a
+[longmemeval] 10d9b85a 9660ms
+[eval.longmemeval] 26/407 (6%) e3038f8c
+[longmemeval] e3038f8c 8016ms
+[eval.longmemeval] 27/407 (6%) 2b8f3739
+[longmemeval] 2b8f3739 10635ms
+[eval.longmemeval] 28/407 (6%) 1a8a66a6
+[longmemeval] 1a8a66a6 9165ms
+[eval.longmemeval] 29/407 (7%) c2ac3c61
+[longmemeval] c2ac3c61 11868ms
+[eval.longmemeval] 30/407 (7%) bf659f65
+[longmemeval] bf659f65 9628ms
+[eval.longmemeval] 31/407 (7%) gpt4_372c3eed
+[longmemeval] gpt4_372c3eed 9492ms
+[eval.longmemeval] 32/407 (7%) gpt4_2f91af09
+[longmemeval] gpt4_2f91af09 11989ms
+[eval.longmemeval] 33/407 (8%) 81507db6
+[longmemeval] 81507db6 13013ms
+[eval.longmemeval] 34/407 (8%) 88432d0a_abs
+[longmemeval] 88432d0a_abs 7414ms
+[eval.longmemeval] 35/407 (8%) 80ec1f4f_abs
+[longmemeval] 80ec1f4f_abs 10814ms
+[eval.longmemeval] 36/407 (8%) eeda8a6d_abs
+[longmemeval] eeda8a6d_abs 7923ms
+[eval.longmemeval] 37/407 (9%) 60bf93ed_abs
+[longmemeval] 60bf93ed_abs 9410ms
+[eval.longmemeval] 38/407 (9%) edced276_abs
+[longmemeval] edced276_abs 8882ms
+[eval.longmemeval] 39/407 (9%) gpt4_372c3eed_abs
+[longmemeval] gpt4_372c3eed_abs 10630ms
+[eval.longmemeval] 40/407 (9%) 8a2466db
+[longmemeval] 8a2466db 10908ms
+[eval.longmemeval] 41/407 (10%) 06878be2
+[longmemeval] 06878be2 13776ms
+[eval.longmemeval] 42/407 (10%) 75832dbd
+[longmemeval] 75832dbd 12333ms
+[eval.longmemeval] 43/407 (10%) 0edc2aef
+[longmemeval] 0edc2aef 8650ms
+[eval.longmemeval] 44/407 (10%) 35a27287
+[longmemeval] 35a27287 9865ms
+[eval.longmemeval] 45/407 (11%) 32260d93
+[longmemeval] 32260d93 9407ms
+[eval.longmemeval] 46/407 (11%) 195a1a1b
+[longmemeval] 195a1a1b 11872ms
+[eval.longmemeval] 47/407 (11%) afdc33df
+[longmemeval] afdc33df 11683ms
+[eval.longmemeval] 48/407 (11%) caf03d32
+[longmemeval] caf03d32 13520ms
+[eval.longmemeval] 49/407 (12%) 54026fce
+[longmemeval] 54026fce 11635ms
+[eval.longmemeval] 50/407 (12%) 06f04340
+[longmemeval] 06f04340 10746ms
+[eval.longmemeval] 51/407 (12%) 6b7dfb22
+[longmemeval] 6b7dfb22 11338ms
+[eval.longmemeval] 52/407 (12%) 1a1907b4
+[longmemeval] 1a1907b4 12956ms
+[eval.longmemeval] 53/407 (13%) 09d032c9
+[longmemeval] 09d032c9 10002ms
+[eval.longmemeval] 54/407 (13%) 38146c39
+[longmemeval] 38146c39 8771ms
+[eval.longmemeval] 55/407 (13%) d24813b1
+[longmemeval] d24813b1 14475ms
+[eval.longmemeval] 56/407 (13%) 57f827a0
+[longmemeval] 57f827a0 8235ms
+[eval.longmemeval] 57/407 (14%) 95228167
+[longmemeval] 95228167 15518ms
+[eval.longmemeval] 58/407 (14%) 505af2f5
+[longmemeval] 505af2f5 10663ms
+[eval.longmemeval] 59/407 (14%) 75f70248
+[longmemeval] 75f70248 13792ms
+[eval.longmemeval] 60/407 (14%) d6233ab6
+[longmemeval] d6233ab6 11450ms
+[eval.longmemeval] 61/407 (14%) 1da05512
+[longmemeval] 1da05512 12312ms
+[eval.longmemeval] 62/407 (15%) fca70973
+[longmemeval] fca70973 12726ms
+[eval.longmemeval] 63/407 (15%) b6025781
+[longmemeval] b6025781 11970ms
+[eval.longmemeval] 64/407 (15%) a89d7624
+[longmemeval] a89d7624 12482ms
+[eval.longmemeval] 65/407 (15%) b0479f84
+[longmemeval] b0479f84 11342ms
+[eval.longmemeval] 66/407 (16%) 1d4e3b97
+[longmemeval] 1d4e3b97 7913ms
+[eval.longmemeval] 67/407 (16%) 07b6f563
+[longmemeval] 07b6f563 10332ms
+[eval.longmemeval] 68/407 (16%) 1c0ddc50
+[longmemeval] 1c0ddc50 12659ms
+[eval.longmemeval] 69/407 (16%) 0a34ad58
+[longmemeval] 0a34ad58 12720ms
+[eval.longmemeval] 70/407 (17%) d3ab962e
+[longmemeval] d3ab962e 9134ms
+[eval.longmemeval] 71/407 (17%) 2311e44b
+[longmemeval] 2311e44b 9688ms
+[eval.longmemeval] 72/407 (17%) cc06de0d
+[longmemeval] cc06de0d 8530ms
+[eval.longmemeval] 73/407 (17%) a11281a2
+[longmemeval] a11281a2 9167ms
+[eval.longmemeval] 74/407 (18%) 4f54b7c9
+[longmemeval] 4f54b7c9 11175ms
+[eval.longmemeval] 75/407 (18%) 85fa3a3f
+[longmemeval] 85fa3a3f 11779ms
+[eval.longmemeval] 76/407 (18%) 9aaed6a3
+[longmemeval] 9aaed6a3 9535ms
+[eval.longmemeval] 77/407 (18%) 1f2b8d4f
+[longmemeval] 1f2b8d4f 9370ms
+[eval.longmemeval] 78/407 (19%) e6041065
+[longmemeval] e6041065 8337ms
+[eval.longmemeval] 79/407 (19%) 51c32626
+[longmemeval] 51c32626 7515ms
+[eval.longmemeval] 80/407 (19%) d905b33f
+[longmemeval] d905b33f 9817ms
+[eval.longmemeval] 81/407 (19%) 7405e8b1
+[longmemeval] 7405e8b1 9095ms
+[eval.longmemeval] 82/407 (20%) f35224e0
+[longmemeval] f35224e0 8558ms
+[eval.longmemeval] 83/407 (20%) 6456829e
+[longmemeval] 6456829e 7512ms
+[eval.longmemeval] 84/407 (20%) a4996e51
+[longmemeval] a4996e51 6953ms
+[eval.longmemeval] 85/407 (20%) 3c1045c8
+[longmemeval] 3c1045c8 8190ms
+[eval.longmemeval] 86/407 (21%) 60036106
+[longmemeval] 60036106 7192ms
+[eval.longmemeval] 87/407 (21%) 681a1674
+[longmemeval] 681a1674 7595ms
+[eval.longmemeval] 88/407 (21%) e25c3b8d
+[longmemeval] e25c3b8d 7066ms
+[eval.longmemeval] 89/407 (21%) 4adc0475
+[longmemeval] 4adc0475 8471ms
+[eval.longmemeval] 90/407 (22%) 4bc144e2
+[longmemeval] 4bc144e2 9132ms
+[eval.longmemeval] 91/407 (22%) ef66a6e5
+[longmemeval] ef66a6e5 8813ms
+[eval.longmemeval] 92/407 (22%) 5025383b
+[longmemeval] 5025383b 9167ms
+[eval.longmemeval] 93/407 (22%) a1cc6108
+[longmemeval] a1cc6108 7617ms
+[eval.longmemeval] 94/407 (23%) 9ee3ecd6
+[longmemeval] 9ee3ecd6 9145ms
+rc=137
+[longmemeval] resume: 187 already done; 313/500 remaining
+[longmemeval] judge backfill: 0 row(s) to judge from their stored hypothesis; 187 verdict(s) stand
+[longmemeval] judge: openai:gpt-4o, 313 live + 0 backfill question(s), estimated judge spend ~$0.6936 (cap $10.00)
+[longmemeval] estimated 20-60 minutes for 313 questions; use --limit N for shorter runs
+[longmemeval] connecting in-memory brain...
+[longmemeval] starting (questions: 313, model: anthropic:claude-sonnet-4-6, mode: balanced, reranker: on, autocut: off, expansion: off, budget: legacy, embedder: openai:text-embedding-3-large@1536, top-k: 5, trajectory: off, retrieval_config_hash: 0d5ee2baf7b5)
+  Setting up brain schema (v166)...
+  161 migration(s) applied
+[longmemeval] embed cache: $M6_DIR/embed-cache.sqlite (openai:text-embedding-3-large@1536, 107606 rows)
+[eval.longmemeval] start
+[eval.longmemeval] 1/313 (0%) 3fdac837
+[longmemeval] 3fdac837 8900ms
+[eval.longmemeval] 2/313 (0%) 91b15a6e
+[longmemeval] 91b15a6e 11296ms
+[eval.longmemeval] 3/313 (0%) 27016adc
+[longmemeval] 27016adc 8928ms
+[eval.longmemeval] 4/313 (1%) 720133ac
+[longmemeval] 720133ac 7879ms
+[eval.longmemeval] 5/313 (1%) 77eafa52
+[longmemeval] 77eafa52 9922ms
+[eval.longmemeval] 6/313 (1%) 8979f9ec
+[longmemeval] 8979f9ec 9125ms
+[eval.longmemeval] 7/313 (2%) 0100672e
+[longmemeval] 0100672e 7924ms
+[eval.longmemeval] 8/313 (2%) a96c20ee
+[longmemeval] a96c20ee 7542ms
+[eval.longmemeval] 9/313 (2%) 92a0aa75
+[longmemeval] 92a0aa75 7348ms
+[eval.longmemeval] 10/313 (3%) 3fe836c9
+[longmemeval] 3fe836c9 8526ms
+[eval.longmemeval] 11/313 (3%) 1c549ce4
+[longmemeval] 1c549ce4 7971ms
+[eval.longmemeval] 12/313 (3%) 6c49646a
+[longmemeval] 6c49646a 11343ms
+[eval.longmemeval] 13/313 (4%) 1192316e
+[longmemeval] 1192316e 7858ms
+[eval.longmemeval] 14/313 (4%) 0ea62687
+[longmemeval] 0ea62687 8076ms
+[eval.longmemeval] 15/313 (4%) 67e0d0f2
+[longmemeval] 67e0d0f2 11475ms
+[eval.longmemeval] 16/313 (5%) bb7c3b45
+[longmemeval] bb7c3b45 8040ms
+[eval.longmemeval] 17/313 (5%) ba358f49
+[longmemeval] ba358f49 7530ms
+[eval.longmemeval] 18/313 (5%) 61f8c8f8
+[longmemeval] 61f8c8f8 8194ms
+[eval.longmemeval] 19/313 (6%) 60159905
+[longmemeval] 60159905 10401ms
+[eval.longmemeval] 20/313 (6%) ef9cf60a
+[longmemeval] ef9cf60a 9991ms
+[eval.longmemeval] 21/313 (6%) 73d42213
+[longmemeval] 73d42213 8892ms
+[eval.longmemeval] 22/313 (7%) bc149d6b
+[longmemeval] bc149d6b 9353ms
+[eval.longmemeval] 23/313 (7%) 099778bb
+[longmemeval] 099778bb 7923ms
+[eval.longmemeval] 24/313 (7%) 09ba9854
+[longmemeval] 09ba9854 8728ms
+[eval.longmemeval] 25/313 (7%) d6062bb9
+[longmemeval] d6062bb9 8922ms
+[eval.longmemeval] 26/313 (8%) 157a136e
+[longmemeval] 157a136e 8542ms
+[eval.longmemeval] 27/313 (8%) c18a7dc8
+[longmemeval] c18a7dc8 7576ms
+[eval.longmemeval] 28/313 (8%) a3332713
+[longmemeval] a3332713 7607ms
+[eval.longmemeval] 29/313 (9%) 55241a1f
+[longmemeval] 55241a1f 8249ms
+[eval.longmemeval] 30/313 (9%) a08a253f
+[longmemeval] a08a253f 8756ms
+[eval.longmemeval] 31/313 (9%) f0e564bc
+[longmemeval] f0e564bc 9037ms
+[eval.longmemeval] 32/313 (10%) 078150f1
+[longmemeval] 078150f1 7894ms
+[eval.longmemeval] 33/313 (10%) 8cf4d046
+[longmemeval] 8cf4d046 7632ms
+[eval.longmemeval] 34/313 (10%) a346bb18
+[longmemeval] a346bb18 10234ms
+[eval.longmemeval] 35/313 (11%) 37f165cf
+[longmemeval] 37f165cf 6568ms
+[eval.longmemeval] 36/313 (11%) 8e91e7d9
+[longmemeval] 8e91e7d9 8479ms
+[eval.longmemeval] 37/313 (11%) 87f22b4a
+[longmemeval] 87f22b4a 7440ms
+[eval.longmemeval] 38/313 (12%) e56a43b9
+[longmemeval] e56a43b9 9369ms
+[eval.longmemeval] 39/313 (12%) efc3f7c2
+[longmemeval] efc3f7c2 7528ms
+[eval.longmemeval] 40/313 (12%) 21d02d0d
+[longmemeval] 21d02d0d 8455ms
+[eval.longmemeval] 41/313 (13%) 2311e44b_abs
+[longmemeval] 2311e44b_abs 8232ms
+[eval.longmemeval] 42/313 (13%) 6456829e_abs
+[longmemeval] 6456829e_abs 8427ms
+[eval.longmemeval] 43/313 (13%) e5ba910e_abs
+[longmemeval] e5ba910e_abs 8526ms
+[eval.longmemeval] 44/313 (14%) a96c20ee_abs
+[longmemeval] a96c20ee_abs 9685ms
+[eval.longmemeval] 45/313 (14%) ba358f49_abs
+[longmemeval] ba358f49_abs 8451ms
+[eval.longmemeval] 46/313 (14%) 09ba9854_abs
+[longmemeval] 09ba9854_abs 9720ms
+[eval.longmemeval] 47/313 (15%) gpt4_59149c77
+[longmemeval] gpt4_59149c77 9377ms
+[eval.longmemeval] 48/313 (15%) gpt4_f49edff3
+[longmemeval] gpt4_f49edff3 8861ms
+[eval.longmemeval] 49/313 (15%) 71017276
+[longmemeval] 71017276 8144ms
+[eval.longmemeval] 50/313 (15%) b46e15ed
+[longmemeval] b46e15ed 10740ms
+[eval.longmemeval] 51/313 (16%) gpt4_fa19884c
+[longmemeval] gpt4_fa19884c 9566ms
+[eval.longmemeval] 52/313 (16%) 0bc8ad92
+[longmemeval] 0bc8ad92 8224ms
+[eval.longmemeval] 53/313 (16%) af082822
+[longmemeval] af082822 8845ms
+[eval.longmemeval] 54/313 (17%) gpt4_4929293a
+[longmemeval] gpt4_4929293a 8999ms
+[eval.longmemeval] 55/313 (17%) gpt4_b5700ca9
+[longmemeval] gpt4_b5700ca9 8517ms
+[eval.longmemeval] 56/313 (17%) 9a707b81
+[longmemeval] 9a707b81 11474ms
+[eval.longmemeval] 57/313 (18%) gpt4_1d4ab0c9
+[longmemeval] gpt4_1d4ab0c9 9724ms
+[eval.longmemeval] 58/313 (18%) gpt4_e072b769
+[longmemeval] gpt4_e072b769 9836ms
+[eval.longmemeval] 59/313 (18%) 0db4c65d
+[longmemeval] 0db4c65d 10030ms
+[eval.longmemeval] 60/313 (19%) gpt4_1d80365e
+[longmemeval] gpt4_1d80365e 8546ms
+[eval.longmemeval] 61/313 (19%) gpt4_7f6b06db
+[longmemeval] gpt4_7f6b06db 13387ms
+[eval.longmemeval] 62/313 (19%) gpt4_6dc9b45b
+[longmemeval] gpt4_6dc9b45b 7850ms
+[eval.longmemeval] 63/313 (20%) gpt4_8279ba02
+[longmemeval] gpt4_8279ba02 8078ms
+[eval.longmemeval] 64/313 (20%) gpt4_18c2b244
+[longmemeval] gpt4_18c2b244 11181ms
+[eval.longmemeval] 65/313 (20%) gpt4_a1b77f9c
+[longmemeval] gpt4_a1b77f9c 11743ms
+[eval.longmemeval] 66/313 (21%) gpt4_1916e0ea
+[longmemeval] gpt4_1916e0ea 10307ms
+[eval.longmemeval] 67/313 (21%) gpt4_7a0daae1
+[longmemeval] gpt4_7a0daae1 10266ms
+[gbrain chunker] lua: semantic parsing unavailable (Parsing failed); falling back to text chunks for every .lua file — code-def/code-callers will return 0 for this language. First seen: fence.lua
+[eval.longmemeval] 68/313 (21%) gpt4_468eb063
+[longmemeval] gpt4_468eb063 67237ms
+[eval.longmemeval] 69/313 (22%) gpt4_7abb270c
+[longmemeval] gpt4_7abb270c 9937ms
+[eval.longmemeval] 70/313 (22%) gpt4_1e4a8aeb
+[longmemeval] gpt4_1e4a8aeb 10224ms
+[eval.longmemeval] 71/313 (22%) gpt4_4fc4f797
+[longmemeval] gpt4_4fc4f797 9237ms
+[eval.longmemeval] 72/313 (23%) 4dfccbf7
+[longmemeval] 4dfccbf7 9619ms
+[eval.longmemeval] 73/313 (23%) gpt4_61e13b3c
+[longmemeval] gpt4_61e13b3c 8734ms
+[eval.longmemeval] 74/313 (23%) gpt4_45189cb4
+[longmemeval] gpt4_45189cb4 11564ms
+[eval.longmemeval] 75/313 (23%) 2ebe6c90
+[longmemeval] 2ebe6c90 7390ms
+[eval.longmemeval] 76/313 (24%) gpt4_e061b84f
+[longmemeval] gpt4_e061b84f 8165ms
+[eval.longmemeval] 77/313 (24%) 370a8ff4
+[longmemeval] 370a8ff4 8723ms
+[eval.longmemeval] 78/313 (24%) gpt4_d6585ce8
+[longmemeval] gpt4_d6585ce8 9578ms
+[eval.longmemeval] 79/313 (25%) gpt4_4ef30696
+[longmemeval] gpt4_4ef30696 8934ms
+[eval.longmemeval] 80/313 (25%) gpt4_ec93e27f
+[longmemeval] gpt4_ec93e27f 8361ms
+[eval.longmemeval] 81/313 (25%) 6e984301
+[longmemeval] 6e984301 8762ms
+[eval.longmemeval] 82/313 (26%) 8077ef71
+[longmemeval] 8077ef71 9272ms
+[eval.longmemeval] 83/313 (26%) gpt4_f420262c
+[longmemeval] gpt4_f420262c 12941ms
+[eval.longmemeval] 84/313 (26%) gpt4_8e165409
+[longmemeval] gpt4_8e165409 7876ms
+[eval.longmemeval] 85/313 (27%) gpt4_74aed68e
+[longmemeval] gpt4_74aed68e 9863ms
+[eval.longmemeval] 86/313 (27%) bcbe585f
+[longmemeval] bcbe585f 8881ms
+[eval.longmemeval] 87/313 (27%) gpt4_21adecb5
+[longmemeval] gpt4_21adecb5 8805ms
+[eval.longmemeval] 88/313 (28%) 5e1b23de
+[longmemeval] 5e1b23de 8414ms
+[eval.longmemeval] 89/313 (28%) gpt4_98f46fc6
+[longmemeval] gpt4_98f46fc6 8214ms
+[eval.longmemeval] 90/313 (28%) gpt4_af6db32f
+[longmemeval] gpt4_af6db32f 7942ms
+[eval.longmemeval] 91/313 (29%) eac54adc
+[longmemeval] eac54adc 9273ms
+[eval.longmemeval] 92/313 (29%) gpt4_7ddcf75f
+[longmemeval] gpt4_7ddcf75f 7651ms
+[eval.longmemeval] 93/313 (29%) gpt4_a2d1d1f6
+[longmemeval] gpt4_a2d1d1f6 7334ms
+[eval.longmemeval] 94/313 (30%) gpt4_85da3956
+[longmemeval] gpt4_85da3956 7854ms
+rc=137
+[longmemeval] resume: 281 already done; 219/500 remaining
+[longmemeval] judge backfill: 0 row(s) to judge from their stored hypothesis; 281 verdict(s) stand
+[longmemeval] judge: openai:gpt-4o, 219 live + 0 backfill question(s), estimated judge spend ~$0.4855 (cap $10.00)
+[longmemeval] estimated 20-60 minutes for 219 questions; use --limit N for shorter runs
+[longmemeval] connecting in-memory brain...
+[longmemeval] starting (questions: 219, model: anthropic:claude-sonnet-4-6, mode: balanced, reranker: on, autocut: off, expansion: off, budget: legacy, embedder: openai:text-embedding-3-large@1536, top-k: 5, trajectory: off, retrieval_config_hash: 0d5ee2baf7b5)
+  Setting up brain schema (v166)...
+  161 migration(s) applied
+[longmemeval] embed cache: $M6_DIR/embed-cache.sqlite (openai:text-embedding-3-large@1536, 107606 rows)
+[eval.longmemeval] start
+[eval.longmemeval] 1/219 (0%) gpt4_b0863698
+[longmemeval] gpt4_b0863698 10692ms
+[eval.longmemeval] 2/219 (0%) gpt4_68e94287
+[longmemeval] gpt4_68e94287 8823ms
+[eval.longmemeval] 3/219 (1%) gpt4_e414231e
+[longmemeval] gpt4_e414231e 9063ms
+[eval.longmemeval] 4/219 (1%) gpt4_7ca326fa
+[longmemeval] gpt4_7ca326fa 10152ms
+[eval.longmemeval] 5/219 (2%) gpt4_7bc6cf22
+[longmemeval] gpt4_7bc6cf22 7034ms
+[eval.longmemeval] 6/219 (2%) 2ebe6c92
+[longmemeval] 2ebe6c92 6998ms
+[eval.longmemeval] 7/219 (3%) gpt4_e061b84g
+[longmemeval] gpt4_e061b84g 7956ms
+[eval.longmemeval] 8/219 (3%) 71017277
+[longmemeval] 71017277 8240ms
+[eval.longmemeval] 9/219 (4%) b46e15ee
+[longmemeval] b46e15ee 7602ms
+[eval.longmemeval] 10/219 (4%) gpt4_d6585ce9
+[longmemeval] gpt4_d6585ce9 9001ms
+[eval.longmemeval] 11/219 (5%) gpt4_1e4a8aec
+[longmemeval] gpt4_1e4a8aec 6654ms
+[eval.longmemeval] 12/219 (5%) gpt4_f420262d
+[longmemeval] gpt4_f420262d 8860ms
+[eval.longmemeval] 13/219 (5%) gpt4_59149c78
+[longmemeval] gpt4_59149c78 8949ms
+[eval.longmemeval] 14/219 (6%) gpt4_e414231f
+[longmemeval] gpt4_e414231f 10506ms
+[eval.longmemeval] 15/219 (6%) gpt4_4929293b
+[longmemeval] gpt4_4929293b 9056ms
+[eval.longmemeval] 16/219 (7%) gpt4_468eb064
+[longmemeval] gpt4_468eb064 9265ms
+[eval.longmemeval] 17/219 (7%) gpt4_fa19884d
+[longmemeval] gpt4_fa19884d 9761ms
+[eval.longmemeval] 18/219 (8%) 9a707b82
+[longmemeval] 9a707b82 8644ms
+[eval.longmemeval] 19/219 (8%) eac54add
+[longmemeval] eac54add 10164ms
+[eval.longmemeval] 20/219 (9%) 4dfccbf8
+[longmemeval] 4dfccbf8 9420ms
+[eval.longmemeval] 21/219 (9%) 0bc8ad93
+[longmemeval] 0bc8ad93 10139ms
+[eval.longmemeval] 22/219 (10%) 6e984302
+[longmemeval] 6e984302 8457ms
+[eval.longmemeval] 23/219 (10%) gpt4_8279ba03
+[longmemeval] gpt4_8279ba03 8029ms
+[eval.longmemeval] 24/219 (10%) gpt4_b5700ca0
+[longmemeval] gpt4_b5700ca0 7464ms
+[eval.longmemeval] 25/219 (11%) gpt4_68e94288
+[longmemeval] gpt4_68e94288 6891ms
+[eval.longmemeval] 26/219 (11%) gpt4_2655b836
+[longmemeval] gpt4_2655b836 9175ms
+[eval.longmemeval] 27/219 (12%) gpt4_2487a7cb
+[longmemeval] gpt4_2487a7cb 9383ms
+[eval.longmemeval] 28/219 (12%) gpt4_76048e76
+[longmemeval] gpt4_76048e76 8367ms
+[eval.longmemeval] 29/219 (13%) gpt4_2312f94c
+[longmemeval] gpt4_2312f94c 7612ms
+[eval.longmemeval] 30/219 (13%) 0bb5a684
+[longmemeval] 0bb5a684 7946ms
+[eval.longmemeval] 31/219 (14%) 08f4fc43
+[longmemeval] 08f4fc43 9472ms
+[eval.longmemeval] 32/219 (14%) 2c63a862
+[longmemeval] 2c63a862 10022ms
+[eval.longmemeval] 33/219 (15%) gpt4_385a5000
+[longmemeval] gpt4_385a5000 10899ms
+[eval.longmemeval] 34/219 (15%) 2a1811e2
+[longmemeval] 2a1811e2 9520ms
+[eval.longmemeval] 35/219 (15%) bbf86515
+[longmemeval] bbf86515 9171ms
+[eval.longmemeval] 36/219 (16%) gpt4_5dcc0aab
+[longmemeval] gpt4_5dcc0aab 8160ms
+[eval.longmemeval] 37/219 (16%) gpt4_0b2f1d21
+[longmemeval] gpt4_0b2f1d21 11161ms
+[eval.longmemeval] 38/219 (17%) f0853d11
+[longmemeval] f0853d11 8247ms
+[eval.longmemeval] 39/219 (17%) gpt4_6ed717ea
+[longmemeval] gpt4_6ed717ea 7954ms
+[eval.longmemeval] 40/219 (18%) gpt4_70e84552
+[longmemeval] gpt4_70e84552 8351ms
+[eval.longmemeval] 41/219 (18%) a3838d2b
+[longmemeval] a3838d2b 11632ms
+[eval.longmemeval] 42/219 (19%) gpt4_93159ced
+[longmemeval] gpt4_93159ced 7521ms
+[eval.longmemeval] 43/219 (19%) gpt4_2d58bcd6
+[longmemeval] gpt4_2d58bcd6 7793ms
+[eval.longmemeval] 44/219 (20%) gpt4_65aabe59
+[longmemeval] gpt4_65aabe59 13113ms
+[eval.longmemeval] 45/219 (20%) 982b5123
+[longmemeval] 982b5123 9405ms
+[eval.longmemeval] 46/219 (21%) b9cfe692
+[longmemeval] b9cfe692 7889ms
+[eval.longmemeval] 47/219 (21%) gpt4_4edbafa2
+[longmemeval] gpt4_4edbafa2 7069ms
+[eval.longmemeval] 48/219 (21%) c8090214
+[longmemeval] c8090214 8629ms
+[eval.longmemeval] 49/219 (22%) gpt4_483dd43c
+[longmemeval] gpt4_483dd43c 9088ms
+[eval.longmemeval] 50/219 (22%) e4e14d04
+[longmemeval] e4e14d04 8850ms
+[eval.longmemeval] 51/219 (23%) c9f37c46
+[longmemeval] c9f37c46 9224ms
+[eval.longmemeval] 52/219 (23%) gpt4_2c50253f
+[longmemeval] gpt4_2c50253f 8672ms
+[eval.longmemeval] 53/219 (24%) dcfa8644
+[longmemeval] dcfa8644 8812ms
+[eval.longmemeval] 54/219 (24%) gpt4_b4a80587
+[longmemeval] gpt4_b4a80587 11525ms
+[eval.longmemeval] 55/219 (25%) gpt4_9a159967
+[longmemeval] gpt4_9a159967 11695ms
+[eval.longmemeval] 56/219 (25%) cc6d1ec1
+[longmemeval] cc6d1ec1 7584ms
+[eval.longmemeval] 57/219 (26%) gpt4_8c8961ae
+[longmemeval] gpt4_8c8961ae 8289ms
+[eval.longmemeval] 58/219 (26%) gpt4_d9af6064
+[longmemeval] gpt4_d9af6064 7941ms
+[eval.longmemeval] 59/219 (26%) gpt4_7de946e7
+[longmemeval] gpt4_7de946e7 8114ms
+[eval.longmemeval] 60/219 (27%) d01c6aa8
+[longmemeval] d01c6aa8 7759ms
+[eval.longmemeval] 61/219 (27%) 993da5e2
+[longmemeval] 993da5e2 9386ms
+[eval.longmemeval] 62/219 (28%) a3045048
+[longmemeval] a3045048 8522ms
+[eval.longmemeval] 63/219 (28%) gpt4_d31cdae3
+[longmemeval] gpt4_d31cdae3 9972ms
+[eval.longmemeval] 64/219 (29%) gpt4_cd90e484
+[longmemeval] gpt4_cd90e484 11459ms
+[eval.longmemeval] 65/219 (29%) gpt4_88806d6e
+[longmemeval] gpt4_88806d6e 8386ms
+[eval.longmemeval] 66/219 (30%) gpt4_4cd9eba1
+[longmemeval] gpt4_4cd9eba1 8223ms
+[eval.longmemeval] 67/219 (30%) gpt4_93f6379c
+[longmemeval] gpt4_93f6379c 10869ms
+[eval.longmemeval] 68/219 (31%) b29f3365
+[longmemeval] b29f3365 9808ms
+[eval.longmemeval] 69/219 (31%) gpt4_2f56ae70
+[longmemeval] gpt4_2f56ae70 8822ms
+[eval.longmemeval] 70/219 (31%) 6613b389
+[longmemeval] 6613b389 9826ms
+[eval.longmemeval] 71/219 (32%) gpt4_78cf46a3
+[longmemeval] gpt4_78cf46a3 10292ms
+[eval.longmemeval] 72/219 (32%) gpt4_0a05b494
+[longmemeval] gpt4_0a05b494 12057ms
+[eval.longmemeval] 73/219 (33%) gpt4_1a1dc16d
+[longmemeval] gpt4_1a1dc16d 9883ms
+[eval.longmemeval] 74/219 (33%) gpt4_2f584639
+[longmemeval] gpt4_2f584639 10758ms
+[eval.longmemeval] 75/219 (34%) gpt4_213fd887
+[longmemeval] gpt4_213fd887 7687ms
+[eval.longmemeval] 76/219 (34%) gpt4_5438fa52
+[longmemeval] gpt4_5438fa52 10385ms
+[eval.longmemeval] 77/219 (35%) gpt4_c27434e8
+[longmemeval] gpt4_c27434e8 8168ms
+[eval.longmemeval] 78/219 (35%) gpt4_fe651585
+[longmemeval] gpt4_fe651585 7692ms
+[eval.longmemeval] 79/219 (36%) 8c18457d
+[longmemeval] 8c18457d 8235ms
+[eval.longmemeval] 80/219 (36%) gpt4_70e84552_abs
+[longmemeval] gpt4_70e84552_abs 8373ms
+[eval.longmemeval] 81/219 (36%) gpt4_93159ced_abs
+[longmemeval] gpt4_93159ced_abs 10297ms
+[eval.longmemeval] 82/219 (37%) 982b5123_abs
+[longmemeval] 982b5123_abs 6487ms
+[eval.longmemeval] 83/219 (37%) c8090214_abs
+[longmemeval] c8090214_abs 7981ms
+[eval.longmemeval] 84/219 (38%) gpt4_c27434e8_abs
+[longmemeval] gpt4_c27434e8_abs 8971ms
+[eval.longmemeval] 85/219 (38%) gpt4_fe651585_abs
+[longmemeval] gpt4_fe651585_abs 9449ms
+[eval.longmemeval] 86/219 (39%) 6a1eabeb
+[longmemeval] 6a1eabeb 8892ms
+[eval.longmemeval] 87/219 (39%) 6aeb4375
+[longmemeval] 6aeb4375 8182ms
+[eval.longmemeval] 88/219 (40%) 830ce83f
+[longmemeval] 830ce83f 10363ms
+[gbrain] content-sanity warn: chat/s-a8ad34100c (78305 bytes) — exceeds warn threshold, consider splitting
+[eval.longmemeval] 89/219 (40%) 852ce960
+[longmemeval] 852ce960 7813ms
+[eval.longmemeval] 90/219 (41%) 945e3d21
+[longmemeval] 945e3d21 11934ms
+[eval.longmemeval] 91/219 (41%) d7c942c3
+[longmemeval] d7c942c3 11688ms
+[eval.longmemeval] 92/219 (42%) 71315a70
+[longmemeval] 71315a70 8185ms
+[eval.longmemeval] 93/219 (42%) 89941a93
+[longmemeval] 89941a93 7490ms
+rc=137
+[longmemeval] resume: 374 already done; 126/500 remaining
+[longmemeval] judge backfill: 0 row(s) to judge from their stored hypothesis; 374 verdict(s) stand
+[longmemeval] judge: openai:gpt-4o, 126 live + 0 backfill question(s), estimated judge spend ~$0.2807 (cap $10.00)
+[longmemeval] estimated 20-60 minutes for 126 questions; use --limit N for shorter runs
+[longmemeval] connecting in-memory brain...
+[longmemeval] starting (questions: 126, model: anthropic:claude-sonnet-4-6, mode: balanced, reranker: on, autocut: off, expansion: off, budget: legacy, embedder: openai:text-embedding-3-large@1536, top-k: 5, trajectory: off, retrieval_config_hash: 0d5ee2baf7b5)
+  Setting up brain schema (v166)...
+  161 migration(s) applied
+[longmemeval] embed cache: $M6_DIR/embed-cache.sqlite (openai:text-embedding-3-large@1536, 107606 rows)
+[eval.longmemeval] start
+[eval.longmemeval] 1/126 (0%) ce6d2d27
+[longmemeval] ce6d2d27 14225ms
+[eval.longmemeval] 2/126 (1%) 9ea5eabc
+[longmemeval] 9ea5eabc 9096ms
+[eval.longmemeval] 3/126 (2%) 07741c44
+[longmemeval] 07741c44 7519ms
+[eval.longmemeval] 4/126 (3%) a1eacc2a
+[longmemeval] a1eacc2a 7475ms
+[eval.longmemeval] 5/126 (3%) 184da446
+[longmemeval] 184da446 7656ms
+[eval.longmemeval] 6/126 (4%) 031748ae
+[longmemeval] 031748ae 10207ms
+[eval.longmemeval] 7/126 (5%) 4d6b87c8
+[longmemeval] 4d6b87c8 10010ms
+[eval.longmemeval] 8/126 (6%) 0f05491a
+[longmemeval] 0f05491a 7965ms
+[eval.longmemeval] 9/126 (7%) 08e075c7
+[longmemeval] 08e075c7 8408ms
+[eval.longmemeval] 10/126 (7%) f9e8c073
+[longmemeval] f9e8c073 10777ms
+[eval.longmemeval] 11/126 (8%) 41698283
+[longmemeval] 41698283 7635ms
+[eval.longmemeval] 12/126 (9%) 2698e78f
+[longmemeval] 2698e78f 7856ms
+[eval.longmemeval] 13/126 (10%) b6019101
+[longmemeval] b6019101 9388ms
+[eval.longmemeval] 14/126 (11%) 45dc21b6
+[longmemeval] 45dc21b6 9412ms
+[eval.longmemeval] 15/126 (11%) 5a4f22c0
+[longmemeval] 5a4f22c0 6591ms
+[eval.longmemeval] 16/126 (12%) 6071bd76
+[longmemeval] 6071bd76 8092ms
+[eval.longmemeval] 17/126 (13%) e493bb7c
+[longmemeval] e493bb7c 7642ms
+[eval.longmemeval] 18/126 (14%) 618f13b2
+[longmemeval] 618f13b2 9584ms
+[eval.longmemeval] 19/126 (15%) 72e3ee87
+[longmemeval] 72e3ee87 7534ms
+[eval.longmemeval] 20/126 (15%) c4ea545c
+[longmemeval] c4ea545c 9253ms
+[eval.longmemeval] 21/126 (16%) 01493427
+[longmemeval] 01493427 8630ms
+[eval.longmemeval] 22/126 (17%) 6a27ffc2
+[longmemeval] 6a27ffc2 8182ms
+[eval.longmemeval] 23/126 (18%) 2133c1b5
+[longmemeval] 2133c1b5 11513ms
+[eval.longmemeval] 24/126 (19%) 18bc8abd
+[longmemeval] 18bc8abd 9915ms
+[eval.longmemeval] 25/126 (19%) db467c8c
+[longmemeval] db467c8c 7444ms
+[eval.longmemeval] 26/126 (20%) 7a87bd0c
+[longmemeval] 7a87bd0c 8681ms
+[eval.longmemeval] 27/126 (21%) e61a7584
+[longmemeval] e61a7584 8451ms
+[eval.longmemeval] 28/126 (22%) 1cea1afa
+[longmemeval] 1cea1afa 9948ms
+[eval.longmemeval] 29/126 (23%) ed4ddc30
+[longmemeval] ed4ddc30 7407ms
+[eval.longmemeval] 30/126 (23%) 8fb83627
+[longmemeval] 8fb83627 8635ms
+[eval.longmemeval] 31/126 (24%) b01defab
+[longmemeval] b01defab 8194ms
+[eval.longmemeval] 32/126 (25%) 22d2cb42
+[longmemeval] 22d2cb42 8301ms
+[eval.longmemeval] 33/126 (26%) 0e4e4c46
+[longmemeval] 0e4e4c46 8576ms
+[eval.longmemeval] 34/126 (26%) 4b24c848
+[longmemeval] 4b24c848 8922ms
+[eval.longmemeval] 35/126 (27%) 7e974930
+[longmemeval] 7e974930 7201ms
+[eval.longmemeval] 36/126 (28%) 603deb26
+[longmemeval] 603deb26 8135ms
+[eval.longmemeval] 37/126 (29%) 59524333
+[longmemeval] 59524333 6662ms
+[eval.longmemeval] 38/126 (30%) 5831f84d
+[longmemeval] 5831f84d 9948ms
+[eval.longmemeval] 39/126 (30%) eace081b
+[longmemeval] eace081b 10049ms
+[eval.longmemeval] 40/126 (31%) affe2881
+[longmemeval] affe2881 8991ms
+[eval.longmemeval] 41/126 (32%) 50635ada
+[longmemeval] 50635ada 9052ms
+[eval.longmemeval] 42/126 (33%) e66b632c
+[longmemeval] e66b632c 8196ms
+[eval.longmemeval] 43/126 (34%) 0ddfec37
+[longmemeval] 0ddfec37 7820ms
+[eval.longmemeval] 44/126 (34%) f685340e
+[longmemeval] f685340e 7713ms
+[eval.longmemeval] 45/126 (35%) cc5ded98
+[longmemeval] cc5ded98 9622ms
+[eval.longmemeval] 46/126 (36%) dfde3500
+[longmemeval] dfde3500 10524ms
+[eval.longmemeval] 47/126 (37%) 69fee5aa
+[longmemeval] 69fee5aa 8922ms
+[eval.longmemeval] 48/126 (38%) 7401057b
+[longmemeval] 7401057b 10274ms
+[eval.longmemeval] 49/126 (38%) cf22b7bf
+[longmemeval] cf22b7bf 11338ms
+[eval.longmemeval] 50/126 (39%) a2f3aa27
+[longmemeval] a2f3aa27 9040ms
+[eval.longmemeval] 51/126 (40%) c7dc5443
+[longmemeval] c7dc5443 8174ms
+[eval.longmemeval] 52/126 (41%) 06db6396
+[longmemeval] 06db6396 8924ms
+[eval.longmemeval] 53/126 (42%) 3ba21379
+[longmemeval] 3ba21379 10296ms
+[eval.longmemeval] 54/126 (42%) 9bbe84a2
+[longmemeval] 9bbe84a2 8917ms
+[eval.longmemeval] 55/126 (43%) 10e09553
+[longmemeval] 10e09553 7536ms
+[eval.longmemeval] 56/126 (44%) dad224aa
+[longmemeval] dad224aa 10930ms
+[eval.longmemeval] 57/126 (45%) ba61f0b9
+[longmemeval] ba61f0b9 7787ms
+[eval.longmemeval] 58/126 (46%) 42ec0761
+[longmemeval] 42ec0761 9456ms
+[eval.longmemeval] 59/126 (46%) 5c40ec5b
+[longmemeval] 5c40ec5b 9102ms
+[eval.longmemeval] 60/126 (47%) c6853660
+[longmemeval] c6853660 9483ms
+[eval.longmemeval] 61/126 (48%) 26bdc477
+[longmemeval] 26bdc477 9734ms
+[eval.longmemeval] 62/126 (49%) 0977f2af
+[longmemeval] 0977f2af 8509ms
+[eval.longmemeval] 63/126 (50%) 6aeb4375_abs
+[longmemeval] 6aeb4375_abs 9373ms
+[eval.longmemeval] 64/126 (50%) 031748ae_abs
+[longmemeval] 031748ae_abs 8858ms
+[eval.longmemeval] 65/126 (51%) 2698e78f_abs
+[longmemeval] 2698e78f_abs 9975ms
+[eval.longmemeval] 66/126 (52%) 2133c1b5_abs
+[longmemeval] 2133c1b5_abs 10581ms
+[eval.longmemeval] 67/126 (53%) 0ddfec37_abs
+[longmemeval] 0ddfec37_abs 9996ms
+[eval.longmemeval] 68/126 (53%) f685340e_abs
+[longmemeval] f685340e_abs 9496ms
+[eval.longmemeval] 69/126 (54%) 89941a94
+[longmemeval] 89941a94 9580ms
+[eval.longmemeval] 70/126 (55%) 07741c45
+[longmemeval] 07741c45 7945ms
+[eval.longmemeval] 71/126 (56%) 7161e7e2
+[longmemeval] 7161e7e2 8029ms
+[eval.longmemeval] 72/126 (57%) c4f10528
+[longmemeval] c4f10528 9125ms
+[eval.longmemeval] 73/126 (57%) 89527b6b
+[longmemeval] 89527b6b 6950ms
+[eval.longmemeval] 74/126 (58%) e9327a54
+[longmemeval] e9327a54 7953ms
+[eval.longmemeval] 75/126 (59%) 4c36ccef
+[longmemeval] 4c36ccef 8861ms
+[eval.longmemeval] 76/126 (60%) 6ae235be
+[longmemeval] 6ae235be 9728ms
+[eval.longmemeval] 77/126 (61%) 7e00a6cb
+[longmemeval] 7e00a6cb 9692ms
+[eval.longmemeval] 78/126 (61%) 1903aded
+[longmemeval] 1903aded 9119ms
+[eval.longmemeval] 79/126 (62%) ceb54acb
+[longmemeval] ceb54acb 7867ms
+[eval.longmemeval] 80/126 (63%) f523d9fe
+[longmemeval] f523d9fe 8762ms
+[eval.longmemeval] 81/126 (64%) 0e5e2d1a
+[longmemeval] 0e5e2d1a 8709ms
+[eval.longmemeval] 82/126 (65%) fea54f57
+[longmemeval] fea54f57 8320ms
+[eval.longmemeval] 83/126 (65%) cc539528
+[longmemeval] cc539528 8766ms
+[eval.longmemeval] 84/126 (66%) dc439ea3
+[longmemeval] dc439ea3 8547ms
+[eval.longmemeval] 85/126 (67%) 18dcd5a5
+[longmemeval] 18dcd5a5 8483ms
+[eval.longmemeval] 86/126 (68%) 488d3006
+[longmemeval] 488d3006 8051ms
+[eval.longmemeval] 87/126 (69%) 58470ed2
+[longmemeval] 58470ed2 8592ms
+[eval.longmemeval] 88/126 (69%) 8cf51dda
+[longmemeval] 8cf51dda 9028ms
+[eval.longmemeval] 89/126 (70%) 1d4da289
+[longmemeval] 1d4da289 10543ms
+[eval.longmemeval] 90/126 (71%) 8464fc84
+[longmemeval] 8464fc84 8174ms
+[eval.longmemeval] 91/126 (72%) 8aef76bc
+[longmemeval] 8aef76bc 7599ms
+[eval.longmemeval] 92/126 (73%) 71a3fd6b
+[longmemeval] 71a3fd6b 8698ms
+[eval.longmemeval] 93/126 (73%) 2bf43736
+[longmemeval] 2bf43736 9192ms
+rc=137
+[longmemeval] resume: 467 already done; 33/500 remaining
+[longmemeval] judge backfill: 0 row(s) to judge from their stored hypothesis; 467 verdict(s) stand
+[longmemeval] judge: openai:gpt-4o, 33 live + 0 backfill question(s), estimated judge spend ~$0.0751 (cap $10.00)
+[longmemeval] estimated 20-60 minutes for 33 questions; use --limit N for shorter runs
+[longmemeval] connecting in-memory brain...
+[longmemeval] starting (questions: 33, model: anthropic:claude-sonnet-4-6, mode: balanced, reranker: on, autocut: off, expansion: off, budget: legacy, embedder: openai:text-embedding-3-large@1536, top-k: 5, trajectory: off, retrieval_config_hash: 0d5ee2baf7b5)
+  Setting up brain schema (v166)...
+  161 migration(s) applied
+[longmemeval] embed cache: $M6_DIR/embed-cache.sqlite (openai:text-embedding-3-large@1536, 107606 rows)
+[eval.longmemeval] start
+[eval.longmemeval] 1/33 (3%) 70b3e69b
+[longmemeval] 70b3e69b 10976ms
+[eval.longmemeval] 2/33 (6%) 8752c811
+[longmemeval] 8752c811 8552ms
+[eval.longmemeval] 3/33 (9%) 3249768e
+[longmemeval] 3249768e 9528ms
+[eval.longmemeval] 4/33 (12%) 1b9b7252
+[longmemeval] 1b9b7252 7030ms
+[eval.longmemeval] 5/33 (15%) 1568498a
+[longmemeval] 1568498a 8493ms
+[eval.longmemeval] 6/33 (18%) 6222b6eb
+[longmemeval] 6222b6eb 9775ms
+[eval.longmemeval] 7/33 (21%) e8a79c70
+[longmemeval] e8a79c70 8230ms
+[eval.longmemeval] 8/33 (24%) d596882b
+[longmemeval] d596882b 9602ms
+[eval.longmemeval] 9/33 (27%) e3fc4d6e
+[longmemeval] e3fc4d6e 10904ms
+[eval.longmemeval] 10/33 (30%) 51b23612
+[longmemeval] 51b23612 8316ms
+[eval.longmemeval] 11/33 (33%) 3e321797
+[longmemeval] 3e321797 12496ms
+[eval.longmemeval] 12/33 (36%) e982271f
+[longmemeval] e982271f 7587ms
+[eval.longmemeval] 13/33 (39%) 352ab8bd
+[longmemeval] 352ab8bd 7731ms
+[eval.longmemeval] 14/33 (42%) fca762bc
+[longmemeval] fca762bc 7098ms
+[eval.longmemeval] 15/33 (45%) 7a8d0b71
+[longmemeval] 7a8d0b71 8068ms
+[eval.longmemeval] 16/33 (48%) a40e080f
+[longmemeval] a40e080f 10814ms
+[eval.longmemeval] 17/33 (51%) 8b9d4367
+[longmemeval] 8b9d4367 8061ms
+[eval.longmemeval] 18/33 (54%) 5809eb10
+[longmemeval] 5809eb10 9026ms
+[eval.longmemeval] 19/33 (57%) 41275add
+[longmemeval] 41275add 10361ms
+[eval.longmemeval] 20/33 (60%) 4388e9dd
+[longmemeval] 4388e9dd 10832ms
+[eval.longmemeval] 21/33 (63%) 4baee567
+[longmemeval] 4baee567 8097ms
+[eval.longmemeval] 22/33 (66%) 561fabcd
+[longmemeval] 561fabcd 14068ms
+[eval.longmemeval] 23/33 (69%) b759caee
+[longmemeval] b759caee 7546ms
+[eval.longmemeval] 24/33 (72%) ac031881
+[longmemeval] ac031881 9964ms
+[eval.longmemeval] 25/33 (75%) 28bcfaac
+[longmemeval] 28bcfaac 7434ms
+[eval.longmemeval] 26/33 (78%) 16c90bf4
+[longmemeval] 16c90bf4 10893ms
+[eval.longmemeval] 27/33 (81%) c8f1aeed
+[longmemeval] c8f1aeed 7883ms
+[eval.longmemeval] 28/33 (84%) eaca4986
+[longmemeval] eaca4986 10021ms
+[eval.longmemeval] 29/33 (87%) c7cf7dfd
+[longmemeval] c7cf7dfd 8086ms
+[eval.longmemeval] 30/33 (90%) e48988bc
+[longmemeval] e48988bc 9324ms
+[eval.longmemeval] 31/33 (93%) 1de5cff2
+[longmemeval] 1de5cff2 7675ms
+[eval.longmemeval] 32/33 (96%) 65240037
+[longmemeval] 65240037 9306ms
+[eval.longmemeval] 33/33 (100%) 778164c6
+[longmemeval] 778164c6 12044ms
+[eval.longmemeval] 33/33 (100%) done
+
+[longmemeval] done. 33 questions in 312s. 0 errors.
+[longmemeval] recall_all@5 / recall_any@5 by question_type:
+  knowledge-update: all 72/72 (100.0%), any 72/72 (100.0%)
+  multi-session: all 111/121 (91.7%), any 121/121 (100.0%)
+  single-session-assistant: all 56/56 (100.0%), any 56/56 (100.0%)
+  single-session-preference: all 30/30 (100.0%), any 30/30 (100.0%)
+  single-session-user: all 64/64 (100.0%), any 64/64 (100.0%)
+  temporal-reasoning: all 117/127 (92.1%), any 127/127 (100.0%)
+  (excluded 30 abstention question(s); --include-abstention counts them)
+[longmemeval] embed cache: 7296 hits, 0 misses, 0 bypassed, 0 infra fault(s) (canonical 322dc4e6ba4e)
+[longmemeval] qa_accuracy: headline 86.4% (432/500; judge_errors 0, skipped_budget 0, reader_errors 0), excluding errors 86.4% (432/500), non-abstention 86.2% (n=470), abstention 27/30; ci95 [83.4%, 89.4%] (question-sampling only); judge openai:gpt-4o v=longmemeval-anscheck-v1+gbrain-boundary-v1; spend est $0.0751, this run $0.0231, all rows $0.3802
+[driver-r] exit 0
+rc=0
