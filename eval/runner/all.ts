@@ -24,7 +24,9 @@
  *   - a receipt that exists but fails validation → FAIL with the reason (C-07),
  *   - run_status 'skipped' → SKIPPED, never pass; skips fail the whole run
  *     unless `BRAINBENCH_ALLOW_SKIP=1` acknowledges them,
- *   - a completed receipt passes only with verdict 'pass'.
+ *   - a completed receipt passes only with verdict 'pass'; a report-only
+ *     category (registry gate) with another verdict is REPORTED, never a
+ *     pass and never a failure of the run.
  *
  * **Env vars passed through to every child:**
  *   - `BRAINBENCH_N`: read ONLY by multi-adapter.ts (paid tier). No other
@@ -42,7 +44,7 @@ import { randomUUID } from 'node:crypto';
 import { writeFileSync, mkdirSync, existsSync, statSync } from 'fs';
 import { basename, join } from 'path';
 import { loadReceipt, receiptPath, type Receipt } from './receipt.ts';
-import { REGISTRY, tiersFor, type CategoryEntry, type RegistryTier, type TierSelection } from '../registry.ts';
+import { REGISTRY, tiersFor, type CategoryEntry, type GateStatus, type RegistryTier, type TierSelection } from '../registry.ts';
 
 // ─── Category registry ───────────────────────────────────────────────
 // The rows live in eval/registry.ts. all.ts keeps each row's legacy alias
@@ -68,6 +70,8 @@ interface DispatchedCategory {
   timeoutMs?: number;
   /** Latency benchmark: runs alone, never alongside another category. */
   exclusive?: boolean;
+  /** report-only: a completed non-pass verdict is reported, not failed (registry gate). */
+  gate: GateStatus;
 }
 
 interface ListedCategory {
@@ -92,7 +96,7 @@ function toCategory(entry: CategoryEntry): Category {
   }
   if (entry.tier === 'none') throw new Error(`registry entry ${entry.id} is dispatched but has no tier`);
   const { kind: _kind, ...run } = entry.run;
-  return { ...base, ...run, kind: 'dispatched', tier: entry.tier === 'H' ? 'offline' : 'paid', registryTier: entry.tier, script: entry.script };
+  return { ...base, ...run, kind: 'dispatched', tier: entry.tier === 'H' ? 'offline' : 'paid', registryTier: entry.tier, script: entry.script, gate: entry.gate };
 }
 
 const CATEGORIES: readonly Category[] = REGISTRY.map(toCategory);
@@ -102,7 +106,7 @@ interface CategoryRun {
   name: string;
   tier: Tier;
   script: string;
-  status: 'pass' | 'fail' | 'skipped';
+  status: 'pass' | 'fail' | 'skipped' | 'reported';
   statusSource: 'receipt' | 'no-receipt' | 'timeout' | 'spawn-error';
   statusNote?: string;
   output: string;
@@ -178,7 +182,13 @@ export function loadFreshReceipt(path: string, startedAtMs: number): ReceiptLoad
 }
 
 /** Every dispatched runner must produce a fresh valid receipt; nothing else counts as a pass. */
-export function deriveStatus(load: ReceiptLoad): { status: 'pass' | 'fail' | 'skipped'; statusSource: 'receipt' | 'no-receipt'; statusNote: string } {
+/**
+ * A report-only category (registry gate) that completes with a non-pass
+ * verdict is 'reported': shown in the report, never failing the run. It is
+ * how a new category lands before the product bugs it finds are fixed. A
+ * missing, stale, invalid or errored receipt still fails.
+ */
+export function deriveStatus(load: ReceiptLoad, gate: GateStatus = 'gate'): { status: 'pass' | 'fail' | 'skipped' | 'reported'; statusSource: 'receipt' | 'no-receipt'; statusNote: string } {
   if (load.kind === 'missing') return { status: 'fail', statusSource: 'no-receipt', statusNote: 'no receipt written by this run' };
   if (load.kind === 'stale') return { status: 'fail', statusSource: 'no-receipt', statusNote: `stale receipt from ${load.mtime}; this run wrote none` };
   if (load.kind === 'invalid') return { status: 'fail', statusSource: 'receipt', statusNote: `invalid receipt: ${load.reason}` };
@@ -188,7 +198,7 @@ export function deriveStatus(load: ReceiptLoad): { status: 'pass' | 'fail' | 'sk
       // 'partial' verdicts count as fail at the aggregate: a category either
       // meets its own bar or it does not.
       return {
-        status: receipt.verdict === 'pass' ? 'pass' : 'fail',
+        status: receipt.verdict === 'pass' ? 'pass' : gate === 'report-only' ? 'reported' : 'fail',
         statusSource: 'receipt',
         statusNote: `verdict=${receipt.verdict}${receipt.publishable ? '' : ' (not publishable)'}`,
       };
@@ -249,7 +259,7 @@ function runCatSubprocess(cat: DispatchedCategory): Promise<CategoryRun> {
       clearTimeout(timer);
       const elapsedMs = Date.now() - started;
       const exitCode = code ?? -1;
-      const derived = deriveStatus(loadFreshReceipt(receiptFile, started));
+      const derived = deriveStatus(loadFreshReceipt(receiptFile, started), cat.gate);
       // eslint-disable-next-line no-console
       console.log(`  [done ] Cat ${cat.id}: ${derived.status.toUpperCase()} [${derived.statusSource}] (${Math.round(elapsedMs / 1000)}s) ${derived.statusNote}`);
       resolve({ ...base, ...derived, output, exitCode, elapsedMs });
@@ -318,13 +328,14 @@ function git(args: string): string {
   }
 }
 
-const STATUS_LABEL: Record<CategoryRun['status'], string> = { pass: '✓ PASS', fail: '✗ FAIL', skipped: '⤼ SKIPPED' };
+const STATUS_LABEL: Record<CategoryRun['status'], string> = { pass: '✓ PASS', fail: '✗ FAIL', skipped: '⤼ SKIPPED', reported: '◐ REPORTED (report-only)' };
 
 function buildReport(tier: TierSelection, runs: CategoryRun[], notRun: NotRun[]): string {
   const date = new Date().toISOString().slice(0, 10);
   const passed = runs.filter(r => r.status === 'pass').length;
   const failed = runs.filter(r => r.status === 'fail').length;
   const skipped = runs.filter(r => r.status === 'skipped').length;
+  const reported = runs.filter(r => r.status === 'reported').length;
 
   const lines: string[] = [];
   lines.push(`# BrainBench: ${date}`);
@@ -340,7 +351,7 @@ function buildReport(tier: TierSelection, runs: CategoryRun[], notRun: NotRun[])
   lines.push('## Summary');
   lines.push('');
   lines.push(
-    `${runs.length} of ${CATEGORIES.length} listed categories ran in tier "${tier}": ${passed} passed, ${failed} failed, ${skipped} skipped (a skipped category is never a pass). ${notRun.length} were not run; they are listed below with the reason.`,
+    `${runs.length} of ${CATEGORIES.length} listed categories ran in tier "${tier}": ${passed} passed, ${failed} failed, ${skipped} skipped (a skipped category is never a pass), ${reported} report-only with a non-pass verdict (reported, not failed). ${notRun.length} were not run; they are listed below with the reason.`,
   );
   lines.push('');
 

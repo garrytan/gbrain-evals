@@ -42,6 +42,65 @@ embedding cache and judges, with `voyage:rerank-2.5` on.
   reranker-on numbers beside the 439/500 and says the leak made no
   measurable difference to the published configuration.
 
+## [0.10.4] - 2026-09-30
+
+Three keyless categories from the evidence-delivery plan (section 5): temporal
+and as-of questions (N3), entity resolution (N4), and a visibility and access
+leak fuzz over every read operation (N6). Each has a registry entry with a
+semantic contract, gold from a seeded generator ledger (never from gbrain
+output), solvability and negative controls, presence assertions, receipt v2,
+tests and a dated report. All three land report-only, and each found gbrain
+bugs; they become gates once those are fixed. No paid calls.
+
+Measured on the pinned gbrain (`608a174`, 0.60.10.0) and on master (`f8d1e39`,
+0.60.11.0) as a copied overlay; every category gave identical numbers on both.
+
+- **N3 temporal and as-of** (`temporal-asof`,
+  [report](docs/benchmarks/2026-09-30-n3-temporal-asof.md)). 500 of 513 probes
+  pass: chronicle reads, search date bounds, effective-date precedence,
+  time-zone and daylight-saving edges and trajectories all 100%, range set-F1
+  1.000 over 179 probes, `ontology_get` as-of 99/104, last seen 76/83. The 13
+  misses are four gbrain bugs: `ontology_get` drops a late-recorded stint that
+  names the current value, `chronicle_last_seen` matches attendees by
+  substring and can report the previous day, and a non-ISO `query` date bound
+  such as `since: "May 5"` returns nothing instead of an error. The
+  forward job-state gold moved from `temporal.ts` into
+  `eval/generators/job-state.ts`, shared by Cat 4 and N3.
+- **N4 entity resolution** (`entity-resolution`,
+  [report](docs/benchmarks/2026-09-30-n4-entity-resolution.md)). On 136
+  single-source mentions the resolver merged wrongly once, refused all 17
+  mentions that must be refused and resolved every variant recorded in
+  `aliases:`; B-cubed F1 0.755 against 0.566 for exact-only, 0.480 for refusing
+  everything and 0.109 for merging everything. Typos, initials and prose-only
+  nicknames stay unresolved by design. Two bugs: another page's alias beats a
+  page's own exact name, and federated `recall({ entity })` merges two
+  different people who share a slug and drops `source_id`.
+- **N6 visibility and access leak fuzz** (`visibility-leak-fuzz`,
+  [report](docs/benchmarks/2026-09-30-n6-visibility-fuzz.md)). Enumerates
+  gbrain's read operations at run time (73) and calls each as stdio, serve-http
+  read, write and slug-bound clients and remote and local subagents, against
+  private pages, held Takes, private Facts, derived atoms and an ungranted
+  source, with public-twin and trusted-local controls and a never-written
+  ghost for existence oracles. 24 of the 25 read ops that return protected
+  content held, and 0 of 90 access gates were bypassed. One bug: `entity` and
+  `context_pack` show remote callers inbound links from private pages, with
+  the private slug and a sentence of its body. It also runs against the
+  `capy/evidence-delivery` branch (c0a72ab, same result); that head documents
+  `return_unit` and `assemble_evidence` but does not implement them yet. A
+  later run against the branch head with the code (732ee81) fuzzed every
+  `return_unit` value on `search`, `query`, `recall` and `assemble_evidence`,
+  with new presence controls for expansion (an expanded `delivered` block, and
+  delivered text spanning the stripped Takes and Facts rows): no expansion
+  path leaked.
+- **`--gbrain <checkout>[@ref]` / `GBRAIN_UNDER_TEST`** for the new runners
+  (`eval/runner/gbrain-under-test.ts`): extracts the ref with `git archive`
+  into `.gbrain-overlays/`, installs it, verifies the copy (tree hash, no
+  symlinks, CLI version) and records the loaded commit in the receipt's
+  product identity. Never a symlink.
+- **`all.ts` honors `gate: 'report-only'`.** A report-only category that
+  completes with a non-pass verdict is REPORTED, never a pass and never a
+  failure of the run; missing, stale, invalid and errored receipts still fail.
+
 ## [0.10.1] - 2026-09-29
 
 One release for all of the work that followed the September 28 audits and the
