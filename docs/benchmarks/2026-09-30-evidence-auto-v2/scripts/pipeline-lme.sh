@@ -4,7 +4,7 @@
 # Run from the gbrain-evals checkout; ED, GBRAIN_DIR and DS must be set.
 set -euo pipefail
 R="bun eval/runner/evidence-auto-v2.ts"
-WD=docs/benchmarks/2026-09-30-evidence-delivery/scripts/wd.sh
+WD=docs/benchmarks/2026-09-30-evidence-auto-v2/scripts/wd.sh
 mkdir -p $ED/logs
 step() { echo "$(date -u +%FT%TZ) $*" >> $ED/logs/pipeline.txt; }
 [ -f $ED/run-id ] || $R campaign-open --budget-usd 150 > $ED/run-id
