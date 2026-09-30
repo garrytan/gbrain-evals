@@ -62,7 +62,7 @@ import { existsSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Operation, OperationContext, AuthInfo, ParamDef } from 'gbrain/operations';
-import { generateN6World, ledgerFingerprint, N6_DEFAULT_SEED, N6_GENERATOR_VERSION, type N6ClassSpec, type N6Ledger, type N6Target } from '../generators/n6-visibility-gen.ts';
+import { generateN6World, ledgerFingerprint, personIntro, N6_DEFAULT_SEED, N6_GENERATOR_VERSION, type N6ClassSpec, type N6Ledger, type N6Target } from '../generators/n6-visibility-gen.ts';
 import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
 import { gbrainPin } from './gbrain-version.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
@@ -239,6 +239,12 @@ export interface ProbeRow {
   local_replay_detected?: boolean;
   /** This caller sees the public twin through the op. */
   twin_seen?: boolean;
+  /** Expansion probes only: the return_unit requested (`default` for assemble_evidence without one). */
+  expansion_unit?: string;
+  /** A response carried a `delivered` block whose unit is window, section or page: the stage actually expanded. */
+  expansion_applied?: boolean;
+  /** Fence classes: the twin response carried the person page's intro and its public Facts row, so the delivered text spans the fences the protected rows were stripped from. */
+  fence_neighbor_reached?: boolean;
   protected_error?: string;
   twin_error?: string;
 }
@@ -451,6 +457,21 @@ async function presence(engine: Awaited<ReturnType<typeof newEngine>>, ledger: N
   return { checks, sealed_chunk_violations: sealed };
 }
 
+const EXPANDED_UNITS = new Set(['window', 'section', 'page']);
+const FENCE_CLASSES = new Set(['private_take', 'private_fact']);
+
+/** Every `delivered.unit` in a response (the evidence-delivery stage's per-result block). */
+export function deliveredUnits(data: unknown, out: string[] = []): string[] {
+  if (Array.isArray(data)) { for (const x of data) deliveredUnits(x, out); return out; }
+  if (data && typeof data === 'object') {
+    for (const [k, v] of Object.entries(data as Record<string, unknown>)) {
+      if (k === 'delivered' && v && typeof v === 'object' && typeof (v as { unit?: unknown }).unit === 'string') out.push((v as { unit: string }).unit);
+      else deliveredUnits(v, out);
+    }
+  }
+  return out;
+}
+
 /** Why an op produced no signal-bearing probe, from its rows. */
 export function uncoveredReason(s: OpSummary, rows: readonly ProbeRow[]): string {
   if (s.unsupported) return s.unsupported;
@@ -574,6 +595,9 @@ async function runN6Hermetic(options: N6Options) {
             const asked = Object.values(protParams).filter((x): x is string => typeof x === 'string');
             const leak = scanLeaks(pr, forbiddenMarkers, forbiddenSlugs, asked, echoCredit(protParams, gh?.params, gr?.raw, forbiddenMarkers));
             let twinSeen: boolean;
+            const expansionUnit = v.enumOverride?.[0] === 'return_unit' ? v.enumOverride[1] : op.name === 'assemble_evidence' ? 'default' : undefined;
+            let expansionApplied = expansionUnit ? deliveredUnits(pr.data).some(u => EXPANDED_UNITS.has(u)) : false;
+            let fenceNeighbor: boolean | undefined;
             let oracle: string | null = null;
             let twinError: string | undefined;
             if (unit.cls) {
@@ -595,6 +619,15 @@ async function runN6Hermetic(options: N6Options) {
                 const b = normalizeForOracle(gr.ok ? gr.data : { error: gr.error_code }, mask);
                 if (a !== b) oracle = `protected: ${a.slice(0, 300)} | ghost: ${b.slice(0, 300)}`;
               }
+              if (expansionUnit && tr) {
+                expansionApplied ||= deliveredUnits(tr.data).some(u => EXPANDED_UNITS.has(u));
+                // The person page's intro sits above the Takes fence and the public Facts row inside the Facts fence, so a
+                // delivered block carrying both spans the rows the protected Take and Fact were stripped from.
+                if (FENCE_CLASSES.has(cls.class)) {
+                  const factTwin = ledger.classes.find(c => c.class === 'private_fact')!.twin_markers;
+                  fenceNeighbor = tr.raw.includes(personIntro(cls.protected.slug)) && factTwin.some(m => tr.raw.includes(m));
+                }
+              }
             } else {
               twinSeen = controlSeen(pr, twinMarkers, twinSlugs);
             }
@@ -608,7 +641,7 @@ async function runN6Hermetic(options: N6Options) {
             if (status === 'leak') summary.leaks++;
             if (status === 'oracle') summary.oracles++;
             if (control) summary.signal++;
-            rows.push({ ...base, status, control, local_replay_detected: localReplay.get(replayKey)!, twin_seen: twinSeen, ...(pr.ok ? {} : { protected_error: `${pr.error_code}: ${pr.raw.slice(0, 160)}` }), ...(twinError ? { twin_error: twinError } : {}) });
+            rows.push({ ...base, status, control, local_replay_detected: localReplay.get(replayKey)!, twin_seen: twinSeen, ...(pr.ok ? {} : { protected_error: `${pr.error_code}: ${pr.raw.slice(0, 160)}` }), ...(twinError ? { twin_error: twinError } : {}), ...(expansionUnit ? { expansion_unit: expansionUnit, expansion_applied: expansionApplied, ...(fenceNeighbor !== undefined ? { fence_neighbor_reached: fenceNeighbor } : {}) } : {}) });
           }
         }
       }
@@ -677,16 +710,22 @@ async function runN6Hermetic(options: N6Options) {
     ? [...['search', 'query', 'recall'].filter(n => !('return_unit' in (g.operations.find(o => o.name === n)?.params ?? {}))).map(n => `${n}.return_unit`),
       ...(g.operations.some(o => o.name === 'assemble_evidence') ? [] : ['assemble_evidence'])]
     : [];
-  const perUnit: Record<string, { probes: number; signal: number; leaks: number; oracles: number }> = {};
+  // Per op and requested unit. `applied` counts probes whose response shows an expanded block; `fence_probes` /
+  // `fence_neighbor_reached` count Takes/Facts twin probes and those whose delivered text reached the public rows
+  // beside the protected ones (the presence control for fenced rows, which sealed chunks keep out for every caller).
+  const perUnit: Record<string, { probes: number; signal: number; applied: number; fence_probes: number; fence_neighbor_reached: number; leaks: number; oracles: number }> = {};
   for (const r of exposedRows) {
-    const m = /^return_unit=(.+)$/.exec(r.variant);
-    const key = m ? m[1] : r.op === 'assemble_evidence' ? `assemble_evidence:${r.variant}` : null;
-    if (!key) continue;
-    perUnit[key] ??= { probes: 0, signal: 0, leaks: 0, oracles: 0 };
-    perUnit[key].probes++;
-    if (r.control) perUnit[key].signal++;
-    if (r.status === 'leak') perUnit[key].leaks++;
-    if (r.status === 'oracle') perUnit[key].oracles++;
+    if (!r.expansion_unit) continue;
+    const key = `${r.op}:${r.expansion_unit}`;
+    perUnit[key] ??= { probes: 0, signal: 0, applied: 0, fence_probes: 0, fence_neighbor_reached: 0, leaks: 0, oracles: 0 };
+    const u = perUnit[key];
+    u.probes++;
+    if (r.control) u.signal++;
+    if (r.expansion_applied) u.applied++;
+    if (r.fence_neighbor_reached !== undefined) u.fence_probes++;
+    if (r.fence_neighbor_reached) u.fence_neighbor_reached++;
+    if (r.status === 'leak') u.leaks++;
+    if (r.status === 'oracle') u.oracles++;
   }
   const metrics = {
     read_ops_total: readOps.length,
@@ -755,7 +794,8 @@ async function runN6Hermetic(options: N6Options) {
       metrics,
       presence: { seed_errors: seedErrors, checks: pres.checks, sealed_chunk_violations: pres.sealed_chunk_violations },
       by_caller: byCaller,
-      expansion_paths: { documented: expansionDocumented, present: expansionOps.length > 0, ops: expansionOps, documented_but_missing: expansionMissing, per_unit: perUnit },
+      expansion_paths: { documented: expansionDocumented, present: expansionOps.length > 0, ops: expansionOps, documented_but_missing: expansionMissing, per_unit: perUnit,
+        not_applied: exposedRows.filter(r => r.expansion_unit && !['chunk', 'default'].includes(r.expansion_unit) && !r.expansion_applied).map(r => r.probe_id) },
       ops: opSummaries,
       uncovered_ops: opSummaries.filter(s => s.signal === 0).map(s => ({ op: s.op, reason: uncoveredReason(s, rows.filter(r => r.op === s.op)) })),
       findings: findings.slice(0, 400),

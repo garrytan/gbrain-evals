@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import type { ParamDef } from 'gbrain/operations';
 import { generateN6World, ledgerFingerprint, N6_CLASSES, N6_DEFAULT_SEED } from '../../eval/generators/n6-visibility-gen.ts';
 import {
-  controlSeen, countOccurrences, echoCredit, hasSourceRow, isTargeted, namedSlugs, normalizeForOracle,
+  controlSeen, countOccurrences, deliveredUnits, echoCredit, hasSourceRow, isTargeted, namedSlugs, normalizeForOracle,
   runN6, scanLeaks, synthesizeParams, variantsFor, type CallOutcome,
 } from '../../eval/runner/n6-visibility-fuzz.ts';
 import { gbrainSpecFrom, parseGbrainSpec } from '../../eval/runner/gbrain-under-test.ts';
@@ -116,6 +116,11 @@ describe('N6 leak scoring', () => {
   test('returning everything leaks every class', () => {
     const everything = ok({ pages: ledger.pages.map(p => ({ slug: p.slug, source_id: p.source_id, body: p.content })) });
     for (const c of ledger.classes) expect(scanLeaks(everything, c.protected_markers, c.protected_slugs, []).content).not.toBeNull();
+  });
+
+  test('expansion is recognized only from delivered blocks', () => {
+    expect(deliveredUnits({ results: [{ chunk_text: 'x', delivered: { unit: 'page', chunk_ids: [1] } }, { delivered: { unit: 'chunk' } }] })).toEqual(['page', 'chunk']);
+    expect(deliveredUnits({ results: [{ chunk_text: 'x' }], delivery: { applied_unit: 'page' } })).toEqual([]);
   });
 
   test('the oracle compares masked shapes and ignores volatile fields', () => {

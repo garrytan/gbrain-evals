@@ -83,6 +83,9 @@ export interface N6Ledger {
   filler_slugs: string[];
 }
 
+/** First sentence of the person page, written just above its Takes and Facts fences. */
+export const personIntro = (slug: string) => `A person page for the ${slug} fixture.`;
+
 function mulberry32(seed: number): () => number {
   let a = seed >>> 0;
   return () => {
@@ -146,7 +149,7 @@ export function generateN6World(seed = N6_DEFAULT_SEED): N6Ledger {
     const holder = `${word(2)}-example`;
     const [pTake, tTake, pFact, tFact] = [marker(), marker(), marker(), marker()];
     const personBody = [
-      `A person page for the ${person} fixture. See [[${hub}]].`,
+      `${personIntro(person)} See [[${hub}]].`,
       '',
       '## Takes',
       '',
