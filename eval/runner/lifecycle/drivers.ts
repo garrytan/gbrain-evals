@@ -37,7 +37,11 @@ export interface Driver {
 export interface RunEnv {
   buildDir: string;
   env: NodeJS.ProcessEnv;
+  /** Arguments to `bun` before the subcommand; defaults to the build's src/cli.ts. */
+  entry?: string[];
 }
+
+const entryArgs = (run: RunEnv) => run.entry ?? [join(run.buildDir, 'src/cli.ts')];
 
 function parseMaybeJson(text: string): unknown {
   const t = text.trim();
@@ -64,7 +68,7 @@ function errorOf(data: unknown): string | undefined {
 export function runCli(run: RunEnv, args: string[], timeoutMs = 300_000): Promise<{ code: number; stdout: string; stderr: string; ms: number }> {
   const t0 = Date.now();
   return new Promise(resolve => {
-    const proc = spawn('bun', [join(run.buildDir, 'src/cli.ts'), ...args], { env: run.env, cwd: run.env.GBRAIN_HOME });
+    const proc = spawn('bun', [...entryArgs(run), ...args], { env: run.env, cwd: run.env.GBRAIN_HOME });
     let stdout = '';
     let stderr = '';
     proc.stdout.setEncoding('utf8');
@@ -134,7 +138,7 @@ export class McpStdioDriver implements Driver {
   }
 
   async start() {
-    const proc = spawn('bun', [join(this.run.buildDir, 'src/cli.ts'), 'serve'], { env: this.run.env, cwd: this.run.env.GBRAIN_HOME });
+    const proc = spawn('bun', [...entryArgs(this.run), 'serve'], { env: this.run.env, cwd: this.run.env.GBRAIN_HOME });
     this.proc = proc;
     this.started++;
     proc.stdout.setEncoding('utf8');
@@ -254,7 +258,7 @@ export class McpHttpDriver implements Driver {
   }
 
   async start() {
-    const proc = spawn('bun', [join(this.run.buildDir, 'src/cli.ts'), 'serve', '--http', '--port', String(this.port)], { env: this.run.env, cwd: this.run.env.GBRAIN_HOME });
+    const proc = spawn('bun', [...entryArgs(this.run), 'serve', '--http', '--port', String(this.port)], { env: this.run.env, cwd: this.run.env.GBRAIN_HOME });
     this.proc = proc;
     this.started++;
     this.sessionId = null;

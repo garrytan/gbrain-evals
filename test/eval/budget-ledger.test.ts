@@ -48,6 +48,16 @@ describe('pricing', () => {
     expect(routed).toMatchObject({ input: 3, output: 15 });
   });
 
+  test('dated snapshots use the family list price; Voyage rerank is priced from query and documents', () => {
+    expect(priceRequest('https://api.openai.com/v1/chat/completions', { model: 'gpt-4o-2024-08-06', max_tokens: 10, messages: [] }))
+      .toMatchObject({ kind: 'chat', input: 2.5, output: 10, maxOutputTokens: 10 });
+    const rerank = priceRequest('https://api.voyageai.com/v1/rerank', { model: 'rerank-2.5', query: 'abc', documents: ['defdef', 'ghi'] })!;
+    expect(rerank).toMatchObject({ kind: 'rerank', input: 0.05, output: 0, maxOutputTokens: 0 });
+    expect(rerank.inputTokens).toBe(Math.ceil((3 * 2 + 9) / 3) + 16);
+    expect(usageCost(rerank, { usage: { total_tokens: 2000 } })).toEqual({ usd: 2000 * 0.05 / 1e6, input_tokens: 2000, output_tokens: 0 });
+    expect(() => priceRequest('https://api.voyageai.com/v1/rerank', { model: 'rerank-9', query: 'q', documents: [] })).toThrow('no rerank price');
+  });
+
   test('usage reconciles from provider-reported tokens; missing usage is null', () => {
     const chat = priceRequest('https://api.anthropic.com/v1/messages', anthropicBody)!;
     expect(usageCost(chat, { usage: { input_tokens: 1000, output_tokens: 200 } })).toEqual({ usd: (1000 * 3 + 200 * 15) / 1e6, input_tokens: 1000, output_tokens: 200 });
