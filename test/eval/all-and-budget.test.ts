@@ -39,7 +39,7 @@ describe('CATEGORIES catalog', () => {
       '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '13b', '13b-sit', '14', '15', '18', '18b',
       '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30-33', '34', '35', '36', '36-live', 'N3', 'N4', 'N6',
       'multi-adapter', 'relational-ab', 'precisionmembench', 'longmemeval', 'longmemeval-answers',
-      'longmemeval-m-pilot', 'reading-notes', 'lifecycle', 'sealed-confirmation', 'situation-recall', 'shootout', 'qrels',
+      'longmemeval-m-pilot', 'reading-notes', 'lifecycle', 'evidence-delivery', 'sealed-confirmation', 'situation-recall', 'shootout', 'qrels',
     ]);
   });
 

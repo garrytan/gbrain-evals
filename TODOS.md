@@ -4,6 +4,12 @@ These items record unfinished work and its origin. An open box means the work ha
 
 The [August 31 audit](docs/audit/2026-08-31-eval-audit.md) explains the finding identifiers. The [September 9 retrieval refresh](docs/benchmarks/2026-09-09-retrieval-refresh.md) records the focused reruns accompanying the documentation rewrite. Do not treat that work as a rerun of every category below.
 
+## Evidence delivery follow-ups (2026-09-30 plan)
+
+- [ ] **Production `think` end to end with `think.return_unit`.** The evidence-delivery study measures a one-shot reader, not think; think's default does not flip in that plan.
+
+- [ ] **A curated-notes answer benchmark for `auto` on long pages.** Neither LongMemEval nor the sealed set has long curated pages, so `auto`'s curated-page branch has correctness tests only.
+
 ## Retrieval measurements
 
 - [x] **Correct the May LongMemEval score** (`longmemeval-01`). Completed 2026-08-31 without new API calls. Rescoring the original rows produced 83.40% strict `recall_all@5`; the old scoring reconciled to 488/500 = 97.60%, and all 500 answer sets matched the reference dataset. Keep the corrected score and old metric identifiable in the [report](docs/benchmarks/2026-05-07-longmemeval-s.md).

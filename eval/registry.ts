@@ -470,6 +470,16 @@ export const REGISTRY: readonly CategoryEntry[] = [
     contract: 'Follows one small vault through ingest, query, an embedding outage, corrections, reconcile, forget and restart, and scores what an agent can read at each checkpoint against the evaluator\'s own ledger. gbrain\'s doctor, integrity and invariant checks are never the answer key. It covers the scripted scenario only; timing-dependent counts can differ between repeat runs.',
   },
   {
+    id: 'evidence-delivery', legacy_alias: 'evidence-delivery', name: 'Evidence delivery ablation (LongMemEval-S, frozen reranked hits)',
+    family: 'reasoning', tier: 'P', script: 'eval/runner/evidence-delivery.ts',
+    run: { kind: 'listed', reason: 'preregistered paid protocol on a frozen evidence manifest at a pinned gbrain commit; every paid step joins one campaign budget-ledger run', command: 'bun eval/runner/evidence-delivery.ts e1 --frozen-dir <dir> --dataset <longmemeval_s_cleaned.json> --out-dir <dir> --set pilot --arms <arms> --budget-run-id <campaign run>' },
+    cost_estimate: { usd: 122, basis: 'bun eval/runner/evidence-delivery.ts costs: $122 at list prices for the whole program before retries ($153 with a 25% margin); the manifest caps the campaign at $400' },
+    receipt_path: 'docs/benchmarks/2026-09-30-evidence-delivery/',
+    headline: { metric: 'judged answer accuracy of each evidence-delivery policy against chunk and whole-page delivery, with provider-reported reader input tokens', denominator: '400 confirmatory LongMemEval-S questions (policies chosen on the 100-question pilot)' },
+    gate: 'report-only', evidence_maturity: 'synthetic-production-path',
+    contract: 'Freezes each question\'s reranked top-5 hits, their chunk text and every chunk of every hit page once at a pinned gbrain commit, then changes only the delivered evidence between arms (chunk, window, section, page, auto budgets, top-10 chunks, the harness page reader, and an agent that may fetch pages). The decision rule is an executable manifest committed before any paid run; LongMemEval-S is development data and the sealed set is the independent no-regression check.',
+  },
+  {
     id: 'sealed-confirmation', legacy_alias: 'sealed-confirmation', name: 'Sealed confirmation set (release decisions only)',
     family: 'retrieval', tier: 'P', script: 'eval/runner/sealed-confirmation.ts',
     run: { kind: 'listed', reason: 'private questions and labels; every run is a release decision that needs a committed preregistration', command: 'bun eval/runner/sealed-confirmation.ts run --questions <q.json> --out-dir <dir>' },
@@ -604,4 +614,4 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
 };
 
 /** Subdirectories of eval/runner/ holding helper modules only. */
-export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'evaluator', 'lifecycle', 'queries', 'stats'];
+export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'evaluator', 'evidence-delivery', 'lifecycle', 'queries', 'stats'];

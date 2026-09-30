@@ -67,6 +67,7 @@ export function openLabels(path: string, manifest: Manifest, log: { path: string
   if (!log.purpose.trim()) throw new Error('--purpose is required to open sealed labels');
   const c = commitment(manifest, 'labels.json');
   const bytes = assertCommitment(path, c);
+  if (log.action === 'score' && !log.decision_id?.trim()) throw new Error('--decision-id is required to open sealed labels for scoring (protocol: every scoring open is a named release decision)');
   appendAccessLog(log.path, { action: log.action, purpose: log.purpose, decision_id: log.decision_id, labels_sha256: c.sha256, run_sha256: log.run_sha256 });
   return JSON.parse(bytes.toString('utf8'));
 }

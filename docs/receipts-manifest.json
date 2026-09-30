@@ -3060,6 +3060,82 @@
       "artifact_sha256": "8f5493b62e67f2239939b8dc1e207f9fe76ddc7ee01e16bd2c2131258d9a179b",
       "status": "covered",
       "note": "Machine-local paths replaced by placeholders; no other bytes changed. The dataset and embedding cache are not committed; provenance-rerank.json records their hashes."
+    },
+    {
+      "claim_id": "evidence-delivery-decision-manifest",
+      "readme_anchor": "docs/benchmarks/2026-09-30-evidence-delivery.md: executable decision rule, committed before any paid run, gbrain pinned to 732ee811",
+      "artifact_path": "docs/benchmarks/2026-09-30-evidence-delivery/decision-manifest.json",
+      "artifact_sha256": "1b7e1fb19aadf0d75df289dcf8836023163a7914584705a7a70f3237b48709ea",
+      "status": "covered",
+      "expected": {
+        "/candidate_commits/gbrain": "732ee8116b6fd7d2de38824a54d35f57e4ea35c4",
+        "/family/holm_m": 6,
+        "/confirmatory/success/closure_fraction": 0.6,
+        "/token_rule/max_ratio": 0.5
+      },
+      "note": "The rule the decision code applies; changing it after the runs would change this hash."
+    },
+    {
+      "claim_id": "evidence-delivery-pilot-decision",
+      "readme_anchor": "docs/benchmarks/2026-09-30-evidence-delivery.md: Pilot: choosing two candidates",
+      "artifact_path": "docs/benchmarks/2026-09-30-evidence-delivery/results/pilot-decision.json",
+      "artifact_sha256": "e5f884355fbccb8d107f9e84348737b0d8c1bce1a69f01bca5d251948ae99718",
+      "status": "covered",
+      "expected": {
+        "/selection/advanced": [
+          "window1",
+          "window2"
+        ],
+        "/selection/reference_guard/ok": true,
+        "/test_retest/agree": 77,
+        "/test_retest/questions": 81,
+        "/agent_fetch/correct": 83
+      },
+      "note": "Output of the analyze command on the pilot rows."
+    },
+    {
+      "claim_id": "evidence-delivery-confirmatory-decision",
+      "readme_anchor": "docs/benchmarks/2026-09-30-evidence-delivery.md: Confirmatory: the decision",
+      "artifact_path": "docs/benchmarks/2026-09-30-evidence-delivery/results/confirmatory-decision.json",
+      "artifact_sha256": "7e17d3901746b68e33137c1774bb71d497fd4afa377f9f4701c8cef8a30155bf",
+      "status": "covered",
+      "expected": {
+        "/decision/outcome": "page_only",
+        "/decision/winner": null,
+        "/decision/gap/value": 108,
+        "/decision/chunk/correct": 253,
+        "/decision/page/correct": 361,
+        "/decision/candidates/0/correct": 285,
+        "/decision/candidates/1/correct": 292,
+        "/gpt4o/chunk/correct": 128,
+        "/gpt4o/window2/correct": 129
+      },
+      "note": "Output of the analyze command on the confirmatory rows, including the gpt-4o arms."
+    },
+    {
+      "claim_id": "evidence-delivery-e3-summary",
+      "readme_anchor": "docs/benchmarks/2026-09-30-evidence-delivery.md: Product path (E3)",
+      "artifact_path": "docs/benchmarks/2026-09-30-evidence-delivery/results/e3/e3-summary.json",
+      "artifact_sha256": "ccb71e0d954764abecb216a44ae7a07f3968497899f64492a16eb1ae83dca7fd",
+      "status": "covered",
+      "expected": {
+        "/questions": 100,
+        "/live_hits_match_frozen": 100,
+        "/arms/page/local_remote_match/true": 100,
+        "/arms/window2/product_path_match/false": 1
+      },
+      "note": "e3-summary over the 100 E3 records; pass is false because of one window2 query mismatch and one synthesized code-chunk header."
+    },
+    {
+      "claim_id": "evidence-delivery-ledger-summary",
+      "readme_anchor": "docs/benchmarks/2026-09-30-evidence-delivery.md: Reproduce and inspect (cost)",
+      "artifact_path": "docs/benchmarks/2026-09-30-evidence-delivery/results/ledger-summary.json",
+      "artifact_sha256": "b9cc9e64920f2cd8b954fce95c6676356c71e10c58a681f1cc5c89fb10b443a1",
+      "status": "covered",
+      "expected": {
+        "/total_usd": 112.4412
+      },
+      "note": "Summarized from the VM budget ledger of the campaign run."
     }
   ]
 }

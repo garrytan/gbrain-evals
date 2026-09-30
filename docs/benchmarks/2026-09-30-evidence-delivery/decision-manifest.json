@@ -1,0 +1,184 @@
+{
+  "schema": "gbrain-evals/evidence-delivery-decision/v1",
+  "id": "evidence-delivery-2026-09-30",
+  "committed_before_any_paid_run": true,
+  "status": "LongMemEval-S is development data (parent plan amendment 1). E1 results are development evidence even when a p-value is small. E2 on the sealed set is the one independent check, and it is a no-regression check.",
+  "plan": {
+    "source": "Evidence delivery plan, 2026-09-30, with the ten accepted amendments of the independent cross-model review",
+    "original_plan_sha256": "708bc3fedcc75a67f269ad77ae4d17d40fa1d7a98a673051d71d05ceff2aff4b",
+    "reviewed_plan_sha256": "7b72ccfeec3413f76489f7eb149b5d8999a6432a2aea51132c9ec28b4bfccc68",
+    "outside_review_sha256": "2a4fcdc89a65713d1633e608773871cd154b6e75ee76fb1ff142f996f0f01eb3"
+  },
+  "candidate_commits": {
+    "gbrain_repository": "garrytan/gbrain",
+    "gbrain_branch": "capy/evidence-delivery",
+    "gbrain": "732ee8116b6fd7d2de38824a54d35f57e4ea35c4",
+    "gbrain_rule": "gbrain is the full 40-hex head of the gbrain evidence-delivery PR. It is written here once, in its own commit, before the evidence freeze. Every paid subcommand refuses while it is null, when the frozen evidence manifest names another commit, or when this file differs from its committed version. A rebase of the gbrain PR re-runs the freeze and the fingerprint comparison; a changed fingerprint for any arm used in a decision re-runs E3 at minimum and is reported.",
+    "gbrain_evals_rule": "The gbrain-evals commit that contains this file; every paid row records it and the SHA-256 of this file."
+  },
+  "data": {
+    "longmemeval_s": { "file": "longmemeval_s_cleaned.json", "sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442", "questions": 500 },
+    "pilot": { "path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/subset100_seed20260929.txt", "sha256": "84e6f8d3a760346ea8f670854a8ab886f060e46cb398ed09044bacca586644b3", "questions": 100, "use": "policy selection only" },
+    "confirmatory": { "definition": "the 400 LongMemEval-S questions not in the pilot file", "questions": 400, "use": "every confirmatory test" },
+    "cluster_map": { "path": "docs/benchmarks/2026-09-30-evidence-delivery/cluster-map.json", "definition": "questions whose gold evidence sessions overlap form one cluster (union-find over answer_session_ids); 490 singletons and 5 pairs over all 500" },
+    "strata": ["single-session-user", "single-session-assistant", "single-session-preference", "multi-session", "temporal-reasoning", "knowledge-update"]
+  },
+  "retrieval": {
+    "frozen_once": "Hit lists are frozen once at candidate_commits.gbrain with R1's settings, stored with chunk text and chunk index, and used by every arm. Agreement with R1 (identical (slug, chunk_id, rank) lists out of 500) is reported. No row is dropped for differing from R1.",
+    "top_k": 5,
+    "comparator_top_k": 10,
+    "mode": "balanced",
+    "reranker": { "enabled": true, "model": "voyage:rerank-2.5", "candidates_per_query": 25 },
+    "autocut": false,
+    "expansion": false,
+    "trajectory": false,
+    "embedding": { "model": "openai:text-embedding-3-large", "dimensions": 1536 },
+    "r1_rows": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/reranker-on/r1/rows.ndjson",
+    "k10_rule": "The k10 comparator uses the limit-10 search. It is labeled shared_stream only on questions whose limit-10 top five equal the frozen top five; otherwise the question is reported as a separate stream for k10."
+  },
+  "reader": {
+    "model": "anthropic:claude-sonnet-4-6",
+    "route": "gbrain gateway chat, as R1",
+    "mode": "notes",
+    "system_sha256": "3db7ccbb12b2bda893755f560fdfe0d8d733253d38645d6d8124cb3ffb0887d0",
+    "prompt_version": "gbrain-lme-reader-v4-notes-fullsessions",
+    "max_tokens": 1024,
+    "temperature": "provider default (unset)",
+    "renderer": "renderChatBlock with maxSessionChars 60000, one <chat_session> block per delivered block, opaque session id and session date, no span markers",
+    "user_text": "buildReaderUserText({question, questionDate, rendered})",
+    "history": "one fresh request per question and arm; nothing carries across questions"
+  },
+  "judges": {
+    "primary": { "id": "gbrain", "implementation": "gbrain src/eval/longmemeval/judge.ts judgeRow", "model": "openai:gpt-4o", "snapshot": "gpt-4o-2024-08-06", "temperature": 0, "max_tokens": 16, "prompt_version": "longmemeval-anscheck-v1+gbrain-boundary-v1" },
+    "confirmation": { "id": "official", "implementation": "verbatim LongMemEval evaluate_qa.py get_anscheck_prompt", "model": "gpt-4o-2024-08-06", "temperature": 0, "max_tokens": 10 },
+    "rule": "Every decision is computed with the primary judge. The confirmation judge must not reverse it: for a success, the confirmation judge's candidate - chunk and page - chunk must both be positive. A primary success that the confirmation judge reverses is inconclusive. The confirmation judge never rescues a primary failure. No adjudication after the run."
+  },
+  "arms": [
+    { "id": "chunk", "role": "baseline", "source": "frozen", "unit": "chunk", "blocks": "per_chunk", "budget_tokens": null, "sets": ["pilot", "confirmatory"] },
+    { "id": "window1", "role": "candidate", "source": "product", "unit": "window", "return_window": 1, "blocks": "per_page", "budget_tokens": 6000, "sets": ["pilot"] },
+    { "id": "window2", "role": "candidate", "source": "product", "unit": "window", "return_window": 2, "blocks": "per_page", "budget_tokens": 6000, "sets": ["pilot"] },
+    { "id": "section", "role": "candidate", "source": "product", "unit": "section", "blocks": "per_page", "budget_tokens": 6000, "sets": ["pilot"] },
+    { "id": "page", "role": "reference", "source": "product", "unit": "page", "blocks": "per_page", "budget_tokens": 100000, "sets": ["pilot", "confirmatory"] },
+    { "id": "auto4k", "role": "candidate", "source": "product", "unit": "auto", "blocks": "per_page", "budget_tokens": 4000, "sets": ["pilot"] },
+    { "id": "auto6k", "role": "candidate", "source": "product", "unit": "auto", "blocks": "per_page", "budget_tokens": 6000, "sets": ["pilot"] },
+    { "id": "auto7_5k", "role": "candidate", "source": "product", "unit": "auto", "blocks": "per_page", "budget_tokens": 7500, "sets": ["pilot"] },
+    { "id": "k10", "role": "comparator", "source": "frozen", "unit": "chunk", "top_k": 10, "blocks": "per_chunk", "budget_tokens": 6000, "packing": "rank order, cl100k count of each chunk text, a chunk that does not fit is skipped and later chunks may still fit", "sets": ["pilot"] },
+    { "id": "page_legacy", "role": "control", "source": "harness", "unit": "page", "blocks": "per_page", "budget_tokens": null, "definition": "the gbrain harness reader's own evidence: the imported page markdown (frontmatter included) of each distinct hit page in rank order, exactly as generateAnswer builds it", "sets": ["pilot"] },
+    { "id": "agent_fetch", "role": "agent", "source": "frozen+product", "unit": "chunk", "blocks": "per_chunk", "sets": ["pilot"], "protocol": "the chunk arm's request plus one get_page tool; see agent_fetch" }
+  ],
+  "budget_note": "The product default search.return_budget_default is 6000 tokens, so window1, window2 and section are measured at the budget an agent gets when it names the unit without a budget. page uses a budget above any five-session total so only the 60000-character block cap binds, as in the harness. Budgets are the product's cl100k counts; the token rule below uses provider-reported input tokens.",
+  "family": {
+    "candidates": ["window1", "window2", "section", "auto4k", "auto6k", "auto7_5k"],
+    "holm_m": 6,
+    "untested_p": 1,
+    "not_in_family": { "page": "reference", "chunk": "baseline", "k10": "separately labeled resource-matched comparator; cannot win", "page_legacy": "parity and test-retest control", "agent_fetch": "changes the reader protocol; reported separately" }
+  },
+  "pilot_selection": {
+    "set": "pilot",
+    "advance": 2,
+    "eligibility": "mean provider-reported reader input tokens over the pilot questions is at most token_rule.max_ratio times page's mean on the same questions",
+    "rank_by": ["primary judge correct count, descending", "mean provider-reported reader input tokens, ascending", "family order"],
+    "fewer_eligible": "Only eligible candidates advance. With none eligible, the confirmatory run is chunk and page only and the outcome can be at best page_only.",
+    "no_retuning": "Candidates are frozen as listed. A policy changed after reading pilot errors is a new hypothesis and is not tested in this decision."
+  },
+  "confirmatory": {
+    "set": "confirmatory",
+    "arms": ["chunk", "page", "<advanced candidates>"],
+    "gap": {
+      "formula": "gap = correct(page) - correct(chunk) on the confirmatory questions, primary judge",
+      "established": "gap > 0 and the exact two-sided McNemar p for page against chunk is below alpha",
+      "not_established": "outcome no_demonstrated_benefit: there is no measured delivery gap on reranker-on lists to close; the default stays chunk"
+    },
+    "success": {
+      "closure": "correct(P) >= correct(chunk) + closure_fraction * gap, point estimate on counts",
+      "closure_fraction": 0.6,
+      "token_rule": "mean provider-reported reader input tokens of P <= max_ratio * mean of page, same questions, point estimate",
+      "max_ratio": 0.5,
+      "significance": "P - chunk > 0, and both the Holm-adjusted exact two-sided McNemar p and the Holm-adjusted cluster sign-flip two-sided p are below alpha, Holm over the full family with untested candidates at p = 1",
+      "alpha": 0.05,
+      "sign_flip_draws": 20000,
+      "bootstrap_draws": 20000,
+      "seed": 20260930,
+      "per_type": "for every stratum, losses - wins of P against chunk is at most max_net_loss; per-type clustered intervals are descriptive",
+      "max_net_loss": 2,
+      "confirmation_judge": "judges.rule"
+    },
+    "winner": "Among successful candidates: most primary-correct answers, then fewer mean provider input tokens, then family order.",
+    "descriptive": ["paired contrast mean(P - chunk - 0.6 * (page - chunk)) with a cluster bootstrap interval", "closure ratio", "token ratio mean and p95", "per-type gains and losses", "abstention subgroup", "reader latency and cost", "all 500 questions as secondary"]
+  },
+  "outcomes": {
+    "success": "one winner; the gbrain default may flip for transcript and chat sources only, and only if E2 passes",
+    "page_only": "gap established, no candidate succeeds: benefit only at full token cost; page ships as a documented opt-in and the default stays chunk",
+    "no_demonstrated_benefit": "gap not established; the feature stays opt-in and the report says so",
+    "inconclusive": "missing rows, an arm over the error limit, or the confirmation judge reversing a success; nothing flips"
+  },
+  "missing_and_errors": {
+    "retries": "provider calls retry inside the run (5 attempts with backoff); a question whose reader call still fails is re-run by resume, at most 3 resume passes",
+    "reader_error": "after the resume passes, a reader error counts as incorrect for both judges",
+    "judge_error": "a judge malfunction counts as incorrect for that judge",
+    "truncated_output": "a reader answer stopped by max_tokens is judged as written and counted",
+    "max_error_rate": 0.02,
+    "over_limit": "an arm with reader errors above max_error_rate on a set makes every decision that uses that arm on that set inconclusive",
+    "missing_rows": "a question missing from any arm used in a comparison blocks the comparison (inconclusive); the denominator never shrinks silently"
+  },
+  "token_rule": {
+    "max_ratio": 0.5,
+    "unit": "provider-reported reader input tokens (usage.input_tokens plus cache read and cache creation tokens when reported), summed over every turn for agent_fetch",
+    "reference": "the page arm on the same questions",
+    "reference_guard": "Before the confirmatory run, page's pilot mean provider input tokens must be within reference_guard_ratio of page_legacy's; otherwise the confirmatory run does not start and the difference is investigated.",
+    "reference_guard_ratio": 1.02,
+    "accounting": "Three counts are recorded separately for every row: product encoding tokens (cl100k, the product's own delivered.tokens or the same encoder for harness arms), serialized tool tokens (cl100k of the JSON the MCP tool would return, JSON.stringify(result, null, 2)), and provider-reported reader input tokens. Only the last one decides.",
+    "duplicate_bodies": "A candidate or page row whose delivered blocks repeat a block's text, or contain one block's text inside another, is flagged; a flagged page reference blocks the confirmatory run."
+  },
+  "e1b_agent_fetch": {
+    "set": "pilot",
+    "reader": "the same model, system text and chunk-arm user message",
+    "tool": { "name": "get_page", "input": "session_id, one of the opaque ids shown in the chunk blocks", "returns": "the page arm's delivered block for that session, rendered with the same renderer" },
+    "caps": { "max_fetches": 5, "max_turns": 6, "max_tokens_per_turn": 1024, "fetchable": "only the retrieved sessions" },
+    "records": ["tool calls", "turns", "provider input and output tokens summed over turns", "latency", "failures"],
+    "role": "reported separately; not in the Holm family"
+  },
+  "gpt4o": {
+    "reader_model": "openai:gpt-4o",
+    "set": "confirmatory",
+    "arms": ["chunk", "winner"],
+    "winner_rule": "the confirmatory winner; if there is none, the advanced candidate with more primary-correct answers on the confirmatory set (then fewer tokens, then family order), labeled as such",
+    "everything_else": "identical to the Sonnet arms except the model id",
+    "role": "reader-generalization check, descriptive"
+  },
+  "test_retest": {
+    "set": "pilot questions whose frozen top-5 list equals R1's",
+    "compare": "page_legacy answers against the stored R1 answers, primary judge; page_legacy's request bytes are also compared with R1's logged request bytes before any model call",
+    "role": "reader-noise estimate at provider-default temperature"
+  },
+  "e3": {
+    "when": "after pilot selection and before the E1 confirmatory run, for page and the advanced candidates; repeated for the final candidate before E2",
+    "deterministic": "for every arm used in a decision, the product's evidence for the frozen hit lists must match the frozen fingerprints; page must be byte-identical to the harness reader's evidence up to the classified parity differences reported by the parity check",
+    "live": "100 pilot questions, each in its own brain: the gbrain query operation through MCP stdio as a remote caller with return_unit set and expand: false (the frozen lists were retrieved without query expansion); hit-list drift against the frozen lists is reported; answers are scored from the exact serialized product evidence",
+    "pass": "zero fingerprint mismatches on questions whose live hit list equals the frozen one, zero protected-content findings, delivered-token counts equal to the frozen ones"
+  },
+  "e2": {
+    "set": "sealed-confirmation-v1, 150 questions over 30 personas (5 each)",
+    "arms": ["chunk", "winner"],
+    "run_only_if": "E1 outcome is success and E3 passes",
+    "bridge": "eval/runner/evidence-delivery/e2-bridge.ts: the same retrieval pins, the same frozen evidence construction and the same reader request as E1; only the evidence differs between arms",
+    "custody": "labels open once through openLabels with a non-empty decision id equal to this manifest's id plus the winner, and every open is logged",
+    "clusters": "haystack (persona)",
+    "judges": "primary gbrain judgeRow (abstention items routed with the _abs id suffix), confirmation the sealed protocol's official-prompt judge",
+    "pass": "winner - chunk >= -2 questions and the persona-clustered 95% bootstrap interval's upper bound >= 0, primary judge, and the confirmation judge's winner - chunk >= -2",
+    "reject": "winner - chunk < -2 or the interval's upper bound < 0, primary judge",
+    "inconclusive": "either arm has more than 3 reader errors, a question is missing, or the primary judge passes while the confirmation judge fails",
+    "max_errors": 3,
+    "min_delta": -2,
+    "bootstrap_draws": 20000,
+    "seed": 20260930,
+    "no_second_try": "No second winner, budget or setting may be tried on the sealed set after a reject or an inconclusive result."
+  },
+  "rollout_scope": "Any default flip is limited to transcript and chat sources, keeps an explicit opt-out and a tested kill switch, and carries candidate and config receipts.",
+  "budget": {
+    "ledger": "eval/runner/budget-ledger.ts; every paid request, including embeddings, reranks, judges and subprocess requests, is reserved and reconciled there",
+    "campaign_cap_usd": 400,
+    "program_cap_usd": 1000,
+    "campaign_run": "one shared ledger run opened for this campaign; every paid subcommand joins it with --budget-run-id, so the $400 cap binds across all of them"
+  }
+}
