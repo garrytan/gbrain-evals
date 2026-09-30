@@ -2,6 +2,56 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.3] - 2026-09-30
+
+The evidence-delivery study, preregistered before any paid run. gbrain is
+adding an opt-in stage that returns neighbors, sections or whole pages
+instead of bare chunks. This release adds the harness that will measure it;
+it contains no result.
+
+### Added
+
+- **An executable decision manifest**
+  (`docs/benchmarks/2026-09-30-evidence-delivery/decision-manifest.json`),
+  committed before any paid call. It fixes judge roles (gbrain judge primary,
+  official judge may not reverse), the gap and 60% closure formula, the 50%
+  provider-token rule, the six-candidate Holm family, pilot selection and
+  tie-breaks, clusters, error handling, the E2 pass/reject/inconclusive rule
+  and the gbrain commit pin. `eval/runner/evidence-delivery/decision.ts`
+  applies it; a keyless suite covers close wins, zero and negative gaps,
+  sparse types, judge disagreement, many-policy selection and failed calls.
+- **A power analysis** over the exact decision code. A candidate that closes
+  70% of the gap passes 65% to 82% of the time. The per-type rule fails even
+  a page-quality policy 12% to 24% of the time through reader noise, and E2
+  rejects a truly equal winner 6% to 20% of the time. Both rules are kept as
+  preregistered and flagged.
+- **A content-addressed frozen evidence manifest.** `freeze` stores each
+  question's reranked top-5 and top-10 hits with chunk text, every chunk of
+  every hit page, the harness page text and every arm's delivered evidence
+  with gbrain's fingerprint, plus code, parser and index hashes and the
+  agreement with R1.
+- **The E1 runner** (ten arms, the `get_page` agent arm, gpt-4o arms), with
+  three token counts per row and a byte-level check that the harness page
+  request reproduces R1's logged request before any model call.
+- **The E3 product-path check** over MCP stdio as a remote caller, with
+  gbrain's server spend joining the ledger through a preload, and **the E2
+  bridge**, which gives the sealed set the E1 reader instead of the sealed
+  runner's whole-session prompt.
+- `bun eval/runner/evidence-delivery.ts costs`: the paid program is estimated
+  at $122 ($153 with a retry margin) against a $400 campaign cap.
+- A $0.97 plumbing smoke against the WIP gbrain branch: 4 of 4 identical-list
+  questions reproduced R1's request bytes; the product `page` drops page
+  frontmatter and 9 of 24 blocks lose a paragraph break at chunk seams; MCP
+  `assemble_evidence` reproduced the local fingerprints.
+
+### Changed
+
+- The budget ledger prices dated model snapshots (`gpt-4o-2024-08-06`) at
+  their family's list price and prices Voyage rerank requests.
+- The sealed runner refuses to open labels for scoring without a decision id.
+- Lifecycle drivers accept an entry override so a server can run with a
+  preload.
+
 ## [0.10.2] - 2026-09-30
 
 The two reranker-on follow-ups from the LongMemEval opaque-id re-run. Both

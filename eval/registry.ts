@@ -449,7 +449,7 @@ export const REGISTRY: readonly CategoryEntry[] = [
     id: 'evidence-delivery', legacy_alias: 'evidence-delivery', name: 'Evidence delivery ablation (LongMemEval-S, frozen reranked hits)',
     family: 'reasoning', tier: 'P', script: 'eval/runner/evidence-delivery.ts',
     run: { kind: 'listed', reason: 'preregistered paid protocol on a frozen evidence manifest at a pinned gbrain commit; every paid step joins one campaign budget-ledger run', command: 'bun eval/runner/evidence-delivery.ts e1 --frozen-dir <dir> --dataset <longmemeval_s_cleaned.json> --out-dir <dir> --set pilot --arms <arms> --budget-run-id <campaign run>' },
-    cost_estimate: { usd: 150, basis: 'bun eval/runner/evidence-delivery.ts costs: about $150 at list prices for the whole program before retries; the manifest caps the campaign at $400' },
+    cost_estimate: { usd: 122, basis: 'bun eval/runner/evidence-delivery.ts costs: $122 at list prices for the whole program before retries ($153 with a 25% margin); the manifest caps the campaign at $400' },
     receipt_path: 'docs/benchmarks/2026-09-30-evidence-delivery/',
     headline: { metric: 'judged answer accuracy of each evidence-delivery policy against chunk and whole-page delivery, with provider-reported reader input tokens', denominator: '400 confirmatory LongMemEval-S questions (policies chosen on the 100-question pilot)' },
     gate: 'report-only', evidence_maturity: 'synthetic-production-path',
