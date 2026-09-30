@@ -68,12 +68,12 @@ export class Args {
   flag(name: string): boolean { return this.switches.has(name); }
 }
 
-function writeJson(path: string, value: unknown) {
+export function writeJson(path: string, value: unknown) {
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, JSON.stringify(value, null, 2) + '\n');
 }
 const log = (line: string) => process.stderr.write(line + '\n');
-const readJsonl = (path: string) => readFileSync(path, 'utf8').split('\n').filter(l => l.trim()).map(l => JSON.parse(l));
+export const readJsonl = (path: string) => readFileSync(path, 'utf8').split('\n').filter(l => l.trim()).map(l => JSON.parse(l));
 
 function manifestOrThrow() {
   const { manifest, sha256: sha } = loadDecisionManifest();
@@ -82,13 +82,14 @@ function manifestOrThrow() {
   return { manifest, sha };
 }
 
-function evalsCommit(): string {
+export function evalsCommit(): string {
   return execFileSync('git', ['-C', REPO_ROOT, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
 }
 
 /** The decision manifest must be committed and unchanged before any non-smoke paid call. */
-export function assertManifestCommitted(root = REPO_ROOT): void {
-  const rel = 'docs/benchmarks/2026-09-30-evidence-delivery/decision-manifest.json';
+export const DECISION_MANIFEST_REL = 'docs/benchmarks/2026-09-30-evidence-delivery/decision-manifest.json';
+
+export function assertManifestCommitted(root = REPO_ROOT, rel = DECISION_MANIFEST_REL): void {
   try { execFileSync('git', ['-C', root, 'ls-files', '--error-unmatch', rel], { stdio: 'pipe' }); }
   catch { throw new Error(`${rel} is not committed; commit the decision manifest before any paid run`); }
   const diff = execFileSync('git', ['-C', root, 'status', '--porcelain', '--', rel], { encoding: 'utf8' }).trim();
@@ -96,7 +97,9 @@ export function assertManifestCommitted(root = REPO_ROOT): void {
 }
 
 /** Budget options with the manifest's program cap unless one was given explicitly. */
-function budgetOptions(a: Args, m: DecisionManifest): BudgetOptions {
+export interface CampaignBudget { budget: { campaign_cap_usd: number; program_cap_usd: number; campaign_runner?: string } }
+
+export function budgetOptions(a: Args, m: CampaignBudget): BudgetOptions {
   const o = budgetOptionsFrom(a.argv);
   const explicit = a.get('--program-cap-usd') !== null || process.env.BRAINBENCH_PROGRAM_CAP_USD !== undefined;
   return { ...o, programCapUsd: explicit ? o.programCapUsd : m.budget.program_cap_usd };
@@ -106,7 +109,8 @@ function budgetOptions(a: Args, m: DecisionManifest): BudgetOptions {
  * Open the paid guard. Real runs must join the campaign run (the $400 plan cap
  * binds across every subcommand); smoke runs open their own run of at most $3.
  */
-export function paidGuard(a: Args, m: DecisionManifest, runner: string, estimateUsd: number) {
+export function paidGuard(a: Args, m: CampaignBudget, runner: string, estimateUsd: number, manifestRel = DECISION_MANIFEST_REL) {
+  const campaignRunner = m.budget.campaign_runner ?? CAMPAIGN_RUNNER;
   const smoke = a.flag('--smoke');
   const o = budgetOptions(a, m);
   if (smoke) {
@@ -114,26 +118,26 @@ export function paidGuard(a: Args, m: DecisionManifest, runner: string, estimate
     if (o.budgetUsd === null || o.budgetUsd > SMOKE_CAP_USD) throw new Error(`--smoke needs --budget-usd <= ${SMOKE_CAP_USD}`);
     return startPaidRun(`${runner}-smoke`, { ...o, estimateUsd: Math.min(estimateUsd, o.budgetUsd), log });
   }
-  assertManifestCommitted();
-  if (!o.runId) throw new Error(`join the campaign run with --budget-run-id (open it once with: bun eval/runner/evidence-delivery.ts campaign-open --budget-usd ${m.budget.campaign_cap_usd})`);
+  assertManifestCommitted(REPO_ROOT, manifestRel);
+  if (!o.runId) throw new Error(`join the campaign run with --budget-run-id (open it once with campaign-open --budget-usd ${m.budget.campaign_cap_usd})`);
   const ledger = JSON.parse(readFileSync(o.ledgerPath, 'utf8'));
   const run = ledger.runs.find((r: any) => r.run_id === o.runId);
-  if (run?.runner !== CAMPAIGN_RUNNER) throw new Error(`${o.runId} is not an ${CAMPAIGN_RUNNER} run`);
+  if (run?.runner !== campaignRunner) throw new Error(`${o.runId} is not an ${campaignRunner} run`);
   if (run.budget_usd > m.budget.campaign_cap_usd) throw new Error(`campaign run budget $${run.budget_usd} exceeds the manifest cap $${m.budget.campaign_cap_usd}`);
   return startPaidRun(runner, { ...o, estimateUsd, log });
 }
 
-async function gbrainFor(a: Args, requireEvidence = false): Promise<GbrainModules> {
+export async function gbrainFor(a: Args, requireEvidence = false): Promise<GbrainModules> {
   const g = await loadGbrain(resolveGbrainDir(a.get('--gbrain-dir')), { requireEvidence });
   configureGbrainGateway(g);
   return g;
 }
 
-function r1Rows(): Map<string, any> {
+export function r1Rows(): Map<string, any> {
   return new Map(readJsonl(join(R1_DIR, 'rows.ndjson')).filter((r: any) => r.question_id).map((r: any) => [r.question_id, r]));
 }
 
-function r1Calls(): Map<string, R1Call> {
+export function r1Calls(): Map<string, R1Call> {
   const lines = gunzipSync(readFileSync(join(R1_DIR, 'calls.ndjson.gz'))).toString('utf8').split('\n').filter(l => l.trim());
   const out = new Map<string, R1Call>();
   for (const l of lines) { const r = JSON.parse(l); if (r.lane === 'reader' && typeof r.question === 'string') out.set(r.question, { system: r.system, user: r.user }); }
@@ -286,7 +290,7 @@ async function cmdFreeze(a: Args) {
 }
 
 /** Merge freeze shards made at one gbrain commit (one process per embedding cache) into one frozen manifest. */
-async function cmdMergeFrozen(a: Args) {
+export async function cmdMergeFrozen(a: Args) {
   const out = resolve(a.need('--out-dir'));
   const from = (a.list('--from') ?? []).map(d => resolve(d));
   if (from.length < 1) throw new Error('--from needs the shard directories');
@@ -319,7 +323,7 @@ async function cmdMergeFrozen(a: Args) {
   process.stdout.write(JSON.stringify({ questions: merged.questions.size, frozen_manifest_sha256: merged.sha256 }) + '\n');
 }
 
-function e1Context(a: Args, g: GbrainModules, manifest: DecisionManifest, sha: string, set: string, readerModel: string): E1Context {
+export function e1Context(a: Args, g: GbrainModules, manifest: DecisionManifest, sha: string, set: string, readerModel: string): E1Context {
   const frozen = readFrozen(a.need('--frozen-dir'));
   const smoke = a.flag('--smoke');
   if (!smoke) {
@@ -515,7 +519,7 @@ async function cmdE2Score(a: Args) {
 }
 
 /** Keyless E3 summary against the manifest's pass rule, with the E1 frozen-evidence answers for the same questions. */
-async function cmdE3Summary(a: Args) {
+export async function cmdE3Summary(a: Args) {
   const records = readJsonl(a.need('--e3')) as Array<E3QuestionRecord & { scored?: Array<{ arm: string; primary: 0 | 1 | null; confirmation: 0 | 1 | null; provider_input: number }> }>;
   const arms = [...new Set(records.flatMap(r => r.arms.map(x => x.arm)))];
   const count = (f: (x: any) => unknown, arm: string, v: unknown) => records.filter(r => f(r.arms.find(x => x.arm === arm)) === v).length;

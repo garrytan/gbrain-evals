@@ -1,0 +1,467 @@
+{
+  "schema": "gbrain-evals/evidence-auto-v2-power/v1",
+  "decision_rule_sha256": "166a55a96b927572fe980ba7079b223a15e145d8007a5fd9e2b1e1e26af69bc5",
+  "note": "Simulated with decideE2V2 on 30 personas x 5 questions; persona random effect sd 0.8 on the logit scale; the arms share each question's latent draw plus independent reader noise; the confirmation judge flips 1% of verdicts. Sign-flip draws lowered to 2000 for speed.",
+  "cells": [
+    {
+      "chunk_accuracy": 0.6,
+      "true_delta": 0,
+      "reader_noise": 0.02,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.006,
+      "fail": 0.994,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.6,
+      "true_delta": 0.03,
+      "reader_noise": 0.02,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.13,
+      "fail": 0.87,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.6,
+      "true_delta": 0.05,
+      "reader_noise": 0.02,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.385,
+      "fail": 0.615,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.6,
+      "true_delta": 0.08,
+      "reader_noise": 0.02,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.741,
+      "fail": 0.259,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.6,
+      "true_delta": 0.1,
+      "reader_noise": 0.02,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.878,
+      "fail": 0.122,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.6,
+      "true_delta": 0.15,
+      "reader_noise": 0.02,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.993,
+      "fail": 0.007,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.7,
+      "true_delta": 0,
+      "reader_noise": 0.02,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.008,
+      "fail": 0.992,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.7,
+      "true_delta": 0.03,
+      "reader_noise": 0.02,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.143,
+      "fail": 0.857,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.7,
+      "true_delta": 0.05,
+      "reader_noise": 0.02,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.377,
+      "fail": 0.623,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.7,
+      "true_delta": 0.08,
+      "reader_noise": 0.02,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.735,
+      "fail": 0.265,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.7,
+      "true_delta": 0.1,
+      "reader_noise": 0.02,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.881,
+      "fail": 0.119,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.7,
+      "true_delta": 0.15,
+      "reader_noise": 0.02,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.988,
+      "fail": 0.012,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.8,
+      "true_delta": 0,
+      "reader_noise": 0.02,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.007,
+      "fail": 0.993,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.8,
+      "true_delta": 0.03,
+      "reader_noise": 0.02,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.144,
+      "fail": 0.856,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.8,
+      "true_delta": 0.05,
+      "reader_noise": 0.02,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.375,
+      "fail": 0.625,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.8,
+      "true_delta": 0.08,
+      "reader_noise": 0.02,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.722,
+      "fail": 0.278,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.8,
+      "true_delta": 0.1,
+      "reader_noise": 0.02,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.858,
+      "fail": 0.142,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.8,
+      "true_delta": 0.15,
+      "reader_noise": 0.02,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.976,
+      "fail": 0.024,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.9,
+      "true_delta": 0,
+      "reader_noise": 0.02,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.003,
+      "fail": 0.997,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.9,
+      "true_delta": 0.03,
+      "reader_noise": 0.02,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.148,
+      "fail": 0.852,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.9,
+      "true_delta": 0.05,
+      "reader_noise": 0.02,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.335,
+      "fail": 0.665,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.9,
+      "true_delta": 0.08,
+      "reader_noise": 0.02,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.598,
+      "fail": 0.402,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.9,
+      "true_delta": 0.1,
+      "reader_noise": 0.02,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.713,
+      "fail": 0.287,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.6,
+      "true_delta": 0,
+      "reader_noise": 0.05,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.002,
+      "fail": 0.998,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.6,
+      "true_delta": 0.03,
+      "reader_noise": 0.05,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.074,
+      "fail": 0.926,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.6,
+      "true_delta": 0.05,
+      "reader_noise": 0.05,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.211,
+      "fail": 0.789,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.6,
+      "true_delta": 0.08,
+      "reader_noise": 0.05,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.464,
+      "fail": 0.536,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.6,
+      "true_delta": 0.1,
+      "reader_noise": 0.05,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.663,
+      "fail": 0.337,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.6,
+      "true_delta": 0.15,
+      "reader_noise": 0.05,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.92,
+      "fail": 0.08,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.7,
+      "true_delta": 0,
+      "reader_noise": 0.05,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.009,
+      "fail": 0.991,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.7,
+      "true_delta": 0.03,
+      "reader_noise": 0.05,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.096,
+      "fail": 0.904,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.7,
+      "true_delta": 0.05,
+      "reader_noise": 0.05,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.214,
+      "fail": 0.786,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.7,
+      "true_delta": 0.08,
+      "reader_noise": 0.05,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.472,
+      "fail": 0.528,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.7,
+      "true_delta": 0.1,
+      "reader_noise": 0.05,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.654,
+      "fail": 0.346,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.7,
+      "true_delta": 0.15,
+      "reader_noise": 0.05,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.904,
+      "fail": 0.096,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.8,
+      "true_delta": 0,
+      "reader_noise": 0.05,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.012,
+      "fail": 0.988,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.8,
+      "true_delta": 0.03,
+      "reader_noise": 0.05,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.086,
+      "fail": 0.914,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.8,
+      "true_delta": 0.05,
+      "reader_noise": 0.05,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.223,
+      "fail": 0.777,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.8,
+      "true_delta": 0.08,
+      "reader_noise": 0.05,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.46,
+      "fail": 0.54,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.8,
+      "true_delta": 0.1,
+      "reader_noise": 0.05,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.604,
+      "fail": 0.396,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.8,
+      "true_delta": 0.15,
+      "reader_noise": 0.05,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.883,
+      "fail": 0.117,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.9,
+      "true_delta": 0,
+      "reader_noise": 0.05,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.011,
+      "fail": 0.989,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.9,
+      "true_delta": 0.03,
+      "reader_noise": 0.05,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.076,
+      "fail": 0.924,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.9,
+      "true_delta": 0.05,
+      "reader_noise": 0.05,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.178,
+      "fail": 0.822,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.9,
+      "true_delta": 0.08,
+      "reader_noise": 0.05,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.378,
+      "fail": 0.622,
+      "inconclusive": 0
+    },
+    {
+      "chunk_accuracy": 0.9,
+      "true_delta": 0.1,
+      "reader_noise": 0.05,
+      "persona_sd": 0.8,
+      "sims": 1000,
+      "pass": 0.472,
+      "fail": 0.528,
+      "inconclusive": 0
+    }
+  ]
+}

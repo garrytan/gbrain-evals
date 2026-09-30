@@ -1,0 +1,25 @@
+2026-09-30T19:15:26Z attempt=1 stall 3581s; killing
+2026-09-30T19:15:31Z attempt=1 rc=137
+2026-09-30T19:16:01Z attempt=2 stall 3616s; killing
+2026-09-30T19:16:06Z attempt=2 rc=137
+2026-09-30T19:16:36Z attempt=3 stall 3651s; killing
+2026-09-30T19:16:41Z attempt=3 rc=137
+2026-09-30T19:17:12Z attempt=4 stall 3687s; killing
+2026-09-30T19:17:17Z attempt=4 rc=137
+2026-09-30T19:17:47Z attempt=5 stall 3722s; killing
+2026-09-30T19:17:52Z attempt=5 rc=137
+2026-09-30T19:18:22Z attempt=6 stall 3757s; killing
+2026-09-30T19:18:27Z attempt=6 rc=137
+2026-09-30T19:18:57Z attempt=7 stall 3792s; killing
+2026-09-30T19:19:02Z attempt=7 rc=137
+2026-09-30T19:19:32Z attempt=8 stall 3827s; killing
+2026-09-30T19:19:37Z attempt=8 rc=137
+2026-09-30T19:20:07Z attempt=9 stall 3862s; killing
+2026-09-30T19:20:12Z attempt=9 rc=137
+2026-09-30T19:20:42Z attempt=10 stall 3897s; killing
+2026-09-30T19:20:47Z attempt=10 rc=137
+2026-09-30T19:21:17Z attempt=11 stall 3932s; killing
+2026-09-30T19:21:22Z attempt=11 rc=137
+2026-09-30T19:21:52Z attempt=12 stall 3967s; killing
+2026-09-30T19:21:57Z attempt=12 rc=137
+2026-09-30T21:54:39Z attempt=1 rc=0

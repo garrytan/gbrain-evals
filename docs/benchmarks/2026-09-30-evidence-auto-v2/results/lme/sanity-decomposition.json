@@ -1,0 +1,21 @@
+{
+  "note": "auto against page split by whether the two reader requests were byte-identical (same request SHA-256). On identical requests every difference is reader nondeterminism at provider-default temperature.",
+  "identical_requests": {
+    "questions": 419,
+    "auto": 377,
+    "page": 385,
+    "auto_only": 6,
+    "page_only": 14,
+    "official_auto": 375,
+    "official_page": 386
+  },
+  "different_requests_truncated_by_16k_budget": {
+    "questions": 81,
+    "auto": 68,
+    "page": 72,
+    "auto_only": 1,
+    "page_only": 5,
+    "official_auto": 68,
+    "official_page": 72
+  }
+}

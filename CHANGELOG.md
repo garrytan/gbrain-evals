@@ -4,16 +4,53 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [0.10.2] - 2026-09-30
 
-One release for three pieces of work that followed v0.10.1: the LongMemEval
-reranker-on follow-ups, the evidence-delivery study, and three keyless
-categories (N3, N4, N6). It was built on three branches (numbered 0.10.2 to
+One release for four pieces of work that followed v0.10.1: the LongMemEval
+reranker-on follow-ups, the evidence-delivery study, its auto v2 release check
+on the sealed set, and three keyless categories (N3, N4, N6). It was built on three branches (numbered 0.10.2 to
 0.10.4 while in review) and ships as a single patch release. It also moves the
 gbrain pin to master `6c8373c` (v0.60.13.0), which contains the evidence
 delivery code and the fixes for the seven bugs N3, N4 and N6 found.
 
 Paid work in this release: the reranker-on runs ($51.22 against a $120 cap),
 the evidence-delivery program ($112.44 through one ledger run) and its $0.97
-plumbing smoke. Everything else is keyless.
+plumbing smoke, and the auto v2 release check ($73.92 through one ledger run
+against a $150 cap). Everything else is keyless.
+
+### Auto v2 release check on the sealed set: `fail`
+
+gbrain's new default, `auto` v2 (gbrain `e9b580c5`, v0.60.16.0), returns the
+whole page for conversation hits within a 16,000-token budget and leaves other
+hits' chunks unchanged. A second decision manifest, committed before any paid
+call and pinned in its own commit, made the sealed confirmation set the
+decision and LongMemEval-S a sanity check.
+
+- **Verdict: `fail`.** On the 150 sealed questions, auto answered 149 against
+  147 for the chunk default (+2/−0, exact McNemar p = 0.50, persona-clustered
+  p = 0.49; official judge 149 against 146). The rule required a significant
+  gain. Chunks were already at 98% on the short sealed chats, so no delivery
+  change could reach significance there (it would need six one-sided wins;
+  chunks missed three questions). No demonstrated benefit on held-out data,
+  and no demonstrated harm.
+- **LongMemEval-S (development data, 500 questions):** auto 445, page 457,
+  chunk 312 (auto against chunk +145/−12, p = 4e-30; against page +7/−19).
+  The sanity bar, page − 10 = 447, was missed by two questions.
+- **Truncation cost:** the 16,000-token budget cut 81 questions (85 of 2,451
+  blocks truncated, no fallbacks); there auto scored 68 against page's 72,
+  about 0.8% of 500. On the other 419 questions auto's request was
+  byte-identical to page's and the reader still disagreed on 20 (377 against
+  385), which is reader noise and most of the shortfall.
+- **Custody:** the sealed questions, labels and access log were transferred
+  to the Capy machine with a custody note and never copied to a VM. Labels
+  opened once through the sealed runner (commitment check, decision id
+  `evidence-auto-v2-2026-09-30:e2:auto`, access log 2 → 3 lines). Only
+  aggregates are published, and every sealed file and derived artifact was
+  deleted after scoring. This was the first of the set's three release
+  decisions.
+- Code: decision manifest v2, `eval/runner/evidence-delivery/decision-v2.ts`
+  with a keyless test suite, a power analysis, `eval/runner/evidence-auto-v2.ts`;
+  the paid guard and sealed scorer now take a manifest path, campaign runner
+  and E2 rule, and the watchdog measures staleness from each attempt's start.
+  Report: `docs/benchmarks/2026-09-30-evidence-auto-v2.md`.
 
 ### Evidence delivery: whole pages help; cheaper windows do not close enough of the gap
 

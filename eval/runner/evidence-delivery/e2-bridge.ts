@@ -58,16 +58,19 @@ export interface SealedJudgments { question_id: string; arm: string; primary: 0 
  * `judgePrimary` / `judgeConfirm` are the gbrain judge and the sealed
  * protocol's official-prompt judge.
  */
-export async function scoreSealed(o: {
+export async function scoreSealed<D = E2Decision>(o: {
   manifest: DecisionManifest;
   winner: string;
+  /** Overrides for a later manifest version: its decision id and its E2 rule. */
+  decisionId?: string;
+  decide?: (chunk: OutcomeRow[], winner: OutcomeRow[]) => D;
   questions: QuestionsFile;
   answers: SealedAnswerRow[];
   openLabels: (decisionId: string) => LabelsFile;
   judgePrimary: (label: LabelsFile['labels'][number], question: string, hypothesis: string) => Promise<0 | 1 | null>;
   judgeConfirm: (label: LabelsFile['labels'][number], question: string, hypothesis: string) => Promise<0 | 1 | null>;
-}): Promise<{ decision_id: string; decision: E2Decision; judgments: SealedJudgments[] }> {
-  const decisionId = decisionIdFor(o.manifest, o.winner);
+}): Promise<{ decision_id: string; decision: D; judgments: SealedJudgments[] }> {
+  const decisionId = o.decisionId ?? decisionIdFor(o.manifest, o.winner);
   const arms = ['chunk', o.winner];
   for (const arm of arms) {
     const ids = new Set(o.answers.filter(a => a.arm === arm).map(a => a.question_id));
@@ -90,7 +93,8 @@ export async function scoreSealed(o: {
       rows[arm].push({ question_id: l.question_id, question_type: l.question_type, cluster: persona.get(l.question_id)!, primary, confirmation, provider_input_tokens: a.provider_input_tokens, reader_error: a.reader_error ?? null });
     }
   }
-  return { decision_id: decisionId, decision: decideE2(o.manifest, rows.chunk, rows[o.winner]), judgments };
+  const decision = o.decide ? o.decide(rows.chunk, rows[o.winner]) : decideE2(o.manifest, rows.chunk, rows[o.winner]) as unknown as D;
+  return { decision_id: decisionId, decision, judgments };
 }
 
 /** gbrain's judge keys abstention on an `_abs` id suffix; sealed ids are opaque, so abstention labels get the suffix here. */

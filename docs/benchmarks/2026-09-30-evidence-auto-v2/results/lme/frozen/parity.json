@@ -1,0 +1,26 @@
+{
+  "frozen_manifest_sha256": "ae590e8d5d26c21f87d4c6803e4fc62cc09fd9b2961eb41bc7cb225401f03462",
+  "gbrain_commit": "e9b580c5b9f9ac2e6ad069ea45ee5a6ac52c5761",
+  "schema": "gbrain-evals/evidence-delivery-parity/v1",
+  "harness_vs_r1": {
+    "eligible": 409,
+    "identical": 409,
+    "mismatched": []
+  },
+  "product_page_vs_harness": {
+    "questions": 500,
+    "requests_identical": 0,
+    "same_session_order": 500,
+    "blocks": {
+      "identical": 0,
+      "frontmatter_only": 2451,
+      "whitespace_only": 0,
+      "truncated": 0,
+      "missing": 0,
+      "other": 0
+    },
+    "examples": []
+  },
+  "ok": true,
+  "problems": []
+}

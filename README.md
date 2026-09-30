@@ -73,9 +73,17 @@ input tokens: better than chunks, but it closed only 30% to 36% of the gap,
 short of the preregistered 60%. So gbrain v0.60.13.0 ships `return_unit: page`
 as a documented opt-in and keeps `chunk` as the default. Use `page` when answer
 quality matters more than reader tokens. LongMemEval-S is development data for
-gbrain, and the sealed confirmation set was not opened, so this is not an
-independent confirmation.
+gbrain, so this is not an independent confirmation.
 [Read the evidence-delivery study](docs/benchmarks/2026-09-30-evidence-delivery.md).
+gbrain then made delivery automatic: `auto` v2 (v0.60.16.0) returns whole
+conversation pages within a 16,000-token budget and leaves other hits as
+chunks. Its preregistered release check on the sealed confirmation set came out
+**`fail`**: 149 of 150 against 147 for chunks (+2/−0, p = 0.50), because chunks
+already answer 98% of those short chats and no change could reach
+significance there. On LongMemEval-S, as development data, `auto` scored 445 of
+500 against 312 for chunks and 457 for uncapped pages; the budget cut 81
+questions and cost about 4 answers.
+[Read the auto v2 check](docs/benchmarks/2026-09-30-evidence-auto-v2.md).
 
 ## Why put gbrain on your shortlist?
 

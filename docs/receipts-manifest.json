@@ -3200,6 +3200,62 @@
         "/data/metrics/read_ops_total": 74
       },
       "note": "gbrain master 6c8373c (v0.60.13.0), clean tree 2880304, hermetic, $0. The entity/context_pack private-backlink leak is fixed and every return_unit is fuzzed; the category is a gate from this receipt on."
+    },
+    {
+      "claim_id": "evidence-auto-v2-decision-manifest",
+      "readme_anchor": "docs/benchmarks/2026-09-30-evidence-auto-v2.md: decision manifest v2, pinned to e9b580c5",
+      "artifact_path": "docs/benchmarks/2026-09-30-evidence-auto-v2/decision-manifest.json",
+      "artifact_sha256": "b41011c22af62fa7ab0b360fd01344c4fcd99dfd4ca0e2b010c549357a905dca",
+      "status": "covered",
+      "expected": {
+        "/candidate_commits/gbrain": "e9b580c5b9f9ac2e6ad069ea45ee5a6ac52c5761",
+        "/e2/decision_id": "evidence-auto-v2-2026-09-30:e2:auto",
+        "/sanity/max_shortfall_fraction": 0.02
+      },
+      "note": "The rule applied by decision-v2.ts."
+    },
+    {
+      "claim_id": "evidence-auto-v2-e2-decision",
+      "readme_anchor": "docs/benchmarks/2026-09-30-evidence-auto-v2.md: Decision: the sealed confirmation set (E2)",
+      "artifact_path": "docs/benchmarks/2026-09-30-evidence-auto-v2/results/e2-decision.json",
+      "artifact_sha256": "6fda90b34cb46bcb9ce4657f194dbaa6bfad21f3dbe4ce2baaa70f31df001575",
+      "status": "covered",
+      "expected": {
+        "/decision/outcome": "fail",
+        "/decision/chunk_correct": 147,
+        "/decision/auto_correct": 149,
+        "/decision/mcnemar/wins": 2,
+        "/decision/mcnemar/losses": 0,
+        "/access_log_lines": 3
+      },
+      "note": "Aggregates only; per-question sealed outcomes stayed private and were deleted."
+    },
+    {
+      "claim_id": "evidence-auto-v2-lme-sanity",
+      "readme_anchor": "docs/benchmarks/2026-09-30-evidence-auto-v2.md: Sanity check: LongMemEval-S",
+      "artifact_path": "docs/benchmarks/2026-09-30-evidence-auto-v2/results/lme/sanity.json",
+      "artifact_sha256": "5df68a4ce3bea5bf92c614f9a56b4d45bf8d4b2a12dd92550455d8ab39a13bee",
+      "status": "covered",
+      "expected": {
+        "/sanity/chunk": 312,
+        "/sanity/auto": 445,
+        "/sanity/page": 457,
+        "/sanity/pass": false,
+        "/auto_delivery/truncated": 85,
+        "/auto_delivery/questions_auto_equals_page": 419
+      },
+      "note": "analyze output on the three LongMemEval arms."
+    },
+    {
+      "claim_id": "evidence-auto-v2-ledger-summary",
+      "readme_anchor": "docs/benchmarks/2026-09-30-evidence-auto-v2.md: Reproduce and inspect (cost)",
+      "artifact_path": "docs/benchmarks/2026-09-30-evidence-auto-v2/results/ledger-summary.json",
+      "artifact_sha256": "d1e226efa66d84230d25518a1f3155f507159ed721fc53f8a2e761ae5e554156",
+      "status": "covered",
+      "expected": {
+        "/total_usd": 73.9177
+      },
+      "note": "Summarized from the campaign ledger run."
     }
   ]
 }

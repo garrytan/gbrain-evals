@@ -227,3 +227,44 @@ export function runPowerAnalysis(m: DecisionManifest, manifestSha: string, opts:
     confirmatory, selection, e2,
   };
 }
+
+// ─── Decision manifest v2: sealed superiority test ──────────────────
+
+export interface E2SuperiorityCell { chunk_accuracy: number; true_delta: number; reader_noise: number; persona_sd: number; sims: number; pass: number; fail: number; inconclusive: number }
+
+/**
+ * Probability that decideE2V2 passes for a candidate whose true accuracy is
+ * chunk + trueDelta, on 30 personas x 5 questions with a persona random
+ * effect; the arms share each question's latent draw, plus independent
+ * reader noise per arm, and the confirmation judge flips 1% of verdicts.
+ */
+export function e2SuperiorityPower(m: import('./decision-v2.ts').DecisionManifestV2, decide: typeof import('./decision-v2.ts').decideE2V2, opts: { chunkAcc: number; trueDelta: number; personaSd: number; noise: number; sims: number; seed: number; draws: number }): E2SuperiorityCell {
+  const sm = JSON.parse(JSON.stringify(m)) as typeof m;
+  sm.e2.sign_flip_draws = opts.draws;
+  const rng = seededRandom(opts.seed);
+  const logit = (p: number) => Math.log(p / (1 - p));
+  const inv = (x: number) => 1 / (1 + Math.exp(-x));
+  const normal = () => Math.sqrt(-2 * Math.log(1 - rng())) * Math.cos(2 * Math.PI * rng());
+  let pass = 0, fail = 0, inc = 0;
+  for (let s = 0; s < opts.sims; s++) {
+    const chunk: OutcomeRow[] = [], auto: OutcomeRow[] = [];
+    for (let p = 0; p < 30; p++) {
+      const shift = normal() * opts.personaSd;
+      const pc = inv(logit(opts.chunkAcc) + shift);
+      const pa = Math.max(0, Math.min(1, pc + opts.trueDelta));
+      for (let q = 0; q < 5; q++) {
+        const u = rng();
+        let c: 0 | 1 = u < pc ? 1 : 0, a: 0 | 1 = u < pa ? 1 : 0;
+        if (rng() < opts.noise) c = (1 - c) as 0 | 1;
+        if (rng() < opts.noise) a = (1 - a) as 0 | 1;
+        const id = `p${p}q${q}`;
+        chunk.push({ question_id: id, question_type: 'sealed', cluster: `p${p}`, primary: c, confirmation: flip(c, rng), provider_input_tokens: 1500 });
+        auto.push({ question_id: id, question_type: 'sealed', cluster: `p${p}`, primary: a, confirmation: flip(a, rng), provider_input_tokens: 5000 });
+      }
+    }
+    const d = decide(sm, chunk, auto);
+    if (d.outcome === 'pass') pass++; else if (d.outcome === 'fail') fail++; else inc++;
+  }
+  const r = (k: number) => Number((k / opts.sims).toFixed(4));
+  return { chunk_accuracy: opts.chunkAcc, true_delta: opts.trueDelta, reader_noise: opts.noise, persona_sd: opts.personaSd, sims: opts.sims, pass: r(pass), fail: r(fail), inconclusive: r(inc) };
+}

@@ -1,0 +1,80 @@
+{
+  "schema": "gbrain-evals/evidence-delivery-frozen/v1",
+  "created_at": "2026-09-30T18:11:34.463Z",
+  "smoke": false,
+  "decision_manifest_sha256": "b41011c22af62fa7ab0b360fd01344c4fcd99dfd4ca0e2b010c549357a905dca",
+  "gbrain": {
+    "dir_label": "GBRAIN_DIR",
+    "commit": "e9b580c5b9f9ac2e6ad069ea45ee5a6ac52c5761",
+    "tree": "79e792e7cb93d04c2e66f5c8fc9707ddbdae5af9",
+    "dirty": false,
+    "dirty_sha256": null,
+    "version": "0.60.16.0",
+    "code_sha256": {
+      "src/core/import-file.ts": "f9376e4e0b051045216366165df57d966cc9b339d549a9cd323120fd071f67a6",
+      "src/core/markdown.ts": "84aa993d94ef4b3035909b94c1abfa32a08e310383fc470106092661a5ddde8b",
+      "src/core/remote-body.ts": "b068d287e3e30b0b1f6f2dceac60c94051e33f022c0d9ac5ae96429e58773d95",
+      "src/core/chunkers/recursive.ts": "a538be93fb5b01af888d6ecfc9574a24c4f893af34e2a11d4ef99b05dad95997",
+      "src/core/chunkers/token-estimate.ts": "2086698a4783a80b6a6f635ddb35c8679c10a95e21030d480fb4003939234c7a",
+      "src/core/search/hybrid.ts": "1f5049265ebfaff723960a0bfc96ce1a73d21bf9ca72c8b1ac090ddc1c24105d",
+      "src/core/search/evidence-delivery.ts": "cc36998f01e4e75cacae7af62afdd48f43159dde75581a777cede5d8846e106a",
+      "src/core/search/output-redaction.ts": "a89ab32c283e60a784b1f86e1725628fe1552a24f7f903d2f17489fa22d81cb5",
+      "src/eval/longmemeval/adapter.ts": "3c60448a8f7e379da66eea9d818924f5f3791d095b59290fa6cae564bf18d33b",
+      "src/eval/longmemeval/reader.ts": "b9ec536fcb0589618e174054143213895d0b0d8e57a7d2aba42c72790c258ed0",
+      "src/eval/longmemeval/sanitize.ts": "f393ab8ee97c4d3cd0b5791169d2d4b5a8d016af0a0cae81c76a947b567bf439",
+      "src/eval/longmemeval/judge.ts": "92bdb6519343bccebb03acba3e0fa5b179b9b30285de3fea614c0f8620d09b41"
+    },
+    "parser_sha256": "a1eb3aee61f9c238d7b414af49014ce330b357e1f92aef85049cadd39736859e",
+    "evidence_code_sha256": "4baf9da792922b854194cda557fb7c20cae3be75e29f36720c000377691a8404"
+  },
+  "dataset_sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442",
+  "retrieval": {
+    "top_k": 5,
+    "comparator_top_k": 10,
+    "mode": "balanced",
+    "reranker": true,
+    "autocut": false,
+    "expansion": false,
+    "trajectory": false,
+    "embedding": "openai:text-embedding-3-large@1536"
+  },
+  "embed_cache": {
+    "sha256_before": null,
+    "sha256_after": null,
+    "misses": 102406,
+    "shards": [
+      {
+        "dir": "shard-0",
+        "questions": 167,
+        "sha256_before": null,
+        "sha256_after": "85bfcba49794a6d21f35b29bfa7feea6446611de62da28ff999628c6f198844d",
+        "misses": 34212
+      },
+      {
+        "dir": "shard-1",
+        "questions": 167,
+        "sha256_before": null,
+        "sha256_after": "704cb31828fde4f1ee8c9e29c6286249c7e6a6b2be0c876520a80d29a0f85f8b",
+        "misses": 34175
+      },
+      {
+        "dir": "shard-2",
+        "questions": 166,
+        "sha256_before": null,
+        "sha256_after": "1975c38123f31296fcdf2288c9077877c89ca3e28cd3f11c5a72ee6755b03b1a",
+        "misses": 34019
+      }
+    ]
+  },
+  "product_arms": {
+    "auto": {
+      "unit": "auto",
+      "budget_tokens": null
+    },
+    "page": {
+      "unit": "page",
+      "budget_tokens": 100000
+    }
+  },
+  "note": "product arms produced by assembleEvidenceForHits at this commit"
+}
