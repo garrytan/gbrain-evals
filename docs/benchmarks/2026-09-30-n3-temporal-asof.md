@@ -15,6 +15,21 @@ Last-seen exact rate was 91.6% (76 of 83) and last-seen mean absolute error was 
 
 The category is report-only. It becomes a gate once these bugs are fixed.
 
+## Update, 2026-09-30: all four bugs fixed at the new pin (`6c8373c`, v0.60.13.0)
+
+gbrain v0.60.13.0 ([#5769](https://github.com/garrytan/gbrain/pull/5769)) includes fixes for the four bugs above. Re-run at the new pinned dependency, gbrain master `6c8373c`, with the same seed-3 ledger (same ledger SHA-256) on a clean gbrain-evals tree (commit `2880304`): **513 of 513 probes pass**, and the verdict is `pass`.
+
+| Measure | `608a174` / `f8d1e39` | `6c8373c` |
+|---|---|---|
+| Probes passing | 500/513 | 513/513 |
+| `ontology_get` as-of | 99/104 (95.2%) | 104/104 |
+| Last seen, exact | 76/83 (91.6%) | 83/83 |
+| Last-seen mean absolute error | 16.34 days (n = 58) | 0.00 days (n = 58) |
+| Negative controls | 153/155 | 155/155 |
+| Non-ISO date bound (`since: "May 5"`) | accepted, returned nothing | rejected with an error naming the expected format |
+
+Timeline as-of stays 104/104 and range set-F1 1.000 over 179 probes. With a clean pass, the category becomes a gate: `temporal-asof` has `gate: 'gate'` in `eval/registry.ts`, so a later gbrain that regresses any of these probes fails `all.ts --tier offline`. Receipt: [receipt-pin-6c8373c.json](2026-09-30-n3-temporal-asof/receipt-pin-6c8373c.json). The historical sections below describe `608a174` and `f8d1e39`.
+
 ## The concrete case
 
 An invented example from the generated world. Alice (`people/alice-example`) joined startup-0 on 2022-10-13, moved to startup-1 on 2023-04-07 and returned to startup-0 on 2023-07-08. The note about her first stint at startup-0 was written on 2023-07-18, after her return had already been recorded. Asked "where did Alice work on 2023-01-09?", the right answer is startup-0: the question is about when she worked there (valid time), not when anyone wrote it down (recorded time).

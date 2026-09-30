@@ -17,6 +17,21 @@ Two behaviors are bugs:
 
 Verdict: `fail` against the contract targets (wrong merges must be 0, the floor 100%, B-cubed F1 at least 0.9, unresolved at most 10%). The category is report-only, so this is information, not a CI failure.
 
+## Update, 2026-09-30: both merge bugs fixed at the new pin (`6c8373c`, v0.60.13.0)
+
+gbrain v0.60.13.0 ([#5769](https://github.com/garrytan/gbrain/pull/5769)) includes fixes for both bugs. Re-run at the new pinned dependency, gbrain master `6c8373c`, with the same ledger (default seed 20260930, same ledger SHA-256) on a clean gbrain-evals tree (commit `2880304`):
+
+| Surface | Wrong merges | Floor | Correct refusals | Accuracy | B-cubed F1 |
+|---|---|---|---|---|---|
+| resolver | 0/136 (was 1) | 48/48 (was 47) | 17/17 | 82/119, 68.9% (was 81) | 0.762 (was 0.755) |
+| recall | 0/144 (was 3) | 50/50 (was 49) | 21/21 (was 19) | 86/123, 69.9% (was 85) | 0.778 (was 0.770) |
+| remember | 0/136 (was 1) | 48/48 | 17/17 | 82/119 | 0.762 |
+| resolve_on_save | 0/136 (was 1) | 48/48 | 17/17 | 82/119 | 0.762 |
+
+"Leonard Linden-Example" now resolves to his own page on all four surfaces, and a two-source `recall({ entity })` for the same-slug namesakes (name and slug) is refused instead of merging both people's facts. Seed 7 also gives 0 wrong merges, the full floor and every refusal (resolver 74/119, B-cubed F1 0.719). 740 of 740 probes scored with 0 errors on both seeds.
+
+The verdict is still `fail`, and the category stays report-only. The remaining shortfall is recall of variants gbrain does not read by design (typos, initials not in `aliases:`, names declared only in prose), which keeps B-cubed F1 under 0.9 and unresolved above 10%. Receipts: [receipt-pin-6c8373c.json](2026-09-30-n4-entity-resolution/receipt-pin-6c8373c.json) and [seed 7](2026-09-30-n4-entity-resolution/receipt-pin-6c8373c-seed7.json). The historical sections below describe `608a174` and `f8d1e39`.
+
 ## The concrete case
 
 All names are invented placeholders.

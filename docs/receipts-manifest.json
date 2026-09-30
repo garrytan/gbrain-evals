@@ -3136,6 +3136,70 @@
         "/total_usd": 112.4412
       },
       "note": "Summarized from the VM budget ledger of the campaign run."
+    },
+    {
+      "claim_id": "n3-temporal-asof-2026-09-30-pin-6c8373c",
+      "readme_anchor": "docs/benchmarks/2026-09-30-n3-temporal-asof.md: Update, 2026-09-30 (513/513 at 6c8373c; as-of 104/104, last seen 83/83)",
+      "artifact_path": "docs/benchmarks/2026-09-30-n3-temporal-asof/receipt-pin-6c8373c.json",
+      "artifact_sha256": "18951faa928b22ae164c7b5b28f9bd5533248dda0bee2a2e45513a2277c43f97",
+      "status": "covered",
+      "expected": {
+        "/verdict": "pass",
+        "/n_scored": 513,
+        "/gbrain_version": "0.60.13.0",
+        "/data/summary/asof_accuracy": 1,
+        "/data/summary/last_seen_exact_rate": 1,
+        "/data/summary/negative_control_pass_rate": 1
+      },
+      "note": "Seed 3 at gbrain master 6c8373c (v0.60.13.0), clean gbrain-evals tree 2880304, hermetic, $0. The four bugs found at 608a174 and f8d1e39 no longer reproduce; the category is a gate from this receipt on."
+    },
+    {
+      "claim_id": "n4-entity-resolution-2026-09-30-pin-6c8373c",
+      "readme_anchor": "docs/benchmarks/2026-09-30-n4-entity-resolution.md: Update, 2026-09-30 (0 wrong merges on every surface at 6c8373c)",
+      "artifact_path": "docs/benchmarks/2026-09-30-n4-entity-resolution/receipt-pin-6c8373c.json",
+      "artifact_sha256": "8e042ce8f2d4ba233eac580b7daff0ea6601fe93c028ab69f03326bdbdff4198",
+      "status": "covered",
+      "expected": {
+        "/verdict": "fail",
+        "/n_scored": 740,
+        "/gbrain_version": "0.60.13.0",
+        "/data/surfaces/resolver/wrong_merges": 0,
+        "/data/surfaces/recall/wrong_merges": 0,
+        "/data/surfaces/resolver/floor/correct": 48,
+        "/data/surfaces/recall/correct_refusal_rate": 1
+      },
+      "note": "Default seed 20260930 at gbrain master 6c8373c (v0.60.13.0), clean tree 2880304, $0. Both merge bugs fixed; verdict stays fail on F1 and unresolved targets by design, so the category stays report-only."
+    },
+    {
+      "claim_id": "n4-entity-resolution-2026-09-30-pin-6c8373c-seed7",
+      "readme_anchor": "docs/benchmarks/2026-09-30-n4-entity-resolution.md: Update, 2026-09-30 (seed 7 at 6c8373c)",
+      "artifact_path": "docs/benchmarks/2026-09-30-n4-entity-resolution/receipt-pin-6c8373c-seed7.json",
+      "artifact_sha256": "b97a3edfd626ed9b3cfbfa6e2105344ee9c6722de266ecf3d9a3350fe9eca215",
+      "status": "covered",
+      "expected": {
+        "/n_scored": 740,
+        "/data/surfaces/resolver/wrong_merges": 0,
+        "/data/surfaces/recall/wrong_merges": 0
+      },
+      "note": "Second seed at the same pin and tree, $0."
+    },
+    {
+      "claim_id": "n6-visibility-fuzz-2026-09-30-pin-6c8373c",
+      "readme_anchor": "docs/benchmarks/2026-09-30-n6-visibility-fuzz.md: Update, 2026-09-30 (0 leaks at 6c8373c)",
+      "artifact_path": "docs/benchmarks/2026-09-30-n6-visibility-fuzz/receipt-pin-6c8373c.json",
+      "artifact_sha256": "0b2cd24da7b471c47d9a5a85a40c27f2969fbdc9dd76563dd884bdea279f7b56",
+      "status": "covered",
+      "expected": {
+        "/verdict": "pass",
+        "/gbrain_version": "0.60.13.0",
+        "/data/metrics/content_leak_probes": 0,
+        "/data/metrics/existence_leak_probes": 0,
+        "/data/metrics/oracle_probes": 0,
+        "/data/metrics/gate_bypasses": 0,
+        "/data/metrics/probes_exposed": 3854,
+        "/data/metrics/read_ops_total": 74
+      },
+      "note": "gbrain master 6c8373c (v0.60.13.0), clean tree 2880304, hermetic, $0. The entity/context_pack private-backlink leak is fixed and every return_unit is fuzzed; the category is a gate from this receipt on."
     }
   ]
 }

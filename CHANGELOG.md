@@ -2,13 +2,24 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [0.10.3] - 2026-09-30
+## [0.10.2] - 2026-09-30
+
+One release for three pieces of work that followed v0.10.1: the LongMemEval
+reranker-on follow-ups, the evidence-delivery study, and three keyless
+categories (N3, N4, N6). It was built on three branches (numbered 0.10.2 to
+0.10.4 while in review) and ships as a single patch release. It also moves the
+gbrain pin to master `6c8373c` (v0.60.13.0), which contains the evidence
+delivery code and the fixes for the seven bugs N3, N4 and N6 found.
+
+Paid work in this release: the reranker-on runs ($51.22 against a $120 cap),
+the evidence-delivery program ($112.44 through one ledger run) and its $0.97
+plumbing smoke. Everything else is keyless.
+
+### Evidence delivery: whole pages help; cheaper windows do not close enough of the gap
 
 The evidence-delivery study: preregistered, run and reported. gbrain is
 adding an opt-in stage that returns neighbors, sections or whole pages
 instead of bare chunks.
-
-### Added
 
 - **Result: whole pages help; cheaper windows do not close enough of the
   gap.** On 400 held-out LongMemEval-S questions with the reranker on and
@@ -64,7 +75,7 @@ instead of bare chunks.
 - Voyage rerank timeout raised to 30 s in freeze and E3 after 28 haystacks
   timed out at gbrain's 5 s default during a Voyage overload.
 
-### Changed
+Harness changes made for the study:
 
 - The budget ledger prices dated model snapshots (`gpt-4o-2024-08-06`) at
   their family's list price and prices Voyage rerank requests.
@@ -72,13 +83,11 @@ instead of bare chunks.
 - Lifecycle drivers accept an entry override so a server can run with a
   preload.
 
-## [0.10.2] - 2026-09-30
+### LongMemEval with the reranker on
 
 The two reranker-on follow-ups from the LongMemEval opaque-id re-run. Both
 use the same gbrain code as the 439/500 arm (`a7cb37b`), the same data,
 embedding cache and judges, with `voyage:rerank-2.5` on.
-
-### Added
 
 - **R1, the house notes reader with the reranker on: 453/500 (90.6%).**
   - The reranker raised strict retrieval from 435/470 to 450/470 (paired
@@ -105,22 +114,19 @@ embedding cache and judges, with `voyage:rerank-2.5` on.
   with nine manifest entries. `scripts/verify-longmemeval-opaque-qa.py` now
   also recounts both runs, their paired tests against arm a and the
   published rows, rerank coverage and the prompt leak check.
-
-### Changed
-
 - The report gains a reranker-on section. The README now gives the
   reranker-on numbers beside the 439/500 and says the leak made no
   measurable difference to the published configuration.
 
-## [0.10.4] - 2026-09-30
+### Offline categories N3, N4 and N6
 
 Three keyless categories from the evidence-delivery plan (section 5): temporal
 and as-of questions (N3), entity resolution (N4), and a visibility and access
 leak fuzz over every read operation (N6). Each has a registry entry with a
 semantic contract, gold from a seeded generator ledger (never from gbrain
 output), solvability and negative controls, presence assertions, receipt v2,
-tests and a dated report. All three land report-only, and each found gbrain
-bugs; they become gates once those are fixed. No paid calls.
+tests and a dated report. All three landed report-only, and each found gbrain
+bugs, which gbrain v0.60.13.0 fixed (see the re-run below). No paid calls.
 
 Measured on the pinned gbrain (`608a174`, 0.60.10.0) and on master (`f8d1e39`,
 0.60.11.0) as a copied overlay; every category gave identical numbers on both.
@@ -170,6 +176,30 @@ Measured on the pinned gbrain (`608a174`, 0.60.10.0) and on master (`f8d1e39`,
 - **`all.ts` honors `gate: 'report-only'`.** A report-only category that
   completes with a non-pass verdict is REPORTED, never a pass and never a
   failure of the run; missing, stale, invalid and errored receipts still fail.
+- **Re-run at the new pin, gbrain master `6c8373c` (v0.60.13.0, #5769), which
+  fixes all seven bugs above.** Same seeds and ledgers, clean tree, $0.
+  N3: 513/513 probes pass (as-of 104/104, last seen 83/83 with 0.00 days mean
+  error, negative controls 155/155, the non-ISO bound now rejected). N4: 0
+  wrong merges on every surface (was 1 on the resolver and 3 on `recall`),
+  exact-name floor 48/48 on the resolver and 50/50 on `recall`, `recall`
+  refusals 21/21; seed 7 agrees. N6: 0 content leaks,
+  0 existence leaks, 0 oracles and 0 gate bypasses over 3,854 probes and 74
+  read ops, with every `return_unit` fuzzed. **N3 and N6 are now gates**
+  (`gate: 'gate'`); N4 stays report-only because its B-cubed F1 and
+  unresolved targets miss on variants gbrain does not read by design (typos,
+  unrecorded initials, prose-only names). Receipts:
+  `receipt-pin-6c8373c*.json` beside each report, with four manifest entries.
+
+### gbrain pin
+
+- **gbrain is pinned to master `6c8373c` (v0.60.13.0,
+  [#5769](https://github.com/garrytan/gbrain/pull/5769))**, replacing
+  `608a174` (v0.60.10.0). The `balanced`, `conservative` and `tokenmax` mode
+  definitions are unchanged. `gbrain-cues` (`939232f`) and `gbrain-reader`
+  (`e78f1c3`) keep their pins, so the frozen cue and reader package
+  identities are unchanged. The evidence-delivery results stay dated to the
+  commit they measured, `732ee811`. The README, settings guide and
+  comparison-systems page name the new pin.
 
 ## [0.10.1] - 2026-09-29
 

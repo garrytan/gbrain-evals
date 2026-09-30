@@ -16,6 +16,10 @@ Verdict: `fail` (the target is zero leaks). The category is report-only, so this
 
 The evidence-expansion paths are not measured yet: the evidence-delivery branch carries `docs/evidence-delivery.md` but no `return_unit` parameter or `assemble_evidence` op at c0a72ab. The receipt records them as documented but missing, and N6 will fuzz them automatically when they land (see "Reproduce").
 
+## Update, 2026-09-30: zero leaks at the new pin (`6c8373c`, v0.60.13.0)
+
+gbrain v0.60.13.0 ([#5769](https://github.com/garrytan/gbrain/pull/5769)) merges the evidence-delivery code and fixes the `entity` / `context_pack` private-backlink leak. Re-run at the new pinned dependency, gbrain master `6c8373c`, on a clean gbrain-evals tree (commit `2880304`): **0 content leaks, 0 existence leaks, 0 existence oracles and 0 of 90 access gates bypassed**, over 3,854 exposed probes (1,546 with signal) and 74 read ops. All 26 read ops that return protected content to the trusted owner held, including `entity` and `context_pack`, whose 8 leaking probes at `608a174`, `f8d1e39` and `732ee81` are now clean. Every `return_unit` value on `search`, `query`, `recall` and `assemble_evidence` was fuzzed and none leaked; the stage expanded on 30 of 36 probes per expanding unit on `search` and `query`, 20 of 24 on `recall` and every non-chunk `assemble_evidence` probe. The verdict is `pass`, so the category becomes a gate: `visibility-leak-fuzz` has `gate: 'gate'` in `eval/registry.ts`, and any leak fails `all.ts --tier offline`. Receipt: [receipt-pin-6c8373c.json](2026-09-30-n6-visibility-fuzz/receipt-pin-6c8373c.json).
+
 ## Update, 2026-09-30: the evidence-expansion code (`capy/evidence-delivery` at 732ee81)
 
 The expansion stage landed on the gbrain branch at `732ee81` (0.60.13.0): `return_unit` and `return_window` on `search`, `query` and `recall`, and the new read op `assemble_evidence`. N6 ran against it as a copied overlay (clean checkout; gbrain-evals commit `7635759`, clean tree). **No expansion path leaked.** The only findings are the same 8 `entity` / `context_pack` probes as before (bug 1), which the branch does not touch.
