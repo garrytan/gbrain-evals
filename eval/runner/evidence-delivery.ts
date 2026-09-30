@@ -33,7 +33,7 @@ import { decideConfirmatory, gpt4oSecondArm, loadDecisionManifest, selectPilot, 
 import { CLUSTER_MAP_PATH, REPO_ROOT, STUDY_DIR, buildClusterMap, loadClusterMap, loadDataset, pilotIds, sha256 } from './evidence-delivery/data.ts';
 import { runPowerAnalysis } from './evidence-delivery/power.ts';
 import { configureGbrainGateway, loadGbrain, resolveGbrainDir, type GbrainModules } from './evidence-delivery/gbrain.ts';
-import { freeze, type FreezeInput } from './evidence-delivery/freeze.ts';
+import { RERANK_TIMEOUT_MS, freeze, type FreezeInput } from './evidence-delivery/freeze.ts';
 import { readFrozen } from './evidence-delivery/store.ts';
 import { parityCheck, type R1Call } from './evidence-delivery/parity.ts';
 import { GPT4O, SONNET, estimateE1Usd, readRows, rendererFrom, rowsPath, runE1, toOutcome, type E1Context } from './evidence-delivery/e1.ts';
@@ -410,6 +410,7 @@ async function cmdE3(a: Args) {
         await engine.setConfig('search.mode', 'balanced');
         await engine.setConfig('search.reranker.enabled', 'true');
         await engine.setConfig('search.autocut', 'false');
+        await engine.setConfig('search.reranker.timeout_ms', String(RERANK_TIMEOUT_MS));
         await cache.withTransaction(async () => { for (const p of g.adapter.haystackToPages(d)) await g.importFile.importFromContent(engine, p.slug, p.content, { noEmbed: false }); });
         await engine.disconnect();
         const driver = guardedStdioDriver(g.dir, brain.env);

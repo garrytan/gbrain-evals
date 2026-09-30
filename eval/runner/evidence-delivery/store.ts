@@ -66,7 +66,7 @@ export interface FrozenQuestion {
   question_sha256: string;
   question_date: string;
   index_sha256: string;
-  search_meta: { reranked: boolean | null; degraded: unknown[] };
+  search_meta: { reranked: boolean | null; degraded: unknown[]; reranker_timeout_ms?: number };
   hits5: FrozenHit[];
   hits10: FrozenHit[];
   pages: FrozenPage[];

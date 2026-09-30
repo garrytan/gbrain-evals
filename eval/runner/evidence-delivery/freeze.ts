@@ -41,6 +41,13 @@ export interface FreezeOptions {
 }
 
 export const EMBEDDING = 'openai:text-embedding-3-large@1536';
+/**
+ * Voyage reranks of some haystacks take longer than gbrain's 5 s default at
+ * this commit, and a timed-out rerank falls back to unreranked order. The
+ * timeout never changes a completed rerank's order, so it is raised for
+ * questions frozen from 2026-09-30T14:30Z on and recorded per question.
+ */
+export const RERANK_TIMEOUT_MS = 30_000;
 
 export function productArmSpecs(m: DecisionManifest) {
   return m.arms.filter(a => a.source === 'product').map(a => ({ id: a.id, unit: a.unit, ...(a.return_window ? { return_window: a.return_window } : {}), budget_tokens: a.budget_tokens ?? null }));
@@ -54,6 +61,7 @@ async function configure(engine: any, m: DecisionManifest) {
   await engine.setConfig('search.mode', String((m as any).retrieval?.mode ?? 'balanced'));
   await engine.setConfig('search.reranker.enabled', 'true');
   await engine.setConfig('search.autocut', 'false');
+  await engine.setConfig('search.reranker.timeout_ms', String(RERANK_TIMEOUT_MS));
 }
 
 export async function freeze(o: FreezeOptions): Promise<{ frozen: number; skipped: number; errors: Array<{ question_id: string; error: string }> }> {
@@ -203,7 +211,7 @@ async function freezeOne(g: GbrainModules, engine: any, input: FreezeInput, stor
 
   return {
     question_id: q.question_id, set: input.set, question_type: q.question_type ?? null, question_sha256: sha256(q.question), question_date: q.question_date,
-    index_sha256: indexSha(allChunks, EMBEDDING), search_meta: { reranked, degraded: [] },
+    index_sha256: indexSha(allChunks, EMBEDDING), search_meta: { reranked, degraded: [], reranker_timeout_ms: RERANK_TIMEOUT_MS },
     hits5, hits10, pages: frozenPages, r1: compareWithR1(hits5, input.r1Retrieved), arms,
   };
 }
