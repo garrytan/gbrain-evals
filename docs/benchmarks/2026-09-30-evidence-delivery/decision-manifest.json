@@ -12,7 +12,7 @@
   "candidate_commits": {
     "gbrain_repository": "garrytan/gbrain",
     "gbrain_branch": "capy/evidence-delivery",
-    "gbrain": null,
+    "gbrain": "732ee8116b6fd7d2de38824a54d35f57e4ea35c4",
     "gbrain_rule": "gbrain is the full 40-hex head of the gbrain evidence-delivery PR. It is written here once, in its own commit, before the evidence freeze. Every paid subcommand refuses while it is null, when the frozen evidence manifest names another commit, or when this file differs from its committed version. A rebase of the gbrain PR re-runs the freeze and the fingerprint comparison; a changed fingerprint for any arm used in a decision re-runs E3 at minimum and is reported.",
     "gbrain_evals_rule": "The gbrain-evals commit that contains this file; every paid row records it and the SHA-256 of this file."
   },
