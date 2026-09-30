@@ -2,6 +2,46 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.2] - 2026-09-30
+
+The two reranker-on follow-ups from the LongMemEval opaque-id re-run. Both
+use the same gbrain code as the 439/500 arm (`a7cb37b`), the same data,
+embedding cache and judges, with `voyage:rerank-2.5` on.
+
+### Added
+
+- **R1, the house notes reader with the reranker on: 453/500 (90.6%).**
+  - The reranker raised strict retrieval from 435/470 to 450/470 (paired
+    +22/−7, exact McNemar p = 0.008).
+  - Against reranker off, answers moved +31/−17 (p = 0.059); with the
+    official judge, 451 against 443 (p = 0.33). That is suggestive, not a
+    demonstrated answer gain.
+- **R2, the published configuration without the leak: 432/500.** It used the
+  direct reader at 512 tokens, the reranker on and opaque ids. Paired against
+  the invalid published 433/500, it moved +15/−16 (p = 1.0). Hiding the gold
+  ids made no measurable difference there. The published number stays
+  invalid because it was measured with the ids visible, and the report lists
+  the remaining configuration differences.
+- **Notes against direct on identical reranked retrieval: 453 against 432**
+  (+32/−11, p = 0.002; official judge p = 0.049). This is a new full-500
+  comparison, not a re-run of the September 25 transfer cohort, whose flag
+  stays in place.
+- Voyage accounting for each run: 500 calls, all HTTP 200, 6.94M tokens
+  ($0.35), 500/500 rows reranked, 0 `rerank_failed` or other degraded
+  stages. Paid cost for both runs was $51.22 against a $120 cap. Each run
+  hit the known #5092 stall five times; a watchdog resumed each time without
+  repeating a reader call.
+- Receipts under `docs/benchmarks/2026-09-29-longmemeval-opaque-qa/reranker-on/`
+  with nine manifest entries. `scripts/verify-longmemeval-opaque-qa.py` now
+  also recounts both runs, their paired tests against arm a and the
+  published rows, rerank coverage and the prompt leak check.
+
+### Changed
+
+- The report gains a reranker-on section. The README now gives the
+  reranker-on numbers beside the 439/500 and says the leak made no
+  measurable difference to the published configuration.
+
 ## [0.10.1] - 2026-09-29
 
 One release for all of the work that followed the September 28 audits and the

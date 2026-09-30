@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "description": "Map from published claims to their saved evidence. The manifest test checks artifact paths, SHA-256 hashes, and declared JSON-pointer values. It does not parse report prose or independently validate every scorer. Separate golden tests and recount scripts are named where available. Entries marked disclosed-gap identify missing evidence; a fresh run cannot restore a missing historical receipt.",
-  "updated": "2026-09-29",
+  "updated": "2026-09-30",
   "entries": [
     {
       "claim_id": "lifecycle-2026-09-29-primary",
@@ -2962,6 +2962,104 @@
       },
       "status": "covered",
       "note": "Keyless stub-embedding check (one ingestion seed). Firing counts are parser behavior; its recall and hit numbers come from hash embeddings and are not search-quality evidence."
+    },
+    {
+      "claim_id": "longmemeval-reranker-on-summary",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: reranker on, 453/500 notes reader (R1), 432/500 direct reader without the leak (R2) against the invalid 433/500, 450/470 strict retrieval",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/reranker-on/summary-rerank.json",
+      "artifact_sha256": "aa72e6d6da4771054503643d8237a917eb8d029730e64e658fa7c27e38edf302",
+      "expected": {
+        "/arms/r1/correct_gbrain_judge": 453,
+        "/arms/r1/correct_official_judge": 451,
+        "/arms/r2/correct_gbrain_judge": 432,
+        "/arms/r2/correct_official_judge": 437,
+        "/arms/r1/denominator": 500,
+        "/arms/r1/strict_recall_all_at5": 450,
+        "/arms/r2/strict_recall_all_at5": 450,
+        "/arms/r1/voyage/rows_reranked": 500,
+        "/arms/r2/voyage/rows_reranked": 500,
+        "/paired/r1_vs_a_gbrain_judge/gains": 31,
+        "/paired/r1_vs_a_gbrain_judge/losses": 17,
+        "/paired/r2_vs_published_d1_gbrain_judge/gains": 15,
+        "/paired/r2_vs_published_d1_gbrain_judge/losses": 16,
+        "/retrieval/r1_vs_a/gains": 22,
+        "/retrieval/r1_vs_a/losses": 7,
+        "/retrieval/r1_r2_identical_chunk_lists": 500
+      },
+      "golden_test": "scripts/verify-longmemeval-opaque-qa.py: keyless recount of the reranker-on verdicts, strict recall, paired tests against arm a and the published D1 rows, rerank coverage and the prompt leak check",
+      "status": "covered",
+      "note": "Measured 2026-09-29/30 on gbrain a7cb37b, the same code, data, cache and judges as the 439/500 arm; only the reranker (voyage:rerank-2.5) and, for R2, the reader (direct, 512 tokens) change. All 500 questions; 0 reader errors, judge errors, provider failures or rerank_failed stages."
+    },
+    {
+      "claim_id": "longmemeval-reranker-on-r1-rows",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: R1 harness rows (notes reader, reranker on)",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/reranker-on/r1/rows.ndjson",
+      "artifact_sha256": "7859ceea0f74e73a22a98db3760fff6b3ddb36694901258fa284720b7a424792",
+      "status": "covered",
+      "note": "Machine-local paths replaced by placeholders; no other bytes changed. The dataset and embedding cache are not committed; provenance-rerank.json records their hashes.",
+      "golden_test": "scripts/verify-longmemeval-opaque-qa.py: keyless recount of the reranker-on verdicts, strict recall, paired tests against arm a and the published D1 rows, rerank coverage and the prompt leak check"
+    },
+    {
+      "claim_id": "longmemeval-reranker-on-r1-official-judge",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: Verbatim official judge over R1",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/reranker-on/r1/official-judge.ndjson",
+      "artifact_sha256": "d5bb3a8d2638226602c78ca289a910ec61c9544a029bda1b5e7f1969d4b4cbb5",
+      "status": "covered",
+      "note": "Machine-local paths replaced by placeholders; no other bytes changed. The dataset and embedding cache are not committed; provenance-rerank.json records their hashes.",
+      "golden_test": "scripts/verify-longmemeval-opaque-qa.py: keyless recount of the reranker-on verdicts, strict recall, paired tests against arm a and the published D1 rows, rerank coverage and the prompt leak check"
+    },
+    {
+      "claim_id": "longmemeval-reranker-on-r1-calls",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: Every paid call of R1 including Voyage rerank records (gzip)",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/reranker-on/r1/calls.ndjson.gz",
+      "artifact_sha256": "5d63c2160e64495912cb6e4762b89dc2360d90da13d37a2ae375260378b5d1c2",
+      "status": "covered",
+      "note": "Machine-local paths replaced by placeholders; no other bytes changed. The dataset and embedding cache are not committed; provenance-rerank.json records their hashes.",
+      "golden_test": "scripts/verify-longmemeval-opaque-qa.py: keyless recount of the reranker-on verdicts, strict recall, paired tests against arm a and the published D1 rows, rerank coverage and the prompt leak check"
+    },
+    {
+      "claim_id": "longmemeval-reranker-on-r2-rows",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: R2 harness rows (direct 512 reader, reranker on, opaque ids)",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/reranker-on/r2/rows.ndjson",
+      "artifact_sha256": "28537ba28c4b7eb3aef375509db4d09ab6201782e4be9b362d64d283182de4f5",
+      "status": "covered",
+      "note": "Machine-local paths replaced by placeholders; no other bytes changed. The dataset and embedding cache are not committed; provenance-rerank.json records their hashes.",
+      "golden_test": "scripts/verify-longmemeval-opaque-qa.py: keyless recount of the reranker-on verdicts, strict recall, paired tests against arm a and the published D1 rows, rerank coverage and the prompt leak check"
+    },
+    {
+      "claim_id": "longmemeval-reranker-on-r2-official-judge",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: Verbatim official judge over R2",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/reranker-on/r2/official-judge.ndjson",
+      "artifact_sha256": "a765d076948eb1f4ca14532b16bc1d65fa4c36828eeeb72fc942605054373db3",
+      "status": "covered",
+      "note": "Machine-local paths replaced by placeholders; no other bytes changed. The dataset and embedding cache are not committed; provenance-rerank.json records their hashes.",
+      "golden_test": "scripts/verify-longmemeval-opaque-qa.py: keyless recount of the reranker-on verdicts, strict recall, paired tests against arm a and the published D1 rows, rerank coverage and the prompt leak check"
+    },
+    {
+      "claim_id": "longmemeval-reranker-on-r2-calls",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: Every paid call of R2 including Voyage rerank records (gzip)",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/reranker-on/r2/calls.ndjson.gz",
+      "artifact_sha256": "b755b0405e588f1522a40c277c783bc06c796dd4488e332f5415abd813650f7e",
+      "status": "covered",
+      "note": "Machine-local paths replaced by placeholders; no other bytes changed. The dataset and embedding cache are not committed; provenance-rerank.json records their hashes.",
+      "golden_test": "scripts/verify-longmemeval-opaque-qa.py: keyless recount of the reranker-on verdicts, strict recall, paired tests against arm a and the published D1 rows, rerank coverage and the prompt leak check"
+    },
+    {
+      "claim_id": "longmemeval-reranker-on-per-question-rerank",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: Per-question retrieval and correctness for a, R1, R2 and the published D1 run",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/reranker-on/per_question_rerank.csv",
+      "artifact_sha256": "3e692916ffa137fd3852fb6afb781fdd3933b1d8a77d9a8d1dab6dfb07895592",
+      "status": "covered",
+      "note": "Machine-local paths replaced by placeholders; no other bytes changed. The dataset and embedding cache are not committed; provenance-rerank.json records their hashes.",
+      "golden_test": "scripts/verify-longmemeval-opaque-qa.py: keyless recount of the reranker-on verdicts, strict recall, paired tests against arm a and the published D1 rows, rerank coverage and the prompt leak check"
+    },
+    {
+      "claim_id": "longmemeval-reranker-on-provenance-rerank",
+      "readme_anchor": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md: Code, flags, cache identity, prices and executed script hashes for R1 and R2",
+      "artifact_path": "docs/benchmarks/2026-09-29-longmemeval-opaque-qa/reranker-on/provenance-rerank.json",
+      "artifact_sha256": "8f5493b62e67f2239939b8dc1e207f9fe76ddc7ee01e16bd2c2131258d9a179b",
+      "status": "covered",
+      "note": "Machine-local paths replaced by placeholders; no other bytes changed. The dataset and embedding cache are not committed; provenance-rerank.json records their hashes."
     }
   ]
 }
