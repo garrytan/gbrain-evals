@@ -715,7 +715,7 @@ async function main(): Promise<void> {
         trajectory_points: ledger.trajectories.reduce((n, t) => n + t.points.length, 0),
       },
       probes_by_feature: featureCounts,
-      negative_controls: r.world.negative.size,
+      ledger_negative_controls: r.world.negative.size,
       presence: r.presence,
       seed_report: r.seedReport ? { writes: r.seedReport.writes, write_errors: r.seedReport.write_errors, chronicle_extract: r.seedReport.chronicle_extract } : null,
       unsupported: UNSUPPORTED,
