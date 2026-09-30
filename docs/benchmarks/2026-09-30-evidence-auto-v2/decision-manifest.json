@@ -1,0 +1,111 @@
+{
+  "schema": "gbrain-evals/evidence-delivery-decision/v2",
+  "id": "evidence-auto-v2-2026-09-30",
+  "committed_before_any_paid_run": true,
+  "question": "Does auto v2 at the product default budget keep page's gain on conversation questions, so that it can ship as gbrain's release default?",
+  "status": "The decision rests on the sealed confirmation set (E2). LongMemEval-S is development data: its 400 confirmatory questions were used once by the prior study, so here it is a sanity check reported beside the decision.",
+  "prior": {
+    "report": "docs/benchmarks/2026-09-30-evidence-delivery.md",
+    "decision_manifest_sha256": "1b7e1fb19aadf0d75df289dcf8836023163a7914584705a7a70f3237b48709ea",
+    "outcome": "page_only: page 361/400 against chunk 253/400; window1 285 and window2 292 closed 30% and 36% of the gap"
+  },
+  "candidate_commits": {
+    "gbrain_repository": "garrytan/gbrain",
+    "gbrain_branch": "capy/evidence-page-code-fix",
+    "gbrain": null,
+    "gbrain_rule": "The full 40-hex head of the auto v2 branch after its master merge, written here once, in its own commit, before any paid run. Every paid subcommand refuses while it is null, when the frozen evidence names another commit, or when this file differs from its committed version.",
+    "comparison_release": "The same commit with return_unit chunk, which is byte for byte the pre-0.60.16 default (the stage is skipped and ranked chunks are returned unchanged). The sealed protocol's frozen comparison release is therefore the candidate commit's chunk path.",
+    "gbrain_evals_rule": "The gbrain-evals commit that contains this file; every paid row records it and the SHA-256 of this file."
+  },
+  "data": {
+    "longmemeval_s": { "file": "longmemeval_s_cleaned.json", "sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442", "questions": 500, "role": "development data; sanity check on all 500" },
+    "cluster_map": { "path": "docs/benchmarks/2026-09-30-evidence-delivery/cluster-map.json" },
+    "strata": ["single-session-user", "single-session-assistant", "single-session-preference", "multi-session", "temporal-reasoning", "knowledge-update"],
+    "sealed": {
+      "set": "sealed-confirmation-v1",
+      "manifest": "eval/data/sealed-confirmation-v1/manifest.json",
+      "questions_sha256": "c382f438ab80d745151613e1a5b9f6daec31b74c03cc4757702a35caaca78a1d",
+      "labels_sha256": "4990a7e234cf6aed37c64f424ec3d7b319f6556e2c4652f04bfad771d2cdafc9",
+      "questions": 150,
+      "personas": 30,
+      "question_kinds": ["single-session-user", "multi-session", "temporal-reasoning", "knowledge-update", "abstention"],
+      "release_decision": "the first of at most three release decisions the sealed protocol allows"
+    }
+  },
+  "retrieval": {
+    "frozen_once": "Hit lists are frozen once at candidate_commits.gbrain with the prior study's settings and used by every arm; LongMemEval agreement with R1 and with the prior freeze is reported, never used to drop rows.",
+    "top_k": 5,
+    "mode": "balanced",
+    "reranker": { "enabled": true, "model": "voyage:rerank-2.5", "candidates_per_query": 25, "timeout_ms": 30000 },
+    "autocut": false,
+    "expansion": false,
+    "trajectory": false,
+    "embedding": { "model": "openai:text-embedding-3-large", "dimensions": 1536 }
+  },
+  "reader": {
+    "model": "anthropic:claude-sonnet-4-6",
+    "route": "gbrain gateway chat",
+    "mode": "notes",
+    "system_sha256": "3db7ccbb12b2bda893755f560fdfe0d8d733253d38645d6d8124cb3ffb0887d0",
+    "prompt_version": "gbrain-lme-reader-v4-notes-fullsessions",
+    "max_tokens": 1024,
+    "temperature": "provider default (unset)",
+    "renderer": "renderChatBlock with maxSessionChars 60000, one <chat_session> block per delivered block, opaque session id and session date, no span markers",
+    "user_text": "buildReaderUserText({question, questionDate, rendered})",
+    "e2_bridge": "The sealed set uses the same request builder through eval/runner/evidence-delivery/e2-bridge.ts, not the sealed runner's whole-session answer prompt; only the evidence differs between arms."
+  },
+  "judges": {
+    "primary": { "id": "gbrain", "implementation": "gbrain src/eval/longmemeval/judge.ts judgeRow (sealed abstention items routed with the _abs id suffix)", "model": "openai:gpt-4o", "snapshot": "gpt-4o-2024-08-06", "temperature": 0, "max_tokens": 16 },
+    "confirmation": { "id": "official", "implementation": "LongMemEval evaluate_qa.py get_anscheck_prompt (verbatim on LongMemEval; the sealed protocol's own implementation on the sealed set)", "model": "gpt-4o-2024-08-06", "temperature": 0 },
+    "rule": "Decisions use the primary judge. The confirmation judge must not reverse a pass: its auto - chunk must be positive. It never rescues a failure."
+  },
+  "arms": [
+    { "id": "chunk", "role": "baseline", "source": "frozen", "unit": "chunk", "blocks": "per_chunk", "budget_tokens": null, "sets": ["longmemeval", "sealed"] },
+    { "id": "auto", "role": "candidate", "source": "product", "unit": "auto", "blocks": "per_result", "budget_tokens": null, "budget_note": "no budget is passed, so the product default applies: search.return_budget_conversation, 16,000 tokens for a trusted local caller. The applied budget is read back from the delivery meta and must be 16000.", "expected_budget_tokens": 16000, "sets": ["longmemeval", "sealed"] },
+    { "id": "page", "role": "reference", "source": "product", "unit": "page", "blocks": "per_page", "budget_tokens": 100000, "sets": ["longmemeval"] }
+  ],
+  "sanity": {
+    "set": "all 500 LongMemEval-S questions",
+    "rule": "correct(auto) >= correct(page) - max_shortfall_fraction x 500, primary judge, point estimate",
+    "max_shortfall_fraction": 0.02,
+    "role": "Reported beside the E2 decision. It does not gate opening the seal: E2 decides auto against chunk, while this check measures what the 16,000-token default gives up against uncapped pages.",
+    "diagnostics": [
+      "auto blocks delivered as a whole or partial conversation page, truncated blocks, and blocks kept as ranked chunks with reason conversation_over_budget, from the product's delivered objects",
+      "questions where any hit fell back, and the delivery meta's fallbacks and dropped counts",
+      "auto - page and auto - chunk paired gains and losses, by question type, and on questions with and without truncation",
+      "the three token counts, and whether auto's delivered text equals page's on untruncated questions"
+    ]
+  },
+  "e2": {
+    "set": "sealed-confirmation-v1, 150 questions over 30 personas (5 each)",
+    "arms": ["chunk", "auto"],
+    "decision_id": "evidence-auto-v2-2026-09-30:e2:auto",
+    "custody": "The questions and labels are transferred by the owner's agent with a custody note, used only on the Capy machine (never copied to a VM), and deleted after scoring. Labels open once, through the sealed runner's openLabels, with the commitment check, this decision id and an access-log line; the access log's line count is reported.",
+    "clusters": "haystack (persona)",
+    "pass": "auto - chunk > 0, the exact two-sided McNemar p < alpha, the persona-clustered two-sided sign-flip p < alpha, primary judge, and the confirmation judge's auto - chunk > 0",
+    "fail": "anything else that is not inconclusive",
+    "inconclusive": "either arm has more than max_errors reader errors, a question is missing from either arm, or the primary judge passes while the confirmation judge's auto - chunk <= 0",
+    "alpha": 0.05,
+    "max_errors": 3,
+    "sign_flip_draws": 20000,
+    "bootstrap_draws": 20000,
+    "seed": 20260930,
+    "published": "aggregate counts with denominators by question kind, the paired table and the tests; per-question outcomes, question text, chats and answers stay private with the files",
+    "no_second_try": "No other setting, budget or unit may be tried on the sealed set after this decision; a failed candidate is fixed on development data and re-preregistered."
+  },
+  "missing_and_errors": {
+    "retries": "provider calls retry inside the run (5 attempts with backoff); a question whose reader call still fails is re-run by resume, at most 3 resume passes",
+    "reader_error": "after the resume passes, a reader error counts as incorrect for both judges",
+    "judge_error": "a judge malfunction counts as incorrect for that judge",
+    "truncated_output": "a reader answer stopped by max_tokens is judged as written and counted",
+    "missing_rows": "a question missing from any arm blocks the comparison (inconclusive)"
+  },
+  "token_accounting": "Every row records the product's cl100k count of the delivered text, the serialized tool payload and the provider-reported reader input tokens; they are reported separately.",
+  "budget": {
+    "ledger": "eval/runner/budget-ledger.ts; every paid request, including embeddings, reranks and judges, is reserved and reconciled there",
+    "campaign_cap_usd": 150,
+    "program_cap_usd": 1000,
+    "campaign_runner": "evidence-auto-v2-campaign",
+    "campaign_run": "one shared ledger run opened for this campaign; every paid subcommand joins it with --budget-run-id"
+  }
+}
