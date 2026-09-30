@@ -1,6 +1,6 @@
 {
   "schema": "gbrain-evals/evidence-delivery-power/v1",
-  "decision_manifest_sha256": "b15e219651183a5ad51839a25bfd668d62271a9c35f45afabb9a0cd3dd045a49",
+  "decision_manifest_sha256": "1b7e1fb19aadf0d75df289dcf8836023163a7914584705a7a70f3237b48709ea",
   "seed": 20260930,
   "draws": 2000,
   "assumptions": {
