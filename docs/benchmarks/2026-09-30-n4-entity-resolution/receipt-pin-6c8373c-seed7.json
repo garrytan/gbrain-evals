@@ -14,12 +14,12 @@
   "category": "entity-resolution",
   "gbrain_version": "0.60.13.0",
   "gbrain_pin": "github:garrytan/gbrain#6c8373c3de9bb321a3da0bfa2dc2140736aeafa5",
-  "started_at": "2026-09-30T17:07:40.337Z",
+  "started_at": "2026-09-30T17:28:58.808Z",
   "execution": {
     "source_tree": {
-      "sha256": "c4e9aefc5e6600759bc034eaa0e2df30b7d0be50e100e09985b92def64fb8372",
-      "files": 1464,
-      "git_head": "28803044dde6c01d05dadfd93535c35eaf118ae7",
+      "sha256": "e3bb19415981403d03a61761709caf7dfd70bb5cbb0d60c05711097da2acb106",
+      "files": 1468,
+      "git_head": "26cb6000e1e2afa6bfdcded3b39e84f5b401593d",
       "dirty": false
     },
     "product": {
@@ -74,7 +74,7 @@
     "ledger": "f6ae3d5e164ccc6cb1690ec6d4fc74a2ff54606d11fc8f046025b8b9a07b26c0",
     "gold": "8f02fcd268467af2391109182aad64d108b424cd2c9eaaf3dbda0ac229dd3a13"
   },
-  "finished_at": "2026-09-30T17:07:53.194Z",
+  "finished_at": "2026-09-30T17:29:11.677Z",
   "data": {
     "headline": {
       "surface": "resolver",

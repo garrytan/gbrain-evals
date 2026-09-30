@@ -3157,7 +3157,7 @@
       "claim_id": "n4-entity-resolution-2026-09-30-pin-6c8373c",
       "readme_anchor": "docs/benchmarks/2026-09-30-n4-entity-resolution.md: Update, 2026-09-30 (0 wrong merges on every surface at 6c8373c)",
       "artifact_path": "docs/benchmarks/2026-09-30-n4-entity-resolution/receipt-pin-6c8373c.json",
-      "artifact_sha256": "8e042ce8f2d4ba233eac580b7daff0ea6601fe93c028ab69f03326bdbdff4198",
+      "artifact_sha256": "095e052fab4798dea33993f35f40fb8948905981b0002599a3af829310ace51e",
       "status": "covered",
       "expected": {
         "/verdict": "fail",
@@ -3168,13 +3168,13 @@
         "/data/surfaces/resolver/floor/correct": 48,
         "/data/surfaces/recall/correct_refusal_rate": 1
       },
-      "note": "Default seed 20260930 at gbrain master 6c8373c (v0.60.13.0), clean tree 2880304, $0. Both merge bugs fixed; verdict stays fail on F1 and unresolved targets by design, so the category stays report-only."
+      "note": "Default seed 20260930 at gbrain master 6c8373c (v0.60.13.0), clean tree 26cb600, $0. Both merge bugs fixed; verdict stays fail on F1 and unresolved targets by design, so the category stays report-only."
     },
     {
       "claim_id": "n4-entity-resolution-2026-09-30-pin-6c8373c-seed7",
       "readme_anchor": "docs/benchmarks/2026-09-30-n4-entity-resolution.md: Update, 2026-09-30 (seed 7 at 6c8373c)",
       "artifact_path": "docs/benchmarks/2026-09-30-n4-entity-resolution/receipt-pin-6c8373c-seed7.json",
-      "artifact_sha256": "b97a3edfd626ed9b3cfbfa6e2105344ee9c6722de266ecf3d9a3350fe9eca215",
+      "artifact_sha256": "ec8ba6a52874f09a4cbd180fa0f26bd24cd63bce40ac0807db4396954c7b2abe",
       "status": "covered",
       "expected": {
         "/n_scored": 740,

@@ -173,6 +173,12 @@ Measured on the pinned gbrain (`608a174`, 0.60.10.0) and on master (`f8d1e39`,
   into `.gbrain-overlays/`, installs it, verifies the copy (tree hash, no
   symlinks, CLI version) and records the loaded commit in the receipt's
   product identity. Never a symlink.
+- **N4 is hermetic inside a shared test process.** `runN4` now removes
+  provider keys and points `GBRAIN_HOME` at a temporary directory for the run,
+  as N3 and N6 already did. Before, a test that had configured gbrain's
+  gateway earlier in the same process made `remember` writes wait on provider
+  calls when keys were present, and the end-to-end test timed out. Scores
+  are unchanged: the re-run receipts match the earlier ones row for row.
 - **`all.ts` honors `gate: 'report-only'`.** A report-only category that
   completes with a non-pass verdict is REPORTED, never a pass and never a
   failure of the run; missing, stale, invalid and errored receipts still fail.

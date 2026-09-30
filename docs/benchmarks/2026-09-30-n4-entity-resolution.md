@@ -19,7 +19,7 @@ Verdict: `fail` against the contract targets (wrong merges must be 0, the floor 
 
 ## Update, 2026-09-30: both merge bugs fixed at the new pin (`6c8373c`, v0.60.13.0)
 
-gbrain v0.60.13.0 ([#5769](https://github.com/garrytan/gbrain/pull/5769)) includes fixes for both bugs. Re-run at the new pinned dependency, gbrain master `6c8373c`, with the same ledger (default seed 20260930, same ledger SHA-256) on a clean gbrain-evals tree (commit `2880304`):
+gbrain v0.60.13.0 ([#5769](https://github.com/garrytan/gbrain/pull/5769)) includes fixes for both bugs. Re-run at the new pinned dependency, gbrain master `6c8373c`, with the same ledger (default seed 20260930, same ledger SHA-256) on a clean gbrain-evals tree (commit `26cb600`):
 
 | Surface | Wrong merges | Floor | Correct refusals | Accuracy | B-cubed F1 |
 |---|---|---|---|---|---|
