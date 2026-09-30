@@ -87,7 +87,7 @@ export function armParams(spec: ArmSpec): Record<string, unknown> {
 
 /** All transport-level comparisons for one question; pure given the transport, so tests can drive it with a stub. */
 export async function checkQuestion(t: E3Transport, q: FrozenQuestion, question: string, arms: ArmSpec[], store: Pick<BlobStore, 'get'>, fingerprint: (results: any[]) => string, count: (s: string) => number): Promise<E3QuestionRecord> {
-  const live = await t.call('query', { query: question, return_unit: 'chunk', limit: 5 });
+  const live = await t.call('query', { query: question, return_unit: 'chunk', limit: 5, expand: false });
   const liveHits = resultsOf(live.data).slice(0, 5);
   const liveSig = liveHits.map((r: any) => `${r.slug}#${r.chunk_id}`).join(',');
   const frozenSig = q.hits5.map(h => `${h.slug}#${h.chunk_id}`).join(',');
@@ -101,7 +101,7 @@ export async function checkQuestion(t: E3Transport, q: FrozenQuestion, question:
     const remote = await t.call('assemble_evidence', { hits: q.hits5.map(toHit), ...params });
     if (!remote.ok) errors.push(`assemble_evidence(frozen): ${remote.error}`);
     const remoteResults = resultsOf(remote.data);
-    const query = await t.call('query', { query: question, limit: 5, ...params });
+    const query = await t.call('query', { query: question, limit: 5, expand: false, ...params });
     if (!query.ok) errors.push(`query: ${query.error}`);
     const queryResults = resultsOf(query.data);
     const liveAssemble = await t.call('assemble_evidence', { hits: liveHits.map(toHit), ...params });

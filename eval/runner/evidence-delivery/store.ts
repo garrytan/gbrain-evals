@@ -82,7 +82,7 @@ export interface FrozenHeader {
   gbrain: GbrainIdentity;
   dataset_sha256: string;
   retrieval: Record<string, unknown>;
-  embed_cache: { sha256_before: string | null; sha256_after: string | null; misses: number | null };
+  embed_cache: { sha256_before: string | null; sha256_after: string | null; misses: number | null; shards?: Array<Record<string, unknown>> };
   product_arms: Record<string, { unit: string; return_window?: number; budget_tokens: number | null }>;
   note: string;
 }

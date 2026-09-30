@@ -25,7 +25,7 @@
  */
 import './budget-ledger.ts';
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import { BudgetExceededError, BudgetRun, budgetOptionsFrom, receiptCost, startPaidRun, type BudgetOptions } from './budget-ledger.ts';
@@ -146,6 +146,12 @@ function selectIds(a: Args, m: DecisionManifest, all: string[]): string[] {
   const explicit = a.list('--ids');
   let ids = explicit ?? (set === 'all' ? all : all.filter(id => (set === 'pilot') === pilot.has(id)));
   if (set === 'pilot') ids = pilotIds(m).filter(id => ids.includes(id));
+  const shard = a.get('--shard');
+  if (shard) {
+    const [k, n] = shard.split('/').map(Number);
+    if (!(n > 0 && k >= 0 && k < n)) throw new Error('--shard must be k/n with 0 <= k < n');
+    ids = ids.filter((_, i) => i % n === k);
+  }
   return ids.slice(0, a.num('--limit', ids.length));
 }
 
@@ -279,6 +285,40 @@ async function cmdFreeze(a: Args) {
   } finally { guard.uninstall(); }
 }
 
+/** Merge freeze shards made at one gbrain commit (one process per embedding cache) into one frozen manifest. */
+async function cmdMergeFrozen(a: Args) {
+  const out = resolve(a.need('--out-dir'));
+  const from = (a.list('--from') ?? []).map(d => resolve(d));
+  if (from.length < 1) throw new Error('--from needs the shard directories');
+  const shards = from.map(d => readFrozen(d));
+  const h0 = shards[0].header;
+  for (const [i, s] of shards.entries()) {
+    const h = s.header;
+    if (h.gbrain.commit !== h0.gbrain.commit || h.gbrain.dirty_sha256 !== h0.gbrain.dirty_sha256 || h.decision_manifest_sha256 !== h0.decision_manifest_sha256 || h.smoke !== h0.smoke || h.dataset_sha256 !== h0.dataset_sha256 || JSON.stringify(h.product_arms) !== JSON.stringify(h0.product_arms)) throw new Error(`${from[i]} was frozen under different identities than ${from[0]}`);
+  }
+  if (existsSync(join(out, 'frozen-manifest.jsonl'))) throw new Error(`${out} already holds a frozen manifest`);
+  mkdirSync(join(out, 'blobs'), { recursive: true });
+  const seen = new Set<string>();
+  const lines: string[] = [];
+  for (const [i, s] of shards.entries()) {
+    for (const sub of readdirSync(join(from[i], 'blobs')).sort()) {
+      mkdirSync(join(out, 'blobs', sub), { recursive: true });
+      for (const f of readdirSync(join(from[i], 'blobs', sub)).sort()) if (!existsSync(join(out, 'blobs', sub, f))) copyFileSync(join(from[i], 'blobs', sub, f), join(out, 'blobs', sub, f));
+    }
+    for (const q of s.questions.values()) {
+      if (seen.has(q.question_id)) throw new Error(`${q.question_id} appears in two shards`);
+      seen.add(q.question_id);
+      for (const hash of [q.hits5, q.hits10].flat().map(h => h.text)) if (!s.store.has(hash)) throw new Error(`missing blob ${hash}`);
+      lines.push(JSON.stringify(q));
+    }
+  }
+  writeFileSync(join(out, 'frozen-manifest.jsonl'), lines.join('\n') + '\n');
+  const header = { ...h0, embed_cache: { sha256_before: null, sha256_after: null, misses: shards.reduce((n, s) => n + (s.header.embed_cache.misses ?? 0), 0), shards: shards.map((s, i) => ({ dir: `shard-${i}`, questions: s.questions.size, ...s.header.embed_cache })) } };
+  writeJson(join(out, 'frozen-header.json'), header);
+  const merged = readFrozen(out);
+  process.stdout.write(JSON.stringify({ questions: merged.questions.size, frozen_manifest_sha256: merged.sha256 }) + '\n');
+}
+
 function e1Context(a: Args, g: GbrainModules, manifest: DecisionManifest, sha: string, set: string, readerModel: string): E1Context {
   const frozen = readFrozen(a.need('--frozen-dir'));
   const smoke = a.flag('--smoke');
@@ -380,7 +420,7 @@ async function cmdE3(a: Args) {
           if (score) {
             record.scored = [];
             for (const spec of specs) {
-              const resp = await driver.call('query', { query: d.question, limit: 5, return_unit: spec.unit, ...(spec.return_window ? { return_window: spec.return_window } : {}), ...(spec.budget_tokens ? { token_budget: spec.budget_tokens } : {}) });
+              const resp = await driver.call('query', { query: d.question, limit: 5, expand: false, return_unit: spec.unit, ...(spec.return_window ? { return_window: spec.return_window } : {}), ...(spec.budget_tokens ? { token_budget: spec.budget_tokens } : {}) });
               const { request } = requestFromSerialized(ctx.renderer, q, { question: d.question, question_date: d.question_date }, resultsOf(resp.data), SONNET, manifest.reader.max_tokens);
               const rr = await readerCall(g, request);
               const jq = { question_id: id, question_type: d.question_type, question: d.question, answer: d.answer };
@@ -475,7 +515,7 @@ async function cmdE2Score(a: Args) {
 
 const COMMANDS: Record<string, (a: Args) => Promise<void>> = {
   'cluster-map': cmdClusterMap, power: cmdPower, parity: cmdParity, analyze: cmdAnalyze, costs: cmdCosts,
-  'campaign-open': cmdCampaignOpen, freeze: cmdFreeze, e1: cmdE1, e3: cmdE3, 'e2-freeze': cmdE2Freeze, 'e2-answer': cmdE2Answer, 'e2-score': cmdE2Score,
+  'campaign-open': cmdCampaignOpen, freeze: cmdFreeze, 'merge-frozen': cmdMergeFrozen, e1: cmdE1, e3: cmdE3, 'e2-freeze': cmdE2Freeze, 'e2-answer': cmdE2Answer, 'e2-score': cmdE2Score,
 };
 
 if (import.meta.main) {

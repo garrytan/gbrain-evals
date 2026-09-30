@@ -154,7 +154,7 @@
   "e3": {
     "when": "after pilot selection and before the E1 confirmatory run, for page and the advanced candidates; repeated for the final candidate before E2",
     "deterministic": "for every arm used in a decision, the product's evidence for the frozen hit lists must match the frozen fingerprints; page must be byte-identical to the harness reader's evidence up to the classified parity differences reported by the parity check",
-    "live": "100 pilot questions, each in its own brain: the gbrain query operation through MCP stdio as a remote caller with return_unit set; hit-list drift against the frozen lists is reported; answers are scored from the exact serialized product evidence",
+    "live": "100 pilot questions, each in its own brain: the gbrain query operation through MCP stdio as a remote caller with return_unit set and expand: false (the frozen lists were retrieved without query expansion); hit-list drift against the frozen lists is reported; answers are scored from the exact serialized product evidence",
     "pass": "zero fingerprint mismatches on questions whose live hit list equals the frozen one, zero protected-content findings, delivered-token counts equal to the frozen ones"
   },
   "e2": {
