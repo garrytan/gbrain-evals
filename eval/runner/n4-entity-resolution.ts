@@ -48,7 +48,8 @@
  *
  * Usage: bun eval/runner/n4-entity-resolution.ts [--seed N] [--output DIR] [--gbrain <checkout>[@ref]] [--json]
  */
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import type { BrainEngine } from 'gbrain/engine';
 import type { Operation, OperationContext } from 'gbrain/operations';
@@ -378,7 +379,24 @@ const IDENTITY_SCOPES: ReadonlyArray<{ name: string; caller: MentionCaller | 'tr
   { name: 'local-team', caller: { sources: ['team'], remote: false } },
 ];
 
+const PROVIDER_KEYS = ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY', 'GROQ_API_KEY', 'ZEROENTROPY_API_KEY', 'OPENROUTER_API_KEY', 'GOOGLE_API_KEY', 'GEMINI_API_KEY', 'COHERE_API_KEY', 'MISTRAL_API_KEY'];
+
+/** Hermetic environment for the run (no provider keys, a throwaway GBRAIN_HOME), restored afterwards. */
 export async function runN4(gut: GbrainUnderTest, ledger: Ledger, gold: GoldStore<Gold>, opts: RunOptions): Promise<RunResult> {
+  const saved = Object.fromEntries([...PROVIDER_KEYS, 'GBRAIN_HOME'].map(k => [k, process.env[k]]));
+  for (const k of PROVIDER_KEYS) delete process.env[k];
+  process.env.GBRAIN_HOME = mkdtempSync(join(tmpdir(), 'n4-home-'));
+  try {
+    return await runN4Hermetic(gut, ledger, gold, opts);
+  } finally {
+    for (const [k, v] of Object.entries(saved)) {
+      if (v === undefined) delete process.env[k];
+      else process.env[k] = v;
+    }
+  }
+}
+
+async function runN4Hermetic(gut: GbrainUnderTest, ledger: Ledger, gold: GoldStore<Gold>, opts: RunOptions): Promise<RunResult> {
   const log = opts.log ?? (() => {});
   const acc = opts.acc ?? new ProbeAccounting(plannedProbes(ledger));
   const g = await loadGbrain(gut);
