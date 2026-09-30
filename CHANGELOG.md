@@ -4,12 +4,27 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [0.10.3] - 2026-09-30
 
-The evidence-delivery study, preregistered before any paid run. gbrain is
+The evidence-delivery study: preregistered, run and reported. gbrain is
 adding an opt-in stage that returns neighbors, sections or whole pages
-instead of bare chunks. This release adds the harness that will measure it;
-it contains no result.
+instead of bare chunks.
 
 ### Added
+
+- **Result: whole pages help; cheaper windows do not close enough of the
+  gap.** On 400 held-out LongMemEval-S questions with the reranker on and
+  retrieval frozen at gbrain `732ee811`, whole-page delivery answered 361
+  against 253 for five chunks (+114/−6, p = 6e-27). The two pilot winners,
+  one or two neighbor chunks per side, scored 285 and 292 at 44% of
+  whole-page input tokens: significant against chunks, but only 30% and 36%
+  of the gap against the preregistered 60%. Decision-manifest verdict:
+  `page_only`, so `page` ships opt-in and the default stays `chunk`; the
+  sealed set was not opened. An agent that could fetch pages scored 83/100
+  on the pilot (chunks 68, pages 92). The gpt-4o reader tied (128 against
+  129/400) because it abstained on about two thirds of questions under the
+  notes prompt. E3 reproduced the frozen evidence over MCP on 100/100
+  questions for every arm. Paid cost $112.44 through one ledger run.
+  Report: `docs/benchmarks/2026-09-30-evidence-delivery.md`, receipts under
+  `docs/benchmarks/2026-09-30-evidence-delivery/results/`.
 
 - **An executable decision manifest**
   (`docs/benchmarks/2026-09-30-evidence-delivery/decision-manifest.json`),
@@ -41,8 +56,13 @@ it contains no result.
   at $122 ($153 with a retry margin) against a $400 campaign cap.
 - A $0.97 plumbing smoke against the WIP gbrain branch: 4 of 4 identical-list
   questions reproduced R1's request bytes; the product `page` drops page
-  frontmatter and 9 of 24 blocks lose a paragraph break at chunk seams; MCP
-  `assemble_evidence` reproduced the local fingerprints.
+  frontmatter and 9 of 24 blocks lost a paragraph break at chunk seams (fixed
+  in gbrain before the pinned commit); MCP `assemble_evidence` reproduced the
+  local fingerprints.
+- Sharded freezing (one process per embedding cache) with `merge-frozen`,
+  `e3-summary`, and the VM pipeline and watchdog scripts used for the run.
+- Voyage rerank timeout raised to 30 s in freeze and E3 after 28 haystacks
+  timed out at gbrain's 5 s default during a Voyage overload.
 
 ### Changed
 

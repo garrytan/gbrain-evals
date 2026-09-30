@@ -1,0 +1,246 @@
+{
+  "decision_manifest_sha256": "1b7e1fb19aadf0d75df289dcf8836023163a7914584705a7a70f3237b48709ea",
+  "stage": "confirmatory",
+  "rows_dir": "$HOME/ed/e1",
+  "decision": {
+    "outcome": "page_only",
+    "winner": null,
+    "problems": [],
+    "n": 400,
+    "chunk": {
+      "arm": "chunk",
+      "n": 400,
+      "correct": 253,
+      "errors": 0,
+      "error_rate": 0,
+      "mean_tokens": 3511.2825,
+      "p95_tokens": 4023,
+      "missing_tokens": 0,
+      "duplicate_rows": 0
+    },
+    "page": {
+      "arm": "page",
+      "n": 400,
+      "correct": 361,
+      "errors": 0,
+      "error_rate": 0,
+      "mean_tokens": 15483.5725,
+      "p95_tokens": 19445,
+      "missing_tokens": 0,
+      "duplicate_rows": 0
+    },
+    "gap": {
+      "value": 108,
+      "mcnemar_p": 5.795583853506602e-27,
+      "established": true,
+      "confirmation_value": 106
+    },
+    "candidates": [
+      {
+        "id": "window1",
+        "correct": 285,
+        "delta_vs_chunk": 32,
+        "hurdle": 317.8,
+        "closure_ratio": 0.2962962962962963,
+        "closure_met": false,
+        "token_ratio": 0.43948416943182844,
+        "token_p95": 7179,
+        "token_met": true,
+        "mcnemar": {
+          "wins": 47,
+          "losses": 15,
+          "p": 0.00005778372004920304,
+          "p_holm": 0.0002889186002460152
+        },
+        "sign_flip": {
+          "p": 0.0000999950002499875,
+          "p_holm": 0.0004999750012499375,
+          "ci95": [
+            0.0425,
+            0.1175
+          ]
+        },
+        "significance_met": true,
+        "per_type": [
+          {
+            "type": "single-session-user",
+            "n": 54,
+            "wins": 5,
+            "losses": 1,
+            "net_loss": -4,
+            "ok": true
+          },
+          {
+            "type": "single-session-assistant",
+            "n": 44,
+            "wins": 6,
+            "losses": 0,
+            "net_loss": -6,
+            "ok": true
+          },
+          {
+            "type": "single-session-preference",
+            "n": 25,
+            "wins": 2,
+            "losses": 1,
+            "net_loss": -1,
+            "ok": true
+          },
+          {
+            "type": "multi-session",
+            "n": 112,
+            "wins": 19,
+            "losses": 4,
+            "net_loss": -15,
+            "ok": true
+          },
+          {
+            "type": "temporal-reasoning",
+            "n": 110,
+            "wins": 11,
+            "losses": 6,
+            "net_loss": -5,
+            "ok": true
+          },
+          {
+            "type": "knowledge-update",
+            "n": 55,
+            "wins": 4,
+            "losses": 3,
+            "net_loss": -1,
+            "ok": true
+          }
+        ],
+        "per_type_met": true,
+        "confirmation": {
+          "delta_vs_chunk": 31,
+          "gap": 106,
+          "agrees": true
+        },
+        "contrast": {
+          "mean": -0.08200000000000003,
+          "ci95": [
+            -0.11650000000000021,
+            -0.049000000000000064
+          ]
+        },
+        "primary_success": false,
+        "success": false,
+        "reasons": [
+          "closure: 285 correct is below the hurdle 317.8"
+        ]
+      },
+      {
+        "id": "window2",
+        "correct": 292,
+        "delta_vs_chunk": 39,
+        "hurdle": 317.8,
+        "closure_ratio": 0.3611111111111111,
+        "closure_met": false,
+        "token_ratio": 0.445993649075496,
+        "token_p95": 7207,
+        "token_met": true,
+        "mcnemar": {
+          "wins": 54,
+          "losses": 15,
+          "p": 0.000002612848003590018,
+          "p_holm": 0.00001567708802154011
+        },
+        "sign_flip": {
+          "p": 0.00004999750012499375,
+          "p_holm": 0.0002999850007499625,
+          "ci95": [
+            0.05764411027568922,
+            0.1375
+          ]
+        },
+        "significance_met": true,
+        "per_type": [
+          {
+            "type": "single-session-user",
+            "n": 54,
+            "wins": 7,
+            "losses": 2,
+            "net_loss": -5,
+            "ok": true
+          },
+          {
+            "type": "single-session-assistant",
+            "n": 44,
+            "wins": 7,
+            "losses": 0,
+            "net_loss": -7,
+            "ok": true
+          },
+          {
+            "type": "single-session-preference",
+            "n": 25,
+            "wins": 2,
+            "losses": 0,
+            "net_loss": -2,
+            "ok": true
+          },
+          {
+            "type": "multi-session",
+            "n": 112,
+            "wins": 22,
+            "losses": 5,
+            "net_loss": -17,
+            "ok": true
+          },
+          {
+            "type": "temporal-reasoning",
+            "n": 110,
+            "wins": 13,
+            "losses": 7,
+            "net_loss": -6,
+            "ok": true
+          },
+          {
+            "type": "knowledge-update",
+            "n": 55,
+            "wins": 3,
+            "losses": 1,
+            "net_loss": -2,
+            "ok": true
+          }
+        ],
+        "per_type_met": true,
+        "confirmation": {
+          "delta_vs_chunk": 37,
+          "gap": 106,
+          "agrees": true
+        },
+        "contrast": {
+          "mean": -0.06450000000000003,
+          "ci95": [
+            -0.09874686716791997,
+            -0.031077694235588947
+          ]
+        },
+        "primary_success": false,
+        "success": false,
+        "reasons": [
+          "closure: 292 correct is below the hurdle 317.8"
+        ]
+      }
+    ],
+    "reasons": [
+      "the gap is established but no candidate meets every success condition"
+    ]
+  },
+  "gpt4o_second_arm": {
+    "arm": "window2",
+    "label": "best_advanced"
+  },
+  "gpt4o": {
+    "chunk": {
+      "n": 400,
+      "correct": 128
+    },
+    "window2": {
+      "n": 400,
+      "correct": 129
+    }
+  }
+}

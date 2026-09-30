@@ -1,0 +1,13 @@
+2026-09-30T14:13:44Z attempt=1 rc=1
+2026-09-30T14:15:15Z attempt=2 rc=1
+2026-09-30T14:16:45Z attempt=3 rc=1
+2026-09-30T14:18:15Z attempt=4 rc=1
+2026-09-30T14:19:15Z attempt=5 rc=1
+2026-09-30T14:20:15Z attempt=6 rc=1
+2026-09-30T14:21:15Z attempt=7 rc=1
+2026-09-30T14:22:15Z attempt=8 rc=1
+2026-09-30T14:23:15Z attempt=9 rc=1
+2026-09-30T14:24:15Z attempt=10 rc=1
+2026-09-30T14:25:16Z attempt=11 rc=1
+2026-09-30T14:26:16Z attempt=12 rc=1
+2026-09-30T14:32:57Z attempt=1 rc=0

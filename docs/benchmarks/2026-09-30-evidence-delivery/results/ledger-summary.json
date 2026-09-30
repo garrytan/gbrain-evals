@@ -1,0 +1,53 @@
+{
+  "schema": "gbrain-evals/evidence-delivery-ledger-summary/v1",
+  "run": {
+    "run_id": "evidence-delivery-campaign-2026-09-30T13-04-40-261Z-f2d1c672",
+    "runner": "evidence-delivery-campaign",
+    "budget_usd": 400,
+    "estimate_usd": 152.57,
+    "started_at": "2026-09-30T13:04:40.262Z",
+    "finished_at": null
+  },
+  "program_cap_usd": 1000,
+  "campaign_cap_usd": 400,
+  "total_usd": 112.4412,
+  "requests": 43680,
+  "by_model": {
+    "openai:text-embedding-3-large embedding": {
+      "requests": 29944,
+      "usd": 9.1102,
+      "charged_at_reservation": 5,
+      "input_tokens": 70071343,
+      "output_tokens": 0
+    },
+    "voyage:rerank-2.5 rerank": {
+      "requests": 2260,
+      "usd": 1.8005,
+      "charged_at_reservation": 548,
+      "input_tokens": 23702530,
+      "output_tokens": 0
+    },
+    "anthropic:claude-sonnet-4-6 chat": {
+      "requests": 3076,
+      "usd": 85.2706,
+      "charged_at_reservation": 0,
+      "input_tokens": 25041722,
+      "output_tokens": 676362
+    },
+    "openai:gpt-4o-2024-08-06 chat": {
+      "requests": 3800,
+      "usd": 3.0388,
+      "charged_at_reservation": 0,
+      "input_tokens": 1190111,
+      "output_tokens": 6354
+    },
+    "openai:gpt-4o chat": {
+      "requests": 4600,
+      "usd": 13.2211,
+      "charged_at_reservation": 0,
+      "input_tokens": 5137642,
+      "output_tokens": 37701
+    }
+  },
+  "note": "Every paid request of the program, including gbrain server subprocess requests during E3 and the stalled E3 rerun, joined this one run. Charged-at-reservation entries had no usage in the response (timed-out or 503 reranks, a few embedding retries) and are counted at their worst-case reservation, so the total can only overstate spend. The earlier plumbing smoke (/bin/bash.97, a separate local ledger) is not included."
+}

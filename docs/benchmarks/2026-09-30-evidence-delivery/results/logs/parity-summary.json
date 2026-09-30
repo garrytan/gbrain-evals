@@ -1,0 +1,21 @@
+{
+  "ok": true,
+  "harness_vs_r1": {
+    "eligible": 406,
+    "identical": 406
+  },
+  "product_page_vs_harness": {
+    "questions": 500,
+    "requests_identical": 0,
+    "same_session_order": 500,
+    "blocks": {
+      "identical": 0,
+      "frontmatter_only": 2448,
+      "whitespace_only": 0,
+      "truncated": 0,
+      "missing": 0,
+      "other": 3
+    },
+    "examples": 3
+  }
+}

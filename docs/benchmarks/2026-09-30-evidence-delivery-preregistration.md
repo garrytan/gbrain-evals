@@ -1,6 +1,6 @@
 # Evidence delivery: preregistration, power analysis and paid-run plan
 
-**Status, 2026-09-30: preregistered, not yet run.** No paid arm has run except a plumbing smoke test ($0.97). This document fixes the question, the arms, the decision rule and the budget before any measurement. The executable rule is [decision-manifest.json](2026-09-30-evidence-delivery/decision-manifest.json); the code that applies it is `eval/runner/evidence-delivery/decision.ts`. Where this prose and the manifest differ, the manifest wins.
+**Status, 2026-09-30: preregistered, then run the same day.** Results and the verdict (`page_only`) are in the [report](2026-09-30-evidence-delivery.md). Everything below was written before any paid arm ran, except this status line, the gbrain pin (step 0) and the recomputed power-report hash; a plumbing smoke test ($0.97) ran before the pin. This document fixes the question, the arms, the decision rule and the budget before any measurement. The executable rule is [decision-manifest.json](2026-09-30-evidence-delivery/decision-manifest.json); the code that applies it is `eval/runner/evidence-delivery/decision.ts`. Where this prose and the manifest differ, the manifest wins.
 
 ## The question
 

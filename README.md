@@ -87,6 +87,11 @@ the same reader given only the five retrieved chunks fell from 89/100 to
 and `gbrain think`'s prompt tied at 65, 65 and 64 of 100. Delivering more of
 the evidence mattered far more than the prompt wording.
 [Read the re-run](docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md).
+On September 30, with the reranker on and retrieval frozen, whole-page
+delivery answered 361 of 400 held-out questions against 253 for chunks; one or
+two neighbor chunks per side reached only 285 and 292 at 44% of the page
+tokens, short of the preregistered bar, so whole pages ship as an opt-in.
+[Read the evidence-delivery study](docs/benchmarks/2026-09-30-evidence-delivery.md).
 
 **Keeping the conversations intact can help the answer model use them.** In a
 separate September 24 matched reading study, asking Sonnet 4.6 to take brief
