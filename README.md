@@ -53,8 +53,12 @@ historical 433/500 (86.6%) stays in the record as invalid: its answer model
 could see session ids that mark the labeled evidence. On exactly the same
 retrieved sessions, a GPT-4o reader with LongMemEval's official reading prompt
 scored 430/500 (86.0%); paired, it won 21 questions and lost 30 (exact McNemar
-p = 0.26), so the two readers are not demonstrably different. Published results
-for other systems range from 81.6% to 96.1%, each with its own retrieval,
+p = 0.26), so the two readers are not demonstrably different. With the Voyage
+reranker on and the same code, the notes reader scored **453/500 (90.6%)**
+(+31/−17 against reranker off, p = 0.059, not yet a demonstrated gain), and the
+published configuration with the leak removed scored 432/500 against the
+invalid 433/500 (+15/−16), so hiding the gold ids made no measurable
+difference there. Published results for other systems range from 81.6% to 96.1%, each with its own retrieval,
 reader, judge and prompts. Retrieval, context size and judges still differ, so
 we claim no ranking on answers in either direction.
 [Read the re-run](docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md).
@@ -242,7 +246,10 @@ a dated correction:
 - The LongMemEval answer accuracy (433/500) is invalid because the answer
   model saw `answer_` session ids. A leak-free re-run on September 29 scored
   439/500 (87.8%) with the reranker off and the notes reader, a different
-  configuration, so it replaces the claim without measuring the leak's effect.
+  configuration. A September 30 run of the published configuration with the
+  leak removed (direct 512 reader, reranker on) scored 432/500, paired +15/−16
+  against 433/500, so the leak made no measurable difference; 433/500 stays
+  invalid because it was measured with the gold ids visible.
   [Report](docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md). The
   reading-notes result (308/361 to 324/361) is still pending a re-run for the
   same reason. Retrieval numbers are unaffected as far as a 30-question check

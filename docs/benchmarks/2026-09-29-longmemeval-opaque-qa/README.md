@@ -15,5 +15,6 @@ These files support [the report](../2026-09-29-longmemeval-opaque-qa.md). Everyt
 | `subset100_seed20260929.txt`, `pilot20.txt` | Question ids for the component subset and the cost pilot. |
 | `logs/` | Harness logs for the pilot and the full run, and the watchdog log of the four stalls. |
 | `scripts/` | The executed driver, arm and analysis scripts. Only machine-local paths differ from the executed bytes. |
+| `reranker-on/` | Added 2026-09-30: runs R1 (notes reader) and R2 (direct 512 reader) with `voyage:rerank-2.5` on the same code, cache and judges. `summary-rerank.json`, `per_question_rerank.csv`, and per run `rows.ndjson`, `official-judge.ndjson` and `calls.ndjson.gz` (every paid call, including Voyage rerank records), plus logs, scripts and `provenance-rerank.json`. |
 
 The LongMemEval data is MIT-licensed. The dataset file and the embedding cache are not committed. Recount the saved results with `python3 scripts/verify-longmemeval-opaque-qa.py` from the repository root.

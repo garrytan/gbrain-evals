@@ -1,6 +1,6 @@
 # LongMemEval answers without the answer key: 439/500, and the evidence budget matters more than the prompt
 
-Published 2026-09-29. Measured 2026-09-29 on gbrain [PR 5676](https://github.com/garrytan/gbrain/pull/5676) at `a7cb37b7884ca4a6dba8bb82a4cd430e6a6e806f` (v0.59.13.0), since squash-merged to gbrain master as `b80cad6`.
+Published 2026-09-29, extended 2026-09-30 with two reranker-on arms. Measured 2026-09-29 and 2026-09-30 on gbrain [PR 5676](https://github.com/garrytan/gbrain/pull/5676) at `a7cb37b7884ca4a6dba8bb82a4cd430e6a6e806f` (v0.59.13.0), since squash-merged to gbrain master as `b80cad6`.
 
 [gbrain](https://github.com/garrytan/gbrain) is a Markdown-first memory system for agents. [LongMemEval](https://arxiv.org/abs/2410.10813) asks questions about long histories of old conversations. A memory system first has to find the right conversations. Then a language model (the "reader") has to answer from what was found, and a second model (the "judge") grades the answer against the dataset's reference.
 
@@ -23,6 +23,13 @@ Published 2026-09-29. Measured 2026-09-29 on gbrain [PR 5676](https://github.com
 3. Its reader could see LongMemEval session ids. Every labeled evidence session's id starts with `answer_`, so that reader could tell which conversations were the labeled ones.
 
 With three changes at once, 439 versus 433 says nothing about how much the leak helped. The 433/500 figure stays in the record as historical and invalid.
+
+**September 30 update: reranker on, same code.** With a Voyage key added, we re-ran on the same code, data, embedding cache and judges with `voyage:rerank-2.5` on. Everything is in [Reranker on](#reranker-on-added-september-30).
+
+- **Retrieval.** The reranker raised strict retrieval from 435/470 to 450/470. Paired: +22/−7, exact McNemar p = 0.008.
+- **R1, house notes reader.** It answered **453/500 (90.6%)**, against 439/500 with the reranker off. Paired: +31/−17, p = 0.059. With the official judge it was 451 against 443 (p = 0.33). That is suggestive, not a demonstrated answer gain.
+- **R2, the published configuration minus the leak.** This is the old `direct` reader, 512 tokens, reranker on, with opaque ids. It answered **432/500**, against the invalid published 433/500. Paired: +15/−16, p = 1.0. As far as the configurations match, hiding the gold ids made no measurable difference to that result. The historical number still stays invalid, because it was measured with the leak present.
+- **Notes against direct.** On identical reranked retrieval (500/500 chunk lists identical), the notes reader beat the direct reader: 453 against 432. Paired: +32/−11, p = 0.002 (official judge 451 against 437, p = 0.049).
 
 **Answer accuracy is still not a matched comparison with vendor self-reports.** The GPT-4o arm uses the same reader model and official prompts as several published rows, but retrieval, context size and judges still differ. We claim no ranking on answers in either direction.
 
@@ -240,10 +247,128 @@ gbrain eval longmemeval longmemeval_s_cleaned.json --top-k 5 --no-trajectory --m
   --model anthropic:claude-sonnet-4-6 --judge --judge-model openai:gpt-4o --by-type --output rows.ndjson
 ```
 
+## Reranker on (added September 30)
+
+The two runs above had the reranker off because no Voyage key was available. Once a key was added, two more full runs changed only what the question needed. Everything else matched arm a exactly:
+
+- the same gbrain code (`a7cb37b`);
+- the same dataset file and opaque ids;
+- the same embedding cache, with 0 misses and the file hash unchanged;
+- `--mode balanced --autocut off --top-k 5 --no-trajectory`;
+- the same two judges.
+
+The reranker rereads the 25 best candidates together with the question and reorders them before the top five are kept. Both runs record `retrieval_config_hash` `0d5ee2baf7b5`, which is identical to the published September 6 D1 run.
+
+| Arm | Reader | Reranker | Question it answers |
+|---|---|---|---|
+| a (above) | notes, 1,024 tokens | off | leak-free house number without a Voyage key |
+| R1 | notes, 1,024 tokens | `voyage:rerank-2.5` | the reranker's effect on answers under the current reader (pair with a) |
+| R2 | `direct`, 512 tokens | `voyage:rerank-2.5` | the published configuration with the leak removed (compare with the invalid 433/500) |
+
+### Retrieval
+
+| Run | Strict `recall_all@5` (470) | Paired against a |
+|---|---|---|
+| a, reranker off | 435/470 (92.55%) | |
+| R1 and R2, reranker on | 450/470 (95.74%) | +22 / −7, exact McNemar p = 0.008 |
+| September 6 D1 (published, reranker on, v0.48.4.0) | 449/470 (95.53%) | R2 against D1: +2 / −1, p = 1.0 |
+
+R1 and R2 returned identical chunk lists for all 500 questions.
+
+Voyage accounting, per run:
+- 500 calls, all HTTP 200, 25 documents each;
+- 6.94M tokens, $0.35 at $0.05 per million;
+- p50 latency 185 to 192 ms;
+- 500/500 rows reranked.
+
+No row carries a `rerank_failed` stage or any other degraded stage, and the harness gate that fails a run with un-reranked rows exited cleanly for both runs.
+
+### Answers
+
+Denominator: all 500 questions. There were no reader errors, judge errors, provider failures or output-limit truncations in either run.
+
+| Arm | Correct, gbrain judge | Correct, official judge |
+|---|---|---|
+| a, notes, reranker off | 439/500 (87.8%) | 443/500 (88.6%) |
+| R1, notes, reranker on | **453/500 (90.6%)** | 451/500 (90.2%) |
+| R2, direct 512, reranker on, opaque ids | **432/500 (86.4%)** | 437/500 (87.4%) |
+| September 6 D1, direct 512, reranker on, `answer_` ids visible (invalid) | 433/500 (86.6%) | not run |
+
+| Paired comparison | Judge | Gains | Losses | Exact McNemar p |
+|---|---|---|---|---|
+| R1 against a (reranker effect) | gbrain | 31 | 17 | 0.059 |
+| R1 against a | official | 30 | 22 | 0.33 |
+| R2 against published D1 (leak removed) | gbrain | 15 | 16 | 1.0 |
+| R2 against R1 (direct against notes, same retrieval) | gbrain | 11 | 32 | 0.002 |
+| R2 against R1 | official | 15 | 29 | 0.049 |
+| R2 against a | gbrain | 31 | 38 | 0.47 |
+
+When every labeled session was retrieved (450 questions), R1 answered 416 correctly and R2 answered 396, both under the gbrain judge. The two judges agreed on 488/500 R1 answers and 491/500 R2 answers.
+
+By type, gbrain judge (a / R1 / R2):
+
+| Type | a | R1 | R2 |
+|---|---|---|---|
+| single-session-assistant | 55/56 | 56/56 | 55/56 |
+| single-session-user | 62/64 | 62/64 | 63/64 |
+| knowledge-update | 67/72 | 68/72 | 66/72 |
+| temporal-reasoning | 108/127 | 112/127 | 103/127 |
+| multi-session | 95/121 | 98/121 | 97/121 |
+| single-session-preference | 24/30 | 27/30 | 21/30 |
+| abstention | 28/30 | 30/30 | 27/30 |
+
+**What this says about the leak.** R2 is as close to the published run as this code allows, and it scores 432 against 433 (+15/−16). The same reader prompt, 512-token limit and 60,000-character session cap are byte-identical between the published run (gbrain `2efaaf8f`) and `a7cb37b`, and the retrieval pins match. The leak therefore did not measurably change the published answer accuracy. The published number stays invalid because it was measured with the gold ids visible. Four differences remain:
+
+- The search code moved from v0.48.4.0 to v0.59.13.0, which adds page-grain fusion and keeps the reranker's order through the identity tiers. Retrieval landed at 450 against 449.
+- The embedding cache is a different file built with the same model.
+- A `max_tokens` finish now counts as an error; no R2 answer hit the limit.
+- The provider-default temperature makes any two runs differ slightly.
+
+**What this says about the reranker and the reader.** The reranker is a clear retrieval gain on this benchmark. Its effect on answers under the notes reader, +14 net questions, is suggestive but not established at p < 0.05. On identical reranked evidence, the notes reader beat the direct reader under both judges. This is a new full-500 comparison with opaque ids. It is not a re-run of the September 25 transfer cohort, so that report's flag stays in place.
+
+### Tokens, latency and cost
+
+| Run | Input tokens mean / median / p95 | Output tokens mean | Reader latency p50 / p95 | End to end p50 / p95 |
+|---|---|---|---|---|
+| R1 | 15,451 / 15,561 / 19,517 | 243 | 6.4 s / 11.7 s | 12.0 s / 17.1 s |
+| R2 | 15,435 / 15,545 / 19,501 | 90 | 3.5 s / 6.5 s | 9.0 s / 12.3 s |
+
+End to end runs from import through the judge, on a warm embedding cache.
+
+| Item | R1 | R2 |
+|---|---|---|
+| Reader | $25.00 | $23.83 |
+| gbrain judge | $0.55 | $0.38 |
+| Official judge | $0.47 | $0.29 |
+| Voyage rerank | $0.35 | $0.35 |
+| **Total** | **$26.37** | **$24.85** |
+
+A 20-question R1 pilot projected about $52 for both runs and is included in R1's rows and cost. Total paid cost for these two runs was $51.22 against a $120 cap. Ubicloud compute (one 4-vCPU VM for about 4 hours) is not included.
+
+Incidents: both runs hit the #5092 stall, a long single-process run on `a7cb37b` stalling at 100% CPU. R1 stalled 5 times and R2 5 times, always during import and never during a reader call. A watchdog resumed from the rows file each time; after the third R1 stall, a second detector killed stalled processes after 3 minutes instead of 10. No reader call was repeated: 500 reader calls per run. The logs are in [`reranker-on/logs/`](2026-09-29-longmemeval-opaque-qa/reranker-on/logs/).
+
+Receipts are in [`reranker-on/`](2026-09-29-longmemeval-opaque-qa/reranker-on/):
+
+- `summary-rerank.json` and `per_question_rerank.csv`;
+- `r1/` and `r2/`, each with harness rows, official-judge verdicts and every paid call (gzip, with full reader prompts and Voyage call records);
+- logs and scripts;
+- `provenance-rerank.json`.
+
+The keyless recount (`python3 scripts/verify-longmemeval-opaque-qa.py`) now also checks both reranker arms. It re-derives the verdict counts, strict recall, the paired tests against arm a and the published D1 rows, and that every row was reranked with no degraded stage. It also checks that no saved reader prompt contains `answer_` or a retrieved raw id.
+
+To reproduce, use the same setup as arm a with `driver-r.ts` and `run-r.sh r1` / `run-r.sh r2`. `watchdog-r.sh` runs them one after the other on the one cache, and `VOYAGE_API_KEY` is required. Through gbrain's CLI:
+
+```bash
+gbrain eval longmemeval longmemeval_s_cleaned.json --top-k 5 --no-trajectory --mode balanced --reranker on --autocut off \
+  --model anthropic:claude-sonnet-4-6 --reader-mode notes --reader-max-tokens 1024 --judge --judge-model openai:gpt-4o --by-type --output r1.ndjson
+gbrain eval longmemeval longmemeval_s_cleaned.json --top-k 5 --no-trajectory --mode balanced --reranker on --autocut off \
+  --model anthropic:claude-sonnet-4-6 --reader-mode direct --reader-max-tokens 512 --judge --judge-model openai:gpt-4o --by-type --output r2.ndjson
+```
+
 ## Open questions
 
-- **A reranker-on house number** needs a Voyage key. The historical release configuration used `voyage:rerank-2.5`.
-- **The leak's own effect.** Isolating it needs the old `direct` 512-token reader with opaque ids and the reranker matched to the September 6 run.
+- **A reranker-on house number** and **the leak's own effect:** answered on September 30 in [Reranker on](#reranker-on-added-september-30) (453/500; 432/500 against the invalid 433/500).
+- **Whether the reranker's answer gain is real.** +31/−17 (p = 0.059) needs a larger or repeated sample to confirm.
 - **Production `think` end to end,** with its own search over the benchmark brain.
 - **Cheaper ways to deliver more evidence,** since that is where the accuracy is. Examples: expanding chunk hits to their sessions, or more chunks at an equal token budget.
 - **The September 25 reading-notes transfer result (308/361 to 324/361)** was not re-run here and remains pending.
