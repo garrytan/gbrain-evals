@@ -381,6 +381,11 @@ export function generateN3World(opts: N3Options = {}): GeneratedN3 {
     const fm: PrecedencePage['frontmatter'] = {};
     PREC_KEYS.forEach((k, j) => { if (rng.chance(0.55)) fm[k] = days[j]; });
     const layout = i % 3; // 0: meetings/<date>-…, 1: notes/<date>-…, 2: notes/prec-…
+    // Pin the two lowest-precedence outcomes so every source is exercised:
+    // a filename date outside meetings/ beats `created` (i = 7), and
+    // `created` wins when nothing else is present (i = 8).
+    if (i === 7 || i === 8) for (const k of PREC_KEYS) delete fm[k];
+    if (i === 7 || i === 8) fm.created = days[3];
     const filenameDate = layout === 2 ? null : days[4];
     if (Object.keys(fm).length === 0 && filenameDate === null) fm.date = days[1];
     const t = token('zd');
