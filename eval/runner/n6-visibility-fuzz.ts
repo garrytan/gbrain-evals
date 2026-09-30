@@ -661,6 +661,7 @@ async function runN6Hermetic(options: N6Options) {
   const summary = acct.summary();
 
   const covered = opSummaries.filter(s => s.signal > 0).length;
+  const reachable = new Set(rows.filter(r => r.local_replay_detected).map(r => r.op));
   const count = (k: ProbeFinding['kind']) => new Set(findings.filter(f => f.kind === k).map(f => f.probe_id)).size;
   const byCaller = Object.fromEntries(REMOTE_CALLERS.map(c => [c, {
     probes: exposedRows.filter(r => r.caller === c).length,
@@ -691,6 +692,10 @@ async function runN6Hermetic(options: N6Options) {
     read_ops_total: readOps.length,
     read_ops_covered: covered,
     op_coverage: readOps.length ? covered / readOps.length : 0,
+    // Read ops that return protected content to the trusted local caller for at least one synthesized probe:
+    // the ops that could leak in this world. Coverage of these is the meaningful share.
+    read_ops_content_reachable: reachable.size,
+    content_reachable_coverage: reachable.size ? opSummaries.filter(s => s.signal > 0 && reachable.has(s.op)).length / reachable.size : 0,
     probes_exposed: exposedRows.length,
     probes_with_signal: exposedRows.filter(r => r.control).length,
     probes_no_signal: exposedRows.filter(r => r.status === 'no_signal').length,
