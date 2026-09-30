@@ -88,6 +88,12 @@ The [September 29 lifecycle report](docs/benchmarks/2026-09-29-lifecycle.md) is 
 
 - [x] **Add score gates to Cat 2 and Cat 3** (September 28 audit, C-06/C7). Completed in v0.10.1: both runners write receipts and gate on regression floors, and CI runs them through `all.ts --tier offline`.
 
+## Offline categories N3, N4, N6 (evidence-delivery plan, section 5)
+
+- [ ] **Turn N3, N4 and N6 into gates once their gbrain bugs are fixed.** All three landed report-only on 2026-09-30. N3: `ontology_get` late-recorded stint, `chronicle_last_seen` substring match and day-early ordering, non-ISO date bound. N4: alias beating an exact name, federated `recall` merging same-slug namesakes. N6: `entity` / `context_pack` private backlinks. Flip `gate` in `eval/registry.ts` after a run against the fixed gbrain passes.
+- [ ] **Run N6 against the evidence-delivery code when it lands** (plan T15). At `c0a72ab` the branch documents `return_unit` and `assemble_evidence` but does not implement them, so the receipt lists them as documented but missing. Any expansion leak blocks the gbrain PR.
+- [ ] **Widen N6 coverage.** 48 of 73 read ops return no protected content in the N6 world (skills, code intelligence, ontology, open loops, schema packs, aggregates) or need a provider. Seed those surfaces, and add Postgres and the real HTTP transport.
+
 ## Cat35 publication and measurement
 
 These items came from the August 16 plan reviews and the August 26 publication review.
