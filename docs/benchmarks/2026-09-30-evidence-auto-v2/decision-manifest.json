@@ -12,7 +12,7 @@
   "candidate_commits": {
     "gbrain_repository": "garrytan/gbrain",
     "gbrain_branch": "capy/evidence-page-code-fix",
-    "gbrain": null,
+    "gbrain": "e9b580c5b9f9ac2e6ad069ea45ee5a6ac52c5761",
     "gbrain_rule": "The full 40-hex head of the auto v2 branch after its master merge, written here once, in its own commit, before any paid run. Every paid subcommand refuses while it is null, when the frozen evidence names another commit, or when this file differs from its committed version.",
     "comparison_release": "The same commit with return_unit chunk, which is byte for byte the pre-0.60.16 default (the stage is skipped and ranked chunks are returned unchanged). The sealed protocol's frozen comparison release is therefore the candidate commit's chunk path.",
     "gbrain_evals_rule": "The gbrain-evals commit that contains this file; every paid row records it and the SHA-256 of this file."
