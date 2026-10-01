@@ -1,0 +1,1615 @@
+{
+  "generator_version": "n13-ts-gold/1",
+  "typescript_version": "5.9.3",
+  "corpus_commit": "bc7477a01f0bd60ada017add8142c9f9d69ccdc5",
+  "functions": [
+    {
+      "name": "_apply",
+      "file": "src/_glob.ts",
+      "start_line": 39,
+      "end_line": 44,
+      "exported": false,
+      "references": [
+        {
+          "file": "src/_glob.ts",
+          "line": 105
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 117
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 144
+        }
+      ]
+    },
+    {
+      "name": "match",
+      "file": "src/_glob.ts",
+      "start_line": 46,
+      "end_line": 91,
+      "exported": false,
+      "references": [
+        {
+          "file": "src/_glob.ts",
+          "line": 301
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 302
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 303
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 304
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 305
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 313
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 314
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 315
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 316
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 318
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 321
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 324
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 327
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 330
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 333
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 336
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 339
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 342
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 344
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 345
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 346
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 347
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 348
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 349
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 350
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 351
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 369
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 370
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 371
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 374
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 378
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 386
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 387
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 388
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 389
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 390
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 391
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 392
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 394
+        }
+      ]
+    },
+    {
+      "name": "and",
+      "file": "src/_glob.ts",
+      "start_line": 93,
+      "end_line": 109,
+      "exported": false,
+      "references": [
+        {
+          "file": "src/_glob.ts",
+          "line": 359
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 384
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 411
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 415
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 417
+        }
+      ]
+    },
+    {
+      "name": "or",
+      "file": "src/_glob.ts",
+      "start_line": 111,
+      "end_line": 124,
+      "exported": false,
+      "references": [
+        {
+          "file": "src/_glob.ts",
+          "line": 300
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 322
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 334
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 340
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 352
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 383
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 396
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 410
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 426
+        }
+      ]
+    },
+    {
+      "name": "repeat",
+      "file": "src/_glob.ts",
+      "start_line": 126,
+      "end_line": 148,
+      "exported": false,
+      "references": [
+        {
+          "file": "src/_glob.ts",
+          "line": 151
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 153
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 155
+        }
+      ]
+    },
+    {
+      "name": "optional",
+      "file": "src/_glob.ts",
+      "start_line": 150,
+      "end_line": 151,
+      "exported": false,
+      "references": [
+        {
+          "file": "src/_glob.ts",
+          "line": 362
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 414
+        }
+      ]
+    },
+    {
+      "name": "star",
+      "file": "src/_glob.ts",
+      "start_line": 152,
+      "end_line": 153,
+      "exported": false,
+      "references": [
+        {
+          "file": "src/_glob.ts",
+          "line": 299
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 363
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 417
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 425
+        }
+      ]
+    },
+    {
+      "name": "plus",
+      "file": "src/_glob.ts",
+      "start_line": 154,
+      "end_line": 155,
+      "exported": false,
+      "references": [
+        {
+          "file": "src/_glob.ts",
+          "line": 395
+        }
+      ]
+    },
+    {
+      "name": "lazy",
+      "file": "src/_glob.ts",
+      "start_line": 157,
+      "end_line": 160,
+      "exported": false,
+      "references": [
+        {
+          "file": "src/_glob.ts",
+          "line": 393
+        }
+      ]
+    },
+    {
+      "name": "parse",
+      "file": "src/_glob.ts",
+      "start_line": 162,
+      "end_line": 168,
+      "exported": false,
+      "references": [
+        {
+          "file": "src/_glob.ts",
+          "line": 309
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 458
+        }
+      ]
+    },
+    {
+      "name": "regex",
+      "file": "src/_glob.ts",
+      "start_line": 177,
+      "end_line": 177,
+      "exported": false,
+      "references": [
+        {
+          "file": "src/_glob.ts",
+          "line": 313
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 314
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 316
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 319
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 325
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 328
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 331
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 333
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 337
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 339
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 342
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 366
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 384
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 389
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 390
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 392
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 394
+        }
+      ]
+    },
+    {
+      "name": "slash",
+      "file": "src/_glob.ts",
+      "start_line": 178,
+      "end_line": 178,
+      "exported": false,
+      "references": [
+        {
+          "file": "src/_glob.ts",
+          "line": 315
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 325
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 328
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 331
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 337
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 391
+        }
+      ]
+    },
+    {
+      "name": "alternation",
+      "file": "src/_glob.ts",
+      "start_line": 179,
+      "end_line": 179,
+      "exported": false,
+      "references": [
+        {
+          "file": "src/_glob.ts",
+          "line": 198
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 325
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 328
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 331
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 422
+        }
+      ]
+    },
+    {
+      "name": "_pushToLeaves",
+      "file": "src/_glob.ts",
+      "start_line": 181,
+      "end_line": 194,
+      "exported": false,
+      "references": [
+        {
+          "file": "src/_glob.ts",
+          "line": 191
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 201
+        }
+      ]
+    },
+    {
+      "name": "sequence",
+      "file": "src/_glob.ts",
+      "start_line": 196,
+      "end_line": 204,
+      "exported": false,
+      "references": [
+        {
+          "file": "src/_glob.ts",
+          "line": 325
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 328
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 331
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 337
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 408
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 439
+        }
+      ]
+    },
+    {
+      "name": "getNodes",
+      "file": "src/_glob.ts",
+      "start_line": 206,
+      "end_line": 220,
+      "exported": false,
+      "references": [
+        {
+          "file": "src/_glob.ts",
+          "line": 250
+        }
+      ]
+    },
+    {
+      "name": "nodeSourceCached",
+      "file": "src/_glob.ts",
+      "start_line": 222,
+      "end_line": 243,
+      "exported": false,
+      "references": [
+        {
+          "file": "src/_glob.ts",
+          "line": 231
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 252
+        }
+      ]
+    },
+    {
+      "name": "nodeSource",
+      "file": "src/_glob.ts",
+      "start_line": 248,
+      "end_line": 255,
+      "exported": false,
+      "references": [
+        {
+          "file": "src/_glob.ts",
+          "line": 459
+        }
+      ]
+    },
+    {
+      "name": "int2alpha",
+      "file": "src/_glob.ts",
+      "start_line": 261,
+      "end_line": 268,
+      "exported": false,
+      "references": [
+        {
+          "file": "src/_glob.ts",
+          "line": 293
+        }
+      ]
+    },
+    {
+      "name": "alpha2int",
+      "file": "src/_glob.ts",
+      "start_line": 270,
+      "end_line": 276,
+      "exported": false,
+      "references": [
+        {
+          "file": "src/_glob.ts",
+          "line": 293
+        }
+      ]
+    },
+    {
+      "name": "makeRangeInt",
+      "file": "src/_glob.ts",
+      "start_line": 278,
+      "end_line": 287,
+      "exported": false,
+      "references": [
+        {
+          "file": "src/_glob.ts",
+          "line": 280
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 290
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 293
+        }
+      ]
+    },
+    {
+      "name": "makeRangePaddedInt",
+      "file": "src/_glob.ts",
+      "start_line": 289,
+      "end_line": 290,
+      "exported": false,
+      "references": [
+        {
+          "file": "src/_glob.ts",
+          "line": 372
+        }
+      ]
+    },
+    {
+      "name": "makeRangeAlpha",
+      "file": "src/_glob.ts",
+      "start_line": 292,
+      "end_line": 293,
+      "exported": false,
+      "references": [
+        {
+          "file": "src/_glob.ts",
+          "line": 376
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 381
+        }
+      ]
+    },
+    {
+      "name": "identity",
+      "file": "src/_glob.ts",
+      "start_line": 297,
+      "end_line": 297,
+      "exported": false,
+      "references": [
+        {
+          "file": "src/_glob.ts",
+          "line": 301
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 305
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 344
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 345
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 347
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 348
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 351
+        }
+      ]
+    },
+    {
+      "name": "normalizeGlob",
+      "file": "src/_glob.ts",
+      "start_line": 309,
+      "end_line": 309,
+      "exported": false,
+      "references": [
+        {
+          "file": "src/_glob.ts",
+          "line": 458
+        }
+      ]
+    },
+    {
+      "name": "compileGlob",
+      "file": "src/_glob.ts",
+      "start_line": 450,
+      "end_line": 469,
+      "exported": false,
+      "references": [
+        {
+          "file": "src/_glob.ts",
+          "line": 319
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 472
+        },
+        {
+          "file": "src/_glob.ts",
+          "line": 480
+        }
+      ]
+    },
+    {
+      "name": "compileGlobs",
+      "file": "src/_glob.ts",
+      "start_line": 471,
+      "end_line": 474,
+      "exported": false,
+      "references": [
+        {
+          "file": "src/_glob.ts",
+          "line": 480
+        }
+      ]
+    },
+    {
+      "name": "matchGlob",
+      "file": "src/_glob.ts",
+      "start_line": 479,
+      "end_line": 482,
+      "exported": true,
+      "references": [
+        {
+          "file": "src/_path.ts",
+          "line": 11
+        },
+        {
+          "file": "src/_path.ts",
+          "line": 313
+        }
+      ]
+    },
+    {
+      "name": "normalizeWindowsPath",
+      "file": "src/_internal.ts",
+      "start_line": 2,
+      "end_line": 24,
+      "exported": true,
+      "references": [
+        {
+          "file": "src/_path.ts",
+          "line": 12
+        },
+        {
+          "file": "src/_path.ts",
+          "line": 34
+        },
+        {
+          "file": "src/_path.ts",
+          "line": 99
+        },
+        {
+          "file": "src/_path.ts",
+          "line": 221
+        },
+        {
+          "file": "src/_path.ts",
+          "line": 256
+        },
+        {
+          "file": "src/_path.ts",
+          "line": 266
+        },
+        {
+          "file": "src/_path.ts",
+          "line": 270
+        },
+        {
+          "file": "src/_path.ts",
+          "line": 295
+        },
+        {
+          "file": "src/utils.ts",
+          "line": 2
+        },
+        {
+          "file": "src/utils.ts",
+          "line": 57
+        },
+        {
+          "file": "src/utils.ts",
+          "line": 80
+        }
+      ]
+    },
+    {
+      "name": "normalize",
+      "file": "src/_path.ts",
+      "start_line": 28,
+      "end_line": 64,
+      "exported": true,
+      "references": [
+        {
+          "file": "src/_path.ts",
+          "line": 87
+        },
+        {
+          "file": "src/_path.ts",
+          "line": 313
+        }
+      ]
+    },
+    {
+      "name": "join",
+      "file": "src/_path.ts",
+      "start_line": 66,
+      "end_line": 88,
+      "exported": true,
+      "references": [
+        {
+          "file": "src/utils.ts",
+          "line": 1
+        },
+        {
+          "file": "src/utils.ts",
+          "line": 68
+        },
+        {
+          "file": "src/utils.ts",
+          "line": 94
+        }
+      ]
+    },
+    {
+      "name": "cwd",
+      "file": "src/_path.ts",
+      "start_line": 90,
+      "end_line": 95,
+      "exported": false,
+      "references": [
+        {
+          "file": "src/_path.ts",
+          "line": 109
+        }
+      ]
+    },
+    {
+      "name": "resolve",
+      "file": "src/_path.ts",
+      "start_line": 97,
+      "end_line": 139,
+      "exported": true,
+      "references": [
+        {
+          "file": "src/_path.ts",
+          "line": 236
+        },
+        {
+          "file": "src/_path.ts",
+          "line": 237
+        },
+        {
+          "file": "src/_path.ts",
+          "line": 266
+        }
+      ]
+    },
+    {
+      "name": "normalizeString",
+      "file": "src/_path.ts",
+      "start_line": 148,
+      "end_line": 214,
+      "exported": true,
+      "references": [
+        {
+          "file": "src/_path.ts",
+          "line": 41
+        },
+        {
+          "file": "src/_path.ts",
+          "line": 125
+        }
+      ]
+    },
+    {
+      "name": "isAbsolute",
+      "file": "src/_path.ts",
+      "start_line": 216,
+      "end_line": 218,
+      "exported": true,
+      "references": [
+        {
+          "file": "src/_path.ts",
+          "line": 37
+        },
+        {
+          "file": "src/_path.ts",
+          "line": 63
+        },
+        {
+          "file": "src/_path.ts",
+          "line": 117
+        },
+        {
+          "file": "src/_path.ts",
+          "line": 134
+        },
+        {
+          "file": "src/_path.ts",
+          "line": 260
+        }
+      ]
+    },
+    {
+      "name": "toNamespacedPath",
+      "file": "src/_path.ts",
+      "start_line": 220,
+      "end_line": 222,
+      "exported": true,
+      "references": []
+    },
+    {
+      "name": "extname",
+      "file": "src/_path.ts",
+      "start_line": 224,
+      "end_line": 232,
+      "exported": true,
+      "references": [
+        {
+          "file": "src/_path.ts",
+          "line": 291
+        }
+      ]
+    },
+    {
+      "name": "relative",
+      "file": "src/_path.ts",
+      "start_line": 234,
+      "end_line": 253,
+      "exported": true,
+      "references": []
+    },
+    {
+      "name": "dirname",
+      "file": "src/_path.ts",
+      "start_line": 255,
+      "end_line": 261,
+      "exported": true,
+      "references": [
+        {
+          "file": "src/_path.ts",
+          "line": 294
+        }
+      ]
+    },
+    {
+      "name": "format",
+      "file": "src/_path.ts",
+      "start_line": 263,
+      "end_line": 267,
+      "exported": true,
+      "references": []
+    },
+    {
+      "name": "basename",
+      "file": "src/_path.ts",
+      "start_line": 269,
+      "end_line": 285,
+      "exported": true,
+      "references": [
+        {
+          "file": "src/_path.ts",
+          "line": 228
+        },
+        {
+          "file": "src/_path.ts",
+          "line": 290
+        }
+      ]
+    },
+    {
+      "name": "parse",
+      "file": "src/_path.ts",
+      "start_line": 287,
+      "end_line": 305,
+      "exported": true,
+      "references": []
+    },
+    {
+      "name": "matchesGlob",
+      "file": "src/_path.ts",
+      "start_line": 312,
+      "end_line": 314,
+      "exported": true,
+      "references": []
+    },
+    {
+      "name": "mix",
+      "file": "src/index.ts",
+      "start_line": 23,
+      "end_line": 32,
+      "exported": false,
+      "references": [
+        {
+          "file": "src/index.ts",
+          "line": 34
+        },
+        {
+          "file": "src/index.ts",
+          "line": 36
+        }
+      ]
+    },
+    {
+      "name": "normalizeAliases",
+      "file": "src/utils.ts",
+      "start_line": 17,
+      "end_line": 46,
+      "exported": true,
+      "references": [
+        {
+          "file": "src/utils.ts",
+          "line": 58
+        },
+        {
+          "file": "src/utils.ts",
+          "line": 81
+        }
+      ]
+    },
+    {
+      "name": "resolveAlias",
+      "file": "src/utils.ts",
+      "start_line": 56,
+      "end_line": 72,
+      "exported": true,
+      "references": []
+    },
+    {
+      "name": "reverseResolveAlias",
+      "file": "src/utils.ts",
+      "start_line": 79,
+      "end_line": 100,
+      "exported": true,
+      "references": []
+    },
+    {
+      "name": "filename",
+      "file": "src/utils.ts",
+      "start_line": 108,
+      "end_line": 122,
+      "exported": true,
+      "references": []
+    },
+    {
+      "name": "_compareAliases",
+      "file": "src/utils.ts",
+      "start_line": 126,
+      "end_line": 128,
+      "exported": false,
+      "references": [
+        {
+          "file": "src/utils.ts",
+          "line": 24
+        }
+      ]
+    },
+    {
+      "name": "hasTrailingSlash",
+      "file": "src/utils.ts",
+      "start_line": 131,
+      "end_line": 134,
+      "exported": false,
+      "references": [
+        {
+          "file": "src/utils.ts",
+          "line": 65
+        },
+        {
+          "file": "src/utils.ts",
+          "line": 67
+        },
+        {
+          "file": "src/utils.ts",
+          "line": 91
+        },
+        {
+          "file": "src/utils.ts",
+          "line": 93
+        }
+      ]
+    }
+  ],
+  "calls": [
+    {
+      "caller": "and",
+      "caller_file": "src/_glob.ts",
+      "callee": "_apply",
+      "callee_file": "src/_glob.ts",
+      "line": 105,
+      "same_file": true
+    },
+    {
+      "caller": "or",
+      "caller_file": "src/_glob.ts",
+      "callee": "_apply",
+      "callee_file": "src/_glob.ts",
+      "line": 117,
+      "same_file": true
+    },
+    {
+      "caller": "repeat",
+      "caller_file": "src/_glob.ts",
+      "callee": "_apply",
+      "callee_file": "src/_glob.ts",
+      "line": 144,
+      "same_file": true
+    },
+    {
+      "caller": "optional",
+      "caller_file": "src/_glob.ts",
+      "callee": "repeat",
+      "callee_file": "src/_glob.ts",
+      "line": 151,
+      "same_file": true
+    },
+    {
+      "caller": "star",
+      "caller_file": "src/_glob.ts",
+      "callee": "repeat",
+      "callee_file": "src/_glob.ts",
+      "line": 153,
+      "same_file": true
+    },
+    {
+      "caller": "plus",
+      "caller_file": "src/_glob.ts",
+      "callee": "repeat",
+      "callee_file": "src/_glob.ts",
+      "line": 155,
+      "same_file": true
+    },
+    {
+      "caller": "_pushToLeaves",
+      "caller_file": "src/_glob.ts",
+      "callee": "_pushToLeaves",
+      "callee_file": "src/_glob.ts",
+      "line": 191,
+      "same_file": true
+    },
+    {
+      "caller": "sequence",
+      "caller_file": "src/_glob.ts",
+      "callee": "alternation",
+      "callee_file": "src/_glob.ts",
+      "line": 198,
+      "same_file": true
+    },
+    {
+      "caller": "sequence",
+      "caller_file": "src/_glob.ts",
+      "callee": "_pushToLeaves",
+      "callee_file": "src/_glob.ts",
+      "line": 201,
+      "same_file": true
+    },
+    {
+      "caller": "nodeSourceCached",
+      "caller_file": "src/_glob.ts",
+      "callee": "nodeSourceCached",
+      "callee_file": "src/_glob.ts",
+      "line": 231,
+      "same_file": true
+    },
+    {
+      "caller": "nodeSource",
+      "caller_file": "src/_glob.ts",
+      "callee": "getNodes",
+      "callee_file": "src/_glob.ts",
+      "line": 250,
+      "same_file": true
+    },
+    {
+      "caller": "nodeSource",
+      "caller_file": "src/_glob.ts",
+      "callee": "nodeSourceCached",
+      "callee_file": "src/_glob.ts",
+      "line": 252,
+      "same_file": true
+    },
+    {
+      "caller": "makeRangeInt",
+      "caller_file": "src/_glob.ts",
+      "callee": "makeRangeInt",
+      "callee_file": "src/_glob.ts",
+      "line": 280,
+      "same_file": true
+    },
+    {
+      "caller": "makeRangePaddedInt",
+      "caller_file": "src/_glob.ts",
+      "callee": "makeRangeInt",
+      "callee_file": "src/_glob.ts",
+      "line": 290,
+      "same_file": true
+    },
+    {
+      "caller": "makeRangeAlpha",
+      "caller_file": "src/_glob.ts",
+      "callee": "makeRangeInt",
+      "callee_file": "src/_glob.ts",
+      "line": 293,
+      "same_file": true
+    },
+    {
+      "caller": "makeRangeAlpha",
+      "caller_file": "src/_glob.ts",
+      "callee": "alpha2int",
+      "callee_file": "src/_glob.ts",
+      "line": 293,
+      "same_file": true
+    },
+    {
+      "caller": "makeRangeAlpha",
+      "caller_file": "src/_glob.ts",
+      "callee": "alpha2int",
+      "callee_file": "src/_glob.ts",
+      "line": 293,
+      "same_file": true
+    },
+    {
+      "caller": "normalizeGlob",
+      "caller_file": "src/_glob.ts",
+      "callee": "parse",
+      "callee_file": "src/_glob.ts",
+      "line": 309,
+      "same_file": true
+    },
+    {
+      "caller": "compileGlob",
+      "caller_file": "src/_glob.ts",
+      "callee": "parse",
+      "callee_file": "src/_glob.ts",
+      "line": 458,
+      "same_file": true
+    },
+    {
+      "caller": "compileGlob",
+      "caller_file": "src/_glob.ts",
+      "callee": "normalizeGlob",
+      "callee_file": "src/_glob.ts",
+      "line": 458,
+      "same_file": true
+    },
+    {
+      "caller": "compileGlob",
+      "caller_file": "src/_glob.ts",
+      "callee": "nodeSource",
+      "callee_file": "src/_glob.ts",
+      "line": 459,
+      "same_file": true
+    },
+    {
+      "caller": "compileGlobs",
+      "caller_file": "src/_glob.ts",
+      "callee": "compileGlob",
+      "callee_file": "src/_glob.ts",
+      "line": 472,
+      "same_file": true
+    },
+    {
+      "caller": "matchGlob",
+      "caller_file": "src/_glob.ts",
+      "callee": "compileGlob",
+      "callee_file": "src/_glob.ts",
+      "line": 480,
+      "same_file": true
+    },
+    {
+      "caller": "matchGlob",
+      "caller_file": "src/_glob.ts",
+      "callee": "compileGlobs",
+      "callee_file": "src/_glob.ts",
+      "line": 480,
+      "same_file": true
+    },
+    {
+      "caller": "normalize",
+      "caller_file": "src/_path.ts",
+      "callee": "normalizeWindowsPath",
+      "callee_file": "src/_internal.ts",
+      "line": 34,
+      "same_file": false
+    },
+    {
+      "caller": "normalize",
+      "caller_file": "src/_path.ts",
+      "callee": "isAbsolute",
+      "callee_file": "src/_path.ts",
+      "line": 37,
+      "same_file": true
+    },
+    {
+      "caller": "normalize",
+      "caller_file": "src/_path.ts",
+      "callee": "normalizeString",
+      "callee_file": "src/_path.ts",
+      "line": 41,
+      "same_file": true
+    },
+    {
+      "caller": "normalize",
+      "caller_file": "src/_path.ts",
+      "callee": "isAbsolute",
+      "callee_file": "src/_path.ts",
+      "line": 63,
+      "same_file": true
+    },
+    {
+      "caller": "join",
+      "caller_file": "src/_path.ts",
+      "callee": "normalize",
+      "callee_file": "src/_path.ts",
+      "line": 87,
+      "same_file": true
+    },
+    {
+      "caller": "resolve",
+      "caller_file": "src/_path.ts",
+      "callee": "normalizeWindowsPath",
+      "callee_file": "src/_internal.ts",
+      "line": 99,
+      "same_file": false
+    },
+    {
+      "caller": "resolve",
+      "caller_file": "src/_path.ts",
+      "callee": "cwd",
+      "callee_file": "src/_path.ts",
+      "line": 109,
+      "same_file": true
+    },
+    {
+      "caller": "resolve",
+      "caller_file": "src/_path.ts",
+      "callee": "isAbsolute",
+      "callee_file": "src/_path.ts",
+      "line": 117,
+      "same_file": true
+    },
+    {
+      "caller": "resolve",
+      "caller_file": "src/_path.ts",
+      "callee": "normalizeString",
+      "callee_file": "src/_path.ts",
+      "line": 125,
+      "same_file": true
+    },
+    {
+      "caller": "resolve",
+      "caller_file": "src/_path.ts",
+      "callee": "isAbsolute",
+      "callee_file": "src/_path.ts",
+      "line": 134,
+      "same_file": true
+    },
+    {
+      "caller": "toNamespacedPath",
+      "caller_file": "src/_path.ts",
+      "callee": "normalizeWindowsPath",
+      "callee_file": "src/_internal.ts",
+      "line": 221,
+      "same_file": false
+    },
+    {
+      "caller": "extname",
+      "caller_file": "src/_path.ts",
+      "callee": "basename",
+      "callee_file": "src/_path.ts",
+      "line": 228,
+      "same_file": true
+    },
+    {
+      "caller": "relative",
+      "caller_file": "src/_path.ts",
+      "callee": "resolve",
+      "callee_file": "src/_path.ts",
+      "line": 236,
+      "same_file": true
+    },
+    {
+      "caller": "relative",
+      "caller_file": "src/_path.ts",
+      "callee": "resolve",
+      "callee_file": "src/_path.ts",
+      "line": 237,
+      "same_file": true
+    },
+    {
+      "caller": "dirname",
+      "caller_file": "src/_path.ts",
+      "callee": "normalizeWindowsPath",
+      "callee_file": "src/_internal.ts",
+      "line": 256,
+      "same_file": false
+    },
+    {
+      "caller": "dirname",
+      "caller_file": "src/_path.ts",
+      "callee": "isAbsolute",
+      "callee_file": "src/_path.ts",
+      "line": 260,
+      "same_file": true
+    },
+    {
+      "caller": "format",
+      "caller_file": "src/_path.ts",
+      "callee": "normalizeWindowsPath",
+      "callee_file": "src/_internal.ts",
+      "line": 266,
+      "same_file": false
+    },
+    {
+      "caller": "format",
+      "caller_file": "src/_path.ts",
+      "callee": "resolve",
+      "callee_file": "src/_path.ts",
+      "line": 266,
+      "same_file": true
+    },
+    {
+      "caller": "basename",
+      "caller_file": "src/_path.ts",
+      "callee": "normalizeWindowsPath",
+      "callee_file": "src/_internal.ts",
+      "line": 270,
+      "same_file": false
+    },
+    {
+      "caller": "parse",
+      "caller_file": "src/_path.ts",
+      "callee": "basename",
+      "callee_file": "src/_path.ts",
+      "line": 290,
+      "same_file": true
+    },
+    {
+      "caller": "parse",
+      "caller_file": "src/_path.ts",
+      "callee": "extname",
+      "callee_file": "src/_path.ts",
+      "line": 291,
+      "same_file": true
+    },
+    {
+      "caller": "parse",
+      "caller_file": "src/_path.ts",
+      "callee": "dirname",
+      "callee_file": "src/_path.ts",
+      "line": 294,
+      "same_file": true
+    },
+    {
+      "caller": "parse",
+      "caller_file": "src/_path.ts",
+      "callee": "normalizeWindowsPath",
+      "callee_file": "src/_internal.ts",
+      "line": 295,
+      "same_file": false
+    },
+    {
+      "caller": "matchesGlob",
+      "caller_file": "src/_path.ts",
+      "callee": "matchGlob",
+      "callee_file": "src/_glob.ts",
+      "line": 313,
+      "same_file": false
+    },
+    {
+      "caller": "matchesGlob",
+      "caller_file": "src/_path.ts",
+      "callee": "normalize",
+      "callee_file": "src/_path.ts",
+      "line": 313,
+      "same_file": true
+    },
+    {
+      "caller": "normalizeAliases",
+      "caller_file": "src/utils.ts",
+      "callee": "_compareAliases",
+      "callee_file": "src/utils.ts",
+      "line": 24,
+      "same_file": true
+    },
+    {
+      "caller": "resolveAlias",
+      "caller_file": "src/utils.ts",
+      "callee": "normalizeWindowsPath",
+      "callee_file": "src/_internal.ts",
+      "line": 57,
+      "same_file": false
+    },
+    {
+      "caller": "resolveAlias",
+      "caller_file": "src/utils.ts",
+      "callee": "normalizeAliases",
+      "callee_file": "src/utils.ts",
+      "line": 58,
+      "same_file": true
+    },
+    {
+      "caller": "resolveAlias",
+      "caller_file": "src/utils.ts",
+      "callee": "hasTrailingSlash",
+      "callee_file": "src/utils.ts",
+      "line": 65,
+      "same_file": true
+    },
+    {
+      "caller": "resolveAlias",
+      "caller_file": "src/utils.ts",
+      "callee": "hasTrailingSlash",
+      "callee_file": "src/utils.ts",
+      "line": 67,
+      "same_file": true
+    },
+    {
+      "caller": "resolveAlias",
+      "caller_file": "src/utils.ts",
+      "callee": "join",
+      "callee_file": "src/_path.ts",
+      "line": 68,
+      "same_file": false
+    },
+    {
+      "caller": "reverseResolveAlias",
+      "caller_file": "src/utils.ts",
+      "callee": "normalizeWindowsPath",
+      "callee_file": "src/_internal.ts",
+      "line": 80,
+      "same_file": false
+    },
+    {
+      "caller": "reverseResolveAlias",
+      "caller_file": "src/utils.ts",
+      "callee": "normalizeAliases",
+      "callee_file": "src/utils.ts",
+      "line": 81,
+      "same_file": true
+    },
+    {
+      "caller": "reverseResolveAlias",
+      "caller_file": "src/utils.ts",
+      "callee": "hasTrailingSlash",
+      "callee_file": "src/utils.ts",
+      "line": 91,
+      "same_file": true
+    },
+    {
+      "caller": "reverseResolveAlias",
+      "caller_file": "src/utils.ts",
+      "callee": "hasTrailingSlash",
+      "callee_file": "src/utils.ts",
+      "line": 93,
+      "same_file": true
+    },
+    {
+      "caller": "reverseResolveAlias",
+      "caller_file": "src/utils.ts",
+      "callee": "join",
+      "callee_file": "src/_path.ts",
+      "line": 94,
+      "same_file": false
+    }
+  ]
+}
