@@ -1,0 +1,2 @@
+# Exact spans the gstack credential pre-push guard may ignore: placeholders in benchmark inputs that cannot be edited.
+postgresql://app_user:REDACTED_PASSWORD@db.example.net:5432/appdb?sslmode=require
