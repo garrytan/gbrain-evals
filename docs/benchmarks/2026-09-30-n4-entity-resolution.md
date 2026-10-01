@@ -1,6 +1,6 @@
 # N4 entity resolution: gbrain keeps different people apart, resolves what `aliases:` records, and has two merge bugs
 
-Date: 2026-09-30. Category `entity-resolution` (legacy alias N4), report-only. gbrain 0.60.10.0 (the pinned dependency, 608a174) and 0.60.11.0 (master, f8d1e39, loaded as a copied overlay). Both produced identical numbers: the resolver, save-time and identity code did not change between the two commits.
+Date: 2026-09-30. Category `entity-resolution` (legacy alias N4), report-only when written; it gates from 2026-10-01 (see the first update). gbrain 0.60.10.0 (the pinned dependency, 608a174) and 0.60.11.0 (master, f8d1e39, loaded as a copied overlay). Both produced identical numbers: the resolver, save-time and identity code did not change between the two commits.
 
 ## The finding
 
@@ -16,6 +16,10 @@ Two behaviors are bugs:
 2. **Federated `recall` merges two different people who share a slug in two sources.** With a two-source grant, `recall({ entity })` returns both people's facts in one list, and the rows carry no `source_id`, so the caller cannot separate them.
 
 Verdict: `fail` against the contract targets (wrong merges must be 0, the floor 100%, B-cubed F1 at least 0.9, unresolved at most 10%). The category is report-only, so this is information, not a CI failure.
+
+## Update, 2026-10-01: N4 now gates (gbrain-evals 0.10.5)
+
+Under the eval-category wave's promotion rules, N4 gates on five safety contracts (zero identity-group leaks; zero wrong merges on resolve, recall, remember and resolve-on-save) and two exact-lookup floors at 100%. All seven held at `6c8373c` and at the new pin `3a284ae`. The runner verdict below stays `fail` because B-cubed F1 and unresolved rate miss their targets on variants gbrain does not read by design; those are exploratory now and no longer the gate.
 
 ## Update, 2026-09-30: both merge bugs fixed at the new pin (`6c8373c`, v0.60.13.0)
 

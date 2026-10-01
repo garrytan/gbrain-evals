@@ -27,6 +27,7 @@ import * as extractPackage from 'gbrain/extract';
 import * as searchPackage from 'gbrain/search/hybrid';
 import * as importPackage from 'gbrain/import-file';
 import * as gatewayPackage from 'gbrain/ai/gateway';
+import { join } from 'node:path';
 import { assertEmbedded } from '../import-embedded.ts';
 import type { HybridSearchMeta, SearchResult } from 'gbrain/types';
 import type { Adapter, AdapterConfig, BrainState, Page, PublicQuery, RankedDoc } from '../types.ts';
@@ -58,6 +59,17 @@ export interface GbrainInlineOptions {
    * from the cue build; everything else measures the pinned 'gbrain'.
    */
   productPackage?: 'gbrain' | 'gbrain-cues';
+  /**
+   * Absolute gbrain root (a copied `--gbrain` overlay from gbrain-under-test.ts)
+   * to load every module from by path. Overrides productPackage.
+   */
+  productRoot?: string;
+  /**
+   * false: import without embeddings (`noEmbed`), the keyless keyword-only
+   * brain a user gets with no provider key. Default true, which requires
+   * every page to embed.
+   */
+  embed?: boolean;
 }
 
 interface ProductModules {
@@ -69,8 +81,14 @@ interface ProductModules {
   diagnoseEmbedding: typeof gatewayPackage.diagnoseEmbedding;
 }
 
-async function loadProduct(pkg: 'gbrain' | 'gbrain-cues'): Promise<ProductModules> {
-  const [engine, extract, search, importer, gateway] = pkg === 'gbrain'
+async function loadProduct(pkg: 'gbrain' | 'gbrain-cues', root?: string): Promise<ProductModules> {
+  const [engine, extract, search, importer, gateway] = root !== undefined
+    ? await Promise.all([
+      import(join(root, 'src/core/pglite-engine.ts')) as Promise<typeof enginePackage>, import(join(root, 'src/commands/extract.ts')) as Promise<typeof extractPackage>,
+      import(join(root, 'src/core/search/hybrid.ts')) as Promise<typeof searchPackage>, import(join(root, 'src/core/import-file.ts')) as Promise<typeof importPackage>,
+      import(join(root, 'src/core/ai/gateway.ts')) as Promise<typeof gatewayPackage>,
+    ])
+    : pkg === 'gbrain'
     ? [enginePackage, extractPackage, searchPackage, importPackage, gatewayPackage]
     : await Promise.all([
       import(`${pkg}/pglite-engine`) as Promise<typeof enginePackage>, import(`${pkg}/extract`) as Promise<typeof extractPackage>,
@@ -154,7 +172,7 @@ export class GbrainInlineAdapter implements Adapter {
   async init(rawPages: Page[], _config: AdapterConfig): Promise<BrainState> {
     // v0.40+ requires the gateway configured before any embed call —
     // Imports embed inline; assertEmbedded turns a deferred embedding into a throw.
-    const product = await loadProduct(this.opts.productPackage ?? 'gbrain');
+    const product = await loadProduct(this.opts.productPackage ?? 'gbrain', this.opts.productRoot);
     product.configureGateway({
       embedding_model: this.opts.embeddingModel ?? 'openai:text-embedding-3-large',
       embedding_dimensions: this.opts.embeddingDimensions ?? 1536,
@@ -192,7 +210,8 @@ export class GbrainInlineAdapter implements Adapter {
         if (p.timeline && p.timeline.trim().length > 0) {
           fm.push('', '## Timeline', '', p.timeline);
         }
-        assertEmbedded(await product.importFromContent(engine, p.slug, fm.join('\n')), p.slug);
+        if (this.opts.embed === false) await product.importFromContent(engine, p.slug, fm.join('\n'), { noEmbed: true });
+        else assertEmbedded(await product.importFromContent(engine, p.slug, fm.join('\n')), p.slug);
         imported += 1;
         if (imported % GC_EVERY_PAGES === 0) gcNow();
       }

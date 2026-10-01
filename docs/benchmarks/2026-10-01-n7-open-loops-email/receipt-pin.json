@@ -1,0 +1,1282 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "hermetic: provider keys stripped; no model call (the keyless extractor refusal is recorded, not paid)"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "hermetic: provider keys stripped; no model call (the keyless extractor refusal is recorded, not paid)"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "n7-open-loops-email",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 230,
+  "n_scored": 230,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "gbrain_version": "0.60.26.0",
+  "gbrain_pin": "github:garrytan/gbrain#3a284aea26889b77c633aebb4149c3016d834ee6",
+  "execution": {
+    "source_tree": {
+      "sha256": "21da96a518e0038b465e37d235baca29a62a528c361fc67e505956e097893fc3",
+      "files": 2402,
+      "git_head": "64a163d33b9b6f72d7b2eec8c4374b8102d48b74",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#3a284aea26889b77c633aebb4149c3016d834ee6",
+      "declared_sha": "3a284aea26889b77c633aebb4149c3016d834ee6",
+      "version": "0.60.26.0",
+      "package_sha256": "b103036cefcba7b163f42113617edb5fd9d731ac587e0a291d042bdef8eeca17",
+      "loaded_git_head": "3a284aea26889b77c633aebb4149c3016d834ee6"
+    }
+  },
+  "resolved_config": {
+    "engine": "pglite-in-memory",
+    "decide": "off (no key, fresh GBRAIN_HOME)",
+    "now": "2026-10-01T12:00:00.000Z",
+    "my_addresses": [
+      "me@example.com",
+      "me.alt@example.com"
+    ],
+    "seed": 7,
+    "generator_version": "n7-gmail-loops-gen-v1",
+    "ledger_sha256": "5373f56659fae43a8628cc3e525e7f8b6a005c0f4170cb4088d2a119e1631ef8",
+    "caller": "GmailClient.getThread with a stub fetch; detectThreadLoop and applyThreadLoopVerdict with the pinned now; operations with OperationContext { remote: false } (and remote: true for the redaction check), sourceId n7-google",
+    "entry_points": [
+      "src/core/google/google-clients.ts GmailClient.getThread (stub fetch)",
+      "src/core/google/loop-detect.ts detectThreadLoop, applyThreadLoopVerdict, __clearSuppressionCacheForTests",
+      "src/core/loops/loops-store.ts upsertOpenLoop (ranking fixtures)",
+      "src/core/google/google-render.ts renderThreadPage",
+      "src/core/google/loops-extract.ts runLoopsExtract (keyless refusal only)",
+      "operations: open_loops, loops_close, loops_mute"
+    ],
+    "oracle": "independent implementation of docs/guides/open-loops.md over ledger facts (eval/generators/n7-gmail-loops-gen.ts mechanicsOracle); \"unanswered for 24 hours\" counts from the first unanswered message in the trailing run",
+    "amara_now": "2026-04-22T19:30:00.000Z",
+    "gbrain_overlay": {
+      "requested": "/workspace/gbrain@3a284aea26889b77c633aebb4149c3016d834ee6",
+      "ref": "3a284aea26889b77c633aebb4149c3016d834ee6",
+      "commit": "3a284aea26889b77c633aebb4149c3016d834ee6",
+      "tree": "ce2f2ecc26e083bf719aa336fd752fc065c9b878",
+      "version": "0.60.26.0",
+      "checkout_dirty": false,
+      "verified": {
+        "copy_tree": "ce2f2ecc26e083bf719aa336fd752fc065c9b878",
+        "tree_matches": true,
+        "symlinks_under_src": 0,
+        "dir_is_realpath": true,
+        "cli_version": "0.60.26.0",
+        "cli_version_matches": true
+      },
+      "copied_not_symlinked": true
+    },
+    "targets": "preregistered in eval/registry.ts (open-loops-email): five safety contracts at 0; planted-loop recall >= 0.8, closure accuracy >= 0.95, counterparty accuracy >= 0.95"
+  },
+  "hashes": {
+    "ledger_sha256": "5373f56659fae43a8628cc3e525e7f8b6a005c0f4170cb4088d2a119e1631ef8",
+    "outputs_sha256": "a91b1adf8e533d173dbde1d4e9fd9e43a9f44de146b784046d8aca409ccb8e79"
+  },
+  "started_at": "2026-10-01T19:45:18.940Z",
+  "finished_at": "2026-10-01T19:45:24.686Z",
+  "data": {
+    "verdict_detail": {
+      "pass": true,
+      "failed": []
+    },
+    "contracts": {
+      "excluded_class_loops": 0,
+      "calendar_closes": 0,
+      "manual_close_reverted": 0,
+      "muted_new_loops": 0,
+      "remote_evidence_leaks": 0
+    },
+    "quality": {
+      "planted_loop_recall": 1,
+      "planted_loop_precision": 1,
+      "closure_accuracy": 1,
+      "counterparty_accuracy": 1
+    },
+    "exploratory": {
+      "backfill_nudge_recall": {
+        "inbound": {
+          "n": 6,
+          "detected": 0
+        },
+        "outbound_followup": {
+          "n": 4,
+          "detected": 0
+        }
+      },
+      "acknowledgement_closes": {
+        "store_rounds": 4,
+        "closed": 4,
+        "snapshot_ack_threads_closed": 5,
+        "snapshot_ack_closure_cases": 5
+      },
+      "still_owed_after_close": {
+        "closed_by_my_reply": 23,
+        "still_owed": 13,
+        "rate": 0.5652173913043478
+      },
+      "url_question_mark_opens": {
+        "n": 4,
+        "opened": 4
+      },
+      "steady_state_nudge_hold": {
+        "rounds": 4,
+        "held_open": 4
+      },
+      "reopen_on_newer_activity": {
+        "rounds": 4,
+        "reopened": 4
+      },
+      "turn_flip_reopens_inbound": {
+        "rounds": 4,
+        "reopened": 4
+      },
+      "ranking": {
+        "fixtures": "a: one commitment due in 8 days, opened now; b: one loop, opened 10 days ago, no due date; c: two loops; d: one loop (c and d otherwise equal, opened 30 days ago)",
+        "order_at_now": [
+          "c-rank@example.org",
+          "d-rank@example.org",
+          "b-rank@example.org",
+          "a-rank@example.org"
+        ],
+        "order_at_now_repeat": [
+          "c-rank@example.org",
+          "d-rank@example.org",
+          "b-rank@example.org",
+          "a-rank@example.org"
+        ],
+        "order_two_days_later": [
+          "c-rank@example.org",
+          "d-rank@example.org",
+          "a-rank@example.org",
+          "b-rank@example.org"
+        ],
+        "same_clock_same_order": true,
+        "order_changes_with_clock_alone": true,
+        "a_before_b_at_now": false,
+        "a_before_b_two_days_later": true,
+        "more_loops_rank_higher": true,
+        "ticking_clock_order": [
+          "c-rank@example.org",
+          "d-rank@example.org",
+          "b-rank@example.org",
+          "a-rank@example.org"
+        ],
+        "ticking_clock_matches_fixed": true,
+        "age_from_detection": {
+          "message_age_hours": {
+            "older": 720,
+            "newer": 30
+          },
+          "opened_at_spread_seconds": 0,
+          "last_activity_spread_hours": 690,
+          "note": "open_loops ranks on the oldest opened_at, which the database stamps at detection; two loops detected in one sync rank as equally old whatever the message ages."
+        }
+      },
+      "amara_background": {
+        "threads": 25,
+        "gold_open": 18,
+        "detected": 18,
+        "agree": 25,
+        "disagreements": []
+      }
+    },
+    "detection": {
+      "planted_open": 45,
+      "planted_detected_right_type": 45,
+      "planted_loop_recall": 1,
+      "opens_on_planted": 45,
+      "correct_opens_on_planted": 45,
+      "planted_loop_precision": 1,
+      "counterparty_checked": 45,
+      "counterparty_correct": 45,
+      "counterparty_accuracy": 1,
+      "closure_cases": 31,
+      "closure_correct": 31,
+      "excluded_threads": 37,
+      "excluded_class_loops": 0,
+      "calendar_snapshot_closes": 0,
+      "by_class": {
+        "inbound_owed": {
+          "n": 12,
+          "gold_open": 12,
+          "detected": 12,
+          "correct": 12,
+          "errors": 0
+        },
+        "inbound_alias": {
+          "n": 3,
+          "gold_open": 3,
+          "detected": 3,
+          "correct": 3,
+          "errors": 0
+        },
+        "inbound_multi_to": {
+          "n": 3,
+          "gold_open": 3,
+          "detected": 3,
+          "correct": 3,
+          "errors": 0
+        },
+        "mixed_case_sender": {
+          "n": 3,
+          "gold_open": 3,
+          "detected": 3,
+          "correct": 3,
+          "errors": 0
+        },
+        "outbound_question": {
+          "n": 10,
+          "gold_open": 10,
+          "detected": 10,
+          "correct": 10,
+          "errors": 0
+        },
+        "outbound_multi_to": {
+          "n": 3,
+          "gold_open": 3,
+          "detected": 3,
+          "correct": 3,
+          "errors": 0
+        },
+        "outbound_answered_then_owed": {
+          "n": 4,
+          "gold_open": 4,
+          "detected": 4,
+          "correct": 4,
+          "errors": 0
+        },
+        "calendar_after_question": {
+          "n": 4,
+          "gold_open": 4,
+          "detected": 4,
+          "correct": 4,
+          "errors": 0
+        },
+        "answered_by_me": {
+          "n": 8,
+          "gold_open": 0,
+          "detected": 0,
+          "correct": 8,
+          "errors": 0
+        },
+        "ack_thanks": {
+          "n": 8,
+          "gold_open": 0,
+          "detected": 0,
+          "correct": 8,
+          "errors": 0
+        },
+        "outbound_answered_fresh": {
+          "n": 5,
+          "gold_open": 0,
+          "detected": 0,
+          "correct": 5,
+          "errors": 0
+        },
+        "reply_with_quoted_question": {
+          "n": 4,
+          "gold_open": 0,
+          "detected": 0,
+          "correct": 4,
+          "errors": 0
+        },
+        "forward_fyi": {
+          "n": 3,
+          "gold_open": 0,
+          "detected": 0,
+          "correct": 3,
+          "errors": 0
+        },
+        "inbound_fresh": {
+          "n": 5,
+          "gold_open": 0,
+          "detected": 0,
+          "correct": 5,
+          "errors": 0
+        },
+        "outbound_fresh": {
+          "n": 5,
+          "gold_open": 0,
+          "detected": 0,
+          "correct": 5,
+          "errors": 0
+        },
+        "cc_only": {
+          "n": 5,
+          "gold_open": 0,
+          "detected": 0,
+          "correct": 5,
+          "errors": 0
+        },
+        "list_mail": {
+          "n": 5,
+          "gold_open": 0,
+          "detected": 0,
+          "correct": 5,
+          "errors": 0
+        },
+        "noise": {
+          "n": 5,
+          "gold_open": 0,
+          "detected": 0,
+          "correct": 5,
+          "errors": 0
+        },
+        "calendar_only": {
+          "n": 4,
+          "gold_open": 0,
+          "detected": 0,
+          "correct": 4,
+          "errors": 0
+        },
+        "self_thread": {
+          "n": 3,
+          "gold_open": 0,
+          "detected": 0,
+          "correct": 3,
+          "errors": 0
+        },
+        "outbound_fyi": {
+          "n": 5,
+          "gold_open": 0,
+          "detected": 0,
+          "correct": 5,
+          "errors": 0
+        },
+        "nudge_inbound_backfill": {
+          "n": 6,
+          "gold_open": 6,
+          "detected": 0,
+          "correct": 0,
+          "errors": 0
+        },
+        "followup_outbound_backfill": {
+          "n": 4,
+          "gold_open": 4,
+          "detected": 0,
+          "correct": 0,
+          "errors": 0
+        },
+        "url_question_fyi": {
+          "n": 4,
+          "gold_open": 0,
+          "detected": 4,
+          "correct": 0,
+          "errors": 0
+        },
+        "promise_pending": {
+          "n": 4,
+          "gold_open": 0,
+          "detected": 0,
+          "correct": 4,
+          "errors": 0
+        },
+        "promise_fulfilled": {
+          "n": 4,
+          "gold_open": 0,
+          "detected": 0,
+          "correct": 4,
+          "errors": 0
+        },
+        "promise_then_thanks": {
+          "n": 4,
+          "gold_open": 0,
+          "detected": 0,
+          "correct": 4,
+          "errors": 0
+        },
+        "promise_to_me": {
+          "n": 3,
+          "gold_open": 3,
+          "detected": 3,
+          "correct": 3,
+          "errors": 0
+        }
+      },
+      "contested": {
+        "nudge_inbound": {
+          "n": 6,
+          "detected": 0
+        },
+        "followup_outbound": {
+          "n": 4,
+          "detected": 0
+        },
+        "url_question_mark_opens": {
+          "n": 4,
+          "opened": 4
+        }
+      },
+      "errors": 0
+    },
+    "store": {
+      "calendar_closes": 0,
+      "manual_close_reverted": 0,
+      "muted_new_loops": 0,
+      "closure_rounds": 8,
+      "closure_rounds_correct": 8,
+      "ack_rounds": 4,
+      "ack_closed": 4,
+      "nudge_rounds": 4,
+      "nudge_held_open": 4,
+      "reopen_rounds": 4,
+      "reopened": 4,
+      "turn_flip_rounds": 4,
+      "turn_flip_reopened_inbound": 4,
+      "presence_failures": []
+    },
+    "redaction": {
+      "leaks": 0,
+      "detail": [],
+      "trusted_quotes": 16,
+      "remote_groups": 16
+    },
+    "semantic": {
+      "closed_by_my_reply": 23,
+      "still_owed_after_close": 13,
+      "still_owed_after_close_rate": 0.5652173913043478,
+      "still_owed_classes": [
+        "ack_thanks",
+        "promise_pending",
+        "promise_then_thanks"
+      ],
+      "promises": {
+        "total": 15,
+        "by_me": 12,
+        "to_me": 3,
+        "fulfilled": 4,
+        "detector_open_on_promise_threads": [
+          {
+            "klass": "promise_to_me",
+            "loop_type": "unanswered_inbound"
+          },
+          {
+            "klass": "promise_to_me",
+            "loop_type": "unanswered_inbound"
+          },
+          {
+            "klass": "promise_to_me",
+            "loop_type": "unanswered_inbound"
+          }
+        ],
+        "note": "The turn-flip detector has no notion of a promise. Promise extraction is the LLM extractor (paid arm); fulfillment is never marked by gbrain (feature gap N7 ledger entry)."
+      },
+      "waiting_on_me_but_no_inbound_loop": [
+        "ack_thanks",
+        "ack_thanks",
+        "ack_thanks",
+        "ack_thanks",
+        "ack_thanks",
+        "ack_thanks",
+        "ack_thanks",
+        "ack_thanks",
+        "inbound_fresh",
+        "inbound_fresh",
+        "inbound_fresh",
+        "inbound_fresh",
+        "inbound_fresh",
+        "nudge_inbound_backfill",
+        "nudge_inbound_backfill",
+        "nudge_inbound_backfill",
+        "nudge_inbound_backfill",
+        "nudge_inbound_backfill",
+        "nudge_inbound_backfill",
+        "promise_pending",
+        "promise_pending",
+        "promise_pending",
+        "promise_pending",
+        "promise_then_thanks",
+        "promise_then_thanks",
+        "promise_then_thanks",
+        "promise_then_thanks"
+      ],
+      "inbound_loop_but_nobody_waiting": [
+        "promise_to_me",
+        "promise_to_me",
+        "promise_to_me"
+      ],
+      "extractor_keyless": {
+        "refused": true,
+        "error": "loops_extract: chat provider unavailable (no configured chat model / API key) — retryable"
+      }
+    },
+    "unsupported": [
+      {
+        "feature": "Slack and calendar commitments",
+        "reason": "no product path: connectors are chatgpt and claude only, and calendar mail is excluded from loops by design (capability matrix N7). Recorded as a feature gap."
+      },
+      {
+        "feature": "promise fulfillment",
+        "reason": "the LLM extractor upserts commitments and never marks a stored one fulfilled; the guide calls fulfillment-by-reply future work. Labeled separately in data.semantic and recorded as a feature gap, never scored as a detector miss."
+      },
+      {
+        "feature": "commitment extraction quality",
+        "reason": "runLoopsExtract needs a chat model; keyless it throws llm_unavailable. Measured only in a paid arm."
+      },
+      {
+        "feature": "ranking quality",
+        "reason": "no independently assigned priorities exist; ranking is checked for conformance (determinism under a shifted clock, monotonicity) only."
+      },
+      {
+        "feature": "a pinned clock for ranking, staleness and close timestamps",
+        "reason": "open_loops ranks with Date.now(); opened_at, closed_at and staleness use the database clock. The runner overrides Date.now in process for the ranking checks and never scores a stored timestamp."
+      },
+      {
+        "feature": "real Google sync",
+        "reason": "threads enter through GmailClient.getThread with a stub fetch; OAuth, history paging and sync scheduling are not exercised."
+      }
+    ],
+    "findings": [
+      {
+        "id": "N7-1",
+        "classification": "bug",
+        "surface": "src/core/google/loop-detect.ts detectThreadLoop (grace check on the last message)",
+        "expected": "A thread first seen with a request 30 to 120 hours old and a nudge 1 to 20 hours old opens unanswered_inbound: the request has been unanswered for more than 24 hours.",
+        "actual": "No loop: the grace window is measured from the nudge, so 6 of 6 such threads (and 4 of 4 outbound follow-ups) are invisible on first sync (backfill or after a sync gap) until the nudge itself ages past the window. Steady-state syncs that saw the request first keep the loop open (hold).",
+        "repro": "bun docs/benchmarks/2026-10-01-n7-open-loops-email/repro/n7-1-nudge-backfill.ts"
+      },
+      {
+        "id": "N7-2",
+        "classification": "feature-gap",
+        "surface": "src/core/google/loop-detect.ts detectThreadLoop (turn flip is the only close signal)",
+        "expected": "A reply that only acknowledges (\"Thanks!\") while the request is still owed leaves someone waiting; a semantic open-loop engine would keep it open.",
+        "actual": "The acknowledgement closes the reply-owed loop as documented (4 of 4 store rounds closed by reply_detected); 13 of 23 threads closed by my reply are still owed by the semantic labels.",
+        "repro": "bun docs/benchmarks/2026-10-01-n7-open-loops-email/repro/n7-2-thanks-closes.ts"
+      },
+      {
+        "id": "N7-3",
+        "classification": "feature-gap",
+        "surface": "src/core/google/loops-extract.ts runLoopsExtract; src/core/loops/loops-store.ts upsertOpenLoop",
+        "expected": "A commitment loop closes when a later message in the thread fulfils it (\"As promised, here is the deck\").",
+        "actual": "Nothing marks a stored commitment fulfilled: re-extraction can only upsert what the model returns, the reply auto-close touches deterministic_thread loops only, and staleness closes llm_extract loops by age. Keyless the extractor refuses (llm_unavailable). The preregistered paid replay (docs/benchmarks/2026-10-01-n7-open-loops-email/receipt-extractor-pin.json) saw the model correctly omit all 4 fulfilled promises on a single pass, yet all 4 commitment loops extracted before the fulfilling message stayed open after it was extracted.",
+        "repro": "bun docs/benchmarks/2026-10-01-n7-open-loops-email/repro/n7-3-fulfillment-gap.ts"
+      },
+      {
+        "id": "N7-4",
+        "classification": "feature-gap",
+        "surface": "src/core/connectors/providers/; src/core/google/loop-detect.ts calendar exclusion",
+        "expected": "Commitments made in Slack or calendar invitations surface as open loops.",
+        "actual": "No Slack or calendar loop source exists; calendar notices neither open nor close loops by design.",
+        "repro": "ls node_modules/gbrain/src/core/connectors/providers/ && grep -n \"isCalendarSystemMail\" node_modules/gbrain/src/core/google/loop-detect.ts"
+      },
+      {
+        "id": "N7-5",
+        "classification": "feature-gap",
+        "surface": "src/core/ops/loops.ts rankGroups (Date.now() in the score)",
+        "expected": "A published `gbrain waiting` order can be reproduced: the same rows and the same reference time give the same order, and the reference time can be pinned.",
+        "actual": "At a fixed instant the order is stable (verified), but with identical rows counterparty a ranks below b now and above b two days later. The clock is Date.now() with no parameter, so ranking cannot be pinned for an evaluation or a replay.",
+        "repro": "bun docs/benchmarks/2026-10-01-n7-open-loops-email/repro/n7-5-ranking-clock.ts"
+      },
+      {
+        "id": "N7-6",
+        "classification": "feature-gap",
+        "surface": "src/core/loops/loops-store.ts upsertOpenLoop (opened_at defaults to now()); src/core/ops/loops.ts rankGroups (age from oldest_opened_at)",
+        "expected": "Someone whose request has waited 30 days ranks as older than someone who wrote yesterday, including on the first sync of an existing inbox.",
+        "actual": "Loop age is time since detection: two inbound loops detected in one sync have opened_at 0 s apart although their messages are 690 hours apart, so a backfill ranks every waiting person as equally old.",
+        "repro": "bun docs/benchmarks/2026-10-01-n7-open-loops-email/repro/n7-6-age-from-detection.ts"
+      },
+      {
+        "id": "N7-7",
+        "classification": "feature-gap",
+        "surface": "src/core/google/loop-detect.ts detectThreadLoop (question test)",
+        "expected": "An FYI whose only question mark sits inside a link (https://docs.example.com/view?id=42) is not an ask.",
+        "actual": "4 of 4 such messages opened unanswered_outbound after 72 hours.",
+        "repro": "bun docs/benchmarks/2026-10-01-n7-open-loops-email/repro/n7-7-url-question-mark.ts"
+      }
+    ],
+    "failures": [
+      {
+        "thread": "692f24a201736afa",
+        "klass": "nudge_inbound_backfill",
+        "gold": {
+          "loop_type": "unanswered_inbound",
+          "counterparty": "fenno.fernsby-125@example.org"
+        },
+        "detected": null
+      },
+      {
+        "thread": "4b1359dc9d809f8b",
+        "klass": "nudge_inbound_backfill",
+        "gold": {
+          "loop_type": "unanswered_inbound",
+          "counterparty": "gorrin.fernsby-126@example.net"
+        },
+        "detected": null
+      },
+      {
+        "thread": "5921997a72ab353b",
+        "klass": "nudge_inbound_backfill",
+        "gold": {
+          "loop_type": "unanswered_inbound",
+          "counterparty": "hessa.fernsby-127@acme-example.com"
+        },
+        "detected": null
+      },
+      {
+        "thread": "2755ea360b2dd301",
+        "klass": "nudge_inbound_backfill",
+        "gold": {
+          "loop_type": "unanswered_inbound",
+          "counterparty": "ivrel.fernsby-128@fund-a-example.com"
+        },
+        "detected": null
+      },
+      {
+        "thread": "90f33aec3be2c9c5",
+        "klass": "nudge_inbound_backfill",
+        "gold": {
+          "loop_type": "unanswered_inbound",
+          "counterparty": "jorrit.fernsby-129@startup-example.io"
+        },
+        "detected": null
+      },
+      {
+        "thread": "2aa9cad73431bfbd",
+        "klass": "nudge_inbound_backfill",
+        "gold": {
+          "loop_type": "unanswered_inbound",
+          "counterparty": "kesmi.fernsby-130@example.org"
+        },
+        "detected": null
+      },
+      {
+        "thread": "7948bf314232893c",
+        "klass": "followup_outbound_backfill",
+        "gold": {
+          "loop_type": "unanswered_outbound",
+          "counterparty": "lunet.fernsby-131@example.net"
+        },
+        "detected": null
+      },
+      {
+        "thread": "132d6e7e72d9b173",
+        "klass": "followup_outbound_backfill",
+        "gold": {
+          "loop_type": "unanswered_outbound",
+          "counterparty": "morrow.fernsby-132@acme-example.com"
+        },
+        "detected": null
+      },
+      {
+        "thread": "b3cd8d2e463c44e1",
+        "klass": "followup_outbound_backfill",
+        "gold": {
+          "loop_type": "unanswered_outbound",
+          "counterparty": "nyssa.fernsby-133@fund-a-example.com"
+        },
+        "detected": null
+      },
+      {
+        "thread": "66359c051e513b45",
+        "klass": "followup_outbound_backfill",
+        "gold": {
+          "loop_type": "unanswered_outbound",
+          "counterparty": "orvel.fernsby-134@startup-example.io"
+        },
+        "detected": null
+      },
+      {
+        "thread": "ff0588ea040e7265",
+        "klass": "url_question_fyi",
+        "gold": null,
+        "detected": {
+          "loop_type": "unanswered_outbound",
+          "counterparty": "pella.fernsby-135@example.org"
+        }
+      },
+      {
+        "thread": "fe1fb189ece49f03",
+        "klass": "url_question_fyi",
+        "gold": null,
+        "detected": {
+          "loop_type": "unanswered_outbound",
+          "counterparty": "quorin.fernsby-136@example.net"
+        }
+      },
+      {
+        "thread": "c4e7e5deb2183c12",
+        "klass": "url_question_fyi",
+        "gold": null,
+        "detected": {
+          "loop_type": "unanswered_outbound",
+          "counterparty": "rissa.fernsby-137@acme-example.com"
+        }
+      },
+      {
+        "thread": "c5c7a30c006b17d5",
+        "klass": "url_question_fyi",
+        "gold": null,
+        "detected": {
+          "loop_type": "unanswered_outbound",
+          "counterparty": "sorrel.fernsby-138@fund-a-example.com"
+        }
+      }
+    ],
+    "store_steps": [
+      {
+        "scenario": "reply_close-0",
+        "kind": "reply_close",
+        "step": 0,
+        "expected": "open unanswered_inbound (kesmi.ravelwood-154@startup-example.io)",
+        "observed": "open (kesmi.ravelwood-154@startup-example.io)",
+        "pass": true
+      },
+      {
+        "scenario": "reply_close-0",
+        "kind": "reply_close",
+        "step": 1,
+        "expected": "done unanswered_inbound by reply_detected",
+        "observed": "done by reply_detected (kesmi.ravelwood-154@startup-example.io)",
+        "pass": true
+      },
+      {
+        "scenario": "ack_close-0",
+        "kind": "ack_close",
+        "step": 0,
+        "expected": "open unanswered_inbound (lunet.ravelwood-155@example.org)",
+        "observed": "open (lunet.ravelwood-155@example.org)",
+        "pass": true
+      },
+      {
+        "scenario": "ack_close-0",
+        "kind": "ack_close",
+        "step": 1,
+        "expected": "done unanswered_inbound by reply_detected",
+        "observed": "done by reply_detected (lunet.ravelwood-155@example.org)",
+        "pass": true
+      },
+      {
+        "scenario": "nudge_hold-0",
+        "kind": "nudge_hold",
+        "step": 0,
+        "expected": "open unanswered_inbound (morrow.ravelwood-156@example.net)",
+        "observed": "open (morrow.ravelwood-156@example.net)",
+        "pass": true
+      },
+      {
+        "scenario": "nudge_hold-0",
+        "kind": "nudge_hold",
+        "step": 1,
+        "expected": "open unanswered_inbound (morrow.ravelwood-156@example.net)",
+        "observed": "open (morrow.ravelwood-156@example.net)",
+        "pass": true
+      },
+      {
+        "scenario": "calendar_hold-0",
+        "kind": "calendar_hold",
+        "step": 0,
+        "expected": "open unanswered_outbound (nyssa.ravelwood-157@acme-example.com)",
+        "observed": "open (nyssa.ravelwood-157@acme-example.com)",
+        "pass": true
+      },
+      {
+        "scenario": "calendar_hold-0",
+        "kind": "calendar_hold",
+        "step": 1,
+        "expected": "open unanswered_outbound (nyssa.ravelwood-157@acme-example.com)",
+        "observed": "open (nyssa.ravelwood-157@acme-example.com)",
+        "pass": true
+      },
+      {
+        "scenario": "manual_close-0",
+        "kind": "manual_close",
+        "step": 0,
+        "expected": "open unanswered_inbound (orvel.ravelwood-158@fund-a-example.com)",
+        "observed": "open (orvel.ravelwood-158@fund-a-example.com)",
+        "pass": true
+      },
+      {
+        "scenario": "manual_close-0",
+        "kind": "manual_close",
+        "step": 1,
+        "expected": "closed done",
+        "observed": "closed done",
+        "pass": true
+      },
+      {
+        "scenario": "manual_close-0",
+        "kind": "manual_close",
+        "step": 2,
+        "expected": "done unanswered_inbound by manual",
+        "observed": "done by manual (orvel.ravelwood-158@fund-a-example.com)",
+        "pass": true
+      },
+      {
+        "scenario": "manual_close-0",
+        "kind": "manual_close",
+        "step": 3,
+        "expected": "open unanswered_inbound (orvel.ravelwood-158@fund-a-example.com)",
+        "observed": "open (orvel.ravelwood-158@fund-a-example.com)",
+        "pass": true
+      },
+      {
+        "scenario": "mute_sender-0",
+        "kind": "mute_sender",
+        "step": 1,
+        "expected": "absent unanswered_inbound",
+        "observed": "absent",
+        "pass": true
+      },
+      {
+        "scenario": "mute_thread-0",
+        "kind": "mute_thread",
+        "step": 1,
+        "expected": "absent unanswered_inbound",
+        "observed": "absent",
+        "pass": true
+      },
+      {
+        "scenario": "turn_flip-0",
+        "kind": "turn_flip",
+        "step": 0,
+        "expected": "open unanswered_outbound (rissa.ravelwood-161@example.net)",
+        "observed": "open (rissa.ravelwood-161@example.net)",
+        "pass": true
+      },
+      {
+        "scenario": "turn_flip-0",
+        "kind": "turn_flip",
+        "step": 1,
+        "expected": "done unanswered_outbound by reply_detected",
+        "observed": "done by reply_detected (rissa.ravelwood-161@example.net)",
+        "pass": true
+      },
+      {
+        "scenario": "turn_flip-0",
+        "kind": "turn_flip",
+        "step": 2,
+        "expected": "open unanswered_inbound (rissa.ravelwood-161@example.net)",
+        "observed": "open (rissa.ravelwood-161@example.net)",
+        "pass": true
+      },
+      {
+        "scenario": "reply_close-1",
+        "kind": "reply_close",
+        "step": 0,
+        "expected": "open unanswered_inbound (sorrel.ravelwood-162@acme-example.com)",
+        "observed": "open (sorrel.ravelwood-162@acme-example.com)",
+        "pass": true
+      },
+      {
+        "scenario": "reply_close-1",
+        "kind": "reply_close",
+        "step": 1,
+        "expected": "done unanswered_inbound by reply_detected",
+        "observed": "done by reply_detected (sorrel.ravelwood-162@acme-example.com)",
+        "pass": true
+      },
+      {
+        "scenario": "ack_close-1",
+        "kind": "ack_close",
+        "step": 0,
+        "expected": "open unanswered_inbound (tamsin.ravelwood-163@fund-a-example.com)",
+        "observed": "open (tamsin.ravelwood-163@fund-a-example.com)",
+        "pass": true
+      },
+      {
+        "scenario": "ack_close-1",
+        "kind": "ack_close",
+        "step": 1,
+        "expected": "done unanswered_inbound by reply_detected",
+        "observed": "done by reply_detected (tamsin.ravelwood-163@fund-a-example.com)",
+        "pass": true
+      },
+      {
+        "scenario": "nudge_hold-1",
+        "kind": "nudge_hold",
+        "step": 0,
+        "expected": "open unanswered_inbound (ulric.ravelwood-164@startup-example.io)",
+        "observed": "open (ulric.ravelwood-164@startup-example.io)",
+        "pass": true
+      },
+      {
+        "scenario": "nudge_hold-1",
+        "kind": "nudge_hold",
+        "step": 1,
+        "expected": "open unanswered_inbound (ulric.ravelwood-164@startup-example.io)",
+        "observed": "open (ulric.ravelwood-164@startup-example.io)",
+        "pass": true
+      },
+      {
+        "scenario": "calendar_hold-1",
+        "kind": "calendar_hold",
+        "step": 0,
+        "expected": "open unanswered_outbound (vessa.ravelwood-165@example.org)",
+        "observed": "open (vessa.ravelwood-165@example.org)",
+        "pass": true
+      },
+      {
+        "scenario": "calendar_hold-1",
+        "kind": "calendar_hold",
+        "step": 1,
+        "expected": "open unanswered_outbound (vessa.ravelwood-165@example.org)",
+        "observed": "open (vessa.ravelwood-165@example.org)",
+        "pass": true
+      },
+      {
+        "scenario": "manual_close-1",
+        "kind": "manual_close",
+        "step": 0,
+        "expected": "open unanswered_inbound (wrenna.ravelwood-166@example.net)",
+        "observed": "open (wrenna.ravelwood-166@example.net)",
+        "pass": true
+      },
+      {
+        "scenario": "manual_close-1",
+        "kind": "manual_close",
+        "step": 1,
+        "expected": "closed done",
+        "observed": "closed done",
+        "pass": true
+      },
+      {
+        "scenario": "manual_close-1",
+        "kind": "manual_close",
+        "step": 2,
+        "expected": "done unanswered_inbound by manual",
+        "observed": "done by manual (wrenna.ravelwood-166@example.net)",
+        "pass": true
+      },
+      {
+        "scenario": "manual_close-1",
+        "kind": "manual_close",
+        "step": 3,
+        "expected": "open unanswered_inbound (wrenna.ravelwood-166@example.net)",
+        "observed": "open (wrenna.ravelwood-166@example.net)",
+        "pass": true
+      },
+      {
+        "scenario": "mute_sender-1",
+        "kind": "mute_sender",
+        "step": 1,
+        "expected": "absent unanswered_inbound",
+        "observed": "absent",
+        "pass": true
+      },
+      {
+        "scenario": "mute_thread-1",
+        "kind": "mute_thread",
+        "step": 1,
+        "expected": "absent unanswered_inbound",
+        "observed": "absent",
+        "pass": true
+      },
+      {
+        "scenario": "turn_flip-1",
+        "kind": "turn_flip",
+        "step": 0,
+        "expected": "open unanswered_outbound (brisa.stonemere-169@startup-example.io)",
+        "observed": "open (brisa.stonemere-169@startup-example.io)",
+        "pass": true
+      },
+      {
+        "scenario": "turn_flip-1",
+        "kind": "turn_flip",
+        "step": 1,
+        "expected": "done unanswered_outbound by reply_detected",
+        "observed": "done by reply_detected (brisa.stonemere-169@startup-example.io)",
+        "pass": true
+      },
+      {
+        "scenario": "turn_flip-1",
+        "kind": "turn_flip",
+        "step": 2,
+        "expected": "open unanswered_inbound (brisa.stonemere-169@startup-example.io)",
+        "observed": "open (brisa.stonemere-169@startup-example.io)",
+        "pass": true
+      },
+      {
+        "scenario": "reply_close-2",
+        "kind": "reply_close",
+        "step": 0,
+        "expected": "open unanswered_inbound (corvan.stonemere-170@example.org)",
+        "observed": "open (corvan.stonemere-170@example.org)",
+        "pass": true
+      },
+      {
+        "scenario": "reply_close-2",
+        "kind": "reply_close",
+        "step": 1,
+        "expected": "done unanswered_inbound by reply_detected",
+        "observed": "done by reply_detected (corvan.stonemere-170@example.org)",
+        "pass": true
+      },
+      {
+        "scenario": "ack_close-2",
+        "kind": "ack_close",
+        "step": 0,
+        "expected": "open unanswered_inbound (dellith.stonemere-171@example.net)",
+        "observed": "open (dellith.stonemere-171@example.net)",
+        "pass": true
+      },
+      {
+        "scenario": "ack_close-2",
+        "kind": "ack_close",
+        "step": 1,
+        "expected": "done unanswered_inbound by reply_detected",
+        "observed": "done by reply_detected (dellith.stonemere-171@example.net)",
+        "pass": true
+      },
+      {
+        "scenario": "nudge_hold-2",
+        "kind": "nudge_hold",
+        "step": 0,
+        "expected": "open unanswered_inbound (emberly.stonemere-172@acme-example.com)",
+        "observed": "open (emberly.stonemere-172@acme-example.com)",
+        "pass": true
+      },
+      {
+        "scenario": "nudge_hold-2",
+        "kind": "nudge_hold",
+        "step": 1,
+        "expected": "open unanswered_inbound (emberly.stonemere-172@acme-example.com)",
+        "observed": "open (emberly.stonemere-172@acme-example.com)",
+        "pass": true
+      },
+      {
+        "scenario": "calendar_hold-2",
+        "kind": "calendar_hold",
+        "step": 0,
+        "expected": "open unanswered_outbound (fenno.stonemere-173@fund-a-example.com)",
+        "observed": "open (fenno.stonemere-173@fund-a-example.com)",
+        "pass": true
+      },
+      {
+        "scenario": "calendar_hold-2",
+        "kind": "calendar_hold",
+        "step": 1,
+        "expected": "open unanswered_outbound (fenno.stonemere-173@fund-a-example.com)",
+        "observed": "open (fenno.stonemere-173@fund-a-example.com)",
+        "pass": true
+      },
+      {
+        "scenario": "manual_close-2",
+        "kind": "manual_close",
+        "step": 0,
+        "expected": "open unanswered_inbound (gorrin.stonemere-174@startup-example.io)",
+        "observed": "open (gorrin.stonemere-174@startup-example.io)",
+        "pass": true
+      },
+      {
+        "scenario": "manual_close-2",
+        "kind": "manual_close",
+        "step": 1,
+        "expected": "closed done",
+        "observed": "closed done",
+        "pass": true
+      },
+      {
+        "scenario": "manual_close-2",
+        "kind": "manual_close",
+        "step": 2,
+        "expected": "done unanswered_inbound by manual",
+        "observed": "done by manual (gorrin.stonemere-174@startup-example.io)",
+        "pass": true
+      },
+      {
+        "scenario": "manual_close-2",
+        "kind": "manual_close",
+        "step": 3,
+        "expected": "open unanswered_inbound (gorrin.stonemere-174@startup-example.io)",
+        "observed": "open (gorrin.stonemere-174@startup-example.io)",
+        "pass": true
+      },
+      {
+        "scenario": "mute_sender-2",
+        "kind": "mute_sender",
+        "step": 1,
+        "expected": "absent unanswered_inbound",
+        "observed": "absent",
+        "pass": true
+      },
+      {
+        "scenario": "mute_thread-2",
+        "kind": "mute_thread",
+        "step": 1,
+        "expected": "absent unanswered_inbound",
+        "observed": "absent",
+        "pass": true
+      },
+      {
+        "scenario": "turn_flip-2",
+        "kind": "turn_flip",
+        "step": 0,
+        "expected": "open unanswered_outbound (jorrit.stonemere-177@acme-example.com)",
+        "observed": "open (jorrit.stonemere-177@acme-example.com)",
+        "pass": true
+      },
+      {
+        "scenario": "turn_flip-2",
+        "kind": "turn_flip",
+        "step": 1,
+        "expected": "done unanswered_outbound by reply_detected",
+        "observed": "done by reply_detected (jorrit.stonemere-177@acme-example.com)",
+        "pass": true
+      },
+      {
+        "scenario": "turn_flip-2",
+        "kind": "turn_flip",
+        "step": 2,
+        "expected": "open unanswered_inbound (jorrit.stonemere-177@acme-example.com)",
+        "observed": "open (jorrit.stonemere-177@acme-example.com)",
+        "pass": true
+      },
+      {
+        "scenario": "reply_close-3",
+        "kind": "reply_close",
+        "step": 0,
+        "expected": "open unanswered_inbound (kesmi.stonemere-178@fund-a-example.com)",
+        "observed": "open (kesmi.stonemere-178@fund-a-example.com)",
+        "pass": true
+      },
+      {
+        "scenario": "reply_close-3",
+        "kind": "reply_close",
+        "step": 1,
+        "expected": "done unanswered_inbound by reply_detected",
+        "observed": "done by reply_detected (kesmi.stonemere-178@fund-a-example.com)",
+        "pass": true
+      },
+      {
+        "scenario": "ack_close-3",
+        "kind": "ack_close",
+        "step": 0,
+        "expected": "open unanswered_inbound (lunet.stonemere-179@startup-example.io)",
+        "observed": "open (lunet.stonemere-179@startup-example.io)",
+        "pass": true
+      },
+      {
+        "scenario": "ack_close-3",
+        "kind": "ack_close",
+        "step": 1,
+        "expected": "done unanswered_inbound by reply_detected",
+        "observed": "done by reply_detected (lunet.stonemere-179@startup-example.io)",
+        "pass": true
+      },
+      {
+        "scenario": "nudge_hold-3",
+        "kind": "nudge_hold",
+        "step": 0,
+        "expected": "open unanswered_inbound (morrow.stonemere-180@example.org)",
+        "observed": "open (morrow.stonemere-180@example.org)",
+        "pass": true
+      },
+      {
+        "scenario": "nudge_hold-3",
+        "kind": "nudge_hold",
+        "step": 1,
+        "expected": "open unanswered_inbound (morrow.stonemere-180@example.org)",
+        "observed": "open (morrow.stonemere-180@example.org)",
+        "pass": true
+      },
+      {
+        "scenario": "calendar_hold-3",
+        "kind": "calendar_hold",
+        "step": 0,
+        "expected": "open unanswered_outbound (nyssa.stonemere-181@example.net)",
+        "observed": "open (nyssa.stonemere-181@example.net)",
+        "pass": true
+      },
+      {
+        "scenario": "calendar_hold-3",
+        "kind": "calendar_hold",
+        "step": 1,
+        "expected": "open unanswered_outbound (nyssa.stonemere-181@example.net)",
+        "observed": "open (nyssa.stonemere-181@example.net)",
+        "pass": true
+      },
+      {
+        "scenario": "manual_close-3",
+        "kind": "manual_close",
+        "step": 0,
+        "expected": "open unanswered_inbound (orvel.stonemere-182@acme-example.com)",
+        "observed": "open (orvel.stonemere-182@acme-example.com)",
+        "pass": true
+      },
+      {
+        "scenario": "manual_close-3",
+        "kind": "manual_close",
+        "step": 1,
+        "expected": "closed done",
+        "observed": "closed done",
+        "pass": true
+      },
+      {
+        "scenario": "manual_close-3",
+        "kind": "manual_close",
+        "step": 2,
+        "expected": "done unanswered_inbound by manual",
+        "observed": "done by manual (orvel.stonemere-182@acme-example.com)",
+        "pass": true
+      },
+      {
+        "scenario": "manual_close-3",
+        "kind": "manual_close",
+        "step": 3,
+        "expected": "open unanswered_inbound (orvel.stonemere-182@acme-example.com)",
+        "observed": "open (orvel.stonemere-182@acme-example.com)",
+        "pass": true
+      },
+      {
+        "scenario": "mute_sender-3",
+        "kind": "mute_sender",
+        "step": 1,
+        "expected": "absent unanswered_inbound",
+        "observed": "absent",
+        "pass": true
+      },
+      {
+        "scenario": "mute_thread-3",
+        "kind": "mute_thread",
+        "step": 1,
+        "expected": "absent unanswered_inbound",
+        "observed": "absent",
+        "pass": true
+      },
+      {
+        "scenario": "turn_flip-3",
+        "kind": "turn_flip",
+        "step": 0,
+        "expected": "open unanswered_outbound (rissa.stonemere-185@example.org)",
+        "observed": "open (rissa.stonemere-185@example.org)",
+        "pass": true
+      },
+      {
+        "scenario": "turn_flip-3",
+        "kind": "turn_flip",
+        "step": 1,
+        "expected": "done unanswered_outbound by reply_detected",
+        "observed": "done by reply_detected (rissa.stonemere-185@example.org)",
+        "pass": true
+      },
+      {
+        "scenario": "turn_flip-3",
+        "kind": "turn_flip",
+        "step": 2,
+        "expected": "open unanswered_inbound (rissa.stonemere-185@example.org)",
+        "observed": "open (rissa.stonemere-185@example.org)",
+        "pass": true
+      }
+    ],
+    "harness_error": null
+  },
+  "accounting": {
+    "planned": 230,
+    "attempted": 230,
+    "scored": 230,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null
+}

@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "id": "associative-recall-v1-disputed-negatives-adjudication-v1",
+  "date": "2026-10-01",
+  "corpus": "eval/data/associative-recall-v1",
+  "corpus_hashes": {
+    "sources.json": "c99a5419b87aa92d095d0d22297237937fc66b064207d64ceff6eb4c1053be2a",
+    "probes.json": "d0493d9724ca3075c6137d61c82d0055e9bc79ac2f401c18ddbe53af973e45ee",
+    "qrels.json": "ab04627e4cdecea22a55f6205ef29ffd3f3b99b1335b720f78839c9bb66cb08e"
+  },
+  "adjudicator": "coding agent (eval-category wave lane N7/N8), not an independent human reviewer",
+  "status": "agent-adjudicated; pending independent human relevance review. The frozen corpus files are unchanged.",
+  "why": "Wave amendment 4 requires N8's disputed negatives to be adjudicated before any N8 number counts. The corpus README names three negative probes whose sources hold related but non-answering evidence and warns that an unavailable answer does not make related memory irrelevant.",
+  "questions": {
+    "answerable": "Does accessible public evidence in the family answer the probe? If not, the empty answer gold (required_span_ids: []) stands.",
+    "permissible_association": "If memory is volunteered on this turn without being asked, which pages would a reasonable reviewer count as useful related memory rather than a false alarm? Pages listed here are excluded from the adjudicated false-alarm count; any other delivered page on the turn still counts."
+  },
+  "scoring_rule": "N8 reports two false-alarm rates on associative negatives: strict (frozen labels: any delivered page on a negative turn is a false alarm) and adjudicated (a delivered page listed in permissible_pages is not a false alarm). Neither rate deletes or relabels a probe. Withdrawn and private pages are never permissible.",
+  "decisions": [
+    {
+      "probe_id": "causal-context/ink-smear/negative",
+      "probe": "Which ink brand did the print collective use?",
+      "answerable": false,
+      "answer_gold_unchanged": true,
+      "permissible_pages": [{ "source_id": "causal-context/ink-smear/history", "slug": "ink-smear/episode-1" }],
+      "not_permissible": [
+        { "source_id": "causal-context/ink-smear/history", "slug": "ink-smear/episode-2", "reason": "describes the drying-rack change only; nothing about ink" },
+        { "source_id": "causal-context/ink-smear/other-party", "slug": "ink-smear/episode-1", "reason": "other-party distractor about rainwater on flyers" }
+      ],
+      "rationale": "Episode 1 says the edition log records which ink was used, so it points to where the answer lives without stating the brand. Volunteering it is a useful association, not a false alarm."
+    },
+    {
+      "probe_id": "changing-decisions/library-fines/negative",
+      "probe": "What replacement fee applies to the missing toy train?",
+      "answerable": false,
+      "answer_gold_unchanged": true,
+      "permissible_pages": [{ "source_id": "changing-decisions/library-fines/history", "slug": "library-fines/episode-1" }],
+      "not_permissible": [
+        { "source_id": "changing-decisions/library-fines/other-party", "slug": "library-fines/episode-1", "reason": "tool library distractor with a separate inventory" }
+      ],
+      "rationale": "Episode 1 confirms that replacement charges for lost toys still apply but gives no amount. It is a partial, relevant answer: the fee exists. Volunteering it is useful."
+    },
+    {
+      "probe_id": "changing-decisions/concert-recording/negative",
+      "probe": "Which community concert performances have approved edited release?",
+      "answerable": false,
+      "answer_gold_unchanged": true,
+      "permissible_pages": [{ "source_id": "changing-decisions/concert-recording/history", "slug": "concert-recording/episode-1" }],
+      "not_permissible": [
+        { "source_id": "changing-decisions/concert-recording/restricted-1", "slug": "concert-recording/episode-1", "reason": "withdrawn consent list; surfacing it would deliver withdrawn material, which is prohibited" },
+        { "source_id": "changing-decisions/concert-recording/other-party", "slug": "concert-recording/episode-1", "reason": "school orchestra distractor under a different consent process" }
+      ],
+      "rationale": "Episode 1 states the approval policy (only performances with separate written approval may be included) without listing which performances qualify. The policy is a useful association; the withdrawn list is not."
+    }
+  ]
+}

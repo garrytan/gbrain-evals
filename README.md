@@ -85,6 +85,35 @@ significance there. On LongMemEval-S, as development data, `auto` scored 445 of
 questions and cost about 4 answers.
 [Read the auto v2 check](docs/benchmarks/2026-09-30-evidence-auto-v2.md).
 
+**Beyond retrieval, the October 1 checks found real wins and real
+losses.** Eleven keyless or cheap categories ran against gbrain `3a284ae`.
+These are the places gbrain held up:
+
+- It kept different people apart (N4).
+- No read op it probes leaked private content (N6).
+- It tracked Gmail-shaped open loops 45/45 (N7).
+- It kept speaker and time across all 27 transcript formats it registers
+  (N12).
+- It never served a stale value after an update (N1) or reactivated a
+  forgotten one (N5).
+
+These are the places it did not:
+
+- `volunteer_context` gave 4 private pages to remote callers (N8).
+- A three-label status note parsed as a chat (N12).
+- `ontology_propose` was refused on default brains, so 100 of 388
+  current-value probes missed (N1).
+- A cache kept serving forgotten facts for 30 seconds (N5).
+- Its contradiction judge found 105 of 150 conflicts (N2).
+- Composed two- and three-hop questions never produced a multi-relation
+  plan (N9).
+- Its answer grade called every question `moderate` (A4).
+- Associative recall, which gbrain does not claim, scored 0 of 240 (N8).
+
+Of the 20 bugs found, 8 are fixed in gbrain's open fix wave 5 and 10 are
+scheduled for fix wave 6. The [findings ledger](docs/benchmarks/2026-10-01-wave-bugs.md)
+lists every bug and gap. All of this is synthetic data with generator gold.
+
 ## Why put gbrain on your shortlist?
 
 **It finds evidence across long conversations.** In the September 6 LongMemEval
@@ -167,8 +196,9 @@ them. Hosted embedding and reranking services receive the text they process;
 local storage does not make those API calls local. The retrieval results above
 were measured at gbrain [`2efaaf8f`](https://github.com/garrytan/gbrain/tree/2efaaf8f8a817b5b82e023383618fdcdb1cc5f7d)
 (v0.48.4.0). This repository currently installs gbrain master
-[`6c8373c`](https://github.com/garrytan/gbrain/tree/6c8373c3de9bb321a3da0bfa2dc2140736aeafa5)
-(v0.60.13.0), whose search mode definitions are identical. See
+[`3a284ae`](https://github.com/garrytan/gbrain/tree/3a284aea26889b77c633aebb4149c3016d834ee6)
+(v0.60.26.0), whose search mode definitions are identical. That release adds
+System One decision slots, which stay off unless a TypeSafe key is set. See
 [how to reproduce a run](eval/README.md).
 
 ## What should you learn here?

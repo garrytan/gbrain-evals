@@ -21,6 +21,8 @@ export interface CallResult {
   error?: string;
   raw: string;
   ms: number;
+  /** The MCP result's `_meta` (for example brain_hot_memory), when the server sent one. */
+  meta?: unknown;
 }
 
 export interface Driver {
@@ -100,16 +102,16 @@ export class CliDriver implements Driver {
 
 interface Pending { resolve: (v: unknown) => void; reject: (e: Error) => void; timer: ReturnType<typeof setTimeout> }
 
-function toolResult(msg: Record<string, unknown>): { data: unknown; error?: string; raw: string } {
+function toolResult(msg: Record<string, unknown>): { data: unknown; error?: string; raw: string; meta?: unknown } {
   if (msg.error) return { data: msg.error, error: `rpc: ${JSON.stringify(msg.error)}`, raw: JSON.stringify(msg.error) };
-  const result = msg.result as { content?: Array<{ type: string; text?: string }>; isError?: boolean } | undefined;
+  const result = msg.result as { content?: Array<{ type: string; text?: string }>; isError?: boolean; _meta?: unknown } | undefined;
   const texts = (result?.content ?? []).filter(c => c.type === 'text').map(c => c.text ?? '');
   const text = texts.join('\n');
   // A server may append a notice as a second text block; the payload is the first block that parses.
   const parsed = texts.map(t => parseMaybeJson(t));
   const data = parsed.find(d => d !== null && typeof d === 'object') ?? parseMaybeJson(text);
   const err = result?.isError ? (errorOf(data) ?? (typeof data === 'string' ? data : 'tool error')) : errorOf(data);
-  return { data, error: err, raw: text };
+  return { data, error: err, raw: text, ...(result?._meta !== undefined ? { meta: result._meta } : {}) };
 }
 
 export class McpStdioDriver implements Driver {
@@ -181,7 +183,7 @@ export class McpStdioDriver implements Driver {
     try {
       const msg = await this.request('tools/call', { name: op, arguments: args });
       const r = toolResult(msg);
-      return { ok: !r.error, data: r.data, error: r.error, raw: r.raw, ms: Date.now() - t0 };
+      return { ok: !r.error, data: r.data, error: r.error, raw: r.raw, ms: Date.now() - t0, ...(r.meta !== undefined ? { meta: r.meta } : {}) };
     } catch (e) {
       return { ok: false, data: null, error: (e as Error).message, raw: '', ms: Date.now() - t0 };
     }
@@ -203,27 +205,22 @@ export class McpStdioDriver implements Driver {
 }
 
 /**
- * MCP over HTTP (streamable HTTP transport). Authenticates as an OAuth
- * client_credentials client registered for the vault source, fetching a new
- * access token for every session. Responses may arrive as JSON or as a
- * server-sent-events stream.
+ * One OAuth client's session against a running `gbrain serve --http`: a
+ * client_credentials token and an MCP session. McpHttpDriver uses one for
+ * its own client; a category can open more against the same server to act
+ * as a differently scoped caller (a read-only or foreign-source client).
  */
-export class McpHttpDriver implements Driver {
-  readonly kind = 'mcp-http' as const;
-  readonly remote = true;
-  private proc: ChildProcessWithoutNullStreams | null = null;
-  private started = 0;
+export class McpHttpClient {
   private sessionId: string | null = null;
   private nextId = 1;
-  serverVersion = '';
-  stderrTail: string[] = [];
   private token = '';
-  constructor(private run: RunEnv, private port: number, private client: { id: string; secret: string }) {}
+  serverVersion = '';
+  constructor(private port: number, private client: { id: string; secret: string; scope?: string }) {}
 
   private async fetchToken(): Promise<string> {
     const body = new URLSearchParams({
       grant_type: 'client_credentials', client_id: this.client.id, client_secret: this.client.secret,
-      scope: 'read write', resource: `http://localhost:${this.port}/mcp`,
+      scope: this.client.scope ?? 'read write', resource: `http://localhost:${this.port}/mcp`,
     });
     const res = await fetch(`http://127.0.0.1:${this.port}/token`, {
       method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body, signal: AbortSignal.timeout(30_000),
@@ -257,12 +254,50 @@ export class McpHttpDriver implements Driver {
     try { return JSON.parse(text); } catch { return { error: { message: `HTTP ${res.status}`, body: text.slice(0, 500) } }; }
   }
 
+  /** Fetch a token and open an MCP session. Throws with the server's reply when either fails. */
+  async initialize(): Promise<void> {
+    this.sessionId = null;
+    this.token = await this.fetchToken();
+    const init = await this.post({ jsonrpc: '2.0', id: this.nextId++, method: 'initialize', params: {
+      protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'gbrain-evals-lifecycle', version: '1' },
+    } });
+    if (!init || !init.result) throw new Error(JSON.stringify(init).slice(0, 300));
+    this.serverVersion = String(((init.result as Record<string, unknown>).serverInfo as Record<string, unknown>)?.version ?? '');
+    await this.post({ jsonrpc: '2.0', method: 'notifications/initialized' });
+  }
+
+  async call(op: string, args: Record<string, unknown>): Promise<CallResult> {
+    const t0 = Date.now();
+    try {
+      const msg = await this.post({ jsonrpc: '2.0', id: this.nextId++, method: 'tools/call', params: { name: op, arguments: args } });
+      const r = toolResult(msg ?? {});
+      return { ok: !r.error, data: r.data, error: r.error, raw: r.raw, ms: Date.now() - t0, ...(r.meta !== undefined ? { meta: r.meta } : {}) };
+    } catch (e) {
+      return { ok: false, data: null, error: (e as Error).message, raw: '', ms: Date.now() - t0 };
+    }
+  }
+}
+
+/**
+ * MCP over HTTP (streamable HTTP transport). Authenticates as an OAuth
+ * client_credentials client registered for the vault source, fetching a new
+ * access token for every session. Responses may arrive as JSON or as a
+ * server-sent-events stream.
+ */
+export class McpHttpDriver implements Driver {
+  readonly kind = 'mcp-http' as const;
+  readonly remote = true;
+  private proc: ChildProcessWithoutNullStreams | null = null;
+  private started = 0;
+  private session: McpHttpClient | null = null;
+  serverVersion = '';
+  stderrTail: string[] = [];
+  constructor(private run: RunEnv, readonly port: number, private client: { id: string; secret: string }) {}
+
   async start() {
     const proc = spawn('bun', [...entryArgs(this.run), 'serve', '--http', '--port', String(this.port)], { env: this.run.env, cwd: this.run.env.GBRAIN_HOME });
     this.proc = proc;
     this.started++;
-    this.sessionId = null;
-    this.token = '';
     proc.stderr.setEncoding('utf8');
     proc.stdout.setEncoding('utf8');
     const tail = (chunk: string) => {
@@ -277,36 +312,26 @@ export class McpHttpDriver implements Driver {
       await new Promise(r => setTimeout(r, 500));
       if (proc.exitCode !== null) throw new Error(`serve --http exited: ${this.stderrTail.slice(-5).join(' | ')}`);
       try {
-        if (!this.token) this.token = await this.fetchToken();
-        const init = await this.post({ jsonrpc: '2.0', id: this.nextId++, method: 'initialize', params: {
-          protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'gbrain-evals-lifecycle', version: '1' },
-        } });
-        if (init && init.result) {
-          this.serverVersion = String(((init.result as Record<string, unknown>).serverInfo as Record<string, unknown>)?.version ?? '');
-          await this.post({ jsonrpc: '2.0', method: 'notifications/initialized' });
-          return;
-        }
-        lastErr = JSON.stringify(init).slice(0, 300);
+        const session = new McpHttpClient(this.port, this.client);
+        await session.initialize();
+        this.session = session;
+        this.serverVersion = session.serverVersion;
+        return;
       } catch (e) { lastErr = (e as Error).message; }
     }
     throw new Error(`serve --http did not initialize: ${lastErr}`);
   }
 
   async call(op: string, args: Record<string, unknown>): Promise<CallResult> {
-    const t0 = Date.now();
-    try {
-      const msg = await this.post({ jsonrpc: '2.0', id: this.nextId++, method: 'tools/call', params: { name: op, arguments: args } });
-      const r = toolResult(msg ?? {});
-      return { ok: !r.error, data: r.data, error: r.error, raw: r.raw, ms: Date.now() - t0 };
-    } catch (e) {
-      return { ok: false, data: null, error: (e as Error).message, raw: '', ms: Date.now() - t0 };
-    }
+    if (!this.session) return { ok: false, data: null, error: 'serve --http is not running', raw: '', ms: 0 };
+    return this.session.call(op, args);
   }
 
   async close() {
     const proc = this.proc;
     if (!proc) return;
     this.proc = null;
+    this.session = null;
     await new Promise<void>(resolve => {
       const t = setTimeout(() => { proc.kill('SIGKILL'); resolve(); }, 15_000);
       proc.once('exit', () => { clearTimeout(t); resolve(); });
