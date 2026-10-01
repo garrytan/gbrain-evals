@@ -375,6 +375,30 @@ export const REGISTRY: readonly CategoryEntry[] = [
     contract: 'Compares B, C0 and cue arms on indirect questions; cue and summary arms run on gbrain-cues. A preregistered protocol, not a published result.',
   },
   {
+    id: 'temporal-asof', legacy_alias: 'N3', name: 'Temporal and as-of questions through gbrain\'s temporal features',
+    family: 'temporal', tier: 'H', script: 'eval/runner/n3-temporal-asof.ts', run: { kind: 'dispatched' },
+    cost_estimate: FREE, receipt_path: receipt('n3-temporal-asof'),
+    headline: { metric: 'as-of accuracy (ontology_get over fact validity windows), range set-F1, last-seen MAE in days, per-feature pass rates', denominator: 'seed 3: 513 probes (492 from the ledger, 21 clock-relative): 104 as-of probes per arm, 179 range probes, 83 last-seen probes; 155 of the 513 are negative controls' },
+    gate: 'gate', evidence_maturity: 'synthetic-production-path',
+    contract: 'Writes a seeded ledger (job changes with separate valid and recorded dates, timestamped chronicle events, competing date signals, time-zone and DST edges, metric trajectories) through gbrain operation handlers on in-memory PGLite, then scores chronicle_day/since/on_this_day/last_seen, query since/until on the keyword path, effective-date precedence and recorded-time fallback, relative durations, ontology_get and get_timeline as-of, and find_trajectory against gold the generator derives from the ledger with independent oracles. Page-date filtering is scored as a filter and reported separately from true as-of state. It does not measure chronicle extraction from prose (a scripted judge feeds events), natural-language dates, a pinned "now", or think. A gbrain operation that throws where an answer is expected is a scored miss; a failed presence assertion is a harness error and voids the run.',
+  },
+  {
+    id: 'entity-resolution', legacy_alias: 'N4', name: 'Entity resolution: variants, namesakes and cross-source identity',
+    family: 'relationships', tier: 'H', script: 'eval/runner/n4-entity-resolution.ts', run: { kind: 'dispatched' },
+    cost_estimate: FREE, receipt_path: receipt('n4-entity-resolution'),
+    headline: { metric: 'B-cubed F1, wrong-merge rate, correct-refusal rate and exact-lookup floor of the read-time resolver, beside singleton, merge-everything and exact-only baselines', denominator: '136 single-source mentions (119 solvable, 17 refusals) at the default seed; recall adds 8 two-source-grant mentions' },
+    gate: 'report-only', evidence_maturity: 'synthetic-production-path',
+    contract: 'Seeds a generated world of people and companies (nicknames, typos, handles, initials, former names, namesakes, the same person in two sources linked by an identity group, and two different people sharing a slug across sources) into PGLite, then resolves mentions through gbrain\'s resolver cascade, the recall and remember operations, the resolve-on-save path, the search exact-lookup tier and the identity-group operations. Gold comes from an oracle over the written pages; ambiguous, unreadable and no-referent mentions must be refused. Metrics are B-cubed over mention clusters, wrong merges, fragmentation, unresolved and correct refusals. It does not test context-aware disambiguation, names declared only in prose as a gbrain feature, or LLM extraction. A product exception is a scored miss; a failed presence assertion is a harness error.',
+  },
+  {
+    id: 'visibility-leak-fuzz', legacy_alias: 'N6', name: 'Visibility and access leak fuzz (every read op x caller x scope)',
+    family: 'safety', tier: 'H', script: 'eval/runner/n6-visibility-fuzz.ts', run: { kind: 'dispatched' },
+    cost_estimate: FREE, receipt_path: receipt('n6-visibility-fuzz'),
+    headline: { metric: 'leaking probes (content, existence, existence-oracle; target 0), access-gate bypasses, and read-op coverage', denominator: 'every read op enumerated from gbrain operations at run time x 6 remote callers x targets and variants (3,854 exposed probes and 74 read ops at 0.60.13.0)' },
+    gate: 'gate', evidence_maturity: 'synthetic-production-path',
+    contract: 'Seeds a brain holding protected content (visibility: private pages with body, tag and timeline markers, held Takes rows, private Facts rows, derived atoms, an ungranted source) beside public twins, then calls every read op in gbrain operations as stdio, serve-http read/write/slug-bound clients and remote/local subagents scoped to one source. Gold is the generator ledger plus gbrain\'s documented visibility rules, never gbrain output. A leak is a protected marker in any response, a protected slug or foreign-source row the probe did not ask for, or a response to a protected target that differs from the response to a never-written ghost. Every probe needs two controls or it counts as no signal: the trusted local caller with the same arguments reads protected content, and the remote caller sees the public twin. Coverage counts read ops with at least one signal-bearing probe. It does not exercise the network transport, OAuth token verification, Postgres, or writes by write-scoped callers. Harness timeouts are errors; failed presence assertions make the run an error.',
+  },
+  {
     id: 'multi-adapter', legacy_alias: 'multi-adapter', name: 'Multi-adapter relational, fuzzy and external query families',
     family: 'relationships', tier: 'P', script: 'eval/runner/multi-adapter.ts', run: { kind: 'dispatched', timeoutMs: 2 * HOUR },
     cost_estimate: UNMEASURED, receipt_path: receipt('multi-adapter'),
@@ -446,6 +470,16 @@ export const REGISTRY: readonly CategoryEntry[] = [
     contract: 'Follows one small vault through ingest, query, an embedding outage, corrections, reconcile, forget and restart, and scores what an agent can read at each checkpoint against the evaluator\'s own ledger. gbrain\'s doctor, integrity and invariant checks are never the answer key. It covers the scripted scenario only; timing-dependent counts can differ between repeat runs.',
   },
   {
+    id: 'evidence-delivery', legacy_alias: 'evidence-delivery', name: 'Evidence delivery ablation (LongMemEval-S, frozen reranked hits)',
+    family: 'reasoning', tier: 'P', script: 'eval/runner/evidence-delivery.ts',
+    run: { kind: 'listed', reason: 'preregistered paid protocol on a frozen evidence manifest at a pinned gbrain commit; every paid step joins one campaign budget-ledger run', command: 'bun eval/runner/evidence-delivery.ts e1 --frozen-dir <dir> --dataset <longmemeval_s_cleaned.json> --out-dir <dir> --set pilot --arms <arms> --budget-run-id <campaign run>' },
+    cost_estimate: { usd: 122, basis: 'bun eval/runner/evidence-delivery.ts costs: $122 at list prices for the whole program before retries ($153 with a 25% margin); the manifest caps the campaign at $400' },
+    receipt_path: 'docs/benchmarks/2026-09-30-evidence-delivery/',
+    headline: { metric: 'judged answer accuracy of each evidence-delivery policy against chunk and whole-page delivery, with provider-reported reader input tokens', denominator: '400 confirmatory LongMemEval-S questions (policies chosen on the 100-question pilot)' },
+    gate: 'report-only', evidence_maturity: 'synthetic-production-path',
+    contract: 'Freezes each question\'s reranked top-5 hits, their chunk text and every chunk of every hit page once at a pinned gbrain commit, then changes only the delivered evidence between arms (chunk, window, section, page, auto budgets, top-10 chunks, the harness page reader, and an agent that may fetch pages). The decision rule is an executable manifest committed before any paid run; LongMemEval-S is development data and the sealed set is the independent no-regression check.',
+  },
+  {
     id: 'sealed-confirmation', legacy_alias: 'sealed-confirmation', name: 'Sealed confirmation set (release decisions only)',
     family: 'retrieval', tier: 'P', script: 'eval/runner/sealed-confirmation.ts',
     run: { kind: 'listed', reason: 'private questions and labels; every run is a release decision that needs a committed preregistration', command: 'bun eval/runner/sealed-confirmation.ts run --questions <q.json> --out-dir <dir>' },
@@ -511,6 +545,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'adversarial-injections.ts': { role: 'injection generator and scorer used by Cat6', part_of: 'prose-autolink-precision' },
   'all.ts': { role: 'umbrella runner that dispatches registry entries' },
   'budget-ledger.ts': { role: 'shared paid-run reservation ledger' },
+  'evidence-auto-v2.ts': { role: 'auto v2 follow-up to the evidence-delivery study (decision manifest v2: LongMemEval sanity check and sealed E2)', part_of: 'evidence-delivery' },
   'cat13-gap-localize.ts': { role: 'Phase E1 diagnostic over Cat13 hybrid stages', part_of: 'concept-search' },
   'cat13-kacf-calibrate.ts': { role: 'Phase E2 keyword-floor calibration over Cat13', part_of: 'concept-search' },
   'cat30-skillopt-improvement.ts': { role: 'Cat30 runner, driven by run-skillopt-cats.sh', part_of: 'skillopt' },
@@ -528,6 +563,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'cat36-snapshot.ts': { role: 'Cat36 index snapshot hashing', part_of: 'associative-retrieval-live' },
   'compare.ts': { role: 'paired run comparator CLI' },
   'eval-adapter-config.ts': { role: 'typed adapter config for matrix cells' },
+  'gbrain-under-test.ts': { role: 'pinned gbrain or a copied --gbrain overlay, with receipt identity' },
   'gbrain-version.ts': { role: 'resolves the loaded gbrain version' },
   'import-embedded.ts': { role: 'embedding-required import wrapper' },
   'judge.ts': { role: 'shared rubric judge' },
@@ -579,4 +615,4 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
 };
 
 /** Subdirectories of eval/runner/ holding helper modules only. */
-export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'evaluator', 'lifecycle', 'queries', 'stats'];
+export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'evaluator', 'evidence-delivery', 'lifecycle', 'queries', 'stats'];

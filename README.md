@@ -53,11 +53,37 @@ historical 433/500 (86.6%) stays in the record as invalid: its answer model
 could see session ids that mark the labeled evidence. On exactly the same
 retrieved sessions, a GPT-4o reader with LongMemEval's official reading prompt
 scored 430/500 (86.0%); paired, it won 21 questions and lost 30 (exact McNemar
-p = 0.26), so the two readers are not demonstrably different. Published results
-for other systems range from 81.6% to 96.1%, each with its own retrieval,
+p = 0.26), so the two readers are not demonstrably different. With the Voyage
+reranker on and the same code, the notes reader scored **453/500 (90.6%)**
+(+31/−17 against reranker off, p = 0.059, not yet a demonstrated gain), and the
+published configuration with the leak removed scored 432/500 against the
+invalid 433/500 (+15/−16), so hiding the gold ids made no measurable
+difference there. Published results for other systems range from 81.6% to 96.1%, each with its own retrieval,
 reader, judge and prompts. Retrieval, context size and judges still differ, so
 we claim no ranking on answers in either direction.
 [Read the re-run](docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md).
+
+**What the reader receives matters more than which chunks rank first.** On
+September 30, with the Voyage reranker on and the top five hits frozen at
+gbrain `732ee811`, giving the reader the whole page behind each hit answered
+**361 of 400 held-out LongMemEval-S questions**, against 253 for the five
+chunks alone (+114/−6, exact McNemar p = 6e-27). The cheaper option, one or two
+neighbor chunks on each side, reached 285 and 292 at 44% of the whole-page
+input tokens: better than chunks, but it closed only 30% to 36% of the gap,
+short of the preregistered 60%. So gbrain v0.60.13.0 ships `return_unit: page`
+as a documented opt-in and keeps `chunk` as the default. Use `page` when answer
+quality matters more than reader tokens. LongMemEval-S is development data for
+gbrain, so this is not an independent confirmation.
+[Read the evidence-delivery study](docs/benchmarks/2026-09-30-evidence-delivery.md).
+gbrain then made delivery automatic: `auto` v2 (v0.60.16.0) returns whole
+conversation pages within a 16,000-token budget and leaves other hits as
+chunks. Its preregistered release check on the sealed confirmation set came out
+**`fail`**: 149 of 150 against 147 for chunks (+2/−0, p = 0.50), because chunks
+already answer 98% of those short chats and no change could reach
+significance there. On LongMemEval-S, as development data, `auto` scored 445 of
+500 against 312 for chunks and 457 for uncapped pages; the budget cut 81
+questions and cost about 4 answers.
+[Read the auto v2 check](docs/benchmarks/2026-09-30-evidence-auto-v2.md).
 
 ## Why put gbrain on your shortlist?
 
@@ -83,6 +109,8 @@ the same reader given only the five retrieved chunks fell from 89/100 to
 and `gbrain think`'s prompt tied at 65, 65 and 64 of 100. Delivering more of
 the evidence mattered far more than the prompt wording.
 [Read the re-run](docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md).
+The evidence-delivery study above measured the same effect with retrieval
+held fixed.
 
 **Keeping the conversations intact can help the answer model use them.** In a
 separate September 24 matched reading study, asking Sonnet 4.6 to take brief
@@ -119,7 +147,7 @@ Those questions use the exact verbs gbrain's relationship parser recognizes. On
 September 29 (gbrain `b80cad6`) the same 145 questions, reworded by a fixed
 paraphrase grammar, never triggered relationship retrieval, and recall at five
 stayed at 0.411 in both arms, so the gain depended on that wording. gbrain
-v0.60.6.0 widened the parser: at the current pin `608a174` a keyless check
+v0.60.6.0 widened the parser: at the previous pin `608a174` a keyless check
 fires relationship retrieval on 33 of the 145 reworded questions (0 at
 `b80cad6`). The paid run has not been repeated there, so the benefit on
 reworded questions is not yet measured.
@@ -139,8 +167,8 @@ them. Hosted embedding and reranking services receive the text they process;
 local storage does not make those API calls local. The retrieval results above
 were measured at gbrain [`2efaaf8f`](https://github.com/garrytan/gbrain/tree/2efaaf8f8a817b5b82e023383618fdcdb1cc5f7d)
 (v0.48.4.0). This repository currently installs gbrain master
-[`608a174`](https://github.com/garrytan/gbrain/tree/608a174dcfa1d39d5ea2d8fb5b296122b1cc78c5)
-(v0.60.10.0), whose search mode definitions are identical. See
+[`6c8373c`](https://github.com/garrytan/gbrain/tree/6c8373c3de9bb321a3da0bfa2dc2140736aeafa5)
+(v0.60.13.0), whose search mode definitions are identical. See
 [how to reproduce a run](eval/README.md).
 
 ## What should you learn here?
@@ -242,7 +270,10 @@ a dated correction:
 - The LongMemEval answer accuracy (433/500) is invalid because the answer
   model saw `answer_` session ids. A leak-free re-run on September 29 scored
   439/500 (87.8%) with the reranker off and the notes reader, a different
-  configuration, so it replaces the claim without measuring the leak's effect.
+  configuration. A September 30 run of the published configuration with the
+  leak removed (direct 512 reader, reranker on) scored 432/500, paired +15/−16
+  against 433/500, so the leak made no measurable difference; 433/500 stays
+  invalid because it was measured with the gold ids visible.
   [Report](docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md). The
   reading-notes result (308/361 to 324/361) is still pending a re-run for the
   same reason. Retrieval numbers are unaffected as far as a 30-question check

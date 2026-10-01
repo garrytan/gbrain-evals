@@ -2,6 +2,248 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.2] - 2026-09-30
+
+One release for four pieces of work that followed v0.10.1: the LongMemEval
+reranker-on follow-ups, the evidence-delivery study, its auto v2 release check
+on the sealed set, and three keyless categories (N3, N4, N6). It was built on three branches (numbered 0.10.2 to
+0.10.4 while in review) and ships as a single patch release. It also moves the
+gbrain pin to master `6c8373c` (v0.60.13.0), which contains the evidence
+delivery code and the fixes for the seven bugs N3, N4 and N6 found.
+
+Paid work in this release: the reranker-on runs ($51.22 against a $120 cap),
+the evidence-delivery program ($112.44 through one ledger run) and its $0.97
+plumbing smoke, and the auto v2 release check ($73.92 through one ledger run
+against a $150 cap). Everything else is keyless.
+
+### Auto v2 release check on the sealed set: `fail`
+
+gbrain's new default, `auto` v2 (gbrain `e9b580c5`, v0.60.16.0), returns the
+whole page for conversation hits within a 16,000-token budget and leaves other
+hits' chunks unchanged. A second decision manifest, committed before any paid
+call and pinned in its own commit, made the sealed confirmation set the
+decision and LongMemEval-S a sanity check.
+
+- **Verdict: `fail`.** On the 150 sealed questions, auto answered 149 against
+  147 for the chunk default (+2/−0, exact McNemar p = 0.50, persona-clustered
+  p = 0.49; official judge 149 against 146). The rule required a significant
+  gain. Chunks were already at 98% on the short sealed chats, so no delivery
+  change could reach significance there (it would need six one-sided wins;
+  chunks missed three questions). No demonstrated benefit on held-out data,
+  and no demonstrated harm.
+- **LongMemEval-S (development data, 500 questions):** auto 445, page 457,
+  chunk 312 (auto against chunk +145/−12, p = 4e-30; against page +7/−19).
+  The sanity bar, page − 10 = 447, was missed by two questions.
+- **Truncation cost:** the 16,000-token budget cut 81 questions (85 of 2,451
+  blocks truncated, no fallbacks); there auto scored 68 against page's 72,
+  about 0.8% of 500. On the other 419 questions auto's request was
+  byte-identical to page's and the reader still disagreed on 20 (377 against
+  385), which is reader noise and most of the shortfall.
+- **Custody:** the sealed questions, labels and access log were transferred
+  to the Capy machine with a custody note and never copied to a VM. Labels
+  opened once through the sealed runner (commitment check, decision id
+  `evidence-auto-v2-2026-09-30:e2:auto`, access log 2 → 3 lines). Only
+  aggregates are published, and every sealed file and derived artifact was
+  deleted after scoring. This was the first of the set's three release
+  decisions.
+- Code: decision manifest v2, `eval/runner/evidence-delivery/decision-v2.ts`
+  with a keyless test suite, a power analysis, `eval/runner/evidence-auto-v2.ts`;
+  the paid guard and sealed scorer now take a manifest path, campaign runner
+  and E2 rule, and the watchdog measures staleness from each attempt's start.
+  Report: `docs/benchmarks/2026-09-30-evidence-auto-v2.md`.
+
+### Evidence delivery: whole pages help; cheaper windows do not close enough of the gap
+
+The evidence-delivery study: preregistered, run and reported. gbrain is
+adding an opt-in stage that returns neighbors, sections or whole pages
+instead of bare chunks.
+
+- **Result: whole pages help; cheaper windows do not close enough of the
+  gap.** On 400 held-out LongMemEval-S questions with the reranker on and
+  retrieval frozen at gbrain `732ee811`, whole-page delivery answered 361
+  against 253 for five chunks (+114/−6, p = 6e-27). The two pilot winners,
+  one or two neighbor chunks per side, scored 285 and 292 at 44% of
+  whole-page input tokens: significant against chunks, but only 30% and 36%
+  of the gap against the preregistered 60%. Decision-manifest verdict:
+  `page_only`, so `page` ships opt-in and the default stays `chunk`; the
+  sealed set was not opened. An agent that could fetch pages scored 83/100
+  on the pilot (chunks 68, pages 92). The gpt-4o reader tied (128 against
+  129/400) because it abstained on about two thirds of questions under the
+  notes prompt. E3 reproduced the frozen evidence over MCP on 100/100
+  questions for every arm. Paid cost $112.44 through one ledger run.
+  Report: `docs/benchmarks/2026-09-30-evidence-delivery.md`, receipts under
+  `docs/benchmarks/2026-09-30-evidence-delivery/results/`.
+
+- **An executable decision manifest**
+  (`docs/benchmarks/2026-09-30-evidence-delivery/decision-manifest.json`),
+  committed before any paid call. It fixes judge roles (gbrain judge primary,
+  official judge may not reverse), the gap and 60% closure formula, the 50%
+  provider-token rule, the six-candidate Holm family, pilot selection and
+  tie-breaks, clusters, error handling, the E2 pass/reject/inconclusive rule
+  and the gbrain commit pin. `eval/runner/evidence-delivery/decision.ts`
+  applies it; a keyless suite covers close wins, zero and negative gaps,
+  sparse types, judge disagreement, many-policy selection and failed calls.
+- **A power analysis** over the exact decision code. A candidate that closes
+  70% of the gap passes 65% to 82% of the time. The per-type rule fails even
+  a page-quality policy 12% to 24% of the time through reader noise, and E2
+  rejects a truly equal winner 6% to 20% of the time. Both rules are kept as
+  preregistered and flagged.
+- **A content-addressed frozen evidence manifest.** `freeze` stores each
+  question's reranked top-5 and top-10 hits with chunk text, every chunk of
+  every hit page, the harness page text and every arm's delivered evidence
+  with gbrain's fingerprint, plus code, parser and index hashes and the
+  agreement with R1.
+- **The E1 runner** (ten arms, the `get_page` agent arm, gpt-4o arms), with
+  three token counts per row and a byte-level check that the harness page
+  request reproduces R1's logged request before any model call.
+- **The E3 product-path check** over MCP stdio as a remote caller, with
+  gbrain's server spend joining the ledger through a preload, and **the E2
+  bridge**, which gives the sealed set the E1 reader instead of the sealed
+  runner's whole-session prompt.
+- `bun eval/runner/evidence-delivery.ts costs`: the paid program is estimated
+  at $122 ($153 with a retry margin) against a $400 campaign cap.
+- A $0.97 plumbing smoke against the WIP gbrain branch: 4 of 4 identical-list
+  questions reproduced R1's request bytes; the product `page` drops page
+  frontmatter and 9 of 24 blocks lost a paragraph break at chunk seams (fixed
+  in gbrain before the pinned commit); MCP `assemble_evidence` reproduced the
+  local fingerprints.
+- Sharded freezing (one process per embedding cache) with `merge-frozen`,
+  `e3-summary`, and the VM pipeline and watchdog scripts used for the run.
+- Voyage rerank timeout raised to 30 s in freeze and E3 after 28 haystacks
+  timed out at gbrain's 5 s default during a Voyage overload.
+
+Harness changes made for the study:
+
+- The budget ledger prices dated model snapshots (`gpt-4o-2024-08-06`) at
+  their family's list price and prices Voyage rerank requests.
+- The sealed runner refuses to open labels for scoring without a decision id.
+- Lifecycle drivers accept an entry override so a server can run with a
+  preload.
+
+### LongMemEval with the reranker on
+
+The two reranker-on follow-ups from the LongMemEval opaque-id re-run. Both
+use the same gbrain code as the 439/500 arm (`a7cb37b`), the same data,
+embedding cache and judges, with `voyage:rerank-2.5` on.
+
+- **R1, the house notes reader with the reranker on: 453/500 (90.6%).**
+  - The reranker raised strict retrieval from 435/470 to 450/470 (paired
+    +22/−7, exact McNemar p = 0.008).
+  - Against reranker off, answers moved +31/−17 (p = 0.059); with the
+    official judge, 451 against 443 (p = 0.33). That is suggestive, not a
+    demonstrated answer gain.
+- **R2, the published configuration without the leak: 432/500.** It used the
+  direct reader at 512 tokens, the reranker on and opaque ids. Paired against
+  the invalid published 433/500, it moved +15/−16 (p = 1.0). Hiding the gold
+  ids made no measurable difference there. The published number stays
+  invalid because it was measured with the ids visible, and the report lists
+  the remaining configuration differences.
+- **Notes against direct on identical reranked retrieval: 453 against 432**
+  (+32/−11, p = 0.002; official judge p = 0.049). This is a new full-500
+  comparison, not a re-run of the September 25 transfer cohort, whose flag
+  stays in place.
+- Voyage accounting for each run: 500 calls, all HTTP 200, 6.94M tokens
+  ($0.35), 500/500 rows reranked, 0 `rerank_failed` or other degraded
+  stages. Paid cost for both runs was $51.22 against a $120 cap. Each run
+  hit the known #5092 stall five times; a watchdog resumed each time without
+  repeating a reader call.
+- Receipts under `docs/benchmarks/2026-09-29-longmemeval-opaque-qa/reranker-on/`
+  with nine manifest entries. `scripts/verify-longmemeval-opaque-qa.py` now
+  also recounts both runs, their paired tests against arm a and the
+  published rows, rerank coverage and the prompt leak check.
+- The report gains a reranker-on section. The README now gives the
+  reranker-on numbers beside the 439/500 and says the leak made no
+  measurable difference to the published configuration.
+
+### Offline categories N3, N4 and N6
+
+Three keyless categories from the evidence-delivery plan (section 5): temporal
+and as-of questions (N3), entity resolution (N4), and a visibility and access
+leak fuzz over every read operation (N6). Each has a registry entry with a
+semantic contract, gold from a seeded generator ledger (never from gbrain
+output), solvability and negative controls, presence assertions, receipt v2,
+tests and a dated report. All three landed report-only, and each found gbrain
+bugs, which gbrain v0.60.13.0 fixed (see the re-run below). No paid calls.
+
+Measured on the pinned gbrain (`608a174`, 0.60.10.0) and on master (`f8d1e39`,
+0.60.11.0) as a copied overlay; every category gave identical numbers on both.
+
+- **N3 temporal and as-of** (`temporal-asof`,
+  [report](docs/benchmarks/2026-09-30-n3-temporal-asof.md)). 500 of 513 probes
+  pass: chronicle reads, search date bounds, effective-date precedence,
+  time-zone and daylight-saving edges and trajectories all 100%, range set-F1
+  1.000 over 179 probes, `ontology_get` as-of 99/104, last seen 76/83. The 13
+  misses are four gbrain bugs: `ontology_get` drops a late-recorded stint that
+  names the current value, `chronicle_last_seen` matches attendees by
+  substring and can report the previous day, and a non-ISO `query` date bound
+  such as `since: "May 5"` returns nothing instead of an error. The
+  forward job-state gold moved from `temporal.ts` into
+  `eval/generators/job-state.ts`, shared by Cat 4 and N3.
+- **N4 entity resolution** (`entity-resolution`,
+  [report](docs/benchmarks/2026-09-30-n4-entity-resolution.md)). On 136
+  single-source mentions the resolver merged wrongly once, refused all 17
+  mentions that must be refused and resolved every variant recorded in
+  `aliases:`; B-cubed F1 0.755 against 0.566 for exact-only, 0.480 for refusing
+  everything and 0.109 for merging everything. Typos, initials and prose-only
+  nicknames stay unresolved by design. Two bugs: another page's alias beats a
+  page's own exact name, and federated `recall({ entity })` merges two
+  different people who share a slug and drops `source_id`.
+- **N6 visibility and access leak fuzz** (`visibility-leak-fuzz`,
+  [report](docs/benchmarks/2026-09-30-n6-visibility-fuzz.md)). Enumerates
+  gbrain's read operations at run time (73) and calls each as stdio, serve-http
+  read, write and slug-bound clients and remote and local subagents, against
+  private pages, held Takes, private Facts, derived atoms and an ungranted
+  source, with public-twin and trusted-local controls and a never-written
+  ghost for existence oracles. 24 of the 25 read ops that return protected
+  content held, and 0 of 90 access gates were bypassed. One bug: `entity` and
+  `context_pack` show remote callers inbound links from private pages, with
+  the private slug and a sentence of its body. It also runs against the
+  `capy/evidence-delivery` branch (c0a72ab, same result); that head documents
+  `return_unit` and `assemble_evidence` but does not implement them yet. A
+  later run against the branch head with the code (732ee81) fuzzed every
+  `return_unit` value on `search`, `query`, `recall` and `assemble_evidence`,
+  with new presence controls for expansion (an expanded `delivered` block, and
+  delivered text spanning the stripped Takes and Facts rows): no expansion
+  path leaked.
+- **`--gbrain <checkout>[@ref]` / `GBRAIN_UNDER_TEST`** for the new runners
+  (`eval/runner/gbrain-under-test.ts`): extracts the ref with `git archive`
+  into `.gbrain-overlays/`, installs it, verifies the copy (tree hash, no
+  symlinks, CLI version) and records the loaded commit in the receipt's
+  product identity. Never a symlink.
+- **N4 is hermetic inside a shared test process.** `runN4` now removes
+  provider keys and points `GBRAIN_HOME` at a temporary directory for the run,
+  as N3 and N6 already did. Before, a test that had configured gbrain's
+  gateway earlier in the same process made `remember` writes wait on provider
+  calls when keys were present, and the end-to-end test timed out. Scores
+  are unchanged: the re-run receipts match the earlier ones row for row.
+- **`all.ts` honors `gate: 'report-only'`.** A report-only category that
+  completes with a non-pass verdict is REPORTED, never a pass and never a
+  failure of the run; missing, stale, invalid and errored receipts still fail.
+- **Re-run at the new pin, gbrain master `6c8373c` (v0.60.13.0, #5769), which
+  fixes all seven bugs above.** Same seeds and ledgers, clean tree, $0.
+  N3: 513/513 probes pass (as-of 104/104, last seen 83/83 with 0.00 days mean
+  error, negative controls 155/155, the non-ISO bound now rejected). N4: 0
+  wrong merges on every surface (was 1 on the resolver and 3 on `recall`),
+  exact-name floor 48/48 on the resolver and 50/50 on `recall`, `recall`
+  refusals 21/21; seed 7 agrees. N6: 0 content leaks,
+  0 existence leaks, 0 oracles and 0 gate bypasses over 3,854 probes and 74
+  read ops, with every `return_unit` fuzzed. **N3 and N6 are now gates**
+  (`gate: 'gate'`); N4 stays report-only because its B-cubed F1 and
+  unresolved targets miss on variants gbrain does not read by design (typos,
+  unrecorded initials, prose-only names). Receipts:
+  `receipt-pin-6c8373c*.json` beside each report, with four manifest entries.
+
+### gbrain pin
+
+- **gbrain is pinned to master `6c8373c` (v0.60.13.0,
+  [#5769](https://github.com/garrytan/gbrain/pull/5769))**, replacing
+  `608a174` (v0.60.10.0). The `balanced`, `conservative` and `tokenmax` mode
+  definitions are unchanged. `gbrain-cues` (`939232f`) and `gbrain-reader`
+  (`e78f1c3`) keep their pins, so the frozen cue and reader package
+  identities are unchanged. The evidence-delivery results stay dated to the
+  commit they measured, `732ee811`. The README, settings guide and
+  comparison-systems page name the new pin.
+
 ## [0.10.1] - 2026-09-29
 
 One release for all of the work that followed the September 28 audits and the

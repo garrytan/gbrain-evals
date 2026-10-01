@@ -1,0 +1,53 @@
+{
+  "schema": "gbrain-evals/evidence-delivery-ledger-summary/v1",
+  "run": {
+    "run_id": "evidence-auto-v2-campaign-2026-09-30T18-11-31-562Z-5c129c9c",
+    "runner": "evidence-auto-v2-campaign",
+    "budget_usd": 150,
+    "estimate_usd": 92.11,
+    "started_at": "2026-09-30T18:11:31.570Z",
+    "finished_at": null
+  },
+  "program_cap_usd": 1000,
+  "campaign_cap_usd": 150,
+  "total_usd": 73.9177,
+  "requests": 40689,
+  "by_model": {
+    "openai:text-embedding-3-large embedding": {
+      "requests": 33989,
+      "usd": 9.1208,
+      "charged_at_reservation": 46,
+      "input_tokens": 70026812,
+      "output_tokens": 0
+    },
+    "voyage:rerank-2.5 rerank": {
+      "requests": 1300,
+      "usd": 0.8745,
+      "charged_at_reservation": 0,
+      "input_tokens": 17489940,
+      "output_tokens": 0
+    },
+    "anthropic:claude-sonnet-4-6 chat": {
+      "requests": 1800,
+      "usd": 60.4799,
+      "charged_at_reservation": 0,
+      "input_tokens": 18198259,
+      "output_tokens": 392342
+    },
+    "openai:gpt-4o chat": {
+      "requests": 1800,
+      "usd": 1.8728,
+      "charged_at_reservation": 0,
+      "input_tokens": 734596,
+      "output_tokens": 3629
+    },
+    "openai:gpt-4o-2024-08-06 chat": {
+      "requests": 1800,
+      "usd": 1.5697,
+      "charged_at_reservation": 0,
+      "input_tokens": 614380,
+      "output_tokens": 3373
+    }
+  },
+  "note": "Every paid request of the auto v2 follow-up (LongMemEval freeze and readers, sealed freeze, sealed answers and judges) joined this run on the Capy machine. Charged-at-reservation entries had no usage in the response and count at their worst-case reservation, so the total can only overstate spend."
+}

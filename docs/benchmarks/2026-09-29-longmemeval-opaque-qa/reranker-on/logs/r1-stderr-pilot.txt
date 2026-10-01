@@ -1,0 +1,61 @@
+[longmemeval] judge: openai:gpt-4o, 20 live + 0 backfill question(s), estimated judge spend ~$0.0695 (cap $10.00)
+[longmemeval] estimated 20-60 minutes for 20 questions; use --limit N for shorter runs
+[longmemeval] connecting in-memory brain...
+[longmemeval] starting (questions: 20, model: anthropic:claude-sonnet-4-6, mode: balanced, reranker: on, autocut: off, expansion: off, budget: legacy, embedder: openai:text-embedding-3-large@1536, top-k: 5, trajectory: off, retrieval_config_hash: 0d5ee2baf7b5)
+  Setting up brain schema (v166)...
+  161 migration(s) applied
+[longmemeval] embed cache: $M6_DIR/embed-cache.sqlite (openai:text-embedding-3-large@1536, 107606 rows)
+[eval.longmemeval] start
+[eval.longmemeval] 1/20 (5%) a06e4cfe
+[longmemeval] a06e4cfe 12099ms
+[eval.longmemeval] 2/20 (10%) 60d45044
+[longmemeval] 60d45044 10359ms
+[eval.longmemeval] 3/20 (15%) 8e9d538c
+[longmemeval] 8e9d538c 14616ms
+[eval.longmemeval] 4/20 (20%) c14c00dd
+[longmemeval] c14c00dd 10432ms
+[eval.longmemeval] 5/20 (25%) c4a1ceb8
+[longmemeval] c4a1ceb8 18272ms
+[eval.longmemeval] 6/20 (30%) 88432d0a
+[longmemeval] 88432d0a 20495ms
+[eval.longmemeval] 7/20 (35%) d851d5ba
+[longmemeval] d851d5ba 16946ms
+[eval.longmemeval] 8/20 (40%) 5a7937c8
+[longmemeval] 5a7937c8 13006ms
+[eval.longmemeval] 9/20 (45%) gpt4_372c3eed_abs
+[longmemeval] gpt4_372c3eed_abs 15025ms
+[eval.longmemeval] 10/20 (50%) ef66a6e5
+[longmemeval] ef66a6e5 11327ms
+[eval.longmemeval] 11/20 (55%) a1cc6108
+[longmemeval] a1cc6108 14256ms
+[eval.longmemeval] 12/20 (60%) 73d42213
+[longmemeval] 73d42213 12152ms
+[eval.longmemeval] 13/20 (65%) bc149d6b
+[longmemeval] bc149d6b 12835ms
+[eval.longmemeval] 14/20 (70%) 71017276
+[longmemeval] 71017276 9794ms
+[eval.longmemeval] 15/20 (75%) a3838d2b
+[longmemeval] a3838d2b 12131ms
+[eval.longmemeval] 16/20 (80%) 982b5123
+[longmemeval] 982b5123 15539ms
+[eval.longmemeval] 17/20 (85%) 031748ae
+[longmemeval] 031748ae 11910ms
+[eval.longmemeval] 18/20 (90%) 0f05491a
+[longmemeval] 0f05491a 13957ms
+[eval.longmemeval] 19/20 (95%) 2698e78f_abs
+[longmemeval] 2698e78f_abs 11381ms
+[eval.longmemeval] 20/20 (100%) 4baee567
+[longmemeval] 4baee567 8028ms
+[eval.longmemeval] 20/20 (100%) done
+
+[longmemeval] done. 20 questions in 282s. 0 errors.
+[longmemeval] recall_all@5 / recall_any@5 by question_type:
+  knowledge-update: all 2/2 (100.0%), any 2/2 (100.0%)
+  multi-session: all 7/8 (87.5%), any 8/8 (100.0%)
+  single-session-assistant: all 1/1 (100.0%), any 1/1 (100.0%)
+  single-session-user: all 4/4 (100.0%), any 4/4 (100.0%)
+  temporal-reasoning: all 2/3 (66.7%), any 3/3 (100.0%)
+  (excluded 2 abstention question(s); --include-abstention counts them)
+[longmemeval] embed cache: 4422 hits, 0 misses, 0 bypassed, 0 infra fault(s) (canonical 322dc4e6ba4e)
+[longmemeval] qa_accuracy: headline 80.0% (16/20; judge_errors 0, skipped_budget 0, reader_errors 0), excluding errors 80.0% (16/20), non-abstention 77.8% (n=18), abstention 2/2; ci95 [60.0%, 95.0%] (question-sampling only); judge openai:gpt-4o v=longmemeval-anscheck-v1+gbrain-boundary-v1; spend est $0.0695, this run $0.0216, all rows $0.0216
+[driver-r] exit 0

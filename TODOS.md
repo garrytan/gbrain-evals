@@ -4,6 +4,14 @@ These items record unfinished work and its origin. An open box means the work ha
 
 The [August 31 audit](docs/audit/2026-08-31-eval-audit.md) explains the finding identifiers. The [September 9 retrieval refresh](docs/benchmarks/2026-09-09-retrieval-refresh.md) records the focused reruns accompanying the documentation rewrite. Do not treat that work as a rerun of every category below.
 
+## Evidence delivery follow-ups (2026-09-30 plan)
+
+- [ ] **A sealed set that can confirm a delivery gain.** On sealed-confirmation-v1 the chunk default already answers 147/150, so no evidence-delivery change can reach significance there (2026-09-30 auto v2 check). A v2 set needs longer chats or harder multi-session and temporal questions, generated with a new seed and preregistered before use.
+
+- [ ] **Production `think` end to end with `think.return_unit`.** The evidence-delivery study measures a one-shot reader, not think; think's default does not flip in that plan.
+
+- [ ] **A curated-notes answer benchmark for `auto` on long pages.** Neither LongMemEval nor the sealed set has long curated pages, so `auto`'s curated-page branch has correctness tests only.
+
 ## Retrieval measurements
 
 - [x] **Correct the May LongMemEval score** (`longmemeval-01`). Completed 2026-08-31 without new API calls. Rescoring the original rows produced 83.40% strict `recall_all@5`; the old scoring reconciled to 488/500 = 97.60%, and all 500 answer sets matched the reference dataset. Keep the corrected score and old metric identifiable in the [report](docs/benchmarks/2026-05-07-longmemeval-s.md).
@@ -24,7 +32,7 @@ The [August 31 audit](docs/audit/2026-08-31-eval-audit.md) explains the finding 
 
 - [ ] **Run live negative controls** (WS3). For model-backed categories, confirm that deliberately degraded configurations score at most half as well as the real ones under the fixed-seed rule. Scripted-model tests show that the checks can fail; live runs test whether they detect actual model-quality differences.
 
-- [ ] **Re-run LongMemEval answers with opaque session ids** (September 28 audit, C-01). Every labeled evidence session id starts with `answer_`, and the answer model saw those ids. v0.10.1 maps ids to opaque values in this repository's runners, with a test that no system or reader input contains `answer_`. The judged answers were re-run on 2026-09-29 in gbrain's own evaluator with opaque ids: 439/500 with the reranker off and the notes reader ([report](docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md)). Still to do: the reading-notes transfer (308/361 to 324/361), and a reranker-on answer run, which needs a Voyage key. Retrieval was unaffected in a 30-question check, but the full retrieval arms should be recounted with opaque ids too.
+- [ ] **Re-run LongMemEval answers with opaque session ids** (September 28 audit, C-01). Every labeled evidence session id starts with `answer_`, and the answer model saw those ids. v0.10.1 maps ids to opaque values in this repository's runners, with a test that no system or reader input contains `answer_`. The judged answers were re-run on 2026-09-29 in gbrain's own evaluator with opaque ids: 439/500 with the reranker off and the notes reader ([report](docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md)). The reranker-on runs followed on 2026-09-30: 453/500 with the notes reader and 432/500 for the published configuration without the leak ([report](docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md)). Still to do: the reading-notes transfer (308/361 to 324/361). Retrieval was unaffected in a 30-question check, but the full retrieval arms should be recounted with opaque ids too.
 
 - [ ] **Confirm the LongMemEval release configuration on held-out data** (September 28 audit, B4). Autocut off was chosen by comparing arms on the same 470 questions. Complete the preregistered [LongMemEval-M pilot](docs/benchmarks/2026-09-24-longmemeval-m-pilot-preregistration.md) (4 of 28 B cases done; C0/C1 not run) or score a fresh split. Since v0.10.1 the fresh set exists: the [sealed confirmation set](docs/benchmarks/2026-09-29-sealed-confirmation-protocol.md) (150 questions, 30 personas) is frozen and unopened; LongMemEval-S and M count as development data (plan amendment 1).
 
@@ -87,6 +95,12 @@ The [September 29 lifecycle report](docs/benchmarks/2026-09-29-lifecycle.md) is 
 - [ ] **Export gbrain's version.** A `gbrain/version` subpath would replace the path-resolution helper in `eval/runner/gbrain-version.ts`. The helper currently works; this is maintenance work.
 
 - [x] **Add score gates to Cat 2 and Cat 3** (September 28 audit, C-06/C7). Completed in v0.10.1: both runners write receipts and gate on regression floors, and CI runs them through `all.ts --tier offline`.
+
+## Offline categories N3, N4, N6 (evidence-delivery plan, section 5)
+
+- [x] **Turn N3, N4 and N6 into gates once their gbrain bugs are fixed.** All three landed report-only on 2026-09-30. N3: `ontology_get` late-recorded stint, `chronicle_last_seen` substring match and day-early ordering, non-ISO date bound. N4: alias beating an exact name, federated `recall` merging same-slug namesakes. N6: `entity` / `context_pack` private backlinks. gbrain v0.60.13.0 (#5769) fixed all seven; at the `6c8373c` pin N3 passes 513/513 and N6 has 0 leaks, so both are gates. N4 has 0 wrong merges but stays report-only: its F1 and unresolved targets miss on variants gbrain does not read by design (typos, unrecorded initials, prose-only names).
+- [x] **Run N6 against the evidence-delivery code when it lands** (plan T15). Done 2026-09-30 at `732ee81`: every `return_unit` value on `search`, `query`, `recall` and `assemble_evidence`, 0 expansion leaks. Rerun on every later head of the gbrain PR; any expansion leak blocks it.
+- [ ] **Widen N6 coverage.** 48 of 74 read ops (at `6c8373c`) return no protected content in the N6 world (skills, code intelligence, ontology, open loops, schema packs, aggregates) or need a provider. Seed those surfaces, and add Postgres and the real HTTP transport.
 
 ## Cat35 publication and measurement
 

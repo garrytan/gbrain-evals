@@ -1,0 +1,12 @@
+2026-09-30T13:04:40Z campaign run evidence-delivery-campaign-2026-09-30T13-04-40-261Z-f2d1c672
+2026-09-30T13:04:40Z freeze: 5 shards
+2026-09-30T14:30:27Z campaign run evidence-delivery-campaign-2026-09-30T13-04-40-261Z-f2d1c672
+2026-09-30T14:30:27Z freeze: 5 shards
+2026-09-30T14:36:35Z parity done
+2026-09-30T14:57:35Z e1 pilot done
+2026-09-30T15:03:35Z agent_fetch done
+2026-09-30T15:03:35Z advanced: window1,window2
+2026-09-30T15:51:06Z e3 done
+2026-09-30T16:25:39Z confirmatory done
+2026-09-30T16:40:11Z gpt4o done
+2026-09-30T16:40:11Z pipeline complete

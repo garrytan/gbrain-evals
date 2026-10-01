@@ -1,0 +1,312 @@
+{
+  "arms": {
+    "r1": {
+      "denominator": 500,
+      "rows_present": 500,
+      "correct_gbrain_judge": 453,
+      "correct_official_judge": 451,
+      "reader_errors": 0,
+      "reader_error_detail": {},
+      "gbrain_judge_errors": 0,
+      "official_judge_unjudged": 0,
+      "reader_calls": 500,
+      "reader_provider_failures": 0,
+      "judge_calls": 500,
+      "judge_provider_failures": 0,
+      "finish_reasons": {
+        "end": 500
+      },
+      "delivered_input_tokens": {
+        "mean": 15450.81,
+        "median": 15561.0,
+        "p95": 19517.05
+      },
+      "output_tokens_mean": 243.394,
+      "reader_latency_ms": {
+        "p50": 6387.0,
+        "p95": 11657.49999999999
+      },
+      "end_to_end_ms": {
+        "p50": 11952.5,
+        "p95": 17110.149999999994,
+        "n": 500
+      },
+      "strict_recall_all_at5": 450,
+      "strict_denominator": 470,
+      "voyage": {
+        "calls": 500,
+        "status": {
+          "200": 500
+        },
+        "tokens": 6935293,
+        "cost_usd": 0.34676465,
+        "latency_ms": {
+          "p50": 192.0,
+          "p95": 406.04999999999995
+        },
+        "rows_reranked": 500,
+        "degraded_stages": {}
+      },
+      "cost_usd": {
+        "reader_all_calls": 25.00167,
+        "gbrain_judge": 0.5514600000000001,
+        "official_judge": 0.46611250000000004,
+        "voyage": 0.34676465,
+        "total": 26.36600715
+      },
+      "by_type": {
+        "abstention": {
+          "n": 30,
+          "correct_gbrain_judge": 30,
+          "correct_official_judge": 27
+        },
+        "knowledge-update": {
+          "n": 72,
+          "correct_gbrain_judge": 68,
+          "correct_official_judge": 69
+        },
+        "multi-session": {
+          "n": 121,
+          "correct_gbrain_judge": 98,
+          "correct_official_judge": 100
+        },
+        "single-session-assistant": {
+          "n": 56,
+          "correct_gbrain_judge": 56,
+          "correct_official_judge": 56
+        },
+        "single-session-preference": {
+          "n": 30,
+          "correct_gbrain_judge": 27,
+          "correct_official_judge": 24
+        },
+        "single-session-user": {
+          "n": 64,
+          "correct_gbrain_judge": 62,
+          "correct_official_judge": 63
+        },
+        "temporal-reasoning": {
+          "n": 127,
+          "correct_gbrain_judge": 112,
+          "correct_official_judge": 112
+        }
+      }
+    },
+    "r2": {
+      "denominator": 500,
+      "rows_present": 500,
+      "correct_gbrain_judge": 432,
+      "correct_official_judge": 437,
+      "reader_errors": 0,
+      "reader_error_detail": {},
+      "gbrain_judge_errors": 0,
+      "official_judge_unjudged": 0,
+      "reader_calls": 500,
+      "reader_provider_failures": 0,
+      "judge_calls": 500,
+      "judge_provider_failures": 0,
+      "finish_reasons": {
+        "end": 500
+      },
+      "delivered_input_tokens": {
+        "mean": 15434.81,
+        "median": 15545.0,
+        "p95": 19501.05
+      },
+      "output_tokens_mean": 90.028,
+      "reader_latency_ms": {
+        "p50": 3545.0,
+        "p95": 6519.8499999999985
+      },
+      "end_to_end_ms": {
+        "p50": 9032.5,
+        "p95": 12313.05,
+        "n": 500
+      },
+      "strict_recall_all_at5": 450,
+      "strict_denominator": 470,
+      "voyage": {
+        "calls": 500,
+        "status": {
+          "200": 500
+        },
+        "tokens": 6935293,
+        "cost_usd": 0.34676465,
+        "latency_ms": {
+          "p50": 185.0,
+          "p95": 267.0
+        },
+        "rows_reranked": 500,
+        "degraded_stages": {}
+      },
+      "cost_usd": {
+        "reader_all_calls": 23.827425,
+        "gbrain_judge": 0.38019250000000004,
+        "official_judge": 0.29454,
+        "voyage": 0.34676465,
+        "total": 24.848922150000003
+      },
+      "by_type": {
+        "abstention": {
+          "n": 30,
+          "correct_gbrain_judge": 27,
+          "correct_official_judge": 28
+        },
+        "knowledge-update": {
+          "n": 72,
+          "correct_gbrain_judge": 66,
+          "correct_official_judge": 66
+        },
+        "multi-session": {
+          "n": 121,
+          "correct_gbrain_judge": 97,
+          "correct_official_judge": 99
+        },
+        "single-session-assistant": {
+          "n": 56,
+          "correct_gbrain_judge": 55,
+          "correct_official_judge": 55
+        },
+        "single-session-preference": {
+          "n": 30,
+          "correct_gbrain_judge": 21,
+          "correct_official_judge": 19
+        },
+        "single-session-user": {
+          "n": 64,
+          "correct_gbrain_judge": 63,
+          "correct_official_judge": 63
+        },
+        "temporal-reasoning": {
+          "n": 127,
+          "correct_gbrain_judge": 103,
+          "correct_official_judge": 107
+        }
+      }
+    }
+  },
+  "paired": {
+    "r1_vs_a_gbrain_judge": {
+      "n_paired": 500,
+      "a_correct": 439,
+      "b_correct": 453,
+      "gains": 31,
+      "losses": 17,
+      "exact_mcnemar_p": 0.05946337525377032
+    },
+    "r2_vs_r1_gbrain_judge": {
+      "n_paired": 500,
+      "a_correct": 453,
+      "b_correct": 432,
+      "gains": 11,
+      "losses": 32,
+      "exact_mcnemar_p": 0.001913961001264397
+    },
+    "r2_vs_a_gbrain_judge": {
+      "n_paired": 500,
+      "a_correct": 439,
+      "b_correct": 432,
+      "gains": 31,
+      "losses": 38,
+      "exact_mcnemar_p": 0.4703685318581444
+    },
+    "r1_vs_a_official_judge": {
+      "n_paired": 500,
+      "a_correct": 443,
+      "b_correct": 451,
+      "gains": 30,
+      "losses": 22,
+      "exact_mcnemar_p": 0.3317497633694906
+    },
+    "r2_vs_r1_official_judge": {
+      "n_paired": 500,
+      "a_correct": 451,
+      "b_correct": 437,
+      "gains": 15,
+      "losses": 29,
+      "exact_mcnemar_p": 0.048766765904474596
+    },
+    "r2_vs_a_official_judge": {
+      "n_paired": 500,
+      "a_correct": 443,
+      "b_correct": 437,
+      "gains": 28,
+      "losses": 34,
+      "exact_mcnemar_p": 0.5257733601756501
+    },
+    "r2_vs_published_d1_gbrain_judge": {
+      "n_paired": 500,
+      "a_correct": 433,
+      "b_correct": 432,
+      "gains": 15,
+      "losses": 16,
+      "exact_mcnemar_p": 1.0,
+      "note": "D1 = the invalid published 433/500 (September 6, v0.48.4.0, answer_ ids visible); gbrain judge on both sides, same judge prompt version"
+    }
+  },
+  "retrieval": {
+    "strict_counts": {
+      "a": 435,
+      "r1": 450,
+      "r2": 450,
+      "sep6_a1_rerank_off": 439,
+      "sep6_a2_rerank_on": 449,
+      "sep6_d1_published": 449
+    },
+    "r1_vs_a": {
+      "n_paired": 470,
+      "a_correct": 435,
+      "b_correct": 450,
+      "gains": 22,
+      "losses": 7,
+      "exact_mcnemar_p": 0.008130058646202087
+    },
+    "r2_vs_a": {
+      "n_paired": 470,
+      "a_correct": 435,
+      "b_correct": 450,
+      "gains": 22,
+      "losses": 7,
+      "exact_mcnemar_p": 0.008130058646202087
+    },
+    "r1_vs_sep6_d1_published": {
+      "n_paired": 470,
+      "a_correct": 449,
+      "b_correct": 450,
+      "gains": 2,
+      "losses": 1,
+      "exact_mcnemar_p": 1.0
+    },
+    "r2_vs_sep6_d1_published": {
+      "n_paired": 470,
+      "a_correct": 449,
+      "b_correct": 450,
+      "gains": 2,
+      "losses": 1,
+      "exact_mcnemar_p": 1.0
+    },
+    "r1_r2_identical_chunk_lists": 500
+  },
+  "evidence": {
+    "r1": {
+      "recall_all_hit": 450,
+      "correct_given_complete_gbrain_judge": 416,
+      "correct_given_complete_official_judge": 417
+    },
+    "r2": {
+      "recall_all_hit": 450,
+      "correct_given_complete_gbrain_judge": 396,
+      "correct_given_complete_official_judge": 400
+    }
+  },
+  "judge_agreement": {
+    "r1": {
+      "n": 500,
+      "agree": 488
+    },
+    "r2": {
+      "n": 500,
+      "agree": 491
+    }
+  }
+}

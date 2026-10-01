@@ -285,10 +285,19 @@ const PAID_HOSTS: Record<string, 'openai' | 'anthropic' | 'voyage' | 'openrouter
 /** Output-token allowance for a chat request that names no limit. */
 const DEFAULT_MAX_OUTPUT_TOKENS = 4096;
 
+/** Reranker list prices, USD per 1M tokens (voyageai.com/pricing, checked 2026-09-30). */
+const RERANK_PRICES: Record<string, number> = {
+  'voyage:rerank-2.5': 0.05,
+  'voyage:rerank-2.5-lite': 0.02,
+};
+
+/** A dated API snapshot (`gpt-4o-2024-08-06`) is billed at its family's list price. */
+const chatPrice = (id: string) => canonicalLookup(id) ?? canonicalLookup(id.replace(/-\d{4}-\d{2}-\d{2}$/, ''));
+
 interface RequestPrice {
   provider: string;
   model: string;
-  kind: 'chat' | 'embedding';
+  kind: 'chat' | 'embedding' | 'rerank';
   /** USD per 1M tokens. */
   input: number;
   output: number;
@@ -312,6 +321,13 @@ export function priceRequest(url: string, body: unknown): RequestPrice | null {
   const model = typeof b.model === 'string' ? b.model : '';
   if (!model) throw new BudgetExceededError(`paid request to ${url} names no model; cannot reserve its cost`);
   const path = new URL(url).pathname;
+  if (/\/rerank/.test(path)) {
+    const perMTok = RERANK_PRICES[`${provider}:${model}`];
+    if (perMTok === undefined) throw new BudgetExceededError(`no rerank price for ${provider}:${model}; cannot reserve its cost`);
+    const documents = Array.isArray(b.documents) ? b.documents : [];
+    const inputTokens = Math.ceil((textBytes(b.query) * Math.max(1, documents.length) + textBytes(documents)) / 3) + 16;
+    return { provider, model, kind: 'rerank', input: perMTok, output: 0, inputTokens, maxOutputTokens: 0 };
+  }
   const embedding = /embeddings|\/embed/.test(path);
   const input = embedding ? b.input ?? b.texts : [b.system, b.messages, b.prompt, b.input];
   const inputTokens = Math.ceil(textBytes(input) / 3) + 16;
@@ -328,7 +344,7 @@ export function priceRequest(url: string, body: unknown): RequestPrice | null {
     }
     return { provider, model, kind: 'chat', input: maxPrice.prompt, output: maxPrice.completion, inputTokens, maxOutputTokens };
   }
-  const price = canonicalLookup(`${provider}:${model}`);
+  const price = chatPrice(`${provider}:${model}`);
   if (!price) throw new BudgetExceededError(`no chat price for ${provider}:${model}; cannot reserve its cost`);
   return { provider, model, kind: 'chat', input: price.input, output: price.output, inputTokens, maxOutputTokens };
 }

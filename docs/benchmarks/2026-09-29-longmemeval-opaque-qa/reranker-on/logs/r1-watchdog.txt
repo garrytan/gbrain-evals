@@ -1,0 +1,11 @@
+2026-09-29T22:06:20Z attempt=1 stall 604s; last log: [longmemeval] gpt4_d12ceb0e 16325ms; killing
+2026-09-29T22:06:25Z attempt=1 ended: rc=137
+2026-09-29T22:37:55Z attempt=2 stall 609s; last log: [longmemeval] 1c549ce4 9283ms; killing
+2026-09-29T22:38:00Z attempt=2 ended: rc=137
+2026-09-29T23:08:01Z attempt=3 stall 601s; last log: [longmemeval] gpt4_e414231f 16847ms; killing
+2026-09-29T23:08:06Z attempt=3 ended: rc=137
+2026-09-29T23:30:22Z fastkill stall 184s; last log: [longmemeval] 72e3ee87 10832ms
+2026-09-29T23:30:36Z attempt=4 ended: rc=137
+2026-09-29T23:52:23Z fastkill stall 184s; last log: [longmemeval] 4388e9dd 10861ms
+2026-09-29T23:52:37Z attempt=5 ended: rc=137
+2026-09-29T23:55:37Z finished rc=0

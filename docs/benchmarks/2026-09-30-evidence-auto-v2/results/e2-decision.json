@@ -1,0 +1,84 @@
+{
+  "decision_id": "evidence-auto-v2-2026-09-30:e2:auto",
+  "decision": {
+    "outcome": "fail",
+    "n": 150,
+    "n_clusters": 30,
+    "chunk_correct": 147,
+    "auto_correct": 149,
+    "delta": 2,
+    "mcnemar": {
+      "wins": 2,
+      "losses": 0,
+      "p": 0.5
+    },
+    "sign_flip": {
+      "p": 0.4930253487325634,
+      "ci95": [
+        0,
+        0.03333333333333333
+      ]
+    },
+    "confirmation": {
+      "chunk_correct": 146,
+      "auto_correct": 149,
+      "delta": 3
+    },
+    "errors": {
+      "chunk": 0,
+      "auto": 0
+    },
+    "problems": [],
+    "reasons": [
+      "primary: auto - chunk 2, McNemar p 0.500, persona sign-flip p 0.493"
+    ]
+  },
+  "by_kind": {
+    "multi-session": {
+      "n": 30,
+      "chunk": 28,
+      "auto": 29,
+      "chunk_official": 28,
+      "auto_official": 29
+    },
+    "temporal-reasoning": {
+      "n": 30,
+      "chunk": 29,
+      "auto": 30,
+      "chunk_official": 28,
+      "auto_official": 30
+    },
+    "single-session-user": {
+      "n": 30,
+      "chunk": 30,
+      "auto": 30,
+      "chunk_official": 30,
+      "auto_official": 30
+    },
+    "knowledge-update": {
+      "n": 30,
+      "chunk": 30,
+      "auto": 30,
+      "chunk_official": 30,
+      "auto_official": 30
+    },
+    "abstention": {
+      "n": 30,
+      "chunk": 30,
+      "auto": 30,
+      "chunk_official": 30,
+      "auto_official": 30
+    }
+  },
+  "mean_provider_input_tokens": {
+    "chunk": 3107,
+    "auto": 4986
+  },
+  "access_log_lines": 3,
+  "cost": {
+    "usd": 0.451665,
+    "input_tokens": 174758,
+    "output_tokens": 1477,
+    "basis": "budget ledger evidence-auto-v2-campaign-2026-09-30T18-11-31-562Z-5c129c9c: 600 paid requests, 0 charged at their reservation because usage was unavailable"
+  }
+}

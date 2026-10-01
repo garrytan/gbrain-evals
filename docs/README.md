@@ -21,6 +21,8 @@ when you want to understand how a decision changed.
 
 | Engineering question | Report |
 |---|---|
+| Does gbrain's automatic whole-conversation delivery hold up on the sealed held-out set? | [September 30 auto v2 release check](benchmarks/2026-09-30-evidence-auto-v2.md) |
+| Should an agent get neighbor chunks, sections or whole pages instead of bare chunks, and at what token cost? | [September 30 evidence-delivery study](benchmarks/2026-09-30-evidence-delivery.md) |
 | With the answer key hidden, how accurate are gbrain's answers, and does the reader prompt or the amount of evidence matter more? | [September 29 opaque-id answer re-run](benchmarks/2026-09-29-longmemeval-opaque-qa.md) |
 | Does taking brief notes before answering help when the original conversations remain available? | [September 25 reading-notes comparison](benchmarks/2026-09-25-reading-notes.md) |
 | Does relationship retrieval still help when the question is reworded? | [September 29 paraphrase check](benchmarks/2026-09-29-relational-paraphrase.md) |
@@ -50,6 +52,14 @@ gap does not isolate the effect of a graph alone.
 | Can the system distinguish kinds of claims and sensible confidence? | [Calibration and proposed takes](benchmarks/2026-05-18-brainbench-cat14-cat15-calibration.md) (the advice result was retracted on September 28, 2026) |
 | What happens when tweet ingestion becomes parallel? | [Tweet ingestion](benchmarks/2026-04-18-tweet-ingestion.md) |
 | What did the earlier ingestion worker comparisons measure? | [Subagent comparison](benchmarks/2026-04-18-minions-vs-openclaw-subagents.md), [production comparison](benchmarks/2026-04-18-minions-vs-openclaw-production.md) |
+
+## Correctness and access checks (keyless, synthetic worlds)
+
+| Engineering question | Report |
+|---|---|
+| Does gbrain answer "where did she work on that date?" and "when did I last see him?" from valid time, not from when a note was written? | [September 30 temporal and as-of check (N3)](benchmarks/2026-09-30-n3-temporal-asof.md) |
+| Does a nickname, handle or former name reach the right person without merging two people who share a name? | [September 30 entity-resolution check (N4)](benchmarks/2026-09-30-n4-entity-resolution.md) |
+| Can an agent-facing caller read private pages, held Takes, private Facts or another source through any read operation? | [September 30 visibility leak fuzz (N6)](benchmarks/2026-09-30-n6-visibility-fuzz.md) |
 
 ## Protocols and preregistrations (no results yet)
 

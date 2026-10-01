@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Recount the September 29 opaque-id LongMemEval answer receipts.
+"""Recount the September 29 opaque-id LongMemEval answer receipts, including the reranker-on arms.
 
 Keyless and offline. Recounts saved judge verdicts and retrieval flags per arm,
 re-derives the paired gains, losses and exact McNemar p-values, checks them
@@ -126,5 +126,68 @@ def verify():
                 strict_recall_all_at5=f"{strict}/470", prompts_checked=prompts, leaks=leaks)
 
 
+WAVE = ROOT / "docs/benchmarks/2026-09-06-longmemeval-ranker-wave/longmemeval"
+
+
+def verify_reranker():
+    """Reranker-on arms R1 (notes 1024) and R2 (direct 512) on the same code as arm a."""
+    rdir = DIR / "reranker-on"
+    summary = json.loads((rdir / "summary-rerank.json").read_text())
+    a = by_qid(rows(DIR / "a/rows.ndjson"))
+    a_off = by_qid(rows(DIR / "a/official-judge.ndjson"))
+    d1 = by_qid(rows(WAVE / "D1-judged-release-config-sonnet46-reader-gpt4o-judge.ndjson"))
+    arms = {"a": (a, a_off)}
+    for name in ("r1", "r2"):
+        arms[name] = (by_qid(rows(rdir / f"{name}/rows.ndjson")), by_qid(rows(rdir / f"{name}/official-judge.ndjson")))
+    qids = sorted(a)
+    non_abs = [q for q in qids if not q.endswith("_abs")]
+    g, o, strict = {}, {}, {}
+    for name, (rs, off) in arms.items():
+        assert len(rs) == 500 and len(off) == 500, name
+        for q, r in rs.items():
+            assert r["hypothesis"] in off[q]["off_judge_prompt"], ("official judge graded the saved answer", name, q)
+        g[name] = {q: correct(rs[q], "judge_correct") for q in qids}
+        o[name] = {q: bool(off[q]["off_judge_correct"]) and not rs[q].get("error") for q in qids}
+        strict[name] = {q: rs[q].get("recall_all_hit") is True for q in non_abs}
+    for name in ("r1", "r2"):
+        rs = arms[name][0]
+        want = summary["arms"][name]
+        assert sum(g[name].values()) == want["correct_gbrain_judge"], name
+        assert sum(o[name].values()) == want["correct_official_judge"], name
+        assert sum(strict[name].values()) == want["strict_recall_all_at5"], name
+        assert all(r["search_meta"]["reranked"] and not r["search_meta"]["degraded"] for r in rs.values()), ("every row reranked, none degraded", name)
+        assert want["voyage"]["rows_reranked"] == 500 and not want["voyage"]["degraded_stages"], name
+    d1g = {q: d1[q].get("judge_correct") is True for q in qids}
+    d1s = {q: d1[q].get("recall_all_hit") is True for q in non_abs}
+    pairs = {
+        "r1_vs_a_gbrain_judge": (g["a"], g["r1"]), "r2_vs_r1_gbrain_judge": (g["r1"], g["r2"]), "r2_vs_a_gbrain_judge": (g["a"], g["r2"]),
+        "r1_vs_a_official_judge": (o["a"], o["r1"]), "r2_vs_r1_official_judge": (o["r1"], o["r2"]), "r2_vs_a_official_judge": (o["a"], o["r2"]),
+        "r2_vs_published_d1_gbrain_judge": (d1g, g["r2"]),
+    }
+    for name, (x, y) in pairs.items():
+        got, want = mcnemar(x, y), summary["paired"][name]
+        assert (got["gains"], got["losses"], got["n_paired"]) == (want["gains"], want["losses"], want["n_paired"]), name
+        assert abs(got["exact_mcnemar_p"] - want["exact_mcnemar_p"]) < 1e-12, name
+    for name, (x, y) in {"r1_vs_a": (strict["a"], strict["r1"]), "r2_vs_a": (strict["a"], strict["r2"]), "r2_vs_sep6_d1_published": (d1s, strict["r2"])}.items():
+        got, want = mcnemar(x, y), summary["retrieval"][name]
+        assert (got["gains"], got["losses"]) == (want["gains"], want["losses"]), name
+    leaks = 0
+    for name in ("r1", "r2"):
+        rs = arms[name][0]
+        raw_ids = {q: {x["session_id"] for x in r["retrieved"]} for q, r in rs.items()}
+        by_question = {r["question"]: q for q, r in rs.items()}
+        for call in rows(rdir / f"{name}/calls.ndjson.gz"):
+            if call.get("lane") != "reader":
+                continue
+            text = (call.get("system") or "") + call["user"]
+            leaks += ("answer_" in text) + any(sid in text for sid in raw_ids[by_question[call["question"]]])
+    assert leaks == 0, ("reranker-on leak check", leaks)
+    return dict(r1=dict(gbrain_judge=sum(g["r1"].values()), official_judge=sum(o["r1"].values()), strict=sum(strict["r1"].values())),
+                r2=dict(gbrain_judge=sum(g["r2"].values()), official_judge=sum(o["r2"].values()), strict=sum(strict["r2"].values())),
+                published_d1=dict(gbrain_judge=sum(d1g.values()), strict=sum(d1s.values())), leaks=leaks)
+
+
 if __name__ == "__main__":
-    print(json.dumps(verify(), indent=2))
+    result = verify()
+    result["reranker_on"] = verify_reranker()
+    print(json.dumps(result, indent=2))

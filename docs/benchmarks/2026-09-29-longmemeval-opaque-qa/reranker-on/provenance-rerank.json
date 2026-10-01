@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "run_dates_utc": {
+    "r1_pilot": "2026-09-29T21:32Z",
+    "r1_full_start": "2026-09-29T21:44Z",
+    "r1_end": "2026-09-29T23:55Z",
+    "r2_start": "2026-09-29T23:55Z",
+    "r2_end": "2026-09-30T01:32Z"
+  },
+  "gbrain": {
+    "commit": "a7cb37b7884ca4a6dba8bb82a4cd430e6a6e806f",
+    "note": "same code as the 439/500 arm (a); gbrain PR 5676, squash-merged as b80cad6",
+    "bun": "1.3.14",
+    "retrieval_config_hash": "0d5ee2baf7b5867f37c05e239101be47e5a3155efe9e0df938ad493cc1cf9865",
+    "retrieval_config_hash_note": "identical to the published September 6 D1 run's hash"
+  },
+  "arms": {
+    "r1": "--reader-mode notes --reader-max-tokens 1024 --reranker on",
+    "r2": "--reader-mode direct --reader-max-tokens 512 --reranker on"
+  },
+  "shared_flags": "--top-k 5 --no-trajectory --mode balanced --autocut off --model anthropic:claude-sonnet-4-6 --judge --judge-model openai:gpt-4o --by-type",
+  "reranker": {
+    "model": "voyage:rerank-2.5",
+    "candidates_per_query": 25,
+    "price_usd_per_million_tokens": 0.05
+  },
+  "dataset": {
+    "sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442",
+    "committed": false
+  },
+  "embed_cache": {
+    "sha256_before_and_after": "7beac2aa2b2d28d5ed28ecc11832aa79207580ccf3fa9ba0ee4f7907cb301350",
+    "misses": 0,
+    "committed": false,
+    "note": "the same cache as arm (a); unchanged by R1 and R2"
+  },
+  "compute": {
+    "where": "Ubicloud standard-4, us-east-a2, one process at a time",
+    "pilot": "Capy cloud machine (20 questions)",
+    "note": "VM destroyed after the run"
+  },
+  "published_d1_reader_match": "The direct reader's system text, 512-token limit, 60,000-character session cap and prompt version gbrain-lme-reader-v3-abstention-fullsessions are byte-identical between the published run (gbrain 2efaaf8f) and a7cb37b",
+  "executed_script_sha256": {
+    "driver-r.ts": "febd48007580b0658de55e097b5f5c54301bfd6e1fbb16b277e769bceaed5d92",
+    "run-r.sh": "4518422c47814c6e79796c466dd155254a5d0befdf47224570ecb91de02c9c44",
+    "watchdog-r.sh": "980f495e213ac081f30efb146950b347273668819d57228969b01707d8cb6b3c",
+    "fastkill.sh": "270aeb4d62fd61fdec1fd87bf74194002b716e7ef6c6f7ac33fc67d6779c24ff",
+    "rejudge.ts": "3373ceaf8f433d39f7f29dbf7d08d4d359b1a9f578735b992473e78b6c652f84",
+    "analyze-r.py": "86e9b706627d89543ae4ea598659c2b923ad611ba1714f3296779a0fa2ae4c1d",
+    "lib.ts": "db2d5ed71eb6ad9215eb2cf3c7bacf736cf3d605eded6641a2148cd22e6b57d6"
+  },
+  "scrub": "Machine-local paths only: run directory to $M6_DIR, gbrain checkout to GBRAIN_DIR, evals checkout to EVALS_DIR, home directories to $HOME. analyze-r.py reads M6_DIR and EVALS_DIR from the environment."
+}

@@ -1,0 +1,489 @@
+{
+  "schema": "gbrain-evals/evidence-delivery-smoke/v1",
+  "purpose": "plumbing smoke only: 5 frozen pilot questions, 3 answered per arm, 2 through MCP. Not evidence about any policy.",
+  "date": "2026-09-30",
+  "gbrain": {
+    "commit": "51144975ba78839ea77e25c3e664465a9166ce81",
+    "branch": "capy/evidence-delivery (WIP, not the pinned candidate)",
+    "dirty": false,
+    "parser_sha256": "a1eb3aee61f9c238d7b414af49014ce330b357e1f92aef85049cadd39736859e",
+    "evidence_code_sha256": "f0186448d17219d7e35cf6c3fff6cbf95d5997f7053d120e374b9f12f798f3d0"
+  },
+  "decision_manifest_sha256": "b15e219651183a5ad51839a25bfd668d62271a9c35f45afabb9a0cd3dd045a49",
+  "freeze": {
+    "questions": 5,
+    "identical_to_r1_slug_chunk_rank": 4,
+    "identical_to_r1_slug_rank": 4,
+    "k10_shared_stream": 5,
+    "arms_per_question": [
+      "auto4k",
+      "auto6k",
+      "auto7_5k",
+      "chunk",
+      "k10",
+      "page",
+      "page_legacy",
+      "section",
+      "window1",
+      "window2"
+    ],
+    "embed_cache_misses": 1060
+  },
+  "parity": {
+    "ok": true,
+    "harness_vs_r1": {
+      "eligible": 4,
+      "identical": 4,
+      "mismatched": []
+    },
+    "product_page_vs_harness": {
+      "questions": 5,
+      "requests_identical": 0,
+      "same_session_order": 5,
+      "blocks": {
+        "identical": 0,
+        "frontmatter_only": 15,
+        "whitespace_only": 9,
+        "truncated": 0,
+        "missing": 0,
+        "other": 0
+      },
+      "examples": [
+        {
+          "question_id": "73d42213",
+          "slug": "chat/s-e804462455",
+          "class": "whitespace_only",
+          "first_difference": 10934,
+          "product_context": "s and improve the patient's experience.\nThese are just a few examples of how the",
+          "harness_context": "s and improve the patient's experience.\n\nThese are just a few examples of how th"
+        },
+        {
+          "question_id": "a3838d2b",
+          "slug": "chat/s-e5545f7366",
+          "class": "whitespace_only",
+          "first_difference": 2618,
+          "product_context": "you're feeling refreshed and motivated.\nRemember, every small step counts, and y",
+          "harness_context": "you're feeling refreshed and motivated.\n\nRemember, every small step counts, and "
+        },
+        {
+          "question_id": "a3838d2b",
+          "slug": "chat/s-86330f996e",
+          "class": "whitespace_only",
+          "first_difference": 4052,
+          "product_context": " it's all part of the learning process.\nFor an easy trail, look for routes with:",
+          "harness_context": " it's all part of the learning process.\n\nFor an easy trail, look for routes with"
+        },
+        {
+          "question_id": "5a7937c8",
+          "slug": "chat/s-dab66bc702",
+          "class": "whitespace_only",
+          "first_difference": 5024,
+          "product_context": "he community during the holiday season.\nThese ideas should give you a good start",
+          "harness_context": "he community during the holiday season.\n\nThese ideas should give you a good star"
+        },
+        {
+          "question_id": "5a7937c8",
+          "slug": "chat/s-baf4ab3801",
+          "class": "whitespace_only",
+          "first_difference": 2810,
+          "product_context": "discussion more engaging and memorable.\nSome recommended resources for leading B",
+          "harness_context": "discussion more engaging and memorable.\n\nSome recommended resources for leading "
+        },
+        {
+          "question_id": "5a7937c8",
+          "slug": "chat/s-d55c78f956",
+          "class": "whitespace_only",
+          "first_difference": 9093,
+          "product_context": "es, like YouTube channels or yoga apps.\nRemember, the key to a successful yoga p",
+          "harness_context": "es, like YouTube channels or yoga apps.\n\nRemember, the key to a successful yoga "
+        },
+        {
+          "question_id": "d851d5ba",
+          "slug": "chat/s-76f8824b9c",
+          "class": "whitespace_only",
+          "first_difference": 2716,
+          "product_context": " and provide valuable tips and support.\nRemember to listen to your body and adju",
+          "harness_context": " and provide valuable tips and support.\n\nRemember to listen to your body and adj"
+        },
+        {
+          "question_id": "d851d5ba",
+          "slug": "chat/s-f6b9827bda",
+          "class": "whitespace_only",
+          "first_difference": 8033,
+          "product_context": " your supporters engaged and motivated.\nRemember, the most important thing is to",
+          "harness_context": " your supporters engaged and motivated.\n\nRemember, the most important thing is t"
+        },
+        {
+          "question_id": "d851d5ba",
+          "slug": "chat/s-cb6500d823",
+          "class": "whitespace_only",
+          "first_difference": 2533,
+          "product_context": "nd encouraged throughout your training.\nRemember, staying motivated is a journey",
+          "harness_context": "nd encouraged throughout your training.\n\nRemember, staying motivated is a journe"
+        }
+      ]
+    }
+  },
+  "e1_rows": {
+    "agent_fetch": [
+      {
+        "question_id": "73d42213",
+        "primary": 1,
+        "confirmation": 1,
+        "tokens": {
+          "tokenizer": "cl100k",
+          "product_encoding": 2346,
+          "serialized_tool": 2945,
+          "provider_input": 10417,
+          "provider_output": 383
+        },
+        "tool_calls": 1
+      },
+      {
+        "question_id": "a3838d2b",
+        "primary": 0,
+        "confirmation": 0,
+        "tokens": {
+          "tokenizer": "cl100k",
+          "product_encoding": 2816,
+          "serialized_tool": 3427,
+          "provider_input": 18453,
+          "provider_output": 444
+        },
+        "tool_calls": 3
+      },
+      {
+        "question_id": "ef66a6e5",
+        "primary": 1,
+        "confirmation": 1,
+        "tokens": {
+          "tokenizer": "cl100k",
+          "product_encoding": 3028,
+          "serialized_tool": 3681,
+          "provider_input": 15679,
+          "provider_output": 339
+        },
+        "tool_calls": 2
+      }
+    ],
+    "auto6k": [
+      {
+        "question_id": "a3838d2b",
+        "primary": 0,
+        "confirmation": 0,
+        "tokens": {
+          "tokenizer": "cl100k",
+          "product_encoding": 5961,
+          "serialized_tool": 6960,
+          "provider_input": 6689,
+          "provider_output": 255
+        }
+      },
+      {
+        "question_id": "73d42213",
+        "primary": 1,
+        "confirmation": 1,
+        "tokens": {
+          "tokenizer": "cl100k",
+          "product_encoding": 5963,
+          "serialized_tool": 7166,
+          "provider_input": 6714,
+          "provider_output": 207
+        }
+      },
+      {
+        "question_id": "ef66a6e5",
+        "primary": 1,
+        "confirmation": 1,
+        "tokens": {
+          "tokenizer": "cl100k",
+          "product_encoding": 5949,
+          "serialized_tool": 7185,
+          "provider_input": 6855,
+          "provider_output": 241
+        }
+      }
+    ],
+    "chunk": [
+      {
+        "question_id": "a3838d2b",
+        "primary": 0,
+        "confirmation": 0,
+        "tokens": {
+          "tokenizer": "cl100k",
+          "product_encoding": 2816,
+          "serialized_tool": 3427,
+          "provider_input": 3453,
+          "provider_output": 255
+        }
+      },
+      {
+        "question_id": "73d42213",
+        "primary": 0,
+        "confirmation": 0,
+        "tokens": {
+          "tokenizer": "cl100k",
+          "product_encoding": 2346,
+          "serialized_tool": 2945,
+          "provider_input": 2954,
+          "provider_output": 94
+        }
+      },
+      {
+        "question_id": "ef66a6e5",
+        "primary": 0,
+        "confirmation": 0,
+        "tokens": {
+          "tokenizer": "cl100k",
+          "product_encoding": 3028,
+          "serialized_tool": 3681,
+          "provider_input": 3710,
+          "provider_output": 322
+        }
+      }
+    ],
+    "k10": [
+      {
+        "question_id": "73d42213",
+        "primary": 0,
+        "confirmation": 0,
+        "tokens": {
+          "tokenizer": "cl100k",
+          "product_encoding": 4138,
+          "serialized_tool": null,
+          "provider_input": 5230,
+          "provider_output": 219
+        }
+      },
+      {
+        "question_id": "a3838d2b",
+        "primary": 0,
+        "confirmation": 0,
+        "tokens": {
+          "tokenizer": "cl100k",
+          "product_encoding": 5539,
+          "serialized_tool": null,
+          "provider_input": 6599,
+          "provider_output": 303
+        }
+      },
+      {
+        "question_id": "ef66a6e5",
+        "primary": 0,
+        "confirmation": 0,
+        "tokens": {
+          "tokenizer": "cl100k",
+          "product_encoding": 5569,
+          "serialized_tool": null,
+          "provider_input": 6821,
+          "provider_output": 232
+        }
+      }
+    ],
+    "page": [
+      {
+        "question_id": "73d42213",
+        "primary": 1,
+        "confirmation": 1,
+        "tokens": {
+          "tokenizer": "cl100k",
+          "product_encoding": 11046,
+          "serialized_tool": 12377,
+          "provider_input": 12188,
+          "provider_output": 203
+        }
+      },
+      {
+        "question_id": "ef66a6e5",
+        "primary": 1,
+        "confirmation": 1,
+        "tokens": {
+          "tokenizer": "cl100k",
+          "product_encoding": 16186,
+          "serialized_tool": 17780,
+          "provider_input": 17722,
+          "provider_output": 204
+        }
+      },
+      {
+        "question_id": "a3838d2b",
+        "primary": 0,
+        "confirmation": 0,
+        "tokens": {
+          "tokenizer": "cl100k",
+          "product_encoding": 11980,
+          "serialized_tool": 13180,
+          "provider_input": 13103,
+          "provider_output": 343
+        }
+      }
+    ],
+    "page_legacy": [
+      {
+        "question_id": "73d42213",
+        "primary": 1,
+        "confirmation": 1,
+        "tokens": {
+          "tokenizer": "cl100k",
+          "product_encoding": 10992,
+          "serialized_tool": null,
+          "provider_input": 12382,
+          "provider_output": 325
+        }
+      },
+      {
+        "question_id": "a3838d2b",
+        "primary": 0,
+        "confirmation": 0,
+        "tokens": {
+          "tokenizer": "cl100k",
+          "product_encoding": 11940,
+          "serialized_tool": null,
+          "provider_input": 13257,
+          "provider_output": 357
+        }
+      },
+      {
+        "question_id": "ef66a6e5",
+        "primary": 1,
+        "confirmation": 1,
+        "tokens": {
+          "tokenizer": "cl100k",
+          "product_encoding": 16071,
+          "serialized_tool": null,
+          "provider_input": 17919,
+          "provider_output": 223
+        }
+      }
+    ],
+    "window1": [
+      {
+        "question_id": "73d42213",
+        "primary": 1,
+        "confirmation": 1,
+        "tokens": {
+          "tokenizer": "cl100k",
+          "product_encoding": 4817,
+          "serialized_tool": 5944,
+          "provider_input": 5516,
+          "provider_output": 202
+        }
+      },
+      {
+        "question_id": "a3838d2b",
+        "primary": 0,
+        "confirmation": 0,
+        "tokens": {
+          "tokenizer": "cl100k",
+          "product_encoding": 5830,
+          "serialized_tool": 6839,
+          "provider_input": 6567,
+          "provider_output": 368
+        }
+      },
+      {
+        "question_id": "ef66a6e5",
+        "primary": 1,
+        "confirmation": 1,
+        "tokens": {
+          "tokenizer": "cl100k",
+          "product_encoding": 5963,
+          "serialized_tool": 7198,
+          "provider_input": 6795,
+          "provider_output": 203
+        }
+      }
+    ]
+  },
+  "e3": [
+    {
+      "question_id": "73d42213",
+      "live_hits_match_frozen": true,
+      "arms": [
+        {
+          "arm": "page",
+          "local_remote_match": true,
+          "product_path_match": true,
+          "tokens_match": true,
+          "uncontained_segments": 0
+        },
+        {
+          "arm": "window1",
+          "local_remote_match": true,
+          "product_path_match": true,
+          "tokens_match": true,
+          "uncontained_segments": 0
+        }
+      ],
+      "scored": [
+        {
+          "arm": "page",
+          "primary": 1,
+          "confirmation": 1,
+          "provider_input": 12188
+        },
+        {
+          "arm": "window1",
+          "primary": 1,
+          "confirmation": 1,
+          "provider_input": 5516
+        }
+      ]
+    },
+    {
+      "question_id": "a3838d2b",
+      "live_hits_match_frozen": false,
+      "arms": [
+        {
+          "arm": "page",
+          "local_remote_match": true,
+          "product_path_match": true,
+          "tokens_match": true,
+          "uncontained_segments": 0
+        },
+        {
+          "arm": "window1",
+          "local_remote_match": true,
+          "product_path_match": true,
+          "tokens_match": true,
+          "uncontained_segments": 0
+        }
+      ],
+      "scored": [
+        {
+          "arm": "page",
+          "primary": 0,
+          "confirmation": 0,
+          "provider_input": 16111
+        },
+        {
+          "arm": "window1",
+          "primary": 0,
+          "confirmation": 0,
+          "provider_input": 6729
+        }
+      ]
+    }
+  ],
+  "ledger_runs": [
+    {
+      "runner": "evidence-delivery-freeze-smoke",
+      "requests": 244,
+      "usd": 0.0818,
+      "subprocess_requests": 0
+    },
+    {
+      "runner": "evidence-delivery-e1-pilot-smoke",
+      "requests": 66,
+      "usd": 0.7265,
+      "subprocess_requests": 0
+    },
+    {
+      "runner": "evidence-delivery-e3-smoke",
+      "requests": 62,
+      "usd": 0.1578,
+      "subprocess_requests": 50
+    }
+  ],
+  "total_usd": 0.9661
+}

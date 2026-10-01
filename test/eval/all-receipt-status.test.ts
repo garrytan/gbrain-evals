@@ -74,6 +74,21 @@ describe('deriveStatus', () => {
     expect(derived.statusNote).toContain('requires verdict');
   });
 
+  test('report-only: a completed non-pass verdict is REPORTED, never pass and never fail', () => {
+    const reportOnly = (r: Receipt) => deriveStatus({ kind: 'ok', receipt: r }, 'report-only');
+    expect(reportOnly(receipt({ verdict: 'fail' })).status).toBe('reported');
+    expect(reportOnly(receipt({ verdict: 'partial' })).status).toBe('reported');
+    expect(reportOnly(receipt({})).status).toBe('pass');
+  });
+
+  test('report-only never softens a broken run: error, missing, stale and invalid receipts still fail', () => {
+    expect(deriveStatus({ kind: 'ok', receipt: receipt({ run_status: 'error', verdict: undefined }) }, 'report-only').status).toBe('fail');
+    expect(deriveStatus({ kind: 'missing' }, 'report-only').status).toBe('fail');
+    expect(deriveStatus({ kind: 'stale', mtime: 't' }, 'report-only').status).toBe('fail');
+    expect(deriveStatus({ kind: 'invalid', reason: 'x' }, 'report-only').status).toBe('fail');
+    expect(deriveStatus({ kind: 'ok', receipt: receipt({ run_status: 'skipped', skip_reason: 'no key', verdict: undefined }) }, 'report-only').status).toBe('skipped');
+  });
+
   test('unpublishable completed run is noted', () => {
     expect(ok(receipt({ publishable: false })).statusNote).toContain('not publishable');
   });

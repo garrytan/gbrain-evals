@@ -1,0 +1,51 @@
+{
+  "frozen_manifest_sha256": "c06b134b12219a3ad5fbc1aa898af32daf3cb383a4d52a45490c723f4213043b",
+  "gbrain_commit": "732ee8116b6fd7d2de38824a54d35f57e4ea35c4",
+  "schema": "gbrain-evals/evidence-delivery-parity/v1",
+  "harness_vs_r1": {
+    "eligible": 406,
+    "identical": 406,
+    "mismatched": []
+  },
+  "product_page_vs_harness": {
+    "questions": 500,
+    "requests_identical": 0,
+    "same_session_order": 500,
+    "blocks": {
+      "identical": 0,
+      "frontmatter_only": 2448,
+      "whitespace_only": 0,
+      "truncated": 0,
+      "missing": 0,
+      "other": 3
+    },
+    "examples": [
+      {
+        "question_id": "71017276",
+        "slug": "chat/s-9a328e6460",
+        "class": "other",
+        "first_difference": 0,
+        "product_context": "[TypeScript] fence.ts:27-30 method defin",
+        "harness_context": "**user:** i want to write a new clandly "
+      },
+      {
+        "question_id": "gpt4_70e84552_abs",
+        "slug": "chat/s-89908deba0",
+        "class": "other",
+        "first_difference": 0,
+        "product_context": "[Python] fence.py:1-1 module\n\n.\\ConvertT",
+        "harness_context": "**assistant:** Sure, I can rename the `N"
+      },
+      {
+        "question_id": "3c1045c8",
+        "slug": "chat/s-93e2e3f0d3",
+        "class": "other",
+        "first_difference": 0,
+        "product_context": "[C#] fence.cs:1-2 module\n\nSystem.out.pri",
+        "harness_context": "**user:** what is this code doing:\n\nimpo"
+      }
+    ]
+  },
+  "ok": true,
+  "problems": []
+}
