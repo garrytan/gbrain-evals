@@ -1,0 +1,43 @@
+{
+  "repository": "https://github.com/unjs/pathe",
+  "commit": "bc7477a01f0bd60ada017add8142c9f9d69ccdc5",
+  "commit_date": "2026-07-08T16:19:21+02:00",
+  "license": "MIT",
+  "license_file": {
+    "stored_as": "pathe/LICENSE",
+    "sha256": "52e92576851154bad7737e90cc72818936f43665cb0e3f7428ed8edc8cc5709b"
+  },
+  "note": "Vendored so CI stays offline. Files are stored with a .txt suffix so this repository's TypeScript build and tests never compile them; the bytes are the upstream bytes at the commit. Refetch and compare with: bun eval/generators/n13-code-scout-vendor.ts --check",
+  "files": [
+    {
+      "path": "src/_glob.ts",
+      "stored_as": "pathe/src/_glob.ts.txt",
+      "sha256": "39e04f05926cfe43503eb77ad4bb38ce4cd6f499d256f5d0a28df15f4185fe12",
+      "bytes": 14751
+    },
+    {
+      "path": "src/_internal.ts",
+      "stored_as": "pathe/src/_internal.ts.txt",
+      "sha256": "48e4af9f176e4960d039e5d56fadcf5f7c9a4234589a5241b103d006ff5b99ab",
+      "bytes": 519
+    },
+    {
+      "path": "src/_path.ts",
+      "stored_as": "pathe/src/_path.ts.txt",
+      "sha256": "fe4f45fcc9203de691b19ea72135770de3159db2584ff103d49082395c9545cf",
+      "bytes": 9352
+    },
+    {
+      "path": "src/index.ts",
+      "stored_as": "pathe/src/index.ts.txt",
+      "sha256": "4d797c46a67866a3ea96012dbccbdf5f4eb90caf2e33432690f5cc2dbe411a56",
+      "bytes": 1079
+    },
+    {
+      "path": "src/utils.ts",
+      "stored_as": "pathe/src/utils.ts.txt",
+      "sha256": "61363d9fb58e3ccd3722a3f802f69608f167e01fe1042e624b9fff8a4a5bef46",
+      "bytes": 4136
+    }
+  ]
+}

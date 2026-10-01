@@ -1,0 +1,1429 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "hermetic: provider keys stripped, importCodeFile with noEmbed, keyword-only PGLite; no model and no paid request"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "hermetic: provider keys stripped, importCodeFile with noEmbed, keyword-only PGLite; no model and no paid request"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "n13-code-intelligence",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 106,
+  "n_scored": 106,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "gbrain_version": "0.60.26.0",
+  "gbrain_pin": "github:garrytan/gbrain#3a284aea26889b77c633aebb4149c3016d834ee6",
+  "execution": {
+    "source_tree": {
+      "sha256": "cfe1bac7b35b2988490c07dee4a0697c3ec6762d7acb598d3d062abbb9ce91e3",
+      "files": 2392,
+      "git_head": "93143f24c389b454bdc3339ffe936fd5b2b06df2",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#3a284aea26889b77c633aebb4149c3016d834ee6",
+      "declared_sha": "3a284aea26889b77c633aebb4149c3016d834ee6",
+      "version": "0.60.26.0",
+      "package_sha256": "b103036cefcba7b163f42113617edb5fd9d731ac587e0a291d042bdef8eeca17",
+      "loaded_git_head": "3a284aea26889b77c633aebb4149c3016d834ee6"
+    }
+  },
+  "resolved_config": {
+    "engine": "pglite-in-memory",
+    "decide": "off (no key, fresh GBRAIN_HOME)",
+    "caller": "handleToolCall (trusted local, remote: false, parameters validated); remote check calls the op handler with remote: true",
+    "corpus": {
+      "repository": "https://github.com/unjs/pathe",
+      "commit": "bc7477a01f0bd60ada017add8142c9f9d69ccdc5",
+      "license": "MIT",
+      "files": [
+        {
+          "path": "src/_glob.ts",
+          "sha256": "39e04f05926cfe43503eb77ad4bb38ce4cd6f499d256f5d0a28df15f4185fe12"
+        },
+        {
+          "path": "src/_internal.ts",
+          "sha256": "48e4af9f176e4960d039e5d56fadcf5f7c9a4234589a5241b103d006ff5b99ab"
+        },
+        {
+          "path": "src/_path.ts",
+          "sha256": "fe4f45fcc9203de691b19ea72135770de3159db2584ff103d49082395c9545cf"
+        },
+        {
+          "path": "src/index.ts",
+          "sha256": "4d797c46a67866a3ea96012dbccbdf5f4eb90caf2e33432690f5cc2dbe411a56"
+        },
+        {
+          "path": "src/utils.ts",
+          "sha256": "61363d9fb58e3ccd3722a3f802f69608f167e01fe1042e624b9fff8a4a5bef46"
+        }
+      ]
+    },
+    "gold": {
+      "path": "eval/data/n13-code-scout/ts-gold.json",
+      "sha256": "661c18415cd5d741383dc5591705dc2445b43026bbcaca82875f3c1a7a5e8505",
+      "generator_version": "n13-ts-gold/1",
+      "typescript_version": "5.9.3"
+    },
+    "internal_entry_points": [
+      "src/core/import-file.ts importCodeFile",
+      "src/core/chunkers/symbol-resolver.ts resolveSymbolEdgesIncremental",
+      "src/mcp/server.ts handleToolCall (trusted local, the gbrain call path)",
+      "src/core/operations.ts operations (remote refusal check)",
+      "src/core/pglite-engine.ts PGLiteEngine"
+    ],
+    "gbrain_overlay": {
+      "requested": "<gbrain checkout>@3a284aea26889b77c633aebb4149c3016d834ee6",
+      "ref": "3a284aea26889b77c633aebb4149c3016d834ee6",
+      "commit": "3a284aea26889b77c633aebb4149c3016d834ee6",
+      "tree": "ce2f2ecc26e083bf719aa336fd752fc065c9b878",
+      "version": "0.60.26.0",
+      "checkout_dirty": false,
+      "verified": {
+        "copy_tree": "ce2f2ecc26e083bf719aa336fd752fc065c9b878",
+        "tree_matches": true,
+        "symlinks_under_src": 0,
+        "dir_is_realpath": true,
+        "cli_version": "0.60.26.0",
+        "cli_version_matches": true
+      },
+      "copied_not_symlinked": true
+    },
+    "runtime_ms": 6285
+  },
+  "hashes": {
+    "ts_gold_sha256": "661c18415cd5d741383dc5591705dc2445b43026bbcaca82875f3c1a7a5e8505",
+    "corpus_commit": "bc7477a01f0bd60ada017add8142c9f9d69ccdc5"
+  },
+  "started_at": "2026-10-01T19:35:41.874Z",
+  "finished_at": "2026-10-01T19:35:48.159Z",
+  "data": {
+    "summary": {
+      "ops": 6,
+      "ops_trusted_ok": 6,
+      "ops_answered_nonempty": 6,
+      "ops_remote_refused": 6,
+      "ops_with_cli_command": 4,
+      "def": {
+        "symbols": 50,
+        "top1_file_ok": 40,
+        "top1_span_ok": 40,
+        "any_span_ok": 41,
+        "no_result": 9
+      },
+      "refs": {
+        "symbols": 50,
+        "chunks": 291,
+        "chunks_with_semantic_reference": 115,
+        "chunks_lexical_only": 130,
+        "gold_references": 171,
+        "references_covered": 167,
+        "symbols_with_lexical_only_chunks": [
+          "match",
+          "and",
+          "or",
+          "star",
+          "parse",
+          "regex",
+          "slash",
+          "nodeSource",
+          "normalize",
+          "join",
+          "resolve",
+          "extname",
+          "relative",
+          "parse",
+          "resolveAlias"
+        ]
+      },
+      "callers": {
+        "same_file": {
+          "edges": 42,
+          "found": 39,
+          "resolved_in_metadata": 33
+        },
+        "cross_file": {
+          "edges": 12,
+          "found": 12,
+          "resolved_in_metadata": 0
+        },
+        "gbrain_edges": 81,
+        "gbrain_edges_resolved_flag_true": 0,
+        "gbrain_edges_resolved_in_metadata": 53,
+        "gbrain_edges_without_checker_call": 30
+      }
+    },
+    "import": {
+      "files": [
+        {
+          "path": "src/_glob.ts",
+          "status": "imported",
+          "chunks": 41
+        },
+        {
+          "path": "src/_internal.ts",
+          "status": "imported",
+          "chunks": 1
+        },
+        {
+          "path": "src/_path.ts",
+          "status": "imported",
+          "chunks": 16
+        },
+        {
+          "path": "src/index.ts",
+          "status": "imported",
+          "chunks": 8
+        },
+        {
+          "path": "src/utils.ts",
+          "status": "imported",
+          "chunks": 7
+        }
+      ],
+      "import_ms": 593,
+      "resolver_ms": 24,
+      "resolver": {
+        "chunks_walked": 73,
+        "edges_examined": 251,
+        "edges_resolved": 81,
+        "edges_ambiguous": 0,
+        "edges_unmatched": 170,
+        "batches": 1,
+        "ms": 24
+      },
+      "code_pages": 5,
+      "chunks": 73,
+      "chunks_with_symbol": 59,
+      "symbol_edges": 251,
+      "chunk_edges": 0
+    },
+    "readiness": [
+      {
+        "op": "code_def",
+        "probe": {
+          "symbol": "normalize"
+        },
+        "trusted_ok": true,
+        "trusted_error": null,
+        "status": "ready",
+        "ready": true,
+        "answer_count": 1,
+        "latency_ms": 19,
+        "remote_refused": true,
+        "remote_error_code": "permission_denied",
+        "cli_command": "code-def"
+      },
+      {
+        "op": "code_refs",
+        "probe": {
+          "symbol": "normalize"
+        },
+        "trusted_ok": true,
+        "trusted_error": null,
+        "status": "ready",
+        "ready": true,
+        "answer_count": 17,
+        "latency_ms": 5,
+        "remote_refused": true,
+        "remote_error_code": "permission_denied",
+        "cli_command": "code-refs"
+      },
+      {
+        "op": "code_callers",
+        "probe": {
+          "symbol": "normalizeWindowsPath"
+        },
+        "trusted_ok": true,
+        "trusted_error": null,
+        "status": "ready",
+        "ready": true,
+        "answer_count": 9,
+        "latency_ms": 9,
+        "remote_refused": true,
+        "remote_error_code": "permission_denied",
+        "cli_command": "code-callers"
+      },
+      {
+        "op": "code_callees",
+        "probe": {
+          "symbol": "resolve"
+        },
+        "trusted_ok": true,
+        "trusted_error": null,
+        "status": "ready",
+        "ready": true,
+        "answer_count": 6,
+        "latency_ms": 7,
+        "remote_refused": true,
+        "remote_error_code": "permission_denied",
+        "cli_command": "code-callees"
+      },
+      {
+        "op": "code_blast",
+        "probe": {
+          "symbol": "normalizeWindowsPath"
+        },
+        "trusted_ok": true,
+        "trusted_error": null,
+        "status": "ready",
+        "ready": true,
+        "answer_count": 3,
+        "latency_ms": 51,
+        "remote_refused": true,
+        "remote_error_code": "permission_denied",
+        "cli_command": null
+      },
+      {
+        "op": "code_flow",
+        "probe": {
+          "entry_point": "resolve"
+        },
+        "trusted_ok": true,
+        "trusted_error": null,
+        "status": "ready",
+        "ready": true,
+        "answer_count": 2,
+        "latency_ms": 36,
+        "remote_refused": true,
+        "remote_error_code": "permission_denied",
+        "cli_command": null
+      }
+    ],
+    "def_check": [
+      {
+        "symbol": "_apply",
+        "gold_file": "src/_glob.ts",
+        "gold_line": 39,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "match",
+        "gold_file": "src/_glob.ts",
+        "gold_line": 46,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "and",
+        "gold_file": "src/_glob.ts",
+        "gold_line": 93,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "or",
+        "gold_file": "src/_glob.ts",
+        "gold_line": 111,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "repeat",
+        "gold_file": "src/_glob.ts",
+        "gold_line": 126,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "optional",
+        "gold_file": "src/_glob.ts",
+        "gold_line": 150,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "star",
+        "gold_file": "src/_glob.ts",
+        "gold_line": 152,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "plus",
+        "gold_file": "src/_glob.ts",
+        "gold_line": 154,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "lazy",
+        "gold_file": "src/_glob.ts",
+        "gold_line": 157,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "parse",
+        "gold_file": "src/_glob.ts",
+        "gold_line": 162,
+        "results": 2,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "regex",
+        "gold_file": "src/_glob.ts",
+        "gold_line": 177,
+        "results": 0,
+        "top1_file_ok": false,
+        "top1_span_ok": false,
+        "any_span_ok": false
+      },
+      {
+        "symbol": "slash",
+        "gold_file": "src/_glob.ts",
+        "gold_line": 178,
+        "results": 0,
+        "top1_file_ok": false,
+        "top1_span_ok": false,
+        "any_span_ok": false
+      },
+      {
+        "symbol": "alternation",
+        "gold_file": "src/_glob.ts",
+        "gold_line": 179,
+        "results": 0,
+        "top1_file_ok": false,
+        "top1_span_ok": false,
+        "any_span_ok": false
+      },
+      {
+        "symbol": "_pushToLeaves",
+        "gold_file": "src/_glob.ts",
+        "gold_line": 181,
+        "results": 0,
+        "top1_file_ok": false,
+        "top1_span_ok": false,
+        "any_span_ok": false
+      },
+      {
+        "symbol": "sequence",
+        "gold_file": "src/_glob.ts",
+        "gold_line": 196,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "getNodes",
+        "gold_file": "src/_glob.ts",
+        "gold_line": 206,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "nodeSourceCached",
+        "gold_file": "src/_glob.ts",
+        "gold_line": 222,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "nodeSource",
+        "gold_file": "src/_glob.ts",
+        "gold_line": 248,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "int2alpha",
+        "gold_file": "src/_glob.ts",
+        "gold_line": 261,
+        "results": 0,
+        "top1_file_ok": false,
+        "top1_span_ok": false,
+        "any_span_ok": false
+      },
+      {
+        "symbol": "alpha2int",
+        "gold_file": "src/_glob.ts",
+        "gold_line": 270,
+        "results": 0,
+        "top1_file_ok": false,
+        "top1_span_ok": false,
+        "any_span_ok": false
+      },
+      {
+        "symbol": "makeRangeInt",
+        "gold_file": "src/_glob.ts",
+        "gold_line": 278,
+        "results": 0,
+        "top1_file_ok": false,
+        "top1_span_ok": false,
+        "any_span_ok": false
+      },
+      {
+        "symbol": "makeRangePaddedInt",
+        "gold_file": "src/_glob.ts",
+        "gold_line": 289,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "makeRangeAlpha",
+        "gold_file": "src/_glob.ts",
+        "gold_line": 292,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "identity",
+        "gold_file": "src/_glob.ts",
+        "gold_line": 297,
+        "results": 0,
+        "top1_file_ok": false,
+        "top1_span_ok": false,
+        "any_span_ok": false
+      },
+      {
+        "symbol": "normalizeGlob",
+        "gold_file": "src/_glob.ts",
+        "gold_line": 309,
+        "results": 0,
+        "top1_file_ok": false,
+        "top1_span_ok": false,
+        "any_span_ok": false
+      },
+      {
+        "symbol": "compileGlob",
+        "gold_file": "src/_glob.ts",
+        "gold_line": 450,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "compileGlobs",
+        "gold_file": "src/_glob.ts",
+        "gold_line": 471,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "matchGlob",
+        "gold_file": "src/_glob.ts",
+        "gold_line": 479,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "normalizeWindowsPath",
+        "gold_file": "src/_internal.ts",
+        "gold_line": 2,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "normalize",
+        "gold_file": "src/_path.ts",
+        "gold_line": 28,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "join",
+        "gold_file": "src/_path.ts",
+        "gold_line": 66,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "cwd",
+        "gold_file": "src/_path.ts",
+        "gold_line": 90,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "resolve",
+        "gold_file": "src/_path.ts",
+        "gold_line": 97,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "normalizeString",
+        "gold_file": "src/_path.ts",
+        "gold_line": 148,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "isAbsolute",
+        "gold_file": "src/_path.ts",
+        "gold_line": 216,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "toNamespacedPath",
+        "gold_file": "src/_path.ts",
+        "gold_line": 220,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "extname",
+        "gold_file": "src/_path.ts",
+        "gold_line": 224,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "relative",
+        "gold_file": "src/_path.ts",
+        "gold_line": 234,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "dirname",
+        "gold_file": "src/_path.ts",
+        "gold_line": 255,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "format",
+        "gold_file": "src/_path.ts",
+        "gold_line": 263,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "basename",
+        "gold_file": "src/_path.ts",
+        "gold_line": 269,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "parse",
+        "gold_file": "src/_path.ts",
+        "gold_line": 287,
+        "results": 2,
+        "top1_file_ok": false,
+        "top1_span_ok": false,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "matchesGlob",
+        "gold_file": "src/_path.ts",
+        "gold_line": 312,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "mix",
+        "gold_file": "src/index.ts",
+        "gold_line": 23,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "normalizeAliases",
+        "gold_file": "src/utils.ts",
+        "gold_line": 17,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "resolveAlias",
+        "gold_file": "src/utils.ts",
+        "gold_line": 56,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "reverseResolveAlias",
+        "gold_file": "src/utils.ts",
+        "gold_line": 79,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "filename",
+        "gold_file": "src/utils.ts",
+        "gold_line": 108,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "_compareAliases",
+        "gold_file": "src/utils.ts",
+        "gold_line": 126,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      },
+      {
+        "symbol": "hasTrailingSlash",
+        "gold_file": "src/utils.ts",
+        "gold_line": 131,
+        "results": 1,
+        "top1_file_ok": true,
+        "top1_span_ok": true,
+        "any_span_ok": true
+      }
+    ],
+    "refs_check": [
+      {
+        "symbol": "_apply",
+        "chunks": 4,
+        "gold_references": 3,
+        "chunks_with_semantic_reference": 3,
+        "chunks_lexical_only": 0,
+        "references_covered": 3
+      },
+      {
+        "symbol": "match",
+        "chunks": 17,
+        "gold_references": 39,
+        "chunks_with_semantic_reference": 10,
+        "chunks_lexical_only": 6,
+        "references_covered": 39
+      },
+      {
+        "symbol": "and",
+        "chunks": 15,
+        "gold_references": 5,
+        "chunks_with_semantic_reference": 3,
+        "chunks_lexical_only": 11,
+        "references_covered": 5
+      },
+      {
+        "symbol": "or",
+        "chunks": 47,
+        "gold_references": 9,
+        "chunks_with_semantic_reference": 7,
+        "chunks_lexical_only": 39,
+        "references_covered": 9
+      },
+      {
+        "symbol": "repeat",
+        "chunks": 4,
+        "gold_references": 3,
+        "chunks_with_semantic_reference": 3,
+        "chunks_lexical_only": 0,
+        "references_covered": 3
+      },
+      {
+        "symbol": "optional",
+        "chunks": 3,
+        "gold_references": 2,
+        "chunks_with_semantic_reference": 2,
+        "chunks_lexical_only": 0,
+        "references_covered": 2
+      },
+      {
+        "symbol": "star",
+        "chunks": 20,
+        "gold_references": 4,
+        "chunks_with_semantic_reference": 4,
+        "chunks_lexical_only": 15,
+        "references_covered": 4
+      },
+      {
+        "symbol": "plus",
+        "chunks": 2,
+        "gold_references": 1,
+        "chunks_with_semantic_reference": 1,
+        "chunks_lexical_only": 0,
+        "references_covered": 1
+      },
+      {
+        "symbol": "lazy",
+        "chunks": 2,
+        "gold_references": 1,
+        "chunks_with_semantic_reference": 1,
+        "chunks_lexical_only": 0,
+        "references_covered": 1
+      },
+      {
+        "symbol": "parse",
+        "chunks": 6,
+        "gold_references": 2,
+        "chunks_with_semantic_reference": 2,
+        "chunks_lexical_only": 3,
+        "references_covered": 2
+      },
+      {
+        "symbol": "regex",
+        "chunks": 18,
+        "gold_references": 17,
+        "chunks_with_semantic_reference": 9,
+        "chunks_lexical_only": 8,
+        "references_covered": 17
+      },
+      {
+        "symbol": "slash",
+        "chunks": 17,
+        "gold_references": 6,
+        "chunks_with_semantic_reference": 5,
+        "chunks_lexical_only": 11,
+        "references_covered": 6
+      },
+      {
+        "symbol": "alternation",
+        "chunks": 6,
+        "gold_references": 5,
+        "chunks_with_semantic_reference": 5,
+        "chunks_lexical_only": 0,
+        "references_covered": 5
+      },
+      {
+        "symbol": "_pushToLeaves",
+        "chunks": 2,
+        "gold_references": 2,
+        "chunks_with_semantic_reference": 2,
+        "chunks_lexical_only": 0,
+        "references_covered": 2
+      },
+      {
+        "symbol": "sequence",
+        "chunks": 7,
+        "gold_references": 6,
+        "chunks_with_semantic_reference": 6,
+        "chunks_lexical_only": 0,
+        "references_covered": 6
+      },
+      {
+        "symbol": "getNodes",
+        "chunks": 2,
+        "gold_references": 1,
+        "chunks_with_semantic_reference": 1,
+        "chunks_lexical_only": 0,
+        "references_covered": 1
+      },
+      {
+        "symbol": "nodeSourceCached",
+        "chunks": 2,
+        "gold_references": 2,
+        "chunks_with_semantic_reference": 2,
+        "chunks_lexical_only": 0,
+        "references_covered": 2
+      },
+      {
+        "symbol": "nodeSource",
+        "chunks": 3,
+        "gold_references": 1,
+        "chunks_with_semantic_reference": 1,
+        "chunks_lexical_only": 1,
+        "references_covered": 1
+      },
+      {
+        "symbol": "int2alpha",
+        "chunks": 2,
+        "gold_references": 1,
+        "chunks_with_semantic_reference": 1,
+        "chunks_lexical_only": 0,
+        "references_covered": 1
+      },
+      {
+        "symbol": "alpha2int",
+        "chunks": 2,
+        "gold_references": 1,
+        "chunks_with_semantic_reference": 1,
+        "chunks_lexical_only": 0,
+        "references_covered": 1
+      },
+      {
+        "symbol": "makeRangeInt",
+        "chunks": 3,
+        "gold_references": 3,
+        "chunks_with_semantic_reference": 3,
+        "chunks_lexical_only": 0,
+        "references_covered": 3
+      },
+      {
+        "symbol": "makeRangePaddedInt",
+        "chunks": 2,
+        "gold_references": 1,
+        "chunks_with_semantic_reference": 1,
+        "chunks_lexical_only": 0,
+        "references_covered": 1
+      },
+      {
+        "symbol": "makeRangeAlpha",
+        "chunks": 2,
+        "gold_references": 2,
+        "chunks_with_semantic_reference": 1,
+        "chunks_lexical_only": 0,
+        "references_covered": 2
+      },
+      {
+        "symbol": "identity",
+        "chunks": 3,
+        "gold_references": 7,
+        "chunks_with_semantic_reference": 3,
+        "chunks_lexical_only": 0,
+        "references_covered": 7
+      },
+      {
+        "symbol": "normalizeGlob",
+        "chunks": 2,
+        "gold_references": 1,
+        "chunks_with_semantic_reference": 1,
+        "chunks_lexical_only": 0,
+        "references_covered": 1
+      },
+      {
+        "symbol": "compileGlob",
+        "chunks": 4,
+        "gold_references": 3,
+        "chunks_with_semantic_reference": 3,
+        "chunks_lexical_only": 0,
+        "references_covered": 3
+      },
+      {
+        "symbol": "compileGlobs",
+        "chunks": 2,
+        "gold_references": 1,
+        "chunks_with_semantic_reference": 1,
+        "chunks_lexical_only": 0,
+        "references_covered": 1
+      },
+      {
+        "symbol": "matchGlob",
+        "chunks": 2,
+        "gold_references": 2,
+        "chunks_with_semantic_reference": 1,
+        "chunks_lexical_only": 0,
+        "references_covered": 1
+      },
+      {
+        "symbol": "normalizeWindowsPath",
+        "chunks": 10,
+        "gold_references": 11,
+        "chunks_with_semantic_reference": 9,
+        "chunks_lexical_only": 0,
+        "references_covered": 9
+      },
+      {
+        "symbol": "normalize",
+        "chunks": 17,
+        "gold_references": 2,
+        "chunks_with_semantic_reference": 2,
+        "chunks_lexical_only": 14,
+        "references_covered": 2
+      },
+      {
+        "symbol": "join",
+        "chunks": 13,
+        "gold_references": 3,
+        "chunks_with_semantic_reference": 2,
+        "chunks_lexical_only": 10,
+        "references_covered": 2
+      },
+      {
+        "symbol": "cwd",
+        "chunks": 2,
+        "gold_references": 1,
+        "chunks_with_semantic_reference": 1,
+        "chunks_lexical_only": 0,
+        "references_covered": 1
+      },
+      {
+        "symbol": "resolve",
+        "chunks": 7,
+        "gold_references": 3,
+        "chunks_with_semantic_reference": 2,
+        "chunks_lexical_only": 4,
+        "references_covered": 3
+      },
+      {
+        "symbol": "normalizeString",
+        "chunks": 3,
+        "gold_references": 2,
+        "chunks_with_semantic_reference": 2,
+        "chunks_lexical_only": 0,
+        "references_covered": 2
+      },
+      {
+        "symbol": "isAbsolute",
+        "chunks": 4,
+        "gold_references": 5,
+        "chunks_with_semantic_reference": 3,
+        "chunks_lexical_only": 0,
+        "references_covered": 5
+      },
+      {
+        "symbol": "toNamespacedPath",
+        "chunks": 1,
+        "gold_references": 0,
+        "chunks_with_semantic_reference": 0,
+        "chunks_lexical_only": 0,
+        "references_covered": 0
+      },
+      {
+        "symbol": "extname",
+        "chunks": 3,
+        "gold_references": 1,
+        "chunks_with_semantic_reference": 1,
+        "chunks_lexical_only": 1,
+        "references_covered": 1
+      },
+      {
+        "symbol": "relative",
+        "chunks": 2,
+        "gold_references": 0,
+        "chunks_with_semantic_reference": 0,
+        "chunks_lexical_only": 1,
+        "references_covered": 0
+      },
+      {
+        "symbol": "dirname",
+        "chunks": 2,
+        "gold_references": 1,
+        "chunks_with_semantic_reference": 1,
+        "chunks_lexical_only": 0,
+        "references_covered": 1
+      },
+      {
+        "symbol": "format",
+        "chunks": 1,
+        "gold_references": 0,
+        "chunks_with_semantic_reference": 0,
+        "chunks_lexical_only": 0,
+        "references_covered": 0
+      },
+      {
+        "symbol": "basename",
+        "chunks": 3,
+        "gold_references": 2,
+        "chunks_with_semantic_reference": 2,
+        "chunks_lexical_only": 0,
+        "references_covered": 2
+      },
+      {
+        "symbol": "parse",
+        "chunks": 6,
+        "gold_references": 0,
+        "chunks_with_semantic_reference": 0,
+        "chunks_lexical_only": 5,
+        "references_covered": 0
+      },
+      {
+        "symbol": "matchesGlob",
+        "chunks": 1,
+        "gold_references": 0,
+        "chunks_with_semantic_reference": 0,
+        "chunks_lexical_only": 0,
+        "references_covered": 0
+      },
+      {
+        "symbol": "mix",
+        "chunks": 3,
+        "gold_references": 2,
+        "chunks_with_semantic_reference": 2,
+        "chunks_lexical_only": 0,
+        "references_covered": 2
+      },
+      {
+        "symbol": "normalizeAliases",
+        "chunks": 3,
+        "gold_references": 2,
+        "chunks_with_semantic_reference": 2,
+        "chunks_lexical_only": 0,
+        "references_covered": 2
+      },
+      {
+        "symbol": "resolveAlias",
+        "chunks": 2,
+        "gold_references": 0,
+        "chunks_with_semantic_reference": 0,
+        "chunks_lexical_only": 1,
+        "references_covered": 0
+      },
+      {
+        "symbol": "reverseResolveAlias",
+        "chunks": 1,
+        "gold_references": 0,
+        "chunks_with_semantic_reference": 0,
+        "chunks_lexical_only": 0,
+        "references_covered": 0
+      },
+      {
+        "symbol": "filename",
+        "chunks": 1,
+        "gold_references": 0,
+        "chunks_with_semantic_reference": 0,
+        "chunks_lexical_only": 0,
+        "references_covered": 0
+      },
+      {
+        "symbol": "_compareAliases",
+        "chunks": 2,
+        "gold_references": 1,
+        "chunks_with_semantic_reference": 1,
+        "chunks_lexical_only": 0,
+        "references_covered": 1
+      },
+      {
+        "symbol": "hasTrailingSlash",
+        "chunks": 3,
+        "gold_references": 4,
+        "chunks_with_semantic_reference": 2,
+        "chunks_lexical_only": 0,
+        "references_covered": 4
+      }
+    ],
+    "callers_check": {
+      "same_file": {
+        "edges": 42,
+        "found": 39,
+        "resolved_in_metadata": 33
+      },
+      "cross_file": {
+        "edges": 12,
+        "found": 12,
+        "resolved_in_metadata": 0
+      },
+      "gbrain_edges": 81,
+      "gbrain_edges_resolved_flag_true": 0,
+      "gbrain_edges_resolved_in_metadata": 53,
+      "gbrain_edges_without_checker_call": 30
+    },
+    "walks": {
+      "blast": {
+        "symbol": "normalizeWindowsPath",
+        "depth": 3,
+        "envelope": {
+          "result": "ok",
+          "depth_groups": [
+            {
+              "depth": 1,
+              "nodes": [
+                {
+                  "symbol": "dirname",
+                  "chunk_id": 54
+                },
+                {
+                  "symbol": "toNamespacedPath",
+                  "chunk_id": 51
+                },
+                {
+                  "symbol": "reverseResolveAlias",
+                  "chunk_id": 70
+                },
+                {
+                  "symbol": "normalize",
+                  "chunk_id": 45
+                },
+                {
+                  "symbol": "resolveAlias",
+                  "chunk_id": 69
+                },
+                {
+                  "symbol": "resolve",
+                  "chunk_id": 48
+                },
+                {
+                  "symbol": "parse",
+                  "chunk_id": 57
+                },
+                {
+                  "symbol": "format",
+                  "chunk_id": 55
+                },
+                {
+                  "symbol": "basename",
+                  "chunk_id": 56
+                }
+              ],
+              "confidence": 0.7692307692307692
+            },
+            {
+              "depth": 2,
+              "nodes": [
+                {
+                  "symbol": "join",
+                  "chunk_id": 46
+                },
+                {
+                  "symbol": "matchesGlob",
+                  "chunk_id": 58
+                },
+                {
+                  "symbol": "relative",
+                  "chunk_id": 53
+                },
+                {
+                  "symbol": "compileGlob",
+                  "chunk_id": 39
+                },
+                {
+                  "symbol": "extname",
+                  "chunk_id": 52
+                }
+              ],
+              "confidence": 0.625
+            },
+            {
+              "depth": 3,
+              "nodes": [
+                {
+                  "symbol": "compileGlobs",
+                  "chunk_id": 40
+                },
+                {
+                  "symbol": "Class",
+                  "chunk_id": 32
+                },
+                {
+                  "symbol": "matchGlob",
+                  "chunk_id": 41
+                }
+              ],
+              "confidence": 0.5263157894736842
+            }
+          ],
+          "cycles_detected": true,
+          "truncation": "depth_cap",
+          "freshness": "fresh",
+          "status": "ready",
+          "ready": true
+        },
+        "depth1": [
+          "basename",
+          "dirname",
+          "format",
+          "normalize",
+          "parse",
+          "resolve",
+          "resolveAlias",
+          "reverseResolveAlias",
+          "toNamespacedPath"
+        ],
+        "gold_direct_callers": [
+          "basename",
+          "dirname",
+          "format",
+          "normalize",
+          "parse",
+          "resolve",
+          "resolveAlias",
+          "reverseResolveAlias",
+          "toNamespacedPath"
+        ]
+      },
+      "flow": {
+        "entry_point": "resolve",
+        "depth": 4,
+        "envelope": {
+          "result": "ok",
+          "depth_groups": [
+            {
+              "depth": 1,
+              "nodes": [
+                {
+                  "symbol": "test",
+                  "chunk_id": 48
+                },
+                {
+                  "symbol": "map",
+                  "chunk_id": 48
+                },
+                {
+                  "symbol": "normalizeWindowsPath",
+                  "chunk_id": 48
+                },
+                {
+                  "symbol": "isAbsolute",
+                  "chunk_id": 48
+                },
+                {
+                  "symbol": "normalizeString",
+                  "chunk_id": 48
+                },
+                {
+                  "symbol": "cwd",
+                  "chunk_id": 48
+                }
+              ],
+              "confidence": 0.7692307692307692
+            },
+            {
+              "depth": 2,
+              "nodes": [
+                {
+                  "symbol": "slice",
+                  "chunk_id": 42
+                },
+                {
+                  "symbol": "toUpperCase",
+                  "chunk_id": 42
+                },
+                {
+                  "symbol": "replace",
+                  "chunk_id": 42
+                },
+                {
+                  "symbol": "includes",
+                  "chunk_id": 42
+                },
+                {
+                  "symbol": "node:path::slice",
+                  "chunk_id": 49
+                },
+                {
+                  "symbol": "lastIndexOf",
+                  "chunk_id": 49
+                },
+                {
+                  "symbol": "string",
+                  "chunk_id": 49
+                },
+                {
+                  "symbol": "boolean",
+                  "chunk_id": 49
+                }
+              ],
+              "confidence": 0.625
+            }
+          ],
+          "cycles_detected": true,
+          "truncation": "none",
+          "freshness": "fresh",
+          "status": "ready",
+          "ready": true
+        }
+      },
+      "language_gate": {
+        "go": "unsupported_language",
+        "python": "ok",
+        "typescript": "ok",
+        "same_name_go_and_python": "unsupported_language"
+      },
+      "flow_wrong_param": "Missing required parameter: entry_point"
+    },
+    "documented_limits": [
+      {
+        "id": "remote-suspended",
+        "limit": "All six code reads refuse agent (remote) callers on stdio and HTTP at this commit; only the trusted local path is scouted.",
+        "source": "src/core/ops/code-intel.ts (permission_denied wrapper); capability matrix P9"
+      },
+      {
+        "id": "refs-lexical",
+        "limit": "code_refs is a substring match over chunk text, so a name that is a prefix of another name returns both; lexical references are not semantic references.",
+        "source": "src/commands/code-refs.ts header"
+      },
+      {
+        "id": "resolver-within-file",
+        "limit": "The symbol resolver resolves a call only when exactly one chunk in the same file has the qualified name; cross-file calls stay unresolved.",
+        "source": "src/core/chunkers/symbol-resolver.ts header"
+      },
+      {
+        "id": "walk-languages",
+        "limit": "code_blast and code_flow refuse languages other than TypeScript, TSX, JavaScript and Python.",
+        "source": "src/core/code-intel/recursive-walk.ts"
+      },
+      {
+        "id": "no-cli-blast-flow",
+        "limit": "code_blast and code_flow have no named CLI command; they run through `gbrain call` or in process.",
+        "source": "src/cli/command-table.ts"
+      },
+      {
+        "id": "no-quality-gold",
+        "limit": "No broad caller, blast or flow quality metric is reported: the compiler gold here covers one repository and top-level functions only. Deferred until independent call and flow gold (SCIP or equivalent) is committed.",
+        "source": "wave plan amendment 9"
+      }
+    ],
+    "deferred": "Broad caller, blast and flow quality: waits for independent call and flow gold (plan amendment 9).",
+    "harness_error": null
+  },
+  "accounting": {
+    "planned": 106,
+    "attempted": 106,
+    "scored": 106,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null
+}
