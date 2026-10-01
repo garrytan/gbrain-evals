@@ -59,6 +59,8 @@ export const CATEGORY = 'n2-contradiction-surfacing';
 export const JUDGE_MODEL = 'anthropic:claude-haiku-4-5-20251001';
 export const PAID_ESTIMATE_USD = 4;
 export const PROBE_BUDGET_USD = 6;
+/** The paid arm splits the queries into shards run concurrently (one probe run each, probe budget split evenly); per-query pairs and verdicts are unaffected. */
+export const PAID_SHARDS = 4;
 const TOP_K = 5;
 const THROWING_SLICE = 30;
 
@@ -616,10 +618,13 @@ async function runPaid(gut: GbrainUnderTest, world: ReturnType<typeof generateN2
         const seedErrors = await seedPages(sut, ledger.pages.map(p => ({ slug: p.slug, content: renderN2Page(p) })));
         if (seedErrors.length) throw new Error(`paid arm seed errors: ${seedErrors[0]}`);
         log(`paid judge (${JUDGE_MODEL}) over ${ledger.items.length} queries`);
-        const cap = await runProbe(sut, itemQueries(ledger), n2Gold(ledger), async input => {
+        const qs = itemQueries(ledger);
+        const shards = Array.from({ length: PAID_SHARDS }, (_, k) => qs.filter((_q, i) => i % PAID_SHARDS === k));
+        const parts = await Promise.all(shards.map(shard => runProbe(sut, shard, n2Gold(ledger), async input => {
           if (guard.exhausted) throw new Error('budget exhausted');
           return await sut.judge({ ...input, model: JUDGE_MODEL });
-        });
+        }, { budgetUsd: PROBE_BUDGET_USD / PAID_SHARDS })));
+        const cap = { judgments: parts.flatMap(x => x.judgments), capHitMidRun: parts.some(x => x.capHitMidRun) };
         const paidKeys = [...new Set(cap.judgments.map(j => `${j.query_item}::${j.key}`))].sort();
         const amara = await amaraArm(gut, s => input => s.judge({ ...input, model: JUDGE_MODEL }), log).catch(e => ({ error: e instanceof Error ? e.message : String(e) }));
         return {
@@ -701,7 +706,7 @@ async function main(): Promise<void> {
       caller: 'operation handlers with OperationContext { remote: false, sourceId: default } for writes; runContradictionProbe in-process',
       search_path: `runContradictionProbe default hybridSearch (wrapped only to record results), top-K ${TOP_K}, no embedding gateway (keyword only)`,
       probe: { top_k: TOP_K, sampling: 'deterministic', no_cache: true, yes_override: true, budget_usd: PROBE_BUDGET_USD },
-      judges: { hermetic: 'oracle-recording judge (gold verdicts from the ledger) and a throwing judge on the first 30 queries', paid: p ? `gbrain judgeContradiction, ${JUDGE_MODEL}, prompt version 2` : 'not run' },
+      judges: { hermetic: 'oracle-recording judge (gold verdicts from the ledger) and a throwing judge on the first 30 queries', paid: p ? `gbrain judgeContradiction, ${JUDGE_MODEL}, prompt version 2; queries in ${PAID_SHARDS} concurrent probe runs, probe budget $${PROBE_BUDGET_USD / PAID_SHARDS} each` : 'not run' },
       seed, generator_version: N2_GENERATOR_VERSION, ledger_sha256: world.fingerprint,
       entrypoints: ENTRYPOINTS,
       gbrain_overlay: overlaySummary(gut),
