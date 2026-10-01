@@ -1,0 +1,1324 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "hermetic: provider keys stripped; no model call"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "hermetic: provider keys stripped; no model call"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "n8-proactive-recall",
+  "run_status": "completed",
+  "verdict": "fail",
+  "n_total": 1224,
+  "n_scored": 1224,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "gbrain_version": "0.60.26.0",
+  "gbrain_pin": "github:garrytan/gbrain#3a284aea26889b77c633aebb4149c3016d834ee6",
+  "execution": {
+    "source_tree": {
+      "sha256": "2cce7ce79031f8645e90117fe79668305d02aed32b7cf5dd57c53242df87602e",
+      "files": 2399,
+      "git_head": "655202a05c01b4b263eb161cdb46f0c6fe89afa0",
+      "dirty": true
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#3a284aea26889b77c633aebb4149c3016d834ee6",
+      "declared_sha": "3a284aea26889b77c633aebb4149c3016d834ee6",
+      "version": "0.60.26.0",
+      "package_sha256": "b103036cefcba7b163f42113617edb5fd9d731ac587e0a291d042bdef8eeca17",
+      "loaded_git_head": "3a284aea26889b77c633aebb4149c3016d834ee6"
+    }
+  },
+  "resolved_config": {
+    "engine": "pglite-in-memory",
+    "decide": "off (no key, fresh GBRAIN_HOME)",
+    "seed": 8,
+    "generator_version": "n8-proactive-recall-gen-v1",
+    "ledger_sha256": "bf21d39c97a8cd99f68fde487c0fdfbf51e68e4202146f60dbe197361adad9ef",
+    "window_turns": 4,
+    "caller": "volunteer_context with OperationContext { remote: false | true, sourceId: default }; assembleTurnContext in process (turn mode, sourceId default, priorContextText = earlier delivered blocks in the session)",
+    "entry_points": [
+      "operations: volunteer_context (remote false and true), search (baseline), get_page (presence)",
+      "src/core/context/turn-context.ts assembleTurnContext (turn mode; the builder behind IPC turn_context)",
+      "src/core/import-file.ts importFromContent; engine.softDeletePage"
+    ],
+    "token_estimate": "ceil(characters / 4) of the delivered payload (JSON pages for volunteer_context, the rendered block for turn_context)",
+    "gbrain_overlay": {
+      "requested": "/workspace/gbrain@3a284aea26889b77c633aebb4149c3016d834ee6",
+      "ref": "3a284aea26889b77c633aebb4149c3016d834ee6",
+      "commit": "3a284aea26889b77c633aebb4149c3016d834ee6",
+      "tree": "ce2f2ecc26e083bf719aa336fd752fc065c9b878",
+      "version": "0.60.26.0",
+      "checkout_dirty": false,
+      "verified": {
+        "copy_tree": "ce2f2ecc26e083bf719aa336fd752fc065c9b878",
+        "tree_matches": true,
+        "symlinks_under_src": 0,
+        "dir_is_realpath": true,
+        "cli_version": "0.60.26.0",
+        "cli_version_matches": true
+      },
+      "copied_not_symlinked": true
+    },
+    "report_only": "until associative-recall-v1 labels pass independent human review (amendment 8, CEO requirement)"
+  },
+  "hashes": {
+    "ledger_sha256": "bf21d39c97a8cd99f68fde487c0fdfbf51e68e4202146f60dbe197361adad9ef",
+    "outputs_sha256": "dbad189bb2f9d29232ed68f35c9197009a7077c870b06d98b2eefc51918b362e"
+  },
+  "started_at": "2026-10-01T19:38:06.549Z",
+  "finished_at": "2026-10-01T19:38:39.868Z",
+  "data": {
+    "contracts": {
+      "private_pages_delivered_remote": 4,
+      "private_pages_delivered_turn_context": 4,
+      "withdrawn_pages_delivered": 0,
+      "redelivered_with_prior_context": 0
+    },
+    "targets": {
+      "pass": false,
+      "failed": [
+        "private=4"
+      ]
+    },
+    "presence": {
+      "live_pages": 34,
+      "readable_pages": 34,
+      "direct_alias_controls": 12,
+      "direct_alias_controls_fired": 12
+    },
+    "quality": {
+      "mechanics": {
+        "recall_default": 1,
+        "false_alarm_rate_default": 0,
+        "trigger_turns": 60,
+        "hits": 54,
+        "recall": 0.9,
+        "recall_by_kind": {
+          "trigger_title": {
+            "n": 24,
+            "hits": 24
+          },
+          "trigger_alias": {
+            "n": 18,
+            "hits": 18
+          },
+          "trigger_surname": {
+            "n": 12,
+            "hits": 12
+          },
+          "trigger_slug_suffix": {
+            "n": 6,
+            "hits": 0
+          }
+        },
+        "recall_alias_title": 1,
+        "negative_turns": 80,
+        "negative_turns_with_false_alarm": 6,
+        "false_alarm_rate": 0.075,
+        "collision_turns": 12,
+        "collision_false_alarm_rate": 0.5,
+        "innocuous_and_no_mention_false_alarm_rate": 0,
+        "false_alarm_by_kind": {
+          "no_mention": {
+            "n": 52,
+            "false_alarms": 0
+          },
+          "innocuous": {
+            "n": 16,
+            "false_alarms": 0
+          },
+          "collision_lower": {
+            "n": 6,
+            "false_alarms": 6
+          },
+          "collision_initial": {
+            "n": 6,
+            "false_alarms": 0
+          }
+        },
+        "deliveries": 64,
+        "useful_deliveries": 58,
+        "useful_precision": 0.90625,
+        "redundant_deliveries": 0,
+        "redundant_per_session": 0,
+        "private_deliveries": 4,
+        "withdrawn_deliveries": 0,
+        "tokens_per_turn_mean": 24.634408602150536,
+        "tokens_per_turn_p95": 73,
+        "tokens_per_negative_turn_mean": 5.5,
+        "latency_ms_p50": 0.5874509999994189,
+        "latency_ms_p95": 1.2706719999996494,
+        "errors": 0
+      },
+      "modes": {
+        "volunteer_local_prior": {
+          "trigger_turns": 60,
+          "hits": 54,
+          "recall": 0.9,
+          "recall_by_kind": {
+            "trigger_title": {
+              "n": 24,
+              "hits": 24
+            },
+            "trigger_alias": {
+              "n": 18,
+              "hits": 18
+            },
+            "trigger_surname": {
+              "n": 12,
+              "hits": 12
+            },
+            "trigger_slug_suffix": {
+              "n": 6,
+              "hits": 0
+            }
+          },
+          "recall_alias_title": 1,
+          "negative_turns": 80,
+          "negative_turns_with_false_alarm": 6,
+          "false_alarm_rate": 0.075,
+          "collision_turns": 12,
+          "collision_false_alarm_rate": 0.5,
+          "innocuous_and_no_mention_false_alarm_rate": 0,
+          "false_alarm_by_kind": {
+            "no_mention": {
+              "n": 52,
+              "false_alarms": 0
+            },
+            "innocuous": {
+              "n": 16,
+              "false_alarms": 0
+            },
+            "collision_lower": {
+              "n": 6,
+              "false_alarms": 6
+            },
+            "collision_initial": {
+              "n": 6,
+              "false_alarms": 0
+            }
+          },
+          "deliveries": 64,
+          "useful_deliveries": 58,
+          "useful_precision": 0.90625,
+          "redundant_deliveries": 0,
+          "redundant_per_session": 0,
+          "private_deliveries": 4,
+          "withdrawn_deliveries": 0,
+          "tokens_per_turn_mean": 24.634408602150536,
+          "tokens_per_turn_p95": 73,
+          "tokens_per_negative_turn_mean": 5.5,
+          "latency_ms_p50": 0.5874509999994189,
+          "latency_ms_p95": 1.2706719999996494,
+          "errors": 0
+        },
+        "volunteer_local_no_prior": {
+          "trigger_turns": 60,
+          "hits": 54,
+          "recall": 0.9,
+          "recall_by_kind": {
+            "trigger_title": {
+              "n": 24,
+              "hits": 24
+            },
+            "trigger_alias": {
+              "n": 18,
+              "hits": 18
+            },
+            "trigger_surname": {
+              "n": 12,
+              "hits": 12
+            },
+            "trigger_slug_suffix": {
+              "n": 6,
+              "hits": 0
+            }
+          },
+          "recall_alias_title": 1,
+          "negative_turns": 80,
+          "negative_turns_with_false_alarm": 18,
+          "false_alarm_rate": 0.225,
+          "collision_turns": 12,
+          "collision_false_alarm_rate": 1,
+          "innocuous_and_no_mention_false_alarm_rate": 0.08823529411764706,
+          "false_alarm_by_kind": {
+            "no_mention": {
+              "n": 52,
+              "false_alarms": 6
+            },
+            "innocuous": {
+              "n": 16,
+              "false_alarms": 0
+            },
+            "collision_lower": {
+              "n": 6,
+              "false_alarms": 6
+            },
+            "collision_initial": {
+              "n": 6,
+              "false_alarms": 6
+            }
+          },
+          "deliveries": 161,
+          "useful_deliveries": 58,
+          "useful_precision": 0.36024844720496896,
+          "redundant_deliveries": 97,
+          "redundant_per_session": 1.8653846153846154,
+          "private_deliveries": 12,
+          "withdrawn_deliveries": 0,
+          "tokens_per_turn_mean": 58.236559139784944,
+          "tokens_per_turn_p95": 132,
+          "tokens_per_negative_turn_mean": 38.4125,
+          "latency_ms_p50": 0.5890809999991689,
+          "latency_ms_p95": 0.8723110000000815,
+          "errors": 0
+        },
+        "volunteer_remote_prior": {
+          "trigger_turns": 60,
+          "hits": 54,
+          "recall": 0.9,
+          "recall_by_kind": {
+            "trigger_title": {
+              "n": 24,
+              "hits": 24
+            },
+            "trigger_alias": {
+              "n": 18,
+              "hits": 18
+            },
+            "trigger_surname": {
+              "n": 12,
+              "hits": 12
+            },
+            "trigger_slug_suffix": {
+              "n": 6,
+              "hits": 0
+            }
+          },
+          "recall_alias_title": 1,
+          "negative_turns": 80,
+          "negative_turns_with_false_alarm": 6,
+          "false_alarm_rate": 0.075,
+          "collision_turns": 12,
+          "collision_false_alarm_rate": 0.5,
+          "innocuous_and_no_mention_false_alarm_rate": 0,
+          "false_alarm_by_kind": {
+            "no_mention": {
+              "n": 52,
+              "false_alarms": 0
+            },
+            "innocuous": {
+              "n": 16,
+              "false_alarms": 0
+            },
+            "collision_lower": {
+              "n": 6,
+              "false_alarms": 6
+            },
+            "collision_initial": {
+              "n": 6,
+              "false_alarms": 0
+            }
+          },
+          "deliveries": 64,
+          "useful_deliveries": 58,
+          "useful_precision": 0.90625,
+          "redundant_deliveries": 0,
+          "redundant_per_session": 0,
+          "private_deliveries": 4,
+          "withdrawn_deliveries": 0,
+          "tokens_per_turn_mean": 24.634408602150536,
+          "tokens_per_turn_p95": 73,
+          "tokens_per_negative_turn_mean": 5.5,
+          "latency_ms_p50": 0.5057710000000952,
+          "latency_ms_p95": 0.8278419999996913,
+          "errors": 0
+        },
+        "turn_context_local": {
+          "trigger_turns": 60,
+          "hits": 60,
+          "recall": 1,
+          "recall_by_kind": {
+            "trigger_title": {
+              "n": 24,
+              "hits": 24
+            },
+            "trigger_alias": {
+              "n": 18,
+              "hits": 18
+            },
+            "trigger_surname": {
+              "n": 12,
+              "hits": 12
+            },
+            "trigger_slug_suffix": {
+              "n": 6,
+              "hits": 6
+            }
+          },
+          "recall_alias_title": 1,
+          "negative_turns": 80,
+          "negative_turns_with_false_alarm": 6,
+          "false_alarm_rate": 0.075,
+          "collision_turns": 12,
+          "collision_false_alarm_rate": 0.5,
+          "innocuous_and_no_mention_false_alarm_rate": 0,
+          "false_alarm_by_kind": {
+            "no_mention": {
+              "n": 52,
+              "false_alarms": 0
+            },
+            "innocuous": {
+              "n": 16,
+              "false_alarms": 0
+            },
+            "collision_lower": {
+              "n": 6,
+              "false_alarms": 6
+            },
+            "collision_initial": {
+              "n": 6,
+              "false_alarms": 0
+            }
+          },
+          "deliveries": 70,
+          "useful_deliveries": 64,
+          "useful_precision": 0.9142857142857143,
+          "redundant_deliveries": 0,
+          "redundant_per_session": 0,
+          "private_deliveries": 4,
+          "withdrawn_deliveries": 0,
+          "tokens_per_turn_mean": 23.419354838709676,
+          "tokens_per_turn_p95": 64,
+          "tokens_per_negative_turn_mean": 4.825,
+          "latency_ms_p50": 0.9097630000005665,
+          "latency_ms_p95": 1.96395400000074,
+          "errors": 0
+        },
+        "baseline_never": {
+          "trigger_turns": 60,
+          "hits": 0,
+          "recall": 0,
+          "recall_by_kind": {
+            "trigger_title": {
+              "n": 24,
+              "hits": 0
+            },
+            "trigger_alias": {
+              "n": 18,
+              "hits": 0
+            },
+            "trigger_surname": {
+              "n": 12,
+              "hits": 0
+            },
+            "trigger_slug_suffix": {
+              "n": 6,
+              "hits": 0
+            }
+          },
+          "recall_alias_title": 0,
+          "negative_turns": 80,
+          "negative_turns_with_false_alarm": 0,
+          "false_alarm_rate": 0,
+          "collision_turns": 12,
+          "collision_false_alarm_rate": 0,
+          "innocuous_and_no_mention_false_alarm_rate": 0,
+          "false_alarm_by_kind": {
+            "no_mention": {
+              "n": 52,
+              "false_alarms": 0
+            },
+            "innocuous": {
+              "n": 16,
+              "false_alarms": 0
+            },
+            "collision_lower": {
+              "n": 6,
+              "false_alarms": 0
+            },
+            "collision_initial": {
+              "n": 6,
+              "false_alarms": 0
+            }
+          },
+          "deliveries": 0,
+          "useful_deliveries": 0,
+          "useful_precision": null,
+          "redundant_deliveries": 0,
+          "redundant_per_session": 0,
+          "private_deliveries": 0,
+          "withdrawn_deliveries": 0,
+          "tokens_per_turn_mean": 0,
+          "tokens_per_turn_p95": 0,
+          "tokens_per_negative_turn_mean": 0,
+          "latency_ms_p50": 0.0004800000006071059,
+          "latency_ms_p95": 0.0006400000002031447,
+          "errors": 0
+        },
+        "baseline_always_3": {
+          "trigger_turns": 60,
+          "hits": 6,
+          "recall": 0.1,
+          "recall_by_kind": {
+            "trigger_title": {
+              "n": 24,
+              "hits": 1
+            },
+            "trigger_alias": {
+              "n": 18,
+              "hits": 1
+            },
+            "trigger_surname": {
+              "n": 12,
+              "hits": 2
+            },
+            "trigger_slug_suffix": {
+              "n": 6,
+              "hits": 2
+            }
+          },
+          "recall_alias_title": 0.047619047619047616,
+          "negative_turns": 80,
+          "negative_turns_with_false_alarm": 80,
+          "false_alarm_rate": 1,
+          "collision_turns": 12,
+          "collision_false_alarm_rate": 1,
+          "innocuous_and_no_mention_false_alarm_rate": 1,
+          "false_alarm_by_kind": {
+            "no_mention": {
+              "n": 52,
+              "false_alarms": 52
+            },
+            "innocuous": {
+              "n": 16,
+              "false_alarms": 16
+            },
+            "collision_lower": {
+              "n": 6,
+              "false_alarms": 6
+            },
+            "collision_initial": {
+              "n": 6,
+              "false_alarms": 6
+            }
+          },
+          "deliveries": 558,
+          "useful_deliveries": 11,
+          "useful_precision": 0.01971326164874552,
+          "redundant_deliveries": 73,
+          "redundant_per_session": 1.4038461538461537,
+          "private_deliveries": 0,
+          "withdrawn_deliveries": 0,
+          "tokens_per_turn_mean": 18.370967741935484,
+          "tokens_per_turn_p95": 20,
+          "tokens_per_negative_turn_mean": 18.4,
+          "latency_ms_p50": 0.0019199999996999395,
+          "latency_ms_p95": 0.002650000000357977,
+          "errors": 0
+        },
+        "baseline_keyword_search_top3": {
+          "trigger_turns": 60,
+          "hits": 49,
+          "recall": 0.8166666666666667,
+          "recall_by_kind": {
+            "trigger_title": {
+              "n": 24,
+              "hits": 24
+            },
+            "trigger_alias": {
+              "n": 18,
+              "hits": 7
+            },
+            "trigger_surname": {
+              "n": 12,
+              "hits": 12
+            },
+            "trigger_slug_suffix": {
+              "n": 6,
+              "hits": 6
+            }
+          },
+          "recall_alias_title": 0.7380952380952381,
+          "negative_turns": 80,
+          "negative_turns_with_false_alarm": 35,
+          "false_alarm_rate": 0.4375,
+          "collision_turns": 12,
+          "collision_false_alarm_rate": 1,
+          "innocuous_and_no_mention_false_alarm_rate": 0.3382352941176471,
+          "false_alarm_by_kind": {
+            "no_mention": {
+              "n": 52,
+              "false_alarms": 15
+            },
+            "innocuous": {
+              "n": 16,
+              "false_alarms": 8
+            },
+            "collision_lower": {
+              "n": 6,
+              "false_alarms": 6
+            },
+            "collision_initial": {
+              "n": 6,
+              "false_alarms": 6
+            }
+          },
+          "deliveries": 238,
+          "useful_deliveries": 52,
+          "useful_precision": 0.2184873949579832,
+          "redundant_deliveries": 26,
+          "redundant_per_session": 0.5,
+          "private_deliveries": 22,
+          "withdrawn_deliveries": 0,
+          "tokens_per_turn_mean": 184.5752688172043,
+          "tokens_per_turn_p95": 466,
+          "tokens_per_negative_turn_mean": 142.1125,
+          "latency_ms_p50": 4.495018999999957,
+          "latency_ms_p95": 11.244822999999997,
+          "errors": 0
+        }
+      },
+      "sweep": {
+        "points": [
+          {
+            "min_confidence": 0.5,
+            "recall": 1,
+            "recall_alias_title": 1,
+            "false_alarm_rate": 0.075,
+            "innocuous_and_no_mention_false_alarm_rate": 0,
+            "collision_false_alarm_rate": 0.5,
+            "useful_precision": 0.9142857142857143,
+            "recall_by_kind": {
+              "trigger_title": {
+                "n": 24,
+                "hits": 24
+              },
+              "trigger_alias": {
+                "n": 18,
+                "hits": 18
+              },
+              "trigger_surname": {
+                "n": 12,
+                "hits": 12
+              },
+              "trigger_slug_suffix": {
+                "n": 6,
+                "hits": 6
+              }
+            }
+          },
+          {
+            "min_confidence": 0.55,
+            "recall": 1,
+            "recall_alias_title": 1,
+            "false_alarm_rate": 0.075,
+            "innocuous_and_no_mention_false_alarm_rate": 0,
+            "collision_false_alarm_rate": 0.5,
+            "useful_precision": 0.9142857142857143,
+            "recall_by_kind": {
+              "trigger_title": {
+                "n": 24,
+                "hits": 24
+              },
+              "trigger_alias": {
+                "n": 18,
+                "hits": 18
+              },
+              "trigger_surname": {
+                "n": 12,
+                "hits": 12
+              },
+              "trigger_slug_suffix": {
+                "n": 6,
+                "hits": 6
+              }
+            }
+          },
+          {
+            "min_confidence": 0.6,
+            "recall": 1,
+            "recall_alias_title": 1,
+            "false_alarm_rate": 0.075,
+            "innocuous_and_no_mention_false_alarm_rate": 0,
+            "collision_false_alarm_rate": 0.5,
+            "useful_precision": 0.9142857142857143,
+            "recall_by_kind": {
+              "trigger_title": {
+                "n": 24,
+                "hits": 24
+              },
+              "trigger_alias": {
+                "n": 18,
+                "hits": 18
+              },
+              "trigger_surname": {
+                "n": 12,
+                "hits": 12
+              },
+              "trigger_slug_suffix": {
+                "n": 6,
+                "hits": 6
+              }
+            }
+          },
+          {
+            "min_confidence": 0.65,
+            "recall": 1,
+            "recall_alias_title": 1,
+            "false_alarm_rate": 0.075,
+            "innocuous_and_no_mention_false_alarm_rate": 0,
+            "collision_false_alarm_rate": 0.5,
+            "useful_precision": 0.9142857142857143,
+            "recall_by_kind": {
+              "trigger_title": {
+                "n": 24,
+                "hits": 24
+              },
+              "trigger_alias": {
+                "n": 18,
+                "hits": 18
+              },
+              "trigger_surname": {
+                "n": 12,
+                "hits": 12
+              },
+              "trigger_slug_suffix": {
+                "n": 6,
+                "hits": 6
+              }
+            }
+          },
+          {
+            "min_confidence": 0.7,
+            "recall": 0.9,
+            "recall_alias_title": 1,
+            "false_alarm_rate": 0.075,
+            "innocuous_and_no_mention_false_alarm_rate": 0,
+            "collision_false_alarm_rate": 0.5,
+            "useful_precision": 0.90625,
+            "recall_by_kind": {
+              "trigger_title": {
+                "n": 24,
+                "hits": 24
+              },
+              "trigger_alias": {
+                "n": 18,
+                "hits": 18
+              },
+              "trigger_surname": {
+                "n": 12,
+                "hits": 12
+              },
+              "trigger_slug_suffix": {
+                "n": 6,
+                "hits": 0
+              }
+            }
+          },
+          {
+            "min_confidence": 0.75,
+            "recall": 0.9,
+            "recall_alias_title": 1,
+            "false_alarm_rate": 0.075,
+            "innocuous_and_no_mention_false_alarm_rate": 0,
+            "collision_false_alarm_rate": 0.5,
+            "useful_precision": 0.90625,
+            "recall_by_kind": {
+              "trigger_title": {
+                "n": 24,
+                "hits": 24
+              },
+              "trigger_alias": {
+                "n": 18,
+                "hits": 18
+              },
+              "trigger_surname": {
+                "n": 12,
+                "hits": 12
+              },
+              "trigger_slug_suffix": {
+                "n": 6,
+                "hits": 0
+              }
+            }
+          },
+          {
+            "min_confidence": 0.8,
+            "recall": 0.7,
+            "recall_alias_title": 1,
+            "false_alarm_rate": 0.075,
+            "innocuous_and_no_mention_false_alarm_rate": 0,
+            "collision_false_alarm_rate": 0.5,
+            "useful_precision": 0.8846153846153846,
+            "recall_by_kind": {
+              "trigger_title": {
+                "n": 24,
+                "hits": 24
+              },
+              "trigger_alias": {
+                "n": 18,
+                "hits": 18
+              },
+              "trigger_surname": {
+                "n": 12,
+                "hits": 0
+              },
+              "trigger_slug_suffix": {
+                "n": 6,
+                "hits": 0
+              }
+            }
+          },
+          {
+            "min_confidence": 0.85,
+            "recall": 0.7,
+            "recall_alias_title": 1,
+            "false_alarm_rate": 0.075,
+            "innocuous_and_no_mention_false_alarm_rate": 0,
+            "collision_false_alarm_rate": 0.5,
+            "useful_precision": 0.8846153846153846,
+            "recall_by_kind": {
+              "trigger_title": {
+                "n": 24,
+                "hits": 24
+              },
+              "trigger_alias": {
+                "n": 18,
+                "hits": 18
+              },
+              "trigger_surname": {
+                "n": 12,
+                "hits": 0
+              },
+              "trigger_slug_suffix": {
+                "n": 6,
+                "hits": 0
+              }
+            }
+          },
+          {
+            "min_confidence": 0.9,
+            "recall": 0.3,
+            "recall_alias_title": 0.42857142857142855,
+            "false_alarm_rate": 0.075,
+            "innocuous_and_no_mention_false_alarm_rate": 0,
+            "collision_false_alarm_rate": 0.5,
+            "useful_precision": 0.8285714285714286,
+            "recall_by_kind": {
+              "trigger_title": {
+                "n": 24,
+                "hits": 0
+              },
+              "trigger_alias": {
+                "n": 18,
+                "hits": 18
+              },
+              "trigger_surname": {
+                "n": 12,
+                "hits": 0
+              },
+              "trigger_slug_suffix": {
+                "n": 6,
+                "hits": 0
+              }
+            }
+          },
+          {
+            "min_confidence": 0.95,
+            "recall": 0.3,
+            "recall_alias_title": 0.42857142857142855,
+            "false_alarm_rate": 0.075,
+            "innocuous_and_no_mention_false_alarm_rate": 0,
+            "collision_false_alarm_rate": 0.5,
+            "useful_precision": 0.8285714285714286,
+            "recall_by_kind": {
+              "trigger_title": {
+                "n": 24,
+                "hits": 0
+              },
+              "trigger_alias": {
+                "n": 18,
+                "hits": 18
+              },
+              "trigger_surname": {
+                "n": 12,
+                "hits": 0
+              },
+              "trigger_slug_suffix": {
+                "n": 6,
+                "hits": 0
+              }
+            }
+          }
+        ],
+        "fa_budget": 0.05,
+        "recall_at_fa_budget_all_negatives": null,
+        "recall_at_fa_budget_innocuous_and_no_mention": 1,
+        "pr_auc": 0.8613221153846154
+      },
+      "tokens_per_turn": {
+        "volunteer_local_prior": {
+          "mean": 24.634408602150536,
+          "p95": 73,
+          "negative_turn_mean": 5.5
+        },
+        "volunteer_local_no_prior": {
+          "mean": 58.236559139784944,
+          "p95": 132,
+          "negative_turn_mean": 38.4125
+        },
+        "volunteer_remote_prior": {
+          "mean": 24.634408602150536,
+          "p95": 73,
+          "negative_turn_mean": 5.5
+        },
+        "turn_context_local": {
+          "mean": 23.419354838709676,
+          "p95": 64,
+          "negative_turn_mean": 4.825
+        },
+        "baseline_never": {
+          "mean": 0,
+          "p95": 0,
+          "negative_turn_mean": 0
+        },
+        "baseline_always_3": {
+          "mean": 18.370967741935484,
+          "p95": 20,
+          "negative_turn_mean": 18.4
+        },
+        "baseline_keyword_search_top3": {
+          "mean": 184.5752688172043,
+          "p95": 466,
+          "negative_turn_mean": 142.1125
+        }
+      },
+      "latency_ms": {
+        "volunteer_local_prior": {
+          "p50": 0.5874509999994189,
+          "p95": 1.2706719999996494
+        },
+        "volunteer_local_no_prior": {
+          "p50": 0.5890809999991689,
+          "p95": 0.8723110000000815
+        },
+        "volunteer_remote_prior": {
+          "p50": 0.5057710000000952,
+          "p95": 0.8278419999996913
+        },
+        "turn_context_local": {
+          "p50": 0.9097630000005665,
+          "p95": 1.96395400000074
+        },
+        "baseline_never": {
+          "p50": 0.0004800000006071059,
+          "p95": 0.0006400000002031447
+        },
+        "baseline_always_3": {
+          "p50": 0.0019199999996999395,
+          "p95": 0.002650000000357977
+        },
+        "baseline_keyword_search_top3": {
+          "p50": 4.495018999999957,
+          "p95": 11.244822999999997
+        }
+      },
+      "session": {
+        "volunteer_local_prior": {
+          "redundant": 0,
+          "per_session": 0
+        },
+        "volunteer_local_no_prior": {
+          "redundant": 97,
+          "per_session": 1.8653846153846154
+        },
+        "volunteer_remote_prior": {
+          "redundant": 0,
+          "per_session": 0
+        },
+        "turn_context_local": {
+          "redundant": 0,
+          "per_session": 0
+        },
+        "baseline_never": {
+          "redundant": 0,
+          "per_session": 0
+        },
+        "baseline_always_3": {
+          "redundant": 73,
+          "per_session": 1.4038461538461537
+        },
+        "baseline_keyword_search_top3": {
+          "redundant": 26,
+          "per_session": 0.5
+        }
+      },
+      "associative": {
+        "volunteer_context": {
+          "probes": 480,
+          "probes_with_any_delivery": 0,
+          "errors": 0,
+          "indirect": {
+            "n": 240,
+            "any": 0,
+            "all": 0,
+            "any_hit_recall": 0,
+            "all_hit_recall": 0
+          },
+          "direct": {
+            "n": 120,
+            "any": 0,
+            "all": 0,
+            "any_hit_recall": 0,
+            "all_hit_recall": 0
+          },
+          "negatives": 120,
+          "strict_false_alarm_rate": 0,
+          "adjudicated_false_alarm_rate": 0,
+          "strict_false_alarms": 0,
+          "adjudicated_false_alarms": 0,
+          "private_deliveries": 0,
+          "withdrawn_deliveries": 0
+        },
+        "baseline_keyword_search_top3": {
+          "probes": 480,
+          "probes_with_any_delivery": 480,
+          "errors": 0,
+          "indirect": {
+            "n": 240,
+            "any": 190,
+            "all": 189,
+            "any_hit_recall": 0.7916666666666666,
+            "all_hit_recall": 0.7875
+          },
+          "direct": {
+            "n": 120,
+            "any": 111,
+            "all": 111,
+            "any_hit_recall": 0.925,
+            "all_hit_recall": 0.925
+          },
+          "negatives": 120,
+          "strict_false_alarm_rate": 1,
+          "adjudicated_false_alarm_rate": 1,
+          "strict_false_alarms": 120,
+          "adjudicated_false_alarms": 120,
+          "private_deliveries": 14,
+          "withdrawn_deliveries": 0
+        },
+        "adjudication": "eval/data/n8-proactive-recall/associative-negatives-adjudication-v1.json",
+        "corpus_hashes": {
+          "sources.json": "c99a5419b87aa92d095d0d22297237937fc66b064207d64ceff6eb4c1053be2a",
+          "probes.json": "d0493d9724ca3075c6137d61c82d0055e9bc79ac2f401c18ddbe53af973e45ee",
+          "qrels.json": "ab04627e4cdecea22a55f6205ef29ffd3f3b99b1335b720f78839c9bb66cb08e",
+          "splits.json": "aa8a5d215e5996f544b505db5c7151f50080a215dc1e5c4fdba10808c7660b30",
+          "counterfactuals.json": "686994c5df67c28dfb7e7f608279ddb3f455a897dd84460c3955e2ce77cc3de0"
+        },
+        "label_status": "pending-independent-relevance-review (corpus manifest); three disputed negatives agent-adjudicated"
+      },
+      "baselines": {
+        "never": {
+          "trigger_turns": 60,
+          "hits": 0,
+          "recall": 0,
+          "recall_by_kind": {
+            "trigger_title": {
+              "n": 24,
+              "hits": 0
+            },
+            "trigger_alias": {
+              "n": 18,
+              "hits": 0
+            },
+            "trigger_surname": {
+              "n": 12,
+              "hits": 0
+            },
+            "trigger_slug_suffix": {
+              "n": 6,
+              "hits": 0
+            }
+          },
+          "recall_alias_title": 0,
+          "negative_turns": 80,
+          "negative_turns_with_false_alarm": 0,
+          "false_alarm_rate": 0,
+          "collision_turns": 12,
+          "collision_false_alarm_rate": 0,
+          "innocuous_and_no_mention_false_alarm_rate": 0,
+          "false_alarm_by_kind": {
+            "no_mention": {
+              "n": 52,
+              "false_alarms": 0
+            },
+            "innocuous": {
+              "n": 16,
+              "false_alarms": 0
+            },
+            "collision_lower": {
+              "n": 6,
+              "false_alarms": 0
+            },
+            "collision_initial": {
+              "n": 6,
+              "false_alarms": 0
+            }
+          },
+          "deliveries": 0,
+          "useful_deliveries": 0,
+          "useful_precision": null,
+          "redundant_deliveries": 0,
+          "redundant_per_session": 0,
+          "private_deliveries": 0,
+          "withdrawn_deliveries": 0,
+          "tokens_per_turn_mean": 0,
+          "tokens_per_turn_p95": 0,
+          "tokens_per_negative_turn_mean": 0,
+          "latency_ms_p50": 0.0004800000006071059,
+          "latency_ms_p95": 0.0006400000002031447,
+          "errors": 0
+        },
+        "always_3": {
+          "trigger_turns": 60,
+          "hits": 6,
+          "recall": 0.1,
+          "recall_by_kind": {
+            "trigger_title": {
+              "n": 24,
+              "hits": 1
+            },
+            "trigger_alias": {
+              "n": 18,
+              "hits": 1
+            },
+            "trigger_surname": {
+              "n": 12,
+              "hits": 2
+            },
+            "trigger_slug_suffix": {
+              "n": 6,
+              "hits": 2
+            }
+          },
+          "recall_alias_title": 0.047619047619047616,
+          "negative_turns": 80,
+          "negative_turns_with_false_alarm": 80,
+          "false_alarm_rate": 1,
+          "collision_turns": 12,
+          "collision_false_alarm_rate": 1,
+          "innocuous_and_no_mention_false_alarm_rate": 1,
+          "false_alarm_by_kind": {
+            "no_mention": {
+              "n": 52,
+              "false_alarms": 52
+            },
+            "innocuous": {
+              "n": 16,
+              "false_alarms": 16
+            },
+            "collision_lower": {
+              "n": 6,
+              "false_alarms": 6
+            },
+            "collision_initial": {
+              "n": 6,
+              "false_alarms": 6
+            }
+          },
+          "deliveries": 558,
+          "useful_deliveries": 11,
+          "useful_precision": 0.01971326164874552,
+          "redundant_deliveries": 73,
+          "redundant_per_session": 1.4038461538461537,
+          "private_deliveries": 0,
+          "withdrawn_deliveries": 0,
+          "tokens_per_turn_mean": 18.370967741935484,
+          "tokens_per_turn_p95": 20,
+          "tokens_per_negative_turn_mean": 18.4,
+          "latency_ms_p50": 0.0019199999996999395,
+          "latency_ms_p95": 0.002650000000357977,
+          "errors": 0
+        },
+        "keyword_search_top3": {
+          "trigger_turns": 60,
+          "hits": 49,
+          "recall": 0.8166666666666667,
+          "recall_by_kind": {
+            "trigger_title": {
+              "n": 24,
+              "hits": 24
+            },
+            "trigger_alias": {
+              "n": 18,
+              "hits": 7
+            },
+            "trigger_surname": {
+              "n": 12,
+              "hits": 12
+            },
+            "trigger_slug_suffix": {
+              "n": 6,
+              "hits": 6
+            }
+          },
+          "recall_alias_title": 0.7380952380952381,
+          "negative_turns": 80,
+          "negative_turns_with_false_alarm": 35,
+          "false_alarm_rate": 0.4375,
+          "collision_turns": 12,
+          "collision_false_alarm_rate": 1,
+          "innocuous_and_no_mention_false_alarm_rate": 0.3382352941176471,
+          "false_alarm_by_kind": {
+            "no_mention": {
+              "n": 52,
+              "false_alarms": 15
+            },
+            "innocuous": {
+              "n": 16,
+              "false_alarms": 8
+            },
+            "collision_lower": {
+              "n": 6,
+              "false_alarms": 6
+            },
+            "collision_initial": {
+              "n": 6,
+              "false_alarms": 6
+            }
+          },
+          "deliveries": 238,
+          "useful_deliveries": 52,
+          "useful_precision": 0.2184873949579832,
+          "redundant_deliveries": 26,
+          "redundant_per_session": 0.5,
+          "private_deliveries": 22,
+          "withdrawn_deliveries": 0,
+          "tokens_per_turn_mean": 184.5752688172043,
+          "tokens_per_turn_p95": 466,
+          "tokens_per_negative_turn_mean": 142.1125,
+          "latency_ms_p50": 4.495018999999957,
+          "latency_ms_p95": 11.244822999999997,
+          "errors": 0
+        }
+      }
+    },
+    "leak_examples": [
+      {
+        "mode": "volunteer_remote_prior",
+        "turn": "s044-u0",
+        "slug": "people/kesmi-duskvale",
+        "private_body_marker_delivered": true
+      },
+      {
+        "mode": "volunteer_remote_prior",
+        "turn": "s045-u0",
+        "slug": "people/morrow-foxmere",
+        "private_body_marker_delivered": true
+      },
+      {
+        "mode": "volunteer_remote_prior",
+        "turn": "s046-u0",
+        "slug": "people/emberly-ambermoor",
+        "private_body_marker_delivered": true
+      },
+      {
+        "mode": "volunteer_remote_prior",
+        "turn": "s047-u0",
+        "slug": "people/brisa-oakhollow",
+        "private_body_marker_delivered": true
+      },
+      {
+        "mode": "turn_context_local",
+        "turn": "s044-u0",
+        "slug": "people/kesmi-duskvale",
+        "private_body_marker_delivered": true
+      },
+      {
+        "mode": "turn_context_local",
+        "turn": "s045-u0",
+        "slug": "people/morrow-foxmere",
+        "private_body_marker_delivered": true
+      }
+    ],
+    "unsupported": [
+      {
+        "feature": "turn_context over IPC",
+        "reason": "turn_context is an IPC kind served by a running gbrain serve (gbrain hook user-prompt), not an operation; the runner calls assembleTurnContext in process. No real hook trace is claimed."
+      },
+      {
+        "feature": "System One S6 recall_needed",
+        "reason": "off keyless and not a key default; cited from the SO category, not re-measured."
+      },
+      {
+        "feature": "general associative recall",
+        "reason": "volunteer_context and turn_context resolve entity mentions (alias, title, surname, slug tail); recall of situations that name no entity is not a gbrain capability (capability matrix N8). The associative arm reports it as a gap."
+      },
+      {
+        "feature": "turn_context over several sources",
+        "reason": "assembleTurnContext takes one sourceId, so the associative arm (one source per fixture source) runs through volunteer_context only."
+      },
+      {
+        "feature": "agent use of the injected block",
+        "reason": "no model reads the delivered context in a hermetic run."
+      },
+      {
+        "feature": "hot facts in turn_context",
+        "reason": "the seeded world has no facts rows; the hot-memory section is empty in every turn and its world-only posture is not exercised here."
+      }
+    ],
+    "findings": [
+      {
+        "id": "N8-1",
+        "classification": "bug",
+        "surface": "volunteer_context op (src/core/ops/insights.ts) -> volunteerContext -> resolveEntitiesToPointers (src/core/context/retrieval-reflex.ts), no excludePrivate",
+        "expected": "A remote (MCP) caller whose window mentions a private page by title or alias gets no page for it, as remote search does.",
+        "actual": "volunteer_context returns the private page with its title and a body synopsis to the remote caller: 4 private deliveries over the seeded sessions (remote search for the same name returns nothing).",
+        "repro": "bun docs/benchmarks/2026-10-01-n8-proactive-recall/repro/n8-1-private-volunteer-remote.ts"
+      },
+      {
+        "id": "N8-2",
+        "classification": "bug",
+        "surface": "assembleTurnContext turn mode (src/core/context/turn-context.ts): reflex pointers and volunteered pages resolve without a visibility filter",
+        "expected": "The per-turn block injected by gbrain hook user-prompt carries no visibility: private page; only its hot facts are filtered to world today.",
+        "actual": "The block lists the private page and its body synopsis under \"Brain pages mentioned this turn\": 4 private deliveries over the seeded sessions.",
+        "repro": "bun docs/benchmarks/2026-10-01-n8-proactive-recall/repro/n8-2-private-turn-context.ts"
+      },
+      {
+        "id": "N8-3",
+        "classification": "feature-gap",
+        "surface": "src/core/context/entity-salience.ts candidate extraction + alias arm of resolveEntitiesToPointers",
+        "expected": "An alias that is an ordinary English word (\"Harbor\", \"Summit\") is not volunteered when the turn uses the word in its ordinary sense.",
+        "actual": "At the default gate 50% of common-word turns (12 turns) delivered the company page; matching is lexical and has no sense disambiguation.",
+        "repro": "bun docs/benchmarks/2026-10-01-n8-proactive-recall/repro/n8-3-common-word-alias.ts"
+      },
+      {
+        "id": "N8-4",
+        "classification": "feature-gap",
+        "surface": "volunteer_context op; assembleTurnContext",
+        "expected": "A later situation that names no entity (\"We could squeeze an extra layer of bowls into the community firing\") surfaces the earlier note that matters, unasked.",
+        "actual": "volunteer_context delivered a required page on 0.0% of 240 indirect associative-recall-v1 probes.",
+        "repro": "bun eval/runner/n8-proactive-recall.ts  (the \"associative\" line; data.quality.associative in the receipt)"
+      }
+    ],
+    "harness_error": null
+  },
+  "accounting": {
+    "planned": 1224,
+    "attempted": 1224,
+    "scored": 1224,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null
+}
