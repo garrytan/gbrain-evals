@@ -321,6 +321,334 @@
       "note": "Post-change Cat 35 receipt at gbrain 079941d2, compared with the immediate pre-change aa820c7f run. Coverage and hallucination use a model judge; quotation fidelity uses a substring check. The recorded claude-sonnet-4-6 name is a movable alias. Human coverage calibration remains pending. One distraction was confirmed; this run did not have zero distraction leakage."
     },
     {
+      "claim_id": "system-one-verdicts",
+      "readme_anchor": "docs/benchmarks/2026-09-30-system-one-jev.md: The finding",
+      "artifact_path": "docs/benchmarks/2026-09-30-system-one-jev/verdicts.json",
+      "artifact_sha256": "192ad9568155da7e35b5e6293c937ff090f9ba0d5aa1cb9c040c4037e8f375c9",
+      "status": "covered",
+      "expected": {
+        "/model_resolved": "jev-1.13.0",
+        "/provider": "typesafe:jev-1.13.0",
+        "/spend/total_usd": 24.95,
+        "/slots/0/slot": "S7",
+        "/slots/0/verdict": "win, costs more",
+        "/slots/1/slot": "S9",
+        "/slots/1/verdict": "win",
+        "/slots/2/verdict": "regression",
+        "/slots/4/verdict": "regression",
+        "/slots/5/verdict": "regression"
+      },
+      "note": "Machine-readable verdict table; test/eval/system-one-jev.test.ts checks every number in it against its receipt pointer."
+    },
+    {
+      "claim_id": "system-one-s7-triage-pair",
+      "readme_anchor": "docs/benchmarks/2026-09-30-system-one-jev.md: S7 dream triage: win, costs more",
+      "artifact_path": "docs/benchmarks/2026-09-30-system-one-jev/receipts/s7/summary.json",
+      "artifact_sha256": "0a0b5b297663f099e388b0fc94c7e8b6a4240a46ad0e806fc201c7794433ad26",
+      "status": "covered",
+      "expected": {
+        "/a/synthetic_buried/positives_missed": 10,
+        "/b/synthetic_buried/positives_missed": 0,
+        "/a/tp": 20,
+        "/b/tp": 30,
+        "/a/tn": 78,
+        "/b/tn": 52,
+        "/a/sent_to_synthesis": 21,
+        "/b/sent_to_synthesis": 57,
+        "/a/latency_ms/p50": 2238,
+        "/b/latency_ms/p50": 1437,
+        "/retest/a/flips": 1,
+        "/retest/b/flips": 5,
+        "/discordant/b_right_a_wrong": 11,
+        "/discordant/a_right_b_wrong": 27
+      },
+      "note": "gbrain summarize-pair.ts output; recounted here from the four committed arm files by eval/runner/system-one/recount.ts."
+    },
+    {
+      "claim_id": "system-one-s7-qualify",
+      "readme_anchor": "docs/benchmarks/2026-09-30-system-one-jev.md: S7 dream triage: win, costs more",
+      "artifact_path": "docs/benchmarks/2026-09-30-system-one-jev/receipts/s7/qualify.json",
+      "artifact_sha256": "d6d640dde052ed1a9f49dc5589a02eebf63c8d41dc895761d59fdd403bad7408",
+      "status": "covered",
+      "expected": {
+        "/status": "qualified",
+        "/correct_families": 39,
+        "/families": 39,
+        "/action_precision_lb": 0.9103331450047064
+      },
+      "note": "Family-level Wilson lower bound on correct rejections, eval half."
+    },
+    {
+      "claim_id": "system-one-s7-calibrate",
+      "readme_anchor": "docs/benchmarks/2026-09-30-system-one-jev.md: Stability and judge agreement",
+      "artifact_path": "docs/benchmarks/2026-09-30-system-one-jev/receipts/s7/calibrate.json",
+      "artifact_sha256": "1dffc33c1f446f5fbde8663510da78a85fbe543ad0f11eb642131edde8817825",
+      "status": "covered",
+      "expected": {
+        "/threshold": 0.77,
+        "/retest_sd": 0.013776771545062764,
+        "/repack_sd": 0.012667210240227527,
+        "/model_resolved": "jev-1.13.0",
+        "/dataset_hash": "91bb3dec2951e309",
+        "/split_hash": "de2b13e9820b5ffb"
+      },
+      "note": "gbrain decide calibrate --slot triage --target recall --min 1.0 on the calibrate half."
+    },
+    {
+      "claim_id": "system-one-preset-e2e",
+      "readme_anchor": "docs/benchmarks/2026-09-30-system-one-jev.md: S7 dream triage: win, costs more",
+      "artifact_path": "docs/benchmarks/2026-09-30-system-one-jev/receipts/preset/preset-summary.json",
+      "artifact_sha256": "09ab54f81b951b37f59e515495be7b2267d219416b003e5200e5be67e7e560e4",
+      "status": "covered",
+      "expected": {
+        "/A/pos_proc": 9,
+        "/B/pos_proc": 16,
+        "/A/buried_proc": 3,
+        "/B/buried_proc": 10,
+        "/A/pos_total": 16
+      },
+      "note": "Preset end-to-end dream run on 29 eval-half transcripts; no upstream driver was committed (disclosed in the report)."
+    },
+    {
+      "claim_id": "system-one-s9-conflict",
+      "readme_anchor": "docs/benchmarks/2026-09-30-system-one-jev.md: S9 contradiction sweep: win",
+      "artifact_path": "docs/benchmarks/2026-09-30-system-one-jev/receipts/s9/analysis-cal.json",
+      "artifact_sha256": "1f711cf80c95f1d1ea24811e63a533bfd141f991e802a3449c9b07e54d8b43a7",
+      "status": "covered",
+      "expected": {
+        "/eval/baseline_cosine_rule/supersedes_found": 0,
+        "/eval/s9_calibrated/supersedes_found": 94,
+        "/eval/s9_calibrated/supersede_labels": 97,
+        "/eval/s9_calibrated/wrong_supersedes": 1,
+        "/eval/baseline_cosine_rule/wrong_supersedes": 10,
+        "/retest_flip_rate/flips": 0
+      },
+      "note": "s9-analyze.ts with the stored calibration (duplicate 0.52, floor 0.65); `system-one-jev.ts analyze --eval s9-conflict-values` reproduced it exactly on 2026-10-01."
+    },
+    {
+      "claim_id": "system-one-s1-lme-s",
+      "readme_anchor": "docs/benchmarks/2026-09-30-system-one-jev.md: S1 reranking: regression",
+      "artifact_path": "docs/benchmarks/2026-09-30-system-one-jev/receipts/s1/longmemeval-s-summary.json",
+      "artifact_sha256": "b3327fd5eae708b118b0f6574d350c4cbce1c02c21201618ab7af796e46a3d39",
+      "status": "covered",
+      "expected": {
+        "/s_voy30/recall_all@5_n": 221,
+        "/s_off/recall_all@5_n": 218,
+        "/s_jev30/recall_all@5_n": 219,
+        "/s_jev50/recall_all@5_n": 213,
+        "/s_jev100/recall_all@5_n": 216,
+        "/s_jev100b/recall_all@5_n": 215,
+        "/s_jev50/vs_s_voy30/recall_all/losses": 9,
+        "/s_voy30/top1_when_present": "220/233",
+        "/s_jev30/top1_when_present": "214/233",
+        "/s_jev100x/decide_outcomes": {
+          "rerank:skipped:timeout": 248
+        }
+      },
+      "note": "lme-summarize.py output; recounted here from the committed per-question rows. The expansion arm s_jev100x never reranked (timeout)."
+    },
+    {
+      "claim_id": "system-one-s1-m-pilot",
+      "readme_anchor": "docs/benchmarks/2026-09-30-system-one-jev.md: S1 reranking: regression",
+      "artifact_path": "docs/benchmarks/2026-09-30-system-one-jev/receipts/s1/longmemeval-m-pilot-summary.json",
+      "artifact_sha256": "545878a844fb0874fcdfb7adaece87b06674d4cfb1eb0c6ba1e2c46eb0eb758f",
+      "status": "covered",
+      "expected": {
+        "/m_voy30/top1_when_present": "21/24",
+        "/m_jev100/top1_when_present": "18/24",
+        "/m_jev300/top1_when_present": "17/24",
+        "/m_jev100x/decide_outcomes": {
+          "rerank:skipped:timeout": 28
+        }
+      },
+      "note": "28-question LongMemEval-M pilot, 24 answerable; recounted from committed rows."
+    },
+    {
+      "claim_id": "system-one-s1-judged",
+      "readme_anchor": "docs/benchmarks/2026-09-30-system-one-jev.md: S1 reranking: regression",
+      "artifact_path": "docs/benchmarks/2026-09-30-system-one-jev/receipts/s1/longmemeval-judged-summary.json",
+      "artifact_sha256": "1f38697674e66d5df4484ceb1d0313b7149f7ebe941b1136ccf9efb4083e7829",
+      "status": "covered",
+      "expected": {
+        "/j_voy30/answer_accuracy_n": "91/100",
+        "/j_jev30/answer_accuracy_n": "89/100",
+        "/j_jev30/vs_j_voy30/answer/wins": 1,
+        "/j_jev30/vs_j_voy30/answer/losses": 3
+      },
+      "note": "Summary only; the judged per-question rows were not committed upstream (separate disclosed gap)."
+    },
+    {
+      "claim_id": "system-one-s2-s3-lme",
+      "readme_anchor": "docs/benchmarks/2026-09-30-system-one-jev.md: S3 evidence gate: regression",
+      "artifact_path": "docs/benchmarks/2026-09-30-system-one-jev/receipts/s3/longmemeval-decide-arms-summary.json",
+      "artifact_sha256": "17119fd0130b69bb796e4448b805becde49566f1dbf9ee2e1369558248a80864",
+      "status": "covered",
+      "expected": {
+        "/s_s3/recall_all@5_n": 213,
+        "/s_s3/vs_s_voy30/recall_all/wins": 1,
+        "/s_s3/vs_s_voy30/recall_all/losses": 9,
+        "/s_s2/vs_s_voy30/recall_all/wins": 0,
+        "/s_s2/vs_s_voy30/recall_all/losses": 0,
+        "/s_s3s5/decide_outcomes/injection:demoted": 93
+      },
+      "note": "S2, S3 and S3+S5 LongMemEval arms against s_voy30; recounted from committed rows."
+    },
+    {
+      "claim_id": "system-one-s2-routing",
+      "readme_anchor": "docs/benchmarks/2026-09-30-system-one-jev.md: S2 query routing: no measurable change",
+      "artifact_path": "docs/benchmarks/2026-09-30-system-one-jev/receipts/s2/analysis.json",
+      "artifact_sha256": "40f077a981db510678be88ace22d32359e8479abdec5661a6373615edbe4f034",
+      "status": "covered",
+      "expected": {
+        "/search/regex_accuracy": 0.46511627906976744,
+        "/search/on_accuracy": 0.6686046511627907,
+        "/think/regex_accuracy": 0.5873015873015873,
+        "/think/on_accuracy": 0.7698412698412699,
+        "/search/overrides_helped": 41,
+        "/search/overrides_hurt": 6
+      },
+      "note": "s2-analyze.ts; reproduced by `analyze --eval s2-intent-routing`."
+    },
+    {
+      "claim_id": "system-one-s6-brainbench",
+      "readme_anchor": "docs/benchmarks/2026-09-30-system-one-jev.md: S6 know-to-ask: mixed",
+      "artifact_path": "docs/benchmarks/2026-09-30-system-one-jev/receipts/s6/bb-summary.json",
+      "artifact_sha256": "996e804d6c88c8cddaee7f7df00abd2d982f95284c3c2bbfcfe513adb4b5aa49",
+      "status": "covered",
+      "expected": {
+        "/bb-extra-off.json/failure_rate": 0.713,
+        "/bb-extra-on.json/failure_rate": 0.113,
+        "/bb-bb-on.json/false_fire_rate": 0.0851,
+        "/bb-bb-off.json/latency_ms/p50": 9.6,
+        "/bb-bb-on.json/latency_ms/p50": 161.1
+      },
+      "note": "s6-brainbench-summary.py over the eval half; the raw brainbench turn rows were not committed upstream (separate disclosed gap)."
+    },
+    {
+      "claim_id": "system-one-s6-qualify",
+      "readme_anchor": "docs/benchmarks/2026-09-30-system-one-jev.md: S6 know-to-ask: mixed",
+      "artifact_path": "docs/benchmarks/2026-09-30-system-one-jev/receipts/s6/qualify.json",
+      "artifact_sha256": "beef714f71b3ce119711bd97e765cb299d1b10aa35d94b3b53de7d89ad5c47fa",
+      "status": "covered",
+      "expected": {
+        "/status": "insufficient_n",
+        "/correct_families": 14,
+        "/required_n": 35
+      },
+      "note": "Suppression qualification on the eval half."
+    },
+    {
+      "claim_id": "system-one-s8-grounding",
+      "readme_anchor": "docs/benchmarks/2026-09-30-system-one-jev.md: S8 grounding: inconclusive",
+      "artifact_path": "docs/benchmarks/2026-09-30-system-one-jev/receipts/s8/analysis.json",
+      "artifact_sha256": "db769408bf9974e23af5de77fc2c1af6155abb16923b6d51a9f4f10d947409c4",
+      "status": "covered",
+      "expected": {
+        "/eval_dream_page_units/quarantined": 25,
+        "/eval_dream_page_units/useful_claims_lost": 3,
+        "/eval_perturbations/quarantined": 63,
+        "/eval_perturbations/n": 126
+      },
+      "note": "s8-analyze.ts at threshold 0.29; reproduced by `analyze --eval s8-grounding-values`."
+    },
+    {
+      "claim_id": "system-one-judge-longmemeval",
+      "readme_anchor": "docs/benchmarks/2026-09-30-system-one-jev.md: Stability and judge agreement",
+      "artifact_path": "docs/benchmarks/2026-09-30-system-one-jev/receipts/judge/longmemeval.json",
+      "artifact_sha256": "3005a5ed952be16cf204d901f0838a6ab4532ef5164201fad69d26731fad4ff7",
+      "status": "covered",
+      "expected": {
+        "/kappa": 0.7346,
+        "/kappa_ci95": [
+          0.5079,
+          0.9613
+        ],
+        "/raw_agreement": 0.95,
+        "/n": 100
+      },
+      "note": "Jev against the gpt-4o LongMemEval judge: judge-vs-judge agreement, not accuracy."
+    },
+    {
+      "claim_id": "system-one-judge-grounding",
+      "readme_anchor": "docs/benchmarks/2026-09-30-system-one-jev.md: Stability and judge agreement",
+      "artifact_path": "docs/benchmarks/2026-09-30-system-one-jev/receipts/judge/grounding.json",
+      "artifact_sha256": "1f625253d9ff8788c195627b2af1092b7a865c773462ad9502ce780d7dec502f",
+      "status": "covered",
+      "expected": {
+        "/kappa": 0.5804,
+        "/kappa_ci95": [
+          0.5227,
+          0.6381
+        ],
+        "/raw_agreement": 0.7867,
+        "/n": 750
+      },
+      "note": "Jev against the claude-sonnet-5 S8 labels: judge-vs-judge agreement."
+    },
+    {
+      "claim_id": "system-one-ledger",
+      "readme_anchor": "docs/benchmarks/2026-09-30-system-one-jev.md: Reproduce and inspect",
+      "artifact_path": "docs/benchmarks/2026-09-30-system-one-jev/ledger.jsonl",
+      "artifact_sha256": "0c02111325429280d118ecd32214a292eebfcb97c487fcfd0eb679e52b07300a",
+      "status": "covered",
+      "note": "Eval-lane spend, one line per paid batch; with ledger-datasets.jsonl it totals $24.95 (checked by system-one-jev.ts verify)."
+    },
+    {
+      "claim_id": "system-one-reproduction-build",
+      "readme_anchor": "docs/benchmarks/2026-09-30-system-one-jev.md: Reproduce and inspect",
+      "artifact_path": "docs/benchmarks/2026-09-30-system-one-jev/reproduction-2026-10-01/fc9a1d45/build.json",
+      "artifact_sha256": "61abd0a8e6e9f4eb0cc1bdeb4a941cdbe1c3ccd8072f4b6b6a08c7e8ca8bea52",
+      "status": "covered",
+      "expected": {
+        "/gbrain/commit": "fc9a1d45d6fa4842c938c94d4d9e4ac96366730a",
+        "/results/0/ok": true,
+        "/results/1/ok": true,
+        "/results/2/ok": true,
+        "/results/3/ok": true
+      },
+      "note": "Keyless rebuild of S7, S8, S3 and S4 with gbrain fc9a1d45 on 2026-10-01; all four matched the frozen dataset and split hashes."
+    },
+    {
+      "claim_id": "system-one-reproduction-build-9196543d",
+      "readme_anchor": "docs/benchmarks/2026-09-30-system-one-jev.md: Reproduce and inspect",
+      "artifact_path": "docs/benchmarks/2026-09-30-system-one-jev/reproduction-2026-10-01/9196543d/build.json",
+      "artifact_sha256": "d20724116c2b2376046b690b490e51a721359da7866d8ebbf39d1526c146f450",
+      "status": "covered",
+      "expected": {
+        "/gbrain/commit": "9196543dffd8c6b918b232559956f4693874e67b",
+        "/version": "0.60.26.0",
+        "/results/0/ok": true,
+        "/results/1/ok": true,
+        "/results/2/ok": true,
+        "/results/3/ok": true
+      },
+      "note": "Keyless rebuild of S7, S8, S3 and S4 at the re-pinned gbrain 9196543d (v0.60.26.0, gbrain#5797) on 2026-10-01; all four matched the frozen dataset and split hashes."
+    },
+    {
+      "claim_id": "system-one-s1-expansion-remeasure",
+      "readme_anchor": "docs/benchmarks/2026-09-30-system-one-jev.md: One fix landed after the eval",
+      "artifact_path": null,
+      "artifact_sha256": null,
+      "status": "disclosed-gap",
+      "note": "The S1 expansion arms timed out on every question before gbrain 9f7794ec moved the decision budget after retrieval; no run measures Jev reranking with expansion."
+    },
+    {
+      "claim_id": "system-one-s3-lb-0869",
+      "readme_anchor": "docs/benchmarks/2026-09-30-system-one-jev.md: S3 evidence gate: regression",
+      "artifact_path": null,
+      "artifact_sha256": null,
+      "status": "disclosed-gap",
+      "note": "The family-level lower bound 0.869 at threshold 0.08 is quoted from gbrain's verdict page; the qualify run that produced it was not committed."
+    },
+    {
+      "claim_id": "system-one-raw-turn-and-judged-rows",
+      "readme_anchor": "docs/benchmarks/2026-09-30-system-one-jev.md: Reproduce and inspect",
+      "artifact_path": null,
+      "artifact_sha256": null,
+      "status": "disclosed-gap",
+      "note": "gbrain committed summaries, not raw rows, for the S6 brainbench arms and the 100-question judged S1 arms; those summaries cannot be recounted here."
+    },
+    {
       "claim_id": "cat35-prewave-receipt",
       "readme_anchor": "docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md: immediate pre-change bracket, recall 70.2%, 16/20 signal sessions emit",
       "artifact_path": "docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill/receipt-2026-08-31-prewave-baseline-aa820c7f.json",

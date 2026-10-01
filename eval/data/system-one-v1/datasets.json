@@ -1,0 +1,248 @@
+{
+  "schema_version": 1,
+  "upstream": {
+    "repo": "garrytan/gbrain",
+    "branch": "feat/system-one-v1",
+    "commit": "9196543dffd8c6b918b232559956f4693874e67b",
+    "path": "docs/eval/system-one/datasets"
+  },
+  "datasets": [
+    {
+      "id": "s2-intent",
+      "slot": "intent",
+      "build": "committed",
+      "file": "s2-intent.jsonl",
+      "dataset_hash16": "59d0d17abfbeba15",
+      "split_hash": "be9564887bf21a74",
+      "items": 866,
+      "families": 866,
+      "calibrate": 442,
+      "eval": 424,
+      "label_provenance": {
+        "upstream-gold": 866
+      },
+      "label_note": "LongMemEval-S question_type annotations and BrainBench relational fixtures, mapped to routing labels by gbrain's builder."
+    },
+    {
+      "id": "s5-injection",
+      "slot": "injection",
+      "build": "committed",
+      "file": "s5-injection.jsonl",
+      "dataset_hash16": "9eafb629a0ab28a6",
+      "split_hash": "edde14e1853279ed",
+      "items": 36,
+      "families": 12,
+      "calibrate": 18,
+      "eval": 18,
+      "label_provenance": {
+        "upstream-gold": 36
+      },
+      "label_note": "gbrain test/fixtures/decide/injection-cases.jsonl: 12 cases, 4 with an attack candidate, labelled by the fixture author."
+    },
+    {
+      "id": "s6-brainbench",
+      "slot": "recall_needed",
+      "build": "committed",
+      "file": "s6-recall-needed.brainbench.jsonl",
+      "dataset_hash16": "30b665c7f8230b9b",
+      "split_hash": "483d9f1aa5493e2d",
+      "items": 149,
+      "families": 149,
+      "calibrate": 70,
+      "eval": 79,
+      "label_provenance": {
+        "upstream-gold": 149
+      },
+      "label_note": "BrainBench know-to-ask sealed gold from gbrain evals/brainbench (generator-constructed, blind double-labelled by that corpus's own pass); the reflex slice was replayed by the builder."
+    },
+    {
+      "id": "s6-extra",
+      "slot": "recall_needed",
+      "build": "committed",
+      "file": "s6-recall-needed.extra.jsonl",
+      "dataset_hash16": "379e5e7b593e7914",
+      "split_hash": "7b76176e54d8a2e5",
+      "items": 528,
+      "families": 528,
+      "calibrate": 264,
+      "eval": 264,
+      "label_provenance": {
+        "synthetic-construction": 528
+      },
+      "label_note": "Know-to-ask reflex-miss corpus from know-to-ask-extra.ts (Mulberry32 seed 60601): the label is the designed intent recorded in know-to-ask-extra/_design.json. No person or model labelled it."
+    },
+    {
+      "id": "s6-combined",
+      "slot": "recall_needed",
+      "build": "committed",
+      "file": "s6-recall-needed.combined.jsonl",
+      "dataset_hash16": "274eefc9b571d677",
+      "split_hash": "fbdf426421cf8718",
+      "items": 677,
+      "families": 677,
+      "calibrate": 334,
+      "eval": 343,
+      "label_provenance": {
+        "upstream-gold": 149,
+        "synthetic-construction": 528
+      },
+      "label_note": "The BrainBench and reflex-miss files concatenated; S6 calibrates on this file."
+    },
+    {
+      "id": "s7-triage",
+      "slot": "triage",
+      "build": "rebuilt",
+      "file": "s7-triage.jsonl",
+      "dataset_hash16": "91bb3dec2951e309",
+      "split_hash": "de2b13e9820b5ffb",
+      "items": 254,
+      "families": 254,
+      "calibrate": 145,
+      "eval": 109,
+      "label_provenance": {
+        "synthetic-construction": 230,
+        "upstream-gold": 24
+      },
+      "label_note": "24 Cat 35 transcripts labelled by that corpus's expected_triage, plus 230 synthetic transcripts from s7-synthetic-transcripts.ts (openai:gpt-5.6-luna) labelled by the generator's instruction (180 routine, 50 with one buried synthesis-worthy passage). Nobody read and labelled them.",
+      "staged_tree_sha256": "c374577bc42be5a61ad908ae319f3c7c4069e84ea5c9117ecf433892bff4a3b3",
+      "build_command": "gbrain decide dataset --slot triage --from cat35 <staged>/s7-triage --out s7-triage.jsonl"
+    },
+    {
+      "id": "s8-grounding",
+      "slot": "grounding",
+      "build": "rebuilt",
+      "file": "s8-grounding.jsonl",
+      "dataset_hash16": "13c9845020ba8779",
+      "split_hash": "dc24dffe77eff2f0",
+      "items": 750,
+      "families": 16,
+      "calibrate": 254,
+      "eval": 496,
+      "label_provenance": {
+        "llm:claude-sonnet-5 (dream-page)": 567,
+        "llm:claude-sonnet-5 (perturbation)": 183
+      },
+      "label_note": "Claim units from 16 Cat 35 dream pages, labelled supported/unsupported by claude-sonnet-5 (567 real units), plus 183 perturbation negatives written and blind-judged by the same model. LLM labels, not hand labels.",
+      "staged_tree_sha256": "b0028e68148af6cc1d686a4370985b3b84f994c6af0c14110198765775380b0a",
+      "build_command": "(cwd <staged>/s8-root) gbrain decide dataset --slot grounding --from grounding-labels docs/eval/system-one/datasets/s8-grounding/labels.jsonl --out s8.raw.jsonl; then label-source.ts s8.raw.jsonl s8-grounding.jsonl llm:claude-sonnet-5 <labels.jsonl>"
+    },
+    {
+      "id": "s9-conflict",
+      "slot": "conflict",
+      "build": "committed",
+      "file": "s9-conflict.jsonl",
+      "dataset_hash16": "37fe4083e9722308",
+      "split_hash": "2ec631956c4b9e33",
+      "items": 786,
+      "families": 408,
+      "calibrate": 391,
+      "eval": 395,
+      "label_provenance": {
+        "upstream-gold": 6,
+        "synthetic-construction": 780
+      },
+      "label_note": "Fact pairs: 780 from conflict-pairs.ts (Mulberry32 seed 90909) labelled by the template that built them, 6 from labelled gbrain tests. The cosine-rule baseline per pair came from OpenAI text-embedding-3-large at 1536 dimensions."
+    },
+    {
+      "id": "s9-conflict-sweep-eligible",
+      "slot": "conflict",
+      "build": "committed",
+      "file": "s9-conflict.sweep-eligible.jsonl",
+      "dataset_hash16": "7dbf17fb5073d9e9",
+      "split_hash": "ea1f192b0ed16c14",
+      "items": 172,
+      "families": 162,
+      "calibrate": 84,
+      "eval": 88,
+      "label_provenance": {
+        "upstream-gold": 3,
+        "synthetic-construction": 169
+      },
+      "label_note": "The S9 pairs whose baseline cosine is at least 0.80, the sweep's candidate floor."
+    },
+    {
+      "id": "s3-evidence",
+      "slot": "evidence",
+      "build": "external",
+      "file": "s3-evidence.jsonl",
+      "dataset_hash16": "bff8133e64fbb450",
+      "split_hash": "036999bf920b7039",
+      "items": 10000,
+      "families": 500,
+      "calibrate": 5040,
+      "eval": 4960,
+      "label_provenance": {
+        "upstream-gold": 10000
+      },
+      "label_note": "LongMemEval answer-session annotations: label true when the candidate session is one of the question's answer sessions. 20 sessions per question, each capped at 6,000 characters. 57 MB, so it is rebuilt, not committed.",
+      "build_command": "gbrain decide dataset --slot evidence --from longmemeval longmemeval_s_cleaned.json --out s3-evidence.jsonl",
+      "source": {
+        "name": "LongMemEval-S cleaned (longmemeval_s_cleaned.json)",
+        "url": "https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned/resolve/main/longmemeval_s_cleaned.json",
+        "sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442",
+        "license": "MIT"
+      }
+    },
+    {
+      "id": "s4-answerable",
+      "slot": "answerable",
+      "build": "external",
+      "file": "s4-answerable.jsonl",
+      "dataset_hash16": "df016484c6367b8b",
+      "split_hash": "c2d7aea440b81e88",
+      "items": 500,
+      "families": 500,
+      "calibrate": 248,
+      "eval": 252,
+      "label_provenance": {
+        "upstream-gold": 500
+      },
+      "label_note": "LongMemEval abstention annotations: label false for the 30 _abs questions.",
+      "build_command": "gbrain decide dataset --slot answerable --from longmemeval longmemeval_s_cleaned.json --out s4-answerable.jsonl",
+      "source": {
+        "name": "LongMemEval-S cleaned (longmemeval_s_cleaned.json)",
+        "url": "https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned/resolve/main/longmemeval_s_cleaned.json",
+        "sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442",
+        "license": "MIT"
+      }
+    }
+  ],
+  "inputs": {
+    "know-to-ask-extra": {
+      "sha256": "dca918343ec06083a8d2d11f4a1ae7832498aa9a4360eb503170384f0dcf7be4",
+      "note": "BrainBench-schema fixtures, gold and _design.json for the reflex-miss corpus (tree hash)"
+    },
+    "s7-triage-synthetic": {
+      "sha256": "c09ccde6bf83943d19b555dabb04a2ad891f2fc1503a95ecc23d9838c3ffce2b",
+      "note": "230 synthetic S7 transcripts and their generator-spec gold (tree hash)"
+    },
+    "s8-grounding/labels.jsonl": {
+      "sha256": "b10020e44f71b07d3da98104dbd8d6023d1197ca589ec3830cb2305a5362e34b",
+      "note": "S8 builder input: claim units with LLM labels and transcript paths"
+    },
+    "s9-conflict/pairs.jsonl": {
+      "sha256": "c7b92c4427d72eb84f9fb98e1b082125307800b75765d8088be882f9e35e7241",
+      "note": "S9 builder input with cosine-rule baselines"
+    },
+    "s9-conflict/pairs.sweep-eligible.jsonl": {
+      "sha256": "af5ee8b5b8eff400a22dd11f5543fbfe1bb6af6538372d7d6dd213b296e09fc3",
+      "note": "S9 builder input, cosine >= 0.80"
+    },
+    "longmemeval/s-eval-half.txt": {
+      "sha256": "9bedfed286862ece20c635085719b5be00c526286e28e4ee92ec6579eab3b8e0",
+      "note": "the 248 LongMemEval-S questions in the eval half of the S3 split"
+    },
+    "longmemeval/s-eval-judged-100.txt": {
+      "sha256": "24fbbe6f6f502fb6f501974377503dc18273b426f91365229c8c7bb184438f58",
+      "note": "85 answerable eval-half questions by hash order plus all 15 eval-half abstention questions"
+    },
+    "longmemeval/m-pilot-28.txt (derived)": {
+      "sha256": "ef44c8ea066caa41a1a75a24b8afcb9dd0c67cc2871a872138994ff0d18fc510",
+      "note": "gbrain's m-pilot-28.txt; derived here from eval/data/longmemeval-m-pilot-selection.json selected_ids"
+    },
+    "preset-dream-29.txt": {
+      "sha256": "b32a0d24d1a51972495532533511c8302249cb27f8cabf9bf949b61cff0bccbd",
+      "note": "the 29 eval-half transcripts of the preset end-to-end run"
+    }
+  }
+}

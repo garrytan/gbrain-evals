@@ -1,0 +1,60 @@
+{
+  "s_voy30": {
+    "questions": 2,
+    "answerable": 2,
+    "errors": 0,
+    "recall_all@5": 1,
+    "recall_all@5_n": 2,
+    "recall_any@5": 1,
+    "R@1": 1,
+    "fused_pool_size_mean": 47.5,
+    "pool_recall_all@30": 1,
+    "pool_recall_all@50": 1,
+    "pool_recall_all@100": 1,
+    "pool_recall_all@300": 1,
+    "top1_when_present": "2/2",
+    "decide_cost_usd_total": 0,
+    "decide_cost_usd_per_question": 0,
+    "mean_distinct_sessions_top5": 5
+  },
+  "s_jev30": {
+    "questions": 2,
+    "answerable": 2,
+    "errors": 0,
+    "recall_all@5": 1,
+    "recall_all@5_n": 2,
+    "recall_any@5": 1,
+    "R@1": 1,
+    "fused_pool_size_mean": 47.5,
+    "pool_recall_all@30": 1,
+    "pool_recall_all@50": 1,
+    "pool_recall_all@100": 1,
+    "pool_recall_all@300": 1,
+    "top1_when_present": "2/2",
+    "jev_rerank_latency_ms": {
+      "p50": 258,
+      "p95": 290,
+      "p99": 290
+    },
+    "decide_cost_usd_total": 0.00175,
+    "decide_cost_usd_per_question": 0.000873,
+    "decide_outcomes": {
+      "rerank:kept": 60
+    },
+    "mean_distinct_sessions_top5": 5,
+    "vs_s_voy30": {
+      "recall_all": {
+        "n": 2,
+        "wins": 0,
+        "losses": 0,
+        "mcnemar_p": 1
+      },
+      "R@1": {
+        "n": 2,
+        "wins": 0,
+        "losses": 0,
+        "mcnemar_p": 1
+      }
+    }
+  }
+}

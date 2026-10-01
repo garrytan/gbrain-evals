@@ -1,0 +1,2 @@
+{"id":"coding-reflection-02","label":true,"slice":"windows:1-4","arm":"off","worth":true,"score":0.52,"rescued":false,"unreliable":null,"path":"llm","decide_outcome":null,"latency_ms":3901,"llm_tokens_in":1698,"llm_tokens_out":413,"llm_usd":0.003763,"decide_input_tokens":0,"decide_usd":0}
+{"id":"coding-reflection-03","label":true,"slice":"windows:5-8","arm":"off","worth":true,"score":0.72,"rescued":false,"unreliable":null,"path":"llm","decide_outcome":null,"latency_ms":4815,"llm_tokens_in":1869,"llm_tokens_out":519,"llm_usd":0.004464,"decide_input_tokens":0,"decide_usd":0}

@@ -48,6 +48,7 @@ gap does not isolate the effect of a graph alone.
 | Does the index stay correct after moves, renames, corrections, forgetting, an embedding outage and a restart? | [September 29 lifecycle experiment](benchmarks/2026-09-29-lifecycle.md) |
 | Does important material from a working session survive into saved pages? | [Transcript distillation](benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md) |
 | Does useful memory arrive at the right moment in a conversation? | [Memory conformance](benchmarks/2026-06-12-brainbench-memory.md) |
+| Where does a small decision model (TypeSafe Jev) help gbrain triage, rerank, prune, abstain or spot contradicting facts, and where does it hurt? | [September 30 System One v1 slots](benchmarks/2026-09-30-system-one-jev.md) |
 | Can a skill improve on held-out tasks, and can the judge detect cheating? | [Skill optimization](benchmarks/2026-06-03-skillopt.md) |
 | Can the system distinguish kinds of claims and sensible confidence? | [Calibration and proposed takes](benchmarks/2026-05-18-brainbench-cat14-cat15-calibration.md) (the advice result was retracted on September 28, 2026) |
 | What happens when tweet ingestion becomes parallel? | [Tweet ingestion](benchmarks/2026-04-18-tweet-ingestion.md) |
@@ -81,6 +82,9 @@ a mapping from a question to the documents considered relevant.
   metric definitions, and commands.
 - [Relevance judgments](../qrels/README.md) and [baselines](../baselines/README.md):
   stored expectations and regression checks.
+- [System One datasets](../eval/data/system-one-v1/README.md): what each
+  label is made from (generator, benchmark annotation or LLM) and which files
+  are rebuilt instead of stored.
 - [Source-swamp fixture](../eval/data/source-swamp-v1/_README.md),
   [multimodal fixture](../eval/data/multimodal/README.md),
   [calibration fixture](../eval/data/cat14-calibration/README.md), and

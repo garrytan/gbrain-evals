@@ -1,0 +1,359 @@
+{
+  "schema_version": 1,
+  "what": "Verbatim copy of gbrain's System One v1 eval record (receipts, spend ledgers, generators and runners). Explanations were rewritten in this repository; these files were not edited.",
+  "source": {
+    "repo": "garrytan/gbrain",
+    "branch": "feat/system-one-v1",
+    "pull_request": "garrytan/gbrain#5797",
+    "commit": "9196543dffd8c6b918b232559956f4693874e67b",
+    "version": "0.60.26.0",
+    "copied": "2026-10-01",
+    "previous_copy": {
+      "commit": "fc9a1d45d6fa4842c938c94d4d9e4ac96366730a",
+      "version": "0.60.21.0",
+      "note": "first copied at fc9a1d45. Between the two commits every receipt, ledger, dataset, generator and runner is byte-identical except upstream/runners/ubicloud-setup.sh, which now installs a pinned, checksum-verified Bun instead of curl | bash. The 2026-09-30 runs used the earlier script, sha256 d30a7d07c21fb49535a02f1c410ceb8694952c57603191c331a2559885a10ce8."
+    }
+  },
+  "measured": {
+    "date": "2026-09-30",
+    "window_utc": "2026-09-30T21:23Z to 2026-09-30T23:45Z (ledger timestamps)",
+    "branch": "feat/system-one-v1-evals",
+    "code": "gbrain v0.60.17.0 plus the System One branch: the eval flags landed in afeab73cc37464f46a82b3bb8b35be720036b9a1 and the receipts were committed in 57661631f9cb3b0fb11c6b36417387d8b7e8f595. The receipts do not record a per-run commit; every pair ran within that window, and gbrain's protocol states runs never mixed commits within a pair.",
+    "eval_flags_commit": "afeab73cc37464f46a82b3bb8b35be720036b9a1",
+    "receipts_commit": "57661631f9cb3b0fb11c6b36417387d8b7e8f595",
+    "provider": "typesafe:jev-1.13.0",
+    "model_resolved": "jev-1.13.0",
+    "other_models": [
+      "anthropic:claude-haiku-4-5-20251001 (triage judge, LongMemEval reader)",
+      "anthropic:claude-sonnet-4-6 (dream synthesis)",
+      "openai:gpt-4o (LongMemEval judge)",
+      "openai:text-embedding-3-large and -3-small (embeddings)",
+      "voyage:rerank-2.5 (today's reranker)",
+      "anthropic:claude-sonnet-5 (S8 labels)",
+      "openai:gpt-5.6-luna (S7 synthetic transcripts)"
+    ],
+    "post_measurement_code_changes": "After the eval, feat/system-one-v1 gained the S1 budget fix (9f7794ec), key-aware defaults that turn on S7 and S9 when a TypeSafe key is present (3efee1e3; explicit settings win and eval runs never get key defaults, so the matched-pair arms are unchanged), and master merges through v0.60.25.0. The LongMemEval harness (src/eval/) and every reducer the analyzers apply are unchanged between fc9a1d45 and 9196543d; build and analyze reproduced the record at both commits."
+  },
+  "post_eval_fix": {
+    "commit": "9f7794ec4a841f928e2c109d19b0d798ba4f91d4",
+    "summary": "the per-query decide budget (decide.query_budget_ms, 1,500 ms) now starts at the first post-retrieval decide stage, so query expansion no longer uses it up; the S1 expansion arms (s_jev100x, m_jev100x) timed out on every question before the fix and were not re-measured"
+  },
+  "upstream_docs_sha256": {
+    "docs/eval/system-one/README.md": "190b62b50b634086186527e3207fba2c196422927dd6ef4cea8adb53c6e4ff75",
+    "docs/eval/system-one/PROTOCOL.md": "58ca9a546119b665e84c39dfab86d2c0c38187928195faa2a7d789d37c5a64a9",
+    "docs/eval/system-one/datasets/README.md": "e57b9dbfbcce8864a0990890a41fd087a09a54330be927d2922814dc711e2e9c",
+    "docs/eval/system-one/datasets/HASHES.md": "8516a3b62c56e77d9e7c5721fc15675cd42005b5254ec68b5d9845e8a037070e",
+    "docs/designs/SYSTEM_ONE_JEV_V1.md": "a8743b1bffe4d3be8042139330bbe4482a48c83d920eda50993bba51ccbbaefa",
+    "docs/guides/system-one.md": "2988064d2e70a64a61ea3ad4642ea27ef43e0aa3e9609fd29246f0bec8b8d63c"
+  },
+  "files": {
+    "receipts/judge/grounding.json": {
+      "sha256": "1f625253d9ff8788c195627b2af1092b7a865c773462ad9502ce780d7dec502f",
+      "upstream_path": "docs/eval/system-one/receipts/judge/grounding.json"
+    },
+    "receipts/judge/longmemeval.json": {
+      "sha256": "3005a5ed952be16cf204d901f0838a6ab4532ef5164201fad69d26731fad4ff7",
+      "upstream_path": "docs/eval/system-one/receipts/judge/longmemeval.json"
+    },
+    "receipts/preset/dream-A.json": {
+      "sha256": "9b779c88e963d52bcf10e00332cdfdf5d33cf9758a49c7e1ff192249d0c147a3",
+      "upstream_path": "docs/eval/system-one/receipts/preset/dream-A.json"
+    },
+    "receipts/preset/dream-B.json": {
+      "sha256": "0246445e9017874eb3b2ee45130616efd28138525798c277a1032d49cb16dbf9",
+      "upstream_path": "docs/eval/system-one/receipts/preset/dream-B.json"
+    },
+    "receipts/preset/preset-pages.json": {
+      "sha256": "5b451126fe90db0e43790a23292ea0558589609e024aa7d4ed577209b9fdfc89",
+      "upstream_path": "docs/eval/system-one/receipts/preset/preset-pages.json"
+    },
+    "receipts/preset/preset-summary.json": {
+      "sha256": "09ab54f81b951b37f59e515495be7b2267d219416b003e5200e5be67e7e560e4",
+      "upstream_path": "docs/eval/system-one/receipts/preset/preset-summary.json"
+    },
+    "receipts/s1/longmemeval-judged-summary.json": {
+      "sha256": "1f38697674e66d5df4484ceb1d0313b7149f7ebe941b1136ccf9efb4083e7829",
+      "upstream_path": "docs/eval/system-one/receipts/s1/longmemeval-judged-summary.json"
+    },
+    "receipts/s1/longmemeval-m-pilot-summary.json": {
+      "sha256": "545878a844fb0874fcdfb7adaece87b06674d4cfb1eb0c6ba1e2c46eb0eb758f",
+      "upstream_path": "docs/eval/system-one/receipts/s1/longmemeval-m-pilot-summary.json"
+    },
+    "receipts/s1/longmemeval-s-summary.json": {
+      "sha256": "b3327fd5eae708b118b0f6574d350c4cbce1c02c21201618ab7af796e46a3d39",
+      "upstream_path": "docs/eval/system-one/receipts/s1/longmemeval-s-summary.json"
+    },
+    "receipts/s1/m_jev100.rows.jsonl": {
+      "sha256": "e1fa5938d50223757b07531035c7694d173b1a31310d1b9ca1afc49e08767fc1",
+      "upstream_path": "docs/eval/system-one/receipts/s1/m_jev100.rows.jsonl"
+    },
+    "receipts/s1/m_jev100x.rows.jsonl": {
+      "sha256": "e53390ddae1a79f4b5e19c23c54ff3de68a3f32295766d62b1a43be7c0e90582",
+      "upstream_path": "docs/eval/system-one/receipts/s1/m_jev100x.rows.jsonl"
+    },
+    "receipts/s1/m_jev300.rows.jsonl": {
+      "sha256": "571a97d43c9ea474e9b23db1d127a63fe82e06ce9b3746a5940e3817c79a0580",
+      "upstream_path": "docs/eval/system-one/receipts/s1/m_jev300.rows.jsonl"
+    },
+    "receipts/s1/m_off.rows.jsonl": {
+      "sha256": "39be8c9c38b3569dbf9d62ef191f345db7bcb301b9711ba6c8444c1870acd54b",
+      "upstream_path": "docs/eval/system-one/receipts/s1/m_off.rows.jsonl"
+    },
+    "receipts/s1/m_voy30.rows.jsonl": {
+      "sha256": "5c2e13468c0639b0617ca53f0e0d7d7bc2668ebc409e94fc08b62eae9523c5e5",
+      "upstream_path": "docs/eval/system-one/receipts/s1/m_voy30.rows.jsonl"
+    },
+    "receipts/s1/s_jev100.rows.jsonl": {
+      "sha256": "af76b7b686e68bb5a8da3ce219c2d4faee0f5ded5be9a711bf782b6b5ae9f59e",
+      "upstream_path": "docs/eval/system-one/receipts/s1/s_jev100.rows.jsonl"
+    },
+    "receipts/s1/s_jev100b.rows.jsonl": {
+      "sha256": "b4ae0061aa5b525d7036103387eaec1639313826004db1f2e0b9437c6c5777be",
+      "upstream_path": "docs/eval/system-one/receipts/s1/s_jev100b.rows.jsonl"
+    },
+    "receipts/s1/s_jev100x.rows.jsonl": {
+      "sha256": "f8bd6d1ef80e13dcab476ab1bd207b8bf2586bedc815690900d4c4e2e397370b",
+      "upstream_path": "docs/eval/system-one/receipts/s1/s_jev100x.rows.jsonl"
+    },
+    "receipts/s1/s_jev30.rows.jsonl": {
+      "sha256": "f18ed8cc8c1937b1db0a7d40acd41c1cede9f607462cfbb906300475b56583e4",
+      "upstream_path": "docs/eval/system-one/receipts/s1/s_jev30.rows.jsonl"
+    },
+    "receipts/s1/s_jev50.rows.jsonl": {
+      "sha256": "5a15ebb1176d13e5136a0295db3879e668f21ba6ede1c731364c7dbfe1a12879",
+      "upstream_path": "docs/eval/system-one/receipts/s1/s_jev50.rows.jsonl"
+    },
+    "receipts/s1/s_off.rows.jsonl": {
+      "sha256": "907a47e89d4fc433c2cf6df922897da2b91d8fe7188c1827a0e390c5b1f69387",
+      "upstream_path": "docs/eval/system-one/receipts/s1/s_off.rows.jsonl"
+    },
+    "receipts/s1/s_s2.rows.jsonl": {
+      "sha256": "8a99f8364a177f845beba0051da86f28ed127d3a7a7717c4403b5a60f45e3eeb",
+      "upstream_path": "docs/eval/system-one/receipts/s1/s_s2.rows.jsonl"
+    },
+    "receipts/s1/s_s3.rows.jsonl": {
+      "sha256": "8f567e4948aca7e9ba2e418094ddcdd62ac90a6b9f468eacd42b55d28634a5d2",
+      "upstream_path": "docs/eval/system-one/receipts/s1/s_s3.rows.jsonl"
+    },
+    "receipts/s1/s_s3s5.rows.jsonl": {
+      "sha256": "8335696832587185157998e2aefa273333fd3668ac954ff5fb16e7874400df01",
+      "upstream_path": "docs/eval/system-one/receipts/s1/s_s3s5.rows.jsonl"
+    },
+    "receipts/s1/s_voy100.rows.jsonl": {
+      "sha256": "7988bd5476b2db9756d9106c8b41adb9643f8aee6abf6c8f347075eb8ebcc4ae",
+      "upstream_path": "docs/eval/system-one/receipts/s1/s_voy100.rows.jsonl"
+    },
+    "receipts/s1/s_voy30.rows.jsonl": {
+      "sha256": "3095a89fbb05fb96c871e1e336b2eb3ffdb9cf3878d6e8133a43e573debe911a",
+      "upstream_path": "docs/eval/system-one/receipts/s1/s_voy30.rows.jsonl"
+    },
+    "receipts/s2/analysis.json": {
+      "sha256": "40f077a981db510678be88ace22d32359e8479abdec5661a6373615edbe4f034",
+      "upstream_path": "docs/eval/system-one/receipts/s2/analysis.json"
+    },
+    "receipts/s2/values.jsonl": {
+      "sha256": "141c0a8a29dddf5a4036763d0a77c4cf7efcea66f13712093d37558bb28069ee",
+      "upstream_path": "docs/eval/system-one/receipts/s2/values.jsonl"
+    },
+    "receipts/s3/calibrate-s3.json": {
+      "sha256": "9a691e9bd15b2848ed8ab45e77bcec3e68444f2c2f05cb958e878f2e3c806f40",
+      "upstream_path": "docs/eval/system-one/receipts/s3/calibrate-s3.json"
+    },
+    "receipts/s3/calibrate-s3s5.json": {
+      "sha256": "6e965fe06c16312959400e3413bdae694e0ede94d044d43e639eaa05502eb766",
+      "upstream_path": "docs/eval/system-one/receipts/s3/calibrate-s3s5.json"
+    },
+    "receipts/s3/longmemeval-decide-arms-summary.json": {
+      "sha256": "17119fd0130b69bb796e4448b805becde49566f1dbf9ee2e1369558248a80864",
+      "upstream_path": "docs/eval/system-one/receipts/s3/longmemeval-decide-arms-summary.json"
+    },
+    "receipts/s3/qualify-s3.json": {
+      "sha256": "65237f1e1c8ded66d2220b140dcd0d3359680c53d81a8a81d338aa1c8903c130",
+      "upstream_path": "docs/eval/system-one/receipts/s3/qualify-s3.json"
+    },
+    "receipts/s3/qualify-s3s5.json": {
+      "sha256": "c11483361610ef37561c0c644a18726ba59841fa3de99101df73dd93f9881154",
+      "upstream_path": "docs/eval/system-one/receipts/s3/qualify-s3s5.json"
+    },
+    "receipts/s4/calibrate.json": {
+      "sha256": "5488afda53250fb4ecfdd0bf4c8b95549e189ba38f1dd50c0987d05305b8717a",
+      "upstream_path": "docs/eval/system-one/receipts/s4/calibrate.json"
+    },
+    "receipts/s4/qualify.json": {
+      "sha256": "9e80096ec212826b86a3d40ff220265fe113e3f57ed920c464b9cbd10d59316c",
+      "upstream_path": "docs/eval/system-one/receipts/s4/qualify.json"
+    },
+    "receipts/s4/values.jsonl": {
+      "sha256": "a30d65c41e61523b798446b537b09205364a7a143c27aceedecb1bc16035985b",
+      "upstream_path": "docs/eval/system-one/receipts/s4/values.jsonl"
+    },
+    "receipts/s5/values.jsonl": {
+      "sha256": "81cbe21f70de8498132f0199918cc227e9e8640da4f885d48c184aca7c583245",
+      "upstream_path": "docs/eval/system-one/receipts/s5/values.jsonl"
+    },
+    "receipts/s6/analysis-0.05.json": {
+      "sha256": "88f0458bb60e826fd10cae788bfea15e250fdcb86ff6367110cc50e53d5947b4",
+      "upstream_path": "docs/eval/system-one/receipts/s6/analysis-0.05.json"
+    },
+    "receipts/s6/analysis-0.10.json": {
+      "sha256": "ce5ab9acec020ff566b1e33b7a171ed14f42b5e8e1d27af9b206e95e7f07f954",
+      "upstream_path": "docs/eval/system-one/receipts/s6/analysis-0.10.json"
+    },
+    "receipts/s6/bb-summary.json": {
+      "sha256": "996e804d6c88c8cddaee7f7df00abd2d982f95284c3c2bbfcfe513adb4b5aa49",
+      "upstream_path": "docs/eval/system-one/receipts/s6/bb-summary.json"
+    },
+    "receipts/s6/calibrate.json": {
+      "sha256": "769f0cd023dcba0148feb67a00e63a0d21a379396770922398332eb707fa652a",
+      "upstream_path": "docs/eval/system-one/receipts/s6/calibrate.json"
+    },
+    "receipts/s6/qualify.json": {
+      "sha256": "beef714f71b3ce119711bd97e765cb299d1b10aa35d94b3b53de7d89ad5c47fa",
+      "upstream_path": "docs/eval/system-one/receipts/s6/qualify.json"
+    },
+    "receipts/s6/values.jsonl": {
+      "sha256": "e6ae4de4bbe26e91b3fe9edd0ece0332430f63e4d55600800eb6814c9e263db6",
+      "upstream_path": "docs/eval/system-one/receipts/s6/values.jsonl"
+    },
+    "receipts/s7/arm-off-1.jsonl": {
+      "sha256": "2c03c10f73377c7bec801611d311f155b42fec8eb3848ed3f6b3a3ec48b26740",
+      "upstream_path": "docs/eval/system-one/receipts/s7/arm-off-1.jsonl"
+    },
+    "receipts/s7/arm-off-2.jsonl": {
+      "sha256": "1f7e553b873cfbb217882611db3479eb6ab7d1d2063bbf34a020dcdf49ba4df7",
+      "upstream_path": "docs/eval/system-one/receipts/s7/arm-off-2.jsonl"
+    },
+    "receipts/s7/arm-on-1.jsonl": {
+      "sha256": "bbd5bb6335a1f8c0a6d8111a255768dc3da5937273ceb5d5056e0f216dcd9e47",
+      "upstream_path": "docs/eval/system-one/receipts/s7/arm-on-1.jsonl"
+    },
+    "receipts/s7/arm-on-2.jsonl": {
+      "sha256": "0fa3241e39da4e86fb413c4710f2cc1cb609ad271bff1db95a641d681705d75e",
+      "upstream_path": "docs/eval/system-one/receipts/s7/arm-on-2.jsonl"
+    },
+    "receipts/s7/calibrate.json": {
+      "sha256": "1dffc33c1f446f5fbde8663510da78a85fbe543ad0f11eb642131edde8817825",
+      "upstream_path": "docs/eval/system-one/receipts/s7/calibrate.json"
+    },
+    "receipts/s7/qualify.json": {
+      "sha256": "d6d640dde052ed1a9f49dc5589a02eebf63c8d41dc895761d59fdd403bad7408",
+      "upstream_path": "docs/eval/system-one/receipts/s7/qualify.json"
+    },
+    "receipts/s7/summary.json": {
+      "sha256": "0a0b5b297663f099e388b0fc94c7e8b6a4240a46ad0e806fc201c7794433ad26",
+      "upstream_path": "docs/eval/system-one/receipts/s7/summary.json"
+    },
+    "receipts/s8/analysis.json": {
+      "sha256": "db769408bf9974e23af5de77fc2c1af6155abb16923b6d51a9f4f10d947409c4",
+      "upstream_path": "docs/eval/system-one/receipts/s8/analysis.json"
+    },
+    "receipts/s8/calibrate.json": {
+      "sha256": "afad4d08f5487ec33128bbe7fd1d630a6bd7b287cbef9dc01048de5accf835fe",
+      "upstream_path": "docs/eval/system-one/receipts/s8/calibrate.json"
+    },
+    "receipts/s8/qualify.json": {
+      "sha256": "0366df0a2805d5bd763866e0e0861cdc076210fd0d5dc4ee651f84a92f23b421",
+      "upstream_path": "docs/eval/system-one/receipts/s8/qualify.json"
+    },
+    "receipts/s8/values.jsonl": {
+      "sha256": "45f5aae9d71bbc46e9b76e25ef30a86750a4fce817420ae8ab1e6c05763952e4",
+      "upstream_path": "docs/eval/system-one/receipts/s8/values.jsonl"
+    },
+    "receipts/s9/analysis-cal--eligible-only.json": {
+      "sha256": "4d31315c637f28af3aa7c81579cacb4dfca18a3e270c06dd1b90961aa7c27049",
+      "upstream_path": "docs/eval/system-one/receipts/s9/analysis-cal--eligible-only.json"
+    },
+    "receipts/s9/analysis-cal.json": {
+      "sha256": "1f711cf80c95f1d1ea24811e63a533bfd141f991e802a3449c9b07e54d8b43a7",
+      "upstream_path": "docs/eval/system-one/receipts/s9/analysis-cal.json"
+    },
+    "receipts/s9/calibrate.json": {
+      "sha256": "b4e87b9fca3a7e33d3e5d9332b551291b70f325e6a902835a5932a6771e8e4e4",
+      "upstream_path": "docs/eval/system-one/receipts/s9/calibrate.json"
+    },
+    "receipts/s9/values.jsonl": {
+      "sha256": "a29efb7863516cf200c39892a07ba38465db5a8415aeca0d215fea1a1fa5d843",
+      "upstream_path": "docs/eval/system-one/receipts/s9/values.jsonl"
+    },
+    "upstream/generators/conflict-baseline.ts": {
+      "sha256": "9b0ab72ba53ebf7ad40ec5e078009804525a546091c4e39fa2883938f000365b",
+      "upstream_path": "docs/eval/system-one/generators/conflict-baseline.ts"
+    },
+    "upstream/generators/conflict-pairs.ts": {
+      "sha256": "8623caac1b8daaae29e09685c0c869669cfbe14cff2c5899a3d54440ef511e2d",
+      "upstream_path": "docs/eval/system-one/generators/conflict-pairs.ts"
+    },
+    "upstream/generators/grounding-labels.ts": {
+      "sha256": "8dbb48969e729bf35e83ff9cd9ffa9aeb1c6a1104a6fc636548396e89785285c",
+      "upstream_path": "docs/eval/system-one/generators/grounding-labels.ts"
+    },
+    "upstream/generators/hashes.ts": {
+      "sha256": "abcaca70b875f5c5d8bfe0f3c9cca63593711e403da2e8215a06c61d11417282",
+      "upstream_path": "docs/eval/system-one/generators/hashes.ts"
+    },
+    "upstream/generators/know-to-ask-extra.ts": {
+      "sha256": "3d25c3e57fc8223f5615936e216732a6d1ffb4a46dd9ff073c215bb766ebcfb4",
+      "upstream_path": "docs/eval/system-one/generators/know-to-ask-extra.ts"
+    },
+    "upstream/generators/label-source.ts": {
+      "sha256": "55130050495936c4aa5e568939dd04ec1eb8850a91a9169942e57b668935d943",
+      "upstream_path": "docs/eval/system-one/generators/label-source.ts"
+    },
+    "upstream/generators/s7-synthetic-transcripts.ts": {
+      "sha256": "524201af2d1ff9cd7917c21035774abffbe8d9ffe638c3cb5f02dc9b4ebc921b",
+      "upstream_path": "docs/eval/system-one/generators/s7-synthetic-transcripts.ts"
+    },
+    "upstream/runners/ask-dataset.ts": {
+      "sha256": "c3247db5488490579349855e2758b853cfacd9306041085ae76f6c8332e2bf2a",
+      "upstream_path": "docs/eval/system-one/runners/ask-dataset.ts"
+    },
+    "upstream/runners/lme-arms.sh": {
+      "sha256": "4d785900b2a001f5cd5753cf38b6332b428089da69e3c2c7caf04e4f36c7f3a9",
+      "upstream_path": "docs/eval/system-one/runners/lme-arms.sh"
+    },
+    "upstream/runners/lme-summarize.py": {
+      "sha256": "2e856f3d796028c92bd964779fe5d76d55be7189722b68f1970f263e8c41c086",
+      "upstream_path": "docs/eval/system-one/runners/lme-summarize.py"
+    },
+    "upstream/runners/s2-analyze.ts": {
+      "sha256": "00f59020f7363fdacdfa7826f740e2dc9e9acf664e11bf192cabc99a5400152b",
+      "upstream_path": "docs/eval/system-one/runners/s2-analyze.ts"
+    },
+    "upstream/runners/s6-analyze.ts": {
+      "sha256": "ab26bc0107830d7974465921f2340bf604b285265e272b1a5970152f3e422883",
+      "upstream_path": "docs/eval/system-one/runners/s6-analyze.ts"
+    },
+    "upstream/runners/s6-brainbench-summary.py": {
+      "sha256": "be1c279c27b1efc9828e6d9adc32ef0e36d0ccfcdee3a76190a19d755f25422f",
+      "upstream_path": "docs/eval/system-one/runners/s6-brainbench-summary.py"
+    },
+    "upstream/runners/s7-triage-pair.ts": {
+      "sha256": "ee0d3efe22f7fba59e1dc863b836ab6a64ef74e76a0217752f257e5f1e212956",
+      "upstream_path": "docs/eval/system-one/runners/s7-triage-pair.ts"
+    },
+    "upstream/runners/s8-analyze.ts": {
+      "sha256": "c0941f41b9fc8d233dfbe9d48a22c4705aeadbe812623054d5be10246a4c8c43",
+      "upstream_path": "docs/eval/system-one/runners/s8-analyze.ts"
+    },
+    "upstream/runners/s9-analyze.ts": {
+      "sha256": "dc5489bdf322236279de7880e4d927d46fac317a12375615e758c38bbb924a29",
+      "upstream_path": "docs/eval/system-one/runners/s9-analyze.ts"
+    },
+    "upstream/runners/summarize-pair.ts": {
+      "sha256": "8b5434ec04adfc441ba007af9d1cb8a5b2989debadbd6db5938fffe3711bc681",
+      "upstream_path": "docs/eval/system-one/runners/summarize-pair.ts"
+    },
+    "upstream/runners/ubicloud-setup.sh": {
+      "sha256": "94be69e77920a7c2f8e587c92845d32f17cd4784aaab70b0cc0139dfe9baa42d",
+      "upstream_path": "docs/eval/system-one/runners/ubicloud-setup.sh"
+    },
+    "ledger.jsonl": {
+      "sha256": "0c02111325429280d118ecd32214a292eebfcb97c487fcfd0eb679e52b07300a",
+      "upstream_path": "docs/eval/system-one/ledger.jsonl"
+    },
+    "ledger-datasets.jsonl": {
+      "sha256": "314c8df28db7586844640af53fe776ba071589e6d155583dbb4eeb414ca051b1",
+      "upstream_path": "docs/eval/system-one/ledger-datasets.jsonl"
+    }
+  }
+}
