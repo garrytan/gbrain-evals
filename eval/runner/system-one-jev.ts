@@ -29,7 +29,7 @@
  *       Paid: run the evaluation's arms against the checkout.
  *
  * The `--decide` flags, `--eval-pool-depth`, `gbrain decide judge-agreement`
- * and the dataset runners exist on gbrain feat/system-one-v1 (fc9a1d45) and
+ * and the dataset runners exist on gbrain feat/system-one-v1 (9196543d, v0.60.26.0) and
  * not yet at this repository's gbrain pin, so every command that executes
  * gbrain needs `--gbrain`.
  */
@@ -353,7 +353,7 @@ function requireGbrain(argv: string[]): GbrainUnderTest {
   const spec = gbrainSpecFrom(argv);
   if (!spec) throw new Error('this command executes gbrain: pass --gbrain <checkout>@<ref> (a checkout of garrytan/gbrain feat/system-one-v1 or later)');
   const gut = resolveGbrainUnderTest(spec);
-  if (!existsSync(join(gut.root, UPSTREAM_RUNNERS, 'ask-dataset.ts'))) throw new Error(`gbrain ${gut.version} at ${gut.root} has no ${UPSTREAM_RUNNERS}; use feat/system-one-v1 (fc9a1d45) or a later System One build`);
+  if (!existsSync(join(gut.root, UPSTREAM_RUNNERS, 'ask-dataset.ts'))) throw new Error(`gbrain ${gut.version} at ${gut.root} has no ${UPSTREAM_RUNNERS}; use feat/system-one-v1 (9196543d) or a later System One build`);
   return gut;
 }
 

@@ -142,7 +142,7 @@ export async function runSealed(o: { questionsPath: string; outDir: string; mani
     if (existsSync(ndjson)) throw new Error(`${ndjson} exists; use a fresh --out-dir`);
     const opts = {
       ...parseOpts(['--path', exportPath, '--adapters', adapter, '--top-k', String(o.topK), ...o.passthrough]),
-      datasetName: 'sealed-confirmation-v1', ndjsonPath: ndjson, output: join(outDir, `lme-summary-${adapter}.json`),
+      datasetName: o.manifest?.set ?? 'sealed-confirmation-v1', ndjsonPath: ndjson, output: join(outDir, `lme-summary-${adapter}.json`),
       reportsDir: join(outDir, `reports-${adapter}`), minRecallAll: 0,
     };
     const result = await run(opts);

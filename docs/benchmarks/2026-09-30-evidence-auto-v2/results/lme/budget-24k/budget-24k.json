@@ -1,0 +1,109 @@
+{
+  "schema": "gbrain-evals/evidence-auto-budget-24k/v1",
+  "status": "development data, not preregistered",
+  "questions": "the 81 LongMemEval-S questions whose auto evidence was truncated at the 16,000-token budget in the auto v2 sanity check",
+  "gbrain_commit": "aea59b2f0b46e4f5b0ca008254d4cc0ac4b530e3",
+  "baseline_gbrain_commit": "e9b580c5",
+  "n": 81,
+  "checks": {
+    "hits_text_match": 81,
+    "reader_errors": 0,
+    "budget_tokens": [
+      24000
+    ]
+  },
+  "delivery_at_24k": {
+    "questions_truncated": 0,
+    "blocks_truncated": 0,
+    "over_budget": 0,
+    "fallback": 0,
+    "request_byte_identical_to_page": 81,
+    "request_byte_identical_to_auto_16k": 0
+  },
+  "correct": {
+    "auto_24k": {
+      "gbrain_judge": 71,
+      "official_judge": 70
+    },
+    "auto_16k": {
+      "gbrain_judge": 68,
+      "official_judge": 68
+    },
+    "page": {
+      "gbrain_judge": 72,
+      "official_judge": 72
+    },
+    "chunk": {
+      "gbrain_judge": 37,
+      "official_judge": 36
+    }
+  },
+  "paired_gbrain_judge": {
+    "auto_24k_vs_auto_16k": {
+      "wins": 3,
+      "losses": 0,
+      "exact_mcnemar_p": 0.25
+    },
+    "auto_24k_vs_page": {
+      "wins": 1,
+      "losses": 2,
+      "exact_mcnemar_p": 1.0
+    }
+  },
+  "paired_official_judge": {
+    "auto_24k_vs_auto_16k": {
+      "wins": 3,
+      "losses": 1,
+      "exact_mcnemar_p": 0.625
+    },
+    "auto_24k_vs_page": {
+      "wins": 0,
+      "losses": 2,
+      "exact_mcnemar_p": 0.5
+    }
+  },
+  "mean_provider_input_tokens": {
+    "auto_24k": 19066,
+    "auto_16k": 17817,
+    "page": 19066,
+    "chunk": 3583
+  },
+  "mean_product_encoding_tokens_auto_24k": 17087,
+  "by_type_gbrain_judge": {
+    "knowledge-update": {
+      "n": 13,
+      "auto_24k": 12,
+      "auto_16k": 12,
+      "page": 12,
+      "chunk": 10
+    },
+    "multi-session": {
+      "n": 34,
+      "auto_24k": 27,
+      "auto_16k": 26,
+      "page": 29,
+      "chunk": 9
+    },
+    "single-session-preference": {
+      "n": 7,
+      "auto_24k": 7,
+      "auto_16k": 7,
+      "page": 6,
+      "chunk": 5
+    },
+    "single-session-user": {
+      "n": 7,
+      "auto_24k": 7,
+      "auto_16k": 7,
+      "page": 7,
+      "chunk": 4
+    },
+    "temporal-reasoning": {
+      "n": 20,
+      "auto_24k": 18,
+      "auto_16k": 16,
+      "page": 18,
+      "chunk": 9
+    }
+  }
+}

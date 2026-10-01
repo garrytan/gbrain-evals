@@ -1,0 +1,10 @@
+$ bun eval/runner/system-one-jev.ts analyze --gbrain <gbrain checkout>@9196543dffd8c6b918b232559956f4693874e67b --eval s2-intent-routing
+ok   s2-analyze.ts  vs s2/analysis.json: reproduced
+$ bun eval/runner/system-one-jev.ts analyze --gbrain <gbrain checkout>@9196543dffd8c6b918b232559956f4693874e67b --eval s6-recall-needed-values
+ok   s6-analyze.ts --suppress-below vs s6/analysis-0.10.json: reproduced
+ok   s6-analyze.ts --suppress-below vs s6/analysis-0.05.json: reproduced
+$ bun eval/runner/system-one-jev.ts analyze --gbrain <gbrain checkout>@9196543dffd8c6b918b232559956f4693874e67b --eval s8-grounding-values
+ok   s8-analyze.ts --threshold --margin vs s8/analysis.json: reproduced
+$ bun eval/runner/system-one-jev.ts analyze --gbrain <gbrain checkout>@9196543dffd8c6b918b232559956f4693874e67b --eval s9-conflict-values
+ok   s9-analyze.ts --dup-threshold --floor vs s9/analysis-cal.json: reproduced
+ok   s9-analyze.ts --dup-threshold --floor --eligible-only vs s9/analysis-cal--eligible-only.json: reproduced

@@ -303,8 +303,69 @@ async function cmdE2Score(a: Args) {
 
 async function cmdCosts() { process.stdout.write(JSON.stringify(costPlanV2(), null, 2) + '\n'); }
 
+/**
+ * Development-data budget check (not preregistered): auto at a newer gbrain
+ * commit's default budget on the LongMemEval questions that auto trimmed at
+ * 16,000 tokens, on the same frozen hit lists, reader and judges. Haystacks
+ * are re-imported without embeddings (assembly reads stored chunks only), and
+ * every frozen hit's chunk text is checked against the new import first.
+ */
+async function cmdBudgetCheck(a: Args) {
+  const { manifest } = manifestV2();
+  const g = await gbrainFor(a, true);
+  const frozen = readFrozen(a.need('--frozen-dir'));
+  const ds = new Map(loadDataset(a.need('--dataset'), manifest.data.longmemeval_s.sha256).map(q => [q.question_id, q]));
+  const cut = [...frozen.questions.values()].filter(q => q.arms.auto?.results && autoDiagnostics(JSON.parse(frozen.store.get(q.arms.auto.results))).truncated > 0).map(q => q.question_id).sort();
+  const ids = cut.slice(0, a.num('--limit', cut.length));
+  const renderer = rendererFrom(g);
+  if (createHash('sha256').update(renderer.system).digest('hex') !== manifest.reader.system_sha256) throw new Error('reader system text changed');
+  const outDir = resolve(a.need('--out-dir'));
+  mkdirSync(outDir, { recursive: true });
+  const outPath = join(outDir, 'budget-check.ndjson');
+  const done = new Set<string>();
+  try { for (const r of readJsonl(outPath) as any[]) if (!r.reader_error) done.add(r.question_id); } catch { /* fresh */ }
+  const identity = (await import('./evidence-delivery/gbrain.ts')).gbrainIdentity(g.dir);
+  const o = budgetOptions(a, manifest);
+  const { startPaidRun } = await import('./budget-ledger.ts');
+  const { run, guard: g2 } = startPaidRun('evidence-auto-v2-budget-check', { ...o, estimateUsd: ids.length * 0.08, log });
+  const engine = await g.harness.createBenchmarkBrain();
+  try {
+    for (const id of ids) {
+      if (done.has(id)) continue;
+      const q = frozen.questions.get(id)!;
+      const d = ds.get(id)!;
+      await g.harness.resetTables(engine);
+      for (const p of g.adapter.haystackToPages(d)) await g.importFile.importFromContent(engine, p.slug, p.content, { noEmbed: true });
+      const hitTextOk = await Promise.all(q.hits5.map(async h => ((await engine.getChunks(h.slug)) as any[]).find(c => c.id === h.chunk_id)?.chunk_text === frozen.store.get(h.text)));
+      const out = await g.evidence!.assembleEvidenceForHits(engine, { hits: q.hits5.map(h => ({ source_id: 'default', slug: h.slug, chunk_id: h.chunk_id })), return_unit: 'auto', caller: { remote: false } });
+      const diag = autoDiagnostics(out.results as any[]);
+      const dates = new Map(q.pages.map(p => [p.slug, p.date]));
+      const sessions = (out.results as any[]).map(r => ({ session_id: renderer.sessionIdFromSlug(r.slug), ...(dates.get(r.slug) ? { date: dates.get(r.slug)! } : {}), body: String(r.chunk_text) }));
+      const { request } = (await import('./evidence-delivery/arms.ts')).buildRequest(renderer, { question: d.question, question_date: d.question_date }, sessions, SONNET, manifest.reader.max_tokens);
+      const row: Record<string, unknown> = {
+        question_id: id, question_type: d.question_type, gbrain_commit: identity.commit, hits_text_match: hitTextOk.every(Boolean), budget_tokens: (out.delivery as any)?.budget_tokens ?? null,
+        delivery: diag, product_encoding_tokens: (out.results as any[]).reduce((t, r) => t + (r.delivered?.tokens ?? 0), 0), serialized_tool_tokens: g.tokens.estimateTokens(JSON.stringify(out.results, null, 2)),
+        request_sha256: requestSha(request), evidence_fingerprint: g.evidence!.evidenceFingerprint(out.results as any),
+      };
+      try {
+        const rr = await readerCall(g, request);
+        const jq = { question_id: id, question_type: d.question_type, question: d.question, answer: d.answer };
+        const { officialJudge } = await import('./evidence-delivery/calls.ts');
+        const [gj, oj] = await Promise.all([gbrainJudge(g, jq, rr.text), officialJudge(jq, rr.text)]);
+        Object.assign(row, { hypothesis: rr.text, provider_input_tokens: providerInputTokens(rr.usage), primary: gj.judge_correct === true ? 1 : gj.judge_correct === false ? 0 : null, confirmation: (oj as any).off_judge_correct === true ? 1 : (oj as any).off_judge_correct === false ? 0 : null });
+      } catch (e: any) {
+        if (e instanceof BudgetExceededError) throw e;
+        row.reader_error = String(e?.message ?? e).slice(0, 300);
+      }
+      writeFileSync(outPath, JSON.stringify(row) + '\n', { flag: 'a' });
+      log(`[budget-check] ${id} budget=${row.budget_tokens} truncated=${diag.truncated} primary=${row.primary}`);
+    }
+    process.stdout.write(JSON.stringify({ questions: ids.length, cost: receiptCost(run.close()) }) + '\n');
+  } finally { await engine.disconnect(); g2.uninstall(); }
+}
+
 const COMMANDS: Record<string, (a: Args) => Promise<void>> = {
-  power: cmdPower, costs: cmdCosts, analyze: cmdAnalyze, parity: cmdParity, 'campaign-open': cmdCampaignOpen, freeze: cmdFreeze,
+  power: cmdPower, costs: cmdCosts, 'budget-check': cmdBudgetCheck, analyze: cmdAnalyze, parity: cmdParity, 'campaign-open': cmdCampaignOpen, freeze: cmdFreeze,
   'merge-frozen': cmdMergeFrozen, e1: cmdE1, 'e2-freeze': cmdE2Freeze, 'e2-answer': cmdE2Answer, 'e2-score': cmdE2Score,
 };
 

@@ -330,8 +330,16 @@ and the receipts were committed in
 [`57661631`](https://github.com/garrytan/gbrain/commit/57661631f9cb3b0fb11c6b36417387d8b7e8f595).
 The receipts do not name a per-run commit. This copy comes from
 `feat/system-one-v1` at
-[`fc9a1d45`](https://github.com/garrytan/gbrain/tree/fc9a1d45d6fa4842c938c94d4d9e4ac96366730a)
-(v0.60.21.0), which also contains the S1 budget fix. The declared gbrain
+[`9196543d`](https://github.com/garrytan/gbrain/tree/9196543dffd8c6b918b232559956f4693874e67b)
+(v0.60.26.0, [gbrain#5797](https://github.com/garrytan/gbrain/pull/5797)), which
+also contains the S1 budget fix. It was first copied at `fc9a1d45` (v0.60.21.0);
+between the two commits the receipts, ledgers, datasets, generators and
+analyzers are byte-identical, and the only changed file in the record is the
+Ubicloud setup script, which now installs a pinned Bun. The decision code
+gained key-aware defaults (S7 and S9 on when a TypeSafe key is present), which
+eval runs never receive and explicit slot modes override, so the matched-pair
+arms are unchanged. `build` and `analyze` reproduced the record at both
+commits. The declared gbrain
 dependency of this repository (master `6c8373c`, v0.60.13.0) has none of the
 System One commands, so every command that runs gbrain takes
 `--gbrain <checkout>@<ref>`, which copies that commit into `.gbrain-overlays/`
@@ -346,17 +354,18 @@ bun run eval:system-one
 
 # Rebuild the S7, S8, S3 and S4 datasets with gbrain and check their frozen hashes.
 git clone https://github.com/garrytan/gbrain.git ../gbrain
-bun eval/runner/system-one-jev.ts build --gbrain ../gbrain@fc9a1d45d6fa4842c938c94d4d9e4ac96366730a \
+bun eval/runner/system-one-jev.ts build --gbrain ../gbrain@9196543dffd8c6b918b232559956f4693874e67b \
   --longmemeval-s longmemeval_s_cleaned.json
 
 # Re-apply gbrain's production reducers to the recorded Jev answers.
-bun eval/runner/system-one-jev.ts analyze --gbrain ../gbrain@fc9a1d45d6fa4842c938c94d4d9e4ac96366730a --eval s9-conflict-values
+bun eval/runner/system-one-jev.ts analyze --gbrain ../gbrain@9196543dffd8c6b918b232559956f4693874e67b --eval s9-conflict-values
 ```
 
 `analyze` takes `s2-intent-routing`, `s6-recall-needed-values`,
-`s8-grounding-values` or `s9-conflict-values`. On October 1 all four reproduced
-the committed analysis files exactly, and `build` reproduced all four rebuilt
-datasets' hashes ([reproduction record](2026-09-30-system-one-jev/reproduction-2026-10-01/analyze.txt)).
+`s8-grounding-values` or `s9-conflict-values`. On October 1, at both
+`fc9a1d45` and `9196543d`, all four reproduced the committed analysis files
+exactly, and `build` reproduced all four rebuilt datasets' hashes
+([reproduction record](2026-09-30-system-one-jev/reproduction-2026-10-01/9196543d/analyze.txt)).
 LongMemEval-S cleaned comes from
 [Hugging Face](https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned)
 (MIT, sha256 `d6f21ea9…c3a442`, checked before building).
@@ -366,7 +375,7 @@ anything; `run` executes them and needs `--yes`.
 
 ```sh
 bun eval/runner/system-one-jev.ts plan --eval S7
-bun eval/runner/system-one-jev.ts run --gbrain ../gbrain@fc9a1d45d6fa4842c938c94d4d9e4ac96366730a \
+bun eval/runner/system-one-jev.ts run --gbrain ../gbrain@9196543dffd8c6b918b232559956f4693874e67b \
   --eval s7-triage-pair --yes
 ```
 
@@ -384,7 +393,7 @@ bun eval/runner/system-one-jev.ts run --gbrain ../gbrain@fc9a1d45d6fa4842c938c94
 
 Outputs land in `eval/reports/system-one-jev/<evaluation>/` (`run.json`,
 `summary.json`, per-arm rows and `analyze-*.json`). `--limit N` runs only the
-first N families or questions as a smoke test. On October 1 a smoke of
+first N families or questions as a smoke test. On October 1 (at `fc9a1d45`) a smoke of
 `s7-triage-pair` (2 transcripts), `s9-conflict-values` (3 families) and two
 `s1-rerank-lme-s` arms (2 questions) ran end to end for about $0.07; those
 receipts are in
@@ -413,7 +422,7 @@ procedure. Its numbers above come from `receipts/preset/`.
 - [`eval/data/system-one-v1/`](../../eval/data/system-one-v1/README.md): the
   datasets, inputs and `datasets.json`.
 - gbrain's own write-up:
-  [verdicts](https://github.com/garrytan/gbrain/blob/fc9a1d45d6fa4842c938c94d4d9e4ac96366730a/docs/eval/system-one/README.md),
-  [protocol](https://github.com/garrytan/gbrain/blob/fc9a1d45d6fa4842c938c94d4d9e4ac96366730a/docs/eval/system-one/PROTOCOL.md),
-  [design plan](https://github.com/garrytan/gbrain/blob/fc9a1d45d6fa4842c938c94d4d9e4ac96366730a/docs/designs/SYSTEM_ONE_JEV_V1.md)
-  and [user guide](https://github.com/garrytan/gbrain/blob/fc9a1d45d6fa4842c938c94d4d9e4ac96366730a/docs/guides/system-one.md).
+  [verdicts](https://github.com/garrytan/gbrain/blob/9196543dffd8c6b918b232559956f4693874e67b/docs/eval/system-one/README.md),
+  [protocol](https://github.com/garrytan/gbrain/blob/9196543dffd8c6b918b232559956f4693874e67b/docs/eval/system-one/PROTOCOL.md),
+  [design plan](https://github.com/garrytan/gbrain/blob/9196543dffd8c6b918b232559956f4693874e67b/docs/designs/SYSTEM_ONE_JEV_V1.md)
+  and [user guide](https://github.com/garrytan/gbrain/blob/9196543dffd8c6b918b232559956f4693874e67b/docs/guides/system-one.md).

@@ -4,9 +4,15 @@
   "source": {
     "repo": "garrytan/gbrain",
     "branch": "feat/system-one-v1",
-    "commit": "fc9a1d45d6fa4842c938c94d4d9e4ac96366730a",
-    "version": "0.60.21.0",
-    "copied": "2026-10-01"
+    "pull_request": "garrytan/gbrain#5797",
+    "commit": "9196543dffd8c6b918b232559956f4693874e67b",
+    "version": "0.60.26.0",
+    "copied": "2026-10-01",
+    "previous_copy": {
+      "commit": "fc9a1d45d6fa4842c938c94d4d9e4ac96366730a",
+      "version": "0.60.21.0",
+      "note": "first copied at fc9a1d45. Between the two commits every receipt, ledger, dataset, generator and runner is byte-identical except upstream/runners/ubicloud-setup.sh, which now installs a pinned, checksum-verified Bun instead of curl | bash. The 2026-09-30 runs used the earlier script, sha256 d30a7d07c21fb49535a02f1c410ceb8694952c57603191c331a2559885a10ce8."
+    }
   },
   "measured": {
     "date": "2026-09-30",
@@ -25,7 +31,8 @@
       "voyage:rerank-2.5 (today's reranker)",
       "anthropic:claude-sonnet-5 (S8 labels)",
       "openai:gpt-5.6-luna (S7 synthetic transcripts)"
-    ]
+    ],
+    "post_measurement_code_changes": "After the eval, feat/system-one-v1 gained the S1 budget fix (9f7794ec), key-aware defaults that turn on S7 and S9 when a TypeSafe key is present (3efee1e3; explicit settings win and eval runs never get key defaults, so the matched-pair arms are unchanged), and master merges through v0.60.25.0. The LongMemEval harness (src/eval/) and every reducer the analyzers apply are unchanged between fc9a1d45 and 9196543d; build and analyze reproduced the record at both commits."
   },
   "post_eval_fix": {
     "commit": "9f7794ec4a841f928e2c109d19b0d798ba4f91d4",
@@ -36,8 +43,8 @@
     "docs/eval/system-one/PROTOCOL.md": "58ca9a546119b665e84c39dfab86d2c0c38187928195faa2a7d789d37c5a64a9",
     "docs/eval/system-one/datasets/README.md": "e57b9dbfbcce8864a0990890a41fd087a09a54330be927d2922814dc711e2e9c",
     "docs/eval/system-one/datasets/HASHES.md": "8516a3b62c56e77d9e7c5721fc15675cd42005b5254ec68b5d9845e8a037070e",
-    "docs/designs/SYSTEM_ONE_JEV_V1.md": "296dd94b8fc6c2984c478573f4a202745935fe2781c2d039bf86a98e2410ffe5",
-    "docs/guides/system-one.md": "0ca7a024522554b30eb258b202cfd172428f5bcb919569f6a111710496307dfc"
+    "docs/designs/SYSTEM_ONE_JEV_V1.md": "a8743b1bffe4d3be8042139330bbe4482a48c83d920eda50993bba51ccbbaefa",
+    "docs/guides/system-one.md": "2988064d2e70a64a61ea3ad4642ea27ef43e0aa3e9609fd29246f0bec8b8d63c"
   },
   "files": {
     "receipts/judge/grounding.json": {
@@ -337,7 +344,7 @@
       "upstream_path": "docs/eval/system-one/runners/summarize-pair.ts"
     },
     "upstream/runners/ubicloud-setup.sh": {
-      "sha256": "d30a7d07c21fb49535a02f1c410ceb8694952c57603191c331a2559885a10ce8",
+      "sha256": "94be69e77920a7c2f8e587c92845d32f17cd4784aaab70b0cc0139dfe9baa42d",
       "upstream_path": "docs/eval/system-one/runners/ubicloud-setup.sh"
     },
     "ledger.jsonl": {

@@ -38,9 +38,12 @@ release mirrors that record and makes every slot runnable from here.
   number in `verdicts.json` against its receipt. `build`, `analyze` and `run`
   take `--gbrain <checkout>@<ref>`, since the pinned gbrain has no System One
   commands (registry `SO-live`, tier P).
-- **Reproduced keylessly on 2026-10-01** against gbrain `fc9a1d45`: `build`
-  matched the frozen hashes of S7, S8, S3 and S4, and `analyze` reproduced the
-  S2, S6, S8 and S9 analysis files exactly.
+- **Reproduced keylessly on 2026-10-01** against gbrain `fc9a1d45` and again
+  at `9196543d` (v0.60.26.0, gbrain#5797): `build` matched the frozen hashes of
+  S7, S8, S3 and S4, and `analyze` reproduced the S2, S6, S8 and S9 analysis
+  files exactly. The copy is pinned to `9196543d`; between the two commits only
+  the Ubicloud setup script changed in the record, and the key-aware defaults
+  gbrain added never apply to eval runs.
 - **Data.** `eval/data/system-one-v1/`. S7 and S8 reuse the Cat 35 corpus in
   `eval/data/transcript-distill-v1` (their 24 and 16 Cat 35 transcripts were
   byte-identical copies) and add only the 230 synthetic S7 transcripts and
@@ -51,6 +54,66 @@ release mirrors that record and makes every slot runnable from here.
   provenance and upstream runners under
   `docs/benchmarks/2026-09-30-system-one-jev/`. Tests:
   `test/eval/system-one-jev.test.ts`.
+## [0.10.3] - 2026-10-01
+
+### Auto delivery at the 24,000-token budget: no question cut, requests equal page's (development data)
+
+gbrain now ships `auto` evidence delivery as the default, a judgment call on
+development evidence after the sealed release check in 0.10.2 could not show a
+gain, and raised the default conversation budget from 16,000 to 24,000 tokens
+(gbrain `aea59b2f`, v0.60.23.0). This release adds a development-data addendum
+measuring that budget. It was not preregistered and does not change the
+sealed E2 verdict; the sealed set was not touched.
+
+- **Setup:** the 81 LongMemEval-S questions the 16,000-token budget cut, on
+  the same frozen top-five hit lists, Sonnet notes reader and both judges.
+  Every frozen hit's chunk text matched the re-import on all 81; no reader
+  errors.
+- **Result:** at 24,000 no question is cut (largest delivery 19,989 tokens),
+  and auto's request is byte-identical to page's on all 81. auto answered 71
+  against 68 at 16,000 (+3/−0, p = 0.25) and 72 for page (+1/−2, p = 1.0);
+  official judge 70, 68 and 72. Mean reader input 19,066 tokens, equal to
+  page's. Since the other 419 questions were already under 16,000, auto at
+  24,000 is page delivery on all 500 development questions (inferred from the
+  delivery rule, not re-run).
+- **Cost:** $5.17 against a $20 cap, through one ledger run.
+- Code: a `budget-check` subcommand in `eval/runner/evidence-auto-v2.ts`.
+  Report: the addendum in `docs/benchmarks/2026-09-30-evidence-auto-v2.md`,
+  receipts under `docs/benchmarks/2026-09-30-evidence-auto-v2/results/lme/budget-24k/`.
+
+### Sealed confirmation set v2: built, frozen, not opened
+
+v1 was too easy to confirm a delivery gain (the chunk default answered 147 of
+150), so this release freezes a harder second sealed set with v1's custody
+design. No gbrain run has touched it.
+
+- **The set:** 200 questions over 40 invented personas (80 multi-session, 40
+  temporal, 40 knowledge update, 40 abstention; no single-session). Histories
+  of 46 chats, 135,000 to 150,000 tokens each (about LongMemEval-S size), over
+  eight to twelve months. Answers need three to four chats for multi-session,
+  two to three chats 90+ days apart for temporal, and an initial value plus
+  two changes for knowledge update. Planned and audited by `gpt-6-sol`,
+  written by `gpt-6-luna`, seed 20261002; 616 of 640 persona chats passed the
+  fact audit and 19 questions carry an audit flag.
+- **Solvability (reported, never used to delete items):** oracle 199/200,
+  chunk oracle 196/200, no memory 40/200 (0/160 answerable). The evidence
+  always fits in five chunks (median two to four), so the set tests whether
+  retrieval finds several chats months apart, not whether chunks can hold the
+  answer.
+- **Overlap audit** against LongMemEval S/M: no exact or near-duplicate
+  questions (max Jaccard 0.33), no persona full names; only filler chats share
+  a 13-word run (stock phrases; 6 in S, 10 in M), no persona chat does.
+- **Custody:** only the manifest (commitments and counts), the solvability
+  summary and the overlap counts are committed. Access log: one line, the
+  solvability run.
+- **Cost:** $29.90 of a $60 cap ($20.99 generation, $0.35 pilot, $8.56
+  solvability). About $8 of generation was wasted by a duplicate process
+  started by mistake after an agent restart; the manifest records the
+  settled total and the note.
+- Code: `eval/generators/sealed-confirmation-v2-gen.ts` and
+  `sealed-confirmation-v2-prompts.ts` with a keyless test suite; the sealed
+  runner names its dataset after the manifest's set. Protocol:
+  `docs/benchmarks/2026-10-01-sealed-confirmation-v2-protocol.md`.
 
 ## [0.10.2] - 2026-09-30
 

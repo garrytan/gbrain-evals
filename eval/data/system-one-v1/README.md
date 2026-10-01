@@ -3,7 +3,8 @@
 Labelled inputs for gbrain's System One v1 eval (Jev decision support,
 measured 2026-09-30). The [report](../../../docs/benchmarks/2026-09-30-system-one-jev.md)
 explains the slots and results. Files were copied byte for byte from
-garrytan/gbrain `feat/system-one-v1` at `fc9a1d45`
+garrytan/gbrain `feat/system-one-v1` at `9196543d` (v0.60.26.0;
+identical at `fc9a1d45`, where they were first copied)
 (`docs/eval/system-one/datasets/`), except where noted below.
 
 Every line uses gbrain's dataset schema (`id`, `family`, `slot`, `split`,

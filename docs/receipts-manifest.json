@@ -596,7 +596,7 @@
     {
       "claim_id": "system-one-reproduction-build",
       "readme_anchor": "docs/benchmarks/2026-09-30-system-one-jev.md: Reproduce and inspect",
-      "artifact_path": "docs/benchmarks/2026-09-30-system-one-jev/reproduction-2026-10-01/build.json",
+      "artifact_path": "docs/benchmarks/2026-09-30-system-one-jev/reproduction-2026-10-01/fc9a1d45/build.json",
       "artifact_sha256": "61abd0a8e6e9f4eb0cc1bdeb4a941cdbe1c3ccd8072f4b6b6a08c7e8ca8bea52",
       "status": "covered",
       "expected": {
@@ -607,6 +607,22 @@
         "/results/3/ok": true
       },
       "note": "Keyless rebuild of S7, S8, S3 and S4 with gbrain fc9a1d45 on 2026-10-01; all four matched the frozen dataset and split hashes."
+    },
+    {
+      "claim_id": "system-one-reproduction-build-9196543d",
+      "readme_anchor": "docs/benchmarks/2026-09-30-system-one-jev.md: Reproduce and inspect",
+      "artifact_path": "docs/benchmarks/2026-09-30-system-one-jev/reproduction-2026-10-01/9196543d/build.json",
+      "artifact_sha256": "d20724116c2b2376046b690b490e51a721359da7866d8ebbf39d1526c146f450",
+      "status": "covered",
+      "expected": {
+        "/gbrain/commit": "9196543dffd8c6b918b232559956f4693874e67b",
+        "/version": "0.60.26.0",
+        "/results/0/ok": true,
+        "/results/1/ok": true,
+        "/results/2/ok": true,
+        "/results/3/ok": true
+      },
+      "note": "Keyless rebuild of S7, S8, S3 and S4 at the re-pinned gbrain 9196543d (v0.60.26.0, gbrain#5797) on 2026-10-01; all four matched the frozen dataset and split hashes."
     },
     {
       "claim_id": "system-one-s1-expansion-remeasure",
@@ -3568,6 +3584,83 @@
         "/total_usd": 73.9177
       },
       "note": "Summarized from the campaign ledger run."
+    },
+    {
+      "claim_id": "evidence-auto-budget-24k",
+      "readme_anchor": "docs/benchmarks/2026-09-30-evidence-auto-v2.md: Addendum (2026-10-01): the 24,000-token budget, on development data",
+      "artifact_path": "docs/benchmarks/2026-09-30-evidence-auto-v2/results/lme/budget-24k/budget-24k.json",
+      "artifact_sha256": "32e6c1255dcae6171f413eb2aace9aed53e69e0a65afe051b7d4deda315d743a",
+      "status": "covered",
+      "expected": {
+        "/gbrain_commit": "aea59b2f0b46e4f5b0ca008254d4cc0ac4b530e3",
+        "/n": 81,
+        "/delivery_at_24k/questions_truncated": 0,
+        "/delivery_at_24k/request_byte_identical_to_page": 81,
+        "/correct/auto_24k/gbrain_judge": 71,
+        "/correct/auto_16k/gbrain_judge": 68,
+        "/correct/page/gbrain_judge": 72
+      },
+      "note": "Development data, not preregistered: the 81 questions the 16,000-token budget cut, re-run at the 24,000 default on the same frozen hits, reader and judges."
+    },
+    {
+      "claim_id": "evidence-auto-budget-24k-ledger-summary",
+      "readme_anchor": "docs/benchmarks/2026-09-30-evidence-auto-v2.md: Addendum (2026-10-01) (cost)",
+      "artifact_path": "docs/benchmarks/2026-09-30-evidence-auto-v2/results/lme/budget-24k/ledger-summary.json",
+      "artifact_sha256": "d7730d1ebc4d42fac878c83f7cc77b829a560848b7721d8204de5bf137e545ba",
+      "status": "covered",
+      "expected": {
+        "/total_usd": 5.1678
+      },
+      "note": "Summarized from the budget-check ledger run."
+    },
+    {
+      "claim_id": "sealed-confirmation-v2-commitments",
+      "readme_anchor": "docs/benchmarks/2026-10-01-sealed-confirmation-v2-protocol.md: SHA-256 commitments of the private questions, labels and ledger; 200 questions over 40 personas",
+      "artifact_path": "eval/data/sealed-confirmation-v2/manifest.json",
+      "artifact_sha256": "9c6d3b8c353e13c464ce3f64cca94b2cf2b4c96213b6482c3fb1092cc741911a",
+      "expected": {
+        "/commitments/questions.json/sha256": "8d29e92dc6792fb444e564ca556acd5cb4566ec14a6080c0e2e1ee8e8bd98a38",
+        "/commitments/labels.json/sha256": "83bf52d11e0a26f64f1ece8ce5ac637b81844e38e67c5df1495cb7614a0357c4",
+        "/commitments/ledger.json/sha256": "03df09aacbe85dbfa659da38b67aa6ce88305e52b799b2251b16b6b3a0e2e8c1",
+        "/counts/questions": 200,
+        "/counts/personas": 40,
+        "/generation_date": "2026-10-01"
+      },
+      "golden_test": "test/eval/sealed-confirmation-v2.test.ts: committed v2 manifest matches the generator, prompts and question mix",
+      "status": "covered",
+      "note": "The labels and questions are private; this entry pins the commitments the runner checks before opening them."
+    },
+    {
+      "claim_id": "sealed-confirmation-v2-solvability",
+      "readme_anchor": "docs/benchmarks/2026-10-01-sealed-confirmation-v2-protocol.md: oracle 199/200, chunk oracle 196/200, no memory 40/200 (0/160 answerable)",
+      "artifact_path": "eval/data/sealed-confirmation-v2/solvability.json",
+      "artifact_sha256": "d77c0da027fe7cdc281ee4178d503cf95744c2cde0b5de5ebcf82fa57a0b752e",
+      "expected": {
+        "/n": 200,
+        "/oracle_correct": 199,
+        "/chunk_oracle_correct": 196,
+        "/no_memory_correct": 40,
+        "/questions_needing_more_than_5_chunks": 0
+      },
+      "status": "covered",
+      "note": "Aggregate only. Per-question rows stay with the sealed files."
+    },
+    {
+      "claim_id": "sealed-confirmation-v2-overlap",
+      "readme_anchor": "docs/benchmarks/2026-10-01-sealed-confirmation-v2-protocol.md: zero exact question matches and zero persona full names; only filler chats share a 13-word run with LongMemEval S/M",
+      "artifact_path": "eval/data/sealed-confirmation-v2/overlap-audit.json",
+      "artifact_sha256": "8bad82eb40fc1dd03d49d8795087b8f4a43ced375ffd9d381acbbb07980d1488",
+      "expected": {
+        "/datasets/longmemeval_s_cleaned/exact_question_matches": 0,
+        "/datasets/longmemeval_m_cleaned/exact_question_matches": 0,
+        "/datasets/longmemeval_s_cleaned/persona_full_name_matches": 0,
+        "/datasets/longmemeval_m_cleaned/persona_full_name_matches": 0,
+        "/datasets/longmemeval_s_cleaned/sealed_sessions_sharing_a_13_word_shingle": 6,
+        "/datasets/longmemeval_m_cleaned/sealed_sessions_sharing_a_13_word_shingle": 10,
+        "/datasets/longmemeval_m_cleaned/m_questions_absent_from_s": 0
+      },
+      "status": "covered",
+      "note": "Counts only; the matched items are listed in a private file kept with the sealed set."
     }
   ]
 }

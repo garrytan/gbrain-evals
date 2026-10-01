@@ -1,0 +1,162 @@
+{
+  "set": "sealed-confirmation-v2",
+  "status": "sealed",
+  "purpose": "held-out confirmation hard enough that five retrieved chunks cannot cover the evidence; see docs/benchmarks/2026-10-01-sealed-confirmation-v2-protocol.md",
+  "generation_date": "2026-10-01",
+  "generator_version": "sealed-confirmation-gen-v2",
+  "generator_git_head": "45016f29a1ec200426a780db91227b2c57c8fdb0",
+  "generator_source_sha256": {
+    "eval/generators/sealed-confirmation-v2-gen.ts": "cf09952b74c1646e09fc5bc579c0495b74074c5b4264f843524d2e1f6d0cc48c",
+    "eval/generators/sealed-confirmation-v2-prompts.ts": "babacfee9f79bea78a0d60329e57d0f1a4be8551404bb5444dbabb686aa5809d",
+    "eval/generators/sealed-confirmation-gen.ts": "9fa3ccf7461dcd52ccdc8e521f6f8e9472f9f8268b08264db9dfc00ea5fe99da",
+    "eval/generators/sealed-confirmation-prompts.ts": "8ce249001f2cc8d7cabc82ad7d336389b18c25e3082d7d80508fcf8eb1172641",
+    "eval/runner/sealed-confirmation-lib.ts": "caeaf9271900e331673fafb55bcb009a072798edeb163e386d34afc2db2919e9"
+  },
+  "prompt_sha256": {
+    "PLAN_SYSTEM_V2": "58d0f19146b4aa8b7593aacbbbc30814cb622ae61dcf41094a33d7bdf8a85249",
+    "plan_user_template": "2cddfa63ccca8e7c4a200b154ed4a56c69c3685ec167c2faba6c9d1ae9f7bb06",
+    "SESSION_SYSTEM_V2": "d2f37e0edc16a59540e9a01d94a996457be81a6f69b668a1e0032320f7df71e0",
+    "session_user_template": "bc74fe69c3cb2e70efceb8368464d2afea7e48834d70c647228f3de4f920b911",
+    "AUDIT_SYSTEM": "229d66f49e1ff3fd4e1ad0302d16c928f2d1b260e05a08dd7843985d94a888d7",
+    "audit_user_template": "3b7e329c7b7b8d2dbeabd105a3f4505d1dc7b34db0b7c3e64b14522888547a05",
+    "FILLER_SYSTEM_V2": "127d8bfaf479733f0ceaa9d1882cb374164d1f6b1023132245e9818d11f2032e",
+    "filler_user_template": "83a7647c6bc030b23e88595aadc3f37eeb8001b7da4cdbcc5c197cb7190a7808",
+    "FILLER_VARIANTS_V2": "0ba068b0de0c5029dafb5e82e2052dd2535895a6645d1e402ad337747e6cfec3",
+    "PLAN_SCHEMA_V2": "e5c445508cb5846caee25c27e4c1d71236808f156e30d51af9cc5c4ecbf38f06",
+    "TURNS_SCHEMA": "1da48359fdfc24ca800ceefc9b04d4960abccc0f93733a8c5388d8c09708b8c1",
+    "AUDIT_SCHEMA": "37119c25446102262792f6e4606be8ab0b1ed66abdef1c497a2c9fbcea8c45d3"
+  },
+  "models": {
+    "plan": "gpt-6-sol",
+    "session": "gpt-6-luna",
+    "audit": "gpt-6-sol",
+    "filler": "gpt-6-luna"
+  },
+  "seed": 20261002,
+  "counts": {
+    "personas": 40,
+    "questions": 200,
+    "answerable_questions": 160,
+    "by_type": {
+      "single-session-user": 0,
+      "multi-session": 80,
+      "temporal-reasoning": 40,
+      "knowledge-update": 40,
+      "abstention": 40
+    },
+    "gold_sessions_per_question": {
+      "multi-session": {
+        "min": 3,
+        "median": 4,
+        "max": 4
+      },
+      "temporal-reasoning": {
+        "min": 2,
+        "median": 2,
+        "max": 3
+      },
+      "knowledge-update": {
+        "min": 3,
+        "median": 3,
+        "max": 4
+      },
+      "abstention": {
+        "min": 2,
+        "median": 2,
+        "max": 4
+      }
+    },
+    "sessions_per_haystack": {
+      "min": 46,
+      "median": 46,
+      "max": 46
+    },
+    "persona_sessions_per_haystack": {
+      "min": 16,
+      "median": 16,
+      "max": 16
+    },
+    "characters_per_haystack": {
+      "min": 539321,
+      "median": 570786,
+      "max": 601541
+    },
+    "approx_tokens_per_haystack_chars_div_4": {
+      "min": 134830,
+      "median": 142697,
+      "max": 150385
+    },
+    "approx_tokens_per_persona_session_chars_div_4": {
+      "min": 1932,
+      "median": 2669,
+      "max": 3678
+    },
+    "filler_pool": 176,
+    "fillers_per_haystack": 30
+  },
+  "generation_quality": {
+    "plan_attempts": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "persona_sessions_written": 640,
+    "persona_sessions_passing_audit": 616,
+    "session_attempts_total": 744,
+    "questions_with_audit_flags": 19,
+    "dropped_personas": []
+  },
+  "generation_cost_usd": 20.9937,
+  "generation_cost_note": "Settled total of spend.jsonl. A second generation process ran by mistake for about 30 minutes (00:11 to 00:41 UTC) against the same cache and repeated most session calls (1,117 request labels appear more than once in spend.jsonl); it was stopped and the first process wrote every output file. The ledger.json spend_usd (12.8793) counts only the surviving process. Ten requests in flight when the duplicate was stopped reserved 0.2565 and never settled. A one-persona pilot in a separate directory cost 0.3473 and is not included.",
+  "commitments": {
+    "questions.json": {
+      "sha256": "8d29e92dc6792fb444e564ca556acd5cb4566ec14a6080c0e2e1ee8e8bd98a38",
+      "bytes": 25534003
+    },
+    "labels.json": {
+      "sha256": "83bf52d11e0a26f64f1ece8ce5ac637b81844e38e67c5df1495cb7614a0357c4",
+      "bytes": 65802
+    },
+    "ledger.json": {
+      "sha256": "03df09aacbe85dbfa659da38b67aa6ce88305e52b799b2251b16b6b3a0e2e8c1",
+      "bytes": 22462410
+    }
+  }
+}

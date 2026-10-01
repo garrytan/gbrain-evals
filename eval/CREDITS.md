@@ -26,7 +26,7 @@ These are useful controls, but they are not third-party implementations submitte
 
 The committed `eval/data/world-v1/` corpus contains 240 fictional entities. Claude Opus wrote the generated prose. Its historical one-time generation cost was approximately $3.14; that is a recorded cost, not a current regeneration quote.
 
-The `eval/data/system-one-v1/` datasets come from gbrain's System One v1 eval (MIT, garrytan/gbrain `feat/system-one-v1` at `fc9a1d45`). Their synthetic S7 transcripts were written by `openai:gpt-5.6-luna` for about $0.75, and the S8 labels by `claude-sonnet-5` for about $2.51; both are recorded costs. The [System One data notes](data/system-one-v1/README.md) give each label's source.
+The `eval/data/system-one-v1/` datasets come from gbrain's System One v1 eval (MIT, garrytan/gbrain `feat/system-one-v1` at `9196543d`). Their synthetic S7 transcripts were written by `openai:gpt-5.6-luna` for about $0.75, and the S8 labels by `claude-sonnet-5` for about $2.51; both are recorded costs. The [System One data notes](data/system-one-v1/README.md) give each label's source.
 
 The [PrecisionMemBench attribution](precisionmembench/ATTRIBUTION.md) names the upstream author, license, pinned revision and local adaptations. Other external benchmark sources are identified in their individual reports.
 

@@ -1,0 +1,46 @@
+{
+  "gbrain": {
+    "requested": "<gbrain checkout>@9196543dffd8c6b918b232559956f4693874e67b",
+    "ref": "9196543dffd8c6b918b232559956f4693874e67b",
+    "commit": "9196543dffd8c6b918b232559956f4693874e67b",
+    "tree": "ce2f2ecc26e083bf719aa336fd752fc065c9b878",
+    "version": "0.60.26.0",
+    "checkout_dirty": false,
+    "verified": {
+      "copy_tree": "ce2f2ecc26e083bf719aa336fd752fc065c9b878",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.26.0",
+      "cli_version_matches": true
+    },
+    "copied_not_symlinked": true
+  },
+  "version": "0.60.26.0",
+  "results": [
+    {
+      "id": "s7-triage",
+      "file": "eval/reports/system-one-jev/built/s7-triage.jsonl",
+      "ok": true,
+      "detail": "91bb3dec2951e309 de2b13e9820b5ffb (frozen 91bb3dec2951e309 de2b13e9820b5ffb)"
+    },
+    {
+      "id": "s8-grounding",
+      "file": "eval/reports/system-one-jev/built/s8-grounding.jsonl",
+      "ok": true,
+      "detail": "13c9845020ba8779 dc24dffe77eff2f0 (frozen 13c9845020ba8779 dc24dffe77eff2f0)"
+    },
+    {
+      "id": "s3-evidence",
+      "file": "eval/reports/system-one-jev/built/s3-evidence.jsonl",
+      "ok": true,
+      "detail": "bff8133e64fbb450 036999bf920b7039 (frozen bff8133e64fbb450 036999bf920b7039)"
+    },
+    {
+      "id": "s4-answerable",
+      "file": "eval/reports/system-one-jev/built/s4-answerable.jsonl",
+      "ok": true,
+      "detail": "df016484c6367b8b c2d7aea440b81e88 (frozen df016484c6367b8b c2d7aea440b81e88)"
+    }
+  ]
+}

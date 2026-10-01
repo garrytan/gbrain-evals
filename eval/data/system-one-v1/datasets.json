@@ -3,7 +3,7 @@
   "upstream": {
     "repo": "garrytan/gbrain",
     "branch": "feat/system-one-v1",
-    "commit": "fc9a1d45d6fa4842c938c94d4d9e4ac96366730a",
+    "commit": "9196543dffd8c6b918b232559956f4693874e67b",
     "path": "docs/eval/system-one/datasets"
   },
   "datasets": [
