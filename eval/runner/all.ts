@@ -7,8 +7,14 @@
  * did not run and why (C-09, audit 2026-09-28).
  *
  *   bun eval/runner/all.ts                 # --tier offline (default, keyless)
- *   bun eval/runner/all.ts --tier paid     # provider-backed runners only
- *   bun eval/runner/all.ts --tier all      # both
+ *   bun eval/runner/all.ts --tier paid --paid --budget-run-id <id>   # provider-backed runners only
+ *   bun eval/runner/all.ts --tier all --paid --budget-run-id <id>    # both
+ *   bun eval/runner/all.ts --only N3,entity-resolution               # a subset (ids or legacy aliases)
+ *
+ * **Paid guard:** a selection that includes any K or P category refuses to
+ * start without both `--paid` and `--budget-run-id <id>` naming an open run
+ * in the budget ledger (eval/runner/paid-arm.ts). The id reaches every child
+ * as BRAINBENCH_BUDGET_RUN_ID, so runners that use startPaidRun join it.
  *
  * **Shape:** each dispatched runner runs in its own Bun subprocess (isolated
  * PGLite engine, stdout/stderr captured). Subprocesses run concurrently
@@ -28,6 +34,19 @@
  *     category (registry gate) with another verdict is REPORTED, never a
  *     pass and never a failure of the run.
  *
+ * **Promotion rules (amendment 1, 2026-10-01):** a completed receipt is
+ * graded against the category's preregistered promotion rules in
+ * eval/registry.ts: every safety contract and quality threshold must hold.
+ * The runner's verdict gates only when a rule names it (RUNNER_VERDICT), so a
+ * category can gate on zero leaks while its recall stays exploratory. A
+ * category with no gating rule is report-only.
+ *
+ * **Promotion rules (amendment 1, 2026-10-01):** a completed receipt is
+ * graded against the category's preregistered promotion rules in
+ * eval/registry.ts: every safety contract and quality threshold must hold.
+ * The runner's verdict gates only when a rule names it (RUNNER_VERDICT).
+ * A category with no gating rule is report-only.
+ *
  * **Env vars passed through to every child:**
  *   - `BRAINBENCH_N`: read ONLY by multi-adapter.ts (paid tier). No other
  *     dispatched runner reads it; it is not a universal work cap.
@@ -44,7 +63,9 @@ import { randomUUID } from 'node:crypto';
 import { writeFileSync, mkdirSync, existsSync, statSync } from 'fs';
 import { basename, join } from 'path';
 import { loadReceipt, receiptPath, type Receipt } from './receipt.ts';
-import { REGISTRY, tiersFor, type CategoryEntry, type GateStatus, type RegistryTier, type TierSelection } from '../registry.ts';
+import { REGISTRY, registryEntry, tiersFor, type CategoryEntry, type GateStatus, type PromotionRules, type RegistryTier, type TierSelection } from '../registry.ts';
+import { PaidArmRefusal, requirePaidArm } from './paid-arm.ts';
+import { describeOutcome, evaluatePromotion } from './promotion.ts';
 
 // ─── Category registry ───────────────────────────────────────────────
 // The rows live in eval/registry.ts. all.ts keeps each row's legacy alias
@@ -72,6 +93,10 @@ interface DispatchedCategory {
   exclusive?: boolean;
   /** report-only: a completed non-pass verdict is reported, not failed (registry gate). */
   gate: GateStatus;
+  /** Preregistered promotion rules; all.ts gates on these when present. */
+  promotion?: PromotionRules;
+  /** Registry cost estimate in USD, null when unmeasured. */
+  costUsd: number | null;
 }
 
 interface ListedCategory {
@@ -96,7 +121,7 @@ function toCategory(entry: CategoryEntry): Category {
   }
   if (entry.tier === 'none') throw new Error(`registry entry ${entry.id} is dispatched but has no tier`);
   const { kind: _kind, ...run } = entry.run;
-  return { ...base, ...run, kind: 'dispatched', tier: entry.tier === 'H' ? 'offline' : 'paid', registryTier: entry.tier, script: entry.script, gate: entry.gate };
+  return { ...base, ...run, kind: 'dispatched', tier: entry.tier === 'H' ? 'offline' : 'paid', registryTier: entry.tier, script: entry.script, gate: entry.gate, promotion: entry.promotion, costUsd: entry.cost_estimate.usd };
 }
 
 const CATEGORIES: readonly Category[] = REGISTRY.map(toCategory);
@@ -130,13 +155,34 @@ export function parseTier(argv: string[]): TierSelection {
   throw new Error(`--tier must be H, K, P, offline (H), paid (K and P) or all (got ${JSON.stringify(value)})`);
 }
 
+/**
+ * `--only a,b,c`: registry ids or legacy aliases, resolved to registry ids.
+ * Returns null without the flag; an unknown name throws with the valid list.
+ */
+export function parseOnly(argv: string[]): Set<string> | null {
+  const eq = argv.find(a => a.startsWith('--only='));
+  const i = argv.indexOf('--only');
+  const raw = eq ? eq.slice('--only='.length) : i >= 0 ? argv[i + 1] : undefined;
+  if (raw === undefined) return null;
+  const names = raw.split(',').map(n => n.trim()).filter(Boolean);
+  if (names.length === 0) throw new Error('--only needs a comma-separated list of registry ids or legacy aliases');
+  const unknown = names.filter(n => !registryEntry(n));
+  if (unknown.length) {
+    throw new Error(`--only: unknown categor${unknown.length > 1 ? 'ies' : 'y'} ${unknown.map(n => JSON.stringify(n)).join(', ')}. `
+      + `Valid ids (legacy alias in parentheses): ${REGISTRY.map(e => `${e.id} (${e.legacy_alias})`).join(', ')}`);
+  }
+  return new Set(names.map(n => registryEntry(n)!.id));
+}
+
 /** Split the registry into what runs in this tier and what does not, with a reason for each omission. */
-export function selectCategories(tier: TierSelection): { dispatch: DispatchedCategory[]; notRun: NotRun[] } {
+export function selectCategories(tier: TierSelection, only: ReadonlySet<string> | null = null): { dispatch: DispatchedCategory[]; notRun: NotRun[] } {
   const dispatch: DispatchedCategory[] = [];
   const notRun: NotRun[] = [];
   const selected = tiersFor(tier);
   for (const c of CATEGORIES) {
-    if (c.kind === 'listed') {
+    if (only && !only.has(c.registryId)) {
+      notRun.push({ id: c.id, name: c.name, tier: c.tier, reason: 'not selected by --only' });
+    } else if (c.kind === 'listed') {
       notRun.push({ id: c.id, name: c.name, tier: c.tier, reason: c.reason, command: c.command });
     } else if (selected.has(c.registryTier)) {
       dispatch.push(c);
@@ -181,27 +227,31 @@ export function loadFreshReceipt(path: string, startedAtMs: number): ReceiptLoad
   }
 }
 
-/** Every dispatched runner must produce a fresh valid receipt; nothing else counts as a pass. */
 /**
- * A report-only category (registry gate) that completes with a non-pass
- * verdict is 'reported': shown in the report, never failing the run. It is
- * how a new category lands before the product bugs it finds are fixed. A
- * missing, stale, invalid or errored receipt still fails.
+ * Every dispatched runner must produce a fresh valid receipt; nothing else
+ * counts as a pass. A completed receipt is graded by the category's promotion
+ * rules: every safety contract and quality threshold must hold, whatever the
+ * runner's own verdict says. A category without a gating rule that completes
+ * with a non-pass verdict is 'reported': shown in the report, never failing
+ * the run. A missing, stale, invalid or errored receipt still fails.
  */
-export function deriveStatus(load: ReceiptLoad, gate: GateStatus = 'gate'): { status: 'pass' | 'fail' | 'skipped' | 'reported'; statusSource: 'receipt' | 'no-receipt'; statusNote: string } {
+export function deriveStatus(load: ReceiptLoad, gating: GateStatus | PromotionRules = 'gate'): { status: 'pass' | 'fail' | 'skipped' | 'reported'; statusSource: 'receipt' | 'no-receipt'; statusNote: string } {
   if (load.kind === 'missing') return { status: 'fail', statusSource: 'no-receipt', statusNote: 'no receipt written by this run' };
   if (load.kind === 'stale') return { status: 'fail', statusSource: 'no-receipt', statusNote: `stale receipt from ${load.mtime}; this run wrote none` };
   if (load.kind === 'invalid') return { status: 'fail', statusSource: 'receipt', statusNote: `invalid receipt: ${load.reason}` };
   const receipt = load.receipt;
   switch (receipt.run_status) {
-    case 'completed':
-      // 'partial' verdicts count as fail at the aggregate: a category either
-      // meets its own bar or it does not.
-      return {
-        status: receipt.verdict === 'pass' ? 'pass' : gate === 'report-only' ? 'reported' : 'fail',
-        statusSource: 'receipt',
-        statusNote: `verdict=${receipt.verdict}${receipt.publishable ? '' : ' (not publishable)'}`,
-      };
+    case 'completed': {
+      const note = `verdict=${receipt.verdict}${receipt.publishable ? '' : ' (not publishable)'}`;
+      // Without promotion rules (older callers): the verdict gates, and
+      // 'partial' counts as fail.
+      if (typeof gating === 'string') {
+        return { status: receipt.verdict === 'pass' ? 'pass' : gating === 'report-only' ? 'reported' : 'fail', statusSource: 'receipt', statusNote: note };
+      }
+      const outcome = evaluatePromotion(gating, receipt);
+      if (!outcome.gated) return { status: receipt.verdict === 'pass' ? 'pass' : 'reported', statusSource: 'receipt', statusNote: `${note}; no gating rule` };
+      return { status: outcome.pass ? 'pass' : 'fail', statusSource: 'receipt', statusNote: `${note}; ${describeOutcome(outcome)}` };
+    }
     case 'skipped':
       return { status: 'skipped', statusSource: 'receipt', statusNote: receipt.skip_reason ?? 'skipped' };
     case 'error':
@@ -259,7 +309,7 @@ function runCatSubprocess(cat: DispatchedCategory): Promise<CategoryRun> {
       clearTimeout(timer);
       const elapsedMs = Date.now() - started;
       const exitCode = code ?? -1;
-      const derived = deriveStatus(loadFreshReceipt(receiptFile, started), cat.gate);
+      const derived = deriveStatus(loadFreshReceipt(receiptFile, started), cat.promotion ?? cat.gate);
       // eslint-disable-next-line no-console
       console.log(`  [done ] Cat ${cat.id}: ${derived.status.toUpperCase()} [${derived.statusSource}] (${Math.round(elapsedMs / 1000)}s) ${derived.statusNote}`);
       resolve({ ...base, ...derived, output, exitCode, elapsedMs });
@@ -395,8 +445,9 @@ function buildReport(tier: TierSelection, runs: CategoryRun[], notRun: NotRun[])
   lines.push('');
   lines.push('```bash');
   lines.push('bun eval/runner/all.ts --tier offline   # keyless categories');
-  lines.push('bun eval/runner/all.ts --tier paid      # provider-backed categories (spends money)');
-  lines.push('bun eval/runner/all.ts --tier all');
+  lines.push('bun eval/runner/all.ts --tier paid --paid --budget-run-id <id>   # provider-backed categories (spends money)');
+  lines.push('bun eval/runner/all.ts --tier all --paid --budget-run-id <id>');
+  lines.push('bun eval/runner/all.ts --only <ids-or-aliases>   # a subset, e.g. --only N3,N4,N6');
   lines.push('```');
 
   return lines.join('\n');
@@ -409,9 +460,23 @@ export function printNotRun(notRun: NotRun[], log: (s: string) => void = console
 
 // ─── Main ─────────────────────────────────────────────────────────────
 
+/**
+ * Refuse a selection that includes a K or P category unless `--paid` and
+ * `--budget-run-id` name an open budget run; returns the env every child gets.
+ */
+export function paidGuard(argv: readonly string[], dispatch: readonly DispatchedCategory[], ledger: { ledgerPath?: string } = {}): Record<string, string> {
+  const paid = dispatch.filter(c => c.registryTier !== 'H');
+  if (paid.length === 0) return {};
+  const estimate = paid.some(c => c.costUsd === null) ? null : paid.reduce((n, c) => n + (c.costUsd ?? 0), 0);
+  const { budgetRunId } = requirePaidArm(argv, { arm: `all.ts with ${paid.length} paid categor${paid.length > 1 ? 'ies' : 'y'} (${paid.map(c => `Cat ${c.id}`).join(', ')})`, estimateUsd: estimate, ...ledger });
+  return { BRAINBENCH_BUDGET_RUN_ID: budgetRunId };
+}
+
 async function main() {
-  const tier = parseTier(process.argv.slice(2));
-  const { dispatch, notRun } = selectCategories(tier);
+  const argv = process.argv.slice(2);
+  const tier = parseTier(argv);
+  const { dispatch, notRun } = selectCategories(tier, parseOnly(argv));
+  Object.assign(process.env, paidGuard(argv, dispatch));
   const concurrency = parseInt(process.env.BRAINBENCH_CONCURRENCY ?? String(DEFAULT_CONCURRENCY), 10);
 
   // eslint-disable-next-line no-console
@@ -452,9 +517,11 @@ async function main() {
 
 if (import.meta.main) {
   main().catch(e => {
+    // Refusals and flag errors carry their own fix; print the message, not a stack.
+    const usage = e instanceof PaidArmRefusal || (e instanceof Error && e.message.startsWith('--'));
     // eslint-disable-next-line no-console
-    console.error(e);
-    process.exit(1);
+    console.error(usage ? e.message : e);
+    process.exit(usage ? 2 : 1);
   });
 }
 

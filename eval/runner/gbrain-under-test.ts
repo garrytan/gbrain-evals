@@ -74,9 +74,23 @@ export function resolveGbrainUnderTest(spec: string | null): GbrainUnderTest {
   const build = prepareBuild(checkout, { label, ref, description: `gbrain under test from ${checkout}` }, OVERLAY_ROOT);
   const { tree_matches, symlinks_under_src, dir_is_realpath, cli_version_matches } = build.verified;
   if (!tree_matches || symlinks_under_src !== 0 || !dir_is_realpath || !cli_version_matches) {
-    throw new Error(`gbrain overlay failed verification: ${JSON.stringify(build.verified)}`);
+    throw new Error(overlayMismatchMessage({ spec, checkout, ref, dirty: status.trim() !== '', build }));
   }
   return { root: build.dir, version: build.version, overlay: { requested: spec, checkout, ref, checkout_dirty: status.trim() !== '', build } };
+}
+
+/** Problem, cause and fix for an overlay copy that does not match the commit it was asked for. */
+export function overlayMismatchMessage(o: { spec: string; checkout: string; ref: string; dirty: boolean; build: Pick<BuildInfo, 'commit' | 'tree' | 'version' | 'verified'> }): string {
+  const v = o.build.verified;
+  const problems: string[] = [];
+  if (!v.tree_matches) problems.push(`the copied tree is \`${v.copy_tree.slice(0, 12)}\`, but \`--gbrain ${o.spec}\` asked for commit \`${o.build.commit.slice(0, 12)}\` (tree \`${o.build.tree.slice(0, 12)}\`)`);
+  if (v.symlinks_under_src !== 0) problems.push(`the copy has ${v.symlinks_under_src} symlinks under src/, so Bun would load files from outside the copy`);
+  if (!v.dir_is_realpath) problems.push('the overlay directory is reached through a symlink, so Bun would resolve modules outside it');
+  if (!v.cli_version_matches) problems.push(`the copied CLI prints ${JSON.stringify(v.cli_version)}, not the commit's VERSION ${o.build.version}`);
+  const cause = o.dirty
+    ? `The checkout ${o.checkout} has uncommitted changes, which a copied overlay never measures, or ${o.ref} moved while the copy was made.`
+    : `The ref ${o.ref} probably moved while the copy was made, or an earlier copy in .gbrain-overlays/ is stale.`;
+  return `gbrain overlay failed verification: ${problems.join('; ')}. ${cause} Commit or stash, or pass \`--gbrain <path>@<ref>\` with a fixed commit, then delete .gbrain-overlays/ and rerun.`;
 }
 
 /** Import `<root>/<subpath>`, for example `src/core/pglite-engine.ts`. */
