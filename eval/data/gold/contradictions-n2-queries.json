@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "written": "2026-10-01, before any N2 run",
+  "purpose": "One supplied query per amara-life gold pair for the N2 development arm (the contradiction probe is query-driven). Written from the fact keys in eval/data/gold/contradictions.json, not tuned on any result.",
+  "queries": {
+    "c-001": "How large was the Meridian Solar Series A?",
+    "c-002": "What is the Datastream headcount?",
+    "c-003": "Who is leading the Voltaic Grid round?",
+    "c-004": "What equity stake does Jordan Park hold?",
+    "c-005": "What is the Threshold Series B target size?",
+    "c-006": "What is the CarbonLoop burn multiple?",
+    "c-007": "Who takes the Helios board seat?",
+    "c-008": "How much runway does NovaMind have?",
+    "c-009": "What is the Sunfield Energy valuation cap?",
+    "c-010": "How many pilot customers does Tidewater have?",
+    "s-001": "Has Datastream hired a CFO?",
+    "s-002": "When will the Threshold Series B close?",
+    "s-003": "Is the Meridian Solar pilot contract signed?",
+    "s-004": "Has Halfway Fund III had its first close?",
+    "s-005": "Does NovaMind have a VP of Engineering?"
+  }
+}
