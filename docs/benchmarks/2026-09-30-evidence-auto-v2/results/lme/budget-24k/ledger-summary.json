@@ -1,0 +1,38 @@
+{
+  "schema": "gbrain-evals/evidence-delivery-ledger-summary/v1",
+  "run": {
+    "run_id": "evidence-auto-v2-budget-check-2026-10-01T00-12-29-119Z-e541478c",
+    "runner": "evidence-auto-v2-budget-check",
+    "budget_usd": 20,
+    "estimate_usd": 6.48,
+    "started_at": "2026-10-01T00:12:29.312Z",
+    "finished_at": "2026-10-01T00:28:46.326Z"
+  },
+  "program_cap_usd": 1000,
+  "campaign_cap_usd": 20,
+  "total_usd": 5.1678,
+  "requests": 243,
+  "by_model": {
+    "anthropic:claude-sonnet-4-6 chat": {
+      "requests": 81,
+      "usd": 4.9859,
+      "charged_at_reservation": 0,
+      "input_tokens": 1544338,
+      "output_tokens": 23528
+    },
+    "openai:gpt-4o-2024-08-06 chat": {
+      "requests": 81,
+      "usd": 0.084,
+      "charged_at_reservation": 0,
+      "input_tokens": 33050,
+      "output_tokens": 134
+    },
+    "openai:gpt-4o chat": {
+      "requests": 81,
+      "usd": 0.0979,
+      "charged_at_reservation": 0,
+      "input_tokens": 38482,
+      "output_tokens": 165
+    }
+  }
+}

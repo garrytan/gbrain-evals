@@ -1,0 +1,44 @@
+{
+  "set": "sealed-confirmation-v2",
+  "reader": "claude-sonnet-4-6 (sealed protocol reader: official LongMemEval reading prompt, temperature 0, 2048 output tokens)",
+  "judge": "gpt-4o-2024-08-06 (official evaluate_qa.py prompts)",
+  "chunk_oracle": "at most five ~300-word chunks (50-word overlap) from the gold sessions, one per evidence fact chosen by word overlap with the ledger statement, in time order; generous, since a retriever would still have to find them",
+  "n": 200,
+  "oracle_correct": 199,
+  "chunk_oracle_correct": 196,
+  "no_memory_correct": 40,
+  "questions_needing_more_than_5_chunks": 0,
+  "truncated_reader_outputs": 0,
+  "by_type": {
+    "abstention": {
+      "n": 40,
+      "oracle_correct": 40,
+      "chunk_oracle_correct": 40,
+      "no_memory_correct": 40,
+      "evidence_chunks_needed_median": 2
+    },
+    "knowledge-update": {
+      "n": 40,
+      "oracle_correct": 40,
+      "chunk_oracle_correct": 40,
+      "no_memory_correct": 0,
+      "evidence_chunks_needed_median": 3
+    },
+    "multi-session": {
+      "n": 80,
+      "oracle_correct": 80,
+      "chunk_oracle_correct": 78,
+      "no_memory_correct": 0,
+      "evidence_chunks_needed_median": 4
+    },
+    "temporal-reasoning": {
+      "n": 40,
+      "oracle_correct": 39,
+      "chunk_oracle_correct": 38,
+      "no_memory_correct": 0,
+      "evidence_chunks_needed_median": 2
+    }
+  },
+  "cost_usd": 8.555,
+  "note": "Reported, never used to delete items."
+}

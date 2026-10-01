@@ -148,7 +148,7 @@ Save a worthwhile run under a dated path in `docs/benchmarks/`, including its ra
 
 ## Sealed confirmation set
 
-The [sealed confirmation set](../docs/benchmarks/2026-09-29-sealed-confirmation-protocol.md) is private. `bun eval/runner/sealed-confirmation.ts validate|run|answer` never read labels; `score` and `solvability` take the private labels path, refuse a file that does not match the commitment in `eval/data/sealed-confirmation-v1/manifest.json`, and append to the access log first. Do not run it for development: every run is a release decision and needs a committed preregistration. The unit tests use a small fixture built in code.
+The [sealed confirmation set](../docs/benchmarks/2026-09-29-sealed-confirmation-protocol.md) is private. `bun eval/runner/sealed-confirmation.ts validate|run|answer` never read labels; `score` and `solvability` take the private labels path, refuse a file that does not match the commitment in `eval/data/sealed-confirmation-v1/manifest.json`, and append to the access log first. Do not run it for development: every run is a release decision and needs a committed preregistration. The unit tests use a small fixture built in code. The [v2 set](../docs/benchmarks/2026-10-01-sealed-confirmation-v2-protocol.md) uses the same runner with `--manifest eval/data/sealed-confirmation-v2/manifest.json`.
 
 ## Cat36 situation-aware recall and the all-category release gate
 
