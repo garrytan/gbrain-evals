@@ -521,7 +521,7 @@ export const REGISTRY: readonly CategoryEntry[] = [
   {
     id: 'relational-ab', legacy_alias: 'relational-ab', name: 'Relational retrieval off vs on',
     family: 'relationships', tier: 'K', script: 'eval/runner/relational-ab.ts', run: { kind: 'dispatched', outputFlag: '--output-dir', timeoutMs: 2 * HOUR },
-    cost_estimate: { usd: 0.07, basis: 'measured 2026-09-29: $0.0645 of OpenAI embeddings in the budget ledger for 3 seeds x 2 splits (docs/benchmarks/2026-09-29-relational-paraphrase)' }, receipt_path: 'eval/reports/relational-ab/<output>/receipt.json',
+    cost_estimate: { usd: 0.07, basis: 'measured 2026-09-29 and again 2026-10-01 at 3a284ae: $0.0645 of OpenAI embeddings in the budget ledger for 3 seeds x 2 splits (docs/benchmarks/2026-10-01-n9-multi-hop)' }, receipt_path: 'eval/reports/relational-ab/<output>/receipt.json',
     headline: { metric: 'Recall@5 and hit@1 with relational retrieval off vs on over one index, template vs paraphrase wording', denominator: '145 questions x 2 wordings x 3 seeds' },
     gate: 'report-only', promotion: REPORT_ONLY, evidence_maturity: 'synthetic-production-path',
     contract: 'Toggles only relational retrieval over a shared index and pairs outcomes per question, on the template questions (the parser\'s own verbs) and on a frozen paraphrase of each. Report distinct-question gains beside pair gains, and the paraphrase split beside the template split.',
@@ -552,7 +552,7 @@ export const REGISTRY: readonly CategoryEntry[] = [
     id: 'multi-hop-paraphrase-paid', legacy_alias: 'N9-paid', name: 'Multi-hop with held-out wording, hybrid arm with OpenAI embeddings',
     family: 'relationships', tier: 'P', script: 'eval/runner/n9-multi-hop-paraphrase.ts',
     run: { kind: 'listed', reason: 'spends money: needs --paid and --budget-run-id naming an open budget run', command: 'bun eval/runner/n9-multi-hop-paraphrase.ts --paid --budget-run-id <id>' },
-    cost_estimate: { usd: null, basis: 'unmeasured before the first run; estimated about $0.07 from the relational-ab receipt (3 seeds of world-v1 corpus embeddings plus distinct questions)' },
+    cost_estimate: { usd: 0.07, basis: 'measured 2026-10-01 at 3a284ae: $0.0647 of OpenAI embeddings for 3 seeds (docs/benchmarks/2026-10-01-n9-multi-hop/n9-paid.receipt.json)' },
     receipt_path: 'eval/reports/n9-multi-hop-paraphrase/<output>/receipt.json',
     headline: { metric: 'strict supporting-fact all-hit@10, relational retrieval off vs on, canonical vs paraphrase wording, on hybrid search', denominator: '125 composed questions x 2 wordings x 3 ingestion seeds per arm' },
     gate: 'report-only', evidence_maturity: 'synthetic-production-path',
