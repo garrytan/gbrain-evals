@@ -496,7 +496,7 @@ export const REGISTRY: readonly CategoryEntry[] = [
     id: 'open-loops-email', legacy_alias: 'N7', name: 'Open loops on Gmail-shaped threads: turn-flip detection, closure, manual close and mute',
     family: 'agent', tier: 'H', script: 'eval/runner/n7-open-loops-email.ts', run: { kind: 'dispatched' },
     cost_estimate: FREE, receipt_path: receipt('n7-open-loops-email'),
-    headline: { metric: 'planted-loop recall and precision of the turn-flip detector, closure accuracy, counterparty accuracy, and violations of the documented exclusion, close, mute and redaction rules', denominator: 'seeded Gmail-shaped threads (planted loops, closing replies, acknowledgements, nudges, noise, list, calendar, CC-only and self threads) plus the 25 amara-life-v1 threads, judged at a pinned now; multi-round store scenarios on PGLite' },
+    headline: { metric: 'planted-loop recall and precision of the turn-flip detector, closure accuracy, counterparty accuracy, and violations of the documented exclusion, close, mute and redaction rules', denominator: 'seed 7: 136 Gmail-shaped threads judged at a pinned now (45 planted loops, 40 closures and no-loop threads with 31 closure cases, 37 excluded-mail threads, 14 contested), 32 multi-round store scenarios (8 closure rounds), 16 open_loops groups for the redaction check, plus the 25 amara-life-v1 threads as background' },
     gate: 'gate', evidence_maturity: 'synthetic-production-path',
     promotion: {
       preregistered: '2026-10-01',
@@ -530,7 +530,7 @@ export const REGISTRY: readonly CategoryEntry[] = [
     id: 'proactive-recall', legacy_alias: 'N8', name: 'Unsolicited recall: volunteer_context and turn_context final delivery across sessions',
     family: 'agent', tier: 'H', script: 'eval/runner/n8-proactive-recall.ts', run: { kind: 'dispatched' },
     cost_estimate: FREE, receipt_path: receipt('n8-proactive-recall'),
-    headline: { metric: 'proactive recall on trigger turns against false-alarm rate on negative turns at the default gate, with a min_confidence sweep, tokens per turn, redundant injections per session, and private or withdrawn deliveries', denominator: 'seeded entity sessions (trigger, matched innocuous, common-word collision, private, withdrawn and repeat turns) plus associative-recall-v1 probes as turns (240 indirect, 120 direct, 120 negatives with three adjudicated)' },
+    headline: { metric: 'proactive recall on trigger turns against false-alarm rate on negative turns at the default gate, with a min_confidence sweep, tokens per turn, redundant injections per session, and private or withdrawn deliveries', denominator: 'seed 8: 186 user turns in 52 sessions (60 triggers, 42 of them alias or exact title; 80 negatives, 68 innocuous or no-mention and 12 common-word; 8 private and 8 soft-deleted mentions; 30 repeats) plus 480 associative-recall-v1 probes as one-turn windows (240 indirect, 120 direct, 120 negatives with three adjudicated)' },
     gate: 'report-only', evidence_maturity: 'synthetic-production-path',
     promotion: {
       preregistered: '2026-10-01',
