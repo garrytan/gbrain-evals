@@ -69,6 +69,8 @@ gap does not isolate the effect of a graph alone.
 | Does relationship retrieval help questions that chain two or three relations, in wording the parser never saw, and does it still help reworded one-hop questions at the current pin? | [October 1 multi-hop check (N9)](benchmarks/2026-10-01-n9-multi-hop.md) |
 | After a value changes, does gbrain serve the new value everywhere and keep the old one as history, across transports, restarts, reimports and concurrent writes? | [October 1 knowledge update and supersession (N1)](benchmarks/2026-10-01-n1-knowledge-update.md) |
 | After `forget`, is the claim gone from every active recall surface, and only that claim, even after reimport, restart and concurrent writes? | [October 1 forgetting residue (N5)](benchmarks/2026-10-01-n5-forget-residue.md) |
+| When two notes disagree about the same fact, does gbrain find the pair, call it a contradiction rather than a change over time, and propose a safe fix? | [October 1 contradiction-surfacing check (N2)](benchmarks/2026-10-01-n2-contradiction-surfacing.md), [N2 and A4 preregistration](benchmarks/2026-10-01-n2-a4-preregistration.md) |
+| Does gbrain's confidence grade tell an answerable question from an unanswerable one, and does a fixed reader on gbrain's retrieval say "I don't know" without refusing answerable questions? | [October 1 abstention check (A4)](benchmarks/2026-10-01-a4-abstention.md) |
 | Which gbrain bugs, feature gaps and category defects has the October 1 eval-category wave found? | [Wave bug ledger](benchmarks/2026-10-01-wave-bugs.md) |
 
 ## Protocols and preregistrations (no results yet)
