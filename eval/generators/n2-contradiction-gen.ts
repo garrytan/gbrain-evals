@@ -198,7 +198,7 @@ function monthDay(iso: string): string {
 }
 
 export function renderN2Page(p: Pick<N2Page, 'title' | 'date' | 'body'>): string {
-  const fm = [`type: note`, `title: ${p.title}`, ...(p.date ? [`date: ${p.date}`] : [])];
+  const fm = [`type: note`, `title: ${JSON.stringify(p.title)}`, ...(p.date ? [`date: ${p.date}`] : [])];
   return `---\n${fm.join('\n')}\n---\n${p.body}\n`;
 }
 

@@ -103,7 +103,7 @@ const pad = (n: number, w = 3) => String(n).padStart(w, '0');
 const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
 export function renderA4Page(p: Pick<A4Page, 'title' | 'type' | 'body'>): string {
-  return `---\ntype: ${p.type}\ntitle: ${p.title}\n---\n${p.body}\n`;
+  return `---\ntype: ${p.type}\ntitle: ${JSON.stringify(p.title)}\n---\n${p.body}\n`;
 }
 
 export function generateA4World(opts: { seed?: number; counts?: Partial<Record<A4Class, number>> } = {}): GeneratedA4 {
