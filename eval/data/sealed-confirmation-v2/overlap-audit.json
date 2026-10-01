@@ -1,0 +1,50 @@
+{
+  "generated_at": "2026-10-01",
+  "sealed_questions": 200,
+  "sealed_personas": 40,
+  "shingle_words": 13,
+  "datasets": {
+    "longmemeval_s_cleaned": {
+      "file_sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442",
+      "rows": 500,
+      "unique_sessions_scanned": 19195,
+      "exact_question_matches": 0,
+      "max_question_jaccard": 0.3333,
+      "questions_with_jaccard_ge_0_5": 0,
+      "questions_with_jaccard_ge_0_3": 3,
+      "persona_full_name_matches": 0,
+      "persona_name_tokens_found": 2,
+      "persona_name_tokens_total": 75,
+      "invented_proper_nouns_found": 241,
+      "invented_proper_nouns_total": 612,
+      "sealed_sessions_sharing_a_13_word_shingle": 6,
+      "seconds": 33.5
+    },
+    "longmemeval_m_cleaned": {
+      "file_sha256": "9d79e5524794a2e6900a3aa9cb7d9152c5a3e8319c9a87c25494ba1eacee495f",
+      "rows": 500,
+      "unique_sessions_scanned": 51661,
+      "exact_question_matches": 0,
+      "max_question_jaccard": 0.3333,
+      "questions_with_jaccard_ge_0_5": 0,
+      "questions_with_jaccard_ge_0_3": 3,
+      "persona_full_name_matches": 0,
+      "persona_name_tokens_found": 2,
+      "persona_name_tokens_total": 75,
+      "invented_proper_nouns_found": 251,
+      "invented_proper_nouns_total": 612,
+      "sealed_sessions_sharing_a_13_word_shingle": 10,
+      "seconds": 93.4,
+      "m_questions_absent_from_s": 0
+    }
+  },
+  "gbrain_evals_data": {
+    "persona_names_found_in_eval_data": 0
+  },
+  "cat13": {
+    "queries_compared": 50,
+    "world_v1_concepts_checked": 30,
+    "max_question_jaccard": 0.1429,
+    "sealed_questions_mentioning_a_cat13_concept": 0
+  }
+}

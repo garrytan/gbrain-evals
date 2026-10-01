@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Overlap audit: sealed confirmation set vs LongMemEval S/M and existing gbrain-evals data.
+"""Overlap audit: a sealed confirmation set (v1 or v2; same private file shapes) vs LongMemEval S/M and existing gbrain-evals data.
 
 Checks, all computed from the private sealed files and the public datasets:
   1. Question overlap: exact normalized matches and word-set Jaccard between every
@@ -18,9 +18,9 @@ the author can inspect them; it stays with the sealed files.
 
 Usage (repository root):
   uv run --with ijson python3 scripts/sealed-confirmation-overlap.py \
-    --questions ~/.capy/work/sealed/v1/questions.json --ledger ~/.capy/work/sealed/v1/ledger.json \
+    --questions <private dir>/questions.json --ledger <private dir>/ledger.json \
     --lme-s ~/datasets/longmemeval/longmemeval_s_cleaned.json --lme-m ~/datasets/longmemeval/longmemeval_m_cleaned.json \
-    --out-public eval/data/sealed-confirmation-v1/overlap-audit.json --out-private ~/.capy/work/sealed/v1/overlap-private.json
+    --out-public eval/data/sealed-confirmation-v<N>/overlap-audit.json --out-private <private dir>/overlap-private.json
 """
 import argparse
 import hashlib
