@@ -3661,6 +3661,67 @@
       },
       "status": "covered",
       "note": "Counts only; the matched items are listed in a private file kept with the sealed set."
+    },
+    {
+      "claim_id": "n2-3-prompt-ab-receipt",
+      "readme_anchor": "docs/benchmarks/2026-10-01-n2-contradiction-surfacing.md: Addendum (2026-10-01): the N2-3 prompt fix, on development data",
+      "artifact_path": "docs/benchmarks/2026-10-01-n2-contradiction-surfacing/n2-3-prompt-ab/receipt.json",
+      "artifact_sha256": "1ca20857117c0c28dd1435e19792309baac2612580c46b0fbf7b0e658dfa3900",
+      "expected": {
+        "/data_class": "development",
+        "/seed": 20261002,
+        "/offered_keys_sha256": "f3fb6709146d250630d4ef065302ff37e622d9a727eb03db821acf6ec1065a33",
+        "/arms/before/prompt_version": "2",
+        "/arms/after/prompt_version": "3",
+        "/arms/before/judged": 1371,
+        "/arms/after/judged": 1371,
+        "/arms/before/metrics/e2e_conflict_recall/hits": 101,
+        "/arms/after/metrics/e2e_conflict_recall/hits": 131,
+        "/arms/before/metrics/false_contradiction_unplanted_pairs/hits": 59,
+        "/arms/after/metrics/false_contradiction_unplanted_pairs/hits": 11,
+        "/arms/after/metrics/false_contradiction_unplanted_pairs/n": 820,
+        "/arms/before/metrics/false_contradiction_compatible/hits": 3,
+        "/arms/after/metrics/false_contradiction_compatible/hits": 2,
+        "/arms/before/metrics/false_contradiction_dated_changes/hits": 0,
+        "/arms/after/metrics/false_contradiction_dated_changes/hits": 0,
+        "/paired_flips/contradiction/gained": 30,
+        "/paired_flips/contradiction/lost": 0,
+        "/paired_flips/unplanted/lost": 51,
+        "/paired_flips/unplanted/gained": 3
+      },
+      "golden_test": "test/eval/n2-3-prompt-ab.test.ts: scores, offered-pair hash and the compare output recount from the per-arm judgments",
+      "status": "covered",
+      "note": "Development data on a fresh seed (20261002); the counted N2 run at seed 20261001 stays as published. One judge sample per arm; all planted pairs plus a fixed 40% hash sample of unplanted pairs."
+    },
+    {
+      "claim_id": "n2-3-prompt-ab-ledger-summary",
+      "readme_anchor": "docs/benchmarks/2026-10-01-n2-contradiction-surfacing.md: Addendum (2026-10-01): the N2-3 prompt fix, on development data (cost)",
+      "artifact_path": "docs/benchmarks/2026-10-01-n2-contradiction-surfacing/n2-3-prompt-ab/ledger-summary.json",
+      "artifact_sha256": "89605017c8b1e71d11bf5c570dff3c4e0f53c6aaf682768faf2976a4999c98f4",
+      "expected": {
+        "/total_usd": 5.8957,
+        "/requests": 2742,
+        "/run/budget_usd": 10,
+        "/by_arm/before/requests": 1371,
+        "/by_arm/after/requests": 1371
+      },
+      "status": "covered",
+      "note": "Summarized from the budget-ledger run n2-3-prompt-ab-2026-10-01T21-40-40-215Z-f873e9f2; every request reconciled."
+    },
+    {
+      "claim_id": "n2-3-prompt-ab-parity",
+      "readme_anchor": "docs/benchmarks/2026-10-01-n2-contradiction-surfacing.md: Addendum (2026-10-01): the N2-3 prompt fix, on development data (reproduce)",
+      "artifact_path": "docs/benchmarks/2026-10-01-n2-contradiction-surfacing/n2-3-prompt-ab/parity-2026-10-01.json",
+      "artifact_sha256": "35fb5376224f7483b7259149519e64822bd6267a2854cccfe301388c0aa6a056",
+      "expected": {
+        "/matches_measured": true,
+        "/arms/before/gbrain/commit": "e833e93d094918524392aa5bc0056014b72fb879",
+        "/arms/after/gbrain/commit": "89a4f8a9ec168cfcbe402dbce3b0285e9e14c6f9",
+        "/arms/before/offered_keys_sha256": "f3fb6709146d250630d4ef065302ff37e622d9a727eb03db821acf6ec1065a33",
+        "/arms/after/offered_keys_sha256": "f3fb6709146d250630d4ef065302ff37e622d9a727eb03db821acf6ec1065a33"
+      },
+      "status": "covered",
+      "note": "Keyless ($0) rerun of the committed driver through copied overlays at the pushed gbrain commits; it offers the same pairs as the measured arms."
     }
   ]
 }

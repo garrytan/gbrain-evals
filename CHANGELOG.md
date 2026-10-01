@@ -100,9 +100,11 @@ overlay, with provider keys stripped and System One off.
   - **In fix wave 6, lane D:**
     - N2-1: undated pages reach the judge with the fallback date.
     - N2-2: `find-contradictions` with no flags returns nothing.
-    - N2-3: judge quality against its own prompt rules. Attempted only if a
-      fresh-seed check shows a gain without more false contradictions;
-      otherwise deferred.
+    - N2-3: judge quality against its own prompt rules. Fixed by judge prompt
+      v3 (gbrain `89a4f8a9`). On a fresh seed (development data), same-time
+      conflicts called contradictions went from 101/150 to 131/150, and
+      unplanted false contradictions from 59/820 to 11/820
+      ([addendum](docs/benchmarks/2026-10-01-n2-contradiction-surfacing.md#addendum-2026-10-01-the-n2-3-prompt-fix-on-development-data)).
 - **Feature gaps (28)** are listed rather than "fixed":
   - Implicit supersession, paraphrase retraction and physical erasure.
   - Corpus-wide contradiction discovery, and findings hidden from remote
@@ -125,9 +127,10 @@ overlay, with provider keys stripped and System One off.
   - A4-3: the budget ledger cannot price TypeSafe, so S4-on was not run.
   - A4-4: refusals that name another company's value count as answers.
   - N12-8: the first development run measured the legacy schema pack.
-- **Paid spend: $9.85 in total.**
+- **Paid spend: $15.75 in total.**
   - N2 judge: $5.74, plus $2.76 from a first attempt that a tool time limit
     stopped with no receipt.
+  - N2-3 prompt A/B (development data): $5.90.
   - A4 reader: $1.12.
   - N9 paid arms: $0.129.
   - N7 extractor replay: $0.10.

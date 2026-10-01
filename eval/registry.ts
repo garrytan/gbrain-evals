@@ -944,6 +944,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'longmemeval-validate-ndjson.ts': { role: 'LongMemEval NDJSON validator', part_of: 'longmemeval-retrieval' },
   'metrics.ts': { role: 'shared retrieval metrics' },
   'mutation-kit.ts': { role: 'scorer mutation kit: fake systems every category scorer must fail' },
+  'n2-3-prompt-ab.ts': { role: 'matched before/after of the gbrain contradiction-judge prompt (N2-3) on a fresh N2 seed, development data', part_of: 'contradiction-surfacing' },
   'paid-arm.ts': { role: 'paid-arm guard: --paid and --budget-run-id against the budget ledger' },
   'pins.ts': { role: 'declared gbrain pins from package.json' },
   'precisionmembench-instrument.ts': { role: 'PrecisionMemBench instrumentation sweep', part_of: 'precisionmembench' },

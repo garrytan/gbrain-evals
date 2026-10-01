@@ -1,0 +1,339 @@
+{
+ "kind": "n2-3-prompt-ab",
+ "data_class": "development",
+ "note": "Fresh seed, not the counted seed 20261001; one judge sample per arm.",
+ "seed": 20261002,
+ "generator_version": "n2-contradiction-gen/1.0.0",
+ "world_fingerprint": "9ef13efe48fcfc7c4c2b640b7c68fcac9a83349c9433246910e75e2fddcad273",
+ "judge_model": "anthropic:claude-haiku-4-5-20251001",
+ "sample": {
+  "planted": "all",
+  "unplanted": "sha256(\"n2-3:\" + pairKey)[0] < 103"
+ },
+ "offered_keys_sha256": "f3fb6709146d250630d4ef065302ff37e622d9a727eb03db821acf6ec1065a33",
+ "arms": {
+  "before": {
+   "label": "before",
+   "gbrain": {
+    "commit": "e833e93d",
+    "note": "gbrain capy/evalwave-fixes-d with N2-1 and N2-2",
+    "full_commit": "e833e93d094918524392aa5bc0056014b72fb879",
+    "loaded_from": "git worktree at that commit (not a copied overlay)"
+   },
+   "prompt_version": "2",
+   "offered": 2680,
+   "judged": 1371,
+   "skipped_unsampled": 1309,
+   "skipped_by_date": 20,
+   "judge_errors": 0,
+   "metrics": {
+    "e2e_conflict_recall": {
+     "n": 150,
+     "hits": 101,
+     "rate": 0.6733333333333333
+    },
+    "classification_recall_offered_conflicts": {
+     "n": 150,
+     "hits": 101,
+     "rate": 0.6733333333333333
+    },
+    "false_contradiction_dated_changes": {
+     "n": 40,
+     "hits": 0,
+     "rate": 0
+    },
+    "false_contradiction_compatible": {
+     "n": 50,
+     "hits": 3,
+     "rate": 0.06
+    },
+    "false_contradiction_unplanted_pairs": {
+     "n": 820,
+     "hits": 59,
+     "rate": 0.07195121951219512
+    },
+    "judged_pair_precision": {
+     "n": 163,
+     "hits": 101,
+     "rate": 0.6196319018404908
+    },
+    "temporal_recognition": {
+     "n": 40,
+     "hits": 40,
+     "rate": 1
+    },
+    "judge_errors": {
+     "n": 1371,
+     "hits": 0,
+     "rate": 0
+    },
+    "resolution_acceptable": {
+     "n": 190,
+     "hits": 141,
+     "rate": 0.7421052631578947
+    }
+   },
+   "by_variant": {
+    "same_time_conflict/dated_same_day": {
+     "offered": 50,
+     "contradiction": 36,
+     "temporal": 14,
+     "not_contradiction": 0,
+     "error": 0
+    },
+    "same_time_conflict/undated": {
+     "offered": 50,
+     "contradiction": 24,
+     "temporal": 26,
+     "not_contradiction": 0,
+     "error": 0
+    },
+    "same_time_conflict/mixed_dated": {
+     "offered": 50,
+     "contradiction": 41,
+     "temporal": 9,
+     "not_contradiction": 0,
+     "error": 0
+    },
+    "dated_change/frontmatter_dates": {
+     "offered": 20,
+     "contradiction": 0,
+     "temporal": 20,
+     "not_contradiction": 0,
+     "error": 0
+    },
+    "dated_change/text_dates": {
+     "offered": 0,
+     "contradiction": 0,
+     "temporal": 0,
+     "not_contradiction": 0,
+     "error": 0
+    },
+    "dated_change/regression": {
+     "offered": 20,
+     "contradiction": 0,
+     "temporal": 20,
+     "not_contradiction": 0,
+     "error": 0
+    },
+    "holder_opinion/plain": {
+     "offered": 15,
+     "contradiction": 0,
+     "temporal": 0,
+     "not_contradiction": 15,
+     "error": 0
+    },
+    "agreement/plain": {
+     "offered": 15,
+     "contradiction": 0,
+     "temporal": 0,
+     "not_contradiction": 15,
+     "error": 0
+    },
+    "namesake/plain": {
+     "offered": 5,
+     "contradiction": 1,
+     "temporal": 0,
+     "not_contradiction": 4,
+     "error": 0
+    },
+    "negation/plain": {
+     "offered": 15,
+     "contradiction": 2,
+     "temporal": 0,
+     "not_contradiction": 13,
+     "error": 0
+    }
+   }
+  },
+  "after": {
+   "label": "after",
+   "gbrain": {
+    "commit": "cce29a23",
+    "runtime_equivalent": "89a4f8a9ec168cfcbe402dbce3b0285e9e14c6f9",
+    "note": "unpushed scratch commit: e833e93d plus the prompt change; its src/ differs from the pushed 89a4f8a9 only by a two-line doc comment in types.ts",
+    "full_commit": "cce29a2307c782385bd0a2fffc827b7be847305b",
+    "loaded_from": "git worktree at that commit (not a copied overlay)"
+   },
+   "prompt_version": "3",
+   "offered": 2680,
+   "judged": 1371,
+   "skipped_unsampled": 1309,
+   "skipped_by_date": 20,
+   "judge_errors": 0,
+   "metrics": {
+    "e2e_conflict_recall": {
+     "n": 150,
+     "hits": 131,
+     "rate": 0.8733333333333333
+    },
+    "classification_recall_offered_conflicts": {
+     "n": 150,
+     "hits": 131,
+     "rate": 0.8733333333333333
+    },
+    "false_contradiction_dated_changes": {
+     "n": 40,
+     "hits": 0,
+     "rate": 0
+    },
+    "false_contradiction_compatible": {
+     "n": 50,
+     "hits": 2,
+     "rate": 0.04
+    },
+    "false_contradiction_unplanted_pairs": {
+     "n": 820,
+     "hits": 11,
+     "rate": 0.013414634146341463
+    },
+    "judged_pair_precision": {
+     "n": 144,
+     "hits": 131,
+     "rate": 0.9097222222222222
+    },
+    "temporal_recognition": {
+     "n": 40,
+     "hits": 40,
+     "rate": 1
+    },
+    "judge_errors": {
+     "n": 1371,
+     "hits": 0,
+     "rate": 0
+    },
+    "resolution_acceptable": {
+     "n": 190,
+     "hits": 171,
+     "rate": 0.9
+    }
+   },
+   "by_variant": {
+    "same_time_conflict/dated_same_day": {
+     "offered": 50,
+     "contradiction": 45,
+     "temporal": 5,
+     "not_contradiction": 0,
+     "error": 0
+    },
+    "same_time_conflict/undated": {
+     "offered": 50,
+     "contradiction": 37,
+     "temporal": 13,
+     "not_contradiction": 0,
+     "error": 0
+    },
+    "same_time_conflict/mixed_dated": {
+     "offered": 50,
+     "contradiction": 49,
+     "temporal": 1,
+     "not_contradiction": 0,
+     "error": 0
+    },
+    "dated_change/frontmatter_dates": {
+     "offered": 20,
+     "contradiction": 0,
+     "temporal": 20,
+     "not_contradiction": 0,
+     "error": 0
+    },
+    "dated_change/text_dates": {
+     "offered": 0,
+     "contradiction": 0,
+     "temporal": 0,
+     "not_contradiction": 0,
+     "error": 0
+    },
+    "dated_change/regression": {
+     "offered": 20,
+     "contradiction": 0,
+     "temporal": 20,
+     "not_contradiction": 0,
+     "error": 0
+    },
+    "holder_opinion/plain": {
+     "offered": 15,
+     "contradiction": 0,
+     "temporal": 0,
+     "not_contradiction": 15,
+     "error": 0
+    },
+    "agreement/plain": {
+     "offered": 15,
+     "contradiction": 0,
+     "temporal": 0,
+     "not_contradiction": 15,
+     "error": 0
+    },
+    "namesake/plain": {
+     "offered": 5,
+     "contradiction": 0,
+     "temporal": 0,
+     "not_contradiction": 5,
+     "error": 0
+    },
+    "negation/plain": {
+     "offered": 15,
+     "contradiction": 2,
+     "temporal": 0,
+     "not_contradiction": 13,
+     "error": 0
+    }
+   }
+  }
+ },
+ "paired_flips": {
+  "unplanted": {
+   "gained": 3,
+   "lost": 51
+  },
+  "contradiction": {
+   "gained": 30,
+   "lost": 0
+  },
+  "compatible": {
+   "gained": 1,
+   "lost": 2
+  }
+ },
+ "ledger_summary": {
+  "schema": "gbrain-evals/n2-3-prompt-ab-ledger-summary/v1",
+  "run": {
+   "run_id": "n2-3-prompt-ab-2026-10-01T21-40-40-215Z-f873e9f2",
+   "runner": "n2-3-prompt-ab",
+   "budget_usd": 10,
+   "estimate_usd": 6,
+   "started_at": "2026-10-01T21:40:40.216Z",
+   "finished_at": "2026-10-01T22:02:09.986Z"
+  },
+  "program_cap_usd": 500,
+  "total_usd": 5.8957,
+  "requests": 2742,
+  "statuses": {
+   "reconciled": 2742
+  },
+  "by_model": {
+   "anthropic:claude-haiku-4-5-20251001 chat": {
+    "requests": 2742,
+    "usd": 5.8957,
+    "charged_at_reservation": 0,
+    "input_tokens": 2540206,
+    "output_tokens": 671104
+   }
+  },
+  "by_arm": {
+   "before": {
+    "requests": 1371,
+    "usd": 2.778,
+    "input_tokens": 1189214,
+    "output_tokens": 317764
+   },
+   "after": {
+    "requests": 1371,
+    "usd": 3.1177,
+    "input_tokens": 1350992,
+    "output_tokens": 353340
+   }
+  }
+ }
+}

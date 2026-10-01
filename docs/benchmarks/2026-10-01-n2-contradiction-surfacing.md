@@ -75,3 +75,28 @@ bun eval/runner/n2-contradiction-surfacing.ts --gbrain <gbrain checkout>@3a284ae
 ```
 
 Receipts: [hermetic](2026-10-01-n2-contradiction-surfacing/receipt-hermetic-3a284ae.json), [paid](2026-10-01-n2-contradiction-surfacing/receipt-paid-3a284ae.json) (every judged pair, its gold and verdict). Preregistration: [N2 and A4](2026-10-01-n2-a4-preregistration.md). Registry row: `contradiction-surfacing`.
+
+## Addendum (2026-10-01): the N2-3 prompt fix, on development data
+
+This is development data on a fresh seed, 20261002. The counted run above (seed 20261001, gbrain `3a284ae`) stays as published, and nothing here changes its decision.
+
+gbrain fix wave 6, lane D, added two rules to the judge prompt and bumped it from version 2 to version 3. The first rule says the three temporal verdicts need two different times, so same-date or undated value conflicts are contradictions. The second says that entities whose names merely look alike are different entities. Both arms ran gbrain branch `capy/evalwave-fixes-d`. The before arm was `e833e93d`, which already has the N2-1 and N2-2 fixes. The after arm was the same tree plus the prompt change; it ran as unpushed commit `cce29a23`, whose `src/` differs from the pushed `89a4f8a9` only by a two-line comment. Because N2-1 is fixed in both arms, undated pages show `(date unknown)`, and the date pre-filter now skips the 20 dated changes whose dates appear only in their text. So 40 dated changes were scored, not 60.
+
+Each arm wrote the world through `put_page`, then ran `runContradictionProbe` with keyword-only `hybridSearch`, top five, cache off. The judge was `anthropic:claude-haiku-4-5-20251001`, called once per pair. Both arms judged the same 1,371 offered pairs (offered-pair SHA-256 `f3fb6709…` in both). Those were every planted pair plus a fixed hash sample of about 40% of unplanted pairs, 820 distinct, chosen because two full arms would have cost about $11.50. Pairs outside the sample were not judged or scored.
+
+| Metric | Before (prompt v2) | After (prompt v3) |
+|---|---|---|
+| Same-time conflicts called contradiction | 101/150 (67.3%) | 131/150 (87.3%) |
+| … same-day dates / both undated / mixed | 36 / 24 / 41 of 50 | 45 / 37 / 49 of 50 |
+| False contradictions on dated changes | 0/40 | 0/40 |
+| False contradictions on compatible negatives | 3/50 | 2/50 |
+| False contradictions on unplanted pairs | 59/820 (7.2%) | 11/820 (1.3%) |
+| Judged-pair precision | 101/163 (62.0%) | 131/144 (91.0%) |
+| Dated changes recognised as temporal | 40/40 | 40/40 |
+| Acceptable resolution proposals | 141/190 | 171/190 |
+
+Paired, the after arm called 30 more planted conflicts contradictions and none fewer. It dropped 51 unplanted false contradictions and added 3, and on compatible negatives it dropped 2 and added 1. This is one judge sample per arm on development data. It is not a preregistered rerun of the counted arm, so the counted decision stays as published until a counted rerun at a pinned gbrain that contains the fix.
+
+**Cost.** $5.90 for 2,742 requests ($2.78 before, $3.12 after), reconciled in one $10 budget-ledger run.
+
+**Reproduce.** Each arm is `bun eval/runner/n2-3-prompt-ab.ts arm --gbrain <gbrain checkout>@<commit> --label <before|after> --output <file> --paid --budget-run-id <id>`, and `compare` builds the receipt. Without `--paid` an arm judges nothing ($0) and records only the offered pairs. Run that way through copied overlays at `e833e93d` and `89a4f8a9`, both arms offered the same pair hash as the measured arms. Artifacts: [receipt](2026-10-01-n2-contradiction-surfacing/n2-3-prompt-ab/receipt.json), per-arm judgments ([before](2026-10-01-n2-contradiction-surfacing/n2-3-prompt-ab/arm-before.json), [after](2026-10-01-n2-contradiction-surfacing/n2-3-prompt-ab/arm-after.json)), [ledger summary](2026-10-01-n2-contradiction-surfacing/n2-3-prompt-ab/ledger-summary.json), [parity check](2026-10-01-n2-contradiction-surfacing/n2-3-prompt-ab/parity-2026-10-01.json). `test/eval/n2-3-prompt-ab.test.ts` recounts all of them.
