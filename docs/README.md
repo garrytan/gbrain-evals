@@ -67,6 +67,8 @@ gap does not isolate the effect of a graph alone.
 | Does "who is waiting on me" open, close and mute Gmail loops the way the guide says, and where does a reply closing a loop differ from the work being done? | [October 1 open loops on Gmail-shaped threads (N7)](benchmarks/2026-10-01-n7-open-loops-email.md) |
 | Does the brain volunteer the right page when someone is mentioned, without false alarms, and does it keep private pages out of what it pushes? (report-only) | [October 1 unsolicited recall at final delivery (N8)](benchmarks/2026-10-01-n8-proactive-recall.md) |
 | Does relationship retrieval help questions that chain two or three relations, in wording the parser never saw, and does it still help reworded one-hop questions at the current pin? | [October 1 multi-hop check (N9)](benchmarks/2026-10-01-n9-multi-hop.md) |
+| After a value changes, does gbrain serve the new value everywhere and keep the old one as history, across transports, restarts, reimports and concurrent writes? | [October 1 knowledge update and supersession (N1)](benchmarks/2026-10-01-n1-knowledge-update.md) |
+| After `forget`, is the claim gone from every active recall surface, and only that claim, even after reimport, restart and concurrent writes? | [October 1 forgetting residue (N5)](benchmarks/2026-10-01-n5-forget-residue.md) |
 | Which gbrain bugs, feature gaps and category defects has the October 1 eval-category wave found? | [Wave bug ledger](benchmarks/2026-10-01-wave-bugs.md) |
 
 ## Protocols and preregistrations (no results yet)
