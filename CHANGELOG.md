@@ -93,15 +93,16 @@ overlay, with provider keys stripped and System One off.
     - N1-2: an ontology revert is a no-op.
     - N1-3: private ontology observations reach remote callers.
     - N5-1: the hot-memory cache serves forgotten facts for 30 s.
-  - **In fix wave 6:**
-    - N2-1: undated pages reach the judge with the fallback date.
-    - N2-2: `find-contradictions` with no flags returns nothing.
-  - **Not yet assigned to a fix wave:**
-    - N2-3: judge quality against its own prompt rules.
     - N5-2: concurrent PGLite writes leave a forgotten fact's page without
       chunks.
     - N5-3: the first `remember` after a forget is refused with
       `scope_denied`.
+  - **In fix wave 6, lane D:**
+    - N2-1: undated pages reach the judge with the fallback date.
+    - N2-2: `find-contradictions` with no flags returns nothing.
+    - N2-3: judge quality against its own prompt rules. Attempted only if a
+      fresh-seed check shows a gain without more false contradictions;
+      otherwise deferred.
 - **Feature gaps (28)** are listed rather than "fixed":
   - Implicit supersession, paraphrase retraction and physical erasure.
   - Corpus-wide contradiction discovery, and findings hidden from remote
