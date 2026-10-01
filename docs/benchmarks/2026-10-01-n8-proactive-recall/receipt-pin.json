@@ -23,10 +23,10 @@
   "gbrain_pin": "github:garrytan/gbrain#3a284aea26889b77c633aebb4149c3016d834ee6",
   "execution": {
     "source_tree": {
-      "sha256": "2cce7ce79031f8645e90117fe79668305d02aed32b7cf5dd57c53242df87602e",
-      "files": 2399,
-      "git_head": "655202a05c01b4b263eb161cdb46f0c6fe89afa0",
-      "dirty": true
+      "sha256": "21da96a518e0038b465e37d235baca29a62a528c361fc67e505956e097893fc3",
+      "files": 2402,
+      "git_head": "64a163d33b9b6f72d7b2eec8c4374b8102d48b74",
+      "dirty": false
     },
     "product": {
       "package": "gbrain",
@@ -74,8 +74,8 @@
     "ledger_sha256": "bf21d39c97a8cd99f68fde487c0fdfbf51e68e4202146f60dbe197361adad9ef",
     "outputs_sha256": "dbad189bb2f9d29232ed68f35c9197009a7077c870b06d98b2eefc51918b362e"
   },
-  "started_at": "2026-10-01T19:38:06.549Z",
-  "finished_at": "2026-10-01T19:38:39.868Z",
+  "started_at": "2026-10-01T19:45:24.875Z",
+  "finished_at": "2026-10-01T19:45:57.700Z",
   "data": {
     "contracts": {
       "private_pages_delivered_remote": 4,
@@ -155,8 +155,8 @@
         "tokens_per_turn_mean": 24.634408602150536,
         "tokens_per_turn_p95": 73,
         "tokens_per_negative_turn_mean": 5.5,
-        "latency_ms_p50": 0.5874509999994189,
-        "latency_ms_p95": 1.2706719999996494,
+        "latency_ms_p50": 0.6307409999999436,
+        "latency_ms_p95": 1.3496930000001157,
         "errors": 0
       },
       "modes": {
@@ -217,8 +217,8 @@
           "tokens_per_turn_mean": 24.634408602150536,
           "tokens_per_turn_p95": 73,
           "tokens_per_negative_turn_mean": 5.5,
-          "latency_ms_p50": 0.5874509999994189,
-          "latency_ms_p95": 1.2706719999996494,
+          "latency_ms_p50": 0.6307409999999436,
+          "latency_ms_p95": 1.3496930000001157,
           "errors": 0
         },
         "volunteer_local_no_prior": {
@@ -278,8 +278,8 @@
           "tokens_per_turn_mean": 58.236559139784944,
           "tokens_per_turn_p95": 132,
           "tokens_per_negative_turn_mean": 38.4125,
-          "latency_ms_p50": 0.5890809999991689,
-          "latency_ms_p95": 0.8723110000000815,
+          "latency_ms_p50": 0.6176910000003772,
+          "latency_ms_p95": 0.900962000000618,
           "errors": 0
         },
         "volunteer_remote_prior": {
@@ -339,8 +339,8 @@
           "tokens_per_turn_mean": 24.634408602150536,
           "tokens_per_turn_p95": 73,
           "tokens_per_negative_turn_mean": 5.5,
-          "latency_ms_p50": 0.5057710000000952,
-          "latency_ms_p95": 0.8278419999996913,
+          "latency_ms_p50": 0.5115820000000895,
+          "latency_ms_p95": 0.9517530000002807,
           "errors": 0
         },
         "turn_context_local": {
@@ -400,8 +400,8 @@
           "tokens_per_turn_mean": 23.419354838709676,
           "tokens_per_turn_p95": 64,
           "tokens_per_negative_turn_mean": 4.825,
-          "latency_ms_p50": 0.9097630000005665,
-          "latency_ms_p95": 1.96395400000074,
+          "latency_ms_p50": 1.0344219999997222,
+          "latency_ms_p95": 1.9892740000004778,
           "errors": 0
         },
         "baseline_never": {
@@ -462,7 +462,7 @@
           "tokens_per_turn_p95": 0,
           "tokens_per_negative_turn_mean": 0,
           "latency_ms_p50": 0.0004800000006071059,
-          "latency_ms_p95": 0.0006400000002031447,
+          "latency_ms_p95": 0.0007399999994959217,
           "errors": 0
         },
         "baseline_always_3": {
@@ -522,8 +522,8 @@
           "tokens_per_turn_mean": 18.370967741935484,
           "tokens_per_turn_p95": 20,
           "tokens_per_negative_turn_mean": 18.4,
-          "latency_ms_p50": 0.0019199999996999395,
-          "latency_ms_p95": 0.002650000000357977,
+          "latency_ms_p50": 0.0019800000000032014,
+          "latency_ms_p95": 0.0028299999994487735,
           "errors": 0
         },
         "baseline_keyword_search_top3": {
@@ -582,9 +582,9 @@
           "withdrawn_deliveries": 0,
           "tokens_per_turn_mean": 184.5752688172043,
           "tokens_per_turn_p95": 466,
-          "tokens_per_negative_turn_mean": 142.1125,
-          "latency_ms_p50": 4.495018999999957,
-          "latency_ms_p95": 11.244822999999997,
+          "tokens_per_negative_turn_mean": 142.1,
+          "latency_ms_p50": 4.565759000000071,
+          "latency_ms_p95": 11.331905000000006,
           "errors": 0
         }
       },
@@ -900,37 +900,37 @@
         "baseline_keyword_search_top3": {
           "mean": 184.5752688172043,
           "p95": 466,
-          "negative_turn_mean": 142.1125
+          "negative_turn_mean": 142.1
         }
       },
       "latency_ms": {
         "volunteer_local_prior": {
-          "p50": 0.5874509999994189,
-          "p95": 1.2706719999996494
+          "p50": 0.6307409999999436,
+          "p95": 1.3496930000001157
         },
         "volunteer_local_no_prior": {
-          "p50": 0.5890809999991689,
-          "p95": 0.8723110000000815
+          "p50": 0.6176910000003772,
+          "p95": 0.900962000000618
         },
         "volunteer_remote_prior": {
-          "p50": 0.5057710000000952,
-          "p95": 0.8278419999996913
+          "p50": 0.5115820000000895,
+          "p95": 0.9517530000002807
         },
         "turn_context_local": {
-          "p50": 0.9097630000005665,
-          "p95": 1.96395400000074
+          "p50": 1.0344219999997222,
+          "p95": 1.9892740000004778
         },
         "baseline_never": {
           "p50": 0.0004800000006071059,
-          "p95": 0.0006400000002031447
+          "p95": 0.0007399999994959217
         },
         "baseline_always_3": {
-          "p50": 0.0019199999996999395,
-          "p95": 0.002650000000357977
+          "p50": 0.0019800000000032014,
+          "p95": 0.0028299999994487735
         },
         "baseline_keyword_search_top3": {
-          "p50": 4.495018999999957,
-          "p95": 11.244822999999997
+          "p50": 4.565759000000071,
+          "p95": 11.331905000000006
         }
       },
       "session": {
@@ -1085,7 +1085,7 @@
           "tokens_per_turn_p95": 0,
           "tokens_per_negative_turn_mean": 0,
           "latency_ms_p50": 0.0004800000006071059,
-          "latency_ms_p95": 0.0006400000002031447,
+          "latency_ms_p95": 0.0007399999994959217,
           "errors": 0
         },
         "always_3": {
@@ -1145,8 +1145,8 @@
           "tokens_per_turn_mean": 18.370967741935484,
           "tokens_per_turn_p95": 20,
           "tokens_per_negative_turn_mean": 18.4,
-          "latency_ms_p50": 0.0019199999996999395,
-          "latency_ms_p95": 0.002650000000357977,
+          "latency_ms_p50": 0.0019800000000032014,
+          "latency_ms_p95": 0.0028299999994487735,
           "errors": 0
         },
         "keyword_search_top3": {
@@ -1205,9 +1205,9 @@
           "withdrawn_deliveries": 0,
           "tokens_per_turn_mean": 184.5752688172043,
           "tokens_per_turn_p95": 466,
-          "tokens_per_negative_turn_mean": 142.1125,
-          "latency_ms_p50": 4.495018999999957,
-          "latency_ms_p95": 11.244822999999997,
+          "tokens_per_negative_turn_mean": 142.1,
+          "latency_ms_p50": 4.565759000000071,
+          "latency_ms_p95": 11.331905000000006,
           "errors": 0
         }
       }

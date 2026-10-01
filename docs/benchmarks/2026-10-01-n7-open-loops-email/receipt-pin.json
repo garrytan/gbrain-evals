@@ -23,10 +23,10 @@
   "gbrain_pin": "github:garrytan/gbrain#3a284aea26889b77c633aebb4149c3016d834ee6",
   "execution": {
     "source_tree": {
-      "sha256": "13aec33a746e1f253a2053e555c0a21b65ff7a7c0fe56ba88427c8100d45b1bc",
-      "files": 2394,
-      "git_head": "655202a05c01b4b263eb161cdb46f0c6fe89afa0",
-      "dirty": true
+      "sha256": "21da96a518e0038b465e37d235baca29a62a528c361fc67e505956e097893fc3",
+      "files": 2402,
+      "git_head": "64a163d33b9b6f72d7b2eec8c4374b8102d48b74",
+      "dirty": false
     },
     "product": {
       "package": "gbrain",
@@ -82,8 +82,8 @@
     "ledger_sha256": "5373f56659fae43a8628cc3e525e7f8b6a005c0f4170cb4088d2a119e1631ef8",
     "outputs_sha256": "a91b1adf8e533d173dbde1d4e9fd9e43a9f44de146b784046d8aca409ccb8e79"
   },
-  "started_at": "2026-10-01T19:35:39.001Z",
-  "finished_at": "2026-10-01T19:35:44.843Z",
+  "started_at": "2026-10-01T19:45:18.940Z",
+  "finished_at": "2026-10-01T19:45:24.686Z",
   "data": {
     "verdict_detail": {
       "pass": true,
@@ -177,7 +177,7 @@
             "older": 720,
             "newer": 30
           },
-          "opened_at_spread_seconds": 0.001,
+          "opened_at_spread_seconds": 0,
           "last_activity_spread_hours": 690,
           "note": "open_loops ranks on the oldest opened_at, which the database stamps at detection; two loops detected in one sync rank as equally old whatever the message ages."
         }
@@ -582,7 +582,7 @@
         "classification": "feature-gap",
         "surface": "src/core/loops/loops-store.ts upsertOpenLoop (opened_at defaults to now()); src/core/ops/loops.ts rankGroups (age from oldest_opened_at)",
         "expected": "Someone whose request has waited 30 days ranks as older than someone who wrote yesterday, including on the first sync of an existing inbox.",
-        "actual": "Loop age is time since detection: two inbound loops detected in one sync have opened_at 0.001 s apart although their messages are 690 hours apart, so a backfill ranks every waiting person as equally old.",
+        "actual": "Loop age is time since detection: two inbound loops detected in one sync have opened_at 0 s apart although their messages are 690 hours apart, so a backfill ranks every waiting person as equally old.",
         "repro": "bun docs/benchmarks/2026-10-01-n7-open-loops-email/repro/n7-6-age-from-detection.ts"
       },
       {
