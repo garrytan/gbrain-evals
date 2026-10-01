@@ -45,7 +45,8 @@
  * graded against the category's preregistered promotion rules in
  * eval/registry.ts: every safety contract and quality threshold must hold.
  * The runner's verdict gates only when a rule names it (RUNNER_VERDICT).
- * A category with no gating rule is report-only.
+ * A category with no gating rule, or whose rules are held while a gbrain fix
+ * is pending, is report-only.
  *
  * **Env vars passed through to every child:**
  *   - `BRAINBENCH_N`: read ONLY by multi-adapter.ts (paid tier). No other
@@ -249,7 +250,7 @@ export function deriveStatus(load: ReceiptLoad, gating: GateStatus | PromotionRu
         return { status: receipt.verdict === 'pass' ? 'pass' : gating === 'report-only' ? 'reported' : 'fail', statusSource: 'receipt', statusNote: note };
       }
       const outcome = evaluatePromotion(gating, receipt);
-      if (!outcome.gated) return { status: receipt.verdict === 'pass' ? 'pass' : 'reported', statusSource: 'receipt', statusNote: `${note}; no gating rule` };
+      if (!outcome.gated) return { status: receipt.verdict === 'pass' ? 'pass' : 'reported', statusSource: 'receipt', statusNote: `${note}; ${gating.held ? `rules held since ${gating.held.since} (${describeOutcome(outcome)})` : 'no gating rule'}` };
       return { status: outcome.pass ? 'pass' : 'fail', statusSource: 'receipt', statusNote: `${note}; ${describeOutcome(outcome)}` };
     }
     case 'skipped':

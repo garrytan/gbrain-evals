@@ -24,7 +24,8 @@
  * all.ts gates on safety contracts and quality thresholds only, never on the
  * runner's own verdict unless a rule names it (RUNNER_VERDICT, kept for
  * categories whose verdict was frozen in runner code before this wave). An
- * entry gates exactly when it has at least one gating rule. A candidate fix
+ * entry gates exactly when it has at least one gating rule and its rules are
+ * not held (PromotionRules.held). A candidate fix
  * never sets its own acceptance threshold: change a threshold only in a
  * reviewed commit that does not also change the code it measures.
  *
@@ -93,6 +94,13 @@ export interface PromotionRules {
   quality_thresholds: readonly PromotionCheck[];
   /** Metrics reported for the reader that never gate. */
   exploratory: readonly string[];
+  /**
+   * Set while the rules wait on a gbrain fix that has not reached the pinned
+   * commit: the frozen rules are still evaluated and reported, but they do not
+   * gate, so the entry is report-only. Remove it in the commit that re-pins
+   * gbrain to the fix; never change a rule value instead.
+   */
+  held?: { since: string; reason: string };
 }
 
 export interface CategoryEntry {
@@ -109,7 +117,7 @@ export interface CategoryEntry {
   /** Where the receipt lands; <output> is the fresh directory all.ts passes. */
   receipt_path: string;
   headline: { metric: string; denominator: string };
-  /** Derived from promotion: 'gate' exactly when a safety contract or quality threshold exists. */
+  /** Derived from promotion: 'gate' exactly when a safety contract or quality threshold exists and the rules are not held. */
   gate: GateStatus;
   /** Required for dispatched entries; see PromotionRules. */
   promotion?: PromotionRules;
@@ -497,8 +505,9 @@ export const REGISTRY: readonly CategoryEntry[] = [
     family: 'ingestion', tier: 'H', script: 'eval/runner/n12-format-fidelity.ts', run: { kind: 'dispatched' },
     cost_estimate: FREE, receipt_path: receipt('n12-format-fidelity'),
     headline: { metric: 'speaker attribution accuracy, timestamp exact match, turn-count error, honesty on non-conversation input, format coverage; attended-vs-mentioned F1 as a separate attendance stage', denominator: 'canonical turns rendered into every format enumerated at run time from transcriptAdapters() and BUILTIN_PATTERNS (7 adapters and 20 patterns at 3a284ae); negative pages and files; seeded meeting pages for attendance' },
-    gate: 'gate', evidence_maturity: 'synthetic-production-path',
+    gate: 'report-only', evidence_maturity: 'synthetic-production-path',
     promotion: {
+      held: { since: '2026-10-01', reason: 'no-fabricated-turns fails at the pinned 3a284ae on gbrain bug N12-1 (one-off bold labels parse as a conversation). The fix is in gbrain fix wave 5 (garrytan/gbrain#5839), open and unmerged on 2026-10-01; re-pin to a gbrain master that contains it, rerun N12, and remove this hold to make the row gate as preregistered' },
       preregistered: '2026-10-01',
       basis: 'amendment 1 and 9, frozen before the first run of this runner: the four safety contracts restate gbrain\'s own documented contracts (src/core/transcripts/types.ts: timestamps are real source timestamps, never invented, and skipped record kinds never reach the archive; conversation-parser no_match on non-conversation bodies; attended links need attendance evidence, src/core/link-extraction.ts). The two utility floors make a refuse-everything system fail: the plain control conversation must come back whole in every registered format, and the meeting-ingestion `## Attendees` form must be read. Every other metric is exploratory',
       safety_contracts: [

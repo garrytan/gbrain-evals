@@ -102,6 +102,22 @@ The [September 29 lifecycle report](docs/benchmarks/2026-09-29-lifecycle.md) is 
 - [x] **Run N6 against the evidence-delivery code when it lands** (plan T15). Done 2026-09-30 at `732ee81`: every `return_unit` value on `search`, `query`, `recall` and `assemble_evidence`, 0 expansion leaks. Rerun on every later head of the gbrain PR; any expansion leak blocks it.
 - [ ] **Widen N6 coverage.** 48 of 74 read ops (at `6c8373c`) return no protected content in the N6 world (skills, code intelligence, ontology, open loops, schema packs, aggregates) or need a provider. Seed those surfaces, and add Postgres and the real HTTP transport.
 
+## Eval-category wave follow-ups (2026-10-01, 0.10.5)
+
+- [ ] **Remove the N12 hold after gbrain fixes N12-1.** The fix is in gbrain fix wave 5 ([#5839](https://github.com/garrytan/gbrain/pull/5839)), unmerged on 2026-10-01. When master contains it, re-pin, rerun `bun eval/runner/n12-format-fidelity.ts`, and delete `held` from the `format-fidelity` promotion rules in the same commit; the rule values stay as frozen.
+
+- [ ] **Re-run the wave categories against fix waves 5 and 6.** Bugs N7-1, N8-1, N8-2, N12-1, N12-2 and N13-1 to N13-3 are fixed in #5839; N1-1 to N1-3, N5-1, N9-2 to N9-4, N2-1 and N2-2 in fix wave 6. Re-pin after each lands, rerun the owning category (N2 paid before and after, since N2-1 changes judge input), and move each ledger entry to `fixed` with its PR. N2-3, N5-2 and N5-3 have no fix wave yet.
+
+- [ ] **Let N8's privacy contracts gate once N8-1 and N8-2 are fixed.** They do not depend on the associative labels; the rest of N8 stays report-only until those labels pass human review. Add an N6 window that names a protected page, since N6's `volunteer_context` probes had no signal.
+
+- [ ] **Measure CI-sized N1 and N5 slices.** Both are listed, not dispatched: the CLI cells take 6 to 17 minutes and the Postgres cells need Docker.
+
+- [ ] **Trim N9 and N2 hermetic arms under 60 seconds.** N9 takes about 134 s and N2 about 76 s (51 s of page writes). Options: drop N9's one-hop splits from the hermetic arm or run one seed in CI.
+
+- [ ] **Price TypeSafe requests in the budget ledger and run A4 with S4 on** (A4-3).
+
+- [ ] **Move the remaining runners with private key lists to `eval/runner/hermetic-env.ts`.**
+
 ## System One v1 follow-ups (2026-09-30 Jev eval)
 
 - [ ] **Re-measure S1 reranking with query expansion.** On 2026-09-30 every expansion arm (248/248 LongMemEval-S, 28/28 M pilot) timed out before reranking because the decision budget started at request start; gbrain `9f7794ec` starts it after retrieval. Run `s1-rerank-lme-s` and `s1-rerank-lme-m-pilot` arms `s_jev100x` and `m_jev100x` at that commit or later.
@@ -116,7 +132,7 @@ The [September 29 lifecycle report](docs/benchmarks/2026-09-29-lifecycle.md) is 
 
 - [ ] **Commit an S4 and an S5 analyzer upstream.** Their recorded answers are committed, but no reducer script, so `analyze` cannot recompute their abstention and flag counts; the report quotes gbrain's counts beside a direct count from the answers.
 
-- [ ] **Re-pin when System One reaches gbrain master.** The commands exist only on `feat/system-one-v1`; until then every run needs `--gbrain`.
+- [ ] **Drop `--gbrain` from the System One runs now that System One is on master.** 0.10.5 pins gbrain `3a284ae`, which has the `--decide` flags (#5797); `docs/benchmarks/2026-09-30-system-one-jev.md` (around line 343) and the `system-one-jev` registry row still say the pin lacks them.
 
 ## Cat35 publication and measurement
 

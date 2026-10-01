@@ -451,7 +451,7 @@
       "contract": "Attendance written on a meeting page is stored person to meeting (src/core/link-extraction.ts:938 orientCanonicalAttendance, used by resolvedLinkCandidate :926-936; src/core/derived-links.ts reversedAttendance), the direction the relational parser walks for \"Who attended X?\" (src/core/search/relational-intent.ts attended verb, direction in).",
       "surface": "src/core/link-extraction.ts:665-671 typeFor (the pack page-type-bound verb is returned before the canonical-attendance branch at :673-685)",
       "repro": "env -u OPENAI_API_KEY GBRAIN_HOME=$(mktemp -d) bun docs/benchmarks/2026-10-01-n9-multi-hop/repro-relational-edges.ts",
-      "expected": "the body line \"Attendees: [Alice Example](people/alice-example), [Bob Example](people/bob-example)\" on meetings/board-acme-example is stored people/alice-example -> meetings/board-acme-example (and Bob likewise), as extractPageLinks produces when no pack is passed; fanout in direction in from the meeting returns both attendees",
+      "expected": "the body line `Attendees: [Alice Example](people/alice-example), [Bob Example](people/bob-example)` on meetings/board-acme-example is stored people/alice-example -> meetings/board-acme-example (and Bob likewise), as extractPageLinks produces when no pack is passed; fanout in direction in from the meeting returns both attendees",
       "actual": "with the default schema pack (gbrain-base.yaml link_types: attended, page_type: meeting) the edges are stored meetings/board-acme-example -> people/alice-example and -> people/bob-example; typeFor returns { linkType: attended } without canonicalAttendance, so nothing reorients them; fanout in direction in returns [] (direction out returns both)",
       "status": "open"
     },

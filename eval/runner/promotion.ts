@@ -16,7 +16,7 @@ export interface CheckResult {
 }
 
 export interface PromotionOutcome {
-  /** True when the rules contain at least one safety contract or quality threshold. */
+  /** True when the rules contain at least one safety contract or quality threshold and are not held. */
   gated: boolean;
   pass: boolean;
   results: CheckResult[];
@@ -48,7 +48,7 @@ export function evaluatePromotion(rules: PromotionRules, receipt: unknown): Prom
     return { id: c.id, kind, pass: checkPasses(c, observed), observed, expected: `${c.path} ${c.op} ${JSON.stringify(c.value)}` };
   });
   const failures = results.filter(r => !r.pass);
-  return { gated: results.length > 0, pass: failures.length === 0, results, failures };
+  return { gated: results.length > 0 && !rules.held, pass: failures.length === 0, results, failures };
 }
 
 /** One line for the report: "safety 5/5, quality 2/2" plus each failure. */

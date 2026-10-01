@@ -98,7 +98,7 @@ describe('promotion rules', () => {
       expect([e.id, e.promotion !== undefined]).toEqual([e.id, true]);
       const p = e.promotion!;
       expect([e.id, /^\d{4}-\d{2}-\d{2}$/.test(p.preregistered) && p.basis.length > 10]).toEqual([e.id, true]);
-      expect([e.id, e.gate]).toEqual([e.id, p.safety_contracts.length + p.quality_thresholds.length > 0 ? 'gate' : 'report-only']);
+      expect([e.id, e.gate]).toEqual([e.id, p.safety_contracts.length + p.quality_thresholds.length > 0 && !p.held ? 'gate' : 'report-only']);
       const ids = [...p.safety_contracts, ...p.quality_thresholds].map(c => c.id);
       expect([e.id, new Set(ids).size]).toEqual([e.id, ids.length]);
       for (const c of [...p.safety_contracts, ...p.quality_thresholds]) expect([e.id, c.id, c.description.length > 10, c.path.length > 0]).toEqual([e.id, c.id, true, true]);
@@ -157,6 +157,18 @@ describe('promotion rules', () => {
     expect(evaluatePromotion(reportOnly, receipt()).gated).toBe(false);
     expect(deriveStatus({ kind: 'ok', receipt: receipt({ verdict: 'fail' }) }, reportOnly).status).toBe('reported');
     expect(deriveStatus({ kind: 'ok', receipt: receipt({ run_status: 'error', verdict: undefined }) }, reportOnly).status).toBe('fail');
+  });
+
+  test('held rules are evaluated and reported but do not gate; a broken run still fails', () => {
+    const rules = { preregistered: '2026-10-01', basis: 'a frozen floor waiting on a gbrain fix', safety_contracts: [{ id: 'zero-x', path: 'data.x', op: '==' as const, value: 0, description: 'no x ever appears' }], quality_thresholds: [], exploratory: [] };
+    const held = { ...rules, held: { since: '2026-10-01', reason: 'waits on a gbrain fix' } };
+    const failing = receipt({ verdict: 'fail', data: { x: 3 } } as Partial<Receipt>);
+    expect(deriveStatus({ kind: 'ok', receipt: failing }, rules).status).toBe('fail');
+    expect(evaluatePromotion(held, failing)).toMatchObject({ gated: false, pass: false });
+    const reported = deriveStatus({ kind: 'ok', receipt: failing }, held);
+    expect(reported.status).toBe('reported');
+    expect(reported.statusNote).toContain('rules held since 2026-10-01 (safety 0/1');
+    expect(deriveStatus({ kind: 'missing' }, held).status).toBe('fail');
   });
 });
 

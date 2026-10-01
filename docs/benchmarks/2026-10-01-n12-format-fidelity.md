@@ -108,7 +108,9 @@ Grok's `chat_history.jsonl` has no per-message times. Its documented contract st
 | control-turn-floor (`data.floor.control_recovered_rate >= 1`) | quality (utility floor) | pass (27 of 27 formats) |
 | attendance-control-floor (`data.attendance.control_recall >= 1`) | quality (utility floor) | pass (5 of 5) |
 
-The receipt verdict is the safety contracts only, so it is `fail`. Because the row has gating rules, `all.ts --tier offline` reports N12 as failing until N12-1 is fixed in gbrain. That is the intended effect of amendment 1, and the integrator decides whether the wave PR carries the gate as is.
+The receipt verdict is the safety contracts only, so it is `fail`.
+
+**Gate status (2026-10-01, gbrain-evals 0.10.5): report-only, rules held.** The fix for N12-1 is in gbrain fix wave 5 ([garrytan/gbrain#5839](https://github.com/garrytan/gbrain/pull/5839)), which had not merged to gbrain master when 0.10.5 shipped. The registry row keeps its frozen rules but marks them `held`, so `all.ts --tier offline` evaluates and prints them and reports N12 as REPORTED rather than failing. When gbrain master contains the fix, re-pin, rerun N12, and remove the hold in that commit; the rule values do not change.
 
 **Scorer validation.** The mutation suite (`test/eval/n12-format-fidelity.test.ts`) grades fake systems with the preregistered rules. The honest system passes, and every fake fails at least one rule:
 
