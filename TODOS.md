@@ -24,7 +24,7 @@ The [August 31 audit](docs/audit/2026-08-31-eval-audit.md) explains the finding 
 
 - [x] **Test relational wording the parser did not help design** (issue #24 finding 6, September 28 audit B-RAB-01). Done 2026-09-29: a seeded paraphrase grammar, frozen before scoring, rewords the 145 questions. At `b80cad6` relationship retrieval fired on 174/435 template runs and 0/435 paraphrase runs, and paraphrase metrics were identical in both arms (recall at five 0.411). [Report](docs/benchmarks/2026-09-29-relational-paraphrase.md).
 
-- [ ] **Measure relationship retrieval on reworded questions at the current pin.** The paraphrase split in `relational-ab.ts` is the test: a parser or intent step that accepts ordinary wording should move its recall and first-place hits, which were flat at `b80cad6` on 2026-09-29. gbrain v0.60.6.0 widened the parser, and at `608a174` a keyless check fires on 33/145 paraphrases (0/50 attendance). Repeat the paid run (`relational-ab.ts --budget-usd 2`, about $0.06) to measure the effect.
+- [x] **Measure relationship retrieval on reworded questions at the current pin.** Done 2026-10-01 at `3a284ae` (paid, $0.0645): on the 145 paraphrases recall at five rose 0.411 to 0.537 and first-place hits 4.8% to 16.6%, 19 distinct questions better and 0 worse (p = 0.000004); the template split is unchanged from 2026-09-29. The paraphrase split is development data. [Report](docs/benchmarks/2026-10-01-n9-multi-hop.md).
 
 - [x] **Repeat the ZeroEntropy cells of the embedding-provider matrix** (Cat18/18b, WS5). Closed as obsolete on 2026-09-28: ZeroEntropy's hosted API was retired on 2026-09-04 and gbrain master no longer ships its recipe, so the `zembed-1` and `zerank-2` cells cannot be re-run. The May numbers stay historical and are marked invalid in the [May snapshot](docs/benchmarks/2026-05-23-v0.40.6.0-snapshot.md).
 
@@ -46,7 +46,7 @@ The [August 31 audit](docs/audit/2026-08-31-eval-audit.md) explains the finding 
 
 - [x] **Fix the attendance link direction in the relationship fixture** (September 28 audit, B3). Done in 0.10.1 for the Cat 2 answer key (now `person → meeting`, gbrain's stored orientation).
 
-- [ ] **Find out why relationship retrieval never fires on "who attended" questions.** At `b80cad6` and again at `608a174` the keyless smoke (`relational-ab.ts --stub-embed --seeds 1`) still fires on 0/50 attendance questions against 13/40, 31/39 and 14/16 for the other templates. World-v1 meetings name attendees in prose, which current gbrain does not type as attendance.
+- [x] **Find out why relationship retrieval never fires on "who attended" questions.** Root-caused 2026-10-01 by N9 with a keyless repro: the meeting seed never resolves (the resolver returns entity pages only, ledger N9-4), and under the default schema pack attendance edges are stored meeting to person, the opposite of what the parser walks (N9-2 for frontmatter, N9-3 for body links). Fixes belong to the gbrain fix wave. [Report](docs/benchmarks/2026-10-01-n9-multi-hop.md).
 
 - [ ] **Re-run Cat14 with the current blind runner** (September 28 audit, A-01). The May 75% result is retracted. The current runner is blind, judges both orders at temperature 0 and calls `runThink`; the historical cost was about $0.05.
 

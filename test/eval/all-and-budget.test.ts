@@ -38,7 +38,7 @@ describe('CATEGORIES catalog', () => {
     expect(CATEGORIES.map(c => c.id)).toEqual([
       '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '13b', '13b-sit', '14', '15', '18', '18b',
       '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30-33', '34', '35', '36', '36-live', 'N3', 'N4', 'N6', 'N12', 'N13', 'N7', 'N8', 'SO', 'SO-live',
-      'multi-adapter', 'relational-ab', 'precisionmembench', 'longmemeval', 'longmemeval-answers',
+      'multi-adapter', 'relational-ab', 'N9', 'N9-paid', 'precisionmembench', 'longmemeval', 'longmemeval-answers',
       'longmemeval-m-pilot', 'reading-notes', 'lifecycle', 'evidence-delivery', 'sealed-confirmation', 'situation-recall', 'shootout', 'qrels',
     ]);
   });
@@ -115,7 +115,7 @@ describe('tiers', () => {
     }
     expect(offline.notRun.find(n => n.id === '13')?.reason).toBe('tier P not selected');
     expect(paid.notRun.find(n => n.id === '2')?.reason).toBe('tier H not selected');
-    expect(offline.dispatch.map(c => c.id)).toEqual(['1', '2', '3', '4', '6', '7', '10', '11', '12', '19', '22', '23', '24', '27', '28', '34', '36', 'N3', 'N4', 'N6', 'N12', 'N13', 'N7', 'N8', 'SO']);
+    expect(offline.dispatch.map(c => c.id)).toEqual(['1', '2', '3', '4', '6', '7', '10', '11', '12', '19', '22', '23', '24', '27', '28', '34', '36', 'N3', 'N4', 'N6', 'N12', 'N13', 'N7', 'N8', 'SO', 'N9']);
   });
 
   test('the not-run list is printed with every category and its reason', () => {
