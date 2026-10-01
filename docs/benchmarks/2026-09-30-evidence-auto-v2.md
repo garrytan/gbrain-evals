@@ -6,6 +6,8 @@ On LongMemEval-S, which is now development data, `auto` beat chunks by a wide ma
 
 The gbrain code is `e9b580c5b9f9ac2e6ad069ea45ee5a6ac52c5761` (branch `capy/evidence-page-code-fix`, v0.60.16.0). It was pinned in [decision manifest v2](2026-09-30-evidence-auto-v2/decision-manifest.json), which was committed before any paid call (`4947b41`), with the pin in its own commit (`592e347`). This follows the [evidence-delivery study](2026-09-30-evidence-delivery.md), whose verdict was `page_only`.
 
+**Addendum, 2026-10-01 (development data, not preregistered).** gbrain shipped `auto` as the default anyway and raised the conversation budget to 24,000 tokens. On the 81 LongMemEval questions the 16,000 budget cut, 24,000 cuts none, every request is byte-identical to page's, and auto answers 71 against 68 at 16,000 and 72 for page. See [the addendum](#addendum-2026-10-01-the-24000-token-budget-on-development-data).
+
 ## What changed and why it was tested again
 
 The first study found that whole pages beat chunks on conversation questions (361 against 253 of 400) and that cheaper neighbor windows closed only about a third of the gap. gbrain then made the choice automatic instead of a setting:
@@ -73,6 +75,33 @@ Why, from the frozen evidence and the request hashes:
 - The preregistered decision does not support flipping the release default to `auto` on held-out evidence. The sealed set neither confirmed nor contradicted a benefit, because its chunk baseline is at ceiling.
 - On development data, `auto` keeps essentially all of page's gain over chunks (+133 of page's +145 questions) at page's token cost. The budget costs about 1%.
 - Shipping `auto` as the default anyway would be a judgment call on development evidence, not a result of this preregistered check. Per the sealed protocol, the set may not be re-run with another setting to get a different answer. A future confirmation needs a harder held-out set, with longer chats or chunk accuracy well below ceiling, preregistered before it is opened.
+
+## Addendum (2026-10-01): the 24,000-token budget, on development data
+
+After this check, Garry chose to ship `auto` as gbrain's default on the development evidence and to raise the default conversation budget from 16,000 to 24,000 tokens (gbrain `aea59b2f0b46e4f5b0ca008254d4cc0ac4b530e3`, v0.60.23.0). This addendum measures that budget on LongMemEval-S. **It is development data and was not preregistered.** It does not change the E2 verdict above, and the sealed set was not touched.
+
+**Setup.** The 81 questions the 16,000-token budget cut, on the same frozen top-five hit lists, the same Sonnet notes reader and system text, and both judges. Each haystack was re-imported at `aea59b2f` without embeddings (evidence assembly reads stored chunks), and every frozen hit's chunk text matched the new import on all 81 questions. The applied budget read back from gbrain was 24,000 on every question. There were no reader errors.
+
+| Arm (81 questions) | Correct (gbrain judge) | Official judge | Mean reader input tokens |
+|---|---|---|---|
+| auto @ 24,000 | 71 | 70 | 19,066 |
+| auto @ 16,000 | 68 | 68 | 17,817 |
+| page | 72 | 72 | 19,066 |
+| chunk | 37 | 36 | 3,583 |
+
+- **No question is cut at 24,000.** No blocks were truncated, no conversation went over budget and no hit fell back. The largest delivered evidence was 19,989 tokens by gbrain's own count (mean 17,087), so the budget has about 4,000 tokens of headroom on these hit lists.
+- **auto's request is byte-identical to page's on all 81 questions.** So any remaining difference from page is the reader answering the same bytes differently at provider-default temperature, not delivery.
+- **Against auto @ 16,000:** +3 / −0 (exact McNemar p = 0.25; official judge +3 / −1). **Against page:** +1 / −2 (p = 1.0; official judge +0 / −2). Neither difference is significant.
+- **By type (auto 24K / auto 16K / page / chunk):** multi-session 27 / 26 / 29 / 9 of 34, temporal 18 / 16 / 18 / 9 of 20, knowledge-update 12 / 12 / 12 / 10 of 13, single-session-user 7 / 7 / 7 / 4 of 7, preference 7 / 7 / 6 / 5 of 7.
+- **What this implies for the full 500.** The other 419 questions were already under 16,000 tokens, so at 24,000 auto's request equals page's on all 500 LongMemEval questions. That is an inference from the delivery rule, not a re-run of those 419. On this development data, auto at 24,000 is page delivery, at page's token cost, and the 0.8% budget cost measured above is gone.
+- **Cost: $5.17** against a $20 cap: Sonnet reader $4.99, both judges $0.18, 243 requests ([ledger summary](2026-09-30-evidence-auto-v2/results/lme/budget-24k/ledger-summary.json)).
+
+Receipts: [analysis](2026-09-30-evidence-auto-v2/results/lme/budget-24k/budget-24k.json), [per-question rows](2026-09-30-evidence-auto-v2/results/lme/budget-24k/rows.ndjson.gz) and the [run log](2026-09-30-evidence-auto-v2/results/lme/budget-24k/budget-check.log.gz).
+
+```bash
+export GBRAIN_DIR=<gbrain checkout at aea59b2f>
+bun eval/runner/evidence-auto-v2.ts budget-check --frozen-dir <frozen> --dataset <longmemeval_s_cleaned.json> --out-dir <out> --budget-usd 20
+```
 
 ## Custody of the sealed set
 
