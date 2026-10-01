@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "description": "Map from published claims to their saved evidence. The manifest test checks artifact paths, SHA-256 hashes, and declared JSON-pointer values. It does not parse report prose or independently validate every scorer. Separate golden tests and recount scripts are named where available. Entries marked disclosed-gap identify missing evidence; a fresh run cannot restore a missing historical receipt.",
-  "updated": "2026-09-30",
+  "updated": "2026-10-01",
   "entries": [
     {
       "claim_id": "lifecycle-2026-09-29-primary",
@@ -3256,6 +3256,55 @@
         "/total_usd": 73.9177
       },
       "note": "Summarized from the campaign ledger run."
+    },
+    {
+      "claim_id": "sealed-confirmation-v2-commitments",
+      "readme_anchor": "docs/benchmarks/2026-10-01-sealed-confirmation-v2-protocol.md: SHA-256 commitments of the private questions, labels and ledger; 200 questions over 40 personas",
+      "artifact_path": "eval/data/sealed-confirmation-v2/manifest.json",
+      "artifact_sha256": "9c6d3b8c353e13c464ce3f64cca94b2cf2b4c96213b6482c3fb1092cc741911a",
+      "expected": {
+        "/commitments/questions.json/sha256": "8d29e92dc6792fb444e564ca556acd5cb4566ec14a6080c0e2e1ee8e8bd98a38",
+        "/commitments/labels.json/sha256": "83bf52d11e0a26f64f1ece8ce5ac637b81844e38e67c5df1495cb7614a0357c4",
+        "/commitments/ledger.json/sha256": "03df09aacbe85dbfa659da38b67aa6ce88305e52b799b2251b16b6b3a0e2e8c1",
+        "/counts/questions": 200,
+        "/counts/personas": 40,
+        "/generation_date": "2026-10-01"
+      },
+      "golden_test": "test/eval/sealed-confirmation-v2.test.ts: committed v2 manifest matches the generator, prompts and question mix",
+      "status": "covered",
+      "note": "The labels and questions are private; this entry pins the commitments the runner checks before opening them."
+    },
+    {
+      "claim_id": "sealed-confirmation-v2-solvability",
+      "readme_anchor": "docs/benchmarks/2026-10-01-sealed-confirmation-v2-protocol.md: oracle 199/200, chunk oracle 196/200, no memory 40/200 (0/160 answerable)",
+      "artifact_path": "eval/data/sealed-confirmation-v2/solvability.json",
+      "artifact_sha256": "d77c0da027fe7cdc281ee4178d503cf95744c2cde0b5de5ebcf82fa57a0b752e",
+      "expected": {
+        "/n": 200,
+        "/oracle_correct": 199,
+        "/chunk_oracle_correct": 196,
+        "/no_memory_correct": 40,
+        "/questions_needing_more_than_5_chunks": 0
+      },
+      "status": "covered",
+      "note": "Aggregate only. Per-question rows stay with the sealed files."
+    },
+    {
+      "claim_id": "sealed-confirmation-v2-overlap",
+      "readme_anchor": "docs/benchmarks/2026-10-01-sealed-confirmation-v2-protocol.md: zero exact question matches and zero persona full names; only filler chats share a 13-word run with LongMemEval S/M",
+      "artifact_path": "eval/data/sealed-confirmation-v2/overlap-audit.json",
+      "artifact_sha256": "8bad82eb40fc1dd03d49d8795087b8f4a43ced375ffd9d381acbbb07980d1488",
+      "expected": {
+        "/datasets/longmemeval_s_cleaned/exact_question_matches": 0,
+        "/datasets/longmemeval_m_cleaned/exact_question_matches": 0,
+        "/datasets/longmemeval_s_cleaned/persona_full_name_matches": 0,
+        "/datasets/longmemeval_m_cleaned/persona_full_name_matches": 0,
+        "/datasets/longmemeval_s_cleaned/sealed_sessions_sharing_a_13_word_shingle": 6,
+        "/datasets/longmemeval_m_cleaned/sealed_sessions_sharing_a_13_word_shingle": 10,
+        "/datasets/longmemeval_m_cleaned/m_questions_absent_from_s": 0
+      },
+      "status": "covered",
+      "note": "Counts only; the matched items are listed in a private file kept with the sealed set."
     }
   ]
 }

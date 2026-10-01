@@ -6,7 +6,7 @@ The [August 31 audit](docs/audit/2026-08-31-eval-audit.md) explains the finding 
 
 ## Evidence delivery follow-ups (2026-09-30 plan)
 
-- [ ] **A sealed set that can confirm a delivery gain.** On sealed-confirmation-v1 the chunk default already answers 147/150, so no evidence-delivery change can reach significance there (2026-09-30 auto v2 check). A v2 set needs longer chats or harder multi-session and temporal questions, generated with a new seed and preregistered before use.
+- [ ] **A sealed set that can confirm a delivery gain.** On sealed-confirmation-v1 the chunk default already answers 147/150, so no evidence-delivery change can reach significance there (2026-09-30 auto v2 check). A v2 set needs longer chats or harder multi-session and temporal questions, generated with a new seed and preregistered before use. *Built 2026-10-01 as [sealed-confirmation-v2](docs/benchmarks/2026-10-01-sealed-confirmation-v2-protocol.md) (200 questions, LongMemEval-S-sized histories, multi-chat evidence); still needs a preregistered decision to open it.*
 
 - [ ] **Production `think` end to end with `think.return_unit`.** The evidence-delivery study measures a one-shot reader, not think; think's default does not flip in that plan.
 
