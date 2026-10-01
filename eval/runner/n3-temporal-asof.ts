@@ -49,6 +49,7 @@ import type { PGLiteEngine as PGLiteEngineType } from 'gbrain/pglite-engine';
 import { GoldStore } from './evaluator/gold-store.ts';
 import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
 import { gbrainPin } from './gbrain-version.ts';
+import { DECIDE_OFF, withHermeticEnv } from './hermetic-env.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import {
   BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, receiptPath, sourceTreeIdentity, writeReceipt, type Receipt,
@@ -60,7 +61,6 @@ import {
 } from '../generators/n3-temporal-gen.ts';
 
 export const CATEGORY = 'n3-temporal-asof';
-const PROVIDER_KEYS = ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY', 'GOOGLE_API_KEY', 'GEMINI_API_KEY', 'OPENROUTER_API_KEY', 'GROQ_API_KEY', 'MISTRAL_API_KEY', 'COHERE_API_KEY', 'TOGETHER_API_KEY', 'DEEPSEEK_API_KEY', 'XAI_API_KEY'];
 const NOTE_TOKEN = 'ledgernote';
 const REL_TOKEN = 'relpage';
 const UNDATED_TOKEN = 'undatedpage';
@@ -605,8 +605,14 @@ export interface N3RunResult {
   harnessError: string | null;
 }
 
-export async function runN3(opts: { gut: GbrainUnderTest; seed?: number; people?: number; meetings?: number; anchorDay?: string; log?: (s: string) => void }): Promise<N3RunResult> {
-  for (const k of PROVIDER_KEYS) delete process.env[k];
+type N3RunOptions = { gut: GbrainUnderTest; seed?: number; people?: number; meetings?: number; anchorDay?: string; log?: (s: string) => void };
+
+/** Hermetic environment for the run (eval/runner/hermetic-env.ts), restored afterwards. */
+export async function runN3(opts: N3RunOptions): Promise<N3RunResult> {
+  return withHermeticEnv('n3', () => runN3Hermetic(opts));
+}
+
+async function runN3Hermetic(opts: N3RunOptions): Promise<N3RunResult> {
   const log = opts.log ?? (() => {});
   const world = generateN3World({ seed: opts.seed ?? N3_DEFAULT_SEED, people: opts.people, meetings: opts.meetings });
   const gold = new GoldStore<N3Gold>('n3-temporal', world.gold.entries());
@@ -683,6 +689,7 @@ async function main(): Promise<void> {
     execution: { source_tree: sourceTreeIdentity(), product: productIdentityFor(gut) },
     resolved_config: {
       engine: 'pglite-in-memory',
+      decide: DECIDE_OFF,
       caller: 'operation handlers with OperationContext { remote: false, sourceId: default }',
       search_path: 'query operation, expand=false, autocut=false, adaptive_return=false, limit=100; no embedding gateway (keyword only); search.mcp_keyword_only=true',
       brain_timezone: ledger.brain_timezone,

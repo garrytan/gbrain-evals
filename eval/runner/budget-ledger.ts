@@ -152,6 +152,21 @@ export function ledgerTotals(ledger: LedgerFile): LedgerTotals {
   };
 }
 
+/** Read-only view of the ledger at `ledgerPath`: program totals, plus one run's budget and spend when `runId` names a run. */
+export function ledgerStatus(options: { ledgerPath?: string; programCapUsd?: number; runId?: string | null } = {}): {
+  totals: LedgerTotals;
+  run: (LedgerRun & { committed_usd: number; remaining_usd: number }) | null;
+} {
+  const programCapUsd = options.programCapUsd ?? DEFAULT_PROGRAM_CAP_USD;
+  const ledger = readLedger(resolve(options.ledgerPath ?? DEFAULT_LEDGER_PATH), programCapUsd);
+  const record = options.runId ? ledger.runs.find(r => r.run_id === options.runId) : undefined;
+  const runCommitted = record ? sum(ledger.entries.filter(e => e.run_id === record.run_id).map(committed)) : 0;
+  return {
+    totals: ledgerTotals(ledger),
+    run: record ? { ...record, committed_usd: runCommitted, remaining_usd: record.budget_usd - runCommitted } : null,
+  };
+}
+
 export interface RunSummary {
   run_id: string;
   budget_usd: number;
