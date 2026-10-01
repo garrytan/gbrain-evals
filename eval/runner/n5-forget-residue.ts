@@ -36,7 +36,8 @@
  *          [--engines pglite,postgres] [--interfaces cli,mcp-stdio,mcp-http] [--pg-url <url>] [--concurrency N] [--json]
  */
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { gbrainSpecFrom, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
 import { gbrainPin } from './gbrain-version.ts';
@@ -400,7 +401,8 @@ async function main(): Promise<void> {
   const concurrency = Number(argValue(argv, '--concurrency') ?? '3');
   const output = argValue(argv, '--output');
   const outPath = output ? join(output, 'receipt.json') : receiptPath(CATEGORY);
-  const work = resolve(argValue(argv, '--work') ?? join('eval/reports', CATEGORY, 'cells'));
+  // Cells live outside this checkout: gbrain init refuses a content directory inside another Git repository.
+  const work = resolve(argValue(argv, '--work') ?? mkdtempSync(join(tmpdir(), `${CATEGORY}-cells-`)));
   mkdirSync(work, { recursive: true });
   const startedAt = new Date().toISOString();
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));

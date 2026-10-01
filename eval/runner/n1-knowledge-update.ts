@@ -37,7 +37,8 @@
  * Usage: bun eval/runner/n1-knowledge-update.ts [--seed N] [--output <dir>] [--gbrain <checkout>[@ref]]
  *          [--engines pglite,postgres] [--interfaces cli,mcp-stdio,mcp-http] [--pg-url <url>] [--concurrency N] [--json]
  */
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import type { OperationContext } from 'gbrain/operations';
 import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
@@ -460,7 +461,8 @@ async function main(): Promise<void> {
   const concurrency = Number(argValue(argv, '--concurrency') ?? '3');
   const output = argValue(argv, '--output');
   const outPath = output ? join(output, 'receipt.json') : receiptPath(CATEGORY);
-  const work = resolve(argValue(argv, '--work') ?? join('eval/reports', CATEGORY, 'cells'));
+  // Cells live outside this checkout: gbrain init refuses a content directory inside another Git repository.
+  const work = resolve(argValue(argv, '--work') ?? mkdtempSync(join(tmpdir(), `${CATEGORY}-cells-`)));
   mkdirSync(work, { recursive: true });
   const startedAt = new Date().toISOString();
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));

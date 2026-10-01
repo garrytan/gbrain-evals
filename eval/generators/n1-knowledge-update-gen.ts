@@ -400,7 +400,9 @@ export function n1Probes(ledger: N1Ledger, state: GoldState): N1Probe[] {
     const currents = upto.map(r => chainValueAt(c, r).at(-1)!.token);
     const all = [...new Set([...c.values.map(v => v.token), c.concurrent.token])];
     const base = { chain: c.id, entity: c.entity, depth: c.depth, kind: c.kind as UpdateKind, private: c.visibility === 'private', key: c.key };
-    for (const surface of ['recall', 'search'] as const) {
+    // Private fence rows never enter search chunks for any caller (the chunker strips them, src/core/facts-fence.ts
+    // "Layer A"), so search is not a surface for a private value; remote search responses are still scanned for leaks.
+    for (const surface of c.visibility === 'private' ? ['recall'] as const : ['recall', 'search'] as const) {
       probes.push({ ...base, id: `${state}:fence_current:${surface}:${c.id}`, type: 'fence_current', surface, gold: final, stale: staleValues(currents, final), all });
     }
     const struck = fenceRowsAt(ledger, c.entity, round).filter(r => r.chain === c.id && !r.active).map(r => r.token);

@@ -51,6 +51,8 @@ describe('N1 generator', () => {
     const secret = new Set(privateTokens(ledger));
     for (const c of ledger.fence.filter(x => x.visibility === 'world')) for (const v of c.values) expect(secret.has(v.token)).toBe(false);
     expect(n1ExposureProbes(ledger, 'sequential')).toHaveLength(4);
+    // The chunker strips private fence rows for every caller, so no search probe targets a private chain.
+    expect(n1Probes(ledger, 'sequential').filter(p => p.private && p.type === 'fence_current' && p.surface === 'search')).toEqual([]);
   });
 
   test('write plan: round 0 writes every entity and every ontology chain; later rounds only what changed', () => {
