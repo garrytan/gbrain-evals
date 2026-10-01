@@ -1,0 +1,315 @@
+{
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "n1-knowledge-update-paid",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 30,
+  "n_scored": 30,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "gbrain_version": "0.60.26.0",
+  "gbrain_pin": "github:garrytan/gbrain#3a284aea26889b77c633aebb4149c3016d834ee6",
+  "execution": {
+    "source_tree": {
+      "sha256": "bac7dbdb8e501df907effba515b711e69bbf81421311e4403c8be0d00dca65de",
+      "files": 2390,
+      "git_head": "732ea6d54c8a905ff096ac5a605ed0702f27b525",
+      "dirty": true
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#3a284aea26889b77c633aebb4149c3016d834ee6",
+      "declared_sha": "3a284aea26889b77c633aebb4149c3016d834ee6",
+      "version": "0.60.26.0",
+      "package_sha256": "ea36f0fea82028ba26c61e83b9b42940d4f9026b93ceb6ef0a7d2d3e1f4e8cf3",
+      "loaded_git_head": null
+    }
+  },
+  "cost": {
+    "usd": 0.000006,
+    "input_tokens": 314,
+    "output_tokens": 0,
+    "basis": "budget ledger capy-wave-n1-n5-2026-10-01T19-50-48-533Z-3c67f696: 60 paid requests, 0 charged at their reservation because usage was unavailable"
+  },
+  "delivered_tokens": {
+    "tokens": 314,
+    "basis": "embedding input tokens from the budget ledger"
+  },
+  "resolved_config": {
+    "arm": "implicit supersession through remember (report-only, preregistered)",
+    "embedding_model": "openai:text-embedding-3-small",
+    "budget_run_id": "capy-wave-n1-n5-2026-10-01T19-50-48-533Z-3c67f696",
+    "engine": "pglite-in-memory, unmanaged, trusted local handlers",
+    "seed": 11,
+    "ledger_sha256": "6c176db0a8e4a53753d0c1a26b81f46d32779562abcd6a6542fb4fa7e4538d96",
+    "gbrain_overlay": null
+  },
+  "started_at": "2026-10-01T19:50:54.325Z",
+  "finished_at": "2026-10-01T19:51:17.496Z",
+  "data": {
+    "summary": {
+      "implicit_supersession_rate": 0,
+      "value_change_pairs": 10,
+      "value_change_superseded": 0,
+      "unrelated_controls_superseded": 0,
+      "unrelated_controls": 10,
+      "near_duplicate_controls_deduped": 10,
+      "near_duplicate_controls": 10,
+      "degraded_dedup": 0,
+      "errors": 0
+    },
+    "pairs": [
+      {
+        "chain": "fence-1-city",
+        "kind": "value-change",
+        "first": "Home city is Braga",
+        "second": "Home city is Lisbon",
+        "status": "inserted",
+        "degraded_dedup": null
+      },
+      {
+        "chain": "fence-1-city",
+        "kind": "unrelated-control",
+        "first": "Home city is Braga",
+        "second": "Enjoys long walks near Lisbon",
+        "status": "inserted",
+        "degraded_dedup": null
+      },
+      {
+        "chain": "fence-1-city",
+        "kind": "near-duplicate-control",
+        "first": "Home city is Braga",
+        "second": "Home city is Braga.",
+        "status": "duplicate",
+        "degraded_dedup": null
+      },
+      {
+        "chain": "fence-1-employer",
+        "kind": "value-change",
+        "first": "Works at Summit Freight",
+        "second": "Works at Willow Robotics",
+        "status": "inserted",
+        "degraded_dedup": null
+      },
+      {
+        "chain": "fence-1-employer",
+        "kind": "unrelated-control",
+        "first": "Works at Summit Freight",
+        "second": "Enjoys long walks near Willow Robotics",
+        "status": "inserted",
+        "degraded_dedup": null
+      },
+      {
+        "chain": "fence-1-employer",
+        "kind": "near-duplicate-control",
+        "first": "Works at Summit Freight",
+        "second": "Works at Summit Freight.",
+        "status": "duplicate",
+        "degraded_dedup": null
+      },
+      {
+        "chain": "fence-2-city",
+        "kind": "value-change",
+        "first": "Home city is Evora",
+        "second": "Home city is Viseu",
+        "status": "inserted",
+        "degraded_dedup": null
+      },
+      {
+        "chain": "fence-2-city",
+        "kind": "unrelated-control",
+        "first": "Home city is Evora",
+        "second": "Enjoys long walks near Viseu",
+        "status": "inserted",
+        "degraded_dedup": null
+      },
+      {
+        "chain": "fence-2-city",
+        "kind": "near-duplicate-control",
+        "first": "Home city is Evora",
+        "second": "Home city is Evora.",
+        "status": "duplicate",
+        "degraded_dedup": null
+      },
+      {
+        "chain": "fence-2-employer",
+        "kind": "value-change",
+        "first": "Works at Meadow Health",
+        "second": "Works at Lantern Media",
+        "status": "inserted",
+        "degraded_dedup": null
+      },
+      {
+        "chain": "fence-2-employer",
+        "kind": "unrelated-control",
+        "first": "Works at Meadow Health",
+        "second": "Enjoys long walks near Lantern Media",
+        "status": "inserted",
+        "degraded_dedup": null
+      },
+      {
+        "chain": "fence-2-employer",
+        "kind": "near-duplicate-control",
+        "first": "Works at Meadow Health",
+        "second": "Works at Meadow Health.",
+        "status": "duplicate",
+        "degraded_dedup": null
+      },
+      {
+        "chain": "fence-3-city",
+        "kind": "value-change",
+        "first": "Home city is Braga",
+        "second": "Home city is Sintra",
+        "status": "inserted",
+        "degraded_dedup": null
+      },
+      {
+        "chain": "fence-3-city",
+        "kind": "unrelated-control",
+        "first": "Home city is Braga",
+        "second": "Enjoys long walks near Sintra",
+        "status": "inserted",
+        "degraded_dedup": null
+      },
+      {
+        "chain": "fence-3-city",
+        "kind": "near-duplicate-control",
+        "first": "Home city is Braga",
+        "second": "Home city is Braga.",
+        "status": "duplicate",
+        "degraded_dedup": null
+      },
+      {
+        "chain": "fence-3-employer",
+        "kind": "value-change",
+        "first": "Works at Summit Freight",
+        "second": "Works at Harbor Works",
+        "status": "inserted",
+        "degraded_dedup": null
+      },
+      {
+        "chain": "fence-3-employer",
+        "kind": "unrelated-control",
+        "first": "Works at Summit Freight",
+        "second": "Enjoys long walks near Harbor Works",
+        "status": "inserted",
+        "degraded_dedup": null
+      },
+      {
+        "chain": "fence-3-employer",
+        "kind": "near-duplicate-control",
+        "first": "Works at Summit Freight",
+        "second": "Works at Summit Freight.",
+        "status": "duplicate",
+        "degraded_dedup": null
+      },
+      {
+        "chain": "fence-4-city",
+        "kind": "value-change",
+        "first": "Home city is Setubal",
+        "second": "Home city is Tomar",
+        "status": "inserted",
+        "degraded_dedup": null
+      },
+      {
+        "chain": "fence-4-city",
+        "kind": "unrelated-control",
+        "first": "Home city is Setubal",
+        "second": "Enjoys long walks near Tomar",
+        "status": "inserted",
+        "degraded_dedup": null
+      },
+      {
+        "chain": "fence-4-city",
+        "kind": "near-duplicate-control",
+        "first": "Home city is Setubal",
+        "second": "Home city is Setubal.",
+        "status": "duplicate",
+        "degraded_dedup": null
+      },
+      {
+        "chain": "fence-4-employer",
+        "kind": "value-change",
+        "first": "Works at Willow Robotics",
+        "second": "Works at Summit Freight",
+        "status": "inserted",
+        "degraded_dedup": null
+      },
+      {
+        "chain": "fence-4-employer",
+        "kind": "unrelated-control",
+        "first": "Works at Willow Robotics",
+        "second": "Enjoys long walks near Summit Freight",
+        "status": "inserted",
+        "degraded_dedup": null
+      },
+      {
+        "chain": "fence-4-employer",
+        "kind": "near-duplicate-control",
+        "first": "Works at Willow Robotics",
+        "second": "Works at Willow Robotics.",
+        "status": "duplicate",
+        "degraded_dedup": null
+      },
+      {
+        "chain": "fence-5-employer",
+        "kind": "value-change",
+        "first": "Works at Meadow Health",
+        "second": "Works at Harbor Works",
+        "status": "inserted",
+        "degraded_dedup": null
+      },
+      {
+        "chain": "fence-5-employer",
+        "kind": "unrelated-control",
+        "first": "Works at Meadow Health",
+        "second": "Enjoys long walks near Harbor Works",
+        "status": "inserted",
+        "degraded_dedup": null
+      },
+      {
+        "chain": "fence-5-employer",
+        "kind": "near-duplicate-control",
+        "first": "Works at Meadow Health",
+        "second": "Works at Meadow Health.",
+        "status": "duplicate",
+        "degraded_dedup": null
+      },
+      {
+        "chain": "fence-6-employer",
+        "kind": "value-change",
+        "first": "Works at Willow Robotics",
+        "second": "Works at Meadow Health",
+        "status": "inserted",
+        "degraded_dedup": null
+      },
+      {
+        "chain": "fence-6-employer",
+        "kind": "unrelated-control",
+        "first": "Works at Willow Robotics",
+        "second": "Enjoys long walks near Meadow Health",
+        "status": "inserted",
+        "degraded_dedup": null
+      },
+      {
+        "chain": "fence-6-employer",
+        "kind": "near-duplicate-control",
+        "first": "Works at Willow Robotics",
+        "second": "Works at Willow Robotics.",
+        "status": "duplicate",
+        "degraded_dedup": null
+      }
+    ]
+  },
+  "accounting": {
+    "planned": 30,
+    "attempted": 30,
+    "scored": 30,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null
+}
