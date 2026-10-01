@@ -1,0 +1,75 @@
+{
+  "eligible_only": true,
+  "duplicate_threshold": null,
+  "proposal_floor": null,
+  "applied_policy": {
+    "threshold": 0.52,
+    "proposalFloor": 0.65
+  },
+  "eval": {
+    "baseline_cosine_rule": {
+      "n": 2,
+      "confusion": {
+        "supersede": {
+          "independent": 1
+        },
+        "duplicate": {
+          "supersede": 1
+        }
+      },
+      "supersedes_found": 0,
+      "supersede_labels": 1,
+      "proposals": 1,
+      "wrong_supersedes": 1,
+      "wrong_supersede_rate": 1,
+      "proposal_precision_lb": 0,
+      "label_agreement": 0
+    },
+    "s9_calibrated": {
+      "n": 2,
+      "confusion": {
+        "supersede": {
+          "proposal": 1
+        },
+        "duplicate": {
+          "duplicate": 1
+        }
+      },
+      "supersedes_found": 1,
+      "supersede_labels": 1,
+      "proposals": 1,
+      "wrong_supersedes": 0,
+      "wrong_supersede_rate": 0,
+      "proposal_precision_lb": 0.20654931179180275,
+      "label_agreement": 1
+    },
+    "s9_default_floor_0_5": {
+      "n": 2,
+      "confusion": {
+        "supersede": {
+          "proposal": 1
+        },
+        "duplicate": {
+          "duplicate": 1
+        }
+      },
+      "supersedes_found": 1,
+      "supersede_labels": 1,
+      "proposals": 1,
+      "wrong_supersedes": 0,
+      "wrong_supersede_rate": 0,
+      "proposal_precision_lb": 0.20654931179180275,
+      "label_agreement": 1
+    }
+  },
+  "retest_flip_rate": {
+    "n": 2,
+    "flips": 0
+  },
+  "latency_ms_per_request": {
+    "p50": 300,
+    "p95": 300,
+    "p99": 300
+  },
+  "cost_usd_per_swept_fact": 0.000022890000000000003
+}

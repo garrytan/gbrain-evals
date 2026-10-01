@@ -1,0 +1,91 @@
+{
+  "eligible_only": false,
+  "duplicate_threshold": {
+    "threshold": 0,
+    "metric": "f1",
+    "metric_value": 0,
+    "precision": 0,
+    "recall": 1,
+    "f1": 0
+  },
+  "proposal_floor": {
+    "threshold": 0,
+    "metric": "f1",
+    "metric_value": 0,
+    "precision": 0,
+    "recall": 1,
+    "f1": 0
+  },
+  "applied_policy": {
+    "threshold": 0.52,
+    "proposalFloor": 0.65
+  },
+  "eval": {
+    "baseline_cosine_rule": {
+      "n": 3,
+      "confusion": {
+        "supersede": {
+          "independent": 2
+        },
+        "duplicate": {
+          "supersede": 1
+        }
+      },
+      "supersedes_found": 0,
+      "supersede_labels": 2,
+      "proposals": 1,
+      "wrong_supersedes": 1,
+      "wrong_supersede_rate": 1,
+      "proposal_precision_lb": 0,
+      "label_agreement": 0
+    },
+    "s9_calibrated": {
+      "n": 3,
+      "confusion": {
+        "supersede": {
+          "independent": 1,
+          "proposal": 1
+        },
+        "duplicate": {
+          "duplicate": 1
+        }
+      },
+      "supersedes_found": 1,
+      "supersede_labels": 2,
+      "proposals": 1,
+      "wrong_supersedes": 0,
+      "wrong_supersede_rate": 0,
+      "proposal_precision_lb": 0.20654931179180275,
+      "label_agreement": 0.6666666666666666
+    },
+    "s9_default_floor_0_5": {
+      "n": 3,
+      "confusion": {
+        "supersede": {
+          "independent": 1,
+          "proposal": 1
+        },
+        "duplicate": {
+          "duplicate": 1
+        }
+      },
+      "supersedes_found": 1,
+      "supersede_labels": 2,
+      "proposals": 1,
+      "wrong_supersedes": 0,
+      "wrong_supersede_rate": 0,
+      "proposal_precision_lb": 0.20654931179180275,
+      "label_agreement": 0.6666666666666666
+    }
+  },
+  "retest_flip_rate": {
+    "n": 3,
+    "flips": 0
+  },
+  "latency_ms_per_request": {
+    "p50": 291,
+    "p95": 300,
+    "p99": 300
+  },
+  "cost_usd_per_swept_fact": 0.000018872
+}

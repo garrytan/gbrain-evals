@@ -1,0 +1,59 @@
+{
+  "category": "system-one-jev",
+  "evaluation": "s7-triage-pair",
+  "slot": "S7",
+  "decide_slot": "triage",
+  "provider": "typesafe:jev-1.13.0",
+  "started_at": "2026-10-01T00:41:04.780Z",
+  "finished_at": "2026-10-01T00:41:18.779Z",
+  "limit": 2,
+  "smoke": true,
+  "gbrain": {
+    "requested": "<gbrain checkout>@fc9a1d45d6fa4842c938c94d4d9e4ac96366730a",
+    "ref": "fc9a1d45d6fa4842c938c94d4d9e4ac96366730a",
+    "commit": "fc9a1d45d6fa4842c938c94d4d9e4ac96366730a",
+    "tree": "7141d44add7c0a3978cd3c413a555cc50ac8cf3c",
+    "version": "0.60.21.0",
+    "checkout_dirty": false,
+    "verified": {
+      "copy_tree": "7141d44add7c0a3978cd3c413a555cc50ac8cf3c",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.21.0",
+      "cli_version_matches": true
+    },
+    "copied_not_symlinked": true
+  },
+  "product": {
+    "package": "gbrain",
+    "declared_pin": "github:garrytan/gbrain#6c8373c3de9bb321a3da0bfa2dc2140736aeafa5",
+    "declared_sha": "6c8373c3de9bb321a3da0bfa2dc2140736aeafa5",
+    "version": "0.60.21.0",
+    "package_sha256": "198e97b2a1df91e92065532256fa332697287380bdad164741281cfa46eca8ac",
+    "loaded_git_head": "fc9a1d45d6fa4842c938c94d4d9e4ac96366730a"
+  },
+  "steps": [
+    {
+      "name": "arm-off-1",
+      "status": 0,
+      "seconds": 6
+    },
+    {
+      "name": "arm-on-1",
+      "status": 0,
+      "seconds": 2
+    },
+    {
+      "name": "arm-off-2",
+      "status": 0,
+      "seconds": 5
+    },
+    {
+      "name": "arm-on-2",
+      "status": 0,
+      "seconds": 2
+    }
+  ],
+  "note": "smoke run on the first 2 families or questions; not comparable with the published full-run numbers"
+}

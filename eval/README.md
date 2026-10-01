@@ -36,6 +36,7 @@ It searches the committed fictional corpus and writes a receipt under `eval/repo
 | Does search return too much irrelevant material? | `precisionmembench.ts` | External 77-case benchmark; result limits matter. |
 | Do conversations become useful notes? | `cat35-transcript-distill.ts` | Model-backed write-path test; the default is a small paid setup run. |
 | Does the right memory appear without asking? | `cat34-brainbench-memory.ts` | Offline conformance test with separate production and integration-contract rows. |
+| Does a small decision model (Jev) beat gbrain's rules at triage, reranking or spotting contradictions? | `system-one-jev.ts` | `verify` checks the September 30 record offline; `run` replays a slot's matched pair against a gbrain checkout passed with `--gbrain`. |
 
 Paths in the table are relative to `eval/runner/`. A “Cat” number is simply a historical category identifier.
 

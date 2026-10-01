@@ -1,0 +1,1287 @@
+{
+  "schema_version": 1,
+  "experiment": "gbrain System One v1 (Jev decision support), per-slot matched pairs",
+  "measured": "2026-09-30",
+  "provider": "typesafe:jev-1.13.0",
+  "model_resolved": "jev-1.13.0",
+  "receipts_dir": "receipts/",
+  "note": "Every value is copied from the named receipt at the JSON pointer; test/eval/system-one-jev.test.ts checks each one. Eval-half numbers only. No label is a human hand label.",
+  "slots": [
+    {
+      "slot": "S7",
+      "decide_slot": "triage",
+      "name": "Dream triage",
+      "verdict": "win, costs more",
+      "shipped": "yes: reference calibration triage-jev-1.13.0-2026-09-30 and `gbrain decide enable --recommended`",
+      "headline": "Buried-signal misses 10/18 -> 0/18; routine rejected 78/79 -> 52/79; triage cost per transcript $0.0046 -> $0.0009; latency p50/p95 2.2/6.2 s -> 1.4/4.2 s. Preset end to end: 10/10 buried signals synthesized vs 3/10, junk pages 2 -> 5, dream spend $1.50 -> $2.60.",
+      "denominator": "109 eval-half transcripts (30 synthesis-worthy: 12 Cat 35 + 18 synthetic buried-signal; 79 routine)",
+      "qualification": "qualified: 39/39 correct rejections, family lower bound 0.910",
+      "numbers": [
+        {
+          "key": "off_buried_missed",
+          "receipt": "s7/summary.json",
+          "pointer": "/a/synthetic_buried/positives_missed",
+          "value": 10
+        },
+        {
+          "key": "on_buried_missed",
+          "receipt": "s7/summary.json",
+          "pointer": "/b/synthetic_buried/positives_missed",
+          "value": 0
+        },
+        {
+          "key": "buried_n",
+          "receipt": "s7/summary.json",
+          "pointer": "/a/synthetic_buried/positives",
+          "value": 18
+        },
+        {
+          "key": "off_worthy_passed",
+          "receipt": "s7/summary.json",
+          "pointer": "/a/tp",
+          "value": 20
+        },
+        {
+          "key": "on_worthy_passed",
+          "receipt": "s7/summary.json",
+          "pointer": "/b/tp",
+          "value": 30
+        },
+        {
+          "key": "off_routine_rejected",
+          "receipt": "s7/summary.json",
+          "pointer": "/a/tn",
+          "value": 78
+        },
+        {
+          "key": "on_routine_rejected",
+          "receipt": "s7/summary.json",
+          "pointer": "/b/tn",
+          "value": 52
+        },
+        {
+          "key": "off_sent",
+          "receipt": "s7/summary.json",
+          "pointer": "/a/sent_to_synthesis",
+          "value": 21
+        },
+        {
+          "key": "on_sent",
+          "receipt": "s7/summary.json",
+          "pointer": "/b/sent_to_synthesis",
+          "value": 57
+        },
+        {
+          "key": "off_accuracy",
+          "receipt": "s7/summary.json",
+          "pointer": "/a/accuracy",
+          "value": 0.8990825688073395
+        },
+        {
+          "key": "on_accuracy",
+          "receipt": "s7/summary.json",
+          "pointer": "/b/accuracy",
+          "value": 0.7522935779816514
+        },
+        {
+          "key": "off_cost_per_transcript",
+          "receipt": "s7/summary.json",
+          "pointer": "/a/cost_usd_per_transcript",
+          "value": 0.004645954128440367
+        },
+        {
+          "key": "on_cost_per_transcript",
+          "receipt": "s7/summary.json",
+          "pointer": "/b/cost_usd_per_transcript",
+          "value": 0.0009394412660550462
+        },
+        {
+          "key": "off_latency_ms",
+          "receipt": "s7/summary.json",
+          "pointer": "/a/latency_ms",
+          "value": {
+            "p50": 2238,
+            "p95": 6221,
+            "p99": 7660,
+            "mean": 2718.0183486238534
+          }
+        },
+        {
+          "key": "on_latency_ms",
+          "receipt": "s7/summary.json",
+          "pointer": "/b/latency_ms",
+          "value": {
+            "p50": 1437,
+            "p95": 4156,
+            "p99": 5146,
+            "mean": 1723.48623853211
+          }
+        },
+        {
+          "key": "on_paths",
+          "receipt": "s7/summary.json",
+          "pointer": "/b/paths",
+          "value": {
+            "decide:pass": 57,
+            "decide:reject": 37,
+            "decide->llm:margin_hold": 15
+          }
+        },
+        {
+          "key": "off_flip_rate",
+          "receipt": "s7/summary.json",
+          "pointer": "/retest/a/rate",
+          "value": 0.009174311926605505
+        },
+        {
+          "key": "on_flip_rate",
+          "receipt": "s7/summary.json",
+          "pointer": "/retest/b/rate",
+          "value": 0.045871559633027525
+        },
+        {
+          "key": "discordant_on_right",
+          "receipt": "s7/summary.json",
+          "pointer": "/discordant/b_right_a_wrong",
+          "value": 11
+        },
+        {
+          "key": "discordant_off_right",
+          "receipt": "s7/summary.json",
+          "pointer": "/discordant/a_right_b_wrong",
+          "value": 27
+        },
+        {
+          "key": "mcnemar_p",
+          "receipt": "s7/summary.json",
+          "pointer": "/mcnemar_p",
+          "value": 0.013852965261321515
+        },
+        {
+          "key": "threshold",
+          "receipt": "s7/calibrate.json",
+          "pointer": "/threshold",
+          "value": 0.77
+        },
+        {
+          "key": "calibrate_recall",
+          "receipt": "s7/calibrate.json",
+          "pointer": "/recall",
+          "value": 1
+        },
+        {
+          "key": "retest_sd",
+          "receipt": "s7/calibrate.json",
+          "pointer": "/retest_sd",
+          "value": 0.013776771545062764
+        },
+        {
+          "key": "repack_sd",
+          "receipt": "s7/calibrate.json",
+          "pointer": "/repack_sd",
+          "value": 0.012667210240227527
+        },
+        {
+          "key": "ece",
+          "receipt": "s7/calibrate.json",
+          "pointer": "/ece",
+          "value": 0.46441379310344827
+        },
+        {
+          "key": "qualify_status",
+          "receipt": "s7/qualify.json",
+          "pointer": "/status",
+          "value": "qualified"
+        },
+        {
+          "key": "qualify_lb",
+          "receipt": "s7/qualify.json",
+          "pointer": "/action_precision_lb",
+          "value": 0.9103331450047064
+        },
+        {
+          "key": "qualify_correct_families",
+          "receipt": "s7/qualify.json",
+          "pointer": "/correct_families",
+          "value": 39
+        },
+        {
+          "key": "preset_off_worthy_synthesized",
+          "receipt": "preset/preset-summary.json",
+          "pointer": "/A/pos_proc",
+          "value": 9
+        },
+        {
+          "key": "preset_on_worthy_synthesized",
+          "receipt": "preset/preset-summary.json",
+          "pointer": "/B/pos_proc",
+          "value": 16
+        },
+        {
+          "key": "preset_worthy_total",
+          "receipt": "preset/preset-summary.json",
+          "pointer": "/A/pos_total",
+          "value": 16
+        },
+        {
+          "key": "preset_off_buried_synthesized",
+          "receipt": "preset/preset-summary.json",
+          "pointer": "/A/buried_proc",
+          "value": 3
+        },
+        {
+          "key": "preset_on_buried_synthesized",
+          "receipt": "preset/preset-summary.json",
+          "pointer": "/B/buried_proc",
+          "value": 10
+        },
+        {
+          "key": "preset_off_routine_pages",
+          "receipt": "preset/preset-pages.json",
+          "pointer": "/A/pages/routine",
+          "value": 2
+        },
+        {
+          "key": "preset_on_routine_pages",
+          "receipt": "preset/preset-pages.json",
+          "pointer": "/B/pages/routine",
+          "value": 4
+        },
+        {
+          "key": "preset_on_cat35_low_pages",
+          "receipt": "preset/preset-pages.json",
+          "pointer": "/B/pages/cat35-low",
+          "value": 1
+        },
+        {
+          "key": "preset_off_pages",
+          "receipt": "preset/dream-A.json",
+          "pointer": "/pages_written",
+          "value": 20
+        },
+        {
+          "key": "preset_on_pages",
+          "receipt": "preset/dream-B.json",
+          "pointer": "/pages_written",
+          "value": 38
+        },
+        {
+          "key": "preset_off_transcripts",
+          "receipt": "preset/dream-A.json",
+          "pointer": "/transcripts_processed",
+          "value": 10
+        },
+        {
+          "key": "preset_on_transcripts",
+          "receipt": "preset/dream-B.json",
+          "pointer": "/transcripts_processed",
+          "value": 19
+        },
+        {
+          "key": "preset_off_synthesis_usd",
+          "receipt": "preset/dream-A.json",
+          "pointer": "/estimated_spend_usd",
+          "value": 1.3567889999999998
+        },
+        {
+          "key": "preset_off_triage_usd",
+          "receipt": "preset/dream-A.json",
+          "pointer": "/triage/cost_usd",
+          "value": 0.144223
+        },
+        {
+          "key": "preset_on_synthesis_usd",
+          "receipt": "preset/dream-B.json",
+          "pointer": "/estimated_spend_usd",
+          "value": 2.579361
+        },
+        {
+          "key": "preset_on_triage_llm_usd",
+          "receipt": "preset/dream-B.json",
+          "pointer": "/triage/cost_usd",
+          "value": 0.010945
+        },
+        {
+          "key": "preset_on_triage_jev_usd",
+          "receipt": "preset/dream-B.json",
+          "pointer": "/triage/decide/cost_usd",
+          "value": 0.007732956
+        },
+        {
+          "key": "preset_off_summary",
+          "receipt": "preset/dream-A.json",
+          "pointer": "/summary",
+          "value": "10 transcript(s) synthesized in 733.0s"
+        },
+        {
+          "key": "preset_on_summary",
+          "receipt": "preset/dream-B.json",
+          "pointer": "/summary",
+          "value": "19 transcript(s) synthesized in 1427.1s"
+        }
+      ]
+    },
+    {
+      "slot": "S9",
+      "decide_slot": "conflict",
+      "name": "Contradiction sweep",
+      "verdict": "win",
+      "shipped": "yes: reference calibration conflict-jev-1.13.0-2026-09-30 and `gbrain decide enable --recommended`",
+      "headline": "Supersedes found 0/97 (cosine rule) -> 94/97; wrong supersedes 10 -> 1; $0.00002 per swept fact.",
+      "denominator": "395 eval-half fact pairs (97 supersede, 75 duplicate, 223 independent labels)",
+      "qualification": "not a harmful slot (proposals only)",
+      "numbers": [
+        {
+          "key": "off_found",
+          "receipt": "s9/analysis-cal.json",
+          "pointer": "/eval/baseline_cosine_rule/supersedes_found",
+          "value": 0
+        },
+        {
+          "key": "on_found",
+          "receipt": "s9/analysis-cal.json",
+          "pointer": "/eval/s9_calibrated/supersedes_found",
+          "value": 94
+        },
+        {
+          "key": "supersede_labels",
+          "receipt": "s9/analysis-cal.json",
+          "pointer": "/eval/s9_calibrated/supersede_labels",
+          "value": 97
+        },
+        {
+          "key": "off_wrong",
+          "receipt": "s9/analysis-cal.json",
+          "pointer": "/eval/baseline_cosine_rule/wrong_supersedes",
+          "value": 10
+        },
+        {
+          "key": "off_proposals",
+          "receipt": "s9/analysis-cal.json",
+          "pointer": "/eval/baseline_cosine_rule/proposals",
+          "value": 10
+        },
+        {
+          "key": "on_wrong",
+          "receipt": "s9/analysis-cal.json",
+          "pointer": "/eval/s9_calibrated/wrong_supersedes",
+          "value": 1
+        },
+        {
+          "key": "on_proposals",
+          "receipt": "s9/analysis-cal.json",
+          "pointer": "/eval/s9_calibrated/proposals",
+          "value": 95
+        },
+        {
+          "key": "off_agreement",
+          "receipt": "s9/analysis-cal.json",
+          "pointer": "/eval/baseline_cosine_rule/label_agreement",
+          "value": 0.5645569620253165
+        },
+        {
+          "key": "on_agreement",
+          "receipt": "s9/analysis-cal.json",
+          "pointer": "/eval/s9_calibrated/label_agreement",
+          "value": 0.9392405063291139
+        },
+        {
+          "key": "floor_0_5_found",
+          "receipt": "s9/analysis-cal.json",
+          "pointer": "/eval/s9_default_floor_0_5/supersedes_found",
+          "value": 95
+        },
+        {
+          "key": "floor_0_5_agreement",
+          "receipt": "s9/analysis-cal.json",
+          "pointer": "/eval/s9_default_floor_0_5/label_agreement",
+          "value": 0.9417721518987342
+        },
+        {
+          "key": "eligible_n",
+          "receipt": "s9/analysis-cal--eligible-only.json",
+          "pointer": "/eval/s9_calibrated/n",
+          "value": 88
+        },
+        {
+          "key": "eligible_found",
+          "receipt": "s9/analysis-cal--eligible-only.json",
+          "pointer": "/eval/s9_calibrated/supersedes_found",
+          "value": 29
+        },
+        {
+          "key": "eligible_labels",
+          "receipt": "s9/analysis-cal--eligible-only.json",
+          "pointer": "/eval/s9_calibrated/supersede_labels",
+          "value": 30
+        },
+        {
+          "key": "eligible_wrong",
+          "receipt": "s9/analysis-cal--eligible-only.json",
+          "pointer": "/eval/s9_calibrated/wrong_supersedes",
+          "value": 0
+        },
+        {
+          "key": "flips",
+          "receipt": "s9/analysis-cal.json",
+          "pointer": "/retest_flip_rate/flips",
+          "value": 0
+        },
+        {
+          "key": "latency_ms",
+          "receipt": "s9/analysis-cal.json",
+          "pointer": "/latency_ms_per_request",
+          "value": {
+            "p50": 146,
+            "p95": 221,
+            "p99": 324
+          }
+        },
+        {
+          "key": "cost_per_fact",
+          "receipt": "s9/analysis-cal.json",
+          "pointer": "/cost_usd_per_swept_fact",
+          "value": 2.326604411764706e-05
+        },
+        {
+          "key": "dup_threshold",
+          "receipt": "s9/calibrate.json",
+          "pointer": "/threshold",
+          "value": 0.52
+        },
+        {
+          "key": "retest_sd",
+          "receipt": "s9/calibrate.json",
+          "pointer": "/retest_sd",
+          "value": 0.0012503446710886346
+        },
+        {
+          "key": "repack_sd",
+          "receipt": "s9/calibrate.json",
+          "pointer": "/repack_sd",
+          "value": 0.004583381032010948
+        }
+      ]
+    },
+    {
+      "slot": "S1",
+      "decide_slot": "rerank",
+      "name": "Search reranking",
+      "verdict": "regression",
+      "shipped": "no",
+      "headline": "LongMemEval-S (233 answerable): recall_all@5 94.8% (Voyage) vs 94.0 / 91.4 / 92.7% (Jev at top_n_in 30/50/100); R@1 94.4% vs 91.4-91.8%. Answer accuracy (100 q) 91% vs 89%. LongMemEval-M pilot: R@1 87.5% vs 75.0% (100) / 70.8% (300).",
+      "denominator": "248 eval-half LongMemEval-S questions (233 answerable); 100 judged questions; 28 LongMemEval-M pilot questions (24 answerable)",
+      "qualification": "n/a (no threshold)",
+      "numbers": [
+        {
+          "key": "voy30_recall_all",
+          "receipt": "s1/longmemeval-s-summary.json",
+          "pointer": "/s_voy30/recall_all@5",
+          "value": 0.9484978540772532
+        },
+        {
+          "key": "off_recall_all",
+          "receipt": "s1/longmemeval-s-summary.json",
+          "pointer": "/s_off/recall_all@5",
+          "value": 0.9356223175965666
+        },
+        {
+          "key": "voy100_recall_all",
+          "receipt": "s1/longmemeval-s-summary.json",
+          "pointer": "/s_voy100/recall_all@5",
+          "value": 0.9484978540772532
+        },
+        {
+          "key": "jev30_recall_all",
+          "receipt": "s1/longmemeval-s-summary.json",
+          "pointer": "/s_jev30/recall_all@5",
+          "value": 0.9399141630901288
+        },
+        {
+          "key": "jev50_recall_all",
+          "receipt": "s1/longmemeval-s-summary.json",
+          "pointer": "/s_jev50/recall_all@5",
+          "value": 0.9141630901287554
+        },
+        {
+          "key": "jev100_recall_all",
+          "receipt": "s1/longmemeval-s-summary.json",
+          "pointer": "/s_jev100/recall_all@5",
+          "value": 0.927038626609442
+        },
+        {
+          "key": "jev100b_recall_all",
+          "receipt": "s1/longmemeval-s-summary.json",
+          "pointer": "/s_jev100b/recall_all@5",
+          "value": 0.9227467811158798
+        },
+        {
+          "key": "jev50_vs_voy30",
+          "receipt": "s1/longmemeval-s-summary.json",
+          "pointer": "/s_jev50/vs_s_voy30/recall_all",
+          "value": {
+            "n": 233,
+            "wins": 1,
+            "losses": 9,
+            "mcnemar_p": 0.0215
+          }
+        },
+        {
+          "key": "voy30_r1",
+          "receipt": "s1/longmemeval-s-summary.json",
+          "pointer": "/s_voy30/R@1",
+          "value": 0.944206008583691
+        },
+        {
+          "key": "off_r1",
+          "receipt": "s1/longmemeval-s-summary.json",
+          "pointer": "/s_off/R@1",
+          "value": 0.9184549356223176
+        },
+        {
+          "key": "voy100_r1",
+          "receipt": "s1/longmemeval-s-summary.json",
+          "pointer": "/s_voy100/R@1",
+          "value": 0.9313304721030042
+        },
+        {
+          "key": "jev30_r1",
+          "receipt": "s1/longmemeval-s-summary.json",
+          "pointer": "/s_jev30/R@1",
+          "value": 0.9184549356223176
+        },
+        {
+          "key": "jev50_r1",
+          "receipt": "s1/longmemeval-s-summary.json",
+          "pointer": "/s_jev50/R@1",
+          "value": 0.9141630901287554
+        },
+        {
+          "key": "jev100_r1",
+          "receipt": "s1/longmemeval-s-summary.json",
+          "pointer": "/s_jev100/R@1",
+          "value": 0.9141630901287554
+        },
+        {
+          "key": "jev100b_r1",
+          "receipt": "s1/longmemeval-s-summary.json",
+          "pointer": "/s_jev100b/R@1",
+          "value": 0.9184549356223176
+        },
+        {
+          "key": "voy30_top1_present",
+          "receipt": "s1/longmemeval-s-summary.json",
+          "pointer": "/s_voy30/top1_when_present",
+          "value": "220/233"
+        },
+        {
+          "key": "jev30_top1_present",
+          "receipt": "s1/longmemeval-s-summary.json",
+          "pointer": "/s_jev30/top1_when_present",
+          "value": "214/233"
+        },
+        {
+          "key": "jev100_top1_present",
+          "receipt": "s1/longmemeval-s-summary.json",
+          "pointer": "/s_jev100/top1_when_present",
+          "value": "213/233"
+        },
+        {
+          "key": "jev30_latency",
+          "receipt": "s1/longmemeval-s-summary.json",
+          "pointer": "/s_jev30/jev_rerank_latency_ms",
+          "value": {
+            "p50": 381,
+            "p95": 521,
+            "p99": 633
+          }
+        },
+        {
+          "key": "jev50_latency",
+          "receipt": "s1/longmemeval-s-summary.json",
+          "pointer": "/s_jev50/jev_rerank_latency_ms",
+          "value": {
+            "p50": 512,
+            "p95": 750,
+            "p99": 1210
+          }
+        },
+        {
+          "key": "jev100_latency",
+          "receipt": "s1/longmemeval-s-summary.json",
+          "pointer": "/s_jev100/jev_rerank_latency_ms",
+          "value": {
+            "p50": 515,
+            "p95": 716,
+            "p99": 973
+          }
+        },
+        {
+          "key": "jev30_cost_per_q",
+          "receipt": "s1/longmemeval-s-summary.json",
+          "pointer": "/s_jev30/decide_cost_usd_per_question",
+          "value": 0.000835
+        },
+        {
+          "key": "jev100_cost_per_q",
+          "receipt": "s1/longmemeval-s-summary.json",
+          "pointer": "/s_jev100/decide_cost_usd_per_question",
+          "value": 0.001297
+        },
+        {
+          "key": "jev100x_recall_all",
+          "receipt": "s1/longmemeval-s-summary.json",
+          "pointer": "/s_jev100x/recall_all@5",
+          "value": 0.9356223175965666
+        },
+        {
+          "key": "jev100x_outcomes",
+          "receipt": "s1/longmemeval-s-summary.json",
+          "pointer": "/s_jev100x/decide_outcomes",
+          "value": {
+            "rerank:skipped:timeout": 248
+          }
+        },
+        {
+          "key": "pool_recall_all_30",
+          "receipt": "s1/longmemeval-s-summary.json",
+          "pointer": "/s_voy30/pool_recall_all@30",
+          "value": 1.0
+        },
+        {
+          "key": "fused_pool_mean",
+          "receipt": "s1/longmemeval-s-summary.json",
+          "pointer": "/s_voy30/fused_pool_size_mean",
+          "value": 47.38197424892704
+        },
+        {
+          "key": "judged_voy30_accuracy",
+          "receipt": "s1/longmemeval-judged-summary.json",
+          "pointer": "/j_voy30/answer_accuracy_n",
+          "value": "91/100"
+        },
+        {
+          "key": "judged_jev30_accuracy",
+          "receipt": "s1/longmemeval-judged-summary.json",
+          "pointer": "/j_jev30/answer_accuracy_n",
+          "value": "89/100"
+        },
+        {
+          "key": "judged_paired",
+          "receipt": "s1/longmemeval-judged-summary.json",
+          "pointer": "/j_jev30/vs_j_voy30/answer",
+          "value": {
+            "n": 85,
+            "wins": 1,
+            "losses": 3,
+            "mcnemar_p": 0.625
+          }
+        },
+        {
+          "key": "m_voy30_r1",
+          "receipt": "s1/longmemeval-m-pilot-summary.json",
+          "pointer": "/m_voy30/R@1",
+          "value": 0.875
+        },
+        {
+          "key": "m_jev100_r1",
+          "receipt": "s1/longmemeval-m-pilot-summary.json",
+          "pointer": "/m_jev100/R@1",
+          "value": 0.75
+        },
+        {
+          "key": "m_jev300_r1",
+          "receipt": "s1/longmemeval-m-pilot-summary.json",
+          "pointer": "/m_jev300/R@1",
+          "value": 0.7083333333333334
+        },
+        {
+          "key": "m_answerable",
+          "receipt": "s1/longmemeval-m-pilot-summary.json",
+          "pointer": "/m_voy30/answerable",
+          "value": 24
+        },
+        {
+          "key": "m_pool_recall_all_30",
+          "receipt": "s1/longmemeval-m-pilot-summary.json",
+          "pointer": "/m_off/pool_recall_all@30",
+          "value": 1.0
+        }
+      ]
+    },
+    {
+      "slot": "S2",
+      "decide_slot": "intent",
+      "name": "Query routing",
+      "verdict": "no measurable change",
+      "shipped": "no; gbrain raised decide.slots.intent.wait_ms to 250 ms from these late rates",
+      "headline": "Routing accuracy search 46.5% -> 66.9%, think 58.7% -> 77.0%, but LongMemEval retrieval 0 wins / 0 losses.",
+      "denominator": "424 eval-half routing queries (172 search, 252 think); 248 eval-half LongMemEval-S questions",
+      "qualification": "n/a (not harmful)",
+      "numbers": [
+        {
+          "key": "search_regex_accuracy",
+          "receipt": "s2/analysis.json",
+          "pointer": "/search/regex_accuracy",
+          "value": 0.46511627906976744
+        },
+        {
+          "key": "search_on_accuracy",
+          "receipt": "s2/analysis.json",
+          "pointer": "/search/on_accuracy",
+          "value": 0.6686046511627907
+        },
+        {
+          "key": "search_overrides",
+          "receipt": "s2/analysis.json",
+          "pointer": "/search/overrides",
+          "value": 51
+        },
+        {
+          "key": "search_helped",
+          "receipt": "s2/analysis.json",
+          "pointer": "/search/overrides_helped",
+          "value": 41
+        },
+        {
+          "key": "search_hurt",
+          "receipt": "s2/analysis.json",
+          "pointer": "/search/overrides_hurt",
+          "value": 6
+        },
+        {
+          "key": "think_regex_accuracy",
+          "receipt": "s2/analysis.json",
+          "pointer": "/think/regex_accuracy",
+          "value": 0.5873015873015873
+        },
+        {
+          "key": "think_on_accuracy",
+          "receipt": "s2/analysis.json",
+          "pointer": "/think/on_accuracy",
+          "value": 0.7698412698412699
+        },
+        {
+          "key": "search_late_rate",
+          "receipt": "s2/analysis.json",
+          "pointer": "/search/late_rate",
+          "value": {
+            "150": 0.388268156424581,
+            "200": 0.07262569832402235,
+            "250": 0.030726256983240222,
+            "300": 0.008379888268156424,
+            "400": 0
+          }
+        },
+        {
+          "key": "think_late_rate",
+          "receipt": "s2/analysis.json",
+          "pointer": "/think/late_rate",
+          "value": {
+            "150": 0.4074803149606299,
+            "200": 0.07874015748031496,
+            "250": 0.011811023622047244,
+            "300": 0.005905511811023622,
+            "400": 0
+          }
+        },
+        {
+          "key": "search_latency",
+          "receipt": "s2/analysis.json",
+          "pointer": "/search/latency_ms",
+          "value": {
+            "p50": 142,
+            "p95": 217,
+            "p99": 292
+          }
+        },
+        {
+          "key": "lme_vs_voy30",
+          "receipt": "s3/longmemeval-decide-arms-summary.json",
+          "pointer": "/s_s2/vs_s_voy30/recall_all",
+          "value": {
+            "n": 233,
+            "wins": 0,
+            "losses": 0,
+            "mcnemar_p": 1.0
+          }
+        },
+        {
+          "key": "lme_outcomes",
+          "receipt": "s3/longmemeval-decide-arms-summary.json",
+          "pointer": "/s_s2/decide_outcomes",
+          "value": {
+            "intent:fallback_regex": 202,
+            "intent:skipped:late": 67,
+            "intent:late": 67,
+            "intent:override": 46
+          }
+        }
+      ]
+    },
+    {
+      "slot": "S3",
+      "decide_slot": "evidence",
+      "name": "Evidence gate",
+      "verdict": "regression",
+      "shipped": "no",
+      "headline": "Calibrated threshold (0.02) never prunes. At the lowest acting threshold (0.08, forced): recall_all@5 94.8% -> 91.4% (1 win / 9 losses, p=0.02), sessions in top 5 4.89 -> 3.52.",
+      "denominator": "248 eval-half LongMemEval-S questions (233 answerable)",
+      "qualification": "fails: best acting family lower bound 0.869 (not in a committed receipt)",
+      "numbers": [
+        {
+          "key": "calibrated_threshold",
+          "receipt": "s3/calibrate-s3.json",
+          "pointer": "/threshold",
+          "value": 0.02
+        },
+        {
+          "key": "qualify_status",
+          "receipt": "s3/qualify-s3.json",
+          "pointer": "/status",
+          "value": "insufficient_n"
+        },
+        {
+          "key": "voy30_recall_all",
+          "receipt": "s3/longmemeval-decide-arms-summary.json",
+          "pointer": "/s_voy30/recall_all@5",
+          "value": 0.9484978540772532
+        },
+        {
+          "key": "s3_recall_all",
+          "receipt": "s3/longmemeval-decide-arms-summary.json",
+          "pointer": "/s_s3/recall_all@5",
+          "value": 0.9141630901287554
+        },
+        {
+          "key": "s3_vs_voy30",
+          "receipt": "s3/longmemeval-decide-arms-summary.json",
+          "pointer": "/s_s3/vs_s_voy30/recall_all",
+          "value": {
+            "n": 233,
+            "wins": 1,
+            "losses": 9,
+            "mcnemar_p": 0.0215
+          }
+        },
+        {
+          "key": "voy30_sessions_top5",
+          "receipt": "s3/longmemeval-decide-arms-summary.json",
+          "pointer": "/s_voy30/mean_distinct_sessions_top5",
+          "value": 4.888412017167382
+        },
+        {
+          "key": "s3_sessions_top5",
+          "receipt": "s3/longmemeval-decide-arms-summary.json",
+          "pointer": "/s_s3/mean_distinct_sessions_top5",
+          "value": 3.515021459227468
+        },
+        {
+          "key": "s3_outcomes",
+          "receipt": "s3/longmemeval-decide-arms-summary.json",
+          "pointer": "/s_s3/decide_outcomes",
+          "value": {
+            "evidence:margin_hold": 334,
+            "evidence:kept": 655,
+            "evidence:pruned": 10659,
+            "evidence:skipped:timeout": 2
+          }
+        },
+        {
+          "key": "s3s5_recall_all",
+          "receipt": "s3/longmemeval-decide-arms-summary.json",
+          "pointer": "/s_s3s5/recall_all@5",
+          "value": 0.9141630901287554
+        }
+      ]
+    },
+    {
+      "slot": "S4",
+      "decide_slot": "answerable",
+      "name": "Abstention",
+      "verdict": "regression",
+      "shipped": "no",
+      "headline": "Abstention precision <= 34% at any acting threshold (0.20: 13 of 38 abstentions correct).",
+      "denominator": "500 LongMemEval-S questions, 30 of them abstention; 252 in the eval half (19 abstention)",
+      "qualification": "insufficient_n (15 abstention families in the eval half)",
+      "numbers": [
+        {
+          "key": "calibrated_threshold",
+          "receipt": "s4/calibrate.json",
+          "pointer": "/threshold",
+          "value": 0.05
+        },
+        {
+          "key": "qualify_status",
+          "receipt": "s4/qualify.json",
+          "pointer": "/status",
+          "value": "insufficient_n"
+        },
+        {
+          "key": "calibrate_recall",
+          "receipt": "s4/calibrate.json",
+          "pointer": "/recall",
+          "value": 0.9620253164556962
+        }
+      ],
+      "notes": [
+        "The 13-of-38 count comes from gbrain's verdict page; gbrain committed the recorded answers (s4/values.jsonl) but no S4 analyzer. Counting directly from the values, eval-half questions below 0.20 are 47 with 16 correct (34%), and below 0.15 (the 0.05 margin) 36 with 13 correct (36%). Every reading is far below the 0.90 gate."
+      ]
+    },
+    {
+      "slot": "S6",
+      "decide_slot": "recall_needed",
+      "name": "Know-to-ask",
+      "verdict": "mixed",
+      "shipped": "no; gbrain raised the suppress-below default from 0.05 to 0.10",
+      "headline": "Reflex-miss corpus: know-to-ask failures 71.3% -> 11.3%; sealed BrainBench: failures 0% -> 0%, false fires 0% -> 8.5%; turn latency p50 10 ms -> 161 ms.",
+      "denominator": "eval half: 264 reflex-miss turns (115 need memory), 79 BrainBench turns (32 need memory)",
+      "qualification": "insufficient_n: 14/14 correct suppressions, 35 needed",
+      "numbers": [
+        {
+          "key": "extra_off_failure_rate",
+          "receipt": "s6/bb-summary.json",
+          "pointer": "/bb-extra-off.json/failure_rate",
+          "value": 0.713
+        },
+        {
+          "key": "extra_on_failure_rate",
+          "receipt": "s6/bb-summary.json",
+          "pointer": "/bb-extra-on.json/failure_rate",
+          "value": 0.113
+        },
+        {
+          "key": "extra_off_false_fire",
+          "receipt": "s6/bb-summary.json",
+          "pointer": "/bb-extra-off.json/false_fire_rate",
+          "value": 0.557
+        },
+        {
+          "key": "extra_on_false_fire",
+          "receipt": "s6/bb-summary.json",
+          "pointer": "/bb-extra-on.json/false_fire_rate",
+          "value": 0.4966
+        },
+        {
+          "key": "bb_off_failure_rate",
+          "receipt": "s6/bb-summary.json",
+          "pointer": "/bb-bb-off.json/failure_rate",
+          "value": 0.0
+        },
+        {
+          "key": "bb_on_failure_rate",
+          "receipt": "s6/bb-summary.json",
+          "pointer": "/bb-bb-on.json/failure_rate",
+          "value": 0.0
+        },
+        {
+          "key": "bb_off_false_fire",
+          "receipt": "s6/bb-summary.json",
+          "pointer": "/bb-bb-off.json/false_fire_rate",
+          "value": 0.0
+        },
+        {
+          "key": "bb_on_false_fire",
+          "receipt": "s6/bb-summary.json",
+          "pointer": "/bb-bb-on.json/false_fire_rate",
+          "value": 0.0851
+        },
+        {
+          "key": "bb_off_latency",
+          "receipt": "s6/bb-summary.json",
+          "pointer": "/bb-bb-off.json/latency_ms",
+          "value": {
+            "p50": 9.6,
+            "p95": 19.3,
+            "p99": 24.9
+          }
+        },
+        {
+          "key": "bb_on_latency",
+          "receipt": "s6/bb-summary.json",
+          "pointer": "/bb-bb-on.json/latency_ms",
+          "value": {
+            "p50": 161.1,
+            "p95": 258.3,
+            "p99": 299.0
+          }
+        },
+        {
+          "key": "bb_on_outcomes",
+          "receipt": "s6/bb-summary.json",
+          "pointer": "/bb-bb-on.json/outcomes",
+          "value": {
+            "timeout": 3,
+            "fire": 4,
+            "no_fire": 54,
+            "no_candidates": 18
+          }
+        },
+        {
+          "key": "extra_on_outcomes",
+          "receipt": "s6/bb-summary.json",
+          "pointer": "/bb-extra-on.json/outcomes",
+          "value": {
+            "no_fire": 127,
+            "suppress": 14,
+            "fire": 70,
+            "margin_hold": 39,
+            "no_candidates": 5,
+            "timeout": 9
+          }
+        },
+        {
+          "key": "qualify_correct",
+          "receipt": "s6/qualify.json",
+          "pointer": "/correct_families",
+          "value": 14
+        },
+        {
+          "key": "qualify_required",
+          "receipt": "s6/qualify.json",
+          "pointer": "/required_n",
+          "value": 35
+        },
+        {
+          "key": "qualify_status",
+          "receipt": "s6/qualify.json",
+          "pointer": "/status",
+          "value": "insufficient_n"
+        },
+        {
+          "key": "suppress_at_0_05",
+          "receipt": "s6/analysis-0.05.json",
+          "pointer": "/eval/on/suppress_actions",
+          "value": 0
+        },
+        {
+          "key": "suppress_at_0_10",
+          "receipt": "s6/analysis-0.10.json",
+          "pointer": "/eval/on/suppress_actions",
+          "value": 14
+        },
+        {
+          "key": "threshold",
+          "receipt": "s6/calibrate.json",
+          "pointer": "/threshold",
+          "value": 0.74
+        },
+        {
+          "key": "retest_sd",
+          "receipt": "s6/calibrate.json",
+          "pointer": "/retest_sd",
+          "value": 0.0064630156111138756
+        },
+        {
+          "key": "repack_sd",
+          "receipt": "s6/calibrate.json",
+          "pointer": "/repack_sd",
+          "value": 0.005819847238670255
+        },
+        {
+          "key": "flips",
+          "receipt": "s6/analysis-0.10.json",
+          "pointer": "/retest_flip_rate/flips",
+          "value": 10
+        }
+      ]
+    },
+    {
+      "slot": "S8",
+      "decide_slot": "grounding",
+      "name": "Claim support",
+      "verdict": "inconclusive",
+      "shipped": "no",
+      "headline": "Real dream-page units: 25 quarantined, 22 of them unsupported by LLM label (88%); catches 13% of LLM-flagged unsupported units; 3/206 supported units wrongly quarantined.",
+      "denominator": "496 eval-half claim units from 11 dream pages (370 real, 126 perturbations)",
+      "qualification": "insufficient_n: 11 page families, 3 with a wrong quarantine",
+      "numbers": [
+        {
+          "key": "threshold",
+          "receipt": "s8/analysis.json",
+          "pointer": "/threshold",
+          "value": 0.29
+        },
+        {
+          "key": "real_quarantined",
+          "receipt": "s8/analysis.json",
+          "pointer": "/eval_dream_page_units/quarantined",
+          "value": 25
+        },
+        {
+          "key": "real_precision",
+          "receipt": "s8/analysis.json",
+          "pointer": "/eval_dream_page_units/quarantine_precision",
+          "value": 0.88
+        },
+        {
+          "key": "real_caught",
+          "receipt": "s8/analysis.json",
+          "pointer": "/eval_dream_page_units/unsupported_caught",
+          "value": 0.13414634146341464
+        },
+        {
+          "key": "real_lost",
+          "receipt": "s8/analysis.json",
+          "pointer": "/eval_dream_page_units/useful_claims_lost",
+          "value": 3
+        },
+        {
+          "key": "real_supported",
+          "receipt": "s8/analysis.json",
+          "pointer": "/eval_dream_page_units/supported",
+          "value": 206
+        },
+        {
+          "key": "perturb_quarantined",
+          "receipt": "s8/analysis.json",
+          "pointer": "/eval_perturbations/quarantined",
+          "value": 63
+        },
+        {
+          "key": "perturb_n",
+          "receipt": "s8/analysis.json",
+          "pointer": "/eval_perturbations/n",
+          "value": 126
+        },
+        {
+          "key": "perturb_precision",
+          "receipt": "s8/analysis.json",
+          "pointer": "/eval_perturbations/quarantine_precision",
+          "value": 1
+        },
+        {
+          "key": "flips",
+          "receipt": "s8/analysis.json",
+          "pointer": "/retest_flip_rate/flips",
+          "value": 10
+        },
+        {
+          "key": "qualify_families",
+          "receipt": "s8/qualify.json",
+          "pointer": "/families",
+          "value": 11
+        },
+        {
+          "key": "qualify_correct",
+          "receipt": "s8/qualify.json",
+          "pointer": "/correct_families",
+          "value": 8
+        },
+        {
+          "key": "qualify_status",
+          "receipt": "s8/qualify.json",
+          "pointer": "/status",
+          "value": "insufficient_n"
+        },
+        {
+          "key": "retest_sd",
+          "receipt": "s8/calibrate.json",
+          "pointer": "/retest_sd",
+          "value": 0.014758209680393205
+        },
+        {
+          "key": "repack_sd",
+          "receipt": "s8/calibrate.json",
+          "pointer": "/repack_sd",
+          "value": 0.014825988318374835
+        }
+      ]
+    },
+    {
+      "slot": "S5",
+      "decide_slot": "injection",
+      "name": "Injection signal",
+      "verdict": "inconclusive",
+      "shipped": "no",
+      "headline": "12 fixtures: at 0.65 flags 3/4 attacks, 0/32 clean; a quoted payload scores 0.56-0.60. On LongMemEval (no attacks) it demoted 0.8% of candidates.",
+      "denominator": "12 fixture cases (4 with an attack), 3 repeats; 11,548 LongMemEval candidate judgments in the S3+S5 arm",
+      "qualification": "not harmful",
+      "numbers": [
+        {
+          "key": "lme_injection_demoted",
+          "receipt": "s3/longmemeval-decide-arms-summary.json",
+          "pointer": "/s_s3s5/decide_outcomes/injection:demoted",
+          "value": 93
+        },
+        {
+          "key": "lme_injection_kept",
+          "receipt": "s3/longmemeval-decide-arms-summary.json",
+          "pointer": "/s_s3s5/decide_outcomes/injection:kept",
+          "value": 11455
+        }
+      ],
+      "notes": [
+        "Attack and clean scores are in s5/values.jsonl (recorded answers, three repeats); gbrain committed no S5 analyzer. Counting rep 0 at 0.65: 3 of 4 attack candidates flagged, 0 of 32 clean.",
+        "gbrain's verdict page reports 93 of 11,402 candidates demoted; the receipt's kept-plus-demoted count is 11,548. Both are 0.8%."
+      ]
+    }
+  ],
+  "judge_agreement": {
+    "note": "judge-vs-judge agreement (Cohen's kappa), not accuracy against human labels",
+    "numbers": [
+      {
+        "key": "longmemeval_kappa",
+        "receipt": "judge/longmemeval.json",
+        "pointer": "/kappa",
+        "value": 0.7346
+      },
+      {
+        "key": "longmemeval_ci95",
+        "receipt": "judge/longmemeval.json",
+        "pointer": "/kappa_ci95",
+        "value": [
+          0.5079,
+          0.9613
+        ]
+      },
+      {
+        "key": "longmemeval_agreement",
+        "receipt": "judge/longmemeval.json",
+        "pointer": "/raw_agreement",
+        "value": 0.95
+      },
+      {
+        "key": "longmemeval_n",
+        "receipt": "judge/longmemeval.json",
+        "pointer": "/n",
+        "value": 100
+      },
+      {
+        "key": "grounding_kappa",
+        "receipt": "judge/grounding.json",
+        "pointer": "/kappa",
+        "value": 0.5804
+      },
+      {
+        "key": "grounding_ci95",
+        "receipt": "judge/grounding.json",
+        "pointer": "/kappa_ci95",
+        "value": [
+          0.5227,
+          0.6381
+        ]
+      },
+      {
+        "key": "grounding_agreement",
+        "receipt": "judge/grounding.json",
+        "pointer": "/raw_agreement",
+        "value": 0.7867
+      },
+      {
+        "key": "grounding_n",
+        "receipt": "judge/grounding.json",
+        "pointer": "/n",
+        "value": 750
+      }
+    ]
+  },
+  "spend": {
+    "cap_usd": 40,
+    "total_usd": 24.95,
+    "ledgers": [
+      "ledger.jsonl",
+      "ledger-datasets.jsonl"
+    ]
+  }
+}

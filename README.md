@@ -179,6 +179,7 @@ were measured at gbrain [`2efaaf8f`](https://github.com/garrytan/gbrain/tree/2ef
 | Which configuration should I try? | [Settings by workload](docs/settings.md) |
 | What changed after fixing the benchmark adapters? | [September retrieval refresh](docs/benchmarks/2026-09-09-retrieval-refresh.md) |
 | Does memory stay correct after edits, forgetting and restarts? | [Lifecycle experiment](docs/benchmarks/2026-09-29-lifecycle.md) |
+| Where does a small decision model (Jev) beat gbrain's rules? | [System One report](docs/benchmarks/2026-09-30-system-one-jev.md) |
 | How do retrieval scores differ from answer accuracy? | [What the scores mean](docs/retrieval-lessons.md#what-the-scores-mean) |
 | How does gbrain compare with other memory systems? | [Comparisons and their protocols](docs/comparison-systems.md) |
 | Can I reproduce a result or test my own system? | [Run the suite](eval/README.md), [contribute an adapter](eval/CONTRIBUTING.md) |
@@ -239,6 +240,24 @@ evaluate the write path without treating retention as correctness.
 We also test [when memory should surface during a conversation](docs/benchmarks/2026-06-12-brainbench-memory.md),
 source isolation, identities, dates, and other behaviors. The
 [full index](docs/README.md) explains each benchmark in ordinary terms.
+
+## Where a small decision model helps
+
+gbrain's System One lets a small, fast model (TypeSafe's Jev, `jev-1.13.0`)
+make nine yes/no or ranking calls that gbrain otherwise makes with a fixed rule
+or a larger LLM. In matched pairs on September 30, **Jev measurably helped dream
+triage and contradiction proposals; reranking, evidence trimming and abstention
+regressed; the rest was inconclusive.** Dream triage missed 0 of 18 buried
+decisions and commitments where today's triage missed 10, but sent 57 of 109
+transcripts to the page writer instead of 21. The contradiction sweep found 94
+of 97 updated facts where the current cosine rule found none. So on gbrain's
+System One branch (`feat/system-one-v1`, not yet on master),
+`gbrain decide enable --recommended` turns on those two slots only. One fix
+landed after the eval: reranking with query expansion timed out on every
+question because the decision budget started before expansion; the budget now
+starts after retrieval, and that arm was not re-measured. Labels come from
+generators, benchmark annotations or an LLM, never from people.
+[Read the System One report](docs/benchmarks/2026-09-30-system-one-jev.md).
 
 ## Corrections
 

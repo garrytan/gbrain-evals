@@ -102,6 +102,22 @@ The [September 29 lifecycle report](docs/benchmarks/2026-09-29-lifecycle.md) is 
 - [x] **Run N6 against the evidence-delivery code when it lands** (plan T15). Done 2026-09-30 at `732ee81`: every `return_unit` value on `search`, `query`, `recall` and `assemble_evidence`, 0 expansion leaks. Rerun on every later head of the gbrain PR; any expansion leak blocks it.
 - [ ] **Widen N6 coverage.** 48 of 74 read ops (at `6c8373c`) return no protected content in the N6 world (skills, code intelligence, ontology, open loops, schema packs, aggregates) or need a provider. Seed those surfaces, and add Postgres and the real HTTP transport.
 
+## System One v1 follow-ups (2026-09-30 Jev eval)
+
+- [ ] **Re-measure S1 reranking with query expansion.** On 2026-09-30 every expansion arm (248/248 LongMemEval-S, 28/28 M pilot) timed out before reranking because the decision budget started at request start; gbrain `9f7794ec` starts it after retrieval. Run `s1-rerank-lme-s` and `s1-rerank-lme-m-pilot` arms `s_jev100x` and `m_jev100x` at that commit or later.
+
+- [ ] **Hand-label an S8 grounding sample.** Every S8 label is a `claude-sonnet-5` judgment, and 16 pages cannot reach the 35-family qualification minimum. gbrain's design plan asks for a human-labelled sample before any quarantine precision is reported.
+
+- [ ] **Give S6 suppression enough families to qualify.** 14 of 14 suppressions were correct, but qualification needs 35 families with a suppression opportunity.
+
+- [ ] **Measure S7 routed to a local `llm:` model.** Planned upstream, not run.
+
+- [ ] **Write a driver for the preset end-to-end dream run.** Its receipts are in `docs/benchmarks/2026-09-30-system-one-jev/receipts/preset/`, but gbrain committed no script for the brain setup and session-corpus wiring, so it is not a runnable definition here.
+
+- [ ] **Commit an S4 and an S5 analyzer upstream.** Their recorded answers are committed, but no reducer script, so `analyze` cannot recompute their abstention and flag counts; the report quotes gbrain's counts beside a direct count from the answers.
+
+- [ ] **Re-pin when System One reaches gbrain master.** The commands exist only on `feat/system-one-v1`; until then every run needs `--gbrain`.
+
 ## Cat35 publication and measurement
 
 These items came from the August 16 plan reviews and the August 26 publication review.

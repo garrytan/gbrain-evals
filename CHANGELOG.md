@@ -2,6 +2,56 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.4] - 2026-10-01
+
+### System One v1 (Jev decision support): two slots help, three regress
+
+gbrain's System One lets TypeSafe's Jev (`typesafe:jev-1.13.0`, always
+resolved to `jev-1.13.0`) make nine decisions inside gbrain. gbrain measured
+each slot on 2026-09-30 as a matched pair on branch `feat/system-one-v1-evals`
+(v0.60.17.0 plus the System One work, receipts committed in `57661631`). This
+release mirrors that record and makes every slot runnable from here.
+
+- **Result.** Jev measurably helped dream triage (S7) and contradiction
+  proposals (S9); reranking (S1), evidence trimming (S3) and abstention (S4)
+  regressed; routing (S2) changed nothing; S5, S6 and S8 were inconclusive.
+  S7: buried-signal misses 10/18 to 0/18, routine chats rejected 78/79 to
+  52/79, triage $0.0046 to $0.0009 per transcript; end to end 10/10 buried
+  signals synthesized against 3/10, dream spend $1.50 to $2.60. S9: supersedes
+  found 0/97 to 94/97, one wrong proposal. S1: `recall_all@5` 94.8% with Voyage
+  against 91.4% to 94.0% with Jev on 233 LongMemEval-S questions.
+- **Post-eval fix, not re-measured.** S1 with query expansion timed out on
+  every question (248/248 and 28/28) because the 1,500 ms decision budget
+  started before expansion. gbrain `9f7794ec` starts it after retrieval.
+- **Labels.** Generator construction, benchmark annotations or
+  `claude-sonnet-5` (S8); none is a human hand label. Judge agreement: kappa
+  0.73 against gpt-4o on LongMemEval answers, 0.58 against the S8 labels.
+- **Spend.** $24.95 of a $40 cap in gbrain's run, itemised in the copied
+  ledgers. This release's own smoke runs cost about $0.07.
+- **New category.** `eval/runner/system-one-jev.ts` with per-slot
+  definitions in `eval/runner/system-one/slots.ts`: 15 evaluations covering
+  S1 to S9 through `gbrain eval longmemeval --decide`, `eval brainbench
+  --decide`, `decide judge-agreement`, gbrain's triage-pair runner and its
+  recorded-answer runner. `verify` (registry `SO`, tier H, in CI) recomputes
+  every dataset and split hash, rebuilds the S7/S8 inputs, recounts the S7
+  pair and all LongMemEval arm summaries from per-item rows, and checks every
+  number in `verdicts.json` against its receipt. `build`, `analyze` and `run`
+  take `--gbrain <checkout>@<ref>`, since the pinned gbrain has no System One
+  commands (registry `SO-live`, tier P).
+- **Reproduced keylessly on 2026-10-01** against gbrain `fc9a1d45`: `build`
+  matched the frozen hashes of S7, S8, S3 and S4, and `analyze` reproduced the
+  S2, S6, S8 and S9 analysis files exactly.
+- **Data.** `eval/data/system-one-v1/`. S7 and S8 reuse the Cat 35 corpus in
+  `eval/data/transcript-distill-v1` (their 24 and 16 Cat 35 transcripts were
+  byte-identical copies) and add only the 230 synthetic S7 transcripts and
+  the S8 labels. S3 and S4 (57 MB and 14 MB) are rebuilt from LongMemEval-S.
+- **Not ported.** The preset end-to-end dream run has receipts but no
+  upstream driver; S7 on a local `llm:` model was never measured.
+- Report: `docs/benchmarks/2026-09-30-system-one-jev.md`; receipts, ledgers,
+  provenance and upstream runners under
+  `docs/benchmarks/2026-09-30-system-one-jev/`. Tests:
+  `test/eval/system-one-jev.test.ts`.
+
 ## [0.10.2] - 2026-09-30
 
 One release for four pieces of work that followed v0.10.1: the LongMemEval

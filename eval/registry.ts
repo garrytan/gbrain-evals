@@ -399,6 +399,24 @@ export const REGISTRY: readonly CategoryEntry[] = [
     contract: 'Seeds a brain holding protected content (visibility: private pages with body, tag and timeline markers, held Takes rows, private Facts rows, derived atoms, an ungranted source) beside public twins, then calls every read op in gbrain operations as stdio, serve-http read/write/slug-bound clients and remote/local subagents scoped to one source. Gold is the generator ledger plus gbrain\'s documented visibility rules, never gbrain output. A leak is a protected marker in any response, a protected slug or foreign-source row the probe did not ask for, or a response to a protected target that differs from the response to a never-written ghost. Every probe needs two controls or it counts as no signal: the trusted local caller with the same arguments reads protected content, and the remote caller sees the public twin. Coverage counts read ops with at least one signal-bearing probe. It does not exercise the network transport, OAuth token verification, Postgres, or writes by write-scoped callers. Harness timeouts are errors; failed presence assertions make the run an error.',
   },
   {
+    id: 'system-one-jev-record', legacy_alias: 'SO', name: 'System One (Jev decision support) record: datasets, receipts and pair definitions',
+    family: 'agent', tier: 'H', script: 'eval/runner/system-one-jev.ts', run: { kind: 'dispatched' },
+    cost_estimate: FREE, receipt_path: receipt('system-one-jev'),
+    headline: { metric: 'checks passing: dataset and split hashes, rebuilt S7/S8 inputs, recounts of the S7 pair and LongMemEval arms, verdict numbers against receipts, matched-pair definitions', denominator: '42 checks over 11 datasets, 77 upstream receipt files and 15 evaluation definitions' },
+    gate: 'gate', evidence_maturity: 'regression-only',
+    contract: 'Checks the committed record of gbrain\'s 2026-09-30 System One v1 eval without running gbrain: recomputes gbrain\'s dataset and split hashes for every committed dataset, rebuilds the S7 and S8 inputs from the Cat 35 corpus plus the committed synthetic files and compares tree hashes, recounts the S7 triage pair and the LongMemEval arm summaries from per-item rows, checks every number in verdicts.json against its receipt pointer, and checks that each on arm has an off arm with the same data and settings apart from the slot under test. It proves the record is internally consistent and unedited; it does not re-measure Jev.',
+  },
+  {
+    id: 'system-one-jev', legacy_alias: 'SO-live', name: 'System One (Jev decision support) per-slot matched pairs, run against a gbrain checkout',
+    family: 'agent', tier: 'P', script: 'eval/runner/system-one-jev.ts',
+    run: { kind: 'listed', reason: 'needs a gbrain checkout with the --decide eval flags (feat/system-one-v1 or later) and a TypeSafe Jev key; most arms also need OpenAI, Voyage and Anthropic keys', command: 'bun eval/runner/system-one-jev.ts run --gbrain <checkout>@<ref> --eval <evaluation id or slot> --yes' },
+    cost_estimate: { usd: 24.95, basis: 'measured: the 2026-09-30 run of every slot, including dataset building, spent $24.95 (docs/benchmarks/2026-09-30-system-one-jev ledgers)' },
+    receipt_path: 'eval/reports/system-one-jev/<evaluation id>/run.json, summary.json and analyze-*.json',
+    headline: { metric: 'per slot, the slot\'s own metric off vs on: S7 synthesis-worthy transcripts passed and routine rejected, S9 supersedes found and wrong proposals, S1-S3 strict recall_all@5 and R@1, S6 know-to-ask failures and false fires, S8 quarantine precision and unsupported caught', denominator: 'eval half of each frozen split: 109 transcripts (S7), 395 fact pairs (S9), 248 LongMemEval-S questions with 233 answerable (S1-S3), 343 turns (S6), 496 claim units (S8), 424 routing queries (S2)' },
+    gate: 'report-only', evidence_maturity: 'synthetic-production-path',
+    contract: 'Runs gbrain\'s nine System One decision slots as matched pairs through the gbrain commands they change (eval longmemeval, eval brainbench and decide judge-agreement with --decide, and the checkout\'s triage-pair and dataset runners), with the same commit, data and seed in both arms. Labels come from generators, benchmark annotations or an LLM; none is a human hand label, so S8 in particular is judge-vs-model agreement. Jev is a hosted model: the same request can return slightly different probabilities, which the retest arms measure. A run with --limit is a smoke and is not comparable with the published numbers.',
+  },
+  {
     id: 'multi-adapter', legacy_alias: 'multi-adapter', name: 'Multi-adapter relational, fuzzy and external query families',
     family: 'relationships', tier: 'P', script: 'eval/runner/multi-adapter.ts', run: { kind: 'dispatched', timeoutMs: 2 * HOUR },
     cost_estimate: UNMEASURED, receipt_path: receipt('multi-adapter'),
@@ -615,4 +633,4 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
 };
 
 /** Subdirectories of eval/runner/ holding helper modules only. */
-export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'evaluator', 'evidence-delivery', 'lifecycle', 'queries', 'stats'];
+export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'evaluator', 'evidence-delivery', 'lifecycle', 'queries', 'stats', 'system-one'];
