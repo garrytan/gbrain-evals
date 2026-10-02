@@ -62,7 +62,7 @@ gap does not isolate the effect of a graph alone.
 | Does gbrain answer "where did she work on that date?" and "when did I last see him?" from valid time, not from when a note was written? | [September 30 temporal and as-of check (N3)](benchmarks/2026-09-30-n3-temporal-asof.md) |
 | Does a nickname, handle or former name reach the right person without merging two people who share a name? | [September 30 entity-resolution check (N4)](benchmarks/2026-09-30-n4-entity-resolution.md) |
 | Can an agent-facing caller read private pages, held Takes, private Facts or another source through any read operation? | [September 30 visibility leak fuzz (N6)](benchmarks/2026-09-30-n6-visibility-fuzz.md) |
-| When the same conversation arrives as a Claude Code, Codex, ChatGPT or WhatsApp export (any of the 27 formats gbrain registers), does gbrain keep who said what and when, and admit what it cannot parse? Does a meeting page tell attendees from people only mentioned? (report-only until gbrain fixes N12-1) | [October 1 ingestion format fidelity (N12)](benchmarks/2026-10-01-n12-format-fidelity.md) |
+| When the same conversation arrives as a Claude Code, Codex, ChatGPT or WhatsApp export (any of the 27 formats gbrain registers), does gbrain keep who said what and when, and admit what it cannot parse? Does a meeting page tell attendees from people only mentioned? (gates since 2026-10-02, when gbrain's fix for N12-1 was verified) | [October 1 ingestion format fidelity (N12)](benchmarks/2026-10-01-n12-format-fidelity.md) |
 | Are gbrain's six code-intelligence operations ready to use on a real TypeScript repository, and where do their documented limits show? | [October 1 code-intelligence readiness scout (N13)](benchmarks/2026-10-01-n13-code-intelligence.md) |
 | Does "who is waiting on me" open, close and mute Gmail loops the way the guide says, and where does a reply closing a loop differ from the work being done? | [October 1 open loops on Gmail-shaped threads (N7)](benchmarks/2026-10-01-n7-open-loops-email.md) |
 | Does the brain volunteer the right page when someone is mentioned, without false alarms, and does it keep private pages out of what it pushes? (report-only) | [October 1 unsolicited recall at final delivery (N8)](benchmarks/2026-10-01-n8-proactive-recall.md) |
@@ -72,6 +72,7 @@ gap does not isolate the effect of a graph alone.
 | When two notes disagree about the same fact, does gbrain find the pair, call it a contradiction rather than a change over time, and propose a safe fix? | [October 1 contradiction-surfacing check (N2)](benchmarks/2026-10-01-n2-contradiction-surfacing.md), [N2 and A4 preregistration](benchmarks/2026-10-01-n2-a4-preregistration.md) |
 | Does gbrain's confidence grade tell an answerable question from an unanswerable one, and does a fixed reader on gbrain's retrieval say "I don't know" without refusing answerable questions? | [October 1 abstention check (A4)](benchmarks/2026-10-01-a4-abstention.md) |
 | Which gbrain bugs, feature gaps and category defects has the October 1 eval-category wave found? | [Wave bug ledger](benchmarks/2026-10-01-wave-bugs.md) |
+| After gbrain fix waves 5 and 6, which of those bugs are really fixed, and what changed in each category's numbers? | [October 2 rerun at gbrain `d44296c`](benchmarks/2026-10-02-wave-repin.md) |
 
 ## Protocols and preregistrations (no results yet)
 

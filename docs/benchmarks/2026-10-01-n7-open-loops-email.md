@@ -1,5 +1,7 @@
 # Open loops on Gmail-shaped threads (N7, 2026-10-01)
 
+**Update, 2026-10-02.** gbrain fix wave 5 fixed N7-1 (`1842c749`). At gbrain `d44296c`, backfill nudges are detected (6 of 6 inbound, 4 of 4 outbound, was 0 and 0), and every gating number below is unchanged. Gaps N7-2 to N7-7 still reproduce. See the [October 2 rerun](2026-10-02-wave-repin.md).
+
 ## The finding
 
 gbrain's Gmail turn-flip detector does what its guide documents. On 136 seeded threads judged at a pinned now (`2026-10-01T12:00:00Z`) and 32 multi-round store scenarios, run against the pinned gbrain `3a284ae` (v0.60.26.0) through a copied overlay, every preregistered safety contract held and every quality threshold passed:

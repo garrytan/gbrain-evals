@@ -1,5 +1,7 @@
 # Code intelligence readiness scout: six code_* ops on one pinned TypeScript repository (2026-10-01)
 
+**Update, 2026-10-02.** gbrain fix wave 5 fixed N13-1 (`02b0d0f4`), N13-2 and N13-3 (`bf087a04`). At gbrain `d44296c`, `code_def` is right for 49 of 50 top-level functions (was 40), and `resolved` is true on 76 of 91 caller edges (was 0 of 81). The documented limits below still hold. See the [October 2 rerun](2026-10-02-wave-repin.md).
+
 ## The finding
 
 All six code-intelligence operations work through gbrain's trusted local path on a small real TypeScript repository. That repository is [unjs/pathe](https://github.com/unjs/pathe) at commit `bc7477a` (MIT): 5 files, about 1,000 lines. The import took 0.6 s, and every op answered the probe symbol in 51 ms or less. All six refuse agent (remote) callers, as the remote suspension at this commit says they should. Four of the six have a named CLI command; `code_blast` and `code_flow` run only through `gbrain call`.

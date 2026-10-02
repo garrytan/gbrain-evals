@@ -114,6 +114,23 @@ Of the 20 bugs found, 8 are fixed in gbrain's open fix wave 5 and 10 are
 scheduled for fix wave 6. The [findings ledger](docs/benchmarks/2026-10-01-wave-bugs.md)
 lists every bug and gap. All of this is synthetic data with generator gold.
 
+**Update, October 2: all 20 bugs are fixed at gbrain `d44296c`, and a rerun
+here verified each one.** Same runners, seeds and settings, new pin:
+
+- Ontology updates now work on default brains. N1 current-value accuracy
+  went from 288/388 to 388/388 probes.
+- `forget` leaves no residue in a running server. N5 prohibited outputs went
+  from 2 to 0, and reinstatement from 4/6 to 6/6.
+- No private page reached a remote caller or the turn block (N8, 0 and 0).
+- The status note no longer parses as a chat, so N12 now gates CI.
+- With its new prompt, the contradiction judge found 132 of 150 conflicts,
+  and false contradictions on unrelated pairs fell from 109 to 26 out of
+  about 1,970 pairs (N2).
+
+Composed multi-hop questions still never produce a multi-relation plan (N9),
+and the A4 grade was not rerun.
+[Read the before and after](docs/benchmarks/2026-10-02-wave-repin.md).
+
 ## Why put gbrain on your shortlist?
 
 **It finds evidence across long conversations.** In the September 6 LongMemEval

@@ -1,0 +1,67 @@
+{
+  "schema": "gbrain-evals/wave-repin-ledger-summary/v1",
+  "run": {
+    "run_id": "capy-repin-0.10.6-2026-10-02T14-50-51-782Z-241e2a48",
+    "runner": "capy-repin-0.10.6",
+    "budget_usd": 60,
+    "estimate_usd": 8,
+    "started_at": "2026-10-02T14:50:51.782Z",
+    "finished_at": "2026-10-02T15:30:15.778Z"
+  },
+  "program_cap_usd": 500,
+  "total_usd": 6.370616,
+  "requests": 5035,
+  "statuses": {
+    "reconciled": 5035
+  },
+  "by_model": {
+    "anthropic:claude-haiku-4-5-20251001 chat": {
+      "requests": 2761,
+      "usd": 6.241381,
+      "charged_at_reservation": 0,
+      "input_tokens": 2754226,
+      "output_tokens": 697431
+    },
+    "openai:text-embedding-3-large embedding": {
+      "requests": 2214,
+      "usd": 0.129228,
+      "charged_at_reservation": 0,
+      "input_tokens": 994064,
+      "output_tokens": 0
+    },
+    "openai:text-embedding-3-small embedding": {
+      "requests": 60,
+      "usd": 0.000006,
+      "charged_at_reservation": 0,
+      "input_tokens": 314,
+      "output_tokens": 0
+    }
+  },
+  "by_receipt": {
+    "N2 judge arm (n2-contradiction-surfacing --paid)": {
+      "receipt": "docs/benchmarks/2026-10-02-wave-repin/n2/receipt-paid-d44296c.json",
+      "usd": 6.241381,
+      "input_tokens": 2754226,
+      "output_tokens": 697431
+    },
+    "N9 paid arm (n9-multi-hop-paraphrase --paid)": {
+      "receipt": "docs/benchmarks/2026-10-02-wave-repin/n9/n9-paid-d44296c.receipt.json",
+      "usd": 0.064723,
+      "input_tokens": 497866,
+      "output_tokens": 0
+    },
+    "one-hop rerun (relational-ab --paid)": {
+      "receipt": "docs/benchmarks/2026-10-02-wave-repin/n9/relational-ab-d44296c-paid.receipt.json",
+      "usd": 0.064506,
+      "input_tokens": 496198,
+      "output_tokens": 0
+    },
+    "N1 paid arm (n1-knowledge-update --paid)": {
+      "receipt": "docs/benchmarks/2026-10-02-wave-repin/n1-n5/n1-paid-receipt-d44296c.json",
+      "usd": 0.000006,
+      "input_tokens": 314,
+      "output_tokens": 0
+    }
+  },
+  "note": "Copied from the gitignored .budget/ledger.json after the run closed. One budget run with a $60 cap covered every paid request of the 2026-10-02 re-pin; all other runs were keyless ($0)."
+}

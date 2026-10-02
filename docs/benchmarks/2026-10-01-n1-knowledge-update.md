@@ -1,5 +1,7 @@
 # Knowledge update and supersession through the lifecycle harness (N1, 2026-10-01)
 
+**Update, 2026-10-02.** gbrain fix wave 6 fixed N1-1, N1-2 and N1-3 (`982a77eb`). At gbrain `d44296c`, the same run passes all five preregistered rules: current-value accuracy 388/388 and history retained 385/385 on PGLite and on Postgres, with 0 stale values, 0 private values and 0 lost writes. The numbers below are the October 1 measurement at `3a284ae`. See the [October 2 rerun](2026-10-02-wave-repin.md).
+
 ## The finding
 
 Explicit supersession through the Facts fence works everywhere it was measured, and the ontology half of gbrain's update story does not work on a default brain. Across six cells (PGLite and Postgres, each over the trusted local CLI, stdio MCP and HTTP MCP), after four rounds of updates, a restart, a full reimport of the vault and a concurrent update round:
