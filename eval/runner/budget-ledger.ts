@@ -312,6 +312,7 @@ export const CHAT_PRICE_OVERRIDES: Record<string, { input: number; output: numbe
   'openai:gpt-5.5': { input: 5, output: 30, cache_read: 0.5 },
   'openai:gpt-6-sol': { input: 2, output: 10, cache_read: 0.2 },
   'openai:gpt-6.1-sol': { input: 2, output: 10, cache_read: 0.1, cache_write: 2.5 },
+  'openai:gpt-6-astra': { input: 10, output: 50, cache_read: 1, cache_write: 12.5 },
 };
 
 /** A dated API snapshot (`gpt-4o-2024-08-06`) is billed at its family's list price. */

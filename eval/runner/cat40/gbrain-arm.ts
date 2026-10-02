@@ -13,7 +13,7 @@
  * its slot to be restored from the post-build snapshot before the next run.
  */
 import { spawn, execFileSync, type ChildProcessWithoutNullStreams } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import type { Arm, ToolSpec } from './loop.ts';
 import type { LadderWorld } from '../../generators/model-ladder-gen.ts';
@@ -200,7 +200,7 @@ export class GbrainSlot {
       steps.push({ step: 'operator-analyze', code: 0, ms: Date.now() - t, tail: 'ANALYZE' });
     }
     const meter = proxy.take(this.id);
-    execFileSync('tar', ['-C', this.dir, '-cf', this.snapshot, 'home', 'uh', 'vault']);
+    execFileSync('tar', ['-C', this.dir, '-cf', this.snapshot, 'home']);
     return { slot: this.id, dir: this.dir, steps, meter, ms: Date.now() - t0 };
   }
 
@@ -211,8 +211,19 @@ export class GbrainSlot {
   async stop() { await this.client?.close(); this.client = null; }
   async restore() {
     await this.stop();
-    for (const d of ['home', 'uh', 'vault']) rmSync(join(this.dir, d), { recursive: true, force: true });
-    execFileSync('tar', ['-C', this.dir, '-xf', this.snapshot]);
+    // gbrain records the checkout's device and inode and refuses managed writes when they change
+    // ("The physical checkout identity changed"), so the vault directory is never recreated: git
+    // resets its content to the corpus commit. Only the database home is replaced from the snapshot,
+    // inside the existing directory.
+    const vault = join(this.dir, 'vault');
+    const git = (args: string[]) => execFileSync('git', ['-C', vault, ...args], { stdio: 'pipe', encoding: 'utf8' }).trim();
+    const corpus = git(['rev-list', '--max-parents=0', 'HEAD']).split('\n')[0];
+    git(['reset', '-q', '--hard', corpus]);
+    // Keep gbrain's ownership marker (.gbrain-owner.json): it is untracked and records the checkout identity.
+    git(['clean', '-qfdx', '-e', '.gbrain-owner*']);
+    const home = join(this.dir, 'home');
+    for (const entry of readdirSync(home)) rmSync(join(home, entry), { recursive: true, force: true });
+    execFileSync('tar', ['-C', this.dir, '-xf', this.snapshot, 'home']);
     await this.start();
   }
   /** A fresh harness session: a new server process on the same brain. */

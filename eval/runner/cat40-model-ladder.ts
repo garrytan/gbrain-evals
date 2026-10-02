@@ -54,7 +54,7 @@ export interface CellRecord {
   key: string;
   model: string;
   provider: string;
-  arm: ArmName;
+  arm: string;
   task: string;
   family: Family;
   variant: string;
@@ -95,6 +95,10 @@ interface Ctx {
   proxy?: MeteringProxy;
   scripted: boolean;
   judge: string | null;
+  /** Arm name recorded for gbrain cells, so two gbrain builds can be compared (`--gbrain-label`). */
+  gbrainLabel: string;
+  /** Per-tool-result character cap for every arm (`--max-tool-chars`, default 20,000). */
+  maxToolChars: number;
 }
 
 async function judgeClaims(ctx: Ctx, task: LadderTask, run: AgentRun): Promise<{ claims: ClaimVerdicts | null; usd: number }> {
@@ -127,7 +131,8 @@ async function runAgentText(model: string, system: string, user: string): Promis
 
 async function runCell(ctx: Ctx, model: string, armName: ArmName, task: LadderTask, repeat: number): Promise<CellRecord> {
   const started = new Date();
-  const runId = `${model}|${armName}|${task.id}|${repeat}`;
+  const label = armName === 'gbrain' ? ctx.gbrainLabel : armName;
+  const runId = `${model}|${label}|${task.id}|${repeat}`;
   let arm: Arm;
   let slot: GbrainSlot | null = null;
   if (armName === 'fs') arm = new FsArm('fs', FileStore.fromWorld(ctx.world));
@@ -142,7 +147,7 @@ async function runCell(ctx: Ctx, model: string, armName: ArmName, task: LadderTa
   }
   try {
     const isWrite = (name: string, args: Record<string, unknown>) => isWriteCall(arm, name, args);
-    const common = { model, arm, system: systemPrompt(ctx.world, arm) };
+    const common = { model, arm, system: systemPrompt(ctx.world, arm), maxToolChars: ctx.maxToolChars };
     let session1: AgentRun | undefined;
     if (task.family === 'F' && armName !== 'oracle') {
       session1 = await runAgent({ ...common, user: userMessage(ctx.world, task, arm, 1), scripted: ctx.scripted ? scriptedAgent(task, armName) : undefined });
@@ -154,7 +159,7 @@ async function runCell(ctx: Ctx, model: string, armName: ArmName, task: LadderTa
     const judged = await judgeClaims(ctx, task, run);
     const total = run.usd + (session1?.usd ?? 0) + (gbrain_internal?.usd ?? 0);
     return {
-      key: runId, model, provider: ctx.scripted ? 'scripted' : provider(model), arm: armName, task: task.id, family: task.family, variant: task.variant, repeat,
+      key: runId, model, provider: ctx.scripted ? 'scripted' : provider(model), arm: label, task: task.id, family: task.family, variant: task.variant, repeat,
       score, claims: judged.claims, run: strip(run), ...(session1 ? { session1: strip(session1) } : {}), ...(gbrain_internal ? { gbrain_internal } : {}),
       total_usd: total, judge_usd: judged.usd, wall_ms: Date.now() - started.getTime(), started_at: started.toISOString(),
     } as CellRecord;
@@ -193,7 +198,7 @@ export async function main(argv = process.argv.slice(2)) {
   const out = resolve(flag(argv, '--out') ?? join('eval/reports/cat40', scripted ? 'scripted' : new Date().toISOString().replace(/[:.]/g, '-')));
   mkdirSync(out, { recursive: true });
   const judge = scripted || flag(argv, '--judge') === 'none' ? null : (flag(argv, '--judge') ?? 'gpt-5.4-mini');
-  const ctx: Ctx = { world, out, scripted, judge };
+  const ctx: Ctx = { world, out, scripted, judge, gbrainLabel: flag(argv, '--gbrain-label') ?? 'gbrain', maxToolChars: Number(flag(argv, '--max-tool-chars') ?? 20_000) };
   const log = (s: string) => { process.stderr.write(`[cat40] ${s}\n`); appendFileSync(join(out, 'run.log'), `${new Date().toISOString()} ${s}\n`); };
 
   const paid = !scripted;
@@ -204,7 +209,7 @@ export async function main(argv = process.argv.slice(2)) {
   const cells: Array<{ model: string; arm: ArmName; task: LadderTask; repeat: number }> = [];
   for (let r = 0; r < repeats; r++) for (const task of tasks) for (const model of models) for (const arm of arms) {
     if (arm === 'fs-acl' && task.family !== 'C') continue;
-    if (!done.has(`${model}|${arm}|${task.id}|${r}`)) cells.push({ model, arm, task, repeat: r });
+    if (!done.has(`${model}|${arm === 'gbrain' ? ctx.gbrainLabel : arm}|${task.id}|${r}`)) cells.push({ model, arm, task, repeat: r });
   }
   log(`${cells.length} cells to run (${done.size} already done) in ${out}`);
 
@@ -231,6 +236,13 @@ export async function main(argv = process.argv.slice(2)) {
         if (!s.hasSnapshot() || argv.includes('--rebuild')) { const b = await s.build(world, ctx.proxy!, !argv.includes('--no-pglite-analyze')); builds.push(b); log(`built ${s.id} in ${(b.ms / 1000).toFixed(0)}s, $${b.meter.usd.toFixed(4)} (${b.meter.requests} provider requests)`); }
         await s.restore();
       }));
+      // A write probe after restore: the arm is only fair if the agent's writes can land.
+      for (const s of slots) {
+        const probe = await s.client!.call('put_page', { slug: 'notes/cat40-write-probe', content: '---\ntitle: "write probe"\ntype: note\n---\nprobe\n' });
+        if (/^Error/.test(probe) || !(await s.client!.call('get_page', { slug: 'notes/cat40-write-probe' })).includes('write probe')) throw new Error(`gbrain ${s.id} refuses writes after restore: ${probe.slice(0, 300)}`);
+        await s.restore();
+      }
+      log('write probe passed on every slot');
       ctx.pool = new GbrainPool(slots);
       log(`gbrain ${gbrainBuild.version} (${gbrainBuild.commit.slice(0, 12)}) ready on ${n} slots, surface ${surface}`);
     }
@@ -260,7 +272,7 @@ export async function main(argv = process.argv.slice(2)) {
       evals_commit: (() => { try { return execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(); } catch { return null; } })(),
       evals_dirty: (() => { try { return execFileSync('git', ['status', '--porcelain'], { encoding: 'utf8' }).trim().length > 0; } catch { return null; } })(),
       gbrain: gbrainBuild ? { commit: gbrainBuild.commit, version: gbrainBuild.version, tree: gbrainBuild.tree, verified: gbrainBuild.verified, surface: flag(argv, '--surface') ?? 'starter', operator_analyze: !argv.includes('--no-pglite-analyze') } : null,
-      slot_builds: builds, models, arms, families, repeats, argv,
+      slot_builds: builds, models, arms, families, repeats, max_tool_chars: ctx.maxToolChars, argv,
       cost: summary ? receiptCost(summary) : null,
       finished_at: new Date().toISOString(),
     };

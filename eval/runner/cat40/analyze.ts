@@ -68,7 +68,8 @@ export interface Analysis {
   usd: number;
 }
 
-export function analyze(recs: CellRecord[], opts: { boots?: number; seed?: number } = {}): Analysis {
+export function analyze(recs: CellRecord[], opts: { boots?: number; seed?: number; subject?: string } = {}): Analysis {
+  const subject = opts.subject ?? 'gbrain';
   const models = [...new Set(recs.map(r => r.model))].sort();
   const arms = [...new Set(recs.map(r => r.arm))].sort();
   const tasks = [...new Set(recs.map(r => r.task))].sort();
@@ -88,7 +89,7 @@ export function analyze(recs: CellRecord[], opts: { boots?: number; seed?: numbe
   const advOn = (taskSet: string[]) => {
     const per: Record<string, { best: string; value: number }> = {};
     for (const m of models) {
-      const g = rate(t, m, 'gbrain', taskSet);
+      const g = rate(t, m, subject, taskSet);
       const bs = BASELINES.map(b => ({ b, v: rate(t, m, b, taskSet) })).filter(x => x.v !== null) as Array<{ b: string; v: number }>;
       if (g === null || !bs.length) continue;
       const best = bs.reduce((a, b) => (b.v > a.v ? b : a));
@@ -114,7 +115,7 @@ export function analyze(recs: CellRecord[], opts: { boots?: number; seed?: numbe
     const rs = (m: string, a: string, list: string[]) => { const v = list.map(x => t.get(`${m}\t${a}\t${x}`)); return v.every(x => x !== undefined) && v.length ? (v as number[]).reduce((p, q) => p + q, 0) / v.length : null; };
     const adv: Record<string, number> = {}, cap: Record<string, number> = {};
     for (const m of models) {
-      const g = rs(m, 'gbrain', sample);
+      const g = rs(m, subject, sample);
       const bs = BASELINES.map(x => rs(m, x, sample)).filter((x): x is number => x !== null);
       const c = rs(m, 'oracle', sample);
       if (g === null || !bs.length) continue;
@@ -131,7 +132,7 @@ export function analyze(recs: CellRecord[], opts: { boots?: number; seed?: numbe
       if (fs.length < 2) continue;
       const a2: Record<string, number> = {}, c2: Record<string, number> = {};
       for (const m of models) {
-        const g = rs(m, 'gbrain', fs); const bs = BASELINES.map(x => rs(m, x, fs)).filter((x): x is number => x !== null); const c = rs(m, 'oracle', fs);
+        const g = rs(m, subject, fs); const bs = BASELINES.map(x => rs(m, x, fs)).filter((x): x is number => x !== null); const c = rs(m, 'oracle', fs);
         if (g !== null && bs.length && c !== null) { a2[m] = g - Math.max(...bs); c2[m] = c; }
       }
       const mm = Object.keys(a2);
@@ -212,8 +213,8 @@ export function markdown(a: Analysis): string {
 if (import.meta.main) {
   const argv = process.argv.slice(2);
   const flag = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
-  const paths = argv.filter((x, i) => !x.startsWith('--') && !['--json', '--md'].includes(argv[i - 1]));
-  const a = analyze(load(paths));
+  const paths = argv.filter((x, i) => !x.startsWith('--') && !['--json', '--md', '--subject'].includes(argv[i - 1]));
+  const a = analyze(load(paths), { subject: flag('--subject') ?? 'gbrain' });
   const md = markdown(a);
   if (flag('--json')) writeFileSync(flag('--json')!, JSON.stringify(a, null, 2));
   if (flag('--md')) writeFileSync(flag('--md')!, md + '\n');

@@ -200,7 +200,8 @@ export class OracleArm implements Arm {
     // The ideal permissioned layer: nothing finance-only, nothing derived from it.
     const docs = task.relevant.map(id => byId.get(id)!).filter(d => !d.restricted && !(d.derived_from ?? []).some(x => byId.get(x)?.restricted));
     const parts = docs.map(d => `<document id="${d.id}">\n${renderDoc(d)}</document>`);
-    if (task.family === 'F') parts.push(`<document id="message-${task.id}">\nMessage from a teammate on ${world.today}: ${task.session1}\n</document>`);
+    // What an ideal write-back store holds after session 1: the correction as a dated note, not the instruction to record it.
+    if (task.family === 'F') parts.push(`<document id="notes/${task.id.toLowerCase()}-billing-contact-update">\n---\ntitle: "Billing contact update"\ntype: note\ndate: ${world.today}\nauthor: "${world.principal.name}"\n---\nRecorded ${world.today} from a team update: ${task.gold.answer![0]} is now the billing contact for ${(byId.get(`crm/${task.account}`)?.title ?? '').replace('CRM record: ', '')}; ${task.gold.wrong![0]} moved to another role.\n</document>`);
     return parts.join('\n\n');
   }
 }
