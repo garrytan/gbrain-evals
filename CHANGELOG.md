@@ -2,6 +2,47 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.8] - 2026-10-02
+
+### Sealed v2, release decision 1: whole-conversation delivery confirmed on held-out data
+
+The first preregistered opening of sealed confirmation set v2 asked whether
+gbrain's shipped evidence default, `auto` (whole conversation pages within a
+24,000-token budget), is non-inferior to the old `chunk` default and whether it
+is better, at gbrain `d44296c` (v0.60.30.0)
+([results](docs/benchmarks/2026-10-02-sealed-v2-decision-1.md),
+[preregistration](docs/benchmarks/2026-10-02-sealed-v2-decision-1-preregistration.md)).
+
+- **Result.** `auto` answered 192 of 200 questions and `chunk` 132 of 200,
+  from the same five retrieved hits, with Claude Sonnet 4.6 at temperature 0
+  reading and `gpt-4o-2024-08-06` judging. `auto` won 60 and lost 0: +30.0
+  points, 95% persona-cluster interval +24.0 to +36.0. The preregistered
+  verdict is `pass`, with superiority confirmed (exact McNemar p = 1.7e-18;
+  persona sign-flip p = 0.00005). Multi-session questions went from 33 to 76
+  of 80 and temporal questions from 21 to 36 of 40. Knowledge update (38 to
+  40) and abstention (40 and 40) barely moved. Reader input rose from a mean of
+  3,280 to 12,982 tokens.
+- **Retrieval was not the bottleneck.** The shared top five held every gold
+  chat for 153 of 160 answerable questions. All 60 wins came from those 153.
+- **Rule written first.** The 3-point non-inferiority margin, the fixed-order
+  superiority test (reusing the E2 rule from the auto v2 manifest), the
+  `compare.ts` family and a simulated power table were committed in `d0efb58`
+  before the sealed files reached the machine.
+- **Runner.** `eval/runner/sealed-confirmation.ts` gains `evidence-freeze`
+  (the evidence-delivery freeze on sealed questions, sharded by history),
+  `evidence-answer` (the protocol reader over one frozen arm, resumable from
+  its response cache) and `decide` (the preregistered rule over `compare.ts`
+  output). `score` now writes `haystack_id` per question, and adds
+  `error`/`error_origin` only on failed rows, so its rows pair in `compare.ts`.
+  `readAnswer` also returns the provider-reported input tokens.
+- **Custody.** Labels were read twice through the runner under one decision
+  id. The access log went from 1 to 3 lines, and it was handed back with the
+  per-question scores for private custody. Everything else holding sealed
+  content was deleted from the machine. This is release decision 1 of the 3 the
+  protocol allows. The v2 protocol doc and README record the opening.
+- **Cost:** $16.06 of a $60 cap (10,600 requests), plus about $0.22 for setup
+  runs on invented fixtures.
+
 ## [0.10.6] - 2026-10-02
 
 ### Re-pin to gbrain `d44296c`: all 20 wave bugs fixed and verified, N12 gates

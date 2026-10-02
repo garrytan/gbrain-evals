@@ -3862,6 +3862,78 @@
         "/run/budget_usd": 60
       },
       "note": "Copied from the gitignored budget ledger after its one run closed."
+    },
+    {
+      "claim_id": "sealed-v2-decision-1-rule",
+      "readme_anchor": "docs/benchmarks/2026-10-02-sealed-v2-decision-1-preregistration.md: What is fixed",
+      "artifact_path": "docs/benchmarks/2026-10-02-sealed-v2-decision-1/decision.json",
+      "artifact_sha256": "23dae4c1b03d7c6427e25dcf902a0c4276e6d6eee8ba8be29d5dc37e575133ba",
+      "status": "covered",
+      "expected": {
+        "/candidate_commits/gbrain": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "/decision_id": "sealed-v2-decision-1-2026-10-02:auto-vs-chunk",
+        "/rule/noninferiority_margin": 0.03,
+        "/rule/alpha": 0.05,
+        "/arms/1/expected_budget_tokens": 24000
+      },
+      "note": "Committed in d0efb58 before the sealed files reached the machine."
+    },
+    {
+      "claim_id": "sealed-v2-decision-1-family",
+      "readme_anchor": "docs/benchmarks/2026-10-02-sealed-v2-decision-1-preregistration.md: The decision rule",
+      "artifact_path": "docs/benchmarks/2026-10-02-sealed-v2-decision-1/family.json",
+      "artifact_sha256": "f9e6054c00f5eec5d11a0dad5c76ae71baa2501f4ef0d487fbc9bad6bad74c1c",
+      "status": "covered",
+      "expected": {
+        "/comparisons/0/tolerance": 0.03,
+        "/comparisons/0/cluster_by": "haystack_id",
+        "/seed": 20261002,
+        "/draws": 20000
+      },
+      "note": "compare.ts family, committed with the preregistration."
+    },
+    {
+      "claim_id": "sealed-v2-decision-1-outcome",
+      "readme_anchor": "docs/benchmarks/2026-10-02-sealed-v2-decision-1.md: The preregistered decision",
+      "artifact_path": "docs/benchmarks/2026-10-02-sealed-v2-decision-1/results/decision-outcome.json",
+      "artifact_sha256": "797b3ea168ff165756c6df93cd2ae43f4f3fc9b8e2ab23a0028a1d6434cd6d0f",
+      "status": "covered",
+      "expected": {
+        "/verdict": "pass",
+        "/superiority": "confirmed",
+        "/reader_errors/chunk": 0,
+        "/reader_errors/auto": 0
+      },
+      "note": "sealed-confirmation.ts decide over compare.json."
+    },
+    {
+      "claim_id": "sealed-v2-decision-1-summary",
+      "readme_anchor": "docs/benchmarks/2026-10-02-sealed-v2-decision-1.md: Answer accuracy, judged correct (paired)",
+      "artifact_path": "docs/benchmarks/2026-10-02-sealed-v2-decision-1/results/summary.json",
+      "artifact_sha256": "1273fe156a0449f91c77f58242205fac6a613d6b7d3c4c7debf43c75ffdd8d26",
+      "status": "covered",
+      "expected": {
+        "/arms/chunk/answers_correct": 132,
+        "/arms/auto/answers_correct": 192,
+        "/paired/all/auto_wins": 60,
+        "/paired/all/auto_losses": 0,
+        "/paired/multi-session/auto": 76,
+        "/retrieval/answerable/recall_all_hits": 153,
+        "/access_log/lines_after": 3
+      },
+      "note": "Aggregates only; per-question sealed outcomes went to private custody and were deleted from the machine."
+    },
+    {
+      "claim_id": "sealed-v2-decision-1-ledger",
+      "readme_anchor": "docs/benchmarks/2026-10-02-sealed-v2-decision-1.md: Reproduce and inspect",
+      "artifact_path": "docs/benchmarks/2026-10-02-sealed-v2-decision-1/results/ledger-summary.json",
+      "artifact_sha256": "a6105acdf44d72b86dc5f46cdc7855dde797c42676901e6fb60e8d5397065b33",
+      "status": "covered",
+      "expected": {
+        "/requests": 10600,
+        "/budget_usd": 60
+      },
+      "note": "Budget-ledger close output for the decision run."
     }
   ]
 }
