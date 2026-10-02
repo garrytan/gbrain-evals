@@ -84,6 +84,14 @@ significance there. On LongMemEval-S, as development data, `auto` scored 445 of
 500 against 312 for chunks and 457 for uncapped pages; the budget cut 81
 questions and cost about 4 answers.
 [Read the auto v2 check](docs/benchmarks/2026-09-30-evidence-auto-v2.md).
+gbrain then shipped `auto` as the default with a 24,000-token budget. A harder
+sealed set (v2: 200 questions, histories of about 143,000 tokens, answers that
+need two to four chats months apart) was opened for its first preregistered
+release decision on 2026-10-02, at gbrain `d44296c`. `auto` answered 192 of 200
+against 132 for chunks from the same five hits (+60/−0, +30 points, 95%
+interval +24 to +36), so the check **passed** with superiority confirmed. The
+cost is about four times the reader input (13,000 against 3,300 tokens).
+[Read the sealed v2 decision](docs/benchmarks/2026-10-02-sealed-v2-decision-1.md).
 
 **Beyond retrieval, the October 1 checks found real wins and real
 losses.** Eleven keyless or cheap categories ran against gbrain `3a284ae`.

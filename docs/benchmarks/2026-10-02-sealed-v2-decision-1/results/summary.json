@@ -1,0 +1,238 @@
+{
+  "schema": "gbrain-evals/sealed-v2-decision-1-summary/v1",
+  "decision_id": "sealed-v2-decision-1-2026-10-02:auto-vs-chunk",
+  "decision_sha256": "23dae4c1b03d7c6427e25dcf902a0c4276e6d6eee8ba8be29d5dc37e575133ba",
+  "note": "Aggregates only. Per-question outcomes are in private custody with the sealed files; question text, chats, labels and answers are never published.",
+  "gbrain_commit": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+  "gbrain_version": "0.60.30.0",
+  "preregistration_commit": "d0efb5887f39b3dd92a8b8baa08b2a1bd8030440",
+  "arms": {
+    "chunk": {
+      "answers_correct": 132,
+      "answers_n": 200,
+      "by_type": {
+        "multi-session": {
+          "n": 80,
+          "correct": 33
+        },
+        "temporal-reasoning": {
+          "n": 40,
+          "correct": 21
+        },
+        "knowledge-update": {
+          "n": 40,
+          "correct": 38
+        },
+        "abstention": {
+          "n": 40,
+          "correct": 40
+        }
+      },
+      "answerable_correct": 92,
+      "answerable_n": 160,
+      "reader_errors": 0,
+      "reader_empty": 0,
+      "reader_truncated": 0,
+      "reader_input_tokens": {
+        "mean": 3280,
+        "median": 3277.0,
+        "max": 3736
+      },
+      "delivered_tokens_cl100k": {
+        "mean": 2656,
+        "max": 3044
+      },
+      "blocks": 1000,
+      "delivery": {
+        "blocks": 1000,
+        "page": 0,
+        "chunk": 1000,
+        "truncated": 0,
+        "over_budget": 0
+      },
+      "applied_budget_tokens": [
+        null
+      ],
+      "frozen_manifest_sha256": "3a1b52cd0823fb86e7650d8a219826cecf23cbec382d0fca97b64e6f77a28c08"
+    },
+    "auto": {
+      "answers_correct": 192,
+      "answers_n": 200,
+      "by_type": {
+        "multi-session": {
+          "n": 80,
+          "correct": 76
+        },
+        "temporal-reasoning": {
+          "n": 40,
+          "correct": 36
+        },
+        "knowledge-update": {
+          "n": 40,
+          "correct": 40
+        },
+        "abstention": {
+          "n": 40,
+          "correct": 40
+        }
+      },
+      "answerable_correct": 152,
+      "answerable_n": 160,
+      "reader_errors": 0,
+      "reader_empty": 0,
+      "reader_truncated": 0,
+      "reader_input_tokens": {
+        "mean": 12982,
+        "median": 13133.5,
+        "max": 16121
+      },
+      "delivered_tokens_cl100k": {
+        "mean": 11526,
+        "max": 13992
+      },
+      "blocks": 976,
+      "delivery": {
+        "blocks": 976,
+        "page": 976,
+        "chunk": 0,
+        "truncated": 0,
+        "over_budget": 0
+      },
+      "applied_budget_tokens": [
+        24000
+      ],
+      "frozen_manifest_sha256": "3a1b52cd0823fb86e7650d8a219826cecf23cbec382d0fca97b64e6f77a28c08"
+    }
+  },
+  "paired": {
+    "multi-session": {
+      "n": 80,
+      "chunk": 33,
+      "auto": 76,
+      "auto_wins": 43,
+      "auto_losses": 0
+    },
+    "all": {
+      "n": 200,
+      "chunk": 132,
+      "auto": 192,
+      "auto_wins": 60,
+      "auto_losses": 0
+    },
+    "answerable": {
+      "n": 160,
+      "chunk": 92,
+      "auto": 152,
+      "auto_wins": 60,
+      "auto_losses": 0
+    },
+    "temporal-reasoning": {
+      "n": 40,
+      "chunk": 21,
+      "auto": 36,
+      "auto_wins": 15,
+      "auto_losses": 0
+    },
+    "knowledge-update": {
+      "n": 40,
+      "chunk": 38,
+      "auto": 40,
+      "auto_wins": 2,
+      "auto_losses": 0
+    },
+    "abstention": {
+      "n": 40,
+      "chunk": 40,
+      "auto": 40,
+      "auto_wins": 0,
+      "auto_losses": 0
+    }
+  },
+  "files_sha256": {
+    "answers-chunk.jsonl": "c6a974df5817e9970465b415956a72375b1d2d1b0d1edd7b287863dd8b781561",
+    "score-chunk.json": "25a5828aae61741e9a15e825bf9bb7f96b77a27b731bc41117dbd57cf281926b",
+    "answers-auto.jsonl": "8f95a88af8e91bd870d03e1200ce61fc52f7cce6a23342ae5a6ff31db3f06b52",
+    "score-auto.json": "7080bc8d1ec9102d8ad888ef9811442bf764e36008fc63d4a8f602c1fe7afdfe"
+  },
+  "retrieval": {
+    "top_k": 5,
+    "answerable": {
+      "n": 160,
+      "recall_all_hits": 153,
+      "recall_any_hits": 160,
+      "errors": 0
+    },
+    "abstention_excluded": 40,
+    "by_type": {
+      "multi-session": {
+        "n": 80,
+        "recall_all_hits": 76,
+        "recall_any_hits": 80,
+        "errors": 0
+      },
+      "temporal-reasoning": {
+        "n": 40,
+        "recall_all_hits": 37,
+        "recall_any_hits": 40,
+        "errors": 0
+      },
+      "knowledge-update": {
+        "n": 40,
+        "recall_all_hits": 40,
+        "recall_any_hits": 40,
+        "errors": 0
+      }
+    },
+    "missing_rows": [],
+    "unknown_rows": []
+  },
+  "by_retrieval": {
+    "recall_all_hit": {
+      "n": 153,
+      "chunk": 92,
+      "auto": 152
+    },
+    "recall_all_miss": {
+      "n": 7,
+      "chunk": 0,
+      "auto": 0
+    }
+  },
+  "access_log": {
+    "lines_before": 1,
+    "lines_after": 3,
+    "new_lines": [
+      {
+        "at": "2026-10-02T16:43:39.889Z",
+        "operator": "user",
+        "host": "cox.local",
+        "action": "score",
+        "purpose": "sealed v2 release decision 1: auto vs chunk at gbrain d44296c",
+        "decision_id": "sealed-v2-decision-1-2026-10-02:auto-vs-chunk",
+        "labels_sha256": "83bf52d11e0a26f64f1ece8ce5ac637b81844e38e67c5df1495cb7614a0357c4",
+        "run_sha256": "c6a974df5817e9970465b415956a72375b1d2d1b0d1edd7b287863dd8b781561"
+      },
+      {
+        "at": "2026-10-02T16:44:29.865Z",
+        "operator": "user",
+        "host": "cox.local",
+        "action": "score",
+        "purpose": "sealed v2 release decision 1: auto vs chunk at gbrain d44296c",
+        "decision_id": "sealed-v2-decision-1-2026-10-02:auto-vs-chunk",
+        "labels_sha256": "83bf52d11e0a26f64f1ece8ce5ac637b81844e38e67c5df1495cb7614a0357c4",
+        "run_sha256": "8f95a88af8e91bd870d03e1200ce61fc52f7cce6a23342ae5a6ff31db3f06b52"
+      }
+    ]
+  },
+  "cost_usd": {
+    "retrieval_freeze_embeddings_and_rerank": 3.7057,
+    "reader_chunk": 3.048,
+    "reader_auto": 8.8451,
+    "judge_chunk": 0.2353,
+    "judge_auto": 0.2307,
+    "total": 16.0648,
+    "cap": 60,
+    "basis": "budget ledger run sealed-v2-decision-1-2026-10-02T16-11-15-997Z-9dea584f, 10,600 paid requests, all reconciled from provider-reported usage; reader and judge figures agree with the per-step LlmClient ledgers",
+    "outside_cap_setup_fixtures": 0.22
+  }
+}
