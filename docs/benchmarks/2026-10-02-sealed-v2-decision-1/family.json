@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "family_id": "sealed-v2-decision-1",
+  "registered_at": "2026-10-02",
+  "description": "Sealed confirmation v2, release decision 1: auto (B) against chunk (A) at gbrain d44296c, judged answer correctness over all 200 questions, paired by question and clustered by persona (haystack). Rule: decision.json in this directory.",
+  "alpha": 0.05,
+  "seed": 20261002,
+  "draws": 20000,
+  "min_clusters": 10,
+  "id_field": "question_id",
+  "comparisons": [
+    { "id": "answer_accuracy_noninferiority", "metric": "answer_correct", "gate": "noninferiority", "direction": "higher", "tolerance": 0.03, "cluster_by": "haystack_id", "description": "Primary. auto must not be worse than chunk by more than 3 percentage points of the 200 questions." },
+    { "id": "answer_accuracy_superiority", "metric": "answer_correct", "gate": "exploratory", "direction": "higher", "cluster_by": "haystack_id", "description": "Read by the preregistered superiority rule (decideEvidence) after non-inferiority passes: delta > 0, exact McNemar and persona-clustered sign-flip two-sided p < 0.05. compare.ts reports it without a verdict." },
+    { "id": "recall_all_at_5", "metric": "recall_all", "gate": "exploratory", "direction": "higher", "cluster_by": "haystack_id", "description": "Shared retrieval over the 160 answerable questions; must be identical across arms (abstention rows have no recall and are ineligible on both sides)." }
+  ]
+}
