@@ -1,0 +1,176 @@
+# Ledger repros rerun on 2026-10-03 against the pinned gbrain 48ed5e8233f617479df989998560840747af0425 (v0.60.32.0), Bun 1.4.2.
+# Each block: the repository-root command (keys stripped, fresh GBRAIN_HOME), its exit code and its output without schema-migration lines.
+# Most repros exit 1 while their bug reproduces; the N7-2..N7-7 and N8-3 repros print the gap and exit 0 either way. The last three blocks are new checks written for this rerun: N13-8, N7-5 with as_of pinned and N7-6 request-time ages (each exits 1 while its gap reproduces; each exits 1 at d44296c).
+
+$ bun docs/benchmarks/2026-10-01-n1-n5/repro/n1-1-ontology-propose-managed.ts
+ontology-add exit 0 | }
+call ontology_propose exit 0 | }
+ontology_get -> [
+  {
+    "dimension": "location",
+    "value": "Lisbon",
+    "confidence": 0.7,
+    "source": "manual",
+    "valid_from": "2026-10-02T23:04:48.545Z",
+    "valid_to": null,
+    "status": "active",
+    "fact_id": 1
+  }
+]
+exit 0
+
+$ bun docs/benchmarks/2026-10-01-n1-n5/repro/n1-2-ontology-revert-noop.ts
+propose Lisbon from 2020-01-01 -> inserted
+propose Porto from 2022-01-01 -> superseded_prior
+propose Lisbon from 2024-01-01 -> superseded_prior
+current location (expected Lisbon): Lisbon
+exit 0
+
+$ bun docs/benchmarks/2026-10-01-n1-n5/repro/n1-3-ontology-private-remote.ts
+remote ontology_get (expected: decision_style only): decision_style=deliberate
+exit 0
+
+$ bun docs/benchmarks/2026-10-01-n1-n5/repro/n5-1-hot-memory-after-forget.ts
+context_pack before forget carries the fact: true
+forget ok: true | recall after forget carries it: false
+context_pack right after forget carries it (expected false): false
+get_page _meta.brain_hot_memory right after forget carries it (expected false): false
+exit 0
+
+$ bun docs/benchmarks/2026-10-01-n1-n5/repro/n5-2-forget-owner-unavailable.ts
+round 1: forget -> ok; forgotten fact active: false; retained neighbor in recall: true, in search (expected true): true
+round 2: forget -> ok; forgotten fact active: false; retained neighbor in recall: true, in search (expected true): true
+round 3: forget -> ok; forgotten fact active: false; retained neighbor in recall: true, in search (expected true): true
+round 4: forget -> ok; forgotten fact active: false; retained neighbor in recall: true, in search (expected true): true
+round 5: forget -> ok; forgotten fact active: false; retained neighbor in recall: true, in search (expected true): true
+exit 0
+
+$ bun docs/benchmarks/2026-10-01-n1-n5/repro/n5-3-remember-after-forget-pglite.ts
+forget: ok
+first remember of the corrected claim (expected ok): ok
+identical retry: not needed
+exit 0
+
+$ bun docs/benchmarks/2026-10-01-n12-format-fidelity/repros/n12-1-bold-label-note.ts
+{"phase":"no_match","speakers":[]}
+exit 0
+
+$ bun docs/benchmarks/2026-10-01-n12-format-fidelity/repros/n12-2-offset-timestamp-roundtrip.ts
+{"adapter_timestamp":"2026-08-11T05:30:00.000Z","anchor":"**User** (2026-08-11 5:30 AM): hello","reparsed":"2026-08-11T05:30:00Z","true_instant":"2026-08-11T05:30:00.000Z"}
+exit 0
+
+$ bun docs/benchmarks/2026-10-01-n12-format-fidelity/repros/n12-7-legacy-pack-attendance.ts
+{"attended_legacy_pack":["people/alice-example"],"attended_gbrain_base_v2":["people/alice-example"],"expected":["people/alice-example"]}
+exit 0
+
+$ bun docs/benchmarks/2026-10-01-n13-code-intelligence/repros/n13-1-merged-arrow-defs.ts
+{"code_def_count":1,"defs":["src/sample.ts:3"],"chunks":[{"symbol_name":"ALPHABET","symbol_type":"lexical declaration","start_line":1,"end_line":1},{"symbol_name":"int2alpha","symbol_type":"lexical declaration","start_line":3,"end_line":10},{"symbol_name":"alpha2int","symbol_type":"lexical declaration","start_line":12,"end_line":16},{"symbol_name":"roundTrip","symbol_type":"export statement","start_line":18,"end_line":20}]}
+exit 0
+
+$ bun docs/benchmarks/2026-10-01-n13-code-intelligence/repros/n13-2-resolved-flag.ts
+{"resolver":{"edges_resolved":1},"callers":[{"from":"caller","resolved":true,"resolved_chunk_id":1}]}
+exit 0
+
+$ bun docs/benchmarks/2026-10-01-n13-code-intelligence/repros/n13-3-shared-name-language-gate.ts
+{"code_blast":"ok","supported":null}
+exit 0
+
+$ bun docs/benchmarks/2026-10-01-n2-contradiction-surfacing/repro/n2-1-undated-page-gets-a-date.ts
+[gbrain] vector search unavailable (no_gateway_config) — results are keyword-only. Run `gbrain doctor` to diagnose.
+dates the judge received (expected null for both undated pages): []
+pairs skipped by the date filter (expected 1: both texts carry dates 184 days apart): 1
+exit 0
+
+$ bun docs/benchmarks/2026-10-01-n2-contradiction-surfacing/repro/n2-2-find-contradictions-default-cli.ts
+CLI default (sourceId default) -> {"contradictions":[],"note":"Stored contradiction reports are temporarily available only to trusted local callers without a source filter."}
+CLI --source __all__ -> {"run_id":"r1","ran_at":"2026-10-01","contradictions":[{"kind":"cross_slug_chunks","severity":"medium","axis":"headcount","confidence":0.9,"a":{"slug":"notes/a","chunk_id":1,"take_id":null},"b":{"slug":"notes/b","chunk_id":2,"take_id":null},"resolution_kind":"manual_review","resolution_command":"# manual review"}],"total_in_run":1}
+exit 0
+
+$ bun docs/benchmarks/2026-10-01-n7-open-loops-email/repro/n7-1-nudge-backfill.ts
+expected: open unanswered_inbound for bob@example.org (request unanswered 40h > 24h)
+actual:   open=[["unanswered_inbound","bob@example.org"]]
+MATCHES EXPECTED
+exit 0
+
+$ bun docs/benchmarks/2026-10-01-n7-open-loops-email/repro/n7-2-thanks-closes.ts
+expected: a semantic loop engine keeps "send the deck" open
+actual:   open=[{"loopType":"unanswered_inbound","summary":"Reply owed to bob@example.org: \"Deck\"","counterpartyEmail":"bob@example.org","evidence":[{"message_id":"b1","quote":"Can you send the deck?"}],"lastActivityMs":1790712000000,"openedMs":1790712000000}] close=["unanswered_outbound"] (documented: a reply closes)
+MATCHES EXPECTED
+exit 0
+
+$ bun docs/benchmarks/2026-10-01-n7-open-loops-email/repro/n7-3-fulfillment-gap.ts
+expected: commitment loop closed after "As promised, here is the deck."
+actual:   status=open (reply auto-close touches deterministic_thread loops only; re-extraction only upserts)
+exit 0
+
+$ bun docs/benchmarks/2026-10-01-n7-open-loops-email/repro/n7-5-ranking-clock.ts
+expected: one reproducible order for these two rows (or a way to pin the reference time)
+actual:   at T ["b@example.org","a@example.org"]; at T+2d ["a@example.org","b@example.org"]
+exit 0
+
+$ bun docs/benchmarks/2026-10-01-n7-open-loops-email/repro/n7-6-age-from-detection.ts
+new: opened_at=2026-09-30T06:00:00.000Z last_activity_at=2026-09-30T06:00:00.000Z
+old: opened_at=2026-09-01T12:00:00.000Z last_activity_at=2026-09-01T12:00:00.000Z
+expected: the 720-hour request ranks older than the 30-hour one
+actual:   opened_at (the ranking input) is the detection time for both
+exit 0
+
+$ bun docs/benchmarks/2026-10-01-n7-open-loops-email/repro/n7-7-url-question-mark.ts
+expected: no loop (no question asked)
+actual:   open=[]
+MATCHES EXPECTED
+exit 0
+
+$ bun docs/benchmarks/2026-10-01-n8-proactive-recall/repro/n8-1-private-volunteer-remote.ts
+[gbrain] vector search unavailable (no_gateway_config) — results are keyword-only. Run `gbrain doctor` to diagnose.
+expected: remote volunteer_context delivers nothing for a private page (as remote search returns nothing)
+actual:   remote volunteer_context -> []; remote search hits: 0
+exit 0
+
+$ bun docs/benchmarks/2026-10-01-n8-proactive-recall/repro/n8-2-private-turn-context.ts
+expected: no private page in the injected block (the IPC path must not widen what MCP returns; hot facts are world-only already)
+actual:   ""
+exit 0
+
+$ bun docs/benchmarks/2026-10-01-n8-proactive-recall/repro/n8-3-common-word-alias.ts
+expected: nothing volunteered (the turn is about a harbor, not Harbor Logistics)
+actual:   [{"slug":"companies/harbor-logistics","arm":"alias","confidence":0.9500000000000001}]
+exit 0
+
+$ bun docs/benchmarks/2026-10-01-n9-multi-hop/repro-relational-edges.ts
+[extract.links_db] start
+[extract.links_db] 5/5 (100%)
+[extract.links_db] 5/5 (100%) done
+typed edges (from -> to, type, producer):
+  people/alice-example -> meetings/board-acme-example (attended, markdown)
+  people/alice-example -> meetings/board-beta-example (attended, frontmatter)
+  people/bob-example -> companies/gamma-example (invested_in, frontmatter)
+  people/bob-example -> meetings/board-acme-example (attended, markdown)
+  people/bob-example -> meetings/board-beta-example (attended, frontmatter)
+contrast, frontmatter investors on a company page: parse {"linkTypes":["invested_in","led_round"],"direction":"in"}, fanout ["people/bob-example"] (expected people/bob-example)
+
+Who attended Acme Example Board Meeting?
+  parse: {"seeds":["Acme Example Board Meeting"],"linkTypes":["attended"],"direction":"in"}
+  N9-2 fanout from meetings/board-acme-example with the parsed direction: ["people/alice-example","people/bob-example"] (expected both attendees)
+  N9-3 seed resolution: {"slug":"acme-example-board-meeting","source":"fallback_slugify"} (expected meetings/board-acme-example)
+[gbrain] vector search unavailable (no_gateway_config) — results are keyword-only. Run `gbrain doctor` to diagnose.
+  relational arm: {"fired":true,"kind":"who_rel","seeds_resolved":1,"candidates":2,"errored":false,"duration_ms":6} (expected fired: true)
+
+Who attended Beta Example Board Meeting?
+  parse: {"seeds":["Beta Example Board Meeting"],"linkTypes":["attended"],"direction":"in"}
+  N9-2 fanout from meetings/board-beta-example with the parsed direction: ["people/alice-example","people/bob-example"] (expected both attendees)
+  N9-3 seed resolution: {"slug":"beta-example-board-meeting","source":"fallback_slugify"} (expected meetings/board-beta-example)
+  relational arm: {"fired":true,"kind":"who_rel","seeds_resolved":1,"candidates":2,"errored":false,"duration_ms":5} (expected fired: true)
+exit 0
+
+$ bun docs/benchmarks/2026-10-03-wave7-repin/repros/n13-8-member-call.ts
+{"callers":[{"from":"resolveAll","resolved":true,"member_call":null},{"from":"dirname","resolved":false,"member_call":true},{"from":"join","resolved":false,"member_call":true}]}
+exit 0
+
+$ bun docs/benchmarks/2026-10-03-wave7-repin/repros/n7-5-as-of-pins-order.ts
+{"unpinned":{"at_T":["b@example.org","a@example.org"],"at_T_plus_2d":["a@example.org","b@example.org"]},"pinned_as_of":"2026-10-01T12:00:00.000Z","pinned":{"wall_T":["b@example.org","a@example.org"],"wall_T_plus_2d":["b@example.org","a@example.org"]}}
+exit 0
+
+$ bun docs/benchmarks/2026-10-03-wave7-repin/repros/n7-6-request-time-age.ts
+{"request_time":{"old":"2026-09-01T12:00:00.000Z","new":"2026-09-30T06:00:00.000Z"},"opened_at":{"new":"2026-09-30T06:00:00.000Z","old":"2026-09-01T12:00:00.000Z"}}
+exit 0
