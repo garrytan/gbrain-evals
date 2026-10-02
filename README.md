@@ -196,8 +196,8 @@ them. Hosted embedding and reranking services receive the text they process;
 local storage does not make those API calls local. The retrieval results above
 were measured at gbrain [`2efaaf8f`](https://github.com/garrytan/gbrain/tree/2efaaf8f8a817b5b82e023383618fdcdb1cc5f7d)
 (v0.48.4.0). This repository currently installs gbrain master
-[`3a284ae`](https://github.com/garrytan/gbrain/tree/3a284aea26889b77c633aebb4149c3016d834ee6)
-(v0.60.26.0), whose search mode definitions are identical. That release adds
+[`d44296c`](https://github.com/garrytan/gbrain/tree/d44296cf4d6481a10eb85562d3179e38cfd02c43)
+(v0.60.30.0), whose search mode definitions are identical. That release adds
 System One decision slots, which stay off unless a TypeSafe key is set. See
 [how to reproduce a run](eval/README.md).
 
