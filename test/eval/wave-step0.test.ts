@@ -251,6 +251,25 @@ describe('bug ledger', () => {
     expect(validateBugEntry({ ...entry, id: 'bad id' })).toContain('bad id: id must look like <category>-<n>');
   });
 
+  test('validates fix commits, closed gaps and reviews', () => {
+    const sha = 'd44296cf4d6481a10eb85562d3179e38cfd02c43';
+    const review = { date: '2026-10-02', gbrain_sha: sha, evidence: 'rerun' as const, receipts: ['docs/benchmarks/x/receipt.json'] };
+    expect(validateBugEntry({ ...entry, status: 'fixed', fixing_pr: 'garrytan/gbrain#5845', fixing_commit: sha, review })).toEqual([]);
+    expect(validateBugEntry({ ...entry, fixing_commit: 'd44296c' })).toContain('N5-1: fixing_commit must be a full 40-character commit');
+    expect(validateBugEntry({ ...entry, review: { ...review, receipts: [] } })).toContain('N5-1: a rerun review names its receipts');
+    expect(validateBugEntry({ ...entry, review: { ...review, evidence: 'trust-me' as never } }).join(' ')).toContain('review.evidence must be one of');
+    expect(validateBugEntry({ ...entry, review: { ...review, date: '2 Oct' } })).toContain('N5-1: review.date must be YYYY-MM-DD');
+    expect(validateBugEntry({ ...entry, status: 'closed', reason: 'r', fixing_pr: '#1' })).toContain('N5-1: a bug is fixed, not closed');
+    expect(validateBugEntry({ ...entry, classification: 'feature-gap', status: 'closed' })).toContain('N5-1: a closed entry needs a reason and fixing_pr');
+    expect(validateBugEntry({ ...entry, classification: 'feature-gap', status: 'closed', reason: 'gbrain now gates it', fixing_pr: '#1', review })).toEqual([]);
+  });
+
+  test('the wave ledger records a 2026-10-02 review on every entry', () => {
+    const ledger = JSON.parse(readFileSync(join(import.meta.dir, '../../docs/benchmarks/2026-10-01-wave-bugs.json'), 'utf8')) as { entries: BugEntry[] };
+    expect(ledger.entries.filter(e => e.review?.date !== '2026-10-02').map(e => e.id)).toEqual([]);
+    expect(ledger.entries.filter(e => e.status === 'fixed' && !e.fixing_commit).map(e => e.id)).toEqual([]);
+  });
+
   test('upserts by id and renders the Markdown view', () => {
     const dir = mkdtempSync(join(tmpdir(), 'bug-ledger-'));
     const path = join(dir, 'bugs.json');

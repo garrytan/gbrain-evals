@@ -13,6 +13,12 @@
  *
  * The JSON file is the record; the Markdown view is rendered from it.
  *
+ * Status changes never rewrite the original finding: `gbrain_sha`, `expected`
+ * and `actual` stay as found. A later check adds `review` (the date, the gbrain
+ * commit checked and the evidence), and a fix adds `fixing_pr` and
+ * `fixing_commit`. A feature gap or category defect that gbrain closes on
+ * purpose becomes `closed`, never `fixed`.
+ *
  *   bun eval/runner/bug-ledger.ts validate [ledger.json]
  *   bun eval/runner/bug-ledger.ts render [ledger.json] [--out view.md]
  */
@@ -21,7 +27,26 @@ import { existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 export const WAVE_BUG_LEDGER = 'docs/benchmarks/2026-10-01-wave-bugs.json';
 
 export const BUG_CLASSIFICATIONS = ['bug', 'feature-gap', 'category-defect'] as const;
-export const BUG_STATUSES = ['open', 'fixed', 'deferred', 'not-a-bug'] as const;
+export const BUG_STATUSES = ['open', 'fixed', 'deferred', 'not-a-bug', 'closed'] as const;
+/**
+ * How a review established an entry's status:
+ *   rerun          the category and the entry's repro were run at review.gbrain_sha;
+ *   upstream-only  gbrain says it fixed the entry, but nothing here re-ran it;
+ *   not-rechecked  the status is carried forward without a run at review.gbrain_sha.
+ */
+export const REVIEW_EVIDENCE = ['rerun', 'upstream-only', 'not-rechecked'] as const;
+
+export interface BugReview {
+  /** ISO date of the review. */
+  date: string;
+  /** Full 40-character gbrain commit the status refers to. */
+  gbrain_sha: string;
+  evidence: typeof REVIEW_EVIDENCE[number];
+  /** Repository paths of the receipts or repro output behind a rerun. */
+  receipts?: string[];
+  /** What the rerun showed, in one or two sentences. */
+  note?: string;
+}
 
 export interface BugEntry {
   /** Stable id: `<category alias>-<n>`, e.g. N5-1. */
@@ -44,6 +69,10 @@ export interface BugEntry {
   reason?: string;
   /** Required when fixed: the gbrain PR URL or number. */
   fixing_pr?: string;
+  /** Full 40-character gbrain commit that carries the fix, reachable from the reviewed commit. */
+  fixing_commit?: string;
+  /** Latest status review; see BugReview. */
+  review?: BugReview;
 }
 
 export interface BugLedger { schema_version: 1; entries: BugEntry[] }
@@ -62,7 +91,20 @@ export function validateBugEntry(e: unknown): string[] {
   if (!BUG_STATUSES.includes(b.status as never)) v.push(`${id}: status must be one of ${BUG_STATUSES.join('|')}`);
   if ((b.status === 'deferred' || b.status === 'not-a-bug') && !nonEmpty(b.reason)) v.push(`${id}: a ${b.status} entry needs a reason`);
   if (b.status === 'fixed' && !nonEmpty(b.fixing_pr)) v.push(`${id}: a fixed entry needs fixing_pr`);
-  if (b.status === 'fixed' && b.classification !== 'bug') v.push(`${id}: only a bug can be fixed in gbrain; a ${String(b.classification)} is deferred, not-a-bug or open`);
+  if (b.status === 'fixed' && b.classification !== 'bug') v.push(`${id}: only a bug can be fixed in gbrain; a ${String(b.classification)} is deferred, not-a-bug, closed or open`);
+  if (b.status === 'closed' && b.classification === 'bug') v.push(`${id}: a bug is fixed, not closed`);
+  if (b.status === 'closed' && (!nonEmpty(b.reason) || !nonEmpty(b.fixing_pr))) v.push(`${id}: a closed entry needs a reason and fixing_pr`);
+  if (b.fixing_commit !== undefined && (typeof b.fixing_commit !== 'string' || !/^[0-9a-f]{40}$/.test(b.fixing_commit))) v.push(`${id}: fixing_commit must be a full 40-character commit`);
+  if (b.review !== undefined) {
+    const r = b.review as Record<string, unknown> | null;
+    if (!r || typeof r !== 'object') v.push(`${id}: review must be an object`);
+    else {
+      if (typeof r.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(r.date)) v.push(`${id}: review.date must be YYYY-MM-DD`);
+      if (typeof r.gbrain_sha !== 'string' || !/^[0-9a-f]{40}$/.test(r.gbrain_sha)) v.push(`${id}: review.gbrain_sha must be a full 40-character commit`);
+      if (!REVIEW_EVIDENCE.includes(r.evidence as never)) v.push(`${id}: review.evidence must be one of ${REVIEW_EVIDENCE.join('|')}`);
+      if (r.evidence === 'rerun' && (!Array.isArray(r.receipts) || r.receipts.length === 0)) v.push(`${id}: a rerun review names its receipts`);
+    }
+  }
   return v;
 }
 
@@ -100,6 +142,13 @@ export function upsertBug(entry: BugEntry, path: string = WAVE_BUG_LEDGER): BugL
 }
 
 const cell = (s: string | undefined) => (s ?? '').replace(/\|/g, '\\|').replace(/\n/g, ' ');
+const short = (sha: string | undefined) => (sha ? sha.slice(0, 8) : '');
+const EVIDENCE_LABEL: Record<BugReview['evidence'], string> = { rerun: 'verified by rerun', 'upstream-only': 'fixed upstream, not re-verified', 'not-rechecked': 'not rechecked' };
+function reviewCell(e: BugEntry): string {
+  if (!e.review) return '';
+  const label = e.status === 'fixed' || e.status === 'closed' || e.review.evidence !== 'rerun' ? EVIDENCE_LABEL[e.review.evidence] : 'still reproduces at rerun';
+  return cell(`${e.review.date} at ${short(e.review.gbrain_sha)}: ${label}${e.review.note ? `. ${e.review.note}` : ''}`);
+}
 
 export function renderBugLedgerMarkdown(ledger: BugLedger): string {
   const count = (pred: (e: BugEntry) => boolean) => ledger.entries.filter(pred).length;
@@ -110,12 +159,23 @@ export function renderBugLedgerMarkdown(ledger: BugLedger): string {
     '',
     `${ledger.entries.length} findings: ${count(e => e.classification === 'bug')} bugs (${count(e => e.classification === 'bug' && e.status === 'fixed')} fixed), `
       + `${count(e => e.classification === 'feature-gap')} feature gaps, ${count(e => e.classification === 'category-defect')} category defects.`,
-    '',
-    '| Id | Category | Kind | Status | Surface | Expected | Actual | Repro | Fix or reason |',
-    '|---|---|---|---|---|---|---|---|---|',
   ];
+  const reviewed = ledger.entries.filter(e => e.review);
+  if (reviewed.length) {
+    const fixed = (ev: BugReview['evidence']) => count(e => e.status === 'fixed' && e.review?.evidence === ev);
+    const dates = [...new Set(reviewed.map(e => e.review!.date))].sort().join(', ');
+    lines.push('', `Reviewed ${dates}: ${fixed('rerun')} bugs fixed and verified by a rerun, ${fixed('upstream-only')} fixed upstream but not re-verified, `
+      + `${count(e => e.classification === 'bug' && e.status === 'open')} bugs still open, ${count(e => e.status === 'closed')} gaps or defects closed by gbrain. `
+      + 'Expected, actual and the first gbrain commit describe the finding as found; the last column describes the latest review.');
+  }
+  lines.push(
+    '',
+    '| Id | Category | Kind | Status | Surface | Expected | Actual | Repro | Fix or reason | Fix commit | Latest review |',
+    '|---|---|---|---|---|---|---|---|---|---|---|',
+  );
   for (const e of ledger.entries) {
-    lines.push(`| ${e.id} | ${cell(e.category)} | ${e.classification} | ${e.status} | \`${cell(e.surface)}\` | ${cell(e.expected)} | ${cell(e.actual)} | \`${cell(e.repro)}\` | ${cell(e.fixing_pr ?? e.reason)} |`);
+    const fix = [e.fixing_pr, e.reason].filter(nonEmpty).join('; ');
+    lines.push(`| ${e.id} | ${cell(e.category)} | ${e.classification} | ${e.status} | \`${cell(e.surface)}\` | ${cell(e.expected)} | ${cell(e.actual)} | \`${cell(e.repro)}\` | ${cell(fix)} | ${short(e.fixing_commit)} | ${reviewCell(e)} |`);
   }
   return lines.join('\n') + '\n';
 }
