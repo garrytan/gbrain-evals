@@ -1,0 +1,94 @@
+{
+  "probe_id": "cat14-neg-1-empty-profile",
+  "category": "calibration-empty-profile",
+  "question": "Should I invest in a Seattle-based vertical SaaS startup?",
+  "baseline_answer": "## Answer\n\nThe brain contains no data relevant to evaluating a Seattle-based vertical SaaS startup investment. There are no stored takes or pages covering:\n\n- The specific startup in question\n- Your investment thesis, portfolio, or risk tolerance\n- Your views on vertical SaaS as a category\n- Your views on Seattle as a geography\n- Any relevant market or sector analysis\n\nWithout this data, no synthesis is possible.",
+  "calibrated_answer": "## Answer\n\nThe brain contains no data relevant to evaluating a Seattle-based vertical SaaS startup investment. There are no stored takes or pages covering:\n\n- The specific startup in question\n- Your investment thesis, portfolio, or risk preferences\n- Your views on vertical SaaS as a category\n- Your views on Seattle as a geography\n- Any relevant market or sector analysis\n\nWithout this data, no synthesis is possible.",
+  "prompts_identical": true,
+  "calibration_block_present": false,
+  "think_warnings": {
+    "baseline": [
+      "CITATIONS_REGEX_FALLBACK"
+    ],
+    "calibrated": [
+      "NO_CALIBRATION_PROFILE",
+      "CITATIONS_REGEX_FALLBACK"
+    ]
+  },
+  "win_eligible": false,
+  "judge_orders": 2,
+  "scores": [
+    {
+      "axis": "mentions_relevant_bias_tag",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers are functionally identical—they provide the same honest acknowledgment that the system lacks relevant data to answer the investment question. Neither mentions bias patterns (the profile is empty anyway), neither uses clinical jargon, and neither attempts a conversational tone. The only trivial difference is \"risk tolerance\" vs. \"risk preferences,\" which is purely semantic. Both are equally useful in declining to speculate without grounding data. || Both answers are nearly identical, declining to answer due to lack of stored data about the specific startup, the user's investment thesis, or their views on vertical SaaS and Seattle. Neither mentions relevant or irrelevant biases (the profile is empty anyway), neither presents a counter-prior, and both use a neutral, non-conversational tone. The only trivial difference is \"risk preferences\" (A) vs. \"risk tolerance\" (B)—a wording variation with no substantive impact. Both are equally unhelpful in the same way."
+    },
+    {
+      "axis": "presents_counter_prior",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers are functionally identical—they provide the same honest acknowledgment that the system lacks relevant data to answer the investment question. Neither mentions bias patterns (the profile is empty anyway), neither uses clinical jargon, and neither attempts a conversational tone. The only trivial difference is \"risk tolerance\" vs. \"risk preferences,\" which is purely semantic. Both are equally useful in declining to speculate without grounding data. || Both answers are nearly identical, declining to answer due to lack of stored data about the specific startup, the user's investment thesis, or their views on vertical SaaS and Seattle. Neither mentions relevant or irrelevant biases (the profile is empty anyway), neither presents a counter-prior, and both use a neutral, non-conversational tone. The only trivial difference is \"risk preferences\" (A) vs. \"risk tolerance\" (B)—a wording variation with no substantive impact. Both are equally unhelpful in the same way."
+    },
+    {
+      "axis": "changes_recommendation_meaningfully",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers are functionally identical—they provide the same honest acknowledgment that the system lacks relevant data to answer the investment question. Neither mentions bias patterns (the profile is empty anyway), neither uses clinical jargon, and neither attempts a conversational tone. The only trivial difference is \"risk tolerance\" vs. \"risk preferences,\" which is purely semantic. Both are equally useful in declining to speculate without grounding data. || Both answers are nearly identical, declining to answer due to lack of stored data about the specific startup, the user's investment thesis, or their views on vertical SaaS and Seattle. Neither mentions relevant or irrelevant biases (the profile is empty anyway), neither presents a counter-prior, and both use a neutral, non-conversational tone. The only trivial difference is \"risk preferences\" (A) vs. \"risk tolerance\" (B)—a wording variation with no substantive impact. Both are equally unhelpful in the same way."
+    },
+    {
+      "axis": "voice_conversational",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers are functionally identical—they provide the same honest acknowledgment that the system lacks relevant data to answer the investment question. Neither mentions bias patterns (the profile is empty anyway), neither uses clinical jargon, and neither attempts a conversational tone. The only trivial difference is \"risk tolerance\" vs. \"risk preferences,\" which is purely semantic. Both are equally useful in declining to speculate without grounding data. || Both answers are nearly identical, declining to answer due to lack of stored data about the specific startup, the user's investment thesis, or their views on vertical SaaS and Seattle. Neither mentions relevant or irrelevant biases (the profile is empty anyway), neither presents a counter-prior, and both use a neutral, non-conversational tone. The only trivial difference is \"risk preferences\" (A) vs. \"risk tolerance\" (B)—a wording variation with no substantive impact. Both are equally unhelpful in the same way."
+    },
+    {
+      "axis": "doesnt_force_fit_irrelevant_bias",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers are functionally identical—they provide the same honest acknowledgment that the system lacks relevant data to answer the investment question. Neither mentions bias patterns (the profile is empty anyway), neither uses clinical jargon, and neither attempts a conversational tone. The only trivial difference is \"risk tolerance\" vs. \"risk preferences,\" which is purely semantic. Both are equally useful in declining to speculate without grounding data. || Both answers are nearly identical, declining to answer due to lack of stored data about the specific startup, the user's investment thesis, or their views on vertical SaaS and Seattle. Neither mentions relevant or irrelevant biases (the profile is empty anyway), neither presents a counter-prior, and both use a neutral, non-conversational tone. The only trivial difference is \"risk preferences\" (A) vs. \"risk tolerance\" (B)—a wording variation with no substantive impact. Both are equally unhelpful in the same way."
+    },
+    {
+      "axis": "behaves_like_baseline",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers are functionally identical—they provide the same honest acknowledgment that the system lacks relevant data to answer the investment question. Neither mentions bias patterns (the profile is empty anyway), neither uses clinical jargon, and neither attempts a conversational tone. The only trivial difference is \"risk tolerance\" vs. \"risk preferences,\" which is purely semantic. Both are equally useful in declining to speculate without grounding data. || Both answers are nearly identical, declining to answer due to lack of stored data about the specific startup, the user's investment thesis, or their views on vertical SaaS and Seattle. Neither mentions relevant or irrelevant biases (the profile is empty anyway), neither presents a counter-prior, and both use a neutral, non-conversational tone. The only trivial difference is \"risk preferences\" (A) vs. \"risk tolerance\" (B)—a wording variation with no substantive impact. Both are equally unhelpful in the same way."
+    }
+  ],
+  "win_score": 0.5,
+  "win_overall": "tie",
+  "per_axis_pass_rate": 0.8333333333333334,
+  "failure_modes": [
+    "voice_conversational"
+  ]
+}

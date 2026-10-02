@@ -1,0 +1,76 @@
+{
+  "probe_id": "cat14-pos-1-geography",
+  "category": "calibration-pattern-relevant",
+  "question": "Should we lead the seed round for a SaaS startup based in Austin? Founder has strong product instinct but no Bay Area network.",
+  "baseline_answer": "## Answer\n\nThe brain contains limited directly applicable data for this specific decision. However, there are relevant resolved takes on geography-based skepticism:\n\n**Geography as a negative signal has repeatedly been wrong.** Three resolved takes show that garry's past geographic pessimism was incorrect:\n- A prediction that a New York startup would *not* hit $5M ARR in 12 months was **incorrect** (conviction w=0.85) [cat14/cat14-pos-1-geography/take-1]\n- A prediction that a Boston founder *couldn't* build a marketplace from there was **incorrect** (conviction w=0.75) [cat14/cat14-pos-1-geography/take-3]\n- A prediction that a Miami fintech *wouldn't* scale outside Florida was **incorrect** (conviction w=0.8) [cat14/cat14-pos-1-geography/take-2]\n\nThis pattern suggests the brain's track record on geography-based negative takes is poor — all three resolved cases went against the geographic skeptic.\n\n**On the specific factors raised (Austin location, strong product instinct, no Bay Area network):** The brain contains no direct takes on these specific attributes or their interaction. The resolved data above is suggestive but not directly analogous to the Austin/SaaS/seed-lead question.\n\n## Conflicts\n\nNo conflicting takes found in the brain on this topic.",
+  "calibrated_answer": "## Answer\n\nThe brain contains no direct takes on this specific Austin SaaS opportunity or this founder. What it *does* contain is a strong calibration signal relevant to how this question is being framed.\n\n## Calibration\n\n**Active bias tag: `over-confident-geography`**\n\nGarry's 2024 geography track record shows 3 high-conviction calls, all of which missed:\n\n- \"This New York startup will hit $5M ARR in 12 months\" — incorrect (conviction 0.85) [cat14/cat14-pos-1-geography/take-1]\n- \"This Miami fintech won't scale outside Florida\" — incorrect (conviction 0.80) [cat14/cat14-pos-1-geography/take-2]\n- \"That Boston founder can't build a marketplace from there\" — incorrect (conviction 0.75) [cat14/cat14-pos-1-geography/take-3]\n\nAll three misses share a common structure: geography (non-Bay Area location) was treated as a meaningful negative signal, and in each case that judgment was wrong.\n\n**Two priors to hold simultaneously:**\n\n1. **Default prior (garry's instinct):** \"No Bay Area network\" reads as a real disadvantage — harder to recruit, raise follow-on, get warm intros to enterprise buyers.\n2. **Counter-prior (debiased, from the `over-confident-geography` pattern):** The 3-of-3 miss rate in 2024 suggests this geographic penalty is being systematically over-weighted. Austin specifically has a growing SaaS ecosystem (Salesforce, Dell, Oracle presences; active local VC community). The \"no Bay Area network\" framing may be applying a 2015 mental model to a 2024 landscape.\n\nThe calibration data does not tell us whether to lead this round — it tells us that geography-based skepticism here fits the exact pattern that has been wrong every time it appeared at high conviction in 2024.",
+  "prompts_identical": false,
+  "calibration_block_present": true,
+  "think_warnings": {
+    "baseline": [],
+    "calibrated": []
+  },
+  "win_eligible": true,
+  "judge_orders": 2,
+  "scores": [
+    {
+      "axis": "mentions_relevant_bias_tag",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers correctly identify the relevant geography bias from the calibration profile and cite the same three resolved misses. However, they differ substantially in how they frame the insight. Answer A presents the track record data in clinical reference format (conviction weights, case IDs) but stops short of translating this into actionable guidance—it notes the pattern is \"suggestive but not directly analogous\" and offers no clear direction. Answer B does the harder work: it names both the user's gut prior (\"no Bay Area network\" is a real disadvantage) and the counter-prior (the 3-of-3 miss pattern suggests systematic over-weighting of geography as a penalty, especially given Austin's evolved ecosystem). Answer B also maintains a conversational, peer-to-peer tone throughout, whereas Answer A reads like a system dump. The substantive difference is that B actually helps the user hold two competing considerations in tension, while A merely reports the data without synthesis. || Answer A explicitly names both the user's gut prior (\"No Bay Area network\" reads as a real disadvantage) and a debiased counter-prior grounded in the track record (the 3-of-3 miss pattern suggests geographic penalty is over-weighted, and Austin has a growing SaaS ecosystem). It maintains a conversational, friend-like tone throughout. Answer B identifies the relevant bias pattern and cites the same track record, but stops short of articulating the user's actual prior or synthesizing a clear counter-consideration—it merely notes the data is \"suggestive but not directly analogous\" without helping the user navigate the tension. Answer B also uses clinical phrasing (\"conviction w=0.85\") without translation. The substantive difference is that A gives the user a framework to hold both considerations simultaneously, while B leaves the user to do that work alone."
+    },
+    {
+      "axis": "presents_counter_prior",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers correctly identify the relevant geography bias from the calibration profile and cite the same three resolved misses. However, they differ substantially in how they frame the insight. Answer A presents the track record data in clinical reference format (conviction weights, case IDs) but stops short of translating this into actionable guidance—it notes the pattern is \"suggestive but not directly analogous\" and offers no clear direction. Answer B does the harder work: it names both the user's gut prior (\"no Bay Area network\" is a real disadvantage) and the counter-prior (the 3-of-3 miss pattern suggests systematic over-weighting of geography as a penalty, especially given Austin's evolved ecosystem). Answer B also maintains a conversational, peer-to-peer tone throughout, whereas Answer A reads like a system dump. The substantive difference is that B actually helps the user hold two competing considerations in tension, while A merely reports the data without synthesis. || Answer A explicitly names both the user's gut prior (\"No Bay Area network\" reads as a real disadvantage) and a debiased counter-prior grounded in the track record (the 3-of-3 miss pattern suggests geographic penalty is over-weighted, and Austin has a growing SaaS ecosystem). It maintains a conversational, friend-like tone throughout. Answer B identifies the relevant bias pattern and cites the same track record, but stops short of articulating the user's actual prior or synthesizing a clear counter-consideration—it merely notes the data is \"suggestive but not directly analogous\" without helping the user navigate the tension. Answer B also uses clinical phrasing (\"conviction w=0.85\") without translation. The substantive difference is that A gives the user a framework to hold both considerations simultaneously, while B leaves the user to do that work alone."
+    },
+    {
+      "axis": "changes_recommendation_meaningfully",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers correctly identify the relevant geography bias from the calibration profile and cite the same three resolved misses. However, they differ substantially in how they frame the insight. Answer A presents the track record data in clinical reference format (conviction weights, case IDs) but stops short of translating this into actionable guidance—it notes the pattern is \"suggestive but not directly analogous\" and offers no clear direction. Answer B does the harder work: it names both the user's gut prior (\"no Bay Area network\" is a real disadvantage) and the counter-prior (the 3-of-3 miss pattern suggests systematic over-weighting of geography as a penalty, especially given Austin's evolved ecosystem). Answer B also maintains a conversational, peer-to-peer tone throughout, whereas Answer A reads like a system dump. The substantive difference is that B actually helps the user hold two competing considerations in tension, while A merely reports the data without synthesis. || Answer A explicitly names both the user's gut prior (\"No Bay Area network\" reads as a real disadvantage) and a debiased counter-prior grounded in the track record (the 3-of-3 miss pattern suggests geographic penalty is over-weighted, and Austin has a growing SaaS ecosystem). It maintains a conversational, friend-like tone throughout. Answer B identifies the relevant bias pattern and cites the same track record, but stops short of articulating the user's actual prior or synthesizing a clear counter-consideration—it merely notes the data is \"suggestive but not directly analogous\" without helping the user navigate the tension. Answer B also uses clinical phrasing (\"conviction w=0.85\") without translation. The substantive difference is that A gives the user a framework to hold both considerations simultaneously, while B leaves the user to do that work alone."
+    },
+    {
+      "axis": "voice_conversational",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers correctly identify the relevant geography bias from the calibration profile and cite the same three resolved misses. However, they differ substantially in how they frame the insight. Answer A presents the track record data in clinical reference format (conviction weights, case IDs) but stops short of translating this into actionable guidance—it notes the pattern is \"suggestive but not directly analogous\" and offers no clear direction. Answer B does the harder work: it names both the user's gut prior (\"no Bay Area network\" is a real disadvantage) and the counter-prior (the 3-of-3 miss pattern suggests systematic over-weighting of geography as a penalty, especially given Austin's evolved ecosystem). Answer B also maintains a conversational, peer-to-peer tone throughout, whereas Answer A reads like a system dump. The substantive difference is that B actually helps the user hold two competing considerations in tension, while A merely reports the data without synthesis. || Answer A explicitly names both the user's gut prior (\"No Bay Area network\" reads as a real disadvantage) and a debiased counter-prior grounded in the track record (the 3-of-3 miss pattern suggests geographic penalty is over-weighted, and Austin has a growing SaaS ecosystem). It maintains a conversational, friend-like tone throughout. Answer B identifies the relevant bias pattern and cites the same track record, but stops short of articulating the user's actual prior or synthesizing a clear counter-consideration—it merely notes the data is \"suggestive but not directly analogous\" without helping the user navigate the tension. Answer B also uses clinical phrasing (\"conviction w=0.85\") without translation. The substantive difference is that A gives the user a framework to hold both considerations simultaneously, while B leaves the user to do that work alone."
+    },
+    {
+      "axis": "doesnt_force_fit_irrelevant_bias",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers correctly identify the relevant geography bias from the calibration profile and cite the same three resolved misses. However, they differ substantially in how they frame the insight. Answer A presents the track record data in clinical reference format (conviction weights, case IDs) but stops short of translating this into actionable guidance—it notes the pattern is \"suggestive but not directly analogous\" and offers no clear direction. Answer B does the harder work: it names both the user's gut prior (\"no Bay Area network\" is a real disadvantage) and the counter-prior (the 3-of-3 miss pattern suggests systematic over-weighting of geography as a penalty, especially given Austin's evolved ecosystem). Answer B also maintains a conversational, peer-to-peer tone throughout, whereas Answer A reads like a system dump. The substantive difference is that B actually helps the user hold two competing considerations in tension, while A merely reports the data without synthesis. || Answer A explicitly names both the user's gut prior (\"No Bay Area network\" reads as a real disadvantage) and a debiased counter-prior grounded in the track record (the 3-of-3 miss pattern suggests geographic penalty is over-weighted, and Austin has a growing SaaS ecosystem). It maintains a conversational, friend-like tone throughout. Answer B identifies the relevant bias pattern and cites the same track record, but stops short of articulating the user's actual prior or synthesizing a clear counter-consideration—it merely notes the data is \"suggestive but not directly analogous\" without helping the user navigate the tension. Answer B also uses clinical phrasing (\"conviction w=0.85\") without translation. The substantive difference is that A gives the user a framework to hold both considerations simultaneously, while B leaves the user to do that work alone."
+    }
+  ],
+  "win_score": 1,
+  "win_overall": "calibrated",
+  "per_axis_pass_rate": 1,
+  "failure_modes": []
+}

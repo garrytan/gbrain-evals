@@ -48,7 +48,7 @@ The [August 31 audit](docs/audit/2026-08-31-eval-audit.md) explains the finding 
 
 - [x] **Find out why relationship retrieval never fires on "who attended" questions.** Root-caused 2026-10-01 by N9 with a keyless repro: the meeting seed never resolves (the resolver returns entity pages only, ledger N9-4), and under the default schema pack attendance edges are stored meeting to person, the opposite of what the parser walks (N9-2 for frontmatter, N9-3 for body links). Fixes belong to the gbrain fix wave. [Report](docs/benchmarks/2026-10-01-n9-multi-hop.md).
 
-- [ ] **Re-run Cat14 with the current blind runner** (September 28 audit, A-01). The May 75% result is retracted. The current runner is blind, judges both orders at temperature 0 and calls `runThink`; the historical cost was about $0.05.
+- [x] **Re-run Cat14 with the current blind runner** (September 28 audit, A-01). Done 2026-10-02 at `d44296c` (about $0.30, not metered by the runner): 8/8 probes scored; calibrated advice preferred in 5 of 6 win-eligible probes, 0 for the plain answer; gate failed (counter to the usual pattern 2/4 against 80%, conversational voice 31% against 95%). [Report](docs/benchmarks/2026-10-02-cat14-rerun.md). Original text: The May 75% result is retracted. The current runner is blind, judges both orders at temperature 0 and calls `runThink`; the historical cost was about $0.05.
 
 - [ ] **Re-run the May snapshot categories with current runners** (September 28 audit, A-09 and Part B). Cats 19, 20 and 21 have hermetic or cheap live modes. Until receipts exist, the May rows stay marked invalid.
 
