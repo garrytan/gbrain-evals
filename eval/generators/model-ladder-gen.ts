@@ -491,7 +491,7 @@ if (import.meta.main) {
   const seed = Number(arg('--seed') ?? LADDER_DEFAULT_SEED);
   const out = resolve(arg('--out') ?? DEFAULT_LADDER_DIR);
   const world = generateLadderWorld(seed);
-  const text = JSON.stringify(world) + '\n';
+  const text = JSON.stringify(world, null, 1) + '\n';
   const path = join(out, 'world.json');
   if (process.argv.includes('--check')) {
     const same = existsSync(path) && readFileSync(path, 'utf8') === text;
