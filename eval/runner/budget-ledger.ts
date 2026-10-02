@@ -291,8 +291,34 @@ const RERANK_PRICES: Record<string, number> = {
   'voyage:rerank-2.5-lite': 0.02,
 };
 
+/**
+ * Chat list prices, USD per 1M tokens, checked against the providers' pricing
+ * pages on 2026-10-02. They take precedence over the pinned gbrain table,
+ * which lacks newer models and lists stale prices for some (gpt-5.5, gpt-5.2).
+ * Cache prices apply when the response reports cached tokens.
+ */
+export const CHAT_PRICE_OVERRIDES: Record<string, { input: number; output: number; cache_read?: number; cache_write?: number }> = {
+  'anthropic:claude-haiku-4-5': { input: 1, output: 5, cache_read: 0.1, cache_write: 1.25 },
+  'anthropic:claude-sonnet-4-5': { input: 3, output: 15, cache_read: 0.3, cache_write: 3.75 },
+  'anthropic:claude-sonnet-4-6': { input: 3, output: 15, cache_read: 0.3, cache_write: 3.75 },
+  'anthropic:claude-sonnet-5': { input: 2, output: 10, cache_read: 0.2, cache_write: 2.5 },
+  'anthropic:claude-sonnet-5-5': { input: 2, output: 10, cache_read: 0.2, cache_write: 2.5 },
+  'anthropic:claude-opus-4-6': { input: 5, output: 25, cache_read: 0.5, cache_write: 6.25 },
+  'anthropic:claude-opus-5': { input: 5, output: 25, cache_read: 0.5, cache_write: 6.25 },
+  'anthropic:claude-opus-5-5': { input: 4, output: 20, cache_read: 0.2, cache_write: 5 },
+  'openai:gpt-5.2': { input: 1.75, output: 14, cache_read: 0.175 },
+  'openai:gpt-5.4': { input: 2.5, output: 15, cache_read: 0.25 },
+  'openai:gpt-5.4-mini': { input: 0.75, output: 4.5, cache_read: 0.075 },
+  'openai:gpt-5.5': { input: 5, output: 30, cache_read: 0.5 },
+  'openai:gpt-6-sol': { input: 2, output: 10, cache_read: 0.2 },
+  'openai:gpt-6.1-sol': { input: 2, output: 10, cache_read: 0.1, cache_write: 2.5 },
+};
+
 /** A dated API snapshot (`gpt-4o-2024-08-06`) is billed at its family's list price. */
-const chatPrice = (id: string) => canonicalLookup(id) ?? canonicalLookup(id.replace(/-\d{4}-\d{2}-\d{2}$/, ''));
+const chatPrice = (id: string) => {
+  const undated = id.replace(/-\d{4}-?\d{2}-?\d{2}$/, '');
+  return CHAT_PRICE_OVERRIDES[id] ?? CHAT_PRICE_OVERRIDES[undated] ?? canonicalLookup(id) ?? canonicalLookup(undated);
+};
 
 interface RequestPrice {
   provider: string;
@@ -301,6 +327,9 @@ interface RequestPrice {
   /** USD per 1M tokens. */
   input: number;
   output: number;
+  /** USD per 1M cached input tokens read / written, when the provider reports them. */
+  cache_read?: number;
+  cache_write?: number;
   /** Conservative input-token estimate (3 bytes per token). */
   inputTokens: number;
   maxOutputTokens: number;
@@ -317,6 +346,8 @@ function textBytes(value: unknown): number {
 export function priceRequest(url: string, body: unknown): RequestPrice | null {
   const provider = PAID_HOSTS[new URL(url).hostname];
   if (!provider) return null;
+  // Model listings are free metadata reads (providers' key probes use them).
+  if (/\/models(\/[^/]+)?\/?$/.test(new URL(url).pathname) && (body === undefined || body === null)) return null;
   const b = (body ?? {}) as Record<string, unknown>;
   const model = typeof b.model === 'string' ? b.model : '';
   if (!model) throw new BudgetExceededError(`paid request to ${url} names no model; cannot reserve its cost`);
@@ -346,7 +377,7 @@ export function priceRequest(url: string, body: unknown): RequestPrice | null {
   }
   const price = chatPrice(`${provider}:${model}`);
   if (!price) throw new BudgetExceededError(`no chat price for ${provider}:${model}; cannot reserve its cost`);
-  return { provider, model, kind: 'chat', input: price.input, output: price.output, inputTokens, maxOutputTokens };
+  return { provider, model, kind: 'chat', input: price.input, output: price.output, cache_read: price.cache_read, cache_write: price.cache_write, inputTokens, maxOutputTokens };
 }
 
 /** Worst-case reservation: input estimate plus the full output allowance. */
@@ -364,7 +395,15 @@ export function usageCost(price: RequestPrice, responseBody: unknown): { usd: nu
   const outputTokens = n('output_tokens') + n('completion_tokens');
   if (inputTokens === 0 && outputTokens === 0) return null;
   const reported = price.provider === 'openrouter' && typeof usage.cost === 'number' ? usage.cost as number : null;
-  return { usd: reported ?? (inputTokens * price.input + outputTokens * price.output) / 1e6, input_tokens: inputTokens, output_tokens: outputTokens };
+  if (reported !== null) return { usd: reported, input_tokens: inputTokens, output_tokens: outputTokens };
+  // Cached input: Anthropic reports reads and writes beside input_tokens; OpenAI counts cached tokens inside input_tokens.
+  const details = (usage.input_tokens_details ?? usage.prompt_tokens_details) as Record<string, unknown> | undefined;
+  const openaiCached = typeof details?.cached_tokens === 'number' ? details.cached_tokens as number : 0;
+  const cacheRead = n('cache_read_input_tokens') + openaiCached;
+  const cacheWrite = n('cache_creation_input_tokens');
+  const usd = ((inputTokens - cacheRead - cacheWrite) * price.input + cacheRead * (price.cache_read ?? price.input)
+    + cacheWrite * (price.cache_write ?? price.input) + outputTokens * price.output) / 1e6;
+  return { usd, input_tokens: inputTokens, output_tokens: outputTokens };
 }
 
 async function requestBody(input: RequestInfo | URL, init?: RequestInit): Promise<unknown> {
