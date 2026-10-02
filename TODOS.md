@@ -42,7 +42,7 @@ The [August 31 audit](docs/audit/2026-08-31-eval-audit.md) explains the finding 
 
 - [ ] **Run matched-reader answer accuracy** (September 28 audit, B6). Run gbrain retrieval with a GPT-4o reader and a frontier reader, notes first, so answer accuracy can be compared with published results that used the same reader. Until then README claims no answer-accuracy ranking. Done for GPT-4o on 2026-09-29: 430/500 with LongMemEval's official reading prompt on the house retrieval, not a demonstrated difference from the house reader's 439/500. The frontier-reader arm is still open.
 
-- [ ] **Add a vector-plus-reranker concept cell** (September 28 audit, B2). The README concept comparison is 102/181 for gbrain against 118/181 for vectors without reranking; gbrain with reranking scored 130/181, but vectors with the same reranker were never run.
+- [x] **Add a vector-plus-reranker concept cell** (September 28 audit, B2). Done 2026-10-02 at `d44296c` ($1.09 including a smoke run): on the 181 held-out questions vectors with gbrain's Voyage reranker put an exact target first on 128, gbrain with it on 130 (8 first places won, 10 lost; p = 0.81), vectors alone 118, gbrain alone 99. The README now quotes the matched set. [Report](docs/benchmarks/2026-10-02-concept-vector-rerank.md). Original text: The README concept comparison is 102/181 for gbrain against 118/181 for vectors without reranking; gbrain with reranking scored 130/181, but vectors with the same reranker were never run.
 
 - [x] **Fix the attendance link direction in the relationship fixture** (September 28 audit, B3). Done in 0.10.1 for the Cat 2 answer key (now `person → meeting`, gbrain's stored orientation).
 

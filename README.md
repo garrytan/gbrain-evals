@@ -171,13 +171,16 @@ comparison. [Read the study](docs/benchmarks/2026-09-25-reading-notes.md).
 
 **It can find an idea described in different words, with a reranker.** On our
 held-out concept questions, gbrain with a reranker put an exact target first
-on **130/181 questions**. A reranker reads candidate passages again together
-with the question. Without it, gbrain scored 102/181, below vector search
-alone at 118/181. We have not yet run vector search with the same reranker, so
-the like-for-like comparison is 102 against 118 without reranking. The
-reranker gained 37 questions and lost 9. For concept questions, test gbrain
-with reranking and keep vector search as a serious alternative.
-[Compare all six configurations](docs/benchmarks/2026-09-09-retrieval-refresh.md#concept-search-order-meaning-and-popularity).
+on **130/181 questions** (October 2, 2026, gbrain `d44296c`). A reranker reads
+candidate passages again together with the question. Vector search with the
+same Voyage reranker scored 128/181; question by question, gbrain won first
+place on 8 and lost it on 10, so the two are level on this test. Without
+reranking, gbrain scored 99/181 and vector search 118/181. Reranking gained
+gbrain 40 questions and lost 9. For concept questions, run gbrain with
+reranking, and when you compare it with a vector store, rerank both.
+[Read the matched comparison](docs/benchmarks/2026-10-02-concept-vector-rerank.md).
+The September 9 cells at an older pin (102, 118 and 130 of 181) remain in the
+[retrieval refresh](docs/benchmarks/2026-09-09-retrieval-refresh.md#concept-search-order-meaning-and-popularity).
 
 **It has a way to use relationships as evidence.** Suppose you ask who invested
 in Acme. Searching for “Acme” finds pages that mention the company. Following an
