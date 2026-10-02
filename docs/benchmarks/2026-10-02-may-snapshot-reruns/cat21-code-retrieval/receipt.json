@@ -1,0 +1,286 @@
+{
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "cat21-code-retrieval",
+  "gbrain_version": "0.60.30.0",
+  "gbrain_pin": "github:garrytan/gbrain#d44296cf4d6481a10eb85562d3179e38cfd02c43",
+  "started_at": "2026-10-02T16:57:00.695Z",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 24,
+  "n_scored": 24,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "resolved_config": {
+    "search_mode": "balanced",
+    "reranker_enabled": false,
+    "pinned_config": {
+      "search.mode": "balanced",
+      "search.reranker.enabled": "false",
+      "search.expansion": "false",
+      "search.autocut": "false",
+      "search.tokenBudget": "1000000"
+    },
+    "embed_transport": "live",
+    "max_file_chars": 36000,
+    "distractors": 48,
+    "exclude_gold": false,
+    "chunk_fetch_limit": 30,
+    "min_mrr_gate": 0.5,
+    "min_mrr_gate_mode": "live-quality",
+    "cells": {
+      "voyage-code-3": {
+        "embedder": "voyage:voyage-code-3",
+        "dim": 1024
+      },
+      "openai-default": {
+        "embedder": "openai:text-embedding-3-large",
+        "dim": 1536
+      }
+    },
+    "corpus": "gbrain-src-core"
+  },
+  "finished_at": "2026-10-02T16:59:22.874Z",
+  "data": {
+    "cells": [
+      {
+        "cell": "voyage-code-3",
+        "embedder": "voyage:voyage-code-3",
+        "dim": 1024,
+        "files_planned": 60,
+        "files_ok": 60,
+        "files_failed": 0,
+        "first_ingest_error": null,
+        "gold_present": 12,
+        "gold_missing": [],
+        "queries_total": 12,
+        "queries_scored": 12,
+        "query_errors": 0,
+        "degraded_queries": 0,
+        "rerank_scored_queries": 0,
+        "top1_hits": 12,
+        "mrr": 1,
+        "recall_at_5": 1,
+        "mean_query_ms": 235.91666666666666,
+        "p50_query_ms": 233.5,
+        "ingest_ms": 82200,
+        "valid": true,
+        "invalid_reasons": [],
+        "per_query": [
+          {
+            "id": "q01",
+            "rank": 1,
+            "top1": true,
+            "ms": 279
+          },
+          {
+            "id": "q02",
+            "rank": 1,
+            "top1": true,
+            "ms": 243
+          },
+          {
+            "id": "q03",
+            "rank": 1,
+            "top1": true,
+            "ms": 251
+          },
+          {
+            "id": "q04",
+            "rank": 1,
+            "top1": true,
+            "ms": 226
+          },
+          {
+            "id": "q05",
+            "rank": 1,
+            "top1": true,
+            "ms": 241
+          },
+          {
+            "id": "q06",
+            "rank": 1,
+            "top1": true,
+            "ms": 208
+          },
+          {
+            "id": "q07",
+            "rank": 1,
+            "top1": true,
+            "ms": 222
+          },
+          {
+            "id": "q08",
+            "rank": 1,
+            "top1": true,
+            "ms": 215
+          },
+          {
+            "id": "q09",
+            "rank": 1,
+            "top1": true,
+            "ms": 231
+          },
+          {
+            "id": "q10",
+            "rank": 1,
+            "top1": true,
+            "ms": 236
+          },
+          {
+            "id": "q11",
+            "rank": 1,
+            "top1": true,
+            "ms": 258
+          },
+          {
+            "id": "q12",
+            "rank": 1,
+            "top1": true,
+            "ms": 221
+          }
+        ]
+      },
+      {
+        "cell": "openai-default",
+        "embedder": "openai:text-embedding-3-large",
+        "dim": 1536,
+        "files_planned": 60,
+        "files_ok": 60,
+        "files_failed": 0,
+        "first_ingest_error": null,
+        "gold_present": 12,
+        "gold_missing": [],
+        "queries_total": 12,
+        "queries_scored": 12,
+        "query_errors": 0,
+        "degraded_queries": 0,
+        "rerank_scored_queries": 0,
+        "top1_hits": 12,
+        "mrr": 1,
+        "recall_at_5": 1,
+        "mean_query_ms": 316.75,
+        "p50_query_ms": 299.5,
+        "ingest_ms": 49387,
+        "valid": true,
+        "invalid_reasons": [],
+        "per_query": [
+          {
+            "id": "q01",
+            "rank": 1,
+            "top1": true,
+            "ms": 360
+          },
+          {
+            "id": "q02",
+            "rank": 1,
+            "top1": true,
+            "ms": 384
+          },
+          {
+            "id": "q03",
+            "rank": 1,
+            "top1": true,
+            "ms": 318
+          },
+          {
+            "id": "q04",
+            "rank": 1,
+            "top1": true,
+            "ms": 280
+          },
+          {
+            "id": "q05",
+            "rank": 1,
+            "top1": true,
+            "ms": 278
+          },
+          {
+            "id": "q06",
+            "rank": 1,
+            "top1": true,
+            "ms": 325
+          },
+          {
+            "id": "q07",
+            "rank": 1,
+            "top1": true,
+            "ms": 409
+          },
+          {
+            "id": "q08",
+            "rank": 1,
+            "top1": true,
+            "ms": 281
+          },
+          {
+            "id": "q09",
+            "rank": 1,
+            "top1": true,
+            "ms": 275
+          },
+          {
+            "id": "q10",
+            "rank": 1,
+            "top1": true,
+            "ms": 275
+          },
+          {
+            "id": "q11",
+            "rank": 1,
+            "top1": true,
+            "ms": 351
+          },
+          {
+            "id": "q12",
+            "rank": 1,
+            "top1": true,
+            "ms": 265
+          }
+        ]
+      }
+    ],
+    "comparison": {
+      "valid": true,
+      "over_cells": [
+        "voyage-code-3",
+        "openai-default"
+      ],
+      "best_by_mrr": "voyage-code-3",
+      "note": null
+    },
+    "verdict_reasons": [
+      "all 2 cells valid with MRR >= 0.5"
+    ],
+    "queries": 12,
+    "infra_error_rate": 0
+  },
+  "accounting": {
+    "planned": 24,
+    "attempted": 24,
+    "scored": 24,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "cost": null,
+  "latency_ms": null,
+  "delivered_tokens": null,
+  "execution": {
+    "source_tree": {
+      "sha256": "c060ae020865a62ea349e079ce6a71c024ab7b7112e2240fb800a6d806fe900b",
+      "files": 2535,
+      "git_head": "4a0c930b818deee2c84b6c6295bdce3cb382c370",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#d44296cf4d6481a10eb85562d3179e38cfd02c43",
+      "declared_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+      "version": "0.60.30.0",
+      "package_sha256": "cab9a29878d395587525de2d77a47f59d864643d64fc70ff942e507fb4cbd7b2",
+      "loaded_git_head": null
+    }
+  }
+}

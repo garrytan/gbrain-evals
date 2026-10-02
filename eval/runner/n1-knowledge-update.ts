@@ -34,8 +34,15 @@
  * and is recorded as a gap. Gating metrics (data.metrics) aggregate the
  * PGLite cells; Postgres cells are report-only (data.metrics_postgres).
  *
+ * CI slice (`--slice ci`, registry entry knowledge-update-ci): four of the
+ * nine ledger entities on one PGLite cell served over stdio MCP by the gbrain
+ * CLI, with the trusted controls read through `gbrain call`. The entity list,
+ * cell and floors were preregistered on 2026-10-02 before any slice run
+ * (docs/benchmarks/2026-10-02-ci-slices-preregistration.md).
+ *
  * Usage: bun eval/runner/n1-knowledge-update.ts [--seed N] [--output <dir>] [--gbrain <checkout>[@ref]]
  *          [--engines pglite,postgres] [--interfaces cli,mcp-stdio,mcp-http] [--pg-url <url>] [--concurrency N] [--json]
+ *        bun eval/runner/n1-knowledge-update.ts --slice ci [--output <dir>]
  */
 import { mkdirSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -59,6 +66,7 @@ import {
   N1_DEFAULT_SEED, N1_GENERATOR_VERSION, ROUNDS, fenceRowsAt, generateN1World, n1ExposureProbes, n1Probes, ontologyObservationsAt, privateTokens, renderEntityPage,
   type ExposureProbe, type GoldState, type N1Ledger, type N1Probe, type N1World, type Round,
 } from '../generators/n1-knowledge-update-gen.ts';
+import { fingerprint } from '../generators/seeded.ts';
 
 export const CATEGORY = 'n1-knowledge-update';
 export const CHECKPOINTS = ['updated', 'restart', 'reimport', 'concurrent'] as const;
@@ -439,6 +447,31 @@ export function aggregate(cells: readonly CellOutcome[]): N1Metrics & { cells: n
   return { ...n1Metrics(rows, { private_value_leaks: leaks, exposure, acknowledged_writes_lost: lost }), cells: cells.length, void_cells: cells.filter(c => c.void_reason || c.fatal).length };
 }
 
+/** The preregistered CI slice: which entities, which cell. */
+export const N1_CI_SLICE = {
+  name: 'ci',
+  entities: ['people/alder-example', 'people/birch-example', 'people/ember-example', 'companies/kappa-example'],
+  engines: ['pglite'] as Engine[],
+  interfaces: ['mcp-stdio'] as Iface[],
+  preregistration: 'docs/benchmarks/2026-10-02-ci-slices-preregistration.md',
+} as const;
+
+/** The ledger restricted to `entities`: every chain on a kept entity, unchanged; the ghost key stays. */
+export function sliceN1World(world: N1World, entities: readonly string[]): N1World {
+  const keep = new Set(entities);
+  const l = world.ledger;
+  const missing = entities.filter(e => !l.entities.some(x => x.slug === e));
+  if (missing.length) throw new Error(`slice names entities the ledger does not have: ${missing.join(', ')}`);
+  const ledger: N1Ledger = {
+    ...l,
+    entities: l.entities.filter(e => keep.has(e.slug)),
+    fence: l.fence.filter(c => keep.has(c.entity)),
+    ontology: l.ontology.filter(c => keep.has(c.entity)),
+    trajectory: l.trajectory.filter(c => keep.has(c.entity)),
+  };
+  return { ledger, fingerprint: fingerprint(ledger) };
+}
+
 function argValue(argv: readonly string[], flag: string): string | undefined {
   const at = argv.indexOf(flag);
   if (at >= 0) return argv[at + 1];
@@ -453,22 +486,27 @@ async function main(): Promise<void> {
   const log = json ? () => {} : (s: string) => console.log(s);
   const seed = Number(argValue(argv, '--seed') ?? N1_DEFAULT_SEED);
   if (!Number.isInteger(seed)) throw new Error('--seed needs an integer');
-  const engines = (argValue(argv, '--engines') ?? 'pglite,postgres').split(',') as Engine[];
-  const ifaces = (argValue(argv, '--interfaces') ?? IFACES.join(',')).split(',') as Iface[];
+  const sliceName = argValue(argv, '--slice');
+  if (sliceName !== undefined && sliceName !== N1_CI_SLICE.name) throw new Error(`--slice takes ${N1_CI_SLICE.name}, not ${sliceName}`);
+  const slice = sliceName ? N1_CI_SLICE : null;
+  if (slice && (argValue(argv, '--engines') || argValue(argv, '--interfaces') || argValue(argv, '--seed') || paidRequested(argv))) throw new Error('--slice ci fixes the seed, engine and interface; drop --seed, --engines, --interfaces and --paid');
+  const engines = slice ? [...slice.engines] : (argValue(argv, '--engines') ?? 'pglite,postgres').split(',') as Engine[];
+  const ifaces = slice ? [...slice.interfaces] : (argValue(argv, '--interfaces') ?? IFACES.join(',')).split(',') as Iface[];
   for (const e of engines) if (!ENGINES.includes(e)) throw new Error(`--engines takes ${ENGINES.join(',')}, not ${e}`);
   for (const i of ifaces) if (!IFACES.includes(i)) throw new Error(`--interfaces takes ${IFACES.join(',')}, not ${i}`);
   const pgAdminUrl = argValue(argv, '--pg-url') ?? process.env.LIFECYCLE_PG_URL ?? 'postgres://postgres@127.0.0.1:55432/postgres';
   const concurrency = Number(argValue(argv, '--concurrency') ?? '3');
   const output = argValue(argv, '--output');
-  const outPath = output ? join(output, 'receipt.json') : receiptPath(CATEGORY);
+  const outPath = output ? join(output, 'receipt.json') : receiptPath(slice ? `${CATEGORY}-ci` : CATEGORY);
   // Cells live outside this checkout: gbrain init refuses a content directory inside another Git repository.
   const work = resolve(argValue(argv, '--work') ?? mkdtempSync(join(tmpdir(), `${CATEGORY}-cells-`)));
   mkdirSync(work, { recursive: true });
   const startedAt = new Date().toISOString();
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
-  log(`# BrainBench N1: knowledge update and supersession (gbrain ${gut.version}${gut.overlay ? `, overlay ${gut.overlay.build.commit.slice(0, 7)}` : ', pinned'})`);
+  log(`# BrainBench N1${slice ? ' CI slice' : ''}: knowledge update and supersession (gbrain ${gut.version}${gut.overlay ? `, overlay ${gut.overlay.build.commit.slice(0, 7)}` : ', pinned'})`);
 
-  const world = generateN1World({ seed });
+  const fullWorld = generateN1World({ seed });
+  const world = slice ? sliceN1World(fullWorld, slice.entities) : fullWorld;
   if (paidRequested(argv)) {
     const paid = await runPaidArm(gut, world.ledger, argv, log);
     const count = (kind: PaidPair['kind'], status: string) => paid.pairs.filter(p => p.kind === kind && p.status === status).length;
@@ -519,7 +557,7 @@ async function main(): Promise<void> {
   const harnessErrors = result.cells.filter(c => c.fatal || c.void_reason).map(c => ({ probe_id: c.id, origin: 'harness' as const, message: (c.void_reason ?? c.fatal ?? '').slice(0, 500) }));
   const allRows = pglite.flatMap(c => Object.values(c.checkpoints).flatMap(cp => cp!.rows));
   const sutErrors = allRows.filter(r => r.error).slice(0, 50).map(r => ({ probe_id: r.probe_id, origin: 'sut' as const, message: r.error!.slice(0, 300) }));
-  const entry = registryEntry('N1')!;
+  const entry = registryEntry(slice ? 'N1-ci' : 'N1')!;
   const pgliteVoid = pglite.length === 0 || pglite.some(c => c.fatal || c.void_reason);
   const runStatus = pgliteVoid ? 'error' : 'completed';
   const safety = {
@@ -558,6 +596,7 @@ async function main(): Promise<void> {
       harness: 'eval/runner/lifecycle/slice.ts (lifecycle drivers: trusted local CLI `gbrain call`, stdio `gbrain serve`, HTTP `gbrain serve --http` with an OAuth client_credentials client bound to the vault source)',
       init: '`gbrain init --no-embedding --non-interactive` (managed persistence, keyword search only), a git vault as the default source',
       seed, generator_version: N1_GENERATOR_VERSION, ledger_sha256: world.fingerprint,
+      slice: slice ? { ...slice, full_ledger_sha256: fullWorld.fingerprint } : null,
       checkpoints: CHECKPOINTS,
       oracle: {
         fence: 'the author\'s own fence: the active row is current, struck rows are history (eval/generators/n1-knowledge-update-gen.ts fenceRowsAt)',
@@ -567,7 +606,7 @@ async function main(): Promise<void> {
       gating_scope: 'data.metrics aggregates the PGLite cells; data.metrics_postgres is report-only outside CI',
       gbrain_overlay: overlaySummary(gut),
     },
-    hashes: { ledger_sha256: world.fingerprint },
+    hashes: { ledger_sha256: world.fingerprint, ...(slice ? { full_ledger_sha256: fullWorld.fingerprint } : {}) },
     started_at: startedAt,
     finished_at: new Date().toISOString(),
     data: {

@@ -189,3 +189,34 @@ bun eval/runner/n6-visibility-fuzz.ts --seed 7 --only entity,get_page   # anothe
 No keys: the runner removes provider keys from its environment and points `GBRAIN_HOME` at a temp directory. `--gbrain` (or `GBRAIN_UNDER_TEST`) extracts the ref with `git archive` into `.gbrain-overlays/`, installs it and verifies the copy (tree hash, no symlinks, CLI version); uncommitted edits in the checkout are not measured and the receipt says whether it was dirty. When the evidence-delivery code lands, rerun the third command: `return_unit` values are fuzzed as enum variants, `assemble_evidence` gets hit lists naming each protected target, and the receipt's `expansion_paths.per_unit` reports them.
 
 Receipts (schema v2, scrubbed; produced by gbrain-evals commit `ce612e2` on a clean tree): [pin](2026-09-30-n6-visibility-fuzz/receipt-pin.json), [master](2026-09-30-n6-visibility-fuzz/receipt-master.json), [evidence-delivery branch](2026-09-30-n6-visibility-fuzz/receipt-evidence-delivery.json). Each holds the per-op table, every finding with evidence, every gate outcome, the presence checks and the uncovered ops with reasons.
+
+## Update, 2026-10-02: three more surfaces seeded (30 of 74 read ops covered)
+
+At gbrain `d44296c`, 48 of 74 read ops returned no protected content even to the trusted local caller, so N6 could not test them for leaks. Generator v2 (`n6-visibility-v2`) keeps every v1 class and marker and adds three cheap, keyless classes outside page bodies:
+
+| Class | Protected content | Public twin | Ops it newly reaches |
+|---|---|---|---|
+| `private_ontology` | a `private` ontology observation on the public person page, written with `ontology_propose` | a `world` observation on the same page | `ontology_get` |
+| `private_raw_data` | raw data attached to the private note with `put_raw_data` | raw data on its public twin note | `get_raw_data` |
+| `private_orphan` | a `visibility: private` note with no links | a public orphan note | `find_orphans`, `volunteer_chronicle` |
+
+| Measurement (gbrain `d44296c`, seed 20260930) | v1 (October 2 offline tier) | v2 |
+|---|---:|---:|
+| Read ops with at least one signal-bearing probe | 26 of 74 | 30 of 74 |
+| Exposed probes | 4,046 | 5,984 |
+| Probes with signal | 1,578 | 2,230 |
+| Content, existence and oracle leaks | 0, 0, 0 | 0, 0, 0 |
+| Access-gate bypasses | 0 of 90 | 0 of 90 |
+
+The two new non-page classes have their own positive controls: the trusted local caller must read the private ontology value through `ontology_get` and the private raw data through `get_raw_data`, or the run voids. Both passed.
+
+Still uncovered, with the reason each op gave the trusted local caller:
+
+- `list_skills`, `get_skill`, `list_brain_skillpack`, `advisor`: not published over MCP by the brain owner (a configuration gate), so nothing reaches any caller.
+- `code_def`, `code_refs`, `code_callers`, `code_callees`, `code_blast`, `code_flow`: "temporarily unavailable to agent callers" at this pin.
+- `synthesize`: needs a chat model; `search_by_image`: needs an image.
+- `ontology_dimensions` and `ontology_conflicts`: dimension names carry no marker, and a second private value on the same dimension did not produce a conflict, so that attempt was dropped.
+- Schema-pack, aggregate and identity ops (`schema_*`, `takes_scorecard`, `takes_calibration`, `get_calibration_profile`, `find_anomalies`, `find_experts`, `entity_identity_list`, `extraction_pending`, `find_contradictions`, `open_loops`, `volunteer_context`): each needs its own fixture (resolved Takes, calibration rows, stored contradiction runs, Gmail-shaped loops, an entity-mentioning window) and was not cheap enough for this pass. Postgres and the network HTTP transport remain unexercised.
+
+Receipt: [receipt-v2-d44296c.json](2026-09-30-n6-visibility-fuzz/receipt-v2-d44296c.json). Cost $0, about 25 s.
+

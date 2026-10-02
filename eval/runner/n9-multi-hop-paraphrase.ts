@@ -33,7 +33,9 @@
  * Decision rules and void conditions: docs/benchmarks/2026-10-01-n9-multi-hop-preregistration.md.
  */
 import { createHash } from 'node:crypto';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { spawn } from 'node:child_process';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { PGLiteEngine } from 'gbrain/pglite-engine';
 import { buildRelationalQueries, loadWorldCorpus } from './queries/relational.ts';
@@ -229,6 +231,11 @@ export interface N9Options {
   search?: RelationalSearch;
   /** Test seam: a smaller corpus directory (gold is then regenerated from it, not read from the committed file). */
   corpusDir?: string;
+  /** Run each ingestion seed's index in its own process (hermetic arm, default on); results merge in seed order. */
+  parallelSeeds?: boolean;
+  /** Internal: index one seed and write its rows to `workerOut` instead of scoring. */
+  workerSeed?: number;
+  workerOut?: string;
 }
 
 export function parseN9Args(argv: readonly string[]): N9Options {
@@ -245,6 +252,9 @@ export function parseN9Args(argv: readonly string[]): N9Options {
     else if (flag === '--output') o.outputDir = value();
     else if (flag === '--record-bugs') o.recordBugs = true;
     else if (flag === '--quiet') o.quiet = true;
+    else if (flag === '--serial-seeds') o.parallelSeeds = false;
+    else if (flag === '--worker-seed') o.workerSeed = Number(value());
+    else if (flag === '--worker-out') o.workerOut = value();
     else if (flag === '--paid') continue;
     else if (flag === '--gbrain' || flag === '--budget-run-id' || flag === '--budget-ledger') value();
     else if (flag.startsWith('--gbrain=') || flag.startsWith('--budget-run-id=')) continue;
@@ -267,6 +277,91 @@ const sha256 = (v: string | Buffer) => createHash('sha256').update(v).digest('he
 
 export interface N9Result { receipt: Receipt; exitCode: number; findings: BugEntry[] }
 
+type Presence = { seed: number; anchors: number; found: number; rate: number };
+interface SeedRun { rows: PairedRow[]; indices: Array<Record<string, unknown>>; presence: Presence[]; accounting: ReturnType<ProbeAccounting['toJSON']> }
+
+/** Everything both the scorer and a seed worker need: the product, corpus, questions and query list. */
+async function prepareN9(options: N9Options, paid: boolean) {
+  const gut: GbrainUnderTest = resolveGbrainUnderTest(options.gbrainSpec ?? null);
+  const product: RelationalProduct = await loadRelationalProduct(gut);
+  const corpusDir = options.corpusDir ?? join(import.meta.dir, '../data/world-v1');
+  const pages = loadWorldCorpus(corpusDir);
+  const file = loadN9Questions(options.corpusDir);
+  const questions = file.questions;
+  const composedQueries: SharedIndexQuery[] = questions.flatMap(q => ([
+    ['composed-template', q.template_text], ['composed-paraphrase', q.paraphrase_text],
+  ] as const).map(([split, text]) => ({
+    id: `${q.id}-${split === 'composed-template' ? 't' : 'p'}`, tier: 'hard' as const, text,
+    expected_output_type: 'cited-source-pages' as const, gold: { relevant: q.required }, split, template: q.family, limit: N9_K,
+  })));
+  const oneHop: SharedIndexQuery[] = paid ? [] : (() => {
+    const templates = buildRelationalQueries(pages).map(q => ({ ...q, split: 'template' as const, template: templateOfText(q.text) }));
+    const paraphrases = paraphraseQueries(templates, options.corpusDir);
+    return [
+      ...templates.map(q => ({ ...q, split: 'one-hop-template', limit: RELATIONAL_LIMIT })),
+      ...paraphrases.map(q => ({ ...q, split: 'one-hop-paraphrase', limit: RELATIONAL_LIMIT })),
+    ];
+  })();
+  const anchors = [...new Map(questions.map(q => [q.anchor, q.anchor_name])).entries()];
+  return { gut, product, pages, file, questions, composedQueries, queries: [...composedQueries, ...oneHop], anchors };
+}
+
+/** Build each seed's index in this process and run every paired query over it, plus the anchor presence probe. */
+async function indexSeeds(prep: Awaited<ReturnType<typeof prepareN9>>, seeds: readonly number[], embed: EmbedMode, options: N9Options, accounting: ProbeAccounting, log: (s: string) => void): Promise<Omit<SeedRun, 'accounting'>> {
+  const { product, pages, queries, anchors } = prep;
+  const presence: Presence[] = [];
+  const run = await runSharedIndexPairs({
+    product, pages, queries, seeds, embed, search: options.search, accounting, log,
+    afterIndex: async (engine: PGLiteEngine, seed: number, search: RelationalSearch) => {
+      let found = 0;
+      for (const [slug, name] of anchors) {
+        const vector = embed === 'keyword' ? null : await product.embedQuery(name);
+        const pair = await searchRelationalPair(engine, { id: `presence-${slug}`, text: name }, vector, search, { limit: N9_K });
+        if (pair.off.pages.includes(slug)) found += 1;
+      }
+      presence.push({ seed, anchors: anchors.length, found, rate: found / anchors.length });
+    },
+  });
+  return { rows: run.rows, indices: run.indices, presence };
+}
+
+/**
+ * The same per-seed work, one child process per seed. Seeds are independent
+ * (each builds a fresh index), so the merged rows equal a serial run's apart
+ * from timing fields. Children inherit this process's stripped environment
+ * and enter their own hermetic environment.
+ */
+async function indexSeedsInWorkers(seeds: readonly number[], options: N9Options, log: (s: string) => void): Promise<SeedRun[]> {
+  const dir = mkdtempSync(join(tmpdir(), 'n9-seeds-'));
+  try {
+    return await Promise.all(seeds.map(seed => new Promise<SeedRun>((resolve, reject) => {
+      const out = join(dir, `seed-${seed}.json`);
+      const args = [import.meta.path, '--worker-seed', String(seed), '--worker-out', out, '--quiet', ...(options.gbrainSpec ? ['--gbrain', options.gbrainSpec] : [])];
+      const child = spawn(process.execPath, args, { stdio: ['ignore', 'ignore', 'pipe'] });
+      let stderr = '';
+      child.stderr.on('data', (c: Buffer) => { stderr += c.toString(); });
+      child.on('error', reject);
+      child.on('close', code => {
+        if (code !== 0) { reject(new Error(`N9 seed ${seed} worker exited ${code}: ${stderr.trim().split('\n').slice(-5).join(' | ')}`)); return; }
+        log(`Relational OFF/ON: ingestion seed ${seed} finished in its own process`);
+        resolve(JSON.parse(readFileSync(out, 'utf8')) as SeedRun);
+      });
+    })));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+/** Worker entry (`--worker-seed`): index one seed and write its rows; no scoring and no receipt. */
+async function runN9Worker(options: N9Options): Promise<void> {
+  await withHermeticEnv('n9', async () => {
+    const prep = await prepareN9(options, false);
+    const accounting = new ProbeAccounting(prep.queries.length * 2);
+    const run = await indexSeeds(prep, [options.workerSeed!], 'keyword', options, accounting, () => {});
+    writeFileSync(options.workerOut!, JSON.stringify({ ...run, accounting: accounting.toJSON() } satisfies SeedRun));
+  });
+}
+
 export async function runN9(options: N9Options = {}): Promise<N9Result> {
   const paid = options.paidArgv !== null && options.paidArgv !== undefined;
   if (paid) requirePaidArm(options.paidArgv!, { arm: 'N9 paid arm (hybrid search with OpenAI embeddings)', estimateUsd: N9_PAID_ESTIMATE_USD });
@@ -285,30 +380,10 @@ async function runN9Inner(options: N9Options, paid: boolean): Promise<N9Result> 
   const log = options.quiet ? (_: string) => {} : (s: string) => console.log(s);
   const seeds = options.seeds ?? [...RELATIONAL_SEEDS];
   const embed: EmbedMode = paid ? 'openai' : 'keyword';
-  const gut: GbrainUnderTest = resolveGbrainUnderTest(options.gbrainSpec ?? null);
-  const product: RelationalProduct = await loadRelationalProduct(gut);
+  const prep = await prepareN9(options, paid);
+  const { gut, product, pages, file, questions, composedQueries, queries } = prep;
   const { parseRelationalQuery } = await importGbrain<{ parseRelationalQuery: (q: string) => ParsedRelational | null }>(gut, 'src/core/search/relational-intent.ts');
-  const corpusDir = options.corpusDir ?? join(import.meta.dir, '../data/world-v1');
-  const pages = loadWorldCorpus(corpusDir);
-  const file = loadN9Questions(options.corpusDir);
-  const questions = file.questions;
   const byId = new Map(questions.map(q => [q.id, q]));
-
-  const composedQueries: SharedIndexQuery[] = questions.flatMap(q => ([
-    ['composed-template', q.template_text], ['composed-paraphrase', q.paraphrase_text],
-  ] as const).map(([split, text]) => ({
-    id: `${q.id}-${split === 'composed-template' ? 't' : 'p'}`, tier: 'hard' as const, text,
-    expected_output_type: 'cited-source-pages' as const, gold: { relevant: q.required }, split, template: q.family, limit: N9_K,
-  })));
-  const oneHop: SharedIndexQuery[] = paid ? [] : (() => {
-    const templates = buildRelationalQueries(pages).map(q => ({ ...q, split: 'template' as const, template: templateOfText(q.text) }));
-    const paraphrases = paraphraseQueries(templates, options.corpusDir);
-    return [
-      ...templates.map(q => ({ ...q, split: 'one-hop-template', limit: RELATIONAL_LIMIT })),
-      ...paraphrases.map(q => ({ ...q, split: 'one-hop-paraphrase', limit: RELATIONAL_LIMIT })),
-    ];
-  })();
-  const queries = [...composedQueries, ...oneHop];
 
   const capability: CapabilityRow[] = composedQueries.map(cq => {
     const q = byId.get(cq.id.slice(0, -2))!;
@@ -317,27 +392,27 @@ async function runN9Inner(options: N9Options, paid: boolean): Promise<N9Result> 
     return { question_id: q.id, split: cq.split, text: cq.text, parsed, ...classifyParse(q, parsed) };
   });
 
-  const anchors = [...new Map(questions.map(q => [q.anchor, q.anchor_name])).entries()];
-  const presence: Array<{ seed: number; anchors: number; found: number; rate: number }> = [];
+  const presence: Presence[] = [];
   const accounting = new ProbeAccounting(seeds.length * queries.length * 2);
   const paidRun = paid ? startPaidRun(CATEGORY, { ...budgetOptionsFrom(options.paidArgv!), estimateUsd: N9_PAID_ESTIMATE_USD, log }) : null;
   let rows: PairedRow[] = [];
   let indices: Array<Record<string, unknown>> = [];
+  const parallel = !paid && options.parallelSeeds !== false && !options.search && options.corpusDir === undefined && seeds.length > 1;
   try {
-    const run = await runSharedIndexPairs({
-      product, pages, queries, seeds, embed, search: options.search, accounting, log,
-      afterIndex: async (engine: PGLiteEngine, seed: number, search: RelationalSearch) => {
-        let found = 0;
-        for (const [slug, name] of anchors) {
-          const vector = embed === 'keyword' ? null : await product.embedQuery(name);
-          const pair = await searchRelationalPair(engine, { id: `presence-${slug}`, text: name }, vector, search, { limit: N9_K });
-          if (pair.off.pages.includes(slug)) found += 1;
-        }
-        presence.push({ seed, anchors: anchors.length, found, rate: found / anchors.length });
-      },
-    });
-    rows = run.rows;
-    indices = run.indices;
+    if (parallel) {
+      log(`Relational OFF/ON: ${seeds.length} ingestion seeds in parallel processes, ${queries.length} paired queries each (${embed})`);
+      for (const run of await indexSeedsInWorkers(seeds, options, log)) {
+        rows.push(...run.rows);
+        indices.push(...run.indices);
+        presence.push(...run.presence);
+        accounting.absorb(run.accounting);
+      }
+    } else {
+      const run = await indexSeeds(prep, seeds, embed, options, accounting, log);
+      rows = run.rows;
+      indices = run.indices;
+      presence.push(...run.presence);
+    }
   } finally {
     paidRun?.guard.uninstall();
   }
@@ -447,6 +522,7 @@ async function runN9Inner(options: N9Options, paid: boolean): Promise<N9Result> 
       composed_k_rows: N9_K,
       one_hop_k_rows: paid ? null : RELATIONAL_LIMIT,
       scoring_unit: 'distinct pages of the first k result rows, in product order',
+      seed_execution: parallel ? 'one child process per ingestion seed, merged in seed order (since gbrain-evals 0.10.7)' : 'serial, in this process',
       verdict_meaning: 'validity only (no harness error, presence held); the category has no safety contract or quality threshold (registry promotion rules), so no metric changes the verdict',
       question_file: { path: 'eval/data/n9-multihop-paraphrase-v1/questions.json', sha256: sha256(readFileSync(N9_QUESTIONS_PATH)), grammar_version: file.grammar_version, seed: file.seed, frames_sha256: file.frames_sha256 },
       gbrain_overlay: overlaySummary(gut),
@@ -514,7 +590,11 @@ function printSummary(
 }
 
 if (import.meta.main) {
-  runN9(parseN9Args(process.argv.slice(2)))
+  const options = parseN9Args(process.argv.slice(2));
+  if (options.workerSeed !== undefined) {
+    if (!options.workerOut) throw new Error('--worker-seed needs --worker-out');
+    runN9Worker(options).catch(e => { console.error(e); process.exitCode = 3; });
+  } else runN9(options)
     .then(r => { process.exitCode = r.exitCode; })
     .catch(e => { console.error(e instanceof Error && e.name === 'PaidArmRefusal' ? e.message : e); process.exitCode = 3; });
 }

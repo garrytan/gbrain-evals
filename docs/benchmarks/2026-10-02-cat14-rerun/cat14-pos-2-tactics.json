@@ -1,0 +1,79 @@
+{
+  "probe_id": "cat14-pos-2-tactics",
+  "category": "calibration-pattern-confidence-boost",
+  "question": "Founder wants to ship a half-baked v1 in 4 weeks vs polish for 4 months. Which call do I make?",
+  "baseline_answer": "## Answer\n\nThe brain's resolved takes consistently favor shipping fast over polishing:\n\n- **Founders who ship v1 in <30 days hit PMF faster** — recorded as correct with conviction weight 0.8 [cat14/cat14-pos-2-tactics/take-1].\n- **Polish-mode founders miss windows** — recorded as correct with conviction weight 0.75 [cat14/cat14-pos-2-tactics/take-2].\n- **Velocity is the leading indicator of breakout** — recorded as correct with conviction weight 0.85 [cat14/cat14-pos-2-tactics/take-3].\n\nAll three resolved takes point in the same direction: ship the half-baked v1 in 4 weeks. The 4-month polish path is associated with missing market windows and slower PMF discovery. The highest-conviction claim (w=0.85) frames velocity itself as the leading signal of breakout outcomes.\n\nNo contradicting takes exist in the brain on this question.",
+  "calibrated_answer": "## Answer\n\nThe brain's resolved takes consistently support the faster-shipping path:\n\n- **Founders who ship v1 in <30 days hit PMF faster** — recorded as correct (conviction weight 0.8) [cat14/cat14-pos-2-tactics/take-1]\n- **Polish-mode founders miss windows** — recorded as correct (conviction weight 0.75) [cat14/cat14-pos-2-tactics/take-2]\n- **Velocity is the leading indicator of breakout** — recorded as correct (conviction weight 0.85) [cat14/cat14-pos-2-tactics/take-3]\n\nAll three resolved takes point in the same direction: the 4-week \"half-baked\" ship aligns with the pattern that produced PMF faster and avoided missed windows, while the 4-month polish path matches the pattern associated with missing windows.\n\n## Calibration\n\nGarry's calibration profile flags **well-calibrated-tactics**: 8 of 10 early-stage tactics calls held up across the 2024 cohort, specifically including velocity-based shipping speed judgments. This question sits squarely in that domain, so the prior here carries above-average reliability. The counter-prior (that polish produces a better product and stronger retention) is not represented in the resolved takes — it may be a real consideration but the brain has no supporting evidence for it in this context.",
+  "prompts_identical": false,
+  "calibration_block_present": true,
+  "think_warnings": {
+    "baseline": [],
+    "calibrated": []
+  },
+  "win_eligible": true,
+  "judge_orders": 2,
+  "scores": [
+    {
+      "axis": "mentions_relevant_bias_tag",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers correctly identify the user's well-calibrated-tactics bias and cite the same three resolved takes supporting fast shipping. Both use clinical phrasing (conviction weights, category tags) rather than conversational voice. The key difference is that Answer B explicitly names the counter-prior—the intuitive case for polish (better product, stronger retention)—and acknowledges it lacks supporting evidence in the track record, while Answer A simply states \"no contradicting takes exist\" without surfacing what the opposing argument might be. Answer B's acknowledgment of the counter-prior and its absence from the evidence base makes the reasoning more complete and transparent, even though both reach the same recommendation. || Both answers correctly identify the relevant bias (well-calibrated-tactics on shipping speed) and cite the same three resolved takes with conviction weights. Both use clinical phrasing (conviction weights, category tags, Brier-score-like notation) rather than conversational voice. The key difference is that Answer A explicitly names the counter-prior—that polish might produce a better product and stronger retention—and acknowledges it lacks supporting evidence in the track record. Answer B omits this counter-consideration entirely, stating only that \"no contradicting takes exist.\" For a founder facing a real tension between speed and quality, Answer A's acknowledgment of the opposing intuition (even while the data favors shipping fast) is more intellectually honest and useful than Answer B's one-sided framing. Both substantively recommend the same action, but A provides better reasoning by surfacing the tradeoff."
+    },
+    {
+      "axis": "presents_counter_prior",
+      "expected": false,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers correctly identify the user's well-calibrated-tactics bias and cite the same three resolved takes supporting fast shipping. Both use clinical phrasing (conviction weights, category tags) rather than conversational voice. The key difference is that Answer B explicitly names the counter-prior—the intuitive case for polish (better product, stronger retention)—and acknowledges it lacks supporting evidence in the track record, while Answer A simply states \"no contradicting takes exist\" without surfacing what the opposing argument might be. Answer B's acknowledgment of the counter-prior and its absence from the evidence base makes the reasoning more complete and transparent, even though both reach the same recommendation. || Both answers correctly identify the relevant bias (well-calibrated-tactics on shipping speed) and cite the same three resolved takes with conviction weights. Both use clinical phrasing (conviction weights, category tags, Brier-score-like notation) rather than conversational voice. The key difference is that Answer A explicitly names the counter-prior—that polish might produce a better product and stronger retention—and acknowledges it lacks supporting evidence in the track record. Answer B omits this counter-consideration entirely, stating only that \"no contradicting takes exist.\" For a founder facing a real tension between speed and quality, Answer A's acknowledgment of the opposing intuition (even while the data favors shipping fast) is more intellectually honest and useful than Answer B's one-sided framing. Both substantively recommend the same action, but A provides better reasoning by surfacing the tradeoff."
+    },
+    {
+      "axis": "changes_recommendation_meaningfully",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers correctly identify the user's well-calibrated-tactics bias and cite the same three resolved takes supporting fast shipping. Both use clinical phrasing (conviction weights, category tags) rather than conversational voice. The key difference is that Answer B explicitly names the counter-prior—the intuitive case for polish (better product, stronger retention)—and acknowledges it lacks supporting evidence in the track record, while Answer A simply states \"no contradicting takes exist\" without surfacing what the opposing argument might be. Answer B's acknowledgment of the counter-prior and its absence from the evidence base makes the reasoning more complete and transparent, even though both reach the same recommendation. || Both answers correctly identify the relevant bias (well-calibrated-tactics on shipping speed) and cite the same three resolved takes with conviction weights. Both use clinical phrasing (conviction weights, category tags, Brier-score-like notation) rather than conversational voice. The key difference is that Answer A explicitly names the counter-prior—that polish might produce a better product and stronger retention—and acknowledges it lacks supporting evidence in the track record. Answer B omits this counter-consideration entirely, stating only that \"no contradicting takes exist.\" For a founder facing a real tension between speed and quality, Answer A's acknowledgment of the opposing intuition (even while the data favors shipping fast) is more intellectually honest and useful than Answer B's one-sided framing. Both substantively recommend the same action, but A provides better reasoning by surfacing the tradeoff."
+    },
+    {
+      "axis": "voice_conversational",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers correctly identify the user's well-calibrated-tactics bias and cite the same three resolved takes supporting fast shipping. Both use clinical phrasing (conviction weights, category tags) rather than conversational voice. The key difference is that Answer B explicitly names the counter-prior—the intuitive case for polish (better product, stronger retention)—and acknowledges it lacks supporting evidence in the track record, while Answer A simply states \"no contradicting takes exist\" without surfacing what the opposing argument might be. Answer B's acknowledgment of the counter-prior and its absence from the evidence base makes the reasoning more complete and transparent, even though both reach the same recommendation. || Both answers correctly identify the relevant bias (well-calibrated-tactics on shipping speed) and cite the same three resolved takes with conviction weights. Both use clinical phrasing (conviction weights, category tags, Brier-score-like notation) rather than conversational voice. The key difference is that Answer A explicitly names the counter-prior—that polish might produce a better product and stronger retention—and acknowledges it lacks supporting evidence in the track record. Answer B omits this counter-consideration entirely, stating only that \"no contradicting takes exist.\" For a founder facing a real tension between speed and quality, Answer A's acknowledgment of the opposing intuition (even while the data favors shipping fast) is more intellectually honest and useful than Answer B's one-sided framing. Both substantively recommend the same action, but A provides better reasoning by surfacing the tradeoff."
+    },
+    {
+      "axis": "doesnt_force_fit_irrelevant_bias",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers correctly identify the user's well-calibrated-tactics bias and cite the same three resolved takes supporting fast shipping. Both use clinical phrasing (conviction weights, category tags) rather than conversational voice. The key difference is that Answer B explicitly names the counter-prior—the intuitive case for polish (better product, stronger retention)—and acknowledges it lacks supporting evidence in the track record, while Answer A simply states \"no contradicting takes exist\" without surfacing what the opposing argument might be. Answer B's acknowledgment of the counter-prior and its absence from the evidence base makes the reasoning more complete and transparent, even though both reach the same recommendation. || Both answers correctly identify the relevant bias (well-calibrated-tactics on shipping speed) and cite the same three resolved takes with conviction weights. Both use clinical phrasing (conviction weights, category tags, Brier-score-like notation) rather than conversational voice. The key difference is that Answer A explicitly names the counter-prior—that polish might produce a better product and stronger retention—and acknowledges it lacks supporting evidence in the track record. Answer B omits this counter-consideration entirely, stating only that \"no contradicting takes exist.\" For a founder facing a real tension between speed and quality, Answer A's acknowledgment of the opposing intuition (even while the data favors shipping fast) is more intellectually honest and useful than Answer B's one-sided framing. Both substantively recommend the same action, but A provides better reasoning by surfacing the tradeoff."
+    }
+  ],
+  "win_score": 1,
+  "win_overall": "calibrated",
+  "per_axis_pass_rate": 0.6,
+  "failure_modes": [
+    "presents_counter_prior",
+    "voice_conversational"
+  ]
+}

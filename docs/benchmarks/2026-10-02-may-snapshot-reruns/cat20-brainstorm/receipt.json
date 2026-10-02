@@ -1,0 +1,602 @@
+{
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "cat20-brainstorm",
+  "gbrain_version": "0.60.30.0",
+  "gbrain_pin": "github:garrytan/gbrain#d44296cf4d6481a10eb85562d3179e38cfd02c43",
+  "started_at": "2026-10-02T16:50:19.478Z",
+  "run_status": "completed",
+  "verdict": "fail",
+  "n_total": 6,
+  "n_scored": 6,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "resolved_config": {
+    "search_mode": "balanced",
+    "reranker_enabled": false,
+    "pinned_config": {
+      "search.mode": "balanced",
+      "search.reranker.enabled": "false",
+      "search.expansion": "false"
+    },
+    "embed_transport": "live",
+    "chat_transport": "live",
+    "profile": "brainstorm",
+    "corpus": "synthetic-v1",
+    "corpus_pages": 165,
+    "min_grounding": 0.5,
+    "min_ideas": 3,
+    "live_judge": true,
+    "min_judge_score": 2.5,
+    "judge_prompt_version": "judge-2026-09-28-untrusted-v1"
+  },
+  "judge": {
+    "model": "claude-haiku-4-5-20251001",
+    "temperature": 0,
+    "rubric_version": "cat20-novelty-usefulness-v1"
+  },
+  "finished_at": "2026-10-02T17:01:21.257Z",
+  "data": {
+    "per_question": [
+      {
+        "question": "What is a non-obvious next-step product for an inference-platform company that already serves autonomous-picking?",
+        "error": null,
+        "idea_count": 72,
+        "passing_count": 22,
+        "internal_judge_failed": false,
+        "graded_set": "passing",
+        "graded_count": 22,
+        "grounding": 1,
+        "grounding_detail": [
+          {
+            "idea_id": "03",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "13",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "19",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "23",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "26",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "29",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "30",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "32",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "36",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "37",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "38",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "41",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "45",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "50",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "51",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "53",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "56",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "59",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "63",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "68",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "69",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "72",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          }
+        ],
+        "judge_overall": 0.5,
+        "judge_verdict": "fail"
+      },
+      {
+        "question": "How could a fund focused on early ML differentiate from competitors going after the same wave?",
+        "error": null,
+        "idea_count": 72,
+        "passing_count": 14,
+        "internal_judge_failed": false,
+        "graded_set": "passing",
+        "graded_count": 14,
+        "grounding": 1,
+        "grounding_detail": [
+          {
+            "idea_id": "13",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "21",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "23",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "28",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "32",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "45",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "50",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "60",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "63",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "66",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "67",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "69",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "71",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "72",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          }
+        ],
+        "judge_overall": 1.5,
+        "judge_verdict": "fail"
+      },
+      {
+        "question": "What is an unexplored research direction that combines agent memory with autonomous-picking robotics?",
+        "error": null,
+        "idea_count": 72,
+        "passing_count": 33,
+        "internal_judge_failed": false,
+        "graded_set": "passing",
+        "graded_count": 33,
+        "grounding": 1,
+        "grounding_detail": [
+          {
+            "idea_id": "04",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "06",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "07",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "11",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "18",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "22",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "25",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "26",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "29",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "31",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "32",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "35",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "37",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "38",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "39",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "40",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "41",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "42",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "48",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "50",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "52",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "53",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "54",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "55",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "58",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "59",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "61",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "63",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "65",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "66",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "67",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "68",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          },
+          {
+            "idea_id": "72",
+            "slugs_valid": true,
+            "cites_close": true,
+            "cites_far": true,
+            "score": 1
+          }
+        ],
+        "judge_overall": 1.5,
+        "judge_verdict": "fail"
+      }
+    ],
+    "mean_grounding": 1,
+    "mean_judge_overall": 1.1666666666666667,
+    "verdict_reasons": [
+      "mean judge 1.17 < 2.5 floor"
+    ],
+    "infra_error_rate": 0
+  },
+  "accounting": {
+    "planned": 6,
+    "attempted": 6,
+    "scored": 6,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "cost": null,
+  "latency_ms": null,
+  "delivered_tokens": null,
+  "execution": {
+    "source_tree": {
+      "sha256": "c060ae020865a62ea349e079ce6a71c024ab7b7112e2240fb800a6d806fe900b",
+      "files": 2535,
+      "git_head": "4a0c930b818deee2c84b6c6295bdce3cb382c370",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#d44296cf4d6481a10eb85562d3179e38cfd02c43",
+      "declared_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+      "version": "0.60.30.0",
+      "package_sha256": "cab9a29878d395587525de2d77a47f59d864643d64fc70ff942e507fb4cbd7b2",
+      "loaded_git_head": null
+    }
+  }
+}

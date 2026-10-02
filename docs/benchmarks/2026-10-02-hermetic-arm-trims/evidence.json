@@ -1,0 +1,62 @@
+{
+  "date": "2026-10-02",
+  "gbrain": "0.60.30.0",
+  "gbrain_pin": "github:garrytan/gbrain#d44296cf4d6481a10eb85562d3179e38cfd02c43",
+  "machine": "4-core cloud machine (Ubuntu 24.04), Bun 1.4.2, run alone",
+  "n9": {
+    "serial": {
+      "wall_s_measured": "about 120 (the October 2 offline tier recorded 130 s)",
+      "started_at": "2026-10-02T16:25:17.956Z",
+      "finished_at": "2026-10-02T16:27:20.183Z",
+      "runner_sha256": "a30c6e0d223137c9f3ff832d516a8159aa0cb121207779ec832a22bca4629ad4",
+      "clean_receipt_sha256": "0f222b12f8ee350fa3aa4a0a3b808c8fa31186e20209741f7c8688b291451218"
+    },
+    "parallel": {
+      "wall_s": 47.1,
+      "started_at": "2026-10-02T16:31:05.680Z",
+      "finished_at": "2026-10-02T16:31:52.521Z",
+      "runner_sha256": "b2451d2cb5fbd020734e2b79235bb1b65dfb8aa77c93604441a66ec3e9564226",
+      "seed_execution": "one child process per ingestion seed, merged in seed order (since gbrain-evals 0.10.7)",
+      "clean_receipt_sha256": "0f222b12f8ee350fa3aa4a0a3b808c8fa31186e20209741f7c8688b291451218"
+    },
+    "comparison": "receipts compared field by field after dropping timing fields, index ids, execution identity and hashes: no difference. The only differing field in the full receipts is hashes.runner (the runner file changed).",
+    "dropped_fields": [
+      "duration_ms",
+      "elapsed_ms",
+      "execution",
+      "finished_at",
+      "hashes",
+      "index_id",
+      "latency",
+      "latency_ms",
+      "ms",
+      "seed_execution",
+      "started_at",
+      "timings_ms",
+      "wall_ms"
+    ],
+    "n_total": 3240,
+    "n_scored": 3240
+  },
+  "n2": {
+    "started_at": "2026-10-02T16:19:23.420Z",
+    "timings_ms": {
+      "seed": 49349,
+      "oracle_probe": 14369,
+      "throwing_probe": 1622,
+      "total": 73605
+    },
+    "pages_seeded": 825,
+    "put_page_ms_per_100_pages": [
+      5816,
+      5487,
+      5590,
+      5471,
+      5480,
+      5467,
+      5475,
+      5457
+    ],
+    "cpu_profile_200_pages": "about 52% of CPU time inside PGLite statement execution (pglite-statements.ts execute), the rest in gbrain write-path JavaScript; constant cost per page, no growth with brain size"
+  }
+}

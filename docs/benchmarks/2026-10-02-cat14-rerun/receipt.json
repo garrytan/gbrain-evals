@@ -1,0 +1,142 @@
+{
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "cat14-calibration",
+  "gbrain_version": "0.60.30.0",
+  "gbrain_pin": "github:garrytan/gbrain#d44296cf4d6481a10eb85562d3179e38cfd02c43",
+  "started_at": "2026-10-02T16:45:41.525Z",
+  "finished_at": "2026-10-02T16:49:56.404Z",
+  "hashes": {
+    "probes_jsonl": "e65f3d49a5f6bf9f"
+  },
+  "run_status": "completed",
+  "verdict": "fail",
+  "n_total": 8,
+  "n_scored": 8,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "resolved_config": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.expansion": "false",
+    "search.cache.enabled": "false",
+    "models.think": "claude-sonnet-4-6",
+    "think_temperature": 0,
+    "judge_model": "claude-haiku-4-5-20251001",
+    "judge_temperature": 0,
+    "judge_prompt_version": "cat14-ab-2026-09-28-untrusted-v1",
+    "judge_orders": 2,
+    "embedding_transport": "stubbed deterministic hash-embed (__setEmbedTransportForTests)",
+    "pipeline": "gbrain runThink ('gbrain/think' subpath export), client-injected LLM",
+    "mode": "live",
+    "probe_filter": null
+  },
+  "judge": {
+    "model": "claude-haiku-4-5-20251001",
+    "temperature": 0
+  },
+  "data": {
+    "summary": {
+      "mode": "live",
+      "total_probes": 8,
+      "scored_probes": 8,
+      "judge_failed": 0,
+      "sut_failed": 0,
+      "win_eligible_n": 6,
+      "win_rate_calibrated": 0.8333333333333334,
+      "win_rate_baseline": 0,
+      "win_rate_tie": 0.16666666666666666,
+      "per_axis": {
+        "mentions_relevant_bias_tag": {
+          "rate": 1,
+          "n": 4,
+          "subset": "positive"
+        },
+        "presents_counter_prior": {
+          "rate": 0.5,
+          "n": 4,
+          "subset": "positive"
+        },
+        "changes_recommendation_meaningfully": {
+          "rate": 0.625,
+          "n": 8,
+          "subset": "all"
+        },
+        "voice_conversational": {
+          "rate": 0.3125,
+          "n": 8,
+          "subset": "all"
+        },
+        "doesnt_force_fit_irrelevant_bias": {
+          "rate": 1,
+          "n": 4,
+          "subset": "negative"
+        },
+        "behaves_like_baseline": {
+          "rate": 1,
+          "n": 1,
+          "subset": "declaring"
+        },
+        "voice_must_not_be_clinical": {
+          "rate": 0,
+          "n": 1,
+          "subset": "declaring"
+        }
+      },
+      "failure_mode_counts": {
+        "presents_counter_prior": 4,
+        "voice_conversational": 6,
+        "changes_recommendation_meaningfully": 3,
+        "mentions_relevant_bias_tag": 1,
+        "voice_must_not_be_clinical": 1
+      },
+      "doctor_flags": [],
+      "gate": "fail",
+      "gate_reasons": [
+        "presents_counter_prior 50% < 80% target (positive subset, n=4)",
+        "voice_conversational 31% < 95% target (all subset, n=8)",
+        "voice_must_not_be_clinical 0% < 95% target (declaring subset, n=1)"
+      ],
+      "provenance": {
+        "probe_filter": null,
+        "probes_planned": 8,
+        "probes_in_fixture": 8,
+        "think_model": "claude-sonnet-4-6",
+        "think_temperature": 0,
+        "judge_model": "claude-haiku-4-5-20251001",
+        "judge_temperature": 0,
+        "probes_jsonl_sha256_16": "e65f3d49a5f6bf9f",
+        "started_at": "2026-10-02T16:45:41.525Z",
+        "finished_at": "2026-10-02T16:49:56.403Z"
+      }
+    }
+  },
+  "accounting": {
+    "planned": 8,
+    "attempted": 8,
+    "scored": 8,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "cost": null,
+  "latency_ms": null,
+  "delivered_tokens": null,
+  "execution": {
+    "source_tree": {
+      "sha256": "f56a7bbd934f794012ff2900aaa9326598939a9f06bd4c1a5d56d4f729b52dd7",
+      "files": 2518,
+      "git_head": "74f0ef8b2ff650111e2de60787d87865846384e9",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#d44296cf4d6481a10eb85562d3179e38cfd02c43",
+      "declared_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+      "version": "0.60.30.0",
+      "package_sha256": "cab9a29878d395587525de2d77a47f59d864643d64fc70ff942e507fb4cbd7b2",
+      "loaded_git_head": null
+    }
+  }
+}

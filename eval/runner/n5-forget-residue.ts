@@ -32,8 +32,15 @@
  * (data.metrics) aggregate the PGLite cells; Postgres cells are report-only
  * (data.metrics_postgres).
  *
+ * CI slice (`--slice ci`, registry entry forget-residue-ci): the canaries on
+ * two of the four ledger entities on one PGLite cell served over stdio MCP by
+ * the gbrain CLI, with private canaries handled through `gbrain call`. The
+ * entity list, cell and floors were preregistered on 2026-10-02 before any
+ * slice run (docs/benchmarks/2026-10-02-ci-slices-preregistration.md).
+ *
  * Usage: bun eval/runner/n5-forget-residue.ts [--seed N] [--output <dir>] [--gbrain <checkout>[@ref]]
  *          [--engines pglite,postgres] [--interfaces cli,mcp-stdio,mcp-http] [--pg-url <url>] [--concurrency N] [--json]
+ *        bun eval/runner/n5-forget-residue.ts --slice ci [--output <dir>]
  */
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
@@ -55,6 +62,7 @@ import {
   ACTIVE_TIERS, CHECKPOINTS, N5_DEFAULT_SEED, N5_GENERATOR_VERSION, generateN5World, isForgottenAt, privateTokens, renderInitialPage, writtenBy,
   type ActiveTier, type Canary, type N5Checkpoint, type N5Ledger, type N5World,
 } from '../generators/n5-forget-residue-gen.ts';
+import { fingerprint } from '../generators/seeded.ts';
 
 export const CATEGORY = 'n5-forget-residue';
 
@@ -324,11 +332,11 @@ async function runCell(world: N5World, gut: GbrainUnderTest, engine: Engine, ifa
       return n;
     });
     const gitLog = execFileSync('git', ['-C', cell.vaults.vault, 'log', '-p', '--all'], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
-    const prose = ledger.canaries.find(c => c.in_prose)!;
+    const prose = ledger.canaries.find(c => c.in_prose);
     out.retained_by_design = {
       page_history_tokens: history,
       vault_git_tokens: forgottenTokens.filter(t => gitLog.includes(t)).length,
-      prose_chunk_hits: ['search', 'query', 'recall_query'].filter(t => { const o = conc.obs.get(pairKey(prose.id, t as ActiveTier)); return o && 'present' in o && o.present; }).length,
+      prose_chunk_hits: prose ? ['search', 'query', 'recall_query'].filter(t => { const o = conc.obs.get(pairKey(prose.id, t as ActiveTier)); return o && 'present' in o && o.present; }).length : 0,
     };
   } catch (e) {
     out.fatal = `${(e as Error).stack ?? String(e)}${cell.remote ? `\n[server stderr tail]\n${cell.stderrTail().join('\n')}` : ''}`;
@@ -375,6 +383,45 @@ async function runCell(world: N5World, gut: GbrainUnderTest, engine: Engine, ifa
 
 // ─── Receipt ─────────────────────────────────────────────────────────────
 
+/** The preregistered CI slice: which entities, which cell. */
+export const N5_CI_SLICE = {
+  name: 'ci',
+  entities: ['people/hazel-example', 'people/ivy-example'],
+  engines: ['pglite'] as Engine[],
+  interfaces: ['mcp-stdio'] as Iface[],
+  preregistration: 'docs/benchmarks/2026-10-02-ci-slices-preregistration.md',
+} as const;
+
+/**
+ * The ledger restricted to `entities`: a canary is kept when it sits on a kept
+ * entity and any canary it copies or relates to is kept too. Repeats and
+ * authority targets follow their canaries. Canaries are not renumbered.
+ */
+export function sliceN5World(world: N5World, entities: readonly string[]): N5World {
+  const keep = new Set(entities);
+  const l = world.ledger;
+  const missing = entities.filter(e => !l.entities.some(x => x.slug === e));
+  if (missing.length) throw new Error(`slice names entities the ledger does not have: ${missing.join(', ')}`);
+  const onKept = new Set(l.canaries.filter(c => keep.has(c.entity)).map(c => c.id));
+  const canaries = l.canaries.filter(c => onKept.has(c.id) && (!c.twin_of || onKept.has(c.twin_of)) && (!c.relates_to || onKept.has(c.relates_to)));
+  const ids = new Set(canaries.map(c => c.id));
+  const ledger: N5Ledger = {
+    ...l,
+    entities: l.entities.filter(e => keep.has(e.slug)),
+    canaries,
+    repeats: l.repeats.filter(id => ids.has(id)),
+    authority_targets: l.authority_targets.filter(id => ids.has(id)),
+  };
+  return { ledger, fingerprint: fingerprint(ledger) };
+}
+
+/** Private canaries the trusted control saw in some tier at the witness checkpoint: the signal behind the zero-leak contract. */
+export function privateControl(ledger: N5Ledger, cells: readonly N5CellOutcome[]): { canaries: number; witnessed_by_trusted: number } {
+  const priv = ledger.canaries.filter(c => c.visibility === 'private');
+  const witnessed = priv.filter(c => cells.length > 0 && cells.every(cell => ACTIVE_TIERS.some(t => cell.checkpoints.witness?.[pairKey(c.id, t)] === true)));
+  return { canaries: priv.length, witnessed_by_trusted: witnessed.length };
+}
+
 function argValue(argv: readonly string[], flag: string): string | undefined {
   const at = argv.indexOf(flag);
   if (at >= 0) return argv[at + 1];
@@ -393,22 +440,27 @@ async function main(): Promise<void> {
   const log = json ? () => {} : (s: string) => console.log(s);
   const seed = Number(argValue(argv, '--seed') ?? N5_DEFAULT_SEED);
   if (!Number.isInteger(seed)) throw new Error('--seed needs an integer');
-  const engines = (argValue(argv, '--engines') ?? 'pglite,postgres').split(',') as Engine[];
-  const ifaces = (argValue(argv, '--interfaces') ?? IFACES.join(',')).split(',') as Iface[];
+  const sliceName = argValue(argv, '--slice');
+  if (sliceName !== undefined && sliceName !== N5_CI_SLICE.name) throw new Error(`--slice takes ${N5_CI_SLICE.name}, not ${sliceName}`);
+  const slice = sliceName ? N5_CI_SLICE : null;
+  if (slice && (argValue(argv, '--engines') || argValue(argv, '--interfaces') || argValue(argv, '--seed'))) throw new Error('--slice ci fixes the seed, engine and interface; drop --seed, --engines and --interfaces');
+  const engines = slice ? [...slice.engines] : (argValue(argv, '--engines') ?? 'pglite,postgres').split(',') as Engine[];
+  const ifaces = slice ? [...slice.interfaces] : (argValue(argv, '--interfaces') ?? IFACES.join(',')).split(',') as Iface[];
   for (const e of engines) if (!ENGINES.includes(e)) throw new Error(`--engines takes ${ENGINES.join(',')}, not ${e}`);
   for (const i of ifaces) if (!IFACES.includes(i)) throw new Error(`--interfaces takes ${IFACES.join(',')}, not ${i}`);
   const pgAdminUrl = argValue(argv, '--pg-url') ?? process.env.LIFECYCLE_PG_URL ?? 'postgres://postgres@127.0.0.1:55432/postgres';
   const concurrency = Number(argValue(argv, '--concurrency') ?? '3');
   const output = argValue(argv, '--output');
-  const outPath = output ? join(output, 'receipt.json') : receiptPath(CATEGORY);
+  const outPath = output ? join(output, 'receipt.json') : receiptPath(slice ? `${CATEGORY}-ci` : CATEGORY);
   // Cells live outside this checkout: gbrain init refuses a content directory inside another Git repository.
   const work = resolve(argValue(argv, '--work') ?? mkdtempSync(join(tmpdir(), `${CATEGORY}-cells-`)));
   mkdirSync(work, { recursive: true });
   const startedAt = new Date().toISOString();
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
-  log(`# BrainBench N5: forgetting and withdrawal residue (gbrain ${gut.version}${gut.overlay ? `, overlay ${gut.overlay.build.commit.slice(0, 7)}` : ', pinned'})`);
+  log(`# BrainBench N5${slice ? ' CI slice' : ''}: forgetting and withdrawal residue (gbrain ${gut.version}${gut.overlay ? `, overlay ${gut.overlay.build.commit.slice(0, 7)}` : ', pinned'})`);
 
-  const world = generateN5World({ seed });
+  const fullWorld = generateN5World({ seed });
+  const world = slice ? sliceN5World(fullWorld, slice.entities) : fullWorld;
   const result = await withHermeticEnv('n5', async () => {
     const pgDown = engines.includes('postgres') ? await postgresReachable(pgAdminUrl) : null;
     const runEngines = engines.filter(e => e !== 'postgres' || !pgDown);
@@ -423,7 +475,7 @@ async function main(): Promise<void> {
   const postgres = result.cells.filter(c => c.engine === 'postgres');
   const metrics = aggregateN5(pglite);
   const metricsPg = postgres.length ? aggregateN5(postgres) : null;
-  const entry = registryEntry('N5')!;
+  const entry = registryEntry(slice ? 'N5-ci' : 'N5')!;
   const pgliteVoid = pglite.length === 0 || pglite.some(c => c.fatal || c.void_reason);
   const runStatus = pgliteVoid ? 'error' : 'completed';
   const safety = {
@@ -473,12 +525,13 @@ async function main(): Promise<void> {
       harness: 'eval/runner/lifecycle/slice.ts (lifecycle drivers: trusted local CLI `gbrain call`, stdio `gbrain serve`, HTTP `gbrain serve --http` with OAuth client_credentials clients: main read+write on vault, reader read-only on vault, foreign read+write on another source)',
       init: '`gbrain init --no-embedding --non-interactive` (managed persistence, keyword search only), git vaults as sources',
       seed, generator_version: N5_GENERATOR_VERSION, ledger_sha256: world.fingerprint,
+      slice: slice ? { ...slice, full_ledger_sha256: fullWorld.fingerprint, canaries: world.ledger.canaries.map(c => c.id) } : null,
       checkpoints: CHECKPOINTS, active_tiers: ACTIVE_TIERS,
       contract: 'src/core/facts/forget.ts header and docs/guides/memory-boundaries.md at the tested commit',
       gating_scope: 'data.metrics aggregates the PGLite cells; data.metrics_postgres is report-only outside CI',
       gbrain_overlay: overlaySummary(gut),
     },
-    hashes: { ledger_sha256: world.fingerprint },
+    hashes: { ledger_sha256: world.fingerprint, ...(slice ? { full_ledger_sha256: fullWorld.fingerprint } : {}) },
     started_at: startedAt,
     finished_at: new Date().toISOString(),
     data: {
@@ -487,6 +540,7 @@ async function main(): Promise<void> {
       safety,
       quality,
       promotion_rules: entry.promotion,
+      private_control: privateControl(world.ledger, pglite),
       by_tier: sumBy(pglite, 'by_tier'),
       by_checkpoint: sumBy(pglite, 'by_checkpoint'),
       by_tier_postgres: sumBy(postgres, 'by_tier'),

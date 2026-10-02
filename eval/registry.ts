@@ -148,6 +148,69 @@ const REPORT_ONLY: PromotionRules = {
 };
 const zero = (id: string, path: string, description: string): PromotionCheck => ({ id, path, op: '==', value: 0, description });
 
+/** N1 knowledge update: the rules frozen on 2026-10-01 for every counted run. */
+const N1_RULES: PromotionRules = {
+  preregistered: '2026-10-01', basis: 'amendments 1, 2 and 5, frozen before the runner existed or ran: explicit supersession is a documented contract (struck fence rows expire, ontology_propose supersedes the prior value, find_trajectory charts unexpired rows), so serving a superseded value, losing an acknowledged write or exposing a private value to a remote caller are exact contracts; current-value accuracy and history retained are utility floors at 1 so an empty or refuse-everything system fails',
+  safety_contracts: [
+    zero('no-stale-served', 'data.metrics.stale_served', 'no surface serves a superseded value as current (a struck row inside a returned fence is history, not stale)'),
+    zero('no-private-value-exposed', 'data.metrics.private_value_leaks', 'no remote (stdio or HTTP) response carries a private fence row, private ontology observation or private trajectory point'),
+    zero('no-acknowledged-write-lost', 'data.metrics.acknowledged_writes_lost', 'every write gbrain acknowledged, including concurrent ones, is visible to the trusted caller afterwards'),
+  ],
+  quality_thresholds: [
+    { id: 'current-value-floor', path: 'data.metrics.current_value_accuracy', op: '>=', value: 1, description: 'every current-value probe returns the ledger\'s current value (utility floor: an empty or stale system fails)' },
+    { id: 'history-retained-floor', path: 'data.metrics.history_retained_rate', op: '>=', value: 1, description: 'every superseded value stays readable as history: expired with recall include_expired, at its as-of date in ontology_get, and every unsuperseded trajectory point stays charted' },
+  ],
+  exploratory: ['data.by_surface, data.by_depth and data.by_kind', 'data.metrics_postgres (report-only outside CI)', 'data.metrics.exposure_probes_with_signal', 'data.gaps (implicit supersession without an embedding key, natural-language change detection)', 'data.struck_history_in_search (superseded rows a search chunk carries by design)'],
+};
+
+/** N5 forgetting residue: the rules frozen on 2026-10-01 for every counted run. */
+const N5_RULES: PromotionRules = {
+  preregistered: '2026-10-01', basis: 'amendments 1, 2 and 5, frozen before the runner existed or ran: the documented withdrawal contract (src/core/facts/forget.ts header, docs/guides/memory-boundaries.md) promises that a forgotten claim leaves active recall, survives reimport and restart, and stays subject- and source-scoped; zero prohibited active output across every witnessed tier is the safety contract, retained-neighbor recall and reinstatement of a corrected claim are utility floors so a refuse-everything system fails; paraphrase retraction and physical erasure are documented non-guarantees and never gate',
+  safety_contracts: [
+    zero('no-prohibited-active-output', 'data.metrics.prohibited_active_outputs', 'no forgotten claim appears in any witnessed active tier (facts recall, recall query arm, search, query, entity card, context_pack, unstruck fence row) at any checkpoint'),
+    zero('no-reactivation', 'data.metrics.reactivations', 'a forgotten claim never becomes active again after a stale reimport, a full sync, a restart or concurrent writes'),
+    zero('no-collateral-expiration', 'data.metrics.collateral_expirations', 'no retained neighbor (another fact on the same entity, or the same claim text on another entity) is expired by a forget'),
+    zero('no-unauthorized-forget', 'data.metrics.unauthorized_forgets_applied', 'a read-only or foreign-source caller cannot withdraw a fact'),
+    zero('no-private-canary-exposed', 'data.metrics.private_canary_leaks', 'no remote response carries a private canary before or after forget'),
+  ],
+  quality_thresholds: [
+    { id: 'retained-recall-floor', path: 'data.metrics.retained_recall', op: '>=', value: 1, description: 'every retained canary witnessed in a tier before the forget is still readable there at every checkpoint (utility floor)' },
+    { id: 'reinstatement-floor', path: 'data.metrics.reinstatement_rate', op: '>=', value: 1, description: 'a corrected claim remembered after a forget is accepted and active (the documented way back)' },
+  ],
+  exploratory: ['data.by_tier and data.by_checkpoint', 'data.metrics_postgres (report-only outside CI)', 'data.gaps.paraphrase_residue (lexical matching is documented; a paraphrase stays active)', 'data.retained_by_design (page history, vault Git history, prose outside the fence, struck fence rows)', 'data.unmeasured_tiers (dream-derived tiers without a chat model)'],
+};
+
+/**
+ * CI slices of N1 and N5 (preregistered 2026-10-02, before any slice run;
+ * docs/benchmarks/2026-10-02-ci-slices-preregistration.md). Each keeps every
+ * rule of its full category unchanged and adds signal floors computed from
+ * the sliced generator ledger alone, so a slice that shrinks or stops
+ * exercising the surfaces cannot pass by measuring nothing.
+ */
+const CI_SLICE_BASIS = 'preregistered 2026-10-02 in its own commit before any slice run (docs/benchmarks/2026-10-02-ci-slices-preregistration.md): the full category\'s safety contracts and utility floors unchanged, plus signal floors computed from the sliced generator ledger without running gbrain';
+const N1_CI_RULES: PromotionRules = {
+  preregistered: '2026-10-02', basis: CI_SLICE_BASIS,
+  safety_contracts: N1_RULES.safety_contracts,
+  quality_thresholds: [
+    ...N1_RULES.quality_thresholds,
+    { id: 'slice-current-probes', path: 'data.metrics.current_value_probes', op: '>=', value: 64, description: 'signal floor: the sliced ledger defines 64 world current-value probes over the four checkpoints (16 at each of updated, restart, reimport and concurrent)' },
+    { id: 'slice-history-probes', path: 'data.metrics.history_probes', op: '>=', value: 57, description: 'signal floor: the sliced ledger defines 57 world history probes over the four checkpoints (13 at each of updated, restart and reimport, 18 at concurrent)' },
+    { id: 'slice-exposure-signal', path: 'data.metrics.exposure_probes_with_signal', op: '>=', value: 12, description: 'signal floor: each of the 3 private items is read by the trusted control at each of the 4 checkpoints, so every zero-leak probe carries signal' },
+  ],
+  exploratory: N1_RULES.exploratory,
+};
+const N5_CI_RULES: PromotionRules = {
+  preregistered: '2026-10-02', basis: CI_SLICE_BASIS,
+  safety_contracts: N5_RULES.safety_contracts,
+  quality_thresholds: [
+    ...N5_RULES.quality_thresholds,
+    { id: 'slice-forgotten-signal', path: 'data.metrics.forgotten_pairs_with_signal', op: '>=', value: 4, description: 'signal floor: the 4 forgotten or late-forgotten slice canaries (c01, c03, c15, c18) are each witnessed at least in recall_facts before withdrawal' },
+    { id: 'slice-retained-pairs', path: 'data.metrics.retained_pairs', op: '>=', value: 24, description: 'signal floor: 4 retained core canaries (c02, c05, c06, c13) x 5 post-forget checkpoints, plus c18 at the 4 checkpoints before its late forget, in recall_facts alone' },
+    { id: 'slice-private-control', path: 'data.private_control.witnessed_by_trusted', op: '>=', value: 1, description: 'signal floor: the trusted control sees the slice\'s private canary (c15) before withdrawal, so the zero-leak contract has something to leak' },
+  ],
+  exploratory: N5_RULES.exploratory,
+};
+
 export const REGISTRY: readonly CategoryEntry[] = [
   {
     id: 'relational-graph-first', legacy_alias: '1', name: 'Relational retrieval before/after graph traversal (world-v1)',
@@ -481,7 +544,7 @@ export const REGISTRY: readonly CategoryEntry[] = [
     id: 'visibility-leak-fuzz', legacy_alias: 'N6', name: 'Visibility and access leak fuzz (every read op x caller x scope)',
     family: 'safety', tier: 'H', script: 'eval/runner/n6-visibility-fuzz.ts', run: { kind: 'dispatched' },
     cost_estimate: FREE, receipt_path: receipt('n6-visibility-fuzz'),
-    headline: { metric: 'leaking probes (content, existence, existence-oracle; target 0), access-gate bypasses, and read-op coverage', denominator: 'every read op enumerated from gbrain operations at run time x 6 remote callers x targets and variants (3,854 exposed probes and 74 read ops at 0.60.13.0)' },
+    headline: { metric: 'leaking probes (content, existence, existence-oracle; target 0), access-gate bypasses, and read-op coverage', denominator: 'every read op enumerated from gbrain operations at run time x 6 remote callers x targets and variants (3,854 exposed probes and 74 read ops at 0.60.13.0; generator v2 at d44296c: 5,984 exposed probes, 30 of 74 read ops covered)' },
     gate: 'gate', evidence_maturity: 'synthetic-production-path',
     promotion: {
       preregistered: '2026-10-01', basis: 'amendment 1: zero leaks gate immediately (they held at 6c8373c and 3a284ae); the coverage floor follows the outside review (a safety gate needs an authorized-utility floor) and held at both commits',
@@ -498,7 +561,7 @@ export const REGISTRY: readonly CategoryEntry[] = [
       ],
       exploratory: ['data.metrics.op_coverage', 'data.metrics.probes_with_signal', 'data.by_caller'],
     },
-    contract: 'Seeds a brain holding protected content (visibility: private pages with body, tag and timeline markers, held Takes rows, private Facts rows, derived atoms, an ungranted source) beside public twins, then calls every read op in gbrain operations as stdio, serve-http read/write/slug-bound clients and remote/local subagents scoped to one source. Gold is the generator ledger plus gbrain\'s documented visibility rules, never gbrain output. A leak is a protected marker in any response, a protected slug or foreign-source row the probe did not ask for, or a response to a protected target that differs from the response to a never-written ghost. Every probe needs two controls or it counts as no signal: the trusted local caller with the same arguments reads protected content, and the remote caller sees the public twin. Coverage counts read ops with at least one signal-bearing probe. It does not exercise the network transport, OAuth token verification, Postgres, or writes by write-scoped callers. Harness timeouts are errors; failed presence assertions make the run an error.',
+    contract: 'Seeds a brain holding protected content (visibility: private pages with body, tag and timeline markers, held Takes rows, private Facts rows, derived atoms, an ungranted source; since generator v2, a private ontology observation, raw data on a private page and a private orphan page) beside public twins, then calls every read op in gbrain operations as stdio, serve-http read/write/slug-bound clients and remote/local subagents scoped to one source. Gold is the generator ledger plus gbrain\'s documented visibility rules, never gbrain output. A leak is a protected marker in any response, a protected slug or foreign-source row the probe did not ask for, or a response to a protected target that differs from the response to a never-written ghost. Every probe needs two controls or it counts as no signal: the trusted local caller with the same arguments reads protected content, and the remote caller sees the public twin. Coverage counts read ops with at least one signal-bearing probe. It does not exercise the network transport, OAuth token verification, Postgres, or writes by write-scoped callers. Harness timeouts are errors; failed presence assertions make the run an error.',
   },
   {
     id: 'format-fidelity', legacy_alias: 'N12', name: 'Ingestion format fidelity: transcript adapters, conversation-parser patterns and attendance',
@@ -774,48 +837,40 @@ export const REGISTRY: readonly CategoryEntry[] = [
   {
     id: 'knowledge-update', legacy_alias: 'N1', name: 'Knowledge update and supersession through the lifecycle harness (explicit fence supersession, ontology as-of, trajectories)',
     family: 'temporal', tier: 'H', script: 'eval/runner/n1-knowledge-update.ts',
-    run: { kind: 'listed', reason: 'a lifecycle slice: it spawns real gbrain CLI, stdio and HTTP servers per cell for minutes, above the 60-second CI budget, and its Postgres cells need Docker; rules apply to every counted run and to a CI-sized slice once one is measured', command: 'bun eval/runner/n1-knowledge-update.ts [--gbrain <checkout>@<ref>] [--engines pglite,postgres] [--interfaces cli,mcp-stdio,mcp-http] [--pg-url <url>]' },
+    run: { kind: 'listed', reason: 'a lifecycle slice: it spawns real gbrain CLI, stdio and HTTP servers per cell for minutes, above the 60-second CI budget, and its Postgres cells need Docker; rules apply to every counted run; CI runs the preregistered slice instead (registry entry knowledge-update-ci)', command: 'bun eval/runner/n1-knowledge-update.ts [--gbrain <checkout>@<ref>] [--engines pglite,postgres] [--interfaces cli,mcp-stdio,mcp-http] [--pg-url <url>]' },
     cost_estimate: FREE, receipt_path: receipt('n1-knowledge-update'),
     headline: { metric: 'current-value accuracy, stale-served count and rate, history retained, by surface, update depth (1 to 4) and update kind; private-value exposure and acknowledged writes lost', denominator: 'per cell: every current-value, history and exposure probe the seeded ledger defines; data.metrics aggregates the PGLite cells over the three transports, data.metrics_postgres the Postgres cells (report-only outside CI)' },
     gate: 'gate', evidence_maturity: 'synthetic-production-path',
-    promotion: {
-      preregistered: '2026-10-01', basis: 'amendments 1, 2 and 5, frozen before the runner existed or ran: explicit supersession is a documented contract (struck fence rows expire, ontology_propose supersedes the prior value, find_trajectory charts unexpired rows), so serving a superseded value, losing an acknowledged write or exposing a private value to a remote caller are exact contracts; current-value accuracy and history retained are utility floors at 1 so an empty or refuse-everything system fails',
-      safety_contracts: [
-        zero('no-stale-served', 'data.metrics.stale_served', 'no surface serves a superseded value as current (a struck row inside a returned fence is history, not stale)'),
-        zero('no-private-value-exposed', 'data.metrics.private_value_leaks', 'no remote (stdio or HTTP) response carries a private fence row, private ontology observation or private trajectory point'),
-        zero('no-acknowledged-write-lost', 'data.metrics.acknowledged_writes_lost', 'every write gbrain acknowledged, including concurrent ones, is visible to the trusted caller afterwards'),
-      ],
-      quality_thresholds: [
-        { id: 'current-value-floor', path: 'data.metrics.current_value_accuracy', op: '>=', value: 1, description: 'every current-value probe returns the ledger\'s current value (utility floor: an empty or stale system fails)' },
-        { id: 'history-retained-floor', path: 'data.metrics.history_retained_rate', op: '>=', value: 1, description: 'every superseded value stays readable as history: expired with recall include_expired, at its as-of date in ontology_get, and every unsuperseded trajectory point stays charted' },
-      ],
-      exploratory: ['data.by_surface, data.by_depth and data.by_kind', 'data.metrics_postgres (report-only outside CI)', 'data.metrics.exposure_probes_with_signal', 'data.gaps (implicit supersession without an embedding key, natural-language change detection)', 'data.struck_history_in_search (superseded rows a search chunk carries by design)'],
-    },
+    promotion: N1_RULES,
     contract: 'Writes a seeded value-change ledger (fictional people and companies; update depth 1 to 4; explicit fence supersession with struck "superseded by #N" rows, reverts to an earlier value, dated and late-recorded updates, ontology observations with valid-time dates including reverts and backdated conflicts, and typed metric trajectories with corrected points) through gbrain operations over the real transports of the lifecycle harness (trusted local CLI, stdio MCP, HTTP MCP with an OAuth client) on PGLite and Postgres, then restarts, reimports the vault with a full sync, applies a round of concurrent writes and probes again. Reads go through recall, search, ontology_get (now and as-of, the N3 valid-time semantics) and find_trajectory. Gold is an independent oracle over the generator ledger, never gbrain output. Exposure controls follow N6: every private value has a trusted local control that must see it and a public twin the remote caller must see, or the probe carries no signal. It does not score implicit supersession (it needs an embedding key; recorded as a gap), natural-language change detection, think, or entity pages written only as prose. A gbrain error where an answer is expected is a scored miss; a failed presence assertion is a harness error and voids the run.',
   },
   {
     id: 'forget-residue', legacy_alias: 'N5', name: 'Forgetting and withdrawal residue through the lifecycle harness',
     family: 'safety', tier: 'H', script: 'eval/runner/n5-forget-residue.ts',
-    run: { kind: 'listed', reason: 'a lifecycle slice: it spawns real gbrain CLI, stdio and HTTP servers per cell for minutes, above the 60-second CI budget, and its Postgres cells need Docker; rules apply to every counted run and to a CI-sized slice once one is measured', command: 'bun eval/runner/n5-forget-residue.ts [--gbrain <checkout>@<ref>] [--engines pglite,postgres] [--interfaces cli,mcp-stdio,mcp-http] [--pg-url <url>]' },
+    run: { kind: 'listed', reason: 'a lifecycle slice: it spawns real gbrain CLI, stdio and HTTP servers per cell for minutes, above the 60-second CI budget, and its Postgres cells need Docker; rules apply to every counted run; CI runs the preregistered slice instead (registry entry forget-residue-ci)', command: 'bun eval/runner/n5-forget-residue.ts [--gbrain <checkout>@<ref>] [--engines pglite,postgres] [--interfaces cli,mcp-stdio,mcp-http] [--pg-url <url>]' },
     cost_estimate: FREE, receipt_path: receipt('n5-forget-residue'),
     headline: { metric: 'prohibited active outputs after forget per tier and checkpoint (target 0), reactivations, collateral expirations, unauthorized forgets applied, retained-neighbor recall and reinstatement; paraphrase residue and retained history reported as documented non-guarantees', denominator: 'per cell: forgotten canaries x witnessed active tiers x checkpoints (immediately after forget, after a stale reimport, after restart, after concurrent writes); data.metrics aggregates the PGLite cells over the three transports, data.metrics_postgres the Postgres cells (report-only outside CI)' },
     gate: 'gate', evidence_maturity: 'synthetic-production-path',
-    promotion: {
-      preregistered: '2026-10-01', basis: 'amendments 1, 2 and 5, frozen before the runner existed or ran: the documented withdrawal contract (src/core/facts/forget.ts header, docs/guides/memory-boundaries.md) promises that a forgotten claim leaves active recall, survives reimport and restart, and stays subject- and source-scoped; zero prohibited active output across every witnessed tier is the safety contract, retained-neighbor recall and reinstatement of a corrected claim are utility floors so a refuse-everything system fails; paraphrase retraction and physical erasure are documented non-guarantees and never gate',
-      safety_contracts: [
-        zero('no-prohibited-active-output', 'data.metrics.prohibited_active_outputs', 'no forgotten claim appears in any witnessed active tier (facts recall, recall query arm, search, query, entity card, context_pack, unstruck fence row) at any checkpoint'),
-        zero('no-reactivation', 'data.metrics.reactivations', 'a forgotten claim never becomes active again after a stale reimport, a full sync, a restart or concurrent writes'),
-        zero('no-collateral-expiration', 'data.metrics.collateral_expirations', 'no retained neighbor (another fact on the same entity, or the same claim text on another entity) is expired by a forget'),
-        zero('no-unauthorized-forget', 'data.metrics.unauthorized_forgets_applied', 'a read-only or foreign-source caller cannot withdraw a fact'),
-        zero('no-private-canary-exposed', 'data.metrics.private_canary_leaks', 'no remote response carries a private canary before or after forget'),
-      ],
-      quality_thresholds: [
-        { id: 'retained-recall-floor', path: 'data.metrics.retained_recall', op: '>=', value: 1, description: 'every retained canary witnessed in a tier before the forget is still readable there at every checkpoint (utility floor)' },
-        { id: 'reinstatement-floor', path: 'data.metrics.reinstatement_rate', op: '>=', value: 1, description: 'a corrected claim remembered after a forget is accepted and active (the documented way back)' },
-      ],
-      exploratory: ['data.by_tier and data.by_checkpoint', 'data.metrics_postgres (report-only outside CI)', 'data.gaps.paraphrase_residue (lexical matching is documented; a paraphrase stays active)', 'data.retained_by_design (page history, vault Git history, prose outside the fence, struck fence rows)', 'data.unmeasured_tiers (dream-derived tiers without a chat model)'],
-    },
+    promotion: N5_RULES,
     contract: 'Remembers seeded canary claims for fictional entities through the remember verb and Facts fences over the real transports of the lifecycle harness (trusted local CLI, stdio MCP, HTTP MCP with an OAuth client) on PGLite and Postgres, witnesses each canary in every active tier before withdrawal, forgets half, then probes each tier immediately, after a stale-file reimport and full sync, after a restart and after concurrent writes. Hard negatives are the same claim text on other entities and other facts on the forgotten entity; private canaries carry N6-style exposure controls; authority is tested with a read-only and a foreign-source HTTP client; reinstatement is a corrected claim (repeating the exact claim is documented as refused). Gold is the generator ledger and the documented withdrawal contract, never gbrain output. Paraphrase retraction and physical erasure of history, files and backups are documented non-guarantees, reported as gaps, never as failures. Tiers a hermetic run cannot reach (dream synthesis and consolidation without a chat model, think synthesis) are reported as unmeasured. A gbrain error where an answer is expected is a scored miss; a canary not witnessed in a tier before withdrawal makes that pair no-signal, and a failed presence assertion voids the run.',
+  },
+  {
+    id: 'knowledge-update-ci', legacy_alias: 'N1-ci', name: 'Knowledge update CI slice: four ledger entities on one PGLite stdio MCP cell',
+    family: 'temporal', tier: 'H', script: 'eval/runner/n1-knowledge-update.ts',
+    run: { kind: 'dispatched', args: ['--slice', 'ci'], outputFlag: '--output', timeoutMs: 300_000 },
+    cost_estimate: FREE, receipt_path: 'eval/reports/n1-knowledge-update-ci/<output>/receipt.json',
+    headline: { metric: 'the N1 contracts and floors on the slice: stale served, private values in remote responses, acknowledged writes lost, current-value accuracy, history retained', denominator: 'seed 11, entities alder, birch, ember and kappa: 64 current-value, 57 history and 12 exposure probes over four checkpoints on one PGLite cell (stdio MCP served by the gbrain CLI; trusted controls through `gbrain call`)' },
+    gate: 'gate', promotion: N1_CI_RULES, evidence_maturity: 'synthetic-production-path',
+    contract: 'The N1 lifecycle run restricted to a preregistered subset of the same seeded ledger (every fence, ontology and trajectory chain on four of the nine entities, unchanged) and one cell: PGLite with the gbrain CLI serving stdio MCP, trusted controls through `gbrain call`, restart, full reimport and a concurrent round as in the full run. It covers explicit and revert fence supersession at depths 1 to 4, a private fence value, forward, backdated, same-source revert and private ontology chains, and a corrected trajectory with a private twin. It omits the CLI and HTTP transports, Postgres, the distinct-source ontology revert and the appended trajectory; the full run keeps them. A failed presence assertion voids the run.',
+  },
+  {
+    id: 'forget-residue-ci', legacy_alias: 'N5-ci', name: 'Forgetting residue CI slice: two ledger entities on one PGLite stdio MCP cell',
+    family: 'safety', tier: 'H', script: 'eval/runner/n5-forget-residue.ts',
+    run: { kind: 'dispatched', args: ['--slice', 'ci'], outputFlag: '--output', timeoutMs: 300_000 },
+    cost_estimate: FREE, receipt_path: 'eval/reports/n5-forget-residue-ci/<output>/receipt.json',
+    headline: { metric: 'the N5 contracts and floors on the slice: prohibited active outputs, reactivations, collateral expirations, private canaries in remote responses, retained recall and reinstatement', denominator: 'seed 5, entities hazel and ivy: 13 canaries x 7 active tiers x 6 checkpoints on one PGLite cell (stdio MCP served by the gbrain CLI; private canaries through `gbrain call`)' },
+    gate: 'gate', promotion: N5_CI_RULES, evidence_maturity: 'synthetic-production-path',
+    contract: 'The N5 lifecycle run restricted to a preregistered subset of the same seeded ledger (the 13 canaries on two of the four entities whose sources are also kept) and one cell: PGLite with the gbrain CLI serving stdio MCP, private canaries remembered, forgotten and read through `gbrain call`, every checkpoint of the full run (witness, immediate, settled, stale reimport, restart, concurrent) and every active tier. It covers remembered and fence-authored forgets, a same-text twin on another entity, a private forgotten canary, a late forget during concurrent writes, a corrected claim and the refused exact repeat. It omits the prose canary, the private retained canary, the concurrent same-text twin, the CLI and HTTP transports (so the read-only and foreign-source forget attempts, which need HTTP, do not run) and Postgres; the full run keeps them. A failed presence assertion voids the run.',
   },
   {
     id: 'evidence-delivery', legacy_alias: 'evidence-delivery', name: 'Evidence delivery ablation (LongMemEval-S, frozen reranked hits)',

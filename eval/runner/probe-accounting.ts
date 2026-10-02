@@ -64,6 +64,17 @@ export class ProbeAccounting {
     if (origin === 'sut') this.scores.set(probeId, 0);
   }
 
+  /** Plain-data state, so a worker process's accounting can be merged into its parent's. */
+  toJSON(): { scores: Array<[string, number]>; errors: ProbeError[] } {
+    return { scores: [...this.scores], errors: [...this.probeErrors] };
+  }
+
+  /** Merge another accounting's state (scores by probe id, errors appended in order). */
+  absorb(state: { scores: Array<[string, number]>; errors: ProbeError[] }): void {
+    for (const [id, value] of state.scores) this.scores.set(id, value);
+    this.probeErrors.push(...state.errors);
+  }
+
   /** Values that participate in primary metrics (includes sut-failure zeros). */
   scoredValues(): number[] {
     return [...this.scores.values()];

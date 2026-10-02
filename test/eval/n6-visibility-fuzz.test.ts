@@ -12,6 +12,8 @@ import { gbrainSpecFrom, parseGbrainSpec } from '../../eval/runner/gbrain-under-
 
 const ok = (data: unknown): CallOutcome => ({ exposed: true, ok: true, raw: JSON.stringify(data), data });
 const ledger = generateN6World();
+/** The v1 generator's private_page markers at the default seed, recorded before the v2 classes were added. */
+const V1_PRIVATE_PAGE_MARKERS = ['zxkapewezeteq', 'zxluzijamohiq', 'zxsomidukixiq'];
 const forbiddenMarkers = ledger.classes.flatMap(c => c.protected_markers);
 const forbiddenSlugs = ledger.classes.flatMap(c => c.protected_slugs);
 
@@ -25,7 +27,7 @@ describe('N6 generator ledger', () => {
 
   test('every class has protected markers, a public twin and a ghost that was never written', () => {
     expect(ledger.classes.map(c => c.class)).toEqual([...N6_CLASSES]);
-    const written = ledger.pages.map(p => p.content).join('\n');
+    const written = [...ledger.pages.map(p => p.content), JSON.stringify(ledger.side_writes)].join('\n');
     const pageKeys = new Set(ledger.pages.map(p => `${p.source_id}/${p.slug}`));
     for (const c of ledger.classes) {
       expect(c.protected_markers.length).toBeGreaterThan(0);
@@ -40,12 +42,28 @@ describe('N6 generator ledger', () => {
     expect(new Set(all).size).toBe(all.length);
     const privatePage = ledger.classes.find(c => c.class === 'private_page')!;
     const atom = ledger.classes.find(c => c.class === 'derived_atom')!;
+    const orphan = ledger.classes.find(c => c.class === 'private_orphan')!;
     const fenceHosts = new Set([ledger.classes.find(c => c.class === 'private_take')!.protected.slug]);
     for (const p of ledger.pages) {
-      const protectedPage = p.source_id === 'beta' || p.slug === privatePage.protected.slug || p.slug === atom.protected.slug || fenceHosts.has(p.slug);
+      const protectedPage = p.source_id === 'beta' || p.slug === privatePage.protected.slug || p.slug === atom.protected.slug || p.slug === orphan.protected.slug || fenceHosts.has(p.slug);
       if (protectedPage) continue;
       for (const m of forbiddenMarkers) expect([p.slug, p.content.includes(m)]).toEqual([p.slug, false]);
     }
+  });
+
+  test('v2 side writes: the private ontology value and private raw data are protected, their twins are world', () => {
+    const ont = ledger.classes.find(c => c.class === 'private_ontology')!;
+    const raw = ledger.classes.find(c => c.class === 'private_raw_data')!;
+    const privatePage = ledger.classes.find(c => c.class === 'private_page')!;
+    expect(ledger.side_writes.ontology.filter(o => o.value.includes(ont.protected_markers[0])).map(o => o.visibility)).toEqual(['private']);
+    expect(ledger.side_writes.ontology.filter(o => o.value.includes(ont.twin_markers[0])).map(o => o.visibility)).toEqual(['world']);
+    expect(ledger.side_writes.raw_data.find(d => JSON.stringify(d.data).includes(raw.protected_markers[0]))?.slug).toBe(privatePage.protected.slug);
+    expect(ledger.side_writes.raw_data.find(d => JSON.stringify(d.data).includes(raw.twin_markers[0]))?.slug).toBe(privatePage.twin.slug);
+  });
+
+  test('v2 keeps every v1 class and marker unchanged', () => {
+    expect(ledger.classes.slice(0, 5).map(c => c.class)).toEqual(['private_page', 'private_take', 'private_fact', 'derived_atom', 'foreign_source']);
+    expect(ledger.classes[0].protected_markers).toEqual(V1_PRIVATE_PAGE_MARKERS);
   });
 });
 
@@ -114,7 +132,7 @@ describe('N6 leak scoring', () => {
   });
 
   test('returning everything leaks every class', () => {
-    const everything = ok({ pages: ledger.pages.map(p => ({ slug: p.slug, source_id: p.source_id, body: p.content })) });
+    const everything = ok({ pages: ledger.pages.map(p => ({ slug: p.slug, source_id: p.source_id, body: p.content })), side_writes: ledger.side_writes });
     for (const c of ledger.classes) expect(scanLeaks(everything, c.protected_markers, c.protected_slugs, []).content).not.toBeNull();
   });
 

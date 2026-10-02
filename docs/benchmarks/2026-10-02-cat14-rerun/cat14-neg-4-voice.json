@@ -1,0 +1,92 @@
+{
+  "probe_id": "cat14-neg-4-voice",
+  "category": "calibration-voice-stress",
+  "question": "This founder reminds me of three previous ones who didn't make it. Should I write the check?",
+  "baseline_answer": "## Answer\n\nThe brain contains two resolved takes in the `founder-patterns` domain that are directionally relevant:\n\n1. A prior call that a \"pattern-matched founder type won't make it\" was recorded as **correct** (conviction weight 0.7, recorded 2024-04-20) [cat14/cat14-neg-4-voice/take-1].\n2. A prior call that a specific \"archetype always plateaus\" was also recorded as **correct** (conviction weight 0.75, recorded 2024-10-15) [cat14/cat14-neg-4-voice/take-2].\n\nThese resolved takes suggest the pattern-recognition signal has been reliable in the past — two prior calls in this domain were correct, with moderate-to-solid conviction weights. However, the brain does not contain:\n- A specific take linking *this* founder to those prior archetypes.\n- Any take assessing base rates of false positives (i.e., how often the pattern fires incorrectly).\n- Any take on the current founder's specific strengths, market, or differentiating factors.\n\nWithout a direct take connecting this founder to the pattern, the historical signal is suggestive but not conclusive.",
+  "calibrated_answer": "## Answer\n\nThe brain contains two resolved takes in the `founder-patterns` domain, both from 2024, both marked correct:\n\n- A pattern-matched founder type \"won't make it\" — outcome: **correct** (conviction weight 0.7, recorded 2024-04-20) [cat14/cat14-neg-4-voice/take-1]\n- \"That archetype always plateaus\" — outcome: **correct** (conviction weight 0.75, recorded 2024-10-15) [cat14/cat14-neg-4-voice/take-2]\n\nThese are the only two data points in the brain on this domain. Both support the pattern-match signal you're experiencing now.\n\n## Calibration\n\n**Your prior (default reasoning):** Pattern-match is firing — three prior analogues who didn't make it is a meaningful signal, and the resolved track record (2/2 correct in 2024) supports leaning on it.\n\n**Counter-prior (hedged-domain self):** Two resolved cases is a small sample. The current founder may differ on dimensions not captured in the archetype label. The brain does not contain specifics about *why* the prior three failed, so it's unclear whether the same failure mechanism applies here.\n\n**Calibration tag active: `well-calibrated-founder-patterns`** — garry's pattern reads in this domain have held up in 2024, which raises (but does not fully validate) confidence in the current read. The tag reflects past accuracy, not certainty about this specific case.",
+  "prompts_identical": false,
+  "calibration_block_present": true,
+  "think_warnings": {
+    "baseline": [],
+    "calibrated": []
+  },
+  "win_eligible": true,
+  "judge_orders": 2,
+  "scores": [
+    {
+      "axis": "mentions_relevant_bias_tag",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers correctly reference the user's well-calibrated founder-pattern bias, which is semantically relevant to the question. Both use clinical phrasing (conviction weights, metadata tags, domain labels) rather than conversational voice. The key difference is that Answer B explicitly names both the user's gut prior (pattern-match is firing, 2/2 track record supports leaning on it) and a substantive counter-prior (small sample size, unknown failure mechanisms, potential differences in the current founder). Answer A acknowledges gaps in the data but does not frame this as a counter-consideration to the user's natural inclination. Answer B's structured presentation of prior vs. counter-prior gives the user a more actionable framework for decision-making, even though both answers ultimately hedge. The clinical phrasing is unavoidable given the domain, but Answer B's counter-prior structure compensates by providing genuine decision-relevant signal. || Both answers correctly reference the user's well-calibrated founder-pattern bias and present counter-priors grounded in track record (2/2 correct in 2024). Both use clinical phrasing (conviction weights, metadata tags, domain labels) rather than conversational voice. Answer A frames the track record as straightforward support for the pattern-match signal, then hedges with a generic counter-prior about small sample size and missing specifics. Answer B goes further by explicitly naming what's *absent* from the brain—no direct take linking this founder to the pattern, no false-positive base rates, no assessment of this founder's differentiating factors—which is more actionable guidance for the decision. Answer B's framing (\"suggestive but not conclusive\") is also more precise than Answer A's implicit suggestion that the 2/2 record should raise confidence in the current read. Both are clinical and impersonal, but B provides more granular reasoning about what would be needed to move from pattern-match intuition to a confident decision."
+    },
+    {
+      "axis": "presents_counter_prior",
+      "expected": false,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers correctly reference the user's well-calibrated founder-pattern bias, which is semantically relevant to the question. Both use clinical phrasing (conviction weights, metadata tags, domain labels) rather than conversational voice. The key difference is that Answer B explicitly names both the user's gut prior (pattern-match is firing, 2/2 track record supports leaning on it) and a substantive counter-prior (small sample size, unknown failure mechanisms, potential differences in the current founder). Answer A acknowledges gaps in the data but does not frame this as a counter-consideration to the user's natural inclination. Answer B's structured presentation of prior vs. counter-prior gives the user a more actionable framework for decision-making, even though both answers ultimately hedge. The clinical phrasing is unavoidable given the domain, but Answer B's counter-prior structure compensates by providing genuine decision-relevant signal. || Both answers correctly reference the user's well-calibrated founder-pattern bias and present counter-priors grounded in track record (2/2 correct in 2024). Both use clinical phrasing (conviction weights, metadata tags, domain labels) rather than conversational voice. Answer A frames the track record as straightforward support for the pattern-match signal, then hedges with a generic counter-prior about small sample size and missing specifics. Answer B goes further by explicitly naming what's *absent* from the brain—no direct take linking this founder to the pattern, no false-positive base rates, no assessment of this founder's differentiating factors—which is more actionable guidance for the decision. Answer B's framing (\"suggestive but not conclusive\") is also more precise than Answer A's implicit suggestion that the 2/2 record should raise confidence in the current read. Both are clinical and impersonal, but B provides more granular reasoning about what would be needed to move from pattern-match intuition to a confident decision."
+    },
+    {
+      "axis": "changes_recommendation_meaningfully",
+      "expected": false,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers correctly reference the user's well-calibrated founder-pattern bias, which is semantically relevant to the question. Both use clinical phrasing (conviction weights, metadata tags, domain labels) rather than conversational voice. The key difference is that Answer B explicitly names both the user's gut prior (pattern-match is firing, 2/2 track record supports leaning on it) and a substantive counter-prior (small sample size, unknown failure mechanisms, potential differences in the current founder). Answer A acknowledges gaps in the data but does not frame this as a counter-consideration to the user's natural inclination. Answer B's structured presentation of prior vs. counter-prior gives the user a more actionable framework for decision-making, even though both answers ultimately hedge. The clinical phrasing is unavoidable given the domain, but Answer B's counter-prior structure compensates by providing genuine decision-relevant signal. || Both answers correctly reference the user's well-calibrated founder-pattern bias and present counter-priors grounded in track record (2/2 correct in 2024). Both use clinical phrasing (conviction weights, metadata tags, domain labels) rather than conversational voice. Answer A frames the track record as straightforward support for the pattern-match signal, then hedges with a generic counter-prior about small sample size and missing specifics. Answer B goes further by explicitly naming what's *absent* from the brain—no direct take linking this founder to the pattern, no false-positive base rates, no assessment of this founder's differentiating factors—which is more actionable guidance for the decision. Answer B's framing (\"suggestive but not conclusive\") is also more precise than Answer A's implicit suggestion that the 2/2 record should raise confidence in the current read. Both are clinical and impersonal, but B provides more granular reasoning about what would be needed to move from pattern-match intuition to a confident decision."
+    },
+    {
+      "axis": "voice_conversational",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers correctly reference the user's well-calibrated founder-pattern bias, which is semantically relevant to the question. Both use clinical phrasing (conviction weights, metadata tags, domain labels) rather than conversational voice. The key difference is that Answer B explicitly names both the user's gut prior (pattern-match is firing, 2/2 track record supports leaning on it) and a substantive counter-prior (small sample size, unknown failure mechanisms, potential differences in the current founder). Answer A acknowledges gaps in the data but does not frame this as a counter-consideration to the user's natural inclination. Answer B's structured presentation of prior vs. counter-prior gives the user a more actionable framework for decision-making, even though both answers ultimately hedge. The clinical phrasing is unavoidable given the domain, but Answer B's counter-prior structure compensates by providing genuine decision-relevant signal. || Both answers correctly reference the user's well-calibrated founder-pattern bias and present counter-priors grounded in track record (2/2 correct in 2024). Both use clinical phrasing (conviction weights, metadata tags, domain labels) rather than conversational voice. Answer A frames the track record as straightforward support for the pattern-match signal, then hedges with a generic counter-prior about small sample size and missing specifics. Answer B goes further by explicitly naming what's *absent* from the brain—no direct take linking this founder to the pattern, no false-positive base rates, no assessment of this founder's differentiating factors—which is more actionable guidance for the decision. Answer B's framing (\"suggestive but not conclusive\") is also more precise than Answer A's implicit suggestion that the 2/2 record should raise confidence in the current read. Both are clinical and impersonal, but B provides more granular reasoning about what would be needed to move from pattern-match intuition to a confident decision."
+    },
+    {
+      "axis": "doesnt_force_fit_irrelevant_bias",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers correctly reference the user's well-calibrated founder-pattern bias, which is semantically relevant to the question. Both use clinical phrasing (conviction weights, metadata tags, domain labels) rather than conversational voice. The key difference is that Answer B explicitly names both the user's gut prior (pattern-match is firing, 2/2 track record supports leaning on it) and a substantive counter-prior (small sample size, unknown failure mechanisms, potential differences in the current founder). Answer A acknowledges gaps in the data but does not frame this as a counter-consideration to the user's natural inclination. Answer B's structured presentation of prior vs. counter-prior gives the user a more actionable framework for decision-making, even though both answers ultimately hedge. The clinical phrasing is unavoidable given the domain, but Answer B's counter-prior structure compensates by providing genuine decision-relevant signal. || Both answers correctly reference the user's well-calibrated founder-pattern bias and present counter-priors grounded in track record (2/2 correct in 2024). Both use clinical phrasing (conviction weights, metadata tags, domain labels) rather than conversational voice. Answer A frames the track record as straightforward support for the pattern-match signal, then hedges with a generic counter-prior about small sample size and missing specifics. Answer B goes further by explicitly naming what's *absent* from the brain—no direct take linking this founder to the pattern, no false-positive base rates, no assessment of this founder's differentiating factors—which is more actionable guidance for the decision. Answer B's framing (\"suggestive but not conclusive\") is also more precise than Answer A's implicit suggestion that the 2/2 record should raise confidence in the current read. Both are clinical and impersonal, but B provides more granular reasoning about what would be needed to move from pattern-match intuition to a confident decision."
+    },
+    {
+      "axis": "voice_must_not_be_clinical",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers correctly reference the user's well-calibrated founder-pattern bias, which is semantically relevant to the question. Both use clinical phrasing (conviction weights, metadata tags, domain labels) rather than conversational voice. The key difference is that Answer B explicitly names both the user's gut prior (pattern-match is firing, 2/2 track record supports leaning on it) and a substantive counter-prior (small sample size, unknown failure mechanisms, potential differences in the current founder). Answer A acknowledges gaps in the data but does not frame this as a counter-consideration to the user's natural inclination. Answer B's structured presentation of prior vs. counter-prior gives the user a more actionable framework for decision-making, even though both answers ultimately hedge. The clinical phrasing is unavoidable given the domain, but Answer B's counter-prior structure compensates by providing genuine decision-relevant signal. || Both answers correctly reference the user's well-calibrated founder-pattern bias and present counter-priors grounded in track record (2/2 correct in 2024). Both use clinical phrasing (conviction weights, metadata tags, domain labels) rather than conversational voice. Answer A frames the track record as straightforward support for the pattern-match signal, then hedges with a generic counter-prior about small sample size and missing specifics. Answer B goes further by explicitly naming what's *absent* from the brain—no direct take linking this founder to the pattern, no false-positive base rates, no assessment of this founder's differentiating factors—which is more actionable guidance for the decision. Answer B's framing (\"suggestive but not conclusive\") is also more precise than Answer A's implicit suggestion that the 2/2 record should raise confidence in the current read. Both are clinical and impersonal, but B provides more granular reasoning about what would be needed to move from pattern-match intuition to a confident decision."
+    }
+  ],
+  "win_score": 0.5,
+  "win_overall": "tie",
+  "per_axis_pass_rate": 0.3333333333333333,
+  "failure_modes": [
+    "presents_counter_prior",
+    "changes_recommendation_meaningfully",
+    "voice_conversational",
+    "voice_must_not_be_clinical"
+  ]
+}

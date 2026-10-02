@@ -1,0 +1,78 @@
+{
+  "probe_id": "cat14-pos-3-macro",
+  "category": "calibration-pattern-relevant",
+  "question": "AI valuations are at all-time highs. Should we pull our AI investment activity for 6 months?",
+  "baseline_answer": "## Answer\n\nThe brain contains directly relevant data on this question: garry has a track record of **three consecutive failed macro-timing calls** on AI valuations:\n\n1. **\"AI hype cycle peaks by Q3 2024\"** — recorded 2024-01-15 with conviction weight 0.85 → **incorrect** [cat14/cat14-pos-3-macro/take-1]\n2. **\"AI valuations correct by year-end 2024\"** — recorded 2024-04-10 with conviction weight 0.80 → **incorrect** [cat14/cat14-pos-3-macro/take-2]\n3. **\"The bubble pops in 2025\"** — recorded 2024-07-30 with conviction weight 0.85 → **incorrect** [cat14/cat14-pos-3-macro/take-3]\n\nAll three calls were made with high conviction (0.80–0.85) and all three resolved as incorrect. This constitutes a consistent pattern of failed macro-timing on AI valuations within the brain's recorded history.\n\nThe brain does **not** contain current takes on whether to pause AI investment activity, nor does it contain data on current portfolio composition, deal pipeline, or fund mandate constraints that would bear on a 6-month pause decision.",
+  "calibrated_answer": "## Answer\n\nThe brain contains three resolved macro-timing takes from garry, all high-conviction, all incorrect:\n\n1. **\"AI hype cycle peaks by Q3 2024\"** — incorrect (conviction 0.85, recorded 2024-01-15) [cat14/cat14-pos-3-macro/take-1]\n2. **\"AI valuations correct by year-end 2024\"** — incorrect (conviction 0.80, recorded 2024-04-10) [cat14/cat14-pos-3-macro/take-2]\n3. **\"The bubble pops in 2025\"** — incorrect (conviction 0.85, recorded 2024-07-30) [cat14/cat14-pos-3-macro/take-3]\n\nThe brain does not contain current AI valuation data, portfolio composition details, or investment mandate constraints needed to evaluate the specific 6-month pause proposal.\n\n## Calibration\n\n**Active bias tag: over-confident-macro-timing**\n\nThe question \"AI valuations are at all-time highs, should we pause?\" is structurally identical to the three prior calls above — each was a high-conviction read that a valuation peak or correction was imminent. The calibration profile notes garry's macro-timing prior is **consistently early by 12–18 months**.\n\n- **Garry's default prior (the one generating this question):** Valuations are stretched → correction is near → reduce exposure now.\n- **Garry's counter-prior (from the hedged-domain self, given the track record):** The same signal has fired three times in 18 months and been wrong each time; the correction may still be 12–18 months further out than it feels.\n\nThe over-confident-macro-timing pattern is directly active here. The track record (3/3 missed calls, all in the same direction) is relevant data when weighting how much the current valuation read should drive a 6-month activity pause.",
+  "prompts_identical": false,
+  "calibration_block_present": true,
+  "think_warnings": {
+    "baseline": [],
+    "calibrated": []
+  },
+  "win_eligible": true,
+  "judge_orders": 2,
+  "scores": [
+    {
+      "axis": "mentions_relevant_bias_tag",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers correctly identify the over-confident-macro-timing bias as relevant and cite the three failed high-conviction calls. Answer A documents the track record but stops short of drawing actionable inference—it notes the pattern exists but doesn't connect it to the current decision. Answer B goes further: it explicitly names the user's gut prior (valuations stretched → pause now) and articulates the counter-prior grounded in the track record (the same signal has misfired 3/3 times; correction may be 12–18 months further out). This counter-prior framing is the core insight needed to calibrate the current decision. Answer A uses clinical notation (conviction weights, catalog references) without translating to decision logic; Answer B avoids jargon and focuses on the inference. The substantive difference is that B provides a reasoned hedge against the current impulse, while A merely documents the history. || Both answers correctly identify the over-confident-macro-timing bias as relevant and cite the three failed calls with appropriate conviction weights. Answer A goes further by explicitly naming the user's gut prior (\"valuations are stretched → correction is near → reduce exposure now\") and then presenting a concrete counter-prior grounded in the track record: the same signal has fired three times and been wrong each time, suggesting the correction may be 12–18 months further out. Answer B stops at documenting the failed calls without synthesizing them into actionable guidance on whether to pause. Answer A's explicit prior-vs-counter-prior framing directly addresses the decision at hand, while Answer B leaves the user to draw their own inference. Both maintain conversational voice and avoid clinical jargon."
+    },
+    {
+      "axis": "presents_counter_prior",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers correctly identify the over-confident-macro-timing bias as relevant and cite the three failed high-conviction calls. Answer A documents the track record but stops short of drawing actionable inference—it notes the pattern exists but doesn't connect it to the current decision. Answer B goes further: it explicitly names the user's gut prior (valuations stretched → pause now) and articulates the counter-prior grounded in the track record (the same signal has misfired 3/3 times; correction may be 12–18 months further out). This counter-prior framing is the core insight needed to calibrate the current decision. Answer A uses clinical notation (conviction weights, catalog references) without translating to decision logic; Answer B avoids jargon and focuses on the inference. The substantive difference is that B provides a reasoned hedge against the current impulse, while A merely documents the history. || Both answers correctly identify the over-confident-macro-timing bias as relevant and cite the three failed calls with appropriate conviction weights. Answer A goes further by explicitly naming the user's gut prior (\"valuations are stretched → correction is near → reduce exposure now\") and then presenting a concrete counter-prior grounded in the track record: the same signal has fired three times and been wrong each time, suggesting the correction may be 12–18 months further out. Answer B stops at documenting the failed calls without synthesizing them into actionable guidance on whether to pause. Answer A's explicit prior-vs-counter-prior framing directly addresses the decision at hand, while Answer B leaves the user to draw their own inference. Both maintain conversational voice and avoid clinical jargon."
+    },
+    {
+      "axis": "changes_recommendation_meaningfully",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers correctly identify the over-confident-macro-timing bias as relevant and cite the three failed high-conviction calls. Answer A documents the track record but stops short of drawing actionable inference—it notes the pattern exists but doesn't connect it to the current decision. Answer B goes further: it explicitly names the user's gut prior (valuations stretched → pause now) and articulates the counter-prior grounded in the track record (the same signal has misfired 3/3 times; correction may be 12–18 months further out). This counter-prior framing is the core insight needed to calibrate the current decision. Answer A uses clinical notation (conviction weights, catalog references) without translating to decision logic; Answer B avoids jargon and focuses on the inference. The substantive difference is that B provides a reasoned hedge against the current impulse, while A merely documents the history. || Both answers correctly identify the over-confident-macro-timing bias as relevant and cite the three failed calls with appropriate conviction weights. Answer A goes further by explicitly naming the user's gut prior (\"valuations are stretched → correction is near → reduce exposure now\") and then presenting a concrete counter-prior grounded in the track record: the same signal has fired three times and been wrong each time, suggesting the correction may be 12–18 months further out. Answer B stops at documenting the failed calls without synthesizing them into actionable guidance on whether to pause. Answer A's explicit prior-vs-counter-prior framing directly addresses the decision at hand, while Answer B leaves the user to draw their own inference. Both maintain conversational voice and avoid clinical jargon."
+    },
+    {
+      "axis": "voice_conversational",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        true
+      ],
+      "score": 0.5,
+      "outcome": "split",
+      "rationale": "Both answers correctly identify the over-confident-macro-timing bias as relevant and cite the three failed high-conviction calls. Answer A documents the track record but stops short of drawing actionable inference—it notes the pattern exists but doesn't connect it to the current decision. Answer B goes further: it explicitly names the user's gut prior (valuations stretched → pause now) and articulates the counter-prior grounded in the track record (the same signal has misfired 3/3 times; correction may be 12–18 months further out). This counter-prior framing is the core insight needed to calibrate the current decision. Answer A uses clinical notation (conviction weights, catalog references) without translating to decision logic; Answer B avoids jargon and focuses on the inference. The substantive difference is that B provides a reasoned hedge against the current impulse, while A merely documents the history. || Both answers correctly identify the over-confident-macro-timing bias as relevant and cite the three failed calls with appropriate conviction weights. Answer A goes further by explicitly naming the user's gut prior (\"valuations are stretched → correction is near → reduce exposure now\") and then presenting a concrete counter-prior grounded in the track record: the same signal has fired three times and been wrong each time, suggesting the correction may be 12–18 months further out. Answer B stops at documenting the failed calls without synthesizing them into actionable guidance on whether to pause. Answer A's explicit prior-vs-counter-prior framing directly addresses the decision at hand, while Answer B leaves the user to draw their own inference. Both maintain conversational voice and avoid clinical jargon."
+    },
+    {
+      "axis": "doesnt_force_fit_irrelevant_bias",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers correctly identify the over-confident-macro-timing bias as relevant and cite the three failed high-conviction calls. Answer A documents the track record but stops short of drawing actionable inference—it notes the pattern exists but doesn't connect it to the current decision. Answer B goes further: it explicitly names the user's gut prior (valuations stretched → pause now) and articulates the counter-prior grounded in the track record (the same signal has misfired 3/3 times; correction may be 12–18 months further out). This counter-prior framing is the core insight needed to calibrate the current decision. Answer A uses clinical notation (conviction weights, catalog references) without translating to decision logic; Answer B avoids jargon and focuses on the inference. The substantive difference is that B provides a reasoned hedge against the current impulse, while A merely documents the history. || Both answers correctly identify the over-confident-macro-timing bias as relevant and cite the three failed calls with appropriate conviction weights. Answer A goes further by explicitly naming the user's gut prior (\"valuations are stretched → correction is near → reduce exposure now\") and then presenting a concrete counter-prior grounded in the track record: the same signal has fired three times and been wrong each time, suggesting the correction may be 12–18 months further out. Answer B stops at documenting the failed calls without synthesizing them into actionable guidance on whether to pause. Answer A's explicit prior-vs-counter-prior framing directly addresses the decision at hand, while Answer B leaves the user to draw their own inference. Both maintain conversational voice and avoid clinical jargon."
+    }
+  ],
+  "win_score": 1,
+  "win_overall": "calibrated",
+  "per_axis_pass_rate": 0.9,
+  "failure_modes": [
+    "voice_conversational"
+  ]
+}
