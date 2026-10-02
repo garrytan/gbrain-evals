@@ -58,8 +58,9 @@ import {
 
 export const CATEGORY = 'n2-contradiction-surfacing';
 export const JUDGE_MODEL = 'anthropic:claude-haiku-4-5-20251001';
-export const PAID_ESTIMATE_USD = 4;
-export const PROBE_BUDGET_USD = 6;
+export const PAID_ESTIMATE_USD = 8;
+/** Raised from $6 ($1.50 per shard) to $10 ($2.50 per shard) on 2026-10-03, preregistered in docs/benchmarks/2026-10-03-wave7-repin-preregistration.md before the prompt v4 run. */
+export const PROBE_BUDGET_USD = 10;
 /** The paid arm splits the queries into shards run concurrently (one probe run each, probe budget split evenly); per-query pairs and verdicts are unaffected. */
 export const PAID_SHARDS = 4;
 const TOP_K = 5;
