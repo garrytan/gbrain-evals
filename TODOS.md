@@ -50,7 +50,11 @@ The [August 31 audit](docs/audit/2026-08-31-eval-audit.md) explains the finding 
 
 - [x] **Re-run Cat14 with the current blind runner** (September 28 audit, A-01). Done 2026-10-02 at `d44296c` (about $0.30, not metered by the runner): 8/8 probes scored; calibrated advice preferred in 5 of 6 win-eligible probes, 0 for the plain answer; gate failed (counter to the usual pattern 2/4 against 80%, conversational voice 31% against 95%). [Report](docs/benchmarks/2026-10-02-cat14-rerun.md). Original text: The May 75% result is retracted. The current runner is blind, judges both orders at temperature 0 and calls `runThink`; the historical cost was about $0.05.
 
-- [ ] **Re-run the May snapshot categories with current runners** (September 28 audit, A-09 and Part B). Cats 19, 20 and 21 have hermetic or cheap live modes. Until receipts exist, the May rows stay marked invalid.
+- [x] **Re-run the May snapshot categories with current runners** (September 28 audit, A-09 and Part B). Done 2026-10-02 at `d44296c` (about $1.20): Cat 19 passed 5/5 gates with live embeddings; Cat 20 failed its judge floor (grounding 1.00, judge 1.17/5 against 2.5); Cat 21 tied at the ceiling (12/12 for both embedders), so it needs paraphrased questions to separate them. The May rows keep their numbers with dated pointers. [Report](docs/benchmarks/2026-10-02-may-snapshot-reruns.md). Original text: Cats 19, 20 and 21 have hermetic or cheap live modes. Until receipts exist, the May rows stay marked invalid.
+
+- [ ] **Record the Cat 20 judge's rationale and add a second judge.** The 2026-10-02 rerun scored 1.17/5 but stored no rationale, so a weak-ideas result cannot be told from a harsh judge.
+
+- [ ] **Give Cat 21 questions that do not name the symbol.** Every 2026-10-02 question names its symbol, so the keyword arm finds it and both embedders tie at 12/12.
 
 - [x] **Re-pin gbrain to a master commit or release tag** (September 28 audit, C1/C2). Done in 0.10.1: `gbrain` pins master `b80cad6`, the cue experiments use the `gbrain-cues` alias at `939232f`, and pins are read from `package.json`. `gbrain-reader` moved in 0.10.1 from `a9de062` (on no branch) to master `e78f1c3`, whose `src/` tree is byte-identical.
 
