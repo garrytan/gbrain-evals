@@ -61,6 +61,8 @@ export interface CellRecord {
   repeat: number;
   score: TaskScore;
   claims: ClaimVerdicts | null;
+  /** Set when the claims judge failed; the paid agent run is still recorded, with `claims: null`. */
+  judge_error?: string;
   run: Omit<AgentRun, 'tools'> & { tool_calls: Array<{ name: string; ms: number; chars: number; truncated: boolean; error?: string }> };
   session1?: Omit<AgentRun, 'tools'> & { tool_calls: Array<{ name: string; ms: number; chars: number }> };
   gbrain_internal?: Meter;
@@ -156,11 +158,16 @@ async function runCell(ctx: Ctx, model: string, armName: ArmName, task: LadderTa
     const run = await runAgent({ ...common, system: systemPrompt(ctx.world, arm), user: userMessage(ctx.world, task, arm, 2), scripted: ctx.scripted ? scriptedAgent(task, armName) : undefined });
     const score = scoreTask(task, run, { session1, isWrite });
     const gbrain_internal = slot ? ctx.proxy!.take(slot.id) : undefined;
-    const judged = await judgeClaims(ctx, task, run);
+    let judged: { claims: ClaimVerdicts | null; usd: number; error?: string };
+    try { judged = await judgeClaims(ctx, task, run); }
+    catch (e) {
+      if ((e as Error).name === 'BudgetExceededError') throw e;
+      judged = { claims: null, usd: 0, error: (e as Error).message };
+    }
     const total = run.usd + (session1?.usd ?? 0) + (gbrain_internal?.usd ?? 0);
     return {
       key: runId, model, provider: ctx.scripted ? 'scripted' : provider(model), arm: label, task: task.id, family: task.family, variant: task.variant, repeat,
-      score, claims: judged.claims, run: strip(run), ...(session1 ? { session1: strip(session1) } : {}), ...(gbrain_internal ? { gbrain_internal } : {}),
+      score, claims: judged.claims, ...(judged.error ? { judge_error: judged.error } : {}), run: strip(run), ...(session1 ? { session1: strip(session1) } : {}), ...(gbrain_internal ? { gbrain_internal } : {}),
       total_usd: total, judge_usd: judged.usd, wall_ms: Date.now() - started.getTime(), started_at: started.toISOString(),
     } as CellRecord;
   } finally {
