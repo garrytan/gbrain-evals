@@ -2,6 +2,68 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.9] - 2026-10-02
+
+### CI slices for N1 and N5, faster N9, a matched concept cell, fresh Cat 14 and Cat 19 to 21 receipts, wider N6, live negative controls
+
+gbrain stays pinned at master `d44296c` (v0.60.30.0). Paid spend for the
+whole wave: $1.09 metered by the budget ledger (concept cells and a smoke
+run), plus about $2.20 counted from runners that do not meter their spend,
+about $3.30 against a $50 cap. No new gbrain bug was found.
+
+- **N1 and N5 now gate in CI.** New registry entries `knowledge-update-ci`
+  and `forget-residue-ci` run in the offline tier. Each is an entity subset
+  of the seeded ledger on one PGLite cell, served over stdio MCP by the
+  gbrain CLI, with trusted and private reads through `gbrain call`. They
+  keep every rule of the full category and add signal floors computed from
+  the sliced ledger. The subsets, cell and floors were preregistered in their
+  own commit before any slice ran. First runs passed every rule: N1-ci 64/64
+  current-value and 57/57 history probes in 57 s, N5-ci 0 prohibited outputs
+  and 120/120 retained pairs in 79 s. A pure CLI-transport cell could not fit
+  two minutes: each `gbrain call` costs about 1 s, 0.7 s of it opening
+  PGLite, and the full N5 CLI cell made 508 calls in 575 s
+  ([report](docs/benchmarks/2026-10-02-ci-slices.md)).
+- **N9 hermetic arm: 47 s instead of about 130 s.** Each ingestion seed now
+  runs in its own process and the rows merge in seed order. A serial and a
+  parallel receipt are identical apart from timing fields and the runner
+  hash; `--serial-seeds` restores the old path. **N2 was not trimmed:**
+  seeding 825 pages through `put_page` (49 s) and the two gating probes
+  already take about 65 s, and the remaining cuts would shrink the
+  preregistered 150-conflict denominator
+  ([note](docs/benchmarks/2026-10-02-hermetic-arm-trims.md)).
+- **Concept search with the same reranker on both sides** (September 28
+  audit, B2). New opt-in Cat 13 adapter `vector-rerank` sends vector results
+  through gbrain's own `applyReranker`. On the 181 held-out questions:
+  vectors 118, vectors with the reranker 128, gbrain 99, gbrain with the
+  reranker 130 exact targets first. Reranked gbrain won first place on 8
+  questions and lost it on 10 (p = 0.81). The README now quotes this matched
+  set; the September cells (102, 118, 130) stay as history
+  ([report](docs/benchmarks/2026-10-02-concept-vector-rerank.md)).
+- **Cat 14 rerun with the blind runner** (audit A-01): 8/8 probes scored, the
+  calibrated advice preferred in 5 of 6 win-eligible probes and never the
+  plain answer; the gate fails on the counter-argument (2/4) and voice (31%)
+  axes. The May 75% stays retracted
+  ([report](docs/benchmarks/2026-10-02-cat14-rerun.md)).
+- **Cats 19, 20 and 21 have fresh receipts** (audit A-09). Cat 19 passes 5/5
+  gates with live embeddings (health score 10 to 85). Cat 20 fails its judge
+  floor: grounding 1.00 over 69 graded ideas, judge 1.17/5 against 2.5. Cat
+  21 ties at the ceiling (12/12 for both embedders), so it needs questions
+  that do not name the symbol. The May rows keep their numbers with dated
+  pointers ([report](docs/benchmarks/2026-10-02-may-snapshot-reruns.md)).
+- **N6 generator v2** seeds a private ontology observation, raw data on a
+  private page and a private orphan page beside public twins. Read-op
+  coverage rose from 26 to 30 of 74 with 0 leaks; skills, code intelligence
+  and schema-pack ops remain uncovered for the reasons recorded in the
+  [update](docs/benchmarks/2026-09-30-n6-visibility-fuzz.md#update-2026-10-02-three-more-surfaces-seeded-30-of-74-read-ops-covered).
+- **Live negative controls** (WS3), both preregistered and both passing the
+  0.5 rule: Cat 25 `think` without trajectory data 0.00 against 0.84 with
+  it; Cat 13 vector search with hash embeddings held-out nDCG@5 0.077
+  against 0.606 with Voyage
+  ([report](docs/benchmarks/2026-10-02-live-negative-controls.md)).
+- Plans written before the paid runs:
+  [paid reruns and negative controls](docs/benchmarks/2026-10-02-paid-reruns-plan.md),
+  [CI slices](docs/benchmarks/2026-10-02-ci-slices-preregistration.md).
+
 ## [0.10.6] - 2026-10-02
 
 ### Re-pin to gbrain `d44296c`: all 20 wave bugs fixed and verified, N12 gates
