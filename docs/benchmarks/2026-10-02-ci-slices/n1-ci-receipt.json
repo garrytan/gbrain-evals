@@ -3707,13 +3707,13 @@
               "init",
               "--pglite",
               "--path",
-              "/tmp/n1-knowledge-update-cells-4V0Sck/n1-pglite-mcp-stdio/gbrain-home/brain.pglite",
+              "<tmp>/n1-knowledge-update-cells-4V0Sck/n1-pglite-mcp-stdio/gbrain-home/brain.pglite",
               "--no-embedding",
               "--non-interactive"
             ],
             "code": 0,
             "ms": 3432,
-            "tail": "  Setting up brain schema (v188)...\n  v142: takes.embedding resized to vector(1024); existing take vectors cleared\n  183 migration(s) applied\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: /tmp/n1-knowledge-update-cells-4V0Sck/n1-pglite-mcp-stdio/gbrain-home/.gbrain/content/f5077f7f-401d-4191-bbaa-ec9aaa216254/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)\n10 recommended skill(s) not installed yet (cold-start, book-mirror, article-enrichment, strategic-reading, …).\nOpen your agent workspace first (scaffold needs a target), then `gbrain skillpack scaffold --all`; full list: gbrain advisor"
+            "tail": "  Setting up brain schema (v188)...\n  v142: takes.embedding resized to vector(1024); existing take vectors cleared\n  183 migration(s) applied\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: <tmp>/n1-knowledge-update-cells-4V0Sck/n1-pglite-mcp-stdio/gbrain-home/.gbrain/content/f5077f7f-401d-4191-bbaa-ec9aaa216254/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)\n10 recommended skill(s) not installed yet (cold-start, book-mirror, article-enrichment, strategic-reading, …).\nOpen your agent workspace first (scaffold needs a target), then `gbrain skillpack scaffold --all`; full list: gbrain advisor"
           },
           {
             "step": "sources-add:vault",
@@ -3722,11 +3722,11 @@
               "add",
               "vault",
               "--path",
-              "/tmp/n1-knowledge-update-cells-4V0Sck/n1-pglite-mcp-stdio/vault-vault"
+              "<tmp>/n1-knowledge-update-cells-4V0Sck/n1-pglite-mcp-stdio/vault-vault"
             ],
             "code": 0,
             "ms": 1113,
-            "tail": "  \"source_id\": \"vault\",\n  \"local_path\": \"/tmp/n1-knowledge-update-cells-4V0Sck/n1-pglite-mcp-stdio/vault-vault\",\n  \"source_incarnation\": \"24536852-2be1-4e09-9ffd-2f20e34581bd\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"da7e7e22-648f-40cd-bb17-5f4e0d8cde32\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}"
+            "tail": "  \"source_id\": \"vault\",\n  \"local_path\": \"<tmp>/n1-knowledge-update-cells-4V0Sck/n1-pglite-mcp-stdio/vault-vault\",\n  \"source_incarnation\": \"24536852-2be1-4e09-9ffd-2f20e34581bd\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"da7e7e22-648f-40cd-bb17-5f4e0d8cde32\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}"
           },
           {
             "step": "sources-default",

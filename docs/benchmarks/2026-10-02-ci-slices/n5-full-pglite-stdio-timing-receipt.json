@@ -2017,13 +2017,13 @@
               "init",
               "--pglite",
               "--path",
-              "/tmp/n5-forget-residue-cells-efagzP/n5-pglite-mcp-stdio/gbrain-home/brain.pglite",
+              "<tmp>/n5-forget-residue-cells-efagzP/n5-pglite-mcp-stdio/gbrain-home/brain.pglite",
               "--no-embedding",
               "--non-interactive"
             ],
             "code": 0,
             "ms": 3495,
-            "tail": "  Setting up brain schema (v188)...\n  v142: takes.embedding resized to vector(1024); existing take vectors cleared\n  183 migration(s) applied\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: /tmp/n5-forget-residue-cells-efagzP/n5-pglite-mcp-stdio/gbrain-home/.gbrain/content/edee2253-b187-45f5-9372-74507b3b4ffb/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)\n10 recommended skill(s) not installed yet (cold-start, book-mirror, article-enrichment, strategic-reading, …).\nOpen your agent workspace first (scaffold needs a target), then `gbrain skillpack scaffold --all`; full list: gbrain advisor"
+            "tail": "  Setting up brain schema (v188)...\n  v142: takes.embedding resized to vector(1024); existing take vectors cleared\n  183 migration(s) applied\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: <tmp>/n5-forget-residue-cells-efagzP/n5-pglite-mcp-stdio/gbrain-home/.gbrain/content/edee2253-b187-45f5-9372-74507b3b4ffb/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)\n10 recommended skill(s) not installed yet (cold-start, book-mirror, article-enrichment, strategic-reading, …).\nOpen your agent workspace first (scaffold needs a target), then `gbrain skillpack scaffold --all`; full list: gbrain advisor"
           },
           {
             "step": "sources-add:vault",
@@ -2032,11 +2032,11 @@
               "add",
               "vault",
               "--path",
-              "/tmp/n5-forget-residue-cells-efagzP/n5-pglite-mcp-stdio/vault-vault"
+              "<tmp>/n5-forget-residue-cells-efagzP/n5-pglite-mcp-stdio/vault-vault"
             ],
             "code": 0,
             "ms": 1076,
-            "tail": "  \"source_id\": \"vault\",\n  \"local_path\": \"/tmp/n5-forget-residue-cells-efagzP/n5-pglite-mcp-stdio/vault-vault\",\n  \"source_incarnation\": \"02c9e274-5d9d-499e-9622-070281c7b850\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"1eec27f5-bd16-4c08-b6bc-1da405e5c5ea\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}"
+            "tail": "  \"source_id\": \"vault\",\n  \"local_path\": \"<tmp>/n5-forget-residue-cells-efagzP/n5-pglite-mcp-stdio/vault-vault\",\n  \"source_incarnation\": \"02c9e274-5d9d-499e-9622-070281c7b850\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"1eec27f5-bd16-4c08-b6bc-1da405e5c5ea\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}"
           },
           {
             "step": "sources-add:other",
@@ -2045,11 +2045,11 @@
               "add",
               "other",
               "--path",
-              "/tmp/n5-forget-residue-cells-efagzP/n5-pglite-mcp-stdio/other-vault"
+              "<tmp>/n5-forget-residue-cells-efagzP/n5-pglite-mcp-stdio/other-vault"
             ],
             "code": 0,
             "ms": 1053,
-            "tail": "  \"source_id\": \"other\",\n  \"local_path\": \"/tmp/n5-forget-residue-cells-efagzP/n5-pglite-mcp-stdio/other-vault\",\n  \"source_incarnation\": \"70f57872-c1b6-4c5e-a13c-f82d991ae497\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"536319a8-b282-41bc-adab-ed18be94e58f\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}"
+            "tail": "  \"source_id\": \"other\",\n  \"local_path\": \"<tmp>/n5-forget-residue-cells-efagzP/n5-pglite-mcp-stdio/other-vault\",\n  \"source_incarnation\": \"70f57872-c1b6-4c5e-a13c-f82d991ae497\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"536319a8-b282-41bc-adab-ed18be94e58f\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}"
           },
           {
             "step": "sources-default",
