@@ -505,9 +505,8 @@ export const REGISTRY: readonly CategoryEntry[] = [
     family: 'ingestion', tier: 'H', script: 'eval/runner/n12-format-fidelity.ts', run: { kind: 'dispatched' },
     cost_estimate: FREE, receipt_path: receipt('n12-format-fidelity'),
     headline: { metric: 'speaker attribution accuracy, timestamp exact match, turn-count error, honesty on non-conversation input, format coverage; attended-vs-mentioned F1 as a separate attendance stage', denominator: 'canonical turns rendered into every format enumerated at run time from transcriptAdapters() and BUILTIN_PATTERNS (7 adapters and 20 patterns at 3a284ae); negative pages and files; seeded meeting pages for attendance' },
-    gate: 'report-only', evidence_maturity: 'synthetic-production-path',
+    gate: 'gate', evidence_maturity: 'synthetic-production-path',
     promotion: {
-      held: { since: '2026-10-01', reason: 'no-fabricated-turns fails at the pinned 3a284ae on gbrain bug N12-1 (one-off bold labels parse as a conversation). The fix is in gbrain fix wave 5 (garrytan/gbrain#5839), open and unmerged on 2026-10-01; re-pin to a gbrain master that contains it, rerun N12, and remove this hold to make the row gate as preregistered' },
       preregistered: '2026-10-01',
       basis: 'amendment 1 and 9, frozen before the first run of this runner: the four safety contracts restate gbrain\'s own documented contracts (src/core/transcripts/types.ts: timestamps are real source timestamps, never invented, and skipped record kinds never reach the archive; conversation-parser no_match on non-conversation bodies; attended links need attendance evidence, src/core/link-extraction.ts). The two utility floors make a refuse-everything system fail: the plain control conversation must come back whole in every registered format, and the meeting-ingestion `## Attendees` form must be read. Every other metric is exploratory',
       safety_contracts: [

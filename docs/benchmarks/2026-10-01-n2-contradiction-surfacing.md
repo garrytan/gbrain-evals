@@ -1,5 +1,7 @@
 # Contradiction surfacing in three stages: discovery, classification, resolution (2026-10-01, N2)
 
+**Update, 2026-10-02.** gbrain fix wave 6 fixed N2-1, N2-2 and N2-3. At gbrain `d44296c`, undated pages reach the judge undated (0 of 190 shown with a date), and the bare CLI command reads the latest run. With judge prompt version 3 and the same model and budget, the judge called 132 of 150 same-time conflicts contradictions (was 105), and all three preregistered decision rules hold. Undated conflicts did not improve (36 of 50 both times). The numbers below are the October 1 measurement at `3a284ae`. See the [October 2 rerun](2026-10-02-wave-repin.md).
+
 ## The finding
 
 gbrain finds two notes that disagree only when a caller already asks about the right company and attribute, and its contradiction judge then calls 70% of real same-time conflicts contradictions.

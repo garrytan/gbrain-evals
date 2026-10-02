@@ -1,5 +1,7 @@
 # Ingestion format fidelity: transcript adapters, conversation-parser patterns and attendance (2026-10-01)
 
+**Update, 2026-10-02.** gbrain fix wave 5 fixed N12-1 (`7f723e45`) and N12-2 (`e437fe3d`), and fix wave 6 closed gap N12-7 (`81755f5b`). At gbrain `d44296c`, N12 passes all six preregistered rules on seeds 12 and 7: 0 fabricated turns, and 16 of 16 offset-stamped turns round-trip exactly. Its hold was removed, so **N12 now gates CI**. The numbers below are the October 1 measurement at `3a284ae`. See the [October 2 rerun](2026-10-02-wave-repin.md).
+
 ## The finding
 
 When a conversation arrives in any format gbrain registers, gbrain keeps who spoke, when, and how many turns there were. We rendered the same 8 seeded conversations (38 turns) into all 27 registered formats: the 7 transcript adapters and the 20 conversation-parser patterns, both read from gbrain's own registries at run time. Results:

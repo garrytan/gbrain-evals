@@ -11,7 +11,13 @@
       "surface": "think / query (keyless)",
       "repro": "bun eval/runner/a4-abstention.ts --gbrain <gbrain checkout>@3a284aea26889b77c633aebb4149c3016d834ee6",
       "expected": "n/a (gap)",
-      "actual": "the keyless path cannot say \"I don't know\"; A4 measures answers with a paid harness reader (gbrain's house reader)"
+      "actual": "the keyless path cannot say \"I don't know\"; A4 measures answers with a paid harness reader (gbrain's house reader)",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "not-rechecked",
+        "note": "A4 was not rerun: no A4 entry was in either fix wave"
+      }
     },
     {
       "id": "A4-2",
@@ -23,7 +29,13 @@
       "surface": "query op retrieval.crag (gradeRetrievalConfidence) on the keyword path",
       "repro": "bun eval/runner/a4-abstention.ts --gbrain <gbrain checkout>@3a284aea26889b77c633aebb4149c3016d834ee6   (data.crag)",
       "expected": "n/a (gap): a grade that separates questions the evidence can answer from ones it cannot",
-      "actual": "all 240 natural questions graded moderate (keyword_exact top), answerable or not, including 30 of 30 about companies no page names; the top result was a relaxed keyword match for 120 of 120 unanswerable questions (and 80 of 120 answerable), a signal the grade ignores; name-only lookups graded strong for 90 of 90 existing companies whose asked attribute is missing"
+      "actual": "all 240 natural questions graded moderate (keyword_exact top), answerable or not, including 30 of 30 about companies no page names; the top result was a relaxed keyword match for 120 of 120 unanswerable questions (and 80 of 120 answerable), a signal the grade ignores; name-only lookups graded strong for 90 of 90 existing companies whose asked attribute is missing",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "not-rechecked",
+        "note": "A4 was not rerun: no A4 entry was in either fix wave"
+      }
     },
     {
       "id": "A4-3",
@@ -35,7 +47,13 @@
       "surface": "eval/runner/budget-ledger.ts PAID_HOSTS (OpenAI, Anthropic, Voyage, OpenRouter only)",
       "repro": "bun -e \"import {priceRequest} from './eval/runner/budget-ledger.ts'; console.log(priceRequest('https://api.typesafe.ai/v1/x', {model: 'jev-1'}))\"",
       "expected": "a TypeSafe (Jev) request is priced and reserved, so the S4-on arm can run under the lane cap",
-      "actual": "null (treated as a free host), so S4-on would spend outside the guard; the S4-on arm was not run. Keyless, S4 was structurally blocked on 0 of 120 unanswerable natural questions, but on 90 of 90 existing-company name lookups"
+      "actual": "null (treated as a free host), so S4-on would spend outside the guard; the S4-on arm was not run. Keyless, S4 was structurally blocked on 0 of 120 unanswerable natural questions, but on 90 of 90 existing-company name lookups",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "not-rechecked",
+        "note": "A4 was not rerun: no A4 entry was in either fix wave"
+      }
     },
     {
       "id": "A4-4",
@@ -48,43 +66,85 @@
       "surface": "eval/runner/a4-abstention.ts scoreAnswer",
       "repro": "read docs/benchmarks/2026-10-01-a4-abstention/receipt-paid-3a284ae.json data.paid.answers where hedged is true",
       "expected": "an answer that refuses for the asked company and names a different company's value only as context counts as an abstention",
-      "actual": "13 such answers (1 retrieved, 12 oracle) counted as wrong_source under the frozen rule; read as abstentions, abstain recall is 120/120 (retrieved) and 119/120 (oracle). The frozen abstention pattern also missed one plain refusal (\"I don't have the information needed ...\", q230, oracle arm), scored unscorable"
+      "actual": "13 such answers (1 retrieved, 12 oracle) counted as wrong_source under the frozen rule; read as abstentions, abstain recall is 120/120 (retrieved) and 119/120 (oracle). The frozen abstention pattern also missed one plain refusal (\"I don't have the information needed ...\", q230, oracle arm), scored unscorable",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "not-rechecked",
+        "note": "A4 was not rerun: no A4 entry was in either fix wave"
+      }
     },
     {
       "id": "N1-1",
       "category": "knowledge-update",
       "classification": "bug",
       "gbrain_sha": "3a284aea26889b77c633aebb4149c3016d834ee6",
-      "status": "open",
+      "status": "fixed",
       "contract": "ontology_propose \"record one ontology observation ... A new value supersedes the prior\" (src/core/ops/chronicle.ts:153-188), exposed as CLI `gbrain ontology-add`; the capability matrix lists it on OP, STDIO, HTTP and CLI.",
       "surface": "ontology_propose -> engine.mergeOntologyFact (src/core/pglite-engine.ts:2263, src/core/postgres-engine.ts) inserts into facts directly; the managed_writer_guard trigger (src/core/persistence/writer-guard-schema.ts) rejects it on every brain made by `gbrain init`",
       "repro": "bun docs/benchmarks/2026-10-01-n1-n5/repro/n1-1-ontology-propose-managed.ts",
       "expected": "`gbrain ontology-add people/alice-example location Lisbon` records the observation (action inserted) and ontology_get returns location = Lisbon.",
-      "actual": "exit 1 \"writer_coordinator_required: canonical writer must use the persistence coordinator\"; ontology_get returns []. In N1 every ontology write was refused in all 6 cells (3 transports x 2 engines), so every ontology current-value and as-of probe is a scored miss."
+      "actual": "exit 1 \"writer_coordinator_required: canonical writer must use the persistence coordinator\"; ontology_get returns []. In N1 every ontology write was refused in all 6 cells (3 transports x 2 engines), so every ontology current-value and as-of probe is a scored miss.",
+      "fixing_pr": "garrytan/gbrain#5845 (fix wave 6, v0.60.30.0)",
+      "fixing_commit": "982a77eb8c682a9aa205e5d620167845b4fe278c",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n1-n5/n1-receipt-d44296c.json",
+          "docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt"
+        ],
+        "note": "ontology writes are accepted on all 6 managed cells: current-value accuracy 388 of 388 (was 288 of 388), history retained 385 of 385 (was 168 of 385); the repro records the observation"
+      }
     },
     {
       "id": "N1-2",
       "category": "knowledge-update",
       "classification": "bug",
       "gbrain_sha": "3a284aea26889b77c633aebb4149c3016d834ee6",
-      "status": "open",
+      "status": "fixed",
       "contract": "ontology_propose: \"A new value supersedes the prior\" (src/core/ops/chronicle.ts:153-188); ontology_get returns the value valid at asof.",
       "surface": "mergeOntologyFact ON CONFLICT (source_id, entity_slug, dimension, value_hash, source_markdown_slug) DO NOTHING (src/core/pglite-engine.ts:2298-2306 and the Postgres twin): the key has no time component, so a return to an earlier value with the same provenance is a no-op",
       "repro": "bun docs/benchmarks/2026-10-01-n1-n5/repro/n1-2-ontology-revert-noop.ts",
       "expected": "Lisbon (2020), Porto (2022), Lisbon again (2024): ontology_get now returns Lisbon; as-of 2024-06 returns Lisbon.",
-      "actual": "The third write returns action \"noop\"; ontology_get returns Porto now and at every date after 2022. In the N1 in-process arm the same-source revert chain is stale served on its current probe and wrong on the as-of probe after the revert; the distinct-source revert chain passes."
+      "actual": "The third write returns action \"noop\"; ontology_get returns Porto now and at every date after 2022. In the N1 in-process arm the same-source revert chain is stale served on its current probe and wrong on the as-of probe after the revert; the distinct-source revert chain passes.",
+      "fixing_pr": "garrytan/gbrain#5845 (fix wave 6, v0.60.30.0)",
+      "fixing_commit": "982a77eb8c682a9aa205e5d620167845b4fe278c",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n1-n5/n1-receipt-d44296c.json",
+          "docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt"
+        ],
+        "note": "Lisbon, Porto, Lisbon now returns Lisbon (repro); the in-process ontology arm serves 18 of 18 current values with 0 stale (was 17 of 18, 1 stale)"
+      }
     },
     {
       "id": "N1-3",
       "category": "knowledge-update",
       "classification": "bug",
       "gbrain_sha": "3a284aea26889b77c633aebb4149c3016d834ee6",
-      "status": "open",
+      "status": "fixed",
       "contract": "Facts with visibility \"private\" are local-only: remote callers get world facts only (find_trajectory D-CDX-1 in src/core/ops/insights.ts:250-338, recall, context_pack \"Ignored (world-only) for remote callers\"); ontology_propose stores visibility (default private).",
       "surface": "ontology_get (src/core/ops/chronicle.ts:128-151) and getOntology: remote callers lose only diary-sourced rows and rows whose provenance page is private (privateProvenanceFilterFragment); facts.visibility is never checked",
       "repro": "bun docs/benchmarks/2026-10-01-n1-n5/repro/n1-3-ontology-private-remote.ts",
       "expected": "A remote ontology_get on an entity with a private risk_tolerance observation and a world decision_style observation returns decision_style only.",
-      "actual": "It returns both, including \"risk_tolerance=high (private marker)\". Masked on default brains today by N1-1 (the write is refused); reachable on any brain whose ontology rows were written another way, and on every brain once N1-1 is fixed."
+      "actual": "It returns both, including \"risk_tolerance=high (private marker)\". Masked on default brains today by N1-1 (the write is refused); reachable on any brain whose ontology rows were written another way, and on every brain once N1-1 is fixed.",
+      "fixing_pr": "garrytan/gbrain#5845 (fix wave 6, v0.60.30.0)",
+      "fixing_commit": "982a77eb8c682a9aa205e5d620167845b4fe278c",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n1-n5/n1-receipt-d44296c.json",
+          "docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt"
+        ],
+        "note": "remote ontology_get returns the world observation only (repro); 0 private values in remote responses with 32 of 32 exposure probes carrying signal (was 24 of 32), in-process arm 0 remote leaks (was 2)"
+      }
     },
     {
       "id": "N1-4",
@@ -97,7 +157,16 @@
       "repro": "bun eval/runner/n1-knowledge-update.ts --paid --budget-run-id <run>   # paid arm, text-embedding-3-small",
       "expected": "Gap, not a failure: a changed value (\"Home city is Lisbon\" then \"Home city is Porto\") is not detected as an update.",
       "actual": "Keyless: dedup and supersession are skipped (degraded_dedup). With real embeddings (paid arm): 0 of 10 value changes superseded, 0 of 10 unrelated controls superseded, 10 of 10 punctuation-only near duplicates deduplicated, so the dedup path ran and value changes stay as separate active facts.",
-      "reason": "feature gap at the tested commit; explicit fence supersession is the documented update path and passed every probe"
+      "reason": "feature gap at the tested commit; explicit fence supersession is the documented update path and passed every probe",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n1-n5/n1-paid-receipt-d44296c.json"
+        ],
+        "note": "paid arm at the pin: 0 of 10 value changes superseded implicitly, 0 of 10 controls, 10 of 10 near duplicates deduplicated (unchanged)"
+      }
     },
     {
       "id": "N1-5",
@@ -110,7 +179,16 @@
       "repro": "first dev run of bun eval/runner/n1-knowledge-update.ts --engines pglite --interfaces mcp-stdio",
       "expected": "The generator writes canonical metric names.",
       "actual": "It wrote claim_metric \"burn\", which gbrain stored as \"burn_rate\", so find_trajectory metric=burn returned nothing to every caller and the exposure control had no signal.",
-      "reason": "category defect fixed in gbrain-evals before the counted run (the chain now uses burn_rate); gbrain behaves as documented"
+      "reason": "category defect fixed in gbrain-evals before the counted run (the chain now uses burn_rate); gbrain behaves as documented",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n1-n5/n1-receipt-d44296c.json"
+        ],
+        "note": "the counted rerun uses the corrected generator"
+      }
     },
     {
       "id": "N1-6",
@@ -123,43 +201,88 @@
       "repro": "docs/benchmarks/2026-10-01-n1-n5/n1-receipt-before-erratum.json (first counted run, gbrain-evals 1dab7dd)",
       "expected": "No search probe targets a private fence chain.",
       "actual": "The first counted run scored 16 search probes for the two private chains on the trusted CLI cells (8 PGLite, 8 Postgres); they failed by construction.",
-      "reason": "category defect fixed in gbrain-evals (a6d9f45) and N1 rerun; every other number was identical between the two runs"
+      "reason": "category defect fixed in gbrain-evals (a6d9f45) and N1 rerun; every other number was identical between the two runs",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n1-n5/n1-receipt-d44296c.json"
+        ],
+        "note": "the counted rerun uses the corrected probes"
+      }
     },
     {
       "id": "N2-1",
       "category": "contradiction-surfacing",
       "classification": "bug",
       "gbrain_sha": "3a284aea26889b77c633aebb4149c3016d834ee6",
-      "status": "open",
+      "status": "fixed",
       "contract": "src/core/eval-contradictions/runner.ts:120-121 (searchResultToMember): effective_date is \"null when the page has no temporal anchor (judge will see `(date unknown)`)\"; the judge prompt (judge.ts:325-327) and the date pre-filter (date-filter.ts rule 1) depend on that null.",
       "surface": "src/core/eval-contradictions/runner.ts:121 searchResultToMember (effective_date taken from the search projection, which fills undated pages with the recorded-time fallback, effective_date_source \"fallback\")",
       "repro": "env -u ANTHROPIC_API_KEY -u OPENAI_API_KEY -u VOYAGE_API_KEY -u JEV_TYPESAFE_API_KEY GBRAIN_HOME=$(mktemp -d) bun docs/benchmarks/2026-10-01-n2-contradiction-surfacing/repro/n2-1-undated-page-gets-a-date.ts",
       "expected": "an undated page reaches the judge with effective_date null, so the prompt says \"(date unknown)\"; two undated pages whose texts carry dates 184 days apart are skipped by the date pre-filter (1 skip)",
-      "actual": "both undated pages reach the judge dated with the run day (2026-10-01, source \"fallback\") and nothing is skipped (0). In the N2 world: 190 of 190 undated planted pages offered were shown with a date, 0 pairs were ever skipped by the date filter, and 0 of 20 text-dated changes got a supersede proposal naming the older page (all \"date order unclear\") with the oracle judge"
+      "actual": "both undated pages reach the judge dated with the run day (2026-10-01, source \"fallback\") and nothing is skipped (0). In the N2 world: 190 of 190 undated planted pages offered were shown with a date, 0 pairs were ever skipped by the date filter, and 0 of 20 text-dated changes got a supersede proposal naming the older page (all \"date order unclear\") with the oracle judge",
+      "fixing_pr": "garrytan/gbrain#5845 (fix wave 6, v0.60.30.0)",
+      "fixing_commit": "7d70363e9d2893a433c9ff58d157c3720b241677",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n2/receipt-paid-d44296c.json",
+          "docs/benchmarks/2026-10-02-wave-repin/n2/receipt-hermetic-d44296c.json",
+          "docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt"
+        ],
+        "note": "0 of 190 undated planted pages reach the judge with a date (was 190 of 190); the date pre-filter now skips 20 pairs (was 0), the 20 text-dated changes"
+      }
     },
     {
       "id": "N2-2",
       "category": "contradiction-surfacing",
       "classification": "bug",
       "gbrain_sha": "3a284aea26889b77c633aebb4149c3016d834ee6",
-      "status": "open",
+      "status": "fixed",
       "contract": "skills/correction-pipeline/SKILL.md:214 documents `gbrain find-contradictions` as \"read the latest run's findings\"; the op returns stored findings to trusted local callers without a source filter (operations-descriptions.ts:109-111).",
       "surface": "find_contradictions (src/core/ops/insights.ts:197-200) with the CLI context, which always sets sourceId \"default\" (src/cli.ts:1515)",
       "repro": "bun docs/benchmarks/2026-10-01-n2-contradiction-surfacing/repro/n2-2-find-contradictions-default-cli.ts",
       "expected": "the bare CLI command (a trusted local caller that passed no source filter) returns the stored findings",
-      "actual": "it returns {contradictions: [], note: \"...only to trusted local callers without a source filter.\"}; only `--source __all__` (sourceId \"__all__\") returns them. In the N2 run, 0 of 210 stored findings for the default-scope local caller, 100 (limit) of 210 for __all__"
+      "actual": "it returns {contradictions: [], note: \"...only to trusted local callers without a source filter.\"}; only `--source __all__` (sourceId \"__all__\") returns them. In the N2 run, 0 of 210 stored findings for the default-scope local caller, 100 (limit) of 210 for __all__",
+      "fixing_pr": "garrytan/gbrain#5845 (fix wave 6, v0.60.30.0)",
+      "fixing_commit": "e833e93d094918524392aa5bc0056014b72fb879",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n2/receipt-paid-d44296c.json",
+          "docs/benchmarks/2026-10-02-wave-repin/n2/receipt-hermetic-d44296c.json"
+        ],
+        "note": "through the context gbrain's CLI builds (makeContext), the bare command returns 100 of 190 stored findings (the limit); the probe that emulates the old CLI context, { remote: false, sourceId: default }, still returns 0, which is the fixed contract for an explicit source filter"
+      }
     },
     {
       "id": "N2-3",
       "category": "contradiction-surfacing",
       "classification": "bug",
       "gbrain_sha": "3a284aea26889b77c633aebb4149c3016d834ee6",
-      "status": "open",
+      "status": "fixed",
       "contract": "judge prompt rules (src/core/eval-contradictions/judge.ts buildJudgePrompt, prompt version 2): \"Use contradiction ONLY for genuinely conflicting claims at the same point in time\"; temporal verdicts only when \"the newer-dated claim updates or replaces the older one\"; \"Different aspects of the same entity are not contradictions\"; disagreements unrelated to the query do not count. This is model-judged quality against the rules gbrain states, not a deterministic code path.",
       "surface": "judgeContradiction with the default utility model anthropic:claude-haiku-4-5-20251001",
       "repro": "bun eval/runner/n2-contradiction-surfacing.ts --gbrain <gbrain checkout>@3a284aea26889b77c633aebb4149c3016d834ee6 --paid --budget-run-id <id>   (about $6; per-pair verdicts in docs/benchmarks/2026-10-01-n2-contradiction-surfacing/receipt-paid-3a284ae.json data.paid.judgments, e.g. item i001 pages vs companies/lunvane-example)",
       "expected": "same-time conflicts (both pages dated the same day, or both undated) judged contradiction; values of a different company, or a different attribute of the same company, judged no_contradiction",
-      "actual": "45 of 150 offered same-time conflicts judged temporal (21 of 50 with both pages dated the same day), so recall on offered conflicts is 70.0% (105/150); 109 of 1,977 distinct unplanted pairs judged contradiction (93 compare two different companies with similar names, 16 compare two different attributes of one company), so judged-pair precision is 48.6% (105/216); 2 of 15 negation pairs judged contradiction. Dated changes were never called contradictions (0/60)"
+      "actual": "45 of 150 offered same-time conflicts judged temporal (21 of 50 with both pages dated the same day), so recall on offered conflicts is 70.0% (105/150); 109 of 1,977 distinct unplanted pairs judged contradiction (93 compare two different companies with similar names, 16 compare two different attributes of one company), so judged-pair precision is 48.6% (105/216); 2 of 15 negation pairs judged contradiction. Dated changes were never called contradictions (0/60)",
+      "fixing_pr": "garrytan/gbrain#5845 (fix wave 6, v0.60.30.0)",
+      "fixing_commit": "89a4f8a9ec168cfcbe402dbce3b0285e9e14c6f9",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n2/receipt-paid-d44296c.json"
+        ],
+        "note": "judge prompt v3 on the counted N2 world (seed 20261001, same model and probe budget): conflicts called contradictions 132 of 150 (was 105 of 150), unplanted pairs called contradictions 26 of 1,968 (was 109 of 1,977), judged-pair precision 132 of 161 (was 105 of 216); all three preregistered decision rules hold. Not held-out: this is the world the bug was found on"
+      }
     },
     {
       "id": "N2-4",
@@ -171,7 +294,16 @@
       "surface": "src/core/eval-contradictions/runner.ts:316-428 (query-driven pair generation)",
       "repro": "bun eval/runner/n2-contradiction-surfacing.ts --gbrain <gbrain checkout>@3a284aea26889b77c633aebb4149c3016d834ee6   (data.generic_queries, data.amara)",
       "expected": "n/a (gap): planted conflicts are reachable without a query that already names the company and attribute",
-      "actual": "8 queries that name no company offered 4 of 150 planted conflicts; on the amara-life development corpus, supplied fact queries offered 8 of 15 gold pairs (3 of the 4 adjudicated contradictions were never offered)"
+      "actual": "8 queries that name no company offered 4 of 150 planted conflicts; on the amara-life development corpus, supplied fact queries offered 8 of 15 gold pairs (3 of the 4 adjudicated contradictions were never offered)",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n2/receipt-hermetic-d44296c.json"
+        ],
+        "note": "8 queries that name no company still offer 4 of 150 planted conflicts"
+      }
     },
     {
       "id": "N2-5",
@@ -183,7 +315,16 @@
       "surface": "find_contradictions (src/core/ops/insights.ts:197-200) for stdio and HTTP MCP callers",
       "repro": "bun eval/runner/n2-contradiction-surfacing.ts --gbrain <gbrain checkout>@3a284aea26889b77c633aebb4149c3016d834ee6   (data.find_contradictions.remote_caller)",
       "expected": "n/a (documented, temporary suspension)",
-      "actual": "remote callers receive 0 of 210 stored findings with the availability note"
+      "actual": "remote callers receive 0 of 210 stored findings with the availability note",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n2/receipt-hermetic-d44296c.json"
+        ],
+        "note": "remote find_contradictions still returns the empty note (0 of 190)"
+      }
     },
     {
       "id": "N2-6",
@@ -196,43 +337,88 @@
       "surface": "eval/data/gold/contradictions.json (eval/generators/amara-life.ts CONTRADICTION_FIXTURES)",
       "repro": "bun test test/eval/n2-a4-generators.test.ts -t adjudication; read eval/data/gold/contradictions-adjudication.json",
       "expected": "every pair labeled contradiction states two values for the same fact at the same time",
-      "actual": "6 of 10 are not: 3 are temporal evolution (c-006, c-007, c-010), 1 is two holders' targets (c-005), 2 name different entities or rounds (c-002, c-003); 2 canonical-side reasons are not supported by the text (c-001, c-009). gbrain's judge agreed with 5 of 8 judged pairs on the original labels and 6 of 8 on the adjudicated ones"
+      "actual": "6 of 10 are not: 3 are temporal evolution (c-006, c-007, c-010), 1 is two holders' targets (c-005), 2 name different entities or rounds (c-002, c-003); 2 canonical-side reasons are not supported by the text (c-001, c-009). gbrain's judge agreed with 5 of 8 judged pairs on the original labels and 6 of 8 on the adjudicated ones",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n2/receipt-paid-d44296c.json"
+        ],
+        "note": "amara arm: 8 of 15 pairs offered; the judge agrees with 4 of 8 original and 6 of 8 adjudicated labels (was 5 and 6)"
+      }
     },
     {
       "id": "N5-1",
       "category": "forget-residue",
       "classification": "bug",
       "gbrain_sha": "3a284aea26889b77c633aebb4149c3016d834ee6",
-      "status": "open",
+      "status": "fixed",
       "contract": "`forget` withdraws a fact from active recall (src/core/facts/forget.ts header; docs/guides/memory-boundaries.md); context_pack is a memory verb that packs hot facts; the hot-memory cache says it is \"Refreshed on extraction event via bumpCache\" (src/core/facts/meta-hook.ts:10).",
       "surface": "getBrainHotMemoryMeta (src/core/facts/meta-hook.ts:65-176): a 30 s per-process cache of the ten most recent facts, served by context_pack and attached as _meta.brain_hot_memory to every MCP tool response; bumpHotMemoryCache (meta-hook.ts:179) has no caller, so forget never invalidates it",
       "repro": "bun docs/benchmarks/2026-10-01-n1-n5/repro/n5-1-hot-memory-after-forget.ts",
       "expected": "Right after forget returns, neither context_pack nor any response _meta carries the withdrawn claim.",
-      "actual": "Both still carry it for up to 30 s in a running stdio or HTTP server. N5 counted run: 2 prohibited context_pack outputs on the PGLite cells and 12 on Postgres; 108 PGLite and 304 Postgres remote responses carried a forgotten canary in _meta after its forget returned."
+      "actual": "Both still carry it for up to 30 s in a running stdio or HTTP server. N5 counted run: 2 prohibited context_pack outputs on the PGLite cells and 12 on Postgres; 108 PGLite and 304 Postgres remote responses carried a forgotten canary in _meta after its forget returned.",
+      "fixing_pr": "garrytan/gbrain#5845 (fix wave 6, v0.60.30.0)",
+      "fixing_commit": "3b1d238c3eef56b98377c7d3b16430cc919cdab1",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n1-n5/n5-receipt-d44296c.json",
+          "docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt"
+        ],
+        "note": "0 prohibited active outputs on PGLite (was 2) and Postgres (was 12); 0 remote responses with a forgotten canary in _meta hot memory (was 108 PGLite, 304 Postgres)"
+      }
     },
     {
       "id": "N5-2",
       "category": "forget-residue",
       "classification": "bug",
       "gbrain_sha": "3a284aea26889b77c633aebb4149c3016d834ee6",
-      "status": "open",
+      "status": "fixed",
       "contract": "forget withdraws only the forgotten claim; other facts on the page stay readable (src/core/facts/withdrawal.ts). A refused write is not applied: owner_unavailable is a retryable refusal (src/core/connectors/item-holds.ts:97).",
       "surface": "forget under concurrent CLI writes on PGLite: recordFactWithdrawal deletes the page chunks in the commit (src/core/facts/withdrawal.ts:45-50); its withdrawal-mirror, git and embedding effects can stay queued after the committing process exits",
       "repro": "bun docs/benchmarks/2026-10-01-n1-n5/repro/n5-2-forget-owner-unavailable.ts",
       "expected": "Either the forget is refused and nothing changes, or it is acknowledged and the page chunks are rebuilt, so retained facts on the page stay searchable.",
-      "actual": "The page keeps 0 chunks and its retained facts are missing from search, query and the recall query arm until an unrelated later write drains the queue (repro: 2 of 5 rounds, with forget returning ok). In the N5 PGLite CLI cell both late forgets answered owner_unavailable although they had committed, and 4 retained neighbors (12 of 750 retained pairs) went missing from the chunk tiers."
+      "actual": "The page keeps 0 chunks and its retained facts are missing from search, query and the recall query arm until an unrelated later write drains the queue (repro: 2 of 5 rounds, with forget returning ok). In the N5 PGLite CLI cell both late forgets answered owner_unavailable although they had committed, and 4 retained neighbors (12 of 750 retained pairs) went missing from the chunk tiers.",
+      "fixing_pr": "garrytan/gbrain#5845 (fix wave 6, v0.60.30.0)",
+      "fixing_commit": "9eaab73f0ba4a44d9f1a217e32dbf90d34ba0621",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n1-n5/n5-receipt-d44296c.json",
+          "docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt"
+        ],
+        "note": "retained-neighbor recall 750 of 750 (was 738 of 750); the repro keeps every neighbor searchable in 5 of 5 rounds. The owner_unavailable half is gbrain 5a5505335109fb6dba7d9964be3830a0b55a7800"
+      }
     },
     {
       "id": "N5-3",
       "category": "forget-residue",
       "classification": "bug",
       "gbrain_sha": "3a284aea26889b77c633aebb4149c3016d834ee6",
-      "status": "open",
+      "status": "fixed",
       "contract": "After forget, \"Remember a corrected claim. Repeating the old claim does not restore withdrawn memory.\" (src/core/facts/write-single.ts:105-110): a corrected claim is the documented way back.",
       "surface": "remember right after forget on the same entity, PGLite, trusted CLI (`gbrain call remember`)",
       "repro": "bun docs/benchmarks/2026-10-01-n1-n5/repro/n5-3-remember-after-forget-pglite.ts",
       "expected": "The corrected claim is accepted (status inserted) on the first try.",
-      "actual": "The first remember after a forget fails with \"scope_denied: The source file bytes changed after this request was accepted.\" (2 of 2 in the repro, with and without a vault source); an identical retry succeeds. Postgres CLI and the stdio and HTTP servers accept it. In N5 it fails the reinstatement floor in the PGLite CLI cell."
+      "actual": "The first remember after a forget fails with \"scope_denied: The source file bytes changed after this request was accepted.\" (2 of 2 in the repro, with and without a vault source); an identical retry succeeds. Postgres CLI and the stdio and HTTP servers accept it. In N5 it fails the reinstatement floor in the PGLite CLI cell.",
+      "fixing_pr": "garrytan/gbrain#5845 (fix wave 6, v0.60.30.0)",
+      "fixing_commit": "9eaab73f0ba4a44d9f1a217e32dbf90d34ba0621",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n1-n5/n5-receipt-d44296c.json",
+          "docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt"
+        ],
+        "note": "reinstatement 6 of 6 (was 4 of 6); the first remember after a forget is accepted (repro)"
+      }
     },
     {
       "id": "N5-4",
@@ -245,7 +431,16 @@
       "repro": "bun eval/runner/n5-forget-residue.ts   # data.gaps.paraphrase_residue",
       "expected": "Gap, not a failure: a paraphrase of a forgotten claim (\"Is a beekeeper\" after forgetting \"Keeps bees\") stays active.",
       "actual": "6 of 6 paraphrases (2 per PGLite cell) stayed active after their originals were forgotten.",
-      "reason": "documented non-guarantee (amendment 2): semantic paraphrase retraction is not claimed"
+      "reason": "documented non-guarantee (amendment 2): semantic paraphrase retraction is not claimed",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n1-n5/n5-receipt-d44296c.json"
+        ],
+        "note": "paraphrases still active after forget: 6 of 6"
+      }
     },
     {
       "id": "N5-5",
@@ -258,7 +453,16 @@
       "repro": "bun eval/runner/n5-forget-residue.ts   # data.retained_by_design",
       "expected": "Gap, not a failure: forgotten claims remain in history and source material.",
       "actual": "On the PGLite cells: 30 forgotten-token hits in get_versions, 24 in the vault Git history, 9 prose chunk hits for the prose canary, 126 struck \"forgotten:\" fence-row sightings.",
-      "reason": "documented non-guarantee (amendment 2): physical erasure is not claimed"
+      "reason": "documented non-guarantee (amendment 2): physical erasure is not claimed",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n1-n5/n5-receipt-d44296c.json"
+        ],
+        "note": "history and prose outside the fence are retained by design"
+      }
     },
     {
       "id": "N5-6",
@@ -271,7 +475,16 @@
       "repro": "not run hermetically: these phases call a chat model",
       "expected": "Gap: a claim consolidated into a take or a synthesized page before the forget would stay there.",
       "actual": "Unmeasured in this slice (no chat model; no fake chat endpoint wired). Listed so it is not mistaken for a zero.",
-      "reason": "feature gap at the tested commit, and an unmeasured tier in this slice"
+      "reason": "feature gap at the tested commit, and an unmeasured tier in this slice",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n1-n5/n5-receipt-d44296c.json"
+        ],
+        "note": "dream-derived tiers stay unmeasured without a chat model"
+      }
     },
     {
       "id": "N5-7",
@@ -284,7 +497,16 @@
       "repro": "first N5 dev run: bun eval/runner/n5-forget-residue.ts --engines pglite --interfaces mcp-http",
       "expected": "Retained recall counts only exhaustive tiers.",
       "actual": "The first definition counted context_pack, where retained neighbors drop out when newer facts arrive, so retained recall fell below 1 without any withdrawal.",
-      "reason": "category defect fixed in gbrain-evals with an erratum before the counted run: context_pack still counts for residue, not for retained recall; the receipt also reports retained recall with it included"
+      "reason": "category defect fixed in gbrain-evals with an erratum before the counted run: context_pack still counts for residue, not for retained recall; the receipt also reports retained recall with it included",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n1-n5/n5-receipt-d44296c.json"
+        ],
+        "note": "the counted rerun uses the corrected retention definition"
+      }
     },
     {
       "id": "N7-1",
@@ -296,7 +518,19 @@
       "repro": "bun docs/benchmarks/2026-10-01-n7-open-loops-email/repro/n7-1-nudge-backfill.ts",
       "expected": "A thread first seen with a request 30 to 120 hours old and a nudge 1 to 20 hours old opens unanswered_inbound: the request has been unanswered for more than 24 hours.",
       "actual": "No loop: the grace window is measured from the nudge, so 6 of 6 such threads (and 4 of 4 outbound follow-ups) are invisible on first sync (backfill or after a sync gap) until the nudge itself ages past the window. Steady-state syncs that saw the request first keep the loop open (hold).",
-      "status": "open"
+      "status": "fixed",
+      "fixing_pr": "garrytan/gbrain#5839 (fix wave 5, v0.60.28.0)",
+      "fixing_commit": "1842c74944ef68a3db2a2522af5a6d4542e4deb4",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n7/receipt-pin-d44296c.json",
+          "docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt"
+        ],
+        "note": "backfill nudges detected 6 of 6 inbound and 4 of 4 outbound follow-ups (was 0 of 6 and 0 of 4)"
+      }
     },
     {
       "id": "N7-2",
@@ -308,7 +542,17 @@
       "repro": "bun docs/benchmarks/2026-10-01-n7-open-loops-email/repro/n7-2-thanks-closes.ts",
       "expected": "A reply that only acknowledges (\"Thanks!\") while the request is still owed leaves someone waiting; a semantic open-loop engine would keep it open.",
       "actual": "The acknowledgement closes the reply-owed loop as documented (4 of 4 store rounds closed by reply_detected); 13 of 23 threads closed by my reply are still owed by the semantic labels.",
-      "status": "open"
+      "status": "open",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n7/receipt-pin-d44296c.json",
+          "docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt"
+        ],
+        "note": "the repro still closes on \"thanks\""
+      }
     },
     {
       "id": "N7-3",
@@ -320,7 +564,17 @@
       "repro": "bun docs/benchmarks/2026-10-01-n7-open-loops-email/repro/n7-3-fulfillment-gap.ts",
       "expected": "A commitment loop closes when a later message in the thread fulfils it (\"As promised, here is the deck\").",
       "actual": "Nothing marks a stored commitment fulfilled: re-extraction can only upsert what the model returns, the reply auto-close touches deterministic_thread loops only, and staleness closes llm_extract loops by age. Keyless the extractor refuses (llm_unavailable). The preregistered paid replay (docs/benchmarks/2026-10-01-n7-open-loops-email/receipt-extractor-pin.json) saw the model correctly omit all 4 fulfilled promises on a single pass, yet all 4 commitment loops extracted before the fulfilling message stayed open after it was extracted.",
-      "status": "open"
+      "status": "open",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n7/receipt-pin-d44296c.json",
+          "docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt"
+        ],
+        "note": "the repro commitment loop stays open after fulfillment"
+      }
     },
     {
       "id": "N7-4",
@@ -332,7 +586,16 @@
       "repro": "ls node_modules/gbrain/src/core/connectors/providers/ && grep -n \"isCalendarSystemMail\" node_modules/gbrain/src/core/google/loop-detect.ts",
       "expected": "Commitments made in Slack or calendar invitations surface as open loops.",
       "actual": "No Slack or calendar loop source exists; calendar notices neither open nor close loops by design.",
-      "status": "open"
+      "status": "open",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n7/receipt-pin-d44296c.json"
+        ],
+        "note": "Gmail remains the only loop provider"
+      }
     },
     {
       "id": "N7-5",
@@ -344,7 +607,17 @@
       "repro": "bun docs/benchmarks/2026-10-01-n7-open-loops-email/repro/n7-5-ranking-clock.ts",
       "expected": "A published `gbrain waiting` order can be reproduced: the same rows and the same reference time give the same order, and the reference time can be pinned.",
       "actual": "At a fixed instant the order is stable (verified), but with identical rows counterparty a ranks below b now and above b two days later. The clock is Date.now() with no parameter, so ranking cannot be pinned for an evaluation or a replay.",
-      "status": "open"
+      "status": "open",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n7/receipt-pin-d44296c.json",
+          "docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt"
+        ],
+        "note": "the order still depends on the wall clock"
+      }
     },
     {
       "id": "N7-6",
@@ -356,7 +629,17 @@
       "repro": "bun docs/benchmarks/2026-10-01-n7-open-loops-email/repro/n7-6-age-from-detection.ts",
       "expected": "Someone whose request has waited 30 days ranks as older than someone who wrote yesterday, including on the first sync of an existing inbox.",
       "actual": "Loop age is time since detection: two inbound loops detected in one sync have opened_at 0.001 s apart although their messages are 690 hours apart, so a backfill ranks every waiting person as equally old.",
-      "status": "open"
+      "status": "open",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n7/receipt-pin-d44296c.json",
+          "docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt"
+        ],
+        "note": "opened_at is still the detection time"
+      }
     },
     {
       "id": "N7-7",
@@ -368,7 +651,17 @@
       "repro": "bun docs/benchmarks/2026-10-01-n7-open-loops-email/repro/n7-7-url-question-mark.ts",
       "expected": "An FYI whose only question mark sits inside a link (https://docs.example.com/view?id=42) is not an ask.",
       "actual": "4 of 4 such messages opened unanswered_outbound after 72 hours.",
-      "status": "open"
+      "status": "open",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n7/receipt-pin-d44296c.json",
+          "docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt"
+        ],
+        "note": "a URL question mark still opens a loop (4 of 4)"
+      }
     },
     {
       "id": "N8-1",
@@ -380,7 +673,19 @@
       "repro": "bun docs/benchmarks/2026-10-01-n8-proactive-recall/repro/n8-1-private-volunteer-remote.ts",
       "expected": "A remote (MCP) caller whose window mentions a private page by title or alias gets no page for it, as remote search does.",
       "actual": "volunteer_context returns the private page with its title and a body synopsis to the remote caller: 4 private deliveries over the seeded sessions (remote search for the same name returns nothing).",
-      "status": "open"
+      "status": "fixed",
+      "fixing_pr": "garrytan/gbrain#5839 (fix wave 5, v0.60.28.0)",
+      "fixing_commit": "bb4e997020e78b73287b18c36e6a2ef93797b54c",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n8/receipt-pin-d44296c.json",
+          "docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt"
+        ],
+        "note": "private pages delivered to remote callers 0 (was 4)"
+      }
     },
     {
       "id": "N8-2",
@@ -392,7 +697,19 @@
       "repro": "bun docs/benchmarks/2026-10-01-n8-proactive-recall/repro/n8-2-private-turn-context.ts",
       "expected": "The per-turn block injected by gbrain hook user-prompt carries no visibility: private page; only its hot facts are filtered to world today.",
       "actual": "The block lists the private page and its body synopsis under \"Brain pages mentioned this turn\": 4 private deliveries over the seeded sessions.",
-      "status": "open"
+      "status": "fixed",
+      "fixing_pr": "garrytan/gbrain#5839 (fix wave 5, v0.60.28.0)",
+      "fixing_commit": "bb4e997020e78b73287b18c36e6a2ef93797b54c",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n8/receipt-pin-d44296c.json",
+          "docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt"
+        ],
+        "note": "private pages delivered into the turn_context block 0 (was 4)"
+      }
     },
     {
       "id": "N8-3",
@@ -404,7 +721,17 @@
       "repro": "bun docs/benchmarks/2026-10-01-n8-proactive-recall/repro/n8-3-common-word-alias.ts",
       "expected": "An alias that is an ordinary English word (\"Harbor\", \"Summit\") is not volunteered when the turn uses the word in its ordinary sense.",
       "actual": "At the default gate 50% of common-word turns (12 turns) delivered the company page; matching is lexical and has no sense disambiguation.",
-      "status": "open"
+      "status": "open",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n8/receipt-pin-d44296c.json",
+          "docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt"
+        ],
+        "note": "common-word turns still raise false alarms: 6 of 12 (unchanged)"
+      }
     },
     {
       "id": "N8-4",
@@ -416,7 +743,16 @@
       "repro": "bun eval/runner/n8-proactive-recall.ts  (the \"associative\" line; data.quality.associative in the receipt)",
       "expected": "A later situation that names no entity (\"We could squeeze an extra layer of bowls into the community firing\") surfaces the earlier note that matters, unasked.",
       "actual": "volunteer_context delivered a required page on 0.0% of 240 indirect associative-recall-v1 probes.",
-      "status": "open"
+      "status": "open",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n8/receipt-pin-d44296c.json"
+        ],
+        "note": "associative recall 0 of 240 (unchanged)"
+      }
     },
     {
       "id": "N9-1",
@@ -429,7 +765,17 @@
       "expected": "a composed question such as \"Who founded the companies that <investor> invested in?\" yields a plan with one relation per hop (invested_in, then founded)",
       "actual": "0 of 250 composed wordings (125 questions x 2) produced a multi-relation plan; 102 parsed as one relation (0 first hop, 102 last hop), 102 with a seed that is not exactly the anchor name",
       "status": "deferred",
-      "reason": "feature gap, not a bug: composition is not implemented or claimed at this commit; composed questions are scored on what the system returns anyway"
+      "reason": "feature gap, not a bug: composition is not implemented or claimed at this commit; composed questions are scored on what the system returns anyway",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n9/n9-hermetic-d44296c.receipt.json",
+          "docs/benchmarks/2026-10-02-wave-repin/n9/n9-paid-d44296c.receipt.json"
+        ],
+        "note": "0 of 250 composed wordings produce a multi-relation plan; the arm fires 0 of 750 runs per search path"
+      }
     },
     {
       "id": "N9-2",
@@ -441,7 +787,18 @@
       "repro": "env -u OPENAI_API_KEY GBRAIN_HOME=$(mktemp -d) bun docs/benchmarks/2026-10-01-n9-multi-hop/repro-relational-edges.ts",
       "expected": "with the default schema pack, `extract links --source db --include-frontmatter` stores people/bob-example -> companies/gamma-example (invested_in) and people/alice-example -> meetings/board-beta-example (attended); relationalFanout from the company in the parsed direction (in) returns people/bob-example",
       "actual": "stored companies/gamma-example -> people/bob-example and meetings/board-beta-example -> people/alice-example, people/bob-example; the fanout returns []. Every field the default pack declares in frontmatter_links (company investors, key_people, partner; deal investors, lead; meeting attendees) is written outgoing, reversing the in-code map, so \"Who invested in X?\" and \"Who attended X?\" miss frontmatter-derived edges",
-      "status": "open"
+      "status": "fixed",
+      "fixing_pr": "garrytan/gbrain#5845 (fix wave 6, v0.60.30.0)",
+      "fixing_commit": "81755f5b6cdd399185197461c7713ac4eccc689a",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt"
+        ],
+        "note": "the repro fans out from the meeting to both attendees in the parsed direction. world-v1 pages carry no schema-pack frontmatter relations, so the N9 run does not exercise this edge kind"
+      }
     },
     {
       "id": "N9-3",
@@ -453,7 +810,19 @@
       "repro": "env -u OPENAI_API_KEY GBRAIN_HOME=$(mktemp -d) bun docs/benchmarks/2026-10-01-n9-multi-hop/repro-relational-edges.ts",
       "expected": "the body line `Attendees: [Alice Example](people/alice-example), [Bob Example](people/bob-example)` on meetings/board-acme-example is stored people/alice-example -> meetings/board-acme-example (and Bob likewise), as extractPageLinks produces when no pack is passed; fanout in direction in from the meeting returns both attendees",
       "actual": "with the default schema pack (gbrain-base.yaml link_types: attended, page_type: meeting) the edges are stored meetings/board-acme-example -> people/alice-example and -> people/bob-example; typeFor returns { linkType: attended } without canonicalAttendance, so nothing reorients them; fanout in direction in returns [] (direction out returns both)",
-      "status": "open"
+      "status": "fixed",
+      "fixing_pr": "garrytan/gbrain#5845 (fix wave 6, v0.60.30.0)",
+      "fixing_commit": "81755f5b6cdd399185197461c7713ac4eccc689a",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt",
+          "docs/benchmarks/2026-10-02-wave-repin/n9/n9-hermetic-d44296c.receipt.json"
+        ],
+        "note": "the repro stores attendance person to meeting and the relational arm fires with 2 candidates. On world-v1, attendance named only in prose is now typed mentions by the evidence gate, so the 150 attended runs per split still fire 0 times (see N12-6)"
+      }
     },
     {
       "id": "N9-4",
@@ -465,7 +834,19 @@
       "repro": "env -u OPENAI_API_KEY GBRAIN_HOME=$(mktemp -d) bun docs/benchmarks/2026-10-01-n9-multi-hop/repro-relational-edges.ts",
       "expected": "\"Who attended Acme Example Board Meeting?\" resolves its seed to meetings/board-acme-example (the exact page title) and the relational arm fires",
       "actual": "the seed resolves only to fallback_slugify \"acme-example-board-meeting\", because the resolver returns people, companies, hosts, projects and concepts basenames and entity pages only (resolve.ts:209-227, :517-526); the arm reports seeds_resolved 0 and never fires. In the N9 hermetic run, 0 of 150 world-v1 \"Who attended\" template runs fired",
-      "status": "open"
+      "status": "fixed",
+      "fixing_pr": "garrytan/gbrain#5845 (fix wave 6, v0.60.30.0)",
+      "fixing_commit": "81755f5b6cdd399185197461c7713ac4eccc689a",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n9/n9-hermetic-d44296c.receipt.json",
+          "docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt"
+        ],
+        "note": "one-hop template seeds resolved 390 of 435 (was 240): all 150 \"Who attended <meeting>?\" runs now resolve the meeting"
+      }
     },
     {
       "id": "N9-5",
@@ -478,31 +859,65 @@
       "expected": "as a capability: \"Who works at Acme?\" resolves Acme to companies/acme-0, whose title is exactly \"Acme\"",
       "actual": "\"Acme\" collides with companies/acme-labs-50 under prefix expansion, falls back to slugify and the arm does not fire. 15 of 145 world-v1 one-hop template questions are affected (8 works_at, 5 invested_in, 2 advises: Acme, Delta, Epsilon, Helix, Iris, Nimbus, Quantum, Vector)",
       "status": "deferred",
-      "reason": "documented precision-first resolver design, not a broken contract; an exact-title tier for bare names would be a product change"
+      "reason": "documented precision-first resolver design, not a broken contract; an exact-title tier for bare names would be a product change",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n9/n9-hermetic-d44296c.receipt.json"
+        ],
+        "note": "45 of 435 one-hop template runs (15 questions x 3 seeds) still leave the seed unresolved"
+      }
     },
     {
       "id": "N12-1",
       "category": "format-fidelity",
       "classification": "bug",
-      "status": "open",
+      "status": "fixed",
       "gbrain_sha": "3a284aea26889b77c633aebb4149c3016d834ee6",
       "contract": "parseConversation must not flip prose with a few stray anchors to regex_match, because that \"silently corrupts downstream fact extraction\" (src/core/conversation-parser/parse.ts SCORING_MIN_ACCEPTANCE comment); bold-name-no-time sets score_full_body so \"a notes page with a few bold labels\" is no_match (src/core/conversation-parser/builtins.ts).",
       "surface": "src/core/conversation-parser/parse.ts parseConversation (bold-name-no-time, score_full_body)",
       "repro": "bun docs/benchmarks/2026-10-01-n12-format-fidelity/repros/n12-1-bold-label-note.ts",
       "expected": "A 26-line status note with three one-off labels (**Status:**, **Owner:**, **Next step:**) parses as no_match with 0 messages.",
-      "actual": "regex_match via bold-name-no-time with 3 messages whose speakers are Status, Owner and Next step. The full-body density guard only helps long pages (3 of 26 non-blank lines is above the 5% floor); every label occurs once, which a real transcript almost never does."
+      "actual": "regex_match via bold-name-no-time with 3 messages whose speakers are Status, Owner and Next step. The full-body density guard only helps long pages (3 of 26 non-blank lines is above the 5% floor); every label occurs once, which a real transcript almost never does.",
+      "fixing_pr": "garrytan/gbrain#5839 (fix wave 5, v0.60.28.0)",
+      "fixing_commit": "7f723e4568e16f351d4b4708c54903740dc8a5f8",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n12/receipt-pin-d44296c.json",
+          "docs/benchmarks/2026-10-02-wave-repin/n12/receipt-pin-d44296c-seed7.json",
+          "docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt"
+        ],
+        "note": "fabricated turns 0 of 16 negative items on seeds 12 and 7 (was 3 turns from the bold-label note)"
+      }
     },
     {
       "id": "N12-2",
       "category": "format-fidelity",
       "classification": "bug",
-      "status": "open",
+      "status": "fixed",
       "gbrain_sha": "3a284aea26889b77c633aebb4149c3016d834ee6",
       "contract": "TranscriptMessage.timestamp is \"ISO 8601 UTC, from the SOURCE\" (src/core/transcripts/types.ts) and rendered pages carry REAL timestamps (src/core/transcripts/render.ts header).",
       "surface": "src/core/transcripts/render.ts anchorTimestamp (day from iso.slice(0, 10), hour from getUTCHours); codex, openclaw, claude-code and claude-export adapters pass source timestamp strings through unconverted",
       "repro": "bun docs/benchmarks/2026-10-01-n12-format-fidelity/repros/n12-2-offset-timestamp-roundtrip.ts",
       "expected": "A source stamped 2026-08-10T22:30:00.000-07:00 renders as (2026-08-11 5:30 AM) and re-parses to 2026-08-11T05:30:00Z.",
-      "actual": "The adapter keeps the -07:00 string, the anchor reads (2026-08-10 5:30 AM) and the re-parsed turn is 2026-08-10T05:30:00Z, one day early (16 of 16 offset-stamped turns across the four ISO-string adapters). buildTranscriptSlug takes its date from the same local slice. Every host fixture in gbrain writes Z, so only sources that write offsets are affected."
+      "actual": "The adapter keeps the -07:00 string, the anchor reads (2026-08-10 5:30 AM) and the re-parsed turn is 2026-08-10T05:30:00Z, one day early (16 of 16 offset-stamped turns across the four ISO-string adapters). buildTranscriptSlug takes its date from the same local slice. Every host fixture in gbrain writes Z, so only sources that write offsets are affected.",
+      "fixing_pr": "garrytan/gbrain#5839 (fix wave 5, v0.60.28.0)",
+      "fixing_commit": "e437fe3d1e279fd5602afdc592fdceda9533fb41",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n12/receipt-pin-d44296c.json",
+          "docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt"
+        ],
+        "note": "offset-stamped round-trip turns exact 16 of 16 (was 0 of 16); all round-trip timestamps exact 266 of 266 (was 250 of 266)"
+      }
     },
     {
       "id": "N12-3",
@@ -515,7 +930,16 @@
       "repro": "bun eval/runner/n12-format-fidelity.ts --gbrain <gbrain checkout>@3a284ae",
       "expected": "A generic {messages:[{role, content, timestamp}]} transcript imports (if gbrain claimed it).",
       "actual": "detectAdapter reports unknown_format and parseConversation returns no_match for a JSON body.",
-      "reason": "Not claimed at this commit; recorded as a coverage gap, not a failure (wave amendment 3)."
+      "reason": "Not claimed at this commit; recorded as a coverage gap, not a failure (wave amendment 3).",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n12/receipt-pin-d44296c.json"
+        ],
+        "note": "generic JSON is still detected as nothing"
+      }
     },
     {
       "id": "N12-4",
@@ -528,7 +952,16 @@
       "repro": "bun eval/runner/n12-format-fidelity.ts --gbrain <gbrain checkout>@3a284ae",
       "expected": "A date for time-only and no-time patterns when the page has none.",
       "actual": "1970-01-01 on 494 of 494 date-less turns parsed with no page date (13 time-only and no-time patterns x 38 turns); inline-date patterns keep their dates.",
-      "reason": "Documented fallback; the page date in frontmatter is the supported path, and with it every timed turn matched at minute precision."
+      "reason": "Documented fallback; the page date in frontmatter is the supported path, and with it every timed turn matched at minute precision.",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n12/receipt-pin-d44296c.json"
+        ],
+        "note": "1970-01-01 on 494 of 494 date-less turns with no page date"
+      }
     },
     {
       "id": "N12-5",
@@ -541,7 +974,16 @@
       "repro": "bun eval/runner/n12-format-fidelity.ts --gbrain <gbrain checkout>@3a284ae",
       "expected": "Seconds written in the line survive (if claimed).",
       "actual": "Seconds dropped on 36 of 152 turns rendered in the four formats whose lines carry seconds (seed 12).",
-      "reason": "Minute precision by design; recorded so a reader does not read minute-exact as source-exact."
+      "reason": "Minute precision by design; recorded so a reader does not read minute-exact as source-exact.",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n12/receipt-pin-d44296c.json"
+        ],
+        "note": "seconds dropped on 36 turns"
+      }
     },
     {
       "id": "N12-6",
@@ -554,20 +996,41 @@
       "repro": "bun eval/runner/n12-format-fidelity.ts --gbrain <gbrain checkout>@3a284ae",
       "expected": "People listed on a Participants: line, or who only speak in a transcript, are typed attended (if claimed).",
       "actual": "0 of 10 such attendees typed attended (participants-line 0 of 5, speakers-only 0 of 5); they stay mentions or carry no link.",
-      "reason": "Not a documented evidence form; documented forms score 20 of 20 with zero false attendance."
+      "reason": "Not a documented evidence form; documented forms score 20 of 20 with zero false attendance.",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n12/receipt-pin-d44296c.json"
+        ],
+        "note": "participants-line and speakers-only attendees: 0 of 10 typed attended (attendance recall 20 of 30 overall, 20 of 20 on documented forms)"
+      }
     },
     {
       "id": "N12-7",
       "category": "format-fidelity",
       "classification": "feature-gap",
-      "status": "deferred",
+      "status": "closed",
       "gbrain_sha": "3a284aea26889b77c633aebb4149c3016d834ee6",
       "contract": "The bundled legacy gbrain-base pack declares attended with inference.page_type: meeting, and a pack-declared verb wins over the in-code attendance-evidence check (src/core/schema-pack/base/gbrain-base.yaml; src/core/link-extraction.ts typeFor). gbrain init writes gbrain-base-v2 (src/commands/init.ts).",
       "surface": "src/core/link-extraction.ts extractPageLinks with the gbrain-base pack (schema_pack unset)",
       "repro": "bun docs/benchmarks/2026-10-01-n12-format-fidelity/repros/n12-7-legacy-pack-attendance.ts",
       "expected": "A person only mentioned in a meeting page's notes is typed mentions.",
       "actual": "With schema_pack unset, every linked person is typed attended: 24 of 24 mentioned-only people across 12 meetings. With gbrain-base-v2, 0 of 24.",
-      "reason": "Behaviour declared by the legacy pack, not a broken contract: evidence-gated attendance exists only under gbrain-base-v2. Brains with no schema_pack configured (created before init wrote one) still get it; a fix would apply the evidence gate to pack-declared attended too, or migrate such brains to v2."
+      "reason": "Behaviour declared by the legacy pack, not a broken contract: evidence-gated attendance exists only under gbrain-base-v2. Brains with no schema_pack configured (created before init wrote one) still get it; a fix would apply the evidence gate to pack-declared attended too, or migrate such brains to v2. Closed 2026-10-02: gbrain 81755f5b applies the evidence gate to the legacy pack too.",
+      "fixing_pr": "garrytan/gbrain#5845 (fix wave 6, v0.60.30.0)",
+      "fixing_commit": "81755f5b6cdd399185197461c7713ac4eccc689a",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n12/receipt-pin-d44296c.json",
+          "docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt"
+        ],
+        "note": "with schema_pack unset, mentioned-only people typed attended 0 of 24 (was 24 of 24); the repro types only the listed attendee"
+      }
     },
     {
       "id": "N12-8",
@@ -580,43 +1043,88 @@
       "repro": "bun eval/runner/n12-format-fidelity.ts --gbrain <gbrain checkout>@3a284ae (receipt data.attendance_legacy_pack keeps the uncorrected arm)",
       "expected": "The attendance stage configures schema_pack as gbrain init does.",
       "actual": "The first development run left schema_pack unset, so it measured the legacy pack (24 false attendances). Fixed in gbrain-evals before the counted run; the unset arm is kept as an exploratory row.",
-      "reason": "Harness defect in gbrain-evals, corrected before any counted number; see N12-7 for the gbrain-side behaviour it exposed."
+      "reason": "Harness defect in gbrain-evals, corrected before any counted number; see N12-7 for the gbrain-side behaviour it exposed.",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n12/receipt-pin-d44296c.json"
+        ],
+        "note": "the counted rerun configures schema_pack as gbrain init does"
+      }
     },
     {
       "id": "N13-1",
       "category": "code-intelligence",
       "classification": "bug",
-      "status": "open",
+      "status": "fixed",
       "gbrain_sha": "3a284aea26889b77c633aebb4149c3016d834ee6",
       "contract": "\"A symbol type code-def can resolve must never have its symbol_name erased by small-sibling merging\" (src/core/chunkers/def-types.ts header, #4511); code-def resolves lexical declarations (DEF_TYPES).",
       "surface": "src/core/chunkers/code.ts mergeSmallSiblings; src/core/chunkers/def-types.ts MERGEABLE_RUN_TYPES (lexical declaration stays mergeable)",
       "repro": "bun docs/benchmarks/2026-10-01-n13-code-intelligence/repros/n13-1-merged-arrow-defs.ts",
       "expected": "code_def int2alpha returns src/sample.ts:3 (a nine-line `const int2alpha = (...) => {...}`).",
-      "actual": "code_def returns 0 results; lines 1-16 are one anonymous merged chunk. On pathe, 9 of 50 top-level functions (all `const` arrow functions in src/_glob.ts) are unreachable, and 3 same-file calls they make lose their caller name."
+      "actual": "code_def returns 0 results; lines 1-16 are one anonymous merged chunk. On pathe, 9 of 50 top-level functions (all `const` arrow functions in src/_glob.ts) are unreachable, and 3 same-file calls they make lose their caller name.",
+      "fixing_pr": "garrytan/gbrain#5839 (fix wave 5, v0.60.28.0)",
+      "fixing_commit": "02b0d0f457ec154a3d428ade20daf4d2e4c3c7e7",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n13/receipt-pin-d44296c.json",
+          "docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt"
+        ],
+        "note": "code_def top-1 right for 49 of 50 top-level functions with 0 empty answers (was 40 of 50 with 9 empty)"
+      }
     },
     {
       "id": "N13-2",
       "category": "code-intelligence",
       "classification": "bug",
-      "status": "open",
+      "status": "fixed",
       "gbrain_sha": "3a284aea26889b77c633aebb4149c3016d834ee6",
       "contract": "code_callers returns callers with a resolved flag, documented with resolved: true for a resolved edge (src/core/operations-descriptions.ts CODE_CALLERS_DESCRIPTION).",
       "surface": "src/core/engine-sql/code-edges.ts getCallersOf / getCalleesOf (resolved means \"row is in code_edges_chunk\", which the extractor never writes)",
       "repro": "bun docs/benchmarks/2026-10-01-n13-code-intelligence/repros/n13-2-resolved-flag.ts",
       "expected": "After resolve_symbol_edges, the caller -> helper edge reports resolved: true.",
-      "actual": "resolved: false with edge_metadata.resolved_chunk_id set. On pathe, resolved is false on 81 of 81 caller edges while 53 carry resolved_chunk_id."
+      "actual": "resolved: false with edge_metadata.resolved_chunk_id set. On pathe, resolved is false on 81 of 81 caller edges while 53 carry resolved_chunk_id.",
+      "fixing_pr": "garrytan/gbrain#5839 (fix wave 5, v0.60.28.0)",
+      "fixing_commit": "bf087a043b95ddbde39f93eaa93b0fd37e03b590",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n13/receipt-pin-d44296c.json",
+          "docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt"
+        ],
+        "note": "resolved true on 76 of 91 caller edges, matching resolved_chunk_id on 76 (was 0 of 81 with 53)"
+      }
     },
     {
       "id": "N13-3",
       "category": "code-intelligence",
       "classification": "bug",
-      "status": "open",
+      "status": "fixed",
       "gbrain_sha": "3a284aea26889b77c633aebb4149c3016d834ee6",
       "contract": "code_blast and code_flow support TypeScript, TSX, JavaScript and Python (src/core/code-intel/recursive-walk.ts SUPPORTED_LANGS).",
       "surface": "src/core/code-intel/recursive-walk.ts runRecursiveWalk (detectSymbolLanguage takes the first row for a bare name shared across files)",
       "repro": "bun docs/benchmarks/2026-10-01-n13-code-intelligence/repros/n13-3-shared-name-language-gate.ts",
       "expected": "code_blast shared_helper, defined in a Python file and a Go file, returns ok or ambiguous.",
-      "actual": "unsupported_language: the Go definition decides the gate for the Python one."
+      "actual": "unsupported_language: the Go definition decides the gate for the Python one.",
+      "fixing_pr": "garrytan/gbrain#5839 (fix wave 5, v0.60.28.0)",
+      "fixing_commit": "bf087a043b95ddbde39f93eaa93b0fd37e03b590",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n13/receipt-pin-d44296c.json",
+          "docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt"
+        ],
+        "note": "code_blast on a name defined in Python and Go returns ok (repro)"
+      }
     },
     {
       "id": "N13-4",
@@ -629,7 +1137,16 @@
       "repro": "bun eval/runner/n13-code-intelligence.ts --gbrain <gbrain checkout>@3a284ae",
       "expected": "Semantic references only (if claimed).",
       "actual": "130 of 291 returned chunks across 50 symbols hold only a substring (for example join inside .join() calls), while 167 of 171 compiler references are covered.",
-      "reason": "Documented: lexical references are not semantic references."
+      "reason": "Documented: lexical references are not semantic references.",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n13/receipt-pin-d44296c.json"
+        ],
+        "note": "134 of 296 returned chunks hold only a substring (was 130 of 291)"
+      }
     },
     {
       "id": "N13-5",
@@ -642,7 +1159,16 @@
       "repro": "bun eval/runner/n13-code-intelligence.ts --gbrain <gbrain checkout>@3a284ae",
       "expected": "Cross-file calls resolved to their definition (if claimed).",
       "actual": "0 of 12 cross-file calls resolved; all 12 appear in code_callers only through a bare-name match, which also matches same-named functions in other files (pathe has two parse functions).",
-      "reason": "Documented limit of the resolver."
+      "reason": "Documented limit of the resolver.",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n13/receipt-pin-d44296c.json"
+        ],
+        "note": "0 of 12 cross-file calls resolved"
+      }
     },
     {
       "id": "N13-6",
@@ -655,7 +1181,16 @@
       "repro": "bun eval/runner/n13-code-intelligence.ts --gbrain <gbrain checkout>@3a284ae",
       "expected": "Agent callers can read code (if claimed).",
       "actual": "6 of 6 ops refuse remote callers; only the trusted local path answers.",
-      "reason": "Remote code reads are suspended at this commit."
+      "reason": "Remote code reads are suspended at this commit.",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n13/receipt-pin-d44296c.json"
+        ],
+        "note": "6 of 6 ops still refuse remote callers"
+      }
     },
     {
       "id": "N13-7",
@@ -668,7 +1203,16 @@
       "repro": "bun eval/runner/n13-code-intelligence.ts --gbrain <gbrain checkout>@3a284ae",
       "expected": "Named CLI commands for blast and flow (if claimed).",
       "actual": "Reachable only through gbrain call or in process.",
-      "reason": "Not claimed at this commit."
+      "reason": "Not claimed at this commit.",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n13/receipt-pin-d44296c.json"
+        ],
+        "note": "code_blast and code_flow still have no CLI command"
+      }
     },
     {
       "id": "N13-8",
@@ -681,7 +1225,16 @@
       "repro": "bun eval/runner/n13-code-intelligence.ts --gbrain <gbrain checkout>@3a284ae (receipt data.callers_check.gbrain_edges_without_checker_call)",
       "expected": "A member call such as segments.join(\"/\") or process.cwd() is not resolved to a same-named top-level function.",
       "actual": "On pathe, dirname, relative and format are resolved callers of pathe's join (they call Array.prototype.join), and cwd is a resolved caller of itself (it calls process.cwd()): 4 of 53 resolved edges.",
-      "reason": "Consequence of the documented bare-token emission for untyped receivers; precision cost of within-file resolution, not a broken contract. Worth a receiver-aware guard before blast radius is trusted."
+      "reason": "Consequence of the documented bare-token emission for untyped receivers; precision cost of within-file resolution, not a broken contract. Worth a receiver-aware guard before blast radius is trusted.",
+      "review": {
+        "date": "2026-10-02",
+        "gbrain_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-02-wave-repin/n13/receipt-pin-d44296c.json"
+        ],
+        "note": "37 of 91 gbrain edges have no matching compiler call (was 30 of 81)"
+      }
     }
   ]
 }

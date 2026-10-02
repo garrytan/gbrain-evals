@@ -1,5 +1,7 @@
 # Forgetting and withdrawal residue through the lifecycle harness (N5, 2026-10-01)
 
+**Update, 2026-10-02.** gbrain fix wave 6 fixed N5-1 (`3b1d238c`), N5-2 and N5-3 (`9eaab73f`, `5a550533`). At gbrain `d44296c`, the same run passes all seven preregistered rules on PGLite and on Postgres: 0 prohibited outputs, retained-neighbor recall 750/750 and reinstatement 6/6. No remote response carried a forgotten fact in `_meta`. The numbers below are the October 1 measurement at `3a284ae`. See the [October 2 rerun](2026-10-02-wave-repin.md).
+
 ## The finding
 
 `forget` keeps its documented promise on the storage side and breaks it in three places around it. Across six cells (PGLite and Postgres, each over the trusted local CLI, stdio MCP and HTTP MCP) a forgotten claim never came back: zero reactivations after an incremental sync, a full reimport of the pre-forget files, an agent writing back a stale page, a restart and a concurrent round, and zero collateral expirations of same-entity neighbors or same-text claims on other entities. A read-only and a foreign-source OAuth client could not withdraw anything (2 of 2 attempts refused on each HTTP cell). No private canary reached a remote caller.

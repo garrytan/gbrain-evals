@@ -2,6 +2,82 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.6] - 2026-10-02
+
+### Re-pin to gbrain `d44296c`: all 20 wave bugs fixed and verified, N12 gates
+
+gbrain fix wave 5 ([#5839](https://github.com/garrytan/gbrain/pull/5839),
+v0.60.28.0) and fix wave 6 ([#5845](https://github.com/garrytan/gbrain/pull/5845),
+v0.60.30.0) have merged. This release pins gbrain master `d44296c`, which
+contains both, and reruns the October 1 categories with the same runners,
+seeds and settings
+([results](docs/benchmarks/2026-10-02-wave-repin.md)).
+
+- **Gate changes.**
+  - **N12 format fidelity now gates.** Its frozen hold said to re-pin to a
+    master with the N12-1 fix, rerun N12 and remove the hold. At `d44296c`
+    it passes all six preregistered rules on seeds 12 and 7, including 0
+    fabricated turns out of 16 negative items (3 turns on October 1). The
+    hold was removed in the re-pin commit. No rule value changed.
+  - N1 and N5 already had gate status, and now pass every rule on PGLite and
+    Postgres. They stay listed, not dispatched, until a CI-sized slice exists.
+  - N8 stays report-only, and its private-delivery targets stay exploratory.
+    N9 and N13 have no gating rule. Paid arms never gate.
+- **Before and after (October 1 at `3a284ae`, October 2 at `d44296c`).**
+  - **N1 knowledge update.** Current-value accuracy went from 288/388 to
+    388/388 probes, and history retained from 168/385 to 385/385. Stale
+    values stayed at 0 of 773.
+  - **N5 forgetting residue.** Prohibited outputs after forget went from 2 to
+    0 on PGLite and from 12 to 0 on Postgres. Retained-neighbor recall went
+    from 738/750 to 750/750, and reinstatement from 4/6 to 6/6. Remote
+    responses carrying a forgotten fact in `_meta` went from 108 and 304 to
+    0 and 0.
+  - **N2 contradiction surfacing (paid, judge prompt v3).** Conflicts called
+    contradictions rose from 105/150 to 132/150. Unplanted false
+    contradictions fell from 109/1,977 to 26/1,968, and judged-pair precision
+    rose from 48.6% to 82.0%. All three preregistered decision rules now
+    hold. Undated conflicts did not move (36 of 50 both times). One of four
+    probe runs hit its $1.50 cap, so 13 of 2,680 pairs went unjudged; no
+    planted conflict was among them.
+  - **N8 proactive recall.** Private pages delivered went from 4 to 0 for
+    remote callers and from 4 to 0 for the turn block.
+  - **N13 code intelligence.** `code_def` top-1 went from 40/50 to 49/50, and
+    the `resolved` flag from 0 of 81 edges to 76 of 91.
+  - **N7 open loops.** Backfill nudges went from 0/6 and 0/4 to 6/6 and 4/4.
+    The gating numbers are unchanged.
+  - **N9 multi-hop.** Unchanged: 0 composed plans and 0 firings. "Who
+    attended" seeds now resolve (150/150, was 0), but the arm still fires 0
+    times. World-v1 names attendees only in prose, which the evidence gate now
+    types as mentions. The one-hop paid rerun repeated its October 1 numbers.
+- **Bug ledger.** Each entry gains a dated `review` with the commit checked,
+  the evidence and its receipts. Fixed bugs gain `fixing_pr` and
+  `fixing_commit`, and a new `closed` status covers a gap that gbrain closes on
+  purpose. The original findings are unchanged. Status on 2026-10-02:
+  - 20 of 20 bugs are fixed and verified by a rerun. None is fixed upstream
+    without verification, and none is still open.
+  - Gap N12-7 (legacy-pack attendance) is closed by gbrain `81755f5b`.
+  - Of the other gaps, 25 still reproduce. A4-1 and A4-2 were not rechecked,
+    because A4 was not rerun.
+  - All 24 ledger repros now exit 0
+    ([output](docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt)).
+- **No new gbrain bugs.** Three findings are follow-up work, not contract
+  breaks: undated conflicts called temporal, prose attendance typed as
+  mentions, and the N2 probe cap. They are in `TODOS.md`.
+- **Harness.**
+  - N2 gains a `local_bare_cli` probe that asks gbrain's own `makeContext`
+    for the context. The existing probe imitates the October 1 CLI context
+    and is unchanged.
+  - N2 now records the judge prompt version from gbrain instead of
+    hard-coding "2".
+  - The N2 small-world test now pins the fixed behavior.
+- **Runtime.** gbrain v0.60.27.0 requires Bun 1.4.0 or newer, so CI and the
+  reruns moved from Bun 1.3.14 to 1.4.2. That is the one setting that
+  differs from the October 1 runs.
+- **Paid spend: $6.37** in one budget run capped at $60, with every request
+  reconciled. Of that, the N2 judge cost $6.24, the N9 paid arm $0.065,
+  the relational-ab one-hop rerun $0.065 and the N1 paid arm $0.000006.
+  Everything else ran keyless. The sealed confirmation sets were not touched.
+
 ## [0.10.5] - 2026-10-01
 
 ### Eval-category wave: eleven categories at gbrain `3a284ae`, 20 gbrain bugs found

@@ -1,5 +1,7 @@
 # Unsolicited recall at final delivery (N8, 2026-10-01)
 
+**Update, 2026-10-02.** gbrain fix wave 5 fixed N8-1 and N8-2 (`bb4e9970`). At gbrain `d44296c`, 0 private pages reached remote callers or the turn-context block (was 4 and 4). N8 stays report-only until people review its associative labels. See the [October 2 rerun](2026-10-02-wave-repin.md).
+
 Report-only. This category stays report-only until the associative-recall-v1 labels pass independent human review (wave amendment 8 and the CEO requirement). Nothing here is a README capability claim.
 
 ## The finding

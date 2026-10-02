@@ -129,7 +129,7 @@ describe('N2 broken systems fail the safety contracts', () => {
 });
 
 describe('N2 on PGLite through gbrain\'s probe (small world)', () => {
-  test('presence holds, nothing is mutated, judge errors stay errors, undated pages reach the judge with a date', async () => {
+  test('presence holds, nothing is mutated, judge errors stay errors, undated pages reach the judge undated, the bare CLI reads the run', async () => {
     const world = generateN2World({ seed: 11, counts: { same_time_conflict: 6, dated_change: 3, holder_opinion: 1, agreement: 1, namesake: 1, negation: 1 } });
     const r = await runHermetic(resolveGbrainUnderTest(null), world, { amara: false });
     expect(r.harness_error).toBeNull();
@@ -138,7 +138,8 @@ describe('N2 on PGLite through gbrain\'s probe (small world)', () => {
     expect(r.safety!.judge_errors_counted_as_verdicts).toBe(0);
     expect(r.candidate!.conflicts_total).toBe(6);
     expect(r.find_contradictions!.local_default_scope_cli).toMatchObject({ returned: 0 });
-    expect((r.date_signal as { undated_shown_with_a_date: number }).undated_shown_with_a_date).toBeGreaterThan(0);
+    expect((r.find_contradictions!.local_bare_cli as { returned: number }).returned).toBeGreaterThan(0);
+    expect((r.date_signal as { undated_shown_with_a_date: number }).undated_shown_with_a_date).toBe(0);
   }, 120_000);
 });
 
