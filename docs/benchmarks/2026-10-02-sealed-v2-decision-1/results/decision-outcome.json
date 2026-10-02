@@ -1,0 +1,14 @@
+{
+  "decision_id": "sealed-v2-decision-1-2026-10-02:auto-vs-chunk",
+  "decision_sha256": "23dae4c1b03d7c6427e25dcf902a0c4276e6d6eee8ba8be29d5dc37e575133ba",
+  "reader_errors": {
+    "chunk": 0,
+    "auto": 0
+  },
+  "verdict": "pass",
+  "superiority": "confirmed",
+  "reasons": [
+    "non-inferiority: pass",
+    "superiority: delta 0.3000, McNemar p 1.73e-18, sign-flip p 0.0000500"
+  ]
+}

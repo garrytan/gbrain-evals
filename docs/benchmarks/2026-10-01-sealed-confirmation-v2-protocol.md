@@ -1,6 +1,6 @@
 # Sealed confirmation set v2: protocol, 2026-10-01
 
-This is a data and access protocol, not a benchmark result. It freezes a second sealed test set for gbrain, built because [v1](2026-09-29-sealed-confirmation-protocol.md) turned out too easy to confirm an evidence-delivery gain: on v1 the chunk default already answered 147 of 150 questions ([auto v2 check](2026-09-30-evidence-auto-v2.md)). No gbrain run has touched v2. Opening it is a release decision, under the same access rules as v1.
+This is a data and access protocol, not a benchmark result. It freezes a second sealed test set for gbrain, built because [v1](2026-09-29-sealed-confirmation-protocol.md) turned out too easy to confirm an evidence-delivery gain: on v1 the chunk default already answered 147 of 150 questions ([auto v2 check](2026-09-30-evidence-auto-v2.md)). No gbrain run had touched v2 when this protocol was written. Opening it is a release decision, under the same access rules as v1. (2026-10-02: release decision 1 has since opened it; see [Openings](#access-policy).)
 
 ## What changed from v1
 
@@ -80,6 +80,8 @@ The sealed files are `questions.json`, `labels.json` and `ledger.json`. Their co
 The rules are v1's ([access policy](2026-09-29-sealed-confirmation-protocol.md#access-policy)): owner custody outside this repository; a dated preregistration committed before any opening; every label read through the runner, which checks the commitment and appends to `access-log.jsonl` first; aggregates only; at most three release decisions; no tuning. Run the runner with `--manifest eval/data/sealed-confirmation-v2/manifest.json`; without it the runner checks v1's commitments and refuses v2's files.
 
 **Access so far.** The access log has one line: the solvability run above. The author, a Capy agent, also read generation logs, plan-validation output and the shared 13-word runs in the two filler chats the overlap audit matched. The overlap audit read the questions and ledger programmatically, as in v1, and publishes counts only. Nobody has run gbrain or any retrieval system on the set.
+
+**Openings: 1 of 3 used (added 2026-10-02).** The paragraph above describes the set as of 2026-10-01 and is kept as written. Release decision 1 ([preregistration](2026-10-02-sealed-v2-decision-1-preregistration.md), [results](2026-10-02-sealed-v2-decision-1.md)) opened the set on 2026-10-02. It compared gbrain's `auto` evidence default with `chunk` at gbrain `d44296c` and came out `pass` with superiority confirmed (192 against 132 of 200). The labels were read twice through the runner under decision id `sealed-v2-decision-1-2026-10-02:auto-vs-chunk`, so the access log now has three lines. `ledger.json` was not read. Two release decisions remain.
 
 ## Limits
 
