@@ -28,7 +28,8 @@
  *
  * Missed and capped pairs stay in the end-to-end denominators. A throwing
  * judge on a slice checks that judge exceptions become error rows, never
- * verdicts. find_contradictions read-back is probed by caller scope.
+ * verdicts. find_contradictions read-back is probed by caller scope, including
+ * the context gbrain's own CLI builds for a bare command (makeContext).
  *
  * A development arm imports the amara-life notes, meetings and emails and
  * scores the 15 pairs of eval/data/gold/contradictions.json against both
@@ -555,6 +556,12 @@ async function runHermeticInner(gut: GbrainUnderTest, world: ReturnType<typeof g
       remote_caller: await fc({ remote: true, sourceId: 'default' }),
       local_default_scope_cli: await fc({ remote: false, sourceId: 'default' }),
       local_all_sources: await fc({ remote: false, sourceId: '__all__' }),
+      local_bare_cli: await (async () => {
+        try {
+          const { makeContext } = await importGbrain<{ makeContext: (e: Engine, p: Record<string, unknown>) => Promise<Record<string, unknown>> }>(gut, 'src/cli.ts');
+          return await fc(await makeContext(sut.engine, {}));
+        } catch (e) { return { error: e instanceof Error ? e.message : String(e) }; }
+      })(),
     };
 
     const after = await pageSnapshot(sut);
@@ -685,6 +692,7 @@ async function main(): Promise<void> {
   ];
   const safetyPass = h.safety !== null && h.safety.applied_mutations === 0 && h.safety.judge_errors_counted_as_verdicts === 0;
   const nTotal = world.ledger.items.length;
+  const { PROMPT_VERSION } = await importGbrain<{ PROMPT_VERSION: string }>(gut, 'src/core/eval-contradictions/types.ts');
   const receipt: Receipt = {
     ...(p ? {} : noModelSpend('hermetic: provider keys stripped, keyword search only, injected oracle and throwing judges; no model and no paid request')),
     schema_version: RECEIPT_SCHEMA_VERSION,
@@ -706,7 +714,7 @@ async function main(): Promise<void> {
       caller: 'operation handlers with OperationContext { remote: false, sourceId: default } for writes; runContradictionProbe in-process',
       search_path: `runContradictionProbe default hybridSearch (wrapped only to record results), top-K ${TOP_K}, no embedding gateway (keyword only)`,
       probe: { top_k: TOP_K, sampling: 'deterministic', no_cache: true, yes_override: true, budget_usd: PROBE_BUDGET_USD },
-      judges: { hermetic: 'oracle-recording judge (gold verdicts from the ledger) and a throwing judge on the first 30 queries', paid: p ? `gbrain judgeContradiction, ${JUDGE_MODEL}, prompt version 2; queries in ${PAID_SHARDS} concurrent probe runs, probe budget $${PROBE_BUDGET_USD / PAID_SHARDS} each` : 'not run' },
+      judges: { hermetic: 'oracle-recording judge (gold verdicts from the ledger) and a throwing judge on the first 30 queries', paid: p ? `gbrain judgeContradiction, ${JUDGE_MODEL}, prompt version ${PROMPT_VERSION}; queries in ${PAID_SHARDS} concurrent probe runs, probe budget $${PROBE_BUDGET_USD / PAID_SHARDS} each` : 'not run' },
       seed, generator_version: N2_GENERATOR_VERSION, ledger_sha256: world.fingerprint,
       entrypoints: ENTRYPOINTS,
       gbrain_overlay: overlaySummary(gut),
