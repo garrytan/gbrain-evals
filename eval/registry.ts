@@ -623,7 +623,7 @@ export const REGISTRY: readonly CategoryEntry[] = [
     gate: 'gate', evidence_maturity: 'synthetic-production-path',
     promotion: {
       preregistered: '2026-10-01',
-      basis: 'amendment 1 and amendment 8, frozen before the first N7 run: safety contracts are the documented exclusion, close, mute and redaction rules (docs/guides/open-loops.md at 3a284ae); the recall floor is a utility floor so a detector that never opens a loop fails, not a value tuned to a run; closure and counterparty thresholds allow one documented-rule miss in twenty',
+      basis: 'amendment 1 and amendment 8, frozen before the first N7 run: safety contracts are the documented exclusion, close, mute and redaction rules (docs/guides/open-loops.md at 3a284ae); the recall floor is a utility floor so a detector that never opens a loop fails, not a value tuned to a run; closure and counterparty thresholds allow one documented-rule miss in twenty. Amendment 2026-10-03 (docs/benchmarks/2026-10-03-n7-oracle-amendment.md): the oracle applies the open-loop rules documented by the gbrain version under test (n7RulesFor); from 0.60.32.0 an acknowledgement-only reply to their question is not a reply. No threshold or contract changed',
       safety_contracts: [
         zero('no-loop-from-excluded-mail', 'data.contracts.excluded_class_loops', 'noise senders, list mail, CC-only delivery, self-threads, calendar system mail, outbound without a question mark and mail inside the grace window never open a loop'),
         zero('calendar-never-closes', 'data.contracts.calendar_closes', 'a calendar notice after an open loop never closes it'),
