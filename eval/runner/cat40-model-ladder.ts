@@ -69,6 +69,9 @@ export interface CellRecord {
   started_at: string;
 }
 
+/** Tool calls with (shortened) results per cell, for --transcripts diagnostics. */
+export const lastTools = new Map<string, Array<{ session: number; name: string; args: Record<string, unknown>; result: string }>>();
+
 function strip(r: AgentRun) {
   const { tools, ...rest } = r;
   return { ...rest, tool_calls: tools.map(t => ({ name: t.name, ms: t.ms, chars: t.chars, truncated: t.truncated, ...(t.error ? { error: t.error } : {}) })) };
@@ -155,6 +158,7 @@ async function runCell(ctx: Ctx, model: string, armName: ArmName, task: LadderTa
     }
     const run = await runAgent({ ...common, system: systemPrompt(ctx.world, arm), user: userMessage(ctx.world, task, arm, 2), scripted: ctx.scripted ? scriptedAgent(task, armName) : undefined });
     const score = scoreTask(task, run, { session1, isWrite });
+    lastTools.set(runId, [...(session1?.tools ?? []).map(t => ({ session: 1, name: t.name, args: t.args, result: t.result.slice(0, 4000) })), ...run.tools.map(t => ({ session: 2, name: t.name, args: t.args, result: t.result.slice(0, 4000) }))]);
     const gbrain_internal = slot ? ctx.proxy!.take(slot.id) : undefined;
     const judged = await judgeClaims(ctx, task, run);
     const total = run.usd + (session1?.usd ?? 0) + (gbrain_internal?.usd ?? 0);
@@ -205,6 +209,7 @@ export async function main(argv = process.argv.slice(2)) {
   const budget = paid ? startPaidRun('cat40-model-ladder', { ...budgetOptionsFrom(argv), estimateUsd: flag(argv, '--estimate-usd') ? Number(flag(argv, '--estimate-usd')) : null, log }) : null;
 
   const resultsPath = join(out, 'results.jsonl');
+  const transcripts = argv.includes('--transcripts');
   const done = new Set(existsSync(resultsPath) ? readFileSync(resultsPath, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l).key as string) : []);
   const cells: Array<{ model: string; arm: ArmName; task: LadderTask; repeat: number }> = [];
   for (let r = 0; r < repeats; r++) for (const task of tasks) for (const model of models) for (const arm of arms) {
@@ -231,7 +236,10 @@ export async function main(argv = process.argv.slice(2)) {
       ctx.proxy.start();
       const n = Number(flag(argv, '--slots') ?? 3);
       const surface = flag(argv, '--surface') ?? 'starter';
-      const slots = Array.from({ length: n }, (_, i) => new GbrainSlot(`slot${i}`, join(root, `slots-${gbrainBuild!.commit.slice(0, 12)}-${worldDigest(world).slice(0, 8)}${argv.includes('--no-pglite-analyze') ? '-noanalyze' : ''}`), gbrainBuild!.dir, ctx.proxy!.port, surface));
+      // --slot-ref reuses brains built by another commit (read-path changes only; the commits must share a schema).
+      const slotRef = flag(argv, '--slot-ref');
+      const slotCommit = slotRef ? execFileSync('git', ['-C', repo, 'rev-parse', `${slotRef}^{commit}`], { encoding: 'utf8' }).trim() : gbrainBuild.commit;
+      const slots = Array.from({ length: n }, (_, i) => new GbrainSlot(`slot${i}`, join(root, `slots-${slotCommit.slice(0, 12)}-${worldDigest(world).slice(0, 8)}${argv.includes('--no-pglite-analyze') ? '-noanalyze' : ''}`), gbrainBuild!.dir, ctx.proxy!.port, surface));
       await Promise.all(slots.map(async s => {
         if (!s.hasSnapshot() || argv.includes('--rebuild')) { const b = await s.build(world, ctx.proxy!, !argv.includes('--no-pglite-analyze')); builds.push(b); log(`built ${s.id} in ${(b.ms / 1000).toFixed(0)}s, $${b.meter.usd.toFixed(4)} (${b.meter.requests} provider requests)`); }
         await s.restore();
@@ -258,6 +266,7 @@ export async function main(argv = process.argv.slice(2)) {
         return;
       }
       appendFileSync(resultsPath, JSON.stringify(rec) + '\n');
+      if (transcripts) appendFileSync(join(out, 'transcripts.jsonl'), JSON.stringify({ key: rec.key, tools: lastTools.get(rec.key) ?? [] }) + '\n');
       finished++;
       if (finished % 10 === 0 || finished === cells.length) log(`${finished}/${cells.length} cells; last ${rec.key} success=${rec.score.success} $${rec.total_usd.toFixed(3)}`);
     });
@@ -271,7 +280,7 @@ export async function main(argv = process.argv.slice(2)) {
       world: { path: 'eval/data/model-ladder-v1/world.json', digest: worldDigest(world), seed: world.seed, docs: world.docs.length, tasks: world.tasks.length },
       evals_commit: (() => { try { return execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(); } catch { return null; } })(),
       evals_dirty: (() => { try { return execFileSync('git', ['status', '--porcelain'], { encoding: 'utf8' }).trim().length > 0; } catch { return null; } })(),
-      gbrain: gbrainBuild ? { commit: gbrainBuild.commit, version: gbrainBuild.version, tree: gbrainBuild.tree, verified: gbrainBuild.verified, surface: flag(argv, '--surface') ?? 'starter', operator_analyze: !argv.includes('--no-pglite-analyze') } : null,
+      gbrain: gbrainBuild ? { slot_ref: flag(argv, '--slot-ref') ?? null, label: ctx.gbrainLabel, commit: gbrainBuild.commit, version: gbrainBuild.version, tree: gbrainBuild.tree, verified: gbrainBuild.verified, surface: flag(argv, '--surface') ?? 'starter', operator_analyze: !argv.includes('--no-pglite-analyze') } : null,
       slot_builds: builds, models, arms, families, repeats, max_tool_chars: ctx.maxToolChars, argv,
       cost: summary ? receiptCost(summary) : null,
       finished_at: new Date().toISOString(),
