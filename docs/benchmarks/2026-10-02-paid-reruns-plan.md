@@ -28,3 +28,10 @@ Run `bun eval/runner/cat14-calibration.ts` live once. Report its verdict, axes a
 - Cat 21: `bun eval/runner/cat21-code-retrieval.ts`. Expected cost about $0.30.
 
 Each fresh receipt replaces the "invalid" marker in the May snapshot with a dated pointer; the May numbers stay as history. A failed or partial run is reported as it is, not rerun until it passes. Each run passes the runner's own budget flag where it has one, and stops if the running total would pass $50.
+
+## 4. Live negative controls (WS3), added before running them
+
+Added on October 2, 2026, after items 1 to 3 above ran and before either control below. The rule is the existing one (August 31 audit; `NEGATIVE_CONTROL_RATIO = 0.5` in `cat25-trajectory-routing.ts`): a deliberately degraded configuration must score at most half the real configuration at the same fixed seed and fixture. A control that fails the rule says the category cannot tell the degraded configuration from the real one.
+
+- **Cat 25, trajectory routing in `think`.** Run `bun eval/runner/cat25-trajectory-routing.ts` live once (`claude-sonnet-4-6` at temperature 0, Haiku judge). The real arm is `withTrajectory: true`; the degraded arm is the baseline `withTrajectory: false` on the same probes. Today the runner enforces the ratio only in hermetic mode. Pass when the baseline judge mean is at most 0.5 times the wave judge mean. Expected cost $0.30 to $0.60.
+- **Cat 13, concept search.** The real configuration is the October 2 `vector` arm with live Voyage `voyage-4` embeddings (held-out nDCG@5 0.6058, already measured above). The degraded configuration is the same arm with deterministic hash embeddings (`--stub-embed --adapter vector`, seed 42, same split). Pass when the degraded held-out nDCG@5 is at most 0.3029. Cost $0.
