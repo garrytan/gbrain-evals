@@ -158,7 +158,7 @@ async function runCell(ctx: Ctx, model: string, armName: ArmName, task: LadderTa
     }
     const run = await runAgent({ ...common, system: systemPrompt(ctx.world, arm), user: userMessage(ctx.world, task, arm, 2), scripted: ctx.scripted ? scriptedAgent(task, armName) : undefined });
     const score = scoreTask(task, run, { session1, isWrite });
-    lastTools.set(runId, [...(session1?.tools ?? []).map(t => ({ session: 1, name: t.name, args: t.args, result: t.result.slice(0, 4000) })), ...run.tools.map(t => ({ session: 2, name: t.name, args: t.args, result: t.result.slice(0, 4000) }))]);
+    lastTools.set(runId, [...(session1?.tools ?? []).map(t => ({ session: 1, name: t.name, args: t.args, result: t.result.slice(0, 40_000) })), ...run.tools.map(t => ({ session: 2, name: t.name, args: t.args, result: t.result.slice(0, 40_000) }))]);
     const gbrain_internal = slot ? ctx.proxy!.take(slot.id) : undefined;
     const judged = await judgeClaims(ctx, task, run);
     const total = run.usd + (session1?.usd ?? 0) + (gbrain_internal?.usd ?? 0);
@@ -188,7 +188,7 @@ function flag(argv: string[], name: string): string | undefined {
 
 export async function main(argv = process.argv.slice(2)) {
   const scripted = argv.includes('--scripted');
-  const worldPath = join(DEFAULT_LADDER_DIR, 'world.json');
+  const worldPath = resolve(flag(argv, '--world') ?? join(DEFAULT_LADDER_DIR, 'world.json'));
   const world: LadderWorld = JSON.parse(readFileSync(worldPath, 'utf8'));
   const regenerated = generateLadderWorld(world.seed);
   if (worldDigest(regenerated) !== worldDigest(world)) throw new Error(`${worldPath} does not match its generator; run bun eval/generators/model-ladder-gen.ts`);
@@ -277,7 +277,7 @@ export async function main(argv = process.argv.slice(2)) {
     budget?.guard.uninstall();
     const receipt = {
       schema: 'cat40-receipt-v1', version: CAT40_VERSION, judge_prompt: JUDGE_PROMPT_VERSION, judge: ctx.judge,
-      world: { path: 'eval/data/model-ladder-v1/world.json', digest: worldDigest(world), seed: world.seed, docs: world.docs.length, tasks: world.tasks.length },
+      world: { path: worldPath, digest: worldDigest(world), seed: world.seed, docs: world.docs.length, tasks: world.tasks.length },
       evals_commit: (() => { try { return execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(); } catch { return null; } })(),
       evals_dirty: (() => { try { return execFileSync('git', ['status', '--porcelain'], { encoding: 'utf8' }).trim().length > 0; } catch { return null; } })(),
       gbrain: gbrainBuild ? { slot_ref: flag(argv, '--slot-ref') ?? null, label: ctx.gbrainLabel, commit: gbrainBuild.commit, version: gbrainBuild.version, tree: gbrainBuild.tree, verified: gbrainBuild.verified, surface: flag(argv, '--surface') ?? 'starter', operator_analyze: !argv.includes('--no-pglite-analyze') } : null,
