@@ -17,7 +17,8 @@
  * and `actual` stay as found. A later check adds `review` (the date, the gbrain
  * commit checked and the evidence), and a fix adds `fixing_pr` and
  * `fixing_commit`. A feature gap or category defect that gbrain closes on
- * purpose becomes `closed`, never `fixed`.
+ * purpose becomes `closed`, never `fixed`. A newer review moves the previous
+ * one to `review_history` (oldest first), so dated reviews are never lost.
  *
  *   bun eval/runner/bug-ledger.ts validate [ledger.json]
  *   bun eval/runner/bug-ledger.ts render [ledger.json] [--out view.md]
@@ -73,6 +74,8 @@ export interface BugEntry {
   fixing_commit?: string;
   /** Latest status review; see BugReview. */
   review?: BugReview;
+  /** Earlier reviews, oldest first, each kept as written. */
+  review_history?: BugReview[];
 }
 
 export interface BugLedger { schema_version: 1; entries: BugEntry[] }
@@ -95,14 +98,22 @@ export function validateBugEntry(e: unknown): string[] {
   if (b.status === 'closed' && b.classification === 'bug') v.push(`${id}: a bug is fixed, not closed`);
   if (b.status === 'closed' && (!nonEmpty(b.reason) || !nonEmpty(b.fixing_pr))) v.push(`${id}: a closed entry needs a reason and fixing_pr`);
   if (b.fixing_commit !== undefined && (typeof b.fixing_commit !== 'string' || !/^[0-9a-f]{40}$/.test(b.fixing_commit))) v.push(`${id}: fixing_commit must be a full 40-character commit`);
-  if (b.review !== undefined) {
-    const r = b.review as Record<string, unknown> | null;
-    if (!r || typeof r !== 'object') v.push(`${id}: review must be an object`);
+  const checkReview = (value: unknown, at: string) => {
+    const r = value as Record<string, unknown> | null;
+    if (!r || typeof r !== 'object') { v.push(`${id}: ${at} must be an object`); return; }
+    if (typeof r.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(r.date)) v.push(`${id}: ${at}.date must be YYYY-MM-DD`);
+    if (typeof r.gbrain_sha !== 'string' || !/^[0-9a-f]{40}$/.test(r.gbrain_sha)) v.push(`${id}: ${at}.gbrain_sha must be a full 40-character commit`);
+    if (!REVIEW_EVIDENCE.includes(r.evidence as never)) v.push(`${id}: ${at}.evidence must be one of ${REVIEW_EVIDENCE.join('|')}`);
+    if (r.evidence === 'rerun' && (!Array.isArray(r.receipts) || r.receipts.length === 0)) v.push(`${id}: a rerun review names its receipts`);
+  };
+  if (b.review !== undefined) checkReview(b.review, 'review');
+  if (b.review_history !== undefined) {
+    if (!Array.isArray(b.review_history)) v.push(`${id}: review_history must be an array`);
     else {
-      if (typeof r.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(r.date)) v.push(`${id}: review.date must be YYYY-MM-DD`);
-      if (typeof r.gbrain_sha !== 'string' || !/^[0-9a-f]{40}$/.test(r.gbrain_sha)) v.push(`${id}: review.gbrain_sha must be a full 40-character commit`);
-      if (!REVIEW_EVIDENCE.includes(r.evidence as never)) v.push(`${id}: review.evidence must be one of ${REVIEW_EVIDENCE.join('|')}`);
-      if (r.evidence === 'rerun' && (!Array.isArray(r.receipts) || r.receipts.length === 0)) v.push(`${id}: a rerun review names its receipts`);
+      b.review_history.forEach((r, i) => checkReview(r, `review_history[${i}]`));
+      if (b.review === undefined && b.review_history.length) v.push(`${id}: review_history needs a current review`);
+      const dates = [...(b.review_history as Array<{ date?: unknown }>), b.review as { date?: unknown } | undefined].map(r => String(r?.date ?? ''));
+      if (dates.some((d, i) => i > 0 && d < dates[i - 1])) v.push(`${id}: reviews must be in date order, oldest first`);
     }
   }
   return v;

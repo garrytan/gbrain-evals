@@ -262,11 +262,18 @@ describe('bug ledger', () => {
     expect(validateBugEntry({ ...entry, status: 'closed', reason: 'r', fixing_pr: '#1' })).toContain('N5-1: a bug is fixed, not closed');
     expect(validateBugEntry({ ...entry, classification: 'feature-gap', status: 'closed' })).toContain('N5-1: a closed entry needs a reason and fixing_pr');
     expect(validateBugEntry({ ...entry, classification: 'feature-gap', status: 'closed', reason: 'gbrain now gates it', fixing_pr: '#1', review })).toEqual([]);
+    const later = { ...review, date: '2026-10-03' };
+    expect(validateBugEntry({ ...entry, review: later, review_history: [review] })).toEqual([]);
+    expect(validateBugEntry({ ...entry, review, review_history: [later] })).toContain('N5-1: reviews must be in date order, oldest first');
+    expect(validateBugEntry({ ...entry, review_history: [review] })).toContain('N5-1: review_history needs a current review');
+    expect(validateBugEntry({ ...entry, review: later, review_history: [{ ...review, receipts: [] }] })).toContain('N5-1: a rerun review names its receipts');
   });
 
-  test('the wave ledger records a 2026-10-02 review on every entry', () => {
+  test('the wave ledger records a 2026-10-03 review on every entry and keeps the 2026-10-02 reviews', () => {
     const ledger = JSON.parse(readFileSync(join(import.meta.dir, '../../docs/benchmarks/2026-10-01-wave-bugs.json'), 'utf8')) as { entries: BugEntry[] };
-    expect(ledger.entries.filter(e => e.review?.date !== '2026-10-02').map(e => e.id)).toEqual([]);
+    expect(ledger.entries.filter(e => e.review?.date !== '2026-10-03').map(e => e.id)).toEqual([]);
+    const firstWave = ledger.entries.filter(e => !['N7-8', 'N12-9'].includes(e.id));
+    expect(firstWave.filter(e => e.review_history?.[0]?.date !== '2026-10-02').map(e => e.id)).toEqual([]);
     expect(ledger.entries.filter(e => e.status === 'fixed' && !e.fixing_commit).map(e => e.id)).toEqual([]);
   });
 
