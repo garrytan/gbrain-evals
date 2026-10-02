@@ -60,10 +60,21 @@ export interface TaskScore {
   over_refusal: boolean;
 }
 
+/** Cited document refs. Models sometimes send `sources` as a string (one path, a comma list or a JSON-encoded array) instead of an array. */
+export function submittedSources(f: AgentRun['final']): string[] {
+  let raw: unknown = f?.sources ?? [];
+  if (typeof raw === 'string') {
+    const text = raw;
+    try { raw = JSON.parse(text); } catch { raw = text.split(/[,\n]/); }
+  }
+  const list = Array.isArray(raw) ? raw : [raw];
+  return list.map(s => String(s).trim()).filter(Boolean).map(normalizeDocRef);
+}
+
 export function scoreTask(task: LadderTask, run: AgentRun, extra: { session1?: AgentRun; isWrite: (name: string, args: Record<string, unknown>) => boolean }): TaskScore {
   const f = run.final;
   const outputText = JSON.stringify(f ?? {}) + '\n' + (run.text ?? '');
-  const sources = (f?.sources ?? []).map(s => normalizeDocRef(String(s)));
+  const sources = submittedSources(f);
   let success = false, said_wrong = false;
   let field_correct: Record<string, boolean> | undefined;
   if (task.answer_kind === 'fields') {
@@ -109,7 +120,7 @@ export function judgePrompt(world: LadderWorld, task: LadderTask, run: AgentRun)
   const answerText = [f?.answer ? `answer: ${f.answer}` : '', f?.fields ? `fields: ${JSON.stringify(f.fields)}` : '', f?.notes ? `notes: ${f.notes}` : '', run.text ?? ''].filter(Boolean).join('\n');
   if (!answerText.trim()) return null;
   const byId = new Map(world.docs.map(d => [d.id, d]));
-  const ids = [...new Set([...task.relevant, ...(f?.sources ?? []).map(s => normalizeDocRef(String(s)))])].filter(id => byId.has(id));
+  const ids = [...new Set([...task.relevant, ...submittedSources(f)])].filter(id => byId.has(id));
   const docs = ids.map(id => `<document id="${id}">\n${renderDoc(byId.get(id)!)}</document>`).join('\n');
   return {
     system: 'You check an assistant\'s answer against company documents. List every factual claim the answer makes about the company, its customers or people (values, dates, names, statuses, who said or decided what). For each claim decide: supported (a document states it), contradicted (a governing document states otherwise), or unsupported (no document states it). Claims that only describe what a document says, including documents the answer correctly treats as unsigned, inferred or superseded, count as supported. Reply with JSON only: {"claims":[{"claim":"...","verdict":"supported|contradicted|unsupported"}]}',

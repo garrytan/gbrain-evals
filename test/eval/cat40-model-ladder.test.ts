@@ -78,6 +78,13 @@ describe('arms and loop (scripted model, no network)', () => {
     } });
     expect(scoreTask(task, run, { isWrite: () => false }).success).toBe(false);
   });
+  test('sources sent as a string still score instead of crashing the cell', async () => {
+    const doc = task.gold.evidence[0];
+    for (const sources of [doc, JSON.stringify([doc]), `${doc}, other.md`]) {
+      const run = await runAgent({ model: 'scripted', system: '', user: task.question, arm: new OracleArm(), scripted: () => ({ name: 'submit_answer', args: { answer: task.gold.answer![0], sources } }) });
+      expect(scoreTask(task, run, { isWrite: () => false }).evidence_cited).toEqual([normalizeDocRef(doc)]);
+    }
+  });
   test('memory arm views directories and writes to its overlay only', async () => {
     const store = FileStore.fromWorld(world);
     const arm = new MemoryArm(store);
