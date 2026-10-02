@@ -4,7 +4,8 @@
  * The arms differ only in the tools they offer. The loop, system prompt
  * frame, turn cap, output cap and the `submit_answer` tool are shared. Calls
  * go out through `fetch`, so the paid-request guard in budget-ledger.ts
- * reserves and caps every request, retries included.
+ * reserves and caps every request, retries included. A refused reservation
+ * propagates instead of being recorded as a model error.
  *
  * Anthropic: Messages API, prompt caching on the system prompt, tools and the
  * latest message (what Claude Code does). Native tools such as the memory
@@ -166,6 +167,7 @@ export async function runAgent(cfg: LoopConfig): Promise<AgentRun> {
       await openaiLoop(cfg, run, specs, execute, maxTurns, fetchImpl);
     }
   } catch (e) {
+    if ((e as Error).name === 'BudgetExceededError') throw e;
     run.stop = 'error';
     run.error = (e as Error).message;
   }
