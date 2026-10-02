@@ -52,7 +52,8 @@ jobs:
       # Every keyless category through all.ts (--tier offline). Status comes
       # from each runner's receipt and gate (Cats 1, 2, 3 and 10 gate on
       # regressions), so a score regression fails this step through all.ts's
-      # exit code. Cat 34 needs an external gbrain checkout and records a
+      # exit code. The N1 and N5 CI slices (knowledge-update-ci,
+      # forget-residue-ci) run here on PGLite through the gbrain CLI. Cat 34 needs an external gbrain checkout and records a
       # skip here; BRAINBENCH_ALLOW_SKIP acknowledges receipt-declared skips.
       - name: "BrainBench offline tier (all.ts --tier offline)"
         run: BRAINBENCH_ALLOW_SKIP=1 timeout 900 bun run eval:brainbench
