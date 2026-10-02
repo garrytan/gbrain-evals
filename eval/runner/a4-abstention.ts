@@ -23,8 +23,9 @@
  *
  * System One S4 (answerable) is reported separately. S4 off is the reader
  * arm. S4 on needs a TypeSafe key, explicit enabling and a budget guard that
- * can price TypeSafe requests; the guard cannot at this commit, so that arm
- * is recorded as not run. The hermetic arm computes, with gbrain's own
+ * can price TypeSafe requests. The guard prices them since gbrain-evals
+ * 0.10.10 (A4-3), but this runner has no S4-on arm yet, so it is recorded as
+ * not run. The hermetic arm computes, with gbrain's own
  * reducer inputs (isProtectedResult and the deterministic CRAG grade), on
  * which unanswerable questions S4 could never abstain even when on.
  *
@@ -63,7 +64,7 @@ export const GAPS: ReadonlyArray<{ capability: string; reason: string }> = [
   { capability: 'keyless answerer or "I don\'t know" response', reason: 'think without a chat model returns its gather without an answer (src/core/think/index.ts:784,1113-1116); the query op only grades. The keyless path cannot abstain, so A4 defines a paid harness answerer.' },
   { capability: 'attribute-level sufficiency in the CRAG grade', reason: 'the grade reads rank-1 evidence labels; an exact title match is strong whether or not the asked-for attribute is present (crag.ts:67-106, matrix P5).' },
   { capability: 'S4 abstention on exact-entity questions', reason: 'reduceAnswerable passes whenever there is an identity hit or a strong deterministic grade (answerable.ts:62-68), so S4 cannot abstain on a missing attribute of a company whose page matches exactly.' },
-  { capability: 'S4 on arm', reason: 'needs a TypeSafe key and explicit enabling; the budget ledger (eval/runner/budget-ledger.ts PAID_HOSTS) prices OpenAI, Anthropic, Voyage and OpenRouter only, so TypeSafe requests would spend outside the guard. Not run.' },
+  { capability: 'S4 on arm', reason: 'needs a TypeSafe key and explicit enabling. The budget ledger prices TypeSafe requests since gbrain-evals 0.10.10 (A4-3), but this runner does not implement the S4-on arm yet. Not run.' },
 ];
 
 const LEVEL_RANK: Record<string, number> = { weak: 0, moderate: 1, strong: 2 };
@@ -447,7 +448,7 @@ async function main(): Promise<void> {
       search_path: `query operation, expand=false, limit=${TOP_K}; no embedding gateway (keyword only); search.crag_escalation and search.crag_think at defaults (off)`,
       seed, generator_version: A4_GENERATOR_VERSION, ledger_sha256: world.fingerprint,
       answerer: paidOut ? paidOut.reader : 'not run (hermetic)',
-      s4_on: 'not run: needs a TypeSafe key, explicit enabling, and a budget guard that prices TypeSafe requests (PAID_HOSTS lacks TypeSafe)',
+      s4_on: 'not run: the runner has no S4-on arm yet (needs a TypeSafe key and explicit enabling; the budget guard prices TypeSafe requests since 0.10.10)',
       entrypoints: ENTRYPOINTS,
       gbrain_overlay: overlaySummary(gut),
       paid: paid ? { budget_run_id: budget?.budgetRunId ?? null, provider_keys: ['ANTHROPIC_API_KEY'], error: paidError, evidence: 'the retrieved arm reads exactly the hermetic arm\'s top five query results' } : null,
