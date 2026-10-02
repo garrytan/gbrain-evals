@@ -283,3 +283,17 @@ describe('receipt schema v2', () => {
     expect(validateStoredReceipt(v1)).toEqual([]);
   });
 });
+
+describe('ProbeAccounting merge (N9 seed workers)', () => {
+  test('absorbing per-seed state equals recording everything in one accounting', () => {
+    const one = new ProbeAccounting(4);
+    one.score('1:q:off', 1); one.error('1:q:on', 'sut', 'boom'); one.score('2:q:off', 0.5); one.error('2:q:on', 'harness', 'down');
+    const a = new ProbeAccounting(2); a.score('1:q:off', 1); a.error('1:q:on', 'sut', 'boom');
+    const b = new ProbeAccounting(2); b.score('2:q:off', 0.5); b.error('2:q:on', 'harness', 'down');
+    const merged = new ProbeAccounting(4);
+    merged.absorb(JSON.parse(JSON.stringify(a.toJSON())));
+    merged.absorb(JSON.parse(JSON.stringify(b.toJSON())));
+    expect(merged.summary()).toEqual(one.summary());
+    expect(merged.scoredValues()).toEqual(one.scoredValues());
+  });
+});

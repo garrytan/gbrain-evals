@@ -118,7 +118,7 @@ The [September 29 lifecycle report](docs/benchmarks/2026-09-29-lifecycle.md) is 
 
 - [ ] **Re-check the N2 probe budget before the next paid N2 run.** Prompt v3 costs about 9% more per pair, and one of four probe runs hit its $1.50 cap on 2026-10-02 (13 of 2,680 pairs unjudged, no planted conflict among them). Any budget change belongs in a preregistration, with the before and after budget stated.
 
-- [ ] **Trim N9 and N2 hermetic arms under 60 seconds.** N9 takes about 134 s and N2 about 76 s (51 s of page writes). Options: drop N9's one-hop splits from the hermetic arm or run one seed in CI.
+- [ ] **Trim N9 and N2 hermetic arms under 60 seconds.** N9 takes about 134 s and N2 about 76 s (51 s of page writes). Options: drop N9's one-hop splits from the hermetic arm or run one seed in CI. *2026-10-02: N9 done without dropping anything: each ingestion seed runs in its own process, 47 s instead of about 130 s, with receipts identical apart from timing fields. N2 stopped: seeding 825 pages through `put_page` (49 s, about 55 ms each, half inside PGLite) plus the two gating probes already take about 65 s, and the only remaining cuts shrink the preregistered 150-conflict denominator. It needs a faster gbrain write path. [Note](docs/benchmarks/2026-10-02-hermetic-arm-trims.md).*
 
 - [ ] **Price TypeSafe requests in the budget ledger and run A4 with S4 on** (A4-3).
 
