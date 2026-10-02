@@ -1,0 +1,3603 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "hermetic: no model and no paid request (provider keys removed from the environment)"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "hermetic: no model and no paid request (provider keys removed from the environment)"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "n6-visibility-fuzz",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 6074,
+  "n_scored": 6074,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "gbrain_version": "0.60.30.0",
+  "gbrain_pin": "github:garrytan/gbrain#d44296cf4d6481a10eb85562d3179e38cfd02c43",
+  "execution": {
+    "source_tree": {
+      "sha256": "73bada1dcb319537fc864b3c318f2decfdb5ca8a543735f0ad55790a56515351",
+      "files": 2517,
+      "git_head": "905b30b68ac7d0858d83c89a761c2a8b923cc539",
+      "dirty": true
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#d44296cf4d6481a10eb85562d3179e38cfd02c43",
+      "declared_sha": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+      "version": "0.60.30.0",
+      "package_sha256": "cab9a29878d395587525de2d77a47f59d864643d64fc70ff942e507fb4cbd7b2",
+      "loaded_git_head": null
+    }
+  },
+  "accounting": {
+    "planned": 6074,
+    "attempted": 6074,
+    "scored": 6074,
+    "errors": 0,
+    "misses": 0,
+    "source": "runner"
+  },
+  "resolved_config": {
+    "engine": "pglite (in-memory)",
+    "decide": "off (no key, fresh GBRAIN_HOME)",
+    "seed": 20260930,
+    "generator_version": "n6-visibility-v2",
+    "callers": [
+      "stdio",
+      "http-read",
+      "http-write",
+      "http-bound",
+      "subagent-remote",
+      "subagent-local"
+    ],
+    "granted_source": "alpha",
+    "holder_allow_list": [
+      "world"
+    ],
+    "call_timeout_ms": 10000,
+    "only": null,
+    "gbrain_overlay": null,
+    "not_exercised": [
+      "network transport and OAuth token verification (serve-http tools/call replayed in process)",
+      "Postgres engine",
+      "write ops executed by write-scoped callers",
+      "gates on ops without a required param (safety)"
+    ]
+  },
+  "hashes": {
+    "ledger_sha256": "12a0c3f9fa6055701995dc98960b3741ed800fed2168e3490072b20ec4aab639"
+  },
+  "started_at": "2026-10-02T16:43:08.102Z",
+  "finished_at": "2026-10-02T16:43:32.730Z",
+  "data": {
+    "metrics": {
+      "read_ops_total": 74,
+      "read_ops_covered": 30,
+      "op_coverage": 0.40540540540540543,
+      "read_ops_content_reachable": 30,
+      "content_reachable_coverage": 1,
+      "probes_exposed": 5984,
+      "probes_with_signal": 2230,
+      "probes_no_signal": 3754,
+      "content_leak_probes": 0,
+      "existence_leak_probes": 0,
+      "oracle_probes": 0,
+      "gates_executed": 90,
+      "gate_bypasses": 0,
+      "sealed_chunk_violations": 0,
+      "local_replays": 1238,
+      "local_replay_detections": 453,
+      "local_oracle_pairs": 1064,
+      "local_oracle_differences": 279
+    },
+    "presence": {
+      "seed_errors": [],
+      "checks": [
+        {
+          "name": "every ledger page stored in its source",
+          "pass": true,
+          "detail": "19/19"
+        },
+        {
+          "name": "held take row indexed",
+          "pass": true,
+          "detail": "1 row(s)"
+        },
+        {
+          "name": "private fact row indexed",
+          "pass": true,
+          "detail": "1 row(s)"
+        },
+        {
+          "name": "private page timeline indexed",
+          "pass": true,
+          "detail": "1 entr(ies)"
+        },
+        {
+          "name": "private page links to the public hub",
+          "pass": true,
+          "detail": "1 link(s)"
+        },
+        {
+          "name": "local get_page reads private_page markers",
+          "pass": true,
+          "detail": "3/3 markers"
+        },
+        {
+          "name": "local get_page reads private_take markers",
+          "pass": true,
+          "detail": "1/1 markers"
+        },
+        {
+          "name": "local get_page reads private_fact markers",
+          "pass": true,
+          "detail": "1/1 markers"
+        },
+        {
+          "name": "local get_page reads derived_atom markers",
+          "pass": true,
+          "detail": "1/1 markers"
+        },
+        {
+          "name": "local get_page reads foreign_source markers",
+          "pass": true,
+          "detail": "1/2 markers"
+        },
+        {
+          "name": "local ontology_get reads private_ontology markers",
+          "pass": true,
+          "detail": "1/1 markers"
+        },
+        {
+          "name": "local get_raw_data reads private_raw_data markers",
+          "pass": true,
+          "detail": "1/1 markers"
+        },
+        {
+          "name": "local get_page reads private_orphan markers",
+          "pass": true,
+          "detail": "1/1 markers"
+        }
+      ],
+      "sealed_chunk_violations": []
+    },
+    "by_caller": {
+      "stdio": {
+        "probes": 1238,
+        "signal": 421,
+        "leaks": 0,
+        "oracles": 0
+      },
+      "http-read": {
+        "probes": 1238,
+        "signal": 421,
+        "leaks": 0,
+        "oracles": 0
+      },
+      "http-write": {
+        "probes": 1238,
+        "signal": 421,
+        "leaks": 0,
+        "oracles": 0
+      },
+      "http-bound": {
+        "probes": 1238,
+        "signal": 421,
+        "leaks": 0,
+        "oracles": 0
+      },
+      "subagent-remote": {
+        "probes": 516,
+        "signal": 273,
+        "leaks": 0,
+        "oracles": 0
+      },
+      "subagent-local": {
+        "probes": 516,
+        "signal": 273,
+        "leaks": 0,
+        "oracles": 0
+      }
+    },
+    "expansion_paths": {
+      "documented": true,
+      "present": true,
+      "ops": [
+        "search",
+        "query",
+        "assemble_evidence",
+        "recall"
+      ],
+      "documented_but_missing": [],
+      "per_unit": {
+        "search:chunk": {
+          "probes": 54,
+          "signal": 30,
+          "applied": 0,
+          "fence_probes": 12,
+          "fence_neighbor_reached": 4,
+          "leaks": 0,
+          "oracles": 0
+        },
+        "search:window": {
+          "probes": 54,
+          "signal": 30,
+          "applied": 36,
+          "fence_probes": 12,
+          "fence_neighbor_reached": 6,
+          "leaks": 0,
+          "oracles": 0
+        },
+        "search:section": {
+          "probes": 54,
+          "signal": 30,
+          "applied": 36,
+          "fence_probes": 12,
+          "fence_neighbor_reached": 6,
+          "leaks": 0,
+          "oracles": 0
+        },
+        "search:page": {
+          "probes": 54,
+          "signal": 30,
+          "applied": 36,
+          "fence_probes": 12,
+          "fence_neighbor_reached": 6,
+          "leaks": 0,
+          "oracles": 0
+        },
+        "search:auto": {
+          "probes": 54,
+          "signal": 30,
+          "applied": 0,
+          "fence_probes": 12,
+          "fence_neighbor_reached": 6,
+          "leaks": 0,
+          "oracles": 0
+        },
+        "query:chunk": {
+          "probes": 54,
+          "signal": 30,
+          "applied": 0,
+          "fence_probes": 12,
+          "fence_neighbor_reached": 4,
+          "leaks": 0,
+          "oracles": 0
+        },
+        "query:window": {
+          "probes": 54,
+          "signal": 30,
+          "applied": 36,
+          "fence_probes": 12,
+          "fence_neighbor_reached": 6,
+          "leaks": 0,
+          "oracles": 0
+        },
+        "query:section": {
+          "probes": 54,
+          "signal": 30,
+          "applied": 36,
+          "fence_probes": 12,
+          "fence_neighbor_reached": 6,
+          "leaks": 0,
+          "oracles": 0
+        },
+        "query:page": {
+          "probes": 54,
+          "signal": 30,
+          "applied": 36,
+          "fence_probes": 12,
+          "fence_neighbor_reached": 6,
+          "leaks": 0,
+          "oracles": 0
+        },
+        "query:auto": {
+          "probes": 54,
+          "signal": 30,
+          "applied": 0,
+          "fence_probes": 12,
+          "fence_neighbor_reached": 6,
+          "leaks": 0,
+          "oracles": 0
+        },
+        "assemble_evidence:default": {
+          "probes": 144,
+          "signal": 64,
+          "applied": 144,
+          "fence_probes": 32,
+          "fence_neighbor_reached": 32,
+          "leaks": 0,
+          "oracles": 0
+        },
+        "assemble_evidence:chunk": {
+          "probes": 36,
+          "signal": 16,
+          "applied": 0,
+          "fence_probes": 8,
+          "fence_neighbor_reached": 8,
+          "leaks": 0,
+          "oracles": 0
+        },
+        "assemble_evidence:window": {
+          "probes": 36,
+          "signal": 16,
+          "applied": 36,
+          "fence_probes": 8,
+          "fence_neighbor_reached": 8,
+          "leaks": 0,
+          "oracles": 0
+        },
+        "assemble_evidence:section": {
+          "probes": 36,
+          "signal": 16,
+          "applied": 36,
+          "fence_probes": 8,
+          "fence_neighbor_reached": 8,
+          "leaks": 0,
+          "oracles": 0
+        },
+        "assemble_evidence:page": {
+          "probes": 36,
+          "signal": 16,
+          "applied": 36,
+          "fence_probes": 8,
+          "fence_neighbor_reached": 8,
+          "leaks": 0,
+          "oracles": 0
+        },
+        "assemble_evidence:auto": {
+          "probes": 36,
+          "signal": 16,
+          "applied": 0,
+          "fence_probes": 8,
+          "fence_neighbor_reached": 8,
+          "leaks": 0,
+          "oracles": 0
+        },
+        "recall:chunk": {
+          "probes": 36,
+          "signal": 20,
+          "applied": 0,
+          "fence_probes": 8,
+          "fence_neighbor_reached": 4,
+          "leaks": 0,
+          "oracles": 0
+        },
+        "recall:window": {
+          "probes": 36,
+          "signal": 20,
+          "applied": 24,
+          "fence_probes": 8,
+          "fence_neighbor_reached": 4,
+          "leaks": 0,
+          "oracles": 0
+        },
+        "recall:section": {
+          "probes": 36,
+          "signal": 20,
+          "applied": 24,
+          "fence_probes": 8,
+          "fence_neighbor_reached": 4,
+          "leaks": 0,
+          "oracles": 0
+        },
+        "recall:page": {
+          "probes": 36,
+          "signal": 20,
+          "applied": 24,
+          "fence_probes": 8,
+          "fence_neighbor_reached": 4,
+          "leaks": 0,
+          "oracles": 0
+        },
+        "recall:auto": {
+          "probes": 36,
+          "signal": 20,
+          "applied": 0,
+          "fence_probes": 8,
+          "fence_neighbor_reached": 4,
+          "leaks": 0,
+          "oracles": 0
+        }
+      },
+      "not_applied": [
+        "stdio:search:private_page:return_unit=auto",
+        "stdio:search:private_take:return_unit=window",
+        "stdio:search:private_take:return_unit=section",
+        "stdio:search:private_take:return_unit=page",
+        "stdio:search:private_take:return_unit=auto",
+        "stdio:search:private_fact:return_unit=auto",
+        "stdio:search:derived_atom:return_unit=auto",
+        "stdio:search:foreign_source:return_unit=auto",
+        "stdio:search:private_ontology:return_unit=window",
+        "stdio:search:private_ontology:return_unit=section",
+        "stdio:search:private_ontology:return_unit=page",
+        "stdio:search:private_ontology:return_unit=auto",
+        "stdio:search:private_raw_data:return_unit=window",
+        "stdio:search:private_raw_data:return_unit=section",
+        "stdio:search:private_raw_data:return_unit=page",
+        "stdio:search:private_raw_data:return_unit=auto",
+        "stdio:search:private_orphan:return_unit=auto",
+        "stdio:search:hub:return_unit=auto",
+        "http-read:search:private_page:return_unit=auto",
+        "http-read:search:private_take:return_unit=window",
+        "http-read:search:private_take:return_unit=section",
+        "http-read:search:private_take:return_unit=page",
+        "http-read:search:private_take:return_unit=auto",
+        "http-read:search:private_fact:return_unit=auto",
+        "http-read:search:derived_atom:return_unit=auto",
+        "http-read:search:foreign_source:return_unit=auto",
+        "http-read:search:private_ontology:return_unit=window",
+        "http-read:search:private_ontology:return_unit=section",
+        "http-read:search:private_ontology:return_unit=page",
+        "http-read:search:private_ontology:return_unit=auto",
+        "http-read:search:private_raw_data:return_unit=window",
+        "http-read:search:private_raw_data:return_unit=section",
+        "http-read:search:private_raw_data:return_unit=page",
+        "http-read:search:private_raw_data:return_unit=auto",
+        "http-read:search:private_orphan:return_unit=auto",
+        "http-read:search:hub:return_unit=auto",
+        "http-write:search:private_page:return_unit=auto",
+        "http-write:search:private_take:return_unit=window",
+        "http-write:search:private_take:return_unit=section",
+        "http-write:search:private_take:return_unit=page",
+        "http-write:search:private_take:return_unit=auto",
+        "http-write:search:private_fact:return_unit=auto",
+        "http-write:search:derived_atom:return_unit=auto",
+        "http-write:search:foreign_source:return_unit=auto",
+        "http-write:search:private_ontology:return_unit=window",
+        "http-write:search:private_ontology:return_unit=section",
+        "http-write:search:private_ontology:return_unit=page",
+        "http-write:search:private_ontology:return_unit=auto",
+        "http-write:search:private_raw_data:return_unit=window",
+        "http-write:search:private_raw_data:return_unit=section",
+        "http-write:search:private_raw_data:return_unit=page",
+        "http-write:search:private_raw_data:return_unit=auto",
+        "http-write:search:private_orphan:return_unit=auto",
+        "http-write:search:hub:return_unit=auto",
+        "http-bound:search:private_page:return_unit=auto",
+        "http-bound:search:private_take:return_unit=window",
+        "http-bound:search:private_take:return_unit=section",
+        "http-bound:search:private_take:return_unit=page",
+        "http-bound:search:private_take:return_unit=auto",
+        "http-bound:search:private_fact:return_unit=auto",
+        "http-bound:search:derived_atom:return_unit=auto",
+        "http-bound:search:foreign_source:return_unit=auto",
+        "http-bound:search:private_ontology:return_unit=window",
+        "http-bound:search:private_ontology:return_unit=section",
+        "http-bound:search:private_ontology:return_unit=page",
+        "http-bound:search:private_ontology:return_unit=auto",
+        "http-bound:search:private_raw_data:return_unit=window",
+        "http-bound:search:private_raw_data:return_unit=section",
+        "http-bound:search:private_raw_data:return_unit=page",
+        "http-bound:search:private_raw_data:return_unit=auto",
+        "http-bound:search:private_orphan:return_unit=auto",
+        "http-bound:search:hub:return_unit=auto",
+        "subagent-remote:search:private_page:return_unit=auto",
+        "subagent-remote:search:private_take:return_unit=window",
+        "subagent-remote:search:private_take:return_unit=section",
+        "subagent-remote:search:private_take:return_unit=page",
+        "subagent-remote:search:private_take:return_unit=auto",
+        "subagent-remote:search:private_fact:return_unit=auto",
+        "subagent-remote:search:derived_atom:return_unit=auto",
+        "subagent-remote:search:foreign_source:return_unit=auto",
+        "subagent-remote:search:private_ontology:return_unit=window",
+        "subagent-remote:search:private_ontology:return_unit=section",
+        "subagent-remote:search:private_ontology:return_unit=page",
+        "subagent-remote:search:private_ontology:return_unit=auto",
+        "subagent-remote:search:private_raw_data:return_unit=window",
+        "subagent-remote:search:private_raw_data:return_unit=section",
+        "subagent-remote:search:private_raw_data:return_unit=page",
+        "subagent-remote:search:private_raw_data:return_unit=auto",
+        "subagent-remote:search:private_orphan:return_unit=auto",
+        "subagent-remote:search:hub:return_unit=auto",
+        "subagent-local:search:private_page:return_unit=auto",
+        "subagent-local:search:private_take:return_unit=window",
+        "subagent-local:search:private_take:return_unit=section",
+        "subagent-local:search:private_take:return_unit=page",
+        "subagent-local:search:private_take:return_unit=auto",
+        "subagent-local:search:private_fact:return_unit=auto",
+        "subagent-local:search:derived_atom:return_unit=auto",
+        "subagent-local:search:foreign_source:return_unit=auto",
+        "subagent-local:search:private_ontology:return_unit=window",
+        "subagent-local:search:private_ontology:return_unit=section",
+        "subagent-local:search:private_ontology:return_unit=page",
+        "subagent-local:search:private_ontology:return_unit=auto",
+        "subagent-local:search:private_raw_data:return_unit=window",
+        "subagent-local:search:private_raw_data:return_unit=section",
+        "subagent-local:search:private_raw_data:return_unit=page",
+        "subagent-local:search:private_raw_data:return_unit=auto",
+        "subagent-local:search:private_orphan:return_unit=auto",
+        "subagent-local:search:hub:return_unit=auto",
+        "stdio:query:private_page:return_unit=auto",
+        "stdio:query:private_take:return_unit=window",
+        "stdio:query:private_take:return_unit=section",
+        "stdio:query:private_take:return_unit=page",
+        "stdio:query:private_take:return_unit=auto",
+        "stdio:query:private_fact:return_unit=auto",
+        "stdio:query:derived_atom:return_unit=auto",
+        "stdio:query:foreign_source:return_unit=auto",
+        "stdio:query:private_ontology:return_unit=window",
+        "stdio:query:private_ontology:return_unit=section",
+        "stdio:query:private_ontology:return_unit=page",
+        "stdio:query:private_ontology:return_unit=auto",
+        "stdio:query:private_raw_data:return_unit=window",
+        "stdio:query:private_raw_data:return_unit=section",
+        "stdio:query:private_raw_data:return_unit=page",
+        "stdio:query:private_raw_data:return_unit=auto",
+        "stdio:query:private_orphan:return_unit=auto",
+        "stdio:query:hub:return_unit=auto",
+        "http-read:query:private_page:return_unit=auto",
+        "http-read:query:private_take:return_unit=window",
+        "http-read:query:private_take:return_unit=section",
+        "http-read:query:private_take:return_unit=page",
+        "http-read:query:private_take:return_unit=auto",
+        "http-read:query:private_fact:return_unit=auto",
+        "http-read:query:derived_atom:return_unit=auto",
+        "http-read:query:foreign_source:return_unit=auto",
+        "http-read:query:private_ontology:return_unit=window",
+        "http-read:query:private_ontology:return_unit=section",
+        "http-read:query:private_ontology:return_unit=page",
+        "http-read:query:private_ontology:return_unit=auto",
+        "http-read:query:private_raw_data:return_unit=window",
+        "http-read:query:private_raw_data:return_unit=section",
+        "http-read:query:private_raw_data:return_unit=page",
+        "http-read:query:private_raw_data:return_unit=auto",
+        "http-read:query:private_orphan:return_unit=auto",
+        "http-read:query:hub:return_unit=auto",
+        "http-write:query:private_page:return_unit=auto",
+        "http-write:query:private_take:return_unit=window",
+        "http-write:query:private_take:return_unit=section",
+        "http-write:query:private_take:return_unit=page",
+        "http-write:query:private_take:return_unit=auto",
+        "http-write:query:private_fact:return_unit=auto",
+        "http-write:query:derived_atom:return_unit=auto",
+        "http-write:query:foreign_source:return_unit=auto",
+        "http-write:query:private_ontology:return_unit=window",
+        "http-write:query:private_ontology:return_unit=section",
+        "http-write:query:private_ontology:return_unit=page",
+        "http-write:query:private_ontology:return_unit=auto",
+        "http-write:query:private_raw_data:return_unit=window",
+        "http-write:query:private_raw_data:return_unit=section",
+        "http-write:query:private_raw_data:return_unit=page",
+        "http-write:query:private_raw_data:return_unit=auto",
+        "http-write:query:private_orphan:return_unit=auto",
+        "http-write:query:hub:return_unit=auto",
+        "http-bound:query:private_page:return_unit=auto",
+        "http-bound:query:private_take:return_unit=window",
+        "http-bound:query:private_take:return_unit=section",
+        "http-bound:query:private_take:return_unit=page",
+        "http-bound:query:private_take:return_unit=auto",
+        "http-bound:query:private_fact:return_unit=auto",
+        "http-bound:query:derived_atom:return_unit=auto",
+        "http-bound:query:foreign_source:return_unit=auto",
+        "http-bound:query:private_ontology:return_unit=window",
+        "http-bound:query:private_ontology:return_unit=section",
+        "http-bound:query:private_ontology:return_unit=page",
+        "http-bound:query:private_ontology:return_unit=auto",
+        "http-bound:query:private_raw_data:return_unit=window",
+        "http-bound:query:private_raw_data:return_unit=section",
+        "http-bound:query:private_raw_data:return_unit=page",
+        "http-bound:query:private_raw_data:return_unit=auto",
+        "http-bound:query:private_orphan:return_unit=auto",
+        "http-bound:query:hub:return_unit=auto",
+        "subagent-remote:query:private_page:return_unit=auto",
+        "subagent-remote:query:private_take:return_unit=window",
+        "subagent-remote:query:private_take:return_unit=section",
+        "subagent-remote:query:private_take:return_unit=page",
+        "subagent-remote:query:private_take:return_unit=auto",
+        "subagent-remote:query:private_fact:return_unit=auto",
+        "subagent-remote:query:derived_atom:return_unit=auto",
+        "subagent-remote:query:foreign_source:return_unit=auto",
+        "subagent-remote:query:private_ontology:return_unit=window",
+        "subagent-remote:query:private_ontology:return_unit=section",
+        "subagent-remote:query:private_ontology:return_unit=page",
+        "subagent-remote:query:private_ontology:return_unit=auto",
+        "subagent-remote:query:private_raw_data:return_unit=window",
+        "subagent-remote:query:private_raw_data:return_unit=section",
+        "subagent-remote:query:private_raw_data:return_unit=page",
+        "subagent-remote:query:private_raw_data:return_unit=auto",
+        "subagent-remote:query:private_orphan:return_unit=auto",
+        "subagent-remote:query:hub:return_unit=auto",
+        "subagent-local:query:private_page:return_unit=auto",
+        "subagent-local:query:private_take:return_unit=window",
+        "subagent-local:query:private_take:return_unit=section",
+        "subagent-local:query:private_take:return_unit=page",
+        "subagent-local:query:private_take:return_unit=auto",
+        "subagent-local:query:private_fact:return_unit=auto",
+        "subagent-local:query:derived_atom:return_unit=auto",
+        "subagent-local:query:foreign_source:return_unit=auto",
+        "subagent-local:query:private_ontology:return_unit=window",
+        "subagent-local:query:private_ontology:return_unit=section",
+        "subagent-local:query:private_ontology:return_unit=page",
+        "subagent-local:query:private_ontology:return_unit=auto",
+        "subagent-local:query:private_raw_data:return_unit=window",
+        "subagent-local:query:private_raw_data:return_unit=section",
+        "subagent-local:query:private_raw_data:return_unit=page",
+        "subagent-local:query:private_raw_data:return_unit=auto",
+        "subagent-local:query:private_orphan:return_unit=auto",
+        "subagent-local:query:hub:return_unit=auto",
+        "stdio:assemble_evidence:private_page:return_unit=auto",
+        "stdio:assemble_evidence:private_take:return_unit=auto",
+        "stdio:assemble_evidence:private_fact:return_unit=auto",
+        "stdio:assemble_evidence:derived_atom:return_unit=auto",
+        "stdio:assemble_evidence:foreign_source:return_unit=auto",
+        "stdio:assemble_evidence:private_ontology:return_unit=auto",
+        "stdio:assemble_evidence:private_raw_data:return_unit=auto",
+        "stdio:assemble_evidence:private_orphan:return_unit=auto",
+        "stdio:assemble_evidence:hub:return_unit=auto",
+        "http-read:assemble_evidence:private_page:return_unit=auto",
+        "http-read:assemble_evidence:private_take:return_unit=auto",
+        "http-read:assemble_evidence:private_fact:return_unit=auto",
+        "http-read:assemble_evidence:derived_atom:return_unit=auto",
+        "http-read:assemble_evidence:foreign_source:return_unit=auto",
+        "http-read:assemble_evidence:private_ontology:return_unit=auto",
+        "http-read:assemble_evidence:private_raw_data:return_unit=auto",
+        "http-read:assemble_evidence:private_orphan:return_unit=auto",
+        "http-read:assemble_evidence:hub:return_unit=auto",
+        "http-write:assemble_evidence:private_page:return_unit=auto",
+        "http-write:assemble_evidence:private_take:return_unit=auto",
+        "http-write:assemble_evidence:private_fact:return_unit=auto",
+        "http-write:assemble_evidence:derived_atom:return_unit=auto",
+        "http-write:assemble_evidence:foreign_source:return_unit=auto",
+        "http-write:assemble_evidence:private_ontology:return_unit=auto",
+        "http-write:assemble_evidence:private_raw_data:return_unit=auto",
+        "http-write:assemble_evidence:private_orphan:return_unit=auto",
+        "http-write:assemble_evidence:hub:return_unit=auto",
+        "http-bound:assemble_evidence:private_page:return_unit=auto",
+        "http-bound:assemble_evidence:private_take:return_unit=auto",
+        "http-bound:assemble_evidence:private_fact:return_unit=auto",
+        "http-bound:assemble_evidence:derived_atom:return_unit=auto",
+        "http-bound:assemble_evidence:foreign_source:return_unit=auto",
+        "http-bound:assemble_evidence:private_ontology:return_unit=auto",
+        "http-bound:assemble_evidence:private_raw_data:return_unit=auto",
+        "http-bound:assemble_evidence:private_orphan:return_unit=auto",
+        "http-bound:assemble_evidence:hub:return_unit=auto",
+        "stdio:recall:private_page:return_unit=auto",
+        "stdio:recall:private_take:return_unit=window",
+        "stdio:recall:private_take:return_unit=section",
+        "stdio:recall:private_take:return_unit=page",
+        "stdio:recall:private_take:return_unit=auto",
+        "stdio:recall:private_fact:return_unit=auto",
+        "stdio:recall:derived_atom:return_unit=auto",
+        "stdio:recall:foreign_source:return_unit=auto",
+        "stdio:recall:private_ontology:return_unit=window",
+        "stdio:recall:private_ontology:return_unit=section",
+        "stdio:recall:private_ontology:return_unit=page",
+        "stdio:recall:private_ontology:return_unit=auto",
+        "stdio:recall:private_raw_data:return_unit=window",
+        "stdio:recall:private_raw_data:return_unit=section",
+        "stdio:recall:private_raw_data:return_unit=page",
+        "stdio:recall:private_raw_data:return_unit=auto",
+        "stdio:recall:private_orphan:return_unit=auto",
+        "stdio:recall:hub:return_unit=auto",
+        "http-read:recall:private_page:return_unit=auto",
+        "http-read:recall:private_take:return_unit=window",
+        "http-read:recall:private_take:return_unit=section",
+        "http-read:recall:private_take:return_unit=page",
+        "http-read:recall:private_take:return_unit=auto",
+        "http-read:recall:private_fact:return_unit=auto",
+        "http-read:recall:derived_atom:return_unit=auto",
+        "http-read:recall:foreign_source:return_unit=auto",
+        "http-read:recall:private_ontology:return_unit=window",
+        "http-read:recall:private_ontology:return_unit=section",
+        "http-read:recall:private_ontology:return_unit=page",
+        "http-read:recall:private_ontology:return_unit=auto",
+        "http-read:recall:private_raw_data:return_unit=window",
+        "http-read:recall:private_raw_data:return_unit=section",
+        "http-read:recall:private_raw_data:return_unit=page",
+        "http-read:recall:private_raw_data:return_unit=auto",
+        "http-read:recall:private_orphan:return_unit=auto",
+        "http-read:recall:hub:return_unit=auto",
+        "http-write:recall:private_page:return_unit=auto",
+        "http-write:recall:private_take:return_unit=window",
+        "http-write:recall:private_take:return_unit=section",
+        "http-write:recall:private_take:return_unit=page",
+        "http-write:recall:private_take:return_unit=auto",
+        "http-write:recall:private_fact:return_unit=auto",
+        "http-write:recall:derived_atom:return_unit=auto",
+        "http-write:recall:foreign_source:return_unit=auto",
+        "http-write:recall:private_ontology:return_unit=window",
+        "http-write:recall:private_ontology:return_unit=section",
+        "http-write:recall:private_ontology:return_unit=page",
+        "http-write:recall:private_ontology:return_unit=auto",
+        "http-write:recall:private_raw_data:return_unit=window",
+        "http-write:recall:private_raw_data:return_unit=section",
+        "http-write:recall:private_raw_data:return_unit=page",
+        "http-write:recall:private_raw_data:return_unit=auto",
+        "http-write:recall:private_orphan:return_unit=auto",
+        "http-write:recall:hub:return_unit=auto",
+        "http-bound:recall:private_page:return_unit=auto",
+        "http-bound:recall:private_take:return_unit=window",
+        "http-bound:recall:private_take:return_unit=section",
+        "http-bound:recall:private_take:return_unit=page",
+        "http-bound:recall:private_take:return_unit=auto",
+        "http-bound:recall:private_fact:return_unit=auto",
+        "http-bound:recall:derived_atom:return_unit=auto",
+        "http-bound:recall:foreign_source:return_unit=auto",
+        "http-bound:recall:private_ontology:return_unit=window",
+        "http-bound:recall:private_ontology:return_unit=section",
+        "http-bound:recall:private_ontology:return_unit=page",
+        "http-bound:recall:private_ontology:return_unit=auto",
+        "http-bound:recall:private_raw_data:return_unit=window",
+        "http-bound:recall:private_raw_data:return_unit=section",
+        "http-bound:recall:private_raw_data:return_unit=page",
+        "http-bound:recall:private_raw_data:return_unit=auto",
+        "http-bound:recall:private_orphan:return_unit=auto",
+        "http-bound:recall:hub:return_unit=auto"
+      ]
+    },
+    "ops": [
+      {
+        "op": "entity",
+        "kind": "targeted",
+        "probes": 54,
+        "signal": 20,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "synthesize",
+        "kind": "targeted",
+        "probes": 54,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "get_page",
+        "kind": "targeted",
+        "probes": 162,
+        "signal": 102,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound",
+          "subagent-remote",
+          "subagent-local"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "list_pages",
+        "kind": "targeted",
+        "probes": 378,
+        "signal": 372,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound",
+          "subagent-remote",
+          "subagent-local"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "fetch",
+        "kind": "targeted",
+        "probes": 54,
+        "signal": 16,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "search",
+        "kind": "targeted",
+        "probes": 756,
+        "signal": 396,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound",
+          "subagent-remote",
+          "subagent-local"
+        ],
+        "expansion": true
+      },
+      {
+        "op": "query",
+        "kind": "targeted",
+        "probes": 972,
+        "signal": 486,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound",
+          "subagent-remote",
+          "subagent-local"
+        ],
+        "expansion": true
+      },
+      {
+        "op": "assemble_evidence",
+        "kind": "targeted",
+        "probes": 486,
+        "signal": 144,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": true
+      },
+      {
+        "op": "search_modes",
+        "kind": "listing",
+        "probes": 6,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "search_by_image",
+        "kind": "targeted",
+        "probes": 162,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "get_tags",
+        "kind": "targeted",
+        "probes": 54,
+        "signal": 4,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "get_links",
+        "kind": "targeted",
+        "probes": 162,
+        "signal": 24,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "get_backlinks",
+        "kind": "targeted",
+        "probes": 162,
+        "signal": 12,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound",
+          "subagent-remote",
+          "subagent-local"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "list_link_sources",
+        "kind": "listing",
+        "probes": 6,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound",
+          "subagent-remote",
+          "subagent-local"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "traverse_graph",
+        "kind": "targeted",
+        "probes": 324,
+        "signal": 114,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound",
+          "subagent-remote",
+          "subagent-local"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "get_timeline",
+        "kind": "targeted",
+        "probes": 54,
+        "signal": 4,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "get_versions",
+        "kind": "targeted",
+        "probes": 54,
+        "signal": 16,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "get_brain_identity",
+        "kind": "listing",
+        "probes": 6,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "list_skills",
+        "kind": "listing",
+        "probes": 18,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "get_skill",
+        "kind": "targeted",
+        "probes": 162,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "list_brain_skillpack",
+        "kind": "listing",
+        "probes": 6,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "advisor",
+        "kind": "listing",
+        "probes": 6,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "get_skill_asset",
+        "kind": "targeted",
+        "probes": 0,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [],
+        "expansion": false,
+        "unsupported": "no synthesis rule for required string param \"revision\""
+      },
+      {
+        "op": "join_brain",
+        "kind": "listing",
+        "probes": 0,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [],
+        "expansion": false,
+        "unsupported": "no synthesis rule for required string param \"adapter\""
+      },
+      {
+        "op": "sync_brain_skills",
+        "kind": "listing",
+        "probes": 0,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [],
+        "expansion": false,
+        "unsupported": "no synthesis rule for required string param \"installation_id\""
+      },
+      {
+        "op": "leave_brain",
+        "kind": "listing",
+        "probes": 0,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [],
+        "expansion": false,
+        "unsupported": "no synthesis rule for required string param \"installation_id\""
+      },
+      {
+        "op": "get_raw_data",
+        "kind": "targeted",
+        "probes": 54,
+        "signal": 4,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "resolve_slugs",
+        "kind": "targeted",
+        "probes": 162,
+        "signal": 66,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound",
+          "subagent-remote",
+          "subagent-local"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "get_chunks",
+        "kind": "targeted",
+        "probes": 54,
+        "signal": 12,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "get_ingest_log",
+        "kind": "listing",
+        "probes": 6,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound",
+          "subagent-remote",
+          "subagent-local"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "find_orphans",
+        "kind": "listing",
+        "probes": 6,
+        "signal": 4,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "get_calibration_profile",
+        "kind": "targeted",
+        "probes": 54,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "takes_list",
+        "kind": "targeted",
+        "probes": 54,
+        "signal": 12,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "takes_search",
+        "kind": "targeted",
+        "probes": 54,
+        "signal": 4,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "think",
+        "kind": "targeted",
+        "probes": 54,
+        "signal": 32,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "takes_scorecard",
+        "kind": "targeted",
+        "probes": 54,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "takes_calibration",
+        "kind": "targeted",
+        "probes": 54,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "whoami",
+        "kind": "listing",
+        "probes": 6,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "sources_list",
+        "kind": "listing",
+        "probes": 6,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "sources_status",
+        "kind": "targeted",
+        "probes": 54,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "request_tools",
+        "kind": "listing",
+        "probes": 24,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "get_recent_salience",
+        "kind": "targeted",
+        "probes": 162,
+        "signal": 90,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound",
+          "subagent-remote",
+          "subagent-local"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "find_anomalies",
+        "kind": "listing",
+        "probes": 6,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound",
+          "subagent-remote",
+          "subagent-local"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "chronicle_day",
+        "kind": "targeted",
+        "probes": 54,
+        "signal": 4,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "chronicle_on_this_day",
+        "kind": "targeted",
+        "probes": 54,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "chronicle_since",
+        "kind": "targeted",
+        "probes": 54,
+        "signal": 12,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "chronicle_last_seen",
+        "kind": "targeted",
+        "probes": 54,
+        "signal": 20,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "ontology_get",
+        "kind": "targeted",
+        "probes": 54,
+        "signal": 4,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "ontology_dimensions",
+        "kind": "listing",
+        "probes": 6,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "ontology_conflicts",
+        "kind": "listing",
+        "probes": 6,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "volunteer_chronicle",
+        "kind": "targeted",
+        "probes": 54,
+        "signal": 4,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "volunteer_context",
+        "kind": "targeted",
+        "probes": 54,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "extraction_pending",
+        "kind": "listing",
+        "probes": 6,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "entity_identity_list",
+        "kind": "targeted",
+        "probes": 54,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "recall",
+        "kind": "targeted",
+        "probes": 540,
+        "signal": 164,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": true
+      },
+      {
+        "op": "context_pack",
+        "kind": "targeted",
+        "probes": 54,
+        "signal": 36,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "delta",
+        "kind": "targeted",
+        "probes": 54,
+        "signal": 36,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "find_contradictions",
+        "kind": "targeted",
+        "probes": 216,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "find_experts",
+        "kind": "targeted",
+        "probes": 54,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "find_trajectory",
+        "kind": "targeted",
+        "probes": 216,
+        "signal": 16,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "code_callers",
+        "kind": "targeted",
+        "probes": 162,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "code_callees",
+        "kind": "targeted",
+        "probes": 162,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "code_def",
+        "kind": "targeted",
+        "probes": 54,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "code_refs",
+        "kind": "targeted",
+        "probes": 54,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "code_blast",
+        "kind": "targeted",
+        "probes": 162,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "code_flow",
+        "kind": "targeted",
+        "probes": 162,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "get_active_schema_pack",
+        "kind": "listing",
+        "probes": 6,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "list_schema_packs",
+        "kind": "listing",
+        "probes": 6,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "schema_stats",
+        "kind": "listing",
+        "probes": 6,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "schema_lint",
+        "kind": "listing",
+        "probes": 6,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "schema_graph",
+        "kind": "listing",
+        "probes": 6,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "schema_explain_type",
+        "kind": "listing",
+        "probes": 6,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "schema_review_orphans",
+        "kind": "listing",
+        "probes": 6,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      },
+      {
+        "op": "open_loops",
+        "kind": "listing",
+        "probes": 84,
+        "signal": 0,
+        "leaks": 0,
+        "oracles": 0,
+        "exposed_to": [
+          "stdio",
+          "http-read",
+          "http-write",
+          "http-bound"
+        ],
+        "expansion": false
+      }
+    ],
+    "uncovered_ops": [
+      {
+        "op": "synthesize",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target (e.g. unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\":)"
+      },
+      {
+        "op": "search_modes",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target"
+      },
+      {
+        "op": "search_by_image",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target (e.g. internal_error: {\n  \"error\": \"internal_error\",\n  \"message\": \"search_by_image requires one of: image_path, image_url, ima)"
+      },
+      {
+        "op": "list_link_sources",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target"
+      },
+      {
+        "op": "get_brain_identity",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target"
+      },
+      {
+        "op": "list_skills",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target (e.g. permission_denied: {\n  \"error\": \"permission_denied\",\n  \"message\": \"This tool is not published by the brain owner, so it )"
+      },
+      {
+        "op": "get_skill",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target (e.g. permission_denied: {\n  \"error\": \"permission_denied\",\n  \"message\": \"This tool is not published by the brain owner, so it )"
+      },
+      {
+        "op": "list_brain_skillpack",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target (e.g. permission_denied: {\n  \"error\": \"permission_denied\",\n  \"message\": \"This tool is not published by the brain owner, so it )"
+      },
+      {
+        "op": "advisor",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target (e.g. permission_denied: {\n  \"error\": \"permission_denied\",\n  \"message\": \"The advisor is not published over MCP by the brain ow)"
+      },
+      {
+        "op": "get_skill_asset",
+        "reason": "no synthesis rule for required string param \"revision\""
+      },
+      {
+        "op": "join_brain",
+        "reason": "no synthesis rule for required string param \"adapter\""
+      },
+      {
+        "op": "sync_brain_skills",
+        "reason": "no synthesis rule for required string param \"installation_id\""
+      },
+      {
+        "op": "leave_brain",
+        "reason": "no synthesis rule for required string param \"installation_id\""
+      },
+      {
+        "op": "get_ingest_log",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target"
+      },
+      {
+        "op": "get_calibration_profile",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target"
+      },
+      {
+        "op": "takes_scorecard",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target"
+      },
+      {
+        "op": "takes_calibration",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target"
+      },
+      {
+        "op": "whoami",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target"
+      },
+      {
+        "op": "sources_list",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target"
+      },
+      {
+        "op": "sources_status",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target (e.g. not_found: {\n  \"error\": \"not_found\",\n  \"message\": \"Unknown source: notes/guwahusoq\"\n})"
+      },
+      {
+        "op": "request_tools",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target"
+      },
+      {
+        "op": "find_anomalies",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target"
+      },
+      {
+        "op": "chronicle_on_this_day",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target"
+      },
+      {
+        "op": "ontology_dimensions",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target"
+      },
+      {
+        "op": "ontology_conflicts",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target"
+      },
+      {
+        "op": "volunteer_context",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target"
+      },
+      {
+        "op": "extraction_pending",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target"
+      },
+      {
+        "op": "entity_identity_list",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target"
+      },
+      {
+        "op": "find_contradictions",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target"
+      },
+      {
+        "op": "find_experts",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target"
+      },
+      {
+        "op": "code_callers",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target (e.g. permission_denied: {\n  \"error\": \"permission_denied\",\n  \"message\": \"code_callers is temporarily unavailable to agent call)"
+      },
+      {
+        "op": "code_callees",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target (e.g. permission_denied: {\n  \"error\": \"permission_denied\",\n  \"message\": \"code_callees is temporarily unavailable to agent call)"
+      },
+      {
+        "op": "code_def",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target (e.g. permission_denied: {\n  \"error\": \"permission_denied\",\n  \"message\": \"code_def is temporarily unavailable to agent callers.)"
+      },
+      {
+        "op": "code_refs",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target (e.g. permission_denied: {\n  \"error\": \"permission_denied\",\n  \"message\": \"code_refs is temporarily unavailable to agent callers)"
+      },
+      {
+        "op": "code_blast",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target (e.g. permission_denied: {\n  \"error\": \"permission_denied\",\n  \"message\": \"code_blast is temporarily unavailable to agent caller)"
+      },
+      {
+        "op": "code_flow",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target (e.g. permission_denied: {\n  \"error\": \"permission_denied\",\n  \"message\": \"code_flow is temporarily unavailable to agent callers)"
+      },
+      {
+        "op": "get_active_schema_pack",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target"
+      },
+      {
+        "op": "list_schema_packs",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target"
+      },
+      {
+        "op": "schema_stats",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target"
+      },
+      {
+        "op": "schema_lint",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target"
+      },
+      {
+        "op": "schema_graph",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target"
+      },
+      {
+        "op": "schema_explain_type",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target"
+      },
+      {
+        "op": "schema_review_orphans",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target"
+      },
+      {
+        "op": "open_loops",
+        "reason": "returns no protected content even to the trusted local caller for any synthesized target (e.g. permission_denied: {\n  \"error\": \"permission_denied\",\n  \"message\": \"open_loops: source 'beta' is outside your granted sou)"
+      }
+    ],
+    "findings": [],
+    "findings_total": 0,
+    "gates": [
+      {
+        "caller": "http-read",
+        "op": "remember",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "forget",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "put_page",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "delete_page",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "restore_page",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "purge_deleted_pages",
+        "kind": "local_only",
+        "outcome": "skipped_no_required_param",
+        "detail": "not called: a bypass would run the handler"
+      },
+      {
+        "caller": "http-write",
+        "op": "purge_deleted_pages",
+        "kind": "local_only",
+        "outcome": "skipped_no_required_param",
+        "detail": "not called: a bypass would run the handler"
+      },
+      {
+        "caller": "http-bound",
+        "op": "purge_deleted_pages",
+        "kind": "local_only",
+        "outcome": "skipped_no_required_param",
+        "detail": "not called: a bypass would run the handler"
+      },
+      {
+        "caller": "http-read",
+        "op": "capture",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "get_write_request",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "list_write_requests",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "operationScopesAllowed evaluated without calling the op"
+      },
+      {
+        "caller": "http-read",
+        "op": "cancel_write_request",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "search_stats",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "operationScopesAllowed evaluated without calling the op"
+      },
+      {
+        "caller": "http-read",
+        "op": "search_tune",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "operationScopesAllowed evaluated without calling the op"
+      },
+      {
+        "caller": "http-read",
+        "op": "cache_stats",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "operationScopesAllowed evaluated without calling the op"
+      },
+      {
+        "caller": "http-read",
+        "op": "add_tag",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "remove_tag",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "add_link",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "remove_link",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "add_timeline_entry",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "get_stats",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "operationScopesAllowed evaluated without calling the op"
+      },
+      {
+        "caller": "http-read",
+        "op": "get_health",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "operationScopesAllowed evaluated without calling the op"
+      },
+      {
+        "caller": "http-read",
+        "op": "run_doctor",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "operationScopesAllowed evaluated without calling the op"
+      },
+      {
+        "caller": "http-read",
+        "op": "revert_version",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "quarantine_list",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "operationScopesAllowed evaluated without calling the op"
+      },
+      {
+        "caller": "http-read",
+        "op": "get_status_snapshot",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "operationScopesAllowed evaluated without calling the op"
+      },
+      {
+        "caller": "http-read",
+        "op": "put_skill",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "delete_skill",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "set_skill_policy",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "get_skill_policy",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "get_skill_retention",
+        "kind": "local_only",
+        "outcome": "skipped_no_required_param",
+        "detail": "not called: a bypass would run the handler"
+      },
+      {
+        "caller": "http-write",
+        "op": "get_skill_retention",
+        "kind": "local_only",
+        "outcome": "skipped_no_required_param",
+        "detail": "not called: a bypass would run the handler"
+      },
+      {
+        "caller": "http-bound",
+        "op": "get_skill_retention",
+        "kind": "local_only",
+        "outcome": "skipped_no_required_param",
+        "detail": "not called: a bypass would run the handler"
+      },
+      {
+        "caller": "http-read",
+        "op": "prune_skill_revisions",
+        "kind": "local_only",
+        "outcome": "skipped_no_required_param",
+        "detail": "not called: a bypass would run the handler"
+      },
+      {
+        "caller": "http-write",
+        "op": "prune_skill_revisions",
+        "kind": "local_only",
+        "outcome": "skipped_no_required_param",
+        "detail": "not called: a bypass would run the handler"
+      },
+      {
+        "caller": "http-bound",
+        "op": "prune_skill_revisions",
+        "kind": "local_only",
+        "outcome": "skipped_no_required_param",
+        "detail": "not called: a bypass would run the handler"
+      },
+      {
+        "caller": "http-read",
+        "op": "retain_skill_revision",
+        "kind": "local_only",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-write",
+        "op": "retain_skill_revision",
+        "kind": "local_only",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-bound",
+        "op": "retain_skill_revision",
+        "kind": "local_only",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "import_skill_proposal",
+        "kind": "local_only",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-write",
+        "op": "import_skill_proposal",
+        "kind": "local_only",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-bound",
+        "op": "import_skill_proposal",
+        "kind": "local_only",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "sync_brain",
+        "kind": "local_only",
+        "outcome": "skipped_no_required_param",
+        "detail": "not called: a bypass would run the handler"
+      },
+      {
+        "caller": "http-write",
+        "op": "sync_brain",
+        "kind": "local_only",
+        "outcome": "skipped_no_required_param",
+        "detail": "not called: a bypass would run the handler"
+      },
+      {
+        "caller": "http-bound",
+        "op": "sync_brain",
+        "kind": "local_only",
+        "outcome": "skipped_no_required_param",
+        "detail": "not called: a bypass would run the handler"
+      },
+      {
+        "caller": "http-read",
+        "op": "put_raw_data",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "log_ingest",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "get_usage",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "operationScopesAllowed evaluated without calling the op"
+      },
+      {
+        "caller": "http-read",
+        "op": "file_list",
+        "kind": "local_only",
+        "outcome": "skipped_no_required_param",
+        "detail": "not called: a bypass would run the handler"
+      },
+      {
+        "caller": "http-write",
+        "op": "file_list",
+        "kind": "local_only",
+        "outcome": "skipped_no_required_param",
+        "detail": "not called: a bypass would run the handler"
+      },
+      {
+        "caller": "http-bound",
+        "op": "file_list",
+        "kind": "local_only",
+        "outcome": "skipped_no_required_param",
+        "detail": "not called: a bypass would run the handler"
+      },
+      {
+        "caller": "http-read",
+        "op": "file_upload",
+        "kind": "local_only",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-write",
+        "op": "file_upload",
+        "kind": "local_only",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-bound",
+        "op": "file_upload",
+        "kind": "local_only",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "file_url",
+        "kind": "local_only",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-write",
+        "op": "file_url",
+        "kind": "local_only",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-bound",
+        "op": "file_url",
+        "kind": "local_only",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "submit_job",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "get_job",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "list_jobs",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "operationScopesAllowed evaluated without calling the op"
+      },
+      {
+        "caller": "http-read",
+        "op": "cancel_job",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "retry_job",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "get_job_progress",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "pause_job",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "resume_job",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "replay_job",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "send_job_message",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "submit_agent",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "get_agent_job",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "get_job_stats",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "operationScopesAllowed evaluated without calling the op"
+      },
+      {
+        "caller": "http-read",
+        "op": "takes_add",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "takes_update",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "takes_resolve",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "takes_supersede",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "sources_add",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "sources_remove",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "sources_inspect",
+        "kind": "local_only",
+        "outcome": "denied",
+        "detail": "unknown_tool: {\n  \"error\": \"unknown_tool\",\n  \"message\": \"Unknown tool: sources_inspect\"\n}"
+      },
+      {
+        "caller": "http-write",
+        "op": "sources_inspect",
+        "kind": "local_only",
+        "outcome": "denied",
+        "detail": "unknown_tool: {\n  \"error\": \"unknown_tool\",\n  \"message\": \"Unknown tool: sources_inspect\"\n}"
+      },
+      {
+        "caller": "http-bound",
+        "op": "sources_inspect",
+        "kind": "local_only",
+        "outcome": "denied",
+        "detail": "unknown_tool: {\n  \"error\": \"unknown_tool\",\n  \"message\": \"Unknown tool: sources_inspect\"\n}"
+      },
+      {
+        "caller": "http-read",
+        "op": "get_recent_transcripts",
+        "kind": "local_only",
+        "outcome": "skipped_no_required_param",
+        "detail": "not called: a bypass would run the handler"
+      },
+      {
+        "caller": "http-write",
+        "op": "get_recent_transcripts",
+        "kind": "local_only",
+        "outcome": "skipped_no_required_param",
+        "detail": "not called: a bypass would run the handler"
+      },
+      {
+        "caller": "http-bound",
+        "op": "get_recent_transcripts",
+        "kind": "local_only",
+        "outcome": "skipped_no_required_param",
+        "detail": "not called: a bypass would run the handler"
+      },
+      {
+        "caller": "http-read",
+        "op": "connectors_status",
+        "kind": "local_only",
+        "outcome": "skipped_no_required_param",
+        "detail": "not called: a bypass would run the handler"
+      },
+      {
+        "caller": "http-write",
+        "op": "connectors_status",
+        "kind": "local_only",
+        "outcome": "skipped_no_required_param",
+        "detail": "not called: a bypass would run the handler"
+      },
+      {
+        "caller": "http-bound",
+        "op": "connectors_status",
+        "kind": "local_only",
+        "outcome": "skipped_no_required_param",
+        "detail": "not called: a bypass would run the handler"
+      },
+      {
+        "caller": "http-read",
+        "op": "connector_sync",
+        "kind": "local_only",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-write",
+        "op": "connector_sync",
+        "kind": "local_only",
+        "outcome": "denied",
+        "detail": "unknown_tool: {\n  \"error\": \"unknown_tool\",\n  \"message\": \"Unknown tool: connector_sync\"\n}"
+      },
+      {
+        "caller": "http-bound",
+        "op": "connector_sync",
+        "kind": "local_only",
+        "outcome": "denied",
+        "detail": "unknown_tool: {\n  \"error\": \"unknown_tool\",\n  \"message\": \"Unknown tool: connector_sync\"\n}"
+      },
+      {
+        "caller": "http-read",
+        "op": "ontology_propose",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "chronicle_backfill",
+        "kind": "local_only",
+        "outcome": "skipped_no_required_param",
+        "detail": "not called: a bypass would run the handler"
+      },
+      {
+        "caller": "http-write",
+        "op": "chronicle_backfill",
+        "kind": "local_only",
+        "outcome": "skipped_no_required_param",
+        "detail": "not called: a bypass would run the handler"
+      },
+      {
+        "caller": "http-bound",
+        "op": "chronicle_backfill",
+        "kind": "local_only",
+        "outcome": "skipped_no_required_param",
+        "detail": "not called: a bypass would run the handler"
+      },
+      {
+        "caller": "http-read",
+        "op": "extract_entities",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "extraction_review",
+        "kind": "local_only",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-write",
+        "op": "extraction_review",
+        "kind": "local_only",
+        "outcome": "denied",
+        "detail": "unknown_tool: {\n  \"error\": \"unknown_tool\",\n  \"message\": \"Unknown tool: extraction_review\"\n}"
+      },
+      {
+        "caller": "http-bound",
+        "op": "extraction_review",
+        "kind": "local_only",
+        "outcome": "denied",
+        "detail": "unknown_tool: {\n  \"error\": \"unknown_tool\",\n  \"message\": \"Unknown tool: extraction_review\"\n}"
+      },
+      {
+        "caller": "http-read",
+        "op": "entity_identity_link",
+        "kind": "local_only",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-write",
+        "op": "entity_identity_link",
+        "kind": "local_only",
+        "outcome": "denied",
+        "detail": "unknown_tool: {\n  \"error\": \"unknown_tool\",\n  \"message\": \"Unknown tool: entity_identity_link\",\n  \"suggestion\": \"Did you mean \\\"entity_identity_list\\\"?\"\n}"
+      },
+      {
+        "caller": "http-bound",
+        "op": "entity_identity_link",
+        "kind": "local_only",
+        "outcome": "denied",
+        "detail": "unknown_tool: {\n  \"error\": \"unknown_tool\",\n  \"message\": \"Unknown tool: entity_identity_link\",\n  \"suggestion\": \"Did you mean \\\"entity_identity_list\\\"?\"\n}"
+      },
+      {
+        "caller": "http-read",
+        "op": "entity_identity_unlink",
+        "kind": "local_only",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-write",
+        "op": "entity_identity_unlink",
+        "kind": "local_only",
+        "outcome": "denied",
+        "detail": "unknown_tool: {\n  \"error\": \"unknown_tool\",\n  \"message\": \"Unknown tool: entity_identity_unlink\"\n}"
+      },
+      {
+        "caller": "http-bound",
+        "op": "entity_identity_unlink",
+        "kind": "local_only",
+        "outcome": "denied",
+        "detail": "unknown_tool: {\n  \"error\": \"unknown_tool\",\n  \"message\": \"Unknown tool: entity_identity_unlink\"\n}"
+      },
+      {
+        "caller": "http-read",
+        "op": "extract_facts",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "forget_fact",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "code_traversal_cache_clear",
+        "kind": "local_only",
+        "outcome": "skipped_no_required_param",
+        "detail": "not called: a bypass would run the handler"
+      },
+      {
+        "caller": "http-write",
+        "op": "code_traversal_cache_clear",
+        "kind": "local_only",
+        "outcome": "skipped_no_required_param",
+        "detail": "not called: a bypass would run the handler"
+      },
+      {
+        "caller": "http-bound",
+        "op": "code_traversal_cache_clear",
+        "kind": "local_only",
+        "outcome": "skipped_no_required_param",
+        "detail": "not called: a bypass would run the handler"
+      },
+      {
+        "caller": "http-read",
+        "op": "migrate_embeddings",
+        "kind": "local_only",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-write",
+        "op": "migrate_embeddings",
+        "kind": "local_only",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-bound",
+        "op": "migrate_embeddings",
+        "kind": "local_only",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "schema_apply_mutations",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "reload_schema_pack",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "operationScopesAllowed evaluated without calling the op"
+      },
+      {
+        "caller": "http-read",
+        "op": "run_onboard",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "operationScopesAllowed evaluated without calling the op"
+      },
+      {
+        "caller": "http-read",
+        "op": "run_skillopt",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "loops_close",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "loops_mute",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      },
+      {
+        "caller": "http-read",
+        "op": "loops_unmute",
+        "kind": "scope",
+        "outcome": "denied",
+        "detail": "insufficient_scope: "
+      }
+    ],
+    "no_signal_samples": [
+      {
+        "probe_id": "stdio:entity:private_take:base",
+        "caller": "stdio",
+        "op": "entity",
+        "target": "private_take",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": true
+      },
+      {
+        "probe_id": "stdio:entity:private_fact:base",
+        "caller": "stdio",
+        "op": "entity",
+        "target": "private_fact",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": true
+      },
+      {
+        "probe_id": "stdio:entity:foreign_source:base",
+        "caller": "stdio",
+        "op": "entity",
+        "target": "foreign_source",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": true
+      },
+      {
+        "probe_id": "stdio:entity:private_ontology:base",
+        "caller": "stdio",
+        "op": "entity",
+        "target": "private_ontology",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": true
+      },
+      {
+        "probe_id": "http-read:entity:private_take:base",
+        "caller": "http-read",
+        "op": "entity",
+        "target": "private_take",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": true
+      },
+      {
+        "probe_id": "http-read:entity:private_fact:base",
+        "caller": "http-read",
+        "op": "entity",
+        "target": "private_fact",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": true
+      },
+      {
+        "probe_id": "http-read:entity:foreign_source:base",
+        "caller": "http-read",
+        "op": "entity",
+        "target": "foreign_source",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": true
+      },
+      {
+        "probe_id": "http-read:entity:private_ontology:base",
+        "caller": "http-read",
+        "op": "entity",
+        "target": "private_ontology",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": true
+      },
+      {
+        "probe_id": "http-write:entity:private_take:base",
+        "caller": "http-write",
+        "op": "entity",
+        "target": "private_take",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": true
+      },
+      {
+        "probe_id": "http-write:entity:private_fact:base",
+        "caller": "http-write",
+        "op": "entity",
+        "target": "private_fact",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": true
+      },
+      {
+        "probe_id": "http-write:entity:foreign_source:base",
+        "caller": "http-write",
+        "op": "entity",
+        "target": "foreign_source",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": true
+      },
+      {
+        "probe_id": "http-write:entity:private_ontology:base",
+        "caller": "http-write",
+        "op": "entity",
+        "target": "private_ontology",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": true
+      },
+      {
+        "probe_id": "http-bound:entity:private_take:base",
+        "caller": "http-bound",
+        "op": "entity",
+        "target": "private_take",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": true
+      },
+      {
+        "probe_id": "http-bound:entity:private_fact:base",
+        "caller": "http-bound",
+        "op": "entity",
+        "target": "private_fact",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": true
+      },
+      {
+        "probe_id": "http-bound:entity:foreign_source:base",
+        "caller": "http-bound",
+        "op": "entity",
+        "target": "foreign_source",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": true
+      },
+      {
+        "probe_id": "http-bound:entity:private_ontology:base",
+        "caller": "http-bound",
+        "op": "entity",
+        "target": "private_ontology",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": true
+      },
+      {
+        "probe_id": "stdio:synthesize:private_page:base",
+        "caller": "stdio",
+        "op": "synthesize",
+        "target": "private_page",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a",
+        "twin_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "stdio:synthesize:private_take:base",
+        "caller": "stdio",
+        "op": "synthesize",
+        "target": "private_take",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a",
+        "twin_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "stdio:synthesize:private_fact:base",
+        "caller": "stdio",
+        "op": "synthesize",
+        "target": "private_fact",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a",
+        "twin_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "stdio:synthesize:derived_atom:base",
+        "caller": "stdio",
+        "op": "synthesize",
+        "target": "derived_atom",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a",
+        "twin_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "stdio:synthesize:foreign_source:base",
+        "caller": "stdio",
+        "op": "synthesize",
+        "target": "foreign_source",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a",
+        "twin_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "stdio:synthesize:private_ontology:base",
+        "caller": "stdio",
+        "op": "synthesize",
+        "target": "private_ontology",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a",
+        "twin_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "stdio:synthesize:private_raw_data:base",
+        "caller": "stdio",
+        "op": "synthesize",
+        "target": "private_raw_data",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a",
+        "twin_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "stdio:synthesize:private_orphan:base",
+        "caller": "stdio",
+        "op": "synthesize",
+        "target": "private_orphan",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a",
+        "twin_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "stdio:synthesize:hub:base",
+        "caller": "stdio",
+        "op": "synthesize",
+        "target": "hub",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "http-read:synthesize:private_page:base",
+        "caller": "http-read",
+        "op": "synthesize",
+        "target": "private_page",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a",
+        "twin_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "http-read:synthesize:private_take:base",
+        "caller": "http-read",
+        "op": "synthesize",
+        "target": "private_take",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a",
+        "twin_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "http-read:synthesize:private_fact:base",
+        "caller": "http-read",
+        "op": "synthesize",
+        "target": "private_fact",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a",
+        "twin_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "http-read:synthesize:derived_atom:base",
+        "caller": "http-read",
+        "op": "synthesize",
+        "target": "derived_atom",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a",
+        "twin_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "http-read:synthesize:foreign_source:base",
+        "caller": "http-read",
+        "op": "synthesize",
+        "target": "foreign_source",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a",
+        "twin_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "http-read:synthesize:private_ontology:base",
+        "caller": "http-read",
+        "op": "synthesize",
+        "target": "private_ontology",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a",
+        "twin_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "http-read:synthesize:private_raw_data:base",
+        "caller": "http-read",
+        "op": "synthesize",
+        "target": "private_raw_data",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a",
+        "twin_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "http-read:synthesize:private_orphan:base",
+        "caller": "http-read",
+        "op": "synthesize",
+        "target": "private_orphan",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a",
+        "twin_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "http-read:synthesize:hub:base",
+        "caller": "http-read",
+        "op": "synthesize",
+        "target": "hub",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "http-write:synthesize:private_page:base",
+        "caller": "http-write",
+        "op": "synthesize",
+        "target": "private_page",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a",
+        "twin_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "http-write:synthesize:private_take:base",
+        "caller": "http-write",
+        "op": "synthesize",
+        "target": "private_take",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a",
+        "twin_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "http-write:synthesize:private_fact:base",
+        "caller": "http-write",
+        "op": "synthesize",
+        "target": "private_fact",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a",
+        "twin_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "http-write:synthesize:derived_atom:base",
+        "caller": "http-write",
+        "op": "synthesize",
+        "target": "derived_atom",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a",
+        "twin_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "http-write:synthesize:foreign_source:base",
+        "caller": "http-write",
+        "op": "synthesize",
+        "target": "foreign_source",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a",
+        "twin_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "http-write:synthesize:private_ontology:base",
+        "caller": "http-write",
+        "op": "synthesize",
+        "target": "private_ontology",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a",
+        "twin_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "http-write:synthesize:private_raw_data:base",
+        "caller": "http-write",
+        "op": "synthesize",
+        "target": "private_raw_data",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a",
+        "twin_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "http-write:synthesize:private_orphan:base",
+        "caller": "http-write",
+        "op": "synthesize",
+        "target": "private_orphan",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a",
+        "twin_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "http-write:synthesize:hub:base",
+        "caller": "http-write",
+        "op": "synthesize",
+        "target": "hub",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "http-bound:synthesize:private_page:base",
+        "caller": "http-bound",
+        "op": "synthesize",
+        "target": "private_page",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a",
+        "twin_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "http-bound:synthesize:private_take:base",
+        "caller": "http-bound",
+        "op": "synthesize",
+        "target": "private_take",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a",
+        "twin_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "http-bound:synthesize:private_fact:base",
+        "caller": "http-bound",
+        "op": "synthesize",
+        "target": "private_fact",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a",
+        "twin_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "http-bound:synthesize:derived_atom:base",
+        "caller": "http-bound",
+        "op": "synthesize",
+        "target": "derived_atom",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a",
+        "twin_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "http-bound:synthesize:foreign_source:base",
+        "caller": "http-bound",
+        "op": "synthesize",
+        "target": "foreign_source",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a",
+        "twin_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "http-bound:synthesize:private_ontology:base",
+        "caller": "http-bound",
+        "op": "synthesize",
+        "target": "private_ontology",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a",
+        "twin_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "http-bound:synthesize:private_raw_data:base",
+        "caller": "http-bound",
+        "op": "synthesize",
+        "target": "private_raw_data",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a",
+        "twin_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "http-bound:synthesize:private_orphan:base",
+        "caller": "http-bound",
+        "op": "synthesize",
+        "target": "private_orphan",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a",
+        "twin_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "http-bound:synthesize:hub:base",
+        "caller": "http-bound",
+        "op": "synthesize",
+        "target": "hub",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "unavailable: {\n  \"error\": \"unavailable\",\n  \"message\": \"synthesize needs an LLM and none is configured.\",\n  \"suggestion\": \"Set an API key (e.g. `gbrain config set anthropic_a"
+      },
+      {
+        "probe_id": "stdio:get_page:private_page:source_id=beta",
+        "caller": "stdio",
+        "op": "get_page",
+        "target": "private_page",
+        "variant": "source_id=beta",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "permission_denied: {\n  \"error\": \"permission_denied\",\n  \"message\": \"Requested source is outside your granted sources\",\n  \"suggestion\": \"beta is not federated; the brain owner can r",
+        "twin_error": "permission_denied: {\n  \"error\": \"permission_denied\",\n  \"message\": \"Requested source is outside your granted sources\",\n  \"suggestion\": \"beta is not federated; the brain owner can r"
+      },
+      {
+        "probe_id": "stdio:get_page:private_take:source_id=beta",
+        "caller": "stdio",
+        "op": "get_page",
+        "target": "private_take",
+        "variant": "source_id=beta",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "permission_denied: {\n  \"error\": \"permission_denied\",\n  \"message\": \"Requested source is outside your granted sources\",\n  \"suggestion\": \"beta is not federated; the brain owner can r",
+        "twin_error": "permission_denied: {\n  \"error\": \"permission_denied\",\n  \"message\": \"Requested source is outside your granted sources\",\n  \"suggestion\": \"beta is not federated; the brain owner can r"
+      },
+      {
+        "probe_id": "stdio:get_page:private_fact:source_id=beta",
+        "caller": "stdio",
+        "op": "get_page",
+        "target": "private_fact",
+        "variant": "source_id=beta",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "permission_denied: {\n  \"error\": \"permission_denied\",\n  \"message\": \"Requested source is outside your granted sources\",\n  \"suggestion\": \"beta is not federated; the brain owner can r",
+        "twin_error": "permission_denied: {\n  \"error\": \"permission_denied\",\n  \"message\": \"Requested source is outside your granted sources\",\n  \"suggestion\": \"beta is not federated; the brain owner can r"
+      },
+      {
+        "probe_id": "stdio:get_page:derived_atom:source_id=beta",
+        "caller": "stdio",
+        "op": "get_page",
+        "target": "derived_atom",
+        "variant": "source_id=beta",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "permission_denied: {\n  \"error\": \"permission_denied\",\n  \"message\": \"Requested source is outside your granted sources\",\n  \"suggestion\": \"beta is not federated; the brain owner can r",
+        "twin_error": "permission_denied: {\n  \"error\": \"permission_denied\",\n  \"message\": \"Requested source is outside your granted sources\",\n  \"suggestion\": \"beta is not federated; the brain owner can r"
+      },
+      {
+        "probe_id": "stdio:get_page:private_ontology:source_id=beta",
+        "caller": "stdio",
+        "op": "get_page",
+        "target": "private_ontology",
+        "variant": "source_id=beta",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "permission_denied: {\n  \"error\": \"permission_denied\",\n  \"message\": \"Requested source is outside your granted sources\",\n  \"suggestion\": \"beta is not federated; the brain owner can r",
+        "twin_error": "permission_denied: {\n  \"error\": \"permission_denied\",\n  \"message\": \"Requested source is outside your granted sources\",\n  \"suggestion\": \"beta is not federated; the brain owner can r"
+      },
+      {
+        "probe_id": "stdio:get_page:private_raw_data:source_id=beta",
+        "caller": "stdio",
+        "op": "get_page",
+        "target": "private_raw_data",
+        "variant": "source_id=beta",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "permission_denied: {\n  \"error\": \"permission_denied\",\n  \"message\": \"Requested source is outside your granted sources\",\n  \"suggestion\": \"beta is not federated; the brain owner can r",
+        "twin_error": "permission_denied: {\n  \"error\": \"permission_denied\",\n  \"message\": \"Requested source is outside your granted sources\",\n  \"suggestion\": \"beta is not federated; the brain owner can r"
+      },
+      {
+        "probe_id": "stdio:get_page:private_orphan:source_id=beta",
+        "caller": "stdio",
+        "op": "get_page",
+        "target": "private_orphan",
+        "variant": "source_id=beta",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false,
+        "protected_error": "permission_denied: {\n  \"error\": \"permission_denied\",\n  \"message\": \"Requested source is outside your granted sources\",\n  \"suggestion\": \"beta is not federated; the brain owner can r",
+        "twin_error": "permission_denied: {\n  \"error\": \"permission_denied\",\n  \"message\": \"Requested source is outside your granted sources\",\n  \"suggestion\": \"beta is not federated; the brain owner can r"
+      },
+      {
+        "probe_id": "stdio:get_page:hub:base",
+        "caller": "stdio",
+        "op": "get_page",
+        "target": "hub",
+        "variant": "base",
+        "status": "no_signal",
+        "control": false,
+        "local_replay_detected": false,
+        "twin_seen": false
+      }
+    ]
+  },
+  "latency_ms": null
+}
