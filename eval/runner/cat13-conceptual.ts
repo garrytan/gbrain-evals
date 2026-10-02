@@ -105,6 +105,7 @@ import { VectorOnlyAdapter } from './adapters/vector.ts';
 import { HybridNoGraphAdapter } from './adapters/vector-grep-rrf-fusion.ts';
 import { observedSearchFailures, type SearchObservedStats, type SearchObservation } from './retrieval-pins.ts';
 import { GbrainInlineAdapter } from './adapters/gbrain-inline.ts';
+import { VectorRerankAdapter } from './adapters/vector-rerank.ts';
 import type { EvalAdapterConfig } from './eval-adapter-config.ts';
 import type { Adapter, Page, Query, RankedDoc } from './types.ts';
 import { sanitizePage, sanitizeQuery } from './types.ts';
@@ -1190,6 +1191,15 @@ export function buildAdapters(run: { embedder: EmbedderConfig; searchConfig: Rec
   ];
 }
 
+/**
+ * Adapters that run only when named with --adapter, never in the default
+ * all-adapter run, so the standard scorecard and its verdict are unchanged.
+ * vector-rerank: vectors plus gbrain's reranker (September 28 audit, B2).
+ */
+export function buildOptInAdapters(run: { embedder: EmbedderConfig }): AdapterPlan[] {
+  return [{ adapter: new VectorRerankAdapter(), initConfig: { shootout: { embedder: run.embedder.model, dim: run.embedder.dims, searchMode: CAT13_SEARCH_MODE } satisfies EvalAdapterConfig } }];
+}
+
 /** Adapters whose retrieval runs through gbrain's hybridSearch (the pins apply to these). */
 export const GBRAIN_BACKED_ADAPTERS: ReadonlySet<string> = new Set(['gbrain', 'vector-grep-rrf-fusion']);
 
@@ -1486,8 +1496,9 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
   }
   log('');
 
-  const allPlans = buildAdapters({ embedder, searchConfig, stubEmbed });
-  const plans = opts.only ? allPlans.filter(p => p.adapter.name === opts.only) : allPlans;
+  const standardPlans = buildAdapters({ embedder, searchConfig, stubEmbed });
+  const allPlans = [...standardPlans, ...buildOptInAdapters({ embedder })];
+  const plans = opts.only ? allPlans.filter(p => p.adapter.name === opts.only) : standardPlans;
   if (plans.length === 0) {
     throw new Error(`--adapter ${opts.only} matches none of: ${allPlans.map(p => p.adapter.name).join(', ')}`);
   }
@@ -1521,7 +1532,7 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
         }
         log(`  EMBEDDER DRIFT: ${r.gatewayAfterInit.model}@${r.gatewayAfterInit.dims} != ${embedder.model}@${embedder.dims}`);
       }
-      if (pins.reranker === 'on' && GBRAIN_BACKED_ADAPTERS.has(a.name) && r.observed
+      if ((a.name === 'vector-rerank' || (pins.reranker === 'on' && GBRAIN_BACKED_ADAPTERS.has(a.name))) && r.observed
         && r.observed.queries > 0 && (r.observed.rerank_failed_queries ?? 0) > 0) {
         // Same shape as longmemeval's rerank_missing_score: the pin said
         // "reranker on" but no result carried a rerank_score — the fail-open
@@ -1741,7 +1752,7 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
     return { receipt, results, exitCode: 3 };
   }
 
-  const fullStandardRun = !opts.only && results.length === allPlans.length;
+  const fullStandardRun = !opts.only && results.length === plans.length;
   const verdict = computeCat13Verdict(results, { stubEmbed, fullStandardRun });
 
   const receipt: Receipt = {
