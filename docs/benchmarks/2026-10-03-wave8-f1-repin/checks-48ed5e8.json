@@ -1,0 +1,582 @@
+{
+  "kind": "wave8-f1-checks",
+  "date": "2026-10-03T20:38:06.060Z",
+  "bun": "1.4.2",
+  "gbrain": {
+    "version": "0.60.32.0",
+    "root": "GBRAIN_ROOT checkout",
+    "loaded_git_head": "48ed5e8233f617479df989998560840747af0425",
+    "declared_pin": "github:garrytan/gbrain#109b992172e1f49107f9de9841758c1d043a2668"
+  },
+  "gbrain_evals": {
+    "git_head": "0b64dab1008666f782a34f5ed70280d624e747db",
+    "dirty": true
+  },
+  "keys": "every *_API_KEY, *_TOKEN, *_BASE_URL and GBRAIN_* variable removed; scripted provider on 127.0.0.1 where a check needs one",
+  "results": [
+    {
+      "check": "pricing-flow",
+      "exit_code": 1,
+      "seconds": 15.5,
+      "result": {
+        "check": "pricing-flow",
+        "gbrain_version": "0.60.32.0",
+        "pass": false,
+        "failed": [
+          "A1_structured_fields",
+          "A2_text_names_command_units_model",
+          "A2_text_tells_remote_agent_to_ask_operator",
+          "A3_default_cap_warns_with_command",
+          "A4_set_ok",
+          "A4_other_overrides_kept",
+          "A5_retry_priced",
+          "A5_registered_price_enforced_by_cap",
+          "A6_thin_client_refuses_pricing_and_names_operator"
+        ],
+        "checks": {
+          "setup_ok": true,
+          "A1_explicit_cap_refused_before_model_call": true,
+          "A1_structured_fields": false,
+          "A2_text_names_command_units_model": false,
+          "A2_text_tells_remote_agent_to_ask_operator": false,
+          "A3_default_cap_runs": true,
+          "A3_default_cap_warns_with_command": false,
+          "A4_set_ok": false,
+          "A4_other_overrides_kept": false,
+          "A5_retry_priced": false,
+          "A5_registered_price_enforced_by_cap": false,
+          "A6_no_pricing_tool_over_mcp": true,
+          "A6_guessed_tool_refused_and_nothing_stored": true,
+          "A6_thin_client_refuses_pricing_and_names_operator": false
+        },
+        "observed": {
+          "chat_calls": {
+            "refused": 0,
+            "default_cap": 1,
+            "retried": 0,
+            "tiny_cap": 0
+          },
+          "per_call_usd_expected": 0.0002,
+          "refusal_json": {
+            "pages_considered": 1,
+            "pages_processed": 0,
+            "pages_skipped": 0,
+            "pages_skipped_unparsed": 0,
+            "pages_skipped_type_mismatch": 0,
+            "pages_skipped_insufficient_turns": 0,
+            "pages_skipped_since": 0,
+            "pages_skipped_too_large": 0,
+            "pages_skipped_disappeared": 0,
+            "pages_skipped_completed": 0,
+            "pages_skipped_non_extractable": 0,
+            "pages_marked_non_extractable": 0,
+            "pages_skipped_unrecognized_speaker": 0,
+            "pages_failed": 0,
+            "pages_llm_fallback": 0,
+            "pages_lock_skipped": 0,
+            "orphan_facts_cleaned": 0,
+            "segments_processed": 0,
+            "facts_extracted": 0,
+            "facts_inserted": 0,
+            "fallback_slugify_count": 0,
+            "resolution_errors": 0,
+            "sources": [
+              "default"
+            ],
+            "dry_run": false,
+            "outcome": "extracted 0 facts (0 inserted)",
+            "spent_usd": 0,
+            "budget_exhausted": true,
+            "no_pricing_models": [
+              "litellm:custom-chat"
+            ]
+          },
+          "refusal_text": {
+            "code": 1,
+            "stdout_tail": "\nDone: extracted 0 facts (0 inserted) across 0 segments from 0/1 pages in 1 source(s). Spent ~$0.0000.\n  no_pricing: litellm:custom-chat. Configure pricing.overrides; raising --max-cost-usd cannot resolve missing pricing.\n",
+            "stderr_tail": "UPGRADE_AVAILABLE 0.60.32.0 0.60.37.0\ngbrain 0.60.32.0 -> 0.60.37.0 available. Run: gbrain self-upgrade\n[extract.conversation_facts] start\n[extract.conversation_facts] 1/1 (100%) default: 0 facts inserted\n[extract.conversation_facts] 1/1 (100%) done\n"
+          },
+          "default_cap_run": {
+            "code": 0,
+            "stdout_tail": "{\n  \"pages_considered\": 1,\n  \"pages_processed\": 1,\n  \"pages_skipped\": 0,\n  \"pages_skipped_unparsed\": 0,\n  \"pages_skipped_type_mismatch\": 0,\n  \"pages_skipped_insufficient_turns\": 0,\n  \"pages_skipped_since\": 0,\n  \"pages_skipped_too_large\": 0,\n  \"pages_skipped_disappeared\": 0,\n  \"pages_skipped_completed\": 0,\n  \"pages_skipped_non_extractable\": 0,\n  \"pages_marked_non_extractable\": 0,\n  \"pages_skipped_unrecognized_speaker\": 0,\n  \"pages_failed\": 0,\n  \"pages_llm_fallback\": 0,\n  \"pages_lock_skipped\": 0,\n  \"orphan_facts_cleaned\": 0,\n  \"segments_processed\": 1,\n  \"facts_extracted\": 1,\n  \"facts_inserted\": 1,\n  \"fallback_slugify_count\": 0,\n  \"resolution_errors\": 0,\n  \"sources\": [\n    \"default\"\n  ],\n  \"dry_run\": false,\n  \"outcome\": \"extracted 1 facts (1 inserted)\",\n  \"spent_usd\": 0,\n  \"budget_exhausted\": false,\n  \"no_pricing_models\": []\n}\n",
+            "stderr_tail": "UPGRADE_AVAILABLE 0.60.32.0 0.60.37.0\ngbrain 0.60.32.0 -> 0.60.37.0 available. Run: gbrain self-upgrade\n[extract.conversation_facts] start\n[conversation-facts] litellm:custom-chat has no pricing; default USD cap is not enforced. Configure pricing.overrides to enforce a USD cap; explicit caps remain fail-closed.\n[budget] BUDGET_TRACKER_NO_PRICING: model \"litellm:custom-chat\" (kind=chat) not in pricing maps. Cost gate disabled for this call.\n[extract-conversation-facts] example-chat-b: 1 facts inserted across 1 segments entity_resolution_counts={}\n[extract.conversation_facts] 1/1 (100%) default: 1 facts inserted\n[extract.conversation_facts] 1/1 (100%) done\n",
+            "json": {
+              "pages_considered": 1,
+              "pages_processed": 1,
+              "pages_skipped": 0,
+              "pages_skipped_unparsed": 0,
+              "pages_skipped_type_mismatch": 0,
+              "pages_skipped_insufficient_turns": 0,
+              "pages_skipped_since": 0,
+              "pages_skipped_too_large": 0,
+              "pages_skipped_disappeared": 0,
+              "pages_skipped_completed": 0,
+              "pages_skipped_non_extractable": 0,
+              "pages_marked_non_extractable": 0,
+              "pages_skipped_unrecognized_speaker": 0,
+              "pages_failed": 0,
+              "pages_llm_fallback": 0,
+              "pages_lock_skipped": 0,
+              "orphan_facts_cleaned": 0,
+              "segments_processed": 1,
+              "facts_extracted": 1,
+              "facts_inserted": 1,
+              "fallback_slugify_count": 0,
+              "resolution_errors": 0,
+              "sources": [
+                "default"
+              ],
+              "dry_run": false,
+              "outcome": "extracted 1 facts (1 inserted)",
+              "spent_usd": 0,
+              "budget_exhausted": false,
+              "no_pricing_models": []
+            }
+          },
+          "pricing_set": {
+            "code": 1,
+            "stdout_tail": "",
+            "stderr_tail": "UPGRADE_AVAILABLE 0.60.32.0 0.60.37.0\ngbrain 0.60.32.0 -> 0.60.37.0 available. Run: gbrain self-upgrade\nUnknown command: pricing\nRun gbrain --help for available commands.\n"
+          },
+          "stored_overrides": {
+            "litellm:other-embed": 0.13,
+            "example:priced-chat": {
+              "input": 3,
+              "output": 15
+            }
+          },
+          "pricing_list": null,
+          "retried": {
+            "pages_considered": 1,
+            "pages_processed": 0,
+            "pages_skipped": 0,
+            "pages_skipped_unparsed": 0,
+            "pages_skipped_type_mismatch": 0,
+            "pages_skipped_insufficient_turns": 0,
+            "pages_skipped_since": 0,
+            "pages_skipped_too_large": 0,
+            "pages_skipped_disappeared": 0,
+            "pages_skipped_completed": 0,
+            "pages_skipped_non_extractable": 0,
+            "pages_marked_non_extractable": 0,
+            "pages_skipped_unrecognized_speaker": 0,
+            "pages_failed": 0,
+            "pages_llm_fallback": 0,
+            "pages_lock_skipped": 0,
+            "orphan_facts_cleaned": 0,
+            "segments_processed": 0,
+            "facts_extracted": 0,
+            "facts_inserted": 0,
+            "fallback_slugify_count": 0,
+            "resolution_errors": 0,
+            "sources": [
+              "default"
+            ],
+            "dry_run": false,
+            "outcome": "extracted 0 facts (0 inserted)",
+            "spent_usd": 0,
+            "budget_exhausted": true,
+            "no_pricing_models": [
+              "litellm:custom-chat"
+            ]
+          },
+          "tiny_cap": {
+            "exit_code": 1,
+            "json": {
+              "pages_considered": 1,
+              "pages_processed": 0,
+              "pages_skipped": 0,
+              "pages_skipped_unparsed": 0,
+              "pages_skipped_type_mismatch": 0,
+              "pages_skipped_insufficient_turns": 0,
+              "pages_skipped_since": 0,
+              "pages_skipped_too_large": 0,
+              "pages_skipped_disappeared": 0,
+              "pages_skipped_completed": 0,
+              "pages_skipped_non_extractable": 0,
+              "pages_marked_non_extractable": 0,
+              "pages_skipped_unrecognized_speaker": 0,
+              "pages_failed": 0,
+              "pages_llm_fallback": 0,
+              "pages_lock_skipped": 0,
+              "orphan_facts_cleaned": 0,
+              "segments_processed": 0,
+              "facts_extracted": 0,
+              "facts_inserted": 0,
+              "fallback_slugify_count": 0,
+              "resolution_errors": 0,
+              "sources": [
+                "default"
+              ],
+              "dry_run": false,
+              "outcome": "extracted 0 facts (0 inserted)",
+              "spent_usd": 0,
+              "budget_exhausted": true,
+              "no_pricing_models": [
+                "litellm:custom-chat"
+              ]
+            }
+          },
+          "mcp_tool_count": 145,
+          "mcp_guessed_call": "{\n  \"error\": \"unknown_tool\",\n  \"message\": \"Unknown tool: pricing_set\"\n}",
+          "thin_client": {
+            "code": 1,
+            "stdout_tail": "",
+            "stderr_tail": "Unknown command: pricing\nRun gbrain --help for available commands.\n"
+          }
+        }
+      },
+      "stderr_tail": ""
+    },
+    {
+      "check": "import-ignored-dir",
+      "exit_code": 1,
+      "seconds": 10.9,
+      "result": {
+        "check": "import-ignored-dir",
+        "gbrain_version": "0.60.32.0",
+        "pass": false,
+        "failed": [
+          "B1_ignored_dir_imports_its_files",
+          "B1_pages_listed"
+        ],
+        "checks": {
+          "B1_ignored_dir_imports_its_files": false,
+          "B1_pages_listed": false,
+          "B2_repo_import_honors_gitignore": true
+        },
+        "observed": {
+          "scratch_import": {
+            "code": 0,
+            "stdout": "Found 0 markdown files\n\nImport complete (0.0s):\n  0 pages imported\n  0 pages skipped (0 unchanged, 0 errors, 0 malformed filenames)\n  0 chunks created\n",
+            "stderr": "UPGRADE_AVAILABLE 0.60.32.0 0.60.37.0\ngbrain 0.60.32.0 -> 0.60.37.0 available. Run: gbrain self-upgrade\n[gbrain phase] import.collect_files start dir=<tmp>/w8f1-repo-DnUF7l/scratch strategy=markdown\n[gbrain phase] import.collect_files done 10ms files=0\n[import.files] start\n[import.files] done\n"
+          },
+          "scratch_list": "No pages found.\n",
+          "repo_import": {
+            "code": 0,
+            "stdout": "Found 1 markdown files\n\nImport complete (0.3s):\n  1 pages imported\n  0 pages skipped (0 unchanged, 0 errors, 0 malformed filenames)\n  1 chunks created\n"
+          },
+          "repo_list": "tracked-note\tconcept\t2026-10-03\tTracked note\n"
+        }
+      },
+      "stderr_tail": ""
+    },
+    {
+      "check": "embed-budget-stop",
+      "exit_code": 1,
+      "seconds": 9.4,
+      "result": {
+        "check": "embed-budget-stop",
+        "gbrain_version": "0.60.32.0",
+        "pass": false,
+        "failed": [
+          "C1_budget_stop_exits_11",
+          "C2_stdout_names_reason_remaining_and_resume"
+        ],
+        "checks": {
+          "setup_ok": true,
+          "C1_budget_stop_exits_11": false,
+          "C2_stdout_names_reason_remaining_and_resume": false,
+          "C3_resume_command_finishes": true,
+          "C4_drained_brain_with_same_budget_exits_0": true
+        },
+        "observed": {
+          "stopped": {
+            "code": 0,
+            "stdout": "",
+            "stderr": "UPGRADE_AVAILABLE 0.60.32.0 0.60.37.0\ngbrain 0.60.32.0 -> 0.60.37.0 available. Run: gbrain self-upgrade\n",
+            "embed_calls": 0,
+            "remaining": null
+          },
+          "resumed": {
+            "code": 0,
+            "stdout": "Embedded 20 chunks across 20 pages\n"
+          },
+          "again": {
+            "code": 0,
+            "stdout": ""
+          },
+          "embed_calls_total": 20
+        }
+      },
+      "stderr_tail": ""
+    },
+    {
+      "check": "link-typing-5882",
+      "exit_code": 0,
+      "seconds": 6.5,
+      "result": {
+        "check": "link-typing-5882",
+        "gbrain_version": "0.60.32.0",
+        "pages": 240,
+        "links": 684,
+        "by_type": {
+          "works_at": {
+            "edges": 34,
+            "correct": 17,
+            "wrong_type_but_related": 10,
+            "unrelated": 7,
+            "gold": 120,
+            "gold_found": 17
+          },
+          "invested_in": {
+            "edges": 71,
+            "correct": 51,
+            "wrong_type_but_related": 7,
+            "unrelated": 13,
+            "gold": 79,
+            "gold_found": 51
+          },
+          "advises": {
+            "edges": 32,
+            "correct": 17,
+            "wrong_type_but_related": 12,
+            "unrelated": 3,
+            "gold": 61,
+            "gold_found": 17
+          },
+          "founded": {
+            "edges": 40,
+            "correct": 40,
+            "wrong_type_but_related": 0,
+            "unrelated": 0,
+            "gold": 60,
+            "gold_found": 40
+          }
+        },
+        "link_type_counts": {
+          "works_at": 45,
+          "founded": 94,
+          "mentions": 391,
+          "advises": 55,
+          "invested_in": 99
+        }
+      },
+      "stderr_tail": "%)\n[extract.links_db] 240/240 (100%)\n[extract.links_db] 240/240 (100%) done\n[extract.timeline_db] start\n[extract.timeline_db] 10/240 (4%)\n[extract.timeline_db] 20/240 (8%)\n[extract.timeline_db] 30/240 (12%)\n[extract.timeline_db] 40/240 (16%)\n[extract.timeline_db] 50/240 (20%)\n[extract.timeline_db] 60/240 (25%)\n[extract.timeline_db] 70/240 (29%)\n[extract.timeline_db] 80/240 (33%)\n[extract.timeline_db] 90/240 (37%)\n[extract.timeline_db] 100/240 (41%)\n[extract.timeline_db] 110/240 (45%)\n[extract.timeline_db] 120/240 (50%)\n[extract.timeline_db] 130/240 (54%)\n[extract.timeline_db] 140/240 (58%)\n[extract.timeline_db] 150/240 (62%)\n[extract.timeline_db] 160/240 (66%)\n[extract.timeline_db] 170/240 (70%)\n[extract.timeline_db] 180/240 (75%)\n[extract.timeline_db] 190/240 (79%)\n[extract.timeline_db] 200/240 (83%)\n[extract.timeline_db] 210/240 (87%)\n[extract.timeline_db] 220/240 (91%)\n[extract.timeline_db] 230/240 (95%)\n[extract.timeline_db] 240/240 (100%)\n[extract.timeline_db] 240/240 (100%) done\n"
+    },
+    {
+      "check": "pending-count-5831",
+      "exit_code": 1,
+      "seconds": 7.6,
+      "result": {
+        "check": "pending-count-5831",
+        "gbrain_version": "0.60.32.0",
+        "pass": false,
+        "failed": [
+          "D2_cli_pending_count_excludes_no_entity_fact",
+          "D2_mcp_pending_count_excludes_no_entity_fact"
+        ],
+        "checks": {
+          "setup_ok": true,
+          "D2_both_facts_still_listed": true,
+          "D2_cli_pending_count_excludes_no_entity_fact": false,
+          "D2_mcp_pending_count_excludes_no_entity_fact": false
+        },
+        "observed": {
+          "cli_pending_consolidation_count": 2,
+          "mcp_pending_consolidation_count": 2,
+          "listed": [
+            "Alice Example prefers tea",
+            "The example vendor review moved to Friday"
+          ],
+          "mcp_text_head": "{\n  \"facts\": [\n    {\n      \"id\": 2,\n      \"fact\": \"Alice Example prefers tea\",\n      \"kind\": \"fact\",\n      \"entity_slug\": \"people/alice-example\",\n      \"source_id\": \"default\",\n      \"visibility\": \"world\",\n      \"notability\": \"medium\",\n      \"valid_from\": \"2026-10-03T20:35:23.123Z\",\n      \"valid_unti"
+        }
+      },
+      "stderr_tail": ""
+    },
+    {
+      "check": "dream-conversation-pages-4419",
+      "exit_code": 1,
+      "seconds": 15.5,
+      "result": {
+        "check": "dream-conversation-pages-4419",
+        "gbrain_version": "0.60.32.0",
+        "pass": false,
+        "failed": [
+          "D3a_imported_conversation_page_discovered",
+          "D3b_unconfigured_warns_with_opt_in_command"
+        ],
+        "checks": {
+          "D3a_imported_conversation_page_discovered": false,
+          "D3b_unconfigured_warns_with_opt_in_command": false
+        },
+        "observed": {
+          "with_corpus": {
+            "code": 0,
+            "phase": {
+              "phase": "synthesize",
+              "status": "ok",
+              "duration_ms": 22,
+              "summary": "no transcripts to process",
+              "details": {
+                "transcripts_processed": 0,
+                "pages_written": 0
+              }
+            },
+            "stderr_tail": "UPGRADE_AVAILABLE 0.60.32.0 0.60.37.0\ngbrain 0.60.32.0 -> 0.60.37.0 available. Run: gbrain self-upgrade\n[cycle.synthesize] start\n[cycle.synthesize] done\n"
+          },
+          "unconfigured": {
+            "code": 0,
+            "phase": {
+              "phase": "synthesize",
+              "status": "skipped",
+              "duration_ms": 12,
+              "summary": "dream.synthesize.session_corpus_dir is unset",
+              "details": {
+                "reason": "not_configured"
+              }
+            },
+            "stderr_tail": "UPGRADE_AVAILABLE 0.60.32.0 0.60.37.0\ngbrain 0.60.32.0 -> 0.60.37.0 available. Run: gbrain self-upgrade\n[cycle.synthesize] start\n[cycle.synthesize] done\n"
+          }
+        }
+      },
+      "stderr_tail": ""
+    },
+    {
+      "check": "search-stall-2k",
+      "exit_code": 0,
+      "seconds": 130.4,
+      "result": {
+        "check": "search-stall-2k",
+        "gbrain_version": "0.60.32.0",
+        "pass": true,
+        "failed": [],
+        "checks": {
+          "setup_ok": true,
+          "D4_every_search_returned_results": true,
+          "D4_late_searches_not_stalled": true
+        },
+        "observed": {
+          "pages": 2000,
+          "import_ms": 124288,
+          "search_ms": [
+            325,
+            150,
+            115,
+            157,
+            134,
+            135,
+            148,
+            128,
+            122,
+            135
+          ],
+          "early_median_ms_2_to_5": 150,
+          "late_max_ms_6_to_10": 148,
+          "hits": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ]
+        }
+      },
+      "stderr_tail": ""
+    },
+    {
+      "check": "grants-empty-sources-5231",
+      "exit_code": 1,
+      "seconds": 8.6,
+      "result": {
+        "check": "grants-empty-sources-5231",
+        "gbrain_version": "0.60.32.0",
+        "pass": false,
+        "failed": [
+          "D5_empty_source_token_refused_for_search",
+          "D5_empty_source_token_refused_for_get_page"
+        ],
+        "checks": {
+          "setup_ok": true,
+          "D5_open_token_reads_default": true,
+          "D5_empty_source_token_refused_for_search": false,
+          "D5_empty_source_token_refused_for_get_page": false
+        },
+        "observed": {
+          "stored_permissions": [
+            {
+              "name": "example-empty",
+              "permissions": {
+                "source_id": [],
+                "takes_holders": [
+                  "world"
+                ]
+              }
+            },
+            {
+              "name": "example-open",
+              "permissions": {
+                "takes_holders": [
+                  "world"
+                ]
+              }
+            }
+          ],
+          "open_init": {
+            "status": 200,
+            "ok": true,
+            "detail": "{\"result\":{\"protocolVersion\":\"2025-06-18\",\"capabilities\":{\"tools\":{},\"resources\":{}},\"serverInfo\":{\"name\":\"gbrain\",\"version\":\"0.60.32.0\"},\"instructions\":\"GBrain agent operating contract (apply on every cold start):\\n1. Treat gbrain as the user's shared knowledge and skills brain. Search or query it before external lookup, and use get_page when canonical page content matters. Preserve the current a"
+          },
+          "open_search": {
+            "status": 200,
+            "refused": false,
+            "text": "[\n  {\n    \"slug\": \"orchard-note\",\n    \"page_id\": 1,\n    \"title\": \"Orchard note\",\n    \"type\": \"concept\",\n    \"chunk_text\": \"The example orchard opens in spring.\",\n    \"chunk_source\": \"compiled_truth\",\n    \"chunk_id\": 1,\n    \"chunk_index\": 0,\n    \"score\": 1,\n    \"stale\": false,\n    \"source_id\": \"default\",\n    \"effective_date\": \"2026-10-03\",\n    \"effective_date_source\": \"fallback\",\n    \"keyword_hit\": true,\n    \"base_score\": 1,\n    \"evidence\": \"keyword_exact\",\n    \"create_safety\": \"probable\",\n    \"id\": \"gbrain-page:v1:WyJkZWZhdWx0Iiwib3JjaGFyZC1ub3RlIl0\"\n  }\n]"
+          },
+          "empty_init": {
+            "status": 200,
+            "ok": true,
+            "detail": "{\"result\":{\"protocolVersion\":\"2025-06-18\",\"capabilities\":{\"tools\":{},\"resources\":{}},\"serverInfo\":{\"name\":\"gbrain\",\"version\":\"0.60.32.0\"},\"instructions\":\"GBrain agent operating contract (apply on every cold start):\\n1. Treat gbrain as the user's shared knowledge and skills brain. Search or query it before external lookup, and use get_page when canonical page content matters. Preserve the current a"
+          },
+          "empty_search": {
+            "status": 200,
+            "refused": false,
+            "text": "[\n  {\n    \"slug\": \"orchard-note\",\n    \"page_id\": 1,\n    \"title\": \"Orchard note\",\n    \"type\": \"concept\",\n    \"chunk_text\": \"The example orchard opens in spring.\",\n    \"chunk_source\": \"compiled_truth\",\n    \"chunk_id\": 1,\n    \"chunk_index\": 0,\n    \"score\": 1,\n    \"stale\": false,\n    \"source_id\": \"default\",\n    \"effective_date\": \"2026-10-03\",\n    \"effective_date_source\": \"fallback\",\n    \"keyword_hit\": true,\n    \"base_score\": 1,\n    \"evidence\": \"keyword_exact\",\n    \"create_safety\": \"probable\",\n    \"id\": \"gbrain-page:v1:WyJkZWZhdWx0Iiwib3JjaGFyZC1ub3RlIl0\"\n  }\n]"
+          },
+          "empty_get_page": {
+            "status": 200,
+            "refused": false,
+            "text": "{\n  \"id\": 1,\n  \"slug\": \"orchard-note\",\n  \"type\": \"concept\",\n  \"title\": \"Orchard note\",\n  \"compiled_truth\": \"The example orchard opens in spring.\",\n  \"timeline\": \"\",\n  \"frontmatter\": {},\n  \"content_hash\": \"eec113082fce24f1898d863fbf67a183c876e7d9b75d4bb02d760c2dbe456c0c\",\n  \"source_path\": \"orchard-note.md\",\n  \"knowledge_revision\": \"6a9b0de0-4fa2-4801-b415-a52c746d68f5\",\n  \"text_projection_revision\": \"6a9b0de0-4fa2-4801-b415-a52c746d68f5\",\n  \"emotional_weight\": 0,\n  \"created_at\": \"2026-10-03T20:37:55.633Z\",\n  \"updated_at\": \"2026-10-03T20:37:55.633Z\",\n  \"deleted_at\": null,\n  \"effective_date\": \"20"
+          }
+        }
+      },
+      "stderr_tail": ""
+    },
+    {
+      "check": "attribution-f1",
+      "exit_code": 1,
+      "seconds": 6.2,
+      "result": {
+        "check": "attribution-f1",
+        "gbrain_version": "0.60.32.0",
+        "pass": false,
+        "failed": [
+          "setup_ok",
+          "D6_created_names_request_operation_principal",
+          "D6_mcp_edit_page_landed",
+          "D6_last_change_names_the_mcp_writer"
+        ],
+        "checks": {
+          "setup_ok": false,
+          "D6_created_names_request_operation_principal": false,
+          "D6_mcp_edit_page_landed": false,
+          "D6_stale_revision_refused": true,
+          "D6_last_change_names_the_mcp_writer": false,
+          "D6_creation_unchanged_after_edit": true
+        },
+        "observed": {
+          "first": null,
+          "after_mcp_edit": null,
+          "mcp_edit": "{\n  \"error\": \"unknown_tool\",\n  \"message\": \"Unknown tool: edit_page\",\n  \"suggestion\": \"Did you mean \\\"get_page\\\"?\"\n}",
+          "stale_edit": "{\n  \"error\": \"unknown_tool\",\n  \"message\": \"Unknown tool: edit_page\",\n  \"suggestion\": \"Did you mean \\\"get_page\\\"?\"\n}",
+          "first_stderr": "UPGRADE_AVAILABLE 0.60.32.0 0.60.37.0\ngbrain 0.60.32.0 -> 0.60.37.0 available. Run: gbrain self-upgrade\nUnknown command: attribution\nRun gbrain --help for available commands.\n"
+        }
+      },
+      "stderr_tail": ""
+    }
+  ]
+}
