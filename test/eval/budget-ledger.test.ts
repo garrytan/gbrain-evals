@@ -1,17 +1,20 @@
 import { afterEach, describe, expect, test } from 'bun:test';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
-  BudgetExceededError, BudgetRun, budgetOptionsFrom, installPaidRequestGuard, ledgerTotals, priceRequest, receiptCost,
-  reservationUsd, startPaidRun, usageCost, type LedgerFile,
+  BudgetExceededError, BudgetRun, budgetOptionsFrom, closeLedgers, initLedger, installPaidRequestGuard, ledgerTotals, priceRequest, readLedger, receiptCost,
+  reservationUsd, startPaidRun, usageCost,
 } from '../../eval/runner/budget-ledger.ts';
 import Anthropic from '@anthropic-ai/sdk';
 
 const dirs: string[] = [];
-const ledgerPath = () => { const dir = mkdtempSync(join(tmpdir(), 'budget-ledger-')); dirs.push(dir); return join(dir, 'nested', 'ledger.json'); };
-const read = (path: string) => JSON.parse(readFileSync(path, 'utf8')) as LedgerFile;
-afterEach(() => { for (const dir of dirs.splice(0)) rmSync(dir, { recursive: true, force: true }); });
+/** A path with no ledger yet. */
+const freshPath = () => { const dir = mkdtempSync(join(tmpdir(), 'budget-ledger-')); dirs.push(dir); return join(dir, 'nested', 'ledger.sqlite'); };
+/** A ledger created with the default $500 cap (a missing ledger off the default path is refused since 0.10.12). */
+const ledgerPath = () => { const path = freshPath(); initLedger({ ledgerPath: path }); return path; };
+const read = (path: string) => readLedger(path);
+afterEach(() => { closeLedgers(); for (const dir of dirs.splice(0)) rmSync(dir, { recursive: true, force: true }); });
 
 const anthropicBody = { model: 'claude-sonnet-4-6', max_tokens: 1000, messages: [{ role: 'user', content: 'x'.repeat(3000) }] };
 const embeddingBody = { model: 'text-embedding-3-large', input: ['alpha beta', 'gamma'] };
@@ -124,7 +127,7 @@ describe('ledger', () => {
   });
 
   test('the program cap spans runs, counts open reservations, and refuses a run that does not fit', () => {
-    const path = ledgerPath();
+    const path = freshPath();
     const first = BudgetRun.open({ runner: 'a', budgetUsd: 4, ledgerPath: path, programCapUsd: 5 });
     const open = first.reserve(3, 'crashed before settling');
     expect(ledgerTotals(read(path))).toMatchObject({ committed_usd: 3, open_reservations_usd: 3 });
@@ -142,6 +145,7 @@ describe('ledger', () => {
     const path = ledgerPath();
     expect(() => BudgetRun.open({ runner: 'a', budgetUsd: 500.01, ledgerPath: path })).toThrow('$500.00 program cap');
     BudgetRun.open({ runner: 'a', budgetUsd: 1, ledgerPath: path });
+    closeLedgers();
     writeFileSync(path, '{"schema_version": 9}');
     expect(() => BudgetRun.open({ runner: 'b', budgetUsd: 1, ledgerPath: path })).toThrow('unreadable budget ledger');
   });
@@ -219,16 +223,17 @@ describe('shared runs (longmemeval-batch workers)', () => {
 
 describe('runner flags', () => {
   test('--budget-usd is required for paid work; flags override env', () => {
-    const path = ledgerPath();
+    const path = freshPath();
     const lines: string[] = [];
     const options = budgetOptionsFrom(['--budget-ledger', path], {});
-    expect(options).toMatchObject({ budgetUsd: null, programCapUsd: 500 });
+    expect(options).toMatchObject({ budgetUsd: null, programCapUsd: null });
     expect(() => startPaidRun('cat13', { ...options, estimateUsd: 3, log: l => lines.push(l) })).toThrow('--budget-usd');
     expect(lines[0]).toContain('estimated cost $3.00');
     expect(existsSync(path)).toBe(false);
     expect(budgetOptionsFrom(['--budget-usd=7'], { BRAINBENCH_BUDGET_USD: '2' }).budgetUsd).toBe(7);
     expect(budgetOptionsFrom([], { BRAINBENCH_BUDGET_USD: '2', BRAINBENCH_PROGRAM_CAP_USD: '50' })).toMatchObject({ budgetUsd: 2, programCapUsd: 50 });
     expect(() => budgetOptionsFrom(['--budget-usd', '-1'])).toThrow('positive');
+    initLedger({ ledgerPath: path });
     const { run, guard } = startPaidRun('cat13', { ...budgetOptionsFrom(['--budget-usd', '5', '--budget-ledger', path], {}), estimateUsd: 3, log: () => {} });
     guard.uninstall();
     expect(run.budgetUsd).toBe(5);

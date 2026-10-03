@@ -8,10 +8,24 @@
  * capability across models is the headline; its interval comes from a
  * bootstrap that resamples tasks (all models and arms of a task move together).
  *
+ * Cost: `total_usd` per cell is every agent session plus gbrain's own
+ * provider calls (judge excluded). The cost split divides it into uncached
+ * input, cache writes, cache reads and output (both sessions), plus gbrain's
+ * provider calls; the buckets sum to `total_usd`. Cost per success is
+ * `total_usd` summed over cells divided by successful cells.
+ *
+ * With --receipt (repeatable) it warns when a run's event-loop lag p99 was 50 ms
+ * or more (its tool latency is then not trustworthy). With --budget-ledger it
+ * reconciles cell totals, judge cost and slot builds against each budget run's
+ * ledger spend and flags a gap over 1%.
+ *
  * Usage: bun eval/runner/cat40/analyze.ts <results.jsonl> [more.jsonl ...] [--json out.json] [--md out.md]
+ *          [--subject gbrain] [--receipt receipt.json ...] [--budget-ledger <ledger>]
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import type { CellRecord } from '../cat40-model-ladder.ts';
+import { CHAT_PRICE_OVERRIDES, ledgerStatus } from '../budget-ledger.ts';
+import { provider } from './loop.ts';
 
 export const BASELINES = ['fs', 'memory', 'pg'] as const;
 
@@ -64,8 +78,75 @@ export interface Analysis {
   efficiency: Record<string, Record<string, { usd_per_task: number; usd_per_success: number | null; p50_s: number; p95_s: number; turns: number }>>;
   claims: Record<string, { unsupported_per_answer: number; contradicted_per_answer: number; judged: number }>;
   missed_evidence: Record<string, number>;
+  /** Mean dollars per cell by bucket, per model and arm; the buckets sum to total_usd. */
+  cost_split: Record<string, Record<string, CostBuckets>>;
+  /** Mean tool-result characters per cell by tool name (both sessions), per model and arm. */
+  tool_chars: Record<string, Record<string, Record<string, number>>>;
   cells: number;
   usd: number;
+}
+
+/** `unsplit` holds agent cost a cell's record cannot split (no usage or no verified price); it is 0 for runner output. */
+export interface CostBuckets { uncached_input: number; cache_write: number; cache_read: number; output: number; gbrain_provider_calls: number; unsplit: number; total: number }
+const BUCKETS = ['uncached_input', 'cache_write', 'cache_read', 'output', 'gbrain_provider_calls', 'unsplit'] as const;
+
+/** One cell's total_usd split into buckets (a scripted cell costs nothing). */
+export function cellCostBuckets(r: CellRecord): CostBuckets {
+  const b: CostBuckets = { uncached_input: 0, cache_write: 0, cache_read: 0, output: 0, gbrain_provider_calls: r.gbrain_internal?.usd ?? 0, unsplit: 0, total: 0 };
+  let p: (typeof CHAT_PRICE_OVERRIDES)[string] | undefined;
+  try { p = CHAT_PRICE_OVERRIDES[`${provider(r.model)}:${r.model}`]; } catch { p = undefined; }
+  if (r.provider === 'scripted') { /* no agent cost */ }
+  else if (!p || !r.run.usage) b.unsplit = r.total_usd - b.gbrain_provider_calls;
+  else {
+    for (const u of [r.run.usage, r.session1?.usage]) {
+      if (!u) continue;
+      b.uncached_input += u.input * p.input / 1e6;
+      b.cache_write += u.cache_write * (p.cache_write ?? p.input) / 1e6;
+      b.cache_read += u.cache_read * (p.cache_read ?? p.input) / 1e6;
+      b.output += u.output * p.output / 1e6;
+    }
+  }
+  b.total = BUCKETS.reduce((s, k) => s + b[k], 0);
+  return b;
+}
+
+/** Tool-result characters by tool name in one cell, both sessions. */
+export function cellToolChars(r: CellRecord): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const t of [...(r.session1?.tool_calls ?? []), ...(r.run.tool_calls ?? [])]) out[t.name] = (out[t.name] ?? 0) + t.chars;
+  return out;
+}
+
+export interface ReceiptLike { path?: string; budget_run_id?: string | null; slot_builds?: Array<{ allowance?: { usd: number } }>; cost?: { event_loop_lag_ms?: { p50: number; p99: number; max: number } | null; event_loop_lag_unavailable?: string } | null }
+
+/** A warning per receipt whose event-loop lag p99 reached 50 ms, or whose lag was not measured. */
+export function lagWarnings(receipts: ReceiptLike[]): string[] {
+  const out: string[] = [];
+  for (const r of receipts) {
+    const lag = r.cost?.event_loop_lag_ms;
+    if (lag && lag.p99 >= 50) out.push(`${r.path ?? 'receipt'}: event-loop lag p99 ${lag.p99} ms (max ${lag.max} ms) is 50 ms or more; tool latency from this run is not trustworthy`);
+    else if (r.cost && !lag) out.push(`${r.path ?? 'receipt'}: event-loop lag not measured (${r.cost.event_loop_lag_unavailable ?? 'receipt predates the lag monitor'})`);
+  }
+  return out;
+}
+
+export interface Reconciliation { budget_run_id: string; cells: number; cells_usd: number; judge_usd: number; slot_builds_usd: number; attributed_usd: number; ledger_usd: number; gap_usd: number; gap_pct: number; flagged: boolean }
+
+/**
+ * Per budget run: cell total_usd plus judge cost plus slot-build allowances,
+ * against the ledger's committed spend for that run. A gap over 1% means some
+ * spend is not in any cell (failed cells, unattributed proxy requests) or a
+ * cell's own pricing disagrees with the provider's billing.
+ */
+export function reconcile(recs: CellRecord[], ledgerUsd: Record<string, number>, slotBuildsUsd: Record<string, number> = {}): Reconciliation[] {
+  const runs = [...new Set([...recs.map(r => r.budget_run_id).filter((x): x is string => !!x), ...Object.keys(ledgerUsd)])].sort();
+  return runs.map(id => {
+    const rr = recs.filter(r => r.budget_run_id === id);
+    const cells_usd = rr.reduce((s, r) => s + r.total_usd, 0), judge_usd = rr.reduce((s, r) => s + (r.judge_usd ?? 0), 0), slot_builds_usd = slotBuildsUsd[id] ?? 0;
+    const attributed_usd = cells_usd + judge_usd + slot_builds_usd, ledger_usd = ledgerUsd[id] ?? NaN;
+    const gap_usd = ledger_usd - attributed_usd, gap_pct = ledger_usd > 0 ? Math.abs(gap_usd) / ledger_usd : (attributed_usd > 0 ? 1 : 0);
+    return { budget_run_id: id, cells: rr.length, cells_usd, judge_usd, slot_builds_usd, attributed_usd, ledger_usd, gap_usd, gap_pct, flagged: !(gap_pct <= 0.01) };
+  });
 }
 
 export function analyze(recs: CellRecord[], opts: { boots?: number; seed?: number; subject?: string } = {}): Analysis {
@@ -175,11 +256,29 @@ export function analyze(recs: CellRecord[], opts: { boots?: number; seed?: numbe
     const tot = rr.reduce((s, r) => s + r.score.evidence_cited.length + r.score.missed_evidence.length, 0);
     missed_evidence[a] = tot ? rr.reduce((s, r) => s + r.score.missed_evidence.length, 0) / tot : NaN;
   }
+  const cost_split: Analysis['cost_split'] = {};
+  const tool_chars: Analysis['tool_chars'] = {};
+  for (const m of models) {
+    cost_split[m] = {}; tool_chars[m] = {};
+    for (const a of arms) {
+      const rr = recs.filter(r => r.model === m && r.arm === a);
+      if (!rr.length) continue;
+      const sum: CostBuckets = { uncached_input: 0, cache_write: 0, cache_read: 0, output: 0, gbrain_provider_calls: 0, unsplit: 0, total: 0 };
+      const chars: Record<string, number> = {};
+      for (const r of rr) {
+        const b = cellCostBuckets(r);
+        for (const k of [...BUCKETS, 'total'] as const) sum[k] += b[k] / rr.length;
+        for (const [tool, c] of Object.entries(cellToolChars(r))) chars[tool] = (chars[tool] ?? 0) + c / rr.length;
+      }
+      cost_split[m][a] = sum;
+      tool_chars[m][a] = chars;
+    }
+  }
   const ms = Object.keys(point).filter(m => capability[m] !== null);
   return {
     models, arms, tasks, families, success, by_family, capability, advantage, pooled_advantage,
     slope: { value: ms.length >= 2 ? slope(ms.map(m => capability[m]!), ms.map(m => point[m].value)) : NaN, ci95: ci(bootSlope), n_models: ms.length },
-    family_slopes, safety, efficiency, claims, missed_evidence, cells: recs.length,
+    family_slopes, safety, efficiency, claims, missed_evidence, cost_split, tool_chars, cells: recs.length,
     usd: recs.reduce((s, r) => s + r.total_usd + ((r as unknown as { judge_usd?: number }).judge_usd ?? 0), 0),
   };
 }
@@ -207,15 +306,46 @@ export function markdown(a: Analysis): string {
   for (const x of a.arms) L.push(`| ${x} | ${a.safety[x].output_leaks}/${a.safety[x].c_runs} | ${a.safety[x].context_exposures}/${a.safety[x].c_runs} | ${a.safety[x].unsafe_writes} | ${f2(a.claims[x].unsupported_per_answer)} | ${pc(a.missed_evidence[x])} |`);
   L.push('', '| Model | Arm | $/task | $/success | p50 s | p95 s | turns |', '|---|---|---|---|---|---|---|');
   for (const m of a.models) for (const x of a.arms) { const e = a.efficiency[m][x]; if (e) L.push(`| ${m} | ${x} | ${e.usd_per_task.toFixed(3)} | ${e.usd_per_success === null ? 'n/a' : e.usd_per_success.toFixed(3)} | ${e.p50_s.toFixed(0)} | ${e.p95_s.toFixed(0)} | ${e.turns.toFixed(1)} |`); }
+  L.push('', 'Cost split per cell (`total_usd`: agent sessions plus gbrain provider calls, judge excluded; the columns sum to the total):', '',
+    '| Model | Arm | uncached input $ | cache write $ | cache read $ | output $ | gbrain provider calls $ | total_usd |', '|---|---|---|---|---|---|---|---|');
+  for (const m of a.models) for (const x of a.arms) { const c = a.cost_split[m]?.[x]; if (c) L.push(`| ${m} | ${x} | ${c.uncached_input.toFixed(4)} | ${c.cache_write.toFixed(4)} | ${c.cache_read.toFixed(4)} | ${c.output.toFixed(4)} | ${c.gbrain_provider_calls.toFixed(4)} | ${c.total.toFixed(4)} |`); }
+  L.push('', 'Tool-result characters per cell, by tool:', '', '| Model | Arm | characters by tool |', '|---|---|---|');
+  for (const m of a.models) for (const x of a.arms) {
+    const t = a.tool_chars[m]?.[x];
+    if (t) L.push(`| ${m} | ${x} | ${Object.entries(t).sort((p, q) => q[1] - p[1]).map(([k, v]) => `${k} ${Math.round(v).toLocaleString('en-US')}`).join(', ') || 'none'} |`);
+  }
+  return L.join('\n');
+}
+
+export function reconciliationMarkdown(rows: Reconciliation[]): string {
+  const L = ['| Budget run | cells | cells $ | judge $ | slot builds $ | ledger $ | gap | |', '|---|---|---|---|---|---|---|---|'];
+  for (const r of rows) L.push(`| ${r.budget_run_id} | ${r.cells} | ${r.cells_usd.toFixed(4)} | ${r.judge_usd.toFixed(4)} | ${r.slot_builds_usd.toFixed(4)} | ${r.ledger_usd.toFixed(4)} | ${(r.gap_pct * 100).toFixed(2)}% | ${r.flagged ? 'GAP OVER 1%' : 'ok'} |`);
   return L.join('\n');
 }
 
 if (import.meta.main) {
   const argv = process.argv.slice(2);
   const flag = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
-  const paths = argv.filter((x, i) => !x.startsWith('--') && !['--json', '--md', '--subject'].includes(argv[i - 1]));
-  const a = analyze(load(paths), { subject: flag('--subject') ?? 'gbrain' });
-  const md = markdown(a);
+  const valued = ['--json', '--md', '--subject', '--receipt', '--budget-ledger'];
+  const paths = argv.filter((x, i) => !x.startsWith('--') && !valued.includes(argv[i - 1]));
+  const recs = load(paths);
+  const a = analyze(recs, { subject: flag('--subject') ?? 'gbrain' });
+  const receipts: ReceiptLike[] = argv.flatMap((x, i) => (argv[i - 1] === '--receipt' ? [{ path: x, ...JSON.parse(readFileSync(x, 'utf8')) }] : []));
+  let md = markdown(a);
+  const warnings = lagWarnings(receipts);
+  if (warnings.length) md += '\n\n' + warnings.map(w => `Warning: ${w}`).join('\n');
+  if (flag('--budget-ledger')) {
+    const ledgerUsd: Record<string, number> = {};
+    for (const id of new Set(recs.map(r => r.budget_run_id).filter((x): x is string => !!x))) {
+      const run = ledgerStatus({ ledgerPath: flag('--budget-ledger')!, runId: id }).run;
+      if (run) ledgerUsd[id] = run.committed_usd;
+    }
+    const builds: Record<string, number> = {};
+    for (const r of receipts) if (r.budget_run_id) builds[r.budget_run_id] = (builds[r.budget_run_id] ?? 0) + (r.slot_builds ?? []).reduce((s, b) => s + (b.allowance?.usd ?? 0), 0);
+    const rows = reconcile(recs, ledgerUsd, builds);
+    md += '\n\nReconciliation against the budget ledger:\n\n' + reconciliationMarkdown(rows);
+    (a as Analysis & { reconciliation?: Reconciliation[] }).reconciliation = rows;
+  }
   if (flag('--json')) writeFileSync(flag('--json')!, JSON.stringify(a, null, 2));
   if (flag('--md')) writeFileSync(flag('--md')!, md + '\n');
   console.log(md);

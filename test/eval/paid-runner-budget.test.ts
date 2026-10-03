@@ -25,7 +25,7 @@ async function withoutNetwork<T>(fn: () => Promise<T>): Promise<{ result: T; req
 describe('Cat13 budget', () => {
   test('budget flags parse; unknown flags still fail', () => {
     const opts = parseCat13Argv(['--budget-usd', '4', '--budget-ledger', '/tmp/x.json', '--program-cap-usd=100'], {});
-    expect(opts.budget).toMatchObject({ budgetUsd: 4, ledgerPath: '/tmp/x.json', programCapUsd: 100 });
+    expect(opts.budget).toMatchObject({ budgetUsd: 4, ledgerPath: '/tmp/x.sqlite', programCapUsd: 100, programCapSource: '--program-cap-usd' });
     expect(() => parseCat13Argv(['--budget'], {})).toThrow('unknown argument');
   });
 
@@ -37,6 +37,7 @@ describe('Cat13 budget', () => {
     expect(result.receipt.run_status).toBe('skipped');
     expect(result.receipt.skip_reason).toContain('--budget-usd');
     expect(result.exitCode).not.toBe(0);
+    expect(existsSync(join(dir, 'ledger.sqlite'))).toBe(false);
     expect(existsSync(join(dir, 'ledger.json'))).toBe(false);
   });
 
@@ -64,6 +65,7 @@ describe('Cat35 budget', () => {
     const receipt = JSON.parse(readFileSync(join(root, 'eval/reports/cat35-transcript-distill/receipt.json'), 'utf8'));
     expect(receipt.run_status).toBe('skipped');
     expect(receipt.skip_reason).toContain('budget:');
+    expect(existsSync(join(dir, 'ledger.sqlite'))).toBe(false);
     expect(existsSync(join(dir, 'ledger.json'))).toBe(false);
   }, 60_000);
 });

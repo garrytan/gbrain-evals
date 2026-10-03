@@ -188,6 +188,20 @@ These items came from the August 16 plan reviews and the August 26 publication r
 
 - [ ] **Split compound claims more carefully** (Codex round 2). Mechanical `segmentClaims` treats some compound sentences as one claim. Model-based decomposition could sharpen hallucination measurement while adding cost and nondeterminism.
 
+## Cat 40 follow-ups (2026-10-03 plan, deferred)
+
+Deferred from [the Cat 40 follow-ups plan](docs/plans/2026-10-03-cat40-followups/PLAN.md) when the budget ledger moved to SQLite (0.10.12).
+
+- [ ] **Ledger compaction** (E5). What: a `budget-ledger.ts compact` command that folds settled entries of finished runs into per-run totals. Why: reserve and settle stay constant-time, but `status`, `verify` and run summaries scan the entries, and the file only grows. When: `status` reports a read over 1 s or a file over 100 MB (it prints a hint). Depends on the SQLite ledger.
+
+- [ ] **`gbrain-verbs` cost-floor arm** (E6, gate T4 deferred). What: the Cat 40 gbrain arm on the 7-verb surface, whose tool list is about 14,000 characters. Why: it shows how cheap a gbrain task can be and whether tool descriptions are the right lever. Depends on budget left after the cost-wave runs.
+
+- [ ] **Cost parity target** (A6). What: a next wave aimed at cost per successful task at or below plain files on at least half the models. Why: the cost wave's -40% target still leaves gbrain at about 2.4 times the cost of files.
+
+- [ ] **Bring the Python retrieval-refresh spend under the shared cap** (N-10). What: route `scripts/run-retrieval-refresh.py` spending through the SQLite ledger, or give it a shared cap. Why: its own `budget-ledger.json` sits outside the guard every other paid runner uses.
+
+- [ ] **Priced dry run for paid scripts** (DX). What: `PRINT_ONLY=1` prints `scripts/cat40-followups.sh` commands; a priced dry run would also estimate each step's cost from the runner's estimate and the ledger's remaining money.
+
 ## Completed infrastructure work
 
 - [x] **Run every hermetic check in CI** (September 28 audit, C5 to C9). CI now runs the unit tests under `eval/`, the Python orchestrator tests, the LongMemEval recount, documentation and query validators, and an unfiltered `tsc`. The unit suite reuses a pre-migrated PGLite snapshot per embedding shape and runs as four concurrent shards, locally and in CI. The inert `postgres@3.4.9` patch and the unneeded PGLite postinstall link were removed. Completed in gbrain-evals v0.10.1, 2026-09-28.

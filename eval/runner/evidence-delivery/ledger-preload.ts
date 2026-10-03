@@ -7,4 +7,4 @@ import { BudgetRun, budgetOptionsFrom, installPaidRequestGuard } from '../budget
 
 const options = budgetOptionsFrom([], process.env);
 if (!options.runId) throw new Error('ledger-preload: BRAINBENCH_BUDGET_RUN_ID is required so subprocess spend joins the campaign run');
-installPaidRequestGuard(BudgetRun.join({ runId: options.runId, ledgerPath: options.ledgerPath, programCapUsd: options.programCapUsd }));
+installPaidRequestGuard(BudgetRun.join({ runId: options.runId, ledgerPath: options.ledgerPath, programCapUsd: options.programCapUsd, programCapSource: options.programCapSource }));
