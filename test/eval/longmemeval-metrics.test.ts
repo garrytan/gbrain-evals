@@ -71,7 +71,7 @@ import { dedupeRows, inferRunParams, aggregateRows, findMixedRunConfigHashes } f
 import { assertChartable, chartTitle, headlineCard, nLabel } from '../../eval/runner/longmemeval-chart.ts';
 import { EmbeddingCache, makeCachingTransport, inputTypeFromParams } from '../../eval/runner/longmemeval-cache.ts';
 import { loadReceipt } from '../../eval/runner/receipt.ts';
-import { budgetOptionsFrom } from '../../eval/runner/budget-ledger.ts';
+import { budgetOptionsFrom, initLedger, readLedger } from '../../eval/runner/budget-ledger.ts';
 
 const TMP = mkdtempSync(join(tmpdir(), 'lme-test-'));
 
@@ -1096,6 +1096,7 @@ describe('paid-run budget ledger (plan item 11)', () => {
       expect(result.receipt.run_status).toBe('skipped');
       expect(result.receipt.skip_reason).toContain('--budget-usd');
       expect(requests).toBe(0);
+      expect(existsSync(join(dir, 'ledger.sqlite'))).toBe(false);
       expect(existsSync(join(dir, 'ledger.json'))).toBe(false);
     } finally {
       globalThis.fetch = savedFetch;
@@ -1106,7 +1107,8 @@ describe('paid-run budget ledger (plan item 11)', () => {
   test('every embedding request is reserved and reconciled, and the receipt carries cost and delivered tokens', async () => {
     const dir = mkdtempSync(join(TMP, 'budget-mock-'));
     const datasetPath = join(dir, 'dataset.json');
-    const ledger = join(dir, 'ledger.json');
+    const ledger = join(dir, 'ledger.sqlite');
+    initLedger({ ledgerPath: ledger });
     writeFileSync(datasetPath, JSON.stringify(makeDataset({ goldInHaystack: true })));
     const savedKey = process.env.OPENAI_API_KEY;
     const savedFetch = globalThis.fetch;
@@ -1125,7 +1127,7 @@ describe('paid-run budget ledger (plan item 11)', () => {
       const result = await run(vectorOpts(dir, datasetPath, ['--budget-usd', '0.5', '--budget-ledger', ledger]));
       expect([result.receipt.run_status, result.receipt.skip_reason]).toEqual(['completed', undefined]);
       expect(requests).toBeGreaterThan(0);
-      const entries = JSON.parse(readFileSync(ledger, 'utf8')).entries as Array<{ status: string; actual_usd: number; input_tokens: number }>;
+      const entries = readLedger(ledger).entries as Array<{ status: string; actual_usd: number; input_tokens: number }>;
       expect(entries).toHaveLength(requests);
       expect(entries.every(e => e.status === 'reconciled')).toBe(true);
       const written = loadReceipt(result.receiptFile);

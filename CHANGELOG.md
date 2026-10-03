@@ -2,6 +2,68 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.12] - 2026-10-03
+
+### The budget ledger moves to SQLite, so paid runs stop stalling their own timing; Cat 40 gets the tooling for the gbrain cost wave
+
+Every paid request reserves its cost in the budget ledger before it is sent.
+The ledger was one JSON file that each reservation parsed, rewrote and
+fsynced in full on the runner's event loop. At 110,000 entries that blocked
+the loop for about 0.6 s per request, which is why gbrain's tool latency in
+the Cat 40 harness looked 10 to 30 times slower than the same calls replayed
+alone. The ledger is now a SQLite file (`bun:sqlite`, WAL mode,
+`synchronous=FULL`), following Garry's gate decision (UC3) on the
+[Cat 40 follow-ups plan](docs/plans/2026-10-03-cat40-followups/PLAN.md).
+Guide: [docs/budget-ledger.md](docs/budget-ledger.md).
+
+- **Constant-cost reservations.** A reserve plus settle took 0.45 to 0.8 ms
+  with 200,000 entries in the ledger on a 4-core cloud machine, most of it two
+  fsyncs; a test holds the average under 5 ms at that size. Cross-process
+  safety comes from SQLite's `BEGIN IMMEDIATE`: four processes making 2,000
+  reservations against a tight budget never overspend, and a writer paused
+  between its check and its write cannot be overtaken.
+- **The program cap lives in the ledger.** `init` records it ($500 by
+  default), runners without a cap flag adopt it, a disagreeing flag or
+  environment variable is refused with the fix, and `set-cap` changes it only
+  with a reason. A missing ledger off the default path refuses with the `init`
+  command instead of starting empty. New CLI commands: `init`, `verify`,
+  `set-cap`, `migrate --finish`; `status` is read-only JSON with hints.
+- **Safe migration.** An existing `ledger.json` migrates once under both its
+  old lock and the new one, keeps a `.migrated` copy, and is replaced by a
+  tombstone that code from before this release refuses to spend against. A
+  crash at any step leaves either the legacy file or a state that `migrate
+  --finish` completes; differing totals stop spending and say to ask the user.
+  `evidence-delivery.ts`, which read `ledger.json` directly, now goes through
+  the shared reader, and a campaign manifest's cap is an upper limit.
+- **Reservations cover what providers bill.** Tool schemas, OpenAI
+  `instructions`, the context a `previous_response_id` carries (a full window
+  when the chain is unknown) and the cache-write premium are now reserved. Any
+  remaining overshoot is recorded. A failed ledger write stops the process
+  from spending.
+- **Event-loop lag in every receipt.** `startPaidRun` records lag p50, p99 and
+  max; every receipt's cost block carries it with the ledger path and recorded
+  cap (`n2-3-prompt-ab.ts` included). A deliberate 100 ms block registers.
+- **Cat 40 runner.** Tool results are uncapped by default (`--max-tool-chars
+  none` spells it). Each `--out` directory is bound to its experiment, and a
+  resume joins the step's original budget run instead of opening a fresh one.
+  Slot brains are built by their own `--build-slots` step, one at a time, and
+  agent steps refuse when a snapshot is missing. `--order model` finishes
+  each model before the next. gbrain's provider calls are charged to the cell
+  that made them even when they finish after it, unpriced ones at their
+  reservation, and cells record `restore_ms`.
+- **Cat 40 analysis.** `analyze.ts` splits each cell's `total_usd` into
+  uncached input, cache writes, cache reads, output and gbrain provider calls
+  (the parts sum to the total), reports tool-result characters by tool and cost
+  per success, warns on event-loop lag, and reconciles cells against the
+  ledger. `holdout_stats.py` refuses comparisons without complete, unique
+  coverage and adds the gate's ship rule (-5 point margin, -3 beside it), the
+  dev-round harm screen, a power check, and pairs for the new build against
+  the contemporaneous `566a242a` control.
+- **Paid-run script.** `scripts/cat40-followups.sh` holds the exact commands
+  for dev rounds 1 and 2, the latency comparator, the new-build held-out run
+  and the `566a242a` control, on one ledger capped at $237. `PRINT_ONLY=1`
+  prints them. No paid run was made for this release.
+
 ## [0.10.11] - 2026-10-03
 
 ### Cat 40 Model Ladder: gbrain lost to grep at release v0.60.27.0; a fix wave puts it ahead on the dev world and level-to-ahead on a held-out world

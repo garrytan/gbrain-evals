@@ -22,7 +22,7 @@
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { budgetOptionsFrom, startPaidRun, type RunSummary } from './budget-ledger.ts';
+import { budgetOptionsFrom, receiptCost, startPaidRun, type RunSummary } from './budget-ledger.ts';
 import { gbrainSpecFrom, importGbrain, overlaySummary, resolveGbrainUnderTest } from './gbrain-under-test.ts';
 import { withHermeticEnv } from './hermetic-env.ts';
 import { JUDGE_MODEL, scoreClassification, type ClassificationSummary, type Judgment, type Verdict } from './n2-contradiction-surfacing.ts';
@@ -61,6 +61,8 @@ export interface ArmResult {
   skipped_by_date: number;
   offered_keys_sha256: string;
   cost: RunSummary | null;
+  /** The receipt v2 cost block for the arm, with the ledger path, recorded cap and event-loop lag (0.10.12; absent in older arms). */
+  receipt_cost?: ReturnType<typeof receiptCost> | null;
   score: ClassificationSummary | null;
   judgments: Judgment[];
 }
@@ -170,7 +172,7 @@ async function runArm(argv: readonly string[]): Promise<ArmResult> {
     if (paidRun) {
       paidRun.guard.uninstall();
       const summary = paidRun.run.close();
-      if (result) result.cost = summary;
+      if (result) { result.cost = summary; result.receipt_cost = receiptCost(summary); }
     }
   }
   return result;

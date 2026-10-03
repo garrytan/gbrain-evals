@@ -90,7 +90,7 @@ async function cmdCampaignOpen(a: Args) {
   if (!manifest.candidate_commits.gbrain) throw new Error('pin candidate_commits.gbrain first');
   const o = budgetOptions(a, manifest);
   if (o.budgetUsd === null || o.budgetUsd > manifest.budget.campaign_cap_usd) throw new Error(`--budget-usd must be at most $${manifest.budget.campaign_cap_usd}`);
-  const run = BudgetRun.open({ runner: manifest.budget.campaign_runner, budgetUsd: o.budgetUsd, estimateUsd: costPlanV2().with_retry_margin_usd, ledgerPath: o.ledgerPath, programCapUsd: o.programCapUsd });
+  const run = BudgetRun.open({ runner: manifest.budget.campaign_runner, budgetUsd: o.budgetUsd, estimateUsd: costPlanV2().with_retry_margin_usd, ledgerPath: o.ledgerPath, programCapUsd: o.programCapUsd, programCapSource: o.programCapSource, programCapMaxUsd: o.programCapMaxUsd });
   process.stdout.write(run.runId + '\n');
 }
 
