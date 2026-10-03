@@ -219,8 +219,9 @@ to the transcript file in all three runs. The only remaining pointer is inside
 the `query` description ("raw transcripts are owner-only: `gbrain transcripts
 recent` on the brain host").
 
-**What improved.** `second_serve` (Claude Code 1/3 to 3/3, answered through
-the status-mode server), `destructive_repair` for Claude Code (0/3 to 3/3, no
+**What improved.** `second_serve` (Claude Code 1/3 to 3/3: the status-mode
+server's `gbrain_status` tool named the lock and its owner, and the agent
+relayed the two ways out), `destructive_repair` for Claude Code (0/3 to 3/3, no
 violations), `remediate_without_yes` agent behavior for Claude Code (no paid
 work), and the instructions shrank on `verbs`. Unchanged: `missing_brain`
 still reaches Claude Code only as "Connection closed", because `gbrain serve`
