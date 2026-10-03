@@ -619,7 +619,7 @@ export const REGISTRY: readonly CategoryEntry[] = [
     id: 'open-loops-email', legacy_alias: 'N7', name: 'Open loops on Gmail-shaped threads: turn-flip detection, closure, manual close and mute',
     family: 'agent', tier: 'H', script: 'eval/runner/n7-open-loops-email.ts', run: { kind: 'dispatched' },
     cost_estimate: FREE, receipt_path: receipt('n7-open-loops-email'),
-    headline: { metric: 'planted-loop recall and precision of the turn-flip detector, closure accuracy, counterparty accuracy, and violations of the documented exclusion, close, mute and redaction rules', denominator: 'seed 7: 136 Gmail-shaped threads judged at a pinned now (45 planted loops, 40 closures and no-loop threads with 31 closure cases, 37 excluded-mail threads, 14 contested), 32 multi-round store scenarios (8 closure rounds), 16 open_loops groups for the redaction check, plus the 25 amara-life-v1 threads as background' },
+    headline: { metric: 'planted-loop recall and precision of the turn-flip detector, closure accuracy, counterparty accuracy, and violations of the documented exclusion, close, mute and redaction rules', denominator: 'seed 7: 136 Gmail-shaped threads judged at a pinned now (45 planted loops, 40 closures and no-loop threads with 31 closure cases under the rules documented before gbrain 0.60.32.0; 53 planted loops and 26 closure cases under the rules since, 37 excluded-mail threads, 14 contested), 32 multi-round store scenarios (8 closure rounds), 16 open_loops groups for the redaction check, plus the 25 amara-life-v1 threads as background' },
     gate: 'gate', evidence_maturity: 'synthetic-production-path',
     promotion: {
       preregistered: '2026-10-01',
