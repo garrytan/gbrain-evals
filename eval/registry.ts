@@ -488,6 +488,16 @@ export const REGISTRY: readonly CategoryEntry[] = [
     contract: 'Follows one small vault through ingest, query, an embedding outage, corrections, reconcile, forget and restart, and scores what an agent can read at each checkpoint against the evaluator\'s own ledger. gbrain\'s doctor, integrity and invariant checks are never the answer key. It covers the scripted scenario only; timing-dependent counts can differ between repeat runs.',
   },
   {
+    id: 'model-ladder', legacy_alias: '40', name: 'Model Ladder: agent tasks over a company knowledge base, by memory system and model generation',
+    family: 'reasoning', tier: 'P', script: 'eval/runner/cat40-model-ladder.ts',
+    run: { kind: 'listed', reason: 'paid model calls across many models, and a gbrain checkout for the gbrain arm', command: 'bun eval/runner/cat40-model-ladder.ts --models <list> --arms oracle,fs,fs-acl,memory,pg,gbrain --max-tool-chars 100000000 --gbrain-repo <gbrain checkout> --budget-usd <n>' },
+    cost_estimate: { usd: 800, basis: 'the uncapped 11-model, 6-arm ladder on 2026-10-02 cost $777 for 7,624 cells; one model and repeat costs $10-$80' },
+    receipt_path: 'docs/benchmarks/2026-10-02-model-ladder/',
+    headline: { metric: 'agent task success per memory arm and model, gbrain advantage over the best simple arm, and its slope on model capability', denominator: '50 tasks (authority, true-now, permissions, evidence briefs, write-back) per model and repeat' },
+    gate: 'report-only', evidence_maturity: 'synthetic-production-path',
+    contract: 'Runs one agent loop per arm (files, memory tool, plain Postgres, gbrain MCP, and handed-over evidence) on a fictional company corpus generated from a ledger, scores answers deterministically and counts finance-only leaks. Capability is the oracle arm; the 4k-document world is development data, the seed-20261003 world is held out.',
+  },
+  {
     id: 'evidence-delivery', legacy_alias: 'evidence-delivery', name: 'Evidence delivery ablation (LongMemEval-S, frozen reranked hits)',
     family: 'reasoning', tier: 'P', script: 'eval/runner/evidence-delivery.ts',
     run: { kind: 'listed', reason: 'preregistered paid protocol on a frozen evidence manifest at a pinned gbrain commit; every paid step joins one campaign budget-ledger run', command: 'bun eval/runner/evidence-delivery.ts e1 --frozen-dir <dir> --dataset <longmemeval_s_cleaned.json> --out-dir <dir> --set pilot --arms <arms> --budget-run-id <campaign run>' },
@@ -633,4 +643,4 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
 };
 
 /** Subdirectories of eval/runner/ holding helper modules only. */
-export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'evaluator', 'evidence-delivery', 'lifecycle', 'queries', 'stats', 'system-one'];
+export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'cat40', 'evaluator', 'evidence-delivery', 'lifecycle', 'queries', 'stats', 'system-one'];
