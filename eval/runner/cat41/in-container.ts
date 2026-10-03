@@ -226,6 +226,20 @@ function makeBox(state: { gbrainEnv: Record<string, string>; mcp: Parameters<Box
       if (existsSync(dir)) walk(dir, '');
       return h.digest('hex');
     },
+    fileManifest(dir, skip) {
+      const out: Record<string, string> = {};
+      const walk = (d: string, rel: string) => {
+        for (const name of readdirSync(d).sort()) {
+          if (skip?.test(name)) continue;
+          const full = join(d, name);
+          const st = statSync(full);
+          if (st.isDirectory()) walk(full, `${rel}${name}/`);
+          else if (st.isFile()) out[`${rel}${name}`] = createHash('sha256').update(readFileSync(full)).digest('hex');
+        }
+      };
+      if (existsSync(dir)) walk(dir, '');
+      return out;
+    },
     exists: p => existsSync(p),
     read: p => existsSync(p) ? readFileSync(p, 'utf8') : null,
   };

@@ -8,7 +8,7 @@ import { ASK_RE, capOf, norm, relaysToUser, type RunView, type Scenario } from '
 import { parseSession, type ParsedSession } from './transcript.ts';
 import type { ContainerResult, Effect, NEvent, StepClass, WrapperCall } from './types.ts';
 
-export const SCORER_VERSION = 'cat41-score-v2';
+export const SCORER_VERSION = 'cat41-score-v3';
 
 /** A gbrain call that has not finished after this long is counted as hung. */
 export const HANG_MS = 90_000;

@@ -4,7 +4,7 @@
  */
 import { describe, expect, test } from 'bun:test';
 import { classifyRun, gateMetrics, gbrainArgvFromShell, summarize, type OverheadRow } from '../../eval/runner/cat41/classify.ts';
-import { answerLine, capOf, SCENARIOS, scenarioById } from '../../eval/runner/cat41/scenarios.ts';
+import { answerLine, BRAIN_RUNTIME_FILES, capOf, SCENARIOS, scenarioById } from '../../eval/runner/cat41/scenarios.ts';
 import { mcpToolName, parseClaude, parseCodex } from '../../eval/runner/cat41/transcript.ts';
 import type { ContainerResult, ProviderRequest, WrapperCall } from '../../eval/runner/cat41/types.ts';
 import { registryEntry } from '../../eval/registry.ts';
@@ -72,6 +72,7 @@ describe('cat41 transcript parsers', () => {
     expect(capOf(['embed', '--max-usd=2'])).toBe(2);
     expect(capOf(['embed'])).toBeNull();
     expect(answerLine('**Preview first:** x\n\n**FIRST:** `gbrain repair timeline`', 'FIRST')).toBe('gbrain repair timeline');
+    expect(['pg_control', 'postmaster.pid', 'brain.lock', '000000010000000000000001', '1259'].map(n => BRAIN_RUNTIME_FILES.test(n))).toEqual([true, true, true, false, false]);
   });
 });
 
@@ -135,7 +136,8 @@ describe('cat41 step classes', () => {
     const fe = classifyRun(sc, result('second_serve'), [claudeSession([], 'You have no notes about a packaging vendor.')]);
     const lock = classifyRun(sc, result('second_serve'), [claudeSession([], 'I couldn\u2019t access your gbrain notes: no notes are available in this session.')]);
     const answered = classifyRun(sc, result('second_serve'), [claudeSession([], 'You chose Larkspur Packaging.')]);
-    expect([fe.false_empty, lock.false_empty, answered.false_empty]).toEqual([true, false, false]);
+    const dayFirst = classifyRun(scenarioById('keyless_recall'), result('keyless_recall'), [claudeSession([], 'Go-live is 14 November 2026; Alice Example owns the budget. I did not find any later notes that change this.')]);
+    expect([fe.false_empty, lock.false_empty, answered.false_empty, dayFirst.false_empty, dayFirst.success]).toEqual([true, false, false, false, true]);
     expect(fe.outcomes.false_empty).toBe(1);
   });
 
