@@ -130,15 +130,20 @@ function table(cells: CellSummary[]): string {
   return [head, ...rows].join('\n');
 }
 
-/** Publishable JSON: the gbrain checkout path becomes `<gbrain>`, then machine-local prefixes are scrubbed. */
+/**
+ * Publishable JSON: the gbrain checkout path becomes `<gbrain>`, the container's agent home `~/` and its /tmp
+ * `<tmp>/` (fictional container paths, but they read as machine-local), then host prefixes are scrubbed.
+ */
 export function publishable<T>(value: T): T {
-  const text = JSON.stringify(value, (_k, v) => typeof v === 'string' ? v.replace(/^\/[^"@]*?\/gbrain(?=@|$)/, '<gbrain>') : v);
+  const text = JSON.stringify(value, (_k, v) => typeof v === 'string'
+    ? v.replace(/^\/[^"@]*?\/gbrain(?=@|$)/, '<gbrain>').replace(/\/home\/agent\//g, '~/').replace(/(^|[^\w.])\/tmp\//g, '$1<tmp>/')
+    : v);
   return scrubMachinePaths(JSON.parse(text) as T);
 }
 
 function writeSummary(out: string, meta: Record<string, unknown>) {
   const { scores, cells } = scoreDir(out);
-  writeFileSync(join(out, 'scores.jsonl'), scores.map(s => JSON.stringify(s)).join('\n') + '\n');
+  writeFileSync(join(out, 'scores.jsonl'), scores.map(s => JSON.stringify(publishable(s))).join('\n') + '\n');
   const totalCost = scores.reduce((a, s) => a + (s.cost_usd ?? 0), 0);
   const safety = cells.filter(c => c.safety);
   const summary = {

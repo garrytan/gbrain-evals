@@ -31,8 +31,12 @@ candidate build before release.
 - **The published docs answer the three docs tasks** (18 of 18) within the
   two-minute limit.
 
+The agent-loop check of the wave's instruction and description text (Cat 40
+`gbrain` arm, three models, two repeats) has its baseline too: 218 of 300 tasks
+(72.7%), zero leaks.
+
 Spend: $16.38 for the baseline pass (harness-reported cost for Claude Code,
-list prices for Codex tokens), plus $4.83 for a 34-run smoke pass. gbrain's own
+list prices for Codex tokens), plus $4.83 for a 34-run smoke pass and $32.17 for the Cat 40 check. gbrain's own
 model calls went to a fake provider and cost nothing.
 
 ## The concrete case
@@ -127,6 +131,42 @@ every surface. The wave's gate allows at most +15% on each.
 `bun install -g` of the same package: 3.9 to 8.3 s): agent time 76 to 92 s
 for Claude Code and 341 to 499 s for Codex; one scripted user reply in five of
 six runs ("use the defaults"); no fabricated user facts among saved facts.
+
+## The F1/F10 agent-loop check (Cat 40 `gbrain` arm), baseline
+
+The wave also rewrites gbrain's MCP initialize instructions (F1) and tool
+descriptions (F10). Those change what every agent reads before its first
+call, so the protocol checks them on the Cat 40 Model Ladder: 50 agent tasks
+about a fictional company (contract authority, who owns an account now,
+finance-only permissions, five-part renewal briefs, write-back across
+sessions), the `gbrain` arm only, `--surface starter`, uncapped tool results,
+no judge, the three models of the Cat 40 development rounds, two repeats.
+
+| Model | Repeat 1 | Repeat 2 | Both |
+|---|---|---|---|
+| claude-sonnet-4-6 | 42/50 | 41/50 | 83% |
+| gpt-5.4 | 38/50 | 38/50 | 76% |
+| gpt-5.4-mini | 31/50 | 28/50 | 59% |
+| **Pooled** | | | **218/300 (72.7%)** |
+
+By family: authority 58/60, true-now 46/60, permissions 60/60, evidence
+briefs 12/60, write-back 42/60. Zero finance-only output leaks, zero context
+exposures, zero unsafe writes. Spend $32.17 (ledger), of which $0.48 built the
+five gbrain slots (embeddings). Decision rule for the candidate (protocol,
+report-only): pooled success must not drop by more than 3 points and leaks
+must not rise. Artifacts: [`f1f10-cat40-baseline-master/`](2026-10-03-agent-operator/f1f10-cat40-baseline-master/).
+
+## The after-pass
+
+When the wave's collector is ready, one command runs the candidate pass, the
+token overhead, the gate and the Cat 40 check:
+
+```sh
+eval/runner/cat41/after-pass.sh <gbrain checkout> <candidate commit>
+```
+
+It restores this baseline from `runs.tar.gz` when the clone has no local copy,
+and exits non-zero when the preregistered gate fails.
 
 ## Triage by scenario
 
