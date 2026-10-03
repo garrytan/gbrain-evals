@@ -35,6 +35,7 @@ import { registryEntry } from '../registry.ts';
 import { evaluatePromotion, describeOutcome } from './promotion.ts';
 import { HARNESSES, type ContainerResult, type Harness } from './cat41/types.ts';
 import { resolveGbrainUnderTest, overlaySummary } from './gbrain-under-test.ts';
+import { scrubMachinePaths } from './receipt.ts';
 import { BudgetRun, CHAT_PRICE_OVERRIDES, budgetOptionsFrom, receiptCost } from './budget-ledger.ts';
 import { requirePaidArm } from './paid-arm.ts';
 import { McpClient } from './cat40/gbrain-arm.ts';
@@ -129,6 +130,12 @@ function table(cells: CellSummary[]): string {
   return [head, ...rows].join('\n');
 }
 
+/** Publishable JSON: the gbrain checkout path becomes `<gbrain>`, then machine-local prefixes are scrubbed. */
+export function publishable<T>(value: T): T {
+  const text = JSON.stringify(value, (_k, v) => typeof v === 'string' ? v.replace(/^\/[^"@]*?\/gbrain(?=@|$)/, '<gbrain>') : v);
+  return scrubMachinePaths(JSON.parse(text) as T);
+}
+
 function writeSummary(out: string, meta: Record<string, unknown>) {
   const { scores, cells } = scoreDir(out);
   writeFileSync(join(out, 'scores.jsonl'), scores.map(s => JSON.stringify(s)).join('\n') + '\n');
@@ -145,7 +152,7 @@ function writeSummary(out: string, meta: Record<string, unknown>) {
     },
     cells,
   };
-  writeFileSync(join(out, 'summary.json'), JSON.stringify(summary, null, 2) + '\n');
+  writeFileSync(join(out, 'summary.json'), JSON.stringify(publishable(summary), null, 2) + '\n');
   writeFileSync(join(out, 'summary.md'), `# Cat 41 ${meta.label ?? ''}\n\n${table(cells)}\n`);
   return summary;
 }
@@ -185,7 +192,7 @@ async function cmdRun(argv: string[]) {
     docs_base: docsBase, install_spec: installSpec, budget_run_id: budget.runId, tool_result_cap: 'none (harness defaults; the evaluator adds no per-tool-result cap)',
     seed: { pages: Object.keys(SEED_PAGES).length, facts: SEED_FACTS.length },
   };
-  writeFileSync(join(out, 'meta.json'), JSON.stringify({ ...meta, started_at: new Date().toISOString() }, null, 2));
+  writeFileSync(join(out, 'meta.json'), JSON.stringify(publishable({ ...meta, started_at: new Date().toISOString() }), null, 2));
   console.log(`[cat41] ${jobs.length} runs (${scenarios.length} scenarios x ${harnesses.join('+')} x ${repeat}) against gbrain ${gut.version} @ ${commit.slice(0, 12)} -> ${out}`);
 
   await pool(jobs, concurrency, async ({ s, h, r }) => {
@@ -247,7 +254,7 @@ async function cmdOverhead(argv: string[]) {
   const out = resolve(flag(argv, 'out', join(REPO, 'eval/reports/cat41/overhead'))!);
   mkdirSync(out, { recursive: true });
   const rows = await measureOverhead(gut.root);
-  writeFileSync(join(out, 'overhead.json'), JSON.stringify({ version: CAT41_VERSION, gbrain: overlaySummary(gut), measured_at: new Date().toISOString(), rows }, null, 2) + '\n');
+  writeFileSync(join(out, 'overhead.json'), JSON.stringify(publishable({ version: CAT41_VERSION, gbrain: overlaySummary(gut), measured_at: new Date().toISOString(), rows }), null, 2) + '\n');
   console.table(rows);
 }
 
@@ -269,7 +276,7 @@ function cmdGate(argv: string[]) {
   const beforeDir = flag(argv, 'before');
   const { report, outcome } = gateReport(beforeDir ? resolve(beforeDir) : null, resolve(afterDir));
   const outFile = flag(argv, 'out');
-  if (outFile) writeFileSync(outFile, JSON.stringify(report, null, 2) + '\n');
+  if (outFile) writeFileSync(outFile, JSON.stringify(publishable(report), null, 2) + '\n');
   console.log(`GATE ${outcome.pass ? 'PASS' : 'FAIL'}: ${describeOutcome(outcome)}`);
   for (const c of report.data.checks) console.log(`  ${c.pass ? 'ok  ' : 'FAIL'} ${c.id}: ${c.detail}`);
   if (report.data.metrics.max_overhead_pct === undefined) console.log('  token overhead not compared: run `overhead --out <dir>` for both passes (the threshold fails closed)');

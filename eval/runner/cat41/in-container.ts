@@ -319,6 +319,7 @@ async function main() {
       const login = await run(['bash', '-c', 'codex login --with-api-key < /run/keys/openai'], { as: 'agent', env: { HOME } });
       if (login.code !== 0) throw new Error(`codex login failed: ${login.stderr.slice(-300)}`);
     }
+    state.notes.install_spec = arg('install-spec');
     const t0 = Date.now();
     try { await scenario.setup(box); }
     catch (e) { result.setup_error = (e as Error).message; write(); return; }
