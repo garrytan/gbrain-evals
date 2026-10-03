@@ -1,5 +1,7 @@
 # Open loops on Gmail-shaped threads (N7, 2026-10-01)
 
+**Update, 2026-10-03.** gbrain fix wave 7 (`48ed5e8`) closed gaps N7-2, N7-5, N7-6 and N7-7: an acknowledgement-only reply no longer closes a loop (0 of 4 store rounds, was 4 of 4), a `?` inside a link opens nothing (0 of 4, was 4 of 4), loop age starts at the request, and `open_loops` takes `as_of`. gbrain changed its documented rule to do this, so N7's oracle was [amended](2026-10-03-n7-oracle-amendment.md) to follow the rules of the version under test; under the frozen oracle, closure accuracy was 34 of 39. With the amendment N7 passes every rule (53 of 53 planted loops, 34 of 34 closures). See the [October 3 rerun](2026-10-03-wave7-repin.md).
+
 **Update, 2026-10-02.** gbrain fix wave 5 fixed N7-1 (`1842c749`). At gbrain `d44296c`, backfill nudges are detected (6 of 6 inbound, 4 of 4 outbound, was 0 and 0), and every gating number below is unchanged. Gaps N7-2 to N7-7 still reproduce. See the [October 2 rerun](2026-10-02-wave-repin.md).
 
 ## The finding

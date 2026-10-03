@@ -1,5 +1,7 @@
 # Contradiction surfacing in three stages: discovery, classification, resolution (2026-10-01, N2)
 
+**Update, 2026-10-03.** gbrain fix wave 7 (`48ed5e8`, v0.60.32.0) ships judge prompt version 4. With the probe budget raised from $6 to $10 (preregistered, so all 2,680 offered pairs were judged), the judge called 149 of 150 same-time conflicts contradictions, including 50 of 50 undated ones (version 3: 132 and 36). False contradictions rose to 6 of 51 compatible pairs (11.8%) and 38 of 1,977 unplanted pairs, so the compatible-pair decision rule fails and the report may no longer say the judge separates conflicts from dated changes on this world. The hermetic arm is unchanged. See the [October 3 rerun](2026-10-03-wave7-repin.md).
+
 **Update, 2026-10-02.** gbrain fix wave 6 fixed N2-1, N2-2 and N2-3. At gbrain `d44296c`, undated pages reach the judge undated (0 of 190 shown with a date), and the bare CLI command reads the latest run. With judge prompt version 3 and the same model and budget, the judge called 132 of 150 same-time conflicts contradictions (was 105), and all three preregistered decision rules hold. Undated conflicts did not improve (36 of 50 both times). The numbers below are the October 1 measurement at `3a284ae`. See the [October 2 rerun](2026-10-02-wave-repin.md).
 
 ## The finding

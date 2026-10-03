@@ -139,6 +139,24 @@ Composed multi-hop questions still never produce a multi-relation plan (N9),
 and the A4 grade was not rerun.
 [Read the before and after](docs/benchmarks/2026-10-02-wave-repin.md).
 
+**Update, October 3: gbrain fix wave 7 (`48ed5e8`) closes eight more ledger
+gaps, and a rerun here shows each one.** Same runners, seeds and settings:
+
+- The contradiction judge (prompt version 4) found 149 of 150 conflicts,
+  including all 50 between undated notes (was 132 and 36). It also called
+  6 of 51 compatible pairs contradictions, above the preregistered 10% limit,
+  so the report no longer says it "separates" conflicts from dated changes (N2).
+- A "Thanks!" reply no longer closes someone's open request, and old requests
+  rank as old (N7). N7's oracle was amended to follow gbrain's new documented
+  rule before the counted run; the failing first run is published.
+- "Who works at Acme?" finds the company titled "Acme" when "Acme Labs" also
+  exists: unresolved one-hop seeds fell from 45 to 6 of 435 runs (N9).
+- `Participants:` lines count as attendance, 5 of 5 (was 0 of 5) (N12).
+- The answer grade no longer calls every question `moderate`: all 120
+  unanswerable questions grade `weak`, and so do 80 of 120 answerable ones (A4).
+
+[Read the before and after](docs/benchmarks/2026-10-03-wave7-repin.md).
+
 ## Why put gbrain on your shortlist?
 
 **It finds evidence across long conversations.** In the September 6 LongMemEval

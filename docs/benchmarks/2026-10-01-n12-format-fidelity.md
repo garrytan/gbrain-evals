@@ -1,5 +1,7 @@
 # Ingestion format fidelity: transcript adapters, conversation-parser patterns and attendance (2026-10-01)
 
+**Update, 2026-10-03.** gbrain fix wave 7 (`48ed5e8`) closed gap N12-6 for `Participants:` lines: 5 of 5 such attendees are typed attended on seeds 12 and 7 (was 0 of 5), with 0 false attendance. People who only speak in a transcript stay mentions (now gap N12-9). All six rules still pass. See the [October 3 rerun](2026-10-03-wave7-repin.md).
+
 **Update, 2026-10-02.** gbrain fix wave 5 fixed N12-1 (`7f723e45`) and N12-2 (`e437fe3d`), and fix wave 6 closed gap N12-7 (`81755f5b`). At gbrain `d44296c`, N12 passes all six preregistered rules on seeds 12 and 7: 0 fabricated turns, and 16 of 16 offset-stamped turns round-trip exactly. Its hold was removed, so **N12 now gates CI**. The numbers below are the October 1 measurement at `3a284ae`. See the [October 2 rerun](2026-10-02-wave-repin.md).
 
 ## The finding

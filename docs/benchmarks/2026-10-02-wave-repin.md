@@ -1,5 +1,7 @@
 # The October 1 categories after gbrain fix waves 5 and 6 (2026-10-02)
 
+**Update, 2026-10-03.** gbrain fix wave 7 (`48ed5e8`) closed eight more ledger gaps and moved N2's paid result: prompt version 4 calls 149 of 150 conflicts contradictions but fails the compatible-pair decision rule (6 of 51). N7's oracle was amended for gbrain's new acknowledgement rule. See the [October 3 rerun](2026-10-03-wave7-repin.md).
+
 ## The finding
 
 All 20 gbrain bugs that the October 1 eval-category wave recorded are fixed at gbrain master `d44296c` (v0.60.30.0), and a rerun here verified each one. We re-ran eight categories with the same runners, seeds and settings as the October 1 runs and compared them to the October 1 numbers at `3a284ae` (v0.60.26.0). In those eight categories, every safety contract that failed on October 1 now passes, and so does every utility floor that failed.

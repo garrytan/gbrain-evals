@@ -118,13 +118,19 @@ The [September 29 lifecycle report](docs/benchmarks/2026-09-29-lifecycle.md) is 
 
 - [ ] **Measure attendance retrieval on a corpus that writes attendees in a documented form.** Since gbrain v0.60.30.0, attendance needs evidence under every schema pack, and world-v1 meetings name attendees only in prose, so N9's 150 "who attended" runs per split resolve their seed and still fire 0 times (2026-10-02). A world-v1 variant with `## Attendees` lists (a new corpus version, not an edit of world-v1) would test the fixed N9-2 to N9-4 path end to end.
 
-- [ ] **Look at undated same-time conflicts in N2.** With judge prompt v3, gbrain's judge still calls 14 of 50 real conflicts between two undated notes temporal (36 of 50 contradictions, unchanged from prompt v2), while same-day and mixed-date conflicts reached 46 and 50 of 50 (2026-10-02). Worth a gbrain issue with examples from the paid receipt.
+- [x] **Look at undated same-time conflicts in N2.** Done 2026-10-03: gbrain fix wave 7 (#5908, prompt v4) catches 50 of 50 undated conflicts at `48ed5e8` [rerun](docs/benchmarks/2026-10-03-wave7-repin.md). Original text: With judge prompt v3, gbrain's judge still calls 14 of 50 real conflicts between two undated notes temporal (36 of 50 contradictions, unchanged from prompt v2), while same-day and mixed-date conflicts reached 46 and 50 of 50 (2026-10-02). Worth a gbrain issue with examples from the paid receipt.
 
-- [ ] **Re-check the N2 probe budget before the next paid N2 run.** Prompt v3 costs about 9% more per pair, and one of four probe runs hit its $1.50 cap on 2026-10-02 (13 of 2,680 pairs unjudged, no planted conflict among them). Any budget change belongs in a preregistration, with the before and after budget stated.
+- [x] **Re-check the N2 probe budget before the next paid N2 run.** Done 2026-10-03: preregistered a raise from $6 to $10 ($1.50 to $2.50 per probe run) before the prompt v4 run ([preregistration](docs/benchmarks/2026-10-03-wave7-repin-preregistration.md)); the v4 arm cost $7.04 and judged 2,680 of 2,680 pairs. Original text: Prompt v3 costs about 9% more per pair, and one of four probe runs hit its $1.50 cap on 2026-10-02 (13 of 2,680 pairs unjudged, no planted conflict among them). Any budget change belongs in a preregistration, with the before and after budget stated.
 
 - [ ] **Trim N9 and N2 hermetic arms under 60 seconds.** N9 takes about 134 s and N2 about 76 s (51 s of page writes). Options: drop N9's one-hop splits from the hermetic arm or run one seed in CI. *2026-10-02: N9 done without dropping anything: each ingestion seed runs in its own process, 47 s instead of about 130 s, with receipts identical apart from timing fields. N2 stopped: seeding 825 pages through `put_page` (49 s, about 55 ms each, half inside PGLite) plus the two gating probes already take about 65 s, and the only remaining cuts shrink the preregistered 150-conflict denominator. It needs a faster gbrain write path. [Note](docs/benchmarks/2026-10-02-hermetic-arm-trims.md).*
 
-- [ ] **Price TypeSafe requests in the budget ledger and run A4 with S4 on** (A4-3).
+- [ ] **Price TypeSafe requests in the budget ledger and run A4 with S4 on** (A4-3). *2026-10-03: pricing done in 0.10.10 (`api.typesafe.ai`, input tokens at gbrain's `typesafe:jev-1.13.0` price; unpriced Jev models refused). Still open: `a4-abstention.ts` has no S4-on arm; write and preregister it, then run it with a TypeSafe key.*
+
+- [ ] **Look at N2 false contradictions on compatible negatives under prompt v4.** At `48ed5e8` the judge called 6 of 51 compatible pairs contradictions (negation about a different party 4 of 15, holder opinions 2 of 15), above the preregistered 10% limit, while catching 149 of 150 conflicts (2026-10-03, [rerun](docs/benchmarks/2026-10-03-wave7-repin.md)). Worth a gbrain issue with the six pairs from the paid receipt. Any change to the N2 decision rules needs a new preregistration.
+
+- [ ] **Make N7's printed findings follow the measurement.** `n7Findings` still prints N7-2 unconditionally and N7-5 whenever the unpinned order moves with the clock, though both gaps closed at `48ed5e8`. The ledger is the record; the runner's list should check `ack_closed` and an `as_of`-pinned ranking before naming them.
+
+- [ ] **Revise the A4 abstention pattern in the next A4 preregistration** (A4-4), and **regenerate the amara-life contradiction fixtures** (N2-6) in a release that may regenerate corpora.
 
 - [ ] **Move the remaining runners with private key lists to `eval/runner/hermetic-env.ts`.**
 

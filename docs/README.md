@@ -74,6 +74,7 @@ gap does not isolate the effect of a graph alone.
 | Does gbrain's confidence grade tell an answerable question from an unanswerable one, and does a fixed reader on gbrain's retrieval say "I don't know" without refusing answerable questions? | [October 1 abstention check (A4)](benchmarks/2026-10-01-a4-abstention.md) |
 | Which gbrain bugs, feature gaps and category defects has the October 1 eval-category wave found? | [Wave bug ledger](benchmarks/2026-10-01-wave-bugs.md) |
 | After gbrain fix waves 5 and 6, which of those bugs are really fixed, and what changed in each category's numbers? | [October 2 rerun at gbrain `d44296c`](benchmarks/2026-10-02-wave-repin.md) |
+| After gbrain fix wave 7, which ledger gaps did it close, and what changed in N2, N7, N9, N12, N13 and A4? | [October 3 rerun at gbrain `48ed5e8`](benchmarks/2026-10-03-wave7-repin.md) ([preregistration](benchmarks/2026-10-03-wave7-repin-preregistration.md), [N7 oracle amendment](benchmarks/2026-10-03-n7-oracle-amendment.md)) |
 | Does a model-backed category score a deliberately broken configuration at most half as well as the real one? | [October 2 live negative controls (Cat 25, Cat 13)](benchmarks/2026-10-02-live-negative-controls.md) |
 | What do the May snapshot's invalid Categories 19, 20 and 21 measure with today's runners? | [October 2 fresh receipts](benchmarks/2026-10-02-may-snapshot-reruns.md) |
 | Can the N9 and N2 hermetic arms run faster without changing what they test? | [October 2 hermetic-arm trims](benchmarks/2026-10-02-hermetic-arm-trims.md) |

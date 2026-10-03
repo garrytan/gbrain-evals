@@ -1,5 +1,7 @@
 # Abstention: the CRAG grade against evidence, and a fixed answerer against answerability (2026-10-01, A4)
 
+**Update, 2026-10-03.** gbrain fix wave 7 (`48ed5e8`) closed gap A4-2: a top result that matches only some query words grades `weak`. All 120 unanswerable questions now grade `weak` (were `moderate`), and so do 80 of 120 answerable ones, so a reader gated at `moderate` would keep only 40 of 120 correct answers. The paid reader's results are unchanged at `d44296c` and `48ed5e8`. The budget ledger now prices TypeSafe requests (A4-3). See the [October 3 rerun](2026-10-03-wave7-repin.md).
+
 ## The finding
 
 gbrain's retrieval-confidence grade tells you nothing about whether a question can be answered on the keyword path, and a good reader on top of gbrain's retrieval abstains almost perfectly on this world without any help from the grade.
