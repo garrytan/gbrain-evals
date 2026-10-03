@@ -1,0 +1,36 @@
+{
+  "ledger": ".budget/ledger.json (local, uncommitted)",
+  "runs": [
+    {
+      "run_id": "cat40-model-ladder-2026-10-02T18-19-03-386Z-0e5d8ef3",
+      "requests": 32253,
+      "committed_usd": 165.19,
+      "open_reservations_usd": 1.223
+    },
+    {
+      "run_id": "cat40-model-ladder-2026-10-02T19-57-32-174Z-117f6562",
+      "requests": 2,
+      "committed_usd": 0.04,
+      "open_reservations_usd": 0
+    },
+    {
+      "run_id": "cat40-model-ladder-2026-10-02T20-13-04-779Z-36369949",
+      "requests": 27564,
+      "committed_usd": 469.32,
+      "open_reservations_usd": 1.096
+    },
+    {
+      "run_id": "cat40-model-ladder-2026-10-02T23-18-28-670Z-e683d841",
+      "requests": 13,
+      "committed_usd": 0.04,
+      "open_reservations_usd": 0
+    },
+    {
+      "run_id": "cat40-model-ladder-2026-10-02T23-19-19-831Z-a8f0d947",
+      "requests": 12975,
+      "committed_usd": 163.76,
+      "open_reservations_usd": 0
+    }
+  ],
+  "total_committed_usd": 798.34
+}

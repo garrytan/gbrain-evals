@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { generateLadderWorld, worldDigest, DEFAULT_LADDER_DIR, FAMILIES, renderDoc } from '../../eval/generators/model-ladder-gen.ts';
 import { FsArm, MemoryArm, OracleArm, FileStore, normalizeDocRef, isWriteCall } from '../../eval/runner/cat40/arms.ts';
 import { runAgent } from '../../eval/runner/cat40/loop.ts';
+import { BudgetExceededError } from '../../eval/runner/budget-ledger.ts';
 import { scoreTask, valueVerdict, normalizeValue, answerHead } from '../../eval/runner/cat40/score.ts';
 import { analyze } from '../../eval/runner/cat40/analyze.ts';
 import type { CellRecord } from '../../eval/runner/cat40-model-ladder.ts';
@@ -77,6 +78,17 @@ describe('arms and loop (scripted model, no network)', () => {
       return { name: 'submit_answer', args: { answer, sources: [] } };
     } });
     expect(scoreTask(task, run, { isWrite: () => false }).success).toBe(false);
+  });
+  test('a refused budget reservation stops the run instead of recording a model error', async () => {
+    const refuse = (async () => { throw new BudgetExceededError('over its $1.00 budget'); }) as unknown as typeof fetch;
+    await expect(runAgent({ model: 'claude-haiku-4-5', system: '', user: task.question, arm: new OracleArm(), fetchImpl: refuse })).rejects.toThrow('over its $1.00 budget');
+  });
+  test('sources sent as a string still score instead of crashing the cell', async () => {
+    const doc = task.gold.evidence[0];
+    for (const sources of [doc, JSON.stringify([doc]), `${doc}, other.md`]) {
+      const run = await runAgent({ model: 'scripted', system: '', user: task.question, arm: new OracleArm(), scripted: () => ({ name: 'submit_answer', args: { answer: task.gold.answer![0], sources } }) });
+      expect(scoreTask(task, run, { isWrite: () => false }).evidence_cited).toEqual([normalizeDocRef(doc)]);
+    }
   });
   test('memory arm views directories and writes to its overlay only', async () => {
     const store = FileStore.fromWorld(world);

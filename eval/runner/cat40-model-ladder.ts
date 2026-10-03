@@ -62,6 +62,8 @@ export interface CellRecord {
   repeat: number;
   score: TaskScore;
   claims: ClaimVerdicts | null;
+  /** Set when the claims judge failed; the paid agent run is still recorded, with `claims: null`. */
+  judge_error?: string;
   run: Omit<AgentRun, 'tools'> & { tool_calls: Array<{ name: string; ms: number; chars: number; truncated: boolean; error?: string }> };
   session1?: Omit<AgentRun, 'tools'> & { tool_calls: Array<{ name: string; ms: number; chars: number }> };
   gbrain_internal?: Meter;
@@ -163,11 +165,16 @@ async function runCell(ctx: Ctx, model: string, armName: ArmName, task: LadderTa
     const score = scoreTask(task, run, { session1, isWrite });
     lastTools.set(runId, [...(session1?.tools ?? []).map(t => ({ session: 1, name: t.name, args: t.args, result: t.result.slice(0, 40_000) })), ...run.tools.map(t => ({ session: 2, name: t.name, args: t.args, result: t.result.slice(0, 40_000) }))]);
     const gbrain_internal = slot ? ctx.proxy!.take(slot.id) : undefined;
-    const judged = await judgeClaims(ctx, task, run);
+    let judged: { claims: ClaimVerdicts | null; usd: number; error?: string };
+    try { judged = await judgeClaims(ctx, task, run); }
+    catch (e) {
+      if ((e as Error).name === 'BudgetExceededError') throw e;
+      judged = { claims: null, usd: 0, error: (e as Error).message };
+    }
     const total = run.usd + (session1?.usd ?? 0) + (gbrain_internal?.usd ?? 0);
     return {
       key: runId, model, provider: ctx.scripted ? 'scripted' : provider(model), arm: label, task: task.id, family: task.family, variant: task.variant, repeat,
-      score, claims: judged.claims, run: strip(run), ...(session1 ? { session1: strip(session1) } : {}), ...(gbrain_internal ? { gbrain_internal } : {}),
+      score, claims: judged.claims, ...(judged.error ? { judge_error: judged.error } : {}), run: strip(run), ...(session1 ? { session1: strip(session1) } : {}), ...(gbrain_internal ? { gbrain_internal } : {}),
       total_usd: total, judge_usd: judged.usd, wall_ms: Date.now() - started.getTime(), started_at: started.toISOString(),
     } as CellRecord;
   } finally {
@@ -179,9 +186,17 @@ async function runCell(ctx: Ctx, model: string, armName: ArmName, task: LadderTa
   }
 }
 
+/** After the first failure no new item starts, but items already running finish before it is rethrown (so gbrain slots stay up for them). */
 async function pool<T>(items: T[], n: number, fn: (x: T) => Promise<void>) {
   let i = 0;
-  await Promise.all(Array.from({ length: Math.min(n, items.length) }, async () => { while (i < items.length) { const x = items[i++]; await fn(x); } }));
+  let failure = null as { error: unknown } | null;
+  await Promise.all(Array.from({ length: Math.min(n, items.length) }, async () => {
+    while (i < items.length && !failure) {
+      const x = items[i++];
+      try { await fn(x); } catch (error) { failure ??= { error }; }
+    }
+  }));
+  if (failure) throw failure.error;
 }
 
 function flag(argv: string[], name: string): string | undefined {
@@ -275,7 +290,7 @@ export async function main(argv = process.argv.slice(2)) {
       try { rec = await runCell(ctx, c.model, c.arm, c.task, c.repeat); }
       catch (e) {
         log(`cell ${c.model}|${c.arm}|${c.task.id} failed: ${(e as Error).message}`);
-        if (/BudgetExceeded|exceed/i.test((e as Error).message)) throw e;
+        if ((e as Error).name === 'BudgetExceededError' || /BudgetExceeded|exceed/i.test((e as Error).message)) throw e;
         return;
       }
       appendFileSync(resultsPath, JSON.stringify(rec) + '\n');
