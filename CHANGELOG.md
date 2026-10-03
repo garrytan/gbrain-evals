@@ -2,6 +2,45 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.13] - 2026-10-03
+
+### Re-pin to gbrain `109b992` (fix wave 8 and Foundations 1): no accuracy change, one small latency regression, nine new checks
+
+gbrain is pinned at master `109b992` (v0.60.37.0), which contains
+[#5932](https://github.com/garrytan/gbrain/pull/5932) (v0.60.35.0), fix wave 8
+([#5927](https://github.com/garrytan/gbrain/pull/5927), v0.60.36.0) and
+Foundations 1 ([#5962](https://github.com/garrytan/gbrain/pull/5962),
+v0.60.37.0) ([report](docs/benchmarks/2026-10-03-wave8-f1-repin.md),
+preregistrations for the [regression check](docs/benchmarks/2026-10-03-wave8-f1-repin-preregistration.md)
+and the [new checks](docs/benchmarks/2026-10-03-wave8-f1-coverage-preregistration.md)).
+Provider spend: $0.
+
+- **Regression check.** The offline tier ran at `48ed5e8` and `109b992` on
+  paired Ubicloud VMs: 30 of 30 categories reach the same verdicts, with no
+  change in any accuracy, recall or leak count. All 27 ledger repros pass.
+  Cat 34 (run against both checkouts) and N12 at seed 7 are unchanged.
+- **One regression (Cat7-1).** Cat 7's `get_timeline` at 1,000 pages went from
+  a 0.045 ms to a 0.097 ms median, and the preregistered paired repeat
+  confirmed it (0.052 to 0.101 ms). A keyless repro bisects it to Foundations 1
+  and shows that `GBRAIN_PLANNER_AUTO_ANALYZE=0` removes it. The same
+  statistics made `search_keyword` at 10,000 pages 30 times faster (4.00 to
+  0.13 ms).
+- **Link typing (#5882).** On world-v1, person-to-company edges went from 125
+  right and 52 wrong to 128 right and 43 wrong; N9's relational arm returns
+  fewer candidates with unchanged hits on all 870 one-hop runs.
+- **New checks** (`docs/benchmarks/2026-10-03-wave8-f1-repin/checks/`), each
+  keyless through gbrain's CLI or MCP server, with a scripted provider on
+  127.0.0.1 where a model is needed: the unpriced-model flow under a cap
+  (refusal with guidance, default cap runs, `gbrain pricing set`, metered
+  retry, no remote registration); `gbrain import` of a directory the
+  repository ignores; the embed budget stop (exit 11); pending-fact counts;
+  Dream reading conversation pages; repeated searches; empty legacy source
+  grants; creation attribution with `edit_page`. All nine pass at `109b992`;
+  seven fail at `48ed5e8` as expected.
+- **Ledger.** Twelve entries that the range touched get a 2026-10-03 review at
+  `109b992` (statuses unchanged); Cat7-1 is new.
+- **Version.** 0.10.12 is taken by the open PR #58, so this release is 0.10.13.
+
 ## [0.10.11] - 2026-10-03
 
 ### Cat 40 Model Ladder: gbrain lost to grep at release v0.60.27.0; a fix wave puts it ahead on the dev world and level-to-ahead on a held-out world

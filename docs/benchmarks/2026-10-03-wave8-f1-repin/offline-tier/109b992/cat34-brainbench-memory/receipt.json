@@ -1,0 +1,43 @@
+{
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "cat34-brainbench-memory",
+  "gbrain_version": "0.60.37.0",
+  "gbrain_pin": "github:garrytan/gbrain#109b992172e1f49107f9de9841758c1d043a2668",
+  "started_at": "2026-10-03T19:50:37.532Z",
+  "run_status": "skipped",
+  "skip_reason": "no gbrain checkout with BrainBench found. Set GBRAIN_REPO to a checkout carrying src/cli.ts + evals/brainbench/ (requires the Cathedral 2 release, > v0.42.40.0).",
+  "n_total": 0,
+  "n_scored": 0,
+  "completion_rate": 0,
+  "errors": [],
+  "publishable": false,
+  "finished_at": "2026-10-03T19:50:37.533Z",
+  "accounting": {
+    "planned": 0,
+    "attempted": 0,
+    "scored": 0,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "cost": null,
+  "latency_ms": null,
+  "delivered_tokens": null,
+  "execution": {
+    "source_tree": {
+      "sha256": "0fb4812737143f09c978fabb77bfba735c8ee1e9df0402951c8a11b6422f9602",
+      "files": 2665,
+      "git_head": "5e0a5b8253bab3ab5d8ba55bf21659e45929167d",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#109b992172e1f49107f9de9841758c1d043a2668",
+      "declared_sha": "109b992172e1f49107f9de9841758c1d043a2668",
+      "version": "0.60.37.0",
+      "package_sha256": "1a36b32df3da27d26456e6f32a7e73023c240046a84df7dc887945048f7f51b4",
+      "loaded_git_head": null
+    }
+  }
+}
