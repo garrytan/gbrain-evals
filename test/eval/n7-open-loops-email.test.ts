@@ -10,7 +10,7 @@ import { registryEntry } from '../../eval/registry.ts';
 import { assertScorerRejectsFakeSystems } from '../../eval/runner/mutation-kit.ts';
 import { evaluatePromotion } from '../../eval/runner/promotion.ts';
 import {
-  EXCLUDED_CLASSES, ME, N7_DEFAULT_SEED, N7_NOW_ISO, generateN7World, mechanicsOracle, type LedgerMessage, type LedgerThread,
+  EXCLUDED_CLASSES, ME, MY_ADDRESSES, N7_DEFAULT_SEED, N7_NOW_ISO, generateN7World, mechanicsOracle, n7RulesFor, type LedgerMessage, type LedgerThread,
 } from '../../eval/generators/n7-gmail-loops-gen.ts';
 import {
   asksQuestion, combine, n7Verdict, rawGmailThread, redactionLeaks, scoreDetection, scoreStore,
@@ -56,6 +56,27 @@ describe('N7 documented-rule oracle', () => {
     expect(thanks.open).toBeNull();
     expect(thanks.closes).toBe('unanswered_inbound');
     expect(thanks.closure_case).toBe(true);
+  });
+
+  test('ack-is-not-a-reply rules (gbrain 0.60.32.0 and later): my acknowledgement of their question is not an answer', () => {
+    expect(n7RulesFor('0.60.30.0')).toBe('reply-closes');
+    expect(n7RulesFor('0.60.26.0')).toBe('reply-closes');
+    expect(n7RulesFor('0.60.32.0')).toBe('ack-is-not-a-reply');
+    expect(n7RulesFor('0.61.0.0')).toBe('ack-is-not-a-reply');
+    const rules = 'ack-is-not-a-reply' as const;
+    const thanks = mechanicsOracle([m({ age_hours: 60 }), mine({ age_hours: 30, own_text: 'Thanks!', asks: false })], MY_ADDRESSES, rules);
+    expect(thanks.open).toEqual({ loop_type: 'unanswered_inbound', counterparty: 'bob@example.org' });
+    expect(thanks.closure_case).toBe(false);
+    const answered = mechanicsOracle([m({ age_hours: 60 }), mine({ age_hours: 30, own_text: 'Here it is.', asks: false })], MY_ADDRESSES, rules);
+    expect(answered.open).toBeNull();
+    expect(answered.closure_case).toBe(true);
+    const ackOfStatement = mechanicsOracle([m({ age_hours: 60, own_text: 'Here is the deck.', asks: false }), mine({ age_hours: 30, own_text: 'Thanks!', asks: false })], MY_ADDRESSES, rules);
+    expect(ackOfStatement.open).toBeNull();
+    const w = generateN7World({ rules });
+    expect(w.fingerprint).toBe(generateN7World().fingerprint);
+    const acks = w.ledger.threads.filter(t => t.klass === 'ack_thanks');
+    expect(acks.length).toBe(8);
+    for (const t of acks) expect(w.gold.get(t.id)!.open?.loop_type).toBe('unanswered_inbound');
   });
 
   test('outbound needs a question and 72 hours; a calendar notice neither opens nor closes', () => {

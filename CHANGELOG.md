@@ -2,6 +2,58 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.10] - 2026-10-03
+
+### Re-pin to gbrain `48ed5e8` (fix wave 7): eight ledger gaps closed and verified, N2 prompt v4, an N7 oracle amendment
+
+gbrain is pinned at master `48ed5e8` (v0.60.32.0), which contains fix wave 7
+([garrytan/gbrain#5908](https://github.com/garrytan/gbrain/pull/5908)). The
+owning categories were rerun with the October 2 runners, seeds and settings
+([report](docs/benchmarks/2026-10-03-wave7-repin.md),
+[preregistration](docs/benchmarks/2026-10-03-wave7-repin-preregistration.md)).
+Paid spend: $15.68 against a $30 cap, every request reconciled. No new gbrain
+bug was found.
+
+- **N2: judge prompt version 4.** 149 of 150 planted same-time conflicts
+  called contradictions end to end (version 3 at `d44296c`: 132), 50 of 50
+  between undated notes (36). False contradictions: 6 of 51 compatible pairs
+  (3 of 50) and 38 of 1,977 unplanted pairs (26 of 1,968). The compatible-pair
+  decision rule (at most 10%) fails at 11.8%, so the report no longer says the
+  judge separates conflicts from dated changes on this world. A preregistered
+  repeat of version 3 at `d44296c` gave 129 of 150 and 5 of 51 compatible
+  pairs, so the compatible-pair difference is within run-to-run variation.
+  Before the run, the probe budget was raised from $6 to $10 in its own
+  commit; every one of the 2,680 offered pairs was judged.
+- **N7: oracle amendment.** gbrain changed its documented rule so that an
+  acknowledgement-only reply to a question no longer closes a loop (gap
+  N7-2). The frozen oracle encoded the old rule, and the first run failed
+  closure accuracy (34 of 39, threshold 0.95) on exactly those threads. A
+  dated amendment makes the oracle apply the rules documented by the gbrain
+  version under test; no threshold, contract or input changed, the failing
+  receipt is kept, and at `d44296c` the amended oracle reproduces the
+  October 2 receipt byte for byte
+  ([amendment](docs/benchmarks/2026-10-03-n7-oracle-amendment.md)). N7 then
+  passes every rule: 53 of 53 planted loops, 34 of 34 closures.
+- **Gaps closed by gbrain and verified here:** N7-2, N7-5 (`as_of` pins the
+  ranking), N7-6 (loop age from the request), N7-7 (`?` inside a link), N9-5
+  (unresolved one-hop seeds 45 to 6 of 435 runs), N12-6 (`Participants:`
+  attendees 5 of 5, was 0), N13-8 (member calls; resolved edges 76 to 72 of
+  91 with all 42 same-file calls kept) and A4-2 (unanswerable questions graded
+  `weak` 120 of 120, was `moderate`; 80 of 120 answerable also grade `weak`).
+- **Ledger.** A 2026-10-03 review on every entry; earlier reviews kept in a
+  new `review_history` field. All 20 bugs re-verified. Wave 7's by-design
+  dispositions (A4-1, N2-5, N5-4, N5-5, N5-6, N12-4, N12-5, N13-4) cite
+  gbrain's documented reasons. New entries N7-8 (the frozen oracle) and N12-9
+  (speakers-only attendance, split from N12-6). 27 repros pass, three of them
+  new keyless checks.
+- **A4-3 fixed:** the budget ledger prices TypeSafe requests at gbrain's own
+  rate and refuses an unpriced Jev model. A4 still has no S4-on arm.
+- **No gate flipped.** No threshold moved; N7, N12, A4, N2 and the N1 and N5
+  CI slices gate and pass.
+- `@ai-sdk/anthropic` moves to 3.0.127 in the lockfile with gbrain's new
+  floor, and `cat36-production.ts` casts the older `gbrain-cues` operations
+  through `unknown` (gbrain 0.60.31.0 made `outputRedaction` required).
+
 ## [0.10.9] - 2026-10-02
 
 ### CI slices for N1 and N5, faster N9, a matched concept cell, fresh Cat 14 and Cat 19 to 21 receipts, wider N6, live negative controls

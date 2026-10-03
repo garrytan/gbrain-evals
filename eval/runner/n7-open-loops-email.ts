@@ -57,7 +57,7 @@ import { paidRequested, requirePaidArm } from './paid-arm.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, receiptPath, sourceTreeIdentity, writeReceipt, type Receipt } from './receipt.ts';
 import {
-  CONTESTED_CLASSES, EXCLUDED_CLASSES, MY_ADDRESSES, N7_DEFAULT_SEED, N7_GENERATOR_VERSION, N7_NOW_ISO, generateN7World, mechanicsOracle,
+  CONTESTED_CLASSES, EXCLUDED_CLASSES, MY_ADDRESSES, N7_DEFAULT_SEED, N7_GENERATOR_VERSION, N7_NOW_ISO, generateN7World, mechanicsOracle, n7RulesFor,
   type LedgerMessage, type LedgerThread, type LoopType, type MechanicsGold, type StoreScenario, type ThreadClass,
 } from '../generators/n7-gmail-loops-gen.ts';
 
@@ -578,7 +578,8 @@ function semanticReport(rows: readonly ScoredThread[], world: ReturnType<typeof 
 
 async function runN7Hermetic(opts: { gut: GbrainUnderTest; seed?: number; log?: (s: string) => void }): Promise<N7RunResult> {
   const log = opts.log ?? (() => {});
-  const world = generateN7World({ seed: opts.seed ?? N7_DEFAULT_SEED });
+  const rules = n7RulesFor(opts.gut.version);
+  const world = generateN7World({ seed: opts.seed ?? N7_DEFAULT_SEED, rules });
   const nowMs = Date.parse(N7_NOW_ISO);
   const amara = amaraThreads();
   const planned = world.ledger.threads.length + world.ledger.scenarios.reduce((n, s) => n + s.steps.filter(st => st.kind !== 'mute').length, 0) + amara.threads.length + 1;
@@ -637,7 +638,7 @@ async function runN7Hermetic(opts: { gut: GbrainUnderTest; seed?: number; log?: 
     const dis: Array<{ thread: string; gold: unknown; detected: unknown }> = [];
     let gOpen = 0; let det = 0; let agree = 0;
     for (const t of amara.threads) {
-      const g = mechanicsOracle(t.messages);
+      const g = mechanicsOracle(t.messages, MY_ADDRESSES, rules);
       try {
         const a = toAnswer(sut.detect(await sut.parse(rawGmailThread(t, amaraNow.getTime())), amaraNow));
         if (g.open) gOpen++;
@@ -934,6 +935,7 @@ async function main(): Promise<void> {
       caller: 'GmailClient.getThread with a stub fetch; detectThreadLoop and applyThreadLoopVerdict with the pinned now; operations with OperationContext { remote: false } (and remote: true for the redaction check), sourceId n7-google',
       entry_points: ENTRY_POINTS,
       oracle: 'independent implementation of docs/guides/open-loops.md over ledger facts (eval/generators/n7-gmail-loops-gen.ts mechanicsOracle); "unanswered for 24 hours" counts from the first unanswered message in the trailing run',
+      oracle_rules: n7RulesFor(gut.version),
       amara_now: amaraThreads().now,
       gbrain_overlay: overlaySummary(gut),
       targets: 'preregistered in eval/registry.ts (open-loops-email): five safety contracts at 0; planted-loop recall >= 0.8, closure accuracy >= 0.95, counterparty accuracy >= 0.95',

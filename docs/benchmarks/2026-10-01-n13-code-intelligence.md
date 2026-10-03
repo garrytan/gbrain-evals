@@ -1,5 +1,7 @@
 # Code intelligence readiness scout: six code_* ops on one pinned TypeScript repository (2026-10-01)
 
+**Update, 2026-10-03.** gbrain fix wave 7 (`48ed5e8`) closed gap N13-8: member calls through an untyped receiver no longer resolve to a same-file function. Resolved caller edges went from 76 to 72 of 91, and all 42 compiler-checked same-file calls stay resolved. See the [October 3 rerun](2026-10-03-wave7-repin.md).
+
 **Update, 2026-10-02.** gbrain fix wave 5 fixed N13-1 (`02b0d0f4`), N13-2 and N13-3 (`bf087a04`). At gbrain `d44296c`, `code_def` is right for 49 of 50 top-level functions (was 40), and `resolved` is true on 76 of 91 caller edges (was 0 of 81). The documented limits below still hold. See the [October 2 rerun](2026-10-02-wave-repin.md).
 
 ## The finding

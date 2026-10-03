@@ -41,6 +41,30 @@ export const ME_ALIAS = 'me.alt@example.com';
 export const MY_ADDRESSES = [ME, ME_ALIAS] as const;
 export const INBOUND_GRACE_H = 24;
 export const OUTBOUND_GRACE_H = 72;
+/** The acknowledgement-only replies the generator writes (ack_thanks threads and the ack_close scenario). */
+export const ACK_ONLY_REPLIES: readonly string[] = ['Thanks!', 'Thanks, got it.', 'Noted, thank you.'];
+
+/**
+ * Which documented open-loop rules the oracle applies (amendment of 2026-10-03,
+ * docs/benchmarks/2026-10-03-n7-oracle-amendment.md):
+ *   reply-closes        docs/guides/open-loops.md at 3a284ae and d44296c: any
+ *                       reply of mine flips the turn, "Thanks!" included.
+ *   ack-is-not-a-reply  the same guide at 48ed5e8 (v0.60.32.0): my
+ *                       acknowledgement-only reply to their question is not an
+ *                       answer; the loop stays open and its clock keeps running.
+ */
+export type N7Rules = 'reply-closes' | 'ack-is-not-a-reply';
+export const N7_ACK_RULE_SINCE = '0.60.32.0';
+
+/** The rules documented by the gbrain version under test. */
+export function n7RulesFor(version: string): N7Rules {
+  const parse = (v: string) => v.split('.').map(n => Number.parseInt(n, 10) || 0);
+  const a = parse(version); const b = parse(N7_ACK_RULE_SINCE);
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    if ((a[i] ?? 0) !== (b[i] ?? 0)) return (a[i] ?? 0) > (b[i] ?? 0) ? 'ack-is-not-a-reply' : 'reply-closes';
+  }
+  return 'ack-is-not-a-reply';
+}
 
 export type MessageKind = 'human' | 'noise' | 'calendar' | 'list';
 
@@ -267,7 +291,7 @@ function buildThread(b: Builder, klass: ThreadClass): LedgerThread {
       const a = r.int(40, 200);
       return T([
         b.msg({ from: them, to: ['me'], subject, age: a, own: ask, asks: true }),
-        b.msg({ from: 'me', to: [them], subject, age: r.int(25, a - 5), own: r.pick(['Thanks!', 'Thanks, got it.', 'Noted, thank you.']), quoted: quoteOf(them.name, ask), asks: false }),
+        b.msg({ from: 'me', to: [them], subject, age: r.int(25, a - 5), own: r.pick(ACK_ONLY_REPLIES), quoted: quoteOf(them.name, ask), asks: false }),
       ], waiting(true));
     }
     case 'outbound_answered_fresh': {
@@ -357,9 +381,16 @@ function buildThread(b: Builder, klass: ThreadClass): LedgerThread {
 }
 
 /** Independent implementation of the documented open-loop rules over ledger facts. */
-export function mechanicsOracle(messages: readonly LedgerMessage[], myAddresses: readonly string[] = MY_ADDRESSES): MechanicsGold {
+export function mechanicsOracle(messages: readonly LedgerMessage[], myAddresses: readonly string[] = MY_ADDRESSES, rules: N7Rules = 'reply-closes'): MechanicsGold {
   const mine = new Set(myAddresses);
-  const substantive = messages.filter(m => m.kind === 'human' || m.kind === 'list');
+  let theirQuestionPending = false;
+  const substantive = messages.filter(m => m.kind === 'human' || m.kind === 'list').filter(m => {
+    if (rules === 'reply-closes') return true;
+    if (!m.sent_by_me) { theirQuestionPending = m.asks; return true; }
+    if (theirQuestionPending && ACK_ONLY_REPLIES.includes(m.own_text.trim())) return false;
+    theirQuestionPending = false;
+    return true;
+  });
   if (!substantive.length) return { open: null, closes: null, closure_case: false };
   const stateOf = (ms: readonly LedgerMessage[]): MechanicsGold['open'] => {
     const last = ms[ms.length - 1];
@@ -469,7 +500,7 @@ export function ledgerFingerprint(ledger: N7Ledger): string {
   return createHash('sha256').update(canonical(ledger)).digest('hex');
 }
 
-export function generateN7World(opts: { seed?: number } = {}): GeneratedN7 {
+export function generateN7World(opts: { seed?: number; rules?: N7Rules } = {}): GeneratedN7 {
   const seed = opts.seed ?? N7_DEFAULT_SEED;
   const b = new Builder(seed);
   const threads: LedgerThread[] = [];
@@ -478,7 +509,7 @@ export function generateN7World(opts: { seed?: number } = {}): GeneratedN7 {
   }
   const scenarios = buildScenarios(b);
   const ledger: N7Ledger = { generator_version: N7_GENERATOR_VERSION, seed, now: N7_NOW_ISO, my_addresses: [...MY_ADDRESSES], threads, scenarios };
-  const gold = new Map<string, MechanicsGold>(threads.map(t => [t.id, mechanicsOracle(t.messages)]));
+  const gold = new Map<string, MechanicsGold>(threads.map(t => [t.id, mechanicsOracle(t.messages, MY_ADDRESSES, opts.rules ?? 'reply-closes')]));
   return { ledger, fingerprint: ledgerFingerprint(ledger), gold };
 }
 

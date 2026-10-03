@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "description": "Map from published claims to their saved evidence. The manifest test checks artifact paths, SHA-256 hashes, and declared JSON-pointer values. It does not parse report prose or independently validate every scorer. Separate golden tests and recount scripts are named where available. Entries marked disclosed-gap identify missing evidence; a fresh run cannot restore a missing historical receipt.",
-  "updated": "2026-10-02",
+  "updated": "2026-10-03",
   "entries": [
     {
       "claim_id": "lifecycle-2026-09-29-primary",
@@ -3934,6 +3934,175 @@
         "/budget_usd": 60
       },
       "note": "Budget-ledger close output for the decision run."
+    },
+    {
+      "claim_id": "wave7-n2-paid",
+      "readme_anchor": "docs/benchmarks/2026-10-03-wave7-repin.md: N2 paid rows: prompt v4",
+      "artifact_path": "docs/benchmarks/2026-10-03-wave7-repin/n2/receipt-paid-48ed5e8.json",
+      "artifact_sha256": "9e3a2cf02bd0c096d9e459c32352df8a42013463db783cce6d66a5c5c6625800",
+      "status": "covered",
+      "expected": {
+        "/execution/product/loaded_git_head": "48ed5e8233f617479df989998560840747af0425",
+        "/data/paid/classification/e2e_conflict_recall/hits": 149,
+        "/data/paid/classification/false_contradiction_compatible/hits": 6,
+        "/data/paid/classification/false_contradiction_compatible/n": 51,
+        "/data/paid/classification/false_contradiction_unplanted_pairs/hits": 38,
+        "/data/paid/classification/false_contradiction_unplanted_pairs/n": 1977,
+        "/data/paid/classification/decision/separates": false,
+        "/data/paid/candidate_parity/paid_offered": 2680
+      },
+      "note": "n2-contradiction-surfacing.ts --paid at gbrain 48ed5e8 (judge prompt v4, probe budget $10)."
+    },
+    {
+      "claim_id": "wave7-n2-hermetic",
+      "readme_anchor": "docs/benchmarks/2026-10-03-wave7-repin.md: N2 rows: candidate recall and remote find_contradictions",
+      "artifact_path": "docs/benchmarks/2026-10-03-wave7-repin/n2/receipt-hermetic-48ed5e8.json",
+      "artifact_sha256": "29eeb0edadc7b3e0306f98223a867c4bd55e2b47d9cdd288772e0ae3e2834b3d",
+      "status": "covered",
+      "expected": {
+        "/verdict": "pass",
+        "/execution/product/loaded_git_head": "48ed5e8233f617479df989998560840747af0425"
+      },
+      "note": "n2-contradiction-surfacing.ts hermetic arm at gbrain 48ed5e8."
+    },
+    {
+      "claim_id": "wave7-n7",
+      "readme_anchor": "docs/benchmarks/2026-10-03-wave7-repin.md: N7 rows: gating floors and acknowledgement closes",
+      "artifact_path": "docs/benchmarks/2026-10-03-wave7-repin/n7/receipt-pin-48ed5e8.json",
+      "artifact_sha256": "eed4fb8369a7987248e4c5835b12aa890eca6e67bbd5ab26205e5bcc475cea07",
+      "status": "covered",
+      "expected": {
+        "/verdict": "pass",
+        "/execution/product/loaded_git_head": "48ed5e8233f617479df989998560840747af0425",
+        "/resolved_config/oracle_rules": "ack-is-not-a-reply",
+        "/data/quality/closure_accuracy": 1,
+        "/data/exploratory/acknowledgement_closes/closed": 0,
+        "/data/exploratory/url_question_mark_opens/opened": 0
+      },
+      "note": "n7-open-loops-email.ts at gbrain 48ed5e8 with the amended oracle."
+    },
+    {
+      "claim_id": "wave7-n7-frozen",
+      "readme_anchor": "docs/benchmarks/2026-10-03-wave7-repin.md: The N7 amendment: frozen-oracle closure accuracy",
+      "artifact_path": "docs/benchmarks/2026-10-03-wave7-repin/n7/receipt-frozen-oracle-48ed5e8.json",
+      "artifact_sha256": "4bb5e1077422aeca50f4568a4c2234a588e3cc1ecbd8ef4329e08425eaff072a",
+      "status": "covered",
+      "expected": {
+        "/verdict": "fail",
+        "/execution/product/loaded_git_head": "48ed5e8233f617479df989998560840747af0425",
+        "/data/quality/closure_accuracy": 0.8717948717948718,
+        "/data/detection/closure_cases": 31,
+        "/data/detection/closure_correct": 26
+      },
+      "note": "The first N7 run at 48ed5e8, under the oracle frozen on 2026-10-01; kept as evidence for the amendment."
+    },
+    {
+      "claim_id": "wave7-n9",
+      "readme_anchor": "docs/benchmarks/2026-10-03-wave7-repin.md: N9 rows: one-hop seeds and firing",
+      "artifact_path": "docs/benchmarks/2026-10-03-wave7-repin/n9/n9-hermetic-48ed5e8.receipt.json",
+      "artifact_sha256": "c289c1c71527e59b434e7a3e8698290f3b62bd4d881847bc60dd5ec3c50deb66",
+      "status": "covered",
+      "expected": {
+        "/execution/product/loaded_git_head": "48ed5e8233f617479df989998560840747af0425",
+        "/data/one_hop/funnel/one-hop-template/seed_resolved": 429,
+        "/data/one_hop/funnel/one-hop-template/fired": 213
+      },
+      "note": "n9-multi-hop-paraphrase.ts hermetic arm at gbrain 48ed5e8."
+    },
+    {
+      "claim_id": "wave7-n12",
+      "readme_anchor": "docs/benchmarks/2026-10-03-wave7-repin.md: N12 rows: Participants attendance",
+      "artifact_path": "docs/benchmarks/2026-10-03-wave7-repin/n12/receipt-pin-48ed5e8.json",
+      "artifact_sha256": "a67dd179a3853735969f098ae00a95bef5c6d810d6dc55a197456ed5a4e49be0",
+      "status": "covered",
+      "expected": {
+        "/verdict": "pass",
+        "/execution/product/loaded_git_head": "48ed5e8233f617479df989998560840747af0425",
+        "/data/attendance/by_form/participants-line/tp": 5,
+        "/data/attendance/by_form/speakers-only/tp": 0,
+        "/data/attendance/false_attended": 0
+      },
+      "note": "n12-format-fidelity.ts at gbrain 48ed5e8, seed 12."
+    },
+    {
+      "claim_id": "wave7-n13",
+      "readme_anchor": "docs/benchmarks/2026-10-03-wave7-repin.md: N13 rows: resolved caller edges",
+      "artifact_path": "docs/benchmarks/2026-10-03-wave7-repin/n13/receipt-pin-48ed5e8.json",
+      "artifact_sha256": "bead84e31d18a55e79d5dcde1d50c8760aa330155bdd890b343fb5711cbf752e",
+      "status": "covered",
+      "expected": {
+        "/execution/product/loaded_git_head": "48ed5e8233f617479df989998560840747af0425",
+        "/data/callers_check/gbrain_edges": 91,
+        "/data/callers_check/gbrain_edges_resolved_flag_true": 72,
+        "/data/callers_check/same_file/resolved_in_metadata": 42
+      },
+      "note": "n13-code-intelligence.ts at gbrain 48ed5e8."
+    },
+    {
+      "claim_id": "wave7-a4-hermetic",
+      "readme_anchor": "docs/benchmarks/2026-10-03-wave7-repin.md: A4 rows: CRAG grade by class",
+      "artifact_path": "docs/benchmarks/2026-10-03-wave7-repin/a4/receipt-hermetic-48ed5e8.json",
+      "artifact_sha256": "efe3bfd5cde9f90bef18073f6a789771cb7eaa26330e9c39afc8d71ffcc657d0",
+      "status": "covered",
+      "expected": {
+        "/verdict": "pass",
+        "/execution/product/loaded_git_head": "48ed5e8233f617479df989998560840747af0425"
+      },
+      "note": "a4-abstention.ts hermetic arm at gbrain 48ed5e8."
+    },
+    {
+      "claim_id": "wave7-a4-paid",
+      "readme_anchor": "docs/benchmarks/2026-10-03-wave7-repin.md: A4 paid rows: reader and CRAG-gated reader",
+      "artifact_path": "docs/benchmarks/2026-10-03-wave7-repin/a4/receipt-paid-48ed5e8.json",
+      "artifact_sha256": "1450bf4307a73d64b74e1f5982726f5cbccb75c92e6d17bd758774f6be745fc1",
+      "status": "covered",
+      "expected": {
+        "/execution/product/loaded_git_head": "48ed5e8233f617479df989998560840747af0425",
+        "/data/paid/crag_gated/moderate_or_strong/utility_l1": 40,
+        "/data/paid/retrieved/utility_l1": 120
+      },
+      "note": "a4-abstention.ts --paid at gbrain 48ed5e8."
+    },
+    {
+      "claim_id": "wave7-a4-paid-before",
+      "readme_anchor": "docs/benchmarks/2026-10-03-wave7-repin.md: A4 paid rows: the d44296c baseline",
+      "artifact_path": "docs/benchmarks/2026-10-03-wave7-repin/a4/receipt-paid-d44296c.json",
+      "artifact_sha256": "fb0b81675d3bd25dd2b963aa566efd5b39df38a2616eedb1f6b3225c96dd313a",
+      "status": "covered",
+      "expected": {
+        "/execution/product/loaded_git_head": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "/data/paid/crag_gated/moderate_or_strong/utility_l1": 120,
+        "/data/paid/retrieved/utility_l1": 120
+      },
+      "note": "a4-abstention.ts --paid at gbrain d44296c, run for this report."
+    },
+    {
+      "claim_id": "wave7-n2-repeat",
+      "readme_anchor": "docs/benchmarks/2026-10-03-wave7-repin.md: N2 run-to-run variation: prompt v3 repeat control",
+      "artifact_path": "docs/benchmarks/2026-10-03-wave7-repin/n2/receipt-paid-v3-repeat-d44296c.json",
+      "artifact_sha256": "1ef0e650daf35d308df11262efa71766aab05f77615773c37dccb7febca20138",
+      "status": "covered",
+      "expected": {
+        "/execution/product/loaded_git_head": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "/data/paid/classification/e2e_conflict_recall/hits": 129,
+        "/data/paid/classification/false_contradiction_compatible/hits": 5,
+        "/data/paid/classification/false_contradiction_compatible/n": 51,
+        "/data/paid/classification/decision/separates": true
+      },
+      "note": "Preregistered repeat control: judge prompt v3 at gbrain d44296c with the $10 probe budget."
+    },
+    {
+      "claim_id": "wave7-ledger",
+      "readme_anchor": "docs/benchmarks/2026-10-03-wave7-repin.md: Reproduce and inspect",
+      "artifact_path": "docs/benchmarks/2026-10-03-wave7-repin/ledger-summary.json",
+      "artifact_sha256": "90de34a1f5f4dfb2f77e19da5985fb3529da62382e48a4b60c3379e8b3904d0a",
+      "status": "covered",
+      "expected": {
+        "/requests": 8722,
+        "/run/budget_usd": 30,
+        "/total_usd": 15.68434
+      },
+      "note": "Budget-ledger summary for every paid request of the wave 7 re-pin."
     }
   ]
 }
