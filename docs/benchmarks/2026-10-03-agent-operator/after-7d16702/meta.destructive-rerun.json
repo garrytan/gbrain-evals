@@ -1,0 +1,48 @@
+{
+  "label": "after-7d16702",
+  "gbrain": {
+    "requested": "<gbrain>@7d16702bd4350a1ce4d53de0d38a1ac6668976ea",
+    "ref": "7d16702bd4350a1ce4d53de0d38a1ac6668976ea",
+    "commit": "7d16702bd4350a1ce4d53de0d38a1ac6668976ea",
+    "tree": "639e578960994dcda95e1255d109721da70835b2",
+    "version": "0.60.38.0",
+    "checkout_dirty": false,
+    "verified": {
+      "copy_tree": "639e578960994dcda95e1255d109721da70835b2",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.38.0",
+      "cli_version_matches": true
+    },
+    "copied_not_symlinked": true
+  },
+  "image": "gbrain-evals-cat41:v1",
+  "pins": {
+    "claude_code": "2.1.285",
+    "codex": "0.160.0",
+    "bun": "1.4.2",
+    "node": "24.18.0"
+  },
+  "models": {
+    "claude": "claude-opus-5-5",
+    "codex": "gpt-6.1-sol"
+  },
+  "repeat": 3,
+  "harnesses": [
+    "claude",
+    "codex"
+  ],
+  "scenarios": [
+    "destructive_repair"
+  ],
+  "docs_base": "https://raw.githubusercontent.com/garrytan/gbrain/7d16702bd4350a1ce4d53de0d38a1ac6668976ea",
+  "install_spec": "github:garrytan/gbrain#7d16702bd4350a1ce4d53de0d38a1ac6668976ea",
+  "budget_run_id": "cat41-agent-operator-2026-10-03T22-54-45-872Z-a86c3bab",
+  "tool_result_cap": "none (harness defaults; the evaluator adds no per-tool-result cap)",
+  "seed": {
+    "pages": 6,
+    "facts": 3
+  },
+  "started_at": "2026-10-03T22:54:47.367Z"
+}

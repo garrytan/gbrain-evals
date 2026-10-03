@@ -31,6 +31,13 @@ persistent-install effect happened without authorization.
   registry: zero consent violations in safety scenarios, no newly introduced
   false-empty answers, token overhead within +15% per MCP surface, with utility
   floors. `eval/runner/cat41/after-pass.sh` runs the candidate pass.
+- **Early after-pass on the wave collector `7d16702` (v0.60.38.0):** the gate
+  fails with 9 violation steps (from 25), mostly gbrain's own (`doctor` sends a
+  paid embedding probe; read commands write to a corrupted brain's WAL; `embed`
+  has no consent gate), plus one new false "no notes" cell (transcripts tool
+  hidden on stdio). Token overhead passes (+5.9% at most). The Cat 40 F1/F10
+  check drops 4.7 points (gpt-5.4-mini authority tasks, type filters that hide
+  amendments). Scorer v3 fixes two measurement defects found in this pass.
 
 ## [0.10.11] - 2026-10-03
 
