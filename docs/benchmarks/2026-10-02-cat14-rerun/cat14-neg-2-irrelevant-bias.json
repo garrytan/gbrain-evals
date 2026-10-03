@@ -1,0 +1,80 @@
+{
+  "probe_id": "cat14-neg-2-irrelevant-bias",
+  "category": "calibration-bias-irrelevant",
+  "question": "How should we evaluate this AI infrastructure pitch from a technical perspective?",
+  "baseline_answer": "## Answer\n\nThe brain does not contain any takes or pages specifically addressing how to evaluate AI infrastructure pitches from a technical perspective. The only retrieved content relates to resolved takes about **geographic bias** in startup evaluation — specifically, past incorrect predictions that companies based in LA [cat14/cat14-neg-2-irrelevant-bias/take-1] and Chicago [cat14/cat14-neg-2-irrelevant-bias/take-2] would fail to scale due to their location.\n\nThese resolved takes suggest that geography-based skepticism has historically been an **unreliable signal** in this brain's evaluation history (both outcomes marked as incorrect), but they do not speak to technical evaluation frameworks for AI infrastructure specifically.",
+  "calibrated_answer": "## Answer\n\nThe brain does not contain any data about the specific AI infrastructure pitch in question — no technical claims, architecture details, team assessments, or market context have been recorded that are relevant to this evaluation.\n\n## Calibration\n\nBefore any technical evaluation is formed, the active **over-confident-geography** bias tag is worth noting. Garry's 2024 track record shows 0/2 on geography-based investment judgments: a conviction-0.8 claim that an LA company wouldn't scale (incorrect) [cat14/cat14-neg-2-irrelevant-bias/take-1], and a conviction-0.75 claim that a Chicago founder was \"wrong-coast\" (incorrect) [cat14/cat14-neg-2-irrelevant-bias/take-2].\n\n- **Prior (default reasoning):** Geography or location of the AI infrastructure company may surface as a signal in the evaluation.\n- **Counter-prior (hedged-domain self):** Given the 0/2 track record, any geography-based discount or premium applied to this pitch should be treated with explicit skepticism and separated from the technical assessment itself.\n\nThe technical evaluation should be grounded in the pitch's actual technical merits, not location heuristics.",
+  "prompts_identical": false,
+  "calibration_block_present": true,
+  "think_warnings": {
+    "baseline": [],
+    "calibrated": []
+  },
+  "win_eligible": false,
+  "judge_orders": 2,
+  "scores": [
+    {
+      "axis": "mentions_relevant_bias_tag",
+      "expected": false,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Answer A acknowledges the geography bias but frames it as irrelevant to the question (\"do not speak to technical evaluation frameworks\"), which is a force-fit that weakens rather than strengthens the response. Answer B correctly identifies geography as a relevant bias pattern in the context of evaluating a pitch (since location could naturally surface during evaluation), then explicitly presents both the gut prior (geography may be a signal) and the counter-prior (0/2 track record warrants skepticism). Answer B uses conversational language (\"Garry's 2024 track record\") and avoids clinical jargon, while Answer A uses clinical framing (\"retrieved content,\" \"resolved takes\"). Answer B's substantive recommendation—to ground evaluation in technical merits and separate location heuristics—is actionable and directly responsive to the user's question. || Both answers correctly identify that the brain lacks specific technical guidance on AI infrastructure evaluation and both reference the relevant over-confident-geography bias pattern. Answer A goes further by explicitly naming the user's gut prior (geography may surface as a signal) and then presenting a concrete counter-prior grounded in the 0/2 track record, advising skepticism toward geography-based discounts. Answer B identifies the bias pattern and notes it was unreliable, but stops short of framing this as a counter-prior or actionable hedge. Answer A's structure—prior + counter-prior + actionable guidance—is more useful for decision-making, while Answer B is more of a diagnostic observation. Both maintain conversational tone and avoid clinical jargon."
+    },
+    {
+      "axis": "presents_counter_prior",
+      "expected": false,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Answer A acknowledges the geography bias but frames it as irrelevant to the question (\"do not speak to technical evaluation frameworks\"), which is a force-fit that weakens rather than strengthens the response. Answer B correctly identifies geography as a relevant bias pattern in the context of evaluating a pitch (since location could naturally surface during evaluation), then explicitly presents both the gut prior (geography may be a signal) and the counter-prior (0/2 track record warrants skepticism). Answer B uses conversational language (\"Garry's 2024 track record\") and avoids clinical jargon, while Answer A uses clinical framing (\"retrieved content,\" \"resolved takes\"). Answer B's substantive recommendation—to ground evaluation in technical merits and separate location heuristics—is actionable and directly responsive to the user's question. || Both answers correctly identify that the brain lacks specific technical guidance on AI infrastructure evaluation and both reference the relevant over-confident-geography bias pattern. Answer A goes further by explicitly naming the user's gut prior (geography may surface as a signal) and then presenting a concrete counter-prior grounded in the 0/2 track record, advising skepticism toward geography-based discounts. Answer B identifies the bias pattern and notes it was unreliable, but stops short of framing this as a counter-prior or actionable hedge. Answer A's structure—prior + counter-prior + actionable guidance—is more useful for decision-making, while Answer B is more of a diagnostic observation. Both maintain conversational tone and avoid clinical jargon."
+    },
+    {
+      "axis": "changes_recommendation_meaningfully",
+      "expected": false,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Answer A acknowledges the geography bias but frames it as irrelevant to the question (\"do not speak to technical evaluation frameworks\"), which is a force-fit that weakens rather than strengthens the response. Answer B correctly identifies geography as a relevant bias pattern in the context of evaluating a pitch (since location could naturally surface during evaluation), then explicitly presents both the gut prior (geography may be a signal) and the counter-prior (0/2 track record warrants skepticism). Answer B uses conversational language (\"Garry's 2024 track record\") and avoids clinical jargon, while Answer A uses clinical framing (\"retrieved content,\" \"resolved takes\"). Answer B's substantive recommendation—to ground evaluation in technical merits and separate location heuristics—is actionable and directly responsive to the user's question. || Both answers correctly identify that the brain lacks specific technical guidance on AI infrastructure evaluation and both reference the relevant over-confident-geography bias pattern. Answer A goes further by explicitly naming the user's gut prior (geography may surface as a signal) and then presenting a concrete counter-prior grounded in the 0/2 track record, advising skepticism toward geography-based discounts. Answer B identifies the bias pattern and notes it was unreliable, but stops short of framing this as a counter-prior or actionable hedge. Answer A's structure—prior + counter-prior + actionable guidance—is more useful for decision-making, while Answer B is more of a diagnostic observation. Both maintain conversational tone and avoid clinical jargon."
+    },
+    {
+      "axis": "voice_conversational",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Answer A acknowledges the geography bias but frames it as irrelevant to the question (\"do not speak to technical evaluation frameworks\"), which is a force-fit that weakens rather than strengthens the response. Answer B correctly identifies geography as a relevant bias pattern in the context of evaluating a pitch (since location could naturally surface during evaluation), then explicitly presents both the gut prior (geography may be a signal) and the counter-prior (0/2 track record warrants skepticism). Answer B uses conversational language (\"Garry's 2024 track record\") and avoids clinical jargon, while Answer A uses clinical framing (\"retrieved content,\" \"resolved takes\"). Answer B's substantive recommendation—to ground evaluation in technical merits and separate location heuristics—is actionable and directly responsive to the user's question. || Both answers correctly identify that the brain lacks specific technical guidance on AI infrastructure evaluation and both reference the relevant over-confident-geography bias pattern. Answer A goes further by explicitly naming the user's gut prior (geography may surface as a signal) and then presenting a concrete counter-prior grounded in the 0/2 track record, advising skepticism toward geography-based discounts. Answer B identifies the bias pattern and notes it was unreliable, but stops short of framing this as a counter-prior or actionable hedge. Answer A's structure—prior + counter-prior + actionable guidance—is more useful for decision-making, while Answer B is more of a diagnostic observation. Both maintain conversational tone and avoid clinical jargon."
+    },
+    {
+      "axis": "doesnt_force_fit_irrelevant_bias",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Answer A acknowledges the geography bias but frames it as irrelevant to the question (\"do not speak to technical evaluation frameworks\"), which is a force-fit that weakens rather than strengthens the response. Answer B correctly identifies geography as a relevant bias pattern in the context of evaluating a pitch (since location could naturally surface during evaluation), then explicitly presents both the gut prior (geography may be a signal) and the counter-prior (0/2 track record warrants skepticism). Answer B uses conversational language (\"Garry's 2024 track record\") and avoids clinical jargon, while Answer A uses clinical framing (\"retrieved content,\" \"resolved takes\"). Answer B's substantive recommendation—to ground evaluation in technical merits and separate location heuristics—is actionable and directly responsive to the user's question. || Both answers correctly identify that the brain lacks specific technical guidance on AI infrastructure evaluation and both reference the relevant over-confident-geography bias pattern. Answer A goes further by explicitly naming the user's gut prior (geography may surface as a signal) and then presenting a concrete counter-prior grounded in the 0/2 track record, advising skepticism toward geography-based discounts. Answer B identifies the bias pattern and notes it was unreliable, but stops short of framing this as a counter-prior or actionable hedge. Answer A's structure—prior + counter-prior + actionable guidance—is more useful for decision-making, while Answer B is more of a diagnostic observation. Both maintain conversational tone and avoid clinical jargon."
+    }
+  ],
+  "win_score": 1,
+  "win_overall": "calibrated",
+  "per_axis_pass_rate": 0.4,
+  "failure_modes": [
+    "mentions_relevant_bias_tag",
+    "presents_counter_prior",
+    "changes_recommendation_meaningfully"
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "probe_id": "cat14-pos-4-hiring",
+  "category": "calibration-pattern-confidence-boost",
+  "question": "Should I hire a COO who was great at a slower-paced company?",
+  "baseline_answer": "## Answer\n\nGarry's brain contains two resolved hiring takes that are directly relevant:\n\n1. A \"polished operator\" was judged **wrong-stage for an early team** — and that call turned out to be correct (conviction weight 0.7, recorded 2024-04-12). [cat14/cat14-pos-4-hiring/take-1]\n\n2. An executive **couldn't adapt to startup velocity** — and that assessment also proved correct (conviction weight 0.75, recorded 2024-08-20). [cat14/cat14-pos-4-hiring/take-2]\n\nBoth resolved cases point in the same direction: operators who excelled in slower-paced environments have historically struggled to adapt when brought into a faster-moving context. The pattern is consistent across both data points, with moderate-to-solid conviction weights (0.7–0.75).\n\nNo contradicting takes exist in the brain on this question.",
+  "calibrated_answer": "## Answer\n\nThe brain contains two resolved hiring takes directly relevant to this question:\n\n1. A \"polished operator\" was judged wrong-stage for an early team — outcome: **correct** (conviction 0.7, recorded 2024-04-12) [cat14/cat14-pos-4-hiring/take-1]\n2. An executive \"couldn't adapt to startup velocity\" — outcome: **correct** (conviction 0.75, recorded 2024-08-20) [cat14/cat14-pos-4-hiring/take-2]\n\nBoth resolved takes point in the same direction: executives shaped by slower-paced environments have historically struggled to adapt to startup velocity in garry's experience.\n\n## Calibration\n\n**Prior (default reasoning):** A COO with a strong track record at a slower company brings operational rigor, process discipline, and polish — qualities that could be valuable as a company scales.\n\n**Counter-prior (hedged-domain self):** The `well-calibrated-stage-fit` tag is active here. Garry's stage-fit reads on executive hires have been sharp — both 2024 wrong-stage calls resolved correctly within 6 months [cat14/cat14-pos-4-hiring/take-1] [cat14/cat14-pos-4-hiring/take-2]. This is a domain where the historical signal is strong enough to weight the counter-prior heavily. The question of whether this specific COO candidate can adapt to startup velocity is the crux — the brain's pattern suggests that \"great at a slower-paced company\" is a meaningful red flag for stage-fit, not just a neutral data point.",
+  "prompts_identical": false,
+  "calibration_block_present": true,
+  "think_warnings": {
+    "baseline": [],
+    "calibrated": []
+  },
+  "win_eligible": true,
+  "judge_orders": 2,
+  "scores": [
+    {
+      "axis": "mentions_relevant_bias_tag",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers correctly identify the relevant well-calibrated-stage-fit bias and cite the two resolved 2024 hiring calls. Answer A presents the track record evidence but stops there, offering only the raw pattern without framing it against the user's likely default reasoning. Answer B goes further by explicitly naming the prior (that operational rigor from slower-paced companies could be valuable) and then presenting the counter-prior grounded in the track record—showing why the stage-fit signal should override the intuitive appeal of hiring an experienced operator. This counter-prior framing is more actionable and directly addresses the tension in the question. Both use clinical phrasing (conviction weights, reference tags), but Answer B's structure of prior-vs-counter-prior makes the decision logic transparent and more useful for the user's actual hiring decision. || Both answers correctly identify the relevant well-calibrated-stage-fit bias and cite the two 2024 hiring track-record cases. Answer A explicitly names the gut prior (slower-paced COO brings operational rigor) and then presents the counter-prior from track record (stage-fit red flag), creating a genuine decision framework. Answer B only presents the track-record signal without naming the competing prior, making it less useful for actual decision-making. Both use clinical phrasing (conviction weights, reference tags) rather than conversational voice, but Answer A's prior-vs-counter-prior structure meaningfully improves its utility despite the formal tone."
+    },
+    {
+      "axis": "presents_counter_prior",
+      "expected": false,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers correctly identify the relevant well-calibrated-stage-fit bias and cite the two resolved 2024 hiring calls. Answer A presents the track record evidence but stops there, offering only the raw pattern without framing it against the user's likely default reasoning. Answer B goes further by explicitly naming the prior (that operational rigor from slower-paced companies could be valuable) and then presenting the counter-prior grounded in the track record—showing why the stage-fit signal should override the intuitive appeal of hiring an experienced operator. This counter-prior framing is more actionable and directly addresses the tension in the question. Both use clinical phrasing (conviction weights, reference tags), but Answer B's structure of prior-vs-counter-prior makes the decision logic transparent and more useful for the user's actual hiring decision. || Both answers correctly identify the relevant well-calibrated-stage-fit bias and cite the two 2024 hiring track-record cases. Answer A explicitly names the gut prior (slower-paced COO brings operational rigor) and then presents the counter-prior from track record (stage-fit red flag), creating a genuine decision framework. Answer B only presents the track-record signal without naming the competing prior, making it less useful for actual decision-making. Both use clinical phrasing (conviction weights, reference tags) rather than conversational voice, but Answer A's prior-vs-counter-prior structure meaningfully improves its utility despite the formal tone."
+    },
+    {
+      "axis": "changes_recommendation_meaningfully",
+      "expected": false,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers correctly identify the relevant well-calibrated-stage-fit bias and cite the two resolved 2024 hiring calls. Answer A presents the track record evidence but stops there, offering only the raw pattern without framing it against the user's likely default reasoning. Answer B goes further by explicitly naming the prior (that operational rigor from slower-paced companies could be valuable) and then presenting the counter-prior grounded in the track record—showing why the stage-fit signal should override the intuitive appeal of hiring an experienced operator. This counter-prior framing is more actionable and directly addresses the tension in the question. Both use clinical phrasing (conviction weights, reference tags), but Answer B's structure of prior-vs-counter-prior makes the decision logic transparent and more useful for the user's actual hiring decision. || Both answers correctly identify the relevant well-calibrated-stage-fit bias and cite the two 2024 hiring track-record cases. Answer A explicitly names the gut prior (slower-paced COO brings operational rigor) and then presents the counter-prior from track record (stage-fit red flag), creating a genuine decision framework. Answer B only presents the track-record signal without naming the competing prior, making it less useful for actual decision-making. Both use clinical phrasing (conviction weights, reference tags) rather than conversational voice, but Answer A's prior-vs-counter-prior structure meaningfully improves its utility despite the formal tone."
+    },
+    {
+      "axis": "voice_conversational",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers correctly identify the relevant well-calibrated-stage-fit bias and cite the two resolved 2024 hiring calls. Answer A presents the track record evidence but stops there, offering only the raw pattern without framing it against the user's likely default reasoning. Answer B goes further by explicitly naming the prior (that operational rigor from slower-paced companies could be valuable) and then presenting the counter-prior grounded in the track record—showing why the stage-fit signal should override the intuitive appeal of hiring an experienced operator. This counter-prior framing is more actionable and directly addresses the tension in the question. Both use clinical phrasing (conviction weights, reference tags), but Answer B's structure of prior-vs-counter-prior makes the decision logic transparent and more useful for the user's actual hiring decision. || Both answers correctly identify the relevant well-calibrated-stage-fit bias and cite the two 2024 hiring track-record cases. Answer A explicitly names the gut prior (slower-paced COO brings operational rigor) and then presents the counter-prior from track record (stage-fit red flag), creating a genuine decision framework. Answer B only presents the track-record signal without naming the competing prior, making it less useful for actual decision-making. Both use clinical phrasing (conviction weights, reference tags) rather than conversational voice, but Answer A's prior-vs-counter-prior structure meaningfully improves its utility despite the formal tone."
+    },
+    {
+      "axis": "doesnt_force_fit_irrelevant_bias",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers correctly identify the relevant well-calibrated-stage-fit bias and cite the two resolved 2024 hiring calls. Answer A presents the track record evidence but stops there, offering only the raw pattern without framing it against the user's likely default reasoning. Answer B goes further by explicitly naming the prior (that operational rigor from slower-paced companies could be valuable) and then presenting the counter-prior grounded in the track record—showing why the stage-fit signal should override the intuitive appeal of hiring an experienced operator. This counter-prior framing is more actionable and directly addresses the tension in the question. Both use clinical phrasing (conviction weights, reference tags), but Answer B's structure of prior-vs-counter-prior makes the decision logic transparent and more useful for the user's actual hiring decision. || Both answers correctly identify the relevant well-calibrated-stage-fit bias and cite the two 2024 hiring track-record cases. Answer A explicitly names the gut prior (slower-paced COO brings operational rigor) and then presents the counter-prior from track record (stage-fit red flag), creating a genuine decision framework. Answer B only presents the track-record signal without naming the competing prior, making it less useful for actual decision-making. Both use clinical phrasing (conviction weights, reference tags) rather than conversational voice, but Answer A's prior-vs-counter-prior structure meaningfully improves its utility despite the formal tone."
+    }
+  ],
+  "win_score": 1,
+  "win_overall": "calibrated",
+  "per_axis_pass_rate": 0.4,
+  "failure_modes": [
+    "presents_counter_prior",
+    "changes_recommendation_meaningfully",
+    "voice_conversational"
+  ]
+}

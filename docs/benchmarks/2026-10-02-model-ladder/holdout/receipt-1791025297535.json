@@ -4,7 +4,7 @@
   "judge_prompt": "cat40-claims-v1",
   "judge": "gpt-5.4-mini",
   "world": {
-    "path": "/workspace/gbrain-evals/eval/reports/cat40/holdout/world.json",
+    "path": "<evals>/eval/reports/cat40/holdout/world.json",
     "digest": "df9e4f65cf603430934d6afa30073a44813ea670f78ae83c68bbde8210d1db9b",
     "seed": 20261003,
     "docs": 4036,
@@ -32,19 +32,19 @@
   "slot_builds": [
     {
       "slot": "slot1",
-      "dir": "/home/user/.capy/work/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot1",
+      "dir": "<work>/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot1",
       "steps": [
         {
           "step": "init",
           "code": 0,
           "ms": 9282,
-          "tail": "More: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to supabase` · health `gbrain doctor`\n  Setting up brain schema (v189)...\n  184 migration(s) applied\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: /home/user/.capy/work/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot1/home/.gbrain/content/ac2301b6-35a6-472c-8de8-2ed97c1955f3/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)\n10 recommended skill(s) not installed yet (cold-start, book-mirror, article-enrichment, strategic-reading, …).\nOpen your agent workspace first (scaffold needs a target), then `gbrain skillpack scaffold --all`; full list: gbrain advisor"
+          "tail": "More: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to supabase` · health `gbrain doctor`\n  Setting up brain schema (v189)...\n  184 migration(s) applied\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: <work>/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot1/home/.gbrain/content/ac2301b6-35a6-472c-8de8-2ed97c1955f3/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)\n10 recommended skill(s) not installed yet (cold-start, book-mirror, article-enrichment, strategic-reading, …).\nOpen your agent workspace first (scaffold needs a target), then `gbrain skillpack scaffold --all`; full list: gbrain advisor"
         },
         {
           "step": "sources-add",
           "code": 0,
           "ms": 2804,
-          "tail": "  \"local_path\": \"/home/user/.capy/work/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot1/vault\",\n  \"source_incarnation\": \"f0184802-9848-4052-b49a-d669e58f0261\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"5df2b68b-2a83-4053-a119-d528d2f34369\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\n[models] OpenAI account offers gpt-6.1-sol but src/core/model-pricing.ts has no row for it — staying on the newest PRICED family so budget caps keep working. Add the pricing row to adopt it."
+          "tail": "  \"local_path\": \"<work>/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot1/vault\",\n  \"source_incarnation\": \"f0184802-9848-4052-b49a-d669e58f0261\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"5df2b68b-2a83-4053-a119-d528d2f34369\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\n[models] OpenAI account offers gpt-6.1-sol but src/core/model-pricing.ts has no row for it — staying on the newest PRICED family so budget caps keep working. Add the pricing row to adopt it."
         },
         {
           "step": "sources-default",
@@ -86,19 +86,19 @@
     },
     {
       "slot": "slot0",
-      "dir": "/home/user/.capy/work/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot0",
+      "dir": "<work>/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot0",
       "steps": [
         {
           "step": "init",
           "code": 0,
           "ms": 10694,
-          "tail": "More: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to supabase` · health `gbrain doctor`\n  Setting up brain schema (v189)...\n  184 migration(s) applied\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: /home/user/.capy/work/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot0/home/.gbrain/content/8a8ec35b-3c36-43e4-a2b3-f5a17127e88e/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)\n10 recommended skill(s) not installed yet (cold-start, book-mirror, article-enrichment, strategic-reading, …).\nOpen your agent workspace first (scaffold needs a target), then `gbrain skillpack scaffold --all`; full list: gbrain advisor"
+          "tail": "More: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to supabase` · health `gbrain doctor`\n  Setting up brain schema (v189)...\n  184 migration(s) applied\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: <work>/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot0/home/.gbrain/content/8a8ec35b-3c36-43e4-a2b3-f5a17127e88e/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)\n10 recommended skill(s) not installed yet (cold-start, book-mirror, article-enrichment, strategic-reading, …).\nOpen your agent workspace first (scaffold needs a target), then `gbrain skillpack scaffold --all`; full list: gbrain advisor"
         },
         {
           "step": "sources-add",
           "code": 0,
           "ms": 3049,
-          "tail": "  \"local_path\": \"/home/user/.capy/work/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot0/vault\",\n  \"source_incarnation\": \"0d65b4c1-d4ba-4825-a76c-b3b201226c45\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"e82e6df4-f7f7-46ad-b71c-468dbf5bb788\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\n[models] OpenAI account offers gpt-6.1-sol but src/core/model-pricing.ts has no row for it — staying on the newest PRICED family so budget caps keep working. Add the pricing row to adopt it."
+          "tail": "  \"local_path\": \"<work>/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot0/vault\",\n  \"source_incarnation\": \"0d65b4c1-d4ba-4825-a76c-b3b201226c45\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"e82e6df4-f7f7-46ad-b71c-468dbf5bb788\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\n[models] OpenAI account offers gpt-6.1-sol but src/core/model-pricing.ts has no row for it — staying on the newest PRICED family so budget caps keep working. Add the pricing row to adopt it."
         },
         {
           "step": "sources-default",
@@ -140,19 +140,19 @@
     },
     {
       "slot": "slot4",
-      "dir": "/home/user/.capy/work/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot4",
+      "dir": "<work>/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot4",
       "steps": [
         {
           "step": "init",
           "code": 0,
           "ms": 8320,
-          "tail": "More: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to supabase` · health `gbrain doctor`\n  Setting up brain schema (v189)...\n  184 migration(s) applied\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: /home/user/.capy/work/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot4/home/.gbrain/content/ed784d45-f4b7-4a8e-a364-db088fb0f204/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)\n10 recommended skill(s) not installed yet (cold-start, book-mirror, article-enrichment, strategic-reading, …).\nOpen your agent workspace first (scaffold needs a target), then `gbrain skillpack scaffold --all`; full list: gbrain advisor"
+          "tail": "More: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to supabase` · health `gbrain doctor`\n  Setting up brain schema (v189)...\n  184 migration(s) applied\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: <work>/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot4/home/.gbrain/content/ed784d45-f4b7-4a8e-a364-db088fb0f204/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)\n10 recommended skill(s) not installed yet (cold-start, book-mirror, article-enrichment, strategic-reading, …).\nOpen your agent workspace first (scaffold needs a target), then `gbrain skillpack scaffold --all`; full list: gbrain advisor"
         },
         {
           "step": "sources-add",
           "code": 0,
           "ms": 1892,
-          "tail": "  \"local_path\": \"/home/user/.capy/work/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot4/vault\",\n  \"source_incarnation\": \"771d75fb-6b50-40c2-b56f-c7e5f28507fa\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"241100e0-5e55-4970-b8a3-162fc8af1606\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\n[models] OpenAI account offers gpt-6.1-sol but src/core/model-pricing.ts has no row for it — staying on the newest PRICED family so budget caps keep working. Add the pricing row to adopt it."
+          "tail": "  \"local_path\": \"<work>/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot4/vault\",\n  \"source_incarnation\": \"771d75fb-6b50-40c2-b56f-c7e5f28507fa\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"241100e0-5e55-4970-b8a3-162fc8af1606\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\n[models] OpenAI account offers gpt-6.1-sol but src/core/model-pricing.ts has no row for it — staying on the newest PRICED family so budget caps keep working. Add the pricing row to adopt it."
         },
         {
           "step": "sources-default",
@@ -194,19 +194,19 @@
     },
     {
       "slot": "slot2",
-      "dir": "/home/user/.capy/work/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot2",
+      "dir": "<work>/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot2",
       "steps": [
         {
           "step": "init",
           "code": 0,
           "ms": 8847,
-          "tail": "More: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to supabase` · health `gbrain doctor`\n  Setting up brain schema (v189)...\n  184 migration(s) applied\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: /home/user/.capy/work/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot2/home/.gbrain/content/331f19bc-db6c-4fcf-8852-7452b0748e74/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)\n10 recommended skill(s) not installed yet (cold-start, book-mirror, article-enrichment, strategic-reading, …).\nOpen your agent workspace first (scaffold needs a target), then `gbrain skillpack scaffold --all`; full list: gbrain advisor"
+          "tail": "More: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to supabase` · health `gbrain doctor`\n  Setting up brain schema (v189)...\n  184 migration(s) applied\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: <work>/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot2/home/.gbrain/content/331f19bc-db6c-4fcf-8852-7452b0748e74/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)\n10 recommended skill(s) not installed yet (cold-start, book-mirror, article-enrichment, strategic-reading, …).\nOpen your agent workspace first (scaffold needs a target), then `gbrain skillpack scaffold --all`; full list: gbrain advisor"
         },
         {
           "step": "sources-add",
           "code": 0,
           "ms": 2715,
-          "tail": "  \"local_path\": \"/home/user/.capy/work/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot2/vault\",\n  \"source_incarnation\": \"7a8dec79-e246-48ad-82c4-2a0386b71349\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"11305ed2-4e7d-4975-b9e1-860d14b15f5f\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\n[models] OpenAI account offers gpt-6.1-sol but src/core/model-pricing.ts has no row for it — staying on the newest PRICED family so budget caps keep working. Add the pricing row to adopt it."
+          "tail": "  \"local_path\": \"<work>/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot2/vault\",\n  \"source_incarnation\": \"7a8dec79-e246-48ad-82c4-2a0386b71349\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"11305ed2-4e7d-4975-b9e1-860d14b15f5f\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\n[models] OpenAI account offers gpt-6.1-sol but src/core/model-pricing.ts has no row for it — staying on the newest PRICED family so budget caps keep working. Add the pricing row to adopt it."
         },
         {
           "step": "sources-default",
@@ -248,19 +248,19 @@
     },
     {
       "slot": "slot3",
-      "dir": "/home/user/.capy/work/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot3",
+      "dir": "<work>/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot3",
       "steps": [
         {
           "step": "init",
           "code": 0,
           "ms": 9180,
-          "tail": "More: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to supabase` · health `gbrain doctor`\n  Setting up brain schema (v189)...\n  184 migration(s) applied\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: /home/user/.capy/work/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot3/home/.gbrain/content/2e84ee87-99ea-4976-9a81-8bf7315dd1d2/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)\n10 recommended skill(s) not installed yet (cold-start, book-mirror, article-enrichment, strategic-reading, …).\nOpen your agent workspace first (scaffold needs a target), then `gbrain skillpack scaffold --all`; full list: gbrain advisor"
+          "tail": "More: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to supabase` · health `gbrain doctor`\n  Setting up brain schema (v189)...\n  184 migration(s) applied\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: <work>/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot3/home/.gbrain/content/2e84ee87-99ea-4976-9a81-8bf7315dd1d2/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)\n10 recommended skill(s) not installed yet (cold-start, book-mirror, article-enrichment, strategic-reading, …).\nOpen your agent workspace first (scaffold needs a target), then `gbrain skillpack scaffold --all`; full list: gbrain advisor"
         },
         {
           "step": "sources-add",
           "code": 0,
           "ms": 1951,
-          "tail": "  \"local_path\": \"/home/user/.capy/work/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot3/vault\",\n  \"source_incarnation\": \"53da1f04-cbe1-4bd6-892d-a98e8c9d3de4\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"6ecb115a-136d-4fe8-b277-29f303c517b4\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\n[models] OpenAI account offers gpt-6.1-sol but src/core/model-pricing.ts has no row for it — staying on the newest PRICED family so budget caps keep working. Add the pricing row to adopt it."
+          "tail": "  \"local_path\": \"<work>/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot3/vault\",\n  \"source_incarnation\": \"53da1f04-cbe1-4bd6-892d-a98e8c9d3de4\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"6ecb115a-136d-4fe8-b277-29f303c517b4\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\n[models] OpenAI account offers gpt-6.1-sol but src/core/model-pricing.ts has no row for it — staying on the newest PRICED family so budget caps keep working. Add the pricing row to adopt it."
         },
         {
           "step": "sources-default",

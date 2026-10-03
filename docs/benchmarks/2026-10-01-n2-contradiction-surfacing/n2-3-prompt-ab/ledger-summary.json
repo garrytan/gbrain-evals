@@ -1,0 +1,40 @@
+{
+ "schema": "gbrain-evals/n2-3-prompt-ab-ledger-summary/v1",
+ "run": {
+  "run_id": "n2-3-prompt-ab-2026-10-01T21-40-40-215Z-f873e9f2",
+  "runner": "n2-3-prompt-ab",
+  "budget_usd": 10,
+  "estimate_usd": 6,
+  "started_at": "2026-10-01T21:40:40.216Z",
+  "finished_at": "2026-10-01T22:02:09.986Z"
+ },
+ "program_cap_usd": 500,
+ "total_usd": 5.8957,
+ "requests": 2742,
+ "statuses": {
+  "reconciled": 2742
+ },
+ "by_model": {
+  "anthropic:claude-haiku-4-5-20251001 chat": {
+   "requests": 2742,
+   "usd": 5.8957,
+   "charged_at_reservation": 0,
+   "input_tokens": 2540206,
+   "output_tokens": 671104
+  }
+ },
+ "by_arm": {
+  "before": {
+   "requests": 1371,
+   "usd": 2.778,
+   "input_tokens": 1189214,
+   "output_tokens": 317764
+  },
+  "after": {
+   "requests": 1371,
+   "usd": 3.1177,
+   "input_tokens": 1350992,
+   "output_tokens": 353340
+  }
+ }
+}

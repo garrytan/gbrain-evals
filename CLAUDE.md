@@ -68,6 +68,8 @@ For a new report:
 5. Write the report from the results, including unsuccessful candidates.
 6. Run the relevant artifact, data and documentation checks.
 
+To add a category, follow the "Add a category" checklist in [eval/CONTRIBUTING.md](eval/CONTRIBUTING.md): registry row and preregistered promotion rules first, the shared hermetic environment, the paid-arm guard, the scorer mutation kit and the bug ledger.
+
 Follow the current task's branch and review instructions. This guide does not authorize pushing, merging or publishing.
 
 ## Match a change to a useful test

@@ -1,0 +1,53 @@
+[cat14] running 8 probes through gbrain runThink (mode=live think=claude-sonnet-4-6@t0 judge=claude-haiku-4-5-20251001@t0 both-orders)
+  cat14-pos-1-geography...   Setting up brain schema (v188)...
+  183 migration(s) applied
+axes=1.00 win=calibrated
+  cat14-pos-2-tactics...   Setting up brain schema (v188)...
+  183 migration(s) applied
+axes=0.60 win=calibrated
+  cat14-pos-3-macro...   Setting up brain schema (v188)...
+  183 migration(s) applied
+axes=0.90 win=calibrated
+  cat14-pos-4-hiring...   Setting up brain schema (v188)...
+  183 migration(s) applied
+axes=0.40 win=calibrated
+  cat14-neg-1-empty-profile...   Setting up brain schema (v188)...
+  183 migration(s) applied
+axes=0.83 win=tie (tie-expected, win-exempt)
+  cat14-neg-2-irrelevant-bias...   Setting up brain schema (v188)...
+  183 migration(s) applied
+axes=0.40 win=calibrated (tie-expected, win-exempt)
+  cat14-neg-3-multi-bias...   Setting up brain schema (v188)...
+  183 migration(s) applied
+axes=0.80 win=calibrated
+  cat14-neg-4-voice...   Setting up brain schema (v188)...
+  183 migration(s) applied
+axes=0.33 win=tie
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+cat14 calibration A/B via gbrain runThink — summary (live)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+probes:            8/8 scored (judge_failed=0 sut_failed=0)
+win calibrated:    83% of 6 win-eligible (tie-expected categories excluded)
+win baseline/tie:  0% / 17%
+per-axis pass rate (gated subset):
+  mentions_relevant_bias_tag             100%  (positive, n=4)
+  presents_counter_prior                  50%  (positive, n=4)
+  changes_recommendation_meaningfully     63%  (all, n=8)
+  voice_conversational                    31%  (all, n=8)
+  doesnt_force_fit_irrelevant_bias       100%  (negative, n=4)
+  behaves_like_baseline                  100%  (declaring, n=1)
+  voice_must_not_be_clinical               0%  (declaring, n=1)
+failure-mode counts:
+  presents_counter_prior                 4
+  voice_conversational                   6
+  changes_recommendation_meaningfully    3
+  mentions_relevant_bias_tag             1
+  voice_must_not_be_clinical             1
+
+gate: FAIL
+  ✗ presents_counter_prior 50% < 80% target (positive subset, n=4)
+  ✗ voice_conversational 31% < 95% target (all subset, n=8)
+  ✗ voice_must_not_be_clinical 0% < 95% target (declaring subset, n=1)
+
+Per-probe dumps in /workspace/gbrain-evals/eval/reports/cat14-calibration/<probe_id>.json — read scores[].rationale to find what to fix. See ../data/cat14-calibration/README.md for the failure-mode → fix-location map.

@@ -461,7 +461,7 @@ async function buildCues(module: PublicModule, admin: typeof import('gbrain/oper
 export async function buildProductionCueIndex(engine: BrainEngine, sourceIds: string[], profile: Cat36Profile): Promise<EnrichmentResult> {
   validateCat36Profile(profile);
   const module = await requireCueSupport();
-  const { operationsByName } = await (import('gbrain-cues/operations') as Promise<typeof import('gbrain/operations')>);
+  const { operationsByName } = await (import('gbrain-cues/operations') as unknown as Promise<typeof import('gbrain/operations')>);
   const admin = operationsByName.memory_cues;
   if (!admin || admin.localOnly !== true || admin.scope !== 'admin') throw new Cat36Failure('trusted memory_cues admin operation unavailable', 'dependency');
   const ctx: OperationContext = { engine, config: { engine: 'pglite', embedding_model: profile.embedding_model, embedding_dimensions: profile.embedding_dimensions },

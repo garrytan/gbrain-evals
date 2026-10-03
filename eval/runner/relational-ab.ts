@@ -37,10 +37,13 @@ import type { PGLiteEngine } from 'gbrain/pglite-engine';
 import { hybridSearch, type HybridSearchOpts } from 'gbrain/search/hybrid';
 import type { HybridSearchMeta, SearchResult } from 'gbrain/types';
 import { embedQuery } from 'gbrain/embedding';
-import { configureGateway, getEmbeddingModel, getEmbeddingDimensions, __setEmbedTransportForTests } from 'gbrain/ai/gateway';
+import { configureGateway, getEmbeddingModel, getEmbeddingDimensions, __setEmbedTransportForTests, diagnoseEmbedding } from 'gbrain/ai/gateway';
 import { GbrainInlineAdapter, assertStubEmbedTransport, gcNow } from './adapters/gbrain-inline.ts';
 import { pagesInResultOrder } from './adapters/page-results.ts';
-import { buildRelationalQueries, loadWorldCorpus } from './queries/relational.ts';
+import { buildRelationalQueries, loadWorldCorpus, type RichPage } from './queries/relational.ts';
+import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
+import { requirePaidArm } from './paid-arm.ts';
+import { sourceTreeIdentity } from './receipt.ts';
 import { PARAPHRASE_PATH, renderParaphraseFile, templateOfText, type ParaphraseFile } from '../generators/relational-paraphrase-gen.ts';
 import { sanitizePage, sanitizeQuery, type PublicQuery, type Query } from './types.ts';
 import { precisionAtK, recallAtK, recallAnyAtK } from './metrics.ts';
@@ -86,7 +89,8 @@ export interface PairedRow {
   query_id: string;
   text: string;
   template: string;
-  split: QuerySplit;
+  /** template | paraphrase here; other categories built on runSharedIndexPairs add their own splits. */
+  split: string;
   relevant: string[];
   off: ScoredArm;
   on: ScoredArm;
@@ -112,13 +116,16 @@ class ObservationError extends Error {
 export async function searchRelationalPair(
   engine: PGLiteEngine,
   query: PublicQuery,
-  vector: Float32Array,
+  /** null: keyword path (no embedding provider); both arms must then run without vectors. */
+  vector: Float32Array | null,
   search: RelationalSearch = hybridSearch,
+  options: { limit?: number } = {},
 ): Promise<{ off: ArmResult; on: ArmResult }> {
-  if (vector.length !== RELATIONAL_EMBEDDER.dimensions || vector.some(v => !Number.isFinite(v))) {
+  const limit = options.limit ?? RELATIONAL_LIMIT;
+  if (vector !== null && (vector.length !== RELATIONAL_EMBEDDER.dimensions || vector.some(v => !Number.isFinite(v)))) {
     throw new ObservationError('harness', 'invalid shared query vector');
   }
-  const queryHash = vectorHash(vector);
+  const queryHash = vector === null ? 'keyword-only' : vectorHash(vector);
   const runArm = async (enabled: boolean): Promise<ArmResult> => {
     const started = performance.now();
     const result: ArmResult = {
@@ -127,35 +134,41 @@ export async function searchRelationalPair(
     };
     try {
       const rows = await search(engine, query.text, {
-        limit: RELATIONAL_LIMIT,
+        limit,
         relationalRetrieval: enabled,
         relationalRetrievalDepth: 2,
         expansion: false,
         autocut: false,
         adaptiveReturn: false,
-        queryEmbedFn: text => {
-          if (text !== query.text) throw new ObservationError('harness', 'unexpected query rewrite with expansion disabled');
-          result.query_embed_calls += 1;
-          // Separate copies protect one arm from mutating the other's input.
-          return new Float32Array(vector);
-        },
+        ...(vector === null ? {} : {
+          queryEmbedFn: (text: string) => {
+            if (text !== query.text) throw new ObservationError('harness', 'unexpected query rewrite with expansion disabled');
+            result.query_embed_calls += 1;
+            // Separate copies protect one arm from mutating the other's input.
+            return new Float32Array(vector);
+          },
+        }),
         onRelationalMeta: meta => { result.relational_meta.push({ ...meta }); },
         onMeta: meta => { result.search_meta = meta; },
       });
       result.rows = rows.map(r => ({ slug: r.slug, chunk_id: r.chunk_id, source_id: r.source_id, score: r.score }));
-      result.pages = pagesInResultOrder(rows, RELATIONAL_LIMIT).map(r => r.page_id);
-      if (rows.length > RELATIONAL_LIMIT) throw new ObservationError('sut', 'product exceeded the five-chunk output limit');
-      if (!result.search_meta || result.query_embed_calls === 0) {
-        throw new ObservationError('harness', 'missing search telemetry or shared query embedding was not used');
+      result.pages = pagesInResultOrder(rows, limit).map(r => r.page_id);
+      if (rows.length > limit) throw new ObservationError('sut', `product exceeded the ${limit}-chunk output limit`);
+      if (!result.search_meta) throw new ObservationError('harness', 'missing search telemetry');
+      if (vector === null) {
+        if (result.search_meta.vector_enabled) throw new ObservationError('harness', 'vector retrieval ran in a keyword-only cell (a provider key or embedding endpoint leaked in)');
+      } else {
+        if (result.query_embed_calls === 0) throw new ObservationError('harness', 'missing search telemetry or shared query embedding was not used');
+        if (!result.search_meta.vector_enabled) throw new ObservationError('harness', 'vector retrieval disabled or expansion unexpectedly enabled');
       }
-      if (!result.search_meta.vector_enabled || result.search_meta.expansion_applied) {
-        throw new ObservationError('harness', 'vector retrieval disabled or expansion unexpectedly enabled');
-      }
+      if (result.search_meta.expansion_applied) throw new ObservationError('harness', 'vector retrieval disabled or expansion unexpectedly enabled');
       if (rows.some(r => Number.isFinite(r.rerank_score))) throw new ObservationError('harness', 'reranker ran in an explicitly disabled cell');
       if (enabled && result.relational_meta.length === 0) throw new ObservationError('harness', 'missing ON-arm relational telemetry');
       if (!enabled && result.relational_meta.length !== 0) throw new ObservationError('harness', 'relational arm ran while disabled');
       if (result.relational_meta.some(m => m.errored)) throw new ObservationError('sut', 'relational arm failed open (errored telemetry)');
-      const failures = searchObservation({ query: query.text, queryId: query.id, results: rows, meta: result.search_meta }).failures;
+      const failures = searchObservation({ query: query.text, queryId: query.id, results: rows, meta: result.search_meta }).failures
+        // The keyword cell has no embedding provider by design; every other degradation still invalidates it.
+        .filter(f => vector !== null || (f !== 'vector_not_enabled' && !f.startsWith('embed_unavailable:')));
       if (failures.length > 0) throw new ObservationError('sut', `search incomplete: ${failures.join(', ')}`);
     } catch (error) {
       result.error = {
@@ -266,6 +279,172 @@ function hashEmbedding(text: string): number[] {
   return values.map(v => v / norm);
 }
 
+/** The gbrain functions relational-ab calls, from the pinned package or a copied overlay. */
+export interface RelationalProduct {
+  /** Overlay root, or null for the pinned dependency (static imports). */
+  root: string | null;
+  hybridSearch: RelationalSearch;
+  embedQuery: (text: string) => Promise<Float32Array>;
+  configureGateway: typeof configureGateway;
+  getEmbeddingModel: typeof getEmbeddingModel;
+  getEmbeddingDimensions: typeof getEmbeddingDimensions;
+  setEmbedTransport: typeof __setEmbedTransportForTests;
+  diagnoseEmbedding: typeof diagnoseEmbedding;
+}
+
+export const PINNED_RELATIONAL_PRODUCT: RelationalProduct = {
+  root: null, hybridSearch, embedQuery, configureGateway, getEmbeddingModel, getEmbeddingDimensions,
+  setEmbedTransport: __setEmbedTransportForTests, diagnoseEmbedding,
+};
+
+/** Load every gbrain module the harness uses from one tree, so the gateway state is the overlay's own. */
+export async function loadRelationalProduct(gut: GbrainUnderTest | null): Promise<RelationalProduct> {
+  if (!gut?.overlay) return PINNED_RELATIONAL_PRODUCT;
+  const search = await importGbrain<{ hybridSearch: RelationalSearch }>(gut, 'src/core/search/hybrid.ts');
+  const embedding = await importGbrain<{ embedQuery: RelationalProduct['embedQuery'] }>(gut, 'src/core/embedding.ts');
+  const gateway = await importGbrain<{
+    configureGateway: typeof configureGateway; getEmbeddingModel: typeof getEmbeddingModel; getEmbeddingDimensions: typeof getEmbeddingDimensions;
+    __setEmbedTransportForTests: typeof __setEmbedTransportForTests; diagnoseEmbedding: typeof diagnoseEmbedding;
+  }>(gut, 'src/core/ai/gateway.ts');
+  return {
+    root: gut.root, hybridSearch: search.hybridSearch, embedQuery: embedding.embedQuery,
+    configureGateway: gateway.configureGateway, getEmbeddingModel: gateway.getEmbeddingModel, getEmbeddingDimensions: gateway.getEmbeddingDimensions,
+    setEmbedTransport: gateway.__setEmbedTransportForTests, diagnoseEmbedding: gateway.diagnoseEmbedding,
+  };
+}
+
+/**
+ * How the shared index and the query vector are made:
+ *   openai   live OpenAI embeddings (paid, through the budget ledger);
+ *   stub     hash embeddings through gbrain's test transport (plumbing only);
+ *   keyword  no embedding at all: pages imported without vectors, both arms
+ *            on gbrain's keyword path, the keyless default.
+ */
+export type EmbedMode = 'openai' | 'stub' | 'keyword';
+
+export interface SharedIndexQuery extends Query { split: string; template: string; /** Result rows for this query; defaults to the run's limit. */ limit?: number }
+
+export interface SharedIndexRun {
+  rows: PairedRow[];
+  indices: Array<Record<string, unknown>>;
+}
+
+/**
+ * The relational-ab experiment core: per ingestion seed, build one extracted
+ * index, run every query with relational retrieval off and on over it, and
+ * pair the results. `afterIndex` runs extra probes on each live index (for
+ * example presence checks) before it is torn down; its errors are harness
+ * errors on that seed.
+ */
+export async function runSharedIndexPairs(o: {
+  product: RelationalProduct;
+  pages: readonly RichPage[];
+  queries: readonly SharedIndexQuery[];
+  seeds: readonly number[];
+  embed: EmbedMode;
+  limit?: number;
+  search?: RelationalSearch;
+  accounting: ProbeAccounting;
+  log?: (line: string) => void;
+  afterIndex?: (engine: PGLiteEngine, seed: number, search: RelationalSearch) => Promise<void>;
+}): Promise<SharedIndexRun> {
+  const { product, accounting, embed } = o;
+  const search = o.search ?? product.hybridSearch;
+  const limit = o.limit ?? RELATIONAL_LIMIT;
+  const log = o.log ?? (() => {});
+  const rows: PairedRow[] = [];
+  const indices: Array<Record<string, unknown>> = [];
+  const embeddings = new Map<string, Float32Array>();
+  const stub = embed === 'stub';
+  const oldKey = process.env.OPENAI_API_KEY;
+  if (stub) {
+    process.env.OPENAI_API_KEY = 'relational-ab-stub';
+    product.configureGateway({ embedding_model: RELATIONAL_EMBEDDER.model, embedding_dimensions: RELATIONAL_EMBEDDER.dimensions, env: process.env });
+    product.setEmbedTransport((async (params: { values: string[] }) => ({
+      embeddings: params.values.map(hashEmbedding), values: params.values, warnings: [],
+    })) as unknown as Parameters<typeof __setEmbedTransportForTests>[0]);
+  }
+  try {
+    for (const seed of o.seeds) {
+      log(`Relational OFF/ON: ingestion seed ${seed}, ${o.queries.length} paired queries (${embed})`);
+      const shuffled = shuffle(o.pages, seed);
+      const indexId = randomUUID();
+      const adapter = new GbrainInlineAdapter({
+        topK: limit, extract: true, searchConfig: { ...RELATIONAL_PINS },
+        embeddingModel: RELATIONAL_EMBEDDER.model, embeddingDimensions: RELATIONAL_EMBEDDER.dimensions,
+        expectStubTransport: stub, embed: embed !== 'keyword', ...(product.root ? { productRoot: product.root } : {}),
+      });
+      let state: Awaited<ReturnType<typeof adapter.init>> | undefined;
+      try {
+        state = await adapter.init(shuffled.map(sanitizePage), { name: 'relational-shared-index' });
+        const engine = adapter.engineOf(state);
+        const readback: Record<string, string | null> = {};
+        for (const [key, value] of Object.entries(RELATIONAL_PINS)) {
+          readback[key] = await engine.getConfig(key);
+          if (readback[key] !== value) throw new ObservationError('harness', `config readback mismatch: ${key}`);
+        }
+        if (embed !== 'keyword' && (product.getEmbeddingModel() !== RELATIONAL_EMBEDDER.model || product.getEmbeddingDimensions() !== RELATIONAL_EMBEDDER.dimensions)) {
+          throw new ObservationError('harness', 'embedding gateway drifted during index initialization');
+        }
+        indices.push({ seed, index_id: indexId, ingestion_order_sha256: sha256(JSON.stringify(shuffled.map(p => p.slug))), config_readback: readback });
+        for (const query of o.queries) {
+          let pair: { off: ArmResult; on: ArmResult };
+          try {
+            if (stub) assertStubEmbedTransport('relational pair', product.diagnoseEmbedding);
+            let vector: Float32Array | null = null;
+            if (embed !== 'keyword') {
+              vector = embeddings.get(query.text) ?? null;
+              if (!vector) { vector = await product.embedQuery(query.text); embeddings.set(query.text, vector); }
+            }
+            pair = await searchRelationalPair(engine, sanitizeQuery(query), vector, search, { limit: query.limit ?? limit });
+          } catch (error) {
+            const origin = error instanceof ObservationError ? error.origin : 'dependency';
+            pair = failedPair(origin, String(error));
+          }
+          appendRow(seed, indexId, query, pair);
+          if (rows.length % 25 === 0) gcNow();
+        }
+        if (o.afterIndex) {
+          try { await o.afterIndex(engine, seed, search); }
+          catch (error) { accounting.error(`${seed}:after-index`, 'harness', `after-index probes failed: ${String(error)}`); }
+        }
+      } catch (error) {
+        const origin = error instanceof ObservationError ? error.origin : 'sut';
+        for (const query of o.queries) {
+          if (!rows.some(r => r.seed === seed && r.query_id === query.id)) appendRow(seed, indexId, query, failedPair(origin, `index initialization: ${String(error)}`));
+        }
+      } finally {
+        if (state !== undefined) {
+          try { await adapter.teardown(state); }
+          catch (error) { accounting.error(`${seed}:teardown`, 'harness', `index cleanup failed: ${String(error)}`); }
+        }
+      }
+    }
+  } finally {
+    if (stub) {
+      product.setEmbedTransport(null);
+      if (oldKey === undefined) delete process.env.OPENAI_API_KEY;
+      else process.env.OPENAI_API_KEY = oldKey;
+    }
+  }
+  return { rows, indices };
+
+  function appendRow(seed: number, indexId: string, query: SharedIndexQuery, pair: { off: ArmResult; on: ArmResult }): void {
+    const relevant = new Set(query.gold.relevant ?? []);
+    const row: PairedRow = {
+      seed, index_id: indexId, query_id: query.id, text: query.text, template: query.template, split: query.split, relevant: [...relevant],
+      off: scoreRelationalArm(pair.off, relevant), on: scoreRelationalArm(pair.on, relevant),
+    };
+    rows.push(row);
+    for (const arm of ['off', 'on'] as const) {
+      const result = row[arm];
+      const id = `${seed}:${query.id}:${arm}`;
+      if (result.error) accounting.error(id, result.error.origin, result.error.message);
+      else accounting.score(id, result.metrics!.recall_at_5);
+    }
+  }
+}
+
 export interface RelationalABOptions {
   outputDir?: string;
   reportsDir?: string;
@@ -276,14 +455,23 @@ export interface RelationalABOptions {
   split?: QuerySplit | 'both';
   /** --budget-usd / --budget-ledger / --program-cap-usd (live runs only). */
   budget?: BudgetOptions;
+  /** argv when --paid or --budget-run-id was given: the live arm then runs only through requirePaidArm. */
+  paidArgv?: string[];
+  /** --gbrain <checkout>[@ref]: measure a copied overlay instead of the pinned package. */
+  gbrainSpec?: string;
   stubEmbed?: boolean;
   allowSkip?: boolean;
   quiet?: boolean;
 }
 
+export const RELATIONAL_AB_ESTIMATE_USD = 0.07;
+
 export function parseRelationalArgs(args: string[]): RelationalABOptions {
   const options: RelationalABOptions = {};
   if (args.some(a => /^--(budget-usd|budget-ledger|program-cap-usd|budget-run-id)(=|$)/.test(a))) options.budget = budgetOptionsFrom(args);
+  if (args.some(a => a === '--paid' || /^--budget-run-id(=|$)/.test(a))) options.paidArgv = [...args];
+  const spec = gbrainSpecFrom(args);
+  if (spec) options.gbrainSpec = spec;
   for (let i = 0; i < args.length; i++) {
     const flag = args[i];
     const value = () => {
@@ -293,12 +481,14 @@ export function parseRelationalArgs(args: string[]): RelationalABOptions {
     };
     if (flag === '--stub-embed') options.stubEmbed = true;
     else if (flag === '--allow-skip') options.allowSkip = true;
+    else if (flag === '--paid') continue;
     else if (flag === '--output-dir') options.outputDir = value();
     else if (flag === '--reports-dir') options.reportsDir = value();
     else if (flag === '--seeds') options.seeds = value().split(',').map(Number);
     else if (flag === '--limit') options.limit = Number(value());
     else if (flag === '--split') options.split = value() as RelationalABOptions['split'];
-    else if (['--budget-usd', '--budget-ledger', '--program-cap-usd', '--budget-run-id'].includes(flag)) value();
+    else if (['--budget-usd', '--budget-ledger', '--program-cap-usd', '--budget-run-id', '--gbrain'].includes(flag)) value();
+    else if (flag.startsWith('--gbrain=')) continue;
     else throw new Error(`unknown option: ${flag}`);
   }
   validateOptions(options);
@@ -320,16 +510,19 @@ function validateOptions(options: RelationalABOptions): void {
 
 export async function runRelationalAB(
   options: RelationalABOptions = {},
-  search: RelationalSearch = hybridSearch,
+  search?: RelationalSearch,
 ): Promise<{ receipt: Receipt; exitCode: number }> {
   validateOptions(options);
   const started = new Date().toISOString();
   const outputDir = options.outputDir ?? join(options.reportsDir ?? join(import.meta.dir, '../reports'), 'relational-ab');
   const seeds = options.seeds ?? [...RELATIONAL_SEEDS];
   const stub = options.stubEmbed ?? false;
+  const gut = options.gbrainSpec ? resolveGbrainUnderTest(options.gbrainSpec) : null;
+  const product = await loadRelationalProduct(gut);
   const base = {
     schema_version: RECEIPT_SCHEMA_VERSION, benchmark_version: BENCHMARK_VERSION, category: 'relational-ab',
-    gbrain_version: gbrainVersion(), gbrain_pin: gbrainPin(), started_at: started,
+    gbrain_version: gut ? gut.version : gbrainVersion(), gbrain_pin: gbrainPin(), started_at: started,
+    ...(gut ? { execution: { source_tree: sourceTreeIdentity(), product: productIdentityFor(gut) } } : {}),
   } as const;
   if (!stub && !process.env.OPENAI_API_KEY) {
     const receipt: Receipt = {
@@ -352,8 +545,9 @@ export async function runRelationalAB(
   if (!pages.length || !queries.length) throw new Error('relational corpus/query set is empty');
   let paid: { run: BudgetRun; guard: PaidRequestGuard } | null = null;
   if (!stub) {
+    if (options.paidArgv) requirePaidArm(options.paidArgv, { arm: 'relational-ab live arm (OpenAI embeddings)', estimateUsd: RELATIONAL_AB_ESTIMATE_USD });
     try {
-      paid = startPaidRun('relational-ab', { ...(options.budget ?? budgetOptionsFrom([])), estimateUsd: null });
+      paid = startPaidRun('relational-ab', { ...(options.budget ?? budgetOptionsFrom([])), estimateUsd: options.paidArgv ? RELATIONAL_AB_ESTIMATE_USD : null });
     } catch (error) {
       if (!(error instanceof BudgetExceededError)) throw error;
       const receipt: Receipt = {
@@ -365,75 +559,14 @@ export async function runRelationalAB(
     }
   }
   const accounting = new ProbeAccounting(seeds.length * queries.length * 2);
-  const rows: PairedRow[] = [];
-  const indices: Array<Record<string, unknown>> = [];
-  const embeddings = new Map<string, Float32Array>();
   const log = options.quiet ? (_: string) => {} : (text: string) => console.log(text);
-  const oldKey = process.env.OPENAI_API_KEY;
-  if (stub) {
-    process.env.OPENAI_API_KEY = 'relational-ab-stub';
-    configureGateway({ embedding_model: RELATIONAL_EMBEDDER.model, embedding_dimensions: RELATIONAL_EMBEDDER.dimensions, env: process.env });
-    __setEmbedTransportForTests((async (params: { values: string[] }) => ({
-      embeddings: params.values.map(hashEmbedding), values: params.values, warnings: [],
-    })) as unknown as Parameters<typeof __setEmbedTransportForTests>[0]);
-  }
+  let run: SharedIndexRun;
   try {
-    for (const seed of seeds) {
-      log(`Relational OFF/ON: ingestion seed ${seed}, ${queries.length} paired queries`);
-      const shuffled = shuffle(pages, seed);
-      const indexId = randomUUID();
-      const adapter = new GbrainInlineAdapter({
-        topK: RELATIONAL_LIMIT, extract: true, searchConfig: { ...RELATIONAL_PINS },
-        embeddingModel: RELATIONAL_EMBEDDER.model, embeddingDimensions: RELATIONAL_EMBEDDER.dimensions,
-        expectStubTransport: stub,
-      });
-      let state: Awaited<ReturnType<typeof adapter.init>> | undefined;
-      try {
-        state = await adapter.init(shuffled.map(sanitizePage), { name: 'relational-shared-index' });
-        const engine = adapter.engineOf(state);
-        const readback: Record<string, string | null> = {};
-        for (const [key, value] of Object.entries(RELATIONAL_PINS)) {
-          readback[key] = await engine.getConfig(key);
-          if (readback[key] !== value) throw new ObservationError('harness', `config readback mismatch: ${key}`);
-        }
-        if (getEmbeddingModel() !== RELATIONAL_EMBEDDER.model || getEmbeddingDimensions() !== RELATIONAL_EMBEDDER.dimensions) {
-          throw new ObservationError('harness', 'embedding gateway drifted during index initialization');
-        }
-        indices.push({ seed, index_id: indexId, ingestion_order_sha256: sha256(JSON.stringify(shuffled.map(p => p.slug))), config_readback: readback });
-        for (const query of queries) {
-          let pair: { off: ArmResult; on: ArmResult };
-          try {
-            if (stub) assertStubEmbedTransport('relational pair');
-            let vector = embeddings.get(query.text);
-            if (!vector) { vector = await embedQuery(query.text); embeddings.set(query.text, vector); }
-            pair = await searchRelationalPair(engine, sanitizeQuery(query), vector, search);
-          } catch (error) {
-            const origin = error instanceof ObservationError ? error.origin : 'dependency';
-            pair = failedPair(origin, String(error));
-          }
-          appendRow(seed, indexId, query, pair);
-          if (rows.length % 25 === 0) gcNow();
-        }
-      } catch (error) {
-        const origin = error instanceof ObservationError ? error.origin : 'sut';
-        for (const query of queries) {
-          if (!rows.some(r => r.seed === seed && r.query_id === query.id)) appendRow(seed, indexId, query, failedPair(origin, `index initialization: ${String(error)}`));
-        }
-      } finally {
-        if (state !== undefined) {
-          try { await adapter.teardown(state); }
-          catch (error) { accounting.error(`${seed}:teardown`, 'harness', `index cleanup failed: ${String(error)}`); }
-        }
-      }
-    }
+    run = await runSharedIndexPairs({ product, pages, queries, seeds, embed: stub ? 'stub' : 'openai', search, accounting, log });
   } finally {
     paid?.guard.uninstall();
-    if (stub) {
-      __setEmbedTransportForTests(null);
-      if (oldKey === undefined) delete process.env.OPENAI_API_KEY;
-      else process.env.OPENAI_API_KEY = oldKey;
-    }
   }
+  const { rows, indices } = run;
   const summary = accounting.summary();
   const incompleteRecipe = options.limit !== undefined || JSON.stringify(seeds) !== JSON.stringify(RELATIONAL_SEEDS) || options.corpusDir !== undefined || split !== 'both';
   const valid = summary.errors.length === 0 && summary.completion_rate === 1;
@@ -464,6 +597,8 @@ export async function runRelationalAB(
       limit_selection: options.limit === undefined ? null : 'round-robin across templates',
       repeat_interpretation: 'ingestion-order sensitivity, not independent question samples',
       comparison: 'effect of enabling relational retrieval under fixed graph metadata settings',
+      gbrain_overlay: gut ? overlaySummary(gut) : null,
+      paid_guard: options.paidArgv ? '--paid --budget-run-id (eval/runner/paid-arm.ts)' : null,
     },
     hashes: {
       corpus: sha256(JSON.stringify(pages.map(sanitizePage))),
@@ -486,24 +621,9 @@ export async function runRelationalAB(
   log(JSON.stringify(data.summary, null, 2));
   log(`Receipt: ${join(outputDir, 'receipt.json')}`);
   return { receipt, exitCode: valid ? 0 : 1 };
-
-  function appendRow(seed: number, indexId: string, query: SplitQuery, pair: { off: ArmResult; on: ArmResult }): void {
-    const relevant = new Set(query.gold.relevant ?? []);
-    const row: PairedRow = {
-      seed, index_id: indexId, query_id: query.id, text: query.text, template: query.template, split: query.split, relevant: [...relevant],
-      off: scoreRelationalArm(pair.off, relevant), on: scoreRelationalArm(pair.on, relevant),
-    };
-    rows.push(row);
-    for (const arm of ['off', 'on'] as const) {
-      const result = row[arm];
-      const id = `${seed}:${query.id}:${arm}`;
-      if (result.error) accounting.error(id, result.error.origin, result.error.message);
-      else accounting.score(id, result.metrics!.recall_at_5);
-    }
-  }
 }
 
-function failedPair(origin: FailureOrigin, message: string): { off: ArmResult; on: ArmResult } {
+export function failedPair(origin: FailureOrigin, message: string): { off: ArmResult; on: ArmResult } {
   const failed = (enabled: boolean): ArmResult => ({
     relational_retrieval: enabled, rows: [], pages: [], query_embed_calls: 0,
     query_vector_sha256: '', relational_meta: [], search_meta: null, wall_ms: 0,

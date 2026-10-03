@@ -153,6 +153,21 @@ export function ledgerTotals(ledger: LedgerFile): LedgerTotals {
   };
 }
 
+/** Read-only view of the ledger at `ledgerPath`: program totals, plus one run's budget and spend when `runId` names a run. */
+export function ledgerStatus(options: { ledgerPath?: string; programCapUsd?: number; runId?: string | null } = {}): {
+  totals: LedgerTotals;
+  run: (LedgerRun & { committed_usd: number; remaining_usd: number }) | null;
+} {
+  const programCapUsd = options.programCapUsd ?? DEFAULT_PROGRAM_CAP_USD;
+  const ledger = readLedger(resolve(options.ledgerPath ?? DEFAULT_LEDGER_PATH), programCapUsd);
+  const record = options.runId ? ledger.runs.find(r => r.run_id === options.runId) : undefined;
+  const runCommitted = record ? sum(ledger.entries.filter(e => e.run_id === record.run_id).map(committed)) : 0;
+  return {
+    totals: ledgerTotals(ledger),
+    run: record ? { ...record, committed_usd: runCommitted, remaining_usd: record.budget_usd - runCommitted } : null,
+  };
+}
+
 export interface RunSummary {
   run_id: string;
   budget_usd: number;
@@ -323,11 +338,12 @@ const allowanceScope = new AsyncLocalStorage<BudgetAllowance>();
 // ─── Request pricing ────────────────────────────────────────────────
 
 /** Hosts whose requests cost money. */
-const PAID_HOSTS: Record<string, 'openai' | 'anthropic' | 'voyage' | 'openrouter'> = {
+const PAID_HOSTS: Record<string, 'openai' | 'anthropic' | 'voyage' | 'openrouter' | 'typesafe'> = {
   'api.openai.com': 'openai',
   'api.anthropic.com': 'anthropic',
   'api.voyageai.com': 'voyage',
   'openrouter.ai': 'openrouter',
+  'api.typesafe.ai': 'typesafe',
 };
 
 /** Output-token allowance for a chat request that names no limit. */
@@ -401,6 +417,13 @@ export function priceRequest(url: string, body: unknown): RequestPrice | null {
   const model = typeof b.model === 'string' ? b.model : '';
   if (!model) throw new BudgetExceededError(`paid request to ${url} names no model; cannot reserve its cost`);
   const path = new URL(url).pathname;
+  if (provider === 'typesafe') {
+    // System One and the Jev reranker bill input tokens only, at gbrain's own TypeSafe price (embedding-pricing.ts).
+    const price = lookupEmbeddingPrice(`typesafe:${model}`);
+    if (price.kind !== 'known') throw new BudgetExceededError(`no TypeSafe price for ${model}; cannot reserve its cost`);
+    const { model: _model, ...payload } = b;
+    return { provider, model, kind: /\/rerank/.test(path) ? 'rerank' : 'chat', input: price.pricePerMTok, output: 0, inputTokens: Math.ceil(textBytes(payload) / 3) + 16, maxOutputTokens: 0 };
+  }
   if (/\/rerank/.test(path)) {
     const perMTok = RERANK_PRICES[`${provider}:${model}`];
     if (perMTok === undefined) throw new BudgetExceededError(`no rerank price for ${provider}:${model}; cannot reserve its cost`);

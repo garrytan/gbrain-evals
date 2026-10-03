@@ -1,5 +1,5 @@
-2026-10-02T22:48:45.864Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger /workspace/gbrain-evals/.budget/ledger.json
-2026-10-02T22:48:45.867Z 2520 cells to run (0 already done) in /workspace/gbrain-evals/eval/reports/cat40/holdout-run
+2026-10-02T22:48:45.864Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger <evals>/.budget/ledger.json
+2026-10-02T22:48:45.867Z 2520 cells to run (0 already done) in <evals>/eval/reports/cat40/holdout-run
 2026-10-02T22:49:25.525Z pg arm ready
 2026-10-02T22:49:36.208Z 10/2520 cells; last claude-sonnet-4-6|fs|A01|0 success=true $0.024
 2026-10-02T22:49:41.980Z 20/2520 cells; last gpt-5.4-mini|pg|A01|0 success=true $0.004
@@ -254,14 +254,14 @@
 2026-10-02T23:53:30.358Z 2490/2520 cells; last gpt-5.4|fs|F09|1 success=true $0.029
 2026-10-02T23:53:49.387Z 2500/2520 cells; last claude-haiku-4-5|memory|F10|1 success=false $0.089
 2026-10-02T23:54:02.312Z 2510/2520 cells; last claude-sonnet-5-5|memory|F10|1 success=true $0.217
-2026-10-02T23:54:43.350Z receipt /workspace/gbrain-evals/eval/reports/cat40/holdout-run/receipt-1790985283350.json
-2026-10-02T23:55:18.194Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger /workspace/gbrain-evals/.budget/ledger.json
-2026-10-02T23:55:18.270Z 2 cells to run (2518 already done) in /workspace/gbrain-evals/eval/reports/cat40/holdout-run
+2026-10-02T23:54:43.350Z receipt <evals>/eval/reports/cat40/holdout-run/receipt-1790985283350.json
+2026-10-02T23:55:18.194Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger <evals>/.budget/ledger.json
+2026-10-02T23:55:18.270Z 2 cells to run (2518 already done) in <evals>/eval/reports/cat40/holdout-run
 2026-10-02T23:55:28.143Z pg arm ready
 2026-10-02T23:55:51.700Z 2/2 cells; last claude-sonnet-4-6|fs|F04|0 success=true $0.049
-2026-10-02T23:55:51.803Z receipt /workspace/gbrain-evals/eval/reports/cat40/holdout-run/receipt-1790985351802.json
-2026-10-02T23:56:01.818Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger /workspace/gbrain-evals/.budget/ledger.json
-2026-10-02T23:56:01.894Z 600 cells to run (2520 already done) in /workspace/gbrain-evals/eval/reports/cat40/holdout-run
+2026-10-02T23:55:51.803Z receipt <evals>/eval/reports/cat40/holdout-run/receipt-1790985351802.json
+2026-10-02T23:56:01.818Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger <evals>/.budget/ledger.json
+2026-10-02T23:56:01.894Z 600 cells to run (2520 already done) in <evals>/eval/reports/cat40/holdout-run
 2026-10-03T00:36:21.819Z built slot0 in 2417s, $0.0655 (3050 provider requests)
 2026-10-03T00:36:33.896Z built slot4 in 2426s, $0.0714 (3126 provider requests)
 2026-10-03T00:36:36.535Z built slot1 in 2431s, $0.0717 (3134 provider requests)
@@ -329,9 +329,9 @@
 2026-10-03T02:28:36.307Z 580/600 cells; last claude-sonnet-4-6|gbrain-base|F07|1 success=true $0.261
 2026-10-03T02:31:07.827Z 590/600 cells; last claude-sonnet-4-6|gbrain-base|F09|1 success=true $0.129
 2026-10-03T02:33:30.751Z 600/600 cells; last gpt-6.1-sol|gbrain-base|F10|1 success=false $0.027
-2026-10-03T02:33:32.057Z receipt /workspace/gbrain-evals/eval/reports/cat40/holdout-run/receipt-1790994812057.json
-2026-10-03T02:34:12.025Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger /workspace/gbrain-evals/.budget/ledger.json
-2026-10-03T02:34:12.245Z 600 cells to run (3120 already done) in /workspace/gbrain-evals/eval/reports/cat40/holdout-run
+2026-10-03T02:33:32.057Z receipt <evals>/eval/reports/cat40/holdout-run/receipt-1790994812057.json
+2026-10-03T02:34:12.025Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger <evals>/.budget/ledger.json
+2026-10-03T02:34:12.245Z 600 cells to run (3120 already done) in <evals>/eval/reports/cat40/holdout-run
 2026-10-03T03:13:00.362Z built slot4 in 2321s, $0.0133 (1386 provider requests)
 2026-10-03T03:13:01.232Z built slot2 in 2324s, $0.0135 (1400 provider requests)
 2026-10-03T03:13:20.535Z built slot1 in 2344s, $0.0141 (1461 provider requests)
@@ -398,14 +398,14 @@
 2026-10-03T06:22:33.972Z 570/600 cells; last gpt-6.1-sol|gbrain-next|F05|1 success=true $0.045
 2026-10-03T06:26:12.830Z 580/600 cells; last gpt-5.4|gbrain-next|F07|1 success=true $0.051
 2026-10-03T06:30:22.964Z 590/600 cells; last claude-sonnet-5-5|gbrain-next|F09|1 success=true $0.086
-2026-10-03T06:35:00.775Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger /workspace/gbrain-evals/.budget/ledger.json
-2026-10-03T06:35:01.109Z 1 cells to run (3719 already done) in /workspace/gbrain-evals/eval/reports/cat40/holdout-run
+2026-10-03T06:35:00.775Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger <evals>/.budget/ledger.json
+2026-10-03T06:35:01.109Z 1 cells to run (3719 already done) in <evals>/eval/reports/cat40/holdout-run
 2026-10-03T06:36:38.607Z write probe passed on every slot
 2026-10-03T06:36:38.608Z gbrain 0.60.27.0 (51a30c1b86aa) ready on 5 slots, surface starter
 2026-10-03T06:37:44.157Z 1/1 cells; last gpt-5.4|gbrain-next|F10|1 success=false $0.056
-2026-10-03T06:37:45.921Z receipt /workspace/gbrain-evals/eval/reports/cat40/holdout-run/receipt-1791009465920.json
-2026-10-03T06:38:10.524Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger /workspace/gbrain-evals/.budget/ledger.json
-2026-10-03T06:38:10.838Z 600 cells to run (3720 already done) in /workspace/gbrain-evals/eval/reports/cat40/holdout-run
+2026-10-03T06:37:45.921Z receipt <evals>/eval/reports/cat40/holdout-run/receipt-1791009465920.json
+2026-10-03T06:38:10.524Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger <evals>/.budget/ledger.json
+2026-10-03T06:38:10.838Z 600 cells to run (3720 already done) in <evals>/eval/reports/cat40/holdout-run
 2026-10-03T07:17:20.375Z built slot1 in 2345s, $0.0083 (863 provider requests)
 2026-10-03T07:17:21.300Z built slot0 in 2347s, $0.0082 (859 provider requests)
 2026-10-03T07:17:22.115Z built slot4 in 2344s, $0.0088 (915 provider requests)
@@ -473,4 +473,4 @@
 2026-10-03T10:52:14.395Z 580/600 cells; last gpt-5.4-mini|gbrain-next|F07|1 success=true $0.024
 2026-10-03T10:57:15.910Z 590/600 cells; last claude-sonnet-4-6|gbrain-next|F09|1 success=true $0.178
 2026-10-03T11:01:35.123Z 600/600 cells; last gpt-6.1-sol|gbrain-next|F10|1 success=true $0.062
-2026-10-03T11:01:37.536Z receipt /workspace/gbrain-evals/eval/reports/cat40/holdout-run/receipt-1791025297535.json
+2026-10-03T11:01:37.536Z receipt <evals>/eval/reports/cat40/holdout-run/receipt-1791025297535.json

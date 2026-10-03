@@ -40,6 +40,8 @@ const EXPECTED_SCHEMAS = [
 // qrels) had no generator and no runnable consumer and were removed in 0.10.1.
 const EXPECTED_GOLD = [
   'contradictions.json',
+  'contradictions-adjudication.json',
+  'contradictions-n2-queries.json',
   'poison.json',
   'implicit-preferences.json',
 ];

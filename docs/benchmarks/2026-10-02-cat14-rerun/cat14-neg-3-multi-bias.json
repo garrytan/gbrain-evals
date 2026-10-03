@@ -1,0 +1,78 @@
+{
+  "probe_id": "cat14-neg-3-multi-bias",
+  "category": "calibration-multi-bias",
+  "question": "Should we lead the Series A for an LA-based AI startup with a COO from a slower-paced company?",
+  "baseline_answer": "## Answer\n\nThe brain does not contain direct takes or pages addressing the specific question of whether to lead a Series A for an LA-based AI startup with a COO from a slower-paced company.\n\nThe only retrieved pages are resolved historical takes on unrelated deals:\n- A tactics take about a founder who \"ships fast and wins\" (correct, w=0.8) [cat14/cat14-neg-3-multi-bias/take-2]\n- A geography take about a NY tech startup scaling beyond NY (incorrect, w=0.85) [cat14/cat14-neg-3-multi-bias/take-1]\n\nNeither of these speaks to the LA geography signal, the AI sector thesis, or the COO background concern raised in the question. No substantive inference can be drawn from the brain's current data for this decision.",
+  "calibrated_answer": "## Answer\n\nThis question involves two distinct judgment domains: **geography** (LA-based startup) and **tactics** (COO from a slower-paced company). Garry's calibration profile diverges sharply across these domains.\n\n### Geography dimension\nGarry's geography prior is currently flagged as **over-confident** with a 0/1 track record in 2024 [cat14/cat14-neg-3-multi-bias/take-1]. The resolved take on the NY startup scaling beyond NY was held at conviction weight 0.85 and turned out incorrect [cat14/cat14-neg-3-multi-bias/take-1]. This fits the **over-confident-geography** bias tag directly. Any strong geographic conviction about an LA-based startup should be discounted accordingly.\n\n### Tactics dimension\nGarry's tactics prior is flagged as **well-calibrated-tactics**. The resolved take on a founder shipping fast was held at conviction weight 0.8 and was correct [cat14/cat14-neg-3-multi-bias/take-2]. Judgments about the COO's operational pace and its implications for execution fall into this domain, where Garry's track record is sharper.\n\n### Calibration section\n- **Geography prior (default):** Garry's instinct on geographic scaling potential tends to be over-confident. The 0/1 2024 record is a direct caution signal against high-conviction geographic bets [cat14/cat14-neg-3-multi-bias/take-1].\n- **Counter-prior (hedged-domain self):** On tactics — specifically execution pace and operator background — Garry's assessments have been reliable [cat14/cat14-neg-3-multi-bias/take-2]. A concern about a COO from a slower-paced company is a tactics-domain signal and should be weighted more heavily than the geographic dimension.",
+  "prompts_identical": false,
+  "calibration_block_present": true,
+  "think_warnings": {
+    "baseline": [],
+    "calibrated": []
+  },
+  "win_eligible": true,
+  "judge_orders": 2,
+  "scores": [
+    {
+      "axis": "mentions_relevant_bias_tag",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Answer A declines to engage with the question, claiming insufficient data in the knowledge base. Answer B directly applies the user's calibration profile to the decision at hand, mapping both the geography and tactics dimensions of the question to the user's track record. Answer B identifies the over-confident-geography bias as relevant to the LA location signal and the well-calibrated-tactics bias as relevant to the COO background concern, then presents a counter-prior: discount geographic conviction but weight the tactics-domain signal more heavily. Both answers use clinical phrasing, but Answer B's substantive engagement with the user's actual bias patterns and track record makes it far more useful for decision-making, whereas Answer A provides no actionable guidance. || Answer A directly engages with the user's calibration profile by decomposing the question into two domains (geography and tactics), naming both the over-confident-geography prior and the well-calibrated-tactics counter-prior, and providing actionable guidance: discount geographic conviction but weight the COO/tactics concern more heavily. Answer B declines to engage, claiming the brain contains no relevant data—a defensible epistemic stance but unhelpful when the user explicitly asked for calibration-informed judgment. Both use clinical phrasing and lack conversational warmth, but A's substantive decomposition and dual-prior framing makes it materially more useful despite the formal tone."
+    },
+    {
+      "axis": "presents_counter_prior",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Answer A declines to engage with the question, claiming insufficient data in the knowledge base. Answer B directly applies the user's calibration profile to the decision at hand, mapping both the geography and tactics dimensions of the question to the user's track record. Answer B identifies the over-confident-geography bias as relevant to the LA location signal and the well-calibrated-tactics bias as relevant to the COO background concern, then presents a counter-prior: discount geographic conviction but weight the tactics-domain signal more heavily. Both answers use clinical phrasing, but Answer B's substantive engagement with the user's actual bias patterns and track record makes it far more useful for decision-making, whereas Answer A provides no actionable guidance. || Answer A directly engages with the user's calibration profile by decomposing the question into two domains (geography and tactics), naming both the over-confident-geography prior and the well-calibrated-tactics counter-prior, and providing actionable guidance: discount geographic conviction but weight the COO/tactics concern more heavily. Answer B declines to engage, claiming the brain contains no relevant data—a defensible epistemic stance but unhelpful when the user explicitly asked for calibration-informed judgment. Both use clinical phrasing and lack conversational warmth, but A's substantive decomposition and dual-prior framing makes it materially more useful despite the formal tone."
+    },
+    {
+      "axis": "changes_recommendation_meaningfully",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Answer A declines to engage with the question, claiming insufficient data in the knowledge base. Answer B directly applies the user's calibration profile to the decision at hand, mapping both the geography and tactics dimensions of the question to the user's track record. Answer B identifies the over-confident-geography bias as relevant to the LA location signal and the well-calibrated-tactics bias as relevant to the COO background concern, then presents a counter-prior: discount geographic conviction but weight the tactics-domain signal more heavily. Both answers use clinical phrasing, but Answer B's substantive engagement with the user's actual bias patterns and track record makes it far more useful for decision-making, whereas Answer A provides no actionable guidance. || Answer A directly engages with the user's calibration profile by decomposing the question into two domains (geography and tactics), naming both the over-confident-geography prior and the well-calibrated-tactics counter-prior, and providing actionable guidance: discount geographic conviction but weight the COO/tactics concern more heavily. Answer B declines to engage, claiming the brain contains no relevant data—a defensible epistemic stance but unhelpful when the user explicitly asked for calibration-informed judgment. Both use clinical phrasing and lack conversational warmth, but A's substantive decomposition and dual-prior framing makes it materially more useful despite the formal tone."
+    },
+    {
+      "axis": "voice_conversational",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Answer A declines to engage with the question, claiming insufficient data in the knowledge base. Answer B directly applies the user's calibration profile to the decision at hand, mapping both the geography and tactics dimensions of the question to the user's track record. Answer B identifies the over-confident-geography bias as relevant to the LA location signal and the well-calibrated-tactics bias as relevant to the COO background concern, then presents a counter-prior: discount geographic conviction but weight the tactics-domain signal more heavily. Both answers use clinical phrasing, but Answer B's substantive engagement with the user's actual bias patterns and track record makes it far more useful for decision-making, whereas Answer A provides no actionable guidance. || Answer A directly engages with the user's calibration profile by decomposing the question into two domains (geography and tactics), naming both the over-confident-geography prior and the well-calibrated-tactics counter-prior, and providing actionable guidance: discount geographic conviction but weight the COO/tactics concern more heavily. Answer B declines to engage, claiming the brain contains no relevant data—a defensible epistemic stance but unhelpful when the user explicitly asked for calibration-informed judgment. Both use clinical phrasing and lack conversational warmth, but A's substantive decomposition and dual-prior framing makes it materially more useful despite the formal tone."
+    },
+    {
+      "axis": "doesnt_force_fit_irrelevant_bias",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Answer A declines to engage with the question, claiming insufficient data in the knowledge base. Answer B directly applies the user's calibration profile to the decision at hand, mapping both the geography and tactics dimensions of the question to the user's track record. Answer B identifies the over-confident-geography bias as relevant to the LA location signal and the well-calibrated-tactics bias as relevant to the COO background concern, then presents a counter-prior: discount geographic conviction but weight the tactics-domain signal more heavily. Both answers use clinical phrasing, but Answer B's substantive engagement with the user's actual bias patterns and track record makes it far more useful for decision-making, whereas Answer A provides no actionable guidance. || Answer A directly engages with the user's calibration profile by decomposing the question into two domains (geography and tactics), naming both the over-confident-geography prior and the well-calibrated-tactics counter-prior, and providing actionable guidance: discount geographic conviction but weight the COO/tactics concern more heavily. Answer B declines to engage, claiming the brain contains no relevant data—a defensible epistemic stance but unhelpful when the user explicitly asked for calibration-informed judgment. Both use clinical phrasing and lack conversational warmth, but A's substantive decomposition and dual-prior framing makes it materially more useful despite the formal tone."
+    }
+  ],
+  "win_score": 1,
+  "win_overall": "calibrated",
+  "per_axis_pass_rate": 0.8,
+  "failure_modes": [
+    "voice_conversational"
+  ]
+}

@@ -51,6 +51,10 @@ describe('pricing', () => {
   test('dated snapshots use the family list price; Voyage rerank is priced from query and documents', () => {
     expect(priceRequest('https://api.openai.com/v1/chat/completions', { model: 'gpt-4o-2024-08-06', max_tokens: 10, messages: [] }))
       .toMatchObject({ kind: 'chat', input: 2.5, output: 10, maxOutputTokens: 10 });
+    const jev = priceRequest('https://api.typesafe.ai/v1/systemone', { model: 'jev-1.13.0', state: { query: 'abc' }, questions: { q: { type: 'noul', instructions: 'defdef' } } })!;
+    expect(jev).toMatchObject({ provider: 'typesafe', model: 'jev-1.13.0', input: 0.042, output: 0, maxOutputTokens: 0 });
+    expect(jev.inputTokens).toBeGreaterThan(16);
+    expect(() => priceRequest('https://api.typesafe.ai/v1/x', { model: 'jev-1' })).toThrow('no TypeSafe price');
     const rerank = priceRequest('https://api.voyageai.com/v1/rerank', { model: 'rerank-2.5', query: 'abc', documents: ['defdef', 'ghi'] })!;
     expect(rerank).toMatchObject({ kind: 'rerank', input: 0.05, output: 0, maxOutputTokens: 0 });
     expect(rerank.inputTokens).toBe(Math.ceil((3 * 2 + 9) / 3) + 16);

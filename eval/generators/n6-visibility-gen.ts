@@ -20,6 +20,15 @@
  *   foreign_source  a page in source `beta` at the same slug as an `alpha`
  *                   page, plus a beta-only page; twin: the alpha page.
  *
+ * Added in v2 (2026-10-02) for surfaces outside page bodies; the v1 classes
+ * and their markers are unchanged:
+ *   private_ontology  a `private` ontology observation on the public person
+ *                     page (ontology_propose); twin: a `world` observation.
+ *   private_raw_data  raw data attached to the private note (put_raw_data);
+ *                     twin: raw data on its public twin note.
+ *   private_orphan    a `visibility: private` note with no links in or out;
+ *                     twin: a public orphan note.
+ *
  * Every class also gets a ghost: values that were never written, so a
  * response to a protected target can be compared with the response to
  * something that does not exist.
@@ -28,14 +37,14 @@
  */
 import { createHash } from 'node:crypto';
 
-export const N6_GENERATOR_VERSION = 'n6-visibility-v1';
+export const N6_GENERATOR_VERSION = 'n6-visibility-v2';
 export const N6_DEFAULT_SEED = 20260930;
 export const N6_SOURCES = ['alpha', 'beta'] as const;
 /** The source every scoped caller is granted. */
 export const N6_GRANTED_SOURCE = 'alpha';
 
-export type N6Class = 'private_page' | 'private_take' | 'private_fact' | 'derived_atom' | 'foreign_source';
-export const N6_CLASSES: readonly N6Class[] = ['private_page', 'private_take', 'private_fact', 'derived_atom', 'foreign_source'];
+export type N6Class = 'private_page' | 'private_take' | 'private_fact' | 'derived_atom' | 'foreign_source' | 'private_ontology' | 'private_raw_data' | 'private_orphan';
+export const N6_CLASSES: readonly N6Class[] = ['private_page', 'private_take', 'private_fact', 'derived_atom', 'foreign_source', 'private_ontology', 'private_raw_data', 'private_orphan'];
 
 export interface N6Page {
   source_id: string;
@@ -72,6 +81,12 @@ export interface N6ClassSpec {
   twin_markers: string[];
 }
 
+/** Writes that are not pages, applied by the trusted local caller after the pages. */
+export interface N6SideWrites {
+  ontology: Array<{ entity: string; dimension: string; value: string; visibility: 'private' | 'world'; valid_from: string }>;
+  raw_data: Array<{ slug: string; source: string; data: Record<string, string> }>;
+}
+
 export interface N6Ledger {
   generator_version: string;
   seed: number;
@@ -79,6 +94,7 @@ export interface N6Ledger {
   granted_source: string;
   hub_slug: string;
   pages: N6Page[];
+  side_writes: N6SideWrites;
   classes: N6ClassSpec[];
   filler_slugs: string[];
 }
@@ -235,7 +251,59 @@ export function generateN6World(seed = N6_DEFAULT_SEED): N6Ledger {
     pages.push({ source_id: 'alpha', slug, content: note({ title: `Filler ${i}`, type: 'note' }, `Filler note ${i} about offsite planning logistics.`) });
   }
 
-  return { generator_version: N6_GENERATOR_VERSION, seed, sources: N6_SOURCES, granted_source: N6_GRANTED_SOURCE, hub_slug: hub, pages, classes, filler_slugs };
+  // v2 classes. Drawn after every v1 value so the v1 markers stay identical.
+  const side_writes: N6SideWrites = { ontology: [], raw_data: [] };
+  {
+    const person = classes.find(c => c.class === 'private_fact')!.protected.slug;
+    const [pOnt, tOnt] = [marker(), marker()];
+    side_writes.ontology.push(
+      { entity: person, dimension: 'location', value: `${pOnt} harbor district`, visibility: 'private', valid_from: '2024-03-01' },
+      { entity: person, dimension: 'employer', value: `${tOnt} cooperative`, visibility: 'world', valid_from: '2024-03-01' },
+    );
+    classes.push({
+      class: 'private_ontology',
+      protected: { slug: person, query: pOnt, type: 'person' },
+      twin: { slug: person, query: tOnt, type: 'person' },
+      ghost: { slug: person, query: marker(), type: 'person' },
+      protected_markers: [pOnt],
+      protected_slugs: [],
+      twin_markers: [tOnt],
+    });
+  }
+  {
+    const page = classes.find(c => c.class === 'private_page')!;
+    const [pRaw, tRaw] = [marker(), marker()];
+    side_writes.raw_data.push(
+      { slug: page.protected.slug, source: 'n6-fixture', data: { note: `raw capture ${pRaw}` } },
+      { slug: page.twin.slug, source: 'n6-fixture', data: { note: `raw capture ${tRaw}` } },
+    );
+    classes.push({
+      class: 'private_raw_data',
+      protected: { slug: page.protected.slug, query: pRaw, type: 'note' },
+      twin: { slug: page.twin.slug, query: tRaw, type: 'note' },
+      ghost: { slug: page.ghost.slug, query: marker(), type: 'note' },
+      protected_markers: [pRaw],
+      protected_slugs: [page.protected.slug],
+      twin_markers: [tRaw],
+    });
+  }
+  {
+    const [pSlug, tSlug, gSlug] = [`notes/${word()}`, `notes/${word()}`, `notes/${word()}`];
+    const [pBody, tBody] = [marker(), marker()];
+    pages.push({ source_id: 'alpha', slug: pSlug, content: note({ title: `Orphan ${pBody}`, type: 'note', visibility: 'private' }, `Loose thought ${pBody}, not linked anywhere.`) });
+    pages.push({ source_id: 'alpha', slug: tSlug, content: note({ title: `Orphan ${tBody}`, type: 'note' }, `Loose thought ${tBody}, not linked anywhere.`) });
+    classes.push({
+      class: 'private_orphan',
+      protected: { slug: pSlug, query: pBody, type: 'note' },
+      twin: { slug: tSlug, query: tBody, type: 'note' },
+      ghost: { slug: gSlug, query: marker(), type: 'note' },
+      protected_markers: [pBody],
+      protected_slugs: [pSlug],
+      twin_markers: [tBody],
+    });
+  }
+
+  return { generator_version: N6_GENERATOR_VERSION, seed, sources: N6_SOURCES, granted_source: N6_GRANTED_SOURCE, hub_slug: hub, pages, side_writes, classes, filler_slugs };
 }
 
 function canonical(value: unknown): string {

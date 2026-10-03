@@ -1,0 +1,522 @@
+{
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "n7-open-loops-email-extractor",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 36,
+  "n_scored": 36,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "gbrain_version": "0.60.26.0",
+  "gbrain_pin": "github:garrytan/gbrain#3a284aea26889b77c633aebb4149c3016d834ee6",
+  "execution": {
+    "source_tree": {
+      "sha256": "0377dfcfdea9c31b739d1a5630c147edd6a7aee63fd33c90277681c0f6fcba48",
+      "files": 2394,
+      "git_head": "655202a05c01b4b263eb161cdb46f0c6fe89afa0",
+      "dirty": true
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#3a284aea26889b77c633aebb4149c3016d834ee6",
+      "declared_sha": "3a284aea26889b77c633aebb4149c3016d834ee6",
+      "version": "0.60.26.0",
+      "package_sha256": "b103036cefcba7b163f42113617edb5fd9d731ac587e0a291d042bdef8eeca17",
+      "loaded_git_head": "3a284aea26889b77c633aebb4149c3016d834ee6"
+    }
+  },
+  "cost": {
+    "usd": 0.100962,
+    "input_tokens": 21204,
+    "output_tokens": 2490,
+    "basis": "budget ledger eval-category-wave-n7-n8-2026-10-01T19-34-00-779Z-147c2e1d: 36 paid requests, 0 charged at their reservation because usage was unavailable"
+  },
+  "delivered_tokens": {
+    "tokens": 21204,
+    "basis": "input tokens the budget ledger recorded for the extractor calls"
+  },
+  "resolved_config": {
+    "engine": "pglite-in-memory",
+    "decide": "off (no key, fresh GBRAIN_HOME)",
+    "chat_model": "anthropic:claude-sonnet-4-6",
+    "key_route": "gateway config env only; process keys stripped",
+    "now": "2026-10-01T12:00:00.000Z",
+    "seed": 7,
+    "generator_version": "n7-gmail-loops-gen-v1",
+    "ledger_sha256": "5373f56659fae43a8628cc3e525e7f8b6a005c0f4170cb4088d2a119e1631ef8",
+    "budget_run_id": "eval-category-wave-n7-n8-2026-10-01T19-34-00-779Z-147c2e1d",
+    "preregistration": "docs/plans/2026-10-01-eval-category-wave/prereg-n7-extractor-arm.md",
+    "gbrain_overlay": {
+      "requested": "/workspace/gbrain@3a284aea26889b77c633aebb4149c3016d834ee6",
+      "ref": "3a284aea26889b77c633aebb4149c3016d834ee6",
+      "commit": "3a284aea26889b77c633aebb4149c3016d834ee6",
+      "tree": "ce2f2ecc26e083bf719aa336fd752fc065c9b878",
+      "version": "0.60.26.0",
+      "checkout_dirty": false,
+      "verified": {
+        "copy_tree": "ce2f2ecc26e083bf719aa336fd752fc065c9b878",
+        "tree_matches": true,
+        "symlinks_under_src": 0,
+        "dir_is_realpath": true,
+        "cli_version": "0.60.26.0",
+        "cli_version_matches": true
+      },
+      "copied_not_symlinked": true
+    },
+    "verdict_meaning": "completion only (every planned extraction returned); exploratory, never gates"
+  },
+  "started_at": "2026-10-01T19:34:04.861Z",
+  "finished_at": "2026-10-01T19:35:23.486Z",
+  "data": {
+    "scored": {
+      "promise_recall": {
+        "n": 11,
+        "recalled": 11,
+        "rate": 1
+      },
+      "due_date_exact": {
+        "n": 11,
+        "exact": 11,
+        "rate": 1,
+        "rows": [
+          {
+            "thread": "9859c80f33454d9c",
+            "gold": "2026-10-05",
+            "got": "2026-10-05"
+          },
+          {
+            "thread": "c27005d47911627e",
+            "gold": "2026-10-09",
+            "got": "2026-10-09"
+          },
+          {
+            "thread": "c92d4f4319d4971e",
+            "gold": "2026-10-08",
+            "got": "2026-10-08"
+          },
+          {
+            "thread": "48fe45190936e7e3",
+            "gold": "2026-10-06",
+            "got": "2026-10-06"
+          },
+          {
+            "thread": "9f2d65405755808b",
+            "gold": "2026-10-06",
+            "got": "2026-10-06"
+          },
+          {
+            "thread": "faea6dce84ac823e",
+            "gold": "2026-10-09",
+            "got": "2026-10-09"
+          },
+          {
+            "thread": "4d3aa88da85a9bb9",
+            "gold": "2026-10-05",
+            "got": "2026-10-05"
+          },
+          {
+            "thread": "fefcced16dfccedc",
+            "gold": "2026-10-08",
+            "got": "2026-10-08"
+          },
+          {
+            "thread": "5f990f11c424ffc0",
+            "gold": "2026-10-05",
+            "got": "2026-10-05"
+          },
+          {
+            "thread": "60ad59475296e008",
+            "gold": "2026-10-05",
+            "got": "2026-10-05"
+          },
+          {
+            "thread": "faae2aed4c33ea7a",
+            "gold": "2026-10-03",
+            "got": "2026-10-03"
+          }
+        ]
+      },
+      "fulfilled_single_pass_suppressed": {
+        "n": 4,
+        "suppressed": 4
+      },
+      "fulfillment_replay": {
+        "n": 4,
+        "extracted_before": 4,
+        "still_open_after": 4
+      },
+      "false_commitments_on_controls": {
+        "n": 13,
+        "threads_with_owed_by_me": 4
+      },
+      "errors": 0
+    },
+    "rows": [
+      {
+        "thread": "9859c80f33454d9c",
+        "klass": "promise_pending",
+        "pass": "single",
+        "loops": [
+          {
+            "loop_type": "commitment_owed_by_me",
+            "status": "open",
+            "due": "2026-10-05T23:59:59.000Z"
+          }
+        ]
+      },
+      {
+        "thread": "c27005d47911627e",
+        "klass": "promise_pending",
+        "pass": "single",
+        "loops": [
+          {
+            "loop_type": "commitment_owed_by_me",
+            "status": "open",
+            "due": "2026-10-09T23:59:59.000Z"
+          }
+        ]
+      },
+      {
+        "thread": "c92d4f4319d4971e",
+        "klass": "promise_pending",
+        "pass": "single",
+        "loops": [
+          {
+            "loop_type": "commitment_owed_by_me",
+            "status": "open",
+            "due": "2026-10-08T23:59:59.000Z"
+          }
+        ]
+      },
+      {
+        "thread": "48fe45190936e7e3",
+        "klass": "promise_pending",
+        "pass": "single",
+        "loops": [
+          {
+            "loop_type": "commitment_owed_by_me",
+            "status": "open",
+            "due": "2026-10-06T23:59:59.000Z"
+          }
+        ]
+      },
+      {
+        "thread": "9f2d65405755808b",
+        "klass": "promise_then_thanks",
+        "pass": "single",
+        "loops": [
+          {
+            "loop_type": "commitment_owed_by_me",
+            "status": "open",
+            "due": "2026-10-06T23:59:59.000Z"
+          }
+        ]
+      },
+      {
+        "thread": "faea6dce84ac823e",
+        "klass": "promise_then_thanks",
+        "pass": "single",
+        "loops": [
+          {
+            "loop_type": "commitment_owed_by_me",
+            "status": "open",
+            "due": "2026-10-09T23:59:59.000Z"
+          }
+        ]
+      },
+      {
+        "thread": "4d3aa88da85a9bb9",
+        "klass": "promise_then_thanks",
+        "pass": "single",
+        "loops": [
+          {
+            "loop_type": "commitment_owed_by_me",
+            "status": "open",
+            "due": "2026-10-05T23:59:59.000Z"
+          }
+        ]
+      },
+      {
+        "thread": "fefcced16dfccedc",
+        "klass": "promise_then_thanks",
+        "pass": "single",
+        "loops": [
+          {
+            "loop_type": "commitment_owed_by_me",
+            "status": "open",
+            "due": "2026-10-08T23:59:59.000Z"
+          }
+        ]
+      },
+      {
+        "thread": "5f990f11c424ffc0",
+        "klass": "promise_to_me",
+        "pass": "single",
+        "loops": [
+          {
+            "loop_type": "commitment_owed_to_me",
+            "status": "open",
+            "due": "2026-10-05T23:59:59.000Z"
+          }
+        ]
+      },
+      {
+        "thread": "60ad59475296e008",
+        "klass": "promise_to_me",
+        "pass": "single",
+        "loops": [
+          {
+            "loop_type": "commitment_owed_to_me",
+            "status": "open",
+            "due": "2026-10-05T23:59:59.000Z"
+          }
+        ]
+      },
+      {
+        "thread": "faae2aed4c33ea7a",
+        "klass": "promise_to_me",
+        "pass": "single",
+        "loops": [
+          {
+            "loop_type": "commitment_owed_to_me",
+            "status": "open",
+            "due": "2026-10-03T23:59:59.000Z"
+          }
+        ]
+      },
+      {
+        "thread": "861943378fd5fa56",
+        "klass": "promise_fulfilled",
+        "pass": "single",
+        "loops": []
+      },
+      {
+        "thread": "c1af26377cf2a948",
+        "klass": "promise_fulfilled",
+        "pass": "single",
+        "loops": []
+      },
+      {
+        "thread": "4a0efd24df0f40d7",
+        "klass": "promise_fulfilled",
+        "pass": "single",
+        "loops": []
+      },
+      {
+        "thread": "5d4f1058d0aafa31",
+        "klass": "promise_fulfilled",
+        "pass": "single",
+        "loops": []
+      },
+      {
+        "thread": "bb055a331f715c0e",
+        "klass": "ack_thanks",
+        "pass": "single",
+        "loops": [
+          {
+            "loop_type": "commitment_owed_by_me",
+            "status": "open",
+            "due": null
+          }
+        ]
+      },
+      {
+        "thread": "affb86abce93495c",
+        "klass": "ack_thanks",
+        "pass": "single",
+        "loops": []
+      },
+      {
+        "thread": "c1cc39f34ecd17ff",
+        "klass": "ack_thanks",
+        "pass": "single",
+        "loops": [
+          {
+            "loop_type": "commitment_owed_by_me",
+            "status": "open",
+            "due": null
+          }
+        ]
+      },
+      {
+        "thread": "7f6b6d0ea34b8fcc",
+        "klass": "ack_thanks",
+        "pass": "single",
+        "loops": [
+          {
+            "loop_type": "commitment_owed_by_me",
+            "status": "open",
+            "due": null
+          }
+        ]
+      },
+      {
+        "thread": "d486dfed0d4b316e",
+        "klass": "ack_thanks",
+        "pass": "single",
+        "loops": []
+      },
+      {
+        "thread": "d406c46132f4131b",
+        "klass": "ack_thanks",
+        "pass": "single",
+        "loops": []
+      },
+      {
+        "thread": "6c93a9e747652940",
+        "klass": "ack_thanks",
+        "pass": "single",
+        "loops": []
+      },
+      {
+        "thread": "a3df261b773d88d8",
+        "klass": "ack_thanks",
+        "pass": "single",
+        "loops": [
+          {
+            "loop_type": "commitment_owed_by_me",
+            "status": "open",
+            "due": null
+          }
+        ]
+      },
+      {
+        "thread": "e74c0cd9b903154f",
+        "klass": "outbound_fyi",
+        "pass": "single",
+        "loops": []
+      },
+      {
+        "thread": "5a44ee0902db3065",
+        "klass": "outbound_fyi",
+        "pass": "single",
+        "loops": []
+      },
+      {
+        "thread": "fa4040a5ba8d3fde",
+        "klass": "outbound_fyi",
+        "pass": "single",
+        "loops": []
+      },
+      {
+        "thread": "fe6f80433e5372fe",
+        "klass": "outbound_fyi",
+        "pass": "single",
+        "loops": []
+      },
+      {
+        "thread": "01e387f783eed8f2",
+        "klass": "outbound_fyi",
+        "pass": "single",
+        "loops": []
+      },
+      {
+        "thread": "861943378fd5fa56",
+        "klass": "promise_fulfilled",
+        "pass": "before_fulfillment",
+        "loops": [
+          {
+            "loop_type": "commitment_owed_by_me",
+            "status": "open",
+            "due": "2026-10-03T23:59:59.000Z"
+          }
+        ]
+      },
+      {
+        "thread": "861943378fd5fa56",
+        "klass": "promise_fulfilled",
+        "pass": "after_fulfillment",
+        "loops": [
+          {
+            "loop_type": "commitment_owed_by_me",
+            "status": "open",
+            "due": "2026-10-03T23:59:59.000Z"
+          }
+        ]
+      },
+      {
+        "thread": "c1af26377cf2a948",
+        "klass": "promise_fulfilled",
+        "pass": "before_fulfillment",
+        "loops": [
+          {
+            "loop_type": "commitment_owed_by_me",
+            "status": "open",
+            "due": "2026-10-03T23:59:59.000Z"
+          }
+        ]
+      },
+      {
+        "thread": "c1af26377cf2a948",
+        "klass": "promise_fulfilled",
+        "pass": "after_fulfillment",
+        "loops": [
+          {
+            "loop_type": "commitment_owed_by_me",
+            "status": "open",
+            "due": "2026-10-03T23:59:59.000Z"
+          }
+        ]
+      },
+      {
+        "thread": "4a0efd24df0f40d7",
+        "klass": "promise_fulfilled",
+        "pass": "before_fulfillment",
+        "loops": [
+          {
+            "loop_type": "commitment_owed_by_me",
+            "status": "open",
+            "due": "2026-10-09T23:59:59.000Z"
+          }
+        ]
+      },
+      {
+        "thread": "4a0efd24df0f40d7",
+        "klass": "promise_fulfilled",
+        "pass": "after_fulfillment",
+        "loops": [
+          {
+            "loop_type": "commitment_owed_by_me",
+            "status": "open",
+            "due": "2026-10-09T23:59:59.000Z"
+          }
+        ]
+      },
+      {
+        "thread": "5d4f1058d0aafa31",
+        "klass": "promise_fulfilled",
+        "pass": "before_fulfillment",
+        "loops": [
+          {
+            "loop_type": "commitment_owed_by_me",
+            "status": "open",
+            "due": "2026-10-03T23:59:59.000Z"
+          }
+        ]
+      },
+      {
+        "thread": "5d4f1058d0aafa31",
+        "klass": "promise_fulfilled",
+        "pass": "after_fulfillment",
+        "loops": [
+          {
+            "loop_type": "commitment_owed_by_me",
+            "status": "open",
+            "due": "2026-10-03T23:59:59.000Z"
+          }
+        ]
+      }
+    ]
+  },
+  "accounting": {
+    "planned": 36,
+    "attempted": 36,
+    "scored": 36,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null
+}

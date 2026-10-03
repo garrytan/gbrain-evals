@@ -2,6 +2,433 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.11] - 2026-10-03
+
+### Cat 40 Model Ladder: gbrain lost to grep at release v0.60.27.0; a fix wave puts it ahead on the dev world and level-to-ahead on a held-out world
+
+Cat 40 (`model-ladder`, tier P, report-only) gives one agent loop 50 tasks
+about a fictional company, with different memory setups: plain Markdown files
+with `grep`, Anthropic's memory tool, plain Postgres search, gbrain's MCP
+server, and an oracle arm that is handed the evidence. The task families are
+contract authority, who-owns-it-now, permissions, five-part renewal briefs
+and write-back across sessions
+([report](docs/benchmarks/2026-10-02-model-ladder.md),
+[protocol](docs/benchmarks/2026-10-02-model-ladder-protocol.md)).
+
+- **Release v0.60.27.0 lost to grep.** 11 models, uncapped tool output,
+  7,624 runs: gbrain was 8 points below the best simple setup pooled
+  (95% CI −13 to −4). It leaked finance-only text in 64 of 330 permission
+  runs, against 17 for files. On a 52,028-document world (4 models) it was
+  16 points behind.
+- **The gbrain fix wave** ([garrytan/gbrain#5932](https://github.com/garrytan/gbrain/pull/5932))
+  addresses the five mechanisms found in the transcripts: derived pages
+  leaking private sources, guessed page types hiding evidence, saved facts
+  invisible to search, other names for a customer, and wasted cold-start
+  turns. On the development world it finished 494 of 550 runs, against 455
+  for files: +7 points pooled (CI +3 to +9), with 0 leaks.
+- **Held-out world** (seed 20261003, 6 models, 2 repeats, the shipped build
+  `77dcf414`): +16.7 points over the release (CI +9.7 to +23.8) and +6.0 over
+  files (CI −0.2 to +12.3). It leaked nothing in 120 permission runs.
+- **Price:** a gbrain run costs 2.5 to 4 times a file run.
+- **Latency measured inside the harness is invalid.** Every model request
+  rewrites the whole budget ledger synchronously on the runner's event loop,
+  and that loop also proxies gbrain's own provider requests. An isolated
+  replay shows the fixed build's searches are as fast as the release's.
+- **Not measurable here:** whether gbrain's advantage grows with model
+  capability. The strongest models score 96–100% with every setup.
+- **New:** generator `eval/generators/model-ladder-gen.ts`, runner
+  `eval/runner/cat40-model-ladder.ts` with `eval/runner/cat40/` (loop, arms,
+  scoring, analysis), and budget-ledger allowances (one reservation covering
+  many small requests) plus prices for the ladder models.
+- **Spend:** $1,763 across the program, under a $2,000 authorization.
+
+## [0.10.10] - 2026-10-03
+
+### Re-pin to gbrain `48ed5e8` (fix wave 7): eight ledger gaps closed and verified, N2 prompt v4, an N7 oracle amendment
+
+gbrain is pinned at master `48ed5e8` (v0.60.32.0), which contains fix wave 7
+([garrytan/gbrain#5908](https://github.com/garrytan/gbrain/pull/5908)). The
+owning categories were rerun with the October 2 runners, seeds and settings
+([report](docs/benchmarks/2026-10-03-wave7-repin.md),
+[preregistration](docs/benchmarks/2026-10-03-wave7-repin-preregistration.md)).
+Paid spend: $15.68 against a $30 cap, every request reconciled. No new gbrain
+bug was found.
+
+- **N2: judge prompt version 4.** 149 of 150 planted same-time conflicts
+  called contradictions end to end (version 3 at `d44296c`: 132), 50 of 50
+  between undated notes (36). False contradictions: 6 of 51 compatible pairs
+  (3 of 50) and 38 of 1,977 unplanted pairs (26 of 1,968). The compatible-pair
+  decision rule (at most 10%) fails at 11.8%, so the report no longer says the
+  judge separates conflicts from dated changes on this world. A preregistered
+  repeat of version 3 at `d44296c` gave 129 of 150 and 5 of 51 compatible
+  pairs, so the compatible-pair difference is within run-to-run variation.
+  Before the run, the probe budget was raised from $6 to $10 in its own
+  commit; every one of the 2,680 offered pairs was judged.
+- **N7: oracle amendment.** gbrain changed its documented rule so that an
+  acknowledgement-only reply to a question no longer closes a loop (gap
+  N7-2). The frozen oracle encoded the old rule, and the first run failed
+  closure accuracy (34 of 39, threshold 0.95) on exactly those threads. A
+  dated amendment makes the oracle apply the rules documented by the gbrain
+  version under test; no threshold, contract or input changed, the failing
+  receipt is kept, and at `d44296c` the amended oracle reproduces the
+  October 2 receipt byte for byte
+  ([amendment](docs/benchmarks/2026-10-03-n7-oracle-amendment.md)). N7 then
+  passes every rule: 53 of 53 planted loops, 34 of 34 closures.
+- **Gaps closed by gbrain and verified here:** N7-2, N7-5 (`as_of` pins the
+  ranking), N7-6 (loop age from the request), N7-7 (`?` inside a link), N9-5
+  (unresolved one-hop seeds 45 to 6 of 435 runs), N12-6 (`Participants:`
+  attendees 5 of 5, was 0), N13-8 (member calls; resolved edges 76 to 72 of
+  91 with all 42 same-file calls kept) and A4-2 (unanswerable questions graded
+  `weak` 120 of 120, was `moderate`; 80 of 120 answerable also grade `weak`).
+- **Ledger.** A 2026-10-03 review on every entry; earlier reviews kept in a
+  new `review_history` field. All 20 bugs re-verified. Wave 7's by-design
+  dispositions (A4-1, N2-5, N5-4, N5-5, N5-6, N12-4, N12-5, N13-4) cite
+  gbrain's documented reasons. New entries N7-8 (the frozen oracle) and N12-9
+  (speakers-only attendance, split from N12-6). 27 repros pass, three of them
+  new keyless checks.
+- **A4-3 fixed:** the budget ledger prices TypeSafe requests at gbrain's own
+  rate and refuses an unpriced Jev model. A4 still has no S4-on arm.
+- **No gate flipped.** No threshold moved; N7, N12, A4, N2 and the N1 and N5
+  CI slices gate and pass.
+- `@ai-sdk/anthropic` moves to 3.0.127 in the lockfile with gbrain's new
+  floor, and `cat36-production.ts` casts the older `gbrain-cues` operations
+  through `unknown` (gbrain 0.60.31.0 made `outputRedaction` required).
+
+## [0.10.9] - 2026-10-02
+
+### CI slices for N1 and N5, faster N9, a matched concept cell, fresh Cat 14 and Cat 19 to 21 receipts, wider N6, live negative controls
+
+gbrain stays pinned at master `d44296c` (v0.60.30.0). Paid spend for the
+whole wave: $1.09 metered by the budget ledger (concept cells and a smoke
+run), plus about $2.20 counted from runners that do not meter their spend,
+about $3.30 against a $50 cap. No new gbrain bug was found.
+
+- **N1 and N5 now gate in CI.** New registry entries `knowledge-update-ci`
+  and `forget-residue-ci` run in the offline tier. Each is an entity subset
+  of the seeded ledger on one PGLite cell, served over stdio MCP by the
+  gbrain CLI, with trusted and private reads through `gbrain call`. They
+  keep every rule of the full category and add signal floors computed from
+  the sliced ledger. The subsets, cell and floors were preregistered in their
+  own commit before any slice ran. First runs passed every rule: N1-ci 64/64
+  current-value and 57/57 history probes in 57 s, N5-ci 0 prohibited outputs
+  and 120/120 retained pairs in 79 s. A pure CLI-transport cell could not fit
+  two minutes: each `gbrain call` costs about 1 s, 0.7 s of it opening
+  PGLite, and the full N5 CLI cell made 508 calls in 575 s
+  ([report](docs/benchmarks/2026-10-02-ci-slices.md)).
+- **N9 hermetic arm: 47 s instead of about 130 s.** Each ingestion seed now
+  runs in its own process and the rows merge in seed order. A serial and a
+  parallel receipt are identical apart from timing fields and the runner
+  hash; `--serial-seeds` restores the old path. **N2 was not trimmed:**
+  seeding 825 pages through `put_page` (49 s) and the two gating probes
+  already take about 65 s, and the remaining cuts would shrink the
+  preregistered 150-conflict denominator
+  ([note](docs/benchmarks/2026-10-02-hermetic-arm-trims.md)).
+- **Concept search with the same reranker on both sides** (September 28
+  audit, B2). New opt-in Cat 13 adapter `vector-rerank` sends vector results
+  through gbrain's own `applyReranker`. On the 181 held-out questions:
+  vectors 118, vectors with the reranker 128, gbrain 99, gbrain with the
+  reranker 130 exact targets first. Reranked gbrain won first place on 8
+  questions and lost it on 10 (p = 0.81). The README now quotes this matched
+  set; the September cells (102, 118, 130) stay as history
+  ([report](docs/benchmarks/2026-10-02-concept-vector-rerank.md)).
+- **Cat 14 rerun with the blind runner** (audit A-01): 8/8 probes scored, the
+  calibrated advice preferred in 5 of 6 win-eligible probes and never the
+  plain answer; the gate fails on the counter-argument (2/4) and voice (31%)
+  axes. The May 75% stays retracted
+  ([report](docs/benchmarks/2026-10-02-cat14-rerun.md)).
+- **Cats 19, 20 and 21 have fresh receipts** (audit A-09). Cat 19 passes 5/5
+  gates with live embeddings (health score 10 to 85). Cat 20 fails its judge
+  floor: grounding 1.00 over 69 graded ideas, judge 1.17/5 against 2.5. Cat
+  21 ties at the ceiling (12/12 for both embedders), so it needs questions
+  that do not name the symbol. The May rows keep their numbers with dated
+  pointers ([report](docs/benchmarks/2026-10-02-may-snapshot-reruns.md)).
+- **N6 generator v2** seeds a private ontology observation, raw data on a
+  private page and a private orphan page beside public twins. Read-op
+  coverage rose from 26 to 30 of 74 with 0 leaks; skills, code intelligence
+  and schema-pack ops remain uncovered for the reasons recorded in the
+  [update](docs/benchmarks/2026-09-30-n6-visibility-fuzz.md#update-2026-10-02-three-more-surfaces-seeded-30-of-74-read-ops-covered).
+- **Live negative controls** (WS3), both preregistered and both passing the
+  0.5 rule: Cat 25 `think` without trajectory data 0.00 against 0.84 with
+  it; Cat 13 vector search with hash embeddings held-out nDCG@5 0.077
+  against 0.606 with Voyage
+  ([report](docs/benchmarks/2026-10-02-live-negative-controls.md)).
+- Plans written before the paid runs:
+  [paid reruns and negative controls](docs/benchmarks/2026-10-02-paid-reruns-plan.md),
+  [CI slices](docs/benchmarks/2026-10-02-ci-slices-preregistration.md).
+
+## [0.10.8] - 2026-10-02
+
+### Sealed v2, release decision 1: whole-conversation delivery confirmed on held-out data
+
+The first preregistered opening of sealed confirmation set v2 asked whether
+gbrain's shipped evidence default, `auto` (whole conversation pages within a
+24,000-token budget), is non-inferior to the old `chunk` default and whether it
+is better, at gbrain `d44296c` (v0.60.30.0)
+([results](docs/benchmarks/2026-10-02-sealed-v2-decision-1.md),
+[preregistration](docs/benchmarks/2026-10-02-sealed-v2-decision-1-preregistration.md)).
+
+- **Result.** `auto` answered 192 of 200 questions and `chunk` 132 of 200,
+  from the same five retrieved hits, with Claude Sonnet 4.6 at temperature 0
+  reading and `gpt-4o-2024-08-06` judging. `auto` won 60 and lost 0: +30.0
+  points, 95% persona-cluster interval +24.0 to +36.0. The preregistered
+  verdict is `pass`, with superiority confirmed (exact McNemar p = 1.7e-18;
+  persona sign-flip p = 0.00005). Multi-session questions went from 33 to 76
+  of 80 and temporal questions from 21 to 36 of 40. Knowledge update (38 to
+  40) and abstention (40 and 40) barely moved. Reader input rose from a mean of
+  3,280 to 12,982 tokens.
+- **Retrieval was not the bottleneck.** The shared top five held every gold
+  chat for 153 of 160 answerable questions. All 60 wins came from those 153.
+- **Rule written first.** The 3-point non-inferiority margin, the fixed-order
+  superiority test (reusing the E2 rule from the auto v2 manifest), the
+  `compare.ts` family and a simulated power table were committed in `d0efb58`
+  before the sealed files reached the machine.
+- **Runner.** `eval/runner/sealed-confirmation.ts` gains `evidence-freeze`
+  (the evidence-delivery freeze on sealed questions, sharded by history),
+  `evidence-answer` (the protocol reader over one frozen arm, resumable from
+  its response cache) and `decide` (the preregistered rule over `compare.ts`
+  output). `score` now writes `haystack_id` per question, and adds
+  `error`/`error_origin` only on failed rows, so its rows pair in `compare.ts`.
+  `readAnswer` also returns the provider-reported input tokens.
+- **Custody.** Labels were read twice through the runner under one decision
+  id. The access log went from 1 to 3 lines, and it was handed back with the
+  per-question scores for private custody. Everything else holding sealed
+  content was deleted from the machine. This is release decision 1 of the 3 the
+  protocol allows. The v2 protocol doc and README record the opening.
+- **Cost:** $16.06 of a $60 cap (10,600 requests), plus about $0.22 for setup
+  runs on invented fixtures.
+
+## [0.10.6] - 2026-10-02
+
+### Re-pin to gbrain `d44296c`: all 20 wave bugs fixed and verified, N12 gates
+
+gbrain fix wave 5 ([#5839](https://github.com/garrytan/gbrain/pull/5839),
+v0.60.28.0) and fix wave 6 ([#5845](https://github.com/garrytan/gbrain/pull/5845),
+v0.60.30.0) have merged. This release pins gbrain master `d44296c`, which
+contains both, and reruns the October 1 categories with the same runners,
+seeds and settings
+([results](docs/benchmarks/2026-10-02-wave-repin.md)).
+
+- **Gate changes.**
+  - **N12 format fidelity now gates.** Its frozen hold said to re-pin to a
+    master with the N12-1 fix, rerun N12 and remove the hold. At `d44296c`
+    it passes all six preregistered rules on seeds 12 and 7, including 0
+    fabricated turns out of 16 negative items (3 turns on October 1). The
+    hold was removed in the re-pin commit. No rule value changed.
+  - N1 and N5 already had gate status, and now pass every rule on PGLite and
+    Postgres. They stay listed, not dispatched, until a CI-sized slice exists.
+  - N8 stays report-only, and its private-delivery targets stay exploratory.
+    N9 and N13 have no gating rule. Paid arms never gate.
+- **Before and after (October 1 at `3a284ae`, October 2 at `d44296c`).**
+  - **N1 knowledge update.** Current-value accuracy went from 288/388 to
+    388/388 probes, and history retained from 168/385 to 385/385. Stale
+    values stayed at 0 of 773.
+  - **N5 forgetting residue.** Prohibited outputs after forget went from 2 to
+    0 on PGLite and from 12 to 0 on Postgres. Retained-neighbor recall went
+    from 738/750 to 750/750, and reinstatement from 4/6 to 6/6. Remote
+    responses carrying a forgotten fact in `_meta` went from 108 and 304 to
+    0 and 0.
+  - **N2 contradiction surfacing (paid, judge prompt v3).** Conflicts called
+    contradictions rose from 105/150 to 132/150. Unplanted false
+    contradictions fell from 109/1,977 to 26/1,968, and judged-pair precision
+    rose from 48.6% to 82.0%. All three preregistered decision rules now
+    hold. Undated conflicts did not move (36 of 50 both times). One of four
+    probe runs hit its $1.50 cap, so 13 of 2,680 pairs went unjudged; no
+    planted conflict was among them.
+  - **N8 proactive recall.** Private pages delivered went from 4 to 0 for
+    remote callers and from 4 to 0 for the turn block.
+  - **N13 code intelligence.** `code_def` top-1 went from 40/50 to 49/50, and
+    the `resolved` flag from 0 of 81 edges to 76 of 91.
+  - **N7 open loops.** Backfill nudges went from 0/6 and 0/4 to 6/6 and 4/4.
+    The gating numbers are unchanged.
+  - **N9 multi-hop.** Unchanged: 0 composed plans and 0 firings. "Who
+    attended" seeds now resolve (150/150, was 0), but the arm still fires 0
+    times. World-v1 names attendees only in prose, which the evidence gate now
+    types as mentions. The one-hop paid rerun repeated its October 1 numbers.
+- **Bug ledger.** Each entry gains a dated `review` with the commit checked,
+  the evidence and its receipts. Fixed bugs gain `fixing_pr` and
+  `fixing_commit`, and a new `closed` status covers a gap that gbrain closes on
+  purpose. The original findings are unchanged. Status on 2026-10-02:
+  - 20 of 20 bugs are fixed and verified by a rerun. None is fixed upstream
+    without verification, and none is still open.
+  - Gap N12-7 (legacy-pack attendance) is closed by gbrain `81755f5b`.
+  - Of the other gaps, 25 still reproduce. A4-1 and A4-2 were not rechecked,
+    because A4 was not rerun.
+  - All 24 ledger repros now exit 0
+    ([output](docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt)).
+- **No new gbrain bugs.** Three findings are follow-up work, not contract
+  breaks: undated conflicts called temporal, prose attendance typed as
+  mentions, and the N2 probe cap. They are in `TODOS.md`.
+- **Harness.**
+  - N2 gains a `local_bare_cli` probe that asks gbrain's own `makeContext`
+    for the context. The existing probe imitates the October 1 CLI context
+    and is unchanged.
+  - N2 now records the judge prompt version from gbrain instead of
+    hard-coding "2".
+  - The N2 small-world test now pins the fixed behavior.
+- **Runtime.** gbrain v0.60.27.0 requires Bun 1.4.0 or newer, so CI and the
+  reruns moved from Bun 1.3.14 to 1.4.2. That is the one setting that
+  differs from the October 1 runs.
+- **Paid spend: $6.37** in one budget run capped at $60, with every request
+  reconciled. Of that, the N2 judge cost $6.24, the N9 paid arm $0.065,
+  the relational-ab one-hop rerun $0.065 and the N1 paid arm $0.000006.
+  Everything else ran keyless. The sealed confirmation sets were not touched.
+
+## [0.10.5] - 2026-10-01
+
+### Eval-category wave: eleven categories at gbrain `3a284ae`, 20 gbrain bugs found
+
+This release integrates the October 1 eval-category wave
+([plan](docs/plans/2026-10-01-eval-category-wave/README.md)): a shared step 0
+and five category lanes, merged as one release. Every new category froze its
+promotion rules in the registry before its first counted run, and every
+counted run used gbrain master `3a284ae` (v0.60.26.0) through a copied
+overlay, with provider keys stripped and System One off.
+
+- **Gate changes.**
+  - **N4 entity resolution now gates.** It was report-only. It gates on five
+    safety contracts (zero identity-group leaks; zero wrong merges on resolve,
+    recall, remember and resolve-on-save) and two exact-lookup floors at 100%,
+    all of which held at `6c8373c` and `3a284ae`. Its runner verdict stays
+    `fail` because B-cubed F1 is under 0.9 on variants gbrain does not read by
+    design; that metric is now exploratory.
+  - **N6 visibility fuzz gains a coverage floor.** `content_reachable_coverage
+    >= 1` sits beside its six zero-leak contracts. It held at both commits.
+  - **N7 open loops gates from its first run.** Five safety contracts and
+    three quality floors all held.
+  - N2 and A4 also gate, and both held. N12 lands report-only with its rules
+    held (see below). N8, N9 and N13 are report-only. N1 and N5 carry gating
+    rules but are listed, not dispatched: their CLI cells take 6 to 17
+    minutes and the Postgres cells need Docker.
+- **Headline numbers.**
+  - **N1 knowledge update.** Safety contracts pass: 0 stale values served in
+    773 probes. The floors fail. Current-value accuracy is 288/388 (74.2%) and
+    history retained is 168/385 (43.6%). Every miss is an ontology probe,
+    because `ontology_propose` is refused on default brains (N1-1). With real
+    embeddings, 0 of 10 value changes were superseded implicitly.
+  - **N5 forgetting residue.** 0 reactivations, 0 collateral expirations, 0
+    unauthorized forgets and 0 private leaks. It fails on 2 prohibited
+    `context_pack` outputs from the hot-memory cache (N5-1), retained recall
+    738/750 and reinstatement 4/6.
+  - **N2 contradiction surfacing.** With a query that names the company and
+    attribute, the hermetic probe offered 150/150 planted conflicts to the
+    judge. With queries that name no company it offered 4/150. With gbrain's
+    judge (paid), end-to-end recall was 105/150 and false contradictions were
+    0/60 on dated changes. That is below the preregistered 0.80, so the judge
+    does not yet separate conflicts from dated changes.
+  - **A4 abstention.** Every one of 240 calls carried a grade, but every
+    natural question was graded `moderate`. With a paid house reader on
+    retrieved evidence, it answered 120/120 correctly and abstained on 119/120
+    unanswerable questions.
+  - **N7 open loops (Gmail-shaped threads).** Recall 45/45, closure 39/39,
+    counterparty 45/45 and 0 safety violations.
+  - **N8 proactive recall.** Alias and title recall was 42/42 with 0/68 false
+    alarms. Common-word aliases fired 6/6. Associative recall was 0/240. The
+    private-page contracts fail: 4 deliveries to remote callers and 4 into the
+    `turn_context` block (N8-1, N8-2).
+  - **N9 multi-hop with held-out wording.** 0 of 250 composed wordings
+    produced a multi-relation plan, so the relational arm never fired. Strict
+    all-hit at 10 was 10/375 (keyword, canonical). On the one-hop paid rerun,
+    paraphrase recall at five rose from 0.411 to 0.537 (19 better, 0 worse,
+    p = 0.000004), on development data.
+  - **N12 format fidelity.** Across all 27 registered formats, adapter roles
+    were right for 266/266 turns, adapter timestamps for 266/266 and parser
+    speakers for 760/760. Attendance from documented forms was 20/20 with 0
+    false. One safety contract fails: a status note with three bold labels
+    parses as a 3-turn chat (N12-1).
+  - **N13 code intelligence (scout).** All 6 ops answer the trusted call and
+    all 6 refuse remote callers. `code_def` top-1 was right for 40 of 50
+    functions, and `resolved` is false on 81 of 81 edges.
+- **N12 is report-only until gbrain fixes N12-1.** The fix is in gbrain fix
+  wave 5 ([#5839](https://github.com/garrytan/gbrain/pull/5839)), which was
+  still open on 2026-10-01. A new `held` field on the promotion rules keeps
+  the frozen rules evaluated and printed without letting them gate. When
+  master contains the fix, re-pin, rerun N12 and remove the hold in that
+  commit.
+- **gbrain bugs found (20).**
+  - **Fixed in fix wave 5, lane A ([#5839](https://github.com/garrytan/gbrain/pull/5839), open):**
+    - N7-1: the nudge on first sight.
+    - N8-1 and N8-2: private pages reach `volunteer_context` and the turn
+      block.
+    - N12-1: one-off bold labels parse as a conversation.
+    - N12-2: offset timestamps land a day early.
+    - N13-1: merged arrow functions lose their definitions.
+    - N13-2: the `resolved` flag.
+    - N13-3: the shared-name language gate.
+  - **In the upcoming fix wave 6, lane B:**
+    - N9-2: schema-pack frontmatter relations are forced outgoing.
+    - N9-3: meeting attendance is stored meeting to person.
+    - N9-4: the attended seed never resolves.
+    - Lane B also covers the legacy-pack attendance gap, N12-7.
+  - **In fix wave 6, lane C:**
+    - N1-1: `ontology_propose` is refused on managed brains.
+    - N1-2: an ontology revert is a no-op.
+    - N1-3: private ontology observations reach remote callers.
+    - N5-1: the hot-memory cache serves forgotten facts for 30 s.
+    - N5-2: concurrent PGLite writes leave a forgotten fact's page without
+      chunks.
+    - N5-3: the first `remember` after a forget is refused with
+      `scope_denied`.
+  - **In fix wave 6, lane D:**
+    - N2-1: undated pages reach the judge with the fallback date.
+    - N2-2: `find-contradictions` with no flags returns nothing.
+    - N2-3: judge quality against its own prompt rules. Fixed by judge prompt
+      v3 (gbrain `89a4f8a9`). On a fresh seed (development data), same-time
+      conflicts called contradictions went from 101/150 to 131/150, and
+      unplanted false contradictions from 59/820 to 11/820
+      ([addendum](docs/benchmarks/2026-10-01-n2-contradiction-surfacing.md#addendum-2026-10-01-the-n2-3-prompt-fix-on-development-data)).
+- **Feature gaps (28)** are listed rather than "fixed":
+  - Implicit supersession, paraphrase retraction and physical erasure.
+  - Corpus-wide contradiction discovery, and findings hidden from remote
+    callers.
+  - Keyless abstention and a grade that never separates answerable from
+    unanswerable questions.
+  - Any reply closes a loop, there is no fulfillment tracking, loops are
+    Gmail-only, and loops rank by wall clock and detection age.
+  - Common-word alias false alarms, and no associative recall.
+  - No composed multi-hop plans.
+  - No generic JSON transcript adapter, the `1970-01-01` date fallback,
+    dropped seconds and undocumented attendance forms.
+  - Substring `code_refs`, no cross-file resolution, and code reads that are
+    trusted-only.
+  - The full list is in the [wave ledger](docs/benchmarks/2026-10-01-wave-bugs.md).
+- **Category defects (7), fixed or recorded here, never in gbrain:**
+  - N1-5 and N1-6: N1 scoring errata.
+  - N5-7: N5's first retention definition.
+  - N2-6: 6 of 10 amara-life contradiction labels relabelled.
+  - A4-3: the budget ledger cannot price TypeSafe, so S4-on was not run.
+  - A4-4: refusals that name another company's value count as answers.
+  - N12-8: the first development run measured the legacy schema pack.
+- **Paid spend: $15.75 in total.**
+  - N2 judge: $5.74, plus $2.76 from a first attempt that a tool time limit
+    stopped with no receipt.
+  - N2-3 prompt A/B (development data): $5.90.
+  - A4 reader: $1.12.
+  - N9 paid arms: $0.129.
+  - N7 extractor replay: $0.10.
+  - N1 paid arm: $0.000006.
+  - Step 0, N12, N13 and N5: $0.
+- **Step 0 infrastructure.**
+  - gbrain is re-pinned from `6c8373c` (v0.60.13.0) to `3a284ae`.
+    `MODE_BUNDLES` are identical.
+  - `eval/runner/hermetic-env.ts` strips provider and TypeSafe keys, uses a
+    fresh `GBRAIN_HOME`, and proves System One is off before and after a run.
+  - Registry promotion rules: `all.ts` gates only on them. It also gains
+    `--only` and a `--paid --budget-run-id` guard.
+  - A scorer mutation kit, with empty, always-positive, always-refuse, stale
+    and wrong-source fakes.
+  - A shared bug ledger, `eval/runner/bug-ledger.ts`.
+  - A capability and entrypoint matrix with committed keyless probes.
+  - An "add a category" checklist.
+- **Known limits.**
+  - The N9 hermetic arm (about 134 s) and N2 (about 76 s) run over the
+    wave's 60-second CI target.
+  - N8 waits on human review of its associative labels.
+  - The SO report still says the pin lacks `--decide`; at `3a284ae` it has
+    it.
+- Reports: `docs/benchmarks/2026-10-01-*.md`. Ledger:
+  `docs/benchmarks/2026-10-01-wave-bugs.json`, with its rendered view beside
+  it. Capability matrix: `docs/benchmarks/2026-10-01-capability-matrix.md`.
+
 ## [0.10.4] - 2026-10-01
 
 ### System One v1 (Jev decision support): two slots help, three regress

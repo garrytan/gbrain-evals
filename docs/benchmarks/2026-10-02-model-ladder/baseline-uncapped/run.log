@@ -1,5 +1,5 @@
-2026-10-02T18:19:03.386Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger /workspace/gbrain-evals/.budget/ledger.json
-2026-10-02T18:19:03.391Z 8580 cells to run (0 already done) in /workspace/gbrain-evals/eval/reports/cat40/ladder-uncapped
+2026-10-02T18:19:03.386Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger <evals>/.budget/ledger.json
+2026-10-02T18:19:03.391Z 8580 cells to run (0 already done) in <evals>/eval/reports/cat40/ladder-uncapped
 2026-10-02T18:19:46.223Z pg arm ready
 2026-10-02T18:45:46.584Z built slot2 in 1556s, $0.0959 (3975 provider requests)
 2026-10-02T18:46:10.807Z built slot4 in 1578s, $0.0959 (3975 provider requests)
@@ -218,8 +218,8 @@
 2026-10-02T19:50:41.558Z cell claude-sonnet-4-6|gbrain|E04 failed: judge error 429: {"error":{"message":"You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.","type":"insufficient_quota","param":null,"code":"credit_balance_exhausted"}}
 2026-10-02T19:50:51.343Z cell claude-sonnet-5-5|gbrain|E04 failed: judge error 429: {"error":{"message":"You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.","type":"insufficient_quota","param":null,"code":"credit_balance_exhausted"}}
 2026-10-02T19:50:59.482Z 1930/8580 cells; last gpt-5.4|oracle|E04|0 success=true $0.005
-2026-10-02T20:13:04.779Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger /workspace/gbrain-evals/.budget/ledger.json
-2026-10-02T20:13:04.937Z 6650 cells to run (1930 already done) in /workspace/gbrain-evals/eval/reports/cat40/ladder-uncapped
+2026-10-02T20:13:04.779Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger <evals>/.budget/ledger.json
+2026-10-02T20:13:04.937Z 6650 cells to run (1930 already done) in <evals>/eval/reports/cat40/ladder-uncapped
 2026-10-02T20:13:15.284Z pg arm ready
 2026-10-02T20:14:34.526Z write probe passed on every slot
 2026-10-02T20:14:34.527Z gbrain 0.60.27.0 (ad7900d8dcd2) ready on 5 slots, surface starter
@@ -576,8 +576,8 @@
 2026-10-02T23:17:11.843Z 3510/6650 cells; last gpt-6.1-sol|memory|F05|1 success=true $0.107
 2026-10-02T23:17:44.763Z 3520/6650 cells; last gpt-5.5|gbrain|F05|1 success=true $0.164
 2026-10-02T23:18:31.817Z 3530/6650 cells; last claude-haiku-4-5|gbrain|F06|1 success=false $0.097
-2026-10-02T23:19:19.831Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger /workspace/gbrain-evals/.budget/ledger.json
-2026-10-02T23:19:29.434Z 3113 cells to run (5467 already done) in /workspace/gbrain-evals/eval/reports/cat40/ladder-uncapped
+2026-10-02T23:19:19.831Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger <evals>/.budget/ledger.json
+2026-10-02T23:19:29.434Z 3113 cells to run (5467 already done) in <evals>/eval/reports/cat40/ladder-uncapped
 2026-10-02T23:19:39.368Z pg arm ready
 2026-10-02T23:20:56.254Z write probe passed on every slot
 2026-10-02T23:20:56.254Z gbrain 0.60.27.0 (ad7900d8dcd2) ready on 5 slots, surface starter
@@ -801,4 +801,4 @@
 2026-10-03T00:58:06.452Z cell claude-opus-5-5|gbrain|E03 failed: anthropic:claude-opus-5-5 chat: reserving $0.4318 would take this run to $165.0681, over its $165.00 budget
 2026-10-03T00:58:09.506Z cell claude-sonnet-5-5|gbrain|E03 failed: anthropic:claude-sonnet-5-5 chat: reserving $0.3801 would take this run to $165.1052, over its $165.00 budget
 2026-10-03T00:58:43.643Z cell gpt-5.4|gbrain|E03 failed: openai:gpt-5.4 chat: reserving $0.3152 would take this run to $165.0215, over its $165.00 budget
-2026-10-03T00:58:44.258Z receipt /workspace/gbrain-evals/eval/reports/cat40/ladder-uncapped/receipt-1790989124257.json
+2026-10-03T00:58:44.258Z receipt <evals>/eval/reports/cat40/ladder-uncapped/receipt-1790989124257.json

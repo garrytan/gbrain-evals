@@ -1,0 +1,79 @@
+{
+  "schema": "gbrain-evals/wave-repin-ledger-summary/v1",
+  "run": {
+    "run_id": "capy-repin-0.10.10-2026-10-02T22-55-56-470Z-cee27930",
+    "runner": "capy-repin-0.10.10",
+    "budget_usd": 30,
+    "estimate_usd": 16,
+    "started_at": "2026-10-02T22:55:56.471Z",
+    "finished_at": "2026-10-03T00:19:43.631Z"
+  },
+  "program_cap_usd": 500,
+  "total_usd": 15.68434,
+  "requests": 8722,
+  "statuses": {
+    "reconciled": 8722
+  },
+  "by_model": {
+    "anthropic:claude-haiku-4-5-20251001 chat": {
+      "requests": 5548,
+      "usd": 13.303318,
+      "charged_at_reservation": 0,
+      "input_tokens": 6055618,
+      "output_tokens": 1449540
+    },
+    "openai:text-embedding-3-large embedding": {
+      "requests": 2214,
+      "usd": 0.129228,
+      "charged_at_reservation": 0,
+      "input_tokens": 994064,
+      "output_tokens": 0
+    },
+    "anthropic:claude-sonnet-4-6 chat": {
+      "requests": 960,
+      "usd": 2.251794,
+      "charged_at_reservation": 0,
+      "input_tokens": 407758,
+      "output_tokens": 68568
+    }
+  },
+  "by_receipt": {
+    "N2 judge arm, prompt v4 at 48ed5e8 (n2-contradiction-surfacing --paid)": {
+      "receipt": "docs/benchmarks/2026-10-03-wave7-repin/n2/receipt-paid-48ed5e8.json",
+      "usd": 7.038795,
+      "input_tokens": 3288565,
+      "output_tokens": 750046
+    },
+    "N2 repeat control, prompt v3 at d44296c (n2-contradiction-surfacing --paid)": {
+      "receipt": "docs/benchmarks/2026-10-03-wave7-repin/n2/receipt-paid-v3-repeat-d44296c.json",
+      "usd": 6.264523,
+      "input_tokens": 2767053,
+      "output_tokens": 699494
+    },
+    "A4 answer arm at 48ed5e8 (a4-abstention --paid)": {
+      "receipt": "docs/benchmarks/2026-10-03-wave7-repin/a4/receipt-paid-48ed5e8.json",
+      "usd": 1.129032,
+      "input_tokens": 203879,
+      "output_tokens": 34493
+    },
+    "A4 answer arm at d44296c (a4-abstention --paid)": {
+      "receipt": "docs/benchmarks/2026-10-03-wave7-repin/a4/receipt-paid-d44296c.json",
+      "usd": 1.122762,
+      "input_tokens": 203879,
+      "output_tokens": 34075
+    },
+    "N9 paid arm (n9-multi-hop-paraphrase --paid)": {
+      "receipt": "docs/benchmarks/2026-10-03-wave7-repin/n9/n9-paid-48ed5e8.receipt.json",
+      "usd": 0.064723,
+      "input_tokens": 497866,
+      "output_tokens": 0
+    },
+    "one-hop rerun (relational-ab --paid)": {
+      "receipt": "docs/benchmarks/2026-10-03-wave7-repin/n9/relational-ab-48ed5e8-paid.receipt.json",
+      "usd": 0.064506,
+      "input_tokens": 496198,
+      "output_tokens": 0
+    }
+  },
+  "note": "Copied from the gitignored .budget/ledger.json after the run closed. One budget run with a $30 cap covered every paid request of the 2026-10-03 wave 7 re-pin; all other runs were keyless ($0)."
+}

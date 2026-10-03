@@ -1,0 +1,190 @@
+{
+  "summary": {
+    "mode": "live",
+    "probes_planned": 6,
+    "probes_scored": 6,
+    "sut_failed": 0,
+    "baseline_mean": 0,
+    "wave_mean": 0.8444444444444444,
+    "delta_mean": 0.8444444444444444,
+    "wave_wins": 6,
+    "baseline_wins": 0,
+    "ties": 0,
+    "trajectory_injected_rate": 1,
+    "gate": "pass",
+    "gate_reasons": []
+  },
+  "per_probe": [
+    {
+      "probe_id": "arr-trajectory-acme",
+      "question": "What was the ARR of Acme AI in March 2026?",
+      "trajectory_points_preflight": 3,
+      "baseline_answer": "The brain does not contain a recorded ARR figure for Acme AI in March 2026. The [companies/acme-ai] page notes that dated metric readings live in a facts index, but no matching take or fact entry was retrieved for this query.",
+      "wave_answer": "## Answer\n\nAs of **March 10, 2026**, Acme AI's ARR was **$1.2M** (USD, annualized) [companies/acme-ai]. This is the closest recorded data point within March 2026. For context, ARR was $500K on January 15, 2026, and grew to $2.5M by May 1, 2026 [companies/acme-ai].",
+      "baseline_score": 0,
+      "wave_score": 1,
+      "delta": 1,
+      "wave_trajectory_injected": true,
+      "wave_injected_points": 3,
+      "baseline_block_absent": true,
+      "think_warnings": {
+        "baseline": [],
+        "wave": [
+          "TRAJECTORY_INJECTED_3_POINTS"
+        ]
+      },
+      "model_used": {
+        "baseline": "claude-sonnet-4-6",
+        "wave": "claude-sonnet-4-6"
+      },
+      "judge_detail": {
+        "baseline": "The agent incorrectly stated that no ARR data exists for Acme AI in March 2026, when ground truth explicitly provides $1.2M as of 2026-03-10. This is a complete factual failure on the primary criterion.",
+        "wave": "The agent provides the correct ARR value ($1.2M) for Acme AI in March 2026, properly anchored to the specific reading date (March 10, 2026) from the ground truth. Both rubric criteria are fully satisfied."
+      }
+    },
+    {
+      "probe_id": "team-size-trajectory-foundry",
+      "question": "How big was the Foundry Labs team in January 2026?",
+      "trajectory_points_preflight": 2,
+      "baseline_answer": "The brain does not contain data on Foundry Labs' team size in January 2026. [companies/foundry-labs]",
+      "wave_answer": "As of January 10, 2026, the Foundry Labs team was **8 people** [companies/foundry-labs].",
+      "baseline_score": 0,
+      "wave_score": 1,
+      "delta": 1,
+      "wave_trajectory_injected": true,
+      "wave_injected_points": 2,
+      "baseline_block_absent": true,
+      "think_warnings": {
+        "baseline": [],
+        "wave": [
+          "TRAJECTORY_INJECTED_2_POINTS"
+        ]
+      },
+      "model_used": {
+        "baseline": "claude-sonnet-4-6",
+        "wave": "claude-sonnet-4-6"
+      },
+      "judge_detail": {
+        "baseline": "The agent incorrectly claimed the brain contains no data on Foundry Labs' team size in January 2026, when ground truth explicitly provides a dated reading of 8 people as of 2026-01-10. This is a complete failure on both criteria.",
+        "wave": "The agent correctly identified the team size as 8 people and properly anchored it to the specific reading date of January 10, 2026, fully satisfying both rubric criteria."
+      }
+    },
+    {
+      "probe_id": "mrr-midpoint-nimbus",
+      "question": "What was the MRR of Nimbus Health in April 2026?",
+      "trajectory_points_preflight": 3,
+      "baseline_answer": "The brain does not contain any recorded MRR figure for Nimbus Health in April 2026. The Nimbus Health page [companies/nimbus-health] notes that dated metric readings live in a facts index, but no relevant take or fact entry was retrieved for this query.",
+      "wave_answer": "## Nimbus Health MRR — April 2026\n\nThere is no recorded MRR data point for Nimbus Health specifically in April 2026. The closest bracketing readings from the known trajectory are:\n\n- **2026-01-05:** $40,000/month [companies/nimbus-health]\n- **2026-03-20:** $75,000/month [companies/nimbus-health]\n- **2026-06-12:** $130,000/month [companies/nimbus-health]\n\nApril 2026 falls between the March 20 reading ($75K) and the June 12 reading ($130K), but no exact April figure is recorded in the brain. Any April value would be an interpolation, not a confirmed data point.",
+      "baseline_score": 0,
+      "wave_score": 0.13333333333333333,
+      "delta": 0.13333333333333333,
+      "wave_trajectory_injected": true,
+      "wave_injected_points": 3,
+      "baseline_block_absent": true,
+      "think_warnings": {
+        "baseline": [],
+        "wave": [
+          "TRAJECTORY_INJECTED_3_POINTS"
+        ]
+      },
+      "model_used": {
+        "baseline": "claude-sonnet-4-6",
+        "wave": "claude-sonnet-4-6"
+      },
+      "judge_detail": {
+        "baseline": "The agent incorrectly states that no MRR data exists for Nimbus Health in April 2026, when the ground truth clearly contains a dated reading of $75K as of 2026-03-20, which is the applicable figure for that period. The agent failed both the value correctness and date anchoring criteria.",
+        "wave": "The agent correctly identified the bracketing data points but failed to provide the expected answer: the most recent MRR reading on or before April 2026, which is $75,000/month as of March 20, 2026. Instead, it declined to interpolate and provided no definitive value, which does not satisfy the rubric's requirement to state the value that the dated readings support for the queried period."
+      }
+    },
+    {
+      "probe_id": "headcount-latest-orbital",
+      "question": "What is the current headcount at Orbital Freight?",
+      "trajectory_points_preflight": 3,
+      "baseline_answer": "The brain contains a page for Orbital Freight, describing it as a logistics marketplace [companies/orbital-freight], but no headcount data is recorded in the facts index or takes for this company.",
+      "wave_answer": "## Answer\n\nAs of the most recent snapshot (2026-06-30), Orbital Freight's headcount is **45 people** [companies/orbital-freight]. This supersedes earlier readings of 31 (2026-02-14) and 22 (2025-11-01), reflecting consistent growth over the tracked period.",
+      "baseline_score": 0,
+      "wave_score": 1,
+      "delta": 1,
+      "wave_trajectory_injected": true,
+      "wave_injected_points": 3,
+      "baseline_block_absent": true,
+      "think_warnings": {
+        "baseline": [],
+        "wave": [
+          "TRAJECTORY_INJECTED_3_POINTS"
+        ]
+      },
+      "model_used": {
+        "baseline": "claude-sonnet-4-6",
+        "wave": "claude-sonnet-4-6"
+      },
+      "judge_detail": {
+        "baseline": "The agent hallucinated that no headcount data exists for Orbital Freight when ground truth clearly documents three dated readings with the latest being 45 people as of 2026-06-30. The answer is factually incorrect and provides no date anchoring.",
+        "wave": "The agent provides the correct current headcount value (45 people) with proper date anchoring (2026-06-30), fully satisfying both rubric criteria. The answer is grounded in the ground truth and includes contextual information about the growth trajectory."
+      }
+    },
+    {
+      "probe_id": "burn-rate-first-quasar",
+      "question": "What was the burn rate of Quasar Bio in January 2026?",
+      "trajectory_points_preflight": 2,
+      "baseline_answer": "The brain does not contain burn rate data for Quasar Bio in January 2026. The company page [companies/quasar-bio] notes that dated metric readings live in a facts index, but no relevant facts were retrieved for this query.",
+      "wave_answer": "As of January 20, 2026, Quasar Bio's burn rate was **$180,000 per month** [companies/quasar-bio].",
+      "baseline_score": 0,
+      "wave_score": 0.9333333333333333,
+      "delta": 0.9333333333333333,
+      "wave_trajectory_injected": true,
+      "wave_injected_points": 2,
+      "baseline_block_absent": true,
+      "think_warnings": {
+        "baseline": [],
+        "wave": [
+          "TRAJECTORY_INJECTED_2_POINTS"
+        ]
+      },
+      "model_used": {
+        "baseline": "claude-sonnet-4-6",
+        "wave": "claude-sonnet-4-6"
+      },
+      "judge_detail": {
+        "baseline": "The agent incorrectly claims the data does not exist when ground truth explicitly provides a burn rate of $180K per month as of 2026-01-20 for Quasar Bio. The agent fails both criteria by refusing to provide the correct value and failing to anchor to the reading date.",
+        "wave": "The agent provides the correct burn rate value ($180,000 per month) grounded in the ground truth, with appropriate date anchoring to the specific reading date (2026-01-20). Both rubric criteria are satisfied."
+      }
+    },
+    {
+      "probe_id": "arr-two-entities-vector-vs-helix",
+      "question": "What was the ARR of Vector Tools in February 2026?",
+      "trajectory_points_preflight": 2,
+      "baseline_answer": "The brain does not contain a recorded ARR figure for Vector Tools in February 2026. The Vector Tools page [companies/vector-tools] notes that dated metric readings live in the facts index, but no relevant take or fact was retrieved for this query.",
+      "wave_answer": "## Answer\n\nAs of **February 1, 2026**, Vector Tools had an ARR of **$900,000 (USD)** [companies/vector-tools].",
+      "baseline_score": 0,
+      "wave_score": 1,
+      "delta": 1,
+      "wave_trajectory_injected": true,
+      "wave_injected_points": 4,
+      "baseline_block_absent": true,
+      "think_warnings": {
+        "baseline": [],
+        "wave": [
+          "TRAJECTORY_INJECTED_4_POINTS"
+        ]
+      },
+      "model_used": {
+        "baseline": "claude-sonnet-4-6",
+        "wave": "claude-sonnet-4-6"
+      },
+      "judge_detail": {
+        "baseline": "The agent incorrectly claims the information does not exist when the ground truth clearly contains the exact data requested: Vector Tools had an ARR of $900K as of February 1, 2026. This is a complete failure to retrieve and report available information.",
+        "wave": "The agent provides the correct ARR value for Vector Tools in February 2026 ($900,000) with proper date anchoring to February 1, 2026, fully satisfying both rubric criteria."
+      }
+    }
+  ],
+  "accounting": {
+    "n_total": 6,
+    "n_scored": 6,
+    "completion_rate": 1,
+    "errors": [],
+    "infra_error_rate": 0,
+    "run_invalid": false,
+    "publishable": true
+  }
+}

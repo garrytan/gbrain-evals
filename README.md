@@ -84,6 +84,78 @@ significance there. On LongMemEval-S, as development data, `auto` scored 445 of
 500 against 312 for chunks and 457 for uncapped pages; the budget cut 81
 questions and cost about 4 answers.
 [Read the auto v2 check](docs/benchmarks/2026-09-30-evidence-auto-v2.md).
+gbrain then shipped `auto` as the default with a 24,000-token budget. A harder
+sealed set (v2: 200 questions, histories of about 143,000 tokens, answers that
+need two to four chats months apart) was opened for its first preregistered
+release decision on 2026-10-02, at gbrain `d44296c`. `auto` answered 192 of 200
+against 132 for chunks from the same five hits (+60/−0, +30 points, 95%
+interval +24 to +36), so the check **passed** with superiority confirmed. The
+cost is about four times the reader input (13,000 against 3,300 tokens).
+[Read the sealed v2 decision](docs/benchmarks/2026-10-02-sealed-v2-decision-1.md).
+
+**Beyond retrieval, the October 1 checks found real wins and real
+losses.** Eleven keyless or cheap categories ran against gbrain `3a284ae`.
+These are the places gbrain held up:
+
+- It kept different people apart (N4).
+- No read op it probes leaked private content (N6).
+- It tracked Gmail-shaped open loops 45/45 (N7).
+- It kept speaker and time across all 27 transcript formats it registers
+  (N12).
+- It never served a stale value after an update (N1) or reactivated a
+  forgotten one (N5).
+
+These are the places it did not:
+
+- `volunteer_context` gave 4 private pages to remote callers (N8).
+- A three-label status note parsed as a chat (N12).
+- `ontology_propose` was refused on default brains, so 100 of 388
+  current-value probes missed (N1).
+- A cache kept serving forgotten facts for 30 seconds (N5).
+- Its contradiction judge found 105 of 150 conflicts (N2).
+- Composed two- and three-hop questions never produced a multi-relation
+  plan (N9).
+- Its answer grade called every question `moderate` (A4).
+- Associative recall, which gbrain does not claim, scored 0 of 240 (N8).
+
+Of the 20 bugs found, 8 are fixed in gbrain's open fix wave 5 and 10 are
+scheduled for fix wave 6. The [findings ledger](docs/benchmarks/2026-10-01-wave-bugs.md)
+lists every bug and gap. All of this is synthetic data with generator gold.
+
+**Update, October 2: all 20 bugs are fixed at gbrain `d44296c`, and a rerun
+here verified each one.** Same runners, seeds and settings, new pin:
+
+- Ontology updates now work on default brains. N1 current-value accuracy
+  went from 288/388 to 388/388 probes.
+- `forget` leaves no residue in a running server. N5 prohibited outputs went
+  from 2 to 0, and reinstatement from 4/6 to 6/6.
+- No private page reached a remote caller or the turn block (N8, 0 and 0).
+- The status note no longer parses as a chat, so N12 now gates CI.
+- With its new prompt, the contradiction judge found 132 of 150 conflicts,
+  and false contradictions on unrelated pairs fell from 109 to 26 out of
+  about 1,970 pairs (N2).
+
+Composed multi-hop questions still never produce a multi-relation plan (N9),
+and the A4 grade was not rerun.
+[Read the before and after](docs/benchmarks/2026-10-02-wave-repin.md).
+
+**Update, October 3: gbrain fix wave 7 (`48ed5e8`) closes eight more ledger
+gaps, and a rerun here shows each one.** Same runners, seeds and settings:
+
+- The contradiction judge (prompt version 4) found 149 of 150 conflicts,
+  including all 50 between undated notes (was 132 and 36). It also called
+  6 of 51 compatible pairs contradictions, above the preregistered 10% limit,
+  so the report no longer says it "separates" conflicts from dated changes (N2).
+- A "Thanks!" reply no longer closes someone's open request, and old requests
+  rank as old (N7). N7's oracle was amended to follow gbrain's new documented
+  rule before the counted run; the failing first run is published.
+- "Who works at Acme?" finds the company titled "Acme" when "Acme Labs" also
+  exists: unresolved one-hop seeds fell from 45 to 6 of 435 runs (N9).
+- `Participants:` lines count as attendance, 5 of 5 (was 0 of 5) (N12).
+- The answer grade no longer calls every question `moderate`: all 120
+  unanswerable questions grade `weak`, and so do 80 of 120 answerable ones (A4).
+
+[Read the before and after](docs/benchmarks/2026-10-03-wave7-repin.md).
 
 ## Why put gbrain on your shortlist?
 
@@ -125,13 +197,16 @@ comparison. [Read the study](docs/benchmarks/2026-09-25-reading-notes.md).
 
 **It can find an idea described in different words, with a reranker.** On our
 held-out concept questions, gbrain with a reranker put an exact target first
-on **130/181 questions**. A reranker reads candidate passages again together
-with the question. Without it, gbrain scored 102/181, below vector search
-alone at 118/181. We have not yet run vector search with the same reranker, so
-the like-for-like comparison is 102 against 118 without reranking. The
-reranker gained 37 questions and lost 9. For concept questions, test gbrain
-with reranking and keep vector search as a serious alternative.
-[Compare all six configurations](docs/benchmarks/2026-09-09-retrieval-refresh.md#concept-search-order-meaning-and-popularity).
+on **130/181 questions** (October 2, 2026, gbrain `d44296c`). A reranker reads
+candidate passages again together with the question. Vector search with the
+same Voyage reranker scored 128/181; question by question, gbrain won first
+place on 8 and lost it on 10, so the two are level on this test. Without
+reranking, gbrain scored 99/181 and vector search 118/181. Reranking gained
+gbrain 40 questions and lost 9. For concept questions, run gbrain with
+reranking, and when you compare it with a vector store, rerank both.
+[Read the matched comparison](docs/benchmarks/2026-10-02-concept-vector-rerank.md).
+The September 9 cells at an older pin (102, 118 and 130 of 181) remain in the
+[retrieval refresh](docs/benchmarks/2026-09-09-retrieval-refresh.md#concept-search-order-meaning-and-popularity).
 
 **It has a way to use relationships as evidence.** Suppose you ask who invested
 in Acme. Searching for “Acme” finds pages that mention the company. Following an
@@ -167,8 +242,9 @@ them. Hosted embedding and reranking services receive the text they process;
 local storage does not make those API calls local. The retrieval results above
 were measured at gbrain [`2efaaf8f`](https://github.com/garrytan/gbrain/tree/2efaaf8f8a817b5b82e023383618fdcdb1cc5f7d)
 (v0.48.4.0). This repository currently installs gbrain master
-[`6c8373c`](https://github.com/garrytan/gbrain/tree/6c8373c3de9bb321a3da0bfa2dc2140736aeafa5)
-(v0.60.13.0), whose search mode definitions are identical. See
+[`48ed5e8`](https://github.com/garrytan/gbrain/tree/48ed5e8233f617479df989998560840747af0425)
+(v0.60.32.0), whose search mode definitions are identical. That release adds
+System One decision slots, which stay off unless a TypeSafe key is set. See
 [how to reproduce a run](eval/README.md).
 
 ## What should you learn here?

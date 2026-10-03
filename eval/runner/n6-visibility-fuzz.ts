@@ -58,20 +58,19 @@
  *
  * Usage: bun eval/runner/n6-visibility-fuzz.ts [--seed N] [--gbrain <path>[@ref]] [--output <dir>] [--only op1,op2] [--json]
  */
-import { existsSync, mkdtempSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Operation, OperationContext, AuthInfo, ParamDef } from 'gbrain/operations';
 import { generateN6World, ledgerFingerprint, personIntro, N6_DEFAULT_SEED, N6_GENERATOR_VERSION, type N6ClassSpec, type N6Ledger, type N6Target } from '../generators/n6-visibility-gen.ts';
 import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
 import { gbrainPin } from './gbrain-version.ts';
+import { DECIDE_OFF, withHermeticEnv } from './hermetic-env.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, receiptPath, sourceTreeIdentity, writeReceipt, type Receipt } from './receipt.ts';
 
 export const N6_CATEGORY = 'n6-visibility-fuzz';
 const CALL_TIMEOUT_MS = 10_000;
 const MAX_TIMEOUTS_PER_OP = 2;
-const PROVIDER_KEYS = ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY', 'GROQ_API_KEY', 'ZEROENTROPY_API_KEY', 'OPENROUTER_API_KEY', 'GOOGLE_API_KEY', 'GEMINI_API_KEY', 'COHERE_API_KEY', 'MISTRAL_API_KEY'];
 
 export type CallerId = 'local' | 'stdio' | 'http-read' | 'http-write' | 'http-bound' | 'subagent-remote' | 'subagent-local';
 export const REMOTE_CALLERS: readonly CallerId[] = ['stdio', 'http-read', 'http-write', 'http-bound', 'subagent-remote', 'subagent-local'];
@@ -414,8 +413,24 @@ async function seed(g: Gbrain, engine: Awaited<ReturnType<typeof newEngine>>, le
       if (typeof revision === 'string') revisions.set(key, revision);
     }
   }
+  // Surfaces outside page bodies (generator v2), written by the trusted local caller.
+  const byName = (name: string) => g.operations.find(o => o.name === name)!;
+  for (const o of ledger.side_writes.ontology) {
+    const r = await local(byName('ontology_propose'), { entity: o.entity, dimension: o.dimension, value: o.value, visibility: o.visibility, valid_from: o.valid_from, confidence: 0.9, source: 'n6-fixture' });
+    if (!r.ok) errors.push(`ontology_propose ${o.entity} ${o.dimension}: ${r.raw.slice(0, 200)}`);
+  }
+  for (const d of ledger.side_writes.raw_data) {
+    const r = await local(byName('put_raw_data'), { slug: d.slug, source: d.source, data: d.data });
+    if (!r.ok) errors.push(`put_raw_data ${d.slug}: ${r.raw.slice(0, 200)}`);
+  }
   return errors;
 }
+
+/** The trusted local read that must show a class's protected markers (the positive control). Page-borne classes use get_page. */
+const CONTROL_READ: Partial<Record<N6ClassSpec['class'], (t: N6Target) => [string, Record<string, unknown>]>> = {
+  private_ontology: t => ['ontology_get', { entity: t.slug }],
+  private_raw_data: t => ['get_raw_data', { slug: t.slug }],
+};
 
 async function newEngine(g: Gbrain) {
   const engine = new g.PGLiteEngine();
@@ -426,7 +441,7 @@ async function newEngine(g: Gbrain) {
 
 export interface PresenceResult { name: string; pass: boolean; detail: string }
 
-async function presence(engine: Awaited<ReturnType<typeof newEngine>>, ledger: N6Ledger, local: Caller, getPage: Operation): Promise<{ checks: PresenceResult[]; sealed_chunk_violations: string[] }> {
+async function presence(engine: Awaited<ReturnType<typeof newEngine>>, ledger: N6Ledger, local: Caller, getPage: Operation, opByName: (name: string) => Operation): Promise<{ checks: PresenceResult[]; sealed_chunk_violations: string[] }> {
   const checks: PresenceResult[] = [];
   const count = async (sql: string, params: unknown[]) => Number((await engine.executeRaw<{ n: number }>(sql, params))[0]?.n ?? 0);
   let found = 0;
@@ -445,9 +460,10 @@ async function presence(engine: Awaited<ReturnType<typeof newEngine>>, ledger: N
   checks.push({ name: 'private page links to the public hub', pass: links >= 1, detail: `${links} link(s)` });
   // Positive controls: the trusted local caller can read every protected marker, so a remote miss means filtering, not absence.
   for (const c of ledger.classes) {
-    const r = await local(getPage, { slug: c.protected.slug, ...(c.protected.source_id ? { source_id: c.protected.source_id } : {}) });
+    const [opName, params] = CONTROL_READ[c.class]?.(c.protected) ?? ['get_page', { slug: c.protected.slug, ...(c.protected.source_id ? { source_id: c.protected.source_id } : {}) }];
+    const r = await local(opName === 'get_page' ? getPage : opByName(opName), params);
     const seen = c.protected_markers.filter(m => r.raw.includes(m));
-    checks.push({ name: `local get_page reads ${c.class} markers`, pass: seen.length > 0, detail: `${seen.length}/${c.protected_markers.length} markers${r.ok ? '' : `; ${r.raw.slice(0, 160)}`}` });
+    checks.push({ name: `local ${opName} reads ${c.class} markers`, pass: seen.length > 0, detail: `${seen.length}/${c.protected_markers.length} markers${r.ok ? '' : `; ${r.raw.slice(0, 160)}`}` });
   }
   const sealed: string[] = [];
   for (const m of [take.protected.query, fact.protected.query]) {
@@ -501,19 +517,9 @@ export interface OpSummary {
   expansion: boolean;
 }
 
-/** Hermetic environment for the run (no provider keys, a throwaway GBRAIN_HOME), restored afterwards. */
+/** Hermetic environment for the run (eval/runner/hermetic-env.ts), restored afterwards. */
 export async function runN6(options: N6Options = {}) {
-  const saved = Object.fromEntries([...PROVIDER_KEYS, 'GBRAIN_HOME'].map(k => [k, process.env[k]]));
-  for (const k of PROVIDER_KEYS) delete process.env[k];
-  process.env.GBRAIN_HOME = mkdtempSync(join(tmpdir(), 'n6-home-'));
-  try {
-    return await runN6Hermetic(options);
-  } finally {
-    for (const [k, v] of Object.entries(saved)) {
-      if (v === undefined) delete process.env[k];
-      else process.env[k] = v;
-    }
-  }
+  return withHermeticEnv('n6', () => runN6Hermetic(options));
 }
 
 async function runN6Hermetic(options: N6Options) {
@@ -528,7 +534,7 @@ async function runN6Hermetic(options: N6Options) {
   const getPage = g.operations.find(o => o.name === 'get_page')!;
 
   const seedErrors = await seed(g, engine, ledger);
-  const pres = await presence(engine, ledger, callers.local, getPage);
+  const pres = await presence(engine, ledger, callers.local, getPage, name => g.operations.find(o => o.name === name)!);
   const presenceOk = seedErrors.length === 0 && pres.checks.every(c => c.pass);
 
   const forbiddenMarkers = ledger.classes.flatMap(c => c.protected_markers);
@@ -777,6 +783,7 @@ async function runN6Hermetic(options: N6Options) {
     },
     resolved_config: {
       engine: 'pglite (in-memory)',
+      decide: DECIDE_OFF,
       seed: seedValue,
       generator_version: N6_GENERATOR_VERSION,
       callers: REMOTE_CALLERS,

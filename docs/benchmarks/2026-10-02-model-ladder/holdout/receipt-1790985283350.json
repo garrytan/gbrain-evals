@@ -4,7 +4,7 @@
   "judge_prompt": "cat40-claims-v1",
   "judge": "gpt-5.4-mini",
   "world": {
-    "path": "/workspace/gbrain-evals/eval/reports/cat40/holdout/world.json",
+    "path": "<evals>/eval/reports/cat40/holdout/world.json",
     "digest": "df9e4f65cf603430934d6afa30073a44813ea670f78ae83c68bbde8210d1db9b",
     "seed": 20261003,
     "docs": 4036,

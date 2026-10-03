@@ -1,0 +1,11 @@
+const G = new URL("../../../../node_modules/gbrain/src/core", import.meta.url).pathname;
+const { transcriptAdapters } = await import(`${G}/transcripts/detect.ts`);
+const { BUILTIN_PATTERNS } = await import(`${G}/conversation-parser/builtins.ts`);
+const { parseConversation } = await import(`${G}/conversation-parser/parse.ts`);
+console.log("transcriptAdapters():", JSON.stringify(transcriptAdapters().map((a: any) => a.format)));
+console.log("BUILTIN_PATTERNS:", BUILTIN_PATTERNS.length, JSON.stringify(BUILTIN_PATTERNS.map((p: any) => p.id)));
+const show = (label: string, body: string, opts: any = {}) => { const r = parseConversation(body, { noFallback: true, noPolish: true, ...opts }); console.log(label, "->", JSON.stringify({ phase: r.phase, pattern: r.matched_pattern_id, n: r.messages.length, first: r.messages[0], tz: r.timezone_warning, date_fallback_count: r.date_fallback_count })); };
+show("time-only iMessage shape, no date", "**Alice Example** (9:05 AM): hi\n**Bob Example** (9:06 AM): hello\n**Alice Example** (9:07 AM): bye");
+show("time-only iMessage shape, fallbackDate", "**Alice Example** (9:05 AM): hi\n**Bob Example** (9:06 AM): hello\n**Alice Example** (9:07 AM): bye", { fallbackDate: "2026-09-30" });
+show("meeting speaker shape", "**Alice Example:** hi there\n**Bob Example:** hello\n**Alice Example:** ok");
+show("generic JSON body", JSON.stringify([{ role: "user", content: "hi", ts: "2026-09-30T10:00:00Z" }, { role: "assistant", content: "hello" }]));

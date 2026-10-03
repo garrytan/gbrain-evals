@@ -1,0 +1,66 @@
+{
+ "schema": "gbrain-evals/n2-3-prompt-ab-parity/v1",
+ "date": "2026-10-01",
+ "command": "bun eval/runner/n2-3-prompt-ab.ts arm --gbrain <gbrain checkout>@<commit> --label <label> --output <file>  (no --paid: judges nothing, $0)",
+ "purpose": "The committed driver, run through copied overlays at the pushed commits, offers the same 1,371 judged pairs as the measured arms.",
+ "arms": {
+  "before": {
+   "seed": 20261002,
+   "world_fingerprint": "9ef13efe48fcfc7c4c2b640b7c68fcac9a83349c9433246910e75e2fddcad273",
+   "gbrain": {
+    "requested": "/workspace/gbrain@e833e93d",
+    "ref": "e833e93d",
+    "commit": "e833e93d094918524392aa5bc0056014b72fb879",
+    "tree": "00a00a2a205e54b3738e7a0dcf98c3ae1c2a4843",
+    "version": "0.60.28.0",
+    "checkout_dirty": false,
+    "verified": {
+     "copy_tree": "00a00a2a205e54b3738e7a0dcf98c3ae1c2a4843",
+     "tree_matches": true,
+     "symlinks_under_src": 0,
+     "dir_is_realpath": true,
+     "cli_version": "0.60.28.0",
+     "cli_version_matches": true
+    },
+    "copied_not_symlinked": true
+   },
+   "prompt_version": "2",
+   "paid": false,
+   "offered": 2680,
+   "judged": 1371,
+   "skipped_unsampled": 1309,
+   "skipped_by_date": 20,
+   "offered_keys_sha256": "f3fb6709146d250630d4ef065302ff37e622d9a727eb03db821acf6ec1065a33"
+  },
+  "after": {
+   "seed": 20261002,
+   "world_fingerprint": "9ef13efe48fcfc7c4c2b640b7c68fcac9a83349c9433246910e75e2fddcad273",
+   "gbrain": {
+    "requested": "/workspace/gbrain@89a4f8a9",
+    "ref": "89a4f8a9",
+    "commit": "89a4f8a9ec168cfcbe402dbce3b0285e9e14c6f9",
+    "tree": "9a7c008ae05af3dbad11e7a38c896cddb12e41e3",
+    "version": "0.60.28.0",
+    "checkout_dirty": false,
+    "verified": {
+     "copy_tree": "9a7c008ae05af3dbad11e7a38c896cddb12e41e3",
+     "tree_matches": true,
+     "symlinks_under_src": 0,
+     "dir_is_realpath": true,
+     "cli_version": "0.60.28.0",
+     "cli_version_matches": true
+    },
+    "copied_not_symlinked": true
+   },
+   "prompt_version": "3",
+   "paid": false,
+   "offered": 2680,
+   "judged": 1371,
+   "skipped_unsampled": 1309,
+   "skipped_by_date": 20,
+   "offered_keys_sha256": "f3fb6709146d250630d4ef065302ff37e622d9a727eb03db821acf6ec1065a33"
+  }
+ },
+ "measured_offered_keys_sha256": "f3fb6709146d250630d4ef065302ff37e622d9a727eb03db821acf6ec1065a33",
+ "matches_measured": true
+}

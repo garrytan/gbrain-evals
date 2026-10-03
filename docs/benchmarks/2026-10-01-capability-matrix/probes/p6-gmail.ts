@@ -1,0 +1,16 @@
+const G = new URL("../../../../node_modules/gbrain/src/core", import.meta.url).pathname;
+const { detectThreadLoop, INBOUND_GRACE_HOURS, OUTBOUND_GRACE_HOURS } = await import(`${G}/google/loop-detect.ts`);
+const now = new Date("2026-10-01T12:00:00Z");
+const me = new Set(["me@example.com"]);
+const H = 3_600_000;
+const msg = (o: any) => ({ id: o.id, threadId: "t1", from: o.from, fromAddress: o.from, to: o.to ?? [], cc: o.cc ?? [], subject: o.subject ?? "Deck", dateIso: "", internalDateMs: now.getTime() - o.ageH * H, labelIds: o.from === "me@example.com" ? ["SENT"] : [], listUnsubscribe: !!o.list, calendarMethod: o.cal ?? null, bodyText: o.body ?? "" });
+const th = (...m: any[]) => ({ threadId: "t1", account: "me@example.com", messages: m });
+const show = (label: string, t: any) => { const v = detectThreadLoop(t, me, now); console.log(label, "->", JSON.stringify({ open: v.open.map((o: any) => [o.loopType, o.counterpartyEmail]), close: v.close })); };
+console.log("grace hours inbound/outbound:", INBOUND_GRACE_HOURS, OUTBOUND_GRACE_HOURS);
+show("inbound 30h, To me", th(msg({ id: "1", from: "bob@example.org", to: ["me@example.com"], ageH: 30, body: "Can you send the deck?" })));
+show("inbound 10h (inside grace)", th(msg({ id: "1", from: "bob@example.org", to: ["me@example.com"], ageH: 10, body: "Can you send the deck?" })));
+show("inbound CC-only 30h", th(msg({ id: "1", from: "bob@example.org", to: ["x@example.org"], cc: ["me@example.com"], ageH: 30, body: "deck?" })));
+show("inbound then my reply 'thanks!' (no deck)", th(msg({ id: "1", from: "bob@example.org", to: ["me@example.com"], ageH: 40, body: "Can you send the deck?" }), msg({ id: "2", from: "me@example.com", to: ["bob@example.org"], ageH: 30, body: "Thanks!" })));
+show("my promise 'I'll send the deck Friday' (no ?) 100h", th(msg({ id: "1", from: "me@example.com", to: ["bob@example.org"], ageH: 100, body: "I'll send the deck Friday." })));
+show("my question 100h", th(msg({ id: "1", from: "me@example.com", to: ["bob@example.org"], ageH: 100, body: "Any update?" })));
+show("my question 100h then calendar notice from them", th(msg({ id: "1", from: "me@example.com", to: ["bob@example.org"], ageH: 100, body: "Any update?" }), msg({ id: "2", from: "bob@example.org", to: ["me@example.com"], ageH: 5, cal: "REQUEST", subject: "Invitation: sync", body: "invite" })));

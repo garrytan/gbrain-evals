@@ -1,0 +1,82 @@
+{
+  "schema": "gbrain-evals/sealed-evidence-decision/v1",
+  "decision_id": "sealed-v2-decision-1-2026-10-02:auto-vs-chunk",
+  "registered_at": "2026-10-02",
+  "preregistration": "docs/benchmarks/2026-10-02-sealed-v2-decision-1-preregistration.md",
+  "question": "At gbrain d44296c (v0.60.30.0), is the shipped evidence default (auto: whole conversation pages within a 24,000-token conversation budget, other hits unchanged) non-inferior to the old chunk default on end-to-end answer accuracy, and is it better?",
+  "sealed": {
+    "set": "sealed-confirmation-v2",
+    "manifest": "eval/data/sealed-confirmation-v2/manifest.json",
+    "questions_sha256": "8d29e92dc6792fb444e564ca556acd5cb4566ec14a6080c0e2e1ee8e8bd98a38",
+    "labels_sha256": "83bf52d11e0a26f64f1ece8ce5ac637b81844e38e67c5df1495cb7614a0357c4",
+    "questions": 200,
+    "personas": 40,
+    "release_decision": "the first of at most three release decisions the protocol allows; no earlier gbrain run has touched the set"
+  },
+  "candidate_commits": {
+    "gbrain_repository": "garrytan/gbrain",
+    "gbrain": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+    "gbrain_version": "0.60.30.0",
+    "comparison_release": "The same commit with return_unit chunk. At this commit the chunk unit skips evidence assembly and returns the ranked chunks unchanged, which is the pre-0.60.16 default. Both arms share one frozen retrieval, so only the delivered evidence differs.",
+    "gbrain_evals_rule": "The gbrain-evals commit containing this file; every answer file records this file's SHA-256 and the frozen evidence records the gbrain commit."
+  },
+  "retrieval": {
+    "frozen_once": "One retrieval per question at the pinned commit, shared by both arms. A crashed freeze resumes per question; frozen questions are never re-retrieved.",
+    "top_k": 5,
+    "mode": "balanced",
+    "reranker": { "enabled": true, "model": "voyage:rerank-2.5 (gbrain DEFAULT_RERANKER_MODEL at the pin)", "timeout_ms": 30000 },
+    "autocut": false,
+    "expansion": false,
+    "embedding": { "model": "openai:text-embedding-3-large", "dimensions": 1536 },
+    "implementation": "eval/runner/evidence-delivery/freeze.ts through eval/runner/sealed-confirmation.ts evidence-freeze"
+  },
+  "arms": [
+    { "id": "chunk", "role": "baseline", "source": "frozen", "unit": "chunk", "budget_tokens": null },
+    { "id": "auto", "role": "candidate", "source": "product", "unit": "auto", "budget_tokens": null, "expected_budget_tokens": 24000, "budget_note": "No budget is passed, so gbrain's default applies (search.return_budget_conversation, 24,000 tokens for a trusted local caller). The answer step refuses any question whose applied budget differs." }
+  ],
+  "reader": {
+    "model": "claude-sonnet-4-6",
+    "temperature": 0,
+    "max_tokens": 2048,
+    "prompt": "LongMemEval's chain-of-thought reading prompt (LME_READER_TEMPLATE in eval/runner/sealed-confirmation-lib.ts), the protocol's reader",
+    "evidence_rendering": "One dated pseudo-session per delivered block, the block text as a single turn, sorted by date (evidenceSessions in sealed-confirmation.ts). This is the shape the v2 solvability chunk oracle used. Both arms use it; only the delivered text differs."
+  },
+  "judge": {
+    "model": "gpt-4o-2024-08-06",
+    "temperature": 0,
+    "prompts": "LongMemEval evaluate_qa.py per-kind prompts, abstention items with the unanswerable prompt (judgePrompt in sealed-confirmation-lib.ts)",
+    "implementation": "sealed-confirmation.ts score --judge, which verifies the labels commitment and appends an access-log line before parsing"
+  },
+  "metric": {
+    "primary": "answer_correct: the judge says yes. Denominator: all 200 questions (160 answerable plus 40 abstention). A reader error counts as incorrect.",
+    "exploratory": [
+      "answer accuracy on the 160 answerable questions, and by question kind (80 multi-session, 40 temporal, 40 knowledge update, 40 abstention)",
+      "recall_all@5 and recall_any@5 over the 160 answerable questions (the shared retrieval; identical in both arms by construction)",
+      "mean provider-reported reader input tokens per arm; auto delivery counts (blocks delivered as pages, truncated, over budget)"
+    ]
+  },
+  "rule": {
+    "family": "docs/benchmarks/2026-10-02-sealed-v2-decision-1/family.json",
+    "noninferiority_comparison": "answer_accuracy_noninferiority",
+    "superiority_comparison": "answer_accuracy_superiority",
+    "alpha": 0.05,
+    "noninferiority_margin": 0.03,
+    "max_reader_errors": 3,
+    "verdict": "pass when compare.ts's non-inferiority comparison passes: the one-sided persona-cluster bootstrap p-value for delta <= -0.03 is at most 0.05 (equivalently the lower end of a 90% cluster-bootstrap interval for auto - chunk is above -3 points). fail when the whole 95% cluster-bootstrap interval lies below -0.03. inconclusive otherwise, when a comparison is blocked (missing or duplicated rows), or when either arm has more than max_reader_errors reader errors.",
+    "superiority": "Tested only after non-inferiority passes (fixed sequence, so no further alpha adjustment). confirmed when auto - chunk > 0 and both the exact two-sided McNemar p-value and the persona-clustered two-sided sign-flip p-value are below 0.05, the E2 rule of decision manifest v2. Otherwise not_confirmed.",
+    "implementation": "bun eval/runner/compare.ts with this family, then sealed-confirmation.ts decide (decideEvidence)"
+  },
+  "missing_and_errors": {
+    "reader_retries": "LlmClient retries each request up to four times. A crashed answer step is resumed by rerunning it on the same output file: answered questions are kept, and identical requests are served from the response cache, so nothing is re-sampled. At most three resume passes.",
+    "reader_error": "After the resume passes, a question without an answer is judged incorrect and stays in the denominator.",
+    "missing_rows": "A question missing from either arm blocks the comparison (inconclusive).",
+    "truncated_output": "An answer stopped at 2,048 output tokens is judged as written."
+  },
+  "label_reads": "Labels are read twice, both through sealed-confirmation.ts score under this decision id: once for the chunk answers and once for the auto answers. No other label read is allowed.",
+  "budget": {
+    "cap_usd": 60,
+    "ledger": "one eval/runner/budget-ledger.ts run (runner sealed-v2-decision-1) with --budget-usd 60, joined by every paid step; each reader and judge step also has its own LlmClient cap",
+    "estimate_usd": "see the preregistration's cost table"
+  },
+  "no_second_try": "Each arm is answered once. No other setting, budget, unit, reader or judge may be tried on the sealed set under this decision; a failed candidate is fixed on development data and re-preregistered as a new decision."
+}

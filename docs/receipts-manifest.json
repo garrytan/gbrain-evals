@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "description": "Map from published claims to their saved evidence. The manifest test checks artifact paths, SHA-256 hashes, and declared JSON-pointer values. It does not parse report prose or independently validate every scorer. Separate golden tests and recount scripts are named where available. Entries marked disclosed-gap identify missing evidence; a fresh run cannot restore a missing historical receipt.",
-  "updated": "2026-10-01",
+  "updated": "2026-10-03",
   "entries": [
     {
       "claim_id": "lifecycle-2026-09-29-primary",
@@ -3661,6 +3661,448 @@
       },
       "status": "covered",
       "note": "Counts only; the matched items are listed in a private file kept with the sealed set."
+    },
+    {
+      "claim_id": "n2-3-prompt-ab-receipt",
+      "readme_anchor": "docs/benchmarks/2026-10-01-n2-contradiction-surfacing.md: Addendum (2026-10-01): the N2-3 prompt fix, on development data",
+      "artifact_path": "docs/benchmarks/2026-10-01-n2-contradiction-surfacing/n2-3-prompt-ab/receipt.json",
+      "artifact_sha256": "1ca20857117c0c28dd1435e19792309baac2612580c46b0fbf7b0e658dfa3900",
+      "expected": {
+        "/data_class": "development",
+        "/seed": 20261002,
+        "/offered_keys_sha256": "f3fb6709146d250630d4ef065302ff37e622d9a727eb03db821acf6ec1065a33",
+        "/arms/before/prompt_version": "2",
+        "/arms/after/prompt_version": "3",
+        "/arms/before/judged": 1371,
+        "/arms/after/judged": 1371,
+        "/arms/before/metrics/e2e_conflict_recall/hits": 101,
+        "/arms/after/metrics/e2e_conflict_recall/hits": 131,
+        "/arms/before/metrics/false_contradiction_unplanted_pairs/hits": 59,
+        "/arms/after/metrics/false_contradiction_unplanted_pairs/hits": 11,
+        "/arms/after/metrics/false_contradiction_unplanted_pairs/n": 820,
+        "/arms/before/metrics/false_contradiction_compatible/hits": 3,
+        "/arms/after/metrics/false_contradiction_compatible/hits": 2,
+        "/arms/before/metrics/false_contradiction_dated_changes/hits": 0,
+        "/arms/after/metrics/false_contradiction_dated_changes/hits": 0,
+        "/paired_flips/contradiction/gained": 30,
+        "/paired_flips/contradiction/lost": 0,
+        "/paired_flips/unplanted/lost": 51,
+        "/paired_flips/unplanted/gained": 3
+      },
+      "golden_test": "test/eval/n2-3-prompt-ab.test.ts: scores, offered-pair hash and the compare output recount from the per-arm judgments",
+      "status": "covered",
+      "note": "Development data on a fresh seed (20261002); the counted N2 run at seed 20261001 stays as published. One judge sample per arm; all planted pairs plus a fixed 40% hash sample of unplanted pairs."
+    },
+    {
+      "claim_id": "n2-3-prompt-ab-ledger-summary",
+      "readme_anchor": "docs/benchmarks/2026-10-01-n2-contradiction-surfacing.md: Addendum (2026-10-01): the N2-3 prompt fix, on development data (cost)",
+      "artifact_path": "docs/benchmarks/2026-10-01-n2-contradiction-surfacing/n2-3-prompt-ab/ledger-summary.json",
+      "artifact_sha256": "89605017c8b1e71d11bf5c570dff3c4e0f53c6aaf682768faf2976a4999c98f4",
+      "expected": {
+        "/total_usd": 5.8957,
+        "/requests": 2742,
+        "/run/budget_usd": 10,
+        "/by_arm/before/requests": 1371,
+        "/by_arm/after/requests": 1371
+      },
+      "status": "covered",
+      "note": "Summarized from the budget-ledger run n2-3-prompt-ab-2026-10-01T21-40-40-215Z-f873e9f2; every request reconciled."
+    },
+    {
+      "claim_id": "n2-3-prompt-ab-parity",
+      "readme_anchor": "docs/benchmarks/2026-10-01-n2-contradiction-surfacing.md: Addendum (2026-10-01): the N2-3 prompt fix, on development data (reproduce)",
+      "artifact_path": "docs/benchmarks/2026-10-01-n2-contradiction-surfacing/n2-3-prompt-ab/parity-2026-10-01.json",
+      "artifact_sha256": "35fb5376224f7483b7259149519e64822bd6267a2854cccfe301388c0aa6a056",
+      "expected": {
+        "/matches_measured": true,
+        "/arms/before/gbrain/commit": "e833e93d094918524392aa5bc0056014b72fb879",
+        "/arms/after/gbrain/commit": "89a4f8a9ec168cfcbe402dbce3b0285e9e14c6f9",
+        "/arms/before/offered_keys_sha256": "f3fb6709146d250630d4ef065302ff37e622d9a727eb03db821acf6ec1065a33",
+        "/arms/after/offered_keys_sha256": "f3fb6709146d250630d4ef065302ff37e622d9a727eb03db821acf6ec1065a33"
+      },
+      "status": "covered",
+      "note": "Keyless ($0) rerun of the committed driver through copied overlays at the pushed gbrain commits; it offers the same pairs as the measured arms."
+    },
+    {
+      "claim_id": "wave-repin-n1",
+      "readme_anchor": "docs/benchmarks/2026-10-02-wave-repin.md: N1 rows: current-value accuracy and history retained",
+      "artifact_path": "docs/benchmarks/2026-10-02-wave-repin/n1-n5/n1-receipt-d44296c.json",
+      "artifact_sha256": "0292571d061294c53c6d6698efabd3dcc9b93fd3755d0ab88d9727e41eb77c41",
+      "status": "covered",
+      "expected": {
+        "/verdict": "pass",
+        "/execution/product/loaded_git_head": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "/data/metrics/current_value_correct": 388,
+        "/data/metrics/current_value_probes": 388,
+        "/data/metrics/history_retained": 385,
+        "/data/metrics/history_probes": 385,
+        "/data/metrics/stale_served": 0,
+        "/data/metrics_postgres/current_value_correct": 388
+      },
+      "note": "n1-knowledge-update.ts at gbrain d44296c, PGLite and Postgres cells over CLI, stdio and HTTP; compare docs/benchmarks/2026-10-01-n1-n5/n1-receipt.json."
+    },
+    {
+      "claim_id": "wave-repin-n5",
+      "readme_anchor": "docs/benchmarks/2026-10-02-wave-repin.md: N5 rows: prohibited outputs, retained recall, reinstatement",
+      "artifact_path": "docs/benchmarks/2026-10-02-wave-repin/n1-n5/n5-receipt-d44296c.json",
+      "artifact_sha256": "67703ef734e953c917f422271ab5134623da9bdb2858a642909295167d050913",
+      "status": "covered",
+      "expected": {
+        "/verdict": "pass",
+        "/execution/product/loaded_git_head": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "/data/metrics/prohibited_active_outputs": 0,
+        "/data/metrics/retained_present": 750,
+        "/data/metrics/retained_pairs": 750,
+        "/data/metrics/reinstated": 6,
+        "/data/metrics/reinstatement_attempts": 6,
+        "/data/metrics_postgres/prohibited_active_outputs": 0
+      },
+      "note": "n5-forget-residue.ts at gbrain d44296c; compare docs/benchmarks/2026-10-01-n1-n5/n5-receipt.json."
+    },
+    {
+      "claim_id": "wave-repin-n2-paid",
+      "readme_anchor": "docs/benchmarks/2026-10-02-wave-repin.md: N2 rows: judge prompt v3 end-to-end recall, unplanted false contradictions, bare CLI read-back",
+      "artifact_path": "docs/benchmarks/2026-10-02-wave-repin/n2/receipt-paid-d44296c.json",
+      "artifact_sha256": "636a331ad08fb5083e6ab537690621f03d01845b336d8cf1493ef912a082381e",
+      "status": "covered",
+      "expected": {
+        "/execution/product/loaded_git_head": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "/data/paid/classification/e2e_conflict_recall/hits": 132,
+        "/data/paid/classification/e2e_conflict_recall/n": 150,
+        "/data/paid/classification/false_contradiction_unplanted_pairs/hits": 26,
+        "/data/paid/classification/false_contradiction_unplanted_pairs/n": 1968,
+        "/data/paid/cap_hit_mid_run": true,
+        "/data/date_signal/undated_shown_with_a_date": 0,
+        "/data/find_contradictions/local_bare_cli/returned": 100,
+        "/cost/usd": 6.241381
+      },
+      "note": "n2-contradiction-surfacing.ts --paid at gbrain d44296c (claude-haiku-4-5, prompt version 3, $6 probe budget over 4 runs); compare docs/benchmarks/2026-10-01-n2-contradiction-surfacing/receipt-paid-3a284ae.json."
+    },
+    {
+      "claim_id": "wave-repin-n12",
+      "readme_anchor": "docs/benchmarks/2026-10-02-wave-repin.md: N12 rows: fabricated turns, all six rules, offset round-trip",
+      "artifact_path": "docs/benchmarks/2026-10-02-wave-repin/n12/receipt-pin-d44296c.json",
+      "artifact_sha256": "511a66395e0b96d27ab2017c13dd70924ef1e557e142a671b0f146c9971c7d90",
+      "status": "covered",
+      "expected": {
+        "/verdict": "pass",
+        "/execution/product/loaded_git_head": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "/data/honesty/fabricated": 0,
+        "/data/promotion/pass": true,
+        "/data/roundtrip/offset_source/ts_exact": 16,
+        "/data/attendance_legacy_pack/false_attended": 0
+      },
+      "note": "n12-format-fidelity.ts at gbrain d44296c, seed 12; the evidence for removing the N12 hold."
+    },
+    {
+      "claim_id": "wave-repin-n8",
+      "readme_anchor": "docs/benchmarks/2026-10-02-wave-repin.md: N8 rows: private deliveries",
+      "artifact_path": "docs/benchmarks/2026-10-02-wave-repin/n8/receipt-pin-d44296c.json",
+      "artifact_sha256": "01042990c92783caf8e6e9995dd9b1d2c0aa04f57668b9ab79b494ec07ffa286",
+      "status": "covered",
+      "expected": {
+        "/execution/product/loaded_git_head": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "/data/contracts/private_pages_delivered_remote": 0,
+        "/data/contracts/private_pages_delivered_turn_context": 0
+      },
+      "note": "n8-proactive-recall.ts at gbrain d44296c; report-only."
+    },
+    {
+      "claim_id": "wave-repin-n13",
+      "readme_anchor": "docs/benchmarks/2026-10-02-wave-repin.md: N13 rows: code_def top-1 and resolved flag",
+      "artifact_path": "docs/benchmarks/2026-10-02-wave-repin/n13/receipt-pin-d44296c.json",
+      "artifact_sha256": "b6b50dc584f219350287dda40d2fa359b4166103cd6032c4adc18b998987a381",
+      "status": "covered",
+      "expected": {
+        "/execution/product/loaded_git_head": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "/data/summary/def/top1_file_ok": 49,
+        "/data/summary/def/no_result": 0,
+        "/data/summary/callers/gbrain_edges": 91,
+        "/data/summary/callers/gbrain_edges_resolved_flag_true": 76
+      },
+      "note": "n13-code-intelligence.ts at gbrain d44296c; report-only scout."
+    },
+    {
+      "claim_id": "wave-repin-n7",
+      "readme_anchor": "docs/benchmarks/2026-10-02-wave-repin.md: N7 rows: backfill nudges and gating floors",
+      "artifact_path": "docs/benchmarks/2026-10-02-wave-repin/n7/receipt-pin-d44296c.json",
+      "artifact_sha256": "5b6f47469897d72af1472995fd4c87608729de23483b13ef1f867fd962b498b1",
+      "status": "covered",
+      "expected": {
+        "/verdict": "pass",
+        "/execution/product/loaded_git_head": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "/data/exploratory/backfill_nudge_recall/inbound/detected": 6,
+        "/data/exploratory/backfill_nudge_recall/outbound_followup/detected": 4,
+        "/data/quality/planted_loop_recall": 1
+      },
+      "note": "n7-open-loops-email.ts at gbrain d44296c."
+    },
+    {
+      "claim_id": "wave-repin-n9",
+      "readme_anchor": "docs/benchmarks/2026-10-02-wave-repin.md: N9 rows: composed firing and attendance seeds",
+      "artifact_path": "docs/benchmarks/2026-10-02-wave-repin/n9/n9-hermetic-d44296c.receipt.json",
+      "artifact_sha256": "e5fcd53f2bcc3aced9307cf4ae70a7f8f8533c072ed569424bf0105eb66abbbd",
+      "status": "covered",
+      "expected": {
+        "/execution/product/loaded_git_head": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "/data/one_hop/funnel/one-hop-template/seed_resolved": 390,
+        "/data/one_hop/funnel/one-hop-template/fired": 174
+      },
+      "note": "n9-multi-hop-paraphrase.ts hermetic arm at gbrain d44296c."
+    },
+    {
+      "claim_id": "wave-repin-ledger-summary",
+      "readme_anchor": "docs/benchmarks/2026-10-02-wave-repin.md: Paid spend for the 2026-10-02 rerun",
+      "artifact_path": "docs/benchmarks/2026-10-02-wave-repin/ledger-summary.json",
+      "artifact_sha256": "6790ec9eebd11a676c1fe0e54c19f2f959a84a799946eae55d8089292cfd9ef8",
+      "status": "covered",
+      "expected": {
+        "/total_usd": 6.370616,
+        "/requests": 5035,
+        "/run/budget_usd": 60
+      },
+      "note": "Copied from the gitignored budget ledger after its one run closed."
+    },
+    {
+      "claim_id": "sealed-v2-decision-1-rule",
+      "readme_anchor": "docs/benchmarks/2026-10-02-sealed-v2-decision-1-preregistration.md: What is fixed",
+      "artifact_path": "docs/benchmarks/2026-10-02-sealed-v2-decision-1/decision.json",
+      "artifact_sha256": "23dae4c1b03d7c6427e25dcf902a0c4276e6d6eee8ba8be29d5dc37e575133ba",
+      "status": "covered",
+      "expected": {
+        "/candidate_commits/gbrain": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "/decision_id": "sealed-v2-decision-1-2026-10-02:auto-vs-chunk",
+        "/rule/noninferiority_margin": 0.03,
+        "/rule/alpha": 0.05,
+        "/arms/1/expected_budget_tokens": 24000
+      },
+      "note": "Committed in d0efb58 before the sealed files reached the machine."
+    },
+    {
+      "claim_id": "sealed-v2-decision-1-family",
+      "readme_anchor": "docs/benchmarks/2026-10-02-sealed-v2-decision-1-preregistration.md: The decision rule",
+      "artifact_path": "docs/benchmarks/2026-10-02-sealed-v2-decision-1/family.json",
+      "artifact_sha256": "f9e6054c00f5eec5d11a0dad5c76ae71baa2501f4ef0d487fbc9bad6bad74c1c",
+      "status": "covered",
+      "expected": {
+        "/comparisons/0/tolerance": 0.03,
+        "/comparisons/0/cluster_by": "haystack_id",
+        "/seed": 20261002,
+        "/draws": 20000
+      },
+      "note": "compare.ts family, committed with the preregistration."
+    },
+    {
+      "claim_id": "sealed-v2-decision-1-outcome",
+      "readme_anchor": "docs/benchmarks/2026-10-02-sealed-v2-decision-1.md: The preregistered decision",
+      "artifact_path": "docs/benchmarks/2026-10-02-sealed-v2-decision-1/results/decision-outcome.json",
+      "artifact_sha256": "797b3ea168ff165756c6df93cd2ae43f4f3fc9b8e2ab23a0028a1d6434cd6d0f",
+      "status": "covered",
+      "expected": {
+        "/verdict": "pass",
+        "/superiority": "confirmed",
+        "/reader_errors/chunk": 0,
+        "/reader_errors/auto": 0
+      },
+      "note": "sealed-confirmation.ts decide over compare.json."
+    },
+    {
+      "claim_id": "sealed-v2-decision-1-summary",
+      "readme_anchor": "docs/benchmarks/2026-10-02-sealed-v2-decision-1.md: Answer accuracy, judged correct (paired)",
+      "artifact_path": "docs/benchmarks/2026-10-02-sealed-v2-decision-1/results/summary.json",
+      "artifact_sha256": "1273fe156a0449f91c77f58242205fac6a613d6b7d3c4c7debf43c75ffdd8d26",
+      "status": "covered",
+      "expected": {
+        "/arms/chunk/answers_correct": 132,
+        "/arms/auto/answers_correct": 192,
+        "/paired/all/auto_wins": 60,
+        "/paired/all/auto_losses": 0,
+        "/paired/multi-session/auto": 76,
+        "/retrieval/answerable/recall_all_hits": 153,
+        "/access_log/lines_after": 3
+      },
+      "note": "Aggregates only; per-question sealed outcomes went to private custody and were deleted from the machine."
+    },
+    {
+      "claim_id": "sealed-v2-decision-1-ledger",
+      "readme_anchor": "docs/benchmarks/2026-10-02-sealed-v2-decision-1.md: Reproduce and inspect",
+      "artifact_path": "docs/benchmarks/2026-10-02-sealed-v2-decision-1/results/ledger-summary.json",
+      "artifact_sha256": "a6105acdf44d72b86dc5f46cdc7855dde797c42676901e6fb60e8d5397065b33",
+      "status": "covered",
+      "expected": {
+        "/requests": 10600,
+        "/budget_usd": 60
+      },
+      "note": "Budget-ledger close output for the decision run."
+    },
+    {
+      "claim_id": "wave7-n2-paid",
+      "readme_anchor": "docs/benchmarks/2026-10-03-wave7-repin.md: N2 paid rows: prompt v4",
+      "artifact_path": "docs/benchmarks/2026-10-03-wave7-repin/n2/receipt-paid-48ed5e8.json",
+      "artifact_sha256": "9e3a2cf02bd0c096d9e459c32352df8a42013463db783cce6d66a5c5c6625800",
+      "status": "covered",
+      "expected": {
+        "/execution/product/loaded_git_head": "48ed5e8233f617479df989998560840747af0425",
+        "/data/paid/classification/e2e_conflict_recall/hits": 149,
+        "/data/paid/classification/false_contradiction_compatible/hits": 6,
+        "/data/paid/classification/false_contradiction_compatible/n": 51,
+        "/data/paid/classification/false_contradiction_unplanted_pairs/hits": 38,
+        "/data/paid/classification/false_contradiction_unplanted_pairs/n": 1977,
+        "/data/paid/classification/decision/separates": false,
+        "/data/paid/candidate_parity/paid_offered": 2680
+      },
+      "note": "n2-contradiction-surfacing.ts --paid at gbrain 48ed5e8 (judge prompt v4, probe budget $10)."
+    },
+    {
+      "claim_id": "wave7-n2-hermetic",
+      "readme_anchor": "docs/benchmarks/2026-10-03-wave7-repin.md: N2 rows: candidate recall and remote find_contradictions",
+      "artifact_path": "docs/benchmarks/2026-10-03-wave7-repin/n2/receipt-hermetic-48ed5e8.json",
+      "artifact_sha256": "29eeb0edadc7b3e0306f98223a867c4bd55e2b47d9cdd288772e0ae3e2834b3d",
+      "status": "covered",
+      "expected": {
+        "/verdict": "pass",
+        "/execution/product/loaded_git_head": "48ed5e8233f617479df989998560840747af0425"
+      },
+      "note": "n2-contradiction-surfacing.ts hermetic arm at gbrain 48ed5e8."
+    },
+    {
+      "claim_id": "wave7-n7",
+      "readme_anchor": "docs/benchmarks/2026-10-03-wave7-repin.md: N7 rows: gating floors and acknowledgement closes",
+      "artifact_path": "docs/benchmarks/2026-10-03-wave7-repin/n7/receipt-pin-48ed5e8.json",
+      "artifact_sha256": "eed4fb8369a7987248e4c5835b12aa890eca6e67bbd5ab26205e5bcc475cea07",
+      "status": "covered",
+      "expected": {
+        "/verdict": "pass",
+        "/execution/product/loaded_git_head": "48ed5e8233f617479df989998560840747af0425",
+        "/resolved_config/oracle_rules": "ack-is-not-a-reply",
+        "/data/quality/closure_accuracy": 1,
+        "/data/exploratory/acknowledgement_closes/closed": 0,
+        "/data/exploratory/url_question_mark_opens/opened": 0
+      },
+      "note": "n7-open-loops-email.ts at gbrain 48ed5e8 with the amended oracle."
+    },
+    {
+      "claim_id": "wave7-n7-frozen",
+      "readme_anchor": "docs/benchmarks/2026-10-03-wave7-repin.md: The N7 amendment: frozen-oracle closure accuracy",
+      "artifact_path": "docs/benchmarks/2026-10-03-wave7-repin/n7/receipt-frozen-oracle-48ed5e8.json",
+      "artifact_sha256": "4bb5e1077422aeca50f4568a4c2234a588e3cc1ecbd8ef4329e08425eaff072a",
+      "status": "covered",
+      "expected": {
+        "/verdict": "fail",
+        "/execution/product/loaded_git_head": "48ed5e8233f617479df989998560840747af0425",
+        "/data/quality/closure_accuracy": 0.8717948717948718,
+        "/data/detection/closure_cases": 31,
+        "/data/detection/closure_correct": 26
+      },
+      "note": "The first N7 run at 48ed5e8, under the oracle frozen on 2026-10-01; kept as evidence for the amendment."
+    },
+    {
+      "claim_id": "wave7-n9",
+      "readme_anchor": "docs/benchmarks/2026-10-03-wave7-repin.md: N9 rows: one-hop seeds and firing",
+      "artifact_path": "docs/benchmarks/2026-10-03-wave7-repin/n9/n9-hermetic-48ed5e8.receipt.json",
+      "artifact_sha256": "c289c1c71527e59b434e7a3e8698290f3b62bd4d881847bc60dd5ec3c50deb66",
+      "status": "covered",
+      "expected": {
+        "/execution/product/loaded_git_head": "48ed5e8233f617479df989998560840747af0425",
+        "/data/one_hop/funnel/one-hop-template/seed_resolved": 429,
+        "/data/one_hop/funnel/one-hop-template/fired": 213
+      },
+      "note": "n9-multi-hop-paraphrase.ts hermetic arm at gbrain 48ed5e8."
+    },
+    {
+      "claim_id": "wave7-n12",
+      "readme_anchor": "docs/benchmarks/2026-10-03-wave7-repin.md: N12 rows: Participants attendance",
+      "artifact_path": "docs/benchmarks/2026-10-03-wave7-repin/n12/receipt-pin-48ed5e8.json",
+      "artifact_sha256": "a67dd179a3853735969f098ae00a95bef5c6d810d6dc55a197456ed5a4e49be0",
+      "status": "covered",
+      "expected": {
+        "/verdict": "pass",
+        "/execution/product/loaded_git_head": "48ed5e8233f617479df989998560840747af0425",
+        "/data/attendance/by_form/participants-line/tp": 5,
+        "/data/attendance/by_form/speakers-only/tp": 0,
+        "/data/attendance/false_attended": 0
+      },
+      "note": "n12-format-fidelity.ts at gbrain 48ed5e8, seed 12."
+    },
+    {
+      "claim_id": "wave7-n13",
+      "readme_anchor": "docs/benchmarks/2026-10-03-wave7-repin.md: N13 rows: resolved caller edges",
+      "artifact_path": "docs/benchmarks/2026-10-03-wave7-repin/n13/receipt-pin-48ed5e8.json",
+      "artifact_sha256": "bead84e31d18a55e79d5dcde1d50c8760aa330155bdd890b343fb5711cbf752e",
+      "status": "covered",
+      "expected": {
+        "/execution/product/loaded_git_head": "48ed5e8233f617479df989998560840747af0425",
+        "/data/callers_check/gbrain_edges": 91,
+        "/data/callers_check/gbrain_edges_resolved_flag_true": 72,
+        "/data/callers_check/same_file/resolved_in_metadata": 42
+      },
+      "note": "n13-code-intelligence.ts at gbrain 48ed5e8."
+    },
+    {
+      "claim_id": "wave7-a4-hermetic",
+      "readme_anchor": "docs/benchmarks/2026-10-03-wave7-repin.md: A4 rows: CRAG grade by class",
+      "artifact_path": "docs/benchmarks/2026-10-03-wave7-repin/a4/receipt-hermetic-48ed5e8.json",
+      "artifact_sha256": "efe3bfd5cde9f90bef18073f6a789771cb7eaa26330e9c39afc8d71ffcc657d0",
+      "status": "covered",
+      "expected": {
+        "/verdict": "pass",
+        "/execution/product/loaded_git_head": "48ed5e8233f617479df989998560840747af0425"
+      },
+      "note": "a4-abstention.ts hermetic arm at gbrain 48ed5e8."
+    },
+    {
+      "claim_id": "wave7-a4-paid",
+      "readme_anchor": "docs/benchmarks/2026-10-03-wave7-repin.md: A4 paid rows: reader and CRAG-gated reader",
+      "artifact_path": "docs/benchmarks/2026-10-03-wave7-repin/a4/receipt-paid-48ed5e8.json",
+      "artifact_sha256": "1450bf4307a73d64b74e1f5982726f5cbccb75c92e6d17bd758774f6be745fc1",
+      "status": "covered",
+      "expected": {
+        "/execution/product/loaded_git_head": "48ed5e8233f617479df989998560840747af0425",
+        "/data/paid/crag_gated/moderate_or_strong/utility_l1": 40,
+        "/data/paid/retrieved/utility_l1": 120
+      },
+      "note": "a4-abstention.ts --paid at gbrain 48ed5e8."
+    },
+    {
+      "claim_id": "wave7-a4-paid-before",
+      "readme_anchor": "docs/benchmarks/2026-10-03-wave7-repin.md: A4 paid rows: the d44296c baseline",
+      "artifact_path": "docs/benchmarks/2026-10-03-wave7-repin/a4/receipt-paid-d44296c.json",
+      "artifact_sha256": "fb0b81675d3bd25dd2b963aa566efd5b39df38a2616eedb1f6b3225c96dd313a",
+      "status": "covered",
+      "expected": {
+        "/execution/product/loaded_git_head": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "/data/paid/crag_gated/moderate_or_strong/utility_l1": 120,
+        "/data/paid/retrieved/utility_l1": 120
+      },
+      "note": "a4-abstention.ts --paid at gbrain d44296c, run for this report."
+    },
+    {
+      "claim_id": "wave7-n2-repeat",
+      "readme_anchor": "docs/benchmarks/2026-10-03-wave7-repin.md: N2 run-to-run variation: prompt v3 repeat control",
+      "artifact_path": "docs/benchmarks/2026-10-03-wave7-repin/n2/receipt-paid-v3-repeat-d44296c.json",
+      "artifact_sha256": "1ef0e650daf35d308df11262efa71766aab05f77615773c37dccb7febca20138",
+      "status": "covered",
+      "expected": {
+        "/execution/product/loaded_git_head": "d44296cf4d6481a10eb85562d3179e38cfd02c43",
+        "/data/paid/classification/e2e_conflict_recall/hits": 129,
+        "/data/paid/classification/false_contradiction_compatible/hits": 5,
+        "/data/paid/classification/false_contradiction_compatible/n": 51,
+        "/data/paid/classification/decision/separates": true
+      },
+      "note": "Preregistered repeat control: judge prompt v3 at gbrain d44296c with the $10 probe budget."
+    },
+    {
+      "claim_id": "wave7-ledger",
+      "readme_anchor": "docs/benchmarks/2026-10-03-wave7-repin.md: Reproduce and inspect",
+      "artifact_path": "docs/benchmarks/2026-10-03-wave7-repin/ledger-summary.json",
+      "artifact_sha256": "90de34a1f5f4dfb2f77e19da5985fb3529da62382e48a4b60c3379e8b3904d0a",
+      "status": "covered",
+      "expected": {
+        "/requests": 8722,
+        "/run/budget_usd": 30,
+        "/total_usd": 15.68434
+      },
+      "note": "Budget-ledger summary for every paid request of the wave 7 re-pin."
     }
   ]
 }
