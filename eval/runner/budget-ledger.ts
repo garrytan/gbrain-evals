@@ -39,6 +39,7 @@
  *   bun eval/runner/budget-ledger.ts close --budget-run-id <id>
  */
 
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { randomUUID } from 'node:crypto';
 import { closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, statSync, writeSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -246,6 +247,11 @@ export class BudgetRun {
     });
   }
 
+  /** Reserve an allowance for many small requests at once; see BudgetAllowance. */
+  allowance(usd: number, description: string): BudgetAllowance {
+    return new BudgetAllowance(this, this.reserve(usd, `${description} (allowance)`), usd, description);
+  }
+
   summary(): RunSummary {
     const ledger = readLedger(this.ledgerPath, this.programCapUsd);
     const entries = ledger.entries.filter(e => e.run_id === this.runId && (this.participant === null || e.participant === this.participant));
@@ -271,6 +277,48 @@ export class BudgetRun {
     return this.summary();
   }
 }
+
+/**
+ * One ledger reservation that covers many requests. Every reservation and
+ * settlement rewrites the whole ledger file under its lock, so tens of
+ * thousands of tiny requests (a bulk embedding pass sends one per page) slow
+ * to a few per second as the ledger grows. Requests made inside
+ * `allowance.run(fn)` are charged against the allowance in memory instead: a
+ * request whose reservation would take the allowance past its amount throws
+ * BudgetExceededError and is not sent, so spending stays inside a sum the
+ * ledger already checked against both caps. `close()` settles the ledger entry
+ * with the measured total (requests without usage count at their reservation).
+ */
+export class BudgetAllowance {
+  spent_usd = 0;
+  private pending_usd = 0;
+  requests = 0;
+  charged_reservations = 0;
+  input_tokens = 0;
+  output_tokens = 0;
+  private closed = false;
+  constructor(readonly budget: BudgetRun, readonly id: string, readonly usd: number, readonly description: string) {}
+  /** Run `fn` with its paid requests charged to this allowance. */
+  run<T>(fn: () => Promise<T>): Promise<T> { return allowanceScope.run(this, fn); }
+  hold(usd: number, what: string) {
+    if (this.closed) throw new BudgetExceededError(`${what}: allowance ${this.description} is closed`);
+    if (this.spent_usd + this.pending_usd + usd > this.usd) throw new BudgetExceededError(`${what}: reserving $${usd.toFixed(6)} would take allowance ${this.description} past its $${this.usd.toFixed(2)}`);
+    this.pending_usd += usd;
+  }
+  charge(held: number, cost: { usd: number; input_tokens?: number | null; output_tokens?: number | null } | null) {
+    this.pending_usd -= held;
+    this.requests++;
+    if (!cost) { this.charged_reservations++; this.spent_usd += held; return; }
+    this.spent_usd += cost.usd;
+    this.input_tokens += cost.input_tokens ?? 0;
+    this.output_tokens += cost.output_tokens ?? 0;
+  }
+  close(): { usd: number; requests: number; charged_reservations: number } {
+    if (!this.closed) { this.closed = true; this.budget.settle(this.id, { usd: this.spent_usd + this.pending_usd, input_tokens: this.input_tokens, output_tokens: this.output_tokens }); }
+    return { usd: this.spent_usd, requests: this.requests, charged_reservations: this.charged_reservations };
+  }
+}
+const allowanceScope = new AsyncLocalStorage<BudgetAllowance>();
 
 // ─── Request pricing ────────────────────────────────────────────────
 
@@ -453,6 +501,21 @@ export function installPaidRequestGuard(run: BudgetRun, options: { fetchImpl?: t
     try {
       price = priceRequest(url, body);
       if (!price) return send(input, init);
+      const allowance = allowanceScope.getStore();
+      if (allowance) {
+        if (allowance.budget !== run) throw new BudgetExceededError(`allowance ${allowance.description} belongs to another budget run`);
+        const held = reservationUsd(price);
+        allowance.hold(held, `${price.provider}:${price.model} ${price.kind}`);
+        let res: Response;
+        try { res = await send(input, init); }
+        catch (error) { allowance.charge(held, null); throw error; }
+        let c: ReturnType<typeof usageCost> = null;
+        if (!(res.headers.get('content-type') ?? '').includes('event-stream')) {
+          try { c = usageCost(price, await res.clone().json()); } catch { c = null; }
+        }
+        allowance.charge(held, c);
+        return res;
+      }
       id = run.reserve(reservationUsd(price), `${price.provider}:${price.model} ${price.kind}`);
     } catch (error) {
       if (error instanceof BudgetExceededError) state.exhausted = true;

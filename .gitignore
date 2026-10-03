@@ -37,3 +37,6 @@ __pycache__/
 
 # Copied gbrain overlays for --gbrain / GBRAIN_UNDER_TEST (eval/runner/gbrain-under-test.ts)
 .gbrain-overlays/
+
+# Cat 40 large world (41 MB): regenerate with `bun eval/generators/model-ladder-gen.ts --scale large`; manifest.json is committed
+eval/data/model-ladder-v1-large/world.json

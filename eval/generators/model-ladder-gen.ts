@@ -32,7 +32,15 @@
  *   F write-back  a correction told in one session, needed in a fresh one
  * Family D (surviving failure) is not generated in v1; see the protocol.
  *
- * Usage: bun eval/generators/model-ladder-gen.ts [--seed N] [--out DIR] [--check]
+ * Scale `large` keeps the v1 world exactly (same accounts, tasks and
+ * documents, generated first from the same random sequence) and then adds
+ * LARGE_EXTRA_ACCOUNTS distractor accounts and LARGE_EXTRA_UPDATES team
+ * updates, about 52,000 documents in all. Value spaces (renewal dates, seat
+ * counts, names) are too small for 1,350 accounts to have unique values, so
+ * the added accounts may share values with each other, but never with any
+ * value in the v1 world, and never a task account's base name or alias.
+ *
+ * Usage: bun eval/generators/model-ladder-gen.ts [--seed N] [--scale large] [--out DIR] [--check]
  */
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
@@ -46,6 +54,11 @@ export const TASKS_PER_FAMILY = 10;
 export const DISTRACTOR_ACCOUNTS = 50;
 /** Task accounts that get a distractor account sharing their first word. */
 export const NAMESAKE_PAIRS = 25;
+export type LadderScale = 'v1' | 'large';
+export const LARGE_EXTRA_ACCOUNTS = 1250;
+export const LARGE_EXTRA_UPDATES = 3000;
+/** Rejection-sampling attempts before a generator gives up instead of looping forever. */
+const MAX_DRAWS = 100_000;
 
 export type Family = 'A' | 'B' | 'C' | 'E' | 'F';
 export const FAMILIES: readonly Family[] = ['A', 'B', 'C', 'E', 'F'];
@@ -95,6 +108,8 @@ export interface LadderTask {
 export interface LadderWorld {
   version: string;
   seed: number;
+  /** Present only for scale `large`; the v1 world has no such key. */
+  scale?: 'large';
   today: string;
   principal: typeof LADDER_PRINCIPAL;
   docs: LadderDoc[];
@@ -163,13 +178,18 @@ const TEAMS = ['Platform', 'Support', 'Solutions', 'Partnerships', 'Growth'];
 
 interface Account { slug: string; name: string; base: string; alias: string; owner: string; billing: string; champion: string; segment: string }
 
+function draw<T>(make: () => T, ok: (v: T) => boolean, what: string): T {
+  for (let i = 0; i < MAX_DRAWS; i++) { const v = make(); if (ok(v)) return v; }
+  throw new Error(`model-ladder-gen: ran out of ${what}`);
+}
+
 function slugify(s: string) { return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
 function addDays(iso: string, days: number) { const d = new Date(`${iso}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + days); return d.toISOString().slice(0, 10); }
 function longDate(iso: string) { return new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' }); }
 
 // ─── Generation ─────────────────────────────────────────────────────
 
-export function generateLadderWorld(seed = LADDER_DEFAULT_SEED): LadderWorld {
+export function generateLadderWorld(seed = LADDER_DEFAULT_SEED, opts: { scale?: LadderScale } = {}): LadderWorld {
   const rng = new Rng(seed);
   const docs: LadderDoc[] = [];
   /** Which account each account-specific doc is about (generator-side only). */
@@ -186,19 +206,19 @@ export function generateLadderWorld(seed = LADDER_DEFAULT_SEED): LadderWorld {
     return doc;
   };
   const usedNames = new Set<string>();
-  const person = () => { for (;;) { const n = `${rng.pick(FIRST)} ${rng.pick(LAST)}`; if (!usedNames.has(n)) { usedNames.add(n); return n; } } };
+  const person = () => { const n = draw(() => `${rng.pick(FIRST)} ${rng.pick(LAST)}`, x => !usedNames.has(x), 'person names'); usedNames.add(n); return n; };
   const acmeStaff = Array.from({ length: 18 }, person);
   const nTask = FAMILIES.length * TASKS_PER_FAMILY;
   const usedBases = new Set<string>();
   const usedAliases = new Set<string>();
   const makeAccount = (base: string, suffix: string): Account => {
     let alias = (base.slice(0, 2) + suffix.slice(0, 1) + base.slice(-1)).toUpperCase();
-    while (usedAliases.has(alias)) alias = alias.slice(0, 3) + String.fromCharCode(65 + rng.int(0, 25));
+    if (usedAliases.has(alias)) alias = draw(() => alias.slice(0, 3) + String.fromCharCode(65 + rng.int(0, 25)), x => !usedAliases.has(x), `account aliases ${alias.slice(0, 3)}*`);
     usedAliases.add(alias);
     const name = `${base} ${suffix}`;
     return { slug: slugify(name), name, base, alias, owner: rng.pick(acmeStaff), billing: person(), champion: person(), segment: rng.pick(['mid-market', 'enterprise', 'growth']) };
   };
-  const freshBase = () => { for (;;) { const b = `${rng.pick(SYL_A)}${rng.pick(SYL_B)}`; if (!usedBases.has(b)) { usedBases.add(b); return b; } } };
+  const freshBase = () => { const b = draw(() => `${rng.pick(SYL_A)}${rng.pick(SYL_B)}`, x => !usedBases.has(x), 'account base names'); usedBases.add(b); return b; };
   const taskAccounts: Account[] = Array.from({ length: nTask }, () => makeAccount(freshBase(), rng.pick(SUFFIX)));
   const namesakeOf = new Map<string, Account>();
   const distractors: Account[] = [];
@@ -220,17 +240,18 @@ export function generateLadderWorld(seed = LADDER_DEFAULT_SEED): LadderWorld {
     return lines.join('\n');
   };
   const usedValues = new Set<string>();
-  const unique = (make: () => string) => { for (;;) { const v = make(); if (!usedValues.has(v)) { usedValues.add(v); return v; } } };
+  const unique = (make: () => string) => { const v = draw(make, x => !usedValues.has(x), 'unique values'); usedValues.add(v); return v; };
   const ticketId = () => unique(() => `TKT-${rng.int(10000, 99999)}`);
 
   const contracts = new Map<string, { renewal: string; terms: Record<string, string>; signed: string; id: string }>();
-  for (const a of accounts) {
+  /** Contract, CRM record and routine traffic for one account. `value` draws the contract's distinctive values. */
+  const accountRecords = (a: Account, value: (make: () => string) => string) => {
     const signed = date('2024-01-10', '2025-09-30');
-    const renewal = unique(() => date('2026-10-01', '2027-06-30'));
+    const renewal = value(() => date('2026-10-01', '2027-06-30'));
     const terms = {
       payment_terms: `Net ${rng.pick([15, 30, 45, 60, 75, 90])}`,
-      liability_cap: unique(() => `$${rng.int(8, 900) * 5},000`),
-      seats: unique(() => String(rng.int(40, 2400))),
+      liability_cap: value(() => `$${rng.int(8, 900) * 5},000`),
+      seats: value(() => String(rng.int(40, 2400))),
       uptime_sla: `${rng.pick(['99.5', '99.9', '99.95', '99.0'])}%`,
     };
     const id = `contracts/${a.slug}-msa`;
@@ -275,15 +296,17 @@ export function generateLadderWorld(seed = LADDER_DEFAULT_SEED): LadderWorld {
         }, a.slug);
       }
     }
-  }
-  for (let i = 0; i < 300; i++) {
+  };
+  for (const a of accounts) accountRecords(a, unique);
+  const teamUpdate = (mentioned: () => Account[]) => {
     const d = date('2025-10-01', '2026-09-10');
     const team = rng.pick(TEAMS);
     add({
       id: `company/updates/${d}-${slugify(team)}`, title: `${team} team update, ${d}`, type: 'team-update', date: d, author: rng.pick(acmeStaff),
-      body: `# ${team} team update\n\nThis week: ${rng.pick(['shipped dashboard filters', 'hired two support engineers', 'closed the quarter', 'ran the renewal playbook review', 'updated the payment-terms FAQ', 'reassigned a few accounts between owners'])}. Accounts mentioned: ${rng.shuffle(accounts).slice(0, 3).map(x => ref(x, true)).join(', ')}.`,
+      body: `# ${team} team update\n\nThis week: ${rng.pick(['shipped dashboard filters', 'hired two support engineers', 'closed the quarter', 'ran the renewal playbook review', 'updated the payment-terms FAQ', 'reassigned a few accounts between owners'])}. Accounts mentioned: ${mentioned().map(x => ref(x, true)).join(', ')}.`,
     });
-  }
+  };
+  for (let i = 0; i < 300; i++) teamUpdate(() => rng.shuffle(accounts).slice(0, 3));
   add({ id: 'company/policies/which-document-governs', title: 'Policy: which document governs', type: 'policy', date: '2025-06-01', author: 'legal@acme-example',
     body: '# Which document governs a customer term\n\nAn executed contract or an executed amendment governs. Draft amendments, proposals, email threads and notes do not change a term until an amendment is countersigned.' });
   add({ id: 'company/policies/finance-only-information', title: 'Policy: finance-only information', type: 'policy', date: '2025-06-01', author: 'finance@acme-example',
@@ -467,9 +490,34 @@ export function generateLadderWorld(seed = LADDER_DEFAULT_SEED): LadderWorld {
       relevant: [...recordIds(a), conf.id], protected_docs: [contracts.get(a.slug)!.id] });
   });
 
+  // Large scale: everything above is the v1 world, untouched. The additions below come later in the same random sequence.
+  if (opts.scale === 'large') {
+    const protectedValues = new Set(usedValues);
+    const v1Names = new Set(usedNames);
+    const freeNames = FIRST.flatMap(f => LAST.map(l => `${f} ${l}`)).filter(n => !v1Names.has(n));
+    const taskBases = new Set(taskAccounts.map(a => a.base));
+    const accountNames = new Set(accounts.map(a => a.name));
+    const ALNUM = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'];
+    const shared = (make: () => string) => draw(make, v => !protectedValues.has(v), 'distractor values outside the v1 world');
+    const extra: Account[] = [];
+    for (let k = 0; k < LARGE_EXTRA_ACCOUNTS; k++) {
+      const [base, suffix] = draw(() => [`${rng.pick(SYL_A)}${rng.pick(SYL_B)}`, rng.pick(SUFFIX)], ([b, s]) => !taskBases.has(b) && !accountNames.has(`${b} ${s}`), 'large distractor account names');
+      const name = `${base} ${suffix}`;
+      accountNames.add(name);
+      const natural = (base.slice(0, 2) + suffix.slice(0, 1) + base.slice(-1)).toUpperCase();
+      const alias = usedAliases.has(natural) ? draw(() => natural.slice(0, 3) + rng.pick(ALNUM), x => !usedAliases.has(x), `account aliases ${natural.slice(0, 3)}*`) : natural;
+      usedAliases.add(alias);
+      const a: Account = { slug: slugify(name), name, base, alias, owner: rng.pick(acmeStaff), billing: rng.pick(freeNames), champion: rng.pick(freeNames), segment: rng.pick(['mid-market', 'enterprise', 'growth']) };
+      extra.push(a);
+      accountRecords(a, shared);
+    }
+    const everyone = [...accounts, ...extra];
+    for (let i = 0; i < LARGE_EXTRA_UPDATES; i++) teamUpdate(() => { const picked = new Set<Account>(); while (picked.size < 3) picked.add(rng.pick(everyone)); return [...picked]; });
+  }
+
   docs.sort((x, y) => x.id.localeCompare(y.id));
   for (const t of tasks) for (const id of [...t.relevant, ...t.gold.evidence]) if (!ids.has(id)) throw new Error(`${t.id} references missing doc ${id}`);
-  return { version: LADDER_GENERATOR_VERSION, seed, today: LADDER_TODAY, principal: LADDER_PRINCIPAL, docs, tasks };
+  return { version: LADDER_GENERATOR_VERSION, seed, ...(opts.scale === 'large' ? { scale: 'large' as const } : {}), today: LADDER_TODAY, principal: LADDER_PRINCIPAL, docs, tasks };
 }
 
 /** The Markdown file every file-backed arm sees. Frontmatter is identical across arms. */
@@ -485,21 +533,40 @@ export function worldDigest(w: LadderWorld): string {
 }
 
 export const DEFAULT_LADDER_DIR = resolve(import.meta.dir, '../data/model-ladder-v1');
+export const LARGE_LADDER_DIR = resolve(import.meta.dir, '../data/model-ladder-v1-large');
+
+/** Size-checked summary committed beside a world too large for Git. */
+export interface LadderManifest { version: string; seed: number; scale: LadderScale; digest: string; file_sha256: string; bytes: number; docs: number; tasks: number; by_type: Record<string, number>; command: string }
+
+export function ladderManifest(world: LadderWorld, text: string): LadderManifest {
+  const by_type: Record<string, number> = {};
+  for (const d of world.docs) by_type[d.type] = (by_type[d.type] ?? 0) + 1;
+  return {
+    version: world.version, seed: world.seed, scale: world.scale ?? 'v1', digest: worldDigest(world), file_sha256: createHash('sha256').update(text).digest('hex'),
+    bytes: Buffer.byteLength(text), docs: world.docs.length, tasks: world.tasks.length, by_type,
+    command: `bun eval/generators/model-ladder-gen.ts --seed ${world.seed}${world.scale ? ` --scale ${world.scale}` : ''}`,
+  };
+}
 
 if (import.meta.main) {
   const arg = (n: string) => { const i = process.argv.indexOf(n); return i >= 0 ? process.argv[i + 1] : undefined; };
   const seed = Number(arg('--seed') ?? LADDER_DEFAULT_SEED);
-  const out = resolve(arg('--out') ?? DEFAULT_LADDER_DIR);
-  const world = generateLadderWorld(seed);
+  const scale = (arg('--scale') ?? 'v1') as LadderScale;
+  if (scale !== 'v1' && scale !== 'large') throw new Error(`--scale must be v1 or large, not ${scale}`);
+  const out = resolve(arg('--out') ?? (scale === 'large' ? LARGE_LADDER_DIR : DEFAULT_LADDER_DIR));
+  const world = generateLadderWorld(seed, { scale });
   const text = JSON.stringify(world, null, 1) + '\n';
   const path = join(out, 'world.json');
+  const manifestPath = join(out, 'manifest.json');
   if (process.argv.includes('--check')) {
     const same = existsSync(path) && readFileSync(path, 'utf8') === text;
-    console.log(same ? `ok: ${path} matches seed ${seed}` : `DIFFERS: ${path}`);
-    process.exit(same ? 0 : 1);
+    const manifestOk = scale === 'v1' || (existsSync(manifestPath) && JSON.parse(readFileSync(manifestPath, 'utf8')).digest === worldDigest(world));
+    console.log(same && manifestOk ? `ok: ${path} matches seed ${seed}` : `DIFFERS: ${!same ? path : manifestPath}`);
+    process.exit(same && manifestOk ? 0 : 1);
   }
   mkdirSync(out, { recursive: true });
   writeFileSync(path, text);
+  if (scale === 'large') writeFileSync(manifestPath, JSON.stringify(ladderManifest(world, text), null, 2) + '\n');
   const byFamily = Object.fromEntries(FAMILIES.map(f => [f, world.tasks.filter(t => t.family === f).length]));
   console.log(JSON.stringify({ path, docs: world.docs.length, bytes: text.length, tasks: world.tasks.length, byFamily, digest: worldDigest(world) }));
 }
