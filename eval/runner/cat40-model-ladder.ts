@@ -13,17 +13,18 @@
  *   bun eval/runner/cat40-model-ladder.ts --models claude-sonnet-4-6,gpt-5.4 \
  *     --arms oracle,fs,pg,memory,gbrain --budget-usd 100 [--families A,B] [--tasks A01,B02] \
  *     [--repeat 1] [--concurrency 6] [--slots 3] [--gbrain-repo ../gbrain --gbrain-ref <sha>] \
- *     [--judge gpt-5.4-mini|none] [--out eval/reports/cat40/<name>]
+ *     [--judge gpt-5.4-mini|none] [--world eval/data/model-ladder-v1-large/world.json] [--out eval/reports/cat40/<name>]
  *   bun eval/runner/cat40-model-ladder.ts --scripted --arms fs,memory,oracle   (hermetic, $0)
  */
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { generateLadderWorld, worldDigest, DEFAULT_LADDER_DIR, FAMILIES, type LadderTask, type LadderWorld, type Family } from '../generators/model-ladder-gen.ts';
 import { runAgent, provider, priceUsage, type AgentRun, type Arm, type ScriptedModel } from './cat40/loop.ts';
 import { FsArm, MemoryArm, OracleArm, FileStore, isWriteCall, type ArmName } from './cat40/arms.ts';
+import { renderDoc } from '../generators/model-ladder-gen.ts';
 import { PgArm, PgStore, cachedOpenAIEmbedder } from './cat40/pg-arm.ts';
-import { GbrainArm, GbrainPool, GbrainSlot, MeteringProxy, type Meter, type SlotBuild } from './cat40/gbrain-arm.ts';
+import { GbrainArm, GbrainPool, GbrainSlot, MeteringProxy, SERVE_BOOT_TIMEOUT_SECONDS, STAGED_SOURCE_ADD_DOCS, STAGED_SYNC_BATCH, type Meter, type SlotBuild } from './cat40/gbrain-arm.ts';
 import { scoreTask, judgePrompt, parseClaims, JUDGE_PROMPT_VERSION, type TaskScore, type ClaimVerdicts } from './cat40/score.ts';
 import { budgetOptionsFrom, startPaidRun, receiptCost } from './budget-ledger.ts';
 import { prepareBuild } from './lifecycle/builds.ts';
@@ -92,6 +93,8 @@ export function scriptedAgent(task: LadderTask, armName: string): ScriptedModel 
 
 interface Ctx {
   world: LadderWorld;
+  /** Rendered corpus files, built once and shared read-only by every file-backed run (each run writes to its own overlay). */
+  files: { all: Map<string, string>; acl: Map<string, string> };
   out: string;
   pg?: PgStore;
   pool?: GbrainPool;
@@ -138,9 +141,9 @@ async function runCell(ctx: Ctx, model: string, armName: ArmName, task: LadderTa
   const runId = `${model}|${label}|${task.id}|${repeat}`;
   let arm: Arm;
   let slot: GbrainSlot | null = null;
-  if (armName === 'fs') arm = new FsArm('fs', FileStore.fromWorld(ctx.world));
-  else if (armName === 'fs-acl') arm = new FsArm('fs-acl', FileStore.fromWorld(ctx.world, d => !d.restricted));
-  else if (armName === 'memory') arm = new MemoryArm(FileStore.fromWorld(ctx.world));
+  if (armName === 'fs') arm = new FsArm('fs', new FileStore(ctx.files.all));
+  else if (armName === 'fs-acl') arm = new FsArm('fs-acl', new FileStore(ctx.files.acl));
+  else if (armName === 'memory') arm = new MemoryArm(new FileStore(ctx.files.all));
   else if (armName === 'oracle') arm = new OracleArm();
   else if (armName === 'pg') arm = new PgArm(ctx.pg!, runId);
   else {
@@ -190,8 +193,8 @@ export async function main(argv = process.argv.slice(2)) {
   const scripted = argv.includes('--scripted');
   const worldPath = resolve(flag(argv, '--world') ?? join(DEFAULT_LADDER_DIR, 'world.json'));
   const world: LadderWorld = JSON.parse(readFileSync(worldPath, 'utf8'));
-  const regenerated = generateLadderWorld(world.seed);
-  if (worldDigest(regenerated) !== worldDigest(world)) throw new Error(`${worldPath} does not match its generator; run bun eval/generators/model-ladder-gen.ts`);
+  const regenerated = generateLadderWorld(world.seed, { scale: world.scale });
+  if (worldDigest(regenerated) !== worldDigest(world)) throw new Error(`${worldPath} does not match its generator; run bun eval/generators/model-ladder-gen.ts${world.scale ? ` --scale ${world.scale}` : ''}`);
   const models = scripted ? ['scripted'] : (flag(argv, '--models') ?? '').split(',').filter(Boolean);
   if (!models.length) throw new Error('--models is required (or --scripted)');
   const arms = (flag(argv, '--arms') ?? 'oracle,fs,pg,memory,gbrain').split(',') as ArmName[];
@@ -202,7 +205,8 @@ export async function main(argv = process.argv.slice(2)) {
   const out = resolve(flag(argv, '--out') ?? join('eval/reports/cat40', scripted ? 'scripted' : new Date().toISOString().replace(/[:.]/g, '-')));
   mkdirSync(out, { recursive: true });
   const judge = scripted || flag(argv, '--judge') === 'none' ? null : (flag(argv, '--judge') ?? 'gpt-5.4-mini');
-  const ctx: Ctx = { world, out, scripted, judge, gbrainLabel: flag(argv, '--gbrain-label') ?? 'gbrain', maxToolChars: Number(flag(argv, '--max-tool-chars') ?? 20_000) };
+  const files = (keep: (d: LadderWorld['docs'][number]) => boolean) => new Map(world.docs.filter(keep).map(d => [`${d.id}.md`, renderDoc(d)]));
+  const ctx: Ctx = { world, files: { all: files(() => true), acl: files(d => !d.restricted) }, out, scripted, judge, gbrainLabel: flag(argv, '--gbrain-label') ?? 'gbrain', maxToolChars: Number(flag(argv, '--max-tool-chars') ?? 20_000) };
   const log = (s: string) => { process.stderr.write(`[cat40] ${s}\n`); appendFileSync(join(out, 'run.log'), `${new Date().toISOString()} ${s}\n`); };
 
   const paid = !scripted;
@@ -241,7 +245,16 @@ export async function main(argv = process.argv.slice(2)) {
       const slotCommit = slotRef ? execFileSync('git', ['-C', repo, 'rev-parse', `${slotRef}^{commit}`], { encoding: 'utf8' }).trim() : gbrainBuild.commit;
       const slots = Array.from({ length: n }, (_, i) => new GbrainSlot(`slot${i}`, join(root, `slots-${slotCommit.slice(0, 12)}-${worldDigest(world).slice(0, 8)}${argv.includes('--no-pglite-analyze') ? '-noanalyze' : ''}`), gbrainBuild!.dir, ctx.proxy!.port, surface));
       await Promise.all(slots.map(async s => {
-        if (!s.hasSnapshot() || argv.includes('--rebuild')) { const b = await s.build(world, ctx.proxy!, !argv.includes('--no-pglite-analyze')); builds.push(b); log(`built ${s.id} in ${(b.ms / 1000).toFixed(0)}s, $${b.meter.usd.toFixed(4)} (${b.meter.requests} provider requests)`); }
+        if (!s.hasSnapshot() || argv.includes('--rebuild')) {
+          // A build sends one provider request per page; an allowance keeps the ledger from being rewritten for each.
+          const allowance = budget!.run.allowance(Number(flag(argv, '--slot-build-allowance-usd') ?? 5), `gbrain ${s.id} build`);
+          ctx.proxy!.allowances.set(s.id, allowance);
+          let b: SlotBuild, charged: ReturnType<typeof allowance.close>;
+          try { b = await s.build(world, ctx.proxy!, !argv.includes('--no-pglite-analyze')); }
+          finally { ctx.proxy!.allowances.delete(s.id); charged = allowance.close(); }
+          builds.push({ ...b, allowance: { reserved_usd: allowance.usd, ...charged } });
+          log(`built ${s.id} in ${(b.ms / 1000).toFixed(0)}s, $${b.meter.usd.toFixed(4)} (${b.meter.requests} provider requests; ledger allowance charged $${charged.usd.toFixed(4)})`);
+        }
         await s.restore();
       }));
       // A write probe after restore: the arm is only fair if the agent's writes can land.
@@ -277,10 +290,10 @@ export async function main(argv = process.argv.slice(2)) {
     budget?.guard.uninstall();
     const receipt = {
       schema: 'cat40-receipt-v1', version: CAT40_VERSION, judge_prompt: JUDGE_PROMPT_VERSION, judge: ctx.judge,
-      world: { path: worldPath, digest: worldDigest(world), seed: world.seed, docs: world.docs.length, tasks: world.tasks.length },
+      world: { path: relative(process.cwd(), worldPath), scale: world.scale ?? 'v1', digest: worldDigest(world), seed: world.seed, docs: world.docs.length, tasks: world.tasks.length },
       evals_commit: (() => { try { return execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(); } catch { return null; } })(),
       evals_dirty: (() => { try { return execFileSync('git', ['status', '--porcelain'], { encoding: 'utf8' }).trim().length > 0; } catch { return null; } })(),
-      gbrain: gbrainBuild ? { slot_ref: flag(argv, '--slot-ref') ?? null, label: ctx.gbrainLabel, commit: gbrainBuild.commit, version: gbrainBuild.version, tree: gbrainBuild.tree, verified: gbrainBuild.verified, surface: flag(argv, '--surface') ?? 'starter', operator_analyze: !argv.includes('--no-pglite-analyze') } : null,
+      gbrain: gbrainBuild ? { slot_ref: flag(argv, '--slot-ref') ?? null, label: ctx.gbrainLabel, commit: gbrainBuild.commit, version: gbrainBuild.version, tree: gbrainBuild.tree, verified: gbrainBuild.verified, surface: flag(argv, '--surface') ?? 'starter', operator_analyze: !argv.includes('--no-pglite-analyze'), serve_boot_timeout_s: SERVE_BOOT_TIMEOUT_SECONDS, staged_build: world.docs.length > STAGED_SOURCE_ADD_DOCS ? { sync_batch_docs: STAGED_SYNC_BATCH } : null } : null,
       slot_builds: builds, models, arms, families, repeats, max_tool_chars: ctx.maxToolChars, argv,
       cost: summary ? receiptCost(summary) : null,
       finished_at: new Date().toISOString(),

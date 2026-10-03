@@ -13,15 +13,20 @@
  * its slot to be restored from the post-build snapshot before the next run.
  */
 import { spawn, execFileSync, type ChildProcessWithoutNullStreams } from 'node:child_process';
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import type { Arm, ToolSpec } from './loop.ts';
 import type { LadderWorld } from '../../generators/model-ladder-gen.ts';
 import { renderDoc } from '../../generators/model-ladder-gen.ts';
 import { runCli, type RunEnv } from '../lifecycle/drivers.ts';
-import { priceRequest, usageCost } from '../budget-ledger.ts';
+import { priceRequest, usageCost, type BudgetAllowance } from '../budget-ledger.ts';
 
 export const GBRAIN_EMBED_MODEL = 'openai:text-embedding-3-large';
+/** Above this many documents the source is registered before the corpus is written (see GbrainSlot.build). */
+export const STAGED_SOURCE_ADD_DOCS = 6000;
+export const STAGED_SYNC_BATCH = 5000;
+export const SERVE_BOOT_TIMEOUT_SECONDS = 0;
+const CORPUS_TAG = 'cat40-corpus';
 
 // ─── Metering proxy ─────────────────────────────────────────────────
 
@@ -33,6 +38,8 @@ export const newMeter = (): Meter => ({ usd: 0, requests: 0, unpriced: 0, byMode
 export class MeteringProxy {
   private server: ReturnType<typeof Bun.serve> | null = null;
   readonly meters = new Map<string, Meter>();
+  /** Slots whose provider requests are charged to a ledger allowance (slot builds), not one ledger entry each. */
+  readonly allowances = new Map<string, BudgetAllowance>();
   get port(): number { return this.server!.port as number; }
   start() {
     this.server = Bun.serve({
@@ -47,7 +54,9 @@ export class MeteringProxy {
         for (const h of ['host', 'content-length', 'accept-encoding', 'connection']) headers.delete(h);
         const body = req.method === 'GET' || req.method === 'HEAD' ? undefined : await req.text();
         let res: Response;
-        try { res = await fetch(target, { method: req.method, headers, body }); }
+        const allowance = this.allowances.get(slot);
+        const send = () => fetch(target, { method: req.method, headers, body });
+        try { res = await (allowance ? allowance.run(send) : send()); }
         catch (e) { return new Response(JSON.stringify({ error: { message: `cat40 proxy: ${(e as Error).message}` } }), { status: 502, headers: { 'content-type': 'application/json' } }); }
         const text = await res.text();
         const meter = this.meters.get(slot) ?? newMeter();
@@ -139,7 +148,23 @@ export class McpClient {
 
 // ─── Slots ──────────────────────────────────────────────────────────
 
-export interface SlotBuild { slot: string; dir: string; steps: Array<{ step: string; code: number; ms: number; tail: string }>; meter: Meter; ms: number; pages?: unknown }
+/**
+ * PATH for gbrain processes. Capy cloud machines wrap git in a logging shell script that starts about ten
+ * extra processes per call, and gbrain's sync calls git twice per imported file, which made it a large share
+ * of a 50,000-document import. When that wrapper is present, gbrain gets the real binary instead.
+ */
+export function directGitPath(root: string): string | undefined {
+  const path = process.env.PATH;
+  let git: string;
+  try { git = execFileSync('sh', ['-c', 'command -v git'], { encoding: 'utf8' }).trim(); } catch { return path; }
+  if (!git || !existsSync(`${git}.real`) || !readFileSync(git, 'utf8').startsWith('#!')) return path;
+  const bin = join(root, 'direct-git-bin');
+  mkdirSync(bin, { recursive: true });
+  if (!existsSync(join(bin, 'git'))) symlinkSync(`${git}.real`, join(bin, 'git'));
+  return `${bin}:${path}`;
+}
+
+export interface SlotBuild { slot: string; dir: string; steps: Array<{ step: string; code: number; ms: number; tail: string }>; meter: Meter; ms: number; pages?: unknown; allowance?: { reserved_usd: number; usd: number; requests: number; charged_reservations: number } }
 
 export class GbrainSlot {
   client: McpClient | null = null;
@@ -151,8 +176,11 @@ export class GbrainSlot {
     this.run = {
       buildDir,
       env: {
-        PATH: process.env.PATH, HOME: join(this.dir, 'uh'), GBRAIN_HOME: join(this.dir, 'home'),
+        PATH: directGitPath(root), HOME: join(this.dir, 'uh'), GBRAIN_HOME: join(this.dir, 'home'),
         GBRAIN_SKIP_STARTUP_HOOKS: '1', GBRAIN_BACKUP_CHECK: 'off', TZ: 'UTC', LANG: 'C.UTF-8', NO_COLOR: '1',
+        // `gbrain serve` exits when its boot has not completed within 60 s (serve.ts). On a 52,000-page PGLite
+        // brain it already answers tool calls but its boot runs past that deadline, so it exited mid-session. 0 disables it.
+        GBRAIN_SERVE_BOOT_TIMEOUT_SECONDS: String(SERVE_BOOT_TIMEOUT_SECONDS),
         OPENAI_API_KEY: process.env.OPENAI_API_KEY, ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY, VOYAGE_API_KEY: process.env.VOYAGE_API_KEY,
         ANTHROPIC_BASE_URL: `${base}/anthropic`, OPENAI_BASE_URL: `${base}/openai`,
       },
@@ -165,13 +193,18 @@ export class GbrainSlot {
     rmSync(this.dir, { recursive: true, force: true });
     const vault = join(this.dir, 'vault');
     for (const d of ['home', 'uh', 'vault']) mkdirSync(join(this.dir, d), { recursive: true });
-    for (const doc of world.docs) {
+    const writeDocs = (docs: LadderWorld['docs']) => { for (const doc of docs) {
       const p = join(vault, `${doc.id}.md`);
       mkdirSync(dirname(p), { recursive: true });
       writeFileSync(p, renderDoc(doc));
-    }
+    } };
     const git = (args: string[]) => execFileSync('git', ['-C', vault, '-c', 'user.name=cat40', '-c', 'user.email=cat40@example.invalid', ...args], { stdio: 'pipe' });
-    git(['init', '-q']); git(['add', '-A']); git(['commit', '-q', '-m', 'corpus']);
+    // `gbrain sources add` hashes every file into a manifest and refuses one over 1 MiB (source-lifecycle.ts),
+    // about 8,000 files. A larger corpus registers the source with the policy files only, then adds the rest
+    // in synced batches. The final corpus commit is tagged so restore resets to it.
+    const staged = world.docs.length > STAGED_SOURCE_ADD_DOCS;
+    writeDocs(staged ? world.docs.filter(d => d.type === 'policy') : world.docs);
+    git(['init', '-q']); git(['add', '-A']); git(['commit', '-q', '-m', staged ? 'policies' : 'corpus']);
     const steps: SlotBuild['steps'] = [];
     const op = async (step: string, args: string[]) => {
       const r = await runCli(this.run, args, 3_600_000);
@@ -184,12 +217,7 @@ export class GbrainSlot {
     cfg.provider_base_urls = { ...(cfg.provider_base_urls ?? {}), voyage: `http://127.0.0.1:${proxy.port}/${this.id}/voyage/v1` };
     writeFileSync(cfgPath, JSON.stringify(cfg, null, 2));
     proxy.take(this.id);
-    await op('sources-add', ['sources', 'add', 'vault', '--path', vault]);
-    await op('sources-default', ['sources', 'default', 'vault']);
-    await op('sync', ['sync', '--source', 'vault', '--no-pull']);
-    await op('extract', ['extract', '--stale']);
-    await op('embed', ['embed', '--stale']);
-    if (analyze) {
+    const operatorAnalyze = (step: string) => {
       // gbrain does not ANALYZE after a bulk import on PGLite (no autovacuum), so the planner sees empty
       // tables and the graph-signal join in every search runs as a pages x pages nested loop (~50 s at
       // 4k pages). One ANALYZE fixes the plan (6 ms). Recorded in the receipt; the gbrain fix ships separately.
@@ -197,8 +225,33 @@ export class GbrainSlot {
       const pglite = join(this.buildDir, 'node_modules/@electric-sql/pglite/dist');
       const script = `const { PGlite } = await import(${JSON.stringify(`${pglite}/index.js`)}); const { vector } = await import(${JSON.stringify(`${pglite}/vector/index.js`)}); const { pg_trgm } = await import(${JSON.stringify(`${pglite}/contrib/pg_trgm.js`)}); const db = await PGlite.create({ dataDir: ${JSON.stringify(join(this.dir, 'home', 'brain.pglite'))}, extensions: { vector, pg_trgm } }); await db.exec('ANALYZE'); await db.close();`;
       execFileSync('bun', ['-e', script], { stdio: 'pipe' });
-      steps.push({ step: 'operator-analyze', code: 0, ms: Date.now() - t, tail: 'ANALYZE' });
+      steps.push({ step, code: 0, ms: Date.now() - t, tail: 'ANALYZE' });
+    };
+    await op('sources-add', ['sources', 'add', 'vault', '--path', vault]);
+    await op('sources-default', ['sources', 'default', 'vault']);
+    if (staged) {
+      // The import slows as tables grow with stale planner statistics (2.3 docs/s at 13k pages, about 7 after
+      // an ANALYZE), and a sync is hard-killed after an hour. So the corpus arrives in batches, each synced and
+      // followed by an operator ANALYZE (only when analyze is on), the way a growing company brain is maintained.
+      const rest = world.docs.filter(d => d.type !== 'policy');
+      for (let i = 0, k = 1; i < rest.length; i += STAGED_SYNC_BATCH, k++) {
+        writeDocs(rest.slice(i, i + STAGED_SYNC_BATCH));
+        git(['add', '-A']); git(['commit', '-q', '-m', `corpus batch ${k}`]);
+        await op(`sync-${k}`, ['sync', '--source', 'vault', '--no-pull']);
+        if (analyze) operatorAnalyze(`operator-analyze-${k}`);
+      }
+    } else await op('sync', ['sync', '--source', 'vault', '--no-pull']);
+    git(['tag', CORPUS_TAG]);
+    await op('extract', ['extract', '--stale']);
+    // `embed --stale` stops after 30 minutes of wall clock unless --catch-up is given, which would leave a large
+    // corpus partly embedded. The dry run afterwards proves nothing is left.
+    await op('embed', ['embed', '--stale', ...(staged ? ['--catch-up'] : [])]);
+    if (staged) {
+      await op('embed-verify', ['embed', '--stale', '--dry-run']);
+      const left = steps.at(-1)!.tail.match(/Would embed (\d+) stale chunks/);
+      if (left && Number(left[1]) > 0) throw new Error(`gbrain ${this.id}: ${left[1]} chunks still unembedded after embed --catch-up`);
     }
+    if (analyze) operatorAnalyze('operator-analyze');
     const meter = proxy.take(this.id);
     execFileSync('tar', ['-C', this.dir, '-cf', this.snapshot, 'home']);
     return { slot: this.id, dir: this.dir, steps, meter, ms: Date.now() - t0 };
@@ -217,12 +270,12 @@ export class GbrainSlot {
     // inside the existing directory.
     const vault = join(this.dir, 'vault');
     const git = (args: string[]) => execFileSync('git', ['-C', vault, ...args], { stdio: 'pipe', encoding: 'utf8' }).trim();
-    const corpus = git(['rev-list', '--max-parents=0', 'HEAD']).split('\n')[0];
+    const corpus = git(['tag', '--list', CORPUS_TAG]) ? CORPUS_TAG : git(['rev-list', '--max-parents=0', 'HEAD']).split('\n')[0];
     git(['reset', '-q', '--hard', corpus]);
     // Keep gbrain's ownership marker (.gbrain-owner.json): it is untracked and records the checkout identity.
     git(['clean', '-qfdx', '-e', '.gbrain-owner*']);
     const home = join(this.dir, 'home');
-    for (const entry of readdirSync(home)) rmSync(join(home, entry), { recursive: true, force: true });
+    for (const entry of readdirSync(home).sort()) rmSync(join(home, entry), { recursive: true, force: true });
     execFileSync('tar', ['-C', this.dir, '-xf', this.snapshot, 'home']);
     await this.start();
   }

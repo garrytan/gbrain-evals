@@ -1,0 +1,676 @@
+{
+  "schema": "cat40-receipt-v1",
+  "version": "cat40-v1",
+  "judge_prompt": "cat40-claims-v1",
+  "judge": "gpt-5.4-mini",
+  "world": {
+    "path": "eval/data/model-ladder-v1-large/world.json",
+    "scale": "large",
+    "digest": "e481a619fa64b3a9e9712f2c499c3ebdac6bf87dd1ab8de0b95218eb00c3831f",
+    "seed": 20261002,
+    "docs": 52028,
+    "tasks": 50
+  },
+  "evals_commit": "ed2c423348a58c1e747399a31459bb0d7cdd3a6b",
+  "evals_dirty": true,
+  "gbrain": {
+    "commit": "ad7900d8dcd221e22b885fef0f4030b73a1d69c9",
+    "version": "0.60.27.0",
+    "tree": "2a2e1f19f20b343fb126699297c8d3df2b94012b",
+    "verified": {
+      "copy_tree": "2a2e1f19f20b343fb126699297c8d3df2b94012b",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.27.0",
+      "cli_version_matches": true
+    },
+    "surface": "starter",
+    "operator_analyze": true
+  },
+  "slot_builds": [
+    {
+      "slot": "slot0",
+      "dir": "~/.capy/work/cat40/gbrain/slots-ad7900d8dcd2-e481a619/slot0",
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 6935,
+          "tail": "More: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to supabase` · health `gbrain doctor`\n  Setting up brain schema (v186)...\n  181 migration(s) applied\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: ~/.capy/work/cat40/gbrain/slots-ad7900d8dcd2-e481a619/slot0/home/.gbrain/content/5214ac50-ed86-441b-a86f-375abfa75f2c/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)\n10 recommended skill(s) not installed yet (cold-start, book-mirror, article-enrichment, strategic-reading, …).\nOpen your agent workspace first (scaffold needs a target), then `gbrain skillpack scaffold --all`; full list: gbrain advisor"
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1918,
+          "tail": "  \"local_path\": \"~/.capy/work/cat40/gbrain/slots-ad7900d8dcd2-e481a619/slot0/vault\",\n  \"source_incarnation\": \"a11af533-afd1-4f17-a656-ad843d9fb097\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"69d2e83f-92e6-4254-a8fc-264c824f38c8\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\n[models] OpenAI account offers gpt-6.1-sol but src/core/model-pricing.ts has no row for it — staying on the newest PRICED family so budget caps keep working. Add the pricing row to adopt it."
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 2116,
+          "tail": "Default source set to \"vault\"."
+        },
+        {
+          "step": "sync-1",
+          "code": 0,
+          "ms": 360756,
+          "tail": "[sync-watchdog] parent alive 60s elapsed, hard-kill in ~3570s\n[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync] 4002 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync-watchdog] parent alive 360s elapsed, hard-kill in ~3270s\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "operator-analyze-1",
+          "code": 0,
+          "ms": 1801,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "sync-2",
+          "code": 0,
+          "ms": 328498,
+          "tail": "[sync-watchdog] hard deadline armed: 3600s + 30s grace (default:non-tty); disable with --no-hard-deadline\n[sync-watchdog] parent alive 60s elapsed, hard-kill in ~3570s\n[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync] 8002 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "operator-analyze-2",
+          "code": 0,
+          "ms": 2119,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "sync-3",
+          "code": 0,
+          "ms": 333009,
+          "tail": "[sync-watchdog] hard deadline armed: 3600s + 30s grace (default:non-tty); disable with --no-hard-deadline\n[sync-watchdog] parent alive 60s elapsed, hard-kill in ~3570s\n[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync] 12002 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "operator-analyze-3",
+          "code": 0,
+          "ms": 2338,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "sync-4",
+          "code": 0,
+          "ms": 336399,
+          "tail": "[sync-watchdog] hard deadline armed: 3600s + 30s grace (default:non-tty); disable with --no-hard-deadline\n[sync-watchdog] parent alive 60s elapsed, hard-kill in ~3570s\n[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync] 16002 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "operator-analyze-4",
+          "code": 0,
+          "ms": 2758,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "sync-5",
+          "code": 0,
+          "ms": 342706,
+          "tail": "[sync-watchdog] hard deadline armed: 3600s + 30s grace (default:non-tty); disable with --no-hard-deadline\n[sync-watchdog] parent alive 60s elapsed, hard-kill in ~3570s\n[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync] 20002 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "operator-analyze-5",
+          "code": 0,
+          "ms": 3251,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "sync-6",
+          "code": 0,
+          "ms": 344178,
+          "tail": "[sync-watchdog] hard deadline armed: 3600s + 30s grace (default:non-tty); disable with --no-hard-deadline\n[sync-watchdog] parent alive 60s elapsed, hard-kill in ~3570s\n[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync] 24002 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "operator-analyze-6",
+          "code": 0,
+          "ms": 3468,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "sync-7",
+          "code": 0,
+          "ms": 352039,
+          "tail": "[sync-watchdog] parent alive 60s elapsed, hard-kill in ~3570s\n[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync] 28002 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n  → embed-backfill not queued; manual drain required: `gbrain embed --stale --source vault`."
+        },
+        {
+          "step": "operator-analyze-7",
+          "code": 0,
+          "ms": 3717,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "sync-8",
+          "code": 0,
+          "ms": 358867,
+          "tail": "[sync-watchdog] parent alive 60s elapsed, hard-kill in ~3570s\n[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync] 32002 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n  → embed-backfill not queued; manual drain required: `gbrain embed --stale --source vault`."
+        },
+        {
+          "step": "operator-analyze-8",
+          "code": 0,
+          "ms": 3284,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "sync-9",
+          "code": 0,
+          "ms": 357328,
+          "tail": "[sync-watchdog] parent alive 60s elapsed, hard-kill in ~3570s\n[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync] 36002 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n  → embed-backfill not queued; manual drain required: `gbrain embed --stale --source vault`."
+        },
+        {
+          "step": "operator-analyze-9",
+          "code": 0,
+          "ms": 3956,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "sync-10",
+          "code": 0,
+          "ms": 357331,
+          "tail": "[sync-watchdog] parent alive 60s elapsed, hard-kill in ~3570s\n[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync] 40002 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n  → embed-backfill not queued; manual drain required: `gbrain embed --stale --source vault`."
+        },
+        {
+          "step": "operator-analyze-10",
+          "code": 0,
+          "ms": 3445,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "sync-11",
+          "code": 0,
+          "ms": 162985,
+          "tail": "  2026 chunks created\n  Links: 0 created, 0 removed across 1000 page(s); 41028 page(s) still owe extraction — run 'gbrain extract --stale'.\n[sync-watchdog] hard deadline armed: 3600s + 30s grace (default:non-tty); disable with --no-hard-deadline\n[sync-watchdog] parent alive 60s elapsed, hard-kill in ~3570s\n[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync] 41028 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n  → embed-backfill not queued; manual drain required: `gbrain embed --stale --source vault`."
+        },
+        {
+          "step": "operator-analyze-11",
+          "code": 0,
+          "ms": 3704,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 588430,
+          "tail": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 41028 page(s)."
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 860775,
+          "tail": "[embed.pages] 38422/46000 (83%)\n[embed.pages] 38483/46000 (83%)\n[embed.pages] 38535/46000 (83%)\n[embed.pages] 38598/46000 (83%)\n[embed.pages] 38657/46000 (84%)\n[embed.pages] 38715/46000 (84%)\n[embed.pages] 38760/46000 (84%)\n[embed.pages] 38760/46000 (84%) done"
+        },
+        {
+          "step": "embed-verify",
+          "code": 0,
+          "ms": 1627,
+          "tail": "[dry-run] Would embed 0 chunks (0 stale found)"
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 3451,
+          "tail": "ANALYZE"
+        }
+      ],
+      "meter": {
+        "usd": 1.1773137999999557,
+        "requests": 52046,
+        "unpriced": 1,
+        "byModel": {
+          "openai:text-embedding-3-large": {
+            "usd": 1.1773137999999557,
+            "requests": 52045
+          }
+        }
+      },
+      "ms": 5151872,
+      "allowance": {
+        "reserved_usd": 5,
+        "usd": 1.1773139299999558,
+        "requests": 52046,
+        "charged_reservations": 0
+      }
+    },
+    {
+      "slot": "slot1",
+      "dir": "~/.capy/work/cat40/gbrain/slots-ad7900d8dcd2-e481a619/slot1",
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 4495,
+          "tail": "More: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to supabase` · health `gbrain doctor`\n  Setting up brain schema (v186)...\n  181 migration(s) applied\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: ~/.capy/work/cat40/gbrain/slots-ad7900d8dcd2-e481a619/slot1/home/.gbrain/content/dc1ccdff-a51f-4f3e-b861-311d1c3ff3ff/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)\n10 recommended skill(s) not installed yet (cold-start, book-mirror, article-enrichment, strategic-reading, …).\nOpen your agent workspace first (scaffold needs a target), then `gbrain skillpack scaffold --all`; full list: gbrain advisor"
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 2027,
+          "tail": "  \"local_path\": \"~/.capy/work/cat40/gbrain/slots-ad7900d8dcd2-e481a619/slot1/vault\",\n  \"source_incarnation\": \"f19cc9d0-f8df-473d-876c-15679b7b905c\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"8260a0ea-122f-4ec2-a69a-7531f7551d6f\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\n[models] OpenAI account offers gpt-6.1-sol but src/core/model-pricing.ts has no row for it — staying on the newest PRICED family so budget caps keep working. Add the pricing row to adopt it."
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 1108,
+          "tail": "Default source set to \"vault\"."
+        },
+        {
+          "step": "sync-1",
+          "code": 0,
+          "ms": 364983,
+          "tail": "[sync-watchdog] parent alive 60s elapsed, hard-kill in ~3570s\n[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync-watchdog] parent alive 360s elapsed, hard-kill in ~3270s\n[sync] 4002 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "operator-analyze-1",
+          "code": 0,
+          "ms": 1698,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "sync-2",
+          "code": 0,
+          "ms": 330616,
+          "tail": "[sync-watchdog] hard deadline armed: 3600s + 30s grace (default:non-tty); disable with --no-hard-deadline\n[sync-watchdog] parent alive 60s elapsed, hard-kill in ~3570s\n[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync] 8002 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "operator-analyze-2",
+          "code": 0,
+          "ms": 2092,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "sync-3",
+          "code": 0,
+          "ms": 333239,
+          "tail": "[sync-watchdog] hard deadline armed: 3600s + 30s grace (default:non-tty); disable with --no-hard-deadline\n[sync-watchdog] parent alive 60s elapsed, hard-kill in ~3570s\n[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync] 12002 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "operator-analyze-3",
+          "code": 0,
+          "ms": 2342,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "sync-4",
+          "code": 0,
+          "ms": 340138,
+          "tail": "[sync-watchdog] hard deadline armed: 3600s + 30s grace (default:non-tty); disable with --no-hard-deadline\n[sync-watchdog] parent alive 60s elapsed, hard-kill in ~3570s\n[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync] 16002 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "operator-analyze-4",
+          "code": 0,
+          "ms": 2815,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "sync-5",
+          "code": 0,
+          "ms": 342087,
+          "tail": "[sync-watchdog] hard deadline armed: 3600s + 30s grace (default:non-tty); disable with --no-hard-deadline\n[sync-watchdog] parent alive 60s elapsed, hard-kill in ~3570s\n[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync] 20002 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "operator-analyze-5",
+          "code": 0,
+          "ms": 3224,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "sync-6",
+          "code": 0,
+          "ms": 348335,
+          "tail": "[sync-watchdog] hard deadline armed: 3600s + 30s grace (default:non-tty); disable with --no-hard-deadline\n[sync-watchdog] parent alive 60s elapsed, hard-kill in ~3570s\n[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync] 24002 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "operator-analyze-6",
+          "code": 0,
+          "ms": 3427,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "sync-7",
+          "code": 0,
+          "ms": 353193,
+          "tail": "[sync-watchdog] parent alive 60s elapsed, hard-kill in ~3570s\n[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync] 28002 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n  → embed-backfill not queued; manual drain required: `gbrain embed --stale --source vault`."
+        },
+        {
+          "step": "operator-analyze-7",
+          "code": 0,
+          "ms": 3722,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "sync-8",
+          "code": 0,
+          "ms": 357754,
+          "tail": "[sync-watchdog] parent alive 60s elapsed, hard-kill in ~3570s\n[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync] 32002 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n  → embed-backfill not queued; manual drain required: `gbrain embed --stale --source vault`."
+        },
+        {
+          "step": "operator-analyze-8",
+          "code": 0,
+          "ms": 4008,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "sync-9",
+          "code": 0,
+          "ms": 359906,
+          "tail": "[sync-watchdog] parent alive 60s elapsed, hard-kill in ~3570s\n[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync] 36002 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n  → embed-backfill not queued; manual drain required: `gbrain embed --stale --source vault`."
+        },
+        {
+          "step": "operator-analyze-9",
+          "code": 0,
+          "ms": 3369,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "sync-10",
+          "code": 0,
+          "ms": 360849,
+          "tail": "[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync-watchdog] parent alive 360s elapsed, hard-kill in ~3270s\n[sync] 40002 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n  → embed-backfill not queued; manual drain required: `gbrain embed --stale --source vault`."
+        },
+        {
+          "step": "operator-analyze-10",
+          "code": 0,
+          "ms": 3368,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "sync-11",
+          "code": 0,
+          "ms": 164400,
+          "tail": "  2026 chunks created\n  Links: 0 created, 0 removed across 1000 page(s); 41028 page(s) still owe extraction — run 'gbrain extract --stale'.\n[sync-watchdog] hard deadline armed: 3600s + 30s grace (default:non-tty); disable with --no-hard-deadline\n[sync-watchdog] parent alive 60s elapsed, hard-kill in ~3570s\n[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync] 41028 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n  → embed-backfill not queued; manual drain required: `gbrain embed --stale --source vault`."
+        },
+        {
+          "step": "operator-analyze-11",
+          "code": 0,
+          "ms": 3982,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 591498,
+          "tail": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 41028 page(s)."
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 863467,
+          "tail": "[embed.pages] 38128/46000 (82%)\n[embed.pages] 38181/46000 (83%)\n[embed.pages] 38238/46000 (83%)\n[embed.pages] 38293/46000 (83%)\n[embed.pages] 38350/46000 (83%)\n[embed.pages] 38408/46000 (83%)\n[embed.pages] 38467/46000 (83%)\n[embed.pages] 38524/46000 (83%) done"
+        },
+        {
+          "step": "embed-verify",
+          "code": 0,
+          "ms": 1545,
+          "tail": "[dry-run] Would embed 0 chunks (0 stale found)"
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 3991,
+          "tail": "ANALYZE"
+        }
+      ],
+      "meter": {
+        "usd": 1.177316139999956,
+        "requests": 52043,
+        "unpriced": 1,
+        "byModel": {
+          "openai:text-embedding-3-large": {
+            "usd": 1.177316139999956,
+            "requests": 52042
+          }
+        }
+      },
+      "ms": 5176589,
+      "allowance": {
+        "reserved_usd": 5,
+        "usd": 1.177316269999956,
+        "requests": 52043,
+        "charged_reservations": 0
+      }
+    },
+    {
+      "slot": "slot2",
+      "dir": "~/.capy/work/cat40/gbrain/slots-ad7900d8dcd2-e481a619/slot2",
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 5138,
+          "tail": "More: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to supabase` · health `gbrain doctor`\n  Setting up brain schema (v186)...\n  181 migration(s) applied\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: ~/.capy/work/cat40/gbrain/slots-ad7900d8dcd2-e481a619/slot2/home/.gbrain/content/e7149b4a-4d4f-40de-8140-238f75eb7d32/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)\n10 recommended skill(s) not installed yet (cold-start, book-mirror, article-enrichment, strategic-reading, …).\nOpen your agent workspace first (scaffold needs a target), then `gbrain skillpack scaffold --all`; full list: gbrain advisor"
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 4345,
+          "tail": "  \"source_id\": \"vault\",\n  \"local_path\": \"~/.capy/work/cat40/gbrain/slots-ad7900d8dcd2-e481a619/slot2/vault\",\n  \"source_incarnation\": \"f2af88ae-4fe4-4b7d-b4a2-09b8c9868702\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"d391f9b9-a6d7-4cda-a0b5-937443fe4a59\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}"
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 1107,
+          "tail": "Default source set to \"vault\"."
+        },
+        {
+          "step": "sync-1",
+          "code": 0,
+          "ms": 363037,
+          "tail": "[sync-watchdog] hard deadline armed: 3600s + 30s grace (default:non-tty); disable with --no-hard-deadline\n[sync-watchdog] parent alive 60s elapsed, hard-kill in ~3570s\n[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync] 4002 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "operator-analyze-1",
+          "code": 0,
+          "ms": 1878,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "sync-2",
+          "code": 0,
+          "ms": 330808,
+          "tail": "[sync-watchdog] hard deadline armed: 3600s + 30s grace (default:non-tty); disable with --no-hard-deadline\n[sync-watchdog] parent alive 60s elapsed, hard-kill in ~3570s\n[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync] 8002 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "operator-analyze-2",
+          "code": 0,
+          "ms": 1733,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "sync-3",
+          "code": 0,
+          "ms": 333970,
+          "tail": "[models] OpenAI account offers gpt-6.1-sol but src/core/model-pricing.ts has no row for it — staying on the newest PRICED family so budget caps keep working. Add the pricing row to adopt it.\n[sync-watchdog] parent alive 60s elapsed, hard-kill in ~3570s\n[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync] 12002 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "operator-analyze-3",
+          "code": 0,
+          "ms": 2462,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "sync-4",
+          "code": 0,
+          "ms": 340588,
+          "tail": "[sync-watchdog] hard deadline armed: 3600s + 30s grace (default:non-tty); disable with --no-hard-deadline\n[sync-watchdog] parent alive 60s elapsed, hard-kill in ~3570s\n[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync] 16002 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "operator-analyze-4",
+          "code": 0,
+          "ms": 2696,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "sync-5",
+          "code": 0,
+          "ms": 342748,
+          "tail": "[sync-watchdog] hard deadline armed: 3600s + 30s grace (default:non-tty); disable with --no-hard-deadline\n[sync-watchdog] parent alive 60s elapsed, hard-kill in ~3570s\n[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync] 20002 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "operator-analyze-5",
+          "code": 0,
+          "ms": 3025,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "sync-6",
+          "code": 0,
+          "ms": 348707,
+          "tail": "[sync-watchdog] hard deadline armed: 3600s + 30s grace (default:non-tty); disable with --no-hard-deadline\n[sync-watchdog] parent alive 60s elapsed, hard-kill in ~3570s\n[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync] 24002 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "operator-analyze-6",
+          "code": 0,
+          "ms": 3282,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "sync-7",
+          "code": 0,
+          "ms": 353702,
+          "tail": "[sync-watchdog] parent alive 60s elapsed, hard-kill in ~3570s\n[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync] 28002 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n  → embed-backfill not queued; manual drain required: `gbrain embed --stale --source vault`."
+        },
+        {
+          "step": "operator-analyze-7",
+          "code": 0,
+          "ms": 3833,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "sync-8",
+          "code": 0,
+          "ms": 358168,
+          "tail": "[sync-watchdog] parent alive 60s elapsed, hard-kill in ~3570s\n[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync] 32002 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n  → embed-backfill not queued; manual drain required: `gbrain embed --stale --source vault`."
+        },
+        {
+          "step": "operator-analyze-8",
+          "code": 0,
+          "ms": 3664,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "sync-9",
+          "code": 0,
+          "ms": 360550,
+          "tail": "[sync-watchdog] parent alive 60s elapsed, hard-kill in ~3570s\n[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync] 36002 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n  → embed-backfill not queued; manual drain required: `gbrain embed --stale --source vault`."
+        },
+        {
+          "step": "operator-analyze-9",
+          "code": 0,
+          "ms": 3825,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "sync-10",
+          "code": 0,
+          "ms": 362331,
+          "tail": "[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync-watchdog] parent alive 360s elapsed, hard-kill in ~3270s\n[sync] 40002 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n  → embed-backfill not queued; manual drain required: `gbrain embed --stale --source vault`."
+        },
+        {
+          "step": "operator-analyze-10",
+          "code": 0,
+          "ms": 3796,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "sync-11",
+          "code": 0,
+          "ms": 164521,
+          "tail": "  2026 chunks created\n  Links: 0 created, 0 removed across 1000 page(s); 41028 page(s) still owe extraction — run 'gbrain extract --stale'.\n[sync-watchdog] hard deadline armed: 3600s + 30s grace (default:non-tty); disable with --no-hard-deadline\n[sync-watchdog] parent alive 60s elapsed, hard-kill in ~3570s\n[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync] 41028 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n  → embed-backfill not queued; manual drain required: `gbrain embed --stale --source vault`."
+        },
+        {
+          "step": "operator-analyze-11",
+          "code": 0,
+          "ms": 3880,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 589338,
+          "tail": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 41028 page(s)."
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 878581,
+          "tail": "[embed.pages] 38270/46000 (83%)\n[embed.pages] 38322/46000 (83%)\n[embed.pages] 38373/46000 (83%)\n[embed.pages] 38426/46000 (83%)\n[embed.pages] 38478/46000 (83%)\n[embed.pages] 38527/46000 (83%)\n[embed.pages] 38577/46000 (83%)\n[embed.pages] 38608/46000 (83%) done"
+        },
+        {
+          "step": "embed-verify",
+          "code": 0,
+          "ms": 1636,
+          "tail": "[dry-run] Would embed 0 chunks (0 stale found)"
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 4419,
+          "tail": "ANALYZE"
+        }
+      ],
+      "meter": {
+        "usd": 1.1773128899999559,
+        "requests": 52043,
+        "unpriced": 2,
+        "byModel": {
+          "openai:text-embedding-3-large": {
+            "usd": 1.1773128899999559,
+            "requests": 52041
+          }
+        }
+      },
+      "ms": 5197277,
+      "allowance": {
+        "reserved_usd": 5,
+        "usd": 1.1773130199999557,
+        "requests": 52042,
+        "charged_reservations": 0
+      }
+    }
+  ],
+  "models": [
+    "claude-sonnet-4-6",
+    "claude-sonnet-5-5",
+    "gpt-5.4",
+    "gpt-6.1-sol"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "families": [
+    "A",
+    "B",
+    "C",
+    "E",
+    "F"
+  ],
+  "repeats": 1,
+  "max_tool_chars": 100000000,
+  "argv": [
+    "--world",
+    "eval/data/model-ladder-v1-large/world.json",
+    "--models",
+    "claude-sonnet-4-6,claude-sonnet-5-5,gpt-5.4,gpt-6.1-sol",
+    "--arms",
+    "gbrain",
+    "--repeat",
+    "1",
+    "--slots",
+    "3",
+    "--max-tool-chars",
+    "100000000",
+    "--gbrain-repo",
+    "../gbrain",
+    "--gbrain-ref",
+    "ad7900d",
+    "--budget-run-id",
+    "cat40-model-ladder-scale-tier-2026-10-02T19-04-26-629Z-5947cc6e",
+    "--program-cap-usd",
+    "2000",
+    "--out",
+    "eval/reports/cat40/scale-tier-gbrain"
+  ],
+  "cost": {
+    "usd": 3.531943,
+    "input_tokens": 27168794,
+    "output_tokens": 0,
+    "basis": "budget ledger cat40-model-ladder-scale-tier-2026-10-02T19-04-26-629Z-5947cc6e: 3 paid requests, 0 charged at their reservation because usage was unavailable"
+  },
+  "finished_at": "2026-10-02T22:01:33.238Z"
+}

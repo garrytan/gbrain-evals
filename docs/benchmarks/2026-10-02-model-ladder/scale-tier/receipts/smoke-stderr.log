@@ -1,0 +1,18 @@
+[cat40] [budget] cat40-model-ladder: estimated cost unmeasured; ledger .budget/ledger.json
+[cat40] 2 cells to run (0 already done) in eval/reports/cat40/scale-smoke
+[cat40] pg arm ready
+[cat40] receipt eval/reports/cat40/scale-smoke/receipt-1790965534038.json
+174 |     git(['init', '-q']); git(['add', '-A']); git(['commit', '-q', '-m', 'corpus']);
+175 |     const steps: SlotBuild['steps'] = [];
+176 |     const op = async (step: string, args: string[]) => {
+177 |       const r = await runCli(this.run, args, 3_600_000);
+178 |       steps.push({ step, code: r.code, ms: r.ms, tail: (r.stdout + '\n' + r.stderr).split('\n').filter(l => l.trim()).slice(-8).join('\n') });
+179 |       if (r.code !== 0) throw new Error(`gbrain ${step} failed (exit ${r.code}): ${steps.at(-1)!.tail}`);
+                                        ^
+error: gbrain sources-add failed (exit 1): [models] OpenAI account offers gpt-6.1-sol but src/core/model-pricing.ts has no row for it — staying on the newest PRICED family so budget caps keep working. Add the pricing row to adopt it.
+Error [request_too_large]: The verified source manifest exceeds the 1 MiB administration metadata bound.
+      at <anonymous> (eval/runner/cat40/gbrain-arm.ts:179:35)
+      at async build (eval/runner/cat40/gbrain-arm.ts:187:11)
+      at async <anonymous> (eval/runner/cat40-model-ladder.ts:240:81)
+      at async main (eval/runner/cat40-model-ladder.ts:239:21)
+

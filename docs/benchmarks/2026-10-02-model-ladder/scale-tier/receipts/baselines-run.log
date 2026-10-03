@@ -1,0 +1,95 @@
+2026-10-02T19:04:42.131Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger .budget/ledger.json
+2026-10-02T19:04:42.132Z [budget] cat40-model-ladder: joined shared run cat40-model-ladder-scale-tier-2026-10-02T19-04-26-629Z-5947cc6e ($248.00 across all of its workers)
+2026-10-02T19:04:42.132Z 84 cells to run (0 already done) in eval/reports/cat40/scale-tier-baselines
+2026-10-02T19:06:52.759Z pg arm ready
+2026-10-02T19:07:09.660Z 10/84 cells; last claude-sonnet-5-5|memory|A01|0 success=true $0.680
+2026-10-02T19:07:33.798Z 20/84 cells; last claude-sonnet-4-6|pg|B01|0 success=false $0.024
+2026-10-02T19:07:55.845Z 30/84 cells; last claude-sonnet-4-6|fs-acl|C06|0 success=false $0.016
+2026-10-02T19:08:19.649Z 40/84 cells; last claude-sonnet-5-5|pg|C06|0 success=true $0.014
+2026-10-02T19:08:49.213Z 50/84 cells; last claude-sonnet-5-5|oracle|E01|0 success=true $0.017
+2026-10-02T19:09:23.610Z 60/84 cells; last claude-sonnet-5-5|pg|E01|0 success=true $0.123
+2026-10-02T19:10:13.025Z 70/84 cells; last gpt-5.4|oracle|F01|0 success=true $0.003
+2026-10-02T19:10:47.070Z 80/84 cells; last gpt-5.4|pg|F01|0 success=true $0.041
+2026-10-02T19:11:15.326Z 84/84 cells; last gpt-6.1-sol|memory|F01|0 success=true $0.865
+2026-10-02T19:11:15.573Z receipt eval/reports/cat40/scale-tier-baselines/receipt-1790968275573.json
+2026-10-02T19:12:07.923Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger .budget/ledger.json
+2026-10-02T19:12:07.928Z [budget] cat40-model-ladder: joined shared run cat40-model-ladder-scale-tier-2026-10-02T19-04-26-629Z-5947cc6e ($248.00 across all of its workers)
+2026-10-02T19:12:07.930Z 576 cells to run (84 already done) in eval/reports/cat40/scale-tier-baselines
+2026-10-02T19:14:11.605Z pg arm ready
+2026-10-02T19:14:29.134Z 10/576 cells; last claude-sonnet-4-6|fs|A02|0 success=true $0.039
+2026-10-02T19:14:45.969Z 20/576 cells; last gpt-5.4|fs|A03|0 success=true $0.018
+2026-10-02T19:14:59.255Z 30/576 cells; last gpt-6.1-sol|fs|A03|0 success=true $0.012
+2026-10-02T19:15:13.731Z 40/576 cells; last gpt-6.1-sol|fs|A04|0 success=true $0.011
+2026-10-02T19:15:30.124Z 50/576 cells; last gpt-5.4|oracle|A06|0 success=true $0.003
+2026-10-02T19:15:45.080Z 60/576 cells; last claude-sonnet-4-6|oracle|A07|0 success=true $0.011
+2026-10-02T19:16:03.105Z 70/576 cells; last gpt-5.4|pg|A07|0 success=false $0.011
+2026-10-02T19:16:16.195Z 80/576 cells; last gpt-6.1-sol|oracle|A08|0 success=true $0.001
+2026-10-02T19:16:31.531Z 90/576 cells; last gpt-6.1-sol|oracle|A09|0 success=true $0.001
+2026-10-02T19:16:46.668Z 100/576 cells; last claude-sonnet-5-5|pg|A10|0 success=true $0.012
+2026-10-02T19:17:03.742Z 110/576 cells; last gpt-5.4|oracle|B02|0 success=true $0.004
+2026-10-02T19:17:17.384Z 120/576 cells; last claude-sonnet-4-6|oracle|B03|0 success=true $0.024
+2026-10-02T19:17:33.631Z 130/576 cells; last gpt-5.4|fs|B03|0 success=false $0.016
+2026-10-02T19:17:46.924Z 140/576 cells; last claude-sonnet-5-5|fs|B04|0 success=true $0.030
+2026-10-02T19:18:07.056Z 150/576 cells; last gpt-5.4|fs|B05|0 success=false $0.015
+2026-10-02T19:18:24.004Z 160/576 cells; last gpt-6.1-sol|fs|B05|0 success=true $0.025
+2026-10-02T19:18:45.049Z 170/576 cells; last claude-sonnet-5-5|oracle|B07|0 success=true $0.017
+2026-10-02T19:19:03.230Z 180/576 cells; last claude-sonnet-4-6|pg|B08|0 success=true $0.014
+2026-10-02T19:19:18.165Z 190/576 cells; last claude-sonnet-5-5|oracle|B09|0 success=true $0.004
+2026-10-02T19:19:35.557Z 200/576 cells; last claude-sonnet-4-6|fs|B09|0 success=true $0.043
+2026-10-02T19:19:51.427Z 210/576 cells; last gpt-6.1-sol|pg|B09|0 success=true $0.012
+2026-10-02T19:20:07.345Z 220/576 cells; last claude-sonnet-5-5|fs-acl|C01|0 success=true $0.015
+2026-10-02T19:20:15.241Z 230/576 cells; last gpt-5.4|fs-acl|C01|0 success=true $0.018
+2026-10-02T19:20:25.406Z 240/576 cells; last claude-sonnet-5-5|fs-acl|C02|0 success=true $0.015
+2026-10-02T19:20:40.354Z 250/576 cells; last gpt-6.1-sol|fs-acl|C02|0 success=true $0.008
+2026-10-02T19:20:51.407Z 260/576 cells; last gpt-5.4|pg|C03|0 success=true $0.010
+2026-10-02T19:21:03.497Z 270/576 cells; last claude-sonnet-5-5|pg|C04|0 success=true $0.009
+2026-10-02T19:21:13.194Z 280/576 cells; last gpt-6.1-sol|pg|C04|0 success=true $0.005
+2026-10-02T19:21:25.644Z 290/576 cells; last claude-sonnet-5-5|fs-acl|C05|0 success=true $0.019
+2026-10-02T19:21:39.615Z 300/576 cells; last claude-sonnet-4-6|fs|C07|0 success=false $0.025
+2026-10-02T19:21:54.169Z 310/576 cells; last claude-sonnet-5-5|fs-acl|C07|0 success=true $0.026
+2026-10-02T19:22:05.687Z 320/576 cells; last gpt-6.1-sol|fs-acl|C07|0 success=true $0.011
+2026-10-02T19:22:17.918Z 330/576 cells; last gpt-6.1-sol|pg|C08|0 success=true $0.006
+2026-10-02T19:22:34.315Z 340/576 cells; last claude-sonnet-4-6|oracle|C10|0 success=true $0.008
+2026-10-02T19:22:51.190Z 350/576 cells; last gpt-6.1-sol|oracle|C10|0 success=true $0.002
+2026-10-02T19:23:04.005Z 360/576 cells; last claude-sonnet-4-6|oracle|E02|0 success=true $0.027
+2026-10-02T19:23:37.701Z 370/576 cells; last claude-sonnet-4-6|oracle|E03|0 success=true $0.024
+2026-10-02T19:24:10.079Z 380/576 cells; last gpt-5.4|pg|E03|0 success=true $0.057
+2026-10-02T19:24:54.698Z 390/576 cells; last claude-sonnet-5-5|fs|E04|0 success=true $0.121
+2026-10-02T19:25:18.162Z 400/576 cells; last gpt-6.1-sol|oracle|E05|0 success=true $0.009
+2026-10-02T19:25:51.303Z 410/576 cells; last claude-sonnet-4-6|fs|E05|0 success=false $0.188
+2026-10-02T19:26:38.767Z 420/576 cells; last gpt-6.1-sol|fs|E06|0 success=true $0.039
+2026-10-02T19:27:03.326Z 430/576 cells; last claude-sonnet-5-5|fs|E07|0 success=true $0.272
+2026-10-02T19:27:34.517Z 440/576 cells; last gpt-6.1-sol|oracle|E08|0 success=true $0.009
+2026-10-02T19:28:10.742Z 450/576 cells; last claude-sonnet-5-5|pg|E09|0 success=false $0.096
+2026-10-02T19:28:44.194Z 460/576 cells; last gpt-6.1-sol|oracle|E10|0 success=true $0.007
+2026-10-02T19:29:17.541Z 470/576 cells; last claude-sonnet-4-6|fs|F02|0 success=true $0.054
+2026-10-02T19:29:31.193Z 480/576 cells; last claude-sonnet-5-5|oracle|F03|0 success=true $0.005
+2026-10-02T19:30:00.729Z 490/576 cells; last claude-sonnet-4-6|oracle|F04|0 success=true $0.010
+2026-10-02T19:30:28.826Z 500/576 cells; last gpt-5.4|pg|F04|0 success=false $0.016
+2026-10-02T19:30:51.411Z 510/576 cells; last gpt-6.1-sol|oracle|F05|0 success=true $0.002
+2026-10-02T19:31:24.881Z 520/576 cells; last claude-sonnet-4-6|fs|F06|0 success=true $0.051
+2026-10-02T19:31:55.601Z 530/576 cells; last gpt-6.1-sol|pg|F06|0 success=true $0.021
+2026-10-02T19:32:15.902Z 540/576 cells; last claude-sonnet-5-5|oracle|F08|0 success=true $0.005
+2026-10-02T19:32:42.904Z 550/576 cells; last claude-sonnet-4-6|oracle|F09|0 success=true $0.009
+2026-10-02T19:33:06.849Z 560/576 cells; last claude-sonnet-5-5|fs|F09|0 success=true $0.056
+2026-10-02T19:33:33.380Z 570/576 cells; last claude-sonnet-4-6|fs|F10|0 success=true $0.047
+2026-10-02T19:34:31.511Z 576/576 cells; last gpt-6.1-sol|fs|F10|0 success=true $0.037
+2026-10-02T19:34:31.955Z receipt eval/reports/cat40/scale-tier-baselines/receipt-1790969671955.json
+2026-10-02T19:35:01.937Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger .budget/ledger.json
+2026-10-02T19:35:01.956Z [budget] cat40-model-ladder: joined shared run cat40-model-ladder-scale-tier-2026-10-02T19-04-26-629Z-5947cc6e ($248.00 across all of its workers)
+2026-10-02T19:35:01.962Z 20 cells to run (660 already done) in eval/reports/cat40/scale-tier-baselines
+2026-10-02T19:35:39.692Z 10/20 cells; last claude-sonnet-5-5|memory|C01|0 success=true $0.679
+2026-10-02T19:37:57.345Z 20/20 cells; last gpt-6.1-sol|memory|E02|0 success=false $1.339
+2026-10-02T19:37:57.560Z receipt eval/reports/cat40/scale-tier-baselines/receipt-1790969877559.json
+2026-10-02T22:22:07.145Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger .budget/ledger.json
+2026-10-02T22:22:07.175Z [budget] cat40-model-ladder: joined shared run cat40-model-ladder-scale-tier-2026-10-02T19-04-26-629Z-5947cc6e ($248.00 across all of its workers)
+2026-10-02T22:22:07.194Z 80 cells to run (680 already done) in eval/reports/cat40/scale-tier-baselines
+2026-10-02T22:22:39.223Z 10/80 cells; last claude-sonnet-4-6|memory|A05|0 success=true $0.872
+2026-10-02T22:23:09.456Z 20/80 cells; last gpt-6.1-sol|memory|B03|0 success=false $0.552
+2026-10-02T22:23:54.576Z 30/80 cells; last claude-sonnet-5-5|memory|C02|0 success=true $0.679
+2026-10-02T22:24:28.246Z 40/80 cells; last gpt-5.4|memory|C07|0 success=false $1.008
+2026-10-02T22:25:28.811Z 50/80 cells; last gpt-5.4|memory|E04|0 success=false $2.764
+2026-10-02T22:27:39.726Z 60/80 cells; last gpt-6.1-sol|memory|E06|0 success=false $0.583
+2026-10-02T22:28:46.674Z 70/80 cells; last gpt-6.1-sol|memory|F03|0 success=true $1.215
+2026-10-02T22:30:19.612Z 80/80 cells; last claude-sonnet-4-6|memory|F06|0 success=false $3.237
+2026-10-02T22:30:19.811Z receipt eval/reports/cat40/scale-tier-baselines/receipt-1790980219810.json

@@ -7,13 +7,13 @@
  * in this experiment (OpenAI `text-embedding-3-large` at 1536 dimensions).
  * No access control: restricted documents are rows like any other.
  *
- * Embeddings are cached on disk by content hash, so repeated runs do not pay
- * for them again.
+ * Embeddings are cached on disk by content hash (append-only JSONL), so
+ * repeated runs do not pay for them again.
  */
 import { PGlite } from '@electric-sql/pglite';
 import { vector } from '@electric-sql/pglite/vector';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import type { Arm, ToolSpec } from './loop.ts';
 import type { LadderWorld } from '../../generators/model-ladder-gen.ts';
@@ -25,23 +25,41 @@ export const PG_EMBED_DIMS = 1536;
 export type Embedder = (texts: string[]) => Promise<number[][]>;
 
 export function cachedOpenAIEmbedder(cachePath: string, fetchImpl: typeof fetch = fetch): Embedder {
+  // Legacy cache: one JSON object. New entries are appended to a JSONL file beside it (base64 float32), so a
+  // 50,000-document corpus neither rewrites a gigabyte of JSON per query nor exceeds the maximum string length.
+  const linesPath = cachePath.replace(/\.json$/, '') + '.jsonl';
   const cache: Record<string, number[]> = existsSync(cachePath) ? JSON.parse(readFileSync(cachePath, 'utf8')) : {};
+  if (existsSync(linesPath)) {
+    for (const line of readFileSync(linesPath, 'utf8').split('\n')) {
+      if (!line) continue;
+      const { k, v } = JSON.parse(line) as { k: string; v: string };
+      const buf = Buffer.from(v, 'base64');
+      cache[k] = Array.from(new Float32Array(buf.buffer, buf.byteOffset, buf.byteLength / 4));
+    }
+  }
   const key = (t: string) => createHash('sha256').update(`${PG_EMBED_MODEL}:${PG_EMBED_DIMS}:${t}`).digest('hex');
-  let dirty = 0;
+  const fetchBatch = async (batch: string[]) => {
+    const res = await fetchImpl('https://api.openai.com/v1/embeddings', {
+      method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.OPENAI_API_KEY ?? ''}` },
+      body: JSON.stringify({ model: PG_EMBED_MODEL, input: batch.map(t => t.slice(0, 24_000)), dimensions: PG_EMBED_DIMS }),
+    });
+    if (!res.ok) throw new Error(`embedding error ${res.status}: ${(await res.text()).slice(0, 300)}`);
+    const body = await res.json() as { data: Array<{ index: number; embedding: number[] }> };
+    const lines: string[] = [];
+    for (const d of body.data) {
+      const k = key(batch[d.index]);
+      cache[k] = d.embedding;
+      lines.push(JSON.stringify({ k, v: Buffer.from(new Float32Array(d.embedding).buffer).toString('base64') }));
+    }
+    mkdirSync(dirname(linesPath), { recursive: true });
+    appendFileSync(linesPath, lines.join('\n') + '\n');
+  };
   return async (texts: string[]) => {
     const missing = [...new Set(texts.filter(t => !cache[key(t)]))];
-    for (let i = 0; i < missing.length; i += 96) {
-      const batch = missing.slice(i, i + 96);
-      const res = await fetchImpl('https://api.openai.com/v1/embeddings', {
-        method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.OPENAI_API_KEY ?? ''}` },
-        body: JSON.stringify({ model: PG_EMBED_MODEL, input: batch.map(t => t.slice(0, 24_000)), dimensions: PG_EMBED_DIMS }),
-      });
-      if (!res.ok) throw new Error(`embedding error ${res.status}: ${(await res.text()).slice(0, 300)}`);
-      const body = await res.json() as { data: Array<{ index: number; embedding: number[] }> };
-      for (const d of body.data) cache[key(batch[d.index])] = d.embedding;
-      dirty += batch.length;
-    }
-    if (dirty) { mkdirSync(dirname(cachePath), { recursive: true }); writeFileSync(cachePath, JSON.stringify(cache)); dirty = 0; }
+    const batches: string[][] = [];
+    for (let i = 0; i < missing.length; i += 96) batches.push(missing.slice(i, i + 96));
+    let next = 0;
+    await Promise.all(Array.from({ length: Math.min(4, batches.length) }, async () => { while (next < batches.length) await fetchBatch(batches[next++]); }));
     return texts.map(t => cache[key(t)]);
   };
 }
