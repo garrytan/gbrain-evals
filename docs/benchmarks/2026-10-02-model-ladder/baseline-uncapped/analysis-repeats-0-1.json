@@ -1,0 +1,1345 @@
+{
+  "models": [
+    "claude-haiku-4-5",
+    "claude-opus-5-5",
+    "claude-sonnet-4-6",
+    "claude-sonnet-5",
+    "claude-sonnet-5-5",
+    "gpt-5.4",
+    "gpt-5.4-mini",
+    "gpt-5.5",
+    "gpt-6-astra",
+    "gpt-6-sol",
+    "gpt-6.1-sol"
+  ],
+  "arms": [
+    "fs",
+    "fs-acl",
+    "gbrain",
+    "memory",
+    "oracle",
+    "pg"
+  ],
+  "tasks": [
+    "A01",
+    "A02",
+    "A03",
+    "A04",
+    "A05",
+    "A06",
+    "A07",
+    "A08",
+    "A09",
+    "A10",
+    "B01",
+    "B02",
+    "B03",
+    "B04",
+    "B05",
+    "B06",
+    "B07",
+    "B08",
+    "B09",
+    "B10",
+    "C01",
+    "C02",
+    "C03",
+    "C04",
+    "C05",
+    "C06",
+    "C07",
+    "C08",
+    "C09",
+    "C10",
+    "E01",
+    "E02",
+    "E03",
+    "E04",
+    "E05",
+    "E06",
+    "E07",
+    "E08",
+    "E09",
+    "E10",
+    "F01",
+    "F02",
+    "F03",
+    "F04",
+    "F05",
+    "F06",
+    "F07",
+    "F08",
+    "F09",
+    "F10"
+  ],
+  "families": [
+    "A",
+    "B",
+    "C",
+    "E",
+    "F"
+  ],
+  "success": {
+    "claude-haiku-4-5": {
+      "fs": 0.57,
+      "fs-acl": 0.6,
+      "gbrain": 0.56,
+      "memory": 0.5,
+      "oracle": 1,
+      "pg": 0.53
+    },
+    "claude-opus-5-5": {
+      "fs": 0.98,
+      "fs-acl": 1,
+      "gbrain": 0.9,
+      "memory": 0.77,
+      "oracle": 0.98,
+      "pg": 0.89
+    },
+    "claude-sonnet-4-6": {
+      "fs": 0.6,
+      "fs-acl": 0.7,
+      "gbrain": 0.55,
+      "memory": 0.61,
+      "oracle": 0.96,
+      "pg": 0.65
+    },
+    "claude-sonnet-5": {
+      "fs": 0.82,
+      "fs-acl": 0.65,
+      "gbrain": 0.7,
+      "memory": 0.61,
+      "oracle": 0.96,
+      "pg": 0.62
+    },
+    "claude-sonnet-5-5": {
+      "fs": 0.93,
+      "fs-acl": 1,
+      "gbrain": 0.83,
+      "memory": 0.77,
+      "oracle": 0.99,
+      "pg": 0.82
+    },
+    "gpt-5.4": {
+      "fs": 0.69,
+      "fs-acl": 1,
+      "gbrain": 0.51,
+      "memory": 0.57,
+      "oracle": 0.99,
+      "pg": 0.59
+    },
+    "gpt-5.4-mini": {
+      "fs": 0.62,
+      "fs-acl": 0.8,
+      "gbrain": 0.35,
+      "memory": 0.5,
+      "oracle": 0.97,
+      "pg": 0.56
+    },
+    "gpt-5.5": {
+      "fs": 0.91,
+      "fs-acl": 1,
+      "gbrain": 0.89,
+      "memory": 0.71,
+      "oracle": 1,
+      "pg": 0.81
+    },
+    "gpt-6-astra": {
+      "fs": 1,
+      "fs-acl": 1,
+      "gbrain": 0.98,
+      "memory": 0.86,
+      "oracle": 1,
+      "pg": 0.96
+    },
+    "gpt-6-sol": {
+      "fs": 0.96,
+      "fs-acl": 1,
+      "gbrain": 0.94,
+      "memory": 0.73,
+      "oracle": 1,
+      "pg": 0.88
+    },
+    "gpt-6.1-sol": {
+      "fs": 0.97,
+      "fs-acl": 1,
+      "gbrain": 0.99,
+      "memory": 0.91,
+      "oracle": 1,
+      "pg": 0.92
+    }
+  },
+  "by_family": {
+    "A": {
+      "claude-haiku-4-5": {
+        "fs": 0.7,
+        "fs-acl": null,
+        "gbrain": 0.65,
+        "memory": 0.65,
+        "oracle": 1,
+        "pg": 0.65
+      },
+      "claude-opus-5-5": {
+        "fs": 1,
+        "fs-acl": null,
+        "gbrain": 1,
+        "memory": 1,
+        "oracle": 1,
+        "pg": 1
+      },
+      "claude-sonnet-4-6": {
+        "fs": 0.7,
+        "fs-acl": null,
+        "gbrain": 0.75,
+        "memory": 0.9,
+        "oracle": 1,
+        "pg": 0.7
+      },
+      "claude-sonnet-5": {
+        "fs": 0.95,
+        "fs-acl": null,
+        "gbrain": 0.75,
+        "memory": 0.9,
+        "oracle": 1,
+        "pg": 0.7
+      },
+      "claude-sonnet-5-5": {
+        "fs": 1,
+        "fs-acl": null,
+        "gbrain": 0.85,
+        "memory": 1,
+        "oracle": 1,
+        "pg": 0.8
+      },
+      "gpt-5.4": {
+        "fs": 0.95,
+        "fs-acl": null,
+        "gbrain": 0.55,
+        "memory": 0.65,
+        "oracle": 1,
+        "pg": 0.7
+      },
+      "gpt-5.4-mini": {
+        "fs": 0.9,
+        "fs-acl": null,
+        "gbrain": 0.55,
+        "memory": 0.65,
+        "oracle": 1,
+        "pg": 0.7
+      },
+      "gpt-5.5": {
+        "fs": 1,
+        "fs-acl": null,
+        "gbrain": 1,
+        "memory": 1,
+        "oracle": 1,
+        "pg": 0.9
+      },
+      "gpt-6-astra": {
+        "fs": 1,
+        "fs-acl": null,
+        "gbrain": 1,
+        "memory": 1,
+        "oracle": 1,
+        "pg": 1
+      },
+      "gpt-6-sol": {
+        "fs": 1,
+        "fs-acl": null,
+        "gbrain": 1,
+        "memory": 1,
+        "oracle": 1,
+        "pg": 1
+      },
+      "gpt-6.1-sol": {
+        "fs": 0.95,
+        "fs-acl": null,
+        "gbrain": 1,
+        "memory": 1,
+        "oracle": 1,
+        "pg": 1
+      }
+    },
+    "B": {
+      "claude-haiku-4-5": {
+        "fs": 0.75,
+        "fs-acl": null,
+        "gbrain": 0.8,
+        "memory": 0.3,
+        "oracle": 1,
+        "pg": 0.6
+      },
+      "claude-opus-5-5": {
+        "fs": 1,
+        "fs-acl": null,
+        "gbrain": 0.85,
+        "memory": 0.6,
+        "oracle": 1,
+        "pg": 0.6
+      },
+      "claude-sonnet-4-6": {
+        "fs": 0.75,
+        "fs-acl": null,
+        "gbrain": 0.8,
+        "memory": 0.5,
+        "oracle": 1,
+        "pg": 0.55
+      },
+      "claude-sonnet-5": {
+        "fs": 0.75,
+        "fs-acl": null,
+        "gbrain": 0.85,
+        "memory": 0.5,
+        "oracle": 1,
+        "pg": 0.6
+      },
+      "claude-sonnet-5-5": {
+        "fs": 1,
+        "fs-acl": null,
+        "gbrain": 0.9,
+        "memory": 0.6,
+        "oracle": 1,
+        "pg": 0.75
+      },
+      "gpt-5.4": {
+        "fs": 0.4,
+        "fs-acl": null,
+        "gbrain": 0.7,
+        "memory": 0.5,
+        "oracle": 1,
+        "pg": 0.55
+      },
+      "gpt-5.4-mini": {
+        "fs": 0.4,
+        "fs-acl": null,
+        "gbrain": 0.45,
+        "memory": 0.4,
+        "oracle": 1,
+        "pg": 0.6
+      },
+      "gpt-5.5": {
+        "fs": 0.85,
+        "fs-acl": null,
+        "gbrain": 0.85,
+        "memory": 0.5,
+        "oracle": 1,
+        "pg": 0.6
+      },
+      "gpt-6-astra": {
+        "fs": 1,
+        "fs-acl": null,
+        "gbrain": 0.95,
+        "memory": 0.7,
+        "oracle": 1,
+        "pg": 0.8
+      },
+      "gpt-6-sol": {
+        "fs": 0.9,
+        "fs-acl": null,
+        "gbrain": 0.9,
+        "memory": 0.4,
+        "oracle": 1,
+        "pg": 0.6
+      },
+      "gpt-6.1-sol": {
+        "fs": 1,
+        "fs-acl": null,
+        "gbrain": 1,
+        "memory": 0.8,
+        "oracle": 1,
+        "pg": 0.7
+      }
+    },
+    "C": {
+      "claude-haiku-4-5": {
+        "fs": 0.8,
+        "fs-acl": 0.6,
+        "gbrain": 0.7,
+        "memory": 0.95,
+        "oracle": 1,
+        "pg": 0.9
+      },
+      "claude-opus-5-5": {
+        "fs": 1,
+        "fs-acl": 1,
+        "gbrain": 1,
+        "memory": 1,
+        "oracle": 1,
+        "pg": 1
+      },
+      "claude-sonnet-4-6": {
+        "fs": 0.9,
+        "fs-acl": 0.7,
+        "gbrain": 0.7,
+        "memory": 0.95,
+        "oracle": 1,
+        "pg": 1
+      },
+      "claude-sonnet-5": {
+        "fs": 0.9,
+        "fs-acl": 0.65,
+        "gbrain": 0.55,
+        "memory": 0.8,
+        "oracle": 1,
+        "pg": 0.7
+      },
+      "claude-sonnet-5-5": {
+        "fs": 1,
+        "fs-acl": 1,
+        "gbrain": 0.8,
+        "memory": 1,
+        "oracle": 1,
+        "pg": 0.85
+      },
+      "gpt-5.4": {
+        "fs": 0.8,
+        "fs-acl": 1,
+        "gbrain": 0.7,
+        "memory": 0.85,
+        "oracle": 1,
+        "pg": 0.7
+      },
+      "gpt-5.4-mini": {
+        "fs": 0.9,
+        "fs-acl": 0.8,
+        "gbrain": 0.7,
+        "memory": 0.85,
+        "oracle": 1,
+        "pg": 1
+      },
+      "gpt-5.5": {
+        "fs": 1,
+        "fs-acl": 1,
+        "gbrain": 0.7,
+        "memory": 1,
+        "oracle": 1,
+        "pg": 0.9
+      },
+      "gpt-6-astra": {
+        "fs": 1,
+        "fs-acl": 1,
+        "gbrain": 1,
+        "memory": 1,
+        "oracle": 1,
+        "pg": 1
+      },
+      "gpt-6-sol": {
+        "fs": 1,
+        "fs-acl": 1,
+        "gbrain": 0.95,
+        "memory": 1,
+        "oracle": 1,
+        "pg": 1
+      },
+      "gpt-6.1-sol": {
+        "fs": 1,
+        "fs-acl": 1,
+        "gbrain": 1,
+        "memory": 1,
+        "oracle": 1,
+        "pg": 1
+      }
+    },
+    "E": {
+      "claude-haiku-4-5": {
+        "fs": 0.15,
+        "fs-acl": null,
+        "gbrain": 0,
+        "memory": 0,
+        "oracle": 1,
+        "pg": 0
+      },
+      "claude-opus-5-5": {
+        "fs": 0.9,
+        "fs-acl": null,
+        "gbrain": 0.65,
+        "memory": 0.25,
+        "oracle": 0.9,
+        "pg": 0.85
+      },
+      "claude-sonnet-4-6": {
+        "fs": 0.15,
+        "fs-acl": null,
+        "gbrain": 0.1,
+        "memory": 0,
+        "oracle": 0.8,
+        "pg": 0.35
+      },
+      "claude-sonnet-5": {
+        "fs": 0.5,
+        "fs-acl": null,
+        "gbrain": 0.45,
+        "memory": 0,
+        "oracle": 0.8,
+        "pg": 0.4
+      },
+      "claude-sonnet-5-5": {
+        "fs": 0.75,
+        "fs-acl": null,
+        "gbrain": 0.6,
+        "memory": 0.25,
+        "oracle": 0.95,
+        "pg": 0.85
+      },
+      "gpt-5.4": {
+        "fs": 0.3,
+        "fs-acl": null,
+        "gbrain": 0.1,
+        "memory": 0,
+        "oracle": 0.95,
+        "pg": 0.45
+      },
+      "gpt-5.4-mini": {
+        "fs": 0.05,
+        "fs-acl": null,
+        "gbrain": 0,
+        "memory": 0,
+        "oracle": 0.85,
+        "pg": 0
+      },
+      "gpt-5.5": {
+        "fs": 0.7,
+        "fs-acl": null,
+        "gbrain": 0.95,
+        "memory": 0.05,
+        "oracle": 1,
+        "pg": 1
+      },
+      "gpt-6-astra": {
+        "fs": 1,
+        "fs-acl": null,
+        "gbrain": 1,
+        "memory": 0.6,
+        "oracle": 1,
+        "pg": 1
+      },
+      "gpt-6-sol": {
+        "fs": 0.9,
+        "fs-acl": null,
+        "gbrain": 1,
+        "memory": 0.25,
+        "oracle": 1,
+        "pg": 0.95
+      },
+      "gpt-6.1-sol": {
+        "fs": 1,
+        "fs-acl": null,
+        "gbrain": 1,
+        "memory": 0.75,
+        "oracle": 1,
+        "pg": 1
+      }
+    },
+    "F": {
+      "claude-haiku-4-5": {
+        "fs": 0.45,
+        "fs-acl": null,
+        "gbrain": 0.65,
+        "memory": 0.6,
+        "oracle": 1,
+        "pg": 0.5
+      },
+      "claude-opus-5-5": {
+        "fs": 1,
+        "fs-acl": null,
+        "gbrain": 1,
+        "memory": 1,
+        "oracle": 1,
+        "pg": 1
+      },
+      "claude-sonnet-4-6": {
+        "fs": 0.5,
+        "fs-acl": null,
+        "gbrain": 0.4,
+        "memory": 0.7,
+        "oracle": 1,
+        "pg": 0.65
+      },
+      "claude-sonnet-5": {
+        "fs": 1,
+        "fs-acl": null,
+        "gbrain": 0.9,
+        "memory": 0.85,
+        "oracle": 1,
+        "pg": 0.7
+      },
+      "claude-sonnet-5-5": {
+        "fs": 0.9,
+        "fs-acl": null,
+        "gbrain": 1,
+        "memory": 1,
+        "oracle": 1,
+        "pg": 0.85
+      },
+      "gpt-5.4": {
+        "fs": 1,
+        "fs-acl": null,
+        "gbrain": 0.5,
+        "memory": 0.85,
+        "oracle": 1,
+        "pg": 0.55
+      },
+      "gpt-5.4-mini": {
+        "fs": 0.85,
+        "fs-acl": null,
+        "gbrain": 0.05,
+        "memory": 0.6,
+        "oracle": 1,
+        "pg": 0.5
+      },
+      "gpt-5.5": {
+        "fs": 1,
+        "fs-acl": null,
+        "gbrain": 0.95,
+        "memory": 1,
+        "oracle": 1,
+        "pg": 0.65
+      },
+      "gpt-6-astra": {
+        "fs": 1,
+        "fs-acl": null,
+        "gbrain": 0.95,
+        "memory": 1,
+        "oracle": 1,
+        "pg": 1
+      },
+      "gpt-6-sol": {
+        "fs": 1,
+        "fs-acl": null,
+        "gbrain": 0.85,
+        "memory": 1,
+        "oracle": 1,
+        "pg": 0.85
+      },
+      "gpt-6.1-sol": {
+        "fs": 0.9,
+        "fs-acl": null,
+        "gbrain": 0.95,
+        "memory": 1,
+        "oracle": 1,
+        "pg": 0.9
+      }
+    }
+  },
+  "capability": {
+    "claude-haiku-4-5": 1,
+    "claude-opus-5-5": 0.98,
+    "claude-sonnet-4-6": 0.96,
+    "claude-sonnet-5": 0.96,
+    "claude-sonnet-5-5": 0.99,
+    "gpt-5.4": 0.99,
+    "gpt-5.4-mini": 0.97,
+    "gpt-5.5": 1,
+    "gpt-6-astra": 1,
+    "gpt-6-sol": 1,
+    "gpt-6.1-sol": 1
+  },
+  "advantage": {
+    "claude-haiku-4-5": {
+      "best_baseline": "fs",
+      "value": -0.009999999999999898,
+      "ci95": [
+        -0.14999999999999997,
+        0.06999999999999995
+      ]
+    },
+    "claude-opus-5-5": {
+      "best_baseline": "fs",
+      "value": -0.07999999999999996,
+      "ci95": [
+        -0.15000000000000002,
+        -0.020000000000000018
+      ]
+    },
+    "claude-sonnet-4-6": {
+      "best_baseline": "pg",
+      "value": -0.09999999999999998,
+      "ci95": [
+        -0.23000000000000004,
+        -0.010000000000000009
+      ]
+    },
+    "claude-sonnet-5": {
+      "best_baseline": "fs",
+      "value": -0.12,
+      "ci95": [
+        -0.22999999999999998,
+        -0.020000000000000018
+      ]
+    },
+    "claude-sonnet-5-5": {
+      "best_baseline": "fs",
+      "value": -0.10000000000000009,
+      "ci95": [
+        -0.18000000000000005,
+        -0.020000000000000018
+      ]
+    },
+    "gpt-5.4": {
+      "best_baseline": "fs",
+      "value": -0.17999999999999994,
+      "ci95": [
+        -0.31,
+        -0.05999999999999994
+      ]
+    },
+    "gpt-5.4-mini": {
+      "best_baseline": "fs",
+      "value": -0.27,
+      "ci95": [
+        -0.39000000000000007,
+        -0.15999999999999998
+      ]
+    },
+    "gpt-5.5": {
+      "best_baseline": "fs",
+      "value": -0.020000000000000018,
+      "ci95": [
+        -0.12,
+        0.07000000000000006
+      ]
+    },
+    "gpt-6-astra": {
+      "best_baseline": "fs",
+      "value": -0.020000000000000018,
+      "ci95": [
+        -0.050000000000000044,
+        0
+      ]
+    },
+    "gpt-6-sol": {
+      "best_baseline": "fs",
+      "value": -0.020000000000000018,
+      "ci95": [
+        -0.06999999999999995,
+        0.039999999999999925
+      ]
+    },
+    "gpt-6.1-sol": {
+      "best_baseline": "fs",
+      "value": 0.020000000000000018,
+      "ci95": [
+        -0.020000000000000018,
+        0.050000000000000044
+      ]
+    }
+  },
+  "pooled_advantage": {
+    "value": -0.0818181818181818,
+    "ci95": [
+      -0.13090909090909092,
+      -0.04272727272727273
+    ]
+  },
+  "slope": {
+    "value": 3.4006849315068464,
+    "ci95": [
+      0.026595744680849753,
+      11.61702127659573
+    ],
+    "n_models": 11
+  },
+  "family_slopes": {
+    "A": {
+      "value": null,
+      "ci95": [
+        null,
+        null
+      ]
+    },
+    "B": {
+      "value": null,
+      "ci95": [
+        null,
+        null
+      ]
+    },
+    "C": {
+      "value": null,
+      "ci95": [
+        null,
+        null
+      ]
+    },
+    "E": {
+      "value": 0.4589041095890413,
+      "ci95": [
+        -0.46666666666666673,
+        1.680851063829788
+      ]
+    },
+    "F": {
+      "value": null,
+      "ci95": [
+        null,
+        null
+      ]
+    }
+  },
+  "safety": {
+    "fs": {
+      "output_leaks": 12,
+      "context_exposures": 205,
+      "unsafe_writes": 0,
+      "c_runs": 220
+    },
+    "fs-acl": {
+      "output_leaks": 23,
+      "context_exposures": 100,
+      "unsafe_writes": 0,
+      "c_runs": 220
+    },
+    "gbrain": {
+      "output_leaks": 44,
+      "context_exposures": 104,
+      "unsafe_writes": 0,
+      "c_runs": 220
+    },
+    "memory": {
+      "output_leaks": 12,
+      "context_exposures": 123,
+      "unsafe_writes": 0,
+      "c_runs": 220
+    },
+    "oracle": {
+      "output_leaks": 0,
+      "context_exposures": 0,
+      "unsafe_writes": 0,
+      "c_runs": 220
+    },
+    "pg": {
+      "output_leaks": 19,
+      "context_exposures": 211,
+      "unsafe_writes": 0,
+      "c_runs": 220
+    }
+  },
+  "efficiency": {
+    "claude-haiku-4-5": {
+      "fs": {
+        "usd_per_task": 0.023591415000000008,
+        "usd_per_success": 0.041388447368421066,
+        "p50_s": 13.159,
+        "p95_s": 36.214,
+        "turns": 5.56
+      },
+      "fs-acl": {
+        "usd_per_task": 0.015590922500000002,
+        "usd_per_success": 0.025984870833333337,
+        "p50_s": 8.069,
+        "p95_s": 33.278,
+        "turns": 5.7
+      },
+      "gbrain": {
+        "usd_per_task": 0.05819448310000001,
+        "usd_per_success": 0.1039187198214286,
+        "p50_s": 19.118,
+        "p95_s": 62.174,
+        "turns": 3.68
+      },
+      "memory": {
+        "usd_per_task": 0.06426549150000001,
+        "usd_per_success": 0.12853098300000002,
+        "p50_s": 20.981,
+        "p95_s": 43.02,
+        "turns": 7.94
+      },
+      "oracle": {
+        "usd_per_task": 0.0045918999999999995,
+        "usd_per_success": 0.0045918999999999995,
+        "p50_s": 6.651,
+        "p95_s": 9.362,
+        "turns": 1
+      },
+      "pg": {
+        "usd_per_task": 0.014348073,
+        "usd_per_success": 0.027071835849056602,
+        "p50_s": 10.747,
+        "p95_s": 36.79,
+        "turns": 4.08
+      }
+    },
+    "claude-opus-5-5": {
+      "fs": {
+        "usd_per_task": 0.08612539800000002,
+        "usd_per_success": 0.08788305918367349,
+        "p50_s": 25.214,
+        "p95_s": 49.814,
+        "turns": 5.08
+      },
+      "fs-acl": {
+        "usd_per_task": 0.046206769999999994,
+        "usd_per_success": 0.046206769999999994,
+        "p50_s": 22.129,
+        "p95_s": 31.648,
+        "turns": 5.5
+      },
+      "gbrain": {
+        "usd_per_task": 0.3193715116999999,
+        "usd_per_success": 0.3548572352222221,
+        "p50_s": 34.8,
+        "p95_s": 99.109,
+        "turns": 4.84
+      },
+      "memory": {
+        "usd_per_task": 0.5551863519999999,
+        "usd_per_success": 0.7210212363636362,
+        "p50_s": 31.195,
+        "p95_s": 197.83,
+        "turns": 7.04
+      },
+      "oracle": {
+        "usd_per_task": 0.019012320000000003,
+        "usd_per_success": 0.019400326530612248,
+        "p50_s": 8.636,
+        "p95_s": 20.106,
+        "turns": 1
+      },
+      "pg": {
+        "usd_per_task": 0.06605939799999998,
+        "usd_per_success": 0.07422404269662919,
+        "p50_s": 20.057,
+        "p95_s": 46.495,
+        "turns": 4.44
+      }
+    },
+    "claude-sonnet-4-6": {
+      "fs": {
+        "usd_per_task": 0.04801936349999998,
+        "usd_per_success": 0.08003227249999997,
+        "p50_s": 18.531,
+        "p95_s": 65.653,
+        "turns": 4.75
+      },
+      "fs-acl": {
+        "usd_per_task": 0.021605115,
+        "usd_per_success": 0.030864450000000005,
+        "p50_s": 11.638,
+        "p95_s": 27.045,
+        "turns": 3.75
+      },
+      "gbrain": {
+        "usd_per_task": 0.17941052790000012,
+        "usd_per_success": 0.32620095981818203,
+        "p50_s": 22.537,
+        "p95_s": 109.279,
+        "turns": 3.16
+      },
+      "memory": {
+        "usd_per_task": 0.184828752,
+        "usd_per_success": 0.30299795409836067,
+        "p50_s": 20.699,
+        "p95_s": 107.978,
+        "turns": 5.97
+      },
+      "oracle": {
+        "usd_per_task": 0.014764870499999997,
+        "usd_per_success": 0.015380073437499997,
+        "p50_s": 10.343,
+        "p95_s": 14.216,
+        "turns": 1
+      },
+      "pg": {
+        "usd_per_task": 0.03440369849999999,
+        "usd_per_success": 0.05292876692307691,
+        "p50_s": 15.642,
+        "p95_s": 43.343,
+        "turns": 3.22
+      }
+    },
+    "claude-sonnet-5": {
+      "fs": {
+        "usd_per_task": 0.04836699800000001,
+        "usd_per_success": 0.058984143902439036,
+        "p50_s": 18.359,
+        "p95_s": 56.691,
+        "turns": 5.74
+      },
+      "fs-acl": {
+        "usd_per_task": 0.023304335,
+        "usd_per_success": 0.03585282307692307,
+        "p50_s": 12.367,
+        "p95_s": 79.584,
+        "turns": 4.8
+      },
+      "gbrain": {
+        "usd_per_task": 0.229292991,
+        "usd_per_success": 0.3275614157142857,
+        "p50_s": 30.218,
+        "p95_s": 99.207,
+        "turns": 4.23
+      },
+      "memory": {
+        "usd_per_task": 0.21745278199999996,
+        "usd_per_success": 0.3564799704918032,
+        "p50_s": 24.168,
+        "p95_s": 140.394,
+        "turns": 7.68
+      },
+      "oracle": {
+        "usd_per_task": 0.012215100000000001,
+        "usd_per_success": 0.012724062500000001,
+        "p50_s": 7.532,
+        "p95_s": 10.437,
+        "turns": 1
+      },
+      "pg": {
+        "usd_per_task": 0.026772435999999993,
+        "usd_per_success": 0.043181348387096766,
+        "p50_s": 15.006,
+        "p95_s": 37.382,
+        "turns": 3.37
+      }
+    },
+    "claude-sonnet-5-5": {
+      "fs": {
+        "usd_per_task": 0.048421587000000016,
+        "usd_per_success": 0.05206622258064518,
+        "p50_s": 17.965,
+        "p95_s": 38.672,
+        "turns": 4.74
+      },
+      "fs-acl": {
+        "usd_per_task": 0.022999115000000004,
+        "usd_per_success": 0.022999115000000004,
+        "p50_s": 14.932,
+        "p95_s": 22.315,
+        "turns": 4.75
+      },
+      "gbrain": {
+        "usd_per_task": 0.23398074100000005,
+        "usd_per_success": 0.28190450722891575,
+        "p50_s": 26.468,
+        "p95_s": 110.369,
+        "turns": 4.18
+      },
+      "memory": {
+        "usd_per_task": 0.262334283,
+        "usd_per_success": 0.340693874025974,
+        "p50_s": 25.812,
+        "p95_s": 177.693,
+        "turns": 6.89
+      },
+      "oracle": {
+        "usd_per_task": 0.009634878999999999,
+        "usd_per_success": 0.009732201010101008,
+        "p50_s": 7.255,
+        "p95_s": 10.525,
+        "turns": 1
+      },
+      "pg": {
+        "usd_per_task": 0.037216355,
+        "usd_per_success": 0.045385798780487804,
+        "p50_s": 12.955,
+        "p95_s": 33.517,
+        "turns": 3.89
+      }
+    },
+    "gpt-5.4": {
+      "fs": {
+        "usd_per_task": 0.031469219999999985,
+        "usd_per_success": 0.04560756521739129,
+        "p50_s": 14.058,
+        "p95_s": 28.691,
+        "turns": 3.87
+      },
+      "fs-acl": {
+        "usd_per_task": 0.017427624999999995,
+        "usd_per_success": 0.017427624999999995,
+        "p50_s": 10.179,
+        "p95_s": 13.822,
+        "turns": 3
+      },
+      "gbrain": {
+        "usd_per_task": 0.08982464690000003,
+        "usd_per_success": 0.17612675862745103,
+        "p50_s": 27.039,
+        "p95_s": 73.581,
+        "turns": 4.21
+      },
+      "memory": {
+        "usd_per_task": 0.10853908000000001,
+        "usd_per_success": 0.19041943859649124,
+        "p50_s": 13.831,
+        "p95_s": 28.798,
+        "turns": 4.32
+      },
+      "oracle": {
+        "usd_per_task": 0.0049521700000000005,
+        "usd_per_success": 0.005002191919191919,
+        "p50_s": 5.478,
+        "p95_s": 8.363,
+        "turns": 1
+      },
+      "pg": {
+        "usd_per_task": 0.02017987999999999,
+        "usd_per_success": 0.03420318644067795,
+        "p50_s": 12.949,
+        "p95_s": 28.056,
+        "turns": 3.21
+      }
+    },
+    "gpt-5.4-mini": {
+      "fs": {
+        "usd_per_task": 0.0074579910000000015,
+        "usd_per_success": 0.012029017741935486,
+        "p50_s": 12.859,
+        "p95_s": 25.157,
+        "turns": 4.52
+      },
+      "fs-acl": {
+        "usd_per_task": 0.004669132500000001,
+        "usd_per_success": 0.005836415625000001,
+        "p50_s": 9.988,
+        "p95_s": 14.314,
+        "turns": 4.05
+      },
+      "gbrain": {
+        "usd_per_task": 0.014843482399999997,
+        "usd_per_success": 0.0424099497142857,
+        "p50_s": 22.937,
+        "p95_s": 71.097,
+        "turns": 3.38
+      },
+      "memory": {
+        "usd_per_task": 0.025130509500000005,
+        "usd_per_success": 0.05026101900000001,
+        "p50_s": 12.615,
+        "p95_s": 29.335,
+        "turns": 5.28
+      },
+      "oracle": {
+        "usd_per_task": 0.0018609675,
+        "usd_per_success": 0.0019185231958762888,
+        "p50_s": 4.593,
+        "p95_s": 6.769,
+        "turns": 1.04
+      },
+      "pg": {
+        "usd_per_task": 0.004066937999999999,
+        "usd_per_success": 0.007262389285714285,
+        "p50_s": 11.502,
+        "p95_s": 21.742,
+        "turns": 3.57
+      }
+    },
+    "gpt-5.5": {
+      "fs": {
+        "usd_per_task": 0.13692576,
+        "usd_per_success": 0.15046786813186813,
+        "p50_s": 28.825,
+        "p95_s": 54.356,
+        "turns": 7.77
+      },
+      "fs-acl": {
+        "usd_per_task": 0.06451994999999999,
+        "usd_per_success": 0.06451994999999999,
+        "p50_s": 18.022,
+        "p95_s": 30.353,
+        "turns": 5.55
+      },
+      "gbrain": {
+        "usd_per_task": 0.3345421275,
+        "usd_per_success": 0.37589003089887646,
+        "p50_s": 40.768,
+        "p95_s": 100.562,
+        "turns": 5.09
+      },
+      "memory": {
+        "usd_per_task": 0.36755469000000013,
+        "usd_per_success": 0.5176826619718311,
+        "p50_s": 25.881,
+        "p95_s": 121.547,
+        "turns": 7.99
+      },
+      "oracle": {
+        "usd_per_task": 0.013729640000000005,
+        "usd_per_success": 0.013729640000000005,
+        "p50_s": 6.287,
+        "p95_s": 8.384,
+        "turns": 1
+      },
+      "pg": {
+        "usd_per_task": 0.08239901,
+        "usd_per_success": 0.10172717283950616,
+        "p50_s": 19.386,
+        "p95_s": 51.341,
+        "turns": 4.66
+      }
+    },
+    "gpt-6-astra": {
+      "fs": {
+        "usd_per_task": 0.11617969000000002,
+        "usd_per_success": 0.11617969000000002,
+        "p50_s": 22.774,
+        "p95_s": 54.247,
+        "turns": 4.94
+      },
+      "fs-acl": {
+        "usd_per_task": 0.08554885,
+        "usd_per_success": 0.08554885,
+        "p50_s": 20.441,
+        "p95_s": 27.266,
+        "turns": 6.2
+      },
+      "gbrain": {
+        "usd_per_task": 0.39897284689999984,
+        "usd_per_success": 0.40711514989795905,
+        "p50_s": 31.292,
+        "p95_s": 60.835,
+        "turns": 3.84
+      },
+      "memory": {
+        "usd_per_task": 0.8486980100000002,
+        "usd_per_success": 0.986858151162791,
+        "p50_s": 25.459,
+        "p95_s": 238.359,
+        "turns": 6.48
+      },
+      "oracle": {
+        "usd_per_task": 0.022221399999999995,
+        "usd_per_success": 0.022221399999999995,
+        "p50_s": 5.567,
+        "p95_s": 8.282,
+        "turns": 1
+      },
+      "pg": {
+        "usd_per_task": 0.09928709,
+        "usd_per_success": 0.10342405208333333,
+        "p50_s": 17.57,
+        "p95_s": 32.37,
+        "turns": 3.81
+      }
+    },
+    "gpt-6-sol": {
+      "fs": {
+        "usd_per_task": 0.02308486,
+        "usd_per_success": 0.024046729166666666,
+        "p50_s": 19.971,
+        "p95_s": 35.093,
+        "turns": 5.15
+      },
+      "fs-acl": {
+        "usd_per_task": 0.014326340000000003,
+        "usd_per_success": 0.014326340000000003,
+        "p50_s": 18.03,
+        "p95_s": 23.957,
+        "turns": 5.9
+      },
+      "gbrain": {
+        "usd_per_task": 0.1564711783,
+        "usd_per_success": 0.16645870031914897,
+        "p50_s": 34.131,
+        "p95_s": 84.761,
+        "turns": 4.81
+      },
+      "memory": {
+        "usd_per_task": 0.129740642,
+        "usd_per_success": 0.17772690684931505,
+        "p50_s": 18.854,
+        "p95_s": 148.244,
+        "turns": 6.55
+      },
+      "oracle": {
+        "usd_per_task": 0.004685980000000001,
+        "usd_per_success": 0.004685980000000001,
+        "p50_s": 5.212,
+        "p95_s": 8.12,
+        "turns": 1
+      },
+      "pg": {
+        "usd_per_task": 0.020986765999999997,
+        "usd_per_success": 0.023848597727272724,
+        "p50_s": 17.726,
+        "p95_s": 34.012,
+        "turns": 4.19
+      }
+    },
+    "gpt-6.1-sol": {
+      "fs": {
+        "usd_per_task": 0.02213739400000001,
+        "usd_per_success": 0.022822055670103102,
+        "p50_s": 24.783,
+        "p95_s": 66.547,
+        "turns": 4.66
+      },
+      "fs-acl": {
+        "usd_per_task": 0.014382514999999998,
+        "usd_per_success": 0.014382514999999998,
+        "p50_s": 21.655,
+        "p95_s": 32.872,
+        "turns": 5.2
+      },
+      "gbrain": {
+        "usd_per_task": 0.08407786550000003,
+        "usd_per_success": 0.0849271368686869,
+        "p50_s": 27.398,
+        "p95_s": 64.592,
+        "turns": 3.85
+      },
+      "memory": {
+        "usd_per_task": 0.16477953299999992,
+        "usd_per_success": 0.1810764098901098,
+        "p50_s": 26.571,
+        "p95_s": 266.607,
+        "turns": 6.3
+      },
+      "oracle": {
+        "usd_per_task": 0.0042509800000000006,
+        "usd_per_success": 0.0042509800000000006,
+        "p50_s": 6.555,
+        "p95_s": 10.248,
+        "turns": 1
+      },
+      "pg": {
+        "usd_per_task": 0.018723528999999996,
+        "usd_per_success": 0.020351661956521733,
+        "p50_s": 23.644,
+        "p95_s": 38.658,
+        "turns": 3.92
+      }
+    }
+  },
+  "claims": {
+    "fs": {
+      "unsupported_per_answer": 0.88909426987061,
+      "contradicted_per_answer": 0.3456561922365989,
+      "judged": 1082
+    },
+    "fs-acl": {
+      "unsupported_per_answer": 0.6422018348623854,
+      "contradicted_per_answer": 0.03211009174311927,
+      "judged": 218
+    },
+    "gbrain": {
+      "unsupported_per_answer": 0.9745222929936306,
+      "contradicted_per_answer": 0.41128298453139217,
+      "judged": 1099
+    },
+    "memory": {
+      "unsupported_per_answer": 0.759375,
+      "contradicted_per_answer": 0.478125,
+      "judged": 960
+    },
+    "oracle": {
+      "unsupported_per_answer": 0.7090909090909091,
+      "contradicted_per_answer": 0.23545454545454544,
+      "judged": 1100
+    },
+    "pg": {
+      "unsupported_per_answer": 0.8581818181818182,
+      "contradicted_per_answer": 0.33181818181818185,
+      "judged": 1100
+    }
+  },
+  "missed_evidence": {
+    "fs": 0.16960651289009498,
+    "fs-acl": 0.045454545454545456,
+    "gbrain": 0.20827679782903663,
+    "memory": 0.5264586160108549,
+    "oracle": 0.004070556309362279,
+    "pg": 0.1824966078697422
+  },
+  "cells": 5720,
+  "usd": 636.1556180700005
+}

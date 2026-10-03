@@ -1,0 +1,69 @@
+{
+  "schema": "cat40-receipt-v1",
+  "version": "cat40-v1",
+  "judge_prompt": "cat40-claims-v1",
+  "judge": "gpt-5.4-mini",
+  "world": {
+    "path": "<evals>/eval/reports/cat40/holdout/world.json",
+    "digest": "df9e4f65cf603430934d6afa30073a44813ea670f78ae83c68bbde8210d1db9b",
+    "seed": 20261003,
+    "docs": 4036,
+    "tasks": 50
+  },
+  "evals_commit": "462e31f3ee193004cb47d4790507a772addb9cc1",
+  "evals_dirty": false,
+  "gbrain": null,
+  "slot_builds": [],
+  "models": [
+    "claude-haiku-4-5",
+    "claude-sonnet-4-6",
+    "claude-sonnet-5-5",
+    "gpt-5.4-mini",
+    "gpt-5.4",
+    "gpt-6.1-sol"
+  ],
+  "arms": [
+    "oracle",
+    "fs",
+    "fs-acl",
+    "memory",
+    "pg"
+  ],
+  "families": [
+    "A",
+    "B",
+    "C",
+    "E",
+    "F"
+  ],
+  "repeats": 2,
+  "max_tool_chars": 100000000,
+  "argv": [
+    "--world",
+    "eval/reports/cat40/holdout/world.json",
+    "--models",
+    "claude-haiku-4-5,claude-sonnet-4-6,claude-sonnet-5-5,gpt-5.4-mini,gpt-5.4,gpt-6.1-sol",
+    "--arms",
+    "oracle,fs,fs-acl,memory,pg",
+    "--repeat",
+    "2",
+    "--max-tool-chars",
+    "100000000",
+    "--budget-usd",
+    "150",
+    "--program-cap-usd",
+    "2000",
+    "--concurrency",
+    "10",
+    "--transcripts",
+    "--out",
+    "eval/reports/cat40/holdout-run"
+  ],
+  "cost": {
+    "usd": 127.765786,
+    "input_tokens": 179056556,
+    "output_tokens": 2969461,
+    "basis": "budget ledger cat40-model-ladder-2026-10-02T22-48-45-864Z-a8b763db: 14663 paid requests, 0 charged at their reservation because usage was unavailable"
+  },
+  "finished_at": "2026-10-02T23:54:43.350Z"
+}

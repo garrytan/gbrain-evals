@@ -151,6 +151,39 @@ describe('ledger', () => {
   });
 });
 
+describe('allowances (bulk requests)', () => {
+  test('requests inside an allowance write no ledger entries, stop at the allowance, and settle as one entry', async () => {
+    const path = ledgerPath();
+    const run = BudgetRun.open({ runner: 'test', budgetUsd: 1, ledgerPath: path });
+    const perRequest = reservationUsd(priceRequest('https://api.openai.com/v1/embeddings', embeddingBody)!);
+    const mock = mockFetch(() => Response.json({ usage: { prompt_tokens: 4, total_tokens: 4 } }));
+    const guard = installPaidRequestGuard(run, { fetchImpl: mock.impl });
+    const allowance = run.allowance(perRequest * 3.5, 'bulk');
+    try {
+      await allowance.run(async () => {
+        for (let i = 0; i < 3; i++) expect((await send('https://api.openai.com/v1/embeddings', embeddingBody)).status).toBe(200);
+        expect(read(path).entries).toHaveLength(1);
+      });
+      // Spent is below the reservations, so a fourth fits; a fifth would pass the allowance only if usage were unknown.
+      await allowance.run(() => send('https://api.openai.com/v1/embeddings', embeddingBody));
+      const big = { model: 'text-embedding-3-large', input: ['x'.repeat(400_000)] };
+      await expect(allowance.run(() => send('https://api.openai.com/v1/embeddings', big))).rejects.toThrow(BudgetExceededError);
+    } finally { guard.uninstall(); }
+    expect(mock.calls).toHaveLength(4);
+    const charged = allowance.close();
+    expect(charged.requests).toBe(4);
+    const [entry] = read(path).entries;
+    expect(read(path).entries).toHaveLength(1);
+    expect(entry.status).toBe('reconciled');
+    expect(entry.actual_usd).toBeCloseTo(charged.usd, 12);
+    expect(entry.input_tokens).toBe(16);
+  });
+  test('an allowance cannot exceed the run budget', () => {
+    const run = BudgetRun.open({ runner: 'test', budgetUsd: 1, ledgerPath: ledgerPath() });
+    expect(() => run.allowance(2, 'bulk')).toThrow(BudgetExceededError);
+  });
+});
+
 describe('shared runs (longmemeval-batch workers)', () => {
   test('joined workers share one run budget, report only their own spend, and cannot close the run', () => {
     const path = ledgerPath();

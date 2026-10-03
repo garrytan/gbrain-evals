@@ -1,0 +1,36 @@
+2026-10-02T19:04:35.000Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger .budget/ledger.json
+2026-10-02T19:04:35.009Z [budget] cat40-model-ladder: joined shared run cat40-model-ladder-scale-tier-2026-10-02T19-04-26-629Z-5947cc6e ($248.00 across all of its workers)
+2026-10-02T19:04:35.010Z 200 cells to run (0 already done) in eval/reports/cat40/scale-tier-gbrain
+2026-10-02T20:28:20.994Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger .budget/ledger.json
+2026-10-02T20:28:21.028Z [budget] cat40-model-ladder: joined shared run cat40-model-ladder-scale-tier-2026-10-02T19-04-26-629Z-5947cc6e ($248.00 across all of its workers)
+2026-10-02T20:28:21.028Z 200 cells to run (0 already done) in eval/reports/cat40/scale-tier-gbrain
+2026-10-02T21:54:14.682Z built slot0 in 5152s, $1.1773 (52046 provider requests; ledger allowance charged $1.1773)
+2026-10-02T21:54:41.427Z built slot1 in 5177s, $1.1773 (52043 provider requests; ledger allowance charged $1.1773)
+2026-10-02T21:55:04.260Z built slot2 in 5197s, $1.1773 (52043 provider requests; ledger allowance charged $1.1773)
+2026-10-02T22:01:33.239Z receipt eval/reports/cat40/scale-tier-gbrain/receipt-1790978493238.json
+2026-10-02T22:12:31.262Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger .budget/ledger.json
+2026-10-02T22:12:31.293Z [budget] cat40-model-ladder: joined shared run cat40-model-ladder-scale-tier-2026-10-02T19-04-26-629Z-5947cc6e ($248.00 across all of its workers)
+2026-10-02T22:12:31.293Z 200 cells to run (0 already done) in eval/reports/cat40/scale-tier-gbrain
+2026-10-02T22:18:06.803Z write probe passed on every slot
+2026-10-02T22:18:06.804Z gbrain 0.60.27.0 (ad7900d8dcd2) ready on 3 slots, surface starter
+2026-10-02T22:25:25.510Z 10/200 cells; last claude-sonnet-5-5|gbrain|A03|0 success=true $0.098
+2026-10-02T22:30:47.154Z 20/200 cells; last gpt-6.1-sol|gbrain|A05|0 success=false $0.021
+2026-10-02T22:36:11.766Z 30/200 cells; last gpt-5.4|gbrain|A08|0 success=false $0.039
+2026-10-02T22:42:17.744Z 40/200 cells; last gpt-6.1-sol|gbrain|A10|0 success=true $0.030
+2026-10-02T22:47:24.730Z 50/200 cells; last gpt-5.4|gbrain|B03|0 success=false $0.023
+2026-10-02T22:52:36.712Z 60/200 cells; last claude-sonnet-4-6|gbrain|B06|0 success=true $0.044
+2026-10-02T22:57:57.689Z 70/200 cells; last claude-sonnet-5-5|gbrain|B08|0 success=true $0.057
+2026-10-02T23:04:07.067Z 80/200 cells; last gpt-6.1-sol|gbrain|B10|0 success=true $0.048
+2026-10-02T23:09:34.583Z 90/200 cells; last gpt-5.4|gbrain|C03|0 success=true $0.019
+2026-10-02T23:15:09.004Z 100/200 cells; last claude-sonnet-4-6|gbrain|C06|0 success=false $0.144
+2026-10-02T23:21:23.403Z 110/200 cells; last claude-sonnet-5-5|gbrain|C08|0 success=false $0.133
+2026-10-02T23:27:54.095Z 120/200 cells; last gpt-6.1-sol|gbrain|C10|0 success=true $0.071
+2026-10-02T23:36:40.107Z 130/200 cells; last claude-sonnet-4-6|gbrain|E03|0 success=false $0.597
+2026-10-02T23:45:09.439Z 140/200 cells; last gpt-6.1-sol|gbrain|E05|0 success=true $0.244
+2026-10-02T23:53:16.483Z 150/200 cells; last claude-sonnet-5-5|gbrain|E08|0 success=false $0.410
+2026-10-03T00:00:53.742Z 160/200 cells; last gpt-5.4|gbrain|E10|0 success=false $0.174
+2026-10-03T00:08:11.376Z 170/200 cells; last claude-sonnet-5-5|gbrain|F03|0 success=true $0.095
+2026-10-03T00:14:28.457Z 180/200 cells; last gpt-6.1-sol|gbrain|F05|0 success=true $0.024
+2026-10-03T00:21:40.566Z 190/200 cells; last claude-sonnet-5-5|gbrain|F08|0 success=true $0.128
+2026-10-03T00:27:50.826Z 200/200 cells; last gpt-5.4|gbrain|F10|0 success=false $0.067
+2026-10-03T00:27:51.269Z receipt eval/reports/cat40/scale-tier-gbrain/receipt-1790987271269.json

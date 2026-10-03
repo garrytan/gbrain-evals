@@ -835,6 +835,16 @@ export const REGISTRY: readonly CategoryEntry[] = [
     contract: 'Follows one small vault through ingest, query, an embedding outage, corrections, reconcile, forget and restart, and scores what an agent can read at each checkpoint against the evaluator\'s own ledger. gbrain\'s doctor, integrity and invariant checks are never the answer key. It covers the scripted scenario only; timing-dependent counts can differ between repeat runs.',
   },
   {
+    id: 'model-ladder', legacy_alias: '40', name: 'Model Ladder: agent tasks over a company knowledge base, by memory system and model generation',
+    family: 'reasoning', tier: 'P', script: 'eval/runner/cat40-model-ladder.ts',
+    run: { kind: 'listed', reason: 'paid model calls across many models, and a gbrain checkout for the gbrain arm', command: 'bun eval/runner/cat40-model-ladder.ts --models <list> --arms oracle,fs,fs-acl,memory,pg,gbrain --max-tool-chars 100000000 --gbrain-repo <gbrain checkout> --budget-usd <n>' },
+    cost_estimate: { usd: 800, basis: 'the uncapped 11-model, 6-arm ladder on 2026-10-02 cost $777 for 7,624 cells; one model and repeat costs $10-$80' },
+    receipt_path: 'docs/benchmarks/2026-10-02-model-ladder/',
+    headline: { metric: 'agent task success per memory arm and model, gbrain advantage over the best simple arm, and its slope on model capability', denominator: '50 tasks (authority, true-now, permissions, evidence briefs, write-back) per model and repeat' },
+    gate: 'report-only', evidence_maturity: 'synthetic-production-path',
+    contract: 'Runs one agent loop per arm (files, memory tool, plain Postgres, gbrain MCP, and handed-over evidence) on a fictional company corpus generated from a ledger, scores answers deterministically and counts finance-only leaks. Capability is the oracle arm; the 4k-document world is development data, the seed-20261003 world is held out.',
+  },
+  {
     id: 'knowledge-update', legacy_alias: 'N1', name: 'Knowledge update and supersession through the lifecycle harness (explicit fence supersession, ontology as-of, trajectories)',
     family: 'temporal', tier: 'H', script: 'eval/runner/n1-knowledge-update.ts',
     run: { kind: 'listed', reason: 'a lifecycle slice: it spawns real gbrain CLI, stdio and HTTP servers per cell for minutes, above the 60-second CI budget, and its Postgres cells need Docker; rules apply to every counted run; CI runs the preregistered slice instead (registry entry knowledge-update-ci)', command: 'bun eval/runner/n1-knowledge-update.ts [--gbrain <checkout>@<ref>] [--engines pglite,postgres] [--interfaces cli,mcp-stdio,mcp-http] [--pg-url <url>]' },
@@ -1031,4 +1041,4 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
 };
 
 /** Subdirectories of eval/runner/ holding helper modules only. */
-export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'evaluator', 'evidence-delivery', 'lifecycle', 'queries', 'stats', 'system-one'];
+export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'cat40', 'evaluator', 'evidence-delivery', 'lifecycle', 'queries', 'stats', 'system-one'];

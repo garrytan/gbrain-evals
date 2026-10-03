@@ -1,0 +1,86 @@
+{
+  "schema": "cat40-receipt-v1",
+  "version": "cat40-v1",
+  "judge_prompt": "cat40-claims-v1",
+  "judge": null,
+  "world": {
+    "path": "eval/data/model-ladder-v1/world.json",
+    "digest": "df8c95e71b17beab176851e3b15daaea9b8719fb009ba50e02cfc68243009a20",
+    "seed": 20261002,
+    "docs": 3973,
+    "tasks": 50
+  },
+  "evals_commit": "a83855750ef44015530babd1f6dc79b29b1ee6b1",
+  "evals_dirty": false,
+  "gbrain": {
+    "slot_ref": "ad7900d",
+    "label": "gbrain-next2",
+    "commit": "445855d638ade28177fc9a3879141656bc09e44e",
+    "version": "0.60.27.0",
+    "tree": "afc16bb33d868bc1a4472247136cedfe0a1c4930",
+    "verified": {
+      "copy_tree": "afc16bb33d868bc1a4472247136cedfe0a1c4930",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.27.0",
+      "cli_version_matches": true
+    },
+    "surface": "starter",
+    "operator_analyze": true
+  },
+  "slot_builds": [],
+  "models": [
+    "gpt-5.4-mini",
+    "gpt-5.4",
+    "claude-sonnet-4-6"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "families": [
+    "A",
+    "B",
+    "C",
+    "E",
+    "F"
+  ],
+  "repeats": 1,
+  "max_tool_chars": 100000000,
+  "argv": [
+    "--models",
+    "gpt-5.4-mini,gpt-5.4,claude-sonnet-4-6",
+    "--arms",
+    "gbrain",
+    "--gbrain-label",
+    "gbrain-next2",
+    "--max-tool-chars",
+    "100000000",
+    "--transcripts",
+    "--slots",
+    "5",
+    "--gbrain-repo",
+    "<gbrain>",
+    "--gbrain-ref",
+    "445855d",
+    "--slot-ref",
+    "ad7900d",
+    "--budget-usd",
+    "10",
+    "--program-cap-usd",
+    "2000",
+    "--concurrency",
+    "6",
+    "--judge",
+    "none",
+    "--out",
+    "<work>/dev-base"
+  ],
+  "cost": {
+    "usd": 0.870091,
+    "input_tokens": 1301522,
+    "output_tokens": 9088,
+    "basis": "budget ledger cat40-model-ladder-2026-10-02T21-25-48-294Z-20df41fb: 699 paid requests, 1 charged at their reservation because usage was unavailable"
+  },
+  "finished_at": "2026-10-02T21:30:23.486Z"
+}

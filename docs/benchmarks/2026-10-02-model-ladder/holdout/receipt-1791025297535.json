@@ -1,0 +1,361 @@
+{
+  "schema": "cat40-receipt-v1",
+  "version": "cat40-v1",
+  "judge_prompt": "cat40-claims-v1",
+  "judge": "gpt-5.4-mini",
+  "world": {
+    "path": "<evals>/eval/reports/cat40/holdout/world.json",
+    "digest": "df9e4f65cf603430934d6afa30073a44813ea670f78ae83c68bbde8210d1db9b",
+    "seed": 20261003,
+    "docs": 4036,
+    "tasks": 50
+  },
+  "evals_commit": "462e31f3ee193004cb47d4790507a772addb9cc1",
+  "evals_dirty": false,
+  "gbrain": {
+    "slot_ref": null,
+    "label": "gbrain-next",
+    "commit": "77dcf414cefe35e2238cbd165e8a2fb09772a129",
+    "version": "0.60.35.0",
+    "tree": "985a0b501b53044a55f9db42c1a7eddeffec819f",
+    "verified": {
+      "copy_tree": "985a0b501b53044a55f9db42c1a7eddeffec819f",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.35.0",
+      "cli_version_matches": true
+    },
+    "surface": "starter",
+    "operator_analyze": false
+  },
+  "slot_builds": [
+    {
+      "slot": "slot1",
+      "dir": "<work>/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot1",
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 9282,
+          "tail": "More: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to supabase` · health `gbrain doctor`\n  Setting up brain schema (v189)...\n  184 migration(s) applied\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: <work>/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot1/home/.gbrain/content/ac2301b6-35a6-472c-8de8-2ed97c1955f3/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)\n10 recommended skill(s) not installed yet (cold-start, book-mirror, article-enrichment, strategic-reading, …).\nOpen your agent workspace first (scaffold needs a target), then `gbrain skillpack scaffold --all`; full list: gbrain advisor"
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 2804,
+          "tail": "  \"local_path\": \"<work>/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot1/vault\",\n  \"source_incarnation\": \"f0184802-9848-4052-b49a-d669e58f0261\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"5df2b68b-2a83-4053-a119-d528d2f34369\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\n[models] OpenAI account offers gpt-6.1-sol but src/core/model-pricing.ts has no row for it — staying on the newest PRICED family so budget caps keep working. Add the pricing row to adopt it."
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 1157,
+          "tail": "Default source set to \"vault\"."
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 460230,
+          "tail": "[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync-watchdog] parent alive 360s elapsed, hard-kill in ~3270s\n[sync-watchdog] parent alive 420s elapsed, hard-kill in ~3210s\n[sync] 3036 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 24371,
+          "tail": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 3036 page(s)."
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 1846100,
+          "tail": "[embed.pages] 692/6000 (11%)\n[embed.pages] 695/6000 (11%)\n[embed.pages] 699/6000 (11%)\n[embed.pages] 703/6000 (11%)\n[embed.pages] 707/6000 (11%)\n[embed.pages] 709/6000 (11%)\n  [embed] wall-clock budget (1800000ms) exceeded; exiting cleanly. Re-run picks up via partial index.\n[embed.pages] 711/6000 (11%) done"
+        }
+      ],
+      "meter": {
+        "usd": 0.00827008,
+        "requests": 863,
+        "unpriced": 1,
+        "byModel": {
+          "openai:text-embedding-3-large": {
+            "usd": 0.00827008,
+            "requests": 862
+          }
+        }
+      },
+      "ms": 2345137
+    },
+    {
+      "slot": "slot0",
+      "dir": "<work>/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot0",
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 10694,
+          "tail": "More: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to supabase` · health `gbrain doctor`\n  Setting up brain schema (v189)...\n  184 migration(s) applied\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: <work>/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot0/home/.gbrain/content/8a8ec35b-3c36-43e4-a2b3-f5a17127e88e/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)\n10 recommended skill(s) not installed yet (cold-start, book-mirror, article-enrichment, strategic-reading, …).\nOpen your agent workspace first (scaffold needs a target), then `gbrain skillpack scaffold --all`; full list: gbrain advisor"
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 3049,
+          "tail": "  \"local_path\": \"<work>/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot0/vault\",\n  \"source_incarnation\": \"0d65b4c1-d4ba-4825-a76c-b3b201226c45\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"e82e6df4-f7f7-46ad-b71c-468dbf5bb788\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\n[models] OpenAI account offers gpt-6.1-sol but src/core/model-pricing.ts has no row for it — staying on the newest PRICED family so budget caps keep working. Add the pricing row to adopt it."
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 1477,
+          "tail": "Default source set to \"vault\"."
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 461953,
+          "tail": "[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync-watchdog] parent alive 360s elapsed, hard-kill in ~3270s\n[sync-watchdog] parent alive 420s elapsed, hard-kill in ~3210s\n[sync] 3036 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 34703,
+          "tail": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 3036 page(s)."
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 1833875,
+          "tail": "[embed.pages] 660/6000 (11%)\n[embed.pages] 661/6000 (11%)\n[embed.pages] 665/6000 (11%)\n[embed.pages] 669/6000 (11%)\n[embed.pages] 673/6000 (11%)\n[embed.pages] 677/6000 (11%)\n  [embed] wall-clock budget (1800000ms) exceeded; exiting cleanly. Re-run picks up via partial index.\n[embed.pages] 680/6000 (11%) done"
+        }
+      ],
+      "meter": {
+        "usd": 0.008223540000000003,
+        "requests": 859,
+        "unpriced": 1,
+        "byModel": {
+          "openai:text-embedding-3-large": {
+            "usd": 0.008223540000000003,
+            "requests": 858
+          }
+        }
+      },
+      "ms": 2346951
+    },
+    {
+      "slot": "slot4",
+      "dir": "<work>/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot4",
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 8320,
+          "tail": "More: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to supabase` · health `gbrain doctor`\n  Setting up brain schema (v189)...\n  184 migration(s) applied\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: <work>/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot4/home/.gbrain/content/ed784d45-f4b7-4a8e-a364-db088fb0f204/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)\n10 recommended skill(s) not installed yet (cold-start, book-mirror, article-enrichment, strategic-reading, …).\nOpen your agent workspace first (scaffold needs a target), then `gbrain skillpack scaffold --all`; full list: gbrain advisor"
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1892,
+          "tail": "  \"local_path\": \"<work>/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot4/vault\",\n  \"source_incarnation\": \"771d75fb-6b50-40c2-b56f-c7e5f28507fa\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"241100e0-5e55-4970-b8a3-162fc8af1606\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\n[models] OpenAI account offers gpt-6.1-sol but src/core/model-pricing.ts has no row for it — staying on the newest PRICED family so budget caps keep working. Add the pricing row to adopt it."
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 1941,
+          "tail": "Default source set to \"vault\"."
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 462506,
+          "tail": "[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync-watchdog] parent alive 360s elapsed, hard-kill in ~3270s\n[sync-watchdog] parent alive 420s elapsed, hard-kill in ~3210s\n[sync] 3036 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 33573,
+          "tail": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 3036 page(s)."
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 1833466,
+          "tail": "[embed.pages] 660/6000 (11%)\n[embed.pages] 664/6000 (11%)\n[embed.pages] 668/6000 (11%)\n[embed.pages] 672/6000 (11%)\n[embed.pages] 676/6000 (11%)\n[embed.pages] 679/6000 (11%)\n  [embed] wall-clock budget (1800000ms) exceeded; exiting cleanly. Re-run picks up via partial index.\n[embed.pages] 679/6000 (11%) done"
+        }
+      ],
+      "meter": {
+        "usd": 0.008770970000000001,
+        "requests": 915,
+        "unpriced": 1,
+        "byModel": {
+          "openai:text-embedding-3-large": {
+            "usd": 0.008770970000000001,
+            "requests": 914
+          }
+        }
+      },
+      "ms": 2343841
+    },
+    {
+      "slot": "slot2",
+      "dir": "<work>/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot2",
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 8847,
+          "tail": "More: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to supabase` · health `gbrain doctor`\n  Setting up brain schema (v189)...\n  184 migration(s) applied\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: <work>/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot2/home/.gbrain/content/331f19bc-db6c-4fcf-8852-7452b0748e74/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)\n10 recommended skill(s) not installed yet (cold-start, book-mirror, article-enrichment, strategic-reading, …).\nOpen your agent workspace first (scaffold needs a target), then `gbrain skillpack scaffold --all`; full list: gbrain advisor"
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 2715,
+          "tail": "  \"local_path\": \"<work>/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot2/vault\",\n  \"source_incarnation\": \"7a8dec79-e246-48ad-82c4-2a0386b71349\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"11305ed2-4e7d-4975-b9e1-860d14b15f5f\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\n[models] OpenAI account offers gpt-6.1-sol but src/core/model-pricing.ts has no row for it — staying on the newest PRICED family so budget caps keep working. Add the pricing row to adopt it."
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 1237,
+          "tail": "Default source set to \"vault\"."
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 464811,
+          "tail": "[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync-watchdog] parent alive 360s elapsed, hard-kill in ~3270s\n[sync-watchdog] parent alive 420s elapsed, hard-kill in ~3210s\n[sync] 3036 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 34027,
+          "tail": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 3036 page(s)."
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 1833897,
+          "tail": "[embed.pages] 657/6000 (10%)\n[embed.pages] 661/6000 (11%)\n[embed.pages] 665/6000 (11%)\n[embed.pages] 669/6000 (11%)\n[embed.pages] 673/6000 (11%)\n[embed.pages] 678/6000 (11%)\n  [embed] wall-clock budget (1800000ms) exceeded; exiting cleanly. Re-run picks up via partial index.\n[embed.pages] 680/6000 (11%) done"
+        }
+      ],
+      "meter": {
+        "usd": 0.00861328,
+        "requests": 899,
+        "unpriced": 1,
+        "byModel": {
+          "openai:text-embedding-3-large": {
+            "usd": 0.00861328,
+            "requests": 898
+          }
+        }
+      },
+      "ms": 2347002
+    },
+    {
+      "slot": "slot3",
+      "dir": "<work>/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot3",
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 9180,
+          "tail": "More: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to supabase` · health `gbrain doctor`\n  Setting up brain schema (v189)...\n  184 migration(s) applied\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: <work>/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot3/home/.gbrain/content/2e84ee87-99ea-4976-9a81-8bf7315dd1d2/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)\n10 recommended skill(s) not installed yet (cold-start, book-mirror, article-enrichment, strategic-reading, …).\nOpen your agent workspace first (scaffold needs a target), then `gbrain skillpack scaffold --all`; full list: gbrain advisor"
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1951,
+          "tail": "  \"local_path\": \"<work>/cat40/gbrain/slots-77dcf414cefe-df9e4f65-noanalyze/slot3/vault\",\n  \"source_incarnation\": \"53da1f04-cbe1-4bd6-892d-a98e8c9d3de4\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"6ecb115a-136d-4fe8-b277-29f303c517b4\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\n[models] OpenAI account offers gpt-6.1-sol but src/core/model-pricing.ts has no row for it — staying on the newest PRICED family so budget caps keep working. Add the pricing row to adopt it."
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 1758,
+          "tail": "Default source set to \"vault\"."
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 473919,
+          "tail": "[sync-watchdog] parent alive 120s elapsed, hard-kill in ~3510s\n[sync-watchdog] parent alive 180s elapsed, hard-kill in ~3450s\n[sync-watchdog] parent alive 240s elapsed, hard-kill in ~3390s\n[sync-watchdog] parent alive 300s elapsed, hard-kill in ~3330s\n[sync-watchdog] parent alive 360s elapsed, hard-kill in ~3270s\n[sync-watchdog] parent alive 420s elapsed, hard-kill in ~3210s\n[sync] 3036 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 26155,
+          "tail": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 3036 page(s)."
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 1833167,
+          "tail": "[embed.pages] 630/6000 (10%)\n[embed.pages] 634/6000 (10%)\n[embed.pages] 638/6000 (10%)\n[embed.pages] 643/6000 (10%)\n[embed.pages] 648/6000 (10%)\n  [embed-retry] attempt 1/5, waiting 791ms...\n  [embed] wall-clock budget (1800000ms) exceeded; exiting cleanly. Re-run picks up via partial index.\n[embed.pages] 648/6000 (10%) done"
+        }
+      ],
+      "meter": {
+        "usd": 0.008308690000000006,
+        "requests": 869,
+        "unpriced": 1,
+        "byModel": {
+          "openai:text-embedding-3-large": {
+            "usd": 0.008308690000000006,
+            "requests": 868
+          }
+        }
+      },
+      "ms": 2347862
+    }
+  ],
+  "models": [
+    "claude-haiku-4-5",
+    "claude-sonnet-4-6",
+    "claude-sonnet-5-5",
+    "gpt-5.4-mini",
+    "gpt-5.4",
+    "gpt-6.1-sol"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "families": [
+    "A",
+    "B",
+    "C",
+    "E",
+    "F"
+  ],
+  "repeats": 2,
+  "max_tool_chars": 100000000,
+  "argv": [
+    "--world",
+    "eval/reports/cat40/holdout/world.json",
+    "--models",
+    "claude-haiku-4-5,claude-sonnet-4-6,claude-sonnet-5-5,gpt-5.4-mini,gpt-5.4,gpt-6.1-sol",
+    "--arms",
+    "gbrain",
+    "--gbrain-label",
+    "gbrain-next",
+    "--gbrain-repo",
+    "../gbrain",
+    "--gbrain-ref",
+    "77dcf414",
+    "--no-pglite-analyze",
+    "--slots",
+    "5",
+    "--repeat",
+    "2",
+    "--max-tool-chars",
+    "100000000",
+    "--budget-usd",
+    "100",
+    "--program-cap-usd",
+    "2000",
+    "--concurrency",
+    "10",
+    "--transcripts",
+    "--out",
+    "eval/reports/cat40/holdout-run"
+  ],
+  "cost": {
+    "usd": 79.938148,
+    "input_tokens": 116711371,
+    "output_tokens": 613110,
+    "basis": "budget ledger cat40-model-ladder-2026-10-03T06-38-10-524Z-066c4627: 24410 paid requests, 1 charged at their reservation because usage was unavailable"
+  },
+  "finished_at": "2026-10-03T11:01:37.535Z"
+}

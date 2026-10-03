@@ -1,0 +1,85 @@
+{
+  "schema": "cat40-receipt-v1",
+  "version": "cat40-v1",
+  "judge_prompt": "cat40-claims-v1",
+  "judge": "gpt-5.4-mini",
+  "world": {
+    "path": "eval/data/model-ladder-v1-large/world.json",
+    "scale": "large",
+    "digest": "e481a619fa64b3a9e9712f2c499c3ebdac6bf87dd1ab8de0b95218eb00c3831f",
+    "seed": 20261002,
+    "docs": 52028,
+    "tasks": 50
+  },
+  "evals_commit": "c886cdbc1fe724d197ee629abd5e76ee88693ed6",
+  "evals_dirty": true,
+  "gbrain": {
+    "commit": "ad7900d8dcd221e22b885fef0f4030b73a1d69c9",
+    "version": "0.60.27.0",
+    "tree": "2a2e1f19f20b343fb126699297c8d3df2b94012b",
+    "verified": {
+      "copy_tree": "2a2e1f19f20b343fb126699297c8d3df2b94012b",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.27.0",
+      "cli_version_matches": true
+    },
+    "surface": "starter",
+    "operator_analyze": true,
+    "serve_boot_timeout_s": 0,
+    "staged_build": {
+      "sync_batch_docs": 5000
+    }
+  },
+  "slot_builds": [],
+  "models": [
+    "claude-sonnet-4-6",
+    "claude-sonnet-5-5",
+    "gpt-5.4",
+    "gpt-6.1-sol"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "families": [
+    "A",
+    "B",
+    "C",
+    "E",
+    "F"
+  ],
+  "repeats": 1,
+  "max_tool_chars": 100000000,
+  "argv": [
+    "--world",
+    "eval/data/model-ladder-v1-large/world.json",
+    "--models",
+    "claude-sonnet-4-6,claude-sonnet-5-5,gpt-5.4,gpt-6.1-sol",
+    "--arms",
+    "gbrain",
+    "--repeat",
+    "1",
+    "--slots",
+    "3",
+    "--max-tool-chars",
+    "100000000",
+    "--gbrain-repo",
+    "../gbrain",
+    "--gbrain-ref",
+    "ad7900d",
+    "--budget-run-id",
+    "cat40-model-ladder-scale-tier-2026-10-02T19-04-26-629Z-5947cc6e",
+    "--program-cap-usd",
+    "2000",
+    "--out",
+    "eval/reports/cat40/scale-tier-gbrain"
+  ],
+  "cost": {
+    "usd": 31.375585,
+    "input_tokens": 41747877,
+    "output_tokens": 237516,
+    "basis": "budget ledger cat40-model-ladder-scale-tier-2026-10-02T19-04-26-629Z-5947cc6e: 2412 paid requests, 0 charged at their reservation because usage was unavailable"
+  },
+  "finished_at": "2026-10-03T00:27:51.269Z"
+}

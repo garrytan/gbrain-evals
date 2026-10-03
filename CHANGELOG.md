@@ -2,6 +2,46 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.11] - 2026-10-03
+
+### Cat 40 Model Ladder: gbrain lost to grep at release v0.60.27.0; a fix wave puts it ahead on the dev world and level-to-ahead on a held-out world
+
+Cat 40 (`model-ladder`, tier P, report-only) gives one agent loop 50 tasks
+about a fictional company, with different memory setups: plain Markdown files
+with `grep`, Anthropic's memory tool, plain Postgres search, gbrain's MCP
+server, and an oracle arm that is handed the evidence. The task families are
+contract authority, who-owns-it-now, permissions, five-part renewal briefs
+and write-back across sessions
+([report](docs/benchmarks/2026-10-02-model-ladder.md),
+[protocol](docs/benchmarks/2026-10-02-model-ladder-protocol.md)).
+
+- **Release v0.60.27.0 lost to grep.** 11 models, uncapped tool output,
+  7,624 runs: gbrain was 8 points below the best simple setup pooled
+  (95% CI −13 to −4). It leaked finance-only text in 64 of 330 permission
+  runs, against 17 for files. On a 52,028-document world (4 models) it was
+  16 points behind.
+- **The gbrain fix wave** ([garrytan/gbrain#5932](https://github.com/garrytan/gbrain/pull/5932))
+  addresses the five mechanisms found in the transcripts: derived pages
+  leaking private sources, guessed page types hiding evidence, saved facts
+  invisible to search, other names for a customer, and wasted cold-start
+  turns. On the development world it finished 494 of 550 runs, against 455
+  for files: +7 points pooled (CI +3 to +9), with 0 leaks.
+- **Held-out world** (seed 20261003, 6 models, 2 repeats, the shipped build
+  `77dcf414`): +16.7 points over the release (CI +9.7 to +23.8) and +6.0 over
+  files (CI −0.2 to +12.3). It leaked nothing in 120 permission runs.
+- **Price:** a gbrain run costs 2.5 to 4 times a file run.
+- **Latency measured inside the harness is invalid.** Every model request
+  rewrites the whole budget ledger synchronously on the runner's event loop,
+  and that loop also proxies gbrain's own provider requests. An isolated
+  replay shows the fixed build's searches are as fast as the release's.
+- **Not measurable here:** whether gbrain's advantage grows with model
+  capability. The strongest models score 96–100% with every setup.
+- **New:** generator `eval/generators/model-ladder-gen.ts`, runner
+  `eval/runner/cat40-model-ladder.ts` with `eval/runner/cat40/` (loop, arms,
+  scoring, analysis), and budget-ledger allowances (one reservation covering
+  many small requests) plus prices for the ladder models.
+- **Spend:** $1,763 across the program, under a $2,000 authorization.
+
 ## [0.10.10] - 2026-10-03
 
 ### Re-pin to gbrain `48ed5e8` (fix wave 7): eight ledger gaps closed and verified, N2 prompt v4, an N7 oracle amendment

@@ -39,6 +39,7 @@
  *   bun eval/runner/budget-ledger.ts close --budget-run-id <id>
  */
 
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { randomUUID } from 'node:crypto';
 import { closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, statSync, writeSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -261,6 +262,11 @@ export class BudgetRun {
     });
   }
 
+  /** Reserve an allowance for many small requests at once; see BudgetAllowance. */
+  allowance(usd: number, description: string): BudgetAllowance {
+    return new BudgetAllowance(this, this.reserve(usd, `${description} (allowance)`), usd, description);
+  }
+
   summary(): RunSummary {
     const ledger = readLedger(this.ledgerPath, this.programCapUsd);
     const entries = ledger.entries.filter(e => e.run_id === this.runId && (this.participant === null || e.participant === this.participant));
@@ -287,6 +293,48 @@ export class BudgetRun {
   }
 }
 
+/**
+ * One ledger reservation that covers many requests. Every reservation and
+ * settlement rewrites the whole ledger file under its lock, so tens of
+ * thousands of tiny requests (a bulk embedding pass sends one per page) slow
+ * to a few per second as the ledger grows. Requests made inside
+ * `allowance.run(fn)` are charged against the allowance in memory instead: a
+ * request whose reservation would take the allowance past its amount throws
+ * BudgetExceededError and is not sent, so spending stays inside a sum the
+ * ledger already checked against both caps. `close()` settles the ledger entry
+ * with the measured total (requests without usage count at their reservation).
+ */
+export class BudgetAllowance {
+  spent_usd = 0;
+  private pending_usd = 0;
+  requests = 0;
+  charged_reservations = 0;
+  input_tokens = 0;
+  output_tokens = 0;
+  private closed = false;
+  constructor(readonly budget: BudgetRun, readonly id: string, readonly usd: number, readonly description: string) {}
+  /** Run `fn` with its paid requests charged to this allowance. */
+  run<T>(fn: () => Promise<T>): Promise<T> { return allowanceScope.run(this, fn); }
+  hold(usd: number, what: string) {
+    if (this.closed) throw new BudgetExceededError(`${what}: allowance ${this.description} is closed`);
+    if (this.spent_usd + this.pending_usd + usd > this.usd) throw new BudgetExceededError(`${what}: reserving $${usd.toFixed(6)} would take allowance ${this.description} past its $${this.usd.toFixed(2)}`);
+    this.pending_usd += usd;
+  }
+  charge(held: number, cost: { usd: number; input_tokens?: number | null; output_tokens?: number | null } | null) {
+    this.pending_usd -= held;
+    this.requests++;
+    if (!cost) { this.charged_reservations++; this.spent_usd += held; return; }
+    this.spent_usd += cost.usd;
+    this.input_tokens += cost.input_tokens ?? 0;
+    this.output_tokens += cost.output_tokens ?? 0;
+  }
+  close(): { usd: number; requests: number; charged_reservations: number } {
+    if (!this.closed) { this.closed = true; this.budget.settle(this.id, { usd: this.spent_usd + this.pending_usd, input_tokens: this.input_tokens, output_tokens: this.output_tokens }); }
+    return { usd: this.spent_usd, requests: this.requests, charged_reservations: this.charged_reservations };
+  }
+}
+const allowanceScope = new AsyncLocalStorage<BudgetAllowance>();
+
 // ─── Request pricing ────────────────────────────────────────────────
 
 /** Hosts whose requests cost money. */
@@ -307,8 +355,35 @@ const RERANK_PRICES: Record<string, number> = {
   'voyage:rerank-2.5-lite': 0.02,
 };
 
+/**
+ * Chat list prices, USD per 1M tokens, checked against the providers' pricing
+ * pages on 2026-10-02. They take precedence over the pinned gbrain table,
+ * which lacks newer models and lists stale prices for some (gpt-5.5, gpt-5.2).
+ * Cache prices apply when the response reports cached tokens.
+ */
+export const CHAT_PRICE_OVERRIDES: Record<string, { input: number; output: number; cache_read?: number; cache_write?: number }> = {
+  'anthropic:claude-haiku-4-5': { input: 1, output: 5, cache_read: 0.1, cache_write: 1.25 },
+  'anthropic:claude-sonnet-4-5': { input: 3, output: 15, cache_read: 0.3, cache_write: 3.75 },
+  'anthropic:claude-sonnet-4-6': { input: 3, output: 15, cache_read: 0.3, cache_write: 3.75 },
+  'anthropic:claude-sonnet-5': { input: 2, output: 10, cache_read: 0.2, cache_write: 2.5 },
+  'anthropic:claude-sonnet-5-5': { input: 2, output: 10, cache_read: 0.2, cache_write: 2.5 },
+  'anthropic:claude-opus-4-6': { input: 5, output: 25, cache_read: 0.5, cache_write: 6.25 },
+  'anthropic:claude-opus-5': { input: 5, output: 25, cache_read: 0.5, cache_write: 6.25 },
+  'anthropic:claude-opus-5-5': { input: 4, output: 20, cache_read: 0.2, cache_write: 5 },
+  'openai:gpt-5.2': { input: 1.75, output: 14, cache_read: 0.175 },
+  'openai:gpt-5.4': { input: 2.5, output: 15, cache_read: 0.25 },
+  'openai:gpt-5.4-mini': { input: 0.75, output: 4.5, cache_read: 0.075 },
+  'openai:gpt-5.5': { input: 5, output: 30, cache_read: 0.5 },
+  'openai:gpt-6-sol': { input: 2, output: 10, cache_read: 0.2 },
+  'openai:gpt-6.1-sol': { input: 2, output: 10, cache_read: 0.1, cache_write: 2.5 },
+  'openai:gpt-6-astra': { input: 10, output: 50, cache_read: 1, cache_write: 12.5 },
+};
+
 /** A dated API snapshot (`gpt-4o-2024-08-06`) is billed at its family's list price. */
-const chatPrice = (id: string) => canonicalLookup(id) ?? canonicalLookup(id.replace(/-\d{4}-\d{2}-\d{2}$/, ''));
+const chatPrice = (id: string) => {
+  const undated = id.replace(/-\d{4}-?\d{2}-?\d{2}$/, '');
+  return CHAT_PRICE_OVERRIDES[id] ?? CHAT_PRICE_OVERRIDES[undated] ?? canonicalLookup(id) ?? canonicalLookup(undated);
+};
 
 interface RequestPrice {
   provider: string;
@@ -317,6 +392,9 @@ interface RequestPrice {
   /** USD per 1M tokens. */
   input: number;
   output: number;
+  /** USD per 1M cached input tokens read / written, when the provider reports them. */
+  cache_read?: number;
+  cache_write?: number;
   /** Conservative input-token estimate (3 bytes per token). */
   inputTokens: number;
   maxOutputTokens: number;
@@ -333,6 +411,8 @@ function textBytes(value: unknown): number {
 export function priceRequest(url: string, body: unknown): RequestPrice | null {
   const provider = PAID_HOSTS[new URL(url).hostname];
   if (!provider) return null;
+  // Model listings are free metadata reads (providers' key probes use them).
+  if (/\/models(\/[^/]+)?\/?$/.test(new URL(url).pathname) && (body === undefined || body === null)) return null;
   const b = (body ?? {}) as Record<string, unknown>;
   const model = typeof b.model === 'string' ? b.model : '';
   if (!model) throw new BudgetExceededError(`paid request to ${url} names no model; cannot reserve its cost`);
@@ -369,7 +449,7 @@ export function priceRequest(url: string, body: unknown): RequestPrice | null {
   }
   const price = chatPrice(`${provider}:${model}`);
   if (!price) throw new BudgetExceededError(`no chat price for ${provider}:${model}; cannot reserve its cost`);
-  return { provider, model, kind: 'chat', input: price.input, output: price.output, inputTokens, maxOutputTokens };
+  return { provider, model, kind: 'chat', input: price.input, output: price.output, cache_read: price.cache_read, cache_write: price.cache_write, inputTokens, maxOutputTokens };
 }
 
 /** Worst-case reservation: input estimate plus the full output allowance. */
@@ -387,7 +467,15 @@ export function usageCost(price: RequestPrice, responseBody: unknown): { usd: nu
   const outputTokens = n('output_tokens') + n('completion_tokens');
   if (inputTokens === 0 && outputTokens === 0) return null;
   const reported = price.provider === 'openrouter' && typeof usage.cost === 'number' ? usage.cost as number : null;
-  return { usd: reported ?? (inputTokens * price.input + outputTokens * price.output) / 1e6, input_tokens: inputTokens, output_tokens: outputTokens };
+  if (reported !== null) return { usd: reported, input_tokens: inputTokens, output_tokens: outputTokens };
+  // Cached input: Anthropic reports reads and writes beside input_tokens; OpenAI counts cached tokens inside input_tokens.
+  const details = (usage.input_tokens_details ?? usage.prompt_tokens_details) as Record<string, unknown> | undefined;
+  const openaiCached = typeof details?.cached_tokens === 'number' ? details.cached_tokens as number : 0;
+  const cacheRead = n('cache_read_input_tokens') + openaiCached;
+  const cacheWrite = n('cache_creation_input_tokens');
+  const usd = ((inputTokens - cacheRead - cacheWrite) * price.input + cacheRead * (price.cache_read ?? price.input)
+    + cacheWrite * (price.cache_write ?? price.input) + outputTokens * price.output) / 1e6;
+  return { usd, input_tokens: inputTokens, output_tokens: outputTokens };
 }
 
 async function requestBody(input: RequestInfo | URL, init?: RequestInit): Promise<unknown> {
@@ -436,6 +524,21 @@ export function installPaidRequestGuard(run: BudgetRun, options: { fetchImpl?: t
     try {
       price = priceRequest(url, body);
       if (!price) return send(input, init);
+      const allowance = allowanceScope.getStore();
+      if (allowance) {
+        if (allowance.budget !== run) throw new BudgetExceededError(`allowance ${allowance.description} belongs to another budget run`);
+        const held = reservationUsd(price);
+        allowance.hold(held, `${price.provider}:${price.model} ${price.kind}`);
+        let res: Response;
+        try { res = await send(input, init); }
+        catch (error) { allowance.charge(held, null); throw error; }
+        let c: ReturnType<typeof usageCost> = null;
+        if (!(res.headers.get('content-type') ?? '').includes('event-stream')) {
+          try { c = usageCost(price, await res.clone().json()); } catch { c = null; }
+        }
+        allowance.charge(held, c);
+        return res;
+      }
       id = run.reserve(reservationUsd(price), `${price.provider}:${price.model} ${price.kind}`);
     } catch (error) {
       if (error instanceof BudgetExceededError) state.exhausted = true;

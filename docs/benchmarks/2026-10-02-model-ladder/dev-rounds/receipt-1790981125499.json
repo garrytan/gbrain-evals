@@ -1,0 +1,86 @@
+{
+  "schema": "cat40-receipt-v1",
+  "version": "cat40-v1",
+  "judge_prompt": "cat40-claims-v1",
+  "judge": null,
+  "world": {
+    "path": "<repo>/eval/data/model-ladder-v1/world.json",
+    "digest": "df8c95e71b17beab176851e3b15daaea9b8719fb009ba50e02cfc68243009a20",
+    "seed": 20261002,
+    "docs": 3973,
+    "tasks": 50
+  },
+  "evals_commit": "462e31f3ee193004cb47d4790507a772addb9cc1",
+  "evals_dirty": false,
+  "gbrain": {
+    "slot_ref": "ad7900d",
+    "label": "gbrain-next4",
+    "commit": "7c53e47cb296ebc5aa861c7cb4c84c9b3ad0a084",
+    "version": "0.60.27.0",
+    "tree": "85670d9701683a046167653ecb9deac2750c37bc",
+    "verified": {
+      "copy_tree": "85670d9701683a046167653ecb9deac2750c37bc",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.27.0",
+      "cli_version_matches": true
+    },
+    "surface": "starter",
+    "operator_analyze": true
+  },
+  "slot_builds": [],
+  "models": [
+    "gpt-5.4-mini",
+    "gpt-5.4",
+    "claude-sonnet-4-6"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "families": [
+    "A",
+    "B",
+    "C",
+    "E",
+    "F"
+  ],
+  "repeats": 1,
+  "max_tool_chars": 100000000,
+  "argv": [
+    "--models",
+    "gpt-5.4-mini,gpt-5.4,claude-sonnet-4-6",
+    "--arms",
+    "gbrain",
+    "--gbrain-label",
+    "gbrain-next4",
+    "--max-tool-chars",
+    "100000000",
+    "--transcripts",
+    "--slots",
+    "5",
+    "--gbrain-repo",
+    "<gbrain>",
+    "--gbrain-ref",
+    "7c53e47",
+    "--slot-ref",
+    "ad7900d",
+    "--budget-usd",
+    "30",
+    "--program-cap-usd",
+    "2000",
+    "--concurrency",
+    "6",
+    "--judge",
+    "none",
+    "--out",
+    "<work>/dev-base"
+  ],
+  "cost": {
+    "usd": 13.150407,
+    "input_tokens": 15111889,
+    "output_tokens": 84911,
+    "basis": "budget ledger cat40-model-ladder-2026-10-02T22-09-21-980Z-6aa2261f: 4737 paid requests, 1 charged at their reservation because usage was unavailable"
+  },
+  "finished_at": "2026-10-02T22:45:25.499Z"
+}

@@ -1,0 +1,90 @@
+{
+  "schema": "cat40-receipt-v1",
+  "version": "cat40-v1",
+  "judge_prompt": "cat40-claims-v1",
+  "judge": "gpt-5.4-mini",
+  "world": {
+    "path": "<evals>/eval/reports/cat40/holdout/world.json",
+    "digest": "df9e4f65cf603430934d6afa30073a44813ea670f78ae83c68bbde8210d1db9b",
+    "seed": 20261003,
+    "docs": 4036,
+    "tasks": 50
+  },
+  "evals_commit": "462e31f3ee193004cb47d4790507a772addb9cc1",
+  "evals_dirty": false,
+  "gbrain": {
+    "slot_ref": null,
+    "label": "gbrain-next",
+    "commit": "51a30c1b86aa4f19e5764f3312ddec5cbe934961",
+    "version": "0.60.27.0",
+    "tree": "051f49340b0779323d1110c83dd13163290a43d0",
+    "verified": {
+      "copy_tree": "051f49340b0779323d1110c83dd13163290a43d0",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.27.0",
+      "cli_version_matches": true
+    },
+    "surface": "starter",
+    "operator_analyze": false
+  },
+  "slot_builds": [],
+  "models": [
+    "claude-haiku-4-5",
+    "claude-sonnet-4-6",
+    "claude-sonnet-5-5",
+    "gpt-5.4-mini",
+    "gpt-5.4",
+    "gpt-6.1-sol"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "families": [
+    "A",
+    "B",
+    "C",
+    "E",
+    "F"
+  ],
+  "repeats": 2,
+  "max_tool_chars": 100000000,
+  "argv": [
+    "--world",
+    "eval/reports/cat40/holdout/world.json",
+    "--models",
+    "claude-haiku-4-5,claude-sonnet-4-6,claude-sonnet-5-5,gpt-5.4-mini,gpt-5.4,gpt-6.1-sol",
+    "--arms",
+    "gbrain",
+    "--gbrain-label",
+    "gbrain-next",
+    "--gbrain-repo",
+    "../gbrain",
+    "--gbrain-ref",
+    "51a30c1",
+    "--no-pglite-analyze",
+    "--slots",
+    "5",
+    "--repeat",
+    "2",
+    "--max-tool-chars",
+    "100000000",
+    "--budget-usd",
+    "100",
+    "--program-cap-usd",
+    "2000",
+    "--concurrency",
+    "10",
+    "--transcripts",
+    "--out",
+    "eval/reports/cat40/holdout-run"
+  ],
+  "cost": {
+    "usd": 0.059682,
+    "input_tokens": 105361,
+    "output_tokens": 656,
+    "basis": "budget ledger cat40-model-ladder-2026-10-03T06-35-00-776Z-0e9562f6: 303 paid requests, 1 charged at their reservation because usage was unavailable"
+  },
+  "finished_at": "2026-10-03T06:37:45.920Z"
+}
