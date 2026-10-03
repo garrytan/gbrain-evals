@@ -6,6 +6,37 @@ Status: draft for autoplan, 2026-10-03.
 Context: the Cat 40 Model Ladder report (`docs/benchmarks/2026-10-02-model-ladder.md`) and the gbrain fix wave
 (garrytan/gbrain#5932, v0.60.35.0, merged).
 
+## Gate decisions (Garry, 2026-10-03: "Approve")
+
+These override any conflicting text below.
+
+- **UC1 (approved change).** The ship rule is one bundle-level rule on the held-out paired comparison with a
+  −5-point margin, preceded by a power check (expected CI half-width from the existing held-out runs). The −3-point
+  result is reported next to it. Dev rounds are a harm screen only: drop a change whose dev-round paired difference
+  is −5 points or worse, and use the family breakdown to pick which one.
+- **UC2 (approved change).** Instead of the 11-model ladder, spend about $80 on a contemporaneous held-out control:
+  rerun gbrain at `566a242a` (master, v0.60.35.0) on the held-out world under the new ledger, with the same models,
+  repeats and argv as the new build's held-out run. G2 compares against that control. The 11-model ladder runs only
+  with money left over. CEO-T2 is dropped, because the control subsumes it.
+- **UC3 (approved change).** Ledger storage is `bun:sqlite` in WAL mode instead of a custom JSONL journal. Every
+  accepted requirement still holds:
+  - the cap is stored in the ledger, and a missing cap flag stays null
+  - the CLI provides `init`, `status`, `verify`, `set-cap` and `migrate --finish`
+  - conservative reservations
+  - durability failures stop spending
+  - migration with a tombstone and a `.migrated` copy
+  - refusal messages
+  - receipts and the lag monitor
+
+  Requirements that were specific to the journal (byte offsets, torn tails, `O_APPEND`) are replaced by SQLite
+  transactions (`BEGIN IMMEDIATE`) and `synchronous=FULL`.
+- **UC4 (direction kept).** Lean rows are the default for remote callers, with `fields: "full"` per call and
+  `mcp.result_rows: full` per host as escape hatches.
+- **T1 approved:** if per-tool budgets cannot reach 25k, move the skill-admin and write-request ops behind
+  `request_tools`. **T3:** keep C4 with whole-item truncation. **T4:** defer the verbs-surface arm.
+- **Budget:** dev round 1 about $18, dev round 2 about $18, new-build held-out about $85, control about $80; total
+  about $201 of the $237 left. No other paid work runs concurrently against this cap.
+
 ## Why
 
 Two problems were left open when Cat 40 shipped.
