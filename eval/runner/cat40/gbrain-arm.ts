@@ -275,7 +275,7 @@ export class GbrainSlot {
     // Keep gbrain's ownership marker (.gbrain-owner.json): it is untracked and records the checkout identity.
     git(['clean', '-qfdx', '-e', '.gbrain-owner*']);
     const home = join(this.dir, 'home');
-    for (const entry of readdirSync(home)) rmSync(join(home, entry), { recursive: true, force: true });
+    for (const entry of readdirSync(home).sort()) rmSync(join(home, entry), { recursive: true, force: true });
     execFileSync('tar', ['-C', this.dir, '-xf', this.snapshot, 'home']);
     await this.start();
   }

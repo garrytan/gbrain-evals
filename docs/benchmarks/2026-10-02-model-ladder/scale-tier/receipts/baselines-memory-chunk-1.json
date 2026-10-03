@@ -1,0 +1,65 @@
+{
+  "schema": "cat40-receipt-v1",
+  "version": "cat40-v1",
+  "judge_prompt": "cat40-claims-v1",
+  "judge": "gpt-5.4-mini",
+  "world": {
+    "path": "eval/data/model-ladder-v1-large/world.json",
+    "scale": "large",
+    "digest": "e481a619fa64b3a9e9712f2c499c3ebdac6bf87dd1ab8de0b95218eb00c3831f",
+    "seed": 20261002,
+    "docs": 52028,
+    "tasks": 50
+  },
+  "evals_commit": "ed2c423348a58c1e747399a31459bb0d7cdd3a6b",
+  "evals_dirty": true,
+  "gbrain": null,
+  "slot_builds": [],
+  "models": [
+    "claude-sonnet-4-6",
+    "claude-sonnet-5-5",
+    "gpt-5.4",
+    "gpt-6.1-sol"
+  ],
+  "arms": [
+    "memory"
+  ],
+  "families": [
+    "A",
+    "B",
+    "C",
+    "E",
+    "F"
+  ],
+  "repeats": 1,
+  "max_tool_chars": 100000000,
+  "argv": [
+    "--world",
+    "eval/data/model-ladder-v1-large/world.json",
+    "--models",
+    "claude-sonnet-4-6,claude-sonnet-5-5,gpt-5.4,gpt-6.1-sol",
+    "--arms",
+    "memory",
+    "--tasks",
+    "A02,B02,C01,E02,F02",
+    "--repeat",
+    "1",
+    "--concurrency",
+    "8",
+    "--max-tool-chars",
+    "100000000",
+    "--budget-run-id",
+    "cat40-model-ladder-scale-tier-2026-10-02T19-04-26-629Z-5947cc6e",
+    "--program-cap-usd",
+    "2000",
+    "--out",
+    "eval/reports/cat40/scale-tier-baselines"
+  ],
+  "cost": {
+    "usd": 26.903135,
+    "input_tokens": 36640672,
+    "output_tokens": 39584,
+    "basis": "budget ledger cat40-model-ladder-scale-tier-2026-10-02T19-04-26-629Z-5947cc6e: 159 paid requests, 0 charged at their reservation because usage was unavailable"
+  },
+  "finished_at": "2026-10-02T19:37:57.559Z"
+}
