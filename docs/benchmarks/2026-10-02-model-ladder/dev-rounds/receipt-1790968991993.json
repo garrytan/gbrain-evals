@@ -1,0 +1,86 @@
+{
+  "schema": "cat40-receipt-v1",
+  "version": "cat40-v1",
+  "judge_prompt": "cat40-claims-v1",
+  "judge": null,
+  "world": {
+    "path": "eval/data/model-ladder-v1/world.json",
+    "digest": "df8c95e71b17beab176851e3b15daaea9b8719fb009ba50e02cfc68243009a20",
+    "seed": 20261002,
+    "docs": 3973,
+    "tasks": 50
+  },
+  "evals_commit": "ed2c423348a58c1e747399a31459bb0d7cdd3a6b",
+  "evals_dirty": true,
+  "gbrain": {
+    "slot_ref": "ad7900d",
+    "label": "gbrain-next1",
+    "commit": "8e8cf5ddcef080257504b53bccc628fd9940c668",
+    "version": "0.60.27.0",
+    "tree": "06ebc343aee7cc563a3a7e675a9c9c0cbcbf8c06",
+    "verified": {
+      "copy_tree": "06ebc343aee7cc563a3a7e675a9c9c0cbcbf8c06",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.27.0",
+      "cli_version_matches": true
+    },
+    "surface": "starter",
+    "operator_analyze": true
+  },
+  "slot_builds": [],
+  "models": [
+    "gpt-5.4-mini",
+    "gpt-5.4",
+    "claude-sonnet-4-6"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "families": [
+    "A",
+    "B",
+    "C",
+    "E",
+    "F"
+  ],
+  "repeats": 1,
+  "max_tool_chars": 100000000,
+  "argv": [
+    "--models",
+    "gpt-5.4-mini,gpt-5.4,claude-sonnet-4-6",
+    "--arms",
+    "gbrain",
+    "--gbrain-label",
+    "gbrain-next1",
+    "--max-tool-chars",
+    "100000000",
+    "--transcripts",
+    "--slots",
+    "5",
+    "--gbrain-repo",
+    "<gbrain>",
+    "--gbrain-ref",
+    "8e8cf5d",
+    "--slot-ref",
+    "ad7900d",
+    "--budget-usd",
+    "30",
+    "--program-cap-usd",
+    "2000",
+    "--concurrency",
+    "6",
+    "--judge",
+    "none",
+    "--out",
+    "<work>/dev-base"
+  ],
+  "cost": {
+    "usd": 12.746683,
+    "input_tokens": 15774042,
+    "output_tokens": 87934,
+    "basis": "budget ledger cat40-model-ladder-2026-10-02T18-52-41-254Z-3761a188: 4607 paid requests, 2 charged at their reservation because usage was unavailable"
+  },
+  "finished_at": "2026-10-02T19:23:11.993Z"
+}
