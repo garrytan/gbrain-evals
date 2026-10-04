@@ -416,7 +416,7 @@ const LATER: Record<string, string> = {
 const HELP = `eval:decide — held-out decision kit
 
   init       --plan P1..P8 --gbrain <checkout>@<ref> [--baseline <checkout>@<ref>] [--type quality|cost|correctness] [--id <id>] [--out <dir>] | --fixture
-  fetch      --decision <dir> | --benchmark locomo|lme-s|beam-100k|beam-1m  [--force] [--verify-only]
+  fetch      --decision <dir> | --benchmark locomo|lme-s|beam-100k|beam-500k|beam-1m  [--force] [--verify-only]
   preflight  --decision <dir> [--budget-run-id <id>]
   dev        --decision <dir> [--paid --budget-usd <n> | --paid --budget-run-id <id>] [--shards N] [--jobs N] [--only <source>] [--output <dir>]
   verdict    --decision <dir> [--only <source>] [--json]

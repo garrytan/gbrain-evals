@@ -97,6 +97,7 @@ export function filesFor(benchmark: string): DatasetFile[] {
     case 'locomo': return [LOCOMO_FILE];
     case 'lme-s': return [LME_S_FILE];
     case 'beam-100k': return beamFiles('100k');
+    case 'beam-500k': return beamFiles('500k');
     case 'beam-1m': return beamFiles('1m');
     case 'fixture': return [];
     default: throw new Error(`unknown benchmark ${benchmark}`);
@@ -208,7 +209,7 @@ function messageIds(src: unknown): number[] {
   return [];
 }
 
-export function loadBeam(size: '100k' | '1m'): Corpus {
+export function loadBeam(size: '100k' | '500k' | '1m'): Corpus {
   const m = beamManifest();
   const conversations: Conversation[] = [];
   const questions: MemoryQuestion[] = [];
@@ -253,6 +254,7 @@ export function loadCorpus(benchmark: string): Corpus {
     case 'locomo': return loadLocomo();
     case 'lme-s': return loadLmeS();
     case 'beam-100k': return loadBeam('100k');
+    case 'beam-500k': return loadBeam('500k');
     case 'beam-1m': return loadBeam('1m');
     case 'fixture': return loadFixture();
     default: throw new Error(`unknown benchmark ${benchmark}`);

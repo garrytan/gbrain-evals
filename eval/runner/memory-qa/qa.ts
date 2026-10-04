@@ -31,8 +31,8 @@ import type { MemoryQuestion, Session } from './corpus.ts';
 
 export const READER_TEMPLATE = 'I will give you several history chats between you and a user. Please answer the question based on the relevant chat history. Answer the question step by step: first extract all the relevant information, and then reason over the information to get the answer.\n\n\nHistory Chats:\n\n{history}\n\nCurrent Date: {date}\nQuestion: {question}\nAnswer (step by step):';
 
-export const DEFAULT_READER: Record<string, string> = { 'lme-s': 'openai:gpt-4o-2024-08-06', locomo: 'openai:gpt-4o-mini', 'beam-100k': 'openai:gpt-4.1-mini', 'beam-1m': 'openai:gpt-4.1-mini', fixture: 'openai:gpt-4o-mini' };
-export const DEFAULT_JUDGE: Record<string, string> = { 'lme-s': 'openai:gpt-4o-2024-08-06', locomo: 'openai:gpt-4o-2024-08-06', 'beam-100k': 'openai:gpt-4.1-mini', 'beam-1m': 'openai:gpt-4.1-mini', fixture: 'openai:gpt-4o-mini' };
+export const DEFAULT_READER: Record<string, string> = { 'lme-s': 'openai:gpt-4o-2024-08-06', locomo: 'openai:gpt-4o-mini', 'beam-100k': 'openai:gpt-4.1-mini', 'beam-500k': 'openai:gpt-4.1-mini', 'beam-1m': 'openai:gpt-4.1-mini', fixture: 'openai:gpt-4o-mini' };
+export const DEFAULT_JUDGE: Record<string, string> = { 'lme-s': 'openai:gpt-4o-2024-08-06', locomo: 'openai:gpt-4o-2024-08-06', 'beam-100k': 'openai:gpt-4.1-mini', 'beam-500k': 'openai:gpt-4.1-mini', 'beam-1m': 'openai:gpt-4.1-mini', fixture: 'openai:gpt-4o-mini' };
 
 export interface ChatResult { text: string; input_tokens: number; output_tokens: number; cached: boolean }
 

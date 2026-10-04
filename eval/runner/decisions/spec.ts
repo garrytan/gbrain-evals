@@ -21,7 +21,7 @@ import { decideError } from './errors.ts';
 
 export type VerdictType = 'quality' | 'cost' | 'correctness';
 export type Plan = 'P1' | 'P2' | 'P3' | 'P4' | 'P5' | 'P6' | 'P7' | 'P8' | 'P0' | 'other';
-export type MemoryQaBenchmark = 'locomo' | 'lme-s' | 'beam-100k' | 'beam-1m' | 'fixture';
+export type MemoryQaBenchmark = 'locomo' | 'lme-s' | 'beam-100k' | 'beam-500k' | 'beam-1m' | 'fixture';
 export type EmbedMode = 'hash' | 'real';
 
 export interface ArmSpec {
@@ -136,7 +136,7 @@ export function validateSpec(value: unknown, path = 'decision.json'): DecisionSp
       }
       if (!Array.isArray(src?.comparisons)) problems.push(`${label}: comparisons must be an array (empty for contract-only sources)`);
       if (src?.kind === 'memory-qa') {
-        if (!['locomo', 'lme-s', 'beam-100k', 'beam-1m', 'fixture'].includes(src.benchmark)) problems.push(`${label}: unknown benchmark ${src.benchmark}`);
+        if (!['locomo', 'lme-s', 'beam-100k', 'beam-500k', 'beam-1m', 'fixture'].includes(src.benchmark)) problems.push(`${label}: unknown benchmark ${src.benchmark}`);
         if (src.split !== 'dev') problems.push(`${label}: dev specs may only name dev splits (sealed data opens through the custodian)`);
         if (!['hash', 'real'].includes(src.embed)) problems.push(`${label}: embed must be hash or real`);
         if (!Number.isInteger(src.top_k) || src.top_k < 5 || src.top_k > 50) problems.push(`${label}: top_k must be an integer in [5, 50]`);
@@ -216,7 +216,7 @@ export function qaSource(benchmark: MemoryQaBenchmark, mode: 'reader' | 'think',
 }
 
 export function memoryQaSource(benchmark: MemoryQaBenchmark, opts: { primary: boolean; embed?: EmbedMode; limit?: number | null; categories?: string[]; minEffect?: number }): MemoryQaSource {
-  const estimate: Record<MemoryQaBenchmark, number> = { fixture: 0, locomo: 1, 'lme-s': 12, 'beam-100k': 2, 'beam-1m': 10 };
+  const estimate: Record<MemoryQaBenchmark, number> = { fixture: 0, locomo: 1, 'lme-s': 12, 'beam-100k': 2, 'beam-500k': 5, 'beam-1m': 10 };
   return {
     id: `${benchmark}-dev${opts.categories?.length ? '-' + opts.categories.join('-').replace(/[^a-z0-9-]+/gi, '-').toLowerCase().slice(0, 40) : ''}`,
     kind: 'memory-qa', benchmark, split: 'dev', embed: opts.embed ?? (benchmark === 'fixture' ? 'hash' : 'real'),

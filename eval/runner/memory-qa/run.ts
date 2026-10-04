@@ -213,7 +213,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   const needsPaid = a.embed === 'real' || a.qa.mode !== 'none';
   if (!['none', 'reader', 'think'].includes(a.qa.mode)) throw new Error('--qa must be none, reader or think');
   if (needsPaid) {
-    const perQuestion: Record<string, number> = { 'lme-s': 0.012, locomo: 0.002, 'beam-100k': 0.01, 'beam-1m': 0.03, fixture: 0 };
+    const perQuestion: Record<string, number> = { 'lme-s': 0.012, locomo: 0.002, 'beam-100k': 0.01, 'beam-500k': 0.02, 'beam-1m': 0.03, fixture: 0 };
     const perQa: Record<string, number> = { none: 0, reader: a.benchmark === 'lme-s' ? 0.05 : 0.01, think: 0.08 };
     const mine = questions.filter(q => myConvs.includes(q.conversation)).length;
     const estimate = Math.max(0.05, Math.round(((a.embed === 'real' ? perQuestion[a.benchmark] ?? 0.02 : 0) + perQa[a.qa.mode] * a.qa.runs) * mine * 100) / 100);

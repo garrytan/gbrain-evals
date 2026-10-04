@@ -30,6 +30,8 @@ export interface SplitFile {
   sealed: string[];
   created_at: string;
   note: string;
+  /** Sealed conversations a preregistered decision has claimed; another decision does not open them. */
+  reservations?: Array<{ decision: string; scope: string; reason: string; reserved_at: string }>;
 }
 
 export function splitOrder(ids: readonly string[], salt = SPLIT_SALT): string[] {
