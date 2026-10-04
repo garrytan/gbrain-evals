@@ -1,0 +1,2 @@
+2026-10-04T03:01:17Z restarted with 14 workers on the same budget run (throughput: workers were API-latency bound)
+2026-10-04T03:02:16Z the 14-worker restart refused to start: the first budget run was closed when its wrapper was killed (spent $6.33 of $11). New budget run with the remaining $4.67.

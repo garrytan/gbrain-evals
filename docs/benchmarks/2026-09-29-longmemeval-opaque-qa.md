@@ -371,4 +371,5 @@ gbrain eval longmemeval longmemeval_s_cleaned.json --top-k 5 --no-trajectory --m
 - **Whether the reranker's answer gain is real.** +31/−17 (p = 0.059) needs a larger or repeated sample to confirm.
 - **Production `think` end to end,** with its own search over the benchmark brain.
 - **Cheaper ways to deliver more evidence,** since that is where the accuracy is. Examples: expanding chunk hits to their sessions, or more chunks at an equal token budget.
-- **The September 25 reading-notes transfer result (308/361 to 324/361)** was not re-run here and remains pending.
+- **The September 25 reading-notes transfer result (308/361 to 324/361)** was not re-run here. *Answered October 4, 2026: with opaque ids it is 304/361 to 320/361, and the predeclared gate passes ([report](2026-10-04-longmemeval-opaque-followups.md#1b-the-reading-notes-transfer-with-opaque-ids)).*
+- **A frontier reader on the same sessions.** *Answered October 4, 2026: `gpt-5.4` (medium reasoning) with arm b's exact official prompts answered 447/500 (official judge 448/500), against GPT-4o's 430/500 (+33/−16, p = 0.021) ([report](2026-10-04-longmemeval-opaque-followups.md#2-a-frontier-reader-on-gbrains-retrieval)).*

@@ -26,6 +26,8 @@ This run pinned gbrain v0.48.2.0 (`5cfb84f1`, PR 4792, branch `yaounde`) and the
 
 Mode was `balanced` and autocut was **off in every arm**. Reranker-on arms used Voyage `rerank-2.5`. The historical tables call them the “release default path,” but they disabled the autocut setting that the release then shipped. They therefore measured the default reranker with an explicit configuration override, not an untouched new install.
 
+**October 4, 2026 notice: recounted with opaque session ids.** These five arms were re-run with the same command through this repository's runner, which renders sessions under opaque ids since v0.10.1, at gbrain `109b992` ([report](2026-10-04-longmemeval-opaque-followups.md)). Strict hits over the same 470 questions: hybrid 436 (438 below), hybrid+expansion 440 (258), hybrid-sessdiv 437 (439), hybrid+rerank 451 (448), hybrid-sessdiv+rerank 452 (449). All but the expansion arm are confirmed. A post-hoc check at the September 6 code attributes the expansion change to later gbrain code, not to the ids; see the report. The table keeps the September 2 measurements.
+
 | Adapter | official `recall_all@5` | any-hit `recall_any@5` (diagnostic) | nDCG_any@5 | distinct sessions in top-5 (mean) | paired vs gbrain-hybrid (gained / lost) | p50 / p99 per question, wall | Status |
 |---|---|---|---|---|---|---|---|
 | **gbrain-hybrid** (reranker off; the like-for-like row vs May 2026 and v0.48.0.0) | **93.19%** (438/470) | 98.72% | 93.32% | 4.90 (5 sessions on 422 questions, 4 on 47, 3 on 1) | reference | 3,707 ms / 6,348 ms, 1,977 s | complete, 0 errors |

@@ -158,7 +158,8 @@ be excellent while the second is still indispensable.
 lower-scoring tail. This can save tokens, the pieces of text a model reads. On
 LongMemEval it often removed another conversation needed for the answer.
 Turning it off raised complete retrieval from 379/470 to 449/470, with 70 gains
-and no losses in that comparison. The strict metric exposed a problem that
+and no losses in that comparison (384/470 to 451/470, 67 gains and no losses,
+when recounted with opaque session ids on October 4, 2026). The strict metric exposed a problem that
 finding any one relevant conversation largely concealed.
 
 This does not mean every query should return a long list. **Adaptive return
@@ -185,6 +186,14 @@ crowd out the original query's best evidence. Start with expansion off for this
 workload. If you enable it elsewhere, compare questions where the original query
 is weak and count losses as well as gains.
 [Full experiment](benchmarks/2026-09-06-longmemeval-ranker-wave.md).
+
+*October 4, 2026:* recounted with opaque session ids at gbrain `109b992`, the same
+expansion settings no longer lose: full-vote expansion found all required
+conversations for 436/470 questions against 434/470 for plain hybrid, and released
+`tokenmax` 442/470 against 451/470 for `balanced`. The September losses were real for that code, not an effect of the `answer_` id leak; later gbrain releases removed them. The advice to start with
+expansion off stands because it costs a model call per question without a measured
+gain, not because it crowds out the original query.
+[Recount](benchmarks/2026-10-04-longmemeval-opaque-followups.md).
 
 ## What the scores mean
 

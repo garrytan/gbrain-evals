@@ -21,12 +21,17 @@ question needs. On [LongMemEval](https://arxiv.org/abs/2410.10813)'s cleaned
 small split, gbrain found all labeled evidence sessions for **449 of 470
 answerable questions (95.53%)** in its first five returned chunks. That is
 higher than every other system we can score on the same strict metric from
-its saved per-question rankings.
+its saved per-question rankings. On October 4 we recounted every published
+retrieval arm with opaque session ids (so the `answer_` prefix of evidence ids
+never reaches gbrain) at the current pin, `109b992`: the same configuration
+found all evidence for **451/470 (95.96%)**, paired +2/−0 against 449/470.
 
 | System | Strict `recall_all@5` | Where the number comes from |
 |---|---|---|
 | **gbrain v0.48.4.0**, `balanced` with Voyage reranker | **95.53% (449/470)** | our run, September 6 |
 | gbrain v0.48.4.0, same without the reranker | 93.40% (439/470) | our run, September 6 |
+| gbrain v0.60.37.0 (`109b992`), `balanced` with Voyage reranker, opaque session ids | 95.96% (451/470) | our recount, October 4 |
+| gbrain v0.60.37.0, same without the reranker, opaque session ids | 92.34% (434/470) | our recount, October 4 |
 | MemPalace hybrid v4 + LLM rerank | 90.0% (423/470) | our strict recount of their saved rankings |
 | MemPalace hybrid v4, held-out subset | 88.7% (376/424) | our strict recount; different denominator |
 | MemPalace raw (ChromaDB) | 85.7% (403/470) | our strict recount of their saved rankings |
@@ -58,10 +63,16 @@ reranker on and the same code, the notes reader scored **453/500 (90.6%)**
 (+31/−17 against reranker off, p = 0.059, not yet a demonstrated gain), and the
 published configuration with the leak removed scored 432/500 against the
 invalid 433/500 (+15/−16), so hiding the gold ids made no measurable
-difference there. Published results for other systems range from 81.6% to 96.1%, each with its own retrieval,
+difference there. On October 4, a frontier reader, `gpt-5.4` at medium
+reasoning effort (the reader behind Zep's and Memoria's published numbers),
+read exactly the GPT-4o arm's official prompts and answered **447/500 (89.4%)**
+(official judge 448/500). Against GPT-4o on identical input it won 33 questions
+and lost 16 (exact McNemar p = 0.021); against gbrain's house reader it won 25
+and lost 17 (p = 0.28). Published results for other systems range from 81.6% to 96.1%, each with its own retrieval,
 reader, judge and prompts. Retrieval, context size and judges still differ, so
 we claim no ranking on answers in either direction.
-[Read the re-run](docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md).
+[Read the re-run](docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md),
+[the frontier reader](docs/benchmarks/2026-10-04-longmemeval-opaque-followups.md#2-a-frontier-reader-on-gbrains-retrieval).
 
 **What the reader receives matters more than which chunks rank first.** On
 September 30, with the Voyage reranker on and the top five hits frozen at
@@ -188,7 +199,9 @@ Those are separate measurements with separate denominators. The release setting
 pre-registered target of at least 92% answer accuracy was missed. On September
 28 we found that the answer model saw the `answer_` prefix that LongMemEval
 puts on every labeled evidence session id, so the 433/500 figure is historical
-and invalid. A 30-question check found no effect of the prefix on retrieval.
+and invalid. A 30-question check found no effect of the prefix on retrieval, and
+the October 4 full recount with opaque ids confirmed it (451/470 with the
+reranker, 434/470 without).
 [Read the experiment](docs/benchmarks/2026-09-06-longmemeval-ranker-wave.md).
 
 **The reader needs whole conversations, not just matching passages.** The
@@ -208,8 +221,11 @@ separate September 24 matched reading study, asking Sonnet 4.6 to take brief
 notes before answering raised judged correct answers from 308/361 to 324/361
 on fixed retrieved sessions. Nine notes responses hit the output limit, and
 manual review found grading artifacts. This measures answer reading, not a
-retrieval gain. Both arms saw the same `answer_` session ids, so the
-comparison is matched, but the result is pending a re-run with opaque ids. A
+retrieval gain. Both arms saw the same `answer_` session ids. Re-run on
+October 4 with opaque ids on the same 361 questions, notes still won:
+**304/361 to 320/361** (+25/−9, exact McNemar p = 0.009, paired 95% interval
++1.4 to +7.5 points), with 11 notes responses cut off at 512 tokens
+([re-run](docs/benchmarks/2026-10-04-longmemeval-opaque-followups.md#1b-the-reading-notes-transfer-with-opaque-ids)). A
 later reader release defaults to notes with a larger output limit; that new
 default has only a selected-case completion check here, not a fresh accuracy
 comparison. [Read the study](docs/benchmarks/2026-09-25-reading-notes.md).
@@ -250,8 +266,11 @@ reworded questions is not yet measured.
 **You can see what each setting buys you.** Returning fewer results saves reading,
 but a question about two events may need two old conversations. On LongMemEval,
 turning off the score-based trimming step raised complete retrieval from
-**379/470 to 449/470**. Extra query rewrites, meanwhile, hurt retrieval at a
-five-result limit. These experiments produced practical defaults:
+**379/470 to 449/470** (384/470 to 451/470 in the October 4 recount with opaque
+session ids). Extra query rewrites hurt retrieval at a five-result limit on
+September 6, but not in the October 4 recount at the current code (436/470
+against 434/470 without them), so expansion stays off only because it adds a
+model call without a measured gain. These experiments produced practical defaults:
 [when to rerank, trim, expand, or favor a source](docs/settings.md).
 
 **The system is inspectable.** gbrain keeps knowledge in Markdown files and builds
@@ -389,9 +408,13 @@ a dated correction:
   against 433/500, so the leak made no measurable difference; 433/500 stays
   invalid because it was measured with the gold ids visible.
   [Report](docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md). The
-  reading-notes result (308/361 to 324/361) is still pending a re-run for the
-  same reason. Retrieval numbers are unaffected as far as a 30-question check
-  can tell.
+  reading-notes result (308/361 to 324/361) was measured with the same leak;
+  re-run with opaque ids on October 4 it is 304/361 to 320/361 (+25/−9, gate
+  passes). Retrieval numbers recounted with opaque ids are confirmed; the
+  query-expansion arms moved up (255/470 to 436/470) because of later gbrain
+  code, not the ids, so the old finding that expansion hurts no longer
+  describes current gbrain.
+  [Report](docs/benchmarks/2026-10-04-longmemeval-opaque-followups.md).
 
 ## Inspect or extend the work
 
