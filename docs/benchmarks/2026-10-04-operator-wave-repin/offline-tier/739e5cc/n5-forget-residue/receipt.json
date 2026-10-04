@@ -1,0 +1,1487 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "hermetic: provider keys stripped, no embedding model, System One off; no model and no paid request"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "hermetic: provider keys stripped, no embedding model, System One off; no model and no paid request"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "n5-forget-residue",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 504,
+  "n_scored": 504,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "gbrain_version": "0.60.46.0",
+  "gbrain_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+  "execution": {
+    "source_tree": {
+      "sha256": "5bdfac4a948f48501f8b89953d46cba272135872a40eb3c6f4bef67fb7c1d97d",
+      "files": 2935,
+      "git_head": "3ff60f944c9c70fed4eeef2ba0af2c2d8d302c88",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+      "declared_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+      "version": "0.60.46.0",
+      "package_sha256": "6ea533ae573e6f0f91d920b14a7a9c8d7e1562ffba69a9547cdcd2da3813261c",
+      "loaded_git_head": null
+    }
+  },
+  "latency_ms": {
+    "p50": 8,
+    "p95": 107,
+    "n": 244,
+    "basis": "primary-transport call latency over the PGLite cells"
+  },
+  "resolved_config": {
+    "decide": "off (no key, fresh GBRAIN_HOME)",
+    "decide_status_per_cell": {
+      "n5-pglite-mcp-stdio": "all slots off"
+    },
+    "engines": {
+      "requested": [
+        "pglite"
+      ],
+      "run": [
+        "pglite"
+      ],
+      "postgres_unreachable": null
+    },
+    "interfaces": [
+      "mcp-stdio"
+    ],
+    "harness": "eval/runner/lifecycle/slice.ts (lifecycle drivers: trusted local CLI `gbrain call`, stdio `gbrain serve`, HTTP `gbrain serve --http` with OAuth client_credentials clients: main read+write on vault, reader read-only on vault, foreign read+write on another source)",
+    "init": "`gbrain init --no-embedding --non-interactive` (managed persistence, keyword search only), git vaults as sources",
+    "seed": 5,
+    "generator_version": "n5-forget-residue-gen@1",
+    "ledger_sha256": "fafa987368b4aefea2b404fe53bda9bceffb2101ef68ca5af26d881466e9a633",
+    "slice": {
+      "name": "ci",
+      "entities": [
+        "people/hazel-example",
+        "people/ivy-example"
+      ],
+      "engines": [
+        "pglite"
+      ],
+      "interfaces": [
+        "mcp-stdio"
+      ],
+      "preregistration": "docs/benchmarks/2026-10-02-ci-slices-preregistration.md",
+      "full_ledger_sha256": "65323fb7605d5d8ec0d87252124993a74828335976606fa8e2997574f02c9da5",
+      "canaries": [
+        "c01",
+        "c02",
+        "c03",
+        "c04",
+        "c05",
+        "c06",
+        "c13",
+        "c15",
+        "c18",
+        "c20",
+        "c21",
+        "c22",
+        "c24"
+      ]
+    },
+    "checkpoints": [
+      "witness",
+      "immediate",
+      "settled",
+      "stale_reimport",
+      "restart",
+      "concurrent"
+    ],
+    "active_tiers": [
+      "recall_facts",
+      "recall_query",
+      "search",
+      "query",
+      "context_pack",
+      "fence_active",
+      "entity_card"
+    ],
+    "contract": "src/core/facts/forget.ts header and docs/guides/memory-boundaries.md at the tested commit",
+    "gating_scope": "data.metrics aggregates the PGLite cells; data.metrics_postgres is report-only outside CI",
+    "gbrain_overlay": null
+  },
+  "hashes": {
+    "ledger_sha256": "fafa987368b4aefea2b404fe53bda9bceffb2101ef68ca5af26d881466e9a633",
+    "full_ledger_sha256": "65323fb7605d5d8ec0d87252124993a74828335976606fa8e2997574f02c9da5"
+  },
+  "started_at": "2026-10-04T15:11:57.722Z",
+  "finished_at": "2026-10-04T15:13:12.069Z",
+  "data": {
+    "metrics": {
+      "prohibited_active_outputs": 0,
+      "reactivations": 0,
+      "collateral_expirations": 0,
+      "unauthorized_forgets_applied": 0,
+      "private_canary_leaks": 0,
+      "retained_pairs": 120,
+      "retained_present": 120,
+      "retained_recall": 1,
+      "capped_pairs": 24,
+      "capped_present": 24,
+      "retained_recall_including_capped": 1,
+      "reinstatement_attempts": 1,
+      "reinstated": 1,
+      "reinstatement_rate": 1,
+      "forgotten_pairs_with_signal": 27,
+      "forgotten_pairs_without_witness": 8,
+      "sut_errors": 0,
+      "cells": 1,
+      "void_cells": 0
+    },
+    "metrics_postgres": null,
+    "safety": {
+      "prohibited_active_outputs": true,
+      "reactivations": true,
+      "collateral_expirations": true,
+      "unauthorized_forgets_applied": true,
+      "private_canary_leaks": true
+    },
+    "quality": {
+      "retained_recall": {
+        "value": 1,
+        "threshold": 1,
+        "pass": true
+      },
+      "reinstatement_rate": {
+        "value": 1,
+        "threshold": 1,
+        "pass": true
+      }
+    },
+    "promotion_rules": {
+      "preregistered": "2026-10-02",
+      "basis": "preregistered 2026-10-02 in its own commit before any slice run (docs/benchmarks/2026-10-02-ci-slices-preregistration.md): the full category's safety contracts and utility floors unchanged, plus signal floors computed from the sliced generator ledger without running gbrain",
+      "safety_contracts": [
+        {
+          "id": "no-prohibited-active-output",
+          "path": "data.metrics.prohibited_active_outputs",
+          "op": "==",
+          "value": 0,
+          "description": "no forgotten claim appears in any witnessed active tier (facts recall, recall query arm, search, query, entity card, context_pack, unstruck fence row) at any checkpoint"
+        },
+        {
+          "id": "no-reactivation",
+          "path": "data.metrics.reactivations",
+          "op": "==",
+          "value": 0,
+          "description": "a forgotten claim never becomes active again after a stale reimport, a full sync, a restart or concurrent writes"
+        },
+        {
+          "id": "no-collateral-expiration",
+          "path": "data.metrics.collateral_expirations",
+          "op": "==",
+          "value": 0,
+          "description": "no retained neighbor (another fact on the same entity, or the same claim text on another entity) is expired by a forget"
+        },
+        {
+          "id": "no-unauthorized-forget",
+          "path": "data.metrics.unauthorized_forgets_applied",
+          "op": "==",
+          "value": 0,
+          "description": "a read-only or foreign-source caller cannot withdraw a fact"
+        },
+        {
+          "id": "no-private-canary-exposed",
+          "path": "data.metrics.private_canary_leaks",
+          "op": "==",
+          "value": 0,
+          "description": "no remote response carries a private canary before or after forget"
+        }
+      ],
+      "quality_thresholds": [
+        {
+          "id": "retained-recall-floor",
+          "path": "data.metrics.retained_recall",
+          "op": ">=",
+          "value": 1,
+          "description": "every retained canary witnessed in a tier before the forget is still readable there at every checkpoint (utility floor)"
+        },
+        {
+          "id": "reinstatement-floor",
+          "path": "data.metrics.reinstatement_rate",
+          "op": ">=",
+          "value": 1,
+          "description": "a corrected claim remembered after a forget is accepted and active (the documented way back)"
+        },
+        {
+          "id": "slice-forgotten-signal",
+          "path": "data.metrics.forgotten_pairs_with_signal",
+          "op": ">=",
+          "value": 4,
+          "description": "signal floor: the 4 forgotten or late-forgotten slice canaries (c01, c03, c15, c18) are each witnessed at least in recall_facts before withdrawal"
+        },
+        {
+          "id": "slice-retained-pairs",
+          "path": "data.metrics.retained_pairs",
+          "op": ">=",
+          "value": 24,
+          "description": "signal floor: 4 retained core canaries (c02, c05, c06, c13) x 5 post-forget checkpoints, plus c18 at the 4 checkpoints before its late forget, in recall_facts alone"
+        },
+        {
+          "id": "slice-private-control",
+          "path": "data.private_control.witnessed_by_trusted",
+          "op": ">=",
+          "value": 1,
+          "description": "signal floor: the trusted control sees the slice's private canary (c15) before withdrawal, so the zero-leak contract has something to leak"
+        }
+      ],
+      "exploratory": [
+        "data.by_tier and data.by_checkpoint",
+        "data.metrics_postgres (report-only outside CI)",
+        "data.gaps.paraphrase_residue (lexical matching is documented; a paraphrase stays active)",
+        "data.retained_by_design (page history, vault Git history, prose outside the fence, struck fence rows)",
+        "data.unmeasured_tiers (dream-derived tiers without a chat model)"
+      ]
+    },
+    "private_control": {
+      "canaries": 1,
+      "witnessed_by_trusted": 1
+    },
+    "by_tier": {
+      "recall_facts": {
+        "prohibited": 0,
+        "retained_pairs": 24,
+        "retained_present": 24,
+        "forgotten_with_signal": 5
+      },
+      "recall_query": {
+        "prohibited": 0,
+        "retained_pairs": 24,
+        "retained_present": 24,
+        "forgotten_with_signal": 4
+      },
+      "search": {
+        "prohibited": 0,
+        "retained_pairs": 24,
+        "retained_present": 24,
+        "forgotten_with_signal": 4
+      },
+      "query": {
+        "prohibited": 0,
+        "retained_pairs": 24,
+        "retained_present": 24,
+        "forgotten_with_signal": 4
+      },
+      "context_pack": {
+        "prohibited": 0,
+        "retained_pairs": 24,
+        "retained_present": 24,
+        "forgotten_with_signal": 5
+      },
+      "fence_active": {
+        "prohibited": 0,
+        "retained_pairs": 24,
+        "retained_present": 24,
+        "forgotten_with_signal": 5
+      },
+      "entity_card": {
+        "prohibited": 0,
+        "retained_pairs": 0,
+        "retained_present": 0,
+        "forgotten_with_signal": 0
+      }
+    },
+    "by_checkpoint": {
+      "immediate": {
+        "prohibited": 0,
+        "retained_pairs": 25,
+        "retained_present": 25
+      },
+      "settled": {
+        "prohibited": 0,
+        "retained_pairs": 25,
+        "retained_present": 25
+      },
+      "stale_reimport": {
+        "prohibited": 0,
+        "retained_pairs": 25,
+        "retained_present": 25
+      },
+      "restart": {
+        "prohibited": 0,
+        "retained_pairs": 25,
+        "retained_present": 25
+      },
+      "concurrent": {
+        "prohibited": 0,
+        "retained_pairs": 20,
+        "retained_present": 20
+      }
+    },
+    "by_tier_postgres": {},
+    "by_cell": [
+      {
+        "id": "n5-pglite-mcp-stdio",
+        "duration_ms": 73650,
+        "server_version": "0.60.46.0",
+        "metrics": {
+          "prohibited_active_outputs": 0,
+          "reactivations": 0,
+          "collateral_expirations": 0,
+          "unauthorized_forgets_applied": 0,
+          "private_canary_leaks": 0,
+          "retained_pairs": 120,
+          "retained_present": 120,
+          "retained_recall": 1,
+          "capped_pairs": 24,
+          "capped_present": 24,
+          "retained_recall_including_capped": 1,
+          "reinstatement_attempts": 1,
+          "reinstated": 1,
+          "reinstatement_rate": 1,
+          "forgotten_pairs_with_signal": 27,
+          "forgotten_pairs_without_witness": 8,
+          "sut_errors": 0
+        },
+        "calls": {
+          "primary": 244,
+          "trusted": 48,
+          "extra": 0
+        },
+        "authority": [],
+        "forgets_failed": [],
+        "concurrent_writes": [
+          {
+            "canary": "c24",
+            "ok": true,
+            "status": "inserted"
+          }
+        ],
+        "concurrent_visible": 1,
+        "entity_counts": {
+          "witness": {
+            "people/ivy-example": 6,
+            "people/hazel-example": 4
+          },
+          "immediate": {
+            "people/ivy-example": 5,
+            "people/hazel-example": 3
+          },
+          "settled": {
+            "people/ivy-example": 5,
+            "people/hazel-example": 3
+          },
+          "stale_reimport": {
+            "people/ivy-example": 5,
+            "people/hazel-example": 2
+          },
+          "restart": {
+            "people/ivy-example": 5,
+            "people/hazel-example": 2
+          },
+          "concurrent": {
+            "people/ivy-example": 4,
+            "people/hazel-example": 3
+          }
+        }
+      }
+    ],
+    "gaps": {
+      "paraphrase_residue": {
+        "active_after_forget": 2,
+        "of": 2,
+        "note": "documented: withdrawal matches normalized claims lexically"
+      },
+      "non_guarantees": [
+        {
+          "item": "semantic paraphrase retraction",
+          "source": "withdrawal fingerprints fold case, whitespace and listed punctuation only (src/core/facts/withdrawal-schema.ts); a paraphrase has a different fingerprint"
+        },
+        {
+          "item": "physical erasure of page history (get_versions), vault Git history, files and backups",
+          "source": "src/core/facts/forget.ts header: \"These are retractions: original prose, files and backups may retain text\"; docs/guides/memory-boundaries.md"
+        },
+        {
+          "item": "prose outside the Facts fence",
+          "source": "src/core/facts/forget.ts header; the chunker drops forgotten fence rows only (src/core/remote-body.ts)"
+        },
+        {
+          "item": "struck fence rows",
+          "source": "forget strikes the row with a \"forgotten:\" marker and keeps it as the audit trail (src/core/facts/withdrawal-overlay.ts)"
+        }
+      ]
+    },
+    "retained_by_design": {
+      "struck_fence_rows_seen": 21,
+      "page_history_tokens": 5,
+      "vault_git_tokens": 4,
+      "prose_chunk_hits": 0
+    },
+    "meta_hot_memory_residue": {
+      "scope": "reported, not gated (a tier found during development, after the rules were frozen): remote responses whose MCP _meta.brain_hot_memory still carried a canary after its forget returned",
+      "pglite": {
+        "responses": 0,
+        "canaries": 0,
+        "cells_with_residue": []
+      },
+      "postgres": {
+        "responses": 0,
+        "canaries": 0,
+        "cells_with_residue": []
+      },
+      "witnessed_before_forget": 0,
+      "evidence": []
+    },
+    "unmeasured_tiers": [
+      {
+        "tier": "dream synthesis and consolidation (takes, synthesized pages)",
+        "reason": "these phases call a chat model; the hermetic arm strips every key and no fake chat endpoint was wired for this slice, so they were not run. The capability matrix lists them as tiers forget does not touch (a gap, not scored)."
+      },
+      {
+        "tier": "think",
+        "reason": "keyless think returns the gather only, with no synthesized answer; not probed."
+      },
+      {
+        "tier": "ontology and timeline rows",
+        "reason": "forget does not write to them (capability matrix, N5); the canaries here are not written there."
+      }
+    ],
+    "findings": [],
+    "leak_evidence": [],
+    "cells": [
+      {
+        "id": "n5-pglite-mcp-stdio",
+        "engine": "pglite",
+        "interface": "mcp-stdio",
+        "duration_ms": 73650,
+        "server_version": "0.60.46.0",
+        "decide": {
+          "ok": true,
+          "slots": [
+            {
+              "slot": "rerank",
+              "effective": "off"
+            },
+            {
+              "slot": "intent",
+              "effective": "off"
+            },
+            {
+              "slot": "evidence",
+              "effective": "off"
+            },
+            {
+              "slot": "answerable",
+              "effective": "off"
+            },
+            {
+              "slot": "injection",
+              "effective": "off"
+            },
+            {
+              "slot": "recall_needed",
+              "effective": "off"
+            },
+            {
+              "slot": "triage",
+              "effective": "off"
+            },
+            {
+              "slot": "grounding",
+              "effective": "off"
+            },
+            {
+              "slot": "conflict",
+              "effective": "off"
+            }
+          ]
+        },
+        "writes": [
+          {
+            "step": "initial-page",
+            "target": "people/hazel-example",
+            "ok": true
+          },
+          {
+            "step": "initial-page",
+            "target": "people/ivy-example",
+            "ok": true
+          },
+          {
+            "step": "remember",
+            "canary": "c01",
+            "ok": true,
+            "status": "inserted"
+          },
+          {
+            "step": "remember",
+            "canary": "c02",
+            "ok": true,
+            "status": "inserted"
+          },
+          {
+            "step": "remember",
+            "canary": "c04",
+            "ok": true,
+            "status": "inserted"
+          },
+          {
+            "step": "remember",
+            "canary": "c05",
+            "ok": true,
+            "status": "inserted"
+          },
+          {
+            "step": "remember",
+            "canary": "c13",
+            "ok": true,
+            "status": "inserted"
+          },
+          {
+            "step": "remember",
+            "canary": "c15",
+            "ok": true,
+            "status": "inserted"
+          },
+          {
+            "step": "remember",
+            "canary": "c18",
+            "ok": true,
+            "status": "inserted"
+          },
+          {
+            "step": "remember",
+            "canary": "c20",
+            "ok": true,
+            "status": "inserted"
+          },
+          {
+            "step": "remember",
+            "canary": "c21",
+            "ok": true,
+            "status": "inserted"
+          },
+          {
+            "step": "stale-put-page",
+            "target": "people/hazel-example",
+            "ok": true
+          }
+        ],
+        "fact_ids": {
+          "c20": "10",
+          "c02": "4",
+          "c01": "3",
+          "c03": "1",
+          "c21": "11",
+          "c18": "9",
+          "c15": "8",
+          "c13": "7",
+          "c05": "6",
+          "c04": "5",
+          "c06": "2"
+        },
+        "forgets": [
+          {
+            "canary": "c01",
+            "caller": "primary",
+            "ok": true,
+            "checkpoint": "immediate"
+          },
+          {
+            "canary": "c03",
+            "caller": "primary",
+            "ok": true,
+            "checkpoint": "immediate"
+          },
+          {
+            "canary": "c04",
+            "caller": "primary",
+            "ok": true,
+            "checkpoint": "immediate"
+          },
+          {
+            "canary": "c15",
+            "caller": "trusted",
+            "ok": true,
+            "checkpoint": "immediate"
+          },
+          {
+            "canary": "c18",
+            "caller": "primary",
+            "ok": true,
+            "checkpoint": "concurrent"
+          }
+        ],
+        "checkpoints": {
+          "witness": {
+            "c01|context_pack": true,
+            "c02|context_pack": true,
+            "c03|context_pack": true,
+            "c04|context_pack": true,
+            "c05|context_pack": true,
+            "c06|context_pack": true,
+            "c13|context_pack": true,
+            "c18|context_pack": true,
+            "c20|context_pack": true,
+            "c21|context_pack": true,
+            "c01|recall_facts": true,
+            "c02|recall_facts": true,
+            "c03|recall_facts": true,
+            "c20|recall_facts": true,
+            "c01|fence_active": true,
+            "c02|fence_active": true,
+            "c03|fence_active": true,
+            "c20|fence_active": true,
+            "c01|entity_card": false,
+            "c02|entity_card": false,
+            "c03|entity_card": false,
+            "c20|entity_card": false,
+            "c04|recall_facts": true,
+            "c05|recall_facts": true,
+            "c06|recall_facts": true,
+            "c13|recall_facts": true,
+            "c18|recall_facts": true,
+            "c21|recall_facts": true,
+            "c04|fence_active": true,
+            "c05|fence_active": true,
+            "c06|fence_active": true,
+            "c13|fence_active": true,
+            "c18|fence_active": true,
+            "c21|fence_active": true,
+            "c04|entity_card": false,
+            "c05|entity_card": false,
+            "c06|entity_card": false,
+            "c13|entity_card": false,
+            "c18|entity_card": false,
+            "c21|entity_card": false,
+            "c01|search": true,
+            "c13|search": true,
+            "c01|query": true,
+            "c13|query": true,
+            "c01|recall_query": true,
+            "c13|recall_query": true,
+            "c02|search": true,
+            "c02|query": true,
+            "c02|recall_query": true,
+            "c03|search": true,
+            "c03|query": true,
+            "c03|recall_query": true,
+            "c04|search": true,
+            "c04|query": true,
+            "c04|recall_query": true,
+            "c05|search": true,
+            "c05|query": true,
+            "c05|recall_query": true,
+            "c06|search": true,
+            "c06|query": true,
+            "c06|recall_query": true,
+            "c18|search": true,
+            "c18|query": true,
+            "c18|recall_query": true,
+            "c20|search": true,
+            "c20|query": true,
+            "c20|recall_query": true,
+            "c21|search": true,
+            "c21|query": true,
+            "c21|recall_query": true,
+            "c15|context_pack": true,
+            "c15|recall_facts": true,
+            "c15|fence_active": true,
+            "c15|entity_card": false,
+            "c15|search": false,
+            "c15|query": false,
+            "c15|recall_query": false
+          },
+          "immediate": {
+            "c01|context_pack": false,
+            "c02|context_pack": true,
+            "c03|context_pack": false,
+            "c04|context_pack": false,
+            "c05|context_pack": true,
+            "c06|context_pack": true,
+            "c13|context_pack": true,
+            "c18|context_pack": true,
+            "c20|context_pack": true,
+            "c21|context_pack": true,
+            "c22|context_pack": true,
+            "c01|recall_facts": false,
+            "c02|recall_facts": true,
+            "c03|recall_facts": false,
+            "c20|recall_facts": true,
+            "c22|recall_facts": true,
+            "c01|fence_active": false,
+            "c02|fence_active": true,
+            "c03|fence_active": false,
+            "c20|fence_active": true,
+            "c22|fence_active": true,
+            "c01|entity_card": false,
+            "c02|entity_card": false,
+            "c03|entity_card": false,
+            "c20|entity_card": false,
+            "c22|entity_card": false,
+            "c04|recall_facts": false,
+            "c05|recall_facts": true,
+            "c06|recall_facts": true,
+            "c13|recall_facts": true,
+            "c18|recall_facts": true,
+            "c21|recall_facts": true,
+            "c04|fence_active": false,
+            "c05|fence_active": true,
+            "c06|fence_active": true,
+            "c13|fence_active": true,
+            "c18|fence_active": true,
+            "c21|fence_active": true,
+            "c04|entity_card": false,
+            "c05|entity_card": false,
+            "c06|entity_card": false,
+            "c13|entity_card": false,
+            "c18|entity_card": false,
+            "c21|entity_card": false,
+            "c01|search": false,
+            "c13|search": true,
+            "c01|query": false,
+            "c13|query": true,
+            "c01|recall_query": false,
+            "c13|recall_query": true,
+            "c02|search": true,
+            "c02|query": true,
+            "c02|recall_query": true,
+            "c03|search": false,
+            "c03|query": false,
+            "c03|recall_query": false,
+            "c04|search": false,
+            "c04|query": false,
+            "c04|recall_query": false,
+            "c05|search": true,
+            "c05|query": true,
+            "c05|recall_query": true,
+            "c06|search": true,
+            "c06|query": true,
+            "c06|recall_query": true,
+            "c18|search": true,
+            "c18|query": true,
+            "c18|recall_query": true,
+            "c20|search": true,
+            "c20|query": true,
+            "c20|recall_query": true,
+            "c21|search": true,
+            "c21|query": true,
+            "c21|recall_query": true,
+            "c22|search": true,
+            "c22|query": true,
+            "c22|recall_query": true,
+            "c15|context_pack": false,
+            "c15|recall_facts": false,
+            "c15|fence_active": false,
+            "c15|entity_card": false,
+            "c15|search": false,
+            "c15|query": false,
+            "c15|recall_query": false
+          },
+          "settled": {
+            "c01|context_pack": false,
+            "c02|context_pack": true,
+            "c03|context_pack": false,
+            "c04|context_pack": false,
+            "c05|context_pack": true,
+            "c06|context_pack": true,
+            "c13|context_pack": true,
+            "c18|context_pack": true,
+            "c20|context_pack": true,
+            "c21|context_pack": true,
+            "c22|context_pack": true,
+            "c01|recall_facts": false,
+            "c02|recall_facts": true,
+            "c03|recall_facts": false,
+            "c20|recall_facts": true,
+            "c22|recall_facts": true,
+            "c01|fence_active": false,
+            "c02|fence_active": true,
+            "c03|fence_active": false,
+            "c20|fence_active": true,
+            "c22|fence_active": true,
+            "c01|entity_card": false,
+            "c02|entity_card": false,
+            "c03|entity_card": false,
+            "c20|entity_card": false,
+            "c22|entity_card": false,
+            "c04|recall_facts": false,
+            "c05|recall_facts": true,
+            "c06|recall_facts": true,
+            "c13|recall_facts": true,
+            "c18|recall_facts": true,
+            "c21|recall_facts": true,
+            "c04|fence_active": false,
+            "c05|fence_active": true,
+            "c06|fence_active": true,
+            "c13|fence_active": true,
+            "c18|fence_active": true,
+            "c21|fence_active": true,
+            "c04|entity_card": false,
+            "c05|entity_card": false,
+            "c06|entity_card": false,
+            "c13|entity_card": false,
+            "c18|entity_card": false,
+            "c21|entity_card": false,
+            "c01|search": false,
+            "c13|search": true,
+            "c01|query": false,
+            "c13|query": true,
+            "c01|recall_query": false,
+            "c13|recall_query": true,
+            "c02|search": true,
+            "c02|query": true,
+            "c02|recall_query": true,
+            "c03|search": false,
+            "c03|query": false,
+            "c03|recall_query": false,
+            "c04|search": false,
+            "c04|query": false,
+            "c04|recall_query": false,
+            "c05|search": true,
+            "c05|query": true,
+            "c05|recall_query": true,
+            "c06|search": true,
+            "c06|query": true,
+            "c06|recall_query": true,
+            "c18|search": true,
+            "c18|query": true,
+            "c18|recall_query": true,
+            "c20|search": true,
+            "c20|query": true,
+            "c20|recall_query": true,
+            "c21|search": true,
+            "c21|query": true,
+            "c21|recall_query": true,
+            "c22|search": true,
+            "c22|query": true,
+            "c22|recall_query": true,
+            "c15|context_pack": false,
+            "c15|recall_facts": false,
+            "c15|fence_active": false,
+            "c15|entity_card": false,
+            "c15|search": false,
+            "c15|query": false,
+            "c15|recall_query": false
+          },
+          "stale_reimport": {
+            "c01|context_pack": false,
+            "c02|context_pack": true,
+            "c03|context_pack": false,
+            "c04|context_pack": false,
+            "c05|context_pack": true,
+            "c06|context_pack": true,
+            "c13|context_pack": true,
+            "c18|context_pack": true,
+            "c20|context_pack": true,
+            "c21|context_pack": true,
+            "c22|context_pack": false,
+            "c01|recall_facts": false,
+            "c02|recall_facts": true,
+            "c03|recall_facts": false,
+            "c20|recall_facts": true,
+            "c22|recall_facts": false,
+            "c01|fence_active": false,
+            "c02|fence_active": true,
+            "c03|fence_active": false,
+            "c20|fence_active": true,
+            "c22|fence_active": false,
+            "c01|entity_card": false,
+            "c02|entity_card": false,
+            "c03|entity_card": false,
+            "c20|entity_card": false,
+            "c22|entity_card": false,
+            "c04|recall_facts": false,
+            "c05|recall_facts": true,
+            "c06|recall_facts": true,
+            "c13|recall_facts": true,
+            "c18|recall_facts": true,
+            "c21|recall_facts": true,
+            "c04|fence_active": false,
+            "c05|fence_active": true,
+            "c06|fence_active": true,
+            "c13|fence_active": true,
+            "c18|fence_active": true,
+            "c21|fence_active": true,
+            "c04|entity_card": false,
+            "c05|entity_card": false,
+            "c06|entity_card": false,
+            "c13|entity_card": false,
+            "c18|entity_card": false,
+            "c21|entity_card": false,
+            "c01|search": false,
+            "c13|search": true,
+            "c01|query": false,
+            "c13|query": true,
+            "c01|recall_query": false,
+            "c13|recall_query": true,
+            "c02|search": true,
+            "c02|query": true,
+            "c02|recall_query": true,
+            "c03|search": false,
+            "c03|query": false,
+            "c03|recall_query": false,
+            "c04|search": false,
+            "c04|query": false,
+            "c04|recall_query": false,
+            "c05|search": true,
+            "c05|query": true,
+            "c05|recall_query": true,
+            "c06|search": true,
+            "c06|query": true,
+            "c06|recall_query": true,
+            "c18|search": true,
+            "c18|query": true,
+            "c18|recall_query": true,
+            "c20|search": true,
+            "c20|query": true,
+            "c20|recall_query": true,
+            "c21|search": true,
+            "c21|query": true,
+            "c21|recall_query": true,
+            "c22|search": false,
+            "c22|query": false,
+            "c22|recall_query": false,
+            "c15|context_pack": false,
+            "c15|recall_facts": false,
+            "c15|fence_active": false,
+            "c15|entity_card": false,
+            "c15|search": false,
+            "c15|query": false,
+            "c15|recall_query": false
+          },
+          "restart": {
+            "c01|context_pack": false,
+            "c02|context_pack": true,
+            "c03|context_pack": false,
+            "c04|context_pack": false,
+            "c05|context_pack": true,
+            "c06|context_pack": true,
+            "c13|context_pack": true,
+            "c18|context_pack": true,
+            "c20|context_pack": true,
+            "c21|context_pack": true,
+            "c22|context_pack": false,
+            "c01|recall_facts": false,
+            "c02|recall_facts": true,
+            "c03|recall_facts": false,
+            "c20|recall_facts": true,
+            "c22|recall_facts": false,
+            "c01|fence_active": false,
+            "c02|fence_active": true,
+            "c03|fence_active": false,
+            "c20|fence_active": true,
+            "c22|fence_active": false,
+            "c01|entity_card": false,
+            "c02|entity_card": false,
+            "c03|entity_card": false,
+            "c20|entity_card": false,
+            "c22|entity_card": false,
+            "c04|recall_facts": false,
+            "c05|recall_facts": true,
+            "c06|recall_facts": true,
+            "c13|recall_facts": true,
+            "c18|recall_facts": true,
+            "c21|recall_facts": true,
+            "c04|fence_active": false,
+            "c05|fence_active": true,
+            "c06|fence_active": true,
+            "c13|fence_active": true,
+            "c18|fence_active": true,
+            "c21|fence_active": true,
+            "c04|entity_card": false,
+            "c05|entity_card": false,
+            "c06|entity_card": false,
+            "c13|entity_card": false,
+            "c18|entity_card": false,
+            "c21|entity_card": false,
+            "c01|search": false,
+            "c13|search": true,
+            "c01|query": false,
+            "c13|query": true,
+            "c01|recall_query": false,
+            "c13|recall_query": true,
+            "c02|search": true,
+            "c02|query": true,
+            "c02|recall_query": true,
+            "c03|search": false,
+            "c03|query": false,
+            "c03|recall_query": false,
+            "c04|search": false,
+            "c04|query": false,
+            "c04|recall_query": false,
+            "c05|search": true,
+            "c05|query": true,
+            "c05|recall_query": true,
+            "c06|search": true,
+            "c06|query": true,
+            "c06|recall_query": true,
+            "c18|search": true,
+            "c18|query": true,
+            "c18|recall_query": true,
+            "c20|search": true,
+            "c20|query": true,
+            "c20|recall_query": true,
+            "c21|search": true,
+            "c21|query": true,
+            "c21|recall_query": true,
+            "c22|search": false,
+            "c22|query": false,
+            "c22|recall_query": false,
+            "c15|context_pack": false,
+            "c15|recall_facts": false,
+            "c15|fence_active": false,
+            "c15|entity_card": false,
+            "c15|search": false,
+            "c15|query": false,
+            "c15|recall_query": false
+          },
+          "concurrent": {
+            "c01|context_pack": false,
+            "c02|context_pack": true,
+            "c03|context_pack": false,
+            "c04|context_pack": false,
+            "c05|context_pack": true,
+            "c06|context_pack": true,
+            "c13|context_pack": true,
+            "c18|context_pack": false,
+            "c20|context_pack": true,
+            "c21|context_pack": true,
+            "c22|context_pack": false,
+            "c24|context_pack": true,
+            "c01|recall_facts": false,
+            "c02|recall_facts": true,
+            "c03|recall_facts": false,
+            "c20|recall_facts": true,
+            "c22|recall_facts": false,
+            "c24|recall_facts": true,
+            "c01|fence_active": false,
+            "c02|fence_active": true,
+            "c03|fence_active": false,
+            "c20|fence_active": true,
+            "c22|fence_active": false,
+            "c24|fence_active": true,
+            "c01|entity_card": false,
+            "c02|entity_card": false,
+            "c03|entity_card": false,
+            "c20|entity_card": false,
+            "c22|entity_card": false,
+            "c24|entity_card": false,
+            "c04|recall_facts": false,
+            "c05|recall_facts": true,
+            "c06|recall_facts": true,
+            "c13|recall_facts": true,
+            "c18|recall_facts": false,
+            "c21|recall_facts": true,
+            "c04|fence_active": false,
+            "c05|fence_active": true,
+            "c06|fence_active": true,
+            "c13|fence_active": true,
+            "c18|fence_active": false,
+            "c21|fence_active": true,
+            "c04|entity_card": false,
+            "c05|entity_card": false,
+            "c06|entity_card": false,
+            "c13|entity_card": false,
+            "c18|entity_card": false,
+            "c21|entity_card": false,
+            "c01|search": false,
+            "c13|search": true,
+            "c01|query": false,
+            "c13|query": true,
+            "c01|recall_query": false,
+            "c13|recall_query": true,
+            "c02|search": true,
+            "c02|query": true,
+            "c02|recall_query": true,
+            "c03|search": false,
+            "c03|query": false,
+            "c03|recall_query": false,
+            "c04|search": false,
+            "c04|query": false,
+            "c04|recall_query": false,
+            "c05|search": true,
+            "c05|query": true,
+            "c05|recall_query": true,
+            "c06|search": true,
+            "c06|query": true,
+            "c06|recall_query": true,
+            "c18|search": false,
+            "c18|query": false,
+            "c18|recall_query": false,
+            "c20|search": true,
+            "c20|query": true,
+            "c20|recall_query": true,
+            "c21|search": true,
+            "c21|query": true,
+            "c21|recall_query": true,
+            "c22|search": false,
+            "c22|query": false,
+            "c22|recall_query": false,
+            "c24|search": true,
+            "c24|query": true,
+            "c24|recall_query": true,
+            "c15|context_pack": false,
+            "c15|recall_facts": false,
+            "c15|fence_active": false,
+            "c15|entity_card": false,
+            "c15|search": false,
+            "c15|query": false,
+            "c15|recall_query": false
+          }
+        },
+        "struck_by_design": 21,
+        "paraphrase": [
+          {
+            "canary": "c20",
+            "relates_to": "c01",
+            "active_after_forget": true
+          },
+          {
+            "canary": "c21",
+            "relates_to": "c04",
+            "active_after_forget": true
+          }
+        ],
+        "concurrent_writes": [
+          {
+            "canary": "c24",
+            "ok": true,
+            "status": "inserted"
+          }
+        ],
+        "concurrent_visible": 1,
+        "retained_by_design": {
+          "page_history_tokens": 5,
+          "vault_git_tokens": 4,
+          "prose_chunk_hits": 0
+        },
+        "entity_counts": {
+          "witness": {
+            "people/ivy-example": 6,
+            "people/hazel-example": 4
+          },
+          "immediate": {
+            "people/ivy-example": 5,
+            "people/hazel-example": 3
+          },
+          "settled": {
+            "people/ivy-example": 5,
+            "people/hazel-example": 3
+          },
+          "stale_reimport": {
+            "people/ivy-example": 5,
+            "people/hazel-example": 2
+          },
+          "restart": {
+            "people/ivy-example": 5,
+            "people/hazel-example": 2
+          },
+          "concurrent": {
+            "people/ivy-example": 4,
+            "people/hazel-example": 3
+          }
+        },
+        "authority": [],
+        "meta_residue": {
+          "responses": 0,
+          "canaries": [],
+          "witnessed_before_forget": [],
+          "evidence": []
+        },
+        "score": {
+          "metrics": {
+            "prohibited_active_outputs": 0,
+            "reactivations": 0,
+            "collateral_expirations": 0,
+            "unauthorized_forgets_applied": 0,
+            "private_canary_leaks": 0,
+            "retained_pairs": 120,
+            "retained_present": 120,
+            "retained_recall": 1,
+            "capped_pairs": 24,
+            "capped_present": 24,
+            "retained_recall_including_capped": 1,
+            "reinstatement_attempts": 1,
+            "reinstated": 1,
+            "reinstatement_rate": 1,
+            "forgotten_pairs_with_signal": 27,
+            "forgotten_pairs_without_witness": 8,
+            "sut_errors": 0
+          },
+          "findings": [],
+          "by_tier": {
+            "recall_facts": {
+              "prohibited": 0,
+              "retained_pairs": 24,
+              "retained_present": 24,
+              "forgotten_with_signal": 5
+            },
+            "recall_query": {
+              "prohibited": 0,
+              "retained_pairs": 24,
+              "retained_present": 24,
+              "forgotten_with_signal": 4
+            },
+            "search": {
+              "prohibited": 0,
+              "retained_pairs": 24,
+              "retained_present": 24,
+              "forgotten_with_signal": 4
+            },
+            "query": {
+              "prohibited": 0,
+              "retained_pairs": 24,
+              "retained_present": 24,
+              "forgotten_with_signal": 4
+            },
+            "context_pack": {
+              "prohibited": 0,
+              "retained_pairs": 24,
+              "retained_present": 24,
+              "forgotten_with_signal": 5
+            },
+            "fence_active": {
+              "prohibited": 0,
+              "retained_pairs": 24,
+              "retained_present": 24,
+              "forgotten_with_signal": 5
+            },
+            "entity_card": {
+              "prohibited": 0,
+              "retained_pairs": 0,
+              "retained_present": 0,
+              "forgotten_with_signal": 0
+            }
+          },
+          "by_checkpoint": {
+            "immediate": {
+              "prohibited": 0,
+              "retained_pairs": 25,
+              "retained_present": 25
+            },
+            "settled": {
+              "prohibited": 0,
+              "retained_pairs": 25,
+              "retained_present": 25
+            },
+            "stale_reimport": {
+              "prohibited": 0,
+              "retained_pairs": 25,
+              "retained_present": 25
+            },
+            "restart": {
+              "prohibited": 0,
+              "retained_pairs": 25,
+              "retained_present": 25
+            },
+            "concurrent": {
+              "prohibited": 0,
+              "retained_pairs": 20,
+              "retained_present": 20
+            }
+          },
+          "witnessed": {
+            "c01": [
+              "recall_facts",
+              "recall_query",
+              "search",
+              "query",
+              "context_pack",
+              "fence_active"
+            ],
+            "c02": [
+              "recall_facts",
+              "recall_query",
+              "search",
+              "query",
+              "context_pack",
+              "fence_active"
+            ],
+            "c03": [
+              "recall_facts",
+              "recall_query",
+              "search",
+              "query",
+              "context_pack",
+              "fence_active"
+            ],
+            "c04": [
+              "recall_facts",
+              "recall_query",
+              "search",
+              "query",
+              "context_pack",
+              "fence_active"
+            ],
+            "c05": [
+              "recall_facts",
+              "recall_query",
+              "search",
+              "query",
+              "context_pack",
+              "fence_active"
+            ],
+            "c06": [
+              "recall_facts",
+              "recall_query",
+              "search",
+              "query",
+              "context_pack",
+              "fence_active"
+            ],
+            "c13": [
+              "recall_facts",
+              "recall_query",
+              "search",
+              "query",
+              "context_pack",
+              "fence_active"
+            ],
+            "c15": [
+              "recall_facts",
+              "context_pack",
+              "fence_active"
+            ],
+            "c18": [
+              "recall_facts",
+              "recall_query",
+              "search",
+              "query",
+              "context_pack",
+              "fence_active"
+            ],
+            "c20": [
+              "recall_facts",
+              "recall_query",
+              "search",
+              "query",
+              "context_pack",
+              "fence_active"
+            ],
+            "c21": [
+              "recall_facts",
+              "recall_query",
+              "search",
+              "query",
+              "context_pack",
+              "fence_active"
+            ],
+            "c22": [],
+            "c24": []
+          }
+        },
+        "private_canary_leaks": 0,
+        "leak_evidence": [],
+        "calls": {
+          "primary": 244,
+          "trusted": 48,
+          "extra": 0
+        },
+        "operator": [
+          {
+            "step": "init",
+            "args": [
+              "init",
+              "--pglite",
+              "--path",
+              "<tmp>/n5-forget-residue-cells-kwlN1v/n5-pglite-mcp-stdio/gbrain-home/brain.pglite",
+              "--no-embedding",
+              "--non-interactive"
+            ],
+            "code": 0,
+            "ms": 3196,
+            "tail": "More: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to supabase` · health `gbrain doctor`\n  Setting up brain schema (v199)...\n  v142: takes.embedding resized to vector(1024); existing take vectors cleared\n  194 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: <tmp>/n5-forget-residue-cells-kwlN1v/n5-pglite-mcp-stdio/gbrain-home/.gbrain/content/a45c89c1-e9de-40ef-bb5f-ef971e8043a1/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)"
+          },
+          {
+            "step": "sources-add:vault",
+            "args": [
+              "sources",
+              "add",
+              "vault",
+              "--path",
+              "<tmp>/n5-forget-residue-cells-kwlN1v/n5-pglite-mcp-stdio/vault-vault"
+            ],
+            "code": 0,
+            "ms": 1058,
+            "tail": "  \"source_id\": \"vault\",\n  \"local_path\": \"<tmp>/n5-forget-residue-cells-kwlN1v/n5-pglite-mcp-stdio/vault-vault\",\n  \"source_incarnation\": \"caf9591a-dbcb-4686-b4c0-34051216c2fd\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"246fed95-08b1-4896-bbd4-3b7e85e3a19f\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}"
+          },
+          {
+            "step": "sources-add:other",
+            "args": [
+              "sources",
+              "add",
+              "other",
+              "--path",
+              "<tmp>/n5-forget-residue-cells-kwlN1v/n5-pglite-mcp-stdio/other-vault"
+            ],
+            "code": 0,
+            "ms": 991,
+            "tail": "  \"source_id\": \"other\",\n  \"local_path\": \"<tmp>/n5-forget-residue-cells-kwlN1v/n5-pglite-mcp-stdio/other-vault\",\n  \"source_incarnation\": \"a981b814-a097-4153-8a01-f69c3e35b65f\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"24f8b945-fda1-4eb6-b883-6d1ec29752ff\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}"
+          },
+          {
+            "step": "sources-default",
+            "args": [
+              "sources",
+              "default",
+              "vault"
+            ],
+            "code": 0,
+            "ms": 921,
+            "tail": "Default source set to \"vault\"."
+          },
+          {
+            "step": "decide-status",
+            "args": [
+              "decide",
+              "status",
+              "--json"
+            ],
+            "code": 0,
+            "ms": 879,
+            "tail": "      \"no_entity_7d\": {\n        \"skipped\": 0,\n        \"receipts\": 0,\n        \"share\": 0\n      }\n    }\n  ]\n}"
+          },
+          {
+            "step": "settle-sync",
+            "args": [
+              "sync",
+              "--source",
+              "vault",
+              "--no-pull"
+            ],
+            "code": 0,
+            "ms": 1262,
+            "tail": "First sync complete. Checkpoint: ce38c470\n  0 file(s) imported, 0 chunks\n[sync-watchdog] hard deadline armed: 3600s + 30s grace (default:non-tty); extends while the sync keeps progressing (stops after 900s without progress); disable with --no-hard-deadline\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+          },
+          {
+            "step": "stale-reimport-sync",
+            "args": [
+              "sync",
+              "--source",
+              "vault",
+              "--full",
+              "--no-pull"
+            ],
+            "code": 0,
+            "ms": 1596,
+            "tail": "Synced ce38c470..15fadf32:\n  +0 added, ~1 modified, -0 soft-deleted (recoverable 72h), R0 renamed\n  1 chunks created\n[sync-watchdog] hard deadline armed: 3600s + 30s grace (default:non-tty); extends while the sync keeps progressing (stops after 900s without progress); disable with --no-hard-deadline\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+          }
+        ]
+      }
+    ]
+  },
+  "accounting": {
+    "planned": 504,
+    "attempted": 504,
+    "scored": 504,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  }
+}
