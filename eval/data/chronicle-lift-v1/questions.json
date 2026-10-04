@@ -1,0 +1,377 @@
+{
+ "schema_version": 1,
+ "written": "2026-10-04, before any auto_chronicle run on this corpus, by the agent that ran the experiment (Capy), from the corpus text alone; not reviewed by a person",
+ "today": "2026-04-19",
+ "timezone": "UTC",
+ "contacts_first_names": [
+  "Mina",
+  "Priya",
+  "Marcus",
+  "Sarah",
+  "Jordan",
+  "Hannah",
+  "Diego",
+  "Elena",
+  "Kofi",
+  "Ravi",
+  "Lena",
+  "Tomoko",
+  "Bill",
+  "Nadia",
+  "Anna"
+ ],
+ "scoring": {
+  "names": "correct when the answer names every gold first name and no other first name from contacts_first_names (word match, case-insensitive)",
+  "date": "correct when the answer contains the gold YYYY-MM-DD and no other YYYY-MM-DD date",
+  "keywords": "correct when, for every group, the answer (answer and notes fields) contains at least one alternative (case-insensitive)",
+  "unknown": "correct when the answer contains UNKNOWN and no YYYY-MM-DD date"
+ },
+ "questions": [
+  {
+   "id": "day-1",
+   "type": "day_list",
+   "question": "According to Amara's calendar invites and meeting notes, which people (other than Amara) did she have a meeting or calendar sync with on 2026-04-14? Answer with their first names, comma-separated.",
+   "answer_kind": "names",
+   "gold": [
+    "Elena",
+    "Priya",
+    "Hannah",
+    "Bill"
+   ],
+   "basis": "cal/evt-0000..0003; meetings/mtg-0000, mtg-0001"
+  },
+  {
+   "id": "day-2",
+   "type": "day_list",
+   "question": "According to Amara's calendar invites and meeting notes, which people (other than Amara) did she have a meeting or calendar sync with on 2026-04-15? Answer with their first names, comma-separated.",
+   "answer_kind": "names",
+   "gold": [
+    "Diego",
+    "Ravi",
+    "Tomoko"
+   ],
+   "basis": "cal/evt-0004..0007; meetings/mtg-0002"
+  },
+  {
+   "id": "day-3",
+   "type": "day_list",
+   "question": "According to Amara's calendar invites and meeting notes, which people (other than Amara) did she have a meeting or calendar sync with on 2026-04-16? Answer with their first names, comma-separated.",
+   "answer_kind": "names",
+   "gold": [
+    "Marcus",
+    "Kofi",
+    "Mina",
+    "Priya"
+   ],
+   "basis": "cal/evt-0008..0011; meetings/mtg-0003"
+  },
+  {
+   "id": "day-4",
+   "type": "day_list",
+   "question": "According to Amara's calendar invites and meeting notes, which people (other than Amara) did she have a meeting or calendar sync with on 2026-04-17? Answer with their first names, comma-separated.",
+   "answer_kind": "names",
+   "gold": [
+    "Elena",
+    "Anna",
+    "Lena",
+    "Nadia"
+   ],
+   "basis": "cal/evt-0012..0015; meetings/mtg-0004"
+  },
+  {
+   "id": "day-5",
+   "type": "day_list",
+   "question": "According to Amara's calendar invites and meeting notes, which people (other than Amara) did she have a meeting or calendar sync with on 2026-04-18? Answer with their first names, comma-separated.",
+   "answer_kind": "names",
+   "gold": [
+    "Priya",
+    "Nadia",
+    "Lena",
+    "Diego",
+    "Kofi"
+   ],
+   "basis": "cal/evt-0016..0019; meetings/mtg-0005, mtg-0006"
+  },
+  {
+   "id": "when-1",
+   "type": "when",
+   "question": "On what date did Amara and Marcus Reid hold the Solaris Grid Storage deep dive?",
+   "answer_kind": "date",
+   "gold": "2026-04-16",
+   "basis": "meetings/mtg-0003"
+  },
+  {
+   "id": "when-2",
+   "type": "when",
+   "question": "On what date did Amara discuss Meridian Robotics' Q1 performance with Elena Rossi?",
+   "answer_kind": "date",
+   "gold": "2026-04-14",
+   "basis": "meetings/mtg-0000"
+  },
+  {
+   "id": "when-3",
+   "type": "when",
+   "question": "On what date did Amara catch up with Priya Patel about NovaBio?",
+   "answer_kind": "date",
+   "gold": "2026-04-14",
+   "basis": "meetings/mtg-0001"
+  },
+  {
+   "id": "when-4",
+   "type": "when",
+   "question": "On what date did Amara have the Threshold Robotics Series B planning call with Diego Alvarez?",
+   "answer_kind": "date",
+   "gold": "2026-04-15",
+   "basis": "meetings/mtg-0002"
+  },
+  {
+   "id": "when-5",
+   "type": "when",
+   "question": "On what date did the Helios Energy board formally approve the new director appointment?",
+   "answer_kind": "date",
+   "gold": "2026-04-17",
+   "basis": "meetings/mtg-0006: approved at yesterday's meeting, page dated 2026-04-18"
+  },
+  {
+   "id": "when-6",
+   "type": "when",
+   "question": "On what date did Amara and Elena Rossi review Codex Robotics' Q1 performance?",
+   "answer_kind": "date",
+   "gold": "2026-04-19",
+   "basis": "meetings/mtg-0007"
+  },
+  {
+   "id": "when-7",
+   "type": "when",
+   "question": "On what date did Amara have the quarterly check-in with Elena Rossi where Terraform Robotics came up?",
+   "answer_kind": "date",
+   "gold": "2026-04-17",
+   "basis": "meetings/mtg-0004"
+  },
+  {
+   "id": "when-8",
+   "type": "when",
+   "question": "On what date did Amara review CarbonLoop's Q1 numbers with Priya Patel?",
+   "answer_kind": "date",
+   "gold": "2026-04-18",
+   "basis": "meetings/mtg-0005"
+  },
+  {
+   "id": "last-1",
+   "type": "last_seen",
+   "question": "As of the end of 2026-04-18, on what date did Amara most recently have a meeting or calendar sync with Hannah Liu, according to her calendar invites and meeting notes?",
+   "answer_kind": "date",
+   "gold": "2026-04-14",
+   "basis": "cal/evt-0002"
+  },
+  {
+   "id": "last-2",
+   "type": "last_seen",
+   "question": "As of the end of 2026-04-18, on what date did Amara most recently have a meeting or calendar sync with Bill Hart, according to her calendar invites and meeting notes?",
+   "answer_kind": "date",
+   "gold": "2026-04-14",
+   "basis": "cal/evt-0003"
+  },
+  {
+   "id": "last-3",
+   "type": "last_seen",
+   "question": "As of the end of 2026-04-18, on what date did Amara most recently have a meeting or calendar sync with Ravi Gupta, according to her calendar invites and meeting notes?",
+   "answer_kind": "date",
+   "gold": "2026-04-15",
+   "basis": "cal/evt-0005"
+  },
+  {
+   "id": "last-4",
+   "type": "last_seen",
+   "question": "As of the end of 2026-04-18, on what date did Amara most recently have a meeting or calendar sync with Tomoko Sato, according to her calendar invites and meeting notes?",
+   "answer_kind": "date",
+   "gold": "2026-04-15",
+   "basis": "cal/evt-0006"
+  },
+  {
+   "id": "last-5",
+   "type": "last_seen",
+   "question": "As of the end of 2026-04-18, on what date did Amara most recently have a meeting or calendar sync with Mina Kapoor, according to her calendar invites and meeting notes?",
+   "answer_kind": "date",
+   "gold": "2026-04-16",
+   "basis": "cal/evt-0010"
+  },
+  {
+   "id": "last-6",
+   "type": "last_seen",
+   "question": "As of the end of 2026-04-18, on what date did Amara most recently have a meeting or calendar sync with Anna Petrov, according to her calendar invites and meeting notes?",
+   "answer_kind": "date",
+   "gold": "2026-04-17",
+   "basis": "cal/evt-0013"
+  },
+  {
+   "id": "decision-1",
+   "type": "decision",
+   "question": "When will Halfway start Series B diligence on Threshold Robotics, as decided on the 2026-04-15 call with Diego Alvarez?",
+   "answer_kind": "keywords",
+   "gold": [
+    [
+     "august"
+    ]
+   ],
+   "basis": "meetings/mtg-0002 Decisions"
+  },
+  {
+   "id": "decision-2",
+   "type": "decision",
+   "question": "What did Amara and Marcus Reid decide about Solaris Grid Storage on 2026-04-16?",
+   "answer_kind": "keywords",
+   "gold": [
+    [
+     "diligence"
+    ]
+   ],
+   "basis": "meetings/mtg-0003 Decisions"
+  },
+  {
+   "id": "decision-3",
+   "type": "decision",
+   "question": "On 2026-04-19, what did Halfway decide about the Codex Robotics bridge round?",
+   "answer_kind": "keywords",
+   "gold": [
+    [
+     "pro-rata",
+     "pro rata",
+     "participat"
+    ]
+   ],
+   "basis": "meetings/mtg-0007 Decisions"
+  },
+  {
+   "id": "decision-4",
+   "type": "decision",
+   "question": "On 2026-04-18, what timeline did Amara and Priya Patel green-light for CarbonLoop's Series B prep?",
+   "answer_kind": "keywords",
+   "gold": [
+    [
+     "q3",
+     "third quarter"
+    ]
+   ],
+   "basis": "meetings/mtg-0005 Decisions"
+  },
+  {
+   "id": "decision-5",
+   "type": "decision",
+   "question": "What did Amara and Priya Patel decide about a CarbonLoop board observer seat on 2026-04-18?",
+   "answer_kind": "keywords",
+   "gold": [
+    [
+     "hold",
+     "wait",
+     "defer",
+     "postpone",
+     "until after",
+     "not now",
+     "delay"
+    ]
+   ],
+   "basis": "meetings/mtg-0005 Decisions"
+  },
+  {
+   "id": "decision-6",
+   "type": "decision",
+   "question": "What financing terms did Amara and Priya Patel approve for CarbonLoop on 2026-04-18?",
+   "answer_kind": "keywords",
+   "gold": [
+    [
+     "bridge"
+    ]
+   ],
+   "basis": "meetings/mtg-0005 Decisions"
+  },
+  {
+   "id": "trap-1",
+   "type": "premature_trap",
+   "question": "On what date did Amara attend the Helios Energy board meeting in Austin? If it has not happened as of today, or the knowledge base does not show it happening, answer UNKNOWN.",
+   "answer_kind": "unknown",
+   "gold": "UNKNOWN",
+   "basis": "meetings/mtg-0006 and mtg-0007: planned for May 15; the corpus ends 2026-04-19 and records no completion"
+  },
+  {
+   "id": "trap-2",
+   "type": "premature_trap",
+   "question": "On what date did Amara take the Helios Energy board seat? If it has not happened as of today, or the knowledge base does not show it happening, answer UNKNOWN.",
+   "answer_kind": "unknown",
+   "gold": "UNKNOWN",
+   "basis": "meetings/mtg-0006: effective May 1st; the corpus ends 2026-04-19 and records no completion"
+  },
+  {
+   "id": "trap-3",
+   "type": "premature_trap",
+   "question": "On what date did Diego Alvarez send Halfway the updated Threshold Robotics metrics deck? If it has not happened as of today, or the knowledge base does not show it happening, answer UNKNOWN.",
+   "answer_kind": "unknown",
+   "gold": "UNKNOWN",
+   "basis": "meetings/mtg-0002: by end of April; the corpus ends 2026-04-19 and records no completion"
+  },
+  {
+   "id": "trap-4",
+   "type": "premature_trap",
+   "question": "On what date did Elena Rossi send the updated Codex Robotics cap table and bridge round terms? If it has not happened as of today, or the knowledge base does not show it happening, answer UNKNOWN.",
+   "answer_kind": "unknown",
+   "gold": "UNKNOWN",
+   "basis": "meetings/mtg-0007: by April 25th; the corpus ends 2026-04-19 and records no completion"
+  },
+  {
+   "id": "trap-5",
+   "type": "premature_trap",
+   "question": "On what date did Amara complete her Helios Energy board onboarding paperwork? If it has not happened as of today, or the knowledge base does not show it happening, answer UNKNOWN.",
+   "answer_kind": "unknown",
+   "gold": "UNKNOWN",
+   "basis": "meetings/mtg-0006: by April 25th; the corpus ends 2026-04-19 and records no completion"
+  },
+  {
+   "id": "trap-6",
+   "type": "premature_trap",
+   "question": "On what date did the intro call between Amara and the Threshold Robotics CEO take place? If it has not happened as of today, or the knowledge base does not show it happening, answer UNKNOWN.",
+   "answer_kind": "unknown",
+   "gold": "UNKNOWN",
+   "basis": "meetings/mtg-0002: early May; the corpus ends 2026-04-19 and records no completion"
+  },
+  {
+   "id": "trap-7",
+   "type": "premature_trap",
+   "question": "On what date did Amara and Elena Rossi hold the follow-up call on their Terraform Robotics findings? If it has not happened as of today, or the knowledge base does not show it happening, answer UNKNOWN.",
+   "answer_kind": "unknown",
+   "gold": "UNKNOWN",
+   "basis": "meetings/mtg-0004: early May; the corpus ends 2026-04-19 and records no completion"
+  },
+  {
+   "id": "trap-8",
+   "type": "premature_trap",
+   "question": "On what date did Elena Rossi share the updated Meridian Robotics investor deck draft? If it has not happened as of today, or the knowledge base does not show it happening, answer UNKNOWN.",
+   "answer_kind": "unknown",
+   "gold": "UNKNOWN",
+   "basis": "meetings/mtg-0000: by April 21; the corpus ends 2026-04-19 and records no completion"
+  },
+  {
+   "id": "slack-1",
+   "type": "slack_when",
+   "question": "On what date did Elena Rossi post in Slack that she had just wrapped up the Nexus Robotics board call?",
+   "answer_kind": "date",
+   "gold": "2026-04-14",
+   "basis": "slack sl #halfway-partners 2026-04-14T05:20Z"
+  },
+  {
+   "id": "slack-2",
+   "type": "slack_when",
+   "question": "On what date did Lena Park flag in Slack that Terraform Industries had just closed its Series B?",
+   "answer_kind": "date",
+   "gold": "2026-04-14",
+   "basis": "slack #deal-flow 2026-04-14T08:20Z"
+  },
+  {
+   "id": "slack-3",
+   "type": "slack_when",
+   "question": "On what date did Amara post in Slack that she had just gotten off a call with Terraform Industries about their strong Q1 numbers?",
+   "answer_kind": "date",
+   "gold": "2026-04-17",
+   "basis": "slack #halfway-partners 2026-04-17T12:00Z"
+  }
+ ]
+}
