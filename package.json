@@ -1,6 +1,6 @@
 {
   "name": "gbrain-evals",
-  "version": "0.10.14",
+  "version": "0.10.16",
   "description": "BrainBench \u2014 public benchmark for personal knowledge agent stacks. Consumes gbrain as a library.",
   "type": "module",
   "license": "MIT",
@@ -13,7 +13,7 @@
     "test:unit": "bun scripts/test-shards.ts",
     "test:serial": "bun test test/eval/ eval/",
     "test:py": "python3 test/retrieval_refresh_orchestrator_test.py",
-    "validate": "python3 scripts/verify-published-longmemeval.py && python3 scripts/verify-longmemeval-opaque-qa.py >/dev/null && python3 scripts/verify-documentation-refresh.py && python3 scripts/check-links.py && bun run eval:query:validate && bun eval/runner/validate-data.ts",
+    "validate": "python3 scripts/verify-published-longmemeval.py && python3 scripts/verify-longmemeval-opaque-qa.py >/dev/null && python3 scripts/verify-longmemeval-opaque-followups.py >/dev/null && python3 scripts/verify-documentation-refresh.py && python3 scripts/check-links.py && bun run eval:query:validate && bun eval/runner/validate-data.ts",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json",
     "eval:run": "bun eval/runner/multi-adapter.ts",
     "eval:run:dev": "BRAINBENCH_N=1 bun eval/runner/multi-adapter.ts",

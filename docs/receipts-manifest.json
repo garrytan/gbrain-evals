@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "description": "Map from published claims to their saved evidence. The manifest test checks artifact paths, SHA-256 hashes, and declared JSON-pointer values. It does not parse report prose or independently validate every scorer. Separate golden tests and recount scripts are named where available. Entries marked disclosed-gap identify missing evidence; a fresh run cannot restore a missing historical receipt.",
-  "updated": "2026-10-03",
+  "updated": "2026-10-04",
   "entries": [
     {
       "claim_id": "lifecycle-2026-09-29-primary",
@@ -4223,6 +4223,58 @@
         "/gbrain/loaded_git_head": "48ed5e8233f617479df989998560840747af0425"
       },
       "note": "checks/run-all.ts with GBRAIN_ROOT at a 48ed5e8 checkout."
+    },
+    {
+      "claim_id": "lme-opaque-recount-retrieval",
+      "readme_anchor": "docs/benchmarks/2026-10-04-longmemeval-opaque-followups.md: 1a. Retrieval with opaque ids",
+      "artifact_path": "docs/benchmarks/2026-10-04-longmemeval-opaque-followups/summary-1a.json",
+      "artifact_sha256": "1eadccd7899fb027eedaa956aa8728cfa3d61100a24e563a79b92ff882135416",
+      "status": "covered",
+      "expected": {
+        "/harness/FINAL/all/new_strict": 451,
+        "/harness/FINAL/all/old_strict": 449,
+        "/harness/A1/all/new_strict": 434,
+        "/harness/A1/all/old_strict": 439,
+        "/harness/A4/all/new_strict": 384,
+        "/harness/A3/all/new_strict": 436,
+        "/harness/A3/verdict": "moved",
+        "/harness/FINAL/verdict": "confirmed",
+        "/runner/hybrid+expansion/all/new_strict": 440,
+        "/runner/hybrid-sessdiv+rerank/all/new_strict": 452
+      },
+      "note": "Every published LongMemEval retrieval arm recounted with opaque session ids at gbrain 109b992 and paired with its published receipt; recount with scripts/verify-longmemeval-opaque-followups.py."
+    },
+    {
+      "claim_id": "lme-opaque-reading-notes",
+      "readme_anchor": "docs/benchmarks/2026-10-04-longmemeval-opaque-followups.md: 1b. The reading-notes transfer with opaque ids",
+      "artifact_path": "docs/benchmarks/2026-10-04-longmemeval-opaque-followups/summary-1b.json",
+      "artifact_sha256": "060930ab7f479b459fef56ffe4e34b5fc3ff8209cd18f8c650dab005eddefd81",
+      "status": "covered",
+      "expected": {
+        "/arms/direct/correct": 304,
+        "/arms/notes/correct": 320,
+        "/paired/all/notes_wins": 25,
+        "/paired/all/notes_losses": 9,
+        "/gate/passes": true,
+        "/reader_settled_calls": 722
+      },
+      "note": "Reading-notes transfer cohort (361) rebuilt from public receipts, opaque ids, Sonnet 4.6 at 512 tokens, gbrain judge gpt-4o-2024-08-06."
+    },
+    {
+      "claim_id": "lme-frontier-reader",
+      "readme_anchor": "docs/benchmarks/2026-10-04-longmemeval-opaque-followups.md: 2. A frontier reader on gbrain's retrieval",
+      "artifact_path": "docs/benchmarks/2026-10-04-longmemeval-opaque-followups/summary-2.json",
+      "artifact_sha256": "fc474c72dfae71f9b91e504dca48b6e8e0528ad69cf0fe9f844c78da33ba6009",
+      "status": "covered",
+      "expected": {
+        "/correct/frontier_gbrain_judge": 447,
+        "/correct/frontier_official_judge": 448,
+        "/correct/gpt4o_b_gbrain_judge": 430,
+        "/paired/vs_b_gbrain/frontier_better": 33,
+        "/paired/vs_b_gbrain/frontier_worse": 16,
+        "/rows_present": 500
+      },
+      "note": "gpt-5.4 (medium reasoning) on the 2026-09-29 GPT-4o arm's exact official prompts; two gpt-4o judges."
     }
   ]
 }

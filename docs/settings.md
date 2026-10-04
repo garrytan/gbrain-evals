@@ -4,8 +4,10 @@ For an agent searching long conversation histories with a small result budget,
 start by evaluating gbrain's `balanced` mode. In the measured version,
 it combines search methods, uses the Voyage reranker when available, and leaves
 query expansion and autocut off. That setup retrieved all labeled conversations
-for 449/470 answerable LongMemEval questions. It is a useful starting point backed
-by a specific experiment. [September 6 results](benchmarks/2026-09-06-longmemeval-ranker-wave.md).
+for 449/470 answerable LongMemEval questions (451/470 when recounted with opaque
+session ids at `109b992` on October 4, 2026). It is a useful starting point backed
+by a specific experiment. [September 6 results](benchmarks/2026-09-06-longmemeval-ranker-wave.md),
+[October 4 recount](benchmarks/2026-10-04-longmemeval-opaque-followups.md).
 
 These recommendations refer to **gbrain v0.48.4.0, commit `2efaaf8f`**, the code
 measured in the September 6 and September 9 experiments. This repository currently
@@ -20,7 +22,7 @@ a mode. A mode name alone is not a complete description of an experiment.
 
 | Workload | Starting point | Why and what to watch |
 |---|---|---|
-| Long conversations; questions need several old sessions | `balanced`, reranker on, expansion off, autocut off | Complete retrieval was 449/470 with reranking versus 439/470 without. Autocut discarded necessary additional evidence. [Experiment](benchmarks/2026-09-06-longmemeval-ranker-wave.md) |
+| Long conversations; questions need several old sessions | `balanced`, reranker on, expansion off, autocut off | Complete retrieval was 449/470 with reranking versus 439/470 without (451 versus 434 recounted with opaque ids on October 4, 2026). Autocut discarded necessary additional evidence. [Experiment](benchmarks/2026-09-06-longmemeval-ranker-wave.md) |
 | Exact names, identifiers, or remembered phrases | Include a keyword baseline | The `grep-only` adapter is a BM25 ranker. Compare it with gbrain on your actual phrases before paying for extra stages. [Concept comparison](benchmarks/2026-09-09-retrieval-refresh.md) |
 | Synonyms and vague descriptions | Compare gbrain with reranking and lexical metadata gating against a vector baseline | Held-out concept nDCG@5 was 0.6619 with reranking, 0.5780 without it, and 0.6054 for vectors alone. Link popularity must not overwhelm a better match. [Concept experiment](benchmarks/2026-09-09-retrieval-refresh.md#concept-search-order-meaning-and-popularity) |
 | Recognized relationship questions over linked pages | Evaluate production relationship retrieval; retain relational pin `3` with reranking | Enabling the stage raised investor first-place hits from 9/39 to 21/39. Attendance questions did not improve; link direction and parser coverage matter. [Controlled test](benchmarks/2026-09-09-retrieval-refresh.md#production-relationship-retrieval-one-switch) |
@@ -44,8 +46,8 @@ as completed reranked measurements.
 |---|---|---|
 | `search.mode` | A bundle of defaults | `balanced` is the measured small-budget conversation starting point. Individual overrides can change its behavior. |
 | `search.reranker.enabled` / `.model` | Re-read and reorder candidate passages | The measured reranker is `voyage:rerank-2.5`. It needs `VOYAGE_API_KEY`; availability and latency are part of the tradeoff. |
-| `search.expansion` | Generate alternative query phrasings with a language model | Off for the measured five-result conversation workload. Expansion introduced substantial losses there. |
-| `search.expansion_variant_budget` | Total voting weight shared by query rewrites | `0.25` repaired part of the expansion loss but still underperformed no expansion. It is not the recommended default. |
+| `search.expansion` | Generate alternative query phrasings with a language model | Off for the measured five-result conversation workload. Expansion introduced substantial losses there on September 6. October 4, 2026: at gbrain `109b992` it no longer does (436/470 against 434/470 without the reranker; 442/470 against 451/470 with it), so the reason to keep it off is a model call per query with no measured gain. [Recount](benchmarks/2026-10-04-longmemeval-opaque-followups.md) |
+| `search.expansion_variant_budget` | Total voting weight shared by query rewrites | `0.25` repaired part of the expansion loss but still underperformed no expansion. It is not the recommended default. October 4, 2026: at `109b992` legacy weighting and 0.25 score the same (436 and 435 of 470), so the budget has nothing left to repair. |
 | `search.autocut` | Trim results after a large score drop | Off for questions that may require several sessions. In the recorded comparison, off improved all-evidence recall by 70 questions. |
 | `search.metadata_boost_gate` | Decide when link/age and other metadata bonuses may apply | `lexical` skips these bonuses on a vector-only candidate pool. Keyword, title, or relationship contributions allow them for the pool. Compare with `always` when studying this mechanism. |
 | `search.relational_retrieval` / `search.relational_retrieval_depth` | Enable relationship retrieval and limit how many links it follows | `balanced` enables it at depth `2`. The controlled experiment changes only the enable switch. A question still has to match a supported relationship pattern. |

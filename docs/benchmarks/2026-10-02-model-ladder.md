@@ -16,7 +16,7 @@ Measured 2026-10-02 and 2026-10-03. The protocol is in
 > So the gbrain results in this report measure gbrain with vector search often degraded, and its comparisons with
 > plain files are not comparisons of gbrain as configured. Comparisons between gbrain builds within one run shared
 > the condition. The plain-file, memory-tool and oracle arms make no provider calls through the proxy. The pg arm
-> embeds its queries inside the runner, which waits rather than falls back. The ledger fix is gbrain-evals v0.10.14.
+> embeds its queries inside the runner, which waits rather than falls back. The ledger fix is gbrain-evals v0.10.16.
 > Runs since then are in [the cost wave section](#cost-wave-v060440-measured-on-the-fixed-harness). gbrain against
 > plain files has not been re-measured under the fixed harness.
 
