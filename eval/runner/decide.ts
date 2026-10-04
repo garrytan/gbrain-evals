@@ -242,9 +242,15 @@ async function cmdDev(argv: string[]): Promise<string> {
   const jobs = planJobs(spec, runs, { shards: Number(flag(argv, '--shards') ?? 1), only, budgetRunId });
   const parallel = Math.max(1, Number(flag(argv, '--jobs') ?? 4));
   const results: Array<{ job: Job; code: number; tail: string }> = [];
-  const queue = [...jobs];
-  await Promise.all(Array.from({ length: Math.min(parallel, queue.length) }, async () => {
-    for (let job = queue.shift(); job; job = queue.shift()) {
+  // Category runners may bind fixed local ports (N1), so they run one at a time; memory-qa arms run in parallel.
+  const queue = jobs.filter(j => j.source.kind === 'memory-qa');
+  const serial = jobs.filter(j => j.source.kind === 'category');
+  const lanes = [
+    ...Array.from({ length: Math.max(1, Math.min(parallel - (serial.length ? 1 : 0), queue.length)) }, () => queue),
+    ...(serial.length ? [serial] : []),
+  ];
+  await Promise.all(lanes.map(async lane => {
+    for (let job = lane.shift(); job; job = lane.shift()) {
       process.stderr.write(`[decide] start ${job.source.id} ${job.arm}${job.shards > 1 ? ` shard ${job.shard}/${job.shards}` : ''}\n`);
       const r = await runJob(job);
       process.stderr.write(`[decide] done  ${job.source.id} ${job.arm}${job.shards > 1 ? ` shard ${job.shard}` : ''}: exit ${r.code}\n`);
@@ -293,7 +299,15 @@ export function loadArmRows(runs: string, src: Source, arm: 'baseline' | 'candid
     receipts.push(JSON.parse(readFileSync(r, 'utf8')));
     if (src.rows_path) rows = loadRows(r, { idField: src.id_fields?.[0] ?? src.id_field ?? 'id', rowsPath: src.rows_path }).rows;
   }
-  return { rows: rows.map(row => ({ ...row, __id: composeId(row, src) })), receipts };
+  const derive = src.kind === 'category' ? src.derive ?? [] : [];
+  return {
+    rows: rows.map(row => {
+      const out: Row = { ...row, __id: composeId(row, src) };
+      for (const d of derive) { const v = getPath(row, d.from); if (v !== undefined) out[d.field] = v === d.equals ? 1 : 0; }
+      return out;
+    }),
+    receipts,
+  };
 }
 
 function checkContract(receipt: Record<string, unknown>, c: NonNullable<CategorySource['contracts']>[number]): boolean {

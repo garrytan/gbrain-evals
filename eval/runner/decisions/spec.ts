@@ -75,6 +75,8 @@ export interface CategorySource extends SourceCommon {
   args: string[];
   /** Array of per-item rows inside the receipt; omit for contract-only sources. */
   rows_path?: string;
+  /** Binary metrics derived from row fields before pairing: field = 1 when the value at `from` equals `equals`, else 0 (missing stays missing). */
+  derive?: Array<{ field: string; from: string; equals: string | number | boolean }>;
   contracts?: ContractCheck[];
   paid: boolean;
   estimate_usd?: number;
@@ -147,6 +149,9 @@ export function validateSpec(value: unknown, path = 'decision.json'): DecisionSp
         if (typeof src.script !== 'string' || !src.script.startsWith('eval/runner/')) problems.push(`${label}: script must be a path under eval/runner/`);
         if (!Array.isArray(src.args)) problems.push(`${label}: args must be an array`);
         if (!src.rows_path && !(src.contracts?.length)) problems.push(`${label}: a category source needs rows_path or contracts`);
+        else if (typeof src.script === 'string' && existsSync(src.script) && !readFileSync(src.script, 'utf8').includes('resolveGbrainUnderTest')) {
+          problems.push(`${label}: ${src.script} does not take --gbrain (it imports the installed gbrain package), so both arms would measure the same build`);
+        }
       } else problems.push(`${label}: kind must be memory-qa or category`);
     }
     if (typeof s.alpha !== 'number' || s.alpha <= 0 || s.alpha >= 0.5) problems.push('alpha must be in (0, 0.5)');
@@ -228,12 +233,19 @@ function category(id: string, script: string, extra: Partial<CategorySource>): C
 }
 
 const N3 = () => category('n3-temporal-asof', 'eval/runner/n3-temporal-asof.ts', {
-  rows_path: 'data.rows', id_field: 'probe_id', exclude_when: ['status=unsupported'],
-  comparisons: [{ id: 'n3-pass', metric: 'pass', gate: 'noninferiority', direction: 'higher', tolerance: 0.01, cluster_by: 'scenario' }],
+  rows_path: 'data.rows', id_field: 'probe_id', exclude_when: ['status=unsupported'], min_clusters: 5,
+  comparisons: [
+    { id: 'n3-pass', metric: 'pass', gate: 'noninferiority', direction: 'higher', tolerance: 0.01, cluster_by: 'feature' },
+    { id: 'n3-no-regression', metric: 'pass', gate: 'exact', assertion: { kind: 'no_item_regression', direction: 'higher' }, cluster_by: 'feature' },
+  ],
 });
 const N4 = () => category('n4-entity-resolution', 'eval/runner/n4-entity-resolution.ts', {
-  rows_path: 'data.rows', id_field: 'id',
-  comparisons: [{ id: 'n4-recall', metric: 'recall', gate: 'noninferiority', direction: 'higher', tolerance: 0.01, cluster_by: 'family' }],
+  rows_path: 'data.rows', id_field: 'id', min_clusters: 5,
+  derive: [{ field: 'resolver_correct', from: 'resolver.outcome', equals: 'correct' }, { field: 'resolver_wrong', from: 'resolver.outcome', equals: 'wrong' }],
+  comparisons: [
+    { id: 'n4-correct', metric: 'resolver_correct', gate: 'noninferiority', direction: 'higher', tolerance: 0.01, cluster_by: 'family' },
+    { id: 'n4-no-new-wrong-merge', metric: 'resolver_wrong', gate: 'exact', assertion: { kind: 'no_item_regression', direction: 'lower' }, cluster_by: 'family' },
+  ],
 });
 const N9 = (primary: boolean) => category('n9-multi-hop-paraphrase', 'eval/runner/n9-multi-hop-paraphrase.ts', {
   rows_path: 'data.per_question', id_fields: ['seed', 'question_id', 'split'], args: [],
@@ -245,7 +257,7 @@ const N9 = (primary: boolean) => category('n9-multi-hop-paraphrase', 'eval/runne
     { id: 'n9-support', metric: 'on.support_all_hit', gate: 'exploratory', direction: 'higher', cluster_by: 'question_id' },
   ],
 });
-const TYPE_ACCURACY = () => category('type-accuracy', 'eval/runner/type-accuracy.ts', {
+export const TYPE_ACCURACY = () => category('type-accuracy', 'eval/runner/type-accuracy.ts', {
   rows_path: 'data.rows', id_field: 'probe_id', args: [],
   comparisons: [{ id: 'type-match', metric: 'anyTypeMatch', gate: 'noninferiority', direction: 'higher', tolerance: 0.01, cluster_by: 'probe_id' }],
 });
@@ -278,8 +290,8 @@ export function templateSources(plan: Plan): { sources: Source[]; notes: string 
       notes: 'Always-loaded core tier and pre-compaction save: the agent-compaction scenario lands in milestone M2; LME-S is a guardrail.',
     };
     case 'P5': return {
-      sources: [TYPE_ACCURACY(), N4(), memoryQaSource('lme-s', { primary: false })],
-      notes: 'Human-typable fact/link line grammar, wanted pages, duplicate nudge: typed-edge accuracy and entity resolution; LME-S as a guardrail.',
+      sources: [N4(), memoryQaSource('lme-s', { primary: false })],
+      notes: 'Human-typable fact/link line grammar, wanted pages, duplicate nudge: entity resolution and LME-S as guardrails. Typed-edge accuracy (type-accuracy.ts) cannot measure an overlay build yet; add a grammar category for the primary.',
     };
     case 'P6': return {
       sources: [memoryQaSource('lme-s', { primary: true }), qaSource('lme-s', 'reader', { primary: true }), qaSource('lme-s', 'think', { primary: false }),
