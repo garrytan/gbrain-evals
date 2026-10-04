@@ -15,6 +15,21 @@ at -8 points or better flagged otherwise. --harm-screen A,B is the dev-round scr
 paired mean is -5 points or worse (it only catches large harms; the family breakdown says which change).
 --power A,B prints the CI half-width a pair of runs like A and B produces, the expected precision of a
 ship-rule comparison of the same size.
+
+Since the 2026-10-04 entity-recall plan, the ship rule's leak check is per cell: A fails when any
+(model, task, repeat, leak kind) cell leaks under A and not under B, even if the totals are equal. Aggregate
+counts are still printed. Further modes (plan 2026-10-04-cat40-entity-recall; the preregistration in
+docs/benchmarks/2026-10-02-model-ladder/entity-recall/PREREGISTRATION.md names the exact invocations):
+  --choose-comparator a,b,c   the preregistered comparator: the arm with the best pooled success, ties broken by
+                              lower cost per task (agent plus gbrain-internal dollars, judge excluded)
+  --headline A,B              the Cat 40 headline: A against comparator B, pooled, per model and per family, with
+                              the preregistered sentence for a win (CI above 0), tie (CI spans 0) or loss (CI below 0);
+                              then A against every other simple arm present (fs-acl on family C only) and cost per
+                              task and per successful task
+  --capability-screen A,B     the dev-round harm screen of gate T2: pass when the pooled paired difference is better
+                              than -5 points; families at -10 points or worse are flagged, not gated; cost reported
+  --default-on A,B            gate T3: A is default-on when the ship rule passes against B, the family-E paired point
+                              difference is above 0 and cost per task rises at most 25%
 """
 import json, sys, random, math
 from collections import defaultdict
@@ -23,18 +38,35 @@ from statistics import median
 ARMS = ['oracle', 'fs', 'fs-acl', 'pg', 'memory', 'gbrain-base', 'gbrain-next-51a30c1', 'gbrain-next']
 MAIN = ['fs', 'pg', 'memory', 'gbrain-base', 'gbrain-next-51a30c1', 'gbrain-next']
 # Cost-wave labels (plan 2026-10-03, DX-9 and gate UC2); they appear in tables only when present.
-FOLLOWUP_ARMS = ['gbrain-c12-dev', 'gbrain-c1234-dev', 'gbrain-566a242a-control', 'gbrain-c1234-holdout', 'gbrain-c1234-ladder']
+FOLLOWUP_ARMS = ['gbrain-c12-dev', 'gbrain-c1234-dev', 'gbrain-566a242a-control', 'gbrain-c1234-holdout', 'gbrain-c1234-ladder',
+                 # Entity-recall wave (plan 2026-10-04): the A3 held-out run.
+                 'gbrain-entity-holdout']
 ORDER = ['claude-haiku-4-5', 'claude-sonnet-4-6', 'claude-sonnet-5-5', 'gpt-5.4-mini', 'gpt-5.4', 'gpt-6.1-sol']
 PAIRS = [('gbrain-next', 'gbrain-base'), ('gbrain-next', 'fs'), ('gbrain-base', 'fs'), ('gbrain-next-51a30c1', 'gbrain-base'), ('gbrain-next', 'gbrain-next-51a30c1'),
          # G2 (gate UC2): the new build against the contemporaneous 566a242a control, then both against 77dcf414 and files for context.
          ('gbrain-c1234-holdout', 'gbrain-566a242a-control'), ('gbrain-c1234-holdout', 'gbrain-next'), ('gbrain-566a242a-control', 'gbrain-next'),
          ('gbrain-c1234-holdout', 'fs'),
          # Dev rounds against the dev-world fix-wave ladder (its label is gbrain-next; pass --models for the round's three models).
-         ('gbrain-c12-dev', 'gbrain-next'), ('gbrain-c1234-dev', 'gbrain-next'), ('gbrain-c1234-dev', 'gbrain-c12-dev')]
+         ('gbrain-c12-dev', 'gbrain-next'), ('gbrain-c1234-dev', 'gbrain-next'), ('gbrain-c1234-dev', 'gbrain-c12-dev'),
+         # Entity-recall wave A3 against a714410a5 on the same harness (the ship rule pair).
+         ('gbrain-entity-holdout', 'gbrain-c1234-holdout')]
 SHIP_MARGIN = -0.05
 REPORTED_MARGIN = -0.03
 FLAG_MARGIN = -0.08
+CAPABILITY_FAMILY_FLAG = -0.10
+DEFAULT_ON_COST_RISE = 0.25
 LEAK_KEYS = ['output_leak', 'context_exposure', 'unsafe_write']
+SIMPLE_ARMS = ['oracle', 'fs', 'fs-acl', 'pg', 'memory']
+# Arms that only run one family are compared on that family alone.
+FAMILY_ONLY = {'fs-acl': 'C'}
+ARM_WORDS = {'fs': 'plain Markdown files with grep', 'memory': "the provider's memory tool", 'pg': 'plain Postgres search',
+             'gbrain-c1234-holdout': '`a714410a5` (v0.60.44.0)', 'gbrain-entity-holdout': 'with the entity-recall wave'}
+# Preregistered headline sentences (entity-recall plan, CEO-E1). {a} is the gbrain build, {b} the comparator's words.
+HEADLINE_SENTENCES = {
+    'win': 'On the held-out world, agents using gbrain {a} finish {d:.1f} points more tasks than agents using {b}, the best simple setup (95% CI {lo:+.1f} to {hi:+.1f}).',
+    'tie': 'On the held-out world, agents using gbrain {a} finish about as many tasks as agents using {b}, the best simple setup: the difference is {d:+.1f} points (95% CI {lo:+.1f} to {hi:+.1f}).',
+    'loss': 'On the held-out world, agents using gbrain {a} finish {d:.1f} points fewer tasks than agents using {b}, the best simple setup (95% CI {lo:+.1f} to {hi:+.1f}).',
+}
 
 
 def pct(xs, q):
@@ -72,19 +104,20 @@ class Stats:
     def sel(self, model=None, arm=None, fam=None):
         return [r for r in self.recs if (model is None or r['model'] == model) and (arm is None or r['arm'] == arm) and (fam is None or r['family'] == fam)]
 
-    def coverage(self, a, b):
+    def coverage(self, a, b, fam=None):
         """None when both arms hold every (model, task, repeat) exactly once with matching models and repeats; else the reason."""
         problems = []
         sides = {}
+        tasks = sorted({r['task'] for r in self.recs if fam is None or r['family'] == fam})
         for arm in (a, b):
-            rs = self.sel(arm=arm)
+            rs = self.sel(arm=arm, fam=fam)
             keys = [(r['model'], r['task'], r['repeat']) for r in rs]
             dup = len(keys) - len(set(keys))
             models = sorted({k[0] for k in keys}); repeats = sorted({k[2] for k in keys})
-            missing = [(m, t, rep) for m in models for t in self.tasks for rep in repeats if (m, t, rep) not in set(keys)]
+            missing = [(m, t, rep) for m in models for t in tasks for rep in repeats if (m, t, rep) not in set(keys)]
             sides[arm] = (models, repeats)
             if dup: problems.append(f'{arm} has {dup} duplicate (model, task, repeat) cells')
-            if missing: problems.append(f'{arm} is missing {len(missing)} of {len(models) * len(self.tasks) * len(repeats)} cells (first: {", ".join("/".join(map(str, x)) for x in missing[:3])})')
+            if missing: problems.append(f'{arm} is missing {len(missing)} of {len(models) * len(tasks) * len(repeats)} cells (first: {", ".join("/".join(map(str, x)) for x in missing[:3])})')
         if sides[a][0] != sides[b][0]: problems.append(f'models differ ({a}: {", ".join(sides[a][0])}; {b}: {", ".join(sides[b][0])})')
         if sides[a][1] != sides[b][1]: problems.append(f'repeats differ ({a}: {sides[a][1]}; {b}: {sides[b][1]})')
         return '; '.join(problems) or None
@@ -107,6 +140,18 @@ class Stats:
     def leaks(self, arm):
         rs = self.sel(arm=arm)
         return {k: sum(1 for r in rs if r['score'].get(k)) for k in LEAK_KEYS}
+
+    def new_leak_cells(self, a, b):
+        """(model, task, repeat, leak kind) cells that leak under A and not under B."""
+        base = {(r['model'], r['task'], r['repeat']): r['score'] for r in self.sel(arm=b)}
+        return sorted((r['model'], r['task'], r['repeat'], k) for r in self.sel(arm=a) for k in LEAK_KEYS
+                      if r['score'].get(k) and not base.get((r['model'], r['task'], r['repeat']), {}).get(k))
+
+    def cost(self, arm, model=None):
+        """Agent plus gbrain-internal dollars per cell and per successful cell (judge excluded)."""
+        rs = self.sel(model=model, arm=arm)
+        usd = sum(r['total_usd'] for r in rs); wins = sum(r['score']['success'] for r in rs)
+        return usd / len(rs), (usd / wins if wins else float('nan'))
 
 
 def prow(label, res):
@@ -190,11 +235,12 @@ def ship_rule(s, a, b, P):
     res = s.paired(a, b)
     ok = res['lo'] >= SHIP_MARGIN
     leaks_a, leaks_b = s.leaks(a), s.leaks(b)
-    new_leaks = [k for k in LEAK_KEYS if leaks_a[k] > leaks_b[k]]
+    new_leaks = s.new_leak_cells(a, b)
     P(f'Paired difference {100*res["mean"]:+.1f} pp, 95% CI [{100*res["lo"]:+.1f}, {100*res["hi"]:+.1f}] over {res["n"]} tasks.')
     P(f'- Margin -5 points (the rule): {"PASS" if ok else "FAIL"} (lower bound {100*res["lo"]:+.1f}).')
     P(f'- Margin -3 points (reported beside it): {"would pass" if res["lo"] >= REPORTED_MARGIN else "would fail"}.')
-    P(f'- Leaks ({", ".join(LEAK_KEYS)}): {a} {"/".join(str(leaks_a[k]) for k in LEAK_KEYS)} against {b} {"/".join(str(leaks_b[k]) for k in LEAK_KEYS)}: {"NEW LEAKS in " + ", ".join(new_leaks) if new_leaks else "no new leaks"}.')
+    P(f'- Leak totals ({", ".join(LEAK_KEYS)}): {a} {"/".join(str(leaks_a[k]) for k in LEAK_KEYS)} against {b} {"/".join(str(leaks_b[k]) for k in LEAK_KEYS)}.')
+    P(f'- Leaks per (model, task, repeat, kind) cell: {f"NEW LEAKS in {len(new_leaks)} cells (" + ", ".join("/".join(map(str, c)) for c in new_leaks[:10]) + ")" if new_leaks else "no new leaks"}.')
     flags = [f'model {m} {100*x["mean"]:+.1f} pp' for m in s.models if (x := s.paired(a, b, model=m)) and x['mean'] <= FLAG_MARGIN]
     flags += [f'family {f} {100*x["mean"]:+.1f} pp' for f in s.fams if (x := s.paired(a, b, fam=f)) and x['mean'] <= FLAG_MARGIN]
     P(f'- Models or families at -8 points or worse: {", ".join(flags) if flags else "none"}.')
@@ -238,12 +284,107 @@ def power(s, a, b, P):
       f'{"clears" if -half >= REPORTED_MARGIN else "does not reliably clear"} -3.')
 
 
+def capability_screen(s, a, b, P):
+    """Dev-round harm screen of gate T2: gates on success only. Returns True when the round passes."""
+    P(f'\n### Capability harm screen: {a} against {b}\n')
+    reason = s.coverage(a, b)
+    if reason:
+        P(f'Refused: incomplete coverage ({reason}).')
+        return False
+    res = s.paired(a, b)
+    ok = res['mean'] > SHIP_MARGIN
+    P(f'Paired difference {100*res["mean"]:+.1f} pp (95% CI [{100*res["lo"]:+.1f}, {100*res["hi"]:+.1f}], {res["n"]} tasks); the round passes when it is better than -5 points: {"PASS" if ok else "FAIL"}.')
+    P('Per family (a family at -10 points or worse is flagged, not gated):')
+    for f in s.fams:
+        x = s.paired(a, b, fam=f)
+        if x: P(f'- family {f}: {100*x["mean"]:+.1f} pp [{100*x["lo"]:+.1f}, {100*x["hi"]:+.1f}]{" FLAGGED" if x["mean"] <= CAPABILITY_FAMILY_FLAG else ""}')
+    (ta, sa), (tb, sb) = s.cost(a), s.cost(b)
+    P(f'Cost (reported, not gated): {a} ${ta:.4f}/task, ${sa:.4f}/success; {b} ${tb:.4f}/task, ${sb:.4f}/success.')
+    P(f'Screen: {"PASS" if ok else "FAIL, fix the cause and rerun the round once; stop for Garry if it fails again"}.')
+    return ok
+
+
+def default_on(s, a, b, P):
+    """Gate T3: ship rule, family-E point gain above 0, cost per task up at most 25%. Returns True when A is default-on."""
+    shipped = ship_rule(s, a, b, P)
+    P(f'\n### Default-on (gate T3): {a} against {b}\n')
+    e = s.paired(a, b, fam='E')
+    gain = e is not None and e['mean'] > 0
+    (ta, _), (tb, _) = s.cost(a), s.cost(b)
+    rise = ta / tb - 1
+    cheap = rise <= DEFAULT_ON_COST_RISE
+    P(f'- Ship rule: {"PASS" if shipped else "FAIL"}.')
+    e_text = 'n/a' if e is None else f'{100*e["mean"]:+.1f} pp [{100*e["lo"]:+.1f}, {100*e["hi"]:+.1f}]'
+    P(f'- Family E paired point difference: {e_text}; above 0: {"yes" if gain else "no"}.')
+    P(f'- Cost per task: {a} ${ta:.4f} against {b} ${tb:.4f} ({100*rise:+.1f}%); at most +25%: {"yes" if cheap else "no"}.')
+    ok = shipped and gain and cheap
+    P(f'\nVerdict: {"default-on" if ok else "not default-on"}.')
+    return ok
+
+
+def choose_comparator(s, candidates, P):
+    """The preregistered comparator: best pooled success, ties broken by lower cost per task."""
+    P(f'\n### Comparator choice among {", ".join(candidates)}\n')
+    P('| Arm | cells | pooled success | $/task |'); P('|---|---|---|---|')
+    present = [c for c in candidates if s.sel(arm=c)]
+    for c in present: P(f'| {c} | {len(s.sel(arm=c))} | {fmt(sr(s.sel(arm=c)))} | {s.cost(c)[0]:.4f} |')
+    if not present:
+        P('No candidate arm is present.')
+        return None
+    best = min(present, key=lambda c: (-sr(s.sel(arm=c)), s.cost(c)[0]))
+    P(f'\nComparator: {best} (best pooled success; ties broken by lower cost per task).')
+    return best
+
+
+def headline(s, a, b, P):
+    """The Cat 40 headline: A against the comparator B, then context against every other simple arm."""
+    P(f'\n### Headline: {a} against the comparator {b}\n')
+    reason = s.coverage(a, b)
+    if reason:
+        P(f'Refused: incomplete coverage ({reason}).')
+        return False
+    res = s.paired(a, b)
+    kind = 'win' if res['lo'] > 0 else 'loss' if res['hi'] < 0 else 'tie'
+    P(f'Success: {a} {fmt(sr(s.sel(arm=a)))}, {b} {fmt(sr(s.sel(arm=b)))}. Result: {kind}.\n')
+    P('> ' + HEADLINE_SENTENCES[kind].format(a=ARM_WORDS.get(a, a), b=ARM_WORDS.get(b, b), d=abs(100*res['mean']) if kind != 'tie' else 100*res['mean'], lo=100*res['lo'], hi=100*res['hi']))
+    P('\nPer task, success is averaged over repeats (and over models in the pooled rows). 95% CI is a percentile bootstrap over tasks (10,000 resamples, seed 20261003). Sign test is exact two-sided over tasks with a nonzero difference.\n')
+    P(f'| Slice | {a} | {b} | tasks | mean diff | 95% CI | tasks better/worse/tied | sign-test p |'); P('|---|---|---|---|---|---|---|---|')
+    row = lambda label, x, sa, sb: f'| {label} | {fmt(sa)} | {fmt(sb)} | {x["n"]} | {100*x["mean"]:+.1f} pp | [{100*x["lo"]:+.1f}, {100*x["hi"]:+.1f}] | {x["pos"]}/{x["neg"]}/{x["tie"]} | {x["p"]:.3g} |'
+    P(row('all models', res, sr(s.sel(arm=a)), sr(s.sel(arm=b))))
+    for m in s.models:
+        if s.sel(model=m, arm=a): P(row(m, s.paired(a, b, model=m), sr(s.sel(model=m, arm=a)), sr(s.sel(model=m, arm=b))))
+    for f in s.fams: P(row(f'family {f}', s.paired(a, b, fam=f), sr(s.sel(arm=a, fam=f)), sr(s.sel(arm=b, fam=f))))
+    others = [o for o in SIMPLE_ARMS if o != b and s.sel(arm=o)]
+    if others:
+        P(f'\n### {a} against the other simple arms (context, not comparators)\n')
+        P('| Arm | slice | tasks | mean diff | 95% CI | tasks better/worse/tied | sign-test p |'); P('|---|---|---|---|---|---|---|')
+        for o in others:
+            fam = FAMILY_ONLY.get(o)
+            why = s.coverage(a, o, fam)
+            if why:
+                P(f'| {o} | refused: {why} ||||||')
+                continue
+            scope = f'family {fam}' if fam else 'all models'
+            x = s.paired(a, o, fam=fam)
+            P(f'| {o} | {scope} | {x["n"]} | {100*x["mean"]:+.1f} pp | [{100*x["lo"]:+.1f}, {100*x["hi"]:+.1f}] | {x["pos"]}/{x["neg"]}/{x["tie"]} | {x["p"]:.3g} |')
+            for m in s.models:
+                y = s.paired(a, o, model=m, fam=fam)
+                if y: P(f'| {o} | {m}{" (" + scope + ")" if fam else ""} | {y["n"]} | {100*y["mean"]:+.1f} pp | [{100*y["lo"]:+.1f}, {100*y["hi"]:+.1f}] | {y["pos"]}/{y["neg"]}/{y["tie"]} | {y["p"]:.3g} |')
+    arms = [a, b] + [o for o in others if o not in FAMILY_ONLY]
+    P('\n### Cost per task and per successful task (agent plus gbrain-internal dollars, judge excluded)\n')
+    P('| Model | ' + ' | '.join(f'{x} $/task | {x} $/success' for x in arms) + ' |'); P('|---|' + '---|---|' * len(arms))
+    for m in s.models + [None]:
+        P(f'| {m or "all"} | ' + ' | '.join(f'{s.cost(x, m)[0]:.4f} | {s.cost(x, m)[1]:.4f}' for x in arms) + ' |')
+    return True
+
+
 def main(argv):
     def take(name):
         if name in argv:
             i = argv.index(name); v = argv[i + 1]; del argv[i:i + 2]; return v
         return None
     models = take('--models'); ship = take('--ship-rule'); harm = take('--harm-screen'); pw = take('--power')
+    choose = take('--choose-comparator'); head = take('--headline'); cap = take('--capability-screen'); dflt = take('--default-on')
     recs = [json.loads(l) for path in argv for l in open(path) if l.strip()]
     if models: recs = [r for r in recs if r['model'] in models.split(',')]
     s = Stats(recs)
@@ -255,6 +396,10 @@ def main(argv):
     if ship: ok = ship_rule(s, *ship.split(','), P) and ok
     if harm: ok = harm_screen(s, *harm.split(','), P) and ok
     if pw: power(s, *pw.split(','), P)
+    if choose: ok = choose_comparator(s, choose.split(','), P) is not None and ok
+    if head: ok = headline(s, *head.split(','), P) and ok
+    if cap: ok = capability_screen(s, *cap.split(','), P) and ok
+    if dflt: ok = default_on(s, *dflt.split(','), P) and ok
     tot = sum(r['total_usd'] + r.get('judge_usd', 0) for r in recs)
     P(f'\nSpend in these records (agent + gbrain internal + judge): ${tot:.2f}')
     for a in s.arms:
