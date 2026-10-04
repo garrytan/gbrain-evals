@@ -1,0 +1,266 @@
+/**
+ * Temporal typed edges (P1, E1), development split: does gbrain answer
+ * "who works there now", "where did they work on date D" and "during year Y"
+ * from linked notes whose employment changed over time?
+ *
+ * The world comes from eval/generators/temporal-edges-gen.ts (phrasing set A,
+ * dev seeds 3 and 5). Pages are written through put_page on in-memory PGLite
+ * in a shuffled order, then probed through gbrain's own graph operations and
+ * context_pack. Gold comes from the ledger, never from gbrain. Every probe row
+ * carries exactly one metric field so the decision kit pairs each family on
+ * its own:
+ *   now_precision / now_recall  get_backlinks(company), works_at rows vs current staff
+ *   asof_exact                  get_links(person, works_at, as_of) equals the employers on that date
+ *   during_f1                   get_links(person, works_at, during: year) set-F1
+ *   live_recall                 default get_links still lists every current employer
+ *   trap_ok                     advisor roles stay live; investments and alumni meetings
+ *                               at a former employer do not reopen employment
+ *   invariant                   a second brain written in reverse order, each person first
+ *                               without a timeline, returns the same relationships and stints
+ *   correction_ok               context_pack for a person whose summary names a former
+ *                               employer flags that employment as ended and never as current
+ *   correction_names_current    the same context_pack also names the current employer as
+ *                               current (needs the new employer typed works_at; exploratory)
+ * A build without temporal parameters answers with whatever its graph returns;
+ * that is the comparison, not an error.
+ *
+ * Hermetic: provider keys stripped, PGLite in memory, zero LLM.
+ *
+ * Usage: bun eval/runner/temporal-edges.ts [--seeds 3,5] [--output <dir>] [--gbrain <checkout>[@ref]] [--json]
+ */
+import { join } from 'node:path';
+import type { OperationContext } from 'gbrain/operations';
+import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
+import { gbrainPin } from './gbrain-version.ts';
+import { withHermeticEnv } from './hermetic-env.ts';
+import { ProbeAccounting } from './probe-accounting.ts';
+import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, receiptPath, sourceTreeIdentity, writeReceipt, type Receipt } from './receipt.ts';
+import {
+  DEV_SEEDS, TEMPORAL_EDGES_GENERATOR_VERSION, currentEmployers, generateTemporalEdgesWorld,
+  type TePage, type TemporalEdgesWorld,
+} from '../generators/temporal-edges-gen.ts';
+
+export const CATEGORY = 'temporal-edges';
+
+type Op = (name: string, params: Record<string, unknown>) => Promise<unknown>;
+interface Sut { op: Op; put(slug: string, content: string): Promise<void>; close(): Promise<void> }
+export interface TeRow { probe_id: string; kind: string; cluster: string; seed: number; [metric: string]: unknown }
+
+async function openSut(gut: GbrainUnderTest): Promise<Sut> {
+  const { PGLiteEngine } = await importGbrain<{ PGLiteEngine: new () => { connect(c: object): Promise<void>; initSchema(): Promise<void>; disconnect(): Promise<void>; readPageSnapshot(slug: string, o: { sourceId: string }): Promise<{ revision: unknown } | null> } }>(gut, 'src/core/pglite-engine.ts');
+  const { operations } = await importGbrain<{ operations: Array<{ name: string; handler: (ctx: OperationContext, p: Record<string, unknown>) => Promise<unknown> }> }>(gut, 'src/core/operations.ts');
+  const engine = new PGLiteEngine();
+  await engine.connect({});
+  await engine.initSchema();
+  const logger = { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} };
+  const ctx = { engine, config: { engine: 'pglite', database_path: ':memory:' }, logger, dryRun: false, remote: false, sourceId: 'default' } as unknown as OperationContext;
+  const byName = new Map(operations.map(o => [o.name, o]));
+  return {
+    op: async (name, params) => {
+      const o = byName.get(name);
+      if (!o) throw new Error(`gbrain has no operation ${name}`);
+      return await o.handler(ctx, params);
+    },
+    put: async (slug, content) => {
+      const snapshot = await engine.readPageSnapshot(slug, { sourceId: 'default' });
+      await byName.get('put_page')!.handler(ctx, { slug, content, ...(snapshot ? { expected_revision: snapshot.revision } : {}) });
+    },
+    close: () => engine.disconnect(),
+  };
+}
+
+async function writePages(sut: Sut, pages: readonly TePage[]): Promise<void> {
+  for (const p of pages) await sut.put(p.slug, p.content);
+}
+
+const setOf = (rows: unknown, field: 'to_slug' | 'from_slug', type = 'works_at') =>
+  new Set((rows as Array<Record<string, unknown>>).filter(r => r.link_type === type).map(r => String(r[field])));
+const f1 = (got: Set<string>, gold: readonly string[]) => {
+  if (!got.size && !gold.length) return 1;
+  const tp = gold.filter(g => got.has(g)).length;
+  return tp === 0 ? 0 : (2 * tp) / (got.size + gold.length);
+};
+const short = (slug: string) => slug.split('/').pop()!;
+
+async function probeWorld(world: TemporalEdgesWorld, sut: Sut, mirror: Sut, acc: ProbeAccounting, rows: TeRow[]): Promise<void> {
+  const seed = world.seed;
+  const probe = async (id: string, kind: string, cluster: string, fn: () => Promise<Record<string, number>>) => {
+    const probe_id = `s${seed}:${id}`;
+    try {
+      const metrics = await fn();
+      rows.push({ probe_id, kind, cluster: `s${seed}:${cluster}`, seed, ...metrics });
+      acc.score(probe_id, Object.values(metrics)[0]);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      acc.error(probe_id, 'sut', message);
+      rows.push({ probe_id, kind, cluster: `s${seed}:${cluster}`, seed, error: message, error_origin: 'sut' });
+    }
+  };
+
+  for (const c of world.companies) {
+    const gold = world.people.filter(p => currentEmployers(p).includes(c.slug)).map(p => p.slug);
+    const got = async () => setOf(await sut.op('get_backlinks', { slug: c.slug }), 'from_slug');
+    await probe(`now-p:${c.slug}`, 'now', c.slug, async () => {
+      const g = await got(); const tp = gold.filter(x => g.has(x)).length;
+      return { now_precision: g.size ? tp / g.size : gold.length ? 0 : 1 };
+    });
+    await probe(`now-r:${c.slug}`, 'now', c.slug, async () => {
+      const g = await got();
+      return { now_recall: gold.length ? gold.filter(x => g.has(x)).length / gold.length : 1 };
+    });
+  }
+  for (const a of world.asof_probes) {
+    await probe(a.id, 'asof', a.person, async () => {
+      const got = setOf(await sut.op('get_links', { slug: a.person, link_type: 'works_at', as_of: a.date }), 'to_slug');
+      return { asof_exact: Number(got.size === a.gold.length && a.gold.every(g => got.has(g))) };
+    });
+  }
+  for (const d of world.during_probes) {
+    await probe(d.id, 'during', d.person, async () => {
+      const got = setOf(await sut.op('get_links', { slug: d.person, link_type: 'works_at', during: d.from.slice(0, 4) }), 'to_slug');
+      return { during_f1: f1(got, d.gold) };
+    });
+  }
+  for (const p of world.people) {
+    const cur = currentEmployers(p);
+    if (cur.length) {
+      await probe(`live:${p.slug}`, 'live', p.slug, async () => {
+        const got = setOf(await sut.op('get_links', { slug: p.slug }), 'to_slug');
+        return { live_recall: cur.filter(c => got.has(c)).length / cur.length };
+      });
+    }
+    if (p.advises) {
+      const company = p.advises.company;
+      await probe(`trap-advises:${p.slug}`, 'trap', p.slug, async () => ({
+        trap_ok: Number(setOf(await sut.op('get_links', { slug: p.slug }), 'to_slug', 'advises').has(company)),
+      }));
+    }
+    for (const [label, t] of [['invest', p.invests_after_exit], ['alumni', p.alumni_meeting]] as const) {
+      if (!t || cur.includes(t.company)) continue;
+      await probe(`trap-${label}:${p.slug}`, 'trap', p.slug, async () => ({
+        trap_ok: Number(!setOf(await sut.op('get_links', { slug: p.slug }), 'to_slug').has(t.company)),
+      }));
+    }
+    await probe(`invariant:${p.slug}`, 'invariant', p.slug, async () => {
+      const view = async (s: Sut) => JSON.stringify([
+        [...setOf(await s.op('get_links', { slug: p.slug }), 'to_slug')].sort(),
+        (await s.op('get_links', { slug: p.slug, link_type: 'works_at', status: 'all' }) as Array<Record<string, unknown>>)
+          .map(r => [r.to_slug, r.status ?? null, JSON.stringify(r.stints ?? null)]).sort(),
+      ]);
+      return { invariant: Number((await view(sut)) === (await view(mirror))) };
+    });
+    if (p.style === 'stale_summary' && p.stints.some(s => s.until !== null)) {
+      const formerNamed = [...p.stints].reverse().find(s => s.until !== null)!.company;
+      await probe(`correction:${p.slug}`, 'correction', p.slug, async () => {
+        const text = JSON.stringify(await sut.op('context_pack', { entities: p.slug }));
+        const flagsEnded = cur.includes(formerNamed) || new RegExp(`ended: [^;\\]]*works_at ${short(formerNamed)}`).test(text);
+        const formerAsNow = !cur.includes(formerNamed) && new RegExp(`now: [^;\\]]*${short(formerNamed)}`).test(text);
+        const namesCurrent = cur.every(c => new RegExp(`now: [^;\\]]*${short(c)}`).test(text));
+        return { correction_ok: Number(flagsEnded && !formerAsNow), correction_names_current: Number(namesCurrent) };
+      });
+    }
+  }
+}
+
+export interface TeRunResult { worlds: TemporalEdgesWorld[]; rows: TeRow[]; acc: ProbeAccounting; harnessError: string | null }
+
+export async function runTemporalEdges(opts: { gut: GbrainUnderTest; seeds?: readonly number[]; log?: (s: string) => void }): Promise<TeRunResult> {
+  return withHermeticEnv('temporal-edges', async () => {
+    const log = opts.log ?? (() => {});
+    const worlds = (opts.seeds ?? DEV_SEEDS).map(seed => generateTemporalEdgesWorld({ seed }));
+    const acc = new ProbeAccounting(0);
+    const rows: TeRow[] = [];
+    let harnessError: string | null = null;
+    for (const world of worlds) {
+      const sut = await openSut(opts.gut);
+      const mirror = await openSut(opts.gut);
+      try {
+        log(`seed ${world.seed}: ${world.people.length} people, ${world.companies.length} companies, ${world.pages.length} pages`);
+        await writePages(sut, world.pages);
+        const companies = world.pages.filter(p => p.slug.startsWith('companies/'));
+        const people = world.pages.filter(p => p.slug.startsWith('people/'));
+        await writePages(mirror, [...companies].reverse());
+        await writePages(mirror, people.map(p => ({ slug: p.slug, content: p.content.replace(/## Timeline[\s\S]*$/, '') })));
+        await writePages(mirror, [...people].reverse());
+        await probeWorld(world, sut, mirror, acc, rows);
+      } catch (e) {
+        harnessError = `seed ${world.seed}: ${e instanceof Error ? e.message : String(e)}`;
+        acc.error(`s${world.seed}:seed`, 'harness', harnessError);
+      } finally {
+        await sut.close().catch(() => {});
+        await mirror.close().catch(() => {});
+      }
+    }
+    const planned = new ProbeAccounting(rows.length);
+    planned.absorb(acc.toJSON());
+    return { worlds, rows, acc: planned, harnessError };
+  });
+}
+
+export function summarize(rows: readonly TeRow[]): Record<string, { n: number; mean: number }> {
+  const out: Record<string, { n: number; mean: number }> = {};
+  for (const r of rows) {
+    for (const [k, v] of Object.entries(r)) {
+      if (['probe_id', 'kind', 'cluster', 'seed'].includes(k) || typeof v !== 'number') continue;
+      const s = (out[k] ??= { n: 0, mean: 0 });
+      s.mean = (s.mean * s.n + v) / (s.n + 1); s.n++;
+    }
+  }
+  return out;
+}
+
+function argValue(argv: readonly string[], flag: string): string | undefined {
+  const at = argv.indexOf(flag);
+  if (at >= 0) return argv[at + 1];
+  return argv.find(a => a.startsWith(`${flag}=`))?.slice(flag.length + 1);
+}
+
+async function main(): Promise<void> {
+  const argv = process.argv.slice(2);
+  const json = argv.includes('--json');
+  const log = json ? () => {} : (s: string) => console.log(s);
+  const seeds = (argValue(argv, '--seeds') ?? DEV_SEEDS.join(',')).split(',').map(Number);
+  if (!seeds.every(s => DEV_SEEDS.includes(s))) throw new Error(`only dev seeds ${DEV_SEEDS.join(', ')} run here; held-out seeds belong to the custodian`);
+  const output = argValue(argv, '--output');
+  const outPath = output ? join(output, 'receipt.json') : receiptPath(CATEGORY);
+  const startedAt = new Date().toISOString();
+  const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
+  log(`# temporal-edges (gbrain ${gut.version}${gut.overlay ? `, overlay ${gut.overlay.build.commit.slice(0, 7)}` : ', pinned'})`);
+  const r = await runTemporalEdges({ gut, seeds, log });
+  const a = r.acc.summary();
+  const summary = summarize(r.rows);
+  const receipt: Receipt = {
+    ...noModelSpend('hermetic: provider keys stripped, graph operations and context_pack only; no model and no paid request'),
+    schema_version: RECEIPT_SCHEMA_VERSION,
+    benchmark_version: BENCHMARK_VERSION,
+    category: CATEGORY,
+    run_status: r.harnessError ? 'error' : 'completed',
+    ...(r.harnessError ? {} : { verdict: 'pass' as const }),
+    n_total: a.n_total, n_scored: a.n_scored, completion_rate: a.completion_rate, errors: a.errors,
+    publishable: a.publishable && !r.harnessError,
+    gbrain_version: gut.version,
+    gbrain_pin: gbrainPin(),
+    execution: { source_tree: sourceTreeIdentity(), product: productIdentityFor(gut) },
+    resolved_config: {
+      engine: 'pglite-in-memory',
+      caller: 'operation handlers with OperationContext { remote: false, sourceId: default }',
+      seeds, phrasing: 'A (development)', generator_version: TEMPORAL_EDGES_GENERATOR_VERSION,
+      oracle: 'employment stints from the generator ledger; set arithmetic for now / as-of / during',
+      gbrain_overlay: overlaySummary(gut),
+    },
+    hashes: Object.fromEntries(r.worlds.map(w => [`ledger_seed_${w.seed}`, w.fingerprint])),
+    started_at: startedAt,
+    finished_at: new Date().toISOString(),
+    data: { summary, rows: r.rows, harness_error: r.harnessError },
+  } as Receipt;
+  writeReceipt(outPath, receipt);
+  log('\n| metric | n | mean |\n|---|---|---|');
+  for (const [k, v] of Object.entries(summary)) log(`| ${k} | ${v.n} | ${v.mean.toFixed(3)} |`);
+  log(`receipt: ${outPath}`);
+  if (json) process.stdout.write(JSON.stringify({ run_status: receipt.run_status, summary }, null, 2) + '\n');
+  process.exit(receipt.run_status === 'error' ? 3 : 0);
+}
+
+if (import.meta.main) {
+  main().catch(e => { console.error(e); process.exit(3); });
+}

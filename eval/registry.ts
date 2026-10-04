@@ -540,6 +540,14 @@ export const REGISTRY: readonly CategoryEntry[] = [
     contract: 'Writes a seeded ledger (job changes with separate valid and recorded dates, timestamped chronicle events, competing date signals, time-zone and DST edges, metric trajectories) through gbrain operation handlers on in-memory PGLite, then scores chronicle_day/since/on_this_day/last_seen, query since/until on the keyword path, effective-date precedence and recorded-time fallback, relative durations, ontology_get and get_timeline as-of, and find_trajectory against gold the generator derives from the ledger with independent oracles. Page-date filtering is scored as a filter and reported separately from true as-of state. It does not measure chronicle extraction from prose (a scripted judge feeds events), natural-language dates, a pinned "now", or think. A gbrain operation that throws where an answer is expected is a scored miss; a failed presence assertion is a harness error and voids the run.',
   },
   {
+    id: 'temporal-edges', legacy_alias: 'temporal-edges', name: 'Temporal typed edges: current, as-of and during relationships from linked notes',
+    family: 'temporal', tier: 'H', script: 'eval/runner/temporal-edges.ts', run: { kind: 'dispatched' },
+    cost_estimate: FREE, receipt_path: receipt('temporal-edges'),
+    headline: { metric: 'current-employer precision and recall, as-of exact rate, during set-F1, trap pass rate, order invariance, stale-summary correction rate', denominator: 'dev seeds 3 and 5 (phrasing set A): 24 company probes per metric, 480 as-of, 160 during, 160 invariance probes' },
+    gate: 'report-only', evidence_maturity: 'synthetic-production-path', promotion: REPORT_ONLY,
+    contract: 'Writes a seeded employment ledger rendered as linked prose (present and past tense, dated join/leave timeline lines, explicit Started/Ended lines, frontmatter since/until, stale summaries, traps: advisor roles, investments and alumni meetings at former employers, rejoins) through put_page on in-memory PGLite, company pages first and people in shuffled order, then scores get_backlinks, get_links (as_of, during, status) and context_pack against gold from the ledger. A second brain written in reverse order checks order invariance. Only development phrasing set A is rendered here; held-out phrasing and seeds belong to the custodian. It does not measure link typing from prose beyond what the pages state, query/search, or LLM phases.',
+  },
+  {
     id: 'entity-resolution', legacy_alias: 'N4', name: 'Entity resolution: variants, namesakes and cross-source identity',
     family: 'relationships', tier: 'H', script: 'eval/runner/n4-entity-resolution.ts', run: { kind: 'dispatched' },
     cost_estimate: FREE, receipt_path: receipt('n4-entity-resolution'),
