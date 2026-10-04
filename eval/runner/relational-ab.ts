@@ -52,6 +52,8 @@ import { writeReceipt, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, latencySummary
 import { BudgetExceededError, budgetOptionsFrom, receiptCost, startPaidRun, type BudgetOptions, type BudgetRun, type PaidRequestGuard } from './budget-ledger.ts';
 import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
 import { searchObservation } from './retrieval-pins.ts';
+import { EmbeddingCache, makeCachingTransport } from './longmemeval-cache.ts';
+import { homedir } from 'node:os';
 
 /**
  * Extra engine config pins for a feature arm, from `GBRAIN_EVAL_SEARCH_PINS="key=value,key=value"`
@@ -482,6 +484,8 @@ export interface RelationalABOptions {
   /** --gbrain <checkout>[@ref]: measure a copied overlay instead of the pinned package. */
   gbrainSpec?: string;
   stubEmbed?: boolean;
+  /** Live arm: route page and query embeddings through the shared content-addressed cache (identical vectors across runs). */
+  embedCache?: boolean;
   allowSkip?: boolean;
   quiet?: boolean;
 }
@@ -502,6 +506,7 @@ export function parseRelationalArgs(args: string[]): RelationalABOptions {
       return next;
     };
     if (flag === '--stub-embed') options.stubEmbed = true;
+    else if (flag === '--embed-cache') options.embedCache = true;
     else if (flag === '--allow-skip') options.allowSkip = true;
     else if (flag === '--paid') continue;
     else if (flag === '--output-dir') options.outputDir = value();
@@ -583,8 +588,19 @@ export async function runRelationalAB(
   const accounting = new ProbeAccounting(seeds.length * queries.length * 2);
   const log = options.quiet ? (_: string) => {} : (text: string) => console.log(text);
   let run: SharedIndexRun;
+  let embedCacheStats: Record<string, number> | null = null;
   try {
-    run = await runSharedIndexPairs({ product, pages, queries, seeds, embed: stub ? 'stub' : 'openai', search, accounting, log });
+    let cache: EmbeddingCache | null = null;
+    if (options.embedCache && !stub) {
+      const { embedMany } = await import(Bun.resolveSync('ai', product.root ?? process.cwd())) as { embedMany: (p: unknown) => Promise<unknown> };
+      cache = new EmbeddingCache(join(process.env.GBRAIN_EVALS_EMBED_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'embed-cache'), 'embed-cache-openai_text-embedding-3-large@1536.sqlite'), 'openai:text-embedding-3-large@1536');
+      product.setEmbedTransport(makeCachingTransport(async (p: any) => embedMany(p) as never, cache) as unknown as Parameters<typeof __setEmbedTransportForTests>[0]);
+    }
+    try {
+      run = await runSharedIndexPairs({ product, pages, queries, seeds, embed: stub ? 'stub' : 'openai', search, accounting, log });
+    } finally {
+      if (cache) { log(`embed cache: ${JSON.stringify(cache.stats)}`); embedCacheStats = { ...cache.stats }; cache.close(); product.setEmbedTransport(null); }
+    }
   } finally {
     paid?.guard.uninstall();
   }
@@ -608,7 +624,7 @@ export async function runRelationalAB(
     errors: summary.errors, publishable: valid && !stub && !incompleteRecipe,
     resolved_config: {
       embedder: RELATIONAL_EMBEDDER, stub_embed: stub, ingestion_seeds: seeds,
-      common_search_pins: { ...RELATIONAL_PINS, ...evalSearchPins() }, relational_retrieval: { off: false, on: true },
+      common_search_pins: { ...RELATIONAL_PINS, ...evalSearchPins() }, relational_retrieval: { off: false, on: true }, embed_cache: embedCacheStats,
       query_embedding: 'embedQuery once per distinct question, identical bytes shared across arms and repeats',
       product_limit: RELATIONAL_LIMIT, ranking_unit: 'chunk rows', scoring_unit: 'first occurrence of each page, no refill',
       precision_denominator: RELATIONAL_LIMIT, corpus_pages: pages.length,
