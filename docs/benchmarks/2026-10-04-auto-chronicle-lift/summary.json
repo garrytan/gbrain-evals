@@ -1,0 +1,148 @@
+{
+  "date": "2026-10-04",
+  "gbrain": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c (v0.60.46.0)",
+  "judge_model": "anthropic:claude-sonnet-4-6 (gbrain default chat model)",
+  "agent_model": "claude-sonnet-4-6",
+  "arms": {
+    "on-a": {
+      "judged_pages": 48,
+      "events_written": 380,
+      "events_per_judged_page": 7.92,
+      "recall": {
+        "matched": 35,
+        "expected": 38,
+        "meeting": [
+          15,
+          18
+        ],
+        "calendar": [
+          20,
+          20
+        ]
+      },
+      "labeled_pages": {
+        "events": 86,
+        "premature": 22,
+        "false": 5,
+        "duplicate": 0,
+        "supported_unlabeled": 24,
+        "false_plus_premature": 27,
+        "per_judged_labeled_page": 0.964,
+        "share_of_events": 0.314
+      },
+      "conversations": {
+        "events": 294,
+        "premature": 17,
+        "sample_false": 0,
+        "sample_size": 25
+      },
+      "controls_judged": 0,
+      "cost_metered_usd": 0.565596,
+      "cost_per_judged_page": 0.011783,
+      "gate_A": false,
+      "gate_B": true,
+      "gate_C": true
+    },
+    "on-b": {
+      "judged_pages": 48,
+      "events_written": 381,
+      "events_per_judged_page": 7.94,
+      "recall": {
+        "matched": 37,
+        "expected": 38,
+        "meeting": [
+          17,
+          18
+        ],
+        "calendar": [
+          20,
+          20
+        ]
+      },
+      "labeled_pages": {
+        "events": 86,
+        "premature": 25,
+        "false": 2,
+        "duplicate": 0,
+        "supported_unlabeled": 22,
+        "false_plus_premature": 27,
+        "per_judged_labeled_page": 0.964,
+        "share_of_events": 0.314
+      },
+      "conversations": {
+        "events": 295,
+        "premature": 22,
+        "sample_false": 2,
+        "sample_size": 25
+      },
+      "controls_judged": 0,
+      "cost_metered_usd": 0.567696,
+      "cost_per_judged_page": 0.011827,
+      "gate_A": false,
+      "gate_B": true,
+      "gate_C": true
+    }
+  },
+  "qa": {
+    "questions": 36,
+    "runs": 144,
+    "accuracy_off": 0.9444,
+    "accuracy_on": 1,
+    "lift": {
+      "diff": 0.0556,
+      "lo": 0,
+      "hi": 0.1389
+    },
+    "by_type": {
+      "day_list": {
+        "questions": 5,
+        "off": 0.6,
+        "on": 1
+      },
+      "when": {
+        "questions": 8,
+        "off": 1,
+        "on": 1
+      },
+      "last_seen": {
+        "questions": 6,
+        "off": 1,
+        "on": 1
+      },
+      "decision": {
+        "questions": 6,
+        "off": 1,
+        "on": 1
+      },
+      "premature_trap": {
+        "questions": 8,
+        "off": 1,
+        "on": 1
+      },
+      "slack_when": {
+        "questions": 3,
+        "off": 1,
+        "on": 1
+      }
+    },
+    "usd": {
+      "on-a": 7.435181099999998,
+      "off": 7.792358099999999
+    }
+  },
+  "decision": {
+    "gate_A_both": false,
+    "gate_B_both": true,
+    "gate_C_both": true,
+    "D_interval_above_0": false,
+    "D_interval_below_0": false,
+    "verdict": "contradicted"
+  },
+  "spend": {
+    "ledger_run": "chronicle-lift-v1-2026-10-04T15-19-48-589Z-01aba458",
+    "ledger_committed_usd": 17.158017,
+    "includes_unsettled_reservations_usd": 0.66318,
+    "cost_pilot_usd": 0.186859,
+    "phase_smoke_usd_outside_ledger": 0.0039
+  }
+}
