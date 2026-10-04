@@ -14,7 +14,7 @@
  *     --arms oracle,fs,pg,memory,gbrain --budget-usd 100 [--families A,B] [--tasks A01,B02] \
  *     [--repeat 1] [--concurrency 6] [--slots 3] [--gbrain-repo ../gbrain --gbrain-ref <sha>] \
  *     [--judge gpt-5.4-mini|none] [--world eval/data/model-ladder-v1-large/world.json] [--out eval/reports/cat40/<name>] \
- *     [--max-tool-chars <n>|none] [--order task|model] [--slot-ref <sha>] [--no-pglite-analyze] [--surface starter]
+ *     [--max-tool-chars <n>|none] [--order task|model] [--slot-ref <sha>] [--no-pglite-analyze] [--surface starter] [--gbrain-config key=value,...]
  *   bun eval/runner/cat40-model-ladder.ts --scripted --arms fs,memory,oracle   (hermetic, $0)
  *   bun eval/runner/cat40-model-ladder.ts --build-slots --gbrain-ref <sha> --slots 5 --budget-usd 10 --slot-build-allowance-usd 2
  *
@@ -416,6 +416,13 @@ export async function main(argv = process.argv.slice(2)) {
       ctx.proxy.start();
       const surface = flag(argv, '--surface') ?? 'starter';
       const slots = Array.from({ length: nSlots }, (_, i) => new GbrainSlot(`slot${i}`, slotDir!, gbrainBuild!.dir, ctx.proxy!.port, surface));
+      // --gbrain-config key=value[,key=value]: brain config applied after every restore (a variant of the same build).
+      const gbrainConfig = (flag(argv, '--gbrain-config') ?? '').split(',').filter(Boolean).map(kv => {
+        const i = kv.indexOf('=');
+        if (i <= 0) throw new Error(`--gbrain-config expects key=value pairs separated by commas, got "${kv}"`);
+        return [kv.slice(0, i), kv.slice(i + 1)] as [string, string];
+      });
+      for (const s of slots) s.config = gbrainConfig;
       if (buildSlots) {
         // One build at a time: each holds a small ledger allowance (a build sends one provider request per page).
         for (const s of slots) {

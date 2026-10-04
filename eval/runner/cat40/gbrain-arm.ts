@@ -218,6 +218,8 @@ export class GbrainSlot {
   client: McpClient | null = null;
   readonly dir: string;
   readonly run: RunEnv;
+  /** `gbrain config set` pairs applied after every restore (the snapshot does not carry them). */
+  config: Array<[string, string]> = [];
   constructor(readonly id: string, root: string, readonly buildDir: string, proxyPort: number, readonly surface: string) {
     this.dir = join(root, id);
     const base = `http://127.0.0.1:${proxyPort}/${id}`;
@@ -327,6 +329,10 @@ export class GbrainSlot {
     const home = join(this.dir, 'home');
     for (const entry of readdirSync(home).sort()) rmSync(join(home, entry), { recursive: true, force: true });
     execFileSync('tar', ['-C', this.dir, '-xf', this.snapshot, 'home']);
+    for (const [key, value] of this.config) {
+      const r = await runCli(this.run, ['config', 'set', key, value], 120_000);
+      if (r.code !== 0) throw new Error(`gbrain ${this.id}: config set ${key} failed (exit ${r.code}): ${(r.stdout + r.stderr).trim().split('\n').slice(-3).join(' ')}`);
+    }
     await this.start();
   }
   /** A fresh harness session: a new server process on the same brain. */
