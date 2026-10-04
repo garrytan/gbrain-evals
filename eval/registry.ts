@@ -996,6 +996,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'README-cat13-phase-e0.md': { role: 'protocol notes for the Cat13 ranker-wave phases', part_of: 'concept-search' },
   'adversarial-injections.ts': { role: 'injection generator and scorer used by Cat6', part_of: 'prose-autolink-precision' },
   'all.ts': { role: 'umbrella runner that dispatches registry entries' },
+  'chronicle-lift.ts': { role: 'auto_chronicle off-versus-on experiment (docs/benchmarks/2026-10-04-auto-chronicle-lift-preregistration.md); paid, not dispatched' },
   'budget-ledger.ts': { role: 'shared paid-run reservation ledger' },
   'bug-ledger.ts': { role: 'shared gbrain bug ledger: validated entries and the Markdown view' },
   'evidence-auto-v2.ts': { role: 'auto v2 follow-up to the evidence-delivery study (decision manifest v2: LongMemEval sanity check and sealed E2)', part_of: 'evidence-delivery' },

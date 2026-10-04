@@ -1,0 +1,6 @@
+{"gbrain_version":"0.60.46.0","calls":2000,"p50_ms":0.0569,"p90_ms":0.0698,"limit_ms":0.075}
+exit 0
+{"gbrain_version":"0.60.46.0","calls":2000,"p50_ms":0.0615,"p90_ms":0.0767,"limit_ms":0.075}
+exit 0
+{"gbrain_version":"0.60.46.0","calls":2000,"p50_ms":0.0617,"p90_ms":0.0774,"limit_ms":0.075}
+exit 0

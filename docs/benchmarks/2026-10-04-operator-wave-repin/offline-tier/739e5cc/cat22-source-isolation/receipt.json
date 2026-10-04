@@ -1,0 +1,149 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "hermetic: no model and no paid request"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "hermetic: no model and no paid request"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "cat22-source-isolation",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 8,
+  "n_scored": 8,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "gbrain_version": "0.60.46.0",
+  "gbrain_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+  "resolved_config": {
+    "search_mode": "balanced",
+    "reranker_enabled": false,
+    "pinned_config": {
+      "search.mode": "balanced",
+      "search.reranker.enabled": "false",
+      "search.expansion": "false",
+      "search.autocut": "false"
+    },
+    "embed_transport": "none (provider keys stripped; keyword-only)",
+    "sources": 3,
+    "seeded_pages": {
+      "alpha": 22,
+      "beta": 21,
+      "gamma": 20
+    }
+  },
+  "started_at": "2026-10-04T15:09:08.001Z",
+  "finished_at": "2026-10-04T15:09:10.572Z",
+  "data": {
+    "probes": [
+      {
+        "surface": "hybridSearch",
+        "scope_source": "alpha",
+        "total_results": 20,
+        "expected_results": 20,
+        "leaked_results": 0,
+        "missing_source_id": 0,
+        "leak_sample": [],
+        "pass": true,
+        "fail_reason": null
+      },
+      {
+        "surface": "listPages",
+        "scope_source": "alpha",
+        "total_results": 22,
+        "expected_results": 22,
+        "leaked_results": 0,
+        "missing_source_id": 0,
+        "leak_sample": [],
+        "pass": true,
+        "fail_reason": null
+      },
+      {
+        "surface": "getPage",
+        "scope_source": "alpha",
+        "total_results": 10,
+        "expected_results": 10,
+        "leaked_results": 0,
+        "missing_source_id": 0,
+        "leak_sample": [],
+        "pass": true,
+        "fail_reason": null
+      },
+      {
+        "surface": "listPages-federated",
+        "scope_source": "alpha+beta",
+        "total_results": 43,
+        "expected_results": 43,
+        "leaked_results": 0,
+        "missing_source_id": 0,
+        "leak_sample": [],
+        "pass": true,
+        "fail_reason": null
+      },
+      {
+        "surface": "traverseGraph",
+        "scope_source": "alpha",
+        "total_results": 2,
+        "expected_results": 2,
+        "leaked_results": 0,
+        "missing_source_id": 0,
+        "leak_sample": [],
+        "pass": true,
+        "fail_reason": null
+      }
+    ],
+    "negative_controls": [
+      {
+        "surface": "hybridSearch-unscoped",
+        "total_results": 60,
+        "cross_source_rows": 40,
+        "detected_leak": true
+      },
+      {
+        "surface": "listPages-unscoped",
+        "total_results": 63,
+        "cross_source_rows": 41,
+        "detected_leak": true
+      },
+      {
+        "surface": "traverseGraph-unscoped",
+        "total_results": 3,
+        "cross_source_rows": 1,
+        "detected_leak": true
+      }
+    ],
+    "isolation_clean": true,
+    "controls_detect_leak": true
+  },
+  "accounting": {
+    "planned": 8,
+    "attempted": 8,
+    "scored": 8,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null,
+  "execution": {
+    "source_tree": {
+      "sha256": "5bdfac4a948f48501f8b89953d46cba272135872a40eb3c6f4bef67fb7c1d97d",
+      "files": 2935,
+      "git_head": "3ff60f944c9c70fed4eeef2ba0af2c2d8d302c88",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+      "declared_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+      "version": "0.60.46.0",
+      "package_sha256": "6ea533ae573e6f0f91d920b14a7a9c8d7e1562ffba69a9547cdcd2da3813261c",
+      "loaded_git_head": null
+    }
+  }
+}

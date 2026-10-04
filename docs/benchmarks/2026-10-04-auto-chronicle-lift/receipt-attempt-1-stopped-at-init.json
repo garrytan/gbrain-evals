@@ -1,0 +1,53 @@
+{
+  "kind": "chronicle-lift-v1",
+  "started": "2026-10-04T15:18:04.084Z",
+  "finished": "2026-10-04T15:18:07.166Z",
+  "bun": "1.4.2",
+  "gbrain": {
+    "version": "0.60.46.0",
+    "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c"
+  },
+  "gbrain_evals": {
+    "git_head": "6bcfde9e0cb11864d86c6da4424cebf41de13fab",
+    "dirty": false
+  },
+  "corpus": {
+    "digest": "1f7df155a5776e498d5439f67cb8dbe1785dc32479ab58c684340af368508625",
+    "pages": 144,
+    "chronicle_shaped": 48
+  },
+  "settings": {
+    "arms": [
+      "off",
+      "on-a",
+      "on-b"
+    ],
+    "qa_arms": [
+      "off",
+      "on-a"
+    ],
+    "repeats": 2,
+    "model": "claude-sonnet-4-6",
+    "max_turns": 12,
+    "questions": 36,
+    "chronicle": {
+      "auto_recent_days": 365,
+      "auto_settle_seconds": 0,
+      "judge": "gbrain default chat model (ANTHROPIC_API_KEY only)"
+    },
+    "embeddings": "none (gbrain init --no-embedding; keyword search in every arm)",
+    "mcp": "gbrain serve (default full surface), no provider key"
+  },
+  "builds": {},
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "budget ledger chronicle-lift-v1-2026-10-04T15-18-04-081Z-285ca627: 0 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": ".budget/ledger.sqlite",
+    "program_cap_usd": 500,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": null,
+    "event_loop_lag_unavailable": "no lag samples were taken (the run closed within one sampling interval)"
+  }
+}

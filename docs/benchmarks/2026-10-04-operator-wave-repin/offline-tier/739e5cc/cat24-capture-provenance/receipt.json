@@ -1,0 +1,233 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "hermetic: no model and no paid request"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "hermetic: no model and no paid request"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "cat24-capture-provenance",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 7,
+  "n_scored": 7,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "gbrain_version": "0.60.46.0",
+  "gbrain_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+  "resolved_config": {
+    "embed_transport": "none (provider keys stripped; noEmbed + ctx.deferEmbeds)",
+    "distinct_ingestion_paths": [
+      "importFromContent (content import, provenance opts)",
+      "importFromFile (disk file — no channel provenance by design; file:// origin in source_uri)",
+      "put_page op ctx.remote=false (capture-cli local shape)",
+      "put_page op ctx.remote=true (MCP posture, spoof override)"
+    ],
+    "out_of_scope": "ingestion daemon sources (webhook/inbox/fs-watcher — not exported), thin-client transport",
+    "simulate_broken_trust_gate": false
+  },
+  "started_at": "2026-10-04T15:09:11.706Z",
+  "finished_at": "2026-10-04T15:09:14.073Z",
+  "data": {
+    "per_path": [
+      {
+        "probe_id": "content-import",
+        "path": "importFromContent (trusted library caller)",
+        "slug": "inbox/2026-05-23-content-import",
+        "expected": {
+          "source_kind": "capture-cli",
+          "source_uri": "file://<tmp>/probe.md",
+          "ingested_via": "capture-cli",
+          "ingested_at_null": false
+        },
+        "actual": {
+          "source_kind": "capture-cli",
+          "source_uri": "file://<tmp>/probe.md",
+          "ingested_via": "capture-cli",
+          "ingested_at": "2026-10-04T15:09:13.774Z",
+          "source_path": null
+        },
+        "pass": true,
+        "fail_reason": null
+      },
+      {
+        "probe_id": "file-import-no-channel-provenance",
+        "path": "importFromFile (disk file — sync/import path)",
+        "slug": "inbox/2026-05-23-file-import",
+        "expected": {
+          "source_kind": null,
+          "source_uri": "file://<tmp>/cat24-files-2776-1791126553799/inbox/2026-05-23-file-import.md",
+          "ingested_via": null,
+          "ingested_at_null": false
+        },
+        "actual": {
+          "source_kind": null,
+          "source_uri": "file://<tmp>/cat24-files-2776-1791126553799/inbox/2026-05-23-file-import.md",
+          "ingested_via": null,
+          "ingested_at": "2026-10-04T15:09:13.822Z",
+          "source_path": "inbox/2026-05-23-file-import.md"
+        },
+        "pass": true,
+        "fail_reason": null
+      },
+      {
+        "probe_id": "op-put-page-local-trusted",
+        "path": "put_page op, ctx.remote=false (gbrain capture local install)",
+        "slug": "inbox/2026-05-23-op-local",
+        "expected": {
+          "source_kind": "capture-cli",
+          "source_uri": "stdin",
+          "ingested_via": "capture-cli",
+          "ingested_at_null": false
+        },
+        "actual": {
+          "source_kind": "capture-cli",
+          "source_uri": "stdin",
+          "ingested_via": "capture-cli",
+          "ingested_at": "2026-10-04T15:09:13.926Z",
+          "source_path": null
+        },
+        "pass": true,
+        "fail_reason": null
+      },
+      {
+        "probe_id": "op-put-page-remote-spoof-override",
+        "path": "put_page op, ctx.remote=true (MCP posture, CV6 trust gate)",
+        "slug": "inbox/2026-05-23-op-remote",
+        "expected": {
+          "source_kind": "mcp:put_page",
+          "source_uri": null,
+          "ingested_via": "mcp:put_page",
+          "ingested_at_null": false
+        },
+        "actual": {
+          "source_kind": "mcp:put_page",
+          "source_uri": null,
+          "ingested_via": "mcp:put_page",
+          "ingested_at": "2026-10-04T15:09:14.021Z",
+          "source_path": null
+        },
+        "pass": true,
+        "fail_reason": null
+      }
+    ],
+    "dedup_test": {
+      "before_rows": 1,
+      "after_rows": 1,
+      "distinct_page_ids": 1,
+      "reimport_status": "skipped",
+      "updated_at_unchanged": true,
+      "chunk_ids_unchanged": true
+    },
+    "per_probe": [
+      {
+        "probe_id": "provenance-columns-present",
+        "score": 1,
+        "pass": true,
+        "error": null
+      },
+      {
+        "probe_id": "content-import",
+        "score": 1,
+        "pass": true,
+        "error": null
+      },
+      {
+        "probe_id": "file-import-no-channel-provenance",
+        "score": 1,
+        "pass": true,
+        "error": null
+      },
+      {
+        "probe_id": "op-put-page-local-trusted",
+        "score": 1,
+        "pass": true,
+        "error": null
+      },
+      {
+        "probe_id": "op-put-page-remote-spoof-override",
+        "score": 1,
+        "pass": true,
+        "error": null
+      },
+      {
+        "probe_id": "dedup-hash-short-circuit",
+        "score": 1,
+        "pass": true,
+        "error": null
+      },
+      {
+        "probe_id": "provenance-preserved-on-reimport",
+        "score": 1,
+        "pass": true,
+        "error": null
+      }
+    ],
+    "schema_test": {
+      "probe_id": "provenance-columns-present",
+      "score": 1,
+      "pass": true,
+      "error": null,
+      "selected_columns": [
+        "source_kind",
+        "source_uri",
+        "ingested_via",
+        "ingested_at"
+      ],
+      "select_succeeded": true
+    },
+    "preservation_test": {
+      "probe_id": "provenance-preserved-on-reimport",
+      "score": 1,
+      "pass": true,
+      "error": null,
+      "before": {
+        "source_kind": "capture-cli",
+        "source_uri": "file://<tmp>/probe.md",
+        "ingested_via": "capture-cli",
+        "ingested_at": "2026-10-04T15:09:13.774Z",
+        "source_path": null
+      },
+      "after": {
+        "source_kind": "capture-cli",
+        "source_uri": "file://<tmp>/probe.md",
+        "ingested_via": "capture-cli",
+        "ingested_at": "2026-10-04T15:09:13.774Z",
+        "source_path": null
+      },
+      "at_before": "2026-10-04T15:09:13.774Z",
+      "at_after": "2026-10-04T15:09:13.774Z"
+    }
+  },
+  "accounting": {
+    "planned": 7,
+    "attempted": 7,
+    "scored": 7,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null,
+  "execution": {
+    "source_tree": {
+      "sha256": "5bdfac4a948f48501f8b89953d46cba272135872a40eb3c6f4bef67fb7c1d97d",
+      "files": 2935,
+      "git_head": "3ff60f944c9c70fed4eeef2ba0af2c2d8d302c88",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+      "declared_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+      "version": "0.60.46.0",
+      "package_sha256": "6ea533ae573e6f0f91d920b14a7a9c8d7e1562ffba69a9547cdcd2da3813261c",
+      "loaded_git_head": null
+    }
+  }
+}

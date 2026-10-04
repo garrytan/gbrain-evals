@@ -1,0 +1,158 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "hash embedding stub: no model and no paid request"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "hash embedding stub: no model and no paid request"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "cat27-graph-signals",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 4,
+  "n_scored": 4,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": false,
+  "gbrain_version": "0.60.37.0",
+  "gbrain_pin": "github:garrytan/gbrain#109b992172e1f49107f9de9841758c1d043a2668",
+  "resolved_config": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.expansion": "false",
+    "search.autocut": "false",
+    "search.cache.enabled": "false",
+    "search.relational_retrieval": "false",
+    "search.metadata_boost_gate": "always",
+    "embed_transport": "stubbed-hash",
+    "ab_toggle": "search.graph_signals + SearchOpts.graph_signals (false → true)",
+    "gate": "no aggregate regression and at least one improved probe"
+  },
+  "started_at": "2026-10-04T15:09:13.947Z",
+  "finished_at": "2026-10-04T15:09:21.907Z",
+  "data": {
+    "probes": [
+      {
+        "probe_id": "adjacency-hub-acme-ai",
+        "family": "adjacency",
+        "query": "who is the AI infrastructure stack company",
+        "top1_baseline": "people/alice-okafor",
+        "top1_with_signals": "people/alice-okafor",
+        "top1_correct_baseline": false,
+        "top1_correct_with_signals": false,
+        "ndcg10_baseline": 0.3333333333333333,
+        "ndcg10_with_signals": 0.3333333333333333,
+        "ndcg_delta": 0,
+        "signals_changed_ranking": true
+      },
+      {
+        "probe_id": "cross-source-corroborated-fund-x",
+        "family": "cross_source",
+        "query": "seed-stage fund early ML and AI",
+        "top1_baseline": "companies/fund-y",
+        "top1_with_signals": "companies/fund-y",
+        "top1_correct_baseline": false,
+        "top1_correct_with_signals": false,
+        "ndcg10_baseline": 0.3562071871080222,
+        "ndcg10_with_signals": 0.38685280723454163,
+        "ndcg_delta": 0.030645620126519446,
+        "signals_changed_ranking": true
+      },
+      {
+        "probe_id": "adjacency-close-hub-foundry",
+        "family": "adjacency",
+        "query": "robotics company autonomous picking",
+        "top1_baseline": "companies/foundry-labs",
+        "top1_with_signals": "companies/foundry-labs",
+        "top1_correct_baseline": true,
+        "top1_correct_with_signals": true,
+        "ndcg10_baseline": 1,
+        "ndcg10_with_signals": 1,
+        "ndcg_delta": 0,
+        "signals_changed_ranking": true
+      },
+      {
+        "probe_id": "session-demote-chat-spam",
+        "family": "session",
+        "query": "agent memory architectures and recall",
+        "top1_baseline": "chat/2026-04-15-alpha/chunk-2",
+        "top1_with_signals": "chat/2026-04-15-alpha/chunk-2",
+        "top1_correct_baseline": false,
+        "top1_correct_with_signals": false,
+        "ndcg10_baseline": 0.38685280723454163,
+        "ndcg10_with_signals": 0.38685280723454163,
+        "ndcg_delta": 0,
+        "signals_changed_ranking": true
+      }
+    ],
+    "aggregate": {
+      "n_probes": 4,
+      "top1_hit_rate_baseline": 0.25,
+      "top1_hit_rate_with_signals": 0.25,
+      "top1_hit_rate_delta": 0,
+      "mean_ndcg10_baseline": 0.5190983319189743,
+      "mean_ndcg10_with_signals": 0.5267597369506041,
+      "mean_ndcg10_delta": 0.00766140503162982,
+      "probes_improved": 1,
+      "probes_unchanged": 3,
+      "probes_regressed": 0,
+      "probes_ranking_changed": 4,
+      "by_family": [
+        {
+          "family": "adjacency",
+          "n_probes": 2,
+          "top1_hits_baseline": 1,
+          "top1_hits_with_signals": 1,
+          "mean_ndcg10_baseline": 0.6666666666666666,
+          "mean_ndcg10_with_signals": 0.6666666666666666
+        },
+        {
+          "family": "cross_source",
+          "n_probes": 1,
+          "top1_hits_baseline": 0,
+          "top1_hits_with_signals": 0,
+          "mean_ndcg10_baseline": 0.3562071871080222,
+          "mean_ndcg10_with_signals": 0.38685280723454163
+        },
+        {
+          "family": "session",
+          "n_probes": 1,
+          "top1_hits_baseline": 0,
+          "top1_hits_with_signals": 0,
+          "mean_ndcg10_baseline": 0.38685280723454163,
+          "mean_ndcg10_with_signals": 0.38685280723454163
+        }
+      ]
+    }
+  },
+  "accounting": {
+    "planned": 4,
+    "attempted": 4,
+    "scored": 4,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null,
+  "execution": {
+    "source_tree": {
+      "sha256": "7278494df6069e8c8199722427165e7e60a8f08e14d95d0ff594b3b84b01c757",
+      "files": 2935,
+      "git_head": "4c3704ac632de113290e3848f0c0fa166bc671ee",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#109b992172e1f49107f9de9841758c1d043a2668",
+      "declared_sha": "109b992172e1f49107f9de9841758c1d043a2668",
+      "version": "0.60.37.0",
+      "package_sha256": "1a36b32df3da27d26456e6f32a7e73023c240046a84df7dc887945048f7f51b4",
+      "loaded_git_head": null
+    }
+  }
+}
