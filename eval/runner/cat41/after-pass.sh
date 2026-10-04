@@ -7,12 +7,12 @@
 # OPENAI_API_KEY, and the candidate commit pushed to GitHub (the docs tasks read
 # raw.githubusercontent.com/garrytan/gbrain/<commit>/, the fresh install runs
 # `bun install -g github:garrytan/gbrain#<commit>`). Spend observed for the
-# baseline: about $16 (Cat 41) and $32 (Cat 40).
+# baseline: about $16 (Cat 41) and $32 per Cat 40 build (two builds run).
 set -euo pipefail
 GBRAIN="${1:?gbrain checkout path}"
 SHA="$(git -C "$GBRAIN" rev-parse "${2:?candidate commit}")"
 CAT41_USD="${3:-40}"
-CAT40_USD="${4:-45}"
+CAT40_USD="${4:-45}"  # per Cat 40 build
 SHORT="${SHA:0:7}"
 BASE=eval/reports/cat41/baseline-master-566a242
 AFTER="eval/reports/cat41/after-$SHORT"
@@ -34,12 +34,21 @@ bun eval/runner/budget-ledger.ts close --budget-run-id "$RID"
 bun eval/runner/cat41-agent-operator.ts overhead --gbrain "$GBRAIN@$SHA" --out "$AFTER"
 bun eval/runner/cat41-agent-operator.ts gate --before "$BASE" --after "$AFTER" --out "$AFTER/gate.json" || GATE_FAILED=1
 
-bun eval/runner/cat40-model-ladder.ts --models gpt-5.4-mini,gpt-5.4,claude-sonnet-4-6 --arms gbrain \
-  --gbrain-label "gbrain-aow-$SHORT" --max-tool-chars 100000000 --transcripts --slots 5 \
-  --gbrain-repo "$GBRAIN" --gbrain-ref "$SHA" --repeat 2 --budget-usd "$CAT40_USD" --concurrency 6 --judge none \
-  --out "eval/reports/cat40/aow-f1f10-after-$SHORT"
-bun eval/runner/cat40/analyze.ts "$PUB/f1f10-cat40-baseline-master/results.jsonl" "eval/reports/cat40/aow-f1f10-after-$SHORT/results.jsonl" \
+# Cat 40 F1/F10 check. Amendment 2026-10-04: the baseline build is rerun in the same window right before the
+# candidate, because gpt-5.4-mini's behavior moved by 13 points between two runs of the same baseline code six hours
+# apart on 2026-10-03 (f1f10-instruction-ab/). The decision rule compares against this same-window baseline.
+cat40() { # label ref
+  bun eval/runner/cat40-model-ladder.ts --models gpt-5.4-mini,gpt-5.4,claude-sonnet-4-6 --arms gbrain \
+    --gbrain-label "$1" --max-tool-chars 100000000 --transcripts --slots 5 \
+    --gbrain-repo "$GBRAIN" --gbrain-ref "$2" --repeat 2 --budget-usd "$CAT40_USD" --concurrency 6 --judge none \
+    --out "eval/reports/cat40/aow-f1f10-$1"
+}
+cat40 "base-same-window-$SHORT" 566a242a6cf538396e89093370c784065690df00
+cat40 "after-$SHORT" "$SHA"
+bun eval/runner/cat40/analyze.ts "eval/reports/cat40/aow-f1f10-base-same-window-$SHORT/results.jsonl" "eval/reports/cat40/aow-f1f10-after-$SHORT/results.jsonl" \
   --md "eval/reports/cat40/aow-f1f10-after-$SHORT/analysis-before-after.md"
+bun eval/runner/cat40/types-filter.ts "eval/reports/cat40/aow-f1f10-base-same-window-$SHORT=baseline-same-window" "eval/reports/cat40/aow-f1f10-after-$SHORT=candidate" \
+  --md "eval/reports/cat40/aow-f1f10-after-$SHORT/types-filter.md"
 
 echo "Cat 41 gate: $AFTER/gate.json (exit ${GATE_FAILED:-0}); Cat 40: eval/reports/cat40/aow-f1f10-after-$SHORT/analysis-before-after.md"
 exit "${GATE_FAILED:-0}"

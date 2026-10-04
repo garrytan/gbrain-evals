@@ -13,18 +13,21 @@
  *   bun eval/runner/cat40-model-ladder.ts --models claude-sonnet-4-6,gpt-5.4 \
  *     --arms oracle,fs,pg,memory,gbrain --budget-usd 100 [--families A,B] [--tasks A01,B02] \
  *     [--repeat 1] [--concurrency 6] [--slots 3] [--gbrain-repo ../gbrain --gbrain-ref <sha>] \
+ *     [--gbrain-instructions-file <file>] [--gbrain-tool-descriptions-file <json>] [--gbrain-drop-tools a,b]
+ *       (evaluator-side A/B of the instruction and tool-description text the model sees; gbrain code unchanged)
  *     [--judge gpt-5.4-mini|none] [--world eval/data/model-ladder-v1-large/world.json] [--out eval/reports/cat40/<name>]
  *   bun eval/runner/cat40-model-ladder.ts --scripted --arms fs,memory,oracle   (hermetic, $0)
  */
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { generateLadderWorld, worldDigest, DEFAULT_LADDER_DIR, FAMILIES, type LadderTask, type LadderWorld, type Family } from '../generators/model-ladder-gen.ts';
 import { runAgent, provider, priceUsage, type AgentRun, type Arm, type ScriptedModel } from './cat40/loop.ts';
 import { FsArm, MemoryArm, OracleArm, FileStore, isWriteCall, type ArmName } from './cat40/arms.ts';
 import { renderDoc } from '../generators/model-ladder-gen.ts';
 import { PgArm, PgStore, cachedOpenAIEmbedder } from './cat40/pg-arm.ts';
-import { GbrainArm, GbrainPool, GbrainSlot, MeteringProxy, SERVE_BOOT_TIMEOUT_SECONDS, STAGED_SOURCE_ADD_DOCS, STAGED_SYNC_BATCH, type Meter, type SlotBuild } from './cat40/gbrain-arm.ts';
+import { GbrainArm, instructionsOverride, GbrainPool, GbrainSlot, MeteringProxy, SERVE_BOOT_TIMEOUT_SECONDS, STAGED_SOURCE_ADD_DOCS, STAGED_SYNC_BATCH, type Meter, type SlotBuild } from './cat40/gbrain-arm.ts';
 import { scoreTask, judgePrompt, parseClaims, JUDGE_PROMPT_VERSION, type TaskScore, type ClaimVerdicts } from './cat40/score.ts';
 import { budgetOptionsFrom, startPaidRun, receiptCost } from './budget-ledger.ts';
 import { prepareBuild } from './lifecycle/builds.ts';
@@ -221,6 +224,11 @@ export async function main(argv = process.argv.slice(2)) {
   mkdirSync(out, { recursive: true });
   const judge = scripted || flag(argv, '--judge') === 'none' ? null : (flag(argv, '--judge') ?? 'gpt-5.4-mini');
   const files = (keep: (d: LadderWorld['docs'][number]) => boolean) => new Map(world.docs.filter(keep).map(d => [`${d.id}.md`, renderDoc(d)]));
+  const instructionsFile = flag(argv, '--gbrain-instructions-file');
+  if (instructionsFile) instructionsOverride.text = readFileSync(resolve(instructionsFile), 'utf8').replace(/\n+$/, '');
+  const descriptionsFile = flag(argv, '--gbrain-tool-descriptions-file');
+  if (descriptionsFile) instructionsOverride.descriptions = JSON.parse(readFileSync(resolve(descriptionsFile), 'utf8'));
+  instructionsOverride.dropTools = (flag(argv, '--gbrain-drop-tools') ?? '').split(',').filter(Boolean);
   const ctx: Ctx = { world, files: { all: files(() => true), acl: files(d => !d.restricted) }, out, scripted, judge, gbrainLabel: flag(argv, '--gbrain-label') ?? 'gbrain', maxToolChars: Number(flag(argv, '--max-tool-chars') ?? 20_000) };
   const log = (s: string) => { process.stderr.write(`[cat40] ${s}\n`); appendFileSync(join(out, 'run.log'), `${new Date().toISOString()} ${s}\n`); };
 
@@ -308,11 +316,13 @@ export async function main(argv = process.argv.slice(2)) {
       world: { path: relative(process.cwd(), worldPath), scale: world.scale ?? 'v1', digest: worldDigest(world), seed: world.seed, docs: world.docs.length, tasks: world.tasks.length },
       evals_commit: (() => { try { return execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(); } catch { return null; } })(),
       evals_dirty: (() => { try { return execFileSync('git', ['status', '--porcelain'], { encoding: 'utf8' }).trim().length > 0; } catch { return null; } })(),
-      gbrain: gbrainBuild ? { slot_ref: flag(argv, '--slot-ref') ?? null, label: ctx.gbrainLabel, commit: gbrainBuild.commit, version: gbrainBuild.version, tree: gbrainBuild.tree, verified: gbrainBuild.verified, surface: flag(argv, '--surface') ?? 'starter', operator_analyze: !argv.includes('--no-pglite-analyze'), serve_boot_timeout_s: SERVE_BOOT_TIMEOUT_SECONDS, staged_build: world.docs.length > STAGED_SOURCE_ADD_DOCS ? { sync_batch_docs: STAGED_SYNC_BATCH } : null } : null,
+      gbrain: gbrainBuild ? { slot_ref: flag(argv, '--slot-ref') ?? null, label: ctx.gbrainLabel, commit: gbrainBuild.commit, version: gbrainBuild.version, tree: gbrainBuild.tree, verified: gbrainBuild.verified, surface: flag(argv, '--surface') ?? 'starter', tool_overrides: { descriptions_file: descriptionsFile ?? null, descriptions_sha256: instructionsOverride.descriptions ? createHash('sha256').update(JSON.stringify(instructionsOverride.descriptions)).digest('hex') : null, dropped: instructionsOverride.dropTools }, instructions_override: instructionsOverride.text === null ? null : { file: relative(process.cwd(), resolve(instructionsFile!)), sha256: createHash('sha256').update(instructionsOverride.text).digest('hex') }, served_instructions_sha256: instructionsOverride.served === null ? null : createHash('sha256').update(instructionsOverride.served).digest('hex'), operator_analyze: !argv.includes('--no-pglite-analyze'), serve_boot_timeout_s: SERVE_BOOT_TIMEOUT_SECONDS, staged_build: world.docs.length > STAGED_SOURCE_ADD_DOCS ? { sync_batch_docs: STAGED_SYNC_BATCH } : null } : null,
       slot_builds: builds, models, arms, families, repeats, max_tool_chars: ctx.maxToolChars, argv,
       cost: summary ? receiptCost(summary) : null,
       finished_at: new Date().toISOString(),
     };
+    if (instructionsOverride.served !== null) writeFileSync(join(out, 'served-instructions.txt'), instructionsOverride.served + '\n');
+    if (instructionsOverride.servedTools !== null) writeFileSync(join(out, 'served-tools.json'), JSON.stringify(instructionsOverride.servedTools, null, 2) + '\n');
     const receiptPath = join(out, `receipt-${Date.now()}.json`);
     writeFileSync(receiptPath, JSON.stringify(receipt, null, 2));
     log(`receipt ${receiptPath}`);
