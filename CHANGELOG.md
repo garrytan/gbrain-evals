@@ -51,6 +51,16 @@ persistent-install effect happened without authorization.
   key, as the configured feature; v4 recognizes "can't find your memory at
   <path>" as a missing-brain reason. The v3 and v4 gate reports stay published.
   The same-window Cat 40 pair: candidate 205/300 against baseline 202/300.
+- **Rechecked on the fixed SQLite ledger:** `gpt-5.4-mini` scores 46/100 on
+  both the baseline and the candidate. The candidate's memory-loop line makes
+  mini save write-back corrections with `remember` (16 of 20 runs) and rarely
+  read them back, so write-back drops from 10/20 to 4/20 while pooled success
+  holds.
+- **Docs describe Cat 40 and Cat 41 as they stand:** the README section on
+  agents operating gbrain, the docs index, the evaluation guide, and the Cat 40
+  and Cat 41 protocol pages state what each measures, its gate and the current
+  commands. The method's history moves to the run report's "Method changes"
+  section and this changelog.
 ## [0.10.16] - 2026-10-04
 
 ### The budget ledger moves to SQLite, so paid runs stop stalling their own timing; Cat 40 gets the tooling for the gbrain cost wave

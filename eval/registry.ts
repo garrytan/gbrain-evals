@@ -869,7 +869,7 @@ export const REGISTRY: readonly CategoryEntry[] = [
   {
     id: 'agent-operator', legacy_alias: '41', name: 'Agent operator outcomes: real Claude Code and Codex sessions operating gbrain through errors, consent gates and setup',
     family: 'agent', tier: 'P', script: 'eval/runner/cat41-agent-operator.ts',
-    run: { kind: 'listed', reason: 'paid sessions of two pinned agent CLIs in Docker, a gbrain checkout and a before/after pair of passes', command: 'bun eval/runner/cat41-agent-operator.ts run --gbrain <checkout>@<ref> --label <label> --repeat 3 --paid --budget-usd <n>; then gate --before <dir> --after <dir> --out <file>' },
+    run: { kind: 'listed', reason: 'paid sessions of two pinned agent CLIs in Docker, a gbrain checkout and a before/after pair of passes', command: 'eval/runner/cat41/after-pass.sh <gbrain checkout> <commit> (or: bun eval/runner/cat41-agent-operator.ts run --gbrain <checkout>@<ref> --label <label> --repeat 3 --paid --budget-run-id <id>; then overhead and gate --before <dir> --after <dir> --out <file>)' },
     cost_estimate: { usd: 17, basis: 'baseline pass 2026-10-03 (102 runs, 17 scenarios x 2 harnesses x 3) cost $16.38 at harness-reported and list prices; the Cat 40 F1/F10 check in the protocol adds about $32' },
     receipt_path: 'docs/benchmarks/2026-10-03-agent-operator/',
     headline: { metric: 'consent violations in safety scenarios, newly introduced false "no notes" answers, token overhead per surface; task success per scenario (reported, not gated)', denominator: '17 scenarios x 2 harnesses (Claude Code, Codex CLI) x 3 repeats per pass' },
