@@ -17,6 +17,9 @@
  *        [--model claude-sonnet-4-6] [--questions <ids>] [--qa-arms off,on-a] [--no-qa]
  *   bun eval/runner/chronicle-lift.ts score --out <dir> [--review <review.json>]
  *
+ * `--out` must be outside any Git worktree: `gbrain init` refuses to create its
+ * content directory inside another repository (local_conflict).
+ *
  * Paid work: the ON arms' judge calls (gbrain's own chat model, metered
  * through a local proxy) and the agent's model calls all pass the budget
  * ledger's paid-request guard. The OFF arm and the corpus step make no paid
@@ -27,7 +30,7 @@ import { budgetOptionsFrom, startPaidRun, receiptCost, type BudgetRun, type Paid
 import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 import { MeteringProxy, McpClient, newMeter, type Meter } from './cat40/gbrain-arm.ts';
 import { runAgent, type Arm, type SubmitPayload, type ToolSpec } from './cat40/loop.ts';
 
@@ -278,7 +281,8 @@ function writeVault(out: string): { vault: string; digest: string; pages: number
 }
 
 async function run(argv: string[]) {
-  const out = resolve(flag(argv, '--out') ?? 'eval/reports/chronicle-lift/run');
+  const out = resolve(flag(argv, '--out') ?? join(process.env.HOME ?? '/tmp', '.cache/gbrain-evals/chronicle-lift/run'));
+  if (!relative(REPO, out).startsWith('..')) throw new Error(`--out ${out} is inside this repository; gbrain init refuses a content directory inside another Git worktree. Choose a directory outside it and copy receipts in afterwards.`);
   mkdirSync(out, { recursive: true });
   const arms = (flag(argv, '--arms') ?? 'off,on-a,on-b').split(',') as ArmId[];
   const qaArms = argv.includes('--no-qa') ? [] : (flag(argv, '--qa-arms') ?? 'off,on-a').split(',') as ArmId[];
