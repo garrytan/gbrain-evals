@@ -378,10 +378,9 @@ function score(argv: string[]) {
     const build = JSON.parse(readFileSync(join(out, `build-${arm}.json`), 'utf8'));
     const ledger = JSON.parse(readFileSync(join(out, `ledger-${arm}.json`), 'utf8')) as Array<{ slug: string }>;
     const pageDate = new Map<string, string>();
-    for (const f of readdirSync(join(out, 'vault'), { recursive: true }) as string[]) {
-      if (!f.endsWith('.md')) continue;
-      const m = /^date:\s*(\d{4}-\d{2}-\d{2})/m.exec(readFileSync(join(out, 'vault', f), 'utf8'));
-      if (m) pageDate.set(f.replace(/\.md$/, ''), m[1]);
+    for (const page of renderCorpus()) {
+      const m = /^date:\s*(\d{4}-\d{2}-\d{2})/m.exec(page.content);
+      if (m) pageDate.set(page.path.replace(/\.md$/, ''), m[1]);
     }
     const perClass: Record<string, { pages: number; expected: number; matched: number; events: number }> = {};
     const unmatched: Array<Extracted & { page_date: string; premature: boolean; review?: string }> = [];
