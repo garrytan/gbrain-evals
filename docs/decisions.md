@@ -63,6 +63,15 @@ Fixture scores prove the plumbing works. They say nothing about retrieval qualit
 | `memory-qa` | [`eval/runner/memory-qa/run.ts`](../eval/runner/memory-qa/run.ts): each conversation's sessions are imported as pages into a fresh in-memory gbrain; each question goes through hybrid search; retrieved chunks reduce to distinct sessions | one per question: `recall_all_at_5`, `recall_any_at_5`, `recall_all_at_10`, `ndcg_at_10`, `latency_ms` |
 | `category` | an existing registry runner with `--gbrain` and `--output` | per-item rows from the runner's receipt (`rows_path`), and/or receipt contracts |
 
+A `memory-qa` source with `"facts": "conversation"` adds the facts lane: sessions import as `type: conversation`
+pages with ISO session dates, and gbrain's conversation-facts extractor (product default model) runs on each
+conversation before its questions. Rows then carry `facts_count` and `facts_unresolved_share` (saved facts that
+keep a relative time expression such as "yesterday" or "3 days ago" and no absolute date), one value per
+conversation. With `"qa": { "mode": "reader", "context": "facts", ... }` the reader answers from the saved facts
+(fact text and stored date) of the top `qa.sessions` retrieved sessions instead of the raw sessions, so the QA
+score measures what extraction kept. Extraction is paid: about $0.02 per LoCoMo session and $1 per LongMemEval-S
+question per arm.
+
 Benchmarks for `memory-qa` dev runs, with what each split allows:
 
 | Benchmark | Dev split | Held-out portion |

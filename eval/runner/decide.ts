@@ -106,7 +106,7 @@ function cmdInit(argv: string[]): string {
   return lines.join('\n');
 }
 
-const needsMoney = (s: Source) => (s.kind === 'memory-qa' ? s.embed === 'real' || !!s.qa : s.paid);
+const needsMoney = (s: Source) => (s.kind === 'memory-qa' ? s.embed === 'real' || !!s.qa || !!s.facts : s.paid);
 
 // ─── fetch / preflight ─────────────────────────────────────────────
 
@@ -184,7 +184,8 @@ export function planJobs(spec: DecisionSpec, runs: string, opts: { shards: numbe
             ...armArgs(a), ...Object.entries(s.search_pins).flatMap(([k, v]) => ['--pin', `${k}=${v}`]), '--top-k', String(s.top_k), '--seed', String(spec.seed),
             ...(s.limit ? ['--limit', String(s.limit)] : []), ...(s.categories?.length ? ['--categories', s.categories.join(',')] : []),
             ...(s.qa ? ['--qa', s.qa.mode, '--qa-runs', String(s.qa.runs), '--qa-sessions', String(s.qa.sessions), ...(s.qa.reader ? ['--reader', s.qa.reader] : []), ...(s.qa.judge ? ['--judge', s.qa.judge] : []),
-              ...(s.qa.think_model ? ['--think-model', s.qa.think_model] : []), ...(s.qa.budget_tokens ? ['--qa-budget-tokens', String(s.qa.budget_tokens)] : [])] : []),
+              ...(s.qa.think_model ? ['--think-model', s.qa.think_model] : []), ...(s.qa.budget_tokens ? ['--qa-budget-tokens', String(s.qa.budget_tokens)] : []),
+              ...(s.qa.context ? ['--qa-context', s.qa.context] : [])] : []), ...(s.facts ? ['--facts', s.facts] : []),
             '--shard', `${i}/${shards}`, '--output', out, ...paidFlags] });
         }
       } else {

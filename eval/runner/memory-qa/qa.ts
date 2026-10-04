@@ -64,6 +64,31 @@ export function readerPrompt(q: MemoryQuestion, sessions: Session[], fallbackDat
   return READER_TEMPLATE.replace('{history}', renderHistory(sessions)).replace('{date}', q.question_date ?? fallbackDate ?? 'unknown').replace('{question}', q.question);
 }
 
+export const FACTS_READER_TEMPLATE = 'I will give you facts a memory system saved from past chats between you and a user, each with the date the memory system recorded for it. Please answer the question based on these facts. Answer the question step by step: first extract all the relevant information, and then reason over the information to get the answer.\n\n\nSaved Facts:\n\n{facts}\n\nCurrent Date: {date}\nQuestion: {question}\nAnswer (step by step):';
+
+export interface SavedFact { fact: string; valid_from: string | null }
+
+/** The facts lane's reading prompt: saved fact text with its stored date, nothing from the raw sessions. */
+export function factsReaderPrompt(q: MemoryQuestion, facts: SavedFact[], fallbackDate: string | undefined): string {
+  const lines = facts.map(f => `- [${f.valid_from ? f.valid_from.slice(0, 10) : 'undated'}] ${f.fact}`).join('\n');
+  return FACTS_READER_TEMPLATE.replace('{facts}', lines || '(none)').replace('{date}', q.question_date ?? fallbackDate ?? 'unknown').replace('{question}', q.question);
+}
+
+const RELATIVE_TIME = new RegExp([
+  '\\b(?:yesterday|today|tonight|tomorrow|recently|lately|the other day|the day before|earlier today)\\b',
+  '\\b(?:last|next|this|coming|past)\\s+(?:week|weekend|month|year|night|morning|evening|summer|winter|spring|fall|autumn|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\\b',
+  '\\b(?:a|an|one|two|three|four|five|six|few|couple(?: of)?|several|\\d+)\\s+(?:days?|weeks?|months?|years?)\\s+(?:ago|from now|earlier|later|before)\\b',
+  '\\bearlier this (?:week|month|year)\\b',
+].join('|'), 'i');
+const ABSOLUTE_DATE = /\b(?:19|20)\d{2}\b|\b(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\.?\s+\d{1,2}\b|\b\d{1,2}\s+(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\b/i;
+
+/**
+ * Evaluator-side check: a saved fact still carries a relative time word
+ * ("yesterday", "last week", "3 days ago") and no absolute date, so its
+ * meaning depends on a moment the fact no longer records.
+ */
+export const unresolvedRelativeTime = (fact: string) => RELATIVE_TIME.test(fact) && !ABSOLUTE_DATE.test(fact);
+
 export function judgePromptsFor(benchmark: string, q: MemoryQuestion, response: string): string[] {
   const answer = q.answer ?? '';
   if (benchmark === 'lme-s') return [officialJudgePrompt(q.category, q.question, answer, response, q.abstention)];
