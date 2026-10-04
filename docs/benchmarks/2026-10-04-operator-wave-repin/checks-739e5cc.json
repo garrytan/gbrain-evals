@@ -1,0 +1,232 @@
+{
+  "kind": "operator-wave-repin-checks",
+  "date": "2026-10-04T15:10:54.803Z",
+  "bun": "1.4.2",
+  "gbrain": {
+    "version": "0.60.46.0",
+    "root": "node_modules/gbrain (pinned dependency)",
+    "loaded_git_head": null,
+    "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c"
+  },
+  "gbrain_evals": {
+    "git_head": "8644ada93dc246f91025c4b8321c16b47d624f5b",
+    "dirty": false
+  },
+  "keys": "every *_API_KEY, *_TOKEN, *_BASE_URL and GBRAIN_* variable removed; no model call",
+  "results": [
+    {
+      "check": "grant-hint-token-id",
+      "exit_code": 0,
+      "seconds": 7.6,
+      "result": {
+        "check": "grant-hint-token-id",
+        "gbrain_version": "0.60.46.0",
+        "pass": true,
+        "failed": [],
+        "checks": {
+          "setup_ok": true,
+          "E1_search_refused_and_fix_names_token_id": true,
+          "E1_get_page_refused_and_fix_names_token_id": true,
+          "E1_no_name_placeholder": true
+        },
+        "observed": {
+          "token_id": "ff4a1679-9f87-44e8-8a82-a43484748d24",
+          "search": {
+            "refused": true,
+            "text": "{\n  \"error\": \"permission_denied\",\n  \"code\": \"permission_denied\",\n  \"message\": \"search: this token is granted no sources (its source grant is an explicit empty list).\",\n  \"suggestion\": \"Ask the brain host's operator to grant this token at least one source (command in fix), then reconnect. Next: gbrain auth rescope-token --id ff4a1679-9f87-44e8-8a82-a43484748d24 --sources '<sources>'\",\n  \"docs\": \"https://github.com/garrytan/gbrain/blob/v0.60.46.0/docs/mcp/ADMIN.md#legacy-token-grants\",\n  \"detail\": \"fence=no_source_grant\",\n  \"fix\": {\n    \"argv\": [\n      \"gbrain\",\n      \"auth\",\n      \"rescope-token\",\n      \"--id\",\n      \"ff4a1679-9f87-44e8-8a82-a43484748d24\",\n      \"--sources\",\n      \"<sources>\"\n    ],\n    \"command\": \"gbrain auth rescope-token --id ff4a1679-9f87-44e8-8a82-a43484748d24 --sources '<sources>'\",\n    \"consent\": [\n      \"credentials\"\n    ],\n    \"actor\": \"host_admin\",\n    \"next\": \"tell_user_to_run\",\n    \"why\": \"Grants this connection the sources it may read; only the brain host operator can change grants.\",\n    \"user_message\": \"This needs the gbrain CLI on the machine that hosts this brain. Please ask whoever runs that server to run the command shown.\",\n    \"requires_exclusive\": false,\n    \"inputs\": [\n      {\n        \"name\": \"sources\",\n        \"how\": \"Ask the user which source ids this connection should read (comma-separated; `gbrain sources list` on the brain host shows them).\"\n      }\n    ]\n  },\n  \"docs_cmd\": [\n    \"gbrain\",\n    \"errors\",\n    \"permission_denied\"\n  ],\n  \"class\": \"host_only\",\n  \"retryable\": false,\n  \"contract_version\": 1\n}"
+          },
+          "get_page": {
+            "refused": true,
+            "text": "{\n  \"error\": \"permission_denied\",\n  \"code\": \"permission_denied\",\n  \"message\": \"get_page: this token is granted no sources (its source grant is an explicit empty list).\",\n  \"suggestion\": \"Ask the brain host's operator to grant this token at least one source (command in fix), then reconnect. Next: gbrain auth rescope-token --id ff4a1679-9f87-44e8-8a82-a43484748d24 --sources '<sources>'\",\n  \"docs\": \"https://github.com/garrytan/gbrain/blob/v0.60.46.0/docs/mcp/ADMIN.md#legacy-token-grants\",\n  \"detail\": \"fence=no_source_grant\",\n  \"fix\": {\n    \"argv\": [\n      \"gbrain\",\n      \"auth\",\n      \"rescope-token\",\n      \"--id\",\n      \"ff4a1679-9f87-44e8-8a82-a43484748d24\",\n      \"--sources\",\n      \"<sources>\"\n    ],\n    \"command\": \"gbrain auth rescope-token --id ff4a1679-9f87-44e8-8a82-a43484748d24 --sources '<sources>'\",\n    \"consent\": [\n      \"credentials\"\n    ],\n    \"actor\": \"host_admin\",\n    \"next\": \"tell_user_to_run\",\n    \"why\": \"Grants this connection the sources it may read; only the brain host operator can change grants.\",\n    \"user_message\": \"This needs the gbrain CLI on the machine that hosts this brain. Please ask whoever runs that server to run the command shown.\",\n    \"requires_exclusive\": false,\n    \"inputs\": [\n      {\n        \"name\": \"sources\",\n        \"how\": \"Ask the user which source ids this connection should read (comma-separated; `gbrain sources list` on the brain host shows them).\"\n      }\n    ]\n  },\n  \"docs_cmd\": [\n    \"gbrain\",\n    \"errors\",\n    \"permission_denied\"\n  ],\n  \"class\": \"host_only\",\n  \"retryable\": false,\n  \"contract_version\": 1\n}"
+          }
+        }
+      },
+      "stderr_tail": ""
+    },
+    {
+      "check": "edit-page-diff-order",
+      "exit_code": 0,
+      "seconds": 6.3,
+      "result": {
+        "check": "edit-page-diff-order",
+        "gbrain_version": "0.60.46.0",
+        "pass": true,
+        "failed": [],
+        "checks": {
+          "setup_ok": true,
+          "E2_single_line_edit_removed_before_added": true,
+          "E2_two_line_edit_both_removed_before_both_added": true
+        },
+        "observed": {
+          "diff_single": "--- a/example-garden-plan.md\n+++ b/example-garden-plan.md\n@@ -6,6 +6,6 @@\n ingested_via: put_page\n ---\n \n-The example garden plan starts in May.\n+The example garden plan starts in June.\n The beds face south.\n Watering is daily.\n",
+          "diff_two_lines": "--- a/example-garden-plan.md\n+++ b/example-garden-plan.md\n@@ -7,5 +7,5 @@\n ---\n \n The example garden plan starts in June.\n-The beds face south.\n-Watering is daily.\n+The beds face east.\n+Watering is weekly.\n"
+        }
+      },
+      "stderr_tail": ""
+    },
+    {
+      "check": "segment-gap-5918",
+      "exit_code": 0,
+      "seconds": 13.1,
+      "result": {
+        "check": "segment-gap-5918",
+        "gbrain_version": "0.60.46.0",
+        "pass": true,
+        "failed": [],
+        "checks": {
+          "setup_ok": true,
+          "E3_default_gap_three_segments": true,
+          "E3_page_gap_60_one_segment": true,
+          "E3_quoted_value_ignored_with_warning": true,
+          "E3_out_of_range_ignored_with_warning": true
+        },
+        "observed": {
+          "default": {
+            "put": 0,
+            "exit": 0,
+            "segments": 3,
+            "warning": ""
+          },
+          "gap60": {
+            "put": 0,
+            "exit": 0,
+            "segments": 1,
+            "warning": ""
+          },
+          "quoted": {
+            "put": 0,
+            "exit": 0,
+            "segments": 3,
+            "warning": "[extract-conversation-facts] example-chat-quoted: ignoring frontmatter conversation_segment_gap_minutes=\"60\"; it must be a whole number of minutes from 1 to 10080 (unquoted). Splitting on the default 30-minute gap instead. To fix: set the key to an integer in that range, or remove it, then rerun gbrain extract-conversation-facts --slug example-chat-quoted"
+          },
+          "too_large": {
+            "put": 0,
+            "exit": 0,
+            "segments": 3,
+            "warning": "[extract-conversation-facts] example-chat-too-large: ignoring frontmatter conversation_segment_gap_minutes=20000; it must be a whole number of minutes from 1 to 10080 (unquoted). Splitting on the default 30-minute gap instead. To fix: set the key to an integer in that range, or remove it, then rerun gbrain extract-conversation-facts --slug example-chat-too-large"
+          }
+        }
+      },
+      "stderr_tail": ""
+    },
+    {
+      "check": "chronicle-receipt-keyless",
+      "exit_code": 0,
+      "seconds": 12,
+      "result": {
+        "check": "chronicle-receipt-keyless",
+        "gbrain_version": "0.60.46.0",
+        "pass": true,
+        "failed": [],
+        "checks": {
+          "setup_ok": true,
+          "E4_recent_meeting_pending_next_cycle": true,
+          "E4_note_has_no_chronicle_field": true,
+          "E4_old_meeting_skipped_history_with_paid_backfill_fix": true,
+          "E4_phase_without_chat_provider_judges_nothing": true,
+          "E4_auto_chronicle_false_skips_by_choice": true
+        },
+        "observed": {
+          "recent": {
+            "code": 0,
+            "chronicle": {
+              "pending": "next_cycle",
+              "daily_remaining": 200
+            }
+          },
+          "note": {
+            "code": 0,
+            "chronicle": null
+          },
+          "history": {
+            "code": 0,
+            "chronicle": {
+              "fix": {
+                "why": "Preview with the dry run, then backfill these pages if the user agrees to one paid chat call per page.",
+                "argv": [
+                  "gbrain",
+                  "chronicle-backfill",
+                  "--source",
+                  "default",
+                  "--since",
+                  "2026-10-04",
+                  "--limit",
+                  "50",
+                  "--yes"
+                ],
+                "actor": "agent",
+                "consent": [
+                  "paid"
+                ],
+                "preview_argv": [
+                  "gbrain",
+                  "chronicle-backfill",
+                  "--source",
+                  "default",
+                  "--since",
+                  "2026-10-04",
+                  "--limit",
+                  "50",
+                  "--dry-run"
+                ],
+                "requires_exclusive": false
+              },
+              "why": "The page's own date is more than 30 days old (chronicle.auto_recent_days); history is extracted only on request.",
+              "stage": "decision",
+              "skipped": "history"
+            }
+          },
+          "phase": {
+            "phase": "chronicle",
+            "status": "skipped",
+            "duration_ms": 15,
+            "summary": "chronicle: no chat provider is configured; 1 page(s) wait. Ask the user to configure a chat provider key on the brain host (see docs/ai-providers/); pending pages run on the next cycle.",
+            "details": {
+              "dry_run": false,
+              "sources": 1,
+              "candidates": 1,
+              "judged": 0,
+              "extracted": 0,
+              "no_events": 0,
+              "failed": 0,
+              "reasons": {},
+              "events_written": 0,
+              "events_retired": 0,
+              "deferred_daily_limit": 0,
+              "daily_limit": 200,
+              "daily_remaining": 200,
+              "spent_usd": 0,
+              "unpriced_calls": 0,
+              "max_items": 50,
+              "per_source": {
+                "default": {
+                  "candidates": 1,
+                  "judged": 0
+                }
+              },
+              "auto_chronicle": "on",
+              "reason": "no_chat_provider",
+              "fix": {
+                "consent": [
+                  "credentials"
+                ],
+                "actor": "user",
+                "requires_exclusive": false,
+                "why": "Ask the user to configure a chat provider key on the brain host (see docs/ai-providers/); pending pages run on the next cycle."
+              }
+            }
+          },
+          "off_write": {
+            "code": 0,
+            "chronicle": {
+              "why": "Automatic event extraction is off on this brain by choice (`gbrain config set auto_chronicle false`).",
+              "stage": "decision",
+              "skipped": "auto_chronicle_off"
+            }
+          }
+        }
+      },
+      "stderr_tail": ""
+    }
+  ]
+}
