@@ -2,6 +2,45 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.14] - 2026-10-04
+
+### LongMemEval with opaque session ids: retrieval confirmed, the notes gain holds, and a frontier reader answers 447/500
+
+Measured at the existing pin, gbrain `109b992`, after a committed
+[preregistration](docs/benchmarks/2026-10-04-longmemeval-opaque-followups-preregistration.md)
+([report](docs/benchmarks/2026-10-04-longmemeval-opaque-followups.md)).
+Provider spend: $67.83 of an $80 budget.
+
+- **Retrieval recount (September 28 audit, C-01).** All 13 published
+  LongMemEval retrieval arms were re-run with opaque session ids, so the
+  `answer_` prefix of labeled evidence ids never reaches gbrain, with settings
+  matched by recomputing each arm's recorded knob hash. Over the 470 answerable
+  questions, the release configuration found every labeled session for 451
+  (published 449, +2/−0) and the reranker-off arm for 434 (439, +1/−6,
+  p = 0.13); autocut on scored 384 (379). Ten of 13 arms are confirmed. The
+  three expansion arms without the reranker moved up (legacy expansion 255 to
+  436 in gbrain's harness, 258 to 440 in this repository's runner).
+  A post-hoc check at the published gbrain commit attributes that change to
+  later gbrain code (+12/−1 on 40 questions), not to the ids (+2/−1).
+- **Reading-notes transfer with opaque ids.** On the 361-question cohort,
+  rebuilt from public receipts, the notes reader beat the direct reader 320 to
+  304 (+25/−9, paired 95% interval +1.4 to +7.5 points), so the predeclared
+  gate passes; 308/361 to 324/361 stays as the raw-id measurement. Eleven notes
+  responses hit the 512-token limit.
+- **Frontier reader (audit B6).** `gpt-5.4` at medium reasoning, on exactly the
+  September 29 GPT-4o arm's official prompts, answered 447/500 (official judge
+  448/500): +33/−16 against GPT-4o (p = 0.021), +25/−17 against gbrain's house
+  reader (p = 0.28). No ranking against vendor results is claimed.
+- **Published claims.** Dated annotations in the September 6 ranker-wave, May
+  LongMemEval, September 9 refresh, September 25 reading-notes and September 29
+  opaque-id reports; the README, settings guide, retrieval lessons and
+  comparison page now carry the recounts, and the finding that query expansion
+  hurts retrieval is marked as no longer true of current gbrain.
+- **Tooling.** `scripts/verify-longmemeval-opaque-followups.py` recounts all
+  three items from the committed receipts and runs in `bun run validate`;
+  three receipt-manifest entries; new TODOS follow-ups for a frontier reader on
+  the reranked retrieval and a reading-notes run at 1,024 tokens.
+
 ## [0.10.13] - 2026-10-03
 
 ### Re-pin to gbrain `109b992` (fix wave 8 and Foundations 1): no accuracy change, one small latency regression, nine new checks
