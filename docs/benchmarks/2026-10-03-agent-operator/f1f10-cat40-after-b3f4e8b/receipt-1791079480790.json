@@ -1,0 +1,94 @@
+{
+  "schema": "cat40-receipt-v1",
+  "version": "cat40-v1",
+  "judge_prompt": "cat40-claims-v1",
+  "judge": null,
+  "world": {
+    "path": "eval/data/model-ladder-v1/world.json",
+    "scale": "v1",
+    "digest": "df8c95e71b17beab176851e3b15daaea9b8719fb009ba50e02cfc68243009a20",
+    "seed": 20261002,
+    "docs": 3973,
+    "tasks": 50
+  },
+  "evals_commit": "f6ef027a485861e54c757a4c3e23615e9afac53c",
+  "evals_dirty": false,
+  "gbrain": {
+    "slot_ref": null,
+    "label": "after-b3f4e8b",
+    "commit": "b3f4e8ba5935004066b4715bdc19bc9de4721b81",
+    "version": "0.60.38.0",
+    "tree": "f2f35cdbc425a230ffcbe06b27b062b4175723bc",
+    "verified": {
+      "copy_tree": "f2f35cdbc425a230ffcbe06b27b062b4175723bc",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.38.0",
+      "cli_version_matches": true
+    },
+    "surface": "starter",
+    "tool_overrides": {
+      "descriptions_file": null,
+      "descriptions_sha256": null,
+      "dropped": []
+    },
+    "instructions_override": null,
+    "served_instructions_sha256": null,
+    "operator_analyze": true,
+    "serve_boot_timeout_s": 0,
+    "staged_build": null
+  },
+  "slot_builds": [],
+  "models": [
+    "gpt-5.4-mini",
+    "gpt-5.4",
+    "claude-sonnet-4-6"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "families": [
+    "A",
+    "B",
+    "C",
+    "E",
+    "F"
+  ],
+  "repeats": 2,
+  "max_tool_chars": 100000000,
+  "argv": [
+    "--models",
+    "gpt-5.4-mini,gpt-5.4,claude-sonnet-4-6",
+    "--arms",
+    "gbrain",
+    "--gbrain-label",
+    "after-b3f4e8b",
+    "--max-tool-chars",
+    "100000000",
+    "--transcripts",
+    "--slots",
+    "5",
+    "--gbrain-repo",
+    "<gbrain>",
+    "--gbrain-ref",
+    "b3f4e8ba5935004066b4715bdc19bc9de4721b81",
+    "--repeat",
+    "2",
+    "--budget-usd",
+    "45",
+    "--concurrency",
+    "6",
+    "--judge",
+    "none",
+    "--out",
+    "eval/reports/cat40/aow-f1f10-after-b3f4e8b"
+  ],
+  "cost": {
+    "usd": 20.010775,
+    "input_tokens": 82888,
+    "output_tokens": 0,
+    "basis": "budget ledger cat40-model-ladder-2026-10-04T01-59-32-904Z-fa281e49: 5 paid requests, 4 charged at their reservation because usage was unavailable"
+  },
+  "finished_at": "2026-10-04T02:04:40.790Z"
+}

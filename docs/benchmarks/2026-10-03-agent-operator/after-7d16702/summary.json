@@ -1,6 +1,6 @@
 {
   "version": "cat41-v1",
-  "scorer": "cat41-score-v3",
+  "scorer": "cat41-score-v5",
   "label": "after-7d16702",
   "gbrain": {
     "requested": "<gbrain>@7d16702bd4350a1ce4d53de0d38a1ac6668976ea",

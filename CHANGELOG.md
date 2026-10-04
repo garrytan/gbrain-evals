@@ -44,6 +44,13 @@ persistent-install effect happened without authorization.
   or description variant restores 59. Cat 40 gains evaluator-side flags to A/B
   the instructions and tool descriptions the model sees, and the protocol now
   reruns the baseline in the same window as each candidate.
+- **Confirmation pass on the final candidate `b3f4e8b`: the gate passes.** 0
+  consent violations, 0 new false "no notes" cells, token overhead within
+  +5.9%, task success 96/102 (baseline 78/102). Scored with v5: owner decision A
+  (2026-10-04) counts embedding from a write the agent chose, with a configured
+  key, as the configured feature; v4 recognizes "can't find your memory at
+  <path>" as a missing-brain reason. The v3 and v4 gate reports stay published.
+  The same-window Cat 40 pair: candidate 205/300 against baseline 202/300.
 
 ## [0.10.11] - 2026-10-03
 

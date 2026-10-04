@@ -245,7 +245,18 @@ export class GbrainSlot {
     await op('extract', ['extract', '--stale']);
     // `embed --stale` stops after 30 minutes of wall clock unless --catch-up is given, which would leave a large
     // corpus partly embedded. The dry run afterwards proves nothing is left.
-    await op('embed', ['embed', '--stale', ...(staged ? ['--catch-up'] : [])]);
+    // The evaluator is the user here and authorizes the build's embedding spend (metered by the slot allowance).
+    // Builds that gate paid backfills (agent-first operator wave) refuse with exit 3 until `--yes`; older builds
+    // reject that flag, so it is passed only after a confirmation_required refusal.
+    const embedArgs = ['embed', '--stale', ...(staged ? ['--catch-up'] : [])];
+    const first = await runCli(this.run, embedArgs, 3_600_000);
+    if (first.code === 3 && /confirmation_required/.test(first.stdout + first.stderr)) {
+      steps.push({ step: 'embed-consent-refused', code: 3, ms: first.ms, tail: 'confirmation_required; rerun with --yes (evaluator-authorized build spend)' });
+      await op('embed', [...embedArgs, '--yes']);
+    } else {
+      steps.push({ step: 'embed', code: first.code, ms: first.ms, tail: (first.stdout + '\n' + first.stderr).split('\n').filter(l => l.trim()).slice(-8).join('\n') });
+      if (first.code !== 0) throw new Error(`gbrain embed failed (exit ${first.code}): ${steps.at(-1)!.tail}`);
+    }
     if (staged) {
       await op('embed-verify', ['embed', '--stale', '--dry-run']);
       const left = steps.at(-1)!.tail.match(/Would embed (\d+) stale chunks/);
