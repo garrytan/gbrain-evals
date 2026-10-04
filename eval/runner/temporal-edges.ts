@@ -27,6 +27,10 @@
  * Hermetic: provider keys stripped, PGLite in memory, zero LLM.
  *
  * Usage: bun eval/runner/temporal-edges.ts [--seeds 3,5] [--output <dir>] [--gbrain <checkout>[@ref]] [--json]
+ *
+ * Custodian (held-out) mode: --phrasing-file <custody path> --decision-id <id> --purpose <text> --seeds <held-out seeds>.
+ * The phrasing file lives outside the repository; every read appends a line to access-log.jsonl beside it, and the
+ * receipt records only the phrasing file's SHA-256, never its text.
  */
 import { join } from 'node:path';
 import type { OperationContext } from 'gbrain/operations';
@@ -36,9 +40,13 @@ import { withHermeticEnv } from './hermetic-env.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, receiptPath, sourceTreeIdentity, writeReceipt, type Receipt } from './receipt.ts';
 import {
-  DEV_SEEDS, TEMPORAL_EDGES_GENERATOR_VERSION, currentEmployers, generateTemporalEdgesWorld,
-  type TePage, type TemporalEdgesWorld,
+  DEV_SEEDS, TEMPORAL_EDGES_GENERATOR_VERSION, currentEmployers, generateTemporalEdgesWorld, validatePhrasing,
+  type PhrasingTemplates, type TePage, type TemporalEdgesWorld,
 } from '../generators/temporal-edges-gen.ts';
+import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { dirname } from 'node:path';
+import { appendAccessLog } from './sealed-confirmation-lib.ts';
 
 export const CATEGORY = 'temporal-edges';
 
@@ -164,10 +172,10 @@ async function probeWorld(world: TemporalEdgesWorld, sut: Sut, mirror: Sut, acc:
 
 export interface TeRunResult { worlds: TemporalEdgesWorld[]; rows: TeRow[]; acc: ProbeAccounting; harnessError: string | null }
 
-export async function runTemporalEdges(opts: { gut: GbrainUnderTest; seeds?: readonly number[]; log?: (s: string) => void }): Promise<TeRunResult> {
+export async function runTemporalEdges(opts: { gut: GbrainUnderTest; seeds?: readonly number[]; log?: (s: string) => void; sealedPhrasing?: { id: string; templates: PhrasingTemplates } }): Promise<TeRunResult> {
   return withHermeticEnv('temporal-edges', async () => {
     const log = opts.log ?? (() => {});
-    const worlds = (opts.seeds ?? DEV_SEEDS).map(seed => generateTemporalEdgesWorld({ seed }));
+    const worlds = (opts.seeds ?? DEV_SEEDS).map(seed => generateTemporalEdgesWorld({ seed, sealedPhrasing: opts.sealedPhrasing }));
     const acc = new ProbeAccounting(0);
     const rows: TeRow[] = [];
     let harnessError: string | null = null;
@@ -220,13 +228,27 @@ async function main(): Promise<void> {
   const json = argv.includes('--json');
   const log = json ? () => {} : (s: string) => console.log(s);
   const seeds = (argValue(argv, '--seeds') ?? DEV_SEEDS.join(',')).split(',').map(Number);
-  if (!seeds.every(s => DEV_SEEDS.includes(s))) throw new Error(`only dev seeds ${DEV_SEEDS.join(', ')} run here; held-out seeds belong to the custodian`);
+  const phrasingFile = argValue(argv, '--phrasing-file');
+  let sealedPhrasing: { id: string; templates: PhrasingTemplates } | undefined;
+  let phrasingSha: string | null = null;
+  if (phrasingFile) {
+    const decisionId = argValue(argv, '--decision-id');
+    const purpose = argValue(argv, '--purpose');
+    if (!decisionId || !purpose) throw new Error('custodian mode needs --decision-id and --purpose, recorded in the access log before the phrasing file is read');
+    const bytes = readFileSync(phrasingFile);
+    phrasingSha = createHash('sha256').update(bytes).digest('hex');
+    appendAccessLog(join(dirname(phrasingFile), 'access-log.jsonl'), { action: 'open', purpose, decision_id: decisionId, labels_sha256: phrasingSha, run_sha256: null });
+    const parsed = JSON.parse(bytes.toString('utf8')) as { id: string; templates: unknown };
+    sealedPhrasing = { id: parsed.id, templates: validatePhrasing(parsed.templates) };
+  } else if (!seeds.every(s => DEV_SEEDS.includes(s))) {
+    throw new Error(`only dev seeds ${DEV_SEEDS.join(', ')} run here; held-out seeds belong to the custodian`);
+  }
   const output = argValue(argv, '--output');
   const outPath = output ? join(output, 'receipt.json') : receiptPath(CATEGORY);
   const startedAt = new Date().toISOString();
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
   log(`# temporal-edges (gbrain ${gut.version}${gut.overlay ? `, overlay ${gut.overlay.build.commit.slice(0, 7)}` : ', pinned'})`);
-  const r = await runTemporalEdges({ gut, seeds, log });
+  const r = await runTemporalEdges({ gut, seeds, log, sealedPhrasing });
   const a = r.acc.summary();
   const summary = summarize(r.rows);
   const receipt: Receipt = {
@@ -244,7 +266,7 @@ async function main(): Promise<void> {
     resolved_config: {
       engine: 'pglite-in-memory',
       caller: 'operation handlers with OperationContext { remote: false, sourceId: default }',
-      seeds, phrasing: 'A (development)', generator_version: TEMPORAL_EDGES_GENERATOR_VERSION,
+      seeds, phrasing: sealedPhrasing ? `held-out set ${sealedPhrasing.id} (custody file sha256 ${phrasingSha})` : 'A (development)', generator_version: TEMPORAL_EDGES_GENERATOR_VERSION,
       oracle: 'employment stints from the generator ledger; set arithmetic for now / as-of / during',
       gbrain_overlay: overlaySummary(gut),
     },

@@ -16,8 +16,10 @@
  * "previously at X, now runs X's EU team" rejoin.
  *
  * Phrasing: only set A (development) lives here. A held-out phrasing set with
- * different cue verbs and templates is authored and frozen by the custodian;
- * this module refuses any other set so held-out text never reaches the
+ * different cue verbs and templates is authored and frozen by the custodian
+ * and kept outside the repository; it reaches this module only as a template
+ * object the custodian's runner loads from custody (`sealedPhrasing`). A
+ * phrasing name other than "A" is refused, so held-out text never reaches the
  * implementer's tree.
  */
 import { Rng, fingerprint } from './seeded.ts';
@@ -25,7 +27,40 @@ import { Rng, fingerprint } from './seeded.ts';
 export const TEMPORAL_EDGES_GENERATOR_VERSION = 'temporal-edges-gen/1';
 export const DEV_SEEDS: readonly number[] = [3, 5];
 export const PHRASING_SETS = ['A'] as const;
-export type PhrasingSet = typeof PHRASING_SETS[number];
+export type PhrasingSet = typeof PHRASING_SETS[number] | `sealed:${string}`;
+
+/** Line templates. Placeholders: {name} {company} (a link) {slug} {role} {prev} (a link). */
+export interface PhrasingTemplates {
+  current: string; stale_summary: string; rejoin_eu: string; former: string; advises: string;
+  tl_move: string; tl_join: string; tl_leave: string; tl_advise: string; tl_invest: string; tl_alumni: string;
+  explicit_start: string; explicit_end: string;
+}
+export const PHRASING_A: PhrasingTemplates = {
+  current: '{name} works at {company} as {role}.',
+  stale_summary: '{name} works at {company} as {role}.',
+  rejoin_eu: "Previously at {company}, {name} now runs {company}'s EU team.",
+  former: 'Earlier, {name} worked at {company}.',
+  advises: '{name} also advises {company}.',
+  tl_move: 'linkedin — Left {prev} to join {company} as {role}',
+  tl_join: 'linkedin — Joined {company} as {role}',
+  tl_leave: 'linkedin — Left {company}',
+  tl_advise: 'note — Became an advisor to {company}',
+  tl_invest: "note — Invested in {company}'s seed extension",
+  tl_alumni: 'meeting — Met with the {company} alumni group',
+  explicit_start: 'note — Started works_at [[{slug}]] as {role}',
+  explicit_end: 'note — Ended works_at [[{slug}]]',
+};
+export const PHRASING_KEYS = Object.keys(PHRASING_A) as Array<keyof PhrasingTemplates>;
+
+export function validatePhrasing(t: unknown): PhrasingTemplates {
+  const o = t as Record<string, unknown>;
+  const missing = PHRASING_KEYS.filter(k => typeof o?.[k] !== 'string' || !(o[k] as string).trim());
+  if (missing.length) throw new Error(`phrasing templates missing: ${missing.join(', ')}`);
+  for (const k of ['explicit_start', 'explicit_end'] as const) if (!(o[k] as string).includes('[[{slug}]]')) throw new Error(`${k} must keep the [[{slug}]] link grammar`);
+  return o as unknown as PhrasingTemplates;
+}
+
+const fill = (t: string, v: Record<string, string>) => t.replace(/\{(name|company|slug|role|prev)\}/g, (_, k: string) => v[k] ?? '');
 
 export interface Stint { company: string; from: string; until: string | null; role: string }
 export type PersonStyle = 'timeline' | 'explicit' | 'frontmatter' | 'stale_summary';
@@ -57,11 +92,12 @@ const dayIso = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 const iso = (y: number, m: number, d = 1) => `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 const title = (s: string) => s.replace(/(^|[-\s])([a-z])/g, (_, p, c) => (p ? ' ' : '') + c.toUpperCase());
 
-export function generateTemporalEdgesWorld(opts: { seed: number; phrasing?: string; people?: number; companies?: number }): TemporalEdgesWorld {
-  const phrasing = (opts.phrasing ?? 'A') as PhrasingSet;
-  if (!PHRASING_SETS.includes(phrasing)) {
+export function generateTemporalEdgesWorld(opts: { seed: number; phrasing?: string; sealedPhrasing?: { id: string; templates: PhrasingTemplates }; people?: number; companies?: number }): TemporalEdgesWorld {
+  if (opts.phrasing !== undefined && !(PHRASING_SETS as readonly string[]).includes(opts.phrasing)) {
     throw new Error(`phrasing set ${opts.phrasing} is held out: only the custodian's sealed generator renders it`);
   }
+  const phrasing: PhrasingSet = opts.sealedPhrasing ? `sealed:${opts.sealedPhrasing.id}` : 'A';
+  const templates = opts.sealedPhrasing ? validatePhrasing(opts.sealedPhrasing.templates) : PHRASING_A;
   const rng = new Rng(opts.seed * 7919 + 17);
   const companies: TeCompany[] = rng.shuffle(COMPANY_WORDS).slice(0, opts.companies ?? 12)
     .map(w => ({ slug: `companies/${w}-example`, name: title(w) }));
@@ -104,7 +140,7 @@ export function generateTemporalEdgesWorld(opts: { seed: number; phrasing?: stri
   const name = (slug: string) => companies.find(c => c.slug === slug)!.name;
   const link = (slug: string) => `[${name(slug)}](../${slug}.md)`;
   const companyPages: TePage[] = companies.map(c => ({ slug: c.slug, content: `---\ntype: company\ntitle: ${c.name}\n---\n\n${c.name} is a company.\n` }));
-  const dated = [...companyPages, ...rng.shuffle(people.map(p => ({ slug: p.slug, content: renderPerson(p, link) })))];
+  const dated = [...companyPages, ...rng.shuffle(people.map(p => ({ slug: p.slug, content: renderPerson(p, link, templates) })))];
 
   const asof_probes: TemporalEdgesWorld['asof_probes'] = [];
   const during_probes: TemporalEdgesWorld['during_probes'] = [];
@@ -132,7 +168,7 @@ export function employersDuring(p: TePerson, from: string, until: string): strin
   return [...new Set(p.stints.filter(s => s.from < until && (s.until === null || s.until > from)).map(s => s.company))].sort();
 }
 
-function renderPerson(p: TePerson, link: (slug: string) => string): string {
+function renderPerson(p: TePerson, link: (slug: string) => string, t: PhrasingTemplates): string {
   const cur = p.stints.find(s => s.until === null) ?? null;
   const former = p.stints.filter(s => s.until !== null);
   const fm: string[] = ['type: person', `title: ${p.name}`];
@@ -143,35 +179,35 @@ function renderPerson(p: TePerson, link: (slug: string) => string): string {
   const prose: string[] = [];
   if (p.style === 'stale_summary' && former.length) {
     const old = former[former.length - 1];
-    prose.push(`${p.name} works at ${link(old.company)} as ${old.role}.`);
+    prose.push(fill(t.stale_summary, { name: p.name, company: link(old.company), role: old.role }));
   } else if (cur && p.rejoin_eu) {
-    prose.push(`Previously at ${link(cur.company)}, ${p.name} now runs ${link(cur.company)}'s EU team.`);
+    prose.push(fill(t.rejoin_eu, { name: p.name, company: link(cur.company) }));
   } else if (cur) {
-    prose.push(`${p.name} works at ${link(cur.company)} as ${cur.role}.`);
+    prose.push(fill(t.current, { name: p.name, company: link(cur.company), role: cur.role }));
   }
   const named = new Set([cur?.company, p.style === 'stale_summary' ? former[former.length - 1]?.company : undefined]);
   for (const company of [...new Set(former.map(s => s.company))]) {
     if (named.has(company)) continue;
-    prose.push(`Earlier, ${p.name} worked at ${link(company)}.`);
+    prose.push(fill(t.former, { name: p.name, company: link(company) }));
   }
-  if (p.advises) prose.push(`${p.name} also advises ${link(p.advises.company)}.`);
+  if (p.advises) prose.push(fill(t.advises, { name: p.name, company: link(p.advises.company) }));
 
   const lines: Array<[string, string]> = [];
   p.stints.forEach((s, k) => {
     const prev = p.stints[k - 1];
     if (p.style === 'explicit') {
-      lines.push([s.from, `note — Started works_at [[${s.company}]] as ${s.role}`]);
-      if (s.until) lines.push([s.until, `note — Ended works_at [[${s.company}]]`]);
+      lines.push([s.from, fill(t.explicit_start, { slug: s.company, role: s.role })]);
+      if (s.until) lines.push([s.until, fill(t.explicit_end, { slug: s.company })]);
       return;
     }
-    if (prev && prev.until === s.from) lines.push([s.from, `linkedin — Left ${link(prev.company)} to join ${link(s.company)} as ${s.role}`]);
-    else lines.push([s.from, `linkedin — Joined ${link(s.company)} as ${s.role}`]);
+    if (prev && prev.until === s.from) lines.push([s.from, fill(t.tl_move, { prev: link(prev.company), company: link(s.company), role: s.role })]);
+    else lines.push([s.from, fill(t.tl_join, { company: link(s.company), role: s.role })]);
     const next = p.stints[k + 1];
-    if (s.until && !(next && next.from === s.until)) lines.push([s.until, `linkedin — Left ${link(s.company)}`]);
+    if (s.until && !(next && next.from === s.until)) lines.push([s.until, fill(t.tl_leave, { company: link(s.company) })]);
   });
-  if (p.advises) lines.push([p.advises.from, `note — Became an advisor to ${link(p.advises.company)}`]);
-  if (p.invests_after_exit) lines.push([p.invests_after_exit.on, `note — Invested in ${link(p.invests_after_exit.company)}'s seed extension`]);
-  if (p.alumni_meeting) lines.push([p.alumni_meeting.on, `meeting — Met with the ${link(p.alumni_meeting.company)} alumni group`]);
+  if (p.advises) lines.push([p.advises.from, fill(t.tl_advise, { company: link(p.advises.company) })]);
+  if (p.invests_after_exit) lines.push([p.invests_after_exit.on, fill(t.tl_invest, { company: link(p.invests_after_exit.company) })]);
+  if (p.alumni_meeting) lines.push([p.alumni_meeting.on, fill(t.tl_alumni, { company: link(p.alumni_meeting.company) })]);
   lines.sort((a, b) => a[0].localeCompare(b[0]));
-  return `---\n${fm.join('\n')}\n---\n\n${prose.join(' ')}\n\n## Timeline\n\n${lines.map(([d, t]) => `- **${d}** | ${t}`).join('\n')}\n`;
+  return `---\n${fm.join('\n')}\n---\n\n${prose.join(' ')}\n\n## Timeline\n\n${lines.map(([d, x]) => `- **${d}** | ${x}`).join('\n')}\n`;
 }
