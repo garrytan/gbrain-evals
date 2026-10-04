@@ -1,0 +1,40 @@
+{
+  "id": "batch_6ac1b9fbcbb081908d16eec3bbfdc924",
+  "object": "batch",
+  "endpoint": "/v1/chat/completions",
+  "model": "gpt-5.4-2026-03-05",
+  "errors": null,
+  "input_file_id": "file-VHc6fU2oWA9gFHiXouxpZM",
+  "completion_window": "24h",
+  "status": "completed",
+  "output_file_id": "file-LwMVtGnMiwaMqwuU2WSqRf",
+  "error_file_id": null,
+  "created_at": 1791080955,
+  "in_progress_at": 1791081019,
+  "expires_at": 1791167355,
+  "finalizing_at": 1791081676,
+  "completed_at": 1791081689,
+  "failed_at": null,
+  "expired_at": null,
+  "cancelling_at": null,
+  "cancelled_at": null,
+  "request_counts": {
+    "total": 490,
+    "completed": 490,
+    "failed": 0
+  },
+  "usage": {
+    "input_tokens": 7235159,
+    "output_tokens": 213827,
+    "total_tokens": 7448986,
+    "input_tokens_details": {
+      "cached_tokens": 0
+    },
+    "output_tokens_details": {
+      "reasoning_tokens": 121168
+    }
+  },
+  "metadata": {
+    "purpose": "gbrain-evals opaque-followups item 2"
+  }
+}

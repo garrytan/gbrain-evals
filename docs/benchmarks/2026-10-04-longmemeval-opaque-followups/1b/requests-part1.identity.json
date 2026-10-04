@@ -1,0 +1,25 @@
+{
+ "identity": {
+  "input_sha256": "2ccca08185820a9943c2523f71df8f4c74f2d022b1f883e2951346a2651d5c97",
+  "installed_reader_sha256": "a84d2a2004f207d88b99901ef5799bfa8dbc0eca9f4762ed71b967d011ffad42",
+  "installed_package_sha256": "fbbb5e134981fba2c2874d305e1fb91dbf541cddca83e43c63224c5f117df86b",
+  "declared_reader_pin": "github:garrytan/gbrain#e78f1c38b947b053f3a46881340f74f316be855a"
+ },
+ "configs": {
+  "direct": {
+   "mode": "direct",
+   "prompt_version": "gbrain-lme-reader-v3-abstention-fullsessions",
+   "prompt_sha256": "7d991ff3e789a24ad7e9672e155975bd6fd911a0042a06858c8cffb71fb21b4d",
+   "config_sha256": "786ce22bc26396132a76db466d7f4b8ab964351bba8f0c3cd4e4a9c52cc309be"
+  },
+  "notes": {
+   "mode": "notes",
+   "prompt_version": "gbrain-lme-reader-v4-notes-fullsessions",
+   "prompt_sha256": "3db7ccbb12b2bda893755f560fdfe0d8d733253d38645d6d8124cb3ffb0887d0",
+   "config_sha256": "74952770e8fd19f14cc4d0bd83de6f43cd5ac7fb3233574d2e2008b76a18acb9"
+  }
+ },
+ "model": "anthropic:claude-sonnet-4-6",
+ "max_tokens": 512,
+ "rows": 182
+}

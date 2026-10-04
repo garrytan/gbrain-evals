@@ -1,0 +1,113 @@
+{
+ "denominator": 500,
+ "rows_present": 500,
+ "missing": [],
+ "reader_errors": [],
+ "correct": {
+  "frontier_gbrain_judge": 447,
+  "frontier_official_judge": 448,
+  "gpt4o_b_gbrain_judge": 430,
+  "gpt4o_b_official_judge": 432,
+  "house_a_gbrain_judge": 439,
+  "house_a_official_judge": 443
+ },
+ "judge_agreement": 495,
+ "judge_errors": {
+  "gbrain": [],
+  "official": []
+ },
+ "paired": {
+  "vs_b_gbrain": {
+   "frontier_better": 33,
+   "frontier_worse": 16,
+   "exact_mcnemar_p": 0.021294114141387155
+  },
+  "vs_b_official": {
+   "frontier_better": 30,
+   "frontier_worse": 14,
+   "exact_mcnemar_p": 0.022628841205914796
+  },
+  "vs_a_gbrain": {
+   "frontier_better": 25,
+   "frontier_worse": 17,
+   "exact_mcnemar_p": 0.27995623852893914
+  },
+  "vs_a_official": {
+   "frontier_better": 21,
+   "frontier_worse": 16,
+   "exact_mcnemar_p": 0.5113757815852296
+  }
+ },
+ "retrieval_complete": {
+  "n": 435,
+  "frontier_gbrain_judge": 413,
+  "gpt4o_b_gbrain_judge": 395,
+  "house_a_gbrain_judge": 403
+ },
+ "by_type_gbrain_judge": {
+  "single-session-user": {
+   "n": 64,
+   "frontier": 62,
+   "gpt4o_b": 62,
+   "house_a": 62
+  },
+  "multi-session": {
+   "n": 121,
+   "frontier": 102,
+   "gpt4o_b": 87,
+   "house_a": 95
+  },
+  "knowledge-update": {
+   "n": 72,
+   "frontier": 64,
+   "gpt4o_b": 67,
+   "house_a": 67
+  },
+  "abstention": {
+   "n": 30,
+   "frontier": 26,
+   "gpt4o_b": 28,
+   "house_a": 28
+  },
+  "single-session-preference": {
+   "n": 30,
+   "frontier": 28,
+   "gpt4o_b": 23,
+   "house_a": 24
+  },
+  "temporal-reasoning": {
+   "n": 127,
+   "frontier": 110,
+   "gpt4o_b": 108,
+   "house_a": 108
+  },
+  "single-session-assistant": {
+   "n": 56,
+   "frontier": 55,
+   "gpt4o_b": 55,
+   "house_a": 55
+  }
+ },
+ "tokens": {
+  "mean_prompt": 14773.594,
+  "mean_completion": 438.418,
+  "mean_reasoning": 249.554,
+  "max_completion": 3543,
+  "finish_reasons": {
+   "stop": 500
+  },
+  "response_models": [
+   "gpt-5.4-2026-03-05"
+  ],
+  "via": {
+   "chat.completions": 10,
+   "batch": 490
+  }
+ },
+ "cost_usd": {
+  "reader": 11.10747625,
+  "gbrain_judge": 0.5044975,
+  "official_judge": 0.41924750000000005,
+  "total": 12.03122125
+ }
+}

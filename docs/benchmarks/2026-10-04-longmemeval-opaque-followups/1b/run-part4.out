@@ -1,0 +1,2 @@
+{"schema":1,"n":90,"completed_pairs":89,"accepted_responses":180,"physical_calls":180,"usage_priced_usd":8.815311000000001,"cap_usd":9.3,"modes":{"direct":{"natural_finishes":90,"cutoffs":0,"cost_usd":4.299783},"notes":{"natural_finishes":89,"cutoffs":1,"cost_usd":4.515527999999999}},"interpretation":"Completion and usage comparison only; answer accuracy requires separate graded labels."}
+rc=0
