@@ -20,7 +20,8 @@
  * Facts lane (`--facts conversation`): pages import as conversation pages
  * with ISO session dates and gbrain's conversation-facts extractor runs on
  * each conversation before its questions; rows carry facts_count and
- * facts_unresolved_share. `--qa reader --qa-context facts` answers from the
+ * facts_unresolved_share, and every saved fact lands in facts.ndjson.
+ * `--qa reader --qa-context facts` answers from the
  * saved facts of the top sessions instead of their raw turns.
  *
  * The arm imports gbrain only through `importGbrain`, so `--gbrain` really
@@ -319,6 +320,8 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
             if (!sessionId) continue;
             factsBySession.set(sessionId, [...(factsBySession.get(sessionId) ?? []), { fact: f.fact, valid_from: f.valid_from ? new Date(f.valid_from).toISOString() : null }]);
           }
+          appendFileSync(join(a.output, 'facts.ndjson'), facts.map(f => JSON.stringify({ conversation: convId, session: f.source_markdown_slug ? bySlug.get(f.source_markdown_slug) ?? null : null,
+            valid_from: f.valid_from ? new Date(f.valid_from).toISOString() : null, fact: f.fact, unresolved: unresolvedRelativeTime(f.fact) }) + '\n').join(''));
           const unresolved = facts.filter(f => unresolvedRelativeTime(f.fact)).length;
           factStats.conversations++; factStats.pages_processed += res.pages_processed; factStats.pages_failed += res.pages_failed;
           factStats.facts += facts.length; factStats.unresolved += unresolved;
