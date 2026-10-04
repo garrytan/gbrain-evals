@@ -1,0 +1,5701 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "hermetic: no model and no paid request"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "hermetic: no model and no paid request"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "identity",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 800,
+  "n_scored": 800,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "gbrain_version": "0.60.32.0",
+  "gbrain_pin": "github:garrytan/gbrain#48ed5e8233f617479df989998560840747af0425",
+  "resolved_config": {
+    "entities": 100,
+    "search": "searchKeyword limit 10",
+    "gates": {
+      "min_documented_recall": 1,
+      "min_documented_mrr": 0.95
+    }
+  },
+  "started_at": "2026-10-03T19:50:13.988Z",
+  "finished_at": "2026-10-03T19:50:16.999Z",
+  "data": {
+    "summary": {
+      "docRecall": 1,
+      "undocRecall": 0.1375,
+      "docMrr": 0.9875,
+      "undocMrr": 0.10250000000000002,
+      "docByType": {
+        "fullname": {
+          "found": 100,
+          "total": 100
+        },
+        "handle": {
+          "found": 100,
+          "total": 100
+        },
+        "email": {
+          "found": 100,
+          "total": 100
+        },
+        "handle-plain": {
+          "found": 100,
+          "total": 100
+        }
+      },
+      "undocByType": {
+        "initial": {
+          "found": 15,
+          "total": 100
+        },
+        "no-period": {
+          "found": 15,
+          "total": 100
+        },
+        "typo": {
+          "found": 25,
+          "total": 200
+        }
+      }
+    },
+    "results": [
+      {
+        "alias": "Sarah Chen",
+        "canonicalSlug": "people/sarah-chen-0",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@schen",
+        "canonicalSlug": "people/sarah-chen-0",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "sarah.chen@stripe.com",
+        "canonicalSlug": "people/sarah-chen-0",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "schen",
+        "canonicalSlug": "people/sarah-chen-0",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "S. Chen",
+        "canonicalSlug": "people/sarah-chen-0",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "S Chen",
+        "canonicalSlug": "people/sarah-chen-0",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Sarahh Chen",
+        "canonicalSlug": "people/sarah-chen-0",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Sarah Chenn",
+        "canonicalSlug": "people/sarah-chen-0",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Alice Chen",
+        "canonicalSlug": "people/alice-chen-1",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@achen",
+        "canonicalSlug": "people/alice-chen-1",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "alice.chen@acme.io",
+        "canonicalSlug": "people/alice-chen-1",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "achen",
+        "canonicalSlug": "people/alice-chen-1",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "A. Chen",
+        "canonicalSlug": "people/alice-chen-1",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 2
+      },
+      {
+        "alias": "A Chen",
+        "canonicalSlug": "people/alice-chen-1",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 2
+      },
+      {
+        "alias": "Alicee Chen",
+        "canonicalSlug": "people/alice-chen-1",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Alice Chenn",
+        "canonicalSlug": "people/alice-chen-1",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Bob Chen",
+        "canonicalSlug": "people/bob-chen-2",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@bchen",
+        "canonicalSlug": "people/bob-chen-2",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "bob.chen@beta.co",
+        "canonicalSlug": "people/bob-chen-2",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "bchen",
+        "canonicalSlug": "people/bob-chen-2",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "B. Chen",
+        "canonicalSlug": "people/bob-chen-2",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "B Chen",
+        "canonicalSlug": "people/bob-chen-2",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Bobb Chen",
+        "canonicalSlug": "people/bob-chen-2",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Bob Chenn",
+        "canonicalSlug": "people/bob-chen-2",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Carol Chen",
+        "canonicalSlug": "people/carol-chen-3",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@cchen",
+        "canonicalSlug": "people/carol-chen-3",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "carol.chen@gamma.dev",
+        "canonicalSlug": "people/carol-chen-3",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "cchen",
+        "canonicalSlug": "people/carol-chen-3",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "C. Chen",
+        "canonicalSlug": "people/carol-chen-3",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "C Chen",
+        "canonicalSlug": "people/carol-chen-3",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Caroll Chen",
+        "canonicalSlug": "people/carol-chen-3",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Carol Chenn",
+        "canonicalSlug": "people/carol-chen-3",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "David Chen",
+        "canonicalSlug": "people/david-chen-4",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@dchen",
+        "canonicalSlug": "people/david-chen-4",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "david.chen@delta.ai",
+        "canonicalSlug": "people/david-chen-4",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "dchen",
+        "canonicalSlug": "people/david-chen-4",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "D. Chen",
+        "canonicalSlug": "people/david-chen-4",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "D Chen",
+        "canonicalSlug": "people/david-chen-4",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Davidd Chen",
+        "canonicalSlug": "people/david-chen-4",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "David Chenn",
+        "canonicalSlug": "people/david-chen-4",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Eve Chen",
+        "canonicalSlug": "people/eve-chen-5",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@echen",
+        "canonicalSlug": "people/eve-chen-5",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "eve.chen@stripe.com",
+        "canonicalSlug": "people/eve-chen-5",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "echen",
+        "canonicalSlug": "people/eve-chen-5",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "E. Chen",
+        "canonicalSlug": "people/eve-chen-5",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "E Chen",
+        "canonicalSlug": "people/eve-chen-5",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Evee Chen",
+        "canonicalSlug": "people/eve-chen-5",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Eve Chenn",
+        "canonicalSlug": "people/eve-chen-5",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Frank Chen",
+        "canonicalSlug": "people/frank-chen-6",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@fchen",
+        "canonicalSlug": "people/frank-chen-6",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "frank.chen@acme.io",
+        "canonicalSlug": "people/frank-chen-6",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "fchen",
+        "canonicalSlug": "people/frank-chen-6",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "F. Chen",
+        "canonicalSlug": "people/frank-chen-6",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "F Chen",
+        "canonicalSlug": "people/frank-chen-6",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Frankk Chen",
+        "canonicalSlug": "people/frank-chen-6",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Frank Chenn",
+        "canonicalSlug": "people/frank-chen-6",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Grace Chen",
+        "canonicalSlug": "people/grace-chen-7",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@gchen",
+        "canonicalSlug": "people/grace-chen-7",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "grace.chen@beta.co",
+        "canonicalSlug": "people/grace-chen-7",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "gchen",
+        "canonicalSlug": "people/grace-chen-7",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "G. Chen",
+        "canonicalSlug": "people/grace-chen-7",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "G Chen",
+        "canonicalSlug": "people/grace-chen-7",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Gracee Chen",
+        "canonicalSlug": "people/grace-chen-7",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Grace Chenn",
+        "canonicalSlug": "people/grace-chen-7",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Henry Chen",
+        "canonicalSlug": "people/henry-chen-8",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@hchen",
+        "canonicalSlug": "people/henry-chen-8",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "henry.chen@gamma.dev",
+        "canonicalSlug": "people/henry-chen-8",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "hchen",
+        "canonicalSlug": "people/henry-chen-8",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "H. Chen",
+        "canonicalSlug": "people/henry-chen-8",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "H Chen",
+        "canonicalSlug": "people/henry-chen-8",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Henryy Chen",
+        "canonicalSlug": "people/henry-chen-8",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Henry Chenn",
+        "canonicalSlug": "people/henry-chen-8",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Iris Chen",
+        "canonicalSlug": "people/iris-chen-9",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@ichen",
+        "canonicalSlug": "people/iris-chen-9",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "iris.chen@delta.ai",
+        "canonicalSlug": "people/iris-chen-9",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "ichen",
+        "canonicalSlug": "people/iris-chen-9",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "I. Chen",
+        "canonicalSlug": "people/iris-chen-9",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 10
+      },
+      {
+        "alias": "I Chen",
+        "canonicalSlug": "people/iris-chen-9",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 10
+      },
+      {
+        "alias": "Iriss Chen",
+        "canonicalSlug": "people/iris-chen-9",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Iris Chenn",
+        "canonicalSlug": "people/iris-chen-9",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Jack Chen",
+        "canonicalSlug": "people/jack-chen-10",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@jchen",
+        "canonicalSlug": "people/jack-chen-10",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "jack.chen@stripe.com",
+        "canonicalSlug": "people/jack-chen-10",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "jchen",
+        "canonicalSlug": "people/jack-chen-10",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "J. Chen",
+        "canonicalSlug": "people/jack-chen-10",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "J Chen",
+        "canonicalSlug": "people/jack-chen-10",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Jackk Chen",
+        "canonicalSlug": "people/jack-chen-10",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Jack Chenn",
+        "canonicalSlug": "people/jack-chen-10",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Kate Chen",
+        "canonicalSlug": "people/kate-chen-11",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@kchen",
+        "canonicalSlug": "people/kate-chen-11",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "kate.chen@acme.io",
+        "canonicalSlug": "people/kate-chen-11",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "kchen",
+        "canonicalSlug": "people/kate-chen-11",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "K. Chen",
+        "canonicalSlug": "people/kate-chen-11",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "K Chen",
+        "canonicalSlug": "people/kate-chen-11",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Katee Chen",
+        "canonicalSlug": "people/kate-chen-11",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Kate Chenn",
+        "canonicalSlug": "people/kate-chen-11",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Liam Chen",
+        "canonicalSlug": "people/liam-chen-12",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@lchen",
+        "canonicalSlug": "people/liam-chen-12",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "liam.chen@beta.co",
+        "canonicalSlug": "people/liam-chen-12",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "lchen",
+        "canonicalSlug": "people/liam-chen-12",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "L. Chen",
+        "canonicalSlug": "people/liam-chen-12",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "L Chen",
+        "canonicalSlug": "people/liam-chen-12",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Liamm Chen",
+        "canonicalSlug": "people/liam-chen-12",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Liam Chenn",
+        "canonicalSlug": "people/liam-chen-12",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Mia Chen",
+        "canonicalSlug": "people/mia-chen-13",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@mchen",
+        "canonicalSlug": "people/mia-chen-13",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "mia.chen@gamma.dev",
+        "canonicalSlug": "people/mia-chen-13",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "mchen",
+        "canonicalSlug": "people/mia-chen-13",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "M. Chen",
+        "canonicalSlug": "people/mia-chen-13",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "M Chen",
+        "canonicalSlug": "people/mia-chen-13",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Miaa Chen",
+        "canonicalSlug": "people/mia-chen-13",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Mia Chenn",
+        "canonicalSlug": "people/mia-chen-13",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Noah Chen",
+        "canonicalSlug": "people/noah-chen-14",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@nchen",
+        "canonicalSlug": "people/noah-chen-14",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "noah.chen@delta.ai",
+        "canonicalSlug": "people/noah-chen-14",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "nchen",
+        "canonicalSlug": "people/noah-chen-14",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "N. Chen",
+        "canonicalSlug": "people/noah-chen-14",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "N Chen",
+        "canonicalSlug": "people/noah-chen-14",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Noahh Chen",
+        "canonicalSlug": "people/noah-chen-14",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Noah Chenn",
+        "canonicalSlug": "people/noah-chen-14",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Olivia Chen",
+        "canonicalSlug": "people/olivia-chen-15",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@ochen",
+        "canonicalSlug": "people/olivia-chen-15",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "olivia.chen@stripe.com",
+        "canonicalSlug": "people/olivia-chen-15",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "ochen",
+        "canonicalSlug": "people/olivia-chen-15",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "O. Chen",
+        "canonicalSlug": "people/olivia-chen-15",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "O Chen",
+        "canonicalSlug": "people/olivia-chen-15",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Oliviaa Chen",
+        "canonicalSlug": "people/olivia-chen-15",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Olivia Chenn",
+        "canonicalSlug": "people/olivia-chen-15",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Paul Chen",
+        "canonicalSlug": "people/paul-chen-16",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@pchen",
+        "canonicalSlug": "people/paul-chen-16",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "paul.chen@acme.io",
+        "canonicalSlug": "people/paul-chen-16",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "pchen",
+        "canonicalSlug": "people/paul-chen-16",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "P. Chen",
+        "canonicalSlug": "people/paul-chen-16",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "P Chen",
+        "canonicalSlug": "people/paul-chen-16",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Paull Chen",
+        "canonicalSlug": "people/paul-chen-16",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Paul Chenn",
+        "canonicalSlug": "people/paul-chen-16",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Quinn Chen",
+        "canonicalSlug": "people/quinn-chen-17",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@qchen",
+        "canonicalSlug": "people/quinn-chen-17",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "quinn.chen@beta.co",
+        "canonicalSlug": "people/quinn-chen-17",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "qchen",
+        "canonicalSlug": "people/quinn-chen-17",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Q. Chen",
+        "canonicalSlug": "people/quinn-chen-17",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Q Chen",
+        "canonicalSlug": "people/quinn-chen-17",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Quinnn Chen",
+        "canonicalSlug": "people/quinn-chen-17",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Quinn Chenn",
+        "canonicalSlug": "people/quinn-chen-17",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Rachel Chen",
+        "canonicalSlug": "people/rachel-chen-18",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@rchen",
+        "canonicalSlug": "people/rachel-chen-18",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "rachel.chen@gamma.dev",
+        "canonicalSlug": "people/rachel-chen-18",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "rchen",
+        "canonicalSlug": "people/rachel-chen-18",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "R. Chen",
+        "canonicalSlug": "people/rachel-chen-18",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "R Chen",
+        "canonicalSlug": "people/rachel-chen-18",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Rachell Chen",
+        "canonicalSlug": "people/rachel-chen-18",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Rachel Chenn",
+        "canonicalSlug": "people/rachel-chen-18",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Sam Chen",
+        "canonicalSlug": "people/sam-chen-19",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@schen",
+        "canonicalSlug": "people/sam-chen-19",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 2
+      },
+      {
+        "alias": "sam.chen@delta.ai",
+        "canonicalSlug": "people/sam-chen-19",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "schen",
+        "canonicalSlug": "people/sam-chen-19",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 2
+      },
+      {
+        "alias": "S. Chen",
+        "canonicalSlug": "people/sam-chen-19",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "S Chen",
+        "canonicalSlug": "people/sam-chen-19",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Samm Chen",
+        "canonicalSlug": "people/sam-chen-19",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Sam Chenn",
+        "canonicalSlug": "people/sam-chen-19",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Sarah Smith",
+        "canonicalSlug": "people/sarah-smith-20",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@ssmith",
+        "canonicalSlug": "people/sarah-smith-20",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "sarah.smith@stripe.com",
+        "canonicalSlug": "people/sarah-smith-20",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "ssmith",
+        "canonicalSlug": "people/sarah-smith-20",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "S. Smith",
+        "canonicalSlug": "people/sarah-smith-20",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "S Smith",
+        "canonicalSlug": "people/sarah-smith-20",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Sarahh Smith",
+        "canonicalSlug": "people/sarah-smith-20",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Sarah Smithn",
+        "canonicalSlug": "people/sarah-smith-20",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Alice Smith",
+        "canonicalSlug": "people/alice-smith-21",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@asmith",
+        "canonicalSlug": "people/alice-smith-21",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "alice.smith@acme.io",
+        "canonicalSlug": "people/alice-smith-21",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "asmith",
+        "canonicalSlug": "people/alice-smith-21",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "A. Smith",
+        "canonicalSlug": "people/alice-smith-21",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 2
+      },
+      {
+        "alias": "A Smith",
+        "canonicalSlug": "people/alice-smith-21",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 2
+      },
+      {
+        "alias": "Alicee Smith",
+        "canonicalSlug": "people/alice-smith-21",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Alice Smithn",
+        "canonicalSlug": "people/alice-smith-21",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Bob Smith",
+        "canonicalSlug": "people/bob-smith-22",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@bsmith",
+        "canonicalSlug": "people/bob-smith-22",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "bob.smith@beta.co",
+        "canonicalSlug": "people/bob-smith-22",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "bsmith",
+        "canonicalSlug": "people/bob-smith-22",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "B. Smith",
+        "canonicalSlug": "people/bob-smith-22",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "B Smith",
+        "canonicalSlug": "people/bob-smith-22",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Bobb Smith",
+        "canonicalSlug": "people/bob-smith-22",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Bob Smithn",
+        "canonicalSlug": "people/bob-smith-22",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Carol Smith",
+        "canonicalSlug": "people/carol-smith-23",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@csmith",
+        "canonicalSlug": "people/carol-smith-23",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "carol.smith@gamma.dev",
+        "canonicalSlug": "people/carol-smith-23",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "csmith",
+        "canonicalSlug": "people/carol-smith-23",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "C. Smith",
+        "canonicalSlug": "people/carol-smith-23",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "C Smith",
+        "canonicalSlug": "people/carol-smith-23",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Caroll Smith",
+        "canonicalSlug": "people/carol-smith-23",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Carol Smithn",
+        "canonicalSlug": "people/carol-smith-23",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "David Smith",
+        "canonicalSlug": "people/david-smith-24",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@dsmith",
+        "canonicalSlug": "people/david-smith-24",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "david.smith@delta.ai",
+        "canonicalSlug": "people/david-smith-24",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "dsmith",
+        "canonicalSlug": "people/david-smith-24",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "D. Smith",
+        "canonicalSlug": "people/david-smith-24",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "D Smith",
+        "canonicalSlug": "people/david-smith-24",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Davidd Smith",
+        "canonicalSlug": "people/david-smith-24",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "David Smithn",
+        "canonicalSlug": "people/david-smith-24",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Eve Smith",
+        "canonicalSlug": "people/eve-smith-25",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@esmith",
+        "canonicalSlug": "people/eve-smith-25",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "eve.smith@stripe.com",
+        "canonicalSlug": "people/eve-smith-25",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "esmith",
+        "canonicalSlug": "people/eve-smith-25",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "E. Smith",
+        "canonicalSlug": "people/eve-smith-25",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "E Smith",
+        "canonicalSlug": "people/eve-smith-25",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Evee Smith",
+        "canonicalSlug": "people/eve-smith-25",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Eve Smithn",
+        "canonicalSlug": "people/eve-smith-25",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Frank Smith",
+        "canonicalSlug": "people/frank-smith-26",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@fsmith",
+        "canonicalSlug": "people/frank-smith-26",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "frank.smith@acme.io",
+        "canonicalSlug": "people/frank-smith-26",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "fsmith",
+        "canonicalSlug": "people/frank-smith-26",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "F. Smith",
+        "canonicalSlug": "people/frank-smith-26",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "F Smith",
+        "canonicalSlug": "people/frank-smith-26",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Frankk Smith",
+        "canonicalSlug": "people/frank-smith-26",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Frank Smithn",
+        "canonicalSlug": "people/frank-smith-26",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Grace Smith",
+        "canonicalSlug": "people/grace-smith-27",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@gsmith",
+        "canonicalSlug": "people/grace-smith-27",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "grace.smith@beta.co",
+        "canonicalSlug": "people/grace-smith-27",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "gsmith",
+        "canonicalSlug": "people/grace-smith-27",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "G. Smith",
+        "canonicalSlug": "people/grace-smith-27",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "G Smith",
+        "canonicalSlug": "people/grace-smith-27",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Gracee Smith",
+        "canonicalSlug": "people/grace-smith-27",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Grace Smithn",
+        "canonicalSlug": "people/grace-smith-27",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Henry Smith",
+        "canonicalSlug": "people/henry-smith-28",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@hsmith",
+        "canonicalSlug": "people/henry-smith-28",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "henry.smith@gamma.dev",
+        "canonicalSlug": "people/henry-smith-28",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "hsmith",
+        "canonicalSlug": "people/henry-smith-28",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "H. Smith",
+        "canonicalSlug": "people/henry-smith-28",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "H Smith",
+        "canonicalSlug": "people/henry-smith-28",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Henryy Smith",
+        "canonicalSlug": "people/henry-smith-28",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Henry Smithn",
+        "canonicalSlug": "people/henry-smith-28",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Iris Smith",
+        "canonicalSlug": "people/iris-smith-29",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@ismith",
+        "canonicalSlug": "people/iris-smith-29",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "iris.smith@delta.ai",
+        "canonicalSlug": "people/iris-smith-29",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "ismith",
+        "canonicalSlug": "people/iris-smith-29",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "I. Smith",
+        "canonicalSlug": "people/iris-smith-29",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 10
+      },
+      {
+        "alias": "I Smith",
+        "canonicalSlug": "people/iris-smith-29",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 10
+      },
+      {
+        "alias": "Iriss Smith",
+        "canonicalSlug": "people/iris-smith-29",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Iris Smithn",
+        "canonicalSlug": "people/iris-smith-29",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Jack Smith",
+        "canonicalSlug": "people/jack-smith-30",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@jsmith",
+        "canonicalSlug": "people/jack-smith-30",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "jack.smith@stripe.com",
+        "canonicalSlug": "people/jack-smith-30",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "jsmith",
+        "canonicalSlug": "people/jack-smith-30",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "J. Smith",
+        "canonicalSlug": "people/jack-smith-30",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "J Smith",
+        "canonicalSlug": "people/jack-smith-30",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Jackk Smith",
+        "canonicalSlug": "people/jack-smith-30",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Jack Smithn",
+        "canonicalSlug": "people/jack-smith-30",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Kate Smith",
+        "canonicalSlug": "people/kate-smith-31",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@ksmith",
+        "canonicalSlug": "people/kate-smith-31",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "kate.smith@acme.io",
+        "canonicalSlug": "people/kate-smith-31",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "ksmith",
+        "canonicalSlug": "people/kate-smith-31",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "K. Smith",
+        "canonicalSlug": "people/kate-smith-31",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "K Smith",
+        "canonicalSlug": "people/kate-smith-31",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Katee Smith",
+        "canonicalSlug": "people/kate-smith-31",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Kate Smithn",
+        "canonicalSlug": "people/kate-smith-31",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Liam Smith",
+        "canonicalSlug": "people/liam-smith-32",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@lsmith",
+        "canonicalSlug": "people/liam-smith-32",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "liam.smith@beta.co",
+        "canonicalSlug": "people/liam-smith-32",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "lsmith",
+        "canonicalSlug": "people/liam-smith-32",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "L. Smith",
+        "canonicalSlug": "people/liam-smith-32",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "L Smith",
+        "canonicalSlug": "people/liam-smith-32",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Liamm Smith",
+        "canonicalSlug": "people/liam-smith-32",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Liam Smithn",
+        "canonicalSlug": "people/liam-smith-32",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Mia Smith",
+        "canonicalSlug": "people/mia-smith-33",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@msmith",
+        "canonicalSlug": "people/mia-smith-33",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "mia.smith@gamma.dev",
+        "canonicalSlug": "people/mia-smith-33",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "msmith",
+        "canonicalSlug": "people/mia-smith-33",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "M. Smith",
+        "canonicalSlug": "people/mia-smith-33",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "M Smith",
+        "canonicalSlug": "people/mia-smith-33",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Miaa Smith",
+        "canonicalSlug": "people/mia-smith-33",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Mia Smithn",
+        "canonicalSlug": "people/mia-smith-33",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Noah Smith",
+        "canonicalSlug": "people/noah-smith-34",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@nsmith",
+        "canonicalSlug": "people/noah-smith-34",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "noah.smith@delta.ai",
+        "canonicalSlug": "people/noah-smith-34",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "nsmith",
+        "canonicalSlug": "people/noah-smith-34",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "N. Smith",
+        "canonicalSlug": "people/noah-smith-34",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "N Smith",
+        "canonicalSlug": "people/noah-smith-34",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Noahh Smith",
+        "canonicalSlug": "people/noah-smith-34",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Noah Smithn",
+        "canonicalSlug": "people/noah-smith-34",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Olivia Smith",
+        "canonicalSlug": "people/olivia-smith-35",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@osmith",
+        "canonicalSlug": "people/olivia-smith-35",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "olivia.smith@stripe.com",
+        "canonicalSlug": "people/olivia-smith-35",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "osmith",
+        "canonicalSlug": "people/olivia-smith-35",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "O. Smith",
+        "canonicalSlug": "people/olivia-smith-35",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "O Smith",
+        "canonicalSlug": "people/olivia-smith-35",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Oliviaa Smith",
+        "canonicalSlug": "people/olivia-smith-35",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Olivia Smithn",
+        "canonicalSlug": "people/olivia-smith-35",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Paul Smith",
+        "canonicalSlug": "people/paul-smith-36",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@psmith",
+        "canonicalSlug": "people/paul-smith-36",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "paul.smith@acme.io",
+        "canonicalSlug": "people/paul-smith-36",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "psmith",
+        "canonicalSlug": "people/paul-smith-36",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "P. Smith",
+        "canonicalSlug": "people/paul-smith-36",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "P Smith",
+        "canonicalSlug": "people/paul-smith-36",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Paull Smith",
+        "canonicalSlug": "people/paul-smith-36",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Paul Smithn",
+        "canonicalSlug": "people/paul-smith-36",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Quinn Smith",
+        "canonicalSlug": "people/quinn-smith-37",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@qsmith",
+        "canonicalSlug": "people/quinn-smith-37",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "quinn.smith@beta.co",
+        "canonicalSlug": "people/quinn-smith-37",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "qsmith",
+        "canonicalSlug": "people/quinn-smith-37",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Q. Smith",
+        "canonicalSlug": "people/quinn-smith-37",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Q Smith",
+        "canonicalSlug": "people/quinn-smith-37",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Quinnn Smith",
+        "canonicalSlug": "people/quinn-smith-37",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Quinn Smithn",
+        "canonicalSlug": "people/quinn-smith-37",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Rachel Smith",
+        "canonicalSlug": "people/rachel-smith-38",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@rsmith",
+        "canonicalSlug": "people/rachel-smith-38",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "rachel.smith@gamma.dev",
+        "canonicalSlug": "people/rachel-smith-38",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "rsmith",
+        "canonicalSlug": "people/rachel-smith-38",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "R. Smith",
+        "canonicalSlug": "people/rachel-smith-38",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "R Smith",
+        "canonicalSlug": "people/rachel-smith-38",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Rachell Smith",
+        "canonicalSlug": "people/rachel-smith-38",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Rachel Smithn",
+        "canonicalSlug": "people/rachel-smith-38",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Sam Smith",
+        "canonicalSlug": "people/sam-smith-39",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@ssmith",
+        "canonicalSlug": "people/sam-smith-39",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 2
+      },
+      {
+        "alias": "sam.smith@delta.ai",
+        "canonicalSlug": "people/sam-smith-39",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "ssmith",
+        "canonicalSlug": "people/sam-smith-39",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 2
+      },
+      {
+        "alias": "S. Smith",
+        "canonicalSlug": "people/sam-smith-39",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "S Smith",
+        "canonicalSlug": "people/sam-smith-39",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Samm Smith",
+        "canonicalSlug": "people/sam-smith-39",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Sam Smithn",
+        "canonicalSlug": "people/sam-smith-39",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Sarah Johnson",
+        "canonicalSlug": "people/sarah-johnson-40",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@sjohnson",
+        "canonicalSlug": "people/sarah-johnson-40",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "sarah.johnson@stripe.com",
+        "canonicalSlug": "people/sarah-johnson-40",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "sjohnson",
+        "canonicalSlug": "people/sarah-johnson-40",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "S. Johnson",
+        "canonicalSlug": "people/sarah-johnson-40",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "S Johnson",
+        "canonicalSlug": "people/sarah-johnson-40",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Sarahh Johnson",
+        "canonicalSlug": "people/sarah-johnson-40",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Sarah Johnsonn",
+        "canonicalSlug": "people/sarah-johnson-40",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Alice Johnson",
+        "canonicalSlug": "people/alice-johnson-41",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@ajohnson",
+        "canonicalSlug": "people/alice-johnson-41",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "alice.johnson@acme.io",
+        "canonicalSlug": "people/alice-johnson-41",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "ajohnson",
+        "canonicalSlug": "people/alice-johnson-41",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "A. Johnson",
+        "canonicalSlug": "people/alice-johnson-41",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 2
+      },
+      {
+        "alias": "A Johnson",
+        "canonicalSlug": "people/alice-johnson-41",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 2
+      },
+      {
+        "alias": "Alicee Johnson",
+        "canonicalSlug": "people/alice-johnson-41",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Alice Johnsonn",
+        "canonicalSlug": "people/alice-johnson-41",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Bob Johnson",
+        "canonicalSlug": "people/bob-johnson-42",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@bjohnson",
+        "canonicalSlug": "people/bob-johnson-42",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "bob.johnson@beta.co",
+        "canonicalSlug": "people/bob-johnson-42",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "bjohnson",
+        "canonicalSlug": "people/bob-johnson-42",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "B. Johnson",
+        "canonicalSlug": "people/bob-johnson-42",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "B Johnson",
+        "canonicalSlug": "people/bob-johnson-42",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Bobb Johnson",
+        "canonicalSlug": "people/bob-johnson-42",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Bob Johnsonn",
+        "canonicalSlug": "people/bob-johnson-42",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Carol Johnson",
+        "canonicalSlug": "people/carol-johnson-43",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@cjohnson",
+        "canonicalSlug": "people/carol-johnson-43",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "carol.johnson@gamma.dev",
+        "canonicalSlug": "people/carol-johnson-43",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "cjohnson",
+        "canonicalSlug": "people/carol-johnson-43",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "C. Johnson",
+        "canonicalSlug": "people/carol-johnson-43",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "C Johnson",
+        "canonicalSlug": "people/carol-johnson-43",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Caroll Johnson",
+        "canonicalSlug": "people/carol-johnson-43",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Carol Johnsonn",
+        "canonicalSlug": "people/carol-johnson-43",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "David Johnson",
+        "canonicalSlug": "people/david-johnson-44",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@djohnson",
+        "canonicalSlug": "people/david-johnson-44",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "david.johnson@delta.ai",
+        "canonicalSlug": "people/david-johnson-44",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "djohnson",
+        "canonicalSlug": "people/david-johnson-44",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "D. Johnson",
+        "canonicalSlug": "people/david-johnson-44",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "D Johnson",
+        "canonicalSlug": "people/david-johnson-44",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Davidd Johnson",
+        "canonicalSlug": "people/david-johnson-44",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "David Johnsonn",
+        "canonicalSlug": "people/david-johnson-44",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Eve Johnson",
+        "canonicalSlug": "people/eve-johnson-45",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@ejohnson",
+        "canonicalSlug": "people/eve-johnson-45",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "eve.johnson@stripe.com",
+        "canonicalSlug": "people/eve-johnson-45",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "ejohnson",
+        "canonicalSlug": "people/eve-johnson-45",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "E. Johnson",
+        "canonicalSlug": "people/eve-johnson-45",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "E Johnson",
+        "canonicalSlug": "people/eve-johnson-45",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Evee Johnson",
+        "canonicalSlug": "people/eve-johnson-45",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Eve Johnsonn",
+        "canonicalSlug": "people/eve-johnson-45",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Frank Johnson",
+        "canonicalSlug": "people/frank-johnson-46",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@fjohnson",
+        "canonicalSlug": "people/frank-johnson-46",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "frank.johnson@acme.io",
+        "canonicalSlug": "people/frank-johnson-46",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "fjohnson",
+        "canonicalSlug": "people/frank-johnson-46",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "F. Johnson",
+        "canonicalSlug": "people/frank-johnson-46",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "F Johnson",
+        "canonicalSlug": "people/frank-johnson-46",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Frankk Johnson",
+        "canonicalSlug": "people/frank-johnson-46",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Frank Johnsonn",
+        "canonicalSlug": "people/frank-johnson-46",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Grace Johnson",
+        "canonicalSlug": "people/grace-johnson-47",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@gjohnson",
+        "canonicalSlug": "people/grace-johnson-47",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "grace.johnson@beta.co",
+        "canonicalSlug": "people/grace-johnson-47",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "gjohnson",
+        "canonicalSlug": "people/grace-johnson-47",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "G. Johnson",
+        "canonicalSlug": "people/grace-johnson-47",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "G Johnson",
+        "canonicalSlug": "people/grace-johnson-47",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Gracee Johnson",
+        "canonicalSlug": "people/grace-johnson-47",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Grace Johnsonn",
+        "canonicalSlug": "people/grace-johnson-47",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Henry Johnson",
+        "canonicalSlug": "people/henry-johnson-48",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@hjohnson",
+        "canonicalSlug": "people/henry-johnson-48",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "henry.johnson@gamma.dev",
+        "canonicalSlug": "people/henry-johnson-48",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "hjohnson",
+        "canonicalSlug": "people/henry-johnson-48",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "H. Johnson",
+        "canonicalSlug": "people/henry-johnson-48",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "H Johnson",
+        "canonicalSlug": "people/henry-johnson-48",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Henryy Johnson",
+        "canonicalSlug": "people/henry-johnson-48",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Henry Johnsonn",
+        "canonicalSlug": "people/henry-johnson-48",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Iris Johnson",
+        "canonicalSlug": "people/iris-johnson-49",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@ijohnson",
+        "canonicalSlug": "people/iris-johnson-49",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "iris.johnson@delta.ai",
+        "canonicalSlug": "people/iris-johnson-49",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "ijohnson",
+        "canonicalSlug": "people/iris-johnson-49",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "I. Johnson",
+        "canonicalSlug": "people/iris-johnson-49",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 10
+      },
+      {
+        "alias": "I Johnson",
+        "canonicalSlug": "people/iris-johnson-49",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 10
+      },
+      {
+        "alias": "Iriss Johnson",
+        "canonicalSlug": "people/iris-johnson-49",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Iris Johnsonn",
+        "canonicalSlug": "people/iris-johnson-49",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Jack Johnson",
+        "canonicalSlug": "people/jack-johnson-50",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@jjohnson",
+        "canonicalSlug": "people/jack-johnson-50",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "jack.johnson@stripe.com",
+        "canonicalSlug": "people/jack-johnson-50",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "jjohnson",
+        "canonicalSlug": "people/jack-johnson-50",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "J. Johnson",
+        "canonicalSlug": "people/jack-johnson-50",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "J Johnson",
+        "canonicalSlug": "people/jack-johnson-50",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Jackk Johnson",
+        "canonicalSlug": "people/jack-johnson-50",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Jack Johnsonn",
+        "canonicalSlug": "people/jack-johnson-50",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Kate Johnson",
+        "canonicalSlug": "people/kate-johnson-51",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@kjohnson",
+        "canonicalSlug": "people/kate-johnson-51",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "kate.johnson@acme.io",
+        "canonicalSlug": "people/kate-johnson-51",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "kjohnson",
+        "canonicalSlug": "people/kate-johnson-51",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "K. Johnson",
+        "canonicalSlug": "people/kate-johnson-51",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "K Johnson",
+        "canonicalSlug": "people/kate-johnson-51",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Katee Johnson",
+        "canonicalSlug": "people/kate-johnson-51",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Kate Johnsonn",
+        "canonicalSlug": "people/kate-johnson-51",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Liam Johnson",
+        "canonicalSlug": "people/liam-johnson-52",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@ljohnson",
+        "canonicalSlug": "people/liam-johnson-52",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "liam.johnson@beta.co",
+        "canonicalSlug": "people/liam-johnson-52",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "ljohnson",
+        "canonicalSlug": "people/liam-johnson-52",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "L. Johnson",
+        "canonicalSlug": "people/liam-johnson-52",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "L Johnson",
+        "canonicalSlug": "people/liam-johnson-52",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Liamm Johnson",
+        "canonicalSlug": "people/liam-johnson-52",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Liam Johnsonn",
+        "canonicalSlug": "people/liam-johnson-52",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Mia Johnson",
+        "canonicalSlug": "people/mia-johnson-53",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@mjohnson",
+        "canonicalSlug": "people/mia-johnson-53",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "mia.johnson@gamma.dev",
+        "canonicalSlug": "people/mia-johnson-53",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "mjohnson",
+        "canonicalSlug": "people/mia-johnson-53",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "M. Johnson",
+        "canonicalSlug": "people/mia-johnson-53",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "M Johnson",
+        "canonicalSlug": "people/mia-johnson-53",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Miaa Johnson",
+        "canonicalSlug": "people/mia-johnson-53",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Mia Johnsonn",
+        "canonicalSlug": "people/mia-johnson-53",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Noah Johnson",
+        "canonicalSlug": "people/noah-johnson-54",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@njohnson",
+        "canonicalSlug": "people/noah-johnson-54",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "noah.johnson@delta.ai",
+        "canonicalSlug": "people/noah-johnson-54",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "njohnson",
+        "canonicalSlug": "people/noah-johnson-54",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "N. Johnson",
+        "canonicalSlug": "people/noah-johnson-54",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "N Johnson",
+        "canonicalSlug": "people/noah-johnson-54",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Noahh Johnson",
+        "canonicalSlug": "people/noah-johnson-54",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Noah Johnsonn",
+        "canonicalSlug": "people/noah-johnson-54",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Olivia Johnson",
+        "canonicalSlug": "people/olivia-johnson-55",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@ojohnson",
+        "canonicalSlug": "people/olivia-johnson-55",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "olivia.johnson@stripe.com",
+        "canonicalSlug": "people/olivia-johnson-55",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "ojohnson",
+        "canonicalSlug": "people/olivia-johnson-55",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "O. Johnson",
+        "canonicalSlug": "people/olivia-johnson-55",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "O Johnson",
+        "canonicalSlug": "people/olivia-johnson-55",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Oliviaa Johnson",
+        "canonicalSlug": "people/olivia-johnson-55",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Olivia Johnsonn",
+        "canonicalSlug": "people/olivia-johnson-55",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Paul Johnson",
+        "canonicalSlug": "people/paul-johnson-56",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@pjohnson",
+        "canonicalSlug": "people/paul-johnson-56",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "paul.johnson@acme.io",
+        "canonicalSlug": "people/paul-johnson-56",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "pjohnson",
+        "canonicalSlug": "people/paul-johnson-56",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "P. Johnson",
+        "canonicalSlug": "people/paul-johnson-56",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "P Johnson",
+        "canonicalSlug": "people/paul-johnson-56",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Paull Johnson",
+        "canonicalSlug": "people/paul-johnson-56",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Paul Johnsonn",
+        "canonicalSlug": "people/paul-johnson-56",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Quinn Johnson",
+        "canonicalSlug": "people/quinn-johnson-57",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@qjohnson",
+        "canonicalSlug": "people/quinn-johnson-57",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "quinn.johnson@beta.co",
+        "canonicalSlug": "people/quinn-johnson-57",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "qjohnson",
+        "canonicalSlug": "people/quinn-johnson-57",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Q. Johnson",
+        "canonicalSlug": "people/quinn-johnson-57",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Q Johnson",
+        "canonicalSlug": "people/quinn-johnson-57",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Quinnn Johnson",
+        "canonicalSlug": "people/quinn-johnson-57",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Quinn Johnsonn",
+        "canonicalSlug": "people/quinn-johnson-57",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Rachel Johnson",
+        "canonicalSlug": "people/rachel-johnson-58",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@rjohnson",
+        "canonicalSlug": "people/rachel-johnson-58",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "rachel.johnson@gamma.dev",
+        "canonicalSlug": "people/rachel-johnson-58",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "rjohnson",
+        "canonicalSlug": "people/rachel-johnson-58",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "R. Johnson",
+        "canonicalSlug": "people/rachel-johnson-58",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "R Johnson",
+        "canonicalSlug": "people/rachel-johnson-58",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Rachell Johnson",
+        "canonicalSlug": "people/rachel-johnson-58",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Rachel Johnsonn",
+        "canonicalSlug": "people/rachel-johnson-58",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Sam Johnson",
+        "canonicalSlug": "people/sam-johnson-59",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@sjohnson",
+        "canonicalSlug": "people/sam-johnson-59",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 2
+      },
+      {
+        "alias": "sam.johnson@delta.ai",
+        "canonicalSlug": "people/sam-johnson-59",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "sjohnson",
+        "canonicalSlug": "people/sam-johnson-59",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 2
+      },
+      {
+        "alias": "S. Johnson",
+        "canonicalSlug": "people/sam-johnson-59",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "S Johnson",
+        "canonicalSlug": "people/sam-johnson-59",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Samm Johnson",
+        "canonicalSlug": "people/sam-johnson-59",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Sam Johnsonn",
+        "canonicalSlug": "people/sam-johnson-59",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Sarah Williams",
+        "canonicalSlug": "people/sarah-williams-60",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@swilliams",
+        "canonicalSlug": "people/sarah-williams-60",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "sarah.williams@stripe.com",
+        "canonicalSlug": "people/sarah-williams-60",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "swilliams",
+        "canonicalSlug": "people/sarah-williams-60",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "S. Williams",
+        "canonicalSlug": "people/sarah-williams-60",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "S Williams",
+        "canonicalSlug": "people/sarah-williams-60",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Sarahh Williams",
+        "canonicalSlug": "people/sarah-williams-60",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Sarah Williamsn",
+        "canonicalSlug": "people/sarah-williams-60",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Alice Williams",
+        "canonicalSlug": "people/alice-williams-61",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@awilliams",
+        "canonicalSlug": "people/alice-williams-61",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "alice.williams@acme.io",
+        "canonicalSlug": "people/alice-williams-61",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "awilliams",
+        "canonicalSlug": "people/alice-williams-61",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "A. Williams",
+        "canonicalSlug": "people/alice-williams-61",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 2
+      },
+      {
+        "alias": "A Williams",
+        "canonicalSlug": "people/alice-williams-61",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 2
+      },
+      {
+        "alias": "Alicee Williams",
+        "canonicalSlug": "people/alice-williams-61",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Alice Williamsn",
+        "canonicalSlug": "people/alice-williams-61",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Bob Williams",
+        "canonicalSlug": "people/bob-williams-62",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@bwilliams",
+        "canonicalSlug": "people/bob-williams-62",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "bob.williams@beta.co",
+        "canonicalSlug": "people/bob-williams-62",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "bwilliams",
+        "canonicalSlug": "people/bob-williams-62",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "B. Williams",
+        "canonicalSlug": "people/bob-williams-62",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "B Williams",
+        "canonicalSlug": "people/bob-williams-62",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Bobb Williams",
+        "canonicalSlug": "people/bob-williams-62",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Bob Williamsn",
+        "canonicalSlug": "people/bob-williams-62",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Carol Williams",
+        "canonicalSlug": "people/carol-williams-63",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@cwilliams",
+        "canonicalSlug": "people/carol-williams-63",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "carol.williams@gamma.dev",
+        "canonicalSlug": "people/carol-williams-63",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "cwilliams",
+        "canonicalSlug": "people/carol-williams-63",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "C. Williams",
+        "canonicalSlug": "people/carol-williams-63",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "C Williams",
+        "canonicalSlug": "people/carol-williams-63",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Caroll Williams",
+        "canonicalSlug": "people/carol-williams-63",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Carol Williamsn",
+        "canonicalSlug": "people/carol-williams-63",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "David Williams",
+        "canonicalSlug": "people/david-williams-64",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@dwilliams",
+        "canonicalSlug": "people/david-williams-64",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "david.williams@delta.ai",
+        "canonicalSlug": "people/david-williams-64",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "dwilliams",
+        "canonicalSlug": "people/david-williams-64",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "D. Williams",
+        "canonicalSlug": "people/david-williams-64",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "D Williams",
+        "canonicalSlug": "people/david-williams-64",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Davidd Williams",
+        "canonicalSlug": "people/david-williams-64",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "David Williamsn",
+        "canonicalSlug": "people/david-williams-64",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Eve Williams",
+        "canonicalSlug": "people/eve-williams-65",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@ewilliams",
+        "canonicalSlug": "people/eve-williams-65",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "eve.williams@stripe.com",
+        "canonicalSlug": "people/eve-williams-65",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "ewilliams",
+        "canonicalSlug": "people/eve-williams-65",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "E. Williams",
+        "canonicalSlug": "people/eve-williams-65",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "E Williams",
+        "canonicalSlug": "people/eve-williams-65",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Evee Williams",
+        "canonicalSlug": "people/eve-williams-65",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Eve Williamsn",
+        "canonicalSlug": "people/eve-williams-65",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Frank Williams",
+        "canonicalSlug": "people/frank-williams-66",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@fwilliams",
+        "canonicalSlug": "people/frank-williams-66",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "frank.williams@acme.io",
+        "canonicalSlug": "people/frank-williams-66",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "fwilliams",
+        "canonicalSlug": "people/frank-williams-66",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "F. Williams",
+        "canonicalSlug": "people/frank-williams-66",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "F Williams",
+        "canonicalSlug": "people/frank-williams-66",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Frankk Williams",
+        "canonicalSlug": "people/frank-williams-66",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Frank Williamsn",
+        "canonicalSlug": "people/frank-williams-66",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Grace Williams",
+        "canonicalSlug": "people/grace-williams-67",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@gwilliams",
+        "canonicalSlug": "people/grace-williams-67",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "grace.williams@beta.co",
+        "canonicalSlug": "people/grace-williams-67",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "gwilliams",
+        "canonicalSlug": "people/grace-williams-67",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "G. Williams",
+        "canonicalSlug": "people/grace-williams-67",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "G Williams",
+        "canonicalSlug": "people/grace-williams-67",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Gracee Williams",
+        "canonicalSlug": "people/grace-williams-67",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Grace Williamsn",
+        "canonicalSlug": "people/grace-williams-67",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Henry Williams",
+        "canonicalSlug": "people/henry-williams-68",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@hwilliams",
+        "canonicalSlug": "people/henry-williams-68",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "henry.williams@gamma.dev",
+        "canonicalSlug": "people/henry-williams-68",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "hwilliams",
+        "canonicalSlug": "people/henry-williams-68",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "H. Williams",
+        "canonicalSlug": "people/henry-williams-68",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "H Williams",
+        "canonicalSlug": "people/henry-williams-68",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Henryy Williams",
+        "canonicalSlug": "people/henry-williams-68",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Henry Williamsn",
+        "canonicalSlug": "people/henry-williams-68",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Iris Williams",
+        "canonicalSlug": "people/iris-williams-69",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@iwilliams",
+        "canonicalSlug": "people/iris-williams-69",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "iris.williams@delta.ai",
+        "canonicalSlug": "people/iris-williams-69",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "iwilliams",
+        "canonicalSlug": "people/iris-williams-69",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "I. Williams",
+        "canonicalSlug": "people/iris-williams-69",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 10
+      },
+      {
+        "alias": "I Williams",
+        "canonicalSlug": "people/iris-williams-69",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 10
+      },
+      {
+        "alias": "Iriss Williams",
+        "canonicalSlug": "people/iris-williams-69",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Iris Williamsn",
+        "canonicalSlug": "people/iris-williams-69",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Jack Williams",
+        "canonicalSlug": "people/jack-williams-70",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@jwilliams",
+        "canonicalSlug": "people/jack-williams-70",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "jack.williams@stripe.com",
+        "canonicalSlug": "people/jack-williams-70",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "jwilliams",
+        "canonicalSlug": "people/jack-williams-70",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "J. Williams",
+        "canonicalSlug": "people/jack-williams-70",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "J Williams",
+        "canonicalSlug": "people/jack-williams-70",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Jackk Williams",
+        "canonicalSlug": "people/jack-williams-70",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Jack Williamsn",
+        "canonicalSlug": "people/jack-williams-70",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Kate Williams",
+        "canonicalSlug": "people/kate-williams-71",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@kwilliams",
+        "canonicalSlug": "people/kate-williams-71",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "kate.williams@acme.io",
+        "canonicalSlug": "people/kate-williams-71",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "kwilliams",
+        "canonicalSlug": "people/kate-williams-71",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "K. Williams",
+        "canonicalSlug": "people/kate-williams-71",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "K Williams",
+        "canonicalSlug": "people/kate-williams-71",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Katee Williams",
+        "canonicalSlug": "people/kate-williams-71",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Kate Williamsn",
+        "canonicalSlug": "people/kate-williams-71",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Liam Williams",
+        "canonicalSlug": "people/liam-williams-72",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@lwilliams",
+        "canonicalSlug": "people/liam-williams-72",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "liam.williams@beta.co",
+        "canonicalSlug": "people/liam-williams-72",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "lwilliams",
+        "canonicalSlug": "people/liam-williams-72",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "L. Williams",
+        "canonicalSlug": "people/liam-williams-72",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "L Williams",
+        "canonicalSlug": "people/liam-williams-72",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Liamm Williams",
+        "canonicalSlug": "people/liam-williams-72",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Liam Williamsn",
+        "canonicalSlug": "people/liam-williams-72",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Mia Williams",
+        "canonicalSlug": "people/mia-williams-73",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@mwilliams",
+        "canonicalSlug": "people/mia-williams-73",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "mia.williams@gamma.dev",
+        "canonicalSlug": "people/mia-williams-73",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "mwilliams",
+        "canonicalSlug": "people/mia-williams-73",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "M. Williams",
+        "canonicalSlug": "people/mia-williams-73",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "M Williams",
+        "canonicalSlug": "people/mia-williams-73",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Miaa Williams",
+        "canonicalSlug": "people/mia-williams-73",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Mia Williamsn",
+        "canonicalSlug": "people/mia-williams-73",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Noah Williams",
+        "canonicalSlug": "people/noah-williams-74",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@nwilliams",
+        "canonicalSlug": "people/noah-williams-74",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "noah.williams@delta.ai",
+        "canonicalSlug": "people/noah-williams-74",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "nwilliams",
+        "canonicalSlug": "people/noah-williams-74",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "N. Williams",
+        "canonicalSlug": "people/noah-williams-74",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "N Williams",
+        "canonicalSlug": "people/noah-williams-74",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Noahh Williams",
+        "canonicalSlug": "people/noah-williams-74",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Noah Williamsn",
+        "canonicalSlug": "people/noah-williams-74",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Olivia Williams",
+        "canonicalSlug": "people/olivia-williams-75",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@owilliams",
+        "canonicalSlug": "people/olivia-williams-75",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "olivia.williams@stripe.com",
+        "canonicalSlug": "people/olivia-williams-75",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "owilliams",
+        "canonicalSlug": "people/olivia-williams-75",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "O. Williams",
+        "canonicalSlug": "people/olivia-williams-75",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "O Williams",
+        "canonicalSlug": "people/olivia-williams-75",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Oliviaa Williams",
+        "canonicalSlug": "people/olivia-williams-75",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Olivia Williamsn",
+        "canonicalSlug": "people/olivia-williams-75",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Paul Williams",
+        "canonicalSlug": "people/paul-williams-76",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@pwilliams",
+        "canonicalSlug": "people/paul-williams-76",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "paul.williams@acme.io",
+        "canonicalSlug": "people/paul-williams-76",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "pwilliams",
+        "canonicalSlug": "people/paul-williams-76",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "P. Williams",
+        "canonicalSlug": "people/paul-williams-76",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "P Williams",
+        "canonicalSlug": "people/paul-williams-76",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Paull Williams",
+        "canonicalSlug": "people/paul-williams-76",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Paul Williamsn",
+        "canonicalSlug": "people/paul-williams-76",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Quinn Williams",
+        "canonicalSlug": "people/quinn-williams-77",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@qwilliams",
+        "canonicalSlug": "people/quinn-williams-77",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "quinn.williams@beta.co",
+        "canonicalSlug": "people/quinn-williams-77",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "qwilliams",
+        "canonicalSlug": "people/quinn-williams-77",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Q. Williams",
+        "canonicalSlug": "people/quinn-williams-77",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Q Williams",
+        "canonicalSlug": "people/quinn-williams-77",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Quinnn Williams",
+        "canonicalSlug": "people/quinn-williams-77",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Quinn Williamsn",
+        "canonicalSlug": "people/quinn-williams-77",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Rachel Williams",
+        "canonicalSlug": "people/rachel-williams-78",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@rwilliams",
+        "canonicalSlug": "people/rachel-williams-78",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "rachel.williams@gamma.dev",
+        "canonicalSlug": "people/rachel-williams-78",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "rwilliams",
+        "canonicalSlug": "people/rachel-williams-78",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "R. Williams",
+        "canonicalSlug": "people/rachel-williams-78",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "R Williams",
+        "canonicalSlug": "people/rachel-williams-78",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Rachell Williams",
+        "canonicalSlug": "people/rachel-williams-78",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Rachel Williamsn",
+        "canonicalSlug": "people/rachel-williams-78",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Sam Williams",
+        "canonicalSlug": "people/sam-williams-79",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@swilliams",
+        "canonicalSlug": "people/sam-williams-79",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 2
+      },
+      {
+        "alias": "sam.williams@delta.ai",
+        "canonicalSlug": "people/sam-williams-79",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "swilliams",
+        "canonicalSlug": "people/sam-williams-79",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 2
+      },
+      {
+        "alias": "S. Williams",
+        "canonicalSlug": "people/sam-williams-79",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "S Williams",
+        "canonicalSlug": "people/sam-williams-79",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Samm Williams",
+        "canonicalSlug": "people/sam-williams-79",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Sam Williamsn",
+        "canonicalSlug": "people/sam-williams-79",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Sarah Brown",
+        "canonicalSlug": "people/sarah-brown-80",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@sbrown",
+        "canonicalSlug": "people/sarah-brown-80",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "sarah.brown@stripe.com",
+        "canonicalSlug": "people/sarah-brown-80",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "sbrown",
+        "canonicalSlug": "people/sarah-brown-80",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "S. Brown",
+        "canonicalSlug": "people/sarah-brown-80",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "S Brown",
+        "canonicalSlug": "people/sarah-brown-80",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Sarahh Brown",
+        "canonicalSlug": "people/sarah-brown-80",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Sarah Brownn",
+        "canonicalSlug": "people/sarah-brown-80",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Alice Brown",
+        "canonicalSlug": "people/alice-brown-81",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@abrown",
+        "canonicalSlug": "people/alice-brown-81",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "alice.brown@acme.io",
+        "canonicalSlug": "people/alice-brown-81",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "abrown",
+        "canonicalSlug": "people/alice-brown-81",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "A. Brown",
+        "canonicalSlug": "people/alice-brown-81",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 2
+      },
+      {
+        "alias": "A Brown",
+        "canonicalSlug": "people/alice-brown-81",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 2
+      },
+      {
+        "alias": "Alicee Brown",
+        "canonicalSlug": "people/alice-brown-81",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Alice Brownn",
+        "canonicalSlug": "people/alice-brown-81",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Bob Brown",
+        "canonicalSlug": "people/bob-brown-82",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@bbrown",
+        "canonicalSlug": "people/bob-brown-82",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "bob.brown@beta.co",
+        "canonicalSlug": "people/bob-brown-82",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "bbrown",
+        "canonicalSlug": "people/bob-brown-82",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "B. Brown",
+        "canonicalSlug": "people/bob-brown-82",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "B Brown",
+        "canonicalSlug": "people/bob-brown-82",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Bobb Brown",
+        "canonicalSlug": "people/bob-brown-82",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Bob Brownn",
+        "canonicalSlug": "people/bob-brown-82",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Carol Brown",
+        "canonicalSlug": "people/carol-brown-83",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@cbrown",
+        "canonicalSlug": "people/carol-brown-83",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "carol.brown@gamma.dev",
+        "canonicalSlug": "people/carol-brown-83",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "cbrown",
+        "canonicalSlug": "people/carol-brown-83",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "C. Brown",
+        "canonicalSlug": "people/carol-brown-83",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "C Brown",
+        "canonicalSlug": "people/carol-brown-83",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Caroll Brown",
+        "canonicalSlug": "people/carol-brown-83",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Carol Brownn",
+        "canonicalSlug": "people/carol-brown-83",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "David Brown",
+        "canonicalSlug": "people/david-brown-84",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@dbrown",
+        "canonicalSlug": "people/david-brown-84",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "david.brown@delta.ai",
+        "canonicalSlug": "people/david-brown-84",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "dbrown",
+        "canonicalSlug": "people/david-brown-84",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "D. Brown",
+        "canonicalSlug": "people/david-brown-84",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "D Brown",
+        "canonicalSlug": "people/david-brown-84",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Davidd Brown",
+        "canonicalSlug": "people/david-brown-84",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "David Brownn",
+        "canonicalSlug": "people/david-brown-84",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Eve Brown",
+        "canonicalSlug": "people/eve-brown-85",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@ebrown",
+        "canonicalSlug": "people/eve-brown-85",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "eve.brown@stripe.com",
+        "canonicalSlug": "people/eve-brown-85",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "ebrown",
+        "canonicalSlug": "people/eve-brown-85",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "E. Brown",
+        "canonicalSlug": "people/eve-brown-85",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "E Brown",
+        "canonicalSlug": "people/eve-brown-85",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Evee Brown",
+        "canonicalSlug": "people/eve-brown-85",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Eve Brownn",
+        "canonicalSlug": "people/eve-brown-85",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Frank Brown",
+        "canonicalSlug": "people/frank-brown-86",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@fbrown",
+        "canonicalSlug": "people/frank-brown-86",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "frank.brown@acme.io",
+        "canonicalSlug": "people/frank-brown-86",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "fbrown",
+        "canonicalSlug": "people/frank-brown-86",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "F. Brown",
+        "canonicalSlug": "people/frank-brown-86",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "F Brown",
+        "canonicalSlug": "people/frank-brown-86",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Frankk Brown",
+        "canonicalSlug": "people/frank-brown-86",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Frank Brownn",
+        "canonicalSlug": "people/frank-brown-86",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Grace Brown",
+        "canonicalSlug": "people/grace-brown-87",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@gbrown",
+        "canonicalSlug": "people/grace-brown-87",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "grace.brown@beta.co",
+        "canonicalSlug": "people/grace-brown-87",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "gbrown",
+        "canonicalSlug": "people/grace-brown-87",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "G. Brown",
+        "canonicalSlug": "people/grace-brown-87",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "G Brown",
+        "canonicalSlug": "people/grace-brown-87",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Gracee Brown",
+        "canonicalSlug": "people/grace-brown-87",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Grace Brownn",
+        "canonicalSlug": "people/grace-brown-87",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Henry Brown",
+        "canonicalSlug": "people/henry-brown-88",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@hbrown",
+        "canonicalSlug": "people/henry-brown-88",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "henry.brown@gamma.dev",
+        "canonicalSlug": "people/henry-brown-88",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "hbrown",
+        "canonicalSlug": "people/henry-brown-88",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "H. Brown",
+        "canonicalSlug": "people/henry-brown-88",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "H Brown",
+        "canonicalSlug": "people/henry-brown-88",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Henryy Brown",
+        "canonicalSlug": "people/henry-brown-88",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Henry Brownn",
+        "canonicalSlug": "people/henry-brown-88",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Iris Brown",
+        "canonicalSlug": "people/iris-brown-89",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@ibrown",
+        "canonicalSlug": "people/iris-brown-89",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "iris.brown@delta.ai",
+        "canonicalSlug": "people/iris-brown-89",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "ibrown",
+        "canonicalSlug": "people/iris-brown-89",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "I. Brown",
+        "canonicalSlug": "people/iris-brown-89",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 10
+      },
+      {
+        "alias": "I Brown",
+        "canonicalSlug": "people/iris-brown-89",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 10
+      },
+      {
+        "alias": "Iriss Brown",
+        "canonicalSlug": "people/iris-brown-89",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Iris Brownn",
+        "canonicalSlug": "people/iris-brown-89",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Jack Brown",
+        "canonicalSlug": "people/jack-brown-90",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@jbrown",
+        "canonicalSlug": "people/jack-brown-90",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "jack.brown@stripe.com",
+        "canonicalSlug": "people/jack-brown-90",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "jbrown",
+        "canonicalSlug": "people/jack-brown-90",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "J. Brown",
+        "canonicalSlug": "people/jack-brown-90",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "J Brown",
+        "canonicalSlug": "people/jack-brown-90",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Jackk Brown",
+        "canonicalSlug": "people/jack-brown-90",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Jack Brownn",
+        "canonicalSlug": "people/jack-brown-90",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Kate Brown",
+        "canonicalSlug": "people/kate-brown-91",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@kbrown",
+        "canonicalSlug": "people/kate-brown-91",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "kate.brown@acme.io",
+        "canonicalSlug": "people/kate-brown-91",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "kbrown",
+        "canonicalSlug": "people/kate-brown-91",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "K. Brown",
+        "canonicalSlug": "people/kate-brown-91",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "K Brown",
+        "canonicalSlug": "people/kate-brown-91",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Katee Brown",
+        "canonicalSlug": "people/kate-brown-91",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Kate Brownn",
+        "canonicalSlug": "people/kate-brown-91",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Liam Brown",
+        "canonicalSlug": "people/liam-brown-92",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@lbrown",
+        "canonicalSlug": "people/liam-brown-92",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "liam.brown@beta.co",
+        "canonicalSlug": "people/liam-brown-92",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "lbrown",
+        "canonicalSlug": "people/liam-brown-92",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "L. Brown",
+        "canonicalSlug": "people/liam-brown-92",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "L Brown",
+        "canonicalSlug": "people/liam-brown-92",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Liamm Brown",
+        "canonicalSlug": "people/liam-brown-92",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Liam Brownn",
+        "canonicalSlug": "people/liam-brown-92",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Mia Brown",
+        "canonicalSlug": "people/mia-brown-93",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@mbrown",
+        "canonicalSlug": "people/mia-brown-93",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "mia.brown@gamma.dev",
+        "canonicalSlug": "people/mia-brown-93",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "mbrown",
+        "canonicalSlug": "people/mia-brown-93",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "M. Brown",
+        "canonicalSlug": "people/mia-brown-93",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "M Brown",
+        "canonicalSlug": "people/mia-brown-93",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Miaa Brown",
+        "canonicalSlug": "people/mia-brown-93",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Mia Brownn",
+        "canonicalSlug": "people/mia-brown-93",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Noah Brown",
+        "canonicalSlug": "people/noah-brown-94",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@nbrown",
+        "canonicalSlug": "people/noah-brown-94",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "noah.brown@delta.ai",
+        "canonicalSlug": "people/noah-brown-94",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "nbrown",
+        "canonicalSlug": "people/noah-brown-94",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "N. Brown",
+        "canonicalSlug": "people/noah-brown-94",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "N Brown",
+        "canonicalSlug": "people/noah-brown-94",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Noahh Brown",
+        "canonicalSlug": "people/noah-brown-94",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Noah Brownn",
+        "canonicalSlug": "people/noah-brown-94",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Olivia Brown",
+        "canonicalSlug": "people/olivia-brown-95",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@obrown",
+        "canonicalSlug": "people/olivia-brown-95",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "olivia.brown@stripe.com",
+        "canonicalSlug": "people/olivia-brown-95",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "obrown",
+        "canonicalSlug": "people/olivia-brown-95",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "O. Brown",
+        "canonicalSlug": "people/olivia-brown-95",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "O Brown",
+        "canonicalSlug": "people/olivia-brown-95",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Oliviaa Brown",
+        "canonicalSlug": "people/olivia-brown-95",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Olivia Brownn",
+        "canonicalSlug": "people/olivia-brown-95",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Paul Brown",
+        "canonicalSlug": "people/paul-brown-96",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@pbrown",
+        "canonicalSlug": "people/paul-brown-96",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "paul.brown@acme.io",
+        "canonicalSlug": "people/paul-brown-96",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "pbrown",
+        "canonicalSlug": "people/paul-brown-96",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "P. Brown",
+        "canonicalSlug": "people/paul-brown-96",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "P Brown",
+        "canonicalSlug": "people/paul-brown-96",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Paull Brown",
+        "canonicalSlug": "people/paul-brown-96",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Paul Brownn",
+        "canonicalSlug": "people/paul-brown-96",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Quinn Brown",
+        "canonicalSlug": "people/quinn-brown-97",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@qbrown",
+        "canonicalSlug": "people/quinn-brown-97",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "quinn.brown@beta.co",
+        "canonicalSlug": "people/quinn-brown-97",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "qbrown",
+        "canonicalSlug": "people/quinn-brown-97",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Q. Brown",
+        "canonicalSlug": "people/quinn-brown-97",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Q Brown",
+        "canonicalSlug": "people/quinn-brown-97",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Quinnn Brown",
+        "canonicalSlug": "people/quinn-brown-97",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Quinn Brownn",
+        "canonicalSlug": "people/quinn-brown-97",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Rachel Brown",
+        "canonicalSlug": "people/rachel-brown-98",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@rbrown",
+        "canonicalSlug": "people/rachel-brown-98",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "rachel.brown@gamma.dev",
+        "canonicalSlug": "people/rachel-brown-98",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "rbrown",
+        "canonicalSlug": "people/rachel-brown-98",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "R. Brown",
+        "canonicalSlug": "people/rachel-brown-98",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "R Brown",
+        "canonicalSlug": "people/rachel-brown-98",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Rachell Brown",
+        "canonicalSlug": "people/rachel-brown-98",
+        "category": "undocumented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "Rachel Brownn",
+        "canonicalSlug": "people/rachel-brown-98",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Sam Brown",
+        "canonicalSlug": "people/sam-brown-99",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "@sbrown",
+        "canonicalSlug": "people/sam-brown-99",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 2
+      },
+      {
+        "alias": "sam.brown@delta.ai",
+        "canonicalSlug": "people/sam-brown-99",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 1
+      },
+      {
+        "alias": "sbrown",
+        "canonicalSlug": "people/sam-brown-99",
+        "category": "documented",
+        "found": true,
+        "rankPosition": 2
+      },
+      {
+        "alias": "S. Brown",
+        "canonicalSlug": "people/sam-brown-99",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "S Brown",
+        "canonicalSlug": "people/sam-brown-99",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Samm Brown",
+        "canonicalSlug": "people/sam-brown-99",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      },
+      {
+        "alias": "Sam Brownn",
+        "canonicalSlug": "people/sam-brown-99",
+        "category": "undocumented",
+        "found": false,
+        "rankPosition": 0
+      }
+    ]
+  },
+  "accounting": {
+    "planned": 800,
+    "attempted": 800,
+    "scored": 800,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null,
+  "execution": {
+    "source_tree": {
+      "sha256": "d68d1907ebac6b041196f1b02e0400b6344829f636510715540f0d36272f7773",
+      "files": 2665,
+      "git_head": "27e055ec237d4da9a97db519a6856503cd06c469",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#48ed5e8233f617479df989998560840747af0425",
+      "declared_sha": "48ed5e8233f617479df989998560840747af0425",
+      "version": "0.60.32.0",
+      "package_sha256": "a641d300d4e4fafd284db86cb987edaf2042ec792d8bd4327216dd9e62b12a20",
+      "loaded_git_head": null
+    }
+  }
+}

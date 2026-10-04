@@ -4103,6 +4103,126 @@
         "/total_usd": 15.68434
       },
       "note": "Budget-ledger summary for every paid request of the wave 7 re-pin."
+    },
+    {
+      "claim_id": "wave8f1-cat7-after",
+      "readme_anchor": "docs/benchmarks/2026-10-03-wave8-f1-repin.md: Cat7-1: get_timeline p50 at 1,000 pages, first run at 109b992",
+      "artifact_path": "docs/benchmarks/2026-10-03-wave8-f1-repin/offline-tier/109b992/perf/receipt.json",
+      "artifact_sha256": "b080b3f4e11cfc105c2eeac554d6a7eb814d91d33f63c1c92a0ff198c6c1845e",
+      "status": "covered",
+      "expected": {
+        "/verdict": "pass",
+        "/data/latency/4/p50_ms": 0.09738649999985682,
+        "/data/latency/18/p50_ms": 0.12612050000097952,
+        "/execution/product/declared_sha": "109b992172e1f49107f9de9841758c1d043a2668"
+      },
+      "note": "perf.ts in the offline tier on a standard-16 VM, gbrain 109b992."
+    },
+    {
+      "claim_id": "wave8f1-cat7-before",
+      "readme_anchor": "docs/benchmarks/2026-10-03-wave8-f1-repin.md: Cat7-1: get_timeline p50 at 1,000 pages, first run at 48ed5e8",
+      "artifact_path": "docs/benchmarks/2026-10-03-wave8-f1-repin/offline-tier/48ed5e8/perf/receipt.json",
+      "artifact_sha256": "4b902a19f404ab3751a17350d93a47ab643e6c5f6ce7a145895116e71353bbbe",
+      "status": "covered",
+      "expected": {
+        "/verdict": "pass",
+        "/data/latency/4/p50_ms": 0.045017499999858046,
+        "/data/latency/18/p50_ms": 4.003274499998952,
+        "/execution/product/declared_sha": "48ed5e8233f617479df989998560840747af0425"
+      },
+      "note": "perf.ts in the offline tier on a standard-16 VM, gbrain 48ed5e8."
+    },
+    {
+      "claim_id": "wave8f1-cat7-repeat-after",
+      "readme_anchor": "docs/benchmarks/2026-10-03-wave8-f1-repin.md: Cat7-1: the preregistered paired repeat at 109b992",
+      "artifact_path": "docs/benchmarks/2026-10-03-wave8-f1-repin/cat7-repeat/109b992/perf-1.json",
+      "artifact_sha256": "da9801ea11f1e0018828a558c22c493d623666e9d27a100bd5e7693067939757",
+      "status": "covered",
+      "expected": {
+        "/data/latency/4/p50_ms": 0.1010465000001659
+      },
+      "note": "First of three Cat 7 repeats on a fresh VM, gbrain 109b992."
+    },
+    {
+      "claim_id": "wave8f1-cat7-repeat-before",
+      "readme_anchor": "docs/benchmarks/2026-10-03-wave8-f1-repin.md: Cat7-1: the preregistered paired repeat at 48ed5e8",
+      "artifact_path": "docs/benchmarks/2026-10-03-wave8-f1-repin/cat7-repeat/48ed5e8/perf-1.json",
+      "artifact_sha256": "d87cd8d00d4a14be73d82a3c10fb0049d0417286020c067328266bd627f7902d",
+      "status": "covered",
+      "expected": {
+        "/data/latency/4/p50_ms": 0.05228549999992538
+      },
+      "note": "First of three Cat 7 repeats on a fresh VM, gbrain 48ed5e8."
+    },
+    {
+      "claim_id": "wave8f1-n9-after",
+      "readme_anchor": "docs/benchmarks/2026-10-03-wave8-f1-repin.md: N9 relational arm fired on 210 of 435 template runs",
+      "artifact_path": "docs/benchmarks/2026-10-03-wave8-f1-repin/offline-tier/109b992/n9-multi-hop-paraphrase/receipt.json",
+      "artifact_sha256": "34ca6118d1877d4d2d32246465a9a63070c261c657cebdcb562c7f1f3f1c8f1e",
+      "status": "covered",
+      "expected": {
+        "/data/one_hop/funnel/one-hop-template/fired": 210,
+        "/data/one_hop/funnel/one-hop-template/seed_resolved": 429,
+        "/execution/product/declared_sha": "109b992172e1f49107f9de9841758c1d043a2668"
+      },
+      "note": "n9-multi-hop-paraphrase.ts hermetic arm in the offline tier, gbrain 109b992."
+    },
+    {
+      "claim_id": "wave8f1-n9-bisect-w8",
+      "readme_anchor": "docs/benchmarks/2026-10-03-wave8-f1-repin.md: N9 bisect: the change is in fix wave 8",
+      "artifact_path": "docs/benchmarks/2026-10-03-wave8-f1-repin/n9-bisect/receipt-d82eb2e9e.json",
+      "artifact_sha256": "40154d0d6bb0896e1847b8aea7036a9872f85ef1718138aa520ea9342be6f665",
+      "status": "covered",
+      "expected": {
+        "/data/one_hop/funnel/one-hop-template/fired": 210,
+        "/execution/product/loaded_git_head": "d82eb2e9ec4e6380a0589f06e884717ca26eab8e"
+      },
+      "note": "N9 through a copied overlay at d82eb2e9e."
+    },
+    {
+      "claim_id": "wave8f1-checks-after",
+      "readme_anchor": "docs/benchmarks/2026-10-03-wave8-f1-repin.md: New checks: every check at 109b992",
+      "artifact_path": "docs/benchmarks/2026-10-03-wave8-f1-repin/checks-109b992.json",
+      "artifact_sha256": "9f7b603229c88cfb9527e03b37ae9d952a97c855684d3d2f42d16a2dd35b727a",
+      "status": "covered",
+      "expected": {
+        "/results/0/exit_code": 0,
+        "/results/1/exit_code": 0,
+        "/results/2/exit_code": 0,
+        "/results/4/exit_code": 0,
+        "/results/5/exit_code": 0,
+        "/results/6/exit_code": 0,
+        "/results/7/exit_code": 0,
+        "/results/8/exit_code": 0,
+        "/results/3/result/by_type/works_at/correct": 17,
+        "/results/3/result/by_type/invested_in/correct": 55,
+        "/results/3/result/by_type/advises/correct": 16,
+        "/results/0/result/observed/retried/spent_usd": 0.0002,
+        "/gbrain/version": "0.60.37.0"
+      },
+      "note": "checks/run-all.ts at the pinned dependency, after the coverage preregistration."
+    },
+    {
+      "claim_id": "wave8f1-checks-before",
+      "readme_anchor": "docs/benchmarks/2026-10-03-wave8-f1-repin.md: New checks: the same checks at 48ed5e8",
+      "artifact_path": "docs/benchmarks/2026-10-03-wave8-f1-repin/checks-48ed5e8.json",
+      "artifact_sha256": "6b0c30053b55cef60a47749a2127935d5a1fdc4b676d73369d536d71e355b24c",
+      "status": "covered",
+      "expected": {
+        "/results/0/exit_code": 1,
+        "/results/1/exit_code": 1,
+        "/results/2/exit_code": 1,
+        "/results/4/exit_code": 1,
+        "/results/5/exit_code": 1,
+        "/results/6/exit_code": 0,
+        "/results/7/exit_code": 1,
+        "/results/8/exit_code": 1,
+        "/results/3/result/by_type/works_at/correct": 17,
+        "/results/3/result/by_type/invested_in/correct": 51,
+        "/results/3/result/by_type/advises/correct": 17,
+        "/gbrain/loaded_git_head": "48ed5e8233f617479df989998560840747af0425"
+      },
+      "note": "checks/run-all.ts with GBRAIN_ROOT at a 48ed5e8 checkout."
     }
   ]
 }

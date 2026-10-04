@@ -157,6 +157,25 @@ gaps, and a rerun here shows each one.** Same runners, seeds and settings:
 
 [Read the before and after](docs/benchmarks/2026-10-03-wave7-repin.md).
 
+**Update, October 3: gbrain fix wave 8 and Foundations 1 (`109b992`) change no
+category's accuracy, and nine new checks show what they add.** The whole
+offline tier ran at both commits on paired machines:
+
+- 30 of 30 categories reach the same verdicts, with no change in any accuracy,
+  recall or leak count, and all 27 ledger repros still pass.
+- Under a spending cap you set, a model gbrain cannot price is refused before
+  any call, with the `gbrain pricing set` command, units and model id for your
+  agent; under the default cap it runs. Agents over MCP are told to ask you.
+- `gbrain import` of a folder your repository ignores imports it (3 of 3, was
+  0), and a time-limited `gbrain embed --stale` exits 11 with the resume command.
+- Typed relationship edges from prose links are more accurate: 128 right and
+  43 wrong, was 125 and 52 (world-v1).
+- One small regression: a timeline read on a 1,000-page brain takes 0.10 ms
+  instead of 0.05 ms, from the new automatic planner statistics, which made
+  keyword search on 10,000 pages 30 times faster.
+
+[Read the before and after](docs/benchmarks/2026-10-03-wave8-f1-repin.md).
+
 ## Why put gbrain on your shortlist?
 
 **It finds evidence across long conversations.** In the September 6 LongMemEval
@@ -242,9 +261,9 @@ them. Hosted embedding and reranking services receive the text they process;
 local storage does not make those API calls local. The retrieval results above
 were measured at gbrain [`2efaaf8f`](https://github.com/garrytan/gbrain/tree/2efaaf8f8a817b5b82e023383618fdcdb1cc5f7d)
 (v0.48.4.0). This repository currently installs gbrain master
-[`48ed5e8`](https://github.com/garrytan/gbrain/tree/48ed5e8233f617479df989998560840747af0425)
-(v0.60.32.0), whose search mode definitions are identical. That release adds
-System One decision slots, which stay off unless a TypeSafe key is set. See
+[`109b992`](https://github.com/garrytan/gbrain/tree/109b992172e1f49107f9de9841758c1d043a2668)
+(v0.60.37.0), whose search mode definitions are identical. Its System One
+decision slots stay off unless a TypeSafe key is set. See
 [how to reproduce a run](eval/README.md).
 
 ## What should you learn here?
