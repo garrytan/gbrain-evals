@@ -1,0 +1,20 @@
+2026-10-04T17:19:03.030Z 150 cells to run (0 already done, order task) in <evals>/eval/reports/cat40/entity-dev-kwonly
+2026-10-04T17:19:03.070Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger <evals>/.budget/cat40-followups.sqlite
+2026-10-04T17:21:15.892Z write probe passed on every slot
+2026-10-04T17:21:15.892Z gbrain 0.60.46.0 (739e5cc89ca4) ready on 5 slots, surface starter
+2026-10-04T17:22:28.233Z 10/150 cells; last claude-sonnet-4-6|gbrain-master-kwonly-dev|A02|0 success=true $0.096
+2026-10-04T17:23:22.472Z 20/150 cells; last gpt-5.4|gbrain-master-kwonly-dev|A06|0 success=true $0.033
+2026-10-04T17:24:24.365Z 30/150 cells; last claude-sonnet-4-6|gbrain-master-kwonly-dev|A10|0 success=false $0.032
+2026-10-04T17:25:20.516Z 40/150 cells; last gpt-5.4|gbrain-master-kwonly-dev|B04|0 success=true $0.037
+2026-10-04T17:26:25.535Z 50/150 cells; last gpt-5.4|gbrain-master-kwonly-dev|B07|0 success=true $0.032
+2026-10-04T17:27:15.078Z 60/150 cells; last gpt-5.4|gbrain-master-kwonly-dev|B10|0 success=true $0.063
+2026-10-04T17:28:56.267Z 70/150 cells; last gpt-5.4-mini|gbrain-master-kwonly-dev|C04|0 success=true $0.006
+2026-10-04T17:30:38.089Z 80/150 cells; last gpt-5.4|gbrain-master-kwonly-dev|C07|0 success=true $0.074
+2026-10-04T17:32:09.296Z 90/150 cells; last gpt-5.4|gbrain-master-kwonly-dev|C10|0 success=true $0.060
+2026-10-04T17:34:38.470Z 100/150 cells; last claude-sonnet-4-6|gbrain-master-kwonly-dev|E02|0 success=false $0.428
+2026-10-04T17:36:42.376Z 110/150 cells; last claude-sonnet-4-6|gbrain-master-kwonly-dev|E05|0 success=false $0.456
+2026-10-04T17:38:24.605Z 120/150 cells; last gpt-5.4-mini|gbrain-master-kwonly-dev|F01|0 success=true $0.010
+2026-10-04T17:39:54.398Z 130/150 cells; last claude-sonnet-4-6|gbrain-master-kwonly-dev|F03|0 success=true $0.066
+2026-10-04T17:41:16.220Z 140/150 cells; last gpt-5.4|gbrain-master-kwonly-dev|F07|0 success=true $0.050
+2026-10-04T17:42:39.335Z 150/150 cells; last claude-sonnet-4-6|gbrain-master-kwonly-dev|F10|0 success=true $0.063
+2026-10-04T17:42:39.582Z receipt <evals>/eval/reports/cat40/entity-dev-kwonly/receipt-1791135759582.json

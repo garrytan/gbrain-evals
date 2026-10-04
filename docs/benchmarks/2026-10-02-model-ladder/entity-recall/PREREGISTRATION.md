@@ -105,6 +105,34 @@ Garry; otherwise Item B proceeds.
 catches only large harms. Providers may have changed model behavior since `a714410a5` ran on 2026-10-04 and since the
 simple arms ran on 2026-10-02.
 
+## Amendment 1 (2026-10-04, before any A3 cell and before round 1): model set
+
+Garry's rule (also in `CLAUDE.md`, "Choose models"): run the newest frontier Opus, GPT, Sonnet and Fable models; drop
+older generations except one link to the previous eval; never run gpt-5.4-mini. The model set for every remaining run
+in this wave is **Claude Sonnet 5.5, Claude Opus 5.5, Claude Fable 5.1, GPT-6.1 Sol and GPT-6 Astra**. Sonnet 5.5 and
+GPT-6.1 Sol are also in the 2026-10-02 simple-arm cells and the `a714410a5` held-out cells, so they are the link to
+the earlier results.
+
+- **Keyword-only round (UC3), already run** on the earlier development models (GPT-5.4-mini, GPT-5.4, Sonnet 4.6)
+  beside a master control on the same models: family E 5 of 30 against 2 of 30, below the 15-of-30 bar, and
+  families A (−26.7) and C (−23.3) fall. Item B proceeds.
+- **Development rounds.** The master `739e5cc89` control, round 1 and round 2 run on the five models above, one
+  repeat. The harm screen, its failure actions and the cost reporting are unchanged.
+- **G1** becomes: family E on round 2 scores above the master control's family E on the same five models (paired
+  gain and CI reported), with no family beyond the harm screen and no new leaks. The 15-of-30 bar was set on the
+  older models and does not carry over.
+- **A3** runs the five models (2 repeats), with the argv otherwise unchanged.
+- **Controls for the new models (Opus 5.5, Fable 5.1, GPT-6 Astra)** run on the held-out world before A3, with the
+  same argv as their counterparts:
+  - the simple arms oracle, fs, fs-acl and pg
+  - gbrain `a714410a5`
+
+  The comparator stays fs, as preregistered. Memory, the weakest simple arm on 2026-10-02 (63.3% pooled), is not
+  run for the new models and is reported for Sonnet 5.5 and GPT-6.1 Sol only.
+- **The ship rule and T3** are evaluated on all five models against `a714410a5`, pooled and per model.
+- **Ceiling note.** GPT-6.1 Sol scored 100% on every arm on 2026-10-02 and 2026-10-04. A model at ceiling on both
+  sides is reported as uninformative, not as a tie.
+
 ## A3: the exact commands
 
 A3 copies the [followups/holdout](../followups/holdout/) receipt's argv. Only `--gbrain-ref`, `--gbrain-label`,
@@ -127,7 +155,7 @@ Cells:
 bun eval/runner/cat40-model-ladder.ts --arms gbrain --surface starter --gbrain-repo ../gbrain \
   --budget-ledger .budget/cat40-followups.sqlite --transcripts --world eval/reports/cat40/holdout/world.json \
   --repeat 2 --no-pglite-analyze --slots 5 --concurrency 10 \
-  --models claude-haiku-4-5,claude-sonnet-4-6,claude-sonnet-5-5,gpt-5.4-mini,gpt-5.4,gpt-6.1-sol \
+  --models claude-sonnet-5-5,claude-opus-5-5,claude-fable-5-1,gpt-6.1-sol,gpt-6-astra \
   --gbrain-ref <wave> --gbrain-label gbrain-entity-holdout --budget-usd <dollars> --out eval/reports/cat40/entity-holdout
 ```
 
