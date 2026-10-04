@@ -1,0 +1,3108 @@
+[
+  {
+    "slug": "life/events/2026-04-13-02a4e5c0",
+    "depth": "conversations/slack-halfway-partners-2026-04-13",
+    "day": "2026-04-13",
+    "what": "Amara announced the first close of Halfway Capital Fund III at $85M",
+    "kind": "milestone",
+    "who": [
+      "amara-okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-13-1c0e5924",
+    "depth": "conversations/slack-ops-2026-04-13",
+    "day": "2026-04-13",
+    "what": "Marcus Reid circled back on Q1 portfolio review docs, asking for confirmation of updated financials from Stratos and Beacon Health",
+    "kind": "work",
+    "who": [
+      "Marcus Reid"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-13-22bf268f",
+    "depth": "conversations/slack-ops-2026-04-13",
+    "day": "2026-04-13",
+    "what": "Kofi Mensah pushed updated wire instructions to the shared drive",
+    "kind": "work",
+    "who": [
+      "Kofi Mensah"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-13-4cf00250",
+    "depth": "conversations/slack-ops-2026-04-13",
+    "day": "2026-04-13",
+    "what": "Hannah Liu requested the updated cap table for the Meridian deal from Bill Hart ahead of the partner meeting",
+    "kind": "work",
+    "who": [
+      "Hannah Liu"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-13-4e11e491",
+    "depth": "conversations/slack-deal-flow-2026-04-13",
+    "day": "2026-04-13",
+    "what": "Amara requested Marcus pull and send the Vesta Robotics deck for her review",
+    "kind": "work",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-13-52ea2531",
+    "depth": "conversations/slack-deal-flow-2026-04-13",
+    "day": "2026-04-13",
+    "what": "Priya got off a call with Nexus Robotics CFO and reviewed Q1 numbers showing 40% QoQ revenue growth",
+    "kind": "call",
+    "who": [
+      "Priya Patel"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-13-560f6b56",
+    "depth": "conversations/slack-halfway-partners-2026-04-13",
+    "day": "2026-04-13",
+    "what": "Marcus relayed that Lena Park flagged timeline concerns and believes better terms can be pushed for if patient through Q2",
+    "kind": "work",
+    "who": [
+      "marcus-reid"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-13-6ae5aa1b",
+    "depth": "conversations/slack-deal-flow-2026-04-13",
+    "day": "2026-04-13",
+    "what": "Amara decided Nexus Robotics is worth slotting in for a partner meeting",
+    "kind": "decision",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-13-6f44abd0",
+    "depth": "conversations/slack-halfway-partners-2026-04-13",
+    "day": "2026-04-13",
+    "what": "Amara confirmed she is comfortable with the proposed terms and agreed to move forward with the term sheet this week",
+    "kind": "decision",
+    "who": [
+      "amara-okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-13-7f786c92",
+    "depth": "conversations/slack-ops-2026-04-13",
+    "day": "2026-04-13",
+    "what": "Amara Okafor flagged the need to sync with Priya to get wire instructions sorted before EOD",
+    "kind": "work",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-13-875aa7f2",
+    "depth": "conversations/slack-halfway-partners-2026-04-13",
+    "day": "2026-04-13",
+    "what": "Nadia suggested scheduling a deeper dive with Amara on technical due diligence before the next partner meeting",
+    "kind": "commitment",
+    "who": [
+      "nadia-freeman"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-13-92d716b3",
+    "depth": "conversations/slack-ops-2026-04-13",
+    "day": "2026-04-13",
+    "what": "Amara Okafor committed to looping in Marcus Chen to sort out the LP reporting timeline before the quarterly call",
+    "kind": "commitment",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-13-c5d497a8",
+    "depth": "conversations/slack-random-2026-04-14",
+    "day": "2026-04-13",
+    "what": "Tomoko tried the ramen restaurant recommended by Priya Patel",
+    "kind": "meal",
+    "who": [
+      "Tomoko Sato"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-13-c61c4d43",
+    "depth": "conversations/slack-deal-flow-2026-04-13",
+    "day": "2026-04-13",
+    "what": "Marcus ran preliminary numbers on Nexus Robotics' Series A ask and flagged aggressive burn rate relative to current MRR",
+    "kind": "work",
+    "who": [
+      "Marcus Reid"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-13-cc808bb2",
+    "depth": "conversations/slack-deal-flow-2026-04-13",
+    "day": "2026-04-13",
+    "what": "Nadia reviewed Axon Labs materials and identified churn signals in cohort data warranting further investigation",
+    "kind": "solo",
+    "who": [
+      "Nadia Freeman"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-13-d10f9293",
+    "depth": "conversations/slack-deal-flow-2026-04-13",
+    "day": "2026-04-13",
+    "what": "Amara reviewed the Nexus Robotics deck and assessed their Series A metrics as solid, recommending a deeper look",
+    "kind": "solo",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-13-db03221e",
+    "depth": "conversations/slack-deal-flow-2026-04-13",
+    "day": "2026-04-13",
+    "what": "Lena looped in Jordan Park on technical due diligence for the infra layer and Jordan flagged concerns about Kubernetes deployment",
+    "kind": "work",
+    "who": [
+      "Lena Park"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-13-e617fd5d",
+    "depth": "conversations/slack-halfway-partners-2026-04-13",
+    "day": "2026-04-13",
+    "what": "Sarah committed to circle back with Amara after her board meeting to align on next steps before sending the term sheet",
+    "kind": "commitment",
+    "who": [
+      "sarah-chen"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-13-ef41eb71",
+    "depth": "conversations/slack-halfway-partners-2026-04-13",
+    "day": "2026-04-13",
+    "what": "Kofi flagged the need to finalize positions on the Vela Optics bridge round and requested Amara pull together updated cap table analysis",
+    "kind": "commitment",
+    "who": [
+      "kofi-mensah"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-13-f3335bda",
+    "depth": "conversations/slack-ops-2026-04-13",
+    "day": "2026-04-13",
+    "what": "Sarah Chen reported that Halfway Capital Q1 expense final numbers came in from accounting at 12% under budget",
+    "kind": "milestone",
+    "who": [
+      "Sarah Chen"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-016bfa70",
+    "depth": "conversations/slack-deal-flow-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Priya Patel completed reference calls with two former Kuiper Labs customers, both flagging implementation timelines running 2-3x longer than quoted",
+    "kind": "call",
+    "who": [
+      "Priya Patel"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-017f419c",
+    "depth": "cal/evt-0001",
+    "day": "2026-04-14",
+    "what": "Priya sync meeting took place",
+    "kind": "meeting",
+    "who": [
+      "user/amara-okafor",
+      "people/priya-patel"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-05a3141e",
+    "depth": "conversations/slack-ops-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Bill ran Q1 fund admin cost numbers and found they are tracking about 12% under budget",
+    "kind": "work",
+    "who": [
+      "Bill Hart"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-0a596e1c",
+    "depth": "conversations/slack-random-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Amara posted an article about founder mental health in #general",
+    "kind": "work",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-0dca16c0",
+    "depth": "meetings/mtg-0000",
+    "day": "2026-04-14",
+    "what": "Amara agreed to pull VP Engineering candidates from Halfway Capital talent network",
+    "kind": "commitment",
+    "who": [
+      "user/amara-okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-1220624a",
+    "depth": "conversations/slack-halfway-partners-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Amara Okafor had a call with Priya Patel about Series A terms for Helios, with Priya flagging concerns about liquidation preferences",
+    "kind": "call",
+    "who": [
+      "Amara Okafor",
+      "Priya Patel"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-14452049",
+    "depth": "conversations/slack-halfway-partners-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Daria Novak flagged IP concerns during her legal review of Vela Bio",
+    "kind": "work",
+    "who": [
+      "Daria Novak"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-17696657",
+    "depth": "meetings/mtg-0001",
+    "day": "2026-04-14",
+    "what": "Priya offered to make a warm intro to Jordan Park and said she would text him today",
+    "kind": "commitment",
+    "who": [
+      "people/priya-patel",
+      "people/jordan-park"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-267e5ede",
+    "depth": "conversations/slack-deal-flow-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Ravi Gupta got off the phone with Canopy Robotics founders, who indicated openness to a bridge round with an end-of-month close target",
+    "kind": "call",
+    "who": [
+      "Ravi Gupta"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-2c2be45a",
+    "depth": "conversations/slack-deal-flow-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Kofi Mensah completed first pass review of Jordan Park intro deck, noting aggressive market sizing but compelling enterprise distribution strategy",
+    "kind": "solo",
+    "who": [
+      "Kofi Mensah"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-2c6dd315",
+    "depth": "conversations/slack-ops-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Mina Kapoor completed compliance check for Q1 financials with no flags",
+    "kind": "work",
+    "who": [
+      "Mina Kapoor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-2f6dc5d5",
+    "depth": "conversations/slack-halfway-partners-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Diego Alvarez had a last-minute conflict with Terraform Industries causing him to run late",
+    "kind": "conflict",
+    "who": [
+      "Diego Alvarez",
+      "Terraform Industries"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-3a92be11",
+    "depth": "conversations/slack-halfway-partners-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Team discussed investment priorities including Tempo Health follow-on, Greenloop Packaging situation, Armada Logistics term sheet, Nexus Robotics board metrics, Cognivue term sheet legal flags, Tideline Robotics pass decision, DataMesh bridge terms, Nexus Labs term sheet, Pendulum due diligence, and Vela Bio IP concerns in the #halfway-partners Slack channel",
+    "kind": "meeting",
+    "who": [
+      "Amara Okafor",
+      "Ravi Gupta",
+      "Lena Park",
+      "Elena Rossi",
+      "Kofi Mensah",
+      "Bill Hart",
+      "Hannah Liu",
+      "Tomoko Sato",
+      "Diego Alvarez"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-3bab6ca8",
+    "depth": "meetings/mtg-0001",
+    "day": "2026-04-14",
+    "what": "Amara and Priya met for a coffee sync to discuss NovaBio Series B, founding team dynamics, cap table, and diligence concerns",
+    "kind": "meeting",
+    "who": [
+      "user/amara-okafor",
+      "people/priya-patel"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-3beb7b7b",
+    "depth": "meetings/mtg-0000",
+    "day": "2026-04-14",
+    "what": "Amara offered to introduce Elena to Marcus Reid at Arcline Ventures for Series B conversations",
+    "kind": "commitment",
+    "who": [
+      "user/amara-okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-3f14661f",
+    "depth": "conversations/slack-deal-flow-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Amara Okafor decided Helios Robotics should move to partner review based on solid unit economics and team depth",
+    "kind": "decision",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-4714d356",
+    "depth": "conversations/slack-deal-flow-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Amara Okafor pushed her sync with the Luminos team to 10:30",
+    "kind": "decision",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-4af5c66b",
+    "depth": "conversations/slack-halfway-partners-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Amara Okafor reviewed Tideline Robotics materials and decided to pass due to unit economics and optimistic go-to-market assumptions",
+    "kind": "decision",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-50a5662a",
+    "depth": "meetings/mtg-0001",
+    "day": "2026-04-14",
+    "what": "Priya shared that Jordan Park holds 17% equity after Series A dilution",
+    "kind": "meeting",
+    "who": [
+      "people/priya-patel"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-54ed4749",
+    "depth": "conversations/slack-halfway-partners-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Elena Rossi wrapped up the Nexus Robotics board call and reported they are ahead of projections on Series B metrics",
+    "kind": "call",
+    "who": [
+      "Elena Rossi"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-57f2376e",
+    "depth": "conversations/slack-deal-flow-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Marcus Reid looped Jordan Park into the technical due diligence given her relevant experience evaluating similar infrastructure plays",
+    "kind": "intro",
+    "who": [
+      "Marcus Reid",
+      "Jordan Park"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-596bea62",
+    "depth": "conversations/slack-deal-flow-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Amara Okafor looped back with Jordan Park on the Nexus term sheet and reached alignment on pro-rata but identified need to revisit board seat language",
+    "kind": "call",
+    "who": [
+      "Amara Okafor",
+      "Jordan Park"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-5abe8d7e",
+    "depth": "conversations/slack-ops-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Marcus Reid followed up with two LPs still outstanding on Q2 fund admin docs",
+    "kind": "work",
+    "who": [
+      "Marcus Reid"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-5e10a001",
+    "depth": "meetings/mtg-0001",
+    "day": "2026-04-14",
+    "what": "Priya agreed to introduce Amara to Sarah Chen for a board perspective on NovaBio",
+    "kind": "commitment",
+    "who": [
+      "people/priya-patel",
+      "user/amara-okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-62874740",
+    "depth": "conversations/slack-random-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Lena called out Marcus for falling asleep during a documentary screening last month, and Amara admitted the documentary was better than expected",
+    "kind": "event",
+    "who": [
+      "Amara Okafor",
+      "Lena Park",
+      "Marcus Reid"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-64a9341d",
+    "depth": "conversations/slack-ops-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Tomoko Sato received the updated cap table from Quilr and uploaded it to the data room",
+    "kind": "work",
+    "who": [
+      "Tomoko Sato"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-652bebe2",
+    "depth": "conversations/slack-random-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Sarah wrapped up portfolio review work late at night",
+    "kind": "work",
+    "who": [
+      "Sarah Chen"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-6a1f2950",
+    "depth": "conversations/slack-ops-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Jordan Park received the updated cap table from Verde Climate Solutions and identified a minor discrepancy in the Series A share count, engaging their counsel to resolve it",
+    "kind": "work",
+    "who": [
+      "Jordan Park"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-6adabddd",
+    "depth": "cal/evt-0002",
+    "day": "2026-04-14",
+    "what": "Hannah sync meeting between Amara Okafor and Hannah Liu",
+    "kind": "meeting",
+    "who": [
+      "user/amara-okafor",
+      "people/hannah-liu"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-6fe1e38d",
+    "depth": "conversations/slack-deal-flow-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Amara Okafor spoke with the Helios Robotics founder, finding strong technical vision but underbaked go-to-market",
+    "kind": "call",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-725d0f6d",
+    "depth": "conversations/slack-deal-flow-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Hannah Liu flagged that Canopy Robotics' seed deck came through with solid unit economics",
+    "kind": "work",
+    "who": [
+      "Hannah Liu"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-81cba36c",
+    "depth": "meetings/mtg-0000",
+    "day": "2026-04-14",
+    "what": "Elena reported Meridian Robotics closed Q1 2026 with $2.1M ARR, up 34% from Q4 2025, with 94% customer retention",
+    "kind": "work",
+    "who": [
+      "people/elena-rossi"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-84717601",
+    "depth": "conversations/slack-random-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Bill reported that Hannah's restaurant recommendation was excellent and he took his wife there for their anniversary",
+    "kind": "meal",
+    "who": [
+      "Bill Hart",
+      "Hannah Liu"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-858acad5",
+    "depth": "conversations/slack-deal-flow-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Amara Okafor looped Bill Hart in on a deal and asked him to take a first pass on the IP portfolio before a founder call is scheduled",
+    "kind": "intro",
+    "who": [
+      "Amara Okafor",
+      "Bill Hart"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-88a78215",
+    "depth": "cal/evt-0003",
+    "day": "2026-04-14",
+    "what": "Bill sync meeting took place",
+    "kind": "meeting",
+    "who": [
+      "user/amara-okafor",
+      "people/bill-hart"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-8b872e6a",
+    "depth": "meetings/mtg-0000",
+    "day": "2026-04-14",
+    "what": "Amara and Elena met to review Meridian Robotics Q1 2026 performance and discuss Series B considerations",
+    "kind": "meeting",
+    "who": [
+      "user/amara-okafor",
+      "people/elena-rossi"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-96fd6d90",
+    "depth": "conversations/slack-halfway-partners-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Amara Okafor reviewed the Armada Logistics deck after a founder call and expressed support for moving to term sheet",
+    "kind": "work",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-aa34124a",
+    "depth": "meetings/mtg-0000",
+    "day": "2026-04-14",
+    "what": "Elena disclosed inbound Series B interest from Northvane Partners and one unnamed growth fund",
+    "kind": "work",
+    "who": [
+      "people/elena-rossi"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-ab7c7b64",
+    "depth": "conversations/slack-halfway-partners-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Bill Hart flagged timeline concerns with Sarah Chen and she agreed to pull together updated projections",
+    "kind": "work",
+    "who": [
+      "Bill Hart",
+      "Sarah Chen"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-b36c86c8",
+    "depth": "meetings/mtg-0000",
+    "day": "2026-04-14",
+    "what": "Elena confirmed CAC payback period improved to 14 months from 18 months last quarter, attributed to channel partnership with Thornfield Industrial",
+    "kind": "work",
+    "who": [
+      "people/elena-rossi"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-bc9d4723",
+    "depth": "conversations/slack-ops-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Mina finished reconciling Q1 LP reports and uploaded them to the shared drive, flagging Bodhi Fund distributions for Amara's review",
+    "kind": "work",
+    "who": [
+      "Mina Kapoor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-c34ec92a",
+    "depth": "conversations/slack-deal-flow-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Amara Okafor spoke with Vertex Robotics CTO and came away more bullish on the company",
+    "kind": "call",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-c4c105a5",
+    "depth": "conversations/slack-deal-flow-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Nadia Freeman reviewed the Quantum Materials deck and identified promising unit economics alongside red flags in customer concentration",
+    "kind": "solo",
+    "who": [
+      "Nadia Freeman"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-cdb4bfc3",
+    "depth": "meetings/mtg-0000",
+    "day": "2026-04-14",
+    "what": "Amara and Elena agreed that starting Series B conversations in Q3 2026 would be prudent given market conditions",
+    "kind": "decision",
+    "who": [
+      "user/amara-okafor",
+      "people/elena-rossi"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-d25dbe36",
+    "depth": "conversations/slack-halfway-partners-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Kofi Mensah expressed agreement to move Pendulum forward to due diligence",
+    "kind": "decision",
+    "who": [
+      "Kofi Mensah"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-d61d2e6e",
+    "depth": "conversations/slack-random-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Amara tried cold plunging over the weekend and was sold on it",
+    "kind": "solo",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-da371126",
+    "depth": "meetings/mtg-0001",
+    "day": "2026-04-14",
+    "what": "Priya disclosed she has been in talks with Sarah Chen about potentially joining NovaBio's board if the Series B closes",
+    "kind": "meeting",
+    "who": [
+      "people/priya-patel",
+      "people/sarah-chen"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-db2649a4",
+    "depth": "conversations/slack-deal-flow-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Kofi Mensah ran financial model on Helios Robotics overnight, finding solid unit economics but flagging concerns about go-to-market timeline",
+    "kind": "solo",
+    "who": [
+      "Kofi Mensah"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-ddb69016",
+    "depth": "conversations/slack-random-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Hannah noted that Bill mass-deleted around 200 unread emails and declared inbox zero",
+    "kind": "event",
+    "who": [
+      "Hannah Liu",
+      "Bill Hart"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-dfb70e5c",
+    "depth": "conversations/slack-random-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Amara confirmed she is in for Nadia's hiking trip next month",
+    "kind": "commitment",
+    "who": [
+      "Amara Okafor",
+      "Nadia Freeman"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-e7131aa1",
+    "depth": "conversations/slack-ops-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Anna Petrov announced she would be running the weekly ops sync because Amara is traveling for the Cortex Robotics board meeting",
+    "kind": "work",
+    "who": [
+      "Anna Petrov"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-e89fc774",
+    "depth": "conversations/slack-deal-flow-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Elena Rossi and Priya Patel synced and aligned on moving forward with technical due diligence",
+    "kind": "meeting",
+    "who": [
+      "Elena Rossi",
+      "Priya Patel"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-e93f5fc6",
+    "depth": "conversations/slack-deal-flow-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Diego Alvarez looped Mina Kapoor into technical due diligence to evaluate ML claims",
+    "kind": "intro",
+    "who": [
+      "Diego Alvarez",
+      "Mina Kapoor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-e94c566c",
+    "depth": "conversations/slack-ops-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Mina Kapoor and Kira Johnson finished reconciling Q1 numbers on the fund admin side with no issues",
+    "kind": "work",
+    "who": [
+      "Mina Kapoor",
+      "Kira Johnson"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-eb55b593",
+    "depth": "conversations/slack-deal-flow-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Jordan Park re-ran numbers on Phantom Robotics and concluded unit economics hold up under conservative enterprise adoption assumptions, recommending partner review",
+    "kind": "solo",
+    "who": [
+      "Jordan Park"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-eecc3b6b",
+    "depth": "conversations/slack-halfway-partners-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Hannah Liu noted that Amara had previously flagged governance structure concerns during an earlier sync",
+    "kind": "meeting",
+    "who": [
+      "Hannah Liu",
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-f166bc4b",
+    "depth": "conversations/slack-ops-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Nadia pushed LP reporting template updates to the shared drive",
+    "kind": "work",
+    "who": [
+      "Nadia Freeman"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-f604c342",
+    "depth": "conversations/slack-deal-flow-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Lena Park pulled the Meridian Robotics deck and ran quick comps, finding Series A terms aggressive but not unreasonable given traction",
+    "kind": "solo",
+    "who": [
+      "Lena Park"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-fd811f71",
+    "depth": "meetings/mtg-0000",
+    "day": "2026-04-14",
+    "what": "Elena agreed to share updated investor deck draft by April 21",
+    "kind": "commitment",
+    "who": [
+      "people/elena-rossi"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-fd9a4756",
+    "depth": "cal/evt-0000",
+    "day": "2026-04-14",
+    "what": "Amara and Elena held a sync meeting",
+    "kind": "meeting",
+    "who": [
+      "user/amara-okafor",
+      "people/elena-rossi"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-fe24fffc",
+    "depth": "conversations/slack-random-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Elena appreciated Amara's article about founder mental health posted in #general",
+    "kind": "event",
+    "who": [
+      "Elena Rossi",
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-fee55f9c",
+    "depth": "conversations/slack-deal-flow-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Lena Park flagged that Terraform Industries closed their Series B at a $180M valuation",
+    "kind": "milestone",
+    "who": [
+      "Lena Park"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-14-ff82232a",
+    "depth": "conversations/slack-random-2026-04-14",
+    "day": "2026-04-14",
+    "what": "Sarah's succulent fell off her desk and broke",
+    "kind": "event",
+    "who": [
+      "Sarah Chen"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-0e970cdc",
+    "depth": "conversations/slack-random-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Kofi recounted Nadia explaining blockchain to her mom over FaceTime in the hotel lobby during the offsite",
+    "kind": "event",
+    "who": [
+      "Kofi Mensah",
+      "Nadia Freeman"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-0ed35479",
+    "depth": "conversations/slack-deal-flow-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Kofi Mensah circled back with the Verda Robotics team on their revised term sheet and learned they are flexible on board seat structure",
+    "kind": "meeting",
+    "who": [
+      "Kofi Mensah"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-114f0e27",
+    "depth": "conversations/slack-ops-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Bill Hart announced he will run the Q2 ops review sync in place of Amara, who is tied up with the Phantom board meeting",
+    "kind": "decision",
+    "who": [
+      "Bill Hart"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-14438e79",
+    "depth": "conversations/slack-deal-flow-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Priya Patel got off a call with Terraform Labs founders, who reported 40% MoM growth and are looking to close their Series A by end of May",
+    "kind": "call",
+    "who": [
+      "Priya Patel"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-15eaffe6",
+    "depth": "conversations/slack-deal-flow-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Amara Okafor reviewed the Helios Robotics deck and assessed it worth a deeper look, requesting comps on industrial automation space",
+    "kind": "work",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-217a9f0b",
+    "depth": "cal/evt-0004",
+    "day": "2026-04-15",
+    "what": "Amara and Diego held a sync meeting",
+    "kind": "meeting",
+    "who": [
+      "user/amara-okafor",
+      "people/diego-alvarez"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-21c380be",
+    "depth": "conversations/slack-ops-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Marcus Reid reported that finance flagged discrepancies in Halfway Capital Q1 travel reimbursements and asked Amara to clarify Austin trip coding",
+    "kind": "work",
+    "who": [
+      "Marcus Reid"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-22d4736f",
+    "depth": "meetings/mtg-0002",
+    "day": "2026-04-15",
+    "what": "Diego confirmed Threshold Robotics is targeting an $18M Series B with a $70–80M pre-money valuation, kicking off in late Q3",
+    "kind": "decision",
+    "who": [
+      "user/amara-okafor",
+      "people/diego-alvarez"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-24676c2d",
+    "depth": "conversations/slack-halfway-partners-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Amara completed a reference check on Tomoko Sato, speaking with two former colleagues who gave glowing feedback on her operational instincts",
+    "kind": "work",
+    "who": [
+      "Amara Okafor",
+      "tomoko-sato"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-269b2971",
+    "depth": "conversations/slack-ops-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Anna Petrov confirmed with First Republic that Synthesis Bio funds cleared at 6:47am PT",
+    "kind": "work",
+    "who": [
+      "Anna Petrov"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-351c8abd",
+    "depth": "meetings/mtg-0002",
+    "day": "2026-04-15",
+    "what": "Amara agreed to loop in Marcus Reid on the potential co-investment opportunity",
+    "kind": "commitment",
+    "who": [
+      "user/amara-okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-3cc0a5ef",
+    "depth": "conversations/slack-deal-flow-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Tomoko Sato got off a call with the Cognivault founder, who is now asking for a $45M pre-money valuation",
+    "kind": "call",
+    "who": [
+      "Tomoko Sato"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-3ccd02df",
+    "depth": "conversations/slack-random-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Elena was up late finishing board deck reviews",
+    "kind": "work",
+    "who": [
+      "Elena Rossi"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-3f6430e2",
+    "depth": "conversations/slack-ops-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Anna Petrov finished the final round of LP data room updates",
+    "kind": "work",
+    "who": [
+      "Anna Petrov"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-449ee03e",
+    "depth": "conversations/slack-halfway-partners-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Amara wrapped up her review of Notion follow-on materials and noted solid numbers but flagged need to dig deeper into enterprise retention",
+    "kind": "solo",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-467d26b4",
+    "depth": "conversations/slack-halfway-partners-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Sarah got off a call with the Synthesis AI founders and was impressed with their technical depth",
+    "kind": "call",
+    "who": [
+      "Sarah Chen"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-47ad02c8",
+    "depth": "conversations/slack-halfway-partners-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Amara reviewed Prism Analytics materials and determined she is leaning toward passing due to unit economics not holding up",
+    "kind": "solo",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-4a1d6555",
+    "depth": "conversations/slack-deal-flow-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Amara Okafor spoke with Tomoko Sato, who expressed bullishness on the technical approach of a deal under discussion",
+    "kind": "call",
+    "who": [
+      "Amara Okafor",
+      "Tomoko Sato"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-4e6688e2",
+    "depth": "conversations/slack-halfway-partners-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Diego ran sensitivity analysis on unit economics and determined path to profitability extends to Q3 2028 under realistic assumptions",
+    "kind": "solo",
+    "who": [
+      "Diego Alvarez"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-519ce0d6",
+    "depth": "conversations/slack-deal-flow-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Sarah Chen pulled together updated materials for Phantom Robotics, including revised term sheet and diligence checklist",
+    "kind": "work",
+    "who": [
+      "Sarah Chen"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-546901fd",
+    "depth": "conversations/slack-random-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Anna returned from a late-night debugging session and joined the Slack thread",
+    "kind": "work",
+    "who": [
+      "Anna Petrov"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-56247951",
+    "depth": "conversations/slack-deal-flow-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Tomoko Sato got off a call with Greenloop Logistics, noting they are moving fast on their Series A and have a solid deck but require deeper unit economics analysis",
+    "kind": "call",
+    "who": [
+      "Tomoko Sato"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-5af59aa3",
+    "depth": "conversations/slack-random-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Amara returned from dinner and joined the Slack thread, declaring her pro-pineapple-on-pizza stance",
+    "kind": "solo",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-60b7d40e",
+    "depth": "meetings/mtg-0002",
+    "day": "2026-04-15",
+    "what": "Diego shared that Threshold Robotics' warehouse automation pilot in Phoenix is tracking ahead of Q4 unit economics projections",
+    "kind": "work",
+    "who": [
+      "people/diego-alvarez"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-63fb8b25",
+    "depth": "meetings/mtg-0002",
+    "day": "2026-04-15",
+    "what": "Diego agreed to send an updated metrics deck by end of April",
+    "kind": "commitment",
+    "who": [
+      "people/diego-alvarez"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-6760ffee",
+    "depth": "conversations/slack-random-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Ravi agreed with Tomoko's recommendation of the ramen place on 18th Street for its spicy miso",
+    "kind": "event",
+    "who": [
+      "Ravi Gupta",
+      "Tomoko Sato"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-6c1b50d6",
+    "depth": "cal/evt-0005",
+    "day": "2026-04-15",
+    "what": "Amara and Ravi held a sync meeting",
+    "kind": "meeting",
+    "who": [
+      "user/amara-okafor",
+      "people/ravi-gupta"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-6c604c78",
+    "depth": "conversations/slack-halfway-partners-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Mira Patel confirmed her attendance for Thursday's deep dive on Stratos's infrastructure roadmap",
+    "kind": "commitment",
+    "who": [
+      "Elena Rossi",
+      "mira-patel"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-6cff95ad",
+    "depth": "conversations/slack-halfway-partners-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Anna finished reviewing the Cognify deck and flagged aggressive burn rate concerns",
+    "kind": "solo",
+    "who": [
+      "Anna Petrov"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-72a0221c",
+    "depth": "conversations/slack-random-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Hannah and Ravi discussed a misleading tech journalism article headline",
+    "kind": "event",
+    "who": [
+      "Hannah Liu",
+      "Ravi Gupta"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-7631860b",
+    "depth": "conversations/slack-deal-flow-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Bill Hart ran through Quantum Circuit's numbers, noting high burn rate but a real technology moat",
+    "kind": "work",
+    "who": [
+      "Bill Hart"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-76ddb9d0",
+    "depth": "meetings/mtg-0002",
+    "day": "2026-04-15",
+    "what": "Amara agreed to review Threshold Robotics' current cap table before the next sync",
+    "kind": "commitment",
+    "who": [
+      "user/amara-okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-79bb2f41",
+    "depth": "conversations/slack-deal-flow-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Lena Park pulled the Quillit deck and ran quick comps, finding impressive ARR growth but a longer-than-desired CAC payback period",
+    "kind": "work",
+    "who": [
+      "Lena Park"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-7f7dd85c",
+    "depth": "conversations/slack-ops-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Amara Okafor committed to looping in Jamie to sort wire instructions before EOD to avoid a repeat of the Meridian close delay",
+    "kind": "commitment",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-82ba3114",
+    "depth": "conversations/slack-deal-flow-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Ravi Gupta circled back on the Nextera Robotics deck, noting steep valuation ask but strong founding team experience in industrial automation",
+    "kind": "work",
+    "who": [
+      "Ravi Gupta"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-83997ec8",
+    "depth": "conversations/slack-deal-flow-2026-04-16",
+    "day": "2026-04-15",
+    "what": "Amara Okafor spoke with the Nimbus Robotics CTO and became increasingly bullish on their technical moat",
+    "kind": "call",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-88523a33",
+    "depth": "meetings/mtg-0002",
+    "day": "2026-04-15",
+    "what": "Amara and Diego held a Series B planning call to discuss Threshold Robotics' upcoming raise and Halfway Capital's positioning",
+    "kind": "call",
+    "who": [
+      "user/amara-okafor",
+      "people/diego-alvarez"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-90fe5382",
+    "depth": "conversations/slack-deal-flow-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Amara Okafor spoke with Anna Petrov, who flagged concerns about a company's burn rate",
+    "kind": "call",
+    "who": [
+      "Amara Okafor",
+      "Anna Petrov"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-9267ca6c",
+    "depth": "conversations/slack-deal-flow-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Amara Okafor completed a second pass review of the Nexus Robotics deck and found unit economics stronger than initially thought",
+    "kind": "solo",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-92934317",
+    "depth": "conversations/slack-ops-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Amara Okafor finalized the Glint term sheet draft overnight",
+    "kind": "work",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-955f2452",
+    "depth": "conversations/slack-random-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Amara organized a group coffee run to Blue Bottle around 10:30 due to poor WeWork espresso",
+    "kind": "work",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-9f98778b",
+    "depth": "cal/evt-0006",
+    "day": "2026-04-15",
+    "what": "Amara and Tomoko held a 30-minute sync meeting",
+    "kind": "meeting",
+    "who": [
+      "user/amara-okafor",
+      "people/tomoko-sato"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-a2bc4941",
+    "depth": "conversations/slack-random-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Bill checked in from the gym early in the morning and noted the sunrise",
+    "kind": "solo",
+    "who": [
+      "Bill Hart"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-b81fb243",
+    "depth": "conversations/slack-deal-flow-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Diego Alvarez agreed to reach out to his contact at Helios Robotics' Series A lead to assess runway situation",
+    "kind": "commitment",
+    "who": [
+      "Diego Alvarez"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-bf071007",
+    "depth": "conversations/slack-random-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Priya recommended the new Ethiopian place on Valencia to Hannah",
+    "kind": "event",
+    "who": [
+      "Priya Patel",
+      "Hannah Liu"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-c3cf6247",
+    "depth": "conversations/slack-halfway-partners-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Amara circled back with Kenji and he confirmed he is comfortable moving forward with the term sheet as discussed",
+    "kind": "meeting",
+    "who": [
+      "Amara Okafor",
+      "kenji-tanaka"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-c62602aa",
+    "depth": "conversations/slack-ops-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Priya Patel looped in Mina Kapoor on LP reporting updates",
+    "kind": "intro",
+    "who": [
+      "Priya Patel"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-c6aab7b7",
+    "depth": "meetings/mtg-0002",
+    "day": "2026-04-15",
+    "what": "Amara flagged that Marcus Reid had previously expressed interest in co-investing if Halfway leads the Series B",
+    "kind": "work",
+    "who": [
+      "user/amara-okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-d13c3b66",
+    "depth": "conversations/slack-ops-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Lena Park finished reconciling Q1 numbers with Amara's notes and pushed the updated spreadsheet to the shared drive",
+    "kind": "work",
+    "who": [
+      "Lena Park"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-d489167a",
+    "depth": "meetings/mtg-0002",
+    "day": "2026-04-15",
+    "what": "Halfway Capital decided to plan participation in Series B diligence starting late August",
+    "kind": "decision",
+    "who": [
+      "user/amara-okafor",
+      "people/diego-alvarez"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-dd14d448",
+    "depth": "conversations/slack-ops-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Amara Okafor announced she will be OOO for a Velar Robotics board meeting and asked Jason to finalize the Q1 fund performance deck",
+    "kind": "commitment",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-df5d9e5f",
+    "depth": "conversations/slack-deal-flow-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Amara Okafor reviewed overnight notes from Jordan Park and agreed to reach out to the founder directly to set up a call",
+    "kind": "work",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-e07c3ca9",
+    "depth": "conversations/slack-halfway-partners-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Kofi got off a call with Amara about the Nexus Robotics term sheet where she flagged concerns about liquidation preferences",
+    "kind": "call",
+    "who": [
+      "Kofi Mensah",
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-e1271083",
+    "depth": "conversations/slack-ops-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Kofi Mensah completed final reconciliation on the Q1 fund admin report, aligning all numbers with Apex Fund Services",
+    "kind": "work",
+    "who": [
+      "Kofi Mensah"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-eb447601",
+    "depth": "conversations/slack-halfway-partners-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Lena got off the phone with Tomoko about the Meridian deal, with Tomoko flagging burn rate concerns",
+    "kind": "call",
+    "who": [
+      "Lena Park",
+      "tomoko-sato"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-ec588eb7",
+    "depth": "conversations/slack-deal-flow-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Ravi Gupta pulled updated financials from Phantom Robotics, finding revenue growth solid but burn rate higher than the deck suggested",
+    "kind": "work",
+    "who": [
+      "Ravi Gupta"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-ed2a57aa",
+    "depth": "conversations/slack-deal-flow-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Kofi Mensah flagged Helios Robotics in the pipeline, noting solid seed metrics but wanting deeper analysis on unit economics",
+    "kind": "work",
+    "who": [
+      "Kofi Mensah"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-ee1ba469",
+    "depth": "conversations/slack-random-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Amara expressed regret about skipping the offsite for an LP dinner after seeing espresso martini photos",
+    "kind": "solo",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-eed08e52",
+    "depth": "conversations/slack-random-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Tomoko signed up for a pottery class",
+    "kind": "commitment",
+    "who": [
+      "Tomoko Sato"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-ef6458d4",
+    "depth": "conversations/slack-random-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Lena signed up for a ceramics class with her first session that evening",
+    "kind": "commitment",
+    "who": [
+      "Lena Park"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-f9163be5",
+    "depth": "cal/evt-0007",
+    "day": "2026-04-15",
+    "what": "Diego sync meeting took place",
+    "kind": "meeting",
+    "who": [
+      "user/amara-okafor",
+      "people/diego-alvarez"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-15-fa965187",
+    "depth": "conversations/slack-deal-flow-2026-04-15",
+    "day": "2026-04-15",
+    "what": "Amara Okafor requested Sarah Chen pull the latest Vela Therapeutics deck and add it to the deal room",
+    "kind": "work",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-006faa4c",
+    "depth": "cal/evt-0010",
+    "day": "2026-04-16",
+    "what": "Amara and Mina held a 30-minute sync meeting",
+    "kind": "meeting",
+    "who": [
+      "user/amara-okafor",
+      "people/mina-kapoor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-0dcdc1cf",
+    "depth": "conversations/slack-ops-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Tomoko completed final reconciliation and confirmed the wire is ready to hit Meridian's account",
+    "kind": "milestone",
+    "who": [
+      "tomoko-sato"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-0e831f5b",
+    "depth": "conversations/slack-deal-flow-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Amara Okafor circled back with Luminex founders and confirmed they are open to a bridge round structure",
+    "kind": "call",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-120e0193",
+    "depth": "conversations/slack-deal-flow-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Kofi Mensah got off a call with the Nexus Robotics founder, who is pushing for a term sheet by end of week",
+    "kind": "call",
+    "who": [
+      "Kofi Mensah"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-13817b0b",
+    "depth": "conversations/slack-random-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Kofi watched a documentary about the early days of Stripe",
+    "kind": "solo",
+    "who": [
+      "Kofi Mensah"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-13f03d28",
+    "depth": "conversations/slack-ops-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Diego requested Ravi pull latest portfolio company headcount numbers for the LP update deck",
+    "kind": "work",
+    "who": [
+      "diego-alvarez"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-16693bcd",
+    "depth": "cal/evt-0011",
+    "day": "2026-04-16",
+    "what": "Priya sync meeting took place",
+    "kind": "meeting",
+    "who": [
+      "user/amara-okafor",
+      "people/priya-patel"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-17afa365",
+    "depth": "conversations/slack-ops-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Bill flagged in system notes that Axiom Partners is pre-cleared for expedited onboarding having passed initial due diligence",
+    "kind": "decision",
+    "who": [
+      "bill-hart"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-18d8b02e",
+    "depth": "conversations/slack-halfway-partners-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Partners discussed diligence timelines, term sheets, and deal positions across multiple portfolio companies in the #halfway-partners Slack channel",
+    "kind": "work",
+    "who": [
+      "Amara Okafor",
+      "sarah-chen",
+      "Marcus Reid",
+      "Elena Rossi",
+      "Hannah Liu",
+      "Tomoko Sato",
+      "Mina Kapoor",
+      "Anna Petrov",
+      "Diego Alvarez",
+      "Sarah Chen",
+      "Elena Rossi",
+      "Anna Petrov"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-1a78d3b6",
+    "depth": "conversations/slack-ops-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Amara committed to looping in legal before EOD to ensure compliance coverage",
+    "kind": "commitment",
+    "who": [
+      "amara-okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-1b10cdce",
+    "depth": "conversations/slack-deal-flow-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Bill Hart reviewed Quantum Yield's revised deck and found it addressed most prior concerns",
+    "kind": "work",
+    "who": [
+      "Bill Hart"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-2218e670",
+    "depth": "meetings/mtg-0003",
+    "day": "2026-04-16",
+    "what": "Marcus acknowledged the Arizona pilot site underperformed at 78% capacity factor vs. 85% modeled",
+    "kind": "meeting",
+    "who": [
+      "people/marcus-reid"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-2ab07535",
+    "depth": "cal/evt-0009",
+    "day": "2026-04-16",
+    "what": "Kofi sync meeting held at Halfway HQ",
+    "kind": "meeting",
+    "who": [
+      "user/amara-okafor",
+      "people/kofi-mensah"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-2b3a3fe0",
+    "depth": "meetings/mtg-0003",
+    "day": "2026-04-16",
+    "what": "Marcus agreed to compile an interconnection queue analysis for 2027 projects",
+    "kind": "commitment",
+    "who": [
+      "people/marcus-reid"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-2d8b35a1",
+    "depth": "conversations/slack-random-2026-04-17",
+    "day": "2026-04-16",
+    "what": "Ravi visited the lamb kofta place on Valencia Street for lunch and found it incredible",
+    "kind": "meal",
+    "who": [
+      "Ravi Gupta"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-34201ddb",
+    "depth": "conversations/slack-deal-flow-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Priya Patel asked Anna Petrov to pull customer retention metrics from the last three quarters",
+    "kind": "work",
+    "who": [
+      "Priya Patel",
+      "Anna Petrov"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-3880cef7",
+    "depth": "conversations/slack-ops-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Ravi uploaded the updated LP commitment schedule to the shared drive",
+    "kind": "work",
+    "who": [
+      "ravi-gupta"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-42504bcb",
+    "depth": "meetings/mtg-0003",
+    "day": "2026-04-16",
+    "what": "Decision made to move Solaris Grid Storage to full diligence with Amara leading",
+    "kind": "decision",
+    "who": [
+      "user/amara-okafor",
+      "people/marcus-reid"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-432bca39",
+    "depth": "conversations/slack-ops-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Amara approved the revised Greenfield Series A docs and cleared the wire pending legal confirmation",
+    "kind": "decision",
+    "who": [
+      "amara-okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-436ecdcf",
+    "depth": "conversations/slack-ops-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Amara requested Ravi compile a summary of current fund admin bandwidth ahead of Q2 close",
+    "kind": "work",
+    "who": [
+      "amara-okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-4578492d",
+    "depth": "conversations/slack-ops-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Amara looped in Elena Rossi to pull latest numbers before a sync and align on runway projections",
+    "kind": "work",
+    "who": [
+      "amara-okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-468dc151",
+    "depth": "conversations/slack-random-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Marcus flagged to Anna Petrov that a half-eaten burrito had been left in the third floor fridge since Monday",
+    "kind": "work",
+    "who": [
+      "Marcus Reid",
+      "anna-petrov"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-4b99a253",
+    "depth": "conversations/slack-random-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Amara and bill-hart discussed an article about AI replacing VCs by 2030",
+    "kind": "work",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-5a4b817b",
+    "depth": "conversations/slack-ops-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Sarah Chen reported Q2 budget is tracking 8% under forecast and pulled together the numbers",
+    "kind": "work",
+    "who": [
+      "sarah-chen"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-6a0d3bb8",
+    "depth": "conversations/slack-random-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Amara agreed with Elena about a podcast episode on founder mental health and decided to share it with founders she is working with",
+    "kind": "decision",
+    "who": [
+      "Amara Okafor",
+      "Elena Rossi"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-6e8f7097",
+    "depth": "conversations/slack-ops-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Kofi requested Lena Park pull the updated cap table for Forma before the 10am sync",
+    "kind": "work",
+    "who": [
+      "kofi-mensah"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-72fa4574",
+    "depth": "conversations/slack-deal-flow-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Mina Kapoor completed a deep dive on Nile Analytics, finding solid customer retention but red flags in sales cycle length",
+    "kind": "work",
+    "who": [
+      "Mina Kapoor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-7404aa2a",
+    "depth": "conversations/slack-random-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Lena Park noted that Marcus owes everyone coffee after a demo disaster last week",
+    "kind": "conflict",
+    "who": [
+      "lena-park",
+      "marcus-reid"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-7834d581",
+    "depth": "conversations/slack-ops-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Tomoko confirmed the Q1 narrative draft can be pushed to Monday without impacting the board deck",
+    "kind": "decision",
+    "who": [
+      "tomoko-sato"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-7875252b",
+    "depth": "conversations/slack-halfway-partners-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Tomoko got off a call with Marcus about the Aerion due diligence timeline; Marcus expressed confidence the technical review can close by end of week if API documentation is received that day",
+    "kind": "call",
+    "who": [
+      "Tomoko Sato",
+      "marcus-chen"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-82a618cb",
+    "depth": "meetings/mtg-0003",
+    "day": "2026-04-16",
+    "what": "Marcus agreed to obtain monthly capacity factor data from all three Solaris pilot sites",
+    "kind": "commitment",
+    "who": [
+      "people/marcus-reid"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-84336b22",
+    "depth": "meetings/mtg-0003",
+    "day": "2026-04-16",
+    "what": "Marcus confirmed Solaris has 60% of revenue contracted via 15-year PPAs with two California IOUs",
+    "kind": "meeting",
+    "who": [
+      "people/marcus-reid"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-85363870",
+    "depth": "conversations/slack-halfway-partners-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Mina completed a diligence call with Phantom AI's CTO and found technical architecture solid but raised concerns about go-to-market timeline",
+    "kind": "call",
+    "who": [
+      "Mina Kapoor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-86af52c6",
+    "depth": "conversations/slack-ops-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Diego confirmed the Canopy Robotics wire cleared at the bank that morning",
+    "kind": "milestone",
+    "who": [
+      "diego-alvarez"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-89ebdd11",
+    "depth": "conversations/slack-deal-flow-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Nadia Freeman ran the numbers on Quantex and found unit economics stronger than initially thought",
+    "kind": "work",
+    "who": [
+      "Nadia Freeman"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-916bd307",
+    "depth": "conversations/slack-deal-flow-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Anna Petrov pulled updated financials for Helios Robotics and found solid revenue growth but higher than disclosed burn rate",
+    "kind": "work",
+    "who": [
+      "Anna Petrov"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-969cab86",
+    "depth": "conversations/slack-deal-flow-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Amara Okafor reviewed financials for an unspecified company and found unit economics stronger than initially thought, deciding to loop in Priya for technical diligence",
+    "kind": "work",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-99d57e13",
+    "depth": "conversations/slack-deal-flow-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Sarah Chen pulled the Quantum Mesh deck from last quarter and found metrics had improved, with revenue up 40% and two enterprise contracts closed",
+    "kind": "work",
+    "who": [
+      "Sarah Chen"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-9b051f9a",
+    "depth": "conversations/slack-deal-flow-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Elena Rossi reported that Nexus Robotics technical due diligence came back stronger than expected and requested 30 minutes with Amara to discuss moving forward with a term sheet",
+    "kind": "work",
+    "who": [
+      "Elena Rossi",
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-a25237f2",
+    "depth": "conversations/slack-deal-flow-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Amara Okafor assessed Nimbus Robotics as having real potential but lacking a clear path to unit economics",
+    "kind": "work",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-a474fbdd",
+    "depth": "conversations/slack-ops-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Elena looped in Nadia Freeman on wire instructions to confirm once treasury signs off",
+    "kind": "work",
+    "who": [
+      "elena-rossi"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-a5d77def",
+    "depth": "conversations/slack-halfway-partners-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Amara reviewed Meridian Labs technical docs and became more bullish on the deal",
+    "kind": "solo",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-b0d7b791",
+    "depth": "meetings/mtg-0003",
+    "day": "2026-04-16",
+    "what": "Marcus agreed to schedule a technical deep-dive with the Solaris CTO for next week",
+    "kind": "commitment",
+    "who": [
+      "people/marcus-reid"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-b5a68860",
+    "depth": "conversations/slack-random-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Amara agreed with Lena Park that a podcast episode on founder burnout should be shared in the founders Slack",
+    "kind": "decision",
+    "who": [
+      "Amara Okafor",
+      "lena-park"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-b8899831",
+    "depth": "conversations/slack-halfway-partners-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Amara reviewed Helios Robotics materials and concluded founder references should be prioritized before the next partner meeting",
+    "kind": "solo",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-bda89707",
+    "depth": "conversations/slack-random-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Amara recalled accidentally sending a deck to the wrong founder in the past",
+    "kind": "work",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-bdc7fc38",
+    "depth": "conversations/slack-deal-flow-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Diego Alvarez pulled the cap table for the Series A company and discovered more dilution from the bridge round than initially disclosed",
+    "kind": "work",
+    "who": [
+      "Diego Alvarez"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-c0fc4cfa",
+    "depth": "conversations/slack-halfway-partners-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Elena flagged concerns with Greenfield Robotics term sheet liquidation preferences",
+    "kind": "work",
+    "who": [
+      "Elena Rossi"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-c3d4989b",
+    "depth": "conversations/slack-deal-flow-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Amara Okafor noted that Anna Petrov had flagged concerns about Nutrigenix's burn rate in her notes",
+    "kind": "work",
+    "who": [
+      "Amara Okafor",
+      "Anna Petrov"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-c5ec9d6e",
+    "depth": "conversations/slack-random-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Sarah checked in late night while working on Q1 reports",
+    "kind": "work",
+    "who": [
+      "Sarah Chen"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-c8e040b7",
+    "depth": "conversations/slack-random-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Elena ordered an air fryer she had been considering",
+    "kind": "solo",
+    "who": [
+      "Elena Rossi"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-cb0c85ea",
+    "depth": "conversations/slack-halfway-partners-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Amara chatted with Elena Rossi and confirmed she is aligned on the timeline; agreed to aim for term sheet drafted by end of week",
+    "kind": "meeting",
+    "who": [
+      "Amara Okafor",
+      "Elena Rossi"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-d1538c99",
+    "depth": "conversations/slack-deal-flow-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Lena Park pulled the deck and financials for Quilltree overnight and found NRR strong but CAC payback longer than claimed in the exec summary",
+    "kind": "work",
+    "who": [
+      "Lena Park"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-d1e28f70",
+    "depth": "cal/evt-0008",
+    "day": "2026-04-16",
+    "what": "Amara and Marcus held a sync meeting",
+    "kind": "meeting",
+    "who": [
+      "user/amara-okafor",
+      "people/marcus-reid"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-d23d17b7",
+    "depth": "conversations/slack-ops-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Nadia Freeman requested Kofi Mensah send the updated fund admin contact list for the Q2 LP reporting package",
+    "kind": "work",
+    "who": [
+      "nadia-freeman"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-d2f75da0",
+    "depth": "conversations/slack-deal-flow-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Amara Okafor decided to move Terraform Dynamics to the next stage",
+    "kind": "decision",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-d55527c3",
+    "depth": "conversations/slack-deal-flow-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Ravi Gupta requested the latest financials from Vela Robotics be pulled",
+    "kind": "work",
+    "who": [
+      "Ravi Gupta"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-df40680a",
+    "depth": "conversations/slack-ops-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Mina Kapoor announced she is running the Q2 board deck reviews while Amara is out",
+    "kind": "work",
+    "who": [
+      "mina-kapoor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-dfecf152",
+    "depth": "conversations/slack-halfway-partners-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Amara circled back with Sarah Chen, who confirmed she is comfortable moving forward with the term sheet as-is",
+    "kind": "meeting",
+    "who": [
+      "Amara Okafor",
+      "sarah-chen"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-ee45cff9",
+    "depth": "conversations/slack-deal-flow-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Amara Okafor shared updated view on Nimbus Robotics and prioritized getting them on the IC agenda",
+    "kind": "work",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-f0a2b120",
+    "depth": "conversations/slack-ops-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Anna Petrov confirmed updated wire instructions for Cognify Labs were verified with their CFO",
+    "kind": "work",
+    "who": [
+      "anna-petrov"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-f19cdaad",
+    "depth": "conversations/slack-deal-flow-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Sarah Chen flagged Nutrigenix for a deeper dive based on their clinical trial data and offered to prep a memo",
+    "kind": "work",
+    "who": [
+      "Sarah Chen"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-f2e38647",
+    "depth": "conversations/slack-random-2026-04-16",
+    "day": "2026-04-16",
+    "what": "Amara discussed her late-night snack choices and asked about a new ramen spot on Valencia for dinner plans",
+    "kind": "work",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-fb386a7b",
+    "depth": "meetings/mtg-0003",
+    "day": "2026-04-16",
+    "what": "Marcus agreed to request detailed LCOE model with degradation assumptions from the Solaris team",
+    "kind": "commitment",
+    "who": [
+      "people/marcus-reid"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-fc997ff9",
+    "depth": "meetings/mtg-0003",
+    "day": "2026-04-16",
+    "what": "Amara and Marcus held a deep-dive meeting on the Solaris Grid Storage Series A opportunity, covering unit economics, LCOE trajectory, offtake structure, capacity factors, and interconnection queue risk",
+    "kind": "meeting",
+    "who": [
+      "user/amara-okafor",
+      "people/marcus-reid"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-16-fdd9736b",
+    "depth": "meetings/mtg-0003",
+    "day": "2026-04-16",
+    "what": "Amara agreed to reach out to Priya Patel for an IOU procurement contact reference",
+    "kind": "commitment",
+    "who": [
+      "user/amara-okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-070c68ea",
+    "depth": "conversations/slack-halfway-partners-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Kofi spoke with Marcus Chen about the Tideline term sheet; Marcus is pushing back on pro-rata rights and Kofi suggested flexing on the board observer seat to find middle ground",
+    "kind": "call",
+    "who": [
+      "kofi-mensah",
+      "marcus-chen"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-077ed82d",
+    "depth": "conversations/slack-deal-flow-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Kofi Mensah noted that Anna Petrov had flagged burn rate reservations during diligence and suggested syncing with her before moving forward",
+    "kind": "work",
+    "who": [
+      "Kofi Mensah"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-07ae99c0",
+    "depth": "conversations/slack-deal-flow-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Amara Okafor reasserted that Nexus Robotics merits a deeper look based on solid Series A metrics and relevant founding team exits",
+    "kind": "work",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-08f02d19",
+    "depth": "conversations/slack-deal-flow-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Sarah Chen requested Jordan Park pull the latest cap table docs from the data room",
+    "kind": "work",
+    "who": [
+      "Sarah Chen"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-09b7ad82",
+    "depth": "conversations/slack-deal-flow-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Diego Alvarez flagged Synthesis Bio's Series A deck as having surprisingly solid unit economics and recommended a deeper look",
+    "kind": "work",
+    "who": [
+      "Diego Alvarez"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-11b4565c",
+    "depth": "conversations/slack-random-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Ravi noted Diego's office light was still on when he left and told him to go home",
+    "kind": "work",
+    "who": [
+      "Ravi Gupta",
+      "Diego Alvarez"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-13e4f26b",
+    "depth": "conversations/slack-halfway-partners-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Nadia agreed on timeline concerns and committed to sync with Mina Kapoor to get clarity on runway assumptions before the Wednesday call",
+    "kind": "work",
+    "who": [
+      "nadia-freeman"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-1540ad96",
+    "depth": "conversations/slack-ops-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Bank confirmed the Phantom AI wire transfer cleared this morning",
+    "kind": "milestone",
+    "who": [
+      "Bill Hart"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-2038664e",
+    "depth": "conversations/slack-random-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Amara shared a podcast episode on founder mental health with several portfolio CEOs",
+    "kind": "work",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-23bf0ac7",
+    "depth": "conversations/slack-halfway-partners-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Bill agreed on timeline concerns and committed to sync with Amara on due diligence gaps before Monday reconvene, noting focus on technical audit scope",
+    "kind": "work",
+    "who": [
+      "bill-hart"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-29c73bec",
+    "depth": "conversations/slack-deal-flow-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Hannah Liu looped in Tomoko Sato to compare notes on traction metrics from the last batch review",
+    "kind": "work",
+    "who": [
+      "Hannah Liu",
+      "Tomoko Sato"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-2c7f3771",
+    "depth": "conversations/slack-ops-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Amara completed review of Plexora term sheet and flagged items on the liquidation preference",
+    "kind": "work",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-305d09ff",
+    "depth": "conversations/slack-deal-flow-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Amara Okafor circled back on Nexus Robotics materials and assessed their unit economics as stronger than initially thought",
+    "kind": "work",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-3440b5ac",
+    "depth": "conversations/slack-deal-flow-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Anna Petrov pulled the Cobalt Robotics deck from last quarter and noted comparable warehouse automation metrics",
+    "kind": "work",
+    "who": [
+      "Anna Petrov"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-37b780db",
+    "depth": "conversations/slack-deal-flow-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Ravi Gupta flagged NovaTech for priority review based on solid Series A metrics",
+    "kind": "work",
+    "who": [
+      "Ravi Gupta"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-3a54c492",
+    "depth": "conversations/slack-random-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Amara commented on cold brew restocking in the kitchen at 11pm",
+    "kind": "work",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-3ecfe556",
+    "depth": "meetings/mtg-0004",
+    "day": "2026-04-17",
+    "what": "Both confirmed attendance at the Latitude Summit 2026 in Lisbon",
+    "kind": "commitment",
+    "who": [
+      "user/amara-okafor",
+      "people/elena-rossi"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-3fb955b8",
+    "depth": "conversations/slack-random-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Amara shared that she watched a documentary the previous weekend and couldn't stop thinking about it",
+    "kind": "solo",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-4933a9d5",
+    "depth": "conversations/slack-random-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Mina messaged late working on the deck for the LP meeting and asked Priya about a Series A valuations chart",
+    "kind": "work",
+    "who": [
+      "Mina Kapoor",
+      "Priya Patel"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-4d71c373",
+    "depth": "conversations/slack-halfway-partners-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Amara recommended greenlighting the Prisma Health follow-on based on stronger-than-expected Q1 numbers and founder-friendly round terms",
+    "kind": "work",
+    "who": [
+      "amara-okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-4f301c03",
+    "depth": "conversations/slack-ops-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Anna finished final Q1 investor reporting reconciliations and queued everything for review before Monday send",
+    "kind": "work",
+    "who": [
+      "Anna Petrov"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-502fd58f",
+    "depth": "conversations/slack-ops-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Ravi completed Q1 compliance review and found all portfolio company filings current except Stratos, which is missing an updated cap table",
+    "kind": "work",
+    "who": [
+      "Ravi Gupta"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-5705d19f",
+    "depth": "conversations/slack-ops-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Marcus flagged inconsistencies in Q1 LP Report portfolio company metrics and noted Amara's sign-off is needed before distribution",
+    "kind": "work",
+    "who": [
+      "Marcus Reid"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-608768d0",
+    "depth": "meetings/mtg-0004",
+    "day": "2026-04-17",
+    "what": "Amara agreed to share Halfway Capital Q1 thesis update with Elena",
+    "kind": "commitment",
+    "who": [
+      "user/amara-okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-658db2c1",
+    "depth": "meetings/mtg-0004",
+    "day": "2026-04-17",
+    "what": "Elena agreed to send the Terraform Robotics deck and data room access by end of week",
+    "kind": "commitment",
+    "who": [
+      "people/elena-rossi"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-6d7b9fcd",
+    "depth": "cal/evt-0015",
+    "day": "2026-04-17",
+    "what": "Amara and Nadia held a sync meeting",
+    "kind": "meeting",
+    "who": [
+      "user/amara-okafor",
+      "people/nadia-freeman"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-70b68e45",
+    "depth": "conversations/slack-halfway-partners-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Marcus Reid flagged that the subject company's top 3 accounts represent ~40% of ARR, raising customer concentration risk as a concern before moving forward",
+    "kind": "work",
+    "who": [
+      "marcus-reid"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-79b7f198",
+    "depth": "conversations/slack-ops-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Ravi confirmed the wire went out for the Photon Bio bridge round",
+    "kind": "milestone",
+    "who": [
+      "Ravi Gupta"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-81682f5c",
+    "depth": "conversations/slack-deal-flow-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Ravi Gupta completed an updated market comp analysis for Nile and found their expansion metrics stronger than initially thought",
+    "kind": "work",
+    "who": [
+      "Ravi Gupta"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-82c10d95",
+    "depth": "conversations/slack-deal-flow-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Hannah Liu reported that the Quantum Circuits founder responded to last week's intro and expressed openness to a call",
+    "kind": "work",
+    "who": [
+      "Hannah Liu"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-83fd55a5",
+    "depth": "meetings/mtg-0006",
+    "day": "2026-04-17",
+    "what": "Helios Energy board formally approved the new director appointment at their board meeting",
+    "kind": "meeting",
+    "who": [
+      "companies/helios-energy"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-892afc63",
+    "depth": "conversations/slack-halfway-partners-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Amara got off a call with Terraform Industries and reported strong Q1 numbers and ahead-of-schedule carbon capture milestones, recommending greenlighting the follow-on",
+    "kind": "call",
+    "who": [
+      "amara-okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-8d3cc982",
+    "depth": "conversations/slack-ops-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Amara looped in Mina Kapoor to help sort out the signing workflow",
+    "kind": "work",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-9a6972ca",
+    "depth": "conversations/slack-ops-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Diego requested Mina Kapoor pull Q1 expense reports to reconcile line items before the partner meeting",
+    "kind": "work",
+    "who": [
+      "Diego Alvarez"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-9c0aea43",
+    "depth": "conversations/slack-halfway-partners-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Elena assessed Phantom AI as having strong technical chops but an underbaked go-to-market and agreed a deeper dive is warranted before committing to lead",
+    "kind": "work",
+    "who": [
+      "elena-rossi"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-a13962af",
+    "depth": "conversations/slack-ops-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Sarah looped in Anna Petrov for context on bank turnaround times related to a wire transfer issue",
+    "kind": "work",
+    "who": [
+      "Sarah Chen"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-b2417d36",
+    "depth": "conversations/slack-ops-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Mina processed Q1 LP reports and uploaded them to the shared drive",
+    "kind": "work",
+    "who": [
+      "Mina Kapoor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-b3406080",
+    "depth": "meetings/mtg-0004",
+    "day": "2026-04-17",
+    "what": "Elena flagged Terraform Robotics as a pre-Series A co-investment opportunity she is leading, seeking $8-10M",
+    "kind": "decision",
+    "who": [
+      "user/amara-okafor",
+      "people/elena-rossi"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-b39ac54a",
+    "depth": "cal/evt-0012",
+    "day": "2026-04-17",
+    "what": "Amara and Elena held a sync meeting",
+    "kind": "meeting",
+    "who": [
+      "user/amara-okafor",
+      "people/elena-rossi"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-ba769297",
+    "depth": "meetings/mtg-0004",
+    "day": "2026-04-17",
+    "what": "Elena offered to intro Amara to LPs she is meeting at the Latitude Summit",
+    "kind": "commitment",
+    "who": [
+      "people/elena-rossi"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-bb1da8fc",
+    "depth": "conversations/slack-ops-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Lena updated the portfolio dashboard with latest revenue numbers from Stratos and Mira Health",
+    "kind": "work",
+    "who": [
+      "Lena Park"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-bda620a5",
+    "depth": "meetings/mtg-0004",
+    "day": "2026-04-17",
+    "what": "Amara noted Halfway Capital had passed on Lumina Health's Series A but expressed interest in secondary opportunities",
+    "kind": "decision",
+    "who": [
+      "user/amara-okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-c4d8c55f",
+    "depth": "meetings/mtg-0004",
+    "day": "2026-04-17",
+    "what": "Amara mentioned Marcus Reid has been looking at spaces adjacent to construction automation and might have relevant diligence",
+    "kind": "meeting",
+    "who": [
+      "user/amara-okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-c515bef1",
+    "depth": "conversations/slack-ops-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Amara reviewed updated LP Agreement v3 and confirmed the carry allocation is correct, calling for signatures to move",
+    "kind": "decision",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-c5ca62fa",
+    "depth": "conversations/slack-halfway-partners-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Mina re-ran the numbers on the Qubit deal and concluded the valuation still feels stretched even with the government contract pipeline",
+    "kind": "solo",
+    "who": [
+      "mina-kapoor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-ca599826",
+    "depth": "conversations/slack-deal-flow-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Amara Okafor got off a call with Meridian Robotics founders and raised concerns about their aggressive Q3 enterprise sales ramp timeline",
+    "kind": "call",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-cf8e0347",
+    "depth": "cal/evt-0014",
+    "day": "2026-04-17",
+    "what": "Amara and Lena held a 30-minute sync meeting",
+    "kind": "meeting",
+    "who": [
+      "user/amara-okafor",
+      "people/lena-park"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-d4c633ad",
+    "depth": "meetings/mtg-0004",
+    "day": "2026-04-17",
+    "what": "Amara and Elena held their quarterly portfolio strategy check-in covering portfolio updates, co-investment opportunities, and summit plans",
+    "kind": "meeting",
+    "who": [
+      "user/amara-okafor",
+      "people/elena-rossi"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-dd2894b4",
+    "depth": "conversations/slack-halfway-partners-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Lena flagged movement in the Kollektiv deal after their lead investor reached out about accelerating the timeline",
+    "kind": "work",
+    "who": [
+      "lena-park"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-de8227da",
+    "depth": "conversations/slack-halfway-partners-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Kofi agreed on timeline concerns and committed to sync with Amara the following day to pressure-test revenue assumptions",
+    "kind": "work",
+    "who": [
+      "kofi-mensah"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-dfaccf02",
+    "depth": "cal/evt-0013",
+    "day": "2026-04-17",
+    "what": "Amara and Anna held a sync meeting",
+    "kind": "meeting",
+    "who": [
+      "user/amara-okafor",
+      "people/anna-petrov"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-e24075e5",
+    "depth": "conversations/slack-random-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Kofi recommended a ramen spot to Marcus as his go-to when in the neighborhood for meetings",
+    "kind": "work",
+    "who": [
+      "Kofi Mensah",
+      "Marcus Reid"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-e413b260",
+    "depth": "conversations/slack-halfway-partners-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Amara flagged intent to move forward with Cognito Labs term sheet early next week and asked team to raise concerns by EOD Friday",
+    "kind": "work",
+    "who": [
+      "amara-okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-e913f249",
+    "depth": "conversations/slack-random-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Nadia finished a 1000-piece puzzle she had been working on for three months, and her cat knocked half of it off the table",
+    "kind": "solo",
+    "who": [
+      "Nadia Freeman"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-ef60f304",
+    "depth": "conversations/slack-halfway-partners-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Amara reviewed the Archivo deck again and assessed their enterprise data governance approach as more differentiated than initially thought",
+    "kind": "solo",
+    "who": [
+      "amara-okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-f23e6bdb",
+    "depth": "conversations/slack-deal-flow-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Amara Okafor requested Jordan Park pull the latest retention numbers before their upcoming call",
+    "kind": "work",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-f34223e0",
+    "depth": "conversations/slack-deal-flow-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Amara Okafor looped in Nadia Freeman for her regulatory landscape insights and requested her compliance deep dive notes",
+    "kind": "work",
+    "who": [
+      "Amara Okafor",
+      "Nadia Freeman"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-f6cc9c90",
+    "depth": "conversations/slack-ops-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Anna reported receiving Q1 portfolio reporting responses from 7 out of 12 companies",
+    "kind": "work",
+    "who": [
+      "Anna Petrov"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-f710cef7",
+    "depth": "conversations/slack-ops-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Amara followed up on a wire timing issue and asked Kofi Mensah to confirm SVB processed the Meridian tranche before COB the prior day",
+    "kind": "work",
+    "who": [
+      "Amara Okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-fabd96ab",
+    "depth": "conversations/slack-deal-flow-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Mina Kapoor looped in Ravi Gupta for his context from seed round conversations and requested his notes on the founding team",
+    "kind": "work",
+    "who": [
+      "Mina Kapoor",
+      "Ravi Gupta"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-facba3f2",
+    "depth": "meetings/mtg-0004",
+    "day": "2026-04-17",
+    "what": "Amara agreed to loop in Marcus Reid for initial Terraform Robotics review",
+    "kind": "commitment",
+    "who": [
+      "user/amara-okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-17-fe6893b2",
+    "depth": "conversations/slack-deal-flow-2026-04-17",
+    "day": "2026-04-17",
+    "what": "Elena Rossi completed a call with Meridian Robotics and recommended moving them to partner review based on stronger-than-expected unit economics",
+    "kind": "work",
+    "who": [
+      "Elena Rossi"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-18-00781c63",
+    "depth": "meetings/mtg-0006",
+    "day": "2026-04-18",
+    "what": "Meridian Labs Q1 numbers came in strong, 40% above forecast",
+    "kind": "milestone",
+    "who": [
+      "companies/meridian-labs"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-18-1186fa15",
+    "depth": "meetings/mtg-0005",
+    "day": "2026-04-18",
+    "what": "Approved bridge extension terms discussed last month",
+    "kind": "decision",
+    "who": [
+      "user/amara-okafor",
+      "people/priya-patel"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-18-2f95f1a2",
+    "depth": "meetings/mtg-0006",
+    "day": "2026-04-18",
+    "what": "Kofi confirmed Amara will take the Helios Energy board seat effective May 1st, replacing the outgoing independent director",
+    "kind": "decision",
+    "who": [
+      "user/amara-okafor",
+      "people/kofi-mensah"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-18-3bdfb026",
+    "depth": "meetings/mtg-0006",
+    "day": "2026-04-18",
+    "what": "Kofi and Amara met to discuss the Helios Energy investment and upcoming board changes",
+    "kind": "meeting",
+    "who": [
+      "user/amara-okafor",
+      "people/kofi-mensah"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-18-49ab4cd2",
+    "depth": "meetings/mtg-0006",
+    "day": "2026-04-18",
+    "what": "Amara agreed to complete board onboarding paperwork by April 25th",
+    "kind": "commitment",
+    "who": [
+      "user/amara-okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-18-5617f776",
+    "depth": "meetings/mtg-0005",
+    "day": "2026-04-18",
+    "what": "Agreed to hold off on board observer seat until after next funding round",
+    "kind": "decision",
+    "who": [
+      "user/amara-okafor",
+      "people/priya-patel"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-18-5afc68eb",
+    "depth": "meetings/mtg-0005",
+    "day": "2026-04-18",
+    "what": "Priya agreed to send CarbonLoop intro to recruiting firms by end of week",
+    "kind": "commitment",
+    "who": [
+      "people/priya-patel"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-18-5d7ecec7",
+    "depth": "meetings/mtg-0005",
+    "day": "2026-04-18",
+    "what": "CarbonLoop reported Q1 revenue of $2.1M, ahead of the $1.8M January projection, with three Fortune 500 pilots converting to paid contracts",
+    "kind": "milestone",
+    "who": [
+      "companies/carbonloop"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-18-60276659",
+    "depth": "cal/evt-0017",
+    "day": "2026-04-18",
+    "what": "Nadia sync meeting took place",
+    "kind": "meeting",
+    "who": [
+      "user/amara-okafor",
+      "people/nadia-freeman"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-18-638d7789",
+    "depth": "meetings/mtg-0005",
+    "day": "2026-04-18",
+    "what": "Amara agreed to review updated CarbonLoop board deck before the May meeting",
+    "kind": "commitment",
+    "who": [
+      "user/amara-okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-18-67a7cd3d",
+    "depth": "cal/evt-0016",
+    "day": "2026-04-18",
+    "what": "Priya sync meeting held at Halfway HQ",
+    "kind": "meeting",
+    "who": [
+      "user/amara-okafor",
+      "people/priya-patel"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-18-7389056e",
+    "depth": "meetings/mtg-0005",
+    "day": "2026-04-18",
+    "what": "Priya agreed to draft a Series B positioning memo for CarbonLoop",
+    "kind": "commitment",
+    "who": [
+      "people/priya-patel"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-18-93fa5e3b",
+    "depth": "cal/evt-0019",
+    "day": "2026-04-18",
+    "what": "Diego sync meeting took place",
+    "kind": "meeting",
+    "who": [
+      "user/amara-okafor",
+      "people/diego-alvarez"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-18-967888ed",
+    "depth": "meetings/mtg-0005",
+    "day": "2026-04-18",
+    "what": "Green-lit CarbonLoop Series B prep timeline for Q3",
+    "kind": "decision",
+    "who": [
+      "user/amara-okafor",
+      "people/priya-patel"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-18-9be1dcc6",
+    "depth": "meetings/mtg-0006",
+    "day": "2026-04-18",
+    "what": "Kofi agreed to send over the updated cap table and most recent board deck",
+    "kind": "commitment",
+    "who": [
+      "people/kofi-mensah"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-18-c35ff3f4",
+    "depth": "cal/evt-0018",
+    "day": "2026-04-18",
+    "what": "Amara and Lena held a sync meeting",
+    "kind": "meeting",
+    "who": [
+      "user/amara-okafor",
+      "people/lena-park"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-18-d26eaf7f",
+    "depth": "meetings/mtg-0005",
+    "day": "2026-04-18",
+    "what": "Held portfolio review meeting covering CarbonLoop Q1 performance metrics, concerns, and decisions",
+    "kind": "meeting",
+    "who": [
+      "user/amara-okafor",
+      "people/priya-patel"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-18-fa462bc1",
+    "depth": "meetings/mtg-0005",
+    "day": "2026-04-18",
+    "what": "Priya flagged that CarbonLoop has only filled 2 of 5 senior engineering roles opened in Q4 due to a competitive climate tech hiring market",
+    "kind": "work",
+    "who": [
+      "people/priya-patel"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-18-faf6b9c2",
+    "depth": "meetings/mtg-0006",
+    "day": "2026-04-18",
+    "what": "Priya Patel flagged concerns about burn rate at one of the earlier-stage portfolio companies",
+    "kind": "work",
+    "who": [
+      "people/priya-patel"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-19-3d78e67b",
+    "depth": "meetings/mtg-0007",
+    "day": "2026-04-19",
+    "what": "Elena agreed to provide a competitive analysis memo before the next board meeting",
+    "kind": "commitment",
+    "who": [
+      "people/elena-rossi"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-19-439f25d5",
+    "depth": "meetings/mtg-0007",
+    "day": "2026-04-19",
+    "what": "Amara agreed to connect Elena Rossi with Marcus Reid for a potential customer intro in the logistics space",
+    "kind": "commitment",
+    "who": [
+      "user/amara-okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-19-5bf9aca4",
+    "depth": "meetings/mtg-0007",
+    "day": "2026-04-19",
+    "what": "Amara and Elena met to review Codex Robotics Q1 2026 performance metrics and strategic concerns",
+    "kind": "meeting",
+    "who": [
+      "user/amara-okafor",
+      "people/elena-rossi"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-19-6025b16a",
+    "depth": "meetings/mtg-0007",
+    "day": "2026-04-19",
+    "what": "Decided that Amara will continue board seat observation rights and attend Q2 board meeting in person",
+    "kind": "decision",
+    "who": [
+      "user/amara-okafor",
+      "people/elena-rossi"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-19-87854d6d",
+    "depth": "meetings/mtg-0007",
+    "day": "2026-04-19",
+    "what": "Amara flagged that Codex Robotics sales cycle lengthened from 68 to 89 days average",
+    "kind": "meeting",
+    "who": [
+      "user/amara-okafor"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-19-987ac270",
+    "depth": "meetings/mtg-0007",
+    "day": "2026-04-19",
+    "what": "Elena agreed to send updated cap table and bridge round terms by April 25th",
+    "kind": "commitment",
+    "who": [
+      "people/elena-rossi"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-19-d00b5afa",
+    "depth": "meetings/mtg-0007",
+    "day": "2026-04-19",
+    "what": "Halfway Capital decided to participate in the upcoming bridge round maintaining pro-rata rights",
+    "kind": "decision",
+    "who": [
+      "user/amara-okafor",
+      "people/elena-rossi"
+    ]
+  },
+  {
+    "slug": "life/events/2026-04-19-d29c661d",
+    "depth": "meetings/mtg-0007",
+    "day": "2026-04-19",
+    "what": "Elena walked through Q1 numbers: ARR at $2.8M (34% QoQ growth), NRR at 118%, customer count grew from 23 to 31 enterprise accounts",
+    "kind": "work",
+    "who": [
+      "people/elena-rossi"
+    ]
+  }
+]
