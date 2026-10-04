@@ -1,0 +1,8 @@
+A1 published knobs_hash 0f49f9c6e3de0dad recomputed 0f49f9c6e3de0dad MATCH | differences at 109b992: {'keyword_arm_confidence_floor': ('<absent>', None), 'metadata_boost_gate': ('<absent>', 'always'), 'relational_rerank_pin': ('<absent>', 0)}
+A2 published knobs_hash 6ae9bd8d4e0b88f4 recomputed 6ae9bd8d4e0b88f4 MATCH | differences at 109b992: {'keyword_arm_confidence_floor': ('<absent>', None), 'metadata_boost_gate': ('<absent>', 'always'), 'relational_rerank_pin': ('<absent>', 0)}
+A3 published knobs_hash 28ade59a7d3bb01a recomputed 28ade59a7d3bb01a MATCH | differences at 109b992: {'keyword_arm_confidence_floor': ('<absent>', None), 'metadata_boost_gate': ('<absent>', 'always'), 'relational_rerank_pin': ('<absent>', 0)}
+A4 published knobs_hash e16bbfd4dfb4dce6 recomputed e16bbfd4dfb4dce6 MATCH | differences at 109b992: {'keyword_arm_confidence_floor': ('<absent>', None), 'metadata_boost_gate': ('<absent>', 'always'), 'relational_rerank_pin': ('<absent>', 0)}
+A3p published knobs_hash d0a12840688512b9 recomputed d0a12840688512b9 MATCH | differences at 109b992: {'keyword_arm_confidence_floor': ('<absent>', None), 'metadata_boost_gate': ('<absent>', 'always'), 'relational_rerank_pin': ('<absent>', 0)}
+A3pR published knobs_hash 4e0ee9ff84645d38 recomputed 4e0ee9ff84645d38 MATCH | differences at 109b992: {'keyword_arm_confidence_floor': ('<absent>', None), 'metadata_boost_gate': ('<absent>', 'always'), 'relational_rerank_pin': ('<absent>', 0)}
+TMXR published knobs_hash bd3a9082e104a961 recomputed bd3a9082e104a961 MATCH | differences at 109b992: {}
+FINAL published knobs_hash a8a2e8818b34e328 recomputed a8a2e8818b34e328 MATCH | differences at 109b992: {}
