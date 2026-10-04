@@ -2,7 +2,7 @@
  * memory-qa arm runner: one gbrain build, one benchmark split, one process.
  *
  *   bun eval/runner/memory-qa/run.ts --benchmark locomo|lme-s|beam-100k|beam-1m|fixture
- *     [--split dev] [--gbrain <checkout>[@ref]] [--config key=value]... [--pin key=value]...
+ *     [--split dev | --split sealed --decision-id <id> --purpose <text> (custodian; GBRAIN_EVALS_CUSTODY_LOG)] [--gbrain <checkout>[@ref]] [--config key=value]... [--pin key=value]...
  *     [--embed hash|real] [--embedding-model provider:model --embedding-dims N]
  *     [--categories a,b] [--limit N] [--seed N] [--top-k 10] [--shard i/n]
  *     [--facts conversation] [--qa reader|think --qa-context sessions|facts]
@@ -44,12 +44,15 @@ import { EmbeddingCache, makeCachingTransport } from '../longmemeval-cache.ts';
 import { ndcgAtK, recallAllAtK, recallAnyAtK, uniqueInOrder, percentile } from '../metrics.ts';
 import { loadCorpus, occurrenceId, renderSessionPage, type Corpus, type MemoryQuestion, type Session } from './corpus.ts';
 import { ChatClient, DEFAULT_JUDGE, DEFAULT_READER, factsReaderPrompt, judgeResponse, packSessions, readerPrompt, repeatsTrap, approxTokens, unresolvedRelativeTime, type SavedFact } from './qa.ts';
-import { devConversations } from '../decisions/splits.ts';
+import { devConversations, loadSplit } from '../decisions/splits.ts';
+import { appendAccessLog } from '../sealed-confirmation-lib.ts';
 import { decideError, DecideError, renderOperatorMessage } from '../decisions/errors.ts';
 
 export interface RunArgs {
   benchmark: string;
-  split: 'dev';
+  split: 'dev' | 'sealed';
+  /** Custodian sealed runs: recorded in the access log (GBRAIN_EVALS_CUSTODY_LOG) before any sealed question is read. */
+  custody?: { decisionId: string; purpose: string; log: string };
   gbrain: string | null;
   config: Record<string, string>;
   pins: Record<string, string>;
@@ -121,7 +124,12 @@ export function parseRunArgs(argv: string[]): RunArgs {
   const output = one('--output');
   if (!output) throw new Error('--output <dir> is required');
   const split = one('--split') ?? 'dev';
-  if (split !== 'dev') throw decideError({ code: 'SEALED_SOURCE_IN_DEV', message: `--split ${split} is not available to dev runs`,
+  let custody: RunArgs['custody'];
+  if (split === 'sealed') {
+    const decisionId = one('--decision-id'), purpose = one('--purpose'), log = process.env.GBRAIN_EVALS_CUSTODY_LOG;
+    if (!decisionId || !purpose || !log) throw new Error('--split sealed is custodian-only and needs --decision-id, --purpose and GBRAIN_EVALS_CUSTODY_LOG (the custodian access-log path)');
+    custody = { decisionId, purpose, log };
+  } else if (split !== 'dev') throw decideError({ code: 'SEALED_SOURCE_IN_DEV', message: `--split ${split} is not available to dev runs`,
     why: 'sealed conversations open only through the custodian at a preregistered decision', fix: { next: 'ask_user', user_message: 'request a held-out run from the custodian with `bun run eval:decide request`' } });
   const shardRaw = one('--shard') ?? '0/1';
   const [si, sn] = shardRaw.split('/').map(Number);
@@ -129,7 +137,7 @@ export function parseRunArgs(argv: string[]): RunArgs {
   const embed = (one('--embed') ?? (benchmark === 'fixture' ? 'hash' : 'real')) as 'hash' | 'real';
   if (!['hash', 'real'].includes(embed)) throw new Error('--embed must be hash or real');
   return {
-    benchmark, split: 'dev', gbrain: gbrainSpecFrom(argv), config: kv(many('--config'), '--config'),
+    benchmark, split: split as 'dev' | 'sealed', custody, gbrain: gbrainSpecFrom(argv), config: kv(many('--config'), '--config'),
     pins: { ...DEFAULT_PINS, ...kv(many('--pin'), '--pin') }, embed,
     embeddingModel: one('--embedding-model') ?? 'openai:text-embedding-3-large',
     embeddingDims: Number(one('--embedding-dims') ?? 1536),
@@ -200,7 +208,11 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   mkdirSync(a.output, { recursive: true });
   const gut = resolveGbrainUnderTest(a.gbrain);
   const corpus = loadCorpus(a.benchmark);
-  const allowed = devConversations(a.benchmark);
+  if (a.split === 'sealed') {
+    if (!a.custody) throw new Error('sealed memory-qa runs need custody (decision id, purpose, access log)');
+    appendAccessLog(a.custody.log, { action: 'open', purpose: `memory-qa ${a.benchmark} sealed: ${a.custody.purpose}`, decision_id: a.custody.decisionId, labels_sha256: 'public-split-file', run_sha256: null });
+  }
+  const allowed = a.split === 'sealed' ? new Set(loadSplit(a.benchmark).sealed) : devConversations(a.benchmark);
   let questions = corpus.questions.filter(q => !allowed || allowed.has(q.conversation));
   if (a.categories) questions = questions.filter(q => a.categories!.includes(q.category));
   questions = selectQuestions(questions, a.limit, a.seed);
