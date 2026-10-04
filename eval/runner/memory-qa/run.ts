@@ -196,7 +196,9 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
     gateway.configureGateway({ embedding_model: a.embeddingModel, embedding_dimensions: a.embeddingDims, env: process.env });
     gateway.__setEmbedTransportForTests(async (params: { values: string[] }) => ({ embeddings: params.values.map(v => hashEmbed(v, a.embeddingDims)), values: params.values, warnings: [], usage: { tokens: 0 } }));
   } else {
-    const estimate = a.benchmark === 'lme-s' ? 6 : a.benchmark === 'beam-1m' ? 5 : 1;
+    const perQuestion: Record<string, number> = { 'lme-s': 0.012, locomo: 0.002, 'beam-100k': 0.01, 'beam-1m': 0.03, fixture: 0 };
+    const mine = questions.filter(q => myConvs.includes(q.conversation)).length;
+    const estimate = Math.max(0.05, Math.round((perQuestion[a.benchmark] ?? 0.02) * mine * 100) / 100);
     try { requirePaidArm(a.argv, { arm: `memory-qa ${a.benchmark}`, estimateUsd: estimate }); }
     catch (e) {
       throw decideError({ code: 'PAID_FLAGS_MISSING', message: (e as Error).message, why: 'real embeddings call a paid provider, and every paid request is reserved in the budget ledger first',
