@@ -53,6 +53,21 @@ import { BudgetExceededError, budgetOptionsFrom, receiptCost, startPaidRun, type
 import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
 import { searchObservation } from './retrieval-pins.ts';
 
+/**
+ * Extra engine config pins for a feature arm, from `GBRAIN_EVAL_SEARCH_PINS="key=value,key=value"`
+ * (for example `search.relational_planner=true`). Applied after RELATIONAL_PINS, checked by the
+ * config readback and recorded in the receipt. A build that does not know a key ignores it.
+ */
+export function evalSearchPins(raw: string | undefined = process.env.GBRAIN_EVAL_SEARCH_PINS): Record<string, string> {
+  const pins: Record<string, string> = {};
+  for (const part of (raw ?? '').split(',').map(x => x.trim()).filter(Boolean)) {
+    const eq = part.indexOf('=');
+    if (eq <= 0 || !/^search\.[a-z0-9_.]+$/.test(part.slice(0, eq))) throw new Error(`GBRAIN_EVAL_SEARCH_PINS: "${part}" is not search.<key>=<value>`);
+    pins[part.slice(0, eq)] = part.slice(eq + 1);
+  }
+  return pins;
+}
+
 export const RELATIONAL_LIMIT = 5;
 export const RELATIONAL_EMBEDDER = { model: 'openai:text-embedding-3-large', dimensions: 1536 } as const;
 export const RELATIONAL_SEEDS = [1, 2, 3] as const;
@@ -352,6 +367,7 @@ export async function runSharedIndexPairs(o: {
   const search = o.search ?? product.hybridSearch;
   const limit = o.limit ?? RELATIONAL_LIMIT;
   const log = o.log ?? (() => {});
+  const pins = { ...RELATIONAL_PINS, ...evalSearchPins() };
   const rows: PairedRow[] = [];
   const indices: Array<Record<string, unknown>> = [];
   const embeddings = new Map<string, Float32Array>();
@@ -370,7 +386,7 @@ export async function runSharedIndexPairs(o: {
       const shuffled = shuffle(o.pages, seed);
       const indexId = randomUUID();
       const adapter = new GbrainInlineAdapter({
-        topK: limit, extract: true, searchConfig: { ...RELATIONAL_PINS },
+        topK: limit, extract: true, searchConfig: { ...pins },
         embeddingModel: RELATIONAL_EMBEDDER.model, embeddingDimensions: RELATIONAL_EMBEDDER.dimensions,
         expectStubTransport: stub, embed: embed !== 'keyword', ...(product.root ? { productRoot: product.root } : {}),
       });
@@ -379,7 +395,7 @@ export async function runSharedIndexPairs(o: {
         state = await adapter.init(shuffled.map(sanitizePage), { name: 'relational-shared-index' });
         const engine = adapter.engineOf(state);
         const readback: Record<string, string | null> = {};
-        for (const [key, value] of Object.entries(RELATIONAL_PINS)) {
+        for (const [key, value] of Object.entries(pins)) {
           readback[key] = await engine.getConfig(key);
           if (readback[key] !== value) throw new ObservationError('harness', `config readback mismatch: ${key}`);
         }
@@ -586,7 +602,7 @@ export async function runRelationalAB(
     errors: summary.errors, publishable: valid && !stub && !incompleteRecipe,
     resolved_config: {
       embedder: RELATIONAL_EMBEDDER, stub_embed: stub, ingestion_seeds: seeds,
-      common_search_pins: RELATIONAL_PINS, relational_retrieval: { off: false, on: true },
+      common_search_pins: { ...RELATIONAL_PINS, ...evalSearchPins() }, relational_retrieval: { off: false, on: true },
       query_embedding: 'embedQuery once per distinct question, identical bytes shared across arms and repeats',
       product_limit: RELATIONAL_LIMIT, ranking_unit: 'chunk rows', scoring_unit: 'first occurrence of each page, no refill',
       precision_denominator: RELATIONAL_LIMIT, corpus_pages: pages.length,

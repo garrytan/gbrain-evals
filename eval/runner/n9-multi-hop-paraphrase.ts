@@ -46,7 +46,7 @@ import {
 } from '../generators/n9-multihop-paraphrase-gen.ts';
 import {
   RELATIONAL_EMBEDDER, RELATIONAL_LIMIT, RELATIONAL_PINS, RELATIONAL_SEEDS, loadRelationalProduct, paraphraseQueries,
-  runSharedIndexPairs, searchRelationalPair, summarizeRelationalRows,
+  runSharedIndexPairs, searchRelationalPair, summarizeRelationalRows, evalSearchPins,
   type ArmResult, type EmbedMode, type PairedRow, type RelationalProduct, type RelationalSearch, type SharedIndexQuery,
 } from './relational-ab.ts';
 import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
@@ -517,7 +517,7 @@ async function runN9Inner(options: N9Options, paid: boolean): Promise<N9Result> 
       embedder: paid ? RELATIONAL_EMBEDDER : null,
       engine: 'pglite-in-memory, one index per ingestion seed (import plus extract links and timeline)',
       ingestion_seeds: seeds,
-      common_search_pins: RELATIONAL_PINS,
+      common_search_pins: { ...RELATIONAL_PINS, ...evalSearchPins() },
       relational_retrieval: { off: false, on: true, depth: 2 },
       composed_k_rows: N9_K,
       one_hop_k_rows: paid ? null : RELATIONAL_LIMIT,
