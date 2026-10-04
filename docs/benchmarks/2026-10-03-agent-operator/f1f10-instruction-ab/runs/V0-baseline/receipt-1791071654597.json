@@ -1,0 +1,92 @@
+{
+  "schema": "cat40-receipt-v1",
+  "version": "cat40-v1",
+  "judge_prompt": "cat40-claims-v1",
+  "judge": null,
+  "world": {
+    "path": "eval/data/model-ladder-v1/world.json",
+    "scale": "v1",
+    "digest": "df8c95e71b17beab176851e3b15daaea9b8719fb009ba50e02cfc68243009a20",
+    "seed": 20261002,
+    "docs": 3973,
+    "tasks": 50
+  },
+  "evals_commit": "2c9b09cfb3b61d4cc215a0d58af2f5f2564601b7",
+  "evals_dirty": true,
+  "gbrain": {
+    "slot_ref": null,
+    "label": "V0-baseline",
+    "commit": "7d16702bd4350a1ce4d53de0d38a1ac6668976ea",
+    "version": "0.60.38.0",
+    "tree": "639e578960994dcda95e1255d109721da70835b2",
+    "verified": {
+      "copy_tree": "639e578960994dcda95e1255d109721da70835b2",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.38.0",
+      "cli_version_matches": true
+    },
+    "surface": "starter",
+    "instructions_override": {
+      "file": "docs/benchmarks/2026-10-03-agent-operator/f1f10-instruction-ab/variants/V0-baseline.txt",
+      "sha256": "a58f9a3d87967cbba926058e675d5977fb71042830af016e6a1a54629003a1f3"
+    },
+    "served_instructions_sha256": "53c8b429463a109dcd65d59621aa5a84a3b0385259f1c3b49cfd12f33a4cd657",
+    "operator_analyze": true,
+    "serve_boot_timeout_s": 0,
+    "staged_build": null
+  },
+  "slot_builds": [],
+  "models": [
+    "gpt-5.4-mini"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "families": [
+    "A",
+    "B",
+    "C",
+    "E",
+    "F"
+  ],
+  "repeats": 2,
+  "max_tool_chars": 100000000,
+  "argv": [
+    "--models",
+    "gpt-5.4-mini",
+    "--arms",
+    "gbrain",
+    "--gbrain-label",
+    "V0-baseline",
+    "--max-tool-chars",
+    "100000000",
+    "--transcripts",
+    "--slots",
+    "5",
+    "--gbrain-repo",
+    "<gbrain>",
+    "--gbrain-ref",
+    "7d16702bd4350a1ce4d53de0d38a1ac6668976ea",
+    "--gbrain-instructions-file",
+    "docs/benchmarks/2026-10-03-agent-operator/f1f10-instruction-ab/variants/V0-baseline.txt",
+    "--repeat",
+    "2",
+    "--budget-usd",
+    "6",
+    "--concurrency",
+    "6",
+    "--judge",
+    "none",
+    "--out",
+    "eval/reports/cat40/instr-ab/V0-baseline"
+  ],
+  "cost": {
+    "usd": 2.083386,
+    "input_tokens": 8622565,
+    "output_tokens": 42301,
+    "basis": "budget ledger cat40-model-ladder-2026-10-03T23-43-08-283Z-e28c1811: 1218 paid requests, 0 charged at their reservation because usage was unavailable"
+  },
+  "finished_at": "2026-10-03T23:54:14.596Z"
+}

@@ -1,0 +1,138 @@
+[
+  {
+    "name": "remember",
+    "description": "MEMORY VERB (v1): save one fact to durable agent memory — the protocol write verb. provenance is REQUIRED (free text, e.g. \"conversation 2026-06-12\", \"user said in chat\", \"import: notes.md\"). Set `entity` whenever the fact is about a specific person/company/project — entity-scoped recall will not find it otherwise. ttl accepts duration shorthand (\"30d\", \"12h\") or an absolute ISO 8601 timestamp; ISO-8601 durations like \"P30D\" are rejected with a fix. visibility defaults to \"world\" (readable by every agent connected to this brain; pass \"private\" for local-CLI-only facts). Response: branch on `status` (inserted|duplicate|superseded), never on `status_text` (human rendering only). On duplicate, `id` is the EXISTING fact's id. For bulk extraction from a raw transcript use extract_facts instead."
+  },
+  {
+    "name": "entity",
+    "description": "MEMORY VERB (v1): inspect ONE known person/company/project card — zero LLM calls, sub-100ms. Resolution: alias > exact title > slug-suffix; ties break on most-recently-touched. NEVER errors on a miss: returns found:false plus near-miss suggestions with create_safety hints (exists | probable | unknown — whether writing a new page would duplicate). Routing: for facts/snippets retrieval use recall; for broad questions needing reasoning use synthesize (expensive)."
+  },
+  {
+    "name": "synthesize",
+    "description": "[EXPENSIVE / SLOW — makes LLM calls, seconds-to-minutes latency, costs money] MEMORY VERB (v1): answer a broad question using cross-page LLM reasoning with citations and gap analysis. Prefer recall (facts/snippets) or entity (one known card, zero LLM) for lookups — use synthesize only when the answer requires combining evidence across pages. Response carries a best-effort cost block (model, tokens, usd_estimate) plus compose-status fields (synthesis_status, pages_gathered, takes_gathered, warnings); when the LLM compose step fails but retrieval succeeded, `answer` degrades to an extractive digest of retrieved pages (synthesis_status: \"extractive_fallback\") instead of an error."
+  },
+  {
+    "name": "forget",
+    "description": "MEMORY VERB (v1): expire a remembered fact by id — the protocol delete verb. `id` is the opaque string id returned by remember and recall (facts[].fact_id) — never a page slug. Idempotent: forgetting an already-expired fact returns expired:false (success), unknown id returns a not_found error. The fact is expired (audit trail kept), not deleted."
+  },
+  {
+    "name": "get_page",
+    "description": "Read a page by slug (supports optional fuzzy matching). Slug aliases left by renames redirect to the canonical page in the source that owns the alias (archived sources excluded); a redirected read reports `resolved_slug`. To edit a page, pass include_content: true — the returned `content` field is the canonical full markdown (frontmatter + body + timeline sentinel); edit THAT and pass it back to put_page to round-trip losslessly. Reassembling compiled_truth/timeline by hand risks dropping sections. Soft-deleted pages are hidden by default; pass include_deleted: true to surface them with deleted_at populated (the soft-delete recovery window). `timeline` is only the markdown section after the timeline sentinel; entries written by add_timeline_entry or extraction live in timeline rows, which include_timeline_entries: true returns as `timeline_entries` (the same rows get_timeline returns)."
+  },
+  {
+    "name": "put_page",
+    "description": "Replace a complete canonical Markdown page. Read get_page with include_content:true and pass its revision as expected_revision; force explicitly overwrites the current revision. Omitting both permits creation only. Retain a UUID request_id and repeat identical arguments after transport failure or a pending receipt. Content, tags, sanitized text projections, versions and the committed receipt publish together; embedding and optional Git effects have separate status. Remote callers preserve protected facts/takes fences; automatic graph links are skipped for untrusted writes. A stdio `gbrain serve` sweeps them at startup + on idle; `gbrain serve --http` does not self-sweep — run `gbrain sweep --once` or use trusted local capture/put_page for inline link extraction. Remote callers receive write_through.warning when no repo is configured. For file input use gbrain capture --file PATH --slug SLUG."
+  },
+  {
+    "name": "list_pages",
+    "description": "List pages with optional filters. For 'what's recent / what did I touch this week' questions, use list_pages with sort=updated_desc instead of semantic search. Default 50 rows; remote callers are capped at 100 (local CLI callers' explicit limits are honored). A result with exactly `limit` rows may be truncated. For exhaustive listing, page with updated_after=<last row's updated_at_iso> + updated_after_slug=<last row's slug> until a page returns fewer rows than the limit (the keyset forces sort=updated_asc; a bare updated_after cursor skips rows sharing the cursor timestamp)."
+  },
+  {
+    "name": "capture",
+    "description": "Capture a quick note into the brain — the \"just remember this\" write. Auto-derives a stable inbox/ slug from the content date + hash (recapturing identical text is idempotent), merges frontmatter, refuses binary/empty payloads, then delegates to put_page (inheriting its fences and provenance stamping). Prefer capture for quick notes and put_page when you need to control the slug, type, or an existing page's content. For structured facts about entities, prefer remember."
+  },
+  {
+    "name": "edit_page",
+    "description": "Change part of an existing page without resending it: prefer this over put_page for small changes to large pages. Read get_page with include_content:true and pass its revision as expected_revision. Each edit replaces old_text with new_text; edits apply in order, each to the text the previous edit produced, and each old_text must match exactly once in that content. Protected takes and facts sections never match (use the takes_* operations or remember/forget). All edits publish together or none do, through the same receipts, fences and write-through as put_page. Returns the new revision and a unified diff of your view (at most 8 KB). Refusals name the edit: edit_no_match, edit_ambiguous_match (with match_count), edit_protected_span, edit_invalid; a stale revision returns revision_conflict with current_revision. Retain request_id and repeat identical arguments after a pending receipt."
+  },
+  {
+    "name": "get_write_request",
+    "description": "Read your durable write receipt by request_id. Requires write scope and this operation in the current grant. Foreign, missing, and no-longer-accessible requests return the same not_found error; private journal input and recovery bytes are never returned."
+  },
+  {
+    "name": "list_write_requests",
+    "description": "List your currently authorized write receipts in one source, newest first. Useful when an acknowledgment was lost. Results and pagination exclude other principals and inaccessible targets; no private payloads or cross-principal queue counts are exposed."
+  },
+  {
+    "name": "cancel_write_request",
+    "description": "Cancel your accepted write before publication starts. Returns the actual receipt: running/recovering or already-terminal requests may remain unchanged. Cancellation cannot undo published bytes or a committed fact withdrawal."
+  },
+  {
+    "name": "search",
+    "description": "Cheap hybrid search (vector + keyword + RRF) with no LLM expansion. Best for exact known tokens, names, and structured-field lookups. A populated result set is NOT proof of coverage — for concept / synonym / landscape questions use `query` (adds multi-query expansion); for exhaustive enumeration use list_pages pagination. Pass `return_unit` ('window' / 'section' / 'page') for whole evidence instead of chunks; conversation pages already come back whole by default (return_unit 'auto'; 'chunk' opts out). For personal/emotional questions, prefer get_recent_salience or find_anomalies — they surface activity bursts without needing a search term. For code-symbol questions (callers, callees, definitions, blast radius), use code_callers / code_callees / code_def / code_refs instead — those return structural graph data, not text chunks. For agent memory reads (saved facts + budget-packed retrieval), prefer the `recall` verb."
+  },
+  {
+    "name": "query",
+    "description": "Hybrid search with vector + keyword + multi-query expansion. Prefer `query` for concept / synonym / landscape questions ('all the X that do Y', 'the landscape of Z') — expansion recovers synonym- and outcome-phrased matches a single embedding misses. Still top-K, and the default count when `limit` is omitted depends on the configured search mode (10 conservative / 25 balanced / 50 tokenmax — see the `limit` param description); pass `limit` explicitly for a stable count regardless of mode. When the answer needs the surrounding conversation or section, pass `return_unit` ('page' / 'section' / 'window') to get that evidence in one call instead of get_page per hit; conversation pages already come back whole by default (return_unit 'auto'; 'chunk' opts out). For exhaustive enumeration use list_pages; for exact known tokens `search` is cheaper (no expansion LLM call). For personal/emotional questions ('what's going on with me', 'anything notable', 'how am I feeling'), prefer get_recent_salience or find_anomalies (raw transcripts are owner-only: `gbrain transcripts recent` on the brain host). Semantic search returns polished pages and misses recent activity bursts. Do NOT assume words like 'crazy', 'notable', or 'big' mean impressive — they often mean difficult or emotionally charged. Needs an embedding key for semantic recall and a chat-model key for expansion; without them it runs keyword-only and a degraded_recall notice says so (a thin result is then not proof of absence)."
+  },
+  {
+    "name": "get_backlinks",
+    "description": "List a page's incoming links (who points at it). Use when finding everything that mentions or relates to an entity. Needs read scope. On page_not_found: resolve the slug with resolve_slugs."
+  },
+  {
+    "name": "list_link_sources",
+    "description": "List distinct link_source provenances in the brain with edge counts (e.g. citation-graph, manual, markdown)"
+  },
+  {
+    "name": "traverse_graph",
+    "description": "Traverse link graph from a page. Remote callers default to bidirectional edges (GraphPath[]) at depth 2 (pass depth explicitly for deeper walks); trusted local no-filter callers keep the legacy node shape at depth 5."
+  },
+  {
+    "name": "add_timeline_entry",
+    "description": "Append an entry to the canonical Markdown timeline and structured timeline store in one committed write. Exact replay changes neither store."
+  },
+  {
+    "name": "list_skills",
+    "description": "List the skills this agent's brain publishes. A skill is a named prose instruction set (NOT executable code) that teaches you how to do a task using this server's other tools. Returns a flat catalog — each entry has a name, one-line description, triggers (phrasings that should invoke it), and `usable_tools` / `unavailable_tools` (which tools the skill calls that you CAN vs CANNOT call given this server + your access). To actually use a skill, call get_skill with its name, read the returned prose, and follow it — calling the correspondingly-named tools on THIS server. The response also carries an `instructions` envelope explaining this protocol. On a shared brain, use schema_version:2 for source-qualified identities, immutable revisions, pagination and complete declared requirements. Only authorized sources and owner-approved file classes are visible; pre-migration servers retain their legacy prose catalog. Read-scope; published only when the brain owner enabled mcp.publish_skills."
+  },
+  {
+    "name": "get_skill",
+    "description": "Fetch one skill's full instructions by name. Returns `{name, frontmatter (sanitized), body, usable_tools, unavailable_tools, client_guidance}`. The `body` is prose — read it as your operating instructions for this task, and when it says to search / store / look something up, call the same-named MCP tool on THIS server. There is nothing to 'execute' — the value is the instructions plus your tool calls back to this server. Tools listed in `unavailable_tools` won't work for you (not exposed here, or beyond your access) — adapt accordingly. Size-capped; read-scope; requires the owner to have enabled mcp.publish_skills. On a shared brain, pass schema_version:2 with qualified_id and revision from discovery to fetch exact instructions and their approved dependency manifest. get_skill_asset retrieves declared files from that revision as data; downloading never grants execution or tool permissions."
+  },
+  {
+    "name": "list_brain_skillpack",
+    "description": "List brain-resident skillpacks this brain ships (per-source). Returns each pack's skills, one-line descriptions, the schema pack it targets + whether that matches this brain, and a git scaffold spec. Read-only; gated by mcp.publish_skills. After orienting, call this and ask the user whether to install any pack the brain offers (gbrain skillpack scaffold <spec>)."
+  },
+  {
+    "name": "get_skill_asset",
+    "description": "Read a bounded, owner-approved file from an exact sealed skill revision. Does not execute downloaded bytes."
+  },
+  {
+    "name": "resolve_slugs",
+    "description": "Fuzzy-match a partial name or slug to existing page slugs. Use when a slug is uncertain before get_page, links or tags. Needs read scope. On no matches: search for the name instead."
+  },
+  {
+    "name": "get_ingest_log",
+    "description": "List recent ingestion events (what was imported, from where, which pages changed). Use when checking whether a source was already ingested. Needs read scope."
+  },
+  {
+    "name": "cancel_job",
+    "description": "Cancel a waiting, active, or delayed job. Agent-scoped tokens (no admin) can cancel only jobs they own."
+  },
+  {
+    "name": "submit_agent",
+    "description": "Submit an LLM agent job that the worker dispatches via the gateway-native tool loop. Requires the `agent` OAuth scope. Tools, source, slug prefixes, max concurrency, and daily budget are bound at OAuth client registration time."
+  },
+  {
+    "name": "get_agent_job",
+    "description": "Poll an agent job submitted via submit_agent. Returns a trimmed status view (id, status, timestamps, error_text, result) plus queue_position (waiting jobs ahead in claim order; 0 = next) while the job is still waiting. Requires the `agent` OAuth scope; only jobs owned by the calling client are visible."
+  },
+  {
+    "name": "whoami",
+    "description": "Introspect the calling identity. Returns one of three transport shapes: {transport: \"oauth\", client_id, client_name, scopes, expires_at, source_id, federated_read}, {transport: \"legacy\", token_name, scopes, expires_at: null}, or {transport: \"local\", scopes: []}, or {transport: \"stdio\", scopes: []} for the auth-less stdio MCP pipe. Throws unknown_transport when the context is ambiguous (remote=true without auth and no transport marker) (fail-closed). Every shape also carries `readiness` (the setup gaps of this install, each with its fix); stdio scopes are the grant of the verified registration."
+  },
+  {
+    "name": "request_tools",
+    "description": "Discover this brain's tool catalog and optionally unlock a wider tool surface for your client. No arguments → the catalog visible to YOUR credentials, grouped by area (tool names + one-line summaries). {tools: [\"name\", ...]} → full read-only schemas for the visible subset of those names (unknown/hidden names are silently omitted). {surface: \"verbs\"|\"starter\"|\"full\"} → persist that tool surface for this client (bounded by the server ceiling; denied when an operator pinned the surface; ~5 changes/hour), then re-issue tools/list to see the new catalog."
+  },
+  {
+    "name": "get_recent_salience",
+    "description": "Returns readable pages recently touched and ranked by activity salience and recency. Unrestricted local reads include deterministic 0..1 emotional_weight, take density, and recency decay. Holder-restricted reads count only permitted active takes, use zero emotional_weight, and select recent pages by updated_at; unrestricted local reads retain take-driven touches. Use this when the user asks what's been going on, what's notable, what's hot, anything crazy happening, or for any open-ended 'current state' question about themselves or their work. Do NOT run a semantic search for these — salience surfaces what's unusual without needing a search term."
+  },
+  {
+    "name": "find_anomalies",
+    "description": "Returns statistical anomalies in recent page activity, grouped by cohort (tag or type). Use this for questions about what stood out, what's unusual, or what changed recently. Returns explanatory cohorts (e.g. '15 pages tagged wedding touched on 2026-04-28, baseline 0.3/day') so you can speak about patterns the user wouldn't have searched for. Cohort kinds: tag, type. Year cohort is deferred to a later release."
+  },
+  {
+    "name": "recall",
+    "description": "MEMORY VERB (v1): retrieve saved facts/snippets — the protocol read verb. Filters hot-memory facts by entity / since / session_id; pass `query` to ALSO run hybrid search over pages (results[] arm); pass `budget_tokens` for server-side packing (response reports budget_used + dropped_count — never trims client-side). Remote callers see visibility=world facts only. Routing: for ONE known person/company/project card use `entity` (zero LLM); for broad questions needing reasoning use `synthesize` (expensive). Branch on structured fields (status/kind/evidence), never on prose. Every response carries protocol_version."
+  },
+  {
+    "name": "context_pack",
+    "description": "MEMORY VERB (v1): budget-packed session-boundary bundle for a set of standing entities — entity cards + open threads + hot facts, zero-LLM, sub-second. Call at session start (warm cold context) and after compaction (rehydrate what the summary lost). WORLD-ONLY by default; pass include_private (honored for LOCAL trusted callers only) to widen all arms. budget_tokens packs server-side (response reports budget_used + dropped_count; cards pack first, then facts). Branch on structured fields, never prose. protocol_version rides every response."
+  },
+  {
+    "name": "delta",
+    "description": "MEMORY VERB (v1): \"what changed since T\" for heartbeats — pages updated after `since` + hot facts newer than `since` + open-thread events after `since`, zero-LLM. Lets a periodic wake maintain warm state in O(changes) instead of re-deriving. Optionally scope thread deltas to `entities`. WORLD-ONLY by default; include_private honored for local trusted callers only. budget_tokens packs server-side (pages first, then facts; threads are never dropped). protocol_version rides every response."
+  }
+]

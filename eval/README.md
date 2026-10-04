@@ -37,6 +37,8 @@ It searches the committed fictional corpus and writes a receipt under `eval/repo
 | Do conversations become useful notes? | `cat35-transcript-distill.ts` | Model-backed write-path test; the default is a small paid setup run. |
 | Does the right memory appear without asking? | `cat34-brainbench-memory.ts` | Offline conformance test with separate production and integration-contract rows. |
 | Does a small decision model (Jev) beat gbrain's rules at triage, reranking or spotting contradictions? | `system-one-jev.ts` | `verify` checks the September 30 record offline; `run` replays a slot's matched pair against a gbrain checkout passed with `--gbrain`. |
+| Does gbrain help an agent finish company-knowledge tasks better than grep, a memory tool or Postgres? | `cat40-model-ladder.ts` | Paid agent loop over a 4,000-document fictional company; build gbrain slots with `--build-slots` first; `--scripted` runs the hermetic arms for $0. |
+| Do real agents (Claude Code, Codex) ask before spending or destroying data, and recover from gbrain's errors? | `cat41-agent-operator.ts` | Paid; pinned harnesses in Docker; `cat41/after-pass.sh <gbrain checkout> <commit>` runs a candidate, its gate and the Cat 40 instruction check. |
 
 Paths in the table are relative to `eval/runner/`. A “Cat” number is simply a historical category identifier.
 

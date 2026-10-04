@@ -1,8 +1,13 @@
-# Model Ladder (Cat 40) protocol: does gbrain's advantage survive better models?
+# Model Ladder (Cat 40): does gbrain's advantage survive better models?
 
-Written 2026-10-02, before the pilot's results were read. It fixes the
-question, the comparison and the decision rules. The [plan](../plans/2026-10-01-knowledge-layer/PLAN.md)
-explains why this experiment comes first.
+Cat 40 gives one agent loop the same company-knowledge tasks with different
+memory setups and successively better models. The question, the comparison and
+the decision rules below were fixed on 2026-10-02, before the first results
+were read. The runner is
+[`eval/runner/cat40-model-ladder.ts`](../../eval/runner/cat40-model-ladder.ts);
+results and corrections are in the [report](2026-10-02-model-ladder.md), and the
+[plan](../plans/2026-10-01-knowledge-layer/PLAN.md) explains why the experiment
+exists.
 
 ## The question
 
@@ -12,7 +17,7 @@ helps because it supplies things a model cannot work out for itself (which
 document governs, what is true now, who may see what), its advantage should hold
 or grow.
 
-So we run the same agent tasks against several ways of storing company
+So Cat 40 runs the same agent tasks against several ways of storing company
 knowledge, with successively better models, and ask how gbrain's lead over the
 best simple option moves with model capability.
 
@@ -50,9 +55,9 @@ needs failure injection built into every arm, and is the next addition.
 ## The arms
 
 Every arm runs through one agent loop (`eval/runner/cat40/loop.ts`) with the
-same system prompt, the same `submit_answer` tool, 16 turns, a 20,000-character
-cap on each tool result, and one reminder if the model stops without
-submitting. Only the tools differ.
+same system prompt, the same `submit_answer` tool, 16 turns, whole tool results
+(`--max-tool-chars <n>` sets a cap; `none` is the default), and one reminder if
+the model stops without submitting. Only the tools differ.
 
 | Arm | What the agent gets | Why it is here |
 |---|---|---|
@@ -61,12 +66,19 @@ submitting. Only the tools differ.
 | `fs-acl` | `fs` with finance-only files removed (family C only) | A strong permissions baseline, so a permission result is not won against a strawman |
 | `memory` | Anthropic's memory tool (`memory_20250818`) over the same files in `/memories`; the same commands as a function for OpenAI models | "The harness's own memory is enough" |
 | `pg` | Plain Postgres: full-text search, pgvector search (`text-embedding-3-large`, 1,536 dimensions), get and save document | "Any vector database will do" |
-| `gbrain` | gbrain's own MCP server over stdio, `--surface starter` (33 tools), with its server instructions, at a pinned master commit | The subject |
+| `gbrain` | gbrain's own MCP server over stdio, `--surface starter`, with its server instructions, at the gbrain commit under test (`--gbrain-ref`) | The subject |
 
 gbrain's internal provider calls (query expansion, reranking, embeddings) go
 through a metering proxy and count toward the run's cost. File arms and `pg`
 write to a per-run overlay; gbrain slots are restored from a post-build snapshot
 after every run, so no run sees another's notes.
+
+gbrain slot brains are built once per gbrain commit by a separate
+`--build-slots` step (embedding the corpus is the build's own spend, which the
+evaluator authorizes); an agent step refuses to start when a snapshot is
+missing. `--gbrain-instructions-file`, `--gbrain-tool-descriptions-file` and
+`--gbrain-drop-tools` replace the instructions and tool descriptions the model
+is shown, without changing gbrain, for A/B tests of that text.
 
 ## Models
 
@@ -92,7 +104,7 @@ per cell.
 - **Latency and cost**: wall time per task, and every provider dollar, gbrain's
   internal calls included.
 
-## Analysis (fixed now)
+## Analysis
 
 1. **Capability index**: each model's `oracle` success rate.
 2. **Advantage**: gbrain's success rate minus the best of `fs`, `memory` and `pg`
@@ -111,14 +123,39 @@ capability the models are absorbing. With six models the slope is directional
 evidence, not a precise estimate. "Inconclusive" is a permitted result, and so is
 "gbrain trails the baselines".
 
-## What this pilot cannot show
+## Comparing gbrain builds
+
+A build-versus-build comparison runs the control build in the same window as
+the candidate, with identical models, tasks, repeats and flags, because the
+same build's scores move between runs hours apart. The agent-first operator
+check (F1/F10) on the `gbrain` arm uses `gpt-5.4-mini`, `gpt-5.4` and
+`claude-sonnet-4-6`, all 50 tasks and two repeats, and passes when pooled
+success is no more than 3 points below the same-window control with no rise in
+leaks ([Cat 41 protocol](2026-10-03-agent-operator-protocol.md#the-f1f10-agent-loop-check)).
+
+## Limits
 
 The world is synthetic and written by us, and gbrain-evals has tuned gbrain on
-other data, not on this world. 4,000 documents is small for a company; the plan's
-50,000-document tier is where grep is expected to struggle. Real harnesses (Claude
-Code, Codex) are not in the pilot. Family D is missing.
+other data, not on this world. 4,000 documents is small for a company; the
+52,000-document world (`eval/data/model-ladder-v1-large`) is where grep is
+expected to struggle. Real harnesses (Claude Code, Codex) are measured by
+[Cat 41](2026-10-03-agent-operator-protocol.md), not here. Family D is missing.
 
-## Budget
+## Run it
 
-Authorized: $500 program cap. Smoke runs measured about $0.05 per cell for the
-file and Postgres arms.
+```sh
+# Hermetic arms, no provider calls
+bun eval/runner/cat40-model-ladder.ts --scripted --arms fs,memory,oracle --out $(mktemp -d)
+
+# gbrain arm: build the slots once per commit, then run the cells
+bun eval/runner/cat40-model-ladder.ts --build-slots --gbrain-repo <gbrain checkout> --gbrain-ref <sha> \
+  --slots 5 --slot-build-allowance-usd 2 --budget-usd 10 --out eval/reports/cat40/slots-<sha>
+bun eval/runner/cat40-model-ladder.ts --models gpt-5.4-mini,gpt-5.4,claude-sonnet-4-6 --arms gbrain \
+  --gbrain-repo <gbrain checkout> --gbrain-ref <sha> --gbrain-label <label> --slots 5 --repeat 2 \
+  --transcripts --judge none --budget-usd 45 --out eval/reports/cat40/<label>
+```
+
+Paid runs reserve every request in the budget ledger
+([guide](../budget-ledger.md)) under its program cap. The file and Postgres arms
+cost about $0.05 per cell; a `gbrain` cell costs $0.02 to $0.30 depending on the
+model.

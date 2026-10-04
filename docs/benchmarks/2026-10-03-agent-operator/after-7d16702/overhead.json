@@ -1,0 +1,44 @@
+{
+  "version": "cat41-v1",
+  "gbrain": {
+    "requested": "<gbrain>@7d16702bd4350a1ce4d53de0d38a1ac6668976ea",
+    "ref": "7d16702bd4350a1ce4d53de0d38a1ac6668976ea",
+    "commit": "7d16702bd4350a1ce4d53de0d38a1ac6668976ea",
+    "tree": "639e578960994dcda95e1255d109721da70835b2",
+    "version": "0.60.38.0",
+    "checkout_dirty": false,
+    "verified": {
+      "copy_tree": "639e578960994dcda95e1255d109721da70835b2",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.38.0",
+      "cli_version_matches": true
+    },
+    "copied_not_symlinked": true
+  },
+  "measured_at": "2026-10-03T22:33:10.919Z",
+  "rows": [
+    {
+      "surface": "verbs",
+      "instructions_bytes": 2378,
+      "tools_list_bytes": 14482,
+      "total_bytes": 16860,
+      "tools": 7
+    },
+    {
+      "surface": "starter",
+      "instructions_bytes": 3791,
+      "tools_list_bytes": 61615,
+      "total_bytes": 65406,
+      "tools": 34
+    },
+    {
+      "surface": "full",
+      "instructions_bytes": 3852,
+      "tools_list_bytes": 148464,
+      "total_bytes": 152316,
+      "tools": 139
+    }
+  ]
+}
