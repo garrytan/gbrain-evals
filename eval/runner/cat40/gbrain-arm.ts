@@ -19,7 +19,7 @@ import type { Arm, ToolSpec } from './loop.ts';
 import type { LadderWorld } from '../../generators/model-ladder-gen.ts';
 import { renderDoc } from '../../generators/model-ladder-gen.ts';
 import { runCli, type RunEnv } from '../lifecycle/drivers.ts';
-import { priceRequest, usageCost, type BudgetAllowance } from '../budget-ledger.ts';
+import { priceRequest, reservationUsd, usageCost, type BudgetAllowance } from '../budget-ledger.ts';
 
 export const GBRAIN_EMBED_MODEL = 'openai:text-embedding-3-large';
 /** Above this many documents the source is registered before the corpus is written (see GbrainSlot.build). */
@@ -32,16 +32,57 @@ const CORPUS_TAG = 'cat40-corpus';
 
 const UPSTREAM: Record<string, string> = { anthropic: 'https://api.anthropic.com', openai: 'https://api.openai.com', voyage: 'https://api.voyageai.com' };
 
-export interface Meter { usd: number; requests: number; unpriced: number; byModel: Record<string, { usd: number; requests: number }> }
+export interface Meter {
+  usd: number;
+  requests: number;
+  /** Requests whose cost came from their reservation because the response reported no usage (charged, not free). */
+  unpriced: number;
+  /** Requests still in flight when the meter was finalized after its timeout (their cost is missing here, not in the ledger). */
+  undrained?: number;
+  byModel: Record<string, { usd: number; requests: number }>;
+}
 export const newMeter = (): Meter => ({ usd: 0, requests: 0, unpriced: 0, byModel: {} });
 
+/**
+ * Forwards gbrain's provider requests (each slot's base URL names the slot)
+ * and meters them. A request is charged to the cell bound to its slot when it
+ * arrives, so a request that finishes after the cell moved on still lands on
+ * the right cell; `finalize` waits for a cell's in-flight requests to drain.
+ * Requests with no bound cell are metered under `slot:<id>`.
+ */
 export class MeteringProxy {
   private server: ReturnType<typeof Bun.serve> | null = null;
   readonly meters = new Map<string, Meter>();
   /** Slots whose provider requests are charged to a ledger allowance (slot builds), not one ledger entry each. */
   readonly allowances = new Map<string, BudgetAllowance>();
+  private bindings = new Map<string, string>();
+  private inflight = new Map<string, number>();
+  private waiters = new Map<string, Array<() => void>>();
+  constructor(private options: { fetchImpl?: typeof fetch } = {}) {}
   get port(): number { return this.server!.port as number; }
+  /** Charge the slot's provider requests to `key` (a cell id) from now on. */
+  bind(slot: string, key: string) { this.bindings.set(slot, key); }
+  unbind(slot: string) { this.bindings.delete(slot); }
+  private meter(key: string): Meter { let m = this.meters.get(key); if (!m) this.meters.set(key, m = newMeter()); return m; }
+  private settled(key: string) {
+    const n = (this.inflight.get(key) ?? 1) - 1;
+    if (n > 0) { this.inflight.set(key, n); return; }
+    this.inflight.delete(key);
+    for (const w of this.waiters.get(key) ?? []) w();
+    this.waiters.delete(key);
+  }
+  /** Wait for `key`'s in-flight requests (at most `timeoutMs`), then remove and return its meter. */
+  async finalize(key: string, timeoutMs = 120_000): Promise<Meter> {
+    if (this.inflight.get(key)) {
+      await Promise.race([new Promise<void>(r => { const list = this.waiters.get(key) ?? []; list.push(r); this.waiters.set(key, list); }), Bun.sleep(timeoutMs)]);
+    }
+    const m = this.meters.get(key) ?? newMeter();
+    this.meters.delete(key);
+    if (this.inflight.get(key)) m.undrained = this.inflight.get(key);
+    return m;
+  }
   start() {
+    const send = this.options.fetchImpl ?? ((input: RequestInfo | URL, init?: RequestInit) => fetch(input, init));
     this.server = Bun.serve({
       port: 0, hostname: '127.0.0.1', idleTimeout: 255,
       fetch: async req => {
@@ -49,37 +90,44 @@ export class MeteringProxy {
         const m = url.pathname.match(/^\/([^/]+)\/(anthropic|openai|voyage)(\/.*)$/);
         if (!m) return new Response('not found', { status: 404 });
         const [, slot, prov, rest] = m;
-        const target = `${UPSTREAM[prov]}${rest}${url.search}`;
-        const headers = new Headers(req.headers);
-        for (const h of ['host', 'content-length', 'accept-encoding', 'connection']) headers.delete(h);
-        const body = req.method === 'GET' || req.method === 'HEAD' ? undefined : await req.text();
-        let res: Response;
-        const allowance = this.allowances.get(slot);
-        const send = () => fetch(target, { method: req.method, headers, body });
-        try { res = await (allowance ? allowance.run(send) : send()); }
-        catch (e) { return new Response(JSON.stringify({ error: { message: `cat40 proxy: ${(e as Error).message}` } }), { status: 502, headers: { 'content-type': 'application/json' } }); }
-        const text = await res.text();
-        const meter = this.meters.get(slot) ?? newMeter();
-        this.meters.set(slot, meter);
-        meter.requests++;
+        const key = this.bindings.get(slot) ?? `slot:${slot}`;
+        this.inflight.set(key, (this.inflight.get(key) ?? 0) + 1);
         try {
-          const parsedBody = body ? JSON.parse(body) : undefined;
-          const price = priceRequest(target, parsedBody);
-          const cost = price ? usageCost(price, JSON.parse(text)) : null;
-          if (cost) {
-            meter.usd += cost.usd;
-            const k = `${prov}:${price!.model}`;
-            meter.byModel[k] ??= { usd: 0, requests: 0 };
-            meter.byModel[k].usd += cost.usd; meter.byModel[k].requests++;
-          } else meter.unpriced++;
-        } catch { meter.unpriced++; }
-        const out = new Headers(res.headers);
-        for (const h of ['content-encoding', 'content-length', 'transfer-encoding']) out.delete(h);
-        return new Response(text, { status: res.status, headers: out });
+          const target = `${UPSTREAM[prov]}${rest}${url.search}`;
+          const headers = new Headers(req.headers);
+          for (const h of ['host', 'content-length', 'accept-encoding', 'connection']) headers.delete(h);
+          const body = req.method === 'GET' || req.method === 'HEAD' ? undefined : await req.text();
+          let price: ReturnType<typeof priceRequest> = null;
+          try { price = priceRequest(target, body ? JSON.parse(body) : undefined); } catch { price = null; }
+          const meter = this.meter(key);
+          const charge = (usd: number, unpriced: boolean) => {
+            meter.requests++;
+            meter.usd += usd;
+            if (unpriced) meter.unpriced++;
+            if (price) { const k = `${prov}:${price.model}`; meter.byModel[k] ??= { usd: 0, requests: 0 }; meter.byModel[k].usd += usd; meter.byModel[k].requests++; }
+          };
+          let res: Response;
+          const allowance = this.allowances.get(slot);
+          const forward = () => send(target, { method: req.method, headers, body });
+          try { res = await (allowance ? allowance.run(forward) : forward()); }
+          catch (e) {
+            // A refused reservation never left the process; any other failure after sending is charged at its reservation, as the ledger does.
+            if ((e as Error).name !== 'BudgetExceededError' && price) charge(reservationUsd(price), true);
+            return new Response(JSON.stringify({ error: { message: `cat40 proxy: ${(e as Error).message}` } }), { status: 502, headers: { 'content-type': 'application/json' } });
+          }
+          const text = await res.text();
+          if (price) {
+            let cost: ReturnType<typeof usageCost> = null;
+            try { cost = usageCost(price, JSON.parse(text)); } catch { cost = null; }
+            charge(cost ? cost.usd : reservationUsd(price), !cost);
+          } else charge(0, false);
+          const out = new Headers(res.headers);
+          for (const h of ['content-encoding', 'content-length', 'transfer-encoding']) out.delete(h);
+          return new Response(text, { status: res.status, headers: out });
+        } finally { this.settled(key); }
       },
     });
   }
-  take(slot: string): Meter { const m = this.meters.get(slot) ?? newMeter(); this.meters.set(slot, newMeter()); return m; }
   stop() { this.server?.stop(true); }
 }
 
@@ -190,6 +238,8 @@ export class GbrainSlot {
 
   async build(world: LadderWorld, proxy: MeteringProxy, analyze: boolean): Promise<SlotBuild> {
     const t0 = Date.now();
+    const meterKey = `build:${this.id}`;
+    proxy.bind(this.id, meterKey);
     rmSync(this.dir, { recursive: true, force: true });
     const vault = join(this.dir, 'vault');
     for (const d of ['home', 'uh', 'vault']) mkdirSync(join(this.dir, d), { recursive: true });
@@ -216,7 +266,6 @@ export class GbrainSlot {
     const cfg = JSON.parse(readFileSync(cfgPath, 'utf8'));
     cfg.provider_base_urls = { ...(cfg.provider_base_urls ?? {}), voyage: `http://127.0.0.1:${proxy.port}/${this.id}/voyage/v1` };
     writeFileSync(cfgPath, JSON.stringify(cfg, null, 2));
-    proxy.take(this.id);
     const operatorAnalyze = (step: string) => {
       // gbrain does not ANALYZE after a bulk import on PGLite (no autovacuum), so the planner sees empty
       // tables and the graph-signal join in every search runs as a pages x pages nested loop (~50 s at
@@ -263,7 +312,8 @@ export class GbrainSlot {
       if (left && Number(left[1]) > 0) throw new Error(`gbrain ${this.id}: ${left[1]} chunks still unembedded after embed --catch-up`);
     }
     if (analyze) operatorAnalyze('operator-analyze');
-    const meter = proxy.take(this.id);
+    proxy.unbind(this.id);
+    const meter = await proxy.finalize(meterKey);
     execFileSync('tar', ['-C', this.dir, '-cf', this.snapshot, 'home']);
     return { slot: this.id, dir: this.dir, steps, meter, ms: Date.now() - t0 };
   }

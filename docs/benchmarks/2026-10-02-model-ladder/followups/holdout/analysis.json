@@ -1,0 +1,516 @@
+{
+  "models": [
+    "claude-haiku-4-5",
+    "claude-sonnet-4-6",
+    "claude-sonnet-5-5",
+    "gpt-5.4",
+    "gpt-5.4-mini",
+    "gpt-6.1-sol"
+  ],
+  "arms": [
+    "gbrain-c1234-holdout"
+  ],
+  "tasks": [
+    "A01",
+    "A02",
+    "A03",
+    "A04",
+    "A05",
+    "A06",
+    "A07",
+    "A08",
+    "A09",
+    "A10",
+    "B01",
+    "B02",
+    "B03",
+    "B04",
+    "B05",
+    "B06",
+    "B07",
+    "B08",
+    "B09",
+    "B10",
+    "C01",
+    "C02",
+    "C03",
+    "C04",
+    "C05",
+    "C06",
+    "C07",
+    "C08",
+    "C09",
+    "C10",
+    "E01",
+    "E02",
+    "E03",
+    "E04",
+    "E05",
+    "E06",
+    "E07",
+    "E08",
+    "E09",
+    "E10",
+    "F01",
+    "F02",
+    "F03",
+    "F04",
+    "F05",
+    "F06",
+    "F07",
+    "F08",
+    "F09",
+    "F10"
+  ],
+  "families": [
+    "A",
+    "B",
+    "C",
+    "E",
+    "F"
+  ],
+  "success": {
+    "claude-haiku-4-5": {
+      "gbrain-c1234-holdout": 0.71
+    },
+    "claude-sonnet-4-6": {
+      "gbrain-c1234-holdout": 0.79
+    },
+    "claude-sonnet-5-5": {
+      "gbrain-c1234-holdout": 0.86
+    },
+    "gpt-5.4": {
+      "gbrain-c1234-holdout": 0.71
+    },
+    "gpt-5.4-mini": {
+      "gbrain-c1234-holdout": 0.47
+    },
+    "gpt-6.1-sol": {
+      "gbrain-c1234-holdout": 1
+    }
+  },
+  "by_family": {
+    "A": {
+      "claude-haiku-4-5": {
+        "gbrain-c1234-holdout": 1
+      },
+      "claude-sonnet-4-6": {
+        "gbrain-c1234-holdout": 1
+      },
+      "claude-sonnet-5-5": {
+        "gbrain-c1234-holdout": 1
+      },
+      "gpt-5.4": {
+        "gbrain-c1234-holdout": 1
+      },
+      "gpt-5.4-mini": {
+        "gbrain-c1234-holdout": 0.5
+      },
+      "gpt-6.1-sol": {
+        "gbrain-c1234-holdout": 1
+      }
+    },
+    "B": {
+      "claude-haiku-4-5": {
+        "gbrain-c1234-holdout": 0.8
+      },
+      "claude-sonnet-4-6": {
+        "gbrain-c1234-holdout": 0.8
+      },
+      "claude-sonnet-5-5": {
+        "gbrain-c1234-holdout": 0.8
+      },
+      "gpt-5.4": {
+        "gbrain-c1234-holdout": 0.8
+      },
+      "gpt-5.4-mini": {
+        "gbrain-c1234-holdout": 0.5
+      },
+      "gpt-6.1-sol": {
+        "gbrain-c1234-holdout": 1
+      }
+    },
+    "C": {
+      "claude-haiku-4-5": {
+        "gbrain-c1234-holdout": 0.85
+      },
+      "claude-sonnet-4-6": {
+        "gbrain-c1234-holdout": 1
+      },
+      "claude-sonnet-5-5": {
+        "gbrain-c1234-holdout": 1
+      },
+      "gpt-5.4": {
+        "gbrain-c1234-holdout": 1
+      },
+      "gpt-5.4-mini": {
+        "gbrain-c1234-holdout": 1
+      },
+      "gpt-6.1-sol": {
+        "gbrain-c1234-holdout": 1
+      }
+    },
+    "E": {
+      "claude-haiku-4-5": {
+        "gbrain-c1234-holdout": 0.05
+      },
+      "claude-sonnet-4-6": {
+        "gbrain-c1234-holdout": 0.2
+      },
+      "claude-sonnet-5-5": {
+        "gbrain-c1234-holdout": 0.5
+      },
+      "gpt-5.4": {
+        "gbrain-c1234-holdout": 0.15
+      },
+      "gpt-5.4-mini": {
+        "gbrain-c1234-holdout": 0
+      },
+      "gpt-6.1-sol": {
+        "gbrain-c1234-holdout": 1
+      }
+    },
+    "F": {
+      "claude-haiku-4-5": {
+        "gbrain-c1234-holdout": 0.85
+      },
+      "claude-sonnet-4-6": {
+        "gbrain-c1234-holdout": 0.95
+      },
+      "claude-sonnet-5-5": {
+        "gbrain-c1234-holdout": 1
+      },
+      "gpt-5.4": {
+        "gbrain-c1234-holdout": 0.6
+      },
+      "gpt-5.4-mini": {
+        "gbrain-c1234-holdout": 0.35
+      },
+      "gpt-6.1-sol": {
+        "gbrain-c1234-holdout": 1
+      }
+    }
+  },
+  "capability": {
+    "claude-haiku-4-5": null,
+    "claude-sonnet-4-6": null,
+    "claude-sonnet-5-5": null,
+    "gpt-5.4": null,
+    "gpt-5.4-mini": null,
+    "gpt-6.1-sol": null
+  },
+  "advantage": {},
+  "pooled_advantage": {
+    "value": null,
+    "ci95": [
+      null,
+      null
+    ]
+  },
+  "slope": {
+    "value": null,
+    "ci95": [
+      null,
+      null
+    ],
+    "n_models": 0
+  },
+  "family_slopes": {
+    "A": {
+      "value": null,
+      "ci95": [
+        null,
+        null
+      ]
+    },
+    "B": {
+      "value": null,
+      "ci95": [
+        null,
+        null
+      ]
+    },
+    "C": {
+      "value": null,
+      "ci95": [
+        null,
+        null
+      ]
+    },
+    "E": {
+      "value": null,
+      "ci95": [
+        null,
+        null
+      ]
+    },
+    "F": {
+      "value": null,
+      "ci95": [
+        null,
+        null
+      ]
+    }
+  },
+  "safety": {
+    "gbrain-c1234-holdout": {
+      "output_leaks": 0,
+      "context_exposures": 0,
+      "unsafe_writes": 0,
+      "c_runs": 120
+    }
+  },
+  "efficiency": {
+    "claude-haiku-4-5": {
+      "gbrain-c1234-holdout": {
+        "usd_per_task": 0.05791216089999999,
+        "usd_per_success": 0.08156642380281688,
+        "p50_s": 65.117,
+        "p95_s": 96.999,
+        "turns": 4.91
+      }
+    },
+    "claude-sonnet-4-6": {
+      "gbrain-c1234-holdout": {
+        "usd_per_task": 0.14381104649999998,
+        "usd_per_success": 0.18203929936708857,
+        "p50_s": 68.419,
+        "p95_s": 146.577,
+        "turns": 4.5
+      }
+    },
+    "claude-sonnet-5-5": {
+      "gbrain-c1234-holdout": {
+        "usd_per_task": 0.12166504959999999,
+        "usd_per_success": 0.14147098790697674,
+        "p50_s": 60.912,
+        "p95_s": 87.036,
+        "turns": 3.73
+      }
+    },
+    "gpt-5.4": {
+      "gbrain-c1234-holdout": {
+        "usd_per_task": 0.07516672560000004,
+        "usd_per_success": 0.10586862760563386,
+        "p50_s": 63.389,
+        "p95_s": 83.962,
+        "turns": 3.06
+      }
+    },
+    "gpt-5.4-mini": {
+      "gbrain-c1234-holdout": {
+        "usd_per_task": 0.016555002299999996,
+        "usd_per_success": 0.035223409148936166,
+        "p50_s": 62.987,
+        "p95_s": 83.544,
+        "turns": 3.54
+      }
+    },
+    "gpt-6.1-sol": {
+      "gbrain-c1234-holdout": {
+        "usd_per_task": 0.0648486247,
+        "usd_per_success": 0.0648486247,
+        "p50_s": 65.804,
+        "p95_s": 93.738,
+        "turns": 4.3
+      }
+    }
+  },
+  "claims": {
+    "gbrain-c1234-holdout": {
+      "unsupported_per_answer": 1.0588235294117647,
+      "contradicted_per_answer": 0.5529411764705883,
+      "judged": 595
+    }
+  },
+  "missed_evidence": {
+    "gbrain-c1234-holdout": 0.2644927536231884
+  },
+  "cost_split": {
+    "claude-haiku-4-5": {
+      "gbrain-c1234-holdout": {
+        "uncached_input": 0.000031150000000000005,
+        "cache_write": 0.0353145625,
+        "cache_read": 0.015085753999999998,
+        "output": 0.005125050000000001,
+        "gbrain_provider_calls": 0.0023556444000000006,
+        "unsplit": 0,
+        "total": 0.057912160900000016
+      }
+    },
+    "claude-sonnet-4-6": {
+      "gbrain-c1234-holdout": {
+        "uncached_input": 0.00002313000000000002,
+        "cache_write": 0.08186902500000001,
+        "cache_read": 0.040480413000000014,
+        "output": 0.0172779,
+        "gbrain_provider_calls": 0.004160578500000003,
+        "unsplit": 0,
+        "total": 0.14381104650000004
+      }
+    },
+    "claude-sonnet-5-5": {
+      "gbrain-c1234-holdout": {
+        "uncached_input": 0.000023440000000000013,
+        "cache_write": 0.08681440000000006,
+        "cache_read": 0.023910924000000004,
+        "output": 0.0108785,
+        "gbrain_provider_calls": 0.000037785599999999986,
+        "unsplit": 0,
+        "total": 0.12166504959999999
+      }
+    },
+    "gpt-5.4": {
+      "gbrain-c1234-holdout": {
+        "uncached_input": 0.05893704999999999,
+        "cache_write": 0,
+        "cache_read": 0.00907008,
+        "output": 0.0070833,
+        "gbrain_provider_calls": 0.00007629559999999996,
+        "unsplit": 0,
+        "total": 0.0751667256
+      }
+    },
+    "gpt-5.4-mini": {
+      "gbrain-c1234-holdout": {
+        "uncached_input": 0.01119129750000001,
+        "cache_write": 0,
+        "cache_read": 0.0029376,
+        "output": 0.0016683299999999998,
+        "gbrain_provider_calls": 0.0007577747999999996,
+        "unsplit": 0,
+        "total": 0.0165550023
+      }
+    },
+    "gpt-6.1-sol": {
+      "gbrain-c1234-holdout": {
+        "uncached_input": 0.053953600000000025,
+        "cache_write": 0,
+        "cache_read": 0.006822949000000001,
+        "output": 0.0038962000000000003,
+        "gbrain_provider_calls": 0.0001758757,
+        "unsplit": 0,
+        "total": 0.06484862470000001
+      }
+    }
+  },
+  "tool_chars": {
+    "claude-haiku-4-5": {
+      "gbrain-c1234-holdout": {
+        "search": 49420.12,
+        "get_page": 5971.319999999999,
+        "entity": 217.82999999999998,
+        "get_backlinks": 0.02,
+        "query": 8629.189999999999,
+        "list_pages": 3972.839999999999,
+        "get_recent_salience": 299.51,
+        "recall": 2.58,
+        "put_page": 677.3000000000001,
+        "edit_page": 89.9,
+        "synthesize": 21.3,
+        "remember": 13.43
+      }
+    },
+    "claude-sonnet-4-6": {
+      "gbrain-c1234-holdout": {
+        "entity": 531.2400000000001,
+        "search": 35607.590000000004,
+        "get_page": 5685.37,
+        "query": 2609.5799999999995,
+        "recall": 2187.45,
+        "list_pages": 4098.299999999999,
+        "resolve_slugs": 18.82,
+        "get_backlinks": 0.16,
+        "synthesize": 115.33000000000001,
+        "traverse_graph": 0.1,
+        "edit_page": 898.5200000000001,
+        "remember": 268.12,
+        "add_timeline_entry": 69.38,
+        "get_recent_salience": 115.29,
+        "get_ingest_log": 0.02
+      }
+    },
+    "claude-sonnet-5-5": {
+      "gbrain-c1234-holdout": {
+        "entity": 469.91000000000014,
+        "search": 55798.23,
+        "whoami": 32.999999999999936,
+        "get_page": 1351.79,
+        "recall": 2575.5599999999995,
+        "list_pages": 2399.1400000000003,
+        "query": 2517.65,
+        "edit_page": 957.96,
+        "remember": 269.72,
+        "list_skills": 11.28,
+        "resolve_slugs": 2.04,
+        "get_backlinks": 0.02,
+        "add_timeline_entry": 71.42
+      }
+    },
+    "gpt-5.4": {
+      "gbrain-c1234-holdout": {
+        "search": 54088.92999999999,
+        "get_page": 1923.01,
+        "resolve_slugs": 11.450000000000001,
+        "query": 1196.2000000000003,
+        "whoami": 2.31,
+        "list_pages": 1240.53,
+        "entity": 195.48000000000002,
+        "edit_page": 495.16999999999996,
+        "remember": 188.08999999999997,
+        "recall": 153.01,
+        "capture": 110.32999999999998,
+        "add_timeline_entry": 34.95,
+        "put_page": 75.3
+      }
+    },
+    "gpt-5.4-mini": {
+      "gbrain-c1234-holdout": {
+        "query": 9628.289999999999,
+        "search": 27168.97000000001,
+        "get_page": 660.02,
+        "list_pages": 0.02,
+        "recall": 15.13,
+        "remember": 118.00999999999999,
+        "put_page": 225.94,
+        "capture": 39.269999999999996,
+        "entity": 37.6,
+        "resolve_slugs": 14.36,
+        "edit_page": 327.07,
+        "whoami": 0.33
+      }
+    },
+    "gpt-6.1-sol": {
+      "gbrain-c1234-holdout": {
+        "search": 67839.51,
+        "whoami": 25.739999999999963,
+        "get_page": 5937.649999999999,
+        "entity": 3.71,
+        "query": 6566.690000000001,
+        "resolve_slugs": 10.71,
+        "list_skills": 23.97,
+        "edit_page": 1100.13,
+        "remember": 51.29,
+        "recall": 8.92,
+        "context_pack": 5.74,
+        "list_pages": 8.7
+      }
+    }
+  },
+  "cells": 600,
+  "usd": 49.74048470999994,
+  "reconciliation": [
+    {
+      "budget_run_id": "cat40-model-ladder-2026-10-04T01-53-09-590Z-10354c3a",
+      "cells": 600,
+      "cells_usd": 47.99586095999998,
+      "judge_usd": 1.7446237500000006,
+      "slot_builds_usd": 0,
+      "attributed_usd": 49.74048470999998,
+      "ledger_usd": 49.740490559999884,
+      "gap_usd": 0.000005849999901386127,
+      "gap_pct": 1.1761041830356529e-7,
+      "flagged": false
+    }
+  ]
+}

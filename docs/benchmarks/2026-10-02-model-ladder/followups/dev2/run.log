@@ -1,0 +1,20 @@
+2026-10-03T23:53:00.480Z 150 cells to run (0 already done, order task) in <evals>/eval/reports/cat40/followups-dev2
+2026-10-03T23:53:00.518Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger <evals>/.budget/cat40-followups.sqlite
+2026-10-03T23:54:58.858Z write probe passed on every slot
+2026-10-03T23:54:58.858Z gbrain 0.60.37.0 (ea851b39be97) ready on 5 slots, surface starter
+2026-10-03T23:56:02.487Z 10/150 cells; last claude-sonnet-4-6|gbrain-c1234-dev|A02|0 success=true $0.073
+2026-10-03T23:56:55.574Z 20/150 cells; last gpt-5.4|gbrain-c1234-dev|A07|0 success=true $0.039
+2026-10-03T23:57:38.357Z 30/150 cells; last gpt-5.4|gbrain-c1234-dev|A10|0 success=true $0.054
+2026-10-03T23:58:34.640Z 40/150 cells; last gpt-5.4-mini|gbrain-c1234-dev|B04|0 success=true $0.012
+2026-10-03T23:59:20.249Z 50/150 cells; last gpt-5.4|gbrain-c1234-dev|B07|0 success=false $0.017
+2026-10-04T00:00:13.351Z 60/150 cells; last claude-sonnet-4-6|gbrain-c1234-dev|B10|0 success=true $0.036
+2026-10-04T00:01:00.944Z 70/150 cells; last gpt-5.4|gbrain-c1234-dev|C04|0 success=true $0.025
+2026-10-04T00:02:06.982Z 80/150 cells; last claude-sonnet-4-6|gbrain-c1234-dev|C06|0 success=true $0.144
+2026-10-04T00:03:03.338Z 90/150 cells; last gpt-5.4-mini|gbrain-c1234-dev|E01|0 success=false $0.029
+2026-10-04T00:04:37.149Z 100/150 cells; last claude-sonnet-4-6|gbrain-c1234-dev|E02|0 success=false $0.612
+2026-10-04T00:06:10.487Z 110/150 cells; last gpt-5.4-mini|gbrain-c1234-dev|E08|0 success=false $0.017
+2026-10-04T00:07:37.492Z 120/150 cells; last gpt-5.4|gbrain-c1234-dev|F01|0 success=true $0.060
+2026-10-04T00:08:41.980Z 130/150 cells; last gpt-5.4-mini|gbrain-c1234-dev|F04|0 success=false $0.016
+2026-10-04T00:09:58.154Z 140/150 cells; last gpt-5.4-mini|gbrain-c1234-dev|F07|0 success=true $0.017
+2026-10-04T00:11:20.362Z 150/150 cells; last claude-sonnet-4-6|gbrain-c1234-dev|F10|0 success=false $0.075
+2026-10-04T00:11:20.565Z receipt <evals>/eval/reports/cat40/followups-dev2/receipt-1791072680565.json

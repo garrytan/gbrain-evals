@@ -1,0 +1,33 @@
+{
+  "schema": "cat40-experiment-v1",
+  "gbrain_commit": "51a30c1b86aa4f19e5764f3312ddec5cbe934961",
+  "slot_commit": "ad7900d8dcd221e22b885fef0f4030b73a1d69c9",
+  "world_digest": "df8c95e71b17beab176851e3b15daaea9b8719fb009ba50e02cfc68243009a20",
+  "models": [
+    "gpt-5.4-mini",
+    "gpt-5.4",
+    "claude-sonnet-4-6"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "label": "gbrain-51a30c1-dev",
+  "flags": {
+    "--models": "gpt-5.4-mini,gpt-5.4,claude-sonnet-4-6",
+    "--arms": "gbrain",
+    "--surface": "starter",
+    "--gbrain-repo": "../gbrain",
+    "--budget-ledger": ".budget/cat40-followups.sqlite",
+    "--program-cap-usd": "237",
+    "--transcripts": true,
+    "--slot-ref": "ad7900d",
+    "--slots": "5",
+    "--concurrency": "6",
+    "--repeat": "1",
+    "--families": "E",
+    "--gbrain-ref": "51a30c1",
+    "--gbrain-label": "gbrain-51a30c1-dev",
+    "--out": "eval/reports/cat40/followups-dev-51a30c1-E"
+  },
+  "budget_run_id": "cat40-model-ladder-2026-10-04T00-39-50-553Z-0693d88d"
+}

@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { initLedger, readLedger } from '../../eval/runner/budget-ledger.ts';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import {
@@ -212,6 +213,7 @@ function runHermeticRunner(
     symlinkSync(join(ROOT, 'node_modules'), join(dir, 'node_modules'));
     symlinkSync(join(ROOT, 'package.json'), join(dir, 'package.json'));
     writeFileSync(join(dir, 'preload.ts'), runnerPreload());
+    initLedger({ ledgerPath: join(dir, 'ledger.sqlite') });
     const proc = Bun.spawnSync([
       process.execPath, '--preload', join(dir, 'preload.ts'),
       join(ROOT, 'eval/runner/cat35-transcript-distill.ts'), '--json', '--transcripts',
@@ -221,11 +223,11 @@ function runHermeticRunner(
       // The runner requires a budget authorization; the stubbed transports
       // must leave the ledger with zero paid requests.
       env: { PATH: process.env.PATH, HOME: dir, ANTHROPIC_API_KEY: 'stub-only', OPENAI_API_KEY: 'stub-only', CAT35_JUDGE_MODEL: MODEL,
-        BRAINBENCH_BUDGET_USD: '5', BRAINBENCH_BUDGET_LEDGER: join(dir, 'ledger.json') },
+        BRAINBENCH_BUDGET_USD: '5', BRAINBENCH_BUDGET_LEDGER: join(dir, 'ledger.sqlite') },
       timeout: 30_000,
     });
     expect(proc.exitCode, proc.stderr.toString()).toBe(1);
-    expect(JSON.parse(readFileSync(join(dir, 'ledger.json'), 'utf8')).entries).toEqual([]);
+    expect(readLedger(join(dir, 'ledger.sqlite')).entries).toEqual([]);
     const receipt = JSON.parse(proc.stdout.toString());
     const reports = join(dir, 'eval/reports/cat35-transcript-distill');
     const saved = readdirSync(reports).find(p => p.endsWith('-cat35-bpre.json'))!;

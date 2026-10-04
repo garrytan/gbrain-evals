@@ -13,10 +13,20 @@
  *   bun eval/runner/cat40-model-ladder.ts --models claude-sonnet-4-6,gpt-5.4 \
  *     --arms oracle,fs,pg,memory,gbrain --budget-usd 100 [--families A,B] [--tasks A01,B02] \
  *     [--repeat 1] [--concurrency 6] [--slots 3] [--gbrain-repo ../gbrain --gbrain-ref <sha>] \
+ *     [--judge gpt-5.4-mini|none] [--world eval/data/model-ladder-v1-large/world.json] [--out eval/reports/cat40/<name>] \
+ *     [--max-tool-chars <n>|none] [--order task|model] [--slot-ref <sha>] [--no-pglite-analyze] [--surface starter]
  *     [--gbrain-instructions-file <file>] [--gbrain-tool-descriptions-file <json>] [--gbrain-drop-tools a,b]
  *       (evaluator-side A/B of the instruction and tool-description text the model sees; gbrain code unchanged)
- *     [--judge gpt-5.4-mini|none] [--world eval/data/model-ladder-v1-large/world.json] [--out eval/reports/cat40/<name>]
  *   bun eval/runner/cat40-model-ladder.ts --scripted --arms fs,memory,oracle   (hermetic, $0)
+ *   bun eval/runner/cat40-model-ladder.ts --build-slots --gbrain-ref <sha> --slots 5 --budget-usd 10 --slot-build-allowance-usd 2
+ *
+ * Tool results reach the model whole unless --max-tool-chars <n> sets a cap
+ * (`none` spells the default). gbrain slot brains are built by their own
+ * `--build-slots` step, one at a time; an agent step refuses to start when
+ * a snapshot it needs is missing. Each --out directory is bound to one
+ * experiment (experiment.json): a rerun with the same command resumes and
+ * joins the step's original budget run; a different build, world or flag set
+ * is refused. `--order model` finishes each model's tasks before the next.
  */
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
@@ -29,7 +39,7 @@ import { renderDoc } from '../generators/model-ladder-gen.ts';
 import { PgArm, PgStore, cachedOpenAIEmbedder } from './cat40/pg-arm.ts';
 import { GbrainArm, instructionsOverride, GbrainPool, GbrainSlot, MeteringProxy, SERVE_BOOT_TIMEOUT_SECONDS, STAGED_SOURCE_ADD_DOCS, STAGED_SYNC_BATCH, type Meter, type SlotBuild } from './cat40/gbrain-arm.ts';
 import { scoreTask, judgePrompt, parseClaims, JUDGE_PROMPT_VERSION, type TaskScore, type ClaimVerdicts } from './cat40/score.ts';
-import { budgetOptionsFrom, startPaidRun, receiptCost } from './budget-ledger.ts';
+import { budgetOptionsFrom, startPaidRun, receiptCost, type BudgetRun, type PaidRequestGuard } from './budget-ledger.ts';
 import { prepareBuild } from './lifecycle/builds.ts';
 
 export const CAT40_VERSION = 'cat40-v1';
@@ -69,8 +79,15 @@ export interface CellRecord {
   judge_error?: string;
   run: Omit<AgentRun, 'tools'> & { tool_calls: Array<{ name: string; ms: number; chars: number; truncated: boolean; error?: string }> };
   session1?: Omit<AgentRun, 'tools'> & { tool_calls: Array<{ name: string; ms: number; chars: number }> };
+  /** gbrain's own provider calls during the cell (its sessions and the restore after it), from the metering proxy. */
   gbrain_internal?: Meter;
+  /** Agent sessions plus gbrain's provider calls; the judge is separate. */
   total_usd: number;
+  judge_usd?: number;
+  /** Time to restore the gbrain slot after the cell (synchronous git, delete and tar work), so a restore stall is visible. */
+  restore_ms?: number;
+  /** The budget-ledger run that paid for the cell (for reconciliation in analyze.ts). */
+  budget_run_id?: string | null;
   wall_ms: number;
   started_at: string;
 }
@@ -108,8 +125,11 @@ interface Ctx {
   judge: string | null;
   /** Arm name recorded for gbrain cells, so two gbrain builds can be compared (`--gbrain-label`). */
   gbrainLabel: string;
-  /** Per-tool-result character cap for every arm (`--max-tool-chars`, default 20,000). */
-  maxToolChars: number;
+  /** Per-tool-result character cap for every arm (`--max-tool-chars`); null (the default) passes results through unmodified. */
+  maxToolChars: number | null;
+  budgetRunId: string | null;
+  /** gbrain provider spend of cells that failed before writing a record (it is in the ledger, not in any cell). */
+  failedCellsProxyUsd: number;
 }
 
 async function judgeClaims(ctx: Ctx, task: LadderTask, run: AgentRun): Promise<{ claims: ClaimVerdicts | null; usd: number }> {
@@ -153,9 +173,12 @@ async function runCell(ctx: Ctx, model: string, armName: ArmName, task: LadderTa
   else if (armName === 'pg') arm = new PgArm(ctx.pg!, runId);
   else {
     slot = await ctx.pool!.acquire();
-    ctx.proxy!.take(slot.id);
+    // Every provider request the slot's server makes from now until its restore is charged to this cell.
+    ctx.proxy!.bind(slot.id, runId);
     arm = new GbrainArm(slot);
   }
+  let partial: Omit<CellRecord, 'total_usd' | 'wall_ms' | 'gbrain_internal' | 'restore_ms'> & { agent_usd: number } | null = null;
+  let restoreMs: number | undefined;
   try {
     const isWrite = (name: string, args: Record<string, unknown>) => isWriteCall(arm, name, args);
     const common = { model, arm, system: systemPrompt(ctx.world, arm), maxToolChars: ctx.maxToolChars };
@@ -167,26 +190,36 @@ async function runCell(ctx: Ctx, model: string, armName: ArmName, task: LadderTa
     const run = await runAgent({ ...common, system: systemPrompt(ctx.world, arm), user: userMessage(ctx.world, task, arm, 2), scripted: ctx.scripted ? scriptedAgent(task, armName) : undefined });
     const score = scoreTask(task, run, { session1, isWrite });
     lastTools.set(runId, [...(session1?.tools ?? []).map(t => ({ session: 1, name: t.name, args: t.args, result: t.result.slice(0, 40_000) })), ...run.tools.map(t => ({ session: 2, name: t.name, args: t.args, result: t.result.slice(0, 40_000) }))]);
-    const gbrain_internal = slot ? ctx.proxy!.take(slot.id) : undefined;
     let judged: { claims: ClaimVerdicts | null; usd: number; error?: string };
     try { judged = await judgeClaims(ctx, task, run); }
     catch (e) {
       if ((e as Error).name === 'BudgetExceededError') throw e;
       judged = { claims: null, usd: 0, error: (e as Error).message };
     }
-    const total = run.usd + (session1?.usd ?? 0) + (gbrain_internal?.usd ?? 0);
-    return {
+    partial = {
       key: runId, model, provider: ctx.scripted ? 'scripted' : provider(model), arm: label, task: task.id, family: task.family, variant: task.variant, repeat,
-      score, claims: judged.claims, ...(judged.error ? { judge_error: judged.error } : {}), run: strip(run), ...(session1 ? { session1: strip(session1) } : {}), ...(gbrain_internal ? { gbrain_internal } : {}),
-      total_usd: total, judge_usd: judged.usd, wall_ms: Date.now() - started.getTime(), started_at: started.toISOString(),
-    } as CellRecord;
+      score, claims: judged.claims, ...(judged.error ? { judge_error: judged.error } : {}), run: strip(run), ...(session1 ? { session1: strip(session1) } : {}),
+      judge_usd: judged.usd, budget_run_id: ctx.budgetRunId, started_at: started.toISOString(), agent_usd: run.usd + (session1?.usd ?? 0),
+    };
   } finally {
     if (slot) {
       // Restore after every run: a session can change the brain without a write tool (startup sweeps write too).
-      await slot.restore();
-      ctx.pool!.release(slot);
+      const t = Date.now();
+      try { await slot.restore(); }
+      finally {
+        restoreMs = Date.now() - t;
+        ctx.proxy!.unbind(slot.id);
+        ctx.pool!.release(slot);
+      }
     }
   }
+  // After the restore, wait for the cell's last provider requests (they can finish after its server stopped).
+  const gbrain_internal = slot ? await ctx.proxy!.finalize(runId) : undefined;
+  const { agent_usd, ...rec } = partial!;
+  return {
+    ...rec, ...(gbrain_internal ? { gbrain_internal } : {}), ...(restoreMs !== undefined ? { restore_ms: restoreMs } : {}),
+    total_usd: agent_usd + (gbrain_internal?.usd ?? 0), wall_ms: Date.now() - started.getTime(),
+  };
 }
 
 /** After the first failure no new item starts, but items already running finish before it is rethrown (so gbrain slots stay up for them). */
@@ -207,18 +240,123 @@ function flag(argv: string[], name: string): string | undefined {
   return i >= 0 ? argv[i + 1] : undefined;
 }
 
+/** `--max-tool-chars`: omitted or `none` is uncapped (null); otherwise a positive integer. */
+export function parseMaxToolChars(raw: string | undefined): number | null {
+  if (raw === undefined || raw === 'none') return null;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n <= 0) throw new Error(`--max-tool-chars must be a positive integer or "none" (got ${JSON.stringify(raw)})`);
+  return n;
+}
+
+export type CellOrder = 'task' | 'model';
+export interface PlannedCell { model: string; arm: ArmName; task: LadderTask; repeat: number }
+
+/** The cell key a results.jsonl line carries. */
+export const cellKey = (model: string, label: string, task: string, repeat: number) => `${model}|${label}|${task}|${repeat}`;
+
+/**
+ * Cells still to run. `task` order (the default) interleaves models within
+ * each task; `model` order finishes every task and repeat of one model before
+ * the next starts, so a run cut short by its budget leaves complete models.
+ */
+export function scheduleCells(o: { tasks: LadderTask[]; models: string[]; arms: ArmName[]; repeats: number; order: CellOrder; gbrainLabel: string; done: Set<string> }): PlannedCell[] {
+  const cells: PlannedCell[] = [];
+  const add = (model: string, task: LadderTask, r: number) => {
+    for (const arm of o.arms) {
+      if (arm === 'fs-acl' && task.family !== 'C') continue;
+      if (!o.done.has(cellKey(model, arm === 'gbrain' ? o.gbrainLabel : arm, task.id, r))) cells.push({ model, arm, task, repeat: r });
+    }
+  };
+  if (o.order === 'model') { for (const model of o.models) for (let r = 0; r < o.repeats; r++) for (const task of o.tasks) add(model, task, r); }
+  else for (let r = 0; r < o.repeats; r++) for (const task of o.tasks) for (const model of o.models) add(model, task, r);
+  return cells;
+}
+
+// ─── Experiment identity of an output directory ─────────────────────
+
+/** Flags that set money, not the experiment: a resume may change them. */
+const BUDGET_FLAGS = new Set(['--budget-usd', '--estimate-usd', '--budget-run-id']);
+
+export interface ExperimentManifest {
+  schema: 'cat40-experiment-v1';
+  gbrain_commit: string | null;
+  slot_commit: string | null;
+  world_digest: string;
+  models: string[];
+  arms: string[];
+  label: string;
+  /** Every flag except the budget flags, as given. */
+  flags: Record<string, string | true>;
+  /** The budget-ledger run every invocation on this directory charges (a resume joins it). */
+  budget_run_id: string | null;
+}
+
+export function experimentFlags(argv: readonly string[]): Record<string, string | true> {
+  const flags: Record<string, string | true> = {};
+  for (let i = 0; i < argv.length; i++) {
+    if (!argv[i].startsWith('--')) continue;
+    const [name, eq] = argv[i].split(/=(.*)/s);
+    const value = eq ?? (argv[i + 1] !== undefined && !argv[i + 1].startsWith('--') ? argv[++i] : true);
+    if (!BUDGET_FLAGS.has(name)) flags[name] = value;
+  }
+  return flags;
+}
+
+/**
+ * Bind `out` to one experiment. The first invocation writes experiment.json
+ * with the budget run it opened; a later invocation must describe the same
+ * experiment (build, world, models, arms, label and flags) and joins the
+ * recorded budget run, so a restart after a timeout continues within the
+ * step's original budget instead of opening a fresh one. A different
+ * experiment is refused: give a changed build its own --out.
+ */
+export function bindExperiment<T extends { run: BudgetRun; guard: PaidRequestGuard }>(
+  out: string, manifest: Omit<ExperimentManifest, 'schema' | 'budget_run_id'>, start: (recordedRunId: string | null) => T | null,
+): { paid: T | null; manifest: ExperimentManifest } {
+  const path = join(out, 'experiment.json');
+  const recorded = existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) as ExperimentManifest : null;
+  if (recorded) {
+    const fresh: Record<string, unknown> = { schema: 'cat40-experiment-v1', ...manifest };
+    const differs = Object.keys(fresh).filter(k => JSON.stringify(fresh[k]) !== JSON.stringify((recorded as unknown as Record<string, unknown>)[k]));
+    if (differs.length) {
+      throw new Error(`${out} already holds a different experiment (${differs.map(k => `${k}: recorded ${JSON.stringify((recorded as unknown as Record<string, unknown>)[k])}, now ${JSON.stringify(fresh[k])}`).join('; ')}). `
+        + 'A resume must repeat the original command except for budget flags; a changed build, world or flag set needs a new --out.');
+    }
+  }
+  const paid = start(recorded?.budget_run_id ?? null);
+  const bound: ExperimentManifest = { schema: 'cat40-experiment-v1', ...manifest, budget_run_id: paid?.run.runId ?? recorded?.budget_run_id ?? null };
+  mkdirSync(out, { recursive: true });
+  writeFileSync(path, JSON.stringify(bound, null, 2) + '\n');
+  return { paid, manifest: bound };
+}
+
+// ─── gbrain slots ───────────────────────────────────────────────────
+
+/** Where the slot brains for one build, world and statistics setting live. */
+export function slotRoot(root: string, slotCommit: string, world: LadderWorld, analyze: boolean): string {
+  return join(root, `slots-${slotCommit.slice(0, 12)}-${worldDigest(world).slice(0, 8)}${analyze ? '' : '-noanalyze'}`);
+}
+
+/** Snapshot files the agent steps need; the preflight refuses when any is missing. */
+export function missingSlotSnapshots(dir: string, n: number): string[] {
+  return Array.from({ length: n }, (_, i) => join(dir, `slot${i}.tar`)).filter(p => !existsSync(p));
+}
+
 export async function main(argv = process.argv.slice(2)) {
   const scripted = argv.includes('--scripted');
+  const buildSlots = argv.includes('--build-slots');
   const worldPath = resolve(flag(argv, '--world') ?? join(DEFAULT_LADDER_DIR, 'world.json'));
   const world: LadderWorld = JSON.parse(readFileSync(worldPath, 'utf8'));
   const regenerated = generateLadderWorld(world.seed, { scale: world.scale });
   if (worldDigest(regenerated) !== worldDigest(world)) throw new Error(`${worldPath} does not match its generator; run bun eval/generators/model-ladder-gen.ts${world.scale ? ` --scale ${world.scale}` : ''}`);
-  const models = scripted ? ['scripted'] : (flag(argv, '--models') ?? '').split(',').filter(Boolean);
-  if (!models.length) throw new Error('--models is required (or --scripted)');
-  const arms = (flag(argv, '--arms') ?? 'oracle,fs,pg,memory,gbrain').split(',') as ArmName[];
+  const models = scripted ? ['scripted'] : buildSlots ? [] : (flag(argv, '--models') ?? '').split(',').filter(Boolean);
+  if (!models.length && !buildSlots) throw new Error('--models is required (or --scripted, or --build-slots)');
+  const arms = (buildSlots ? 'gbrain' : flag(argv, '--arms') ?? 'oracle,fs,pg,memory,gbrain').split(',') as ArmName[];
   const families = (flag(argv, '--families') ?? FAMILIES.join(',')).split(',') as Family[];
   const only = flag(argv, '--tasks')?.split(',');
   const repeats = Number(flag(argv, '--repeat') ?? 1);
+  const order = (flag(argv, '--order') ?? 'task') as CellOrder;
+  if (order !== 'task' && order !== 'model') throw new Error('--order must be task or model');
   const tasks = world.tasks.filter(t => families.includes(t.family) && (!only || only.includes(t.id)));
   const out = resolve(flag(argv, '--out') ?? join('eval/reports/cat40', scripted ? 'scripted' : new Date().toISOString().replace(/[:.]/g, '-')));
   mkdirSync(out, { recursive: true });
@@ -229,66 +367,86 @@ export async function main(argv = process.argv.slice(2)) {
   const descriptionsFile = flag(argv, '--gbrain-tool-descriptions-file');
   if (descriptionsFile) instructionsOverride.descriptions = JSON.parse(readFileSync(resolve(descriptionsFile), 'utf8'));
   instructionsOverride.dropTools = (flag(argv, '--gbrain-drop-tools') ?? '').split(',').filter(Boolean);
-  const ctx: Ctx = { world, files: { all: files(() => true), acl: files(d => !d.restricted) }, out, scripted, judge, gbrainLabel: flag(argv, '--gbrain-label') ?? 'gbrain', maxToolChars: Number(flag(argv, '--max-tool-chars') ?? 20_000) };
+  const ctx: Ctx = { world, files: { all: files(() => true), acl: files(d => !d.restricted) }, out, scripted, judge, gbrainLabel: flag(argv, '--gbrain-label') ?? 'gbrain',
+    maxToolChars: parseMaxToolChars(flag(argv, '--max-tool-chars')), budgetRunId: null, failedCellsProxyUsd: 0 };
   const log = (s: string) => { process.stderr.write(`[cat40] ${s}\n`); appendFileSync(join(out, 'run.log'), `${new Date().toISOString()} ${s}\n`); };
-
-  const paid = !scripted;
-  const budget = paid ? startPaidRun('cat40-model-ladder', { ...budgetOptionsFrom(argv), estimateUsd: flag(argv, '--estimate-usd') ? Number(flag(argv, '--estimate-usd')) : null, log }) : null;
 
   const resultsPath = join(out, 'results.jsonl');
   const transcripts = argv.includes('--transcripts');
   const done = new Set(existsSync(resultsPath) ? readFileSync(resultsPath, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l).key as string) : []);
-  const cells: Array<{ model: string; arm: ArmName; task: LadderTask; repeat: number }> = [];
-  for (let r = 0; r < repeats; r++) for (const task of tasks) for (const model of models) for (const arm of arms) {
-    if (arm === 'fs-acl' && task.family !== 'C') continue;
-    if (!done.has(`${model}|${arm === 'gbrain' ? ctx.gbrainLabel : arm}|${task.id}|${r}`)) cells.push({ model, arm, task, repeat: r });
+  const cells = buildSlots ? [] : scheduleCells({ tasks, models, arms, repeats, order, gbrainLabel: ctx.gbrainLabel, done });
+  log(buildSlots ? 'building gbrain slots' : `${cells.length} cells to run (${done.size} already done, order ${order}) in ${out}`);
+  if (!buildSlots && cells.length === 0) { log('nothing to run'); return; }
+
+  // gbrain identity and the slot preflight come first, so a refusal opens no budget run.
+  const needsGbrain = buildSlots || cells.some(c => c.arm === 'gbrain');
+  const analyze = !argv.includes('--no-pglite-analyze');
+  const repo = resolve(flag(argv, '--gbrain-repo') ?? '../gbrain');
+  const root = resolve(flag(argv, '--gbrain-root') ?? join(process.env.HOME ?? '.', '.capy/work/cat40/gbrain'));
+  const nSlots = Number(flag(argv, '--slots') ?? 3);
+  let gbrainCommit: string | null = null, slotCommit: string | null = null, slotDir: string | null = null;
+  if (needsGbrain) {
+    if (scripted) throw new Error('the gbrain arm needs real embeddings; run it without --scripted');
+    const rev = (ref: string) => execFileSync('git', ['-C', repo, 'rev-parse', `${ref}^{commit}`], { encoding: 'utf8' }).trim();
+    gbrainCommit = rev(flag(argv, '--gbrain-ref') ?? 'HEAD');
+    // --slot-ref reuses brains built by another commit (read-path changes only; the commits must share a schema).
+    if (buildSlots && flag(argv, '--slot-ref')) throw new Error('--build-slots builds with --gbrain-ref itself; build the --slot-ref commit by passing it as --gbrain-ref');
+    slotCommit = flag(argv, '--slot-ref') ? rev(flag(argv, '--slot-ref')!) : gbrainCommit;
+    slotDir = slotRoot(root, slotCommit, world, analyze);
+    const missing = missingSlotSnapshots(slotDir, nSlots);
+    if (buildSlots && !missing.length && !argv.includes('--rebuild')) { log(`all ${nSlots} slot snapshots exist in ${slotDir}; nothing to build`); return; }
+    if (!buildSlots && missing.length) {
+      throw new Error(`gbrain slot snapshots are missing for build ${slotCommit.slice(0, 12)} on world ${worldDigest(world).slice(0, 12)} (${missing.length} of ${nSlots}: ${missing.join(', ')}). `
+        + `Build them first as their own step, one at a time: bun eval/runner/cat40-model-ladder.ts --build-slots --gbrain-repo ${repo} --gbrain-ref ${slotCommit} --slots ${nSlots} --world ${relative(process.cwd(), worldPath)}${analyze ? '' : ' --no-pglite-analyze'} --slot-build-allowance-usd 2 --budget-usd <dollars> --budget-ledger <ledger>`);
+    }
   }
-  log(`${cells.length} cells to run (${done.size} already done) in ${out}`);
+
+  const options = budgetOptionsFrom(argv);
+  const estimateUsd = flag(argv, '--estimate-usd') ? Number(flag(argv, '--estimate-usd')) : null;
+  const { paid: budget } = bindExperiment(out, { gbrain_commit: gbrainCommit, slot_commit: slotCommit, world_digest: worldDigest(world), models, arms, label: ctx.gbrainLabel, flags: experimentFlags(argv) },
+    recorded => scripted ? null : startPaidRun(buildSlots ? 'cat40-slot-build' : 'cat40-model-ladder', { ...options, runId: recorded ?? options.runId, estimateUsd, log }));
+  ctx.budgetRunId = budget?.run.runId ?? null;
+  if (budget?.run.participant) log(`resumed: joined the recorded budget run ${budget.run.runId}`);
 
   const builds: SlotBuild[] = [];
   let gbrainBuild: ReturnType<typeof prepareBuild> | null = null;
+  let complete = false;
+  let proxyUnattributed: Record<string, Meter> = {};
   try {
-    if (!scripted && arms.includes('pg')) {
+    if (!scripted && cells.some(c => c.arm === 'pg')) {
       ctx.pg = await PgStore.build(world, cachedOpenAIEmbedder(resolve('eval/reports/cat40/embed-cache.json')));
       log('pg arm ready');
     }
-    if (arms.includes('gbrain') && cells.some(c => c.arm === 'gbrain')) {
-      if (scripted) throw new Error('the gbrain arm needs real embeddings; run it without --scripted');
-      const repo = resolve(flag(argv, '--gbrain-repo') ?? '../gbrain');
-      const ref = flag(argv, '--gbrain-ref') ?? 'HEAD';
-      const root = resolve(flag(argv, '--gbrain-root') ?? join(process.env.HOME ?? '.', '.capy/work/cat40/gbrain'));
+    if (needsGbrain) {
       mkdirSync(root, { recursive: true });
-      gbrainBuild = prepareBuild(repo, { label: 'under-test', ref, description: 'gbrain under test' }, join(root, 'builds'));
+      gbrainBuild = prepareBuild(repo, { label: 'under-test', ref: gbrainCommit!, description: 'gbrain under test' }, join(root, 'builds'));
       ctx.proxy = new MeteringProxy();
       ctx.proxy.start();
-      const n = Number(flag(argv, '--slots') ?? 3);
       const surface = flag(argv, '--surface') ?? 'starter';
-      // --slot-ref reuses brains built by another commit (read-path changes only; the commits must share a schema).
-      const slotRef = flag(argv, '--slot-ref');
-      const slotCommit = slotRef ? execFileSync('git', ['-C', repo, 'rev-parse', `${slotRef}^{commit}`], { encoding: 'utf8' }).trim() : gbrainBuild.commit;
-      const slots = Array.from({ length: n }, (_, i) => new GbrainSlot(`slot${i}`, join(root, `slots-${slotCommit.slice(0, 12)}-${worldDigest(world).slice(0, 8)}${argv.includes('--no-pglite-analyze') ? '-noanalyze' : ''}`), gbrainBuild!.dir, ctx.proxy!.port, surface));
-      await Promise.all(slots.map(async s => {
-        if (!s.hasSnapshot() || argv.includes('--rebuild')) {
-          // A build sends one provider request per page; an allowance keeps the ledger from being rewritten for each.
+      const slots = Array.from({ length: nSlots }, (_, i) => new GbrainSlot(`slot${i}`, slotDir!, gbrainBuild!.dir, ctx.proxy!.port, surface));
+      if (buildSlots) {
+        // One build at a time: each holds a small ledger allowance (a build sends one provider request per page).
+        for (const s of slots) {
+          if (s.hasSnapshot() && !argv.includes('--rebuild')) continue;
           const allowance = budget!.run.allowance(Number(flag(argv, '--slot-build-allowance-usd') ?? 5), `gbrain ${s.id} build`);
-          ctx.proxy!.allowances.set(s.id, allowance);
+          ctx.proxy.allowances.set(s.id, allowance);
           let b: SlotBuild, charged: ReturnType<typeof allowance.close>;
-          try { b = await s.build(world, ctx.proxy!, !argv.includes('--no-pglite-analyze')); }
-          finally { ctx.proxy!.allowances.delete(s.id); charged = allowance.close(); }
+          try { b = await s.build(world, ctx.proxy, analyze); }
+          finally { ctx.proxy.allowances.delete(s.id); charged = allowance.close(); }
           builds.push({ ...b, allowance: { reserved_usd: allowance.usd, ...charged } });
           log(`built ${s.id} in ${(b.ms / 1000).toFixed(0)}s, $${b.meter.usd.toFixed(4)} (${b.meter.requests} provider requests; ledger allowance charged $${charged.usd.toFixed(4)})`);
         }
-        await s.restore();
-      }));
+      }
       // A write probe after restore: the arm is only fair if the agent's writes can land.
       for (const s of slots) {
+        await s.restore();
         const probe = await s.client!.call('put_page', { slug: 'notes/cat40-write-probe', content: '---\ntitle: "write probe"\ntype: note\n---\nprobe\n' });
         if (/^Error/.test(probe) || !(await s.client!.call('get_page', { slug: 'notes/cat40-write-probe' })).includes('write probe')) throw new Error(`gbrain ${s.id} refuses writes after restore: ${probe.slice(0, 300)}`);
         await s.restore();
       }
       log('write probe passed on every slot');
       ctx.pool = new GbrainPool(slots);
-      log(`gbrain ${gbrainBuild.version} (${gbrainBuild.commit.slice(0, 12)}) ready on ${n} slots, surface ${surface}`);
+      log(`gbrain ${gbrainBuild.version} (${gbrainBuild.commit.slice(0, 12)}) ready on ${nSlots} slots, surface ${surface}`);
     }
 
     const concurrency = Number(flag(argv, '--concurrency') ?? 6);
@@ -297,7 +455,9 @@ export async function main(argv = process.argv.slice(2)) {
       let rec: CellRecord;
       try { rec = await runCell(ctx, c.model, c.arm, c.task, c.repeat); }
       catch (e) {
-        log(`cell ${c.model}|${c.arm}|${c.task.id} failed: ${(e as Error).message}`);
+        const key = cellKey(c.model, c.arm === 'gbrain' ? ctx.gbrainLabel : c.arm, c.task.id, c.repeat);
+        if (ctx.proxy) ctx.failedCellsProxyUsd += (await ctx.proxy.finalize(key, 30_000)).usd;
+        log(`cell ${key} failed: ${(e as Error).message}`);
         if ((e as Error).name === 'BudgetExceededError' || /BudgetExceeded|exceed/i.test((e as Error).message)) throw e;
         return;
       }
@@ -306,18 +466,25 @@ export async function main(argv = process.argv.slice(2)) {
       finished++;
       if (finished % 10 === 0 || finished === cells.length) log(`${finished}/${cells.length} cells; last ${rec.key} success=${rec.score.success} $${rec.total_usd.toFixed(3)}`);
     });
+    complete = buildSlots || finished === cells.length;
+    if (!complete) log(`${cells.length - finished} cells failed; rerun the same command to resume them within the same budget run`);
   } finally {
     if (ctx.pool) await Promise.all(ctx.pool.slots.map(s => s.stop()));
+    if (ctx.proxy) proxyUnattributed = Object.fromEntries([...ctx.proxy.meters].filter(([k]) => k.startsWith('slot:')));
     ctx.proxy?.stop();
-    const summary = budget?.run.close();
+    // An incomplete step leaves its budget run open, so a resume continues within the same budget.
+    const summary = budget?.run.close({ finish: complete });
     budget?.guard.uninstall();
     const receipt = {
       schema: 'cat40-receipt-v1', version: CAT40_VERSION, judge_prompt: JUDGE_PROMPT_VERSION, judge: ctx.judge,
       world: { path: relative(process.cwd(), worldPath), scale: world.scale ?? 'v1', digest: worldDigest(world), seed: world.seed, docs: world.docs.length, tasks: world.tasks.length },
       evals_commit: (() => { try { return execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(); } catch { return null; } })(),
       evals_dirty: (() => { try { return execFileSync('git', ['status', '--porcelain'], { encoding: 'utf8' }).trim().length > 0; } catch { return null; } })(),
-      gbrain: gbrainBuild ? { slot_ref: flag(argv, '--slot-ref') ?? null, label: ctx.gbrainLabel, commit: gbrainBuild.commit, version: gbrainBuild.version, tree: gbrainBuild.tree, verified: gbrainBuild.verified, surface: flag(argv, '--surface') ?? 'starter', tool_overrides: { descriptions_file: descriptionsFile ?? null, descriptions_sha256: instructionsOverride.descriptions ? createHash('sha256').update(JSON.stringify(instructionsOverride.descriptions)).digest('hex') : null, dropped: instructionsOverride.dropTools }, instructions_override: instructionsOverride.text === null ? null : { file: relative(process.cwd(), resolve(instructionsFile!)), sha256: createHash('sha256').update(instructionsOverride.text).digest('hex') }, served_instructions_sha256: instructionsOverride.served === null ? null : createHash('sha256').update(instructionsOverride.served).digest('hex'), operator_analyze: !argv.includes('--no-pglite-analyze'), serve_boot_timeout_s: SERVE_BOOT_TIMEOUT_SECONDS, staged_build: world.docs.length > STAGED_SOURCE_ADD_DOCS ? { sync_batch_docs: STAGED_SYNC_BATCH } : null } : null,
+      gbrain: gbrainBuild ? { slot_ref: flag(argv, '--slot-ref') ?? null, slot_commit: slotCommit, label: ctx.gbrainLabel, commit: gbrainBuild.commit, version: gbrainBuild.version, tree: gbrainBuild.tree, verified: gbrainBuild.verified, surface: flag(argv, '--surface') ?? 'starter', tool_overrides: { descriptions_file: descriptionsFile ?? null, descriptions_sha256: instructionsOverride.descriptions ? createHash('sha256').update(JSON.stringify(instructionsOverride.descriptions)).digest('hex') : null, dropped: instructionsOverride.dropTools }, instructions_override: instructionsOverride.text === null ? null : { file: relative(process.cwd(), resolve(instructionsFile!)), sha256: createHash('sha256').update(instructionsOverride.text).digest('hex') }, served_instructions_sha256: instructionsOverride.served === null ? null : createHash('sha256').update(instructionsOverride.served).digest('hex'), operator_analyze: analyze, serve_boot_timeout_s: SERVE_BOOT_TIMEOUT_SECONDS, staged_build: world.docs.length > STAGED_SOURCE_ADD_DOCS ? { sync_batch_docs: STAGED_SYNC_BATCH } : null } : null,
+      mode: buildSlots ? 'build-slots' : 'cells', order, complete, cells_planned: cells.length,
       slot_builds: builds, models, arms, families, repeats, max_tool_chars: ctx.maxToolChars, argv,
+      budget_run_id: ctx.budgetRunId, resumed: Boolean(budget?.run.participant),
+      proxy_unattributed: proxyUnattributed, failed_cells_proxy_usd: ctx.failedCellsProxyUsd,
       cost: summary ? receiptCost(summary) : null,
       finished_at: new Date().toISOString(),
     };
@@ -326,6 +493,8 @@ export async function main(argv = process.argv.slice(2)) {
     const receiptPath = join(out, `receipt-${Date.now()}.json`);
     writeFileSync(receiptPath, JSON.stringify(receipt, null, 2));
     log(`receipt ${receiptPath}`);
+    const lag = summary?.event_loop_lag_ms;
+    if (lag && lag.p99 >= 50) log(`warning: event-loop lag p99 ${lag.p99} ms (max ${lag.max} ms); tool latency in this run is not trustworthy`);
   }
 }
 

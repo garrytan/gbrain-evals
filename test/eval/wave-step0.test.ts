@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { REGISTRY, RUNNER_VERDICT, WAVE_2026_10_ALIASES, registryEntry } from '../../eval/registry.ts';
 import { deriveStatus, paidGuard, parseOnly, selectCategories } from '../../eval/runner/all.ts';
-import { BudgetRun } from '../../eval/runner/budget-ledger.ts';
+import { BudgetRun, initLedger } from '../../eval/runner/budget-ledger.ts';
 import { renderBugLedgerMarkdown, upsertBug, validateBugEntry, type BugEntry } from '../../eval/runner/bug-ledger.ts';
 import {
   DECIDE_OFF, HERMETIC_STRIPPED_KEYS, SystemOneOnError, assertSystemOneOff, enterHermeticEnv, strippedKeysIn, withHermeticEnv,
@@ -200,7 +200,8 @@ describe('all.ts --only', () => {
 
 describe('paid-arm guard', () => {
   const dir = mkdtempSync(join(tmpdir(), 'paid-arm-'));
-  const ledgerPath = join(dir, 'ledger.json');
+  const ledgerPath = join(dir, 'ledger.sqlite');
+  initLedger({ ledgerPath });
 
   test('refuses without both flags and names the fix and the money left', () => {
     let message = '';

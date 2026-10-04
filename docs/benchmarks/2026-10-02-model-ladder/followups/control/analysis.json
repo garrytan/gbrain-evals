@@ -1,0 +1,507 @@
+{
+  "models": [
+    "claude-haiku-4-5",
+    "claude-sonnet-4-6",
+    "claude-sonnet-5-5",
+    "gpt-5.4",
+    "gpt-5.4-mini",
+    "gpt-6.1-sol"
+  ],
+  "arms": [
+    "gbrain-566a242a-control"
+  ],
+  "tasks": [
+    "A01",
+    "A02",
+    "A03",
+    "A04",
+    "A05",
+    "A06",
+    "A07",
+    "A08",
+    "A09",
+    "A10",
+    "B01",
+    "B02",
+    "B03",
+    "B04",
+    "B05",
+    "B06",
+    "B07",
+    "B08",
+    "B09",
+    "B10",
+    "C01",
+    "C02",
+    "C03",
+    "C04",
+    "C05",
+    "C06",
+    "C07",
+    "C08",
+    "C09",
+    "C10",
+    "E01",
+    "E02",
+    "E03",
+    "E04",
+    "E05",
+    "E06",
+    "E07",
+    "E08",
+    "E09",
+    "E10",
+    "F01",
+    "F02",
+    "F03",
+    "F04",
+    "F05",
+    "F06",
+    "F07",
+    "F08",
+    "F09",
+    "F10"
+  ],
+  "families": [
+    "A",
+    "B",
+    "C",
+    "E",
+    "F"
+  ],
+  "success": {
+    "claude-haiku-4-5": {
+      "gbrain-566a242a-control": 0.71
+    },
+    "claude-sonnet-4-6": {
+      "gbrain-566a242a-control": 0.75
+    },
+    "claude-sonnet-5-5": {
+      "gbrain-566a242a-control": 0.85
+    },
+    "gpt-5.4": {
+      "gbrain-566a242a-control": 0.66
+    },
+    "gpt-5.4-mini": {
+      "gbrain-566a242a-control": 0.44
+    },
+    "gpt-6.1-sol": {
+      "gbrain-566a242a-control": 1
+    }
+  },
+  "by_family": {
+    "A": {
+      "claude-haiku-4-5": {
+        "gbrain-566a242a-control": 0.9
+      },
+      "claude-sonnet-4-6": {
+        "gbrain-566a242a-control": 1
+      },
+      "claude-sonnet-5-5": {
+        "gbrain-566a242a-control": 1
+      },
+      "gpt-5.4": {
+        "gbrain-566a242a-control": 0.85
+      },
+      "gpt-5.4-mini": {
+        "gbrain-566a242a-control": 0.55
+      },
+      "gpt-6.1-sol": {
+        "gbrain-566a242a-control": 1
+      }
+    },
+    "B": {
+      "claude-haiku-4-5": {
+        "gbrain-566a242a-control": 0.85
+      },
+      "claude-sonnet-4-6": {
+        "gbrain-566a242a-control": 0.8
+      },
+      "claude-sonnet-5-5": {
+        "gbrain-566a242a-control": 0.8
+      },
+      "gpt-5.4": {
+        "gbrain-566a242a-control": 0.55
+      },
+      "gpt-5.4-mini": {
+        "gbrain-566a242a-control": 0.3
+      },
+      "gpt-6.1-sol": {
+        "gbrain-566a242a-control": 1
+      }
+    },
+    "C": {
+      "claude-haiku-4-5": {
+        "gbrain-566a242a-control": 0.95
+      },
+      "claude-sonnet-4-6": {
+        "gbrain-566a242a-control": 1
+      },
+      "claude-sonnet-5-5": {
+        "gbrain-566a242a-control": 1
+      },
+      "gpt-5.4": {
+        "gbrain-566a242a-control": 1
+      },
+      "gpt-5.4-mini": {
+        "gbrain-566a242a-control": 0.9
+      },
+      "gpt-6.1-sol": {
+        "gbrain-566a242a-control": 1
+      }
+    },
+    "E": {
+      "claude-haiku-4-5": {
+        "gbrain-566a242a-control": 0
+      },
+      "claude-sonnet-4-6": {
+        "gbrain-566a242a-control": 0.1
+      },
+      "claude-sonnet-5-5": {
+        "gbrain-566a242a-control": 0.45
+      },
+      "gpt-5.4": {
+        "gbrain-566a242a-control": 0.3
+      },
+      "gpt-5.4-mini": {
+        "gbrain-566a242a-control": 0
+      },
+      "gpt-6.1-sol": {
+        "gbrain-566a242a-control": 1
+      }
+    },
+    "F": {
+      "claude-haiku-4-5": {
+        "gbrain-566a242a-control": 0.85
+      },
+      "claude-sonnet-4-6": {
+        "gbrain-566a242a-control": 0.85
+      },
+      "claude-sonnet-5-5": {
+        "gbrain-566a242a-control": 1
+      },
+      "gpt-5.4": {
+        "gbrain-566a242a-control": 0.6
+      },
+      "gpt-5.4-mini": {
+        "gbrain-566a242a-control": 0.45
+      },
+      "gpt-6.1-sol": {
+        "gbrain-566a242a-control": 1
+      }
+    }
+  },
+  "capability": {
+    "claude-haiku-4-5": null,
+    "claude-sonnet-4-6": null,
+    "claude-sonnet-5-5": null,
+    "gpt-5.4": null,
+    "gpt-5.4-mini": null,
+    "gpt-6.1-sol": null
+  },
+  "advantage": {},
+  "pooled_advantage": {
+    "value": null,
+    "ci95": [
+      null,
+      null
+    ]
+  },
+  "slope": {
+    "value": null,
+    "ci95": [
+      null,
+      null
+    ],
+    "n_models": 0
+  },
+  "family_slopes": {
+    "A": {
+      "value": null,
+      "ci95": [
+        null,
+        null
+      ]
+    },
+    "B": {
+      "value": null,
+      "ci95": [
+        null,
+        null
+      ]
+    },
+    "C": {
+      "value": null,
+      "ci95": [
+        null,
+        null
+      ]
+    },
+    "E": {
+      "value": null,
+      "ci95": [
+        null,
+        null
+      ]
+    },
+    "F": {
+      "value": null,
+      "ci95": [
+        null,
+        null
+      ]
+    }
+  },
+  "safety": {
+    "gbrain-566a242a-control": {
+      "output_leaks": 0,
+      "context_exposures": 0,
+      "unsafe_writes": 0,
+      "c_runs": 120
+    }
+  },
+  "efficiency": {
+    "claude-haiku-4-5": {
+      "gbrain-566a242a-control": {
+        "usd_per_task": 0.0736324872,
+        "usd_per_success": 0.10370772845070422,
+        "p50_s": 62.08,
+        "p95_s": 88.637,
+        "turns": 4.16
+      }
+    },
+    "claude-sonnet-4-6": {
+      "gbrain-566a242a-control": {
+        "usd_per_task": 0.22447245929999998,
+        "usd_per_success": 0.2992966124,
+        "p50_s": 61.899,
+        "p95_s": 157.947,
+        "turns": 3.89
+      }
+    },
+    "claude-sonnet-5-5": {
+      "gbrain-566a242a-control": {
+        "usd_per_task": 0.20620952480000004,
+        "usd_per_success": 0.2425994409411765,
+        "p50_s": 59.502,
+        "p95_s": 98.211,
+        "turns": 3.88
+      }
+    },
+    "gpt-5.4": {
+      "gbrain-566a242a-control": {
+        "usd_per_task": 0.0880062227,
+        "usd_per_success": 0.13334276166666667,
+        "p50_s": 60.105,
+        "p95_s": 84.597,
+        "turns": 3.33
+      }
+    },
+    "gpt-5.4-mini": {
+      "gbrain-566a242a-control": {
+        "usd_per_task": 0.019811789200000002,
+        "usd_per_success": 0.045026793636363645,
+        "p50_s": 57.038,
+        "p95_s": 82.17,
+        "turns": 3.52
+      }
+    },
+    "gpt-6.1-sol": {
+      "gbrain-566a242a-control": {
+        "usd_per_task": 0.0966082329,
+        "usd_per_success": 0.0966082329,
+        "p50_s": 68.566,
+        "p95_s": 91.592,
+        "turns": 4.18
+      }
+    }
+  },
+  "claims": {
+    "gbrain-566a242a-control": {
+      "unsupported_per_answer": 1.0606060606060606,
+      "contradicted_per_answer": 0.5420875420875421,
+      "judged": 594
+    }
+  },
+  "missed_evidence": {
+    "gbrain-566a242a-control": 0.21980676328502416
+  },
+  "cost_split": {
+    "claude-haiku-4-5": {
+      "gbrain-566a242a-control": {
+        "uncached_input": 0.00002623,
+        "cache_write": 0.05115763749999999,
+        "cache_read": 0.017682284,
+        "output": 0.0046470999999999995,
+        "gbrain_provider_calls": 0.00011923569999999996,
+        "unsplit": 0,
+        "total": 0.0736324872
+      }
+    },
+    "claude-sonnet-4-6": {
+      "gbrain-566a242a-control": {
+        "uncached_input": 0.000021360000000000022,
+        "cache_write": 0.14566578750000003,
+        "cache_read": 0.05766181800000001,
+        "output": 0.0160533,
+        "gbrain_provider_calls": 0.005070193799999997,
+        "unsplit": 0,
+        "total": 0.2244724593
+      }
+    },
+    "claude-sonnet-5-5": {
+      "gbrain-566a242a-control": {
+        "uncached_input": 0.00002376000000000001,
+        "cache_write": 0.14270157500000002,
+        "cache_read": 0.051177216000000025,
+        "output": 0.012258299999999998,
+        "gbrain_provider_calls": 0.0000486738,
+        "unsplit": 0,
+        "total": 0.20620952480000002
+      }
+    },
+    "gpt-5.4": {
+      "gbrain-566a242a-control": {
+        "uncached_input": 0.06483839999999999,
+        "cache_write": 0,
+        "cache_read": 0.017245440000000004,
+        "output": 0.005619750000000003,
+        "gbrain_provider_calls": 0.00030263269999999997,
+        "unsplit": 0,
+        "total": 0.0880062227
+      }
+    },
+    "gpt-5.4-mini": {
+      "gbrain-566a242a-control": {
+        "uncached_input": 0.012018659999999997,
+        "cache_write": 0,
+        "cache_read": 0.005507711999999998,
+        "output": 0.0016248149999999997,
+        "gbrain_provider_calls": 0.0006606022000000001,
+        "unsplit": 0,
+        "total": 0.019811789200000002
+      }
+    },
+    "gpt-6.1-sol": {
+      "gbrain-566a242a-control": {
+        "uncached_input": 0.08105830000000003,
+        "cache_write": 0,
+        "cache_read": 0.011665014999999997,
+        "output": 0.0036398,
+        "gbrain_provider_calls": 0.00024511789999999997,
+        "unsplit": 0,
+        "total": 0.09660823290000002
+      }
+    }
+  },
+  "tool_chars": {
+    "claude-haiku-4-5": {
+      "gbrain-566a242a-control": {
+        "search": 83102.11999999998,
+        "get_page": 4388.249999999999,
+        "list_pages": 1382.99,
+        "entity": 177.89999999999998,
+        "query": 8593.99,
+        "put_page": 768.9199999999998,
+        "remember": 52.53,
+        "recall": 373.33
+      }
+    },
+    "claude-sonnet-4-6": {
+      "gbrain-566a242a-control": {
+        "search": 55577.45000000001,
+        "entity": 460.68,
+        "get_page": 3391.600000000001,
+        "query": 27307.539999999997,
+        "list_pages": 2406.3500000000004,
+        "recall": 2296.2799999999997,
+        "resolve_slugs": 14.659999999999998,
+        "synthesize": 136.99,
+        "remember": 422.92000000000013,
+        "add_timeline_entry": 133.17000000000002,
+        "put_page": 615.16,
+        "get_backlinks": 0.04,
+        "traverse_graph": 0.02,
+        "get_recent_salience": 58.02
+      }
+    },
+    "claude-sonnet-5-5": {
+      "gbrain-566a242a-control": {
+        "entity": 689.8799999999999,
+        "search": 103875.27999999997,
+        "list_pages": 841.7700000000002,
+        "get_page": 1455.72,
+        "recall": 6551.99,
+        "query": 2590.58,
+        "whoami": 8.4,
+        "get_backlinks": 0.04,
+        "get_ingest_log": 0.02,
+        "list_skills": 4.74,
+        "put_page": 768.9199999999998,
+        "remember": 275.66,
+        "resolve_slugs": 2.91,
+        "add_timeline_entry": 43.75
+      }
+    },
+    "gpt-5.4": {
+      "gbrain-566a242a-control": {
+        "query": 5277.03,
+        "search": 59070.63999999999,
+        "resolve_slugs": 9.040000000000001,
+        "get_page": 445.1899999999998,
+        "recall": 957.1799999999997,
+        "whoami": 0.84,
+        "list_pages": 2834.52,
+        "entity": 64.73,
+        "remember": 489.09000000000003,
+        "put_page": 115.21000000000001,
+        "capture": 47.74
+      }
+    },
+    "gpt-5.4-mini": {
+      "gbrain-566a242a-control": {
+        "search": 28999.36999999999,
+        "get_page": 1412.35,
+        "query": 8960.19,
+        "get_recent_salience": 0.02,
+        "put_page": 464.1000000000001,
+        "remember": 254.49999999999994,
+        "resolve_slugs": 8.71,
+        "recall": 106.88,
+        "entity": 14.77,
+        "whoami": 0.42
+      }
+    },
+    "gpt-6.1-sol": {
+      "gbrain-566a242a-control": {
+        "search": 96363.25,
+        "get_page": 3569.060000000001,
+        "whoami": 23.100000000000026,
+        "query": 18866.76,
+        "entity": 59.86,
+        "resolve_slugs": 35.690000000000005,
+        "list_pages": 5.2,
+        "remember": 513.16,
+        "recall": 1575.3700000000001,
+        "put_page": 230.54000000000002,
+        "list_skills": 9.48
+      }
+    }
+  },
+  "cells": 600,
+  "usd": 72.60138611000004,
+  "reconciliation": [
+    {
+      "budget_run_id": "cat40-model-ladder-2026-10-04T03-03-15-407Z-ba9fc82b",
+      "cells": 600,
+      "cells_usd": 70.87407161,
+      "judge_usd": 1.7273144999999983,
+      "slot_builds_usd": 0,
+      "attributed_usd": 72.60138610999999,
+      "ledger_usd": 72.8902294600002,
+      "gap_usd": 0.28884335000020656,
+      "gap_pct": 0.003962716980589483,
+      "flagged": false
+    }
+  ]
+}

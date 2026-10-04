@@ -38,6 +38,9 @@ bun eval/runner/cat41-agent-operator.ts gate --before "$BASE" --after "$AFTER" -
 # candidate, because gpt-5.4-mini's behavior moved by 13 points between two runs of the same baseline code six hours
 # apart on 2026-10-03 (f1f10-instruction-ab/). The decision rule compares against this same-window baseline.
 cat40() { # label ref
+  # Slot brains are built by their own step (cat40 v0.10.15+); it is a no-op when the snapshots exist.
+  bun eval/runner/cat40-model-ladder.ts --build-slots --gbrain-repo "$GBRAIN" --gbrain-ref "$2" --slots 5 --slot-build-allowance-usd 2 \
+    --budget-usd 10 --out "eval/reports/cat40/aow-f1f10-slots-${2:0:7}"
   bun eval/runner/cat40-model-ladder.ts --models gpt-5.4-mini,gpt-5.4,claude-sonnet-4-6 --arms gbrain \
     --gbrain-label "$1" --max-tool-chars 100000000 --transcripts --slots 5 \
     --gbrain-repo "$GBRAIN" --gbrain-ref "$2" --repeat 2 --budget-usd "$CAT40_USD" --concurrency 6 --judge none \

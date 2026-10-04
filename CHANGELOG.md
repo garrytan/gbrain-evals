@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [0.10.14] - 2026-10-04
+## [0.10.17] - 2026-10-04
 
 ### Cat 41 agent operator outcomes: baseline shows agents spending and rebuilding without asking
 
@@ -51,6 +51,122 @@ persistent-install effect happened without authorization.
   key, as the configured feature; v4 recognizes "can't find your memory at
   <path>" as a missing-brain reason. The v3 and v4 gate reports stay published.
   The same-window Cat 40 pair: candidate 205/300 against baseline 202/300.
+## [0.10.16] - 2026-10-04
+
+### The budget ledger moves to SQLite, so paid runs stop stalling their own timing; Cat 40 gets the tooling for the gbrain cost wave
+
+Every paid request reserves its cost in the budget ledger before it is sent.
+The ledger was one JSON file that each reservation parsed, rewrote and
+fsynced in full on the runner's event loop. At 110,000 entries that blocked
+the loop for about 0.6 s per request, which is why gbrain's tool latency in
+the Cat 40 harness looked 10 to 30 times slower than the same calls replayed
+alone. The ledger is now a SQLite file (`bun:sqlite`, WAL mode,
+`synchronous=FULL`), following Garry's gate decision (UC3) on the
+[Cat 40 follow-ups plan](docs/plans/2026-10-03-cat40-followups/PLAN.md).
+Guide: [docs/budget-ledger.md](docs/budget-ledger.md).
+
+- **Constant-cost reservations.** A reserve plus settle took 0.45 to 0.8 ms
+  with 200,000 entries in the ledger on a 4-core cloud machine, most of it two
+  fsyncs; a test holds the average under 5 ms at that size. Cross-process
+  safety comes from SQLite's `BEGIN IMMEDIATE`: four processes making 2,000
+  reservations against a tight budget never overspend, and a writer paused
+  between its check and its write cannot be overtaken.
+- **The program cap lives in the ledger.** `init` records it ($500 by
+  default), runners without a cap flag adopt it, a disagreeing flag or
+  environment variable is refused with the fix, and `set-cap` changes it only
+  with a reason. A missing ledger off the default path refuses with the `init`
+  command instead of starting empty. New CLI commands: `init`, `verify`,
+  `set-cap`, `migrate --finish`; `status` is read-only JSON with hints.
+- **Safe migration.** An existing `ledger.json` migrates once under both its
+  old lock and the new one, keeps a `.migrated` copy, and is replaced by a
+  tombstone that code from before this release refuses to spend against. A
+  crash at any step leaves either the legacy file or a state that `migrate
+  --finish` completes; differing totals stop spending and say to ask the user.
+  `evidence-delivery.ts`, which read `ledger.json` directly, now goes through
+  the shared reader, and a campaign manifest's cap is an upper limit.
+- **Reservations cover what providers bill.** Tool schemas, OpenAI
+  `instructions`, the context a `previous_response_id` carries (a full window
+  when the chain is unknown) and the cache-write premium are now reserved. Any
+  remaining overshoot is recorded. A failed ledger write stops the process
+  from spending.
+- **Event-loop lag in every receipt.** `startPaidRun` records lag p50, p99 and
+  max; every receipt's cost block carries it with the ledger path and recorded
+  cap (`n2-3-prompt-ab.ts` included). A deliberate 100 ms block registers.
+- **Cat 40 runner.** Tool results are uncapped by default (`--max-tool-chars
+  none` spells it). Each `--out` directory is bound to its experiment, and a
+  resume joins the step's original budget run instead of opening a fresh one.
+  Slot brains are built by their own `--build-slots` step, one at a time, and
+  agent steps refuse when a snapshot is missing. `--order model` finishes
+  each model before the next. gbrain's provider calls are charged to the cell
+  that made them even when they finish after it, unpriced ones at their
+  reservation, and cells record `restore_ms`.
+- **Cat 40 analysis.** `analyze.ts` splits each cell's `total_usd` into
+  uncached input, cache writes, cache reads, output and gbrain provider calls
+  (the parts sum to the total), reports tool-result characters by tool and cost
+  per success, warns on event-loop lag, and reconciles cells against the
+  ledger. `holdout_stats.py` refuses comparisons without complete, unique
+  coverage and adds the gate's ship rule (-5 point margin, -3 beside it), the
+  dev-round harm screen, a power check, and pairs for the new build against
+  the contemporaneous `566a242a` control.
+- **Paid-run script.** `scripts/cat40-followups.sh` holds the exact commands
+  for dev rounds 1 and 2, the latency comparator, the new-build held-out run
+  and the `566a242a` control, on one ledger capped at $237. `PRINT_ONLY=1`
+  prints them.
+### Cat 40 results on the fixed harness, and a correction
+
+- **Correction to the Cat 40 report.** In every earlier gbrain run, the ledger stall made gbrain's embedding
+  requests fail, and gbrain quietly fell back to keyword-only search. A recorded search replayed on the same build
+  and brain reproduces its recorded results only when embeddings are unreachable. The `51a30c1` renewal-brief
+  cells rerun under the new ledger scored 4 of 30, against 14 of 30 before. The report now carries a correction
+  note: gbrain against plain files has not been re-measured.
+- **gbrain cost wave (gbrain v0.60.44.0) on the held-out world.** Against a contemporaneous v0.60.35.0 control
+  (6 models × 2 repeats):
+  - cost per task fell 32% ($0.118 to $0.080), and cost per successful task fell 34%
+  - success went from 73.5% to 75.7%: +2.2 points per task (95% CI −0.5 to +5.0)
+  - no leaks
+  - the gate's ship rule passes
+
+  Development rounds and artifacts: `docs/benchmarks/2026-10-02-model-ladder/followups/`. Spend: $179.66 of the
+  $237 ledger.
+## [0.10.15] - 2026-10-04
+
+### LongMemEval with opaque session ids: retrieval confirmed, the notes gain holds, and a frontier reader answers 447/500
+
+Measured at the existing pin, gbrain `109b992`, after a committed
+[preregistration](docs/benchmarks/2026-10-04-longmemeval-opaque-followups-preregistration.md)
+([report](docs/benchmarks/2026-10-04-longmemeval-opaque-followups.md)).
+Provider spend: $67.83 of an $80 budget.
+
+- **Retrieval recount (September 28 audit, C-01).** All 13 published
+  LongMemEval retrieval arms were re-run with opaque session ids, so the
+  `answer_` prefix of labeled evidence ids never reaches gbrain, with settings
+  matched by recomputing each arm's recorded knob hash. Over the 470 answerable
+  questions, the release configuration found every labeled session for 451
+  (published 449, +2/−0) and the reranker-off arm for 434 (439, +1/−6,
+  p = 0.13); autocut on scored 384 (379). Ten of 13 arms are confirmed. The
+  three expansion arms without the reranker moved up (legacy expansion 255 to
+  436 in gbrain's harness, 258 to 440 in this repository's runner).
+  A post-hoc check at the published gbrain commit attributes that change to
+  later gbrain code (+12/−1 on 40 questions), not to the ids (+2/−1).
+- **Reading-notes transfer with opaque ids.** On the 361-question cohort,
+  rebuilt from public receipts, the notes reader beat the direct reader 320 to
+  304 (+25/−9, paired 95% interval +1.4 to +7.5 points), so the predeclared
+  gate passes; 308/361 to 324/361 stays as the raw-id measurement. Eleven notes
+  responses hit the 512-token limit.
+- **Frontier reader (audit B6).** `gpt-5.4` at medium reasoning, on exactly the
+  September 29 GPT-4o arm's official prompts, answered 447/500 (official judge
+  448/500): +33/−16 against GPT-4o (p = 0.021), +25/−17 against gbrain's house
+  reader (p = 0.28). No ranking against vendor results is claimed.
+- **Published claims.** Dated annotations in the September 6 ranker-wave, May
+  LongMemEval, September 9 refresh, September 25 reading-notes and September 29
+  opaque-id reports; the README, settings guide, retrieval lessons and
+  comparison page now carry the recounts, and the finding that query expansion
+  hurts retrieval is marked as no longer true of current gbrain.
+- **Tooling.** `scripts/verify-longmemeval-opaque-followups.py` recounts all
+  three items from the committed receipts and runs in `bun run validate`;
+  three receipt-manifest entries; new TODOS follow-ups for a frontier reader on
+  the reranked retrieval and a reading-notes run at 1,024 tokens.
+
 ## [0.10.13] - 2026-10-03
 
 ### Re-pin to gbrain `109b992` (fix wave 8 and Foundations 1): no accuracy change, one small latency regression, nine new checks

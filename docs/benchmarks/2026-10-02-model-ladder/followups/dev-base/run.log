@@ -1,0 +1,20 @@
+2026-10-03T23:34:18.491Z 150 cells to run (0 already done, order task) in <evals>/eval/reports/cat40/followups-dev-base
+2026-10-03T23:34:18.526Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger <evals>/.budget/cat40-followups.sqlite
+2026-10-03T23:36:13.149Z write probe passed on every slot
+2026-10-03T23:36:13.149Z gbrain 0.60.37.0 (109b992172e1) ready on 5 slots, surface starter
+2026-10-03T23:37:13.721Z 10/150 cells; last gpt-5.4-mini|gbrain-base-dev|A04|0 success=true $0.010
+2026-10-03T23:38:17.798Z 20/150 cells; last claude-sonnet-4-6|gbrain-base-dev|A07|0 success=true $0.062
+2026-10-03T23:39:01.849Z 30/150 cells; last gpt-5.4|gbrain-base-dev|A10|0 success=true $0.078
+2026-10-03T23:39:57.926Z 40/150 cells; last gpt-5.4-mini|gbrain-base-dev|B04|0 success=true $0.011
+2026-10-03T23:40:44.451Z 50/150 cells; last gpt-5.4-mini|gbrain-base-dev|B07|0 success=false $0.016
+2026-10-03T23:41:43.138Z 60/150 cells; last claude-sonnet-4-6|gbrain-base-dev|B10|0 success=true $0.053
+2026-10-03T23:42:29.823Z 70/150 cells; last gpt-5.4-mini|gbrain-base-dev|C03|0 success=true $0.017
+2026-10-03T23:43:29.529Z 80/150 cells; last gpt-5.4-mini|gbrain-base-dev|C07|0 success=true $0.029
+2026-10-03T23:44:46.476Z 90/150 cells; last claude-sonnet-4-6|gbrain-base-dev|C10|0 success=true $0.490
+2026-10-03T23:45:45.666Z 100/150 cells; last gpt-5.4-mini|gbrain-base-dev|E04|0 success=false $0.035
+2026-10-03T23:47:31.306Z 110/150 cells; last claude-sonnet-4-6|gbrain-base-dev|E04|0 success=false $0.983
+2026-10-03T23:48:48.458Z 120/150 cells; last gpt-5.4-mini|gbrain-base-dev|F01|0 success=true $0.039
+2026-10-03T23:49:57.411Z 130/150 cells; last gpt-5.4|gbrain-base-dev|F04|0 success=false $0.050
+2026-10-03T23:51:11.387Z 140/150 cells; last claude-sonnet-4-6|gbrain-base-dev|F07|0 success=true $0.117
+2026-10-03T23:52:37.113Z 150/150 cells; last claude-sonnet-4-6|gbrain-base-dev|F10|0 success=false $0.126
+2026-10-03T23:52:37.382Z receipt <evals>/eval/reports/cat40/followups-dev-base/receipt-1791071557381.json

@@ -84,4 +84,4 @@ On the dev world, the fix-wave run (`../fix-wave-ladder/`) measured a pooled adv
 - Total spend from the budget ledger was $336.08, including slot-build embeddings. No run reached its budget, and no provider returned `insufficient_quota`.
 - Each gbrain slot took about 39 minutes to build on a 4-vCPU machine.
 
-To reproduce the statistics, run from the repository root: `python3 docs/benchmarks/2026-10-02-model-ladder/holdout/holdout_stats.py docs/benchmarks/2026-10-02-model-ladder/holdout/results.jsonl`.
+To reproduce the statistics, run from the repository root: `python3 docs/benchmarks/2026-10-02-model-ladder/holdout/holdout_stats.py docs/benchmarks/2026-10-02-model-ladder/holdout/results.jsonl`. Since 0.10.12 the script refuses a paired comparison unless both arms cover every (model, task, repeat) cell exactly once, and it adds the 2026-10-03 gate's checks for the cost wave: `--ship-rule A,B`, `--harm-screen A,B`, `--power A,B` and `--models` (see the script's header). Its output for this file is unchanged.

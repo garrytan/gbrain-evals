@@ -80,7 +80,8 @@ export interface LoopConfig {
   user: string;
   arm: Arm;
   maxTurns?: number;
-  maxToolChars?: number;
+  /** Per-tool-result character cap; null or omitted passes every result through unmodified. */
+  maxToolChars?: number | null;
   /** Output allowance per model call. */
   maxOutputTokens?: number;
   fetchImpl?: typeof fetch;
@@ -94,7 +95,6 @@ export type ScriptedModel = (history: Array<{ name: string; args: Record<string,
 export const DEFAULT_MAX_TURNS = 16;
 /** Sent once when a model stops without calling a tool; harnesses enforce structured output the same way. */
 export const NUDGE = 'Please call submit_answer now with your final answer.';
-export const DEFAULT_MAX_TOOL_CHARS = 20_000;
 
 export function provider(model: string): 'anthropic' | 'openai' {
   if (model.startsWith('claude')) return 'anthropic';
@@ -108,8 +108,8 @@ export function priceUsage(model: string, u: Usage): number {
   return (u.input * p.input + u.cache_read * (p.cache_read ?? p.input) + u.cache_write * (p.cache_write ?? p.input) + u.output * p.output) / 1e6;
 }
 
-function cap(text: string, max: number): { text: string; truncated: boolean } {
-  if (text.length <= max) return { text, truncated: false };
+function cap(text: string, max: number | null): { text: string; truncated: boolean } {
+  if (max === null || text.length <= max) return { text, truncated: false };
   return { text: `${text.slice(0, max)}\n…[truncated: ${text.length - max} more characters]`, truncated: true };
 }
 
@@ -129,7 +129,7 @@ async function postJson(fetchImpl: typeof fetch, url: string, headers: Record<st
 export async function runAgent(cfg: LoopConfig): Promise<AgentRun> {
   const t0 = Date.now();
   const maxTurns = cfg.maxTurns ?? DEFAULT_MAX_TURNS;
-  const maxChars = cfg.maxToolChars ?? DEFAULT_MAX_TOOL_CHARS;
+  const maxChars = cfg.maxToolChars ?? null;
   const fetchImpl = cfg.fetchImpl ?? fetch;
   const run: AgentRun = { model: cfg.model, final: null, stop: 'turn_cap', turns: 0, tools: [], usage: { input: 0, output: 0, cache_read: 0, cache_write: 0, requests: 0 }, usd: 0, ms: 0, model_ms: 0, tool_ms: 0 };
   const specs = [...cfg.arm.tools(), SUBMIT_TOOL];
