@@ -15,6 +15,7 @@
  *   bun eval/runner/chronicle-lift.ts corpus --out <dir>                    # render the vault only, $0
  *   bun eval/runner/chronicle-lift.ts run --out <dir> --budget-usd <n> [--arms off,on-a,on-b] [--repeats 2]
  *        [--model claude-sonnet-4-6] [--questions <ids>] [--qa-arms off,on-a] [--no-qa]
+ *        (`--arms none` reuses the brains an earlier run built in --out; finished agent cells are never rerun)
  *   bun eval/runner/chronicle-lift.ts score --out <dir> [--review <review.json>]
  *
  * `--out` must be outside any Git worktree: `gbrain init` refuses to create its
@@ -284,7 +285,8 @@ async function run(argv: string[]) {
   const out = resolve(flag(argv, '--out') ?? join(process.env.HOME ?? '/tmp', '.cache/gbrain-evals/chronicle-lift/run'));
   if (!relative(REPO, out).startsWith('..')) throw new Error(`--out ${out} is inside this repository; gbrain init refuses a content directory inside another Git worktree. Choose a directory outside it and copy receipts in afterwards.`);
   mkdirSync(out, { recursive: true });
-  const arms = (flag(argv, '--arms') ?? 'off,on-a,on-b').split(',') as ArmId[];
+  const armsFlag = flag(argv, '--arms') ?? 'off,on-a,on-b';
+  const arms = (armsFlag === 'none' ? [] : armsFlag.split(',')) as ArmId[];
   const qaArms = argv.includes('--no-qa') ? [] : (flag(argv, '--qa-arms') ?? 'off,on-a').split(',') as ArmId[];
   const repeats = Number(flag(argv, '--repeats') ?? 2);
   const model = flag(argv, '--model') ?? 'claude-sonnet-4-6';
@@ -316,7 +318,10 @@ async function run(argv: string[]) {
     }
     const resultsPath = join(out, 'qa-results.jsonl');
     const done = new Set(existsSync(resultsPath) ? readFileSync(resultsPath, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l).key) : []);
-    await Promise.all(qaArms.map(async arm => {
+    // One arm's failure (a refused budget reservation included) stops every arm before the guard is uninstalled,
+    // so no model call can leave the process unguarded.
+    let stopAll = false;
+    const settled = await Promise.allSettled(qaArms.map(async arm => {
       const home = join(out, 'brains', arm);
       const restore = () => { rmSync(join(home, 'home'), { recursive: true, force: true }); execFileSync('tar', ['-C', home, '-xf', join(out, 'brains', `${arm}.tar`), 'home']); };
       restore();
@@ -327,8 +332,11 @@ async function run(argv: string[]) {
           for (const q of questions) {
             const key = `${arm}|${q.id}|${r}`;
             if (done.has(key)) continue;
+            if (stopAll) return;
             if (budget?.guard.exhausted) throw new Error('budget exhausted');
-            const res = await runAgent({ model, system: systemPrompt(agentArm, questionsDoc.today), user: q.question, arm: agentArm, maxTurns });
+            let res: Awaited<ReturnType<typeof runAgent>>;
+            try { res = await runAgent({ model, system: systemPrompt(agentArm, questionsDoc.today), user: q.question, arm: agentArm, maxTurns }); }
+            catch (error) { stopAll = true; throw error; }
             const wrote = res.tools.some(t => agentArm.writeTools().includes(t.name) && t.name !== 'submit_answer');
             const correct = scoreAnswer(q, res.final, questionsDoc.contacts_first_names);
             const { tools, ...runRest } = res;
@@ -340,11 +348,13 @@ async function run(argv: string[]) {
         }
       } finally { await agentArm.stop(); }
     }));
+    const failed = settled.find((r): r is PromiseRejectedResult => r.status === 'rejected');
+    if (failed) throw failed.reason;
   } finally {
     proxy.stop();
     const summary = budget ? (budget.guard.uninstall(), budget.run.close()) : null;
     const pkg = JSON.parse(readFileSync(join(GBRAIN, 'package.json'), 'utf8'));
-    writeFileSync(join(out, 'receipt.json'), JSON.stringify({
+    writeFileSync(join(out, arms.length ? 'receipt.json' : `receipt-qa-${started.replace(/[:.]/g, '-')}.json`), JSON.stringify({
       kind: LIFT_VERSION, started, finished: new Date().toISOString(), bun: Bun.version,
       gbrain: { version: pkg.version, declared_pin: JSON.parse(readFileSync(join(REPO, 'package.json'), 'utf8')).dependencies.gbrain },
       gbrain_evals: { git_head: git('rev-parse', 'HEAD'), dirty: (git('status', '--porcelain') ?? '') !== '' },
