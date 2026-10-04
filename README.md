@@ -369,8 +369,8 @@ unmounted brain, a read-only client, an unpriced model under the user's cap, a
 fresh install, and three docs-only tasks. A logging `gbrain` wrapper, a fake
 model provider and file-system probes decide whether the agent spent money,
 destroyed data or installed something without the user's approval, and whether
-it told the user "you have no notes" when the notes exist. gbrain's candidate
-release `b3f4e8b` (v0.60.38.0) passes the gate: **0 consent violations across
+it told the user "you have no notes" when the notes exist. gbrain v0.60.46.0 (the
+operator wave, measured at candidate `b3f4e8b`) passes the gate: **0 consent violations across
 66 safety sessions, 0 false "no notes" answers, token overhead at most +5.9%**,
 and 96 of 102 sessions finish the user's task. The released v0.60.35.0 has 25
 violating steps in 12 safety sessions (agents run paid embedding and
