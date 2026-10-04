@@ -326,7 +326,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
       if (extractFacts && !importError) {
         try {
           const res = await extractFacts(engine, { sourceId: 'default', slugs: [...bySlug.keys()], types: ['conversation'], force: true });
-          const facts = await engine.executeRaw(`SELECT fact, valid_from, source_markdown_slug FROM facts WHERE expired_at IS NULL ORDER BY valid_from, id`) as Array<{ fact: string; valid_from: Date | string | null; source_markdown_slug: string | null }>;
+          const facts = await engine.executeRaw(`SELECT fact, valid_from, source_markdown_slug FROM facts WHERE expired_at IS NULL AND source NOT LIKE 'cli:extract-conversation-facts:terminal%' AND source NOT LIKE 'cli:extract-conversation-facts:non-extractable%' ORDER BY valid_from, id`) as Array<{ fact: string; valid_from: Date | string | null; source_markdown_slug: string | null }>;
           for (const f of facts) {
             const sessionId = f.source_markdown_slug ? bySlug.get(f.source_markdown_slug) : undefined;
             if (!sessionId) continue;
