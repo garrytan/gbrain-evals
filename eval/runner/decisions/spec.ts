@@ -62,7 +62,9 @@ export interface MemoryQaSource extends SourceCommon {
   search_pins: Record<string, string>;
   top_k: number;
   /** Reading lane: a reader model over the retrieved sessions, or gbrain think; judged against the reference. */
-  qa?: { mode: 'reader' | 'think'; reader?: string; judge?: string; think_model?: string; runs: number; sessions: number; budget_tokens?: number | null };
+  qa?: { mode: 'reader' | 'think'; reader?: string; judge?: string; think_model?: string; runs: number; sessions: number; budget_tokens?: number | null; context?: 'sessions' | 'facts' };
+  /** `conversation` runs gbrain's conversation-facts extractor on each conversation's pages before questions; `qa.context: facts` reads those facts. */
+  facts?: 'conversation';
   /** Estimated dollars for both arms; used for the budget preflight. */
   estimate_usd?: number;
 }
@@ -144,6 +146,8 @@ export function validateSpec(value: unknown, path = 'decision.json'): DecisionSp
           if (!['reader', 'think'].includes(src.qa.mode)) problems.push(`${label}: qa.mode must be reader or think`);
           if (!Number.isInteger(src.qa.runs) || src.qa.runs < 1 || src.qa.runs > 10) problems.push(`${label}: qa.runs must be an integer in [1, 10]`);
           if (!Number.isInteger(src.qa.sessions) || src.qa.sessions < 1 || src.qa.sessions > 50) problems.push(`${label}: qa.sessions must be an integer in [1, 50]`);
+          if (src.qa.context !== undefined && !['sessions', 'facts'].includes(src.qa.context)) problems.push(`${label}: qa.context must be sessions or facts`);
+          if (src.qa.context === 'facts' && (src.facts !== 'conversation' || src.qa.mode !== 'reader')) problems.push(`${label}: qa.context facts needs facts: "conversation" and qa.mode reader`);
         }
       } else if (src?.kind === 'category') {
         if (typeof src.script !== 'string' || !src.script.startsWith('eval/runner/')) problems.push(`${label}: script must be a path under eval/runner/`);

@@ -5,6 +5,7 @@
  *     [--split dev] [--gbrain <checkout>[@ref]] [--config key=value]... [--pin key=value]...
  *     [--embed hash|real] [--embedding-model provider:model --embedding-dims N]
  *     [--categories a,b] [--limit N] [--seed N] [--top-k 10] [--shard i/n]
+ *     [--facts conversation] [--qa reader|think --qa-context sessions|facts]
  *     [--paid --budget-run-id <id>] --output <dir>
  *
  * What it measures: judge-free session retrieval. Each conversation's
@@ -15,6 +16,12 @@
  * session in the top five distinct sessions), recall_any@5, recall_all@10,
  * nDCG@10 and latency. Abstention questions have no gold and are marked so a
  * comparison family excludes them.
+ *
+ * Facts lane (`--facts conversation`): pages import as conversation pages
+ * with ISO session dates and gbrain's conversation-facts extractor runs on
+ * each conversation before its questions; rows carry facts_count and
+ * facts_unresolved_share. `--qa reader --qa-context facts` answers from the
+ * saved facts of the top sessions instead of their raw turns.
  *
  * The arm imports gbrain only through `importGbrain`, so `--gbrain` really
  * selects the build under test; the decision kit runs baseline and candidate
@@ -35,7 +42,7 @@ import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resol
 import { EmbeddingCache, makeCachingTransport } from '../longmemeval-cache.ts';
 import { ndcgAtK, recallAllAtK, recallAnyAtK, uniqueInOrder, percentile } from '../metrics.ts';
 import { loadCorpus, occurrenceId, renderSessionPage, type Corpus, type MemoryQuestion, type Session } from './corpus.ts';
-import { ChatClient, DEFAULT_JUDGE, DEFAULT_READER, judgeResponse, packSessions, readerPrompt, repeatsTrap, approxTokens } from './qa.ts';
+import { ChatClient, DEFAULT_JUDGE, DEFAULT_READER, factsReaderPrompt, judgeResponse, packSessions, readerPrompt, repeatsTrap, approxTokens, unresolvedRelativeTime, type SavedFact } from './qa.ts';
 import { devConversations } from '../decisions/splits.ts';
 import { decideError, DecideError, renderOperatorMessage } from '../decisions/errors.ts';
 
@@ -55,7 +62,8 @@ export interface RunArgs {
   shard: { index: number; count: number };
   output: string;
   argv: string[];
-  qa: { mode: 'none' | 'reader' | 'think'; reader: string; judge: string; runs: number; sessions: number; budgetTokens: number | null; thinkModel: string };
+  qa: { mode: 'none' | 'reader' | 'think'; reader: string; judge: string; runs: number; sessions: number; budgetTokens: number | null; thinkModel: string; context: 'sessions' | 'facts' };
+  facts: 'none' | 'conversation';
 }
 
 export interface MemoryQaRow {
@@ -80,12 +88,18 @@ export interface MemoryQaRow {
   qa_sessions?: number;
   qa_answer?: string;
   qa_error?: string;
+  qa_facts?: number;
+  facts_count?: number;
+  facts_unresolved_share?: number;
+  facts_extract_error?: string;
   error?: string | null;
   error_origin?: 'sut' | 'harness' | 'dependency';
 }
 
 const DEFAULT_PINS: Record<string, string> = { 'search.mode': 'balanced', 'search.reranker.enabled': 'false', 'search.autocut': 'false' };
 const RECYCLE_EVERY = 25;
+/** Planning estimate for one session through the conversation-facts extractor (product default model). */
+const FACTS_USD_PER_SESSION = 0.03;
 const PRESERVE_TABLES = new Set(['sources', 'config', 'gbrain_cycle_locks', 'subagent_rate_leases']);
 
 function kv(list: string[], flag: string): Record<string, string> {
@@ -129,7 +143,9 @@ export function parseRunArgs(argv: string[]): RunArgs {
       runs: Number(one('--qa-runs') ?? 1), sessions: Number(one('--qa-sessions') ?? 5),
       budgetTokens: one('--qa-budget-tokens') ? Number(one('--qa-budget-tokens')) : null,
       thinkModel: one('--think-model') ?? 'anthropic:claude-sonnet-5-5',
+      context: (one('--qa-context') ?? 'sessions') as 'sessions' | 'facts',
     },
+    facts: (one('--facts') ?? 'none') as 'none' | 'conversation',
   };
 }
 
@@ -174,7 +190,7 @@ const PROVIDER_KEY: Record<string, string> = { openai: 'OPENAI_API_KEY', voyage:
 
 export function runConfigHash(a: RunArgs, gut: GbrainUnderTest, corpus: Corpus): string {
   const pre = { benchmark: a.benchmark, split: a.split, config: a.config, pins: a.pins, embed: a.embed, model: a.embeddingModel, dims: a.embeddingDims, qa: a.qa,
-    categories: a.categories, limit: a.limit, seed: a.seed, topK: a.topK, gbrain: gut.overlay?.build.commit ?? gut.version, data: corpus.source.files };
+    categories: a.categories, limit: a.limit, seed: a.seed, topK: a.topK, gbrain: gut.overlay?.build.commit ?? gut.version, data: corpus.source.files, ...(a.facts !== 'none' ? { facts: a.facts } : {}) };
   return createHash('sha256').update(JSON.stringify(pre)).digest('hex');
 }
 
@@ -210,13 +226,17 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   let paid: { run: BudgetRun; guard: PaidRequestGuard } | null = null;
   let cache: EmbeddingCache | null = null;
   const provider = a.embeddingModel.split(':')[0];
-  const needsPaid = a.embed === 'real' || a.qa.mode !== 'none';
+  const needsPaid = a.embed === 'real' || a.qa.mode !== 'none' || a.facts !== 'none';
   if (!['none', 'reader', 'think'].includes(a.qa.mode)) throw new Error('--qa must be none, reader or think');
+  if (!['none', 'conversation'].includes(a.facts)) throw new Error('--facts must be none or conversation');
+  if (!['sessions', 'facts'].includes(a.qa.context)) throw new Error('--qa-context must be sessions or facts');
+  if (a.qa.context === 'facts' && (a.facts === 'none' || a.qa.mode !== 'reader')) throw new Error('--qa-context facts needs --facts conversation and --qa reader');
   if (needsPaid) {
     const perQuestion: Record<string, number> = { 'lme-s': 0.012, locomo: 0.002, 'beam-100k': 0.01, 'beam-1m': 0.03, fixture: 0 };
     const perQa: Record<string, number> = { none: 0, reader: a.benchmark === 'lme-s' ? 0.05 : 0.01, think: 0.08 };
     const mine = questions.filter(q => myConvs.includes(q.conversation)).length;
-    const estimate = Math.max(0.05, Math.round(((a.embed === 'real' ? perQuestion[a.benchmark] ?? 0.02 : 0) + perQa[a.qa.mode] * a.qa.runs) * mine * 100) / 100);
+    const factSessions = a.facts === 'none' ? 0 : myConvs.reduce((n, id) => n + (byConv.get(id)?.sessions.length ?? 0), 0);
+    const estimate = Math.max(0.05, Math.round((((a.embed === 'real' ? perQuestion[a.benchmark] ?? 0.02 : 0) + perQa[a.qa.mode] * a.qa.runs) * mine + FACTS_USD_PER_SESSION * factSessions) * 100) / 100);
     try { requirePaidArm(a.argv, { arm: `memory-qa ${a.benchmark}`, estimateUsd: estimate }); }
     catch (e) {
       throw decideError({ code: 'PAID_FLAGS_MISSING', message: (e as Error).message, why: 'real embeddings and the reading lane call paid providers, and every paid request is reserved in the budget ledger first',
@@ -244,6 +264,10 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   const { importFromContent } = await importGbrain<{ importFromContent: (e: unknown, slug: string, content: string, o?: Record<string, unknown>) => Promise<{ embedding_deferred?: boolean }> }>(gut, 'src/core/import-file.ts');
   const { hybridSearch } = await importGbrain<{ hybridSearch: (e: unknown, q: string, o?: Record<string, unknown>) => Promise<Array<{ slug: string; rerank_score?: number }>> }>(gut, 'src/core/search/hybrid.ts');
 
+  const extractFacts = a.facts === 'conversation'
+    ? (await importGbrain<{ runExtractConversationFactsCore: (e: unknown, o: Record<string, unknown>) => Promise<{ pages_processed: number; pages_failed: number; facts_extracted: number }> }>(gut, 'src/commands/extract-conversation-facts.ts')).runExtractConversationFactsCore
+    : null;
+  const factStats = { conversations: 0, pages_processed: 0, pages_failed: 0, facts: 0, unresolved: 0, errors: 0 };
   const think = a.qa.mode === 'think' ? (await importGbrain<{ runThink: (e: unknown, o: Record<string, unknown>) => Promise<{ answer: string; synthesis_status?: string }> }>(gut, 'src/core/think/index.ts')).runThink : null;
   const chat = a.qa.mode === 'none' ? null : new ChatClient(process.env.GBRAIN_EVALS_QA_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'qa-cache'));
   const lastDate = (sessions: Session[]) => sessions.map(x => x.date ?? '').sort().pop() || undefined;
@@ -280,12 +304,33 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
         const slug = `chat/${occurrenceId(conv.id, s.id)}`;
         bySlug.set(slug, s.id);
         try {
-          const res = await importFromContent(engine, slug, renderSessionPage(s), {});
+          const res = await importFromContent(engine, slug, renderSessionPage(s, { as: extractFacts ? 'conversation' : 'note' }), {});
           if (res?.embedding_deferred) fidelity.embedding_deferred_pages++;
         } catch (e) { importError = (e as Error).message; break; }
       }
+      const factsBySession = new Map<string, SavedFact[]>();
+      let convFacts: Pick<MemoryQaRow, 'facts_count' | 'facts_unresolved_share' | 'facts_extract_error'> = {};
+      if (extractFacts && !importError) {
+        try {
+          const res = await extractFacts(engine, { sourceId: 'default', slugs: [...bySlug.keys()], types: ['conversation'], force: true });
+          const facts = await engine.executeRaw(`SELECT fact, valid_from, source_markdown_slug FROM facts WHERE expired_at IS NULL ORDER BY valid_from, id`) as Array<{ fact: string; valid_from: Date | string | null; source_markdown_slug: string | null }>;
+          for (const f of facts) {
+            const sessionId = f.source_markdown_slug ? bySlug.get(f.source_markdown_slug) : undefined;
+            if (!sessionId) continue;
+            factsBySession.set(sessionId, [...(factsBySession.get(sessionId) ?? []), { fact: f.fact, valid_from: f.valid_from ? new Date(f.valid_from).toISOString() : null }]);
+          }
+          const unresolved = facts.filter(f => unresolvedRelativeTime(f.fact)).length;
+          factStats.conversations++; factStats.pages_processed += res.pages_processed; factStats.pages_failed += res.pages_failed;
+          factStats.facts += facts.length; factStats.unresolved += unresolved;
+          convFacts = { facts_count: facts.length, facts_unresolved_share: facts.length ? unresolved / facts.length : 0,
+            ...(res.pages_failed ? { facts_extract_error: `${res.pages_failed} of ${bySlug.size} pages failed extraction` } : {}) };
+        } catch (e) {
+          factStats.errors++;
+          convFacts = { facts_extract_error: (e as Error).message.slice(0, 300) };
+        }
+      }
       for (const q of qs) {
-        const base: MemoryQaRow = { id: q.id, conversation: q.conversation, category: q.category, abstention: q.abstention, gold_count: q.gold.length };
+        const base: MemoryQaRow = { id: q.id, conversation: q.conversation, category: q.category, abstention: q.abstention, gold_count: q.gold.length, ...convFacts };
         let row: MemoryQaRow;
         if (importError) row = { ...base, error: `import failed: ${importError}`, error_origin: 'sut' };
         else {
@@ -305,13 +350,15 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
                 let tin = 0; let tout = 0; let answer = ''; let trap = 0;
                 const sessById = new Map(conv.sessions.map(x => [x.id, x]));
                 const pack = packSessions(retrieved.map(id => sessById.get(id)).filter((x): x is Session => !!x), a.qa.sessions, a.qa.budgetTokens);
+                const readFacts = a.qa.context === 'facts' ? retrieved.slice(0, a.qa.sessions).flatMap(id => factsBySession.get(id) ?? []) : [];
                 for (let r = 0; r < a.qa.runs; r++) {
                   if (think) {
                     const res = await think(engine, { question: q.question, model: a.qa.thinkModel, modelExplicit: true, remote: false });
                     answer = res.answer ?? '';
                     tin += approxTokens(q.question);
                   } else {
-                    const out = await chat.chat(a.qa.reader, readerPrompt(q, pack.sessions, lastDate(conv.sessions)), { maxTokens: 1024, replicate: r });
+                    const prompt = a.qa.context === 'facts' ? factsReaderPrompt(q, readFacts, lastDate(conv.sessions)) : readerPrompt(q, pack.sessions, lastDate(conv.sessions));
+                    const out = await chat.chat(a.qa.reader, prompt, { maxTokens: 1024, replicate: r });
                     answer = out.text; tin += out.input_tokens; tout += out.output_tokens;
                   }
                   scores.push(await judgeResponse(chat, a.benchmark, a.qa.judge, q, answer, r));
@@ -319,7 +366,8 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
                 }
                 row = { ...row, qa_score: scores.reduce((x, y) => x + y, 0) / scores.length, qa_scores: scores, qa_runs: scores.length,
                   ...(q.trap ? { qa_trap: trap / scores.length } : {}), qa_input_tokens: Math.round(tin / scores.length), qa_output_tokens: Math.round(tout / scores.length),
-                  qa_context_tokens: think ? undefined : pack.tokens, qa_sessions: think ? undefined : pack.sessions.length, qa_answer: answer.slice(0, 2000) };
+                  qa_context_tokens: think || a.qa.context === 'facts' ? undefined : pack.tokens, qa_sessions: think || a.qa.context === 'facts' ? undefined : pack.sessions.length,
+                  ...(a.qa.context === 'facts' ? { qa_facts: readFacts.length } : {}), qa_answer: answer.slice(0, 2000) };
               } catch (e) {
                 row = { ...row, qa_error: (e as Error).message.slice(0, 300) };
               }
@@ -362,7 +410,9 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
     summary: { recall_all_at_5: mean('recall_all_at_5'), recall_any_at_5: mean('recall_any_at_5'), recall_all_at_10: mean('recall_all_at_10'), ndcg_at_10: mean('ndcg_at_10'),
       latency_p50_ms: scored.length ? percentile(scored.map(r => r.latency_ms ?? 0), 50) : null, latency_p95_ms: scored.length ? percentile(scored.map(r => r.latency_ms ?? 0), 95) : null,
       ...(a.qa.mode !== 'none' ? (() => { const qa = allRows.filter(r => typeof r.qa_score === 'number'); return { qa_score: qa.length ? qa.reduce((x, r) => x + (r.qa_score ?? 0), 0) / qa.length : null, qa_rows: qa.length, qa_errors: allRows.filter(r => r.qa_error).length }; })() : {}) },
-    qa: a.qa.mode === 'none' ? null : { ...a.qa, reader_prompt: a.qa.mode === 'reader' ? 'LongMemEval step-by-step reading prompt, sessions in date order' : 'gbrain think', judge_prompts: a.benchmark.startsWith('beam') ? 'per-rubric-item yes/no' : 'LongMemEval official per-type prompts' },
+    facts: a.facts === 'none' ? null : { lane: a.facts, extractor: 'runExtractConversationFactsCore (product default model, force)', pages: 'conversation type, ISO session date', ...factStats,
+      unresolved_share: factStats.facts ? factStats.unresolved / factStats.facts : null },
+    qa: a.qa.mode === 'none' ? null : { ...a.qa, reader_prompt: a.qa.mode === 'think' ? 'gbrain think' : a.qa.context === 'facts' ? 'step-by-step reading prompt over the saved facts (text + stored date) of the top sessions' : 'LongMemEval step-by-step reading prompt, sessions in date order', judge_prompts: a.benchmark.startsWith('beam') ? 'per-rubric-item yes/no' : 'LongMemEval official per-type prompts' },
     fidelity, cost, rows_file: 'rows.ndjson',
   };
   writeFileSync(join(a.output, 'receipt.json'), JSON.stringify(receipt, null, 2) + '\n');
