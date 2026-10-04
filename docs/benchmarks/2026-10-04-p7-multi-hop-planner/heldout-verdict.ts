@@ -1,5 +1,5 @@
 // P7 held-out verdict: applies the preregistered benefit gates to the custodian's run directory.
-// Usage: bun docs/benchmarks/2026-10-04-p7-multi-hop-planner/heldout-verdict.ts <run dir> [--falsefire <falsefire.json>] > verdict.json
+// Usage: bun docs/benchmarks/2026-10-04-p7-multi-hop-planner/heldout-verdict.ts <run dir> [--falsefire <falsefire.json>] [--decision-id <id>] > verdict.json
 // Custodian interpretations fixed before the runs (gbrain-evals 25e33bd): chain answers are distinct pages among the
 // first 10 whose row carries relational role "answer"; edge evidence is correct when every edge on the row connects a
 // gold chain pair (unordered); wrong-answer promotion compares the feature arm's chain rows above the first gold page
@@ -9,6 +9,7 @@ import { join } from 'node:path';
 
 const [dir, ...rest] = process.argv.slice(2);
 const ffPath = rest.includes('--falsefire') ? rest[rest.indexOf('--falsefire') + 1] : null;
+const decisionId = rest.includes('--decision-id') ? rest[rest.indexOf('--decision-id') + 1] : 'p7-heldout-2026-10-04';
 const TYPED = new Set(['investor_founders', 'advisor_founders', 'founder_investors', 'coinvestors', 'founder_portfolio_peers']);
 
 type Row = { seed: number; question_id: string; split: string; family: string; on: { strict_all_hit: number } | null; funnel: { fired: boolean } | null;
@@ -102,4 +103,4 @@ const gates = {
   benefit_6_false_fire: ff ? { pass: ff.filter(x => x.set !== 'brainbench-cat13-subset').every(x => x.rate <= 0.01), detail: ff.map(x => ({ set: x.set, n: x.n, fired: x.fired })) } : { pass: null, detail: 'not run' },
   benefit_7_latency: { pass: null, detail: 'release gate 5, implementer evidence on the frozen build (not re-measured by the custodian)' },
 };
-console.log(JSON.stringify({ decision_id: 'p7-heldout-2026-10-04', cells: summary, gates }, null, 2));
+console.log(JSON.stringify({ decision_id: decisionId, cells: summary, gates }, null, 2));
