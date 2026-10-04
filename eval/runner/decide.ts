@@ -163,7 +163,7 @@ function cmdPreflight(argv: string[]): string {
 
 // ─── dev ────────────────────────────────────────────────────────────
 
-interface Job { source: Source; arm: 'baseline' | 'candidate'; shard: number; shards: number; argv: string[]; out: string }
+interface Job { source: Source; arm: 'baseline' | 'candidate'; shard: number; shards: number; argv: string[]; out: string; env?: Record<string, string> }
 
 function armArgs(arm: ArmSpec): string[] {
   return [...(arm.gbrain ? ['--gbrain', arm.gbrain] : []), ...Object.entries(arm.config).flatMap(([k, v]) => ['--config', `${k}=${v}`])];
@@ -189,8 +189,11 @@ export function planJobs(spec: DecisionSpec, runs: string, opts: { shards: numbe
         }
       } else {
         const out = join(runs, s.id, arm);
-        if (Object.keys(a.config).length) process.stderr.write(`[decide] note: ${s.id} runs the ${arm} build as-is; config overrides apply to memory-qa sources only\n`);
-        jobs.push({ source: s, arm, shard: 0, shards: 1, out, argv: [s.script, ...s.args, ...(a.gbrain ? ['--gbrain', a.gbrain] : []), '--output', out, ...paidFlags] });
+        const searchPins = Object.entries(a.config).filter(([k]) => k.startsWith('search.'));
+        const other = Object.keys(a.config).filter(k => !k.startsWith('search.'));
+        if (other.length) process.stderr.write(`[decide] note: ${s.id} cannot apply ${other.join(', ')} to the ${arm} build; category runners take search.* pins only (GBRAIN_EVAL_SEARCH_PINS)\n`);
+        jobs.push({ source: s, arm, shard: 0, shards: 1, out, argv: [s.script, ...s.args, ...(a.gbrain ? ['--gbrain', a.gbrain] : []), '--output', out, ...paidFlags],
+          env: { GBRAIN_EVAL_SEARCH_PINS: searchPins.map(([k, v]) => `${k}=${v}`).join(',') } });
       }
     }
   }
@@ -200,7 +203,7 @@ export function planJobs(spec: DecisionSpec, runs: string, opts: { shards: numbe
 function runJob(job: Job): Promise<{ job: Job; code: number; tail: string }> {
   mkdirSync(job.out, { recursive: true });
   return new Promise(res => {
-    const child = spawn('bun', job.argv, { cwd: REPO_ROOT, env: process.env, stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawn('bun', job.argv, { cwd: REPO_ROOT, env: { ...process.env, ...(job.env ?? {}) }, stdio: ['ignore', 'pipe', 'pipe'] });
     let tail = '';
     const keep = (b: Buffer) => { tail = (tail + b.toString()).slice(-4000); };
     child.stdout.on('data', keep); child.stderr.on('data', keep);

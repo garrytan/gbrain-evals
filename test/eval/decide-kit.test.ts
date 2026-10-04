@@ -202,3 +202,17 @@ describe('reading lane', () => {
     } finally { globalThis.fetch = real; }
   });
 });
+
+describe('anchor exclusion', () => {
+  test('drops dev probes that touch a sealed anchor and reports only a count', async () => {
+    const { sealedAnchors, excludeSealedAnchors } = await import('../../eval/runner/decisions/anchors.ts');
+    const n9 = await sealedAnchors('n9');
+    expect(n9.size).toBeGreaterThan(50);
+    const anyAnchor = [...n9].find(a => a.includes('/'))!;
+    const r = excludeSealedAnchors([{ a: [anyAnchor] }, { a: ['people/not-in-any-sealed-set-example'] }], p => p.a, n9);
+    expect(r.dropped).toBe(1);
+    expect(r.kept).toHaveLength(1);
+    const world = await sealedAnchors('world-v1-relational');
+    expect(world.size).toBeGreaterThan(10);
+  });
+});

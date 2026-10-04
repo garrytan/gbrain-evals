@@ -175,7 +175,37 @@ export interface ComposedRow {
   off_shuffled: number | null;
   on_shuffled: number | null;
   funnel: { parsed: boolean; seed_resolved: boolean; fired: boolean; candidates: number; all_support: boolean } | null;
+  /** On-arm chain safety: chain answer rows among the first k pages, how many are gold, how many carry only gold-chain edges, wrong pages above the first gold page. */
+  on_safety?: ChainSafety | null;
+  off_safety?: ChainSafety | null;
   error: string | null;
+}
+
+export interface ChainSafety { chain_answers: number; chain_answers_gold: number; chain_edges_ok: number; wrong_above_first_gold: number; chain_wrong_above_first_gold: number }
+
+/**
+ * Chain-evidence safety for one arm's rows. A chain answer is a distinct page among the first k whose row carries
+ * relational role "answer". Edge evidence is correct when every edge on that row connects a pair of pages that is a
+ * gold chain edge (unordered pair match; relation names are not compared because link-type vocabularies differ).
+ */
+export function chainSafety(rows: ArmResult['rows'], q: Pick<N9Question, 'answers' | 'required' | 'edges'>, k = N9_K): ChainSafety {
+  const gold = new Set(q.answers);
+  const relevant = new Set(q.required);
+  const pairs = new Set(q.edges.map(e => [e.from, e.to].sort().join('|')));
+  const seen = new Set<string>();
+  const firstRows: ArmResult['rows'] = [];
+  for (const r of rows) { if (seen.has(r.slug)) continue; seen.add(r.slug); firstRows.push(r); if (firstRows.length >= k) break; }
+  const chain = firstRows.filter(r => r.relational?.role === 'answer');
+  const firstGold = firstRows.findIndex(r => relevant.has(r.slug));
+  const above = firstGold < 0 ? firstRows : firstRows.slice(0, firstGold);
+  const wrongAbove = above.filter(r => !relevant.has(r.slug));
+  return {
+    chain_answers: chain.length,
+    chain_answers_gold: chain.filter(r => gold.has(r.slug)).length,
+    chain_edges_ok: chain.filter(r => (r.relational?.edges.length ?? 0) > 0 && r.relational!.edges.every(e => pairs.has([e.stored_from, e.stored_to].sort().join('|')))).length,
+    wrong_above_first_gold: wrongAbove.length,
+    chain_wrong_above_first_gold: wrongAbove.filter(r => r.relational?.role === 'answer').length,
+  };
 }
 
 const METRIC_KEYS = ['strict_all_hit', 'answer_all_hit', 'support_all_hit', 'answer_recall', 'strict_all_hit_at_5'] as const;
@@ -436,6 +466,8 @@ async function runN9Inner(options: N9Options, paid: boolean): Promise<N9Result> 
         parsed: Boolean(meta?.kind), seed_resolved: (meta?.seeds_resolved ?? 0) > 0, fired: Boolean(meta?.fired),
         candidates: meta?.candidates ?? 0, all_support: on?.strict_all_hit === 1,
       },
+      on_safety: harness || r.on.error ? null : chainSafety(r.on.rows, q),
+      off_safety: harness || r.off.error ? null : chainSafety(r.off.rows, q),
       error: sutError,
     };
   });

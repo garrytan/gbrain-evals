@@ -88,7 +88,7 @@ export type RelationalSearch = (engine: PGLiteEngine, text: string, opts: Hybrid
 export interface RetrievalMetrics { precision_at_5: number; recall_at_5: number; hit_at_1: number; hit_at_5: number }
 export interface ArmResult {
   relational_retrieval: boolean;
-  rows: Array<{ slug: string; chunk_id?: number; source_id?: string; score: number }>;
+  rows: Array<{ slug: string; chunk_id?: number; source_id?: string; score: number; relational?: { role: string; edges: Array<{ stored_from: string; stored_to: string; link_type: string }> } }>;
   pages: string[];
   query_embed_calls: number;
   query_vector_sha256: string;
@@ -166,7 +166,11 @@ export async function searchRelationalPair(
         onRelationalMeta: meta => { result.relational_meta.push({ ...meta }); },
         onMeta: meta => { result.search_meta = meta; },
       });
-      result.rows = rows.map(r => ({ slug: r.slug, chunk_id: r.chunk_id, source_id: r.source_id, score: r.score }));
+      result.rows = rows.map(r => {
+        const rel = (r as { relational?: { role: string; edges?: Array<{ stored_from: string; stored_to: string; link_type: string }> } }).relational;
+        return { slug: r.slug, chunk_id: r.chunk_id, source_id: r.source_id, score: r.score,
+          ...(rel ? { relational: { role: rel.role, edges: (rel.edges ?? []).map(e => ({ stored_from: e.stored_from, stored_to: e.stored_to, link_type: e.link_type })) } } : {}) };
+      });
       result.pages = pagesInResultOrder(rows, limit).map(r => r.page_id);
       if (rows.length > limit) throw new ObservationError('sut', `product exceeded the ${limit}-chunk output limit`);
       if (!result.search_meta) throw new ObservationError('harness', 'missing search telemetry');
@@ -177,7 +181,9 @@ export async function searchRelationalPair(
         if (!result.search_meta.vector_enabled) throw new ObservationError('harness', 'vector retrieval disabled or expansion unexpectedly enabled');
       }
       if (result.search_meta.expansion_applied) throw new ObservationError('harness', 'vector retrieval disabled or expansion unexpectedly enabled');
-      if (rows.some(r => Number.isFinite(r.rerank_score))) throw new ObservationError('harness', 'reranker ran in an explicitly disabled cell');
+      if (evalSearchPins()['search.reranker.enabled'] === 'true') {
+        if (rows.length > 0 && !rows.some(r => Number.isFinite(r.rerank_score))) throw new ObservationError('harness', 'reranker pinned on but no row carries a rerank score (the reranker fail-opened)');
+      } else if (rows.some(r => Number.isFinite(r.rerank_score))) throw new ObservationError('harness', 'reranker ran in an explicitly disabled cell');
       if (enabled && result.relational_meta.length === 0) throw new ObservationError('harness', 'missing ON-arm relational telemetry');
       if (!enabled && result.relational_meta.length !== 0) throw new ObservationError('harness', 'relational arm ran while disabled');
       if (result.relational_meta.some(m => m.errored)) throw new ObservationError('sut', 'relational arm failed open (errored telemetry)');
