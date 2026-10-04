@@ -1024,6 +1024,8 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'cat36-scorer.ts': { role: 'Cat36 span-coverage scorer', part_of: 'associative-retrieval-smoke' },
   'cat36-snapshot.ts': { role: 'Cat36 index snapshot hashing', part_of: 'associative-retrieval-live' },
   'compare.ts': { role: 'paired run comparator CLI' },
+  'feedback-replay-locomo.ts': { role: 'use-attributed feedback replay on LoCoMo (off, frozen, online, noisy, frequency arms); dev or custodian sealed split' },
+  'feedback-replay-world.ts': { role: 'use-attributed feedback replay on world-v1 relational questions; dev or custodian sealed half' },
   'decide.ts': { role: 'held-out decision kit CLI (bun run eval:decide): decision specs, dev runs of baseline vs candidate gbrain builds, paired verdicts' },
   'eval-adapter-config.ts': { role: 'typed adapter config for matrix cells' },
   'gbrain-under-test.ts': { role: 'pinned gbrain or a copied --gbrain overlay, with receipt identity' },
