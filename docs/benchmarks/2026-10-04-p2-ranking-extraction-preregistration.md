@@ -50,20 +50,26 @@ Estimate ≈ $150; caps are twice each estimate; program cap $400. Paid arms run
 
 Dev splits are run by the feature author. Sealed splits are run once by the evaluation custodian after the gbrain build commit and this file are frozen; the author never sees sealed results before the build is frozen.
 
-## Amendment 1 — E2 held-out workload (proposed 2026-10-04, before any sealed cell)
+## Amendment 1 — E2 held-out gate (approved 2026-10-04, before any sealed cell)
 
-Status: proposed, awaiting approval. No sealed E2 cell has run.
+Status: approved 2026-10-04. No sealed E2 cell had run when it was approved. It replaces the E2 workload, primary metric and guards above. The E2 budget is unchanged.
 
-Why: the decision kit's frozen splits put all 500 LongMemEval-S questions in development (the release configuration was chosen on them), so the sealed LongMemEval-S temporal questions named above do not exist. BEAM can't substitute: 82 of its 1,877 sessions carry a date, so the observation date is unknown almost everywhere and grounding has nothing to anchor to. The `query` op has no saved-facts lane in this build, and `think` reads saved facts only through entity trajectories, which these corpora don't create.
+**Why the workload changes.** The decision kit's frozen splits put all 500 LongMemEval-S questions in development, because the release configuration was chosen on them, so the sealed LongMemEval-S temporal questions named above do not exist. BEAM can't substitute: 82 of its 1,877 sessions carry a date, so the observation date is unknown almost everywhere. The `query` op has no saved-facts lane in this build, and `think` reads saved facts only through entity trajectories, which these corpora don't create.
 
-Changes:
+**Why the gate is correctness-first.** Date grounding is meant to keep a saved fact's meaning the same months after it was said. Development showed that within-conversation QA can't detect that. The current extractor already resolves about 94% of relative dates (unresolved share 6.2% on LoCoMo, 5.5% on LongMemEval-S). Re-extracting the same conversation with the same build moved its temporal QA by up to 9 points, which is larger than any plausible QA effect from the remaining 6%. So the unresolved share, which measures correctness directly, decides. QA is held to non-inferiority, and its effect is reported only.
 
-- **Workload.** The 7 sealed LoCoMo conversations (conv-26, 30, 41, 42, 43, 49, 50) go through the decision kit's memory-qa facts lane (gbrain-evals `capy/p2-facts-lane`): sessions are imported as dated conversation pages, and gbrain's conversation-facts extractor runs with the product default model. Unit: question, clustered by conversation. `min_clusters` = 7, set explicitly in the sealed spec.
-- **Answer path.** A fixed reader (the benchmark's pinned reader and judge) answers from the saved facts (fact text and stored date) of the top five retrieved sessions, with 10 replicates per question. This measures what extraction stored, which is the only thing the setting changes.
-- **Primary.** Temporal QA from saved facts: Δ > 0 with clustered CI > 0 (target ≥ +3 pts), unchanged.
-- **Guards.** The unresolved relative-time share drops ≥ 50% relative; a fact containing any absolute date counts as resolved. Non-temporal QA from saved facts Δ ≥ −1 pt. Facts per conversation within ±10%. Page recall@5 non-inferior within 1 pt.
-- **Resolved-date accuracy ≥ 85%** becomes reported only: the kit has no judged date-accuracy metric. The custodian publishes `facts.ndjson` counts by session date instead.
-- **Extraction runs twice per arm** (unchanged). Development showed up to 9 points of temporal-QA movement on one conversation between two extractions of the same build.
-- **Rule version.** The candidate is rule `date-grounding-v2`, which rewrites relative phrases as absolute dates. Version 1 kept the phrase beside its date and lost temporal QA on development. See gbrain `docs/eval/decisions/p2-date-grounding-dev/`.
+**Workload.** The 7 sealed LoCoMo conversations (conv-26, 30, 41, 42, 43, 49, 50) go through the decision kit's memory-qa facts lane (gbrain-evals `capy/p2-facts-lane`): sessions are imported as dated conversation pages, and gbrain's conversation-facts extractor runs with the product default model. Candidate: rule `date-grounding-v2` with `extraction.date_grounding=true`. Baseline: the same base build with the setting absent. Unit: question, clustered by conversation; `min_clusters` = 7. Extraction runs twice per arm, and every metric uses the per-question mean of the two runs. A fixed reader answers from the saved facts (fact text and stored date) of the top five retrieved sessions, with 10 answer-and-judge replicates per question.
 
-Development results (v2, gbrain build 5d5375d43): LoCoMo temporal unresolved share 6.2% → 1.2%, QA from facts 64.0 → 66.0 (CI crosses zero); non-temporal 52.0 → 51.3; LongMemEval-S temporal (11) unresolved 5.5% → 1.7%, QA unchanged. Seven conversations can confirm the unresolved-share guard. They are unlikely to confirm a +2-pt QA effect, in which case the preregistered rule ("inconclusive → off and removed") applies.
+**Primary (decides the default).** On sealed LoCoMo, the share of saved facts that keep a relative time phrase and no absolute date (`facts_unresolved_share`; a fact containing any absolute date counts as resolved) must drop by at least 50% relative to the baseline arm's mean share, with the 95% clustered CI of the paired difference entirely below 0. Development showed −80% (LoCoMo, CI −7.3 to −2.7 pts) and −69% (LongMemEval-S).
+
+**Guards (all must hold).**
+- Temporal QA from saved facts: non-inferior, with the 95% lower bound of Δ no worse than −3 pts.
+- Overall QA from saved facts (temporal, single-hop, multi-hop and open-domain together): non-inferior, with the 95% lower bound of Δ no worse than −3 pts.
+- Page recall@5: unchanged, with the 95% lower bound of Δ no worse than −1 pt. The setting changes extraction only, and development was identical.
+- Facts per conversation: the candidate mean is within ±5% of the baseline mean. Development: −0.6% and +0.7%.
+
+**Reported only.** The temporal and overall QA effect sizes with CIs, LongMemEval-S development results, and counts of stored dates by session date from `facts.ndjson` (the kit has no judged resolved-date-accuracy metric, so the former ≥ 85% guard is reported, not gated).
+
+**Outcome rule.** If the primary and every guard pass, `extraction.date_grounding` defaults on. If any fails or is inconclusive, the setting stays off and the mechanism is removed from the gbrain change.
+
+**Rule version.** The candidate is `date-grounding-v2`, which rewrites relative phrases as absolute dates. Version 1 kept the phrase beside its date and lost temporal QA on development, because a reader shown the fact under its event date applied the phrase a second time. Development record: gbrain `docs/eval/decisions/p2-date-grounding-dev/` (build 5d5375d43).
