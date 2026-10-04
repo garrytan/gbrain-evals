@@ -138,7 +138,10 @@ export class ChatClient {
 async function openaiChat(model: string, prompt: string, opts: { maxTokens: number; temperature?: number }): Promise<Omit<ChatResult, 'cached'>> {
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
-    body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], n: 1, temperature: opts.temperature ?? 0, max_tokens: opts.maxTokens }),
+    // GPT-5 and later reasoning models take max_completion_tokens and only their default temperature.
+    body: JSON.stringify(/^(gpt-[5-9]|o\d)/.test(model)
+      ? { model, messages: [{ role: 'user', content: prompt }], n: 1, max_completion_tokens: Math.max(opts.maxTokens, 2000) }
+      : { model, messages: [{ role: 'user', content: prompt }], n: 1, temperature: opts.temperature ?? 0, max_tokens: opts.maxTokens }),
     signal: AbortSignal.timeout(300_000),
   });
   const json = await res.json() as any;

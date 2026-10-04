@@ -1,0 +1,35 @@
+{
+  "schema": "cat40-experiment-v1",
+  "gbrain_commit": "8f585b0ce955dc765f65f3c841f8457bcc817d3d",
+  "slot_commit": "8f585b0ce955dc765f65f3c841f8457bcc817d3d",
+  "world_digest": "df8c95e71b17beab176851e3b15daaea9b8719fb009ba50e02cfc68243009a20",
+  "models": [
+    "claude-opus-5-5",
+    "claude-sonnet-5-5",
+    "gpt-6.1-sol",
+    "claude-fable-5-1"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "label": "p8-adv-starter",
+  "flags": {
+    "--models": "claude-opus-5-5,claude-sonnet-5-5,gpt-6.1-sol,claude-fable-5-1",
+    "--arms": "gbrain",
+    "--surface": "full",
+    "--advertised": "starter",
+    "--gbrain-repo": "../gbrain",
+    "--gbrain-ref": "8f585b0ce955dc765f65f3c841f8457bcc817d3d",
+    "--gbrain-label": "p8-adv-starter",
+    "--slots": "6",
+    "--repeat": "1",
+    "--tasks": "A01,B01,C01,E01,F01",
+    "--transcripts": true,
+    "--judge": "none",
+    "--max-tool-chars": "none",
+    "--concurrency": "6",
+    "--budget-ledger": ".budget/p8-dev.sqlite",
+    "--out": "eval/reports/cat40/p8-dev-pilot-adv-starter"
+  },
+  "budget_run_id": "cat40-model-ladder-2026-10-04T20-38-55-828Z-2dafca00"
+}

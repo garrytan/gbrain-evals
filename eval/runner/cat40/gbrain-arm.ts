@@ -161,7 +161,11 @@ export class McpClient {
       while ((nl = this.buf.indexOf('\n')) >= 0) {
         const line = this.buf.slice(0, nl).trim();
         this.buf = this.buf.slice(nl + 1);
-        try { const m = JSON.parse(line); const cb = this.pending.get(m.id); if (cb) { this.pending.delete(m.id); cb(m); } } catch { /* not JSON-RPC */ }
+        try {
+          const m = JSON.parse(line);
+          if (m.id === undefined && m.method === 'notifications/tools/list_changed') { this.relisting = this.relist(); continue; }
+          const cb = this.pending.get(m.id); if (cb) { this.pending.delete(m.id); cb(m); }
+        } catch { /* not JSON-RPC */ }
       }
     });
     proc.stderr.setEncoding('utf8');
@@ -172,11 +176,22 @@ export class McpClient {
     this.instructions = String(r.instructions ?? '');
     this.serverVersion = String((r.serverInfo as Record<string, unknown> | undefined)?.version ?? '');
     this.proc.stdin.write(JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }) + '\n');
+    await this.relist();
+  }
+  /** Bumped whenever the listed tools change (tools/list_changed, or a request_tools call that revealed tools). */
+  toolsVersion = 0;
+  private relisting: Promise<void> | null = null;
+  private async relist() {
     const list = await this.request('tools/list', {});
-    this.tools = ((list.result as Record<string, unknown>)?.tools ?? []) as McpClient['tools'];
+    const tools = ((list.result as Record<string, unknown>)?.tools ?? []) as McpClient['tools'];
+    if (this.tools.length && tools.map(t => t.name).join() !== this.tools.map(t => t.name).join()) this.toolsVersion++;
+    this.tools = tools;
   }
   async call(name: string, args: Record<string, unknown>): Promise<string> {
     const m = await this.request('tools/call', { name, arguments: args });
+    // The server may send tools/list_changed before or after the response; request_tools always re-lists.
+    if (name === 'request_tools') this.relisting = this.relist();
+    await this.relisting;
     if (m.error) return `Error: ${JSON.stringify(m.error)}`;
     const res = (m.result ?? {}) as { content?: Array<{ type: string; text?: string }>; isError?: boolean };
     const text = (res.content ?? []).filter(c => c.type === 'text').map(c => c.text ?? '').join('\n');
@@ -218,7 +233,8 @@ export class GbrainSlot {
   client: McpClient | null = null;
   readonly dir: string;
   readonly run: RunEnv;
-  constructor(readonly id: string, root: string, readonly buildDir: string, proxyPort: number, readonly surface: string) {
+  /** `advertised`: the brain's mcp.advertised_surface (tools listed; the callable set stays `surface`). Null leaves it unset. */
+  constructor(readonly id: string, root: string, readonly buildDir: string, proxyPort: number, readonly surface: string, readonly advertised: string | null = null) {
     this.dir = join(root, id);
     const base = `http://127.0.0.1:${proxyPort}/${id}`;
     this.run = {
@@ -319,6 +335,12 @@ export class GbrainSlot {
   }
 
   async start() {
+    if (this.advertised) {
+      const cfgPath = join(this.dir, 'home', '.gbrain', 'config.json');
+      const cfg = JSON.parse(readFileSync(cfgPath, 'utf8'));
+      cfg.mcp = { ...(cfg.mcp ?? {}), advertised_surface: this.advertised };
+      writeFileSync(cfgPath, JSON.stringify(cfg, null, 2));
+    }
     this.client = new McpClient(this.run, ['--surface', this.surface]);
     await this.client.start();
   }
@@ -389,6 +411,7 @@ export class GbrainArm implements Arm {
     const o = instructionsOverride;
     return this.client.tools.filter(t => !o.dropTools.includes(t.name)).map(t => ({ name: t.name, description: o.descriptions?.[t.name] ?? t.description ?? '', input_schema: (t.inputSchema ?? { type: 'object', properties: {} }) as Record<string, unknown> }));
   }
+  toolsVersion() { return this.client.toolsVersion; }
   writeTools() { return this.client.tools.filter(t => t.annotations?.readOnlyHint !== true).map(t => t.name); }
   call(name: string, args: Record<string, unknown>) { return this.client.call(name, args); }
 }

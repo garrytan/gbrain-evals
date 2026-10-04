@@ -1,0 +1,47 @@
+{
+  "schema": "p8-quote-grounding-v1",
+  "gbrain": {
+    "root": "<home>/.capy/work/gbrain-evals/.gbrain-overlays/56a4dbbe2",
+    "version": "0.60.48.0",
+    "overlay": {
+      "requested": "/workspace/gbrain@56a4dbbe2",
+      "checkout": "/workspace/gbrain",
+      "ref": "56a4dbbe2",
+      "checkout_dirty": false,
+      "build": {
+        "label": "56a4dbbe2",
+        "description": "gbrain under test from /workspace/gbrain",
+        "ref": "56a4dbbe2",
+        "dir": "<home>/.capy/work/gbrain-evals/.gbrain-overlays/56a4dbbe2",
+        "commit": "56a4dbbe260f44474ad14ef9678100f34c69f4d0",
+        "tree": "a9a367328d0d6333daf09f12cf1db090f022e2d0",
+        "version": "0.60.48.0",
+        "verified": {
+          "copy_tree": "a9a367328d0d6333daf09f12cf1db090f022e2d0",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.48.0",
+          "cli_version_matches": true
+        }
+      }
+    }
+  },
+  "think_model": "anthropic:claude-sonnet-5-5",
+  "judge_model": "gpt-6.1-sol",
+  "questions": 50,
+  "answered": 50,
+  "spans": 154,
+  "supported_spans": 150,
+  "verbatim": 146,
+  "close": 4,
+  "supported_wrongly_flagged": 24,
+  "supported_wrongly_flagged_rate": 0.16,
+  "supported_wrongly_flagged_wilson_upper": 0.227041057343522,
+  "questions_with_supported": 45,
+  "questions_with_a_wrong_flag": 19,
+  "questions_wrong_flag_wilson_upper": 0.566994672040555,
+  "unsupported_spans": 4,
+  "unsupported_flagged": 1,
+  "unsupported_kept": 3
+}
