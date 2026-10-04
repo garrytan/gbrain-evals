@@ -1,0 +1,244 @@
+{
+  "models": [
+    "claude-sonnet-4-6",
+    "gpt-5.4",
+    "gpt-5.4-mini"
+  ],
+  "arms": [
+    "gbrain-master"
+  ],
+  "tasks": [
+    "A01",
+    "A02",
+    "A03",
+    "A04",
+    "A05",
+    "A06",
+    "A07",
+    "A08",
+    "A09",
+    "A10",
+    "B01",
+    "B02",
+    "B03",
+    "B04",
+    "B05",
+    "B06",
+    "B07",
+    "B08",
+    "B09",
+    "B10",
+    "C01",
+    "C02",
+    "C03",
+    "C04",
+    "C05",
+    "C06",
+    "C07",
+    "C08",
+    "C09",
+    "C10",
+    "E01",
+    "E02",
+    "E03",
+    "E04",
+    "E05",
+    "E06",
+    "E07",
+    "E08",
+    "E09",
+    "E10",
+    "F01",
+    "F02",
+    "F03",
+    "F04",
+    "F05",
+    "F06",
+    "F07",
+    "F08",
+    "F09",
+    "F10"
+  ],
+  "families": [
+    "A",
+    "B",
+    "C",
+    "E",
+    "F"
+  ],
+  "success": {
+    "claude-sonnet-4-6": {
+      "gbrain-master": 0.83
+    },
+    "gpt-5.4": {
+      "gbrain-master": 0.76
+    },
+    "gpt-5.4-mini": {
+      "gbrain-master": 0.59
+    }
+  },
+  "by_family": {
+    "A": {
+      "claude-sonnet-4-6": {
+        "gbrain-master": 1
+      },
+      "gpt-5.4": {
+        "gbrain-master": 1
+      },
+      "gpt-5.4-mini": {
+        "gbrain-master": 0.9
+      }
+    },
+    "B": {
+      "claude-sonnet-4-6": {
+        "gbrain-master": 1
+      },
+      "gpt-5.4": {
+        "gbrain-master": 0.8
+      },
+      "gpt-5.4-mini": {
+        "gbrain-master": 0.5
+      }
+    },
+    "C": {
+      "claude-sonnet-4-6": {
+        "gbrain-master": 1
+      },
+      "gpt-5.4": {
+        "gbrain-master": 1
+      },
+      "gpt-5.4-mini": {
+        "gbrain-master": 1
+      }
+    },
+    "E": {
+      "claude-sonnet-4-6": {
+        "gbrain-master": 0.2
+      },
+      "gpt-5.4": {
+        "gbrain-master": 0.4
+      },
+      "gpt-5.4-mini": {
+        "gbrain-master": 0
+      }
+    },
+    "F": {
+      "claude-sonnet-4-6": {
+        "gbrain-master": 0.95
+      },
+      "gpt-5.4": {
+        "gbrain-master": 0.6
+      },
+      "gpt-5.4-mini": {
+        "gbrain-master": 0.55
+      }
+    }
+  },
+  "capability": {
+    "claude-sonnet-4-6": null,
+    "gpt-5.4": null,
+    "gpt-5.4-mini": null
+  },
+  "advantage": {},
+  "pooled_advantage": {
+    "value": null,
+    "ci95": [
+      null,
+      null
+    ]
+  },
+  "slope": {
+    "value": null,
+    "ci95": [
+      null,
+      null
+    ],
+    "n_models": 0
+  },
+  "family_slopes": {
+    "A": {
+      "value": null,
+      "ci95": [
+        null,
+        null
+      ]
+    },
+    "B": {
+      "value": null,
+      "ci95": [
+        null,
+        null
+      ]
+    },
+    "C": {
+      "value": null,
+      "ci95": [
+        null,
+        null
+      ]
+    },
+    "E": {
+      "value": null,
+      "ci95": [
+        null,
+        null
+      ]
+    },
+    "F": {
+      "value": null,
+      "ci95": [
+        null,
+        null
+      ]
+    }
+  },
+  "safety": {
+    "gbrain-master": {
+      "output_leaks": 0,
+      "context_exposures": 0,
+      "unsafe_writes": 0,
+      "c_runs": 60
+    }
+  },
+  "efficiency": {
+    "claude-sonnet-4-6": {
+      "gbrain-master": {
+        "usd_per_task": 0.20415647590000005,
+        "usd_per_success": 0.24597165771084345,
+        "p50_s": 27.869,
+        "p95_s": 78.767,
+        "turns": 3.03
+      }
+    },
+    "gpt-5.4": {
+      "gbrain-master": {
+        "usd_per_task": 0.09145846,
+        "usd_per_success": 0.12034007894736842,
+        "p50_s": 21.793,
+        "p95_s": 34.864,
+        "turns": 3.11
+      }
+    },
+    "gpt-5.4-mini": {
+      "gbrain-master": {
+        "usd_per_task": 0.021295672600000003,
+        "usd_per_success": 0.036094360338983056,
+        "p50_s": 18.027,
+        "p95_s": 31.8,
+        "turns": 3.47
+      }
+    }
+  },
+  "claims": {
+    "gbrain-master": {
+      "unsupported_per_answer": null,
+      "contradicted_per_answer": null,
+      "judged": 0
+    }
+  },
+  "missed_evidence": {
+    "gbrain-master": 0.25870646766169153
+  },
+  "cells": 300,
+  "usd": 31.691060849999985
+}

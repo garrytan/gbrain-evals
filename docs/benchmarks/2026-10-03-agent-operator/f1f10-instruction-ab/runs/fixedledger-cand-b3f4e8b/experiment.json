@@ -1,0 +1,27 @@
+{
+  "schema": "cat40-experiment-v1",
+  "gbrain_commit": "b3f4e8ba5935004066b4715bdc19bc9de4721b81",
+  "slot_commit": "b3f4e8ba5935004066b4715bdc19bc9de4721b81",
+  "world_digest": "df8c95e71b17beab176851e3b15daaea9b8719fb009ba50e02cfc68243009a20",
+  "models": [
+    "gpt-5.4-mini"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "label": "fixedledger-cand-b3f4e8b",
+  "flags": {
+    "--models": "gpt-5.4-mini",
+    "--arms": "gbrain",
+    "--gbrain-label": "fixedledger-cand-b3f4e8b",
+    "--transcripts": true,
+    "--slots": "5",
+    "--gbrain-repo": "<gbrain>",
+    "--gbrain-ref": "b3f4e8ba5935004066b4715bdc19bc9de4721b81",
+    "--repeat": "2",
+    "--concurrency": "6",
+    "--judge": "none",
+    "--out": "eval/reports/cat40/fixedledger-cand-b3f4e8b"
+  },
+  "budget_run_id": "cat40-model-ladder-2026-10-04T15-21-08-364Z-4f36ad60"
+}

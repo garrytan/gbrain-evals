@@ -294,6 +294,8 @@ decision slots stay off unless a TypeSafe key is set. See
 | What changed after fixing the benchmark adapters? | [September retrieval refresh](docs/benchmarks/2026-09-09-retrieval-refresh.md) |
 | Does memory stay correct after edits, forgetting and restarts? | [Lifecycle experiment](docs/benchmarks/2026-09-29-lifecycle.md) |
 | Where does a small decision model (Jev) beat gbrain's rules? | [System One report](docs/benchmarks/2026-09-30-system-one-jev.md) |
+| Do agents operating gbrain ask before spending or destroying data? | [Agent operator outcomes (Cat 41)](docs/benchmarks/2026-10-03-agent-operator-protocol.md) |
+| Does gbrain help an agent finish company-knowledge tasks, compared with grep, a memory tool or Postgres? | [Model Ladder (Cat 40)](docs/benchmarks/2026-10-02-model-ladder.md) |
 | How do retrieval scores differ from answer accuracy? | [What the scores mean](docs/retrieval-lessons.md#what-the-scores-mean) |
 | How does gbrain compare with other memory systems? | [Comparisons and their protocols](docs/comparison-systems.md) |
 | Can I reproduce a result or test my own system? | [Run the suite](eval/README.md), [contribute an adapter](eval/CONTRIBUTING.md) |
@@ -354,6 +356,45 @@ evaluate the write path without treating retention as correctness.
 We also test [when memory should surface during a conversation](docs/benchmarks/2026-06-12-brainbench-memory.md),
 source isolation, identities, dates, and other behaviors. The
 [full index](docs/README.md) explains each benchmark in ordinary terms.
+
+## When an agent operates gbrain
+
+Most gbrain users never type a gbrain command: an agent such as Claude Code or
+Codex runs it for them. Two categories measure what that agent does.
+
+**Agent operator outcomes (Cat 41)** runs real Claude Code and Codex CLI
+sessions, pinned in Docker, through 17 requests where an operating agent can
+go wrong: a paid fix nobody approved, a destructive repair, a locked or
+unmounted brain, a read-only client, an unpriced model under the user's cap, a
+fresh install, and three docs-only tasks. A logging `gbrain` wrapper, a fake
+model provider and file-system probes decide whether the agent spent money,
+destroyed data or installed something without the user's approval, and whether
+it told the user "you have no notes" when the notes exist. gbrain v0.60.46.0 (the
+operator wave, measured at candidate `b3f4e8b`) passes the gate: **0 consent violations across
+66 safety sessions, 0 false "no notes" answers, token overhead at most +5.9%**,
+and 96 of 102 sessions finish the user's task. The released v0.60.35.0 has 25
+violating steps in 12 safety sessions (agents run paid embedding and
+`pglite-repair --yes` unasked) and finishes 78 of 102.
+[What Cat 41 measures and its gate](docs/benchmarks/2026-10-03-agent-operator-protocol.md),
+[the runs](docs/benchmarks/2026-10-03-agent-operator.md).
+
+**Model Ladder (Cat 40)** gives one agent loop 50 tasks about a fictional
+company (which contract term is in force, who owns an account now, what a
+non-finance employee may see, five-part renewal briefs, corrections that must
+survive into a new session) and swaps only the memory: plain files with `grep`,
+Anthropic's memory tool, plain Postgres, or gbrain's MCP server. It compares
+memory setups across model generations and gbrain builds against each other.
+[What Cat 40 measures](docs/benchmarks/2026-10-02-model-ladder-protocol.md),
+[results](docs/benchmarks/2026-10-02-model-ladder.md).
+
+```sh
+# Cat 41: a candidate gbrain commit, its gate, and the Cat 40 instruction check
+# (Docker, ANTHROPIC_API_KEY, OPENAI_API_KEY; about $80 for both)
+eval/runner/cat41/after-pass.sh <gbrain checkout> <commit>
+
+# Cat 40 without spending: the scripted, hermetic arms
+bun eval/runner/cat40-model-ladder.ts --scripted --arms fs,memory,oracle --out $(mktemp -d)
+```
 
 ## Where a small decision model helps
 
