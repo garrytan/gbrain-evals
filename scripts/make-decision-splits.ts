@@ -9,6 +9,7 @@ import { writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { computeSplit, SPLITS_DIR, type SplitFile } from '../eval/runner/decisions/splits.ts';
 import { beamManifest, LME_S_FILE, LOCOMO_FILE, readDatasetFile } from '../eval/runner/memory-qa/corpus.ts';
+import { buildRelationalQueries, loadWorldCorpus } from '../eval/runner/queries/relational.ts';
 
 const check = process.argv.includes('--check');
 const files: SplitFile[] = [];
@@ -23,6 +24,9 @@ for (const size of ['100k', '500k', '1m']) {
   files.push(computeSplit(`beam-${size}`, beam.sizes[size].map(c => c.conversation), 0.3,
     'Split before any system ran on BEAM; sealed conversations are supporting evidence at decisions and report aggregates until retired.'));
 }
+const world = buildRelationalQueries(loadWorldCorpus(join(import.meta.dir, '../eval/data/world-v1')));
+files.push(computeSplit('world-v1-relational', world.map(t => t.id), 0.5,
+  'Question-level split of the world-v1 relational templates (each paraphrase follows its template). One shared world, so this separates questions, not pages: dev questions may be used to train or tune, sealed questions are scored once at a decision.'));
 let drift = 0;
 for (const f of files) {
   const path = join(SPLITS_DIR, `${f.benchmark}.json`);
