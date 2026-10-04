@@ -1,0 +1,64 @@
+{
+  "label": "after-b3f4e8b",
+  "gbrain": {
+    "requested": "<gbrain>@b3f4e8ba5935004066b4715bdc19bc9de4721b81",
+    "ref": "b3f4e8ba5935004066b4715bdc19bc9de4721b81",
+    "commit": "b3f4e8ba5935004066b4715bdc19bc9de4721b81",
+    "tree": "f2f35cdbc425a230ffcbe06b27b062b4175723bc",
+    "version": "0.60.38.0",
+    "checkout_dirty": false,
+    "verified": {
+      "copy_tree": "f2f35cdbc425a230ffcbe06b27b062b4175723bc",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.38.0",
+      "cli_version_matches": true
+    },
+    "copied_not_symlinked": true
+  },
+  "image": "gbrain-evals-cat41:v1",
+  "pins": {
+    "claude_code": "2.1.285",
+    "codex": "0.160.0",
+    "bun": "1.4.2",
+    "node": "24.18.0"
+  },
+  "models": {
+    "claude": "claude-opus-5-5",
+    "codex": "gpt-6.1-sol"
+  },
+  "repeat": 3,
+  "harnesses": [
+    "claude",
+    "codex"
+  ],
+  "scenarios": [
+    "keyless_recall",
+    "bad_param",
+    "scope_denial",
+    "remediate_without_yes",
+    "preapproved_paid_run",
+    "second_serve",
+    "silent_stdin",
+    "missing_brain",
+    "local_only_tool",
+    "unpriced_model_user_cap",
+    "destructive_repair",
+    "enable_embeddings",
+    "notice_visibility",
+    "fresh_install_to_wired_recall",
+    "docs_diagnose_error",
+    "docs_recover_after_upgrade",
+    "docs_install"
+  ],
+  "docs_base": "https://raw.githubusercontent.com/garrytan/gbrain/b3f4e8ba5935004066b4715bdc19bc9de4721b81",
+  "install_spec": "github:garrytan/gbrain#b3f4e8ba5935004066b4715bdc19bc9de4721b81",
+  "budget_run_id": "cat41-agent-operator-2026-10-04T01-01-48-661Z-f18a3690",
+  "tool_result_cap": "none (harness defaults; the evaluator adds no per-tool-result cap)",
+  "seed": {
+    "pages": 6,
+    "facts": 3
+  },
+  "started_at": "2026-10-04T01:01:52.025Z"
+}

@@ -1,0 +1,4018 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "hermetic: no model and no paid request"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "hermetic: no model and no paid request"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "temporal",
+  "gbrain_version": "0.60.46.0",
+  "gbrain_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+  "started_at": "2026-10-04T15:08:55.802Z",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 114,
+  "n_scored": 114,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "resolved_config": {
+    "engine": "pglite-in-memory",
+    "corpus": "synthetic 50 entities x 10-19 events, 2021-01-01..~2025-10-25",
+    "ranges": [
+      "Q1 2024",
+      "Q2 2025",
+      "Q4 2024",
+      "Q3 2023"
+    ],
+    "asof_gold": "forward job-state machine over seeded events (independent of prediction path)"
+  },
+  "finished_at": "2026-10-04T15:08:58.182Z",
+  "data": {
+    "point": {
+      "recall": 1,
+      "precision": 1
+    },
+    "range": {
+      "recall": 1,
+      "precision": 1,
+      "per_range": [
+        {
+          "label": "Q1 2024",
+          "expected": 37,
+          "returned": 37,
+          "recall": 1,
+          "precision": 1
+        },
+        {
+          "label": "Q2 2025",
+          "expected": 33,
+          "returned": 33,
+          "recall": 1,
+          "precision": 1
+        },
+        {
+          "label": "Q4 2024",
+          "expected": 33,
+          "returned": 33,
+          "recall": 1,
+          "precision": 1
+        },
+        {
+          "label": "Q3 2023",
+          "expected": 45,
+          "returned": 45,
+          "recall": 1,
+          "precision": 1
+        }
+      ]
+    },
+    "recency_top3": 1,
+    "asof_accuracy": 1,
+    "rows": [
+      {
+        "probe_id": "point:2021-01-01",
+        "kind": "point",
+        "status": "scored",
+        "contributed": true,
+        "date": "2021-01-01",
+        "expectedIds": [
+          "people/p0\u00002021-01-01\u0000joined startup-0",
+          "people/p30\u00002021-01-01\u0000joined startup-0"
+        ],
+        "returnedIds": [
+          "people/p0\u00002021-01-01\u0000joined startup-0",
+          "people/p30\u00002021-01-01\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p0\u00002021-01-01\u0000joined startup-0",
+          "people/p30\u00002021-01-01\u0000joined startup-0"
+        ],
+        "hits": 2,
+        "expected": 2,
+        "returned": 2,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "point:2021-01-14",
+        "kind": "point",
+        "status": "scored",
+        "contributed": true,
+        "date": "2021-01-14",
+        "expectedIds": [
+          "people/p1\u00002021-01-14\u0000joined startup-0",
+          "people/p31\u00002021-01-14\u0000joined startup-0"
+        ],
+        "returnedIds": [
+          "people/p1\u00002021-01-14\u0000joined startup-0",
+          "people/p31\u00002021-01-14\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p1\u00002021-01-14\u0000joined startup-0",
+          "people/p31\u00002021-01-14\u0000joined startup-0"
+        ],
+        "hits": 2,
+        "expected": 2,
+        "returned": 2,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "point:2021-01-27",
+        "kind": "point",
+        "status": "scored",
+        "contributed": true,
+        "date": "2021-01-27",
+        "expectedIds": [
+          "people/p2\u00002021-01-27\u0000joined startup-0",
+          "people/p32\u00002021-01-27\u0000joined startup-0"
+        ],
+        "returnedIds": [
+          "people/p2\u00002021-01-27\u0000joined startup-0",
+          "people/p32\u00002021-01-27\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p2\u00002021-01-27\u0000joined startup-0",
+          "people/p32\u00002021-01-27\u0000joined startup-0"
+        ],
+        "hits": 2,
+        "expected": 2,
+        "returned": 2,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "point:2021-05-06",
+        "kind": "point",
+        "status": "scored",
+        "contributed": true,
+        "date": "2021-05-06",
+        "expectedIds": [
+          "people/p17\u00002021-05-06\u0000announced startup-1",
+          "people/p47\u00002021-05-06\u0000announced startup-1"
+        ],
+        "returnedIds": [
+          "people/p17\u00002021-05-06\u0000announced startup-1",
+          "people/p47\u00002021-05-06\u0000announced startup-1"
+        ],
+        "selectedIds": [
+          "people/p17\u00002021-05-06\u0000announced startup-1",
+          "people/p47\u00002021-05-06\u0000announced startup-1"
+        ],
+        "hits": 2,
+        "expected": 2,
+        "returned": 2,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "point:2021-06-25",
+        "kind": "point",
+        "status": "scored",
+        "contributed": true,
+        "date": "2021-06-25",
+        "expectedIds": [
+          "people/p21\u00002021-06-25\u0000announced startup-1",
+          "people/p22\u00002021-06-25\u0000announced startup-1"
+        ],
+        "returnedIds": [
+          "people/p21\u00002021-06-25\u0000announced startup-1",
+          "people/p22\u00002021-06-25\u0000announced startup-1"
+        ],
+        "selectedIds": [
+          "people/p21\u00002021-06-25\u0000announced startup-1",
+          "people/p22\u00002021-06-25\u0000announced startup-1"
+        ],
+        "hits": 2,
+        "expected": 2,
+        "returned": 2,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "point:2021-08-28",
+        "kind": "point",
+        "status": "scored",
+        "contributed": true,
+        "date": "2021-08-28",
+        "expectedIds": [
+          "people/p17\u00002021-08-28\u0000spoke at startup-2",
+          "people/p47\u00002021-08-28\u0000spoke at startup-2"
+        ],
+        "returnedIds": [
+          "people/p17\u00002021-08-28\u0000spoke at startup-2",
+          "people/p47\u00002021-08-28\u0000spoke at startup-2"
+        ],
+        "selectedIds": [
+          "people/p17\u00002021-08-28\u0000spoke at startup-2",
+          "people/p47\u00002021-08-28\u0000spoke at startup-2"
+        ],
+        "hits": 2,
+        "expected": 2,
+        "returned": 2,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "point:2021-11-01",
+        "kind": "point",
+        "status": "scored",
+        "contributed": true,
+        "date": "2021-11-01",
+        "expectedIds": [
+          "people/p22\u00002021-11-01\u0000spoke at startup-2"
+        ],
+        "returnedIds": [
+          "people/p22\u00002021-11-01\u0000spoke at startup-2"
+        ],
+        "selectedIds": [
+          "people/p22\u00002021-11-01\u0000spoke at startup-2"
+        ],
+        "hits": 1,
+        "expected": 1,
+        "returned": 1,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "point:2021-12-25",
+        "kind": "point",
+        "status": "scored",
+        "contributed": true,
+        "date": "2021-12-25",
+        "expectedIds": [
+          "people/p1\u00002021-12-25\u0000spoke at startup-2",
+          "people/p31\u00002021-12-25\u0000spoke at startup-2"
+        ],
+        "returnedIds": [
+          "people/p1\u00002021-12-25\u0000spoke at startup-2",
+          "people/p31\u00002021-12-25\u0000spoke at startup-2"
+        ],
+        "selectedIds": [
+          "people/p1\u00002021-12-25\u0000spoke at startup-2",
+          "people/p31\u00002021-12-25\u0000spoke at startup-2"
+        ],
+        "hits": 2,
+        "expected": 2,
+        "returned": 2,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "point:2022-02-19",
+        "kind": "point",
+        "status": "scored",
+        "contributed": true,
+        "date": "2022-02-19",
+        "expectedIds": [
+          "people/p14\u00002022-02-19\u0000hired by startup-3",
+          "people/p44\u00002022-02-19\u0000hired by startup-3"
+        ],
+        "returnedIds": [
+          "people/p14\u00002022-02-19\u0000hired by startup-3",
+          "people/p44\u00002022-02-19\u0000hired by startup-3"
+        ],
+        "selectedIds": [
+          "people/p14\u00002022-02-19\u0000hired by startup-3",
+          "people/p44\u00002022-02-19\u0000hired by startup-3"
+        ],
+        "hits": 2,
+        "expected": 2,
+        "returned": 2,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "point:2022-04-28",
+        "kind": "point",
+        "status": "scored",
+        "contributed": true,
+        "date": "2022-04-28",
+        "expectedIds": [
+          "people/p9\u00002022-04-28\u0000joined startup-0",
+          "people/p16\u00002022-04-28\u0000promoted to startup-4",
+          "people/p39\u00002022-04-28\u0000joined startup-0",
+          "people/p46\u00002022-04-28\u0000promoted to startup-4"
+        ],
+        "returnedIds": [
+          "people/p9\u00002022-04-28\u0000joined startup-0",
+          "people/p16\u00002022-04-28\u0000promoted to startup-4",
+          "people/p39\u00002022-04-28\u0000joined startup-0",
+          "people/p46\u00002022-04-28\u0000promoted to startup-4"
+        ],
+        "selectedIds": [
+          "people/p9\u00002022-04-28\u0000joined startup-0",
+          "people/p16\u00002022-04-28\u0000promoted to startup-4",
+          "people/p39\u00002022-04-28\u0000joined startup-0",
+          "people/p46\u00002022-04-28\u0000promoted to startup-4"
+        ],
+        "hits": 4,
+        "expected": 4,
+        "returned": 4,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "point:2022-06-20",
+        "kind": "point",
+        "status": "scored",
+        "contributed": true,
+        "date": "2022-06-20",
+        "expectedIds": [
+          "people/p18\u00002022-06-20\u0000joined startup-0",
+          "people/p48\u00002022-06-20\u0000joined startup-0"
+        ],
+        "returnedIds": [
+          "people/p18\u00002022-06-20\u0000joined startup-0",
+          "people/p48\u00002022-06-20\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p18\u00002022-06-20\u0000joined startup-0",
+          "people/p48\u00002022-06-20\u0000joined startup-0"
+        ],
+        "hits": 2,
+        "expected": 2,
+        "returned": 2,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "point:2022-08-17",
+        "kind": "point",
+        "status": "scored",
+        "contributed": true,
+        "date": "2022-08-17",
+        "expectedIds": [
+          "people/p6\u00002022-08-17\u0000joined startup-0",
+          "people/p36\u00002022-08-17\u0000joined startup-0"
+        ],
+        "returnedIds": [
+          "people/p6\u00002022-08-17\u0000joined startup-0",
+          "people/p36\u00002022-08-17\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p6\u00002022-08-17\u0000joined startup-0",
+          "people/p36\u00002022-08-17\u0000joined startup-0"
+        ],
+        "hits": 2,
+        "expected": 2,
+        "returned": 2,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "point:2022-10-20",
+        "kind": "point",
+        "status": "scored",
+        "contributed": true,
+        "date": "2022-10-20",
+        "expectedIds": [
+          "people/p7\u00002022-10-20\u0000announced startup-1",
+          "people/p37\u00002022-10-20\u0000announced startup-1"
+        ],
+        "returnedIds": [
+          "people/p7\u00002022-10-20\u0000announced startup-1",
+          "people/p37\u00002022-10-20\u0000announced startup-1"
+        ],
+        "selectedIds": [
+          "people/p7\u00002022-10-20\u0000announced startup-1",
+          "people/p37\u00002022-10-20\u0000announced startup-1"
+        ],
+        "hits": 2,
+        "expected": 2,
+        "returned": 2,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "point:2022-12-14",
+        "kind": "point",
+        "status": "scored",
+        "contributed": true,
+        "date": "2022-12-14",
+        "expectedIds": [
+          "people/p8\u00002022-12-14\u0000spoke at startup-2",
+          "people/p38\u00002022-12-14\u0000spoke at startup-2"
+        ],
+        "returnedIds": [
+          "people/p8\u00002022-12-14\u0000spoke at startup-2",
+          "people/p38\u00002022-12-14\u0000spoke at startup-2"
+        ],
+        "selectedIds": [
+          "people/p8\u00002022-12-14\u0000spoke at startup-2",
+          "people/p38\u00002022-12-14\u0000spoke at startup-2"
+        ],
+        "hits": 2,
+        "expected": 2,
+        "returned": 2,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "point:2023-02-11",
+        "kind": "point",
+        "status": "scored",
+        "contributed": true,
+        "date": "2023-02-11",
+        "expectedIds": [
+          "people/p7\u00002023-02-11\u0000spoke at startup-2",
+          "people/p12\u00002023-02-11\u0000joined startup-0",
+          "people/p19\u00002023-02-11\u0000hired by startup-3",
+          "people/p37\u00002023-02-11\u0000spoke at startup-2",
+          "people/p42\u00002023-02-11\u0000joined startup-0",
+          "people/p49\u00002023-02-11\u0000hired by startup-3"
+        ],
+        "returnedIds": [
+          "people/p7\u00002023-02-11\u0000spoke at startup-2",
+          "people/p12\u00002023-02-11\u0000joined startup-0",
+          "people/p19\u00002023-02-11\u0000hired by startup-3",
+          "people/p37\u00002023-02-11\u0000spoke at startup-2",
+          "people/p42\u00002023-02-11\u0000joined startup-0",
+          "people/p49\u00002023-02-11\u0000hired by startup-3"
+        ],
+        "selectedIds": [
+          "people/p7\u00002023-02-11\u0000spoke at startup-2",
+          "people/p12\u00002023-02-11\u0000joined startup-0",
+          "people/p19\u00002023-02-11\u0000hired by startup-3",
+          "people/p37\u00002023-02-11\u0000spoke at startup-2",
+          "people/p42\u00002023-02-11\u0000joined startup-0",
+          "people/p49\u00002023-02-11\u0000hired by startup-3"
+        ],
+        "hits": 6,
+        "expected": 6,
+        "returned": 6,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "point:2023-04-24",
+        "kind": "point",
+        "status": "scored",
+        "contributed": true,
+        "date": "2023-04-24",
+        "expectedIds": [
+          "people/p13\u00002023-04-24\u0000announced startup-1",
+          "people/p43\u00002023-04-24\u0000announced startup-1"
+        ],
+        "returnedIds": [
+          "people/p13\u00002023-04-24\u0000announced startup-1",
+          "people/p43\u00002023-04-24\u0000announced startup-1"
+        ],
+        "selectedIds": [
+          "people/p13\u00002023-04-24\u0000announced startup-1",
+          "people/p43\u00002023-04-24\u0000announced startup-1"
+        ],
+        "hits": 2,
+        "expected": 2,
+        "returned": 2,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "point:2023-07-06",
+        "kind": "point",
+        "status": "scored",
+        "contributed": true,
+        "date": "2023-07-06",
+        "expectedIds": [
+          "people/p26\u00002023-07-06\u0000hired by startup-3"
+        ],
+        "returnedIds": [
+          "people/p26\u00002023-07-06\u0000hired by startup-3"
+        ],
+        "selectedIds": [
+          "people/p26\u00002023-07-06\u0000hired by startup-3"
+        ],
+        "hits": 1,
+        "expected": 1,
+        "returned": 1,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "point:2023-07-30",
+        "kind": "point",
+        "status": "scored",
+        "contributed": true,
+        "date": "2023-07-30",
+        "expectedIds": [
+          "people/p22\u00002023-07-30\u0000announced startup-1"
+        ],
+        "returnedIds": [
+          "people/p22\u00002023-07-30\u0000announced startup-1"
+        ],
+        "selectedIds": [
+          "people/p22\u00002023-07-30\u0000announced startup-1"
+        ],
+        "hits": 1,
+        "expected": 1,
+        "returned": 1,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "point:2023-10-18",
+        "kind": "point",
+        "status": "scored",
+        "contributed": true,
+        "date": "2023-10-18",
+        "expectedIds": [
+          "people/p1\u00002023-10-18\u0000announced startup-1",
+          "people/p31\u00002023-10-18\u0000announced startup-1"
+        ],
+        "returnedIds": [
+          "people/p1\u00002023-10-18\u0000announced startup-1",
+          "people/p31\u00002023-10-18\u0000announced startup-1"
+        ],
+        "selectedIds": [
+          "people/p1\u00002023-10-18\u0000announced startup-1",
+          "people/p31\u00002023-10-18\u0000announced startup-1"
+        ],
+        "hits": 2,
+        "expected": 2,
+        "returned": 2,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "point:2023-12-31",
+        "kind": "point",
+        "status": "scored",
+        "contributed": true,
+        "date": "2023-12-31",
+        "expectedIds": [
+          "people/p17\u00002023-12-31\u0000joined startup-0",
+          "people/p47\u00002023-12-31\u0000joined startup-0"
+        ],
+        "returnedIds": [
+          "people/p17\u00002023-12-31\u0000joined startup-0",
+          "people/p47\u00002023-12-31\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p17\u00002023-12-31\u0000joined startup-0",
+          "people/p47\u00002023-12-31\u0000joined startup-0"
+        ],
+        "hits": 2,
+        "expected": 2,
+        "returned": 2,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "point:2024-02-28",
+        "kind": "point",
+        "status": "scored",
+        "contributed": true,
+        "date": "2024-02-28",
+        "expectedIds": [
+          "people/p19\u00002024-02-28\u0000spoke at startup-2",
+          "people/p49\u00002024-02-28\u0000spoke at startup-2"
+        ],
+        "returnedIds": [
+          "people/p19\u00002024-02-28\u0000spoke at startup-2",
+          "people/p49\u00002024-02-28\u0000spoke at startup-2"
+        ],
+        "selectedIds": [
+          "people/p19\u00002024-02-28\u0000spoke at startup-2",
+          "people/p49\u00002024-02-28\u0000spoke at startup-2"
+        ],
+        "hits": 2,
+        "expected": 2,
+        "returned": 2,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "point:2024-05-13",
+        "kind": "point",
+        "status": "scored",
+        "contributed": true,
+        "date": "2024-05-13",
+        "expectedIds": [
+          "people/p22\u00002024-05-13\u0000hired by startup-3"
+        ],
+        "returnedIds": [
+          "people/p22\u00002024-05-13\u0000hired by startup-3"
+        ],
+        "selectedIds": [
+          "people/p22\u00002024-05-13\u0000hired by startup-3"
+        ],
+        "hits": 1,
+        "expected": 1,
+        "returned": 1,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "point:2024-07-03",
+        "kind": "point",
+        "status": "scored",
+        "contributed": true,
+        "date": "2024-07-03",
+        "expectedIds": [
+          "people/p26\u00002024-07-03\u0000announced startup-1"
+        ],
+        "returnedIds": [
+          "people/p26\u00002024-07-03\u0000announced startup-1"
+        ],
+        "selectedIds": [
+          "people/p26\u00002024-07-03\u0000announced startup-1"
+        ],
+        "hits": 1,
+        "expected": 1,
+        "returned": 1,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "point:2024-08-29",
+        "kind": "point",
+        "status": "scored",
+        "contributed": true,
+        "date": "2024-08-29",
+        "expectedIds": [
+          "people/p1\u00002024-08-29\u0000hired by startup-3",
+          "people/p31\u00002024-08-29\u0000hired by startup-3"
+        ],
+        "returnedIds": [
+          "people/p1\u00002024-08-29\u0000hired by startup-3",
+          "people/p31\u00002024-08-29\u0000hired by startup-3"
+        ],
+        "selectedIds": [
+          "people/p1\u00002024-08-29\u0000hired by startup-3",
+          "people/p31\u00002024-08-29\u0000hired by startup-3"
+        ],
+        "hits": 2,
+        "expected": 2,
+        "returned": 2,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "point:2024-10-19",
+        "kind": "point",
+        "status": "scored",
+        "contributed": true,
+        "date": "2024-10-19",
+        "expectedIds": [
+          "people/p22\u00002024-10-19\u0000promoted to startup-4"
+        ],
+        "returnedIds": [
+          "people/p22\u00002024-10-19\u0000promoted to startup-4"
+        ],
+        "selectedIds": [
+          "people/p22\u00002024-10-19\u0000promoted to startup-4"
+        ],
+        "hits": 1,
+        "expected": 1,
+        "returned": 1,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "point:2025-01-02",
+        "kind": "point",
+        "status": "scored",
+        "contributed": true,
+        "date": "2025-01-02",
+        "expectedIds": [
+          "people/p19\u00002025-01-02\u0000joined startup-0",
+          "people/p24\u00002025-01-02\u0000announced startup-1",
+          "people/p49\u00002025-01-02\u0000joined startup-0"
+        ],
+        "returnedIds": [
+          "people/p19\u00002025-01-02\u0000joined startup-0",
+          "people/p24\u00002025-01-02\u0000announced startup-1",
+          "people/p49\u00002025-01-02\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p19\u00002025-01-02\u0000joined startup-0",
+          "people/p24\u00002025-01-02\u0000announced startup-1",
+          "people/p49\u00002025-01-02\u0000joined startup-0"
+        ],
+        "hits": 3,
+        "expected": 3,
+        "returned": 3,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "point:2025-03-02",
+        "kind": "point",
+        "status": "scored",
+        "contributed": true,
+        "date": "2025-03-02",
+        "expectedIds": [
+          "people/p17\u00002025-03-02\u0000promoted to startup-4",
+          "people/p47\u00002025-03-02\u0000promoted to startup-4"
+        ],
+        "returnedIds": [
+          "people/p17\u00002025-03-02\u0000promoted to startup-4",
+          "people/p47\u00002025-03-02\u0000promoted to startup-4"
+        ],
+        "selectedIds": [
+          "people/p17\u00002025-03-02\u0000promoted to startup-4",
+          "people/p47\u00002025-03-02\u0000promoted to startup-4"
+        ],
+        "hits": 2,
+        "expected": 2,
+        "returned": 2,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "point:2025-04-20",
+        "kind": "point",
+        "status": "scored",
+        "contributed": true,
+        "date": "2025-04-20",
+        "expectedIds": [
+          "people/p3\u00002025-04-20\u0000announced startup-1",
+          "people/p24\u00002025-04-20\u0000spoke at startup-2",
+          "people/p33\u00002025-04-20\u0000announced startup-1"
+        ],
+        "returnedIds": [
+          "people/p3\u00002025-04-20\u0000announced startup-1",
+          "people/p24\u00002025-04-20\u0000spoke at startup-2",
+          "people/p33\u00002025-04-20\u0000announced startup-1"
+        ],
+        "selectedIds": [
+          "people/p3\u00002025-04-20\u0000announced startup-1",
+          "people/p24\u00002025-04-20\u0000spoke at startup-2",
+          "people/p33\u00002025-04-20\u0000announced startup-1"
+        ],
+        "hits": 3,
+        "expected": 3,
+        "returned": 3,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "point:2025-06-27",
+        "kind": "point",
+        "status": "scored",
+        "contributed": true,
+        "date": "2025-06-27",
+        "expectedIds": [
+          "people/p18\u00002025-06-27\u0000announced startup-1",
+          "people/p19\u00002025-06-27\u0000spoke at startup-2",
+          "people/p48\u00002025-06-27\u0000announced startup-1",
+          "people/p49\u00002025-06-27\u0000spoke at startup-2"
+        ],
+        "returnedIds": [
+          "people/p18\u00002025-06-27\u0000announced startup-1",
+          "people/p19\u00002025-06-27\u0000spoke at startup-2",
+          "people/p48\u00002025-06-27\u0000announced startup-1",
+          "people/p49\u00002025-06-27\u0000spoke at startup-2"
+        ],
+        "selectedIds": [
+          "people/p18\u00002025-06-27\u0000announced startup-1",
+          "people/p19\u00002025-06-27\u0000spoke at startup-2",
+          "people/p48\u00002025-06-27\u0000announced startup-1",
+          "people/p49\u00002025-06-27\u0000spoke at startup-2"
+        ],
+        "hits": 4,
+        "expected": 4,
+        "returned": 4,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "point:2025-08-25",
+        "kind": "point",
+        "status": "scored",
+        "contributed": true,
+        "date": "2025-08-25",
+        "expectedIds": [
+          "people/p13\u00002025-08-25\u0000spoke at startup-2",
+          "people/p14\u00002025-08-25\u0000hired by startup-3",
+          "people/p43\u00002025-08-25\u0000spoke at startup-2",
+          "people/p44\u00002025-08-25\u0000hired by startup-3"
+        ],
+        "returnedIds": [
+          "people/p13\u00002025-08-25\u0000spoke at startup-2",
+          "people/p14\u00002025-08-25\u0000hired by startup-3",
+          "people/p43\u00002025-08-25\u0000spoke at startup-2",
+          "people/p44\u00002025-08-25\u0000hired by startup-3"
+        ],
+        "selectedIds": [
+          "people/p13\u00002025-08-25\u0000spoke at startup-2",
+          "people/p14\u00002025-08-25\u0000hired by startup-3",
+          "people/p43\u00002025-08-25\u0000spoke at startup-2",
+          "people/p44\u00002025-08-25\u0000hired by startup-3"
+        ],
+        "hits": 4,
+        "expected": 4,
+        "returned": 4,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "range:Q1 2024",
+        "kind": "range",
+        "status": "scored",
+        "contributed": true,
+        "from": "2024-01-01",
+        "to": "2024-03-31",
+        "label": "Q1 2024",
+        "expectedIds": [
+          "people/p0\u00002024-01-13\u0000announced startup-1",
+          "people/p1\u00002024-03-09\u0000spoke at startup-2",
+          "people/p3\u00002024-02-03\u0000hired by startup-3",
+          "people/p5\u00002024-01-09\u0000promoted to startup-4",
+          "people/p6\u00002024-03-14\u0000joined startup-0",
+          "people/p8\u00002024-01-22\u0000announced startup-1",
+          "people/p9\u00002024-03-19\u0000spoke at startup-2",
+          "people/p10\u00002024-01-23\u0000announced startup-1",
+          "people/p11\u00002024-03-19\u0000spoke at startup-2",
+          "people/p13\u00002024-02-13\u0000hired by startup-3",
+          "people/p14\u00002024-03-24\u0000promoted to startup-4",
+          "people/p15\u00002024-01-19\u0000promoted to startup-4",
+          "people/p16\u00002024-02-23\u0000joined startup-0",
+          "people/p18\u00002024-02-01\u0000announced startup-1",
+          "people/p19\u00002024-02-28\u0000spoke at startup-2",
+          "people/p20\u00002024-01-03\u0000announced startup-1",
+          "people/p21\u00002024-03-29\u0000spoke at startup-2",
+          "people/p23\u00002024-02-23\u0000hired by startup-3",
+          "people/p25\u00002024-01-29\u0000promoted to startup-4",
+          "people/p26\u00002024-03-04\u0000joined startup-0",
+          "people/p28\u00002024-02-11\u0000announced startup-1",
+          "people/p29\u00002024-03-09\u0000spoke at startup-2",
+          "people/p30\u00002024-01-13\u0000announced startup-1",
+          "people/p31\u00002024-03-09\u0000spoke at startup-2",
+          "people/p33\u00002024-02-03\u0000hired by startup-3",
+          "people/p35\u00002024-01-09\u0000promoted to startup-4",
+          "people/p36\u00002024-03-14\u0000joined startup-0",
+          "people/p38\u00002024-01-22\u0000announced startup-1",
+          "people/p39\u00002024-03-19\u0000spoke at startup-2",
+          "people/p40\u00002024-01-23\u0000announced startup-1",
+          "people/p41\u00002024-03-19\u0000spoke at startup-2",
+          "people/p43\u00002024-02-13\u0000hired by startup-3",
+          "people/p44\u00002024-03-24\u0000promoted to startup-4",
+          "people/p45\u00002024-01-19\u0000promoted to startup-4",
+          "people/p46\u00002024-02-23\u0000joined startup-0",
+          "people/p48\u00002024-02-01\u0000announced startup-1",
+          "people/p49\u00002024-02-28\u0000spoke at startup-2"
+        ],
+        "returnedIds": [
+          "people/p0\u00002024-01-13\u0000announced startup-1",
+          "people/p1\u00002024-03-09\u0000spoke at startup-2",
+          "people/p3\u00002024-02-03\u0000hired by startup-3",
+          "people/p5\u00002024-01-09\u0000promoted to startup-4",
+          "people/p6\u00002024-03-14\u0000joined startup-0",
+          "people/p8\u00002024-01-22\u0000announced startup-1",
+          "people/p9\u00002024-03-19\u0000spoke at startup-2",
+          "people/p10\u00002024-01-23\u0000announced startup-1",
+          "people/p11\u00002024-03-19\u0000spoke at startup-2",
+          "people/p13\u00002024-02-13\u0000hired by startup-3",
+          "people/p14\u00002024-03-24\u0000promoted to startup-4",
+          "people/p15\u00002024-01-19\u0000promoted to startup-4",
+          "people/p16\u00002024-02-23\u0000joined startup-0",
+          "people/p18\u00002024-02-01\u0000announced startup-1",
+          "people/p19\u00002024-02-28\u0000spoke at startup-2",
+          "people/p20\u00002024-01-03\u0000announced startup-1",
+          "people/p21\u00002024-03-29\u0000spoke at startup-2",
+          "people/p23\u00002024-02-23\u0000hired by startup-3",
+          "people/p25\u00002024-01-29\u0000promoted to startup-4",
+          "people/p26\u00002024-03-04\u0000joined startup-0",
+          "people/p28\u00002024-02-11\u0000announced startup-1",
+          "people/p29\u00002024-03-09\u0000spoke at startup-2",
+          "people/p30\u00002024-01-13\u0000announced startup-1",
+          "people/p31\u00002024-03-09\u0000spoke at startup-2",
+          "people/p33\u00002024-02-03\u0000hired by startup-3",
+          "people/p35\u00002024-01-09\u0000promoted to startup-4",
+          "people/p36\u00002024-03-14\u0000joined startup-0",
+          "people/p38\u00002024-01-22\u0000announced startup-1",
+          "people/p39\u00002024-03-19\u0000spoke at startup-2",
+          "people/p40\u00002024-01-23\u0000announced startup-1",
+          "people/p41\u00002024-03-19\u0000spoke at startup-2",
+          "people/p43\u00002024-02-13\u0000hired by startup-3",
+          "people/p44\u00002024-03-24\u0000promoted to startup-4",
+          "people/p45\u00002024-01-19\u0000promoted to startup-4",
+          "people/p46\u00002024-02-23\u0000joined startup-0",
+          "people/p48\u00002024-02-01\u0000announced startup-1",
+          "people/p49\u00002024-02-28\u0000spoke at startup-2"
+        ],
+        "selectedIds": [
+          "people/p0\u00002024-01-13\u0000announced startup-1",
+          "people/p1\u00002024-03-09\u0000spoke at startup-2",
+          "people/p3\u00002024-02-03\u0000hired by startup-3",
+          "people/p5\u00002024-01-09\u0000promoted to startup-4",
+          "people/p6\u00002024-03-14\u0000joined startup-0",
+          "people/p8\u00002024-01-22\u0000announced startup-1",
+          "people/p9\u00002024-03-19\u0000spoke at startup-2",
+          "people/p10\u00002024-01-23\u0000announced startup-1",
+          "people/p11\u00002024-03-19\u0000spoke at startup-2",
+          "people/p13\u00002024-02-13\u0000hired by startup-3",
+          "people/p14\u00002024-03-24\u0000promoted to startup-4",
+          "people/p15\u00002024-01-19\u0000promoted to startup-4",
+          "people/p16\u00002024-02-23\u0000joined startup-0",
+          "people/p18\u00002024-02-01\u0000announced startup-1",
+          "people/p19\u00002024-02-28\u0000spoke at startup-2",
+          "people/p20\u00002024-01-03\u0000announced startup-1",
+          "people/p21\u00002024-03-29\u0000spoke at startup-2",
+          "people/p23\u00002024-02-23\u0000hired by startup-3",
+          "people/p25\u00002024-01-29\u0000promoted to startup-4",
+          "people/p26\u00002024-03-04\u0000joined startup-0",
+          "people/p28\u00002024-02-11\u0000announced startup-1",
+          "people/p29\u00002024-03-09\u0000spoke at startup-2",
+          "people/p30\u00002024-01-13\u0000announced startup-1",
+          "people/p31\u00002024-03-09\u0000spoke at startup-2",
+          "people/p33\u00002024-02-03\u0000hired by startup-3",
+          "people/p35\u00002024-01-09\u0000promoted to startup-4",
+          "people/p36\u00002024-03-14\u0000joined startup-0",
+          "people/p38\u00002024-01-22\u0000announced startup-1",
+          "people/p39\u00002024-03-19\u0000spoke at startup-2",
+          "people/p40\u00002024-01-23\u0000announced startup-1",
+          "people/p41\u00002024-03-19\u0000spoke at startup-2",
+          "people/p43\u00002024-02-13\u0000hired by startup-3",
+          "people/p44\u00002024-03-24\u0000promoted to startup-4",
+          "people/p45\u00002024-01-19\u0000promoted to startup-4",
+          "people/p46\u00002024-02-23\u0000joined startup-0",
+          "people/p48\u00002024-02-01\u0000announced startup-1",
+          "people/p49\u00002024-02-28\u0000spoke at startup-2"
+        ],
+        "hits": 37,
+        "expected": 37,
+        "returned": 37,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "range:Q2 2025",
+        "kind": "range",
+        "status": "scored",
+        "contributed": true,
+        "from": "2025-04-01",
+        "to": "2025-06-30",
+        "label": "Q2 2025",
+        "expectedIds": [
+          "people/p3\u00002025-04-20\u0000announced startup-1",
+          "people/p4\u00002025-04-30\u0000spoke at startup-2",
+          "people/p5\u00002025-05-07\u0000hired by startup-3",
+          "people/p6\u00002025-06-11\u0000promoted to startup-4",
+          "people/p7\u00002025-06-15\u0000joined startup-0",
+          "people/p8\u00002025-06-17\u0000announced startup-1",
+          "people/p9\u00002025-04-05\u0000announced startup-1",
+          "people/p14\u00002025-05-10\u0000spoke at startup-2",
+          "people/p15\u00002025-05-17\u0000hired by startup-3",
+          "people/p16\u00002025-05-22\u0000promoted to startup-4",
+          "people/p17\u00002025-06-25\u0000joined startup-0",
+          "people/p18\u00002025-06-27\u0000announced startup-1",
+          "people/p19\u00002025-04-15\u0000announced startup-1",
+          "people/p19\u00002025-06-27\u0000spoke at startup-2",
+          "people/p23\u00002025-04-10\u0000announced startup-1",
+          "people/p24\u00002025-04-20\u0000spoke at startup-2",
+          "people/p25\u00002025-05-27\u0000hired by startup-3",
+          "people/p26\u00002025-06-01\u0000promoted to startup-4",
+          "people/p27\u00002025-06-05\u0000joined startup-0",
+          "people/p33\u00002025-04-20\u0000announced startup-1",
+          "people/p34\u00002025-04-30\u0000spoke at startup-2",
+          "people/p35\u00002025-05-07\u0000hired by startup-3",
+          "people/p36\u00002025-06-11\u0000promoted to startup-4",
+          "people/p37\u00002025-06-15\u0000joined startup-0",
+          "people/p38\u00002025-06-17\u0000announced startup-1",
+          "people/p39\u00002025-04-05\u0000announced startup-1",
+          "people/p44\u00002025-05-10\u0000spoke at startup-2",
+          "people/p45\u00002025-05-17\u0000hired by startup-3",
+          "people/p46\u00002025-05-22\u0000promoted to startup-4",
+          "people/p47\u00002025-06-25\u0000joined startup-0",
+          "people/p48\u00002025-06-27\u0000announced startup-1",
+          "people/p49\u00002025-04-15\u0000announced startup-1",
+          "people/p49\u00002025-06-27\u0000spoke at startup-2"
+        ],
+        "returnedIds": [
+          "people/p3\u00002025-04-20\u0000announced startup-1",
+          "people/p4\u00002025-04-30\u0000spoke at startup-2",
+          "people/p5\u00002025-05-07\u0000hired by startup-3",
+          "people/p6\u00002025-06-11\u0000promoted to startup-4",
+          "people/p7\u00002025-06-15\u0000joined startup-0",
+          "people/p8\u00002025-06-17\u0000announced startup-1",
+          "people/p9\u00002025-04-05\u0000announced startup-1",
+          "people/p14\u00002025-05-10\u0000spoke at startup-2",
+          "people/p15\u00002025-05-17\u0000hired by startup-3",
+          "people/p16\u00002025-05-22\u0000promoted to startup-4",
+          "people/p17\u00002025-06-25\u0000joined startup-0",
+          "people/p18\u00002025-06-27\u0000announced startup-1",
+          "people/p19\u00002025-06-27\u0000spoke at startup-2",
+          "people/p19\u00002025-04-15\u0000announced startup-1",
+          "people/p23\u00002025-04-10\u0000announced startup-1",
+          "people/p24\u00002025-04-20\u0000spoke at startup-2",
+          "people/p25\u00002025-05-27\u0000hired by startup-3",
+          "people/p26\u00002025-06-01\u0000promoted to startup-4",
+          "people/p27\u00002025-06-05\u0000joined startup-0",
+          "people/p33\u00002025-04-20\u0000announced startup-1",
+          "people/p34\u00002025-04-30\u0000spoke at startup-2",
+          "people/p35\u00002025-05-07\u0000hired by startup-3",
+          "people/p36\u00002025-06-11\u0000promoted to startup-4",
+          "people/p37\u00002025-06-15\u0000joined startup-0",
+          "people/p38\u00002025-06-17\u0000announced startup-1",
+          "people/p39\u00002025-04-05\u0000announced startup-1",
+          "people/p44\u00002025-05-10\u0000spoke at startup-2",
+          "people/p45\u00002025-05-17\u0000hired by startup-3",
+          "people/p46\u00002025-05-22\u0000promoted to startup-4",
+          "people/p47\u00002025-06-25\u0000joined startup-0",
+          "people/p48\u00002025-06-27\u0000announced startup-1",
+          "people/p49\u00002025-06-27\u0000spoke at startup-2",
+          "people/p49\u00002025-04-15\u0000announced startup-1"
+        ],
+        "selectedIds": [
+          "people/p3\u00002025-04-20\u0000announced startup-1",
+          "people/p4\u00002025-04-30\u0000spoke at startup-2",
+          "people/p5\u00002025-05-07\u0000hired by startup-3",
+          "people/p6\u00002025-06-11\u0000promoted to startup-4",
+          "people/p7\u00002025-06-15\u0000joined startup-0",
+          "people/p8\u00002025-06-17\u0000announced startup-1",
+          "people/p9\u00002025-04-05\u0000announced startup-1",
+          "people/p14\u00002025-05-10\u0000spoke at startup-2",
+          "people/p15\u00002025-05-17\u0000hired by startup-3",
+          "people/p16\u00002025-05-22\u0000promoted to startup-4",
+          "people/p17\u00002025-06-25\u0000joined startup-0",
+          "people/p18\u00002025-06-27\u0000announced startup-1",
+          "people/p19\u00002025-06-27\u0000spoke at startup-2",
+          "people/p19\u00002025-04-15\u0000announced startup-1",
+          "people/p23\u00002025-04-10\u0000announced startup-1",
+          "people/p24\u00002025-04-20\u0000spoke at startup-2",
+          "people/p25\u00002025-05-27\u0000hired by startup-3",
+          "people/p26\u00002025-06-01\u0000promoted to startup-4",
+          "people/p27\u00002025-06-05\u0000joined startup-0",
+          "people/p33\u00002025-04-20\u0000announced startup-1",
+          "people/p34\u00002025-04-30\u0000spoke at startup-2",
+          "people/p35\u00002025-05-07\u0000hired by startup-3",
+          "people/p36\u00002025-06-11\u0000promoted to startup-4",
+          "people/p37\u00002025-06-15\u0000joined startup-0",
+          "people/p38\u00002025-06-17\u0000announced startup-1",
+          "people/p39\u00002025-04-05\u0000announced startup-1",
+          "people/p44\u00002025-05-10\u0000spoke at startup-2",
+          "people/p45\u00002025-05-17\u0000hired by startup-3",
+          "people/p46\u00002025-05-22\u0000promoted to startup-4",
+          "people/p47\u00002025-06-25\u0000joined startup-0",
+          "people/p48\u00002025-06-27\u0000announced startup-1",
+          "people/p49\u00002025-06-27\u0000spoke at startup-2",
+          "people/p49\u00002025-04-15\u0000announced startup-1"
+        ],
+        "hits": 33,
+        "expected": 33,
+        "returned": 33,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "range:Q4 2024",
+        "kind": "range",
+        "status": "scored",
+        "contributed": true,
+        "from": "2024-10-01",
+        "to": "2024-12-31",
+        "label": "Q4 2024",
+        "expectedIds": [
+          "people/p2\u00002024-10-29\u0000promoted to startup-4",
+          "people/p3\u00002024-11-23\u0000joined startup-0",
+          "people/p4\u00002024-12-13\u0000announced startup-1",
+          "people/p6\u00002024-10-12\u0000spoke at startup-2",
+          "people/p7\u00002024-10-29\u0000hired by startup-3",
+          "people/p8\u00002024-12-12\u0000promoted to startup-4",
+          "people/p9\u00002024-12-23\u0000joined startup-0",
+          "people/p12\u00002024-10-09\u0000promoted to startup-4",
+          "people/p13\u00002024-12-03\u0000joined startup-0",
+          "people/p14\u00002024-12-23\u0000announced startup-1",
+          "people/p16\u00002024-10-22\u0000spoke at startup-2",
+          "people/p17\u00002024-11-08\u0000hired by startup-3",
+          "people/p18\u00002024-11-22\u0000promoted to startup-4",
+          "people/p22\u00002024-10-19\u0000promoted to startup-4",
+          "people/p23\u00002024-11-13\u0000joined startup-0",
+          "people/p26\u00002024-10-02\u0000spoke at startup-2",
+          "people/p27\u00002024-11-18\u0000hired by startup-3",
+          "people/p28\u00002024-12-02\u0000promoted to startup-4",
+          "people/p29\u00002024-10-01\u0000promoted to startup-4",
+          "people/p29\u00002024-12-13\u0000joined startup-0",
+          "people/p32\u00002024-10-29\u0000promoted to startup-4",
+          "people/p33\u00002024-11-23\u0000joined startup-0",
+          "people/p34\u00002024-12-13\u0000announced startup-1",
+          "people/p36\u00002024-10-12\u0000spoke at startup-2",
+          "people/p37\u00002024-10-29\u0000hired by startup-3",
+          "people/p38\u00002024-12-12\u0000promoted to startup-4",
+          "people/p39\u00002024-12-23\u0000joined startup-0",
+          "people/p42\u00002024-10-09\u0000promoted to startup-4",
+          "people/p43\u00002024-12-03\u0000joined startup-0",
+          "people/p44\u00002024-12-23\u0000announced startup-1",
+          "people/p46\u00002024-10-22\u0000spoke at startup-2",
+          "people/p47\u00002024-11-08\u0000hired by startup-3",
+          "people/p48\u00002024-11-22\u0000promoted to startup-4"
+        ],
+        "returnedIds": [
+          "people/p2\u00002024-10-29\u0000promoted to startup-4",
+          "people/p3\u00002024-11-23\u0000joined startup-0",
+          "people/p4\u00002024-12-13\u0000announced startup-1",
+          "people/p6\u00002024-10-12\u0000spoke at startup-2",
+          "people/p7\u00002024-10-29\u0000hired by startup-3",
+          "people/p8\u00002024-12-12\u0000promoted to startup-4",
+          "people/p9\u00002024-12-23\u0000joined startup-0",
+          "people/p12\u00002024-10-09\u0000promoted to startup-4",
+          "people/p13\u00002024-12-03\u0000joined startup-0",
+          "people/p14\u00002024-12-23\u0000announced startup-1",
+          "people/p16\u00002024-10-22\u0000spoke at startup-2",
+          "people/p17\u00002024-11-08\u0000hired by startup-3",
+          "people/p18\u00002024-11-22\u0000promoted to startup-4",
+          "people/p22\u00002024-10-19\u0000promoted to startup-4",
+          "people/p23\u00002024-11-13\u0000joined startup-0",
+          "people/p26\u00002024-10-02\u0000spoke at startup-2",
+          "people/p27\u00002024-11-18\u0000hired by startup-3",
+          "people/p28\u00002024-12-02\u0000promoted to startup-4",
+          "people/p29\u00002024-12-13\u0000joined startup-0",
+          "people/p29\u00002024-10-01\u0000promoted to startup-4",
+          "people/p32\u00002024-10-29\u0000promoted to startup-4",
+          "people/p33\u00002024-11-23\u0000joined startup-0",
+          "people/p34\u00002024-12-13\u0000announced startup-1",
+          "people/p36\u00002024-10-12\u0000spoke at startup-2",
+          "people/p37\u00002024-10-29\u0000hired by startup-3",
+          "people/p38\u00002024-12-12\u0000promoted to startup-4",
+          "people/p39\u00002024-12-23\u0000joined startup-0",
+          "people/p42\u00002024-10-09\u0000promoted to startup-4",
+          "people/p43\u00002024-12-03\u0000joined startup-0",
+          "people/p44\u00002024-12-23\u0000announced startup-1",
+          "people/p46\u00002024-10-22\u0000spoke at startup-2",
+          "people/p47\u00002024-11-08\u0000hired by startup-3",
+          "people/p48\u00002024-11-22\u0000promoted to startup-4"
+        ],
+        "selectedIds": [
+          "people/p2\u00002024-10-29\u0000promoted to startup-4",
+          "people/p3\u00002024-11-23\u0000joined startup-0",
+          "people/p4\u00002024-12-13\u0000announced startup-1",
+          "people/p6\u00002024-10-12\u0000spoke at startup-2",
+          "people/p7\u00002024-10-29\u0000hired by startup-3",
+          "people/p8\u00002024-12-12\u0000promoted to startup-4",
+          "people/p9\u00002024-12-23\u0000joined startup-0",
+          "people/p12\u00002024-10-09\u0000promoted to startup-4",
+          "people/p13\u00002024-12-03\u0000joined startup-0",
+          "people/p14\u00002024-12-23\u0000announced startup-1",
+          "people/p16\u00002024-10-22\u0000spoke at startup-2",
+          "people/p17\u00002024-11-08\u0000hired by startup-3",
+          "people/p18\u00002024-11-22\u0000promoted to startup-4",
+          "people/p22\u00002024-10-19\u0000promoted to startup-4",
+          "people/p23\u00002024-11-13\u0000joined startup-0",
+          "people/p26\u00002024-10-02\u0000spoke at startup-2",
+          "people/p27\u00002024-11-18\u0000hired by startup-3",
+          "people/p28\u00002024-12-02\u0000promoted to startup-4",
+          "people/p29\u00002024-12-13\u0000joined startup-0",
+          "people/p29\u00002024-10-01\u0000promoted to startup-4",
+          "people/p32\u00002024-10-29\u0000promoted to startup-4",
+          "people/p33\u00002024-11-23\u0000joined startup-0",
+          "people/p34\u00002024-12-13\u0000announced startup-1",
+          "people/p36\u00002024-10-12\u0000spoke at startup-2",
+          "people/p37\u00002024-10-29\u0000hired by startup-3",
+          "people/p38\u00002024-12-12\u0000promoted to startup-4",
+          "people/p39\u00002024-12-23\u0000joined startup-0",
+          "people/p42\u00002024-10-09\u0000promoted to startup-4",
+          "people/p43\u00002024-12-03\u0000joined startup-0",
+          "people/p44\u00002024-12-23\u0000announced startup-1",
+          "people/p46\u00002024-10-22\u0000spoke at startup-2",
+          "people/p47\u00002024-11-08\u0000hired by startup-3",
+          "people/p48\u00002024-11-22\u0000promoted to startup-4"
+        ],
+        "hits": 33,
+        "expected": 33,
+        "returned": 33,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "range:Q3 2023",
+        "kind": "range",
+        "status": "scored",
+        "contributed": true,
+        "from": "2023-07-01",
+        "to": "2023-09-30",
+        "label": "Q3 2023",
+        "expectedIds": [
+          "people/p0\u00002023-07-07\u0000joined startup-0",
+          "people/p2\u00002023-07-10\u0000announced startup-1",
+          "people/p4\u00002023-07-13\u0000spoke at startup-2",
+          "people/p5\u00002023-09-02\u0000hired by startup-3",
+          "people/p6\u00002023-07-16\u0000hired by startup-3",
+          "people/p7\u00002023-08-29\u0000promoted to startup-4",
+          "people/p8\u00002023-07-19\u0000promoted to startup-4",
+          "people/p9\u00002023-08-26\u0000joined startup-0",
+          "people/p10\u00002023-07-17\u0000joined startup-0",
+          "people/p11\u00002023-09-28\u0000announced startup-1",
+          "people/p12\u00002023-07-20\u0000announced startup-1",
+          "people/p13\u00002023-09-18\u0000spoke at startup-2",
+          "people/p14\u00002023-07-23\u0000spoke at startup-2",
+          "people/p15\u00002023-09-12\u0000hired by startup-3",
+          "people/p16\u00002023-07-26\u0000hired by startup-3",
+          "people/p17\u00002023-09-08\u0000promoted to startup-4",
+          "people/p18\u00002023-07-29\u0000promoted to startup-4",
+          "people/p19\u00002023-09-05\u0000joined startup-0",
+          "people/p20\u00002023-07-27\u0000joined startup-0",
+          "people/p22\u00002023-07-30\u0000announced startup-1",
+          "people/p23\u00002023-09-28\u0000spoke at startup-2",
+          "people/p24\u00002023-07-03\u0000spoke at startup-2",
+          "people/p25\u00002023-09-22\u0000hired by startup-3",
+          "people/p26\u00002023-07-06\u0000hired by startup-3",
+          "people/p27\u00002023-09-18\u0000promoted to startup-4",
+          "people/p28\u00002023-07-09\u0000promoted to startup-4",
+          "people/p29\u00002023-09-15\u0000joined startup-0",
+          "people/p30\u00002023-07-07\u0000joined startup-0",
+          "people/p32\u00002023-07-10\u0000announced startup-1",
+          "people/p34\u00002023-07-13\u0000spoke at startup-2",
+          "people/p35\u00002023-09-02\u0000hired by startup-3",
+          "people/p36\u00002023-07-16\u0000hired by startup-3",
+          "people/p37\u00002023-08-29\u0000promoted to startup-4",
+          "people/p38\u00002023-07-19\u0000promoted to startup-4",
+          "people/p39\u00002023-08-26\u0000joined startup-0",
+          "people/p40\u00002023-07-17\u0000joined startup-0",
+          "people/p41\u00002023-09-28\u0000announced startup-1",
+          "people/p42\u00002023-07-20\u0000announced startup-1",
+          "people/p43\u00002023-09-18\u0000spoke at startup-2",
+          "people/p44\u00002023-07-23\u0000spoke at startup-2",
+          "people/p45\u00002023-09-12\u0000hired by startup-3",
+          "people/p46\u00002023-07-26\u0000hired by startup-3",
+          "people/p47\u00002023-09-08\u0000promoted to startup-4",
+          "people/p48\u00002023-07-29\u0000promoted to startup-4",
+          "people/p49\u00002023-09-05\u0000joined startup-0"
+        ],
+        "returnedIds": [
+          "people/p0\u00002023-07-07\u0000joined startup-0",
+          "people/p2\u00002023-07-10\u0000announced startup-1",
+          "people/p4\u00002023-07-13\u0000spoke at startup-2",
+          "people/p5\u00002023-09-02\u0000hired by startup-3",
+          "people/p6\u00002023-07-16\u0000hired by startup-3",
+          "people/p7\u00002023-08-29\u0000promoted to startup-4",
+          "people/p8\u00002023-07-19\u0000promoted to startup-4",
+          "people/p9\u00002023-08-26\u0000joined startup-0",
+          "people/p10\u00002023-07-17\u0000joined startup-0",
+          "people/p11\u00002023-09-28\u0000announced startup-1",
+          "people/p12\u00002023-07-20\u0000announced startup-1",
+          "people/p13\u00002023-09-18\u0000spoke at startup-2",
+          "people/p14\u00002023-07-23\u0000spoke at startup-2",
+          "people/p15\u00002023-09-12\u0000hired by startup-3",
+          "people/p16\u00002023-07-26\u0000hired by startup-3",
+          "people/p17\u00002023-09-08\u0000promoted to startup-4",
+          "people/p18\u00002023-07-29\u0000promoted to startup-4",
+          "people/p19\u00002023-09-05\u0000joined startup-0",
+          "people/p20\u00002023-07-27\u0000joined startup-0",
+          "people/p22\u00002023-07-30\u0000announced startup-1",
+          "people/p23\u00002023-09-28\u0000spoke at startup-2",
+          "people/p24\u00002023-07-03\u0000spoke at startup-2",
+          "people/p25\u00002023-09-22\u0000hired by startup-3",
+          "people/p26\u00002023-07-06\u0000hired by startup-3",
+          "people/p27\u00002023-09-18\u0000promoted to startup-4",
+          "people/p28\u00002023-07-09\u0000promoted to startup-4",
+          "people/p29\u00002023-09-15\u0000joined startup-0",
+          "people/p30\u00002023-07-07\u0000joined startup-0",
+          "people/p32\u00002023-07-10\u0000announced startup-1",
+          "people/p34\u00002023-07-13\u0000spoke at startup-2",
+          "people/p35\u00002023-09-02\u0000hired by startup-3",
+          "people/p36\u00002023-07-16\u0000hired by startup-3",
+          "people/p37\u00002023-08-29\u0000promoted to startup-4",
+          "people/p38\u00002023-07-19\u0000promoted to startup-4",
+          "people/p39\u00002023-08-26\u0000joined startup-0",
+          "people/p40\u00002023-07-17\u0000joined startup-0",
+          "people/p41\u00002023-09-28\u0000announced startup-1",
+          "people/p42\u00002023-07-20\u0000announced startup-1",
+          "people/p43\u00002023-09-18\u0000spoke at startup-2",
+          "people/p44\u00002023-07-23\u0000spoke at startup-2",
+          "people/p45\u00002023-09-12\u0000hired by startup-3",
+          "people/p46\u00002023-07-26\u0000hired by startup-3",
+          "people/p47\u00002023-09-08\u0000promoted to startup-4",
+          "people/p48\u00002023-07-29\u0000promoted to startup-4",
+          "people/p49\u00002023-09-05\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p0\u00002023-07-07\u0000joined startup-0",
+          "people/p2\u00002023-07-10\u0000announced startup-1",
+          "people/p4\u00002023-07-13\u0000spoke at startup-2",
+          "people/p5\u00002023-09-02\u0000hired by startup-3",
+          "people/p6\u00002023-07-16\u0000hired by startup-3",
+          "people/p7\u00002023-08-29\u0000promoted to startup-4",
+          "people/p8\u00002023-07-19\u0000promoted to startup-4",
+          "people/p9\u00002023-08-26\u0000joined startup-0",
+          "people/p10\u00002023-07-17\u0000joined startup-0",
+          "people/p11\u00002023-09-28\u0000announced startup-1",
+          "people/p12\u00002023-07-20\u0000announced startup-1",
+          "people/p13\u00002023-09-18\u0000spoke at startup-2",
+          "people/p14\u00002023-07-23\u0000spoke at startup-2",
+          "people/p15\u00002023-09-12\u0000hired by startup-3",
+          "people/p16\u00002023-07-26\u0000hired by startup-3",
+          "people/p17\u00002023-09-08\u0000promoted to startup-4",
+          "people/p18\u00002023-07-29\u0000promoted to startup-4",
+          "people/p19\u00002023-09-05\u0000joined startup-0",
+          "people/p20\u00002023-07-27\u0000joined startup-0",
+          "people/p22\u00002023-07-30\u0000announced startup-1",
+          "people/p23\u00002023-09-28\u0000spoke at startup-2",
+          "people/p24\u00002023-07-03\u0000spoke at startup-2",
+          "people/p25\u00002023-09-22\u0000hired by startup-3",
+          "people/p26\u00002023-07-06\u0000hired by startup-3",
+          "people/p27\u00002023-09-18\u0000promoted to startup-4",
+          "people/p28\u00002023-07-09\u0000promoted to startup-4",
+          "people/p29\u00002023-09-15\u0000joined startup-0",
+          "people/p30\u00002023-07-07\u0000joined startup-0",
+          "people/p32\u00002023-07-10\u0000announced startup-1",
+          "people/p34\u00002023-07-13\u0000spoke at startup-2",
+          "people/p35\u00002023-09-02\u0000hired by startup-3",
+          "people/p36\u00002023-07-16\u0000hired by startup-3",
+          "people/p37\u00002023-08-29\u0000promoted to startup-4",
+          "people/p38\u00002023-07-19\u0000promoted to startup-4",
+          "people/p39\u00002023-08-26\u0000joined startup-0",
+          "people/p40\u00002023-07-17\u0000joined startup-0",
+          "people/p41\u00002023-09-28\u0000announced startup-1",
+          "people/p42\u00002023-07-20\u0000announced startup-1",
+          "people/p43\u00002023-09-18\u0000spoke at startup-2",
+          "people/p44\u00002023-07-23\u0000spoke at startup-2",
+          "people/p45\u00002023-09-12\u0000hired by startup-3",
+          "people/p46\u00002023-07-26\u0000hired by startup-3",
+          "people/p47\u00002023-09-08\u0000promoted to startup-4",
+          "people/p48\u00002023-07-29\u0000promoted to startup-4",
+          "people/p49\u00002023-09-05\u0000joined startup-0"
+        ],
+        "hits": 45,
+        "expected": 45,
+        "returned": 45,
+        "recall": 1,
+        "precision": 1
+      },
+      {
+        "probe_id": "recency:people/p0",
+        "kind": "recency",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p0",
+        "expectedIds": [
+          "people/p0\u00002025-07-04\u0000promoted to startup-4",
+          "people/p0\u00002025-01-26\u0000hired by startup-3",
+          "people/p0\u00002024-07-20\u0000spoke at startup-2"
+        ],
+        "returnedIds": [
+          "people/p0\u00002025-07-04\u0000promoted to startup-4",
+          "people/p0\u00002025-01-26\u0000hired by startup-3",
+          "people/p0\u00002024-07-20\u0000spoke at startup-2",
+          "people/p0\u00002024-01-13\u0000announced startup-1",
+          "people/p0\u00002023-07-07\u0000joined startup-0",
+          "people/p0\u00002023-01-29\u0000promoted to startup-4",
+          "people/p0\u00002022-07-23\u0000hired by startup-3",
+          "people/p0\u00002022-01-15\u0000spoke at startup-2",
+          "people/p0\u00002021-07-09\u0000announced startup-1",
+          "people/p0\u00002021-01-01\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p0\u00002025-07-04\u0000promoted to startup-4",
+          "people/p0\u00002025-01-26\u0000hired by startup-3",
+          "people/p0\u00002024-07-20\u0000spoke at startup-2"
+        ],
+        "hits": 3,
+        "expected": 3,
+        "returned": 3,
+        "recall": 1
+      },
+      {
+        "probe_id": "recency:people/p1",
+        "kind": "recency",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p1",
+        "expectedIds": [
+          "people/p1\u00002025-08-10\u0000joined startup-0",
+          "people/p1\u00002025-02-18\u0000promoted to startup-4",
+          "people/p1\u00002024-08-29\u0000hired by startup-3"
+        ],
+        "returnedIds": [
+          "people/p1\u00002025-08-10\u0000joined startup-0",
+          "people/p1\u00002025-02-18\u0000promoted to startup-4",
+          "people/p1\u00002024-08-29\u0000hired by startup-3",
+          "people/p1\u00002024-03-09\u0000spoke at startup-2",
+          "people/p1\u00002023-10-18\u0000announced startup-1",
+          "people/p1\u00002023-04-28\u0000joined startup-0",
+          "people/p1\u00002022-11-06\u0000promoted to startup-4",
+          "people/p1\u00002022-05-17\u0000hired by startup-3",
+          "people/p1\u00002021-12-25\u0000spoke at startup-2",
+          "people/p1\u00002021-07-05\u0000announced startup-1",
+          "people/p1\u00002021-01-14\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p1\u00002025-08-10\u0000joined startup-0",
+          "people/p1\u00002025-02-18\u0000promoted to startup-4",
+          "people/p1\u00002024-08-29\u0000hired by startup-3"
+        ],
+        "hits": 3,
+        "expected": 3,
+        "returned": 3,
+        "recall": 1
+      },
+      {
+        "probe_id": "recency:people/p2",
+        "kind": "recency",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p2",
+        "expectedIds": [
+          "people/p2\u00002025-08-13\u0000announced startup-1",
+          "people/p2\u00002025-03-07\u0000joined startup-0",
+          "people/p2\u00002024-10-29\u0000promoted to startup-4"
+        ],
+        "returnedIds": [
+          "people/p2\u00002025-08-13\u0000announced startup-1",
+          "people/p2\u00002025-03-07\u0000joined startup-0",
+          "people/p2\u00002024-10-29\u0000promoted to startup-4",
+          "people/p2\u00002024-05-23\u0000hired by startup-3",
+          "people/p2\u00002023-12-16\u0000spoke at startup-2",
+          "people/p2\u00002023-07-10\u0000announced startup-1",
+          "people/p2\u00002023-02-01\u0000joined startup-0",
+          "people/p2\u00002022-09-25\u0000promoted to startup-4",
+          "people/p2\u00002022-04-19\u0000hired by startup-3",
+          "people/p2\u00002021-11-11\u0000spoke at startup-2",
+          "people/p2\u00002021-06-05\u0000announced startup-1",
+          "people/p2\u00002021-01-27\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p2\u00002025-08-13\u0000announced startup-1",
+          "people/p2\u00002025-03-07\u0000joined startup-0",
+          "people/p2\u00002024-10-29\u0000promoted to startup-4"
+        ],
+        "hits": 3,
+        "expected": 3,
+        "returned": 3,
+        "recall": 1
+      },
+      {
+        "probe_id": "recency:people/p3",
+        "kind": "recency",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p3",
+        "expectedIds": [
+          "people/p3\u00002025-08-15\u0000spoke at startup-2",
+          "people/p3\u00002025-04-20\u0000announced startup-1",
+          "people/p3\u00002024-11-23\u0000joined startup-0"
+        ],
+        "returnedIds": [
+          "people/p3\u00002025-08-15\u0000spoke at startup-2",
+          "people/p3\u00002025-04-20\u0000announced startup-1",
+          "people/p3\u00002024-11-23\u0000joined startup-0",
+          "people/p3\u00002024-06-29\u0000promoted to startup-4",
+          "people/p3\u00002024-02-03\u0000hired by startup-3",
+          "people/p3\u00002023-10-08\u0000spoke at startup-2",
+          "people/p3\u00002023-05-14\u0000announced startup-1",
+          "people/p3\u00002022-12-17\u0000joined startup-0",
+          "people/p3\u00002022-07-23\u0000promoted to startup-4",
+          "people/p3\u00002022-02-26\u0000hired by startup-3",
+          "people/p3\u00002021-10-31\u0000spoke at startup-2",
+          "people/p3\u00002021-06-06\u0000announced startup-1",
+          "people/p3\u00002021-01-10\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p3\u00002025-08-15\u0000spoke at startup-2",
+          "people/p3\u00002025-04-20\u0000announced startup-1",
+          "people/p3\u00002024-11-23\u0000joined startup-0"
+        ],
+        "hits": 3,
+        "expected": 3,
+        "returned": 3,
+        "recall": 1
+      },
+      {
+        "probe_id": "recency:people/p4",
+        "kind": "recency",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p4",
+        "expectedIds": [
+          "people/p4\u00002025-09-14\u0000hired by startup-3",
+          "people/p4\u00002025-04-30\u0000spoke at startup-2",
+          "people/p4\u00002024-12-13\u0000announced startup-1"
+        ],
+        "returnedIds": [
+          "people/p4\u00002025-09-14\u0000hired by startup-3",
+          "people/p4\u00002025-04-30\u0000spoke at startup-2",
+          "people/p4\u00002024-12-13\u0000announced startup-1",
+          "people/p4\u00002024-07-29\u0000joined startup-0",
+          "people/p4\u00002024-04-13\u0000promoted to startup-4",
+          "people/p4\u00002023-11-27\u0000hired by startup-3",
+          "people/p4\u00002023-07-13\u0000spoke at startup-2",
+          "people/p4\u00002023-02-26\u0000announced startup-1",
+          "people/p4\u00002022-11-10\u0000joined startup-0",
+          "people/p4\u00002022-06-26\u0000promoted to startup-4",
+          "people/p4\u00002022-02-09\u0000hired by startup-3",
+          "people/p4\u00002021-09-24\u0000spoke at startup-2",
+          "people/p4\u00002021-06-09\u0000announced startup-1",
+          "people/p4\u00002021-01-23\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p4\u00002025-09-14\u0000hired by startup-3",
+          "people/p4\u00002025-04-30\u0000spoke at startup-2",
+          "people/p4\u00002024-12-13\u0000announced startup-1"
+        ],
+        "hits": 3,
+        "expected": 3,
+        "returned": 3,
+        "recall": 1
+      },
+      {
+        "probe_id": "recency:people/p5",
+        "kind": "recency",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p5",
+        "expectedIds": [
+          "people/p5\u00002025-09-13\u0000promoted to startup-4",
+          "people/p5\u00002025-05-07\u0000hired by startup-3",
+          "people/p5\u00002025-01-29\u0000spoke at startup-2"
+        ],
+        "returnedIds": [
+          "people/p5\u00002025-09-13\u0000promoted to startup-4",
+          "people/p5\u00002025-05-07\u0000hired by startup-3",
+          "people/p5\u00002025-01-29\u0000spoke at startup-2",
+          "people/p5\u00002024-09-22\u0000announced startup-1",
+          "people/p5\u00002024-05-16\u0000joined startup-0",
+          "people/p5\u00002024-01-09\u0000promoted to startup-4",
+          "people/p5\u00002023-09-02\u0000hired by startup-3",
+          "people/p5\u00002023-05-26\u0000spoke at startup-2",
+          "people/p5\u00002023-01-18\u0000announced startup-1",
+          "people/p5\u00002022-09-11\u0000joined startup-0",
+          "people/p5\u00002022-05-05\u0000promoted to startup-4",
+          "people/p5\u00002022-01-27\u0000hired by startup-3",
+          "people/p5\u00002021-09-20\u0000spoke at startup-2",
+          "people/p5\u00002021-05-14\u0000announced startup-1",
+          "people/p5\u00002021-01-06\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p5\u00002025-09-13\u0000promoted to startup-4",
+          "people/p5\u00002025-05-07\u0000hired by startup-3",
+          "people/p5\u00002025-01-29\u0000spoke at startup-2"
+        ],
+        "hits": 3,
+        "expected": 3,
+        "returned": 3,
+        "recall": 1
+      },
+      {
+        "probe_id": "recency:people/p6",
+        "kind": "recency",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p6",
+        "expectedIds": [
+          "people/p6\u00002025-09-10\u0000joined startup-0",
+          "people/p6\u00002025-06-11\u0000promoted to startup-4",
+          "people/p6\u00002025-02-10\u0000hired by startup-3"
+        ],
+        "returnedIds": [
+          "people/p6\u00002025-09-10\u0000joined startup-0",
+          "people/p6\u00002025-06-11\u0000promoted to startup-4",
+          "people/p6\u00002025-02-10\u0000hired by startup-3",
+          "people/p6\u00002024-10-12\u0000spoke at startup-2",
+          "people/p6\u00002024-06-13\u0000announced startup-1",
+          "people/p6\u00002024-03-14\u0000joined startup-0",
+          "people/p6\u00002023-11-14\u0000promoted to startup-4",
+          "people/p6\u00002023-07-16\u0000hired by startup-3",
+          "people/p6\u00002023-03-17\u0000spoke at startup-2",
+          "people/p6\u00002022-11-16\u0000announced startup-1",
+          "people/p6\u00002022-08-17\u0000joined startup-0",
+          "people/p6\u00002022-04-18\u0000promoted to startup-4",
+          "people/p6\u00002021-12-18\u0000hired by startup-3",
+          "people/p6\u00002021-08-19\u0000spoke at startup-2",
+          "people/p6\u00002021-05-20\u0000announced startup-1",
+          "people/p6\u00002021-01-19\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p6\u00002025-09-10\u0000joined startup-0",
+          "people/p6\u00002025-06-11\u0000promoted to startup-4",
+          "people/p6\u00002025-02-10\u0000hired by startup-3"
+        ],
+        "hits": 3,
+        "expected": 3,
+        "returned": 3,
+        "recall": 1
+      },
+      {
+        "probe_id": "recency:people/p7",
+        "kind": "recency",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p7",
+        "expectedIds": [
+          "people/p7\u00002025-10-07\u0000announced startup-1",
+          "people/p7\u00002025-06-15\u0000joined startup-0",
+          "people/p7\u00002025-02-20\u0000promoted to startup-4"
+        ],
+        "returnedIds": [
+          "people/p7\u00002025-10-07\u0000announced startup-1",
+          "people/p7\u00002025-06-15\u0000joined startup-0",
+          "people/p7\u00002025-02-20\u0000promoted to startup-4",
+          "people/p7\u00002024-10-29\u0000hired by startup-3",
+          "people/p7\u00002024-08-06\u0000spoke at startup-2",
+          "people/p7\u00002024-04-13\u0000announced startup-1",
+          "people/p7\u00002023-12-21\u0000joined startup-0",
+          "people/p7\u00002023-08-29\u0000promoted to startup-4",
+          "people/p7\u00002023-06-05\u0000hired by startup-3",
+          "people/p7\u00002023-02-11\u0000spoke at startup-2",
+          "people/p7\u00002022-10-20\u0000announced startup-1",
+          "people/p7\u00002022-06-27\u0000joined startup-0",
+          "people/p7\u00002022-04-04\u0000promoted to startup-4",
+          "people/p7\u00002021-12-11\u0000hired by startup-3",
+          "people/p7\u00002021-08-18\u0000spoke at startup-2",
+          "people/p7\u00002021-04-26\u0000announced startup-1",
+          "people/p7\u00002021-01-02\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p7\u00002025-10-07\u0000announced startup-1",
+          "people/p7\u00002025-06-15\u0000joined startup-0",
+          "people/p7\u00002025-02-20\u0000promoted to startup-4"
+        ],
+        "hits": 3,
+        "expected": 3,
+        "returned": 3,
+        "recall": 1
+      },
+      {
+        "probe_id": "recency:people/p8",
+        "kind": "recency",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p8",
+        "expectedIds": [
+          "people/p8\u00002025-10-03\u0000spoke at startup-2",
+          "people/p8\u00002025-06-17\u0000announced startup-1",
+          "people/p8\u00002025-03-30\u0000joined startup-0"
+        ],
+        "returnedIds": [
+          "people/p8\u00002025-10-03\u0000spoke at startup-2",
+          "people/p8\u00002025-06-17\u0000announced startup-1",
+          "people/p8\u00002025-03-30\u0000joined startup-0",
+          "people/p8\u00002024-12-12\u0000promoted to startup-4",
+          "people/p8\u00002024-08-26\u0000hired by startup-3",
+          "people/p8\u00002024-05-09\u0000spoke at startup-2",
+          "people/p8\u00002024-01-22\u0000announced startup-1",
+          "people/p8\u00002023-11-04\u0000joined startup-0",
+          "people/p8\u00002023-07-19\u0000promoted to startup-4",
+          "people/p8\u00002023-04-02\u0000hired by startup-3",
+          "people/p8\u00002022-12-14\u0000spoke at startup-2",
+          "people/p8\u00002022-09-27\u0000announced startup-1",
+          "people/p8\u00002022-06-10\u0000joined startup-0",
+          "people/p8\u00002022-02-22\u0000promoted to startup-4",
+          "people/p8\u00002021-11-06\u0000hired by startup-3",
+          "people/p8\u00002021-08-19\u0000spoke at startup-2",
+          "people/p8\u00002021-05-03\u0000announced startup-1",
+          "people/p8\u00002021-01-15\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p8\u00002025-10-03\u0000spoke at startup-2",
+          "people/p8\u00002025-06-17\u0000announced startup-1",
+          "people/p8\u00002025-03-30\u0000joined startup-0"
+        ],
+        "hits": 3,
+        "expected": 3,
+        "returned": 3,
+        "recall": 1
+      },
+      {
+        "probe_id": "recency:people/p9",
+        "kind": "recency",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p9",
+        "expectedIds": [
+          "people/p9\u00002025-09-28\u0000hired by startup-3",
+          "people/p9\u00002025-07-17\u0000spoke at startup-2",
+          "people/p9\u00002025-04-05\u0000announced startup-1"
+        ],
+        "returnedIds": [
+          "people/p9\u00002025-09-28\u0000hired by startup-3",
+          "people/p9\u00002025-07-17\u0000spoke at startup-2",
+          "people/p9\u00002025-04-05\u0000announced startup-1",
+          "people/p9\u00002024-12-23\u0000joined startup-0",
+          "people/p9\u00002024-09-11\u0000promoted to startup-4",
+          "people/p9\u00002024-06-30\u0000hired by startup-3",
+          "people/p9\u00002024-03-19\u0000spoke at startup-2",
+          "people/p9\u00002023-12-07\u0000announced startup-1",
+          "people/p9\u00002023-08-26\u0000joined startup-0",
+          "people/p9\u00002023-05-15\u0000promoted to startup-4",
+          "people/p9\u00002023-03-03\u0000hired by startup-3",
+          "people/p9\u00002022-11-20\u0000spoke at startup-2",
+          "people/p9\u00002022-08-09\u0000announced startup-1",
+          "people/p9\u00002022-04-28\u0000joined startup-0",
+          "people/p9\u00002022-02-14\u0000promoted to startup-4",
+          "people/p9\u00002021-11-03\u0000hired by startup-3",
+          "people/p9\u00002021-07-23\u0000spoke at startup-2",
+          "people/p9\u00002021-04-11\u0000announced startup-1",
+          "people/p9\u00002021-01-28\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p9\u00002025-09-28\u0000hired by startup-3",
+          "people/p9\u00002025-07-17\u0000spoke at startup-2",
+          "people/p9\u00002025-04-05\u0000announced startup-1"
+        ],
+        "hits": 3,
+        "expected": 3,
+        "returned": 3,
+        "recall": 1
+      },
+      {
+        "probe_id": "recency:people/p10",
+        "kind": "recency",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p10",
+        "expectedIds": [
+          "people/p10\u00002025-07-14\u0000promoted to startup-4",
+          "people/p10\u00002025-01-06\u0000hired by startup-3",
+          "people/p10\u00002024-07-30\u0000spoke at startup-2"
+        ],
+        "returnedIds": [
+          "people/p10\u00002025-07-14\u0000promoted to startup-4",
+          "people/p10\u00002025-01-06\u0000hired by startup-3",
+          "people/p10\u00002024-07-30\u0000spoke at startup-2",
+          "people/p10\u00002024-01-23\u0000announced startup-1",
+          "people/p10\u00002023-07-17\u0000joined startup-0",
+          "people/p10\u00002023-01-09\u0000promoted to startup-4",
+          "people/p10\u00002022-07-03\u0000hired by startup-3",
+          "people/p10\u00002022-01-25\u0000spoke at startup-2",
+          "people/p10\u00002021-07-19\u0000announced startup-1",
+          "people/p10\u00002021-01-11\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p10\u00002025-07-14\u0000promoted to startup-4",
+          "people/p10\u00002025-01-06\u0000hired by startup-3",
+          "people/p10\u00002024-07-30\u0000spoke at startup-2"
+        ],
+        "hits": 3,
+        "expected": 3,
+        "returned": 3,
+        "recall": 1
+      },
+      {
+        "probe_id": "recency:people/p11",
+        "kind": "recency",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p11",
+        "expectedIds": [
+          "people/p11\u00002025-07-21\u0000joined startup-0",
+          "people/p11\u00002025-02-28\u0000promoted to startup-4",
+          "people/p11\u00002024-09-08\u0000hired by startup-3"
+        ],
+        "returnedIds": [
+          "people/p11\u00002025-07-21\u0000joined startup-0",
+          "people/p11\u00002025-02-28\u0000promoted to startup-4",
+          "people/p11\u00002024-09-08\u0000hired by startup-3",
+          "people/p11\u00002024-03-19\u0000spoke at startup-2",
+          "people/p11\u00002023-09-28\u0000announced startup-1",
+          "people/p11\u00002023-05-08\u0000joined startup-0",
+          "people/p11\u00002022-11-16\u0000promoted to startup-4",
+          "people/p11\u00002022-05-27\u0000hired by startup-3",
+          "people/p11\u00002021-12-05\u0000spoke at startup-2",
+          "people/p11\u00002021-06-15\u0000announced startup-1",
+          "people/p11\u00002021-01-24\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p11\u00002025-07-21\u0000joined startup-0",
+          "people/p11\u00002025-02-28\u0000promoted to startup-4",
+          "people/p11\u00002024-09-08\u0000hired by startup-3"
+        ],
+        "hits": 3,
+        "expected": 3,
+        "returned": 3,
+        "recall": 1
+      },
+      {
+        "probe_id": "recency:people/p12",
+        "kind": "recency",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p12",
+        "expectedIds": [
+          "people/p12\u00002025-08-23\u0000announced startup-1",
+          "people/p12\u00002025-03-17\u0000joined startup-0",
+          "people/p12\u00002024-10-09\u0000promoted to startup-4"
+        ],
+        "returnedIds": [
+          "people/p12\u00002025-08-23\u0000announced startup-1",
+          "people/p12\u00002025-03-17\u0000joined startup-0",
+          "people/p12\u00002024-10-09\u0000promoted to startup-4",
+          "people/p12\u00002024-05-03\u0000hired by startup-3",
+          "people/p12\u00002023-12-26\u0000spoke at startup-2",
+          "people/p12\u00002023-07-20\u0000announced startup-1",
+          "people/p12\u00002023-02-11\u0000joined startup-0",
+          "people/p12\u00002022-09-05\u0000promoted to startup-4",
+          "people/p12\u00002022-04-29\u0000hired by startup-3",
+          "people/p12\u00002021-11-21\u0000spoke at startup-2",
+          "people/p12\u00002021-06-15\u0000announced startup-1",
+          "people/p12\u00002021-01-07\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p12\u00002025-08-23\u0000announced startup-1",
+          "people/p12\u00002025-03-17\u0000joined startup-0",
+          "people/p12\u00002024-10-09\u0000promoted to startup-4"
+        ],
+        "hits": 3,
+        "expected": 3,
+        "returned": 3,
+        "recall": 1
+      },
+      {
+        "probe_id": "recency:people/p13",
+        "kind": "recency",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p13",
+        "expectedIds": [
+          "people/p13\u00002025-08-25\u0000spoke at startup-2",
+          "people/p13\u00002025-03-31\u0000announced startup-1",
+          "people/p13\u00002024-12-03\u0000joined startup-0"
+        ],
+        "returnedIds": [
+          "people/p13\u00002025-08-25\u0000spoke at startup-2",
+          "people/p13\u00002025-03-31\u0000announced startup-1",
+          "people/p13\u00002024-12-03\u0000joined startup-0",
+          "people/p13\u00002024-07-09\u0000promoted to startup-4",
+          "people/p13\u00002024-02-13\u0000hired by startup-3",
+          "people/p13\u00002023-09-18\u0000spoke at startup-2",
+          "people/p13\u00002023-04-24\u0000announced startup-1",
+          "people/p13\u00002022-12-27\u0000joined startup-0",
+          "people/p13\u00002022-08-02\u0000promoted to startup-4",
+          "people/p13\u00002022-03-08\u0000hired by startup-3",
+          "people/p13\u00002021-10-11\u0000spoke at startup-2",
+          "people/p13\u00002021-06-16\u0000announced startup-1",
+          "people/p13\u00002021-01-20\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p13\u00002025-08-25\u0000spoke at startup-2",
+          "people/p13\u00002025-03-31\u0000announced startup-1",
+          "people/p13\u00002024-12-03\u0000joined startup-0"
+        ],
+        "hits": 3,
+        "expected": 3,
+        "returned": 3,
+        "recall": 1
+      },
+      {
+        "probe_id": "recency:people/p14",
+        "kind": "recency",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p14",
+        "expectedIds": [
+          "people/p14\u00002025-08-25\u0000hired by startup-3",
+          "people/p14\u00002025-05-10\u0000spoke at startup-2",
+          "people/p14\u00002024-12-23\u0000announced startup-1"
+        ],
+        "returnedIds": [
+          "people/p14\u00002025-08-25\u0000hired by startup-3",
+          "people/p14\u00002025-05-10\u0000spoke at startup-2",
+          "people/p14\u00002024-12-23\u0000announced startup-1",
+          "people/p14\u00002024-08-08\u0000joined startup-0",
+          "people/p14\u00002024-03-24\u0000promoted to startup-4",
+          "people/p14\u00002023-12-07\u0000hired by startup-3",
+          "people/p14\u00002023-07-23\u0000spoke at startup-2",
+          "people/p14\u00002023-03-08\u0000announced startup-1",
+          "people/p14\u00002022-10-21\u0000joined startup-0",
+          "people/p14\u00002022-06-06\u0000promoted to startup-4",
+          "people/p14\u00002022-02-19\u0000hired by startup-3",
+          "people/p14\u00002021-10-04\u0000spoke at startup-2",
+          "people/p14\u00002021-05-20\u0000announced startup-1",
+          "people/p14\u00002021-01-03\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p14\u00002025-08-25\u0000hired by startup-3",
+          "people/p14\u00002025-05-10\u0000spoke at startup-2",
+          "people/p14\u00002024-12-23\u0000announced startup-1"
+        ],
+        "hits": 3,
+        "expected": 3,
+        "returned": 3,
+        "recall": 1
+      },
+      {
+        "probe_id": "recency:people/p15",
+        "kind": "recency",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p15",
+        "expectedIds": [
+          "people/p15\u00002025-09-23\u0000promoted to startup-4",
+          "people/p15\u00002025-05-17\u0000hired by startup-3",
+          "people/p15\u00002025-01-09\u0000spoke at startup-2"
+        ],
+        "returnedIds": [
+          "people/p15\u00002025-09-23\u0000promoted to startup-4",
+          "people/p15\u00002025-05-17\u0000hired by startup-3",
+          "people/p15\u00002025-01-09\u0000spoke at startup-2",
+          "people/p15\u00002024-09-02\u0000announced startup-1",
+          "people/p15\u00002024-05-26\u0000joined startup-0",
+          "people/p15\u00002024-01-19\u0000promoted to startup-4",
+          "people/p15\u00002023-09-12\u0000hired by startup-3",
+          "people/p15\u00002023-05-06\u0000spoke at startup-2",
+          "people/p15\u00002023-01-28\u0000announced startup-1",
+          "people/p15\u00002022-09-21\u0000joined startup-0",
+          "people/p15\u00002022-05-15\u0000promoted to startup-4",
+          "people/p15\u00002022-01-07\u0000hired by startup-3",
+          "people/p15\u00002021-09-30\u0000spoke at startup-2",
+          "people/p15\u00002021-05-24\u0000announced startup-1",
+          "people/p15\u00002021-01-16\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p15\u00002025-09-23\u0000promoted to startup-4",
+          "people/p15\u00002025-05-17\u0000hired by startup-3",
+          "people/p15\u00002025-01-09\u0000spoke at startup-2"
+        ],
+        "hits": 3,
+        "expected": 3,
+        "returned": 3,
+        "recall": 1
+      },
+      {
+        "probe_id": "recency:people/p16",
+        "kind": "recency",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p16",
+        "expectedIds": [
+          "people/p16\u00002025-09-20\u0000joined startup-0",
+          "people/p16\u00002025-05-22\u0000promoted to startup-4",
+          "people/p16\u00002025-02-20\u0000hired by startup-3"
+        ],
+        "returnedIds": [
+          "people/p16\u00002025-09-20\u0000joined startup-0",
+          "people/p16\u00002025-05-22\u0000promoted to startup-4",
+          "people/p16\u00002025-02-20\u0000hired by startup-3",
+          "people/p16\u00002024-10-22\u0000spoke at startup-2",
+          "people/p16\u00002024-06-23\u0000announced startup-1",
+          "people/p16\u00002024-02-23\u0000joined startup-0",
+          "people/p16\u00002023-10-25\u0000promoted to startup-4",
+          "people/p16\u00002023-07-26\u0000hired by startup-3",
+          "people/p16\u00002023-03-27\u0000spoke at startup-2",
+          "people/p16\u00002022-11-26\u0000announced startup-1",
+          "people/p16\u00002022-07-28\u0000joined startup-0",
+          "people/p16\u00002022-04-28\u0000promoted to startup-4",
+          "people/p16\u00002021-12-28\u0000hired by startup-3",
+          "people/p16\u00002021-08-29\u0000spoke at startup-2",
+          "people/p16\u00002021-04-30\u0000announced startup-1",
+          "people/p16\u00002021-01-29\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p16\u00002025-09-20\u0000joined startup-0",
+          "people/p16\u00002025-05-22\u0000promoted to startup-4",
+          "people/p16\u00002025-02-20\u0000hired by startup-3"
+        ],
+        "hits": 3,
+        "expected": 3,
+        "returned": 3,
+        "recall": 1
+      },
+      {
+        "probe_id": "recency:people/p17",
+        "kind": "recency",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p17",
+        "expectedIds": [
+          "people/p17\u00002025-09-17\u0000announced startup-1",
+          "people/p17\u00002025-06-25\u0000joined startup-0",
+          "people/p17\u00002025-03-02\u0000promoted to startup-4"
+        ],
+        "returnedIds": [
+          "people/p17\u00002025-09-17\u0000announced startup-1",
+          "people/p17\u00002025-06-25\u0000joined startup-0",
+          "people/p17\u00002025-03-02\u0000promoted to startup-4",
+          "people/p17\u00002024-11-08\u0000hired by startup-3",
+          "people/p17\u00002024-07-17\u0000spoke at startup-2",
+          "people/p17\u00002024-04-23\u0000announced startup-1",
+          "people/p17\u00002023-12-31\u0000joined startup-0",
+          "people/p17\u00002023-09-08\u0000promoted to startup-4",
+          "people/p17\u00002023-05-16\u0000hired by startup-3",
+          "people/p17\u00002023-01-22\u0000spoke at startup-2",
+          "people/p17\u00002022-10-30\u0000announced startup-1",
+          "people/p17\u00002022-07-07\u0000joined startup-0",
+          "people/p17\u00002022-03-15\u0000promoted to startup-4",
+          "people/p17\u00002021-11-21\u0000hired by startup-3",
+          "people/p17\u00002021-08-28\u0000spoke at startup-2",
+          "people/p17\u00002021-05-06\u0000announced startup-1",
+          "people/p17\u00002021-01-12\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p17\u00002025-09-17\u0000announced startup-1",
+          "people/p17\u00002025-06-25\u0000joined startup-0",
+          "people/p17\u00002025-03-02\u0000promoted to startup-4"
+        ],
+        "hits": 3,
+        "expected": 3,
+        "returned": 3,
+        "recall": 1
+      },
+      {
+        "probe_id": "recency:people/p18",
+        "kind": "recency",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p18",
+        "expectedIds": [
+          "people/p18\u00002025-10-13\u0000spoke at startup-2",
+          "people/p18\u00002025-06-27\u0000announced startup-1",
+          "people/p18\u00002025-03-10\u0000joined startup-0"
+        ],
+        "returnedIds": [
+          "people/p18\u00002025-10-13\u0000spoke at startup-2",
+          "people/p18\u00002025-06-27\u0000announced startup-1",
+          "people/p18\u00002025-03-10\u0000joined startup-0",
+          "people/p18\u00002024-11-22\u0000promoted to startup-4",
+          "people/p18\u00002024-09-05\u0000hired by startup-3",
+          "people/p18\u00002024-05-19\u0000spoke at startup-2",
+          "people/p18\u00002024-02-01\u0000announced startup-1",
+          "people/p18\u00002023-10-15\u0000joined startup-0",
+          "people/p18\u00002023-07-29\u0000promoted to startup-4",
+          "people/p18\u00002023-04-12\u0000hired by startup-3",
+          "people/p18\u00002022-12-24\u0000spoke at startup-2",
+          "people/p18\u00002022-09-07\u0000announced startup-1",
+          "people/p18\u00002022-06-20\u0000joined startup-0",
+          "people/p18\u00002022-03-04\u0000promoted to startup-4",
+          "people/p18\u00002021-11-16\u0000hired by startup-3",
+          "people/p18\u00002021-07-30\u0000spoke at startup-2",
+          "people/p18\u00002021-04-13\u0000announced startup-1",
+          "people/p18\u00002021-01-25\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p18\u00002025-10-13\u0000spoke at startup-2",
+          "people/p18\u00002025-06-27\u0000announced startup-1",
+          "people/p18\u00002025-03-10\u0000joined startup-0"
+        ],
+        "hits": 3,
+        "expected": 3,
+        "returned": 3,
+        "recall": 1
+      },
+      {
+        "probe_id": "recency:people/p19",
+        "kind": "recency",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p19",
+        "expectedIds": [
+          "people/p19\u00002025-10-08\u0000hired by startup-3",
+          "people/p19\u00002025-06-27\u0000spoke at startup-2",
+          "people/p19\u00002025-04-15\u0000announced startup-1"
+        ],
+        "returnedIds": [
+          "people/p19\u00002025-10-08\u0000hired by startup-3",
+          "people/p19\u00002025-06-27\u0000spoke at startup-2",
+          "people/p19\u00002025-04-15\u0000announced startup-1",
+          "people/p19\u00002025-01-02\u0000joined startup-0",
+          "people/p19\u00002024-09-21\u0000promoted to startup-4",
+          "people/p19\u00002024-06-10\u0000hired by startup-3",
+          "people/p19\u00002024-02-28\u0000spoke at startup-2",
+          "people/p19\u00002023-12-17\u0000announced startup-1",
+          "people/p19\u00002023-09-05\u0000joined startup-0",
+          "people/p19\u00002023-05-25\u0000promoted to startup-4",
+          "people/p19\u00002023-02-11\u0000hired by startup-3",
+          "people/p19\u00002022-11-30\u0000spoke at startup-2",
+          "people/p19\u00002022-08-19\u0000announced startup-1",
+          "people/p19\u00002022-05-08\u0000joined startup-0",
+          "people/p19\u00002022-01-25\u0000promoted to startup-4",
+          "people/p19\u00002021-11-13\u0000hired by startup-3",
+          "people/p19\u00002021-08-02\u0000spoke at startup-2",
+          "people/p19\u00002021-04-21\u0000announced startup-1",
+          "people/p19\u00002021-01-08\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p19\u00002025-10-08\u0000hired by startup-3",
+          "people/p19\u00002025-06-27\u0000spoke at startup-2",
+          "people/p19\u00002025-04-15\u0000announced startup-1"
+        ],
+        "hits": 3,
+        "expected": 3,
+        "returned": 3,
+        "recall": 1
+      },
+      {
+        "probe_id": "recency:people/p20",
+        "kind": "recency",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p20",
+        "expectedIds": [
+          "people/p20\u00002025-07-24\u0000promoted to startup-4",
+          "people/p20\u00002025-01-16\u0000hired by startup-3",
+          "people/p20\u00002024-07-10\u0000spoke at startup-2"
+        ],
+        "returnedIds": [
+          "people/p20\u00002025-07-24\u0000promoted to startup-4",
+          "people/p20\u00002025-01-16\u0000hired by startup-3",
+          "people/p20\u00002024-07-10\u0000spoke at startup-2",
+          "people/p20\u00002024-01-03\u0000announced startup-1",
+          "people/p20\u00002023-07-27\u0000joined startup-0",
+          "people/p20\u00002023-01-19\u0000promoted to startup-4",
+          "people/p20\u00002022-07-13\u0000hired by startup-3",
+          "people/p20\u00002022-01-05\u0000spoke at startup-2",
+          "people/p20\u00002021-07-29\u0000announced startup-1",
+          "people/p20\u00002021-01-21\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p20\u00002025-07-24\u0000promoted to startup-4",
+          "people/p20\u00002025-01-16\u0000hired by startup-3",
+          "people/p20\u00002024-07-10\u0000spoke at startup-2"
+        ],
+        "hits": 3,
+        "expected": 3,
+        "returned": 3,
+        "recall": 1
+      },
+      {
+        "probe_id": "recency:people/p21",
+        "kind": "recency",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p21",
+        "expectedIds": [
+          "people/p21\u00002025-07-31\u0000joined startup-0",
+          "people/p21\u00002025-02-08\u0000promoted to startup-4",
+          "people/p21\u00002024-09-18\u0000hired by startup-3"
+        ],
+        "returnedIds": [
+          "people/p21\u00002025-07-31\u0000joined startup-0",
+          "people/p21\u00002025-02-08\u0000promoted to startup-4",
+          "people/p21\u00002024-09-18\u0000hired by startup-3",
+          "people/p21\u00002024-03-29\u0000spoke at startup-2",
+          "people/p21\u00002023-10-08\u0000announced startup-1",
+          "people/p21\u00002023-04-18\u0000joined startup-0",
+          "people/p21\u00002022-10-27\u0000promoted to startup-4",
+          "people/p21\u00002022-06-06\u0000hired by startup-3",
+          "people/p21\u00002021-12-15\u0000spoke at startup-2",
+          "people/p21\u00002021-06-25\u0000announced startup-1",
+          "people/p21\u00002021-01-04\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p21\u00002025-07-31\u0000joined startup-0",
+          "people/p21\u00002025-02-08\u0000promoted to startup-4",
+          "people/p21\u00002024-09-18\u0000hired by startup-3"
+        ],
+        "hits": 3,
+        "expected": 3,
+        "returned": 3,
+        "recall": 1
+      },
+      {
+        "probe_id": "recency:people/p22",
+        "kind": "recency",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p22",
+        "expectedIds": [
+          "people/p22\u00002025-08-03\u0000announced startup-1",
+          "people/p22\u00002025-03-27\u0000joined startup-0",
+          "people/p22\u00002024-10-19\u0000promoted to startup-4"
+        ],
+        "returnedIds": [
+          "people/p22\u00002025-08-03\u0000announced startup-1",
+          "people/p22\u00002025-03-27\u0000joined startup-0",
+          "people/p22\u00002024-10-19\u0000promoted to startup-4",
+          "people/p22\u00002024-05-13\u0000hired by startup-3",
+          "people/p22\u00002023-12-06\u0000spoke at startup-2",
+          "people/p22\u00002023-07-30\u0000announced startup-1",
+          "people/p22\u00002023-02-21\u0000joined startup-0",
+          "people/p22\u00002022-09-15\u0000promoted to startup-4",
+          "people/p22\u00002022-04-09\u0000hired by startup-3",
+          "people/p22\u00002021-11-01\u0000spoke at startup-2",
+          "people/p22\u00002021-06-25\u0000announced startup-1",
+          "people/p22\u00002021-01-17\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p22\u00002025-08-03\u0000announced startup-1",
+          "people/p22\u00002025-03-27\u0000joined startup-0",
+          "people/p22\u00002024-10-19\u0000promoted to startup-4"
+        ],
+        "hits": 3,
+        "expected": 3,
+        "returned": 3,
+        "recall": 1
+      },
+      {
+        "probe_id": "recency:people/p23",
+        "kind": "recency",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p23",
+        "expectedIds": [
+          "people/p23\u00002025-09-04\u0000spoke at startup-2",
+          "people/p23\u00002025-04-10\u0000announced startup-1",
+          "people/p23\u00002024-11-13\u0000joined startup-0"
+        ],
+        "returnedIds": [
+          "people/p23\u00002025-09-04\u0000spoke at startup-2",
+          "people/p23\u00002025-04-10\u0000announced startup-1",
+          "people/p23\u00002024-11-13\u0000joined startup-0",
+          "people/p23\u00002024-06-19\u0000promoted to startup-4",
+          "people/p23\u00002024-02-23\u0000hired by startup-3",
+          "people/p23\u00002023-09-28\u0000spoke at startup-2",
+          "people/p23\u00002023-05-04\u0000announced startup-1",
+          "people/p23\u00002022-12-07\u0000joined startup-0",
+          "people/p23\u00002022-08-12\u0000promoted to startup-4",
+          "people/p23\u00002022-03-18\u0000hired by startup-3",
+          "people/p23\u00002021-10-21\u0000spoke at startup-2",
+          "people/p23\u00002021-05-27\u0000announced startup-1",
+          "people/p23\u00002021-01-30\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p23\u00002025-09-04\u0000spoke at startup-2",
+          "people/p23\u00002025-04-10\u0000announced startup-1",
+          "people/p23\u00002024-11-13\u0000joined startup-0"
+        ],
+        "hits": 3,
+        "expected": 3,
+        "returned": 3,
+        "recall": 1
+      },
+      {
+        "probe_id": "recency:people/p24",
+        "kind": "recency",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p24",
+        "expectedIds": [
+          "people/p24\u00002025-09-04\u0000hired by startup-3",
+          "people/p24\u00002025-04-20\u0000spoke at startup-2",
+          "people/p24\u00002025-01-02\u0000announced startup-1"
+        ],
+        "returnedIds": [
+          "people/p24\u00002025-09-04\u0000hired by startup-3",
+          "people/p24\u00002025-04-20\u0000spoke at startup-2",
+          "people/p24\u00002025-01-02\u0000announced startup-1",
+          "people/p24\u00002024-08-18\u0000joined startup-0",
+          "people/p24\u00002024-04-03\u0000promoted to startup-4",
+          "people/p24\u00002023-11-17\u0000hired by startup-3",
+          "people/p24\u00002023-07-03\u0000spoke at startup-2",
+          "people/p24\u00002023-03-18\u0000announced startup-1",
+          "people/p24\u00002022-10-31\u0000joined startup-0",
+          "people/p24\u00002022-06-16\u0000promoted to startup-4",
+          "people/p24\u00002022-01-30\u0000hired by startup-3",
+          "people/p24\u00002021-10-14\u0000spoke at startup-2",
+          "people/p24\u00002021-05-30\u0000announced startup-1",
+          "people/p24\u00002021-01-13\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p24\u00002025-09-04\u0000hired by startup-3",
+          "people/p24\u00002025-04-20\u0000spoke at startup-2",
+          "people/p24\u00002025-01-02\u0000announced startup-1"
+        ],
+        "hits": 3,
+        "expected": 3,
+        "returned": 3,
+        "recall": 1
+      },
+      {
+        "probe_id": "recency:people/p25",
+        "kind": "recency",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p25",
+        "expectedIds": [
+          "people/p25\u00002025-09-03\u0000promoted to startup-4",
+          "people/p25\u00002025-05-27\u0000hired by startup-3",
+          "people/p25\u00002025-01-19\u0000spoke at startup-2"
+        ],
+        "returnedIds": [
+          "people/p25\u00002025-09-03\u0000promoted to startup-4",
+          "people/p25\u00002025-05-27\u0000hired by startup-3",
+          "people/p25\u00002025-01-19\u0000spoke at startup-2",
+          "people/p25\u00002024-09-12\u0000announced startup-1",
+          "people/p25\u00002024-05-06\u0000joined startup-0",
+          "people/p25\u00002024-01-29\u0000promoted to startup-4",
+          "people/p25\u00002023-09-22\u0000hired by startup-3",
+          "people/p25\u00002023-05-16\u0000spoke at startup-2",
+          "people/p25\u00002023-01-08\u0000announced startup-1",
+          "people/p25\u00002022-09-01\u0000joined startup-0",
+          "people/p25\u00002022-05-25\u0000promoted to startup-4",
+          "people/p25\u00002022-01-17\u0000hired by startup-3",
+          "people/p25\u00002021-09-10\u0000spoke at startup-2",
+          "people/p25\u00002021-05-04\u0000announced startup-1",
+          "people/p25\u00002021-01-26\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p25\u00002025-09-03\u0000promoted to startup-4",
+          "people/p25\u00002025-05-27\u0000hired by startup-3",
+          "people/p25\u00002025-01-19\u0000spoke at startup-2"
+        ],
+        "hits": 3,
+        "expected": 3,
+        "returned": 3,
+        "recall": 1
+      },
+      {
+        "probe_id": "recency:people/p26",
+        "kind": "recency",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p26",
+        "expectedIds": [
+          "people/p26\u00002025-09-30\u0000joined startup-0",
+          "people/p26\u00002025-06-01\u0000promoted to startup-4",
+          "people/p26\u00002025-01-31\u0000hired by startup-3"
+        ],
+        "returnedIds": [
+          "people/p26\u00002025-09-30\u0000joined startup-0",
+          "people/p26\u00002025-06-01\u0000promoted to startup-4",
+          "people/p26\u00002025-01-31\u0000hired by startup-3",
+          "people/p26\u00002024-10-02\u0000spoke at startup-2",
+          "people/p26\u00002024-07-03\u0000announced startup-1",
+          "people/p26\u00002024-03-04\u0000joined startup-0",
+          "people/p26\u00002023-11-04\u0000promoted to startup-4",
+          "people/p26\u00002023-07-06\u0000hired by startup-3",
+          "people/p26\u00002023-04-06\u0000spoke at startup-2",
+          "people/p26\u00002022-12-06\u0000announced startup-1",
+          "people/p26\u00002022-08-07\u0000joined startup-0",
+          "people/p26\u00002022-04-08\u0000promoted to startup-4",
+          "people/p26\u00002022-01-07\u0000hired by startup-3",
+          "people/p26\u00002021-09-08\u0000spoke at startup-2",
+          "people/p26\u00002021-05-10\u0000announced startup-1",
+          "people/p26\u00002021-01-09\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p26\u00002025-09-30\u0000joined startup-0",
+          "people/p26\u00002025-06-01\u0000promoted to startup-4",
+          "people/p26\u00002025-01-31\u0000hired by startup-3"
+        ],
+        "hits": 3,
+        "expected": 3,
+        "returned": 3,
+        "recall": 1
+      },
+      {
+        "probe_id": "recency:people/p27",
+        "kind": "recency",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p27",
+        "expectedIds": [
+          "people/p27\u00002025-09-27\u0000announced startup-1",
+          "people/p27\u00002025-06-05\u0000joined startup-0",
+          "people/p27\u00002025-03-12\u0000promoted to startup-4"
+        ],
+        "returnedIds": [
+          "people/p27\u00002025-09-27\u0000announced startup-1",
+          "people/p27\u00002025-06-05\u0000joined startup-0",
+          "people/p27\u00002025-03-12\u0000promoted to startup-4",
+          "people/p27\u00002024-11-18\u0000hired by startup-3",
+          "people/p27\u00002024-07-27\u0000spoke at startup-2",
+          "people/p27\u00002024-04-03\u0000announced startup-1",
+          "people/p27\u00002023-12-11\u0000joined startup-0",
+          "people/p27\u00002023-09-18\u0000promoted to startup-4",
+          "people/p27\u00002023-05-26\u0000hired by startup-3",
+          "people/p27\u00002023-02-01\u0000spoke at startup-2",
+          "people/p27\u00002022-10-10\u0000announced startup-1",
+          "people/p27\u00002022-07-17\u0000joined startup-0",
+          "people/p27\u00002022-03-25\u0000promoted to startup-4",
+          "people/p27\u00002021-12-01\u0000hired by startup-3",
+          "people/p27\u00002021-08-08\u0000spoke at startup-2",
+          "people/p27\u00002021-05-16\u0000announced startup-1",
+          "people/p27\u00002021-01-22\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p27\u00002025-09-27\u0000announced startup-1",
+          "people/p27\u00002025-06-05\u0000joined startup-0",
+          "people/p27\u00002025-03-12\u0000promoted to startup-4"
+        ],
+        "hits": 3,
+        "expected": 3,
+        "returned": 3,
+        "recall": 1
+      },
+      {
+        "probe_id": "recency:people/p28",
+        "kind": "recency",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p28",
+        "expectedIds": [
+          "people/p28\u00002025-09-23\u0000spoke at startup-2",
+          "people/p28\u00002025-07-07\u0000announced startup-1",
+          "people/p28\u00002025-03-20\u0000joined startup-0"
+        ],
+        "returnedIds": [
+          "people/p28\u00002025-09-23\u0000spoke at startup-2",
+          "people/p28\u00002025-07-07\u0000announced startup-1",
+          "people/p28\u00002025-03-20\u0000joined startup-0",
+          "people/p28\u00002024-12-02\u0000promoted to startup-4",
+          "people/p28\u00002024-08-16\u0000hired by startup-3",
+          "people/p28\u00002024-05-29\u0000spoke at startup-2",
+          "people/p28\u00002024-02-11\u0000announced startup-1",
+          "people/p28\u00002023-10-25\u0000joined startup-0",
+          "people/p28\u00002023-07-09\u0000promoted to startup-4",
+          "people/p28\u00002023-03-23\u0000hired by startup-3",
+          "people/p28\u00002023-01-03\u0000spoke at startup-2",
+          "people/p28\u00002022-09-17\u0000announced startup-1",
+          "people/p28\u00002022-05-31\u0000joined startup-0",
+          "people/p28\u00002022-02-12\u0000promoted to startup-4",
+          "people/p28\u00002021-11-26\u0000hired by startup-3",
+          "people/p28\u00002021-08-09\u0000spoke at startup-2",
+          "people/p28\u00002021-04-23\u0000announced startup-1",
+          "people/p28\u00002021-01-05\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p28\u00002025-09-23\u0000spoke at startup-2",
+          "people/p28\u00002025-07-07\u0000announced startup-1",
+          "people/p28\u00002025-03-20\u0000joined startup-0"
+        ],
+        "hits": 3,
+        "expected": 3,
+        "returned": 3,
+        "recall": 1
+      },
+      {
+        "probe_id": "recency:people/p29",
+        "kind": "recency",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p29",
+        "expectedIds": [
+          "people/p29\u00002025-10-18\u0000hired by startup-3",
+          "people/p29\u00002025-07-07\u0000spoke at startup-2",
+          "people/p29\u00002025-03-26\u0000announced startup-1"
+        ],
+        "returnedIds": [
+          "people/p29\u00002025-10-18\u0000hired by startup-3",
+          "people/p29\u00002025-07-07\u0000spoke at startup-2",
+          "people/p29\u00002025-03-26\u0000announced startup-1",
+          "people/p29\u00002024-12-13\u0000joined startup-0",
+          "people/p29\u00002024-10-01\u0000promoted to startup-4",
+          "people/p29\u00002024-06-20\u0000hired by startup-3",
+          "people/p29\u00002024-03-09\u0000spoke at startup-2",
+          "people/p29\u00002023-11-27\u0000announced startup-1",
+          "people/p29\u00002023-09-15\u0000joined startup-0",
+          "people/p29\u00002023-06-04\u0000promoted to startup-4",
+          "people/p29\u00002023-02-21\u0000hired by startup-3",
+          "people/p29\u00002022-11-10\u0000spoke at startup-2",
+          "people/p29\u00002022-08-29\u0000announced startup-1",
+          "people/p29\u00002022-05-18\u0000joined startup-0",
+          "people/p29\u00002022-02-04\u0000promoted to startup-4",
+          "people/p29\u00002021-10-24\u0000hired by startup-3",
+          "people/p29\u00002021-07-13\u0000spoke at startup-2",
+          "people/p29\u00002021-05-01\u0000announced startup-1",
+          "people/p29\u00002021-01-18\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p29\u00002025-10-18\u0000hired by startup-3",
+          "people/p29\u00002025-07-07\u0000spoke at startup-2",
+          "people/p29\u00002025-03-26\u0000announced startup-1"
+        ],
+        "hits": 3,
+        "expected": 3,
+        "returned": 3,
+        "recall": 1
+      },
+      {
+        "probe_id": "asof:people/p0",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p0",
+        "asOfDate": "2024-06-15",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p0\u00002025-07-04\u0000promoted to startup-4",
+          "people/p0\u00002025-01-26\u0000hired by startup-3",
+          "people/p0\u00002024-07-20\u0000spoke at startup-2",
+          "people/p0\u00002024-01-13\u0000announced startup-1",
+          "people/p0\u00002023-07-07\u0000joined startup-0",
+          "people/p0\u00002023-01-29\u0000promoted to startup-4",
+          "people/p0\u00002022-07-23\u0000hired by startup-3",
+          "people/p0\u00002022-01-15\u0000spoke at startup-2",
+          "people/p0\u00002021-07-09\u0000announced startup-1",
+          "people/p0\u00002021-01-01\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p0\u00002023-07-07\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p1",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p1",
+        "asOfDate": "2024-06-16",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p1\u00002025-08-10\u0000joined startup-0",
+          "people/p1\u00002025-02-18\u0000promoted to startup-4",
+          "people/p1\u00002024-08-29\u0000hired by startup-3",
+          "people/p1\u00002024-03-09\u0000spoke at startup-2",
+          "people/p1\u00002023-10-18\u0000announced startup-1",
+          "people/p1\u00002023-04-28\u0000joined startup-0",
+          "people/p1\u00002022-11-06\u0000promoted to startup-4",
+          "people/p1\u00002022-05-17\u0000hired by startup-3",
+          "people/p1\u00002021-12-25\u0000spoke at startup-2",
+          "people/p1\u00002021-07-05\u0000announced startup-1",
+          "people/p1\u00002021-01-14\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p1\u00002023-04-28\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p2",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p2",
+        "asOfDate": "2024-06-17",
+        "expectedCompany": "startup-3",
+        "predictedCompany": "startup-3",
+        "correct": true,
+        "returnedIds": [
+          "people/p2\u00002025-08-13\u0000announced startup-1",
+          "people/p2\u00002025-03-07\u0000joined startup-0",
+          "people/p2\u00002024-10-29\u0000promoted to startup-4",
+          "people/p2\u00002024-05-23\u0000hired by startup-3",
+          "people/p2\u00002023-12-16\u0000spoke at startup-2",
+          "people/p2\u00002023-07-10\u0000announced startup-1",
+          "people/p2\u00002023-02-01\u0000joined startup-0",
+          "people/p2\u00002022-09-25\u0000promoted to startup-4",
+          "people/p2\u00002022-04-19\u0000hired by startup-3",
+          "people/p2\u00002021-11-11\u0000spoke at startup-2",
+          "people/p2\u00002021-06-05\u0000announced startup-1",
+          "people/p2\u00002021-01-27\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p2\u00002024-05-23\u0000hired by startup-3"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p3",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p3",
+        "asOfDate": "2024-06-18",
+        "expectedCompany": "startup-3",
+        "predictedCompany": "startup-3",
+        "correct": true,
+        "returnedIds": [
+          "people/p3\u00002025-08-15\u0000spoke at startup-2",
+          "people/p3\u00002025-04-20\u0000announced startup-1",
+          "people/p3\u00002024-11-23\u0000joined startup-0",
+          "people/p3\u00002024-06-29\u0000promoted to startup-4",
+          "people/p3\u00002024-02-03\u0000hired by startup-3",
+          "people/p3\u00002023-10-08\u0000spoke at startup-2",
+          "people/p3\u00002023-05-14\u0000announced startup-1",
+          "people/p3\u00002022-12-17\u0000joined startup-0",
+          "people/p3\u00002022-07-23\u0000promoted to startup-4",
+          "people/p3\u00002022-02-26\u0000hired by startup-3",
+          "people/p3\u00002021-10-31\u0000spoke at startup-2",
+          "people/p3\u00002021-06-06\u0000announced startup-1",
+          "people/p3\u00002021-01-10\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p3\u00002024-02-03\u0000hired by startup-3"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p4",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p4",
+        "asOfDate": "2024-06-19",
+        "expectedCompany": "startup-3",
+        "predictedCompany": "startup-3",
+        "correct": true,
+        "returnedIds": [
+          "people/p4\u00002025-09-14\u0000hired by startup-3",
+          "people/p4\u00002025-04-30\u0000spoke at startup-2",
+          "people/p4\u00002024-12-13\u0000announced startup-1",
+          "people/p4\u00002024-07-29\u0000joined startup-0",
+          "people/p4\u00002024-04-13\u0000promoted to startup-4",
+          "people/p4\u00002023-11-27\u0000hired by startup-3",
+          "people/p4\u00002023-07-13\u0000spoke at startup-2",
+          "people/p4\u00002023-02-26\u0000announced startup-1",
+          "people/p4\u00002022-11-10\u0000joined startup-0",
+          "people/p4\u00002022-06-26\u0000promoted to startup-4",
+          "people/p4\u00002022-02-09\u0000hired by startup-3",
+          "people/p4\u00002021-09-24\u0000spoke at startup-2",
+          "people/p4\u00002021-06-09\u0000announced startup-1",
+          "people/p4\u00002021-01-23\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p4\u00002023-11-27\u0000hired by startup-3"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p5",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p5",
+        "asOfDate": "2024-06-20",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p5\u00002025-09-13\u0000promoted to startup-4",
+          "people/p5\u00002025-05-07\u0000hired by startup-3",
+          "people/p5\u00002025-01-29\u0000spoke at startup-2",
+          "people/p5\u00002024-09-22\u0000announced startup-1",
+          "people/p5\u00002024-05-16\u0000joined startup-0",
+          "people/p5\u00002024-01-09\u0000promoted to startup-4",
+          "people/p5\u00002023-09-02\u0000hired by startup-3",
+          "people/p5\u00002023-05-26\u0000spoke at startup-2",
+          "people/p5\u00002023-01-18\u0000announced startup-1",
+          "people/p5\u00002022-09-11\u0000joined startup-0",
+          "people/p5\u00002022-05-05\u0000promoted to startup-4",
+          "people/p5\u00002022-01-27\u0000hired by startup-3",
+          "people/p5\u00002021-09-20\u0000spoke at startup-2",
+          "people/p5\u00002021-05-14\u0000announced startup-1",
+          "people/p5\u00002021-01-06\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p5\u00002024-05-16\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p6",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p6",
+        "asOfDate": "2024-06-21",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p6\u00002025-09-10\u0000joined startup-0",
+          "people/p6\u00002025-06-11\u0000promoted to startup-4",
+          "people/p6\u00002025-02-10\u0000hired by startup-3",
+          "people/p6\u00002024-10-12\u0000spoke at startup-2",
+          "people/p6\u00002024-06-13\u0000announced startup-1",
+          "people/p6\u00002024-03-14\u0000joined startup-0",
+          "people/p6\u00002023-11-14\u0000promoted to startup-4",
+          "people/p6\u00002023-07-16\u0000hired by startup-3",
+          "people/p6\u00002023-03-17\u0000spoke at startup-2",
+          "people/p6\u00002022-11-16\u0000announced startup-1",
+          "people/p6\u00002022-08-17\u0000joined startup-0",
+          "people/p6\u00002022-04-18\u0000promoted to startup-4",
+          "people/p6\u00002021-12-18\u0000hired by startup-3",
+          "people/p6\u00002021-08-19\u0000spoke at startup-2",
+          "people/p6\u00002021-05-20\u0000announced startup-1",
+          "people/p6\u00002021-01-19\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p6\u00002024-03-14\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p7",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p7",
+        "asOfDate": "2024-06-22",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p7\u00002025-10-07\u0000announced startup-1",
+          "people/p7\u00002025-06-15\u0000joined startup-0",
+          "people/p7\u00002025-02-20\u0000promoted to startup-4",
+          "people/p7\u00002024-10-29\u0000hired by startup-3",
+          "people/p7\u00002024-08-06\u0000spoke at startup-2",
+          "people/p7\u00002024-04-13\u0000announced startup-1",
+          "people/p7\u00002023-12-21\u0000joined startup-0",
+          "people/p7\u00002023-08-29\u0000promoted to startup-4",
+          "people/p7\u00002023-06-05\u0000hired by startup-3",
+          "people/p7\u00002023-02-11\u0000spoke at startup-2",
+          "people/p7\u00002022-10-20\u0000announced startup-1",
+          "people/p7\u00002022-06-27\u0000joined startup-0",
+          "people/p7\u00002022-04-04\u0000promoted to startup-4",
+          "people/p7\u00002021-12-11\u0000hired by startup-3",
+          "people/p7\u00002021-08-18\u0000spoke at startup-2",
+          "people/p7\u00002021-04-26\u0000announced startup-1",
+          "people/p7\u00002021-01-02\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p7\u00002023-12-21\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p8",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p8",
+        "asOfDate": "2024-06-23",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p8\u00002025-10-03\u0000spoke at startup-2",
+          "people/p8\u00002025-06-17\u0000announced startup-1",
+          "people/p8\u00002025-03-30\u0000joined startup-0",
+          "people/p8\u00002024-12-12\u0000promoted to startup-4",
+          "people/p8\u00002024-08-26\u0000hired by startup-3",
+          "people/p8\u00002024-05-09\u0000spoke at startup-2",
+          "people/p8\u00002024-01-22\u0000announced startup-1",
+          "people/p8\u00002023-11-04\u0000joined startup-0",
+          "people/p8\u00002023-07-19\u0000promoted to startup-4",
+          "people/p8\u00002023-04-02\u0000hired by startup-3",
+          "people/p8\u00002022-12-14\u0000spoke at startup-2",
+          "people/p8\u00002022-09-27\u0000announced startup-1",
+          "people/p8\u00002022-06-10\u0000joined startup-0",
+          "people/p8\u00002022-02-22\u0000promoted to startup-4",
+          "people/p8\u00002021-11-06\u0000hired by startup-3",
+          "people/p8\u00002021-08-19\u0000spoke at startup-2",
+          "people/p8\u00002021-05-03\u0000announced startup-1",
+          "people/p8\u00002021-01-15\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p8\u00002023-11-04\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p9",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p9",
+        "asOfDate": "2024-06-24",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p9\u00002025-09-28\u0000hired by startup-3",
+          "people/p9\u00002025-07-17\u0000spoke at startup-2",
+          "people/p9\u00002025-04-05\u0000announced startup-1",
+          "people/p9\u00002024-12-23\u0000joined startup-0",
+          "people/p9\u00002024-09-11\u0000promoted to startup-4",
+          "people/p9\u00002024-06-30\u0000hired by startup-3",
+          "people/p9\u00002024-03-19\u0000spoke at startup-2",
+          "people/p9\u00002023-12-07\u0000announced startup-1",
+          "people/p9\u00002023-08-26\u0000joined startup-0",
+          "people/p9\u00002023-05-15\u0000promoted to startup-4",
+          "people/p9\u00002023-03-03\u0000hired by startup-3",
+          "people/p9\u00002022-11-20\u0000spoke at startup-2",
+          "people/p9\u00002022-08-09\u0000announced startup-1",
+          "people/p9\u00002022-04-28\u0000joined startup-0",
+          "people/p9\u00002022-02-14\u0000promoted to startup-4",
+          "people/p9\u00002021-11-03\u0000hired by startup-3",
+          "people/p9\u00002021-07-23\u0000spoke at startup-2",
+          "people/p9\u00002021-04-11\u0000announced startup-1",
+          "people/p9\u00002021-01-28\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p9\u00002023-08-26\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p10",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p10",
+        "asOfDate": "2024-06-25",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p10\u00002025-07-14\u0000promoted to startup-4",
+          "people/p10\u00002025-01-06\u0000hired by startup-3",
+          "people/p10\u00002024-07-30\u0000spoke at startup-2",
+          "people/p10\u00002024-01-23\u0000announced startup-1",
+          "people/p10\u00002023-07-17\u0000joined startup-0",
+          "people/p10\u00002023-01-09\u0000promoted to startup-4",
+          "people/p10\u00002022-07-03\u0000hired by startup-3",
+          "people/p10\u00002022-01-25\u0000spoke at startup-2",
+          "people/p10\u00002021-07-19\u0000announced startup-1",
+          "people/p10\u00002021-01-11\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p10\u00002023-07-17\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p11",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p11",
+        "asOfDate": "2024-06-26",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p11\u00002025-07-21\u0000joined startup-0",
+          "people/p11\u00002025-02-28\u0000promoted to startup-4",
+          "people/p11\u00002024-09-08\u0000hired by startup-3",
+          "people/p11\u00002024-03-19\u0000spoke at startup-2",
+          "people/p11\u00002023-09-28\u0000announced startup-1",
+          "people/p11\u00002023-05-08\u0000joined startup-0",
+          "people/p11\u00002022-11-16\u0000promoted to startup-4",
+          "people/p11\u00002022-05-27\u0000hired by startup-3",
+          "people/p11\u00002021-12-05\u0000spoke at startup-2",
+          "people/p11\u00002021-06-15\u0000announced startup-1",
+          "people/p11\u00002021-01-24\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p11\u00002023-05-08\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p12",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p12",
+        "asOfDate": "2024-06-27",
+        "expectedCompany": "startup-3",
+        "predictedCompany": "startup-3",
+        "correct": true,
+        "returnedIds": [
+          "people/p12\u00002025-08-23\u0000announced startup-1",
+          "people/p12\u00002025-03-17\u0000joined startup-0",
+          "people/p12\u00002024-10-09\u0000promoted to startup-4",
+          "people/p12\u00002024-05-03\u0000hired by startup-3",
+          "people/p12\u00002023-12-26\u0000spoke at startup-2",
+          "people/p12\u00002023-07-20\u0000announced startup-1",
+          "people/p12\u00002023-02-11\u0000joined startup-0",
+          "people/p12\u00002022-09-05\u0000promoted to startup-4",
+          "people/p12\u00002022-04-29\u0000hired by startup-3",
+          "people/p12\u00002021-11-21\u0000spoke at startup-2",
+          "people/p12\u00002021-06-15\u0000announced startup-1",
+          "people/p12\u00002021-01-07\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p12\u00002024-05-03\u0000hired by startup-3"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p13",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p13",
+        "asOfDate": "2024-06-28",
+        "expectedCompany": "startup-3",
+        "predictedCompany": "startup-3",
+        "correct": true,
+        "returnedIds": [
+          "people/p13\u00002025-08-25\u0000spoke at startup-2",
+          "people/p13\u00002025-03-31\u0000announced startup-1",
+          "people/p13\u00002024-12-03\u0000joined startup-0",
+          "people/p13\u00002024-07-09\u0000promoted to startup-4",
+          "people/p13\u00002024-02-13\u0000hired by startup-3",
+          "people/p13\u00002023-09-18\u0000spoke at startup-2",
+          "people/p13\u00002023-04-24\u0000announced startup-1",
+          "people/p13\u00002022-12-27\u0000joined startup-0",
+          "people/p13\u00002022-08-02\u0000promoted to startup-4",
+          "people/p13\u00002022-03-08\u0000hired by startup-3",
+          "people/p13\u00002021-10-11\u0000spoke at startup-2",
+          "people/p13\u00002021-06-16\u0000announced startup-1",
+          "people/p13\u00002021-01-20\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p13\u00002024-02-13\u0000hired by startup-3"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p14",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p14",
+        "asOfDate": "2024-06-15",
+        "expectedCompany": "startup-3",
+        "predictedCompany": "startup-3",
+        "correct": true,
+        "returnedIds": [
+          "people/p14\u00002025-08-25\u0000hired by startup-3",
+          "people/p14\u00002025-05-10\u0000spoke at startup-2",
+          "people/p14\u00002024-12-23\u0000announced startup-1",
+          "people/p14\u00002024-08-08\u0000joined startup-0",
+          "people/p14\u00002024-03-24\u0000promoted to startup-4",
+          "people/p14\u00002023-12-07\u0000hired by startup-3",
+          "people/p14\u00002023-07-23\u0000spoke at startup-2",
+          "people/p14\u00002023-03-08\u0000announced startup-1",
+          "people/p14\u00002022-10-21\u0000joined startup-0",
+          "people/p14\u00002022-06-06\u0000promoted to startup-4",
+          "people/p14\u00002022-02-19\u0000hired by startup-3",
+          "people/p14\u00002021-10-04\u0000spoke at startup-2",
+          "people/p14\u00002021-05-20\u0000announced startup-1",
+          "people/p14\u00002021-01-03\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p14\u00002023-12-07\u0000hired by startup-3"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p15",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p15",
+        "asOfDate": "2024-06-16",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p15\u00002025-09-23\u0000promoted to startup-4",
+          "people/p15\u00002025-05-17\u0000hired by startup-3",
+          "people/p15\u00002025-01-09\u0000spoke at startup-2",
+          "people/p15\u00002024-09-02\u0000announced startup-1",
+          "people/p15\u00002024-05-26\u0000joined startup-0",
+          "people/p15\u00002024-01-19\u0000promoted to startup-4",
+          "people/p15\u00002023-09-12\u0000hired by startup-3",
+          "people/p15\u00002023-05-06\u0000spoke at startup-2",
+          "people/p15\u00002023-01-28\u0000announced startup-1",
+          "people/p15\u00002022-09-21\u0000joined startup-0",
+          "people/p15\u00002022-05-15\u0000promoted to startup-4",
+          "people/p15\u00002022-01-07\u0000hired by startup-3",
+          "people/p15\u00002021-09-30\u0000spoke at startup-2",
+          "people/p15\u00002021-05-24\u0000announced startup-1",
+          "people/p15\u00002021-01-16\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p15\u00002024-05-26\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p16",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p16",
+        "asOfDate": "2024-06-17",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p16\u00002025-09-20\u0000joined startup-0",
+          "people/p16\u00002025-05-22\u0000promoted to startup-4",
+          "people/p16\u00002025-02-20\u0000hired by startup-3",
+          "people/p16\u00002024-10-22\u0000spoke at startup-2",
+          "people/p16\u00002024-06-23\u0000announced startup-1",
+          "people/p16\u00002024-02-23\u0000joined startup-0",
+          "people/p16\u00002023-10-25\u0000promoted to startup-4",
+          "people/p16\u00002023-07-26\u0000hired by startup-3",
+          "people/p16\u00002023-03-27\u0000spoke at startup-2",
+          "people/p16\u00002022-11-26\u0000announced startup-1",
+          "people/p16\u00002022-07-28\u0000joined startup-0",
+          "people/p16\u00002022-04-28\u0000promoted to startup-4",
+          "people/p16\u00002021-12-28\u0000hired by startup-3",
+          "people/p16\u00002021-08-29\u0000spoke at startup-2",
+          "people/p16\u00002021-04-30\u0000announced startup-1",
+          "people/p16\u00002021-01-29\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p16\u00002024-02-23\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p17",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p17",
+        "asOfDate": "2024-06-18",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p17\u00002025-09-17\u0000announced startup-1",
+          "people/p17\u00002025-06-25\u0000joined startup-0",
+          "people/p17\u00002025-03-02\u0000promoted to startup-4",
+          "people/p17\u00002024-11-08\u0000hired by startup-3",
+          "people/p17\u00002024-07-17\u0000spoke at startup-2",
+          "people/p17\u00002024-04-23\u0000announced startup-1",
+          "people/p17\u00002023-12-31\u0000joined startup-0",
+          "people/p17\u00002023-09-08\u0000promoted to startup-4",
+          "people/p17\u00002023-05-16\u0000hired by startup-3",
+          "people/p17\u00002023-01-22\u0000spoke at startup-2",
+          "people/p17\u00002022-10-30\u0000announced startup-1",
+          "people/p17\u00002022-07-07\u0000joined startup-0",
+          "people/p17\u00002022-03-15\u0000promoted to startup-4",
+          "people/p17\u00002021-11-21\u0000hired by startup-3",
+          "people/p17\u00002021-08-28\u0000spoke at startup-2",
+          "people/p17\u00002021-05-06\u0000announced startup-1",
+          "people/p17\u00002021-01-12\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p17\u00002023-12-31\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p18",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p18",
+        "asOfDate": "2024-06-19",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p18\u00002025-10-13\u0000spoke at startup-2",
+          "people/p18\u00002025-06-27\u0000announced startup-1",
+          "people/p18\u00002025-03-10\u0000joined startup-0",
+          "people/p18\u00002024-11-22\u0000promoted to startup-4",
+          "people/p18\u00002024-09-05\u0000hired by startup-3",
+          "people/p18\u00002024-05-19\u0000spoke at startup-2",
+          "people/p18\u00002024-02-01\u0000announced startup-1",
+          "people/p18\u00002023-10-15\u0000joined startup-0",
+          "people/p18\u00002023-07-29\u0000promoted to startup-4",
+          "people/p18\u00002023-04-12\u0000hired by startup-3",
+          "people/p18\u00002022-12-24\u0000spoke at startup-2",
+          "people/p18\u00002022-09-07\u0000announced startup-1",
+          "people/p18\u00002022-06-20\u0000joined startup-0",
+          "people/p18\u00002022-03-04\u0000promoted to startup-4",
+          "people/p18\u00002021-11-16\u0000hired by startup-3",
+          "people/p18\u00002021-07-30\u0000spoke at startup-2",
+          "people/p18\u00002021-04-13\u0000announced startup-1",
+          "people/p18\u00002021-01-25\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p18\u00002023-10-15\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p19",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p19",
+        "asOfDate": "2024-06-20",
+        "expectedCompany": "startup-3",
+        "predictedCompany": "startup-3",
+        "correct": true,
+        "returnedIds": [
+          "people/p19\u00002025-10-08\u0000hired by startup-3",
+          "people/p19\u00002025-06-27\u0000spoke at startup-2",
+          "people/p19\u00002025-04-15\u0000announced startup-1",
+          "people/p19\u00002025-01-02\u0000joined startup-0",
+          "people/p19\u00002024-09-21\u0000promoted to startup-4",
+          "people/p19\u00002024-06-10\u0000hired by startup-3",
+          "people/p19\u00002024-02-28\u0000spoke at startup-2",
+          "people/p19\u00002023-12-17\u0000announced startup-1",
+          "people/p19\u00002023-09-05\u0000joined startup-0",
+          "people/p19\u00002023-05-25\u0000promoted to startup-4",
+          "people/p19\u00002023-02-11\u0000hired by startup-3",
+          "people/p19\u00002022-11-30\u0000spoke at startup-2",
+          "people/p19\u00002022-08-19\u0000announced startup-1",
+          "people/p19\u00002022-05-08\u0000joined startup-0",
+          "people/p19\u00002022-01-25\u0000promoted to startup-4",
+          "people/p19\u00002021-11-13\u0000hired by startup-3",
+          "people/p19\u00002021-08-02\u0000spoke at startup-2",
+          "people/p19\u00002021-04-21\u0000announced startup-1",
+          "people/p19\u00002021-01-08\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p19\u00002024-06-10\u0000hired by startup-3"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p20",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p20",
+        "asOfDate": "2024-06-21",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p20\u00002025-07-24\u0000promoted to startup-4",
+          "people/p20\u00002025-01-16\u0000hired by startup-3",
+          "people/p20\u00002024-07-10\u0000spoke at startup-2",
+          "people/p20\u00002024-01-03\u0000announced startup-1",
+          "people/p20\u00002023-07-27\u0000joined startup-0",
+          "people/p20\u00002023-01-19\u0000promoted to startup-4",
+          "people/p20\u00002022-07-13\u0000hired by startup-3",
+          "people/p20\u00002022-01-05\u0000spoke at startup-2",
+          "people/p20\u00002021-07-29\u0000announced startup-1",
+          "people/p20\u00002021-01-21\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p20\u00002023-07-27\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p21",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p21",
+        "asOfDate": "2024-06-22",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p21\u00002025-07-31\u0000joined startup-0",
+          "people/p21\u00002025-02-08\u0000promoted to startup-4",
+          "people/p21\u00002024-09-18\u0000hired by startup-3",
+          "people/p21\u00002024-03-29\u0000spoke at startup-2",
+          "people/p21\u00002023-10-08\u0000announced startup-1",
+          "people/p21\u00002023-04-18\u0000joined startup-0",
+          "people/p21\u00002022-10-27\u0000promoted to startup-4",
+          "people/p21\u00002022-06-06\u0000hired by startup-3",
+          "people/p21\u00002021-12-15\u0000spoke at startup-2",
+          "people/p21\u00002021-06-25\u0000announced startup-1",
+          "people/p21\u00002021-01-04\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p21\u00002023-04-18\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p22",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p22",
+        "asOfDate": "2024-06-23",
+        "expectedCompany": "startup-3",
+        "predictedCompany": "startup-3",
+        "correct": true,
+        "returnedIds": [
+          "people/p22\u00002025-08-03\u0000announced startup-1",
+          "people/p22\u00002025-03-27\u0000joined startup-0",
+          "people/p22\u00002024-10-19\u0000promoted to startup-4",
+          "people/p22\u00002024-05-13\u0000hired by startup-3",
+          "people/p22\u00002023-12-06\u0000spoke at startup-2",
+          "people/p22\u00002023-07-30\u0000announced startup-1",
+          "people/p22\u00002023-02-21\u0000joined startup-0",
+          "people/p22\u00002022-09-15\u0000promoted to startup-4",
+          "people/p22\u00002022-04-09\u0000hired by startup-3",
+          "people/p22\u00002021-11-01\u0000spoke at startup-2",
+          "people/p22\u00002021-06-25\u0000announced startup-1",
+          "people/p22\u00002021-01-17\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p22\u00002024-05-13\u0000hired by startup-3"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p23",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p23",
+        "asOfDate": "2024-06-24",
+        "expectedCompany": "startup-3",
+        "predictedCompany": "startup-3",
+        "correct": true,
+        "returnedIds": [
+          "people/p23\u00002025-09-04\u0000spoke at startup-2",
+          "people/p23\u00002025-04-10\u0000announced startup-1",
+          "people/p23\u00002024-11-13\u0000joined startup-0",
+          "people/p23\u00002024-06-19\u0000promoted to startup-4",
+          "people/p23\u00002024-02-23\u0000hired by startup-3",
+          "people/p23\u00002023-09-28\u0000spoke at startup-2",
+          "people/p23\u00002023-05-04\u0000announced startup-1",
+          "people/p23\u00002022-12-07\u0000joined startup-0",
+          "people/p23\u00002022-08-12\u0000promoted to startup-4",
+          "people/p23\u00002022-03-18\u0000hired by startup-3",
+          "people/p23\u00002021-10-21\u0000spoke at startup-2",
+          "people/p23\u00002021-05-27\u0000announced startup-1",
+          "people/p23\u00002021-01-30\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p23\u00002024-02-23\u0000hired by startup-3"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p24",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p24",
+        "asOfDate": "2024-06-25",
+        "expectedCompany": "startup-3",
+        "predictedCompany": "startup-3",
+        "correct": true,
+        "returnedIds": [
+          "people/p24\u00002025-09-04\u0000hired by startup-3",
+          "people/p24\u00002025-04-20\u0000spoke at startup-2",
+          "people/p24\u00002025-01-02\u0000announced startup-1",
+          "people/p24\u00002024-08-18\u0000joined startup-0",
+          "people/p24\u00002024-04-03\u0000promoted to startup-4",
+          "people/p24\u00002023-11-17\u0000hired by startup-3",
+          "people/p24\u00002023-07-03\u0000spoke at startup-2",
+          "people/p24\u00002023-03-18\u0000announced startup-1",
+          "people/p24\u00002022-10-31\u0000joined startup-0",
+          "people/p24\u00002022-06-16\u0000promoted to startup-4",
+          "people/p24\u00002022-01-30\u0000hired by startup-3",
+          "people/p24\u00002021-10-14\u0000spoke at startup-2",
+          "people/p24\u00002021-05-30\u0000announced startup-1",
+          "people/p24\u00002021-01-13\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p24\u00002023-11-17\u0000hired by startup-3"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p25",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p25",
+        "asOfDate": "2024-06-26",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p25\u00002025-09-03\u0000promoted to startup-4",
+          "people/p25\u00002025-05-27\u0000hired by startup-3",
+          "people/p25\u00002025-01-19\u0000spoke at startup-2",
+          "people/p25\u00002024-09-12\u0000announced startup-1",
+          "people/p25\u00002024-05-06\u0000joined startup-0",
+          "people/p25\u00002024-01-29\u0000promoted to startup-4",
+          "people/p25\u00002023-09-22\u0000hired by startup-3",
+          "people/p25\u00002023-05-16\u0000spoke at startup-2",
+          "people/p25\u00002023-01-08\u0000announced startup-1",
+          "people/p25\u00002022-09-01\u0000joined startup-0",
+          "people/p25\u00002022-05-25\u0000promoted to startup-4",
+          "people/p25\u00002022-01-17\u0000hired by startup-3",
+          "people/p25\u00002021-09-10\u0000spoke at startup-2",
+          "people/p25\u00002021-05-04\u0000announced startup-1",
+          "people/p25\u00002021-01-26\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p25\u00002024-05-06\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p26",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p26",
+        "asOfDate": "2024-06-27",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p26\u00002025-09-30\u0000joined startup-0",
+          "people/p26\u00002025-06-01\u0000promoted to startup-4",
+          "people/p26\u00002025-01-31\u0000hired by startup-3",
+          "people/p26\u00002024-10-02\u0000spoke at startup-2",
+          "people/p26\u00002024-07-03\u0000announced startup-1",
+          "people/p26\u00002024-03-04\u0000joined startup-0",
+          "people/p26\u00002023-11-04\u0000promoted to startup-4",
+          "people/p26\u00002023-07-06\u0000hired by startup-3",
+          "people/p26\u00002023-04-06\u0000spoke at startup-2",
+          "people/p26\u00002022-12-06\u0000announced startup-1",
+          "people/p26\u00002022-08-07\u0000joined startup-0",
+          "people/p26\u00002022-04-08\u0000promoted to startup-4",
+          "people/p26\u00002022-01-07\u0000hired by startup-3",
+          "people/p26\u00002021-09-08\u0000spoke at startup-2",
+          "people/p26\u00002021-05-10\u0000announced startup-1",
+          "people/p26\u00002021-01-09\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p26\u00002024-03-04\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p27",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p27",
+        "asOfDate": "2024-06-28",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p27\u00002025-09-27\u0000announced startup-1",
+          "people/p27\u00002025-06-05\u0000joined startup-0",
+          "people/p27\u00002025-03-12\u0000promoted to startup-4",
+          "people/p27\u00002024-11-18\u0000hired by startup-3",
+          "people/p27\u00002024-07-27\u0000spoke at startup-2",
+          "people/p27\u00002024-04-03\u0000announced startup-1",
+          "people/p27\u00002023-12-11\u0000joined startup-0",
+          "people/p27\u00002023-09-18\u0000promoted to startup-4",
+          "people/p27\u00002023-05-26\u0000hired by startup-3",
+          "people/p27\u00002023-02-01\u0000spoke at startup-2",
+          "people/p27\u00002022-10-10\u0000announced startup-1",
+          "people/p27\u00002022-07-17\u0000joined startup-0",
+          "people/p27\u00002022-03-25\u0000promoted to startup-4",
+          "people/p27\u00002021-12-01\u0000hired by startup-3",
+          "people/p27\u00002021-08-08\u0000spoke at startup-2",
+          "people/p27\u00002021-05-16\u0000announced startup-1",
+          "people/p27\u00002021-01-22\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p27\u00002023-12-11\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p28",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p28",
+        "asOfDate": "2024-06-15",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p28\u00002025-09-23\u0000spoke at startup-2",
+          "people/p28\u00002025-07-07\u0000announced startup-1",
+          "people/p28\u00002025-03-20\u0000joined startup-0",
+          "people/p28\u00002024-12-02\u0000promoted to startup-4",
+          "people/p28\u00002024-08-16\u0000hired by startup-3",
+          "people/p28\u00002024-05-29\u0000spoke at startup-2",
+          "people/p28\u00002024-02-11\u0000announced startup-1",
+          "people/p28\u00002023-10-25\u0000joined startup-0",
+          "people/p28\u00002023-07-09\u0000promoted to startup-4",
+          "people/p28\u00002023-03-23\u0000hired by startup-3",
+          "people/p28\u00002023-01-03\u0000spoke at startup-2",
+          "people/p28\u00002022-09-17\u0000announced startup-1",
+          "people/p28\u00002022-05-31\u0000joined startup-0",
+          "people/p28\u00002022-02-12\u0000promoted to startup-4",
+          "people/p28\u00002021-11-26\u0000hired by startup-3",
+          "people/p28\u00002021-08-09\u0000spoke at startup-2",
+          "people/p28\u00002021-04-23\u0000announced startup-1",
+          "people/p28\u00002021-01-05\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p28\u00002023-10-25\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p29",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p29",
+        "asOfDate": "2024-06-16",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p29\u00002025-10-18\u0000hired by startup-3",
+          "people/p29\u00002025-07-07\u0000spoke at startup-2",
+          "people/p29\u00002025-03-26\u0000announced startup-1",
+          "people/p29\u00002024-12-13\u0000joined startup-0",
+          "people/p29\u00002024-10-01\u0000promoted to startup-4",
+          "people/p29\u00002024-06-20\u0000hired by startup-3",
+          "people/p29\u00002024-03-09\u0000spoke at startup-2",
+          "people/p29\u00002023-11-27\u0000announced startup-1",
+          "people/p29\u00002023-09-15\u0000joined startup-0",
+          "people/p29\u00002023-06-04\u0000promoted to startup-4",
+          "people/p29\u00002023-02-21\u0000hired by startup-3",
+          "people/p29\u00002022-11-10\u0000spoke at startup-2",
+          "people/p29\u00002022-08-29\u0000announced startup-1",
+          "people/p29\u00002022-05-18\u0000joined startup-0",
+          "people/p29\u00002022-02-04\u0000promoted to startup-4",
+          "people/p29\u00002021-10-24\u0000hired by startup-3",
+          "people/p29\u00002021-07-13\u0000spoke at startup-2",
+          "people/p29\u00002021-05-01\u0000announced startup-1",
+          "people/p29\u00002021-01-18\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p29\u00002023-09-15\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p30",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p30",
+        "asOfDate": "2024-06-17",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p30\u00002025-07-04\u0000promoted to startup-4",
+          "people/p30\u00002025-01-26\u0000hired by startup-3",
+          "people/p30\u00002024-07-20\u0000spoke at startup-2",
+          "people/p30\u00002024-01-13\u0000announced startup-1",
+          "people/p30\u00002023-07-07\u0000joined startup-0",
+          "people/p30\u00002023-01-29\u0000promoted to startup-4",
+          "people/p30\u00002022-07-23\u0000hired by startup-3",
+          "people/p30\u00002022-01-15\u0000spoke at startup-2",
+          "people/p30\u00002021-07-09\u0000announced startup-1",
+          "people/p30\u00002021-01-01\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p30\u00002023-07-07\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p31",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p31",
+        "asOfDate": "2024-06-18",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p31\u00002025-08-10\u0000joined startup-0",
+          "people/p31\u00002025-02-18\u0000promoted to startup-4",
+          "people/p31\u00002024-08-29\u0000hired by startup-3",
+          "people/p31\u00002024-03-09\u0000spoke at startup-2",
+          "people/p31\u00002023-10-18\u0000announced startup-1",
+          "people/p31\u00002023-04-28\u0000joined startup-0",
+          "people/p31\u00002022-11-06\u0000promoted to startup-4",
+          "people/p31\u00002022-05-17\u0000hired by startup-3",
+          "people/p31\u00002021-12-25\u0000spoke at startup-2",
+          "people/p31\u00002021-07-05\u0000announced startup-1",
+          "people/p31\u00002021-01-14\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p31\u00002023-04-28\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p32",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p32",
+        "asOfDate": "2024-06-19",
+        "expectedCompany": "startup-3",
+        "predictedCompany": "startup-3",
+        "correct": true,
+        "returnedIds": [
+          "people/p32\u00002025-08-13\u0000announced startup-1",
+          "people/p32\u00002025-03-07\u0000joined startup-0",
+          "people/p32\u00002024-10-29\u0000promoted to startup-4",
+          "people/p32\u00002024-05-23\u0000hired by startup-3",
+          "people/p32\u00002023-12-16\u0000spoke at startup-2",
+          "people/p32\u00002023-07-10\u0000announced startup-1",
+          "people/p32\u00002023-02-01\u0000joined startup-0",
+          "people/p32\u00002022-09-25\u0000promoted to startup-4",
+          "people/p32\u00002022-04-19\u0000hired by startup-3",
+          "people/p32\u00002021-11-11\u0000spoke at startup-2",
+          "people/p32\u00002021-06-05\u0000announced startup-1",
+          "people/p32\u00002021-01-27\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p32\u00002024-05-23\u0000hired by startup-3"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p33",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p33",
+        "asOfDate": "2024-06-20",
+        "expectedCompany": "startup-3",
+        "predictedCompany": "startup-3",
+        "correct": true,
+        "returnedIds": [
+          "people/p33\u00002025-08-15\u0000spoke at startup-2",
+          "people/p33\u00002025-04-20\u0000announced startup-1",
+          "people/p33\u00002024-11-23\u0000joined startup-0",
+          "people/p33\u00002024-06-29\u0000promoted to startup-4",
+          "people/p33\u00002024-02-03\u0000hired by startup-3",
+          "people/p33\u00002023-10-08\u0000spoke at startup-2",
+          "people/p33\u00002023-05-14\u0000announced startup-1",
+          "people/p33\u00002022-12-17\u0000joined startup-0",
+          "people/p33\u00002022-07-23\u0000promoted to startup-4",
+          "people/p33\u00002022-02-26\u0000hired by startup-3",
+          "people/p33\u00002021-10-31\u0000spoke at startup-2",
+          "people/p33\u00002021-06-06\u0000announced startup-1",
+          "people/p33\u00002021-01-10\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p33\u00002024-02-03\u0000hired by startup-3"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p34",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p34",
+        "asOfDate": "2024-06-21",
+        "expectedCompany": "startup-3",
+        "predictedCompany": "startup-3",
+        "correct": true,
+        "returnedIds": [
+          "people/p34\u00002025-09-14\u0000hired by startup-3",
+          "people/p34\u00002025-04-30\u0000spoke at startup-2",
+          "people/p34\u00002024-12-13\u0000announced startup-1",
+          "people/p34\u00002024-07-29\u0000joined startup-0",
+          "people/p34\u00002024-04-13\u0000promoted to startup-4",
+          "people/p34\u00002023-11-27\u0000hired by startup-3",
+          "people/p34\u00002023-07-13\u0000spoke at startup-2",
+          "people/p34\u00002023-02-26\u0000announced startup-1",
+          "people/p34\u00002022-11-10\u0000joined startup-0",
+          "people/p34\u00002022-06-26\u0000promoted to startup-4",
+          "people/p34\u00002022-02-09\u0000hired by startup-3",
+          "people/p34\u00002021-09-24\u0000spoke at startup-2",
+          "people/p34\u00002021-06-09\u0000announced startup-1",
+          "people/p34\u00002021-01-23\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p34\u00002023-11-27\u0000hired by startup-3"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p35",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p35",
+        "asOfDate": "2024-06-22",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p35\u00002025-09-13\u0000promoted to startup-4",
+          "people/p35\u00002025-05-07\u0000hired by startup-3",
+          "people/p35\u00002025-01-29\u0000spoke at startup-2",
+          "people/p35\u00002024-09-22\u0000announced startup-1",
+          "people/p35\u00002024-05-16\u0000joined startup-0",
+          "people/p35\u00002024-01-09\u0000promoted to startup-4",
+          "people/p35\u00002023-09-02\u0000hired by startup-3",
+          "people/p35\u00002023-05-26\u0000spoke at startup-2",
+          "people/p35\u00002023-01-18\u0000announced startup-1",
+          "people/p35\u00002022-09-11\u0000joined startup-0",
+          "people/p35\u00002022-05-05\u0000promoted to startup-4",
+          "people/p35\u00002022-01-27\u0000hired by startup-3",
+          "people/p35\u00002021-09-20\u0000spoke at startup-2",
+          "people/p35\u00002021-05-14\u0000announced startup-1",
+          "people/p35\u00002021-01-06\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p35\u00002024-05-16\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p36",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p36",
+        "asOfDate": "2024-06-23",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p36\u00002025-09-10\u0000joined startup-0",
+          "people/p36\u00002025-06-11\u0000promoted to startup-4",
+          "people/p36\u00002025-02-10\u0000hired by startup-3",
+          "people/p36\u00002024-10-12\u0000spoke at startup-2",
+          "people/p36\u00002024-06-13\u0000announced startup-1",
+          "people/p36\u00002024-03-14\u0000joined startup-0",
+          "people/p36\u00002023-11-14\u0000promoted to startup-4",
+          "people/p36\u00002023-07-16\u0000hired by startup-3",
+          "people/p36\u00002023-03-17\u0000spoke at startup-2",
+          "people/p36\u00002022-11-16\u0000announced startup-1",
+          "people/p36\u00002022-08-17\u0000joined startup-0",
+          "people/p36\u00002022-04-18\u0000promoted to startup-4",
+          "people/p36\u00002021-12-18\u0000hired by startup-3",
+          "people/p36\u00002021-08-19\u0000spoke at startup-2",
+          "people/p36\u00002021-05-20\u0000announced startup-1",
+          "people/p36\u00002021-01-19\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p36\u00002024-03-14\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p37",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p37",
+        "asOfDate": "2024-06-24",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p37\u00002025-10-07\u0000announced startup-1",
+          "people/p37\u00002025-06-15\u0000joined startup-0",
+          "people/p37\u00002025-02-20\u0000promoted to startup-4",
+          "people/p37\u00002024-10-29\u0000hired by startup-3",
+          "people/p37\u00002024-08-06\u0000spoke at startup-2",
+          "people/p37\u00002024-04-13\u0000announced startup-1",
+          "people/p37\u00002023-12-21\u0000joined startup-0",
+          "people/p37\u00002023-08-29\u0000promoted to startup-4",
+          "people/p37\u00002023-06-05\u0000hired by startup-3",
+          "people/p37\u00002023-02-11\u0000spoke at startup-2",
+          "people/p37\u00002022-10-20\u0000announced startup-1",
+          "people/p37\u00002022-06-27\u0000joined startup-0",
+          "people/p37\u00002022-04-04\u0000promoted to startup-4",
+          "people/p37\u00002021-12-11\u0000hired by startup-3",
+          "people/p37\u00002021-08-18\u0000spoke at startup-2",
+          "people/p37\u00002021-04-26\u0000announced startup-1",
+          "people/p37\u00002021-01-02\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p37\u00002023-12-21\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p38",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p38",
+        "asOfDate": "2024-06-25",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p38\u00002025-10-03\u0000spoke at startup-2",
+          "people/p38\u00002025-06-17\u0000announced startup-1",
+          "people/p38\u00002025-03-30\u0000joined startup-0",
+          "people/p38\u00002024-12-12\u0000promoted to startup-4",
+          "people/p38\u00002024-08-26\u0000hired by startup-3",
+          "people/p38\u00002024-05-09\u0000spoke at startup-2",
+          "people/p38\u00002024-01-22\u0000announced startup-1",
+          "people/p38\u00002023-11-04\u0000joined startup-0",
+          "people/p38\u00002023-07-19\u0000promoted to startup-4",
+          "people/p38\u00002023-04-02\u0000hired by startup-3",
+          "people/p38\u00002022-12-14\u0000spoke at startup-2",
+          "people/p38\u00002022-09-27\u0000announced startup-1",
+          "people/p38\u00002022-06-10\u0000joined startup-0",
+          "people/p38\u00002022-02-22\u0000promoted to startup-4",
+          "people/p38\u00002021-11-06\u0000hired by startup-3",
+          "people/p38\u00002021-08-19\u0000spoke at startup-2",
+          "people/p38\u00002021-05-03\u0000announced startup-1",
+          "people/p38\u00002021-01-15\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p38\u00002023-11-04\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p39",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p39",
+        "asOfDate": "2024-06-26",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p39\u00002025-09-28\u0000hired by startup-3",
+          "people/p39\u00002025-07-17\u0000spoke at startup-2",
+          "people/p39\u00002025-04-05\u0000announced startup-1",
+          "people/p39\u00002024-12-23\u0000joined startup-0",
+          "people/p39\u00002024-09-11\u0000promoted to startup-4",
+          "people/p39\u00002024-06-30\u0000hired by startup-3",
+          "people/p39\u00002024-03-19\u0000spoke at startup-2",
+          "people/p39\u00002023-12-07\u0000announced startup-1",
+          "people/p39\u00002023-08-26\u0000joined startup-0",
+          "people/p39\u00002023-05-15\u0000promoted to startup-4",
+          "people/p39\u00002023-03-03\u0000hired by startup-3",
+          "people/p39\u00002022-11-20\u0000spoke at startup-2",
+          "people/p39\u00002022-08-09\u0000announced startup-1",
+          "people/p39\u00002022-04-28\u0000joined startup-0",
+          "people/p39\u00002022-02-14\u0000promoted to startup-4",
+          "people/p39\u00002021-11-03\u0000hired by startup-3",
+          "people/p39\u00002021-07-23\u0000spoke at startup-2",
+          "people/p39\u00002021-04-11\u0000announced startup-1",
+          "people/p39\u00002021-01-28\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p39\u00002023-08-26\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p40",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p40",
+        "asOfDate": "2024-06-27",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p40\u00002025-07-14\u0000promoted to startup-4",
+          "people/p40\u00002025-01-06\u0000hired by startup-3",
+          "people/p40\u00002024-07-30\u0000spoke at startup-2",
+          "people/p40\u00002024-01-23\u0000announced startup-1",
+          "people/p40\u00002023-07-17\u0000joined startup-0",
+          "people/p40\u00002023-01-09\u0000promoted to startup-4",
+          "people/p40\u00002022-07-03\u0000hired by startup-3",
+          "people/p40\u00002022-01-25\u0000spoke at startup-2",
+          "people/p40\u00002021-07-19\u0000announced startup-1",
+          "people/p40\u00002021-01-11\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p40\u00002023-07-17\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p41",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p41",
+        "asOfDate": "2024-06-28",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p41\u00002025-07-21\u0000joined startup-0",
+          "people/p41\u00002025-02-28\u0000promoted to startup-4",
+          "people/p41\u00002024-09-08\u0000hired by startup-3",
+          "people/p41\u00002024-03-19\u0000spoke at startup-2",
+          "people/p41\u00002023-09-28\u0000announced startup-1",
+          "people/p41\u00002023-05-08\u0000joined startup-0",
+          "people/p41\u00002022-11-16\u0000promoted to startup-4",
+          "people/p41\u00002022-05-27\u0000hired by startup-3",
+          "people/p41\u00002021-12-05\u0000spoke at startup-2",
+          "people/p41\u00002021-06-15\u0000announced startup-1",
+          "people/p41\u00002021-01-24\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p41\u00002023-05-08\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p42",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p42",
+        "asOfDate": "2024-06-15",
+        "expectedCompany": "startup-3",
+        "predictedCompany": "startup-3",
+        "correct": true,
+        "returnedIds": [
+          "people/p42\u00002025-08-23\u0000announced startup-1",
+          "people/p42\u00002025-03-17\u0000joined startup-0",
+          "people/p42\u00002024-10-09\u0000promoted to startup-4",
+          "people/p42\u00002024-05-03\u0000hired by startup-3",
+          "people/p42\u00002023-12-26\u0000spoke at startup-2",
+          "people/p42\u00002023-07-20\u0000announced startup-1",
+          "people/p42\u00002023-02-11\u0000joined startup-0",
+          "people/p42\u00002022-09-05\u0000promoted to startup-4",
+          "people/p42\u00002022-04-29\u0000hired by startup-3",
+          "people/p42\u00002021-11-21\u0000spoke at startup-2",
+          "people/p42\u00002021-06-15\u0000announced startup-1",
+          "people/p42\u00002021-01-07\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p42\u00002024-05-03\u0000hired by startup-3"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p43",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p43",
+        "asOfDate": "2024-06-16",
+        "expectedCompany": "startup-3",
+        "predictedCompany": "startup-3",
+        "correct": true,
+        "returnedIds": [
+          "people/p43\u00002025-08-25\u0000spoke at startup-2",
+          "people/p43\u00002025-03-31\u0000announced startup-1",
+          "people/p43\u00002024-12-03\u0000joined startup-0",
+          "people/p43\u00002024-07-09\u0000promoted to startup-4",
+          "people/p43\u00002024-02-13\u0000hired by startup-3",
+          "people/p43\u00002023-09-18\u0000spoke at startup-2",
+          "people/p43\u00002023-04-24\u0000announced startup-1",
+          "people/p43\u00002022-12-27\u0000joined startup-0",
+          "people/p43\u00002022-08-02\u0000promoted to startup-4",
+          "people/p43\u00002022-03-08\u0000hired by startup-3",
+          "people/p43\u00002021-10-11\u0000spoke at startup-2",
+          "people/p43\u00002021-06-16\u0000announced startup-1",
+          "people/p43\u00002021-01-20\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p43\u00002024-02-13\u0000hired by startup-3"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p44",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p44",
+        "asOfDate": "2024-06-17",
+        "expectedCompany": "startup-3",
+        "predictedCompany": "startup-3",
+        "correct": true,
+        "returnedIds": [
+          "people/p44\u00002025-08-25\u0000hired by startup-3",
+          "people/p44\u00002025-05-10\u0000spoke at startup-2",
+          "people/p44\u00002024-12-23\u0000announced startup-1",
+          "people/p44\u00002024-08-08\u0000joined startup-0",
+          "people/p44\u00002024-03-24\u0000promoted to startup-4",
+          "people/p44\u00002023-12-07\u0000hired by startup-3",
+          "people/p44\u00002023-07-23\u0000spoke at startup-2",
+          "people/p44\u00002023-03-08\u0000announced startup-1",
+          "people/p44\u00002022-10-21\u0000joined startup-0",
+          "people/p44\u00002022-06-06\u0000promoted to startup-4",
+          "people/p44\u00002022-02-19\u0000hired by startup-3",
+          "people/p44\u00002021-10-04\u0000spoke at startup-2",
+          "people/p44\u00002021-05-20\u0000announced startup-1",
+          "people/p44\u00002021-01-03\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p44\u00002023-12-07\u0000hired by startup-3"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p45",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p45",
+        "asOfDate": "2024-06-18",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p45\u00002025-09-23\u0000promoted to startup-4",
+          "people/p45\u00002025-05-17\u0000hired by startup-3",
+          "people/p45\u00002025-01-09\u0000spoke at startup-2",
+          "people/p45\u00002024-09-02\u0000announced startup-1",
+          "people/p45\u00002024-05-26\u0000joined startup-0",
+          "people/p45\u00002024-01-19\u0000promoted to startup-4",
+          "people/p45\u00002023-09-12\u0000hired by startup-3",
+          "people/p45\u00002023-05-06\u0000spoke at startup-2",
+          "people/p45\u00002023-01-28\u0000announced startup-1",
+          "people/p45\u00002022-09-21\u0000joined startup-0",
+          "people/p45\u00002022-05-15\u0000promoted to startup-4",
+          "people/p45\u00002022-01-07\u0000hired by startup-3",
+          "people/p45\u00002021-09-30\u0000spoke at startup-2",
+          "people/p45\u00002021-05-24\u0000announced startup-1",
+          "people/p45\u00002021-01-16\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p45\u00002024-05-26\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p46",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p46",
+        "asOfDate": "2024-06-19",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p46\u00002025-09-20\u0000joined startup-0",
+          "people/p46\u00002025-05-22\u0000promoted to startup-4",
+          "people/p46\u00002025-02-20\u0000hired by startup-3",
+          "people/p46\u00002024-10-22\u0000spoke at startup-2",
+          "people/p46\u00002024-06-23\u0000announced startup-1",
+          "people/p46\u00002024-02-23\u0000joined startup-0",
+          "people/p46\u00002023-10-25\u0000promoted to startup-4",
+          "people/p46\u00002023-07-26\u0000hired by startup-3",
+          "people/p46\u00002023-03-27\u0000spoke at startup-2",
+          "people/p46\u00002022-11-26\u0000announced startup-1",
+          "people/p46\u00002022-07-28\u0000joined startup-0",
+          "people/p46\u00002022-04-28\u0000promoted to startup-4",
+          "people/p46\u00002021-12-28\u0000hired by startup-3",
+          "people/p46\u00002021-08-29\u0000spoke at startup-2",
+          "people/p46\u00002021-04-30\u0000announced startup-1",
+          "people/p46\u00002021-01-29\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p46\u00002024-02-23\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p47",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p47",
+        "asOfDate": "2024-06-20",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p47\u00002025-09-17\u0000announced startup-1",
+          "people/p47\u00002025-06-25\u0000joined startup-0",
+          "people/p47\u00002025-03-02\u0000promoted to startup-4",
+          "people/p47\u00002024-11-08\u0000hired by startup-3",
+          "people/p47\u00002024-07-17\u0000spoke at startup-2",
+          "people/p47\u00002024-04-23\u0000announced startup-1",
+          "people/p47\u00002023-12-31\u0000joined startup-0",
+          "people/p47\u00002023-09-08\u0000promoted to startup-4",
+          "people/p47\u00002023-05-16\u0000hired by startup-3",
+          "people/p47\u00002023-01-22\u0000spoke at startup-2",
+          "people/p47\u00002022-10-30\u0000announced startup-1",
+          "people/p47\u00002022-07-07\u0000joined startup-0",
+          "people/p47\u00002022-03-15\u0000promoted to startup-4",
+          "people/p47\u00002021-11-21\u0000hired by startup-3",
+          "people/p47\u00002021-08-28\u0000spoke at startup-2",
+          "people/p47\u00002021-05-06\u0000announced startup-1",
+          "people/p47\u00002021-01-12\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p47\u00002023-12-31\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p48",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p48",
+        "asOfDate": "2024-06-21",
+        "expectedCompany": "startup-0",
+        "predictedCompany": "startup-0",
+        "correct": true,
+        "returnedIds": [
+          "people/p48\u00002025-10-13\u0000spoke at startup-2",
+          "people/p48\u00002025-06-27\u0000announced startup-1",
+          "people/p48\u00002025-03-10\u0000joined startup-0",
+          "people/p48\u00002024-11-22\u0000promoted to startup-4",
+          "people/p48\u00002024-09-05\u0000hired by startup-3",
+          "people/p48\u00002024-05-19\u0000spoke at startup-2",
+          "people/p48\u00002024-02-01\u0000announced startup-1",
+          "people/p48\u00002023-10-15\u0000joined startup-0",
+          "people/p48\u00002023-07-29\u0000promoted to startup-4",
+          "people/p48\u00002023-04-12\u0000hired by startup-3",
+          "people/p48\u00002022-12-24\u0000spoke at startup-2",
+          "people/p48\u00002022-09-07\u0000announced startup-1",
+          "people/p48\u00002022-06-20\u0000joined startup-0",
+          "people/p48\u00002022-03-04\u0000promoted to startup-4",
+          "people/p48\u00002021-11-16\u0000hired by startup-3",
+          "people/p48\u00002021-07-30\u0000spoke at startup-2",
+          "people/p48\u00002021-04-13\u0000announced startup-1",
+          "people/p48\u00002021-01-25\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p48\u00002023-10-15\u0000joined startup-0"
+        ]
+      },
+      {
+        "probe_id": "asof:people/p49",
+        "kind": "asof",
+        "status": "scored",
+        "contributed": true,
+        "slug": "people/p49",
+        "asOfDate": "2024-06-22",
+        "expectedCompany": "startup-3",
+        "predictedCompany": "startup-3",
+        "correct": true,
+        "returnedIds": [
+          "people/p49\u00002025-10-08\u0000hired by startup-3",
+          "people/p49\u00002025-06-27\u0000spoke at startup-2",
+          "people/p49\u00002025-04-15\u0000announced startup-1",
+          "people/p49\u00002025-01-02\u0000joined startup-0",
+          "people/p49\u00002024-09-21\u0000promoted to startup-4",
+          "people/p49\u00002024-06-10\u0000hired by startup-3",
+          "people/p49\u00002024-02-28\u0000spoke at startup-2",
+          "people/p49\u00002023-12-17\u0000announced startup-1",
+          "people/p49\u00002023-09-05\u0000joined startup-0",
+          "people/p49\u00002023-05-25\u0000promoted to startup-4",
+          "people/p49\u00002023-02-11\u0000hired by startup-3",
+          "people/p49\u00002022-11-30\u0000spoke at startup-2",
+          "people/p49\u00002022-08-19\u0000announced startup-1",
+          "people/p49\u00002022-05-08\u0000joined startup-0",
+          "people/p49\u00002022-01-25\u0000promoted to startup-4",
+          "people/p49\u00002021-11-13\u0000hired by startup-3",
+          "people/p49\u00002021-08-02\u0000spoke at startup-2",
+          "people/p49\u00002021-04-21\u0000announced startup-1",
+          "people/p49\u00002021-01-08\u0000joined startup-0"
+        ],
+        "selectedIds": [
+          "people/p49\u00002024-06-10\u0000hired by startup-3"
+        ]
+      }
+    ]
+  },
+  "accounting": {
+    "planned": 114,
+    "attempted": 114,
+    "scored": 114,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null,
+  "execution": {
+    "source_tree": {
+      "sha256": "5bdfac4a948f48501f8b89953d46cba272135872a40eb3c6f4bef67fb7c1d97d",
+      "files": 2935,
+      "git_head": "3ff60f944c9c70fed4eeef2ba0af2c2d8d302c88",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+      "declared_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+      "version": "0.60.46.0",
+      "package_sha256": "6ea533ae573e6f0f91d920b14a7a9c8d7e1562ffba69a9547cdcd2da3813261c",
+      "loaded_git_head": null
+    }
+  }
+}

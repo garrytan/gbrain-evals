@@ -1,0 +1,586 @@
+{
+ "schema_version": 1,
+ "corpus": "amara-life-v1 (eval/data/amara-life-v1, generated 2026-04-19, seed 42; not regenerated)",
+ "written": "2026-10-04, before any auto_chronicle run on this corpus, by the agent that ran the experiment (Capy), from the page text alone; not reviewed by a person",
+ "timezone": "UTC (gbrain's default chronicle.tz); a calendar invite's day is its DTSTART day in UTC",
+ "rules": [
+  "Expected events are anchor events: the meeting or sync itself on the page's date; each bullet under a Decisions heading, dated the page's date; and a past occurrence the page dates to a specific day (\"yesterday's meeting\").",
+  "Not expected (neither required nor wrong when correctly dated): action items and commitments made at the meeting, dated the meeting day; confirmations and statements made at the meeting.",
+  "Never expected: anything dated after the page's own date (planned follow-ups, deadlines, scheduled board meetings), and past occurrences the page dates only to a month or quarter.",
+  "An extracted event matches an expected event of the same page when its day equals the expected day and its summary contains one of the keywords (case-insensitive); matching is a maximum bipartite matching per page."
+ ],
+ "pages": [
+  {
+   "slug": "meetings/mtg-0000",
+   "class": "meeting",
+   "page_date": "2026-04-14",
+   "events": [
+    {
+     "id": "m0-meeting",
+     "day": "2026-04-14",
+     "kind": "meeting",
+     "keywords": [
+      "Elena",
+      "Meridian"
+     ],
+     "basis": "the portfolio review meeting itself, dated by frontmatter"
+    }
+   ]
+  },
+  {
+   "slug": "meetings/mtg-0001",
+   "class": "meeting",
+   "page_date": "2026-04-14",
+   "events": [
+    {
+     "id": "m1-meeting",
+     "day": "2026-04-14",
+     "kind": "meeting",
+     "keywords": [
+      "Priya",
+      "NovaBio"
+     ],
+     "basis": "the catch-up meeting itself"
+    }
+   ]
+  },
+  {
+   "slug": "meetings/mtg-0002",
+   "class": "meeting",
+   "page_date": "2026-04-15",
+   "events": [
+    {
+     "id": "m2-meeting",
+     "day": "2026-04-15",
+     "kind": "meeting",
+     "keywords": [
+      "Diego",
+      "Threshold"
+     ],
+     "basis": "the planning call itself"
+    },
+    {
+     "id": "m2-d1",
+     "day": "2026-04-15",
+     "kind": "decision",
+     "keywords": [
+      "diligence"
+     ],
+     "basis": "Decisions: Halfway will plan to participate in Series B diligence starting late August"
+    },
+    {
+     "id": "m2-d2",
+     "day": "2026-04-15",
+     "kind": "decision",
+     "keywords": [
+      "deck"
+     ],
+     "basis": "Decisions: Diego to send updated metrics deck by end of April (decided on the call; the sending itself is later)"
+    }
+   ]
+  },
+  {
+   "slug": "meetings/mtg-0003",
+   "class": "meeting",
+   "page_date": "2026-04-16",
+   "events": [
+    {
+     "id": "m3-meeting",
+     "day": "2026-04-16",
+     "kind": "meeting",
+     "keywords": [
+      "Marcus",
+      "Solaris"
+     ],
+     "basis": "the deep dive itself"
+    },
+    {
+     "id": "m3-d1",
+     "day": "2026-04-16",
+     "kind": "decision",
+     "keywords": [
+      "diligence"
+     ],
+     "basis": "Decisions: Solaris moves to full diligence; Amara will lead"
+    },
+    {
+     "id": "m3-d2",
+     "day": "2026-04-16",
+     "kind": "decision",
+     "keywords": [
+      "CTO",
+      "deep-dive",
+      "deep dive"
+     ],
+     "basis": "Decisions: Marcus to schedule technical deep-dive with CTO for next week (decided on the call)"
+    }
+   ]
+  },
+  {
+   "slug": "meetings/mtg-0004",
+   "class": "meeting",
+   "page_date": "2026-04-17",
+   "events": [
+    {
+     "id": "m4-meeting",
+     "day": "2026-04-17",
+     "kind": "meeting",
+     "keywords": [
+      "Elena",
+      "check-in",
+      "Terraform"
+     ],
+     "basis": "the quarterly check-in itself"
+    }
+   ]
+  },
+  {
+   "slug": "meetings/mtg-0005",
+   "class": "meeting",
+   "page_date": "2026-04-18",
+   "events": [
+    {
+     "id": "m5-meeting",
+     "day": "2026-04-18",
+     "kind": "meeting",
+     "keywords": [
+      "Priya",
+      "CarbonLoop"
+     ],
+     "basis": "the portfolio review itself"
+    },
+    {
+     "id": "m5-d1",
+     "day": "2026-04-18",
+     "kind": "decision",
+     "keywords": [
+      "bridge"
+     ],
+     "basis": "Decisions: approved the bridge extension terms"
+    },
+    {
+     "id": "m5-d2",
+     "day": "2026-04-18",
+     "kind": "decision",
+     "keywords": [
+      "Series B"
+     ],
+     "basis": "Decisions: green-lit the Series B prep timeline for Q3"
+    },
+    {
+     "id": "m5-d3",
+     "day": "2026-04-18",
+     "kind": "decision",
+     "keywords": [
+      "observer"
+     ],
+     "basis": "Decisions: agreed to hold off on board observer seat until after next funding round"
+    }
+   ]
+  },
+  {
+   "slug": "meetings/mtg-0006",
+   "class": "meeting",
+   "page_date": "2026-04-18",
+   "events": [
+    {
+     "id": "m6-meeting",
+     "day": "2026-04-18",
+     "kind": "meeting",
+     "keywords": [
+      "Kofi",
+      "Helios"
+     ],
+     "basis": "the board-seat and portfolio review meeting itself"
+    },
+    {
+     "id": "m6-p1",
+     "day": "2026-04-17",
+     "kind": "decision",
+     "keywords": [
+      "director",
+      "approv"
+     ],
+     "basis": "Kofi confirmed the Helios board formally approved the new director appointment at yesterday's meeting (the day before 2026-04-18)"
+    }
+   ]
+  },
+  {
+   "slug": "meetings/mtg-0007",
+   "class": "meeting",
+   "page_date": "2026-04-19",
+   "events": [
+    {
+     "id": "m7-meeting",
+     "day": "2026-04-19",
+     "kind": "meeting",
+     "keywords": [
+      "Elena",
+      "Codex"
+     ],
+     "basis": "the portfolio review itself"
+    },
+    {
+     "id": "m7-d1",
+     "day": "2026-04-19",
+     "kind": "decision",
+     "keywords": [
+      "bridge",
+      "pro-rata",
+      "pro rata"
+     ],
+     "basis": "Decisions: Halfway will participate in the upcoming bridge round, maintaining pro-rata"
+    },
+    {
+     "id": "m7-d2",
+     "day": "2026-04-19",
+     "kind": "decision",
+     "keywords": [
+      "observ"
+     ],
+     "basis": "Decisions: board seat observation rights continue, with Amara attending the Q2 board meeting in person (decided on 2026-04-19; the board meeting itself is May 15)"
+    }
+   ]
+  },
+  {
+   "slug": "cal/evt-0000",
+   "class": "calendar",
+   "page_date": "2026-04-14",
+   "events": [
+    {
+     "id": "evt-0000-meeting",
+     "day": "2026-04-14",
+     "kind": "meeting",
+     "keywords": [
+      "Elena",
+      "sync"
+     ],
+     "basis": "the invite's own meeting on its DTSTART day (UTC)"
+    }
+   ]
+  },
+  {
+   "slug": "cal/evt-0001",
+   "class": "calendar",
+   "page_date": "2026-04-14",
+   "events": [
+    {
+     "id": "evt-0001-meeting",
+     "day": "2026-04-14",
+     "kind": "meeting",
+     "keywords": [
+      "Priya",
+      "sync"
+     ],
+     "basis": "the invite's own meeting on its DTSTART day (UTC)"
+    }
+   ]
+  },
+  {
+   "slug": "cal/evt-0002",
+   "class": "calendar",
+   "page_date": "2026-04-14",
+   "events": [
+    {
+     "id": "evt-0002-meeting",
+     "day": "2026-04-14",
+     "kind": "meeting",
+     "keywords": [
+      "Hannah",
+      "sync"
+     ],
+     "basis": "the invite's own meeting on its DTSTART day (UTC)"
+    }
+   ]
+  },
+  {
+   "slug": "cal/evt-0003",
+   "class": "calendar",
+   "page_date": "2026-04-14",
+   "events": [
+    {
+     "id": "evt-0003-meeting",
+     "day": "2026-04-14",
+     "kind": "meeting",
+     "keywords": [
+      "Bill",
+      "sync"
+     ],
+     "basis": "the invite's own meeting on its DTSTART day (UTC)"
+    }
+   ]
+  },
+  {
+   "slug": "cal/evt-0004",
+   "class": "calendar",
+   "page_date": "2026-04-15",
+   "events": [
+    {
+     "id": "evt-0004-meeting",
+     "day": "2026-04-15",
+     "kind": "meeting",
+     "keywords": [
+      "Diego",
+      "sync"
+     ],
+     "basis": "the invite's own meeting on its DTSTART day (UTC)"
+    }
+   ]
+  },
+  {
+   "slug": "cal/evt-0005",
+   "class": "calendar",
+   "page_date": "2026-04-15",
+   "events": [
+    {
+     "id": "evt-0005-meeting",
+     "day": "2026-04-15",
+     "kind": "meeting",
+     "keywords": [
+      "Ravi",
+      "sync"
+     ],
+     "basis": "the invite's own meeting on its DTSTART day (UTC)"
+    }
+   ]
+  },
+  {
+   "slug": "cal/evt-0006",
+   "class": "calendar",
+   "page_date": "2026-04-15",
+   "events": [
+    {
+     "id": "evt-0006-meeting",
+     "day": "2026-04-15",
+     "kind": "meeting",
+     "keywords": [
+      "Tomoko",
+      "sync"
+     ],
+     "basis": "the invite's own meeting on its DTSTART day (UTC)"
+    }
+   ]
+  },
+  {
+   "slug": "cal/evt-0007",
+   "class": "calendar",
+   "page_date": "2026-04-15",
+   "events": [
+    {
+     "id": "evt-0007-meeting",
+     "day": "2026-04-15",
+     "kind": "meeting",
+     "keywords": [
+      "Diego",
+      "sync"
+     ],
+     "basis": "the invite's own meeting on its DTSTART day (UTC)"
+    }
+   ]
+  },
+  {
+   "slug": "cal/evt-0008",
+   "class": "calendar",
+   "page_date": "2026-04-16",
+   "events": [
+    {
+     "id": "evt-0008-meeting",
+     "day": "2026-04-16",
+     "kind": "meeting",
+     "keywords": [
+      "Marcus",
+      "sync"
+     ],
+     "basis": "the invite's own meeting on its DTSTART day (UTC)"
+    }
+   ]
+  },
+  {
+   "slug": "cal/evt-0009",
+   "class": "calendar",
+   "page_date": "2026-04-16",
+   "events": [
+    {
+     "id": "evt-0009-meeting",
+     "day": "2026-04-16",
+     "kind": "meeting",
+     "keywords": [
+      "Kofi",
+      "sync"
+     ],
+     "basis": "the invite's own meeting on its DTSTART day (UTC)"
+    }
+   ]
+  },
+  {
+   "slug": "cal/evt-0010",
+   "class": "calendar",
+   "page_date": "2026-04-16",
+   "events": [
+    {
+     "id": "evt-0010-meeting",
+     "day": "2026-04-16",
+     "kind": "meeting",
+     "keywords": [
+      "Mina",
+      "sync"
+     ],
+     "basis": "the invite's own meeting on its DTSTART day (UTC)"
+    }
+   ]
+  },
+  {
+   "slug": "cal/evt-0011",
+   "class": "calendar",
+   "page_date": "2026-04-16",
+   "events": [
+    {
+     "id": "evt-0011-meeting",
+     "day": "2026-04-16",
+     "kind": "meeting",
+     "keywords": [
+      "Priya",
+      "sync"
+     ],
+     "basis": "the invite's own meeting on its DTSTART day (UTC)"
+    }
+   ]
+  },
+  {
+   "slug": "cal/evt-0012",
+   "class": "calendar",
+   "page_date": "2026-04-17",
+   "events": [
+    {
+     "id": "evt-0012-meeting",
+     "day": "2026-04-17",
+     "kind": "meeting",
+     "keywords": [
+      "Elena",
+      "sync"
+     ],
+     "basis": "the invite's own meeting on its DTSTART day (UTC)"
+    }
+   ]
+  },
+  {
+   "slug": "cal/evt-0013",
+   "class": "calendar",
+   "page_date": "2026-04-17",
+   "events": [
+    {
+     "id": "evt-0013-meeting",
+     "day": "2026-04-17",
+     "kind": "meeting",
+     "keywords": [
+      "Anna",
+      "sync"
+     ],
+     "basis": "the invite's own meeting on its DTSTART day (UTC)"
+    }
+   ]
+  },
+  {
+   "slug": "cal/evt-0014",
+   "class": "calendar",
+   "page_date": "2026-04-17",
+   "events": [
+    {
+     "id": "evt-0014-meeting",
+     "day": "2026-04-17",
+     "kind": "meeting",
+     "keywords": [
+      "Lena",
+      "sync"
+     ],
+     "basis": "the invite's own meeting on its DTSTART day (UTC)"
+    }
+   ]
+  },
+  {
+   "slug": "cal/evt-0015",
+   "class": "calendar",
+   "page_date": "2026-04-17",
+   "events": [
+    {
+     "id": "evt-0015-meeting",
+     "day": "2026-04-17",
+     "kind": "meeting",
+     "keywords": [
+      "Nadia",
+      "sync"
+     ],
+     "basis": "the invite's own meeting on its DTSTART day (UTC)"
+    }
+   ]
+  },
+  {
+   "slug": "cal/evt-0016",
+   "class": "calendar",
+   "page_date": "2026-04-18",
+   "events": [
+    {
+     "id": "evt-0016-meeting",
+     "day": "2026-04-18",
+     "kind": "meeting",
+     "keywords": [
+      "Priya",
+      "sync"
+     ],
+     "basis": "the invite's own meeting on its DTSTART day (UTC)"
+    }
+   ]
+  },
+  {
+   "slug": "cal/evt-0017",
+   "class": "calendar",
+   "page_date": "2026-04-18",
+   "events": [
+    {
+     "id": "evt-0017-meeting",
+     "day": "2026-04-18",
+     "kind": "meeting",
+     "keywords": [
+      "Nadia",
+      "sync"
+     ],
+     "basis": "the invite's own meeting on its DTSTART day (UTC)"
+    }
+   ]
+  },
+  {
+   "slug": "cal/evt-0018",
+   "class": "calendar",
+   "page_date": "2026-04-18",
+   "events": [
+    {
+     "id": "evt-0018-meeting",
+     "day": "2026-04-18",
+     "kind": "meeting",
+     "keywords": [
+      "Lena",
+      "sync"
+     ],
+     "basis": "the invite's own meeting on its DTSTART day (UTC)"
+    }
+   ]
+  },
+  {
+   "slug": "cal/evt-0019",
+   "class": "calendar",
+   "page_date": "2026-04-18",
+   "events": [
+    {
+     "id": "evt-0019-meeting",
+     "day": "2026-04-18",
+     "kind": "meeting",
+     "keywords": [
+      "Diego",
+      "sync"
+     ],
+     "basis": "the invite's own meeting on its DTSTART day (UTC)"
+    }
+   ]
+  }
+ ]
+}

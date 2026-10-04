@@ -1,0 +1,85 @@
+{
+  "arm": "off",
+  "steps": [
+    {
+      "step": "init",
+      "code": 0,
+      "ms": 3356,
+      "tail": "  v142: takes.embedding resized to vector(1024); existing take vectors cleared\n  194 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: <out>/brains/off/home/.gbrain/content/1e2e5ce2-29d2-41b6-a3a0-84bc416cd2e1/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)"
+    },
+    {
+      "step": "recent-days",
+      "code": 0,
+      "ms": 975,
+      "tail": "Set chronicle.auto_recent_days = 365"
+    },
+    {
+      "step": "settle",
+      "code": 0,
+      "ms": 1045,
+      "tail": "Set chronicle.auto_settle_seconds = 0"
+    },
+    {
+      "step": "auto-chronicle-off",
+      "code": 0,
+      "ms": 1009,
+      "tail": "Automatic event extraction is off. To extract history on request (paid; ask the user first): gbrain chronicle-backfill --dry-run\nSet auto_chronicle = false"
+    },
+    {
+      "step": "import",
+      "code": 0,
+      "ms": 10406,
+      "tail": "[import.files] 110/144 (76%) imported=110 skipped=0 errors=0\n[import.files] 120/144 (83%) imported=120 skipped=0 errors=0\n[import.files] 130/144 (90%) imported=130 skipped=0 errors=0\n[import.files] 140/144 (97%) imported=140 skipped=0 errors=0\n[import.files] 144/144 (100%) imported=144 skipped=0 errors=0\n[import.files] 144/144 (100%) done"
+    },
+    {
+      "step": "phase-1",
+      "code": 0,
+      "ms": 1070,
+      "tail": "chronicle: auto_chronicle is off and no backfill rows are pending (turn on: gbrain config set auto_chronicle true)"
+    }
+  ],
+  "phase_runs": [
+    {
+      "phase": "chronicle",
+      "status": "skipped",
+      "duration_ms": 20,
+      "summary": "chronicle: auto_chronicle is off and no backfill rows are pending (turn on: gbrain config set auto_chronicle true)",
+      "details": {
+        "dry_run": false,
+        "sources": 1,
+        "candidates": 0,
+        "judged": 0,
+        "extracted": 0,
+        "no_events": 0,
+        "failed": 0,
+        "reasons": {},
+        "events_written": 0,
+        "events_retired": 0,
+        "deferred_daily_limit": 0,
+        "daily_limit": 200,
+        "daily_remaining": 200,
+        "spent_usd": 0,
+        "unpriced_calls": 0,
+        "max_items": 50,
+        "per_source": {
+          "default": {
+            "candidates": 0,
+            "judged": 0
+          }
+        },
+        "auto_chronicle": "off",
+        "reason": "auto_chronicle_off"
+      }
+    }
+  ],
+  "meter": {
+    "usd": 0,
+    "requests": 0,
+    "unpriced": 0,
+    "byModel": {}
+  },
+  "judged": 0,
+  "spent_usd_recorded": 0,
+  "ms": 18822,
+  "events": 0
+}

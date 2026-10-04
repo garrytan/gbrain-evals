@@ -322,12 +322,13 @@ export class GbrainSlot {
     await op('extract', ['extract', '--stale', '--catch-up']);
     // `embed --stale` stops after 30 minutes of wall clock unless --catch-up is given, which would leave a large
     // corpus partly embedded. The dry run afterwards proves nothing is left.
-    // gbrain v0.60.46+ asks before a paid embedding backfill (exit 3, confirmation_required). The slot build is the
-    // operator's approved, ledger-metered work, so it re-runs the command with the `--yes` the refusal names.
+    // The evaluator is the user here and authorizes the build's embedding spend (metered by the slot allowance).
+    // Builds that gate paid backfills (agent-first operator wave) refuse with exit 3 until `--yes`; older builds
+    // reject that flag, so it is passed only after a confirmation_required refusal.
     const embedArgs = ['embed', '--stale', ...(staged ? ['--catch-up'] : [])];
     const first = await runCli(this.run, embedArgs, 3_600_000);
     if (first.code === 3 && /confirmation_required|needs the user's approval/.test(first.stdout + first.stderr)) {
-      steps.push({ step: 'embed-consent', code: 3, ms: first.ms, tail: 'confirmation_required; approved by the slot build, rerun with --yes' });
+      steps.push({ step: 'embed-consent-refused', code: 3, ms: first.ms, tail: 'confirmation_required; rerun with --yes (evaluator-authorized build spend)' });
       await op('embed', [...embedArgs, '--yes']);
     } else {
       steps.push({ step: 'embed', code: first.code, ms: first.ms, tail: (first.stdout + '\n' + first.stderr).split('\n').filter(l => l.trim()).slice(-8).join('\n') });
@@ -404,15 +405,34 @@ export class GbrainPool {
   }
 }
 
+/**
+ * Evaluator-side replacement for the server's initialize instructions (`--gbrain-instructions-file`), for
+ * A/B tests of instruction text on unchanged gbrain code. gbrain's own `GBRAIN_MCP_INSTRUCTIONS` only appends
+ * a deployment-identity block, so it cannot replace the text. Null keeps what the server sent.
+ */
+export const instructionsOverride: {
+  text: string | null;
+  served: string | null;
+  /** Replacement tool descriptions by tool name (`--gbrain-tool-descriptions-file`, JSON object). */
+  descriptions: Record<string, string> | null;
+  /** Tools withheld from the model (`--gbrain-drop-tools a,b`). */
+  dropTools: string[];
+  servedTools: Array<{ name: string; description?: string; inputSchema?: Record<string, unknown> }> | null;
+} = { text: null, served: null, descriptions: null, dropTools: [], servedTools: null };
+
 export class GbrainArm implements Arm {
   readonly name = 'gbrain';
   constructor(private slot: GbrainSlot) {}
   private get client() { if (!this.slot.client) throw new Error('gbrain slot not started'); return this.slot.client; }
   systemHint() {
-    return `The knowledge base is the company's gbrain, reached through the MCP tools listed. The gbrain server's instructions follow.\n<mcp_server_instructions server="gbrain">\n${this.client.instructions}\n</mcp_server_instructions>`;
+    instructionsOverride.served ??= this.client.instructions;
+    const text = instructionsOverride.text ?? this.client.instructions;
+    return `The knowledge base is the company's gbrain, reached through the MCP tools listed. The gbrain server's instructions follow.\n<mcp_server_instructions server="gbrain">\n${text}\n</mcp_server_instructions>`;
   }
   tools(): ToolSpec[] {
-    return this.client.tools.map(t => ({ name: t.name, description: t.description ?? '', input_schema: (t.inputSchema ?? { type: 'object', properties: {} }) as Record<string, unknown> }));
+    instructionsOverride.servedTools ??= this.client.tools.map(t => ({ name: t.name, description: t.description, inputSchema: t.inputSchema }));
+    const o = instructionsOverride;
+    return this.client.tools.filter(t => !o.dropTools.includes(t.name)).map(t => ({ name: t.name, description: o.descriptions?.[t.name] ?? t.description ?? '', input_schema: (t.inputSchema ?? { type: 'object', properties: {} }) as Record<string, unknown> }));
   }
   writeTools() { return this.client.tools.filter(t => t.annotations?.readOnlyHint !== true).map(t => t.name); }
   call(name: string, args: Record<string, unknown>) { return this.client.call(name, args); }

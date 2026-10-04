@@ -270,10 +270,13 @@ describe('bug ledger', () => {
     expect(validateBugEntry({ ...entry, review: later, review_history: [{ ...review, receipts: [] }] })).toContain('N5-1: a rerun review names its receipts');
   });
 
-  test('the wave ledger records a 2026-10-03 review on every entry and keeps the 2026-10-02 reviews', () => {
+  test('the wave ledger records a review on or after 2026-10-03 on every entry and keeps the earlier reviews', () => {
     const ledger = JSON.parse(readFileSync(join(import.meta.dir, '../../docs/benchmarks/2026-10-01-wave-bugs.json'), 'utf8')) as { entries: BugEntry[] };
-    expect(ledger.entries.filter(e => e.review?.date !== '2026-10-03').map(e => e.id)).toEqual([]);
-    const firstWave = ledger.entries.filter(e => !['N7-8', 'N12-9', 'Cat7-1'].includes(e.id));
+    expect(ledger.entries.filter(e => !e.review || e.review.date < '2026-10-03').map(e => e.id)).toEqual([]);
+    const foundOn20261004 = ['N6-1', 'CL-1', 'CL-2'];
+    const reviewedAgain = ledger.entries.filter(e => e.review?.date === '2026-10-04' && !foundOn20261004.includes(e.id));
+    expect(reviewedAgain.filter(e => e.review_history?.at(-1)?.date !== '2026-10-03').map(e => e.id)).toEqual([]);
+    const firstWave = ledger.entries.filter(e => !['N7-8', 'N12-9', 'Cat7-1', ...foundOn20261004].includes(e.id));
     expect(firstWave.filter(e => e.review_history?.[0]?.date !== '2026-10-02').map(e => e.id)).toEqual([]);
     expect(ledger.entries.filter(e => e.status === 'fixed' && !e.fixing_commit).map(e => e.id)).toEqual([]);
   });

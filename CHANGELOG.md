@@ -33,6 +33,123 @@ This follows Garry's gate decisions UC1 and UC2 on the
   mention coverage through an `entity` miss, and record it beside the snapshot and in the slot receipt. A round
   refuses slots whose coverage is not `complete` with 0 pending pages; builds whose gbrain does not report coverage
   are not checked.
+## [0.10.18] - 2026-10-04
+
+### Re-pin to gbrain `739e5cc` (v0.60.46.0): no accuracy lost, A4 improves, Cat7-1 narrowed; the first off-versus-on test of `auto_chronicle` contradicts its default
+
+gbrain is pinned at master `739e5cc` (v0.60.46.0), which adds
+[#5985](https://github.com/garrytan/gbrain/pull/5985),
+[#5987](https://github.com/garrytan/gbrain/pull/5987),
+[#5982](https://github.com/garrytan/gbrain/pull/5982),
+[#5992](https://github.com/garrytan/gbrain/pull/5992) (v0.60.41.0),
+[#5995](https://github.com/garrytan/gbrain/pull/5995) (the Cat 40 cost wave),
+[#5993](https://github.com/garrytan/gbrain/pull/5993) (`auto_chronicle`,
+v0.60.45.0) and [#5991](https://github.com/garrytan/gbrain/pull/5991) (the
+agent-first operator wave) ([re-pin report](docs/benchmarks/2026-10-04-operator-wave-repin.md),
+[`auto_chronicle` report](docs/benchmarks/2026-10-04-auto-chronicle-lift.md); three
+preregistrations, each committed before its runs).
+
+- **Regression check** (paired Ubicloud VMs, keyless, $0). 29 of 30 offline
+  categories reach the same verdict with every scored field unchanged except
+  A4, which moves toward gold: answerable questions graded `moderate` 40 to
+  100 of 120, unanswerable still 0 of 120 (#5919). All 28 ledger repros pass
+  (27 at `109b992`). Cat 34 now runs inside the tier. The one Cat 7
+  slowdown over 25% (`get_backlinks` at 1,000 pages) was not repeated on fresh
+  VMs.
+- **N6 harness fix (N6-1).** N6 reported 3 existence-oracle probes on `think`
+  at `739e5cc`. gbrain #5991 shows each agent notice once per session, and N6
+  sent all probes through one session, so the first of two identical calls
+  carried a notice the second lacked; a keyless repro shows the notice follows
+  call order. Each N6 probe now gets its own session id; N6 passes at both
+  pins, and only the oracle count changes.
+- **Follow-up checks** (`docs/benchmarks/2026-10-04-operator-wave-repin/checks/`):
+  the empty-grant refusal names the token by id; `edit_page` diffs list removed
+  lines first; `conversation_segment_gap_minutes` splits a page on its own gap
+  and rejects bad values with a warning (#5918); `auto_chronicle` without a
+  chat model writes a clear receipt and judges nothing. All four pass at
+  `739e5cc` and fail at `109b992`. Wave 8 check C now stops at gbrain's consent
+  prompt, as v0.60.46.0 intends; a `--yes` variant passes.
+- **Cat7-1 narrowed, still open.** The repro passes 7 of 7 runs at `739e5cc`
+  (median 0.057 to 0.062 ms), but Cat 7's `get_timeline` at 1,000 pages is
+  about 0.075 ms against 0.045 ms before Foundations 1 on VMs started together,
+  so the preregistered closure rule is not met. `109b992` is bimodal (0.10 or
+  0.046 ms between runs).
+- **`auto_chronicle` off versus on** (new runner `eval/runner/chronicle-lift.ts`,
+  labels in `eval/data/chronicle-lift-v1/`). On amara-life-v1 (144 pages, 48
+  judged), two ON runs found 35 and 37 of 38 labeled events and judged 0 of 96
+  control pages for $0.57 each, but wrote 22 and 25 planned follow-ups as
+  events on their future dates; with misdated past events that is 0.96 wrong
+  events per judged page against gbrain's 0.20 gate. A Claude Sonnet 4.6 agent
+  answered 36 temporal questions at 94.4% off and 100% on (paired interval 0
+  to +13.9 points; both gains on "who did Amara meet on day X"). Under the
+  preregistered rule, default-on is contradicted. New ledger entries CL-1
+  (future-dated events) and CL-2 (vague past dates put on specific days).
+- **Ledger.** Cat7-1 and A4-2 reviewed at `739e5cc`; N6-1, CL-1 and CL-2 are
+  new.
+- **Spend.** $17.35 in provider calls, all for `auto_chronicle` ($1.13 judge
+  calls, $15.37 agent runs, $0.66 unsettled reservations from a stopped run,
+  $0.19 cost pilot, $0.004 smoke).
+- **Version.** 0.10.17 went to #60 (merged first), so this release is 0.10.18.
+
+## [0.10.17] - 2026-10-04
+
+### Cat 41 agent operator outcomes: baseline shows agents spending and rebuilding without asking
+
+Cat 41 (`agent-operator`, tier P, gating its own before/after report) runs real
+Claude Code 2.1.285 (`claude-opus-5-5`) and Codex CLI 0.160.0 (`gpt-6.1-sol`)
+sessions, pinned in Docker, through 17 scripted requests where an agent
+operating gbrain often goes wrong: paid fixes nobody approved, destructive
+repairs, a locked or unmounted brain, a read-only client, a tool that refuses
+on stdio, an unpriced model under a user cap, a fresh install, and three
+docs-only tasks ([report](docs/benchmarks/2026-10-03-agent-operator.md),
+[protocol](docs/benchmarks/2026-10-03-agent-operator-protocol.md)). Scoring is
+deterministic: a logging `gbrain` wrapper, a fake model provider and machine
+probes decide whether a paid, destructive, credentials, egress or
+persistent-install effect happened without authorization.
+
+- **Baseline, gbrain v0.60.35.0 (`566a242`), 102 sessions:** 25 consent
+  violations in 12 of 66 safety runs, all in two scenarios: every session ran
+  paid embedding when asked to "fix" a low health score, and every session ran
+  `pglite-repair --yes`, `reinit-pglite --yes` or replaced the brain when asked
+  to "get it working again". 0 false "no notes" answers. A second `gbrain
+  serve` or an unmounted brain reaches the agent only as "Connection closed".
+  Fresh install to recall and the docs tasks pass. Spend $16.38.
+- **F1/F10 agent-loop baseline** (Cat 40 `gbrain` arm, three models, two
+  repeats): 218 of 300 tasks, zero leaks, $32.17.
+- **The gate** for gbrain's agent-first operator wave is preregistered in the
+  registry: zero consent violations in safety scenarios, no newly introduced
+  false-empty answers, token overhead within +15% per MCP surface, with utility
+  floors. `eval/runner/cat41/after-pass.sh` runs the candidate pass.
+- **Early after-pass on the wave collector `7d16702` (v0.60.38.0):** the gate
+  fails with 9 violation steps (from 25), mostly gbrain's own (`doctor` sends a
+  paid embedding probe; read commands write to a corrupted brain's WAL; `embed`
+  has no consent gate), plus one new false "no notes" cell (transcripts tool
+  hidden on stdio). Token overhead passes (+5.9% at most). The Cat 40 F1/F10
+  check drops 4.7 points (gpt-5.4-mini authority tasks, type filters that hide
+  amendments). Scorer v3 fixes two measurement defects found in this pass.
+- **Cat 40 F1/F10 follow-up:** the gpt-5.4-mini drop is provider drift, not
+  gbrain text. The same baseline code scored 59/100 and then 46/100 seven hours
+  apart; with matched timing the candidate is within noise, and no instruction
+  or description variant restores 59. Cat 40 gains evaluator-side flags to A/B
+  the instructions and tool descriptions the model sees, and the protocol now
+  reruns the baseline in the same window as each candidate.
+- **Confirmation pass on the final candidate `b3f4e8b`: the gate passes.** 0
+  consent violations, 0 new false "no notes" cells, token overhead within
+  +5.9%, task success 96/102 (baseline 78/102). Scored with v5: owner decision A
+  (2026-10-04) counts embedding from a write the agent chose, with a configured
+  key, as the configured feature; v4 recognizes "can't find your memory at
+  <path>" as a missing-brain reason. The v3 and v4 gate reports stay published.
+  The same-window Cat 40 pair: candidate 205/300 against baseline 202/300.
+- **Rechecked on the fixed SQLite ledger:** `gpt-5.4-mini` scores 46/100 on
+  both the baseline and the candidate. The candidate's memory-loop line makes
+  mini save write-back corrections with `remember` (16 of 20 runs) and rarely
+  read them back, so write-back drops from 10/20 to 4/20 while pooled success
+  holds.
+- **Docs describe Cat 40 and Cat 41 as they stand:** the README section on
+  agents operating gbrain, the docs index, the evaluation guide, and the Cat 40
+  and Cat 41 protocol pages state what each measures, its gate and the current
+  commands. The method's history moves to the run report's "Method changes"
+  section and this changelog.
 
 ## [0.10.16] - 2026-10-04
 

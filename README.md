@@ -23,7 +23,7 @@ answerable questions (95.53%)** in its first five returned chunks. That is
 higher than every other system we can score on the same strict metric from
 its saved per-question rankings. On October 4 we recounted every published
 retrieval arm with opaque session ids (so the `answer_` prefix of evidence ids
-never reaches gbrain) at the current pin, `109b992`: the same configuration
+never reaches gbrain) at `109b992`, the pin at the time: the same configuration
 found all evidence for **451/470 (95.96%)**, paired +2/−0 against 449/470.
 
 | System | Strict `recall_all@5` | Where the number comes from |
@@ -187,6 +187,32 @@ offline tier ran at both commits on paired machines:
 
 [Read the before and after](docs/benchmarks/2026-10-03-wave8-f1-repin.md).
 
+**Update, October 4: gbrain v0.60.46.0 (`739e5cc`) changes no category's
+accuracy except A4's, which improves, and automatic event extraction records
+plans as events.** The offline tier ran at `109b992` and `739e5cc` on paired
+machines:
+
+- All 28 ledger repros pass, including the timeline-latency repro (Cat7-1),
+  though the read stays about 0.03 ms slower than before Foundations 1.
+- Keyless `query` grades 100 of 120 answerable questions `moderate` (was 40)
+  and still 0 of 120 unanswerable ones (A4).
+- Refusals tell the agent the exact command: the empty-grant fix names the
+  token by id, and `edit_page` diffs list removed lines first.
+- N6 flagged three probes because new agent notices are shown once per
+  session; the repro shows the notice follows call order, not the private
+  page, and N6 now uses a session per probe.
+
+`auto_chronicle`, on by default since v0.60.45.0, was tested off versus on for
+the first time. It found 35 and 37 of 38 labeled events and took "who did I
+meet that day" questions from 60% to 100%, but it wrote 22 and 25 planned
+follow-ups from meeting notes as timeline events on their future dates. That
+fails gbrain's own accuracy gate (0.96 wrong events per page against 0.20), so
+under the preregistered rule default-on is contradicted until gbrain drops
+events dated after their page.
+
+[Read the re-pin](docs/benchmarks/2026-10-04-operator-wave-repin.md) and
+[the `auto_chronicle` experiment](docs/benchmarks/2026-10-04-auto-chronicle-lift.md).
+
 ## Why put gbrain on your shortlist?
 
 **It finds evidence across long conversations.** In the September 6 LongMemEval
@@ -280,8 +306,8 @@ them. Hosted embedding and reranking services receive the text they process;
 local storage does not make those API calls local. The retrieval results above
 were measured at gbrain [`2efaaf8f`](https://github.com/garrytan/gbrain/tree/2efaaf8f8a817b5b82e023383618fdcdb1cc5f7d)
 (v0.48.4.0). This repository currently installs gbrain master
-[`109b992`](https://github.com/garrytan/gbrain/tree/109b992172e1f49107f9de9841758c1d043a2668)
-(v0.60.37.0), whose search mode definitions are identical. Its System One
+[`739e5cc`](https://github.com/garrytan/gbrain/tree/739e5cc89ca43b9b9351f0f203c7b12a7c0c571c)
+(v0.60.46.0), whose search mode definitions are identical. Its System One
 decision slots stay off unless a TypeSafe key is set. See
 [how to reproduce a run](eval/README.md).
 
@@ -294,6 +320,8 @@ decision slots stay off unless a TypeSafe key is set. See
 | What changed after fixing the benchmark adapters? | [September retrieval refresh](docs/benchmarks/2026-09-09-retrieval-refresh.md) |
 | Does memory stay correct after edits, forgetting and restarts? | [Lifecycle experiment](docs/benchmarks/2026-09-29-lifecycle.md) |
 | Where does a small decision model (Jev) beat gbrain's rules? | [System One report](docs/benchmarks/2026-09-30-system-one-jev.md) |
+| Do agents operating gbrain ask before spending or destroying data? | [Agent operator outcomes (Cat 41)](docs/benchmarks/2026-10-03-agent-operator-protocol.md) |
+| Does gbrain help an agent finish company-knowledge tasks, compared with grep, a memory tool or Postgres? | [Model Ladder (Cat 40)](docs/benchmarks/2026-10-02-model-ladder.md) |
 | How do retrieval scores differ from answer accuracy? | [What the scores mean](docs/retrieval-lessons.md#what-the-scores-mean) |
 | How does gbrain compare with other memory systems? | [Comparisons and their protocols](docs/comparison-systems.md) |
 | Can I reproduce a result or test my own system? | [Run the suite](eval/README.md), [contribute an adapter](eval/CONTRIBUTING.md) |
@@ -354,6 +382,45 @@ evaluate the write path without treating retention as correctness.
 We also test [when memory should surface during a conversation](docs/benchmarks/2026-06-12-brainbench-memory.md),
 source isolation, identities, dates, and other behaviors. The
 [full index](docs/README.md) explains each benchmark in ordinary terms.
+
+## When an agent operates gbrain
+
+Most gbrain users never type a gbrain command: an agent such as Claude Code or
+Codex runs it for them. Two categories measure what that agent does.
+
+**Agent operator outcomes (Cat 41)** runs real Claude Code and Codex CLI
+sessions, pinned in Docker, through 17 requests where an operating agent can
+go wrong: a paid fix nobody approved, a destructive repair, a locked or
+unmounted brain, a read-only client, an unpriced model under the user's cap, a
+fresh install, and three docs-only tasks. A logging `gbrain` wrapper, a fake
+model provider and file-system probes decide whether the agent spent money,
+destroyed data or installed something without the user's approval, and whether
+it told the user "you have no notes" when the notes exist. gbrain v0.60.46.0 (the
+operator wave, measured at candidate `b3f4e8b`) passes the gate: **0 consent violations across
+66 safety sessions, 0 false "no notes" answers, token overhead at most +5.9%**,
+and 96 of 102 sessions finish the user's task. The released v0.60.35.0 has 25
+violating steps in 12 safety sessions (agents run paid embedding and
+`pglite-repair --yes` unasked) and finishes 78 of 102.
+[What Cat 41 measures and its gate](docs/benchmarks/2026-10-03-agent-operator-protocol.md),
+[the runs](docs/benchmarks/2026-10-03-agent-operator.md).
+
+**Model Ladder (Cat 40)** gives one agent loop 50 tasks about a fictional
+company (which contract term is in force, who owns an account now, what a
+non-finance employee may see, five-part renewal briefs, corrections that must
+survive into a new session) and swaps only the memory: plain files with `grep`,
+Anthropic's memory tool, plain Postgres, or gbrain's MCP server. It compares
+memory setups across model generations and gbrain builds against each other.
+[What Cat 40 measures](docs/benchmarks/2026-10-02-model-ladder-protocol.md),
+[results](docs/benchmarks/2026-10-02-model-ladder.md).
+
+```sh
+# Cat 41: a candidate gbrain commit, its gate, and the Cat 40 instruction check
+# (Docker, ANTHROPIC_API_KEY, OPENAI_API_KEY; about $80 for both)
+eval/runner/cat41/after-pass.sh <gbrain checkout> <commit>
+
+# Cat 40 without spending: the scripted, hermetic arms
+bun eval/runner/cat40-model-ladder.ts --scripted --arms fs,memory,oracle --out $(mktemp -d)
+```
 
 ## Where a small decision model helps
 

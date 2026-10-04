@@ -1,0 +1,163 @@
+{
+  "schema": "cat40-receipt-v1",
+  "version": "cat40-v1",
+  "judge_prompt": "cat40-claims-v1",
+  "judge": null,
+  "world": {
+    "path": "eval/data/model-ladder-v1/world.json",
+    "scale": "v1",
+    "digest": "df8c95e71b17beab176851e3b15daaea9b8719fb009ba50e02cfc68243009a20",
+    "seed": 20261002,
+    "docs": 3973,
+    "tasks": 50
+  },
+  "evals_commit": "09da1375285d4691769c2874ff39030bef661d4f",
+  "evals_dirty": true,
+  "gbrain": {
+    "slot_ref": null,
+    "slot_commit": "566a242a6cf538396e89093370c784065690df00",
+    "label": "fixedledger-base-566a242",
+    "commit": "566a242a6cf538396e89093370c784065690df00",
+    "version": "0.60.35.0",
+    "tree": "98dafc046a6a6daa56c492bea1273627eb6f1686",
+    "verified": {
+      "copy_tree": "98dafc046a6a6daa56c492bea1273627eb6f1686",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.35.0",
+      "cli_version_matches": true
+    },
+    "surface": "starter",
+    "tool_overrides": {
+      "descriptions_file": null,
+      "descriptions_sha256": null,
+      "dropped": []
+    },
+    "instructions_override": null,
+    "served_instructions_sha256": "a58f9a3d87967cbba926058e675d5977fb71042830af016e6a1a54629003a1f3",
+    "operator_analyze": true,
+    "serve_boot_timeout_s": 0,
+    "staged_build": null
+  },
+  "mode": "cells",
+  "order": "task",
+  "complete": true,
+  "cells_planned": 100,
+  "slot_builds": [],
+  "models": [
+    "gpt-5.4-mini"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "families": [
+    "A",
+    "B",
+    "C",
+    "E",
+    "F"
+  ],
+  "repeats": 2,
+  "max_tool_chars": null,
+  "argv": [
+    "--models",
+    "gpt-5.4-mini",
+    "--arms",
+    "gbrain",
+    "--gbrain-label",
+    "fixedledger-base-566a242",
+    "--transcripts",
+    "--slots",
+    "5",
+    "--gbrain-repo",
+    "<gbrain>",
+    "--gbrain-ref",
+    "566a242a6cf538396e89093370c784065690df00",
+    "--repeat",
+    "2",
+    "--budget-usd",
+    "6",
+    "--concurrency",
+    "6",
+    "--judge",
+    "none",
+    "--out",
+    "eval/reports/cat40/fixedledger-base-566a242"
+  ],
+  "budget_run_id": "cat40-model-ladder-2026-10-04T15-09-19-546Z-dae67f59",
+  "resumed": false,
+  "proxy_unattributed": {
+    "slot:slot0": {
+      "usd": 0.00000117,
+      "requests": 3,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    },
+    "slot:slot1": {
+      "usd": 0.00000117,
+      "requests": 3,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    },
+    "slot:slot2": {
+      "usd": 0.00000117,
+      "requests": 3,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    },
+    "slot:slot3": {
+      "usd": 0.00000117,
+      "requests": 3,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    },
+    "slot:slot4": {
+      "usd": 0.00000117,
+      "requests": 3,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    }
+  },
+  "failed_cells_proxy_usd": 0,
+  "cost": {
+    "usd": 2.195113,
+    "input_tokens": 9140380,
+    "output_tokens": 43988,
+    "basis": "budget ledger cat40-model-ladder-2026-10-04T15-09-19-546Z-dae67f59: 1292 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "<repo>/.budget/ledger.sqlite",
+    "program_cap_usd": 500,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 5,
+      "max": 5494.7
+    }
+  },
+  "finished_at": "2026-10-04T15:21:07.966Z"
+}

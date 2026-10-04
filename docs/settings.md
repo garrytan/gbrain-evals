@@ -11,10 +11,10 @@ by a specific experiment. [September 6 results](benchmarks/2026-09-06-longmemeva
 
 These recommendations refer to **gbrain v0.48.4.0, commit `2efaaf8f`**, the code
 measured in the September 6 and September 9 experiments. This repository currently
-installs a different commit, gbrain master `109b992` (v0.60.37.0, declared in
+installs a different commit, gbrain master `739e5cc` (v0.60.46.0, declared in
 `package.json`). The `balanced`, `conservative` and `tokenmax` mode definitions
 (`MODE_BUNDLES` in `src/core/search/mode.ts`) have the same values at `939232f`,
-`b80cad6`, `608a174` (checked on 2026-09-29), `6c8373c` (checked on 2026-09-30), `3a284ae` (checked on 2026-10-01), `d44296c` (checked on 2026-10-02), `48ed5e8` (checked on 2026-10-03) and `109b992` (checked on 2026-10-03), so the recommendations still describe the installed
+`b80cad6`, `608a174` (checked on 2026-09-29), `6c8373c` (checked on 2026-09-30), `3a284ae` (checked on 2026-10-01), `d44296c` (checked on 2026-10-02), `48ed5e8` (checked on 2026-10-03), `109b992` (checked on 2026-10-03) and `739e5cc` (checked on 2026-10-04), so the recommendations still describe the installed
 modes; other code differs. Existing per-key overrides can take precedence over
 a mode. A mode name alone is not a complete description of an experiment.
 
@@ -54,6 +54,7 @@ as completed reranked measurements.
 | `search.relational_rerank_pin` | Preserve a bounded number of relationship-derived results through reranking | The measured value is `3`. It protects useful graph answers; it cannot repair an incorrect link. |
 | `search.adaptive_return` | Cap results according to query intent | Off for the broad-return baseline. Try it when irrelevant results cost more than missed additional evidence. |
 | `search.adaptive_return_entity_max` / `_other_max` / `_min_keep` | Caps for entity questions, other questions, and the minimum kept | Product defaults are 2, 6, and 1. The tight experiment explicitly uses 1, 1, and 1. |
+| `auto_chronicle` | Turn saved meeting, conversation and calendar pages into timeline events with one chat call per page (on by default since v0.60.45.0) | Measured at `739e5cc` on October 4, 2026: it finds 92% to 97% of labeled events and helps "who did I meet that day" questions, but writes dated follow-ups from meeting notes as events on their future dates (0.96 wrong events per judged page against gbrain's 0.20 gate). Turn it off (`gbrain config set auto_chronicle false`) when meeting notes carry dated action items, until gbrain drops events dated after their page. [Experiment](benchmarks/2026-10-04-auto-chronicle-lift.md). |
 | `GBRAIN_SOURCE_BOOST` | Override the source-prefix weight map | This is an environment setting, separate from the search mode. A stale prefix can make an intended preference do nothing. |
 
 The settings are defined in the pinned

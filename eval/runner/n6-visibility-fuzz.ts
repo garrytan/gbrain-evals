@@ -59,6 +59,7 @@
  * Usage: bun eval/runner/n6-visibility-fuzz.ts [--seed N] [--gbrain <path>[@ref]] [--output <dir>] [--only op1,op2] [--json]
  */
 import { existsSync } from 'node:fs';
+import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import type { Operation, OperationContext, AuthInfo, ParamDef } from 'gbrain/operations';
 import { generateN6World, ledgerFingerprint, personIntro, N6_DEFAULT_SEED, N6_GENERATOR_VERSION, type N6ClassSpec, type N6Ledger, type N6Target } from '../generators/n6-visibility-gen.ts';
@@ -342,8 +343,11 @@ function authFor(clientId: string, scopes: string[], extra: Partial<AuthInfo> = 
 }
 
 function makeCallers(g: Gbrain, engine: unknown): Record<CallerId, Caller> {
+  // Each probe call gets its own session id. gbrain v0.60.46.0 dedupes agent notices per (transport, principal,
+  // session); with no session id every call of a caller shares one ledger, so the first of two otherwise identical
+  // calls carried a notice the second lacked and the protected-before-ghost order read as an existence oracle.
   const viaDispatch = (opts: Record<string, unknown>): Caller => async (op, params) =>
-    parseToolResult(await g.dispatchToolCall(engine, op.name, params, { config: CONFIG, logger: QUIET, ...opts }));
+    parseToolResult(await g.dispatchToolCall(engine, op.name, params, { config: CONFIG, logger: QUIET, sessionId: `n6-${randomUUID()}`, ...opts }));
   const viaServeHttp = (auth: AuthInfo): Caller => async (op, params) => {
     if (!g.operationScopesAllowed(auth.scopes, op)) return { exposed: false, ok: false, error_code: 'insufficient_scope', raw: '', data: null };
     return viaDispatch({ remote: true, transport: 'http', takesHoldersAllowList: auth.takesHoldersAllowList ?? ['world'], sourceId: auth.sourceId ?? 'default', auth })(op, params);

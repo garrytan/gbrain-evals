@@ -4275,6 +4275,208 @@
         "/rows_present": 500
       },
       "note": "gpt-5.4 (medium reasoning) on the 2026-09-29 GPT-4o arm's exact official prompts; two gpt-4o judges."
+    },
+    {
+      "claim_id": "repin739-a4-after",
+      "readme_anchor": "docs/benchmarks/2026-10-04-operator-wave-repin.md: A4 hermetic at 739e5cc, 100 of 120 answerable graded moderate",
+      "artifact_path": "docs/benchmarks/2026-10-04-operator-wave-repin/offline-tier/739e5cc/a4-abstention/receipt.json",
+      "artifact_sha256": "0846db6ca35e90612ba615d7dd45c8d09116df746fba7824e7ee4c100880fa59",
+      "status": "covered",
+      "expected": {
+        "/verdict": "pass",
+        "/data/crag/by_class/answerable_profile/moderate": 50,
+        "/data/crag/by_class/answerable_note/moderate": 50,
+        "/data/crag/by_class/missing_attribute/moderate": 0,
+        "/data/crag/by_class/sibling_attribute/moderate": 0,
+        "/data/crag/by_class/absent_entity/moderate": 0
+      },
+      "note": "A4 hermetic arm on the 739e5cc VM (gbrain #5992)."
+    },
+    {
+      "claim_id": "repin739-a4-before",
+      "readme_anchor": "docs/benchmarks/2026-10-04-operator-wave-repin.md: A4 hermetic at 109b992, 40 of 120",
+      "artifact_path": "docs/benchmarks/2026-10-04-operator-wave-repin/offline-tier/109b992/a4-abstention/receipt.json",
+      "artifact_sha256": "dcc75f912a7790ab5bb6c71bec92cb4ed3191940151c0c52ab1ff7807529caa2",
+      "status": "covered",
+      "expected": {
+        "/data/crag/by_class/answerable_profile/moderate": 20,
+        "/data/crag/by_class/answerable_note/moderate": 20
+      },
+      "note": "A4 hermetic arm on the 109b992 VM."
+    },
+    {
+      "claim_id": "repin739-n6-tier",
+      "readme_anchor": "docs/benchmarks/2026-10-04-operator-wave-repin.md: N6 at 739e5cc reports 3 oracle probes before the harness fix",
+      "artifact_path": "docs/benchmarks/2026-10-04-operator-wave-repin/offline-tier/739e5cc/n6-visibility-fuzz/receipt.json",
+      "artifact_sha256": "2572ec4fcf6fdc5009d74da468e33046f4a475021fcc05b5c961904c9cb605d3",
+      "status": "covered",
+      "expected": {
+        "/verdict": "fail",
+        "/data/metrics/oracle_probes": 3,
+        "/data/metrics/content_leak_probes": 0,
+        "/data/metrics/existence_leak_probes": 0,
+        "/data/metrics/probes_exposed": 6208
+      },
+      "note": "N6-1: notice dedupe across probes (category defect)."
+    },
+    {
+      "claim_id": "repin739-n6-fixed",
+      "readme_anchor": "docs/benchmarks/2026-10-04-operator-wave-repin.md: N6 at 739e5cc after one session per probe",
+      "artifact_path": "docs/benchmarks/2026-10-04-operator-wave-repin/n6-fixed/receipt-739e5cc.json",
+      "artifact_sha256": "2eb22b477e09ae80824734c8499b5d58e4c2b926a89a84566337ea604a69eebe",
+      "status": "covered",
+      "expected": {
+        "/verdict": "pass",
+        "/data/metrics/oracle_probes": 0,
+        "/data/metrics/probes_exposed": 6208
+      },
+      "note": "N6 with the session-id fix, this machine."
+    },
+    {
+      "claim_id": "repin739-n6-bisect",
+      "readme_anchor": "docs/benchmarks/2026-10-04-operator-wave-repin.md: N6 at 8b5ed04c6 (v0.60.45.0) has 0 oracles",
+      "artifact_path": "docs/benchmarks/2026-10-04-operator-wave-repin/n6-bisect/receipt-8b5ed04c6.json",
+      "artifact_sha256": "65847129a0e510daa5956fbefa2c6af581867c7e1c59928f536eb6e069713141",
+      "status": "covered",
+      "expected": {
+        "/verdict": "pass",
+        "/data/metrics/oracle_probes": 0
+      },
+      "note": "Bisect point before #5991."
+    },
+    {
+      "claim_id": "repin739-cat7-tier-after",
+      "readme_anchor": "docs/benchmarks/2026-10-04-operator-wave-repin.md: Cat 7 at 739e5cc, tier run",
+      "artifact_path": "docs/benchmarks/2026-10-04-operator-wave-repin/offline-tier/739e5cc/perf/receipt.json",
+      "artifact_sha256": "8d8d82145e5e65766dc02e851eaa2822ed0ecb4369698bbc61f329a25ffd4bd9",
+      "status": "covered",
+      "expected": {
+        "/verdict": "pass",
+        "/data/latency/4/p50_ms": 0.07624949999990349,
+        "/data/latency/2/p50_ms": 0.2199550000000272
+      },
+      "note": "latency index 4 is get_timeline at 1,000 pages, 2 get_backlinks at 1,000."
+    },
+    {
+      "claim_id": "repin739-cat7-tier-before",
+      "readme_anchor": "docs/benchmarks/2026-10-04-operator-wave-repin.md: Cat 7 at 109b992, tier run",
+      "artifact_path": "docs/benchmarks/2026-10-04-operator-wave-repin/offline-tier/109b992/perf/receipt.json",
+      "artifact_sha256": "5e100ff2ad5540f9d586cb0c1829c4dc79ba40e3d7065c707b03274e4a800d07",
+      "status": "covered",
+      "expected": {
+        "/verdict": "pass",
+        "/data/latency/4/p50_ms": 0.10508999999979096,
+        "/data/latency/2/p50_ms": 0.12469000000010055
+      },
+      "note": "Paired VM at 109b992."
+    },
+    {
+      "claim_id": "repin739-cat7-repeat-48ed5e8",
+      "readme_anchor": "docs/benchmarks/2026-10-04-operator-wave-repin.md: Cat7-1 in detail, repeat at 48ed5e8",
+      "artifact_path": "docs/benchmarks/2026-10-04-operator-wave-repin/cat7-repeat/48ed5e8/perf-1.json",
+      "artifact_sha256": "02ed66ca7a25214684da3b127b8f53b505a2ad2cfadbb5ad6b84ba7593672456",
+      "status": "covered",
+      "expected": {
+        "/data/latency/4/p50_ms": 0.04158049999978175,
+        "/data/latency/2/p50_ms": 0.21171349999985978
+      },
+      "note": "First of three Cat 7 repeats on a fresh VM, gbrain 48ed5e8."
+    },
+    {
+      "claim_id": "repin739-cat7-repeat-109b992",
+      "readme_anchor": "docs/benchmarks/2026-10-04-operator-wave-repin.md: Cat7-1 in detail, repeat at 109b992",
+      "artifact_path": "docs/benchmarks/2026-10-04-operator-wave-repin/cat7-repeat/109b992/perf-1.json",
+      "artifact_sha256": "8e593294f8fe6cfb8df098eae9674b0ef2afc819cba47b15cb937bc03046acd9",
+      "status": "covered",
+      "expected": {
+        "/data/latency/4/p50_ms": 0.10230550000028416,
+        "/data/latency/2/p50_ms": 0.23021300000004885
+      },
+      "note": "First of three Cat 7 repeats on a fresh VM, gbrain 109b992."
+    },
+    {
+      "claim_id": "repin739-cat7-repeat-739e5cc",
+      "readme_anchor": "docs/benchmarks/2026-10-04-operator-wave-repin.md: Cat7-1 in detail, repeat at 739e5cc",
+      "artifact_path": "docs/benchmarks/2026-10-04-operator-wave-repin/cat7-repeat/739e5cc/perf-1.json",
+      "artifact_sha256": "6afd77644db6950aec2a27739f22f5cf2d3c5903ee47e69dc3a42baba01f41f8",
+      "status": "covered",
+      "expected": {
+        "/data/latency/4/p50_ms": 0.07940599999983533,
+        "/data/latency/2/p50_ms": 0.22469900000032794
+      },
+      "note": "First of three Cat 7 repeats on a fresh VM, gbrain 739e5cc."
+    },
+    {
+      "claim_id": "repin739-checks-after",
+      "readme_anchor": "docs/benchmarks/2026-10-04-operator-wave-repin.md: Follow-up checks at 739e5cc",
+      "artifact_path": "docs/benchmarks/2026-10-04-operator-wave-repin/checks-739e5cc.json",
+      "artifact_sha256": "c63a7c0df1bd2b6719b806413c225b5f5438950def0e4b6ac7c7ee96f1fe950c",
+      "status": "covered",
+      "expected": {
+        "/results/0/exit_code": 0,
+        "/results/1/exit_code": 0,
+        "/results/2/exit_code": 0,
+        "/results/3/exit_code": 0
+      },
+      "note": "E1 to E4 at the pinned 739e5cc."
+    },
+    {
+      "claim_id": "repin739-checks-before",
+      "readme_anchor": "docs/benchmarks/2026-10-04-operator-wave-repin.md: Follow-up checks at 109b992",
+      "artifact_path": "docs/benchmarks/2026-10-04-operator-wave-repin/checks-109b992.json",
+      "artifact_sha256": "4f8a586217fccd7d608a58141676804c5e2ccde4f96ec694faa695de81d68936",
+      "status": "covered",
+      "expected": {
+        "/results/0/exit_code": 1,
+        "/results/1/exit_code": 1,
+        "/results/2/exit_code": 1,
+        "/results/3/exit_code": 1
+      },
+      "note": "E1 to E4 at 109b992 through GBRAIN_ROOT."
+    },
+    {
+      "claim_id": "repin739-w8checks-after",
+      "readme_anchor": "docs/benchmarks/2026-10-04-operator-wave-repin.md: wave 8 checks at 739e5cc, check C stops for consent",
+      "artifact_path": "docs/benchmarks/2026-10-04-operator-wave-repin/checks-w8f1-739e5cc.json",
+      "artifact_sha256": "cfd3d4be1adafebee28026a7d3a65e4827a990ff9dd7523d33acc21f970422c0",
+      "status": "covered",
+      "expected": {
+        "/results/0/exit_code": 0,
+        "/results/1/exit_code": 0,
+        "/results/2/exit_code": 1,
+        "/results/3/exit_code": 0,
+        "/results/4/exit_code": 0,
+        "/results/5/exit_code": 0,
+        "/results/6/exit_code": 0,
+        "/results/7/exit_code": 0,
+        "/results/8/exit_code": 0
+      },
+      "note": "Nine wave 8 checks on the 739e5cc VM."
+    },
+    {
+      "claim_id": "chronicle-lift-summary",
+      "readme_anchor": "docs/benchmarks/2026-10-04-auto-chronicle-lift.md: The decision",
+      "artifact_path": "docs/benchmarks/2026-10-04-auto-chronicle-lift/summary.json",
+      "artifact_sha256": "af4b287a930e8c1244e19d749caa83e4c0520165523081af773962f116d1a92c",
+      "status": "covered",
+      "expected": {
+        "/arms/on-a/recall/matched": 35,
+        "/arms/on-b/recall/matched": 37,
+        "/arms/on-a/labeled_pages/premature": 22,
+        "/arms/on-b/labeled_pages/premature": 25,
+        "/arms/on-a/labeled_pages/false": 5,
+        "/arms/on-b/labeled_pages/false": 2,
+        "/arms/on-a/controls_judged": 0,
+        "/arms/on-b/controls_judged": 0,
+        "/arms/on-a/events_written": 380,
+        "/arms/on-b/events_written": 381,
+        "/qa/accuracy_off": 0.9444,
+        "/qa/accuracy_on": 1,
+        "/qa/lift/lo": 0,
+        "/qa/lift/hi": 0.1389,
+        "/decision/verdict": "contradicted"
+      },
+      "note": "auto_chronicle off versus on on amara-life-v1; summary computed from scores.json (rescore with chronicle-lift.ts score)."
     }
   ]
 }

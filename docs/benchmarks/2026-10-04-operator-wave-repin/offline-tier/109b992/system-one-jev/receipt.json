@@ -1,0 +1,282 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "hermetic: hashes and recounts over committed files, no gbrain call"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "hermetic: hashes and recounts over committed files, no gbrain call"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "system-one-jev",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 42,
+  "n_scored": 42,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "gbrain_version": "not loaded (record check)",
+  "gbrain_pin": "github:garrytan/gbrain#109b992172e1f49107f9de9841758c1d043a2668",
+  "started_at": "2026-10-04T15:11:23.399Z",
+  "finished_at": "2026-10-04T15:11:23.526Z",
+  "execution": {
+    "source_tree": {
+      "sha256": "7278494df6069e8c8199722427165e7e60a8f08e14d95d0ff594b3b84b01c757",
+      "files": 2935,
+      "git_head": "4c3704ac632de113290e3848f0c0fa166bc671ee",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": null,
+      "declared_sha": null,
+      "version": null,
+      "package_sha256": null,
+      "loaded_git_head": null
+    }
+  },
+  "data": {
+    "checks": [
+      {
+        "id": "s2-intent:hashes",
+        "ok": true,
+        "detail": "59d0d17abfbeba15 be9564887bf21a74"
+      },
+      {
+        "id": "s5-injection:hashes",
+        "ok": true,
+        "detail": "9eafb629a0ab28a6 edde14e1853279ed"
+      },
+      {
+        "id": "s6-brainbench:hashes",
+        "ok": true,
+        "detail": "30b665c7f8230b9b 483d9f1aa5493e2d"
+      },
+      {
+        "id": "s6-extra:hashes",
+        "ok": true,
+        "detail": "379e5e7b593e7914 7b76176e54d8a2e5"
+      },
+      {
+        "id": "s6-combined:hashes",
+        "ok": true,
+        "detail": "274eefc9b571d677 fbdf426421cf8718"
+      },
+      {
+        "id": "s9-conflict:hashes",
+        "ok": true,
+        "detail": "37fe4083e9722308 2ec631956c4b9e33"
+      },
+      {
+        "id": "s9-conflict-sweep-eligible:hashes",
+        "ok": true,
+        "detail": "7dbf17fb5073d9e9 ea1f192b0ed16c14"
+      },
+      {
+        "id": "s7-triage:staged-inputs",
+        "ok": true,
+        "detail": "staged tree c374577bc42be5a6 from eval/data/transcript-distill-v1 + s7-triage-synthetic"
+      },
+      {
+        "id": "s8-grounding:staged-inputs",
+        "ok": true,
+        "detail": "staged tree b0028e68148af6cc from eval/data/transcript-distill-v1 + s8-grounding/labels.jsonl"
+      },
+      {
+        "id": "input:know-to-ask-extra",
+        "ok": true,
+        "detail": "dca918343ec06083"
+      },
+      {
+        "id": "input:s7-triage-synthetic",
+        "ok": true,
+        "detail": "c09ccde6bf83943d"
+      },
+      {
+        "id": "input:s8-grounding/labels.jsonl",
+        "ok": true,
+        "detail": "b10020e44f71b07d"
+      },
+      {
+        "id": "input:s9-conflict/pairs.jsonl",
+        "ok": true,
+        "detail": "c7b92c4427d72eb8"
+      },
+      {
+        "id": "input:s9-conflict/pairs.sweep-eligible.jsonl",
+        "ok": true,
+        "detail": "af5ee8b5b8eff400"
+      },
+      {
+        "id": "input:longmemeval/s-eval-half.txt",
+        "ok": true,
+        "detail": "9bedfed286862ece"
+      },
+      {
+        "id": "input:longmemeval/s-eval-judged-100.txt",
+        "ok": true,
+        "detail": "24fbbe6f6f502fb6"
+      },
+      {
+        "id": "input:longmemeval/m-pilot-28.txt (derived)",
+        "ok": true,
+        "detail": "ef44c8ea066caa41"
+      },
+      {
+        "id": "input:preset-dream-29.txt",
+        "ok": true,
+        "detail": "b32a0d24d1a51972"
+      },
+      {
+        "id": "cat35-not-duplicated",
+        "ok": true,
+        "detail": "Cat 35 transcripts are read from eval/data/transcript-distill-v1 only"
+      },
+      {
+        "id": "receipts:verbatim",
+        "ok": true,
+        "detail": "77 upstream files byte-identical"
+      },
+      {
+        "id": "recount:s7-triage-pair",
+        "ok": true,
+        "detail": "s7/summary.json reproduced from the four arm files"
+      },
+      {
+        "id": "recount:s1/longmemeval-s-summary.json",
+        "ok": true,
+        "detail": "8 arms reproduced from committed rows"
+      },
+      {
+        "id": "recount:s1/longmemeval-m-pilot-summary.json",
+        "ok": true,
+        "detail": "5 arms reproduced from committed rows"
+      },
+      {
+        "id": "recount:s3/longmemeval-decide-arms-summary.json",
+        "ok": true,
+        "detail": "4 arms reproduced from committed rows"
+      },
+      {
+        "id": "recount:spend",
+        "ok": true,
+        "detail": "ledgers total $24.95 (eval $22.44, datasets $2.52)"
+      },
+      {
+        "id": "verdicts:pointers",
+        "ok": true,
+        "detail": "174 numbers match their receipts"
+      },
+      {
+        "id": "verdicts:all-slots",
+        "ok": true,
+        "detail": "S1 S2 S3 S4 S5 S6 S7 S8 S9"
+      },
+      {
+        "id": "definition:s1-rerank-lme-s",
+        "ok": true,
+        "detail": "longmemeval, 8 arm(s)"
+      },
+      {
+        "id": "definition:s1-rerank-lme-m-pilot",
+        "ok": true,
+        "detail": "longmemeval, 5 arm(s)"
+      },
+      {
+        "id": "definition:s1-rerank-judged",
+        "ok": true,
+        "detail": "longmemeval, 2 arm(s)"
+      },
+      {
+        "id": "definition:s2-intent-lme",
+        "ok": true,
+        "detail": "longmemeval, 2 arm(s)"
+      },
+      {
+        "id": "definition:s2-intent-routing",
+        "ok": true,
+        "detail": "recorded-answers, recorded arm(s)"
+      },
+      {
+        "id": "definition:s3-evidence-lme",
+        "ok": true,
+        "detail": "longmemeval, 3 arm(s)"
+      },
+      {
+        "id": "definition:s4-answerable-values",
+        "ok": true,
+        "detail": "recorded-answers, recorded arm(s)"
+      },
+      {
+        "id": "definition:s5-injection-values",
+        "ok": true,
+        "detail": "recorded-answers, recorded arm(s)"
+      },
+      {
+        "id": "definition:s6-recall-needed-brainbench",
+        "ok": true,
+        "detail": "brainbench, 4 arm(s)"
+      },
+      {
+        "id": "definition:s6-recall-needed-values",
+        "ok": true,
+        "detail": "recorded-answers, recorded arm(s)"
+      },
+      {
+        "id": "definition:s7-triage-pair",
+        "ok": true,
+        "detail": "triage-pair, 4 arm(s)"
+      },
+      {
+        "id": "definition:s8-grounding-values",
+        "ok": true,
+        "detail": "recorded-answers, recorded arm(s)"
+      },
+      {
+        "id": "definition:s9-conflict-values",
+        "ok": true,
+        "detail": "recorded-answers, recorded arm(s)"
+      },
+      {
+        "id": "definition:judge-agreement-longmemeval",
+        "ok": true,
+        "detail": "judge-agreement, 1 arm(s)"
+      },
+      {
+        "id": "definition:judge-agreement-grounding",
+        "ok": true,
+        "detail": "judge-agreement, 1 arm(s)"
+      }
+    ],
+    "not_ported": [
+      {
+        "id": "preset-dream-e2e",
+        "reason": "gbrain committed no driver for the preset end-to-end dream run (fresh brain, `decide enable --recommended`, `gbrain dream --phase synthesize --eval-run` over the 29 transcripts in preset-dream-29.txt); the brain setup and session-corpus wiring were not recorded, so a definition here would be a reconstruction, not the measured procedure",
+        "receipts": [
+          "preset/dream-A.json",
+          "preset/dream-B.json",
+          "preset/preset-summary.json",
+          "preset/preset-pages.json"
+        ]
+      },
+      {
+        "id": "s7-local-llm-provider",
+        "reason": "not measured upstream: S7 routed to a local `llm:` model was planned but the time budget went to the matched pairs",
+        "receipts": []
+      }
+    ]
+  },
+  "accounting": {
+    "planned": 42,
+    "attempted": 42,
+    "scored": 42,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null
+}

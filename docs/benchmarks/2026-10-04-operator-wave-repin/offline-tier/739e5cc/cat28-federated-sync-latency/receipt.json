@@ -1,0 +1,219 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "hermetic: no model and no paid request"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "hermetic: no model and no paid request"
+  },
+  "latency_ms": {
+    "p50": 2362,
+    "p95": 7716,
+    "n": 6,
+    "basis": "wall time of each successful measured pass (serial and interleaved), setup included, warmup excluded"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "cat28-federated-sync-latency",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 6,
+  "n_scored": 6,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "gbrain_version": "0.60.46.0",
+  "gbrain_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+  "resolved_config": {
+    "workload": "importFromContent noEmbed:true (engine write path only)",
+    "threading": "single_event_loop_thread (PGLite WASM runs on the calling thread; NOT a worker pool)",
+    "search": "not exercised",
+    "sources": 4,
+    "pages_per_source": 30,
+    "reps": 3,
+    "warmup": true,
+    "order_interleaved": true
+  },
+  "started_at": "2026-10-04T15:13:50.405Z",
+  "finished_at": "2026-10-04T15:14:22.165Z",
+  "data": {
+    "passes": [
+      {
+        "mode": "serial",
+        "wallclock_ms": 2362,
+        "per_source_ms": [
+          199,
+          146,
+          143,
+          140
+        ],
+        "setup_ms": [
+          1734
+        ],
+        "pages_verified": 120,
+        "pages_expected": 120,
+        "rep": 0,
+        "order_in_rep": 0,
+        "ok": true
+      },
+      {
+        "mode": "concurrent_single_thread",
+        "wallclock_ms": 7716,
+        "per_source_ms": [
+          175,
+          175,
+          174,
+          176
+        ],
+        "setup_ms": [
+          5928,
+          6732,
+          7536,
+          5112
+        ],
+        "pages_verified": 120,
+        "pages_expected": 120,
+        "rep": 0,
+        "order_in_rep": 1,
+        "ok": true
+      },
+      {
+        "mode": "concurrent_single_thread",
+        "wallclock_ms": 7521,
+        "per_source_ms": [
+          178,
+          181,
+          180,
+          170
+        ],
+        "setup_ms": [
+          5699,
+          6518,
+          7337,
+          4851
+        ],
+        "pages_verified": 120,
+        "pages_expected": 120,
+        "rep": 1,
+        "order_in_rep": 0,
+        "ok": true
+      },
+      {
+        "mode": "serial",
+        "wallclock_ms": 2360,
+        "per_source_ms": [
+          168,
+          138,
+          134,
+          140
+        ],
+        "setup_ms": [
+          1780
+        ],
+        "pages_verified": 120,
+        "pages_expected": 120,
+        "rep": 1,
+        "order_in_rep": 1,
+        "ok": true
+      },
+      {
+        "mode": "serial",
+        "wallclock_ms": 2277,
+        "per_source_ms": [
+          168,
+          130,
+          132,
+          134
+        ],
+        "setup_ms": [
+          1713
+        ],
+        "pages_verified": 120,
+        "pages_expected": 120,
+        "rep": 2,
+        "order_in_rep": 0,
+        "ok": true
+      },
+      {
+        "mode": "concurrent_single_thread",
+        "wallclock_ms": 7420,
+        "per_source_ms": [
+          167,
+          169,
+          166,
+          167
+        ],
+        "setup_ms": [
+          6463,
+          4845,
+          5668,
+          7249
+        ],
+        "pages_verified": 120,
+        "pages_expected": 120,
+        "rep": 2,
+        "order_in_rep": 1,
+        "ok": true
+      }
+    ],
+    "serial": {
+      "mode": "serial",
+      "reps": 3,
+      "wallclock_ms_median": 2360,
+      "wallclock_ms_p95": 2361.8,
+      "wallclock_ms_all": [
+        2362,
+        2360,
+        2277
+      ],
+      "per_source_ms_p50": 140,
+      "per_source_ms_p95": 181.95,
+      "setup_ms_p50": 1734,
+      "setup_ms_p95": 1775.4
+    },
+    "concurrent_single_thread": {
+      "mode": "concurrent_single_thread",
+      "reps": 3,
+      "wallclock_ms_median": 7521,
+      "wallclock_ms_p95": 7696.5,
+      "wallclock_ms_all": [
+        7716,
+        7521,
+        7420
+      ],
+      "per_source_ms_p50": 174.5,
+      "per_source_ms_p95": 180.45,
+      "setup_ms_p50": 6195.5,
+      "setup_ms_p95": 7426.55
+    },
+    "single_thread_interleaving_ratio": 0.31378806009839116,
+    "ratio_caveat": "serial_median / concurrent_median on ONE thread — engine-overhead microbenchmark, not worker-pool speedup"
+  },
+  "accounting": {
+    "planned": 6,
+    "attempted": 6,
+    "scored": 6,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "execution": {
+    "source_tree": {
+      "sha256": "5bdfac4a948f48501f8b89953d46cba272135872a40eb3c6f4bef67fb7c1d97d",
+      "files": 2935,
+      "git_head": "3ff60f944c9c70fed4eeef2ba0af2c2d8d302c88",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+      "declared_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+      "version": "0.60.46.0",
+      "package_sha256": "6ea533ae573e6f0f91d920b14a7a9c8d7e1562ffba69a9547cdcd2da3813261c",
+      "loaded_git_head": null
+    }
+  }
+}

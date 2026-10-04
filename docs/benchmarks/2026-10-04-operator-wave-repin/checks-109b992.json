@@ -1,0 +1,168 @@
+{
+  "kind": "operator-wave-repin-checks",
+  "date": "2026-10-04T15:11:33.048Z",
+  "bun": "1.4.2",
+  "gbrain": {
+    "version": "0.60.37.0",
+    "root": "GBRAIN_ROOT checkout",
+    "loaded_git_head": null,
+    "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c"
+  },
+  "gbrain_evals": {
+    "git_head": "8644ada93dc246f91025c4b8321c16b47d624f5b",
+    "dirty": true
+  },
+  "keys": "every *_API_KEY, *_TOKEN, *_BASE_URL and GBRAIN_* variable removed; no model call",
+  "results": [
+    {
+      "check": "grant-hint-token-id",
+      "exit_code": 1,
+      "seconds": 7.5,
+      "result": {
+        "check": "grant-hint-token-id",
+        "gbrain_version": "0.60.37.0",
+        "pass": false,
+        "failed": [
+          "E1_search_refused_and_fix_names_token_id",
+          "E1_get_page_refused_and_fix_names_token_id",
+          "E1_no_name_placeholder"
+        ],
+        "checks": {
+          "setup_ok": true,
+          "E1_search_refused_and_fix_names_token_id": false,
+          "E1_get_page_refused_and_fix_names_token_id": false,
+          "E1_no_name_placeholder": false
+        },
+        "observed": {
+          "token_id": "bd503c71-a4ce-49ed-ad79-504b49afcd34",
+          "search": {
+            "refused": true,
+            "text": "{\n  \"error\": \"permission_denied\",\n  \"message\": \"search: this token is granted no sources (its source grant is an explicit empty list).\",\n  \"suggestion\": \"On the brain host, grant sources with: gbrain auth rescope-token <name> --sources <id,...>\",\n  \"docs\": \"docs/mcp/ADMIN.md#legacy-token-grants\",\n  \"detail\": \"fence=no_source_grant\"\n}"
+          },
+          "get_page": {
+            "refused": true,
+            "text": "{\n  \"error\": \"permission_denied\",\n  \"message\": \"get_page: this token is granted no sources (its source grant is an explicit empty list).\",\n  \"suggestion\": \"On the brain host, grant sources with: gbrain auth rescope-token <name> --sources <id,...>\",\n  \"docs\": \"docs/mcp/ADMIN.md#legacy-token-grants\",\n  \"detail\": \"fence=no_source_grant\"\n}"
+          }
+        }
+      },
+      "stderr_tail": ""
+    },
+    {
+      "check": "edit-page-diff-order",
+      "exit_code": 1,
+      "seconds": 6,
+      "result": {
+        "check": "edit-page-diff-order",
+        "gbrain_version": "0.60.37.0",
+        "pass": false,
+        "failed": [
+          "E2_single_line_edit_removed_before_added",
+          "E2_two_line_edit_both_removed_before_both_added"
+        ],
+        "checks": {
+          "setup_ok": true,
+          "E2_single_line_edit_removed_before_added": false,
+          "E2_two_line_edit_both_removed_before_both_added": false
+        },
+        "observed": {
+          "diff_single": "--- a/example-garden-plan.md\n+++ b/example-garden-plan.md\n@@ -6,6 +6,6 @@\n ingested_via: put_page\n ---\n \n+The example garden plan starts in June.\n-The example garden plan starts in May.\n The beds face south.\n Watering is daily.\n",
+          "diff_two_lines": "--- a/example-garden-plan.md\n+++ b/example-garden-plan.md\n@@ -7,5 +7,5 @@\n ---\n \n The example garden plan starts in June.\n+The beds face east.\n+Watering is weekly.\n-The beds face south.\n-Watering is daily.\n"
+        }
+      },
+      "stderr_tail": ""
+    },
+    {
+      "check": "segment-gap-5918",
+      "exit_code": 1,
+      "seconds": 13.1,
+      "result": {
+        "check": "segment-gap-5918",
+        "gbrain_version": "0.60.37.0",
+        "pass": false,
+        "failed": [
+          "E3_page_gap_60_one_segment",
+          "E3_quoted_value_ignored_with_warning",
+          "E3_out_of_range_ignored_with_warning"
+        ],
+        "checks": {
+          "setup_ok": true,
+          "E3_default_gap_three_segments": true,
+          "E3_page_gap_60_one_segment": false,
+          "E3_quoted_value_ignored_with_warning": false,
+          "E3_out_of_range_ignored_with_warning": false
+        },
+        "observed": {
+          "default": {
+            "put": 0,
+            "exit": 0,
+            "segments": 3,
+            "warning": ""
+          },
+          "gap60": {
+            "put": 0,
+            "exit": 0,
+            "segments": 3,
+            "warning": ""
+          },
+          "quoted": {
+            "put": 0,
+            "exit": 0,
+            "segments": 3,
+            "warning": ""
+          },
+          "too_large": {
+            "put": 0,
+            "exit": 0,
+            "segments": 3,
+            "warning": ""
+          }
+        }
+      },
+      "stderr_tail": ""
+    },
+    {
+      "check": "chronicle-receipt-keyless",
+      "exit_code": 1,
+      "seconds": 11.5,
+      "result": {
+        "check": "chronicle-receipt-keyless",
+        "gbrain_version": "0.60.37.0",
+        "pass": false,
+        "failed": [
+          "E4_recent_meeting_pending_next_cycle",
+          "E4_old_meeting_skipped_history_with_paid_backfill_fix",
+          "E4_phase_without_chat_provider_judges_nothing",
+          "E4_auto_chronicle_false_skips_by_choice"
+        ],
+        "checks": {
+          "setup_ok": true,
+          "E4_recent_meeting_pending_next_cycle": false,
+          "E4_note_has_no_chronicle_field": true,
+          "E4_old_meeting_skipped_history_with_paid_backfill_fix": false,
+          "E4_phase_without_chat_provider_judges_nothing": false,
+          "E4_auto_chronicle_false_skips_by_choice": false
+        },
+        "observed": {
+          "recent": {
+            "code": 0,
+            "chronicle": null
+          },
+          "note": {
+            "code": 0,
+            "chronicle": null
+          },
+          "history": {
+            "code": 0,
+            "chronicle": null
+          },
+          "phase": null,
+          "off_write": {
+            "code": 0,
+            "chronicle": null
+          }
+        }
+      },
+      "stderr_tail": ""
+    }
+  ]
+}

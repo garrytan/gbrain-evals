@@ -1,0 +1,27 @@
+{
+  "schema": "cat40-experiment-v1",
+  "gbrain_commit": "566a242a6cf538396e89093370c784065690df00",
+  "slot_commit": "566a242a6cf538396e89093370c784065690df00",
+  "world_digest": "df8c95e71b17beab176851e3b15daaea9b8719fb009ba50e02cfc68243009a20",
+  "models": [
+    "gpt-5.4-mini"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "label": "fixedledger-base-566a242",
+  "flags": {
+    "--models": "gpt-5.4-mini",
+    "--arms": "gbrain",
+    "--gbrain-label": "fixedledger-base-566a242",
+    "--transcripts": true,
+    "--slots": "5",
+    "--gbrain-repo": "<gbrain>",
+    "--gbrain-ref": "566a242a6cf538396e89093370c784065690df00",
+    "--repeat": "2",
+    "--concurrency": "6",
+    "--judge": "none",
+    "--out": "eval/reports/cat40/fixedledger-base-566a242"
+  },
+  "budget_run_id": "cat40-model-ladder-2026-10-04T15-09-19-546Z-dae67f59"
+}

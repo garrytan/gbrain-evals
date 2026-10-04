@@ -1,0 +1,31 @@
+{
+  "check": "embed-budget-stop-consented",
+  "gbrain_version": "0.60.46.0",
+  "pass": true,
+  "failed": [],
+  "checks": {
+    "setup_ok": true,
+    "C1_budget_stop_exits_11": true,
+    "C2_stdout_names_reason_remaining_and_resume": true,
+    "C3_resume_command_finishes": true,
+    "C4_drained_brain_with_same_budget_exits_0": true
+  },
+  "observed": {
+    "stopped": {
+      "code": 11,
+      "stdout": "[embed] stopped (reason: time_budget): the --stale run reached its time budget (GBRAIN_EMBED_TIME_BUDGET_MS, default 30 min) with 20 stale chunk(s) left after embedding 0 this run. Finish without a time cap: gbrain embed --stale --catch-up (paid embedding calls for the remaining chunks), or rerun gbrain embed --stale for another budget window; either resumes where this run stopped.\n",
+      "stderr": "[consent] embed: no cost estimate, so the default $5.00 cap applies. Set your own with --max-usd <usd>.\n",
+      "embed_calls": 0,
+      "remaining": 20
+    },
+    "resumed": {
+      "code": 0,
+      "stdout": "Embedded 20 chunks across 20 pages\n"
+    },
+    "again": {
+      "code": 0,
+      "stdout": ""
+    },
+    "embed_calls_total": 20
+  }
+}
