@@ -62,7 +62,7 @@ Guide: [docs/budget-ledger.md](docs/budget-ledger.md).
 - **Paid-run script.** `scripts/cat40-followups.sh` holds the exact commands
   for dev rounds 1 and 2, the latency comparator, the new-build held-out run
   and the `566a242a` control, on one ledger capped at $237. `PRINT_ONLY=1`
-  prints them. No paid run was made for this release.
+  prints them.
 ### Cat 40 results on the fixed harness, and a correction
 
 - **Correction to the Cat 40 report.** In every earlier gbrain run, the ledger stall made gbrain's embedding
