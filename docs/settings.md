@@ -9,10 +9,10 @@ by a specific experiment. [September 6 results](benchmarks/2026-09-06-longmemeva
 
 These recommendations refer to **gbrain v0.48.4.0, commit `2efaaf8f`**, the code
 measured in the September 6 and September 9 experiments. This repository currently
-installs a different commit, gbrain master `48ed5e8` (v0.60.32.0, declared in
+installs a different commit, gbrain master `109b992` (v0.60.37.0, declared in
 `package.json`). The `balanced`, `conservative` and `tokenmax` mode definitions
 (`MODE_BUNDLES` in `src/core/search/mode.ts`) have the same values at `939232f`,
-`b80cad6`, `608a174` (checked on 2026-09-29), `6c8373c` (checked on 2026-09-30), `3a284ae` (checked on 2026-10-01), `d44296c` (checked on 2026-10-02) and `48ed5e8` (checked on 2026-10-03), so the recommendations still describe the installed
+`b80cad6`, `608a174` (checked on 2026-09-29), `6c8373c` (checked on 2026-09-30), `3a284ae` (checked on 2026-10-01), `d44296c` (checked on 2026-10-02), `48ed5e8` (checked on 2026-10-03) and `109b992` (checked on 2026-10-03), so the recommendations still describe the installed
 modes; other code differs. Existing per-key overrides can take precedence over
 a mode. A mode name alone is not a complete description of an experiment.
 

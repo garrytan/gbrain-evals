@@ -273,7 +273,7 @@ describe('bug ledger', () => {
   test('the wave ledger records a 2026-10-03 review on every entry and keeps the 2026-10-02 reviews', () => {
     const ledger = JSON.parse(readFileSync(join(import.meta.dir, '../../docs/benchmarks/2026-10-01-wave-bugs.json'), 'utf8')) as { entries: BugEntry[] };
     expect(ledger.entries.filter(e => e.review?.date !== '2026-10-03').map(e => e.id)).toEqual([]);
-    const firstWave = ledger.entries.filter(e => !['N7-8', 'N12-9'].includes(e.id));
+    const firstWave = ledger.entries.filter(e => !['N7-8', 'N12-9', 'Cat7-1'].includes(e.id));
     expect(firstWave.filter(e => e.review_history?.[0]?.date !== '2026-10-02').map(e => e.id)).toEqual([]);
     expect(ledger.entries.filter(e => e.status === 'fixed' && !e.fixing_commit).map(e => e.id)).toEqual([]);
   });

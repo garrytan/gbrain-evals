@@ -1,0 +1,107 @@
+{
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "cat11-multimodal",
+  "n_total": 5,
+  "n_scored": 5,
+  "completion_rate": 1,
+  "errors": [],
+  "gbrain_version": "0.60.37.0",
+  "gbrain_pin": "github:garrytan/gbrain#109b992172e1f49107f9de9841758c1d043a2668",
+  "resolved_config": {
+    "ingest_path": "importFromContent (gbrain/import-file), noEmbed: true",
+    "search_mode": "not-exercised (cat11 issues no search calls)",
+    "reranker": "not-exercised",
+    "modalities_run": [
+      "markdown",
+      "html"
+    ],
+    "modalities_skipped": [
+      {
+        "modality": "pdf",
+        "reason": "gbrain v0.47.6.0 has no PDF text-extraction/ingest path; the pre-audit runner benchmarked the eval's own pdf-parse wrapper, which measured nothing about gbrain (audit retrieval-cats-12). Deferred until gbrain ships PDF ingestion."
+      },
+      {
+        "modality": "audio",
+        "reason": "No audio fixture manifest: binary clips are not committed to the repo (the fetch script the pre-audit header advertised never existed — audit retrieval-cats-03). Provide local fixtures + GROQ_API_KEY/OPENAI_API_KEY to run this modality."
+      }
+    ],
+    "thresholds": {
+      "markdown": 0.9,
+      "html": 0.8,
+      "audio": 0.85
+    }
+  },
+  "started_at": "2026-10-03T19:50:24.714Z",
+  "finished_at": "2026-10-03T19:50:26.978Z",
+  "data": {
+    "modalities": {
+      "markdown": {
+        "skipped": false,
+        "mean_metric": 1,
+        "threshold": 0.9,
+        "verdict": "pass",
+        "negative_control": {
+          "real_mean": 1,
+          "control_mean": 0.22003475173286494,
+          "degradation_ok": true
+        }
+      },
+      "html": {
+        "skipped": false,
+        "mean_metric": 1,
+        "threshold": 0.8,
+        "verdict": "pass",
+        "negative_control": {
+          "real_mean": 1,
+          "control_mean": 0.17676767676767677,
+          "degradation_ok": true
+        }
+      },
+      "pdf": {
+        "skipped": true,
+        "mean_metric": null,
+        "threshold": null,
+        "verdict": null,
+        "negative_control": null
+      },
+      "audio": {
+        "skipped": true,
+        "mean_metric": null,
+        "threshold": null,
+        "verdict": null,
+        "negative_control": null
+      }
+    }
+  },
+  "run_status": "completed",
+  "verdict": "pass",
+  "publishable": true,
+  "accounting": {
+    "planned": 5,
+    "attempted": 5,
+    "scored": 5,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "cost": null,
+  "latency_ms": null,
+  "delivered_tokens": null,
+  "execution": {
+    "source_tree": {
+      "sha256": "0fb4812737143f09c978fabb77bfba735c8ee1e9df0402951c8a11b6422f9602",
+      "files": 2665,
+      "git_head": "5e0a5b8253bab3ab5d8ba55bf21659e45929167d",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#109b992172e1f49107f9de9841758c1d043a2668",
+      "declared_sha": "109b992172e1f49107f9de9841758c1d043a2668",
+      "version": "0.60.37.0",
+      "package_sha256": "1a36b32df3da27d26456e6f32a7e73023c240046a84df7dc887945048f7f51b4",
+      "loaded_git_head": null
+    }
+  }
+}

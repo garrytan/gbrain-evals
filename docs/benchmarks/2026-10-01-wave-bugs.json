@@ -140,13 +140,13 @@
       "fixing_commit": "982a77eb8c682a9aa205e5d620167845b4fe278c",
       "review": {
         "date": "2026-10-03",
-        "gbrain_sha": "48ed5e8233f617479df989998560840747af0425",
+        "gbrain_sha": "109b992172e1f49107f9de9841758c1d043a2668",
         "evidence": "rerun",
         "receipts": [
-          "docs/benchmarks/2026-10-03-wave7-repin/ci-slices/n1-ci-receipt-48ed5e8.json",
-          "docs/benchmarks/2026-10-03-wave7-repin/repros-48ed5e8.txt"
+          "docs/benchmarks/2026-10-03-wave8-f1-repin/offline-tier/109b992/n1-knowledge-update/receipt.json",
+          "docs/benchmarks/2026-10-03-wave8-f1-repin/repros-109b992.txt"
         ],
-        "note": "repro still passes at 48ed5e8; the N1 CI slice keeps current-value accuracy 64 of 64 and history 57 of 57"
+        "note": "Wave 8 and Foundations 1 changed the writer guard schema and both engines (Foundations 1 adds creation-attribution triggers on facts). Repro passes; N1 CI slice passes every rule with the same counts as at 48ed5e8."
       },
       "review_history": [
         {
@@ -158,6 +158,16 @@
             "docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt"
           ],
           "note": "ontology writes are accepted on all 6 managed cells: current-value accuracy 388 of 388 (was 288 of 388), history retained 385 of 385 (was 168 of 385); the repro records the observation"
+        },
+        {
+          "date": "2026-10-03",
+          "gbrain_sha": "48ed5e8233f617479df989998560840747af0425",
+          "evidence": "rerun",
+          "receipts": [
+            "docs/benchmarks/2026-10-03-wave7-repin/ci-slices/n1-ci-receipt-48ed5e8.json",
+            "docs/benchmarks/2026-10-03-wave7-repin/repros-48ed5e8.txt"
+          ],
+          "note": "repro still passes at 48ed5e8; the N1 CI slice keeps current-value accuracy 64 of 64 and history 57 of 57"
         }
       ]
     },
@@ -176,13 +186,13 @@
       "fixing_commit": "982a77eb8c682a9aa205e5d620167845b4fe278c",
       "review": {
         "date": "2026-10-03",
-        "gbrain_sha": "48ed5e8233f617479df989998560840747af0425",
+        "gbrain_sha": "109b992172e1f49107f9de9841758c1d043a2668",
         "evidence": "rerun",
         "receipts": [
-          "docs/benchmarks/2026-10-03-wave7-repin/ci-slices/n1-ci-receipt-48ed5e8.json",
-          "docs/benchmarks/2026-10-03-wave7-repin/repros-48ed5e8.txt"
+          "docs/benchmarks/2026-10-03-wave8-f1-repin/offline-tier/109b992/n1-knowledge-update/receipt.json",
+          "docs/benchmarks/2026-10-03-wave8-f1-repin/repros-109b992.txt"
         ],
-        "note": "repro: a revert records a new interval (current location Lisbon); N1 CI slice history 57 of 57"
+        "note": "pglite-engine.ts changed in wave 8 and Foundations 1. Repro passes: a return to Lisbon supersedes Porto; N1 CI slice unchanged from 48ed5e8."
       },
       "review_history": [
         {
@@ -194,6 +204,16 @@
             "docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt"
           ],
           "note": "Lisbon, Porto, Lisbon now returns Lisbon (repro); the in-process ontology arm serves 18 of 18 current values with 0 stale (was 17 of 18, 1 stale)"
+        },
+        {
+          "date": "2026-10-03",
+          "gbrain_sha": "48ed5e8233f617479df989998560840747af0425",
+          "evidence": "rerun",
+          "receipts": [
+            "docs/benchmarks/2026-10-03-wave7-repin/ci-slices/n1-ci-receipt-48ed5e8.json",
+            "docs/benchmarks/2026-10-03-wave7-repin/repros-48ed5e8.txt"
+          ],
+          "note": "repro: a revert records a new interval (current location Lisbon); N1 CI slice history 57 of 57"
         }
       ]
     },
@@ -212,13 +232,13 @@
       "fixing_commit": "982a77eb8c682a9aa205e5d620167845b4fe278c",
       "review": {
         "date": "2026-10-03",
-        "gbrain_sha": "48ed5e8233f617479df989998560840747af0425",
+        "gbrain_sha": "109b992172e1f49107f9de9841758c1d043a2668",
         "evidence": "rerun",
         "receipts": [
-          "docs/benchmarks/2026-10-03-wave7-repin/ci-slices/n1-ci-receipt-48ed5e8.json",
-          "docs/benchmarks/2026-10-03-wave7-repin/repros-48ed5e8.txt"
+          "docs/benchmarks/2026-10-03-wave8-f1-repin/offline-tier/109b992/n1-knowledge-update/receipt.json",
+          "docs/benchmarks/2026-10-03-wave8-f1-repin/repros-109b992.txt"
         ],
-        "note": "repro: remote ontology_get shows only the public dimension; N1 CI slice private values in remote responses 0 (12 of 12 exposure probes with signal)"
+        "note": "private-visibility.ts changed in #5932 (derived_from carries private visibility). Repro passes: remote ontology_get shows only the public dimension; N1 CI slice unchanged from 48ed5e8."
       },
       "review_history": [
         {
@@ -230,6 +250,16 @@
             "docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt"
           ],
           "note": "remote ontology_get returns the world observation only (repro); 0 private values in remote responses with 32 of 32 exposure probes carrying signal (was 24 of 32), in-process arm 0 remote leaks (was 2)"
+        },
+        {
+          "date": "2026-10-03",
+          "gbrain_sha": "48ed5e8233f617479df989998560840747af0425",
+          "evidence": "rerun",
+          "receipts": [
+            "docs/benchmarks/2026-10-03-wave7-repin/ci-slices/n1-ci-receipt-48ed5e8.json",
+            "docs/benchmarks/2026-10-03-wave7-repin/repros-48ed5e8.txt"
+          ],
+          "note": "repro: remote ontology_get shows only the public dimension; N1 CI slice private values in remote responses 0 (12 of 12 exposure probes with signal)"
         }
       ]
     },
@@ -375,13 +405,13 @@
       "fixing_commit": "e833e93d094918524392aa5bc0056014b72fb879",
       "review": {
         "date": "2026-10-03",
-        "gbrain_sha": "48ed5e8233f617479df989998560840747af0425",
+        "gbrain_sha": "109b992172e1f49107f9de9841758c1d043a2668",
         "evidence": "rerun",
         "receipts": [
-          "docs/benchmarks/2026-10-03-wave7-repin/n2/receipt-hermetic-48ed5e8.json",
-          "docs/benchmarks/2026-10-03-wave7-repin/repros-48ed5e8.txt"
+          "docs/benchmarks/2026-10-03-wave8-f1-repin/offline-tier/109b992/n2-contradiction-surfacing/receipt.json",
+          "docs/benchmarks/2026-10-03-wave8-f1-repin/repros-109b992.txt"
         ],
-        "note": "bare CLI find-contradictions returns stored findings (unchanged from d44296c)"
+        "note": "src/cli.ts changed in wave 8 and Foundations 1. Repro passes; the N2 hermetic receipt equals the 48ed5e8 receipt field for field."
       },
       "review_history": [
         {
@@ -393,6 +423,16 @@
             "docs/benchmarks/2026-10-02-wave-repin/n2/receipt-hermetic-d44296c.json"
           ],
           "note": "through the context gbrain's CLI builds (makeContext), the bare command returns 100 of 190 stored findings (the limit); the probe that emulates the old CLI context, { remote: false, sourceId: default }, still returns 0, which is the fixed contract for an explicit source filter"
+        },
+        {
+          "date": "2026-10-03",
+          "gbrain_sha": "48ed5e8233f617479df989998560840747af0425",
+          "evidence": "rerun",
+          "receipts": [
+            "docs/benchmarks/2026-10-03-wave7-repin/n2/receipt-hermetic-48ed5e8.json",
+            "docs/benchmarks/2026-10-03-wave7-repin/repros-48ed5e8.txt"
+          ],
+          "note": "bare CLI find-contradictions returns stored findings (unchanged from d44296c)"
         }
       ]
     },
@@ -1052,12 +1092,13 @@
       "fixing_commit": "bb4e997020e78b73287b18c36e6a2ef93797b54c",
       "review": {
         "date": "2026-10-03",
-        "gbrain_sha": "48ed5e8233f617479df989998560840747af0425",
+        "gbrain_sha": "109b992172e1f49107f9de9841758c1d043a2668",
         "evidence": "rerun",
         "receipts": [
-          "docs/benchmarks/2026-10-03-wave7-repin/repros-48ed5e8.txt"
+          "docs/benchmarks/2026-10-03-wave8-f1-repin/offline-tier/109b992/n8-proactive-recall/receipt.json",
+          "docs/benchmarks/2026-10-03-wave8-f1-repin/repros-109b992.txt"
         ],
-        "note": "repro passes at 48ed5e8 (N8 was not rerun: wave 7 changed nothing it owns)"
+        "note": "private-visibility.ts changed in #5932. Repro passes; N8 hermetic arm shows no private delivery, and its only change from 48ed5e8 is the keyword baseline token count (184.45 to 184.41 tokens per turn)."
       },
       "review_history": [
         {
@@ -1069,6 +1110,15 @@
             "docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt"
           ],
           "note": "private pages delivered to remote callers 0 (was 4)"
+        },
+        {
+          "date": "2026-10-03",
+          "gbrain_sha": "48ed5e8233f617479df989998560840747af0425",
+          "evidence": "rerun",
+          "receipts": [
+            "docs/benchmarks/2026-10-03-wave7-repin/repros-48ed5e8.txt"
+          ],
+          "note": "repro passes at 48ed5e8 (N8 was not rerun: wave 7 changed nothing it owns)"
         }
       ]
     },
@@ -1087,12 +1137,13 @@
       "fixing_commit": "bb4e997020e78b73287b18c36e6a2ef93797b54c",
       "review": {
         "date": "2026-10-03",
-        "gbrain_sha": "48ed5e8233f617479df989998560840747af0425",
+        "gbrain_sha": "109b992172e1f49107f9de9841758c1d043a2668",
         "evidence": "rerun",
         "receipts": [
-          "docs/benchmarks/2026-10-03-wave7-repin/repros-48ed5e8.txt"
+          "docs/benchmarks/2026-10-03-wave8-f1-repin/offline-tier/109b992/n8-proactive-recall/receipt.json",
+          "docs/benchmarks/2026-10-03-wave8-f1-repin/repros-109b992.txt"
         ],
-        "note": "repro passes at 48ed5e8 (N8 was not rerun: wave 7 changed nothing it owns)"
+        "note": "private-visibility.ts changed in #5932. Repro passes; N8 hermetic arm unchanged apart from the keyword baseline token count."
       },
       "review_history": [
         {
@@ -1104,6 +1155,15 @@
             "docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt"
           ],
           "note": "private pages delivered into the turn_context block 0 (was 4)"
+        },
+        {
+          "date": "2026-10-03",
+          "gbrain_sha": "48ed5e8233f617479df989998560840747af0425",
+          "evidence": "rerun",
+          "receipts": [
+            "docs/benchmarks/2026-10-03-wave7-repin/repros-48ed5e8.txt"
+          ],
+          "note": "repro passes at 48ed5e8 (N8 was not rerun: wave 7 changed nothing it owns)"
         }
       ]
     },
@@ -1219,12 +1279,14 @@
       "fixing_commit": "81755f5b6cdd399185197461c7713ac4eccc689a",
       "review": {
         "date": "2026-10-03",
-        "gbrain_sha": "48ed5e8233f617479df989998560840747af0425",
+        "gbrain_sha": "109b992172e1f49107f9de9841758c1d043a2668",
         "evidence": "rerun",
         "receipts": [
-          "docs/benchmarks/2026-10-03-wave7-repin/repros-48ed5e8.txt"
+          "docs/benchmarks/2026-10-03-wave8-f1-repin/offline-tier/109b992/n9-multi-hop-paraphrase/receipt.json",
+          "docs/benchmarks/2026-10-03-wave8-f1-repin/checks-109b992.json",
+          "docs/benchmarks/2026-10-03-wave8-f1-repin/repros-109b992.txt"
         ],
-        "note": "repro still fans out from the meeting to both attendees"
+        "note": "Wave 8 #5882 changed markdown link typing. Frontmatter edges are unaffected: repro passes with the same edges as at 48ed5e8. N9 hit@1, hit@5, recall@5 and precision@5 are unchanged on all 870 one-hop runs."
       },
       "review_history": [
         {
@@ -1235,6 +1297,15 @@
             "docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt"
           ],
           "note": "the repro fans out from the meeting to both attendees in the parsed direction. world-v1 pages carry no schema-pack frontmatter relations, so the N9 run does not exercise this edge kind"
+        },
+        {
+          "date": "2026-10-03",
+          "gbrain_sha": "48ed5e8233f617479df989998560840747af0425",
+          "evidence": "rerun",
+          "receipts": [
+            "docs/benchmarks/2026-10-03-wave7-repin/repros-48ed5e8.txt"
+          ],
+          "note": "repro still fans out from the meeting to both attendees"
         }
       ]
     },
@@ -1253,13 +1324,13 @@
       "fixing_commit": "81755f5b6cdd399185197461c7713ac4eccc689a",
       "review": {
         "date": "2026-10-03",
-        "gbrain_sha": "48ed5e8233f617479df989998560840747af0425",
+        "gbrain_sha": "109b992172e1f49107f9de9841758c1d043a2668",
         "evidence": "rerun",
         "receipts": [
-          "docs/benchmarks/2026-10-03-wave7-repin/n9/n9-hermetic-48ed5e8.receipt.json",
-          "docs/benchmarks/2026-10-03-wave7-repin/repros-48ed5e8.txt"
+          "docs/benchmarks/2026-10-03-wave8-f1-repin/offline-tier/109b992/n9-multi-hop-paraphrase/receipt.json",
+          "docs/benchmarks/2026-10-03-wave8-f1-repin/repros-109b992.txt"
         ],
-        "note": "repro passes; one-hop \"who attended\" seeds resolved 150 of 150 template runs"
+        "note": "Wave 8 #5882 changed markdown link typing. Repro passes; \"who attended\" seeds still resolve on every template run, and attended edges are unchanged."
       },
       "review_history": [
         {
@@ -1271,6 +1342,16 @@
             "docs/benchmarks/2026-10-02-wave-repin/n9/n9-hermetic-d44296c.receipt.json"
           ],
           "note": "the repro stores attendance person to meeting and the relational arm fires with 2 candidates. On world-v1, attendance named only in prose is now typed mentions by the evidence gate, so the 150 attended runs per split still fire 0 times (see N12-6)"
+        },
+        {
+          "date": "2026-10-03",
+          "gbrain_sha": "48ed5e8233f617479df989998560840747af0425",
+          "evidence": "rerun",
+          "receipts": [
+            "docs/benchmarks/2026-10-03-wave7-repin/n9/n9-hermetic-48ed5e8.receipt.json",
+            "docs/benchmarks/2026-10-03-wave7-repin/repros-48ed5e8.txt"
+          ],
+          "note": "repro passes; one-hop \"who attended\" seeds resolved 150 of 150 template runs"
         }
       ]
     },
@@ -1534,13 +1615,13 @@
       "reason": "Not a documented evidence form; documented forms score 20 of 20 with zero false attendance. Closed 2026-10-03 for Participants: lines, which are documented attendance evidence at 48ed5e8 (docs/guides/attendance-evidence.md). People who only speak in a transcript are not evidence and are tracked as N12-9.",
       "review": {
         "date": "2026-10-03",
-        "gbrain_sha": "48ed5e8233f617479df989998560840747af0425",
+        "gbrain_sha": "109b992172e1f49107f9de9841758c1d043a2668",
         "evidence": "rerun",
         "receipts": [
-          "docs/benchmarks/2026-10-03-wave7-repin/n12/receipt-pin-48ed5e8.json",
-          "docs/benchmarks/2026-10-03-wave7-repin/n12/receipt-pin-48ed5e8-seed7.json"
+          "docs/benchmarks/2026-10-03-wave8-f1-repin/offline-tier/109b992/n12-format-fidelity/receipt.json",
+          "docs/benchmarks/2026-10-03-wave8-f1-repin/n12/receipt-pin-109b992-seed7.json"
         ],
-        "note": "Participants: line attendees typed attended 5 of 5 on seeds 12 and 7 (was 0 of 5), false attendance 0; speakers-only attendees stay 0 of 5 and move to N12-9"
+        "note": "Wave 8 edited the bundled packs (#5882 ner_only sketch regexes). Participants: lines still type 5 of 5 attendees on seeds 12 and 7 with no false attendance; both N12 receipts equal their 48ed5e8 receipts field for field."
       },
       "review_history": [
         {
@@ -1551,6 +1632,16 @@
             "docs/benchmarks/2026-10-02-wave-repin/n12/receipt-pin-d44296c.json"
           ],
           "note": "participants-line and speakers-only attendees: 0 of 10 typed attended (attendance recall 20 of 30 overall, 20 of 20 on documented forms)"
+        },
+        {
+          "date": "2026-10-03",
+          "gbrain_sha": "48ed5e8233f617479df989998560840747af0425",
+          "evidence": "rerun",
+          "receipts": [
+            "docs/benchmarks/2026-10-03-wave7-repin/n12/receipt-pin-48ed5e8.json",
+            "docs/benchmarks/2026-10-03-wave7-repin/n12/receipt-pin-48ed5e8-seed7.json"
+          ],
+          "note": "Participants: line attendees typed attended 5 of 5 on seeds 12 and 7 (was 0 of 5), false attendance 0; speakers-only attendees stay 0 of 5 and move to N12-9"
         }
       ],
       "fixing_pr": "garrytan/gbrain#5908 (fix wave 7, v0.60.32.0)",
@@ -1572,13 +1663,13 @@
       "fixing_commit": "81755f5b6cdd399185197461c7713ac4eccc689a",
       "review": {
         "date": "2026-10-03",
-        "gbrain_sha": "48ed5e8233f617479df989998560840747af0425",
+        "gbrain_sha": "109b992172e1f49107f9de9841758c1d043a2668",
         "evidence": "rerun",
         "receipts": [
-          "docs/benchmarks/2026-10-03-wave7-repin/n12/receipt-pin-48ed5e8.json",
-          "docs/benchmarks/2026-10-03-wave7-repin/repros-48ed5e8.txt"
+          "docs/benchmarks/2026-10-03-wave8-f1-repin/offline-tier/109b992/n12-format-fidelity/receipt.json",
+          "docs/benchmarks/2026-10-03-wave8-f1-repin/repros-109b992.txt"
         ],
-        "note": "with schema_pack unset, mentioned-only people typed attended 0 of 24; the repro types only the listed attendee"
+        "note": "Wave 8 edited the legacy gbrain-base pack (#5882). Repro passes: with schema_pack unset, mentioned-only people stay mentions."
       },
       "review_history": [
         {
@@ -1590,6 +1681,16 @@
             "docs/benchmarks/2026-10-02-wave-repin/repros-d44296c.txt"
           ],
           "note": "with schema_pack unset, mentioned-only people typed attended 0 of 24 (was 24 of 24); the repro types only the listed attendee"
+        },
+        {
+          "date": "2026-10-03",
+          "gbrain_sha": "48ed5e8233f617479df989998560840747af0425",
+          "evidence": "rerun",
+          "receipts": [
+            "docs/benchmarks/2026-10-03-wave7-repin/n12/receipt-pin-48ed5e8.json",
+            "docs/benchmarks/2026-10-03-wave7-repin/repros-48ed5e8.txt"
+          ],
+          "note": "with schema_pack unset, mentioned-only people typed attended 0 of 24; the repro types only the listed attendee"
         }
       ]
     },
@@ -1640,14 +1741,26 @@
       "reason": "Not a documented evidence form at 48ed5e8; documented forms and Participants: lines score 25 of 25 with zero false attendance.",
       "review": {
         "date": "2026-10-03",
-        "gbrain_sha": "48ed5e8233f617479df989998560840747af0425",
+        "gbrain_sha": "109b992172e1f49107f9de9841758c1d043a2668",
         "evidence": "rerun",
         "receipts": [
-          "docs/benchmarks/2026-10-03-wave7-repin/n12/receipt-pin-48ed5e8.json",
-          "docs/benchmarks/2026-10-03-wave7-repin/n12/receipt-pin-48ed5e8-seed7.json"
+          "docs/benchmarks/2026-10-03-wave8-f1-repin/offline-tier/109b992/n12-format-fidelity/receipt.json",
+          "docs/benchmarks/2026-10-03-wave8-f1-repin/n12/receipt-pin-109b992-seed7.json"
         ],
-        "note": "speakers-only attendees 0 of 5 on seeds 12 and 7"
-      }
+        "note": "Wave 8 edited the bundled packs. Unchanged: speakers-only attendees 0 of 5 on seeds 12 and 7."
+      },
+      "review_history": [
+        {
+          "date": "2026-10-03",
+          "gbrain_sha": "48ed5e8233f617479df989998560840747af0425",
+          "evidence": "rerun",
+          "receipts": [
+            "docs/benchmarks/2026-10-03-wave7-repin/n12/receipt-pin-48ed5e8.json",
+            "docs/benchmarks/2026-10-03-wave7-repin/n12/receipt-pin-48ed5e8-seed7.json"
+          ],
+          "note": "speakers-only attendees 0 of 5 on seeds 12 and 7"
+        }
+      ]
     },
     {
       "id": "N13-1",
@@ -1870,12 +1983,12 @@
       "reason": "Not claimed at this commit.",
       "review": {
         "date": "2026-10-03",
-        "gbrain_sha": "48ed5e8233f617479df989998560840747af0425",
+        "gbrain_sha": "109b992172e1f49107f9de9841758c1d043a2668",
         "evidence": "rerun",
         "receipts": [
-          "docs/benchmarks/2026-10-03-wave7-repin/n13/receipt-pin-48ed5e8.json"
+          "docs/benchmarks/2026-10-03-wave8-f1-repin/offline-tier/109b992/n13-code-intelligence/receipt.json"
         ],
-        "note": "code_blast and code_flow still have no CLI command"
+        "note": "Wave 8 added commands to src/cli/command-table.ts (pricing, attribution and others); code_blast and code_flow still have no CLI command. N13 receipt equals the 48ed5e8 receipt."
       },
       "review_history": [
         {
@@ -1884,6 +1997,15 @@
           "evidence": "rerun",
           "receipts": [
             "docs/benchmarks/2026-10-02-wave-repin/n13/receipt-pin-d44296c.json"
+          ],
+          "note": "code_blast and code_flow still have no CLI command"
+        },
+        {
+          "date": "2026-10-03",
+          "gbrain_sha": "48ed5e8233f617479df989998560840747af0425",
+          "evidence": "rerun",
+          "receipts": [
+            "docs/benchmarks/2026-10-03-wave7-repin/n13/receipt-pin-48ed5e8.json"
           ],
           "note": "code_blast and code_flow still have no CLI command"
         }
@@ -1924,6 +2046,29 @@
       ],
       "fixing_pr": "garrytan/gbrain#5908 (fix wave 7, v0.60.32.0)",
       "fixing_commit": "48ed5e8233f617479df989998560840747af0425"
+    },
+    {
+      "id": "Cat7-1",
+      "category": "pglite-latency",
+      "classification": "bug",
+      "gbrain_sha": "109b992172e1f49107f9de9841758c1d043a2668",
+      "status": "open",
+      "contract": "gbrain v0.60.37.0 CHANGELOG (Foundations 1, F4): PGLite keeps planner statistics fresh so planner-sensitive reads stop being planned as if the tables were empty; Cat 7 (eval/registry.ts pglite-latency) is a regression-only latency check on 1,000 and 10,000 page brains.",
+      "surface": "engine.getTimeline (src/core/engine-sql/timeline.ts getTimeline) on PGLite after the planner auto-analyze (src/core/planner-stats.ts) runs",
+      "repro": "bun docs/benchmarks/2026-10-03-wave8-f1-repin/repros/cat7-get-timeline-1k.ts",
+      "expected": "get_timeline at 1,000 pages stays near its 48ed5e8 latency: p50 0.045 ms in the first Cat 7 run and 0.052 ms in the paired repeat; the repro measures 0.033 to 0.038 ms at 48ed5e8, 566a242a6 and d82eb2e9e.",
+      "actual": "Cat 7 get_timeline p50 at 1,000 pages 0.097 ms (was 0.045) and 0.101 ms in the paired repeat on fresh VMs (was 0.052). The repro measures 0.089 and 0.096 ms at 109b992, and 0.037 ms with GBRAIN_PLANNER_AUTO_ANALYZE=0. After the automatic ANALYZE of pages and links (timeline_entries is never analyzed while empty), PGLite plans the unscoped timeline read as a nested loop over an index scan of pages_source_slug_key instead of a hash join; the raw SQL is equally slower (0.081 vs 0.035 ms). About 0.05 ms per call. The other 21 Cat 7 reads were within 5% of 48ed5e8 or faster, several far faster.",
+      "review": {
+        "date": "2026-10-03",
+        "gbrain_sha": "109b992172e1f49107f9de9841758c1d043a2668",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-03-wave8-f1-repin/offline-tier/109b992/perf/receipt.json",
+          "docs/benchmarks/2026-10-03-wave8-f1-repin/cat7-repeat/109b992/perf-1.json",
+          "docs/benchmarks/2026-10-03-wave8-f1-repin/cat7-repeat/48ed5e8/perf-1.json"
+        ],
+        "note": "Found by the preregistered rule (p50 slowdown above 25%, repeated in a second paired run). Bisect with the repro: 48ed5e8, 566a242a6 (#5932) and d82eb2e9e (wave 8) are fast; 109b992 (Foundations 1) is slow, so the likely range is d82eb2e9e..109b992, the F4 planner-statistics work."
+      }
     }
   ]
 }
