@@ -2,6 +2,38 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.19] - 2026-10-04
+
+### The corrected Cat 40 headline: on the held-out world, gbrain and plain files with grep finish about as many tasks
+
+The [Cat 40 report](docs/benchmarks/2026-10-02-model-ladder.md)'s finding now compares gbrain `a714410a5`
+(v0.60.44.0), measured on the fixed harness, with the simple setups on the held-out world (6 models, 2 repeats,
+50 tasks). gbrain succeeds on 75.7% of cells and plain Markdown files with `grep` on 72.8%: a paired difference of
++2.8 points (95% CI −2.3 to +8.2), a tie. gbrain is ahead of Postgres search (+9.7, CI +3.2 to +16.8) and the memory
+tool (+12.3, CI +6.8 to +18.3), leaks nothing in 120 permission runs, trails files on renewal briefs (−9.2, CI −20.8
+to +0.8) and costs about 2.5 times as much per task. By model it gains 16 to 17 points with Haiku 4.5 and Sonnet 4.6
+and loses 15 with GPT-5.4-mini. The earlier summary stays in the report as history under the 2026-10-04 correction.
+This follows Garry's gate decisions UC1 and UC2 on the
+[entity-recall plan](docs/plans/2026-10-04-cat40-entity-recall/PLAN.md).
+
+- **Reused simple-arm cells, audited.** `eval/runner/cat40/rescore.ts` rescores stored Cat 40 cells with today's
+  `score.ts` from their answers and transcripts ($0). It rescores only success and claims, keeps the original safety
+  flags (transcripts cut tool results at 40,000 characters), marks cells whose eligibility cannot be shown as needing
+  a rerun, and lists cells whose claims need the paid judge again. On the 2026-10-02 held-out simple arms, all 2,520
+  cells are eligible and nothing changed ([audit](docs/benchmarks/2026-10-02-model-ladder/entity-recall/simple-arms-rescored/README.md)).
+- **Preregistration before the wave runs.** [PREREGISTRATION.md](docs/benchmarks/2026-10-02-model-ladder/entity-recall/PREREGISTRATION.md)
+  fixes the comparator (`fs`, the best pooled of `fs`, `memory` and `pg`), the headline sentences, the ship rule, the
+  default-on rule (family-E point gain above 0, cost per task up at most 25%), the G1 and harm-screen thresholds, the
+  exact A3 commands and the analysis commands.
+- **`holdout_stats.py` modes.** `--choose-comparator`, `--headline` (pooled, per model and per family against the
+  comparator, plus every other simple arm, with `fs-acl` on family C only), `--capability-screen` (gates on success,
+  flags families at −10 points or worse) and `--default-on`. The ship rule's leak check is now per
+  (model, task, repeat, leak kind) cell: a leak that moves to another cell fails it even when totals are equal.
+- **Slot coverage preflight.** Slot builds run `gbrain extract --stale --catch-up`, ask the built brain for its
+  mention coverage through an `entity` miss, and record it beside the snapshot and in the slot receipt. A round
+  refuses slots whose coverage is not `complete` with 0 pending pages; builds whose gbrain does not report coverage
+  are not checked.
+
 ## [0.10.16] - 2026-10-04
 
 ### The budget ledger moves to SQLite, so paid runs stop stalling their own timing; Cat 40 gets the tooling for the gbrain cost wave
