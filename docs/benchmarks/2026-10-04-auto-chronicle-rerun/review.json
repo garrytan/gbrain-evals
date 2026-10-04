@@ -1,0 +1,503 @@
+{
+ "schema_version": 1,
+ "reviewed": "2026-10-04 by the agent that ran the experiment (Capy), with the original rubric; events already in the original review.json keep that classification; not reviewed by a person",
+ "rubric": "docs/benchmarks/2026-10-04-auto-chronicle-lift-preregistration.md, metric 2: duplicate, supported or false for every unmatched event on a labeled page dated on or before its page date; the same for the preregistered Slack sample. Premature events are classified mechanically and are not listed here.",
+ "events": {
+  "life/events/2026-04-14-0dca16c0": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-14-36cc76f5": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-14-83addf8a": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-14-881b3c93": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-14-8b872e6a": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-14-9194c9b4": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-14-92ceaf79": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-14-bb9b4b2f": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-14-415790b4": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-14-50a5662a": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-14-72ea6732": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-14-ef457fb4": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-15-351c8abd": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-15-77ed1ad6": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-15-ccd22e8f": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-15-cdba46e8": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-16-811c7966": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-16-84336b22": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-16-94bdd0d3": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-16-f1fab0a3": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-16-fdd9736b": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-17-1ea13f22": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-17-3ecfe556": {
+   "class": "supported",
+   "note": "the page states it was said, decided, committed, reported or held on that day"
+  },
+  "life/events/2026-04-17-451e881c": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-17-4c16d42a": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-17-608768d0": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-17-658db2c1": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-17-71928496": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-17-ba769297": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-18-8c7a8e13": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-18-90092b82": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-18-e38315a4": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-18-ec527c8a": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-18-f47a154b": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-18-00781c63": {
+   "class": "false",
+   "note": "misdated: a quarter result (\"Q1 numbers came in strong\") placed on the meeting day"
+  },
+  "life/events/2026-04-18-3bdfb026": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-18-49ab4cd2": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-18-aceed96f": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-18-b09ec752": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-19-3d78e67b": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-19-439f25d5": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-19-c9666408": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-17-a13962af": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-14-fee55f9c": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-14-9ad82821": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-14-0a71c881": {
+   "class": "false",
+   "note": "plan written as done: the message says the upload will happen tonight"
+  },
+  "life/events/2026-04-14-ae175a64": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-15-b4159a34": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-14-13cd0281": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-17-dee57aa9": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-16-5581f669": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-16-969cab86": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-16-e6f8e804": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-15-27e48fbc": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-16-cb0c85ea": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-17-620efd54": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-15-e1271083": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-16-dbbe8025": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-15-700634a8": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-15-bf071007": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-13-f16434ea": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-17-bb1da8fc": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-17-e011da86": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-13-6c8ae4b6": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-15-467d26b4": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-17-1ba07735": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-15-0c5333ec": {
+   "class": "supported",
+   "note": "the message says the call was \"yesterday\"; the event is dated the day before the page"
+  },
+  "life/events/2026-04-14-81cba36c": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-14-aa34124a": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-14-b36c86c8": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-14-cdb4bfc3": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-14-fd811f71": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-14-3bab6ca8": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-14-5e10a001": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-14-da371126": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-15-60b7d40e": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-15-76ddb9d0": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-15-88523a33": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-15-c6aab7b7": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-16-82a618cb": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-16-b0d7b791": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-16-fb386a7b": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-16-fc997ff9": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-17-b3406080": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-17-bda620a5": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-17-c4d8c55f": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-17-d4c633ad": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-17-facba3f2": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-18-5d7ecec7": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-18-638d7789": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-18-967888ed": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-18-d26eaf7f": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-18-fa462bc1": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-18-9be1dcc6": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-18-faf6b9c2": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-19-5bf9aca4": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-19-87854d6d": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-19-d00b5afa": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-19-d29c661d": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, reported or held on that day"
+  },
+  "life/events/2026-04-17-b2417d36": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-15-24676c2d": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-14-c4c105a5": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-14-016bfa70": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-14-ddb69016": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-15-ee1ba469": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-14-0a596e1c": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-17-f23e6bdb": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-16-7834d581": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-16-bda89707": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-17-070c68ea": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-15-6c604c78": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-16-d55527c3": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-17-70b68e45": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-16-17afa365": {
+   "class": "supported",
+   "note": "a message on that channel-day states it (the message is one of the corpus's planted prompt-injection fixtures; the event repeats it as a claim)"
+  },
+  "life/events/2026-04-16-ee45cff9": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-15-b81fb243": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-15-fa965187": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-16-dfecf152": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-17-c5ca62fa": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-17-f34223e0": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-15-eed08e52": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-15-72a0221c": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-17-13e4f26b": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "life/events/2026-04-15-3ccd02df": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  }
+ }
+}
