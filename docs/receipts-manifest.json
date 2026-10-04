@@ -4477,6 +4477,28 @@
         "/decision/verdict": "contradicted"
       },
       "note": "auto_chronicle off versus on on amara-life-v1; summary computed from scores.json (rescore with chronicle-lift.ts score)."
+    },
+    {
+      "claim_id": "chronicle-rerun-summary",
+      "readme_anchor": "docs/benchmarks/2026-10-04-auto-chronicle-rerun.md: The decision",
+      "artifact_path": "docs/benchmarks/2026-10-04-auto-chronicle-rerun/summary.json",
+      "artifact_sha256": "3ec80ed2ea8975651a6a1e396773e981b20b596ee6d28e9d67103a0f5f83892a",
+      "status": "covered",
+      "expected": {
+        "/arms/on-a/recall_matched": 37,
+        "/arms/on-b/recall_matched": 38,
+        "/arms/on-a/premature": 0,
+        "/arms/on-b/premature": 0,
+        "/arms/on-a/false": 1,
+        "/arms/on-b/false": 1,
+        "/arms/on-a/controls_judged": 0,
+        "/arms/on-b/controls_judged": 0,
+        "/arms/on-a/events_written": 309,
+        "/arms/on-b/events_written": 300,
+        "/decision/verdict": "supported",
+        "/gbrain/overlay_commit": "5a44025816a00f3ee645cd094e614df43f97cbd9"
+      },
+      "note": "auto_chronicle rerun at gbrain PR #6010 head 5a44025 (overlay); summary computed from scores.json (rescore keylessly with chronicle-lift.ts score)."
     }
   ]
 }

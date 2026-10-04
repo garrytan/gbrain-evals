@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-04",
+  "gbrain": {
+    "overlay_commit": "5a44025816a00f3ee645cd094e614df43f97cbd9",
+    "version": "0.60.49.0",
+    "pr": "garrytan/gbrain#6010 (open, not merged at run time)",
+    "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c"
+  },
+  "arms": {
+    "on-a": {
+      "judged_pages": 48,
+      "events_written": 309,
+      "recall_matched": 37,
+      "recall_expected": 38,
+      "premature": 0,
+      "false": 1,
+      "false_plus_premature_per_judged_labeled_page": 0.0357,
+      "slack_events": 230,
+      "slack_premature": 0,
+      "slack_sample_false": 1,
+      "controls_judged": 0,
+      "cost_metered_usd": 0.504219,
+      "cost_per_judged_page": 0.010505,
+      "events_dropped": {
+        "date_imprecise": 5
+      },
+      "gate_A": true,
+      "recall_rule": true,
+      "gate_B": true,
+      "gate_C": true
+    },
+    "on-b": {
+      "judged_pages": 48,
+      "events_written": 300,
+      "recall_matched": 38,
+      "recall_expected": 38,
+      "premature": 0,
+      "false": 1,
+      "false_plus_premature_per_judged_labeled_page": 0.0357,
+      "slack_events": 217,
+      "slack_premature": 0,
+      "slack_sample_false": 0,
+      "controls_judged": 0,
+      "cost_metered_usd": 0.504354,
+      "cost_per_judged_page": 0.010507,
+      "events_dropped": {
+        "date_imprecise": 8
+      },
+      "gate_A": true,
+      "recall_rule": true,
+      "gate_B": true,
+      "gate_C": true
+    }
+  },
+  "decision": {
+    "all_rules_both_arms": true,
+    "verdict": "supported"
+  },
+  "spend": {
+    "ledger_run": "chronicle-lift-v1-2026-10-04T17-22-35-439Z-c45fd05b",
+    "usd": 1.008573
+  }
+}

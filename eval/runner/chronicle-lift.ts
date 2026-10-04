@@ -16,6 +16,7 @@
  *   bun eval/runner/chronicle-lift.ts run --out <dir> --budget-usd <n> [--arms off,on-a,on-b] [--repeats 2]
  *        [--model claude-sonnet-4-6] [--questions <ids>] [--qa-arms off,on-a] [--no-qa]
  *        (`--arms none` reuses the brains an earlier run built in --out; finished agent cells are never rerun)
+ *        [--gbrain <checkout>@<ref>]   measure a copied overlay of another gbrain commit instead of the pin
  *   bun eval/runner/chronicle-lift.ts score --out <dir> [--review <review.json>]
  *
  * `--out` must be outside any Git worktree: `gbrain init` refuses to create its
@@ -34,12 +35,14 @@ import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSyn
 import { dirname, join, relative, resolve } from 'node:path';
 import { MeteringProxy, McpClient, newMeter, type Meter } from './cat40/gbrain-arm.ts';
 import { runAgent, type Arm, type SubmitPayload, type ToolSpec } from './cat40/loop.ts';
+import { gbrainSpecFrom, overlaySummary, resolveGbrainUnderTest } from './gbrain-under-test.ts';
 
 export const LIFT_VERSION = 'chronicle-lift-v1';
 const REPO = resolve(import.meta.dir, '../..');
 const CORPUS = join(REPO, 'eval/data/amara-life-v1');
 const LABELS = join(REPO, 'eval/data/chronicle-lift-v1');
-const GBRAIN = join(REPO, 'node_modules/gbrain');
+/** The gbrain under test: the pinned dependency, or a copied overlay chosen with --gbrain <checkout>@<ref>. */
+let GBRAIN = join(REPO, 'node_modules/gbrain');
 
 // ─── Corpus rendering (deterministic) ───────────────────────────────
 
@@ -282,6 +285,8 @@ function writeVault(out: string): { vault: string; digest: string; pages: number
 }
 
 async function run(argv: string[]) {
+  const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
+  GBRAIN = gut.root;
   const out = resolve(flag(argv, '--out') ?? join(process.env.HOME ?? '/tmp', '.cache/gbrain-evals/chronicle-lift/run'));
   if (!relative(REPO, out).startsWith('..')) throw new Error(`--out ${out} is inside this repository; gbrain init refuses a content directory inside another Git worktree. Choose a directory outside it and copy receipts in afterwards.`);
   mkdirSync(out, { recursive: true });
@@ -356,7 +361,7 @@ async function run(argv: string[]) {
     const pkg = JSON.parse(readFileSync(join(GBRAIN, 'package.json'), 'utf8'));
     writeFileSync(join(out, arms.length ? 'receipt.json' : `receipt-qa-${started.replace(/[:.]/g, '-')}.json`), JSON.stringify({
       kind: LIFT_VERSION, started, finished: new Date().toISOString(), bun: Bun.version,
-      gbrain: { version: pkg.version, declared_pin: JSON.parse(readFileSync(join(REPO, 'package.json'), 'utf8')).dependencies.gbrain },
+      gbrain: { version: pkg.version, declared_pin: JSON.parse(readFileSync(join(REPO, 'package.json'), 'utf8')).dependencies.gbrain, overlay: overlaySummary(gut) },
       gbrain_evals: { git_head: git('rev-parse', 'HEAD'), dirty: (git('status', '--porcelain') ?? '') !== '' },
       corpus: { digest: corpus.digest, pages: corpus.pages, chronicle_shaped: corpus.chronicle_shaped },
       settings: { arms, qa_arms: qaArms, repeats, model, max_turns: maxTurns, questions: questions.length, chronicle: { auto_recent_days: 365, auto_settle_seconds: 0, judge: 'gbrain default chat model (ANTHROPIC_API_KEY only)' }, embeddings: 'none (gbrain init --no-embedding; keyword search in every arm)', mcp: 'gbrain serve (default full surface), no provider key' },
