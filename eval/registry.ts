@@ -1026,6 +1026,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'compare.ts': { role: 'paired run comparator CLI' },
   'feedback-replay-locomo.ts': { role: 'use-attributed feedback replay on LoCoMo (off, frozen, online, noisy, frequency arms); dev or custodian sealed split' },
   'feedback-replay-world.ts': { role: 'use-attributed feedback replay on world-v1 relational questions; dev or custodian sealed half' },
+  'hub-world.ts': { role: 'hub-heavy world-v1 variant probes (hub-as-answer, bridge, one-hop guard) on the shared-index harness; corpus from eval/generators/hub-world-gen.ts' },
   'decide.ts': { role: 'held-out decision kit CLI (bun run eval:decide): decision specs, dev runs of baseline vs candidate gbrain builds, paired verdicts' },
   'eval-adapter-config.ts': { role: 'typed adapter config for matrix cells' },
   'gbrain-under-test.ts': { role: 'pinned gbrain or a copied --gbrain overlay, with receipt identity' },

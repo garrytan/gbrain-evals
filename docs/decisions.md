@@ -121,3 +121,23 @@ Real-embedding sources go through the budget ledger ([`eval/runner/budget-ledger
 every request is reserved before it is sent, and a run stops at its cap. Embeddings are cached by content, so text
 both builds index identically is embedded once. Measured: LoCoMo dev for both arms cost about $0.02 with
 `openai:text-embedding-3-large` at 1536 dimensions.
+
+## Hub-heavy world (for ranking changes that depend on entity degree)
+
+world-v1 pages have at most about a dozen inbound links, so a change such as hub dampening of entity and backlink
+boosts is inert there. `eval/generators/hub-world-gen.ts` writes a world-v1 variant with routine notes whose links
+give entities a heavy-tailed inbound degree and four hubs with 5,000, 10,000, 20,000 and 30,000 inbound links, plus
+two probe families: hub-as-answer (the gold page is a hub) and bridge (the gold entity is reached through a note that
+links a hub). `eval/runner/hub-world.ts` runs those probes and the relational one-hop templates on the shared-index
+harness, with `GBRAIN_EVAL_SEARCH_PINS` selecting the feature arm. Cat 13 takes `--corpus-dir` to run its concept
+probes on the same world.
+
+```bash
+bun eval/generators/hub-world-gen.ts --seed 1 --out ~/datasets/gbrain-evals/hub-world/seed-1        # dev world, about 32,000 pages
+bun eval/runner/hub-world.ts --corpus-dir ~/datasets/gbrain-evals/hub-world/seed-1 --output <dir>   # keyword path, keyless
+GBRAIN_EVAL_SEARCH_PINS=search.hub_dampening=true bun eval/runner/hub-world.ts --corpus-dir ... --output <dir2>
+```
+
+Seed 1 is development data. Seeds 2 and 3 render only from the custodian's private salt
+([`eval/decisions/splits/hub-world.json`](../eval/decisions/splits/hub-world.json) records its SHA-256 and the probe
+file hashes) and are opened once at a preregistered decision.
