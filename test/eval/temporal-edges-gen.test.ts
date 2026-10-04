@@ -10,6 +10,17 @@ describe('temporal-edges generator (dev phrasing set A)', () => {
     expect(generateTemporalEdgesWorld({ seed: DEV_SEEDS[1] }).fingerprint).not.toBe(a.fingerprint);
   });
 
+  test('development sets A2 and A3 render the same ledger with different wording', () => {
+    const a = generateTemporalEdgesWorld({ seed: 3 });
+    for (const phrasing of ['A2', 'A3']) {
+      const w = generateTemporalEdgesWorld({ seed: 3, phrasing });
+      expect(w.phrasing).toBe(phrasing);
+      expect(w.people.map(p => p.stints)).toEqual(a.people.map(p => p.stints));
+      expect(w.asof_probes).toEqual(a.asof_probes);
+      expect(w.fingerprint).not.toBe(a.fingerprint);
+    }
+  });
+
   test('held-out phrasing sets are refused', () => {
     expect(() => generateTemporalEdgesWorld({ seed: 3, phrasing: 'B' })).toThrow(/held out/);
   });
