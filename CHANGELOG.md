@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [0.10.14] - 2026-10-04
+## [0.10.15] - 2026-10-04
 
 ### LongMemEval with opaque session ids: retrieval confirmed, the notes gain holds, and a frontier reader answers 447/500
 
