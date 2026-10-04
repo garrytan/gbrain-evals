@@ -2119,6 +2119,54 @@
         "note": "Bisect: 0 oracles at 8b5ed04c6 (v0.60.45.0), 3 at 739e5cc, so the range is 8b5ed04c6..739e5cc89 (#5991). With one session id per probe call (gbrain-evals 0.10.17), N6 passes at 739e5cc and 109b992 with 0 oracles; no other N6 metric changes."
       },
       "reason": "Harness defect in gbrain-evals (N6's callers shared one notice session), exposed by gbrain #5991's notice dedupe and fixed in gbrain-evals 0.10.17: every probe call gets its own session id. Not a gbrain leak: the extra block is a fixed info notice and follows call order."
+    },
+    {
+      "id": "CL-1",
+      "category": "auto-chronicle-lift",
+      "classification": "bug",
+      "gbrain_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+      "status": "open",
+      "contract": "gbrain v0.60.45.0 CHANGELOG (#5993): the chronicle phase reads a meeting, conversation or calendar page and writes what happened (the meeting, decisions, commitments) as timeline events; gbrain's own gate allows at most 20% false plus premature events per judged page.",
+      "surface": "src/core/chronicle/extract-events.ts (JUDGE_SYSTEM prompt, buildChronicleEvents) and the chronicle cycle phase: no check of a proposal's day against the page's own date",
+      "repro": "bun eval/runner/chronicle-lift.ts run --out <dir outside the repo> --arms on-a --no-qa --budget-usd 2 && bun eval/runner/chronicle-lift.ts score --out <dir>   (paid: about $0.57 of judge calls; the committed receipts rescore keylessly with the same score command)",
+      "expected": "no event dated after the page's own date (a plan or deadline in a past meeting is not an occurrence); at most 0.20 false plus premature events per judged page",
+      "actual": "on amara-life-v1's 8 meeting notes, 22 and 25 events in two runs were planned follow-ups written on their future dates (deadlines, scheduled board meetings, a board seat effective May 1st, a Series B kickoff dated September 1); with the false events, 0.96 wrong events per judged labeled page in both runs. Recall of labeled events was 35 and 37 of 38.",
+      "review": {
+        "date": "2026-10-04",
+        "gbrain_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-04-auto-chronicle-lift/events-on-a.json",
+          "docs/benchmarks/2026-10-04-auto-chronicle-lift/events-on-b.json",
+          "docs/benchmarks/2026-10-04-auto-chronicle-lift/review.json",
+          "docs/benchmarks/2026-10-04-auto-chronicle-lift/summary.json"
+        ],
+        "note": "Found by the preregistered auto_chronicle lift (gate A failed in both ON runs). gbrain TODOS already lists the fix (P2, drop future-dated events extracted from past pages); this corpus argues for the page's date, not the extraction time, as the cutoff. Dropping events dated after the page would leave 5 and 2 wrong events (0.18 and 0.07 per page), an unregistered reading."
+      }
+    },
+    {
+      "id": "CL-2",
+      "category": "auto-chronicle-lift",
+      "classification": "bug",
+      "gbrain_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+      "status": "open",
+      "contract": "gbrain v0.60.45.0 CHANGELOG (#5993): chronicle events are what happened, on the day it happened, so `gbrain day <date>` can answer what happened that day.",
+      "surface": "src/core/chronicle/extract-events.ts JUDGE_SYSTEM: \"Prefer the page's known date for when\" with no instruction for past occurrences the text dates only to a month, year or quarter",
+      "repro": "bun eval/runner/chronicle-lift.ts run --out <dir outside the repo> --arms on-a --no-qa --budget-usd 2 && bun eval/runner/chronicle-lift.ts score --out <dir>   (paid: about $0.57 of judge calls; the committed receipts rescore keylessly with the same score command)",
+      "expected": "a past occurrence the page dates only roughly (\"back in 2024\", \"last month\", Q1 results) is left out or kept off a specific day",
+      "actual": "\"back in 2024\" was written on 2024-01-01 (both runs), \"last year\" on 2025-01-01 and \"last month\" on 2026-03-01; two Q1 results were written as events on the day of the meeting that discussed them. 5 and 2 such events on the 28 labeled pages; 2 of 25 in run B's Slack sample (\"tried it yesterday\" put on the posting day, and a planned sync written as held).",
+      "review": {
+        "date": "2026-10-04",
+        "gbrain_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-04-auto-chronicle-lift/events-on-a.json",
+          "docs/benchmarks/2026-10-04-auto-chronicle-lift/events-on-b.json",
+          "docs/benchmarks/2026-10-04-auto-chronicle-lift/review.json",
+          "docs/benchmarks/2026-10-04-auto-chronicle-lift/summary.json"
+        ],
+        "note": "Classified by hand with the preregistered rubric; every case is in review.json."
+      }
     }
   ]
 }
