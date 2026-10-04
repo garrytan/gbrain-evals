@@ -23,7 +23,7 @@ answerable questions (95.53%)** in its first five returned chunks. That is
 higher than every other system we can score on the same strict metric from
 its saved per-question rankings. On October 4 we recounted every published
 retrieval arm with opaque session ids (so the `answer_` prefix of evidence ids
-never reaches gbrain) at the current pin, `109b992`: the same configuration
+never reaches gbrain) at `109b992`, the pin at the time: the same configuration
 found all evidence for **451/470 (95.96%)**, paired +2/−0 against 449/470.
 
 | System | Strict `recall_all@5` | Where the number comes from |
@@ -280,8 +280,8 @@ them. Hosted embedding and reranking services receive the text they process;
 local storage does not make those API calls local. The retrieval results above
 were measured at gbrain [`2efaaf8f`](https://github.com/garrytan/gbrain/tree/2efaaf8f8a817b5b82e023383618fdcdb1cc5f7d)
 (v0.48.4.0). This repository currently installs gbrain master
-[`109b992`](https://github.com/garrytan/gbrain/tree/109b992172e1f49107f9de9841758c1d043a2668)
-(v0.60.37.0), whose search mode definitions are identical. Its System One
+[`739e5cc`](https://github.com/garrytan/gbrain/tree/739e5cc89ca43b9b9351f0f203c7b12a7c0c571c)
+(v0.60.46.0), whose search mode definitions are identical. Its System One
 decision slots stay off unless a TypeSafe key is set. See
 [how to reproduce a run](eval/README.md).
 
