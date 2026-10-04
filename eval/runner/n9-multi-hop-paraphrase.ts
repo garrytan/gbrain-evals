@@ -396,11 +396,18 @@ export async function runN9(options: N9Options = {}): Promise<N9Result> {
   const paid = options.paidArgv !== null && options.paidArgv !== undefined;
   if (paid) requirePaidArm(options.paidArgv!, { arm: 'N9 paid arm (hybrid search with OpenAI embeddings)', estimateUsd: N9_PAID_ESTIMATE_USD });
   const openaiKey = process.env.OPENAI_API_KEY;
+  const voyageKey = process.env.VOYAGE_API_KEY;
+  const rerankPinned = evalSearchPins()['search.reranker.enabled'] === 'true';
   return withHermeticEnv('n9', async () => {
     if (paid) {
       if (!openaiKey) throw new Error('N9 paid arm needs OPENAI_API_KEY for embeddings; the hermetic arm needs no key (drop --paid).');
       process.env.OPENAI_API_KEY = openaiKey;
-    }
+      // A reranker-pinned cell (GBRAIN_EVAL_SEARCH_PINS search.reranker.enabled=true) needs the reranker's key back too.
+      if (rerankPinned) {
+        if (!voyageKey) throw new Error('a reranker-pinned N9 cell needs VOYAGE_API_KEY');
+        process.env.VOYAGE_API_KEY = voyageKey;
+      }
+    } else if (rerankPinned) throw new Error('the reranker calls a paid provider; a reranker-pinned N9 cell runs only with --paid');
     return runN9Inner(options, paid);
   });
 }
