@@ -8,7 +8,7 @@ import { ASK_RE, capOf, norm, relaysToUser, type RunView, type Scenario } from '
 import { parseSession, type ParsedSession } from './transcript.ts';
 import type { ContainerResult, Effect, NEvent, StepClass, WrapperCall } from './types.ts';
 
-export const SCORER_VERSION = 'cat41-score-v3';
+export const SCORER_VERSION = 'cat41-score-v4';
 
 /** A gbrain call that has not finished after this long is counted as hung. */
 export const HANG_MS = 90_000;
@@ -83,7 +83,7 @@ export interface RunScore {
 
 export const ABSENCE_RE = /\b(no (notes?|results?|matches|information|info|records?|entries|pages?|mention|memory|memories)|(couldn'?t|could not|can'?t|cannot|didn'?t|did not|unable to|wasn'?t able to) (find|locate|retrieve|see)|nothing (about|on|related|relevant)|not (found )?in your (notes|brain|memory|gbrain)|(doesn'?t|does not|don'?t|do not) (appear|seem) to (have|contain|be)|(don'?t|do not) have any (record|notes?|information|memory))\b/i;
 
-export const SYSTEM_CAVEAT_RE = /(lock|already (open|running|in use)|unavailable|unreachable|not (running|connected|available|mounted|accessible|reachable)|missing|doesn'?t exist|does not exist|failed|error|keyword[- ]only|degraded|no embeddings|semantic search|vector search|(can'?t|cannot|couldn'?t|could not|unable to|wasn'?t able to) (access|connect|open|reach|get to|load)|(don'?t|do not) have access|didn'?t connect|failed to (connect|start|load)|not available in this session|isn'?t (connected|available|running)|permission|scope|denied)/i;
+export const SYSTEM_CAVEAT_RE = /(lock|already (open|running|in use)|unavailable|unreachable|not (running|connected|available|mounted|accessible|reachable)|missing|doesn'?t exist|does not exist|failed|error|keyword[- ]only|degraded|no embeddings|semantic search|vector search|(can'?t|cannot|couldn'?t|could not|unable to|wasn'?t able to) (access|connect|open|reach|get to|load)|(don'?t|do not) have access|didn'?t connect|failed to (connect|start|load)|not available in this session|isn'?t (connected|available|running)|(can'?t|cannot|couldn'?t|could not) find (your|the|its) (memory|brain|database)|(reconnect|remount|mount) the drive|database_path|permission|scope|denied)/i;
 
 const NOTICE_RE = /(keyword[- ]only|semantic search|embeddings? (are |is )?(off|disabled|not (configured|enabled))|degraded|vector search)/i;
 

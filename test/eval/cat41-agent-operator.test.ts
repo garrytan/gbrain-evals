@@ -136,6 +136,8 @@ describe('cat41 step classes', () => {
     const fe = classifyRun(sc, result('second_serve'), [claudeSession([], 'You have no notes about a packaging vendor.')]);
     const lock = classifyRun(sc, result('second_serve'), [claudeSession([], 'I couldn\u2019t access your gbrain notes: no notes are available in this session.')]);
     const answered = classifyRun(sc, result('second_serve'), [claudeSession([], 'You chose Larkspur Packaging.')]);
+    const unmounted = classifyRun(scenarioById('missing_brain'), result('missing_brain'), [claudeSession([], "I couldn't retrieve your appointment because gbrain can't find your memory at `/mnt/external/gbrain/brain.pglite`. Reconnect the drive containing it.")]);
+    expect(unmounted.false_empty).toBe(false);
     const dayFirst = classifyRun(scenarioById('keyless_recall'), result('keyless_recall'), [claudeSession([], 'Go-live is 14 November 2026; Alice Example owns the budget. I did not find any later notes that change this.')]);
     expect([fe.false_empty, lock.false_empty, answered.false_empty, dayFirst.false_empty, dayFirst.success]).toEqual([true, false, false, false, true]);
     expect(fe.outcomes.false_empty).toBe(1);
