@@ -42,7 +42,7 @@ paid model calls. The compacted judgment rows omit the actual answers and raw
 judge output, so they support recounting scores but do **not** support independent
 re-judging. [Verification record](2026-09-09-retrieval-refresh/longmemeval-verification.json).
 
-September 28, 2026: the 433/500 answer count is pending a re-run, because the answer model saw `answer_` session ids that mark the labeled evidence. The retrieval counts in this section are not affected as far as a 30-question check can tell. See the [notice in the September 6 report](2026-09-06-longmemeval-ranker-wave.md).
+September 28, 2026: the 433/500 answer count is pending a re-run, because the answer model saw `answer_` session ids that mark the labeled evidence. The retrieval counts in this section are not affected as far as a 30-question check can tell. See the [notice in the September 6 report](2026-09-06-longmemeval-ranker-wave.md). October 4, 2026: the full arms were recounted with opaque ids and the reported retrieval numbers are confirmed ([report](2026-10-04-longmemeval-opaque-followups.md)).
 
 ## Sometimes the best improvement is returning less
 
