@@ -20,6 +20,8 @@ import { sanitizePage } from './types.ts';
 import { templateOfText } from '../generators/relational-paraphrase-gen.ts';
 import { loadSplit } from './decisions/splits.ts';
 import { appendAccessLog } from './sealed-confirmation-lib.ts';
+import { EmbeddingCache, makeCachingTransport } from './longmemeval-cache.ts';
+import { homedir } from 'node:os';
 
 type MemoryQuestion = { id: string; base: string; question: string; gold: string[]; category: string; conversation: string };
 
@@ -57,11 +59,13 @@ const questions: MemoryQuestion[] = allQ
 // Proposed world-v1 E1 split, P0 method (salted sha256 order, first half dev) over base question ids; only dev is read here.
 const worldSplit = loadSplit('world-v1-relational');
 const sealedRun = sealedAccess(argv, 'feedback-replay world-v1 sealed questions');
-const worldDev = new Set(sealedRun ? worldSplit.sealed : worldSplit.dev);
 writeFileSync(join(output, 'world-v1-relational-split.json'), JSON.stringify(worldSplit, null, 2) + '\n');
-const devQuestions = questions.filter(q => worldDev.has(q.base));
+// Dev: train and score halves inside the dev questions. Sealed (preregistered E1 arm a): train on every dev question, score
+// every sealed question; the online stream runs dev and sealed questions in one seeded order and scores sealed only.
+const devBases = new Set(worldSplit.dev), sealedBases = new Set(worldSplit.sealed);
+const devQuestions = questions.filter(q => devBases.has(q.base) || (sealedRun && sealedBases.has(q.base)));
 const h = (s: string) => createHash('sha256').update(`${seed}\u0000${s}`).digest('hex');
-const isTrain = (q: MemoryQuestion) => parseInt(h(q.base).slice(0, 8), 16) % 2 === 0;
+const isTrain = (q: MemoryQuestion) => sealedRun ? devBases.has(q.base) : parseInt(h(q.base).slice(0, 8), 16) % 2 === 0;
 
 const paid = startPaidRun('p3-feedback-replay-world-dev', { ...budgetOptionsFrom(argv), estimateUsd: 0.5 });
 const adapter = new GbrainInlineAdapter({
@@ -123,6 +127,16 @@ function push(arm: string, lambda: number, q: MemoryQuestion, retrieved: string[
 
 const state = await adapter.init(pagesRich.map(sanitizePage) as never, { name: 'p3-feedback-world' } as never);
 const e = adapter.engineOf(state) as any;
+// Query embeddings go through one content-addressed cache, warmed for every question before any arm runs, so every arm
+// reads identical query vectors (fresh provider vectors and cached ones can differ in the last float bits).
+const gateway = await importGbrain<any>(gut, 'src/core/ai/gateway.ts');
+const { embedMany } = await import(Bun.resolveSync('ai', gut.root)) as { embedMany: (p: unknown) => Promise<unknown> };
+const cache = new EmbeddingCache(join(process.env.GBRAIN_EVALS_EMBED_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'embed-cache'), 'embed-cache-openai_text-embedding-3-large@1536.sqlite'), 'openai:text-embedding-3-large@1536');
+let transportCalls = 0;
+const caching = makeCachingTransport(async (p: any) => embedMany(p) as never, cache);
+gateway.__setEmbedTransportForTests(async (p: any) => { transportCalls++; return caching(p); });
+for (const q of devQuestions) await hybridSearch(e, q.question, { limit: TOP_K * 3, expansion: false });
+if (transportCalls === 0) throw new Error('query embeddings bypassed the warm cache transport');
 {
   const convId = 'world-v1';
   await setCfg(e, { ...PINS, 'feedback.enabled': 'false' });
@@ -197,6 +211,7 @@ for (const [k, rs] of groups) {
 }
 const costSummary = paid.run.close();
 paid.guard.uninstall();
+cache.close();
 writeFileSync(join(output, 'rows.ndjson'), rows.map(r => JSON.stringify(r)).join('\n') + '\n');
-writeFileSync(join(output, 'summary.json'), JSON.stringify({ benchmark: 'world-v1 relational (template + paraphrase)', labels: POSITIVE_ONLY ? 'positive-only' : 'gold 5 / non-gold 1', split: 'dev-only halves by base question', gbrain: gut.overlay?.build.commit ?? gut.version, seed, lambdas, cost: receiptCost(costSummary), arms: summary }, null, 2) + '\n');
+writeFileSync(join(output, 'summary.json'), JSON.stringify({ benchmark: 'world-v1 relational (template + paraphrase)', labels: POSITIVE_ONLY ? 'positive-only' : 'gold 5 / non-gold 1', split: sealedRun ? 'sealed: train on all dev questions, score all sealed questions (online: one seeded stream over dev and sealed, sealed scored)' : 'dev-only halves by base question', gbrain: gut.overlay?.build.commit ?? gut.version, seed, lambdas, cost: receiptCost(costSummary), arms: summary }, null, 2) + '\n');
 console.log(JSON.stringify(summary, null, 2));
