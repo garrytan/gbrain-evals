@@ -36,7 +36,7 @@
  */
 import './budget-ledger.ts';
 import { createHash } from 'node:crypto';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { budgetOptionsFrom, receiptCost, startPaidRun } from './budget-ledger.ts';
 import { gbrainSpecFrom, importGbrain, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
@@ -153,16 +153,26 @@ async function main(): Promise<void> {
     const gateway = await importGbrain<any>(gut, 'src/core/ai/gateway.ts');
     const { runPhaseEdgeContradictions } = await importGbrain<any>(gut, 'src/core/cycle/edge-contradictions.ts');
     const worlds = seeds.map(seed => generateTemporalEdgesWorld({ seed, phrasing: sealed ? undefined : devPhrasing, sealedPhrasing: sealed }));
-    const e1: Array<{ seed: number; asof_n: number; asof_exact: number }> = [];
-    const modelRuns: ModelRun[] = [];
+    // Checkpoint: every finished unit appends to checkpoint.ndjson in the output dir; a rerun with the same
+    // arguments skips finished units, so an interrupted run resumes instead of starting over.
+    const ckPath = join(output, 'checkpoint.ndjson');
+    const ckKey = JSON.stringify({ gbrain: gut.overlay?.build.commit ?? gut.version, phrasingSha, devPhrasing: sealed ? null : devPhrasing });
+    const done = existsSync(ckPath) ? readFileSync(ckPath, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l)).filter((x: { key: string }) => x.key === ckKey) : [];
+    const e1: Array<{ seed: number; asof_n: number; asof_exact: number }> = done.filter((x: { kind: string }) => x.kind === 'e1').map((x: { row: never }) => x.row);
+    const modelRuns: ModelRun[] = done.filter((x: { kind: string }) => x.kind === 'model').map((x: { row: ModelRun }) => x.row).filter((r: ModelRun) => !r.error);
+    const save = (kind: 'e1' | 'model', row: unknown) => appendFileSync(ckPath, JSON.stringify({ key: ckKey, kind, row }) + '\n');
     for (const world of worlds) {
       const t = sealed ? sealed.templates : DEV_TEMPLATES[devPhrasing as keyof typeof DEV_TEMPLATES];
       if (!t) throw new Error(`unknown development phrasing ${devPhrasing}`);
-      const base = await openBrain(gut, world, t);
-      const a = await asofExact(base, world);
-      e1.push({ seed: world.seed, asof_n: a.n, asof_exact: a.exact });
-      await base.engine.disconnect();
+      if (!e1.some(r => r.seed === world.seed)) {
+        const base = await openBrain(gut, world, t);
+        const a = await asofExact(base, world);
+        e1.push({ seed: world.seed, asof_n: a.n, asof_exact: a.exact });
+        save('e1', e1[e1.length - 1]);
+        await base.engine.disconnect();
+      }
       for (const model of models) for (let run = 1; run <= runs; run++) {
+        if (modelRuns.some(r => r.model === model && r.run === run && r.seed === world.seed)) continue;
         gateway.configureGateway({ chat_model: model, env: { ...keys } });
         const brain = await openBrain(gut, world, t);
         const row: ModelRun = { model, run, seed: world.seed, phase_status: '', phase_detail: '', totals: {}, applied: 0, wrong: 0, late: 0, undated_closures: 0, statuses: {}, asof_n: 0, asof_exact: 0 };
@@ -196,6 +206,7 @@ async function main(): Promise<void> {
           await brain.engine.disconnect().catch(() => {});
         }
         modelRuns.push(row);
+        if (!row.error) save('model', row);
         process.stderr.write(`[e2] seed ${world.seed} ${model} run ${run}: ${row.phase_status} applied ${row.applied}, wrong ${row.wrong}, as-of ${row.asof_exact}/${row.asof_n}${row.error ? `, error ${row.error}` : ''}\n`);
       }
     }
