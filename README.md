@@ -187,6 +187,32 @@ offline tier ran at both commits on paired machines:
 
 [Read the before and after](docs/benchmarks/2026-10-03-wave8-f1-repin.md).
 
+**Update, October 4: gbrain v0.60.46.0 (`739e5cc`) changes no category's
+accuracy except A4's, which improves, and automatic event extraction records
+plans as events.** The offline tier ran at `109b992` and `739e5cc` on paired
+machines:
+
+- All 28 ledger repros pass, including the timeline-latency repro (Cat7-1),
+  though the read stays about 0.03 ms slower than before Foundations 1.
+- Keyless `query` grades 100 of 120 answerable questions `moderate` (was 40)
+  and still 0 of 120 unanswerable ones (A4).
+- Refusals tell the agent the exact command: the empty-grant fix names the
+  token by id, and `edit_page` diffs list removed lines first.
+- N6 flagged three probes because new agent notices are shown once per
+  session; the repro shows the notice follows call order, not the private
+  page, and N6 now uses a session per probe.
+
+`auto_chronicle`, on by default since v0.60.45.0, was tested off versus on for
+the first time. It found 35 and 37 of 38 labeled events and took "who did I
+meet that day" questions from 60% to 100%, but it wrote 22 and 25 planned
+follow-ups from meeting notes as timeline events on their future dates. That
+fails gbrain's own accuracy gate (0.96 wrong events per page against 0.20), so
+under the preregistered rule default-on is contradicted until gbrain drops
+events dated after their page.
+
+[Read the re-pin](docs/benchmarks/2026-10-04-operator-wave-repin.md) and
+[the `auto_chronicle` experiment](docs/benchmarks/2026-10-04-auto-chronicle-lift.md).
+
 ## Why put gbrain on your shortlist?
 
 **It finds evidence across long conversations.** In the September 6 LongMemEval
