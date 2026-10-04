@@ -296,7 +296,17 @@ export class GbrainSlot {
     await op('extract', ['extract', '--stale']);
     // `embed --stale` stops after 30 minutes of wall clock unless --catch-up is given, which would leave a large
     // corpus partly embedded. The dry run afterwards proves nothing is left.
-    await op('embed', ['embed', '--stale', ...(staged ? ['--catch-up'] : [])]);
+    // gbrain v0.60.46+ asks before a paid embedding backfill (exit 3, confirmation_required). The slot build is the
+    // operator's approved, ledger-metered work, so it re-runs the command with the `--yes` the refusal names.
+    const embedArgs = ['embed', '--stale', ...(staged ? ['--catch-up'] : [])];
+    const first = await runCli(this.run, embedArgs, 3_600_000);
+    if (first.code === 3 && /confirmation_required|needs the user's approval/.test(first.stdout + first.stderr)) {
+      steps.push({ step: 'embed-consent', code: 3, ms: first.ms, tail: 'confirmation_required; approved by the slot build, rerun with --yes' });
+      await op('embed', [...embedArgs, '--yes']);
+    } else {
+      steps.push({ step: 'embed', code: first.code, ms: first.ms, tail: (first.stdout + '\n' + first.stderr).split('\n').filter(l => l.trim()).slice(-8).join('\n') });
+      if (first.code !== 0) throw new Error(`gbrain embed failed (exit ${first.code}): ${steps.at(-1)!.tail}`);
+    }
     if (staged) {
       await op('embed-verify', ['embed', '--stale', '--dry-run']);
       const left = steps.at(-1)!.tail.match(/Would embed (\d+) stale chunks/);
