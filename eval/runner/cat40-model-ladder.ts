@@ -14,7 +14,7 @@
  *     --arms oracle,fs,pg,memory,gbrain --budget-usd 100 [--families A,B] [--tasks A01,B02] \
  *     [--repeat 1] [--concurrency 6] [--slots 3] [--gbrain-repo ../gbrain --gbrain-ref <sha>] \
  *     [--judge gpt-5.4-mini|none] [--world eval/data/model-ladder-v1-large/world.json] [--out eval/reports/cat40/<name>] \
- *     [--max-tool-chars <n>|none] [--order task|model] [--slot-ref <sha>] [--no-pglite-analyze] [--surface starter]
+ *     [--max-tool-chars <n>|none] [--order task|model] [--slot-ref <sha>] [--no-pglite-analyze] [--surface starter] [--advertised verbs|starter|full]
  *     [--gbrain-instructions-file <file>] [--gbrain-tool-descriptions-file <json>] [--gbrain-drop-tools a,b]
  *       (evaluator-side A/B of the instruction and tool-description text the model sees; gbrain code unchanged)
  *   bun eval/runner/cat40-model-ladder.ts --scripted --arms fs,memory,oracle   (hermetic, $0)
@@ -423,7 +423,7 @@ export async function main(argv = process.argv.slice(2)) {
       ctx.proxy = new MeteringProxy();
       ctx.proxy.start();
       const surface = flag(argv, '--surface') ?? 'starter';
-      const slots = Array.from({ length: nSlots }, (_, i) => new GbrainSlot(`slot${i}`, slotDir!, gbrainBuild!.dir, ctx.proxy!.port, surface));
+      const slots = Array.from({ length: nSlots }, (_, i) => new GbrainSlot(`slot${i}`, slotDir!, gbrainBuild!.dir, ctx.proxy!.port, surface, flag(argv, '--advertised') ?? null));
       if (buildSlots) {
         // One build at a time: each holds a small ledger allowance (a build sends one provider request per page).
         for (const s of slots) {
@@ -480,7 +480,7 @@ export async function main(argv = process.argv.slice(2)) {
       world: { path: relative(process.cwd(), worldPath), scale: world.scale ?? 'v1', digest: worldDigest(world), seed: world.seed, docs: world.docs.length, tasks: world.tasks.length },
       evals_commit: (() => { try { return execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(); } catch { return null; } })(),
       evals_dirty: (() => { try { return execFileSync('git', ['status', '--porcelain'], { encoding: 'utf8' }).trim().length > 0; } catch { return null; } })(),
-      gbrain: gbrainBuild ? { slot_ref: flag(argv, '--slot-ref') ?? null, slot_commit: slotCommit, label: ctx.gbrainLabel, commit: gbrainBuild.commit, version: gbrainBuild.version, tree: gbrainBuild.tree, verified: gbrainBuild.verified, surface: flag(argv, '--surface') ?? 'starter', tool_overrides: { descriptions_file: descriptionsFile ?? null, descriptions_sha256: instructionsOverride.descriptions ? createHash('sha256').update(JSON.stringify(instructionsOverride.descriptions)).digest('hex') : null, dropped: instructionsOverride.dropTools }, instructions_override: instructionsOverride.text === null ? null : { file: relative(process.cwd(), resolve(instructionsFile!)), sha256: createHash('sha256').update(instructionsOverride.text).digest('hex') }, served_instructions_sha256: instructionsOverride.served === null ? null : createHash('sha256').update(instructionsOverride.served).digest('hex'), operator_analyze: analyze, serve_boot_timeout_s: SERVE_BOOT_TIMEOUT_SECONDS, staged_build: world.docs.length > STAGED_SOURCE_ADD_DOCS ? { sync_batch_docs: STAGED_SYNC_BATCH } : null } : null,
+      gbrain: gbrainBuild ? { slot_ref: flag(argv, '--slot-ref') ?? null, slot_commit: slotCommit, label: ctx.gbrainLabel, commit: gbrainBuild.commit, version: gbrainBuild.version, tree: gbrainBuild.tree, verified: gbrainBuild.verified, surface: flag(argv, '--surface') ?? 'starter', advertised_surface: flag(argv, '--advertised') ?? null, tool_overrides: { descriptions_file: descriptionsFile ?? null, descriptions_sha256: instructionsOverride.descriptions ? createHash('sha256').update(JSON.stringify(instructionsOverride.descriptions)).digest('hex') : null, dropped: instructionsOverride.dropTools }, instructions_override: instructionsOverride.text === null ? null : { file: relative(process.cwd(), resolve(instructionsFile!)), sha256: createHash('sha256').update(instructionsOverride.text).digest('hex') }, served_instructions_sha256: instructionsOverride.served === null ? null : createHash('sha256').update(instructionsOverride.served).digest('hex'), operator_analyze: analyze, serve_boot_timeout_s: SERVE_BOOT_TIMEOUT_SECONDS, staged_build: world.docs.length > STAGED_SOURCE_ADD_DOCS ? { sync_batch_docs: STAGED_SYNC_BATCH } : null } : null,
       mode: buildSlots ? 'build-slots' : 'cells', order, complete, cells_planned: cells.length,
       slot_builds: builds, models, arms, families, repeats, max_tool_chars: ctx.maxToolChars, argv,
       budget_run_id: ctx.budgetRunId, resumed: Boolean(budget?.run.participant),
