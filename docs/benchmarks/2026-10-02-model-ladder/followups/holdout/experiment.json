@@ -1,0 +1,36 @@
+{
+  "schema": "cat40-experiment-v1",
+  "gbrain_commit": "a714410a56285f3a99bb897c321b8df01dba66cb",
+  "slot_commit": "a714410a56285f3a99bb897c321b8df01dba66cb",
+  "world_digest": "df9e4f65cf603430934d6afa30073a44813ea670f78ae83c68bbde8210d1db9b",
+  "models": [
+    "claude-haiku-4-5",
+    "claude-sonnet-4-6",
+    "claude-sonnet-5-5",
+    "gpt-5.4-mini",
+    "gpt-5.4",
+    "gpt-6.1-sol"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "label": "gbrain-c1234-holdout",
+  "flags": {
+    "--arms": "gbrain",
+    "--surface": "starter",
+    "--gbrain-repo": "../gbrain",
+    "--budget-ledger": ".budget/cat40-followups.sqlite",
+    "--program-cap-usd": "237",
+    "--transcripts": true,
+    "--world": "eval/reports/cat40/holdout/world.json",
+    "--repeat": "2",
+    "--no-pglite-analyze": true,
+    "--slots": "5",
+    "--concurrency": "10",
+    "--models": "claude-haiku-4-5,claude-sonnet-4-6,claude-sonnet-5-5,gpt-5.4-mini,gpt-5.4,gpt-6.1-sol",
+    "--gbrain-ref": "a714410a5",
+    "--gbrain-label": "gbrain-c1234-holdout",
+    "--out": "eval/reports/cat40/followups-holdout"
+  },
+  "budget_run_id": "cat40-model-ladder-2026-10-04T01-53-09-590Z-10354c3a"
+}

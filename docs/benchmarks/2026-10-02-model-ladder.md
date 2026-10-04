@@ -4,6 +4,22 @@ Measured 2026-10-02 and 2026-10-03. The protocol is in
 [2026-10-02-model-ladder-protocol.md](2026-10-02-model-ladder-protocol.md), and the reasons for the experiment are in
 [the knowledge-layer plan](../plans/2026-10-01-knowledge-layer/PLAN.md).
 
+> **Correction, 2026-10-04: gbrain's AI search was partly switched off in every gbrain run below.**
+> The old budget ledger stalled the runner's event loop, and the same loop carries gbrain's embedding requests
+> through the metering proxy. When those requests stalled, gbrain quietly fell back to keyword-only search.
+> Evidence:
+> - Replaying a recorded search on the same build (`51a30c1`), brain and arguments returns different results
+>   today. With embeddings made unreachable, it returns exactly the recorded results.
+> - Rerunning the 30 dev-world renewal-brief cells (family E) of `51a30c1` under the fixed ledger scored 4 of 30,
+>   against 14 of 30 in the fix-wave ladder.
+>
+> So the gbrain results in this report measure gbrain with vector search often degraded, and its comparisons with
+> plain files are not comparisons of gbrain as configured. Comparisons between gbrain builds within one run shared
+> the condition. The plain-file, memory-tool and oracle arms make no provider calls through the proxy. The pg arm
+> embeds its queries inside the runner, which waits rather than falls back. The ledger fix is gbrain-evals v0.10.14.
+> Runs since then are in [the cost wave section](#cost-wave-v060440-measured-on-the-fixed-harness). gbrain against
+> plain files has not been re-measured under the fixed harness.
+
 ## The finding
 
 **At release v0.60.27.0, gbrain did not help agents.** An agent with plain Markdown files and `grep` finished more
@@ -281,6 +297,53 @@ What this shows:
 
 The held-out world uses the same generator templates as the development world, so it tests tuning to 50 tasks, not
 tuning to the generator's wording.
+
+### Cost wave (v0.60.44.0), measured on the fixed harness
+
+The gbrain cost wave ([plan](../plans/2026-10-03-cat40-followups/PLAN.md)) changes four things:
+- remote agents get lean search rows
+- tool results are compact JSON
+- per-tool schema budgets shrink the starter tool list from 59,969 to 24,763 characters
+- notices have size ceilings
+
+Every run below used the SQLite ledger, so gbrain's vector search worked, and every run used the gbrain arm only
+([followups/](2026-10-02-model-ladder/followups/)). The harness now measures what an isolated replay measures:
+search p50 was 579 ms in the harness and 579 ms in the replay.
+
+Development world (GPT-5.4-mini, GPT-5.4, Sonnet 4.6, one repeat), against master `109b99217` built the same way:
+
+| Build | Success (of 150) | Paired difference [95% CI] | $/task |
+|---|---|---|---|
+| master `109b99217` | 93 | | 0.111 |
+| + lean rows, compact JSON (`abc3182e2`) | 97 | +2.7 [−4.7, +10.0] | 0.084 |
+| + schema budgets, notice ceilings (`ea851b39b`) | 97 | +2.7 [−2.0, +7.3] | 0.075 |
+
+The plan's harm screen first compared dev round 1 with the `51a30c1` fix-wave ladder and failed (−8.7 points,
+family E −30). The cause was the correction above, not the wave. The same family scored 5 of 30 on master and 4 of
+30 on `51a30c1` and 4 of 29 on `566a242a` (one cell stopped at its budget) under the fixed ledger.
+
+Held-out world (seed 20261003; Haiku 4.5, Sonnet 4.6, Sonnet 5.5, GPT-5.4-mini, GPT-5.4 and GPT-6.1 Sol; 2 repeats),
+against a contemporaneous control on `566a242a` (v0.60.35.0, gate decision UC2). The wave was measured at
+`a714410a5`.
+
+| Model | control success | wave success | control $/task | wave $/task |
+|---|---|---|---|---|
+| Haiku 4.5 | 71% | 71% | 0.074 | 0.058 |
+| Sonnet 4.6 | 75% | 79% | 0.225 | 0.144 |
+| Sonnet 5.5 | 85% | 86% | 0.206 | 0.122 |
+| GPT-5.4-mini | 44% | 47% | 0.020 | 0.017 |
+| GPT-5.4 | 66% | 71% | 0.088 | 0.075 |
+| GPT-6.1 Sol | 100% | 100% | 0.097 | 0.065 |
+| All | 73.5% | 75.7% | 0.118 | 0.080 |
+
+Paired by task: +2.2 points [−0.5, +5.0]; 20 tasks better, 13 worse, 17 tied. The gate's ship rule (lower bound above
+−5 points, no new leaks, no model or family at −8 or worse) passes, and the −3-point margin would pass too. Neither
+arm leaked. Cost per task fell 32%, short of the plan's 40% target, and cost per successful task fell 34% ($0.161 to
+$0.106). Median wall time per task was 61 s before and 64 s after.
+
+Family E (renewal briefs) is the weakest family for every gbrain build once vector search works: 4–5 of 30 on the
+development world. Hybrid ranking puts short emails above the long meeting transcripts where the blocker and last
+contact live. Keyword-only search did better on this family. That is a gbrain ranking issue for a later wave.
 
 ## What to use, and what this does not show
 

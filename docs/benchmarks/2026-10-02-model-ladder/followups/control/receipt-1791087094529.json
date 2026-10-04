@@ -1,0 +1,168 @@
+{
+  "schema": "cat40-receipt-v1",
+  "version": "cat40-v1",
+  "judge_prompt": "cat40-claims-v1",
+  "judge": "gpt-5.4-mini",
+  "world": {
+    "path": "eval/reports/cat40/holdout/world.json",
+    "scale": "v1",
+    "digest": "df9e4f65cf603430934d6afa30073a44813ea670f78ae83c68bbde8210d1db9b",
+    "seed": 20261003,
+    "docs": 4036,
+    "tasks": 50
+  },
+  "evals_commit": "12d7016ca42dee46e489e0e72c5634c0d9951f10",
+  "evals_dirty": false,
+  "gbrain": {
+    "slot_ref": null,
+    "slot_commit": "566a242a6cf538396e89093370c784065690df00",
+    "label": "gbrain-566a242a-control",
+    "commit": "566a242a6cf538396e89093370c784065690df00",
+    "version": "0.60.35.0",
+    "tree": "98dafc046a6a6daa56c492bea1273627eb6f1686",
+    "verified": {
+      "copy_tree": "98dafc046a6a6daa56c492bea1273627eb6f1686",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.35.0",
+      "cli_version_matches": true
+    },
+    "surface": "starter",
+    "operator_analyze": false,
+    "serve_boot_timeout_s": 0,
+    "staged_build": null
+  },
+  "mode": "cells",
+  "order": "task",
+  "complete": true,
+  "cells_planned": 600,
+  "slot_builds": [],
+  "models": [
+    "claude-haiku-4-5",
+    "claude-sonnet-4-6",
+    "claude-sonnet-5-5",
+    "gpt-5.4-mini",
+    "gpt-5.4",
+    "gpt-6.1-sol"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "families": [
+    "A",
+    "B",
+    "C",
+    "E",
+    "F"
+  ],
+  "repeats": 2,
+  "max_tool_chars": null,
+  "argv": [
+    "--arms",
+    "gbrain",
+    "--surface",
+    "starter",
+    "--gbrain-repo",
+    "../gbrain",
+    "--budget-ledger",
+    ".budget/cat40-followups.sqlite",
+    "--program-cap-usd",
+    "237",
+    "--transcripts",
+    "--world",
+    "eval/reports/cat40/holdout/world.json",
+    "--repeat",
+    "2",
+    "--no-pglite-analyze",
+    "--slots",
+    "5",
+    "--concurrency",
+    "10",
+    "--models",
+    "claude-haiku-4-5,claude-sonnet-4-6,claude-sonnet-5-5,gpt-5.4-mini,gpt-5.4,gpt-6.1-sol",
+    "--gbrain-ref",
+    "566a242a",
+    "--gbrain-label",
+    "gbrain-566a242a-control",
+    "--budget-usd",
+    "85",
+    "--out",
+    "eval/reports/cat40/followups-control"
+  ],
+  "budget_run_id": "cat40-model-ladder-2026-10-04T03-03-15-407Z-ba9fc82b",
+  "resumed": false,
+  "proxy_unattributed": {
+    "slot:slot0": {
+      "usd": 0.00000117,
+      "requests": 3,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    },
+    "slot:slot1": {
+      "usd": 0.00000117,
+      "requests": 3,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    },
+    "slot:slot2": {
+      "usd": 0.00000117,
+      "requests": 3,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    },
+    "slot:slot3": {
+      "usd": 0.00000117,
+      "requests": 3,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    },
+    "slot:slot4": {
+      "usd": 0.00000117,
+      "requests": 3,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    }
+  },
+  "failed_cells_proxy_usd": 0,
+  "cost": {
+    "usd": 72.890229,
+    "input_tokens": 111650310,
+    "output_tokens": 652743,
+    "basis": "budget ledger cat40-model-ladder-2026-10-04T03-03-15-407Z-ba9fc82b: 7568 paid requests, 1 charged at their reservation because usage was unavailable",
+    "ledger": "<evals>/.budget/cat40-followups.sqlite",
+    "program_cap_usd": 237,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 4,
+      "max": 4199.5
+    }
+  },
+  "finished_at": "2026-10-04T04:11:34.529Z"
+}
