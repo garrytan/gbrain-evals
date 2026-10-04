@@ -12,7 +12,7 @@
  * retries and write-side work. Environment variables never satisfy the guard:
  * an inherited BRAINBENCH_BUDGET_RUN_ID must not turn on spending by itself.
  */
-import { DEFAULT_LEDGER_PATH, DEFAULT_PROGRAM_CAP_USD, ledgerStatus } from './budget-ledger.ts';
+import { DEFAULT_LEDGER_PATH, ledgerStatus } from './budget-ledger.ts';
 
 export const WAVE_CAP_USD = 150;
 export const WAVE_RUN_COMMAND = `bun eval/runner/budget-ledger.ts open --runner eval-category-wave --budget-usd ${WAVE_CAP_USD}`;
@@ -42,21 +42,23 @@ const usd = (n: number) => `$${n.toFixed(2)}`;
  * Refuse unless argv carries `--paid` and `--budget-run-id <id>` for an open
  * ledger run with money left. Returns the run id and what is left of it.
  */
-export function requirePaidArm(argv: readonly string[], options: { arm: string; estimateUsd: number | null; ledgerPath?: string; programCapUsd?: number }): { budgetRunId: string; remainingUsd: number } {
+export function requirePaidArm(argv: readonly string[], options: { arm: string; estimateUsd: number | null; ledgerPath?: string }): { budgetRunId: string; remainingUsd: number } {
   const ledgerPath = options.ledgerPath ?? DEFAULT_LEDGER_PATH;
-  const programCapUsd = options.programCapUsd ?? DEFAULT_PROGRAM_CAP_USD;
   const runId = flagValue(argv, '--budget-run-id');
   const estimate = options.estimateUsd === null ? 'unmeasured' : usd(options.estimateUsd);
   if (!argv.includes('--paid') || !runId) {
-    const { totals, run } = ledgerStatus({ ledgerPath, programCapUsd, runId: runId ?? null });
+    const { totals, run, ledger } = ledgerStatus({ ledgerPath, runId: runId ?? null });
+    const capped = totals.program_cap_usd === null || totals.remaining_usd === null
+      ? `the ledger ${ledger} has no recorded program cap yet (create it with \`bun eval/runner/budget-ledger.ts init --budget-ledger ${ledger} --program-cap-usd <dollars>\`)`
+      : `the ledger has ${usd(totals.remaining_usd)} left of its ${usd(totals.program_cap_usd)} program cap`;
     const left = run
       ? `run ${run.run_id} has ${usd(run.remaining_usd)} left of its ${usd(run.budget_usd)} budget`
-      : `the ledger has ${usd(totals.remaining_usd)} left of its ${usd(totals.program_cap_usd)} program cap; the wave cap is ${usd(WAVE_CAP_USD)} (open its run once with \`${WAVE_RUN_COMMAND}\`)`;
+      : `${capped}; the wave cap is ${usd(WAVE_CAP_USD)} (open its run once with \`${WAVE_RUN_COMMAND}\`)`;
     const missing = [!argv.includes('--paid') && '--paid', !runId && '--budget-run-id <id>'].filter(Boolean).join(' and ');
     throw new PaidArmRefusal(`${options.arm} spends money (estimate ${estimate}), and ${missing} ${missing.includes(' and ') ? 'are' : 'is'} missing. Pass \`--paid --budget-run-id <id>\`; ${left}.`);
   }
-  const { run } = ledgerStatus({ ledgerPath, programCapUsd, runId });
-  if (!run) throw new PaidArmRefusal(`${options.arm}: budget run ${runId} is not in the ledger at ${ledgerPath}. Open it with \`${WAVE_RUN_COMMAND}\` and pass the id it prints.`);
+  const { run, ledger } = ledgerStatus({ ledgerPath, runId });
+  if (!run) throw new PaidArmRefusal(`${options.arm}: budget run ${runId} is not in the ledger at ${ledger}. Open it with \`${WAVE_RUN_COMMAND}\` and pass the id it prints.`);
   if (run.finished_at !== null) throw new PaidArmRefusal(`${options.arm}: budget run ${runId} is already closed. Open a new run with \`${WAVE_RUN_COMMAND}\`.`);
   if (run.remaining_usd <= 0 || (options.estimateUsd !== null && options.estimateUsd > run.remaining_usd)) {
     throw new PaidArmRefusal(`${options.arm} spends money (estimate ${estimate}), but run ${runId} has only ${usd(run.remaining_usd)} left of its ${usd(run.budget_usd)} budget. Lower the arm's size or open a new run within the wave cap.`);

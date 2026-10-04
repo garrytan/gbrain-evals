@@ -837,7 +837,7 @@ export const REGISTRY: readonly CategoryEntry[] = [
   {
     id: 'model-ladder', legacy_alias: '40', name: 'Model Ladder: agent tasks over a company knowledge base, by memory system and model generation',
     family: 'reasoning', tier: 'P', script: 'eval/runner/cat40-model-ladder.ts',
-    run: { kind: 'listed', reason: 'paid model calls across many models, and a gbrain checkout for the gbrain arm', command: 'bun eval/runner/cat40-model-ladder.ts --models <list> --arms oracle,fs,fs-acl,memory,pg,gbrain --max-tool-chars 100000000 --gbrain-repo <gbrain checkout> --budget-usd <n>' },
+    run: { kind: 'listed', reason: 'paid model calls across many models, and a gbrain checkout for the gbrain arm', command: 'bun eval/runner/cat40-model-ladder.ts --models <list> --arms oracle,fs,fs-acl,memory,pg,gbrain --gbrain-repo <gbrain checkout> --budget-usd <n>' },
     cost_estimate: { usd: 800, basis: 'the uncapped 11-model, 6-arm ladder on 2026-10-02 cost $777 for 7,624 cells; one model and repeat costs $10-$80' },
     receipt_path: 'docs/benchmarks/2026-10-02-model-ladder/',
     headline: { metric: 'agent task success per memory arm and model, gbrain advantage over the best simple arm, and its slope on model capability', denominator: '50 tasks (authority, true-now, permissions, evidence briefs, write-back) per model and repeat' },

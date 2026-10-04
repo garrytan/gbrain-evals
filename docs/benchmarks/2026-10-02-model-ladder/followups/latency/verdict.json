@@ -1,0 +1,542 @@
+{
+  "schema": "cat40-latency-replay-v1",
+  "run": "<evals>/eval/reports/cat40/followups-dev1",
+  "label": "gbrain-c12-dev",
+  "gbrain_commit": "abc3182e206b7b723455559ee1455d094a26730e",
+  "slot_commit": "abc3182e206b7b723455559ee1455d094a26730e",
+  "world_digest": "df8c95e71b17beab176851e3b15daaea9b8719fb009ba50e02cfc68243009a20",
+  "slots": 5,
+  "concurrency": "one worker per slot, all slots in parallel",
+  "harness_receipts": [
+    "receipt-1791069566831.json"
+  ],
+  "verdict": {
+    "pass": true,
+    "tools": {
+      "search": {
+        "harness_p50_ms": 579,
+        "replay_p50_ms": 579,
+        "ratio": 1,
+        "pass": true,
+        "harness_calls": 438,
+        "replay_calls": 30
+      },
+      "query": {
+        "harness_p50_ms": 2035,
+        "replay_p50_ms": 2113,
+        "ratio": 0.96,
+        "pass": true,
+        "harness_calls": 122,
+        "replay_calls": 10
+      }
+    },
+    "harness_lag_p99_ms": 4,
+    "lag_pass": true,
+    "reasons": []
+  },
+  "calls": [
+    {
+      "name": "search",
+      "args": {
+        "query": "XERK MSA limitation of liability cap",
+        "limit": 5,
+        "return_unit": "section",
+        "adaptive_return": true
+      },
+      "ms": 1072.2369350000008,
+      "worker": 2
+    },
+    {
+      "name": "search",
+      "args": {
+        "query": "GRSA Graloria Systems amendment contract seats executed"
+      },
+      "ms": 1242.9843429999964,
+      "worker": 4
+    },
+    {
+      "name": "search",
+      "args": {
+        "query": "Iskenza Media account owner 2026-01-28",
+        "limit": 5,
+        "source_id": "__all__",
+        "fields": "lean",
+        "adaptive_return": true,
+        "autocut": true,
+        "relational": true
+      },
+      "ms": 716.1175199999998,
+      "worker": 4
+    },
+    {
+      "name": "query",
+      "args": {
+        "query": "ULLN licensed seats under contract current contract seats",
+        "limit": 5,
+        "types": [
+          "company",
+          "contract",
+          "account",
+          "deal"
+        ],
+        "adaptive_return": true,
+        "autocut": true,
+        "relational": true,
+        "fields": "lean",
+        "source_id": "__all__"
+      },
+      "ms": 2293.285910999999,
+      "worker": 0
+    },
+    {
+      "name": "search",
+      "args": {
+        "query": "Dovumbr Health contract renewal date"
+      },
+      "ms": 684.8947069999995,
+      "worker": 4
+    },
+    {
+      "name": "query",
+      "args": {
+        "query": "Hydari Robotics uptime SLA current owe service level agreement uptime",
+        "limit": 5,
+        "types": [
+          "company",
+          "account",
+          "contract",
+          "deal",
+          "customer"
+        ],
+        "adaptive_return": true,
+        "relational": true,
+        "source_id": "__all__"
+      },
+      "ms": 2726.5725109999985,
+      "worker": 3
+    },
+    {
+      "name": "search",
+      "args": {
+        "query": "Caelmiro Foods payment terms current force",
+        "limit": 5,
+        "fields": "lean",
+        "adaptive_return": true,
+        "autocut": true,
+        "relational": true
+      },
+      "ms": 911.4475619999939,
+      "worker": 0
+    },
+    {
+      "name": "query",
+      "args": {
+        "query": "Ulmadyn Logistics ULLN current contract licensed seats executed order form seats",
+        "limit": 10,
+        "detail": "high",
+        "adaptive_return": false
+      },
+      "ms": 3297.1664579999997,
+      "worker": 1
+    },
+    {
+      "name": "search",
+      "args": {
+        "query": "Orvique Foods account owner",
+        "limit": 10,
+        "source_id": "__all__",
+        "fields": "lean",
+        "adaptive_return": true,
+        "autocut": true,
+        "relational": true
+      },
+      "ms": 830.2465799999991,
+      "worker": 3
+    },
+    {
+      "name": "search",
+      "args": {
+        "query": "Gralanta Capital discount deal desk approval"
+      },
+      "ms": 1047.2132700000002,
+      "worker": 4
+    },
+    {
+      "name": "search",
+      "args": {
+        "query": "Branovik Logistics account owner"
+      },
+      "ms": 663.6110210000043,
+      "worker": 0
+    },
+    {
+      "name": "search",
+      "args": {
+        "query": "Voralto Labs renewal pricing",
+        "limit": 10,
+        "return_unit": "section"
+      },
+      "ms": 687.2738969999991,
+      "worker": 0
+    },
+    {
+      "name": "query",
+      "args": {
+        "query": "WYRK licensed seats under contract current contract seats",
+        "limit": 5,
+        "adaptive_return": true,
+        "autocut": false,
+        "types": [
+          "company",
+          "account",
+          "contract",
+          "opportunity",
+          "note",
+          "meeting"
+        ]
+      },
+      "ms": 1335.6186369999996,
+      "worker": 1
+    },
+    {
+      "name": "search",
+      "args": {
+        "query": "Pralalto Systems renewal date expires renews contract term expiration",
+        "limit": 10,
+        "source_id": "__all__",
+        "fields": "lean",
+        "snippet_chars": 500,
+        "return_unit": "page"
+      },
+      "ms": 841.8413440000004,
+      "worker": 1
+    },
+    {
+      "name": "query",
+      "args": {
+        "query": "Kestura Systems owner billing contact account owner",
+        "types": [
+          "crm",
+          "contract",
+          "meeting",
+          "team-update",
+          "email",
+          "ticket"
+        ],
+        "limit": 10,
+        "return_unit": "auto",
+        "source_id": "__all__",
+        "fields": "lean",
+        "relational": true
+      },
+      "ms": 4420.957972000004,
+      "worker": 2
+    },
+    {
+      "name": "query",
+      "args": {
+        "query": "Naxmiro Robotics contract renewal date",
+        "limit": 5,
+        "fields": "lean",
+        "adaptive_return": true,
+        "autocut": true,
+        "relational": true
+      },
+      "ms": 2112.890520999994,
+      "worker": 3
+    },
+    {
+      "name": "query",
+      "args": {
+        "query": "discount approval renewal Xerostra XEFA percentage off"
+      },
+      "ms": 1313.6117409999933,
+      "worker": 0
+    },
+    {
+      "name": "search",
+      "args": {
+        "query": "Gralanta Capital renewal discount approved",
+        "limit": 10,
+        "source_id": "__all__",
+        "return_unit": "page",
+        "snippet_chars": 0
+      },
+      "ms": 455.39735599999403,
+      "worker": 1
+    },
+    {
+      "name": "search",
+      "args": {
+        "query": "XEFA renewal discount approved",
+        "limit": 10,
+        "source_id": "__all__",
+        "return_unit": "page",
+        "fields": "full"
+      },
+      "ms": 366.56891899999755,
+      "worker": 3
+    },
+    {
+      "name": "search",
+      "args": {
+        "query": "Yarostra Logistics contract renewal date",
+        "limit": 5,
+        "return_unit": "section",
+        "adaptive_return": true
+      },
+      "ms": 578.967012000001,
+      "worker": 2
+    },
+    {
+      "name": "search",
+      "args": {
+        "query": "Voralto Labs renewal discount approved"
+      },
+      "ms": 325.69059500000003,
+      "worker": 2
+    },
+    {
+      "name": "search",
+      "args": {
+        "query": "\"Ondrumbr Capital\" discount",
+        "limit": 20,
+        "return_unit": "section",
+        "fields": "lean"
+      },
+      "ms": 594.3683440000023,
+      "worker": 1
+    },
+    {
+      "name": "search",
+      "args": {
+        "query": "Quormiro Capital last contact meeting email 2026-07-29 2026-07-18 2026-07-14",
+        "limit": 20,
+        "return_unit": "page",
+        "source_id": "__all__",
+        "fields": "full"
+      },
+      "ms": 501.3851990000039,
+      "worker": 3
+    },
+    {
+      "name": "search",
+      "args": {
+        "query": "discount approval TEMA renewal percentage"
+      },
+      "ms": 448.9666209999996,
+      "worker": 2
+    },
+    {
+      "name": "search",
+      "args": {
+        "query": "ULCA status: open",
+        "types": [
+          "ticket"
+        ],
+        "limit": 20,
+        "return_unit": "page"
+      },
+      "ms": 478.3569510000016,
+      "worker": 1
+    },
+    {
+      "name": "search",
+      "args": {
+        "query": "customer: \"Vesalto Foods\" status: Open",
+        "limit": 20,
+        "return_unit": "page",
+        "source_id": "__all__"
+      },
+      "ms": 575.901724000003,
+      "worker": 3
+    },
+    {
+      "name": "search",
+      "args": {
+        "query": "Iskesso Health open ticket renewal blocker DPA legal redlines",
+        "limit": 20,
+        "source_id": "__all__",
+        "return_unit": "page",
+        "fields": "full"
+      },
+      "ms": 386.16746799999964,
+      "worker": 2
+    },
+    {
+      "name": "search",
+      "args": {
+        "query": "ULCA Ulmenza dashboard loading slowly ticket August 2026 open",
+        "limit": 5
+      },
+      "ms": 388.5531970000011,
+      "worker": 1
+    },
+    {
+      "name": "search",
+      "args": {
+        "query": "VEFO SSO integration ticket"
+      },
+      "ms": 323.2641960000037,
+      "worker": 3
+    },
+    {
+      "name": "search",
+      "args": {
+        "query": "ISHO open ticket",
+        "limit": 10,
+        "types": [
+          "ticket"
+        ],
+        "return_unit": "page",
+        "snippet_chars": 0
+      },
+      "ms": 366.1874289999978,
+      "worker": 2
+    },
+    {
+      "name": "search",
+      "args": {
+        "query": "Lumellis Robotics renewal blocker competitor reorg legal clauses permissions",
+        "limit": 10,
+        "types": [
+          "email",
+          "meeting",
+          "ticket",
+          "contract"
+        ],
+        "return_unit": "page",
+        "source_id": "__all__"
+      },
+      "ms": 395.54918299999554,
+      "worker": 1
+    },
+    {
+      "name": "query",
+      "args": {
+        "query": "Ulmenza Capital renewal account owner contract renewal date open support ticket most recent email meeting blocker",
+        "limit": 5,
+        "source_id": "__all__",
+        "return_unit": "page",
+        "fields": "full",
+        "adaptive_return": true,
+        "autocut": true,
+        "relational": true
+      },
+      "ms": 1961.4776820000043,
+      "worker": 0
+    },
+    {
+      "name": "query",
+      "args": {
+        "query": "Quormiro Capital most recent email or meeting renewal blocker account owner contract renewal date open support ticket",
+        "limit": 10,
+        "return_unit": "section",
+        "adaptive_return": true,
+        "fields": "lean"
+      },
+      "ms": 4264.914828000001,
+      "worker": 4
+    },
+    {
+      "name": "search",
+      "args": {
+        "query": "Orvovik Media open ticket status open support",
+        "limit": 20,
+        "source_id": "__all__",
+        "return_unit": "page",
+        "fields": "full"
+      },
+      "ms": 664.5065509999913,
+      "worker": 3
+    },
+    {
+      "name": "search",
+      "args": {
+        "query": "QUCO Quormiro Capital ticket open 2026 August September",
+        "types": [
+          "ticket"
+        ]
+      },
+      "ms": 319.9381169999979,
+      "worker": 4
+    },
+    {
+      "name": "search",
+      "args": {
+        "query": "Lumellis Robotics status open ticket renewal blocker latest contact",
+        "types": [
+          "crm",
+          "meeting",
+          "email",
+          "ticket",
+          "note"
+        ],
+        "limit": 20,
+        "return_unit": "section"
+      },
+      "ms": 761.5548919999928,
+      "worker": 2
+    },
+    {
+      "name": "search",
+      "args": {
+        "query": "Ulmenza Capital support ticket open",
+        "limit": 10
+      },
+      "ms": 679.1828810000006,
+      "worker": 0
+    },
+    {
+      "name": "search",
+      "args": {
+        "query": "Iskesso Health"
+      },
+      "ms": 708.4509249999974,
+      "worker": 0
+    },
+    {
+      "name": "query",
+      "args": {
+        "query": "Kestadyn Capital most recent email meeting 2026 support renewal blocker legal reviewing clauses reorg competitor ticket",
+        "limit": 10,
+        "source_id": "__all__",
+        "return_unit": "page",
+        "fields": "full",
+        "adaptive_return": true,
+        "relational": true
+      },
+      "ms": 1862.5853410000127,
+      "worker": 4
+    },
+    {
+      "name": "search",
+      "args": {
+        "query": "ORMK Status: Open ticket",
+        "limit": 20,
+        "return_unit": "page",
+        "fields": "full",
+        "types": [
+          "ticket"
+        ]
+      },
+      "ms": 461.98093200000585,
+      "worker": 4
+    }
+  ],
+  "cost": {
+    "usd": 0.006315,
+    "input_tokens": 4062,
+    "output_tokens": 577,
+    "basis": "budget ledger cat40-latency-replay-2026-10-03T23-19-27-178Z-aeb41e02: 88 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "<evals>/.budget/cat40-followups.sqlite",
+    "program_cap_usd": 237,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 1,
+      "max": 2272
+    }
+  },
+  "finished_at": "2026-10-03T23:20:35.616Z"
+}

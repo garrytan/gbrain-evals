@@ -99,6 +99,6 @@ Some Markdown files under `data/` are the text being tested. Editing them change
 
 ## Contribute or reproduce
 
-Use [CONTRIBUTING.md](CONTRIBUTING.md) to add questions or an adapter, and [RUNBOOK.md](RUNBOOK.md) for setup failures and reproducibility. Browse the fictional world with `bun run eval:world:view`; on a machine without a desktop, `bun run eval:world:render` produces the HTML without opening a browser.
+Use [CONTRIBUTING.md](CONTRIBUTING.md) to add questions or an adapter, and [RUNBOOK.md](RUNBOOK.md) for setup failures and reproducibility. Paid runs spend through the budget ledger described in [docs/budget-ledger.md](../docs/budget-ledger.md). Browse the fictional world with `bun run eval:world:view`; on a machine without a desktop, `bun run eval:world:render` produces the HTML without opening a browser.
 
 To reproduce an old result, match both the gbrain-evals revision and the gbrain code named in the report. Checking out a gbrain commit inside this repository does not select that dependency.

@@ -38,10 +38,12 @@ LongMemEval, Cat13 and Cat35 refuse to make provider requests until you pass `--
 
 Every request to a paid provider host is reserved in a ledger before it is sent, including SDK retries and the requests gbrain makes internally during extraction and synthesis. After the response, the reservation is reconciled to the provider-reported usage. A request whose usage cannot be read is charged at its full reservation. A reservation that would take the run past `--budget-usd`, or all runs together past the program cap, is refused and the request is never sent.
 
-- The ledger lives at `.budget/ledger.json` (gitignored). Override it with `--budget-ledger <path>` or `BRAINBENCH_BUDGET_LEDGER`.
-- The program cap defaults to $500 across every run in the ledger. Override it with `--program-cap-usd` or `BRAINBENCH_PROGRAM_CAP_USD`.
-- Reservations left open by a crash stay counted against both caps until someone checks the provider usage page and edits the entry in the ledger.
-- `bun eval/runner/budget-ledger.ts status` prints committed spend, open reservations and what is left of the cap.
+- The ledger is a SQLite file at `.budget/ledger.sqlite` (gitignored). Use another with `--budget-ledger <path>` or `BRAINBENCH_BUDGET_LEDGER`; create it first with `bun eval/runner/budget-ledger.ts init --budget-ledger <path> --program-cap-usd <dollars>`. A path ending in `.json` means its `.sqlite` sibling, and an old `ledger.json` migrates on first use.
+- The program cap is recorded in the ledger ($500 unless `init` set another). Runners use the recorded cap; an explicit `--program-cap-usd` or `BRAINBENCH_PROGRAM_CAP_USD` that disagrees is refused. Change it with `set-cap`, only with the user's approval.
+- Reservations left open by a crash stay counted against both caps.
+- `bun eval/runner/budget-ledger.ts status` prints committed spend, open reservations and what is left of the cap; `verify` checks the file.
+
+The full guide, including migration, recovery and the event-loop lag recorded in every receipt, is [docs/budget-ledger.md](../docs/budget-ledger.md).
 
 The receipt's `cost` and `delivered_tokens` fields come from this ledger.
 

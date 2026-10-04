@@ -28,7 +28,7 @@ import { execFileSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { gunzipSync } from 'node:zlib';
-import { BudgetExceededError, BudgetRun, budgetOptionsFrom, receiptCost, startPaidRun, type BudgetOptions } from './budget-ledger.ts';
+import { BudgetExceededError, BudgetRun, budgetOptionsFrom, ledgerStatus, receiptCost, startPaidRun, type BudgetOptions } from './budget-ledger.ts';
 import { decideConfirmatory, gpt4oSecondArm, loadDecisionManifest, selectPilot, validateDecisionManifest, type ArmRows, type DecisionManifest } from './evidence-delivery/decision.ts';
 import { CLUSTER_MAP_PATH, REPO_ROOT, STUDY_DIR, buildClusterMap, loadClusterMap, loadDataset, pilotIds, sha256 } from './evidence-delivery/data.ts';
 import { runPowerAnalysis } from './evidence-delivery/power.ts';
@@ -96,13 +96,15 @@ export function assertManifestCommitted(root = REPO_ROOT, rel = DECISION_MANIFES
   if (diff) throw new Error(`${rel} has uncommitted changes; paid runs use the committed manifest only`);
 }
 
-/** Budget options with the manifest's program cap unless one was given explicitly. */
+/**
+ * Budget options with the manifest's program cap as an upper limit: the
+ * ledger's recorded cap applies, and a ledger whose cap is above the
+ * manifest's is refused. A new ledger is created at the manifest's cap.
+ */
 export interface CampaignBudget { budget: { campaign_cap_usd: number; program_cap_usd: number; campaign_runner?: string } }
 
 export function budgetOptions(a: Args, m: CampaignBudget): BudgetOptions {
-  const o = budgetOptionsFrom(a.argv);
-  const explicit = a.get('--program-cap-usd') !== null || process.env.BRAINBENCH_PROGRAM_CAP_USD !== undefined;
-  return { ...o, programCapUsd: explicit ? o.programCapUsd : m.budget.program_cap_usd };
+  return { ...budgetOptionsFrom(a.argv), programCapMaxUsd: m.budget.program_cap_usd };
 }
 
 /**
@@ -120,8 +122,7 @@ export function paidGuard(a: Args, m: CampaignBudget, runner: string, estimateUs
   }
   assertManifestCommitted(REPO_ROOT, manifestRel);
   if (!o.runId) throw new Error(`join the campaign run with --budget-run-id (open it once with campaign-open --budget-usd ${m.budget.campaign_cap_usd})`);
-  const ledger = JSON.parse(readFileSync(o.ledgerPath, 'utf8'));
-  const run = ledger.runs.find((r: any) => r.run_id === o.runId);
+  const { run } = ledgerStatus({ ledgerPath: o.ledgerPath, runId: o.runId });
   if (run?.runner !== campaignRunner) throw new Error(`${o.runId} is not an ${campaignRunner} run`);
   if (run.budget_usd > m.budget.campaign_cap_usd) throw new Error(`campaign run budget $${run.budget_usd} exceeds the manifest cap $${m.budget.campaign_cap_usd}`);
   return startPaidRun(runner, { ...o, estimateUsd, log });
@@ -267,7 +268,7 @@ async function cmdCampaignOpen(a: Args) {
   assertManifestCommitted();
   const o = budgetOptions(a, manifest);
   if (o.budgetUsd === null || o.budgetUsd > manifest.budget.campaign_cap_usd) throw new Error(`--budget-usd must be at most the manifest's campaign cap $${manifest.budget.campaign_cap_usd}`);
-  const run = BudgetRun.open({ runner: CAMPAIGN_RUNNER, budgetUsd: o.budgetUsd, estimateUsd: costPlan().with_retry_margin_usd, ledgerPath: o.ledgerPath, programCapUsd: o.programCapUsd });
+  const run = BudgetRun.open({ runner: CAMPAIGN_RUNNER, budgetUsd: o.budgetUsd, estimateUsd: costPlan().with_retry_margin_usd, ledgerPath: o.ledgerPath, programCapUsd: o.programCapUsd, programCapSource: o.programCapSource, programCapMaxUsd: o.programCapMaxUsd });
   process.stdout.write(run.runId + '\n');
 }
 
