@@ -140,6 +140,20 @@ Decision rule (report, not a registry gate): the candidate's pooled gbrain-arm
 success must not drop by more than 3 points (about 9 of 300 cells), and its
 finance-only leak count must not rise.
 
+### Amendment, 2026-10-04: same-window baseline for the F1/F10 check
+
+The decision rule above compares the candidate with a baseline run. On
+2026-10-03, two runs of the *same* baseline code (`566a242`) on
+`gpt-5.4-mini`, about seven hours apart, scored 59/100 and 46/100, and the
+share of first `search`/`query` calls with a `types` filter went from 12% to
+25% ([instruction A/B](2026-10-03-agent-operator/f1f10-instruction-ab/)). A
+baseline from a different window therefore measures provider drift as well as
+gbrain. From this amendment on, every candidate check reruns the baseline build
+in the same window, immediately before the candidate, with the same models,
+tasks and repeats (`eval/runner/cat41/after-pass.sh` does this). The threshold
+(no drop of more than 3 points pooled, no rise in leaks) is unchanged. The
+2026-10-03 baseline run stays published as the historical record.
+
 ## Reproduce
 
 ```sh

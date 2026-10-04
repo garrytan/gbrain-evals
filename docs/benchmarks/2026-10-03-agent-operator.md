@@ -259,6 +259,41 @@ term. The `search` and `query` schemas are unchanged apart from
 names "people, companies and projects", plus the error-protocol and readiness
 lines), so the instruction text is the likely cause, not a proven one.
 
+### Cat 40 F1/F10 follow-up: the drop is drift, not the instruction text (2026-10-04)
+
+The candidate's Cat 40 drop was concentrated in `gpt-5.4-mini`, so we A/B-tested
+the text the model sees on that arm (50 tasks, two repeats, 100 cells per row)
+on the candidate code. gbrain's `GBRAIN_MCP_INSTRUCTIONS` only *appends* a
+deployment-identity block, so the replacement is evaluator-side: Cat 40's new
+`--gbrain-instructions-file`, `--gbrain-tool-descriptions-file` and
+`--gbrain-drop-tools` flags change what the model is shown, nothing in gbrain.
+V2 ("minus the readiness tail") is identical to the candidate text here,
+because the Cat 40 brains have provider keys and receive no readiness tail.
+
+| Run (gpt-5.4-mini) | Success | Authority | `types` on search/query calls | first call filtered |
+|---|---|---|---|---|
+| Baseline code and text, 2026-10-03 16:30 UTC | 59/100 | 18/20 | 16.0% | 12% |
+| Candidate code and text, 22:30 UTC | 48/100 | 9/20 | 40.6% | 41% |
+| VC: candidate text (via the override) | 44/100 | 12/20 | 50.2% | 55% |
+| V0: baseline text | 46/100 | 10/20 | 38.5% | 34% |
+| V1: candidate minus the error-protocol line | 51/100 | 15/20 | 43.1% | 46% |
+| V3: candidate with the baseline memory line | 46/100 | 12/20 | 45.9% | 49% |
+| V5: candidate plus the two removed shared-skills lines | 45/100 | 14/20 | 37.1% | 36% |
+| T0: full baseline prompt (baseline text, baseline descriptions of the six changed tools, no `edit_page`) | 47/100 | 14/20 | 30.1% | 27% |
+| **Baseline code and text, rerun the same night** | **46/100** | **11/20** | **28.8%** | **25%** |
+
+The same baseline code scored 13 points lower when rerun hours later, and
+filtered its very first search twice as often, before seeing any gbrain
+output. The served tool schemas are identical between the builds. With a
+matched window the candidate is within the noise of the baseline (44 to 51
+across variants against 46), and no text variant restores the morning's 59.
+So no instruction or description change is indicated by this evidence. The
+morning baseline is not comparable; the protocol now reruns the baseline in
+the same window as each candidate ([amendment](2026-10-03-agent-operator-protocol.md#amendment-2026-10-04-same-window-baseline-for-the-f1f10-check)).
+A single 100-cell run moves by about ±5 points by chance, so V1's 51 is not
+evidence of an effect. Artifacts: [`f1f10-instruction-ab/`](2026-10-03-agent-operator/f1f10-instruction-ab/)
+(variants, served text and schemas, results and transcripts).
+
 Spend for the after-pass: about $13.65 (Cat 41, including the six-run rerun)
 and $33.55 (Cat 40). Artifacts:
 [`after-7d16702/`](2026-10-03-agent-operator/after-7d16702/) (including

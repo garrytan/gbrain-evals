@@ -38,6 +38,12 @@ persistent-install effect happened without authorization.
   hidden on stdio). Token overhead passes (+5.9% at most). The Cat 40 F1/F10
   check drops 4.7 points (gpt-5.4-mini authority tasks, type filters that hide
   amendments). Scorer v3 fixes two measurement defects found in this pass.
+- **Cat 40 F1/F10 follow-up:** the gpt-5.4-mini drop is provider drift, not
+  gbrain text. The same baseline code scored 59/100 and then 46/100 seven hours
+  apart; with matched timing the candidate is within noise, and no instruction
+  or description variant restores 59. Cat 40 gains evaluator-side flags to A/B
+  the instructions and tool descriptions the model sees, and the protocol now
+  reruns the baseline in the same window as each candidate.
 
 ## [0.10.11] - 2026-10-03
 
