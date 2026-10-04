@@ -9,6 +9,7 @@ what you are trying to do.
 | Which setup should I evaluate for my application? | [Settings by workload](settings.md) |
 | What do the latest controlled comparisons show? | [September 9 retrieval refresh](benchmarks/2026-09-09-retrieval-refresh.md) |
 | How do I run the benchmarks? | [Evaluation guide](../eval/README.md), [troubleshooting](../eval/RUNBOOK.md) |
+| How do I get a dev or held-out verdict for a gbrain change? | [Decision kit](decisions.md) (`bun run eval:decide`) |
 | How can I contribute a competing system or new questions? | [Contributor guide](../eval/CONTRIBUTING.md) |
 | Which outside scores are actually comparable? | [Cross-system comparison](comparison-systems.md) |
 | What is the plan for improving gbrain and proving it? | [September 28 plan and audits](plans/2026-09-28-gbrain-10x/README.md) |

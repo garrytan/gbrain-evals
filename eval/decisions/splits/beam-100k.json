@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "benchmark": "beam-100k",
+  "salt": "gbrain-evals-heldout-split-v1",
+  "method": "whole conversations ordered by sha256(salt, NUL, conversation id) ascending; first ceil(n * dev_fraction) are dev",
+  "dev_fraction": 0.3,
+  "dev": [
+    "100k-1",
+    "100k-11",
+    "100k-16",
+    "100k-19",
+    "100k-3",
+    "100k-4"
+  ],
+  "sealed": [
+    "100k-10",
+    "100k-12",
+    "100k-13",
+    "100k-14",
+    "100k-15",
+    "100k-17",
+    "100k-18",
+    "100k-2",
+    "100k-20",
+    "100k-5",
+    "100k-6",
+    "100k-7",
+    "100k-8",
+    "100k-9"
+  ],
+  "created_at": "2026-10-04",
+  "note": "Split before any system ran on BEAM; sealed conversations are supporting evidence at decisions and report aggregates until retired."
+}
