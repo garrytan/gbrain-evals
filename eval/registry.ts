@@ -778,6 +778,14 @@ export const REGISTRY: readonly CategoryEntry[] = [
     contract: 'Toggles only relational retrieval over a shared index and pairs outcomes per question, on the template questions (the parser\'s own verbs) and on a frozen paraphrase of each. Report distinct-question gains beside pair gains, and the paraphrase split beside the template split.',
   },
   {
+    id: 'constrained-relational', legacy_alias: 'constrained-relational', name: 'Constrained relational questions: one seed, one relation, one attribute constraint',
+    family: 'relationships', tier: 'K', script: 'eval/runner/constrained-relational.ts', run: { kind: 'dispatched', outputFlag: '--output', timeoutMs: HOUR },
+    cost_estimate: { usd: 0.05, basis: 'measured 2026-10-04: two dev seeds of about 190 pages each, OpenAI embeddings through the budget ledger, under $0.05' }, receipt_path: 'eval/reports/constrained-relational/<output>/receipt.json',
+    headline: { metric: 'NDCG@10, hit@1, hit@3 and Recall@5 over distinct pages, relational-arm fire rate', denominator: 'dev seeds 11 and 13 (phrasing set A): 142 questions (60 who-at-topic, 48 portfolio-by-sector, 34 attendees-by-role)' },
+    gate: 'report-only', promotion: REPORT_ONLY, evidence_maturity: 'synthetic-production-path',
+    contract: 'Generates seeded worlds of investors, companies, employees and meetings as linked notes (eval/generators/constrained-relational-gen.ts), indexes them with extraction and real embeddings on in-memory PGLite, and runs each question through hybrid search with the arm config from GBRAIN_EVAL_SEARCH_PINS. Every question names one seed entity, one typed relation and one attribute constraint that selects 1 to 4 of 8 to 14 neighbors; gold comes from the world model. Built for plan P3 E4 (relational triplet scoring); the fire rate must stay at or above 80%. Only development phrasing set A and seeds 11 and 13 run here; held-out phrasing and seeds belong to the custodian (--phrasing-file, access-logged). It does not measure answer synthesis or multi-hop composition.',
+  },
+  {
     id: 'multi-hop-paraphrase', legacy_alias: 'N9', name: 'Multi-hop with held-out wording: composed 2-3-hop questions, relational retrieval off vs on',
     family: 'relationships', tier: 'H', script: 'eval/runner/n9-multi-hop-paraphrase.ts', run: { kind: 'dispatched', outputFlag: '--output', timeoutMs: 600_000 },
     cost_estimate: FREE, receipt_path: 'eval/reports/n9-multi-hop-paraphrase/<output>/receipt.json',
@@ -1026,6 +1034,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'compare.ts': { role: 'paired run comparator CLI' },
   'feedback-replay-locomo.ts': { role: 'use-attributed feedback replay on LoCoMo (off, frozen, online, noisy, frequency arms); dev or custodian sealed split' },
   'feedback-replay-world.ts': { role: 'use-attributed feedback replay on world-v1 relational questions; dev or custodian sealed half' },
+  'feedback-think-replay.ts': { role: 'use-attributed feedback from the implicit citation signal: LoCoMo answers through the think operation (off, frozen, sparse, online arms), judged N times; dev or custodian sealed split' },
   'hub-world.ts': { role: 'hub-heavy world-v1 variant probes (hub-as-answer, bridge, one-hop guard) on the shared-index harness; corpus from eval/generators/hub-world-gen.ts' },
   'decide.ts': { role: 'held-out decision kit CLI (bun run eval:decide): decision specs, dev runs of baseline vs candidate gbrain builds, paired verdicts' },
   'eval-adapter-config.ts': { role: 'typed adapter config for matrix cells' },
