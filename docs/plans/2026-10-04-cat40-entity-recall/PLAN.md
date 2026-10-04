@@ -6,6 +6,30 @@ Status: draft for autoplan, 2026-10-04.
 Context: the Cat 40 report and its 2026-10-04 correction (`docs/benchmarks/2026-10-02-model-ladder.md`), and the
 cost wave (gbrain v0.60.44.0, gbrain-evals v0.10.16).
 
+## Gate decisions (Garry, 2026-10-04: "approve increase budget to $3k")
+
+These override any conflicting text below.
+
+- **UC1 (approved change).** A2 is not run. The 2026-10-02 held-out simple-arm cells (oracle, fs, fs-acl, memory, pg)
+  are reused and rescored per the UC1 branch and the Eng UC1 audit:
+  - original safety flags are kept where stored tool results were cut at 40,000 characters
+  - only success and claims are rescored
+  - ineligible cells are rerun
+  - the selection is committed before any A3 cell is scored
+- **UC2 (approved change).** The corrected headline is published now, decoupled from Item B. It compares
+  `a714410a5` (followups/holdout, fixed harness) with the preregistered comparator chosen from the rescored simple
+  arms, and is updated again after A3.
+- **UC3 (approved change).** Before B1–B4 are built, one development round tests query-time lexical enumeration
+  (gbrain master with `search.mcp_keyword_only=true`) beside the master control round. Item B proceeds unless that
+  round meets G1's family-E target (≥15/30) without a harm-screen failure. If it does, the plan is revised and brought
+  back to Garry.
+- **T1:** option A, a new `account` entity type in `gbrain-base-v2` (alias `crm`, `expert_routing: false`).
+  **T2:** the dev harm screen gates on success only and reports cost. **T3:** default-on if the held-out family-E point
+  gain is above 0 and the ship rule passes, with cost up to +25% allowed. **T4:** keep seed 20261003 and disclose
+  that this is its third use.
+- **Budget.** The program authorization is $3,000 (was $2,000; $1,943 committed across all ledgers before this wave).
+  The follow-up ledger cap is raised from $237 to $1,237 with `set-cap`. The planned spend is about $130.
+
 ## Why
 
 Two items are open.
