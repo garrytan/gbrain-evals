@@ -61,6 +61,8 @@ export interface MemoryQaSource extends SourceCommon {
   /** Search config pinned on both arms before the arm's own overrides. */
   search_pins: Record<string, string>;
   top_k: number;
+  /** Reading lane: a reader model over the retrieved sessions, or gbrain think; judged against the reference. */
+  qa?: { mode: 'reader' | 'think'; reader?: string; judge?: string; think_model?: string; runs: number; sessions: number; budget_tokens?: number | null };
   /** Estimated dollars for both arms; used for the budget preflight. */
   estimate_usd?: number;
 }
@@ -136,6 +138,11 @@ export function validateSpec(value: unknown, path = 'decision.json'): DecisionSp
         if (src.split !== 'dev') problems.push(`${label}: dev specs may only name dev splits (sealed data opens through the custodian)`);
         if (!['hash', 'real'].includes(src.embed)) problems.push(`${label}: embed must be hash or real`);
         if (!Number.isInteger(src.top_k) || src.top_k < 5 || src.top_k > 50) problems.push(`${label}: top_k must be an integer in [5, 50]`);
+        if (src.qa !== undefined) {
+          if (!['reader', 'think'].includes(src.qa.mode)) problems.push(`${label}: qa.mode must be reader or think`);
+          if (!Number.isInteger(src.qa.runs) || src.qa.runs < 1 || src.qa.runs > 10) problems.push(`${label}: qa.runs must be an integer in [1, 10]`);
+          if (!Number.isInteger(src.qa.sessions) || src.qa.sessions < 1 || src.qa.sessions > 50) problems.push(`${label}: qa.sessions must be an integer in [1, 50]`);
+        }
       } else if (src?.kind === 'category') {
         if (typeof src.script !== 'string' || !src.script.startsWith('eval/runner/')) problems.push(`${label}: script must be a path under eval/runner/`);
         if (!Array.isArray(src.args)) problems.push(`${label}: args must be an array`);
@@ -187,6 +194,21 @@ const guardrailFamily = (): ComparisonSpec[] => [
   { id: 'ndcg-10', metric: 'ndcg_at_10', gate: 'exploratory', direction: 'higher', cluster_by: 'conversation' },
   { id: 'latency', metric: 'latency_ms', gate: 'exploratory', direction: 'lower', cluster_by: 'conversation' },
 ];
+
+const qaFamily = (primary: boolean, minEffect: number): ComparisonSpec[] => [
+  primary
+    ? { id: 'qa-score', metric: 'qa_score', gate: 'superiority', direction: 'higher', min_effect: minEffect, cluster_by: 'conversation', description: 'judged answer correctness (mean over replicates)' }
+    : { id: 'qa-score', metric: 'qa_score', gate: 'noninferiority', direction: 'higher', tolerance: 0.01, cluster_by: 'conversation', description: 'guardrail: judged answer correctness' },
+  { id: 'recall-all-5', metric: 'recall_all_at_5', gate: 'exploratory', direction: 'higher', cluster_by: 'conversation' },
+  { id: 'qa-input-tokens', metric: 'qa_input_tokens', gate: 'exploratory', direction: 'lower', cluster_by: 'conversation' },
+];
+
+export function qaSource(benchmark: MemoryQaBenchmark, mode: 'reader' | 'think', opts: { primary: boolean; limit?: number | null; categories?: string[]; minEffect?: number; runs?: number }): MemoryQaSource {
+  const base = memoryQaSource(benchmark, { primary: opts.primary, limit: opts.limit ?? 150, categories: opts.categories, minEffect: opts.minEffect });
+  const perQ = mode === 'think' ? 0.08 : benchmark === 'lme-s' ? 0.05 : 0.01;
+  return { ...base, id: `${base.id}-${mode}`, exclude_when: [], qa: { mode, runs: opts.runs ?? 1, sessions: 5 },
+    comparisons: qaFamily(opts.primary, opts.minEffect ?? 0), estimate_usd: Math.ceil((base.estimate_usd ?? 0) + perQ * (opts.runs ?? 1) * (opts.limit ?? 150) * 2) };
+}
 
 export function memoryQaSource(benchmark: MemoryQaBenchmark, opts: { primary: boolean; embed?: EmbedMode; limit?: number | null; categories?: string[]; minEffect?: number }): MemoryQaSource {
   const estimate: Record<MemoryQaBenchmark, number> = { fixture: 0, locomo: 1, 'lme-s': 12, 'beam-100k': 2, 'beam-1m': 10 };
@@ -260,8 +282,9 @@ export function templateSources(plan: Plan): { sources: Source[]; notes: string 
       notes: 'Human-typable fact/link line grammar, wanted pages, duplicate nudge: typed-edge accuracy and entity resolution; LME-S as a guardrail.',
     };
     case 'P6': return {
-      sources: [memoryQaSource('lme-s', { primary: true }), memoryQaSource('locomo', { primary: false }), memoryQaSource('beam-100k', { primary: false })],
-      notes: 'Fact keys pointing at raw pages and time-aware retrieval: LME-S strict recall primary (replication target); LoCoMo and BEAM as guardrails.',
+      sources: [memoryQaSource('lme-s', { primary: true }), qaSource('lme-s', 'reader', { primary: true }), qaSource('lme-s', 'think', { primary: false }),
+        memoryQaSource('locomo', { primary: false }), memoryQaSource('beam-100k', { primary: false })],
+      notes: 'Fact keys pointing at raw pages, time-aware retrieval and reading quality: LME-S strict recall and reader accuracy primary (replication targets), gbrain think accuracy as a guardrail on a 150-question stratified sample; LoCoMo and BEAM as guardrails.',
     };
     case 'P7': return {
       sources: [N9(true), memoryQaSource('lme-s', { primary: false })],

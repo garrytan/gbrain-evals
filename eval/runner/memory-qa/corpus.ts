@@ -31,6 +31,12 @@ export interface MemoryQuestion {
   /** Session ids (within the conversation) that hold the evidence. Empty for abstention items. */
   gold: string[];
   abstention: boolean;
+  /** Evaluator-side only: the reference answer, never shown to the system under test. */
+  answer?: string;
+  /** Evaluator-side only: rubric items (BEAM) the judge checks one by one. */
+  rubric?: string[];
+  /** Evaluator-side only: the misleading answer an adversarial question invites (LoCoMo category 5). */
+  trap?: string;
 }
 export interface Corpus { benchmark: string; conversations: Conversation[]; questions: MemoryQuestion[]; source: DatasetIdentity }
 export interface DatasetIdentity { name: string; files: Array<{ path: string; sha256: string }>; revision: string; license: string }
@@ -146,7 +152,7 @@ export async function fetchDataset(benchmark: string, opts: { force?: boolean; v
 const LOCOMO_CATEGORY: Record<number, string> = { 1: 'multi-hop', 2: 'temporal', 3: 'open-domain', 4: 'single-hop', 5: 'adversarial' };
 
 export function loadLocomo(): Corpus {
-  const raw = JSON.parse(readDatasetFile(LOCOMO_FILE, 'locomo')) as Array<{ sample_id: string; conversation: Record<string, unknown>; qa: Array<{ question: string; category: number; evidence?: string[] }> }>;
+  const raw = JSON.parse(readDatasetFile(LOCOMO_FILE, 'locomo')) as Array<{ sample_id: string; conversation: Record<string, unknown>; qa: Array<{ question: string; category: number; evidence?: string[]; answer?: unknown; adversarial_answer?: unknown }> }>;
   const conversations: Conversation[] = [];
   const questions: MemoryQuestion[] = [];
   for (const sample of raw) {
@@ -166,7 +172,8 @@ export function loadLocomo(): Corpus {
         if (m && known.has(`session_${m[1]}`)) gold.add(`session_${m[1]}`);
       }
       questions.push({ id: `${sample.sample_id}:q${String(i).padStart(3, '0')}`, conversation: sample.sample_id, question: q.question,
-        category: LOCOMO_CATEGORY[q.category] ?? `cat${q.category}`, gold: q.category === 5 ? [] : [...gold], abstention: q.category === 5 });
+        category: LOCOMO_CATEGORY[q.category] ?? `cat${q.category}`, gold: q.category === 5 ? [] : [...gold], abstention: q.category === 5,
+        ...(q.category === 5 ? { answer: 'The conversation never states this.', trap: q.adversarial_answer === undefined ? undefined : String(q.adversarial_answer) } : { answer: String(q.answer ?? '') }) });
     });
   }
   return { benchmark: 'locomo', conversations, questions, source: { name: 'LoCoMo (locomo10.json)', files: [{ path: LOCOMO_FILE.path, sha256: LOCOMO_FILE.sha256 }], revision: '3eb6f2c', license: 'CC BY-NC 4.0' } };
@@ -174,7 +181,7 @@ export function loadLocomo(): Corpus {
 
 export function loadLmeS(): Corpus {
   const raw = JSON.parse(readDatasetFile(LME_S_FILE, 'lme-s')) as Array<{
-    question_id: string; question_type: string; question: string; question_date?: string;
+    question_id: string; question_type: string; question: string; question_date?: string; answer?: unknown;
     answer_session_ids: string[]; haystack_session_ids: string[]; haystack_dates?: string[];
     haystack_sessions: Array<Array<{ role: string; content: string }>>;
   }>;
@@ -187,7 +194,7 @@ export function loadLmeS(): Corpus {
     conversations.push({ id: q.question_id, sessions });
     const abstention = q.question_id.endsWith('_abs');
     questions.push({ id: q.question_id, conversation: q.question_id, question: q.question, question_date: q.question_date,
-      category: q.question_type, gold: abstention ? [] : [...q.answer_session_ids], abstention });
+      category: q.question_type, gold: abstention ? [] : [...q.answer_session_ids], abstention, answer: String(q.answer ?? '') });
   }
   return { benchmark: 'lme-s', conversations, questions, source: { name: 'LongMemEval-S cleaned', files: [{ path: LME_S_FILE.path, sha256: LME_S_FILE.sha256 }], revision: '98d7416c', license: 'MIT' } };
 }
@@ -220,12 +227,14 @@ export function loadBeam(size: '100k' | '1m'): Corpus {
     }
     conversations.push({ id: c.conversation, sessions });
     const pq = JSON.parse(readDatasetFile({ path: `beam/${c.questions_path}`, url: m.raw_base + c.questions_path, sha256: c.questions_sha256 }, `beam-${size}`)) as
-      Record<string, Array<{ question: string; source_chat_ids?: unknown }>>;
+      Record<string, Array<{ question: string; source_chat_ids?: unknown; answer?: unknown; ideal_response?: unknown; ideal_answer?: unknown; ideal_summary?: unknown; expected_compliance?: unknown; rubric?: unknown }>>;
     for (const [ability, items] of Object.entries(pq)) {
       items.forEach((item, i) => {
         const gold = [...new Set(messageIds(item.source_chat_ids).map(id => sessionOfMessage.get(id)).filter((s): s is string => !!s))];
         const abstention = ability === 'abstention';
-        questions.push({ id: `${c.conversation}:${ability}:${i}`, conversation: c.conversation, question: item.question, category: ability, gold: abstention ? [] : gold, abstention });
+        const reference = item.answer ?? item.ideal_response ?? item.ideal_answer ?? item.ideal_summary ?? item.expected_compliance;
+        questions.push({ id: `${c.conversation}:${ability}:${i}`, conversation: c.conversation, question: item.question, category: ability, gold: abstention ? [] : gold, abstention,
+          answer: reference === undefined ? undefined : String(reference), rubric: Array.isArray(item.rubric) ? item.rubric.map(String) : undefined });
       });
     }
   }

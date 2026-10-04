@@ -166,3 +166,39 @@ describe('dev workflow', () => {
     expect(await main(['nonsense'])).toBe(2);
   });
 });
+
+describe('reading lane', () => {
+  const { judgePromptsFor, packSessions, repeatsTrap, ChatClient } = require('../../eval/runner/memory-qa/qa.ts') as typeof import('../../eval/runner/memory-qa/qa.ts');
+  const q = (over: Record<string, unknown>) => ({ id: 'x', conversation: 'c', question: 'When?', category: 'temporal', gold: ['s1'], abstention: false, answer: 'May 2023', ...over }) as never;
+  test('judges follow the benchmark: temporal off-by-one, unanswerable for abstention, one prompt per rubric item', () => {
+    expect(judgePromptsFor('locomo', q({}), 'r')[0]).toContain('off-by-one');
+    expect(judgePromptsFor('locomo', q({ abstention: true, category: 'adversarial' }), 'r')[0]).toContain('unanswerable');
+    expect(judgePromptsFor('lme-s', q({ category: 'knowledge-update' }), 'r')[0]).toContain('updated answer');
+    expect(judgePromptsFor('beam-100k', q({ rubric: ['a', 'b', 'c'] }), 'r')).toHaveLength(3);
+  });
+  test('packing keeps retrieval order, whole sessions, and the token budget', () => {
+    const s = (id: string, n: number) => ({ id, date: '2024-01-01', turns: [{ speaker: 'user', content: 'x'.repeat(n) }] });
+    const ranked = [s('a', 400), s('b', 4000), s('c', 400)];
+    expect(packSessions(ranked, 5, null).sessions.map(x => x.id)).toEqual(['a', 'b', 'c']);
+    expect(packSessions(ranked, 5, 300).sessions.map(x => x.id)).toEqual(['a']);
+    expect(packSessions(ranked, 2, null).sessions.map(x => x.id)).toEqual(['a', 'b']);
+  });
+  test('trap detection matches the planted answer, not unrelated text', () => {
+    expect(repeatsTrap('She realized that self-care is important.', 'self-care is important')).toBe(true);
+    expect(repeatsTrap('The conversation never says.', 'self-care is important')).toBe(false);
+  });
+  test('replicates are separate provider calls, never one cached answer', async () => {
+    const real = globalThis.fetch;
+    let calls = 0;
+    globalThis.fetch = (async () => { calls++; return new Response(JSON.stringify({ choices: [{ message: { content: `answer ${calls}` } }], usage: { prompt_tokens: 1, completion_tokens: 1 } }), { status: 200 }); }) as never;
+    try {
+      const c = new ChatClient(join(tmp, 'qa-cache'));
+      const a0 = await c.chat('openai:gpt-4o-mini', 'p', { maxTokens: 5, replicate: 0 });
+      const a1 = await c.chat('openai:gpt-4o-mini', 'p', { maxTokens: 5, replicate: 1 });
+      const again = await c.chat('openai:gpt-4o-mini', 'p', { maxTokens: 5, replicate: 0 });
+      expect(calls).toBe(2);
+      expect(a0.text).not.toBe(a1.text);
+      expect(again.cached).toBe(true);
+    } finally { globalThis.fetch = real; }
+  });
+});

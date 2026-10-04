@@ -34,7 +34,8 @@ import { requirePaidArm } from '../paid-arm.ts';
 import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
 import { EmbeddingCache, makeCachingTransport } from '../longmemeval-cache.ts';
 import { ndcgAtK, recallAllAtK, recallAnyAtK, uniqueInOrder, percentile } from '../metrics.ts';
-import { loadCorpus, occurrenceId, renderSessionPage, type Corpus, type MemoryQuestion } from './corpus.ts';
+import { loadCorpus, occurrenceId, renderSessionPage, type Corpus, type MemoryQuestion, type Session } from './corpus.ts';
+import { ChatClient, DEFAULT_JUDGE, DEFAULT_READER, judgeResponse, packSessions, readerPrompt, repeatsTrap, approxTokens } from './qa.ts';
 import { devConversations } from '../decisions/splits.ts';
 import { decideError, DecideError, renderOperatorMessage } from '../decisions/errors.ts';
 
@@ -54,6 +55,7 @@ export interface RunArgs {
   shard: { index: number; count: number };
   output: string;
   argv: string[];
+  qa: { mode: 'none' | 'reader' | 'think'; reader: string; judge: string; runs: number; sessions: number; budgetTokens: number | null; thinkModel: string };
 }
 
 export interface MemoryQaRow {
@@ -68,6 +70,16 @@ export interface MemoryQaRow {
   ndcg_at_10?: number;
   retrieved?: string[];
   latency_ms?: number;
+  qa_score?: number;
+  qa_scores?: number[];
+  qa_runs?: number;
+  qa_trap?: number;
+  qa_input_tokens?: number;
+  qa_output_tokens?: number;
+  qa_context_tokens?: number;
+  qa_sessions?: number;
+  qa_answer?: string;
+  qa_error?: string;
   error?: string | null;
   error_origin?: 'sut' | 'harness' | 'dependency';
 }
@@ -110,6 +122,14 @@ export function parseRunArgs(argv: string[]): RunArgs {
     limit: one('--limit') ? Number(one('--limit')) : null,
     seed: Number(one('--seed') ?? 42), topK: Number(one('--top-k') ?? 10),
     shard: { index: si, count: sn }, output: resolve(output), argv,
+    qa: {
+      mode: (one('--qa') ?? 'none') as 'none' | 'reader' | 'think',
+      reader: one('--reader') ?? DEFAULT_READER[benchmark] ?? 'openai:gpt-4o-2024-08-06',
+      judge: one('--judge') ?? DEFAULT_JUDGE[benchmark] ?? 'openai:gpt-4o-2024-08-06',
+      runs: Number(one('--qa-runs') ?? 1), sessions: Number(one('--qa-sessions') ?? 5),
+      budgetTokens: one('--qa-budget-tokens') ? Number(one('--qa-budget-tokens')) : null,
+      thinkModel: one('--think-model') ?? 'anthropic:claude-sonnet-5-5',
+    },
   };
 }
 
@@ -153,7 +173,7 @@ export function hashEmbed(text: string, dims: number): number[] {
 const PROVIDER_KEY: Record<string, string> = { openai: 'OPENAI_API_KEY', voyage: 'VOYAGE_API_KEY', google: 'GOOGLE_GENERATIVE_AI_API_KEY' };
 
 export function runConfigHash(a: RunArgs, gut: GbrainUnderTest, corpus: Corpus): string {
-  const pre = { benchmark: a.benchmark, split: a.split, config: a.config, pins: a.pins, embed: a.embed, model: a.embeddingModel, dims: a.embeddingDims,
+  const pre = { benchmark: a.benchmark, split: a.split, config: a.config, pins: a.pins, embed: a.embed, model: a.embeddingModel, dims: a.embeddingDims, qa: a.qa,
     categories: a.categories, limit: a.limit, seed: a.seed, topK: a.topK, gbrain: gut.overlay?.build.commit ?? gut.version, data: corpus.source.files };
   return createHash('sha256').update(JSON.stringify(pre)).digest('hex');
 }
@@ -190,21 +210,26 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   let paid: { run: BudgetRun; guard: PaidRequestGuard } | null = null;
   let cache: EmbeddingCache | null = null;
   const provider = a.embeddingModel.split(':')[0];
+  const needsPaid = a.embed === 'real' || a.qa.mode !== 'none';
+  if (!['none', 'reader', 'think'].includes(a.qa.mode)) throw new Error('--qa must be none, reader or think');
+  if (needsPaid) {
+    const perQuestion: Record<string, number> = { 'lme-s': 0.012, locomo: 0.002, 'beam-100k': 0.01, 'beam-1m': 0.03, fixture: 0 };
+    const perQa: Record<string, number> = { none: 0, reader: a.benchmark === 'lme-s' ? 0.05 : 0.01, think: 0.08 };
+    const mine = questions.filter(q => myConvs.includes(q.conversation)).length;
+    const estimate = Math.max(0.05, Math.round(((a.embed === 'real' ? perQuestion[a.benchmark] ?? 0.02 : 0) + perQa[a.qa.mode] * a.qa.runs) * mine * 100) / 100);
+    try { requirePaidArm(a.argv, { arm: `memory-qa ${a.benchmark}`, estimateUsd: estimate }); }
+    catch (e) {
+      throw decideError({ code: 'PAID_FLAGS_MISSING', message: (e as Error).message, why: 'real embeddings and the reading lane call paid providers, and every paid request is reserved in the budget ledger first',
+        fix: { next: 'run', argv: ['bun', 'eval/runner/budget-ledger.ts', 'status'], verify: ['bun', 'eval/runner/budget-ledger.ts', 'status'] } });
+    }
+    paid = startPaidRun(`memory-qa:${a.benchmark}`, { ...budgetOptionsFrom(a.argv), estimateUsd: estimate });
+  }
   if (a.embed === 'hash') {
     const keyEnv = PROVIDER_KEY[provider] ?? 'OPENAI_API_KEY';
     if (!process.env[keyEnv]) process.env[keyEnv] = 'hash-embed-transport-no-provider-call';
     gateway.configureGateway({ embedding_model: a.embeddingModel, embedding_dimensions: a.embeddingDims, env: process.env });
     gateway.__setEmbedTransportForTests(async (params: { values: string[] }) => ({ embeddings: params.values.map(v => hashEmbed(v, a.embeddingDims)), values: params.values, warnings: [], usage: { tokens: 0 } }));
   } else {
-    const perQuestion: Record<string, number> = { 'lme-s': 0.012, locomo: 0.002, 'beam-100k': 0.01, 'beam-1m': 0.03, fixture: 0 };
-    const mine = questions.filter(q => myConvs.includes(q.conversation)).length;
-    const estimate = Math.max(0.05, Math.round((perQuestion[a.benchmark] ?? 0.02) * mine * 100) / 100);
-    try { requirePaidArm(a.argv, { arm: `memory-qa ${a.benchmark}`, estimateUsd: estimate }); }
-    catch (e) {
-      throw decideError({ code: 'PAID_FLAGS_MISSING', message: (e as Error).message, why: 'real embeddings call a paid provider, and every paid request is reserved in the budget ledger first',
-        fix: { next: 'run', argv: ['bun', 'eval/runner/budget-ledger.ts', 'status'], verify: ['bun', 'eval/runner/budget-ledger.ts', 'status'] } });
-    }
-    paid = startPaidRun(`memory-qa:${a.benchmark}`, { ...budgetOptionsFrom(a.argv), estimateUsd: estimate });
     gateway.configureGateway({ embedding_model: a.embeddingModel, embedding_dimensions: a.embeddingDims, env: process.env });
     const aiPath = Bun.resolveSync('ai', gut.root);
     const { embedMany } = await import(aiPath) as { embedMany: (p: unknown) => Promise<unknown> };
@@ -219,6 +244,9 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   const { importFromContent } = await importGbrain<{ importFromContent: (e: unknown, slug: string, content: string, o?: Record<string, unknown>) => Promise<{ embedding_deferred?: boolean }> }>(gut, 'src/core/import-file.ts');
   const { hybridSearch } = await importGbrain<{ hybridSearch: (e: unknown, q: string, o?: Record<string, unknown>) => Promise<Array<{ slug: string; rerank_score?: number }>> }>(gut, 'src/core/search/hybrid.ts');
 
+  const think = a.qa.mode === 'think' ? (await importGbrain<{ runThink: (e: unknown, o: Record<string, unknown>) => Promise<{ answer: string; synthesis_status?: string }> }>(gut, 'src/core/think/index.ts')).runThink : null;
+  const chat = a.qa.mode === 'none' ? null : new ChatClient(process.env.GBRAIN_EVALS_QA_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'qa-cache'));
+  const lastDate = (sessions: Session[]) => sessions.map(x => x.date ?? '').sort().pop() || undefined;
   const openEngine = async () => {
     const e = new PGLiteEngine();
     await e.connect({});
@@ -271,6 +299,31 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
             }
             const retrieved = uniqueInOrder(results.map(r => bySlug.get(r.slug) ?? `?${r.slug}`)).slice(0, a.topK);
             row = { ...base, ...scoreRetrieval(retrieved, q.gold), retrieved, latency_ms: Math.round(latency * 10) / 10, error: null };
+            if (chat) {
+              try {
+                const scores: number[] = [];
+                let tin = 0; let tout = 0; let answer = ''; let trap = 0;
+                const sessById = new Map(conv.sessions.map(x => [x.id, x]));
+                const pack = packSessions(retrieved.map(id => sessById.get(id)).filter((x): x is Session => !!x), a.qa.sessions, a.qa.budgetTokens);
+                for (let r = 0; r < a.qa.runs; r++) {
+                  if (think) {
+                    const res = await think(engine, { question: q.question, model: a.qa.thinkModel, modelExplicit: true, remote: false });
+                    answer = res.answer ?? '';
+                    tin += approxTokens(q.question);
+                  } else {
+                    const out = await chat.chat(a.qa.reader, readerPrompt(q, pack.sessions, lastDate(conv.sessions)), { maxTokens: 1024, replicate: r });
+                    answer = out.text; tin += out.input_tokens; tout += out.output_tokens;
+                  }
+                  scores.push(await judgeResponse(chat, a.benchmark, a.qa.judge, q, answer, r));
+                  if (q.abstention && repeatsTrap(answer, q.trap)) trap++;
+                }
+                row = { ...row, qa_score: scores.reduce((x, y) => x + y, 0) / scores.length, qa_scores: scores, qa_runs: scores.length,
+                  ...(q.trap ? { qa_trap: trap / scores.length } : {}), qa_input_tokens: Math.round(tin / scores.length), qa_output_tokens: Math.round(tout / scores.length),
+                  qa_context_tokens: think ? undefined : pack.tokens, qa_sessions: think ? undefined : pack.sessions.length, qa_answer: answer.slice(0, 2000) };
+              } catch (e) {
+                row = { ...row, qa_error: (e as Error).message.slice(0, 300) };
+              }
+            }
           } catch (e) {
             row = { ...base, error: (e as Error).message, error_origin: /budget|BudgetExceeded/i.test((e as Error).message) ? 'harness' : 'sut' };
           }
@@ -307,7 +360,9 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
     dataset: corpus.source, selection: { categories: a.categories, limit: a.limit, seed: a.seed, shard: a.shard, conversations: myConvs.length, questions_expected: expected },
     counts: { rows: allRows.length, scored: scored.length, errors: allRows.filter(r => r.error).length, abstention: allRows.filter(r => r.abstention).length },
     summary: { recall_all_at_5: mean('recall_all_at_5'), recall_any_at_5: mean('recall_any_at_5'), recall_all_at_10: mean('recall_all_at_10'), ndcg_at_10: mean('ndcg_at_10'),
-      latency_p50_ms: scored.length ? percentile(scored.map(r => r.latency_ms ?? 0), 50) : null, latency_p95_ms: scored.length ? percentile(scored.map(r => r.latency_ms ?? 0), 95) : null },
+      latency_p50_ms: scored.length ? percentile(scored.map(r => r.latency_ms ?? 0), 50) : null, latency_p95_ms: scored.length ? percentile(scored.map(r => r.latency_ms ?? 0), 95) : null,
+      ...(a.qa.mode !== 'none' ? (() => { const qa = allRows.filter(r => typeof r.qa_score === 'number'); return { qa_score: qa.length ? qa.reduce((x, r) => x + (r.qa_score ?? 0), 0) / qa.length : null, qa_rows: qa.length, qa_errors: allRows.filter(r => r.qa_error).length }; })() : {}) },
+    qa: a.qa.mode === 'none' ? null : { ...a.qa, reader_prompt: a.qa.mode === 'reader' ? 'LongMemEval step-by-step reading prompt, sessions in date order' : 'gbrain think', judge_prompts: a.benchmark.startsWith('beam') ? 'per-rubric-item yes/no' : 'LongMemEval official per-type prompts' },
     fidelity, cost, rows_file: 'rows.ndjson',
   };
   writeFileSync(join(a.output, 'receipt.json'), JSON.stringify(receipt, null, 2) + '\n');

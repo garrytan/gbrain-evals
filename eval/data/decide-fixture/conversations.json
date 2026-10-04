@@ -199,7 +199,8 @@
    "gold": [
     "s2"
    ],
-   "abstention": false
+   "abstention": false,
+   "answer": "85 dollars"
   },
   {
    "id": "fx-01",
@@ -209,7 +210,8 @@
    "gold": [
     "s3"
    ],
-   "abstention": false
+   "abstention": false,
+   "answer": "Willow Mist, a sage green"
   },
   {
    "id": "fx-02",
@@ -219,7 +221,8 @@
    "gold": [
     "s2"
    ],
-   "abstention": false
+   "abstention": false,
+   "answer": "Thursday evenings"
   },
   {
    "id": "fx-03",
@@ -229,7 +232,8 @@
    "gold": [
     "s3"
    ],
-   "abstention": false
+   "abstention": false,
+   "answer": "310 dollars"
   },
   {
    "id": "fx-04",
@@ -239,7 +243,8 @@
    "gold": [
     "s2"
    ],
-   "abstention": false
+   "abstention": false,
+   "answer": "14 kilometers"
   },
   {
    "id": "fx-05",
@@ -249,7 +254,8 @@
    "gold": [
     "s3"
    ],
-   "abstention": false
+   "abstention": false,
+   "answer": "a model with a wider toe box"
   },
   {
    "id": "fx-06",
@@ -259,7 +265,8 @@
    "gold": [
     "s2"
    ],
-   "abstention": false
+   "abstention": false,
+   "answer": "2026-03-01"
   },
   {
    "id": "fx-07",
@@ -267,7 +274,8 @@
    "question": "What is the name of my goldfish?",
    "category": "abstention",
    "gold": [],
-   "abstention": true
+   "abstention": true,
+   "answer": "Never mentioned."
   }
  ]
 }
