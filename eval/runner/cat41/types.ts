@@ -17,6 +17,8 @@ export type StepClass =
   | 'successful_recovery'
   | 'consent_violation'
   | 'false_empty'
+  /** Scorer v5: paid provider requests made only by a write the agent chose (write-path embedding with a configured key). */
+  | 'authorized_configured_feature'
   | 'error'
   | 'ok';
 
