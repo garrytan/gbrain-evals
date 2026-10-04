@@ -11,6 +11,7 @@
  * the fire rate; plan E4 requires at least 80%.
  *
  * Dev:       bun eval/runner/constrained-relational.ts [--seeds 11,13] [--gbrain <checkout>@<sha>] [--output <dir>] --paid --budget-usd 1
+ * Options:   --embed-cache routes page and query embeddings through the shared content-addressed cache.
  * Custodian: --phrasing-file <custody path> --seeds <held-out seeds> --decision-id <id> --purpose <text>; the access is
  *            logged next to the phrasing file before it is read. Implementers run development seeds only.
  */
@@ -24,6 +25,8 @@ import { GbrainInlineAdapter } from './adapters/gbrain-inline.ts';
 import { ndcgAtK, recallAllAtK, uniqueInOrder } from './metrics.ts';
 import { evalSearchPins, RELATIONAL_PINS } from './relational-ab.ts';
 import { appendAccessLog } from './sealed-confirmation-lib.ts';
+import { EmbeddingCache, makeCachingTransport } from './longmemeval-cache.ts';
+import { homedir } from 'node:os';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, receiptPath, sourceTreeIdentity, writeReceipt, type Receipt } from './receipt.ts';
 import { gbrainPin } from './gbrain-version.ts';
 import {
@@ -63,6 +66,15 @@ async function main(): Promise<void> {
   const pins = { ...RELATIONAL_PINS, ...evalSearchPins() };
   const paid = startPaidRun(CATEGORY, { ...budgetOptionsFrom(argv), estimateUsd: 0.2 * seeds.length });
   const { hybridSearch } = await importGbrain<any>(gut, 'src/core/search/hybrid.ts');
+  // --embed-cache: page and query embeddings go through one content-addressed cache, so arms run in separate processes
+  // read identical vectors once the cache is warm (the receipt records hits and misses; a warm run has 0 misses).
+  let cache: EmbeddingCache | null = null;
+  if (argv.includes('--embed-cache')) {
+    const gateway = await importGbrain<any>(gut, 'src/core/ai/gateway.ts');
+    const { embedMany } = await import(Bun.resolveSync('ai', gut.root)) as { embedMany: (p: unknown) => Promise<unknown> };
+    cache = new EmbeddingCache(join(process.env.GBRAIN_EVALS_EMBED_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'embed-cache'), 'embed-cache-openai_text-embedding-3-large@1536.sqlite'), 'openai:text-embedding-3-large@1536');
+    gateway.__setEmbedTransportForTests(makeCachingTransport(async (p: any) => embedMany(p) as never, cache));
+  }
 
   const rows: CrRow[] = [];
   const fingerprints: Record<string, string> = {};
@@ -99,6 +111,8 @@ async function main(): Promise<void> {
   }
   const cost = paid.run.close();
   paid.guard.uninstall();
+  const embedCache = cache ? { ...cache.stats } : null;
+  cache?.close();
   const mean = (k: keyof CrRow, rs = rows) => (rs.length ? rs.reduce((s, r) => s + Number(r[k]), 0) / rs.length : null);
   const summary = {
     n: rows.length, fire_rate: mean('fired'), ndcg_at_10: mean('ndcg_at_10'), hit_at_1: mean('hit_at_1'), hit_at_3: mean('hit_at_3'), recall_all_at_5: mean('recall_all_at_5'),
@@ -117,7 +131,7 @@ async function main(): Promise<void> {
     resolved_config: {
       engine: 'pglite-in-memory, extraction on, openai:text-embedding-3-large@1536', search_pins: pins, top_k: TOP_K, seeds,
       phrasing: sealedPhrasing ? `held-out set ${sealedPhrasing.id} (custody file sha256 ${phrasingSha})` : 'A (development)',
-      generator_version: CONSTRAINED_RELATIONAL_GENERATOR_VERSION, gbrain_overlay: overlaySummary(gut),
+      generator_version: CONSTRAINED_RELATIONAL_GENERATOR_VERSION, gbrain_overlay: overlaySummary(gut), embed_cache: embedCache,
     },
     hashes: fingerprints, started_at: startedAt, finished_at: new Date().toISOString(),
     data: { summary, rows },
