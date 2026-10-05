@@ -100,6 +100,9 @@ async def auto_tune(cell_dir: Path, targets: list[int], base: dict, sample: int 
                 if not errors and gate.ok:
                     chosen = setting
                     break
+                if not gate.p95:
+                    # Nothing reaches the prompt at this setting (e.g. a lane the system renders as empty); scaling cannot help.
+                    break
                 step = target / mean
                 if gate.p95 > target * 1.10:
                     # Mean on target but a long tail: aim the 95th percentile just inside the gate instead.

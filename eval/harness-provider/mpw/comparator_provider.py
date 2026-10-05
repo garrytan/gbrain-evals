@@ -331,12 +331,24 @@ class ComparatorMemoryProvider(MemoryProvider):
 
         by_bank: dict[str, list[Document]] = {}
         units: dict[str, str | None] = {}
+        # A dataset can list one session twice in a history (LongMemEval haystacks do) and the server rejects a
+        # batch with a repeated document id: an identical repeat is retained once, a changed one under its own id.
+        seen: dict[tuple[str, str], str] = {}
         for doc in documents:
             bank = self._bank_id(doc.user_id)
             units[bank] = doc.user_id
+            doc_id = doc.id
+            if (bank, doc_id) in seen:
+                if seen[(bank, doc_id)] == doc.content:
+                    continue
+                n = 2
+                while (bank, f"{doc.id}-{n}") in seen:
+                    n += 1
+                doc_id = f"{doc.id}-{n}"
+            seen[(bank, doc_id)] = doc.content
             context = self._ids.scrub(doc.context, extra_originals=[doc.id, doc.user_id or ""]) if doc.context else doc.context
             hashed = Document(
-                id=self._ids.hash(doc.id), content=doc.content, user_id=doc.user_id,
+                id=self._ids.hash(doc_id), content=doc.content, user_id=doc.user_id,
                 timestamp=doc.timestamp, context=context, tags=doc.tags,
             )
             by_bank.setdefault(bank, []).append(hashed)
