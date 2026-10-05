@@ -128,6 +128,9 @@ def dispatch(adapter: Adapter, method: str, path: str, body: dict[str, Any]) -> 
 
 def serve(adapter: Adapter, port: int | None = None) -> None:
     class Handler(BaseHTTPRequestHandler):
+        # Keep-alive with explicit Content-Length on every response; clients may still close each connection.
+        protocol_version = "HTTP/1.1"
+
         def _go(self, method: str) -> None:
             length = int(self.headers.get("Content-Length") or 0)
             try:

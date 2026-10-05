@@ -11,7 +11,9 @@
  * error shapes, and the harness's rejection of foreign source ids.
  */
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
-import { resolve } from 'node:path';
+import { mkdtempSync, readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
 import { FakeMemorySystem, serveProtocol } from '../../eval/runner/systems/fake.ts';
 import { HttpMemorySystem } from '../../eval/runner/systems/http.ts';
 import { validateSources } from '../../eval/runner/systems/render.ts';
@@ -158,4 +160,48 @@ describe('harness side of the contract', () => {
     await expect(sys.retrieve(NS_A, { text: 'what about conv-26:q007', query_time: null }, POLICY)).rejects.toBeInstanceOf(SanitizerLeakError);
     expect(sent).toEqual([]);
   });
+});
+
+describe('shared Python shim tooling (eval/systems/_shim)', () => {
+  test('protocol_check.py passes against the TypeScript fake and the Python reference shim', async () => {
+    if (!py) throw new Error(pyError ?? 'python shim missing');
+    for (const url of [ts.url, py.url]) {
+      const proc = Bun.spawn(['python3', 'eval/systems/_shim/protocol_check.py', '--url', url, '--questions', '3'], { cwd: ROOT, stdout: 'pipe', stderr: 'pipe' });
+      const [out, code] = await Promise.all([new Response(proc.stdout).text(), proc.exited]);
+      expect(code, out).toBe(0);
+      expect(out).toMatch(/\n(\d+)\/\1 checks passed/);
+    }
+  }, 60_000);
+
+  test('fake_provider.py answers every route the vendor shims use and logs no credential', async () => {
+    const probe = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: () => new Response('') });
+    const port = probe.port as number;
+    probe.stop(true);
+    const log = join(mkdtempSync(join(tmpdir(), 'fake-provider-')), 'log.jsonl');
+    const proc = Bun.spawn(['python3', 'eval/systems/_shim/fake_provider.py', '--port', String(port), '--log', log], { cwd: ROOT, stdout: 'ignore', stderr: 'pipe' });
+    const base = `http://127.0.0.1:${port}/mem0/openai/v1`;
+    const post = async (path: string, body: unknown) => (await fetch(`${base}${path}`, { method: 'POST', headers: { authorization: 'Bearer dummy-key', 'content-type': 'application/json' }, body: JSON.stringify(body), keepalive: false })).json() as Promise<any>;
+    try {
+      for (let i = 0; i < 200; i++) { try { await fetch(`${base}/models`, { keepalive: false }); break; } catch { await Bun.sleep(50); } }
+      const emb = await post('/embeddings', { model: 'text-embedding-3-large', input: ['alpha beta', 'gamma'], dimensions: 1536 });
+      expect(emb.data).toHaveLength(2);
+      expect(emb.data[0].embedding).toHaveLength(1536);
+      expect((await post('/embeddings', { model: 'text-embedding-3-small', input: 'x' })).data[0].embedding).toHaveLength(1536);
+      const lp = await post('/chat/completions', { model: 'gpt-4.1-nano', logprobs: true, top_logprobs: 2, messages: [{ role: 'user', content: '<QUERY>pottery class</QUERY><PASSAGE>a pottery class in Portland</PASSAGE>' }] });
+      expect(lp.choices[0].logprobs.content[0].token).toBe('True');
+      const js = await post('/chat/completions', { model: 'gpt-4.1-mini', response_format: { type: 'json_schema', json_schema: { name: 'KG', schema: { type: 'object', properties: { nodes: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, name: { type: 'string' } } } }, edges: { type: 'array', items: { type: 'object', properties: { source_node_id: { type: 'string' }, target_node_id: { type: 'string' } } } } } } } }, messages: [{ role: 'user', content: 'Caroline met Melanie in Portland.' }] });
+      expect(JSON.parse(js.choices[0].message.content).nodes.map((n: any) => n.name)).toEqual(['Caroline', 'Melanie', 'Portland']);
+      const m0 = await post('/chat/completions', { model: 'gpt-5-mini', messages: [{ role: 'user', content: '## New Messages\nuser: I adopted a dog named Biscuit\nassistant: Nice\n## Output' }] });
+      expect(JSON.parse(m0.choices[0].message.content).memory.map((x: any) => x.text)).toEqual(['I adopted a dog named Biscuit', 'Nice']);
+      const resp = await post('/responses', { model: 'gpt-4.1-mini', input: [{ role: 'user', content: '<CURRENT MESSAGES>Caroline hiked with Melanie at Yosemite.</CURRENT MESSAGES>' }], text: { format: { type: 'json_schema', name: 'ExtractedEdges', schema: { type: 'object', properties: { edges: { type: 'array' } } } } } });
+      expect(JSON.parse(resp.output[0].content[0].text).edges[0]).toMatchObject({ source_entity_name: 'Caroline', target_entity_name: 'Melanie' });
+      const stream = await fetch(`${base}/chat/completions`, { method: 'POST', body: JSON.stringify({ model: 'gpt-4.1-mini', stream: true, messages: [{ role: 'user', content: 'hi' }] }), keepalive: false });
+      expect(stream.headers.get('content-type')).toContain('event-stream');
+      expect(await stream.text()).toContain('"usage": {"prompt_tokens"');
+      const lines = readFileSync(log, 'utf8').trim().split('\n').map(l => JSON.parse(l));
+      expect(lines.map(l => l.route)).toEqual(['embeddings', 'embeddings', 'chat', 'chat', 'chat', 'responses', 'chat']);
+      expect(lines[0]).toMatchObject({ model: 'text-embedding-3-large', dimensions: 1536, auth_is_dummy: true });
+      expect(readFileSync(log, 'utf8')).not.toContain('dummy-key');
+    } finally { proc.kill(); }
+  }, 30_000);
 });
