@@ -154,6 +154,13 @@ def resolve(spec: dict) -> dict:
     schedule = [q.id for q in queries]
     import memory_bench
 
+    if dataset.task_type != "open":
+        judge_calls = 0
+    elif hasattr(dataset, "score_result"):
+        judge_calls = sum(max(1, len(q.meta.get("rubric") or [])) for q in queries)
+    else:
+        judge_calls = len(queries)
+
     return {
         "dataset": spec["dataset"],
         "split": split,
@@ -170,7 +177,7 @@ def resolve(spec: dict) -> dict:
         "timestamp_provenance": {"rule": timestamps.RULES.get(spec["dataset"]), "counts": provenance},
         "dataset_judge_model": (dataset.default_judge_llm().model_id if dataset.default_judge_llm() is not None else None)
         if dataset.task_type == "open" else None,
-        "harness_package": getattr(memory_bench, "__file__", None) and "memory_bench",
+        "judge_calls": judge_calls,
         **revisions(spec["dataset"]),
     }
 
