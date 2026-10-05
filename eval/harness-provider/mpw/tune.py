@@ -38,8 +38,8 @@ def _sample(queries: list, n: int | None) -> list:
     return [queries[int(i * step)] for i in range(n)]
 
 
-async def _measure(run, prov, queries, spec, task) -> tuple[list[int], list[str]]:
-    tokens, errors = [], []
+async def _measure(run, prov, queries, spec, task) -> tuple[list[int], list[str], list[str]]:
+    tokens, errors, anchored = [], [], []
     sem = asyncio.Semaphore(int(getattr(prov, "concurrency", 4) or 1))
 
     async def one(q):
@@ -49,7 +49,9 @@ async def _measure(run, prov, queries, spec, task) -> tuple[list[int], list[str]
             try:
                 with_meta = getattr(prov, "retrieve_with_meta", None)
                 if with_meta is not None:
-                    docs, raw, _ = await asyncio.to_thread(with_meta, pq.query, k, pq.user_id, pq.meta.get("query_timestamp"))
+                    docs, raw, pmeta = await asyncio.to_thread(with_meta, pq.query, k, pq.user_id, pq.meta.get("query_timestamp"))
+                    if (pmeta or {}).get("entity_anchored"):
+                        anchored.append(q.id)
                 else:
                     docs, raw = await prov.async_retrieve(pq.query, k=k, user_id=pq.user_id, query_timestamp=pq.meta.get("query_timestamp"))
             except Exception as e:  # noqa: BLE001
@@ -70,7 +72,7 @@ async def _measure(run, prov, queries, spec, task) -> tuple[list[int], list[str]
         by_unit.setdefault(str(q.user_id), []).append(q)
     for unit_queries in by_unit.values():
         await asyncio.gather(*[one(q) for q in unit_queries])
-    return tokens, errors
+    return tokens, errors, anchored
 
 
 async def auto_tune(cell_dir: Path, targets: list[int], base: dict, sample: int | None, max_iter: int = 6) -> dict:
@@ -93,10 +95,10 @@ async def auto_tune(cell_dir: Path, targets: list[int], base: dict, sample: int 
             for _ in range(max_iter):
                 setting = {k: (0 if v == 0 else max(1, int(round(v * scale)))) for k, v in base.items()}
                 knobs.update(setting)
-                tokens, errors = await _measure(run, prov, queries, run.spec, task)
+                tokens, errors, anchored = await _measure(run, prov, queries, run.spec, task)
                 gate = ctxmod.gate(target, tokens)
                 mean = gate.mean or 1.0
-                rows.append({"setting": setting, **gate.as_dict(), "errors": errors[:5]})
+                rows.append({"setting": setting, **gate.as_dict(), "errors": errors[:5], "entity_anchored": anchored})
                 if not errors and gate.ok:
                     chosen = setting
                     break
@@ -139,14 +141,16 @@ async def tune(cell_dir: Path, grid: dict) -> dict:
     for setting in _settings(grid):
         spec = {**run.spec, "provider_config": {**base_cfg, **setting}}
         knobs.update(setting)
-        tokens, errors = [], []
+        tokens, errors, anchored = [], [], []
         for q in run.queries:
             pq = run.pqueries[q.id]
             k = int(pq.meta.get("retrieval_limit") or spec.get("k") or 10)
             try:
                 with_meta = getattr(prov, "retrieve_with_meta", None)
                 if with_meta is not None:
-                    docs, raw, _ = await asyncio.to_thread(with_meta, pq.query, k, pq.user_id, pq.meta.get("query_timestamp"))
+                    docs, raw, pmeta = await asyncio.to_thread(with_meta, pq.query, k, pq.user_id, pq.meta.get("query_timestamp"))
+                    if (pmeta or {}).get("entity_anchored"):
+                        anchored.append(q.id)
                 else:
                     docs, raw = await prov.async_retrieve(pq.query, k=k, user_id=pq.user_id, query_timestamp=pq.meta.get("query_timestamp"))
             except Exception as e:  # noqa: BLE001
@@ -161,7 +165,7 @@ async def tune(cell_dir: Path, grid: dict) -> dict:
             prompt = build(pq.query, rendered, {**meta, "_raw_response": raw})
             tokens.append(ctxmod.inserted_context(build, pq.query, rendered, meta, raw, prompt).tokens)
         gate = ctxmod.gate(target, tokens)
-        rows.append({"setting": setting, **gate.as_dict(), "errors": errors})
+        rows.append({"setting": setting, **gate.as_dict(), "errors": errors, "entity_anchored": anchored})
     prov.cleanup()
     passing = [r for r in rows if r["ok"] and not r["errors"]]
     best = min(passing, key=lambda r: abs(r["mean"] - (target or r["mean"]))) if passing else None

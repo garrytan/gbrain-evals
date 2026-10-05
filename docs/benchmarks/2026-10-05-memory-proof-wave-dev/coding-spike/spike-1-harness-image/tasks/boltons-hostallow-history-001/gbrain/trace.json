@@ -372,9 +372,9 @@
         {
           "k": "tool",
           "tool": "bash",
-          "arg": "command=env; ls -d /opt/* /root/* ~/.local/* ~/.cargo/* ~/.pyenv/* /usr/local/* 2>/dev/null",
-          "input": "description: Check environment and installation directories\ncommand: env; ls -d /opt/* /root/* ~/.local/* ~/.cargo/* ~/.pyenv/* /usr/local/* 2>/dev/null",
-          "out": "OPENCODE_PROCESS_ROLE=main\nHOSTNAME=54b9a4461835\nGEMINI_REDACTED\nAGENT=1\ncomparator_DISABLED=1\nYARN_VERSION=1.22.22\nPWD=/work\nOPENCODE_PID=16\nHOME=/root\nOPENCODE=1\nOPENCODE_RUN_ID=9d265933-da48-41c9-9bde-8eeb395060e7\nGOOGLE_GENERATIVE_AI_REDACTED\nSHLVL=1\nPYTHONDONTWRITEBYTECODE=1\nnpm_config_user_agent=npm/undefined node/v24.3.0 linux x64 workspaces/false\ncomparator_DIAG_FILE=/tmp/comparator-plugin.log\nPATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\nPYTEST_ADDOPTS=-p no:cacheprovider\nNODE_VERSION=22.23.3\n_=/usr/bin/env\n/opt/yarn-v1.22.22\n/root/.local/share\n/root/.local/state\n/usr/local/CHANGELOG.md\n/usr/local/LICENSE\n/usr/local/README.md\n/usr/local/bin\n/usr/local/etc\n/usr/local/games\n/usr/local/include\n/usr/local/lib\n/usr/local/man\n/usr/local/sbin\n/usr/local/share\n/usr/local/src\n",
+          "arg": "command=env; ls -d /opt/* ~/* ~/.local/* ~/.cargo/* ~/.pyenv/* /usr/local/* 2>/dev/null",
+          "input": "description: Check environment and installation directories\ncommand: env; ls -d /opt/* ~/* ~/.local/* ~/.cargo/* ~/.pyenv/* /usr/local/* 2>/dev/null",
+          "out": "OPENCODE_PROCESS_ROLE=main\nHOSTNAME=54b9a4461835\nGEMINI_REDACTED\nAGENT=1\ncomparator_DISABLED=1\nYARN_VERSION=1.22.22\nPWD=/work\nOPENCODE_PID=16\nHOME=/root\nOPENCODE=1\nOPENCODE_RUN_ID=9d265933-da48-41c9-9bde-8eeb395060e7\nGOOGLE_GENERATIVE_AI_REDACTED\nSHLVL=1\nPYTHONDONTWRITEBYTECODE=1\nnpm_config_user_agent=npm/undefined node/v24.3.0 linux x64 workspaces/false\ncomparator_DIAG_FILE=<tmp>/comparator-plugin.log\nPATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\nPYTEST_ADDOPTS=-p no:cacheprovider\nNODE_VERSION=22.23.3\n_=/usr/bin/env\n/opt/yarn-v1.22.22\n~/.local/share\n~/.local/state\n/usr/local/CHANGELOG.md\n/usr/local/LICENSE\n/usr/local/README.md\n/usr/local/bin\n/usr/local/etc\n/usr/local/games\n/usr/local/include\n/usr/local/lib\n/usr/local/man\n/usr/local/sbin\n/usr/local/share\n/usr/local/src\n",
           "tok_in": 16612,
           "tok_cache": 12216,
           "tok_out": 88,

@@ -2,7 +2,7 @@
 
 Before paying to run gbrain and the comparator memory server on sealed BEAM conversations, we checked for free whether the planned test can give an answer. It mostly cannot at the planned margin. The test asks whether gbrain's score is at most 2 points below the comparator's, but 42 sealed conversations are too few to show that reliably. If the two systems are truly equal, the test says "non-inferior" only about half the time, because chance alone moves the measured difference by about 1.2 points. A 3-point margin on the same 42 conversations works about 4 times in 5. No split of the 70 BEAM 500k and 1M conversations reaches 80% at 2 points under our central assumptions. The statistics themselves are sound: the bootstrap methods give the promised 95% one-sided coverage at 21 or more conversations.
 
-**Recommendation (not adopted here; the preregistration needs the decision).** Keep the 14 dev / 14 validation / 42 sealed split and set the margin to 3.0 points. The planned 42 conversations are enough at 3.0 and not enough at 2.0. If the paid smoke shows room in the budget, add the BEAM 100k reserve (12 more sealed conversations, already committed in the grouping manifest). That raises the chance of showing non-inferiority at 3.0, when the systems are equal, from 79% to 87%.
+**Decision (October 5, after this report).** The margin is 3.0 points and BEAM 100k joins the primary endpoint: BEAM 100k + 500k + 1M, 18 dev / 18 validation / 54 sealed conversations. When the systems are equal, that design shows non-inferiority at 3.0 in 87% of simulations under the central assumptions (79% without 100k). The report recommended 3.0 on the 42 conversations, with 100k as the optional addition. The [preregistration](2026-10-05-memory-proof-wave-preregistration.md) records the decision.
 
 ## What was tested
 
@@ -152,7 +152,7 @@ A 2.0-point margin is detectable only if the per-question variance stays below a
 
 ## What to use and what to avoid
 
-- **Use a 3.0-point margin on the planned 42 conversations**, or justify a different number in the preregistration before any paid cell. At 3.0 the plan's design resolves the central case. A loss of 3 points on a score near 72 is about a 4% relative loss, the same tolerance the [sealed v2 decision](2026-10-02-sealed-v2-decision-1-preregistration.md) used.
+- **Use a 3.0-point margin.** At 3.0 the planned 42 conversations resolve the central case (79%), and the adopted design with BEAM 100k (54 conversations) reaches 87%. A loss of 3 points on a score near 72 is about a 4% relative loss, the same tolerance the [sealed v2 decision](2026-10-02-sealed-v2-decision-1-preregistration.md) used.
 - **Do not keep 2.0 and hope.** With equal systems, an `inconclusive` outcome is as likely as `non-inferior`. The plan forbids changing the margin after seeing sealed results.
 - **Treat a true deficit honestly.** If gbrain is truly 1 point behind, a 3.0-point test shows non-inferiority half the time under the central set. That is the intended trade-off of a margin, not a flaw.
 - **Report PersonaMem and LifeBench as their own rows.** PersonaMem's 12 sealed personas give a minimum detectable margin of 3.5 to 7.4 points. LifeBench's 6 sealed users cannot hold coverage under skew. Both are descriptive.
@@ -160,17 +160,19 @@ A 2.0-point margin is detectable only if the per-question variance stays below a
 
 ## The grouping manifest
 
-[`grouping-manifest.json`](../../eval/data/memory-proof-wave/grouping-manifest.json) fixes the split before any tuning. Each stratum's clusters are ordered by HMAC-SHA256 of a private 32-byte salt and the cluster id: the first 20% are dev, the next 20% validation, the rest sealed. PersonaMem is split by persona, so a persona's histories never straddle splits. The public file lists every cluster, the dev ids and counts, and a salted SHA-256 commitment for each validation and sealed list. The salt and those lists sit in a private file outside the repository, whose SHA-256 is committed in the manifest, under the same custody, access-log and `--decision-id` rules as the [sealed confirmation set](2026-09-29-sealed-confirmation-protocol.md).
+[`grouping-manifest.json`](../../eval/data/memory-proof-wave/grouping-manifest.json) fixes the split before any tuning. Each stratum's clusters were ordered by HMAC-SHA256 of a private 32-byte salt and the cluster id: the first 20% are dev, the next 20% validation, the rest sealed. After the reseal described below, dev stays as first committed and the rest follow a second salt by the same rule. PersonaMem is split by persona, so a persona's histories never straddle splits. The public file lists every cluster, the dev ids and counts, and a salted SHA-256 commitment for each validation and sealed list. The salt and those lists sit in a private file outside the repository, whose SHA-256 is committed in the manifest, under the same custody, access-log and `--decision-id` rules as the [sealed confirmation set](2026-09-29-sealed-confirmation-protocol.md).
 
 | Group | Stratum | Dev | Validation | Sealed (questions) |
 |---|---|---:|---:|---:|
+| Primary | BEAM 100k | 4 | 4 | 12 (240) |
 | Primary | BEAM 500k | 7 | 7 | 21 (420) |
 | Primary | BEAM 1M | 7 | 7 | 21 (420) |
-| Secondary | PersonaMem 32k (personas) | 4 | 4 | 12 (375) |
-| Secondary | LifeBench (users) | 2 | 2 | 6 (1,246) |
-| Reserve | BEAM 100k | 4 | 4 | 12 (240) |
+| Descriptive | PersonaMem 32k (personas) | 4 | 4 | 12 (347) |
+| Descriptive | LifeBench (users) | 2 | 2 | 6 (1,246) |
 
 Opening validation ids logs the access. Opening sealed ids also needs a decision id and a committed preregistration with no `TODO` left; the log line records the preregistration's hash. BEAM is public, so once validation ids are open the sealed ids are the complement. The protection is procedural: the commitments prove the split predates tuning, and the log records every open.
+
+**Reseal, 2026-10-05.** The first private file (`f67da64c…`) was stored where every project subagent could read it, so its validation and sealed partition is treated as possibly seen. Nobody had opened validation or sealed ids (no access log existed), and dev runs used only the public dev ids. `memory-proof-wave-grouping.ts reseal` kept every dev id, cluster list and count, re-split each stratum's other clusters with a fresh salt by the same rule, and wrote a `reseals` entry with the reason, the date and every previous commitment. The new private file is `22292099…`; the old one no longer matches the manifest and opens nothing. Sealed question counts are unchanged except PersonaMem's, which moved from 375 to 347 because its personas have different numbers of questions.
 
 ## Reproduce and inspect
 

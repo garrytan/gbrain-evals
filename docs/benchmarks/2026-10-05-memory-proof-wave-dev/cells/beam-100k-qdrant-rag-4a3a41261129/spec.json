@@ -1,0 +1,25 @@
+{
+  "dataset": "beam",
+  "split": "100k",
+  "provider": "qdrant",
+  "mode": "rag",
+  "lane": "raw",
+  "seal": "dev",
+  "target_tokens": 8000,
+  "models": {
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash"
+  },
+  "budget_usd": 24,
+  "questions": {
+    "units": [
+      "3",
+      "11",
+      "12",
+      "15"
+    ]
+  },
+  "k": 15,
+  "provider_config": {},
+  "note": "memory proof wave dev hybrid-beam-100k-k15 8000-token target"
+}

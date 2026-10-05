@@ -36,6 +36,8 @@ export interface Track {
   name?: string;
   /** Run a target that no setting tunes into the gate at the setting whose mean is nearest it; the cell reports the miss. */
   offTarget?: boolean;
+  /** Stop after tuning: a retrieval-only pass (no answer or judge calls) whose rows record e.g. anchored queries. */
+  probe?: boolean;
   /** Results per query (spec `k`); the knob for a provider with no budget setting, e.g. 512-token chunks. */
   k?: number;
   /** Per-cell budget override (dollars) for the target and default cells. */
@@ -91,6 +93,7 @@ export async function sweep(t: Track, passthrough: string[]): Promise<number> {
     closest = parsed.closest ?? {};
     log({ step: 'tune', code: tune.code, chosen, ...(t.offTarget ? { closest } : {}) });
   }
+  if (t.probe) return 0;
   let failures = 0;
   const offTarget = new Set<number>();
   const runs: Array<[number | null, Record<string, unknown> | null]> = t.targets.map(target => {
@@ -134,7 +137,7 @@ if (import.meta.main) {
     sample: Number(flag('--sample') ?? 60), runDefault: !own.includes('--no-default'),
     gbrainCredentials: flag('--gbrain-credentials')?.split(','), answer: flag('--answer'), name: flag('--name'),
     budget: flag('--budget') ? Number(flag('--budget')) : undefined, offTarget: own.includes('--off-target-closest'),
-    k: flag('--k') ? Number(flag('--k')) : undefined,
+    k: flag('--k') ? Number(flag('--k')) : undefined, probe: own.includes('--probe'),
   };
   process.exit(await sweep(t, passthrough));
 }

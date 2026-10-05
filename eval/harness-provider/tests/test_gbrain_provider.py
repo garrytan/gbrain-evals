@@ -294,3 +294,29 @@ def test_concurrent_queries_across_units_survive_child_eviction(tmp_path, embed_
         assert errors == []
     finally:
         p.cleanup()
+
+
+def test_search_config_is_read_time_and_never_inherited(tmp_path, embed_stub):
+    url, _ = embed_stub
+    store = tmp_path / "store"
+    p = _provider(store, url, search_config={"search.entity_anchoring": "true"})
+    try:
+        p.ingest([DOCS[0]])
+        p.retrieve_with_meta("grey cat", user_id="u-a")
+        home = p.units["u-a"].home
+    finally:
+        p.cleanup()
+    assert p._cli(home, "config", "get", "search.entity_anchoring").strip() == "true"
+
+    from mpw.gbrain_provider import GbrainMemoryProvider
+
+    q = GbrainMemoryProvider({"gbrain_cli": CLI, "token_budget": 2000,
+                              "child_env": {"VOYAGE_API_KEY": "mpwp-gbrain-test", "VOYAGE_BASE_URL": f"{url}/v1"}})
+    q.prepare(store, unit_ids={"u-a", "u-b"}, reset=False)
+    try:
+        _, _, meta = q.retrieve_with_meta("grey cat", user_id="u-a")
+        assert meta["entity_anchored"] == 0
+    finally:
+        q.cleanup()
+    with pytest.raises(RuntimeError, match="not found"):
+        q._cli(home, "config", "get", "search.entity_anchoring")
