@@ -1,0 +1,103 @@
+{
+  "decision_id": "p1-e1-heldout-2026-10-04",
+  "stage": "held-out",
+  "verdict": "fail",
+  "default_rule": "graph.edge_validity stays on only if E1 passes with no guardrail failing (P1 preregistration, gbrain 6dcac08dd)",
+  "builds": {
+    "baseline": "5bd9e84978126689b11cf65107c0a9aa0e91e11b (master merge base, as preregistered)",
+    "candidate": "6dcac08dd89451f6e9cc27418293e3b7818f9b8b"
+  },
+  "harness": "gbrain-evals p0-heldout-harness d0587ff (temporal-edges custodian mode)",
+  "held_out_material": "phrasing set B (custodian-authored, in custody; sha256 767403e8\u2026), seeds 11, 13, 17; opened once per arm, access log 2 lines",
+  "decisive": {
+    "traps_exact_gate": "fail: 14 of 115 trap items violated (candidate 101/115 = 87.8% vs preregistered >= 99%); by trap type: investment after exit 37/43, alumni meeting 29/37, advisor 35/35",
+    "invariance": "pass 240/240"
+  },
+  "diagnostic_not_decisive": [
+    {
+      "id": "now-precision",
+      "status": "pass",
+      "a": 0.35667805561241195,
+      "b": 0.7099957912457913,
+      "delta": 0.3533177356333792,
+      "ci95": [
+        0.29551883972173826,
+        0.4130740401573736
+      ],
+      "clusters": 36
+    },
+    {
+      "id": "asof",
+      "status": "pass",
+      "a": 0.2263888888888889,
+      "b": 0.4638888888888889,
+      "delta": 0.2375,
+      "ci95": [
+        0.19166666666666668,
+        0.2847222222222222
+      ],
+      "clusters": 240
+    },
+    {
+      "id": "during",
+      "status": "inconclusive",
+      "a": 0.5789087301587308,
+      "b": 0.6648809523809527,
+      "delta": 0.08597222222222224,
+      "ci95": [
+        0.04111111111111114,
+        0.1297222222222222
+      ],
+      "clusters": 240
+    },
+    {
+      "id": "correction",
+      "status": "pass",
+      "a": 0,
+      "b": 0.6136363636363636,
+      "delta": 0.6136363636363636,
+      "ci95": [
+        0.4772727272727273,
+        0.75
+      ],
+      "clusters": 44
+    },
+    {
+      "id": "now-recall",
+      "status": "fail",
+      "a": 0.8212418754085421,
+      "b": 0.7723355348355351,
+      "delta": -0.04890634057300723,
+      "ci95": [
+        -0.08037918871252206,
+        -0.021604938271604937
+      ],
+      "clusters": 36
+    },
+    {
+      "id": "live-recall",
+      "status": "fail",
+      "a": 0.8277511961722488,
+      "b": 0.7655502392344498,
+      "delta": -0.06220095693779904,
+      "ci95": [
+        -0.09569377990430622,
+        -0.028708133971291867
+      ],
+      "clusters": 209
+    },
+    {
+      "id": "names-current",
+      "status": "report_only",
+      "a": 0.13636363636363635,
+      "b": 0.5227272727272727,
+      "delta": 0.38636363636363635,
+      "ci95": [
+        0.25,
+        0.5227272727272727
+      ],
+      "clusters": 44
+    }
+  ],
+  "access_log_lines": 2
+}

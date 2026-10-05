@@ -1017,7 +1017,7 @@ const RERANK_PRICES: Record<string, number> = {
 
 /**
  * Chat list prices, USD per 1M tokens, checked against the providers' pricing
- * pages on 2026-10-02. They take precedence over the pinned gbrain table,
+ * pages on 2026-10-02 (claude-fable-5-1 on 2026-10-05). They take precedence over the pinned gbrain table,
  * which lacks newer models and lists stale prices for some (gpt-5.5, gpt-5.2).
  * Cache prices apply when the response reports cached tokens.
  */
@@ -1030,12 +1030,16 @@ export const CHAT_PRICE_OVERRIDES: Record<string, { input: number; output: numbe
   'anthropic:claude-opus-4-6': { input: 5, output: 25, cache_read: 0.5, cache_write: 6.25 },
   'anthropic:claude-opus-5': { input: 5, output: 25, cache_read: 0.5, cache_write: 6.25 },
   'anthropic:claude-opus-5-5': { input: 4, output: 20, cache_read: 0.2, cache_write: 5 },
+  'anthropic:claude-fable-5-1': { input: 10, output: 50, cache_read: 0.25, cache_write: 12.5 },
+  'openai:gpt-4.1-mini': { input: 0.4, output: 1.6, cache_read: 0.1 },
   'openai:gpt-5.2': { input: 1.75, output: 14, cache_read: 0.175 },
   'openai:gpt-5.4': { input: 2.5, output: 15, cache_read: 0.25 },
   'openai:gpt-5.4-mini': { input: 0.75, output: 4.5, cache_read: 0.075 },
   'openai:gpt-5.5': { input: 5, output: 30, cache_read: 0.5 },
   'openai:gpt-6-sol': { input: 2, output: 10, cache_read: 0.2 },
   'openai:gpt-6.1-sol': { input: 2, output: 10, cache_read: 0.1, cache_write: 2.5 },
+  // developers.openai.com/api/docs/pricing, checked 2026-10-05 (short-context standard rates).
+  'openai:gpt-6-luna': { input: 0.1, output: 0.5, cache_read: 0.01, cache_write: 0.125 },
   'openai:gpt-6-astra': { input: 10, output: 50, cache_read: 1, cache_write: 12.5 },
 };
 

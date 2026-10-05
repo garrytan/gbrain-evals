@@ -1,0 +1,10 @@
+2026-10-05T00:12:30.472Z building gbrain slots
+2026-10-05T00:12:30.525Z [budget] cat40-slot-build: estimated cost unmeasured; ledger <evals>/.budget/cat40-followups.sqlite
+2026-10-05T00:17:29.335Z built slot0 in 296s, $0.0938 (4039 provider requests; ledger allowance charged $0.0938); mention coverage complete, 0 pending
+2026-10-05T00:22:28.571Z built slot1 in 299s, $0.0938 (4039 provider requests; ledger allowance charged $0.0938); mention coverage complete, 0 pending
+2026-10-05T00:27:09.101Z built slot2 in 281s, $0.0938 (4040 provider requests; ledger allowance charged $0.0938); mention coverage complete, 0 pending
+2026-10-05T00:31:56.306Z built slot3 in 287s, $0.0938 (4040 provider requests; ledger allowance charged $0.0938); mention coverage complete, 0 pending
+2026-10-05T00:36:37.801Z built slot4 in 281s, $0.0938 (4039 provider requests; ledger allowance charged $0.0938); mention coverage complete, 0 pending
+2026-10-05T00:38:36.669Z write probe passed on every slot
+2026-10-05T00:38:36.669Z gbrain 0.61.1.0 (51f865d78f75) ready on 5 slots, surface starter
+2026-10-05T00:38:36.863Z receipt <evals>/eval/reports/cat40/entity-slots-holdout/receipt-1791160716863.json

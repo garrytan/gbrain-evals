@@ -1247,6 +1247,8 @@ export interface Cat13Options {
   tuningConcepts?: number;
   holdoutConcepts?: number;
   seed?: number;
+  /** Corpus directory in world-v1's format; default eval/data/world-v1. */
+  corpusDir?: string;
   /** Paid-run budget (--budget-usd, --budget-ledger, --program-cap-usd); defaults to the BRAINBENCH_* env vars. */
   budget?: BudgetOptions;
 }
@@ -1301,6 +1303,7 @@ export function parseCat13Argv(
       case '--tuning-concepts': opts.tuningConcepts = parseNonNegativeInt(value(), '--tuning-concepts'); break;
       case '--holdout-concepts': opts.holdoutConcepts = parseNonNegativeInt(value(), '--holdout-concepts'); break;
       case '--seed': opts.seed = parseNonNegativeInt(value(), '--seed'); break;
+      case '--corpus-dir': opts.corpusDir = value(); break;
       case '--budget-usd': case '--budget-ledger': case '--program-cap-usd': {
         const flagValue = value();
         opts.budget = budgetOptionsFrom([...budgetArgv, flag, flagValue], env);
@@ -1437,7 +1440,8 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
   }
 
   const targetProbes = opts.targetProbes ?? resolveTargetProbes();
-  const corpusDir = join(import.meta.dir, '..', 'data', 'world-v1');
+  // A corpus directory in world-v1's format (for example a hub-world-gen output) replaces world-v1; probes and gold come from its concept pages.
+  const corpusDir = opts.corpusDir ?? join(import.meta.dir, '..', 'data', 'world-v1');
   const pages = loadCorpus(corpusDir);
   const { probes, gradesByQuery } = buildProbes(pages, targetProbes);
   if (probes.length === 0) {

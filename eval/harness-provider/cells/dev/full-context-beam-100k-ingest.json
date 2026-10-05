@@ -1,0 +1,25 @@
+{
+  "dataset": "beam",
+  "split": "100k",
+  "provider": "full-context",
+  "mode": "rag",
+  "lane": "raw",
+  "seal": "dev",
+  "target_tokens": 8000,
+  "models": {
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash"
+  },
+  "budget_usd": 10,
+  "questions": {
+    "units": [
+      "3",
+      "11",
+      "12",
+      "15"
+    ]
+  },
+  "k": 10,
+  "provider_config": {},
+  "note": "memory proof wave dev full-context-beam-100k 8000-token target"
+}

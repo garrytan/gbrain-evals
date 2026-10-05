@@ -33,7 +33,7 @@ import { ensureHarness, harnessProcessEnv, PROVIDER_DIR, REPO_ROOT, type Harness
 
 export const DEFAULT_CELLS_DIR = join(REPO_ROOT, 'eval/reports/harness-cells');
 export const CELL_SCHEMA = 'mpw-cell-v1';
-export const PROVIDERS = ['gbrain', 'comparator', 'bm25', 'qdrant', 'vanilla'] as const;
+export const PROVIDERS = ['gbrain', 'comparator', 'bm25', 'qdrant', 'vanilla', 'full-context'] as const;
 export const MODES = ['rag', 'agentic-rag', 'agent', 'retrieval'] as const;
 export const SEALS = ['public', 'dev', 'validation', 'sealed', 'fixture'] as const;
 
@@ -343,7 +343,7 @@ function pick(env: Record<string, string>, providers: string[]): Record<string, 
   const keep: Record<string, string[]> = {
     openai: ['OPENAI_API_KEY', 'OPENAI_BASE_URL'],
     anthropic: ['ANTHROPIC_API_KEY', 'ANTHROPIC_BASE_URL'],
-    gemini: ['GEMINI_API_KEY', 'GOOGLE_GENERATIVE_AI_API_KEY', 'GOOGLE_GEMINI_BASE_URL'],
+    gemini: ['GEMINI_API_KEY', 'GOOGLE_GENERATIVE_AI_API_KEY', 'GOOGLE_GEMINI_BASE_URL', 'GOOGLE_GENERATIVE_AI_BASE_URL'],
     groq: ['GROQ_API_KEY', 'GROQ_BASE_URL'],
     voyage: ['VOYAGE_API_KEY', 'VOYAGE_BASE_URL'],
   };
@@ -427,7 +427,8 @@ export async function runCell(ctx: Ctx, target: string, resume: boolean, tuneGri
     MPW_PROVIDER_CONFIG: JSON.stringify(cell.spec.provider_config ?? {}),
     MPW_GBRAIN_CLI: join(ctx.gut.root, 'src/cli.ts'),
     MPW_BUN: process.execPath,
-    MPW_CHILD_ENV_GBRAIN: JSON.stringify(pick({ ...proxy.envFor('gbrain'), VOYAGE_BASE_URL: proxy.baseUrls.voyage }, cell.spec.gbrain_credentials ?? ['voyage'])),
+    // gbrain reads GOOGLE_GENERATIVE_AI_BASE_URL (builds with the Google base-URL override) and appends /v1beta itself.
+    MPW_CHILD_ENV_GBRAIN: JSON.stringify(pick({ ...proxy.envFor('gbrain'), VOYAGE_BASE_URL: proxy.baseUrls.voyage, GOOGLE_GENERATIVE_AI_BASE_URL: proxy.baseUrls.gemini }, cell.spec.gbrain_credentials ?? ['voyage'])),
     MPW_CHILD_ENV_COMPARATOR: JSON.stringify(proxy.envFor('comparator')),
     MPW_REPO_ROOT: REPO_ROOT,
   };

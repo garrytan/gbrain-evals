@@ -180,7 +180,7 @@ def test_raw_lane_makes_no_chat_request_and_keeps_its_shape(tmp_path, upstream):
         docs, raw, meta = p.retrieve_with_meta("What is the cat called?", 10, "u-2")
         assert raw is None and docs
         assert set(meta) == {"requested", "tokens_delivered", "tokenizer", "applied_unit", "blocks", "dropped", "fallbacks",
-                             "budget_clamped", "vector_enabled", "expansion_applied"}
+                             "budget_clamped", "vector_enabled", "expansion_applied", "degraded"}
         assert "expand" not in meta["requested"]
         assert not _model_hits(hits, before)
         template = json.loads((tmp_path / "store/gbrain/_template/mpw-template.json").read_text())

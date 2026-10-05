@@ -64,7 +64,12 @@ async def _measure(run, prov, queries, spec, task) -> tuple[list[int], list[str]
         prompt = build(pq.query, rendered, {**meta, "_raw_response": raw})
         tokens.append(ctxmod.inserted_context(build, pq.query, rendered, meta, raw, prompt).tokens)
 
-    await asyncio.gather(*[one(q) for q in queries])
+    # One unit at a time, as the cell runner does: providers keep one live store per unit.
+    by_unit: dict = {}
+    for q in queries:
+        by_unit.setdefault(str(q.user_id), []).append(q)
+    for unit_queries in by_unit.values():
+        await asyncio.gather(*[one(q) for q in unit_queries])
     return tokens, errors
 
 
@@ -86,7 +91,7 @@ async def auto_tune(cell_dir: Path, targets: list[int], base: dict, sample: int 
             rows = []
             chosen = None
             for _ in range(max_iter):
-                setting = {k: max(1, int(round(v * scale))) for k, v in base.items()}
+                setting = {k: (0 if v == 0 else max(1, int(round(v * scale)))) for k, v in base.items()}
                 knobs.update(setting)
                 tokens, errors = await _measure(run, prov, queries, run.spec, task)
                 gate = ctxmod.gate(target, tokens)
@@ -95,7 +100,13 @@ async def auto_tune(cell_dir: Path, targets: list[int], base: dict, sample: int 
                 if not errors and gate.ok:
                     chosen = setting
                     break
-                scale *= max(0.5, min(2.0, target / mean))
+                step = target / mean
+                if gate.p95 > target * 1.10:
+                    # Mean on target but a long tail: aim the 95th percentile just inside the gate instead.
+                    step = min(step, target * 1.08 / gate.p95)
+                elif gate.p95 < target * 0.90:
+                    step = max(step, target * 0.92 / gate.p95)
+                scale *= max(0.5, min(2.0, step))
             results[str(target)] = {"chosen": chosen, "rows": rows}
     finally:
         prov.cleanup()

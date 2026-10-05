@@ -1,24 +1,30 @@
 # Learn, evaluate, and extend gbrain
 
-Start with [the case for gbrain](../README.md), then follow the route that fits
-what you are trying to do.
+This index lists every published report by the question it answers. It describes the repository as it stands:
+gbrain-evals v0.10.23, with gbrain master `739e5cc` (v0.60.46.0) as the product under test. Results measured at
+other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
+changelog at the bottom records how this index changed.
+
+Start with [what gbrain does today](../README.md), then follow the route that fits what you are trying to do.
 
 | Your question | Read this |
 |---|---|
 | How do words, vectors, and relationships work together? | [Retrieval lessons](retrieval-lessons.md) |
 | Which setup should I evaluate for my application? | [Settings by workload](settings.md) |
-| What do the latest controlled comparisons show? | [September 9 retrieval refresh](benchmarks/2026-09-09-retrieval-refresh.md) |
+| What does the current pin change, category by category? | [October 4 re-pin at gbrain `739e5cc`](benchmarks/2026-10-04-operator-wave-repin.md) |
+| Does gbrain help an agent finish real tasks, and do agents operate it safely? | [Model Ladder (Cat 40)](benchmarks/2026-10-02-model-ladder.md), [agent operator outcomes (Cat 41)](benchmarks/2026-10-03-agent-operator.md) |
 | How do I run the benchmarks? | [Evaluation guide](../eval/README.md), [troubleshooting](../eval/RUNBOOK.md) |
-| How can I contribute a competing system or new questions? | [Contributor guide](../eval/CONTRIBUTING.md) |
+| How do I get a dev or held-out verdict for a gbrain change? | [Decision kit](decisions.md) (`bun run eval:decide`) |
+| Where does gbrain master start, and which feature ideas won or lost their held-out tests? | [October 5 nine-plan held-out program: starting line, verdicts and scorecard](benchmarks/2026-10-05-heldout-program.md) |
+| How can I contribute a competing system, new questions or a category? | [Contributor guide](../eval/CONTRIBUTING.md) |
 | Which outside scores are actually comparable? | [Cross-system comparison](comparison-systems.md) |
 | What is the plan for improving gbrain and proving it? | [September 28 plan and audits](plans/2026-09-28-gbrain-10x/README.md) |
 | What will the next categories measure, and what does gbrain implement for each of them? | [October 1 eval-category wave plan](plans/2026-10-01-eval-category-wave/README.md), [capability and entrypoint matrix](benchmarks/2026-10-01-capability-matrix.md) |
 
 ## Retrieval experiments
 
-A report's date identifies an experiment, not necessarily the newest version of
-its narrative. Start with the current reports, then follow the historical work
-when you want to understand how a decision changed.
+A report's date identifies an experiment. Each table lists the reports that
+describe current behavior first, then the older work behind a decision.
 
 | Engineering question | Report |
 |---|---|
@@ -53,10 +59,12 @@ gap does not isolate the effect of a graph alone.
 | Does important material from a working session survive into saved pages? | [Transcript distillation](benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md) |
 | Does useful memory arrive at the right moment in a conversation? | [Memory conformance](benchmarks/2026-06-12-brainbench-memory.md) |
 | Where does a small decision model (TypeSafe Jev) help gbrain triage, rerank, prune, abstain or spot contradicting facts, and where does it hurt? | [September 30 System One v1 slots](benchmarks/2026-09-30-system-one-jev.md) |
+| Did gbrain's takes-bootstrap classifier (facts, takes, bets and hunches from a person's pages) pass its graduation bar for running on autopilot? | [October 4 graduation verdict, mirrored from gbrain #6013](benchmarks/2026-10-04-takes-bootstrap-verdict.md) |
 | Can a skill improve on held-out tasks, and can the judge detect cheating? | [Skill optimization](benchmarks/2026-06-03-skillopt.md) |
 | Can the system distinguish kinds of claims and sensible confidence? | [Calibration and proposed takes](benchmarks/2026-05-18-brainbench-cat14-cat15-calibration.md) (the advice result was retracted on September 28, 2026), [October 2 blind rerun of the advice test](benchmarks/2026-10-02-cat14-rerun.md) |
 | When gbrain fails, refuses or needs a decision, do real agents (Claude Code, Codex) ask the user before spending money or destroying data, and do they recover from the errors they can fix? | [Agent operator outcomes (Cat 41): what it measures and its gate](benchmarks/2026-10-03-agent-operator-protocol.md), [runs: v0.60.35.0 baseline, gate passed at `b3f4e8b`](benchmarks/2026-10-03-agent-operator.md) |
 | Does gbrain help an agent finish company-knowledge tasks better than grep, a memory tool or plain Postgres, and does that hold as models improve? | [Model Ladder (Cat 40): what it measures](benchmarks/2026-10-02-model-ladder-protocol.md), [results](benchmarks/2026-10-02-model-ladder.md) |
+| Which MCP tool surface should gbrain register for agents: seven verbs, `starter` or `full`? | [October 5 registration-surface cell](benchmarks/2026-10-05-registration-surface.md) ([preregistration](benchmarks/2026-10-05-registration-surface-preregistration.md)) |
 | What happens when tweet ingestion becomes parallel? | [Tweet ingestion](benchmarks/2026-04-18-tweet-ingestion.md) |
 | What did the earlier ingestion worker comparisons measure? | [Subagent comparison](benchmarks/2026-04-18-minions-vs-openclaw-subagents.md), [production comparison](benchmarks/2026-04-18-minions-vs-openclaw-production.md) |
 
@@ -71,7 +79,7 @@ gap does not isolate the effect of a graph alone.
 | Are gbrain's six code-intelligence operations ready to use on a real TypeScript repository, and where do their documented limits show? | [October 1 code-intelligence readiness scout (N13)](benchmarks/2026-10-01-n13-code-intelligence.md) |
 | Does "who is waiting on me" open, close and mute Gmail loops the way the guide says, and where does a reply closing a loop differ from the work being done? | [October 1 open loops on Gmail-shaped threads (N7)](benchmarks/2026-10-01-n7-open-loops-email.md) |
 | Does the brain volunteer the right page when someone is mentioned, without false alarms, and does it keep private pages out of what it pushes? (report-only) | [October 1 unsolicited recall at final delivery (N8)](benchmarks/2026-10-01-n8-proactive-recall.md) |
-| Does relationship retrieval help questions that chain two or three relations, in wording the parser never saw, and does it still help reworded one-hop questions at the current pin? | [October 1 multi-hop check (N9)](benchmarks/2026-10-01-n9-multi-hop.md) |
+| Does relationship retrieval help questions that chain two or three relations, in wording the parser never saw, and does it still help reworded one-hop questions at the current pin? | [October 1 multi-hop check (N9)](benchmarks/2026-10-01-n9-multi-hop.md), [multi-relation planner preregistration](benchmarks/2026-10-04-p7-multi-hop-planner-preregistration.md) |
 | After a value changes, does gbrain serve the new value everywhere and keep the old one as history, across transports, restarts, reimports and concurrent writes? | [October 1 knowledge update and supersession (N1)](benchmarks/2026-10-01-n1-knowledge-update.md), [October 2 CI slice](benchmarks/2026-10-02-ci-slices.md) |
 | After `forget`, is the claim gone from every active recall surface, and only that claim, even after reimport, restart and concurrent writes? | [October 1 forgetting residue (N5)](benchmarks/2026-10-01-n5-forget-residue.md), [October 2 CI slice](benchmarks/2026-10-02-ci-slices.md) ([preregistration](benchmarks/2026-10-02-ci-slices-preregistration.md)) |
 | When two notes disagree about the same fact, does gbrain find the pair, call it a contradiction rather than a change over time, and propose a safe fix? | [October 1 contradiction-surfacing check (N2)](benchmarks/2026-10-01-n2-contradiction-surfacing.md), [N2 and A4 preregistration](benchmarks/2026-10-01-n2-a4-preregistration.md) |
@@ -144,3 +152,102 @@ Maintainers can use the [Cat13 experiment recipe](../eval/runner/README-cat13-ph
 and [repository writing guide](../CLAUDE.md). The
 [older provider shootout runbook](../scripts/RUNBOOK_SHOOTOUT.md) is an archival
 procedure with documented missing pieces; it is not the current refresh command.
+
+## Changelog
+
+How this index changed, newest first. Measurement history lives in the dated reports and in
+[CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-10-05: Restructured as a current-state page with this changelog
+
+gbrain-evals v0.10.23. The index opens with the repository version and the gbrain pin, and says the tables list current reports first. The route table points to the October 4 re-pin and to Cat 40 and Cat 41 instead of naming the September 9 refresh as "the latest controlled comparisons". The memory table gains a row for the October 5 registration-surface cell. This changelog section is new.
+
+### 2026-10-05: Decision kit and held-out program rows
+
+[`43e6b99`](https://github.com/garrytan/gbrain-evals/commit/43e6b99) (merge of #71). The route table gained rows for the decision kit (`bun run eval:decide`) and the October 5 nine-plan held-out program report, and the N9 row links the multi-relation planner preregistration.
+
+### 2026-10-05: Takes-bootstrap graduation verdict row
+
+[`bbce227`](https://github.com/garrytan/gbrain-evals/commit/bbce227), gbrain-evals v0.10.22. The memory table gained a row for the October 4 takes-bootstrap graduation verdict, mirrored from gbrain #6013: the classifier did not graduate, so its autopilot stays `manual_only`.
+
+### 2026-10-04: `auto_chronicle` row links the rerun
+
+[`bfe09be`](https://github.com/garrytan/gbrain-evals/commit/bfe09be). The `auto_chronicle` row added a link to the rerun on gbrain PR #6010 and its preregistration, next to the original off-versus-on experiment. The rerun found default-on supported at gbrain `5a44025`.
+
+### 2026-10-04: Rows for the `739e5cc` re-pin and `auto_chronicle`
+
+[`b54b978`](https://github.com/garrytan/gbrain-evals/commit/b54b978). The correctness and access table gained two rows. One links the October 4 re-pin at gbrain `739e5cc`, which checks for regressions across v0.60.38.0 to v0.60.46.0 and tests the empty-grant hint, `edit_page` diff order, per-page segment gap and the Cat7-1 fix (with regression and checks preregistrations). The other links the October 4 `auto_chronicle` off-versus-on experiment and its preregistration.
+
+### 2026-10-04: Cat 41 row points to its protocol; new Cat 40 row
+
+[`da5093b`](https://github.com/garrytan/gbrain-evals/commit/da5093b). The Cat 41 agent operator row now links first to the protocol page ("what it measures and its gate") and then to the runs (v0.60.35.0 baseline, gate passed at `b3f4e8b`), replacing a link that named the `566a242` baseline. A new row links the Model Ladder (Cat 40) protocol and results: does gbrain help an agent finish company-knowledge tasks better than grep, a memory tool or plain Postgres, as models improve. The commit moved method history out of these pages and into the run report and CHANGELOG.
+
+### 2026-10-04: Row for the opaque-id recount
+
+[`6bc98aa`](https://github.com/garrytan/gbrain-evals/commit/6bc98aa). The retrieval experiments table gained a row for the October 4 LongMemEval opaque-id follow-ups and frontier reader report, with its preregistration. It asks whether the published retrieval and reading-notes numbers hold with opaque session ids.
+
+### 2026-10-03: Row for the `109b992` re-pin
+
+[`6eefe68`](https://github.com/garrytan/gbrain-evals/commit/6eefe68). The correctness and access table gained a row for the October 3 re-pin at gbrain `109b992` after fix wave 8 and Foundations 1. It covers regressions plus the unpriced-model refusal, ignored-directory import and embed budget stop, with regression and checks preregistrations.
+
+### 2026-10-03: Row for the Cat 41 baseline
+
+[`33399bd`](https://github.com/garrytan/gbrain-evals/commit/33399bd). The memory table gained a row for the Cat 41 agent operator outcomes report, baseline at gbrain `566a242`, with its protocol. It asks whether real agents (Claude Code, Codex) ask the user before spending money or destroying data, and recover from errors they can fix.
+
+### 2026-10-03: Row for the wave 7 rerun
+
+[`5e46ca0`](https://github.com/garrytan/gbrain-evals/commit/5e46ca0). The correctness and access table gained a row for the October 3 rerun at gbrain `48ed5e8` after fix wave 7, covering N2, N7, N9, N12, N13 and A4, with its preregistration and the N7 oracle amendment.
+
+### 2026-10-02: Rows for live negative controls, May snapshot reruns and hermetic-arm trims
+
+[`4230ae4`](https://github.com/garrytan/gbrain-evals/commit/4230ae4). The correctness and access table gained three rows: the October 2 live negative controls for Cat 25 and Cat 13 (does a deliberately broken configuration score at most half as well as the real one), fresh receipts for the May snapshot's invalid Categories 19, 20 and 21, and the N9 and N2 hermetic-arm trims.
+
+### 2026-10-02: Calibration row links the Cat14 blind rerun
+
+[`4a0c930`](https://github.com/garrytan/gbrain-evals/commit/4a0c930). The calibration row, which already noted the September 28 retraction of the advice result, added a link to the October 2 blind rerun of the advice test.
+
+### 2026-10-02: Concept search row links the matched reranker comparison
+
+[`522c860`](https://github.com/garrytan/gbrain-evals/commit/522c860). The concept search row added the October 2 comparison that runs the same reranker on vectors and on gbrain, next to the original concept experiment.
+
+### 2026-10-02: Row for sealed v2 release decision 1
+
+[`2eebf81`](https://github.com/garrytan/gbrain-evals/commit/2eebf81), gbrain-evals v0.10.8. The retrieval experiments table gained a row for the October 2 sealed v2 release decision 1 and its preregistration: does gbrain hold up on a harder held-out set where chunks fall short.
+
+### 2026-10-02: N1 and N5 rows link the CI slices
+
+[`b62d5d5`](https://github.com/garrytan/gbrain-evals/commit/b62d5d5). The N1 knowledge update and N5 forgetting residue rows each added a link to the October 2 CI slice report (the N5 row also links its preregistration).
+
+### 2026-10-02: N12 now gates; row for the `d44296c` rerun
+
+[`bd8e44b`](https://github.com/garrytan/gbrain-evals/commit/bd8e44b). The N12 format fidelity row changed from "report-only until gbrain fixes N12-1" to "gates since 2026-10-02, when gbrain's fix for N12-1 was verified". A new row links the October 2 rerun at gbrain `d44296c` after fix waves 5 and 6.
+
+### 2026-10-01: Eval-category wave rows
+
+[`f94e98d`](https://github.com/garrytan/gbrain-evals/commit/f94e98d), gbrain-evals v0.10.5. The route table gained a row linking the October 1 eval-category wave plan and the capability and entrypoint matrix. The correctness and access table gained ten rows for the new categories: N12 format fidelity (report-only until gbrain fixes N12-1), N13 code-intelligence readiness, N7 open loops on Gmail-shaped threads, N8 unsolicited recall (report-only), N9 multi-hop, N1 knowledge update, N5 forgetting residue, N2 contradiction surfacing (with the N2 and A4 preregistration), A4 abstention, and the wave bug ledger.
+
+### 2026-10-01: System One rows
+
+[`b13b219`](https://github.com/garrytan/gbrain-evals/commit/b13b219), gbrain-evals v0.10.4. The memory table gained a row for the September 30 System One v1 slots report: where a small decision model (TypeSafe Jev) helps or hurts gbrain triage, reranking, pruning, abstention and contradiction spotting. Data and methods gained a link to the System One datasets README, which says what each label is made from and which files are rebuilt instead of stored.
+
+### 2026-09-30: Evidence delivery rows and a correctness section
+
+[`1ec19a2`](https://github.com/garrytan/gbrain-evals/commit/1ec19a2), gbrain-evals v0.10.2. The retrieval experiments table gained rows for the September 30 auto v2 release check and the evidence-delivery study (neighbor chunks, sections or whole pages against bare chunks, and their token cost). A new section, "Correctness and access checks (keyless, synthetic worlds)", opened with three rows: N3 temporal and as-of, N4 entity resolution and N6 visibility leak fuzz.
+
+### 2026-09-29: Plan, protocols and corrections added
+
+[`88d0b19`](https://github.com/garrytan/gbrain-evals/commit/88d0b19), gbrain-evals v0.10.1.
+
+- The route table gained a row for the September 28 plan and audits.
+- Retrieval experiments gained the September 29 opaque-id answer re-run and the relationship paraphrase check. The memory table gained the September 29 lifecycle experiment.
+- The calibration row now says the advice result was retracted on September 28, 2026.
+- A new section, "Protocols and preregistrations (no results yet)", lists the situation-recall protocol, the LongMemEval-M pilot preregistration and the sealed confirmation set.
+- Checking the evidence gained a paragraph on [Comparing runs](comparing-runs.md) (the paired comparator `eval/runner/compare.ts` and its three decision gates) and a pointer to the September 28 corrections in the main README.
+
+### 2026-09-26: Row for the reading-notes comparison
+
+[`b439f12`](https://github.com/garrytan/gbrain-evals/commit/b439f12), gbrain-evals v0.10.0. The retrieval experiments table gained a row for the September 25 reading-notes comparison: does taking brief notes before answering help when the original conversations remain available.
+
+### 2026-09-09: Page created
+
+[`9238ec8`](https://github.com/garrytan/gbrain-evals/commit/9238ec8), gbrain-evals v0.8.0. The page opened as the docs index, "Learn, evaluate, and extend gbrain". It had a route table (retrieval lessons, settings, the September 9 refresh, evaluation guide, contributor guide, cross-system comparison), a retrieval experiments table from BrainBench v1 through the September 9 refresh, a "Saving, using, and improving memory" table, a "Data and methods" section with glossary terms (corpus, ground truth, qrels) and fixture links, and a "Checking the evidence" section on the receipt manifest, the August audit, open work and the changelog.

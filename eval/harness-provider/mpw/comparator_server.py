@@ -230,7 +230,7 @@ def ensure_installed(log=lambda line: print(line, file=sys.stderr), check_only: 
 # Child env names the metering proxy hands out, per upstream provider
 # (CONTRACTS.md table). The launcher passes the comparator label's values to
 # the harness process as JSON in MPW_CHILD_ENV_COMPARATOR.
-UPSTREAM_ENV = {"openai": ("OPENAI_BASE_URL", "OPENAI_API_KEY")}
+UPSTREAM_ENV = {"openai": ("OPENAI_BASE_URL", "OPENAI_API_KEY"), "gemini": ("GOOGLE_GEMINI_BASE_URL", "GEMINI_API_KEY")}
 CHILD_ENV_VAR = "MPW_CHILD_ENV_COMPARATOR"
 
 
@@ -305,6 +305,10 @@ def server_env(install: Install, home: Path, port: int, pg_port: int, upstream: 
         p + "LLM_BASE_URL": upstream.base_url,
         p + "LLM_API_KEY": upstream.api_key,
         p + "SKIP_LLM_VERIFICATION": "true",
+        # The server's Gemini client ignores LLM_BASE_URL; google-genai reads GOOGLE_GEMINI_BASE_URL instead.
+        # Explicit Gemini context caches (cachedContents) are billed by storage time, which the proxy cannot price,
+        # so they are off on the Gemini route; implicit caching still applies and is priced from usage.
+        **({"GOOGLE_GEMINI_BASE_URL": upstream.base_url, p + "LLM_PROMPT_CACHE_ENABLED": "false"} if upstream.provider == "gemini" else {}),
         p + "EMBEDDINGS_PROVIDER": "local",
         p + "EMBEDDINGS_LOCAL_MODEL": install.models["embeddings"]["repo"],
         p + "EMBEDDINGS_LOCAL_FORCE_CPU": "true",

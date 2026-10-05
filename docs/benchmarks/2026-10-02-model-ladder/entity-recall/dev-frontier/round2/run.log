@@ -1,0 +1,30 @@
+2026-10-04T22:47:59.950Z 250 cells to run (0 already done, order task) in <evals>/eval/reports/cat40/entity-dev-r2
+2026-10-04T22:48:00.000Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger <evals>/.budget/cat40-followups.sqlite
+2026-10-04T22:50:11.989Z write probe passed on every slot
+2026-10-04T22:50:11.990Z gbrain 0.61.1.0 (51f865d78f75) ready on 5 slots, surface starter
+2026-10-04T22:51:35.539Z 10/250 cells; last gpt-6.1-sol|gbrain-entity-r2-dev|A02|0 success=true $0.024
+2026-10-04T22:52:40.162Z 20/250 cells; last gpt-6.1-sol|gbrain-entity-r2-dev|A04|0 success=true $0.026
+2026-10-04T22:53:51.594Z 30/250 cells; last gpt-6-astra|gbrain-entity-r2-dev|A06|0 success=true $0.147
+2026-10-04T22:54:58.081Z 40/250 cells; last claude-fable-5-1|gbrain-entity-r2-dev|A08|0 success=true $0.259
+2026-10-04T22:56:01.632Z 50/250 cells; last gpt-6.1-sol|gbrain-entity-r2-dev|A10|0 success=true $0.023
+2026-10-04T22:57:05.948Z 60/250 cells; last gpt-6.1-sol|gbrain-entity-r2-dev|B02|0 success=true $0.021
+2026-10-04T22:58:09.907Z 70/250 cells; last gpt-6-astra|gbrain-entity-r2-dev|B04|0 success=true $0.146
+2026-10-04T22:59:15.392Z 80/250 cells; last gpt-6-astra|gbrain-entity-r2-dev|B06|0 success=true $0.181
+2026-10-04T23:00:23.009Z 90/250 cells; last gpt-6-astra|gbrain-entity-r2-dev|B08|0 success=true $0.222
+2026-10-04T23:01:34.805Z 100/250 cells; last claude-opus-5-5|gbrain-entity-r2-dev|C01|0 success=true $0.142
+2026-10-04T23:02:39.716Z 110/250 cells; last claude-opus-5-5|gbrain-entity-r2-dev|C03|0 success=true $0.115
+2026-10-04T23:03:39.890Z 120/250 cells; last gpt-6-astra|gbrain-entity-r2-dev|C04|0 success=true $0.115
+2026-10-04T23:04:54.341Z 130/250 cells; last claude-opus-5-5|gbrain-entity-r2-dev|C07|0 success=true $0.215
+2026-10-04T23:06:20.696Z 140/250 cells; last claude-sonnet-5-5|gbrain-entity-r2-dev|C09|0 success=true $0.096
+2026-10-04T23:07:51.896Z 150/250 cells; last gpt-6-astra|gbrain-entity-r2-dev|C10|0 success=true $0.298
+2026-10-04T23:09:15.934Z 160/250 cells; last gpt-6-astra|gbrain-entity-r2-dev|E02|0 success=true $0.356
+2026-10-04T23:10:43.769Z 170/250 cells; last claude-sonnet-5-5|gbrain-entity-r2-dev|E05|0 success=false $0.101
+2026-10-04T23:12:19.920Z 180/250 cells; last gpt-6-astra|gbrain-entity-r2-dev|E06|0 success=true $0.612
+2026-10-04T23:13:42.334Z 190/250 cells; last claude-sonnet-5-5|gbrain-entity-r2-dev|E09|0 success=false $0.167
+2026-10-04T23:15:31.758Z 200/250 cells; last claude-sonnet-5-5|gbrain-entity-r2-dev|F01|0 success=true $0.085
+2026-10-04T23:17:24.905Z 210/250 cells; last gpt-6.1-sol|gbrain-entity-r2-dev|F02|0 success=true $0.038
+2026-10-04T23:19:00.725Z 220/250 cells; last claude-fable-5-1|gbrain-entity-r2-dev|F04|0 success=true $0.600
+2026-10-04T23:20:45.894Z 230/250 cells; last claude-fable-5-1|gbrain-entity-r2-dev|F06|0 success=true $0.531
+2026-10-04T23:22:42.204Z 240/250 cells; last gpt-6.1-sol|gbrain-entity-r2-dev|F08|0 success=true $0.033
+2026-10-04T23:24:34.288Z 250/250 cells; last claude-fable-5-1|gbrain-entity-r2-dev|F10|0 success=true $0.611
+2026-10-04T23:24:34.538Z receipt <evals>/eval/reports/cat40/entity-dev-r2/receipt-1791156274538.json

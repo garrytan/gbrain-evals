@@ -84,6 +84,8 @@ DEFAULTS = {
     "expand": None,
     "gbrain_config": {},
     "max_open_units": 1,
+    # The provider's own one-line date header from the timestamp manifest; off when gbrain renders its own (C1).
+    "date_header": True,
     "extraction_model": None,
     "extraction_window_chars": 8000,
     "extraction_in_flight": 8,
@@ -572,7 +574,11 @@ class GbrainMemoryProvider(MemoryProvider):
         retrieval = (meta or {}).get("retrieval", {})
         delivery = retrieval.get("delivery", {})
         degraded = retrieval.get("degraded") or []
-        if degraded:
+        # Degraded stages that leave the text query without semantic search fail the row. Others are kept in
+        # the receipt: e.g. a query that mentions photos makes gbrain try an image-search arm, which fails without a
+        # multimodal model while the text vector arm still serves the query (`vector_enabled` stays true).
+        fatal = {"embed_unavailable", "embed_timeout", "keyword_only_no_embedding_provider"}
+        if retrieval.get("vector_enabled") is False or any(d.get("stage") in fatal for d in degraded if isinstance(d, dict)):
             raise GbrainRetrieveError(f"gbrain reported degraded retrieval: {degraded}")
         if not isinstance(rows, list):
             raise GbrainRetrieveError(f"query returned {type(rows).__name__}, not a list of blocks")
@@ -581,8 +587,9 @@ class GbrainMemoryProvider(MemoryProvider):
             slug = str(row.get("slug", ""))
             doc_id = slug[len(SLUG_PREFIX):] if slug.startswith(SLUG_PREFIX) else slug
             text = row.get("chunk_text") or row.get("text") or ""
-            header = date_header(u.timestamps.get(doc_id))
-            docs.append(Document(id=doc_id, content=f"{header}\n{text}", user_id=user_id))
+            if self.cfg.get("date_header", True):
+                text = f"{date_header(u.timestamps.get(doc_id))}\n{text}"
+            docs.append(Document(id=doc_id, content=text, user_id=user_id))
         meta_out = {
             "requested": args,
             "tokens_delivered": delivery.get("tokens_delivered"),
@@ -594,6 +601,7 @@ class GbrainMemoryProvider(MemoryProvider):
             "budget_clamped": delivery.get("budget_clamped") or ("budget_clamped" in (delivery.get("fallbacks") or [])),
             "vector_enabled": retrieval.get("vector_enabled"),
             "expansion_applied": retrieval.get("expansion_applied"),
+            "degraded": degraded,
         }
         if delivery.get("tokenizer") not in (None, "cl100k"):
             raise GbrainRetrieveError(f"gbrain packed evidence with tokenizer {delivery.get('tokenizer')!r}, not cl100k")

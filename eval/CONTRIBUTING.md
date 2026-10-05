@@ -2,7 +2,7 @@
 
 Useful contributions make it easier to tell when gbrain helps. You can contribute naturally worded questions, a competing search implementation, or a reproduction of a published result.
 
-Work from the repository root. Install with `bun install --frozen-lockfile`, and run `bun run test` for the tests under `test/eval/` and `eval/`, the Python tests and the validators.
+Work from the repository root. Install with `bun install --frozen-lockfile`, and run `bun run test` for the tests under `test/eval/` and `eval/`, the Python tests and the validators. The gbrain under test is the one `package.json` declares, master `739e5cc` (v0.60.46.0); a category scores what gbrain implements at that commit. Model-comparison runs follow the model rules in [CLAUDE.md](../CLAUDE.md#choose-models). Everything above [Changelog](#changelog) is current.
 
 ## Write questions in your own words
 
@@ -60,6 +60,10 @@ BRAINBENCH_N=1 bun eval/runner/multi-adapter.ts --adapter my-adapter --queries r
 
 Document the model, embedding dimensions, graph behavior, network use and any limits. An adapter name must describe the behavior that actually ran. A missing provider key must not silently turn a reranked comparison into ordinary hybrid search.
 
+## Evaluate a gbrain change
+
+To compare a candidate gbrain build against its baseline on dev splits, and later on held-out data, use the decision kit: [docs/decisions.md](../docs/decisions.md) (`bun run eval:decide`).
+
 ## Add a category
 
 A category is a runner, a seeded generator, a scorer and a dated report that answer one question about gbrain. Copy the N3 runner (`runner/n3-temporal-asof.ts`) for the shape, then work through this list in order. The registry test fails on a runner without a row, so start there.
@@ -90,3 +94,47 @@ When reporting a discrepancy, include Bun version, operating system, both code i
 Explain a feature with a concrete case before using its internal name. Keep measurements, benchmark inputs, frozen prompts and generated results intact. Use plain English and avoid em dashes. Commit prefixes such as `docs(eval):`, `fix(eval):` and `test(eval):` make the history easier to scan.
 
 See [CREDITS.md](CREDITS.md) for attribution. Contributions to external questions and adapters should add the author's credit and clearly identify which material is synthetic.
+
+## Changelog
+
+How this page changed, newest first. Measurement history lives in the dated reports and in
+[CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-10-05: Restructured as a current-state page with this changelog
+
+gbrain-evals v0.10.23. The opening paragraph names the gbrain a category scores (`739e5cc`) and points model-comparison work to the model rules in CLAUDE.md. This changelog section is new.
+
+### 2026-10-05: Evaluate a gbrain change
+
+[`43e6b99`](https://github.com/garrytan/gbrain-evals/commit/43e6b99) (merge of #71). A new "Evaluate a gbrain change" section points to the decision kit (`docs/decisions.md`, `bun run eval:decide`) for dev and held-out verdicts on a candidate gbrain build.
+
+### 2026-10-01: "Add a category" checklist
+
+[`f94e98d`](https://github.com/garrytan/gbrain-evals/commit/f94e98d), gbrain-evals v0.10.5. A new "Add a category" section gives a 10-step checklist for a new eval category, modeled on the N3 runner (`runner/n3-temporal-asof.ts`). The steps cover:
+
+- Checking the capability and entrypoint matrix, then writing the `registry.ts` row and preregistering promotion rules (`safety_contracts`, `quality_thresholds`, `exploratory`) in the same commit, before any counted run.
+- Running hermetic by default with `withHermeticEnv`, the shared `--seed`, `--output` and `--gbrain` flags, and gating paid arms behind `--paid --budget-run-id` through `requirePaidArm` and `startPaidRun`.
+- Generating gold with an independent oracle, shipping determinism, scorer and mutation tests (`assertScorerRejectsFakeSystems`), recording gbrain findings with `upsertBug`, keeping the hermetic arm under the 60-second CI target, and writing a dated report plus a `docs/README.md` row.
+
+The commit introduced the capability matrix, promotion rules, hermetic environment and bug ledger that the checklist points to.
+
+### 2026-09-29: Wider test scope and Tier 5.5 label
+
+[`88d0b19`](https://github.com/garrytan/gbrain-evals/commit/88d0b19), gbrain-evals v0.10.1. The setup line now says `bun run test` covers `test/eval/` and `eval/`, the Python tests and the validators, not only `test/eval/`. The Tier 5.5 paragraph now explains that the 50 placeholder questions use the reserved `externally-authored` tier id but scorecards label the family `synthetic-outsider` (earlier receipts say `externally-authored`).
+
+### 2026-09-09: Rewrite in plain language
+
+[`9238ec8`](https://github.com/garrytan/gbrain-evals/commit/9238ec8), gbrain-evals v0.8.0. The page was rewritten from three numbered workflows with commented shell steps into prose sections, as part of the docs pass that explains retrieval in plain terms:
+
+- "Write questions in your own words" replaces the Tier 5.5 workflow. It adds `eval:world:render` for machines without a browser, defines a slug and `gold.relevant`, and keeps the 20-question batch rule and the fictional-data-only rule.
+- "Add a search adapter" shows the current `Adapter` contract (now `PublicQuery` and an optional `teardown`), explains that the runner strips answer labels before calling the adapter, and gives a `BRAINBENCH_N=1` smoke command. It also requires that an adapter name match the behavior that ran.
+- "Reproduce a result" replaces the scorecard checklist. It names the two code identities to pin, asks for the report's exact command, and drops the promise that results land within tolerance bands.
+- "Code style" and "Contributors" became "Documentation and credit".
+
+### 2026-08-30: Test command rename
+
+[`d5b94c7`](https://github.com/garrytan/gbrain-evals/commit/d5b94c7), gbrain-evals v0.3.0. The two references to `bun run test:eval` in the adapter workflow and quality bar became `bun run test`.
+
+### 2026-04-21: Page created
+
+[`5bd8848`](https://github.com/garrytan/gbrain-evals/commit/5bd8848). Created with the initial BrainBench v1 extraction from gbrain. It described three contribution paths: writing Tier 5.5 externally authored queries (scaffold, validate, submit at least 20 per batch), submitting an external adapter against the `Adapter` interface in `eval/runner/types.ts`, and reproducing a published scorecard. It closed with code style rules and a pointer to `CREDITS.md`.

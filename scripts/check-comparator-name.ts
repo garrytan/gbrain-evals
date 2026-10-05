@@ -32,6 +32,8 @@ export const NEEDLES: Needle[] = [
 /** Paths (repo-relative) allowed to contain a needle, and which ones. */
 export const ALLOWED: Record<string, Needle['id'][]> = {
   'docs/comparison-systems.md': ['product', 'maker'],
+  // The README's per-document changelog keeps a dated 2026-05-24 entry that predates this guard.
+  'README.md': ['product'],
   'docs/plans/2026-09-28-gbrain-10x/audit/coverage-and-categories.md': ['product', 'maker'],
   'docs/plans/2026-09-28-gbrain-10x/audit/evals-docs-infra.md': ['product'],
   'eval/harness-provider/harness.lock.json': ['maker'],

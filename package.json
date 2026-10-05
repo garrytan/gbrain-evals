@@ -1,6 +1,6 @@
 {
   "name": "gbrain-evals",
-  "version": "0.10.20",
+  "version": "0.10.23",
   "description": "BrainBench \u2014 public benchmark for personal knowledge agent stacks. Consumes gbrain as a library.",
   "type": "module",
   "license": "MIT",
@@ -17,6 +17,7 @@
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json",
     "eval:run": "bun eval/runner/multi-adapter.ts",
     "eval:run:dev": "BRAINBENCH_N=1 bun eval/runner/multi-adapter.ts",
+    "eval:decide": "bun eval/runner/decide.ts",
     "eval:world:view": "bun eval/cli/world-view.ts",
     "eval:world:render": "bun eval/cli/world-view.ts --no-open",
     "eval:query:validate": "bun eval/cli/query-validate.ts",

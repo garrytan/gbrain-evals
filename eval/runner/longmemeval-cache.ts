@@ -62,6 +62,9 @@ export class EmbeddingCache {
   constructor(path: string, model: string) {
     mkdirSync(dirname(path), { recursive: true });
     this.db = new Database(path);
+    // busy_timeout first: switching to WAL (or recovering a WAL after a crash) needs a lock that another process
+    // opening the same cache can hold for a moment.
+    this.db.exec('PRAGMA busy_timeout = 10000');
     this.db.exec('PRAGMA journal_mode = WAL');
     // Concurrent workers (longmemeval-batch.sh runs 3+ workers in parallel)
     // share this cache file. WAL handles the readers-vs-writer case, but the

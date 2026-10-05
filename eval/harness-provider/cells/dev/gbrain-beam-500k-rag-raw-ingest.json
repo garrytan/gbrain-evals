@@ -10,7 +10,7 @@
     "answer": "gemini:gemini-3.8-flash",
     "judge": "gemini:gemini-3.5-flash"
   },
-  "budget_usd": 400,
+  "budget_usd": 10,
   "questions": {
     "units": [
       "8",

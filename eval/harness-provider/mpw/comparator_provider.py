@@ -244,7 +244,9 @@ class ComparatorMemoryProvider(MemoryProvider):
     # ── lifecycle ────────────────────────────────────────────────────────
 
     def _extraction_model(self) -> tuple[str, str | None]:
-        spec = self.config.get("extraction_model")
+        # serve_model: the server's LLM for this cell only (agent-mode reflect over banks extracted earlier);
+        # it is not an ingest key, so the cell reuses the store its extraction_model built.
+        spec = self.config.get("serve_model") or self.config.get("extraction_model")
         if not spec:
             return "openai", None
         provider, sep, model = str(spec).partition(":")

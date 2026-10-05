@@ -24,7 +24,7 @@ const SPEC_DIR = join(REPO_ROOT, 'eval/harness-provider/cells/dev');
 const LOG_DIR = join(REPO_ROOT, 'eval/reports/harness-dev');
 
 export interface Track {
-  provider: 'gbrain' | 'comparator' | 'qdrant';
+  provider: 'gbrain' | 'comparator' | 'qdrant' | 'full-context';
   dataset: string; split: string; units?: string[]; questionIds?: string[];
   lane: CellSpec['lane']; mode: CellSpec['mode'];
   base: Record<string, number>; extra: Record<string, unknown>;
@@ -32,6 +32,8 @@ export interface Track {
   gbrainCredentials?: string[];
   answer?: string;
   name?: string;
+  /** Per-cell budget override (dollars) for the target and default cells. */
+  budget?: number;
 }
 
 export function trackName(t: Track): string {
@@ -85,7 +87,7 @@ export async function sweep(t: Track, passthrough: string[]): Promise<number> {
   if (t.runDefault) runs.push([null, Object.fromEntries(Object.keys(t.base).map(k => [k, null]))]);
   for (const [target, knobs] of runs) {
     if (target !== null && !knobs) { log({ step: 'run', target, skipped: 'no knob setting passed the delivered-context gate on the tuning sample' }); failures++; continue; }
-    const spec = devSpec(t, target, target === null ? Object.fromEntries(Object.entries(knobs!).filter(([, v]) => v !== null)) : knobs!, target === null ? 40 : Math.max(10, Math.ceil(target / 1000) * 3));
+    const spec = devSpec(t, target, target === null ? Object.fromEntries(Object.entries(knobs!).filter(([, v]) => v !== null)) : knobs!, t.budget ?? (target === null ? 40 : Math.max(10, Math.ceil(target / 1000) * 3)));
     if (target === null && t.provider === 'gbrain') Object.assign(spec.provider_config!, { token_budget: null, return_unit: null, limit: null });
     const path = join(SPEC_DIR, `${name}-${target ?? 'default'}.json`);
     writeFileSync(path, JSON.stringify(spec, null, 2) + '\n');
@@ -115,6 +117,7 @@ if (import.meta.main) {
     targets: (flag('--targets') ?? '4000,8000,16000,32000').split(',').filter(Boolean).map(Number),
     sample: Number(flag('--sample') ?? 60), runDefault: !own.includes('--no-default'),
     gbrainCredentials: flag('--gbrain-credentials')?.split(','), answer: flag('--answer'), name: flag('--name'),
+    budget: flag('--budget') ? Number(flag('--budget')) : undefined,
   };
   process.exit(await sweep(t, passthrough));
 }
