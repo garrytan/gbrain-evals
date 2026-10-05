@@ -610,7 +610,7 @@ class GbrainMemoryProvider(MemoryProvider):
     def _query_pages(self, query: str, user_id: str | None, expand_default: bool | None = None):
         # token_budget / return_unit / limit set to null in the cell config mean "gbrain's own default": the argument is omitted.
         args = {"query": query}
-        for key in ("detail", "return_window"):
+        for key in ("detail", "return_window", "autocut"):
             if self.cfg.get(key) is not None:
                 args[key] = self.cfg[key]
         for key in ("token_budget", "return_unit", "limit"):
