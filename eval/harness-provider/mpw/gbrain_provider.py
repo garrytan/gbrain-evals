@@ -296,7 +296,20 @@ class GbrainMemoryProvider(MemoryProvider):
         child = u.child
         assert child is not None
         t0 = time.perf_counter()
-        pages = [{"slug": SLUG_PREFIX + d.id.lower(), "content": page_markdown(d)} for d in docs]
+        # A dataset can list one session twice in a history (LongMemEval haystacks do): an identical repeat is
+        # written once; a repeat with different text gets its own slug so both stay retrievable.
+        pages, seen = [], {}
+        for d in docs:
+            slug, body = SLUG_PREFIX + d.id.lower(), page_markdown(d)
+            if slug in seen:
+                if seen[slug] == body:
+                    continue
+                n = 2
+                while f"{slug}-{n}" in seen:
+                    n += 1
+                slug = f"{slug}-{n}"
+            seen[slug] = body
+            pages.append({"slug": slug, "content": body})
         for d in docs:
             u.timestamps[d.id.lower()] = d.timestamp
         u.save()
