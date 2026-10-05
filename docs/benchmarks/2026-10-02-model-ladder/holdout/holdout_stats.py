@@ -151,6 +151,7 @@ class Stats:
         """Agent plus gbrain-internal dollars per cell and per successful cell (judge excluded)."""
         rs = self.sel(model=model, arm=arm)
         usd = sum(r['total_usd'] for r in rs); wins = sum(r['score']['success'] for r in rs)
+        if not rs: return float('nan'), float('nan')
         return usd / len(rs), (usd / wins if wins else float('nan'))
 
 

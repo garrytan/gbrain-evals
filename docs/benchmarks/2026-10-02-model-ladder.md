@@ -6,50 +6,50 @@ Measured 2026-10-02 to 2026-10-04. The protocol is in
 
 ## The finding
 
-**On the held-out world, agents using gbrain finish about as many tasks as agents using plain files with grep.**
-gbrain `a714410a5` (released as v0.60.44.0), measured on the fixed harness on 2026-10-04, succeeds on 75.7% of 600
-cells. Plain Markdown files with `grep` (`fs`), the best simple setup, succeed on 72.8%. Paired by task, gbrain is
-2.8 points ahead with a 95% CI of −2.3 to +8.2: 18 tasks better, 18 worse and 14 tied. The interval includes zero, so
-this run does not show gbrain ahead of grep; at the low end of the interval it is 2.3 points behind.
+**On the newest frontier models, agents using gbrain finish as many held-out tasks as agents using plain files with
+grep, and both are at the ceiling.** The current entity-recall build of gbrain (`51f865d78`), measured on the fixed
+harness, succeeds on 95.6% of 500 cells. Plain Markdown files with `grep` (`fs`), the preregistered comparator, also
+succeed on 95.6%. Paired by task, the difference is 0.0 points, with a 95% CI of −3.2 to +3.0.
 
-The result depends on the model. gbrain clearly helps Haiku 4.5 and Sonnet 4.6, clearly hurts GPT-5.4-mini, and the
-strongest model succeeds on every task either way.
-
-| Model | gbrain `a714410a5` | fs | Paired difference | 95% CI |
+| Model | gbrain `51f865d78` | fs | Paired difference | 95% CI |
 |---|---|---|---|---|
-| Haiku 4.5 | 71% | 55% | +16.0 pts | [+5.0, +28.0] |
-| Sonnet 4.6 | 79% | 62% | +17.0 pts | [+6.0, +28.0] |
-| Sonnet 5.5 | 86% | 91% | −5.0 pts | [−15.0, +4.0] |
-| GPT-5.4-mini | 47% | 62% | −15.0 pts | [−25.0, −5.0] |
-| GPT-5.4 | 71% | 67% | +4.0 pts | [−10.0, +18.0] |
-| GPT-6.1 Sol | 100% | 100% | 0 | [0, 0] |
-| All six | 75.7% | 72.8% | +2.8 pts | [−2.3, +8.2] |
+| Sonnet 5.5 | 93% | 91% | +2.0 pts | [−5.0, +9.0] |
+| Opus 5.5 | 92% | 95% | −3.0 pts | [−10.0, +3.0] |
+| Fable 5.1 | 95% | 94% | +1.0 pts | [−6.0, +7.0] |
+| GPT-6 Astra | 98% | 98% | 0 | [−5.0, +4.0] |
+| GPT-6.1 Sol | 100% | 100% | 0 (ceiling) | [0, 0] |
+| All five | 95.6% | 95.6% | 0.0 pts | [−3.2, +3.0] |
 
-**gbrain finishes more tasks than the other simple setups and leaks nothing.** It is 9.7 points ahead of plain
-Postgres search (CI +3.2 to +16.8) and 12.3 points ahead of the provider's memory tool (CI +6.8 to +18.3). On the
-permission tasks it is 15.0 points ahead of files with the finance-only documents removed (`fs-acl`, CI +3.3 to
-+28.3). In 120 permission runs gbrain never put finance-only text in an answer or in the agent's context. Plain files
-put it in 9 answers and in the context of 115 runs; Postgres 12 and 106; the memory tool 9 and 64. `fs-acl` still
-leaked into 17 answers, from digests that repeat finance-only figures without a label.
+- **Why a tie here says little about capability.** The oracle arm, which is handed the evidence, scores 97.6%. So at
+  this level the 50 tasks can't separate memory systems on success. A harder Cat 40 tier is planned to measure that
+  edge ([plan](../plans/2026-10-05-cat40-hard/PLAN.md)).
+- **What gbrain does differently at the frontier: it keeps finance-only text out.** In 100 permission runs gbrain put
+  finance-only text in neither an answer nor the agent's context. Plain files put it in the context of all 100
+  (though in no answer), and Postgres put it in 4 answers and 97 contexts.
+- **gbrain costs about twice as much per task as files:** $0.238 against $0.112, averaged over the five models.
+- **The entity-recall wave makes gbrain better and cheaper than the build before it.** Against `a714410a5` (v0.60.44.0)
+  on the same models and tasks:
+  - renewal briefs rise 7.0 points (CI +1.0 to +12.0)
+  - overall success moves +0.4 points (CI −2.0 to +2.4)
+  - cost per task falls 26%
+  - leaks stay at zero
 
-**Renewal briefs are where gbrain trails.** By family, gbrain is ahead of files on authority (+6.7 points), true-now
-(+5.0), permissions (+5.8) and write-back (+5.8), and behind on the five-part renewal briefs (family E): 31.7% against
-40.8%, −9.2 points (CI −20.8 to +0.8). A brief needs every ticket, meeting and email about one account, and gbrain's
-search does not enumerate them. The [entity-recall plan](../plans/2026-10-04-cat40-entity-recall/PLAN.md) targets this
-gap, and this headline is updated after its held-out run.
+  Details are in [Entity recall](#entity-recall-wave-frontier-models).
 
-**gbrain costs about 2.5 times as much per task as files.** $0.080 per task and $0.106 per successful task, against
-$0.032 and $0.044 for files, $0.021 and $0.032 for Postgres, and $0.138 and $0.218 for the memory tool (agent and
-gbrain-internal model spend; judge excluded).
+**On the earlier six-model set, gbrain was level with files and helped mid-tier models.** gbrain `a714410a5` succeeded
+on 75.7% against 72.8% for files: +2.8 points (CI −2.3 to +8.2). It was clearly ahead for Haiku 4.5 (+16) and Sonnet
+4.6 (+17), and behind on renewal briefs (−9.2). Those tables, and the comparisons with Postgres and the memory tool,
+are in [headline-a714410a5.md](2026-10-02-model-ladder/entity-recall/headline-a714410a5.md).
 
-**How this was measured.** The held-out world (seed 20261003, 4,036 documents, 50 tasks) ran with 6 models and 2
-repeats. The comparator was fixed in advance as the best pooled of `fs`, `memory` and `pg`
-([preregistration](2026-10-02-model-ladder/entity-recall/PREREGISTRATION.md)), and `fs` is it. The simple-arm cells
-are the 2026-10-02 runs, rescored with today's scorer: all 2,520 are eligible for reuse and none changed
-([audit](2026-10-02-model-ladder/entity-recall/simple-arms-rescored/README.md)). Those arms make no requests through
-the proxy the old ledger stalled, so they were not degraded, but they ran two days before the gbrain cells, so the
-comparison is not contemporaneous. This is the held-out world's third use for a gbrain decision. Full tables:
-[headline-a714410a5.md](2026-10-02-model-ladder/entity-recall/headline-a714410a5.md).
+**How this was measured.** The held-out world (seed 20261003, 4,036 documents, 50 tasks; its third use for a gbrain
+decision) ran 2 repeats per model.
+- **Comparator.** It was fixed in advance as the best pooled of `fs`, `memory` and `pg`
+  ([preregistration](2026-10-02-model-ladder/entity-recall/PREREGISTRATION.md)); amendment 1 moved the models to the
+  newest frontier set.
+- **Simple-arm cells.** Sonnet 5.5 and GPT-6.1 Sol come from the 2026-10-02 runs, rescored with today's scorer (all
+  eligible, none changed). Opus 5.5, Fable 5.1 and GPT-6 Astra ran on 2026-10-04. The memory arm was not run for
+  the three new models.
+- **Full tables:** [headline-wave.md](2026-10-02-model-ladder/entity-recall/holdout/headline-wave.md).
 
 > **Correction, 2026-10-04: gbrain's AI search was partly switched off in every gbrain run below.**
 > The old budget ledger stalled the runner's event loop, and the same loop carries gbrain's embedding requests
@@ -126,6 +126,28 @@ briefs, all five fields must match. A finance-only string in the answer is a lea
 contract fails the run. A fixed judge (`gpt-5.4-mini`) counts unsupported claims but never decides success.
 
 ## Results
+
+### Entity-recall wave (frontier models)
+
+The wave links every page to the entity records it names, by name or declared code, and the `entity` card lists
+those pages by type. One instruction tells agents to start an account brief with `entity`
+([plan](../plans/2026-10-04-cat40-entity-recall/PLAN.md); gbrain v0.60.57.0).
+
+| Run | Build | Success | Renewal briefs (family E) | $/task |
+|---|---|---|---|---|
+| Dev world, master control | `739e5cc89` | 239/250 | 44/50 | 0.341 |
+| Dev world, round 1 (linking) | `a3246dea8` | 236/250 (−1.2 [−3.2, +0.8]) | 43/50 | 0.286 |
+| Dev world, round 2 (+instruction) | `51f865d78` | 239/250 (0.0 [−2.0, +2.0]) | 46/50 | 0.240 |
+| Held-out, previous gbrain | `a714410a5` | 95.2% | — | 0.323 |
+| Held-out, wave | `51f865d78` | 95.6% (+0.4 [−2.0, +2.4]) | +7.0 pts [+1.0, +12.0] | 0.238 |
+
+Five models (Sonnet 5.5, Opus 5.5, Fable 5.1, GPT-6.1 Sol, GPT-6 Astra), one repeat on the development world and
+two on the held-out world. The preregistered ship rule passes, with no new leaks and no model or family at −8 or
+worse, and so does the default-on rule (family E above 0, cost within +25%). On the development brain, the wave adds
+4,124 mention links across 3,973 pages; the previous build had 0. A keyword-only variant of master, tested before the
+wave was built, scored 5 of 30 renewal briefs against 2 of 30 for master on the older development models, and lost
+about 25 points on families A and C ([uc3/](2026-10-02-model-ladder/entity-recall/uc3/)). Artifacts:
+[entity-recall/](2026-10-02-model-ladder/entity-recall/).
 
 ### The finding as published on 2026-10-03
 
@@ -397,9 +419,12 @@ contact live. Keyword-only search did better on this family. That is a gbrain ra
 
 ## What to use, and what this does not show
 
-- **Use gbrain with the fix wave.** On unseen tasks it is 17 points better than the release, and at least level with
-  plain files at 2.5 to 4 times the price. For permissions, the release lets derived pages leak; the fix wave closes
-  that. For saved memories, the release's `search` cannot see what `remember` stored.
+- **On frontier models, gbrain matches plain files on these tasks, keeps finance-only text out of the agent's
+  context, and costs about twice as much per task.** Use gbrain when permissions or audited memory matter. Expect no
+  success gain on tasks this size until the harder tier measures one. On mid-tier models (Haiku 4.5, Sonnet 4.6)
+  gbrain finished 16–17 points more tasks than files.
+- **Use the current gbrain.** The entity-recall wave (v0.60.57.0) finds every page about an account. It raises
+  renewal briefs by 7 points over v0.60.44.0 and costs 26% less per task.
 - **Do not read this as "gbrain improves as models improve."** The strongest models already succeed 96–100% with
   plain files, so this world cannot measure a slope at the top. A harder world, real harnesses (Claude Code, Codex),
   and the failure family (D) are the next steps.
@@ -407,9 +432,10 @@ contact live. Keyword-only search did better on this family. That is a gbrain ra
   the other-name feature reads. The held-out world uses the same templates with a new seed, so it tests overfitting
   to these 50 tasks, not to the wording.
 - **Some caveats on the numbers:**
+  - Results before the 2026-10-04 correction measured gbrain with vector search partly degraded.
   - The fixed-build ladder has one repeat per model, compared with repeat 0 of the release.
   - gbrain's saved facts carry the real clock date while the world's "today" is 2026-09-15.
-  - The 52k world was run only on the release.
+  - The 52k world has been run only on the release, under the stalled harness.
   - Tool latency measured inside the harness is not valid (see [cost and speed](#cost-and-speed)).
 
 ## Reproduce

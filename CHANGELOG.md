@@ -4,6 +4,22 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [0.10.19] - 2026-10-04
 
+### Cat 40 on frontier models: gbrain ties plain files at the ceiling; the entity-recall wave lifts renewal briefs and cuts cost
+
+The finding now uses the five newest frontier models: Sonnet 5.5, Opus 5.5, Fable 5.1, GPT-6.1 Sol and GPT-6 Astra.
+They run under the new model-selection rules.
+
+- **Headline.** gbrain `51f865d78` (the entity-recall wave, gbrain v0.60.57.0) and plain files each finish 95.6% of
+  held-out tasks: 0.0 points, CI −3.2 to +3.0. The oracle scores 97.6%, so these tasks are at the ceiling for
+  frontier models. gbrain puts no finance-only text into the agent's context in 100 permission runs; files put it
+  there in all 100. gbrain costs about twice as much per task ($0.238 against $0.112).
+- **Wave against v0.60.44.0.** Renewal briefs rise 7.0 points (CI +1.0 to +12.0), success is level (+0.4), cost per
+  task falls 26%, and there are no leaks. The ship rule and the default-on rule pass.
+- **Development rounds and controls.** Master and two rounds ran on the five models. For the three models new to the
+  eval, the held-out world also got `a714410a5` and the simple arms. Artifacts are in
+  `docs/benchmarks/2026-10-02-model-ladder/entity-recall/`.
+- **`holdout_stats.py`** no longer fails when a cost table lists an arm with no cells for a model.
+
 ### The corrected Cat 40 headline: on the held-out world, gbrain and plain files with grep finish about as many tasks
 
 The [Cat 40 report](docs/benchmarks/2026-10-02-model-ladder.md)'s finding now compares gbrain `a714410a5`
