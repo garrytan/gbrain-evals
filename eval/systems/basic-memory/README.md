@@ -68,6 +68,17 @@ the common embedder; the recipe never calls a provider.
 two dated sessions, finish, dated probes, a namespace-isolation canary with a witness, delete and error shapes. Pass
 `--json` to keep the full request and response transcript.
 
+`SHIM_CONFIG=common` was checked keyless against `eval/systems/mem0/fake_provider.py` standing in for the proxy:
+every embedding request reached `OPENAI_BASE_URL` as `text-embedding-3-large` with `dimensions: 1536` and the dummy
+key. Two retrieval checks fail there because hashed fake vectors fall under Basic Memory's 0.55 similarity floor;
+that is the fake embedder, not the shim.
+
+A keyless smoke on one real conversation (LoCoMo conversation 0 from the dataset file `memory-qa` pins, 19 sessions,
+152 questions in categories 1 to 4, opaque ids, recipe configuration, `vendor-default` k=10) ingested with no errors,
+indexed all 19 notes, and returned every evidence session for 90.8% of questions and at least one for 96.7%;
+query p50 83 ms, p95 109 ms; ingest plus finish 30 seconds. This is a setup check run outside the harness, not a
+counted result.
+
 Timing on a 4-core machine: each `bm` CLI call costs about 5 seconds of start-up, so `/reset` takes about 6 seconds
 and `/finish` about 15 seconds for a small namespace. Search over the warm MCP session took about 50 ms per query in the protocol check, after
 a 1.5-second first query that loads the embedder.
