@@ -9,7 +9,7 @@ This records what each gbrain-evals release changed and what its measurements me
 The finding now uses the five newest frontier models: Sonnet 5.5, Opus 5.5, Fable 5.1, GPT-6.1 Sol and GPT-6 Astra.
 They run under the new model-selection rules.
 
-- **Headline.** gbrain `51f865d78` (the entity-recall wave, gbrain v0.60.57.0) and plain files each finish 95.6% of
+- **Headline.** gbrain `51f865d78` (the entity-recall wave, gbrain v0.60.62.0) and plain files each finish 95.6% of
   held-out tasks: 0.0 points, CI −3.2 to +3.0. The oracle scores 97.6%, so these tasks are at the ceiling for
   frontier models. gbrain puts no finance-only text into the agent's context in 100 permission runs; files put it
   there in all 100. gbrain costs about twice as much per task ($0.238 against $0.112).

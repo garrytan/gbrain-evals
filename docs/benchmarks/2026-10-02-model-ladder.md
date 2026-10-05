@@ -131,7 +131,7 @@ contract fails the run. A fixed judge (`gpt-5.4-mini`) counts unsupported claims
 
 The wave links every page to the entity records it names, by name or declared code, and the `entity` card lists
 those pages by type. One instruction tells agents to start an account brief with `entity`
-([plan](../plans/2026-10-04-cat40-entity-recall/PLAN.md); gbrain v0.60.57.0).
+([plan](../plans/2026-10-04-cat40-entity-recall/PLAN.md); gbrain v0.60.62.0).
 
 | Run | Build | Success | Renewal briefs (family E) | $/task |
 |---|---|---|---|---|
@@ -423,7 +423,7 @@ contact live. Keyword-only search did better on this family. That is a gbrain ra
   context, and costs about twice as much per task.** Use gbrain when permissions or audited memory matter. Expect no
   success gain on tasks this size until the harder tier measures one. On mid-tier models (Haiku 4.5, Sonnet 4.6)
   gbrain finished 16–17 points more tasks than files.
-- **Use the current gbrain.** The entity-recall wave (v0.60.57.0) finds every page about an account. It raises
+- **Use the current gbrain.** The entity-recall wave (v0.60.62.0) finds every page about an account. It raises
   renewal briefs by 7 points over v0.60.44.0 and costs 26% less per task.
 - **Do not read this as "gbrain improves as models improve."** The strongest models already succeed 96–100% with
   plain files, so this world cannot measure a slope at the top. A harder world, real harnesses (Claude Code, Codex),
