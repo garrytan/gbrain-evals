@@ -39,16 +39,16 @@
     "kind": "native-agent",
     "transport": "websocket",
     "version": "Letta Code 0.34.4 App Server, protocol_version 1, `letta server --listen ws://0.0.0.0:4500 --ws-auth capability-token --backend local`",
-    "notes": "Verified keyless on 2026-10-05: app_server_info returns backend local and capabilities agent_management, conversation_management, memory_management, runtime_start; a headless turn's model call went to the openai-compatible provider registered with `letta connect openai-compatible --base-url <proxy>`."
+    "notes": "Verified on 2026-10-05: app_server_info returns backend local and capabilities agent_management, conversation_management, memory_management, runtime_start; metered headless turns reached OpenAI and Anthropic only through the proxy."
   },
   "spike_findings": [
     "letta/letta:0.34.4 is Letta Code 0.34.4 (Node CLI and App Server), not the retired Python API server; its entrypoint refuses the old server's settings.",
     "Local backend storage is files under ~/.letta/lc-local-backend: JSONL transcripts plus a git-backed memory filesystem (memfs) per agent.",
     "No archival memory on the local backend: the bundled letta-client's /v1/agents/{id}/archival-memory and /v1/passages/search are Cloud API routes that LocalBackend does not implement.",
-    "Every message write is an agent turn: HeadlessBackend.executeConversationTurn appends the input and runs the model executor. A one-line prompt cost about 8,600 prompt tokens against the fake provider.",
+    "Every message write is an agent turn: HeadlessBackend.executeConversationTurn appends the input and runs the model executor. Metered on 2026-10-05, a one-line prompt sent 22,020 input tokens to gpt-4.1-mini and 26,122 to claude-haiku-4-5, almost all of it Letta's system prompt.",
     "`letta messages search` is the only passive read: keyword (FTS) search over raw transcripts on the local backend (vector and hybrid modes throw), returning whole messages including Letta's injected system reminders, dated by wall clock.",
     "The App Server exposes passive memory-file commands (write_memory_file, read_memory_file, list_memory, delete_memory_file). They store Markdown files under git with validation hooks (each directory needs a MEMORY.md index; per-file size limits) but offer no query-ranked read; the agent decides what to load.",
-    "Providers: `letta connect openai-compatible --base-url` routes OpenAI-format calls to the metering proxy. Anthropic calls need `letta connect anthropic`; the bundled Anthropic SDK reads ANTHROPIC_BASE_URL, but whether the local Anthropic provider honours it is unverified."
+    "Providers: `letta connect openai-compatible --base-url <proxy>/openai/v1` and `letta connect anthropic --api-key <dummy> --base-url <proxy>/anthropic` both route through the metering proxy (verified metered). ANTHROPIC_BASE_URL alone is ignored: the model catalog hardcodes https://api.anthropic.com, so without --base-url the call has no route and fails. Letta asks Anthropic for 64,000 output tokens per turn, above the proxy's default 32,768 cap, so a Cat 40 cell must lower Letta's output limit or raise the proxy cap, and the per-turn reservation scales with that limit."
   ],
   "deviations_from_vendor_code": ["No Letta Code benchmark ingestion code exists at v0.34.4 (AMB at f618ed7 has no Letta provider), so there is nothing to start from."]
 }

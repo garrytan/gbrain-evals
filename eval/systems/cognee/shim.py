@@ -11,6 +11,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import re
 import sys
 import threading
 import time
@@ -41,6 +42,7 @@ CAPABILITY = json.loads((Path(__file__).resolve().parent / "capability.json").re
 POLICIES = CAPABILITY["retrieval_policies"]
 LANE_KEYS = ("chunks_top_k", "entities_top_k", "facts_top_k", "max_edges_per_entity")
 ENTITY_HEADER = "## Relevant entities\n"
+PROXY_REFUSAL = re.compile(r"\b402\b|['\"]kind['\"]\s*:\s*['\"]budget['\"]")
 
 
 def render_session(session: dict[str, Any], session_number: int) -> list[str]:
@@ -65,7 +67,14 @@ class CogneeAdapter(Adapter):
 
     def run(self, coro: Any, timeout: float | None = None) -> Any:
         with self.lock:
-            return asyncio.run_coroutine_threadsafe(coro, self.loop).result(timeout)
+            try:
+                return asyncio.run_coroutine_threadsafe(coro, self.loop).result(timeout)
+            except ShimError:
+                raise
+            except Exception as e:
+                if PROXY_REFUSAL.search(str(e)):
+                    raise ShimError("budget", f"metering proxy refused a provider call: {type(e).__name__}: {e}", 402) from e
+                raise
 
     def data_id(self, ns: str, source_id: str) -> UUID:
         return uuid5(NAMESPACE_URL, f"shootout:{ns}:{source_id}")

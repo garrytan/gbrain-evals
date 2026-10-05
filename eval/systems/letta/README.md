@@ -22,7 +22,7 @@ Letta's agent loop? Answer: no. Evidence, from the 0.34.4 bundle and keyless run
    `HeadlessBackend`) implements agents, conversations, messages, runs and memory files, and nothing else. There is
    no embedder.
 2. **Every message write is an agent turn.** `executeConversationTurn` appends the input and runs the model. A
-   one-line prompt sent about 8,600 prompt tokens to the provider.
+   one-line prompt sent 22,020 input tokens to `gpt-4.1-mini` (metered), almost all of it Letta's system prompt.
 3. **The only passive read is keyword search over raw transcripts.** `letta messages search` uses full-text search
    locally (vector and hybrid modes throw an error). It returns whole messages, including Letta's injected system
    reminders, dated by wall clock, so a session cannot carry its own date.
@@ -38,8 +38,9 @@ delete. Wrapping the agent loop and calling it passive memory QA would misdescri
 ## What runs here
 
 - [Dockerfile](Dockerfile): the vendor image pinned by digest, plus the stdlib shim (the image ships Python 3.11).
-- [shim.py](shim.py): registers the proxy as an OpenAI-compatible provider (`letta connect openai-compatible
-  --base-url $OPENAI_BASE_URL`), starts the App Server (`letta server --listen ws://0.0.0.0:4500 --ws-auth
+- [shim.py](shim.py): registers the proxy as Letta's OpenAI-compatible and Anthropic providers (`letta connect
+  openai-compatible --base-url $OPENAI_BASE_URL`, `letta connect anthropic --base-url $ANTHROPIC_BASE_URL`), starts
+  the App Server (`letta server --listen ws://0.0.0.0:4500 --ws-auth
   capability-token --backend local`) and serves the protocol. `/health` is true only when the App Server answers an
   `app_server_info` handshake with `backend: local`.
 - [docker-compose.yml](docker-compose.yml): the same sealed network as the other shims. The shim is published on
@@ -59,11 +60,14 @@ records what Letta does. It needs:
 1. **A connection.** WebSocket to `ws://127.0.0.1:4500/ws` with `Authorization: Bearer <token>` from `./run/token`.
    Send `{"type": "app_server_info", "request_id": ...}` and require `backend: "local"` and `protocol_version: 1`.
    Responses echo `request_id`. Message types are declared in the package's `dist/types/types/protocol_v2.d.ts`.
-2. **Providers through the proxy.** OpenAI models work through `letta connect openai-compatible` (verified). The
-   newest Opus, Sonnet and Fable models need `letta connect anthropic`; the bundled Anthropic SDK reads
-   `ANTHROPIC_BASE_URL`, but whether the local Anthropic provider honours it is unverified. Prove it against the
-   metering proxy before any Anthropic cell, or that model is `blocked` for Letta. Pass model handles such as
-   `openai-compatible/<model>` and check `letta model list --byok`.
+2. **Providers through the proxy.** Both verified metered: `letta connect openai-compatible --base-url
+   <proxy>/<slot>/openai/v1` and `letta connect anthropic --api-key <dummy> --base-url <proxy>/<slot>/anthropic`
+   (the shim runs both at start). `ANTHROPIC_BASE_URL` alone is ignored, because Letta's model catalog hardcodes
+   `https://api.anthropic.com`. Model handles are `openai-compatible/<model>` and `anthropic/<model>`; the catalog
+   at 0.34.4 lists `anthropic/claude-opus-5-5`, `claude-sonnet-5-5` and `claude-fable-5-1`. Letta asks Anthropic for
+   64,000 output tokens per turn, above the proxy's default 32,768 cap, so the driver must lower Letta's output
+   limit (`letta model set --model-settings`) or the cell must raise the proxy cap and budget for the larger
+   per-turn reservation.
 3. **One fresh agent per task.** `create_agent` (personality `blank` or `memo`, `model`, `pin_global: false`), then
    `enable_memfs`. Delete it afterwards with `agent_delete`, or use a fresh `letta-home` volume per cell, so no state
    crosses cells.
@@ -76,8 +80,8 @@ records what Letta does. It needs:
    `stream_delta` events and `conversation_messages_list` for the transcript. Two-session tasks reuse the agent in a
    new conversation. Tool approvals arrive as `can_use_tool`; the driver must answer them by a fixed policy.
 6. **Cost.** Usage per turn comes from the run (`usage.prompt_tokens`, `completion_tokens`, cache fields) and from the
-   metering proxy, which is the number of record. Expect at least about 8,600 prompt tokens per turn from Letta's
-   system prompt alone.
+   metering proxy, which is the number of record. Expect 22,000 to 26,000 input tokens per turn from Letta's
+   system prompt alone (metered on `gpt-4.1-mini` and `claude-haiku-4-5`).
 7. **Write targets.** Letta writes to its own memory files, not to the harness's canonical targets. Map memory-file
    paths to canonical document ids for scoring, and read memory with `list_memory` after each task.
 8. **Its own table.** Letta's loop, prompts and tools differ from the harness loop, so its Cat 40 cells are reported
@@ -85,3 +89,25 @@ records what Letta does. It needs:
 
 Proposed home for the driver: `eval/runner/cat40/letta-native.ts` with a canned-transcript test
 (`test/eval/cat40-letta.test.ts`, as the engineering review suggested). Both are outside this lane.
+
+## Metered smoke, 2026-10-05
+
+Letta has no passive memory path to smoke, so the smoke is the native surface: the capability-only protocol check and
+one headless agent turn ("Remember: my dog is named Biscuit. Reply with one word.") per provider, through
+`eval/runner/metering-proxy.ts` in lease mode (slot `letta`, $0.50 lease per run).
+
+| | OpenAI | Anthropic |
+|---|---|---|
+| Model | `openai-compatible/gpt-4.1-mini` | `anthropic/claude-haiku-4-5` |
+| Protocol checks | 7/7 | (same container) |
+| Model requests | 1 chat (plus free `GET /v1/models` reads) | 1 messages |
+| Tokens in / out | 22,020 / 4 | 26,122 / 8 (26,119 written to the prompt cache) |
+| Dollars | $0.00881 | $0.03269 |
+| Turn wall time | 1.1 s (agent), 3.3 s (CLI) | 0.8 s (agent), 3.1 s (CLI) |
+| Refusals | 0 | 1, before the fix below |
+
+The Anthropic turn first failed twice: with only `ANTHROPIC_BASE_URL` set, Letta tried `api.anthropic.com` and had no
+route; after `letta connect anthropic --base-url`, the proxy refused Letta's request for 64,000 output tokens (cap
+32,768). The counted run used `--max-output-tokens 64000` on the proxy, which made the turn's worst-case reservation
+$0.45 on Haiku. Frontier models need a lower Letta output limit to fit a small lease. Haiku was used only to prove the
+route; Cat 40 cells use the newest models.
