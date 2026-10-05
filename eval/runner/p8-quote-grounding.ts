@@ -167,6 +167,18 @@ export function quoteSpans(text: string): string[] {
   return out;
 }
 
+/**
+ * Which answer spans gbrain flagged. gbrain reports each unverified quote as its inner text with whitespace collapsed
+ * and clipped to 300 characters (`clip` in synthesize-verify.ts), so a span is flagged when its text in that form equals
+ * a reported text. Substring containment would also mark a supported span that sits inside, or contains, a different
+ * flagged quote.
+ */
+export function flaggedSpans(spans: readonly string[], unverified: readonly string[]): boolean[] {
+  const key = (t: string) => { const flat = t.replace(/\s+/g, ' ').trim(); return flat.length > 300 ? `${flat.slice(0, 297)}...` : flat; };
+  const reported = new Set(unverified.map(key));
+  return spans.map(span => reported.has(key(span)));
+}
+
 function wilsonUpper(k: number, n: number, z = 1.96): number {
   if (n === 0) return 1;
   const p = k / n, d = 1 + z * z / n;
@@ -314,10 +326,11 @@ async function main(argv = process.argv.slice(2)) {
       }
       catch (e) { log(`${q.id}: ${(e as Error).message}`); continue; }
       const raw = String(res.answer_raw ?? res.answer ?? '');
-      const flaggedTexts = new Set(((res.unverified_quotes ?? []) as Array<{ text: string }>).map(u => u.text.trim()));
+      const answerSpans = quoteSpans(raw);
+      const flags = flaggedSpans(answerSpans, ((res.unverified_quotes ?? []) as Array<{ text: string }>).map(u => u.text));
       const spans = [];
-      for (const span of quoteSpans(raw)) {
-        const flagged = [...flaggedTexts].some(t => t.includes(span) || span.includes(t));
+      for (const [i, span] of answerSpans.entries()) {
+        const flagged = flags[i];
         const judged = prior?.spans.find(s => s.span === span)?.judge;
         if (prior && !judged) continue;
         spans.push({ span, gbrain: flagged ? 'flagged' : 'kept', judge: judged ?? await judge(chat, judgeModel, captured, span) });
