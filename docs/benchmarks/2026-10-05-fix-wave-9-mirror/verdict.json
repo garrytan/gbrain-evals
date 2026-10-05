@@ -8,7 +8,7 @@
     "pr": "garrytan/gbrain#6111",
     "pr_state_at_mirror": "open, pending merge",
     "pr_head": "1fbe8660cb0dc1737d7bd9323aa9c6410dc80ec8",
-    "release": "v0.60.73.0 (PR title; VERSION at the mirrored head still reads 0.60.72.0 until the pending restamp)",
+    "release": "v0.60.74.0 (PR title; VERSION at the mirrored head still reads 0.60.72.0 until the pending restamp)",
     "commits": {
       "search_path": "daf7426b6dbfa0de25356fffc7cb526dbcb78fb0",
       "takes_quality_protocol": "8a2d8a82aad5d32c5b3993fa16f8a75bd2f01103"

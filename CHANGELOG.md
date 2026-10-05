@@ -6,11 +6,24 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ### Mirror: gbrain fix wave 9 pins `search_path` at about 10-13% insert cost; takes-quality receipts move to protocol 2
 
-gbrain #6111 (fix wave 9, v0.60.73.0, open and pending merge at head `1fbe8660c`) carries two changes recorded here ([report](docs/benchmarks/2026-10-05-fix-wave-9-mirror.md), [`verdict.json`](docs/benchmarks/2026-10-05-fix-wave-9-mirror/verdict.json), upstream text verbatim in `upstream/`). Nothing was rerun; $0.
+gbrain #6111 (fix wave 9, v0.60.74.0, open and pending merge at head `1fbe8660c`) carries two changes recorded here ([report](docs/benchmarks/2026-10-05-fix-wave-9-mirror.md), [`verdict.json`](docs/benchmarks/2026-10-05-fix-wave-9-mirror/verdict.json), upstream text verbatim in `upstream/`). Nothing was rerun; $0.
 
 - **`search_path` pinning (#5190, migration v211 `function_search_path`): accepted cost.** Every gbrain plpgsql function pins `search_path`, a security hardening. On the wave lane's own machine (3 runs per side, ranges only), 10,000 fact inserts through the withdrawal trigger went from 1.31-1.46 s to 1.45-1.69 s on PGLite and from 531-536 ms to 565-604 ms on Postgres 16: +13% and +10% at the midpoints, 6-16% at the range ends. The cause is the trigger's pinned setting. A 24-claim fact-fingerprint golden is byte-identical before and after on both engines, and the fingerprint index is still used. Not a retrieval change.
 - **Takes-quality protocol 2 (#5325): comparability note, not a verdict.** One same-model correction per malformed judge slot, priced against the cap first; valid low scores are never re-asked. Receipts gain `protocol_version`, `correction_selection_rule` and `corrections`, and `regress` treats a protocol change as dissimilar inputs. No before/after score was measured. Compare takes-quality receipts only within one protocol version; this repository has published none so far.
-- **Version.** Open #76 and #78 both claim 0.10.26, so this release is 0.10.27.
+- **Version.** #78 took 0.10.26, so this release is 0.10.27.
+
+## [0.10.26] - 2026-10-05
+
+### Mirror: managed Postgres catch-up goes from 3.4 to about 150 pages a minute 57 ms from the database
+
+gbrain measured its managed-sync catch-up on a 57 ms latency rig across three releases
+([#5996](https://github.com/garrytan/gbrain/pull/5996), v0.60.48.0; [#6021](https://github.com/garrytan/gbrain/pull/6021),
+v0.60.58.0; [#6098](https://github.com/garrytan/gbrain/pull/6098), v0.60.73.0). Pages per minute went from 3.4
+(v0.60.39.0, one page per run) to 13.1, 28.8 and finally 152.8 in steady state with six lanes saving groups at once
+(137.4 over the whole 10k run; the 10,000-file backlog from about 49 h to about 1.2 h). Foreground page writes stay
+within about 1.7 s of idle at p95 with no failures. The bench output is copied into
+`docs/benchmarks/2026-10-05-managed-sync-catchup/raw/` and summarized in `results.json`
+([report](docs/benchmarks/2026-10-05-managed-sync-catchup.md)). Nothing was rerun here; $0.
 
 ## [0.10.25] - 2026-10-05
 

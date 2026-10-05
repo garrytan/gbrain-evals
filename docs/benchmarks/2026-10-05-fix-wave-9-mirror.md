@@ -2,7 +2,7 @@
 
 **Measured by gbrain on October 5, 2026, on a development machine; mirrored into this repository the same day. This mirror reruns nothing and spent $0.**
 
-[gbrain](https://github.com/garrytan/gbrain) is a memory system for agents. It keeps notes as Markdown and indexes them in a database, either PGLite (Postgres compiled to WebAssembly, in process) or Postgres. Fix wave 9 ([garrytan/gbrain#6111](https://github.com/garrytan/gbrain/pull/6111), v0.60.73.0, open and pending merge at head `1fbe8660c`) carries two changes that matter to anyone comparing gbrain measurements over time. One has a measured cost. The other changes how one eval's receipts should be compared. The source text is copied unchanged into [`upstream/`](2026-10-05-fix-wave-9-mirror/upstream/), and the numbers below are in [`verdict.json`](2026-10-05-fix-wave-9-mirror/verdict.json).
+[gbrain](https://github.com/garrytan/gbrain) is a memory system for agents. It keeps notes as Markdown and indexes them in a database, either PGLite (Postgres compiled to WebAssembly, in process) or Postgres. Fix wave 9 ([garrytan/gbrain#6111](https://github.com/garrytan/gbrain/pull/6111), v0.60.74.0, open and pending merge at head `1fbe8660c`) carries two changes that matter to anyone comparing gbrain measurements over time. One has a measured cost. The other changes how one eval's receipts should be compared. The source text is copied unchanged into [`upstream/`](2026-10-05-fix-wave-9-mirror/upstream/), and the numbers below are in [`verdict.json`](2026-10-05-fix-wave-9-mirror/verdict.json).
 
 ## The finding
 
@@ -44,7 +44,7 @@ Receipts gain `protocol_version` (absent reads as 1), `correction_selection_rule
 ## Limits of this mirror
 
 - **Local timing.** The insert cost comes from three runs per side on one development machine. The per-run values and hardware are not published, so the ranges cannot be recomputed here.
-- **Pending merge.** gbrain#6111 was open at head `1fbe8660cb0dc1737d7bd9323aa9c6410dc80ec8` when this was written. Its title names v0.60.73.0, while `VERSION` at that head still reads 0.60.72.0 until the wave is restamped. The cited commits are `daf7426b6` (#5190) and `8a2d8a82a` (#5325); both are ancestors of that head.
+- **Pending merge.** gbrain#6111 was open at head `1fbe8660cb0dc1737d7bd9323aa9c6410dc80ec8` when this was written. Its title names v0.60.74.0, while `VERSION` at that head still reads 0.60.72.0 until the wave is restamped. The cited commits are `daf7426b6` (#5190) and `8a2d8a82a` (#5325); both are ancestors of that head.
 - **No takes-quality measurement.** Protocol 2 is recorded as a change of method only.
 
 ## Reproduce and inspect
