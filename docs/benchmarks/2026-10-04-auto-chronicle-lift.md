@@ -1,5 +1,7 @@
 # Automatic event extraction, off versus on: it finds the meetings and helps with "who did I meet that day", but it records plans as if they happened (2026-10-04)
 
+**October 4, 2026 notice: rerun on the fix.** At gbrain PR #6010's head `5a44025` (v0.60.49.0), the same preregistered measurement found 0 events dated after their page and 0.04 wrong events per judged labeled page, with recall 37 and 38 of 38, so default-on is supported there. See [the rerun](2026-10-04-auto-chronicle-rerun.md). The results below describe `739e5cc` and are unchanged.
+
 ## The finding
 
 We tested gbrain v0.60.46.0 (`739e5cc`) with `auto_chronicle`, its automatic event extraction, off and on, on a fixed fictional work week it was never tuned on. Under the decision rule we froze before the run, **default-on is contradicted**: the feature fails gbrain's own accuracy gate on this world, in both independent runs.

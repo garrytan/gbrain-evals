@@ -207,11 +207,14 @@ the first time. It found 35 and 37 of 38 labeled events and took "who did I
 meet that day" questions from 60% to 100%, but it wrote 22 and 25 planned
 follow-ups from meeting notes as timeline events on their future dates. That
 fails gbrain's own accuracy gate (0.96 wrong events per page against 0.20), so
-under the preregistered rule default-on is contradicted until gbrain drops
-events dated after their page.
+under the preregistered rule default-on is contradicted at `739e5cc`. A rerun
+at gbrain PR #6010 (`5a44025`, not yet merged), which drops events dated after
+their page, found 0 such events, 0.04 wrong events per page and recall 37 and
+38 of 38, so default-on is supported there.
 
 [Read the re-pin](docs/benchmarks/2026-10-04-operator-wave-repin.md) and
-[the `auto_chronicle` experiment](docs/benchmarks/2026-10-04-auto-chronicle-lift.md).
+[the `auto_chronicle` experiment](docs/benchmarks/2026-10-04-auto-chronicle-lift.md)
+and [its rerun on the fix](docs/benchmarks/2026-10-04-auto-chronicle-rerun.md).
 
 ## Why put gbrain on your shortlist?
 

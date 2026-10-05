@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [0.10.19] - 2026-10-04
+## [0.10.21] - 2026-10-05
 
 ### Cat 40 on frontier models: gbrain ties plain files at the ceiling; the entity-recall wave lifts renewal briefs and cuts cost
 
@@ -49,6 +49,42 @@ This follows Garry's gate decisions UC1 and UC2 on the
   mention coverage through an `entity` miss, and record it beside the snapshot and in the slot receipt. A round
   refuses slots whose coverage is not `complete` with 0 pending pages; builds whose gbrain does not report coverage
   are not checked.
+## [0.10.20] - 2026-10-05
+
+### Ledger: CL-1 and CL-2 point at the merged gbrain fix
+
+gbrain [#6010](https://github.com/garrytan/gbrain/pull/6010) merged to master as
+`b9ee931` (v0.60.49.0). CL-1 and CL-2 now name `b9ee931` as their fixing commit,
+with the note "verified at PR head 5a44025; chronicle code identical at merge":
+no file under `src/core/chronicle/` or `src/core/cycle/` differs between the
+measured head and the merge. The [rerun report](docs/benchmarks/2026-10-04-auto-chronicle-rerun.md)
+carries a dated line saying so. No new measurement; $0.
+
+## [0.10.19] - 2026-10-04
+
+### `auto_chronicle` rerun on gbrain's date-quality fix: default-on supported at PR #6010's head
+
+A preregistered rerun of the 0.10.18 off-versus-on experiment against gbrain PR
+[#6010](https://github.com/garrytan/gbrain/pull/6010) at its head `5a44025`
+(v0.60.49.0, open when measured), loaded as a copied overlay; the `package.json`
+pin stays at `739e5cc` ([report](docs/benchmarks/2026-10-04-auto-chronicle-rerun.md),
+[preregistration](docs/benchmarks/2026-10-04-auto-chronicle-rerun-preregistration.md)).
+
+- **Result.** Two new ON brains on amara-life-v1: recall 37 and 38 of 38
+  labeled events (35 and 37 at `739e5cc`), 0 events dated after their page (22
+  and 25), 1 false event each, so 0.04 wrong events per judged labeled page
+  against the 0.20 gate (0.96 before). 0 of 96 control pages judged; $0.0105
+  per judged page; 5 and 8 proposals dropped as `date_imprecise`. Every rule
+  holds on both runs, so default-on is supported at `5a44025`. The agent arm
+  was not rerun; its `739e5cc` result stands.
+- **Ledger.** CL-1 and CL-2 are fixed: garrytan/gbrain#6010, verified at PR
+  head `5a44025`, pending merge.
+- **Runner.** `eval/runner/chronicle-lift.ts run` takes
+  `--gbrain <checkout>@<ref>` to measure a copied overlay.
+- **Docs.** The original report carries a dated notice; README, the docs index,
+  the `auto_chronicle` settings row and TODOS point to the rerun.
+- **Spend.** $1.01.
+
 ## [0.10.18] - 2026-10-04
 
 ### Re-pin to gbrain `739e5cc` (v0.60.46.0): no accuracy lost, A4 improves, Cat7-1 narrowed; the first off-versus-on test of `auto_chronicle` contradicts its default

@@ -1,0 +1,128 @@
+{
+  "arm": "on-b",
+  "steps": [
+    {
+      "step": "init",
+      "code": 0,
+      "ms": 3880,
+      "tail": "  v142: takes.embedding resized to vector(1024); existing take vectors cleared\n  195 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: <out>/brains/on-b/home/.gbrain/content/aa401028-9265-47c2-91fe-e1a13e3016c5/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)"
+    },
+    {
+      "step": "recent-days",
+      "code": 0,
+      "ms": 1048,
+      "tail": "Set chronicle.auto_recent_days = 365"
+    },
+    {
+      "step": "settle",
+      "code": 0,
+      "ms": 1001,
+      "tail": "Set chronicle.auto_settle_seconds = 0"
+    },
+    {
+      "step": "import",
+      "code": 0,
+      "ms": 9003,
+      "tail": "[import.files] 109/144 (75%) imported=109 skipped=0 errors=0\n[import.files] 119/144 (82%) imported=119 skipped=0 errors=0\n[import.files] 129/144 (89%) imported=129 skipped=0 errors=0\n[import.files] 139/144 (96%) imported=139 skipped=0 errors=0\n[import.files] 144/144 (100%) imported=144 skipped=0 errors=0\n[import.files] 144/144 (100%) done"
+    },
+    {
+      "step": "phase-1",
+      "code": 0,
+      "ms": 326767,
+      "tail": "chronicle: 48 page(s) judged, 300 event(s) written, 0 retired, 0 failed, ~$0.5044 spent"
+    },
+    {
+      "step": "phase-2",
+      "code": 0,
+      "ms": 1072,
+      "tail": "chronicle: nothing pending"
+    }
+  ],
+  "phase_runs": [
+    {
+      "phase": "chronicle",
+      "status": "ok",
+      "duration_ms": 325715,
+      "summary": "chronicle: 48 page(s) judged, 300 event(s) written, 0 retired, 0 failed, ~$0.5044 spent",
+      "details": {
+        "dry_run": false,
+        "sources": 1,
+        "candidates": 48,
+        "judged": 48,
+        "extracted": 47,
+        "no_events": 1,
+        "failed": 0,
+        "reasons": {
+          "no_events": 1
+        },
+        "events_written": 300,
+        "events_retired": 0,
+        "events_dropped": {
+          "date_imprecise": 8
+        },
+        "deferred_daily_limit": 0,
+        "daily_limit": 200,
+        "daily_remaining": 152,
+        "spent_usd": 0.5043540000000001,
+        "unpriced_calls": 0,
+        "max_items": 50,
+        "per_source": {
+          "default": {
+            "candidates": 48,
+            "judged": 48
+          }
+        },
+        "auto_chronicle": "on",
+        "next_command": "gbrain dream --phase chronicle"
+      }
+    },
+    {
+      "phase": "chronicle",
+      "status": "ok",
+      "duration_ms": 24,
+      "summary": "chronicle: nothing pending",
+      "details": {
+        "dry_run": false,
+        "sources": 1,
+        "candidates": 0,
+        "judged": 0,
+        "extracted": 0,
+        "no_events": 0,
+        "failed": 0,
+        "reasons": {},
+        "events_written": 0,
+        "events_retired": 0,
+        "events_dropped": {},
+        "deferred_daily_limit": 0,
+        "daily_limit": 200,
+        "daily_remaining": 152,
+        "spent_usd": 0,
+        "unpriced_calls": 0,
+        "max_items": 50,
+        "per_source": {
+          "default": {
+            "candidates": 0,
+            "judged": 0
+          }
+        },
+        "auto_chronicle": "on",
+        "reason": "nothing_pending"
+      }
+    }
+  ],
+  "meter": {
+    "usd": 0.5043540000000001,
+    "requests": 48,
+    "unpriced": 0,
+    "byModel": {
+      "anthropic:claude-sonnet-4-6": {
+        "usd": 0.5043540000000001,
+        "requests": 48
+      }
+    }
+  },
+  "judged": 48,
+  "spent_usd_recorded": 0.5043540000000001,
+  "ms": 343856,
+  "events": 300
+}

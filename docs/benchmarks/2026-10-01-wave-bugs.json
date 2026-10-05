@@ -2125,48 +2125,104 @@
       "category": "auto-chronicle-lift",
       "classification": "bug",
       "gbrain_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
-      "status": "open",
+      "status": "fixed",
       "contract": "gbrain v0.60.45.0 CHANGELOG (#5993): the chronicle phase reads a meeting, conversation or calendar page and writes what happened (the meeting, decisions, commitments) as timeline events; gbrain's own gate allows at most 20% false plus premature events per judged page.",
       "surface": "src/core/chronicle/extract-events.ts (JUDGE_SYSTEM prompt, buildChronicleEvents) and the chronicle cycle phase: no check of a proposal's day against the page's own date",
       "repro": "bun eval/runner/chronicle-lift.ts run --out <dir outside the repo> --arms on-a --no-qa --budget-usd 2 && bun eval/runner/chronicle-lift.ts score --out <dir>   (paid: about $0.57 of judge calls; the committed receipts rescore keylessly with the same score command)",
       "expected": "no event dated after the page's own date (a plan or deadline in a past meeting is not an occurrence); at most 0.20 false plus premature events per judged page",
       "actual": "on amara-life-v1's 8 meeting notes, 22 and 25 events in two runs were planned follow-ups written on their future dates (deadlines, scheduled board meetings, a board seat effective May 1st, a Series B kickoff dated September 1); with the false events, 0.96 wrong events per judged labeled page in both runs. Recall of labeled events was 35 and 37 of 38.",
       "review": {
-        "date": "2026-10-04",
-        "gbrain_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+        "date": "2026-10-05",
+        "gbrain_sha": "b9ee931b97a3c5bcc6a2045954b05c2880cb0021",
         "evidence": "rerun",
         "receipts": [
-          "docs/benchmarks/2026-10-04-auto-chronicle-lift/events-on-a.json",
-          "docs/benchmarks/2026-10-04-auto-chronicle-lift/events-on-b.json",
-          "docs/benchmarks/2026-10-04-auto-chronicle-lift/review.json",
-          "docs/benchmarks/2026-10-04-auto-chronicle-lift/summary.json"
+          "docs/benchmarks/2026-10-04-auto-chronicle-rerun/summary.json",
+          "docs/benchmarks/2026-10-04-auto-chronicle-rerun/events-on-a.json",
+          "docs/benchmarks/2026-10-04-auto-chronicle-rerun/events-on-b.json",
+          "docs/benchmarks/2026-10-04-auto-chronicle-rerun/review.json"
         ],
-        "note": "Found by the preregistered auto_chronicle lift (gate A failed in both ON runs). gbrain TODOS already lists the fix (P2, drop future-dated events extracted from past pages); this corpus argues for the page's date, not the extraction time, as the cutoff. Dropping events dated after the page would leave 5 and 2 wrong events (0.18 and 0.07 per page), an unregistered reading."
-      }
+        "note": "verified at PR head 5a44025; chronicle code identical at merge. #6010 merged to master as b9ee931 (v0.60.49.0); no file under src/core/chronicle/ or src/core/cycle/ differs between 5a44025 and b9ee931 (only a comment in src/core/error-registry.ts, src/core/error-docs.ts and docs), checked 2026-10-05. The rerun receipts were measured at 5a44025."
+      },
+      "review_history": [
+        {
+          "date": "2026-10-04",
+          "gbrain_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+          "evidence": "rerun",
+          "receipts": [
+            "docs/benchmarks/2026-10-04-auto-chronicle-lift/events-on-a.json",
+            "docs/benchmarks/2026-10-04-auto-chronicle-lift/events-on-b.json",
+            "docs/benchmarks/2026-10-04-auto-chronicle-lift/review.json",
+            "docs/benchmarks/2026-10-04-auto-chronicle-lift/summary.json"
+          ],
+          "note": "Found by the preregistered auto_chronicle lift (gate A failed in both ON runs). gbrain TODOS already lists the fix (P2, drop future-dated events extracted from past pages); this corpus argues for the page's date, not the extraction time, as the cutoff. Dropping events dated after the page would leave 5 and 2 wrong events (0.18 and 0.07 per page), an unregistered reading."
+        },
+        {
+          "date": "2026-10-04",
+          "gbrain_sha": "5a44025816a00f3ee645cd094e614df43f97cbd9",
+          "evidence": "rerun",
+          "receipts": [
+            "docs/benchmarks/2026-10-04-auto-chronicle-rerun/summary.json",
+            "docs/benchmarks/2026-10-04-auto-chronicle-rerun/events-on-a.json",
+            "docs/benchmarks/2026-10-04-auto-chronicle-rerun/events-on-b.json",
+            "docs/benchmarks/2026-10-04-auto-chronicle-rerun/review.json"
+          ],
+          "note": "Verified at PR head 5a44025, pending merge. Preregistered rerun (two ON brains, same corpus and rubric): 0 events dated after their page in either run (22 and 25 at 739e5cc), 0.04 false plus premature events per judged labeled page (gate 0.20), recall 37 and 38 of 38. The PR drops proposals dated after the page's own day (future_dated)."
+        }
+      ],
+      "fixing_pr": "garrytan/gbrain#6010 (merged as b9ee931, v0.60.49.0)",
+      "fixing_commit": "b9ee931b97a3c5bcc6a2045954b05c2880cb0021"
     },
     {
       "id": "CL-2",
       "category": "auto-chronicle-lift",
       "classification": "bug",
       "gbrain_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
-      "status": "open",
+      "status": "fixed",
       "contract": "gbrain v0.60.45.0 CHANGELOG (#5993): chronicle events are what happened, on the day it happened, so `gbrain day <date>` can answer what happened that day.",
       "surface": "src/core/chronicle/extract-events.ts JUDGE_SYSTEM: \"Prefer the page's known date for when\" with no instruction for past occurrences the text dates only to a month, year or quarter",
       "repro": "bun eval/runner/chronicle-lift.ts run --out <dir outside the repo> --arms on-a --no-qa --budget-usd 2 && bun eval/runner/chronicle-lift.ts score --out <dir>   (paid: about $0.57 of judge calls; the committed receipts rescore keylessly with the same score command)",
       "expected": "a past occurrence the page dates only roughly (\"back in 2024\", \"last month\", Q1 results) is left out or kept off a specific day",
       "actual": "\"back in 2024\" was written on 2024-01-01 (both runs), \"last year\" on 2025-01-01 and \"last month\" on 2026-03-01; two Q1 results were written as events on the day of the meeting that discussed them. 5 and 2 such events on the 28 labeled pages; 2 of 25 in run B's Slack sample (\"tried it yesterday\" put on the posting day, and a planned sync written as held).",
       "review": {
-        "date": "2026-10-04",
-        "gbrain_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+        "date": "2026-10-05",
+        "gbrain_sha": "b9ee931b97a3c5bcc6a2045954b05c2880cb0021",
         "evidence": "rerun",
         "receipts": [
-          "docs/benchmarks/2026-10-04-auto-chronicle-lift/events-on-a.json",
-          "docs/benchmarks/2026-10-04-auto-chronicle-lift/events-on-b.json",
-          "docs/benchmarks/2026-10-04-auto-chronicle-lift/review.json",
-          "docs/benchmarks/2026-10-04-auto-chronicle-lift/summary.json"
+          "docs/benchmarks/2026-10-04-auto-chronicle-rerun/summary.json",
+          "docs/benchmarks/2026-10-04-auto-chronicle-rerun/events-on-a.json",
+          "docs/benchmarks/2026-10-04-auto-chronicle-rerun/events-on-b.json",
+          "docs/benchmarks/2026-10-04-auto-chronicle-rerun/review.json"
         ],
-        "note": "Classified by hand with the preregistered rubric; every case is in review.json."
-      }
+        "note": "verified at PR head 5a44025; chronicle code identical at merge. #6010 merged to master as b9ee931 (v0.60.49.0); no file under src/core/chronicle/ or src/core/cycle/ differs between 5a44025 and b9ee931 (only a comment in src/core/error-registry.ts, src/core/error-docs.ts and docs), checked 2026-10-05. The rerun receipts were measured at 5a44025."
+      },
+      "review_history": [
+        {
+          "date": "2026-10-04",
+          "gbrain_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+          "evidence": "rerun",
+          "receipts": [
+            "docs/benchmarks/2026-10-04-auto-chronicle-lift/events-on-a.json",
+            "docs/benchmarks/2026-10-04-auto-chronicle-lift/events-on-b.json",
+            "docs/benchmarks/2026-10-04-auto-chronicle-lift/review.json",
+            "docs/benchmarks/2026-10-04-auto-chronicle-lift/summary.json"
+          ],
+          "note": "Classified by hand with the preregistered rubric; every case is in review.json."
+        },
+        {
+          "date": "2026-10-04",
+          "gbrain_sha": "5a44025816a00f3ee645cd094e614df43f97cbd9",
+          "evidence": "rerun",
+          "receipts": [
+            "docs/benchmarks/2026-10-04-auto-chronicle-rerun/summary.json",
+            "docs/benchmarks/2026-10-04-auto-chronicle-rerun/events-on-a.json",
+            "docs/benchmarks/2026-10-04-auto-chronicle-rerun/events-on-b.json",
+            "docs/benchmarks/2026-10-04-auto-chronicle-rerun/review.json"
+          ],
+          "note": "Verified at PR head 5a44025, pending merge. No vague past date was pinned to a first-of-period day in either run; the extractor dropped 5 and 8 proposals as date_imprecise. One quarter result per run was still put on the day of the meeting that mentioned it (\"Meridian Labs Q1 numbers came in strong\"), counted as false; 0.04 false plus premature events per judged labeled page overall."
+        }
+      ],
+      "fixing_pr": "garrytan/gbrain#6010 (merged as b9ee931, v0.60.49.0)",
+      "fixing_commit": "b9ee931b97a3c5bcc6a2045954b05c2880cb0021"
     }
   ]
 }
