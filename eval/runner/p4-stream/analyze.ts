@@ -27,6 +27,38 @@ export function pairedStats(diffs: number[], draws = 10_000, seed = 42) {
   return { n, mean, sd, lo: boots[Math.floor(draws * 0.025)], hi: boots[Math.floor(draws * 0.975)], discordant: diffs.filter(d => d !== 0).length / n };
 }
 
+/**
+ * Cluster bootstrap: resample conversations (BEAM asks many questions per
+ * conversation, which are not independent). Also returns the one-way ANOVA
+ * intraclass correlation of the per-question differences.
+ */
+export function clusteredStats(byCluster: Map<string, number[]>, draws = 10_000, seed = 42) {
+  const clusters = [...byCluster.values()].filter(c => c.length);
+  const all = clusters.flat();
+  const n = all.length;
+  const mean = all.reduce((a, b) => a + b, 0) / n;
+  const sd = Math.sqrt(all.reduce((a, b) => a + (b - mean) ** 2, 0) / Math.max(1, n - 1));
+  const rand = mulberry(seed);
+  const boots: number[] = [];
+  for (let i = 0; i < draws; i++) {
+    let s = 0, k = 0;
+    for (let j = 0; j < clusters.length; j++) { const c = clusters[Math.floor(rand() * clusters.length)]; for (const d of c) { s += d; k++; } }
+    boots.push(s / k);
+  }
+  boots.sort((a, b) => a - b);
+  const m = n / clusters.length;
+  const msb = clusters.reduce((a, c) => a + c.length * ((c.reduce((x, y) => x + y, 0) / c.length) - mean) ** 2, 0) / Math.max(1, clusters.length - 1);
+  const msw = clusters.reduce((a, c) => { const cm = c.reduce((x, y) => x + y, 0) / c.length; return a + c.reduce((x, y) => x + (y - cm) ** 2, 0); }, 0) / Math.max(1, n - clusters.length);
+  const icc = clusters.length > 1 && msb + (m - 1) * msw > 0 ? Math.max(0, (msb - msw) / (msb + (m - 1) * msw)) : null;
+  return { n, clusters: clusters.length, mean, sd, lo: boots[Math.floor(draws * 0.025)], hi: boots[Math.floor(draws * 0.975)], icc };
+}
+
+/** Minimum detectable effect (two-sided 95%, given power) for k clusters of m items with per-item SD and ICC. */
+export function minimumDetectable(sd: number, k: number, m: number, icc: number, power = 0.8): number {
+  const deff = 1 + (m - 1) * icc;
+  return (1.96 + (Z[power] ?? 0.8416)) * sd * Math.sqrt(deff / (k * m));
+}
+
 export function requiredN(sd: number, effect: number, power = 0.8): number {
   return Math.ceil(((1.96 + (Z[power] ?? 0.8416)) * sd / effect) ** 2);
 }
@@ -62,12 +94,15 @@ function main(argv: string[]) {
       const ids = [...m.keys()].filter(id => base.has(id));
       if (ids.length < 2) continue;
       const st = pairedStats(ids.map(id => m.get(id)!.qa_score - base.get(id)!.qa_score));
+      const byConv = new Map<string, number[]>();
+      for (const id of ids) { const r = m.get(id)!; const k = r.conversation ?? r.question_id; byConv.set(k, [...(byConv.get(k) ?? []), r.qa_score - base.get(id)!.qa_score]); }
+      const clustered = byConv.size < ids.length ? clusteredStats(byConv) : null;
       const cats: Record<string, number> = {};
       for (const c of new Set(ids.map(id => m.get(id)!.category))) {
         const cid = ids.filter(id => m.get(id)!.category === c);
         cats[c] = cid.reduce((a, id) => a + m.get(id)!.qa_score - base.get(id)!.qa_score, 0) / cid.length;
       }
-      deltas[`${arm}-Aprime`] = { ...st, n_for_effect: requiredN(st.sd, effect, power), by_category: cats };
+      deltas[`${arm}-Aprime`] = { ...st, ...(clustered ? { clustered } : {}), n_for_effect: requiredN(st.sd, effect, power), by_category: cats };
     }
     out[model] = { arms, deltas };
   }
@@ -75,6 +110,7 @@ function main(argv: string[]) {
   for (const [model, v] of Object.entries(out) as Array<[string, { arms: Record<string, Record<string, number | null>>; deltas: Record<string, Record<string, unknown>> }]>) {
     console.log(`\n${model}`);
     for (const [arm, a] of Object.entries(v.arms)) console.log(`  ${arm.padEnd(7)} n ${a.n}  acc ${((a.accuracy as number) * 100).toFixed(1)}%  $/q ${(a.usd_per_question as number).toFixed(2)}  compactions ${(a.compactions as number).toFixed(1)}  notice fire ${((a.notice_fire_rate as number) * 100).toFixed(0)}%  miss ${a.notice_miss_rate === null ? '-' : `${((a.notice_miss_rate as number) * 100).toFixed(0)}%`}  facts ${(a.facts_saved as number).toFixed(1)}  evidence-saved ${((a.evidence_saved as number) * 100).toFixed(0)}%`);
+    for (const [k, d] of Object.entries(v.deltas)) if (d.clustered) { const c = d.clustered as Record<string, number | null>; console.log(`  ${k} (clustered by conversation): Δ ${((c.mean as number) * 100).toFixed(1)} pts, 95% CI [${((c.lo as number) * 100).toFixed(1)}, ${((c.hi as number) * 100).toFixed(1)}], ${c.clusters} conversations, ${c.n} questions, ICC ${c.icc === null ? '-' : (c.icc as number).toFixed(2)}`); }
     for (const [k, d] of Object.entries(v.deltas)) console.log(`  ${k}: Δ ${((d.mean as number) * 100).toFixed(1)} pts, 95% CI [${((d.lo as number) * 100).toFixed(1)}, ${((d.hi as number) * 100).toFixed(1)}], n ${d.n}, SD ${(d.sd as number).toFixed(3)}, discordant ${((d.discordant as number) * 100).toFixed(0)}%, n for +${(effect * 100).toFixed(1)} pts at ${power * 100}% power: ${d.n_for_effect}`);
   }
 }

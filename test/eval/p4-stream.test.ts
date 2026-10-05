@@ -47,3 +47,15 @@ describe('p4-stream harness pieces', () => {
     expect(requiredN(0.4, 0.03)).toBe(1396);
   });
 });
+
+describe('p4-stream clustered stats', () => {
+  test('cluster bootstrap and minimum detectable effect', async () => {
+    const { clusteredStats, minimumDetectable } = await import('../../eval/runner/p4-stream/analyze.ts');
+    const st = clusteredStats(new Map([['a', [1, 1, 0]], ['b', [0, 0, 0]], ['c', [1, 0, 1]]]));
+    expect(st.clusters).toBe(3);
+    expect(st.mean).toBeCloseTo(4 / 9);
+    // No clustering (ICC 0) reduces to the paired formula; ICC inflates it.
+    expect(minimumDetectable(0.7, 24, 20, 0)).toBeCloseTo(2.8016 * 0.7 / Math.sqrt(480), 3);
+    expect(minimumDetectable(0.7, 24, 20, 0.1)).toBeGreaterThan(minimumDetectable(0.7, 24, 20, 0));
+  });
+});
