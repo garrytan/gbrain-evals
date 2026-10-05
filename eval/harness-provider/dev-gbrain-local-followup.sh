@@ -16,7 +16,7 @@ while pgrep -f "dev-gbrain-local-tracks.sh" >/dev/null || pgrep -f "longmemeval_
 ) > eval/reports/harness-dev/track-gbrain-1m-followup.log 2>&1 &
 (
   $D --provider gbrain --dataset longmemeval --split s --question-ids-file "$(ids longmemeval/s)" --base '{"token_budget":8100}' --extra "{$EMB}" --targets 8000 --no-default --sample 40 -- --gbrain "$G" $L
-  for ds in "longmemeval s longmemeval/s_agent_sample" "lifebench en lifebench/en_agent_sample"; do
+  for ds in "longmemeval s longmemeval/s_agent_sample" "locomo locomo10 locomo/locomo10_agent_sample" "lifebench en lifebench/en_agent_sample"; do
     set -- $ds
     $D --provider gbrain --dataset "$1" --split "$2" --question-ids-file "$(ids $3)" --mode agentic-rag --base '{"token_budget":8100}' --extra "{$EMB}" --targets 8000 --no-default --sample 20 --gbrain-credentials voyage --name "gbrain-$1-agentic" -- --gbrain "$GA" $L
     $D --provider gbrain --dataset "$1" --split "$2" --question-ids-file "$(ids $3)" --mode agent --base '{}' --extra "{$EMB,\"think_model\":\"google:gemini-3.8-flash\"}" --targets '' --gbrain-credentials voyage,gemini --name "gbrain-$1-agent" -- --gbrain "$GA" $L
