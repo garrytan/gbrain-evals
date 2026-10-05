@@ -1033,6 +1033,8 @@ export const CHAT_PRICE_OVERRIDES: Record<string, { input: number; output: numbe
   'openai:gpt-5.5': { input: 5, output: 30, cache_read: 0.5 },
   'openai:gpt-6-sol': { input: 2, output: 10, cache_read: 0.2 },
   'openai:gpt-6.1-sol': { input: 2, output: 10, cache_read: 0.1, cache_write: 2.5 },
+  // developers.openai.com/api/docs/pricing, checked 2026-10-05 (short-context standard rates).
+  'openai:gpt-6-luna': { input: 0.1, output: 0.5, cache_read: 0.01, cache_write: 0.125 },
   'openai:gpt-6-astra': { input: 10, output: 50, cache_read: 1, cache_write: 12.5 },
 };
 
