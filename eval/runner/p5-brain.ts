@@ -17,14 +17,19 @@
  * Arm config arrives through GBRAIN_EVAL_CONFIG (eval-config.ts) and is
  * applied before the first page is written.
  */
+import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import type { OperationContext } from 'gbrain/operations';
 import { applyEvalConfig, evalConfigRecord, type AppliedEvalConfig } from './eval-config.ts';
 import { importGbrain, overlaySummary, productIdentityFor, type GbrainUnderTest } from './gbrain-under-test.ts';
 import { gbrainPin } from './gbrain-version.ts';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, sourceTreeIdentity, type Receipt } from './receipt.ts';
+import { McpHttpDriver, runCli, type RunEnv } from './lifecycle/drivers.ts';
+import { startFakeEmbedder } from './lifecycle/fake-embedder.ts';
+import { freePort } from './lifecycle/slice.ts';
 import { appendAccessLog } from './sealed-confirmation-lib.ts';
 import type { GoldEdge, RichPage } from './world-v1-gold.ts';
 
@@ -95,6 +100,117 @@ export async function openP5Brain(gut: GbrainUnderTest, config: Record<string, s
     };
   } catch (e) {
     await engine.disconnect().catch(() => {});
+    throw e;
+  }
+}
+
+/** The part of a brain the forward-reference runner needs; both the in-process brain and the HTTP brain provide it. */
+export type P5Writer = Pick<P5Brain, 'configRecord' | 'hasOp' | 'op' | 'put' | 'sweep' | 'edges' | 'close'>;
+
+const HTTP_SOURCE = 'vault';
+const HTTP_SWEEP_MAX_PASSES = 25;
+
+/** The JSON object in a CLI's stdout (it may follow log lines). */
+function stdoutJson(text: string): Record<string, unknown> {
+  const at = text.indexOf('{');
+  if (at < 0) throw new Error(`no JSON in output: ${text.slice(0, 200)}`);
+  return JSON.parse(text.slice(at)) as Record<string, unknown>;
+}
+
+/**
+ * The same writer over gbrain's HTTP transport, as a remote agent writes:
+ * `gbrain serve --http` on a fresh PGLite brain under a throwaway GBRAIN_HOME
+ * (a local fake embedder, no provider key), an OAuth client_credentials
+ * client for one source, and put_page / wanted_pages / get_links over MCP.
+ * A remote put_page saves link text without extracting it; the server points
+ * remote writers to `gbrain sweep --once`, which delegates to the live server.
+ * sweep() runs that command until a pass extracts and removes no link (at most
+ * 25 passes), so one call is a complete sweep like the in-process catch-up.
+ * Arm config is set with `gbrain config set --force` before the server starts
+ * and read back with `gbrain config get`.
+ */
+export async function openP5HttpBrain(gut: GbrainUnderTest, config: Record<string, string>): Promise<P5Writer & { sweepPasses: number[] }> {
+  const { operations } = await importGbrain<{ operations: Array<{ name: string }> }>(gut, 'src/core/operations.ts');
+  const { KNOWN_CONFIG_KEYS } = await importGbrain<{ KNOWN_CONFIG_KEYS?: readonly string[] }>(gut, 'src/core/config.ts');
+  const dir = mkdtempSync(join(tmpdir(), 'p5-http-'));
+  const home = join(dir, 'gbrain-home');
+  const userHome = join(dir, 'user-home');
+  const vault = join(dir, 'vault');
+  for (const d of [home, userHome, vault]) mkdirSync(d, { recursive: true });
+  const embedder = startFakeEmbedder({ dims: 64 });
+  const run: RunEnv = { buildDir: gut.root, env: {
+    PATH: process.env.PATH, HOME: userHome, GBRAIN_HOME: home, LITELLM_BASE_URL: embedder.url,
+    GBRAIN_SKIP_STARTUP_HOOKS: '1', TZ: 'UTC', LANG: 'C.UTF-8', NO_COLOR: '1',
+  } };
+  let driver: McpHttpDriver | null = null;
+  const cleanup = async () => {
+    await driver?.close().catch(() => {});
+    embedder.stop();
+    rmSync(dir, { recursive: true, force: true });
+  };
+  try {
+    const cli = async (args: string[]) => {
+      const r = await runCli(run, args, 600_000);
+      if (r.code !== 0) throw new Error(`gbrain ${args.join(' ')} exited ${r.code}: ${(r.stderr || r.stdout).replace(/gbrain_cs_[0-9a-f]+/g, '<secret>').slice(-400)}`);
+      return r;
+    };
+    execFileSync('git', ['init', '-q'], { cwd: vault });
+    await cli(['init', '--pglite', '--path', join(home, 'brain.pglite'), '--embedding-model', 'litellm:fake-embed', '--embedding-dimensions', '64']);
+    await cli(['sources', 'add', HTTP_SOURCE, '--path', vault, '--force']);
+    await cli(['sources', 'default', HTTP_SOURCE]);
+    const readback: Record<string, string | null> = {};
+    for (const [k, v] of Object.entries(config)) await cli(['config', 'set', k, v, '--force']);
+    for (const k of Object.keys(config)) readback[k] = (await runCli(run, ['config', 'get', k])).stdout.trim() || null;
+    const wrong = Object.keys(config).filter(k => readback[k] !== config[k]);
+    if (wrong.length) throw new Error(`GBRAIN_EVAL_CONFIG: config did not read back as set over the CLI: ${wrong.map(k => `${k} set ${config[k]}, read ${readback[k]}`).join('; ')}`);
+    const reg = await cli(['auth', 'register-client', 'p5-eval', '--grant-types', 'client_credentials', '--scopes', 'read write', '--source', HTTP_SOURCE]);
+    const client = { id: reg.stdout.match(/gbrain_cl_[0-9a-f]+/)?.[0] ?? '', secret: reg.stdout.match(/gbrain_cs_[0-9a-f]+/)?.[0] ?? '' };
+    if (!client.id || !client.secret) throw new Error('could not register an OAuth client for the HTTP arm');
+    driver = new McpHttpDriver(run, await freePort(47_900), client);
+    await driver.start();
+    const names = new Set(operations.map(o => o.name));
+    const written: string[] = [];
+    const sweepPasses: number[] = [];
+    const call = async (name: string, params: Record<string, unknown>) => {
+      const r = await driver!.call(name, params);
+      if (!r.ok) throw new Error(`${name} over HTTP failed: ${r.error}`);
+      return r.data;
+    };
+    return {
+      configRecord: { ...evalConfigRecord({ requested: { ...config }, readback }, KNOWN_CONFIG_KEYS ?? null), applied_with: 'gbrain config set --force before serve --http' },
+      hasOp: name => names.has(name),
+      op: call,
+      put: async (slug, content) => {
+        const data = await call('put_page', { slug, content }) as Record<string, unknown>;
+        written.push(slug);
+        return (data.outcome ?? data) as Record<string, unknown>;
+      },
+      sweep: async () => {
+        let passes = 0;
+        let extracted = 0;
+        for (; passes < HTTP_SWEEP_MAX_PASSES; ) {
+          const report = stdoutJson((await cli(['sweep', '--once', '--source', HTTP_SOURCE, '--json'])).stdout);
+          passes++;
+          const moved = Number(report.linksExtracted ?? 0) + Number(report.linksRemoved ?? 0);
+          extracted += Number(report.linksExtracted ?? 0);
+          if (moved === 0) break;
+        }
+        sweepPasses.push(passes);
+        return { passes, links_extracted: extracted };
+      },
+      edges: async () => {
+        const out: StoredEdge[] = [];
+        for (const slug of [...new Set(written)]) {
+          const rows = await call('get_links', { slug }) as Array<{ from_slug: string; to_slug: string; link_type: string; origin_slug?: string | null }>;
+          for (const r of rows) out.push({ from: r.from_slug, to: r.to_slug, type: r.link_type, origin: r.origin_slug ?? r.from_slug });
+        }
+        return out;
+      },
+      close: cleanup,
+      sweepPasses,
+    };
+  } catch (e) {
+    await cleanup();
     throw e;
   }
 }

@@ -572,7 +572,7 @@ export const REGISTRY: readonly CategoryEntry[] = [
     cost_estimate: FREE, receipt_path: receipt('forward-reference-heal'),
     headline: { metric: 'reference edges lost after a sequential import with a stale sweep every 10 pages; recall of withheld entities among wanted_pages targets; share of wanted targets that are not entity-shaped', denominator: 'per dev seed, every reference edge in two write orders and the withheld person/company pages that remaining pages link to' },
     gate: 'report-only', evidence_maturity: 'synthetic-production-path',
-    contract: 'Writes world-v1 page by page through put_page in a seeded shuffled order and its reverse, running the stale-link sweep (extract --stale) every 10 pages, and compares the stored edges with an all-at-once write plus one sweep; a withheld variant drops 20% of person and company pages and reads the wanted_pages operation. The HTTP transport arm is recorded with its status and reason. It does not measure rename handling or cross-source links.',
+    contract: 'Writes world-v1 page by page through put_page in a seeded shuffled order and its reverse, running the stale-link sweep (extract --stale) every 10 pages, and compares the stored edges with an all-at-once write plus one sweep; a withheld variant drops 20% of person and company pages and reads the wanted_pages operation. With --arm http the same writes go over gbrain serve --http as a remote caller and each sweep is `gbrain sweep --once` until quiet. It does not measure rename handling or cross-source links.',
   },
   {
     id: 'n4-similar-pages', legacy_alias: 'P5-H5a', name: 'Similar-page hint on creates: finds the existing page, stays quiet for names with no page',

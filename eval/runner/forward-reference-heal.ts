@@ -26,11 +26,14 @@
  * A build without the `wanted_pages` operation lists nothing: its withheld
  * recall is 0 by construction and the summary says so.
  *
- * HTTP arm: not run here; the receipt records why (HTTP_ARM).
+ * Transport arms (--arm): `local` (default) writes in process as a trusted
+ * local caller and sweeps with extractStaleFromDB; `http` writes as a remote
+ * agent over `gbrain serve --http` and sweeps with `gbrain sweep --once`, the
+ * reconciliation path the server names for remote writers (ARM_NOTES).
  *
  * Arm config: GBRAIN_EVAL_CONFIG (eval/runner/eval-config.ts). Hermetic, no model.
  *
- * Usage: bun eval/runner/forward-reference-heal.ts [--seeds 1,2,3] [--sweep-every 10] [--withhold 0.2] [--output <dir>] [--gbrain <checkout>[@ref]] [--json]
+ * Usage: bun eval/runner/forward-reference-heal.ts [--seeds 1,2,3] [--arm local|http] [--sweep-every 10] [--withhold 0.2] [--output <dir>] [--gbrain <checkout>[@ref]] [--json]
  *
  * Custodian (held-out) mode: --phrasing-file <custody path> --decision-id <id> --purpose <text> --seeds <held-out seeds>.
  * H4 has no templates: the custody file (`{ "id": ... }`) records the draw, every read appends a line to
@@ -42,17 +45,20 @@ import { linksTo } from '../generators/relation-line-variants-gen.ts';
 import { parseEvalConfig } from './eval-config.ts';
 import { gbrainSpecFrom, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
 import { withHermeticEnv } from './hermetic-env.ts';
-import { argValue, custodyInput, edgeKeys, openP5Brain, p5Receipt, renderWorldPage, type P5Brain, type StoredEdge } from './p5-brain.ts';
+import { argValue, custodyInput, edgeKeys, openP5Brain, openP5HttpBrain, p5Receipt, renderWorldPage, type P5Writer, type StoredEdge } from './p5-brain.ts';
 import { receiptPath, writeReceipt } from './receipt.ts';
 import { loadCorpus, type RichPage } from './world-v1-gold.ts';
 
 export const CATEGORY = 'forward-reference-heal';
 export const FORWARD_REFERENCE_VERSION = 'forward-reference-heal/1';
 export const DEV_SEEDS: readonly number[] = [1, 2, 3];
-export const HTTP_ARM = {
-  status: 'not run',
-  reason: 'This runner writes in process as a trusted local caller. An in-process remote put_page is refused (writer_registration_required), so a remote arm needs a gbrain serve --http session, where link extraction for remote writes waits for a sweep the server schedules.',
-} as const;
+export const ARMS = ['local', 'http'] as const;
+export type Arm = typeof ARMS[number];
+/** What each transport arm runs; the receipt records the arm that ran. */
+export const ARM_NOTES: Record<Arm, string> = {
+  local: 'in-process put_page as a trusted local caller (links extracted at write time), sweep = extractStaleFromDB catch-up; the HTTP arm runs with --arm http',
+  http: 'gbrain serve --http with an OAuth client_credentials client (remote caller: put_page saves link text without extracting it), sweep = `gbrain sweep --once` delegated to the live server, repeated until a pass extracts and removes nothing; edges read with get_links over HTTP',
+};
 
 const ENTITY_SHAPED = /^(people|companies)\/[a-z0-9][a-z0-9._-]*$/;
 
@@ -68,7 +74,7 @@ export function planSeed(slugs: readonly string[], seed: number, withholdShare: 
   return { order, withheld };
 }
 
-async function writeSequentially(brain: P5Brain, pages: readonly RichPage[], every: number): Promise<number> {
+async function writeSequentially(brain: P5Writer, pages: readonly RichPage[], every: number): Promise<number> {
   let sweeps = 0;
   for (const [i, p] of pages.entries()) {
     await brain.put(p.slug, renderWorldPage(p));
@@ -77,7 +83,7 @@ async function writeSequentially(brain: P5Brain, pages: readonly RichPage[], eve
   return sweeps;
 }
 
-async function wantedTargets(brain: P5Brain): Promise<WantedTarget[] | null> {
+async function wantedTargets(brain: P5Writer): Promise<WantedTarget[] | null> {
   if (!brain.hasOp('wanted_pages')) return null;
   const out: WantedTarget[] = [];
   for (let offset = 0; ;) {
@@ -102,7 +108,7 @@ export function nonEntityShare(perSeed: ReadonlyArray<Record<string, unknown>>):
 }
 
 export async function runForwardReferenceHeal(opts: {
-  gut: GbrainUnderTest; seeds: readonly number[]; config: Record<string, string>; sweepEvery?: number; withholdShare?: number; log?: (s: string) => void;
+  gut: GbrainUnderTest; seeds: readonly number[]; config: Record<string, string>; sweepEvery?: number; withholdShare?: number; arm?: Arm; log?: (s: string) => void;
 }): Promise<{ rows: H4Row[]; perSeed: Array<Record<string, unknown>>; reference: { edges: number }; config: Record<string, unknown> | null; plans: Record<string, string> }> {
   return withHermeticEnv(CATEGORY, async () => {
     const log = opts.log ?? (() => {});
@@ -110,8 +116,8 @@ export async function runForwardReferenceHeal(opts: {
     const share = opts.withholdShare ?? 0.2;
     const corpus = loadCorpus('eval/data/world-v1');
     const bySlug = new Map(corpus.map(p => [p.slug, p]));
-    const withBrain = async <T>(fn: (b: P5Brain) => Promise<T>): Promise<T> => {
-      const brain = await openP5Brain(opts.gut, opts.config);
+    const withBrain = async <T>(fn: (b: P5Writer) => Promise<T>): Promise<T> => {
+      const brain = opts.arm === 'http' ? await openP5HttpBrain(opts.gut, opts.config) : await openP5Brain(opts.gut, opts.config);
       try { return await fn(brain); } finally { await brain.close().catch(() => {}); }
     };
 
@@ -189,15 +195,17 @@ async function main(): Promise<void> {
   const withholdShare = Number(argValue(argv, '--withhold') ?? 0.2);
   if (!Number.isInteger(sweepEvery) || sweepEvery < 1) throw new Error('--sweep-every must be a positive integer');
   if (!(withholdShare > 0 && withholdShare < 1)) throw new Error('--withhold must be a share between 0 and 1');
+  const arm = (argValue(argv, '--arm') ?? 'local') as Arm;
+  if (!ARMS.includes(arm)) throw new Error(`--arm must be ${ARMS.join(' or ')}`);
   const output = argValue(argv, '--output');
   const outPath = output ? join(output, 'receipt.json') : receiptPath(CATEGORY);
   const config = parseEvalConfig();
   const startedAt = new Date().toISOString();
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
-  log(`# ${CATEGORY} (gbrain ${gut.version}${gut.overlay ? `, overlay ${gut.overlay.build.commit.slice(0, 9)}` : ', pinned'})`);
+  log(`# ${CATEGORY} (gbrain ${gut.version}${gut.overlay ? `, overlay ${gut.overlay.build.commit.slice(0, 9)}` : ', pinned'}, ${arm} arm)`);
   let r: Awaited<ReturnType<typeof runForwardReferenceHeal>> | null = null;
   let harnessError: string | null = null;
-  try { r = await runForwardReferenceHeal({ gut, seeds, config, sweepEvery, withholdShare, log }); } catch (e) { harnessError = e instanceof Error ? e.message : String(e); }
+  try { r = await runForwardReferenceHeal({ gut, seeds, config, sweepEvery, withholdShare, arm, log }); } catch (e) { harnessError = e instanceof Error ? e.message : String(e); }
   const edges = (r?.rows ?? []).filter(x => x.kind === 'edge');
   const withheld = (r?.rows ?? []).filter(x => x.kind === 'withheld');
   const summary = r ? {
@@ -205,21 +213,20 @@ async function main(): Promise<void> {
     edges_lost: edges.filter(x => x.edge_kept === 0).length, edge_checks: edges.length,
     withheld_recall: withheld.length ? withheld.reduce((a, x) => a + (x.withheld_recall as number), 0) / withheld.length : null,
     non_entity_share: nonEntityShare(r.perSeed),
+    arm,
     per_seed: r.perSeed,
-    http_arm: HTTP_ARM,
   } : null;
   const receipt = p5Receipt({
     category: CATEGORY, gut, startedAt, harnessError, rows: r?.rows ?? [], summary,
     basis: 'hermetic: provider keys stripped, put_page, the stale-link sweep and wanted_pages only; no model and no paid request',
     resolvedConfig: {
-      engine: 'pglite-in-memory',
-      caller: 'put_page and wanted_pages operation handlers, OperationContext { remote: false, sourceId: default }',
+      arm, transport: ARM_NOTES[arm],
+      engine: arm === 'http' ? 'pglite on disk under a throwaway GBRAIN_HOME, served by gbrain serve --http' : 'pglite-in-memory',
       seeds, sweep_every: sweepEvery, withhold_share: withholdShare, version: FORWARD_REFERENCE_VERSION,
       draw: custody ? `held-out draw ${custody.parsed.id} (custody file sha256 ${custody.sha256})` : 'development seeds',
-      reference: 'all 240 world-v1 pages written, then one extractStaleFromDB sweep',
-      sequential: `pages written one at a time in a seeded shuffled order and its reverse; extractStaleFromDB after every ${sweepEvery} pages and after the last`,
+      reference: 'all 240 world-v1 pages written through the same arm, then one sweep',
+      sequential: `pages written one at a time in a seeded shuffled order and its reverse; a sweep after every ${sweepEvery} pages and after the last`,
       entity_shaped: ENTITY_SHAPED.source,
-      http_arm: HTTP_ARM,
       eval_config: r?.config ?? { channel: 'GBRAIN_EVAL_CONFIG', requested: config },
     },
     hashes: r?.plans,
