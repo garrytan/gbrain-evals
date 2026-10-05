@@ -84,6 +84,7 @@ DEFAULTS = {
     "remote_budget_max": 200000,
     "expand": None,
     "gbrain_config": {},
+    "search_config": {},
     "max_open_units": 1,
     # The provider's own one-line date header from the timestamp manifest; off when gbrain renders its own (C1).
     "date_header": True,
@@ -210,6 +211,7 @@ class _Unit:
         self.child: McpChild | None = None
         self.receipt: dict = {}
         self.timestamps: dict[str, str | None] = {}
+        self.search_applied = False
         meta = home / "mpw-unit.json"
         if meta.exists():
             self.timestamps = json.loads(meta.read_text()).get("timestamps", {})
@@ -334,12 +336,33 @@ class GbrainMemoryProvider(MemoryProvider):
                 while len(self._open) >= int(self.cfg["max_open_units"]):
                     self._close_unit(self._open[0])
                 self._rewrite_config(home)
+                if not u.search_applied:
+                    self._apply_search_config(home)
+                    u.search_applied = True
                 t0 = time.perf_counter()
                 u.child = McpChild([self.bun, self.cli, "serve"], env=self.env_for(home), cwd=home,
                                    stderr_path=home / "serve.stderr.log").start()
                 u.receipt["child_start_s"] = round(time.perf_counter() - t0, 3)
                 self._open.append(unit)
             return u
+
+    def _apply_search_config(self, home: Path) -> None:
+        """Set this cell's read-time `search_config` keys in the unit's brain before its child starts.
+
+        Read-time keys are not ingest inputs, so cells with different values share a store. The unit remembers
+        which keys a cell set; a later cell without them unsets them, so no cell inherits another's setting.
+        """
+        marker = home / "mpw-search-config.json"
+        applied = json.loads(marker.read_text()) if marker.exists() else {}
+        want = {k: str(v) for k, v in (self.cfg.get("search_config") or {}).items()}
+        if applied == want:
+            return
+        for key in applied.keys() - want.keys():
+            self._cli(home, "config", "unset", key)
+        for key, value in want.items():
+            if applied.get(key) != value:
+                self._cli(home, "config", "set", key, value)
+        marker.write_text(json.dumps(want, sort_keys=True))
 
     def _close_unit(self, unit: str) -> None:
         u = self.units.get(unit)
@@ -613,6 +636,7 @@ class GbrainMemoryProvider(MemoryProvider):
             "vector_enabled": retrieval.get("vector_enabled"),
             "expansion_applied": retrieval.get("expansion_applied"),
             "degraded": degraded,
+            "entity_anchored": sum(1 for row in rows if isinstance(row, dict) and row.get("entity_anchored")),
         }
         if delivery.get("tokenizer") not in (None, "cl100k"):
             raise GbrainRetrieveError(f"gbrain packed evidence with tokenizer {delivery.get('tokenizer')!r}, not cl100k")
