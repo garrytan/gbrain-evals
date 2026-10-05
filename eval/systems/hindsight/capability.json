@@ -47,24 +47,52 @@
   "parallel_namespaces": true,
   "retrieval_policies": {
     "vendor-default": {
-      "recall": { "budget": "mid", "max_tokens": 4096, "include_chunks": false },
+      "budget": "mid",
+      "max_tokens": 4096,
+      "include_chunks": false,
       "notes": "hindsight-client 0.10.2 `recall` defaults (hindsight_client.py:618-639): token-budgeted, not top-k. budget mid, max_tokens 4096 of fact text, chunks off, entities off, all fact types. query_timestamp is always the question date."
     },
     "fixed-evidence": {
-      "recall": { "budget": "mid", "max_tokens": 8000, "include_chunks": false },
+      "budget": "mid",
+      "max_tokens": 8000,
+      "include_chunks": false,
       "notes": "Same call with the fact-token cap raised to the shootout's 8,000-token evidence budget, so the harness packer, not Hindsight's 4,096 cap, decides what fits. Hindsight counts tokens with its own tokenizer, the harness with approxTokens; the packer truncates."
     },
-    "allowed_settings_overrides": ["budget", "max_tokens", "include_chunks", "max_chunk_tokens", "types"],
+    "allowed_settings_overrides": [
+      "budget",
+      "max_tokens",
+      "include_chunks",
+      "max_chunk_tokens",
+      "types"
+    ],
     "vendor_benchmark_reference": {
-      "recall": { "budget": "high", "max_tokens": 32768, "include_chunks": true, "max_chunk_tokens": 16384, "include_entities": false },
+      "recall": {
+        "budget": "high",
+        "max_tokens": 32768,
+        "include_chunks": true,
+        "max_chunk_tokens": 16384,
+        "include_entities": false
+      },
       "notes": "What AMB's hindsight provider sends for LoCoMo (`_recall_kwargs`); BEAM uses max_tokens 12288 and max_chunk_tokens 8192. Recorded for reference, not a shootout policy."
     },
     "item_mapping": "recall results in Hindsight's rank order: world and experience facts -> type fact, observations -> type observation, text = AMB `_format_result` ('**[type]** text' plus an occurred/mentioned line); with include_chunks, each chunk follows the first fact that cites it as a type chunk item (AMB inlines it there). valid_from/valid_to stay null: occurred_start/occurred_end are when an event happened, not a validity window, so they live in the text."
   },
   "streaming": "disabled",
-  "provider_routes": ["POST /v1/chat/completions (retain extraction, OpenAI-compatible provider)", "POST /v1/embeddings (common config only)"],
-  "telemetry_off": ["HINDSIGHT_API_OTEL_TRACES_ENABLED=false", "HINDSIGHT_ENABLE_CP=false (control plane UI not started)", "HF_HUB_OFFLINE=1", "TRANSFORMERS_OFFLINE=1"],
-  "agent_surface": { "kind": "vendor-mcp", "transport": "http", "version": "hindsight server 0.10.2, mounted at /mcp/{bank_id} (api/mcp.py), HINDSIGHT_API_MCP_ENABLED" },
+  "provider_routes": [
+    "POST /v1/chat/completions (retain extraction, OpenAI-compatible provider)",
+    "POST /v1/embeddings (common config only)"
+  ],
+  "telemetry_off": [
+    "HINDSIGHT_API_OTEL_TRACES_ENABLED=false",
+    "HINDSIGHT_ENABLE_CP=false (control plane UI not started)",
+    "HF_HUB_OFFLINE=1",
+    "TRANSFORMERS_OFFLINE=1"
+  ],
+  "agent_surface": {
+    "kind": "vendor-mcp",
+    "transport": "http",
+    "version": "hindsight server 0.10.2, mounted at /mcp/{bank_id} (api/mcp.py), HINDSIGHT_API_MCP_ENABLED"
+  },
   "deviations_from_vendor_code": [
     "No raw dataset ids anywhere: AMB sets document_id and metadata.doc_id to '<sample_id>_<session>' and context to '... (session_N of conv-26)' or 'Session <question_id>_<session_id> ...'; the shim sends document_id = opaque source_id, no metadata at all (metadata influences extraction), and context = 'Conversation between <speakers>'.",
     "No per-user tags: AMB tags items 'user:<id>' when it shares one bank; the shim uses one bank per namespace, which AMB also does in per-unit mode.",

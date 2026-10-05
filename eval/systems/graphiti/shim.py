@@ -143,11 +143,10 @@ class GraphitiAdapter(Adapter):
         mode = policy.get("mode")
         if mode not in ("vendor-default", "fixed-evidence"):
             raise ShimError("invalid_request", "policy.mode must be vendor-default or fixed-evidence", 400)
-        overrides = policy.get("settings") or {}
-        unknown = set(overrides) - SEARCH_KNOBS
+        settings = {k: v for k, v in {**self.record["retrieval_policies"][mode], **(policy.get("settings") or {})}.items() if k != "notes"}
+        unknown = set(settings) - SEARCH_KNOBS
         if unknown:
             raise ShimError("unsupported", f"graphiti search_ has no knob(s) {sorted(unknown)}; allowed {sorted(SEARCH_KNOBS)}", 400)
-        settings = {**self.record["retrieval_policies"][mode]["search_"], **overrides}
         recipe = getattr(recipes, settings["recipe"], None)
         if recipe is None or not settings["recipe"].isupper():
             raise ShimError("invalid_request", f"unknown search recipe {settings['recipe']!r}", 400)
