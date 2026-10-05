@@ -33,7 +33,9 @@
  *   with @effective ranges; person probe rows gain `render` and a numeric `range_page` 0/1, and every person rendered as
  *   prose gets a `transitions_sig` row, a SHA-256 of that page's link_transitions rows, so two arms compare exactly)
  *   [--e5-probe]   (P5 delta H10: adds 36 probe people per seed with one long current stint and a later dated advisory
- *   line; needs --pack and --single-value-pass; rows e5_wrong_closures and e5_extra_works_at_starts per probe person)
+ *   line. Rows per probe person: e5_extra_works_at_starts, works_at start transitions beyond the ledger's one (the
+ *   advisory line read as a new job; any build), and with --pack and --single-value-pass e5_wrong_closures, applied
+ *   single-value closures the ledger contradicts (svClosureWrong; needs a build whose schema packs accept cardinality))
  *
  * Arm config: GBRAIN_EVAL_CONFIG (eval/runner/eval-config.ts), for example
  * `line_grammar.effective_ranges=true`, is applied to both brains (scored and mirror) before any page or pack is
@@ -266,7 +268,6 @@ export function svClosureWrong(p: TePerson, ending: string, closeDate: string): 
 export interface TeRunResult { worlds: TemporalEdgesWorld[]; rows: TeRow[]; acc: ProbeAccounting; harnessError: string | null; singleValue: Array<Record<string, unknown>> | null; evalConfig: Record<string, unknown> | null }
 
 export async function runTemporalEdges(opts: { gut: GbrainUnderTest; seeds?: readonly number[]; log?: (s: string) => void; phrasing?: string; sealedPhrasing?: { id: string; templates: PhrasingTemplates }; pack?: TePack; singleValuePass?: boolean; render?: RenderMode; e5Probe?: boolean; evalConfig?: Record<string, string> }): Promise<TeRunResult> {
-  if (opts.e5Probe && (!opts.pack || !opts.singleValuePass)) throw new Error('--e5-probe measures wrong closures with the single-value machinery: pass --pack eval/data/p3-single-value/works-at-one-per-from.yaml --single-value-pass');
   return withHermeticEnv('temporal-edges', async () => {
     const log = opts.log ?? (() => {});
     const worlds = (opts.seeds ?? DEV_SEEDS).map(seed => generateTemporalEdgesWorld({ seed, phrasing: opts.sealedPhrasing ? undefined : opts.phrasing, sealedPhrasing: opts.sealedPhrasing, render: opts.render, e5Probe: opts.e5Probe }));
@@ -304,21 +305,24 @@ export async function runTemporalEdges(opts: { gut: GbrainUnderTest; seeds?: rea
             push({ probe_id: `s${world.seed}:sv-open:${p.slug}`, kind: 'single_value', cluster: `s${world.seed}:${p.slug}`, seed: world.seed,
               sv_conflicts_closed: applied.filter(c => sv.undated.has(key(p.slug, c.ending)) || sv.sameDate.has(key(p.slug, c.ending))).length }, 'sv_conflicts_closed');
           }
-          if (world.e5_probes) {
-            const starts = await sut.engine.executeRaw<{ person: string; n: number }>(
-              `SELECT o.slug AS person, count(*)::int AS n FROM link_transitions lt JOIN pages o ON o.id = lt.origin_page_id
-                WHERE lt.link_type = 'works_at' AND lt.kind = 'start' AND o.slug = ANY($1::text[]) GROUP BY o.slug`, [world.e5_probes.map(p => p.slug)]);
-            for (const p of world.e5_probes) {
-              const tags = { e5_form: p.e5.form, e5_target: p.e5.target };
-              push({ probe_id: `s${world.seed}:e5-wrong:${p.slug}`, kind: 'e5', cluster: `s${world.seed}:${p.slug}`, seed: world.seed,
-                e5_wrong_closures: appliedFor(p.slug).filter(c => svClosureWrong(p, c.ending, c.close_date.slice(0, 10))).length, ...tags }, 'e5_wrong_closures');
-              push({ probe_id: `s${world.seed}:e5-starts:${p.slug}`, kind: 'e5', cluster: `s${world.seed}:${p.slug}`, seed: world.seed,
-                e5_extra_works_at_starts: Math.max(0, Number(starts.find(r => r.person === p.slug)?.n ?? 0) - p.stints.length), ...tags }, 'e5_extra_works_at_starts');
-            }
+          for (const p of world.e5_probes ?? []) {
+            push({ probe_id: `s${world.seed}:e5-wrong:${p.slug}`, kind: 'e5', cluster: `s${world.seed}:${p.slug}`, seed: world.seed,
+              e5_wrong_closures: appliedFor(p.slug).filter(c => svClosureWrong(p, c.ending, c.close_date.slice(0, 10))).length, e5_form: p.e5.form, e5_target: p.e5.target }, 'e5_wrong_closures');
           }
           svTotals.push({ seed: world.seed, detail: sv.detail, applied: sv.closures.filter(c => c.status === 'applied').length,
             statuses: sv.closures.reduce<Record<string, number>>((m, c) => ({ ...m, [c.status]: (m[c.status] ?? 0) + 1 }), {}),
             undated_live: sv.undated.size, same_date_live: sv.sameDate.size });
+        }
+        if (world.e5_probes) {
+          const starts = await sut.engine.executeRaw<{ person: string; n: number }>(
+            `SELECT o.slug AS person, count(*)::int AS n FROM link_transitions lt JOIN pages o ON o.id = lt.origin_page_id
+              WHERE lt.link_type = 'works_at' AND lt.kind = 'start' AND o.slug = ANY($1::text[]) GROUP BY o.slug`, [world.e5_probes.map(p => p.slug)]);
+          for (const p of world.e5_probes) {
+            const probe_id = `s${world.seed}:e5-starts:${p.slug}`;
+            rows.push({ probe_id, kind: 'e5', cluster: `s${world.seed}:${p.slug}`, seed: world.seed,
+              e5_extra_works_at_starts: Math.max(0, Number(starts.find(r => r.person === p.slug)?.n ?? 0) - p.stints.length), e5_form: p.e5.form, e5_target: p.e5.target });
+            acc.score(probe_id, rows[rows.length - 1]!.e5_extra_works_at_starts as number);
+          }
         }
         await probeWorld(world, sut, mirror, acc, rows);
       } catch (e) {
