@@ -19,6 +19,7 @@ published. Comparators are named by kind only.
 | `p7-heldout-2-2026-10-04.json` | P7 multi-relation planner, N9 v1 second opening | pass |
 | `p8-write-cost-2026-10-05.json` | P8 write cost (published, gate: zero commit-path generative attempts) | pass |
 | `p8-quotes-heldout-2026-10-05.json` | P8 quote grounding | fail (Wilson upper 7.6% > 5%) |
+| `p8-quotes-rerun-2026-10-05.json` | P8 quote grounding, custodian rerun with the fixed scorer, and root causes | fail stands (16/319, Wilson upper 8.0%); 8 of 15 false flags are matcher gaps |
 | `p8-withdraw-heldout-2026-10-05.json` | P8 semantic withdrawal review | pass |
 
 Verdicts that land later arrive in follow-up re-pin changes. The [program report](../2026-10-05-heldout-program.md) puts these verdicts beside each plan's preregistration, development results and default.

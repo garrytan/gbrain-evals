@@ -1,0 +1,67 @@
+{
+  "decision_id": "p8-quotes-heldout-2026-10-05-rerun",
+  "stage": "held-out, custodian rerun for a suspected harness bug",
+  "verdict": "fail stands: supported spans wrongly flagged 16/319 = 5.02%, Wilson 95% upper 7.99% (bar <= 5%). The suspected scorer defect does not explain the failure.",
+  "harness_bug_tested": "the scorer attributed gbrain's unverified quotes to answer spans by substring containment, so a supported span inside or around a different flagged quote could be counted as flagged; fixed to exact text in gbrain's reported form (gbrain-evals f9dda4f). In the original sealed rows no row has more spans marked flagged than gbrain's own unverified count, and the rerun with the fixed scorer changes no span decision on the same answers.",
+  "rerun": {
+    "build": "6c958d6e246d18bfbba092ae5fe787511bba76cb (frozen)",
+    "answers_and_judge_labels": "the original sealed answers and judge labels (--replay); no model calls",
+    "harness": "gbrain-evals evals/program-followups 880ff28",
+    "amara": {
+      "spans": 244,
+      "supported": 243,
+      "wrongly_flagged": 9,
+      "identical_to_original": true
+    },
+    "sealed_confirmation_v2": {
+      "spans": 76,
+      "supported": 76,
+      "wrongly_flagged": 7,
+      "note": "one span in one row differs from the original run (kept there, flagged here): gbrain's own unverified count for that row changed, so the evidence it retrieved on replay differed (retrieval drift), not the scorer"
+    },
+    "pooled": {
+      "supported": 319,
+      "wrongly_flagged": 16,
+      "rate": 0.0502,
+      "wilson_upper": 0.0799
+    },
+    "cost_usd_approx": 1.5
+  },
+  "root_cause_of_the_15_original_false_flags": {
+    "matcher_gap_link_text_in_brackets": {
+      "spans": 3,
+      "class": "product",
+      "detail": "the writer keeps a linked name as [Name] without its target; the source fold reads [Name](target) as Name, the quote keeps the brackets"
+    },
+    "matcher_gap_inner_quote_marks": {
+      "spans": 2,
+      "class": "product",
+      "detail": "the source has double quotes inside the quoted passage; the writer, quoting with double quotes, turns them into single quotes"
+    },
+    "matcher_gap_editorial_brackets": {
+      "spans": 3,
+      "class": "product (policy)",
+      "detail": "standard editorial alterations inside a word, such as a bracketed plural or tense ending"
+    },
+    "possessive_altered": {
+      "spans": 1,
+      "class": "borderline gold label",
+      "detail": "the writer turned a possessive 's into a bare apostrophe; the judge's instruction to ignore punctuation counts it verbatim"
+    },
+    "quote_of_the_question": {
+      "spans": 3,
+      "class": "harness definition",
+      "detail": "the answer quotes the user's question; the judge sees the question as evidence and labels it verbatim, while gbrain grounds quotes only against the retrieved evidence blocks"
+    },
+    "altered_words_judged_close": {
+      "spans": 3,
+      "class": "gold-label policy",
+      "detail": "a word in the quote differs from the source; the judge labels it close (supported) while gbrain flags a quote that is not verbatim"
+    }
+  },
+  "what_if": {
+    "matcher_handles_the_8_product_gap_spans": "7/319 = 2.19%, Wilson upper 4.46% (would pass)",
+    "plus_question_quotes_excluded_from_the_pool": "4/316 = 1.27%, Wilson upper 3.21%"
+  },
+  "next": "the product fix is generic matcher tolerance for bracketed link text, inner quote-mark substitution and editorial bracket alterations; any fix is retested on fresh sealed questions. Whether a quote of the user's question counts as supported is a definition to settle before that retest."
+}
