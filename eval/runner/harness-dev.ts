@@ -68,7 +68,7 @@ export async function sweep(t: Track, passthrough: string[]): Promise<number> {
   const name = trackName(t);
   const log = (row: Record<string, unknown>) => { appendFileSync(join(LOG_DIR, `${name}.jsonl`), JSON.stringify({ ts: new Date().toISOString(), ...row }) + '\n'); console.log(`[dev:${name}]`, JSON.stringify(row).slice(0, 400)); };
   const ingestPath = join(SPEC_DIR, `${name}-ingest.json`);
-  writeFileSync(ingestPath, JSON.stringify(devSpec(t, 8000, t.base, 400), null, 2) + '\n');
+  writeFileSync(ingestPath, JSON.stringify(devSpec(t, 8000, t.base, t.provider === 'comparator' || t.extra.gbrain_config ? 60 : 10), null, 2) + '\n');
   const ingest = launch(['ingest', ingestPath], passthrough);
   const ingestCell = cellIdFrom(ingest.err);
   log({ step: 'ingest', code: ingest.code, cell: ingestCell, tail: ingest.err.split('\n').slice(-3).join(' | ') });
