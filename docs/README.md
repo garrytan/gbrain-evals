@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.27, with gbrain master `739e5cc` (v0.60.46.0) as the product under test. Results measured at
+gbrain-evals v0.10.29, with gbrain master `739e5cc` (v0.60.46.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -161,7 +161,7 @@ How this index changed, newest first. Measurement history lives in the dated rep
 
 ### 2026-10-05: Fix wave 9 mirror row
 
-gbrain-evals v0.10.27. The memory table gained a row for the October 5 mirror of gbrain fix wave 9 (#6111, pending merge): pinning `search_path` makes bulk fact inserts about 10-13% slower on a local timing, with fact fingerprints byte-identical, and takes-quality receipts move to protocol 2, so protocol 1 and 2 receipts are compared as dissimilar inputs. The opening line names v0.10.27 instead of v0.10.24.
+gbrain-evals v0.10.29. The memory table gained a row for the October 5 mirror of gbrain fix wave 9 (#6111, pending merge): pinning `search_path` makes bulk fact inserts about 10-13% slower on a local timing, with fact fingerprints byte-identical, and takes-quality receipts move to protocol 2, so protocol 1 and 2 receipts are compared as dissimilar inputs. The opening line names v0.10.29.
 
 ### 2026-10-05: Restructured as a current-state page with this changelog
 
