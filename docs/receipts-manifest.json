@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "description": "Map from published claims to their saved evidence. The manifest test checks artifact paths, SHA-256 hashes, and declared JSON-pointer values. It does not parse report prose or independently validate every scorer. Separate golden tests and recount scripts are named where available. Entries marked disclosed-gap identify missing evidence; a fresh run cannot restore a missing historical receipt.",
-  "updated": "2026-10-04",
+  "updated": "2026-10-05",
   "entries": [
     {
       "claim_id": "lifecycle-2026-09-29-primary",
@@ -4499,6 +4499,25 @@
         "/gbrain/overlay_commit": "5a44025816a00f3ee645cd094e614df43f97cbd9"
       },
       "note": "auto_chronicle rerun at gbrain PR #6010 head 5a44025 (overlay); summary computed from scores.json (rescore keylessly with chronicle-lift.ts score)."
+    },
+    {
+      "claim_id": "heldout-program-starting-line",
+      "readme_anchor": "docs/benchmarks/2026-10-05-heldout-program.md: The starting line on master",
+      "artifact_path": "docs/benchmarks/2026-10-05-heldout-program/starting-line/summary.json",
+      "artifact_sha256": "d3665fc2cba7f5764f6f4ea65384263b5e0658fe49e753def0547a6339edb625",
+      "status": "covered",
+      "expected": {
+        "/lme-s-master/recall_all_at_5": 0.9276595744680851,
+        "/lme-s-master/retrieval_scored": 470,
+        "/lme-s-qa-master/qa_score": 0.856,
+        "/locomo-qa-master/qa_score": 0.6746166950596252,
+        "/locomo-qa-master/abstention_score": 0.6341463414634146,
+        "/beam-100k-master/recall_all_at_5": 0.4537037037037037,
+        "/beam-1m-master/recall_all_at_5": 0.18181818181818182,
+        "/lme-s-master/builds/0": "0.60.48.0@6622a119e40ea09a7719233046aca24741863ed2"
+      },
+      "golden_test": "bun docs/benchmarks/2026-10-05-heldout-program/recount-starting-line.ts --check",
+      "note": "P0 starting line on gbrain master 6622a119e (v0.60.48.0), dev splits only, 2026-10-04. summary.json is recounted from the committed shard rows."
     }
   ]
 }

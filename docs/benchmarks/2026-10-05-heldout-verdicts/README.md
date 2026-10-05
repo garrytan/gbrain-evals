@@ -21,4 +21,4 @@ published. Comparators are named by kind only.
 | `p8-quotes-heldout-2026-10-05.json` | P8 quote grounding | fail (Wilson upper 7.6% > 5%) |
 | `p8-withdraw-heldout-2026-10-05.json` | P8 semantic withdrawal review | pass |
 
-Verdicts that land later arrive in follow-up re-pin changes.
+Verdicts that land later arrive in follow-up re-pin changes. The [program report](../2026-10-05-heldout-program.md) puts these verdicts beside each plan's preregistration, development results and default.

@@ -1,0 +1,8 @@
+{
+  "run_config_hash": "4b141c423b7b15aa4ecb9634ce847a16c0e511c64dbd5e69e8915d573933c02d",
+  "benchmark": "lme-s",
+  "shard": {
+    "index": 3,
+    "count": 4
+  }
+}
