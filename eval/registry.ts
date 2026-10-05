@@ -1140,6 +1140,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'feedback-replay-world.ts': { role: 'use-attributed feedback replay on world-v1 relational questions; dev or custodian sealed half' },
   'feedback-think-replay.ts': { role: 'use-attributed feedback from the implicit citation signal: LoCoMo answers through the think operation (off, frozen, sparse, online arms), judged N times; dev or custodian sealed split' },
   'hub-world.ts': { role: 'hub-heavy world-v1 variant probes (hub-as-answer, bridge, one-hop guard) on the shared-index harness; corpus from eval/generators/hub-world-gen.ts' },
+  'hub-world-arms.ts': { role: 'several read-time arms (hub dampening half degrees, graph signals off) over one shared hub-world index per build; Cat 13 concept, hub-as-answer, bridge and one-hop families (P2 E1)' },
   'decide.ts': { role: 'held-out decision kit CLI (bun run eval:decide): decision specs, dev runs of baseline vs candidate gbrain builds, paired verdicts' },
   'eval-adapter-config.ts': { role: 'typed adapter config for matrix cells' },
   'gbrain-under-test.ts': { role: 'pinned gbrain or a copied --gbrain overlay, with receipt identity' },
