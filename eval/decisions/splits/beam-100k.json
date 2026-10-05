@@ -29,5 +29,13 @@
     "100k-9"
   ],
   "created_at": "2026-10-04",
-  "note": "Split before any system ran on BEAM; sealed conversations are supporting evidence at decisions and report aggregates until retired."
+  "note": "Split before any system ran on BEAM; sealed conversations are supporting evidence at decisions and report aggregates until retired.",
+  "reservations": [
+    {
+      "decision": "P4 core memory (always-loaded core page)",
+      "scope": "preference_following and instruction_following questions on all 14 sealed conversations (56 questions)",
+      "reason": "core delivery only matters for standing preferences and instructions; LongMemEval-S has almost no question whose only evidence is the first session, and BEAM-500K sealed is reserved for the P4 pressure gate",
+      "reserved_at": "2026-10-05"
+    }
+  ]
 }
