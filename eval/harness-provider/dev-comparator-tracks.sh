@@ -32,8 +32,8 @@ public() {  # dataset split ids-key
 }
 agent() {  # dataset split ids-key
   $D --dataset "$1" --split "$2" --question-ids-file "$(ids $3)" --lane combined --mode agentic-rag --base "$COMBINED" --targets 8000 --no-default --sample 20 --name "comparator-$1-agentic" -- $L
-  # Agent mode answers with the server's own synthesis (reflect, its extraction model); no knobs, one default cell.
-  $D --dataset "$1" --split "$2" --question-ids-file "$(ids $3)" --lane combined --mode agent --base '{}' --targets '' --name "comparator-$1-agent" -- $L
+  # Agent mode answers with the server's own synthesis (reflect) on the shared answer model; no knobs, one default cell.
+  $D --dataset "$1" --split "$2" --question-ids-file "$(ids $3)" --lane combined --mode agent --base '{}' --extra '{"serve_model":"gemini:gemini-3.8-flash"}' --targets '' --name "comparator-$1-agent" -- $L
 }
 if [ "${ONLY_PUBLIC:-0}" != 1 ]; then
 ( beam 100k 3,11,12,15 > eval/reports/harness-dev/track-beam-100k.log 2>&1 ) &
