@@ -1,6 +1,6 @@
-# Plan evaluation branches folded into `evals/competitor-program`
+# Plan evaluation branches folded into main
 
-`evals/competitor-program` starts from `p0-heldout-harness` (P0's harness branch, head `d21a2f8` on 2026-10-05) and merges it again whenever it moves. Each plan's evaluation branch is folded in by content. "Ancestor" means the branch head is already in the history, so every commit on it is included. "Patch-identical" means the commit was rebased onto P0's branch under a new hash; `git patch-id` gives the same id for both, so the change is the same.
+Each plan's evaluation branch is folded into main by content, through gbrain-evals#71, which carried P0's harness branch `p0-heldout-harness`. The folded branches are deleted. `capy/p2-preregistration` stays open for P2's preregistration amendments until P2's records are published. "Ancestor" means the branch head is already in the history, so every commit on it is included. "Patch-identical" means the commit was rebased onto P0's branch under a new hash; `git patch-id` gives the same id for both, so the change is the same.
 
 | Branch | Head | How it is folded | Commits |
 |---|---|---|---|
@@ -14,4 +14,8 @@
 | `p8-dev-evals` | `519e3b4` | Ancestor, through P0 merge `1b98953` | `5fd62ee`, `d50017c`, `1a825d9`, `6d7204e`, `519e3b4` (advertised-surface arms, write cost, withdrawal review, quote grounding, dev receipts) |
 | `capy/p4-streaming-harness` | `8cfae29` | Ancestor, last through P0 merge `5eb82f3` | `5d60a21` through `8cfae29` (streaming harness, BEAM support, power analysis, reply-cap reissue, BEAM-100K core-gate reservation) |
 
-After these folds, `git rev-list --count evals/competitor-program..origin/<branch>` is 0 for every branch above.
+On 2026-10-05, after #71 merged, `git rev-list --count origin/main..origin/<branch>` was 0 for every branch above except `capy/p2-preregistration`, whose amendment 3 (`f95b1ff`) is held with P2's other records for their follow-up change.
+
+## Changelog
+
+- 2026-10-05: The nine branches are folded into main through gbrain-evals#71; eight are deleted.
