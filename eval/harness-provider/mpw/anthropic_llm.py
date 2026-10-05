@@ -3,12 +3,15 @@
 The pinned harness ships Gemini, Groq and OpenAI clients only. This client
 follows the same contract (`generate(prompt, schema) -> dict`, `tool_loop`)
 so the newest Sonnet/Opus readers can run through OMB_ANSWER_LLM=anthropic.
-Structured output uses one forced tool call whose input schema is the
-harness Schema. The SDK reads ANTHROPIC_API_KEY and ANTHROPIC_BASE_URL, so
+Structured output uses a `respond` tool whose input schema is the harness
+Schema. The newest models reject a forced tool choice, so the tool is offered
+with `tool_choice: auto` (and no `temperature`, which they also reject) and an instruction to call it; a JSON object in the
+text reply is accepted when the model answers without the tool. The SDK reads ANTHROPIC_API_KEY and ANTHROPIC_BASE_URL, so
 the launcher points it at the metering proxy.
 """
 from __future__ import annotations
 
+import json
 import time
 
 from memory_bench.llm.base import LLM, Schema, ToolDef
@@ -16,6 +19,10 @@ from memory_bench.llm.base import LLM, Schema, ToolDef
 _MAX_RETRIES = 6
 _RETRY_BASE_DELAY = 5
 MAX_OUTPUT_TOKENS = 8192
+
+
+class ModelRefusal(RuntimeError):
+    """The model declined to answer (stop_reason=refusal). A reader behavior, not an infrastructure failure."""
 
 
 class AnthropicLLM(LLM):
@@ -49,15 +56,26 @@ class AnthropicLLM(LLM):
             "description": "Return the structured response.",
             "input_schema": {"type": "object", "properties": schema.properties, "required": schema.required},
         }
+        instruction = "\n\nGive your final response by calling the `respond` tool exactly once."
         response = self._create(
-            messages=[{"role": "user", "content": prompt}],
+            messages=[{"role": "user", "content": prompt + instruction}],
             tools=[tool],
-            tool_choice={"type": "tool", "name": "respond"},
-            temperature=0.0,
+            tool_choice={"type": "auto"},
         )
         for block in response.content:
             if getattr(block, "type", None) == "tool_use" and block.name == "respond":
                 return dict(block.input)
+        if response.stop_reason == "refusal":
+            raise ModelRefusal(f"{self.model_id} declined to answer (stop_reason=refusal)")
+        text = "".join(getattr(b, "text", "") for b in response.content if getattr(b, "type", None) == "text")
+        start, end = text.find("{"), text.rfind("}")
+        if start >= 0 and end > start:
+            try:
+                parsed = json.loads(text[start:end + 1])
+                if isinstance(parsed, dict) and all(k in parsed for k in schema.required):
+                    return parsed
+            except json.JSONDecodeError:
+                pass
         raise RuntimeError(f"{self.model_id} returned no structured response (stop_reason={response.stop_reason})")
 
     def tool_loop(self, prompt: str, tools: list[ToolDef], max_tool_calls: int = 10) -> str:

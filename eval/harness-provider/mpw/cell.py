@@ -41,6 +41,8 @@ from .records import (
 )
 
 MPW_DIR = Path(__file__).resolve().parent
+# A reader that declines is scored like any answer (it is the same model for every system), with the refusal kept in `error`.
+REFUSAL_ANSWER = "(The answer model declined to answer this question.)"
 MODES = ("rag", "agentic-rag", "agent", "retrieval")
 # Tools that read cells but never run inside one; editing them does not change a cell's results.
 OUTSIDE_CELL = {"tune.py", "rejudge.py", "timestamp_manifest.py", "ledger_inputs.py", "stub_llm.py", "__main__.py"}
@@ -450,6 +452,9 @@ class CellRun:
         except leakage.LeakError:
             raise
         except Exception as e:  # noqa: BLE001
+            if type(e).__name__ == "ModelRefusal":
+                return AnswerRecord(ok=True, outcome=ANSWERED, answer=REFUSAL_ANSWER, rendered_context=rendered,
+                                    error=f"reader refusal: {e}", requests=self._requests(tag), **base)
             return AnswerRecord(ok=False, outcome=ANSWER_FAILURE, rendered_context=rendered,
                                 error=f"{type(e).__name__}: {e}", requests=self._requests(tag), **base)
         prompts = [p for p in cap.prompts if "prompt" in p]
@@ -551,8 +556,10 @@ class CellRun:
                            "policy": "pre-dispatch identifier check on every answer prompt"},
             "timestamp_provenance": self.resolved.get("timestamp_provenance"),
         }
+        counts = score.get("counts") or {}
         summary["gates"] = {
             "complete": bool(score.get("complete")),
+            "no_answer_or_retrieval_failures": not (counts.get("answer_failure") or counts.get("retrieval_failure")),
             "delivered_context": gate.ok,
             "no_remote_clamp": not clamps,
         }
