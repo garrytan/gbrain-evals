@@ -19,6 +19,9 @@
  * Opening sealed ids also needs a decision id and a committed
  * preregistration.
  *
+ * `resealManifest` re-splits validation and sealed with a fresh salt, dev
+ * held fixed, when the private file may have been seen before any open.
+ *
  * The datasets themselves are public. Once validation ids are opened, the
  * sealed ids are the complement of dev and validation, so the protection is
  * procedural: the commitment proves the split was fixed before tuning, and
@@ -37,12 +40,14 @@ export const SPLITS = ['dev', 'validation', 'sealed'] as const;
 export type Split = typeof SPLITS[number];
 export const SHARES = { dev: 0.2, validation: 0.2 } as const;
 
-export type GroupRole = 'primary' | 'secondary' | 'reserve';
-/** Which strata the manifest covers, and why. BEAM 100k is a reserve: committed now so it is untouched, used only if the preregistration adopts it before any sealed cell. */
+export type GroupRole = 'primary' | 'secondary';
+/**
+ * Which strata the manifest covers, and why. The October 5 decision after the
+ * power simulation moved BEAM 100k from the reserve into the primary endpoint.
+ */
 export const GROUPS: Array<{ group: GroupRole; strata: string[]; note: string }> = [
-  { group: 'primary', strata: ['beam/500k', 'beam/1m'], note: 'Primary non-inferiority test: BEAM 500k + 1M, 14 dev / 14 validation / 42 sealed conversations.' },
-  { group: 'secondary', strata: ['personamem/32k', 'lifebench/en'], note: 'Secondary rows, each its own dataset: PersonaMem 32k grouped by persona (all histories of a persona together), LifeBench grouped by user.' },
-  { group: 'reserve', strata: ['beam/100k'], note: 'Reserve: same rule, not part of any claim unless the preregistration adopts it before any sealed cell runs.' },
+  { group: 'primary', strata: ['beam/100k', 'beam/500k', 'beam/1m'], note: 'Primary non-inferiority test, margin 3.0 points: BEAM 100k + 500k + 1M, 18 dev / 18 validation / 54 sealed conversations (100k 4/4/12, 500k 7/7/21, 1M 7/7/21).' },
+  { group: 'secondary', strata: ['personamem/32k', 'lifebench/en'], note: 'Descriptive rows, each its own dataset: PersonaMem 32k grouped by persona (all histories of a persona together), LifeBench grouped by user.' },
 ];
 
 export interface ClusterRef { id: string; histories: string[]; questions: number }
@@ -97,6 +102,16 @@ export interface PublicManifest {
   private_file: Commitment;
   access_log: string;
   groups: Array<{ group: GroupRole; note: string; strata: PublicStratum[] }>;
+  /** Every reseal, oldest first. After a reseal, dev ids are fixed by the commit and only validation and sealed follow the current salt. */
+  reseals?: ResealEntry[];
+}
+export interface ResealEntry {
+  date: string;
+  reason: string;
+  rule: string;
+  previous_private_file: Commitment;
+  previous_salt_sha256: string;
+  previous_commitments: Record<string, { validation: string; sealed: string }>;
 }
 export interface PrivateFile {
   schema: typeof PRIVATE_SCHEMA;
@@ -141,6 +156,65 @@ export function buildManifest(inputs: PowerInputs, inputsRef: { path: string; sh
 
 export function newSalt(): Buffer { return randomBytes(32); }
 
+export const RESEAL_RULE = 'Dev ids stay exactly as committed. Per stratum, the other clusters are ordered by HMAC-SHA256(new salt, "<stratum>/<cluster id>") as lowercase hex, ascending; the first round(0.2 G) are validation and the rest sealed, where G counts every cluster in the stratum, so the counts are unchanged. Commitments use the new salt.';
+
+/** Validation and sealed ids for one stratum with dev held fixed: the non-dev clusters ordered by the salt. */
+export function assignNonDev(salt: Buffer, stratum: string, clusters: ClusterRef[], dev: string[]): { validation: string[]; sealed: string[] } {
+  const devSet = new Set(dev);
+  if (dev.some(id => !clusters.some(c => c.id === id))) throw new Error(`${stratum}: dev ids not in the cluster list`);
+  const rest = clusters.map(c => c.id).filter(id => !devSet.has(id));
+  const order = rest.sort((a, b) => { const x = clusterRank(salt, stratum, a), y = clusterRank(salt, stratum, b); return x < y ? -1 : x > y ? 1 : 0; });
+  const n = splitCounts(clusters.length);
+  if (dev.length !== n.dev) throw new Error(`${stratum}: ${dev.length} dev ids, the rule gives ${n.dev}`);
+  const sort = (xs: string[]) => [...xs].sort(naturalCompare);
+  return { validation: sort(order.slice(0, n.validation)), sealed: sort(order.slice(n.validation)) };
+}
+
+/**
+ * Re-split every stratum's non-dev clusters into validation and sealed with a
+ * fresh salt, for use when the private file may have been seen before any
+ * validation or sealed open. Dev ids, cluster lists and counts stay as
+ * committed; strata are regrouped by GROUPS. The reseal entry keeps the old
+ * commitments so the history is auditable.
+ */
+export function resealManifest(m: PublicManifest, salt: Buffer, o: { date: string; reason: string }): { manifest: PublicManifest; privateFile: PrivateFile; privateBytes: Buffer } {
+  if (!o.reason.trim()) throw new Error('a reseal needs a reason');
+  if (sha256Hex(salt) === m.salt_sha256) throw new Error('a reseal needs a new salt');
+  const old = new Map(m.groups.flatMap(g => g.strata).map(s => [s.stratum, s]));
+  const listed = GROUPS.flatMap(g => g.strata);
+  const missing = [...old.keys()].filter(k => !listed.includes(k));
+  if (missing.length || listed.some(k => !old.has(k))) throw new Error(`reseal keeps the same strata; manifest has ${[...old.keys()].join(', ')}, GROUPS has ${listed.join(', ')}`);
+  const privateStrata: PrivateFile['strata'] = [];
+  const groups = GROUPS.map(g => ({
+    group: g.group, note: g.note,
+    strata: g.strata.map(key => {
+      const s = old.get(key)!;
+      const a = assignNonDev(salt, key, s.clusters, s.dev.ids);
+      const q = (ids: string[]) => ids.reduce((t, id) => t + s.clusters.find(c => c.id === id)!.questions, 0);
+      privateStrata.push({ stratum: key, validation: a.validation, sealed: a.sealed });
+      return {
+        ...s,
+        validation: { count: a.validation.length, questions: q(a.validation), commitment: splitCommitment(salt, key, 'validation', a.validation) },
+        sealed: { count: a.sealed.length, questions: q(a.sealed), commitment: splitCommitment(salt, key, 'sealed', a.sealed) },
+      } satisfies PublicStratum;
+    }),
+  }));
+  const privateFile: PrivateFile = { schema: PRIVATE_SCHEMA, salt: salt.toString('hex'), strata: privateStrata };
+  const privateBytes = Buffer.from(JSON.stringify(privateFile, null, 2) + '\n');
+  const entry: ResealEntry = {
+    date: o.date, reason: o.reason, rule: RESEAL_RULE,
+    previous_private_file: m.private_file, previous_salt_sha256: m.salt_sha256,
+    previous_commitments: Object.fromEntries([...old.values()].map(s => [s.stratum, { validation: s.validation.commitment, sealed: s.sealed.commitment }])),
+  };
+  const manifest: PublicManifest = {
+    ...m, groups,
+    salt_sha256: sha256Hex(salt),
+    private_file: { file: PRIVATE_FILE_NAME, sha256: sha256Hex(privateBytes), bytes: privateBytes.length },
+    reseals: [...(m.reseals ?? []), entry],
+  };
+  return { manifest, privateFile, privateBytes };
+}
+
 /** Problems with the public manifest alone: counts, disjointness and that dev ids are real clusters. */
 export function checkPublic(m: PublicManifest): string[] {
   const problems: string[] = [];
@@ -164,11 +238,12 @@ export function checkPrivate(m: PublicManifest, privatePath: string): string[] {
   const salt = Buffer.from(p.salt, 'hex');
   const problems = checkPublic(m);
   if (sha256Hex(salt) !== m.salt_sha256) problems.push('salt does not match salt_sha256');
+  const resealed = (m.reseals?.length ?? 0) > 0;
   for (const g of m.groups) for (const s of g.strata) {
-    const a = assignStratum(salt, s.stratum, s.grouping, s.clusters);
     const priv = p.strata.find(x => x.stratum === s.stratum);
     if (!priv) { problems.push(`${s.stratum}: missing from private file`); continue; }
-    if (canonicalJson(a.dev) !== canonicalJson(s.dev.ids)) problems.push(`${s.stratum}: dev ids differ from the salted rule`);
+    const a = resealed ? assignNonDev(salt, s.stratum, s.clusters, s.dev.ids) : assignStratum(salt, s.stratum, s.grouping, s.clusters);
+    if (!resealed && canonicalJson((a as StratumAssignment).dev) !== canonicalJson(s.dev.ids)) problems.push(`${s.stratum}: dev ids differ from the salted rule`);
     if (canonicalJson(a.validation) !== canonicalJson(priv.validation)) problems.push(`${s.stratum}: validation ids differ from the salted rule`);
     if (canonicalJson(a.sealed) !== canonicalJson(priv.sealed)) problems.push(`${s.stratum}: sealed ids differ from the salted rule`);
     if (splitCommitment(salt, s.stratum, 'validation', priv.validation) !== s.validation.commitment) problems.push(`${s.stratum}: validation commitment mismatch`);

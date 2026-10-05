@@ -8,45 +8,47 @@ This is a preregistration skeleton, not a result. It fixes the question, the dat
 
 The primary claim, as approved in the wave plan:
 
-> On untouched sealed conversations, under one audited protocol with the same answer model, judge and delivered-context targets for both systems, gbrain's graded accuracy on BEAM 500k + 1M is non-inferior to the comparator's (one-sided 95% bound of the paired difference above −margin), at a lower total cost per correct answer under a preregistered cost formula.
+> On untouched sealed conversations, under one audited protocol with the same answer model, judge and delivered-context targets for both systems, gbrain's graded accuracy on BEAM is non-inferior to the comparator's (one-sided 95% bound of the paired difference above −margin), at a lower total cost per correct answer under a preregistered cost formula.
 
-[BEAM](https://arxiv.org/abs/2510.27246) is a public benchmark of very long chat histories. Each conversation has 20 questions of ten kinds (abstention, contradiction resolution, event ordering, information extraction, instruction following, knowledge update, multi-session reasoning, preference following, summarization, temporal reasoning). A judge scores each answer against a short rubric, item by item, so a question can earn partial credit between 0 and 1. The 500k and 1M sizes have 35 conversations each, of about 0.5 and 1 million tokens.
+After the [power simulation](2026-10-05-memory-proof-wave-power.md), Garry set the margin to 3.0 points and moved BEAM 100k into the primary endpoint, so the primary test covers BEAM 100k + 500k + 1M (October 5, 2026, recorded in the wave plan).
+
+[BEAM](https://arxiv.org/abs/2510.27246) is a public benchmark of very long chat histories. Each conversation has 20 questions of ten kinds (abstention, contradiction resolution, event ordering, information extraction, instruction following, knowledge update, multi-session reasoning, preference following, summarization, temporal reasoning). A judge scores each answer against a short rubric, item by item, so a question can earn partial credit between 0 and 1. The 100k size has 20 conversations of about 0.1 million tokens; the 500k and 1M sizes have 35 each, of about 0.5 and 1 million tokens.
 
 ## What is fixed
 
 | Item | Value |
 |---|---|
 | Decision id | TODO(decision id, assigned when this file is completed) |
-| Benchmark harness | The public agent-memory benchmark harness at the commit in [`harness.lock.json`](../../eval/data/memory-proof-wave/harness.lock.json) (`f618ed7b1f0eb9cad7b42e876f91a42f0eadb150`). BEAM queries: 500k `fe4553ac…`, 1M `ed5fd003…` (SHA-256 of `queries.json.gz`). |
-| Split | [`grouping-manifest.json`](../../eval/data/memory-proof-wave/grouping-manifest.json), committed before any tuning: 14 dev, 14 validation and 42 sealed conversations (7 / 7 / 21 per size), private file commitment `f67da64c…`, salt commitment `d7c382d8…`. Built by [`memory-proof-wave-grouping.ts`](../../eval/runner/memory-proof-wave-grouping.ts). |
-| Sealed questions | 840: 42 conversations × 20 questions |
+| Benchmark harness | The public agent-memory benchmark harness at the commit in [`harness.lock.json`](../../eval/data/memory-proof-wave/harness.lock.json) (`f618ed7b1f0eb9cad7b42e876f91a42f0eadb150`). BEAM queries: 100k `f58e001b…`, 500k `fe4553ac…`, 1M `ed5fd003…` (SHA-256 of `queries.json.gz`). |
+| Split | [`grouping-manifest.json`](../../eval/data/memory-proof-wave/grouping-manifest.json), committed before any tuning: 18 dev, 18 validation and 54 sealed conversations (100k 4 / 4 / 12, 500k and 1M 7 / 7 / 21 each). Resealed on October 5 (see [Reseal](#reseal-2026-10-05)): private file commitment `22292099…`, salt commitment `62449d8c…`. Built and resealed by [`memory-proof-wave-grouping.ts`](../../eval/runner/memory-proof-wave-grouping.ts). |
+| Sealed questions | 1,080: 54 conversations × 20 questions (240 at 100k, 420 at 500k, 420 at 1M) |
 | gbrain build | TODO(SHA of the wave PR head, installed from GitHub; the merged `src/` tree is checked byte-identical at merge) |
 | gbrain configuration | TODO(`token_budget`, `return_unit: page`, date header setting, remote budget clamp raised and asserted; values tuned on dev only) |
 | Comparator build | TODO(pinned current release of the comparator server, its best supported mode: facts plus raw chunks) |
 | Comparator configuration | TODO(fact and chunk budgets tuned on dev to the same delivered-context target) |
 | Harness mode | TODO(`rag` expected; fixed before any paid cell) |
-| Answer model | TODO(resolved model id, set through `OMB_ANSWER_LLM` / `OMB_ANSWER_MODEL` with `.env` loading disabled; same for both systems; preregistered fallback model run on an overlap) |
-| Judge | TODO(BEAM's own judge as the harness forces it, asserted by model id on every call; one blinded, shuffled joint judging pass over both systems) |
+| Answer model | `gemini-3.8-flash` for both systems, set through `OMB_ANSWER_LLM` / `OMB_ANSWER_MODEL` with `.env` loading disabled. TODO(exact resolved model id string and the fallback model run on an overlap) |
+| Judge | `gemini-3.5-flash`, BEAM's judge as the harness forces it, asserted by model id on every call; one blinded, shuffled joint judging pass over both systems |
 | Delivered-context target | TODO(tokens, counted with `cl100k_base` on the exact text inserted into the final prompt; cells gated on mean and p95 within ±10% of the target; no truncation) |
 | Scorer | TODO(audited scorer revision: typed outcomes, strict judge field validation, every rubric item scored) |
 | Cost formula | TODO(A6: ingest LLM dollars + embedding dollars + CPU-hours at a stated rate + read-time context and answer dollars, amortized at a stated reads-per-write ratio; sensitivity at 1× and 10× reads) |
-| Spending cap for this decision | TODO(dollars, from the paid smoke's rebuilt ledger; the wave cap is $2,500) |
+| Spending cap for this decision | TODO(dollars for this decision, from the rebuilt ledger; the wave cap is $2,800) |
 
 ## The estimand and the statistic
 
-For each sealed question, the paired difference is gbrain's graded score minus the comparator's, times 100, in points. The estimand is the mean of these 840 differences. Every conversation has 20 questions, so this equals the mean of the 42 conversation means, and each BEAM size gets half the weight.
+For each sealed question, the paired difference is gbrain's graded score minus the comparator's, times 100, in points. The estimand is the mean of these 1,080 differences. Every conversation has 20 questions, so this equals the mean of the 54 conversation means; by question share, 100k carries 22% of the weight and 500k and 1M 39% each.
 
-The analysis treats conversations, not questions, as the independent units, and keeps the two sizes as strata:
+The analysis treats conversations, not questions, as the independent units, and keeps the three sizes as strata:
 
 - **Standard error.** Stratified cluster-robust (CR1): within each size, the variance of conversation totals around the size mean, scaled by G/(G − 1), combined with question-share weights.
 - **Primary lower bound.** The restricted wild cluster bootstrap-t with Webb six-point weights, 9,999 draws, seed `20261005`: the smallest null value the one-sided 5% test does not reject, found by bisection ([`ni-stats.ts`](../../eval/runner/memory-proof-wave/ni-stats.ts), `wildRestrictedLowerBound`). The upper bound uses the same test in the other direction.
-- **Reported beside it, deciding nothing.** The analytic CR1 t bound with 40 degrees of freedom, and the stratified cluster bootstrap-t.
+- **Reported beside it, deciding nothing.** The analytic CR1 t bound with 51 degrees of freedom, and the stratified cluster bootstrap-t.
 
-The [power report](2026-10-05-memory-proof-wave-power.md) checked these choices by simulation at 42 sealed conversations: one-sided coverage of the primary method was 94.5% to 95.4% across four assumption sets, including one in which a tenth of conversations lose 15 points. The percentile bootstrap undercovers and is not used.
+The [power report](2026-10-05-memory-proof-wave-power.md) checked these choices by simulation at 54 sealed conversations (100k + 500k + 1M): one-sided coverage of the primary method was 94.0% to 95.6% across four assumption sets, the lowest being the one in which a tenth of conversations lose 15 points. The percentile bootstrap undercovers and is not used.
 
 ## The margin
 
-TODO(decision: the margin in points). The approved plan says 2.0 points. The [power report](2026-10-05-memory-proof-wave-power.md) finds that 42 sealed conversations cannot resolve 2.0: with no true difference, the bound clears −2.0 in 50% of simulations under the central assumptions (75% optimistic, 34% pessimistic). It recommends 3.0 points on the same split, which clears in 79% under the central assumptions. The plan requires the margin or datasets to change before any paid cell runs, never after. Whatever is chosen is written here, with its reason, before the first paid cell.
+**3.0 points.** The plan first said 2.0. The [power report](2026-10-05-memory-proof-wave-power.md) found that 42 sealed BEAM 500k + 1M conversations cannot resolve 2.0: with no true difference, the bound clears −2.0 in 50% of simulations under the central assumptions. With BEAM 100k added (54 sealed conversations) and a 3.0-point margin, it clears in 87% under the central assumptions (99% optimistic, 65% pessimistic, 78% under skew), and at a true difference of −1 in 58% central. The decision was made before any paid cell, as the plan requires. A loss of 3 points on a score near 72 is about a 4% relative loss.
 
 ## What each outcome means
 
@@ -54,7 +56,7 @@ The outcome is computed by `decide()` in [`ni-stats.ts`](../../eval/runner/memor
 
 | Outcome | Rule | What is published |
 |---|---|---|
-| `ahead` | lower bound > 0 | gbrain's graded accuracy on sealed BEAM 500k + 1M is higher than the comparator's under this protocol, with the bound and both accuracies. |
+| `ahead` | lower bound > 0 | gbrain's graded accuracy on sealed BEAM 100k + 500k + 1M is higher than the comparator's under this protocol, with the bound and both accuracies. |
 | `non-inferior` | −margin < lower bound ≤ 0 | gbrain is at most `margin` points behind, with 95% confidence. If the upper bound is also below 0, the report says gbrain is measurably lower but within the margin. Cost per correct answer is reported beside it. |
 | `behind` | lower bound ≤ −margin and upper bound < 0 | gbrain is measurably behind, and a loss larger than the margin cannot be ruled out. Published as such, with the per-kind breakdown. |
 | `inconclusive` | lower bound ≤ −margin and upper bound ≥ 0 | The sample cannot tell. Published as inconclusive; no equality or parity claim. |
@@ -70,25 +72,35 @@ A sealed cell is marked incomplete, and the decision is `inconclusive`, if any s
 - **Sealed** ids open only with `--decision-id`, a purpose, and this file committed with no `TODO` marker. The log line records this file's SHA-256. Sealed runs once per system. A failed sealed result ends this decision; it is never rerun with `--only-failed` or merged reruns.
 - BEAM is public, so after validation is opened the sealed set is the complement of dev and validation. The protection is procedural: the commitments prove the split was fixed before tuning, and the log shows every open.
 
+## Reseal, 2026-10-05
+
+The first private grouping file (private file `f67da64c…`, salt `d7c382d8…`) was stored where every project subagent could read it, so its validation and sealed partition is treated as possibly seen. No validation or sealed ids had been opened: no access log existed, and dev runs had used only the public dev ids. The split was therefore resealed before any open, with `memory-proof-wave-grouping.ts reseal`:
+
+- dev ids, cluster lists and counts stay exactly as committed;
+- in every stratum (BEAM 100k, 500k and 1M, PersonaMem, LifeBench), the non-dev clusters are re-split into validation and sealed with a fresh random salt by the same HMAC rule;
+- the manifest's `reseals` entry records the reason, the date, the previous private file and salt commitments, and every previous validation and sealed commitment;
+- the new private file (`22292099…`) goes to the repository owner's custody, outside the repository and outside any shared drive. The previous one opens nothing: its hash no longer matches the manifest.
+
+In the smallest strata the new partition can match the old one by chance (LifeBench, 2 validation users drawn from 8: 1 in 28). That is a property of the data size, not of the procedure.
+
 ## Secondary rows
 
-Each secondary dataset is its own row, never pooled with BEAM. They are exploratory unless a Holm correction across them is written here. TODO(Holm family, if any).
+Each secondary dataset is its own row, never pooled with BEAM. Both are descriptive rows only (decided October 5): no bound-based claim is made for either.
 
 | Dataset | Unit | Sealed clusters (questions) | Score | Note from the power report |
 |---|---|---|---|---|
-| PersonaMem 32k | persona (all histories of a persona together; 20 personas, 37 histories) | 12 (375) | multiple choice, its own row | Minimum detectable margin at 80% power: 3.5 to 7.4 points. Descriptive only. |
+| PersonaMem 32k | persona (all histories of a persona together; 20 personas, 37 histories) | 12 (347) | multiple choice, its own row | Minimum detectable margin at 80% power: 3.5 to 7.4 points. Descriptive only. |
 | LifeBench | user (10 users) | 6 (1,246) | binary | Coverage drops to 89–91% when a user can fail badly. Report the point estimate and per-user results only, no bound-based claim. |
-| BEAM 100k | conversation (reserve) | 12 (240) | graded | Committed as a reserve with the same rule. Joins the primary test only if adopted here before any sealed cell. TODO(adopt or leave out). |
 
 ## Models
 
-TODO(models). The answer model, the fallback model and any agent-mode readers follow the gbrain eval model rules: the newest frontier model of each family, no older generations except one shared link to a previous result, and no gpt-5.4-mini. A change to a model named here is written into this file, with its reason, before any new cell runs.
+The answer model is `gemini-3.8-flash` and the BEAM judge `gemini-3.5-flash` (see the table above). TODO(fallback answer model and any agent-mode readers). They follow the gbrain eval model rules: the newest frontier model of each family, no older generations except one shared link to a previous result, and no gpt-5.4-mini. A change to a model named here is written into this file, with its reason, before any new cell runs.
 
 ## Reproduce
 
 ```bash
 bun eval/runner/memory-proof-wave-grouping.ts check
-bun eval/runner/memory-proof-wave-grouping.ts open --split dev --strata beam/500k,beam/1m
+bun eval/runner/memory-proof-wave-grouping.ts open --split dev --strata beam/100k,beam/500k,beam/1m
 bun test test/eval/memory-proof-wave-power.test.ts test/eval/memory-proof-wave-grouping.test.ts
 ```
 
