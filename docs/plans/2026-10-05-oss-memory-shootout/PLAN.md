@@ -1,6 +1,6 @@
 # Open-source memory shootout: gbrain against Graphiti, Cognee, Mem0, Letta, Basic Memory and Hindsight
 
-Status: v3, autoplan complete (CEO and engineering phases, Claude and GPT-6 Astra voices each), awaiting Garry's approval at the final gate.
+Status: approved by Garry on 2026-10-05 with every recommendation: D1 baselines yes, D2 option A, D3 deferred, D4 no public vendor posts for now, D5 Voyage key requested. v3, autoplan complete (CEO and engineering phases, Claude and GPT-6 Astra voices each).
 Review files: [reviews/](reviews/) (summarized in [Review record](#review-record)).
 
 ## The question
