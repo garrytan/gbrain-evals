@@ -370,7 +370,7 @@ async function score(bench: Bench | null, bundle: SuiteBundle, dir: string, log:
     }
   }
   const out: Record<string, Record<string, { n: number; correct: number; accuracy: number; by_category: Record<string, { n: number; correct: number }>; outcomes: Record<string, number>; judged: number; misses?: Record<string, number>; checkpoints?: Record<string, unknown>; context_tokens: { mean: number | null; p95: number | null }; rows: ScoredAnswer[] }>> = {};
-  const models = [MODEL_CONFIG.fixed_reader.id, ...MODEL_CONFIG.frontier_sweep.map(m => m.id).filter(m => m !== MODEL_CONFIG.fixed_reader.id)];
+  const models = [MODEL_CONFIG.fixed_reader.id, ...MODEL_CONFIG.frontier_sweep.map(m => m.id).filter(m => m !== MODEL_CONFIG.fixed_reader.id), ...MODEL_CONFIG.alternate_readers.map(m => m.id)];
   for (const arm of armsWithAnswers(dir)) {
     for (const model of models) {
       const receipts = readReceipts(dir, arm, model);

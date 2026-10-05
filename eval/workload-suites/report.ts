@@ -46,7 +46,7 @@ export function summarize(): { markdown: string; spend: Record<string, { usd: nu
     const res = read(join(dir, 'results.json')).results as Record<string, Record<string, any>>;
     spend[suite] = spendOf(dir);
     lines.push(`### ${suite}`, '');
-    const models = [MODEL_CONFIG.fixed_reader.id, ...MODEL_CONFIG.frontier_sweep.map(m => m.id).filter(m => m !== MODEL_CONFIG.fixed_reader.id)];
+    const models = [MODEL_CONFIG.fixed_reader.id, ...MODEL_CONFIG.frontier_sweep.map(m => m.id).filter(m => m !== MODEL_CONFIG.fixed_reader.id), ...MODEL_CONFIG.alternate_readers.map(m => m.id)];
     lines.push('| Arm | Reader | Correct | Accuracy | Judged | Delivered tokens (mean / p95) |', '|---|---|---:|---:|---:|---:|');
     for (const arm of Object.keys(res).sort()) {
       for (const m of models) {

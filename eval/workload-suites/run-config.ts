@@ -23,6 +23,8 @@ export const MODEL_CONFIG = {
     { id: 'anthropic:claude-sonnet-5-5', family: 'sonnet' },
     { id: 'anthropic:claude-fable-5-1', family: 'fable' },
   ] as ModelRef[],
+  /** The alternate newest GPT, re-reading the same frontier subset when the budget allows (it is also the judge model). */
+  alternate_readers: [{ id: 'openai:gpt-6.1-sol', family: 'gpt' }] as ModelRef[],
   /** Judges only answers the deterministic scorer marks `ambiguous` (both the gold and a stale or distractor value named). */
   judge: { id: 'openai:gpt-6.1-sol', family: 'gpt' } as ModelRef,
   /** Fraction of each category's questions in the frontier sweep, chosen by hash order of query id. */
