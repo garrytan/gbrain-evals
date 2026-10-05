@@ -44,15 +44,19 @@
   "parallel_namespaces": true,
   "retrieval_policies": {
     "vendor-default": {
-      "recipe": "COMBINED_HYBRID_SEARCH_CROSS_ENCODER",
-      "limit": 10,
-      "node_provenance": "mentions",
+      "settings": {
+        "recipe": "COMBINED_HYBRID_SEARCH_CROSS_ENCODER",
+        "limit": 10,
+        "node_provenance": "mentions"
+      },
       "notes": "Graphiti.search_() with no config argument: COMBINED_HYBRID_SEARCH_CROSS_ENCODER (edges, nodes, episodes and communities; BM25 + cosine + BFS candidates, cross-encoder rerank) at SearchConfig's default limit 10 per class (search_config.py DEFAULT_SEARCH_LIMIT)."
     },
     "fixed-evidence": {
-      "recipe": "COMBINED_HYBRID_SEARCH_CROSS_ENCODER",
-      "limit": 50,
-      "node_provenance": "mentions",
+      "settings": {
+        "recipe": "COMBINED_HYBRID_SEARCH_CROSS_ENCODER",
+        "limit": 50,
+        "node_provenance": "mentions"
+      },
       "notes": "The same recipe with 50 results per class, enough to fill the 8,000-token evidence budget (facts run about 25 tokens, node summaries about 100); the harness packer truncates."
     },
     "allowed_settings_overrides": [

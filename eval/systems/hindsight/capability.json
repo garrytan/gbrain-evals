@@ -47,15 +47,19 @@
   "parallel_namespaces": true,
   "retrieval_policies": {
     "vendor-default": {
-      "budget": "mid",
-      "max_tokens": 4096,
-      "include_chunks": false,
+      "settings": {
+        "budget": "mid",
+        "max_tokens": 4096,
+        "include_chunks": false
+      },
       "notes": "hindsight-client 0.10.2 `recall` defaults (hindsight_client.py:618-639): token-budgeted, not top-k. budget mid, max_tokens 4096 of fact text, chunks off, entities off, all fact types. query_timestamp is always the question date."
     },
     "fixed-evidence": {
-      "budget": "mid",
-      "max_tokens": 8000,
-      "include_chunks": false,
+      "settings": {
+        "budget": "mid",
+        "max_tokens": 8000,
+        "include_chunks": false
+      },
       "notes": "Same call with the fact-token cap raised to the shootout's 8,000-token evidence budget, so the harness packer, not Hindsight's 4,096 cap, decides what fits. Hindsight counts tokens with its own tokenizer, the harness with approxTokens; the packer truncates."
     },
     "allowed_settings_overrides": [

@@ -173,7 +173,7 @@ class HindsightAdapter(Adapter):
         mode = policy.get("mode")
         if mode not in ("vendor-default", "fixed-evidence"):
             raise ShimError("invalid_request", "policy.mode must be vendor-default or fixed-evidence", 400)
-        settings = {k: v for k, v in {**self.record["retrieval_policies"][mode], **(policy.get("settings") or {})}.items() if k != "notes"}
+        settings = {**self.record["retrieval_policies"][mode]["settings"], **(policy.get("settings") or {})}
         unknown = set(settings) - RECALL_KNOBS
         if unknown:
             raise ShimError("unsupported", f"hindsight recall has no knob(s) {sorted(unknown)}; allowed {sorted(RECALL_KNOBS)}", 400)
