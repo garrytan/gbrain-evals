@@ -46,7 +46,7 @@ The variant keeps everything the scorer and runner depend on: task ids, answer k
 ## Choose and record the seed
 
 1. Pick a seed privately, for example with `od -An -N4 -tu4 /dev/urandom`. Do not use the plan's fixed seeds (20261005, 20261006, 20261099) or the test seeds (101, 202, 303).
-2. Keep the seed outside the repository, where Garry or the preregistration owner can retrieve it.
+2. Keep the seed outside the repository and off any shared agent drive, where Garry or the preregistration owner can retrieve it. The current seed lives on Garry's Mac at `~/Private/gbrain-sealed/cat40-hard-sealed-seed.txt` (mode 600). It was rotated on 2026-10-05 because the first seed sat on a project drive that every implementing agent could read; nothing had been generated from it.
 3. Print the digest without writing any document:
 
    ```bash
