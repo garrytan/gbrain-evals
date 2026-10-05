@@ -103,7 +103,7 @@ export interface CellRow {
   answer: string; qa_scores: number[]; qa_score: number;
   sessions: number; live_turns: number; compactions: number; notices: number; notice_segments: number; missed_segments: number;
   remember_calls: number; remember_batched: number; remember_items: number; facts_saved: number; evidence_saved: boolean; evidence_recall5: boolean | null;
-  core_chars: number | null; tool_calls: Record<string, number>; errors: string[];
+  core_chars: number | null; tool_calls: Record<string, number>; tool_errors: Record<string, number>; tool_error_samples: string[]; errors: string[];
   usage: CallUsage; usd_agent: number; usd_gbrain: number; usd_profile: number; ms: number;
   builds: Record<string, string>;
 }
@@ -189,7 +189,7 @@ export async function runCell(ctx: Ctx, convId: string, qs: MemoryQuestion[], se
   const row: CellRow = {
     id: cellId, conversation: convId, question_id: '', category: '', abstention: false, arm: armLabel, model, window: ctx.window,
     answer: '', qa_scores: [], qa_score: 0, sessions: ordered.length, live_turns: 0, compactions: 0, notices: 0, notice_segments: 0, missed_segments: 0,
-    remember_calls: 0, remember_batched: 0, remember_items: 0, facts_saved: 0, evidence_saved: false, evidence_recall5: null, core_chars: null, tool_calls: toolCalls, errors,
+    remember_calls: 0, remember_batched: 0, remember_items: 0, facts_saved: 0, evidence_saved: false, evidence_recall5: null, core_chars: null, tool_calls: toolCalls, tool_errors: {}, tool_error_samples: [], errors,
     usage, usd_agent: 0, usd_gbrain: 0, usd_profile: profile.usd, ms: 0, builds: ctx.builds, stream_questions: qs.length, usd_stream: 0,
   };
   try {
@@ -260,6 +260,10 @@ export async function runCell(ctx: Ctx, convId: string, qs: MemoryQuestion[], se
           toolCalls[c.name] = (toolCalls[c.name] ?? 0) + 1;
           let out: string;
           try { out = await client!.call(c.name, c.args); } catch (e) { out = `Error: ${(e as Error).message}`; }
+          if (out.startsWith('Error')) {
+            row.tool_errors[c.name] = (row.tool_errors[c.name] ?? 0) + 1;
+            if (row.tool_error_samples.length < 5) row.tool_error_samples.push(`${c.name}: ${out.slice(0, 300)}`);
+          }
           if (c.name === 'remember') {
             row.remember_calls++;
             if (Array.isArray(c.args.items)) { row.remember_batched++; row.remember_items += c.args.items.length; }
@@ -335,7 +339,7 @@ export async function runCell(ctx: Ctx, convId: string, qs: MemoryQuestion[], se
     const goldSaved = [...savedByOut.entries()].filter(([, s]) => q.gold.includes(s)).map(([id]) => id);
     const r: CellRow = {
       ...row, id: `${q.id}__${armLabel}__${model}`, question_id: q.id, category: q.category, abstention: q.abstention,
-      answer: a?.answer ?? '', qa_scores: [], qa_score: 0, errors: [...errors], tool_calls: { ...toolCalls },
+      answer: a?.answer ?? '', qa_scores: [], qa_score: 0, errors: [...errors], tool_calls: { ...toolCalls }, tool_errors: { ...row.tool_errors },
       evidence_saved: goldSaved.length > 0, stream_questions: qs.length,
       usage: a?.usage ?? { input: 0, cache_write: 0, cache_read: 0, output: 0 },
       usd_stream: streamUsd, usd_agent: streamUsd / qs.length + (a ? priceUsage(model, a.usage) : 0),
