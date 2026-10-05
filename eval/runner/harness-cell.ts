@@ -4,6 +4,7 @@
  *   bun run harness:cell plan   <spec.json | cell-id>   free: resolve, write cell.json, print the cost estimate
  *   bun run harness:cell run    <spec.json | cell-id>   run a planned (or new) cell through the metering proxy
  *   bun run harness:cell resume <cell-id>               continue a cell; refuses when anything it depends on changed
+ *   bun run harness:cell tune <cell-id> --grid <json>   retrieval-only knob sweep on an ingested cell (no answer or judge calls)
  *   bun run harness:cell cli    -- <harness CLI args>   the harness's own CLI with gbrain and comparator registered
  *
  * Flags: --stub-upstream (keyless: every model request goes to the local stub
@@ -351,11 +352,14 @@ function pick(env: Record<string, string>, providers: string[]): Record<string, 
 
 interface SpendFile { cell_id: string; runs: Array<{ run_id: string; ledger: string; usd: number; requests: number; started_at: string; stub: boolean }>; }
 
-export async function runCell(ctx: Ctx, target: string, resume: boolean): Promise<number> {
+export async function runCell(ctx: Ctx, target: string, resume: boolean, tuneGrid: string | null = null): Promise<number> {
   const cell = planCell(ctx, target);
   const dir = join(ctx.cellsDir, cell.cell_id);
   const receipts = stageReceiptCount(dir);
-  if (!resume && receipts > 0) {
+  if (tuneGrid !== null && !existsSync(join(dir, 'stages', 'ingest'))) {
+    throw new Error(`cell ${cell.cell_id} has no ingest receipts; run it (or a cheap copy with the same dataset slice) before tuning its retrieval knobs`);
+  }
+  if (tuneGrid === null && !resume && receipts > 0) {
     throw new Error(`cell ${cell.cell_id} already has ${receipts} stage receipts. Continue it with \`bun run harness:cell resume ${cell.cell_id}\`; plan a new cell to change anything.`);
   }
   if (resume && receipts === 0) ctx.log(`[cell] ${cell.cell_id} has no receipts yet; resume starts it`);
@@ -401,7 +405,8 @@ export async function runCell(ctx: Ctx, target: string, resume: boolean): Promis
     MPW_REPO_ROOT: REPO_ROOT,
   };
   ctx.log(`[cell] ${cell.cell_id}: ${resume ? 'resuming' : 'running'} with $${remaining.toFixed(2)} of $${cell.spec.budget_usd.toFixed(2)} left; proxy ${proxy.url}${ctx.stub ? ' -> stub upstream (keyless)' : ''}`);
-  const child = Bun.spawn([ctx.install.python, '-m', 'mpw.cell', 'run', '--cell-dir', dir], {
+  const pyArgs = tuneGrid === null ? ['mpw.cell', 'run', '--cell-dir', dir] : ['mpw.tune', '--cell-dir', dir, '--grid', tuneGrid];
+  const child = Bun.spawn([ctx.install.python, '-m', ...pyArgs], {
     cwd: PROVIDER_DIR, env: harnessProcessEnv(ctx.install, env), stdout: 'inherit', stderr: 'inherit',
   });
   const onSignal = () => { child.kill('SIGTERM'); };
@@ -433,6 +438,7 @@ export function makeCtx(argv: string[], log: (l: string) => void = l => process.
 }
 
 export const USAGE = `usage: bun run harness:cell <plan|run|resume> <spec.json | cell-id> [--stub-upstream] [--budget-ledger <path>] [--gbrain <checkout>[@ref]] [--cells-dir <dir>]
+       bun run harness:cell tune <cell-id> --grid '{"token_budget": [6000, 7000, 8000]}'   retrieval-only knob sweep on an ingested cell
        bun run harness:cell cli -- <harness CLI arguments>   (keyless only: --stub-upstream is implied)`;
 
 if (import.meta.main) {
@@ -447,7 +453,7 @@ if (import.meta.main) {
       });
       process.exit(proc.exitCode ?? 1);
     }
-    if (!['plan', 'run', 'resume'].includes(action ?? '') || !target) { console.error(USAGE); process.exit(2); }
+    if (!['plan', 'run', 'resume', 'tune'].includes(action ?? '') || !target) { console.error(USAGE); process.exit(2); }
     const ctx = makeCtx(argv);
     if (action === 'plan') {
       const cell = planCell(ctx, target);
@@ -455,6 +461,11 @@ if (import.meta.main) {
         units: cell.resolved.units.length, documents: cell.resolved.documents, document_tokens_cl100k: cell.resolved.document_tokens_cl100k,
         estimate: cell.estimate, reproduce: cell.reproduce }, null, 2));
       process.exit(0);
+    }
+    if (action === 'tune') {
+      const grid = flag(argv, '--grid');
+      if (!grid) throw new Error('tune needs --grid \'{"token_budget": [6000, 8000]}\'');
+      process.exit(await runCell(ctx, target, true, grid));
     }
     process.exit(await runCell(ctx, target, action === 'resume'));
   } catch (error) {

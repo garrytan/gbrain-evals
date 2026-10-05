@@ -42,6 +42,8 @@ from .records import (
 
 MPW_DIR = Path(__file__).resolve().parent
 MODES = ("rag", "agentic-rag", "agent", "retrieval")
+# Tools that read cells but never run inside one; editing them does not change a cell's results.
+OUTSIDE_CELL = {"tune.py", "rejudge.py", "timestamp_manifest.py", "ledger_inputs.py", "stub_llm.py", "__main__.py"}
 
 
 def _sha(*parts: bytes | str) -> str:
@@ -63,7 +65,7 @@ def _harness_file(rel: str) -> Path:
 
 
 def revisions(dataset: str) -> dict[str, str]:
-    wrapper = sorted(p for p in MPW_DIR.glob("*.py"))
+    wrapper = sorted(p for p in MPW_DIR.glob("*.py") if p.name not in OUTSIDE_CELL)
     prompt_files = [_harness_file(f"dataset/{dataset}.py") if dataset != "fixture" else MPW_DIR / "fixture.py",
                     _harness_file("dataset/base.py"), _harness_file("modes/rag.py"),
                     MPW_DIR / "context.py", MPW_DIR / "cell.py"]

@@ -4,7 +4,7 @@ This guide runs gbrain, and an extract-first memory server we call the comparato
 
 gbrain-evals pins the harness to one commit and wraps it in an audited cell runner. The wrapper fixes problems in the harness's own runner that would change results, and it meters every model call. A **cell** is one dataset slice, one memory system, one answer model, one delivered-context target and one budget. Its id is a hash of everything that can change the result, so a changed setting makes a new cell instead of overwriting an old one.
 
-You need Linux or macOS, [Bun](https://bun.sh/) 1.4 or newer, [uv](https://docs.astral.sh/uv/) and Git. The first install downloads about 2 GB of Python wheels (CPU-only PyTorch).
+You need Linux or macOS, [Bun](https://bun.sh/) 1.4 or newer (check with `bun --version`; `bun upgrade` updates it), [uv](https://docs.astral.sh/uv/) and Git. The first install downloads about 2.3 GB of Python wheels into uv's cache and builds a 1.6 GB environment, so allow about 4.5 GB of disk with the clone.
 
 ## 1. Install
 
@@ -25,7 +25,9 @@ bun run harness:cell run eval/harness-provider/cells/fixture-gbrain-rag.json --s
 
 This runs the real gbrain adapter end to end on a committed fixture of six short conversations and four questions. `--stub-upstream` sends every model and embedding request to a local stub that returns fixed answers, through the same metering proxy a paid run uses, against a throwaway ledger. It needs no key and spends nothing. It is a plumbing check, not benchmark evidence: the stub's answers are not real.
 
-It prints a JSON line with `"ok": true` and writes the cell under `eval/reports/harness-cells/<cell-id>/`:
+It prints a JSON line with `"ok": true`, which means the cell passed its gates: every scheduled question has a typed outcome, the delivered-context gate passed and gbrain's budget clamp did not fire. Expect `"accuracy": 0.0`: the stub answers every question with placeholder text. `spend.json` shows list-price dollars for the stub requests; they are recorded against the throwaway ledger inside the cell directory, and no provider is called.
+
+The cell is written under `eval/reports/harness-cells/<cell-id>/`:
 
 | File | What it holds |
 |---|---|
@@ -36,6 +38,10 @@ It prints a JSON line with `"ok": true` and writes the cell under `eval/reports/
 | `stages/judge/<question>.json` | The judge's typed outcome, score and requests |
 | `summary.json` | Score over the fixed question schedule, delivered-context gate, clamp check, leak check |
 | `spend.json` | Metered requests and dollars per process |
+| `proxy/` | The metering proxy's request log and the byte-exact request bodies |
+| `scorer/reverse-maps.json` | Opaque id to dataset id maps, read only by the scorer |
+| `timestamp-manifest.json` | The date provenance of every document in the cell |
+| `store/` | Each memory unit's gbrain brain (PGLite), kept so the cell can resume |
 
 On a cold clone, the time from `git clone` to this first receipt is recorded in [the measurement table below](#measured-setup-time).
 
@@ -98,4 +104,4 @@ Runs every dataset, mode and provider combination against the stub upstream (two
 
 | Date | Machine | `git clone` to first fixture receipt | Notes |
 |---|---|---|---|
-| pending | | | |
+| 2026-10-05 | Capy cloud VM, 4 vCPU AMD EPYC, 15 GiB, empty uv and Bun caches | 2 min 0 s (clone 13 s, `bun install` 5 s, `harness:setup` 60 s, fixture 42 s) | Bun upgraded from 1.3.14 to 1.4.2 beforehand (about 1 s, not counted); measured at gbrain-evals commit `d9409f7` |

@@ -180,6 +180,7 @@ class GbrainMemoryProvider(MemoryProvider):
         path = home / ".gbrain" / "config.json"
         cfg = json.loads(path.read_text())
         cfg["database_path"] = str(home / ".gbrain" / "brain.pglite")
+        cfg["self_upgrade"] = {**cfg.get("self_upgrade", {}), "mode": "off"}
         urls = {}
         if self.child_env.get("VOYAGE_BASE_URL"):
             urls["voyage"] = self.child_env["VOYAGE_BASE_URL"]
@@ -198,6 +199,7 @@ class GbrainMemoryProvider(MemoryProvider):
                   "--embedding-model", self.cfg["embedding_model"],
                   "--embedding-dimensions", str(self.cfg["embedding_dimensions"]), "--skip-embed-check")
         self._cli(template, "apply-migrations", "--yes", "--no-autopilot-install")
+        self._rewrite_config(template)
         settings = {"search.return_budget_max_remote": str(self.cfg["remote_budget_max"]),
                     **{k: str(v) for k, v in (self.cfg.get("gbrain_config") or {}).items()}}
         for key, value in settings.items():
@@ -231,8 +233,7 @@ class GbrainMemoryProvider(MemoryProvider):
                     if not create:
                         raise GbrainRetrieveError(f"no gbrain brain for user {unit!r}: refusing to search another unit's memory")
                     t0 = time.perf_counter()
-                    shutil.copytree(self.root / "_template", home, ignore=shutil.ignore_patterns("mpw-template.json"))
-                    self._rewrite_config(home)
+                    shutil.copytree(self.root / "_template", home, ignore=shutil.ignore_patterns("mpw-template.json", "home", "tmp"))
                     copy_s = time.perf_counter() - t0
                 else:
                     copy_s = 0.0
@@ -242,6 +243,7 @@ class GbrainMemoryProvider(MemoryProvider):
             if u.child is None:
                 while len(self._open) >= int(self.cfg["max_open_units"]):
                     self._close_unit(self._open[0])
+                self._rewrite_config(home)
                 t0 = time.perf_counter()
                 u.child = McpChild([self.bun, self.cli, "serve"], env=self.env_for(home), cwd=home,
                                    stderr_path=home / "serve.stderr.log").start()
