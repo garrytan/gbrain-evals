@@ -15,7 +15,7 @@
  * - `gbrain --version` from the copy prints the copy's VERSION file.
  */
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -109,11 +109,20 @@ export function prepareBuild(repo: string, spec: BuildSpec, root: string, opts: 
   const stamp = join(dir, '.lifecycle-build.json');
   const fresh = !existsSync(stamp) || JSON.parse(readFileSync(stamp, 'utf8')).tree !== tree || opts.reinstall;
   if (fresh) {
-    rmSync(dir, { recursive: true, force: true });
-    mkdirSync(dir, { recursive: true });
-    execFileSync('bash', ['-c', `git -C "${repo}" archive ${commit} | tar -x -C "${dir}"`]);
-    execFileSync('bun', ['install', '--frozen-lockfile'], { cwd: dir, stdio: 'ignore' });
-    writeFileSync(stamp, JSON.stringify({ commit, tree }) + '\n');
+    // Build in a private directory and move it into place, so concurrent processes preparing the same overlay
+    // (parallel shards or arms) never extract over each other; the first finished build wins.
+    const tmp = `${dir}.build-${process.pid}-${Date.now()}`;
+    rmSync(tmp, { recursive: true, force: true });
+    mkdirSync(tmp, { recursive: true });
+    execFileSync('bash', ['-c', `git -C "${repo}" archive ${commit} | tar -x -C "${tmp}" 2>/dev/null`], { maxBuffer: 64 * 1024 * 1024 });
+    execFileSync('bun', ['install', '--frozen-lockfile'], { cwd: tmp, stdio: 'ignore' });
+    writeFileSync(join(tmp, '.lifecycle-build.json'), JSON.stringify({ commit, tree }) + '\n');
+    const current = existsSync(stamp) && JSON.parse(readFileSync(stamp, 'utf8')).tree === tree && !opts.reinstall;
+    if (current) rmSync(tmp, { recursive: true, force: true });
+    else {
+      rmSync(dir, { recursive: true, force: true });
+      try { renameSync(tmp, dir); } catch { rmSync(tmp, { recursive: true, force: true }); if (!existsSync(stamp)) throw new Error(`overlay build for ${commit} did not land at ${dir}`); }
+    }
   }
   const version = readFileSync(join(dir, 'VERSION'), 'utf8').trim();
   const cli = spawnSync('bun', [join(dir, 'src/cli.ts'), '--version'], { encoding: 'utf8', env: { ...process.env, GBRAIN_SKIP_STARTUP_HOOKS: '1' } });

@@ -47,6 +47,7 @@ import { CHAT_PRICE_OVERRIDES, ledgerStatus } from '../budget-ledger.ts';
 import { provider } from './loop.ts';
 import { canonicalCells, gridProblems, isV2, readRecords, type CellRecordV2, type CellView } from './records.ts';
 import { HARD_STOP_KINDS, KNOB_PRIORITY, type HardStopKind } from '../../generators/hard/schema.ts';
+import { stratumOf } from '../../generators/model-ladder-gen.ts';
 
 export const BASELINES = ['fs', 'memory', 'pg'] as const;
 
@@ -90,6 +91,8 @@ export interface Analysis {
   families: string[];
   success: Record<string, Record<string, number | null>>;
   by_family: Record<string, Record<string, Record<string, number | null>>>;
+  /** Success by stratum (memory-only, page-authoring, hidden-tool), then model and arm. */
+  by_stratum: Record<string, Record<string, Record<string, number | null>>>;
   capability: Record<string, number | null>;
   advantage: Record<string, { best_baseline: string; value: number; ci95: [number, number] }>;
   pooled_advantage: { value: number; ci95: [number, number] };
@@ -185,6 +188,13 @@ export function analyze(recs: CellRecord[], opts: { boots?: number; seed?: numbe
     by_family[f] = {};
     const ft = tasks.filter(x => x.startsWith(f));
     for (const m of models) { by_family[f][m] = {}; for (const a of arms) by_family[f][m][a] = rate(t, m, a, ft); }
+  }
+  const by_stratum: Analysis['by_stratum'] = {};
+  const stratumTasks = new Map<string, Set<string>>();
+  for (const r of recs) { const k = stratumOf(r.family); if (!stratumTasks.has(k)) stratumTasks.set(k, new Set()); stratumTasks.get(k)!.add(r.task); }
+  for (const [k, ts] of [...stratumTasks].sort()) {
+    by_stratum[k] = {};
+    for (const m of models) { by_stratum[k][m] = {}; for (const a of arms) by_stratum[k][m][a] = rate(t, m, a, [...ts]); }
   }
   const capability = Object.fromEntries(models.map(m => [m, rate(t, m, 'oracle', coreTasks)]));
 
@@ -297,7 +307,7 @@ export function analyze(recs: CellRecord[], opts: { boots?: number; seed?: numbe
   }
   const ms = Object.keys(point).filter(m => capability[m] !== null);
   return {
-    models, arms, tasks, families, success, by_family, capability, advantage, pooled_advantage,
+    models, arms, tasks, families, success, by_family, by_stratum, capability, advantage, pooled_advantage,
     slope: { value: ms.length >= 2 ? slope(ms.map(m => capability[m]!), ms.map(m => point[m].value)) : NaN, ci95: ci(bootSlope), n_models: ms.length },
     family_slopes, safety, efficiency, claims, missed_evidence, cost_split, tool_chars, cells: recs.length,
     usd: recs.reduce((s, r) => s + r.total_usd + ((r as unknown as { judge_usd?: number }).judge_usd ?? 0), 0),
@@ -323,6 +333,8 @@ export function markdown(a: Analysis): string {
   for (const f of a.families) {
     L.push(`| ${f} | ${a.models.map(m => a.arms.filter(x => x !== 'fs-acl').map(x => `${x[0]}${x === 'memory' ? 'm' : ''}:${pc(a.by_family[f][m][x])}`).join(' ')).join(' | ')} | ${f2(a.family_slopes[f].value)} [${f2(a.family_slopes[f].ci95[0])}, ${f2(a.family_slopes[f].ci95[1])}] |`);
   }
+  L.push('', '| Stratum | ' + a.models.join(' | ') + ' |', '|---|' + a.models.map(() => '---').join('|') + '|');
+  for (const k of Object.keys(a.by_stratum)) L.push(`| ${k} | ${a.models.map(m => a.arms.filter(x => x !== 'fs-acl').map(x => `${x}:${pc(a.by_stratum[k][m][x])}`).join(' ')).join(' | ')} |`);
   L.push('', '| Arm | C output leaks | C context exposures | unsafe writes | unsupported claims/answer | missed evidence |', '|---|---|---|---|---|---|');
   for (const x of a.arms) L.push(`| ${x} | ${a.safety[x].output_leaks}/${a.safety[x].c_runs} | ${a.safety[x].context_exposures}/${a.safety[x].c_runs} | ${a.safety[x].unsafe_writes} | ${f2(a.claims[x].unsupported_per_answer)} | ${pc(a.missed_evidence[x])} |`);
   L.push('', '| Model | Arm | $/task | $/success | p50 s | p95 s | turns |', '|---|---|---|---|---|---|---|');

@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [0.10.24] - 2026-10-05
+## [0.10.25] - 2026-10-05
 
 ### Cat 40 Hard generator v2: records stop naming their account
 
@@ -34,6 +34,37 @@ answer key and changes how records refer to accounts. No paid call ran; round 3 
   account managers, so 4k records keep their meaning inside the 50k world.
 - **H1 set sizes.** H1 keys are computed over the 4k accounts so they match at both scales; the 261-account
   population supports at most 25 to 34 members per predicate, so round 3 keeps 10 to 40.
+
+## [0.10.24] - 2026-10-05
+
+### README describes other memory systems by kind
+
+README's "How gbrain compares" section and its changelog no longer name other memory projects; each is described by
+kind (for example "a verbatim-session memory system"). Names, versions and sources stay in
+[comparisons and their protocols](docs/comparison-systems.md), which README links. No measurement changed; $0.
+
+## [0.10.23] - 2026-10-05
+
+### Top-level docs read as the current state, with a changelog per document
+
+README, the docs index, the settings guide, retrieval lessons, the comparison page, the evaluation guide, the
+contributor guide and the credits now open with what gbrain does at the pinned commit (`739e5cc`, v0.60.46.0) and
+close with a `## Changelog` section recording how that document changed and why, one entry per commit, newest first.
+
+- **README.** Three parts: what gbrain does, current results (one table, each number with its gbrain commit and
+  report) and how gbrain compares (strict LongMemEval retrieval, answer accuracy with the same reader,
+  PrecisionMemBench, concept search, Cat 40 against files, Postgres and the memory tool), then known limits. The
+  dated "Update, October 2/3/4" blocks move to its changelog. New on the page: Cat 40 on frontier models, the
+  multi-relation planner's held-out pass (gbrain v0.60.60.0) and the held-out program.
+- **Settings and retrieval lessons.** Dated "October 4, 2026:" amendments become current statements (opaque-id
+  recount at `109b992`), a `return_unit` row and a whole-conversation delivery section are added, and the September 6
+  values move to the changelog.
+- **Comparison page.** Sentences about earlier versions of the page now state the current position; the history is
+  in its changelog.
+- **CLAUDE.md** records the shape (current state on top, a per-document changelog below), and AGENTS.md summarizes
+  it so Codex and other agents that read only AGENTS.md see it.
+
+No measurement changed; $0.
 
 ## [0.10.22] - 2026-10-05
 
@@ -86,6 +117,23 @@ $1,794).
   from round 1's measured Hard costs (2 to 5 times v1 per cell) plus the measured judge cost; a resumed step opens a
   new budget run (`--new-budget-run`) sized to the cells still missing. `knobs.round-2.json` makes H2 and H3 harder.
 
+## [0.10.22] - 2026-10-05
+
+### Mirror: gbrain's takes-bootstrap classifier did not graduate; its autopilot stays `manual_only`
+
+gbrain's first live graduation run of the takes-bootstrap eval
+([#6013](https://github.com/garrytan/gbrain/pull/6013), merge `d37fab68e`,
+v0.60.59.0; measured 2026-10-04 with Claude Haiku 4.5, $0.0935) passed 75 of
+123 pages. Fact precision was 0.714 (50 of 70), bet precision 0.545 (18 of 33),
+and hunch precision 0.750 with recall 0.667, against bars of 0.80 and 0.70,
+with 3 forbidden attributions. The autopilot tier stays `manual_only`
+([mirror](docs/benchmarks/2026-10-04-takes-bootstrap-verdict.md), with the
+upstream text copied verbatim and `verdict.json`). Nothing was rerun here, and
+gbrain committed no predictions file. The run used an older model generation,
+so TODOS asks for a rerun on current frontier models before the result is
+cited as model-independent.
+- **Version.** 0.10.21 went to #65, which merged first, so this release is 0.10.22.
+
 ## [0.10.21] - 2026-10-05
 
 ### Cat 40 on frontier models: gbrain ties plain files at the ceiling; the entity-recall wave lifts renewal briefs and cuts cost
@@ -133,6 +181,7 @@ This follows Garry's gate decisions UC1 and UC2 on the
   mention coverage through an `entity` miss, and record it beside the snapshot and in the slot receipt. A round
   refuses slots whose coverage is not `complete` with 0 pending pages; builds whose gbrain does not report coverage
   are not checked.
+
 ## [0.10.20] - 2026-10-05
 
 ### Ledger: CL-1 and CL-2 point at the merged gbrain fix
