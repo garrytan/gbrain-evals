@@ -45,6 +45,13 @@ $1,794).
   the `model-ladder-hard` registry row (tier P, report-only).
 - **Regression contract.** Tests pin the v1 world, the large manifest digest, the `score.ts` hash, v1 tool limits and
   a v1 scripted run's scores against a fixture recorded from the previous runner.
+- **After calibration round 1 (2026-10-05).** Both oracle models missed the same account on two H1 tasks: a renamed
+  account's ticket written after the rename still used the old name, and the H1 evidence lacked the rename notice.
+  Records written on or after a rename now use the new name, H1 evidence carries rename and merger notices, a merged
+  account's tickets count for the account it merged into, and H1 predicates that turn on a date boundary are not
+  drawn ([calibration.md](docs/benchmarks/cat40-hard/calibration.md)). Projections now go per model, arm and family
+  from round 1's measured Hard costs (2 to 5 times v1 per cell) plus the measured judge cost; a resumed step opens a
+  new budget run (`--new-budget-run`) sized to the cells still missing. `knobs.round-2.json` makes H2 and H3 harder.
 
 ## [0.10.21] - 2026-10-05
 

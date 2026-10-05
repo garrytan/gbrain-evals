@@ -272,7 +272,7 @@ export function scheduleCells(o: { tasks: LadderTask[]; models: string[]; arms: 
 // ─── Experiment identity of an output directory ─────────────────────
 
 /** Flags that set money, not the experiment: a resume may change them. */
-const BUDGET_FLAGS = new Set(['--budget-usd', '--estimate-usd', '--budget-run-id']);
+const BUDGET_FLAGS = new Set(['--budget-usd', '--estimate-usd', '--budget-run-id', '--new-budget-run']);
 
 export interface ExperimentManifest {
   schema: 'cat40-experiment-v1';
@@ -284,8 +284,10 @@ export interface ExperimentManifest {
   label: string;
   /** Every flag except the budget flags, as given. */
   flags: Record<string, string | true>;
-  /** The budget-ledger run every invocation on this directory charges (a resume joins it). */
+  /** The budget-ledger run every invocation on this directory charges (a resume joins it, unless `--new-budget-run`). */
   budget_run_id: string | null;
+  /** Every budget run this directory has charged, oldest first, once a resume opened a new one (`--new-budget-run`). */
+  budget_runs?: string[];
   /** Hard worlds: identity, behavior settings and the evaluator's code hashes (DX-F14); a resume must match them. */
   hard?: { identity: ReturnType<typeof identityOf>; max_turns: number; tool_limits: string; judge: string | null; scorer: string; judge_prompt: string; settings_digest: string; code: Record<string, string>; runner_commit: string | null };
 }
@@ -310,7 +312,7 @@ export function experimentFlags(argv: readonly string[]): Record<string, string 
  * experiment is refused: give a changed build its own --out.
  */
 export function bindExperiment<T extends { run: BudgetRun; guard: PaidRequestGuard }>(
-  out: string, manifest: Omit<ExperimentManifest, 'schema' | 'budget_run_id'>, start: (recordedRunId: string | null) => T | null,
+  out: string, manifest: Omit<ExperimentManifest, 'schema' | 'budget_run_id' | 'budget_runs'>, start: (recordedRunId: string | null) => T | null, opts: { newBudgetRun?: boolean } = {},
 ): { paid: T | null; manifest: ExperimentManifest } {
   const path = join(out, 'experiment.json');
   const recorded = existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) as ExperimentManifest : null;
@@ -322,8 +324,11 @@ export function bindExperiment<T extends { run: BudgetRun; guard: PaidRequestGua
         + 'A resume must repeat the original command except for budget flags; a changed build, world or flag set needs a new --out.');
     }
   }
-  const paid = start(recorded?.budget_run_id ?? null);
-  const bound: ExperimentManifest = { schema: 'cat40-experiment-v1', ...manifest, budget_run_id: paid?.run.runId ?? recorded?.budget_run_id ?? null };
+  // --new-budget-run: a resume whose recorded run is spent opens a fresh run (a new --budget-usd) and keeps the history.
+  const paid = start(opts.newBudgetRun ? null : recorded?.budget_run_id ?? null);
+  const runId = paid?.run.runId ?? recorded?.budget_run_id ?? null;
+  const history = [...new Set([...(recorded?.budget_runs ?? (recorded?.budget_run_id ? [recorded.budget_run_id] : [])), ...(runId ? [runId] : [])])];
+  const bound: ExperimentManifest = { schema: 'cat40-experiment-v1', ...manifest, budget_run_id: runId, ...(history.length > 1 ? { budget_runs: history } : {}) };
   mkdirSync(out, { recursive: true });
   writeFileSync(path, JSON.stringify(bound, null, 2) + '\n');
   return { paid, manifest: bound };
@@ -363,7 +368,7 @@ export function incompleteSlotCoverage(dir: string, n: number): { problems: stri
 export const VALUE_FLAGS = ['--arms', '--models', '--families', '--tasks', '--repeat', '--concurrency', '--slots', '--gbrain-repo', '--gbrain-ref', '--gbrain-root', '--gbrain-label', '--judge', '--world', '--out',
   '--max-tool-chars', '--order', '--slot-ref', '--surface', '--gbrain-instructions-file', '--gbrain-tool-descriptions-file', '--gbrain-drop-tools', '--gbrain-config', '--slot-build-allowance-usd',
   '--budget-usd', '--estimate-usd', '--budget-run-id', '--budget-ledger', '--program-cap-usd', '--max-turns', '--per-family', '--hard-tool-limits', '--accept-freeze-drift', '--step'];
-export const BOOLEAN_FLAGS = ['--scripted', '--build-slots', '--rebuild', '--no-pglite-analyze', '--transcripts', '--preflight', '--help'];
+export const BOOLEAN_FLAGS = ['--scripted', '--build-slots', '--rebuild', '--no-pglite-analyze', '--transcripts', '--preflight', '--help', '--new-budget-run'];
 const NUMERIC_FLAGS = new Set(['--repeat', '--concurrency', '--slots', '--slot-build-allowance-usd', '--budget-usd', '--estimate-usd', '--program-cap-usd', '--max-turns', '--per-family']);
 
 export const RUNNER_USAGE = `Usage: bun eval/runner/cat40-model-ladder.ts [flags]
@@ -422,7 +427,10 @@ export async function main(argv = process.argv.slice(2)) {
   if (order !== 'task' && order !== 'model') throw new Error('--order must be task or model');
   const perFamily = flag(argv, '--per-family') ? Number(flag(argv, '--per-family')) : null;
   const allTasks = (world.tasks as Array<LadderTask | HardTask>).filter(t => families.includes(t.family as Family) && (!only || only.includes(t.id)));
-  const tasks = (perFamily === null ? allTasks : allTasks.filter(t => allTasks.filter(x => x.family === t.family).indexOf(t) < perFamily)) as LadderTask[];
+  const picked = perFamily === null ? allTasks : allTasks.filter(t => allTasks.filter(x => x.family === t.family).indexOf(t) < perFamily);
+  // Hard cells run families round-robin (H1-01, H2-01, ..., H5-01, H1-02, ...), so a step cut short by its budget still covers every family.
+  const rank = (t: LadderTask | HardTask) => picked.filter(x => x.family === t.family).indexOf(t);
+  const tasks = (hard ? [...picked].sort((x, y) => rank(x) - rank(y) || x.family.localeCompare(y.family)) : picked) as LadderTask[];
   if (!tasks.length && !buildSlots) throw new UsageError('the task selection is empty (check --families, --tasks and --per-family)');
   const out = resolve(flag(argv, '--out') ?? join('eval/reports/cat40', scripted ? 'scripted' : new Date().toISOString().replace(/[:.]/g, '-')));
   const hw = hard ? raw : null;
@@ -516,14 +524,16 @@ export async function main(argv = process.argv.slice(2)) {
     runner_commit: (() => { try { return execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(); } catch { return null; } })(),
   } : undefined;
   if (argv.includes('--preflight')) {
-    printPreflight({ hw, world, models, arms, cells: cells.length, judge, maxTurns, toolLimits, needsGbrain, slotDir, nSlots, step: flag(argv, '--step'), scripted });
+    const perFam = Math.max(0, ...families.map(f => tasks.filter(t => t.family === f).length));
+    printPreflight({ hw, world, models, arms, cells: cells.length, judge, maxTurns, toolLimits, needsGbrain, slotDir, nSlots, step: flag(argv, '--step'), scripted, families: families.filter(f => tasks.some(t => t.family === f)), tasksPerFamily: perFam, repeats, done: hardAttempts as unknown as Array<Record<string, unknown>> });
     return;
   }
 
   const options = budgetOptionsFrom(argv);
   const estimateUsd = flag(argv, '--estimate-usd') ? Number(flag(argv, '--estimate-usd')) : null;
   const { paid: budget } = bindExperiment(out, { gbrain_commit: gbrainCommit, slot_commit: slotCommit, world_digest: worldDigest(world), models, arms, label: ctx.gbrainLabel, flags: experimentFlags(argv), ...(hardManifest ? { hard: hardManifest } : {}) },
-    recorded => scripted ? null : startPaidRun(buildSlots ? 'cat40-slot-build' : 'cat40-model-ladder', { ...options, runId: recorded ?? options.runId, estimateUsd, log }));
+    recorded => scripted ? null : startPaidRun(buildSlots ? 'cat40-slot-build' : 'cat40-model-ladder', { ...options, runId: recorded ?? options.runId, estimateUsd, log }),
+    { newBudgetRun: argv.includes('--new-budget-run') });
   ctx.budgetRunId = budget?.run.runId ?? null;
   if (budget?.run.participant) log(`resumed: joined the recorded budget run ${budget.run.runId}`);
 
@@ -627,6 +637,13 @@ export async function main(argv = process.argv.slice(2)) {
       complete = buildSlots || finished === cells.length;
       if (!complete) log(`${cells.length - finished} cells failed; rerun the same command to resume them within the same budget run`);
     }
+  } catch (e) {
+    if (hw && (e as Error).name === 'BudgetExceededError') {
+      throw new HardStop('HARD_BUDGET_SHORT', `${relative(process.cwd(), out)} stopped when its budget run was spent: ${(e as Error).message.slice(0, 300)}`,
+        'project the remaining cells (hard-ops.ts project --step <step> --done <out>/attempts.jsonl) and resume with the same command plus --new-budget-run and a new --budget-usd; scripts/cat40-hard.sh step <step> does both',
+        'Garry decides only if the Hard ledger has less left than the remaining projection plus 15%');
+    }
+    throw e;
   } finally {
     terminateGrepWorkers();
     if (ctx.pool) await Promise.all(ctx.pool.slots.map(s => s.stop()));
@@ -659,12 +676,12 @@ export async function main(argv = process.argv.slice(2)) {
   }
   if (hw && !buildSlots && !complete) {
     throw new HardStop('HARD_CELLS_INCOMPLETE', `${relative(process.cwd(), out)}: some planned cells lack a harness-clean attempt`,
-      `rerun the same command to resume (it joins the same budget run): bun eval/runner/cat40-model-ladder.ts ${argv.map(a => (/^[\w./:=,@+-]+$/.test(a) ? a : JSON.stringify(a))).join(' ')}`);
+      `rerun the same command to resume (it joins the same budget run; add --new-budget-run with a new --budget-usd if that run is spent): bun eval/runner/cat40-model-ladder.ts ${argv.map(a => (/^[\w./:=,@+-]+$/.test(a) ? a : JSON.stringify(a))).join(' ')}`);
   }
 }
 
 /** --preflight: everything a paid step needs, with no paid call (DX-F13). */
-function printPreflight(o: { hw: HardWorld | null; world: LadderWorld; models: string[]; arms: string[]; cells: number; judge: string | null; maxTurns?: number; toolLimits: string; needsGbrain: boolean; slotDir: string | null; nSlots: number; step?: string; scripted: boolean }) {
+function printPreflight(o: { hw: HardWorld | null; world: LadderWorld; models: string[]; arms: string[]; cells: number; judge: string | null; maxTurns?: number; toolLimits: string; needsGbrain: boolean; slotDir: string | null; nSlots: number; step?: string; scripted: boolean; families: string[]; tasksPerFamily: number; repeats: number; done: Array<Record<string, unknown>> }) {
   const keyOf = (m: string) => { try { return provider(m) === 'anthropic' ? 'ANTHROPIC_API_KEY' : 'OPENAI_API_KEY'; } catch { return '(unknown provider)'; } };
   const env: Record<string, string[]> = {};
   for (const a of o.arms) env[a] = [...new Set([...(o.scripted ? [] : o.models.map(keyOf)), ...(a === 'pg' || a === 'gbrain' ? ['OPENAI_API_KEY (embeddings)'] : [])])];
@@ -682,10 +699,10 @@ function printPreflight(o: { hw: HardWorld | null; world: LadderWorld; models: s
       const r = checkRoster(loadRoster());
       lines.push(`Hard ledger ${relative(process.cwd(), r.hardLedger)}: cap $${r.capUsd.toFixed(2)} (roster), committed $${r.committedUsd.toFixed(2)}, remaining $${r.remainingUsd.toFixed(2)}`);
       if (o.step) {
-        const plan: StepPlan = { step: o.step, order: 0, models: o.models, arms: o.arms, tasksPerFamily: 0, repeats: 1, scale: o.hw.scale ?? 'v1' };
+        const plan: StepPlan = { step: o.step, order: 0, models: o.models, arms: o.arms, tasksPerFamily: o.tasksPerFamily, families: o.families, repeats: o.repeats, scale: o.hw.scale ?? 'v1' };
         const measured = (process.env.HARD_MEASURED ?? '').split(',').filter(Boolean);
         const views = measured.length ? canonicalCells(readRecords(measured)).attempts : undefined;
-        const p = project({ ...plan, tasksPerFamily: o.cells / Math.max(1, o.models.length * o.arms.length) / 5 }, { basis: loadCostBasis(), measured: views });
+        const p = project(plan, { basis: loadCostBasis(), measured: views, done: canonicalCells(o.done).attempts });
         lines.push(`projection for ${o.step}: $${p.total_usd.toFixed(2)} ($${p.with_margin_usd.toFixed(2)} with 15%), basis ${p.basis}`);
         if (r.remainingUsd < p.with_margin_usd) stop = new HardStop('HARD_BUDGET_SHORT', `step ${o.step} projects $${p.with_margin_usd.toFixed(2)} with the margin; $${r.remainingUsd.toFixed(2)} remains`, 'do not raise the cap yourself', 'Garry decides whether to fund, narrow or stop the step');
       }

@@ -18,7 +18,7 @@ import {
 } from '../../eval/generators/hard/schema.ts';
 import { eventAsOf, valueAsOf, correctionOf, statedValue, nameRegistry, evaluatePredicate, type ValueEvent, type PredicateFacts } from '../../eval/generators/hard/semantics.ts';
 import { hardWorldProblems } from '../../eval/generators/hard/validate.ts';
-import { generateHardWorld, buildHardLedger, hardWorldDigest, h5Resolve, aliasesOf, HARD_SIZE } from '../../eval/generators/model-ladder-hard.ts';
+import { generateHardWorld, buildHardLedger, hardWorldDigest, h5Resolve, aliasesOf, onEdge, loadKnobs, HARD_SIZE } from '../../eval/generators/model-ladder-hard.ts';
 import { generateLadderWorld, worldDigest } from '../../eval/generators/model-ladder-gen.ts';
 import { scoreHardTask, parseCount, parseSet, coerceAnswer } from '../../eval/runner/cat40/score-hard.ts';
 import { hardJudgePrompt, parseHardClaims, judgeHardClaims, HARD_JUDGE_PROMPT_VERSION } from '../../eval/runner/cat40/judge-hard.ts';
@@ -28,7 +28,7 @@ import {
 import { project, stepPlan, loadCostBasis, checkRoster, budgetCheck, STEPS } from '../../eval/runner/cat40/hard-ops.ts';
 import { runAgent, ProviderError, HarnessError, type Arm, type AgentRun } from '../../eval/runner/cat40/loop.ts';
 import { OracleArm, FsArm, FileStore } from '../../eval/runner/cat40/arms.ts';
-import { main, checkRunnerFlags, experimentFlags } from '../../eval/runner/cat40-model-ladder.ts';
+import { main, checkRunnerFlags, experimentFlags, bindExperiment } from '../../eval/runner/cat40-model-ladder.ts';
 import { assertScorerRejectsFakeSystems } from '../../eval/runner/mutation-kit.ts';
 import { canonicalCells, readRecords, type CellRecordV2 } from '../../eval/runner/cat40/records.ts';
 import { closeLedgers, initLedger } from '../../eval/runner/budget-ledger.ts';
@@ -55,6 +55,12 @@ describe('world contract and knobs (DX-F2, DX-F14)', () => {
     expect(() => validateKnobs({ ...DEFAULT_HARD_KNOBS, h1_min_members: 'ten' })).toThrow('h1_min_members must be a number');
     expect(() => validateKnobs({ ...DEFAULT_HARD_KNOBS, h2_correction_rate: 2 })).toThrow('fraction');
     expect(validateKnobs(JSON.parse(readFileSync(join(ROOT, 'docs/benchmarks/cat40-hard/knobs.default.json'), 'utf8')))).toEqual(DEFAULT_HARD_KNOBS);
+    for (const r of [1, 2]) {
+      const k = loadKnobs(join(ROOT, `docs/benchmarks/cat40-hard/knobs.round-${r}.json`));
+      expect(k.max_turns).toBe(16);
+      const w = generateHardWorld(CAL, k);
+      expect(hardWorldProblems(w)).toEqual([]);
+    }
   });
   test('the knob digest is order-independent and changes with any value; the world records knobs, schema version and turn cap', () => {
     const shuffled = Object.fromEntries(Object.entries(DEFAULT_HARD_KNOBS).reverse()) as unknown as HardKnobs;
@@ -132,6 +138,61 @@ describe('generator (T1, CEO-F1, CEO-F12, CEO-F29, ENG-F14, ENG-F15, ENG-F17)', 
     expect(aliasesOf(merged)).toContain(merged.mergedIn[0].name);
     expect(world.entities.find(e => e.id === merged.id)!.aliases).toContain(merged.mergedIn[0].code);
     expect(world.entities.some(e => e.name === merged.mergedIn[0].name)).toBe(false);
+  });
+  test('round-1 defect (H1-05, H1-10): a renamed account\'s records after the rename use the new name, earlier ones the old, and H1 evidence carries the rename notice', () => {
+    const b = buildHardLedger(CAL, DEFAULT_HARD_KNOBS);
+    const byId = new Map(world.docs.map(d => [d.id, d]));
+    for (const a of b.accounts.filter(x => x.former)) {
+      for (const id of a.docIds) {
+        const d = byId.get(id);
+        if (!d) continue;
+        const text = d.title + d.body;
+        if (d.date >= a.former!.date) { expect(text).not.toContain(a.former!.name); expect(text).not.toMatch(new RegExp(`\\b${a.former!.code}\\b`)); }
+        else expect(text).not.toContain(a.name);
+      }
+    }
+    // Fixture: a ticket opened after the rename names the account by its new name (the round-1 H1-05/H1-10 miss named the old one).
+    const renamed = b.accounts.find(a => a.former && a.tickets.some(t => t.opened >= a.former!.date));
+    if (renamed) { const t = renamed.tickets.find(x => x.opened >= renamed.former!.date)!; expect(byId.get(t.doc)!.body).toContain(`Customer: ${renamed.name}`); }
+    // Every H1 member's deciding records name it in a way the oracle evidence can resolve: canonical name or code, or an
+    // alias whose rename or merger notice is in the evidence too.
+    for (const w of [world, generateHardWorld(SMOKE)]) {
+      const bw = w === world ? b : buildHardLedger(SMOKE, DEFAULT_HARD_KNOBS);
+      const docs = new Map(w.docs.map(d => [d.id, d]));
+      for (const t of w.tasks.filter(x => x.family === 'H1')) {
+        const memberIds = t.gold.members?.map(m => m.id) ?? evaluatePredicate(t.predicate!, bw.facts()).members;
+        for (const id of memberIds) {
+          const a = bw.accounts.find(x => x.id === id)!;
+          const links = [a.former?.doc, ...a.mergedIn.map(m => m.doc)].filter(Boolean) as string[];
+          for (const l of links) expect(t.relevant).toContain(l);
+          const kinds = t.predicate!.clauses.map(c => c.kind);
+          for (const doc of [...(kinds.includes('open_escalated_ticket') ? a.tickets.map(x => x.doc) : []), ...(kinds.includes('renewal_within') ? a.renewal.map(e => e.doc) : []), ...(kinds.includes('owner') ? a.owner.map(e => e.doc) : [])]) {
+            expect(t.relevant).toContain(doc);
+            const body = docs.get(doc)!.body;
+            expect([a.name, a.code, ...aliasesOf(a)].some(n => body.includes(n))).toBe(true);
+          }
+        }
+      }
+    }
+  });
+  test('a merged account\'s tickets count for the account it merged into (its names map to one entity), and its contract carries that account\'s renewal date', () => {
+    const b = buildHardLedger(CAL, DEFAULT_HARD_KNOBS);
+    for (const holder of b.accounts.filter(a => a.mergedIn.length)) {
+      const merged = b.accounts.find(a => a.mergedInto === holder.id)!;
+      for (const t of merged.tickets) expect(holder.tickets).toContain(t);
+      expect(merged.renewal).toEqual([{ ...merged.renewal[0], value: holder.renewal[0].value }]);
+      expect(b.facts().some(f => f.id === merged.id)).toBe(false);
+    }
+  });
+  test('no H1 member turns on a boundary: no owner change or ticket event on the as-of date, no renewal on a window edge, for an account holding the other clauses', () => {
+    for (const seed of [CAL, SMOKE]) {
+      const b = buildHardLedger(seed, DEFAULT_HARD_KNOBS);
+      for (const t of b.tasks.filter(x => x.family === 'H1')) expect(onEdge(t.predicate!, b.facts())).toBe(false);
+    }
+    const ev = (value: string, effective: string): ValueEvent => ({ value, effective, recorded: effective, doc: 'd', kind: 'change' });
+    const f: PredicateFacts = { id: 'a', segment: 'growth', region: 'EMEA', owner: [ev('Ana', '2025-01-01')], renewal: [ev('2026-11-14', '2025-01-01')], tickets: [{ opened: '2026-08-01', escalated: '2026-08-02' }] };
+    expect(onEdge({ as_of: '2026-09-15', clauses: [{ kind: 'open_escalated_ticket' }, { kind: 'renewal_within', days: 60 }] }, [f])).toBe(true);
+    expect(onEdge({ as_of: '2026-09-15', clauses: [{ kind: 'open_escalated_ticket' }, { kind: 'renewal_within', days: 90 }] }, [f])).toBe(false);
   });
   test('H5: removing each required earlier statement changes or voids the answer; each final answer depends on two sessions and one superseded fact', () => {
     for (const t of byFamily('H5')) {
@@ -338,6 +399,12 @@ describe('runner (T1, T2, T6: CEO-F3, CEO-F12, DX-F3, DX-F7, ENG-F1, ENG-F2, ENG
     expect(Object.keys(ex.hard.code)).toContain('eval/runner/cat40/score-hard.ts');
     void capped;
   });
+  test('Hard cells run families round-robin, so a step cut short by its budget still covers every family', async () => {
+    const out = tmp();
+    await main(['--scripted', '--world', writeWorld(world), '--arms', 'oracle', '--per-family', '2', '--out', out]);
+    const order = readFileSync(join(out, 'results.jsonl'), 'utf8').split('\n').filter(Boolean).map(l => (JSON.parse(l) as CellRecordV2).task);
+    expect(order).toEqual(['H1-01', 'H2-01', 'H3-01', 'H4-01', 'H5-01', 'H1-02', 'H2-02', 'H3-02', 'H4-02', 'H5-02']);
+  });
   test('the turn cap comes from --max-turns or the world: a 1-turn cap stops a two-step agent at turn_cap', async () => {
     const out = tmp();
     await main(['--scripted', '--world', writeWorld(world), '--arms', 'fs', '--families', 'H2', '--per-family', '1', '--max-turns', '1', '--out', out]);
@@ -440,30 +507,54 @@ describe('operator tools (T1, T3, T5, T11: DX-F1, DX-F4, DX-F7, DX-F13, CEO-F4, 
     }
     expect(sh('bash', ['scripts/cat40-hard.sh', 'step', 'nope']).code).toBe(3);
   });
-  test('projections: round 1 from v1 per-cell costs x 1.8; measured Hard costs replace them; 50k scales measured 4k costs', () => {
+  test('projections: per model, arm and family, from v1 cost x the measured Hard factor plus the measured judge; measured cells replace them; done cells are not projected; 50k scales 4k measurements', () => {
     const basis = loadCostBasis();
     const p1 = project(stepPlan('calibrate'), { basis });
     expect(p1.cells).toBe(300);
-    expect(p1.agent_usd).toBeCloseTo(50 * 1.8 * (0.055 + 0.0351 + 0.0102 + 0.1126 + 0.0889 + 0.0162), 6);
-    const measured = [{ key: 'claude-sonnet-5-5|fs|H1-01|0', model: 'claude-sonnet-5-5', arm: 'fs', total_usd: 0.5, judge_usd: 0.1, harness_clean: true }] as never;
-    expect(project(stepPlan('calibrate'), { basis, measured }).rows.find(r => r.model === 'claude-sonnet-5-5' && r.arm === 'fs')!.per_cell_usd).toBeCloseTo(0.6);
-    expect(project(stepPlan('cells-50k'), { basis, measured }).rows.find(r => r.model === 'claude-sonnet-5-5' && r.arm === 'fs')!.per_cell_usd).toBeCloseTo(0.6 * 1.8);
+    const fam = ['H1', 'H2', 'H3', 'H4', 'H5'];
+    const expected = ['claude-sonnet-5-5', 'gpt-6-astra'].flatMap(m => ['oracle', 'fs', 'pg'].flatMap(a => fam.map(f => 10 * (basis.v1_per_cell_usd[m][a] * basis.hard_factor_by_arm_family[a][f] + basis.judge_per_cell_usd_by_family[f]))));
+    expect(p1.total_usd).toBeCloseTo(expected.reduce((x, y) => x + y, 0), 6);
+    expect(project({ ...stepPlan('simple-4k'), models: ['claude-sonnet-5-5'], arms: ['memory'] }, { basis }).agent_usd).toBeCloseTo(20 * fam.reduce((t, f) => t + basis.v1_per_cell_usd['claude-sonnet-5-5'].memory * basis.hard_factor_by_arm_family.fs[f], 0), 6);
+    const cell = (task: string, family: string, total: number, judge: number) => ({ key: `claude-sonnet-5-5|fs|${task}|0`, model: 'claude-sonnet-5-5', arm: 'fs', family, total_usd: total, judge_usd: judge, harness_clean: true });
+    const measured = [cell('H1-01', 'H1', 0.5, 0.1)] as never;
+    const sonnetFs = (p: ReturnType<typeof project>) => p.rows.find(r => r.model === 'claude-sonnet-5-5' && r.arm === 'fs')!;
+    const withH1 = project({ ...stepPlan('calibrate'), families: ['H1'] }, { basis, measured });
+    expect(sonnetFs(withH1).per_cell_usd).toBeCloseTo(0.6);
+    expect(sonnetFs(project({ ...stepPlan('cells-50k'), families: ['H1'] }, { basis, measured })).per_cell_usd).toBeCloseTo(0.6 * 1.8);
+    const done = Array.from({ length: 4 }, (_, i) => cell(`H1-0${i + 1}`, 'H1', 0.5, 0)) as never;
+    expect(sonnetFs(project({ ...stepPlan('calibrate'), families: ['H1'] }, { basis, done })).cells).toBe(6);
     expect(() => budgetCheck(10, p1)).toThrow('HARD_BUDGET_SHORT');
     expect(STEPS.filter(s => !s.free).every(s => s.step)).toBe(true);
+  });
+  test('a resume can open a fresh budget run (--new-budget-run) and keeps the run history; it is a budget flag, not part of the identity', () => {
+    const out = tmp();
+    const run = (id: string) => ({ run: { runId: id }, guard: {} }) as never;
+    const manifest = { gbrain_commit: null, slot_commit: null, world_digest: 'w', models: ['m'], arms: ['fs'], label: 'g', flags: {} };
+    bindExperiment(out, manifest, () => run('r1'));
+    const joined: Array<string | null> = [];
+    bindExperiment(out, manifest, rec => { joined.push(rec); return run('r1'); });
+    expect(joined).toEqual(['r1']);
+    const fresh = bindExperiment(out, manifest, rec => { joined.push(rec); return run('r2'); }, { newBudgetRun: true });
+    expect(joined).toEqual(['r1', null]);
+    expect(fresh.manifest).toMatchObject({ budget_run_id: 'r2', budget_runs: ['r1', 'r2'] });
+    expect(experimentFlags(['--new-budget-run', '--per-family', '10'])).toEqual({ '--per-family': '10' });
+    expect(() => checkRunnerFlags(['--new-budget-run'])).not.toThrow();
   });
   test('ledger roster: allocations within the $4,350 authorization; the Hard ledger opens at $1,794; a missing or different ledger refuses', () => {
     const roster = JSON.parse(readFileSync(join(ROOT, 'docs/benchmarks/cat40-hard/ledger-roster.json'), 'utf8'));
     expect(roster.authorization_usd).toBe(4350);
     expect(roster.ledgers.find((l: { hard?: boolean }) => l.hard).allocation_usd).toBe(1794);
     expect(roster.ledgers.find((l: { hard?: boolean }) => l.hard).path).toBe('.budget/cat40-hard.sqlite');
+    const followupsCap = roster.ledgers.find((l: { path: string | null }) => l.path === '.budget/cat40-followups.sqlite').allocation_usd;
+    expect(roster.ledgers.reduce((t: number, l: { allocation_usd: number }) => t + l.allocation_usd, 0)).toBeLessThanOrEqual(4350);
     const d = tmp();
     expect(() => checkRoster(roster, d)).toThrow('HARD_LEDGER_ROSTER');
-    initLedger({ ledgerPath: join(d, '.budget/cat40-followups.sqlite'), programCapUsd: 792.69, reason: 'test' });
+    initLedger({ ledgerPath: join(d, '.budget/cat40-followups.sqlite'), programCapUsd: followupsCap, reason: 'test' });
     initLedger({ ledgerPath: join(d, '.budget/cat40-hard.sqlite'), programCapUsd: 1794, reason: 'test' });
     expect(checkRoster(roster, d)).toMatchObject({ capUsd: 1794, remainingUsd: 1794 });
     closeLedgers();
     const d2 = tmp();
-    initLedger({ ledgerPath: join(d2, '.budget/cat40-followups.sqlite'), programCapUsd: 792.69, reason: 'test' });
+    initLedger({ ledgerPath: join(d2, '.budget/cat40-followups.sqlite'), programCapUsd: followupsCap, reason: 'test' });
     initLedger({ ledgerPath: join(d2, '.budget/cat40-hard.sqlite'), programCapUsd: 3000, reason: 'test' });
     expect(() => checkRoster(roster, d2)).toThrow('records a cap of $3000.00');
   });

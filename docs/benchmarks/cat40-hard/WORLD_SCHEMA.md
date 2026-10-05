@@ -54,7 +54,7 @@ Other fields:
 
 ### What each family must contain
 
-- **H1, many records.** A set or count over 10 to 40 accounts, from a predicate over owners, open escalated tickets, renewal dates, segments and regions, as of a date. The key is `evaluatePredicate` over the generator's ledger. Oracle evidence holds every member's deciding records and the near misses' records, capped in seeded order.
+- **H1, many records.** A set or count over 10 to 40 accounts, from a predicate over owners, open escalated tickets, renewal dates, segments and regions, as of a date. The key is `evaluatePredicate` over the generator's ledger. Oracle evidence holds every member's deciding records and the near misses' records, capped in seeded order, plus the rename or merger notice of any of them whose records use more than one name. No predicate turns on a boundary a reader could take either way (an event on the as-of date, a renewal on a window edge).
 - **H2, long histories.** One attribute that changes 3 to 6 times with reversals, backdated corrections and effective dates that differ from signing dates, asked as of a date. Oracle evidence holds the attribute's full dated history.
 - **H3, look-alikes.** Accounts sharing a first word or a code prefix, a renamed account or a merged account. The question names only the ambiguous name and one fact that has to be looked up. Oracle evidence holds the disambiguating record and the look-alikes' records.
 - **H4, authority.** 3 to 5 documents that disagree: executed contract and amendments, draft amendment, email summary and agent note. Some deciding documents are long, with the deciding line mid-document.
@@ -70,7 +70,8 @@ These rules decide every answer key, and the Hard system prompt states them to e
 4. A correction replaces the corrected value from that value's effective date: it carries the corrected value's effective date and a later recorded date. Two values with the same effective date resolve to the later recorded one.
 5. Authority: an executed contract or executed amendment outranks a draft amendment, which outranks an email summary, which outranks an agent note. Between two executed documents the later effective date wins.
 6. A user statement in an H5 chain outranks documents, and a later statement outranks an earlier one.
-7. Every name, code, former name and merged name maps to exactly one entity id, at both scales.
+7. Every name, code, former name and merged name maps to exactly one entity id, at both scales. A merged account's records (its tickets, for example) are the entity's records.
+8. Records an account writes on or after its rename date use the new name and code; earlier records keep the old ones. The rename or merger notice is the document that links the names.
 
 ## Invariants (`validate.ts`)
 

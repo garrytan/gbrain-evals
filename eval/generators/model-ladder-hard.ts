@@ -93,6 +93,8 @@ export interface HardAccount {
   role: string;
   /** Name of the account's random streams; stable when other accounts are added or removed. */
   stream: string;
+  /** Documents written about the account by its own timelines (handoffs, tickets, routine mail and meetings, notes). */
+  docIds: string[];
   /** The executed contract is a planted long document (H4), so the standard contract is not rendered. */
   customContract?: boolean;
 }
@@ -212,11 +214,13 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
     const a: HardAccount = {
       id, slug: slugify(name), base, name, code, mergedIn: [], segment: rng.pick(R.SEGMENTS), region: rng.pick(R.REGIONS),
       champion: person(rng, large), billing: person(rng, large), signed, owner: [], renewal: [], terms: { seats: [], payment_terms: [], liability_cap: [], uptime_sla: [] },
-      tickets: [], contractDoc: '', crmDoc: '', large, role: o.role, stream: streamKey,
+      tickets: [], contractDoc: '', crmDoc: '', large, role: o.role, stream: streamKey, docIds: [],
     };
     a.contractDoc = `contracts/${a.slug}-msa`;
     a.crmDoc = `crm/${a.slug}`;
+    const mark = docs.length;
     populate(a, rng);
+    a.docIds = docs.slice(mark).map(d => d.id);
     (large ? appended : accounts).push(a);
     return a;
   };
@@ -409,6 +413,11 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
         body: () => `From: legal@acme-example\nDate: ${md}\nSubject: ${target.name} has merged into ${holder.name}\n\nEffective ${md}, ${target.name} (account code ${target.code}) is part of ${holder.name}. The ${target.name} agreement is consolidated into the ${holder.name} Master Services Agreement, whose terms, owner and renewal date now govern both. ${holder.name} keeps both names, and code ${target.code} now refers to ${holder.name}.` });
       target.mergedInto = holder.id;
       holder.mergedIn.push({ name: target.name, code: target.code, date: md, doc });
+      // One entity, one set of facts: the merged account's names map to the holder, so its tickets are the holder's
+      // tickets, and its contract carries the holder's renewal date (its own renewal amendment is not written).
+      holder.tickets.push(...target.tickets);
+      for (const e of target.renewal.filter(e => e.kind !== 'initial')) { const i = docs.findIndex(d => d.id === e.doc); if (i >= 0) { ids.delete(docs[i].id); docs.splice(i, 1); } }
+      target.renewal = [{ ...target.renewal[0], value: holder.renewal[0].value }];
       wrongExtra.push(nowValue(target, attr));
       relevant.push(doc, target.contractDoc, target.crmDoc);
       evidence.push(doc, target.contractDoc);
@@ -477,6 +486,20 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
     h3Targets.push({ task: i, base: ambiguous, prefix, champion: target.champion, variant, accountId: holder.id });
     tasks.push({ id: taskId('H3', i), family: 'H3', variant: `${variant}:${attr}`, answer_kind: 'value', accounts: [holder.id], question,
       gold: { answer: [gold], wrong, evidence: [...new Set(evidence)] }, relevant: [...new Set(relevant)] });
+  }
+
+  // Records written on or after a rename use the new name and code (the rename announcement says so); earlier ones keep the old.
+  for (const a of accounts.filter(x => x.former)) {
+    const f = a.former!;
+    const esc = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const oldBase = f.name.split(' ')[0], newBase = a.name.split(' ')[0];
+    const subst = (text: string) => text.replace(new RegExp(esc(f.name), 'g'), a.name).replace(new RegExp(`\\b${esc(f.code)}\\b`, 'g'), a.code).replace(new RegExp(`\\b${esc(oldBase)}\\b`, 'g'), newBase);
+    for (const d of docs) {
+      if (!a.docIds.includes(d.id) || d.date < f.date) continue;
+      const orig = d.body;
+      d.title = subst(d.title);
+      d.body = () => subst(typeof orig === 'function' ? orig() : orig);
+    }
   }
 
   // ─── H4: conflicting sources by authority ─────────────────────────
@@ -636,7 +659,7 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
         : { clauses: [{ kind: 'region', region: reg }, { kind: 'renewal_within', days }], kind: 'count', q: `How many ${reg} accounts had a contract renewal date within ${days} days of ${asOf}?` };
       const p: H1Predicate = { as_of: asOf, clauses: spec.clauses };
       const r = evaluatePredicate(p, facts);
-      if (r.members.length >= K.h1_min_members && r.members.length <= K.h1_max_members && !h1Tasks.some(t => JSON.stringify(t.predicate) === JSON.stringify(p))) found = { p, ...r, q: spec.q, kind: spec.kind };
+      if (r.members.length >= K.h1_min_members && r.members.length <= K.h1_max_members && !h1Tasks.some(t => JSON.stringify(t.predicate) === JSON.stringify(p)) && !onEdge(p, facts)) found = { p, ...r, q: spec.q, kind: spec.kind };
     }
     if (!found) throw new Error(`model-ladder-hard: H1 task index ${i}: no predicate with ${K.h1_min_members} to ${K.h1_max_members} members (lower h1_min_members or add accounts)`);
     const byId = new Map(accounts.map(a => [a.id, a]));
@@ -669,7 +692,8 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
     const lookalikeSpecs = h3Targets.flatMap(t => Array.from({ length: LARGE_LOOKALIKES_PER_H3 }, () => t));
     const docsBefore = docs.length;
     for (let k = 0; k < K.large_extra_accounts; k++) {
-      const spec = lookalikeSpecs[k];
+      const wanted = lookalikeSpecs[k];
+      const spec = wanted && (wanted.prefix || R.SUFFIX.some(sf => !usedNames.has(nameKey(`${wanted.base} ${sf}`)))) ? wanted : undefined;
       let a: HardAccount | null = null;
       for (let attempt = 0; attempt < 60; attempt++) {
         const mark = docs.length;
@@ -749,9 +773,26 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
 
 const possessive = (n: string) => (n.endsWith('s') ? `${n}'` : `${n}'s`);
 
+/**
+ * True when an account's membership would turn on a boundary a reader can take either way: an owner change or a
+ * ticket event dated exactly on the as-of date, or a renewal date on the first or last day of the window (or one day
+ * past it), for an account that holds every other clause. The generator draws another predicate instead.
+ */
+export function onEdge(p: H1Predicate, facts: readonly PredicateFacts[]): boolean {
+  const end = (days: number) => { const d = new Date(`${p.as_of}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + days); return d.toISOString().slice(0, 10); };
+  for (const c of p.clauses) for (const f of facts) {
+    if (!p.clauses.every(o => o === c || clauseHolds(o, f, p.as_of))) continue;
+    if (c.kind === 'owner' && f.owner.some(e => e.effective === p.as_of)) return true;
+    if (c.kind === 'open_escalated_ticket' && f.tickets.some(t => [t.opened, t.escalated, t.closed].includes(p.as_of))) return true;
+    if (c.kind === 'renewal_within') { const r = valueAsOf(f.renewal, p.as_of); if (r && [p.as_of, end(c.days), end(c.days + 1)].includes(r)) return true; }
+  }
+  return false;
+}
+
 /** The documents that decide each clause of an H1 predicate for one account. */
 function h1Docs(a: HardAccount, p: H1Predicate): string[] {
-  const out: string[] = [];
+  // A renamed or merged account's records name it more than one way; the announcement that links the names decides too.
+  const out: string[] = [...(a.former ? [a.former.doc] : []), ...a.mergedIn.map(m => m.doc)];
   for (const c of p.clauses) {
     if (c.kind === 'owner') out.push(...a.owner.map(e => e.doc));
     else if (c.kind === 'segment' || c.kind === 'region') out.push(a.crmDoc);

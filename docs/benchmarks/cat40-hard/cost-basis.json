@@ -1,5 +1,5 @@
 {
-  "note": "Measured v1 Cat 40 dollars per cell (agent plus gbrain provider calls, judge excluded) on the newest frontier models. Calibration round 1 projects from these x hard_factor_round1; every later step projects from measured Hard cells (eval/runner/cat40/hard-project.ts --measured).",
+  "note": "Dollars per cell for projections. A (model, arm, family) cell projects from measured Hard cells when they exist (eval/runner/cat40/hard-ops.ts --measured), otherwise from the measured v1 cost per cell of that model and arm (v1_per_cell_usd) times the Hard factor for its arm and family, plus the measured judge cost for its family. memory borrows the fs factors and gbrain the pg factors.",
   "sources": {
     "claude-sonnet-5-5": "docs/benchmarks/2026-10-02-model-ladder/holdout/results.jsonl (fs, pg, memory, oracle); entity-recall/holdout/wave/results.jsonl (gbrain)",
     "gpt-6.1-sol": "docs/benchmarks/2026-10-02-model-ladder/holdout/results.jsonl (fs, pg, memory, oracle); entity-recall/holdout/wave/results.jsonl (gbrain)",
@@ -8,15 +8,84 @@
     "gpt-6-astra": "entity-recall/holdout/simple-arms-new-models/results.jsonl (fs, pg, oracle); baseline-uncapped/results.jsonl (memory); entity-recall/holdout/wave (gbrain)"
   },
   "v1_per_cell_usd": {
-    "claude-sonnet-5-5": { "fs": 0.0550, "pg": 0.0351, "memory": 0.2698, "oracle": 0.0102, "gbrain": 0.1024 },
-    "claude-opus-5-5": { "fs": 0.0888, "pg": 0.0647, "memory": 0.5185, "oracle": 0.0204, "gbrain": 0.1922 },
-    "claude-fable-5-1": { "fs": 0.2792, "pg": 0.2330, "memory": 1.2963, "oracle": 0.0572, "gbrain": 0.6095 },
-    "gpt-6.1-sol": { "fs": 0.0223, "pg": 0.0185, "memory": 0.1869, "oracle": 0.0046, "gbrain": 0.0481 },
-    "gpt-6-astra": { "fs": 0.1126, "pg": 0.0889, "memory": 0.7583, "oracle": 0.0162, "gbrain": 0.2389 }
+    "claude-sonnet-5-5": {
+      "fs": 0.055,
+      "pg": 0.0351,
+      "memory": 0.2698,
+      "oracle": 0.0102,
+      "gbrain": 0.1024
+    },
+    "claude-opus-5-5": {
+      "fs": 0.0888,
+      "pg": 0.0647,
+      "memory": 0.5185,
+      "oracle": 0.0204,
+      "gbrain": 0.1922
+    },
+    "claude-fable-5-1": {
+      "fs": 0.2792,
+      "pg": 0.233,
+      "memory": 1.2963,
+      "oracle": 0.0572,
+      "gbrain": 0.6095
+    },
+    "gpt-6.1-sol": {
+      "fs": 0.0223,
+      "pg": 0.0185,
+      "memory": 0.1869,
+      "oracle": 0.0046,
+      "gbrain": 0.0481
+    },
+    "gpt-6-astra": {
+      "fs": 0.1126,
+      "pg": 0.0889,
+      "memory": 0.7583,
+      "oracle": 0.0162,
+      "gbrain": 0.2389
+    }
   },
-  "hard_factor_round1": 1.8,
-  "judge": { "v1_gpt_5_4_mini_per_cell_usd": 0.0030, "gpt_6_1_sol_price_ratio": 2.67, "note": "Round 1 judge projection = 0.0030 x 2.67 x hard_factor_round1 per cell; later steps use measured judge_usd." },
-  "scale_50k_factor": { "fs": 1.8, "gbrain": 1.3, "oracle": 1.8, "default": 1.8 },
-  "slot_build": { "usd_per_slot": 1.177, "world_bytes": 41551224, "note": "v1-large (52,028 docs) slot builds cost $1.177 each (scale-tier receipt); a Hard slot build is projected as 1.177 x world bytes / 41,551,224." },
+  "hard_factor_by_arm_family": {
+    "fs": {
+      "H1": 8.13,
+      "H2": 0.5,
+      "H3": 1.06,
+      "H4": 1.06,
+      "H5": 2.0
+    },
+    "pg": {
+      "H1": 8.97,
+      "H2": 0.69,
+      "H3": 0.92,
+      "H4": 0.95,
+      "H5": 2.56
+    },
+    "oracle": {
+      "H1": 10.76,
+      "H2": 1.01,
+      "H3": 0.97,
+      "H4": 2.49,
+      "H5": 4.47
+    }
+  },
+  "hard_factor_source": "Calibration round 1 (2026-10-05, seed 20261005, knobs.round-1.json, Sonnet 5.5 and GPT-6 Astra, 189 of 300 cells, $35.18): measured cost per cell over v1 cost per cell, averaged over cells. H1 to H3 have 20 cells per arm; H4 has 2 to 4 (fs H4 uses the H3 factor because its 2-cell measurement, 0.44, is below every other family); H5 is unmeasured and assumed 3 x the H2-H4 mean (five sessions, four of them short). Round 2 replaces these with its own measurements.",
+  "judge_per_cell_usd_by_family": {
+    "H1": 0.0213,
+    "H2": 0.0041,
+    "H3": 0.0038,
+    "H4": 0.0082,
+    "H5": 0.0082
+  },
+  "judge_source": "Measured gpt-6.1-sol judge dollars per cell in calibration round 1 (H5 assumed equal to H4).",
+  "scale_50k_factor": {
+    "fs": 1.8,
+    "gbrain": 1.3,
+    "oracle": 1.8,
+    "default": 1.8
+  },
+  "slot_build": {
+    "usd_per_slot": 1.177,
+    "world_bytes": 41551224,
+    "note": "v1-large (52,028 docs) slot builds cost $1.177 each (scale-tier receipt); a Hard slot build is projected as 1.177 x world bytes / 41,551,224."
+  },
   "margin": 0.15
 }
