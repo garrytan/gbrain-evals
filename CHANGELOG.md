@@ -2,6 +2,17 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.20] - 2026-10-05
+
+### Ledger: CL-1 and CL-2 point at the merged gbrain fix
+
+gbrain [#6010](https://github.com/garrytan/gbrain/pull/6010) merged to master as
+`b9ee931` (v0.60.49.0). CL-1 and CL-2 now name `b9ee931` as their fixing commit,
+with the note "verified at PR head 5a44025; chronicle code identical at merge":
+no file under `src/core/chronicle/` or `src/core/cycle/` differs between the
+measured head and the merge. The [rerun report](docs/benchmarks/2026-10-04-auto-chronicle-rerun.md)
+carries a dated line saying so. No new measurement; $0.
+
 ## [0.10.19] - 2026-10-04
 
 ### `auto_chronicle` rerun on gbrain's date-quality fix: default-on supported at PR #6010's head
