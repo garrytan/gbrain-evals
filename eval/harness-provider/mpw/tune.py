@@ -18,6 +18,7 @@ import argparse
 import asyncio
 import itertools
 import json
+import os
 import time
 from pathlib import Path
 
@@ -138,6 +139,9 @@ async def tune(cell_dir: Path, grid: dict) -> dict:
         raise RuntimeError(f"{run.spec['provider']} exposes no knob dict (config or cfg) to sweep")
     prov.initialize()
     prov.prepare(run.store, unit_ids=None, reset=False)
+    dump = Path(os.environ["MPW_TUNE_DUMP"]) if os.environ.get("MPW_TUNE_DUMP") else None
+    if dump is not None:
+        dump.mkdir(parents=True, exist_ok=True)
     for setting in _settings(grid):
         spec = {**run.spec, "provider_config": {**base_cfg, **setting}}
         knobs.update(setting)
@@ -164,6 +168,11 @@ async def tune(cell_dir: Path, grid: dict) -> dict:
 
             prompt = build(pq.query, rendered, {**meta, "_raw_response": raw})
             tokens.append(ctxmod.inserted_context(build, pq.query, rendered, meta, raw, prompt).tokens)
+            if dump is not None:
+                # Scorer-side diagnosis only (MPW_TUNE_DUMP): what each question's delivered context held.
+                with (dump / f"{len(rows)}.jsonl").open("a") as f:
+                    f.write(json.dumps({"query_id": q.id, "setting": setting, "tokens": tokens[-1], "meta": pmeta if with_meta else None,
+                                        "documents": [{"id": d.id, "content": d.content} for d in docs]}, default=str) + "\n")
         gate = ctxmod.gate(target, tokens)
         rows.append({"setting": setting, **gate.as_dict(), "errors": errors, "entity_anchored": anchored})
     prov.cleanup()

@@ -162,7 +162,7 @@ export function harnessProcessEnv(install: HarnessInstall, extra: Record<string,
     TOKENIZERS_PARALLELISM: 'false',
     MPW_DATASET_CACHE: join(DATASET_DIR, 'cache'),
   };
-  for (const k of ['LANG', 'LC_ALL', 'TMPDIR', 'HF_HOME', 'XDG_CACHE_HOME']) if (process.env[k]) base[k] = process.env[k]!;
+  for (const k of ['LANG', 'LC_ALL', 'TMPDIR', 'HF_HOME', 'XDG_CACHE_HOME', 'MPW_TUNE_DUMP']) if (process.env[k]) base[k] = process.env[k]!;
   return { ...base, ...install.dataset_env, ...extra };
 }
 

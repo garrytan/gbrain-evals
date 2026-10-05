@@ -494,7 +494,9 @@ describe('zero balance blocks dispatch', () => {
     expect(positive.settled).toBe(4);
   }, 180_000);
 
-  test('(c) a gbrain stdio MCP child embedding a page it writes', async () => {
+  // A gbrain child needs Bun >= 1.4 and a PGLite init; the CI unit shards leave it to the harness job, which runs
+  // this file with MPW_REQUIRE_HARNESS=1, so a slow init can never hold a 15-minute shard.
+  test.skipIf(process.env.CI === 'true' && !requireHarness)('(c) a gbrain stdio MCP child embedding a page it writes', async () => {
     const results: string[] = [];
     await assertZeroBalanceBlocks<{ proc: ReturnType<typeof Bun.spawn>; rpc: (method: string, params: unknown) => Promise<any> }>({
       label: 'gbrain',
@@ -511,7 +513,7 @@ describe('zero balance blocks dispatch', () => {
         expect(strippedKeysIn(env)).toEqual(['OPENAI_API_KEY', 'OPENAI_BASE_URL']);
         const cli = join(REPO, 'node_modules/gbrain/src/cli.ts');
         const init = Bun.spawn(['bun', cli, 'init', '--pglite', '--path', join(home, 'brain.pglite'), '--embedding-model', 'openai:text-embedding-3-large', '--non-interactive', '--skip-embed-check'],
-          { env, cwd: home, stdout: 'pipe', stderr: 'pipe' });
+          { env, cwd: home, stdout: 'pipe', stderr: 'pipe', timeout: 90_000, killSignal: 'SIGKILL' });
         const [, initErr] = await Promise.all([new Response(init.stdout).text(), new Response(init.stderr).text(), init.exited]);
         if (init.exitCode !== 0) throw new Error(`gbrain init failed: ${initErr.slice(-2000)}`);
         if (c.stub.hits.total !== 0) throw new Error('gbrain init reached the stub');
