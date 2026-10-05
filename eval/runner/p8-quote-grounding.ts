@@ -28,6 +28,7 @@
  * each read appends a line to access-log.jsonl beside the file before its bytes
  * are parsed, and summaries record SHA-256 values, never custody paths or text.
  *   bun eval/runner/p8-quote-grounding.ts --make-questions --corpus amara|sealed-confirmation [--corpus-dir <custody dir>]
+ *     [--exclude-questions <earlier held-out questions files, comma-separated>]   (custodian: a retest set disjoint from them)
  *     [--corpus-manifest <manifest.json>] --n <n> --seed <held-out seed, not 1> --out-questions <custody file>
  *     --decision-id <id> --purpose <text> [--model gpt-6.1-sol]
  *   bun eval/runner/p8-quote-grounding.ts --gbrain <checkout>@<ref> --heldout-questions <custody file>
@@ -235,7 +236,11 @@ async function makeQuestionsCli(argv: readonly string[]) {
     throw new Error(`only dev seeds ${DEV_SEEDS.join(', ')} run here; held-out questions belong to the custodian (--decision-id, --purpose, --out-questions outside the repository)`);
   }
   const { pages, sealedSha256 } = corpusPages(f, custodian, corpus === 'sealed-confirmation');
-  const exclude = custodian && corpus === 'amara' ? new Set(parseQuestions(JSON.parse(readFileSync(DEV_QUESTIONS, 'utf8'))).questions.map(q => q.page)) : undefined;
+  // --exclude-questions a.json,b.json (custodian): pages an earlier held-out set used, so a retest set is disjoint from it.
+  const priorFiles = custodian ? (f('--exclude-questions') ?? '').split(',').filter(Boolean) : [];
+  const priorPages = priorFiles.flatMap(file => parseQuestions(JSON.parse(readFileSync(file, 'utf8'))).questions.map(q => q.page));
+  const devPages = custodian && corpus === 'amara' ? parseQuestions(JSON.parse(readFileSync(DEV_QUESTIONS, 'utf8'))).questions.map(q => q.page) : [];
+  const exclude = devPages.length || priorPages.length ? new Set([...devPages, ...priorPages]) : undefined;
   const model = f('--model') ?? 'gpt-6.1-sol';
   const cache = cacheDir(custodian);
   const chat = new ChatClient(cache);
