@@ -1,0 +1,13 @@
+{
+  "schema": "gbrain-evals/harness-lock/v1",
+  "HARNESS_REPO": "https://github.com/vectorize-io/agent-memory-benchmark",
+  "HARNESS_COMMIT": "f618ed7b1f0eb9cad7b42e876f91a42f0eadb150",
+  "HARNESS_COMMIT_DATE": "2026-09-30T13:53:01+02:00",
+  "checkout_env": "HARNESS_DIR",
+  "comparator_output_dir_sha256": [
+    "aa475625981493dc52fceb3cb9a39f54d22903284538f5562d2118678b6e6149",
+    "06cc50749fe80e5d95f0d0acb33110ce2ae46482b90c6ea9571fa1287bf18758"
+  ],
+  "baseline_output_dir": "hybrid-search",
+  "notes": "Output directories under outputs/<dataset>/ are named by provider. The comparator's directories are matched by the SHA-256 of their names, so no product name is written here. Any other provider directory is labeled other:<first 8 hex of its name hash>."
+}

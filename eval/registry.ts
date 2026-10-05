@@ -1039,6 +1039,8 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'longmemeval-m-pilot-replay.ts': { role: 'LongMemEval-M pilot replay', part_of: 'longmemeval-m-pilot' },
   'longmemeval-session-ids.ts': { role: 'opaque LongMemEval session ids', part_of: 'longmemeval-retrieval' },
   'longmemeval-validate-ndjson.ts': { role: 'LongMemEval NDJSON validator', part_of: 'longmemeval-retrieval' },
+  'memory-proof-wave-grouping.ts': { role: 'memory proof wave A2: builds, checks and opens the sealed grouping manifest (docs/benchmarks/2026-10-05-memory-proof-wave-preregistration.md); free, not dispatched' },
+  'memory-proof-wave-power.ts': { role: 'memory proof wave A0.1: free power and coverage simulation for the primary non-inferiority test (docs/benchmarks/2026-10-05-memory-proof-wave-power.md); not dispatched' },
   'metrics.ts': { role: 'shared retrieval metrics' },
   'mutation-kit.ts': { role: 'scorer mutation kit: fake systems every category scorer must fail' },
   'n2-3-prompt-ab.ts': { role: 'matched before/after of the gbrain contradiction-judge prompt (N2-3) on a fresh N2 seed, development data', part_of: 'contradiction-surfacing' },
@@ -1074,4 +1076,4 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
 };
 
 /** Subdirectories of eval/runner/ holding helper modules only. */
-export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'cat40', 'cat41', 'evaluator', 'evidence-delivery', 'lifecycle', 'queries', 'stats', 'system-one'];
+export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'cat40', 'cat41', 'evaluator', 'evidence-delivery', 'lifecycle', 'memory-proof-wave', 'queries', 'stats', 'system-one'];

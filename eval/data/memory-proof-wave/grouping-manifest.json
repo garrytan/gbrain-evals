@@ -1,0 +1,1052 @@
+{
+  "schema": "gbrain-evals/mpw-grouping/v1",
+  "status": "sealed",
+  "created": "2026-10-05",
+  "rule": "Per stratum, order clusters by HMAC-SHA256(salt, \"<stratum>/<cluster id>\") as lowercase hex, ascending. The first round(0.2 G) are dev, the next round(0.2 G) validation, the rest sealed. Each validation and sealed commitment is SHA-256 of canonical JSON {ids (sorted), salt (hex), split, stratum}.",
+  "harness": {
+    "lock": "eval/data/memory-proof-wave/harness.lock.json",
+    "commit": "f618ed7b1f0eb9cad7b42e876f91a42f0eadb150"
+  },
+  "inputs": {
+    "path": "docs/benchmarks/2026-10-05-memory-proof-wave-power/inputs.json",
+    "sha256": "1cbfed98f6841ae6fbdecf8b897155f5ee373198849de41c6a961b689176725d"
+  },
+  "salt_sha256": "d7c382d846e546bef6dde52469d6e21a3dd34abb5534a16c8898d18bd4c4373c",
+  "private_file": {
+    "file": "grouping-private.json",
+    "sha256": "f67da64c277db517f3624d8a77b1bf02f8222c34ca2419263a12880ef3841d67",
+    "bytes": 2018
+  },
+  "access_log": "access-log.jsonl, kept beside the private file; every validation or sealed open appends one line",
+  "groups": [
+    {
+      "group": "primary",
+      "note": "Primary non-inferiority test: BEAM 500k + 1M, 14 dev / 14 validation / 42 sealed conversations.",
+      "strata": [
+        {
+          "stratum": "beam/500k",
+          "grouping": "conversation",
+          "queries_file": {
+            "path": "data/beam/500k/queries.json.gz",
+            "sha256": "fe4553ac89ffd7989d7d6dbcf4c3a4a0119244e784cdf13b8566fd11be29a69b"
+          },
+          "clusters": [
+            {
+              "id": "1",
+              "histories": [
+                "1"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "2",
+              "histories": [
+                "2"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "3",
+              "histories": [
+                "3"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "4",
+              "histories": [
+                "4"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "5",
+              "histories": [
+                "5"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "6",
+              "histories": [
+                "6"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "7",
+              "histories": [
+                "7"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "8",
+              "histories": [
+                "8"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "9",
+              "histories": [
+                "9"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "10",
+              "histories": [
+                "10"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "11",
+              "histories": [
+                "11"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "12",
+              "histories": [
+                "12"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "13",
+              "histories": [
+                "13"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "14",
+              "histories": [
+                "14"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "15",
+              "histories": [
+                "15"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "16",
+              "histories": [
+                "16"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "17",
+              "histories": [
+                "17"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "18",
+              "histories": [
+                "18"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "19",
+              "histories": [
+                "19"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "20",
+              "histories": [
+                "20"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "21",
+              "histories": [
+                "21"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "22",
+              "histories": [
+                "22"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "23",
+              "histories": [
+                "23"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "24",
+              "histories": [
+                "24"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "25",
+              "histories": [
+                "25"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "26",
+              "histories": [
+                "26"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "27",
+              "histories": [
+                "27"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "28",
+              "histories": [
+                "28"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "29",
+              "histories": [
+                "29"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "30",
+              "histories": [
+                "30"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "31",
+              "histories": [
+                "31"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "32",
+              "histories": [
+                "32"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "33",
+              "histories": [
+                "33"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "34",
+              "histories": [
+                "34"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "35",
+              "histories": [
+                "35"
+              ],
+              "questions": 20
+            }
+          ],
+          "dev": {
+            "count": 7,
+            "questions": 140,
+            "ids": [
+              "8",
+              "9",
+              "12",
+              "21",
+              "28",
+              "31",
+              "35"
+            ]
+          },
+          "validation": {
+            "count": 7,
+            "questions": 140,
+            "commitment": "e001e1b6129b5c651ed2c4fc051675f81612b0898f4f7f90786e3ff089625340"
+          },
+          "sealed": {
+            "count": 21,
+            "questions": 420,
+            "commitment": "27c51b754ffabaccfbcb437c8228043dd4ed7e9f28d7e3af8f50424938aec83e"
+          }
+        },
+        {
+          "stratum": "beam/1m",
+          "grouping": "conversation",
+          "queries_file": {
+            "path": "data/beam/1m/queries.json.gz",
+            "sha256": "ed5fd00335ccfe3c5b7c45e03fd116079b715450c4768cc34f052196b57e1eb6"
+          },
+          "clusters": [
+            {
+              "id": "1",
+              "histories": [
+                "1"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "2",
+              "histories": [
+                "2"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "3",
+              "histories": [
+                "3"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "4",
+              "histories": [
+                "4"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "5",
+              "histories": [
+                "5"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "6",
+              "histories": [
+                "6"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "7",
+              "histories": [
+                "7"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "8",
+              "histories": [
+                "8"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "9",
+              "histories": [
+                "9"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "10",
+              "histories": [
+                "10"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "11",
+              "histories": [
+                "11"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "12",
+              "histories": [
+                "12"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "13",
+              "histories": [
+                "13"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "14",
+              "histories": [
+                "14"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "15",
+              "histories": [
+                "15"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "16",
+              "histories": [
+                "16"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "17",
+              "histories": [
+                "17"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "18",
+              "histories": [
+                "18"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "19",
+              "histories": [
+                "19"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "20",
+              "histories": [
+                "20"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "21",
+              "histories": [
+                "21"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "22",
+              "histories": [
+                "22"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "23",
+              "histories": [
+                "23"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "24",
+              "histories": [
+                "24"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "25",
+              "histories": [
+                "25"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "26",
+              "histories": [
+                "26"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "27",
+              "histories": [
+                "27"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "28",
+              "histories": [
+                "28"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "29",
+              "histories": [
+                "29"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "30",
+              "histories": [
+                "30"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "31",
+              "histories": [
+                "31"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "32",
+              "histories": [
+                "32"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "33",
+              "histories": [
+                "33"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "34",
+              "histories": [
+                "34"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "35",
+              "histories": [
+                "35"
+              ],
+              "questions": 20
+            }
+          ],
+          "dev": {
+            "count": 7,
+            "questions": 140,
+            "ids": [
+              "1",
+              "6",
+              "16",
+              "21",
+              "22",
+              "25",
+              "26"
+            ]
+          },
+          "validation": {
+            "count": 7,
+            "questions": 140,
+            "commitment": "f5e0923be3ffb86aab5c5ef5c17b61a1ed5ddbee5ae22c82cca427ba9465ffcc"
+          },
+          "sealed": {
+            "count": 21,
+            "questions": 420,
+            "commitment": "69de8993c40c13cfde876348f3f6fd712b87f0eca6ab66e3ae7e189f7b4a94fb"
+          }
+        }
+      ]
+    },
+    {
+      "group": "secondary",
+      "note": "Secondary rows, each its own dataset: PersonaMem 32k grouped by persona (all histories of a persona together), LifeBench grouped by user.",
+      "strata": [
+        {
+          "stratum": "personamem/32k",
+          "grouping": "persona",
+          "queries_file": {
+            "path": "data/personamem/32k/queries.json.gz",
+            "sha256": "a5207c2c29a5b60cf2311c2413b14dcc67e8f889a75f1e3760dc931ee09f866a"
+          },
+          "clusters": [
+            {
+              "id": "0",
+              "histories": [
+                "1b0b224347aea71887603d63880b90c8d37b1f58073098513b839209034c2f3b",
+                "e898d03fec683b1cabf29f57287ff66f8a31842543ecef44b56766844c1c1301"
+              ],
+              "questions": 17
+            },
+            {
+              "id": "1",
+              "histories": [
+                "5c8fb86fe80da5b203e7926407dc3a35f763d32e5891082aaae632210734b5a5",
+                "ae5c969c32dafa28ff3f884495f4655de811b061007afaf3307d7b858ff7cfae"
+              ],
+              "questions": 35
+            },
+            {
+              "id": "2",
+              "histories": [
+                "1621543a17bd464feaf4ba73d83d579d0160987536bde8725ac29131ecf235c3"
+              ],
+              "questions": 28
+            },
+            {
+              "id": "3",
+              "histories": [
+                "06f12a0c4085193a32bd1658c5f4b8a5e6e7e1f5221d7169f296130c8d69480d",
+                "aa95cf5880d83a73bb98512a07a64fb873fb24d9dac2bb1862f7c00008632260"
+              ],
+              "questions": 25
+            },
+            {
+              "id": "4",
+              "histories": [
+                "ea6147f6dc11130b410e00146e314d9370b7fff04f994639c4a3d46ce1255e64"
+              ],
+              "questions": 26
+            },
+            {
+              "id": "5",
+              "histories": [
+                "19032c09f22266d8977a072d72d169ee109508c4362e5bf5d9ac630dddb573c6",
+                "bc7411051b57e9cd98f3a7861f5215815b6212013d05ad447915ce8442b92845"
+              ],
+              "questions": 32
+            },
+            {
+              "id": "6",
+              "histories": [
+                "8c336cac503ae78c7fe58a6aef0965963041cd579d1a885db4709293b1853829",
+                "ad5320ec1416e1e17665cee3d166d459ee29357af2a08f63131443bacc85931a"
+              ],
+              "questions": 27
+            },
+            {
+              "id": "7",
+              "histories": [
+                "a9f46aff0bd886c1e45562554ffc4d67fcee974f8cdcd41611e465971692a6f5",
+                "cf26537544446b92554000ab50a3c44983a1e0b3de21e9923099792f103d84ef"
+              ],
+              "questions": 38
+            },
+            {
+              "id": "8",
+              "histories": [
+                "3cc19ddf369632cd2b14888f59d787245be29268ed480ccb6b2bd5df8ef8f95b",
+                "5c00a991550b5222efae1b357a4ab788855512ca85edcf467bab7a2816abd852"
+              ],
+              "questions": 32
+            },
+            {
+              "id": "9",
+              "histories": [
+                "28249d3fb6f594de0bf9a6708d5eb4ea140c4f157ffbf51dfeeb413452ef0291",
+                "6546821cd2f05f8df39d4b987545f71420fe48c2d7282230d1a92c7a77037893"
+              ],
+              "questions": 40
+            },
+            {
+              "id": "10",
+              "histories": [
+                "7797915581c01170c2a46616041687c09d59240b417898659034cd31cdc8cebf",
+                "b4127adbc8c10f9343857e4f6c3f6b5d9324402871319e13f3c2420ca764809b"
+              ],
+              "questions": 33
+            },
+            {
+              "id": "11",
+              "histories": [
+                "7860e54f4cee5267176f112e951a7796b199e833227c43426272c210d2f1bf42",
+                "87fcbc7f2659effa29e8588b521c937634a53fcc516ee1ca85eeddfe8190708a"
+              ],
+              "questions": 33
+            },
+            {
+              "id": "12",
+              "histories": [
+                "97c532a381a079396499e11df92f6b69c99bc3ce999e2aff2c81aedea4b4c45d",
+                "d4a1f9dcaab3b0eb522c4a7e1521a05eed6b02ca443f0ee9331df07306511255"
+              ],
+              "questions": 43
+            },
+            {
+              "id": "13",
+              "histories": [
+                "a44f332994eedfff13f2c4870ee7e7da35a682625f25b789a5beccde572f5f0b",
+                "f56dc82b80270d4a2d45ddff57844726783aa968c7ede0114de9894b782c8ac9"
+              ],
+              "questions": 36
+            },
+            {
+              "id": "14",
+              "histories": [
+                "357073b65588cc3017575f7f4dde34dac5d5e0cd376ac2fc1fb693f216e0878b",
+                "ff31ea4f6e893e623d262de49b003f3a833571df525d7468689a4d6365f5f688"
+              ],
+              "questions": 23
+            },
+            {
+              "id": "15",
+              "histories": [
+                "5f9be905f1374d0906caf04903eebe4f027af9d3d36acd2fef957928864bd8e6",
+                "98d9b178256013b02fc07fa1bf558117907a33092519997fd1605074184e6708"
+              ],
+              "questions": 23
+            },
+            {
+              "id": "16",
+              "histories": [
+                "373af9983d986370903d4202bcbf9c05874f425666e0a84dc0ce80d938342866",
+                "793db46bf4b7b99a33af860c6afe583bc9ede18fa80506e6952ccb5a1d01e693"
+              ],
+              "questions": 18
+            },
+            {
+              "id": "17",
+              "histories": [
+                "1ee4be06b43a991eeb7c78772fdf2a1b795f46f336b5fc46a5c711d07cc1c052",
+                "40027b883505bfc53148a5b86c418f9374c3bdd49ebd5160d8f6901cfca51d06"
+              ],
+              "questions": 35
+            },
+            {
+              "id": "18",
+              "histories": [
+                "246eaab75dc40bee43ca87c3eddd4b5b9e229e3f1481cc72c6d44b62f985560e"
+              ],
+              "questions": 18
+            },
+            {
+              "id": "19",
+              "histories": [
+                "4b3812acb9161991c5abf24d8f4005c6819ddca7b75883b8850ec4ccd1b7f353",
+                "947ec42fcf5d327ccb9640332b5fabe4b7a25acc46be08b925861fa0c6e8eaf0"
+              ],
+              "questions": 27
+            }
+          ],
+          "dev": {
+            "count": 4,
+            "questions": 93,
+            "ids": [
+              "0",
+              "2",
+              "3",
+              "14"
+            ]
+          },
+          "validation": {
+            "count": 4,
+            "questions": 121,
+            "commitment": "9e7fd0d072bada67ff7e5cd2fa2ea402b2d74c5cf3df9e644b0fc0bf8503006e"
+          },
+          "sealed": {
+            "count": 12,
+            "questions": 375,
+            "commitment": "dc43402d17598e1269689ff26156b05b3d6870b6bd52f48895a5e24c45628be2"
+          }
+        },
+        {
+          "stratum": "lifebench/en",
+          "grouping": "user",
+          "queries_file": {
+            "path": "data/lifebench/en/queries.json.gz",
+            "sha256": "d2fd1eda1bc5272eb1762067cde4033218c6739ccd7df47504c9119396a63b38"
+          },
+          "clusters": [
+            {
+              "id": "于晓薇",
+              "histories": [
+                "于晓薇"
+              ],
+              "questions": 197
+            },
+            {
+              "id": "于晓雯",
+              "histories": [
+                "于晓雯"
+              ],
+              "questions": 217
+            },
+            {
+              "id": "冯浩然",
+              "histories": [
+                "冯浩然"
+              ],
+              "questions": 207
+            },
+            {
+              "id": "叶明轩",
+              "histories": [
+                "叶明轩"
+              ],
+              "questions": 217
+            },
+            {
+              "id": "孙雨薇",
+              "histories": [
+                "孙雨薇"
+              ],
+              "questions": 198
+            },
+            {
+              "id": "宋雅静",
+              "histories": [
+                "宋雅静"
+              ],
+              "questions": 173
+            },
+            {
+              "id": "尹浩",
+              "histories": [
+                "尹浩"
+              ],
+              "questions": 184
+            },
+            {
+              "id": "陆明强",
+              "histories": [
+                "陆明强"
+              ],
+              "questions": 158
+            },
+            {
+              "id": "雷明轩",
+              "histories": [
+                "雷明轩"
+              ],
+              "questions": 228
+            },
+            {
+              "id": "马秀兰",
+              "histories": [
+                "马秀兰"
+              ],
+              "questions": 224
+            }
+          ],
+          "dev": {
+            "count": 2,
+            "questions": 382,
+            "ids": [
+              "孙雨薇",
+              "尹浩"
+            ]
+          },
+          "validation": {
+            "count": 2,
+            "questions": 375,
+            "commitment": "5b1c2e5eb0f3d7aa1aa167ae95bd70d90d7aab1054030920df21f1d9426e0cec"
+          },
+          "sealed": {
+            "count": 6,
+            "questions": 1246,
+            "commitment": "ed4cdfe8cfd65e12b43705312d0fb9de54e988613005e3ea9398c2cb60656454"
+          }
+        }
+      ]
+    },
+    {
+      "group": "reserve",
+      "note": "Reserve: same rule, not part of any claim unless the preregistration adopts it before any sealed cell runs.",
+      "strata": [
+        {
+          "stratum": "beam/100k",
+          "grouping": "conversation",
+          "queries_file": {
+            "path": "data/beam/100k/queries.json.gz",
+            "sha256": "f58e001b3aeb0f13c894aa0ca6896a8181addbec4c140cc982cd0de9c0f0c465"
+          },
+          "clusters": [
+            {
+              "id": "1",
+              "histories": [
+                "1"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "2",
+              "histories": [
+                "2"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "3",
+              "histories": [
+                "3"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "4",
+              "histories": [
+                "4"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "5",
+              "histories": [
+                "5"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "6",
+              "histories": [
+                "6"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "7",
+              "histories": [
+                "7"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "8",
+              "histories": [
+                "8"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "9",
+              "histories": [
+                "9"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "10",
+              "histories": [
+                "10"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "11",
+              "histories": [
+                "11"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "12",
+              "histories": [
+                "12"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "13",
+              "histories": [
+                "13"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "14",
+              "histories": [
+                "14"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "15",
+              "histories": [
+                "15"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "16",
+              "histories": [
+                "16"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "17",
+              "histories": [
+                "17"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "18",
+              "histories": [
+                "18"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "19",
+              "histories": [
+                "19"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "20",
+              "histories": [
+                "20"
+              ],
+              "questions": 20
+            }
+          ],
+          "dev": {
+            "count": 4,
+            "questions": 80,
+            "ids": [
+              "3",
+              "11",
+              "12",
+              "15"
+            ]
+          },
+          "validation": {
+            "count": 4,
+            "questions": 80,
+            "commitment": "8026eb6b0ce6543b1eb97f0ef1eca64e1eaf8c87cf755027f055e0616d9b7a28"
+          },
+          "sealed": {
+            "count": 12,
+            "questions": 240,
+            "commitment": "0d596685370fca9a801e144ec0b4bf3c7398cbc9d04f83c3ed3b6db710954174"
+          }
+        }
+      ]
+    }
+  ]
+}
