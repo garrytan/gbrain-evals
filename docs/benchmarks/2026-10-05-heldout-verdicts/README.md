@@ -8,6 +8,7 @@ published. Comparators are named by kind only.
 |---|---|---|
 | `p1-e1-heldout-2026-10-04.json` | P1 temporal edges E1, round 1 (phrasing set B) | fail (traps 101/115) |
 | `p1-e1-r2-heldout-2026-10-04.json` | P1 temporal edges E1, round 2 (set C) | pass |
+| `p1-e1-sete-2026-10-05.json` | P1 temporal edges E1 on a third phrasing set (second custodian) | fail (traps 89/105; lexicon misses the set's join, leave and move cues) |
 | `p1-e2-r2-heldout-2026-10-04.json` | P1 contradiction phase E2, five judge models | all certified for apply |
 | `p1-e3-r2-heldout-2026-10-04.json` | P1 ingestion to answer E3 | report-only |
 | `p3-e1-heldout-2026-10-04.json` | P3 retrieval feedback E1, per corpus | world-v1 checks pass except one category; LoCoMo fail |

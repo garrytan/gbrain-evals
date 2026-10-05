@@ -38,7 +38,7 @@ One row per idea. "Held-out verdict" is the custodian's sealed result against th
 
 | Plan | Idea | Setting | Held-out verdict | Default | gbrain PR |
 |---|---|---|---|---|---|
-| P1 | Dated typed relationships with live-only reads and as-of queries | `graph.edge_validity` | Round 1 **FAIL** (traps 101/115, recall −4.9 and −6.2 points); round 2 **PASS** on fresh phrasing | on | [#6018](https://github.com/garrytan/gbrain/pull/6018), merged, v0.60.57.0 |
+| P1 | Dated typed relationships with live-only reads and as-of queries | `graph.edge_validity` | Round 1 **FAIL** (traps 101/115, recall −4.9 and −6.2 points); round 2 **PASS** on fresh phrasing; custodian check on a third phrasing **FAIL** (traps 89/105) | on | [#6018](https://github.com/garrytan/gbrain/pull/6018), merged, v0.60.57.0 |
 | P1 | Nightly contradiction check closes superseded relationships | `dream.edge_contradictions.mode` | **PASS** for all five judge models (0 wrong closures) | `apply` for the five certified models, `propose` for others | #6018 |
 | P1 | Corrections reach every read surface (E3) | none | report-only | none | #6018 |
 | P2 | Hub dampening, date-grounded extraction, speaker attribution | in progress, see gbrain PR | in progress | in progress | [#6020](https://github.com/garrytan/gbrain/pull/6020), draft |
@@ -79,6 +79,8 @@ A relationship such as "works at Acme" gets a start and an end date. Reads of "w
 | E3 ([file](2026-10-05-heldout-verdicts/p1-e3-r2-heldout-2026-10-04.json)) | set C, 155 people per surface | correction shown correctly: entity and context pack 27.7%, compiled context 27.7%, ambient turn context 23.9%, `query` 0% (baseline 0% everywhere) | report-only |
 
 Round 1's cause is recorded in the round-2 record: the build overfit set A. Start and end cues anywhere on a line moved employment even on investing, meeting and event lines; past-tense prose closed dated starts at an unknown date; and some transitions ("moved from A to B", "started at X") were missed. Round 2 fixes the rules, not the wording, and passed on phrasing it had never seen. In E2 all five models sit at the same ceiling, so the result certifies `apply` as safe with each of them; it does not rank them. 41 of 66 closures are dated after the true end, which is late, not wrong.
+
+**Generalization check on fresh wording (custodian, 2026-10-05).** A second custodian ran E1 again on a new phrasing set (seeds 103, 107, 109) that shares no wording with sets B and C, comparing master (`8c9a8e9a4`, which contains #6018) to the round-2 baseline `6622a119e`. It **fails** the traps gate: 89 of 105 (investment after exit 29/35, alumni meeting 27/37, advisor 33/33). The feature still lifts now-precision (0.336 → 0.768) and as-of (0.167 → 0.556), with recall unchanged and invariance 240/240. During-year F1 (+0.137) and stale-summary correction (0 in both builds) miss their bars. The cause is lexicon coverage. The employment cue list recognizes none of this set's dated join, leave and move lines (an onboarding-style join verb, a leave phrase whose phrasal verb is split by its object, and an exchange-style "A for B" move), so ended jobs never close. The former employer then stays live, which is exactly what the investment and alumni traps check. Record: [`p1-e1-sete-2026-10-05.json`](2026-10-05-heldout-verdicts/p1-e1-sete-2026-10-05.json).
 
 ### P3: retrieval feedback, triplet scoring, declared single-value relations
 
@@ -147,3 +149,4 @@ Head-to-head comparisons against external memory systems, a full-context baselin
 
 - 2026-10-05: First publication (gbrain-evals#71). The starting line on gbrain master `6622a119e`, the held-out records of P1, P3 and P7, and the program scorecard, with P2, P4, P5, P6 and P8 listed as in progress.
 - 2026-10-05: P3 gains the custodian's root-cause analysis of E1, E4 and E5 and the E5 retest on fresh material.
+- 2026-10-05: P1 gains the custodian's E1 check on a third phrasing set (fails traps, lexicon coverage); the E5 record states that `dream.single_value.mode` stays `propose`.
