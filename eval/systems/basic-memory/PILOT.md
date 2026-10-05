@@ -11,7 +11,7 @@ Every returned item carried exact provenance (one note per session).
 
 - Shim: `eval/systems/basic-memory` at the lane branch (Basic Memory 0.23.2), on the integration branch
   `capy/oss-memory-shootout` harness. The live conformance suite (`SHIM_URL=… bun test
-  test/eval/systems-conformance.test.ts`) passed 11/11 for the recipe configuration before the pilots.
+  test/eval/systems-conformance.test.ts`) passed 11/11 for the recipe configuration before the pilots, and 21/21 on the current integration branch after policy knobs moved under `settings`; `protocol_check.py` passed 26/26.
 - Runner: `bun eval/runner/memory-qa/run.ts --benchmark <b> --system <shim URL> --qa reader --context native
   --policy vendor-default --paid --budget-run-id <id>`, with the runner's preregistered readers and judges. Reader
   and judge calls went through the same metering proxy as the shim (`OPENAI_BASE_URL=http://127.0.0.1:<port>/reader/openai/v1`),
@@ -49,6 +49,10 @@ Observations that matter for Phase 4:
   `new Sanitizer(corpus)` takes 1,700 seconds on the LongMemEval-S corpus (reproduced with `--system fake`, 1,710
   seconds for one question). It is paid once per runner process. One request in that run got HTTP 503 from
   OpenAI and LiteLLM's retry succeeded; ingest stayed `known`.
+- **Bun's 300-second request limit.** Basic Memory indexes inside `/finish`; the LongMemEval-S finish took about
+  4.5 minutes, just under the limit at which Bun's `fetch` aborts a request whatever deadline the caller sets (see
+  `eval/systems/mem0/PILOT.md`). A larger haystack would cross it until `eval/runner/systems/http.ts` disables that
+  limit.
 - **Ingest is serial.** `parallel_namespaces` is false, so haystacks run one after another; embedding one
   LongMemEval-S haystack took 4.5 minutes.
 
