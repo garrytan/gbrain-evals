@@ -1,0 +1,188 @@
+{
+  "schema": "cat40-receipt-v1",
+  "version": "cat40-v1",
+  "judge_prompt": "cat40-claims-v1",
+  "judge": null,
+  "world": {
+    "path": "eval/data/model-ladder-v1/world.json",
+    "scale": "v1",
+    "digest": "df8c95e71b17beab176851e3b15daaea9b8719fb009ba50e02cfc68243009a20",
+    "seed": 20261002,
+    "docs": 3973,
+    "tasks": 50
+  },
+  "evals_commit": "1a825d9f7c1e191d17514fed3d9832e82b58c753",
+  "evals_dirty": true,
+  "gbrain": {
+    "slot_ref": null,
+    "slot_commit": "8f585b0ce955dc765f65f3c841f8457bcc817d3d",
+    "label": "p8-adv-verbs",
+    "commit": "8f585b0ce955dc765f65f3c841f8457bcc817d3d",
+    "version": "0.60.48.0",
+    "tree": "309d890ee2ec4a8755166ee23eefa7d6b4c3d3fc",
+    "verified": {
+      "copy_tree": "309d890ee2ec4a8755166ee23eefa7d6b4c3d3fc",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.48.0",
+      "cli_version_matches": true
+    },
+    "surface": "full",
+    "advertised_surface": "verbs",
+    "tool_overrides": {
+      "descriptions_file": null,
+      "descriptions_sha256": null,
+      "dropped": []
+    },
+    "instructions_override": null,
+    "served_instructions_sha256": "8632b8888b9771caa8236648ee917e10c3071d50f577f58b4d12bfcc8e7421f7",
+    "operator_analyze": true,
+    "serve_boot_timeout_s": 0,
+    "staged_build": null
+  },
+  "mode": "cells",
+  "order": "task",
+  "complete": true,
+  "cells_planned": 20,
+  "slot_builds": [],
+  "models": [
+    "claude-opus-5-5",
+    "claude-sonnet-5-5",
+    "gpt-6.1-sol",
+    "claude-fable-5-1"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "families": [
+    "A",
+    "B",
+    "C",
+    "E",
+    "F"
+  ],
+  "repeats": 1,
+  "max_tool_chars": null,
+  "argv": [
+    "--models",
+    "claude-opus-5-5,claude-sonnet-5-5,gpt-6.1-sol,claude-fable-5-1",
+    "--arms",
+    "gbrain",
+    "--surface",
+    "full",
+    "--advertised",
+    "verbs",
+    "--gbrain-repo",
+    "../gbrain",
+    "--gbrain-ref",
+    "8f585b0ce955dc765f65f3c841f8457bcc817d3d",
+    "--gbrain-label",
+    "p8-adv-verbs",
+    "--slots",
+    "6",
+    "--repeat",
+    "1",
+    "--tasks",
+    "A01,B01,C01,E01,F01",
+    "--transcripts",
+    "--judge",
+    "none",
+    "--max-tool-chars",
+    "none",
+    "--concurrency",
+    "6",
+    "--budget-usd",
+    "40",
+    "--budget-ledger",
+    ".budget/p8-dev.sqlite",
+    "--out",
+    "eval/reports/cat40/p8-dev-pilot-adv-verbs"
+  ],
+  "budget_run_id": "cat40-model-ladder-2026-10-04T20-44-36-932Z-2fb36f8b",
+  "resumed": false,
+  "proxy_unattributed": {
+    "slot:slot0": {
+      "usd": 0.00000117,
+      "requests": 3,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    },
+    "slot:slot1": {
+      "usd": 0.00000117,
+      "requests": 3,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    },
+    "slot:slot2": {
+      "usd": 0.00000117,
+      "requests": 3,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    },
+    "slot:slot3": {
+      "usd": 0.00000117,
+      "requests": 3,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    },
+    "slot:slot4": {
+      "usd": 0.00000117,
+      "requests": 3,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    },
+    "slot:slot5": {
+      "usd": 0.00000117,
+      "requests": 3,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    }
+  },
+  "failed_cells_proxy_usd": 0,
+  "cost": {
+    "usd": 6.225945,
+    "input_tokens": 3797419,
+    "output_tokens": 25568,
+    "basis": "budget ledger cat40-model-ladder-2026-10-04T20-44-36-932Z-2fb36f8b: 259 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "<home>/work/gbrain-evals/.budget/p8-dev.sqlite",
+    "program_cap_usd": 700,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 1,
+      "max": 1680.9
+    }
+  },
+  "finished_at": "2026-10-04T20:49:49.240Z"
+}
