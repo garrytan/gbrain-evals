@@ -438,8 +438,10 @@ export async function main(argv = process.argv.slice(2)) {
         }
       }
       // A write probe after restore: the arm is only fair if the agent's writes can land.
+      // The verbs surface serves no put_page (its write is remember), so it skips the page-write probe.
       for (const s of slots) {
         await s.restore();
+        if (!s.client!.tools.some(t => t.name === 'put_page')) { await s.restore(); continue; }
         const probe = await s.client!.call('put_page', { slug: 'notes/cat40-write-probe', content: '---\ntitle: "write probe"\ntype: note\n---\nprobe\n' });
         if (/^Error/.test(probe) || !(await s.client!.call('get_page', { slug: 'notes/cat40-write-probe' })).includes('write probe')) throw new Error(`gbrain ${s.id} refuses writes after restore: ${probe.slice(0, 300)}`);
         await s.restore();
