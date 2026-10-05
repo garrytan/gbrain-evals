@@ -17,4 +17,4 @@ published. Comparators are named by kind only.
 | `p3-e5-setf-retest-2026-10-05.json` | P3 E5 retest on fresh material (second custodian), guard vs no guard | guard: all gates pass, 0 closures applied (power precondition not met); no guard: 23 of 23 closures wrong |
 | `p7-heldout-2-2026-10-04.json` | P7 multi-relation planner, N9 v1 second opening | pass |
 
-This folder holds the verdicts of plans whose gbrain pull requests have merged (P1, P3, P7). Verdicts of plans still in progress (P2, P4, P5, P6, P8) are added as each gbrain pull request lands. The [program report](../2026-10-05-heldout-program.md) puts these verdicts beside each plan's preregistration, development results and default.
+The table lists the verdicts of plans whose gbrain pull requests have merged (P1, P3, P7). Each plan still in progress (P2, P4, P5, P6, P8) lists its own verdict files on its page under [`../2026-10-05-heldout-program/`](../2026-10-05-heldout-program/), and they move into this table when its gbrain pull request merges. The [program report](../2026-10-05-heldout-program.md) puts these verdicts beside each plan's preregistration, development results and default.
