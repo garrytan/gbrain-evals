@@ -65,6 +65,8 @@ export const SYSTEM_FRAME = `You are a helpful assistant in one long-running con
 
 export const COMPACT_PROMPT = `Your task is to create a detailed summary of the conversation so far, so it can continue in a new context window. Capture what the user said about themselves, their plans, preferences, decisions, dates and requests, and what you told them. Write the summary only; no tool calls.`;
 
+/** The reply cap models conversational reply length, not tool payloads: a tool call cut off at the cap arrives with empty arguments, so that step is reissued with this cap (both calls are billed to the cell). */
+export const TOOL_CALL_OUTPUT_CAP = 8192;
 export const FINAL_INSTRUCTION = `Answer the user's question above as directly as you can. If you are not sure, say what you know and that you are not sure.`;
 
 const PROFILE_PROMPT = `Below is the first conversation between an assistant and a user. Write a short profile of the user as a Markdown bullet list (at most 6 bullets, under 600 characters): who they are, what they do, stable preferences, ongoing projects. Use only what this conversation states. If it states nothing about the user, write "- No details yet."\n\nConversation:\n{conversation}`;
@@ -103,7 +105,7 @@ export interface CellRow {
   answer: string; qa_scores: number[]; qa_score: number;
   sessions: number; live_turns: number; compactions: number; notices: number; notice_segments: number; missed_segments: number;
   remember_calls: number; remember_batched: number; remember_items: number; facts_saved: number; evidence_saved: boolean; evidence_recall5: boolean | null;
-  core_chars: number | null; tool_calls: Record<string, number>; tool_errors: Record<string, number>; tool_error_samples: string[]; errors: string[];
+  core_chars: number | null; tool_calls: Record<string, number>; tool_errors: Record<string, number>; tool_error_samples: string[]; truncated_tool_calls: number; errors: string[];
   usage: CallUsage; usd_agent: number; usd_gbrain: number; usd_profile: number; ms: number;
   builds: Record<string, string>;
 }
@@ -189,7 +191,7 @@ export async function runCell(ctx: Ctx, convId: string, qs: MemoryQuestion[], se
   const row: CellRow = {
     id: cellId, conversation: convId, question_id: '', category: '', abstention: false, arm: armLabel, model, window: ctx.window,
     answer: '', qa_scores: [], qa_score: 0, sessions: ordered.length, live_turns: 0, compactions: 0, notices: 0, notice_segments: 0, missed_segments: 0,
-    remember_calls: 0, remember_batched: 0, remember_items: 0, facts_saved: 0, evidence_saved: false, evidence_recall5: null, core_chars: null, tool_calls: toolCalls, tool_errors: {}, tool_error_samples: [], errors,
+    remember_calls: 0, remember_batched: 0, remember_items: 0, facts_saved: 0, evidence_saved: false, evidence_recall5: null, core_chars: null, tool_calls: toolCalls, tool_errors: {}, tool_error_samples: [], truncated_tool_calls: 0, errors,
     usage, usd_agent: 0, usd_gbrain: 0, usd_profile: profile.usd, ms: 0, builds: ctx.builds, stream_questions: qs.length, usd_stream: 0,
   };
   try {
@@ -246,8 +248,13 @@ export async function runCell(ctx: Ctx, convId: string, qs: MemoryQuestion[], se
       row.live_turns++;
       let finalText = '';
       for (let step = 0; step < maxSteps; step++) {
-        const reply = await callModel({ model, system, tools, messages: history, maxOutput, effort: ctx.effort });
+        let reply = await callModel({ model, system, tools, messages: history, maxOutput, effort: ctx.effort });
         for (const k of Object.keys(usage) as Array<keyof CallUsage>) usage[k] += reply.usage[k];
+        if (reply.stop === 'max_tokens' && reply.blocks.some(b => b.type === 'tool_call')) {
+          row.truncated_tool_calls++;
+          reply = await callModel({ model, system, tools, messages: history, maxOutput: TOOL_CALL_OUTPUT_CAP, effort: ctx.effort });
+          for (const k of Object.keys(usage) as Array<keyof CallUsage>) usage[k] += reply.usage[k];
+        }
         contextTokens = reply.contextTokens;
         history.push({ role: 'assistant', blocks: reply.blocks.length ? reply.blocks : [{ type: 'text', text: '(no reply)' }], ...(reply.raw ? { raw: reply.raw } : {}) });
         const text = textOf(reply.blocks);
@@ -339,7 +346,7 @@ export async function runCell(ctx: Ctx, convId: string, qs: MemoryQuestion[], se
     const goldSaved = [...savedByOut.entries()].filter(([, s]) => q.gold.includes(s)).map(([id]) => id);
     const r: CellRow = {
       ...row, id: `${q.id}__${armLabel}__${model}`, question_id: q.id, category: q.category, abstention: q.abstention,
-      answer: a?.answer ?? '', qa_scores: [], qa_score: 0, errors: [...errors], tool_calls: { ...toolCalls }, tool_errors: { ...row.tool_errors },
+      answer: a?.answer ?? '', qa_scores: [], qa_score: 0, errors: [...errors], tool_calls: { ...toolCalls }, tool_errors: { ...row.tool_errors }, truncated_tool_calls: row.truncated_tool_calls,
       evidence_saved: goldSaved.length > 0, stream_questions: qs.length,
       usage: a?.usage ?? { input: 0, cache_write: 0, cache_read: 0, output: 0 },
       usd_stream: streamUsd, usd_agent: streamUsd / qs.length + (a ? priceUsage(model, a.usage) : 0),

@@ -84,6 +84,8 @@ function main(argv: string[]) {
         notice_fire_rate: rs.filter(r => r.notices > 0).length / rs.length,
         notice_miss_rate: (() => { const seg = rs.reduce((a, r) => a + r.compactions, 0); return seg ? rs.reduce((a, r) => a + r.missed_segments, 0) / seg : null; })(),
         facts_saved: rs.reduce((a, r) => a + r.facts_saved, 0) / rs.length,
+        remember_errors: rs.reduce((a, r) => a + (r.tool_errors?.remember ?? 0), 0) / rs.length,
+        truncated_tool_calls: rs.reduce((a, r) => a + (r.truncated_tool_calls ?? 0), 0) / rs.length,
         evidence_saved: rs.filter(r => !r.abstention).filter(r => r.evidence_saved).length / Math.max(1, rs.filter(r => !r.abstention).length),
       };
     }
@@ -109,7 +111,7 @@ function main(argv: string[]) {
   if (argv.includes('--json')) { console.log(JSON.stringify(out, null, 2)); return; }
   for (const [model, v] of Object.entries(out) as Array<[string, { arms: Record<string, Record<string, number | null>>; deltas: Record<string, Record<string, unknown>> }]>) {
     console.log(`\n${model}`);
-    for (const [arm, a] of Object.entries(v.arms)) console.log(`  ${arm.padEnd(7)} n ${a.n}  acc ${((a.accuracy as number) * 100).toFixed(1)}%  $/q ${(a.usd_per_question as number).toFixed(2)}  compactions ${(a.compactions as number).toFixed(1)}  notice fire ${((a.notice_fire_rate as number) * 100).toFixed(0)}%  miss ${a.notice_miss_rate === null ? '-' : `${((a.notice_miss_rate as number) * 100).toFixed(0)}%`}  facts ${(a.facts_saved as number).toFixed(1)}  evidence-saved ${((a.evidence_saved as number) * 100).toFixed(0)}%`);
+    for (const [arm, a] of Object.entries(v.arms)) console.log(`  ${arm.padEnd(7)} n ${a.n}  acc ${((a.accuracy as number) * 100).toFixed(1)}%  $/q ${(a.usd_per_question as number).toFixed(2)}  compactions ${(a.compactions as number).toFixed(1)}  notice fire ${((a.notice_fire_rate as number) * 100).toFixed(0)}%  miss ${a.notice_miss_rate === null ? '-' : `${((a.notice_miss_rate as number) * 100).toFixed(0)}%`}  facts ${(a.facts_saved as number).toFixed(1)}  evidence-saved ${((a.evidence_saved as number) * 100).toFixed(0)}%  remember errors ${(a.remember_errors as number).toFixed(0)}  truncated tool calls ${(a.truncated_tool_calls as number).toFixed(0)}`);
     for (const [k, d] of Object.entries(v.deltas)) if (d.clustered) { const c = d.clustered as Record<string, number | null>; console.log(`  ${k} (clustered by conversation): Δ ${((c.mean as number) * 100).toFixed(1)} pts, 95% CI [${((c.lo as number) * 100).toFixed(1)}, ${((c.hi as number) * 100).toFixed(1)}], ${c.clusters} conversations, ${c.n} questions, ICC ${c.icc === null ? '-' : (c.icc as number).toFixed(2)}`); }
     for (const [k, d] of Object.entries(v.deltas)) console.log(`  ${k}: Δ ${((d.mean as number) * 100).toFixed(1)} pts, 95% CI [${((d.lo as number) * 100).toFixed(1)}, ${((d.hi as number) * 100).toFixed(1)}], n ${d.n}, SD ${(d.sd as number).toFixed(3)}, discordant ${((d.discordant as number) * 100).toFixed(0)}%, n for +${(effect * 100).toFixed(1)} pts at ${power * 100}% power: ${d.n_for_effect}`);
   }
