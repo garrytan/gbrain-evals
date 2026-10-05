@@ -100,7 +100,7 @@ export interface CellRow {
   id: string; question_id: string; category: string; abstention: boolean; arm: string; model: string; window: number;
   answer: string; qa_scores: number[]; qa_score: number;
   sessions: number; live_turns: number; compactions: number; notices: number; notice_segments: number; missed_segments: number;
-  remember_calls: number; facts_saved: number; evidence_saved: boolean; evidence_recall5: boolean | null;
+  remember_calls: number; remember_batched: number; remember_items: number; facts_saved: number; evidence_saved: boolean; evidence_recall5: boolean | null;
   core_chars: number | null; tool_calls: Record<string, number>; errors: string[];
   usage: CallUsage; usd_agent: number; usd_gbrain: number; usd_profile: number; ms: number;
   builds: Record<string, string>;
@@ -167,7 +167,7 @@ export async function runCell(ctx: Ctx, q: MemoryQuestion, sessions: Session[], 
   const row: CellRow = {
     id: cellId, question_id: q.id, category: q.category, abstention: q.abstention, arm: armLabel, model, window: ctx.window,
     answer: '', qa_scores: [], qa_score: 0, sessions: ordered.length, live_turns: 0, compactions: 0, notices: 0, notice_segments: 0, missed_segments: 0,
-    remember_calls: 0, facts_saved: 0, evidence_saved: false, evidence_recall5: null, core_chars: null, tool_calls: toolCalls, errors,
+    remember_calls: 0, remember_batched: 0, remember_items: 0, facts_saved: 0, evidence_saved: false, evidence_recall5: null, core_chars: null, tool_calls: toolCalls, errors,
     usage, usd_agent: 0, usd_gbrain: 0, usd_profile: profile.usd, ms: 0, builds: ctx.builds,
   };
   try {
@@ -240,6 +240,7 @@ export async function runCell(ctx: Ctx, q: MemoryQuestion, sessions: Session[], 
           try { out = await client!.call(c.name, c.args); } catch (e) { out = `Error: ${(e as Error).message}`; }
           if (c.name === 'remember') {
             row.remember_calls++;
+            if (Array.isArray(c.args.items)) { row.remember_batched++; row.remember_items += c.args.items.length; }
             for (const id of new Set(factIds(out))) { savedBy.set(id, currentSession); }
           }
           results.push({ type: 'tool_result', id: c.id, text: out });
