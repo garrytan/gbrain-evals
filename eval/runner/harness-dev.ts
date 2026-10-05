@@ -24,7 +24,7 @@ const SPEC_DIR = join(REPO_ROOT, 'eval/harness-provider/cells/dev');
 const LOG_DIR = join(REPO_ROOT, 'eval/reports/harness-dev');
 
 export interface Track {
-  provider: 'gbrain' | 'comparator' | 'qdrant';
+  provider: 'gbrain' | 'comparator' | 'qdrant' | 'full-context';
   dataset: string; split: string; units?: string[]; questionIds?: string[];
   lane: CellSpec['lane']; mode: CellSpec['mode'];
   base: Record<string, number>; extra: Record<string, unknown>;

@@ -33,7 +33,7 @@ import { ensureHarness, harnessProcessEnv, PROVIDER_DIR, REPO_ROOT, type Harness
 
 export const DEFAULT_CELLS_DIR = join(REPO_ROOT, 'eval/reports/harness-cells');
 export const CELL_SCHEMA = 'mpw-cell-v1';
-export const PROVIDERS = ['gbrain', 'comparator', 'bm25', 'qdrant', 'vanilla'] as const;
+export const PROVIDERS = ['gbrain', 'comparator', 'bm25', 'qdrant', 'vanilla', 'full-context'] as const;
 export const MODES = ['rag', 'agentic-rag', 'agent', 'retrieval'] as const;
 export const SEALS = ['public', 'dev', 'validation', 'sealed', 'fixture'] as const;
 

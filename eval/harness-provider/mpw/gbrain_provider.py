@@ -63,6 +63,8 @@ DEFAULTS = {
     "expand": None,
     "gbrain_config": {},
     "max_open_units": 1,
+    # The provider's own one-line date header from the timestamp manifest; off when gbrain renders its own (C1).
+    "date_header": True,
 }
 
 SWITCHES = {
@@ -391,8 +393,9 @@ class GbrainMemoryProvider(MemoryProvider):
             slug = str(row.get("slug", ""))
             doc_id = slug[len(SLUG_PREFIX):] if slug.startswith(SLUG_PREFIX) else slug
             text = row.get("chunk_text") or row.get("text") or ""
-            header = date_header(u.timestamps.get(doc_id))
-            docs.append(Document(id=doc_id, content=f"{header}\n{text}", user_id=user_id))
+            if self.cfg.get("date_header", True):
+                text = f"{date_header(u.timestamps.get(doc_id))}\n{text}"
+            docs.append(Document(id=doc_id, content=text, user_id=user_id))
         meta_out = {
             "requested": args,
             "tokens_delivered": delivery.get("tokens_delivered"),
