@@ -1,0 +1,34 @@
+{
+  "cell_id": "locomo-locomo10-gbrain-rag-2036b4669060",
+  "mode": "auto",
+  "base": {
+    "facts_tokens": 1800,
+    "token_budget": 6300
+  },
+  "sample": 60,
+  "targets": {
+    "8000": {
+      "chosen": {
+        "facts_tokens": 1800,
+        "token_budget": 6300
+      },
+      "rows": [
+        {
+          "setting": {
+            "facts_tokens": 1800,
+            "token_budget": 6300
+          },
+          "target": 8000,
+          "n": 60,
+          "mean": 8033.1,
+          "p95": 8128.0,
+          "tolerance": 0.1,
+          "ok": true,
+          "reason": "within \u00b110% of target",
+          "errors": []
+        }
+      ]
+    }
+  },
+  "note": "retrieval-only tuning on an ingested store; no answer or judge calls; knobs scaled together"
+}

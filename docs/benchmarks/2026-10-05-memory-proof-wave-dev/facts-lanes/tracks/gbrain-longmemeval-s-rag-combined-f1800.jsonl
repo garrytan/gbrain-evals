@@ -1,0 +1,2 @@
+{"ts":"2026-10-05T19:06:40.916Z","step":"ingest","code":0,"cell":"longmemeval-s-gbrain-rag-2bb59b984cc9","tail":"[cell] longmemeval-s-gbrain-rag-2bb59b984cc9: resuming with $10.00 of $10.00 left; proxy http://127.0.0.1:33061 | [cell] longmemeval-s-gbrain-rag-2bb59b984cc9 exited 0; receipts in eval/reports/harness-cells/longmemeval-s-gbrain-rag-2bb59b984cc9 | "}
+{"ts":"2026-10-05T19:12:01.086Z","step":"tune","code":0,"chosen":{"8000":{"facts_tokens":1800,"token_budget":6300}}}

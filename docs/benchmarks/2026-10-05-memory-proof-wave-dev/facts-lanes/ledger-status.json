@@ -1,0 +1,29 @@
+{
+  "ledger": ".budget/mpw-dev-facts.sqlite",
+  "state": "sqlite",
+  "totals": {
+    "program_cap_usd": 120,
+    "committed_usd": 54.85425876,
+    "reconciled_usd": 54.8542566,
+    "open_reservations_usd": 0.00000216,
+    "remaining_usd": 65.14574124,
+    "requests": 83976,
+    "overshoot_usd": 0.013278709999999999
+  },
+  "run": null,
+  "runs": 39,
+  "open_runs": 2,
+  "last_cap_change": {
+    "program_cap_usd": 120,
+    "kind": "open",
+    "reason": "memory proof wave dev A4: gbrain facts and combined lanes (opt-in extraction counted)",
+    "by": "user@cox.local",
+    "at": "2026-10-05T14:50:04.809Z"
+  },
+  "size_bytes": 45514304,
+  "read_ms": 38.17,
+  "hints": [
+    "both files present: a real legacy ledger.json beside the SQLite ledger is an interrupted migration; if the totals match run `migrate --finish`, otherwise stop and ask the user",
+    "cap mismatch: unset --program-cap-usd / BRAINBENCH_PROGRAM_CAP_USD to use the recorded cap; run `set-cap` only with the user's authorization"
+  ]
+}
