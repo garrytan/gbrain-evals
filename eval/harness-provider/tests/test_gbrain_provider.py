@@ -248,3 +248,75 @@ def test_children_exit_when_parent_is_killed(tmp_path, embed_stub):
     while time.time() < deadline and any(_alive(x) for x in pids):
         time.sleep(0.2)
     assert not any(_alive(x) for x in pids), "gbrain serve outlived a SIGKILLed parent (stdin EOF should end it)"
+
+def test_repeated_session_is_written_once_and_a_changed_repeat_kept(tmp_path, embed_stub):
+    url, _ = embed_stub
+    p = _provider(tmp_path / "store", url)
+    try:
+        changed = Document(id="d-a1", content="I adopted a second cat named Byte.", user_id="u-a", timestamp="2024-04-01T09:00:00+00:00")
+        p.ingest([DOCS[0], DOCS[0], changed])
+        docs, _, _ = p.retrieve_with_meta("cat", user_id="u-a")
+        by_id = {d.id: d.content for d in docs}
+        assert set(by_id) == {"d-a1", "d-a1-2"}
+        assert by_id["d-a1-2"].startswith("Date: 2024-04-01 09:00 UTC\n")
+    finally:
+        p.cleanup()
+
+
+def test_concurrent_queries_across_units_survive_child_eviction(tmp_path, embed_stub):
+    url, _ = embed_stub
+    p = _provider(tmp_path / "store", url, max_open_units=1)
+    try:
+        p.ingest([d for d in DOCS if d.user_id == "u-a"])
+        p.ingest([d for d in DOCS if d.user_id == "u-b"])
+        errors = []
+        opened = p._ensure_unit
+
+        def slow_open(*a, **k):
+            u = opened(*a, **k)
+            time.sleep(0.05)
+            return u
+
+        p._ensure_unit = slow_open
+
+        def worker(unit):
+            for _ in range(4):
+                try:
+                    p.retrieve_with_meta("cat", user_id=unit)
+                except Exception as e:
+                    errors.append(repr(e))
+
+        threads = [threading.Thread(target=worker, args=(u,)) for u in ("u-a", "u-b", "u-a", "u-b")]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        assert errors == []
+    finally:
+        p.cleanup()
+
+
+def test_search_config_is_read_time_and_never_inherited(tmp_path, embed_stub):
+    url, _ = embed_stub
+    store = tmp_path / "store"
+    p = _provider(store, url, search_config={"search.entity_anchoring": "true"})
+    try:
+        p.ingest([DOCS[0]])
+        p.retrieve_with_meta("grey cat", user_id="u-a")
+        home = p.units["u-a"].home
+    finally:
+        p.cleanup()
+    assert p._cli(home, "config", "get", "search.entity_anchoring").strip() == "true"
+
+    from mpw.gbrain_provider import GbrainMemoryProvider
+
+    q = GbrainMemoryProvider({"gbrain_cli": CLI, "token_budget": 2000,
+                              "child_env": {"VOYAGE_API_KEY": "mpwp-gbrain-test", "VOYAGE_BASE_URL": f"{url}/v1"}})
+    q.prepare(store, unit_ids={"u-a", "u-b"}, reset=False)
+    try:
+        _, _, meta = q.retrieve_with_meta("grey cat", user_id="u-a")
+        assert meta["entity_anchored"] == 0
+    finally:
+        q.cleanup()
+    with pytest.raises(RuntimeError, match="not found"):
+        q._cli(home, "config", "get", "search.entity_anchoring")

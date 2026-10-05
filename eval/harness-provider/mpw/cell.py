@@ -36,6 +36,7 @@ from pathlib import Path
 from . import capture, context as ctxmod, leakage, register, timestamps
 from .projection import Projection
 from .records import (
+    safe_name,
     ANSWER_FAILURE, ANSWERED, INCOMPLETE_INGEST, RETRIEVAL_FAILURE,
     AnswerRecord, IngestRecord, RetrieveRecord, read_record, write_record,
 )
@@ -224,6 +225,9 @@ class CellRun:
         self.log_path = os.environ.get("MPW_PROXY_LOG")
         self.bodies_dir = os.environ.get("MPW_PROXY_BODIES")
         self.events = (cell_dir / "events.jsonl").open("a")
+        # Cells whose ingest inputs match share one store (MPW_STORE_DIR, chosen by the launcher); a cell alone uses its own.
+        self.store = Path(os.environ["MPW_STORE_DIR"]) if os.environ.get("MPW_STORE_DIR") else cell_dir / "store"
+        self.store_id = os.environ.get("MPW_STORE_ID") or self.cell_id
 
     def event(self, **row) -> None:
         row["ts"] = time.time()
@@ -316,10 +320,11 @@ class CellRun:
         self.setup()
         prov = self.provider
         prov.initialize()
-        store = self.dir / "store"
+        store = self.store
         units = sorted(self.pdocs_by_unit)
         unit_ids = {self.projection.unit_id(u) for u in units if u != "_all"} or None
-        resuming = any((self.dir / "stages" / "ingest").glob("*.json"))
+        resuming = any((self.dir / "stages" / "ingest").glob("*.json")) or any((store / "ingest").glob("*.json"))
+        self._lock_store()
         prov.prepare(store, unit_ids=unit_ids, reset=not resuming)
         queries_by_unit: dict[str, list] = {}
         for q in self.queries:
@@ -329,19 +334,49 @@ class CellRun:
                 if unit not in queries_by_unit:
                     continue
                 ok = await self._ingest(unit)
+                if os.environ.get("MPW_INGEST_ONLY") == "1":
+                    continue
                 await self._questions(unit, queries_by_unit[unit], ingest_ok=ok)
                 if self.exhausted():
                     self.event(kind="budget_exhausted", unit=unit)
                     break
         finally:
             prov.cleanup()
+            self._store_lock.close()
+        if os.environ.get("MPW_INGEST_ONLY") == "1":
+            done = sorted(p.stem for p in (self.dir / "stages" / "ingest").glob("*.json"))
+            return {"cell_id": self.cell_id, "ok": True, "gates": {"ingest_only": True}, "score": {"ingested_units": len(done)}}
         return self.finalize()
+
+    def _lock_store(self) -> None:
+        """One cell at a time per store: PGLite has a single writer and banks are not safe to share live."""
+        import fcntl
+
+        self.store.mkdir(parents=True, exist_ok=True)
+        self._store_lock = open(self.store / ".lock", "w")
+        try:
+            fcntl.flock(self._store_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as e:
+            raise CellError(f"the store {self.store} is in use by another cell; run cells that share a store one after another") from e
+
+    def _unit_docs_sha(self, unit: str) -> str:
+        return _sha(*[json.dumps(_doc_dict(d), sort_keys=True, ensure_ascii=False) for d in sorted(self.pdocs_by_unit[unit], key=lambda d: d.id)])
 
     async def _ingest(self, unit: str) -> bool:
         prior = read_record(self.dir, "ingest", unit, self.cell_id)
         if prior is not None:
             if not prior["ok"]:
                 return False
+            return True
+        shared = self.store / "ingest" / f"{safe_name(unit)}.json"
+        docs_sha = self._unit_docs_sha(unit)
+        if shared.exists():
+            stored = json.loads(shared.read_text())
+            if stored.get("store_id") != self.store_id or stored.get("documents_sha256") != docs_sha:
+                raise CellError(f"the shared store's receipt for unit {unit} was written for other inputs; plan a new store")
+            rec = IngestRecord(self.cell_id, unit, True, stored["documents"], 0.0, barrier_ms=0.0,
+                               provider_receipt={"reused_store": self.store_id, "store_receipt": stored})
+            write_record(self.dir, "ingest", unit, rec)
             return True
         reset_unit = getattr(self.provider, "reset_unit", None)
         punit = self.projection.unit_id(unit) if unit != "_all" else None
@@ -361,6 +396,11 @@ class CellRun:
                                round((time.perf_counter() - t0) * 1000, 1), error=f"{type(e).__name__}: {e}")
             self.event(kind="ingest_failed", unit=unit, error=rec.error, trace=traceback.format_exc()[-2000:])
         write_record(self.dir, "ingest", unit, rec)
+        if rec.ok:
+            shared.parent.mkdir(parents=True, exist_ok=True)
+            shared.write_text(json.dumps({"store_id": self.store_id, "unit": unit, "documents": rec.documents,
+                                          "documents_sha256": docs_sha, "first_cell": self.cell_id, "ingest_ms": rec.ingest_ms,
+                                          "barrier_ms": rec.barrier_ms, "provider_receipt": rec.provider_receipt}, indent=2, default=str))
         return rec.ok
 
     async def _questions(self, unit: str, queries: list, ingest_ok: bool) -> None:

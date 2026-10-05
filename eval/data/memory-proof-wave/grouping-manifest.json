@@ -11,18 +11,188 @@
     "path": "docs/benchmarks/2026-10-05-memory-proof-wave-power/inputs.json",
     "sha256": "1cbfed98f6841ae6fbdecf8b897155f5ee373198849de41c6a961b689176725d"
   },
-  "salt_sha256": "d7c382d846e546bef6dde52469d6e21a3dd34abb5534a16c8898d18bd4c4373c",
+  "salt_sha256": "62449d8cc8721dacd92251a77e24ec0b8b9506f720b1fa4ef3cadb40893e41ef",
   "private_file": {
     "file": "grouping-private.json",
-    "sha256": "f67da64c277db517f3624d8a77b1bf02f8222c34ca2419263a12880ef3841d67",
+    "sha256": "222920992a892df89b4619dc8f6f4327dbff800ffcdf90ede0b92e9ac9840413",
     "bytes": 2018
   },
   "access_log": "access-log.jsonl, kept beside the private file; every validation or sealed open appends one line",
   "groups": [
     {
       "group": "primary",
-      "note": "Primary non-inferiority test: BEAM 500k + 1M, 14 dev / 14 validation / 42 sealed conversations.",
+      "note": "Primary non-inferiority test, margin 3.0 points: BEAM 100k + 500k + 1M, 18 dev / 18 validation / 54 sealed conversations (100k 4/4/12, 500k 7/7/21, 1M 7/7/21).",
       "strata": [
+        {
+          "stratum": "beam/100k",
+          "grouping": "conversation",
+          "queries_file": {
+            "path": "data/beam/100k/queries.json.gz",
+            "sha256": "f58e001b3aeb0f13c894aa0ca6896a8181addbec4c140cc982cd0de9c0f0c465"
+          },
+          "clusters": [
+            {
+              "id": "1",
+              "histories": [
+                "1"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "2",
+              "histories": [
+                "2"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "3",
+              "histories": [
+                "3"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "4",
+              "histories": [
+                "4"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "5",
+              "histories": [
+                "5"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "6",
+              "histories": [
+                "6"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "7",
+              "histories": [
+                "7"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "8",
+              "histories": [
+                "8"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "9",
+              "histories": [
+                "9"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "10",
+              "histories": [
+                "10"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "11",
+              "histories": [
+                "11"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "12",
+              "histories": [
+                "12"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "13",
+              "histories": [
+                "13"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "14",
+              "histories": [
+                "14"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "15",
+              "histories": [
+                "15"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "16",
+              "histories": [
+                "16"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "17",
+              "histories": [
+                "17"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "18",
+              "histories": [
+                "18"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "19",
+              "histories": [
+                "19"
+              ],
+              "questions": 20
+            },
+            {
+              "id": "20",
+              "histories": [
+                "20"
+              ],
+              "questions": 20
+            }
+          ],
+          "dev": {
+            "count": 4,
+            "questions": 80,
+            "ids": [
+              "3",
+              "11",
+              "12",
+              "15"
+            ]
+          },
+          "validation": {
+            "count": 4,
+            "questions": 80,
+            "commitment": "7f8fe69fb7740c240d4b05cab3610ad724e64b5d39079098462eaa2198df8f02"
+          },
+          "sealed": {
+            "count": 12,
+            "questions": 240,
+            "commitment": "ca54a9a2e6c4cb6bbdf60082ac644048f0a8f37513ce69de8a988e987e83312f"
+          }
+        },
         {
           "stratum": "beam/500k",
           "grouping": "conversation",
@@ -293,12 +463,12 @@
           "validation": {
             "count": 7,
             "questions": 140,
-            "commitment": "e001e1b6129b5c651ed2c4fc051675f81612b0898f4f7f90786e3ff089625340"
+            "commitment": "f4537e1b4382c97d06e50ccb809da0d6a32a10cf22aca7d61a9bf5a4b6e212d3"
           },
           "sealed": {
             "count": 21,
             "questions": 420,
-            "commitment": "27c51b754ffabaccfbcb437c8228043dd4ed7e9f28d7e3af8f50424938aec83e"
+            "commitment": "51207659feb246ccc88b45f454d0c3971661978e44f65e6eb447e5d4d5d7fe2b"
           }
         },
         {
@@ -571,19 +741,19 @@
           "validation": {
             "count": 7,
             "questions": 140,
-            "commitment": "f5e0923be3ffb86aab5c5ef5c17b61a1ed5ddbee5ae22c82cca427ba9465ffcc"
+            "commitment": "ec56f38123082fc87c55d59dbd0293d8d60d07298a47373d2e6b5b4864b0a5df"
           },
           "sealed": {
             "count": 21,
             "questions": 420,
-            "commitment": "69de8993c40c13cfde876348f3f6fd712b87f0eca6ab66e3ae7e189f7b4a94fb"
+            "commitment": "60362febccd7391a11cc0ecb99f4479f906825df82e41f1bd699ceb97560152b"
           }
         }
       ]
     },
     {
       "group": "secondary",
-      "note": "Secondary rows, each its own dataset: PersonaMem 32k grouped by persona (all histories of a persona together), LifeBench grouped by user.",
+      "note": "Descriptive rows, each its own dataset: PersonaMem 32k grouped by persona (all histories of a persona together), LifeBench grouped by user.",
       "strata": [
         {
           "stratum": "personamem/32k",
@@ -763,13 +933,13 @@
           },
           "validation": {
             "count": 4,
-            "questions": 121,
-            "commitment": "9e7fd0d072bada67ff7e5cd2fa2ea402b2d74c5cf3df9e644b0fc0bf8503006e"
+            "questions": 149,
+            "commitment": "c52664155ce478fa9798ffa3086c41339920356367cc4eb7d595de4a20c3740a"
           },
           "sealed": {
             "count": 12,
-            "questions": 375,
-            "commitment": "dc43402d17598e1269689ff26156b05b3d6870b6bd52f48895a5e24c45628be2"
+            "questions": 347,
+            "commitment": "1cfb173c8792a3886ff1c7828f120d1ef58dee659de0086dc27dc0020356d97e"
           }
         },
         {
@@ -862,191 +1032,50 @@
           "validation": {
             "count": 2,
             "questions": 375,
-            "commitment": "5b1c2e5eb0f3d7aa1aa167ae95bd70d90d7aab1054030920df21f1d9426e0cec"
+            "commitment": "b7a79fb41eae4704bf52c2fe3f32447292fa27c35aa6e1bfcf7b4addfd77de6c"
           },
           "sealed": {
             "count": 6,
             "questions": 1246,
-            "commitment": "ed4cdfe8cfd65e12b43705312d0fb9de54e988613005e3ea9398c2cb60656454"
+            "commitment": "05342d8120e7a595d7ef4ef63b0fa1c3764b051eb78dc1a7f43a9d22cf1b4b1f"
           }
         }
       ]
-    },
+    }
+  ],
+  "reseals": [
     {
-      "group": "reserve",
-      "note": "Reserve: same rule, not part of any claim unless the preregistration adopts it before any sealed cell runs.",
-      "strata": [
-        {
-          "stratum": "beam/100k",
-          "grouping": "conversation",
-          "queries_file": {
-            "path": "data/beam/100k/queries.json.gz",
-            "sha256": "f58e001b3aeb0f13c894aa0ca6896a8181addbec4c140cc982cd0de9c0f0c465"
-          },
-          "clusters": [
-            {
-              "id": "1",
-              "histories": [
-                "1"
-              ],
-              "questions": 20
-            },
-            {
-              "id": "2",
-              "histories": [
-                "2"
-              ],
-              "questions": 20
-            },
-            {
-              "id": "3",
-              "histories": [
-                "3"
-              ],
-              "questions": 20
-            },
-            {
-              "id": "4",
-              "histories": [
-                "4"
-              ],
-              "questions": 20
-            },
-            {
-              "id": "5",
-              "histories": [
-                "5"
-              ],
-              "questions": 20
-            },
-            {
-              "id": "6",
-              "histories": [
-                "6"
-              ],
-              "questions": 20
-            },
-            {
-              "id": "7",
-              "histories": [
-                "7"
-              ],
-              "questions": 20
-            },
-            {
-              "id": "8",
-              "histories": [
-                "8"
-              ],
-              "questions": 20
-            },
-            {
-              "id": "9",
-              "histories": [
-                "9"
-              ],
-              "questions": 20
-            },
-            {
-              "id": "10",
-              "histories": [
-                "10"
-              ],
-              "questions": 20
-            },
-            {
-              "id": "11",
-              "histories": [
-                "11"
-              ],
-              "questions": 20
-            },
-            {
-              "id": "12",
-              "histories": [
-                "12"
-              ],
-              "questions": 20
-            },
-            {
-              "id": "13",
-              "histories": [
-                "13"
-              ],
-              "questions": 20
-            },
-            {
-              "id": "14",
-              "histories": [
-                "14"
-              ],
-              "questions": 20
-            },
-            {
-              "id": "15",
-              "histories": [
-                "15"
-              ],
-              "questions": 20
-            },
-            {
-              "id": "16",
-              "histories": [
-                "16"
-              ],
-              "questions": 20
-            },
-            {
-              "id": "17",
-              "histories": [
-                "17"
-              ],
-              "questions": 20
-            },
-            {
-              "id": "18",
-              "histories": [
-                "18"
-              ],
-              "questions": 20
-            },
-            {
-              "id": "19",
-              "histories": [
-                "19"
-              ],
-              "questions": 20
-            },
-            {
-              "id": "20",
-              "histories": [
-                "20"
-              ],
-              "questions": 20
-            }
-          ],
-          "dev": {
-            "count": 4,
-            "questions": 80,
-            "ids": [
-              "3",
-              "11",
-              "12",
-              "15"
-            ]
-          },
-          "validation": {
-            "count": 4,
-            "questions": 80,
-            "commitment": "8026eb6b0ce6543b1eb97f0ef1eca64e1eaf8c87cf755027f055e0616d9b7a28"
-          },
-          "sealed": {
-            "count": 12,
-            "questions": 240,
-            "commitment": "0d596685370fca9a801e144ec0b4bf3c7398cbc9d04f83c3ed3b6db710954174"
-          }
+      "date": "2026-10-05",
+      "reason": "custody exposure: the first private grouping file (salt and validation/sealed ids) was stored where every project subagent could read it, so its validation/sealed partition is treated as possibly seen. No validation or sealed ids had been opened (no access log existed); dev runs had used only the public dev ids.",
+      "rule": "Dev ids stay exactly as committed. Per stratum, the other clusters are ordered by HMAC-SHA256(new salt, \"<stratum>/<cluster id>\") as lowercase hex, ascending; the first round(0.2 G) are validation and the rest sealed, where G counts every cluster in the stratum, so the counts are unchanged. Commitments use the new salt.",
+      "previous_private_file": {
+        "file": "grouping-private.json",
+        "sha256": "f67da64c277db517f3624d8a77b1bf02f8222c34ca2419263a12880ef3841d67",
+        "bytes": 2018
+      },
+      "previous_salt_sha256": "d7c382d846e546bef6dde52469d6e21a3dd34abb5534a16c8898d18bd4c4373c",
+      "previous_commitments": {
+        "beam/500k": {
+          "validation": "e001e1b6129b5c651ed2c4fc051675f81612b0898f4f7f90786e3ff089625340",
+          "sealed": "27c51b754ffabaccfbcb437c8228043dd4ed7e9f28d7e3af8f50424938aec83e"
+        },
+        "beam/1m": {
+          "validation": "f5e0923be3ffb86aab5c5ef5c17b61a1ed5ddbee5ae22c82cca427ba9465ffcc",
+          "sealed": "69de8993c40c13cfde876348f3f6fd712b87f0eca6ab66e3ae7e189f7b4a94fb"
+        },
+        "personamem/32k": {
+          "validation": "9e7fd0d072bada67ff7e5cd2fa2ea402b2d74c5cf3df9e644b0fc0bf8503006e",
+          "sealed": "dc43402d17598e1269689ff26156b05b3d6870b6bd52f48895a5e24c45628be2"
+        },
+        "lifebench/en": {
+          "validation": "5b1c2e5eb0f3d7aa1aa167ae95bd70d90d7aab1054030920df21f1d9426e0cec",
+          "sealed": "ed4cdfe8cfd65e12b43705312d0fb9de54e988613005e3ea9398c2cb60656454"
+        },
+        "beam/100k": {
+          "validation": "8026eb6b0ce6543b1eb97f0ef1eca64e1eaf8c87cf755027f055e0616d9b7a28",
+          "sealed": "0d596685370fca9a801e144ec0b4bf3c7398cbc9d04f83c3ed3b6db710954174"
         }
-      ]
+      }
     }
   ]
 }

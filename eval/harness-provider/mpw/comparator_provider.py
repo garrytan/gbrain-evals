@@ -50,6 +50,10 @@ _ID_KEYED_MAPS = ("chunks", "source_facts")
 _MIN_SCRUB_LEN = 4
 
 
+# Bump when anything that changes what ingest writes changes (retain payload, bank config, id hashing).
+INGEST_REVISION = "comparator-ingest-1"
+INGEST_KEYS = ("extraction_model", "id_salt")
+
 class OpaqueIds:
     """HMAC-sha256 id hashing with a scorer-only reverse map."""
 
@@ -240,7 +244,9 @@ class ComparatorMemoryProvider(MemoryProvider):
     # ── lifecycle ────────────────────────────────────────────────────────
 
     def _extraction_model(self) -> tuple[str, str | None]:
-        spec = self.config.get("extraction_model")
+        # serve_model: the server's LLM for this cell only (agent-mode reflect over banks extracted earlier);
+        # it is not an ingest key, so the cell reuses the store its extraction_model built.
+        spec = self.config.get("serve_model") or self.config.get("extraction_model")
         if not spec:
             return "openai", None
         provider, sep, model = str(spec).partition(":")
@@ -325,12 +331,24 @@ class ComparatorMemoryProvider(MemoryProvider):
 
         by_bank: dict[str, list[Document]] = {}
         units: dict[str, str | None] = {}
+        # A dataset can list one session twice in a history (LongMemEval haystacks do) and the server rejects a
+        # batch with a repeated document id: an identical repeat is retained once, a changed one under its own id.
+        seen: dict[tuple[str, str], str] = {}
         for doc in documents:
             bank = self._bank_id(doc.user_id)
             units[bank] = doc.user_id
+            doc_id = doc.id
+            if (bank, doc_id) in seen:
+                if seen[(bank, doc_id)] == doc.content:
+                    continue
+                n = 2
+                while (bank, f"{doc.id}-{n}") in seen:
+                    n += 1
+                doc_id = f"{doc.id}-{n}"
+            seen[(bank, doc_id)] = doc.content
             context = self._ids.scrub(doc.context, extra_originals=[doc.id, doc.user_id or ""]) if doc.context else doc.context
             hashed = Document(
-                id=self._ids.hash(doc.id), content=doc.content, user_id=doc.user_id,
+                id=self._ids.hash(doc_id), content=doc.content, user_id=doc.user_id,
                 timestamp=doc.timestamp, context=context, tags=doc.tags,
             )
             by_bank.setdefault(bank, []).append(hashed)

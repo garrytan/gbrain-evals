@@ -163,3 +163,14 @@ def test_retrieval_errors_are_typed_not_empty(tmp_path, stub_models, shim_scorer
     asyncio.run(cellmod.CellRun(d).run())
     answers = [json.loads(p.read_text()) for p in (d / "stages" / "answer").glob("*.json")]
     assert answers and all(a["outcome"] == "retrieval_failure" for a in answers)
+
+
+def test_safe_name_keeps_ids_that_need_replacing_apart(tmp_path):
+    from mpw.records import IngestRecord, read_record, safe_name, write_record
+
+    assert safe_name("conv-26_q3") == "conv-26_q3"
+    assert safe_name("孙雨薇") != safe_name("尹浩")
+    assert safe_name("孙雨薇_q117") != safe_name("尹浩_q117")
+    write_record(tmp_path, "ingest", "孙雨薇", IngestRecord("c1", "孙雨薇", True, 3, 1.0))
+    assert read_record(tmp_path, "ingest", "尹浩", "c1") is None
+    assert read_record(tmp_path, "ingest", "孙雨薇", "c1")["unit"] == "孙雨薇"

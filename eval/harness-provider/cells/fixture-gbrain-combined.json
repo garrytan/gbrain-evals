@@ -1,0 +1,27 @@
+{
+  "note": "Keyless plumbing check for the gbrain combined lane: opt-in extraction through extract_facts at ingest, then facts plus pages at retrieval, every model request answered by the local stub upstream. Not benchmark evidence.",
+  "dataset": "fixture",
+  "split": "tiny",
+  "provider": "gbrain",
+  "mode": "rag",
+  "lane": "combined",
+  "seal": "fixture",
+  "target_tokens": null,
+  "models": {
+    "answer": "openai:gpt-6-luna",
+    "judge": "openai:gpt-6-luna"
+  },
+  "budget_usd": 1,
+  "questions": {},
+  "k": 10,
+  "provider_config": {
+    "lane": "combined",
+    "extraction_model": "openai:gpt-6-luna",
+    "facts_tokens": 600,
+    "token_budget": 1400
+  },
+  "gbrain_credentials": [
+    "voyage",
+    "openai"
+  ]
+}

@@ -16,7 +16,9 @@
  * strings. An OpenAI `json_object` request whose prompt carries its schema
  * ("respond with valid JSON matching this schema: {...}", the soft-schema
  * mode some memory servers use) gets a filled instance of that schema: one
- * element per array and null for nullable fields. Embeddings are unit vectors derived from a hash of the text,
+ * element per array and null for nullable fields. gbrain's fact extractor,
+ * which writes its JSON shape into its system prompt, gets one fact per line
+ * of the turn it was sent (at most three). Embeddings are unit vectors derived from a hash of the text,
  * honoring `dimensions` / `output_dimension` / `outputDimensionality`. Every
  * response carries a usage block in the provider's own shape (4 bytes per
  * token), and `stream: true` requests get server-sent events.
@@ -167,6 +169,28 @@ function promptSchema(body: Record<string, any>): any {
   return null;
 }
 
+const FACTS_EXTRACTOR = 'You extract personal-knowledge claims from a conversation turn into structured facts.';
+
+/**
+ * gbrain's fact extractor names its JSON shape in its system prompt instead of
+ * a schema field: answer it with one fact per non-empty line of the
+ * `<turn>` text (at most three), so extraction lanes write real fact rows.
+ */
+function factsExtractorReply(body: Record<string, any>): { facts: unknown[] } | null {
+  const strings: string[] = [];
+  const walk = (v: unknown): void => {
+    if (typeof v === 'string') strings.push(v);
+    else if (Array.isArray(v)) v.forEach(walk);
+    else if (v && typeof v === 'object') Object.values(v).forEach(walk);
+  };
+  walk(promptText(body));
+  const text = strings.join('\n');
+  if (!text.includes(FACTS_EXTRACTOR)) return null;
+  const turn = /<turn>([\s\S]*?)<\/turn>/.exec(text)?.[1] ?? '';
+  const lines = turn.split('\n').map(l => l.trim()).filter(Boolean).slice(0, 3);
+  return { facts: lines.map(l => ({ fact: `stub fact: ${l.slice(0, 120)}`, kind: 'fact', entity: null, confidence: 0.9, notability: 'high', metric: null, value: null, unit: null, period: null })) };
+}
+
 export async function startStubUpstream(options: { port?: number } = {}): Promise<StubUpstream> {
   const responders = new Map<StubRoute, StubResponder>();
   const hits = { total: 0, byPath: {} as Record<string, number> };
@@ -187,6 +211,8 @@ export async function startStubUpstream(options: { port?: number } = {}): Promis
       const structured = schemaInstance(schema, schema, 'value', 0, fill);
       return { text: JSON.stringify(structured), structured };
     }
+    const facts = factsExtractorReply(request.body);
+    if (facts) return { text: JSON.stringify(facts), structured: facts };
     return { text: `stub answer from ${request.model || request.provider}`, structured: null };
   }
 
