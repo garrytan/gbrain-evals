@@ -1199,6 +1199,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'situation-recall-regression.ts': { role: 'situation-recall regression comparator', part_of: 'situation-recall' },
   'harness-cell.ts': { role: 'public agent-memory benchmark harness: cell launcher (plan, run, resume) behind the metering proxy' },
   'harness-comparator.ts': { role: 'public agent-memory benchmark harness: installs and inspects the pinned comparator server' },
+  'memory-proof-wave-dev-power.ts': { role: 'memory proof wave: power simulation rerun with paired variance and conversation effect measured on dev' },
   'harness-dev.ts': { role: 'public agent-memory benchmark harness: dev-phase driver (ingest once, tune knobs per target, one cell per target)' },
   'harness-ledger.ts': { role: 'public agent-memory benchmark harness: rebuilds the cell ledger from measured acceptance-cell usage' },
   'harness-smoke.ts': { role: 'public agent-memory benchmark harness: free protocol smoke for every dataset x mode x provider on the stub upstream' },
