@@ -40,6 +40,7 @@ from cognee.tasks.ingestion.data_item import DataItem  # noqa: E402
 
 CAPABILITY = json.loads((Path(__file__).resolve().parent / "capability.json").read_text())
 POLICIES = CAPABILITY["retrieval_policies"]
+DESCRIPTIVE_KEYS = set(CAPABILITY["retrieval_notes"]["descriptive_keys"])
 LANE_KEYS = ("chunks_top_k", "entities_top_k", "facts_top_k", "max_edges_per_entity")
 ENTITY_HEADER = "## Relevant entities\n"
 PROXY_REFUSAL = re.compile(r"\b402\b|['\"]kind['\"]\s*:\s*['\"]budget['\"]")
@@ -147,10 +148,12 @@ class CogneeAdapter(Adapter):
         mode = policy.get("mode")
         if mode not in ("vendor-default", "fixed-evidence"):
             raise ShimError("invalid_request", "policy.mode must be vendor-default or fixed-evidence", 400)
-        unknown = set(policy.get("settings", {})) - {"top_k", *LANE_KEYS}
+        given = {k: v for k, v in policy.get("settings", {}).items() if k not in DESCRIPTIVE_KEYS}
+        unknown = set(given) - {"top_k", *LANE_KEYS}
         if unknown:
             raise ShimError("invalid_request", f"unknown settings for cognee: {sorted(unknown)}", 400)
-        settings = {**POLICIES[mode]["settings"], **policy.get("settings", {})}
+        defaults = {k: v for k, v in POLICIES[mode].items() if k not in DESCRIPTIVE_KEYS}
+        settings = {**defaults, **given}
         applied = {"query_type": "HYBRID_COMPLETION", "only_context": True, "verbose": True, **settings,
                    "query_time": "not supported by cognee search; ignored"}
         results = self.run(self._search(ns, question, settings))

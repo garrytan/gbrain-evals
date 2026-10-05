@@ -42,23 +42,40 @@
   "parallel_namespaces": false,
   "retrieval_policies": {
     "vendor-default": {
-      "api": "cognee.search(query_type=HYBRID_COMPLETION, only_context=True, verbose=True, datasets=[ns])",
-      "settings": {"top_k": 15},
-      "resolved": "search top_k 15 caps each hybrid lane at min(15, DEFAULT_HYBRID_LANE_TOP_K=10): 10 chunks, 10 entities with up to 10 edges each, 10 facts",
-      "why": "HYBRID_COMPLETION is recall()'s fallback type (ROUTER_FALLBACK_TYPE) and the retriever cognee selected for its reported BEAM configuration. The type is pinned (auto_route off) so the item shape is deterministic."
+      "top_k": 15,
+      "maps_to": "cognee.search(query_type=HYBRID_COMPLETION, only_context=True, verbose=True, datasets=[ns]). search top_k 15 caps each hybrid lane at min(15, DEFAULT_HYBRID_LANE_TOP_K=10): 10 chunks, 10 entities with up to 10 edges each, 10 facts. HYBRID_COMPLETION is recall()'s fallback type (ROUTER_FALLBACK_TYPE) and the retriever cognee selected for its reported BEAM configuration. The type is pinned (auto_route off) so the item shape is deterministic."
     },
     "fixed-evidence": {
-      "api": "same call",
-      "settings": {"top_k": 15, "chunks_top_k": 20, "entities_top_k": 20},
-      "resolved": "20 chunks, 20 entities (cognee's reported BEAM 100K configuration hybrid_completion_20_20_qa_v1), 10 facts; the harness packs the returned items to the 8,000-token budget",
-      "why": "the largest documented hybrid setting; the harness truncates to the shared budget"
-    },
-    "settable": ["top_k", "chunks_top_k", "entities_top_k", "facts_top_k", "max_edges_per_entity"],
-    "item_order": "chunks (cognee rank), then entities, then facts, the order cognee renders them into its own context string (raw.context)"
+      "top_k": 15,
+      "chunks_top_k": 20,
+      "entities_top_k": 20,
+      "maps_to": "cognee.search(query_type=HYBRID_COMPLETION, only_context=True, verbose=True, datasets=[ns]). 20 chunks, 20 entities (cognee's reported BEAM 100K configuration hybrid_completion_20_20_qa_v1), 10 facts; the harness packs the returned items to the 8,000-token budget. Why: the largest documented hybrid setting; the harness truncates to the shared budget"
+    }
+  },
+  "retrieval_notes": {
+    "settable": [
+      "top_k",
+      "chunks_top_k",
+      "entities_top_k",
+      "facts_top_k",
+      "max_edges_per_entity"
+    ],
+    "item_order": "chunks (cognee rank), then entities, then facts, the order cognee renders them into its own context string (raw.context)",
+    "descriptive_keys": [
+      "maps_to"
+    ]
   },
   "streaming": "disabled",
-  "telemetry_off": ["TELEMETRY_DISABLED=1", "LITELLM_LOCAL_MODEL_COST_MAP=True", "HF_HUB_OFFLINE=1"],
-  "agent_surface": {"kind": "vendor-mcp", "transport": "stdio", "version": "cognee-mcp 0.5.6 (not built in this lane; Phase 8)"},
+  "telemetry_off": [
+    "TELEMETRY_DISABLED=1",
+    "LITELLM_LOCAL_MODEL_COST_MAP=True",
+    "HF_HUB_OFFLINE=1"
+  ],
+  "agent_surface": {
+    "kind": "vendor-mcp",
+    "transport": "stdio",
+    "version": "cognee-mcp 0.5.6 (not built in this lane; Phase 8)"
+  },
   "deviations_from_vendor_code": [
     "Session documents are added as JSON text through DataItem (with a pinned data_id and the source id as label) instead of a JSON file on disk; JsonListChunker reads the same JSON list either way.",
     "Turns are paired in arrival order (1-2, 3-4, ...) and labelled by speaker; cognee's BEAM code pairs user and assistant turns. LoCoMo has two named speakers and no assistant.",
