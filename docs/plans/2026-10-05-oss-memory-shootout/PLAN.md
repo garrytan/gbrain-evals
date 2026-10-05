@@ -1,7 +1,7 @@
 # Open-source memory shootout: gbrain against Graphiti, Cognee, Mem0, Letta, Basic Memory and Hindsight
 
 Status: v3, autoplan complete (CEO and engineering phases, Claude and GPT-6 Astra voices each), awaiting Garry's approval at the final gate.
-Review files: `~/.capy/work/shootout-review/` (summarized in [Review record](#review-record)).
+Review files: [reviews/](reviews/) (summarized in [Review record](#review-record)).
 
 ## The question
 
