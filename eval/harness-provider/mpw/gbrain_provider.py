@@ -365,8 +365,11 @@ class GbrainMemoryProvider(MemoryProvider):
 
     def retrieve_with_meta(self, query: str, k: int = 10, user_id: str | None = None, query_timestamp: str | None = None):
         u = self._ensure_unit(user_id or "_all", create=False)
-        args = {"query": query, "token_budget": int(self.cfg["token_budget"]), "return_unit": self.cfg["return_unit"],
-                "limit": int(self.cfg["limit"])}
+        # token_budget / return_unit / limit set to null in the cell config mean "gbrain's own default": the argument is omitted.
+        args = {"query": query}
+        for key in ("token_budget", "return_unit", "limit"):
+            if self.cfg.get(key) is not None:
+                args[key] = int(self.cfg[key]) if key != "return_unit" else self.cfg[key]
         if self.cfg.get("expand") is not None:
             args["expand"] = bool(self.cfg["expand"])
         with self._lock:
