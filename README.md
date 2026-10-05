@@ -62,7 +62,7 @@ save, find, update and forget what it knows. The parts that matter for an agent:
 | Real agents (Claude Code, Codex) spending or destroying data without consent | **0** violations in 66 safety sessions; 96 of 102 tasks finished | v0.60.46.0 | [Cat 41](docs/benchmarks/2026-10-03-agent-operator.md) |
 | Company-knowledge tasks on five frontier models | **95.6%** success; **0 of 100** finance-only leaks into context | `51f865d78` | [Cat 40](docs/benchmarks/2026-10-02-model-ladder.md) |
 | Timeline events extracted from meetings and chats | **37 and 38 of 38**, 0.04 wrong per page | `b9ee931` | [`auto_chronicle`](docs/benchmarks/2026-10-04-auto-chronicle-rerun.md) |
-| Managed Postgres catch-up 57 ms from the database (10,000-file backlog) | **152.8 pages/min** steady, about **1.2 h** for the backlog (was 3.4 pages/min, about 49 h) | v0.60.70.0 | [Catch-up](docs/benchmarks/2026-10-05-managed-sync-catchup.md) |
+| Managed Postgres catch-up 57 ms from the database (10,000-file backlog) | **152.8 pages/min** steady, about **1.2 h** for the backlog (was 3.4 pages/min, about 49 h) | v0.60.72.0 | [Catch-up](docs/benchmarks/2026-10-05-managed-sync-catchup.md) |
 | Useful material kept when a session becomes a memory page | **88.1%** judged; 74.9% with quoted evidence | Cat 35 run | [Cat 35](docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md) |
 
 All 28 reproductions in the [bug ledger](docs/benchmarks/2026-10-01-wave-bugs.md) pass at `739e5cc`, and moving to
@@ -238,7 +238,7 @@ How this page changed, newest first. Measurement history lives in the dated repo
 
 ### 2026-10-05: Managed Postgres catch-up speed added to current results
 
-gbrain-evals v0.10.26. New row: a managed Postgres brain 57 ms from its database catches up at 152.8 pages per minute in steady state with gbrain v0.60.70.0 (a 10,000-file backlog in about 1.2 h), mirrored from gbrain's own bench in [the catch-up report](docs/benchmarks/2026-10-05-managed-sync-catchup.md). The page had no write-throughput row before.
+gbrain-evals v0.10.26. New row: a managed Postgres brain 57 ms from its database catches up at 152.8 pages per minute in steady state with gbrain v0.60.72.0 (a 10,000-file backlog in about 1.2 h), mirrored from gbrain's own bench in [the catch-up report](docs/benchmarks/2026-10-05-managed-sync-catchup.md). The page had no write-throughput row before.
 
 ### 2026-10-05: Other systems described by kind, not by name
 
