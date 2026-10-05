@@ -60,6 +60,24 @@ startMeteringProxy({
 - An optional `x-mpw-tag` request header is recorded and stripped.
 - An unknown token answers 401 without dispatch.
 
+Additions beyond the signature above (all additive): the returned object
+also has `baseUrls` (proxy base URL per provider, for gbrain's
+`provider_base_urls.voyage`), `exhausted` (true after any refusal) and
+`lastRefusal` (the exact refusal text). Refusal bodies never contain 429,
+500, 502, 503, 504, 529 or "rate", because the harness Gemini, OpenAI and
+Groq clients retry on those substrings; a zero-width space breaks them.
+Settlement: decoded usage reconciles; a 4xx without usage settles at $0
+(the provider rejected it before doing work); anything else without usage
+is charged at its reservation. Free requests (model listings, Gemini
+countTokens) are forwarded without a reservation. The CLI form takes
+`--upstream <provider>=<url>` for stubs.
+
+`eval/runner/metering-proxy-testkit.ts` exports `createMeteredTestCell` and
+`assertZeroBalanceBlocks({ label, spawn, trigger, stop })`, the per-process
+zero-balance check (refused at zero balance with no upstream hit and no new
+committed spend; reaches the stub and settles with budget). The comparator
+server launcher must pass it under label `comparator`.
+
 `eval/runner/stub-upstream.ts` serves deterministic OpenAI, Anthropic, Gemini,
 Groq and Voyage responses (schema-valid structured output, hash embeddings,
 usage blocks) for keyless tests, the mode smoke and the quickstart fixture.
