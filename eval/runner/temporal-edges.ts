@@ -27,6 +27,8 @@
  * Hermetic: provider keys stripped, PGLite in memory, zero LLM.
  *
  * Usage: bun eval/runner/temporal-edges.ts [--seeds 3,5] [--phrasing A|A2|A3] [--output <dir>] [--gbrain <checkout>[@ref]] [--json]
+ *   [--pack <pack.yaml>] [--single-value-pass]   (P3 E5: bind a test schema pack before any page; run one declared-only
+ *   edge_contradictions pass before the probes and add sv_wrong_closures / sv_conflicts_closed rows)
  *
  * Custodian (held-out) mode: --phrasing-file <custody path> --decision-id <id> --purpose <text> --seeds <held-out seeds>.
  * The phrasing file lives outside the repository; every read appends a line to access-log.jsonl beside it, and the
@@ -41,9 +43,9 @@ import { ProbeAccounting } from './probe-accounting.ts';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, receiptPath, sourceTreeIdentity, writeReceipt, type Receipt } from './receipt.ts';
 import {
   DEV_SEEDS, TEMPORAL_EDGES_GENERATOR_VERSION, currentEmployers, generateTemporalEdgesWorld, validatePhrasing,
-  type PhrasingTemplates, type TePage, type TemporalEdgesWorld,
+  type PhrasingTemplates, type TePage, type TePerson, type TemporalEdgesWorld,
 } from '../generators/temporal-edges-gen.ts';
-import { readFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { dirname } from 'node:path';
 import { appendAccessLog } from './sealed-confirmation-lib.ts';
@@ -51,7 +53,8 @@ import { appendAccessLog } from './sealed-confirmation-lib.ts';
 export const CATEGORY = 'temporal-edges';
 
 type Op = (name: string, params: Record<string, unknown>) => Promise<unknown>;
-interface Sut { op: Op; put(slug: string, content: string): Promise<void>; close(): Promise<void> }
+interface Sut { op: Op; put(slug: string, content: string): Promise<void>; close(): Promise<void>; engine: SutEngine }
+interface SutEngine { setConfig(k: string, v: string): Promise<void>; executeRaw<T>(sql: string, params?: unknown[]): Promise<T[]> }
 export interface TeRow { probe_id: string; kind: string; cluster: string; seed: number; [metric: string]: unknown }
 
 async function openSut(gut: GbrainUnderTest): Promise<Sut> {
@@ -74,6 +77,7 @@ async function openSut(gut: GbrainUnderTest): Promise<Sut> {
       await byName.get('put_page')!.handler(ctx, { slug, content, ...(snapshot ? { expected_revision: snapshot.revision } : {}) });
     },
     close: () => engine.disconnect(),
+    engine: engine as unknown as SutEngine,
   };
 }
 
@@ -170,19 +174,71 @@ async function probeWorld(world: TemporalEdgesWorld, sut: Sut, mirror: Sut, acc:
   }
 }
 
-export interface TeRunResult { worlds: TemporalEdgesWorld[]; rows: TeRow[]; acc: ProbeAccounting; harnessError: string | null }
+/** E5 (declared single-value relations): a test pack installed in the hermetic GBRAIN_HOME and bound before any page. */
+export interface TePack { name: string; text: string }
+async function installPack(gut: GbrainUnderTest, sut: Sut, pack: TePack): Promise<void> {
+  if (!process.env.GBRAIN_HOME) throw new Error('--pack needs the hermetic GBRAIN_HOME');
+  const { gbrainPath } = await importGbrain<{ gbrainPath: (...s: string[]) => string }>(gut, 'src/core/config.ts');
+  const dir = gbrainPath('schema-packs', pack.name);
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, 'pack.yaml'), pack.text);
+  await sut.engine.setConfig('schema_pack', pack.name);
+  const { loadActivePackForEngine } = await importGbrain<{ loadActivePackForEngine: (e: unknown, o: Record<string, unknown>) => Promise<{ manifest: { name: string } }> }>(gut, 'src/core/schema-pack/engine-resolution.ts');
+  const active = await loadActivePackForEngine(sut.engine, { sourceId: 'default', remote: false });
+  if (active.manifest.name !== pack.name) throw new Error(`--pack ${pack.name} is not the active pack after binding (active: ${active.manifest.name})`);
+}
 
-export async function runTemporalEdges(opts: { gut: GbrainUnderTest; seeds?: readonly number[]; log?: (s: string) => void; phrasing?: string; sealedPhrasing?: { id: string; templates: PhrasingTemplates } }): Promise<TeRunResult> {
+interface SvClosure { person: string; ending: string; close_date: string; status: string }
+/**
+ * One declared-only edge_contradictions pass (dream.single_value.mode=apply, dream.edge_contradictions.mode=off: no
+ * model). Returns the declared-rule proposals and which live works_at relationships had no dated start, or shared a
+ * dated start with another, before the pass.
+ */
+async function singleValuePass(gut: GbrainUnderTest, sut: Sut): Promise<{ closures: SvClosure[]; undated: Set<string>; sameDate: Set<string>; detail: string }> {
+  const live = await sut.engine.executeRaw<{ person: string; target: string; last_start: unknown }>(
+    `SELECT f.slug AS person, t.slug AS target, lr.last_start FROM link_relationships lr JOIN pages f ON f.id = lr.from_page_id JOIN pages t ON t.id = lr.to_page_id
+      WHERE lr.scope = 'all' AND lr.link_type = 'works_at' AND lr.semantics = 'state' AND lr.valid_ranges @> CURRENT_DATE`);
+  const key = (p: string, t: string) => `${p}\u0000${t}`;
+  const undated = new Set(live.filter(r => r.last_start == null).map(r => key(r.person, r.target)));
+  const byStart = new Map<string, string[]>();
+  for (const r of live) if (r.last_start != null) { const k = `${r.person}\u0000${String(r.last_start).slice(0, 10)}`; byStart.set(k, [...(byStart.get(k) ?? []), r.target]); }
+  const sameDate = new Set<string>();
+  for (const [k, ts] of byStart) if (ts.length > 1) for (const t of ts) sameDate.add(key(k.split('\u0000')[0]!, t));
+  await sut.engine.setConfig('dream.single_value.mode', 'apply');
+  await sut.engine.setConfig('dream.edge_contradictions.mode', 'off');
+  const { runPhaseEdgeContradictions } = await importGbrain<{ runPhaseEdgeContradictions: (e: unknown) => Promise<{ status: string; detail: string }> }>(gut, 'src/core/cycle/edge-contradictions.ts');
+  const r = await runPhaseEdgeContradictions(sut.engine);
+  const closures = await sut.engine.executeRaw<SvClosure>(
+    `SELECT f.slug AS person, t.slug AS ending, p.close_date::text AS close_date, p.status FROM link_edge_proposals p
+       JOIN pages f ON f.id = p.from_page_id LEFT JOIN pages t ON t.id = p.ending_to_page_id
+      WHERE p.link_type = 'works_at' AND p.model = 'schema-pack:cardinality'`);
+  return { closures, undated, sameDate, detail: `${r.status}: ${r.detail}` };
+}
+
+/** Wrong: the ledger says the ended employer is current, or the close date is not the start of the ledger's next stint. */
+export function svClosureWrong(p: TePerson, ending: string, closeDate: string): boolean {
+  if (currentEmployers(p).includes(ending)) return true;
+  const k = [...p.stints.keys()].filter(i => p.stints[i]!.company === ending && p.stints[i]!.from < closeDate).pop();
+  if (k === undefined) return true;
+  const next = p.stints[k + 1];
+  return !next || next.from !== closeDate;
+}
+
+export interface TeRunResult { worlds: TemporalEdgesWorld[]; rows: TeRow[]; acc: ProbeAccounting; harnessError: string | null; singleValue: Array<Record<string, unknown>> | null }
+
+export async function runTemporalEdges(opts: { gut: GbrainUnderTest; seeds?: readonly number[]; log?: (s: string) => void; phrasing?: string; sealedPhrasing?: { id: string; templates: PhrasingTemplates }; pack?: TePack; singleValuePass?: boolean }): Promise<TeRunResult> {
   return withHermeticEnv('temporal-edges', async () => {
     const log = opts.log ?? (() => {});
     const worlds = (opts.seeds ?? DEV_SEEDS).map(seed => generateTemporalEdgesWorld({ seed, phrasing: opts.sealedPhrasing ? undefined : opts.phrasing, sealedPhrasing: opts.sealedPhrasing }));
     const acc = new ProbeAccounting(0);
     const rows: TeRow[] = [];
+    const svTotals: Array<Record<string, unknown>> = [];
     let harnessError: string | null = null;
     for (const world of worlds) {
       const sut = await openSut(opts.gut);
       const mirror = await openSut(opts.gut);
       try {
+        if (opts.pack) { await installPack(opts.gut, sut, opts.pack); await installPack(opts.gut, mirror, opts.pack); }
         log(`seed ${world.seed}: ${world.people.length} people, ${world.companies.length} companies, ${world.pages.length} pages`);
         await writePages(sut, world.pages);
         const companies = world.pages.filter(p => p.slug.startsWith('companies/'));
@@ -190,6 +246,22 @@ export async function runTemporalEdges(opts: { gut: GbrainUnderTest; seeds?: rea
         await writePages(mirror, [...companies].reverse());
         await writePages(mirror, people.map(p => ({ slug: p.slug, content: p.content.replace(/## Timeline[\s\S]*$/, '') })));
         await writePages(mirror, [...people].reverse());
+        if (opts.singleValuePass) {
+          const sv = await singleValuePass(opts.gut, sut);
+          await singleValuePass(opts.gut, mirror);
+          log(`seed ${world.seed}: single-value pass ${sv.detail}`);
+          const key = (p: string, t: string) => `${p}\u0000${t}`;
+          for (const p of world.people) {
+            const applied = sv.closures.filter(c => c.person === p.slug && c.status === 'applied' && c.ending && c.close_date);
+            rows.push({ probe_id: `s${world.seed}:sv-wrong:${p.slug}`, kind: 'single_value', cluster: `s${world.seed}:${p.slug}`, seed: world.seed,
+              sv_wrong_closures: applied.filter(c => svClosureWrong(p, c.ending, c.close_date.slice(0, 10))).length });
+            rows.push({ probe_id: `s${world.seed}:sv-open:${p.slug}`, kind: 'single_value', cluster: `s${world.seed}:${p.slug}`, seed: world.seed,
+              sv_conflicts_closed: applied.filter(c => sv.undated.has(key(p.slug, c.ending)) || sv.sameDate.has(key(p.slug, c.ending))).length });
+          }
+          svTotals.push({ seed: world.seed, detail: sv.detail, applied: sv.closures.filter(c => c.status === 'applied').length,
+            statuses: sv.closures.reduce<Record<string, number>>((m, c) => ({ ...m, [c.status]: (m[c.status] ?? 0) + 1 }), {}),
+            undated_live: sv.undated.size, same_date_live: sv.sameDate.size });
+        }
         await probeWorld(world, sut, mirror, acc, rows);
       } catch (e) {
         harnessError = `seed ${world.seed}: ${e instanceof Error ? e.message : String(e)}`;
@@ -201,7 +273,7 @@ export async function runTemporalEdges(opts: { gut: GbrainUnderTest; seeds?: rea
     }
     const planned = new ProbeAccounting(rows.length);
     planned.absorb(acc.toJSON());
-    return { worlds, rows, acc: planned, harnessError };
+    return { worlds, rows, acc: planned, harnessError, singleValue: opts.singleValuePass ? svTotals : null };
   });
 }
 
@@ -249,7 +321,10 @@ async function main(): Promise<void> {
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
   log(`# temporal-edges (gbrain ${gut.version}${gut.overlay ? `, overlay ${gut.overlay.build.commit.slice(0, 7)}` : ', pinned'})`);
   const devPhrasing = argValue(argv, '--phrasing') ?? 'A';
-  const r = await runTemporalEdges({ gut, seeds, log, phrasing: devPhrasing, sealedPhrasing });
+  const packFile = argValue(argv, '--pack');
+  const pack = packFile ? (() => { const text = readFileSync(packFile, 'utf8'); const name = /^name:\s*([A-Za-z0-9_-]+)\s*$/m.exec(text)?.[1]; if (!name) throw new Error('--pack file needs a top-level name:'); return { name, text }; })() : undefined;
+  const singleValuePassFlag = argv.includes('--single-value-pass');
+  const r = await runTemporalEdges({ gut, seeds, log, phrasing: devPhrasing, sealedPhrasing, pack, singleValuePass: singleValuePassFlag });
   const a = r.acc.summary();
   const summary = summarize(r.rows);
   const receipt: Receipt = {
@@ -270,11 +345,13 @@ async function main(): Promise<void> {
       seeds, phrasing: sealedPhrasing ? `held-out set ${sealedPhrasing.id} (custody file sha256 ${phrasingSha})` : `${devPhrasing} (development)`, generator_version: TEMPORAL_EDGES_GENERATOR_VERSION,
       oracle: 'employment stints from the generator ledger; set arithmetic for now / as-of / during',
       gbrain_overlay: overlaySummary(gut),
+      ...(pack ? { pack: { name: pack.name, sha256: createHash('sha256').update(pack.text).digest('hex') } } : {}),
+      ...(singleValuePassFlag ? { single_value_pass: 'one edge_contradictions pass, dream.single_value.mode=apply, dream.edge_contradictions.mode=off (no model)' } : {}),
     },
     hashes: Object.fromEntries(r.worlds.map(w => [`ledger_seed_${w.seed}`, w.fingerprint])),
     started_at: startedAt,
     finished_at: new Date().toISOString(),
-    data: { summary, rows: r.rows, harness_error: r.harnessError },
+    data: { summary, rows: r.rows, harness_error: r.harnessError, ...(r.singleValue ? { single_value: r.singleValue } : {}) },
   } as Receipt;
   writeReceipt(outPath, receipt);
   log('\n| metric | n | mean |\n|---|---|---|');
