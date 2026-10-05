@@ -86,7 +86,7 @@ async def auto_tune(cell_dir: Path, targets: list[int], base: dict, sample: int 
             rows = []
             chosen = None
             for _ in range(max_iter):
-                setting = {k: max(1, int(round(v * scale))) for k, v in base.items()}
+                setting = {k: (0 if v == 0 else max(1, int(round(v * scale)))) for k, v in base.items()}
                 knobs.update(setting)
                 tokens, errors = await _measure(run, prov, queries, run.spec, task)
                 gate = ctxmod.gate(target, tokens)
