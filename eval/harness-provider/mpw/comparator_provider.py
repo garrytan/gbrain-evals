@@ -425,18 +425,50 @@ class ComparatorMemoryProvider(MemoryProvider):
 
     # ── agent mode ───────────────────────────────────────────────────────
 
+    def _reflect_route(self) -> tuple[str, set[str]]:
+        """The server's reflect path template and the request fields it accepts (from its OpenAPI)."""
+        if getattr(self, "_reflect", None) is None:
+            import httpx
+
+            spec = httpx.get(f"{self._server_url.rstrip('/')}/openapi.json", timeout=30).json()
+            path = next((p for p in spec["paths"] if p.endswith("/reflect") and "{bank_id}" in p), None)
+            if path is None:
+                raise RuntimeError(f"{self.name}: the server exposes no reflect operation; agent mode is unsupported")
+            body = spec["paths"][path]["post"]["requestBody"]["content"]["application/json"]["schema"]
+            fields = set(_schema(spec, body).get("properties", {}))
+            self._reflect = (path, fields)
+        return self._reflect
+
     async def async_direct_answer(self, query, user_id=None, query_timestamp=None):
-        """The server's own synthesis (reflect) over this user's bank, with every id in the reply made opaque."""
+        """The server's own synthesis (reflect) over this user's bank, with every id in the reply made opaque.
+
+        Called over HTTP: the harness's pinned client rejects `query_timestamp`,
+        which the current server accepts. The question date is sent whenever the
+        server's schema has the field, and the receipt says whether it was.
+        """
+        import httpx
+
         if user_id not in self._banks:
             raise RuntimeError(f"{self.name}: no bank for user_id {user_id!r}; it was never ingested in this cell")
         bank = self._banks[user_id]
-        answer, _context, raw = await self._inner.async_direct_answer(query, user_id=user_id, query_timestamp=query_timestamp)
+        path, fields = self._reflect_route()
+        body = {"query": query[:1900]}
+        sent_timestamp = bool(query_timestamp) and "query_timestamp" in fields
+        if sent_timestamp:
+            body["query_timestamp"] = query_timestamp
+        async with httpx.AsyncClient(timeout=300) as client:
+            r = await client.post(self._server_url.rstrip("/") + path.replace("{bank_id}", bank).replace("{agent_id}", "default"), json=body)
+        if r.status_code != 200:
+            raise RuntimeError(f"{self.name}: reflect failed with HTTP {r.status_code}: {r.text[:500]}")
+        raw = r.json()
+        answer = raw.get("text") or raw.get("answer") or ""
         if not answer:
-            raise RuntimeError(f"{self.name}: reflect returned no answer (timed out or empty)")
+            raise RuntimeError(f"{self.name}: reflect returned no answer")
         originals = [*self._bank_docs.get(bank, []), "" if user_id is None else user_id]
-        scrubbed = self._ids.scrub({"answer": answer, "raw": raw or {}}, extra_originals=originals)
+        scrubbed = self._ids.scrub({"answer": answer, "raw": raw}, extra_originals=originals)
         self._persist_ids()
-        return scrubbed["answer"], scrubbed["answer"], scrubbed["raw"]
+        meta = {"reflect": scrubbed["raw"], "query_timestamp_sent": sent_timestamp}
+        return scrubbed["answer"], scrubbed["answer"], meta
 
     def direct_answer(self, query, user_id=None, query_timestamp=None):
         import asyncio
