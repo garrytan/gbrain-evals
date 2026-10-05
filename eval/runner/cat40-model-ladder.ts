@@ -35,13 +35,26 @@ import { join, relative, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { generateLadderWorld, worldDigest, DEFAULT_LADDER_DIR, FAMILIES, type LadderTask, type LadderWorld, type Family } from '../generators/model-ladder-gen.ts';
-import { runAgent, provider, priceUsage, type AgentRun, type Arm, type ScriptedModel } from './cat40/loop.ts';
+import { runAgent, runAgentText, provider, type AgentRun, type Arm, type ScriptedModel } from './cat40/loop.ts';
 import { FsArm, MemoryArm, OracleArm, FileStore, isWriteCall, type ArmName } from './cat40/arms.ts';
 import { renderDoc } from '../generators/model-ladder-gen.ts';
 import { PgArm, PgStore, cachedOpenAIEmbedder } from './cat40/pg-arm.ts';
 import { GbrainArm, instructionsOverride, GbrainPool, GbrainSlot, MeteringProxy, SERVE_BOOT_TIMEOUT_SECONDS, STAGED_SOURCE_ADD_DOCS, STAGED_SYNC_BATCH, coverageProblem, type Meter, type SlotBuild, type SlotCoverage } from './cat40/gbrain-arm.ts';
 import { scoreTask, judgePrompt, parseClaims, JUDGE_PROMPT_VERSION, type TaskScore, type ClaimVerdicts } from './cat40/score.ts';
 import { budgetOptionsFrom, startPaidRun, receiptCost, type BudgetRun, type PaidRequestGuard } from './budget-ledger.ts';
+import { HARD_FAMILIES, isHardWorld, type HardWorld, type HardTask } from '../generators/hard/schema.ts';
+import { hardWorldDigest } from '../generators/model-ladder-hard.ts';
+import {
+  HardStop, hardRefusals, checkHardWorld, identityOf, identityRefusal, requiresFreeze, oracleOversize, runHardCell, runWithRetries, hardTranscripts, codeHashes, settingsDigest,
+  type HardCtx,
+} from './cat40/hard.ts';
+import { HARD_MAX_RETRIES, type CellRecordV2 } from './cat40/records.ts';
+import { HARD_SCORER_VERSION } from './cat40/score-hard.ts';
+import { HARD_JUDGE_PROMPT_VERSION } from './cat40/judge-hard.ts';
+import { terminateGrepWorkers } from './cat40/hard-grep.ts';
+import { checkRoster, loadRoster, project, loadCostBasis, frozenKnobDigest, freezeDrift, REPO_ROOT, type StepPlan } from './cat40/hard-ops.ts';
+import { canonicalCells, readRecords } from './cat40/records.ts';
+import { CHAT_PRICE_OVERRIDES } from './budget-ledger.ts';
 import { prepareBuild } from './lifecycle/builds.ts';
 
 export const CAT40_VERSION = 'cat40-v1';
@@ -132,6 +145,8 @@ interface Ctx {
   budgetRunId: string | null;
   /** gbrain provider spend of cells that failed before writing a record (it is in the ledger, not in any cell). */
   failedCellsProxyUsd: number;
+  /** Turns per session (`--max-turns`; the loop default otherwise). */
+  maxTurns?: number;
 }
 
 async function judgeClaims(ctx: Ctx, task: LadderTask, run: AgentRun): Promise<{ claims: ClaimVerdicts | null; usd: number }> {
@@ -140,26 +155,6 @@ async function judgeClaims(ctx: Ctx, task: LadderTask, run: AgentRun): Promise<{
   if (!p) return { claims: null, usd: 0 };
   const r = await runAgentText(ctx.judge, p.system, p.user);
   return { claims: parseClaims(r.text), usd: r.usd };
-}
-
-async function runAgentText(model: string, system: string, user: string): Promise<{ text: string; usd: number }> {
-  if (provider(model) === 'openai') {
-    const res = await fetch('https://api.openai.com/v1/responses', { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
-      body: JSON.stringify({ model, instructions: system, input: user, max_output_tokens: 8000, reasoning: { effort: 'low' } }) });
-    const j = await res.json() as Record<string, unknown>;
-    if (!res.ok) throw new Error(`judge error ${res.status}: ${JSON.stringify(j).slice(0, 300)}`);
-    const text = ((j.output ?? []) as Array<Record<string, unknown>>).filter(o => o.type === 'message').flatMap(o => (o.content as Array<Record<string, unknown>>) ?? []).map(c => String(c.text ?? '')).join('\n');
-    const u = j.usage as Record<string, unknown>;
-    const cached = ((u.input_tokens_details ?? {}) as Record<string, number>).cached_tokens ?? 0;
-    return { text, usd: priceUsage(model, { input: (u.input_tokens as number) - cached, cache_read: cached, cache_write: 0, output: u.output_tokens as number, requests: 1 }) };
-  }
-  const res = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY ?? '', 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model, max_tokens: 4000, system, messages: [{ role: 'user', content: user }] }) });
-  const j = await res.json() as Record<string, unknown>;
-  if (!res.ok) throw new Error(`judge error ${res.status}: ${JSON.stringify(j).slice(0, 300)}`);
-  const text = ((j.content ?? []) as Array<Record<string, unknown>>).filter(c => c.type === 'text').map(c => String(c.text)).join('\n');
-  const u = j.usage as Record<string, number>;
-  return { text, usd: priceUsage(model, { input: u.input_tokens, output: u.output_tokens, cache_read: u.cache_read_input_tokens ?? 0, cache_write: u.cache_creation_input_tokens ?? 0, requests: 1 }) };
 }
 
 async function runCell(ctx: Ctx, model: string, armName: ArmName, task: LadderTask, repeat: number): Promise<CellRecord> {
@@ -183,7 +178,7 @@ async function runCell(ctx: Ctx, model: string, armName: ArmName, task: LadderTa
   let restoreMs: number | undefined;
   try {
     const isWrite = (name: string, args: Record<string, unknown>) => isWriteCall(arm, name, args);
-    const common = { model, arm, system: systemPrompt(ctx.world, arm), maxToolChars: ctx.maxToolChars };
+    const common = { model, arm, system: systemPrompt(ctx.world, arm), maxToolChars: ctx.maxToolChars, ...(ctx.maxTurns ? { maxTurns: ctx.maxTurns } : {}) };
     let session1: AgentRun | undefined;
     if (task.family === 'F' && armName !== 'oracle') {
       session1 = await runAgent({ ...common, user: userMessage(ctx.world, task, arm, 1), scripted: ctx.scripted ? scriptedAgent(task, armName) : undefined });
@@ -291,6 +286,8 @@ export interface ExperimentManifest {
   flags: Record<string, string | true>;
   /** The budget-ledger run every invocation on this directory charges (a resume joins it). */
   budget_run_id: string | null;
+  /** Hard worlds: identity, behavior settings and the evaluator's code hashes (DX-F14); a resume must match them. */
+  hard?: { identity: ReturnType<typeof identityOf>; max_turns: number; tool_limits: string; judge: string | null; scorer: string; judge_prompt: string; settings_digest: string; code: Record<string, string>; runner_commit: string | null };
 }
 
 export function experimentFlags(argv: readonly string[]): Record<string, string | true> {
@@ -362,25 +359,95 @@ export function incompleteSlotCoverage(dir: string, n: number): { problems: stri
   return { problems, unchecked };
 }
 
+/** Flags the runner accepts; anything else is refused before anything is written (DX-F3). */
+export const VALUE_FLAGS = ['--arms', '--models', '--families', '--tasks', '--repeat', '--concurrency', '--slots', '--gbrain-repo', '--gbrain-ref', '--gbrain-root', '--gbrain-label', '--judge', '--world', '--out',
+  '--max-tool-chars', '--order', '--slot-ref', '--surface', '--gbrain-instructions-file', '--gbrain-tool-descriptions-file', '--gbrain-drop-tools', '--gbrain-config', '--slot-build-allowance-usd',
+  '--budget-usd', '--estimate-usd', '--budget-run-id', '--budget-ledger', '--program-cap-usd', '--max-turns', '--per-family', '--hard-tool-limits', '--accept-freeze-drift', '--step'];
+export const BOOLEAN_FLAGS = ['--scripted', '--build-slots', '--rebuild', '--no-pglite-analyze', '--transcripts', '--preflight', '--help'];
+const NUMERIC_FLAGS = new Set(['--repeat', '--concurrency', '--slots', '--slot-build-allowance-usd', '--budget-usd', '--estimate-usd', '--program-cap-usd', '--max-turns', '--per-family']);
+
+export const RUNNER_USAGE = `Usage: bun eval/runner/cat40-model-ladder.ts [flags]
+  v1:    --models <list> [--arms oracle,fs,fs-acl,memory,pg,gbrain] --budget-usd <n> [--world <world.json>] [--out <dir>] ...
+  Hard:  --world <hard world.json> --models <list> --judge gpt-6.1-sol [--arms oracle,fs,pg,memory,gbrain] [--per-family N] [--max-turns N]
+         [--hard-tool-limits hard|v1] [--preflight] [--step <step>] --budget-usd <n> --budget-ledger .budget/cat40-hard.sqlite --out <dir>
+  $0:    --scripted [--arms fs,memory,oracle] [--world <world.json>] --out <dir>
+  Slots: --build-slots --gbrain-ref <sha> --slots N --world <world.json> --budget-usd <n> --slot-build-allowance-usd 2
+Value flags: ${VALUE_FLAGS.join(' ')}
+Switches: ${BOOLEAN_FLAGS.join(' ')}
+Hard refusals and stops exit 3 with a stable code (docs/benchmarks/cat40-hard/RUNBOOK.md); usage errors exit 2.`;
+
+export class UsageError extends Error { constructor(message: string) { super(message); this.name = 'UsageError'; } }
+
+/** Refuse unknown flags, missing or non-numeric values and empty selections. */
+export function checkRunnerFlags(argv: readonly string[]): void {
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (!a.startsWith('--')) throw new UsageError(`unexpected argument ${JSON.stringify(a)}; every value follows its flag`);
+    const [name, eq] = a.split(/=(.*)/s);
+    if (BOOLEAN_FLAGS.includes(name)) { if (eq !== undefined) throw new UsageError(`${name} takes no value`); continue; }
+    if (!VALUE_FLAGS.includes(name)) throw new UsageError(`unknown flag ${name}. Run with --help for the list.`);
+    const value = eq ?? argv[++i];
+    if (value === undefined || (eq === undefined && value.startsWith('--'))) throw new UsageError(`${name} needs a value`);
+    if (NUMERIC_FLAGS.has(name) && !Number.isFinite(Number(value))) throw new UsageError(`${name} must be a number (got ${JSON.stringify(value)})`);
+    if (['--arms', '--models', '--families', '--tasks'].includes(name) && !value.split(',').filter(Boolean).length) throw new UsageError(`${name} is empty`);
+  }
+}
+
 export async function main(argv = process.argv.slice(2)) {
+  if (argv.includes('--help')) { console.log(RUNNER_USAGE); return; }
+  checkRunnerFlags(argv);
   const scripted = argv.includes('--scripted');
   const buildSlots = argv.includes('--build-slots');
   const worldPath = resolve(flag(argv, '--world') ?? join(DEFAULT_LADDER_DIR, 'world.json'));
-  const world: LadderWorld = JSON.parse(readFileSync(worldPath, 'utf8'));
-  const regenerated = generateLadderWorld(world.seed, { scale: world.scale });
-  if (worldDigest(regenerated) !== worldDigest(world)) throw new Error(`${worldPath} does not match its generator; run bun eval/generators/model-ladder-gen.ts${world.scale ? ` --scale ${world.scale}` : ''}`);
+  const raw = JSON.parse(readFileSync(worldPath, 'utf8')) as LadderWorld | HardWorld;
+  const hard = isHardWorld(raw);
+  if (hard) checkHardWorld(raw, relative(process.cwd(), worldPath));
+  else {
+    const regenerated = generateLadderWorld(raw.seed, { scale: raw.scale });
+    if (worldDigest(regenerated) !== worldDigest(raw)) throw new Error(`${worldPath} does not match its generator; run bun eval/generators/model-ladder-gen.ts${raw.scale ? ` --scale ${raw.scale}` : ''}`);
+    for (const f of ['--per-family', '--hard-tool-limits', '--accept-freeze-drift', '--step']) if (flag(argv, f) !== undefined) throw new UsageError(`${f} applies to Hard worlds only`);
+  }
+  const world = raw as LadderWorld;
   const models = scripted ? ['scripted'] : buildSlots ? [] : (flag(argv, '--models') ?? '').split(',').filter(Boolean);
   if (!models.length && !buildSlots) throw new Error('--models is required (or --scripted, or --build-slots)');
-  const arms = (buildSlots ? 'gbrain' : flag(argv, '--arms') ?? 'oracle,fs,pg,memory,gbrain').split(',') as ArmName[];
-  const families = (flag(argv, '--families') ?? FAMILIES.join(',')).split(',') as Family[];
+  const arms = (buildSlots ? 'gbrain' : flag(argv, '--arms') ?? (scripted ? 'oracle,fs,memory' : 'oracle,fs,pg,memory,gbrain')).split(',') as ArmName[];
+  if (hard && !buildSlots) hardRefusals({ models: scripted ? [] : models, judge: flag(argv, '--judge'), arms, scripted });
+  const families = (flag(argv, '--families') ?? (hard ? HARD_FAMILIES : FAMILIES).join(',')).split(',') as Family[];
+  const known = new Set<string>(hard ? HARD_FAMILIES : FAMILIES);
+  const badFamilies = families.filter(f => !known.has(f));
+  if (badFamilies.length) throw new UsageError(`unknown families ${badFamilies.join(', ')}; this world has ${[...known].join(', ')}`);
   const only = flag(argv, '--tasks')?.split(',');
   const repeats = Number(flag(argv, '--repeat') ?? 1);
   const order = (flag(argv, '--order') ?? 'task') as CellOrder;
   if (order !== 'task' && order !== 'model') throw new Error('--order must be task or model');
-  const tasks = world.tasks.filter(t => families.includes(t.family) && (!only || only.includes(t.id)));
+  const perFamily = flag(argv, '--per-family') ? Number(flag(argv, '--per-family')) : null;
+  const allTasks = (world.tasks as Array<LadderTask | HardTask>).filter(t => families.includes(t.family as Family) && (!only || only.includes(t.id)));
+  const tasks = (perFamily === null ? allTasks : allTasks.filter(t => allTasks.filter(x => x.family === t.family).indexOf(t) < perFamily)) as LadderTask[];
+  if (!tasks.length && !buildSlots) throw new UsageError('the task selection is empty (check --families, --tasks and --per-family)');
   const out = resolve(flag(argv, '--out') ?? join('eval/reports/cat40', scripted ? 'scripted' : new Date().toISOString().replace(/[:.]/g, '-')));
+  const hw = hard ? raw : null;
+  const maxTurns = flag(argv, '--max-turns') ? Number(flag(argv, '--max-turns')) : hw?.max_turns;
+  if (maxTurns !== undefined && (!Number.isInteger(maxTurns) || maxTurns < 1)) throw new UsageError('--max-turns must be a positive integer');
+  const toolLimits = (flag(argv, '--hard-tool-limits') ?? 'hard') as 'hard' | 'v1';
+  if (toolLimits !== 'hard' && toolLimits !== 'v1') throw new UsageError('--hard-tool-limits must be hard or v1');
+  if (hw && !scripted && !buildSlots && requiresFreeze(hw)) {
+    const frozen = frozenKnobDigest();
+    if (frozen !== hw.knob_digest) throw new HardStop('HARD_KNOBS_NOT_FROZEN', `seed ${hw.seed} is a smoke or held-out seed, and its world's knob digest ${hw.knob_digest.slice(0, 12)} ${frozen ? `differs from knobs.frozen.json (${frozen.slice(0, 12)})` : 'has no knobs.frozen.json to match (the generator is not frozen yet)'}`,
+      'freeze first (scripts/cat40-hard.sh step freeze), then regenerate the world with --knobs docs/benchmarks/cat40-hard/knobs.frozen.json');
+    const drift = freezeDrift();
+    if (drift.length && !flag(argv, '--accept-freeze-drift')) throw new HardStop('HARD_FREEZE_DRIFT', `frozen code changed since freeze.json: ${drift.join(', ')}`,
+      'a scorer-only change: rescore offline (eval/runner/cat40/rescore.ts --hard) and continue; a behavior change: rerun the affected calibration and reference cells; then pass --accept-freeze-drift "<dated note in calibration.md>"', 'Garry decides when a generator change after step 5 is involved (CEO-F17)');
+  }
+  if (hw) {
+    const recordedPath = join(out, 'experiment.json');
+    const recorded = existsSync(recordedPath) ? JSON.parse(readFileSync(recordedPath, 'utf8')) as ExperimentManifest : null;
+    identityRefusal(recorded?.hard?.identity, identityOf(hw), relative(process.cwd(), out));
+    if (recorded && JSON.stringify(recorded.flags) !== JSON.stringify(Object.fromEntries(Object.entries(experimentFlags(argv)).filter(([k]) => k !== '--preflight')))) {
+      throw new Error(`${out} already holds a different experiment (flags: recorded ${JSON.stringify(recorded.flags)}, now ${JSON.stringify(experimentFlags(argv))}). A resume must repeat the original command except for budget flags; a changed flag set needs a new --out.`);
+    }
+  }
   mkdirSync(out, { recursive: true });
-  const judge = scripted || flag(argv, '--judge') === 'none' ? null : (flag(argv, '--judge') ?? 'gpt-5.4-mini');
+  const judge = hard ? (scripted || flag(argv, '--judge') === 'none' ? null : flag(argv, '--judge')!) : scripted || flag(argv, '--judge') === 'none' ? null : (flag(argv, '--judge') ?? 'gpt-5.4-mini');
   const files = (keep: (d: LadderWorld['docs'][number]) => boolean) => new Map(world.docs.filter(keep).map(d => [`${d.id}.md`, renderDoc(d)]));
   const instructionsFile = flag(argv, '--gbrain-instructions-file');
   if (instructionsFile) instructionsOverride.text = readFileSync(resolve(instructionsFile), 'utf8').replace(/\n+$/, '');
@@ -388,12 +455,18 @@ export async function main(argv = process.argv.slice(2)) {
   if (descriptionsFile) instructionsOverride.descriptions = JSON.parse(readFileSync(resolve(descriptionsFile), 'utf8'));
   instructionsOverride.dropTools = (flag(argv, '--gbrain-drop-tools') ?? '').split(',').filter(Boolean);
   const ctx: Ctx = { world, files: { all: files(() => true), acl: files(d => !d.restricted) }, out, scripted, judge, gbrainLabel: flag(argv, '--gbrain-label') ?? 'gbrain',
-    maxToolChars: parseMaxToolChars(flag(argv, '--max-tool-chars')), budgetRunId: null, failedCellsProxyUsd: 0 };
+    maxToolChars: parseMaxToolChars(flag(argv, '--max-tool-chars')), budgetRunId: null, failedCellsProxyUsd: 0, ...(flag(argv, '--max-turns') ? { maxTurns } : {}) };
   const log = (s: string) => { process.stderr.write(`[cat40] ${s}\n`); appendFileSync(join(out, 'run.log'), `${new Date().toISOString()} ${s}\n`); };
 
   const resultsPath = join(out, 'results.jsonl');
+  const attemptsPath = join(out, 'attempts.jsonl');
   const transcripts = argv.includes('--transcripts');
-  const done = new Set(existsSync(resultsPath) ? readFileSync(resultsPath, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l).key as string) : []);
+  // Hard: a cell is done once it has a harness-clean attempt; harness-error attempts count toward its retry limit.
+  const priorAttempts = new Map<string, number>();
+  const hardAttempts = hard && existsSync(attemptsPath) ? readFileSync(attemptsPath, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as CellRecordV2) : [];
+  for (const a of hardAttempts) priorAttempts.set(a.key, (priorAttempts.get(a.key) ?? 0) + 1);
+  const done = hard ? new Set(hardAttempts.filter(a => a.stop !== 'harness_error').map(a => a.key))
+    : new Set(existsSync(resultsPath) ? readFileSync(resultsPath, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l).key as string) : []);
   const cells = buildSlots ? [] : scheduleCells({ tasks, models, arms, repeats, order, gbrainLabel: ctx.gbrainLabel, done });
   log(buildSlots ? 'building gbrain slots' : `${cells.length} cells to run (${done.size} already done, order ${order}) in ${out}`);
   if (!buildSlots && cells.length === 0) { log('nothing to run'); return; }
@@ -429,9 +502,27 @@ export async function main(argv = process.argv.slice(2)) {
     }
   }
 
+  const exhausted = hard ? cells.filter(c => (priorAttempts.get(cellKey(c.model, c.arm === 'gbrain' ? ctx.gbrainLabel : c.arm, c.task.id, c.repeat)) ?? 0) > HARD_MAX_RETRIES) : [];
+  if (exhausted.length) throw new HardStop('HARD_RETRIES_EXHAUSTED', `${exhausted.length} cells already had ${HARD_MAX_RETRIES + 1} harness-error attempts (first: ${cellKey(exhausted[0].model, exhausted[0].arm, exhausted[0].task.id, exhausted[0].repeat)})`,
+    `read their errors in ${relative(process.cwd(), attemptsPath)}, fix the harness, and rerun those cells in a new --out`, 'Garry decides whether the step continues without them');
+  if (hw && !buildSlots) {
+    const big = cells.some(c => c.arm === 'oracle') ? oracleOversize(hw, [...new Set(cells.filter(c => c.arm === 'oracle').map(c => c.task as unknown as HardTask))], scripted ? [] : models) : [];
+    if (big.length) throw new HardStop('HARD_ORACLE_TOO_LARGE', `${big.length} oracle cells exceed a model input limit (largest: task ${big.sort((a, b) => b.tokens - a.tokens)[0].task}, about ${big[0].tokens} tokens against ${big[0].limit})`,
+      'lower h1_near_miss_cap in the knob file (before the freeze) or drop the oracle for those tasks with a recorded reason');
+  }
+  const hardManifest: ExperimentManifest['hard'] | undefined = hw ? {
+    identity: identityOf(hw), max_turns: maxTurns!, tool_limits: toolLimits, judge, scorer: HARD_SCORER_VERSION, judge_prompt: HARD_JUDGE_PROMPT_VERSION,
+    settings_digest: settingsDigest({ knob_digest: hw.knob_digest, max_turns: maxTurns!, tool_limits: toolLimits, judge }), code: codeHashes(REPO_ROOT),
+    runner_commit: (() => { try { return execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(); } catch { return null; } })(),
+  } : undefined;
+  if (argv.includes('--preflight')) {
+    printPreflight({ hw, world, models, arms, cells: cells.length, judge, maxTurns, toolLimits, needsGbrain, slotDir, nSlots, step: flag(argv, '--step'), scripted });
+    return;
+  }
+
   const options = budgetOptionsFrom(argv);
   const estimateUsd = flag(argv, '--estimate-usd') ? Number(flag(argv, '--estimate-usd')) : null;
-  const { paid: budget } = bindExperiment(out, { gbrain_commit: gbrainCommit, slot_commit: slotCommit, world_digest: worldDigest(world), models, arms, label: ctx.gbrainLabel, flags: experimentFlags(argv) },
+  const { paid: budget } = bindExperiment(out, { gbrain_commit: gbrainCommit, slot_commit: slotCommit, world_digest: worldDigest(world), models, arms, label: ctx.gbrainLabel, flags: experimentFlags(argv), ...(hardManifest ? { hard: hardManifest } : {}) },
     recorded => scripted ? null : startPaidRun(buildSlots ? 'cat40-slot-build' : 'cat40-model-ladder', { ...options, runId: recorded ?? options.runId, estimateUsd, log }));
   ctx.budgetRunId = budget?.run.runId ?? null;
   if (budget?.run.participant) log(`resumed: joined the recorded budget run ${budget.run.runId}`);
@@ -442,7 +533,7 @@ export async function main(argv = process.argv.slice(2)) {
   let proxyUnattributed: Record<string, Meter> = {};
   try {
     if (!scripted && cells.some(c => c.arm === 'pg')) {
-      ctx.pg = await PgStore.build(world, cachedOpenAIEmbedder(resolve('eval/reports/cat40/embed-cache.json')));
+      ctx.pg = await PgStore.build(world, cachedOpenAIEmbedder(resolve('eval/reports/cat40/embed-cache.json')), hard ? { chunking: 'hard' } : {});
       log('pg arm ready');
     }
     if (needsGbrain) {
@@ -483,13 +574,41 @@ export async function main(argv = process.argv.slice(2)) {
         await s.restore();
       }
       log('write probe passed on every slot');
-      ctx.pool = new GbrainPool(slots);
+      ctx.pool = new GbrainPool(slots, hard ? { minHealthy: nSlots } : {});
       log(`gbrain ${gbrainBuild.version} (${gbrainBuild.commit.slice(0, 12)}) ready on ${nSlots} slots, surface ${surface}`);
     }
 
     const concurrency = Number(flag(argv, '--concurrency') ?? 6);
     let finished = 0;
-    await pool(cells, concurrency, async c => {
+    if (hw) {
+      const hctx: HardCtx = {
+        world: hw, worldDigest: hardWorldDigest(hw), files: ctx.files, pg: ctx.pg, pool: ctx.pool, proxy: ctx.proxy, scripted, judge, gbrainLabel: ctx.gbrainLabel,
+        maxToolChars: ctx.maxToolChars, maxTurns: maxTurns!, toolLimits, budgetRunId: ctx.budgetRunId, logJudge: e => appendFileSync(join(out, 'judge-requests.jsonl'), JSON.stringify(e) + '\n'),
+      };
+      await pool(cells, concurrency, async c => {
+        const key = cellKey(c.model, c.arm === 'gbrain' ? ctx.gbrainLabel : c.arm, c.task.id, c.repeat);
+        const rec = await runWithRetries(priorAttempts.get(key) ?? 0, async attempt => {
+          try { return await runHardCell(hctx, c.model, c.arm, c.task as unknown as HardTask, c.repeat, attempt); }
+          catch (e) {
+            if ((e as Error).name === 'SlotQuarantineError') throw new HardStop('HARD_SLOTS_QUARANTINED', `${(e as Error).message} (quarantined: ${[...ctx.pool!.quarantined].map(([id, why]) => `${id}: ${why}`).join('; ')})`,
+              'read the quarantine reasons, rebuild or repair the slots, then rerun the same command to resume', 'Garry decides whether to continue with fewer slots');
+            if (ctx.proxy) ctx.failedCellsProxyUsd += (await ctx.proxy.finalize(`${key}#${attempt}`, 30_000)).usd;
+            throw e;
+          }
+        }, a => {
+          appendFileSync(attemptsPath, JSON.stringify(a) + '\n');
+          if (transcripts) appendFileSync(join(out, 'transcripts.jsonl'), JSON.stringify({ key: a.key, attempt_id: a.attempt_id, tools: hardTranscripts.get(a.attempt_id) ?? [] }) + '\n');
+          hardTranscripts.delete(a.attempt_id);
+          if (a.stop === 'harness_error') log(`cell ${key} attempt ${a.attempt}: harness error: ${a.error}`);
+        });
+        if (!rec) return;
+        appendFileSync(resultsPath, JSON.stringify(rec) + '\n');
+        finished++;
+        if (finished % 10 === 0 || finished === cells.length) log(`${finished}/${cells.length} cells; last ${rec.key} success=${rec.score.success} stop=${rec.stop} $${rec.total_usd.toFixed(3)}`);
+      });
+      complete = finished === cells.length;
+      if (!complete) log(`${cells.length - finished} cells lack a harness-clean attempt`);
+    } else await pool(cells, concurrency, async c => {
       let rec: CellRecord;
       try { rec = await runCell(ctx, c.model, c.arm, c.task, c.repeat); }
       catch (e) {
@@ -504,9 +623,12 @@ export async function main(argv = process.argv.slice(2)) {
       finished++;
       if (finished % 10 === 0 || finished === cells.length) log(`${finished}/${cells.length} cells; last ${rec.key} success=${rec.score.success} $${rec.total_usd.toFixed(3)}`);
     });
-    complete = buildSlots || finished === cells.length;
-    if (!complete) log(`${cells.length - finished} cells failed; rerun the same command to resume them within the same budget run`);
+    if (!hw) {
+      complete = buildSlots || finished === cells.length;
+      if (!complete) log(`${cells.length - finished} cells failed; rerun the same command to resume them within the same budget run`);
+    }
   } finally {
+    terminateGrepWorkers();
     if (ctx.pool) await Promise.all(ctx.pool.slots.map(s => s.stop()));
     if (ctx.proxy) proxyUnattributed = Object.fromEntries([...ctx.proxy.meters].filter(([k]) => k.startsWith('slot:')));
     ctx.proxy?.stop();
@@ -514,7 +636,8 @@ export async function main(argv = process.argv.slice(2)) {
     const summary = budget?.run.close({ finish: complete });
     budget?.guard.uninstall();
     const receipt = {
-      schema: 'cat40-receipt-v1', version: CAT40_VERSION, judge_prompt: JUDGE_PROMPT_VERSION, judge: ctx.judge,
+      schema: 'cat40-receipt-v1', version: CAT40_VERSION, judge_prompt: hw ? HARD_JUDGE_PROMPT_VERSION : JUDGE_PROMPT_VERSION, judge: ctx.judge,
+      ...(hardManifest ? { hard: { ...hardManifest, attempts_path: 'attempts.jsonl', max_retries: HARD_MAX_RETRIES, quarantined: ctx.pool ? Object.fromEntries(ctx.pool.quarantined) : {}, pg_setup_embed_usd: ctx.pg?.setupEmbedUsd ?? 0 } } : {}),
       world: { path: relative(process.cwd(), worldPath), scale: world.scale ?? 'v1', digest: worldDigest(world), seed: world.seed, docs: world.docs.length, tasks: world.tasks.length },
       evals_commit: (() => { try { return execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(); } catch { return null; } })(),
       evals_dirty: (() => { try { return execFileSync('git', ['status', '--porcelain'], { encoding: 'utf8' }).trim().length > 0; } catch { return null; } })(),
@@ -534,8 +657,48 @@ export async function main(argv = process.argv.slice(2)) {
     const lag = summary?.event_loop_lag_ms;
     if (lag && lag.p99 >= 50) log(`warning: event-loop lag p99 ${lag.p99} ms (max ${lag.max} ms); tool latency in this run is not trustworthy`);
   }
+  if (hw && !buildSlots && !complete) {
+    throw new HardStop('HARD_CELLS_INCOMPLETE', `${relative(process.cwd(), out)}: some planned cells lack a harness-clean attempt`,
+      `rerun the same command to resume (it joins the same budget run): bun eval/runner/cat40-model-ladder.ts ${argv.map(a => (/^[\w./:=,@+-]+$/.test(a) ? a : JSON.stringify(a))).join(' ')}`);
+  }
+}
+
+/** --preflight: everything a paid step needs, with no paid call (DX-F13). */
+function printPreflight(o: { hw: HardWorld | null; world: LadderWorld; models: string[]; arms: string[]; cells: number; judge: string | null; maxTurns?: number; toolLimits: string; needsGbrain: boolean; slotDir: string | null; nSlots: number; step?: string; scripted: boolean }) {
+  const keyOf = (m: string) => { try { return provider(m) === 'anthropic' ? 'ANTHROPIC_API_KEY' : 'OPENAI_API_KEY'; } catch { return '(unknown provider)'; } };
+  const env: Record<string, string[]> = {};
+  for (const a of o.arms) env[a] = [...new Set([...(o.scripted ? [] : o.models.map(keyOf)), ...(a === 'pg' || a === 'gbrain' ? ['OPENAI_API_KEY (embeddings)'] : [])])];
+  if (o.judge) env.judge = [keyOf(o.judge)];
+  const prices = Object.fromEntries([...o.models, ...(o.judge ? [o.judge] : [])].map(m => { try { return [m, CHAT_PRICE_OVERRIDES[`${provider(m)}:${m}`] ?? null]; } catch { return [m, null]; } }));
+  const lines: string[] = ['Cat 40 preflight (no paid call)'];
+  lines.push(`world: ${o.hw ? JSON.stringify({ ...identityOf(o.hw), digest: hardWorldDigest(o.hw).slice(0, 16), docs: o.hw.docs.length, tasks: o.hw.tasks.length }) : JSON.stringify({ seed: o.world.seed, scale: o.world.scale ?? 'v1', digest: worldDigest(o.world).slice(0, 16) })}`);
+  lines.push(`cells: ${o.cells}; turn cap ${o.maxTurns ?? 16}; tool limits ${o.toolLimits}; judge ${o.judge ?? 'none'}`);
+  lines.push(`environment variables by arm: ${JSON.stringify(env)}`);
+  lines.push(`models and prices ($ per million tokens): ${JSON.stringify(prices)}`);
+  if (o.needsGbrain) lines.push(`gbrain slots: ${o.slotDir} (${missingSlotSnapshots(o.slotDir!, o.nSlots).length} of ${o.nSlots} snapshots missing; coverage problems: ${incompleteSlotCoverage(o.slotDir!, o.nSlots).problems.join('; ') || 'none'})`);
+  let stop: HardStop | null = null;
+  if (o.hw && !o.scripted) {
+    try {
+      const r = checkRoster(loadRoster());
+      lines.push(`Hard ledger ${relative(process.cwd(), r.hardLedger)}: cap $${r.capUsd.toFixed(2)} (roster), committed $${r.committedUsd.toFixed(2)}, remaining $${r.remainingUsd.toFixed(2)}`);
+      if (o.step) {
+        const plan: StepPlan = { step: o.step, order: 0, models: o.models, arms: o.arms, tasksPerFamily: 0, repeats: 1, scale: o.hw.scale ?? 'v1' };
+        const measured = (process.env.HARD_MEASURED ?? '').split(',').filter(Boolean);
+        const views = measured.length ? canonicalCells(readRecords(measured)).attempts : undefined;
+        const p = project({ ...plan, tasksPerFamily: o.cells / Math.max(1, o.models.length * o.arms.length) / 5 }, { basis: loadCostBasis(), measured: views });
+        lines.push(`projection for ${o.step}: $${p.total_usd.toFixed(2)} ($${p.with_margin_usd.toFixed(2)} with 15%), basis ${p.basis}`);
+        if (r.remainingUsd < p.with_margin_usd) stop = new HardStop('HARD_BUDGET_SHORT', `step ${o.step} projects $${p.with_margin_usd.toFixed(2)} with the margin; $${r.remainingUsd.toFixed(2)} remains`, 'do not raise the cap yourself', 'Garry decides whether to fund, narrow or stop the step');
+      }
+    } catch (e) { if (e instanceof HardStop) stop = e; else throw e; }
+  }
+  console.log(lines.join('\n'));
+  if (stop) throw stop;
 }
 
 if (import.meta.main) {
-  main().catch(e => { console.error(e); process.exit(1); });
+  main().catch(e => {
+    if (e instanceof HardStop) { console.error(e.render()); process.exit(3); }
+    if (e instanceof UsageError) { console.error(`${e.message}\n\n${RUNNER_USAGE}`); process.exit(2); }
+    console.error(e); process.exit(1);
+  });
 }

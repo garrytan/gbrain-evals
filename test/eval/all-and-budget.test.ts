@@ -39,7 +39,7 @@ describe('CATEGORIES catalog', () => {
       '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '13b', '13b-sit', '14', '15', '18', '18b',
       '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30-33', '34', '35', '36', '36-live', 'N3', 'N4', 'N6', 'N12', 'N13', 'N7', 'N8', 'N2', 'A4', 'SO', 'SO-live',
       'multi-adapter', 'relational-ab', 'N9', 'N9-paid', 'precisionmembench', 'longmemeval', 'longmemeval-answers',
-      'longmemeval-m-pilot', 'reading-notes', 'lifecycle', '40', '41', 'N1', 'N5', 'N1-ci', 'N5-ci', 'evidence-delivery', 'sealed-confirmation', 'situation-recall', 'shootout', 'qrels',
+      'longmemeval-m-pilot', 'reading-notes', 'lifecycle', '40', '40-hard', '41', 'N1', 'N5', 'N1-ci', 'N5-ci', 'evidence-delivery', 'sealed-confirmation', 'situation-recall', 'shootout', 'qrels',
     ]);
   });
 

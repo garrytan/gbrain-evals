@@ -29,19 +29,29 @@ import { DEFAULT_LADDER_DIR, worldDigest, type LadderWorld } from '../../generat
 import { prepareBuild } from '../lifecycle/builds.ts';
 import { GbrainSlot, MeteringProxy } from './gbrain-arm.ts';
 import { missingSlotSnapshots, slotRoot } from '../cat40-model-ladder.ts';
+import { canonicalCells, isV2, type CellRecordV2 } from './records.ts';
 
 export const REPLAY_TOOLS = ['search', 'query'] as const;
 export interface ReplayCall { name: string; args: Record<string, unknown> }
 
-/** Every 10th search/query call of the first 400 the label's cells made, up to `n` (the 2026-10-03 replay's rule). */
+type TranscriptLine = { key: string; attempt_id?: string; tools?: Array<ReplayCall & { result?: string }>; sessions?: Array<{ tools: Array<ReplayCall & { result?: string }> }> };
+
+/**
+ * Every 10th search/query call of the first 400 the label's cells made, up to `n` (the 2026-10-03 replay's rule).
+ * A v2 transcript line (one per attempt, with `attempt_id`) may hold `tools` or per-session `sessions[].tools`;
+ * only the last attempt of each key is sampled, so a retried cell counts once.
+ */
 export function sampleReplayCalls(transcriptLines: string[], label: string, n = 40): ReplayCall[] {
+  const parsed = transcriptLines.filter(line => line.trim() && line.includes(`|${label}|`)).map(line => JSON.parse(line) as TranscriptLine);
+  const lastAttempt = new Map<string, number>();
+  parsed.forEach((j, i) => { if (j.attempt_id) lastAttempt.set(j.key, i); });
   const calls: ReplayCall[] = [];
-  for (const line of transcriptLines) {
-    if (!line.trim() || !line.includes(`|${label}|`)) continue;
-    for (const t of JSON.parse(line).tools as Array<ReplayCall & { result?: string }>) {
+  parsed.forEach((j, i) => {
+    if (j.attempt_id && lastAttempt.get(j.key) !== i) return;
+    for (const t of j.tools ?? (j.sessions ?? []).flatMap(s => s.tools)) {
       if ((REPLAY_TOOLS as readonly string[]).includes(t.name) && calls.length < n * 10) calls.push({ name: t.name, args: t.args });
     }
-  }
+  });
   return calls.filter((_, i) => i % 10 === 0).slice(0, n);
 }
 
@@ -63,15 +73,22 @@ export async function replayParallel<W>(calls: ReplayCall[], workers: W[], fn: (
 
 const p50 = (xs: number[]) => { const s = [...xs].sort((a, b) => a - b); return s.length ? s[(s.length - 1) >> 1] : NaN; };
 
-/** Harness tool-call milliseconds by tool name, from a run's results.jsonl (both sessions). */
+/**
+ * Harness tool-call milliseconds by tool name, from a run's results.jsonl (v1: both sessions). v2 (Hard)
+ * records contribute every session of each canonical cell (the last harness-clean attempt per key), so a
+ * retried cell counts once; attempts.jsonl and results.jsonl give the same answer.
+ */
 export function harnessToolMs(resultLines: string[], label: string): Record<string, number[]> {
   const out: Record<string, number[]> = {};
+  const v2: Array<Record<string, unknown>> = [];
   for (const line of resultLines) {
     if (!line.trim()) continue;
     const r = JSON.parse(line);
     if (r.arm !== label) continue;
+    if (isV2(r)) { v2.push(r as unknown as Record<string, unknown>); continue; }
     for (const t of [...(r.session1?.tool_calls ?? []), ...r.run.tool_calls]) (out[t.name] ??= []).push(t.ms);
   }
+  for (const c of canonicalCells(v2).cells) for (const s of (c.raw as unknown as CellRecordV2).sessions) for (const t of s.run.tool_calls) (out[t.name] ??= []).push(t.ms);
   return out;
 }
 

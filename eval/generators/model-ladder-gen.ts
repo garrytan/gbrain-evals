@@ -548,7 +548,39 @@ export function ladderManifest(world: LadderWorld, text: string): LadderManifest
   };
 }
 
+/** Generator flags; anything else is refused before anything is written (DX-F3). */
+const GEN_VALUE_FLAGS = ['--seed', '--scale', '--out', '--mode', '--knobs', '--base-world'];
+const GEN_SWITCHES = ['--check', '--help'];
+export const GEN_USAGE = `Usage: bun eval/generators/model-ladder-gen.ts [--mode v1|hard] [--seed N] [--scale large] [--out DIR] [--check]
+  v1 (default): the Cat 40 v1 world (eval/data/model-ladder-v1), or with --scale large the 52k world.
+  hard: the Cat 40 Hard world; see --mode hard --help.`;
+
+export function parseGenArgs(argv: readonly string[]): Record<string, string | true> {
+  const out: Record<string, string | true> = {};
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (GEN_SWITCHES.includes(a)) { out[a.slice(2)] = true; continue; }
+    if (!GEN_VALUE_FLAGS.includes(a)) throw new Error(`unknown argument ${JSON.stringify(a)}. Flags: ${[...GEN_VALUE_FLAGS, ...GEN_SWITCHES].join(' ')}`);
+    const v = argv[++i];
+    if (v === undefined || v.startsWith('--')) throw new Error(`${a} needs a value`);
+    if (a === '--seed' && !/^\d+$/.test(v)) throw new Error(`--seed must be a non-negative integer (got ${JSON.stringify(v)})`);
+    out[a.slice(2)] = v;
+  }
+  return out;
+}
+
 if (import.meta.main) {
+  let parsed: Record<string, string | true>;
+  try { parsed = parseGenArgs(process.argv.slice(2)); } catch (e) { console.error(`${(e as Error).message}\n\n${GEN_USAGE}`); process.exit(2); }
+  if (parsed.mode !== undefined && parsed.mode !== 'v1' && parsed.mode !== 'hard') { console.error(`--mode must be v1 or hard\n\n${GEN_USAGE}`); process.exit(2); }
+  if (parsed.mode === 'hard') {
+    const { hardGenMain, HARD_GEN_USAGE } = await import('./model-ladder-hard.ts');
+    if (parsed.help) { console.log(HARD_GEN_USAGE); process.exit(0); }
+    try { process.exit(hardGenMain({ seed: parsed.seed as string | undefined, knobs: parsed.knobs as string | undefined, scale: parsed.scale as string | undefined, out: parsed.out as string | undefined, 'base-world': parsed['base-world'] as string | undefined, check: parsed.check === true })); }
+    catch (e) { console.error(`[model-ladder-gen] ${(e as Error).message}`); process.exit(2); }
+  }
+  if (parsed.help) { console.log(GEN_USAGE); process.exit(0); }
+  if (parsed.knobs !== undefined || parsed['base-world'] !== undefined) { console.error('--knobs and --base-world apply to --mode hard only'); process.exit(2); }
   const arg = (n: string) => { const i = process.argv.indexOf(n); return i >= 0 ? process.argv[i + 1] : undefined; };
   const seed = Number(arg('--seed') ?? LADDER_DEFAULT_SEED);
   const scale = (arg('--scale') ?? 'v1') as LadderScale;

@@ -1,0 +1,11 @@
+{
+  "note": "Program ledgers and allocations for the Cat 40 Hard campaign (ENG-F9). The sum of allocations never exceeds the authorization. Other allocations are frozen for this campaign. --preflight refuses when a listed local ledger is missing or its recorded cap differs.",
+  "authorization_usd": 4350,
+  "decided": "2026-10-05",
+  "decision": "Garry, 2026-10-05: tier A (every arm on every frontier model at both scales), program authorization $4,350 (docs/plans/2026-10-05-cat40-hard/PLAN.md, Gate decisions).",
+  "ledgers": [
+    { "name": "four original machines (Cat 40 v1, cost wave, held-out)", "path": null, "allocation_usd": 1763, "kind": "committed, external" },
+    { "name": "Cat 40 follow-ups and entity recall", "path": ".budget/cat40-followups.sqlite", "allocation_usd": 792.69, "kind": "cap lowered to committed spend" },
+    { "name": "Cat 40 Hard", "path": ".budget/cat40-hard.sqlite", "allocation_usd": 1794, "kind": "this campaign", "hard": true }
+  ]
+}

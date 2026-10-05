@@ -2,6 +2,50 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.22] - 2026-10-05
+
+### Cat 40 Hard: the harness for tasks that measure the edge of frontier models
+
+Cat 40 no longer separates the models people use most: on the development world gbrain master finished 239 of 250
+frontier-model runs. The Hard tier asks harder memory questions, and this release builds everything it needs. No paid
+cell ran; calibration and the held-out runs follow the [runbook](docs/benchmarks/cat40-hard/RUNBOOK.md) under Garry's
+2026-10-05 gate decisions (16 turns with the cap as the last knob, tier A, a $4,350 authorization, the Hard ledger at
+$1,794).
+
+- **Generator.** `bun eval/generators/model-ladder-gen.ts --mode hard` writes a ledger-first world of about 4,000
+  documents with five families: H1 sets and counts over 10 to 40 accounts, H2 attribute histories with reversals,
+  backdated corrections and effective dates, H3 look-alike, renamed and merged accounts, H4 conflicts decided by
+  authority with long deciding documents, and H5 five-session memory. `--knobs` takes a validated knob file;
+  `--scale large --base-world` appends accounts and non-deciding documents to about 50,000 documents and refuses
+  unless every H1 key recomputed over the full ledger equals the 4k key and every H3 disambiguation stays unique.
+  Dates, corrections, user statements and names follow one written semantics (`eval/generators/hard/semantics.ts`),
+  and one predicate evaluator computes and checks every H1 key. Each family and the background draw from their own
+  seeded streams, so a knob change moves only the family it controls.
+- **World contract.** `eval/generators/hard/schema.ts` and `validate.ts` hold the world, task and answer types, the
+  knob schema and the invariants, separate from the renderers, so the sealed validation variant can be written against
+  [WORLD_SCHEMA.md](docs/benchmarks/cat40-hard/WORLD_SCHEMA.md) alone.
+- **Runner.** Hard worlds carry their identity (seed, scale, mode, knobs) and turn cap (16; `--max-turns` overrides
+  and changes the experiment identity). H5 cells run five sessions with a fresh session between them on every arm.
+  Hard runs refuse a missing judge, gpt-5.4-mini and unpriced models, write v2 records to `attempts.jsonl`, retry only
+  harness errors (at most twice), score a context-length error as its own stop kind, quarantine a gbrain slot whose
+  restore fails, and exit 3 with a stable code for every refusal and stop. `--preflight` lists keys, prices, identity,
+  cells, slots, the roster-checked ledger and the step projection without a paid call. v1 runs are unchanged.
+- **Scoring and judge.** `eval/runner/cat40/score-hard.ts` scores sets, counts and values (wrong values anywhere in the
+  answer fail; unreadable sets are reported apart), importing `score.ts` unchanged. `judge-hard.ts` (`--judge
+  gpt-6.1-sol`) treats H5 user messages as evidence, caps H1 near misses, persists requests and re-judges failures.
+- **Fairness and cost.** pg embeds long documents in chunks on Hard; grep returns every match with full lines and a
+  total and runs in a Worker with a time limit; pg pages with offsets and totals; restores run asynchronously; every
+  embedding request is charged to setup or to its cell.
+- **Analysis.** `analyze.ts`, `rescore.ts`, `latency-replay.ts` and `holdout_stats.py` read v1 and v2 records. New:
+  the freeze-rule analyzer (`--freeze-rule --round N`), Hard report tables, offline Hard rescoring, and
+  `holdout_stats.py --hard-comparator`, `--hard-headline` (primary endpoint, simultaneous intervals against every
+  simple arm, weakest-family rule, cost per extra correct answer) and `--hard-mdd`.
+- **Operator tools and paperwork.** `scripts/cat40-hard.sh hello|status|preflight|step`, the runbook, the
+  preregistration template, the calibration record, the program ledger roster, the cost basis, a report template and
+  the `model-ladder-hard` registry row (tier P, report-only).
+- **Regression contract.** Tests pin the v1 world, the large manifest digest, the `score.ts` hash, v1 tool limits and
+  a v1 scripted run's scores against a fixture recorded from the previous runner.
+
 ## [0.10.21] - 2026-10-05
 
 ### Cat 40 on frontier models: gbrain ties plain files at the ceiling; the entity-recall wave lifts renewal briefs and cuts cost

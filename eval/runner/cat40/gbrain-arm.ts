@@ -11,11 +11,20 @@
  * through a local proxy that forwards them via the paid-request guard and
  * attributes their cost to the run holding the slot. A run that writes leaves
  * its slot to be restored from the post-build snapshot before the next run.
+ *
+ * Failures of the harness itself raise HarnessError (loop.ts): an MCP server
+ * that exits, a closed pipe, a response timeout or malformed JSON-RPC, and a
+ * failed restore. Tool results the server marks `isError` stay text for the
+ * agent. Restores run as asynchronous subprocesses so they never block other
+ * cells, and a slot whose restore or health check fails is quarantined by
+ * GbrainPool (plan 2026-10-05, ENG-F10, ENG-F13).
  */
-import { spawn, execFileSync, type ChildProcessWithoutNullStreams } from 'node:child_process';
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { spawn, execFile, execFileSync, type ChildProcessWithoutNullStreams } from 'node:child_process';
+import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { readdir, rm } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
-import type { Arm, ToolSpec } from './loop.ts';
+import { promisify } from 'node:util';
+import { HarnessError, type Arm, type ToolSpec } from './loop.ts';
 import type { LadderWorld } from '../../generators/model-ladder-gen.ts';
 import { renderDoc } from '../../generators/model-ladder-gen.ts';
 import { runCli, type RunEnv } from '../lifecycle/drivers.ts';
@@ -27,6 +36,7 @@ export const STAGED_SOURCE_ADD_DOCS = 6000;
 export const STAGED_SYNC_BATCH = 5000;
 export const SERVE_BOOT_TIMEOUT_SECONDS = 0;
 const CORPUS_TAG = 'cat40-corpus';
+const execFileAsync = promisify(execFile);
 
 // ─── Metering proxy ─────────────────────────────────────────────────
 
@@ -133,27 +143,44 @@ export class MeteringProxy {
 
 // ─── Minimal MCP stdio client ───────────────────────────────────────
 
+type Pending = { resolve: (m: Record<string, unknown>) => void; reject: (e: Error) => void };
+
 export class McpClient {
   private proc: ChildProcessWithoutNullStreams | null = null;
   private buf = '';
   private id = 1;
-  private pending = new Map<number, (m: Record<string, unknown>) => void>();
+  private pending = new Map<number, Pending>();
+  private exited: string | null = null;
   instructions = '';
   serverVersion = '';
   tools: Array<{ name: string; description?: string; inputSchema?: Record<string, unknown>; annotations?: Record<string, unknown> }> = [];
   stderr: string[] = [];
+  /** Response timeout of a tools/call; past it the call throws HarnessError. */
+  callTimeoutMs = 300_000;
   constructor(private run: RunEnv, private args: string[]) {}
+  /** True while the server process is running and its stdin is open. */
+  get alive(): boolean { return !!this.proc && !this.exited && this.proc.stdin.writable; }
+  private failAll(e: HarnessError) { for (const [, p] of this.pending) p.reject(e); this.pending.clear(); }
+  private stderrTail() { return this.stderr.length ? `; stderr: ${this.stderr.slice(-5).join(' | ').slice(0, 800)}` : ''; }
   private request(method: string, params: Record<string, unknown>, timeoutMs = 300_000): Promise<Record<string, unknown>> {
     const id = this.id++;
     return new Promise((resolve, reject) => {
-      const t = setTimeout(() => { this.pending.delete(id); reject(new Error(`MCP timeout: ${method}`)); }, timeoutMs);
-      this.pending.set(id, m => { clearTimeout(t); resolve(m); });
-      this.proc!.stdin.write(JSON.stringify({ jsonrpc: '2.0', id, method, params }) + '\n');
+      const proc = this.proc;
+      if (!proc || this.exited || !proc.stdin.writable) { reject(new HarnessError(`MCP transport closed before ${method}${this.exited ? ` (${this.exited})` : ''}${this.stderrTail()}`)); return; }
+      const t = setTimeout(() => { this.pending.delete(id); reject(new HarnessError(`MCP timeout: ${method} got no response in ${timeoutMs / 1000} s`)); }, timeoutMs);
+      this.pending.set(id, { resolve: m => { clearTimeout(t); resolve(m); }, reject: e => { clearTimeout(t); reject(e); } });
+      proc.stdin.write(JSON.stringify({ jsonrpc: '2.0', id, method, params }) + '\n', err => {
+        if (!err) return;
+        const p = this.pending.get(id);
+        this.pending.delete(id);
+        p?.reject(new HarnessError(`MCP write failed (${method}): ${err.message}`));
+      });
     });
   }
   async start() {
     const proc = spawn('bun', [join(this.run.buildDir, 'src/cli.ts'), 'serve', ...this.args], { env: this.run.env, cwd: this.run.env.GBRAIN_HOME });
     this.proc = proc;
+    this.exited = null;
     proc.stdout.setEncoding('utf8');
     proc.stdout.on('data', (c: string) => {
       this.buf += c;
@@ -161,22 +188,38 @@ export class McpClient {
       while ((nl = this.buf.indexOf('\n')) >= 0) {
         const line = this.buf.slice(0, nl).trim();
         this.buf = this.buf.slice(nl + 1);
-        try { const m = JSON.parse(line); const cb = this.pending.get(m.id); if (cb) { this.pending.delete(m.id); cb(m); } } catch { /* not JSON-RPC */ }
+        let m: Record<string, unknown>;
+        try { m = JSON.parse(line); } catch { continue; /* not JSON-RPC */ }
+        const p = m && typeof m === 'object' ? this.pending.get(m.id as number) : undefined;
+        if (!p) continue;
+        this.pending.delete(m.id as number);
+        if (!('result' in m) && !('error' in m)) p.reject(new HarnessError(`malformed JSON-RPC response (no result or error): ${line.slice(0, 300)}`));
+        else p.resolve(m);
       }
     });
     proc.stderr.setEncoding('utf8');
     proc.stderr.on('data', (c: string) => { this.stderr.push(...c.split('\n').filter(Boolean)); if (this.stderr.length > 300) this.stderr.splice(0, this.stderr.length - 300); });
-    proc.on('exit', () => { for (const [, cb] of this.pending) cb({ error: { message: 'mcp server exited' } }); this.pending.clear(); });
+    proc.stdin.on('error', (e: Error) => this.failAll(new HarnessError(`MCP stdin failed: ${e.message}${this.stderrTail()}`)));
+    proc.on('error', (e: Error) => { this.exited ??= `failed: ${e.message}`; this.failAll(new HarnessError(`MCP server failed: ${e.message}${this.stderrTail()}`)); });
+    // 'close' fires after stderr is drained, so the failure carries the server's last stderr lines.
+    proc.on('exit', (code, signal) => { this.exited = `exit ${code ?? signal}`; });
+    proc.on('close', (code, signal) => { this.exited ??= `exit ${code ?? signal}`; this.failAll(new HarnessError(`MCP server exited (${this.exited})${this.stderrTail()}`)); });
     const init = await this.request('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'gbrain-evals-cat40', version: '1' } }, 180_000);
+    if (init.error) throw new HarnessError(`MCP initialize failed: ${JSON.stringify(init.error).slice(0, 500)}`);
     const r = (init.result ?? {}) as Record<string, unknown>;
     this.instructions = String(r.instructions ?? '');
     this.serverVersion = String((r.serverInfo as Record<string, unknown> | undefined)?.version ?? '');
-    this.proc.stdin.write(JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }) + '\n');
-    const list = await this.request('tools/list', {});
-    this.tools = ((list.result as Record<string, unknown>)?.tools ?? []) as McpClient['tools'];
+    proc.stdin.write(JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }) + '\n');
+    this.tools = await this.listTools();
+  }
+  /** One `tools/list` round trip (no model spend). */
+  async listTools(timeoutMs = 300_000): Promise<McpClient['tools']> {
+    const list = await this.request('tools/list', {}, timeoutMs);
+    if (list.error) throw new HarnessError(`MCP tools/list failed: ${JSON.stringify(list.error).slice(0, 500)}`);
+    return ((list.result as Record<string, unknown>)?.tools ?? []) as McpClient['tools'];
   }
   async call(name: string, args: Record<string, unknown>): Promise<string> {
-    const m = await this.request('tools/call', { name, arguments: args });
+    const m = await this.request('tools/call', { name, arguments: args }, this.callTimeoutMs);
     if (m.error) return `Error: ${JSON.stringify(m.error)}`;
     const res = (m.result ?? {}) as { content?: Array<{ type: string; text?: string }>; isError?: boolean };
     const text = (res.content ?? []).filter(c => c.type === 'text').map(c => c.text ?? '').join('\n');
@@ -186,6 +229,7 @@ export class McpClient {
     const p = this.proc;
     if (!p) return;
     this.proc = null;
+    if (p.exitCode !== null || p.signalCode !== null) return;
     await new Promise<void>(resolve => {
       const t = setTimeout(() => { p.kill('SIGKILL'); resolve(); }, 20_000);
       p.once('exit', () => { clearTimeout(t); resolve(); });
@@ -364,44 +408,103 @@ export class GbrainSlot {
     await this.client.start();
   }
   async stop() { await this.client?.close(); this.client = null; }
+  /** Restore the post-build snapshot and start a new server. Asynchronous subprocesses only; any failure is a HarnessError. */
   async restore() {
-    await this.stop();
-    // gbrain records the checkout's device and inode and refuses managed writes when they change
-    // ("The physical checkout identity changed"), so the vault directory is never recreated: git
-    // resets its content to the corpus commit. Only the database home is replaced from the snapshot,
-    // inside the existing directory.
-    const vault = join(this.dir, 'vault');
-    const git = (args: string[]) => execFileSync('git', ['-C', vault, ...args], { stdio: 'pipe', encoding: 'utf8' }).trim();
-    const corpus = git(['tag', '--list', CORPUS_TAG]) ? CORPUS_TAG : git(['rev-list', '--max-parents=0', 'HEAD']).split('\n')[0];
-    git(['reset', '-q', '--hard', corpus]);
-    // Keep gbrain's ownership marker (.gbrain-owner.json): it is untracked and records the checkout identity.
-    git(['clean', '-qfdx', '-e', '.gbrain-owner*']);
-    const home = join(this.dir, 'home');
-    for (const entry of readdirSync(home).sort()) rmSync(join(home, entry), { recursive: true, force: true });
-    execFileSync('tar', ['-C', this.dir, '-xf', this.snapshot, 'home']);
-    for (const [key, value] of this.config) {
-      const r = await runCli(this.run, ['config', 'set', key, value], 120_000);
-      if (r.code !== 0) throw new Error(`gbrain ${this.id}: config set ${key} failed (exit ${r.code}): ${(r.stdout + r.stderr).trim().split('\n').slice(-3).join(' ')}`);
+    try {
+      await this.stop();
+      // gbrain records the checkout's device and inode and refuses managed writes when they change
+      // ("The physical checkout identity changed"), so the vault directory is never recreated: git
+      // resets its content to the corpus commit. Only the database home is replaced from the snapshot,
+      // inside the existing directory.
+      const vault = join(this.dir, 'vault');
+      const git = async (args: string[]) => (await execFileAsync('git', ['-C', vault, ...args], { encoding: 'utf8', maxBuffer: 64 << 20 })).stdout.trim();
+      const corpus = (await git(['tag', '--list', CORPUS_TAG])) ? CORPUS_TAG : (await git(['rev-list', '--max-parents=0', 'HEAD'])).split('\n')[0];
+      await git(['reset', '-q', '--hard', corpus]);
+      // Keep gbrain's ownership marker (.gbrain-owner.json): it is untracked and records the checkout identity.
+      await git(['clean', '-qfdx', '-e', '.gbrain-owner*']);
+      const home = join(this.dir, 'home');
+      for (const entry of (await readdir(home)).sort()) await rm(join(home, entry), { recursive: true, force: true });
+      await execFileAsync('tar', ['-C', this.dir, '-xf', this.snapshot, 'home'], { maxBuffer: 64 << 20 });
+      for (const [key, value] of this.config) {
+        const r = await runCli(this.run, ['config', 'set', key, value], 120_000);
+        if (r.code !== 0) throw new Error(`gbrain ${this.id}: config set ${key} failed (exit ${r.code}): ${(r.stdout + r.stderr).trim().split('\n').slice(-3).join(' ')}`);
+      }
+      await this.start();
+    } catch (e) {
+      throw new HarnessError(`gbrain ${this.id} restore: ${(e as Error).message}`);
     }
-    await this.start();
+  }
+  /** Why the slot cannot take a cell (null when healthy): its server must run and list tools (one round trip, no model spend). */
+  async healthCheck(): Promise<string | null> {
+    if (!this.client) return 'MCP client not started';
+    if (!this.client.alive) return 'MCP server not running';
+    try { return (await this.client.listTools(60_000)).length ? null : 'MCP server lists no tools'; }
+    catch (e) { return (e as Error).message; }
   }
   /** A fresh harness session: a new server process on the same brain. */
   async newSession() { await this.stop(); await this.start(); }
   hasSnapshot() { return existsSync(this.snapshot); }
 }
 
-export class GbrainPool {
-  private free: GbrainSlot[] = [];
-  private waiters: Array<(s: GbrainSlot) => void> = [];
-  constructor(readonly slots: GbrainSlot[]) { this.free = [...slots]; }
-  acquire(): Promise<GbrainSlot> {
+/** Rejects cells waiting for a gbrain slot once quarantines leave fewer healthy slots than the step needs. */
+export class SlotQuarantineError extends Error {
+  constructor(message: string) { super(message); this.name = 'SlotQuarantineError'; }
+}
+
+/** What the pool needs from a slot (GbrainSlot; tests use fakes). */
+export interface PoolSlot {
+  readonly id: string;
+  restore(): Promise<void>;
+  /** Null when healthy, else the reason. */
+  healthCheck(): Promise<string | null>;
+}
+
+/**
+ * Hands each slot to one cell at a time. A quarantined slot (failed restore or health check, ENG-F10) is never
+ * handed out again. Once fewer than `minHealthy` slots remain healthy, every waiting and later `acquire`
+ * rejects with SlotQuarantineError, so the step halts instead of running on a contaminated or shrunken pool.
+ */
+export class GbrainPool<S extends PoolSlot = GbrainSlot> {
+  private free: S[] = [];
+  private waiters: Array<{ resolve: (s: S) => void; reject: (e: Error) => void }> = [];
+  /** Quarantined slot ids and why. */
+  readonly quarantined = new Map<string, string>();
+  /** Healthy slots the step needs (default 1). */
+  minHealthy: number;
+  constructor(readonly slots: S[], options: { minHealthy?: number } = {}) { this.free = [...slots]; this.minHealthy = options.minHealthy ?? 1; }
+  /** Slots not quarantined (free or in use). */
+  get healthy(): number { return this.slots.length - this.quarantined.size; }
+  /** The error waiting cells get, or null while enough healthy slots remain. */
+  shortfall(): SlotQuarantineError | null {
+    if (this.healthy >= this.minHealthy) return null;
+    const why = [...this.quarantined].map(([id, r]) => `${id}: ${r}`).join('; ');
+    return new SlotQuarantineError(`${this.healthy} healthy gbrain slots of ${this.slots.length}, the step needs ${this.minHealthy}; quarantined: ${why}`);
+  }
+  acquire(): Promise<S> {
+    const short = this.shortfall();
+    if (short) return Promise.reject(short);
     const s = this.free.shift();
     if (s) return Promise.resolve(s);
-    return new Promise(resolve => this.waiters.push(resolve));
+    return new Promise((resolve, reject) => this.waiters.push({ resolve, reject }));
   }
-  release(s: GbrainSlot) {
+  release(s: S) {
+    if (this.quarantined.has(s.id)) return;
     const w = this.waiters.shift();
-    if (w) w(s); else this.free.push(s);
+    if (w) w.resolve(s); else this.free.push(s);
+  }
+  quarantine(s: S, reason: string) {
+    this.quarantined.set(s.id, reason);
+    this.free = this.free.filter(x => x !== s);
+    const short = this.shortfall();
+    if (short) for (const w of this.waiters.splice(0)) w.reject(short);
+  }
+  /** Restore and health-check a slot a cell is done with: release it when healthy, else quarantine it. Returns the failure reason, or null. */
+  async restoreOrQuarantine(s: S): Promise<string | null> {
+    let reason: string | null;
+    try { await s.restore(); reason = await s.healthCheck(); }
+    catch (e) { reason = `restore failed: ${(e as Error).message}`; }
+    if (reason) this.quarantine(s, reason); else this.release(s);
+    return reason;
   }
 }
 

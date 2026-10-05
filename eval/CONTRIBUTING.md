@@ -75,6 +75,8 @@ A category is a runner, a seeded generator, a scorer and a dated report that ans
 9. **Measure the run time** of the hermetic arm and keep it under the registry's CI budget (target 60 seconds); `bun eval/runner/all.ts --only <id>` runs just your category through the same gate CI uses.
 10. **Write the report and the docs row.** A dated report in `docs/benchmarks/` following the N3 report outline, with "gbrain bugs found" and "documented limits (not bugs)" sections, and a question-first row in [docs/README.md](../docs/README.md). Copy worthwhile receipts out of `eval/reports/` and scrub machine paths with `bun eval/runner/receipt.ts scrub`.
 
+A category with more than one tier keeps one operator guide per tier. Cat 40 Hard is the example: its generator mode, world contract ([WORLD_SCHEMA.md](../docs/benchmarks/cat40-hard/WORLD_SCHEMA.md)), runner path, scorer and paid steps are documented in the [Cat 40 Hard runbook](../docs/benchmarks/cat40-hard/RUNBOOK.md), and its registry row is `model-ladder-hard`.
+
 ## Reproduce a result
 
 A report identifies two pieces of code: this repository's runner and the gbrain dependency it tested. Use the corresponding gbrain-evals revision, then install its pinned dependency. If the report used a local gbrain checkout, select the specified revision in that separate checkout before linking it.

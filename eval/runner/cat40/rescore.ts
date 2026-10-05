@@ -32,12 +32,22 @@
  *     --results <results.jsonl> --transcripts <transcripts.jsonl.gz> --receipt <r1.json>[,<r2.json>] \
  *     --arms oracle,fs,fs-acl,memory,pg --out <dir>
  * Writes <dir>/results.jsonl (rescored cells, same shape as the runner's) and <dir>/audit.json.
+ * This mode reads v1 records only; it refuses v2 (Hard) records.
+ *
+ * Hard rescoring (DX-F14, ENG-F6): a scorer-only change after the freeze is
+ * applied offline. Each v2 record's sessions are scored again with
+ * `scoreHardTask` from the stored session finals and stops; `wrote` keeps its
+ * original value (it needs the arm's write tools). The new score is written
+ * beside the original as `rescored: { scorer_version, scorer_sha256, score,
+ * success_changed }`; the original `score` is never overwritten.
+ *   bun eval/runner/cat40/rescore.ts --hard --world <world.json> --results <attempts.jsonl|results.jsonl> --out <dir>
+ * Writes <dir>/<input file name> (every line, with `rescored`) and <dir>/rescore-summary.json.
  */
 import { createHash } from 'node:crypto';
 import { createReadStream, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createInterface } from 'node:readline';
 import { createGunzip } from 'node:zlib';
-import { join } from 'node:path';
+import { basename, join, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { worldDigest, type LadderTask, type LadderWorld } from '../../generators/model-ladder-gen.ts';
 import { FsArm, MemoryArm, OracleArm, FileStore, isWriteCall, normalizeDocRef } from './arms.ts';
@@ -45,6 +55,9 @@ import { PgArm, type PgStore } from './pg-arm.ts';
 import { scoreTask, submittedSources, type TaskScore } from './score.ts';
 import type { AgentRun, Arm } from './loop.ts';
 import type { CellRecord } from '../cat40-model-ladder.ts';
+import { HARD_SCORER_VERSION, scoreHardTask } from './score-hard.ts';
+import { canonicalCells, isV2, type CellRecordV2 } from './records.ts';
+import type { HardScore, HardWorld } from '../../generators/hard/schema.ts';
 
 /** Saved transcripts keep the first 40,000 characters of each tool result (cat40-model-ladder.ts). */
 export const TRANSCRIPT_RESULT_CHARS = 40_000;
@@ -166,6 +179,7 @@ export async function rescore(o: { world: LadderWorld; resultsPath: string; tran
     max_tool_chars: caps.some(c => c === null) ? null : Math.min(...(caps as number[])), world: { digest: digests.length === 1 ? digests[0] : 'mixed' },
   };
   const all = readFileSync(o.resultsPath, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as CellRecord).filter(r => o.arms.includes(r.arm));
+  if (all.some(r => isV2(r))) throw new Error(`${o.resultsPath} holds v2 (Hard) records; rescore them with --hard --world <world.json> --results <file> --out <dir>`);
   const keyCount = new Map<string, number>();
   for (const r of all) keyCount.set(r.key, (keyCount.get(r.key) ?? 0) + 1);
   const transcripts = await readTranscripts(o.transcriptsPath, k => keyCount.has(k));
@@ -198,9 +212,78 @@ export async function rescore(o: { world: LadderWorld; resultsPath: string; tran
   return { records, audit };
 }
 
+export interface HardRescore {
+  scorer_version: string;
+  /** sha256 of score-hard.ts as rescored. */
+  scorer_sha256: string;
+  /** Null when the record has no session to score. */
+  score: HardScore | null;
+  success_changed: boolean;
+  reason?: string;
+}
+
+export interface HardRescoreSummary {
+  scorer_version: string;
+  scorer_sha256: string;
+  /** `world_digest` is worldDigest() of the world file; `record_world_digests` are the digests the records' experiments name. */
+  source: { results: string; world_digest: string; record_world_digests: string[] };
+  lines: number;
+  canonical_cells: number;
+  /** Canonical cells whose success changed. */
+  changed: Array<{ key: string; attempt_id: string; original: boolean; rescored: boolean }>;
+  unscored: Array<{ attempt_id: string; reason: string }>;
+  by_arm: Record<string, { cells: number; success_original: number; success_rescored: number }>;
+}
+
+export const hardScorerSha256 = () => createHash('sha256').update(readFileSync(new URL('./score-hard.ts', import.meta.url))).digest('hex');
+
+/** Score one v2 record again from its stored sessions, keeping the original score and `wrote`. */
+export function rescoreHardRecord(world: Pick<HardWorld, 'entities' | 'tasks'>, rec: CellRecordV2, sha = hardScorerSha256()): CellRecordV2 & { rescored: HardRescore } {
+  const task = world.tasks.find(t => t.id === rec.task);
+  if (!task) throw new Error(`${rec.attempt_id}: task ${rec.task} is not in the world`);
+  const base = { scorer_version: HARD_SCORER_VERSION, scorer_sha256: sha };
+  if (!rec.sessions?.length) return { ...rec, rescored: { ...base, score: null, success_changed: false, reason: 'no sessions recorded' } };
+  const runs = [...rec.sessions].sort((a, b) => a.index - b.index).map(s => ({ final: s.run.final, stop: s.stop, text: s.run.text }));
+  const score = scoreHardTask(world, task, runs, { wrote: rec.score.wrote });
+  return { ...rec, rescored: { ...base, score, success_changed: score.success !== rec.score.success } };
+}
+
+/** Rescore every v2 line; the summary counts canonical cells (the last harness-clean attempt per key). */
+export function rescoreHard(o: { world: HardWorld; records: Array<Record<string, unknown>>; resultsPath?: string }): { records: Array<CellRecordV2 & { rescored: HardRescore }>; summary: HardRescoreSummary } {
+  const v1 = o.records.filter(r => !isV2(r));
+  if (v1.length) throw new Error(`${v1.length} records are not v2 (Hard) records (first key: ${String(v1[0].key)}); rescore v1 records without --hard`);
+  const sha = hardScorerSha256();
+  const records = (o.records as unknown as CellRecordV2[]).map(r => rescoreHardRecord(o.world, r, sha));
+  const canon = canonicalCells(records as unknown as Array<Record<string, unknown>>).cells.map(c => c.raw as unknown as CellRecordV2 & { rescored: HardRescore });
+  const summary: HardRescoreSummary = {
+    scorer_version: HARD_SCORER_VERSION, scorer_sha256: sha, source: { results: o.resultsPath ?? '', world_digest: worldDigest(o.world as unknown as LadderWorld), record_world_digests: [...new Set(records.map(r => r.experiment?.world_digest).filter((x): x is string => !!x))] },
+    lines: records.length, canonical_cells: canon.length, changed: [], unscored: records.filter(r => !r.rescored.score).map(r => ({ attempt_id: r.attempt_id, reason: r.rescored.reason ?? '' })), by_arm: {},
+  };
+  for (const r of canon) {
+    const arm = (summary.by_arm[r.arm] ??= { cells: 0, success_original: 0, success_rescored: 0 });
+    const now = r.rescored.score?.success ?? r.score.success;
+    arm.cells++; arm.success_original += Number(r.score.success); arm.success_rescored += Number(now);
+    if (r.rescored.success_changed) summary.changed.push({ key: r.key, attempt_id: r.attempt_id, original: r.score.success, rescored: now });
+  }
+  return { records, summary };
+}
+
 if (import.meta.main) {
   const argv = process.argv.slice(2);
   const flag = (n: string) => { const i = argv.indexOf(n); if (i < 0 || !argv[i + 1]) throw new Error(`missing ${n}`); return argv[i + 1]; };
+  if (argv.includes('--hard')) {
+    const resultsPath = flag('--results'), out = flag('--out');
+    const target = join(out, basename(resultsPath));
+    if (resolve(target) === resolve(resultsPath)) { console.error(`--out ${out} would overwrite ${resultsPath}; rescoring never replaces the original records. Choose another --out directory.`); process.exit(2); }
+    const world = JSON.parse(readFileSync(flag('--world'), 'utf8')) as HardWorld;
+    const records = readFileSync(resultsPath, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as Record<string, unknown>);
+    const { records: rescored, summary } = rescoreHard({ world, records, resultsPath });
+    mkdirSync(out, { recursive: true });
+    writeFileSync(target, rescored.map(r => JSON.stringify(r)).join('\n') + '\n');
+    writeFileSync(join(out, 'rescore-summary.json'), JSON.stringify(summary, null, 2) + '\n');
+    console.log(JSON.stringify({ lines: summary.lines, canonical_cells: summary.canonical_cells, changed: summary.changed.length, unscored: summary.unscored.length, by_arm: summary.by_arm, wrote: target }, null, 1));
+    process.exit(0);
+  }
   const world = JSON.parse(readFileSync(flag('--world'), 'utf8')) as LadderWorld;
   const out = flag('--out');
   const { records, audit } = await rescore({ world, resultsPath: flag('--results'), transcriptsPath: flag('--transcripts'), receiptPaths: flag('--receipt').split(','), arms: flag('--arms').split(',') });

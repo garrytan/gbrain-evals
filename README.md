@@ -416,13 +416,25 @@ memory setups across model generations and gbrain builds against each other.
 [What Cat 40 measures](docs/benchmarks/2026-10-02-model-ladder-protocol.md),
 [results](docs/benchmarks/2026-10-02-model-ladder.md).
 
+**Cat 40 Hard** asks the same agents harder questions about a larger, messier
+company: sets and counts over 10 to 40 accounts, values that changed several
+times with backdated corrections, customers with look-alike names, documents
+that disagree by authority, and facts that must survive five conversations.
+It is tuned on plain files until frontier models finish about half, then
+measured on a held-out world at about 4,000 and about 50,000 documents.
+[Operator guide](docs/benchmarks/cat40-hard/RUNBOOK.md),
+[world and scoring contract](docs/benchmarks/cat40-hard/WORLD_SCHEMA.md).
+
 ```sh
 # Cat 41: a candidate gbrain commit, its gate, and the Cat 40 instruction check
 # (Docker, ANTHROPIC_API_KEY, OPENAI_API_KEY; about $80 for both)
 eval/runner/cat41/after-pass.sh <gbrain checkout> <commit>
 
-# Cat 40 without spending: the scripted, hermetic arms
+# Cat 40 v1 without spending: the scripted, hermetic arms
 bun eval/runner/cat40-model-ladder.ts --scripted --arms fs,memory,oracle --out $(mktemp -d)
+
+# Cat 40 Hard without spending: every family through the scripted arms, plus the freeze-rule table
+scripts/cat40-hard.sh hello
 ```
 
 ## Where a small decision model helps

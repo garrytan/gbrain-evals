@@ -1,0 +1,100 @@
+# Cat 40 Hard preregistration
+
+Status: template, 2026-10-05. Fields marked **TBD (step N)** are filled and committed at that step, before the step's cells run. Plan: [docs/plans/2026-10-05-cat40-hard/PLAN.md](../../plans/2026-10-05-cat40-hard/PLAN.md). Operator guide: [RUNBOOK.md](RUNBOOK.md).
+
+This run is the Hard baseline. Each later measurement of a gbrain change on Hard uses a fresh preregistered seed with the frozen generator, because this run's tasks and transcripts are published.
+
+## Question
+
+On tasks where plain files with grep finish roughly half of the work for frontier agents, does gbrain (current master) let the same agents finish more tasks than the best simple memory setup, and does the difference hold when the company's documents grow from about 4,000 to about 50,000?
+
+## Fixed now
+
+- Calibration seed: 20261005. Smoke seed: 20261099.
+- Held-out seed: 20261006 (both scales).
+- Generator: `model-ladder-hard-v1`, frozen at step 3 (`freeze.json` and `knobs.frozen.json` in this directory).
+- Models: Sonnet 5.5 (`claude-sonnet-5-5`), Opus 5.5 (`claude-opus-5-5`), GPT-6.1 Sol (`gpt-6.1-sol`), Fable 5.1 (`claude-fable-5-1`), GPT-6 Astra (`gpt-6-astra`). A newer frontier release replaces its predecessor in the same family and tier only through a dated amendment below, with its price registered, before any cell of the next step runs (rules in the plan, CEO-F3).
+- Claims judge: `gpt-6.1-sol` on every cell (reported, never part of success).
+- Arms: oracle (reference only), fs, pg, memory and gbrain, uncapped tool results, Hard tool limits (grep returns every match with full lines and a total; pg searches page with offsets, totals and an exhaustion flag, limit up to 100).
+- Turn cap: 16 per session (each H5 session separately), unless calibration moved it; the frozen value is `max_turns` in knobs.frozen.json.
+- Tasks: 20 per family (100 tasks), 1 repeat, at each scale (Taste CEO-T2). The 50k oracle runs on the 20 H1 tasks, the only family whose oracle evidence changes at 50k.
+- Budget: Garry's tier A decision, $4,350 program authorization; Hard ledger `.budget/cat40-hard.sqlite` at $1,794.
+
+Program ledger roster ([ledger-roster.json](ledger-roster.json)); other allocations are frozen for this campaign:
+
+| Ledger | Allocation |
+|---|---|
+| four original machines (committed) | $1,763.00 |
+| `.budget/cat40-followups.sqlite` (cap lowered to committed spend) | $792.69 |
+| `.budget/cat40-hard.sqlite` | $1,794.00 |
+| total | $4,349.69 of $4,350 |
+
+## Comparator and endpoints
+
+- **Comparator.** The simple arms are fs, pg and memory. The comparator is the simple arm with the best pooled success on the 4k held-out results, among simple arms run on every model, ties broken by lower cost per task, committed in `comparator.txt` in this directory at step 8 before any 4k gbrain cell runs. fs is the comparator at 50k.
+- **Primary endpoint.** The pooled 4k paired difference, gbrain minus the comparator, with a task-clustered bootstrap (a resampled task carries all its models and repeats): `holdout_stats.py --hard-headline gbrain-hard,<comparator> --simple fs,pg,memory`.
+- **Selection-aware intervals (Taste ENG-T1).** Beside the primary interval, simultaneous paired intervals (max-T task-clustered bootstrap) for gbrain against every simple arm run on every model.
+- **Secondary.** Per-model and per-family paired differences; the 50k paired difference gbrain minus fs; gbrain minus fs at both scales, so the scale effect uses the same arm.
+- **Reported, not gated (Taste CEO-T8).** Cost per task and per successful task, incremental cost per extra correct answer against the comparator, agent latency without slot-restore time, setup cost and end-to-end latency, stops by kind, tool calls per task by family, unparseable set answers, harness-error retries per arm and model, and the H5 write diagnostic.
+
+## Held-out bar and decision sentences
+
+A model whose held-out comparator success is above 80% or below 20%, or whose oracle success is below 90%, has its comparison reported with that miss beside it. A model at ceiling on both arms is uninformative, not a tie.
+
+The action each primary outcome triggers:
+
+1. **gbrain ahead by at least the planning MDD.** The next gbrain wave targets the family where gbrain trails most, measured on a fresh Hard seed. "Trails most" requires that family's paired difference to have a bootstrap CI excluding 0; otherwise the choice falls back to per-family mechanism evidence from transcripts.
+2. **Within the MDD.** The next wave is chosen by per-family mechanism evidence (the failure-mode mix from transcripts), not by this endpoint.
+3. **gbrain behind.** Retrieval on the worst family is the next wave's target, under the same CI rule for naming the family.
+
+Each sentence names the family-level evidence it uses: the per-family paired table and its bootstrap CIs from `--hard-headline`.
+
+Claims stay within unrestricted information: Hard has no permissions family, so a gbrain fix wave chosen from Hard also passes the unchanged Cat 40 permission family (C) and ships as one PR.
+
+## Planning minimum detectable difference
+
+**TBD (step 5).** Computed from the freeze check's pooled fs success `p` with `holdout_stats.py <freeze-check results> --hard-mdd fs --mdd-tasks 100`: MDD = (z0.975 + z0.80) x sqrt(psi / n), stated discordance psi = 2p(1-p), worst case psi = 2 min(p, 1-p), n = 100 tasks. The step-8 comparator commit reports the same figure for the chosen comparator.
+
+| Quantity | Value |
+|---|---|
+| freeze-check pooled fs success | TBD (step 5) |
+| planning MDD, stated discordance | TBD (step 5) |
+| planning MDD, worst case | TBD (step 5) |
+
+## gbrain under test
+
+| Field | Value |
+|---|---|
+| gbrain commit (current master) | TBD (step 4; the smoke and every held-out step use the same commit) |
+| `--gbrain-config` | TBD (step 4; none unless named here) |
+| surface | `starter` |
+| slot statistics | operator ANALYZE on (runner default) |
+
+## Freeze and held-out audit
+
+| Field | Value |
+|---|---|
+| knob digest (knobs.frozen.json) | TBD (step 3) |
+| settings digest (freeze.json) | TBD (step 3) |
+| frozen code hashes | `freeze.json` (step 3) |
+| 4k held-out world SHA-256 | TBD (step 5) |
+| 50k held-out world SHA-256 | TBD (step 5) |
+
+## Analysis commands
+
+```bash
+# comparator (step 8)
+python3 docs/benchmarks/2026-10-02-model-ladder/holdout/holdout_stats.py eval/reports/cat40/hard/simple-4k/attempts.jsonl --hard-comparator fs,pg,memory
+# primary endpoint, simultaneous intervals, per-model and per-family tables, weakest-family rule
+python3 docs/benchmarks/2026-10-02-model-ladder/holdout/holdout_stats.py eval/reports/cat40/hard/simple-4k/attempts.jsonl eval/reports/cat40/hard/gbrain-4k/attempts.jsonl --hard-headline gbrain-hard,<comparator> --simple fs,pg,memory
+# 50k
+python3 docs/benchmarks/2026-10-02-model-ladder/holdout/holdout_stats.py eval/reports/cat40/hard/cells-50k/attempts.jsonl --hard-headline gbrain-hard,fs --simple fs
+# tables, costs, stops, latency
+bun eval/runner/cat40/analyze.ts eval/reports/cat40/hard/simple-4k/attempts.jsonl eval/reports/cat40/hard/gbrain-4k/attempts.jsonl --subject gbrain-hard --comparator <comparator> --budget-ledger .budget/cat40-hard.sqlite
+```
+
+The runner argv for every step is in [RUNBOOK.md](RUNBOOK.md) and `scripts/cat40-hard.sh` (print it with `PRINT_ONLY=1 scripts/cat40-hard.sh step <step>`).
+
+## Amendments
+
+None yet. Each amendment is dated, gives its reason, and is committed before any cell it affects runs.
