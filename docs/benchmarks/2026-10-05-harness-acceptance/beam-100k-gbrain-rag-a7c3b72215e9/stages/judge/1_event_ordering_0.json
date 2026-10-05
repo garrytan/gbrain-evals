@@ -1,0 +1,207 @@
+{
+  "cell_id": "beam-100k-gbrain-rag-a7c3b72215e9",
+  "query_id": "1_event_ordering_0",
+  "outcome": "answered",
+  "score": 0.3333333333333333,
+  "correct": false,
+  "judge_model": "gemini:gemini-3.5-flash",
+  "reason": "score=0.333 over 3 rubric items",
+  "rubric": [
+    {
+      "criterion": "LLM response should mention: Core functionality",
+      "valid": true,
+      "score": 1.0,
+      "reason": "The response mentions 'Transaction Management', which represents the core functionality of a personal budget tracker.",
+      "attempts": 1
+    },
+    {
+      "criterion": "LLM response should mention: Transaction error handling",
+      "valid": true,
+      "score": 0.0,
+      "reason": "The response does not mention 'Transaction error handling', only 'Transaction Management'.",
+      "attempts": 1
+    },
+    {
+      "criterion": "LLM response should mention: Security and deployment",
+      "valid": true,
+      "score": 0.0,
+      "reason": "The response does not mention security or deployment, instead listing user authentication, transaction management, and basic analytics.",
+      "attempts": 1
+    }
+  ],
+  "requests": [
+    {
+      "ts": "2026-10-05T08:51:30.843Z",
+      "cell_id": "beam-100k-gbrain-rag-a7c3b72215e9",
+      "label": "harness",
+      "tag": "beam-100k-gbrain-rag-a7c3b72215e9/judge/q-f863a0514858#0",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash",
+      "kind": "chat",
+      "method": "POST",
+      "path": "/v1beta/models/gemini-3.5-flash:generateContent",
+      "body_sha256": "b8d17ef798184d86abcf6fd52375fe59881bf9e6c797ebcecfce48118e897fe9",
+      "stream": false,
+      "reserved_usd": 0.591072,
+      "actual_usd": 0.0050805,
+      "input_tokens": 531,
+      "output_tokens": 476,
+      "status": 200,
+      "refused": false,
+      "settlement": "reconciled",
+      "error": null,
+      "body": {
+        "contents": [
+          {
+            "parts": [
+              {
+                "text": "Evaluate whether the following LLM response demonstrates compliance with the specified RUBRIC CRITERION.\n\nQUESTION:\nCan you list the order in which I brought up different aspects of developing my personal budget tracker throughout our conversations, in order? Mention ONLY and ONLY three items.\n\nLLM RESPONSE:\n1. User Authentication\n2. Transaction Management\n3. Basic Analytics\n\nRUBRIC CRITERION:\nLLM response should mention: Core functionality\n\nSCORING GUIDELINES:\n\nFirst, determine whether the rubric criterion is a POSITIVE requirement (the response SHOULD include something) or a NEGATIVE constraint (the response SHOULD NOT include something).\n\n**For POSITIVE requirements** (response should contain, mention, or demonstrate something):\n- **1.0 (Complete Compliance)**: The required element is present, accurate, and complete.\n- **0.5 (Partial Compliance)**: The required element is partially present, has minor inaccuracies, or is incomplete.\n- **0.0 (No Compliance)**: The required element is missing, incorrect, or the response is entirely off-topic / non-responsive.\n\n**For NEGATIVE constraints** (response should NOT contain or should avoid something):\n- **1.0**: The response is responsive AND the prohibited element is absent.\n- **0.5**: The response is responsive but contains a borderline or ambiguous reference to the prohibited element.\n- **0.0**: The prohibited element is present, OR the response is non-responsive.\n\n**Compound statements** (\"and\"/commas joining multiple required elements): all present=1.0, some=0.5, none=0.0.\n\nEVALUATION RULES:\n1. Semantic tolerance: paraphrases and synonyms are acceptable.\n2. Numeric/date equivalence: \"$68,000\"=\"68k\"=\"sixty-eight thousand dollars\"; \"2 years\"=\"24 months\".\n3. Case/punctuation/whitespace tolerance.\n4. Hedging tolerance: do not penalize \"I think\"/\"probably\"/passive/verbosity if content satisfies the criterion.\n5. Style neutrality: do not penalize tone/format/length unless the criterion requires it.\n6. Responsiveness: completely off-topic or refusal = 0.0.\n7. Independence: evaluate this criterion in isolation.\n8. Specificity: vague generic answers score lower than specific, detailed ones.\n\nReturn JSON: {\"score\": <0.0 or 0.5 or 1.0>, \"reason\": \"<one concise sentence>\"}"
+              }
+            ],
+            "role": "user"
+          }
+        ],
+        "generationConfig": {
+          "temperature": 0.0,
+          "responseMimeType": "application/json",
+          "responseSchema": {
+            "properties": {
+              "score": {
+                "description": "Score: 0.0, 0.5, or 1.0",
+                "type": "NUMBER"
+              },
+              "reason": {
+                "type": "STRING"
+              }
+            },
+            "property_ordering": [
+              "score",
+              "reason"
+            ],
+            "required": [
+              "score",
+              "reason"
+            ],
+            "type": "OBJECT"
+          }
+        }
+      }
+    },
+    {
+      "ts": "2026-10-05T08:51:33.559Z",
+      "cell_id": "beam-100k-gbrain-rag-a7c3b72215e9",
+      "label": "harness",
+      "tag": "beam-100k-gbrain-rag-a7c3b72215e9/judge/q-f863a0514858#1",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash",
+      "kind": "chat",
+      "method": "POST",
+      "path": "/v1beta/models/gemini-3.5-flash:generateContent",
+      "body_sha256": "65795a12149207e44c20b85805e3cb754c0dc76e1b49c5b047fb12ae2b54f89a",
+      "stream": false,
+      "reserved_usd": 0.591075,
+      "actual_usd": 0.002796,
+      "input_tokens": 532,
+      "output_tokens": 222,
+      "status": 200,
+      "refused": false,
+      "settlement": "reconciled",
+      "error": null,
+      "body": {
+        "contents": [
+          {
+            "parts": [
+              {
+                "text": "Evaluate whether the following LLM response demonstrates compliance with the specified RUBRIC CRITERION.\n\nQUESTION:\nCan you list the order in which I brought up different aspects of developing my personal budget tracker throughout our conversations, in order? Mention ONLY and ONLY three items.\n\nLLM RESPONSE:\n1. User Authentication\n2. Transaction Management\n3. Basic Analytics\n\nRUBRIC CRITERION:\nLLM response should mention: Transaction error handling\n\nSCORING GUIDELINES:\n\nFirst, determine whether the rubric criterion is a POSITIVE requirement (the response SHOULD include something) or a NEGATIVE constraint (the response SHOULD NOT include something).\n\n**For POSITIVE requirements** (response should contain, mention, or demonstrate something):\n- **1.0 (Complete Compliance)**: The required element is present, accurate, and complete.\n- **0.5 (Partial Compliance)**: The required element is partially present, has minor inaccuracies, or is incomplete.\n- **0.0 (No Compliance)**: The required element is missing, incorrect, or the response is entirely off-topic / non-responsive.\n\n**For NEGATIVE constraints** (response should NOT contain or should avoid something):\n- **1.0**: The response is responsive AND the prohibited element is absent.\n- **0.5**: The response is responsive but contains a borderline or ambiguous reference to the prohibited element.\n- **0.0**: The prohibited element is present, OR the response is non-responsive.\n\n**Compound statements** (\"and\"/commas joining multiple required elements): all present=1.0, some=0.5, none=0.0.\n\nEVALUATION RULES:\n1. Semantic tolerance: paraphrases and synonyms are acceptable.\n2. Numeric/date equivalence: \"$68,000\"=\"68k\"=\"sixty-eight thousand dollars\"; \"2 years\"=\"24 months\".\n3. Case/punctuation/whitespace tolerance.\n4. Hedging tolerance: do not penalize \"I think\"/\"probably\"/passive/verbosity if content satisfies the criterion.\n5. Style neutrality: do not penalize tone/format/length unless the criterion requires it.\n6. Responsiveness: completely off-topic or refusal = 0.0.\n7. Independence: evaluate this criterion in isolation.\n8. Specificity: vague generic answers score lower than specific, detailed ones.\n\nReturn JSON: {\"score\": <0.0 or 0.5 or 1.0>, \"reason\": \"<one concise sentence>\"}"
+              }
+            ],
+            "role": "user"
+          }
+        ],
+        "generationConfig": {
+          "temperature": 0.0,
+          "responseMimeType": "application/json",
+          "responseSchema": {
+            "properties": {
+              "score": {
+                "description": "Score: 0.0, 0.5, or 1.0",
+                "type": "NUMBER"
+              },
+              "reason": {
+                "type": "STRING"
+              }
+            },
+            "property_ordering": [
+              "score",
+              "reason"
+            ],
+            "required": [
+              "score",
+              "reason"
+            ],
+            "type": "OBJECT"
+          }
+        }
+      }
+    },
+    {
+      "ts": "2026-10-05T08:51:35.123Z",
+      "cell_id": "beam-100k-gbrain-rag-a7c3b72215e9",
+      "label": "harness",
+      "tag": "beam-100k-gbrain-rag-a7c3b72215e9/judge/q-f863a0514858#2",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash",
+      "kind": "chat",
+      "method": "POST",
+      "path": "/v1beta/models/gemini-3.5-flash:generateContent",
+      "body_sha256": "5ee0a6a9d06bd8b036e3ec136d49569f0cd55b68af76f9cbe40cd8bda8470b42",
+      "stream": false,
+      "reserved_usd": 0.5910735,
+      "actual_usd": 0.002553,
+      "input_tokens": 532,
+      "output_tokens": 195,
+      "status": 200,
+      "refused": false,
+      "settlement": "reconciled",
+      "error": null,
+      "body": {
+        "contents": [
+          {
+            "parts": [
+              {
+                "text": "Evaluate whether the following LLM response demonstrates compliance with the specified RUBRIC CRITERION.\n\nQUESTION:\nCan you list the order in which I brought up different aspects of developing my personal budget tracker throughout our conversations, in order? Mention ONLY and ONLY three items.\n\nLLM RESPONSE:\n1. User Authentication\n2. Transaction Management\n3. Basic Analytics\n\nRUBRIC CRITERION:\nLLM response should mention: Security and deployment\n\nSCORING GUIDELINES:\n\nFirst, determine whether the rubric criterion is a POSITIVE requirement (the response SHOULD include something) or a NEGATIVE constraint (the response SHOULD NOT include something).\n\n**For POSITIVE requirements** (response should contain, mention, or demonstrate something):\n- **1.0 (Complete Compliance)**: The required element is present, accurate, and complete.\n- **0.5 (Partial Compliance)**: The required element is partially present, has minor inaccuracies, or is incomplete.\n- **0.0 (No Compliance)**: The required element is missing, incorrect, or the response is entirely off-topic / non-responsive.\n\n**For NEGATIVE constraints** (response should NOT contain or should avoid something):\n- **1.0**: The response is responsive AND the prohibited element is absent.\n- **0.5**: The response is responsive but contains a borderline or ambiguous reference to the prohibited element.\n- **0.0**: The prohibited element is present, OR the response is non-responsive.\n\n**Compound statements** (\"and\"/commas joining multiple required elements): all present=1.0, some=0.5, none=0.0.\n\nEVALUATION RULES:\n1. Semantic tolerance: paraphrases and synonyms are acceptable.\n2. Numeric/date equivalence: \"$68,000\"=\"68k\"=\"sixty-eight thousand dollars\"; \"2 years\"=\"24 months\".\n3. Case/punctuation/whitespace tolerance.\n4. Hedging tolerance: do not penalize \"I think\"/\"probably\"/passive/verbosity if content satisfies the criterion.\n5. Style neutrality: do not penalize tone/format/length unless the criterion requires it.\n6. Responsiveness: completely off-topic or refusal = 0.0.\n7. Independence: evaluate this criterion in isolation.\n8. Specificity: vague generic answers score lower than specific, detailed ones.\n\nReturn JSON: {\"score\": <0.0 or 0.5 or 1.0>, \"reason\": \"<one concise sentence>\"}"
+              }
+            ],
+            "role": "user"
+          }
+        ],
+        "generationConfig": {
+          "temperature": 0.0,
+          "responseMimeType": "application/json",
+          "responseSchema": {
+            "properties": {
+              "score": {
+                "description": "Score: 0.0, 0.5, or 1.0",
+                "type": "NUMBER"
+              },
+              "reason": {
+                "type": "STRING"
+              }
+            },
+            "property_ordering": [
+              "score",
+              "reason"
+            ],
+            "required": [
+              "score",
+              "reason"
+            ],
+            "type": "OBJECT"
+          }
+        }
+      }
+    }
+  ],
+  "error": null,
+  "details": {}
+}

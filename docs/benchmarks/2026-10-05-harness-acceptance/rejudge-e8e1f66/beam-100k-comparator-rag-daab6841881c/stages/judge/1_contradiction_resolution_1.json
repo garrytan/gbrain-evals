@@ -1,0 +1,123 @@
+{
+  "cell_id": "beam-100k-comparator-rag-daab6841881c",
+  "query_id": "1_contradiction_resolution_1",
+  "outcome": "answered",
+  "score": 0.625,
+  "correct": true,
+  "judge_model": "gemini:gemini-3.5-flash",
+  "reason": "score=0.625 over 4 rubric items",
+  "rubric": [
+    {
+      "criterion": "LLM response should state: there is contradictory information",
+      "valid": true,
+      "score": 1.0,
+      "reason": "The LLM response clearly states that there is conflicting information, which is semantically equivalent to contradictory information.",
+      "attempts": 1
+    },
+    {
+      "criterion": "LLM response should mention: You said you have never integrated Flask-Login or managed user sessions in this project",
+      "valid": true,
+      "score": 0.5,
+      "reason": "The response mentions that the user said they have never integrated Flask-Login in the project, but it does not mention the part about never managing user sessions.",
+      "attempts": 1
+    },
+    {
+      "criterion": "LLM response should mention: you also mentioned that Flask-Login v0.6.2 was integrated for session management",
+      "valid": true,
+      "score": 1.0,
+      "reason": "The LLM response explicitly quotes the user's mention of integrating Flask-Login v0.6.2 for session management in their Flask app.",
+      "attempts": 1
+    },
+    {
+      "criterion": "LLM response should mention: which statement is correct?",
+      "valid": true,
+      "score": 0.0,
+      "reason": "The LLM response asks the user to clarify which statement is correct instead of mentioning which statement is correct.",
+      "attempts": 1
+    }
+  ],
+  "requests": [
+    {
+      "model": "gemini:gemini-3.5-flash",
+      "prompt": "Evaluate whether the following LLM response demonstrates compliance with the specified RUBRIC CRITERION.\n\nQUESTION:\nHave I integrated Flask-Login for session management in my project?\n\nLLM RESPONSE:\nThere is conflicting information in the records regarding whether Flask-Login has been integrated into your project.\n\nOn one hand, in Turn 66, you indicated that you were already using and setting it up, stating:\n\"I'm trying to integrate Flask-Login v0.6.2 for session management in my Flask app, specifically for handling user logins and sessions, can you help me with an example of how to use it to replace my manual session handling... here's a basic structure I have so far:\nfrom flask_login import LoginManager, UserMixin, login_user, logout_user\n...\nlogin_manager = LoginManager()\nlogin_manager.init_app(app)\"\n\nOn the other hand, in Turn 108 and Turn 114, you stated:\n\"I want to make sure I'm using the latest versions of my dependencies, like Flask-Login, which I've never actually integrated into this project, so I'm starting from scratch\"\n\nCould you please clarify which situation is correct: have you already started integrating Flask-Login in your project, or have you never integrated it and are starting from scratch?\n\nRUBRIC CRITERION:\nLLM response should state: there is contradictory information\n\nSCORING GUIDELINES:\n\nFirst, determine whether the rubric criterion is a POSITIVE requirement (the response SHOULD include something) or a NEGATIVE constraint (the response SHOULD NOT include something).\n\n**For POSITIVE requirements** (response should contain, mention, or demonstrate something):\n- **1.0 (Complete Compliance)**: The required element is present, accurate, and complete.\n- **0.5 (Partial Compliance)**: The required element is partially present, has minor inaccuracies, or is incomplete.\n- **0.0 (No Compliance)**: The required element is missing, incorrect, or the response is entirely off-topic / non-responsive.\n\n**For NEGATIVE constraints** (response should NOT contain or should avoid something):\n- **1.0**: The response is responsive AND the prohibited element is absent.\n- **0.5**: The response is responsive but contains a borderline or ambiguous reference to the prohibited element.\n- **0.0**: The prohibited element is present, OR the response is non-responsive.\n\n**Compound statements** (\"and\"/commas joining multiple required elements): all present=1.0, some=0.5, none=0.0.\n\nEVALUATION RULES:\n1. Semantic tolerance: paraphrases and synonyms are acceptable.\n2. Numeric/date equivalence: \"$68,000\"=\"68k\"=\"sixty-eight thousand dollars\"; \"2 years\"=\"24 months\".\n3. Case/punctuation/whitespace tolerance.\n4. Hedging tolerance: do not penalize \"I think\"/\"probably\"/passive/verbosity if content satisfies the criterion.\n5. Style neutrality: do not penalize tone/format/length unless the criterion requires it.\n6. Responsiveness: completely off-topic or refusal = 0.0.\n7. Independence: evaluate this criterion in isolation.\n8. Specificity: vague generic answers score lower than specific, detailed ones.\n\nReturn JSON: {\"score\": <0.0 or 0.5 or 1.0>, \"reason\": \"<one concise sentence>\"}",
+      "prompt_sha256": "1ba5330fdfcc313b74b593bcaf2a093299f22bbc05eee256aee4ff6eea618a3c",
+      "attempts": [
+        {
+          "attempt": 0,
+          "response": {
+            "score": 1.0,
+            "reason": "The LLM response clearly states that there is conflicting information, which is semantically equivalent to contradictory information."
+          },
+          "problems": []
+        }
+      ],
+      "valid": true,
+      "response": {
+        "score": 1.0,
+        "reason": "The LLM response clearly states that there is conflicting information, which is semantically equivalent to contradictory information."
+      }
+    },
+    {
+      "model": "gemini:gemini-3.5-flash",
+      "prompt": "Evaluate whether the following LLM response demonstrates compliance with the specified RUBRIC CRITERION.\n\nQUESTION:\nHave I integrated Flask-Login for session management in my project?\n\nLLM RESPONSE:\nThere is conflicting information in the records regarding whether Flask-Login has been integrated into your project.\n\nOn one hand, in Turn 66, you indicated that you were already using and setting it up, stating:\n\"I'm trying to integrate Flask-Login v0.6.2 for session management in my Flask app, specifically for handling user logins and sessions, can you help me with an example of how to use it to replace my manual session handling... here's a basic structure I have so far:\nfrom flask_login import LoginManager, UserMixin, login_user, logout_user\n...\nlogin_manager = LoginManager()\nlogin_manager.init_app(app)\"\n\nOn the other hand, in Turn 108 and Turn 114, you stated:\n\"I want to make sure I'm using the latest versions of my dependencies, like Flask-Login, which I've never actually integrated into this project, so I'm starting from scratch\"\n\nCould you please clarify which situation is correct: have you already started integrating Flask-Login in your project, or have you never integrated it and are starting from scratch?\n\nRUBRIC CRITERION:\nLLM response should mention: You said you have never integrated Flask-Login or managed user sessions in this project\n\nSCORING GUIDELINES:\n\nFirst, determine whether the rubric criterion is a POSITIVE requirement (the response SHOULD include something) or a NEGATIVE constraint (the response SHOULD NOT include something).\n\n**For POSITIVE requirements** (response should contain, mention, or demonstrate something):\n- **1.0 (Complete Compliance)**: The required element is present, accurate, and complete.\n- **0.5 (Partial Compliance)**: The required element is partially present, has minor inaccuracies, or is incomplete.\n- **0.0 (No Compliance)**: The required element is missing, incorrect, or the response is entirely off-topic / non-responsive.\n\n**For NEGATIVE constraints** (response should NOT contain or should avoid something):\n- **1.0**: The response is responsive AND the prohibited element is absent.\n- **0.5**: The response is responsive but contains a borderline or ambiguous reference to the prohibited element.\n- **0.0**: The prohibited element is present, OR the response is non-responsive.\n\n**Compound statements** (\"and\"/commas joining multiple required elements): all present=1.0, some=0.5, none=0.0.\n\nEVALUATION RULES:\n1. Semantic tolerance: paraphrases and synonyms are acceptable.\n2. Numeric/date equivalence: \"$68,000\"=\"68k\"=\"sixty-eight thousand dollars\"; \"2 years\"=\"24 months\".\n3. Case/punctuation/whitespace tolerance.\n4. Hedging tolerance: do not penalize \"I think\"/\"probably\"/passive/verbosity if content satisfies the criterion.\n5. Style neutrality: do not penalize tone/format/length unless the criterion requires it.\n6. Responsiveness: completely off-topic or refusal = 0.0.\n7. Independence: evaluate this criterion in isolation.\n8. Specificity: vague generic answers score lower than specific, detailed ones.\n\nReturn JSON: {\"score\": <0.0 or 0.5 or 1.0>, \"reason\": \"<one concise sentence>\"}",
+      "prompt_sha256": "b62d5dbaa22d358daf82d9bc5c455451d244da49941d72b9e90d9f4c8d036260",
+      "attempts": [
+        {
+          "attempt": 0,
+          "response": {
+            "score": 0.5,
+            "reason": "The response mentions that the user said they have never integrated Flask-Login in the project, but it does not mention the part about never managing user sessions."
+          },
+          "problems": []
+        }
+      ],
+      "valid": true,
+      "response": {
+        "score": 0.5,
+        "reason": "The response mentions that the user said they have never integrated Flask-Login in the project, but it does not mention the part about never managing user sessions."
+      }
+    },
+    {
+      "model": "gemini:gemini-3.5-flash",
+      "prompt": "Evaluate whether the following LLM response demonstrates compliance with the specified RUBRIC CRITERION.\n\nQUESTION:\nHave I integrated Flask-Login for session management in my project?\n\nLLM RESPONSE:\nThere is conflicting information in the records regarding whether Flask-Login has been integrated into your project.\n\nOn one hand, in Turn 66, you indicated that you were already using and setting it up, stating:\n\"I'm trying to integrate Flask-Login v0.6.2 for session management in my Flask app, specifically for handling user logins and sessions, can you help me with an example of how to use it to replace my manual session handling... here's a basic structure I have so far:\nfrom flask_login import LoginManager, UserMixin, login_user, logout_user\n...\nlogin_manager = LoginManager()\nlogin_manager.init_app(app)\"\n\nOn the other hand, in Turn 108 and Turn 114, you stated:\n\"I want to make sure I'm using the latest versions of my dependencies, like Flask-Login, which I've never actually integrated into this project, so I'm starting from scratch\"\n\nCould you please clarify which situation is correct: have you already started integrating Flask-Login in your project, or have you never integrated it and are starting from scratch?\n\nRUBRIC CRITERION:\nLLM response should mention: you also mentioned that Flask-Login v0.6.2 was integrated for session management\n\nSCORING GUIDELINES:\n\nFirst, determine whether the rubric criterion is a POSITIVE requirement (the response SHOULD include something) or a NEGATIVE constraint (the response SHOULD NOT include something).\n\n**For POSITIVE requirements** (response should contain, mention, or demonstrate something):\n- **1.0 (Complete Compliance)**: The required element is present, accurate, and complete.\n- **0.5 (Partial Compliance)**: The required element is partially present, has minor inaccuracies, or is incomplete.\n- **0.0 (No Compliance)**: The required element is missing, incorrect, or the response is entirely off-topic / non-responsive.\n\n**For NEGATIVE constraints** (response should NOT contain or should avoid something):\n- **1.0**: The response is responsive AND the prohibited element is absent.\n- **0.5**: The response is responsive but contains a borderline or ambiguous reference to the prohibited element.\n- **0.0**: The prohibited element is present, OR the response is non-responsive.\n\n**Compound statements** (\"and\"/commas joining multiple required elements): all present=1.0, some=0.5, none=0.0.\n\nEVALUATION RULES:\n1. Semantic tolerance: paraphrases and synonyms are acceptable.\n2. Numeric/date equivalence: \"$68,000\"=\"68k\"=\"sixty-eight thousand dollars\"; \"2 years\"=\"24 months\".\n3. Case/punctuation/whitespace tolerance.\n4. Hedging tolerance: do not penalize \"I think\"/\"probably\"/passive/verbosity if content satisfies the criterion.\n5. Style neutrality: do not penalize tone/format/length unless the criterion requires it.\n6. Responsiveness: completely off-topic or refusal = 0.0.\n7. Independence: evaluate this criterion in isolation.\n8. Specificity: vague generic answers score lower than specific, detailed ones.\n\nReturn JSON: {\"score\": <0.0 or 0.5 or 1.0>, \"reason\": \"<one concise sentence>\"}",
+      "prompt_sha256": "643b394d917ec6e81627fc16214db67ebff6758ca843405bfe752b3e8c326bb5",
+      "attempts": [
+        {
+          "attempt": 0,
+          "response": {
+            "score": 1.0,
+            "reason": "The LLM response explicitly quotes the user's mention of integrating Flask-Login v0.6.2 for session management in their Flask app."
+          },
+          "problems": []
+        }
+      ],
+      "valid": true,
+      "response": {
+        "score": 1.0,
+        "reason": "The LLM response explicitly quotes the user's mention of integrating Flask-Login v0.6.2 for session management in their Flask app."
+      }
+    },
+    {
+      "model": "gemini:gemini-3.5-flash",
+      "prompt": "Evaluate whether the following LLM response demonstrates compliance with the specified RUBRIC CRITERION.\n\nQUESTION:\nHave I integrated Flask-Login for session management in my project?\n\nLLM RESPONSE:\nThere is conflicting information in the records regarding whether Flask-Login has been integrated into your project.\n\nOn one hand, in Turn 66, you indicated that you were already using and setting it up, stating:\n\"I'm trying to integrate Flask-Login v0.6.2 for session management in my Flask app, specifically for handling user logins and sessions, can you help me with an example of how to use it to replace my manual session handling... here's a basic structure I have so far:\nfrom flask_login import LoginManager, UserMixin, login_user, logout_user\n...\nlogin_manager = LoginManager()\nlogin_manager.init_app(app)\"\n\nOn the other hand, in Turn 108 and Turn 114, you stated:\n\"I want to make sure I'm using the latest versions of my dependencies, like Flask-Login, which I've never actually integrated into this project, so I'm starting from scratch\"\n\nCould you please clarify which situation is correct: have you already started integrating Flask-Login in your project, or have you never integrated it and are starting from scratch?\n\nRUBRIC CRITERION:\nLLM response should mention: which statement is correct?\n\nSCORING GUIDELINES:\n\nFirst, determine whether the rubric criterion is a POSITIVE requirement (the response SHOULD include something) or a NEGATIVE constraint (the response SHOULD NOT include something).\n\n**For POSITIVE requirements** (response should contain, mention, or demonstrate something):\n- **1.0 (Complete Compliance)**: The required element is present, accurate, and complete.\n- **0.5 (Partial Compliance)**: The required element is partially present, has minor inaccuracies, or is incomplete.\n- **0.0 (No Compliance)**: The required element is missing, incorrect, or the response is entirely off-topic / non-responsive.\n\n**For NEGATIVE constraints** (response should NOT contain or should avoid something):\n- **1.0**: The response is responsive AND the prohibited element is absent.\n- **0.5**: The response is responsive but contains a borderline or ambiguous reference to the prohibited element.\n- **0.0**: The prohibited element is present, OR the response is non-responsive.\n\n**Compound statements** (\"and\"/commas joining multiple required elements): all present=1.0, some=0.5, none=0.0.\n\nEVALUATION RULES:\n1. Semantic tolerance: paraphrases and synonyms are acceptable.\n2. Numeric/date equivalence: \"$68,000\"=\"68k\"=\"sixty-eight thousand dollars\"; \"2 years\"=\"24 months\".\n3. Case/punctuation/whitespace tolerance.\n4. Hedging tolerance: do not penalize \"I think\"/\"probably\"/passive/verbosity if content satisfies the criterion.\n5. Style neutrality: do not penalize tone/format/length unless the criterion requires it.\n6. Responsiveness: completely off-topic or refusal = 0.0.\n7. Independence: evaluate this criterion in isolation.\n8. Specificity: vague generic answers score lower than specific, detailed ones.\n\nReturn JSON: {\"score\": <0.0 or 0.5 or 1.0>, \"reason\": \"<one concise sentence>\"}",
+      "prompt_sha256": "42630eb82b1beee1954d444a88ef652cfa697e5d260fd8670309d19eb3ab973d",
+      "attempts": [
+        {
+          "attempt": 0,
+          "response": {
+            "score": 0.0,
+            "reason": "The LLM response asks the user to clarify which statement is correct instead of mentioning which statement is correct."
+          },
+          "problems": []
+        }
+      ],
+      "valid": true,
+      "response": {
+        "score": 0.0,
+        "reason": "The LLM response asks the user to clarify which statement is correct instead of mentioning which statement is correct."
+      }
+    }
+  ],
+  "error": null,
+  "details": {}
+}

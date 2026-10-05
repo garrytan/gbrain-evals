@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-10-05T07:53:47.890Z",
+  "generated_at": "2026-10-05T08:59:12.214Z",
   "cap_usd": 2500,
-  "spent_usd": 3.24,
-  "total_usd": 2735.319605116208,
+  "spent_usd": 4.16,
+  "total_usd": 2719.9136158513725,
   "within_cap": false,
   "rates": {
     "reader_input_ratio": {
       "anthropic:claude-fable-5-1": 1.25,
       "openai:gpt-6-astra": 1,
-      "gemini:gemini-3.8-flash": 1.249949257972468,
+      "gemini:gemini-3.8-flash": 1.2338575742325115,
       "openai:gpt-6.1-sol": 1.009167945065381,
       "anthropic:claude-sonnet-5-5": 1.6639716536583584,
       "anthropic:claude-opus-5-5": 1.6639716536583584
@@ -17,24 +17,24 @@
     "answer_output_tokens": {
       "anthropic:claude-fable-5-1": 1200,
       "openai:gpt-6-astra": 1200,
-      "gemini:gemini-3.8-flash": 2165.2,
+      "gemini:gemini-3.8-flash": 2152.4,
       "openai:gpt-6.1-sol": 465.5,
       "anthropic:claude-sonnet-5-5": 389.8,
       "anthropic:claude-opus-5-5": 535.3
     },
-    "judge_in_per_call": 728.1150442477876,
-    "judge_out_per_call": 328.34513274336285,
+    "judge_in_per_call": 744.9557522123894,
+    "judge_out_per_call": 315.91150442477874,
     "gbrain_embed_ratio": 1.5902517178155897,
     "gbrain_embedding_model": "voyage:voyage-4",
     "comparator_ingest": {
       "model": "openai:gpt-4o-mini",
-      "in_ratio": 6.135360441405782,
-      "out_ratio": 0.7251580733048887,
+      "in_ratio": 6.139027399372847,
+      "out_ratio": 0.7018883119998629,
       "measured": true
     },
     "sources": [
-      "beam-100k-gbrain-rag-48a25f23a91b",
-      "beam-100k-comparator-rag-b1bc1d8eee25",
+      "beam-100k-gbrain-rag-a7c3b72215e9",
+      "beam-100k-comparator-rag-daab6841881c",
       "beam-100k-gbrain-rag-f83eab84169e",
       "beam-100k-gbrain-rag-5bf8aeae392b",
       "beam-100k-gbrain-rag-a9d78f4f21df"
@@ -42,7 +42,7 @@
   },
   "measured": [
     {
-      "cell_id": "beam-100k-gbrain-rag-48a25f23a91b",
+      "cell_id": "beam-100k-gbrain-rag-a7c3b72215e9",
       "provider": "gbrain",
       "answer_model": "gemini:gemini-3.8-flash",
       "questions": 10,
@@ -62,56 +62,56 @@
           "gemini:gemini-3.8-flash": {
             "requests": 10,
             "input_tokens": 94824,
-            "output_tokens": 38098,
-            "usd": 0.2139855
+            "output_tokens": 35647,
+            "usd": 0.20479425
           }
         },
         "judge": {
           "gemini:gemini-3.5-flash": {
             "requests": 27,
-            "input_tokens": 18650,
-            "output_tokens": 9556,
-            "usd": 0.113979
+            "input_tokens": 18438,
+            "output_tokens": 8409,
+            "usd": 0.103338
           }
         }
       },
-      "total_usd": 0.33910115999999996
+      "total_usd": 0.31926890999999996
     },
     {
-      "cell_id": "beam-100k-comparator-rag-b1bc1d8eee25",
+      "cell_id": "beam-100k-comparator-rag-daab6841881c",
       "provider": "comparator",
       "answer_model": "gemini:gemini-3.8-flash",
       "questions": 10,
       "document_tokens_cl100k": 116718,
       "target": 8000,
-      "delivered_mean": 8098.7,
+      "delivered_mean": 7671,
       "stages": {
         "ingest": {
           "openai:gpt-4o-mini": {
             "requests": 191,
-            "input_tokens": 716107,
-            "output_tokens": 84639,
-            "usd": 0.15819944999999994
+            "input_tokens": 716535,
+            "output_tokens": 81923,
+            "usd": 0.1566340499999999
           }
         },
         "answer": {
           "gemini:gemini-3.8-flash": {
             "requests": 10,
-            "input_tokens": 104692,
-            "output_tokens": 21652,
-            "usd": 0.159714
+            "input_tokens": 98067,
+            "output_tokens": 21524,
+            "usd": 0.15426525
           }
         },
         "judge": {
           "gemini:gemini-3.5-flash": {
             "requests": 27,
-            "input_tokens": 17212,
-            "output_tokens": 8042,
-            "usd": 0.09819599999999999
+            "input_tokens": 19327,
+            "output_tokens": 7784,
+            "usd": 0.09904650000000002
           }
         }
       },
-      "total_usd": 0.4161094499999999
+      "total_usd": 0.4099458
     },
     {
       "cell_id": "beam-100k-gbrain-rag-f83eab84169e",
@@ -246,12 +246,12 @@
       "readers": [
         "gemini:gemini-3.8-flash"
       ],
-      "usd": 126.99567072590646,
+      "usd": 125.47469660535118,
       "parts": {
         "ingest gbrain embeddings": 4.150038154334242,
-        "answer gemini:gemini-3.8-flash": 35.56867441384004,
-        "judge gemini:gemini-3.5-flash": 28.32447568141593,
-        "ingest comparator extraction": 58.95248247631625
+        "answer gemini:gemini-3.8-flash": 35.237393758429796,
+        "judge gemini:gemini-3.5-flash": 27.718123157522122,
+        "ingest comparator extraction": 58.369141535065026
       }
     },
     {
@@ -276,9 +276,9 @@
       ],
       "readers": [],
       "judge_only": true,
-      "usd": 28.32447568141593,
+      "usd": 27.718123157522122,
       "parts": {
-        "judge gemini:gemini-3.5-flash": 28.32447568141593
+        "judge gemini:gemini-3.5-flash": 27.718123157522122
       }
     },
     {
@@ -312,12 +312,12 @@
       "readers": [
         "gemini:gemini-3.8-flash"
       ],
-      "usd": 285.5759180433808,
+      "usd": 282.51119861962457,
       "parts": {
         "ingest gbrain embeddings": 6.655953115523055,
-        "answer gemini:gemini-3.8-flash": 151.64394551065584,
-        "ingest comparator extraction": 94.54972335525498,
-        "judge gemini:gemini-3.5-flash": 32.726296061946904
+        "answer gemini:gemini-3.8-flash": 150.2153893467539,
+        "ingest comparator extraction": 93.61414401575465,
+        "judge gemini:gemini-3.5-flash": 32.02571214159292
       }
     },
     {
@@ -346,9 +346,9 @@
       ],
       "readers": [],
       "judge_only": true,
-      "usd": 32.726296061946904,
+      "usd": 32.02571214159292,
       "parts": {
-        "judge gemini:gemini-3.5-flash": 32.726296061946904
+        "judge gemini:gemini-3.5-flash": 32.02571214159292
       }
     },
     {
@@ -378,12 +378,12 @@
       "readers": [
         "gemini:gemini-3.8-flash"
       ],
-      "usd": 118.74113006406381,
+      "usd": 117.12587903910652,
       "parts": {
         "ingest gbrain embeddings": 1.0375095385835604,
-        "answer gemini:gemini-3.8-flash": 67.55990530463124,
-        "judge gemini:gemini-3.5-flash": 35.40559460176993,
-        "ingest comparator extraction": 14.738120619079062
+        "answer gemini:gemini-3.8-flash": 66.84843016985405,
+        "judge gemini:gemini-3.5-flash": 34.64765394690264,
+        "ingest comparator extraction": 14.592285383766257
       }
     },
     {
@@ -418,12 +418,12 @@
       "readers": [
         "gemini:gemini-3.8-flash"
       ],
-      "usd": 197.7501250592942,
+      "usd": 195.62270076832195,
       "parts": {
         "ingest gbrain embeddings": 6.476546444434071,
-        "ingest gbrain extraction": 92.00120012723076,
-        "answer gemini:gemini-3.8-flash": 75.67836222214261,
-        "judge gemini:gemini-3.5-flash": 23.59401626548673
+        "ingest gbrain extraction": 91.09083868994911,
+        "answer gemini:gemini-3.8-flash": 74.96638519854052,
+        "judge gemini:gemini-3.5-flash": 23.088930435398225
       }
     },
     {
@@ -458,10 +458,10 @@
       "readers": [
         "gemini:gemini-3.8-flash"
       ],
-      "usd": 99.27237848762934,
+      "usd": 98.05531563393875,
       "parts": {
-        "answer gemini:gemini-3.8-flash": 75.67836222214261,
-        "judge gemini:gemini-3.5-flash": 23.59401626548673
+        "answer gemini:gemini-3.8-flash": 74.96638519854052,
+        "judge gemini:gemini-3.5-flash": 23.088930435398225
       }
     },
     {
@@ -493,10 +493,10 @@
         "gemini:gemini-3.8-flash"
       ],
       "calls_per_question": 4,
-      "usd": 112.43411442820657,
+      "usd": 111.29647561120737,
       "parts": {
-        "answer gemini:gemini-3.8-flash": 105.88885521581719,
-        "judge gemini:gemini-3.5-flash": 6.5452592123893805
+        "answer gemini:gemini-3.8-flash": 104.89133318288879,
+        "judge gemini:gemini-3.5-flash": 6.405142428318584
       }
     },
     {
@@ -527,10 +527,10 @@
       "readers": [
         "openai:gpt-6.1-sol"
       ],
-      "usd": 42.79698986576071,
+      "usd": 42.65687308168991,
       "parts": {
         "answer openai:gpt-6.1-sol": 36.251730653371325,
-        "judge gemini:gemini-3.5-flash": 6.5452592123893805
+        "judge gemini:gemini-3.5-flash": 6.405142428318584
       }
     },
     {
@@ -557,10 +557,10 @@
       "readers": [
         "anthropic:claude-sonnet-5-5"
       ],
-      "usd": 24.689415502963847,
+      "usd": 24.537827371990396,
       "parts": {
         "answer anthropic:claude-sonnet-5-5": 17.608296582609864,
-        "judge gemini:gemini-3.5-flash": 7.081118920353982
+        "judge gemini:gemini-3.5-flash": 6.9295307893805305
       }
     },
     {
@@ -650,11 +650,11 @@
         "gemini:gemini-3.8-flash"
       ],
       "repeats": 3,
-      "usd": 27.072459901471674,
+      "usd": 26.72084745923265,
       "parts": {
         "ingest gbrain embeddings": 3.1125286157506813,
-        "answer gemini:gemini-3.8-flash": 13.338252905190016,
-        "judge gemini:gemini-3.5-flash": 10.621678380530975
+        "answer gemini:gemini-3.8-flash": 13.214022659411174,
+        "judge gemini:gemini-3.5-flash": 10.394296184070797
       }
     },
     {
@@ -689,12 +689,12 @@
       "readers": [
         "gemini:gemini-3.8-flash"
       ],
-      "usd": 170.46295206983413,
+      "usd": 168.825553594811,
       "parts": {
         "ingest gbrain embeddings": 10.462458503771655,
-        "answer gemini:gemini-3.8-flash": 6.351549002471435,
-        "judge gemini:gemini-3.5-flash": 5.026720221238938,
-        "ingest comparator extraction": 148.6222243423521
+        "answer gemini:gemini-3.8-flash": 6.29239174257675,
+        "judge gemini:gemini-3.5-flash": 4.919111362831858,
+        "ingest comparator extraction": 147.15159198563074
       }
     },
     {
@@ -722,10 +722,10 @@
       "readers": [
         "gemini:gemini-3.8-flash"
       ],
-      "usd": 146.23767922433385,
+      "usd": 144.18241276698274,
       "parts": {
-        "answer gemini:gemini-3.8-flash": 103.75096570220995,
-        "judge gemini:gemini-3.5-flash": 42.48671352212389
+        "answer gemini:gemini-3.8-flash": 102.60522803069955,
+        "judge gemini:gemini-3.5-flash": 41.577184736283186
       }
     },
     {
@@ -758,15 +758,15 @@
   "alternatives": [
     {
       "reader": "anthropic:claude-sonnet-5-5",
-      "total_usd": 3491.958641697784
+      "total_usd": 3482.7745656443544
     },
     {
       "reader": "anthropic:claude-opus-5-5",
-      "total_usd": 4984.896198778462
+      "total_usd": 4975.712122725032
     },
     {
       "reader": "openai:gpt-6.1-sol",
-      "total_usd": 3023.52961696337
+      "total_usd": 3014.34554090994
     }
   ]
 }

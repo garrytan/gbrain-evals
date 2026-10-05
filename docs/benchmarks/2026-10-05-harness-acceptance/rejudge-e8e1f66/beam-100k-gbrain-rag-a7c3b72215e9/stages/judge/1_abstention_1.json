@@ -1,0 +1,42 @@
+{
+  "cell_id": "beam-100k-gbrain-rag-a7c3b72215e9",
+  "query_id": "1_abstention_1",
+  "outcome": "abstention",
+  "score": 1.0,
+  "correct": true,
+  "judge_model": "gemini:gemini-3.5-flash",
+  "reason": "score=1.000 over 1 rubric items",
+  "rubric": [
+    {
+      "criterion": "Based on the provided chat, there is no information related to your background or previous development projects",
+      "valid": true,
+      "score": 1.0,
+      "reason": "The response perfectly aligns with the rubric criterion by stating that there is no information about the user's background or previous development projects in the chat.",
+      "attempts": 1
+    }
+  ],
+  "requests": [
+    {
+      "model": "gemini:gemini-3.5-flash",
+      "prompt": "Evaluate whether the following LLM response demonstrates compliance with the specified RUBRIC CRITERION.\n\nQUESTION:\nCan you tell me about my background and previous development projects?\n\nLLM RESPONSE:\nBased on the provided chat, there is no information related to your background and previous development projects.\n\nRUBRIC CRITERION:\nBased on the provided chat, there is no information related to your background or previous development projects\n\nSCORING GUIDELINES:\n\nFirst, determine whether the rubric criterion is a POSITIVE requirement (the response SHOULD include something) or a NEGATIVE constraint (the response SHOULD NOT include something).\n\n**For POSITIVE requirements** (response should contain, mention, or demonstrate something):\n- **1.0 (Complete Compliance)**: The required element is present, accurate, and complete.\n- **0.5 (Partial Compliance)**: The required element is partially present, has minor inaccuracies, or is incomplete.\n- **0.0 (No Compliance)**: The required element is missing, incorrect, or the response is entirely off-topic / non-responsive.\n\n**For NEGATIVE constraints** (response should NOT contain or should avoid something):\n- **1.0**: The response is responsive AND the prohibited element is absent.\n- **0.5**: The response is responsive but contains a borderline or ambiguous reference to the prohibited element.\n- **0.0**: The prohibited element is present, OR the response is non-responsive.\n\n**Compound statements** (\"and\"/commas joining multiple required elements): all present=1.0, some=0.5, none=0.0.\n\nEVALUATION RULES:\n1. Semantic tolerance: paraphrases and synonyms are acceptable.\n2. Numeric/date equivalence: \"$68,000\"=\"68k\"=\"sixty-eight thousand dollars\"; \"2 years\"=\"24 months\".\n3. Case/punctuation/whitespace tolerance.\n4. Hedging tolerance: do not penalize \"I think\"/\"probably\"/passive/verbosity if content satisfies the criterion.\n5. Style neutrality: do not penalize tone/format/length unless the criterion requires it.\n6. Responsiveness: completely off-topic or refusal = 0.0.\n7. Independence: evaluate this criterion in isolation.\n8. Specificity: vague generic answers score lower than specific, detailed ones.\n\nReturn JSON: {\"score\": <0.0 or 0.5 or 1.0>, \"reason\": \"<one concise sentence>\"}",
+      "prompt_sha256": "2e0b9da79645716de54cf8f80322c812ac4b8673babf50db6ff2d0c2cc7b7174",
+      "attempts": [
+        {
+          "attempt": 0,
+          "response": {
+            "score": 1.0,
+            "reason": "The response perfectly aligns with the rubric criterion by stating that there is no information about the user's background or previous development projects in the chat."
+          },
+          "problems": []
+        }
+      ],
+      "valid": true,
+      "response": {
+        "score": 1.0,
+        "reason": "The response perfectly aligns with the rubric criterion by stating that there is no information about the user's background or previous development projects in the chat."
+      }
+    }
+  ],
+  "error": null,
+  "details": {}
+}

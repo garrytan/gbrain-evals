@@ -1,0 +1,271 @@
+{
+  "cell_id": "beam-100k-comparator-rag-daab6841881c",
+  "query_id": "1_contradiction_resolution_1",
+  "outcome": "answered",
+  "score": 0.625,
+  "correct": true,
+  "judge_model": "gemini:gemini-3.5-flash",
+  "reason": "score=0.625 over 4 rubric items",
+  "rubric": [
+    {
+      "criterion": "LLM response should state: there is contradictory information",
+      "valid": true,
+      "score": 1.0,
+      "reason": "The LLM response clearly states that there is conflicting information, which is semantically equivalent to contradictory information.",
+      "attempts": 1
+    },
+    {
+      "criterion": "LLM response should mention: You said you have never integrated Flask-Login or managed user sessions in this project",
+      "valid": true,
+      "score": 0.5,
+      "reason": "The response mentions that the user said they have never integrated Flask-Login, but it does not mention the part about never managing user sessions in the project.",
+      "attempts": 1
+    },
+    {
+      "criterion": "LLM response should mention: you also mentioned that Flask-Login v0.6.2 was integrated for session management",
+      "valid": true,
+      "score": 1.0,
+      "reason": "The LLM response explicitly quotes the user's mention of integrating Flask-Login v0.6.2 for session management in their Flask app.",
+      "attempts": 1
+    },
+    {
+      "criterion": "LLM response should mention: which statement is correct?",
+      "valid": true,
+      "score": 0.0,
+      "reason": "The LLM response does not mention which statement is correct, but instead asks the user to clarify which one is correct.",
+      "attempts": 1
+    }
+  ],
+  "requests": [
+    {
+      "ts": "2026-10-05T08:55:38.408Z",
+      "cell_id": "beam-100k-comparator-rag-daab6841881c",
+      "label": "harness",
+      "tag": "beam-100k-comparator-rag-daab6841881c/judge/q-38c42a6c162f#0",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash",
+      "kind": "chat",
+      "method": "POST",
+      "path": "/v1beta/models/gemini-3.5-flash:generateContent",
+      "body_sha256": "5721963e6056ea7820675ba32c02dc6a4d727654ecd64e15733a0ed5a899d41c",
+      "stream": false,
+      "reserved_usd": 0.5915055,
+      "actual_usd": 0.0023055,
+      "input_tokens": 745,
+      "output_tokens": 132,
+      "status": 200,
+      "refused": false,
+      "settlement": "reconciled",
+      "error": null,
+      "body": {
+        "contents": [
+          {
+            "parts": [
+              {
+                "text": "Evaluate whether the following LLM response demonstrates compliance with the specified RUBRIC CRITERION.\n\nQUESTION:\nHave I integrated Flask-Login for session management in my project?\n\nLLM RESPONSE:\nThere is conflicting information in the records regarding whether Flask-Login has been integrated into your project.\n\nOn one hand, in Turn 66, you indicated that you were already using and setting it up, stating:\n\"I'm trying to integrate Flask-Login v0.6.2 for session management in my Flask app, specifically for handling user logins and sessions, can you help me with an example of how to use it to replace my manual session handling... here's a basic structure I have so far:\nfrom flask_login import LoginManager, UserMixin, login_user, logout_user\n...\nlogin_manager = LoginManager()\nlogin_manager.init_app(app)\"\n\nOn the other hand, in Turn 108 and Turn 114, you stated:\n\"I want to make sure I'm using the latest versions of my dependencies, like Flask-Login, which I've never actually integrated into this project, so I'm starting from scratch\"\n\nCould you please clarify which situation is correct: have you already started integrating Flask-Login in your project, or have you never integrated it and are starting from scratch?\n\nRUBRIC CRITERION:\nLLM response should state: there is contradictory information\n\nSCORING GUIDELINES:\n\nFirst, determine whether the rubric criterion is a POSITIVE requirement (the response SHOULD include something) or a NEGATIVE constraint (the response SHOULD NOT include something).\n\n**For POSITIVE requirements** (response should contain, mention, or demonstrate something):\n- **1.0 (Complete Compliance)**: The required element is present, accurate, and complete.\n- **0.5 (Partial Compliance)**: The required element is partially present, has minor inaccuracies, or is incomplete.\n- **0.0 (No Compliance)**: The required element is missing, incorrect, or the response is entirely off-topic / non-responsive.\n\n**For NEGATIVE constraints** (response should NOT contain or should avoid something):\n- **1.0**: The response is responsive AND the prohibited element is absent.\n- **0.5**: The response is responsive but contains a borderline or ambiguous reference to the prohibited element.\n- **0.0**: The prohibited element is present, OR the response is non-responsive.\n\n**Compound statements** (\"and\"/commas joining multiple required elements): all present=1.0, some=0.5, none=0.0.\n\nEVALUATION RULES:\n1. Semantic tolerance: paraphrases and synonyms are acceptable.\n2. Numeric/date equivalence: \"$68,000\"=\"68k\"=\"sixty-eight thousand dollars\"; \"2 years\"=\"24 months\".\n3. Case/punctuation/whitespace tolerance.\n4. Hedging tolerance: do not penalize \"I think\"/\"probably\"/passive/verbosity if content satisfies the criterion.\n5. Style neutrality: do not penalize tone/format/length unless the criterion requires it.\n6. Responsiveness: completely off-topic or refusal = 0.0.\n7. Independence: evaluate this criterion in isolation.\n8. Specificity: vague generic answers score lower than specific, detailed ones.\n\nReturn JSON: {\"score\": <0.0 or 0.5 or 1.0>, \"reason\": \"<one concise sentence>\"}"
+              }
+            ],
+            "role": "user"
+          }
+        ],
+        "generationConfig": {
+          "temperature": 0.0,
+          "responseMimeType": "application/json",
+          "responseSchema": {
+            "properties": {
+              "score": {
+                "description": "Score: 0.0, 0.5, or 1.0",
+                "type": "NUMBER"
+              },
+              "reason": {
+                "type": "STRING"
+              }
+            },
+            "property_ordering": [
+              "score",
+              "reason"
+            ],
+            "required": [
+              "score",
+              "reason"
+            ],
+            "type": "OBJECT"
+          }
+        }
+      }
+    },
+    {
+      "ts": "2026-10-05T08:55:39.665Z",
+      "cell_id": "beam-100k-comparator-rag-daab6841881c",
+      "label": "harness",
+      "tag": "beam-100k-comparator-rag-daab6841881c/judge/q-38c42a6c162f#1",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash",
+      "kind": "chat",
+      "method": "POST",
+      "path": "/v1beta/models/gemini-3.5-flash:generateContent",
+      "body_sha256": "47bd2098c0c845a7ab726204865032e8fba5eec6d09912eb5ae24e7eafbf91fb",
+      "stream": false,
+      "reserved_usd": 0.5915325,
+      "actual_usd": 0.0079755,
+      "input_tokens": 757,
+      "output_tokens": 760,
+      "status": 200,
+      "refused": false,
+      "settlement": "reconciled",
+      "error": null,
+      "body": {
+        "contents": [
+          {
+            "parts": [
+              {
+                "text": "Evaluate whether the following LLM response demonstrates compliance with the specified RUBRIC CRITERION.\n\nQUESTION:\nHave I integrated Flask-Login for session management in my project?\n\nLLM RESPONSE:\nThere is conflicting information in the records regarding whether Flask-Login has been integrated into your project.\n\nOn one hand, in Turn 66, you indicated that you were already using and setting it up, stating:\n\"I'm trying to integrate Flask-Login v0.6.2 for session management in my Flask app, specifically for handling user logins and sessions, can you help me with an example of how to use it to replace my manual session handling... here's a basic structure I have so far:\nfrom flask_login import LoginManager, UserMixin, login_user, logout_user\n...\nlogin_manager = LoginManager()\nlogin_manager.init_app(app)\"\n\nOn the other hand, in Turn 108 and Turn 114, you stated:\n\"I want to make sure I'm using the latest versions of my dependencies, like Flask-Login, which I've never actually integrated into this project, so I'm starting from scratch\"\n\nCould you please clarify which situation is correct: have you already started integrating Flask-Login in your project, or have you never integrated it and are starting from scratch?\n\nRUBRIC CRITERION:\nLLM response should mention: You said you have never integrated Flask-Login or managed user sessions in this project\n\nSCORING GUIDELINES:\n\nFirst, determine whether the rubric criterion is a POSITIVE requirement (the response SHOULD include something) or a NEGATIVE constraint (the response SHOULD NOT include something).\n\n**For POSITIVE requirements** (response should contain, mention, or demonstrate something):\n- **1.0 (Complete Compliance)**: The required element is present, accurate, and complete.\n- **0.5 (Partial Compliance)**: The required element is partially present, has minor inaccuracies, or is incomplete.\n- **0.0 (No Compliance)**: The required element is missing, incorrect, or the response is entirely off-topic / non-responsive.\n\n**For NEGATIVE constraints** (response should NOT contain or should avoid something):\n- **1.0**: The response is responsive AND the prohibited element is absent.\n- **0.5**: The response is responsive but contains a borderline or ambiguous reference to the prohibited element.\n- **0.0**: The prohibited element is present, OR the response is non-responsive.\n\n**Compound statements** (\"and\"/commas joining multiple required elements): all present=1.0, some=0.5, none=0.0.\n\nEVALUATION RULES:\n1. Semantic tolerance: paraphrases and synonyms are acceptable.\n2. Numeric/date equivalence: \"$68,000\"=\"68k\"=\"sixty-eight thousand dollars\"; \"2 years\"=\"24 months\".\n3. Case/punctuation/whitespace tolerance.\n4. Hedging tolerance: do not penalize \"I think\"/\"probably\"/passive/verbosity if content satisfies the criterion.\n5. Style neutrality: do not penalize tone/format/length unless the criterion requires it.\n6. Responsiveness: completely off-topic or refusal = 0.0.\n7. Independence: evaluate this criterion in isolation.\n8. Specificity: vague generic answers score lower than specific, detailed ones.\n\nReturn JSON: {\"score\": <0.0 or 0.5 or 1.0>, \"reason\": \"<one concise sentence>\"}"
+              }
+            ],
+            "role": "user"
+          }
+        ],
+        "generationConfig": {
+          "temperature": 0.0,
+          "responseMimeType": "application/json",
+          "responseSchema": {
+            "properties": {
+              "score": {
+                "description": "Score: 0.0, 0.5, or 1.0",
+                "type": "NUMBER"
+              },
+              "reason": {
+                "type": "STRING"
+              }
+            },
+            "property_ordering": [
+              "score",
+              "reason"
+            ],
+            "required": [
+              "score",
+              "reason"
+            ],
+            "type": "OBJECT"
+          }
+        }
+      }
+    },
+    {
+      "ts": "2026-10-05T08:55:43.594Z",
+      "cell_id": "beam-100k-comparator-rag-daab6841881c",
+      "label": "harness",
+      "tag": "beam-100k-comparator-rag-daab6841881c/judge/q-38c42a6c162f#2",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash",
+      "kind": "chat",
+      "method": "POST",
+      "path": "/v1beta/models/gemini-3.5-flash:generateContent",
+      "body_sha256": "23444c8f24cbb5e52c777a4ca35af27bb06ed8780af5a5be20d44985b7bab197",
+      "stream": false,
+      "reserved_usd": 0.5915295,
+      "actual_usd": 0.0043785,
+      "input_tokens": 759,
+      "output_tokens": 360,
+      "status": 200,
+      "refused": false,
+      "settlement": "reconciled",
+      "error": null,
+      "body": {
+        "contents": [
+          {
+            "parts": [
+              {
+                "text": "Evaluate whether the following LLM response demonstrates compliance with the specified RUBRIC CRITERION.\n\nQUESTION:\nHave I integrated Flask-Login for session management in my project?\n\nLLM RESPONSE:\nThere is conflicting information in the records regarding whether Flask-Login has been integrated into your project.\n\nOn one hand, in Turn 66, you indicated that you were already using and setting it up, stating:\n\"I'm trying to integrate Flask-Login v0.6.2 for session management in my Flask app, specifically for handling user logins and sessions, can you help me with an example of how to use it to replace my manual session handling... here's a basic structure I have so far:\nfrom flask_login import LoginManager, UserMixin, login_user, logout_user\n...\nlogin_manager = LoginManager()\nlogin_manager.init_app(app)\"\n\nOn the other hand, in Turn 108 and Turn 114, you stated:\n\"I want to make sure I'm using the latest versions of my dependencies, like Flask-Login, which I've never actually integrated into this project, so I'm starting from scratch\"\n\nCould you please clarify which situation is correct: have you already started integrating Flask-Login in your project, or have you never integrated it and are starting from scratch?\n\nRUBRIC CRITERION:\nLLM response should mention: you also mentioned that Flask-Login v0.6.2 was integrated for session management\n\nSCORING GUIDELINES:\n\nFirst, determine whether the rubric criterion is a POSITIVE requirement (the response SHOULD include something) or a NEGATIVE constraint (the response SHOULD NOT include something).\n\n**For POSITIVE requirements** (response should contain, mention, or demonstrate something):\n- **1.0 (Complete Compliance)**: The required element is present, accurate, and complete.\n- **0.5 (Partial Compliance)**: The required element is partially present, has minor inaccuracies, or is incomplete.\n- **0.0 (No Compliance)**: The required element is missing, incorrect, or the response is entirely off-topic / non-responsive.\n\n**For NEGATIVE constraints** (response should NOT contain or should avoid something):\n- **1.0**: The response is responsive AND the prohibited element is absent.\n- **0.5**: The response is responsive but contains a borderline or ambiguous reference to the prohibited element.\n- **0.0**: The prohibited element is present, OR the response is non-responsive.\n\n**Compound statements** (\"and\"/commas joining multiple required elements): all present=1.0, some=0.5, none=0.0.\n\nEVALUATION RULES:\n1. Semantic tolerance: paraphrases and synonyms are acceptable.\n2. Numeric/date equivalence: \"$68,000\"=\"68k\"=\"sixty-eight thousand dollars\"; \"2 years\"=\"24 months\".\n3. Case/punctuation/whitespace tolerance.\n4. Hedging tolerance: do not penalize \"I think\"/\"probably\"/passive/verbosity if content satisfies the criterion.\n5. Style neutrality: do not penalize tone/format/length unless the criterion requires it.\n6. Responsiveness: completely off-topic or refusal = 0.0.\n7. Independence: evaluate this criterion in isolation.\n8. Specificity: vague generic answers score lower than specific, detailed ones.\n\nReturn JSON: {\"score\": <0.0 or 0.5 or 1.0>, \"reason\": \"<one concise sentence>\"}"
+              }
+            ],
+            "role": "user"
+          }
+        ],
+        "generationConfig": {
+          "temperature": 0.0,
+          "responseMimeType": "application/json",
+          "responseSchema": {
+            "properties": {
+              "score": {
+                "description": "Score: 0.0, 0.5, or 1.0",
+                "type": "NUMBER"
+              },
+              "reason": {
+                "type": "STRING"
+              }
+            },
+            "property_ordering": [
+              "score",
+              "reason"
+            ],
+            "required": [
+              "score",
+              "reason"
+            ],
+            "type": "OBJECT"
+          }
+        }
+      }
+    },
+    {
+      "ts": "2026-10-05T08:55:45.648Z",
+      "cell_id": "beam-100k-comparator-rag-daab6841881c",
+      "label": "harness",
+      "tag": "beam-100k-comparator-rag-daab6841881c/judge/q-38c42a6c162f#3",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash",
+      "kind": "chat",
+      "method": "POST",
+      "path": "/v1beta/models/gemini-3.5-flash:generateContent",
+      "body_sha256": "1ea08dee3221370f9e93fdf1b23a8acd89ffc583a448415b5a34cc628e280440",
+      "stream": false,
+      "reserved_usd": 0.5915025,
+      "actual_usd": 0.003747,
+      "input_tokens": 746,
+      "output_tokens": 292,
+      "status": 200,
+      "refused": false,
+      "settlement": "reconciled",
+      "error": null,
+      "body": {
+        "contents": [
+          {
+            "parts": [
+              {
+                "text": "Evaluate whether the following LLM response demonstrates compliance with the specified RUBRIC CRITERION.\n\nQUESTION:\nHave I integrated Flask-Login for session management in my project?\n\nLLM RESPONSE:\nThere is conflicting information in the records regarding whether Flask-Login has been integrated into your project.\n\nOn one hand, in Turn 66, you indicated that you were already using and setting it up, stating:\n\"I'm trying to integrate Flask-Login v0.6.2 for session management in my Flask app, specifically for handling user logins and sessions, can you help me with an example of how to use it to replace my manual session handling... here's a basic structure I have so far:\nfrom flask_login import LoginManager, UserMixin, login_user, logout_user\n...\nlogin_manager = LoginManager()\nlogin_manager.init_app(app)\"\n\nOn the other hand, in Turn 108 and Turn 114, you stated:\n\"I want to make sure I'm using the latest versions of my dependencies, like Flask-Login, which I've never actually integrated into this project, so I'm starting from scratch\"\n\nCould you please clarify which situation is correct: have you already started integrating Flask-Login in your project, or have you never integrated it and are starting from scratch?\n\nRUBRIC CRITERION:\nLLM response should mention: which statement is correct?\n\nSCORING GUIDELINES:\n\nFirst, determine whether the rubric criterion is a POSITIVE requirement (the response SHOULD include something) or a NEGATIVE constraint (the response SHOULD NOT include something).\n\n**For POSITIVE requirements** (response should contain, mention, or demonstrate something):\n- **1.0 (Complete Compliance)**: The required element is present, accurate, and complete.\n- **0.5 (Partial Compliance)**: The required element is partially present, has minor inaccuracies, or is incomplete.\n- **0.0 (No Compliance)**: The required element is missing, incorrect, or the response is entirely off-topic / non-responsive.\n\n**For NEGATIVE constraints** (response should NOT contain or should avoid something):\n- **1.0**: The response is responsive AND the prohibited element is absent.\n- **0.5**: The response is responsive but contains a borderline or ambiguous reference to the prohibited element.\n- **0.0**: The prohibited element is present, OR the response is non-responsive.\n\n**Compound statements** (\"and\"/commas joining multiple required elements): all present=1.0, some=0.5, none=0.0.\n\nEVALUATION RULES:\n1. Semantic tolerance: paraphrases and synonyms are acceptable.\n2. Numeric/date equivalence: \"$68,000\"=\"68k\"=\"sixty-eight thousand dollars\"; \"2 years\"=\"24 months\".\n3. Case/punctuation/whitespace tolerance.\n4. Hedging tolerance: do not penalize \"I think\"/\"probably\"/passive/verbosity if content satisfies the criterion.\n5. Style neutrality: do not penalize tone/format/length unless the criterion requires it.\n6. Responsiveness: completely off-topic or refusal = 0.0.\n7. Independence: evaluate this criterion in isolation.\n8. Specificity: vague generic answers score lower than specific, detailed ones.\n\nReturn JSON: {\"score\": <0.0 or 0.5 or 1.0>, \"reason\": \"<one concise sentence>\"}"
+              }
+            ],
+            "role": "user"
+          }
+        ],
+        "generationConfig": {
+          "temperature": 0.0,
+          "responseMimeType": "application/json",
+          "responseSchema": {
+            "properties": {
+              "score": {
+                "description": "Score: 0.0, 0.5, or 1.0",
+                "type": "NUMBER"
+              },
+              "reason": {
+                "type": "STRING"
+              }
+            },
+            "property_ordering": [
+              "score",
+              "reason"
+            ],
+            "required": [
+              "score",
+              "reason"
+            ],
+            "type": "OBJECT"
+          }
+        }
+      }
+    }
+  ],
+  "error": null,
+  "details": {}
+}

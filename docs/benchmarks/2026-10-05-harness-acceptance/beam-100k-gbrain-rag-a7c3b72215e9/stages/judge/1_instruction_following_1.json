@@ -1,0 +1,79 @@
+{
+  "cell_id": "beam-100k-gbrain-rag-a7c3b72215e9",
+  "query_id": "1_instruction_following_1",
+  "outcome": "answered",
+  "score": 0.5,
+  "correct": true,
+  "judge_model": "gemini:gemini-3.5-flash",
+  "reason": "score=0.500 over 1 rubric items",
+  "rubric": [
+    {
+      "criterion": "LLM response should contain: explicit version details for each dependency",
+      "valid": true,
+      "score": 0.5,
+      "reason": "The response provides explicit version details for only some of the listed dependencies, rather than for each one.",
+      "attempts": 1
+    }
+  ],
+  "requests": [
+    {
+      "ts": "2026-10-05T08:51:53.903Z",
+      "cell_id": "beam-100k-gbrain-rag-a7c3b72215e9",
+      "label": "harness",
+      "tag": "beam-100k-gbrain-rag-a7c3b72215e9/judge/q-d529b6de4ee2#0",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash",
+      "kind": "chat",
+      "method": "POST",
+      "path": "/v1beta/models/gemini-3.5-flash:generateContent",
+      "body_sha256": "5dd27639b7a7f1cf8196cfa7dc4a7078a2d6987e50a9724affe1aa985efb63fe",
+      "stream": false,
+      "reserved_usd": 0.591192,
+      "actual_usd": 0.003381,
+      "input_tokens": 652,
+      "output_tokens": 267,
+      "status": 200,
+      "refused": false,
+      "settlement": "reconciled",
+      "error": null,
+      "body": {
+        "contents": [
+          {
+            "parts": [
+              {
+                "text": "Evaluate whether the following LLM response demonstrates compliance with the specified RUBRIC CRITERION.\n\nQUESTION:\nWhich libraries are used in this project?\n\nLLM RESPONSE:\nBased on the project's codebase and dependency records, the libraries used in this project include:\n\n- **Flask** (version 2.3.1)\n- **Flask-SQLAlchemy / SQLAlchemy** (version 2.0.19)\n- **Flask-Bootstrap**\n- **Flask-Caching**\n- **Flask-Login** (version 0.6.2)\n- **Flask-Migrate**\n- **Flask-WTF** (along with **WTForms**)\n- **Celery**\n- **Chart.js** (version 4.3.0)\n- **Werkzeug**\n- **Jinja2**\n- **sqlite3** (SQLite 3.39)\n\nRUBRIC CRITERION:\nLLM response should contain: explicit version details for each dependency\n\nSCORING GUIDELINES:\n\nFirst, determine whether the rubric criterion is a POSITIVE requirement (the response SHOULD include something) or a NEGATIVE constraint (the response SHOULD NOT include something).\n\n**For POSITIVE requirements** (response should contain, mention, or demonstrate something):\n- **1.0 (Complete Compliance)**: The required element is present, accurate, and complete.\n- **0.5 (Partial Compliance)**: The required element is partially present, has minor inaccuracies, or is incomplete.\n- **0.0 (No Compliance)**: The required element is missing, incorrect, or the response is entirely off-topic / non-responsive.\n\n**For NEGATIVE constraints** (response should NOT contain or should avoid something):\n- **1.0**: The response is responsive AND the prohibited element is absent.\n- **0.5**: The response is responsive but contains a borderline or ambiguous reference to the prohibited element.\n- **0.0**: The prohibited element is present, OR the response is non-responsive.\n\n**Compound statements** (\"and\"/commas joining multiple required elements): all present=1.0, some=0.5, none=0.0.\n\nEVALUATION RULES:\n1. Semantic tolerance: paraphrases and synonyms are acceptable.\n2. Numeric/date equivalence: \"$68,000\"=\"68k\"=\"sixty-eight thousand dollars\"; \"2 years\"=\"24 months\".\n3. Case/punctuation/whitespace tolerance.\n4. Hedging tolerance: do not penalize \"I think\"/\"probably\"/passive/verbosity if content satisfies the criterion.\n5. Style neutrality: do not penalize tone/format/length unless the criterion requires it.\n6. Responsiveness: completely off-topic or refusal = 0.0.\n7. Independence: evaluate this criterion in isolation.\n8. Specificity: vague generic answers score lower than specific, detailed ones.\n\nReturn JSON: {\"score\": <0.0 or 0.5 or 1.0>, \"reason\": \"<one concise sentence>\"}"
+              }
+            ],
+            "role": "user"
+          }
+        ],
+        "generationConfig": {
+          "temperature": 0.0,
+          "responseMimeType": "application/json",
+          "responseSchema": {
+            "properties": {
+              "score": {
+                "description": "Score: 0.0, 0.5, or 1.0",
+                "type": "NUMBER"
+              },
+              "reason": {
+                "type": "STRING"
+              }
+            },
+            "property_ordering": [
+              "score",
+              "reason"
+            ],
+            "required": [
+              "score",
+              "reason"
+            ],
+            "type": "OBJECT"
+          }
+        }
+      }
+    }
+  ],
+  "error": null,
+  "details": {}
+}
