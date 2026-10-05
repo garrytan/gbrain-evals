@@ -25,8 +25,10 @@
         "dims": 1536,
         "reranker": null
       },
-      "unsettable": ["extraction"],
-      "notes": "Basic Memory has no extraction model. The embedder runs through the LiteLLM provider because the built-in openai provider never sends `dimensions` (openai_provider.py embed_documents), so text-embedding-3-large would return 3,072 dimensions; the LiteLLM provider forwards `dimensions` for text-embedding-3 models. Calls go to OPENAI_BASE_URL via semantic_embedding_api_base."
+      "unsettable": [
+        "extraction"
+      ],
+      "notes": "Basic Memory has no extraction model. The embedder runs through the LiteLLM provider because the built-in openai provider never sends `dimensions` (openai_provider.py embed_documents), so text-embedding-3-large would return 3,072 dimensions; the LiteLLM provider forwards `dimensions` for text-embedding-3 models. Calls go to OPENAI_BASE_URL via semantic_embedding_api_base. Basic Memory keeps its default semantic_min_similarity of 0.55 in this config. text-embedding-3-large scores lower in absolute terms than bge-small: in the 2026-10-05 metered smoke the relevant note scored 0.466 for 'What did Caroline sign up for in May 2023?', so vector search dropped it and the query returned nothing (full-text search did not match either)."
     }
   },
   "time": "in-text",

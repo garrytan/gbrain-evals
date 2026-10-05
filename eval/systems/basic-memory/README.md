@@ -60,7 +60,7 @@ python3 eval/systems/basic-memory/protocol_check.py --url http://127.0.0.1:8701
 ```
 
 Compose puts the shim on an internal network. Its only exits are `proxy`, a TCP relay to the metering proxy
-(`PROXY_UPSTREAM`, default `host.docker.internal:8787`), and `ingress`, which publishes the shim's port on
+(`PROXY_UPSTREAM`, default `host.docker.internal:8787`; calls go to `${PROXY_URL}/${PROXY_SLOT:-basic-memory}/openai/v1`), and `ingress`, which publishes the shim's port on
 `127.0.0.1:${SHIM_HOST_PORT:-8701}`. The container holds a dummy `OPENAI_API_KEY`. `SHIM_CONFIG=common` switches to
 the common embedder; the recipe never calls a provider.
 
@@ -83,7 +83,30 @@ Timing on a 4-core machine: each `bm` CLI call costs about 5 seconds of start-up
 and `/finish` about 15 seconds for a small namespace. Search over the warm MCP session took about 50 ms per query in the protocol check, after
 a 1.5-second first query that loads the embedder.
 
+## Metered smoke, 2026-10-05
+
+The recipe makes no provider calls, so only the common configuration ran through the metering proxy (branch
+`capy/shootout-harness`, lease mode, $0.50 lease, run `smoke-basic-memory-common`), driven by `protocol_check.py`:
+two dated sessions plus a canary session in a second namespace, then six retrievals.
+
+| Run | Checks | Requests | Input tokens | Dollars | Finish | Query |
+|---|---|---|---|---|---|---|
+| `smoke-basic-memory-common` | 24/26 | 12 embeddings, `text-embedding-3-large` at 1,536 | 342 | $0.00004 | 18.3 to 18.7 s | 270 to 510 ms (3.9 s first query) |
+
+No refusals and no tripwires. A follow-up probe of the failure added 3 requests (lease total $0.00006).
+
+The two failed checks are one query, "What did Caroline sign up for in May 2023?", which returned nothing. The
+pottery note scored 0.466 in vector search, under Basic Memory's default `semantic_min_similarity` of 0.55, and
+full-text search found no match. The recipe embedder (bge-small) clears the floor on the same query. The common
+configuration changes only the embedder, so the floor stays at its default; text-embedding-3-large's lower absolute
+similarities mean Basic Memory returns fewer results in that row. The report should say this rather than tune it.
+
 ## Changelog
+
+### 2026-10-05: metered smoke
+Common configuration measured through the metering proxy; compose sends calls to the proxy slot
+`/<PROXY_SLOT>/openai/v1`.
+
 
 ### 2026-10-05: first version
 Recipe configuration passes all 26 protocol checks keyless inside the sandboxed compose stack, with egress blocked.

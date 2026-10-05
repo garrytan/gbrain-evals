@@ -17,7 +17,7 @@
         "dims": 1536,
         "reranker": null
       },
-      "notes": "documented self-hosted install: Memory.from_config with the OpenAI LLM and embedder left at SDK defaults (llms/openai.py sets gpt-5-mini, embeddings/openai.py sets text-embedding-3-small), Qdrant server, mem0ai[nlp] with en_core_web_sm for entity extraction and BM25 lemmatization, fastembed for Qdrant BM25 sparse vectors (docs/migration/oss-v2-to-v3.mdx). One LLM call per add (the v3 additive pipeline), no update or delete calls. No reranker is configured and search(rerank=False) is the default. Note: memory-benchmarks' own OSS server defaults to gpt-4o-mini (docker/mem0/main.py LLM_MODEL); the SDK default is gpt-5-mini, which this record follows as the plan does."
+      "notes": "documented self-hosted install: Memory.from_config with the OpenAI LLM and embedder left at SDK defaults (llms/openai.py sets gpt-5-mini, embeddings/openai.py sets text-embedding-3-small), Qdrant server, mem0ai[nlp] with en_core_web_sm for entity extraction and BM25 lemmatization, fastembed for Qdrant BM25 sparse vectors (docs/migration/oss-v2-to-v3.mdx). One LLM call per add (the v3 additive pipeline), no update or delete calls. No reranker is configured and search(rerank=False) is the default. Note: memory-benchmarks' own OSS server defaults to gpt-4o-mini (docker/mem0/main.py LLM_MODEL); the SDK default is gpt-5-mini, which this record follows as the plan does. The recipe sets is_reasoning_model=True on the LLM config: mem0 2.2.1's reasoning-model list (llms/base.py _is_reasoning_model) matches only the exact name gpt-5, so with its own default gpt-5-mini it sends temperature=0.1, which OpenAI rejects with HTTP 400 on every extraction call (seen in the 2026-10-05 metered smoke). is_reasoning_model is mem0's documented override for this; it drops temperature and max_tokens."
     },
     "common": {
       "model_roles": {
@@ -45,7 +45,11 @@
   "ingest_chunking": {
     "env": "MEM0_CHUNK_TURNS",
     "default": 2,
-    "vendor_values": {"locomo": 1, "longmemeval": 2, "beam": 2},
+    "vendor_values": {
+      "locomo": 1,
+      "longmemeval": 2,
+      "beam": 2
+    },
     "notes": "set per cell at container start; each chunk is one add call and one extraction LLM call"
   },
   "retrieval_policies": {
@@ -77,6 +81,8 @@
     "metadata={'source_id', 'session_date'} is added to every add call for provenance and delete; the vendor sends no metadata.",
     "user_id is the opaque namespace plus a reset generation, not locomo_<conv>_<run_id>.",
     "Extraction model: the recipe uses the SDK default gpt-5-mini; memory-benchmarks' server defaults to gpt-4o-mini.",
-    "Search runs once per question at the policy's top_k; the vendor searches once at top_k=200 and slices cutoffs."
-  ]
+    "Search runs once per question at the policy's top_k; the vendor searches once at top_k=200 and slices cutoffs.",
+    "Recipe LLM config sets is_reasoning_model=True, mem0's documented override; without it every gpt-5-mini extraction call fails with HTTP 400 (temperature 0.1 unsupported)."
+  ],
+  "proxy_refusals": "HTTP 402 from the metering proxy maps to the protocol's budget error, HTTP 403 (route outside the allowlist or leak tripwire) to invalid_request"
 }

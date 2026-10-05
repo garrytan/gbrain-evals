@@ -42,7 +42,7 @@ def mem0_config() -> dict[str, Any]:
     cfg: dict[str, Any] = {
         "version": "v1.1",
         "vector_store": {"provider": "qdrant", "config": qdrant},
-        "llm": {"provider": "openai", "config": {}},
+        "llm": {"provider": "openai", "config": {"is_reasoning_model": True}},
         "embedder": {"provider": "openai", "config": {}},
         "history_db_path": str(DATA / f"history_{CONFIG}.db"),
     }
@@ -54,14 +54,17 @@ def mem0_config() -> dict[str, Any]:
     return cfg
 
 
-def budget_refusal(exc: BaseException) -> bool:
-    """True when the metering proxy refused the provider call (it answers 402)."""
+def proxy_refusal(exc: BaseException, doing: str) -> None:
+    """Raise the protocol error when the metering proxy refused a provider call: 402 is over lease or an unpriced
+    model (`budget`), 403 a route outside the allowlist or a leak tripwire (`invalid_request`)."""
     seen = exc
     while seen is not None:
-        if getattr(seen, "status_code", None) == 402:
-            return True
+        status = getattr(seen, "status_code", None)
+        if status == 402:
+            raise ShimError("budget", f"metering proxy refused a call while {doing}: {seen}", 402)
+        if status == 403:
+            raise ShimError("invalid_request", f"metering proxy rejected a call while {doing}: {seen}", 403)
         seen = seen.__cause__ or seen.__context__
-    return False
 
 
 class Mem0Adapter(Adapter):
@@ -139,8 +142,7 @@ class Mem0Adapter(Adapter):
                 try:
                     res = self.memory.add(header + msgs[start:start + CHUNK_TURNS], user_id=user_id, metadata=metadata)
                 except Exception as e:  # noqa: BLE001 - one failed chunk degrades the session, the rest still run
-                    if budget_refusal(e):
-                        raise ShimError("budget", f"metering proxy refused a call while ingesting {sid}: {e}", 402)
+                    proxy_refusal(e, f"ingesting {sid}")
                     errors.append(f"chunk {start // CHUNK_TURNS}: {type(e).__name__}: {str(e)[:300]}")
                     continue
                 created += sum(1 for r in res.get("results", []) if r.get("event") == "ADD")
@@ -164,8 +166,7 @@ class Mem0Adapter(Adapter):
         try:
             res = self.memory.search(question, top_k=k, filters={"user_id": self.scope(ns)})
         except Exception as e:  # noqa: BLE001
-            if budget_refusal(e):
-                raise ShimError("budget", f"metering proxy refused the query embedding: {e}", 402)
+            proxy_refusal(e, "embedding the query")
             raise
         items = []
         for r in res.get("results", []):

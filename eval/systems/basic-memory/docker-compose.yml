@@ -17,7 +17,7 @@ services:
       SHIM_CONFIG: ${SHIM_CONFIG:-recipe}
       SHIM_IMAGE: ${SHIM_IMAGE:-}
       OPENAI_API_KEY: sk-dummy-metering-proxy-injects-the-real-key
-      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-${PROXY_URL:-http://proxy:8787}/openai/v1}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-${PROXY_URL:-http://proxy:8787}/${PROXY_SLOT:-basic-memory}/openai/v1}
     volumes:
       - data:/data
     networks: [sandbox]
