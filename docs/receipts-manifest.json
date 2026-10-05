@@ -4542,7 +4542,7 @@
       "claim_id": "fix-wave-9-mirror",
       "readme_anchor": "docs/benchmarks/2026-10-05-fix-wave-9-mirror.md: The finding",
       "artifact_path": "docs/benchmarks/2026-10-05-fix-wave-9-mirror/verdict.json",
-      "artifact_sha256": "527dc5976729f0cb09025bf03c0ec42fb29faacfd9bc6e2acf90fe7816e7efa8",
+      "artifact_sha256": "4c5a5a0c6cecacb06572b0f48658d8e5bde3a11f002517194731d57327b03180",
       "status": "covered",
       "expected": {
         "/items/search_path_insert_cost/measurement/pglite/before_range/0": 1.31,
