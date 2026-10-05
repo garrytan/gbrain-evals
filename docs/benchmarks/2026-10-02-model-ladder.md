@@ -21,8 +21,8 @@ succeed on 95.6%. Paired by task, the difference is 0.0 points, with a 95% CI of
 | All five | 95.6% | 95.6% | 0.0 pts | [−3.2, +3.0] |
 
 - **Why a tie here says little about capability.** The oracle arm, which is handed the evidence, scores 97.6%. So at
-  this level the 50 tasks can't separate memory systems on success. A harder Cat 40 tier is planned to measure that
-  edge ([plan](../plans/2026-10-05-cat40-hard/PLAN.md)).
+  this level the 50 tasks can't separate memory systems on success. A harder Cat 40 tier, now in planning, is meant to
+  measure that edge.
 - **What gbrain does differently at the frontier: it keeps finance-only text out.** In 100 permission runs gbrain put
   finance-only text in neither an answer nor the agent's context. Plain files put it in the context of all 100
   (though in no answer), and Postgres put it in 4 answers and 97 contexts.
