@@ -11,7 +11,9 @@
  *
  * Writes the generated specs to eval/harness-provider/cells/dev/ and a track
  * log to eval/reports/harness-dev/<track>.jsonl. A target whose knobs cannot
- * be tuned into the ±10% gate is skipped and logged, not run off-target.
+ * be tuned into the ±10% gate is skipped and logged, unless --off-target-closest
+ * runs it at the setting whose mean is nearest the target (the cell then fails
+ * its delivered-context gate and is reported as off target).
  */
 import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -32,6 +34,8 @@ export interface Track {
   gbrainCredentials?: string[];
   answer?: string;
   name?: string;
+  /** Run a target that no setting tunes into the gate at the setting whose mean is nearest it; the cell reports the miss. */
+  offTarget?: boolean;
   /** Per-cell budget override (dollars) for the target and default cells. */
   budget?: number;
 }
@@ -76,26 +80,36 @@ export async function sweep(t: Track, passthrough: string[]): Promise<number> {
   log({ step: 'ingest', code: ingest.code, cell: ingestCell, tail: ingest.err.split('\n').slice(-3).join(' | ') });
   if (ingest.code !== 0 || !ingestCell) return 1;
   let chosen: Record<string, Record<string, number> | null> = {};
+  let closest: Record<string, Record<string, number> | null> = {};
   if (t.targets.length && Object.keys(t.base).length) {
     const tune = launch(['tune', ingestCell, '--auto', JSON.stringify({ targets: t.targets, base: t.base, sample: t.sample })], passthrough);
     const line = tune.out.trim().split('\n').reverse().find(l => l.startsWith('{'));
-    chosen = line ? JSON.parse(line) : {};
-    log({ step: 'tune', code: tune.code, chosen });
+    const parsed = line ? JSON.parse(line) : {};
+    chosen = parsed.chosen ?? parsed;
+    closest = parsed.closest ?? {};
+    log({ step: 'tune', code: tune.code, chosen, ...(t.offTarget ? { closest } : {}) });
   }
   let failures = 0;
-  const runs: Array<[number | null, Record<string, unknown> | null]> = t.targets.map(target => [target, chosen[String(target)] ?? null]);
+  const offTarget = new Set<number>();
+  const runs: Array<[number | null, Record<string, unknown> | null]> = t.targets.map(target => {
+    const knobs = chosen[String(target)] ?? null;
+    if (knobs || !t.offTarget || !closest[String(target)]) return [target, knobs];
+    offTarget.add(target);
+    return [target, closest[String(target)]];
+  });
   if (t.runDefault) runs.push([null, Object.fromEntries(Object.keys(t.base).map(k => [k, null]))]);
   for (const [target, knobs] of runs) {
     if (target !== null && !knobs) { log({ step: 'run', target, skipped: 'no knob setting passed the delivered-context gate on the tuning sample' }); failures++; continue; }
     const spec = devSpec(t, target, target === null ? Object.fromEntries(Object.entries(knobs!).filter(([, v]) => v !== null)) : knobs!, t.budget ?? (target === null ? 40 : Math.max(10, Math.ceil(target / 1000) * 3)));
     if (target === null && t.provider === 'gbrain') Object.assign(spec.provider_config!, { token_budget: null, return_unit: null, limit: null });
+    if (target !== null && offTarget.has(target)) spec.note += '; off target: no setting met the delivered-context gate, so the setting with the mean nearest the target runs and the cell reports the gate miss';
     const path = join(SPEC_DIR, `${name}-${target ?? 'default'}.json`);
     writeFileSync(path, JSON.stringify(spec, null, 2) + '\n');
     const r = launch(['run', path], passthrough);
     const already = r.err.includes('already has');
     const res = already ? launch(['resume', path], passthrough) : r;
     const summaryLine = res.out.split('\n').find(l => l.startsWith('{"cell_id"')) ?? res.err.split('\n').find(l => l.startsWith('{"cell_id"'));
-    log({ step: 'run', target, code: res.code, cell: cellIdFrom(res.err), summary: summaryLine ? JSON.parse(summaryLine) : null, tail: res.code ? res.err.split('\n').slice(-4).join(' | ') : undefined });
+    log({ step: 'run', target, ...(target !== null && offTarget.has(target) ? { off_target: true } : {}), code: res.code, cell: cellIdFrom(res.err), summary: summaryLine ? JSON.parse(summaryLine) : null, tail: res.code ? res.err.split('\n').slice(-4).join(' | ') : undefined });
     if (res.code !== 0) failures++;
   }
   return failures ? 3 : 0;
@@ -117,7 +131,7 @@ if (import.meta.main) {
     targets: (flag('--targets') ?? '4000,8000,16000,32000').split(',').filter(Boolean).map(Number),
     sample: Number(flag('--sample') ?? 60), runDefault: !own.includes('--no-default'),
     gbrainCredentials: flag('--gbrain-credentials')?.split(','), answer: flag('--answer'), name: flag('--name'),
-    budget: flag('--budget') ? Number(flag('--budget')) : undefined,
+    budget: flag('--budget') ? Number(flag('--budget')) : undefined, offTarget: own.includes('--off-target-closest'),
   };
   process.exit(await sweep(t, passthrough));
 }

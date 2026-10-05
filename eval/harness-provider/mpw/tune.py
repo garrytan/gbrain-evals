@@ -107,7 +107,9 @@ async def auto_tune(cell_dir: Path, targets: list[int], base: dict, sample: int 
                 elif gate.p95 < target * 0.90:
                     step = max(step, target * 0.92 / gate.p95)
                 scale *= max(0.5, min(2.0, step))
-            results[str(target)] = {"chosen": chosen, "rows": rows}
+            clean = [r for r in rows if not r["errors"]]
+            closest = min(clean, key=lambda r: abs(r["mean"] - target))["setting"] if clean else None
+            results[str(target)] = {"chosen": chosen, "closest": closest, "rows": rows}
     finally:
         prov.cleanup()
     out = {"cell_id": run.cell_id, "mode": "auto", "base": base, "sample": len(queries), "targets": results,
@@ -177,7 +179,8 @@ def main() -> int:
     if args.auto:
         spec = json.loads(args.auto)
         out = asyncio.run(auto_tune(Path(args.cell_dir), spec["targets"], spec["base"], spec.get("sample")))
-        print(json.dumps({t: r["chosen"] for t, r in out["targets"].items()}))
+        print(json.dumps({"chosen": {t: r["chosen"] for t, r in out["targets"].items()},
+                          "closest": {t: r["closest"] for t, r in out["targets"].items()}}))
         return 0 if all(r["chosen"] for r in out["targets"].values()) else 4
     out = asyncio.run(tune(Path(args.cell_dir), json.loads(args.grid)))
     print(json.dumps({"chosen": out["chosen"], "rows": [{k: r[k] for k in ("setting", "mean", "p95", "ok")} for r in out["rows"]]}))
