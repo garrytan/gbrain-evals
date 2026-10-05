@@ -16,6 +16,7 @@ published. Comparators are named by kind only.
 | `p3-e5-heldout-2026-10-05.json` | P3 declared single-value relations E5 | fail (3 wrong closures) |
 | `p5-heldout-2026-10-05.json` | P5 first run H1, H2, H4 local, H5a | pass (H3, H5b, H6 pending) |
 | `p5-delta-heldout-2026-10-05.json` | P5 delta H7, H9, H10 | pass (LME-S guardrail and H8 pending) |
+| `p5-delta-set-g-2026-10-05.json` | P5 delta H10 re-check and H11 on set G (second custodian) | fail (traps 104/113; current-employer and live recall below master) |
 | `p7-heldout-2-2026-10-04.json` | P7 multi-relation planner, N9 v1 second opening | pass |
 | `p8-write-cost-2026-10-05.json` | P8 write cost (published, gate: zero commit-path generative attempts) | pass |
 | `p8-quotes-heldout-2026-10-05.json` | P8 quote grounding | fail (Wilson upper 7.6% > 5%) |
