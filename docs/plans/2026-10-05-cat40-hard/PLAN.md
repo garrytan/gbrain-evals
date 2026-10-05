@@ -6,6 +6,24 @@ Status: draft for autoplan, 2026-10-05.
 Context: the Cat 40 Model Ladder (`docs/benchmarks/2026-10-02-model-ladder.md`), the entity-recall wave
 (`docs/plans/2026-10-04-cat40-entity-recall/PLAN.md`) and the model-selection rules in `CLAUDE.md` ("Choose models").
 
+## Gate decisions (Garry, 2026-10-05: "1/ yes 2/ do now 3/ approve A")
+
+These override any conflicting text below. Every Taste decision takes the review's recommendation.
+
+- **CEO-UC1 (approved change).** Hard tasks start at 16 turns. The turn cap is the last knob in calibration, used only
+  if content knobs can't reach the freeze band, with at most half of the comparator's failures allowed to be turn-cap
+  stops. The 16-turn sensitivity check (CEO-F19) is no longer needed and is dropped.
+- **CEO-UC2 (approved change, now).** A sealed validation variant is built now, before tuning: independently written
+  renderers, alias conventions and document organization, plus a private seed. It is authored separately from the
+  main Hard generator, from the family specification only. Its seed and rendered world stay sealed until a later
+  held-out check that Garry or a preregistration names. This plan builds and verifies it (hermetic tests, digest
+  recorded) but runs no paid cells on it.
+- **CEO-T3: tier A.** Every arm on every frontier model at both scales (4k and 50k), estimated $1,045–1,855.
+- **Budget.** The program authorization is $4,350. Committed before this plan, across all ledgers: $2,555.69 ($1,763
+  over the four original machines' ledgers plus $792.69 on `.budget/cat40-followups.sqlite`). The follow-up ledger's
+  cap is lowered to its committed spend so no unspent cap carries over. The Hard ledger `.budget/cat40-hard.sqlite`
+  opens at $1,794. If tier A's projection plus 15% exceeds what remains before a step, stop for Garry.
+
 ## Why
 
 Cat 40 no longer separates the models people use most. On the development world, 2026-10-04, with five frontier
