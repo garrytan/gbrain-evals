@@ -9,7 +9,8 @@ Calibration uses seed 20261005, 10 tasks per family from a world generated at th
 | Round | Knob file | Change from the previous round and why | Result |
 |---|---|---|---|
 | 1 | [knobs.round-1.json](knobs.round-1.json) (knobs.default.json) | starting values: 16 turns, 10 to 40 H1 members, 3 to 6 H2 changes, 1 to 3 H3 look-alikes, 3 to 5 H4 sources, one look-alike fact in each H5 chain | stopped at 189 of 300 cells on its $38 budget run; H2 and H3 at 100% on fs and pg; two H1 answer-key defects (below) |
-| 2 | [knobs.round-2.json](knobs.round-2.json) | 2026-10-05: H2 and H3 far too easy (fs 20/20 each); record counts, history length and distractors for those two families raised; background accounts lowered to hold world size; H1, H4, H5, noise and the turn cap unchanged (details below) | not run |
+| 2 | [knobs.round-2.json](knobs.round-2.json) | 2026-10-05: H2 and H3 far too easy (fs 20/20 each); record counts, history length and distractors for those two families raised; background accounts lowered to hold world size; H1, H4, H5, noise and the turn cap unchanged (details below) | pooled fs 95%, pg 97%, oracle 99%; H2 to H5 at 95 to 100% on fs; knobs at their useful range |
+| 3 | knobs.round-3.json (generator v2, 50k) | 2026-10-05, amendment A1: records refer to accounts by code, nickname or manager instead of name; calibration moves to the 50k world | pending |
 
 ## Round 1 (2026-10-05)
 
@@ -52,8 +53,63 @@ Target: H2 and H3 well below their round-1 100%, pooled fs within 40-70%, H1 and
 
 Unchanged: H1 member counts, H4 sources and long-document rate, H5 noise sessions, emails, meetings, transcripts, tickets, handoffs, wrong-note rate, team updates and the 16-turn cap. If round 2 still leaves H2 or H3 above 80% on fs, these families' knobs are at their useful range, and the next lever is a generator change to how the question is asked (for example, a disambiguating fact that itself needs a lookup), which is allowed before the freeze and is recorded here first.
 
+## Round 2 (2026-10-05)
+
+World: seed 20261005, knobs.round-2.json, generator at `cfb84fa`, 4,526 documents. Models Sonnet 5.5 and GPT-6 Astra, arms fs, pg and oracle, 10 tasks per family, complete grid (300 cells), $49.36.
+
+| Arm | H1 | H2 | H3 | H4 | H5 | pooled |
+|---|---|---|---|---|---|---|
+| fs | 16/20 | 19/20 | 20/20 | 20/20 | 20/20 | 95% |
+| pg | 16/20 | 20/20 | 20/20 | 20/20 | 20/20 | 97% |
+| oracle | 19/20 | 20/20 | 20/20 | 20/20 | 20/20 | 99% |
+
+Most fs runs finished in 3 to 5 turns: the agent searched for the account name and read the matching documents. Raising history length and look-alike counts did not change that, because every relevant document still named the account. A turn cap tight enough to force misses (6 to 8) would measure speed rather than memory (CEO-UC1), so the next lever is the generator change in amendment A1, recorded here before any round-3 cell runs.
+
 ## Notes after the freeze
 
 Dated notes for runner or scorer fixes that leave every world digest unchanged (CEO-F17, ENG-F6).
 
 ## Analyzer output
+
+### Round 2 (analyzer output, 2026-10-05)
+
+Freeze rule, round 2: FAIL. Models: claude-sonnet-5-5, gpt-6-astra. Tasks: 50. Pooled arm: pg. Wilson 95% intervals in brackets; point estimates decide.
+
+| Condition | measured | Wilson 95% | threshold | n | result |
+|---|---|---|---|---|---|
+| (a) pooled pg success (the better of fs and pg) | 96% (96/100) | [90.2, 98.4] | 40-70% | 100 | FAIL |
+| (b) claude-sonnet-5-5: better of fs and pg (pg) | 94% (47/50) | [83.8, 97.9] | 20-80% | 50 | FAIL |
+| (b) gpt-6-astra: better of fs and pg (fs) | 98% (49/50) | [89.5, 99.6] | 20-80% | 50 | FAIL |
+| (c) claude-sonnet-5-5: oracle | 100% (50/50) | [92.9, 100.0] | at least 90% | 50 | PASS |
+| (c) gpt-6-astra: oracle | 98% (49/50) | [89.5, 99.6] | at least 90% | 50 | PASS |
+| (d) family H1: oracle, pooled over models | 95% (19/20) | [76.4, 99.1] | at least 80% | 20 | PASS |
+| (d) family H2: oracle, pooled over models | 100% (20/20) | [83.9, 100.0] | at least 80% | 20 | PASS |
+| (d) family H3: oracle, pooled over models | 100% (20/20) | [83.9, 100.0] | at least 80% | 20 | PASS |
+| (d) family H4: oracle, pooled over models | 100% (20/20) | [83.9, 100.0] | at least 80% | 20 | PASS |
+| (d) family H5: oracle, pooled over models | 100% (20/20) | [83.9, 100.0] | at least 80% | 20 | PASS |
+| (e) turn_cap share of pooled pg failures | 50% (2/4) | [15.0, 85.0] | at most 50% | 4 | PASS |
+| (grid) complete grid (2 models x 3 arms x 50 tasks) and one experiment | complete |  | no problems | 300 | PASS |
+
+| Model | fs | pg | oracle |
+|---|---|---|---|
+| claude-sonnet-5-5 | 92% (46/50) [81.2, 96.8] | 94% (47/50) [83.8, 97.9] | 100% (50/50) [92.9, 100.0] |
+| gpt-6-astra | 98% (49/50) [89.5, 99.6] | 98% (49/50) [89.5, 99.6] | 98% (49/50) [89.5, 99.6] |
+
+| Family | fs | pg | oracle |
+|---|---|---|---|
+| H1 | 80% (16/20) [58.4, 91.9] | 80% (16/20) [58.4, 91.9] | 95% (19/20) [76.4, 99.1] |
+| H2 | 95% (19/20) [76.4, 99.1] | 100% (20/20) [83.9, 100.0] | 100% (20/20) [83.9, 100.0] |
+| H3 | 100% (20/20) [83.9, 100.0] | 100% (20/20) [83.9, 100.0] | 100% (20/20) [83.9, 100.0] |
+| H4 | 100% (20/20) [83.9, 100.0] | 100% (20/20) [83.9, 100.0] | 100% (20/20) [83.9, 100.0] |
+| H5 | 100% (20/20) [83.9, 100.0] | 100% (20/20) [83.9, 100.0] | 100% (20/20) [83.9, 100.0] |
+
+| Arm | submitted | turn_cap | no_tool_call | context_overflow | error | harness_error | cost, all attempts |
+|---|---|---|---|---|---|---|---|
+| fs | 97 | 2 | 0 | 1 | 0 | 0 | $24.4804 |
+| pg | 98 | 2 | 0 | 0 | 0 | 0 | $19.3140 |
+| oracle | 100 | 0 | 0 | 0 | 0 | 0 | $5.5705 |
+
+Cost of this round over every attempt (agent, embeddings, gbrain and judge): $49.36.
+
+Next:
+- Too easy: raise record counts (h1_min_members, h1_max_members, h4_sources_min, h4_sources_max, h3_lookalikes_min, h3_lookalikes_max) to make tasks harder. Priority order: record counts, then history length, then distractor rate, then noise, then turn cap.
