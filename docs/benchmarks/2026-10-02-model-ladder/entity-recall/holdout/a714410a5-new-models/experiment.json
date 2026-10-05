@@ -1,0 +1,32 @@
+{
+  "schema": "cat40-experiment-v1",
+  "gbrain_commit": "a714410a56285f3a99bb897c321b8df01dba66cb",
+  "slot_commit": "a714410a56285f3a99bb897c321b8df01dba66cb",
+  "world_digest": "df9e4f65cf603430934d6afa30073a44813ea670f78ae83c68bbde8210d1db9b",
+  "models": [
+    "claude-opus-5-5",
+    "claude-fable-5-1",
+    "gpt-6-astra"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "label": "gbrain-c1234-holdout",
+  "flags": {
+    "--world": "eval/reports/cat40/holdout/world.json",
+    "--models": "claude-opus-5-5,claude-fable-5-1,gpt-6-astra",
+    "--arms": "gbrain",
+    "--surface": "starter",
+    "--gbrain-repo": "../gbrain",
+    "--budget-ledger": ".budget/cat40-followups.sqlite",
+    "--transcripts": true,
+    "--repeat": "2",
+    "--no-pglite-analyze": true,
+    "--slots": "5",
+    "--concurrency": "10",
+    "--gbrain-ref": "a714410a5",
+    "--gbrain-label": "gbrain-c1234-holdout",
+    "--out": "eval/reports/cat40/entity-holdout-a714-newmodels"
+  },
+  "budget_run_id": "cat40-model-ladder-2026-10-04T23-25-17-369Z-a7676862"
+}
