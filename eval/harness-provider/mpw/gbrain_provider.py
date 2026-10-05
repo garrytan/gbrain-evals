@@ -29,6 +29,7 @@ timestamp manifest (`Date: unknown` when the dataset has no observed date).
 """
 from __future__ import annotations
 
+import atexit
 import json
 import os
 import re
@@ -148,6 +149,7 @@ class GbrainMemoryProvider(MemoryProvider):
         self._open: list[str] = []
         self._lock = threading.RLock()
         self.version: dict = {}
+        atexit.register(self.cleanup)
 
     # ── process contract ──────────────────────────────────────────────
 

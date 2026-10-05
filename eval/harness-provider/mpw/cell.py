@@ -26,6 +26,7 @@ import asyncio
 import hashlib
 import json
 import os
+import signal
 import sys
 import time
 import traceback
@@ -569,6 +570,10 @@ def main(argv: list[str] | None = None) -> int:
         spec = json.loads(Path(args.spec).read_text())
         print(json.dumps(resolve(spec)))
         return 0
+    def _terminate(signum, _frame):
+        raise KeyboardInterrupt(f"signal {signum}")
+
+    signal.signal(signal.SIGTERM, _terminate)
     run = CellRun(Path(args.cell_dir))
     summary = asyncio.run(run.run())
     print(json.dumps({"cell_id": summary["cell_id"], "ok": summary["ok"], "gates": summary["gates"],
