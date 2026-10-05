@@ -374,7 +374,7 @@ gbrain-evals v0.10.23. The page now has three parts above the changelog, replaci
 
 ### 2026-05-24: v0.40.6.0 snapshot headline
 
-[`9ecc5b2`](https://github.com/garrytan/gbrain-evals/commit/9ecc5b2). "Latest results" now leads with the gbrain v0.40.6.0 comprehensive snapshot and three headline claims: LongMemEval 97.60% R@5 against MemPalace's 96.6%, BrainBench 49.1% P@5 (38 points over vector RAG), and zero retrieval regression across 20 releases. The table gains snapshot and Cat 14+15 calibration rows, and Hindsight is removed from the comparison mentions.
+[`9ecc5b2`](https://github.com/garrytan/gbrain-evals/commit/9ecc5b2). "Latest results" now leads with the gbrain v0.40.6.0 comprehensive snapshot and three headline claims: LongMemEval 97.60% R@5 against MemPalace's 96.6%, BrainBench 49.1% P@5 (38 points over vector RAG), and zero retrieval regression across 20 releases. The table gains snapshot and Cat 14+15 calibration rows, and one fact-extraction memory server is removed from the comparison mentions.
 
 ### 2026-05-07: LongMemEval result and public-benchmark family
 
