@@ -1,8 +1,10 @@
 # Automatic event extraction after gbrain's date-quality fix: default-on is supported (2026-10-04)
 
+**October 5, 2026: merged.** #6010 merged to gbrain master as `b9ee931` (v0.60.49.0). No file under `src/core/chronicle/` or `src/core/cycle/` differs between the measured PR head `5a44025` and the merge commit (the only source changes are comments in `src/core/error-registry.ts` and `src/core/error-docs.ts`), so the results below hold for the merged release. Ledger entries CL-1 and CL-2 now name `b9ee931` as the fixing commit.
+
 ## The finding
 
-At gbrain PR [#6010](https://github.com/garrytan/gbrain/pull/6010)'s head `5a44025` (v0.60.49.0, not yet merged), `auto_chronicle` passes every rule we [preregistered](2026-10-04-auto-chronicle-rerun-preregistration.md) for this rerun, in both independent runs, so **default-on is supported** on extraction accuracy. Planned follow-ups are no longer written as events: 0 events dated after their page, against 22 and 25 at `739e5cc`. Wrong events fell from 0.96 to 0.04 per judged labeled page (gate: 0.20 or less), and recall stayed at or above where it was.
+At gbrain PR [#6010](https://github.com/garrytan/gbrain/pull/6010)'s head `5a44025` (v0.60.49.0, measured before the merge), `auto_chronicle` passes every rule we [preregistered](2026-10-04-auto-chronicle-rerun-preregistration.md) for this rerun, in both independent runs, so **default-on is supported** on extraction accuracy. Planned follow-ups are no longer written as events: 0 events dated after their page, against 22 and 25 at `739e5cc`. Wrong events fell from 0.96 to 0.04 per judged labeled page (gate: 0.20 or less), and recall stayed at or above where it was.
 
 The agent-question arm was not rerun (it costs about $7.40, over this run's $5 budget). Its result at `739e5cc` still describes the downstream effect: 94.4% off and 100% on, with a paired interval of 0 to +13.9 points.
 
