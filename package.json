@@ -36,7 +36,10 @@
     "eval:system-one": "bun eval/runner/system-one-jev.ts verify",
     "eval:system-one:plan": "bun eval/runner/system-one-jev.ts plan",
     "eval:generate-transcript-distill": "bun eval/generators/transcript-distill-gen.ts",
-    "eval:generate-transcript-distill:dry": "bun eval/generators/transcript-distill-gen.ts --dry-run"
+    "eval:generate-transcript-distill:dry": "bun eval/generators/transcript-distill-gen.ts --dry-run",
+    "harness:setup": "bun eval/runner/harness-env.ts",
+    "harness:test": "bun eval/runner/harness-test.ts",
+    "harness:cell": "bun eval/runner/harness-cell.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",

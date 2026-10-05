@@ -1,0 +1,14 @@
+{
+  "format": "gbrain-evals-harness-lock",
+  "schema_version": 1,
+  "harness_repo": "https://github.com/vectorize-io/agent-memory-benchmark",
+  "harness_commit": "f618ed7b1f0eb9cad7b42e876f91a42f0eadb150",
+  "python": "3.12",
+  "torch_backend": "cpu",
+  "excluded_requirements": ["nvidia-", "cuda-", "triton"],
+  "extra_requirements": ["pytest==8.3.5"],
+  "comparator": {
+    "registry_key_sha256": "aa475625981493dc52fceb3cb9a39f54d22903284538f5562d2118678b6e6149",
+    "note": "The comparator is the extract-first memory server whose harness provider key hashes to registry_key_sha256. Its package and env names are derived at runtime from that key, so no product name is written in this repository."
+  }
+}
