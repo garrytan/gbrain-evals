@@ -378,7 +378,6 @@ class GbrainMemoryProvider(MemoryProvider):
         return docs, raw
 
     def retrieve_with_meta(self, query: str, k: int = 10, user_id: str | None = None, query_timestamp: str | None = None):
-        u = self._ensure_unit(user_id or "_all", create=False)
         # token_budget / return_unit / limit set to null in the cell config mean "gbrain's own default": the argument is omitted.
         args = {"query": query}
         for key in ("token_budget", "return_unit", "limit"):
@@ -386,11 +385,12 @@ class GbrainMemoryProvider(MemoryProvider):
                 args[key] = int(self.cfg[key]) if key != "return_unit" else self.cfg[key]
         if self.cfg.get("expand") is not None:
             args["expand"] = bool(self.cfg["expand"])
+        # Open the unit and call it under one lock hold: another unit opening in between can close this unit's
+        # child once `max_open_units` children are live.
         with self._lock:
-            child = u.child
-            assert child is not None
+            u = self._ensure_unit(user_id or "_all", create=False)
             try:
-                rows, meta = child.call("query", args)
+                rows, meta = u.child.call("query", args)
             except McpToolError as e:
                 raise GbrainRetrieveError(str(e)) from e
         retrieval = (meta or {}).get("retrieval", {})
@@ -430,14 +430,12 @@ class GbrainMemoryProvider(MemoryProvider):
         return docs, None, meta_out
 
     def direct_answer(self, query: str, user_id: str | None = None, query_timestamp: str | None = None):
-        u = self._ensure_unit(user_id or "_all", create=False)
         args = {"question": query}
         if self.cfg.get("think_model"):
             args["model"] = self.cfg["think_model"]
         with self._lock:
-            child = u.child
-            assert child is not None
-            result, meta = child.call("think", args)
+            u = self._ensure_unit(user_id or "_all", create=False)
+            result, meta = u.child.call("think", args)
         if not isinstance(result, dict):
             raise RuntimeError(f"think returned {type(result).__name__}")
         if result.get("synthesis_status") in ("no_llm", "model_unusable"):
