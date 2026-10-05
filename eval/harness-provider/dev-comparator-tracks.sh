@@ -7,8 +7,12 @@ export PATH="$HOME/.bun/bin:$HOME/.local/bin:$PATH"
 L="--budget-ledger ${LEDGER:-.budget/mpw-dev-vm.sqlite}"
 S=eval/harness-provider/cells/dev/subsets.json
 mkdir -p eval/reports/harness-dev
-q() { python3 -c "import json,sys; print(json.dumps(json.load(open('$S'))[sys.argv[1]], ensure_ascii=False))" "$1" > "eval/reports/harness-dev/$1.ids.json".tmp && mv "eval/reports/harness-dev/$1.ids.json".tmp "eval/reports/harness-dev/$(echo $1 | tr '/' '_').ids.json"; }
-for k in longmemeval/s locomo/locomo10 lifebench/en_agent_sample longmemeval/s_agent_sample locomo/locomo10_agent_sample; do q "$k"; done
+python3 - "$S" <<'PY'
+import json, sys
+d = json.load(open(sys.argv[1]))
+for k in ("longmemeval/s", "locomo/locomo10", "lifebench/en_agent_sample", "longmemeval/s_agent_sample", "locomo/locomo10_agent_sample"):
+    open("eval/reports/harness-dev/" + k.replace("/", "_") + ".ids.json", "w").write(json.dumps(d[k], ensure_ascii=False))
+PY
 ids() { echo "eval/reports/harness-dev/$(echo $1 | tr '/' '_').ids.json"; }
 D="bun eval/runner/harness-dev.ts sweep --provider comparator"
 COMBINED='{"max_tokens":3500,"max_chunk_tokens":2000}'
@@ -31,9 +35,11 @@ agent() {  # dataset split ids-key
   # Agent mode answers with the server's own synthesis (reflect, its extraction model); no knobs, one default cell.
   $D --dataset "$1" --split "$2" --question-ids-file "$(ids $3)" --lane combined --mode agent --base '{}' --targets '' --name "comparator-$1-agent" -- $L
 }
+if [ "${ONLY_PUBLIC:-0}" != 1 ]; then
 ( beam 100k 3,11,12,15 > eval/reports/harness-dev/track-beam-100k.log 2>&1 ) &
 ( beam 500k 8,9,12,21,28,31,35 > eval/reports/harness-dev/track-beam-500k.log 2>&1 ) &
 ( beam 1m 1,6,16,21,22,25,26 > eval/reports/harness-dev/track-beam-1m.log 2>&1 ) &
+fi
 ( public longmemeval s longmemeval/s; agent longmemeval s longmemeval/s_agent_sample ) > eval/reports/harness-dev/track-lme.log 2>&1 &
 ( public locomo locomo10 locomo/locomo10; agent locomo locomo10 locomo/locomo10_agent_sample; agent lifebench en lifebench/en_agent_sample ) > eval/reports/harness-dev/track-locomo-lifebench.log 2>&1 &
 wait
