@@ -44,10 +44,13 @@ lme() {
   done
   agent longmemeval s longmemeval/s_agent_sample
 }
-( beam 100k 3,11,12,15 ) > eval/reports/harness-dev/track-beam-100k-f3.log 2>&1 &
-( beam 500k 8,9,12,21,28,31,35 ) > eval/reports/harness-dev/track-beam-500k-f3.log 2>&1 &
-( beam 1m 1,6,16,21,22,25,26 ) > eval/reports/harness-dev/track-beam-1m-f3.log 2>&1 &
-( lme ) > eval/reports/harness-dev/track-lme-f3.log 2>&1 &
-( agent lifebench en lifebench/en_agent_sample ) > eval/reports/harness-dev/track-lifebench-f3.log 2>&1 &
+# BLOCKS picks a subset (e.g. BLOCKS=lme to rerun LongMemEval after a provider fix); TAG names the logs.
+B=" ${BLOCKS:-beam100k beam500k beam1m lme lifebench} "
+T=${TAG:-f3}
+[[ $B == *" beam100k "* ]] && ( beam 100k 3,11,12,15 ) > eval/reports/harness-dev/track-beam-100k-$T.log 2>&1 &
+[[ $B == *" beam500k "* ]] && ( beam 500k 8,9,12,21,28,31,35 ) > eval/reports/harness-dev/track-beam-500k-$T.log 2>&1 &
+[[ $B == *" beam1m "* ]] && ( beam 1m 1,6,16,21,22,25,26 ) > eval/reports/harness-dev/track-beam-1m-$T.log 2>&1 &
+[[ $B == *" lme "* ]] && ( lme ) > eval/reports/harness-dev/track-lme-$T.log 2>&1 &
+[[ $B == *" lifebench "* ]] && ( agent lifebench en lifebench/en_agent_sample ) > eval/reports/harness-dev/track-lifebench-$T.log 2>&1 &
 wait
 echo "followup3 finished"
