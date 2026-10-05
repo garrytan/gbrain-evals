@@ -15,6 +15,8 @@ import threading
 from datetime import datetime, timedelta
 from typing import Any
 
+import openai
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "_shim"))
 from shim import Adapter, Item, ShimError, serve  # noqa: E402
 
@@ -52,8 +54,17 @@ class GraphitiAdapter(Adapter):
         self.ns_locks: dict[str, threading.Lock] = {}
 
     def _run(self, coro: Any) -> Any:
-        """graphiti-core is async and its Neo4j driver is bound to one loop; every call goes through it."""
-        return asyncio.run_coroutine_threadsafe(coro, self.loop).result()
+        """graphiti-core is async and its Neo4j driver is bound to one loop; every call goes through it.
+        A 402 from the metering proxy (over the lease or an unpriced model) becomes the protocol's budget error."""
+        try:
+            return asyncio.run_coroutine_threadsafe(coro, self.loop).result()
+        except Exception as e:
+            cause: BaseException | None = e
+            while cause is not None:
+                if isinstance(cause, openai.APIStatusError) and cause.status_code == 402:
+                    raise ShimError("budget", f"metering proxy refused a provider call: {cause.message}", 402) from e
+                cause = cause.__cause__ or cause.__context__
+            raise
 
     async def _connect(self) -> Graphiti:
         roles = self.record["configs"][CONFIG]["model_roles"]

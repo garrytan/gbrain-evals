@@ -58,6 +58,29 @@ the proxy must listen on an address the bridge can reach, not only 127.0.0.1). `
 sessions, finish, retrieval under both policies, a canary that must not cross namespaces, delete with a survivor
 check, the error shapes and a final reset.
 
+## Metered smoke (2026-10-05)
+
+One run of `test_shim.py` per configuration through the shootout's metering proxy
+(`eval/runner/metering-proxy.ts` from branch `capy/shootout-harness` at `a0787f7`, lease mode, $0.50 lease per run,
+one ledger per run). The workload is tiny and synthetic: two dated three-turn sessions and a two-turn canary
+session in a second namespace (3 retains), then 7 recalls (both policies, the canary probe in each namespace,
+after the delete, the survivor check, after the reset). Both runs passed every step, with zero proxy refusals,
+zero tripwires and no request charged at its reservation. The real LLM extracted 2 memory units per session
+(the mock LLM had made 4 to 5).
+
+| Run | Requests | Input tokens | Output tokens | Cost | Ingest per session (service_ms) | Recall (service_ms, two policies) |
+|---|---|---|---|---|---|---|
+| `common`: `gpt-4.1-mini`, `text-embedding-3-large` at 1,536 | 13 | 9,283 | 709 | $0.0036 | 3,298 and 3,554 | 314 and 407 |
+| `recipe`: `gpt-4o-mini`, local embedder and reranker | 3 | 8,939 | 778 | $0.0012 | 4,584 and 5,081 | 113 and 132 |
+
+Per route: `common` made 3 `POST /v1/chat/completions` calls to `gpt-4.1-mini` (8,942 input and 709 output
+tokens, $0.0036, all at ingest) and 10 `POST /v1/embeddings` calls to `text-embedding-3-large` (341 tokens, under
+$0.0001: 3 at ingest, 7 at recall; the keyless run's request log shows each sends `dimensions: 1536`). `recipe` made only the 3 extraction calls; its
+embedder and reranker are local, so a recall costs nothing. Retain extraction uses chat completions, which
+confirms the provider route in `capability.json`. Raw proxy usage lines and step logs are on the lane machine
+under `~/.capy/work/shootout/` (`usage-smoke-hindsight-*.ndjson`, `smoke-hindsight-*.log`); they are not
+committed.
+
 ## Deviations from the vendor's benchmark code
 
 The adapter starts from AMB's `hindsight-http` provider
@@ -79,6 +102,11 @@ does not ingest through the server, so it is not used. The full list is in `capa
 - The server skips its boot-time LLM key check.
 
 ## Changelog
+
+### 2026-10-05: metered smoke
+
+Added the metered smoke results for `common` and `recipe`. The shim now maps a metering-proxy refusal (HTTP 402,
+kind `budget`) during retain or recall to the protocol's `budget` error.
 
 ### 2026-10-05: first version
 
