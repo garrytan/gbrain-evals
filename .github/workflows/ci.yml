@@ -87,3 +87,36 @@ jobs:
       # test/eval/ plus the unit tests colocated under eval/.
       - name: Unit + integration tests (shard ${{ matrix.shard }}/4)
         run: bun test --shard=${{ matrix.shard }}/4 test/eval/ eval/
+
+  # The pinned agent-memory benchmark harness (eval/harness-provider/): CPU-only
+  # install, the Python wrapper tests (scorer conformance, projection and leak
+  # checks, gbrain provider isolation), the metering proxy's per-process
+  # zero-balance tests and the keyless launcher fixture. Everything talks to
+  # local stubs; no secrets. MPW_REQUIRE_HARNESS=1 turns a missing venv into a
+  # failure instead of a skip.
+  harness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      MPW_REQUIRE_HARNESS: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: 1.4.2
+
+      - name: Install uv 0.12.3
+        run: curl -LsSf https://astral.sh/uv/0.12.3/install.sh | sh && echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Install (frozen lockfile)
+        run: bun install --frozen-lockfile
+
+      - name: Install the pinned harness (CPU wheels)
+        run: bun run harness:setup
+
+      - name: Harness wrapper tests (pytest)
+        run: bun run harness:test
+
+      - name: Metering proxy and launcher tests
+        run: bun test test/eval/metering-proxy.test.ts test/eval/harness-cell.test.ts test/eval/harness-cell-e2e.test.ts

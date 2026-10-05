@@ -91,6 +91,7 @@ class AnswerRecord:
     tool_calls: int = 0
     error: str | None = None
     leak_check: dict = field(default_factory=dict)
+    agent_meta: dict = field(default_factory=dict)
 
 
 @dataclass

@@ -486,6 +486,7 @@ class CellRun:
             inserted_tokens_cl100k=ctxmod.count_tokens(ctx_text), final_prompt=final,
             final_prompt_sha256=hashlib.sha256(final.encode()).hexdigest() if final else "",
             requests=self._requests(tag), tool_calls=tool_calls,
+            agent_meta=result.raw_response if isinstance(result.raw_response, dict) and self.spec["mode"] == "agent" else {},
             leak_check={"ok": True, "checked": "final prompt" if final else "no answer prompt (provider answered)"}, **base)
 
     def _requests(self, tag: str, expected: int | None = None) -> list[dict]:

@@ -412,6 +412,9 @@ class GbrainMemoryProvider(MemoryProvider):
             raise RuntimeError(f"think returned {type(result).__name__}")
         if result.get("synthesis_status") in ("no_llm", "model_unusable"):
             raise RuntimeError(f"gbrain think did not synthesize ({result.get('synthesis_status')})")
-        evidence = result.get("evidence") or result.get("citations") or []
-        context = json.dumps(evidence, ensure_ascii=False) if not isinstance(evidence, str) else evidence
-        return str(result.get("answer", "")), context, None
+        citations = result.get("citations") or []
+        context = json.dumps(citations, ensure_ascii=False)
+        meta = {"model_used": result.get("modelUsed"), "usage": result.get("usage"), "pages_gathered": result.get("pagesGathered"),
+                "takes_gathered": result.get("takesGathered"), "rounds": result.get("rounds"), "synthesis_status": result.get("synthesis_status"),
+                "delivered_tokens_basis": "usage.input_tokens of gbrain think's synthesis call(s); the context field holds only its citations"}
+        return str(result.get("answer", "")), context, meta

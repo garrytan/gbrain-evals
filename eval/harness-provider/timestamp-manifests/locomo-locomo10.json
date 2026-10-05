@@ -1,0 +1,15 @@
+{
+  "counts": {
+    "observed_session_time": 272
+  },
+  "dataset": "locomo",
+  "dates_passed_to_providers": 272,
+  "documents": 272,
+  "policy": "Only observed session times reach providers; stated event dates and unknown dates are withheld from both systems.",
+  "rows_sha256": "69ecbd0750c060adcb689d0ed921d532e883de83266c1b5c716584abc5da7939",
+  "rule": {
+    "provenance": "observed_session_time",
+    "source": "conversation['<session>_date_time']"
+  },
+  "split": "locomo10"
+}

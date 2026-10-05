@@ -369,6 +369,11 @@ For a useful first evaluation of your own application, choose representative
 questions and their relevant documents before comparing systems. The
 [contributor guide](eval/CONTRIBUTING.md) explains the question and adapter formats.
 
+To run gbrain on the public agent-memory benchmark harness (LongMemEval-S, LoCoMo10,
+PersonaMem, LifeBench, BEAM and PrecisionMemBench) under an audited protocol, follow
+the [harness quickstart](docs/benchmarks/harness-quickstart.md). Its first step is a
+keyless plumbing check through the real gbrain adapter.
+
 ## Memory has a write side too
 
 Retrieval can only find information that was saved. Our
