@@ -36,6 +36,8 @@ export interface Track {
   name?: string;
   /** Run a target that no setting tunes into the gate at the setting whose mean is nearest it; the cell reports the miss. */
   offTarget?: boolean;
+  /** Results per query (spec `k`); the knob for a provider with no budget setting, e.g. 512-token chunks. */
+  k?: number;
   /** Per-cell budget override (dollars) for the target and default cells. */
   budget?: number;
 }
@@ -51,7 +53,7 @@ export function devSpec(t: Track, target: number | null, knobs: Record<string, u
     models: { answer: t.answer ?? DEV_ANSWER, judge: DEV_JUDGE[t.dataset] ?? DEV_JUDGE.default },
     budget_usd: budget,
     questions: t.questionIds ? { ids: t.questionIds } : { units: t.units ?? [] },
-    k: 10,
+    k: t.k ?? 10,
     provider_config: { ...t.extra, ...knobs },
     note: `memory proof wave dev ${trackName(t)} ${target === null ? 'system default' : `${target}-token target`}`,
   };
@@ -92,7 +94,7 @@ export async function sweep(t: Track, passthrough: string[]): Promise<number> {
   let failures = 0;
   const offTarget = new Set<number>();
   const runs: Array<[number | null, Record<string, unknown> | null]> = t.targets.map(target => {
-    const knobs = chosen[String(target)] ?? null;
+    const knobs = Object.keys(t.base).length ? chosen[String(target)] ?? null : {};
     if (knobs || !t.offTarget || !closest[String(target)]) return [target, knobs];
     offTarget.add(target);
     return [target, closest[String(target)]];
@@ -132,6 +134,7 @@ if (import.meta.main) {
     sample: Number(flag('--sample') ?? 60), runDefault: !own.includes('--no-default'),
     gbrainCredentials: flag('--gbrain-credentials')?.split(','), answer: flag('--answer'), name: flag('--name'),
     budget: flag('--budget') ? Number(flag('--budget')) : undefined, offTarget: own.includes('--off-target-closest'),
+    k: flag('--k') ? Number(flag('--k')) : undefined,
   };
   process.exit(await sweep(t, passthrough));
 }
