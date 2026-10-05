@@ -95,6 +95,9 @@ def install() -> None:
 
     memory_pkg.REGISTRY["gbrain"] = GbrainMemoryProvider
     memory_pkg.REGISTRY["comparator"] = ComparatorMemoryProvider
+    from .fullcontext_provider import FullContextProvider
+
+    memory_pkg.REGISTRY["full-context"] = FullContextProvider
     _installed = True
 
 

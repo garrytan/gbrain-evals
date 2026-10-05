@@ -1,0 +1,28 @@
+{
+  "dataset": "beam",
+  "split": "100k",
+  "provider": "comparator",
+  "mode": "rag",
+  "lane": "combined",
+  "seal": "dev",
+  "target_tokens": 8000,
+  "models": {
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash"
+  },
+  "budget_usd": 24,
+  "questions": {
+    "units": [
+      "3",
+      "11",
+      "12",
+      "15"
+    ]
+  },
+  "k": 10,
+  "provider_config": {
+    "max_tokens": 3129,
+    "max_chunk_tokens": 1788
+  },
+  "note": "memory proof wave dev comparator-beam-100k-rag-combined 8000-token target"
+}

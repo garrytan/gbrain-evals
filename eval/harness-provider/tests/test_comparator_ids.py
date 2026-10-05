@@ -198,3 +198,52 @@ def test_lock_pins_by_hash_without_the_plain_name():
 ])
 def test_wheel_filter(filename, keep):
     assert comparator_server.wheel_supported(filename) is keep
+
+
+class _Stats(BaseHTTPRequestHandler):
+    documents = 0
+
+    def log_message(self, *_a):
+        pass
+
+    def do_GET(self):
+        body = json.dumps({"total_nodes": 3, "pending_operations": 0, "failed_operations": 0,
+                           "total_documents": type(self).documents}).encode()
+        self.send_response(200)
+        self.send_header("content-type", "application/json")
+        self.send_header("content-length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+
+def test_repeated_session_is_retained_once_and_a_changed_repeat_kept():
+    from memory_bench.models import Document
+
+    handler = type("H", (_Stats,), {"documents": 2})
+    server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    sent = []
+
+    class Inner:
+        drain_ms: dict = {}
+        _resume = False
+
+        @staticmethod
+        def ingest(docs):
+            sent.extend(docs)
+
+        @staticmethod
+        def _bank_kwargs(bank):
+            return {}
+
+    try:
+        provider = ComparatorMemoryProvider({"server_url": f"http://127.0.0.1:{server.server_address[1]}", "id_salt": "s"})
+        provider._inner = Inner()
+        same = Document(id="s1", content="I adopted a cat.", user_id="u1")
+        changed = Document(id="s1", content="I adopted a second cat.", user_id="u1")
+        provider.ingest([same, same, changed])
+    finally:
+        server.shutdown()
+    assert [d.content for d in sent] == ["I adopted a cat.", "I adopted a second cat."]
+    assert len({d.id for d in sent}) == 2 and all(OPAQUE.match(d.id) for d in sent)
+    assert provider.last_ingest_receipt("u1")["documents"] == 2

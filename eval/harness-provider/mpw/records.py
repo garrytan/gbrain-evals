@@ -14,6 +14,7 @@ own ids: these files stay on the scorer side and never reach a model.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -113,8 +114,12 @@ _SAFE = re.compile(r"[^A-Za-z0-9._-]+")
 
 
 def safe_name(identifier: str) -> str:
-    """File-name form of a dataset id (stable, collision-checked by callers)."""
-    return _SAFE.sub("_", identifier)[:180]
+    """File-name form of a dataset id. An id that needs replacing (e.g. a name in Chinese characters) gets a short
+    hash of the original so two such ids never share a file."""
+    safe = _SAFE.sub("_", identifier)
+    if safe == identifier and len(safe) <= 180:
+        return safe
+    return f"{safe[:160]}-{hashlib.sha256(identifier.encode()).hexdigest()[:12]}"
 
 
 def stage_path(cell_dir: Path, stage: str, identifier: str) -> Path:
@@ -141,4 +146,7 @@ def read_record(cell_dir: Path, stage: str, identifier: str, cell_id: str) -> di
     data = json.loads(path.read_text())
     if data.get("cell_id") != cell_id:
         raise RuntimeError(f"{path} belongs to cell {data.get('cell_id')}, not {cell_id}; refusing to mix receipts")
+    owner = data.get("query_id", data.get("unit"))
+    if owner is not None and owner != identifier:
+        raise RuntimeError(f"{path} holds the record for {owner!r}, not {identifier!r}; refusing to mix receipts")
     return data

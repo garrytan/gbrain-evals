@@ -30,6 +30,100 @@ def _settings(grid: dict) -> list[dict]:
     return [dict(zip(keys, values)) for values in itertools.product(*(grid[k] for k in keys))]
 
 
+def _sample(queries: list, n: int | None) -> list:
+    """Every k-th question in schedule order, so each unit and category keeps its share."""
+    if not n or n >= len(queries):
+        return list(queries)
+    step = len(queries) / n
+    return [queries[int(i * step)] for i in range(n)]
+
+
+async def _measure(run, prov, queries, spec, task) -> tuple[list[int], list[str], list[str]]:
+    tokens, errors, anchored = [], [], []
+    sem = asyncio.Semaphore(int(getattr(prov, "concurrency", 4) or 1))
+
+    async def one(q):
+        pq = run.pqueries[q.id]
+        k = int(pq.meta.get("retrieval_limit") or spec.get("k") or 10)
+        async with sem:
+            try:
+                with_meta = getattr(prov, "retrieve_with_meta", None)
+                if with_meta is not None:
+                    docs, raw, pmeta = await asyncio.to_thread(with_meta, pq.query, k, pq.user_id, pq.meta.get("query_timestamp"))
+                    if (pmeta or {}).get("entity_anchored"):
+                        anchored.append(q.id)
+                else:
+                    docs, raw = await prov.async_retrieve(pq.query, k=k, user_id=pq.user_id, query_timestamp=pq.meta.get("query_timestamp"))
+            except Exception as e:  # noqa: BLE001
+                errors.append(f"{q.id}: {type(e).__name__}: {e}"[:300])
+                return
+        rendered = _render_rag_context(docs)
+        meta = dict(pq.meta)
+
+        def build(qq, cc, meta):
+            return run.dataset.build_rag_prompt(qq, cc, task, run.split, None, meta)
+
+        prompt = build(pq.query, rendered, {**meta, "_raw_response": raw})
+        tokens.append(ctxmod.inserted_context(build, pq.query, rendered, meta, raw, prompt).tokens)
+
+    # One unit at a time, as the cell runner does: providers keep one live store per unit.
+    by_unit: dict = {}
+    for q in queries:
+        by_unit.setdefault(str(q.user_id), []).append(q)
+    for unit_queries in by_unit.values():
+        await asyncio.gather(*[one(q) for q in unit_queries])
+    return tokens, errors, anchored
+
+
+async def auto_tune(cell_dir: Path, targets: list[int], base: dict, sample: int | None, max_iter: int = 6) -> dict:
+    """Scale the knobs in `base` together until each target's delivered mean and p95 pass the ±10% gate on the sample."""
+    run = CellRun(cell_dir)
+    run.setup()
+    task = run.task_type
+    base_cfg = dict(run.spec.get("provider_config") or {})
+    prov = _provider({**run.spec, "provider_config": base_cfg})
+    knobs = getattr(prov, "config", None) if isinstance(getattr(prov, "config", None), dict) else getattr(prov, "cfg", None)
+    prov.initialize()
+    prov.prepare(run.store, unit_ids=None, reset=False)
+    queries = _sample(run.queries, sample)
+    results = {}
+    try:
+        for target in targets:
+            scale = target / 8000
+            rows = []
+            chosen = None
+            for _ in range(max_iter):
+                setting = {k: (0 if v == 0 else max(1, int(round(v * scale)))) for k, v in base.items()}
+                knobs.update(setting)
+                tokens, errors, anchored = await _measure(run, prov, queries, run.spec, task)
+                gate = ctxmod.gate(target, tokens)
+                mean = gate.mean or 1.0
+                rows.append({"setting": setting, **gate.as_dict(), "errors": errors[:5], "entity_anchored": anchored})
+                if not errors and gate.ok:
+                    chosen = setting
+                    break
+                if not gate.p95:
+                    # Nothing reaches the prompt at this setting (e.g. a lane the system renders as empty); scaling cannot help.
+                    break
+                step = target / mean
+                if gate.p95 > target * 1.10:
+                    # Mean on target but a long tail: aim the 95th percentile just inside the gate instead.
+                    step = min(step, target * 1.08 / gate.p95)
+                elif gate.p95 < target * 0.90:
+                    step = max(step, target * 0.92 / gate.p95)
+                scale *= max(0.5, min(2.0, step))
+            clean = [r for r in rows if not r["errors"]]
+            closest = min(clean, key=lambda r: abs(r["mean"] - target))["setting"] if clean else None
+            results[str(target)] = {"chosen": chosen, "closest": closest, "rows": rows}
+    finally:
+        prov.cleanup()
+    out = {"cell_id": run.cell_id, "mode": "auto", "base": base, "sample": len(queries), "targets": results,
+           "note": "retrieval-only tuning on an ingested store; no answer or judge calls; knobs scaled together"}
+    (cell_dir / "tuning").mkdir(exist_ok=True)
+    (cell_dir / "tuning" / f"auto-{time.strftime('%Y%m%dT%H%M%S')}.json").write_text(json.dumps(out, indent=2) + "\n")
+    return out
+
+
 async def tune(cell_dir: Path, grid: dict) -> dict:
     run = CellRun(cell_dir)
     run.setup()
@@ -43,18 +137,20 @@ async def tune(cell_dir: Path, grid: dict) -> dict:
     if not isinstance(knobs, dict):
         raise RuntimeError(f"{run.spec['provider']} exposes no knob dict (config or cfg) to sweep")
     prov.initialize()
-    prov.prepare(cell_dir / "store", unit_ids=None, reset=False)
+    prov.prepare(run.store, unit_ids=None, reset=False)
     for setting in _settings(grid):
         spec = {**run.spec, "provider_config": {**base_cfg, **setting}}
         knobs.update(setting)
-        tokens, errors = [], []
+        tokens, errors, anchored = [], [], []
         for q in run.queries:
             pq = run.pqueries[q.id]
             k = int(pq.meta.get("retrieval_limit") or spec.get("k") or 10)
             try:
                 with_meta = getattr(prov, "retrieve_with_meta", None)
                 if with_meta is not None:
-                    docs, raw, _ = await asyncio.to_thread(with_meta, pq.query, k, pq.user_id, pq.meta.get("query_timestamp"))
+                    docs, raw, pmeta = await asyncio.to_thread(with_meta, pq.query, k, pq.user_id, pq.meta.get("query_timestamp"))
+                    if (pmeta or {}).get("entity_anchored"):
+                        anchored.append(q.id)
                 else:
                     docs, raw = await prov.async_retrieve(pq.query, k=k, user_id=pq.user_id, query_timestamp=pq.meta.get("query_timestamp"))
             except Exception as e:  # noqa: BLE001
@@ -69,7 +165,7 @@ async def tune(cell_dir: Path, grid: dict) -> dict:
             prompt = build(pq.query, rendered, {**meta, "_raw_response": raw})
             tokens.append(ctxmod.inserted_context(build, pq.query, rendered, meta, raw, prompt).tokens)
         gate = ctxmod.gate(target, tokens)
-        rows.append({"setting": setting, **gate.as_dict(), "errors": errors})
+        rows.append({"setting": setting, **gate.as_dict(), "errors": errors, "entity_anchored": anchored})
     prov.cleanup()
     passing = [r for r in rows if r["ok"] and not r["errors"]]
     best = min(passing, key=lambda r: abs(r["mean"] - (target or r["mean"]))) if passing else None
@@ -84,8 +180,15 @@ async def tune(cell_dir: Path, grid: dict) -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser(prog="python -m mpw.tune")
     ap.add_argument("--cell-dir", required=True)
-    ap.add_argument("--grid", required=True, help='JSON object: knob -> list of values')
+    ap.add_argument("--grid", help='JSON object: knob -> list of values')
+    ap.add_argument("--auto", help='JSON {"targets": [4000, ...], "base": {knob: value at 8k}, "sample": N}')
     args = ap.parse_args()
+    if args.auto:
+        spec = json.loads(args.auto)
+        out = asyncio.run(auto_tune(Path(args.cell_dir), spec["targets"], spec["base"], spec.get("sample")))
+        print(json.dumps({"chosen": {t: r["chosen"] for t, r in out["targets"].items()},
+                          "closest": {t: r["closest"] for t, r in out["targets"].items()}}))
+        return 0 if all(r["chosen"] for r in out["targets"].values()) else 4
     out = asyncio.run(tune(Path(args.cell_dir), json.loads(args.grid)))
     print(json.dumps({"chosen": out["chosen"], "rows": [{k: r[k] for k in ("setting", "mean", "p95", "ok")} for r in out["rows"]]}))
     return 0 if out["chosen"] is not None else 4

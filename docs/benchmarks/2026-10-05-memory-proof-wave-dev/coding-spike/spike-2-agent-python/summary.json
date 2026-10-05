@@ -1,0 +1,93 @@
+{
+  "tasks": [
+    "boltons-discount-001",
+    "boltons-hostallow-history-001",
+    "boltons-dedupe-amended-001"
+  ],
+  "arms": [
+    "none",
+    "gbrain"
+  ],
+  "model": "google/gemini-3.8-flash",
+  "records": [
+    {
+      "task_id": "boltons-discount-001",
+      "arm": "none",
+      "source": "conversation",
+      "solved": true,
+      "interventions": 1,
+      "capped": false,
+      "wall_s": 95.7,
+      "error": null,
+      "metered_usd": 0.236092,
+      "decision_ranks": null
+    },
+    {
+      "task_id": "boltons-discount-001",
+      "arm": "gbrain",
+      "source": "conversation",
+      "solved": true,
+      "interventions": 0,
+      "capped": false,
+      "wall_s": 39.0,
+      "error": null,
+      "metered_usd": 0.121909,
+      "decision_ranks": [
+        1
+      ]
+    },
+    {
+      "task_id": "boltons-hostallow-history-001",
+      "arm": "none",
+      "source": "history",
+      "solved": true,
+      "interventions": 0,
+      "capped": false,
+      "wall_s": 51.9,
+      "error": null,
+      "metered_usd": 0.210202,
+      "decision_ranks": null
+    },
+    {
+      "task_id": "boltons-hostallow-history-001",
+      "arm": "gbrain",
+      "source": "history",
+      "solved": true,
+      "interventions": 0,
+      "capped": false,
+      "wall_s": 157.8,
+      "error": null,
+      "metered_usd": 0.34374,
+      "decision_ranks": [
+        1
+      ]
+    },
+    {
+      "task_id": "boltons-dedupe-amended-001",
+      "arm": "none",
+      "source": "conversation-amended",
+      "solved": true,
+      "interventions": 2,
+      "capped": false,
+      "wall_s": 223.1,
+      "error": null,
+      "metered_usd": 0.574774,
+      "decision_ranks": null
+    },
+    {
+      "task_id": "boltons-dedupe-amended-001",
+      "arm": "gbrain",
+      "source": "conversation-amended",
+      "solved": true,
+      "interventions": 0,
+      "capped": false,
+      "wall_s": 172.8,
+      "error": null,
+      "metered_usd": 0.483093,
+      "decision_ranks": [
+        1,
+        2
+      ]
+    }
+  ]
+}

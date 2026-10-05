@@ -1,0 +1,49 @@
+{
+  "budget_run": {
+    "run_id": "coding-spike-2026-10-05T15-48-14-852Z-ebd2380b",
+    "budget_usd": 1,
+    "reserved_usd": 0.12750096,
+    "actual_usd": 0.08567957999999999,
+    "charged_reservations": 0,
+    "requests": 2906,
+    "input_tokens": 1427993,
+    "output_tokens": 0,
+    "overshoot_usd": 0.000002880000000000003,
+    "ledger_path": ".budget/mpw-dev-coding.sqlite",
+    "program_cap_usd": 25,
+    "event_loop_lag_ms": null,
+    "event_loop_lag_unavailable": "no lag monitor: the run was not started through startPaidRun"
+  },
+  "metered": {
+    "total": {
+      "requests": 2906,
+      "refused": 0,
+      "reserved_usd": 0.1275009599999998,
+      "actual_usd": 0.08567957999999995,
+      "input_tokens": 1427993,
+      "output_tokens": 0
+    },
+    "byLabel": {
+      "gbrain": {
+        "requests": 2906,
+        "refused": 0,
+        "reserved_usd": 0.1275009599999998,
+        "actual_usd": 0.08567957999999995,
+        "input_tokens": 1427993,
+        "output_tokens": 0
+      }
+    },
+    "byProvider": {
+      "voyage": {
+        "requests": 2906,
+        "refused": 0,
+        "reserved_usd": 0.1275009599999998,
+        "actual_usd": 0.08567957999999995,
+        "input_tokens": 1427993,
+        "output_tokens": 0
+      }
+    },
+    "exhausted": false
+  },
+  "unmetered": []
+}

@@ -1,0 +1,240 @@
+{
+  "schema": "mpw-cell-v1",
+  "cell_id": "beam-100k-gbrain-rag-236700450db0",
+  "identity": {
+    "schema": "mpw-cell-v1",
+    "dataset": "beam",
+    "split": "100k",
+    "dataset_manifest_sha256": "722c8c0c993ba8bfc8c165721f6ba499e2e0e0a7c9e9286537a948a091c25f95",
+    "schedule_sha256": "27a2e286916808a1b43ea3ccf84b51bfd363945b1242cd9a9440a4ec149e1a71",
+    "pins": {
+      "harness_commit": "f618ed7b1f0eb9cad7b42e876f91a42f0eadb150",
+      "harness_lock_sha256": "6b6ace4f721ae10bf66214a8a617c3c6e97a930e91c163728835691994a07b8f",
+      "torch": "2.10.0+cpu",
+      "gbrain": {
+        "version": "0.60.64.0",
+        "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+        "loaded_git_head": "e8e1f66b8e5225b113cacd18931b627fca451bae",
+        "package_sha256": "da82b3935169fa1264395f06a7637c10ae515e34ba01a72100451eb1301c1f36"
+      }
+    },
+    "provider": "gbrain",
+    "provider_config": {
+      "embedding_model": "voyage:voyage-4",
+      "embedding_dimensions": 1024,
+      "date_header": false,
+      "gbrain_config": {
+        "search.evidence_date_header": "true"
+      },
+      "token_budget": 8181
+    },
+    "gbrain_credentials": [
+      "voyage"
+    ],
+    "mode": "rag",
+    "lane": "raw",
+    "seal": "dev",
+    "k": 10,
+    "target_tokens": 8000,
+    "models": {
+      "answer": "gemini:gemini-3.8-flash",
+      "judge": "gemini:gemini-3.5-flash"
+    },
+    "prompt_revision": "3b87410a7e4a5432b5e255555a84dca6414355485c92a7d694318b1e6ffe3c60",
+    "scorer_revision": "7619a08c34a45592b0f1d47d8c7f9340c512803f4fceb8900d76e0880d86bada",
+    "wrapper_revision": "78d122abdb515c37c6b510c26153bdf43b9abe50ecb47533b8249c1669686f90",
+    "budget_usd": 24
+  },
+  "spec": {
+    "dataset": "beam",
+    "split": "100k",
+    "provider": "gbrain",
+    "mode": "rag",
+    "lane": "raw",
+    "seal": "dev",
+    "target_tokens": 8000,
+    "models": {
+      "answer": "gemini:gemini-3.8-flash",
+      "judge": "gemini:gemini-3.5-flash"
+    },
+    "budget_usd": 24,
+    "questions": {
+      "units": [
+        "3",
+        "11",
+        "12",
+        "15"
+      ]
+    },
+    "k": 10,
+    "provider_config": {
+      "embedding_model": "voyage:voyage-4",
+      "embedding_dimensions": 1024,
+      "date_header": false,
+      "gbrain_config": {
+        "search.evidence_date_header": "true"
+      },
+      "token_budget": 8181
+    },
+    "note": "memory proof wave dev gbrain-beam-100k-c1-on 8000-token target",
+    "gbrain_credentials": [
+      "voyage"
+    ]
+  },
+  "resolved": {
+    "dataset": "beam",
+    "split": "100k",
+    "task_type": "open",
+    "isolation_unit": "conversation",
+    "schedule": [
+      "3_abstention_0",
+      "3_abstention_1",
+      "3_contradiction_resolution_0",
+      "3_contradiction_resolution_1",
+      "3_event_ordering_0",
+      "3_event_ordering_1",
+      "3_information_extraction_0",
+      "3_information_extraction_1",
+      "3_instruction_following_0",
+      "3_instruction_following_1",
+      "3_knowledge_update_0",
+      "3_knowledge_update_1",
+      "3_multi_session_reasoning_0",
+      "3_multi_session_reasoning_1",
+      "3_preference_following_0",
+      "3_preference_following_1",
+      "3_summarization_0",
+      "3_summarization_1",
+      "3_temporal_reasoning_0",
+      "3_temporal_reasoning_1",
+      "11_abstention_0",
+      "11_abstention_1",
+      "11_contradiction_resolution_0",
+      "11_contradiction_resolution_1",
+      "11_event_ordering_0",
+      "11_event_ordering_1",
+      "11_information_extraction_0",
+      "11_information_extraction_1",
+      "11_instruction_following_0",
+      "11_instruction_following_1",
+      "11_knowledge_update_0",
+      "11_knowledge_update_1",
+      "11_multi_session_reasoning_0",
+      "11_multi_session_reasoning_1",
+      "11_preference_following_0",
+      "11_preference_following_1",
+      "11_summarization_0",
+      "11_summarization_1",
+      "11_temporal_reasoning_0",
+      "11_temporal_reasoning_1",
+      "12_abstention_0",
+      "12_abstention_1",
+      "12_contradiction_resolution_0",
+      "12_contradiction_resolution_1",
+      "12_event_ordering_0",
+      "12_event_ordering_1",
+      "12_information_extraction_0",
+      "12_information_extraction_1",
+      "12_instruction_following_0",
+      "12_instruction_following_1",
+      "12_knowledge_update_0",
+      "12_knowledge_update_1",
+      "12_multi_session_reasoning_0",
+      "12_multi_session_reasoning_1",
+      "12_preference_following_0",
+      "12_preference_following_1",
+      "12_summarization_0",
+      "12_summarization_1",
+      "12_temporal_reasoning_0",
+      "12_temporal_reasoning_1",
+      "15_abstention_0",
+      "15_abstention_1",
+      "15_contradiction_resolution_0",
+      "15_contradiction_resolution_1",
+      "15_event_ordering_0",
+      "15_event_ordering_1",
+      "15_information_extraction_0",
+      "15_information_extraction_1",
+      "15_instruction_following_0",
+      "15_instruction_following_1",
+      "15_knowledge_update_0",
+      "15_knowledge_update_1",
+      "15_multi_session_reasoning_0",
+      "15_multi_session_reasoning_1",
+      "15_preference_following_0",
+      "15_preference_following_1",
+      "15_summarization_0",
+      "15_summarization_1",
+      "15_temporal_reasoning_0",
+      "15_temporal_reasoning_1"
+    ],
+    "schedule_sha256": "27a2e286916808a1b43ea3ccf84b51bfd363945b1242cd9a9440a4ec149e1a71",
+    "dataset_manifest_sha256": "722c8c0c993ba8bfc8c165721f6ba499e2e0e0a7c9e9286537a948a091c25f95",
+    "questions": 80,
+    "units": [
+      "11",
+      "12",
+      "15",
+      "3"
+    ],
+    "documents": 34,
+    "document_tokens_cl100k": 579786,
+    "document_tokens_by_unit": {
+      "3": 118670,
+      "11": 183646,
+      "12": 182497,
+      "15": 94973
+    },
+    "timestamp_provenance": {
+      "rule": {
+        "provenance": "observed_session_time",
+        "source": "the session's time_anchor turn field; flat 10M fallback documents carry none"
+      },
+      "counts": {
+        "observed_session_time": 34
+      }
+    },
+    "dataset_judge_model": "gemini:gemini-3.5-flash",
+    "judge_calls": 215,
+    "prompt_revision": "3b87410a7e4a5432b5e255555a84dca6414355485c92a7d694318b1e6ffe3c60",
+    "scorer_revision": "7619a08c34a45592b0f1d47d8c7f9340c512803f4fceb8900d76e0880d86bada",
+    "wrapper_revision": "78d122abdb515c37c6b510c26153bdf43b9abe50ecb47533b8249c1669686f90"
+  },
+  "planned_at": "2026-10-05T15:20:25.423Z",
+  "estimate": {
+    "usd": 2.0906,
+    "lines": [
+      {
+        "stage": "ingest: gbrain embeddings",
+        "tokens_in": 921860,
+        "tokens_out": 0,
+        "usd": 0.0553115844,
+        "basis": "579786 cl100k document tokens x 1.59 (provider tokenizer and chunk overlap)"
+      },
+      {
+        "stage": "retrieve: gbrain query embeddings",
+        "tokens_in": 5120,
+        "tokens_out": 0,
+        "usd": 0.0003072,
+        "basis": "64 tokens per question"
+      },
+      {
+        "stage": "answer",
+        "tokens_in": 668000,
+        "tokens_out": 176000,
+        "usd": 1.161,
+        "basis": "80 questions x 1 call(s) x (8000 context + 350 prompt) in, 2200 out"
+      },
+      {
+        "stage": "judge",
+        "tokens_in": 156950,
+        "tokens_out": 70950,
+        "usd": 0.873975,
+        "basis": "215 judge calls x 730 in / 330 out"
+      }
+    ],
+    "unpriced": [],
+    "note": "list-price estimate from token volumes; the run is enforced by the metering proxy, not by this number"
+  },
+  "reproduce": "bun run harness:cell run eval/harness-provider/cells/dev/gbrain-beam-100k-c1-on-8000.json"
+}
