@@ -319,7 +319,7 @@
           "tool": "bash",
           "arg": "command=env; which -a python python3; find / -name \"pytest\" 2>/dev/null",
           "input": "description: Locate python environment and pytest\ncommand: env; which -a python python3; find / -name \"pytest\" 2>/dev/null",
-          "out": "OPENCODE_PROCESS_ROLE=main\nHOSTNAME=bbb87930657a\nGEMINI_REDACTED\nAGENT=1\ncomparator_DISABLED=1\nYARN_VERSION=1.22.22\nPWD=/work\nOPENCODE_PID=16\nHOME=/root\nOPENCODE=1\nOPENCODE_RUN_ID=91dfe94d-0956-47de-ba1b-6ecb4d5751d9\nGOOGLE_GENERATIVE_AI_REDACTED\nSHLVL=1\nPYTHONDONTWRITEBYTECODE=1\nnpm_config_user_agent=npm/undefined node/v24.3.0 linux x64 workspaces/false\ncomparator_DIAG_FILE=/tmp/comparator-plugin.log\nPATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\nPYTEST_ADDOPTS=-p no:cacheprovider\nNODE_VERSION=22.23.3\n_=/usr/bin/env\n",
+          "out": "OPENCODE_PROCESS_ROLE=main\nHOSTNAME=bbb87930657a\nGEMINI_REDACTED\nAGENT=1\ncomparator_DISABLED=1\nYARN_VERSION=1.22.22\nPWD=/work\nOPENCODE_PID=16\nHOME=/root\nOPENCODE=1\nOPENCODE_RUN_ID=91dfe94d-0956-47de-ba1b-6ecb4d5751d9\nGOOGLE_GENERATIVE_AI_REDACTED\nSHLVL=1\nPYTHONDONTWRITEBYTECODE=1\nnpm_config_user_agent=npm/undefined node/v24.3.0 linux x64 workspaces/false\ncomparator_DIAG_FILE=<tmp>/comparator-plugin.log\nPATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\nPYTEST_ADDOPTS=-p no:cacheprovider\nNODE_VERSION=22.23.3\n_=/usr/bin/env\n",
           "tok_in": 10232,
           "tok_cache": 0,
           "tok_out": 73,
