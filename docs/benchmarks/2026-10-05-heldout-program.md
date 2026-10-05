@@ -48,7 +48,7 @@ One row per idea. "Held-out verdict" is the custodian's sealed result against th
 | P3 | Declared single-value relations close the older value | `dream.single_value.mode` | **FAIL** (3 wrong closures, bar 0) | `propose` | #6014 |
 | P4 | Core memory tier and save before compaction | in progress, see gbrain PR | in progress | in progress | [#6015](https://github.com/garrytan/gbrain/pull/6015), draft |
 | P5 | Typed relation lines, wanted pages, similar-page hint | in progress, see gbrain PR | in progress | in progress | [#6017](https://github.com/garrytan/gbrain/pull/6017), draft |
-| P6 | Time-aware search | in progress | in progress | in progress | no PR yet |
+| P6 | Time-aware retrieval and reading ([records](2026-10-05-heldout-program/p6.md)) | `think` date frame, `search.fact_keys` | development: date frame and fact keys pass, time scope and notes-first killed; sealed pending | set by the sealed run | no PR yet |
 | P7 | Multi-relation query planner | `search.relational_planner` | **PASS** (24 better, 0 worse; +27 points strict all-hit@10) | on in `balanced` and `tokenmax` | [#6019](https://github.com/garrytan/gbrain/pull/6019), merged, v0.60.60.0 |
 | P7 | One-hop orientation | `search.relational_orient_onehop` | does not meet its rule (1 better, 0 worse, p = 1.0) | off | #6019 |
 | P8 | Write guard, semantic withdrawal, quote grounding, advertised surface | in progress, see gbrain PR | in progress | in progress | [#6027](https://github.com/garrytan/gbrain/pull/6027), draft |
