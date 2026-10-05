@@ -70,16 +70,44 @@ class McpChild:
 
     def call(self, name: str, arguments: dict) -> tuple[object, dict]:
         """(parsed first text content, _meta). Raises on a tool error."""
-        res = self.request("tools/call", {"name": name, "arguments": arguments})
-        texts = [c.get("text", "") for c in res.get("content", []) if c.get("type") == "text"]
-        if res.get("isError"):
-            raise McpToolError(f"{name} failed: {' | '.join(texts)[:2000]}")
-        first = texts[0] if texts else ""
-        try:
-            parsed = json.loads(first)
-        except json.JSONDecodeError:
-            parsed = first
-        return parsed, res.get("_meta") or {}
+        return _tool_result(name, self.request("tools/call", {"name": name, "arguments": arguments}))
+
+    def call_many(self, calls: list[tuple[str, dict]], in_flight: int = 8) -> list:
+        """Pipelined tool calls: up to `in_flight` requests outstanding at once, results in call order.
+
+        Each result is a `(parsed, _meta)` tuple or the `McpToolError` that call raised; a child
+        that exits mid-batch raises. Holds the request lock for the whole batch.
+        """
+        results: list = [None] * len(calls)
+        pending: dict[int, int] = {}
+        nxt = 0
+        with self._lock:
+            assert self.proc.stdout is not None
+            while nxt < len(calls) or pending:
+                while nxt < len(calls) and len(pending) < max(1, in_flight):
+                    self._id += 1
+                    name, arguments = calls[nxt]
+                    self._send({"jsonrpc": "2.0", "id": self._id, "method": "tools/call", "params": {"name": name, "arguments": arguments}})
+                    pending[self._id] = nxt
+                    nxt += 1
+                line = self.proc.stdout.readline()
+                if not line:
+                    raise McpToolError(f"gbrain MCP child exited (code {self.proc.poll()}) during a batch of {len(calls)} calls")
+                try:
+                    msg = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                i = pending.pop(msg.get("id"), None) if isinstance(msg.get("id"), int) else None
+                if i is None:
+                    continue
+                name = calls[i][0]
+                try:
+                    if "error" in msg:
+                        raise McpToolError(f"tools/call: {msg['error']}")
+                    results[i] = _tool_result(name, msg.get("result") or {})
+                except McpToolError as e:
+                    results[i] = e
+        return results
 
     def close(self) -> None:
         if self.proc.poll() is None:
@@ -106,6 +134,18 @@ class McpChild:
             except Exception:  # noqa: BLE001
                 pass
         self._stderr.close()
+
+
+def _tool_result(name: str, res: dict) -> tuple[object, dict]:
+    texts = [c.get("text", "") for c in res.get("content", []) if c.get("type") == "text"]
+    if res.get("isError"):
+        raise McpToolError(f"{name} failed: {' | '.join(texts)[:2000]}")
+    first = texts[0] if texts else ""
+    try:
+        parsed = json.loads(first)
+    except json.JSONDecodeError:
+        parsed = first
+    return parsed, res.get("_meta") or {}
 
 
 def stderr_tail(path: str | os.PathLike, n: int = 2000) -> str:
