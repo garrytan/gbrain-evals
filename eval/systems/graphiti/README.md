@@ -123,7 +123,18 @@ reports `partial`, or `unavailable` with `settings.node_provenance = "none"`. Ep
 Deletion calls `Graphiti.remove_episode` for each episode of the source and keeps its semantics: an edge goes only
 if the removed episode created it, and a node goes only if no other episode mentions it.
 
+## Phase 2 pilot
+
+[PILOT.md](PILOT.md) records the 2026-10-05 pilots through the memory-qa runner (one LoCoMo conversation, one
+LongMemEval-S haystack, one BEAM-100K conversation): costs per ingested item, reader and judge costs, latency,
+outcomes and the Phase 4 cost extrapolation. Its scores are setup evidence, not results.
+
 ## Changelog
+
+### 2026-10-05: Phase 2 pilot, policy settings
+
+Added PILOT.md. Retrieval policies keep their knobs under `retrieval_policies.<mode>.settings` (PROTOCOL.md), offset-less
+ISO times are read as UTC, and the shim maps a metering-proxy refusal to the `budget` error.
 
 ### 2026-10-05: metered smoke
 
