@@ -1,0 +1,52 @@
+{
+  "suite": "passing-details",
+  "version": "passing-details-v1",
+  "seed": 20261005,
+  "smoke": false,
+  "counts": {
+    "documents": 2560,
+    "queries": 400,
+    "labels": 400,
+    "users": 40,
+    "by_category": {
+      "access-code": 30,
+      "clinician": 33,
+      "expiry": 34,
+      "flight": 33,
+      "furniture-width": 36,
+      "paint-color": 34,
+      "person-name": 29,
+      "pet": 35,
+      "reading-pick": 33,
+      "repair-cost": 34,
+      "restaurant": 33,
+      "wifi-password": 36
+    }
+  },
+  "approx_tokens": {
+    "total": 1107387,
+    "per_user_max": 31334,
+    "per_user_mean": 27685
+  },
+  "timestamp_provenance": "observed_session_time: every document timestamp is the time the conversation happened; no event dates are promoted from text.",
+  "files": {
+    "documents.jsonl": {
+      "sha256": "1967d62b3c50b3e2d1a89b57353ae03c18b062b004d199281661f49e38a6cd62",
+      "bytes": 10222812
+    },
+    "frontier-subset.jsonl": {
+      "sha256": "ce3aa50e9ec4e266d6c7e013f5b3089b7568289911794d67d13f64f812c0a222",
+      "bytes": 1919
+    },
+    "queries.jsonl": {
+      "sha256": "a4685950b4b1fe3c889eab57f9040eb13d2690249ac5962b6d3a28d51ead2911",
+      "bytes": 96225
+    },
+    "scorer-labels.jsonl": {
+      "sha256": "9b4e962da28db53af8401dd333fdceefa2aa67da579ff6210a83d7d1aa4e571f",
+      "bytes": 237626
+    }
+  },
+  "digest": "fdbf8b23e52aa766ba2f188beec201a6895b6c3275104e1a9788aabd21b754e1",
+  "command": "bun run eval:passing-details --seed 20261005"
+}

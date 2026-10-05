@@ -36,7 +36,20 @@
     "eval:system-one": "bun eval/runner/system-one-jev.ts verify",
     "eval:system-one:plan": "bun eval/runner/system-one-jev.ts plan",
     "eval:generate-transcript-distill": "bun eval/generators/transcript-distill-gen.ts",
-    "eval:generate-transcript-distill:dry": "bun eval/generators/transcript-distill-gen.ts --dry-run"
+    "eval:generate-transcript-distill:dry": "bun eval/generators/transcript-distill-gen.ts --dry-run",
+    "eval:passing-details": "bun eval/workload-suites/cli.ts passing-details",
+    "eval:passing-details:smoke": "bun eval/workload-suites/cli.ts passing-details --smoke",
+    "eval:passing-details:dry": "bun eval/workload-suites/cli.ts passing-details --dry-run",
+    "eval:corrections": "bun eval/workload-suites/cli.ts corrections",
+    "eval:corrections:smoke": "bun eval/workload-suites/cli.ts corrections --smoke",
+    "eval:corrections:dry": "bun eval/workload-suites/cli.ts corrections --dry-run",
+    "eval:time-relationships": "bun eval/workload-suites/cli.ts time-relationships",
+    "eval:time-relationships:smoke": "bun eval/workload-suites/cli.ts time-relationships --smoke",
+    "eval:time-relationships:dry": "bun eval/workload-suites/cli.ts time-relationships --dry-run",
+    "eval:beliefs": "bun eval/workload-suites/cli.ts beliefs",
+    "eval:beliefs:smoke": "bun eval/workload-suites/cli.ts beliefs --smoke",
+    "eval:beliefs:dry": "bun eval/workload-suites/cli.ts beliefs --dry-run",
+    "eval:workload-suites": "bun eval/workload-suites/cli.ts all"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",
