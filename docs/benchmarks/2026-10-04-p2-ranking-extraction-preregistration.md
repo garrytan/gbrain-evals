@@ -96,6 +96,8 @@ Each conversation has 2 assistant-said questions and 2 user-said questions: 120 
 
 **Build under test.** The frozen head of gbrain#6020 at the time of the run, recorded by SHA in every receipt (6fa1a77b3 or a later head with no change under `src/core/facts/`, `src/commands/extract-conversation-facts.ts` or `src/core/ai/`). That head stores `attributed_to` and asks the extractor for it. Candidate: `facts.attribution=true`. Baseline: the same build with the setting absent. Each arm extracts twice through the decision kit's facts lane (gbrain-evals `capy/p2-facts-lane` c7cfbe8 or later; product default extraction model), and every metric uses the per-question mean of the two extractions.
 
+**Harness.** The facts lane writes each saved fact's stored `attributed_to` to `facts.ndjson`; Guard 3 reads it from there.
+
 **Answer path.** The facts lane's fixed reader (`openai:gpt-4o-2024-08-06`, the pin the development run used) answers from the saved facts of the top five retrieved sessions, and the pinned LongMemEval judge scores each answer. Answering and judging run 5 replicates per question; replicates measure judge and reader noise only and never add units.
 
 **Gate.**
@@ -107,6 +109,6 @@ Each conversation has 2 assistant-said questions and 2 user-said questions: 120 
 
 **Outcome rule.** If the primary and all three guards pass, `facts.attribution` defaults on. If any fails or is inconclusive, the setting stays off, and the extractor rule plus the `attributed_to` storage are removed from #6020.
 
-**Power.** Development showed a +36.7-pt effect with about 40% of questions changing. With 120 assistant-said questions in 60 clusters, a true effect of +15 pts (less than half of development) gives the clustered bootstrap about 90% power at α = 0.05. With 120 user-said questions and development's zero changed answers, the −2-pt margin holds unless more than about one net question in 60 flips. A loss rate as small as development's would read inconclusive rather than pass only if losses reach 2 or more net.
+**Power.** Development showed a +36.7-pt effect with about 40% of questions changing. With 120 assistant-said questions in 60 clusters, a true effect of +15 pts (less than half of development) gives the clustered bootstrap about 90% power at α = 0.05. With 120 user-said questions and development's zero changed answers, the −2-pt margin holds with no net loss or one. Two or more net losses would make the guard inconclusive, and the setting would stay off.
 
 **Budget.** Estimate: generation and gold check $8; extraction 60 conversations × about 6 sessions × 2 arms × 2 runs, about $30; reader and judge 240 questions × 2 arms × 5 replicates, about $30; guard judging $4. Total about $72, within the remaining $82. Arms run only under a ledger reservation.
