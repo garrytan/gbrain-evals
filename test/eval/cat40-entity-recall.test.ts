@@ -9,7 +9,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { generateLadderWorld, stratumOf, worldDigest, type LadderTask } from '../../eval/generators/model-ladder-gen.ts';
+import { generateLadderWorld, worldDigest, type LadderTask } from '../../eval/generators/model-ladder-gen.ts';
 import { rescoreCell, TRANSCRIPT_RESULT_CHARS, type RescoreReceipt, type TranscriptTool } from '../../eval/runner/cat40/rescore.ts';
 import { coverageProblem, parseCoverage, COVERAGE_PROBE_NAME } from '../../eval/runner/cat40/gbrain-arm.ts';
 import { incompleteSlotCoverage, main, slotRoot, type CellRecord } from '../../eval/runner/cat40-model-ladder.ts';
@@ -27,7 +27,7 @@ describe('UC1 rescoring audit (E-T9)', () => {
   const receipt: RescoreReceipt = { evals_commit: 'abc', evals_dirty: false, max_tool_chars: 100_000_000, world: { digest: worldDigest(world) } };
   const answer = task.gold.answer![0];
   const cell = (results: string[], score: Partial<CellRecord['score']> = {}, extra: Partial<CellRecord['run']> = {}): CellRecord => ({
-    key: `m|fs|${task.id}|0`, model: 'm', provider: 'anthropic', arm: 'fs', task: task.id, family: task.family, stratum: stratumOf(task.family), variant: task.variant, repeat: 0,
+    key: `m|fs|${task.id}|0`, model: 'm', provider: 'anthropic', arm: 'fs', task: task.id, family: task.family, variant: task.variant, repeat: 0,
     score: { success: true, submitted: true, said_wrong: false, output_leak: false, context_exposure: false, evidence_cited: [], missed_evidence: [], unsafe_write: false, wrote: false, over_refusal: false, ...score },
     claims: { claims: [], unsupported: 0, contradicted: 0, total: 0 },
     run: { model: 'm', final: { answer, sources: [task.gold.evidence[0]] }, stop: 'submitted', turns: 2, usage: { input: 0, output: 0, cache_read: 0, cache_write: 0, requests: 0 }, usd: 0, ms: 0, model_ms: 0, tool_ms: 0,

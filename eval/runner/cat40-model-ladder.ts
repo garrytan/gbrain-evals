@@ -14,8 +14,7 @@
  *     --arms oracle,fs,pg,memory,gbrain --budget-usd 100 [--families A,B] [--tasks A01,B02] \
  *     [--repeat 1] [--concurrency 6] [--slots 3] [--gbrain-repo ../gbrain --gbrain-ref <sha>] \
  *     [--judge gpt-5.4-mini|none] [--world eval/data/model-ladder-v1-large/world.json] [--out eval/reports/cat40/<name>] \
- *     [--max-tool-chars <n>|none] [--order task|model] [--slot-ref <sha>] [--no-pglite-analyze] [--surface starter] [--advertised verbs|starter|full]
- *     [--gbrain-config key=value,...]
+ *     [--max-tool-chars <n>|none] [--order task|model] [--slot-ref <sha>] [--no-pglite-analyze] [--surface starter] [--advertised verbs|starter|full] [--gbrain-config key=value,...]
  *     [--gbrain-instructions-file <file>] [--gbrain-tool-descriptions-file <json>] [--gbrain-drop-tools a,b]
  *       (evaluator-side A/B of the instruction and tool-description text the model sees; gbrain code unchanged)
  *   bun eval/runner/cat40-model-ladder.ts --scripted --arms fs,memory,oracle   (hermetic, $0)
@@ -84,7 +83,8 @@ export interface CellRecord {
   task: string;
   family: Family;
   /** memory-only (A, B, C, E), page-authoring (F) or hidden-tool (H). */
-  stratum: Stratum;
+  /** Absent on records written before the wide world (derive it with stratumOf(family)). */
+  stratum?: Stratum;
   variant: string;
   repeat: number;
   score: TaskScore;
