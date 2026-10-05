@@ -1,6 +1,6 @@
 # BrainBench credits
 
-BrainBench combines project-authored tests, public benchmark material and comparison implementations. Attribution matters because a test written by a project's authors supplies different evidence from an independent submission. Everything above [Changelog](#changelog) is current as of gbrain-evals v0.10.23.
+BrainBench combines project-authored tests, public benchmark material and comparison implementations. Attribution matters because a test written by a project's authors supplies different evidence from an independent submission. Everything above [Changelog](#changelog) is current as of gbrain-evals v0.10.24.
 
 ## Project work
 
