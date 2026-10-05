@@ -12,6 +12,16 @@ The [August 31 audit](docs/audit/2026-08-31-eval-audit.md) explains the finding 
 
 - [ ] **A curated-notes answer benchmark for `auto` on long pages.** Neither LongMemEval nor the sealed set has long curated pages, so `auto`'s curated-page branch has correctness tests only.
 
+## Cat 40 entity recall follow-ups (2026-10-04 plan)
+
+These came out of the autoplan review of `docs/plans/2026-10-04-cat40-entity-recall/PLAN.md` and were deferred, not rejected.
+
+- [ ] **Doctor coaching for typed records that are not entity types** (CEO-E3). A brain whose CRM rows, accounts or customers use a type its schema pack does not mark `primitive: entity` gets no mention links to them. A doctor check could find types whose titles are often named in other pages and tell the agent the exact `gbrain schema` command to declare them. P3; depends on the entity-recall wave.
+
+- [ ] **Family E ranking: long meeting transcripts below short mail** (CEO-E4). With hybrid search, renewal briefs score 4-5 of 30 on the development world; keyword-only search scored 14 of 30 in the degraded runs. Hybrid ranking puts short emails above the long transcripts that hold the renewal blocker. Measure a ranking change separately from the entity-recall wave. P3.
+
+- [ ] **Mention links on write, not only on the next stale sweep** (CEO V14). The entity-recall wave keeps sync's inline extraction link-only, so a page saved now appears in `mentioned_in` after the next `extract --stale`; the card's `mentions_index.pending_pages` shows the lag. An inline scan against a cached gazetteer on `put_page` and sync would remove it. P3.
+
 ## Retrieval measurements
 
 - [x] **Correct the May LongMemEval score** (`longmemeval-01`). Completed 2026-08-31 without new API calls. Rescoring the original rows produced 83.40% strict `recall_all@5`; the old scoring reconciled to 488/500 = 97.60%, and all 500 answer sets matched the reference dataset. Keep the corrected score and old metric identifiable in the [report](docs/benchmarks/2026-05-07-longmemeval-s.md).

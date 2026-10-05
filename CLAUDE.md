@@ -68,6 +68,23 @@ For a new report:
 5. Write the report from the results, including unsuccessful candidates.
 6. Run the relevant artifact, data and documentation checks.
 
+### Choose models
+
+Every model-comparison run (Cat 40 Model Ladder and any agent-task or answer-model benchmark) uses current frontier
+models.
+
+- **Always run the newest frontier model of each family:** Opus, GPT, Sonnet and Fable. Before a run, check which
+  models are newest (the provider's model list, or the harness's available models). Add any that the run doesn't
+  already include. Register a price for a new model in `eval/runner/budget-ledger.ts` so the ledger can reserve it.
+- **Do not run older generations** (for example Sonnet 4.6 next to Sonnet 5.5, GPT-5.x next to GPT-6.x, Haiku 4.5,
+  older Opus). The one exception is a single older model that is the only shared link to the previous eval's results.
+  If a model that appears in both runs already gives that link, add no older model.
+- **Do not run gpt-5.4-mini.** Never base a product change, gate or release decision on a gpt-5.4-mini-only finding.
+- **Report the models people use first.** Note a ceiling (a model at 100% on every arm cannot show a difference)
+  rather than counting it as a win or a tie.
+- **Preregistered gates keep their model list.** To change the models of an existing preregistered gate, record the
+  change and its reason in the preregistration before any new cell runs.
+
 To add a category, follow the "Add a category" checklist in [eval/CONTRIBUTING.md](eval/CONTRIBUTING.md): registry row and preregistered promotion rules first, the shared hermetic environment, the paid-arm guard, the scorer mutation kit and the bug ledger.
 
 Follow the current task's branch and review instructions. This guide does not authorize pushing, merging or publishing.

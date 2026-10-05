@@ -1,0 +1,33 @@
+{
+  "schema": "cat40-experiment-v1",
+  "gbrain_commit": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+  "slot_commit": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+  "world_digest": "df8c95e71b17beab176851e3b15daaea9b8719fb009ba50e02cfc68243009a20",
+  "models": [
+    "claude-sonnet-5-5",
+    "claude-opus-5-5",
+    "claude-fable-5-1",
+    "gpt-6.1-sol",
+    "gpt-6-astra"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "label": "gbrain-master-frontier-dev",
+  "flags": {
+    "--models": "claude-sonnet-5-5,claude-opus-5-5,claude-fable-5-1,gpt-6.1-sol,gpt-6-astra",
+    "--arms": "gbrain",
+    "--surface": "starter",
+    "--gbrain-repo": "../gbrain",
+    "--budget-ledger": ".budget/cat40-followups.sqlite",
+    "--transcripts": true,
+    "--slot-ref": "739e5cc89",
+    "--slots": "5",
+    "--concurrency": "6",
+    "--repeat": "1",
+    "--gbrain-ref": "739e5cc89",
+    "--gbrain-label": "gbrain-master-frontier-dev",
+    "--out": "eval/reports/cat40/entity-dev-master-frontier"
+  },
+  "budget_run_id": "cat40-model-ladder-2026-10-04T17-45-10-143Z-1bfc7f0b"
+}

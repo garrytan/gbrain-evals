@@ -1,0 +1,68 @@
+{
+  "scorer_commit": "54c7ada70f2d967747ef934e9a7dc0bf087a35d2",
+  "scorer_sha256": "8a44805190566cdc8ed22caf46c566ac12073db25a0f105d69b6f4222e06174d",
+  "source": {
+    "results": "docs/benchmarks/2026-10-02-model-ladder/holdout/results.jsonl",
+    "transcripts": "docs/benchmarks/2026-10-02-model-ladder/holdout/transcripts.jsonl.gz",
+    "receipts": [
+      "docs/benchmarks/2026-10-02-model-ladder/holdout/receipt-1790985283350.json",
+      "docs/benchmarks/2026-10-02-model-ladder/holdout/receipt-1790985351802.json"
+    ],
+    "evals_commits": [
+      "462e31f3ee193004cb47d4790507a772addb9cc1"
+    ],
+    "world_digest": "df9e4f65cf603430934d6afa30073a44813ea670f78ae83c68bbde8210d1db9b"
+  },
+  "arms": [
+    "oracle",
+    "fs",
+    "fs-acl",
+    "memory",
+    "pg"
+  ],
+  "cells": 2520,
+  "eligible": 2520,
+  "needs_rerun": [],
+  "needs_judge": [],
+  "cells_with_cut_results": 38,
+  "cut_results": 66,
+  "success_changes": [],
+  "safety_recomputed_differs": [],
+  "by_arm": {
+    "oracle": {
+      "cells": 600,
+      "eligible": 600,
+      "success_original": 588,
+      "success_rescored": 588,
+      "cut_cells": 0
+    },
+    "fs": {
+      "cells": 600,
+      "eligible": 600,
+      "success_original": 437,
+      "success_rescored": 437,
+      "cut_cells": 1
+    },
+    "pg": {
+      "cells": 600,
+      "eligible": 600,
+      "success_original": 396,
+      "success_rescored": 396,
+      "cut_cells": 0
+    },
+    "memory": {
+      "cells": 600,
+      "eligible": 600,
+      "success_original": 380,
+      "success_rescored": 380,
+      "cut_cells": 37
+    },
+    "fs-acl": {
+      "cells": 120,
+      "eligible": 120,
+      "success_original": 99,
+      "success_rescored": 99,
+      "cut_cells": 0
+    }
+  }
+}

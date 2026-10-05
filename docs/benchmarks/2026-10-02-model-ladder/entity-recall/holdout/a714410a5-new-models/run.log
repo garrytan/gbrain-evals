@@ -1,0 +1,36 @@
+2026-10-04T23:25:17.226Z 300 cells to run (0 already done, order task) in <evals>/eval/reports/cat40/entity-holdout-a714-newmodels
+2026-10-04T23:25:17.352Z mention coverage not checked on 5 of 5 slots: no coverage record, or the build has no coverage field
+2026-10-04T23:25:17.367Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger <evals>/.budget/cat40-followups.sqlite
+2026-10-04T23:27:38.517Z write probe passed on every slot
+2026-10-04T23:27:38.518Z gbrain 0.60.39.0 (a714410a5628) ready on 5 slots, surface starter
+2026-10-04T23:28:46.540Z 10/300 cells; last gpt-6-astra|gbrain-c1234-holdout|A03|0 success=true $0.159
+2026-10-04T23:29:54.889Z 20/300 cells; last claude-fable-5-1|gbrain-c1234-holdout|A07|0 success=true $0.236
+2026-10-04T23:31:08.336Z 30/300 cells; last claude-opus-5-5|gbrain-c1234-holdout|B01|0 success=true $0.191
+2026-10-04T23:32:17.127Z 40/300 cells; last gpt-6-astra|gbrain-c1234-holdout|B04|0 success=true $0.162
+2026-10-04T23:33:29.865Z 50/300 cells; last claude-opus-5-5|gbrain-c1234-holdout|B08|0 success=true $0.108
+2026-10-04T23:34:42.413Z 60/300 cells; last claude-fable-5-1|gbrain-c1234-holdout|B10|0 success=true $0.437
+2026-10-04T23:35:55.340Z 70/300 cells; last gpt-6-astra|gbrain-c1234-holdout|C04|0 success=true $0.207
+2026-10-04T23:37:16.712Z 80/300 cells; last gpt-6-astra|gbrain-c1234-holdout|C07|0 success=true $0.376
+2026-10-04T23:39:09.725Z 90/300 cells; last claude-opus-5-5|gbrain-c1234-holdout|E01|0 success=true $0.780
+2026-10-04T23:41:13.826Z 100/300 cells; last gpt-6-astra|gbrain-c1234-holdout|E04|0 success=true $0.633
+2026-10-04T23:43:11.907Z 110/300 cells; last gpt-6-astra|gbrain-c1234-holdout|E07|0 success=true $0.860
+2026-10-04T23:45:11.976Z 120/300 cells; last claude-opus-5-5|gbrain-c1234-holdout|F01|0 success=true $0.137
+2026-10-04T23:46:54.897Z 130/300 cells; last claude-fable-5-1|gbrain-c1234-holdout|F03|0 success=true $0.485
+2026-10-04T23:48:53.757Z 140/300 cells; last claude-fable-5-1|gbrain-c1234-holdout|F07|0 success=true $0.449
+2026-10-04T23:50:26.881Z 150/300 cells; last gpt-6-astra|gbrain-c1234-holdout|F10|0 success=true $0.248
+2026-10-04T23:51:25.609Z 160/300 cells; last claude-opus-5-5|gbrain-c1234-holdout|A04|1 success=true $0.077
+2026-10-04T23:52:28.093Z 170/300 cells; last gpt-6-astra|gbrain-c1234-holdout|A07|1 success=true $0.131
+2026-10-04T23:53:25.900Z 180/300 cells; last claude-opus-5-5|gbrain-c1234-holdout|B01|1 success=true $0.156
+2026-10-04T23:54:35.941Z 190/300 cells; last gpt-6-astra|gbrain-c1234-holdout|B03|1 success=true $0.364
+2026-10-04T23:55:47.237Z 200/300 cells; last gpt-6-astra|gbrain-c1234-holdout|B07|1 success=true $0.223
+2026-10-04T23:56:47.822Z 210/300 cells; last claude-fable-5-1|gbrain-c1234-holdout|B10|1 success=true $0.471
+2026-10-04T23:57:44.585Z 220/300 cells; last claude-opus-5-5|gbrain-c1234-holdout|C04|1 success=true $0.114
+2026-10-04T23:59:10.580Z 230/300 cells; last claude-fable-5-1|gbrain-c1234-holdout|C06|1 success=true $1.035
+2026-10-05T00:00:41.989Z 240/300 cells; last claude-opus-5-5|gbrain-c1234-holdout|E01|1 success=true $0.629
+2026-10-05T00:03:03.384Z 250/300 cells; last claude-fable-5-1|gbrain-c1234-holdout|E03|1 success=true $2.018
+2026-10-05T00:05:19.922Z 260/300 cells; last claude-fable-5-1|gbrain-c1234-holdout|E06|1 success=true $2.102
+2026-10-05T00:06:56.853Z 270/300 cells; last claude-opus-5-5|gbrain-c1234-holdout|F01|1 success=true $0.141
+2026-10-05T00:08:48.848Z 280/300 cells; last claude-opus-5-5|gbrain-c1234-holdout|F04|1 success=true $0.156
+2026-10-05T00:10:31.788Z 290/300 cells; last claude-fable-5-1|gbrain-c1234-holdout|F06|1 success=true $0.519
+2026-10-05T00:12:30.050Z 300/300 cells; last claude-fable-5-1|gbrain-c1234-holdout|F10|1 success=true $0.602
+2026-10-05T00:12:30.279Z receipt <evals>/eval/reports/cat40/entity-holdout-a714-newmodels/receipt-1791159150279.json

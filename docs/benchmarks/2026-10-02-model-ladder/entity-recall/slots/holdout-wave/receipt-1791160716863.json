@@ -1,0 +1,510 @@
+{
+  "schema": "cat40-receipt-v1",
+  "version": "cat40-v1",
+  "judge_prompt": "cat40-claims-v1",
+  "judge": "gpt-5.4-mini",
+  "world": {
+    "path": "eval/reports/cat40/holdout/world.json",
+    "scale": "v1",
+    "digest": "df9e4f65cf603430934d6afa30073a44813ea670f78ae83c68bbde8210d1db9b",
+    "seed": 20261003,
+    "docs": 4036,
+    "tasks": 50
+  },
+  "evals_commit": "4b5ae3052fff53589a8c522558225617530e8321",
+  "evals_dirty": false,
+  "gbrain": {
+    "slot_ref": null,
+    "slot_commit": "51f865d78f75eece3d6969fcce1d93ec7931d471",
+    "label": "gbrain",
+    "commit": "51f865d78f75eece3d6969fcce1d93ec7931d471",
+    "version": "0.61.1.0",
+    "tree": "a1b527df79453edfb0a29b3f178da09fb5e07066",
+    "verified": {
+      "copy_tree": "a1b527df79453edfb0a29b3f178da09fb5e07066",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.61.1.0",
+      "cli_version_matches": true
+    },
+    "surface": "starter",
+    "operator_analyze": false,
+    "serve_boot_timeout_s": 0,
+    "staged_build": null
+  },
+  "mode": "build-slots",
+  "order": "task",
+  "complete": true,
+  "cells_planned": 0,
+  "slot_builds": [
+    {
+      "slot": "slot0",
+      "dir": "<work>/cat40/gbrain/slots-51f865d78f75-df9e4f65-noanalyze/slot0",
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3809,
+          "tail": "If `claude` is not found: install Claude Code first, or use the per-harness blocks in that doc.\nMore: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to supabase` · health `gbrain doctor`\n  Setting up brain schema (v201)...\n  196 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: <work>/cat40/gbrain/slots-51f865d78f75-df9e4f65-noanalyze/slot0/home/.gbrain/content/95a61d8c-4b7b-49ae-8de0-a47d46d458ea/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)"
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1581,
+          "tail": "  \"local_path\": \"<work>/cat40/gbrain/slots-51f865d78f75-df9e4f65-noanalyze/slot0/vault\",\n  \"source_incarnation\": \"dc3a13bb-e0e6-4a62-bec8-b5f27df0ead6\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"3ef72e73-ba56-4b6b-9d77-337ed35b54ea\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\n[models] OpenAI account offers gpt-6.1-sol but src/core/model-pricing.ts has no row for it — staying on the newest PRICED family so budget caps keep working. Add the pricing row to adopt it."
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 1146,
+          "tail": "Default source set to \"vault\"."
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 193051,
+          "tail": "[sync] 3094/4036 processed (3094 written, 0 waived this run) · 1317.1 pages/min · indexing ETA 43s\n[sync] 3303/4036 processed (3303 written, 0 waived this run) · 1312.5 pages/min · indexing ETA 34s\n[sync] 3523/4036 processed (3523 written, 0 waived this run) · 1312.9 pages/min · indexing ETA 24s\n[sync] 3740/4036 processed (3740 written, 0 waived this run) · 1312 pages/min · indexing ETA 14s\n[sync-watchdog] parent alive 180s elapsed, deadline in ~3420s (extends while progressing)\n[sync] 3964/4036 processed (3964 written, 0 waived this run) · 1313.6 pages/min · indexing ETA 4s\n[sync] 3036 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 17549,
+          "tail": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 3036 page(s).\nMentions: 4190 link(s) added, 0 removed from 4036 page(s)."
+        },
+        {
+          "step": "embed-consent",
+          "code": 3,
+          "ms": 1019,
+          "tail": "confirmation_required; approved by the slot build, rerun with --yes"
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 63837,
+          "tail": "[embed.pages] 2977/3750 (79%)\n[embed.pages] 3015/3750 (80%)\n[embed.pages] 3053/3750 (81%)\n[embed.pages] 3091/3750 (82%)\n[embed.pages] 3129/3750 (83%)\n[embed.pages] 3167/3750 (84%)\n[embed.pages] 3205/3750 (85%)\n[embed.pages] 3238/3750 (86%) done"
+        }
+      ],
+      "meter": {
+        "usd": 0.09384076000000037,
+        "requests": 4039,
+        "unpriced": 0,
+        "byModel": {
+          "openai:text-embedding-3-large": {
+            "usd": 0.09384076000000037,
+            "requests": 4038
+          }
+        }
+      },
+      "ms": 295787,
+      "coverage": {
+        "supported": true,
+        "state": "complete",
+        "pending": 0,
+        "last_pass_at": "2026-10-05T00:16:10.646Z"
+      },
+      "allowance": {
+        "reserved_usd": 2,
+        "usd": 0.09384076000000037,
+        "requests": 4038,
+        "charged_reservations": 0
+      }
+    },
+    {
+      "slot": "slot1",
+      "dir": "<work>/cat40/gbrain/slots-51f865d78f75-df9e4f65-noanalyze/slot1",
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3922,
+          "tail": "If `claude` is not found: install Claude Code first, or use the per-harness blocks in that doc.\nMore: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to supabase` · health `gbrain doctor`\n  Setting up brain schema (v201)...\n  196 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: <work>/cat40/gbrain/slots-51f865d78f75-df9e4f65-noanalyze/slot1/home/.gbrain/content/904f278d-cd00-4bbe-9211-6d1422b73e8b/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)"
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1840,
+          "tail": "  \"local_path\": \"<work>/cat40/gbrain/slots-51f865d78f75-df9e4f65-noanalyze/slot1/vault\",\n  \"source_incarnation\": \"ba466450-b49b-41dc-b83e-080a752f0dc4\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"96b33594-d298-4b34-bdfa-a151491bc792\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\n[models] OpenAI account offers gpt-6.1-sol but src/core/model-pricing.ts has no row for it — staying on the newest PRICED family so budget caps keep working. Add the pricing row to adopt it."
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 986,
+          "tail": "Default source set to \"vault\"."
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 194250,
+          "tail": "[sync] 3103/4036 processed (3103 written, 0 waived this run) · 1323 pages/min · indexing ETA 43s\n[sync] 3330/4036 processed (3330 written, 0 waived this run) · 1325.5 pages/min · indexing ETA 32s\n[sync] 3558/4036 processed (3558 written, 0 waived this run) · 1328.1 pages/min · indexing ETA 22s\n[sync] 3763/4036 processed (3763 written, 0 waived this run) · 1322.3 pages/min · indexing ETA 13s\n[sync-watchdog] parent alive 180s elapsed, deadline in ~3420s (extends while progressing)\n[sync] 3937/4036 processed (3937 written, 0 waived this run) · 1306.8 pages/min · indexing ETA 5s\n[sync] 3036 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 18714,
+          "tail": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 3036 page(s).\nMentions: 4190 link(s) added, 0 removed from 4036 page(s)."
+        },
+        {
+          "step": "embed-consent",
+          "code": 3,
+          "ms": 1156,
+          "tail": "confirmation_required; approved by the slot build, rerun with --yes"
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 64748,
+          "tail": "[embed.pages] 2969/3746 (79%)\n[embed.pages] 3007/3746 (80%)\n[embed.pages] 3045/3746 (81%)\n[embed.pages] 3083/3746 (82%)\n[embed.pages] 3121/3746 (83%)\n[embed.pages] 3159/3746 (84%)\n[embed.pages] 3197/3746 (85%)\n[embed.pages] 3234/3746 (86%) done"
+        }
+      ],
+      "meter": {
+        "usd": 0.09384193000000039,
+        "requests": 4039,
+        "unpriced": 0,
+        "byModel": {
+          "openai:text-embedding-3-large": {
+            "usd": 0.09384193000000039,
+            "requests": 4038
+          }
+        }
+      },
+      "ms": 299232,
+      "coverage": {
+        "supported": true,
+        "state": "complete",
+        "pending": 0,
+        "last_pass_at": "2026-10-05T00:21:08.874Z"
+      },
+      "allowance": {
+        "reserved_usd": 2,
+        "usd": 0.09384193000000039,
+        "requests": 4038,
+        "charged_reservations": 0
+      }
+    },
+    {
+      "slot": "slot2",
+      "dir": "<work>/cat40/gbrain/slots-51f865d78f75-df9e4f65-noanalyze/slot2",
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3934,
+          "tail": "If `claude` is not found: install Claude Code first, or use the per-harness blocks in that doc.\nMore: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to supabase` · health `gbrain doctor`\n  Setting up brain schema (v201)...\n  196 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: <work>/cat40/gbrain/slots-51f865d78f75-df9e4f65-noanalyze/slot2/home/.gbrain/content/fdce4d95-71d3-4b3d-94a6-28729edbd31d/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)"
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1994,
+          "tail": "  \"local_path\": \"<work>/cat40/gbrain/slots-51f865d78f75-df9e4f65-noanalyze/slot2/vault\",\n  \"source_incarnation\": \"06df2492-0e7e-4049-a288-706a24fef220\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"e65dd145-8e10-4f4b-be9c-75a515365967\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\n[models] OpenAI account offers gpt-6.1-sol but src/core/model-pricing.ts has no row for it — staying on the newest PRICED family so budget caps keep working. Add the pricing row to adopt it."
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 1011,
+          "tail": "Default source set to \"vault\"."
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 183285,
+          "tail": "[sync] 3030/4036 processed (3030 written, 0 waived this run) · 1390.2 pages/min · indexing ETA 44s\n[sync] 3256/4036 processed (3256 written, 0 waived this run) · 1387.4 pages/min · indexing ETA 34s\n[sync] 3476/4036 processed (3476 written, 0 waived this run) · 1382.8 pages/min · indexing ETA 25s\n[sync] 3705/4036 processed (3705 written, 0 waived this run) · 1382.2 pages/min · indexing ETA 15s\n[sync] 3919/4036 processed (3919 written, 0 waived this run) · 1376.3 pages/min · indexing ETA 6s\n[sync-watchdog] parent alive 180s elapsed, deadline in ~3420s (extends while progressing)\n[sync] 3036 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 14914,
+          "tail": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 3036 page(s).\nMentions: 4190 link(s) added, 0 removed from 4036 page(s)."
+        },
+        {
+          "step": "embed-consent",
+          "code": 3,
+          "ms": 1015,
+          "tail": "confirmation_required; approved by the slot build, rerun with --yes"
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 60655,
+          "tail": "[embed.pages] 3016/3768 (80%)\n[embed.pages] 3054/3768 (81%)\n[embed.pages] 3092/3768 (82%)\n[embed.pages] 3130/3768 (83%)\n[embed.pages] 3168/3768 (84%)\n[embed.pages] 3206/3768 (85%)\n[embed.pages] 3244/3768 (86%)\n[embed.pages] 3257/3768 (86%) done"
+        }
+      ],
+      "meter": {
+        "usd": 0.09384128000000037,
+        "requests": 4040,
+        "unpriced": 0,
+        "byModel": {
+          "openai:text-embedding-3-large": {
+            "usd": 0.09384128000000037,
+            "requests": 4039
+          }
+        }
+      },
+      "ms": 280527,
+      "coverage": {
+        "supported": true,
+        "state": "complete",
+        "pending": 0,
+        "last_pass_at": "2026-10-05T00:25:53.750Z"
+      },
+      "allowance": {
+        "reserved_usd": 2,
+        "usd": 0.09384128000000037,
+        "requests": 4039,
+        "charged_reservations": 0
+      }
+    },
+    {
+      "slot": "slot3",
+      "dir": "<work>/cat40/gbrain/slots-51f865d78f75-df9e4f65-noanalyze/slot3",
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3658,
+          "tail": "If `claude` is not found: install Claude Code first, or use the per-harness blocks in that doc.\nMore: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to supabase` · health `gbrain doctor`\n  Setting up brain schema (v201)...\n  196 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: <work>/cat40/gbrain/slots-51f865d78f75-df9e4f65-noanalyze/slot3/home/.gbrain/content/d2afcd82-4629-4beb-b845-25df1880d93f/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)"
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 2145,
+          "tail": "  \"local_path\": \"<work>/cat40/gbrain/slots-51f865d78f75-df9e4f65-noanalyze/slot3/vault\",\n  \"source_incarnation\": \"7a4a2e8e-db91-4897-96f8-40cf21fcae9d\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"f766fc29-d3ff-4b6f-aa8f-341c4c47cfdf\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\n[models] OpenAI account offers gpt-6.1-sol but src/core/model-pricing.ts has no row for it — staying on the newest PRICED family so budget caps keep working. Add the pricing row to adopt it."
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 963,
+          "tail": "Default source set to \"vault\"."
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 189184,
+          "tail": "[sync] 3144/4036 processed (3144 written, 0 waived this run) · 1339.4 pages/min · indexing ETA 40s\n[sync] 3352/4036 processed (3352 written, 0 waived this run) · 1333.2 pages/min · indexing ETA 31s\n[sync] 3586/4036 processed (3586 written, 0 waived this run) · 1337.6 pages/min · indexing ETA 21s\n[sync] 3793/4036 processed (3793 written, 0 waived this run) · 1331.8 pages/min · indexing ETA 11s\n[sync-watchdog] parent alive 180s elapsed, deadline in ~3420s (extends while progressing)\n[sync] 4025/4036 processed (4025 written, 0 waived this run) · 1335 pages/min · indexing ETA 1s\n[sync] 3036 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 15532,
+          "tail": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 3036 page(s).\nMentions: 4190 link(s) added, 0 removed from 4036 page(s)."
+        },
+        {
+          "step": "embed-consent",
+          "code": 3,
+          "ms": 982,
+          "tail": "confirmation_required; approved by the slot build, rerun with --yes"
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 61337,
+          "tail": "[embed.pages] 3029/3780 (80%)\n[embed.pages] 3067/3780 (81%)\n[embed.pages] 3105/3780 (82%)\n[embed.pages] 3143/3780 (83%)\n[embed.pages] 3181/3780 (84%)\n[embed.pages] 3219/3780 (85%)\n[embed.pages] 3257/3780 (86%)\n[embed.pages] 3280/3780 (86%) done"
+        }
+      ],
+      "meter": {
+        "usd": 0.09384063000000038,
+        "requests": 4040,
+        "unpriced": 0,
+        "byModel": {
+          "openai:text-embedding-3-large": {
+            "usd": 0.09384063000000038,
+            "requests": 4039
+          }
+        }
+      },
+      "ms": 287201,
+      "coverage": {
+        "supported": true,
+        "state": "complete",
+        "pending": 0,
+        "last_pass_at": "2026-10-05T00:30:40.589Z"
+      },
+      "allowance": {
+        "reserved_usd": 2,
+        "usd": 0.09384063000000038,
+        "requests": 4039,
+        "charged_reservations": 0
+      }
+    },
+    {
+      "slot": "slot4",
+      "dir": "<work>/cat40/gbrain/slots-51f865d78f75-df9e4f65-noanalyze/slot4",
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3820,
+          "tail": "If `claude` is not found: install Claude Code first, or use the per-harness blocks in that doc.\nMore: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to supabase` · health `gbrain doctor`\n  Setting up brain schema (v201)...\n  196 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: <work>/cat40/gbrain/slots-51f865d78f75-df9e4f65-noanalyze/slot4/home/.gbrain/content/db41fd64-7651-4d97-8c8e-189c254d4e38/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)"
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1459,
+          "tail": "  \"local_path\": \"<work>/cat40/gbrain/slots-51f865d78f75-df9e4f65-noanalyze/slot4/vault\",\n  \"source_incarnation\": \"fd1a7e03-6495-473c-995f-cdf02fd97511\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"a8525754-c3f7-450a-bd84-2d3a3d036693\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\n[models] OpenAI account offers gpt-6.1-sol but src/core/model-pricing.ts has no row for it — staying on the newest PRICED family so budget caps keep working. Add the pricing row to adopt it."
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 990,
+          "tail": "Default source set to \"vault\"."
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 183328,
+          "tail": "[sync] 3031/4036 processed (3031 written, 0 waived this run) · 1390.9 pages/min · indexing ETA 44s\n[sync] 3244/4036 processed (3244 written, 0 waived this run) · 1382.8 pages/min · indexing ETA 35s\n[sync] 3471/4036 processed (3471 written, 0 waived this run) · 1381.2 pages/min · indexing ETA 25s\n[sync] 3700/4036 processed (3700 written, 0 waived this run) · 1380.6 pages/min · indexing ETA 15s\n[sync] 3924/4036 processed (3924 written, 0 waived this run) · 1378.2 pages/min · indexing ETA 5s\n[sync-watchdog] parent alive 180s elapsed, deadline in ~3420s (extends while progressing)\n[sync] 3036 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 15375,
+          "tail": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 3036 page(s).\nMentions: 4190 link(s) added, 0 removed from 4036 page(s)."
+        },
+        {
+          "step": "embed-consent",
+          "code": 3,
+          "ms": 984,
+          "tail": "confirmation_required; approved by the slot build, rerun with --yes"
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 62061,
+          "tail": "[embed.pages] 3020/3774 (80%)\n[embed.pages] 3058/3774 (81%)\n[embed.pages] 3096/3774 (82%)\n[embed.pages] 3134/3774 (83%)\n[embed.pages] 3172/3774 (84%)\n[embed.pages] 3210/3774 (85%)\n[embed.pages] 3248/3774 (86%)\n[embed.pages] 3272/3774 (86%) done"
+        }
+      ],
+      "meter": {
+        "usd": 0.09384076000000037,
+        "requests": 4039,
+        "unpriced": 0,
+        "byModel": {
+          "openai:text-embedding-3-large": {
+            "usd": 0.09384076000000037,
+            "requests": 4038
+          }
+        }
+      },
+      "ms": 281492,
+      "coverage": {
+        "supported": true,
+        "state": "complete",
+        "pending": 0,
+        "last_pass_at": "2026-10-05T00:35:21.199Z"
+      },
+      "allowance": {
+        "reserved_usd": 2,
+        "usd": 0.09384076000000037,
+        "requests": 4038,
+        "charged_reservations": 0
+      }
+    }
+  ],
+  "models": [],
+  "arms": [
+    "gbrain"
+  ],
+  "families": [
+    "A",
+    "B",
+    "C",
+    "E",
+    "F"
+  ],
+  "repeats": 1,
+  "max_tool_chars": null,
+  "argv": [
+    "--build-slots",
+    "--world",
+    "eval/reports/cat40/holdout/world.json",
+    "--no-pglite-analyze",
+    "--gbrain-repo",
+    "../gbrain",
+    "--gbrain-ref",
+    "51f865d78",
+    "--slots",
+    "5",
+    "--slot-build-allowance-usd",
+    "2",
+    "--budget-usd",
+    "6",
+    "--budget-ledger",
+    ".budget/cat40-followups.sqlite",
+    "--out",
+    "eval/reports/cat40/entity-slots-holdout"
+  ],
+  "budget_run_id": "cat40-slot-build-2026-10-05T00-12-30-528Z-aa6d62e5",
+  "resumed": false,
+  "proxy_unattributed": {
+    "slot:slot0": {
+      "usd": 0.00000117,
+      "requests": 1,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    },
+    "slot:slot1": {
+      "usd": 0.00000117,
+      "requests": 1,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    },
+    "slot:slot2": {
+      "usd": 0.00000117,
+      "requests": 1,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    },
+    "slot:slot3": {
+      "usd": 0.00000117,
+      "requests": 1,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    },
+    "slot:slot4": {
+      "usd": 0.00000117,
+      "requests": 1,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    }
+  },
+  "failed_cells_proxy_usd": 0,
+  "cost": {
+    "usd": 0.469211,
+    "input_tokens": 3609317,
+    "output_tokens": 0,
+    "basis": "budget ledger cat40-slot-build-2026-10-05T00-12-30-528Z-aa6d62e5: 10 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "<evals>/.budget/cat40-followups.sqlite",
+    "program_cap_usd": 1237,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 1,
+      "max": 3914.1
+    }
+  },
+  "finished_at": "2026-10-05T00:38:36.863Z"
+}
