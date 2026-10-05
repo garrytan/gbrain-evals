@@ -1150,6 +1150,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'judge.ts': { role: 'shared rubric judge' },
   'lifecycle-report.ts': { role: 'Markdown summary of lifecycle receipts', part_of: 'memory-lifecycle' },
   'llm-budget.ts': { role: 'shared LLM concurrency bucket' },
+  'metering-proxy.ts': { role: 'fail-closed provider metering proxy: in-process for Cat 40 and other gbrain-arm callers, lease mode for open-source memory shootout cells (docs/plans/2026-10-05-oss-memory-shootout/PLAN.md)' },
   'longmemeval-aggregate.ts': { role: 'LongMemEval receipt aggregator', part_of: 'longmemeval-retrieval' },
   'longmemeval-batch.sh': { role: 'LongMemEval multi-worker batch wrapper', part_of: 'longmemeval-retrieval' },
   'longmemeval-cache.ts': { role: 'LongMemEval embedding cache', part_of: 'longmemeval-retrieval' },
@@ -1195,6 +1196,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'situation-recall-programmatic.ts': { role: 'programmatic driver for Cats 5, 8 and 9', part_of: 'situation-recall' },
   'situation-recall-provenance.ts': { role: 'situation-recall provenance hashing', part_of: 'situation-recall' },
   'situation-recall-regression.ts': { role: 'situation-recall regression comparator', part_of: 'situation-recall' },
+  'shootout-cell.ts': { role: 'open-source memory shootout cells (PLAN.md 2026-10-05): campaign manifest, durable host-ledger leases, Ubicloud launch, settlement; not the embedder-shootout entry shootout-cell' },
   'smoke.ts': { role: 'embedder-shootout pre-flight smoke', part_of: 'shootout-cell' },
   'synthetic-corpus-loader.ts': { role: 'synthetic-v1 corpus loader' },
   'tool-bridge.ts': { role: 'agent tool bridge' },
@@ -1204,4 +1206,4 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
 };
 
 /** Subdirectories of eval/runner/ holding helper modules only. */
-export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'cat40', 'cat41', 'decisions', 'evaluator', 'evidence-delivery', 'lifecycle', 'memory-qa', 'p4-stream', 'queries', 'stats', 'system-one'];
+export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'cat40', 'cat41', 'decisions', 'evaluator', 'evidence-delivery', 'lifecycle', 'memory-qa', 'p4-stream', 'queries', 'stats', 'system-one', 'systems'];

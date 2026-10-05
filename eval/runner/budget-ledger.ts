@@ -854,6 +854,31 @@ export class BudgetRun {
     return new BudgetRun(runId, options.budgetUsd, paths.ledger);
   }
 
+  /**
+   * Open or resume a lease run with a fixed id (a shootout cell's metering
+   * proxy). The ledger holds only this lease: a missing ledger is created
+   * with the lease as its program cap, and a lease run that already exists is
+   * resumed with its committed spend, so restarting the proxy never grants the
+   * lease again. A finished lease, a different amount, or another run in the
+   * same ledger is refused.
+   */
+  static openLease(options: { runId: string; leaseUsd: number; ledgerPath: string; runner?: string; log?: (line: string) => void }): BudgetRun {
+    if (!Number.isFinite(options.leaseUsd) || options.leaseUsd <= 0) throw new BudgetExceededError('--lease-usd must be a positive number of dollars');
+    if (!/^[A-Za-z0-9._:-]{1,128}$/.test(options.runId)) throw new BudgetExceededError(`lease run id ${JSON.stringify(options.runId)} must be 1-128 characters of [A-Za-z0-9._:-]`);
+    const paths = ledgerPaths(options.ledgerPath);
+    ensureLedger(paths, { migrateCapUsd: options.leaseUsd, create: { capUsd: options.leaseUsd, reason: `lease ${options.runId}` }, log: options.log });
+    write(paths.ledger, `lease ${options.runId}`, db => {
+      checkCap(db, paths.ledger, { programCapUsd: options.leaseUsd, programCapSource: '--program-cap-usd' });
+      const others = db.query('SELECT run_id FROM runs WHERE run_id != ?').all(options.runId) as Array<{ run_id: string }>;
+      if (others.length) throw new BudgetExceededError(`the lease ledger ${paths.ledger} already holds run ${others[0].run_id}; a lease ledger holds exactly one lease`);
+      const run = db.query('SELECT budget_usd, finished_at FROM runs WHERE run_id = ?').get(options.runId) as { budget_usd: number; finished_at: string | null } | null;
+      if (run?.finished_at) throw new BudgetExceededError(`lease ${options.runId} was closed at ${run.finished_at}; a closed lease is never reopened`);
+      if (run && Math.abs(run.budget_usd - options.leaseUsd) > 1e-9) throw new BudgetExceededError(`lease ${options.runId} was opened for $${run.budget_usd.toFixed(2)}, not $${options.leaseUsd.toFixed(2)}`);
+      if (!run) db.query(`INSERT INTO runs (${RUN_COLUMNS}) VALUES (?, ?, ?, ?, ?, NULL)`).run(options.runId, options.runner ?? 'lease', options.leaseUsd, null, now());
+    });
+    return new BudgetRun(options.runId, options.leaseUsd, paths.ledger);
+  }
+
   /** Measure this process's event-loop lag for the run's summary; close() stops it. */
   attachLagMonitor(monitor: LagMonitor): void { this.lag = monitor; }
 
@@ -1026,7 +1051,16 @@ export const CHAT_PRICE_OVERRIDES: Record<string, { input: number; output: numbe
   'anthropic:claude-opus-5': { input: 5, output: 25, cache_read: 0.5, cache_write: 6.25 },
   'anthropic:claude-opus-5-5': { input: 4, output: 20, cache_read: 0.2, cache_write: 5 },
   'anthropic:claude-fable-5-1': { input: 10, output: 50, cache_read: 0.25, cache_write: 12.5 },
+  // Vendor-default and common models for the open-source memory shootout; developers.openai.com model pages, checked 2026-10-05.
+  'openai:gpt-4o': { input: 2.5, output: 10, cache_read: 1.25 },
+  'openai:gpt-4o-mini': { input: 0.15, output: 0.6, cache_read: 0.075 },
+  'openai:gpt-4.1': { input: 2, output: 8, cache_read: 0.5 },
   'openai:gpt-4.1-mini': { input: 0.4, output: 1.6, cache_read: 0.1 },
+  'openai:gpt-4.1-nano': { input: 0.1, output: 0.4, cache_read: 0.025 },
+  'openai:gpt-5': { input: 1.25, output: 10, cache_read: 0.125 },
+  'openai:gpt-5-mini': { input: 0.25, output: 2, cache_read: 0.025 },
+  'openai:gpt-5-nano': { input: 0.05, output: 0.4, cache_read: 0.005 },
+  'openai:o4-mini': { input: 1.1, output: 4.4, cache_read: 0.275 },
   'openai:gpt-5.2': { input: 1.75, output: 14, cache_read: 0.175 },
   'openai:gpt-5.4': { input: 2.5, output: 15, cache_read: 0.25 },
   'openai:gpt-5.4-mini': { input: 0.75, output: 4.5, cache_read: 0.075 },
