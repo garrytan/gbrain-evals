@@ -64,16 +64,18 @@ export function modelRuleViolations(config: { fixed_reader: ModelRef; frontier_s
 /** One measured configuration of a system on a suite. */
 export interface Arm { id: string; system: 'gbrain' | 'comparator'; lane: 'raw' | 'facts' | 'combined'; note: string }
 
-const LANES = (note: string): Arm[] => (['gbrain', 'comparator'] as const).flatMap(system =>
-  (['raw', 'facts', 'combined'] as const).map(lane => ({ id: `${system}-${lane}`, system, lane, note })));
-
 export const SUITE_ARMS: Record<SuiteId, Arm[]> = {
-  'passing-details': LANES('raw keeps conversations only; facts keeps extracted facts only; combined keeps both. gbrain facts lanes run its opt-in extraction and count that spend.'),
+  'passing-details': [
+    { id: 'gbrain-raw', system: 'gbrain', lane: 'raw', note: 'conversation pages only, zero-LLM write path' },
+    { id: 'gbrain-combined', system: 'gbrain', lane: 'combined', note: 'pages plus facts from extract-conversation-facts (LLM spend counted); query returns matching saved facts beside the page blocks' },
+    { id: 'comparator-facts', system: 'comparator', lane: 'facts', note: 'extracted facts only' },
+    { id: 'comparator-combined', system: 'comparator', lane: 'combined', note: 'facts plus the raw chunks they came from' },
+  ],
   corrections: [
-    { id: 'gbrain-edit-sync', system: 'gbrain', lane: 'combined', note: 'see arms.json' },
-    { id: 'gbrain-forget-remember', system: 'gbrain', lane: 'combined', note: 'see arms.json' },
-    { id: 'gbrain-remember-replaces', system: 'gbrain', lane: 'combined', note: 'optional named arm; see arms.json' },
-    { id: 'gbrain-append', system: 'gbrain', lane: 'combined', note: 'identical bytes to comparator-append' },
+    { id: 'gbrain-edit-sync', system: 'gbrain', lane: 'raw', note: 'see arms.json; zero-LLM write path, remembered facts surface through query' },
+    { id: 'gbrain-forget-remember', system: 'gbrain', lane: 'raw', note: 'see arms.json' },
+    { id: 'gbrain-remember-replaces', system: 'gbrain', lane: 'raw', note: 'optional named arm; see arms.json' },
+    { id: 'gbrain-append', system: 'gbrain', lane: 'raw', note: 'identical bytes to comparator-append' },
     { id: 'comparator-edit-invalidate', system: 'comparator', lane: 'combined', note: 'see arms.json' },
     { id: 'comparator-reretain', system: 'comparator', lane: 'combined', note: 'see arms.json' },
     { id: 'comparator-append', system: 'comparator', lane: 'combined', note: 'identical bytes to gbrain-append' },

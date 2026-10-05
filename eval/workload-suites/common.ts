@@ -108,6 +108,8 @@ export function scoreGold(gold: Gold, answer: string, distractorValues: readonly
       const missing = gold.values.filter(v => !named.includes(v));
       const extra = named.filter(v => !want.has(v));
       if (!missing.length && !extra.length) return { outcome: 'correct', matched: named };
+      // Every gold name plus others: readers often name the people who disagree, which only the judge can read.
+      if (!missing.length) return { outcome: 'ambiguous', matched: named };
       if (!named.length) return { outcome: isAbstention(answer) ? 'abstain' : 'wrong', matched: [] };
       return { outcome: extra.length && extra.some(v => distractorValues.includes(v)) ? 'distractor' : 'wrong', matched: named };
     }

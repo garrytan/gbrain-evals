@@ -267,6 +267,7 @@ export function scoreBelief(label: ScorerLabel, answer: string): ScoreResult {
     const hasTo = containsValue(answer, g.to);
     const wrong = label.distractors.map(d => d.value).filter(v => containsValue(answer, v));
     if (hasFrom && hasTo && !wrong.length) return { outcome: 'correct', matched: [g.from, g.to] };
+    if (hasFrom && hasTo) return { outcome: 'ambiguous', matched: [g.from, g.to, ...wrong] };
     if (wrong.length) return { outcome: 'distractor', matched: wrong };
     return { outcome: isAbstention(answer) ? 'abstain' : 'wrong', matched: [g.from, g.to].filter(v => containsValue(answer, v)) };
   }
