@@ -17,7 +17,9 @@
  * token, the unit the legacy packer already uses), recorded in every row.
  * Selection is in rank order; the first item (or session) that does not fit
  * ends the pack, never split. Two context modes:
- *   native      the item text the system returned, in rank order, with any
+ *   native      the item text the system returned, in rank order (or, for a
+ *               system whose capability record says `presentation:
+ *               event-time`, the selected items in event-time order), with any
  *               validity window printed and superseded facts marked;
  *   rehydrated  the raw sessions behind the items' source ids, first
  *               appearance order for selection, date order for presentation
@@ -105,12 +107,15 @@ export function packRehydrated(items: readonly Item[], sessionOf: (sourceId: str
 }
 
 /** The reader prompt for one question in one context mode; the date falls back to the conversation's last session date. */
-export function packContext(mode: ContextMode, q: MemoryQuestion, items: readonly Item[], opts: { budgetTokens: number | null; maxUnits?: number | null; sessionOf: (sourceId: string) => Session | undefined; fallbackDate?: string }): PackedContext {
+export function packContext(mode: ContextMode, q: MemoryQuestion, items: readonly Item[], opts: { budgetTokens: number | null; maxUnits?: number | null; sessionOf: (sourceId: string) => Session | undefined; fallbackDate?: string; present?: 'rank' | 'event-time' }): PackedContext {
   const date = q.question_date ?? opts.fallbackDate ?? 'unknown';
   const base = { mode, tokenizer: TOKENIZER.id, renderer: RENDERER_VERSION, budget_tokens: opts.budgetTokens };
   if (mode === 'native') {
     const p = packNative(items, opts.budgetTokens, opts.maxUnits ?? null);
-    const prompt = NATIVE_READER_TEMPLATE.replace('{items}', p.lines.join('\n') || '(none)').replace('{date}', date).replace('{question}', q.question);
+    const lines = opts.present === 'event-time'
+      ? p.items.map((item, k) => ({ item, line: p.lines[k], k })).sort((x, y) => (x.item.valid_from ?? '') === (y.item.valid_from ?? '') ? y.k - x.k : (x.item.valid_from ?? '') < (y.item.valid_from ?? '') ? -1 : 1).map(x => x.line)
+      : p.lines;
+    const prompt = NATIVE_READER_TEMPLATE.replace('{items}', lines.join('\n') || '(none)').replace('{date}', date).replace('{question}', q.question);
     return { ...base, tokens: p.tokens, item_ids: p.items.map(i => i.id), source_ids: [...new Set(p.items.flatMap(i => i.source_ids))], prompt };
   }
   const p = packRehydrated(items, opts.sessionOf, opts.budgetTokens, opts.maxUnits ?? null);

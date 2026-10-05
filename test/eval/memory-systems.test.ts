@@ -17,6 +17,7 @@ import { assertScorerRejectsFakeSystems } from '../../eval/runner/mutation-kit.t
 import { pairObservations } from '../../eval/runner/stats/paired.ts';
 import { toObservation } from '../../eval/runner/stats/rows.ts';
 import { FakeMemorySystem, serveProtocol } from '../../eval/runner/systems/fake.ts';
+import { FullContextSystem } from '../../eval/runner/systems/baselines.ts';
 import { HttpMemorySystem } from '../../eval/runner/systems/http.ts';
 import { packContext, packNative, renderItem, strictSources, TOKENIZER, validateSources } from '../../eval/runner/systems/render.ts';
 import { findLeaks, forbiddenMarkers, NS_RE, Sanitizer, SRC_RE } from '../../eval/runner/systems/sanitize.ts';
@@ -95,6 +96,22 @@ describe('renderer and packer', () => {
     expect(p.source_ids).toEqual([src(conv.sessions[1]), src(conv.sessions[0]), src(conv.sessions[2])]);
     expect(p.prompt).toBe(readerPrompt(q, [conv.sessions[1], conv.sessions[0], conv.sessions[2]], '2026-04-01'));
     expect(p.tokenizer).toBe('approx-chars-div-4');
+  });
+
+  test('full-context under a budget drops the earliest sessions and shows the kept ones in chronological order', async () => {
+    const full = new FullContextSystem();
+    for (const [i, day] of ['01', '02', '03', '04'].entries()) await full.ingestSession('ns-x', { source_id: `src-${i}`, turns: [{ role: 'user', speaker: 'user', content: `day ${day} ${'x'.repeat(380)}` }] }, `2024-01-${day}T00:00:00`);
+    const { items } = await full.retrieve('ns-x', { text: 'q', query_time: null }, { name: 'p', mode: 'fixed-evidence', settings: {} });
+    const q = { id: 'q', conversation: 'c', question: 'What happened?', category: 'x', gold: [], abstention: false } as MemoryQuestion;
+    const one = TOKENIZER.count(renderItem(items[0]) + '\n');
+    const native = packContext('native', q, items, { budgetTokens: one * 2 + 1, sessionOf: () => undefined, present: 'event-time' });
+    expect(native.item_ids).toEqual(['src-3', 'src-2']);
+    expect(native.prompt.indexOf('day 03')).toBeLessThan(native.prompt.indexOf('day 04'));
+    expect(native.prompt).not.toContain('day 01');
+    const sessions = new Map(['01', '02', '03', '04'].map((d, i) => [`src-${i}`, { id: `s${i}`, date: `2024-01-${d}`, turns: [{ speaker: 'user', content: `day ${d} ${'x'.repeat(380)}` }] }]));
+    const rehydrated = packContext('rehydrated', q, items, { budgetTokens: 260, sessionOf: id => sessions.get(id) });
+    expect(rehydrated.source_ids).toEqual(['src-3', 'src-2']);
+    expect(rehydrated.prompt.indexOf('day 03')).toBeLessThan(rehydrated.prompt.indexOf('day 04'));
   });
 
   test('foreign source ids and out-of-order ranks are product errors', () => {
@@ -272,6 +289,27 @@ describe('memory-qa with a MemorySystem', () => {
     } finally { server.stop(); }
     const honest = await runArm(args(join(tmp, 'honest-index'), '--system', 'fake'));
     expect(honest.rows.every(r => r.ingest?.readiness_probe === 'found' && r.outcome === 'scored')).toBe(true);
+    const flaky = new FakeMemorySystem();
+    const base = flaky.retrieve.bind(flaky);
+    const errors = new Map<string, number>();
+    flaky.retrieve = async (ns, q, p) => {
+      const n = (errors.get(ns) ?? 0) + 1; errors.set(ns, n);
+      if (p.mode === 'fixed-evidence' && n === 1) throw new SystemError('timeout', 'vendor hiccup');
+      return base(ns, q, p);
+    };
+    const flakyServer = serveProtocol(flaky);
+    try {
+      const once = await runArm(args(join(tmp, 'probe-retry'), '--system', flakyServer.url));
+      expect(once.rows.every(r => r.ingest?.readiness_probe === 'found' && r.outcome === 'scored')).toBe(true);
+    } finally { flakyServer.stop(); }
+    const broken = new FakeMemorySystem();
+    const brokenBase = broken.retrieve.bind(broken);
+    broken.retrieve = async (ns, q, p) => { if (p.mode === 'fixed-evidence') throw new SystemError('product_error', 'probe always fails'); return brokenBase(ns, q, p); };
+    const brokenServer = serveProtocol(broken);
+    try {
+      const twice = await runArm(args(join(tmp, 'probe-broken'), '--system', brokenServer.url));
+      expect(twice.rows.every(r => r.ingest?.readiness_probe === 'missed' && r.outcome === 'ingest_degraded')).toBe(true);
+    } finally { brokenServer.stop(); }
     const control = await runArm(args(join(tmp, 'probe-control'), '--system', 'no-memory'));
     expect(control.rows.every(r => r.ingest?.readiness_probe === 'not-measurable' && r.outcome === 'scored')).toBe(true);
   });

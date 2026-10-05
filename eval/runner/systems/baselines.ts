@@ -3,10 +3,12 @@
  * `MemorySystem` interface as every product, so the same sanitizer, renderer,
  * packer and outcome accounting apply to them:
  *
- *   full-context  the whole namespace history as one item list in event
- *                 order (one item per session, provenance exact). The packer
- *                 cuts it at the reader budget, keeping the earliest sessions;
- *                 with no budget the reader sees everything, where it fits.
+ *   full-context  the whole namespace history, one item per session
+ *                 (provenance exact), ranked most recent first so the packer
+ *                 drops the earliest sessions first, like a chat window. The
+ *                 reader sees the kept sessions in chronological order
+ *                 (capability `presentation: event-time`); with no budget it
+ *                 sees everything, where it fits.
  *                 Its rows carry no recall: returning everything is not a
  *                 ranking (capability `retrieval_metrics: not-applicable`).
  *   no-memory     stores nothing and returns no items: the reader answers
@@ -37,7 +39,7 @@ const checkMode = (p: RetrievalPolicy) => { if (p?.mode !== 'vendor-default' && 
 export class FullContextSystem implements MemorySystem {
   readonly name = 'full-context';
   private store = new Map<string, Array<{ src: string; text: string; event_time: string | null }>>();
-  async capabilities() { return record('full-context', { readiness: 'synchronous; retrieval returns every ingested session in event order', retrieval_metrics: 'not-applicable' }); }
+  async capabilities() { return record('full-context', { readiness: 'synchronous; retrieval returns every ingested session, most recent first', retrieval_metrics: 'not-applicable', presentation: 'event-time' }); }
   async reset(ns: string) { this.store.delete(ns); }
   async ingestSession(ns: string, s: SessionInput, event_time: string | null): Promise<IngestResult> {
     const list = this.store.get(ns) ?? [];
@@ -47,8 +49,8 @@ export class FullContextSystem implements MemorySystem {
   async finishIngest(): Promise<FinishResult> { return { ready: true, waited_ms: 0, completeness: 'known' }; }
   async retrieve(ns: string, _q: PublicQuestion, policy: RetrievalPolicy): Promise<RetrieveResult> {
     checkMode(policy);
-    const items: Item[] = (this.store.get(ns) ?? []).map((x, i) => ({ id: x.src, rank: i + 1, type: 'episode', text: x.text, source_ids: [x.src], valid_from: x.event_time, valid_to: null, provenance_status: 'exact' }));
-    return { items, applied_settings: { order: 'event time', items: items.length }, truncated: false };
+    const items: Item[] = [...(this.store.get(ns) ?? [])].reverse().map((x, i) => ({ id: x.src, rank: i + 1, type: 'episode', text: x.text, source_ids: [x.src], valid_from: x.event_time, valid_to: null, provenance_status: 'exact' }));
+    return { items, applied_settings: { order: 'most recent first', items: items.length }, truncated: false };
   }
   async deleteSource(ns: string, src: string): Promise<DeleteResult> {
     const list = this.store.get(ns) ?? [];

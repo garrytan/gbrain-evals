@@ -133,12 +133,12 @@ describe('harness side of the contract', () => {
     await expect(sys.retrieve(NS_A, { text: 'x', query_time: null }, { ...POLICY, mode: 'bad' as never })).rejects.toBeInstanceOf(SystemError);
   });
 
-  test('the full-context control returns the whole namespace in event order, and plain hybrid fuses keyword and vector ranks', async () => {
+  test('the full-context control returns the whole namespace most recent first, and plain hybrid fuses keyword and vector ranks', async () => {
     const full = new FullContextSystem();
     await full.reset(NS_A);
     await full.ingestSession(NS_A, session(S1, 'first'), '2023-01-01T00:00:00');
     await full.ingestSession(NS_A, session(S2, 'second'), '2023-02-01T00:00:00');
-    expect((await full.retrieve(NS_A, { text: 'anything', query_time: null }, POLICY)).items.map(i => [i.rank, i.source_ids[0], i.valid_from])).toEqual([[1, S1, '2023-01-01T00:00:00'], [2, S2, '2023-02-01T00:00:00']]);
+    expect((await full.retrieve(NS_A, { text: 'anything', query_time: null }, POLICY)).items.map(i => [i.rank, i.source_ids[0], i.valid_from])).toEqual([[1, S2, '2023-02-01T00:00:00'], [2, S1, '2023-01-01T00:00:00']]);
     const hybrid = new PlainHybridSystem(async texts => texts.map(t => hashEmbed(t, PG_EMBED_DIMS)), 'hash');
     try {
       await hybrid.reset(NS_A);

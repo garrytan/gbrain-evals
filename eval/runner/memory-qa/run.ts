@@ -285,7 +285,8 @@ export type ProbeResult = 'found' | 'missed' | 'not-measurable' | 'skipped';
  * Readiness probe (engineering review P2): after the system reports its
  * background work done, ask for a verbatim passage of the last session it
  * ingested and expect that session among the cited sources. A miss means the
- * quiescence signal lied, so the conversation is ingest-degraded. Systems
+ * quiescence signal lied, so the conversation is ingest-degraded. A vendor
+ * error on the probe is retried once, then counts as a miss. Systems
  * without provenance, and the context controls, cannot be probed this way.
  */
 export async function readinessProbe(system: MemorySystem, ns: string, last: SessionInput | undefined, policy: RetrievalPolicy, capabilities: CapabilityRecord): Promise<ProbeResult> {
@@ -293,10 +294,13 @@ export async function readinessProbe(system: MemorySystem, ns: string, last: Ses
   if (capabilities.retrieval_metrics === 'not-applicable' || capabilities.provenance?.status === 'unavailable') return 'not-measurable';
   const passage = [...last.turns].sort((x, y) => y.content.length - x.content.length)[0]?.content.slice(0, 300);
   if (!passage?.trim()) return 'skipped';
-  try {
-    const res = await system.retrieve(ns, { text: passage, query_time: null }, { ...policy, mode: 'fixed-evidence', settings: { ...(capabilities.retrieval_policies?.['fixed-evidence'] ?? {}) } });
-    return res.items.some(i => i.source_ids.includes(last.source_id)) ? 'found' : 'missed';
-  } catch { return 'missed'; }
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await system.retrieve(ns, { text: passage, query_time: null }, { ...policy, mode: 'fixed-evidence', settings: { ...(capabilities.retrieval_policies?.['fixed-evidence'] ?? {}) } });
+      return res.items.some(i => i.source_ids.includes(last.source_id)) ? 'found' : 'missed';
+    } catch { /* a vendor error is retried once, then counts as a miss */ }
+  }
+  return 'missed';
 }
 
 /** A system's retrieval failure as a row: its kind decides whether it is a product miss, a harness failure or a budget stop. */
@@ -569,7 +573,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
               ...(degraded ? { ingest: degraded } : {}), error: null, outcome: degraded?.degraded ? 'ingest_degraded' : 'scored' };
             if (chat) {
               const sessById = new Map(conv.sessions.map(x => [x.id, x]));
-              const pack = packContext(a.context, q, res.items, { budgetTokens: a.qa.budgetTokens, sessionOf: src => { const id = sanitizer.sessionOf(ns, src); return id ? sessById.get(id) : undefined; }, fallbackDate: lastDate(conv.sessions) });
+              const pack = packContext(a.context, q, res.items, { budgetTokens: a.qa.budgetTokens, sessionOf: src => { const id = sanitizer.sessionOf(ns, src); return id ? sessById.get(id) : undefined; }, fallbackDate: lastDate(conv.sessions), present: capabilities.presentation === 'event-time' ? 'event-time' : 'rank' });
               row = { ...row, qa_context: { mode: pack.mode, tokenizer: pack.tokenizer, renderer: pack.renderer, budget_tokens: pack.budget_tokens, tokens: pack.tokens, item_ids: pack.item_ids, source_ids: pack.source_ids,
                 prompt_sha256: createHash('sha256').update(pack.prompt).digest('hex') }, qa_prompt: pack.prompt };
               const scores: number[] = [];
