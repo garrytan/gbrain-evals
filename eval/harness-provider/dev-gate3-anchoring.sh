@@ -4,8 +4,8 @@
 # that records which questions anchoring changed; the on arm runs in full only when the probe saw it fire.
 # Both arms share one store (search_config is read-time). Env: G3 (gbrain build path@sha), LEDGER.
 set -uo pipefail
-# Gate 3 runs on the build that fixes the persistence stall, repeated slugs and the image arm (#6066 head).
-G3="$HOME/.capy/work/mpw/gbrain@b0e70f498"
+# Gate 3 runs on the #6066 head that fills the page budget and fixes the persistence stall, repeated slugs and the image arm.
+G3="$HOME/.capy/work/mpw/gbrain@a87c3e2af"
 L="--budget-ledger ${LEDGER:-.budget/mpw-dev-local.sqlite}"
 D="bun eval/runner/harness-dev.ts sweep --provider gbrain"
 EMB='"embedding_model":"voyage:voyage-4","embedding_dimensions":1024'
