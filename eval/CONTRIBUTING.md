@@ -60,6 +60,10 @@ BRAINBENCH_N=1 bun eval/runner/multi-adapter.ts --adapter my-adapter --queries r
 
 Document the model, embedding dimensions, graph behavior, network use and any limits. An adapter name must describe the behavior that actually ran. A missing provider key must not silently turn a reranked comparison into ordinary hybrid search.
 
+## Evaluate a gbrain change
+
+To compare a candidate gbrain build against its baseline on dev splits, and later on held-out data, use the decision kit: [docs/decisions.md](../docs/decisions.md) (`bun run eval:decide`).
+
 ## Add a category
 
 A category is a runner, a seeded generator, a scorer and a dated report that answer one question about gbrain. Copy the N3 runner (`runner/n3-temporal-asof.ts`) for the shape, then work through this list in order. The registry test fails on a runner without a row, so start there.
@@ -99,6 +103,10 @@ How this page changed, newest first. Measurement history lives in the dated repo
 ### 2026-10-05: Restructured as a current-state page with this changelog
 
 gbrain-evals v0.10.23. The opening paragraph names the gbrain a category scores (`739e5cc`) and points model-comparison work to the model rules in CLAUDE.md. This changelog section is new.
+
+### 2026-10-05: Evaluate a gbrain change
+
+[`43e6b99`](https://github.com/garrytan/gbrain-evals/commit/43e6b99) (merge of #71). A new "Evaluate a gbrain change" section points to the decision kit (`docs/decisions.md`, `bun run eval:decide`) for dev and held-out verdicts on a candidate gbrain build.
 
 ### 2026-10-01: "Add a category" checklist
 

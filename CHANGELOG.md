@@ -14,6 +14,8 @@ close with a `## Changelog` section recording how that document changed and why,
   does today" states each capability once with its current number and commit; the dated "Update, October 2/3/4"
   blocks are folded into it. Cat 40 now carries the frontier-model headline, and the registration-surface cell is
   linked. Corrections list the numbers not to cite.
+- **Held-out program.** README reports the nine-plan held-out program's starting line on gbrain master and the
+  ideas that ship on, and says the multi-relation planner (gbrain v0.60.60.0, after the pin) passed held-out.
 - **Settings and retrieval lessons.** Dated "October 4, 2026:" amendments become current statements (opaque-id
   recount at `109b992`), a `return_unit` row and a whole-conversation delivery section are added, and the September 6
   values move to the changelog.

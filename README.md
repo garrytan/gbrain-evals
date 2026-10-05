@@ -88,8 +88,10 @@ Asked "who invested in Acme?", gbrain can follow a stored "invested in" link ins
 relationship retrieval on raises investor first-place hits from 9 of 39 to 21 of 39 on templated questions
 ([controlled test](docs/benchmarks/2026-09-09-retrieval-refresh.md#production-relationship-retrieval-one-switch)),
 and on 145 reworded questions it raises recall at five from 0.411 to 0.537, with 19 questions better and none worse
-([multi-hop check](docs/benchmarks/2026-10-01-n9-multi-hop.md), gbrain `3a284ae`). It does not plan questions that
-chain two or three relations; gbrain does not claim that capability.
+([multi-hop check](docs/benchmarks/2026-10-01-n9-multi-hop.md), gbrain `3a284ae`). At the pin it does not plan
+questions that chain two or three relations. gbrain v0.60.60.0 ([#6019](https://github.com/garrytan/gbrain/pull/6019),
+after the pin) adds a multi-relation planner, on by default in `balanced` and `tokenmax`, which passed its held-out
+test with 24 questions better and 0 worse (+27 points strict all-hit@10).
 
 ### Its settings have measured effects
 
@@ -174,6 +176,17 @@ updated facts found, against none), and regresses reranking, evidence trimming a
 gbrain's `feat/system-one-v1` branch, not on master; at the pin its decision slots stay off unless a TypeSafe key is
 set. [System One report](docs/benchmarks/2026-09-30-system-one-jev.md).
 
+### gbrain master is ahead of the pin, and its new defaults are decided on held-out data
+
+Feature changes to gbrain now get a preregistered decision rule, a development verdict and a held-out verdict run by
+a custodian who keeps the sealed questions; only a held-out win turns a feature on by default. The first program
+measured its starting line at gbrain master `6622a119e` (v0.60.48.0): strict retrieval of all gold sessions at five is
+92.8% on LongMemEval-S, 75.6% on LoCoMo, 45.4% on BEAM-100K and 18.2% on BEAM-1M, the last a history far too large
+for one prompt. Of the merged plans, three ideas pass and ship on (dated relationships with as-of reads, the
+certified nightly contradiction check, the multi-relation planner); four lose or miss their gate and ship off or in a
+safer mode. These builds are newer than the pin.
+[Held-out program](docs/benchmarks/2026-10-05-heldout-program.md), [decision kit](docs/decisions.md).
+
 ## Where to read next
 
 | Question | Where to start |
@@ -185,6 +198,7 @@ set. [System One report](docs/benchmarks/2026-09-30-system-one-jev.md).
 | How does gbrain compare with other memory systems? | [Comparisons and their protocols](docs/comparison-systems.md) |
 | Does memory stay correct after edits, forgetting and restarts? | [Lifecycle experiment](docs/benchmarks/2026-09-29-lifecycle.md) |
 | Can I reproduce a result or test my own system? | [Run the suite](eval/README.md), [contribute an adapter or a category](eval/CONTRIBUTING.md) |
+| How do I get a verdict on a gbrain change? | [Decision kit](docs/decisions.md) |
 | What is still unfinished? | [Open work](TODOS.md) |
 
 A good score on one workload is a reason to investigate that capability, not a promise about every workload. A
@@ -285,6 +299,10 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](CHANGELOG.md); this section records what this page said and why it changed.
+
+### 2026-10-05: gbrain master's held-out program
+
+gbrain-evals v0.10.23. A new subsection reports the nine-plan held-out program merged in #71: its starting line at gbrain master `6622a119e` (92.8% LongMemEval-S, 75.6% LoCoMo, 45.4% BEAM-100K, 18.2% BEAM-1M strict retrieval) and the three ideas that pass and ship on. The relationships section now says the pin cannot plan chained relations but gbrain v0.60.60.0 adds a planner that passed held-out (24 better, 0 worse), replacing "gbrain does not claim that capability". The reading table links the decision kit.
 
 ### 2026-10-05: Restructured as a current-state page with this changelog
 

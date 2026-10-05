@@ -17,8 +17,8 @@
  *     content-addressed response cache.
  */
 import { createHash, randomUUID } from 'node:crypto';
-import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { hostname, userInfo } from 'node:os';
 import { recallAllAtK, recallAnyAtK, uniqueInOrder } from './metrics.ts';
 
@@ -153,7 +153,7 @@ export function assertCommitment(path: string, commitment: Commitment): Buffer {
 
 export interface AccessLogEntry {
   at: string;
-  action: 'score' | 'solvability' | 'open';
+  action: 'score' | 'solvability' | 'open' | 'write';
   purpose: string;
   decision_id: string | null;
   labels_sha256: string;
@@ -168,6 +168,37 @@ export function appendAccessLog(logPath: string, entry: Omit<AccessLogEntry, 'at
   mkdirSync(dirname(logPath), { recursive: true });
   appendFileSync(logPath, JSON.stringify(full) + '\n');
   return full;
+}
+
+const REPO_ROOT = realpathSync(resolve(import.meta.dir, '../..'));
+
+/** True when the path (or, for a path not yet created, its nearest existing ancestor) resolves inside this repository. */
+export function insideRepository(path: string): boolean {
+  let probe = resolve(path);
+  const tail: string[] = [];
+  while (!existsSync(probe) && dirname(probe) !== probe) { tail.unshift(probe.slice(dirname(probe).length + 1)); probe = dirname(probe); }
+  const r = relative(REPO_ROOT, join(realpathSync(probe), ...tail));
+  return r === '' || (!r.startsWith('..') && !isAbsolute(r));
+}
+
+/** Refuse a custody path (held-out input or custodian output) that lives inside the repository, where Git could pick it up. */
+export function assertOutsideRepository(path: string, flag: string): void {
+  if (insideRepository(path)) throw new Error(`${flag} ${path} is inside the repository; held-out files and custodian output live in the custodian's directory`);
+}
+
+/**
+ * Open one custody file the temporal-edges way: refuse a path inside the
+ * repository, read the bytes, hash them, append an access-log line beside the
+ * file, and only then hand the bytes back for parsing. Callers record the
+ * SHA-256, never the path or the text.
+ */
+export function openCustodyFile(o: { file: string; flag: string; decisionId?: string; purpose?: string }): { bytes: Buffer; sha256: string } {
+  if (!o.decisionId?.trim() || !o.purpose?.trim()) throw new Error(`custodian mode needs --decision-id and --purpose, recorded in the access log before ${o.flag} is read`);
+  assertOutsideRepository(o.file, o.flag);
+  const bytes = readFileSync(o.file);
+  const sha256 = sha256Hex(bytes);
+  appendAccessLog(join(dirname(resolve(o.file)), 'access-log.jsonl'), { action: 'open', purpose: o.purpose, decision_id: o.decisionId, labels_sha256: sha256, run_sha256: null });
+  return { bytes, sha256 };
 }
 
 function safeUser(): string {

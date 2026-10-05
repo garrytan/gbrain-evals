@@ -1,0 +1,15 @@
+# P3 E5 test pack: the default pack (gbrain-base) with works_at declared single-valued per page.
+# A child pack that redeclares a link type replaces the whole entry, so the inference rule is restated unchanged.
+api_version: gbrain-schema-pack-v1
+name: p3-e5-works-at-single
+version: 1.0.0
+description: gbrain-base with works_at declared cardinality one_per_from (P3 E5 test pack)
+gbrain_min_version: 0.38.0
+extends: gbrain-base
+borrow_from: []
+link_types:
+  - name: works_at
+    inference:
+      regex: \b(works? at|employed by|works? for|joined|hired by|ceo of|cto of|cmo of)\b
+      ner_only: true
+    cardinality: one_per_from

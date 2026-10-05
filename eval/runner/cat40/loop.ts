@@ -25,6 +25,8 @@ export interface Arm {
   /** One paragraph appended to the shared system prompt. */
   systemHint(): string;
   tools(): ToolSpec[];
+  /** Changes when the tool list changes mid-run (an MCP server's tools/list_changed); the loops then resend tools(). */
+  toolsVersion?(): number;
   /** Anthropic-native tool definitions used instead of a ToolSpec of the same name on Anthropic models. */
   nativeAnthropic?(): Array<{ type: string; name: string }>;
   call(name: string, args: Record<string, unknown>): Promise<string>;
@@ -132,7 +134,7 @@ export async function runAgent(cfg: LoopConfig): Promise<AgentRun> {
   const maxChars = cfg.maxToolChars ?? null;
   const fetchImpl = cfg.fetchImpl ?? fetch;
   const run: AgentRun = { model: cfg.model, final: null, stop: 'turn_cap', turns: 0, tools: [], usage: { input: 0, output: 0, cache_read: 0, cache_write: 0, requests: 0 }, usd: 0, ms: 0, model_ms: 0, tool_ms: 0 };
-  const specs = [...cfg.arm.tools(), SUBMIT_TOOL];
+  const specs = (): ToolSpec[] => [...cfg.arm.tools(), SUBMIT_TOOL];
 
   const execute = async (name: string, args: Record<string, unknown>): Promise<{ text: string; submitted: boolean }> => {
     if (name === 'submit_answer') {
@@ -178,14 +180,28 @@ export async function runAgent(cfg: LoopConfig): Promise<AgentRun> {
 
 type Exec = (name: string, args: Record<string, unknown>) => Promise<{ text: string; submitted: boolean }>;
 
-async function anthropicLoop(cfg: LoopConfig, run: AgentRun, specs: ToolSpec[], execute: Exec, maxTurns: number, fetchImpl: typeof fetch) {
+/** Rebuilds the provider tool list when the arm's tools changed since the last turn. */
+function toolList<T>(cfg: LoopConfig, build: () => T): () => T {
+  let version = cfg.arm.toolsVersion?.();
+  let tools = build();
+  return () => {
+    const now = cfg.arm.toolsVersion?.();
+    if (now !== version) { version = now; tools = build(); }
+    return tools;
+  };
+}
+
+async function anthropicLoop(cfg: LoopConfig, run: AgentRun, specs: () => ToolSpec[], execute: Exec, maxTurns: number, fetchImpl: typeof fetch) {
   const native = cfg.arm.nativeAnthropic?.() ?? [];
   const nativeNames = new Set(native.map(n => n.name));
-  const tools: Array<Record<string, unknown>> = [
-    ...native,
-    ...specs.filter(s => !nativeNames.has(s.name)).map(s => ({ name: s.name, description: s.description, input_schema: s.input_schema })),
-  ];
-  tools[tools.length - 1] = { ...tools[tools.length - 1], cache_control: { type: 'ephemeral' } };
+  const currentTools = toolList(cfg, () => {
+    const tools: Array<Record<string, unknown>> = [
+      ...native,
+      ...specs().filter(s => !nativeNames.has(s.name)).map(s => ({ name: s.name, description: s.description, input_schema: s.input_schema })),
+    ];
+    tools[tools.length - 1] = { ...tools[tools.length - 1], cache_control: { type: 'ephemeral' } };
+    return tools;
+  });
   const messages: Array<{ role: 'user' | 'assistant'; content: Array<Record<string, unknown>> }> = [{ role: 'user', content: [{ type: 'text', text: cfg.user }] }];
   const headers: Record<string, string> = { 'x-api-key': process.env.ANTHROPIC_API_KEY ?? '', 'anthropic-version': '2023-06-01' };
   let nudged = false;
@@ -198,7 +214,7 @@ async function anthropicLoop(cfg: LoopConfig, run: AgentRun, specs: ToolSpec[], 
     const s = Date.now();
     const res = await postJson(fetchImpl, 'https://api.anthropic.com/v1/messages', headers, {
       model: cfg.model, max_tokens: cfg.maxOutputTokens ?? 8192,
-      system: [{ type: 'text', text: cfg.system, cache_control: { type: 'ephemeral' } }], tools, messages,
+      system: [{ type: 'text', text: cfg.system, cache_control: { type: 'ephemeral' } }], tools: currentTools(), messages,
     });
     run.model_ms += Date.now() - s;
     const u = (res.usage ?? {}) as Record<string, number>;
@@ -227,8 +243,8 @@ async function anthropicLoop(cfg: LoopConfig, run: AgentRun, specs: ToolSpec[], 
   }
 }
 
-async function openaiLoop(cfg: LoopConfig, run: AgentRun, specs: ToolSpec[], execute: Exec, maxTurns: number, fetchImpl: typeof fetch) {
-  const tools = specs.map(s => ({ type: 'function', name: s.name, description: s.description, parameters: s.input_schema, strict: false }));
+async function openaiLoop(cfg: LoopConfig, run: AgentRun, specs: () => ToolSpec[], execute: Exec, maxTurns: number, fetchImpl: typeof fetch) {
+  const currentTools = toolList(cfg, () => specs().map(s => ({ type: 'function', name: s.name, description: s.description, parameters: s.input_schema, strict: false })));
   const headers = { authorization: `Bearer ${process.env.OPENAI_API_KEY ?? ''}` };
   let input: unknown[] = [{ role: 'user', content: cfg.user }];
   let previous: string | undefined;
@@ -237,7 +253,7 @@ async function openaiLoop(cfg: LoopConfig, run: AgentRun, specs: ToolSpec[], exe
     run.turns++;
     const s = Date.now();
     const res = await postJson(fetchImpl, 'https://api.openai.com/v1/responses', headers, {
-      model: cfg.model, instructions: cfg.system, input, tools, max_output_tokens: cfg.maxOutputTokens ?? 16_000,
+      model: cfg.model, instructions: cfg.system, input, tools: currentTools(), max_output_tokens: cfg.maxOutputTokens ?? 16_000,
       ...(previous ? { previous_response_id: previous } : {}),
     });
     run.model_ms += Date.now() - s;

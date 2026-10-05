@@ -1,0 +1,736 @@
+{
+ "dataset": "BEAM",
+ "source": "https://github.com/mohammadtavakoli78/BEAM",
+ "commit": "b2da22eac88bb0874c64665f13457eb99835774a",
+ "license": "CC BY-SA 4.0",
+ "raw_base": "https://raw.githubusercontent.com/mohammadtavakoli78/BEAM/b2da22eac88bb0874c64665f13457eb99835774a/",
+ "note": "Canonical chat file is chat_trunecated.json when present, else chat.json (BEAM src/answer_probing_questions/answer_generation.py:154-158). Hashes only; no dataset text is committed.",
+ "sizes": {
+  "100k": [
+   {
+    "conversation": "100k-1",
+    "chat_path": "chats/100K/1/chat.json",
+    "chat_sha256": "ea71efd5dcc13f7366d3737b45d532eadb3d1497f3d6f23d1fa1c4004d5ffdf2",
+    "chat_bytes": 564977,
+    "questions_path": "chats/100K/1/probing_questions/probing_questions.json",
+    "questions_sha256": "047398ff1497674b11585e7b4829c3d64d2d5e63f7f3572c826b73ca1faaf898"
+   },
+   {
+    "conversation": "100k-2",
+    "chat_path": "chats/100K/2/chat.json",
+    "chat_sha256": "3a3bd796f4aa24e8f34e718dc2823ae942663349eb89054f03885051e2daf1c4",
+    "chat_bytes": 535114,
+    "questions_path": "chats/100K/2/probing_questions/probing_questions.json",
+    "questions_sha256": "d188e929644c9ef9fcd4520e7b5a3daf2c2e069b1247a324bd13d5aadd1ed96e"
+   },
+   {
+    "conversation": "100k-3",
+    "chat_path": "chats/100K/3/chat.json",
+    "chat_sha256": "432d3ae5493c04a17a5b6b0ef7c012a70e70ac5cfcaef13059fca6bedb903009",
+    "chat_bytes": 552331,
+    "questions_path": "chats/100K/3/probing_questions/probing_questions.json",
+    "questions_sha256": "f53030f3753b0e0a93b330bc62d597cb66375c0c794094d7e69b7646df46e324"
+   },
+   {
+    "conversation": "100k-4",
+    "chat_path": "chats/100K/4/chat.json",
+    "chat_sha256": "e0ef0f74b1f7ac911e8e0518722335c422cbc1112048e9909911b208c51fc027",
+    "chat_bytes": 720144,
+    "questions_path": "chats/100K/4/probing_questions/probing_questions.json",
+    "questions_sha256": "f69eda522cd7325830c8f78b6f02a571c992b6cf43311fa96f28043fd3c18dae"
+   },
+   {
+    "conversation": "100k-5",
+    "chat_path": "chats/100K/5/chat_trunecated.json",
+    "chat_sha256": "7d4bbb737bb9fc8430500903af321ba681708f472e42a34bd6f5da8ac548dd9a",
+    "chat_bytes": 475450,
+    "questions_path": "chats/100K/5/probing_questions/probing_questions.json",
+    "questions_sha256": "bdd0819a911e46951dbf998905b8eba96a0cdb103cd3dda79ae9c6831e5f195d"
+   },
+   {
+    "conversation": "100k-6",
+    "chat_path": "chats/100K/6/chat.json",
+    "chat_sha256": "5365cdc41da212fb7143cf9f191ff7862eed8e9ca175b3728fe593adedc87871",
+    "chat_bytes": 635112,
+    "questions_path": "chats/100K/6/probing_questions/probing_questions.json",
+    "questions_sha256": "7a6f88dfdeb3f1b582209a745e7c980158dbb2829a9ceae6cdb08bb868a00035"
+   },
+   {
+    "conversation": "100k-7",
+    "chat_path": "chats/100K/7/chat_trunecated.json",
+    "chat_sha256": "b3e2d90a1d27970161ec2f179f2a382833bb186a1fdf19b28dfc9cc6aefdf3af",
+    "chat_bytes": 618349,
+    "questions_path": "chats/100K/7/probing_questions/probing_questions.json",
+    "questions_sha256": "2c00219e839d54c7cd3e4fbb396f8a2517fd9f143d3a3b8ea1c4fb9f5c4435c7"
+   },
+   {
+    "conversation": "100k-8",
+    "chat_path": "chats/100K/8/chat.json",
+    "chat_sha256": "3207b8f5aa45cd1b2d1e2f37f224831b4696d0cc2352ef514af08f2092b6c239",
+    "chat_bytes": 570827,
+    "questions_path": "chats/100K/8/probing_questions/probing_questions.json",
+    "questions_sha256": "d279dbd8fd293692d29f0057b3dd2468ccb97c7da6df28ae2adc8481d9970148"
+   },
+   {
+    "conversation": "100k-9",
+    "chat_path": "chats/100K/9/chat.json",
+    "chat_sha256": "446777f3eed114c27d62030ad86cfb8ad6610fda0fc83dfe98403b8d68b74bd4",
+    "chat_bytes": 630826,
+    "questions_path": "chats/100K/9/probing_questions/probing_questions.json",
+    "questions_sha256": "b7ab1c7022c0b7ac6928f4c2efadd08e2a438dc91e1288209df066cdcd5e9573"
+   },
+   {
+    "conversation": "100k-10",
+    "chat_path": "chats/100K/10/chat_trunecated.json",
+    "chat_sha256": "b420ff71ac33686522b8c4f80296a5bfc123d80faf3060ce5e6e91ef730b9aaf",
+    "chat_bytes": 621661,
+    "questions_path": "chats/100K/10/probing_questions/probing_questions.json",
+    "questions_sha256": "e9bf9bb545b350425a770ef65b501434ba9983c7535b4524dd6ae4d5743b5a95"
+   },
+   {
+    "conversation": "100k-11",
+    "chat_path": "chats/100K/11/chat_trunecated.json",
+    "chat_sha256": "f3266874081e5a6048727e3cf4ceda9884b357042293f4d57ade9558ee4b9685",
+    "chat_bytes": 657744,
+    "questions_path": "chats/100K/11/probing_questions/probing_questions.json",
+    "questions_sha256": "3aa98a74a03be59472834422dd14004d3b432a0c800bbef8f316865834449c08"
+   },
+   {
+    "conversation": "100k-12",
+    "chat_path": "chats/100K/12/chat_trunecated.json",
+    "chat_sha256": "0229c8ad4fbdd675304bf7832fa3e48a7512493897eb3b68f41d0cf947dcc6e0",
+    "chat_bytes": 667514,
+    "questions_path": "chats/100K/12/probing_questions/probing_questions.json",
+    "questions_sha256": "c36c9b1d4df0d063d1c7db81b35b5ea4743e38a804382d6e557f37ec46e1d6e3"
+   },
+   {
+    "conversation": "100k-13",
+    "chat_path": "chats/100K/13/chat.json",
+    "chat_sha256": "aea586c143dab53cb5a021b3fab23380d5d9628fea1c4b718f91411019166dc6",
+    "chat_bytes": 568613,
+    "questions_path": "chats/100K/13/probing_questions/probing_questions.json",
+    "questions_sha256": "02dee0ba1d5576aed8ac535328a23fe4f882f6dcff3b96e039162e10d547236b"
+   },
+   {
+    "conversation": "100k-14",
+    "chat_path": "chats/100K/14/chat.json",
+    "chat_sha256": "43fbffd9ca235a980203faf4c5d6f636e97af4f31f6d91d9cbe42035ab4f0b0d",
+    "chat_bytes": 492497,
+    "questions_path": "chats/100K/14/probing_questions/probing_questions.json",
+    "questions_sha256": "f30350303b4ccd52a36deaf57750a2bf6924fa5885da92d8230797a82dcfbe5f"
+   },
+   {
+    "conversation": "100k-15",
+    "chat_path": "chats/100K/15/chat.json",
+    "chat_sha256": "e758dfbdfe6d5a6bd060c6577e6f0282eb445fd7f93150208dcd56e8f8676f43",
+    "chat_bytes": 476327,
+    "questions_path": "chats/100K/15/probing_questions/probing_questions.json",
+    "questions_sha256": "6d6ed59bd8cad87ce279c08f42137c2199502d09f198cfa880ef3ab04debd891"
+   },
+   {
+    "conversation": "100k-16",
+    "chat_path": "chats/100K/16/chat_trunecated.json",
+    "chat_sha256": "a90a86bfe313ce0f6082a69188a500fc2afad2fe86f2fdb1a21c7610ca2a3385",
+    "chat_bytes": 598174,
+    "questions_path": "chats/100K/16/probing_questions/probing_questions.json",
+    "questions_sha256": "abf20d16a37322112af0fe48f5c43be0d824d54ae2bb2c5e3e069c6e84c54033"
+   },
+   {
+    "conversation": "100k-17",
+    "chat_path": "chats/100K/17/chat_trunecated.json",
+    "chat_sha256": "fb2067c1ee096dea1cff5cb0f9eafc88e7c6fea41014aebf9ac96ad4a30592bd",
+    "chat_bytes": 585782,
+    "questions_path": "chats/100K/17/probing_questions/probing_questions.json",
+    "questions_sha256": "7948981c2e40751bfe9ace82e53497d32229245e6012a2e5d4da2e801c929451"
+   },
+   {
+    "conversation": "100k-18",
+    "chat_path": "chats/100K/18/chat_trunecated.json",
+    "chat_sha256": "0b6224918bb4ffa5e51f22b77d40881daeba233d664c7957fe8937a4a2d75ed2",
+    "chat_bytes": 628351,
+    "questions_path": "chats/100K/18/probing_questions/probing_questions.json",
+    "questions_sha256": "d813db9e2b416e6ac7cc22841b131ea5c80e5931e690f81bb37aa16c3b9edc3a"
+   },
+   {
+    "conversation": "100k-19",
+    "chat_path": "chats/100K/19/chat_trunecated.json",
+    "chat_sha256": "dece8764492998bb88c2ec75597bc31c36629483ed1813a6dccdac78ce01bc34",
+    "chat_bytes": 637094,
+    "questions_path": "chats/100K/19/probing_questions/probing_questions.json",
+    "questions_sha256": "b911651b2b18e835aaac58b2bc3cb018bc782e252b9161dca8174961ca498ce2"
+   },
+   {
+    "conversation": "100k-20",
+    "chat_path": "chats/100K/20/chat_trunecated.json",
+    "chat_sha256": "774a329b9c43eba22145aadd43203ab6d9a31c1486c70b10b1e2d40908b46758",
+    "chat_bytes": 638168,
+    "questions_path": "chats/100K/20/probing_questions/probing_questions.json",
+    "questions_sha256": "46b679bffff904fd71ed247f5172e9a4a30ed7eb2fdaacc1d89aac0932e5f043"
+   }
+  ],
+  "500k": [
+   {
+    "conversation": "500k-1",
+    "chat_path": "chats/500K/1/chat.json",
+    "chat_sha256": "58c44756cae614e0bfc2cc27e6dcd236d97c255579ac8030cddc840fe71430cf",
+    "chat_bytes": 2024584,
+    "questions_path": "chats/500K/1/probing_questions/probing_questions.json",
+    "questions_sha256": "0eba433d5145f1a0479095b44cd7213a0168000f05383f04a36dc8d21626562f"
+   },
+   {
+    "conversation": "500k-2",
+    "chat_path": "chats/500K/2/chat.json",
+    "chat_sha256": "e35cba6056e49d307d179ebea1e581c55e4215c3e03a770278a9b7e23933306c",
+    "chat_bytes": 2219206,
+    "questions_path": "chats/500K/2/probing_questions/probing_questions.json",
+    "questions_sha256": "c933641497c3512adf7ad1fd029c31eb4ba24bee36d36fd9ab8fba2ebc35cdaa"
+   },
+   {
+    "conversation": "500k-3",
+    "chat_path": "chats/500K/3/chat.json",
+    "chat_sha256": "1ff21495eb108c34779b6af3a5b3118c57d66e030f9824e80e5a59f1f1fa4905",
+    "chat_bytes": 1944112,
+    "questions_path": "chats/500K/3/probing_questions/probing_questions.json",
+    "questions_sha256": "1dfb9c2c4005fefe626caba7c6be3768bdd5c900c0a6cc3e1aa8fad0b0f423ad"
+   },
+   {
+    "conversation": "500k-4",
+    "chat_path": "chats/500K/4/chat.json",
+    "chat_sha256": "f101e055ef1af2e972cba150ff4ebd7f4b685158163e86abfe5afbb7293413a6",
+    "chat_bytes": 2123005,
+    "questions_path": "chats/500K/4/probing_questions/probing_questions.json",
+    "questions_sha256": "fbeac67b08058a3944879c671bcf5ce95c1d169b756390db726c65658e2d438b"
+   },
+   {
+    "conversation": "500k-5",
+    "chat_path": "chats/500K/5/chat.json",
+    "chat_sha256": "8bf67a95be5226bf925d5faaec87ec81f5802d7f7d62b77e8c7229722b3242b9",
+    "chat_bytes": 2255701,
+    "questions_path": "chats/500K/5/probing_questions/probing_questions.json",
+    "questions_sha256": "d9101159d6ffbc16d0cce7165749dae5eb08dc37d83ad1a0aa53c1e38d794c52"
+   },
+   {
+    "conversation": "500k-6",
+    "chat_path": "chats/500K/6/chat.json",
+    "chat_sha256": "a9e2ad00781f9a954123ad0541d820d7895b7d1d5637abee93eeda61118ef7d8",
+    "chat_bytes": 1504999,
+    "questions_path": "chats/500K/6/probing_questions/probing_questions.json",
+    "questions_sha256": "dcbb66bc4cafaa42569f6c128347a68aca6b0d697c7ae01fccc424532ac527ea"
+   },
+   {
+    "conversation": "500k-7",
+    "chat_path": "chats/500K/7/chat.json",
+    "chat_sha256": "6cac5a0a5dc827093bdb7474527cecb410d42f544126cf18e8c6dcf6f4d31a56",
+    "chat_bytes": 2412177,
+    "questions_path": "chats/500K/7/probing_questions/probing_questions.json",
+    "questions_sha256": "b96f1b61ceb1a66d5f486c9d4546451b324db4a11b0a28065e1fbc86da819bca"
+   },
+   {
+    "conversation": "500k-8",
+    "chat_path": "chats/500K/8/chat.json",
+    "chat_sha256": "0996744e2b95d301fb35a7dcffbe3d7286320df531960e2f9b8843662eb7f937",
+    "chat_bytes": 2425175,
+    "questions_path": "chats/500K/8/probing_questions/probing_questions.json",
+    "questions_sha256": "25d8d5d6ce32fdab9b85744a92900939477b6d00f96d58baf7356bb4e365cf44"
+   },
+   {
+    "conversation": "500k-9",
+    "chat_path": "chats/500K/9/chat.json",
+    "chat_sha256": "ef0aa72a9ec213989d981e7542ce686d8b232f3758b02726d9f86c6d2528b826",
+    "chat_bytes": 1631358,
+    "questions_path": "chats/500K/9/probing_questions/probing_questions.json",
+    "questions_sha256": "8a6f67f347c8ae87ddd89b11e7e1c1b5616344029a960befac559f56d9466b53"
+   },
+   {
+    "conversation": "500k-10",
+    "chat_path": "chats/500K/10/chat.json",
+    "chat_sha256": "1675988b164321496d9f81a1783e3408a2c220ece690df9554ba4c27d3304f4f",
+    "chat_bytes": 2153170,
+    "questions_path": "chats/500K/10/probing_questions/probing_questions.json",
+    "questions_sha256": "0d0c92b1e2b628532bd9159faab73e45885079f6f3b1e3612968f1647fc177fd"
+   },
+   {
+    "conversation": "500k-11",
+    "chat_path": "chats/500K/11/chat.json",
+    "chat_sha256": "e319300776999872b9aed1f3e284c3f0db75b94d71addd6d1db80a2da260b4d8",
+    "chat_bytes": 2202847,
+    "questions_path": "chats/500K/11/probing_questions/probing_questions.json",
+    "questions_sha256": "594e51272adabf68a63aeefc0c0ca55a0b94eb91212ab30fb3a6dda628b27b1d"
+   },
+   {
+    "conversation": "500k-12",
+    "chat_path": "chats/500K/12/chat.json",
+    "chat_sha256": "9bfe7a747659bda066e41b27fef5988e8d47e0ea3a84f662195ca6a069d59708",
+    "chat_bytes": 2273764,
+    "questions_path": "chats/500K/12/probing_questions/probing_questions.json",
+    "questions_sha256": "627d8bec6edd334ca180c3ca6540eb6280a21b55a2ef7c1c3f6409ace8b5860a"
+   },
+   {
+    "conversation": "500k-13",
+    "chat_path": "chats/500K/13/chat.json",
+    "chat_sha256": "5d3e0426ddd04c48dddf900665eceef9ef8f4fd1a0c7f17f6dcee32d550dbb78",
+    "chat_bytes": 2910409,
+    "questions_path": "chats/500K/13/probing_questions/probing_questions.json",
+    "questions_sha256": "4ca0b8c6bc24448ace2878c2d70c0754c4f9ea49f22c2c1fe467a7ffc4e01d73"
+   },
+   {
+    "conversation": "500k-14",
+    "chat_path": "chats/500K/14/chat.json",
+    "chat_sha256": "29d1e21d3732983189151bc96016577cdef8009b1f107c6f2daf2d09d295ed4b",
+    "chat_bytes": 2936444,
+    "questions_path": "chats/500K/14/probing_questions/probing_questions.json",
+    "questions_sha256": "71c407c9f9beefd848824f8dc1d1bed8760f937b952cf88cfaa150ecc1e09dd9"
+   },
+   {
+    "conversation": "500k-15",
+    "chat_path": "chats/500K/15/chat.json",
+    "chat_sha256": "8eef61d80e214aa580ca49e92b5ddbf5a28374efc6dfdd405c29e6d3467e4fe3",
+    "chat_bytes": 2468834,
+    "questions_path": "chats/500K/15/probing_questions/probing_questions.json",
+    "questions_sha256": "d0ebb5d5184083fde112e4aced0ef2c671600030f656a5f519fc66d6605ea9fc"
+   },
+   {
+    "conversation": "500k-16",
+    "chat_path": "chats/500K/16/chat.json",
+    "chat_sha256": "88520d6a28843b45081352f16ed23aa97a6b206c09120a63e31a5ee198a4661e",
+    "chat_bytes": 2338808,
+    "questions_path": "chats/500K/16/probing_questions/probing_questions.json",
+    "questions_sha256": "baab8017c5de7ab627d2b2a693f1c3dfa821b3a20a75e5486f1f4dadbedd3af7"
+   },
+   {
+    "conversation": "500k-17",
+    "chat_path": "chats/500K/17/chat.json",
+    "chat_sha256": "ea93a7c7045f4842eaed3a251658e6aac6ca9a989eb31a3589851f548cef0b1d",
+    "chat_bytes": 2819892,
+    "questions_path": "chats/500K/17/probing_questions/probing_questions.json",
+    "questions_sha256": "58467ded32ad303baedfa08cd568a79f2e4ea3a8cae60a83f5e17d744738bbcf"
+   },
+   {
+    "conversation": "500k-18",
+    "chat_path": "chats/500K/18/chat.json",
+    "chat_sha256": "6c2a1f773e85c5de1f0f01877883ad900eb41bb9268bdce50eef4edf80fe0711",
+    "chat_bytes": 2406462,
+    "questions_path": "chats/500K/18/probing_questions/probing_questions.json",
+    "questions_sha256": "3db4c66843b9a35b3e630a578be52ff73ca0272902778d1d2aad98964e706586"
+   },
+   {
+    "conversation": "500k-19",
+    "chat_path": "chats/500K/19/chat.json",
+    "chat_sha256": "9cc25fbdae36bed99f59f25ad2016603e26b3bf603ac28d756d246eb2f3f690d",
+    "chat_bytes": 3009123,
+    "questions_path": "chats/500K/19/probing_questions/probing_questions.json",
+    "questions_sha256": "c6f5bac36382f9f10c197db1b2357b4be6b5c0b031fcca5c962f7c2d6f600ea2"
+   },
+   {
+    "conversation": "500k-20",
+    "chat_path": "chats/500K/20/chat.json",
+    "chat_sha256": "a4310f2665e21053700f8057f7d36af1815ed9a62e5ae64bdcef7f030dece777",
+    "chat_bytes": 2779916,
+    "questions_path": "chats/500K/20/probing_questions/probing_questions.json",
+    "questions_sha256": "db6eeb8cd0e800d2331fcee16ba69728bb25a9f6aa355bde9f713ee85e415224"
+   },
+   {
+    "conversation": "500k-21",
+    "chat_path": "chats/500K/21/chat.json",
+    "chat_sha256": "36829395dd5d75ab5771250a6b617f063c7620ac70b6b53ceac9ac4a7cb96735",
+    "chat_bytes": 2765408,
+    "questions_path": "chats/500K/21/probing_questions/probing_questions.json",
+    "questions_sha256": "0e011e101c011668b67e04a71ff0deb6800136f4c7bf269f6dfe4f3c4ce47c74"
+   },
+   {
+    "conversation": "500k-22",
+    "chat_path": "chats/500K/22/chat.json",
+    "chat_sha256": "b26ef5ae462f09cb316e7d0c79dd5e3625db0c0fd5c25600b30ef54e4f5776c0",
+    "chat_bytes": 3019259,
+    "questions_path": "chats/500K/22/probing_questions/probing_questions.json",
+    "questions_sha256": "c3488fba1350b18e9fb84e01c9c2127ad6c20dbd72d9f6fdd3f015bab40230f3"
+   },
+   {
+    "conversation": "500k-23",
+    "chat_path": "chats/500K/23/chat.json",
+    "chat_sha256": "738525ab551b9a2aea3a4210922514483620607e47fd1c4821ce70923b19cc54",
+    "chat_bytes": 2408208,
+    "questions_path": "chats/500K/23/probing_questions/probing_questions.json",
+    "questions_sha256": "edf493541f55abde635b490c44ee0e8d72adeb9a22b2e941a0c611cf83006381"
+   },
+   {
+    "conversation": "500k-24",
+    "chat_path": "chats/500K/24/chat.json",
+    "chat_sha256": "4eea409147037d803ffbaed1c6990067782b6faac35f3af97bba7fc2aedc7636",
+    "chat_bytes": 2177200,
+    "questions_path": "chats/500K/24/probing_questions/probing_questions.json",
+    "questions_sha256": "230521597cceaf2578d075ac1106094f7d896db3af88bf8753e8cfe8d6e9ab6d"
+   },
+   {
+    "conversation": "500k-25",
+    "chat_path": "chats/500K/25/chat.json",
+    "chat_sha256": "c743ce7178f85a31fda8df8bb72a057fda1821ccc4952eef3d855512d06fd71f",
+    "chat_bytes": 2626982,
+    "questions_path": "chats/500K/25/probing_questions/probing_questions.json",
+    "questions_sha256": "9eaafd78feef303271f0938e08592755c701c4917e36f6ab122b397208c724a7"
+   },
+   {
+    "conversation": "500k-26",
+    "chat_path": "chats/500K/26/chat.json",
+    "chat_sha256": "bdc52a3c539af30e4973823079b0616c16bc277fc2668b1a0c211c7e8d006f7f",
+    "chat_bytes": 2327696,
+    "questions_path": "chats/500K/26/probing_questions/probing_questions.json",
+    "questions_sha256": "57beceb0651682a2727f7dfb07298fd8ccf9c12acb56e438d20314e9a903af44"
+   },
+   {
+    "conversation": "500k-27",
+    "chat_path": "chats/500K/27/chat.json",
+    "chat_sha256": "30e70862d6b67009a8ad3c7ff9426d95c13492a0e5f0f95a9978bbb1ed404867",
+    "chat_bytes": 2396071,
+    "questions_path": "chats/500K/27/probing_questions/probing_questions.json",
+    "questions_sha256": "dfac18c4abcf3a42e31a57ab1a5166407913197ecd1481b4bfb4e924ed924975"
+   },
+   {
+    "conversation": "500k-28",
+    "chat_path": "chats/500K/28/chat.json",
+    "chat_sha256": "0bce8093cce38ddf877858fc83870e5ef8336b3e77a763e9b1097d3d1e1ff822",
+    "chat_bytes": 2503422,
+    "questions_path": "chats/500K/28/probing_questions/probing_questions.json",
+    "questions_sha256": "217232907484971467cdf122bcc4eceab0f2f9cc2aec56e8a8c7fd7d08b75058"
+   },
+   {
+    "conversation": "500k-29",
+    "chat_path": "chats/500K/29/chat.json",
+    "chat_sha256": "641aeea8e96f0f403cc500e9bb295654fb9d8893b18094e1b15f575bb48521b8",
+    "chat_bytes": 2120343,
+    "questions_path": "chats/500K/29/probing_questions/probing_questions.json",
+    "questions_sha256": "4d56013fe0f9e94b69e9ecb6ec1db5f7ca5648a6cc39ecb900a729797b13c6b3"
+   },
+   {
+    "conversation": "500k-30",
+    "chat_path": "chats/500K/30/chat.json",
+    "chat_sha256": "1a27428bdb93f4b2050cdd2a58dd9c9f27803ee0190cd6c26f0e0c5b19226606",
+    "chat_bytes": 2211691,
+    "questions_path": "chats/500K/30/probing_questions/probing_questions.json",
+    "questions_sha256": "5afea3854508d8ec060c5448f69c0b6c4a1b0acb6f7e3eec8016401a3091a364"
+   },
+   {
+    "conversation": "500k-31",
+    "chat_path": "chats/500K/31/chat.json",
+    "chat_sha256": "a8726583a5ed55b6e47f59ec4db45f1ce2c9203b5af4fdaf81005719586e2e54",
+    "chat_bytes": 2526697,
+    "questions_path": "chats/500K/31/probing_questions/probing_questions.json",
+    "questions_sha256": "aa8c93c69134d9f28159182fc918c1ec8e54bc61588283cdc5e4e4e3f3189315"
+   },
+   {
+    "conversation": "500k-32",
+    "chat_path": "chats/500K/32/chat.json",
+    "chat_sha256": "0d3cc7ccf87e1510a7953215eefd3612c45739788f586a7a36a1ff287ce16489",
+    "chat_bytes": 3669882,
+    "questions_path": "chats/500K/32/probing_questions/probing_questions.json",
+    "questions_sha256": "20d04ec4a80135f4eee0d05241e884e77c504209801e51ca4f456b07fee5c1b5"
+   },
+   {
+    "conversation": "500k-33",
+    "chat_path": "chats/500K/33/chat.json",
+    "chat_sha256": "83ef5ef9cbbd02e3f7bf0898f7a9574a14d0b1ff14f6560bfd0c129ced9b2f68",
+    "chat_bytes": 2238648,
+    "questions_path": "chats/500K/33/probing_questions/probing_questions.json",
+    "questions_sha256": "4e6a00a71ba0df48ff9f132ec9b4544e3fd477b65aa7ca8b14f1b7e3fc45f418"
+   },
+   {
+    "conversation": "500k-34",
+    "chat_path": "chats/500K/34/chat.json",
+    "chat_sha256": "e026e43b5677fe4e743f984aab7c4dff355ea6e3d534656fd5c2a8f6fae4a8bc",
+    "chat_bytes": 2448326,
+    "questions_path": "chats/500K/34/probing_questions/probing_questions.json",
+    "questions_sha256": "2800116f9fbb00b54f99805beabf53e263236f06080076600ac815f7507359ba"
+   },
+   {
+    "conversation": "500k-35",
+    "chat_path": "chats/500K/35/chat.json",
+    "chat_sha256": "d3e1560a181addb46fb8a1bd6a5ab648f324e66a41575bce94d424000ed2c911",
+    "chat_bytes": 2165145,
+    "questions_path": "chats/500K/35/probing_questions/probing_questions.json",
+    "questions_sha256": "e1be0d82a8e694f8092b21b584eb3ac57436bb4719b5f979f673e28f649e33f3"
+   }
+  ],
+  "1m": [
+   {
+    "conversation": "1m-1",
+    "chat_path": "chats/1M/1/chat.json",
+    "chat_sha256": "cbfd265429bb4d39cb390ed2e6525d40631c128fc0406fef8420af9bd5f97eae",
+    "chat_bytes": 4602629,
+    "questions_path": "chats/1M/1/probing_questions/probing_questions.json",
+    "questions_sha256": "f3e212069cb3d78b6e032efa2dbdd85530f39cc23809ef0496c3c020cac10c3c"
+   },
+   {
+    "conversation": "1m-2",
+    "chat_path": "chats/1M/2/chat.json",
+    "chat_sha256": "c4845c44e4546732ce626bfa91cf7ef4c7e09bf3dd64fb62407e5903ad72d19b",
+    "chat_bytes": 4584827,
+    "questions_path": "chats/1M/2/probing_questions/probing_questions.json",
+    "questions_sha256": "0cefc355c4e941c9fcb6911f11ce1b4f3af5174d7cb567523306b10fd74f4517"
+   },
+   {
+    "conversation": "1m-3",
+    "chat_path": "chats/1M/3/chat.json",
+    "chat_sha256": "3e2f10e6d76a514ced7ea7d73be589f20f6a77e0cc973fee5139e3705ae5d572",
+    "chat_bytes": 3929913,
+    "questions_path": "chats/1M/3/probing_questions/probing_questions.json",
+    "questions_sha256": "52b2eedd5c099e92b8125d71b480396ebfca61cb84768622196e2f7c4d930c33"
+   },
+   {
+    "conversation": "1m-4",
+    "chat_path": "chats/1M/4/chat.json",
+    "chat_sha256": "10a69ff4b6f868e9ee401038894fef5bbbee9faf8149f75ba64db37b1370484d",
+    "chat_bytes": 3961659,
+    "questions_path": "chats/1M/4/probing_questions/probing_questions.json",
+    "questions_sha256": "23e4f2bfdb6b2189edecf231d8d8b909c76d1a984c267ac72d1a2b078d57739a"
+   },
+   {
+    "conversation": "1m-5",
+    "chat_path": "chats/1M/5/chat.json",
+    "chat_sha256": "f622e6f1a2823c781889dc40e20647f6bb2e9013b8ad029ab802516a31d71f3b",
+    "chat_bytes": 4477574,
+    "questions_path": "chats/1M/5/probing_questions/probing_questions.json",
+    "questions_sha256": "4543ef75d7b7e183ca22fcdc558011ec03e5f7ec50290cc011fb49949d79e812"
+   },
+   {
+    "conversation": "1m-6",
+    "chat_path": "chats/1M/6/chat_trunecated.json",
+    "chat_sha256": "f725c50bbebbc5455b47f50ca0ce275d5287cc1096796d9a6d3c7b66170daf1a",
+    "chat_bytes": 3649914,
+    "questions_path": "chats/1M/6/probing_questions/probing_questions.json",
+    "questions_sha256": "47a0df103bd156d3b11a08ea9bce9da094134e14cfcfe938ee21d564edd9bbfd"
+   },
+   {
+    "conversation": "1m-7",
+    "chat_path": "chats/1M/7/chat.json",
+    "chat_sha256": "41d92b8f58db9d86fe04669a568a4642cbf76ad44e4200f5baef750b76a89201",
+    "chat_bytes": 3308637,
+    "questions_path": "chats/1M/7/probing_questions/probing_questions.json",
+    "questions_sha256": "e5fa0845934d98404a7083ea992e1c28ec3eac1810cc272e869967b8720d072f"
+   },
+   {
+    "conversation": "1m-8",
+    "chat_path": "chats/1M/8/chat.json",
+    "chat_sha256": "a3fe062533b2858c9a1a6f1fec03226f468d4f4f69d1f7ff0201be91516a625f",
+    "chat_bytes": 3338041,
+    "questions_path": "chats/1M/8/probing_questions/probing_questions.json",
+    "questions_sha256": "7e6f80cb6f7a5b4b69fa81271e505a832d23c1e52bab3f0c10afe30a3f887cc5"
+   },
+   {
+    "conversation": "1m-9",
+    "chat_path": "chats/1M/9/chat.json",
+    "chat_sha256": "cc581297a1faa7589a0b0842c03d6c9dd3803075b9bbe9aef705d4be8c157842",
+    "chat_bytes": 3234422,
+    "questions_path": "chats/1M/9/probing_questions/probing_questions.json",
+    "questions_sha256": "571beab784a213167cc4128b18cefb66c02703c5f46aaabde01d196f55fdae7b"
+   },
+   {
+    "conversation": "1m-10",
+    "chat_path": "chats/1M/10/chat.json",
+    "chat_sha256": "3cea892dd1e52a4f2ce010b96d25ed8e2a8d0e854a5ab508e234ee541e2311de",
+    "chat_bytes": 3657965,
+    "questions_path": "chats/1M/10/probing_questions/probing_questions.json",
+    "questions_sha256": "9ce3df632fd59660d73e5a10a94f2be8554a53d503cb41e1f8795bfe88a0a176"
+   },
+   {
+    "conversation": "1m-11",
+    "chat_path": "chats/1M/11/chat_trunecated.json",
+    "chat_sha256": "c401942ddb38aecf8d8140661f65cbc21b4753fec4d7562db42c967e353a2ffe",
+    "chat_bytes": 5390664,
+    "questions_path": "chats/1M/11/probing_questions/probing_questions.json",
+    "questions_sha256": "40a9d0720baf79882a9b0455fd948c2ef5e0001512eff860aa9d7645dd1b610d"
+   },
+   {
+    "conversation": "1m-12",
+    "chat_path": "chats/1M/12/chat_trunecated.json",
+    "chat_sha256": "b6078314ada8f0848b8138cad69929d05d0a3277db9b7f19bcc33a7f951b0ab4",
+    "chat_bytes": 5474509,
+    "questions_path": "chats/1M/12/probing_questions/probing_questions.json",
+    "questions_sha256": "05a9ed6fec37b7ff9fb619f322d09678ca2e0cf96f11ace634ebbe51582e1281"
+   },
+   {
+    "conversation": "1m-13",
+    "chat_path": "chats/1M/13/chat_trunecated.json",
+    "chat_sha256": "fe8a7d9aab69eb1b5cb51caeba6eba1d90cf2d695656157384b58b2e5d9412ad",
+    "chat_bytes": 5203391,
+    "questions_path": "chats/1M/13/probing_questions/probing_questions.json",
+    "questions_sha256": "ca8cde4a6c38e84cbd8b3c4c852e22ab559c3ff3dd2f6605684b7f0a97ea544a"
+   },
+   {
+    "conversation": "1m-14",
+    "chat_path": "chats/1M/14/chat_trunecated.json",
+    "chat_sha256": "017229b53304db2e3e851d4547e483afb1bd4e80246c2245e9d12d536ec23856",
+    "chat_bytes": 5239727,
+    "questions_path": "chats/1M/14/probing_questions/probing_questions.json",
+    "questions_sha256": "b893d0f13f1f42c277f83d04bb431fe0136c8207f49adcfbf0a2dc18c560c86f"
+   },
+   {
+    "conversation": "1m-15",
+    "chat_path": "chats/1M/15/chat.json",
+    "chat_sha256": "4e2b98451c52aa74cb52221c0f1adba15c04d6fc41e4af4bca1947a597128885",
+    "chat_bytes": 4369889,
+    "questions_path": "chats/1M/15/probing_questions/probing_questions.json",
+    "questions_sha256": "e852b9a64031d0335013679376fedfbc1c922b8561178f47e936f9f74bddf80a"
+   },
+   {
+    "conversation": "1m-16",
+    "chat_path": "chats/1M/16/chat.json",
+    "chat_sha256": "53258c5c84fd669f9aa3bdf2101dae2007a4dbb6ddf7bca828dec70059a520da",
+    "chat_bytes": 4743035,
+    "questions_path": "chats/1M/16/probing_questions/probing_questions.json",
+    "questions_sha256": "0059214945c52a617f28d429ece9e8f17d7bc34bed5c2c2edbb735a21c5ef3cf"
+   },
+   {
+    "conversation": "1m-17",
+    "chat_path": "chats/1M/17/chat.json",
+    "chat_sha256": "9f3cacd3fb5b54ad5ef197a6afe8eeb8514318e9848dad7b6da2ba4cfda8d6c3",
+    "chat_bytes": 4437191,
+    "questions_path": "chats/1M/17/probing_questions/probing_questions.json",
+    "questions_sha256": "ee886f50a416b77a770bc9618e3f55f902ce1c38ab7c7d81aba315efb8861b12"
+   },
+   {
+    "conversation": "1m-18",
+    "chat_path": "chats/1M/18/chat_trunecated.json",
+    "chat_sha256": "df658a6c883fb7427aeada919579c9b6f8cc9dc616c08b5aa940e96ac9a4e501",
+    "chat_bytes": 5258708,
+    "questions_path": "chats/1M/18/probing_questions/probing_questions.json",
+    "questions_sha256": "ad18304a2077693ffb28c534fa1194cd89a7fa9e27acc9eafce6ef3495be44c2"
+   },
+   {
+    "conversation": "1m-19",
+    "chat_path": "chats/1M/19/chat_trunecated.json",
+    "chat_sha256": "8a4404d3f8e405513391a91e1da7313ea1e70179af7bd7ea5bc058d4ac34b457",
+    "chat_bytes": 4988856,
+    "questions_path": "chats/1M/19/probing_questions/probing_questions.json",
+    "questions_sha256": "9e2e2336bead1a063112e3f50faf194c1f0fb73f3b8a6f381c9d69cac8429ce6"
+   },
+   {
+    "conversation": "1m-20",
+    "chat_path": "chats/1M/20/chat_trunecated.json",
+    "chat_sha256": "fe91788e98a1ba712421a99a818f75cd5648730880691ea350f1edc6f94d7e32",
+    "chat_bytes": 5186837,
+    "questions_path": "chats/1M/20/probing_questions/probing_questions.json",
+    "questions_sha256": "7f9d121386bed47be754aede8acdf70578880c9f91a4f2a4718424f65a7dbd67"
+   },
+   {
+    "conversation": "1m-21",
+    "chat_path": "chats/1M/21/chat_trunecated.json",
+    "chat_sha256": "f5859c91568b1b7c838ec892ac13c687703add1137336b5f77b060bcfdf6a54e",
+    "chat_bytes": 5270217,
+    "questions_path": "chats/1M/21/probing_questions/probing_questions.json",
+    "questions_sha256": "231efdb4f1c4aea8ac2a518721dcb9a79ce90e626a9d4469a8e21d6f86ae6e99"
+   },
+   {
+    "conversation": "1m-22",
+    "chat_path": "chats/1M/22/chat.json",
+    "chat_sha256": "0880c55e3e52c68ce4838857e92b303daa591c27ebeef642e87a6097006ee322",
+    "chat_bytes": 4775540,
+    "questions_path": "chats/1M/22/probing_questions/probing_questions.json",
+    "questions_sha256": "9fb276ff2bcac3a59361571c2a9870ca4ac2c5e48296e69f8982d1c90428a7d9"
+   },
+   {
+    "conversation": "1m-23",
+    "chat_path": "chats/1M/23/chat.json",
+    "chat_sha256": "445120153fd81655104f6de253ec6f565cd837df42c5241e6cd4e303f49960f2",
+    "chat_bytes": 4543183,
+    "questions_path": "chats/1M/23/probing_questions/probing_questions.json",
+    "questions_sha256": "ceafa932d51f3fabf4dd405e53ed834c64e6854cb622034787293c9392a58678"
+   },
+   {
+    "conversation": "1m-24",
+    "chat_path": "chats/1M/24/chat_trunecated.json",
+    "chat_sha256": "77117046b7d85bb27c995d0a54cb7434855237d9e9ee8d0b4046d583c01cf016",
+    "chat_bytes": 4453400,
+    "questions_path": "chats/1M/24/probing_questions/probing_questions.json",
+    "questions_sha256": "a775f6b5643eb9de2f6f0348414c25b2c49d4982c75fdf02e2c3188c5f965071"
+   },
+   {
+    "conversation": "1m-25",
+    "chat_path": "chats/1M/25/chat_trunecated.json",
+    "chat_sha256": "b8e36cfa4cc757a9dfec605e915e6732c986506f3143a424da2be37eed575818",
+    "chat_bytes": 5417438,
+    "questions_path": "chats/1M/25/probing_questions/probing_questions.json",
+    "questions_sha256": "01c30627d64c5d5345b3a423b05587b380e1cfb1aeafd0309d5b68aa71ddee4c"
+   },
+   {
+    "conversation": "1m-26",
+    "chat_path": "chats/1M/26/chat_trunecated.json",
+    "chat_sha256": "4ffd75ff95e5a2c0ded6201d31f886b568341690cd83c3534f4a5cb0bf05e7ee",
+    "chat_bytes": 5392193,
+    "questions_path": "chats/1M/26/probing_questions/probing_questions.json",
+    "questions_sha256": "033f8fb9c947e76871c3f34e0df66c26417f332be12a05827745d3ef2b5de49b"
+   },
+   {
+    "conversation": "1m-27",
+    "chat_path": "chats/1M/27/chat.json",
+    "chat_sha256": "8d0706ce77ebd5b1088171e12dde706f52787935ec6f6787f49ea4cbca8d7e0f",
+    "chat_bytes": 4714230,
+    "questions_path": "chats/1M/27/probing_questions/probing_questions.json",
+    "questions_sha256": "4d77a572916d0c4cab8e9a94b0393ab61ba5af53c42a2399713153a5f06aedf6"
+   },
+   {
+    "conversation": "1m-28",
+    "chat_path": "chats/1M/28/chat_trunecated.json",
+    "chat_sha256": "7c0f805c8a0973e43b47de7c44045877f64a2ae8f1c4de7de4a1713380349e1e",
+    "chat_bytes": 5280223,
+    "questions_path": "chats/1M/28/probing_questions/probing_questions.json",
+    "questions_sha256": "40741124c30aeaaf9e576582edcde7501cb9db415cabffa43e0ef1b49b05892f"
+   },
+   {
+    "conversation": "1m-29",
+    "chat_path": "chats/1M/29/chat.json",
+    "chat_sha256": "78ad2333c0f54b29d31568bf9a09e99ab7595ed0ec8a1acb4a88b0446065bb26",
+    "chat_bytes": 4598972,
+    "questions_path": "chats/1M/29/probing_questions/probing_questions.json",
+    "questions_sha256": "ad48b89e9c9c27bd0e3c8e98740ea3429aac3f930ea7eac7396c79aa655da155"
+   },
+   {
+    "conversation": "1m-30",
+    "chat_path": "chats/1M/30/chat_trunecated.json",
+    "chat_sha256": "e4cfaf620e8c3b55ab1811917769c0c7201ea0ca8fbe8ec54fe35f9b7d830471",
+    "chat_bytes": 5093809,
+    "questions_path": "chats/1M/30/probing_questions/probing_questions.json",
+    "questions_sha256": "2d272e2c3eac578ace819112f3443b9524e47d968e47f805fa20208cbeeb09e0"
+   },
+   {
+    "conversation": "1m-31",
+    "chat_path": "chats/1M/31/chat.json",
+    "chat_sha256": "4aec3143e4b364e730e37b8d0f5c623403568c4a163537285f97a687673a7131",
+    "chat_bytes": 3926911,
+    "questions_path": "chats/1M/31/probing_questions/probing_questions.json",
+    "questions_sha256": "db22b6bce15e3d18b987c13f17360e7c8476b8a812a2134311cad1cf08673289"
+   },
+   {
+    "conversation": "1m-32",
+    "chat_path": "chats/1M/32/chat.json",
+    "chat_sha256": "81e4ee283ec2ed74708da6466d82336285db21b002040bc628336072cc7a2614",
+    "chat_bytes": 4168894,
+    "questions_path": "chats/1M/32/probing_questions/probing_questions.json",
+    "questions_sha256": "6a6b8a519ad4c6725b4af956ecaf9e6628efa97418345e456d6874a4d1626fec"
+   },
+   {
+    "conversation": "1m-33",
+    "chat_path": "chats/1M/33/chat_trunecated.json",
+    "chat_sha256": "a5b909b7a108c9faf1ae5eb92d8c86e8f04af329169409fb54fa8c313b25382e",
+    "chat_bytes": 5068193,
+    "questions_path": "chats/1M/33/probing_questions/probing_questions.json",
+    "questions_sha256": "081dd9ed2a505e1bcf75af42b9d98d369ec21d144efdf18886cdc6e76bd99e95"
+   },
+   {
+    "conversation": "1m-34",
+    "chat_path": "chats/1M/34/chat_trunecated.json",
+    "chat_sha256": "81380c6f6a1bebf18c3ff1d1d30328d0dadd2849c2fc548411f0a847726c4f89",
+    "chat_bytes": 5394052,
+    "questions_path": "chats/1M/34/probing_questions/probing_questions.json",
+    "questions_sha256": "c01d65e3416e9d973fb0b05d18c474ce4a145303656850753bcd47b4f287281d"
+   },
+   {
+    "conversation": "1m-35",
+    "chat_path": "chats/1M/35/chat.json",
+    "chat_sha256": "96ef4d07a3fd1946300e05303c805ad26151b7902c74134c9a7f2e03d73f6fb4",
+    "chat_bytes": 4697272,
+    "questions_path": "chats/1M/35/probing_questions/probing_questions.json",
+    "questions_sha256": "2b15368225ecb5dfa12401060283c6a3b776d5abd4edf6d56ccaff89a288a85b"
+   }
+  ]
+ }
+}

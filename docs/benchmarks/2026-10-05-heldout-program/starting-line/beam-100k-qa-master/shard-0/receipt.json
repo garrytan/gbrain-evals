@@ -1,0 +1,124 @@
+{
+  "kind": "memory-qa-arm",
+  "schema_version": 1,
+  "benchmark": "beam-100k",
+  "split": "dev",
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "started_at": "2026-10-04T19:51:50.068Z",
+  "finished_at": "2026-10-04T20:03:07.302Z",
+  "run_config_hash": "5e0c9f2ef1dee37dc9797432ae1f58100d44b9c55be1fe0607d96617afe27c3f",
+  "product": {
+    "package": "gbrain",
+    "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "declared_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "version": "0.60.48.0",
+    "package_sha256": "fab1c3142270c58c8357f2298bb3f7bf9b59a1062f5954684e95bd1d1cc11c01",
+    "loaded_git_head": "6622a119e40ea09a7719233046aca24741863ed2"
+  },
+  "overlay": {
+    "requested": "<gbrain checkout>@6622a119e40ea09a7719233046aca24741863ed2",
+    "ref": "6622a119e40ea09a7719233046aca24741863ed2",
+    "commit": "6622a119e40ea09a7719233046aca24741863ed2",
+    "tree": "6e83dc90b3d7ca04b625a53e8f1e3b751a7144a4",
+    "version": "0.60.48.0",
+    "checkout_dirty": false,
+    "verified": {
+      "copy_tree": "6e83dc90b3d7ca04b625a53e8f1e3b751a7144a4",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.48.0",
+      "cli_version_matches": true
+    },
+    "copied_not_symlinked": true
+  },
+  "arm_config": {},
+  "search_pins": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.autocut": "false"
+  },
+  "retrieval_path": "hybridSearch (expansion off), chunks reduced to distinct sessions",
+  "embedding": {
+    "mode": "real",
+    "model": "openai:text-embedding-3-large",
+    "dims": 1536,
+    "cache_stats": {
+      "hits": 2814,
+      "misses": 0,
+      "inserts": 0,
+      "bytes": 0
+    }
+  },
+  "dataset": {
+    "name": "BEAM 100k",
+    "files": [
+      {
+        "path": "eval/decisions/datasets/beam-b2da22e.json",
+        "sha256": "cb154a2f1d245fcb19e4c35ddf604978604823d04b292b37f083db5c68c491b6"
+      }
+    ],
+    "revision": "b2da22e",
+    "license": "CC BY-SA 4.0"
+  },
+  "selection": {
+    "categories": null,
+    "limit": null,
+    "seed": 42,
+    "shard": {
+      "index": 0,
+      "count": 1
+    },
+    "conversations": 6,
+    "questions_expected": 120
+  },
+  "counts": {
+    "rows": 120,
+    "scored": 108,
+    "errors": 0,
+    "abstention": 12
+  },
+  "summary": {
+    "recall_all_at_5": 0.4537037037037037,
+    "recall_any_at_5": 0.8055555555555556,
+    "recall_all_at_10": 0.6018518518518519,
+    "ndcg_at_10": 0.5676755153728675,
+    "latency_p50_ms": 81.05000000000001,
+    "latency_p95_ms": 133.82999999999996,
+    "qa_score": 0.5714417989417989,
+    "qa_rows": 120,
+    "qa_errors": 0
+  },
+  "qa": {
+    "mode": "reader",
+    "reader": "openai:gpt-4.1-mini",
+    "judge": "openai:gpt-4.1-mini",
+    "runs": 1,
+    "sessions": 5,
+    "budgetTokens": null,
+    "thinkModel": "anthropic:claude-sonnet-5-5",
+    "reader_prompt": "LongMemEval step-by-step reading prompt, sessions in date order",
+    "judge_prompts": "per-rubric-item yes/no"
+  },
+  "fidelity": {
+    "embedding_deferred_pages": 0,
+    "rerank_missing_queries": 0,
+    "reranked_queries": 0
+  },
+  "cost": {
+    "usd": 0.660463,
+    "input_tokens": 1368705,
+    "output_tokens": 77813,
+    "basis": "budget ledger p0-qa-master-dev-2026-10-04T19-05-55-566Z-8f7a655f: 438 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": ".budget/ledger.sqlite",
+    "program_cap_usd": 500,
+    "overshoot_usd": 0.000031,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 2,
+      "max": 5623.1
+    }
+  },
+  "rows_file": "rows.ndjson"
+}

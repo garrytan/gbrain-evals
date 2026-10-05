@@ -1,0 +1,26 @@
+[
+  {
+    "set": "longmemeval-s",
+    "n": 500,
+    "fired": 0,
+    "rate": 0,
+    "fired_items": [],
+    "unsupported": {}
+  },
+  {
+    "set": "brainbench-tier5-non-relational",
+    "n": 77,
+    "fired": 0,
+    "rate": 0,
+    "fired_items": [],
+    "unsupported": {}
+  },
+  {
+    "set": "brainbench-cat13-subset",
+    "n": 50,
+    "fired": 0,
+    "rate": 0,
+    "fired_items": [],
+    "unsupported": {}
+  }
+]
