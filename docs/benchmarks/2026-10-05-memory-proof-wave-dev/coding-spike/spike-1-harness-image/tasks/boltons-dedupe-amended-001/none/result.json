@@ -1,0 +1,24 @@
+{
+  "task_id": "boltons-dedupe-amended-001",
+  "codebase": "boltons-dedupe-amended",
+  "variant": "base",
+  "history": "full",
+  "agent": "opencode",
+  "model": "google/gemini-3.8-flash",
+  "solved": true,
+  "interventions": 2,
+  "capped": false,
+  "final_pytest": "11 passed in 0.02s",
+  "patch_bytes": 923,
+  "tokens": {
+    "input": 406213,
+    "output": 2283,
+    "reasoning": 25536,
+    "cache_read": 1268197,
+    "cache_write": 0
+  },
+  "turns": 40,
+  "wall_s": 161.8,
+  "cost_usd": 0.0,
+  "memory_diag": null
+}

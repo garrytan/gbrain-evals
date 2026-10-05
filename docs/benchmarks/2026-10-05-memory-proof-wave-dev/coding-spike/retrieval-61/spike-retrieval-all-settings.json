@@ -1,0 +1,39 @@
+{
+  "tasks": [
+    "all"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "model": "google/gemini-3.8-flash",
+  "retrieval_only": true,
+  "budget_usd": 2,
+  "stub": false,
+  "ledger": ".budget/mpw-dev-coding.sqlite",
+  "budget_run": "coding-spike-2026-10-05T14-47-26-018Z-e4ca6220",
+  "harness_commit": "f618ed7b1f0eb9cad7b42e876f91a42f0eadb150",
+  "dataset_commit": "afcce15c1f608242e28e48832c301f39c5aed708",
+  "host_ref": "979fa9b613fa8c0a455ae16ea6f2ec91c11ecafe",
+  "gbrain": {
+    "version": "0.60.64.0",
+    "identity": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+      "declared_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+      "version": "0.60.64.0",
+      "package_sha256": "da82b3935169fa1264395f06a7637c10ae515e34ba01a72100451eb1301c1f36",
+      "loaded_git_head": "e8e1f66b8e5225b113cacd18931b627fca451bae"
+    },
+    "overlay": {
+      "requested": "~/.capy/work/gbrain@e8e1f66b8e5225b113cacd18931b627fca451bae",
+      "ref": "e8e1f66b8e5225b113cacd18931b627fca451bae"
+    }
+  },
+  "provider_config": {},
+  "agent_image": {
+    "base": "sdebench-agent",
+    "opencode": "1.16.2",
+    "gemini_base_url": "proxy relay on the docker bridge gateway"
+  },
+  "started_at": "2026-10-05T14:47:27.296Z"
+}

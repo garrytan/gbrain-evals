@@ -1205,6 +1205,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'harness-smoke.ts': { role: 'public agent-memory benchmark harness: free protocol smoke for every dataset x mode x provider on the stub upstream' },
   'harness-env.ts': { role: 'public agent-memory benchmark harness: pinned harness venv install (CPU wheels)' },
   'harness-test.ts': { role: 'public agent-memory benchmark harness: Python test runner for eval/harness-provider' },
+  'coding-spike.ts': { role: 'public agent-memory benchmark harness: coding-agent memory spike (sdebench coding mode) behind the metering proxy' },
   'metering-proxy-testkit.ts': { role: 'metering proxy test kit: throwaway metered cell and the zero-balance check' },
   'metering-proxy.ts': { role: 'local metering proxy for every paid model request in a harness cell' },
   'smoke.ts': { role: 'embedder-shootout pre-flight smoke', part_of: 'shootout-cell' },
