@@ -45,6 +45,11 @@ from memory_bench.models import Document
 
 from .mcp_stdio import McpChild, McpToolError, stderr_tail
 
+# Bump when anything that changes what ingest writes changes (page rendering, slugs, template config, barrier).
+# Cells with equal ingest inputs share one store keyed on this (eval/runner/harness-cell.ts storeIdentity).
+INGEST_REVISION = "gbrain-ingest-1"
+INGEST_KEYS = ("embedding_model", "embedding_dimensions", "gbrain_config", "remote_budget_max")
+
 DEFAULTS = {
     "token_budget": 8000,
     "limit": 50,

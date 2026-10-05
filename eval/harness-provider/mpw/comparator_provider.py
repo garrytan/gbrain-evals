@@ -50,6 +50,10 @@ _ID_KEYED_MAPS = ("chunks", "source_facts")
 _MIN_SCRUB_LEN = 4
 
 
+# Bump when anything that changes what ingest writes changes (retain payload, bank config, id hashing).
+INGEST_REVISION = "comparator-ingest-1"
+INGEST_KEYS = ("extraction_model", "id_salt")
+
 class OpaqueIds:
     """HMAC-sha256 id hashing with a scorer-only reverse map."""
 

@@ -351,6 +351,32 @@ function pick(env: Record<string, string>, providers: string[]): Record<string, 
   return Object.fromEntries(Object.entries(env).filter(([k]) => names.has(k)));
 }
 
+const PROVIDER_FILES: Record<string, string> = { gbrain: 'gbrain_provider.py', comparator: 'comparator_provider.py' };
+
+/**
+ * Cells whose ingest inputs are equal share one store: same dataset split,
+ * provider, ingest-affecting config keys (INGEST_KEYS in the provider module),
+ * credentials, pins and the provider's INGEST_REVISION. Retrieval knobs,
+ * targets, models and budgets do not change what ingest writes, so a target
+ * sweep or a lane that only retrieves differently reuses one ingest.
+ */
+export function storeIdentity(spec: CellSpec, pins: Record<string, unknown>): { id: string; identity: Record<string, unknown> } | null {
+  const file = PROVIDER_FILES[spec.provider];
+  if (!file) return null;
+  const source = readFileSync(join(PROVIDER_DIR, 'mpw', file), 'utf8');
+  const revision = /INGEST_REVISION = "([^"]+)"/.exec(source)?.[1];
+  const keys = /INGEST_KEYS = \(([^)]*)\)/.exec(source)?.[1].match(/"([^"]+)"/g)?.map(k => k.slice(1, -1)) ?? [];
+  if (!revision) throw new Error(`${file} declares no INGEST_REVISION`);
+  const config = (spec.provider_config ?? {}) as Record<string, unknown>;
+  const identity = {
+    schema: 'mpw-store-v1', dataset: spec.dataset, split: spec.split, provider: spec.provider, revision,
+    ingest_config: Object.fromEntries(keys.filter(k => k in config).map(k => [k, config[k]])),
+    credentials: spec.provider === 'gbrain' ? (spec.gbrain_credentials ?? ['voyage']) : null,
+    pins,
+  };
+  return { id: `${spec.provider}-${spec.dataset}-${spec.split}-${sha256(canonical(identity)).slice(0, 12)}`.replace(/[^A-Za-z0-9-]+/g, '-'), identity };
+}
+
 interface SpendFile { cell_id: string; runs: Array<{ run_id: string; ledger: string; usd: number; requests: number; started_at: string; stub: boolean }>; }
 
 export async function runCell(ctx: Ctx, target: string, resume: boolean, tuneGrid: string | null = null): Promise<number> {
@@ -405,8 +431,20 @@ export async function runCell(ctx: Ctx, target: string, resume: boolean, tuneGri
     MPW_CHILD_ENV_COMPARATOR: JSON.stringify(proxy.envFor('comparator')),
     MPW_REPO_ROOT: REPO_ROOT,
   };
+  const store = storeIdentity(cell.spec, pinsFor(ctx, cell.spec));
+  if (store && !ctx.argv.includes('--private-store')) {
+    const storeDir = join(ctx.cellsDir, '_stores', store.id);
+    mkdirSync(storeDir, { recursive: true });
+    writeFileSync(join(storeDir, 'store.json'), JSON.stringify(store.identity, null, 2) + '\n');
+    env.MPW_STORE_DIR = storeDir;
+    env.MPW_STORE_ID = store.id;
+    ctx.log(`[cell] store ${store.id} (shared by cells with the same ingest inputs)`);
+  }
   ctx.log(`[cell] ${cell.cell_id}: ${resume ? 'resuming' : 'running'} with $${remaining.toFixed(2)} of $${cell.spec.budget_usd.toFixed(2)} left; proxy ${proxy.url}${ctx.stub ? ' -> stub upstream (keyless)' : ''}`);
-  const pyArgs = tuneGrid === null ? ['mpw.cell', 'run', '--cell-dir', dir] : ['mpw.tune', '--cell-dir', dir, '--grid', tuneGrid];
+  const pyArgs = tuneGrid === null ? ['mpw.cell', 'run', '--cell-dir', dir]
+    : tuneGrid.startsWith('auto:') ? ['mpw.tune', '--cell-dir', dir, '--auto', tuneGrid.slice(5)]
+    : ['mpw.tune', '--cell-dir', dir, '--grid', tuneGrid];
+  if (ctx.argv.includes('--ingest-only')) env.MPW_INGEST_ONLY = '1';
   const child = Bun.spawn([ctx.install.python, '-m', ...pyArgs], {
     cwd: PROVIDER_DIR, env: harnessProcessEnv(ctx.install, env), stdout: 'inherit', stderr: 'inherit',
   });
@@ -470,6 +508,8 @@ export function makeCtx(argv: string[], log: (l: string) => void = l => process.
 
 export const USAGE = `usage: bun run harness:cell <plan|run|resume> <spec.json | cell-id> [--stub-upstream] [--budget-ledger <path>] [--gbrain <checkout>[@ref]] [--cells-dir <dir>]
        bun run harness:cell rejudge <cell-id> <cell-id> [--out <dir>] [--seed N] [--budget-usd N]   joint blinded re-judge with the dataset's judge
+       bun run harness:cell ingest <spec.json | cell-id>   ingest every unit into the shared store, no questions
+       bun run harness:cell tune <cell-id> --auto '{"targets": [4000, 8000, 16000, 32000], "base": {"token_budget": 8100}, "sample": 60}'
        bun run harness:cell tune <cell-id> --grid '{"token_budget": [6000, 7000, 8000]}'   retrieval-only knob sweep on an ingested cell
        bun run harness:cell cli -- <harness CLI arguments>   (keyless only: --stub-upstream is implied)`;
 
@@ -485,7 +525,8 @@ if (import.meta.main) {
       });
       process.exit(proc.exitCode ?? 1);
     }
-    if (!['plan', 'run', 'resume', 'tune', 'rejudge'].includes(action ?? '') || !target) { console.error(USAGE); process.exit(2); }
+    if (action === 'ingest') argv.push('--ingest-only');
+    if (!['plan', 'run', 'resume', 'tune', 'rejudge', 'ingest'].includes(action ?? '') || !target) { console.error(USAGE); process.exit(2); }
     const ctx = makeCtx(argv);
     if (action === 'plan') {
       const cell = planCell(ctx, target);
@@ -501,9 +542,11 @@ if (import.meta.main) {
     }
     if (action === 'tune') {
       const grid = flag(argv, '--grid');
-      if (!grid) throw new Error('tune needs --grid \'{"token_budget": [6000, 8000]}\'');
-      process.exit(await runCell(ctx, target, true, grid));
+      const auto = flag(argv, '--auto');
+      if (!grid && !auto) throw new Error('tune needs --grid \'{"token_budget": [6000, 8000]}\' or --auto \'{"targets": [4000, 8000], "base": {"token_budget": 8100}, "sample": 60}\'');
+      process.exit(await runCell(ctx, target, true, grid ?? `auto:${auto}`));
     }
+    if (action === 'ingest') process.exit(await runCell(ctx, target, true));
     process.exit(await runCell(ctx, target, action === 'resume'));
   } catch (error) {
     console.error(`[harness:cell] ${(error as Error).message}`);
