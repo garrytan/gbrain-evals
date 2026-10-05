@@ -1012,7 +1012,7 @@ const RERANK_PRICES: Record<string, number> = {
 
 /**
  * Chat list prices, USD per 1M tokens, checked against the providers' pricing
- * pages on 2026-10-02. They take precedence over the pinned gbrain table,
+ * pages on 2026-10-02 (claude-fable-5-1 on 2026-10-05). They take precedence over the pinned gbrain table,
  * which lacks newer models and lists stale prices for some (gpt-5.5, gpt-5.2).
  * Cache prices apply when the response reports cached tokens.
  */
