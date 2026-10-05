@@ -103,4 +103,4 @@ A second generator, such as the sealed validation variant, does three things:
 2. Uses `semantics.ts` for every answer key, so the rules above hold.
 3. Registers its regenerator in `HARD_WORLD_GENERATORS` in [`eval/runner/cat40/hard.ts`](../../../eval/runner/cat40/hard.ts), keyed by its version string, so the runner can check a world against its generator.
 
-Its seed and rendered world stay sealed until a held-out check that Garry or a preregistration names.
+Its seed and rendered world stay sealed until a held-out check that Garry or a preregistration names. [SEALED.md](SEALED.md) describes the sealed variant, its independence rules and how to reveal it.
