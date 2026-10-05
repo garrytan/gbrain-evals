@@ -238,7 +238,7 @@ How this page changed, newest first. Measurement history lives in the dated repo
 
 ### 2026-10-05: Managed Postgres catch-up speed added to current results
 
-gbrain-evals v0.10.25. New row: a managed Postgres brain 57 ms from its database catches up at 152.8 pages per minute in steady state with gbrain v0.60.70.0 (a 10,000-file backlog in about 1.2 h), mirrored from gbrain's own bench in [the catch-up report](docs/benchmarks/2026-10-05-managed-sync-catchup.md). The page had no write-throughput row before.
+gbrain-evals v0.10.26. New row: a managed Postgres brain 57 ms from its database catches up at 152.8 pages per minute in steady state with gbrain v0.60.70.0 (a 10,000-file backlog in about 1.2 h), mirrored from gbrain's own bench in [the catch-up report](docs/benchmarks/2026-10-05-managed-sync-catchup.md). The page had no write-throughput row before.
 
 ### 2026-10-05: Other systems described by kind, not by name
 
