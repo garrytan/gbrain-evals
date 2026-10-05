@@ -26,10 +26,14 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 from shim import Adapter, Item, ShimError, serve  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
-DATA = Path(os.environ.get("SHIM_DATA_DIR", "/data"))
+CONFIG = os.environ.get("SHIM_CONFIG", "recipe")
+if CONFIG not in ("recipe", "common"):
+    raise SystemExit(f"SHIM_CONFIG must be recipe or common, not {CONFIG!r}")
+# Basic Memory writes env overrides into config.json, so each configuration keeps its own state; otherwise a recipe
+# container on a volume a common run used would silently keep the common embedder.
+DATA = Path(os.environ.get("SHIM_DATA_DIR", "/data")) / CONFIG
 NOTES = DATA / "notes"
 META = DATA / "meta"
-CONFIG = os.environ.get("SHIM_CONFIG", "recipe")
 NS_RE = re.compile(r"^ns-[A-Za-z0-9_-]{1,80}$")
 SRC_RE = re.compile(r"^src-[A-Za-z0-9_-]{1,120}$")
 EMBED_SUMMARY = re.compile(r"(\d+) entities embedded, (\d+) skipped, (\d+) errors")
@@ -43,7 +47,7 @@ COMMON_ENV = {
 
 
 def bm_env() -> dict[str, str]:
-    env = dict(os.environ)
+    env = dict(os.environ, BASIC_MEMORY_CONFIG_DIR=str(DATA / "bm-config"))
     if CONFIG == "common":
         env.update(COMMON_ENV)
         env["BASIC_MEMORY_SEMANTIC_EMBEDDING_API_BASE"] = os.environ["OPENAI_BASE_URL"]
