@@ -15,10 +15,18 @@
  *   GbrainShootoutSystem (`--system gbrain-shootout`): the shootout's
  *     separately named recipe. Pages are conversation pages dated with the
  *     ISO event time, retrieval is gbrain's hybrid search with the build's
- *     own defaults (no harness pins), and items are the chunk text the read
- *     API returns (native context), each citing the page's source. Its
- *     settings are recorded in the capability record and every row; Phase 0
- *     freezes them.
+ *     own defaults (no harness pins: `balanced` mode, Voyage reranker on), and
+ *     items are the chunk text the read API returns (native context), each
+ *     citing the page's source. On a cell VM its provider calls go through the
+ *     lease proxy (memory-qa `--provider-proxy`).
+ *
+ *     Limits, frozen 2026-10-05 from a keyless check (30 LoCoMo dev questions,
+ *     hash vectors, `--policy fixed-evidence` with limit 200): items average
+ *     465 approximate tokens (median 530), an 8,000-token pack takes 14 to 22
+ *     items, and gbrain returned 22 to 28 items under its own 12,000-token
+ *     search budget, so no pack ran out of items. `vendor-default` passes no
+ *     limit (the mode's own, 25 in `balanced`); `fixed-evidence` asks for 40,
+ *     above every observed need.
  *
  * Both import gbrain only through the functions the caller loads with
  * `importGbrain`, so `--gbrain` really selects the build under test.
@@ -144,13 +152,13 @@ export class GbrainLegacySystem extends GbrainBrain {
 /** gbrain's shootout recipe: native chunk items from the build's own search defaults. */
 export class GbrainShootoutSystem extends GbrainBrain {
   readonly name = 'gbrain-shootout';
-  static readonly POLICIES = { 'vendor-default': { limit: 20 }, 'fixed-evidence': { limit: 60 } } as const;
+  static readonly POLICIES: Record<'vendor-default' | 'fixed-evidence', { limit?: number }> = { 'vendor-default': {}, 'fixed-evidence': { limit: 40 } };
 
   async capabilities(): Promise<CapabilityRecord> {
     return baseCapabilities('gbrain-shootout', this.identity, {
       configs: { recipe: { model_roles: {}, notes: 'gbrain init defaults for search; embedder from the run' }, common: { model_roles: { embedder: 'openai:text-embedding-3-large', dims: 1536 }, unsettable: ['extraction'] } },
       time: 'native', retrieval_policies: { ...GbrainShootoutSystem.POLICIES }, provenance: { status: 'exact', mechanism: 'each chunk cites its page; one page per session' },
-      deviations_from_vendor_code: ['Phase 0 freezes the search limits; until then they are the values in retrieval_policies'],
+      deviations_from_vendor_code: ['retrieval limits frozen from a keyless LoCoMo check (see eval/runner/systems/gbrain.ts)'],
     });
   }
 
@@ -160,12 +168,13 @@ export class GbrainShootoutSystem extends GbrainBrain {
 
   async retrieve(ns: string, question: PublicQuestion, policy: RetrievalPolicy): Promise<RetrieveResult> {
     if (policy.mode !== 'vendor-default' && policy.mode !== 'fixed-evidence') throw new SystemError('invalid_request', 'policy.mode must be vendor-default or fixed-evidence');
-    const limit = Number(policy.settings?.limit ?? GbrainShootoutSystem.POLICIES[policy.mode].limit);
-    const { results, service_ms } = await this.search(ns, question.text, { limit }, false);
+    const raw = policy.settings?.limit ?? GbrainShootoutSystem.POLICIES[policy.mode].limit;
+    const limit = raw === undefined ? undefined : Number(raw);
+    const { results, service_ms } = await this.search(ns, question.text, limit === undefined ? {} : { limit }, false);
     const items: Item[] = results.map((r, i) => {
       const src = sourceOfSlug(r.slug);
       return { id: `${r.slug}#${i}`, rank: i + 1, type: 'chunk', text: r.chunk_text ?? '', source_ids: src ? [src] : [], valid_from: null, valid_to: null, provenance_status: src ? 'exact' : 'unavailable' };
     });
-    return { items, applied_settings: { limit }, truncated: false, service_ms };
+    return { items, applied_settings: { limit: limit ?? 'search mode default' }, truncated: false, service_ms };
   }
 }

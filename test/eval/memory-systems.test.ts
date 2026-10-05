@@ -223,6 +223,28 @@ describe('memory-qa with a MemorySystem', () => {
     } finally { server.stop(); }
   });
 
+  test('the gbrain shootout recipe sends its provider calls through the lease proxy with dummy keys, and needs no paid flags there', async () => {
+    const seen: Array<{ path: string; auth: string | null; model: string }> = [];
+    const upstream = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: async req => {
+      const body = await req.json().catch(() => ({})) as { model?: string; documents?: string[] };
+      seen.push({ path: new URL(req.url).pathname, auth: req.headers.get('authorization'), model: String(body.model) });
+      return Response.json({ object: 'list', model: body.model, data: (body.documents ?? []).map((_, i) => ({ index: i, relevance_score: 1 - i / 10 })), usage: { total_tokens: 5 } });
+    } });
+    const out = join(tmp, 'gbrain-shootout-proxy');
+    try {
+      const proc = Bun.spawn([process.execPath, 'eval/runner/memory-qa/run.ts', '--benchmark', 'fixture', '--system', 'gbrain-shootout', '--context', 'native', '--provider-proxy', `http://127.0.0.1:${upstream.port}`, '--output', out],
+        { cwd: join(import.meta.dir, '../..'), stdout: 'pipe', stderr: 'pipe', env: { ...process.env, GBRAIN_EVALS_QA_CACHE: join(out, 'qa') } });
+      const [err, code] = await Promise.all([new Response(proc.stderr).text(), proc.exited]);
+      expect(code, err).toBe(0);
+    } finally { upstream.stop(true); }
+    expect(seen.length).toBeGreaterThan(0);
+    expect(seen.every(r => r.path === '/gbrain/voyage/v1/rerank' && r.auth === 'Bearer dummy-key-the-proxy-replaces' && r.model === 'rerank-2.5')).toBe(true);
+    const receipt = JSON.parse(readFileSync(join(out, 'receipt.json'), 'utf8'));
+    expect(receipt.metering.mode).toBe('lease-proxy');
+    expect(receipt.run_status).toBe('complete');
+    expect(receipt.system.capabilities.retrieval_policies).toEqual({ 'vendor-default': {}, 'fixed-evidence': { limit: 40 } });
+  }, 120_000);
+
   test('flags: native context and budgets are accepted for shootout systems; gbrain-only lanes are refused elsewhere', async () => {
     const a = args(join(tmp, 'x'), '--system', 'fake', '--context', 'native', '--budget-tokens', '8000', '--policy', 'fixed-evidence');
     expect([a.context, a.qa.budgetTokens, a.policy]).toEqual(['native', 8000, 'fixed-evidence']);

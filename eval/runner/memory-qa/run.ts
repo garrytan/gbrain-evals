@@ -10,7 +10,12 @@
  *     [--paid --budget-run-id <id>] --output <dir>
  *     [--system gbrain|gbrain-shootout|fake|<shim URL>] [--context native|rehydrated] [--budget-tokens N]
  *     [--policy vendor-default|fixed-evidence] [--policy-setting key=value]... [--max-attempts 3]
- *     [--finish-timeout-s 600] [--sealed-profile <custody root>]
+ *     [--finish-timeout-s 600] [--sealed-profile <custody root>] [--provider-proxy <metering proxy URL>]
+ *
+ * Provider proxy (a shootout cell; default SHOOTOUT_PROXY): the process's
+ * provider keys become dummies, gbrain's OpenAI, Anthropic and Voyage calls
+ * and the reader's calls go to the cell's lease proxy, and the lease (not this
+ * process's budget run) is the spending authority.
  *
  * Systems: `gbrain` (default) is the legacy in-process path behind the
  * `MemorySystem` interface (eval/runner/systems/gbrain.ts), pinned by the
@@ -106,6 +111,8 @@ export interface RunArgs {
   finishTimeoutS: number;
   /** Custody root for the sealed execution profile (required for sealed shootout systems). */
   sealedRoot: string | null;
+  /** A shootout cell's metering proxy (--provider-proxy, default SHOOTOUT_PROXY): every provider call goes through it under its lease. */
+  providerProxy: string | null;
 }
 
 export interface MemoryQaRow {
@@ -215,6 +222,7 @@ export function parseRunArgs(argv: string[]): RunArgs {
     maxAttempts: Number(one('--max-attempts') ?? DEFAULT_MAX_ATTEMPTS),
     finishTimeoutS: Number(one('--finish-timeout-s') ?? 600),
     sealedRoot: one('--sealed-profile') ? resolve(one('--sealed-profile')!) : null,
+    providerProxy: (one('--provider-proxy') ?? process.env.SHOOTOUT_PROXY ?? '').replace(/\/$/, '') || null,
   };
 }
 
@@ -318,7 +326,13 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   let cache: EmbeddingCache | null = null;
   const provider = a.embeddingModel.split(':')[0];
   // The shootout recipe runs gbrain's own search defaults, which call paid providers (the reranker) even with hash vectors.
-  const needsPaid = (inProcessGbrain && a.embed === 'real') || a.system === 'gbrain-shootout' || a.qa.mode !== 'none' || a.facts !== 'none';
+  if (a.providerProxy) {
+    if (!/^https?:\/\/[^/]+$/.test(a.providerProxy)) throw new Error('--provider-proxy must look like http://host:port');
+    for (const k of ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY']) process.env[k] = 'dummy-key-the-proxy-replaces';
+    process.env.OPENAI_BASE_URL = `${a.providerProxy}/gbrain/openai/v1`;
+    process.env.ANTHROPIC_BASE_URL = `${a.providerProxy}/gbrain/anthropic`;
+  }
+  const needsPaid = !a.providerProxy && ((inProcessGbrain && a.embed === 'real') || a.system === 'gbrain-shootout' || a.qa.mode !== 'none' || a.facts !== 'none');
   if (!['none', 'reader', 'think'].includes(a.qa.mode)) throw new Error('--qa must be none, reader or think');
   if (!['none', 'conversation'].includes(a.facts)) throw new Error('--facts must be none or conversation');
   if (!['sessions', 'facts'].includes(a.qa.context)) throw new Error('--qa-context must be sessions or facts');
@@ -340,14 +354,15 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   // gbrain systems run in process: hash vectors (keyless) or the real provider through the budget ledger and the content-addressed cache.
   let mods: GbrainModules | null = null;
   if (inProcessGbrain) {
+    const proxyUrls = a.providerProxy ? { base_urls: { voyage: `${a.providerProxy}/gbrain/voyage/v1` } } : {};
     const gateway = await importGbrain<{ configureGateway: (c: Record<string, unknown>) => void; __setEmbedTransportForTests: (fn: unknown) => void }>(gut, 'src/core/ai/gateway.ts');
     if (a.embed === 'hash') {
       const keyEnv = PROVIDER_KEY[provider] ?? 'OPENAI_API_KEY';
       if (!process.env[keyEnv]) process.env[keyEnv] = 'hash-embed-transport-no-provider-call';
-      gateway.configureGateway({ embedding_model: a.embeddingModel, embedding_dimensions: a.embeddingDims, env: process.env });
+      gateway.configureGateway({ embedding_model: a.embeddingModel, embedding_dimensions: a.embeddingDims, env: process.env, ...proxyUrls });
       gateway.__setEmbedTransportForTests(async (params: { values: string[] }) => ({ embeddings: params.values.map(v => hashEmbed(v, a.embeddingDims)), values: params.values, warnings: [], usage: { tokens: 0 } }));
     } else {
-      gateway.configureGateway({ embedding_model: a.embeddingModel, embedding_dimensions: a.embeddingDims, env: process.env });
+      gateway.configureGateway({ embedding_model: a.embeddingModel, embedding_dimensions: a.embeddingDims, env: process.env, ...proxyUrls });
       const aiPath = Bun.resolveSync('ai', gut.root);
       const { embedMany } = await import(aiPath) as { embedMany: (p: unknown) => Promise<unknown> };
       const cacheDir = sealed?.embedCache ?? process.env.GBRAIN_EVALS_EMBED_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'embed-cache');
@@ -590,6 +605,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
       unresolved_share: factStats.facts ? factStats.unresolved / factStats.facts : null },
     qa: a.qa.mode === 'none' ? null : { ...a.qa, reader_prompt: a.qa.mode === 'think' ? 'gbrain think' : a.qa.context === 'facts' ? 'step-by-step reading prompt over the saved facts (text + stored date) of the top sessions' : !legacy && a.context === 'native' ? `native memory-item reading prompt (${RENDERER_VERSION}, ${TOKENIZER.id})` : 'LongMemEval step-by-step reading prompt, sessions in date order', judge_prompts: a.benchmark.startsWith('beam') ? 'per-rubric-item yes/no' : 'LongMemEval official per-type prompts' },
     fidelity, cost, rows_file: 'rows.ndjson',
+    metering: a.providerProxy ? { mode: 'lease-proxy', proxy: a.providerProxy, lease_id: process.env.SHOOTOUT_LEASE_ID ?? null } : { mode: paid ? 'budget-ledger' : 'none' },
     system: { name: system.name, capability_system: capabilities.system, context: a.context, policy, capabilities },
     context: a.context, policy: { name: policy.name, mode: policy.mode },
     manifest_sha256: manifest.expected_sha256, outcomes: canon.counts, attempts_this_run: written, comparison_complete: canon.missing.length === 0 && harnessFailures === 0,
