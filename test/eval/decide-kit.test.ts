@@ -203,6 +203,41 @@ describe('reading lane', () => {
   });
 });
 
+describe('facts lane', () => {
+  const { factsReaderPrompt, unresolvedRelativeTime } = require('../../eval/runner/memory-qa/qa.ts') as typeof import('../../eval/runner/memory-qa/qa.ts');
+  const { isoSessionDate } = require('../../eval/runner/memory-qa/corpus.ts') as typeof import('../../eval/runner/memory-qa/corpus.ts');
+  test('session dates normalize to ISO for both benchmark formats; conversation pages carry type and ISO date', () => {
+    expect(isoSessionDate('1:56 pm on 8 May, 2023')).toBe('2023-05-08T13:56:00');
+    expect(isoSessionDate('12:05 am on 1 January, 2024')).toBe('2024-01-01T00:05:00');
+    expect(isoSessionDate('2023/05/20 (Sat) 02:21')).toBe('2023-05-20T02:21:00');
+    expect(isoSessionDate('sometime')).toBeNull();
+    const s = { id: 's1', date: '1:56 pm on 8 May, 2023', turns: [{ speaker: 'Ana', content: 'hi' }] };
+    expect(renderSessionPage(s, { as: 'conversation' })).toContain('type: conversation\ndate: "2023-05-08T13:56:00"');
+    expect(renderSessionPage(s)).toContain('type: note\ndate: "1:56 pm on 8 May, 2023"');
+  });
+  test('a fact is unresolved only with a relative time word and no absolute date', () => {
+    expect(unresolvedRelativeTime('Ana went to a support group yesterday')).toBe(true);
+    expect(unresolvedRelativeTime('Ana ran a race last Saturday')).toBe(true);
+    expect(unresolvedRelativeTime('Ana moved here 3 years ago')).toBe(true);
+    expect(unresolvedRelativeTime('Ana went to a support group on 7 May 2023')).toBe(false);
+    expect(unresolvedRelativeTime('Ana likes painting')).toBe(false);
+  });
+  test('the facts reader sees fact text and stored date, not sessions', () => {
+    const p = factsReaderPrompt({ id: 'x', conversation: 'c', question: 'When did Ana run?', category: 'temporal', gold: [], abstention: false } as never,
+      [{ fact: 'Ana ran a race', valid_from: '2023-05-06T00:00:00.000Z' }, { fact: 'Ana paints', valid_from: null }], '2023-06-01');
+    expect(p).toContain('- [2023-05-06] Ana ran a race');
+    expect(p).toContain('- [undated] Ana paints');
+    expect(p).toContain('Current Date: 2023-06-01');
+  });
+  test('facts sources pass --facts and --qa-context, and count as paid', () => {
+    const spec = newSpec({ decisionId: 'p2-facts', plan: 'P2', title: 't', verdictType: 'quality', candidate: null, baseline: null });
+    spec.sources = [{ ...templateSources('P2').sources.find(s => s.kind === 'memory-qa' && s.benchmark === 'locomo')!, embed: 'hash', facts: 'conversation', qa: { mode: 'reader', runs: 1, sessions: 5, context: 'facts' } } as never];
+    const jobs = planJobs(spec, '/r', { shards: 1, only: null, budgetRunId: 'run-1' });
+    expect(jobs.every(j => j.argv.includes('--facts') && j.argv.includes('conversation') && j.argv.includes('--qa-context') && j.argv.includes('--paid'))).toBe(true);
+    expect(() => validateSpec({ ...spec, sources: [{ ...spec.sources[0], facts: undefined }] })).toThrow(/qa.context facts/);
+  });
+});
+
 describe('anchor exclusion', () => {
   test('drops dev probes that touch a sealed anchor and reports only a count', async () => {
     const { sealedAnchors, excludeSealedAnchors } = await import('../../eval/runner/decisions/anchors.ts');

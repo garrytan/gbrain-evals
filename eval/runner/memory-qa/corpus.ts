@@ -51,9 +51,38 @@ export function occurrenceId(conversation: string, session: string): string {
   return sha256(`gbrain-evals-memory-qa\u0000${conversation}\u0000${session}`).slice(0, 16);
 }
 
-export function renderSessionPage(session: Session): string {
-  const fm = ['---', 'type: note'];
-  if (session.date) fm.push(`date: ${JSON.stringify(session.date)}`);
+const MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+
+/**
+ * A benchmark session timestamp as ISO 8601 (minute precision, no zone), or
+ * null when the form is unknown. LoCoMo writes "1:56 pm on 8 May, 2023";
+ * LongMemEval writes "2023/05/20 (Sat) 02:21".
+ */
+export function isoSessionDate(raw: string | undefined): string | null {
+  if (!raw) return null;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const lme = raw.match(/^(\d{4})\/(\d{2})\/(\d{2})(?:\s*\(\w+\))?(?:\s+(\d{1,2}):(\d{2}))?/);
+  if (lme) return `${lme[1]}-${lme[2]}-${lme[3]}T${pad(Number(lme[4] ?? 0))}:${lme[5] ?? '00'}:00`;
+  const loc = raw.match(/^(\d{1,2}):(\d{2})\s*(am|pm)\s+on\s+(\d{1,2})\s+([A-Za-z]+),?\s+(\d{4})/i);
+  if (loc) {
+    const month = MONTHS.indexOf(loc[5].toLowerCase());
+    if (month < 0) return null;
+    const hour = (Number(loc[1]) % 12) + (loc[3].toLowerCase() === 'pm' ? 12 : 0);
+    return `${loc[6]}-${pad(month + 1)}-${pad(Number(loc[4]))}T${pad(hour)}:${loc[2]}:00`;
+  }
+  return /^\d{4}-\d{2}-\d{2}/.test(raw) ? raw : null;
+}
+
+/**
+ * `conversation` renders the page the way gbrain's conversation-facts
+ * extractor expects: conversation type and an ISO date its observation-date
+ * resolver can read. The default keeps the retrieval lane's original pages.
+ */
+export function renderSessionPage(session: Session, opts: { as?: 'note' | 'conversation' } = {}): string {
+  const asConversation = opts.as === 'conversation';
+  const fm = ['---', `type: ${asConversation ? 'conversation' : 'note'}`];
+  const date = asConversation ? isoSessionDate(session.date) ?? session.date : session.date;
+  if (date) fm.push(`date: ${JSON.stringify(date)}`);
   fm.push(`title: ${JSON.stringify(session.date ? `Conversation on ${session.date}` : 'Conversation')}`, '---', '');
   const body = session.turns.map(t => `**${t.speaker}:** ${t.content}\n`);
   return fm.join('\n') + body.join('\n');
@@ -97,6 +126,7 @@ export function filesFor(benchmark: string): DatasetFile[] {
     case 'locomo': return [LOCOMO_FILE];
     case 'lme-s': return [LME_S_FILE];
     case 'beam-100k': return beamFiles('100k');
+    case 'beam-500k': return beamFiles('500k');
     case 'beam-1m': return beamFiles('1m');
     case 'fixture': return [];
     default: throw new Error(`unknown benchmark ${benchmark}`);
@@ -208,7 +238,7 @@ function messageIds(src: unknown): number[] {
   return [];
 }
 
-export function loadBeam(size: '100k' | '1m'): Corpus {
+export function loadBeam(size: '100k' | '500k' | '1m'): Corpus {
   const m = beamManifest();
   const conversations: Conversation[] = [];
   const questions: MemoryQuestion[] = [];
@@ -253,6 +283,7 @@ export function loadCorpus(benchmark: string): Corpus {
     case 'locomo': return loadLocomo();
     case 'lme-s': return loadLmeS();
     case 'beam-100k': return loadBeam('100k');
+    case 'beam-500k': return loadBeam('500k');
     case 'beam-1m': return loadBeam('1m');
     case 'fixture': return loadFixture();
     default: throw new Error(`unknown benchmark ${benchmark}`);

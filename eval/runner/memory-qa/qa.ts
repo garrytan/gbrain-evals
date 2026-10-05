@@ -31,8 +31,8 @@ import type { MemoryQuestion, Session } from './corpus.ts';
 
 export const READER_TEMPLATE = 'I will give you several history chats between you and a user. Please answer the question based on the relevant chat history. Answer the question step by step: first extract all the relevant information, and then reason over the information to get the answer.\n\n\nHistory Chats:\n\n{history}\n\nCurrent Date: {date}\nQuestion: {question}\nAnswer (step by step):';
 
-export const DEFAULT_READER: Record<string, string> = { 'lme-s': 'openai:gpt-4o-2024-08-06', locomo: 'openai:gpt-4o-mini', 'beam-100k': 'openai:gpt-4.1-mini', 'beam-1m': 'openai:gpt-4.1-mini', fixture: 'openai:gpt-4o-mini' };
-export const DEFAULT_JUDGE: Record<string, string> = { 'lme-s': 'openai:gpt-4o-2024-08-06', locomo: 'openai:gpt-4o-2024-08-06', 'beam-100k': 'openai:gpt-4.1-mini', 'beam-1m': 'openai:gpt-4.1-mini', fixture: 'openai:gpt-4o-mini' };
+export const DEFAULT_READER: Record<string, string> = { 'lme-s': 'openai:gpt-4o-2024-08-06', locomo: 'openai:gpt-4o-mini', 'beam-100k': 'openai:gpt-4.1-mini', 'beam-500k': 'openai:gpt-4.1-mini', 'beam-1m': 'openai:gpt-4.1-mini', fixture: 'openai:gpt-4o-mini' };
+export const DEFAULT_JUDGE: Record<string, string> = { 'lme-s': 'openai:gpt-4o-2024-08-06', locomo: 'openai:gpt-4o-2024-08-06', 'beam-100k': 'openai:gpt-4.1-mini', 'beam-500k': 'openai:gpt-4.1-mini', 'beam-1m': 'openai:gpt-4.1-mini', fixture: 'openai:gpt-4o-mini' };
 
 export interface ChatResult { text: string; input_tokens: number; output_tokens: number; cached: boolean }
 
@@ -63,6 +63,31 @@ export function packSessions(ranked: Session[], maxSessions: number, budgetToken
 export function readerPrompt(q: MemoryQuestion, sessions: Session[], fallbackDate: string | undefined): string {
   return READER_TEMPLATE.replace('{history}', renderHistory(sessions)).replace('{date}', q.question_date ?? fallbackDate ?? 'unknown').replace('{question}', q.question);
 }
+
+export const FACTS_READER_TEMPLATE = 'I will give you facts a memory system saved from past chats between you and a user, each with the date the memory system recorded for it. Please answer the question based on these facts. Answer the question step by step: first extract all the relevant information, and then reason over the information to get the answer.\n\n\nSaved Facts:\n\n{facts}\n\nCurrent Date: {date}\nQuestion: {question}\nAnswer (step by step):';
+
+export interface SavedFact { fact: string; valid_from: string | null }
+
+/** The facts lane's reading prompt: saved fact text with its stored date, nothing from the raw sessions. */
+export function factsReaderPrompt(q: MemoryQuestion, facts: SavedFact[], fallbackDate: string | undefined): string {
+  const lines = facts.map(f => `- [${f.valid_from ? f.valid_from.slice(0, 10) : 'undated'}] ${f.fact}`).join('\n');
+  return FACTS_READER_TEMPLATE.replace('{facts}', lines || '(none)').replace('{date}', q.question_date ?? fallbackDate ?? 'unknown').replace('{question}', q.question);
+}
+
+const RELATIVE_TIME = new RegExp([
+  '\\b(?:yesterday|today|tonight|tomorrow|recently|lately|the other day|the day before|earlier today)\\b',
+  '\\b(?:last|next|this|coming|past)\\s+(?:week|weekend|month|year|night|morning|evening|summer|winter|spring|fall|autumn|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\\b',
+  '\\b(?:a|an|one|two|three|four|five|six|few|couple(?: of)?|several|\\d+)\\s+(?:days?|weeks?|months?|years?)\\s+(?:ago|from now|earlier|later|before)\\b',
+  '\\bearlier this (?:week|month|year)\\b',
+].join('|'), 'i');
+const ABSOLUTE_DATE = /\b(?:19|20)\d{2}\b|\b(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\.?\s+\d{1,2}\b|\b\d{1,2}\s+(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\b/i;
+
+/**
+ * Evaluator-side check: a saved fact still carries a relative time word
+ * ("yesterday", "last week", "3 days ago") and no absolute date, so its
+ * meaning depends on a moment the fact no longer records.
+ */
+export const unresolvedRelativeTime = (fact: string) => RELATIVE_TIME.test(fact) && !ABSOLUTE_DATE.test(fact);
 
 export function judgePromptsFor(benchmark: string, q: MemoryQuestion, response: string): string[] {
   const answer = q.answer ?? '';
@@ -113,7 +138,10 @@ export class ChatClient {
 async function openaiChat(model: string, prompt: string, opts: { maxTokens: number; temperature?: number }): Promise<Omit<ChatResult, 'cached'>> {
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
-    body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], n: 1, temperature: opts.temperature ?? 0, max_tokens: opts.maxTokens }),
+    // GPT-5 and later reasoning models take max_completion_tokens and only their default temperature.
+    body: JSON.stringify(/^(gpt-[5-9]|o\d)/.test(model)
+      ? { model, messages: [{ role: 'user', content: prompt }], n: 1, max_completion_tokens: Math.max(opts.maxTokens, 2000) }
+      : { model, messages: [{ role: 'user', content: prompt }], n: 1, temperature: opts.temperature ?? 0, max_tokens: opts.maxTokens }),
     signal: AbortSignal.timeout(300_000),
   });
   const json = await res.json() as any;

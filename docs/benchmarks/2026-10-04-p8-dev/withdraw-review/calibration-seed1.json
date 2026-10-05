@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "slot": "conflict",
+    "call_site": "review_withdraw",
+    "provider": "typesafe:jev-1.13.0",
+    "model_resolved": "jev-1.13.0",
+    "threshold": 0.93,
+    "min_keep": null,
+    "metric": "f1",
+    "metric_value": 1,
+    "ece": 0.0005479452,
+    "retest_sd": 0.000094554314,
+    "repack_sd": 0.00008247861,
+    "action_precision_lb": 0.95248157,
+    "qualification": "{\"action_precision_lb\":0.9524815740035489,\"families\":77,\"correct_families\":77,\"actions\":153,\"status\":\"qualified\",\"required_n\":35,\"slices\":{\"restates1\":{\"families\":77,\"correct\":77,\"lb\":0.9524815740035489}},\"min_action_precision\":0.9}",
+    "qualified_at": "2026-10-04T20:23:36.533Z",
+    "policy_fingerprint": "591b4073a1cfd65c",
+    "n": 511,
+    "dataset_hash": "04cb822e41e022e0",
+    "split_hash": "7fae8573103f5995",
+    "calibrate_ids_hash": "248a86780e19baf3",
+    "calibrate_only": true,
+    "pack_shape": "v1:order=rank-id:max=budget:slots=conflict",
+    "created_at": "2026-10-04T20:23:19.044Z",
+    "retired_at": null,
+    "notes": null
+  }
+]

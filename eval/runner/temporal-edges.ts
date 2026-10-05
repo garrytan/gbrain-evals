@@ -26,7 +26,7 @@
  *
  * Hermetic: provider keys stripped, PGLite in memory, zero LLM.
  *
- * Usage: bun eval/runner/temporal-edges.ts [--seeds 3,5] [--output <dir>] [--gbrain <checkout>[@ref]] [--json]
+ * Usage: bun eval/runner/temporal-edges.ts [--seeds 3,5] [--phrasing A|A2|A3] [--output <dir>] [--gbrain <checkout>[@ref]] [--json]
  *
  * Custodian (held-out) mode: --phrasing-file <custody path> --decision-id <id> --purpose <text> --seeds <held-out seeds>.
  * The phrasing file lives outside the repository; every read appends a line to access-log.jsonl beside it, and the
@@ -172,10 +172,10 @@ async function probeWorld(world: TemporalEdgesWorld, sut: Sut, mirror: Sut, acc:
 
 export interface TeRunResult { worlds: TemporalEdgesWorld[]; rows: TeRow[]; acc: ProbeAccounting; harnessError: string | null }
 
-export async function runTemporalEdges(opts: { gut: GbrainUnderTest; seeds?: readonly number[]; log?: (s: string) => void; sealedPhrasing?: { id: string; templates: PhrasingTemplates } }): Promise<TeRunResult> {
+export async function runTemporalEdges(opts: { gut: GbrainUnderTest; seeds?: readonly number[]; log?: (s: string) => void; phrasing?: string; sealedPhrasing?: { id: string; templates: PhrasingTemplates } }): Promise<TeRunResult> {
   return withHermeticEnv('temporal-edges', async () => {
     const log = opts.log ?? (() => {});
-    const worlds = (opts.seeds ?? DEV_SEEDS).map(seed => generateTemporalEdgesWorld({ seed, sealedPhrasing: opts.sealedPhrasing }));
+    const worlds = (opts.seeds ?? DEV_SEEDS).map(seed => generateTemporalEdgesWorld({ seed, phrasing: opts.sealedPhrasing ? undefined : opts.phrasing, sealedPhrasing: opts.sealedPhrasing }));
     const acc = new ProbeAccounting(0);
     const rows: TeRow[] = [];
     let harnessError: string | null = null;
@@ -248,7 +248,8 @@ async function main(): Promise<void> {
   const startedAt = new Date().toISOString();
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
   log(`# temporal-edges (gbrain ${gut.version}${gut.overlay ? `, overlay ${gut.overlay.build.commit.slice(0, 7)}` : ', pinned'})`);
-  const r = await runTemporalEdges({ gut, seeds, log, sealedPhrasing });
+  const devPhrasing = argValue(argv, '--phrasing') ?? 'A';
+  const r = await runTemporalEdges({ gut, seeds, log, phrasing: devPhrasing, sealedPhrasing });
   const a = r.acc.summary();
   const summary = summarize(r.rows);
   const receipt: Receipt = {
@@ -266,7 +267,7 @@ async function main(): Promise<void> {
     resolved_config: {
       engine: 'pglite-in-memory',
       caller: 'operation handlers with OperationContext { remote: false, sourceId: default }',
-      seeds, phrasing: sealedPhrasing ? `held-out set ${sealedPhrasing.id} (custody file sha256 ${phrasingSha})` : 'A (development)', generator_version: TEMPORAL_EDGES_GENERATOR_VERSION,
+      seeds, phrasing: sealedPhrasing ? `held-out set ${sealedPhrasing.id} (custody file sha256 ${phrasingSha})` : `${devPhrasing} (development)`, generator_version: TEMPORAL_EDGES_GENERATOR_VERSION,
       oracle: 'employment stints from the generator ledger; set arithmetic for now / as-of / during',
       gbrain_overlay: overlaySummary(gut),
     },

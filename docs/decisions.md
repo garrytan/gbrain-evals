@@ -63,6 +63,15 @@ Fixture scores prove the plumbing works. They say nothing about retrieval qualit
 | `memory-qa` | [`eval/runner/memory-qa/run.ts`](../eval/runner/memory-qa/run.ts): each conversation's sessions are imported as pages into a fresh in-memory gbrain; each question goes through hybrid search; retrieved chunks reduce to distinct sessions | one per question: `recall_all_at_5`, `recall_any_at_5`, `recall_all_at_10`, `ndcg_at_10`, `latency_ms` |
 | `category` | an existing registry runner with `--gbrain` and `--output` | per-item rows from the runner's receipt (`rows_path`), and/or receipt contracts |
 
+A `memory-qa` source with `"facts": "conversation"` adds the facts lane: sessions import as `type: conversation`
+pages with ISO session dates, and gbrain's conversation-facts extractor (product default model) runs on each
+conversation before its questions. Rows then carry `facts_count` and `facts_unresolved_share` (saved facts that
+keep a relative time expression such as "yesterday" or "3 days ago" and no absolute date), one value per
+conversation. With `"qa": { "mode": "reader", "context": "facts", ... }` the reader answers from the saved facts
+(fact text and stored date) of the top `qa.sessions` retrieved sessions instead of the raw sessions, so the QA
+score measures what extraction kept. Extraction is paid: about $0.02 per LoCoMo session and $1 per LongMemEval-S
+question per arm.
+
 Benchmarks for `memory-qa` dev runs, with what each split allows:
 
 | Benchmark | Dev split | Held-out portion |
@@ -141,3 +150,29 @@ GBRAIN_EVAL_SEARCH_PINS=search.hub_dampening=true bun eval/runner/hub-world.ts -
 Seed 1 is development data. Seeds 2 and 3 render only from the custodian's private salt
 ([`eval/decisions/splits/hub-world.json`](../eval/decisions/splits/hub-world.json) records its SHA-256 and the probe
 file hashes) and are opened once at a preregistered decision.
+
+## Retrieval feedback and constrained relational questions (plan P3)
+
+Three runners measure use-attributed retrieval feedback and relational triplet scoring:
+
+- `eval/runner/feedback-replay-locomo.ts` and `eval/runner/feedback-replay-world.ts` replay oracle ratings (E1) on
+  LoCoMo and on world-v1 relational questions: off, frozen, online, noisy and exposure-frequency arms.
+- `eval/runner/feedback-think-replay.ts` measures the implicit citation signal (E2). Every LoCoMo answer goes through
+  gbrain's `think` operation with a trusted local context, so the answer is recorded and the pages it cites feed the
+  ranking. Arms: off (influence 0), frozen (learn on the train half, score with `feedback.learn=false`), sparse (frozen
+  on a seeded 25% of the train half) and online (one seeded stream, each answer scored before its own citations
+  apply). Each score answer is judged `--judge-runs` times with P0's LoCoMo prompts; the summary reports the judge
+  mean, the SD across replicates, gather Recall@5 and cited events per 100 answers.
+- `eval/runner/constrained-relational.ts` (category `constrained-relational`) asks questions that name one seed, one
+  relation and one attribute constraint ("Who at <company> works on <topic>?", "What has <investor> invested in
+  within <industry>?", "Which <role>s attended <meeting>?"), so a seed has 8 to 14 relational neighbors and 1 to 4 are
+  gold. Arm config comes from `GBRAIN_EVAL_SEARCH_PINS` (for E4, `search.triplet_scoring=true`).
+
+```bash
+bun eval/runner/feedback-think-replay.ts --gbrain ../gbrain@<sha> --output <dir> --train-limit 25 --score-limit 20 --judge-runs 3 --paid --budget-usd 30
+GBRAIN_EVAL_SEARCH_PINS=search.triplet_scoring=true bun eval/runner/constrained-relational.ts --gbrain ../gbrain@<sha> --output <dir> --paid --budget-usd 1
+```
+
+Held-out modes belong to the custodian: the feedback runners take `--split sealed --decision-id <id> --purpose <text>`
+with `GBRAIN_EVALS_CUSTODY_LOG` set, and `constrained-relational` takes `--phrasing-file <custody path>` with held-out
+seeds; every opening is written to the access log before any held-out text is read. Development seeds are 11 and 13.

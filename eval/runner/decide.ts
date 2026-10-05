@@ -106,7 +106,7 @@ function cmdInit(argv: string[]): string {
   return lines.join('\n');
 }
 
-const needsMoney = (s: Source) => (s.kind === 'memory-qa' ? s.embed === 'real' || !!s.qa : s.paid);
+const needsMoney = (s: Source) => (s.kind === 'memory-qa' ? s.embed === 'real' || !!s.qa || !!s.facts : s.paid);
 
 // ─── fetch / preflight ─────────────────────────────────────────────
 
@@ -184,16 +184,20 @@ export function planJobs(spec: DecisionSpec, runs: string, opts: { shards: numbe
             ...armArgs(a), ...Object.entries(s.search_pins).flatMap(([k, v]) => ['--pin', `${k}=${v}`]), '--top-k', String(s.top_k), '--seed', String(spec.seed),
             ...(s.limit ? ['--limit', String(s.limit)] : []), ...(s.categories?.length ? ['--categories', s.categories.join(',')] : []),
             ...(s.qa ? ['--qa', s.qa.mode, '--qa-runs', String(s.qa.runs), '--qa-sessions', String(s.qa.sessions), ...(s.qa.reader ? ['--reader', s.qa.reader] : []), ...(s.qa.judge ? ['--judge', s.qa.judge] : []),
-              ...(s.qa.think_model ? ['--think-model', s.qa.think_model] : []), ...(s.qa.budget_tokens ? ['--qa-budget-tokens', String(s.qa.budget_tokens)] : [])] : []),
+              ...(s.qa.think_model ? ['--think-model', s.qa.think_model] : []), ...(s.qa.budget_tokens ? ['--qa-budget-tokens', String(s.qa.budget_tokens)] : []),
+              ...(s.qa.context ? ['--qa-context', s.qa.context] : [])] : []), ...(s.facts ? ['--facts', s.facts] : []),
             '--shard', `${i}/${shards}`, '--output', out, ...paidFlags] });
         }
       } else {
         const out = join(runs, s.id, arm);
         const searchPins = Object.entries(a.config).filter(([k]) => k.startsWith('search.'));
-        const other = Object.keys(a.config).filter(k => !k.startsWith('search.'));
-        if (other.length) process.stderr.write(`[decide] note: ${s.id} cannot apply ${other.join(', ')} to the ${arm} build; category runners take search.* pins only (GBRAIN_EVAL_SEARCH_PINS)\n`);
+        const other = Object.entries(a.config).filter(([k]) => !k.startsWith('search.'));
+        if (other.length && !s.config_channel) {
+          process.stderr.write(`[decide] note: ${s.id} cannot apply ${other.map(([k]) => k).join(', ')} to the ${arm} build; its runner takes search.* pins only (GBRAIN_EVAL_SEARCH_PINS). Set config_channel: true on the source once its runner reads GBRAIN_EVAL_CONFIG (eval/runner/eval-config.ts)\n`);
+        }
         jobs.push({ source: s, arm, shard: 0, shards: 1, out, argv: [s.script, ...s.args, ...(a.gbrain ? ['--gbrain', a.gbrain] : []), '--output', out, ...paidFlags],
-          env: { GBRAIN_EVAL_SEARCH_PINS: searchPins.map(([k, v]) => `${k}=${v}`).join(',') } });
+          env: { GBRAIN_EVAL_SEARCH_PINS: searchPins.map(([k, v]) => `${k}=${v}`).join(','),
+            GBRAIN_EVAL_CONFIG: s.config_channel ? other.map(([k, v]) => `${k}=${v}`).join(',') : '' } });
       }
     }
   }
@@ -416,7 +420,7 @@ const LATER: Record<string, string> = {
 const HELP = `eval:decide — held-out decision kit
 
   init       --plan P1..P8 --gbrain <checkout>@<ref> [--baseline <checkout>@<ref>] [--type quality|cost|correctness] [--id <id>] [--out <dir>] | --fixture
-  fetch      --decision <dir> | --benchmark locomo|lme-s|beam-100k|beam-1m  [--force] [--verify-only]
+  fetch      --decision <dir> | --benchmark locomo|lme-s|beam-100k|beam-500k|beam-1m  [--force] [--verify-only]
   preflight  --decision <dir> [--budget-run-id <id>]
   dev        --decision <dir> [--paid --budget-usd <n> | --paid --budget-run-id <id>] [--shards N] [--jobs N] [--only <source>] [--output <dir>]
   verdict    --decision <dir> [--only <source>] [--json]

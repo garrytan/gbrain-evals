@@ -137,6 +137,8 @@ for (const convId of convIds) {
   const qs = questions.filter(q => q.conversation === convId).sort((a, b) => (h(a.id) < h(b.id) ? -1 : 1));
   const train = qs.filter(isTrain);
   const score = qs.filter(q => !isTrain(q));
+  // Warm the embedding cache for every question before any arm runs, so every arm reads identical query vectors.
+  for (const q of qs) await ask(e, q, bySlug);
 
   // Baseline ranking; exposure counts for the frequency arm and the cold-start subgroup.
   const exposure = new Map<string, number>();

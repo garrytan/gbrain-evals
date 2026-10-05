@@ -26,7 +26,7 @@ import { Rng, fingerprint } from './seeded.ts';
 
 export const TEMPORAL_EDGES_GENERATOR_VERSION = 'temporal-edges-gen/1';
 export const DEV_SEEDS: readonly number[] = [3, 5];
-export const PHRASING_SETS = ['A'] as const;
+export const PHRASING_SETS = ['A', 'A2', 'A3'] as const;
 export type PhrasingSet = typeof PHRASING_SETS[number] | `sealed:${string}`;
 
 /** Line templates. Placeholders: {name} {company} (a link) {slug} {role} {prev} (a link). */
@@ -50,6 +50,43 @@ export const PHRASING_A: PhrasingTemplates = {
   explicit_start: 'note — Started works_at [[{slug}]] as {role}',
   explicit_end: 'note — Ended works_at [[{slug}]]',
 };
+/**
+ * Development sets A2 and A3, written by the P1 implementer after the set B
+ * verdict, without sight of set B: wider join/leave verbs, present perfect and
+ * promotion prose for current jobs, possessive and event wording for the
+ * traps. Development data like A; a re-decision uses a fresh held-out set.
+ */
+export const PHRASING_A2: PhrasingTemplates = {
+  current: '{name} has worked at {company} for several years and is its {role}.',
+  stale_summary: '{name} is currently {role} at {company}.',
+  rejoin_eu: '{name} returned to {company} and now leads its EU team.',
+  former: '{name} spent a few years at {company} earlier on.',
+  advises: '{name} advises {company} on hiring.',
+  tl_move: 'linkedin — Moved from {prev} to {company} as {role}',
+  tl_join: 'linkedin — Was hired by {company} as {role}',
+  tl_leave: 'linkedin — Moved on from {company}',
+  tl_advise: "note — Joined {company}'s advisory board",
+  tl_invest: "note — Joined {company}'s Series B as an angel investor",
+  tl_alumni: 'event — Back at {company} for an alumni reunion',
+  explicit_start: 'note — Started works_at [[{slug}]] as {role}',
+  explicit_end: 'note — Ended works_at [[{slug}]]',
+};
+export const PHRASING_A3: PhrasingTemplates = {
+  current: '{name} was promoted to {role} at {company} last year.',
+  stale_summary: '{name} works for {company} as {role}.',
+  rejoin_eu: 'After a break, {name} rejoined {company} to run the EU team.',
+  former: 'Formerly at {company}.',
+  advises: '{name} is an advisor to {company}.',
+  tl_move: 'linkedin — Left {prev} for {company} ({role})',
+  tl_join: 'linkedin — Started at {company} as {role}',
+  tl_leave: 'linkedin — Stepped away from {company}',
+  tl_advise: 'note — Started advising {company}',
+  tl_invest: 'note — Wrote an angel check into {company} after leaving',
+  tl_alumni: 'meeting — Joined the {company} alumni dinner',
+  explicit_start: 'note — Started works_at [[{slug}]] as {role}',
+  explicit_end: 'note — Ended works_at [[{slug}]]',
+};
+const DEV_PHRASINGS: Record<(typeof PHRASING_SETS)[number], PhrasingTemplates> = { A: PHRASING_A, A2: PHRASING_A2, A3: PHRASING_A3 };
 export const PHRASING_KEYS = Object.keys(PHRASING_A) as Array<keyof PhrasingTemplates>;
 
 export function validatePhrasing(t: unknown): PhrasingTemplates {
@@ -96,8 +133,9 @@ export function generateTemporalEdgesWorld(opts: { seed: number; phrasing?: stri
   if (opts.phrasing !== undefined && !(PHRASING_SETS as readonly string[]).includes(opts.phrasing)) {
     throw new Error(`phrasing set ${opts.phrasing} is held out: only the custodian's sealed generator renders it`);
   }
-  const phrasing: PhrasingSet = opts.sealedPhrasing ? `sealed:${opts.sealedPhrasing.id}` : 'A';
-  const templates = opts.sealedPhrasing ? validatePhrasing(opts.sealedPhrasing.templates) : PHRASING_A;
+  const devSet = (opts.phrasing ?? 'A') as (typeof PHRASING_SETS)[number];
+  const phrasing: PhrasingSet = opts.sealedPhrasing ? `sealed:${opts.sealedPhrasing.id}` : devSet;
+  const templates = opts.sealedPhrasing ? validatePhrasing(opts.sealedPhrasing.templates) : DEV_PHRASINGS[devSet];
   const rng = new Rng(opts.seed * 7919 + 17);
   const companies: TeCompany[] = rng.shuffle(COMPANY_WORDS).slice(0, opts.companies ?? 12)
     .map(w => ({ slug: `companies/${w}-example`, name: title(w) }));
