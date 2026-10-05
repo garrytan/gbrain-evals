@@ -9,20 +9,25 @@
  */
 import { createHash } from 'node:crypto';
 import type { LadderDoc } from '../model-ladder-gen.ts';
-import { DEFAULT_HARD_KNOBS, HARD_KNOB_SCHEMA_VERSION, knobDigest, type H1Clause, type H1Predicate, type HardEntity, type HardKnobs, type HardTask, type HardWorld, type SessionFact } from '../hard/schema.ts';
-import { clauseHolds, correctionOf, evaluatePredicate, eventAsOf, historyValues, nameRegistry, statedValue, valueAsOf, type PredicateFacts, type UserStatement, type ValueEvent } from '../hard/semantics.ts';
+import { DEFAULT_HARD_KNOBS, hasReferenceKnobs, knobDigest, knobSchemaOf, type H1Clause, type H1Predicate, type HardEntity, type HardKnobs, type HardReference, type HardTask, type HardWorld, type RefForm, type SessionFact } from '../hard/schema.ts';
+import { clauseHolds, correctionOf, evaluatePredicate, eventAsOf, historyValues, managerKnownOn, managerReadingsOn, managerReference, nameRegistry, statedValue, valueAsOf, type PredicateFacts, type UserStatement, type ValueEvent } from '../hard/semantics.ts';
 import { assertHardWorld } from '../hard/validate.ts';
 import { normalizeValue } from '../../runner/cat40/score.ts';
 import { Rng } from './rng.ts';
 import * as P from './pools.ts';
 import {
-  TODAY, EPOCH, addDays, maxDate, minDate, randomDate, distinctDates, longDate, currentName, nameAt, nextId, folder, cardId, changesId, formId,
-  type Acct, type ChangeOrder, type Ticket,
+  TODAY, EPOCH, addDays, maxDate, minDate, randomDate, distinctDates, longDate, currentName, nameAt, nextId, folder, cardId, changesId, formId, profileId, descriptorOf,
+  type Acct, type ChangeOrder, type ChangeRow, type Ticket, type Who,
 } from './ledger.ts';
 import * as R from './render.ts';
 
-/** Version string of sealed worlds; the runner's regenerator registry uses it as the key. */
+/** Version string of sealed worlds from a knob file without the reference-form keys; the runner's regenerator registry uses it as the key. */
 export const SEALED_VERSION = 'hard-sealed';
+/** Version string of sealed worlds from a knob file with the reference-form keys (knob schema 2). */
+export const SEALED_VERSION_V2 = 'hard-sealed-v2';
+
+/** One drawn account reference: the customer (a merged-away one included), its form and text, and the record's date. */
+interface Cite { acct: Acct; form: RefForm; text: string; date: string }
 
 type Fact =
   | { kind: 'region'; region: string }
@@ -52,12 +57,27 @@ class Builder {
   firstWords = new Set<string>();
   prefixes = new Set<string>();
   ticketKeys = new Set<string>();
-  bulletins: Array<{ id: string; no: number; date: string; items: string[]; announce?: { acct: Acct; text: string } }> = [];
+  bulletins: Array<{ id: string; no: number; date: string; items: string[]; announce?: { acct: Acct; text: (w: Who) => string } }> = [];
   h3: H3Spec[] = [];
   h5: H5Ledger[] = [];
   predicates: H1Predicate[] = [];
 
-  constructor(readonly seed: number, readonly k: HardKnobs) {}
+  /** Reference forms are on: the knobs carry them and not every reference is by name. */
+  readonly v2: boolean;
+  /** Reference forms drawn so far, by the document's readable id. */
+  cites = new Map<string, Cite[]>();
+  /** Documents that record an account-lead change; they never use the lead form. */
+  timeline = new Set<string>();
+  /** Resolution documents besides record cards and profiles: rename and merger notices and slips. */
+  resolution = new Set<string>();
+  /** Rename and merger documents by the customer whose names they link. */
+  links = new Map<string, string[]>();
+  nicknames = new Set<string>();
+  private descIndex?: { n: number; map: Map<string, Acct[]> };
+
+  constructor(readonly seed: number, readonly k: HardKnobs) {
+    this.v2 = hasReferenceKnobs(k) && (k.direct_name_share ?? 1) < 1;
+  }
 
   private reserve(name: string): boolean {
     const n = normalizeValue(name);
@@ -70,6 +90,7 @@ class Builder {
     for (let i = 0; i < 20000; i++) {
       const w = r.pick(P.ONSETS) + (syllables === 3 ? r.pick(P.MIDS) : '') + r.pick(P.CODAS);
       if (this.firstWords.has(w.toLowerCase())) continue;
+      if (this.nicknames.size && [...this.nicknames].some(n => n.toLowerCase().includes(w.toLowerCase()))) continue;
       this.firstWords.add(w.toLowerCase());
       return w;
     }
@@ -120,7 +141,7 @@ class Builder {
     return { id, no };
   }
 
-  makeAccount(r: Rng, o: { kind: Acct['kind']; first?: string; firstSyllables?: 2 | 3; prefix?: string; segment?: string; region?: string; avoidSegment?: string; avoidRegion?: string; ghost?: boolean; openedBy?: string }): Acct {
+  makeAccount(r: Rng, o: { kind: Acct['kind']; first?: string; firstSyllables?: 2 | 3; prefix?: string; segment?: string; region?: string; avoidSegment?: string; avoidRegion?: string; ghost?: boolean; openedBy?: string; team?: readonly string[] }): Acct {
     const first = o.first ?? this.newFirstWord(r, o.firstSyllables ?? 2);
     const name = this.newName(r, first);
     const code = this.newCode(r, o.prefix);
@@ -135,11 +156,11 @@ class Builder {
       segment: o.segment ?? r.pick(P.SEGMENTS.filter(s => s !== o.avoidSegment)),
       region: o.region ?? r.pick(P.REGIONS.filter(s => s !== o.avoidRegion)),
       domain: `${first.toLowerCase()}-${name.split(' ')[1].toLowerCase()}.example`,
-      contacts, owner: [], renewal: [], tickets: [], form, changes: [], cos: [], announcements: [], docs: [], seq: {}, kind: o.kind,
+      contacts, owner: [], renewal: [], tickets: [], form, changes: [], cos: [], announcements: [], docs: [], pending: [], seq: {}, kind: o.kind,
     };
     this.accts.push(a);
     this.byId.set(a.id, a);
-    if (!o.ghost) { this.buildOwner(a, r); this.buildRenewal(a, r); this.buildTickets(a, r); }
+    if (!o.ghost) { this.buildOwner(a, r, o.team ?? P.STAFF); this.buildRenewal(a, r); this.buildTickets(a, r); }
     return a;
   }
 
@@ -150,13 +171,16 @@ class Builder {
     return full;
   }
 
-  private buildOwner(a: Acct, r: Rng): void {
+  /** The document a new change-log row goes on: the change log, or with reference forms its own slip. */
+  rowDoc(a: Acct): string { return this.v2 ? nextId(a, 'registry', 'slip') : changesId(a); }
+
+  private buildOwner(a: Acct, r: Rng, team: readonly string[]): void {
     const k = this.k;
-    a.owner.push({ value: r.pick(P.STAFF), effective: a.opened, recorded: a.opened, doc: cardId(a), kind: 'initial' });
+    a.owner.push({ value: r.pick(team), effective: a.opened, recorded: a.opened, doc: cardId(a), kind: 'initial' });
     const n = r.int(0, k.handoffs_per_account_max);
     let cur = a.owner[0].value;
     for (const eff of distinctDates(r, n, addDays(a.opened, 25), addDays(TODAY, 20))) {
-      const next = r.pick(P.STAFF.filter(s => s !== cur));
+      const next = r.pick(team.filter(s => s !== cur));
       if (eff <= addDays(TODAY, -8) && r.chance(k.backdated_handoff_rate)) {
         const recorded = minDate(TODAY, addDays(eff, r.int(8, 45)));
         const channel = r.chance(0.5) ? 'mail' as const : 'bulletin' as const;
@@ -168,15 +192,16 @@ class Builder {
         continue;
       }
       const recorded = minDate(TODAY, maxDate(a.opened, addDays(eff, -r.int(0, 14))));
-      const ev: ValueEvent = { value: next, effective: eff, recorded, doc: changesId(a), kind: 'change' };
+      const ev: ValueEvent = { value: next, effective: eff, recorded, doc: this.rowDoc(a), kind: 'change' };
       a.owner.push(ev);
-      a.changes.push({ logged: recorded, field: 'account lead', was: cur, now: next, effective: eff, by: 'crm-sync' });
+      a.changes.push({ logged: recorded, field: 'account lead', was: cur, now: next, effective: eff, by: 'crm-sync', doc: ev.doc });
       cur = next;
       const fixedOn = addDays(recorded, r.int(3, 25));
       if (r.chance(0.12) && fixedOn <= TODAY) {
-        const fixed = r.pick(P.STAFF.filter(s => s !== next && s !== ev.value));
-        a.owner.push(correctionOf(ev, fixed, fixedOn, changesId(a)));
-        a.changes.push({ logged: fixedOn, field: 'account lead', was: next, now: fixed, effective: eff, by: 'ops-desk', note: `correction: the row keyed ${recorded} named the wrong lead` });
+        const fixed = r.pick(team.filter(s => s !== next && s !== ev.value));
+        const fix = correctionOf(ev, fixed, fixedOn, this.rowDoc(a));
+        a.owner.push(fix);
+        a.changes.push({ logged: fixedOn, field: 'account lead', was: next, now: fixed, effective: eff, by: 'ops-desk', note: `correction: the row keyed ${recorded} named the wrong lead`, doc: fix.doc });
         cur = fixed;
       }
     }
@@ -219,16 +244,145 @@ class Builder {
     a.announcements = [];
   }
 
-  scratch(a: Acct, date: string, lines: string[]): LadderDoc {
-    const d = R.renderScratch(a, nextId(a, 'assistant', 'scratch'), date, lines);
-    a.docs.push(d);
-    return d;
+  /** An assistant scratchpad, rendered once the ledger is complete. `stated` marks a note that states the account lead, which never uses the lead form. */
+  scratch(a: Acct, date: string, lines: (w: Who) => string[], stated = false): string {
+    const id = nextId(a, 'assistant', 'scratch');
+    a.pending.push(() => { const w = this.who(id, a, date, 'name', stated); return R.renderScratch(id, date, lines(w), w); });
+    return id;
   }
 
-  forward(a: Acct, spec: Omit<R.ForwardSpec, 'id'>): LadderDoc {
+  /** A forwarded mail that mentions the customer only by short-name in reference-free worlds, rendered once the ledger is complete. */
+  forward(a: Acct, date: string, spec: (w: Who) => Omit<R.ForwardSpec, 'id' | 'date'>): string {
+    const id = nextId(a, 'mail', 'fw');
+    a.pending.push(() => R.renderForward({ id, date, ...spec(this.who(id, a, date, 'code')) }));
+    return id;
+  }
+
+  /** A rename or merger notice: a resolution document that names the customer in full. */
+  notice(a: Acct, spec: Omit<R.ForwardSpec, 'id'>): string {
     const d = R.renderForward({ id: nextId(a, 'mail', 'fw'), ...spec });
     a.docs.push(d);
-    return d;
+    this.linkDoc(a, d.id);
+    return d.id;
+  }
+
+  linkDoc(a: Acct, id: string): void {
+    this.resolution.add(id);
+    this.links.set(a.id, [...(this.links.get(a.id) ?? []), id]);
+  }
+
+  // ─── Reference forms ──────────────────────────────────────────────
+
+  /** Give each customer a desk handle: unique, and containing no customer name, short-name or first word. */
+  assignNicknames(accts: Acct[]): void {
+    const fw = [...this.firstWords];
+    const clean = new Map([...P.HANDLE_FIRST, ...P.HANDLE_SECOND].map(w => [w, !fw.some(f => w.toLowerCase().includes(f))]));
+    for (const a of accts) {
+      const r = new Rng(this.seed, `handle:${a.id}`);
+      for (let i = 0; ; i++) {
+        if (i > 5000) throw new Error('ran out of desk handles; lower large_extra_accounts');
+        const [x, y] = [r.pick(P.HANDLE_FIRST), r.pick(P.HANDLE_SECOND)];
+        const nick = `${x} ${y}`;
+        if (!clean.get(x) || !clean.get(y) || this.nicknames.has(nick) || !this.reserve(nick)) continue;
+        this.nicknames.add(nick);
+        a.nickname = nick;
+        break;
+      }
+    }
+  }
+
+  /** Mark the documents that record an account-lead change (everything in a lead timeline but the record card). */
+  markTimeline(): void {
+    for (const a of this.accts) for (const e of a.owner) if (e.doc !== cardId(a)) this.timeline.add(e.doc);
+  }
+
+  private sameDescriptor(a: Acct): Acct[] {
+    if (this.descIndex?.n !== this.accts.length) {
+      const map = new Map<string, Acct[]>();
+      for (const x of this.accts) if (!x.ghostOf) map.set(descriptorOf(x), [...(map.get(descriptorOf(x)) ?? []), x]);
+      this.descIndex = { n: this.accts.length, map };
+    }
+    return this.descIndex.map.get(descriptorOf(a)) ?? [];
+  }
+
+  /** The lead-form text for a record, or null when a reader with only earlier records could not pin it to this one customer. */
+  private leadForm(a: Acct, doc: string, date: string): string | null {
+    if (a.ghostOf || this.timeline.has(doc)) return null;
+    const m = managerKnownOn(a.owner, date);
+    if (!m || this.sameDescriptor(a).some(o => o !== a && managerReadingsOn(o.owner, date).has(m))) return null;
+    return managerReference(m, descriptorOf(a));
+  }
+
+  /**
+   * How document `doc` (dated `date`) refers to customer `a`. Without reference forms it is the
+   * form this kind of document always used (`v1`). With them, the form is drawn once per document
+   * and customer from its own stream, after the ledger is complete, so it never moves a fact.
+   */
+  who(doc: string, a: Acct, date: string, v1: 'name' | 'code', stated = false): Who {
+    if (!this.v2) return v1 === 'name' ? { form: 'name', text: nameAt(a, date), code: a.code, mail: true } : { form: 'code', text: a.code, code: a.code, mail: true };
+    const list = this.cites.get(doc) ?? [];
+    let c = list.find(x => x.acct === a);
+    if (!c) {
+      const k = this.k, r = new Rng(this.seed, `cite:${doc}:${a.id}`);
+      const draw = (forms: RefForm[]): RefForm => {
+        const w = forms.map(f => (f === 'code' ? k.code_ref_weight! : f === 'nickname' ? k.nickname_ref_weight! : k.manager_ref_weight!));
+        const total = w.reduce((x, y) => x + y, 0);
+        let u = r.next() * total;
+        for (let i = 0; i < forms.length; i++) { if (u < w[i]) return forms[i]; u -= w[i]; }
+        return forms[0];
+      };
+      let form: RefForm = r.next() < k.direct_name_share! ? 'name' : draw(['code', 'nickname', 'manager']);
+      const lead = form === 'manager' && !stated ? this.leadForm(a, doc, date) : null;
+      if (form === 'manager' && !lead) form = draw(['code', 'nickname']);
+      c = { acct: a, form, date, text: form === 'name' ? nameAt(a, date) : form === 'code' ? a.code : form === 'nickname' ? a.nickname! : lead! };
+      list.push(c);
+      this.cites.set(doc, list);
+    }
+    return { form: c.form, text: c.text, code: c.form === 'name' || c.form === 'code' ? a.code : undefined, mail: c.form === 'name' };
+  }
+
+  /** The id a document is published under: event records get an opaque id (area plus ten letters); resolution documents and ids that name no customer stay readable. */
+  opaque(id: string): string {
+    if (!this.v2 || !/^[a-z]+\/[a-z]{3}-\d{2}\//.test(id) || id.endsWith('/card') || id.endsWith('/profile') || this.resolution.has(id)) return id;
+    const h = createHash('sha256').update(`hard-sealed-id|${this.seed}|${id}`).digest();
+    const letters = 'bcdfghjkmnpqrstvwxz';
+    let token = '';
+    for (let i = 0; i < 10; i++) token += letters[h[i] % letters.length];
+    return `${id.slice(0, id.indexOf('/'))}/${token}`;
+  }
+
+  /**
+   * Reference forms: `ids` plus every resolution document their references need (WORLD_SCHEMA.md,
+   * "Oracle evidence"): the record card for a short-name, the profile for a desk handle, the profile
+   * and the lead timeline up to the record for the lead form (with what those documents need in
+   * turn), and the rename or merger documents when the chain passes through another name.
+   */
+  withResolution(ids: string[]): string[] {
+    if (!this.v2) return ids;
+    const out = [...ids], seen = new Set(ids);
+    const add = (id: string) => { if (!seen.has(id)) { seen.add(id); out.push(id); } };
+    for (let i = 0; i < out.length; i++) for (const c of this.cites.get(out[i]) ?? []) {
+      const a = c.acct;
+      if (c.form === 'code') add(cardId(a));
+      if (c.form === 'nickname' || c.form === 'manager') add(profileId(a));
+      if (c.form === 'manager') for (const e of a.owner) if (e.recorded <= c.date) add(e.doc);
+      const viaOtherName = a.ghostOf !== undefined || (c.form === 'name' ? c.text !== currentName(a) : a.names.length > 1);
+      if (viaOtherName) for (const l of this.links.get(a.ghostOf ?? a.id) ?? []) add(l);
+    }
+    return out;
+  }
+
+  /** Readable ids to published ids in a task, after adding the resolution documents. */
+  publishTask(t: HardTask): HardTask {
+    if (!this.v2) return t;
+    return { ...t, gold: { ...t.gold, evidence: this.withResolution(t.gold.evidence).map(id => this.opaque(id)) }, relevant: this.withResolution(t.relevant).map(id => this.opaque(id)) };
+  }
+
+  /** Every reference in the given documents, by published id. */
+  references(docIds: Iterable<string>): HardReference[] {
+    const out: HardReference[] = [];
+    for (const doc of docIds) for (const c of this.cites.get(doc) ?? []) out.push({ doc: this.opaque(doc), entity: c.acct.ghostOf ?? c.acct.id, form: c.form, text: c.text });
+    return out.sort((x, y) => x.doc.localeCompare(y.doc) || x.entity.localeCompare(y.entity));
   }
 
   /** Render an account's documents: registry, paper, mail, minutes, helpdesk and notes. */
@@ -236,39 +390,46 @@ class Builder {
     const r = new Rng(this.seed, `noise:${a.id}`);
     const k = this.k;
     for (const ann of a.announcements) {
-      const name = nameAt(a, ann.ev.recorded);
       if (ann.channel === 'mail') {
+        const w = this.who(ann.ev.doc, a, ann.ev.recorded, 'name');
         a.docs.push(R.renderForward({
-          id: ann.ev.doc, date: ann.ev.recorded, subject: `Lead change for ${name} (Ref: ${a.code})`, forwarder: r.pick(P.SUPPORT_STAFF), to: 'account-team',
+          id: ann.ev.doc, date: ann.ev.recorded, subject: `Lead change for ${R.whoRef(w)}`, forwarder: r.pick(P.SUPPORT_STAFF), to: 'account-team',
           note: ['This was agreed some time ago and only written up now. Filing it so the folder is complete.'],
-          original: { date: ann.ev.recorded, from: ann.previous, fromDomain: P.COMPANY_DOMAIN, lines: ['Team,', `From ${longDate(ann.ev.effective)}, ${ann.ev.value} has taken over as account lead for ${name} (Ref: ${a.code}). My handover notes are in the shared drive.`, `Apologies for the slow write-up. ${ann.previous.split(' ')[0]}`] },
+          original: { date: ann.ev.recorded, from: ann.previous, fromDomain: P.COMPANY_DOMAIN, lines: ['Team,', `From ${longDate(ann.ev.effective)}, ${ann.ev.value} has taken over as account lead for ${R.whoRef(w)}. My handover notes are in the shared drive.`, `Apologies for the slow write-up. ${ann.previous.split(' ')[0]}`] },
         }));
       } else {
         const b = this.bulletins.find(x => x.id === ann.ev.doc)!;
-        b.announce = { acct: a, text: `Late notice of a lead change: ${name} (Ref ${a.code}) moved from ${ann.previous} to ${ann.ev.value}, counting from ${longDate(ann.ev.effective)}.` };
+        b.announce = { acct: a, text: w => `Late notice of a lead change: ${R.bulletinRef(w)} moved from ${ann.previous} to ${ann.ev.value}, counting from ${longDate(ann.ev.effective)}.` };
       }
     }
+    const routine = (date: string) => { const id = nextId(a, 'mail', 'fw'); return R.routineForward(a, r, id, date, sent => this.who(id, a, sent, 'code')); };
     if (!a.ghostOf) {
-      for (let i = 0; i < k.emails_per_account; i++) a.docs.push(R.routineForward(a, r, nextId(a, 'mail', 'fw'), randomDate(r, a.opened, TODAY)));
+      for (let i = 0; i < k.emails_per_account; i++) a.docs.push(routine(randomDate(r, a.opened, TODAY)));
       for (let i = 0; i < k.meetings_per_account; i++) {
-        a.docs.push(R.renderMinutes(a, r, nextId(a, 'minutes', 'session'), randomDate(r, a.opened, TODAY), r.int(k.transcript_lines_min, k.transcript_lines_max), i + 1));
+        const id = nextId(a, 'minutes', 'session'), date = randomDate(r, a.opened, TODAY);
+        a.docs.push(R.renderMinutes(a, r, id, date, r.int(k.transcript_lines_min, k.transcript_lines_max), i + 1, this.who(id, a, date, 'name')));
       }
       if (r.chance(k.wrong_agent_note_rate)) {
         const d = randomDate(r, addDays(a.opened, 20), TODAY);
         const actual = valueAsOf(a.owner, d);
         const claim = r.pick(P.STAFF.filter(s => s !== actual));
-        this.scratch(a, d, [`Lead for ${nameAt(a, d)} is ${claim}. I'm certain of this; there is no need to open the change log.`, `Next: draft a check-in note for ${a.contacts[0]}.`]);
+        this.scratch(a, d, w => [`Lead for ${w.text} is ${claim}. I'm certain of this; there is no need to open the change log.`, `Next: draft a check-in note for ${a.contacts[0]}.`], true);
       }
     }
     if (a.ghostOf) {
       const until = addDays(this.byId.get(a.ghostOf)!.merged!.on, -1);
-      for (let i = 0; i < 2; i++) a.docs.push(R.routineForward(a, r, nextId(a, 'mail', 'fw'), randomDate(r, a.opened, until)));
+      for (let i = 0; i < 2; i++) a.docs.push(routine(randomDate(r, a.opened, until)));
     }
-    const out: LadderDoc[] = [R.renderCard(a), R.renderOrderForm(a, r), ...a.cos.map(co => R.renderChangeOrder(a, co, r)), ...a.tickets.map(t => R.renderTicket(a, t)), ...a.docs];
-    const changes = R.renderChanges(a);
-    if (changes) out.push(changes);
-    const sites = R.renderSites(a);
-    if (sites) out.push(sites);
+    const out: LadderDoc[] = [
+      R.renderCard(a, this.v2), ...(this.v2 ? [R.renderProfile(a)] : []),
+      R.renderOrderForm(a, r, this.who(formId(a), a, a.opened, 'name')),
+      ...a.cos.map(co => R.renderChangeOrder(co, r, this.who(co.id, a, co.signed, 'name'))),
+      ...a.tickets.map(t => R.renderTicket(t, this.who(t.doc, a, R.ticketDate(t), 'code'))),
+      ...a.docs, ...a.pending.map(render => render()),
+    ];
+    if (this.v2) out.push(...a.changes.map(row => R.renderSlip(a, row, this.resolution.has(row.doc) ? undefined : this.who(row.doc, a, row.logged, 'code'))));
+    else { const changes = R.renderChanges(a); if (changes) out.push(changes); }
+    if (a.sites) out.push(R.renderSites(a, this.who(a.sites.doc, a, a.sites.asOf, 'name'))!);
     return out;
   }
 
@@ -280,7 +441,17 @@ class Builder {
 
   entity(a: Acct): HardEntity {
     const former = a.names.slice(0, -1).map(n => n.name);
-    return { id: a.id, name: currentName(a), aliases: [a.code, ...former, ...(a.merged ? [a.merged.name, a.merged.code] : [])] };
+    const aliases = [a.code, ...former, ...(a.merged ? [a.merged.name, a.merged.code] : [])];
+    if (!this.v2) return { id: a.id, name: currentName(a), aliases };
+    const ghost = a.merged ? this.accts.find(x => x.ghostOf === a.id)! : undefined;
+    const nicknames = [a.nickname!, ...(ghost ? [ghost.nickname!] : [])];
+    return {
+      id: a.id, name: currentName(a), aliases: [...aliases, ...nicknames],
+      refs: {
+        codes: [a.code, ...(ghost ? [ghost.code] : [])], nicknames, descriptor: descriptorOf(a),
+        managers: a.owner.map(e => ({ name: e.value, effective: e.effective, recorded: e.recorded, doc: this.opaque(e.doc) })),
+      },
+    };
   }
 }
 
@@ -369,7 +540,7 @@ function buildH2(b: Builder, i: number): HardTask {
     for (let j = 0; j < k.h2_intermediate_notes; j++) {
       const d = randomDate(h, firstChange, TODAY);
       const v = valueAsOf(events.filter(x => x.recorded <= d), d);
-      if (v) b.scratch(a, d, [`${label} for ${nameAt(a, d)}: ${v}, going by the newest paperwork I could find today.`, `Re-check before the next invoice run.`]);
+      if (v) b.scratch(a, d, w => [`${label} for ${w.text}: ${v}, going by the newest paperwork I could find today.`, `Re-check before the next invoice run.`]);
     }
     const reversal = events.some(e => e.value === answer && e !== inForce && e.effective < inForce.effective) && events.some(e => e.value !== answer && e.effective < inForce.effective);
     const variant = inForce.kind === 'correction' ? 'correction' : naive !== answer ? 'backdated' : reversal ? 'reversal' : 'as-of';
@@ -391,7 +562,7 @@ function buildH3(b: Builder, i: number): HardTask {
   const attr = r.pick(P.H3_ATTRS);
   const { label, values } = P.ATTRIBUTES[attr];
   const nLook = r.int(k.h3_lookalikes_min, k.h3_lookalikes_max);
-  const vals = r.sample(values, nLook + 2);
+  const vals = r.sample(nLook + 2 > values.length ? [...values, ...P.ATTRIBUTE_OVERFLOW[attr]] : values, nLook + 2);
   const segment = r.pick(P.SEGMENTS), region = r.pick(P.REGIONS);
   const looks: Acct[] = [];
   const evidence: string[] = [];
@@ -425,8 +596,10 @@ function buildH3(b: Builder, i: number): HardTask {
     const on = randomDate(r, addDays(target.opened, 45), addDays(TODAY, -90));
     const newName = b.newName(r, b.newFirstWord(r, 2));
     target.names.push({ name: newName, from: on });
-    target.changes.push({ logged: on, field: 'registered name', was: oldName, now: newName, effective: on, by: 'contracts-desk', note: 'short-name unchanged' });
-    const notice = b.forward(target, {
+    const row: ChangeRow = { logged: on, field: 'registered name', was: oldName, now: newName, effective: on, by: 'contracts-desk', note: 'short-name unchanged', doc: b.rowDoc(target) };
+    target.changes.push(row);
+    if (b.v2) b.linkDoc(target, row.doc);
+    const notice = b.notice(target, {
       date: on, subject: `New registered name (Ref: ${target.code})`, forwarder: r.pick(P.SUPPORT_STAFF), to: 'account-team', note: ['Please update any templates that still carry the old name.'],
       original: { date: on, from: target.contacts[0], fromDomain: target.domain, lines: [`Hello,`, `${oldName} now trades as ${newName}. Our short-name with you stays ${target.code}, and nothing else about the account changes.`, `Best, ${target.contacts[0].split(' ')[0]}`] },
     });
@@ -434,7 +607,7 @@ function buildH3(b: Builder, i: number): HardTask {
     wrong.push(vals[nLook + 1]);
     const signed = randomDate(r, addDays(on, 5), addDays(TODAY, -5));
     attrDoc = b.addCo(target, { state: 'executed', signed, effective: signed, items: [{ label, value: vals[0] }] }).id;
-    evidence.push(changesId(target), notice.id);
+    evidence.push(row.doc, notice);
     relevant.push(formId(target));
   } else {
     target = b.makeAccount(r, { kind: 'task', segment, region, openedBy: '2025-11-30' });
@@ -445,8 +618,10 @@ function buildH3(b: Builder, i: number): HardTask {
     ghost.ghostOf = target.id;
     const on = randomDate(r, addDays(maxDate(target.opened, ghost.opened), 30), addDays(TODAY, -40));
     target.merged = { name: ghost.names[0].name, code: ghost.code, on };
-    target.changes.push({ logged: on, field: 'merged in', was: '-', now: `${ghost.names[0].name} (${ghost.code})`, effective: on, by: 'contracts-desk', note: `${ghost.code} order form retired; the combined account runs on VF-${target.code}` });
-    const notice = b.forward(target, {
+    const row: ChangeRow = { logged: on, field: 'merged in', was: '-', now: `${ghost.names[0].name} (${ghost.code})`, effective: on, by: 'contracts-desk', note: `${ghost.code} order form retired; the combined account runs on VF-${target.code}`, doc: b.rowDoc(target) };
+    target.changes.push(row);
+    if (b.v2) b.linkDoc(target, row.doc);
+    const notice = b.notice(target, {
       date: on, subject: `Accounts combined: ${ghost.code} into ${target.code}`, forwarder: r.pick(P.SUPPORT_STAFF), to: 'account-team', note: ['Merger paperwork is done. Both names now point at one account.'],
       original: { date: on, from: target.contacts[0], fromDomain: target.domain, lines: [`Hi all,`, `${ghost.names[0].name} (${ghost.code}) is now part of ${nameAt(target, on)}. Please bill and support everything under ${target.code} from today; the old ${ghost.code} order form no longer applies.`, `Thanks, ${target.contacts[0].split(' ')[0]}`] },
     });
@@ -454,7 +629,7 @@ function buildH3(b: Builder, i: number): HardTask {
     ghost.form[label] = vals[nLook + 1];
     wrong.push(vals[nLook + 1]);
     attrDoc = formId(target);
-    evidence.push(changesId(target), notice.id);
+    evidence.push(row.doc, notice);
     relevant.push(cardId(ghost), formId(ghost));
   }
   looks.forEach((l, j) => { l.form[label] = vals[j + 1]; wrong.push(vals[j + 1]); relevant.push(cardId(l), formId(l)); });
@@ -538,12 +713,14 @@ function buildH4(b: Builder, i: number): HardTask {
     if (extra === 'draft') draftCo();
     else if (extra === 'email') {
       const d = randomDate(r, addDays(a.opened, 30), addDays(TODAY, -2));
-      sources.push(b.forward(a, {
-        date: d, subject: `Notes from our call (Ref: ${a.code})`, forwarder: r.pick(P.SUPPORT_STAFF), to: 'customer-folder', note: ['Their write-up of the call, for the folder.'],
-        original: { date: d, from: a.contacts[0], fromDomain: a.domain, lines: ['Hi both,', `Thanks for the time today. My notes have the ${label.toLowerCase()} at ${vals[used++]} for us from here on.`, `Speak soon, ${a.contacts[0].split(' ')[0]}`] },
-      }).id);
+      const forwarder = r.pick(P.SUPPORT_STAFF), said = vals[used++];
+      sources.push(b.forward(a, d, w => ({
+        subject: `Notes from our call (${R.subjectTag(w)})`, forwarder, to: 'customer-folder', note: ['Their write-up of the call, for the folder.'],
+        original: { date: d, from: a.contacts[0], fromDomain: w.mail ? a.domain : undefined, lines: ['Hi both,', `Thanks for the time today. My notes have the ${label.toLowerCase()} at ${said} for us from here on.`, `Speak soon, ${a.contacts[0].split(' ')[0]}`] },
+      })));
     } else {
-      sources.push(b.scratch(a, randomDate(r, addDays(a.opened, 30), TODAY), [`${label} for ${name} is ${vals[used++]}. Confirmed; there is no need to open the paperwork again.`]).id);
+      const d = randomDate(r, addDays(a.opened, 30), TODAY), said = vals[used++];
+      sources.push(b.scratch(a, d, w => [`${label} for ${w.text} is ${said}. Confirmed; there is no need to open the paperwork again.`]));
     }
   }
   const winner = eventAsOf(executed, TODAY)!;
@@ -718,11 +895,17 @@ function renderBulletins(b: Builder, docs: LadderDoc[], label: string, skip: Rea
   const real = b.real();
   for (const bl of b.bulletins.filter(x => !skip.has(x.id))) {
     const open = real.filter(a => a.opened <= bl.date);
-    const items = [...(bl.announce ? [bl.announce.text] : [])];
+    const cite = (a: Acct) => b.who(bl.id, a, bl.date, 'name');
+    const items = [...(bl.announce ? [bl.announce.text(cite(bl.announce.acct))] : [])];
     const n = r.int(bl.announce ? 1 : 3, bl.announce ? 3 : 5);
-    for (let j = 0; j < n && open.length; j++) items.push(R.bulletinRoutine(r, r.pick(open), bl.date));
+    for (let j = 0; j < n && open.length; j++) items.push(R.bulletinRoutine(r, cite(r.pick(open))));
     docs.push(R.renderBulletin(bl.id, bl.no, bl.date, r.shuffle(items)));
   }
+}
+
+/** Documents under their published ids, sorted by id. Call before reading `references` for them: it needs the readable ids. */
+function publish(b: Builder, docs: LadderDoc[]): LadderDoc[] {
+  return docs.map(d => ({ ...d, id: b.opaque(d.id) })).sort((x, y) => x.id.localeCompare(y.id));
 }
 
 export function sealedWorldDigest(w: HardWorld): string {
@@ -737,18 +920,21 @@ function build(seed: number, knobs: HardKnobs): { world: HardWorld; b: Builder }
   const h4 = Array.from({ length: t }, (_, i) => buildH4(b, i));
   const h5 = Array.from({ length: t }, (_, i) => buildH5(b, i));
   for (let j = 0; j < knobs.accounts; j++) b.makeAccount(new Rng(seed, `acct:${j}`), { kind: 'background' });
+  if (b.v2) b.assignNicknames(b.accts);
   const h1 = buildH1(b);
   assertH3Unique(b);
+  b.markTimeline();
   const docs = b.accts.flatMap(a => b.finish(a));
   const br = new Rng(seed, 'bulletin-dates');
   for (let j = 0; j < knobs.team_updates; j++) b.reserveBulletin(randomDate(br, addDays(EPOCH, 30), TODAY));
   renderBulletins(b, docs, 'bulletins');
-  docs.sort((x, y) => x.id.localeCompare(y.id));
+  const published = publish(b, docs);
   const entities = b.real().map(a => b.entity(a));
   nameRegistry(entities, normalizeValue);
   const world: HardWorld = {
-    version: SEALED_VERSION, mode: 'hard', seed, knob_schema: HARD_KNOB_SCHEMA_VERSION, knobs, knob_digest: knobDigest(knobs), max_turns: knobs.max_turns,
-    today: TODAY, principal: { ...P.PRINCIPAL }, entities, docs, tasks: [...h1, ...h2, ...h3, ...h4, ...h5],
+    version: hasReferenceKnobs(knobs) ? SEALED_VERSION_V2 : SEALED_VERSION, mode: 'hard', seed, knob_schema: knobSchemaOf(knobs), knobs, knob_digest: knobDigest(knobs), max_turns: knobs.max_turns,
+    today: TODAY, principal: { ...P.PRINCIPAL }, entities, docs: published, tasks: [...h1, ...h2, ...h3, ...h4, ...h5].map(t => b.publishTask(t)),
+    ...(b.v2 ? { references: b.references(docs.map(d => d.id)) } : {}),
   };
   assertHardWorld(world);
   return { world, b };
@@ -769,7 +955,7 @@ function quarantine(b: Builder, a: Acct): void {
     ...matching.flatMap(s => (s.fact.kind === 'lead-on' ? [s.fact.staff] : [])),
   ]);
   const single = (staff: string): ValueEvent[] => [{ value: staff, effective: a.opened, recorded: a.opened, doc: cardId(a), kind: 'initial' }];
-  const owners = [a.owner, ...P.STAFF.filter(s => !busy.has(s)).map(single)];
+  const owners = [a.owner, ...(b.v2 ? P.APPENDED_TEAM : P.STAFF).filter(s => !busy.has(s)).map(single)];
   const renewals = [a.renewal, [{ ...a.renewal[0], value: addDays(TODAY, 400) }]];
   const ticketSets = [a.tickets, a.tickets.map(({ escalated: _e, ...t }) => t)];
   const segments = [a.segment, ...P.SEGMENTS.filter(x => x !== a.segment)];
@@ -789,14 +975,17 @@ function quarantine(b: Builder, a: Acct): void {
 function extendLarge(b: Builder, base: HardWorld): HardWorld {
   const k = b.k;
   const appended: Acct[] = [];
+  const team = b.v2 ? { team: P.APPENDED_TEAM } : {};
   const baseBulletins = new Set(b.bulletins.map(x => x.id));
   for (const s of b.h3) {
     const target = b.byId.get(s.target)!;
     const r = new Rng(b.seed, `large:h3:${s.task}`);
-    appended.push(b.makeAccount(r, { kind: 'appended', avoidRegion: target.region, avoidSegment: target.segment, ...(s.token.kind === 'first-word' ? { first: s.token.value } : { prefix: s.token.value }) }));
+    appended.push(b.makeAccount(r, { kind: 'appended', avoidRegion: target.region, avoidSegment: target.segment, ...(s.token.kind === 'first-word' ? { first: s.token.value } : { prefix: s.token.value }), ...team }));
   }
-  for (let j = 0; j < k.large_extra_accounts; j++) appended.push(b.makeAccount(new Rng(b.seed, `large:acct:${j}`), { kind: 'appended', firstSyllables: 3 }));
+  for (let j = 0; j < k.large_extra_accounts; j++) appended.push(b.makeAccount(new Rng(b.seed, `large:acct:${j}`), { kind: 'appended', firstSyllables: 3, ...team }));
   for (const a of appended) quarantine(b, a);
+  if (b.v2) b.assignNicknames(appended);
+  b.markTimeline();
 
   const docs: LadderDoc[] = [];
   for (const a of b.accts) {
@@ -804,14 +993,17 @@ function extendLarge(b: Builder, base: HardWorld): HardWorld {
     const r = new Rng(b.seed, `large:nondeciding:${a.id}`);
     for (let j = 0; j < k.large_nondeciding_per_account; j++) {
       const date = randomDate(r, a.opened, TODAY);
-      docs.push(j % 3 === 2
-        ? R.renderMinutes(a, r, nextId(a, 'minutes', 'session'), date, r.int(6, 20), (a.seq.minutes ?? 0))
-        : R.routineForward(a, r, nextId(a, 'mail', 'fw'), date));
+      if (j % 3 === 2) {
+        const id = nextId(a, 'minutes', 'session');
+        docs.push(R.renderMinutes(a, r, id, date, r.int(6, 20), (a.seq.minutes ?? 0), b.who(id, a, date, 'name')));
+      } else {
+        const id = nextId(a, 'mail', 'fw');
+        docs.push(R.routineForward(a, r, id, date, sent => b.who(id, a, sent, 'code')));
+      }
     }
   }
   for (const a of appended) docs.push(...b.finish(a));
   renderBulletins(b, docs, 'large:bulletins', baseBulletins);
-  docs.sort((x, y) => x.id.localeCompare(y.id));
 
   const facts = b.facts();
   const tasks = base.tasks.map((t, idx) => {
@@ -821,12 +1013,15 @@ function extendLarge(b: Builder, base: HardWorld): HardWorld {
     const before = t.answer_kind === 'set' ? t.gold.members!.map(m => m.id) : null;
     if (t.answer_kind === 'count' ? members.length !== t.gold.count : JSON.stringify(members) !== JSON.stringify(before)) throw new Error(`50k append changed the key of H1 task index ${idx}`);
     const ev = h1Evidence(b, idx, p, members, nearMisses);
-    return { ...t, relevant: ev.relevant, near_miss: ev.near_miss };
+    return { ...t, relevant: b.v2 ? b.withResolution(ev.relevant).map(id => b.opaque(id)) : ev.relevant, near_miss: ev.near_miss };
   });
   assertH3Unique(b);
   const entities = [...base.entities, ...appended.map(a => b.entity(a))];
   nameRegistry(entities, normalizeValue);
-  const world: HardWorld = { ...base, scale: 'large', base_digest: sealedWorldDigest(base), entities, docs: [...base.docs, ...docs], tasks };
+  const world: HardWorld = {
+    ...base, scale: 'large', base_digest: sealedWorldDigest(base), entities, docs: [...base.docs, ...publish(b, docs)], tasks,
+    ...(b.v2 ? { references: [...base.references!, ...b.references(docs.map(d => d.id))] } : {}),
+  };
   assertHardWorld(world);
   return world;
 }

@@ -4,8 +4,10 @@
  * `eval/generators/hard/semantics.ts`; prose is rendered from it afterwards.
  */
 import type { LadderDoc } from '../model-ladder-gen.ts';
+import type { RefForm } from '../hard/schema.ts';
 import type { ValueEvent } from '../hard/semantics.ts';
 import type { Rng } from './rng.ts';
+import { SECTOR, type TRADES } from './pools.ts';
 
 /** The date "today" means in every sealed world. */
 export const TODAY = '2026-09-18';
@@ -73,6 +75,8 @@ export interface ChangeRow {
   effective: string;
   by: string;
   note?: string;
+  /** The document that records the row: the change log, or (reference forms) its own change slip. */
+  doc: string;
 }
 
 export interface CoItem {
@@ -124,8 +128,11 @@ export interface Acct {
   changes: ChangeRow[];
   cos: ChangeOrder[];
   announcements: Announcement[];
-  /** Rendered documents beyond the card, change log, order form and change orders. */
+  /** Documents beyond the card, change log, order form, change orders and tickets: rendered ones, and ones rendered once the ledger is complete. */
   docs: LadderDoc[];
+  pending: Array<() => LadderDoc>;
+  /** Reference forms: the desk handle (a two-word nickname). */
+  nickname?: string;
   /** Per-folder counters for document ids. */
   seq: Record<string, number>;
   /** An account folded into this one. */
@@ -152,5 +159,19 @@ export function nextId(a: Acct, area: string, stem: string): string {
 }
 
 export const cardId = (a: Acct) => `registry/${folder(a)}/card`;
+export const profileId = (a: Acct) => `registry/${folder(a)}/profile`;
 export const changesId = (a: Acct) => `registry/${folder(a)}/changes`;
 export const formId = (a: Acct) => `paper/${folder(a)}/order-form`;
+
+/** Reference forms: territory and sector, e.g. `Delta haulage`. The sector comes from the first registered name's trade, so a rename keeps it. */
+export function descriptorOf(a: Acct): string {
+  const first = a.names[0].name;
+  return `${a.region} ${SECTOR[first.slice(first.indexOf(' ') + 1) as typeof TRADES[number]]}`;
+}
+
+/**
+ * How one document refers to one customer. `name` and `code` forms carry the
+ * short-name in `code`; `mail` says whether customer mail addresses (whose
+ * domain spells the name) may appear.
+ */
+export interface Who { form: RefForm; text: string; code?: string; mail: boolean }

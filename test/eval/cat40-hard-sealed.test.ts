@@ -6,17 +6,23 @@
  * never one of them.
  */
 import { describe, expect, test } from 'bun:test';
-import { DEFAULT_HARD_KNOBS, H5_SESSIONS, HARD_FAMILIES, RECORDED, knobDigest, type HardKnobs, type HardTask, type HardWorld } from '../../eval/generators/hard/schema.ts';
-import type { UserStatement } from '../../eval/generators/hard/semantics.ts';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { DEFAULT_HARD_KNOBS, H5_SESSIONS, HARD_FAMILIES, HARD_V2_KNOB_KEYS, RECORDED, knobDigest, validateKnobs, type HardEntity, type HardKnobs, type HardReference, type HardTask, type HardWorld } from '../../eval/generators/hard/schema.ts';
+import { managerKnownOn, managerReadingsOn, managerReference, nameRegistry, type UserStatement, type ValueEvent } from '../../eval/generators/hard/semantics.ts';
+import { STAFF } from '../../eval/generators/hard-sealed/pools.ts';
 import { hardWorldProblems } from '../../eval/generators/hard/validate.ts';
 import { normalizeValue } from '../../eval/runner/cat40/score.ts';
 import { scoreHardTask } from '../../eval/runner/cat40/score-hard.ts';
 import { HARD_WORLD_GENERATORS, checkHardWorld } from '../../eval/runner/cat40/hard.ts';
 import { generateHardWorld } from '../../eval/generators/model-ladder-hard.ts';
-import { buildSealed, generateSealedWorld, resolveH5, sealedWorldDigest, SEALED_VERSION } from '../../eval/generators/hard-sealed/generate.ts';
+import { buildSealed, generateSealedWorld, resolveH5, sealedWorldDigest, SEALED_VERSION, SEALED_VERSION_V2 } from '../../eval/generators/hard-sealed/generate.ts';
 
 const SEEDS = [101, 202, 303];
 const SMALL_LARGE: HardKnobs = { ...DEFAULT_HARD_KNOBS, large_extra_accounts: 300, large_nondeciding_per_account: 2 };
+/** The main generator's calibration round-3 knobs: the reference-form keys plus larger H2 and H3 knobs. */
+const R3 = validateKnobs(JSON.parse(readFileSync(resolve(import.meta.dir, '../../docs/benchmarks/cat40-hard/knobs.round-3.json'), 'utf8')), 'knobs.round-3.json');
+const R3_WITHOUT_FORMS = Object.fromEntries(Object.entries(R3).filter(([k]) => !(HARD_V2_KNOB_KEYS as readonly string[]).includes(k))) as unknown as HardKnobs;
 const worlds = new Map<number, ReturnType<typeof buildSealed>>(SEEDS.map(s => [s, buildSealed(s)]));
 const world = worlds.get(SEEDS[0])!.world;
 
@@ -256,5 +262,223 @@ describe('sealed generator: independence from the main generator', () => {
     expect(world.entities.filter(e => mainNames.has(normalizeValue(e.name)))).toEqual([]);
     const mainIds = new Set(main.docs.map(d => d.id));
     expect(world.docs.filter(d => mainIds.has(d.id))).toEqual([]);
+  });
+});
+
+// ─── Reference forms (knob schema 2, WORLD_SCHEMA.md "Reference forms") ───
+
+/** Digests of the sealed worlds before reference forms existed (commit 1b3020b), at the default knobs. */
+const V1_DIGESTS: Record<number, string> = {
+  101: '1413fe31f4c62396a49988733e189ae37f0e5dbd69934b8bbdee95b1f5128293',
+  202: 'df394a0b4d32add83041a06686d2ecf3e37b0a24c3d09b47ba671f24d5d54023',
+  303: '055fe1c2bb323220fda6a51a9162810bc9b7b7131c9bb2208d4caae560c76404',
+};
+const V1_LARGE_DIGEST_101 = 'dd1dbe0aa77387cfa93419d0cd24fec3d1baecc9eaad35758edd481f66e74472';
+
+const v2Worlds = new Map<number, HardWorld>(SEEDS.map(s => [s, generateSealedWorld(s, R3)]));
+const v2 = v2Worlds.get(SEEDS[0])!;
+
+const textOf = (w: HardWorld) => { const m = new Map(w.docs.map(d => [d.id, `${d.title}\n${d.body}`])); return (id: string) => m.get(id)!; };
+/** Lookups over one world, built once. Resolution documents are the documents no reference points at. */
+const contexts = new WeakMap<HardWorld, ReturnType<typeof makeContext>>();
+function makeContext(w: HardWorld) {
+  const withRefs = new Set(w.references!.map(r => r.doc));
+  return { text: textOf(w), docs: new Map(w.docs.map(d => [d.id, d])), entities: new Map(w.entities.map(e => [e.id, e])), withRefs, resolution: w.docs.filter(d => !withRefs.has(d.id)) };
+}
+const contextOf = (w: HardWorld) => { if (!contexts.has(w)) contexts.set(w, makeContext(w)); return contexts.get(w)!; };
+const managerEvents = (e: HardEntity): ValueEvent[] => e.refs!.managers.map(m => ({ value: m.name, effective: m.effective, recorded: m.recorded, doc: m.doc, kind: 'change' }));
+const namesOf = (e: HardEntity) => [e.name, ...e.aliases.filter(a => !e.refs!.codes.includes(a) && !e.refs!.nicknames.includes(a))];
+/** What a reader searches for to resolve a reference: the code or handle itself, or `<descriptor> account`. */
+const needleOf = (r: HardReference, e: HardEntity) => (r.form === 'manager' ? `${e.refs!.descriptor} account` : r.text);
+
+/**
+ * Whether `set` lets a reader tie reference `r` to its customer's canonical name using resolution documents only:
+ * the first hop through a resolution document dated on or before the record that holds the needle and a name of the
+ * customer, a second hop (rename or merger document) when that name is not the canonical one, and for the lead form
+ * every lead-timeline document recorded on or before the record.
+ */
+function tiedIn(w: HardWorld, set: ReadonlySet<string>, resolution: readonly string[], r: HardReference): boolean {
+  const { text, docs, entities } = contextOf(w), e = entities.get(r.entity)!;
+  const date = docs.get(r.doc)!.date, names = namesOf(e);
+  if (r.form === 'name' && r.text === e.name) return true;
+  const first = r.form === 'name' ? [r.text] : resolution.filter(id => docs.get(id)!.date <= date && text(id).includes(needleOf(r, e))).flatMap(id => names.filter(n => text(id).includes(n)));
+  const reached = first.includes(e.name) || resolution.some(id => text(id).includes(e.name) && first.some(n => text(id).includes(n)));
+  const timeline = r.form !== 'manager' || e.refs!.managers.every(m => m.recorded > date || set.has(m.doc));
+  return reached && timeline;
+}
+
+describe('sealed generator: reference forms', () => {
+  test('knob files without the reference keys reproduce the earlier worlds byte for byte (4k and 50k)', () => {
+    for (const s of SEEDS) expect(sealedWorldDigest(worlds.get(s)!.world)).toBe(V1_DIGESTS[s]);
+    expect(sealedWorldDigest(generateSealedWorld(101, DEFAULT_HARD_KNOBS, 'large'))).toBe(V1_LARGE_DIGEST_101);
+  });
+
+  test('direct_name_share 1 writes the reference-free world apart from version and knob fields', () => {
+    const knobs: HardKnobs = { ...DEFAULT_HARD_KNOBS, direct_name_share: 1, code_ref_weight: 1, nickname_ref_weight: 1, manager_ref_weight: 1 };
+    const w = generateSealedWorld(101, knobs);
+    expect(w).toMatchObject({ version: SEALED_VERSION_V2, knob_schema: 2, knob_digest: knobDigest(knobs) });
+    expect(w.references).toBeUndefined();
+    const strip = ({ version: _v, knob_schema: _s, knobs: _k, knob_digest: _d, ...rest }: HardWorld) => rest;
+    expect(JSON.stringify(strip(w))).toBe(JSON.stringify(strip(world)));
+  });
+
+  test('round-3 knobs without the reference keys build a valid reference-free world', () => {
+    const w = generateSealedWorld(101, R3_WITHOUT_FORMS);
+    expect(w.version).toBe(SEALED_VERSION);
+    expect(w.references).toBeUndefined();
+    expect(hardWorldProblems(w)).toEqual([]);
+  });
+
+  test('worlds carry the v2 version and knob schema, pass every invariant and are accepted by the runner', () => {
+    for (const s of SEEDS) {
+      const w = v2Worlds.get(s)!;
+      expect(w).toMatchObject({ version: SEALED_VERSION_V2, knob_schema: 2, knob_digest: knobDigest(R3) });
+      expect(hardWorldProblems(w)).toEqual([]);
+      expect(w.entities.every(e => e.refs)).toBe(true);
+    }
+    expect(typeof HARD_WORLD_GENERATORS[SEALED_VERSION_V2]).toBe('function');
+    expect(() => checkHardWorld(v2, 'sealed-v2-test')).not.toThrow();
+    const bad: HardWorld = { ...v2, references: v2.references!.map((r, i) => (i === 0 ? { ...r, text: `${r.text}x` } : r)) };
+    expect(() => checkHardWorld(bad, 'sealed-v2-test')).toThrow(/HARD_WORLD/);
+  });
+
+  test('the same seed and knobs give the same world; seeds differ', () => {
+    expect(sealedWorldDigest(generateSealedWorld(SEEDS[0], R3))).toBe(sealedWorldDigest(v2));
+    expect(new Set(SEEDS.map(s => sealedWorldDigest(v2Worlds.get(s)!))).size).toBe(SEEDS.length);
+  });
+
+  test('all four forms appear, and about direct_name_share of references use the name', () => {
+    for (const w of v2Worlds.values()) {
+      const n = (f: string) => w.references!.filter(r => r.form === f).length;
+      for (const f of ['name', 'code', 'nickname', 'manager']) expect(n(f)).toBeGreaterThan(100);
+      expect(n('name') / w.references!.length).toBeGreaterThan(R3.direct_name_share! - 0.05);
+      expect(n('name') / w.references!.length).toBeLessThan(R3.direct_name_share! + 0.05);
+    }
+  });
+
+  test('every reference resolves to exactly one customer from documents dated on or before it', () => {
+    for (const w of v2Worlds.values()) {
+      const { docs, text, resolution, entities: ents } = contextOf(w), registry = nameRegistry(w.entities, normalizeValue);
+      const byDescriptor = new Map<string, HardEntity[]>();
+      for (const x of w.entities) byDescriptor.set(x.refs!.descriptor, [...(byDescriptor.get(x.refs!.descriptor) ?? []), x]);
+      for (const e of w.entities) for (const m of e.refs!.managers) expect(docs.get(m.doc)?.date).toBe(m.recorded);
+      let checked = 0;
+      for (const r of w.references!) {
+        const e = ents.get(r.entity)!, date = docs.get(r.doc)!.date;
+        if (r.form === 'name') { expect(registry.get(normalizeValue(r.text))).toBe(r.entity); continue; }
+        const holders = r.form === 'code' ? w.entities.filter(x => x.refs!.codes.includes(r.text))
+          : r.form === 'nickname' ? w.entities.filter(x => x.refs!.nicknames.includes(r.text))
+            : [...byDescriptor.values()].flat().filter(x => r.text.endsWith(`'s ${x.refs!.descriptor} account`) && [...managerReadingsOn(managerEvents(x), date)].some(m => r.text === managerReference(m, x.refs!.descriptor)));
+        expect(holders.map(x => x.id)).toEqual([r.entity]);
+        if (r.form === 'manager') expect(r.text).toBe(managerReference(managerKnownOn(managerEvents(e), date)!, e.refs!.descriptor));
+        const intro = resolution.filter(d => d.date <= date && text(d.id).includes(needleOf(r, e)) && namesOf(e).some(n => text(d.id).includes(n)));
+        expect(intro.length).toBeGreaterThan(0);
+        checked++;
+      }
+      expect(checked).toBeGreaterThan(1000);
+    }
+  });
+
+  test('records referring by short-name, handle or lead never name the customer, and handle or lead records never give the short-name', () => {
+    const { text, entities: ents } = contextOf(v2);
+    for (const r of v2.references!.filter(x => x.form !== 'name')) {
+      const e = ents.get(r.entity)!, body = text(r.doc);
+      expect(namesOf(e).some(n => body.includes(n))).toBe(false);
+      if (r.form !== 'code') expect(e.refs!.codes.some(c => new RegExp(`\\b${c}\\b`).test(body))).toBe(false);
+    }
+  });
+
+  test('oracle evidence and relevant documents carry every resolution document their references need', () => {
+    for (const w of v2Worlds.values()) {
+      const byDoc = new Map<string, HardReference[]>();
+      for (const r of w.references!) byDoc.set(r.doc, [...(byDoc.get(r.doc) ?? []), r]);
+      const { withRefs } = contextOf(w);
+      for (const t of w.tasks) for (const ids of [t.relevant, t.gold.evidence]) {
+        const set = new Set(ids), resolution = ids.filter(id => !withRefs.has(id));
+        const untied = ids.flatMap(id => byDoc.get(id) ?? []).filter(r => !tiedIn(w, set, resolution, r));
+        expect({ task: t.id, untied: untied.length }).toEqual({ task: t.id, untied: 0 });
+      }
+    }
+  });
+
+  test('reference forms change no fact: questions and answer keys match the reference-free world from the same knobs', () => {
+    const plain = generateSealedWorld(SEEDS[0], R3_WITHOUT_FORMS);
+    expect(v2.tasks.length).toBe(plain.tasks.length);
+    v2.tasks.forEach((t, i) => {
+      const p = plain.tasks[i];
+      expect([t.id, t.question, t.sessions, t.predicate, t.gold.answer, t.gold.wrong, t.gold.count]).toEqual([p.id, p.question, p.sessions, p.predicate, p.gold.answer, p.gold.wrong, p.gold.count]);
+      expect(t.gold.members?.map(m => m.id)).toEqual(p.gold.members?.map(m => m.id));
+    });
+  });
+
+  test('every gold answer scores as a success, including set answers that use desk handles', () => {
+    for (const t of v2.tasks) {
+      const gold = t.answer_kind === 'set' ? JSON.stringify(t.gold.members!.map(m => m.names.at(-1))) : t.answer_kind === 'count' ? String(t.gold.count) : t.gold.answer![0];
+      expect(score(v2, t, gold).success).toBe(true);
+    }
+  });
+
+  test('desk handles: unique two-word handles that hold no customer name, short-name or first word and sit inside no other identifier', () => {
+    const large = generateSealedWorld(SEEDS[0], { ...R3, large_extra_accounts: 300, large_nondeciding_per_account: 2 }, 'large');
+    for (const w of [v2, large]) {
+      const own = w.entities.map(e => e.refs!.nicknames[0]);
+      expect(new Set(own).size).toBe(own.length);
+      const handles = w.entities.flatMap(e => e.refs!.nicknames);
+      expect(new Set(handles).size).toBe(handles.length);
+      expect(handles.every(h => /^[A-Z][a-z]+ [A-Z][a-z]+$/.test(h))).toBe(true);
+      const names = w.entities.flatMap(e => namesOf(e)), codes = w.entities.flatMap(e => e.refs!.codes), firsts = names.map(n => n.split(' ')[0].toLowerCase());
+      for (const h of handles) {
+        const low = h.toLowerCase();
+        expect(firsts.some(f => low.includes(f))).toBe(false);
+        expect([...names, ...codes].some(x => x.toLowerCase().includes(low) || low.includes(x.toLowerCase()))).toBe(false);
+        expect(handles.some(o => o !== h && o.includes(h))).toBe(false);
+      }
+    }
+  });
+
+  test('event records get opaque ids; record cards, profiles and rename or merger documents stay readable', () => {
+    const withRefs = new Set(v2.references!.map(r => r.doc));
+    const codes = v2.entities.flatMap(e => e.refs!.codes.map(c => c.toLowerCase()));
+    for (const id of withRefs) {
+      expect(codes.some(c => id.includes(c))).toBe(false);
+      expect(/^(paper|mail|minutes|assistant|registry)\/[a-z]{10}$|^support\/hd-\d{5}$|^bulletin\/issue-\d{3}$/.test(id)).toBe(true);
+    }
+    const resolution = v2.docs.filter(d => !withRefs.has(d.id));
+    expect(resolution.every(d => /^(registry|mail)\/[a-z]{3}-\d{2}\/(card|profile|slip-\d{2}|fw-\d{2})$/.test(d.id))).toBe(true);
+    expect(resolution.filter(d => d.id.endsWith('/profile')).length).toBe(resolution.filter(d => d.id.endsWith('/card')).length);
+    expect(v2.docs.some(d => /\d{4}-\d{2}-\d{2}|20\d{2}[-_/]?\d{2}/.test(d.id))).toBe(false);
+  });
+
+  test('50k: appended customers have their own leads, keys stay, base documents and references are kept', () => {
+    const knobs = { ...R3, large_extra_accounts: 300, large_nondeciding_per_account: 2 };
+    const base = generateSealedWorld(SEEDS[0], knobs), large = generateSealedWorld(SEEDS[0], knobs, 'large');
+    expect(hardWorldProblems(large)).toEqual([]);
+    expect(large.base_digest).toBe(sealedWorldDigest(base));
+    expect(large.docs.slice(0, base.docs.length)).toEqual(base.docs);
+    expect(large.references!.slice(0, base.references!.length)).toEqual(base.references!);
+    large.tasks.forEach((t, i) => expect(t.gold).toEqual(base.tasks[i].gold));
+    const appended = large.entities.slice(base.entities.length);
+    expect(appended.flatMap(e => e.refs!.managers.map(m => m.name)).some(m => (STAFF as readonly string[]).includes(m))).toBe(false);
+    expect(sealedWorldDigest(generateSealedWorld(SEEDS[0], knobs, 'large'))).toBe(sealedWorldDigest(large));
+  });
+
+  test('independence: no sealed reference-form sentence template or six-word run appears in a main-generator v2 world', () => {
+    const main = generateHardWorld(undefined, R3);
+    expect(main.references?.length).toBeGreaterThan(0);
+    const words = (w: HardWorld) => {
+      const out = new Set<string>();
+      for (const text of w.docs.map(d => d.body)) {
+        const ws = text.toLowerCase().replace(/[^a-z' ]+/g, ' ').split(/\s+/).filter(Boolean);
+        for (let i = 0; i + 6 <= ws.length; i++) out.add(ws.slice(i, i + 6).join(' '));
+      }
+      return out;
+    };
+    const mainGrams = words(main);
+    expect([...words(v2)].filter(g => mainGrams.has(g))).toEqual([]);
+    const skeleton = (sentence: string) => sentence.replace(/[|>*`#=_"]/g, ' ').split(/\s+/).filter(Boolean)
+      .map(x => (/\d/.test(x) ? '#' : /^[A-Z]/.test(x) ? 'N' : x.toLowerCase().replace(/[^a-z'-]/g, ''))).filter(Boolean).join(' ');
+    const sentences = (w: HardWorld) => new Set(w.docs.flatMap(d => d.body.split(/\n|(?<=[.!?])\s+/)).map(skeleton).filter(k => k.split(' ').filter(x => x !== 'N' && x !== '#').length >= 4));
+    const mainSentences = sentences(main);
+    expect([...sentences(v2)].filter(k => mainSentences.has(k))).toEqual([]);
   });
 });

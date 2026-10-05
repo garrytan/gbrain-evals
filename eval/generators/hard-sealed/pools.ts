@@ -73,3 +73,51 @@ export const TICKET_SUMMARIES = [
   'Report totals differ between the web and the PDF', 'Badge reader rejects new cards', 'Map view loads without site pins', 'Webhook deliveries arrive out of order',
   'Password reset email never arrives', 'Time zone wrong on shift reports', 'Bulk upload rejects valid CSV rows', 'Gateway reboots every few hours',
 ] as const;
+
+/**
+ * Extra attribute values, drawn only when an H3 task needs more distinct
+ * values than the base pool holds (h3_lookalikes_max above 4). Worlds whose
+ * knobs never need them draw exactly as before.
+ */
+export const ATTRIBUTE_OVERFLOW: Record<AttrKind, readonly string[]> = {
+  'payment terms': ['Net 105', 'Net 120'],
+  'support plan': ['Titanium', 'Iridium'],
+  'data retention': ['72 months', '96 months'],
+};
+
+// ─── Reference forms (knob schema 2) ────────────────────────────────
+
+/** Sector of a customer, fixed by the trade in its first registered name. Several trades share a sector. */
+export const SECTOR: Record<typeof TRADES[number], string> = {
+  'Dairy Cooperative': 'agrifood', 'Orchards': 'agrifood', 'Grain Elevators': 'agrifood', 'Seed Bank': 'agrifood', 'Brewing': 'beverage',
+  'Instruments': 'metrology', 'Optics': 'metrology', 'Freightways': 'haulage', 'Marine Supply': 'haulage', 'Cold Storage': 'haulage',
+  'Clinics': 'care', 'Pharmacy Group': 'care', 'Textile Mills': 'fabrication', 'Print Works': 'fabrication', 'Ceramics': 'materials',
+  'Glassworks': 'materials', 'Timber': 'materials', 'Tooling': 'engineering', 'Robotics': 'engineering', 'Water Board': 'utility',
+};
+
+/**
+ * Desk handles: an internal two-word nickname per customer, one word from
+ * each list. No word is a substring of another word in either list or of any
+ * person, site, territory or trade word above.
+ */
+export const HANDLE_FIRST = [
+  'Amber', 'Basalt', 'Birch', 'Bramble', 'Brass', 'Cedar', 'Chalk', 'Cinder', 'Clover', 'Coral', 'Damson', 'Dusk', 'Ebony', 'Ember', 'Fennel', 'Flint',
+  'Frost', 'Garnet', 'Ginger', 'Granite', 'Hazel', 'Heather', 'Indigo', 'Ivory', 'Jasper', 'Juniper', 'Kelp', 'Lilac', 'Linen', 'Maple', 'Marble', 'Meadow',
+  'Mist', 'Moss', 'Nutmeg', 'Ochre', 'Olive', 'Onyx', 'Opal', 'Pebble', 'Pepper', 'Pine', 'Plum', 'Quartz', 'Rowan', 'Russet', 'Saffron', 'Sage',
+  'Sable', 'Slate', 'Sorrel', 'Spruce', 'Tansy', 'Thistle', 'Thyme', 'Umber', 'Velvet', 'Willow', 'Walnut', 'Hemlock', 'Cobble', 'Tawny', 'Auburn', 'Mulberry',
+] as const;
+export const HANDLE_SECOND = [
+  'Anchor', 'Anvil', 'Arbor', 'Beacon', 'Bobbin', 'Bridle', 'Buckle', 'Candle', 'Chisel', 'Compass', 'Cradle', 'Crucible', 'Dynamo', 'Easel', 'Ferry', 'Fiddle',
+  'Funnel', 'Gimbal', 'Girder', 'Harrow', 'Hinge', 'Hopper', 'Ingot', 'Javelin', 'Keel', 'Ladder', 'Lantern', 'Lever', 'Locket', 'Loom', 'Mallet', 'Mantle',
+  'Mortar', 'Needle', 'Paddle', 'Pendulum', 'Piston', 'Plinth', 'Pulley', 'Quiver', 'Rafter', 'Rudder', 'Saddle', 'Sextant', 'Shuttle', 'Sickle', 'Spindle', 'Sprocket',
+  'Tackle', 'Thimble', 'Tiller', 'Trellis', 'Trowel', 'Turbine', 'Valve', 'Wagon', 'Whistle', 'Winch', 'Yoke', 'Bastion', 'Cistern', 'Gazebo', 'Hammock', 'Tripod',
+] as const;
+
+/**
+ * Account leads of the customers a 50k world appends (150 people, none of
+ * them in STAFF), so a lead named in a 4k record still points at one 4k
+ * customer inside the 50k world. Used only with the reference-form knobs.
+ */
+const TEAM_GIVEN = ['Aurelio', 'Brigid', 'Cosmo', 'Delphine', 'Evander', 'Florian', 'Greer', 'Hollis', 'Isolde', 'Jethro', 'Kasia', 'Leopold', 'Mabel', 'Nico', 'Ottilie'] as const;
+const TEAM_FAMILY = ['Ashdown', 'Blythe', 'Cardew', 'Danvers', 'Ellery', 'Fenwick', 'Garside', 'Hartigan', 'Ingham', 'Jessop'] as const;
+export const APPENDED_TEAM: readonly string[] = TEAM_GIVEN.flatMap(g => TEAM_FAMILY.map(f => `${g} ${f}`));

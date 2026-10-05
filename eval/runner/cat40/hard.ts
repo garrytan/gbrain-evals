@@ -95,6 +95,7 @@ export const HARD_WORLD_GENERATORS: Record<string, (seed: number, knobs: HardWor
   'model-ladder-hard-v1': (seed, knobs, scale) => generateHardWorld(seed, knobs, { scale }),
   'model-ladder-hard-v2': (seed, knobs, scale) => generateHardWorld(seed, knobs, { scale }),
   'hard-sealed': (seed, knobs, scale) => generateSealedWorld(seed, knobs, scale),
+  'hard-sealed-v2': (seed, knobs, scale) => generateSealedWorld(seed, knobs, scale),
 };
 
 /** Validate a Hard world and check it against its generator. */

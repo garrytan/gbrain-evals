@@ -45,7 +45,7 @@ const knobs = typeof flags['--knobs'] === 'string' ? validateKnobs(JSON.parse(re
 const world = generateSealedWorld(Number(seedText), knobs, scale);
 const digest = sealedWorldDigest(world);
 console.log(`hard-sealed digest ${digest}`);
-console.log(`scale ${scale}, knob digest ${world.knob_digest}, ${world.entities.length} entities, ${world.docs.length} documents, ${world.tasks.length} tasks`);
+console.log(`version ${world.version}, scale ${scale}, knob digest ${world.knob_digest}, ${world.entities.length} entities, ${world.docs.length} documents, ${world.tasks.length} tasks`);
 if (flags['--digest-only']) process.exit(0);
 
 const out = resolve(flags['--out']);
