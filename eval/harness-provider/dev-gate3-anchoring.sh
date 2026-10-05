@@ -11,7 +11,11 @@ arm() { echo "{$EMB,\"search_config\":{\"search.entity_anchoring\":\"$1\"}}"; }
 fired() {  # track -> number of anchored questions in the newest tuning file of its ingest cell
   python3 - "eval/reports/harness-dev/$1.jsonl" <<'PY'
 import glob, json, os, sys
-cell = [json.loads(l) for l in open(sys.argv[1]) if '"ingest"' in l][-1]["cell"]
+rows = [json.loads(l) for l in open(sys.argv[1])] if os.path.exists(sys.argv[1]) else []
+tune = [r for r in rows if r.get("step") == "tune"]
+if not tune or tune[-1].get("code") not in (0, 4):
+    print(-1); sys.exit()
+cell = [r for r in rows if r.get("step") == "ingest"][-1]["cell"]
 files = sorted(glob.glob(f"eval/reports/harness-cells/{cell}/tuning/auto-*.json"))
 rows = json.load(open(files[-1]))["targets"]["8000"]["rows"] if files else []
 print(len(rows[-1].get("entity_anchored", [])) if rows else 0)
@@ -22,6 +26,7 @@ slice() {  # name dataset split selector...
   $D --dataset "$ds" --split "$sp" "$@" --base '{"token_budget":8100}' --extra "$(arm false)" --targets 8000 --no-default --sample 40 --name "gate3-$name-off" -- --gbrain "$G3" $L
   $D --dataset "$ds" --split "$sp" "$@" --base '{"token_budget":8100}' --extra "$(arm true)" --targets 8000 --no-default --sample 1000 --probe --name "gate3-$name-on-probe" -- --gbrain "$G3" $L
   n=$(fired "gate3-$name-on-probe")
+  [ "$n" -lt 0 ] && { echo "[gate3] $name: the probe did not run; skipping the on arm"; return; }
   echo "[gate3] $name: anchoring fired on $n questions in the probe"
   [ "$n" -gt 0 ] && $D --dataset "$ds" --split "$sp" "$@" --base '{"token_budget":8100}' --extra "$(arm true)" --targets 8000 --no-default --sample 40 --name "gate3-$name-on" -- --gbrain "$G3" $L
 }
