@@ -15,7 +15,7 @@ describes gbrain as this repository pins it today; the changelog at the bottom r
 | Pinned product | gbrain master [`739e5cc`](https://github.com/garrytan/gbrain/tree/739e5cc89ca43b9b9351f0f203c7b12a7c0c571c) (v0.60.46.0), declared as `gbrain` in `package.json` |
 | Newer gbrain builds also measured | v0.60.49.0 (`b9ee931`), v0.60.60.0 (multi-relation planner) and v0.60.62.0 (`51f865d78`, entity recall). Results from them say so. |
 | Fixed-purpose aliases | `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), used only by the experiments that name them |
-| This repository | gbrain-evals v0.10.26 (`VERSION`) |
+| This repository | gbrain-evals v0.10.27 (`VERSION`) |
 
 This repository installs gbrain master `739e5cc`. Some results below were measured at earlier commits; each names
 its commit. The search modes have been identical since v0.48.4.0, so retrieval results from those commits describe
@@ -62,6 +62,7 @@ save, find, update and forget what it knows. The parts that matter for an agent:
 | Real agents (Claude Code, Codex) spending or destroying data without consent | **0** violations in 66 safety sessions; 96 of 102 tasks finished | v0.60.46.0 | [Cat 41](docs/benchmarks/2026-10-03-agent-operator.md) |
 | Company-knowledge tasks on five frontier models | **95.6%** success; **0 of 100** finance-only leaks into context | `51f865d78` | [Cat 40](docs/benchmarks/2026-10-02-model-ladder.md) |
 | Timeline events extracted from meetings and chats | **37 and 38 of 38**, 0.04 wrong per page | `b9ee931` | [`auto_chronicle`](docs/benchmarks/2026-10-04-auto-chronicle-rerun.md) |
+| Managed Postgres catch-up 57 ms from the database (10,000-file backlog) | **152.8 pages/min** steady, about **1.2 h** for the backlog (was 3.4 pages/min, about 49 h) | v0.60.73.0 | [Catch-up](docs/benchmarks/2026-10-05-managed-sync-catchup.md) |
 | Useful material kept when a session becomes a memory page | **88.1%** judged; 74.9% with quoted evidence | Cat 35 run | [Cat 35](docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md) |
 
 All 28 reproductions in the [bug ledger](docs/benchmarks/2026-10-01-wave-bugs.md) pass at `739e5cc`, and moving to
@@ -246,6 +247,10 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](CHANGELOG.md); this section records what this page said and why it changed.
+
+### 2026-10-05: Managed Postgres catch-up speed added to current results
+
+gbrain-evals v0.10.26. New row: a managed Postgres brain 57 ms from its database catches up at 152.8 pages per minute in steady state with gbrain v0.60.73.0 (a 10,000-file backlog in about 1.2 h), mirrored from gbrain's own bench in [the catch-up report](docs/benchmarks/2026-10-05-managed-sync-catchup.md). The page had no write-throughput row before.
 
 ### 2026-10-05: Other systems described by kind, not by name
 

@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [0.10.26] - 2026-10-05
+## [0.10.27] - 2026-10-05
 
 ### Cat 40 Hard generator v2: records stop naming their account
 
@@ -83,6 +83,19 @@ $1,794).
   drawn ([calibration.md](docs/benchmarks/cat40-hard/calibration.md)). Projections now go per model, arm and family
   from round 1's measured Hard costs (2 to 5 times v1 per cell) plus the measured judge cost; a resumed step opens a
   new budget run (`--new-budget-run`) sized to the cells still missing. `knobs.round-2.json` makes H2 and H3 harder.
+
+## [0.10.26] - 2026-10-05
+
+### Mirror: managed Postgres catch-up goes from 3.4 to about 150 pages a minute 57 ms from the database
+
+gbrain measured its managed-sync catch-up on a 57 ms latency rig across three releases
+([#5996](https://github.com/garrytan/gbrain/pull/5996), v0.60.48.0; [#6021](https://github.com/garrytan/gbrain/pull/6021),
+v0.60.58.0; [#6098](https://github.com/garrytan/gbrain/pull/6098), v0.60.73.0). Pages per minute went from 3.4
+(v0.60.39.0, one page per run) to 13.1, 28.8 and finally 152.8 in steady state with six lanes saving groups at once
+(137.4 over the whole 10k run; the 10,000-file backlog from about 49 h to about 1.2 h). Foreground page writes stay
+within about 1.7 s of idle at p95 with no failures. The bench output is copied into
+`docs/benchmarks/2026-10-05-managed-sync-catchup/raw/` and summarized in `results.json`
+([report](docs/benchmarks/2026-10-05-managed-sync-catchup.md)). Nothing was rerun here; $0.
 
 ## [0.10.25] - 2026-10-05
 

@@ -1,0 +1,1495 @@
+{
+ "schema": "gbrain.bench.managed-sync-catchup/v1",
+ "label": "combined-0",
+ "commit": "capy/5984-150-diet-window@56ede00bc",
+ "started_at": "2026-10-04T20:06:23.493Z",
+ "params": {
+  "files": 500,
+  "deletes": 34,
+  "history": 0,
+  "receipt_history": 0,
+  "pad_words": 0,
+  "seed": 1,
+  "rtt_ms": [
+   0
+  ],
+  "rows": [
+   "cli"
+  ],
+  "max_minutes": 10
+ },
+ "host": {
+  "cpus": 4,
+  "platform": "linux",
+  "bun": "1.4.2"
+ },
+ "rerun": "bun scripts/bench/managed-sync-catchup.ts --files 500 --deletes 34 --rtt 0 --rows cli --max-minutes 10 --label combined-0 --pg-port 55452 --proxy-port 55453 --api-port 58494 --out ~/.capy/work/bench-15/comb-cli-0.json",
+ "rows": [
+  {
+   "row": "cli",
+   "rtt_target_ms": 0,
+   "managed": true,
+   "backlog_entries": 534,
+   "done": true,
+   "timed_out": false,
+   "error": null,
+   "wall_s": 55.1,
+   "entries_committed": 500,
+   "entries_noop": 0,
+   "entries_waived": null,
+   "pages_per_min": 544.9,
+   "extrapolated_full_backlog_h": null,
+   "per_page_wall_ms": {
+    "p50": 0,
+    "p90": 0,
+    "import_p50": 0,
+    "delete_p50": null
+   },
+   "admission_to_commit_ms": {
+    "p50": 1629.1,
+    "p90": 1724.7,
+    "p99": 1793.5
+   },
+   "requests_by_state": {
+    "managed_sync_import:committed": 500,
+    "managed_sync_checkpoint:committed": 1
+   },
+   "cli": {
+    "invocations": 1,
+    "wall_ms_p50": 55038,
+    "wall_ms_p90": 55038,
+    "pages_per_invocation": 500,
+    "writer_pending_exits": 0,
+    "first_stderr_ms_p50": 321.6,
+    "e1_first_progress_ms": 792.1,
+    "failed_runs": {},
+    "statuses": {
+     "synced/": 1
+    }
+   },
+   "reentry": null,
+   "trace": {
+    "round_trips": 43294,
+    "round_trips_per_page": 86.6,
+    "describe_round_trips": 923,
+    "connections_opened": 10,
+    "connect_ms_p50": 17.7,
+    "db_ms_per_page": 370.4,
+    "by_process": {
+     "cli-sync": {
+      "round_trips": 43294,
+      "per_page": 86.6,
+      "ms": 185196,
+      "processes": 1
+     }
+    },
+    "round_trips_by_class": {
+     "connection-setup": 0,
+     "other-control": 26.7,
+     "cursor": 2.3,
+     "page-data": 39.7,
+     "txn-control": 8.4,
+     "journal": 1.7,
+     "guards+counters": 2.9,
+     "consumer-background": 4.8
+    },
+    "sync_process_by_class": {
+     "connection-setup": {
+      "round_trips": 20,
+      "per_page": 0,
+      "share": 0
+     },
+     "other-control": {
+      "round_trips": 13130,
+      "per_page": 26.3,
+      "share": 31
+     },
+     "cursor": {
+      "round_trips": 1091,
+      "per_page": 2.2,
+      "share": 2.6
+     },
+     "page-data": {
+      "round_trips": 19541,
+      "per_page": 39.1,
+      "share": 46.1
+     },
+     "txn-control": {
+      "round_trips": 4206,
+      "per_page": 8.4,
+      "share": 9.9
+     },
+     "journal": {
+      "round_trips": 705,
+      "per_page": 1.4,
+      "share": 1.7
+     },
+     "guards+counters": {
+      "round_trips": 1380,
+      "per_page": 2.8,
+      "share": 3.3
+     },
+     "consumer-background": {
+      "round_trips": 2298,
+      "per_page": 4.6,
+      "share": 5.4
+     }
+    },
+    "errors": {},
+    "top_statements": [
+     {
+      "sql": "SELECT value FROM config WHERE key = $N",
+      "count": 4020,
+      "total_ms": 10133.1,
+      "per_page": 8,
+      "by_process": {
+       "cli-sync": 4020
+      }
+     },
+     {
+      "sql": "WITH chosen AS ( SELECT p.* FROM pages p WHERE p.slug=$N AND p.source_id=$N ORDER BY (p.slug=$N) DESC, (p.source_id=$N) DESC, p.source_id ASC LIMIT N ) SELECT p",
+      "count": 2604,
+      "total_ms": 22188.6,
+      "per_page": 5.2,
+      "by_process": {
+       "cli-sync": 2604
+      }
+     },
+     {
+      "sql": "WITH chosen AS ( SELECT p.* FROM pages p WHERE p.slug=$N AND p.source_id=$N AND p.deleted_at IS NULL ORDER BY (p.slug=$N) DESC, (p.source_id=$N) DESC, p.source_",
+      "count": 2000,
+      "total_ms": 1023.3,
+      "per_page": 4,
+      "by_process": {
+       "cli-sync": 2000
+      }
+     },
+     {
+      "sql": "SELECT id,slug,source_path FROM pages WHERE source_id=$N AND source_path=ANY($N::text[])",
+      "count": 1568,
+      "total_ms": 45727.9,
+      "per_page": 3.1,
+      "by_process": {
+       "cli-sync": 1568
+      }
+     },
+     {
+      "sql": "SELECT lane,revoked_at,grant_ceiling FROM persistence_local_writers WHERE id=$N::uuid",
+      "count": 1105,
+      "total_ms": 6159.1,
+      "per_page": 2.2,
+      "by_process": {
+       "cli-sync": 1105
+      }
+     },
+     {
+      "sql": "SELECT set_config('?',$N,true),set_config('?',$N,true),set_config('?',$N,true),set_config('?',$N,true)",
+      "count": 1068,
+      "total_ms": 270.9,
+      "per_page": 2.1,
+      "by_process": {
+       "cli-sync": 1068
+      }
+     },
+     {
+      "sql": "begin",
+      "count": 1041,
+      "total_ms": 2578.2,
+      "per_page": 2.1,
+      "by_process": {
+       "cli-sync": 1041
+      }
+     },
+     {
+      "sql": "commit",
+      "count": 1041,
+      "total_ms": 3248.1,
+      "per_page": 2.1,
+      "by_process": {
+       "cli-sync": 1041
+      }
+     },
+     {
+      "sql": "SELECT key, value FROM config",
+      "count": 1003,
+      "total_ms": 6766.2,
+      "per_page": 2,
+      "by_process": {
+       "cli-sync": 1003
+      }
+     },
+     {
+      "sql": "WITH page_state AS ( SELECT id FROM pages WHERE slug = $N AND source_id = $N FOR KEY SHARE ), inserted AS ( INSERT INTO timeline_entries (page_id, date, source,",
+      "count": 1000,
+      "total_ms": 1166.7,
+      "per_page": 2,
+      "by_process": {
+       "cli-sync": 1000
+      }
+     },
+     {
+      "sql": "SELECT s.source_id,s.source_incarnation,s.worktree_id,s.relative_path, s.topology_generation::text AS topology_generation,w.owner_host_id,w.owner_epoch::text AS",
+      "count": 604,
+      "total_ms": 4575.4,
+      "per_page": 1.2,
+      "by_process": {
+       "cli-sync": 604
+      }
+     },
+     {
+      "sql": "SELECT incarnation FROM sources WHERE id=$N FOR SHARE",
+      "count": 568,
+      "total_ms": 162.4,
+      "per_page": 1.1,
+      "by_process": {
+       "cli-sync": 568
+      }
+     },
+     {
+      "sql": "SELECT brain_id FROM persistence_brain WHERE singleton=N",
+      "count": 537,
+      "total_ms": 186.3,
+      "per_page": 1.1,
+      "by_process": {
+       "cli-sync": 537
+      }
+     },
+     {
+      "sql": "SELECT to_regclass('?') IS NOT NULL AS present",
+      "count": 536,
+      "total_ms": 5979.7,
+      "per_page": 1.1,
+      "by_process": {
+       "cli-sync": 536
+      }
+     },
+     {
+      "sql": "SELECT p.source_id,p.source_incarnation,s.local_path AS source_root, h.local_path AS worktree_root,b.relative_path FROM shared_skill_packs p JOIN sources s ON s",
+      "count": 535,
+      "total_ms": 16198.2,
+      "per_page": 1.1,
+      "by_process": {
+       "cli-sync": 535
+      }
+     },
+     {
+      "sql": "SELECT current_setting('?',true) AS s0,current_setting('?',true) AS s1,current_setting('?',true) AS s2,current_setting('?',true) AS s3",
+      "count": 534,
+      "total_ms": 151.8,
+      "per_page": 1.1,
+      "by_process": {
+       "cli-sync": 534
+      }
+     },
+     {
+      "sql": "savepoint \"s0\"",
+      "count": 533,
+      "total_ms": 133.2,
+      "per_page": 1.1,
+      "by_process": {
+       "cli-sync": 533
+      }
+     },
+     {
+      "sql": "INSERT INTO page_write_guards(source_incarnation,slug) SELECT i,s FROM unnest($N::uuid[],$N::text[]) WITH ORDINALITY AS k(i,s,n) ORDER BY n ON CONFLICT DO NOTHI",
+      "count": 528,
+      "total_ms": 185.8,
+      "per_page": 1.1,
+      "by_process": {
+       "cli-sync": 528
+      }
+     },
+     {
+      "sql": "SELECT g.slug FROM unnest($N::uuid[],$N::text[]) WITH ORDINALITY AS k(i,s,n) JOIN page_write_guards g ON g.source_incarnation=k.i AND g.slug=k.s ORDER BY k.n FO",
+      "count": 528,
+      "total_ms": 214.6,
+      "per_page": 1.1,
+      "by_process": {
+       "cli-sync": 528
+      }
+     },
+     {
+      "sql": "SELECT p.id FROM unnest($N::text[],$N::text[]) WITH ORDINALITY AS k(src,s,n) JOIN pages p ON p.source_id=k.src AND p.slug=k.s ORDER BY k.n FOR UPDATE OF p",
+      "count": 528,
+      "total_ms": 258.5,
+      "per_page": 1.1,
+      "by_process": {
+       "cli-sync": 528
+      }
+     },
+     {
+      "sql": "SELECT set_config('?','?',true)",
+      "count": 506,
+      "total_ms": 2060.9,
+      "per_page": 1,
+      "by_process": {
+       "cli-sync": 506
+      }
+     },
+     {
+      "sql": "SELECT enabled FROM persistence_brain WHERE singleton=N",
+      "count": 504,
+      "total_ms": 3375.5,
+      "per_page": 1,
+      "by_process": {
+       "cli-sync": 504
+      }
+     },
+     {
+      "sql": "SELECT local_path FROM sources WHERE id=$N",
+      "count": 501,
+      "total_ms": 4047.4,
+      "per_page": 1,
+      "by_process": {
+       "cli-sync": 501
+      }
+     },
+     {
+      "sql": "SELECT id, slug FROM pages WHERE source_id = $N AND deleted_at IS NULL AND (content_hash = $N OR (frontmatter->>'?' = $N AND $N::text IS NOT NULL)) AND ($N::tex",
+      "count": 500,
+      "total_ms": 2150.2,
+      "per_page": 1,
+      "by_process": {
+       "cli-sync": 500
+      }
+     },
+     {
+      "sql": "SELECT id, name, local_path, last_commit, last_sync_at, config, created_at, contextual_retrieval_mode, trust_frontmatter_overrides FROM sources WHERE id = $N",
+      "count": 500,
+      "total_ms": 1988.8,
+      "per_page": 1,
+      "by_process": {
+       "cli-sync": 500
+      }
+     },
+     {
+      "sql": "SELECT set_config('?',$N,true),set_config('?',$N,true),set_config('?',$N,true)",
+      "count": 500,
+      "total_ms": 221.3,
+      "per_page": 1,
+      "by_process": {
+       "cli-sync": 500
+      }
+     },
+     {
+      "sql": "INSERT INTO pages (source_id, slug, type, page_kind, title, compiled_truth, timeline, frontmatter, content_hash, updated_at, effective_date, effective_date_sour",
+      "count": 500,
+      "total_ms": 720.4,
+      "per_page": 1,
+      "by_process": {
+       "cli-sync": 500
+      }
+     },
+     {
+      "sql": "UPDATE pages SET contextual_retrieval_mode = $N, corpus_generation = $N, updated_at = now() WHERE source_id = $N AND slug = $N AND deleted_at IS NULL",
+      "count": 500,
+      "total_ms": 533.5,
+      "per_page": 1,
+      "by_process": {
+       "cli-sync": 500
+      }
+     },
+     {
+      "sql": "DELETE FROM content_chunks WHERE page_id = (SELECT id FROM pages WHERE slug = $N AND source_id = $N)",
+      "count": 500,
+      "total_ms": 279.3,
+      "per_page": 1,
+      "by_process": {
+       "cli-sync": 500
+      }
+     },
+     {
+      "sql": "UPDATE pages SET chunker_version = $N WHERE slug = $N AND source_id = $N RETURNING id",
+      "count": 500,
+      "total_ms": 498.4,
+      "per_page": 1,
+      "by_process": {
+       "cli-sync": 500
+      }
+     },
+     {
+      "sql": "INSERT INTO content_chunks (page_id, chunk_index, chunk_text, chunk_source, \"embedding\", model, token_count, embedded_at, embedded_text_hash, embedding_input_ha",
+      "count": 500,
+      "total_ms": 580.9,
+      "per_page": 1,
+      "by_process": {
+       "cli-sync": 500
+      }
+     },
+     {
+      "sql": "DELETE FROM page_aliases WHERE source_id=$N AND slug=$N",
+      "count": 500,
+      "total_ms": 224.7,
+      "per_page": 1,
+      "by_process": {
+       "cli-sync": 500
+      }
+     },
+     {
+      "sql": "UPDATE pages SET source_path=$N WHERE source_id=$N AND slug=$N AND source_path IS DISTINCT FROM $N",
+      "count": 500,
+      "total_ms": 250.4,
+      "per_page": 1,
+      "by_process": {
+       "cli-sync": 500
+      }
+     },
+     {
+      "sql": "UPDATE facts f SET expired_at=COALESCE(expired_at,now()),row_num=NULL WHERE source_id=$N AND source_markdown_slug=$N AND row_num IS NOT NULL AND (COALESCE(f.sou",
+      "count": 500,
+      "total_ms": 319.1,
+      "per_page": 1,
+      "by_process": {
+       "cli-sync": 500
+      }
+     },
+     {
+      "sql": "SELECT N FROM takes k JOIN jsonb_to_recordset($N::text::jsonb) AS n(row_num integer,claim text,kind text,holder text) ON n.row_num=k.row_num WHERE k.page_id=$N ",
+      "count": 500,
+      "total_ms": 390.1,
+      "per_page": 1,
+      "by_process": {
+       "cli-sync": 500
+      }
+     },
+     {
+      "sql": "DELETE FROM takes WHERE page_id=$N AND row_num=ANY($N::integer[])",
+      "count": 500,
+      "total_ms": 408.2,
+      "per_page": 1,
+      "by_process": {
+       "cli-sync": 500
+      }
+     },
+     {
+      "sql": "DELETE FROM timeline_entries t USING jsonb_to_recordset($N::text::jsonb) AS d(id integer,date date,source text,summary text,detail text) WHERE t.page_id=$N AND ",
+      "count": 500,
+      "total_ms": 296.7,
+      "per_page": 1,
+      "by_process": {
+       "cli-sync": 500
+      }
+     },
+     {
+      "sql": "UPDATE timeline_entries t SET detail=r.next FROM jsonb_to_recordset($N::text::jsonb) AS r(id integer,detail text,next text) WHERE t.page_id=$N AND t.event_page_",
+      "count": 500,
+      "total_ms": 684.5,
+      "per_page": 1,
+      "by_process": {
+       "cli-sync": 500
+      }
+     },
+     {
+      "sql": "UPDATE pages SET text_projection_revision=knowledge_revision, search_vector=setweight(to_tsvector('?',COALESCE(title,'?')),'?') || setweight(to_tsvector('?',$N:",
+      "count": 500,
+      "total_ms": 568,
+      "per_page": 1,
+      "by_process": {
+       "cli-sync": 500
+      }
+     },
+     {
+      "sql": "INSERT INTO op_checkpoints(op,fingerprint,completed_keys) VALUES($N,$N,$N::text::jsonb) ON CONFLICT(op,fingerprint) DO UPDATE SET completed_keys=EXCLUDED.comple",
+      "count": 500,
+      "total_ms": 664.8,
+      "per_page": 1,
+      "by_process": {
+       "cli-sync": 500
+      }
+     }
+    ],
+    "re_entry": {
+     "processes": 1,
+     "statements_per_process_p50": 43294,
+     "statements_before_first_admission_p50": 1067,
+     "ms_from_first_statement_to_first_admission_p50": 2792.4
+    },
+    "critical_path": {
+     "pages": 500,
+     "processes": 1,
+     "phases": [
+      {
+       "phase": "publication (group)",
+       "occurrences": 33,
+       "wall_ms_total": 9910.7,
+       "wall_ms_p50": 306.7,
+       "statements": 12996,
+       "statements_p50": 398,
+       "waves": 10168,
+       "waves_p50": 299,
+       "describes": 320,
+       "statements_per_page": 26,
+       "waves_per_page": 20.3,
+       "concurrent": false
+      },
+      {
+       "phase": "publication (single)",
+       "occurrences": 1,
+       "wall_ms_total": 42.8,
+       "wall_ms_p50": 42.8,
+       "statements": 36,
+       "statements_p50": 36,
+       "waves": 49,
+       "waves_p50": 49,
+       "describes": 13,
+       "statements_per_page": 0.1,
+       "waves_per_page": 0.1,
+       "concurrent": false
+      },
+      {
+       "phase": "freeze",
+       "occurrences": 34,
+       "wall_ms_total": 24638.2,
+       "wall_ms_p50": 742.3,
+       "statements": 4527,
+       "statements_p50": 137,
+       "waves": 4451,
+       "waves_p50": 137,
+       "describes": 87,
+       "statements_per_page": 9.1,
+       "waves_per_page": 8.9,
+       "concurrent": false
+      },
+      {
+       "phase": "admission",
+       "occurrences": 34,
+       "wall_ms_total": 4232.1,
+       "wall_ms_p50": 116.3,
+       "statements": 578,
+       "statements_p50": 17,
+       "waves": 697,
+       "waves_p50": 17,
+       "describes": 119,
+       "statements_per_page": 1.2,
+       "waves_per_page": 1.4,
+       "concurrent": false
+      },
+      {
+       "phase": "cursor",
+       "occurrences": 137,
+       "wall_ms_total": 2657.6,
+       "wall_ms_p50": 10.3,
+       "statements": 1094,
+       "statements_p50": 6,
+       "waves": 1131,
+       "waves_p50": 6,
+       "describes": 37,
+       "statements_per_page": 2.2,
+       "waves_per_page": 2.3,
+       "concurrent": false
+      },
+      {
+       "phase": "claim",
+       "occurrences": 67,
+       "wall_ms_total": 2289.9,
+       "wall_ms_p50": 7.8,
+       "statements": 335,
+       "statements_p50": 5,
+       "waves": 365,
+       "waves_p50": 5,
+       "describes": 30,
+       "statements_per_page": 0.7,
+       "waves_per_page": 0.7,
+       "concurrent": false
+      },
+      {
+       "phase": "prepare",
+       "occurrences": 34,
+       "wall_ms_total": 30579,
+       "wall_ms_p50": 987.5,
+       "statements": 8757,
+       "statements_p50": 279,
+       "waves": 8698,
+       "waves_p50": 275,
+       "describes": 102,
+       "statements_per_page": 17.5,
+       "waves_per_page": 17.4,
+       "concurrent": false
+      },
+      {
+       "phase": "wait",
+       "occurrences": 34,
+       "wall_ms_total": 21904.3,
+       "wall_ms_p50": 427.9,
+       "statements": 32,
+       "statements_p50": 1,
+       "waves": 42,
+       "waves_p50": 1,
+       "describes": 10,
+       "statements_per_page": 0.1,
+       "waves_per_page": 0.1,
+       "concurrent": true
+      },
+      {
+       "phase": "commit_gap",
+       "occurrences": 32,
+       "wall_ms_total": 42557.6,
+       "wall_ms_p50": 1381.9,
+       "statements": 25940,
+       "statements_p50": 815,
+       "waves": 23175,
+       "waves_p50": 734,
+       "describes": 615,
+       "statements_per_page": 51.9,
+       "waves_per_page": 46.4,
+       "concurrent": false
+      },
+      {
+       "phase": "background",
+       "occurrences": 1,
+       "wall_ms_total": null,
+       "wall_ms_p50": null,
+       "statements": 2632,
+       "statements_p50": 2632,
+       "waves": 2724,
+       "waves_p50": 2724,
+       "describes": 103,
+       "statements_per_page": 5.3,
+       "waves_per_page": 5.4,
+       "concurrent": true
+      }
+     ],
+     "wave_check": {
+      "sync_waves": 39895,
+      "sync_statements": 42361,
+      "ms_per_wave": 4.5,
+      "publication_wall_ms_per_wave": 1
+     },
+     "rules": {
+      "wave": "A wave is a maximal run of records on one (pid, conn) whose [t, t+ms] intervals overlap; a describe record is always its own wave and the record after it starts a new one. Statements are execute and simple records; describes and connects count only as round trips.",
+      "transaction": "Records between begin and commit/rollback on one (pid, conn). publication = has the lock_timeout 1s set_config and the counter lock (INSERT INTO persistence_counters(key)); group publication = also has >= 1 member attribution (SELECT set_config('gbrain.write_request',...)); admission = INSERT INTO persistence_requests; claim = UPDATE persistence_requests [r] SET state='running' (head claim and group follower claim are separate occurrences); cursor = INSERT/UPDATE/DELETE op_checkpoints.",
+      "freeze": "Per admission: sync-process statements outside any phase transaction from the end of the first cursor save after max(previous admission end, last publication commit) up to the admission begin; waits and consumer background excluded. Wall excludes the cursor saves nested in the window.",
+      "prepare": "Per publication: statements outside any phase transaction between the end of the last claim since the previous publication and the publication begin (waits and consumer background excluded).",
+      "wait": "Per admission: WRITE_PROGRESS_SQL and SELECT * FROM persistence_requests WHERE id=$1::uuid / id=ANY($1::uuid[]) reads from the admission commit to the next cursor save (or admission). Its wall overlaps claim, prepare and publication.",
+      "commit_gap": "Between consecutive committed group publications of one sync process (all publications when it published no group): wall, and every record the process sent in between. Single publications include foreground writes the sync process's consumer published."
+     }
+    },
+    "publication": {
+     "group_transactions": 33,
+     "committed": 33,
+     "rolled_back": 0,
+     "members_total": 500,
+     "members_p50": 16,
+     "fit": {
+      "waves": {
+       "fixed": 76.8,
+       "per_member": 15.27,
+       "r2": 0.738,
+       "n": 33
+      },
+      "statements": {
+       "fixed": 34.7,
+       "per_member": 23.7,
+       "r2": 0.839,
+       "n": 33
+      }
+     },
+     "prefix": {
+      "statements_mean": 23.2,
+      "waves_mean": 26
+     },
+     "first_member_chain": {
+      "statements_mean": 27.8,
+      "waves_mean": 28.6,
+      "describes_mean": 5.9
+     },
+     "steady_member_chain": {
+      "statements_mean": 24,
+      "waves_mean": 17.7,
+      "describes_mean": 0,
+      "segments": 434
+     },
+     "completion_per_member": {
+      "statements": 0,
+      "waves": -0.14
+     },
+     "per_page_publication_round_trips": 17.6,
+     "per_page_publication_statements": 24,
+     "counter_hold": {
+      "statements_p50": 3,
+      "statements_max": 3,
+      "waves_p50": 2,
+      "waves_max": 5,
+      "ms_p50": 6.5,
+      "ms_max": 14.1,
+      "fit": {
+       "statements": {
+        "fixed": 3,
+        "per_member": 0,
+        "r2": null,
+        "n": 33
+       },
+       "waves": {
+        "fixed": 4.9,
+        "per_member": -0.14,
+        "r2": 0.15,
+        "n": 33
+       },
+       "ms": {
+        "fixed": 4.2,
+        "per_member": 0.17,
+        "r2": 0.059,
+        "n": 33
+       }
+      }
+     },
+     "by_members": [
+      {
+       "members": 4,
+       "transactions": 2,
+       "statements_p50": 122,
+       "waves_p50": 139,
+       "describes_p50": 36,
+       "wall_ms_p50": 115.5,
+       "hold_statements_p50": 3,
+       "hold_waves_p50": 5,
+       "hold_ms_p50": 5.4
+      },
+      {
+       "members": 12,
+       "transactions": 1,
+       "statements_p50": 367,
+       "waves_p50": 274,
+       "describes_p50": 0,
+       "wall_ms_p50": 308.3,
+       "hold_statements_p50": 3,
+       "hold_waves_p50": 2,
+       "hold_ms_p50": 6.5
+      },
+      {
+       "members": 16,
+       "transactions": 30,
+       "statements_p50": 398,
+       "waves_p50": 299,
+       "describes_p50": 0,
+       "wall_ms_p50": 309.8,
+       "hold_statements_p50": 3,
+       "hold_waves_p50": 2,
+       "hold_ms_p50": 6.9
+      }
+     ],
+     "single_publications": {
+      "committed": 1,
+      "statements_p50": 36,
+      "waves_p50": 49,
+      "wall_ms_p50": 42.8
+     },
+     "transactions": [
+      {
+       "process": "cli-sync",
+       "members": 4,
+       "statements": 121,
+       "waves": 139,
+       "describes": 36,
+       "wall_ms": 115,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 5,
+        "describes": 2,
+        "ms": 5.4
+       }
+      },
+      {
+       "process": "cli-sync",
+       "members": 4,
+       "statements": 122,
+       "waves": 132,
+       "describes": 28,
+       "wall_ms": 115.5,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 4,
+        "describes": 1,
+        "ms": 4.3
+       }
+      },
+      {
+       "process": "cli-sync",
+       "members": 16,
+       "statements": 398,
+       "waves": 299,
+       "describes": 0,
+       "wall_ms": 135.7,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 2,
+        "describes": 0,
+        "ms": 3.6
+       }
+      },
+      {
+       "process": "cli-sync",
+       "members": 16,
+       "statements": 398,
+       "waves": 337,
+       "describes": 29,
+       "wall_ms": 369.7,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 4,
+        "describes": 1,
+        "ms": 8.6
+       }
+      },
+      {
+       "process": "cli-sync",
+       "members": 16,
+       "statements": 398,
+       "waves": 299,
+       "describes": 0,
+       "wall_ms": 309.8,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 2,
+        "describes": 0,
+        "ms": 7
+       }
+      },
+      {
+       "process": "cli-sync",
+       "members": 16,
+       "statements": 398,
+       "waves": 340,
+       "describes": 32,
+       "wall_ms": 336.3,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 5,
+        "describes": 2,
+        "ms": 8.9
+       }
+      },
+      {
+       "process": "cli-sync",
+       "members": 16,
+       "statements": 398,
+       "waves": 299,
+       "describes": 0,
+       "wall_ms": 300.4,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 2,
+        "describes": 0,
+        "ms": 6.4
+       }
+      },
+      {
+       "process": "cli-sync",
+       "members": 16,
+       "statements": 398,
+       "waves": 299,
+       "describes": 0,
+       "wall_ms": 315.5,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 2,
+        "describes": 0,
+        "ms": 7.5
+       }
+      },
+      {
+       "process": "cli-sync",
+       "members": 16,
+       "statements": 398,
+       "waves": 336,
+       "describes": 28,
+       "wall_ms": 314.1,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 4,
+        "describes": 1,
+        "ms": 8.6
+       }
+      },
+      {
+       "process": "cli-sync",
+       "members": 16,
+       "statements": 398,
+       "waves": 299,
+       "describes": 0,
+       "wall_ms": 320.5,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 2,
+        "describes": 0,
+        "ms": 5.8
+       }
+      },
+      {
+       "process": "cli-sync",
+       "members": 16,
+       "statements": 398,
+       "waves": 299,
+       "describes": 0,
+       "wall_ms": 274.2,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 2,
+        "describes": 0,
+        "ms": 5.3
+       }
+      },
+      {
+       "process": "cli-sync",
+       "members": 16,
+       "statements": 398,
+       "waves": 341,
+       "describes": 33,
+       "wall_ms": 372.2,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 5,
+        "describes": 2,
+        "ms": 14.1
+       }
+      },
+      {
+       "process": "cli-sync",
+       "members": 16,
+       "statements": 398,
+       "waves": 299,
+       "describes": 0,
+       "wall_ms": 306.7,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 2,
+        "describes": 0,
+        "ms": 6.9
+       }
+      },
+      {
+       "process": "cli-sync",
+       "members": 16,
+       "statements": 398,
+       "waves": 299,
+       "describes": 0,
+       "wall_ms": 303,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 2,
+        "describes": 0,
+        "ms": 6.9
+       }
+      },
+      {
+       "process": "cli-sync",
+       "members": 16,
+       "statements": 398,
+       "waves": 336,
+       "describes": 28,
+       "wall_ms": 371.4,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 4,
+        "describes": 1,
+        "ms": 9.5
+       }
+      },
+      {
+       "process": "cli-sync",
+       "members": 16,
+       "statements": 398,
+       "waves": 299,
+       "describes": 0,
+       "wall_ms": 261.2,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 2,
+        "describes": 0,
+        "ms": 5.5
+       }
+      },
+      {
+       "process": "cli-sync",
+       "members": 16,
+       "statements": 398,
+       "waves": 337,
+       "describes": 29,
+       "wall_ms": 371,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 4,
+        "describes": 1,
+        "ms": 9.1
+       }
+      },
+      {
+       "process": "cli-sync",
+       "members": 16,
+       "statements": 398,
+       "waves": 299,
+       "describes": 0,
+       "wall_ms": 302.2,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 2,
+        "describes": 0,
+        "ms": 6.4
+       }
+      },
+      {
+       "process": "cli-sync",
+       "members": 16,
+       "statements": 398,
+       "waves": 299,
+       "describes": 0,
+       "wall_ms": 305.2,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 2,
+        "describes": 0,
+        "ms": 7.2
+       }
+      },
+      {
+       "process": "cli-sync",
+       "members": 16,
+       "statements": 398,
+       "waves": 299,
+       "describes": 0,
+       "wall_ms": 289.6,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 2,
+        "describes": 0,
+        "ms": 7.1
+       }
+      },
+      {
+       "process": "cli-sync",
+       "members": 16,
+       "statements": 398,
+       "waves": 336,
+       "describes": 28,
+       "wall_ms": 166.9,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 4,
+        "describes": 1,
+        "ms": 5.2
+       }
+      },
+      {
+       "process": "cli-sync",
+       "members": 16,
+       "statements": 398,
+       "waves": 299,
+       "describes": 0,
+       "wall_ms": 278.4,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 2,
+        "describes": 0,
+        "ms": 5.9
+       }
+      },
+      {
+       "process": "cli-sync",
+       "members": 16,
+       "statements": 398,
+       "waves": 299,
+       "describes": 0,
+       "wall_ms": 285.6,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 2,
+        "describes": 0,
+        "ms": 4.7
+       }
+      },
+      {
+       "process": "cli-sync",
+       "members": 16,
+       "statements": 398,
+       "waves": 299,
+       "describes": 0,
+       "wall_ms": 194,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 2,
+        "describes": 0,
+        "ms": 3.5
+       }
+      },
+      {
+       "process": "cli-sync",
+       "members": 16,
+       "statements": 398,
+       "waves": 299,
+       "describes": 0,
+       "wall_ms": 290.4,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 2,
+        "describes": 0,
+        "ms": 6
+       }
+      },
+      {
+       "process": "cli-sync",
+       "members": 16,
+       "statements": 398,
+       "waves": 299,
+       "describes": 0,
+       "wall_ms": 239.6,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 2,
+        "describes": 0,
+        "ms": 4.7
+       }
+      },
+      {
+       "process": "cli-sync",
+       "members": 16,
+       "statements": 439,
+       "waves": 334,
+       "describes": 4,
+       "wall_ms": 374.6,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 2,
+        "describes": 0,
+        "ms": 7.1
+       }
+      },
+      {
+       "process": "cli-sync",
+       "members": 16,
+       "statements": 479,
+       "waves": 362,
+       "describes": 4,
+       "wall_ms": 417.2,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 2,
+        "describes": 0,
+        "ms": 8.5
+       }
+      },
+      {
+       "process": "cli-sync",
+       "members": 16,
+       "statements": 479,
+       "waves": 362,
+       "describes": 4,
+       "wall_ms": 370.8,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 2,
+        "describes": 0,
+        "ms": 6.1
+       }
+      },
+      {
+       "process": "cli-sync",
+       "members": 16,
+       "statements": 479,
+       "waves": 401,
+       "describes": 33,
+       "wall_ms": 396.1,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 4,
+        "describes": 1,
+        "ms": 5.6
+       }
+      },
+      {
+       "process": "cli-sync",
+       "members": 16,
+       "statements": 479,
+       "waves": 362,
+       "describes": 4,
+       "wall_ms": 408.8,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 2,
+        "describes": 0,
+        "ms": 7.9
+       }
+      },
+      {
+       "process": "cli-sync",
+       "members": 16,
+       "statements": 479,
+       "waves": 356,
+       "describes": 0,
+       "wall_ms": 390.7,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 2,
+        "describes": 0,
+        "ms": 7.1
+       }
+      },
+      {
+       "process": "cli-sync",
+       "members": 12,
+       "statements": 367,
+       "waves": 274,
+       "describes": 0,
+       "wall_ms": 308.3,
+       "committed": true,
+       "hold": {
+        "statements": 3,
+        "waves": 2,
+        "describes": 0,
+        "ms": 6.5
+       }
+      }
+     ],
+     "rules": {
+      "member_chain": "Members are split at their attribution statements (with its describe, if any): segment i runs from member i's attribution to member i+1's, so it holds member i's apply/effects tail and member i+1's authorize/snapshot/validate lead. The rotation leaves the steady per-member total unchanged. Steady = segments 2..n-1 of transactions with >= 3 members; segment 1 carries first-use describes, the last one runs into the counter lock and is part of the fixed cost.",
+      "counter_hold": "From the counter row lock (SELECT * FROM persistence_counters ... FOR UPDATE, with its describe) to the commit, inclusive. INSERT INTO persistence_counters(key) ... ON CONFLICT DO NOTHING creates missing rows and locks no existing one, so it is outside the hold."
+     }
+    },
+    "pg_stat_statements_calls_ex_txn": 38755,
+    "traced_executions_ex_txn": 38729,
+    "reconciliation_pct": -0.1
+   },
+   "pg_stat_statements": {
+    "available": true,
+    "calls": 40162,
+    "calls_ex_txn": 38755,
+    "total_ms": 4909.4,
+    "top": [
+     {
+      "query": "SELECT value FROM config WHERE key = $1",
+      "calls": 4021,
+      "total_ms": 50.8
+     },
+     {
+      "query": "WITH chosen AS ( SELECT p.* FROM pages p WHERE p.slug=$1 AND p.source_id=$2 ORDER BY (p.slug=$1) DESC, (p.source_id=$3) DESC, p.source_id ASC LIMIT $4 ) SELECT p.*, (SELECT s.incarnation FROM sources ",
+      "calls": 2604,
+      "total_ms": 232.7
+     },
+     {
+      "query": "WITH chosen AS ( SELECT p.* FROM pages p WHERE p.slug=$1 AND p.source_id=$2 AND p.deleted_at IS NULL ORDER BY (p.slug=$1) DESC, (p.source_id=$3) DESC, p.source_id ASC LIMIT $4 ) SELECT p.*, (SELECT s.",
+      "calls": 2000,
+      "total_ms": 263.7
+     },
+     {
+      "query": "SELECT id,slug,source_path FROM pages WHERE source_id=$1 AND source_path=ANY($2::text[])",
+      "calls": 1568,
+      "total_ms": 49.4
+     },
+     {
+      "query": "SELECT lane,revoked_at,grant_ceiling FROM persistence_local_writers WHERE id=$1::uuid",
+      "calls": 1105,
+      "total_ms": 29.1
+     },
+     {
+      "query": "SELECT set_config($5,$1,$6),set_config($7,$2,$8),set_config($9,$3,$10),set_config($11,$4,$12)",
+      "calls": 1068,
+      "total_ms": 8.4
+     },
+     {
+      "query": "begin",
+      "calls": 1041,
+      "total_ms": 1.2
+     },
+     {
+      "query": "SELECT key, value FROM config",
+      "calls": 1003,
+      "total_ms": 19
+     },
+     {
+      "query": "SELECT s.source_id,s.source_incarnation,s.worktree_id,s.relative_path, s.topology_generation::text AS topology_generation,w.owner_host_id,w.owner_epoch::text AS owner_epoch,w.state, h.local_path,h.coo",
+      "calls": 604,
+      "total_ms": 22.8
+     },
+     {
+      "query": "WITH page_state AS ( SELECT id FROM pages WHERE slug = $1 AND source_id = $2 FOR KEY SHARE ), inserted AS ( INSERT INTO timeline_entries (page_id, date, source, summary, detail) SELECT id, $3::date, $",
+      "calls": 592,
+      "total_ms": 157.5
+     },
+     {
+      "query": "SELECT incarnation FROM sources WHERE id=$1 FOR SHARE",
+      "calls": 568,
+      "total_ms": 12.3
+     },
+     {
+      "query": "SELECT brain_id FROM persistence_brain WHERE singleton=$1",
+      "calls": 537,
+      "total_ms": 6.2
+     },
+     {
+      "query": "SELECT to_regclass($1) IS NOT NULL AS present",
+      "calls": 536,
+      "total_ms": 5
+     },
+     {
+      "query": "SELECT p.source_id,p.source_incarnation,s.local_path AS source_root, h.local_path AS worktree_root,b.relative_path FROM shared_skill_packs p JOIN sources s ON s.id=p.source_id AND s.incarnation=p.sour",
+      "calls": 535,
+      "total_ms": 13.1
+     },
+     {
+      "query": "SELECT current_setting($1,$2) AS s0,current_setting($3,$4) AS s1,current_setting($5,$6) AS s2,current_setting($7,$8) AS s3",
+      "calls": 534,
+      "total_ms": 4.2
+     },
+     {
+      "query": "SELECT p.id FROM unnest($1::text[],$2::text[]) WITH ORDINALITY AS k(src,s,n) JOIN pages p ON p.source_id=k.src AND p.slug=k.s ORDER BY k.n FOR UPDATE OF p",
+      "calls": 528,
+      "total_ms": 29.8
+     },
+     {
+      "query": "INSERT INTO page_write_guards(source_incarnation,slug) SELECT i,s FROM unnest($1::uuid[],$2::text[]) WITH ORDINALITY AS k(i,s,n) ORDER BY n ON CONFLICT DO NOTHING",
+      "calls": 528,
+      "total_ms": 45.4
+     },
+     {
+      "query": "SELECT g.slug FROM unnest($1::uuid[],$2::text[]) WITH ORDINALITY AS k(i,s,n) JOIN page_write_guards g ON g.source_incarnation=k.i AND g.slug=k.s ORDER BY k.n FOR UPDATE OF g",
+      "calls": 528,
+      "total_ms": 62.1
+     },
+     {
+      "query": "SELECT set_config($1,$2,$3)",
+      "calls": 506,
+      "total_ms": 6.6
+     },
+     {
+      "query": "SELECT enabled FROM persistence_brain WHERE singleton=$1",
+      "calls": 504,
+      "total_ms": 8.8
+     },
+     {
+      "query": "SELECT local_path AS value FROM sources WHERE id = $1",
+      "calls": 503,
+      "total_ms": 9.1
+     },
+     {
+      "query": "INSERT INTO op_checkpoints(op,fingerprint,completed_keys) VALUES($1,$2,$3::text::jsonb) ON CONFLICT(op,fingerprint) DO UPDATE SET completed_keys=EXCLUDED.completed_keys,updated_at=now()",
+      "calls": 500,
+      "total_ms": 46.9
+     },
+     {
+      "query": "SELECT $2 FROM jsonb_to_recordset(($1::jsonb)->$3) AS v(from_slug text, to_slug text, from_source_id text, to_source_id text) LEFT JOIN pages f ON f.slug=v.from_slug AND f.source_id=v.from_source_id A",
+      "calls": 500,
+      "total_ms": 339.7
+     },
+     {
+      "query": "DELETE FROM content_chunks WHERE page_id = (SELECT id FROM pages WHERE slug = $1 AND source_id = $2)",
+      "calls": 500,
+      "total_ms": 15.5
+     },
+     {
+      "query": "INSERT INTO content_chunks (page_id, chunk_index, chunk_text, chunk_source, \"embedding\", model, token_count, embedded_at, embedded_text_hash, embedding_input_hash, language, symbol_name, symbol_type, ",
+      "calls": 500,
+      "total_ms": 281.4
+     }
+    ]
+   },
+   "guard_wait": {
+    "statements": 582,
+    "total_ms": 240,
+    "per_page_ms": 0.5,
+    "p50_ms": 0.3,
+    "max_ms": 3.8
+   },
+   "claims": {
+    "claims_by_process": {
+     "cli-sync": 34
+    },
+    "publications_by_process": {
+     "cli-sync": 1
+    },
+    "released_unpublished_by_process": {}
+   },
+   "lock_waits": {
+    "samples": 0,
+    "sample_every_ms": 100,
+    "by_holder": []
+   },
+   "db_growth_bytes_per_page": 22643,
+   "db_size_bytes": 26622999,
+   "persistence_counters": [
+    {
+     "key": "brain",
+     "outstanding": 0,
+     "lifetime_ids": 501,
+     "intent_bytes": 0,
+     "terminal_bytes": 8208384
+    },
+    {
+     "key": "principal:local_cli:ac1c4e34-0a45-4299-be67-a2592080af68",
+     "outstanding": 0,
+     "lifetime_ids": 501,
+     "intent_bytes": 0,
+     "terminal_bytes": 8208384
+    },
+    {
+     "key": "worktree:60c16436-c3b5-48a0-873d-c3ca88d53ef6",
+     "outstanding": 0,
+     "lifetime_ids": 0,
+     "intent_bytes": 0,
+     "terminal_bytes": 0
+    }
+   ],
+   "capacity_headroom": {
+    "terminal_bytes_per_request": 16384,
+    "brain_lifetime_ids_used_pct": 0.1,
+    "principal_terminal_bytes_used_pct": 0.5,
+    "full_backlog_principal_terminal_bytes_pct": 1.1,
+    "full_backlog_principal_lifetime_ids_pct": 0.4
+   },
+   "rtt_measured_ms": 0.4,
+   "effects": {
+    "groups": 33,
+    "requests": 500,
+    "effects": 0,
+    "compacted_requests": 0,
+    "effects_per_group": {
+     "mean": 0,
+     "p50": 0,
+     "max": 0
+    },
+    "effects_per_request": 0,
+    "by_kind": {},
+    "final_backlog": 0
+   },
+   "effects_backlog": {
+    "samples": 28,
+    "sample_every_ms": 2000,
+    "max": 0,
+    "p50": 0,
+    "final": 0
+   },
+   "cli_is_owner_host": true
+  }
+ ],
+ "finished_at": "2026-10-04T20:07:27.715Z"
+}
