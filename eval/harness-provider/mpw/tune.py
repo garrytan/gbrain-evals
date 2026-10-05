@@ -64,7 +64,12 @@ async def _measure(run, prov, queries, spec, task) -> tuple[list[int], list[str]
         prompt = build(pq.query, rendered, {**meta, "_raw_response": raw})
         tokens.append(ctxmod.inserted_context(build, pq.query, rendered, meta, raw, prompt).tokens)
 
-    await asyncio.gather(*[one(q) for q in queries])
+    # One unit at a time, as the cell runner does: providers keep one live store per unit.
+    by_unit: dict = {}
+    for q in queries:
+        by_unit.setdefault(str(q.user_id), []).append(q)
+    for unit_queries in by_unit.values():
+        await asyncio.gather(*[one(q) for q in unit_queries])
     return tokens, errors
 
 
