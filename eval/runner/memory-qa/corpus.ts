@@ -238,11 +238,12 @@ function messageIds(src: unknown): number[] {
   return [];
 }
 
-export function loadBeam(size: '100k' | '500k' | '1m'): Corpus {
+/** `only` restricts loading to those conversation ids (a split), so other conversations' files are never read. */
+export function loadBeam(size: '100k' | '500k' | '1m', only?: ReadonlySet<string>): Corpus {
   const m = beamManifest();
   const conversations: Conversation[] = [];
   const questions: MemoryQuestion[] = [];
-  for (const c of m.sizes[size]) {
+  for (const c of m.sizes[size].filter(x => !only || only.has(x.conversation))) {
     const chat = JSON.parse(readDatasetFile({ path: `beam/${c.chat_path}`, url: m.raw_base + c.chat_path, sha256: c.chat_sha256 }, `beam-${size}`)) as
       Array<{ batch_number: number; time_anchor?: string | null; turns: Array<Array<{ role: string; id: number; content: string; time_anchor?: string }>> }>;
     const sessions: Session[] = [];
