@@ -1,0 +1,57 @@
+# Graphiti (graphiti-core 0.30.2, not Zep Cloud) on Neo4j 5.26 behind the shootout shim (eval/systems/PROTOCOL.md).
+#
+#   SHIM_CONFIG=recipe|common  PROXY_URL=http://<metering proxy host:port>  docker compose up -d --build
+#
+# Every vendor container sits on `internal`, a Docker network with no route out. The `egress` relay is the only
+# container on both networks: it publishes the shim on 127.0.0.1:${SHIM_HOST_PORT:-8700} and forwards
+# egress:9000 to the metering proxy at PROXY_URL (scheme://host:port; its path is ignored). OPENAI_BASE_URL
+# points at http://egress:9000${PROXY_OPENAI_PATH}, so a provider call can only reach the proxy, which injects
+# the real key. The containers hold a dummy key.
+name: shootout-graphiti
+
+services:
+  neo4j:
+    image: neo4j:5.26.2@sha256:099b9f74968c123209972835417985ed2a1cc19c0422c0753a313e26a736c365
+    environment:
+      NEO4J_AUTH: neo4j/shootout-graphiti
+      NEO4J_server_memory_heap_max__size: 2G
+      NEO4J_server_memory_pagecache_size: 1G
+      NEO4J_dbms_usage__report_enabled: "false"
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p shootout-graphiti 'RETURN 1' >/dev/null 2>&1"]
+      interval: 3s
+      retries: 60
+    networks: [internal]
+
+  shim:
+    build: { context: .., dockerfile: graphiti/Dockerfile }
+    environment:
+      SHIM_CONFIG: ${SHIM_CONFIG:-recipe}
+      SHIM_GRANULARITY: ${SHIM_GRANULARITY:-session}
+      NEO4J_URI: bolt://neo4j:7687
+      NEO4J_USER: neo4j
+      NEO4J_PASSWORD: shootout-graphiti
+      OPENAI_BASE_URL: http://egress:9000${PROXY_OPENAI_PATH:-/openai/v1}
+      OPENAI_API_KEY: dummy-key-the-proxy-injects-the-real-one
+      GRAPHITI_TELEMETRY_ENABLED: "false"
+    depends_on:
+      neo4j: { condition: service_healthy }
+    networks: [internal]
+
+  egress:
+    image: alpine/socat@sha256:82ad20f6f6e29b91ff33b6662d24063522b1378f08fd8569cd3ab412cac13f50
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        upstream=$${PROXY_URL#*://}; upstream=$${upstream%%/*}
+        socat TCP-LISTEN:8700,fork,reuseaddr TCP:shim:8700 &
+        exec socat TCP-LISTEN:9000,fork,reuseaddr TCP:$$upstream
+    environment:
+      PROXY_URL: ${PROXY_URL:-http://host.docker.internal:8787}
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    ports: ["127.0.0.1:${SHIM_HOST_PORT:-8700}:8700"]
+    networks: [internal, outside]
+
+networks:
+  internal: { internal: true }
+  outside: {}
