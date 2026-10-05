@@ -21,12 +21,42 @@
  * object the custodian's runner loads from custody (`sealedPhrasing`). A
  * phrasing name other than "A" is refused, so held-out text never reaches the
  * implementer's tree.
+ *
+ * Render `relation-lines` (P5 delta H7): for a seeded half of the people
+ * (sha256 of seed and slug, `rangeRendered`), employment is stated only as
+ * typed relation lines with validity ranges, one per stint, under a `## Roles`
+ * heading (the grammar never reads lines inside Timeline or other
+ * machine-written sections):
+ *
+ *   - works_at @effective[2019-03-04,2021-05-06) [[companies/acme-example]]
+ *   - works_at @effective[2021-05-06,) [[companies/globex-example]]
+ *   - advises @effective[2025-03-01,) [[companies/wonka-example]]
+ *
+ * Their employment prose, join/leave timeline lines and frontmatter `company:`
+ * objects are dropped; investment and alumni trap lines stay. The other half
+ * render exactly as in the default mode. The ledger and probes do not change.
+ *
+ * E5 probe (P5 delta H10, `e5Probe`): extra probe people on dedicated probe
+ * companies, each with one long current stint (a dated join line) and a later
+ * dated advisory line in one of three forms: the phrasing set's `tl_advise`,
+ * "Became an advisor at [X]" and "Took an advisory role with [X]" (the two
+ * forms the delta preregistration names). The advisory target X is the
+ * employer itself (`same`) or another probe company the page also asserts
+ * works_at to in an undated sentence (`other`). Any applied single-value
+ * closure on a probe person is wrong: nothing in their ledger ended.
  */
+import { createHash } from 'node:crypto';
 import { Rng, fingerprint } from './seeded.ts';
 
 export const TEMPORAL_EDGES_GENERATOR_VERSION = 'temporal-edges-gen/1';
 export const DEV_SEEDS: readonly number[] = [3, 5];
 export const PHRASING_SETS = ['A', 'A2', 'A3'] as const;
+export const RENDER_MODES = ['prose', 'relation-lines'] as const;
+export type RenderMode = typeof RENDER_MODES[number];
+export const E5_FORMS = ['tl_advise', 'became_advisor_at', 'took_advisory_role_with'] as const;
+export type E5Form = typeof E5_FORMS[number];
+export const E5_TARGETS = ['same', 'other'] as const;
+export const E5_PROBES_PER_SEED = 36;
 export type PhrasingSet = typeof PHRASING_SETS[number] | `sealed:${string}`;
 
 /** Line templates. Placeholders: {name} {company} (a link) {slug} {role} {prev} (a link). */
@@ -108,6 +138,7 @@ export interface TePerson {
   alumni_meeting: { company: string; on: string } | null;
   rejoin_eu: boolean;
 }
+export interface TeE5Probe extends TePerson { e5: { form: E5Form; target: typeof E5_TARGETS[number]; advisory_target: string; advisory_on: string } }
 export interface TeCompany { slug: string; name: string }
 export interface TePage { slug: string; content: string }
 export interface TemporalEdgesWorld {
@@ -116,8 +147,19 @@ export interface TemporalEdgesWorld {
   pages: TePage[]; fingerprint: string;
   asof_probes: Array<{ id: string; person: string; date: string; gold: string[] }>;
   during_probes: Array<{ id: string; person: string; from: string; until: string; gold: string[] }>;
+  /** Render `relation-lines` only: the people whose employment is stated as relation lines with ranges. */
+  range_people?: string[];
+  /** `e5Probe` only: probe people (not in `people`) and their probe companies (not in `companies`). */
+  e5_probes?: TeE5Probe[];
+  e5_companies?: TeCompany[];
 }
 
+/** The seeded half of the people rendered as relation lines: the low bit of sha256(`${seed}:${slug}`). */
+export function rangeRendered(seed: number, slug: string): boolean {
+  return (createHash('sha256').update(`${seed}:${slug}`).digest()[0]! & 1) === 1;
+}
+
+const E5_COMPANY_WORDS = ['northwind', 'fabrikam', 'tailspin', 'litware', 'proseware', 'adatum'];
 const COMPANY_WORDS = ['acme', 'globex', 'initech', 'umbrella', 'hooli', 'vandelay', 'wonka', 'tyrell', 'cyberdyne', 'soylent', 'stark', 'wayne', 'oscorp', 'gringotts'];
 const FIRST = ['alice', 'bob', 'carol', 'dave', 'erin', 'frank', 'grace', 'heidi', 'ivan', 'judy', 'mallory', 'niaj', 'olivia', 'peggy', 'rupert', 'sybil', 'trent', 'victor', 'walter', 'yolanda'];
 const ROLES = ['engineer', 'designer', 'product manager', 'CTO', 'head of sales', 'data scientist', 'VP engineering'];
@@ -129,7 +171,8 @@ const dayIso = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 const iso = (y: number, m: number, d = 1) => `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 const title = (s: string) => s.replace(/(^|[-\s])([a-z])/g, (_, p, c) => (p ? ' ' : '') + c.toUpperCase());
 
-export function generateTemporalEdgesWorld(opts: { seed: number; phrasing?: string; sealedPhrasing?: { id: string; templates: PhrasingTemplates }; people?: number; companies?: number }): TemporalEdgesWorld {
+export function generateTemporalEdgesWorld(opts: { seed: number; phrasing?: string; sealedPhrasing?: { id: string; templates: PhrasingTemplates }; people?: number; companies?: number; render?: RenderMode; e5Probe?: boolean }): TemporalEdgesWorld {
+  if (opts.render !== undefined && !(RENDER_MODES as readonly string[]).includes(opts.render)) throw new Error(`render ${opts.render}: use ${RENDER_MODES.join(' or ')}`);
   if (opts.phrasing !== undefined && !(PHRASING_SETS as readonly string[]).includes(opts.phrasing)) {
     throw new Error(`phrasing set ${opts.phrasing} is held out: only the custodian's sealed generator renders it`);
   }
@@ -177,8 +220,12 @@ export function generateTemporalEdgesWorld(opts: { seed: number; phrasing?: stri
 
   const name = (slug: string) => companies.find(c => c.slug === slug)!.name;
   const link = (slug: string) => `[${name(slug)}](../${slug}.md)`;
-  const companyPages: TePage[] = companies.map(c => ({ slug: c.slug, content: `---\ntype: company\ntitle: ${c.name}\n---\n\n${c.name} is a company.\n` }));
-  const dated = [...companyPages, ...rng.shuffle(people.map(p => ({ slug: p.slug, content: renderPerson(p, link, templates) })))];
+  const companyPage = (c: TeCompany): TePage => ({ slug: c.slug, content: `---\ntype: company\ntitle: ${c.name}\n---\n\n${c.name} is a company.\n` });
+  const companyPages: TePage[] = companies.map(companyPage);
+  const ranged = opts.render === 'relation-lines' ? new Set(people.filter(p => rangeRendered(opts.seed, p.slug)).map(p => p.slug)) : new Set<string>();
+  const dated = [...companyPages, ...rng.shuffle(people.map(p => ({ slug: p.slug, content: ranged.has(p.slug) ? renderPersonLines(p, link, templates) : renderPerson(p, link, templates) })))];
+  const e5 = opts.e5Probe ? e5ProbeWorld(opts.seed, templates) : null;
+  if (e5) dated.push(...e5.companies.map(companyPage), ...e5.pages);
 
   const asof_probes: TemporalEdgesWorld['asof_probes'] = [];
   const during_probes: TemporalEdgesWorld['during_probes'] = [];
@@ -192,7 +239,9 @@ export function generateTemporalEdgesWorld(opts: { seed: number; phrasing?: stri
     const from = iso(y, 1, 1), until = iso(y + 1, 1, 1);
     during_probes.push({ id: `during:${p.slug}:${y}`, person: p.slug, from, until, gold: employersDuring(p, from, until) });
   }
-  const world = { seed: opts.seed, phrasing, companies, people, pages: dated, asof_probes, during_probes };
+  const world = { seed: opts.seed, phrasing, companies, people, pages: dated, asof_probes, during_probes,
+    ...(opts.render === 'relation-lines' ? { range_people: [...ranged].sort() } : {}),
+    ...(e5 ? { e5_probes: e5.probes, e5_companies: e5.companies } : {}) };
   return { ...world, fingerprint: fingerprint({ v: TEMPORAL_EDGES_GENERATOR_VERSION, ...world }) };
 }
 
@@ -204,6 +253,50 @@ export function employersAt(p: TePerson, date: string): string[] {
 }
 export function employersDuring(p: TePerson, from: string, until: string): string[] {
   return [...new Set(p.stints.filter(s => s.from < until && (s.until === null || s.until > from)).map(s => s.company))].sort();
+}
+
+/** E5 probe people on their own companies, from an RNG separate from the world's (the world is identical with or without them). */
+function e5ProbeWorld(seed: number, t: PhrasingTemplates): { companies: TeCompany[]; probes: TeE5Probe[]; pages: TePage[] } {
+  const rng = new Rng(seed * 104_729 + 31);
+  const companies: TeCompany[] = E5_COMPANY_WORDS.map(w => ({ slug: `companies/${w}-probe-example`, name: title(w) }));
+  const link = (slug: string) => `[${companies.find(c => c.slug === slug)!.name}](../${slug}.md)`;
+  const probes: TeE5Probe[] = [];
+  const pages: TePage[] = [];
+  for (let i = 0; i < E5_PROBES_PER_SEED; i++) {
+    const form = E5_FORMS[i % E5_FORMS.length]!;
+    const target = E5_TARGETS[Math.floor(i / E5_FORMS.length) % E5_TARGETS.length]!;
+    const employer = rng.pick(companies).slug;
+    const advisoryTarget = target === 'same' ? employer : rng.pick(companies.filter(c => c.slug !== employer)).slug;
+    const startMs = Date.UTC(rng.int(2008, 2014), rng.int(0, 11), rng.int(1, 28));
+    const from = dayIso(startMs);
+    const advisoryOn = dayIso(startMs + rng.int(3 * 365, 9 * 365) * DAY);
+    const role = rng.pick(ROLES);
+    const p: TeE5Probe = {
+      slug: `people/e5-probe-${i}-example`, name: `${title(rng.pick(FIRST))} P${i}.`, style: 'timeline',
+      stints: [{ company: employer, from, until: null, role }], advises: null, invests_after_exit: null, alumni_meeting: null, rejoin_eu: false,
+      e5: { form, target, advisory_target: advisoryTarget, advisory_on: advisoryOn },
+    };
+    const advisory = form === 'tl_advise' ? fill(t.tl_advise, { company: link(advisoryTarget) })
+      : form === 'became_advisor_at' ? `note — Became an advisor at ${link(advisoryTarget)}`
+      : `linkedin — Took an advisory role with ${link(advisoryTarget)}`;
+    const prose = [fill(t.current, { name: p.name, company: link(employer), role }), ...(target === 'other' ? [`${p.name} also works at ${link(advisoryTarget)}.`] : [])];
+    const lines = [`- **${from}** | ${fill(t.tl_join, { company: link(employer), role })}`, `- **${advisoryOn}** | ${advisory}`];
+    probes.push(p);
+    pages.push({ slug: p.slug, content: `---\ntype: person\ntitle: ${p.name}\n---\n\n${prose.join(' ')}\n\n## Timeline\n\n${lines.join('\n')}\n` });
+  }
+  return { companies, probes, pages };
+}
+
+/** H7: employment and advisory roles as typed relation lines with `@effective[start,end)` ranges; trap timeline lines kept. */
+function renderPersonLines(p: TePerson, link: (slug: string) => string, t: PhrasingTemplates): string {
+  const lines = p.stints.map(s => `- works_at @effective[${s.from},${s.until ?? ''}) [[${s.company}]]`);
+  if (p.advises) lines.push(`- advises @effective[${p.advises.from},) [[${p.advises.company}]]`);
+  const timeline: Array<[string, string]> = [];
+  if (p.invests_after_exit) timeline.push([p.invests_after_exit.on, fill(t.tl_invest, { company: link(p.invests_after_exit.company) })]);
+  if (p.alumni_meeting) timeline.push([p.alumni_meeting.on, fill(t.tl_alumni, { company: link(p.alumni_meeting.company) })]);
+  timeline.sort((a, b) => a[0].localeCompare(b[0]));
+  return `---\ntype: person\ntitle: ${p.name}\n---\n\n${p.name} is a person.\n\n## Roles\n\n${lines.join('\n')}\n`
+    + (timeline.length ? `\n## Timeline\n\n${timeline.map(([d, x]) => `- **${d}** | ${x}`).join('\n')}\n` : '');
 }
 
 function renderPerson(p: TePerson, link: (slug: string) => string, t: PhrasingTemplates): string {
