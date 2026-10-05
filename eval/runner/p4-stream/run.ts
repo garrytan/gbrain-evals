@@ -4,7 +4,7 @@
  *
  *   bun eval/runner/p4-stream/run.ts --arms Aprime,B,C --models claude-sonnet-5-5
  *     --build A=<gbrain>@<sha> --build Aprime=<gbrain>@<sha> --build cand=<gbrain>@<sha>
- *     [--benchmark lme-s] [--limit N] [--offset K] [--seed 42] [--window 32000]
+ *     [--benchmark lme-s|beam-100k|beam-500k|beam-1m] [--split dev] [--categories a,b] [--limit N] [--offset K] [--seed 42] [--window 32000]
  *     [--tag <label for arm ids, e.g. a dev variant>] [--concurrency 4] [--reply-tokens 700] [--judge-runs 10] [--judge-model openai:gpt-4o-2024-08-06]
  *     [--profile-model openai:gpt-4.1-mini] [--effort low] [--work <dir outside any git repo>]
  *     --paid --budget-usd <cap> --output <dir>
@@ -40,7 +40,8 @@ import { McpClient, MeteringProxy, directGitPath, GBRAIN_EMBED_MODEL } from '../
 import { provider } from '../cat40/loop.ts';
 import { runCli, type RunEnv } from '../lifecycle/drivers.ts';
 import { loadCorpus, type MemoryQuestion, type Session } from '../memory-qa/corpus.ts';
-import { ChatClient, judgeResponse } from '../memory-qa/qa.ts';
+import { ChatClient, DEFAULT_JUDGE, judgeResponse } from '../memory-qa/qa.ts';
+import { loadBeamSplit, type BeamSize } from './beam.ts';
 import { ClaudeTranscript } from './transcript.ts';
 import { additionalContext, runHook, type HookEnv } from './hooks.ts';
 import { callModel, textOf, type Block, type CallUsage, type Msg, type ToolDef } from './model.ts';
@@ -97,7 +98,8 @@ const FACT_ID = /"(?:fact_id|id)"\s*:\s*"?([0-9a-zA-Z_-]{1,64})"?/g;
 const factIds = (text: string) => [...text.matchAll(FACT_ID)].map(m => m[1]);
 
 export interface CellRow {
-  id: string; question_id: string; category: string; abstention: boolean; arm: string; model: string; window: number;
+  id: string; conversation: string; question_id: string; category: string; abstention: boolean; arm: string; model: string; window: number;
+  stream_questions: number; usd_stream: number;
   answer: string; qa_scores: number[]; qa_score: number;
   sessions: number; live_turns: number; compactions: number; notices: number; notice_segments: number; missed_segments: number;
   remember_calls: number; remember_batched: number; remember_items: number; facts_saved: number; evidence_saved: boolean; evidence_recall5: boolean | null;
@@ -138,6 +140,17 @@ async function profileFor(ctx: Ctx, first: Session): Promise<{ text: string; usd
   return { text: r.text.trim(), usd: r.cached || !p ? 0 : (r.input_tokens * p.input + r.output_tokens * p.output) / 1e6 };
 }
 
+const STANDING_PROMPT = `Below is a long conversation between an assistant and a user. List the user's standing preferences and instructions for how the assistant should work with them: answer formats and style they asked for, tools, libraries or approaches they prefer or avoid, constraints they set, and lasting facts about them. Write a Markdown bullet list under 1,500 characters. Use only what the conversation states; do not guess.\n\nConversation:\n{conversation}`;
+
+/** BEAM page: standing preferences and instructions from the whole conversation, written without seeing any question. */
+async function standingPreferencesFor(ctx: Ctx, sessions: Session[]): Promise<{ text: string; usd: number }> {
+  const conv = sessions.map(s => s.turns.map(t => `${t.speaker}: ${t.content}`).join('\n')).join('\n\n');
+  const r = await ctx.chat.chat(ctx.profileModel, STANDING_PROMPT.replace('{conversation}', conv), { maxTokens: 700, replicate: 0 });
+  const [prov, name] = ctx.profileModel.split(':');
+  const p = CHAT_PRICE_OVERRIDES[`${prov}:${name}`];
+  return { text: r.text.trim().slice(0, 1800), usd: r.cached || !p ? 0 : (r.input_tokens * p.input + r.output_tokens * p.output) / 1e6 };
+}
+
 async function waitForIpc(home: string, timeoutMs = 60_000): Promise<void> {
   const t0 = Date.now();
   const data = join(home, 'brain.pglite');
@@ -147,10 +160,15 @@ async function waitForIpc(home: string, timeoutMs = 60_000): Promise<void> {
   }
 }
 
-export async function runCell(ctx: Ctx, q: MemoryQuestion, sessions: Session[], arm: ArmSpec, model: string): Promise<CellRow> {
+/**
+ * One stream: a conversation's history through one arm and model, then each of
+ * its questions asked from the same end state (the history is forked per
+ * question). Returns one row per question.
+ */
+export async function runCell(ctx: Ctx, convId: string, qs: MemoryQuestion[], sessions: Session[], arm: ArmSpec, model: string): Promise<CellRow[]> {
   const t0 = Date.now();
   const armLabel = ctx.tag ? `${arm.id}@${ctx.tag}` : arm.id;
-  const cellId = `${q.id}__${armLabel}__${model}`;
+  const cellId = `${convId}__${armLabel}__${model}`;
   const slot = createHash('sha256').update(cellId).digest('hex').slice(0, 12);
   const dir = join(ctx.work, slot);
   rmSync(dir, { recursive: true, force: true });
@@ -162,13 +180,17 @@ export async function runCell(ctx: Ctx, q: MemoryQuestion, sessions: Session[], 
   const usage: CallUsage = { input: 0, cache_write: 0, cache_read: 0, output: 0 };
   const toolCalls: Record<string, number> = {};
   let client: McpClient | null = null;
-  const ordered = [...sessions].sort((a, b) => sessionTime(a.date) - sessionTime(b.date));
-  const profile = await profileFor(ctx, ordered[0]);
+  // LongMemEval haystacks are not stored in date order; BEAM chats are.
+  const ordered = ctx.benchmark === 'lme-s' ? [...sessions].sort((a, b) => sessionTime(a.date) - sessionTime(b.date)) : sessions;
+  const profile = ctx.benchmark === 'lme-s' ? await profileFor(ctx, ordered[0]) : await standingPreferencesFor(ctx, ordered);
+  const answers = new Map<string, { answer: string; usage: CallUsage }>();
+  const savedByOut = new Map<string, string>();
+  let streamUsage: CallUsage = { input: 0, cache_write: 0, cache_read: 0, output: 0 };
   const row: CellRow = {
-    id: cellId, question_id: q.id, category: q.category, abstention: q.abstention, arm: armLabel, model, window: ctx.window,
+    id: cellId, conversation: convId, question_id: '', category: '', abstention: false, arm: armLabel, model, window: ctx.window,
     answer: '', qa_scores: [], qa_score: 0, sessions: ordered.length, live_turns: 0, compactions: 0, notices: 0, notice_segments: 0, missed_segments: 0,
     remember_calls: 0, remember_batched: 0, remember_items: 0, facts_saved: 0, evidence_saved: false, evidence_recall5: null, core_chars: null, tool_calls: toolCalls, errors,
-    usage, usd_agent: 0, usd_gbrain: 0, usd_profile: profile.usd, ms: 0, builds: ctx.builds,
+    usage, usd_agent: 0, usd_gbrain: 0, usd_profile: profile.usd, ms: 0, builds: ctx.builds, stream_questions: qs.length, usd_stream: 0,
   };
   try {
     // Brain: init, arm config, the shared profile page, core marking for C/D.
@@ -193,7 +215,7 @@ export async function runCell(ctx: Ctx, q: MemoryQuestion, sessions: Session[], 
 
     let history: Msg[] = [];
     let contextTokens = 0;
-    const savedBy = new Map<string, string>(); // fact id -> session id
+    const savedBy = savedByOut; // fact id -> session id
     let currentSession = '';
     let segmentNotice = false;
 
@@ -284,18 +306,18 @@ export async function runCell(ctx: Ctx, q: MemoryQuestion, sessions: Session[], 
       await liveTurn(live, 6, ctx.replyTokens);
     }
     if (contextTokens + 2000 > ctx.window * 0.95) await compact();
-    row.answer = await liveTurn(`[Now: ${q.question_date ?? 'today'}] ${q.question}\n\n${FINAL_INSTRUCTION}`, 10, 2000);
-
-    // Evidence: did the agent save a fact while a gold session was live, and does recall surface it in its top five?
-    const goldSaved = [...savedBy.entries()].filter(([, s]) => q.gold.includes(s)).map(([id]) => id);
+    streamUsage = { ...usage };
     row.facts_saved = savedBy.size;
-    row.evidence_saved = goldSaved.length > 0;
-    if (!q.abstention) {
-      try {
-        const rec = await client.call('recall', { query: q.question, limit: 5 });
-        const top = new Set(factIds(rec).slice(0, 10));
-        row.evidence_recall5 = goldSaved.some(id => top.has(id));
-      } catch (e) { errors.push(`recall: ${(e as Error).message}`); }
+    // Every question starts from the same end state: history and transcript are restored before each one.
+    const baseHistory = structuredClone(history);
+    const baseTranscript = readFileSync(transcript.path, 'utf8');
+    const lastDate = [...ordered].reverse().find(x => x.date)?.date;
+    for (const q of qs) {
+      history = structuredClone(baseHistory);
+      writeFileSync(transcript.path, baseTranscript);
+      const before = { ...usage };
+      const answer = await liveTurn(`[Now: ${q.question_date ?? lastDate ?? 'today'}] ${q.question}\n\n${FINAL_INSTRUCTION}`, 10, 2000);
+      answers.set(q.id, { answer, usage: { input: usage.input - before.input, cache_write: usage.cache_write - before.cache_write, cache_read: usage.cache_read - before.cache_read, output: usage.output - before.output } });
     }
   } catch (e) {
     if ((e as Error).name === 'BudgetExceededError') throw e;
@@ -305,14 +327,28 @@ export async function runCell(ctx: Ctx, q: MemoryQuestion, sessions: Session[], 
     ctx.proxy.unbind(slot);
     row.usd_gbrain = (await ctx.proxy.finalize(cellId)).usd;
   }
-  row.usd_agent = priceUsage(model, usage);
-  if (!errors.length || row.answer) {
-    for (let r = 0; r < ctx.judgeRuns; r++) row.qa_scores.push(await judgeResponse(ctx.chat, ctx.benchmark, ctx.judgeModel, q, row.answer, r));
-    row.qa_score = row.qa_scores.length ? row.qa_scores.reduce((a, b) => a + b, 0) / row.qa_scores.length : 0;
+  // Stream cost is shared evenly across the stream's questions; each answer adds its own.
+  const streamUsd = priceUsage(model, streamUsage);
+  const rows: CellRow[] = [];
+  for (const q of qs) {
+    const a = answers.get(q.id);
+    const goldSaved = [...savedByOut.entries()].filter(([, s]) => q.gold.includes(s)).map(([id]) => id);
+    const r: CellRow = {
+      ...row, id: `${q.id}__${armLabel}__${model}`, question_id: q.id, category: q.category, abstention: q.abstention,
+      answer: a?.answer ?? '', qa_scores: [], qa_score: 0, errors: [...errors], tool_calls: { ...toolCalls },
+      evidence_saved: goldSaved.length > 0, stream_questions: qs.length,
+      usage: a?.usage ?? { input: 0, cache_write: 0, cache_read: 0, output: 0 },
+      usd_stream: streamUsd, usd_agent: streamUsd / qs.length + (a ? priceUsage(model, a.usage) : 0),
+      usd_gbrain: row.usd_gbrain / qs.length, usd_profile: row.usd_profile / qs.length, ms: Date.now() - t0,
+    };
+    if (a && a.answer) {
+      for (let k = 0; k < ctx.judgeRuns; k++) r.qa_scores.push(await judgeResponse(ctx.chat, ctx.benchmark, ctx.judgeModel, q, r.answer, k));
+      r.qa_score = r.qa_scores.reduce((x, y) => x + y, 0) / r.qa_scores.length;
+    } else if (!errors.length) r.errors.push('no answer');
+    rows.push(r);
   }
-  row.ms = Date.now() - t0;
   if (!errors.length) rmSync(dir, { recursive: true, force: true });
-  return row;
+  return rows;
 }
 
 async function main(argv: string[]) {
@@ -331,11 +367,21 @@ async function main(argv: string[]) {
   const concurrency = Number(flag(argv, '--concurrency') ?? 4);
   const only = flag(argv, '--questions')?.split(',');
 
-  const corpus = loadCorpus(benchmark);
+  const split = (flag(argv, '--split') ?? 'dev') as 'dev' | 'sealed';
+  if (split === 'sealed' && !argv.includes('--custodian')) throw new Error('the sealed split is run by the custodian only (pass --custodian)');
+  const beam = /^beam-(100k|500k|1m)$/.exec(benchmark);
+  if (!beam && split !== 'dev') throw new Error(`${benchmark} has no sealed split`);
+  const corpus = beam ? await loadBeamSplit(beam[1] as BeamSize, split) : loadCorpus(benchmark);
   const conv = new Map(corpus.conversations.map(c => [c.id, c.sessions]));
+  const categories = flag(argv, '--categories')?.split(',');
   let questions = orderQuestions(corpus.questions, seed);
   if (only) questions = questions.filter(q => only.includes(q.id));
-  questions = questions.slice(offset, limit === null ? undefined : offset + limit);
+  if (categories) questions = questions.filter(q => categories.includes(q.category));
+  // LongMemEval: one conversation per question, so the slice is over questions. BEAM: over conversations (all their questions).
+  if (beam) {
+    const convIds = [...new Set(corpus.conversations.map(c => c.id))].sort().slice(offset, limit === null ? undefined : offset + limit);
+    questions = questions.filter(q => convIds.includes(q.conversation));
+  } else questions = questions.slice(offset, limit === null ? undefined : offset + limit);
 
   const buildDirs: Record<string, string> = {};
   const resolvedBuilds: Record<string, string> = {};
@@ -347,8 +393,15 @@ async function main(argv: string[]) {
 
   const rowsPath = join(out, 'rows.ndjson');
   const done = new Set(existsSync(rowsPath) ? readFileSync(rowsPath, 'utf8').split('\n').filter(Boolean).map(l => (JSON.parse(l) as CellRow).id) : []);
-  const cells: Array<{ q: MemoryQuestion; arm: ArmSpec; model: string }> = [];
-  for (const q of questions) for (const model of models) for (const arm of arms) if (!done.has(`${q.id}__${flag(argv, '--tag') ? `${arm.id}@${flag(argv, '--tag')}` : arm.id}__${model}`)) cells.push({ q, arm, model });
+  const tag = flag(argv, '--tag');
+  const byConv = new Map<string, MemoryQuestion[]>();
+  for (const q of questions) byConv.set(q.conversation, [...(byConv.get(q.conversation) ?? []), q]);
+  const cells: Array<{ conv: string; qs: MemoryQuestion[]; arm: ArmSpec; model: string }> = [];
+  for (const [c, qs] of byConv) for (const model of models) for (const arm of arms) {
+    const label = tag ? `${arm.id}@${tag}` : arm.id;
+    if (qs.every(q => done.has(`${q.id}__${label}__${model}`))) continue;
+    cells.push({ conv: c, qs, arm, model });
+  }
 
   const budget = budgetOptionsFrom(argv);
   if (!argv.includes('--paid')) throw new Error('p4-stream makes paid model calls; pass --paid --budget-usd <cap>');
@@ -356,11 +409,11 @@ async function main(argv: string[]) {
   const proxy = new MeteringProxy();
   proxy.start();
   const ctx: Ctx = {
-    benchmark, tag: flag(argv, '--tag'), window, replyTokens: Number(flag(argv, '--reply-tokens') ?? 700), judgeRuns: Number(flag(argv, '--judge-runs') ?? 10), judgeModel: flag(argv, '--judge-model') ?? 'openai:gpt-4o-2024-08-06',
+    benchmark, tag: flag(argv, '--tag'), window, replyTokens: Number(flag(argv, '--reply-tokens') ?? 700), judgeRuns: Number(flag(argv, '--judge-runs') ?? 10), judgeModel: flag(argv, '--judge-model') ?? DEFAULT_JUDGE[benchmark] ?? 'openai:gpt-4o-2024-08-06',
     profileModel: flag(argv, '--profile-model') ?? 'openai:gpt-4.1-mini', effort: flag(argv, '--effort'),
     builds: resolvedBuilds, buildDirs, work: resolve(flag(argv, '--work') ?? join(homedir(), 'p4-stream-work', createHash('sha256').update(out).digest('hex').slice(0, 10))), proxy, chat: new ChatClient(join(out, 'chat-cache')),
   };
-  writeFileSync(join(out, 'run.json'), JSON.stringify({ started_at: new Date().toISOString(), argv, builds: resolvedBuilds, window, seed, offset, limit, questions: questions.map(q => q.id), arms: arms.map(a => a.id), models, instructions_cap: INSTRUCTIONS_CAP, budget_run_id: paid.run.runId }, null, 2));
+  writeFileSync(join(out, 'run.json'), JSON.stringify({ started_at: new Date().toISOString(), argv, builds: resolvedBuilds, window, seed, offset, limit, split, categories: categories ?? null, questions: questions.map(q => q.id), arms: arms.map(a => a.id), models, instructions_cap: INSTRUCTIONS_CAP, budget_run_id: paid.run.runId }, null, 2));
   process.stderr.write(`[p4-stream] ${cells.length} cell(s) to run (${done.size} done) → ${rowsPath}\n`);
 
   let next = 0;
@@ -369,12 +422,14 @@ async function main(argv: string[]) {
     while (!stop && next < cells.length) {
       const c = cells[next++];
       try {
-        const row = await runCell(ctx, c.q, conv.get(c.q.conversation) ?? [], c.arm, c.model);
-        appendFileSync(rowsPath, `${JSON.stringify(row)}\n`);
-        process.stderr.write(`[p4-stream] ${row.id}: score ${row.qa_score.toFixed(2)} compactions ${row.compactions} notices ${row.notices} saved ${row.facts_saved} $${(row.usd_agent + row.usd_gbrain).toFixed(3)} ${row.errors.length ? `errors ${row.errors.join('; ').slice(0, 200)}` : ''}\n`);
+        const rows = await runCell(ctx, c.conv, c.qs, conv.get(c.conv) ?? [], c.arm, c.model);
+        for (const row of rows) appendFileSync(rowsPath, `${JSON.stringify(row)}\n`);
+        const r0 = rows[0];
+        const mean = rows.reduce((a, r) => a + r.qa_score, 0) / Math.max(1, rows.length);
+        process.stderr.write(`[p4-stream] ${c.conv} ${r0?.arm} ${c.model}: ${rows.length} question(s) mean ${mean.toFixed(2)} compactions ${r0?.compactions} notices ${r0?.notices} saved ${r0?.facts_saved} stream $${(r0?.usd_stream ?? 0).toFixed(2)} ${r0?.errors.length ? `errors ${r0.errors.join('; ').slice(0, 200)}` : ''}\n`);
       } catch (e) {
         if ((e as Error).name === 'BudgetExceededError') { stop = true; process.stderr.write(`[p4-stream] budget cap reached: ${(e as Error).message}\n`); return; }
-        process.stderr.write(`[p4-stream] ${c.q.id} ${c.arm.id} ${c.model} failed: ${(e as Error).message}\n`);
+        process.stderr.write(`[p4-stream] ${c.conv} ${c.arm.id} ${c.model} failed: ${(e as Error).message}\n`);
       }
     }
   };
