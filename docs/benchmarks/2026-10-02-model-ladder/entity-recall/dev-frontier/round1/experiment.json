@@ -1,0 +1,33 @@
+{
+  "schema": "cat40-experiment-v1",
+  "gbrain_commit": "a3246dea8f8b0ea89e90a4445242a68577a7e4a0",
+  "slot_commit": "a3246dea8f8b0ea89e90a4445242a68577a7e4a0",
+  "world_digest": "df8c95e71b17beab176851e3b15daaea9b8719fb009ba50e02cfc68243009a20",
+  "models": [
+    "claude-sonnet-5-5",
+    "claude-opus-5-5",
+    "claude-fable-5-1",
+    "gpt-6.1-sol",
+    "gpt-6-astra"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "label": "gbrain-entity-r1-dev",
+  "flags": {
+    "--models": "claude-sonnet-5-5,claude-opus-5-5,claude-fable-5-1,gpt-6.1-sol,gpt-6-astra",
+    "--arms": "gbrain",
+    "--surface": "starter",
+    "--gbrain-repo": "../gbrain",
+    "--budget-ledger": ".budget/cat40-followups.sqlite",
+    "--transcripts": true,
+    "--slot-ref": "a3246dea8",
+    "--slots": "5",
+    "--concurrency": "6",
+    "--repeat": "1",
+    "--gbrain-ref": "a3246dea8",
+    "--gbrain-label": "gbrain-entity-r1-dev",
+    "--out": "eval/reports/cat40/entity-dev-r1"
+  },
+  "budget_run_id": "cat40-model-ladder-2026-10-04T22-09-40-911Z-6226ada1"
+}

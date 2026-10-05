@@ -14,7 +14,7 @@
  *     --arms oracle,fs,pg,memory,gbrain --budget-usd 100 [--families A,B] [--tasks A01,B02] \
  *     [--repeat 1] [--concurrency 6] [--slots 3] [--gbrain-repo ../gbrain --gbrain-ref <sha>] \
  *     [--judge gpt-5.4-mini|none] [--world eval/data/model-ladder-v1-large/world.json] [--out eval/reports/cat40/<name>] \
- *     [--max-tool-chars <n>|none] [--order task|model] [--slot-ref <sha>] [--no-pglite-analyze] [--surface starter]
+ *     [--max-tool-chars <n>|none] [--order task|model] [--slot-ref <sha>] [--no-pglite-analyze] [--surface starter] [--gbrain-config key=value,...]
  *     [--gbrain-instructions-file <file>] [--gbrain-tool-descriptions-file <json>] [--gbrain-drop-tools a,b]
  *       (evaluator-side A/B of the instruction and tool-description text the model sees; gbrain code unchanged)
  *   bun eval/runner/cat40-model-ladder.ts --scripted --arms fs,memory,oracle   (hermetic, $0)
@@ -23,7 +23,9 @@
  * Tool results reach the model whole unless --max-tool-chars <n> sets a cap
  * (`none` spells the default). gbrain slot brains are built by their own
  * `--build-slots` step, one at a time; an agent step refuses to start when
- * a snapshot it needs is missing. Each --out directory is bound to one
+ * a snapshot it needs is missing, or when a slot's recorded mention coverage
+ * (`slotN.coverage.json`, from a build whose gbrain reports it) is not
+ * `complete` with 0 pending pages. Each --out directory is bound to one
  * experiment (experiment.json): a rerun with the same command resumes and
  * joins the step's original budget run; a different build, world or flag set
  * is refused. `--order model` finishes each model's tasks before the next.
@@ -37,7 +39,7 @@ import { runAgent, provider, priceUsage, type AgentRun, type Arm, type ScriptedM
 import { FsArm, MemoryArm, OracleArm, FileStore, isWriteCall, type ArmName } from './cat40/arms.ts';
 import { renderDoc } from '../generators/model-ladder-gen.ts';
 import { PgArm, PgStore, cachedOpenAIEmbedder } from './cat40/pg-arm.ts';
-import { GbrainArm, instructionsOverride, GbrainPool, GbrainSlot, MeteringProxy, SERVE_BOOT_TIMEOUT_SECONDS, STAGED_SOURCE_ADD_DOCS, STAGED_SYNC_BATCH, type Meter, type SlotBuild } from './cat40/gbrain-arm.ts';
+import { GbrainArm, instructionsOverride, GbrainPool, GbrainSlot, MeteringProxy, SERVE_BOOT_TIMEOUT_SECONDS, STAGED_SOURCE_ADD_DOCS, STAGED_SYNC_BATCH, coverageProblem, type Meter, type SlotBuild, type SlotCoverage } from './cat40/gbrain-arm.ts';
 import { scoreTask, judgePrompt, parseClaims, JUDGE_PROMPT_VERSION, type TaskScore, type ClaimVerdicts } from './cat40/score.ts';
 import { budgetOptionsFrom, startPaidRun, receiptCost, type BudgetRun, type PaidRequestGuard } from './budget-ledger.ts';
 import { prepareBuild } from './lifecycle/builds.ts';
@@ -342,6 +344,24 @@ export function missingSlotSnapshots(dir: string, n: number): string[] {
   return Array.from({ length: n }, (_, i) => join(dir, `slot${i}.tar`)).filter(p => !existsSync(p));
 }
 
+/**
+ * Slots whose recorded mention coverage is not `complete` with 0 pending pages (E-T7). A slot without a coverage
+ * record (built before the record existed) or built by a gbrain without the coverage field is not checked.
+ */
+export function incompleteSlotCoverage(dir: string, n: number): { problems: string[]; unchecked: number } {
+  const problems: string[] = [];
+  let unchecked = 0;
+  for (let i = 0; i < n; i++) {
+    const path = join(dir, `slot${i}.coverage.json`);
+    if (!existsSync(path)) { unchecked++; continue; }
+    const c = JSON.parse(readFileSync(path, 'utf8')) as SlotCoverage;
+    if (!c.supported) { unchecked++; continue; }
+    const problem = coverageProblem(c);
+    if (problem) problems.push(`slot${i}: ${problem}`);
+  }
+  return { problems, unchecked };
+}
+
 export async function main(argv = process.argv.slice(2)) {
   const scripted = argv.includes('--scripted');
   const buildSlots = argv.includes('--build-slots');
@@ -399,6 +419,14 @@ export async function main(argv = process.argv.slice(2)) {
       throw new Error(`gbrain slot snapshots are missing for build ${slotCommit.slice(0, 12)} on world ${worldDigest(world).slice(0, 12)} (${missing.length} of ${nSlots}: ${missing.join(', ')}). `
         + `Build them first as their own step, one at a time: bun eval/runner/cat40-model-ladder.ts --build-slots --gbrain-repo ${repo} --gbrain-ref ${slotCommit} --slots ${nSlots} --world ${relative(process.cwd(), worldPath)}${analyze ? '' : ' --no-pglite-analyze'} --slot-build-allowance-usd 2 --budget-usd <dollars> --budget-ledger <ledger>`);
     }
+    if (!buildSlots) {
+      const coverage = incompleteSlotCoverage(slotDir, nSlots);
+      if (coverage.problems.length) {
+        throw new Error(`gbrain slots in ${slotDir} have an unfinished mention pass (${coverage.problems.join('; ')}), so entity recall would be measured on a partial index. `
+          + `Rebuild them: bun eval/runner/cat40-model-ladder.ts --build-slots --rebuild --gbrain-repo ${repo} --gbrain-ref ${slotCommit} --slots ${nSlots} --world ${relative(process.cwd(), worldPath)}${analyze ? '' : ' --no-pglite-analyze'} --slot-build-allowance-usd 2 --budget-usd <dollars> --budget-ledger <ledger>`);
+      }
+      if (coverage.unchecked) log(`mention coverage not checked on ${coverage.unchecked} of ${nSlots} slots: no coverage record, or the build has no coverage field`);
+    }
   }
 
   const options = budgetOptionsFrom(argv);
@@ -424,6 +452,13 @@ export async function main(argv = process.argv.slice(2)) {
       ctx.proxy.start();
       const surface = flag(argv, '--surface') ?? 'starter';
       const slots = Array.from({ length: nSlots }, (_, i) => new GbrainSlot(`slot${i}`, slotDir!, gbrainBuild!.dir, ctx.proxy!.port, surface));
+      // --gbrain-config key=value[,key=value]: brain config applied after every restore (a variant of the same build).
+      const gbrainConfig = (flag(argv, '--gbrain-config') ?? '').split(',').filter(Boolean).map(kv => {
+        const i = kv.indexOf('=');
+        if (i <= 0) throw new Error(`--gbrain-config expects key=value pairs separated by commas, got "${kv}"`);
+        return [kv.slice(0, i), kv.slice(i + 1)] as [string, string];
+      });
+      for (const s of slots) s.config = gbrainConfig;
       if (buildSlots) {
         // One build at a time: each holds a small ledger allowance (a build sends one provider request per page).
         for (const s of slots) {
@@ -434,7 +469,8 @@ export async function main(argv = process.argv.slice(2)) {
           try { b = await s.build(world, ctx.proxy, analyze); }
           finally { ctx.proxy.allowances.delete(s.id); charged = allowance.close(); }
           builds.push({ ...b, allowance: { reserved_usd: allowance.usd, ...charged } });
-          log(`built ${s.id} in ${(b.ms / 1000).toFixed(0)}s, $${b.meter.usd.toFixed(4)} (${b.meter.requests} provider requests; ledger allowance charged $${charged.usd.toFixed(4)})`);
+          log(`built ${s.id} in ${(b.ms / 1000).toFixed(0)}s, $${b.meter.usd.toFixed(4)} (${b.meter.requests} provider requests; ledger allowance charged $${charged.usd.toFixed(4)}); `
+            + (b.coverage?.supported ? `mention coverage ${b.coverage.state}, ${b.coverage.pending} pending${coverageProblem(b.coverage) ? ' (a round will refuse this slot)' : ''}` : 'no mention coverage field in this build'));
         }
       }
       // A write probe after restore: the arm is only fair if the agent's writes can land.

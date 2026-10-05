@@ -1,0 +1,29 @@
+{
+  "schema": "cat40-experiment-v1",
+  "gbrain_commit": null,
+  "slot_commit": null,
+  "world_digest": "df9e4f65cf603430934d6afa30073a44813ea670f78ae83c68bbde8210d1db9b",
+  "models": [
+    "claude-opus-5-5",
+    "claude-fable-5-1",
+    "gpt-6-astra"
+  ],
+  "arms": [
+    "oracle",
+    "fs",
+    "fs-acl",
+    "pg"
+  ],
+  "label": "gbrain",
+  "flags": {
+    "--world": "eval/reports/cat40/holdout/world.json",
+    "--models": "claude-opus-5-5,claude-fable-5-1,gpt-6-astra",
+    "--arms": "oracle,fs,fs-acl,pg",
+    "--repeat": "2",
+    "--concurrency": "6",
+    "--transcripts": true,
+    "--budget-ledger": ".budget/cat40-followups.sqlite",
+    "--out": "eval/reports/cat40/entity-holdout-simple-newmodels"
+  },
+  "budget_run_id": "cat40-model-ladder-2026-10-04T21-09-40-647Z-f10d4d1b"
+}

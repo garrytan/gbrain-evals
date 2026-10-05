@@ -1,0 +1,38 @@
+2026-10-04T17:45:10.096Z 250 cells to run (0 already done, order task) in <evals>/eval/reports/cat40/entity-dev-master-frontier
+2026-10-04T17:45:10.131Z mention coverage not checked on 5 of 5 slots: no coverage record, or the build has no coverage field
+2026-10-04T17:45:10.142Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger <evals>/.budget/cat40-followups.sqlite
+2026-10-04T17:47:49.417Z write probe passed on every slot
+2026-10-04T17:47:49.417Z gbrain 0.60.46.0 (739e5cc89ca4) ready on 5 slots, surface starter
+2026-10-04T17:49:57.339Z 10/250 cells; last gpt-6.1-sol|gbrain-master-frontier-dev|A02|0 success=true $0.036
+2026-10-04T17:51:38.310Z 20/250 cells; last gpt-6.1-sol|gbrain-master-frontier-dev|A04|0 success=true $0.024
+2026-10-04T17:52:48.769Z 30/250 cells; last gpt-6-astra|gbrain-master-frontier-dev|A06|0 success=true $0.298
+2026-10-04T17:53:47.341Z 40/250 cells; last claude-fable-5-1|gbrain-master-frontier-dev|A08|0 success=true $0.256
+2026-10-04T21:09:40.620Z 205 cells to run (45 already done, order task) in <evals>/eval/reports/cat40/entity-dev-master-frontier
+2026-10-04T21:09:40.785Z mention coverage not checked on 5 of 5 slots: no coverage record, or the build has no coverage field
+2026-10-04T21:09:40.804Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger <evals>/.budget/cat40-followups.sqlite
+2026-10-04T21:09:40.807Z [budget] cat40-model-ladder: joined shared run cat40-model-ladder-2026-10-04T17-45-10-143Z-1bfc7f0b ($90.00 across all of its workers)
+2026-10-04T21:09:40.808Z resumed: joined the recorded budget run cat40-model-ladder-2026-10-04T17-45-10-143Z-1bfc7f0b
+2026-10-04T21:11:53.921Z write probe passed on every slot
+2026-10-04T21:11:53.921Z gbrain 0.60.46.0 (739e5cc89ca4) ready on 5 slots, surface starter
+2026-10-04T21:13:08.399Z 10/205 cells; last claude-sonnet-5-5|gbrain-master-frontier-dev|B02|0 success=true $0.032
+2026-10-04T21:14:15.152Z 20/205 cells; last claude-opus-5-5|gbrain-master-frontier-dev|B04|0 success=true $0.077
+2026-10-04T21:15:17.091Z 30/205 cells; last gpt-6.1-sol|gbrain-master-frontier-dev|B05|0 success=false $0.033
+2026-10-04T21:16:19.700Z 40/205 cells; last claude-sonnet-5-5|gbrain-master-frontier-dev|B08|0 success=true $0.046
+2026-10-04T21:17:30.432Z 50/205 cells; last claude-sonnet-5-5|gbrain-master-frontier-dev|B10|0 success=true $0.108
+2026-10-04T21:18:34.414Z 60/205 cells; last claude-opus-5-5|gbrain-master-frontier-dev|C02|0 success=true $0.166
+2026-10-04T21:19:37.261Z 70/205 cells; last gpt-6.1-sol|gbrain-master-frontier-dev|C03|0 success=true $0.045
+2026-10-04T21:20:41.514Z 80/205 cells; last claude-sonnet-5-5|gbrain-master-frontier-dev|C06|0 success=true $0.160
+2026-10-04T21:22:17.260Z 90/205 cells; last claude-sonnet-5-5|gbrain-master-frontier-dev|C08|0 success=true $0.230
+2026-10-04T21:23:37.977Z 100/205 cells; last claude-sonnet-5-5|gbrain-master-frontier-dev|C10|0 success=true $0.203
+2026-10-04T21:25:25.556Z 110/205 cells; last gpt-6-astra|gbrain-master-frontier-dev|E01|0 success=true $1.049
+2026-10-04T21:27:24.976Z 120/205 cells; last claude-sonnet-5-5|gbrain-master-frontier-dev|E04|0 success=false $0.358
+2026-10-04T21:29:18.386Z 130/205 cells; last claude-fable-5-1|gbrain-master-frontier-dev|E04|0 success=true $2.243
+2026-10-04T21:31:50.767Z 140/205 cells; last claude-fable-5-1|gbrain-master-frontier-dev|E07|0 success=true $2.242
+2026-10-04T21:33:36.049Z 150/205 cells; last gpt-6-astra|gbrain-master-frontier-dev|E09|0 success=true $0.659
+2026-10-04T21:35:39.270Z 160/205 cells; last claude-sonnet-5-5|gbrain-master-frontier-dev|F02|0 success=true $0.137
+2026-10-04T21:37:22.819Z 170/205 cells; last gpt-6-astra|gbrain-master-frontier-dev|F03|0 success=true $0.214
+2026-10-04T21:39:00.117Z 180/205 cells; last gpt-6-astra|gbrain-master-frontier-dev|F05|0 success=true $0.221
+2026-10-04T21:40:40.827Z 190/205 cells; last gpt-6.1-sol|gbrain-master-frontier-dev|F07|0 success=true $0.039
+2026-10-04T21:42:28.320Z 200/205 cells; last claude-fable-5-1|gbrain-master-frontier-dev|F09|0 success=true $0.643
+2026-10-04T21:43:30.305Z 205/205 cells; last claude-fable-5-1|gbrain-master-frontier-dev|F10|0 success=true $0.494
+2026-10-04T21:43:30.549Z receipt <evals>/eval/reports/cat40/entity-dev-master-frontier/receipt-1791150210549.json
