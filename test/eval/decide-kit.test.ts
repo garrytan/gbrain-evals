@@ -8,7 +8,7 @@ import { newSpec, templateSources, validateSpec, type Plan } from '../../eval/ru
 import { computeSplit, loadSplit, splitOrder } from '../../eval/runner/decisions/splits.ts';
 import { DecideError, exitCodeFor, renderOperatorMessage } from '../../eval/runner/decisions/errors.ts';
 import { beamManifest, loadFixture, occurrenceId, renderSessionPage, DATASET_ROOT, LOCOMO_FILE, loadLocomo } from '../../eval/runner/memory-qa/corpus.ts';
-import { scoreRetrieval, selectQuestions } from '../../eval/runner/memory-qa/run.ts';
+import { questionDay, scoreRetrieval, selectQuestions } from '../../eval/runner/memory-qa/run.ts';
 import { combine, main, planJobs } from '../../eval/runner/decide.ts';
 
 const REPO = resolve(import.meta.dir, '../..');
@@ -249,5 +249,14 @@ describe('anchor exclusion', () => {
     expect(r.kept).toHaveLength(1);
     const world = await sealedAnchors('world-v1-relational');
     expect(world.size).toBeGreaterThan(10);
+  });
+});
+
+describe('memory-qa questionDay', () => {
+  test('normalizes dataset question dates to YYYY-MM-DD for think referenceDate', () => {
+    expect(questionDay('2023/05/30 (Tue) 23:40')).toBe('2023-05-30');
+    expect(questionDay('2025-9-3')).toBe('2025-09-03');
+    expect(questionDay(undefined)).toBeUndefined();
+    expect(questionDay('sometime last spring')).toBeUndefined();
   });
 });
