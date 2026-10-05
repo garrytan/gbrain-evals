@@ -2,6 +2,27 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.22] - 2026-10-05
+
+### Top-level docs read as the current state, with a changelog per document
+
+README, the docs index, the settings guide, retrieval lessons, the comparison page, the evaluation guide, the
+contributor guide and the credits now open with what gbrain does at the pinned commit (`739e5cc`, v0.60.46.0) and
+close with a `## Changelog` section recording how that document changed and why, one entry per commit, newest first.
+
+- **README.** A table names the gbrain under test, its aliases and the newer builds measured as overlays. "What gbrain
+  does today" states each capability once with its current number and commit; the dated "Update, October 2/3/4"
+  blocks are folded into it. Cat 40 now carries the frontier-model headline, and the registration-surface cell is
+  linked. Corrections list the numbers not to cite.
+- **Settings and retrieval lessons.** Dated "October 4, 2026:" amendments become current statements (opaque-id
+  recount at `109b992`), a `return_unit` row and a whole-conversation delivery section are added, and the September 6
+  values move to the changelog.
+- **Comparison page.** Sentences about earlier versions of the page now state the current position; the history is
+  in its changelog.
+- **CLAUDE.md** records the shape: current state on top, a per-document changelog below.
+
+No measurement changed; $0.
+
 ## [0.10.21] - 2026-10-05
 
 ### Cat 40 on frontier models: gbrain ties plain files at the ceiling; the entity-recall wave lifts renewal briefs and cuts cost

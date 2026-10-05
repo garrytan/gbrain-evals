@@ -26,6 +26,15 @@ Use short paragraphs, active verbs and plain English. No marketing slogans, em d
 
 The LongMemEval embedding cache is local and uncommitted. Its default location is under `eval/reports/longmemeval/embed-cache/`. A fresh clone has no warm cache. Never describe repeated API work as free unless the particular runner caches it.
 
+## Shape of a top-level document
+
+README.md, the hub pages in `docs/` (index, settings, retrieval lessons, comparisons) and the guides in `eval/` (README, CONTRIBUTING, CREDITS) have two parts:
+
+1. **Current state, on top.** A first-time reader, human or agent, learns what gbrain does at the commit `package.json` pins, in present tense. Name the pin once; give each number its gbrain commit when it differs from the pin. Replace a superseded claim instead of appending an "Update" or a dated amendment beside it.
+2. **`## Changelog`, at the bottom.** Newest first, one `### YYYY-MM-DD: <what changed>` entry per change, linking the commit, saying what changed on that page (old value to new value) and why. History, superseded numbers and corrections to earlier wording live here, in dated reports and in CHANGELOG.md.
+
+When you change one of these documents, update the current state and add its changelog entry in the same commit.
+
 ## Shape of a benchmark report
 
 Use the structure that makes the result easiest to assess. The default is:

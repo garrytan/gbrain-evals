@@ -6,11 +6,15 @@ in Acme,” while the relevant page is a fund's profile. You might remember “t
 emissions thing,” while the note is titled “Carbon Credits.”
 
 This is a good reason to evaluate gbrain. It puts several ways of finding
-information in one system and lets you inspect how they interact. Its strongest
-published conversation-retrieval run found all the labeled evidence for
-449/470 answerable questions. The interesting engineering question is how it gets
-there, and which parts help on other kinds of material.
-[Conversation results](benchmarks/2026-09-06-longmemeval-ranker-wave.md).
+information in one system and lets you inspect how they interact. Its release
+configuration finds all the labeled evidence for 451/470 answerable LongMemEval
+questions (opaque session ids, gbrain `109b992`). The interesting engineering
+question is how it gets there, and which parts help on other kinds of material.
+
+This page states what the experiments show about gbrain as this repository pins
+it (master `739e5cc`, v0.60.46.0); each number names the gbrain commit it was
+measured at. Everything above [Changelog](#changelog) is current.
+[Conversation results](benchmarks/2026-10-04-longmemeval-opaque-followups.md).
 
 ## Three ways to find a page
 
@@ -108,7 +112,7 @@ the result list. The gate acts on the pool, not on each page independently.
 
 The September 6 controlled gate change improved held-out concept nDCG@5 from
 53.0 to 57.8 on a 0–100 display scale; bare vector search scored 60.5. That was a
-useful improvement with a remaining gap. The new
+useful improvement with a remaining gap. The September 9
 [refresh](benchmarks/2026-09-09-retrieval-refresh.md) repeats the comparison after
 fixing adapter ordering. Adding reranking with the lexical gate reached 66.2 on
 the same held-out score scale. That is a reason to test the complete configuration
@@ -135,7 +139,7 @@ hits from 3/39 to 21/39. This is evidence for preserving
 a useful kind of evidence through a later stage. It is not a clean graph-versus-
 vector comparison. [Ranking experiment](benchmarks/2026-09-06-longmemeval-ranker-wave.md).
 
-The [new controlled relationship experiment](benchmarks/2026-09-09-retrieval-refresh.md)
+The [controlled relationship experiment](benchmarks/2026-09-09-retrieval-refresh.md)
 asks a different question: what changes when production relationship retrieval is
 switched on while the index and query vectors stay the same? It improved recall
 on 15 of 145 questions and worsened none, with the same gains in three ingestion
@@ -157,10 +161,9 @@ be excellent while the second is still indispensable.
 **Autocut** looks for a large drop between adjacent result scores and discards the
 lower-scoring tail. This can save tokens, the pieces of text a model reads. On
 LongMemEval it often removed another conversation needed for the answer.
-Turning it off raised complete retrieval from 379/470 to 449/470, with 70 gains
-and no losses in that comparison (384/470 to 451/470, 67 gains and no losses,
-when recounted with opaque session ids on October 4, 2026). The strict metric exposed a problem that
-finding any one relevant conversation largely concealed.
+Turning it off raises complete retrieval from 384/470 to 451/470, with 67 gains
+and no losses (opaque session ids, gbrain `109b992`). The strict metric exposes a
+problem that finding any one relevant conversation largely conceals.
 
 This does not mean every query should return a long list. **Adaptive return
 sizing** applies a different idea: choose a result cap based on the kind of query.
@@ -169,31 +172,36 @@ needs breadth. Our [precision experiments](benchmarks/2026-09-09-retrieval-refre
 measure that tradeoff with all the same beliefs present, including outdated ones.
 Autocut and adaptive sizing are separate controls.
 
-## Extra phrasings can outvote a good question
+## Extra phrasings no longer outvote a good question, but they cost a call
 
 **Query expansion** asks a language model to generate alternative phrasings of
 the question. It is a plausible way to find material written in different words.
 It also gives the alternatives influence over the final ranking.
 
-On September 6 LongMemEval, plain hybrid retrieval found all the required
-conversations for 439/470 questions. Giving each expanded variant a full vote
-reduced that to 255/470. Restricting the variants' combined weight to 0.25 recovered
-394/470, still below plain hybrid. The released `tokenmax` configuration, which
-also used reranking, reached 436/470; `balanced` reached 449/470.
+At gbrain `109b992`, with opaque session ids, full-vote expansion finds all
+required conversations for 436/470 LongMemEval questions against 434/470 for plain
+hybrid, and the `tokenmax` mode, which also reranks, finds 442/470 against 451/470
+for `balanced`. Expansion neither helps nor hurts measurably at this five-result
+budget. Start with it off for this workload because it adds a model call per
+question without a measured gain. If you enable it elsewhere, compare questions
+where the original query is weak and count losses as well as gains.
 
-The lesson is about this small result budget and this corpus. Extra rewrites can
-crowd out the original query's best evidence. Start with expansion off for this
-workload. If you enable it elsewhere, compare questions where the original query
-is weak and count losses as well as gains.
-[Full experiment](benchmarks/2026-09-06-longmemeval-ranker-wave.md).
+Older gbrain code behaved differently: on September 6, at v0.48.4.0, full-vote
+expansion cut complete retrieval from 439/470 to 255/470, and a 0.25 weight budget
+recovered only 394/470. Those losses came from that code, not from the `answer_`
+id leak. [Recount](benchmarks/2026-10-04-longmemeval-opaque-followups.md),
+[September 6 experiment](benchmarks/2026-09-06-longmemeval-ranker-wave.md).
 
-*October 4, 2026:* recounted with opaque session ids at gbrain `109b992`, the same
-expansion settings no longer lose: full-vote expansion found all required
-conversations for 436/470 questions against 434/470 for plain hybrid, and released
-`tokenmax` 442/470 against 451/470 for `balanced`. The September losses were real for that code, not an effect of the `answer_` id leak; later gbrain releases removed them. The advice to start with
-expansion off stands because it costs a model call per question without a measured
-gain, not because it crowds out the original query.
-[Recount](benchmarks/2026-10-04-longmemeval-opaque-followups.md).
+## The reader needs whole conversations, not just matching passages
+
+Retrieval decides which chunks rank first; evidence delivery decides how much text
+the reader gets around each one. With the top five hits held fixed, giving the
+reader the whole page behind each hit answered 361 of 400 held-out LongMemEval-S
+questions against 253 for the five chunks alone. gbrain's default, `auto`, returns
+whole conversations within a 24,000-token budget; on a sealed held-out set it
+answered 192 of 200 against 132 for bare chunks.
+[Evidence-delivery study](benchmarks/2026-09-30-evidence-delivery.md),
+[sealed v2 decision](benchmarks/2026-10-02-sealed-v2-decision-1.md).
 
 ## What the scores mean
 
@@ -217,14 +225,14 @@ give different grades to a direct answer and a related page. The score is
 normalized against an ideal ordering; 1.0 is ideal. A displayed score of 60.5
 means 0.605 on that scale, not that 60.5% of questions were answered correctly.
 
-Always check the unit. The latest LongMemEval runs return five **chunks**, or
+Always check the unit. gbrain's LongMemEval runs return five **chunks**, or
 pieces of text. Several chunks can come from one conversation. Strict
 `recall_all@5` checks whether all required conversations are represented among
 those chunks. Cat13 scores pages after collecting and deduplicating a larger
 chunk pool. The two five-result settings are not identical budgets.
 
-**Answer accuracy** measures the answer written after retrieval. In the September
-LongMemEval run, 53 questions had all labeled conversations retrieved but were
+**Answer accuracy** measures the answer written after retrieval. In the September 6
+LongMemEval run (whose answer score is invalid because the reader saw evidence ids), 53 questions had all labeled conversations retrieved but were
 still judged wrong. Another 13 had incomplete evidence and wrong answers.
 Fixing search and fixing the reader are separate opportunities. Saved compact
 records permit checking retrieval and counting judgments; they do not contain the
@@ -241,3 +249,33 @@ Use [the published matrix](benchmarks/2026-09-09-retrieval-refresh.md) to check 
 work and [the contributor guide](../eval/CONTRIBUTING.md) to add your own adapter
 or questions. gbrain's case is strongest when the retrieval problems in your
 application resemble the ones a measured configuration solves.
+
+## Changelog
+
+How this page changed, newest first. Measurement history lives in the dated reports and in
+[CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-10-05: Restructured as a current-state page with this changelog
+
+gbrain-evals v0.10.22. The introduction quotes 451/470 (opaque ids, `109b992`) and names the pin. The expansion section is retitled "Extra phrasings no longer outvote a good question, but they cost a call" and leads with the current recount (436/470 against 434/470), keeping the September 6 losses (255/470, 394/470) as one paragraph about older code. The autocut paragraph states the recount (384 to 451 of 470) instead of both counts. A new section, "The reader needs whole conversations, not just matching passages", summarizes the evidence-delivery study (361 against 253 of 400) and the sealed `auto` decision (192 against 132 of 200). The answer-accuracy example notes that the September 6 answer score is invalid.
+
+### 2026-10-04: Opaque-id recount notes on autocut and query expansion
+
+[`6bc98aa`](https://github.com/garrytan/gbrain-evals/commit/6bc98aa). The October 4 LongMemEval recount used opaque session ids, which closed the `answer_` id leak. This page now carries the recount numbers beside the September ones and leaves the September figures in place.
+
+- **Autocut:** the 379/470 to 449/470 result (70 gains, no losses) now notes the recount: 384/470 to 451/470, 67 gains and no losses.
+- **Query expansion:** a dated October 4 note says that at gbrain `109b992` the same expansion settings no longer lose. Full-vote expansion found all required conversations for 436/470 questions against 434/470 for plain hybrid, and released `tokenmax` reached 442/470 against 451/470 for `balanced`. The note says the September losses were real for that code, not an effect of the leak, and that later gbrain releases removed them.
+- The advice to start with expansion off stays, with a new reason: it costs a model call per question without a measured gain, not that it crowds out the original query. The note links the recount report, `benchmarks/2026-10-04-longmemeval-opaque-followups.md`.
+
+### 2026-09-29: Relationship counts now name their reranker settings
+
+[`88d0b19`](https://github.com/garrytan/gbrain-evals/commit/88d0b19), gbrain-evals v0.10.1. Two experiments both report 21/39 first-place investor hits, so the page now says how they differ. The relational pin result (3/39 to 21/39) is labeled the September 6 fixture with the text reranker on in both arms. The controlled relationship result (9/39 to 21/39) is labeled reranking off in both arms. A new sentence says the two experiments end at the same count from different starting points and settings.
+
+### 2026-09-09: Page created
+
+[`9238ec8`](https://github.com/garrytan/gbrain-evals/commit/9238ec8), gbrain-evals v0.8.0. The page opened with gbrain's best conversation-retrieval run (449/470 answerable questions with all labeled evidence found). It covered:
+
+- Three retrieval methods: word search (and the fact that the `grep-only` adapter is an in-memory BM25 ranker, not a shell `grep`), vector search and relationship search, with a note that graphs describe evidence rather than a database product.
+- Hybrid search, reciprocal rank fusion and a Mermaid diagram of gbrain's retrieval stages.
+- Lessons with numbers: exact phrases against paraphrases; the lexical gate on metadata boosts (concept nDCG@5 from 53.0 to 57.8, bare vectors 60.5, reranking with the gate 66.2); the relational pin (3/39 to 21/39) and the controlled relationship run (15 of 145 questions improved, none worse, investor first-place hits 9/39 to 21/39); autocut (379/470 to 449/470, 70 gains, no losses); query expansion (plain hybrid 439/470, full-vote expansion 255/470, 0.25 weight 394/470, `tokenmax` 436/470, `balanced` 449/470).
+- A worked metrics table (precision, fractional recall, any-hit, all-evidence, Hit@1), nDCG and chunk units, the 53 plus 13 answer-accuracy misses, and how to apply the lessons with held-out questions.
