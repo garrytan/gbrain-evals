@@ -1,0 +1,51 @@
+{
+  "store_id": "gbrain-longmemeval-s-07c542ba4eda",
+  "unit": "71a3fd6b",
+  "documents": 44,
+  "documents_sha256": "f540cfa0ec9cbae8df7cbffc2ce16deadea480242d4e5f999f69a544c45cf265",
+  "first_cell": "longmemeval-s-gbrain-rag-be80d22034e7",
+  "ingest_ms": 103560.0,
+  "barrier_ms": 16932.6,
+  "provider_receipt": {
+    "template_copy_s": 0.255,
+    "child_start_s": 0.946,
+    "write_path": "put_pages",
+    "pages": 44,
+    "write_s": 2.538,
+    "barrier_ms": 16932.6,
+    "barrier": {
+      "polls": 12,
+      "pages": 44,
+      "missing_embeddings": 0,
+      "stale_pages": 24,
+      "embed_coverage": 1
+    },
+    "server": {
+      "name": "gbrain",
+      "version": "0.60.64.0"
+    },
+    "facts": {
+      "extraction_model": "openai:gpt-6-luna",
+      "op": "extract_facts",
+      "windows": 88,
+      "window_chars": 8000,
+      "window_text_chars": 491567,
+      "inserted": 337,
+      "duplicate": 0,
+      "superseded": 0,
+      "retried_windows": 0,
+      "failed_windows": 0,
+      "failures": {},
+      "extract_s": 82.82
+    },
+    "gbrain": {
+      "cli": ".gbrain-overlays/e8e1f66b8e5225b113cacd18931b627fca451bae/src/cli.ts",
+      "version": "gbrain 0.60.64.0",
+      "template_build_s": 9.4,
+      "config": {
+        "search.return_budget_max_remote": "200000",
+        "facts.extraction_model": "openai:gpt-6-luna"
+      }
+    }
+  }
+}

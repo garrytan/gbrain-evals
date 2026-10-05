@@ -1,0 +1,133 @@
+{
+  "cell_id": "beam-100k-gbrain-rag-5556ec971da6",
+  "mode": "auto",
+  "base": {
+    "facts_tokens": 1800,
+    "token_budget": 6300
+  },
+  "sample": 60,
+  "targets": {
+    "8000": {
+      "chosen": null,
+      "rows": [
+        {
+          "setting": {
+            "facts_tokens": 1800,
+            "token_budget": 6300
+          },
+          "target": 8000,
+          "n": 56,
+          "mean": 7922.4,
+          "p95": 8071.0,
+          "tolerance": 0.1,
+          "ok": true,
+          "reason": "within \u00b110% of target",
+          "errors": [
+            "3_summarization_1: AssertionError: ",
+            "3_summarization_0: AssertionError: ",
+            "11_temporal_reasoning_0: AssertionError: ",
+            "12_summarization_0: AssertionError: "
+          ]
+        },
+        {
+          "setting": {
+            "facts_tokens": 1818,
+            "token_budget": 6362
+          },
+          "target": 8000,
+          "n": 56,
+          "mean": 7983.6,
+          "p95": 8144.0,
+          "tolerance": 0.1,
+          "ok": true,
+          "reason": "within \u00b110% of target",
+          "errors": [
+            "3_temporal_reasoning_0: AssertionError: ",
+            "12_abstention_0: AssertionError: ",
+            "11_summarization_1: AssertionError: ",
+            "12_temporal_reasoning_0: AssertionError: "
+          ]
+        },
+        {
+          "setting": {
+            "facts_tokens": 1821,
+            "token_budget": 6375
+          },
+          "target": 8000,
+          "n": 55,
+          "mean": 8008.0,
+          "p95": 8158.0,
+          "tolerance": 0.1,
+          "ok": true,
+          "reason": "within \u00b110% of target",
+          "errors": [
+            "11_summarization_1: AssertionError: ",
+            "15_abstention_0: AssertionError: ",
+            "15_contradiction_resolution_0: AssertionError: ",
+            "15_abstention_1: AssertionError: ",
+            "12_temporal_reasoning_0: AssertionError: "
+          ]
+        },
+        {
+          "setting": {
+            "facts_tokens": 1820,
+            "token_budget": 6368
+          },
+          "target": 8000,
+          "n": 52,
+          "mean": 7985.2,
+          "p95": 8137.0,
+          "tolerance": 0.1,
+          "ok": true,
+          "reason": "within \u00b110% of target",
+          "errors": [
+            "3_summarization_0: AssertionError: ",
+            "3_temporal_reasoning_0: AssertionError: ",
+            "3_summarization_1: AssertionError: ",
+            "11_temporal_reasoning_0: AssertionError: ",
+            "11_preference_following_0: AssertionError: "
+          ]
+        },
+        {
+          "setting": {
+            "facts_tokens": 1823,
+            "token_budget": 6380
+          },
+          "target": 8000,
+          "n": 56,
+          "mean": 8006.1,
+          "p95": 8164.0,
+          "tolerance": 0.1,
+          "ok": true,
+          "reason": "within \u00b110% of target",
+          "errors": [
+            "3_summarization_1: AssertionError: ",
+            "12_abstention_0: AssertionError: ",
+            "11_summarization_1: AssertionError: ",
+            "15_instruction_following_1: AssertionError: "
+          ]
+        },
+        {
+          "setting": {
+            "facts_tokens": 1822,
+            "token_budget": 6375
+          },
+          "target": 8000,
+          "n": 56,
+          "mean": 7996.9,
+          "p95": 8158.0,
+          "tolerance": 0.1,
+          "ok": true,
+          "reason": "within \u00b110% of target",
+          "errors": [
+            "3_summarization_1: AssertionError: ",
+            "11_summarization_0: AssertionError: ",
+            "12_summarization_1: AssertionError: ",
+            "12_temporal_reasoning_0: AssertionError: "
+          ]
+        }
+      ]
+    }
+  },
+  "note": "retrieval-only tuning on an ingested store; no answer or judge calls; knobs scaled together"
+}
