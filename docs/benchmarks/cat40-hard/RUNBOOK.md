@@ -8,7 +8,7 @@ Cat 40 gives an AI agent questions about a fictional company's documents and com
 
 - Run from the repository root with dependencies installed (`bun install`).
 - `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` are set. pg and gbrain also need `OPENAI_API_KEY` for embeddings. `scripts/cat40-hard.sh preflight <step>` lists the variables each arm needs.
-- The Hard ledger `.budget/cat40-hard.sqlite` exists with a $1,794 cap, and the program ledger roster ([ledger-roster.json](ledger-roster.json)) matches every local ledger. The roster lists the four original machines' committed $1,763, `.budget/cat40-followups.sqlite` at $792.69 (its cap lowered to committed spend) and the Hard ledger at $1,794, within the $4,350 authorization. Nothing else spends against the Hard ledger.
+- The Hard ledger `.budget/cat40-hard.sqlite` exists with a $1,794 cap, and the program ledger roster ([ledger-roster.json](ledger-roster.json)) matches every local ledger. The roster lists the four original machines' committed $1,763, `.budget/cat40-followups.sqlite` at a $793 cap (its committed $792.69, rounded up) and the Hard ledger at $1,794, within the $4,350 authorization. Nothing else spends against the Hard ledger.
 - Every paid command passes `--judge gpt-6.1-sol` and runs only the newest frontier models: Sonnet 5.5, Opus 5.5, Fable 5.1, GPT-6.1 Sol and GPT-6 Astra. A newer frontier Opus, GPT, Sonnet or Fable replaces its predecessor only through a dated preregistration amendment with its price registered.
 - Hard tasks start at 16 turns per session. The turn cap is the last calibration knob, moved only with a dated reason in [calibration.md](calibration.md).
 

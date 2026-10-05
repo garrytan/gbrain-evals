@@ -25,7 +25,7 @@ Program ledger roster ([ledger-roster.json](ledger-roster.json)); other allocati
 | Ledger | Allocation |
 |---|---|
 | four original machines (committed) | $1,763.00 |
-| `.budget/cat40-followups.sqlite` (cap lowered to committed spend) | $792.69 |
+| `.budget/cat40-followups.sqlite` (cap $793, lowered to its committed $792.69) | $793.00 |
 | `.budget/cat40-hard.sqlite` | $1,794.00 |
 | total | $4,349.69 of $4,350 |
 
