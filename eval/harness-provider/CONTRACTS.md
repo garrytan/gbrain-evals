@@ -85,6 +85,32 @@ separately from `raw_response`, because the LongMemEval, LoCoMo and LifeBench
 prompt builders substitute `json.dumps(raw_response)` for the context
 whenever it is non-None.
 
+## Comparator server (`mpw/comparator_server.py`, `comparator.lock.json`)
+
+The comparator's current release runs as its own server, installed by
+`bun run harness:comparator install` into `.harness/comparator/<version>/`
+from `comparator.lock.json` (exact versions, sha256 per wheel, CPU torch,
+local model weights at pinned revisions). The provider starts it in
+`prepare()` and stops it in `cleanup()`; data lives in `config.data_dir`
+(default `<store_dir>/comparator-server`), with the embedded database under
+an isolated HOME there.
+
+- LLM route: the launcher passes the `comparator` label's proxy values to the
+  harness process as `MPW_COMPARATOR_OPENAI_BASE_URL` (`<proxy>/openai/v1`)
+  and `MPW_COMPARATOR_OPENAI_API_KEY` (its `mpwp-comparator-...` token). The
+  server refuses a non-loopback base URL. Its extraction model is the
+  server's documented default for that provider unless `llm_model` is set.
+- Embeddings, reranking and the database are local CPU work (reported as
+  local compute in `receipt()`, not as spend). `receipt()["unmetered"]`
+  lists anything that bypasses the proxy; at 0.10.2 it is empty.
+- Provider config: `max_tokens` (facts budget), `max_chunk_tokens` (raw-chunk
+  budget, 0 for facts only), `budget`, `server_url`, `data_dir`, `id_salt`,
+  `llm_model`, `startup_timeout_s`.
+- Ids: every emitted id (documents, facts, chunks, source ids, banks, and any
+  `*_id`/`*_ids` field or id-keyed map inside `raw_response`) is
+  `c-<hex12>` = HMAC-sha256(salt, original). `reverse_ids()` maps them back
+  for the scorer only.
+
 ## Scorer (`mpw/scorer.py`)
 
 Typed outcomes from `mpw/records.py`; strict judge field validation; a fixed

@@ -39,7 +39,8 @@
     "eval:generate-transcript-distill:dry": "bun eval/generators/transcript-distill-gen.ts --dry-run",
     "harness:setup": "bun eval/runner/harness-env.ts",
     "harness:test": "bun eval/runner/harness-test.ts",
-    "harness:cell": "bun eval/runner/harness-cell.ts"
+    "harness:cell": "bun eval/runner/harness-cell.ts",
+    "harness:comparator": "bun eval/runner/harness-comparator.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",
