@@ -19,7 +19,8 @@ close with a `## Changelog` section recording how that document changed and why,
   values move to the changelog.
 - **Comparison page.** Sentences about earlier versions of the page now state the current position; the history is
   in its changelog.
-- **CLAUDE.md** records the shape: current state on top, a per-document changelog below.
+- **CLAUDE.md** records the shape (current state on top, a per-document changelog below), and AGENTS.md summarizes
+  it so Codex and other agents that read only AGENTS.md see it.
 
 No measurement changed; $0.
 
