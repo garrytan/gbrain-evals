@@ -1,0 +1,79 @@
+{
+  "cell_id": "beam-100k-gbrain-rag-48a25f23a91b",
+  "query_id": "1_instruction_following_0",
+  "outcome": "answered",
+  "score": 1.0,
+  "correct": true,
+  "judge_model": "gemini:gemini-3.5-flash",
+  "reason": "score=1.000 over 1 rubric items",
+  "rubric": [
+    {
+      "criterion": "LLM response should contain: code blocks with syntax highlighting",
+      "valid": true,
+      "score": 1.0,
+      "reason": "The response contains code blocks with Python syntax highlighting specified.",
+      "attempts": 1
+    }
+  ],
+  "requests": [
+    {
+      "ts": "2026-10-05T07:45:30.276Z",
+      "cell_id": "beam-100k-gbrain-rag-48a25f23a91b",
+      "label": "harness",
+      "tag": "beam-100k-gbrain-rag-48a25f23a91b/judge/q-a2f560c2f792#0",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash",
+      "kind": "chat",
+      "method": "POST",
+      "path": "/v1beta/models/gemini-3.5-flash:generateContent",
+      "body_sha256": "d92eebb323e8dadd56fa74428da0de46d5605f2f497154dea4c1190ac7a36f2f",
+      "stream": false,
+      "reserved_usd": 0.591675,
+      "actual_usd": 0.002796,
+      "input_tokens": 868,
+      "output_tokens": 166,
+      "status": 200,
+      "refused": false,
+      "settlement": "reconciled",
+      "error": null,
+      "body": {
+        "contents": [
+          {
+            "parts": [
+              {
+                "text": "Evaluate whether the following LLM response demonstrates compliance with the specified RUBRIC CRITERION.\n\nQUESTION:\nCould you show me how to implement a login feature?\n\nLLM RESPONSE:\nBased on your most recent discussions (April 25, 2024), here are two ways to implement the login feature:\n\n### 1. Token-Based Authentication (JWT / JSON API)\n```python\n@app.route('/login', methods=['POST'])\ndef login():\n    username = request.json['username']\n    password = request.json['password']\n    user = get_user_by_username(username)  # Retrieve user from the database\n    if user and user.check_password(password):\n        access_token = create_access_token(identity=user.id)\n        return jsonify(access_token=access_token)\n    else:\n        return jsonify({\"msg\": \"Bad username or password\"}), 401\n```\n\n### 2. Session-Based Authentication with Rate Limiting (HTML Form)\n```python\n@app.route('/login', methods=['GET', 'POST'])\n@limiter.limit(\"10/minute\")\ndef login():\n    if request.method == 'POST':\n        username = request.form['username']\n        password = request.form['password']\n        # Perform authentication logic\n        if authenticate(username, password):\n            session['user_id'] = username\n            return redirect(url_for('dashboard'))\n        else:\n            return \"Invalid credentials\", 401\n    return '''\n        <form method=\"post\">\n            Username: <input type=\"text\" name=\"username\"><br>\n            Password: <input type=\"password\" name=\"password\"><br>\n            <input type=\"submit\" value=\"Login\">\n        </form>\n    '''\n```\n\nRUBRIC CRITERION:\nLLM response should contain: code blocks with syntax highlighting\n\nSCORING GUIDELINES:\n\nFirst, determine whether the rubric criterion is a POSITIVE requirement (the response SHOULD include something) or a NEGATIVE constraint (the response SHOULD NOT include something).\n\n**For POSITIVE requirements** (response should contain, mention, or demonstrate something):\n- **1.0 (Complete Compliance)**: The required element is present, accurate, and complete.\n- **0.5 (Partial Compliance)**: The required element is partially present, has minor inaccuracies, or is incomplete.\n- **0.0 (No Compliance)**: The required element is missing, incorrect, or the response is entirely off-topic / non-responsive.\n\n**For NEGATIVE constraints** (response should NOT contain or should avoid something):\n- **1.0**: The response is responsive AND the prohibited element is absent.\n- **0.5**: The response is responsive but contains a borderline or ambiguous reference to the prohibited element.\n- **0.0**: The prohibited element is present, OR the response is non-responsive.\n\n**Compound statements** (\"and\"/commas joining multiple required elements): all present=1.0, some=0.5, none=0.0.\n\nEVALUATION RULES:\n1. Semantic tolerance: paraphrases and synonyms are acceptable.\n2. Numeric/date equivalence: \"$68,000\"=\"68k\"=\"sixty-eight thousand dollars\"; \"2 years\"=\"24 months\".\n3. Case/punctuation/whitespace tolerance.\n4. Hedging tolerance: do not penalize \"I think\"/\"probably\"/passive/verbosity if content satisfies the criterion.\n5. Style neutrality: do not penalize tone/format/length unless the criterion requires it.\n6. Responsiveness: completely off-topic or refusal = 0.0.\n7. Independence: evaluate this criterion in isolation.\n8. Specificity: vague generic answers score lower than specific, detailed ones.\n\nReturn JSON: {\"score\": <0.0 or 0.5 or 1.0>, \"reason\": \"<one concise sentence>\"}"
+              }
+            ],
+            "role": "user"
+          }
+        ],
+        "generationConfig": {
+          "temperature": 0.0,
+          "responseMimeType": "application/json",
+          "responseSchema": {
+            "properties": {
+              "score": {
+                "description": "Score: 0.0, 0.5, or 1.0",
+                "type": "NUMBER"
+              },
+              "reason": {
+                "type": "STRING"
+              }
+            },
+            "property_ordering": [
+              "score",
+              "reason"
+            ],
+            "required": [
+              "score",
+              "reason"
+            ],
+            "type": "OBJECT"
+          }
+        }
+      }
+    }
+  ],
+  "error": null,
+  "details": {}
+}

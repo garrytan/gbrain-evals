@@ -1,0 +1,151 @@
+{
+  "schema": "mpw-cell-v1",
+  "cell_id": "beam-100k-gbrain-rag-f83eab84169e",
+  "identity": {
+    "schema": "mpw-cell-v1",
+    "dataset": "beam",
+    "split": "100k",
+    "dataset_manifest_sha256": "04c7de0088e12610436ce970cb5a9ebc369abec4775c2ebbab4a079a32f2a227",
+    "schedule_sha256": "7202e5b1bb791a71ede11f28a389ad749b276215b329ee2603f16551749b1dbf",
+    "pins": {
+      "harness_commit": "f618ed7b1f0eb9cad7b42e876f91a42f0eadb150",
+      "harness_lock_sha256": "6b6ace4f721ae10bf66214a8a617c3c6e97a930e91c163728835691994a07b8f",
+      "torch": "2.10.0+cpu",
+      "gbrain": {
+        "version": "0.60.46.0",
+        "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+        "loaded_git_head": null,
+        "package_sha256": "6ea533ae573e6f0f91d920b14a7a9c8d7e1562ffba69a9547cdcd2da3813261c"
+      }
+    },
+    "provider": "gbrain",
+    "provider_config": {
+      "token_budget": 8100,
+      "embedding_model": "voyage:voyage-4",
+      "embedding_dimensions": 1024
+    },
+    "gbrain_credentials": [
+      "voyage"
+    ],
+    "mode": "rag",
+    "lane": "raw",
+    "seal": "dev",
+    "k": 10,
+    "target_tokens": 8000,
+    "models": {
+      "answer": "openai:gpt-6.1-sol",
+      "judge": "gemini:gemini-3.5-flash"
+    },
+    "prompt_revision": "512f4a1ba599496caa11f5f9e654cdb61e35916caa1c49a296b42d7454b7acdd",
+    "scorer_revision": "7619a08c34a45592b0f1d47d8c7f9340c512803f4fceb8900d76e0880d86bada",
+    "wrapper_revision": "5f5b5ccfe8fe6ff190996df6170aa7ca8b3b6236bf342e5786c74b05636d6b14",
+    "budget_usd": 6
+  },
+  "spec": {
+    "note": "Paid reader-usage probe for the cell ledger: the gbrain acceptance cell with a different answer model, to measure that reader's output tokens. Not a comparison result.",
+    "dataset": "beam",
+    "split": "100k",
+    "provider": "gbrain",
+    "mode": "rag",
+    "lane": "raw",
+    "seal": "dev",
+    "target_tokens": 8000,
+    "models": {
+      "answer": "openai:gpt-6.1-sol",
+      "judge": "gemini:gemini-3.5-flash"
+    },
+    "budget_usd": 6,
+    "questions": {
+      "limit": 10
+    },
+    "k": 10,
+    "gbrain_credentials": [
+      "voyage"
+    ],
+    "provider_config": {
+      "token_budget": 8100,
+      "embedding_model": "voyage:voyage-4",
+      "embedding_dimensions": 1024
+    }
+  },
+  "resolved": {
+    "dataset": "beam",
+    "split": "100k",
+    "task_type": "open",
+    "isolation_unit": "conversation",
+    "schedule": [
+      "1_abstention_0",
+      "1_abstention_1",
+      "1_contradiction_resolution_0",
+      "1_contradiction_resolution_1",
+      "1_event_ordering_0",
+      "1_event_ordering_1",
+      "1_information_extraction_0",
+      "1_information_extraction_1",
+      "1_instruction_following_0",
+      "1_instruction_following_1"
+    ],
+    "schedule_sha256": "7202e5b1bb791a71ede11f28a389ad749b276215b329ee2603f16551749b1dbf",
+    "dataset_manifest_sha256": "04c7de0088e12610436ce970cb5a9ebc369abec4775c2ebbab4a079a32f2a227",
+    "questions": 10,
+    "units": [
+      "1"
+    ],
+    "documents": 6,
+    "document_tokens_cl100k": 116718,
+    "document_tokens_by_unit": {
+      "1": 116718
+    },
+    "timestamp_provenance": {
+      "rule": {
+        "provenance": "observed_session_time",
+        "source": "the session's time_anchor turn field; flat 10M fallback documents carry none"
+      },
+      "counts": {
+        "observed_session_time": 6
+      }
+    },
+    "dataset_judge_model": "gemini:gemini-3.5-flash",
+    "judge_calls": 27,
+    "prompt_revision": "512f4a1ba599496caa11f5f9e654cdb61e35916caa1c49a296b42d7454b7acdd",
+    "scorer_revision": "7619a08c34a45592b0f1d47d8c7f9340c512803f4fceb8900d76e0880d86bada",
+    "wrapper_revision": "5f5b5ccfe8fe6ff190996df6170aa7ca8b3b6236bf342e5786c74b05636d6b14"
+  },
+  "planned_at": "2026-10-05T06:16:20.334Z",
+  "estimate": {
+    "usd": 0.3925,
+    "lines": [
+      {
+        "stage": "ingest: gbrain embeddings",
+        "tokens_in": 151733,
+        "tokens_out": 0,
+        "usd": 0.009104003999999999,
+        "basis": "116718 cl100k document tokens x 1.3 (provider tokenizer and chunk overlap)"
+      },
+      {
+        "stage": "retrieve: gbrain query embeddings",
+        "tokens_in": 640,
+        "tokens_out": 0,
+        "usd": 0.0000384,
+        "basis": "64 tokens per question"
+      },
+      {
+        "stage": "answer",
+        "tokens_in": 92000,
+        "tokens_out": 9000,
+        "usd": 0.274,
+        "basis": "10 questions x 1 call(s) x (8000 context + 1200 prompt) in, 900 out"
+      },
+      {
+        "stage": "judge",
+        "tokens_in": 32400,
+        "tokens_out": 6750,
+        "usd": 0.10935,
+        "basis": "27 judge calls x 1200 in / 250 out"
+      }
+    ],
+    "unpriced": [],
+    "note": "list-price estimate from token volumes; the run is enforced by the metering proxy, not by this number"
+  },
+  "reproduce": "bun run harness:cell run /tmp/specs/reader-openai-gpt-6-1-sol.json"
+}

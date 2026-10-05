@@ -51,8 +51,8 @@ export function measureCell(dir: string): MeasuredCell {
 }
 
 export interface Rates {
-  /** Answer input tokens beyond the delivered context (prompt template, question), per question. */
-  answer_overhead_tokens: number;
+  /** Reader input tokens per cl100k token of prompt (delivered context plus template), by reader: the provider tokenizer and request framing. */
+  reader_input_ratio: Record<string, number>;
   /** Answer output tokens per question, by reader. */
   answer_output_tokens: Record<string, number>;
   judge_in_per_call: number;
@@ -62,19 +62,23 @@ export interface Rates {
   gbrain_embedding_model: string;
   /** Comparator extraction tokens per cl100k document token, or null when not measured. */
   comparator_ingest: { model: string; in_ratio: number; out_ratio: number; measured: boolean } | null;
+  /** cl100k prompt-template tokens around the context in the measured cells' final prompts. */
+  measured_prompt_overhead_cl100k?: number;
   sources: string[];
 }
 
 export function deriveRates(cells: MeasuredCell[], fallback: Partial<Rates>): Rates {
   const sources: string[] = [];
   const outputs: Record<string, number> = {};
-  let overheadSum = 0, overheadN = 0, jIn = 0, jOut = 0, jCalls = 0, embTok = 0, embDoc = 0, embModel = '';
+  const ratio: Record<string, number> = {};
+  const promptOverhead = fallback.measured_prompt_overhead_cl100k ?? 277;
+  let jIn = 0, jOut = 0, jCalls = 0, embTok = 0, embDoc = 0, embModel = '';
   let comparator: Rates['comparator_ingest'] = null;
   for (const c of cells) {
     sources.push(c.cell_id);
     for (const [model, u] of Object.entries(c.stages.answer ?? {})) {
-      outputs[model] = u.output_tokens / c.questions;
-      overheadSum += u.input_tokens / c.questions - c.delivered_mean; overheadN++;
+      outputs[model] = u.output_tokens / Math.max(1, u.requests);
+      ratio[model] = (u.input_tokens / Math.max(1, u.requests)) / (c.delivered_mean + promptOverhead);
     }
     for (const u of Object.values(c.stages.judge ?? {})) { jIn += u.input_tokens; jOut += u.output_tokens; jCalls += u.requests; }
     if (c.provider === 'gbrain') {
@@ -88,7 +92,8 @@ export function deriveRates(cells: MeasuredCell[], fallback: Partial<Rates>): Ra
     }
   }
   return {
-    answer_overhead_tokens: overheadN ? overheadSum / overheadN : fallback.answer_overhead_tokens ?? 1500,
+    reader_input_ratio: { ...(fallback.reader_input_ratio ?? {}), ...ratio },
+    measured_prompt_overhead_cl100k: promptOverhead,
     answer_output_tokens: { ...(fallback.answer_output_tokens ?? {}), ...outputs },
     judge_in_per_call: jCalls ? jIn / jCalls : fallback.judge_in_per_call ?? 1200,
     judge_out_per_call: jCalls ? jOut / jCalls : fallback.judge_out_per_call ?? 300,
@@ -114,6 +119,8 @@ export interface PlanItem {
   /** gbrain write-time LLM extraction (facts lanes) priced like the comparator's extraction. */
   gbrain_extraction?: boolean;
   repeats?: number;
+  /** Only the judge runs (a joint re-judge of answers that already exist). */
+  judge_only?: boolean;
   /** A fixed dollar figure for work this lane cannot measure (e.g. the coding-agent benchmark). */
   fixed_usd?: number;
   /** Reader input tokens given directly (B suites report their own volumes). */
@@ -125,13 +132,15 @@ export interface PlanItem {
 
 export interface Inputs { [split: string]: { questions: number; units: number; document_tokens_cl100k: number; task_type: string; judge_calls: number } }
 
+export const EXTRA_PRICES: Record<string, { input: number; output: number }> = {};
+
 const price = (model: string) => {
-  const p = chatPrice(model);
+  const p = chatPrice(model) ?? EXTRA_PRICES[model];
   if (!p) throw new Error(`no list price for ${model}; register it in eval/runner/budget-ledger.ts before pricing the ledger`);
   return p;
 };
 
-export function priceItem(item: PlanItem, inputs: Inputs, rates: Rates, judgeModels: Record<string, string>) {
+export function priceItem(item: PlanItem, inputs: Inputs, rates: Rates, judgeModels: Record<string, string>, promptOverhead: Record<string, number> = {}) {
   if (item.fixed_usd !== undefined) return { usd: item.fixed_usd, parts: { fixed: item.fixed_usd } };
   const parts: Record<string, number> = {};
   const add = (k: string, v: number) => { parts[k] = (parts[k] ?? 0) + v; };
@@ -148,7 +157,7 @@ export function priceItem(item: PlanItem, inputs: Inputs, rates: Rates, judgeMod
     const questions = inp.questions * d.fraction;
     const docTokens = inp.document_tokens_cl100k * d.fraction;
     for (const system of item.systems) {
-      if (item.ingest !== false) {
+      if (item.ingest !== false && !item.judge_only) {
         if (system === 'gbrain') {
           const e = embeddingPrice(rates.gbrain_embedding_model) ?? 0;
           add('ingest gbrain embeddings', docTokens * rates.gbrain_embed_ratio * e / 1e6);
@@ -162,12 +171,16 @@ export function priceItem(item: PlanItem, inputs: Inputs, rates: Rates, judgeMod
         }
       }
       for (const target of item.targets) {
-        for (const reader of item.readers) {
+        for (const reader of item.judge_only ? ['(judge only)'] : item.readers) {
+          if (!item.judge_only) {
           const p = price(reader);
           const calls = questions * (item.calls_per_question ?? 1);
           const out = rates.answer_output_tokens[reader];
-          if (out === undefined) throw new Error(`no measured output tokens for reader ${reader}`);
-          add(`answer ${reader}`, calls * ((target + rates.answer_overhead_tokens) * p.input + out * p.output) / 1e6);
+          const r = rates.reader_input_ratio[reader];
+          if (out === undefined || r === undefined) throw new Error(`no measured usage for reader ${reader}`);
+          const overhead = promptOverhead[d.split.split(':')[0]] ?? promptOverhead.default ?? 300;
+          add(`answer ${reader}`, calls * (r * (target + overhead) * p.input + out * p.output) / 1e6);
+          }
           if (inp.task_type === 'open') {
             const judge = judgeModels[d.split.split(':')[0]] ?? judgeModels.default;
             const jp = price(judge);
@@ -185,16 +198,17 @@ export function priceItem(item: PlanItem, inputs: Inputs, rates: Rates, judgeMod
 if (import.meta.main) {
   const argv = process.argv.slice(2);
   const flag = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
-  const plan = JSON.parse(readFileSync(flag('--plan')!, 'utf8')) as { cap_usd: number; spent_usd: number; judge_models: Record<string, string>; fallback_rates: Partial<Rates>; cells: string[]; items: PlanItem[]; reader_alternatives: string[]; primary_reader: string };
+  const plan = JSON.parse(readFileSync(flag('--plan')!, 'utf8')) as { cap_usd: number; spent_usd: number; judge_models: Record<string, string>; prompt_overhead_cl100k: Record<string, number>; fallback_rates: Partial<Rates>; cells: string[]; items: PlanItem[]; reader_alternatives: string[]; primary_reader: string };
   const inputs = JSON.parse(readFileSync(flag('--inputs')!, 'utf8')) as Inputs;
+  Object.assign(EXTRA_PRICES, (plan as { extra_prices?: Record<string, { input: number; output: number }> }).extra_prices ?? {});
   const cellsDir = flag('--cells-dir') ?? 'eval/reports/harness-cells';
   const measured = plan.cells.filter(id => existsSync(join(cellsDir, id, 'summary.json'))).map(id => measureCell(join(cellsDir, id)));
   const rates = deriveRates(measured, plan.fallback_rates);
-  const rows = plan.items.map(item => ({ ...item, ...priceItem(item, inputs, rates, plan.judge_models) }));
+  const rows = plan.items.map(item => ({ ...item, ...priceItem(item, inputs, rates, plan.judge_models, plan.prompt_overhead_cl100k) }));
   const total = rows.reduce((s, r) => s + r.usd, 0) + plan.spent_usd;
   const alternatives = plan.reader_alternatives.map(reader => {
     const swapped = plan.items.map(it => it.readers.includes(plan.primary_reader) ? { ...it, readers: it.readers.map(r => r === plan.primary_reader ? reader : r) } : it);
-    return { reader, total_usd: swapped.reduce((s, it) => s + priceItem(it, inputs, rates, plan.judge_models).usd, 0) + plan.spent_usd };
+    return { reader, total_usd: swapped.reduce((s, it) => s + priceItem(it, inputs, rates, plan.judge_models, plan.prompt_overhead_cl100k).usd, 0) + plan.spent_usd };
   });
   const out = { generated_at: new Date().toISOString(), cap_usd: plan.cap_usd, spent_usd: plan.spent_usd, total_usd: total, within_cap: total <= plan.cap_usd, rates, measured, rows, alternatives };
   writeFileSync(flag('--out')!, JSON.stringify(out, null, 2) + '\n');

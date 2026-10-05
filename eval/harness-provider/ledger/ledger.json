@@ -1,0 +1,772 @@
+{
+  "generated_at": "2026-10-05T07:53:47.890Z",
+  "cap_usd": 2500,
+  "spent_usd": 3.24,
+  "total_usd": 2735.319605116208,
+  "within_cap": false,
+  "rates": {
+    "reader_input_ratio": {
+      "anthropic:claude-fable-5-1": 1.25,
+      "openai:gpt-6-astra": 1,
+      "gemini:gemini-3.8-flash": 1.249949257972468,
+      "openai:gpt-6.1-sol": 1.009167945065381,
+      "anthropic:claude-sonnet-5-5": 1.6639716536583584,
+      "anthropic:claude-opus-5-5": 1.6639716536583584
+    },
+    "measured_prompt_overhead_cl100k": 277,
+    "answer_output_tokens": {
+      "anthropic:claude-fable-5-1": 1200,
+      "openai:gpt-6-astra": 1200,
+      "gemini:gemini-3.8-flash": 2165.2,
+      "openai:gpt-6.1-sol": 465.5,
+      "anthropic:claude-sonnet-5-5": 389.8,
+      "anthropic:claude-opus-5-5": 535.3
+    },
+    "judge_in_per_call": 728.1150442477876,
+    "judge_out_per_call": 328.34513274336285,
+    "gbrain_embed_ratio": 1.5902517178155897,
+    "gbrain_embedding_model": "voyage:voyage-4",
+    "comparator_ingest": {
+      "model": "openai:gpt-4o-mini",
+      "in_ratio": 6.135360441405782,
+      "out_ratio": 0.7251580733048887,
+      "measured": true
+    },
+    "sources": [
+      "beam-100k-gbrain-rag-48a25f23a91b",
+      "beam-100k-comparator-rag-b1bc1d8eee25",
+      "beam-100k-gbrain-rag-f83eab84169e",
+      "beam-100k-gbrain-rag-5bf8aeae392b",
+      "beam-100k-gbrain-rag-a9d78f4f21df"
+    ]
+  },
+  "measured": [
+    {
+      "cell_id": "beam-100k-gbrain-rag-48a25f23a91b",
+      "provider": "gbrain",
+      "answer_model": "gemini:gemini-3.8-flash",
+      "questions": 10,
+      "document_tokens_cl100k": 116718,
+      "target": 8000,
+      "delivered_mean": 7936.4,
+      "stages": {
+        "ingest": {
+          "voyage:voyage-4": {
+            "requests": 32,
+            "input_tokens": 185611,
+            "output_tokens": 0,
+            "usd": 0.011136659999999994
+          }
+        },
+        "answer": {
+          "gemini:gemini-3.8-flash": {
+            "requests": 10,
+            "input_tokens": 94824,
+            "output_tokens": 38098,
+            "usd": 0.2139855
+          }
+        },
+        "judge": {
+          "gemini:gemini-3.5-flash": {
+            "requests": 27,
+            "input_tokens": 18650,
+            "output_tokens": 9556,
+            "usd": 0.113979
+          }
+        }
+      },
+      "total_usd": 0.33910115999999996
+    },
+    {
+      "cell_id": "beam-100k-comparator-rag-b1bc1d8eee25",
+      "provider": "comparator",
+      "answer_model": "gemini:gemini-3.8-flash",
+      "questions": 10,
+      "document_tokens_cl100k": 116718,
+      "target": 8000,
+      "delivered_mean": 8098.7,
+      "stages": {
+        "ingest": {
+          "openai:gpt-4o-mini": {
+            "requests": 191,
+            "input_tokens": 716107,
+            "output_tokens": 84639,
+            "usd": 0.15819944999999994
+          }
+        },
+        "answer": {
+          "gemini:gemini-3.8-flash": {
+            "requests": 10,
+            "input_tokens": 104692,
+            "output_tokens": 21652,
+            "usd": 0.159714
+          }
+        },
+        "judge": {
+          "gemini:gemini-3.5-flash": {
+            "requests": 27,
+            "input_tokens": 17212,
+            "output_tokens": 8042,
+            "usd": 0.09819599999999999
+          }
+        }
+      },
+      "total_usd": 0.4161094499999999
+    },
+    {
+      "cell_id": "beam-100k-gbrain-rag-f83eab84169e",
+      "provider": "gbrain",
+      "answer_model": "openai:gpt-6.1-sol",
+      "questions": 10,
+      "document_tokens_cl100k": 116718,
+      "target": 8000,
+      "delivered_mean": 7936.4,
+      "stages": {
+        "ingest": {
+          "voyage:voyage-4": {
+            "requests": 32,
+            "input_tokens": 185611,
+            "output_tokens": 0,
+            "usd": 0.011136659999999994
+          }
+        },
+        "answer": {
+          "openai:gpt-6.1-sol": {
+            "requests": 10,
+            "input_tokens": 82887,
+            "output_tokens": 4655,
+            "usd": 0.212324
+          }
+        },
+        "judge": {
+          "gemini:gemini-3.5-flash": {
+            "requests": 27,
+            "input_tokens": 21570,
+            "output_tokens": 9489,
+            "usd": 0.11775599999999996
+          }
+        }
+      },
+      "total_usd": 0.34121666
+    },
+    {
+      "cell_id": "beam-100k-gbrain-rag-5bf8aeae392b",
+      "provider": "gbrain",
+      "answer_model": "anthropic:claude-sonnet-5-5",
+      "questions": 10,
+      "document_tokens_cl100k": 116718,
+      "target": 8000,
+      "delivered_mean": 7935.7,
+      "stages": {
+        "ingest": {
+          "voyage:voyage-4": {
+            "requests": 32,
+            "input_tokens": 185611,
+            "output_tokens": 0,
+            "usd": 0.011136659999999994
+          }
+        },
+        "answer": {
+          "anthropic:claude-sonnet-5-5": {
+            "requests": 10,
+            "input_tokens": 136657,
+            "output_tokens": 3898,
+            "usd": 0.312294
+          }
+        },
+        "judge": {
+          "gemini:gemini-3.5-flash": {
+            "requests": 16,
+            "input_tokens": 11687,
+            "output_tokens": 4952,
+            "usd": 0.062098499999999994
+          }
+        }
+      },
+      "total_usd": 0.38552916
+    },
+    {
+      "cell_id": "beam-100k-gbrain-rag-a9d78f4f21df",
+      "provider": "gbrain",
+      "answer_model": "anthropic:claude-opus-5-5",
+      "questions": 10,
+      "document_tokens_cl100k": 116718,
+      "target": 8000,
+      "delivered_mean": 7935.7,
+      "stages": {
+        "ingest": {
+          "voyage:voyage-4": {
+            "requests": 32,
+            "input_tokens": 185611,
+            "output_tokens": 0,
+            "usd": 0.011136659999999994
+          }
+        },
+        "answer": {
+          "anthropic:claude-opus-5-5": {
+            "requests": 10,
+            "input_tokens": 136657,
+            "output_tokens": 5353,
+            "usd": 0.653688
+          }
+        },
+        "judge": {
+          "gemini:gemini-3.5-flash": {
+            "requests": 16,
+            "input_tokens": 13158,
+            "output_tokens": 5064,
+            "usd": 0.06531300000000001
+          }
+        }
+      },
+      "total_usd": 0.73013766
+    }
+  ],
+  "rows": [
+    {
+      "line": 1,
+      "name": "Primary: BEAM 500k + 1M validation and sealed (56 of 70 conversations), both systems, 8k target",
+      "data": [
+        {
+          "split": "beam:500k",
+          "fraction": 0.8
+        },
+        {
+          "split": "beam:1m",
+          "fraction": 0.8
+        }
+      ],
+      "systems": [
+        "gbrain",
+        "comparator"
+      ],
+      "targets": [
+        8000
+      ],
+      "readers": [
+        "gemini:gemini-3.8-flash"
+      ],
+      "usd": 126.99567072590646,
+      "parts": {
+        "ingest gbrain embeddings": 4.150038154334242,
+        "answer gemini:gemini-3.8-flash": 35.56867441384004,
+        "judge gemini:gemini-3.5-flash": 28.32447568141593,
+        "ingest comparator extraction": 58.95248247631625
+      }
+    },
+    {
+      "line": 1,
+      "name": "Primary: joint blinded re-judge of both systems",
+      "data": [
+        {
+          "split": "beam:500k",
+          "fraction": 0.8
+        },
+        {
+          "split": "beam:1m",
+          "fraction": 0.8
+        }
+      ],
+      "systems": [
+        "gbrain",
+        "comparator"
+      ],
+      "targets": [
+        1
+      ],
+      "readers": [],
+      "judge_only": true,
+      "usd": 28.32447568141593,
+      "parts": {
+        "judge gemini:gemini-3.5-flash": 28.32447568141593
+      }
+    },
+    {
+      "line": 2,
+      "name": "Secondary: PersonaMem 32k, LifeBench, LongMemEval-S, LoCoMo10, both systems, 8k target",
+      "data": [
+        {
+          "split": "personamem:32k",
+          "fraction": 1
+        },
+        {
+          "split": "lifebench:en",
+          "fraction": 1
+        },
+        {
+          "split": "longmemeval:s",
+          "fraction": 1
+        },
+        {
+          "split": "locomo:locomo10",
+          "fraction": 1
+        }
+      ],
+      "systems": [
+        "gbrain",
+        "comparator"
+      ],
+      "targets": [
+        8000
+      ],
+      "readers": [
+        "gemini:gemini-3.8-flash"
+      ],
+      "usd": 285.5759180433808,
+      "parts": {
+        "ingest gbrain embeddings": 6.655953115523055,
+        "answer gemini:gemini-3.8-flash": 151.64394551065584,
+        "ingest comparator extraction": 94.54972335525498,
+        "judge gemini:gemini-3.5-flash": 32.726296061946904
+      }
+    },
+    {
+      "line": 2,
+      "name": "Secondary: joint re-judge",
+      "data": [
+        {
+          "split": "lifebench:en",
+          "fraction": 1
+        },
+        {
+          "split": "longmemeval:s",
+          "fraction": 1
+        },
+        {
+          "split": "locomo:locomo10",
+          "fraction": 1
+        }
+      ],
+      "systems": [
+        "gbrain",
+        "comparator"
+      ],
+      "targets": [
+        1
+      ],
+      "readers": [],
+      "judge_only": true,
+      "usd": 32.726296061946904,
+      "parts": {
+        "judge gemini:gemini-3.5-flash": 32.726296061946904
+      }
+    },
+    {
+      "line": 3,
+      "name": "Dev sweep: BEAM dev conversations, targets 4k/8k/16k/32k and a 24k stand-in for each system's default",
+      "data": [
+        {
+          "split": "beam:500k",
+          "fraction": 0.2
+        },
+        {
+          "split": "beam:1m",
+          "fraction": 0.2
+        }
+      ],
+      "systems": [
+        "gbrain",
+        "comparator"
+      ],
+      "targets": [
+        4000,
+        8000,
+        16000,
+        24000,
+        32000
+      ],
+      "readers": [
+        "gemini:gemini-3.8-flash"
+      ],
+      "usd": 118.74113006406381,
+      "parts": {
+        "ingest gbrain embeddings": 1.0375095385835604,
+        "answer gemini:gemini-3.8-flash": 67.55990530463124,
+        "judge gemini:gemini-3.5-flash": 35.40559460176993,
+        "ingest comparator extraction": 14.738120619079062
+      }
+    },
+    {
+      "line": 3,
+      "name": "Lanes: gbrain facts extraction (facts-only and combined) on LongMemEval-S, LoCoMo10 and BEAM dev; extraction priced at the comparator's measured rate (assumed)",
+      "data": [
+        {
+          "split": "longmemeval:s",
+          "fraction": 1
+        },
+        {
+          "split": "locomo:locomo10",
+          "fraction": 1
+        },
+        {
+          "split": "beam:500k",
+          "fraction": 0.2
+        },
+        {
+          "split": "beam:1m",
+          "fraction": 0.2
+        }
+      ],
+      "systems": [
+        "gbrain"
+      ],
+      "gbrain_extraction": true,
+      "targets": [
+        8000,
+        8000
+      ],
+      "readers": [
+        "gemini:gemini-3.8-flash"
+      ],
+      "usd": 197.7501250592942,
+      "parts": {
+        "ingest gbrain embeddings": 6.476546444434071,
+        "ingest gbrain extraction": 92.00120012723076,
+        "answer gemini:gemini-3.8-flash": 75.67836222214261,
+        "judge gemini:gemini-3.5-flash": 23.59401626548673
+      }
+    },
+    {
+      "line": 3,
+      "name": "Lanes: comparator facts-only and raw-only retrieval on the same stores",
+      "data": [
+        {
+          "split": "longmemeval:s",
+          "fraction": 1
+        },
+        {
+          "split": "locomo:locomo10",
+          "fraction": 1
+        },
+        {
+          "split": "beam:500k",
+          "fraction": 0.2
+        },
+        {
+          "split": "beam:1m",
+          "fraction": 0.2
+        }
+      ],
+      "systems": [
+        "comparator"
+      ],
+      "ingest": false,
+      "targets": [
+        8000,
+        8000
+      ],
+      "readers": [
+        "gemini:gemini-3.8-flash"
+      ],
+      "usd": 99.27237848762934,
+      "parts": {
+        "answer gemini:gemini-3.8-flash": 75.67836222214261,
+        "judge gemini:gemini-3.5-flash": 23.59401626548673
+      }
+    },
+    {
+      "line": 3,
+      "name": "Agent modes: agentic-rag (about 4 answer calls per question, assumed) on dev slices of LongMemEval-S, LoCoMo10, LifeBench",
+      "data": [
+        {
+          "split": "longmemeval:s",
+          "fraction": 0.2
+        },
+        {
+          "split": "locomo:locomo10",
+          "fraction": 0.2
+        },
+        {
+          "split": "lifebench:en",
+          "fraction": 0.2
+        }
+      ],
+      "systems": [
+        "gbrain",
+        "comparator"
+      ],
+      "ingest": false,
+      "targets": [
+        8000
+      ],
+      "readers": [
+        "gemini:gemini-3.8-flash"
+      ],
+      "calls_per_question": 4,
+      "usd": 112.43411442820657,
+      "parts": {
+        "answer gemini:gemini-3.8-flash": 105.88885521581719,
+        "judge gemini:gemini-3.5-flash": 6.5452592123893805
+      }
+    },
+    {
+      "line": 3,
+      "name": "Agent modes: agent (each system's own synthesis, one call per question at the 8k rate, assumed)",
+      "data": [
+        {
+          "split": "longmemeval:s",
+          "fraction": 0.2
+        },
+        {
+          "split": "locomo:locomo10",
+          "fraction": 0.2
+        },
+        {
+          "split": "lifebench:en",
+          "fraction": 0.2
+        }
+      ],
+      "systems": [
+        "gbrain",
+        "comparator"
+      ],
+      "ingest": false,
+      "targets": [
+        8000
+      ],
+      "readers": [
+        "openai:gpt-6.1-sol"
+      ],
+      "usd": 42.79698986576071,
+      "parts": {
+        "answer openai:gpt-6.1-sol": 36.251730653371325,
+        "judge gemini:gemini-3.5-flash": 6.5452592123893805
+      }
+    },
+    {
+      "line": 3,
+      "name": "Fallback answer model overlap on BEAM validation (newest Sonnet)",
+      "data": [
+        {
+          "split": "beam:500k",
+          "fraction": 0.2
+        },
+        {
+          "split": "beam:1m",
+          "fraction": 0.2
+        }
+      ],
+      "systems": [
+        "gbrain",
+        "comparator"
+      ],
+      "ingest": false,
+      "targets": [
+        8000
+      ],
+      "readers": [
+        "anthropic:claude-sonnet-5-5"
+      ],
+      "usd": 24.689415502963847,
+      "parts": {
+        "answer anthropic:claude-sonnet-5-5": 17.608296582609864,
+        "judge gemini:gemini-3.5-flash": 7.081118920353982
+      }
+    },
+    {
+      "line": 4,
+      "name": "B1-B4 fixed reader (newest Sonnet): 76M reader input tokens at 8k from the suites' dry runs; 150 output tokens per answer (assumed, cap 400)",
+      "data": [],
+      "systems": [],
+      "targets": [],
+      "readers": [
+        "anthropic:claude-sonnet-5-5"
+      ],
+      "reader_input_tokens": 76000000,
+      "reader_calls": 9500,
+      "reader_output_tokens_per_call": 150,
+      "usd": 166.25,
+      "parts": {
+        "answer anthropic:claude-sonnet-5-5": 166.25
+      }
+    },
+    {
+      "line": 4,
+      "name": "B1-B4 frontier sweep: 25% of questions across Opus, GPT, Fable",
+      "data": [],
+      "systems": [],
+      "targets": [],
+      "readers": [
+        "anthropic:claude-opus-5-5",
+        "openai:gpt-6-astra",
+        "anthropic:claude-fable-5-1"
+      ],
+      "reader_input_tokens": 19000000,
+      "reader_calls": 2375,
+      "reader_output_tokens_per_call": 150,
+      "usd": 498.75,
+      "parts": {
+        "answer anthropic:claude-opus-5-5": 83.125,
+        "answer openai:gpt-6-astra": 207.8125,
+        "answer anthropic:claude-fable-5-1": 207.8125
+      }
+    },
+    {
+      "line": 4,
+      "name": "B ingest: extraction for the comparator and gbrain facts lanes over an assumed 5M document tokens per system (lane 3 to confirm)",
+      "fixed_usd": 14,
+      "data": [],
+      "systems": [],
+      "targets": [],
+      "readers": [],
+      "usd": 14,
+      "parts": {
+        "fixed": 14
+      }
+    },
+    {
+      "line": 4,
+      "name": "B5 pinned-question benefit gate (not measured here; plan figure share)",
+      "fixed_usd": 40,
+      "data": [],
+      "systems": [],
+      "targets": [],
+      "readers": [],
+      "usd": 40,
+      "parts": {
+        "fixed": 40
+      }
+    },
+    {
+      "line": 5,
+      "name": "Fix lane: three gbrain rounds re-ingested and answered on BEAM validation",
+      "data": [
+        {
+          "split": "beam:500k",
+          "fraction": 0.2
+        },
+        {
+          "split": "beam:1m",
+          "fraction": 0.2
+        }
+      ],
+      "systems": [
+        "gbrain"
+      ],
+      "targets": [
+        8000
+      ],
+      "readers": [
+        "gemini:gemini-3.8-flash"
+      ],
+      "repeats": 3,
+      "usd": 27.072459901471674,
+      "parts": {
+        "ingest gbrain embeddings": 3.1125286157506813,
+        "answer gemini:gemini-3.8-flash": 13.338252905190016,
+        "judge gemini:gemini-3.5-flash": 10.621678380530975
+      }
+    },
+    {
+      "line": 6,
+      "name": "Coding-agent memory benchmark, full run (not measured here; plan figure)",
+      "fixed_usd": 400,
+      "data": [],
+      "systems": [],
+      "targets": [],
+      "readers": [],
+      "usd": 400,
+      "parts": {
+        "fixed": 400
+      }
+    },
+    {
+      "line": 7,
+      "name": "BEAM 10M, both systems, 8k target (the harness loader makes each conversation one 11M-token document)",
+      "data": [
+        {
+          "split": "beam:10m",
+          "fraction": 1
+        }
+      ],
+      "systems": [
+        "gbrain",
+        "comparator"
+      ],
+      "targets": [
+        8000
+      ],
+      "readers": [
+        "gemini:gemini-3.8-flash"
+      ],
+      "usd": 170.46295206983413,
+      "parts": {
+        "ingest gbrain embeddings": 10.462458503771655,
+        "answer gemini:gemini-3.8-flash": 6.351549002471435,
+        "judge gemini:gemini-3.5-flash": 5.026720221238938,
+        "ingest comparator extraction": 148.6222243423521
+      }
+    },
+    {
+      "line": 8,
+      "name": "Two extra frontier targets on sealed BEAM (16k, 32k), stores reused",
+      "data": [
+        {
+          "split": "beam:500k",
+          "fraction": 0.6
+        },
+        {
+          "split": "beam:1m",
+          "fraction": 0.6
+        }
+      ],
+      "systems": [
+        "gbrain",
+        "comparator"
+      ],
+      "ingest": false,
+      "targets": [
+        16000,
+        32000
+      ],
+      "readers": [
+        "gemini:gemini-3.8-flash"
+      ],
+      "usd": 146.23767922433385,
+      "parts": {
+        "answer gemini:gemini-3.8-flash": 103.75096570220995,
+        "judge gemini:gemini-3.5-flash": 42.48671352212389
+      }
+    },
+    {
+      "line": 8,
+      "name": "LongMemEval-M (not loaded by this harness pin; plan figure share)",
+      "fixed_usd": 100,
+      "data": [],
+      "systems": [],
+      "targets": [],
+      "readers": [],
+      "usd": 100,
+      "parts": {
+        "fixed": 100
+      }
+    },
+    {
+      "line": 9,
+      "name": "Reserve",
+      "fixed_usd": 100,
+      "data": [],
+      "systems": [],
+      "targets": [],
+      "readers": [],
+      "usd": 100,
+      "parts": {
+        "fixed": 100
+      }
+    }
+  ],
+  "alternatives": [
+    {
+      "reader": "anthropic:claude-sonnet-5-5",
+      "total_usd": 3491.958641697784
+    },
+    {
+      "reader": "anthropic:claude-opus-5-5",
+      "total_usd": 4984.896198778462
+    },
+    {
+      "reader": "openai:gpt-6.1-sol",
+      "total_usd": 3023.52961696337
+    }
+  ]
+}

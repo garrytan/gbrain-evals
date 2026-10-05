@@ -37,37 +37,40 @@ async def tune(cell_dir: Path, grid: dict) -> dict:
     task = run.task_type
     base_cfg = dict(run.spec.get("provider_config") or {})
     rows = []
+    # One provider (and one server) for the whole sweep; each setting rewrites its knob dict in place.
+    prov = _provider({**run.spec, "provider_config": base_cfg})
+    knobs = getattr(prov, "config", None) if isinstance(getattr(prov, "config", None), dict) else getattr(prov, "cfg", None)
+    if not isinstance(knobs, dict):
+        raise RuntimeError(f"{run.spec['provider']} exposes no knob dict (config or cfg) to sweep")
+    prov.initialize()
+    prov.prepare(cell_dir / "store", unit_ids=None, reset=False)
     for setting in _settings(grid):
         spec = {**run.spec, "provider_config": {**base_cfg, **setting}}
-        prov = _provider(spec)
-        prov.initialize()
-        prov.prepare(cell_dir / "store", unit_ids=None, reset=False)
+        knobs.update(setting)
         tokens, errors = [], []
-        try:
-            for q in run.queries:
-                pq = run.pqueries[q.id]
-                k = int(pq.meta.get("retrieval_limit") or spec.get("k") or 10)
-                try:
-                    with_meta = getattr(prov, "retrieve_with_meta", None)
-                    if with_meta is not None:
-                        docs, raw, _ = await asyncio.to_thread(with_meta, pq.query, k, pq.user_id, pq.meta.get("query_timestamp"))
-                    else:
-                        docs, raw = await prov.async_retrieve(pq.query, k=k, user_id=pq.user_id, query_timestamp=pq.meta.get("query_timestamp"))
-                except Exception as e:  # noqa: BLE001
-                    errors.append(f"{q.id}: {type(e).__name__}: {e}"[:300])
-                    continue
-                rendered = _render_rag_context(docs)
-                meta = dict(pq.meta)
+        for q in run.queries:
+            pq = run.pqueries[q.id]
+            k = int(pq.meta.get("retrieval_limit") or spec.get("k") or 10)
+            try:
+                with_meta = getattr(prov, "retrieve_with_meta", None)
+                if with_meta is not None:
+                    docs, raw, _ = await asyncio.to_thread(with_meta, pq.query, k, pq.user_id, pq.meta.get("query_timestamp"))
+                else:
+                    docs, raw = await prov.async_retrieve(pq.query, k=k, user_id=pq.user_id, query_timestamp=pq.meta.get("query_timestamp"))
+            except Exception as e:  # noqa: BLE001
+                errors.append(f"{q.id}: {type(e).__name__}: {e}"[:300])
+                continue
+            rendered = _render_rag_context(docs)
+            meta = dict(pq.meta)
 
-                def build(qq, cc, meta):
-                    return run.dataset.build_rag_prompt(qq, cc, task, run.split, None, meta)
+            def build(qq, cc, meta):
+                return run.dataset.build_rag_prompt(qq, cc, task, run.split, None, meta)
 
-                prompt = build(pq.query, rendered, {**meta, "_raw_response": raw})
-                tokens.append(ctxmod.inserted_context(build, pq.query, rendered, meta, raw, prompt).tokens)
-        finally:
-            prov.cleanup()
+            prompt = build(pq.query, rendered, {**meta, "_raw_response": raw})
+            tokens.append(ctxmod.inserted_context(build, pq.query, rendered, meta, raw, prompt).tokens)
         gate = ctxmod.gate(target, tokens)
         rows.append({"setting": setting, **gate.as_dict(), "errors": errors})
+    prov.cleanup()
     passing = [r for r in rows if r["ok"] and not r["errors"]]
     best = min(passing, key=lambda r: abs(r["mean"] - (target or r["mean"]))) if passing else None
     out = {"cell_id": run.cell_id, "target": target, "questions": len(run.queries), "rows": rows,

@@ -1,0 +1,75 @@
+{
+  "cell_id": "beam-100k-comparator-rag-b1bc1d8eee25",
+  "unit": "1",
+  "ok": true,
+  "documents": 6,
+  "ingest_ms": 45305.4,
+  "barrier_ms": 45116.4,
+  "error": null,
+  "provider_receipt": {
+    "bank": "c-e41257e3c074",
+    "documents": 6,
+    "facts": 812,
+    "ingest_ms": 45302.9,
+    "barrier_ms": 45116.4,
+    "extraction_calls_expected": 179,
+    "extraction_calls_rule": "one LLM call per 3000-character retain chunk of each document",
+    "bank_config": {
+      "enable_observations": false
+    },
+    "server": {
+      "version": "0.10.2",
+      "lock_sha256": "49a0e4f35e81e50ea9706e1ef0bf6b660f2b3a82fd27c0e98fc059648f5249b7",
+      "torch": "2.14.1+cpu",
+      "install_seconds": 32.1,
+      "metered": [
+        {
+          "what": "LLM",
+          "provider": "openai",
+          "model": "gpt-4o-mini",
+          "model_source": "server default",
+          "base_url": "http://127.0.0.1:38013/openai/v1",
+          "operations": [
+            "fact extraction (retain)",
+            "consolidation when observations are on",
+            "reflect (agent mode)"
+          ]
+        }
+      ],
+      "local_compute": [
+        {
+          "what": "embeddings",
+          "model": "BAAI/bge-small-en-v1.5@5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+          "device": "cpu"
+        },
+        {
+          "what": "reranker",
+          "model": "cross-encoder/ms-marco-MiniLM-L-6-v2@233902d25c440f23af6f7d6e94d2946bac0bee0a",
+          "device": "cpu"
+        },
+        {
+          "what": "database",
+          "engine": "embedded PostgreSQL",
+          "location": "isolated HOME under the cell directory"
+        }
+      ],
+      "unmetered": [],
+      "defaults": {
+        "llm_provider": "openai",
+        "llm_model": "gpt-4o-mini",
+        "embeddings_provider": "local",
+        "embeddings_local_model": "BAAI/bge-small-en-v1.5",
+        "reranker_provider": "local",
+        "reranker_local_model": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+        "database_url": "pg0",
+        "retain_chunk_size": 3000,
+        "retain_extraction_mode": "concise",
+        "retain_extract_causal_links": true,
+        "enable_observations": true,
+        "tokenizer_encoding": "o200k_base"
+      },
+      "url": "http://127.0.0.1:35723",
+      "data_dir": "eval/reports/harness-cells/beam-100k-comparator-rag-b1bc1d8eee25/store/comparator-server"
+    }
+  }
+}

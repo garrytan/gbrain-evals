@@ -232,9 +232,10 @@ export interface EstimateAssumptions {
 }
 
 export const DEFAULT_ASSUMPTIONS: EstimateAssumptions = {
-  embed_token_ratio: 1.3, comparator_extraction_model: 'gemini:gemini-3.5-flash', comparator_extract_in: 1.6, comparator_extract_out: 0.25,
-  default_context_tokens: 16000, prompt_overhead_tokens: 1200, answer_output_tokens: 900, agentic_calls: 4,
-  judge_in_tokens: 1200, judge_out_tokens: 250,
+  // Measured on the 2026-10-05 acceptance cells (eval/harness-provider/LEDGER.md), except agentic_calls.
+  embed_token_ratio: 1.59, comparator_extraction_model: 'openai:gpt-4o-mini', comparator_extract_in: 6.14, comparator_extract_out: 0.73,
+  default_context_tokens: 16000, prompt_overhead_tokens: 350, answer_output_tokens: 2200, agentic_calls: 4,
+  judge_in_tokens: 730, judge_out_tokens: 330,
 };
 
 // ─── plan / run / resume ─────────────────────────────────────────────
@@ -432,12 +433,43 @@ export async function runCell(ctx: Ctx, target: string, resume: boolean, tuneGri
   return code;
 }
 
+/**
+ * Joint blinded re-judge of two or more cells over the same schedule, through
+ * the metering proxy, with the dataset's own judge (mpw/rejudge.py).
+ */
+export async function rejudgeCells(ctx: Ctx, ids: string[], budgetUsd: number, out: string, seed: string): Promise<number> {
+  const cells = ids.map(id => JSON.parse(readFileSync(join(ctx.cellsDir, id, 'cell.json'), 'utf8')) as CellFile);
+  const judge = cells[0].resolved.dataset_judge_model ?? cells[0].spec.models.judge;
+  if (!judge) throw new Error('these cells have no judge model');
+  const { startMeteringProxy } = await import('./metering-proxy.ts');
+  const ledgerPath = budgetOptionsFrom(ctx.argv).ledgerPath;
+  const run = BudgetRun.open({ runner: `harness-rejudge:${ids.join('+')}`.slice(0, 200), budgetUsd, ledgerPath, log: ctx.log });
+  mkdirSync(join(out, 'proxy'), { recursive: true });
+  const proxy = await startMeteringProxy({ run, cellId: `rejudge:${ids.join('+')}`, requestLogPath: join(out, 'proxy/requests.jsonl'), bodiesDir: join(out, 'proxy/bodies'), labels: ['harness'] });
+  const j = splitModel(judge);
+  const env = { ...pick(proxy.envFor('harness'), [LLM_PROVIDER[j.llm]]), OMB_JUDGE_LLM: j.llm, OMB_JUDGE_MODEL: j.model,
+    OMB_ANSWER_LLM: j.llm, OMB_ANSWER_MODEL: j.model, MPW_PROXY_LOG: join(out, 'proxy/requests.jsonl'), MPW_PROXY_BODIES: join(out, 'proxy/bodies') };
+  const child = Bun.spawn([ctx.install.python, '-m', 'mpw.rejudge', ...ids.flatMap(id => ['--cell', join(ctx.cellsDir, id)]), '--seed', seed, '--out', out, '--judge-model', judge], {
+    cwd: PROVIDER_DIR, env: harnessProcessEnv(ctx.install, env), stdout: 'inherit', stderr: 'inherit',
+  });
+  let code: number;
+  try { code = await child.exited; } finally {
+    const stats = proxy.stats();
+    await proxy.close();
+    const summary = run.close();
+    writeFileSync(join(out, 'spend.json'), JSON.stringify({ run_id: summary.run_id, usd: summary.actual_usd, requests: summary.requests, metered: stats }, null, 2) + '\n');
+    closeLedgers();
+  }
+  return code;
+}
+
 export function makeCtx(argv: string[], log: (l: string) => void = l => process.stderr.write(l + '\n')): Ctx {
   const cellsDir = resolve(flag(argv, '--cells-dir') ?? DEFAULT_CELLS_DIR);
   return { argv, cellsDir, install: ensureHarness({ log }), gut: resolveGbrainUnderTest(gbrainSpecFrom(argv)), stub: argv.includes('--stub-upstream'), log };
 }
 
 export const USAGE = `usage: bun run harness:cell <plan|run|resume> <spec.json | cell-id> [--stub-upstream] [--budget-ledger <path>] [--gbrain <checkout>[@ref]] [--cells-dir <dir>]
+       bun run harness:cell rejudge <cell-id> <cell-id> [--out <dir>] [--seed N] [--budget-usd N]   joint blinded re-judge with the dataset's judge
        bun run harness:cell tune <cell-id> --grid '{"token_budget": [6000, 7000, 8000]}'   retrieval-only knob sweep on an ingested cell
        bun run harness:cell cli -- <harness CLI arguments>   (keyless only: --stub-upstream is implied)`;
 
@@ -453,7 +485,7 @@ if (import.meta.main) {
       });
       process.exit(proc.exitCode ?? 1);
     }
-    if (!['plan', 'run', 'resume', 'tune'].includes(action ?? '') || !target) { console.error(USAGE); process.exit(2); }
+    if (!['plan', 'run', 'resume', 'tune', 'rejudge'].includes(action ?? '') || !target) { console.error(USAGE); process.exit(2); }
     const ctx = makeCtx(argv);
     if (action === 'plan') {
       const cell = planCell(ctx, target);
@@ -461,6 +493,11 @@ if (import.meta.main) {
         units: cell.resolved.units.length, documents: cell.resolved.documents, document_tokens_cl100k: cell.resolved.document_tokens_cl100k,
         estimate: cell.estimate, reproduce: cell.reproduce }, null, 2));
       process.exit(0);
+    }
+    if (action === 'rejudge') {
+      const ids = argv.slice(1).filter((a, i, all) => !a.startsWith('--') && !(all[i - 1] ?? '').startsWith('--'));
+      const out = resolve(flag(argv, '--out') ?? join(ctx.cellsDir, `rejudge-${Date.now()}`));
+      process.exit(await rejudgeCells(ctx, ids, Number(flag(argv, '--budget-usd') ?? 2), out, flag(argv, '--seed') ?? '20261005'));
     }
     if (action === 'tune') {
       const grid = flag(argv, '--grid');
