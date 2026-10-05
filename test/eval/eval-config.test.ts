@@ -79,10 +79,10 @@ describe('decision kit config channel', () => {
   test('spec validation: config_channel must be boolean and the runner must read the channel', () => {
     expect(() => validateSpec(spec({ config_channel: true }))).not.toThrow();
     expect(() => validateSpec(spec({ config_channel: 'yes' as never }))).toThrow('config_channel must be true or false');
-    expect(() => validateSpec(spec({ config_channel: true, script: 'eval/runner/temporal-edges.ts' }))).toThrow('never reads GBRAIN_EVAL_CONFIG');
+    expect(() => validateSpec(spec({ config_channel: true, script: 'eval/runner/n3-temporal-asof.ts' }))).toThrow('never reads GBRAIN_EVAL_CONFIG');
   });
   test('every P5 runner reads the channel', () => {
-    for (const script of ['eval/runner/line-grammar-typing.ts', 'eval/runner/relation-line-variants.ts', 'eval/runner/forward-reference-heal.ts', 'eval/runner/n4-similar-pages.ts']) {
+    for (const script of ['eval/runner/line-grammar-typing.ts', 'eval/runner/relation-line-variants.ts', 'eval/runner/forward-reference-heal.ts', 'eval/runner/n4-similar-pages.ts', 'eval/runner/temporal-edges.ts']) {
       expect(() => validateSpec(spec({ config_channel: true, script }))).not.toThrow();
     }
   });

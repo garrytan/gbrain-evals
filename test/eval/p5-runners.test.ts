@@ -8,7 +8,7 @@ import { edgesByOrigin } from '../../eval/runner/line-grammar-typing.ts';
 import {
   DECOY_KINDS, TEMPLATES_A, dropStatementsLinking, generateRelationLineWorld, linksTo, normalizeRelationType, validateTemplates,
 } from '../../eval/generators/relation-line-variants-gen.ts';
-import { scoreWorld } from '../../eval/runner/relation-line-variants.ts';
+import { scoreWorld, typeRows } from '../../eval/runner/relation-line-variants.ts';
 import { nonEntityShare, planSeed, wantedNames } from '../../eval/runner/forward-reference-heal.ts';
 import { generateLedger } from '../../eval/generators/n4-entity-gen.ts';
 import { generateNoReferentNames, referentProblem, validatePools, POOLS_A } from '../../eval/generators/no-referent-names-gen.ts';
@@ -163,5 +163,18 @@ describe('H5a no-referent names', () => {
     ]);
     expect(s.lexical).toEqual({ n: 1, recall_at_3: 1 });
     expect((s.no_referent as { hint_rate: number }).hint_rate).toBe(0.5);
+  });
+});
+
+describe('P5 delta H9: per-seed gold-edge type rows', () => {
+  test('every gold edge gets a seed-prefixed row; stored gold types match; redaction drops stored types', () => {
+    const gold = buildGoldEdges([...corpus]);
+    const stored = gold.map(g => edge(g.from, g.to, g.type));
+    const t = typeRows(4, corpus, stored);
+    expect(t.rows.length).toBe(gold.length);
+    expect(t.rows.every(r => String(r.id).startsWith('s4:') && String(r.cluster).startsWith('s4:') && r.kind === 'edge' && r.anyTypeMatch === 1 && r.found === 1)).toBe(true);
+    const missing = typeRows(4, corpus, stored.slice(1), true);
+    expect(missing.rows.filter(r => r.anyTypeMatch === 0).length).toBe(1);
+    expect(missing.rows.some(r => 'inferred_types' in r)).toBe(false);
   });
 });

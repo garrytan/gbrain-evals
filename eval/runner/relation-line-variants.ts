@@ -22,11 +22,15 @@
  *                                      the prereg compares candidate minus baseline)
  *                  decoy_type_reached_grammar_off  the same with the grammar off (same build)
  *                  decoy_added_by_grammar          reached with the grammar on and not with it off
- * Summary per seed: rendered lines, typed recall, decoys reached per kind.
+ *   kind edge      (--type-rows, P5 delta H9) one row per world-v1 gold edge, scored against
+ *                  the grammar-on brain as line-grammar-typing.ts scores world-v1:
+ *                  anyTypeMatch, correctly_typed, found; id `s<seed>:<gold probe id>`, so two
+ *                  builds (frozen vs delta extractor) pair per seed and edge
+ * Summary per seed: rendered lines, typed recall, decoys reached per kind (and type accuracy with --type-rows).
  *
  * Arm config: GBRAIN_EVAL_CONFIG (eval/runner/eval-config.ts). Hermetic, no model.
  *
- * Usage: bun eval/runner/relation-line-variants.ts [--seeds 1,2,3] [--phrasing A] [--keep-prose] [--output <dir>] [--gbrain <checkout>[@ref]] [--json]
+ * Usage: bun eval/runner/relation-line-variants.ts [--seeds 1,2,3] [--phrasing A] [--keep-prose] [--type-rows] [--output <dir>] [--gbrain <checkout>[@ref]] [--json]
  *
  * Custodian (held-out) mode: --phrasing-file <custody path> --decision-id <id> --purpose <text> --seeds <held-out seeds>.
  * The file holds `{ "id": ..., "templates": RelationLineTemplates }` and lives outside the repository; every read appends
@@ -39,7 +43,7 @@ import { gbrainSpecFrom, resolveGbrainUnderTest, type GbrainUnderTest } from './
 import { withHermeticEnv } from './hermetic-env.ts';
 import { argValue, custodyInput, openP5Brain, p5Receipt, renderWorldPage, type StoredEdge } from './p5-brain.ts';
 import { receiptPath, writeReceipt } from './receipt.ts';
-import { loadCorpus } from './world-v1-gold.ts';
+import { buildGoldEdges, loadCorpus, score, type RichPage } from './world-v1-gold.ts';
 import {
   DECOY_KINDS, DEV_SEEDS, RELATION_LINE_VARIANTS_GENERATOR_VERSION, generateRelationLineWorld, validateTemplates,
   type RelationLineTemplates, type RelationLineWorld,
@@ -47,7 +51,22 @@ import {
 
 export const CATEGORY = 'relation-line-variants';
 
-export interface H2Row { id: string; kind: 'relation' | 'decoy'; cluster: string; seed: number; [field: string]: unknown }
+export interface H2Row { id: string; kind: 'relation' | 'decoy' | 'edge'; cluster: string; seed: number; [field: string]: unknown }
+
+/**
+ * H9: every world-v1 gold edge scored against one seed's stored edges (world-v1-gold.ts score, as
+ * line-grammar-typing.ts does). `redact` drops the stored types, which could carry held-out vocabulary.
+ */
+export function typeRows(seed: number, corpus: readonly RichPage[], edges: readonly StoredEdge[], redact = false): { rows: H2Row[]; summary: Record<string, unknown> } {
+  const s = score(buildGoldEdges([...corpus]), edges.map(({ from, to, type }) => ({ from, to, type })));
+  const rows: H2Row[] = s.rows.filter(r => r.goldType !== null).map(r => ({
+    id: `s${seed}:${r.probe_id}`, kind: 'edge', cluster: `s${seed}:${r.from}`, seed, from: r.from, to: r.to, gold_type: r.goldType,
+    ...(redact ? {} : { inferred_types: r.inferredTypes }), classification: r.classification,
+    anyTypeMatch: Number(r.anyTypeMatch), correctly_typed: Number(r.classification === 'correctly_typed'), found: Number(r.inferredTypes.length > 0),
+  }));
+  return { rows, summary: { gold_edges: rows.length, type_accuracy: s.overallTypeAccuracy, any_type_accuracy: s.overallAnyTypeAccuracy, strict_f1: s.overallStrictF1,
+    any_type_match_rate: rows.reduce((a, r) => a + (r.anyTypeMatch as number), 0) / rows.length } };
+}
 
 /**
  * Score one world against the stored edges with the grammar on and off.
@@ -101,7 +120,7 @@ export function scoreWorld(world: RelationLineWorld, edges: readonly StoredEdge[
 
 export async function runRelationLineVariants(opts: {
   gut: GbrainUnderTest; seeds: readonly number[]; config: Record<string, string>; templates?: string;
-  sealedTemplates?: { id: string; templates: RelationLineTemplates }; keepProse?: boolean; log?: (s: string) => void;
+  sealedTemplates?: { id: string; templates: RelationLineTemplates }; keepProse?: boolean; typeRows?: boolean; log?: (s: string) => void;
 }): Promise<{ rows: H2Row[]; perSeed: Array<Record<string, unknown>>; config: Record<string, unknown> | null; worlds: RelationLineWorld[] }> {
   return withHermeticEnv(CATEGORY, async () => {
     const log = opts.log ?? (() => {});
@@ -128,7 +147,10 @@ export async function runRelationLineVariants(opts: {
       const off = await graph({ ...opts.config, 'line_grammar.enabled': 'false' });
       const scored = scoreWorld(world, on.edges, off.edges, !!opts.sealedTemplates);
       rows.push(...scored.rows);
-      perSeed.push(scored.summary);
+      const typed = opts.typeRows ? typeRows(seed, corpus, on.edges, !!opts.sealedTemplates) : null;
+      if (typed) rows.push(...typed.rows);
+      perSeed.push({ ...scored.summary, ...(typed ? { type_rows: typed.summary } : {}) });
+      if (typed) log(`seed ${seed}: type accuracy ${Number(typed.summary.type_accuracy).toFixed(3)}, any-type ${Number(typed.summary.any_type_accuracy).toFixed(3)}, strict F1 ${Number(typed.summary.strict_f1).toFixed(3)} over ${typed.summary.gold_edges} gold edges`);
       log(`seed ${seed}: ${scored.summary.rendered_lines} lines, typed recall ${Number(scored.summary.typed_recall).toFixed(3)} (grammar off ${Number(scored.summary.typed_recall_grammar_off).toFixed(3)}), decoy types reached ${scored.summary.decoy_types_reached}/${scored.summary.decoys}, added by the grammar ${scored.summary.decoy_types_added_by_grammar}`);
     }
     return { rows, perSeed, config, worlds };
@@ -144,6 +166,7 @@ async function main(): Promise<void> {
   const sealedTemplates = custody ? { id: custody.parsed.id, templates: validateTemplates(custody.parsed.templates) } : undefined;
   const devTemplates = argValue(argv, '--phrasing') ?? 'A';
   const keepProse = argv.includes('--keep-prose');
+  const typeRowsFlag = argv.includes('--type-rows');
   const output = argValue(argv, '--output');
   const outPath = output ? join(output, 'receipt.json') : receiptPath(CATEGORY);
   const config = parseEvalConfig();
@@ -152,9 +175,10 @@ async function main(): Promise<void> {
   log(`# ${CATEGORY} (gbrain ${gut.version}${gut.overlay ? `, overlay ${gut.overlay.build.commit.slice(0, 9)}` : ', pinned'})`);
   let r: Awaited<ReturnType<typeof runRelationLineVariants>> | null = null;
   let harnessError: string | null = null;
-  try { r = await runRelationLineVariants({ gut, seeds, config, templates: devTemplates, sealedTemplates, keepProse, log }); } catch (e) { harnessError = e instanceof Error ? e.message : String(e); }
+  try { r = await runRelationLineVariants({ gut, seeds, config, templates: devTemplates, sealedTemplates, keepProse, typeRows: typeRowsFlag, log }); } catch (e) { harnessError = e instanceof Error ? e.message : String(e); }
   const rel = (r?.rows ?? []).filter(x => x.kind === 'relation');
   const decoys = (r?.rows ?? []).filter(x => x.kind === 'decoy');
+  const edges = (r?.rows ?? []).filter(x => x.kind === 'edge');
   const sum = (xs: H2Row[], f: string) => xs.reduce((a, x) => a + (x[f] as number), 0);
   const summary = r ? {
     seeds, rendered_lines: rel.length,
@@ -163,6 +187,8 @@ async function main(): Promise<void> {
     decoys: decoys.length,
     decoy_types_reached: sum(decoys, 'decoy_type_reached'),
     decoy_types_added_by_grammar: sum(decoys, 'decoy_added_by_grammar'),
+    ...(typeRowsFlag ? { gold_edge_rows: edges.length, any_type_match_rate: edges.length ? sum(edges, 'anyTypeMatch') / edges.length : null,
+      correctly_typed_rate: edges.length ? sum(edges, 'correctly_typed') / edges.length : null } : {}),
     per_seed: r.perSeed,
   } : null;
   const receipt = p5Receipt({
@@ -171,7 +197,7 @@ async function main(): Promise<void> {
     resolvedConfig: {
       engine: 'pglite-in-memory',
       caller: 'put_page operation handler, OperationContext { remote: false, sourceId: default }',
-      seeds, keep_prose: keepProse, generator_version: RELATION_LINE_VARIANTS_GENERATOR_VERSION,
+      seeds, keep_prose: keepProse, type_rows: typeRowsFlag, generator_version: RELATION_LINE_VARIANTS_GENERATOR_VERSION,
       templates: sealedTemplates ? `held-out set ${sealedTemplates.id} (custody file sha256 ${custody!.sha256})` : `${devTemplates} (development)`,
       extraction: 'extractStaleFromDB (gbrain extract --stale, catch-up) after every page is written; a second brain per seed with line_grammar.enabled=false',
       oracle: 'gold company relationships from world-v1-gold.ts buildGoldEdges; decoy stated types from the generator',
