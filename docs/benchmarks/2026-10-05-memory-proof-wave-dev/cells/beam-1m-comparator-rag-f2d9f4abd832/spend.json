@@ -1,0 +1,45 @@
+{
+  "cell_id": "beam-1m-comparator-rag-f2d9f4abd832",
+  "runs": [
+    {
+      "run_id": "harness-cell:beam-1m-comparator-rag-f2d9f4abd832-2026-10-05T17-54-17-075Z-f0e3f889",
+      "ledger": ".budget/mpw-dev-vm.sqlite",
+      "usd": 6.131701,
+      "requests": 632,
+      "started_at": "2026-10-05T18:18:58.855Z",
+      "stub": false
+    }
+  ],
+  "metered_by_label": {
+    "total": {
+      "requests": 632,
+      "refused": 0,
+      "reserved_usd": 327.64281674999984,
+      "actual_usd": 6.13170075,
+      "input_tokens": 3259793,
+      "output_tokens": 616034
+    },
+    "byLabel": {
+      "harness": {
+        "requests": 632,
+        "refused": 0,
+        "reserved_usd": 327.64281674999984,
+        "actual_usd": 6.13170075,
+        "input_tokens": 3259793,
+        "output_tokens": 616034
+      }
+    },
+    "byProvider": {
+      "gemini": {
+        "requests": 632,
+        "refused": 0,
+        "reserved_usd": 327.64281674999984,
+        "actual_usd": 6.13170075,
+        "input_tokens": 3259793,
+        "output_tokens": 616034
+      }
+    },
+    "exhausted": false
+  },
+  "unmetered": []
+}

@@ -1,0 +1,45 @@
+{
+  "cell_id": "locomo-locomo10-comparator-rag-e21fa5df3aa0",
+  "runs": [
+    {
+      "run_id": "harness-cell:locomo-locomo10-comparator-rag-e21fa5df3aa0-2026-10-05T15-02-02-871Z-05234d8d",
+      "ledger": ".budget/mpw-dev-vm.sqlite",
+      "usd": 4.406253,
+      "requests": 645,
+      "started_at": "2026-10-05T15:20:03.229Z",
+      "stub": false
+    }
+  ],
+  "metered_by_label": {
+    "total": {
+      "requests": 645,
+      "refused": 0,
+      "reserved_usd": 272.0334442500004,
+      "actual_usd": 4.406252999999999,
+      "input_tokens": 3016347,
+      "output_tokens": 368145
+    },
+    "byLabel": {
+      "harness": {
+        "requests": 645,
+        "refused": 0,
+        "reserved_usd": 272.0334442500004,
+        "actual_usd": 4.406252999999999,
+        "input_tokens": 3016347,
+        "output_tokens": 368145
+      }
+    },
+    "byProvider": {
+      "gemini": {
+        "requests": 645,
+        "refused": 0,
+        "reserved_usd": 272.0334442500004,
+        "actual_usd": 4.406252999999999,
+        "input_tokens": 3016347,
+        "output_tokens": 368145
+      }
+    },
+    "exhausted": false
+  },
+  "unmetered": []
+}

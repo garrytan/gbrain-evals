@@ -1,0 +1,53 @@
+{
+  "cell_id": "lifebench-en-comparator-agent-0c2885f55a41",
+  "runs": [
+    {
+      "run_id": "harness-cell:lifebench-en-comparator-agent-0c2885f55a41-2026-10-05T18-05-37-953Z-a3b71878",
+      "ledger": ".budget/mpw-dev-vm.sqlite",
+      "usd": 2.536628,
+      "requests": 278,
+      "started_at": "2026-10-05T18:12:18.038Z",
+      "stub": false
+    }
+  ],
+  "metered_by_label": {
+    "total": {
+      "requests": 278,
+      "refused": 0,
+      "reserved_usd": 87.73062525,
+      "actual_usd": 2.536628249999999,
+      "input_tokens": 2728321,
+      "output_tokens": 104758
+    },
+    "byLabel": {
+      "comparator": {
+        "requests": 228,
+        "refused": 0,
+        "reserved_usd": 58.142393250000005,
+        "actual_usd": 2.3607172499999995,
+        "input_tokens": 2687763,
+        "output_tokens": 91972
+      },
+      "harness": {
+        "requests": 50,
+        "refused": 0,
+        "reserved_usd": 29.588231999999998,
+        "actual_usd": 0.17591099999999998,
+        "input_tokens": 40558,
+        "output_tokens": 12786
+      }
+    },
+    "byProvider": {
+      "gemini": {
+        "requests": 278,
+        "refused": 0,
+        "reserved_usd": 87.73062525,
+        "actual_usd": 2.536628249999999,
+        "input_tokens": 2728321,
+        "output_tokens": 104758
+      }
+    },
+    "exhausted": false
+  },
+  "unmetered": []
+}
