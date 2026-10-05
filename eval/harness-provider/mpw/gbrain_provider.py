@@ -37,7 +37,8 @@ whole turns that fits its 8,000-character input (the windowing gbrain applies
 to session-corpus files), with the document's date as `valid_from`, its
 page id as `session_id` and `visibility: "world"` (stdio MCP is a remote
 caller and sees world facts only). An identical repeated session is written
-and extracted once. The calls return only after the facts are
+and extracted once. With `page_split: "exchanges"` facts are still extracted
+from whole documents, keyed by the document id. The calls return only after the facts are
 written, so the extraction barrier is the last call returning; failed windows
 are retried once and counted in the receipt.
 
@@ -423,7 +424,10 @@ class GbrainMemoryProvider(MemoryProvider):
         t0 = time.perf_counter()
         # A dataset can list one session twice in a history (LongMemEval haystacks do): an identical repeat is
         # written once; a repeat with different text gets its own slug so both stay retrievable.
+        sources = None
         if self.cfg.get("page_split") == "exchanges":
+            # Facts are extracted from whole documents, so the facts store does not depend on the page layout.
+            sources = list({(d.id.lower(), page_markdown(d)): d for d in docs}.values())
             docs = [piece for d in docs for piece in split_exchanges(d)]
         elif self.cfg.get("page_split"):
             raise GbrainIngestError(f"unknown page_split {self.cfg['page_split']!r}: use exchanges or leave it unset")
@@ -458,6 +462,11 @@ class GbrainMemoryProvider(MemoryProvider):
                           "barrier_ms": round((time.perf_counter() - b0) * 1000, 1), "barrier": barrier,
                           "server": child.server_info})
         if self.cfg.get("extraction_model"):
+            if sources is not None:
+                written = [(SLUG_PREFIX + d.id.lower(), d) for d in sources]
+                for d in sources:
+                    u.timestamps.setdefault(d.id.lower(), d.timestamp)
+                u.save()
             u.receipt["facts"] = self._extract_facts(child, written)
 
     def _extract_facts(self, child: McpChild, written: list[tuple[str, Document]]) -> dict:

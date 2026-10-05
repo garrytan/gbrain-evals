@@ -198,3 +198,20 @@ def test_raw_lane_makes_no_chat_request_and_keeps_its_shape(tmp_path, upstream):
         assert "facts.extraction_model" not in template["gbrain"]["config"]
     finally:
         p.cleanup()
+
+
+def test_exchange_pages_extract_from_whole_documents(tmp_path, upstream):
+    url, hits = upstream
+    p = _provider(tmp_path / "store", url, lane="facts", page_split="exchanges")
+    text = "".join(f"[Turn {i}] User: I moved my piano lesson to Thursday number {i}.\nAssistant: Noted, Thursday {i}.\n" for i in range(1, 6))
+    doc = Document(id="d-b0", content=text, user_id="u-3", timestamp="2024-05-02T08:00:00")
+    try:
+        p.ingest([doc])
+        r = p.last_ingest_receipt("u-3")
+        assert r["pages"] == 5
+        assert r["facts"]["windows"] == len(extraction_windows(doc, 8000)) == 1
+        docs, _, meta = p.retrieve_with_meta("When is the piano lesson?", 10, "u-3")
+        assert meta["facts"]["kept"] > 0
+        assert [d.id for d in docs] == ["d-b0"] and docs[0].content.startswith("Date: 2024-05-02 08:00 UTC\nSaved facts:\n")
+    finally:
+        p.cleanup()
