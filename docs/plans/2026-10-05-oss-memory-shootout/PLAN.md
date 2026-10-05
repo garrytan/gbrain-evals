@@ -1,6 +1,6 @@
 # Open-source memory shootout: gbrain against Graphiti, Cognee, Mem0, Letta, Basic Memory and Hindsight
 
-Status: under autoplan review, not yet approved. v2, amended after the autoplan CEO phase (Claude and GPT-6 Astra voices); engineering-phase amendments follow in the review record.
+Status: v3, autoplan complete (CEO and engineering phases, Claude and GPT-6 Astra voices each), awaiting Garry's approval at the final gate.
 Review files: `~/.capy/work/shootout-review/` (summarized in [Review record](#review-record)).
 
 ## The question
@@ -43,7 +43,7 @@ on the Cat 40 tasks, in its own table, because its agent loop is not the harness
 |---|---|---|---|
 | **P1** | **Memory QA** (`eval/runner/memory-qa`) | Public rows: LoCoMo dev (3 conversations, 587 questions), BEAM-100K dev (6 conversations, 120 questions), LongMemEval-S stratified 100-question subset. Aggregate-only, run once by the custodian: LoCoMo sealed (7 conversations) and BEAM-100K sealed (14, excluding the question categories P4 has reserved) | Does the system return the evidence, and does a fixed reader answer from it? |
 | **P2** | **Update and forget** (new portable category `lifecycle-lite`) | Seeded synthetic histories with an independent oracle | After a dated correction arrives through normal ingestion, is the new value served and the old one gone? After an explicit delete through the public API, is the fact gone from retrieval and answers, while unrelated facts survive? |
-| **P3** | **PrecisionMemBench** (77 single-query cases) | upstream fixture | Does the system return only the right facts? |
+| **P3** | **PrecisionMemBench** (77 single-query cases) | upstream fixture and scorer, byte for byte | Does the system's search return only the right facts? Reported as "PrecisionMemBench upstream contract": the shared evaluator supplies persona, pins and relation expansion for every system, and the search-only categories are the headline |
 | **P4** | **Cat 40 agent tasks** | a fresh world from a new seed (the current held-out world is spent and at the ceiling) | Does the memory help an agent finish company-knowledge tasks, at what cost, and does it support walling off finance-only documents? |
 
 Not in this plan: Cat 41 (gbrain's own consent contract), N6 visibility fuzz (needs a private-page concept), Cat 35
@@ -56,7 +56,7 @@ the reviews proposed are listed under [Decisions for Garry](#decisions-for-garry
 1. **Preregistration first.** One committed file fixes systems, capability records, configurations, metrics,
    denominators, reader and judge models, budgets, the minimum detectable differences, and the sentence the report
    may write for each outcome, before the first counted cell.
-2. **One evidence contract.** `retrieve` returns ranked items `{ text, source_ids[], event_time?, score? }` through
+2. **One evidence contract.** `retrieve(ns, question, policy)` takes the question's date and a named, versioned retrieval policy (`vendor-default` with the resolved per-vendor settings, or `fixed-evidence`), and returns ranked items `{ id, rank, type, text, source_ids[], valid_from?, valid_to?, provenance_status: exact | partial | unavailable }` plus the settings actually applied, through
    the product's public read API only; no answer-generation endpoint (Cognee runs with `only_context=True`), no
    evaluator-side expansion. The harness renders every system's items with one renderer, counts tokens with the
    reader's tokenizer and packs deterministically. Two context modes, both reported:
@@ -64,7 +64,10 @@ the reviews proposed are listed under [Decisions for Garry](#decisions-for-garry
      sessions, which changes today's gbrain path);
    - **source-rehydrated**: each item replaced by the raw sessions behind its `source_ids`, in first-appearance order,
      for every system with provenance. This isolates ranking from packaging.
-   Every row stores the exact ordered reader context.
+   Strict recall counts sources in first-appearance order with each item's fan-out, so one item citing every session
+   cannot score 1.0; source ids are validated against the namespace. A fact the system has marked superseded
+   (`valid_to` set) is rendered as such. Every row stores the exact ordered reader context; the four frontier readers
+   replay those bytes unchanged.
 3. **Two budgets.** Each system's own default retrieval amount, and a fixed 8,000-token evidence budget for everyone.
 4. **Two configurations, named for what they control.** *Documented recipe*: the vendor's documented local or
    self-hosted install, resolved in the capability record (Graphiti's default main model is `gpt-5.5`, Mem0's
@@ -72,16 +75,23 @@ the reviews proposed are listed under [Decisions for Garry](#decisions-for-garry
    embedder `text-embedding-3-large` at 1,536 dimensions wherever settable; it controls those two inputs and nothing
    else. gbrain gets the same two rows (`gbrain init` defaults, and the common models).
 5. **No answer leakage.** A sanitizer sits in front of every adapter: only opaque source and namespace ids, dated
-   text and speaker roles cross it, never raw dataset ids, labels, categories or `_abs` markers. A captured-request
+   text and speaker roles cross it, never raw dataset ids, labels, categories or `_abs` markers (today the LongMemEval
+   namespace is the question id, which carries `_abs`; it becomes opaque). A captured-request
    contract test checks HTTP bodies, MCP traffic, prompts, filenames and metadata for any gold marker.
-6. **Ingestion is checked, not assumed.** `ingestSession` carries the session's `event_time` and returns items created
-   and errors; a conversation above 1% failed sessions is `ingest-degraded`. `finishIngest` waits for each system's
+6. **Ingestion is checked, not assumed.** `ingestSession` carries the session's `event_time` under a frozen date and
+   ordering policy (Mem0 OSS rejects a `timestamp`, so its date goes in the text; each capability record says whether
+   time is native or in-text). Sessions are serialized within a namespace and parallel across namespaces. It returns
+   items created, warnings and errors, with completeness `known | unknown | degraded`; a conversation above 1% failed sessions is `ingest-degraded`. `finishIngest` waits for each system's
    quiescence signal (queues empty, pipelines done); a timeout is an outcome. Phase 0 proves per system that a dated
    probe returns the right session, that a canary in one namespace never appears in another, and that one LoCoMo
    conversation ingests with no unexplained errors. LoCoMo dev ingests twice to measure run-to-run variance.
-7. **Fixed denominators.** Each expected question id gets exactly one terminal outcome; attempt history is kept
-   separately. Service quality counts product failures as misses; invalid harness runs and budget stops are never
-   product losses. Intervals cluster by conversation.
+7. **Fixed denominators and honest statistics.** A frozen manifest lists every expected cell before execution. Attempts
+   are append-only and separate from one canonical terminal outcome per cell (retrieval, reader, judge, unsupported,
+   ingest-degraded, invalid-harness, budget-not-run); a reader or judge failure is never dropped from the mean. Service
+   quality counts product failures as misses; harness and budget failures make a comparison incomplete, never a
+   product loss. Inferential comparisons (paired, Holm-corrected, existing `stats/` gates) run only on sets with at
+   least 10 independent clusters: the LongMemEval-S 100 slice and PrecisionMemBench. LoCoMo and BEAM dev are
+   descriptive, with cluster counts and ranges, and the report says so.
 8. **Adapters start from vendor code.** Each adapter begins from the vendor's own published benchmark ingestion where
    it exists (Mem0 `memory-benchmarks`, Hindsight `hindsight-benchmarks` and its AMB provider, Cognee's eval framework,
    Basic Memory's LoCoMo benchmark, Zep's LoCoMo harness for Graphiti), pinned by commit, with every deviation listed.
@@ -115,14 +125,24 @@ flowchart LR
 ```
 
 - **`MemorySystem`** (`eval/runner/systems/types.ts`): `reset`, `ingestSession(ns, session, event_time)`,
-  `finishIngest(ns)`, `retrieve(ns, question, k)`, `deleteSource(ns, source_id)`, `capabilities()`. Updates arrive as
+  `finishIngest(ns)`, `retrieve(ns, question, policy)`, `deleteSource(ns, source_id)` (capability `native |
+  public-api-composition | unsupported`), `capabilities()`. The existing gbrain path moves behind it unchanged first
+  (a keyless golden output captured before the move must still match, and `eval:decide` keeps working); the
+  shootout's gbrain recipe is a separate, named adapter. Updates arrive as
   ordinary dated sessions, so there is no `update()` method that would hand a system the answer.
 - **Shims** (`eval/systems/<name>/`): a small HTTP service in the vendor's own image, `uv.lock` and digest pinned.
   Vendor Python never enters the Bun process.
-- **Metering**: containers sit on a Docker internal network whose only exit is the metering proxy. The proxy listens
-  on the bridge, strips the container's credential, injects the real key, prices every request (list prices for each
-  vendor default model are added to the ledger first) and fails closed on unknown routes. Vendor telemetry is
-  disabled. Phase 0 checks proxy totals against the provider's usage page within 2%.
+- **Cells and budget**: a cell (one system, one benchmark slice, one configuration) runs whole on its own identical
+  Ubicloud VM class, gbrain included, launched by the existing Ubicloud runner. Before launch the host ledger reserves
+  a durable, non-reissuable lease for the cell from one campaign allowance; the sum of leases plus reader and judge
+  leases cannot pass the cap. On the VM, the extracted metering proxy (`eval/runner/metering-proxy.ts`) is the
+  containers' only network exit: it strips their credential, injects the real key, allowlists provider routes and
+  models, prices every request with a conservative input bound and enforced output limit, refuses anything unpriced
+  or over the lease before forwarding, and handles streaming or disables it. After the cell the lease settles against
+  actual usage. Vendor telemetry is off. Phase 0 checks proxy totals against the provider's usage page within 2%.
+- **Sealed execution profile**: custodian cells refuse repository or shared-cache destinations, keep vendor state and
+  request traces inside the custody root, and export only preregistered aggregate fields through an allowlist,
+  tested with planted sealed markers. The batch opens once with the frozen full matrix.
 - **Namespaces**: one per LoCoMo or BEAM conversation and per LongMemEval question haystack, with per-session source
   identity inside it, so graph systems can still connect sessions.
 
@@ -130,18 +150,19 @@ flowchart LR
 
 | Phase | Work | Gate | Estimate |
 |---|---|---|---|
-| 0. Feasibility and pilots | Capability record per system; one LoCoMo conversation, one LME-S haystack, one BEAM-100K history and one Cat 40 slot build per system; proxy reconciliation; Letta API decision; AMB adapter review | each system `ready`, `qa-only`, `agent-only` or `blocked`, with evidence; measured cost per item replaces every estimate below | $40 |
-| 1. Harness | interface, sanitizer, renderer, fixed-denominator accounting, gbrain adapter; keyless fixture tests; replay parity with the starting line at `6622a119e` (same retrieved session ids row for row) | gbrain parity; every shim passes the keyless fixture and the leak contract test | $5 |
-| 2. Preregistration and vendor review | preregistration committed; vendor posts (if D4 approves); review window | committed; window closed | $0 |
-| 3. Memory QA + PrecisionMemBench, dev | LoCoMo dev, BEAM-100K dev, LME-S 100, PMB; both configurations on LoCoMo, BEAM and PMB; common models only on LME-S; both budgets and context modes | every expected id has a terminal outcome | $330 |
-| 4. Custodian sealed cells | LoCoMo sealed and BEAM-100K sealed, aggregates only, logged opening | custodian verdict file | $85 |
-| 5. Update and forget | build `lifecycle-lite` (seeded generator, oracle, mutation kit: must reject leaked ids, inflated provenance, dropped failures, stale post-delete results and delete-everything), run all systems | mutation suite passes | $20 |
-| 6. Cat 40, fresh world | new seed; gbrain, plain files and every system with an agent surface; newest Opus, GPT, Sonnet and Fable models; one repeat; finance capability matrix (native permissions, caller-enforced namespaces, unsupported) reported separately from task success | all cells terminal | $400 |
-| 7. Report | dated report, comparison page rows, README "How gbrain compares" | docs checks pass | $0 |
+| 1. Keyless skeleton | golden output; `MemorySystem` types, sanitizer, renderer and packer; canonical outcomes and resume; campaign manifest; leases; extracted fail-closed proxy; sealed profile; shared shim app with an in-repo fake shim and conformance suite | all keyless tests green; old `memory-qa` CLI and `eval:decide` unchanged | $0 |
+| 2. Vendor adapters and pilots | adapters from vendor benchmark code, in order Basic Memory (keyless with its local embedder), Mem0, Hindsight, Graphiti, Cognee, Letta; capability records; tiny metered smoke per vendor; then one LoCoMo conversation, one LME-S haystack, one BEAM history per system; proxy reconciliation | each system `ready`, `qa-only`, `agent-only` or `blocked`, with evidence; measured cost per item replaces every estimate here | $40 |
+| 3. Preregistration | manifest frozen with measured costs; inferential and descriptive sets; outcome, recall and packing rules; comparison families | committed before any counted cell | $0 |
+| 4. Memory QA dev (P1) + baselines (D1) + frontier readers (D2) | LoCoMo dev, BEAM-100K dev, LME-S 100; recipe arm off LME-S; both budgets and context modes; reader replays | every manifest cell terminal | $380 |
+| 5. PrecisionMemBench (P3) | system adapter on the upstream contract | 77 cases terminal per system | $10 |
+| 6. Update and forget (P2) | `lifecycle-lite`: seeded generator from N1 chains and N5 canaries, presence check before delete, survivor floor, restart, mutation kit; registered report-only | mutation suite rejects every fake | $20 |
+| 7. Custodian sealed batch | LoCoMo sealed and BEAM-100K sealed (excluding the held-out program's P4 reservations), one frozen batch, aggregates only | custodian verdict file | $85 |
+| 8. Cat 40, fresh world (P4) | runtime lease per vendor (new session, restore, close, metering), maintained MCP client for stdio and HTTP, canonical write targets, native Letta driver, explicit claims judge; newest Opus, GPT, Sonnet, Fable; one repeat | all cells terminal | $400 |
+| 9. Report | dated report, comparison page, README; a P1 + P3 report may publish before 6 to 8 finish | docs checks pass | $0 |
 
-Estimated total about $880 before the decisions below. The hard cap goes into the budget ledger as one parent
-allowance split across systems, so the sum cannot pass it. A phase whose measured estimate passes its line by more
-than 50% stops for approval.
+Estimated total about $935 plus Ubicloud VM time, under a $1,200 cap held in the ledger as leases. A phase whose
+measured estimate passes its line by more than 50% stops for approval. Engineering effort for P1 is about a week of
+assisted coding (both reviews agree); P2 and P4 are separate lanes after it.
 
 ## What the report will say
 
@@ -176,6 +197,8 @@ success, cost and finance capability. The finding says where gbrain loses. Ties 
   falls to 18.2% (about $60).
 - **D4, vendor review posts.** Publicly post adapters to the six vendors' repositories before the counted run. Adds
   about a week.
+- **D5, gbrain's own default row (access).** `gbrain init`'s documented embedder is Voyage (`voyage:voyage-4`).
+  Without `VOYAGE_API_KEY` that one row is blocked and gbrain runs only the common-models row.
 - **Cap.** $1,200 covers the base plan plus D1 and D2-A; adding D3 needs $1,300.
 
 ## Review record
@@ -187,6 +210,16 @@ Cat 40 at the ceiling on a spent world, the house model policy, and the need to 
 Every one is fixed above. Astra alone found the raw-id leak path through vendor metadata, the OpenMemory sunset, the
 Letta runtime mismatch, the fixed-denominator gap and the LoCoMo key concern; Claude alone found the ingest
 quiescence and event-time checks, the measured dataset sizes, and the proxy's localhost binding.
+
+Engineering phase, 2026-10-05. Claude voice: 25 findings, 6 silent-bias failure modes. GPT-6 Astra voice: 15
+findings (3 critical). Both found: resume and failure counting that drop reader errors and duplicate failed ids, a
+cap no single process can enforce across VMs, a proxy that forwards unpriced models, provenance recall that one
+over-citing item can game, too few dev conversations for intervals, a retrieve call without query date or policy,
+and the need to keep the gbrain refactor's parity check separate from the new gbrain recipe. Astra alone found the
+PrecisionMemBench evaluator-side expansion, the sealed-output leak paths, Mem0's rejected `timestamp`, Hindsight's
+token-budgeted recall and Graphiti's entity nodes lacking `episodes`. Claude alone found the `_abs` namespace leak,
+the in-process versus VM latency skew, the keyless gate that LLM-ingesting vendors cannot meet, the registry helper
+directory and the Voyage key. Every one is fixed above.
 
 <!-- AUTONOMOUS DECISION LOG -->
 | # | Phase | Decision | Classification | Principle |
@@ -205,3 +238,13 @@ quiescence and event-time checks, the measured dataset sizes, and the proxy's lo
 | 12 | CEO | Start adapters from vendor benchmark code and AMB | Mechanical | 4 |
 | 13 | CEO | Fixed denominators and conversation-clustered intervals | Mechanical | 1 |
 | 14 | CEO | Baselines, frontier readers, extra workloads, vendor posts left to Garry | User Challenge | n/a |
+| 15 | Eng | Canonical outcomes, frozen manifest, append-only attempts | Mechanical | 1 |
+| 16 | Eng | Whole cell per identical VM, gbrain included; durable leases | Mechanical | 1, 5 |
+| 17 | Eng | Fail-closed proxy extracted from the Cat 40 arm | Mechanical | 4 |
+| 18 | Eng | Evidence items with validity window and provenance status | Mechanical | 2 |
+| 19 | Eng | Inference only on sets with 10 or more clusters | Taste | 5 |
+| 20 | Eng | PMB on the upstream contract, labeled | Mechanical | 4 |
+| 21 | Eng | Sealed execution profile with allowlist export | Mechanical | 1 |
+| 22 | Eng | Golden output before the gbrain refactor; separate shootout recipe | Mechanical | 5 |
+| 23 | Eng | Vendor order Basic Memory, Mem0, Hindsight, Graphiti, Cognee, Letta | Taste | 3 |
+| 24 | Eng | P1 + P3 report may ship before P2 and Cat 40 | Taste | 6 |
