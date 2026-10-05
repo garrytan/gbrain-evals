@@ -5,6 +5,7 @@
  *     [--split dev | --split sealed --decision-id <id> --purpose <text> (custodian; GBRAIN_EVALS_CUSTODY_LOG)] [--gbrain <checkout>[@ref]] [--config key=value]... [--pin key=value]...
  *     [--embed hash|real] [--embedding-model provider:model --embedding-dims N]
  *     [--categories a,b] [--limit N] [--seed N] [--top-k 10] [--shard i/n]
+ *     [--benchmark custody --corpus-file <custody path> (custodian sealed corpus; needs --split sealed)]
  *     [--facts conversation] [--qa reader|think --qa-context sessions|facts]
  *     [--paid --budget-run-id <id>] --output <dir>
  *
@@ -54,6 +55,8 @@ export interface RunArgs {
   split: 'dev' | 'sealed';
   /** Custodian sealed runs: recorded in the access log (GBRAIN_EVALS_CUSTODY_LOG) before any sealed question is read. */
   custody?: { decisionId: string; purpose: string; log: string };
+  /** benchmark `custody`: the custodian's sealed corpus file (outside the repository). */
+  corpusFile?: string;
   gbrain: string | null;
   config: Record<string, string>;
   pins: Record<string, string>;
@@ -138,7 +141,7 @@ export function parseRunArgs(argv: string[]): RunArgs {
   const embed = (one('--embed') ?? (benchmark === 'fixture' ? 'hash' : 'real')) as 'hash' | 'real';
   if (!['hash', 'real'].includes(embed)) throw new Error('--embed must be hash or real');
   return {
-    benchmark, split: split as 'dev' | 'sealed', custody, gbrain: gbrainSpecFrom(argv), config: kv(many('--config'), '--config'),
+    benchmark, split: split as 'dev' | 'sealed', custody, corpusFile: one('--corpus-file'), gbrain: gbrainSpecFrom(argv), config: kv(many('--config'), '--config'),
     pins: { ...DEFAULT_PINS, ...kv(many('--pin'), '--pin') }, embed,
     embeddingModel: one('--embedding-model') ?? 'openai:text-embedding-3-large',
     embeddingDims: Number(one('--embedding-dims') ?? 1536),
@@ -208,12 +211,13 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   const started = new Date().toISOString();
   mkdirSync(a.output, { recursive: true });
   const gut = resolveGbrainUnderTest(a.gbrain);
-  const corpus = loadCorpus(a.benchmark);
+  if (a.benchmark === 'custody' && a.split !== 'sealed') throw new Error('benchmark custody is a custodian sealed corpus: run it with --split sealed');
   if (a.split === 'sealed') {
     if (!a.custody) throw new Error('sealed memory-qa runs need custody (decision id, purpose, access log)');
     appendAccessLog(a.custody.log, { action: 'open', purpose: `memory-qa ${a.benchmark} sealed: ${a.custody.purpose}`, decision_id: a.custody.decisionId, labels_sha256: 'public-split-file', run_sha256: null });
   }
-  const allowed = a.split === 'sealed' ? new Set(loadSplit(a.benchmark).sealed) : devConversations(a.benchmark);
+  const corpus = loadCorpus(a.benchmark, a.corpusFile);
+  const allowed = a.benchmark === 'custody' ? null : a.split === 'sealed' ? new Set(loadSplit(a.benchmark).sealed) : devConversations(a.benchmark);
   let questions = corpus.questions.filter(q => !allowed || allowed.has(q.conversation));
   if (a.categories) questions = questions.filter(q => a.categories!.includes(q.category));
   questions = selectQuestions(questions, a.limit, a.seed);
@@ -246,7 +250,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   if (!['sessions', 'facts'].includes(a.qa.context)) throw new Error('--qa-context must be sessions or facts');
   if (a.qa.context === 'facts' && (a.facts === 'none' || a.qa.mode !== 'reader')) throw new Error('--qa-context facts needs --facts conversation and --qa reader');
   if (needsPaid) {
-    const perQuestion: Record<string, number> = { 'lme-s': 0.012, locomo: 0.002, 'beam-100k': 0.01, 'beam-500k': 0.02, 'beam-1m': 0.03, fixture: 0 };
+    const perQuestion: Record<string, number> = { 'lme-s': 0.012, custody: 0.002, locomo: 0.002, 'beam-100k': 0.01, 'beam-500k': 0.02, 'beam-1m': 0.03, fixture: 0 };
     const perQa: Record<string, number> = { none: 0, reader: a.benchmark === 'lme-s' ? 0.05 : 0.01, think: 0.08 };
     const mine = questions.filter(q => myConvs.includes(q.conversation)).length;
     const factSessions = a.facts === 'none' ? 0 : myConvs.reduce((n, id) => n + (byConv.get(id)?.sessions.length ?? 0), 0);

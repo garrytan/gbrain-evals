@@ -278,7 +278,31 @@ export function loadFixture(): Corpus {
   return { benchmark: 'fixture', conversations: raw.conversations, questions: raw.questions, source: { name: 'decide fixture (invented)', files: [{ path: 'eval/data/decide-fixture/conversations.json', sha256: sha256(readFileSync(FIXTURE_PATH)) }], revision: 'repo', license: 'MIT' } };
 }
 
-export function loadCorpus(benchmark: string): Corpus {
+/**
+ * A custodian-authored sealed corpus (benchmark `custody`): one JSON file outside the repository holding
+ * `{ id, conversations: Conversation[], questions: MemoryQuestion[] }`. Question categories use the LongMemEval
+ * names (for example single-session-assistant, single-session-user) so the LongMemEval judge applies. The caller
+ * logs the access before this reads the file.
+ */
+export function loadCustodyCorpus(path: string): Corpus {
+  const bytes = readFileSync(path);
+  const raw = JSON.parse(bytes.toString('utf8')) as { id?: string; conversations?: Conversation[]; questions?: MemoryQuestion[] };
+  if (!raw.id || !Array.isArray(raw.conversations) || !Array.isArray(raw.questions)) throw new Error('custody corpus needs id, conversations and questions');
+  const convIds = new Set(raw.conversations.map(c => c.id));
+  for (const q of raw.questions) {
+    if (!convIds.has(q.conversation)) throw new Error(`custody corpus question ${q.id} names an unknown conversation`);
+    const sessions = new Set(raw.conversations.find(c => c.id === q.conversation)!.sessions.map(x => x.id));
+    if (q.gold.some(g => !sessions.has(g))) throw new Error(`custody corpus question ${q.id} names an unknown gold session`);
+  }
+  return { benchmark: 'custody', conversations: raw.conversations, questions: raw.questions,
+    source: { name: `custodian sealed corpus ${raw.id}`, files: [{ path: 'custody', sha256: sha256(bytes) }], revision: raw.id, license: 'custodian-authored' } };
+}
+
+export function loadCorpus(benchmark: string, corpusFile?: string): Corpus {
+  if (benchmark === 'custody') {
+    if (!corpusFile) throw new Error('benchmark custody needs --corpus-file <custody path>');
+    return loadCustodyCorpus(corpusFile);
+  }
   switch (benchmark) {
     case 'locomo': return loadLocomo();
     case 'lme-s': return loadLmeS();
