@@ -38,8 +38,7 @@ def stub():
 
 @pytest.fixture
 def upstream_env(stub, monkeypatch):
-    monkeypatch.setenv("MPW_COMPARATOR_OPENAI_BASE_URL", f"{stub.url}/v1")
-    monkeypatch.setenv("MPW_COMPARATOR_OPENAI_API_KEY", TOKEN)
+    monkeypatch.setenv("MPW_CHILD_ENV_COMPARATOR", json.dumps({"OPENAI_BASE_URL": f"{stub.url}/v1", "OPENAI_API_KEY": TOKEN}))
     return stub
 
 
@@ -49,7 +48,7 @@ def _docs():
     return [
         Document(id="d-1a2b3c_answer_d61669c7_7_", user_id="u-alpha", timestamp="2023-03-05T10:00:00Z",
                  content="User: I adopted a beagle named Rex in March 2023.\nAssistant: Congratulations on Rex!"),
-        Document(id="d-4d5e6f", user_id="u-alpha", timestamp="2023-04-01T10:00:00Z",
+        Document(id="d-4d5e6f", user_id="u-alpha", timestamp="2023-04-01T10:00:00Z", context="Session d-4d5e6f with u-alpha",
                  content="User: My favourite colour is teal and I live in Lisbon."),
         Document(id="d-7a8b9c", user_id="u-beta", timestamp="2023-05-01T10:00:00Z",
                  content="User: I work as a night-shift nurse in Toronto."),
@@ -59,8 +58,8 @@ def _docs():
 def test_ingest_retrieve_isolation_and_reaping(install, upstream_env, tmp_path):
     stub = upstream_env
     store = tmp_path / "longmemeval" / "comparator" / "_store" / "s" / "all"
-    provider = ComparatorMemoryProvider({"id_salt": "test-salt", "data_dir": str(tmp_path / "server"),
-                                         "max_tokens": 2048, "max_chunk_tokens": 1024})
+    config = {"data_dir": str(tmp_path / "server"), "max_tokens": 2048, "max_chunk_tokens": 1024}
+    provider = ComparatorMemoryProvider(config)
     docs = _docs()
     try:
         provider.prepare(store, unit_ids={"u-alpha", "u-beta"})
@@ -71,6 +70,10 @@ def test_ingest_retrieve_isolation_and_reaping(install, upstream_env, tmp_path):
         assert receipt["metered"][0]["model"] == install.defaults["llm_model"]
 
         provider.ingest(docs)
+        receipt = provider.last_ingest_receipt("u-alpha")
+        assert receipt["documents"] == 2 and receipt["facts"] >= 2 and receipt["extraction_calls_expected"] == 2
+        assert receipt["bank_config"]["enable_observations"] is False
+        assert receipt["server"]["version"] == install.version
         chats = stub.chat_requests()
         assert len(chats) == len(docs), "one extraction call per short document"
         assert {r["auth"] for r in chats} == {f"Bearer {TOKEN}"}
@@ -79,6 +82,7 @@ def test_ingest_retrieve_isolation_and_reaping(install, upstream_env, tmp_path):
         for r in chats:
             for d in docs:
                 assert d.id not in json.dumps(r["body"]), "the server only sees opaque document ids"
+            assert "u-alpha" not in json.dumps(r["body"]) and "u-beta" not in json.dumps(r["body"])
 
         for user, own in (("u-alpha", {"d-1a2b3c_answer_d61669c7_7_", "d-4d5e6f"}), ("u-beta", {"d-7a8b9c"})):
             got, raw, meta = provider.retrieve_with_meta("where do I live and what pet do I have?", user_id=user,
@@ -101,8 +105,26 @@ def test_ingest_retrieve_isolation_and_reaping(install, upstream_env, tmp_path):
         assert len(stub.chat_requests()) == len(docs), "recall makes no LLM calls"
         with pytest.raises(RuntimeError, match="never ingested"):
             provider.retrieve("anything", user_id="u-gamma")
+        first_ids = sorted(s for d in provider.retrieve("pet", user_id="u-alpha")[0] for s in d.source_ids)
     finally:
         provider.cleanup()
+    assert comparator_server.processes_under(home) == []
+
+    # a resumed cell: a new process on the same data directory keeps banks, salt and ids
+    resumed = ComparatorMemoryProvider(config)
+    try:
+        resumed.prepare(store, unit_ids={"u-alpha", "u-beta"}, reset=False)
+        got = resumed.retrieve("pet", user_id="u-alpha")[0]
+        assert sorted(s for d in got for s in d.source_ids) == first_ids
+        assert resumed.last_ingest_receipt("u-alpha")["documents"] == 2
+        assert {resumed.reverse_ids()[s] for s in first_ids} <= {"d-1a2b3c_answer_d61669c7_7_", "d-4d5e6f"}
+        resumed.reset_unit("u-beta")
+        with pytest.raises(RuntimeError, match="never ingested"):
+            resumed.retrieve("job", user_id="u-beta")
+        resumed.ingest([docs[2]])
+        assert resumed.last_ingest_receipt("u-beta")["documents"] == 1
+    finally:
+        resumed.cleanup()
     assert comparator_server.processes_under(home) == []
 
 

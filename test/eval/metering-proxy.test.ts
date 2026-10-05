@@ -177,6 +177,20 @@ describe('stub upstream', () => {
     expect(hashVector('hello', 8)).toEqual(v);
   });
 
+  test('json_object requests that carry their schema in the prompt get a filled instance of it', async () => {
+    const stub = await startStubUpstream();
+    try {
+      const schema = { $defs: { F: { type: 'object', properties: { what: { type: 'string' }, links: { anyOf: [{ type: 'array', items: { type: 'integer' } }, { type: 'null' }] } } } }, type: 'object', properties: { facts: { type: 'array', items: { $ref: '#/$defs/F' } } } };
+      const ask = (content: string) => post(`${stub.url}/openai/v1/chat/completions`, {}, { model: 'gpt-4o-mini', response_format: { type: 'json_object' }, messages: [{ role: 'system', content }, { role: 'user', content: 'json please' }] }).then(r => r.json() as any);
+      const filled = await ask(`Extract facts.\n\nYou must respond with valid JSON matching this schema:\n${JSON.stringify(schema, null, 2)}`);
+      expect(JSON.parse(filled.choices[0].message.content)).toEqual({ facts: [{ what: 'stub-what', links: null }] });
+      const plain = await ask('no schema here');
+      expect(plain.choices[0].message.content).toBe('stub answer from gpt-4o-mini');
+    } finally {
+      stub.close();
+    }
+  });
+
   test('serves every provider shape with usage, counts hits and lets a test choose the content', async () => {
     const stub = await startStubUpstream();
     try {

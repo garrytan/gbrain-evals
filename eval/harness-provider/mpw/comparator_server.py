@@ -229,8 +229,9 @@ def ensure_installed(log=lambda line: print(line, file=sys.stderr), check_only: 
 
 # Child env names the metering proxy hands out, per upstream provider
 # (CONTRACTS.md table). The launcher passes the comparator label's values to
-# the harness process with an `MPW_COMPARATOR_` prefix.
+# the harness process as JSON in MPW_CHILD_ENV_COMPARATOR.
 UPSTREAM_ENV = {"openai": ("OPENAI_BASE_URL", "OPENAI_API_KEY")}
+CHILD_ENV_VAR = "MPW_CHILD_ENV_COMPARATOR"
 
 
 @dataclass
@@ -250,18 +251,26 @@ class Upstream:
             )
 
 
-def upstream_from_env(env: dict | None = None, provider: str = "openai", model: str | None = None) -> Upstream:
-    env = os.environ if env is None else env
+def upstream_from_child_env(child_env: dict, provider: str = "openai", model: str | None = None) -> Upstream:
+    """Upstream from the proxy's `envFor('comparator')` values."""
     if provider not in UPSTREAM_ENV:
         raise RuntimeError(f"comparator LLM provider {provider!r} has no metering-proxy route here; supported: {sorted(UPSTREAM_ENV)}")
-    base_name, key_name = (f"MPW_COMPARATOR_{n}" for n in UPSTREAM_ENV[provider])
-    missing = [n for n in (base_name, key_name) if not env.get(n)]
+    base_name, key_name = UPSTREAM_ENV[provider]
+    missing = [n for n in (base_name, key_name) if not child_env.get(n)]
     if missing:
         raise RuntimeError(
-            f"{', '.join(missing)} not set: the launcher must pass the metering proxy's base URL and the "
-            "comparator label's proxy token so the comparator's LLM calls are metered"
+            f"the comparator's child env has no {', '.join(missing)}: the launcher must pass the metering proxy's "
+            f"envFor('comparator') as {CHILD_ENV_VAR} so the comparator's LLM calls are metered"
         )
-    return Upstream(provider=provider, base_url=env[base_name], api_key=env[key_name], model=model)
+    return Upstream(provider=provider, base_url=child_env[base_name], api_key=child_env[key_name], model=model)
+
+
+def upstream_from_env(env: dict | None = None, provider: str = "openai", model: str | None = None) -> Upstream:
+    env = os.environ if env is None else env
+    raw = env.get(CHILD_ENV_VAR)
+    if not raw:
+        raise RuntimeError(f"{CHILD_ENV_VAR} is not set; run the comparator through `bun run harness:cell` so its LLM calls go through the metering proxy")
+    return upstream_from_child_env(json.loads(raw), provider, model)
 
 
 def free_port() -> int:

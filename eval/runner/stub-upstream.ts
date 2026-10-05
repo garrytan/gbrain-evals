@@ -13,7 +13,10 @@
  * Structured output requests (OpenAI `response_format` json_schema, responses
  * `text.format`, an Anthropic forced tool call, Gemini `responseSchema` or
  * `responseJsonSchema`) get the smallest instance of the schema, with fixed
- * strings. Embeddings are unit vectors derived from a hash of the text,
+ * strings. An OpenAI `json_object` request whose prompt carries its schema
+ * ("respond with valid JSON matching this schema: {...}", the soft-schema
+ * mode some memory servers use) gets a filled instance of that schema: one
+ * element per array and null for nullable fields. Embeddings are unit vectors derived from a hash of the text,
  * honoring `dimensions` / `output_dimension` / `outputDimensionality`. Every
  * response carries a usage block in the provider's own shape (4 bytes per
  * token), and `stream: true` requests get server-sent events.
@@ -88,33 +91,35 @@ const base64Vector = (vector: number[]) => Buffer.from(new Float32Array(vector).
  * upper-case types included): every listed property, empty arrays unless
  * `minItems` asks for more, the first enum value, `stub-<property>` strings.
  */
-export function schemaInstance(schema: any, root: any = schema, name = 'value', depth = 0): unknown {
+export function schemaInstance(schema: any, root: any = schema, name = 'value', depth = 0, fill = false): unknown {
   if (!schema || typeof schema !== 'object' || depth > 32) return null;
   if (typeof schema.$ref === 'string') {
     const target = schema.$ref.replace(/^#\//, '').split('/').reduce((node: any, key: string) => node?.[key], root);
-    return schemaInstance(target, root, name, depth + 1);
+    return schemaInstance(target, root, name, depth + 1, fill);
   }
   if ('const' in schema) return schema.const;
   if (Array.isArray(schema.enum) && schema.enum.length) return schema.enum[0];
   for (const key of ['anyOf', 'oneOf', 'any_of'] as const) {
     if (Array.isArray(schema[key]) && schema[key].length) {
-      const pick = schema[key].find((s: any) => s?.type !== 'null' && s?.type !== 'NULL') ?? schema[key][0];
-      return schemaInstance(pick, root, name, depth + 1);
+      const isNull = (s: any) => s?.type === 'null' || s?.type === 'NULL';
+      if (fill && schema[key].some(isNull)) return null;
+      const pick = schema[key].find((s: any) => !isNull(s)) ?? schema[key][0];
+      return schemaInstance(pick, root, name, depth + 1, fill);
     }
   }
-  if (Array.isArray(schema.allOf) && schema.allOf.length) return schemaInstance(Object.assign({}, ...schema.allOf), root, name, depth + 1);
+  if (Array.isArray(schema.allOf) && schema.allOf.length) return schemaInstance(Object.assign({}, ...schema.allOf), root, name, depth + 1, fill);
   let type = schema.type;
   if (Array.isArray(type)) type = type.find((t: string) => String(t).toLowerCase() !== 'null') ?? type[0];
   type = typeof type === 'string' ? type.toLowerCase() : schema.properties ? 'object' : schema.items ? 'array' : 'string';
   switch (type) {
     case 'object': {
       const out: Record<string, unknown> = {};
-      for (const [key, sub] of Object.entries(schema.properties ?? {})) out[key] = schemaInstance(sub, root, key, depth + 1);
+      for (const [key, sub] of Object.entries(schema.properties ?? {})) out[key] = schemaInstance(sub, root, key, depth + 1, fill);
       return out;
     }
     case 'array': {
-      const n = Math.max(0, Number(schema.minItems ?? schema.min_items ?? 0));
-      return Array.from({ length: n }, (_, i) => schemaInstance(schema.items, root, `${name}-${i}`, depth + 1));
+      const n = Math.max(fill ? 1 : 0, Number(schema.minItems ?? schema.min_items ?? 0));
+      return Array.from({ length: n }, (_, i) => schemaInstance(schema.items, root, `${name}-${i}`, depth + 1, fill));
     }
     case 'integer': return Math.max(0, Math.ceil(Number(schema.minimum ?? 0)));
     case 'number': return Math.max(0, Number(schema.minimum ?? 0));
@@ -141,10 +146,25 @@ function promptText(body: Record<string, any>): unknown {
   return [body.system, body.instructions, body.messages, body.input, body.prompt, body.contents, body.systemInstruction, body.tools];
 }
 
+const PROMPT_SCHEMA = /respond with valid JSON matching this schema:\s*(\{[\s\S]*\})/;
+
 function openaiSchema(body: Record<string, any>): any {
   const format = body.response_format ?? body.text?.format;
   if (format?.type !== 'json_schema') return null;
   return format.json_schema?.schema ?? format.schema ?? {};
+}
+
+/** The schema a `json_object` request wrote into its own prompt, or null. */
+function promptSchema(body: Record<string, any>): any {
+  if (body.response_format?.type !== 'json_object') return null;
+  for (const m of body.messages ?? []) {
+    const text = typeof m?.content === 'string' ? m.content : Array.isArray(m?.content) ? m.content.map((p: any) => p?.text ?? '').join(' ') : '';
+    const found = PROMPT_SCHEMA.exec(text);
+    if (found) {
+      try { return JSON.parse(found[1]); } catch { return null; }
+    }
+  }
+  return null;
 }
 
 export async function startStubUpstream(options: { port?: number } = {}): Promise<StubUpstream> {
@@ -154,7 +174,7 @@ export async function startStubUpstream(options: { port?: number } = {}): Promis
   let seq = 0;
 
   /** Generated text or structured result for a request, after any responder. */
-  async function content(request: StubRequest, schema: any): Promise<{ text: string; structured: unknown } | Response> {
+  async function content(request: StubRequest, schema: any, fill = false): Promise<{ text: string; structured: unknown } | Response> {
     const reply = await responders.get(request.route)?.(request);
     if (reply && 'status' in reply) return json(reply.body, reply.status);
     if (reply && 'json' in reply) return { text: JSON.stringify(reply.json), structured: reply.json };
@@ -164,7 +184,7 @@ export async function startStubUpstream(options: { port?: number } = {}): Promis
       return { text: reply.text, structured };
     }
     if (schema) {
-      const structured = schemaInstance(schema);
+      const structured = schemaInstance(schema, schema, 'value', 0, fill);
       return { text: JSON.stringify(structured), structured };
     }
     return { text: `stub answer from ${request.model || request.provider}`, structured: null };
@@ -172,7 +192,8 @@ export async function startStubUpstream(options: { port?: number } = {}): Promis
 
   async function openaiChat(request: StubRequest, groq: boolean): Promise<Response> {
     const { body } = request;
-    const result = await content(request, openaiSchema(body));
+    const inPrompt = promptSchema(body);
+    const result = await content(request, inPrompt ?? openaiSchema(body), inPrompt !== null);
     if (result instanceof Response) return result;
     const usage = { prompt_tokens: tokens(promptText(body)), completion_tokens: tokens(result.text), total_tokens: 0, prompt_tokens_details: { cached_tokens: 0 } };
     usage.total_tokens = usage.prompt_tokens + usage.completion_tokens;

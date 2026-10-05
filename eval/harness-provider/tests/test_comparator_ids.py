@@ -165,11 +165,13 @@ def test_config_knobs_drive_the_recall_body(monkeypatch):
 def test_upstream_must_be_loopback_and_come_from_the_launcher():
     with pytest.raises(RuntimeError, match="not loopback"):
         comparator_server.Upstream("openai", "https://api.openai.com/v1", "mpwp-x")
-    with pytest.raises(RuntimeError, match="MPW_COMPARATOR_OPENAI_BASE_URL"):
+    with pytest.raises(RuntimeError, match="MPW_CHILD_ENV_COMPARATOR"):
         comparator_server.upstream_from_env({})
-    up = comparator_server.upstream_from_env({"MPW_COMPARATOR_OPENAI_BASE_URL": "http://127.0.0.1:5/openai/v1",
-                                              "MPW_COMPARATOR_OPENAI_API_KEY": "mpwp-comparator-1"})
-    assert up.api_key == "mpwp-comparator-1" and up.provider == "openai"
+    with pytest.raises(RuntimeError, match="OPENAI_API_KEY"):
+        comparator_server.upstream_from_env({"MPW_CHILD_ENV_COMPARATOR": json.dumps({"OPENAI_BASE_URL": "http://127.0.0.1:5/openai/v1"})})
+    child = {"OPENAI_BASE_URL": "http://127.0.0.1:5/openai/v1", "OPENAI_API_KEY": "mpwp-comparator-1", "GEMINI_API_KEY": "mpwp-comparator-2"}
+    up = comparator_server.upstream_from_env({"MPW_CHILD_ENV_COMPARATOR": json.dumps(child)}, model="gpt-6-luna")
+    assert (up.provider, up.base_url, up.api_key, up.model) == ("openai", child["OPENAI_BASE_URL"], "mpwp-comparator-1", "gpt-6-luna")
 
 
 def test_lock_pins_by_hash_without_the_plain_name():
