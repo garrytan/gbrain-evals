@@ -191,10 +191,13 @@ export function planJobs(spec: DecisionSpec, runs: string, opts: { shards: numbe
       } else {
         const out = join(runs, s.id, arm);
         const searchPins = Object.entries(a.config).filter(([k]) => k.startsWith('search.'));
-        const other = Object.keys(a.config).filter(k => !k.startsWith('search.'));
-        if (other.length) process.stderr.write(`[decide] note: ${s.id} cannot apply ${other.join(', ')} to the ${arm} build; category runners take search.* pins only (GBRAIN_EVAL_SEARCH_PINS)\n`);
+        const other = Object.entries(a.config).filter(([k]) => !k.startsWith('search.'));
+        if (other.length && !s.config_channel) {
+          process.stderr.write(`[decide] note: ${s.id} cannot apply ${other.map(([k]) => k).join(', ')} to the ${arm} build; its runner takes search.* pins only (GBRAIN_EVAL_SEARCH_PINS). Set config_channel: true on the source once its runner reads GBRAIN_EVAL_CONFIG (eval/runner/eval-config.ts)\n`);
+        }
         jobs.push({ source: s, arm, shard: 0, shards: 1, out, argv: [s.script, ...s.args, ...(a.gbrain ? ['--gbrain', a.gbrain] : []), '--output', out, ...paidFlags],
-          env: { GBRAIN_EVAL_SEARCH_PINS: searchPins.map(([k, v]) => `${k}=${v}`).join(',') } });
+          env: { GBRAIN_EVAL_SEARCH_PINS: searchPins.map(([k, v]) => `${k}=${v}`).join(','),
+            GBRAIN_EVAL_CONFIG: s.config_channel ? other.map(([k, v]) => `${k}=${v}`).join(',') : '' } });
       }
     }
   }

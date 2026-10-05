@@ -80,6 +80,11 @@ export interface CategorySource extends SourceCommon {
   /** Binary metrics derived from row fields before pairing: field = 1 when the value at `from` equals `equals`, else 0 (missing stays missing). */
   derive?: Array<{ field: string; from: string; equals: string | number | boolean }>;
   contracts?: ContractCheck[];
+  /**
+   * The runner reads GBRAIN_EVAL_CONFIG (eval/runner/eval-config.ts parseEvalConfig, applied with applyEvalConfig), so the kit passes each arm's non-search
+   * config keys to it. Without this the kit can only pass search.* pins and notes the keys it could not apply.
+   */
+  config_channel?: boolean;
   paid: boolean;
   estimate_usd?: number;
 }
@@ -153,6 +158,10 @@ export function validateSpec(value: unknown, path = 'decision.json'): DecisionSp
         if (typeof src.script !== 'string' || !src.script.startsWith('eval/runner/')) problems.push(`${label}: script must be a path under eval/runner/`);
         if (!Array.isArray(src.args)) problems.push(`${label}: args must be an array`);
         if (!src.rows_path && !(src.contracts?.length)) problems.push(`${label}: a category source needs rows_path or contracts`);
+        if (src.config_channel !== undefined && typeof src.config_channel !== 'boolean') problems.push(`${label}: config_channel must be true or false`);
+        else if (src.config_channel && typeof src.script === 'string' && existsSync(src.script) && !readFileSync(src.script, 'utf8').includes('parseEvalConfig')) {
+          problems.push(`${label}: config_channel is true but ${src.script} never reads GBRAIN_EVAL_CONFIG (parseEvalConfig), so the arm config would be dropped`);
+        }
         else if (typeof src.script === 'string' && existsSync(src.script) && !readFileSync(src.script, 'utf8').includes('resolveGbrainUnderTest')) {
           problems.push(`${label}: ${src.script} does not take --gbrain (it imports the installed gbrain package), so both arms would measure the same build`);
         }
@@ -265,6 +274,49 @@ export const TYPE_ACCURACY = () => category('type-accuracy', 'eval/runner/type-a
   rows_path: 'data.rows', id_field: 'probe_id', args: [],
   comparisons: [{ id: 'type-match', metric: 'anyTypeMatch', gate: 'noninferiority', direction: 'higher', tolerance: 0.01, cluster_by: 'probe_id' }],
 });
+/** P5 (gbrain#6017) deterministic sources: dev seeds only; arm config reaches them through GBRAIN_EVAL_CONFIG. */
+const P5_H1 = () => category('line-grammar-typing', 'eval/runner/line-grammar-typing.ts', {
+  rows_path: 'data.rows', id_field: 'id', args: [], config_channel: true, min_clusters: 5,
+  comparisons: [
+    { id: 'h1-type-match', metric: 'anyTypeMatch', gate: 'noninferiority', direction: 'higher', tolerance: 0.01, cluster_by: 'cluster' },
+    { id: 'h1-grammar-invariance', metric: 'extract_identical', gate: 'exact', assertion: { kind: 'every_b_equals', value: 1 }, cluster_by: 'cluster',
+      description: 'pages without relation lines extract identically with the grammar on and off' },
+    { id: 'h1-correctly-typed', metric: 'correctly_typed', gate: 'exploratory', direction: 'higher', cluster_by: 'cluster' },
+  ],
+});
+const P5_H2 = () => category('relation-line-variants', 'eval/runner/relation-line-variants.ts', {
+  rows_path: 'data.rows', id_field: 'id', args: [], config_channel: true, min_clusters: 5,
+  comparisons: [
+    { id: 'h2-typed-recall', metric: 'typed_recall', gate: 'exploratory', direction: 'higher', cluster_by: 'cluster' },
+    { id: 'h2-no-grammar-decoys', metric: 'decoy_added_by_grammar', gate: 'exact', assertion: { kind: 'every_b_equals', value: 0 }, cluster_by: 'cluster',
+      description: 'no decoy line gets its stated type from the grammar (grammar on vs off in the same build)' },
+    { id: 'h2-decoy-reached', metric: 'decoy_type_reached', gate: 'exploratory', direction: 'lower', cluster_by: 'cluster' },
+  ],
+  contracts: [{ path: 'data.summary.typed_recall', op: 'gte', value: 0.98, description: 'typed-edge recall on rendered relation lines' }],
+});
+const P5_H4 = () => category('forward-reference-heal', 'eval/runner/forward-reference-heal.ts', {
+  rows_path: 'data.rows', id_field: 'id', args: [], config_channel: true, min_clusters: 5,
+  comparisons: [
+    { id: 'h4-edges-kept', metric: 'edge_kept', gate: 'exact', assertion: { kind: 'every_b_equals', value: 1 }, cluster_by: 'cluster',
+      description: 'no reference edge is lost by a sequential import' },
+    { id: 'h4-withheld-recall', metric: 'withheld_recall', gate: 'exploratory', direction: 'higher', cluster_by: 'cluster' },
+  ],
+  contracts: [
+    { path: 'data.summary.withheld_recall', op: 'gte', value: 0.9, description: 'withheld entities that remaining pages link to are wanted targets' },
+    { path: 'data.summary.non_entity_share', op: 'lte', value: 0.1, description: 'wanted targets are entity-shaped' },
+  ],
+});
+const P5_H5A = () => category('n4-similar-pages', 'eval/runner/n4-similar-pages.ts', {
+  rows_path: 'data.rows', id_field: 'id', args: [], config_channel: true, min_clusters: 3,
+  comparisons: [
+    { id: 'h5a-recall-at-3', metric: 'recall_at_3', gate: 'exploratory', direction: 'higher', cluster_by: 'cluster' },
+    { id: 'h5a-no-referent-hints', metric: 'hinted', gate: 'exploratory', direction: 'lower', cluster_by: 'cluster' },
+  ],
+  contracts: [
+    { path: 'data.summary.lexical_recall_at_3', op: 'gte', value: 0.9, description: 'recall@3 on lexically detectable mention families' },
+    { path: 'data.summary.no_referent_hint_rate', op: 'lte', value: 0.1, description: 'hint rate on names that match no page' },
+  ],
+});
 const N1 = () => category('n1-knowledge-update', 'eval/runner/n1-knowledge-update.ts', {
   contracts: [{ path: 'verdict', op: 'eq', value: 'pass', description: 'knowledge-update safety contracts hold' }],
 });
@@ -294,8 +346,8 @@ export function templateSources(plan: Plan): { sources: Source[]; notes: string 
       notes: 'Always-loaded core tier and pre-compaction save: the agent-compaction scenario lands in milestone M2; LME-S is a guardrail.',
     };
     case 'P5': return {
-      sources: [N4(), memoryQaSource('lme-s', { primary: false })],
-      notes: 'Human-typable fact/link line grammar, wanted pages, duplicate nudge: entity resolution and LME-S as guardrails. Typed-edge accuracy (type-accuracy.ts) cannot measure an overlay build yet; add a grammar category for the primary.',
+      sources: [P5_H1(), P5_H2(), P5_H4(), P5_H5A(), N4(), memoryQaSource('lme-s', { primary: false })],
+      notes: 'Human-typable fact/link line grammar, wanted pages, duplicate nudge: link typing through the build\'s write path (H1), relation lines and decoys (H2), forward-reference healing and wanted pages (H4) and the similar-page hint (H5a) on dev seeds, with feature keys through GBRAIN_EVAL_CONFIG; entity resolution and LME-S as guardrails.',
     };
     case 'P6': return {
       sources: [memoryQaSource('lme-s', { primary: true }), qaSource('lme-s', 'reader', { primary: true }), qaSource('lme-s', 'think', { primary: false }),
