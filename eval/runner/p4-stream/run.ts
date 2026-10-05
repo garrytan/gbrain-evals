@@ -5,7 +5,7 @@
  *   bun eval/runner/p4-stream/run.ts --arms Aprime,B,C --models claude-sonnet-5-5
  *     --build A=<gbrain>@<sha> --build Aprime=<gbrain>@<sha> --build cand=<gbrain>@<sha>
  *     [--benchmark lme-s] [--limit N] [--offset K] [--seed 42] [--window 32000]
- *     [--concurrency 4] [--reply-tokens 700] [--judge-runs 10] [--judge-model openai:gpt-4o-2024-08-06]
+ *     [--tag <label for arm ids, e.g. a dev variant>] [--concurrency 4] [--reply-tokens 700] [--judge-runs 10] [--judge-model openai:gpt-4o-2024-08-06]
  *     [--profile-model openai:gpt-4.1-mini] [--effort low] [--work <dir outside any git repo>]
  *     --paid --budget-usd <cap> --output <dir>
  *
@@ -97,7 +97,7 @@ const FACT_ID = /"(?:fact_id|id)"\s*:\s*"?([0-9a-zA-Z_-]{1,64})"?/g;
 const factIds = (text: string) => [...text.matchAll(FACT_ID)].map(m => m[1]);
 
 export interface CellRow {
-  id: string; question_id: string; category: string; abstention: boolean; arm: ArmId; model: string; window: number;
+  id: string; question_id: string; category: string; abstention: boolean; arm: string; model: string; window: number;
   answer: string; qa_scores: number[]; qa_score: number;
   sessions: number; live_turns: number; compactions: number; notices: number; notice_segments: number; missed_segments: number;
   remember_calls: number; facts_saved: number; evidence_saved: boolean; evidence_recall5: boolean | null;
@@ -107,7 +107,7 @@ export interface CellRow {
 }
 
 interface Ctx {
-  benchmark: string; window: number; replyTokens: number; judgeRuns: number; judgeModel: string; profileModel: string; effort?: string;
+  benchmark: string; tag?: string; window: number; replyTokens: number; judgeRuns: number; judgeModel: string; profileModel: string; effort?: string;
   builds: Record<string, string>; buildDirs: Record<string, string>; work: string; proxy: MeteringProxy; chat: ChatClient;
 }
 
@@ -149,7 +149,8 @@ async function waitForIpc(home: string, timeoutMs = 60_000): Promise<void> {
 
 export async function runCell(ctx: Ctx, q: MemoryQuestion, sessions: Session[], arm: ArmSpec, model: string): Promise<CellRow> {
   const t0 = Date.now();
-  const cellId = `${q.id}__${arm.id}__${model}`;
+  const armLabel = ctx.tag ? `${arm.id}@${ctx.tag}` : arm.id;
+  const cellId = `${q.id}__${armLabel}__${model}`;
   const slot = createHash('sha256').update(cellId).digest('hex').slice(0, 12);
   const dir = join(ctx.work, slot);
   rmSync(dir, { recursive: true, force: true });
@@ -164,7 +165,7 @@ export async function runCell(ctx: Ctx, q: MemoryQuestion, sessions: Session[], 
   const ordered = [...sessions].sort((a, b) => sessionTime(a.date) - sessionTime(b.date));
   const profile = await profileFor(ctx, ordered[0]);
   const row: CellRow = {
-    id: cellId, question_id: q.id, category: q.category, abstention: q.abstention, arm: arm.id, model, window: ctx.window,
+    id: cellId, question_id: q.id, category: q.category, abstention: q.abstention, arm: armLabel, model, window: ctx.window,
     answer: '', qa_scores: [], qa_score: 0, sessions: ordered.length, live_turns: 0, compactions: 0, notices: 0, notice_segments: 0, missed_segments: 0,
     remember_calls: 0, facts_saved: 0, evidence_saved: false, evidence_recall5: null, core_chars: null, tool_calls: toolCalls, errors,
     usage, usd_agent: 0, usd_gbrain: 0, usd_profile: profile.usd, ms: 0, builds: ctx.builds,
@@ -346,7 +347,7 @@ async function main(argv: string[]) {
   const rowsPath = join(out, 'rows.ndjson');
   const done = new Set(existsSync(rowsPath) ? readFileSync(rowsPath, 'utf8').split('\n').filter(Boolean).map(l => (JSON.parse(l) as CellRow).id) : []);
   const cells: Array<{ q: MemoryQuestion; arm: ArmSpec; model: string }> = [];
-  for (const q of questions) for (const model of models) for (const arm of arms) if (!done.has(`${q.id}__${arm.id}__${model}`)) cells.push({ q, arm, model });
+  for (const q of questions) for (const model of models) for (const arm of arms) if (!done.has(`${q.id}__${flag(argv, '--tag') ? `${arm.id}@${flag(argv, '--tag')}` : arm.id}__${model}`)) cells.push({ q, arm, model });
 
   const budget = budgetOptionsFrom(argv);
   if (!argv.includes('--paid')) throw new Error('p4-stream makes paid model calls; pass --paid --budget-usd <cap>');
@@ -354,7 +355,7 @@ async function main(argv: string[]) {
   const proxy = new MeteringProxy();
   proxy.start();
   const ctx: Ctx = {
-    benchmark, window, replyTokens: Number(flag(argv, '--reply-tokens') ?? 700), judgeRuns: Number(flag(argv, '--judge-runs') ?? 10), judgeModel: flag(argv, '--judge-model') ?? 'openai:gpt-4o-2024-08-06',
+    benchmark, tag: flag(argv, '--tag'), window, replyTokens: Number(flag(argv, '--reply-tokens') ?? 700), judgeRuns: Number(flag(argv, '--judge-runs') ?? 10), judgeModel: flag(argv, '--judge-model') ?? 'openai:gpt-4o-2024-08-06',
     profileModel: flag(argv, '--profile-model') ?? 'openai:gpt-4.1-mini', effort: flag(argv, '--effort'),
     builds: resolvedBuilds, buildDirs, work: resolve(flag(argv, '--work') ?? join(homedir(), 'p4-stream-work', createHash('sha256').update(out).digest('hex').slice(0, 10))), proxy, chat: new ChatClient(join(out, 'chat-cache')),
   };
