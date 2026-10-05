@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import threading
@@ -158,6 +159,16 @@ def test_facts_extraction_and_lanes(tmp_path, upstream):
         assert cmeta["tokens_delivered"] == cmeta["facts"]["tokens"] + cmeta["pages"]["tokens_delivered"]
         assert cmeta["pages"]["requested"]["token_budget"] == 1500 and cmeta["pages"]["requested"]["expand"] is False
         assert [d.content for d in cdocs[:len(fdocs)]] == [d.content for d in fdocs]
+
+        p.cfg.update({"lane": "facts", "fact_dates": True})
+        ddocs, _, dmeta = p.retrieve_with_meta("What is the cat called?", 10, "u-1")
+        assert [d.id for d in ddocs] == [d.id for d in fdocs]
+        lines = {d.id: [l for l in d.content.split("\n") if l.startswith("- ")] for d in ddocs}
+        assert all(re.match(r"- \(\d{4}-\d{2}-\d{2}\) ", l) for ls in lines.values() for l in ls)
+        assert lines["d-a1"] and all(l.startswith("- (2024-03-05) ") for l in lines["d-a1"])
+        assert all(l.startswith("- (2024-03-01) ") for l in lines.get("d-a0", []))
+        assert dmeta["facts"]["tokens"] > meta["facts"]["tokens"] and dmeta["facts"]["tokens"] <= 400
+        p.cfg["fact_dates"] = False
 
         p.cfg["lane"] = "summaries"
         with pytest.raises(Exception, match="unknown lane"):

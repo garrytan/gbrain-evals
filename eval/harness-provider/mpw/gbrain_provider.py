@@ -44,7 +44,8 @@ are retried once and counted in the receipt.
 `lane` picks retrieval: `raw` (default, the page query above, unchanged),
 `facts` (facts only: the question's `saved_facts` from `query` followed by
 `recall`'s facts, packed to `facts_tokens`) or `combined` (those facts, then
-the page query with `token_budget`). `recall` ranks facts newest first and does
+the page query with `token_budget`). `fact_dates` prefixes each fact line with
+its own `valid_from` date, counted inside `facts_tokens`. `recall` ranks facts newest first and does
 not rank them by the question; only `saved_facts` (at most five keyword
 matches) depends on it.
 """
@@ -92,6 +93,8 @@ DEFAULTS = {
     "extraction_in_flight": 8,
     "facts_tokens": 2000,
     "facts_limit": 100,
+    # Prefix each fact line with the fact's own valid_from date (read time only).
+    "fact_dates": False,
 }
 
 SWITCHES = {
@@ -549,7 +552,8 @@ class GbrainMemoryProvider(MemoryProvider):
                 seen.add(key)
                 session = str(f.get("source_session") or sessions.get(key) or "")
                 doc_id = session if session in u.timestamps else ""
-                line = f"- {text}"
+                day = str(f.get("valid_from") or "")[:10] if self.cfg.get("fact_dates") else ""
+                line = f"- ({day}) {text}" if re.match(r"\d{4}-\d{2}-\d{2}$", day) else f"- {text}"
                 cost = count_tokens(line + "\n")
                 if used + cost > budget:
                     dropped += 1
