@@ -12,16 +12,23 @@
  *                   -tolerance). Failing to find a difference is not proof of
  *                   equivalence, so a wide interval is "inconclusive", not a
  *                   pass. An interval entirely below -tolerance is a fail.
+ *   superiority     A claimed improvement. B passes only when it is shown to
+ *                   beat A by more than the preregistered minimum effect: the
+ *                   Holm-adjusted one-sided p-value is at or below alpha
+ *                   (equivalently, the lower interval bound clears
+ *                   +min_effect). An interval entirely on the losing side of
+ *                   zero is a fail; anything else short of a pass is
+ *                   "inconclusive".
  *   exploratory     Dashboards. Reported with intervals and unadjusted
  *                   p-values, and never part of the verdict.
  *
- * Holm correction covers the noninferiority comparisons, the family's
- * confirmatory tests. The family file is written before the runs it judges;
+ * Holm correction covers the noninferiority and superiority comparisons, the
+ * family's confirmatory tests. The family file is written before the runs it judges;
  * comparisons outside it can only be exploratory.
  */
 import { readFileSync } from 'node:fs';
 import {
-  clusteredPairedDelta, exactMcNemar, holmAdjusted, nonInferiorityP, pairObservations, PairingError, powerNote,
+  clusteredPairedDelta, exactMcNemar, holmAdjusted, nonInferiorityP, pairObservations, PairingError, powerNote, superiorityP,
   type McNemarResult, type PairedDelta, type PowerNote,
 } from './paired.ts';
 import { toObservation, type Row } from './rows.ts';
@@ -36,6 +43,7 @@ export type ExactAssertion =
 export type ComparisonSpec =
   | { id: string; metric: string; gate: 'exact'; assertion: ExactAssertion; cluster_by?: string; description?: string }
   | { id: string; metric: string; gate: 'noninferiority'; direction: Direction; tolerance: number; cluster_by: string; description?: string }
+  | { id: string; metric: string; gate: 'superiority'; direction: Direction; min_effect: number; cluster_by: string; description?: string }
   | { id: string; metric: string; gate: 'exploratory'; direction?: Direction; cluster_by?: string; description?: string };
 
 export interface ComparisonFamily {
@@ -69,8 +77,10 @@ export interface ComparisonResult {
   mcnemar?: McNemarResult;
   power?: PowerNote;
   tolerance?: number;
+  min_effect?: number;
   direction?: Direction;
   p_noninferiority?: number | null;
+  p_superiority?: number | null;
   p_holm?: number;
   violations?: string[];
 }
@@ -117,9 +127,13 @@ export function validateFamily(value: unknown): ComparisonFamily {
       if (!['higher', 'lower'].includes(c.direction)) problems.push(`${label}: direction must be higher or lower`);
       if (!finite(c.tolerance) || c.tolerance < 0) problems.push(`${label}: tolerance must be a finite number >= 0, in metric units`);
       if (!text(c.cluster_by)) problems.push(`${label}: cluster_by must be preregistered (use the id field when items are independent)`);
+    } else if (c?.gate === 'superiority') {
+      if (!['higher', 'lower'].includes(c.direction)) problems.push(`${label}: direction must be higher or lower`);
+      if (!finite(c.min_effect) || c.min_effect < 0) problems.push(`${label}: min_effect must be a finite number >= 0, in metric units`);
+      if (!text(c.cluster_by)) problems.push(`${label}: cluster_by must be preregistered (use the id field when items are independent)`);
     } else if (c?.gate === 'exploratory') {
       if (c.direction !== undefined && !['higher', 'lower'].includes(c.direction)) problems.push(`${label}: direction must be higher or lower`);
-    } else problems.push(`${label}: gate must be exact, noninferiority or exploratory`);
+    } else problems.push(`${label}: gate must be exact, noninferiority, superiority or exploratory`);
   }
   if (problems.length) throw new Error(`invalid comparison family: ${problems.join('; ')}`);
   return f;
@@ -164,7 +178,7 @@ export function evaluateFamily(aRows: readonly Row[], bRows: readonly Row[], fam
       results.push({ id: spec.id, metric: spec.metric, gate: spec.gate, status: 'blocked', reasons: problems });
     }
   }
-  const holmFamily = family.comparisons.filter(c => c.gate === 'noninferiority').map(c => c.id);
+  const holmFamily = family.comparisons.filter(c => c.gate === 'noninferiority' || c.gate === 'superiority').map(c => c.id);
   if (blocked.length) {
     for (const spec of family.comparisons) if (!results.some(r => r.id === spec.id)) {
       results.push({ id: spec.id, metric: spec.metric, gate: spec.gate, status: 'skipped', reasons: ['another comparison in the family is blocked'] });
@@ -190,7 +204,7 @@ export function evaluateFamily(aRows: readonly Row[], bRows: readonly Row[], fam
     return { family_id: family.family_id, verdict: 'fail', reasons: exactFailures, alpha: family.alpha, holm_family: holmFamily, comparisons: order(results, family) };
   }
 
-  const statistical: Array<{ spec: Extract<ComparisonSpec, { gate: 'noninferiority' | 'exploratory' }>; stats: PairedDelta; result: ComparisonResult }> = [];
+  const statistical: Array<{ spec: Extract<ComparisonSpec, { gate: 'noninferiority' | 'superiority' | 'exploratory' }>; stats: PairedDelta; result: ComparisonResult }> = [];
   for (const spec of family.comparisons) {
     if (spec.gate === 'exact') continue;
     const { pairs, excluded } = paired.get(spec.id)!;
@@ -205,39 +219,56 @@ export function evaluateFamily(aRows: readonly Row[], bRows: readonly Row[], fam
     results.push(result);
   }
 
-  const ni = statistical.filter(s => s.spec.gate === 'noninferiority');
-  const niP = ni.map(s => {
-    const spec = s.spec as Extract<ComparisonSpec, { gate: 'noninferiority' }>;
-    return nonInferiorityP(s.stats, spec.tolerance, spec.direction);
-  });
-  const adjusted = holmAdjusted(niP.map(p => p ?? 1));
+  const confirmatory = statistical.filter(s => s.spec.gate === 'noninferiority' || s.spec.gate === 'superiority');
+  const confirmP = confirmatory.map(s => s.spec.gate === 'noninferiority'
+    ? nonInferiorityP(s.stats, s.spec.tolerance, s.spec.direction)
+    : superiorityP(s.stats, (s.spec as Extract<ComparisonSpec, { gate: 'superiority' }>).min_effect, (s.spec as Extract<ComparisonSpec, { gate: 'superiority' }>).direction));
+  const adjusted = holmAdjusted(confirmP.map(p => p ?? 1));
   const reasons: string[] = [];
-  ni.forEach((s, i) => {
-    const spec = s.spec as Extract<ComparisonSpec, { gate: 'noninferiority' }>;
+  confirmatory.forEach((s, i) => {
     const r = s.result;
-    r.tolerance = spec.tolerance;
-    r.p_noninferiority = niP[i];
-    r.p_holm = adjusted[i];
-    const sign = spec.direction === 'higher' ? 1 : -1;
+    const sign = s.spec.direction === 'higher' ? 1 : -1;
     const ci = s.stats.ci95;
     const orientedUpper = ci ? Math.max(sign * ci[0], sign * ci[1]) : null;
-    if (orientedUpper !== null && orientedUpper < -spec.tolerance) {
-      r.status = 'fail';
-      r.reasons.push(`the whole 95% interval is worse than the tolerance of ${spec.tolerance}`);
-    } else if (s.stats.n_clusters < minClusters) {
-      r.status = 'inconclusive';
-      r.reasons.push(`${s.stats.n_clusters} clusters is below the family minimum of ${minClusters}`);
-    } else if (niP[i] !== null && adjusted[i] <= family.alpha) {
-      r.status = 'pass';
+    r.p_holm = adjusted[i];
+    if (s.spec.gate === 'noninferiority') {
+      const spec = s.spec;
+      r.tolerance = spec.tolerance;
+      r.p_noninferiority = confirmP[i];
+      if (orientedUpper !== null && orientedUpper < -spec.tolerance) {
+        r.status = 'fail';
+        r.reasons.push(`the whole 95% interval is worse than the tolerance of ${spec.tolerance}`);
+      } else if (s.stats.n_clusters < minClusters) {
+        r.status = 'inconclusive';
+        r.reasons.push(`${s.stats.n_clusters} clusters is below the family minimum of ${minClusters}`);
+      } else if (confirmP[i] !== null && adjusted[i] <= family.alpha) {
+        r.status = 'pass';
+      } else {
+        r.status = 'inconclusive';
+        r.reasons.push(`non-inferiority within ${spec.tolerance} not shown (Holm p = ${adjusted[i].toFixed(4)} > ${family.alpha}); this is not evidence of a regression or of equivalence`);
+      }
     } else {
-      r.status = 'inconclusive';
-      r.reasons.push(`non-inferiority within ${spec.tolerance} not shown (Holm p = ${adjusted[i].toFixed(4)} > ${family.alpha}); this is not evidence of a regression or of equivalence`);
+      const spec = s.spec as Extract<ComparisonSpec, { gate: 'superiority' }>;
+      r.min_effect = spec.min_effect;
+      r.p_superiority = confirmP[i];
+      if (orientedUpper !== null && orientedUpper < 0) {
+        r.status = 'fail';
+        r.reasons.push('the whole 95% interval is on the losing side of zero');
+      } else if (s.stats.n_clusters < minClusters) {
+        r.status = 'inconclusive';
+        r.reasons.push(`${s.stats.n_clusters} clusters is below the family minimum of ${minClusters}`);
+      } else if (confirmP[i] !== null && adjusted[i] <= family.alpha) {
+        r.status = 'pass';
+      } else {
+        r.status = 'inconclusive';
+        r.reasons.push(`an improvement larger than ${spec.min_effect} is not shown (Holm p = ${adjusted[i].toFixed(4)} > ${family.alpha}); this is not evidence of a loss`);
+      }
     }
-    if (r.status !== 'pass') reasons.push(`${spec.id}: ${r.status}`);
+    if (r.status !== 'pass') reasons.push(`${s.spec.id}: ${r.status}`);
   });
-  const verdict: FamilyDecision['verdict'] = !ni.length && !family.comparisons.some(c => c.gate === 'exact') ? 'report_only'
-    : ni.some(s => s.result.status === 'fail') ? 'fail'
-    : ni.some(s => s.result.status === 'inconclusive') ? 'inconclusive' : 'pass';
+  const verdict: FamilyDecision['verdict'] = !confirmatory.length && !family.comparisons.some(c => c.gate === 'exact') ? 'report_only'
+    : confirmatory.some(s => s.result.status === 'fail') ? 'fail'
+    : confirmatory.some(s => s.result.status === 'inconclusive') ? 'inconclusive' : 'pass';
   return { family_id: family.family_id, verdict, reasons, alpha: family.alpha, holm_family: holmFamily, comparisons: order(results, family) };
 }
 

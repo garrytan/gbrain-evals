@@ -52,6 +52,23 @@ import { writeReceipt, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, latencySummary
 import { BudgetExceededError, budgetOptionsFrom, receiptCost, startPaidRun, type BudgetOptions, type BudgetRun, type PaidRequestGuard } from './budget-ledger.ts';
 import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
 import { searchObservation } from './retrieval-pins.ts';
+import { EmbeddingCache, makeCachingTransport } from './longmemeval-cache.ts';
+import { homedir } from 'node:os';
+
+/**
+ * Extra engine config pins for a feature arm, from `GBRAIN_EVAL_SEARCH_PINS="key=value,key=value"`
+ * (for example `search.relational_planner=true`). Applied after RELATIONAL_PINS, checked by the
+ * config readback and recorded in the receipt. A build that does not know a key ignores it.
+ */
+export function evalSearchPins(raw: string | undefined = process.env.GBRAIN_EVAL_SEARCH_PINS): Record<string, string> {
+  const pins: Record<string, string> = {};
+  for (const part of (raw ?? '').split(',').map(x => x.trim()).filter(Boolean)) {
+    const eq = part.indexOf('=');
+    if (eq <= 0 || !/^search\.[a-z0-9_.]+$/.test(part.slice(0, eq))) throw new Error(`GBRAIN_EVAL_SEARCH_PINS: "${part}" is not search.<key>=<value>`);
+    pins[part.slice(0, eq)] = part.slice(eq + 1);
+  }
+  return pins;
+}
 
 export const RELATIONAL_LIMIT = 5;
 export const RELATIONAL_EMBEDDER = { model: 'openai:text-embedding-3-large', dimensions: 1536 } as const;
@@ -73,7 +90,7 @@ export type RelationalSearch = (engine: PGLiteEngine, text: string, opts: Hybrid
 export interface RetrievalMetrics { precision_at_5: number; recall_at_5: number; hit_at_1: number; hit_at_5: number }
 export interface ArmResult {
   relational_retrieval: boolean;
-  rows: Array<{ slug: string; chunk_id?: number; source_id?: string; score: number }>;
+  rows: Array<{ slug: string; chunk_id?: number; source_id?: string; score: number; relational?: { role: string; edges: Array<{ stored_from: string; stored_to: string; link_type: string }> } }>;
   pages: string[];
   query_embed_calls: number;
   query_vector_sha256: string;
@@ -151,7 +168,11 @@ export async function searchRelationalPair(
         onRelationalMeta: meta => { result.relational_meta.push({ ...meta }); },
         onMeta: meta => { result.search_meta = meta; },
       });
-      result.rows = rows.map(r => ({ slug: r.slug, chunk_id: r.chunk_id, source_id: r.source_id, score: r.score }));
+      result.rows = rows.map(r => {
+        const rel = (r as { relational?: { role: string; edges?: Array<{ stored_from: string; stored_to: string; link_type: string }> } }).relational;
+        return { slug: r.slug, chunk_id: r.chunk_id, source_id: r.source_id, score: r.score,
+          ...(rel ? { relational: { role: rel.role, edges: (rel.edges ?? []).map(e => ({ stored_from: e.stored_from, stored_to: e.stored_to, link_type: e.link_type })) } } : {}) };
+      });
       result.pages = pagesInResultOrder(rows, limit).map(r => r.page_id);
       if (rows.length > limit) throw new ObservationError('sut', `product exceeded the ${limit}-chunk output limit`);
       if (!result.search_meta) throw new ObservationError('harness', 'missing search telemetry');
@@ -162,7 +183,9 @@ export async function searchRelationalPair(
         if (!result.search_meta.vector_enabled) throw new ObservationError('harness', 'vector retrieval disabled or expansion unexpectedly enabled');
       }
       if (result.search_meta.expansion_applied) throw new ObservationError('harness', 'vector retrieval disabled or expansion unexpectedly enabled');
-      if (rows.some(r => Number.isFinite(r.rerank_score))) throw new ObservationError('harness', 'reranker ran in an explicitly disabled cell');
+      if (evalSearchPins()['search.reranker.enabled'] === 'true') {
+        if (rows.length > 0 && !rows.some(r => Number.isFinite(r.rerank_score))) throw new ObservationError('harness', 'reranker pinned on but no row carries a rerank score (the reranker fail-opened)');
+      } else if (rows.some(r => Number.isFinite(r.rerank_score))) throw new ObservationError('harness', 'reranker ran in an explicitly disabled cell');
       if (enabled && result.relational_meta.length === 0) throw new ObservationError('harness', 'missing ON-arm relational telemetry');
       if (!enabled && result.relational_meta.length !== 0) throw new ObservationError('harness', 'relational arm ran while disabled');
       if (result.relational_meta.some(m => m.errored)) throw new ObservationError('sut', 'relational arm failed open (errored telemetry)');
@@ -352,6 +375,7 @@ export async function runSharedIndexPairs(o: {
   const search = o.search ?? product.hybridSearch;
   const limit = o.limit ?? RELATIONAL_LIMIT;
   const log = o.log ?? (() => {});
+  const pins = { ...RELATIONAL_PINS, ...evalSearchPins() };
   const rows: PairedRow[] = [];
   const indices: Array<Record<string, unknown>> = [];
   const embeddings = new Map<string, Float32Array>();
@@ -370,7 +394,7 @@ export async function runSharedIndexPairs(o: {
       const shuffled = shuffle(o.pages, seed);
       const indexId = randomUUID();
       const adapter = new GbrainInlineAdapter({
-        topK: limit, extract: true, searchConfig: { ...RELATIONAL_PINS },
+        topK: limit, extract: true, searchConfig: { ...pins },
         embeddingModel: RELATIONAL_EMBEDDER.model, embeddingDimensions: RELATIONAL_EMBEDDER.dimensions,
         expectStubTransport: stub, embed: embed !== 'keyword', ...(product.root ? { productRoot: product.root } : {}),
       });
@@ -379,7 +403,7 @@ export async function runSharedIndexPairs(o: {
         state = await adapter.init(shuffled.map(sanitizePage), { name: 'relational-shared-index' });
         const engine = adapter.engineOf(state);
         const readback: Record<string, string | null> = {};
-        for (const [key, value] of Object.entries(RELATIONAL_PINS)) {
+        for (const [key, value] of Object.entries(pins)) {
           readback[key] = await engine.getConfig(key);
           if (readback[key] !== value) throw new ObservationError('harness', `config readback mismatch: ${key}`);
         }
@@ -460,6 +484,8 @@ export interface RelationalABOptions {
   /** --gbrain <checkout>[@ref]: measure a copied overlay instead of the pinned package. */
   gbrainSpec?: string;
   stubEmbed?: boolean;
+  /** Live arm: route page and query embeddings through the shared content-addressed cache (identical vectors across runs). */
+  embedCache?: boolean;
   allowSkip?: boolean;
   quiet?: boolean;
 }
@@ -480,6 +506,7 @@ export function parseRelationalArgs(args: string[]): RelationalABOptions {
       return next;
     };
     if (flag === '--stub-embed') options.stubEmbed = true;
+    else if (flag === '--embed-cache') options.embedCache = true;
     else if (flag === '--allow-skip') options.allowSkip = true;
     else if (flag === '--paid') continue;
     else if (flag === '--output-dir') options.outputDir = value();
@@ -561,8 +588,19 @@ export async function runRelationalAB(
   const accounting = new ProbeAccounting(seeds.length * queries.length * 2);
   const log = options.quiet ? (_: string) => {} : (text: string) => console.log(text);
   let run: SharedIndexRun;
+  let embedCacheStats: Record<string, number> | null = null;
   try {
-    run = await runSharedIndexPairs({ product, pages, queries, seeds, embed: stub ? 'stub' : 'openai', search, accounting, log });
+    let cache: EmbeddingCache | null = null;
+    if (options.embedCache && !stub) {
+      const { embedMany } = await import(Bun.resolveSync('ai', product.root ?? process.cwd())) as { embedMany: (p: unknown) => Promise<unknown> };
+      cache = new EmbeddingCache(join(process.env.GBRAIN_EVALS_EMBED_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'embed-cache'), 'embed-cache-openai_text-embedding-3-large@1536.sqlite'), 'openai:text-embedding-3-large@1536');
+      product.setEmbedTransport(makeCachingTransport(async (p: any) => embedMany(p) as never, cache) as unknown as Parameters<typeof __setEmbedTransportForTests>[0]);
+    }
+    try {
+      run = await runSharedIndexPairs({ product, pages, queries, seeds, embed: stub ? 'stub' : 'openai', search, accounting, log });
+    } finally {
+      if (cache) { log(`embed cache: ${JSON.stringify(cache.stats)}`); embedCacheStats = { ...cache.stats }; cache.close(); product.setEmbedTransport(null); }
+    }
   } finally {
     paid?.guard.uninstall();
   }
@@ -586,7 +624,7 @@ export async function runRelationalAB(
     errors: summary.errors, publishable: valid && !stub && !incompleteRecipe,
     resolved_config: {
       embedder: RELATIONAL_EMBEDDER, stub_embed: stub, ingestion_seeds: seeds,
-      common_search_pins: RELATIONAL_PINS, relational_retrieval: { off: false, on: true },
+      common_search_pins: { ...RELATIONAL_PINS, ...evalSearchPins() }, relational_retrieval: { off: false, on: true }, embed_cache: embedCacheStats,
       query_embedding: 'embedQuery once per distinct question, identical bytes shared across arms and repeats',
       product_limit: RELATIONAL_LIMIT, ranking_unit: 'chunk rows', scoring_unit: 'first occurrence of each page, no refill',
       precision_denominator: RELATIONAL_LIMIT, corpus_pages: pages.length,

@@ -1,0 +1,25 @@
+{
+  "version": "model-ladder-v1",
+  "seed": 20261002,
+  "scale": "wide",
+  "digest": "79094a8a2cbb6725cae37da8a97bb16b64d7941186f5682e209ecc644b8ab510",
+  "file_sha256": "f7d4e457bbd5e5c23f4e6ebfe100dd36c2f7f17563bfcdf63991ff340e0f167e",
+  "bytes": 7429004,
+  "docs": 8807,
+  "tasks": 120,
+  "by_type": {
+    "policy": 2,
+    "team-update": 600,
+    "amendment": 33,
+    "contract": 220,
+    "crm": 220,
+    "digest": 10,
+    "finance-memo": 20,
+    "forecast": 55,
+    "email": 4170,
+    "meeting": 2017,
+    "agent-note": 40,
+    "ticket": 1420
+  },
+  "command": "bun eval/generators/model-ladder-gen.ts --seed 20261002 --scale wide"
+}

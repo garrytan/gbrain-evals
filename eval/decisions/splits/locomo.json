@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "benchmark": "locomo",
+  "salt": "gbrain-evals-heldout-split-v1",
+  "method": "whole conversations ordered by sha256(salt, NUL, conversation id) ascending; first ceil(n * dev_fraction) are dev",
+  "dev_fraction": 0.3,
+  "dev": [
+    "conv-44",
+    "conv-47",
+    "conv-48"
+  ],
+  "sealed": [
+    "conv-26",
+    "conv-30",
+    "conv-41",
+    "conv-42",
+    "conv-43",
+    "conv-49",
+    "conv-50"
+  ],
+  "created_at": "2026-10-04",
+  "note": "Split before any system ran on LoCoMo. 7 sealed conversations are fewer than the comparator default of 10 clusters, so the sealed split is diagnostic evidence, never a primary confirmation."
+}

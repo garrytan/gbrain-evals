@@ -308,3 +308,21 @@ export function nonInferiorityP(stats: PairedDelta, tolerance: number, direction
   for (const d of stats.bootstrap) if (sign * d <= boundary + 1e-12) atOrBelow++;
   return (atOrBelow + 1) / (draws + 1);
 }
+
+/**
+ * One-sided cluster-bootstrap p-value for superiority by at least `minEffect`
+ * (in metric units, oriented so a larger value is better): the share of
+ * bootstrap deltas at or below `minEffect`. Rejecting (p <= alpha) means the
+ * lower bound of a (1 - 2 * alpha) interval sits above `minEffect`. With
+ * `minEffect` 0 this is a plain one-sided superiority test.
+ */
+export function superiorityP(stats: PairedDelta, minEffect: number, direction: 'higher' | 'lower'): number | null {
+  if (!finite(minEffect) || minEffect < 0) throw new Error('superiority minimum effect must be a finite number >= 0');
+  if (!stats.bootstrap.length) return null;
+  const sign = direction === 'higher' ? 1 : -1;
+  const draws = stats.bootstrap.length;
+  if (draws === 1) return sign * stats.bootstrap[0] > minEffect ? 0 : 1;
+  let atOrBelow = 0;
+  for (const d of stats.bootstrap) if (sign * d <= minEffect + 1e-12) atOrBelow++;
+  return (atOrBelow + 1) / (draws + 1);
+}

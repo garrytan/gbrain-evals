@@ -1,0 +1,436 @@
+{
+  "summary": {
+    "model": "claude-sonnet-5-5",
+    "n": 60,
+    "spent_usd": 0.1818,
+    "grammar": {
+      "correct": 16,
+      "wrong": 5,
+      "unsupported": 27,
+      "not_applicable": 12
+    },
+    "llm": {
+      "correct": 42,
+      "wrong": 0,
+      "none": 0
+    },
+    "llm_only_correct": 28,
+    "grammar_only_correct": 2,
+    "by_family": {
+      "investor->founders": {
+        "n": 12,
+        "grammar": 4,
+        "llm": 12
+      },
+      "advisor->founders": {
+        "n": 12,
+        "grammar": 4,
+        "llm": 12
+      },
+      "founder->investors": {
+        "n": 12,
+        "grammar": 4,
+        "llm": 8
+      },
+      "co-investors": {
+        "n": 12,
+        "grammar": 3,
+        "llm": 10
+      },
+      "founder->other-portfolio": {
+        "n": 12,
+        "grammar": 1,
+        "llm": 0
+      }
+    }
+  },
+  "rows": [
+    {
+      "fam": "investor->founders",
+      "text": "Which founders started the companies Priya Taylor has put money into?",
+      "grammar": "correct",
+      "llm": "correct"
+    },
+    {
+      "fam": "investor->founders",
+      "text": "priya taylor's investments – who founded those companies?",
+      "grammar": "unsupported",
+      "grammar_reason": "more than one candidate entity",
+      "llm": "correct"
+    },
+    {
+      "fam": "investor->founders",
+      "text": "Could you tell me who the founders are of each company in which Priya Taylor has invested?",
+      "grammar": "unsupported",
+      "grammar_reason": "more than one candidate entity",
+      "llm": "correct"
+    },
+    {
+      "fam": "investor->founders",
+      "text": "Which founders started the companies Fiona Moore put money into?",
+      "grammar": "correct",
+      "llm": "correct"
+    },
+    {
+      "fam": "investor->founders",
+      "text": "fiona moore invested in which companies, and who founded them?",
+      "grammar": "unsupported",
+      "grammar_reason": "coordination constraints are not planned (\"and\")",
+      "llm": "correct"
+    },
+    {
+      "fam": "investor->founders",
+      "text": "Could you tell me who the founders are of the companies in which Fiona Moore has invested?",
+      "grammar": "unsupported",
+      "grammar_reason": "more than one candidate entity",
+      "llm": "correct"
+    },
+    {
+      "fam": "investor->founders",
+      "text": "Which founders started the companies Kate Lopez has put money into?",
+      "grammar": "correct",
+      "llm": "correct"
+    },
+    {
+      "fam": "investor->founders",
+      "text": "kate lopez investments, who founded those companies",
+      "grammar": "unsupported",
+      "grammar_reason": "more than one candidate entity",
+      "llm": "correct"
+    },
+    {
+      "fam": "investor->founders",
+      "text": "Could you tell me who the founders are of the companies in which Kate Lopez has invested?",
+      "grammar": "unsupported",
+      "grammar_reason": "more than one candidate entity",
+      "llm": "correct"
+    },
+    {
+      "fam": "investor->founders",
+      "text": "Who are the founders of the companies Wendy Hernandez has invested in?",
+      "grammar": "correct",
+      "llm": "correct"
+    },
+    {
+      "fam": "investor->founders",
+      "text": "wendy hernandez investments, who started those companies",
+      "grammar": "unsupported",
+      "grammar_reason": "more than one candidate entity",
+      "llm": "correct"
+    },
+    {
+      "fam": "investor->founders",
+      "text": "Could you tell me which individuals founded the companies in which Wendy Hernandez holds an investment?",
+      "grammar": "not_applicable",
+      "llm": "correct"
+    },
+    {
+      "fam": "advisor->founders",
+      "text": "Which people started the companies that Tina Wang advises?",
+      "grammar": "correct",
+      "llm": "correct"
+    },
+    {
+      "fam": "advisor->founders",
+      "text": "tina wang advises some companies, who founded them",
+      "grammar": "unsupported",
+      "grammar_reason": "more than one candidate entity",
+      "llm": "correct"
+    },
+    {
+      "fam": "advisor->founders",
+      "text": "Could you tell me the founders of the companies for which Tina Wang serves as an advisor?",
+      "grammar": "unsupported",
+      "grammar_reason": "more than one candidate entity",
+      "llm": "correct"
+    },
+    {
+      "fam": "advisor->founders",
+      "text": "Which founders started the companies that Tara Jackson advises?",
+      "grammar": "correct",
+      "llm": "correct"
+    },
+    {
+      "fam": "advisor->founders",
+      "text": "tara jackson advises some companies, who founded them",
+      "grammar": "unsupported",
+      "grammar_reason": "more than one candidate entity",
+      "llm": "correct"
+    },
+    {
+      "fam": "advisor->founders",
+      "text": "Could you tell me who the founders are of the companies on which Tara Jackson serves as an advisor?",
+      "grammar": "unsupported",
+      "grammar_reason": "more than one candidate entity",
+      "llm": "correct"
+    },
+    {
+      "fam": "advisor->founders",
+      "text": "Who are the founders of the companies that Wendy Wilson advises?",
+      "grammar": "correct",
+      "llm": "correct"
+    },
+    {
+      "fam": "advisor->founders",
+      "text": "wendy wilson advises which companies, and who started them?",
+      "grammar": "unsupported",
+      "grammar_reason": "coordination constraints are not planned (\"and\")",
+      "llm": "correct"
+    },
+    {
+      "fam": "advisor->founders",
+      "text": "Could you tell me who established the companies for which Wendy Wilson serves as an advisor?",
+      "grammar": "not_applicable",
+      "llm": "correct"
+    },
+    {
+      "fam": "advisor->founders",
+      "text": "Who are the founders of the companies that Yara Moore advises?",
+      "grammar": "correct",
+      "llm": "correct"
+    },
+    {
+      "fam": "advisor->founders",
+      "text": "yara moore advises which companies, and who started them?",
+      "grammar": "unsupported",
+      "grammar_reason": "coordination constraints are not planned (\"and\")",
+      "llm": "correct"
+    },
+    {
+      "fam": "advisor->founders",
+      "text": "Could you tell me which individuals founded the firms Yara Moore serves as an advisor to?",
+      "grammar": "unsupported",
+      "grammar_reason": "more than one candidate entity",
+      "llm": "correct"
+    },
+    {
+      "fam": "founder->investors",
+      "text": "Who put money into the companies Chris Williams founded?",
+      "grammar": "correct",
+      "llm": "error:SyntaxError: JSON Parse error: Unexpected identifier \"Start\""
+    },
+    {
+      "fam": "founder->investors",
+      "text": "chris williams founded companies, who were the investors in them",
+      "grammar": "unsupported",
+      "grammar_reason": "more than one candidate entity",
+      "llm": "correct"
+    },
+    {
+      "fam": "founder->investors",
+      "text": "Could you tell me which investors backed the businesses established by Chris Williams?",
+      "grammar": "unsupported",
+      "grammar_reason": "more than one candidate entity",
+      "llm": "correct"
+    },
+    {
+      "fam": "founder->investors",
+      "text": "Which investors backed the companies Yara Smith founded?",
+      "grammar": "correct",
+      "llm": "correct"
+    },
+    {
+      "fam": "founder->investors",
+      "text": "yara smith's startups - who put money into them?",
+      "grammar": "not_applicable",
+      "llm": "error:SyntaxError: JSON Parse error: Unexpected identifier \"Yara\""
+    },
+    {
+      "fam": "founder->investors",
+      "text": "Could you tell me who has provided investment to the companies established by Yara Smith?",
+      "grammar": "not_applicable",
+      "llm": "error:SyntaxError: JSON Parse error: Unexpected identifier \"Start\""
+    },
+    {
+      "fam": "founder->investors",
+      "text": "Which investors backed the companies Henry Johnson founded?",
+      "grammar": "correct",
+      "llm": "correct"
+    },
+    {
+      "fam": "founder->investors",
+      "text": "who put money into Henry Johnson's startups",
+      "grammar": "not_applicable",
+      "llm": "error:SyntaxError: JSON Parse error: Unexpected identifier \"Henry\""
+    },
+    {
+      "fam": "founder->investors",
+      "text": "Could you tell me who the investors were in the companies that Henry Johnson started?",
+      "grammar": "unsupported",
+      "grammar_reason": "more than one candidate entity",
+      "llm": "correct"
+    },
+    {
+      "fam": "founder->investors",
+      "text": "Which investors backed the companies Helen Johnson founded?",
+      "grammar": "correct",
+      "llm": "correct"
+    },
+    {
+      "fam": "founder->investors",
+      "text": "helen johnson's startups - who put money into them?",
+      "grammar": "not_applicable",
+      "llm": "correct"
+    },
+    {
+      "fam": "founder->investors",
+      "text": "Could you tell me who has invested in any of the businesses established by Helen Johnson?",
+      "grammar": "not_applicable",
+      "llm": "correct"
+    },
+    {
+      "fam": "co-investors",
+      "text": "Which other investors backed the companies Wendy Hernandez put money into?",
+      "grammar": "correct",
+      "llm": "correct"
+    },
+    {
+      "fam": "co-investors",
+      "text": "who else is invested in the same companies as Wendy Hernandez",
+      "grammar": "not_applicable",
+      "llm": "correct"
+    },
+    {
+      "fam": "co-investors",
+      "text": "Could you tell me which co-investors participated in the companies in which Wendy Hernandez holds investments?",
+      "grammar": "unsupported",
+      "grammar_reason": "more than one candidate entity",
+      "llm": "error:SyntaxError: JSON Parse error: Unexpected identifier \"Wendy\""
+    },
+    {
+      "fam": "co-investors",
+      "text": "Which other investors backed the same companies Chris Jackson put money into?",
+      "grammar": "unsupported",
+      "grammar_reason": "more than one candidate entity",
+      "llm": "correct"
+    },
+    {
+      "fam": "co-investors",
+      "text": "who else is in on the startups chris jackson invested in",
+      "grammar": "not_applicable",
+      "llm": "correct"
+    },
+    {
+      "fam": "co-investors",
+      "text": "Could you tell me which other parties have invested in the companies that Chris Jackson has funded?",
+      "grammar": "unsupported",
+      "grammar_reason": "more than one candidate entity",
+      "llm": "error:SyntaxError: JSON Parse error: Unexpected identifier \"Chris\""
+    },
+    {
+      "fam": "co-investors",
+      "text": "Which other investors backed the same companies Iris Lee put money into?",
+      "grammar": "unsupported",
+      "grammar_reason": "more than one candidate entity",
+      "llm": "correct"
+    },
+    {
+      "fam": "co-investors",
+      "text": "who else is invested in the companies iris lee invested in",
+      "grammar": "correct",
+      "llm": "correct"
+    },
+    {
+      "fam": "co-investors",
+      "text": "Could you tell me which other parties hold stakes in the companies that Iris Lee has invested in?",
+      "grammar": "not_applicable",
+      "llm": "correct"
+    },
+    {
+      "fam": "co-investors",
+      "text": "Which other investors backed the companies Carol Jackson put money into?",
+      "grammar": "correct",
+      "llm": "correct"
+    },
+    {
+      "fam": "co-investors",
+      "text": "who else has money in the same companies as Carol Jackson",
+      "grammar": "not_applicable",
+      "llm": "correct"
+    },
+    {
+      "fam": "co-investors",
+      "text": "Could you tell me which other individuals or firms have invested in the companies in which Carol Jackson holds an investment?",
+      "grammar": "not_applicable",
+      "llm": "correct"
+    },
+    {
+      "fam": "founder->other-portfolio",
+      "text": "Which other companies have the investors behind Chris Williams's startups put money into?",
+      "grammar": "wrong",
+      "llm": "error:SyntaxError: JSON Parse error: Unexpected identifier \"Chris\""
+    },
+    {
+      "fam": "founder->other-portfolio",
+      "text": "chris williams founded some companies, right? what else did the people who invested in those back?",
+      "grammar": "unsupported",
+      "grammar_reason": "more than one candidate entity",
+      "llm": "error:SyntaxError: JSON Parse error: Unexpected EOF"
+    },
+    {
+      "fam": "founder->other-portfolio",
+      "text": "Please list the additional companies in which investors in Chris Williams's founded ventures have also invested.",
+      "grammar": "unsupported",
+      "grammar_reason": "more than one candidate entity",
+      "llm": "error:SyntaxError: JSON Parse error: Unexpected identifier \"Chris\""
+    },
+    {
+      "fam": "founder->other-portfolio",
+      "text": "What other companies have the investors behind Rachel Garcia's founded companies put money into?",
+      "grammar": "wrong",
+      "llm": "error:SyntaxError: JSON Parse error: Unexpected identifier \"Anchor\""
+    },
+    {
+      "fam": "founder->other-portfolio",
+      "text": "rachel garcia startups investors, what else have they invested in",
+      "grammar": "unsupported",
+      "grammar_reason": "more than one candidate entity",
+      "llm": "error:SyntaxError: JSON Parse error: Unexpected EOF"
+    },
+    {
+      "fam": "founder->other-portfolio",
+      "text": "Could you tell me which additional companies were backed by the investors of the businesses that Rachel Garcia founded?",
+      "grammar": "unsupported",
+      "grammar_reason": "more than one candidate entity",
+      "llm": "error:SyntaxError: JSON Parse error: Unexpected identifier \"Start\""
+    },
+    {
+      "fam": "founder->other-portfolio",
+      "text": "Which other companies have backed the investors behind Victor Taylor's startups also put money into?",
+      "grammar": "wrong",
+      "llm": "error:SyntaxError: JSON Parse error: Unexpected EOF"
+    },
+    {
+      "fam": "founder->other-portfolio",
+      "text": "Victor Taylor founded some companies, and those companies had investors; what else did those investors fund?",
+      "grammar": "unsupported",
+      "grammar_reason": "coordination constraints are not planned (\"and\")",
+      "llm": "error:SyntaxError: JSON Parse error: Unexpected identifier \"Start\""
+    },
+    {
+      "fam": "founder->other-portfolio",
+      "text": "What else have the people who invested in Victor Taylor's founded companies invested in?",
+      "grammar": "correct",
+      "llm": "error:SyntaxError: JSON Parse error: Unexpected EOF"
+    },
+    {
+      "fam": "founder->other-portfolio",
+      "text": "What other companies have the investors in Uma Gonzalez's founded companies put money into?",
+      "grammar": "wrong",
+      "llm": "error:SyntaxError: JSON Parse error: Unexpected identifier \"Anchor\""
+    },
+    {
+      "fam": "founder->other-portfolio",
+      "text": "Uma Gonzalez founded some companies. Who invested in those, and what else have those investors backed?",
+      "grammar": "unsupported",
+      "grammar_reason": "coordination constraints are not planned (\"and\")",
+      "llm": "error:SyntaxError: JSON Parse error: Unexpected identifier \"The\""
+    },
+    {
+      "fam": "founder->other-portfolio",
+      "text": "which other companies did the backers of Uma Gonzalez's startups also invest in",
+      "grammar": "wrong",
+      "llm": "error:SyntaxError: JSON Parse error: Unexpected identifier \"Anchor\""
+    }
+  ]
+}

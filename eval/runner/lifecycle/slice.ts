@@ -1,3 +1,4 @@
+import { createServer, type AddressInfo } from 'node:net';
 /**
  * A lifecycle slice cell for the eval-category wave (N1 knowledge update, N5
  * forgetting residue; amendment 5): one gbrain build, one engine, one
@@ -238,6 +239,19 @@ export class SliceCell {
   }
 }
 
+/**
+ * The preferred port when nothing listens on it, else one the OS assigns: concurrent runs (both arms of a decision,
+ * N1 beside N5) never collide on a fixed base port.
+ */
+export async function freePort(preferred: number): Promise<number> {
+  const tryListen = (port: number) => new Promise<number | null>(done => {
+    const srv = createServer();
+    srv.once('error', () => done(null));
+    srv.listen(port, '127.0.0.1', () => { const got = (srv.address() as AddressInfo).port; srv.close(() => done(got)); });
+  });
+  return (await tryListen(preferred)) ?? (await tryListen(0))!;
+}
+
 /** Run `fn` over every engine x interface cell with bounded concurrency; results keep matrix order. */
 export async function runMatrix<T>(
   engines: readonly Engine[], ifaces: readonly Iface[], concurrency: number, basePort: number,
@@ -249,7 +263,7 @@ export async function runMatrix<T>(
   const worker = async () => {
     while (next < cells.length) {
       const k = next++;
-      out[k] = await fn(cells[k][0], cells[k][1], basePort + k);
+      out[k] = await fn(cells[k][0], cells[k][1], await freePort(basePort + k));
     }
   };
   await Promise.all(Array.from({ length: Math.max(1, Math.min(concurrency, cells.length)) }, worker));
