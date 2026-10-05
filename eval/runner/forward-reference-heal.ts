@@ -218,6 +218,7 @@ async function main(): Promise<void> {
   } : null;
   const receipt = p5Receipt({
     category: CATEGORY, gut, startedAt, harnessError, rows: r?.rows ?? [], summary,
+    errorOrigin: harnessError?.startsWith('gbrain sweep --once reported') ? 'sut' : 'harness',
     basis: 'hermetic: provider keys stripped, put_page, the stale-link sweep and wanted_pages only; no model and no paid request',
     resolvedConfig: {
       arm, transport: ARM_NOTES[arm],
@@ -233,7 +234,7 @@ async function main(): Promise<void> {
   });
   writeReceipt(outPath, receipt);
   log(`receipt: ${outPath}`);
-  if (harnessError) console.error(`harness error: ${harnessError}`);
+  if (harnessError) console.error(`${receipt.errors[0].origin === 'sut' ? 'gbrain error' : 'harness error'}: ${harnessError}`);
   if (json) process.stdout.write(JSON.stringify({ run_status: receipt.run_status, summary }, null, 2) + '\n');
   process.exit(harnessError ? 3 : 0);
 }

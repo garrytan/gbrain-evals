@@ -125,7 +125,9 @@ function stdoutJson(text: string): Record<string, unknown> {
  * A remote put_page saves link text without extracting it; the server points
  * remote writers to `gbrain sweep --once`, which delegates to the live server.
  * sweep() runs that command until a pass extracts and removes no link (at most
- * 25 passes), so one call is a complete sweep like the in-process catch-up.
+ * 25 passes), so one call is a complete sweep like the in-process catch-up; a
+ * pass that reports a failed sweep stage (a `*_error` skip) throws with the
+ * server's log line, because the arm then measures nothing.
  * Arm config is set with `gbrain config set --force` before the server starts
  * and read back with `gbrain config get`.
  */
@@ -191,6 +193,11 @@ export async function openP5HttpBrain(gut: GbrainUnderTest, config: Record<strin
         for (; passes < HTTP_SWEEP_MAX_PASSES; ) {
           const report = stdoutJson((await cli(['sweep', '--once', '--source', HTTP_SOURCE, '--json'])).stdout);
           passes++;
+          const failed = (report.skipped as Array<{ reason: string }> | undefined ?? []).filter(x => x.reason.endsWith('_error')).map(x => x.reason);
+          if (failed.length) {
+            const why = driver!.stderrTail.filter(l => l.includes('pass failed')).slice(-1)[0] ?? 'no reason in the server log';
+            throw new Error(`gbrain sweep --once reported ${failed.join(', ')} on pass ${passes}: ${why.replace(/^.*\[sweep\] /, '')}`);
+          }
           const moved = Number(report.linksExtracted ?? 0) + Number(report.linksRemoved ?? 0);
           extracted += Number(report.linksExtracted ?? 0);
           if (moved === 0) break;
@@ -257,10 +264,12 @@ export function custodyInput(argv: readonly string[], seeds: readonly number[], 
   return null;
 }
 
-/** The receipt every P5 runner writes: rows under data.rows; a harness error makes the run an error (exit 3). */
+/** The receipt every P5 runner writes: rows under data.rows; a run-level failure makes the run an error (exit 3). */
 export function p5Receipt(o: {
   category: string; gut: GbrainUnderTest; startedAt: string; basis: string;
   rows: ReadonlyArray<Record<string, unknown>>; summary: unknown; harnessError: string | null;
+  /** Who failed when harnessError is set: the harness (default) or the system under test. */
+  errorOrigin?: 'harness' | 'sut';
   resolvedConfig: Record<string, unknown>; hashes?: Record<string, string>;
 }): Receipt {
   const n = o.rows.length;
@@ -272,7 +281,7 @@ export function p5Receipt(o: {
     run_status: o.harnessError ? 'error' : 'completed',
     ...(o.harnessError ? {} : { verdict: 'pass' as const }),
     n_total: n, n_scored: n, completion_rate: o.harnessError ? 0 : 1,
-    errors: o.harnessError ? [{ probe_id: 'run', origin: 'harness' as const, message: o.harnessError }] : [],
+    errors: o.harnessError ? [{ probe_id: 'run', origin: o.errorOrigin ?? 'harness', message: o.harnessError }] : [],
     publishable: !o.harnessError,
     gbrain_version: o.gut.version,
     gbrain_pin: gbrainPin(),
