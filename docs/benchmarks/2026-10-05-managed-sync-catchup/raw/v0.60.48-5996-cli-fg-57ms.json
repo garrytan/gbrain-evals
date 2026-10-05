@@ -24,7 +24,7 @@
   "platform": "linux",
   "bun": "1.4.2"
  },
- "rerun": "bun scripts/bench/managed-sync-catchup.ts --files 500 --deletes 34 --rtt 57 --rows foreground,cli --max-minutes 15 --label drain-bulk-final --out /home/user/.capy/work/bench-b/final-57.json",
+ "rerun": "bun scripts/bench/managed-sync-catchup.ts --files 500 --deletes 34 --rtt 57 --rows foreground,cli --max-minutes 15 --label drain-bulk-final --out ~/.capy/work/bench-b/final-57.json",
  "rows": [
   {
    "row": "foreground",

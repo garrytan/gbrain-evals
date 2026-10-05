@@ -23,7 +23,7 @@
   "platform": "linux",
   "bun": "1.4.2"
  },
- "rerun": "bun scripts/bench/managed-sync-catchup.ts --files 1500 --deletes 34 --rtt 57 --rows cli --max-minutes 10 --label lanes6c-1500 --pg-port 55452 --proxy-port 55453 --api-port 58494 --keep --out /home/user/.capy/work/bench-lanes/l6c-1500.json",
+ "rerun": "bun scripts/bench/managed-sync-catchup.ts --files 1500 --deletes 34 --rtt 57 --rows cli --max-minutes 10 --label lanes6c-1500 --pg-port 55452 --proxy-port 55453 --api-port 58494 --keep --out ~/.capy/work/bench-lanes/l6c-1500.json",
  "rows": [
   {
    "row": "cli",

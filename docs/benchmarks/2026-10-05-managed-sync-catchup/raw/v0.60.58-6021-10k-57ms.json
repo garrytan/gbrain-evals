@@ -23,7 +23,7 @@
   "platform": "linux",
   "bun": "1.4.2"
  },
- "rerun": "bun scripts/bench/managed-sync-catchup.ts --files 10000 --deletes 34 --receipt-history 300 --pad-words 300 --rtt 57 --rows cli --max-minutes 15 --label combined-10k --pg-port 55452 --proxy-port 55453 --api-port 58494 --out /home/user/.capy/work/bench-15/comb-10k-57.json",
+ "rerun": "bun scripts/bench/managed-sync-catchup.ts --files 10000 --deletes 34 --receipt-history 300 --pad-words 300 --rtt 57 --rows cli --max-minutes 15 --label combined-10k --pg-port 55452 --proxy-port 55453 --api-port 58494 --out ~/.capy/work/bench-15/comb-10k-57.json",
  "rows": [
   {
    "row": "cli",
