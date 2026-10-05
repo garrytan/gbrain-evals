@@ -4537,6 +4537,66 @@
       },
       "golden_test": "bun docs/benchmarks/2026-10-05-heldout-program/recount-starting-line.ts --check",
       "note": "P0 starting line on gbrain master 6622a119e (v0.60.48.0), dev splits only, 2026-10-04. summary.json is recounted from the committed shard rows."
+    },
+    {
+      "claim_id": "mpw-c2-interleave-verdict-mirror",
+      "readme_anchor": "docs/benchmarks/2026-10-05-memory-proof-wave-gbrain-verdicts.md: Interleaved supersession candidates",
+      "artifact_path": "docs/benchmarks/2026-10-05-memory-proof-wave-gbrain-verdicts/c2-interleave-dev/verdict.json",
+      "artifact_sha256": "19a7ae6a101c008bb02a2c70e1ca3998594fa146dc86644496bcf56e3a4cf5b3",
+      "status": "covered",
+      "expected": {
+        "/overall": "inconclusive",
+        "/fixture/gbrain_git_head": "91081f319b724bd1ca1a82d4636d0cc7eadae208",
+        "/sources/0/family/comparisons/0/stats/losses": 2,
+        "/sources/0/family/comparisons/0/stats/wins": 0
+      },
+      "note": "Mirror of gbrain's C2 dev verdict (#6066, measured at 91081f319); copied byte for byte, not re-measured."
+    },
+    {
+      "claim_id": "mpw-supersession-threshold-verdict-mirror",
+      "readme_anchor": "docs/benchmarks/2026-10-05-memory-proof-wave-gbrain-verdicts.md: Supersession threshold per embedding model",
+      "artifact_path": "docs/benchmarks/2026-10-05-memory-proof-wave-gbrain-verdicts/supersession-threshold-dev/verdict.json",
+      "artifact_sha256": "6e30b14a1c33a80bc62bdc3f97b55ab0e436df49253b301a4a154953738fbb72",
+      "status": "covered",
+      "expected": {
+        "/overall": "inconclusive",
+        "/models/voyage:voyage-4/fixture/gbrain_git_head": "7d2cc1c7049ae6820131b91d146d2c950714583d",
+        "/models/voyage:voyage-4/threshold_pick/guarded": 0.95,
+        "/models/voyage:voyage-4/threshold_pick/balanced": 0.94
+      },
+      "note": "Mirror of gbrain's supersession-threshold dev finding (#6066, measured at 7d2cc1c70); copied byte for byte, not re-measured."
+    },
+    {
+      "claim_id": "mpw-pinned-questions-verdict-mirror",
+      "readme_anchor": "docs/benchmarks/2026-10-05-memory-proof-wave-gbrain-verdicts.md: Pinned questions",
+      "artifact_path": "docs/benchmarks/2026-10-05-memory-proof-wave-gbrain-verdicts/c4-pinned-questions/verdict.json",
+      "artifact_sha256": "d35a366d385345035fefe3b719513660abd01e7ff528f9d26c1911ad588657b7",
+      "status": "covered",
+      "expected": {
+        "/overall": "opt_in",
+        "/deciding_run": "run_3",
+        "/measured_build": "garrytan/gbrain@1384a0db",
+        "/run_3/decision/outcome": "tie_anchored_retrieval_wins",
+        "/run_3/leakage/probes": 144,
+        "/metered_spend_usd": 11.8061
+      },
+      "note": "Mirror of gbrain's C4 pinned-questions verdict (#6066; run 3 at 1384a0db, runs 1-2 and the diagnostic attempt inside); copied byte for byte, not re-measured."
+    },
+    {
+      "claim_id": "mpw-entity-anchoring-verdict-mirror",
+      "readme_anchor": "docs/benchmarks/2026-10-05-memory-proof-wave-gbrain-verdicts.md: Entity-anchored query retrieval",
+      "artifact_path": "docs/benchmarks/2026-10-05-memory-proof-wave-gbrain-verdicts/entity-anchoring-query/verdict.json",
+      "artifact_sha256": "3561fd6ed8af02ebea5ab5afd9ba53b63ccfc387813282894a514595268ddc88",
+      "status": "covered",
+      "expected": {
+        "/overall": "off_pending_gate_3",
+        "/measured_build": "garrytan/gbrain@2fa44f149",
+        "/gate_1/status": "pass",
+        "/gate_2/status": "pass",
+        "/gate_3/status": "pending",
+        "/gate_1/metered_spend_usd": 1.5243
+      },
+      "note": "Mirror of gbrain's entity-anchored query retrieval gates (#6066, measured at 2fa44f149); copied byte for byte, not re-measured; gate 3 belongs to the harness lane."
     }
   ]
 }

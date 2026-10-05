@@ -25,7 +25,7 @@ export interface PairRow { split: string; conversation: string; qid: string; d: 
 
 function judgeScores(dir: string): Map<string, number> {
   const out = new Map<string, number>();
-  for (const f of readdirSync(join(dir, 'stages/judge'))) {
+  for (const f of readdirSync(join(dir, 'stages/judge')).sort()) {
     const r = JSON.parse(readFileSync(join(dir, 'stages/judge', f), 'utf8'));
     out.set(r.query_id, typeof r.score === 'number' ? r.score : 0);
   }

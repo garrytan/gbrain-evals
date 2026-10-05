@@ -1200,6 +1200,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'harness-cell.ts': { role: 'public agent-memory benchmark harness: cell launcher (plan, run, resume) behind the metering proxy' },
   'harness-comparator.ts': { role: 'public agent-memory benchmark harness: installs and inspects the pinned comparator server' },
   'memory-proof-wave-dev-power.ts': { role: 'memory proof wave: power simulation rerun with paired variance and conversation effect measured on dev' },
+  'memory-proof-wave-dev-table.ts': { role: 'memory proof wave: collects dev cell summaries into dev-cells.json and copies scrubbed receipts (docs/benchmarks/2026-10-05-memory-proof-wave-dev/); not dispatched' },
   'harness-dev.ts': { role: 'public agent-memory benchmark harness: dev-phase driver (ingest once, tune knobs per target, one cell per target)' },
   'harness-ledger.ts': { role: 'public agent-memory benchmark harness: rebuilds the cell ledger from measured acceptance-cell usage' },
   'harness-smoke.ts': { role: 'public agent-memory benchmark harness: free protocol smoke for every dataset x mode x provider on the stub upstream' },
