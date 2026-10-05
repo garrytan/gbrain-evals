@@ -8,7 +8,7 @@
     "v0.60.48.0_drain_bulk": { "cli_pages_per_min": 13.1, "backlog_10k_pages_per_min": 15.7, "backlog_10k_hours": 10.7, "receipt": "raw/v0.60.48-5996-cli-fg-57ms.json" },
     "v0.60.58.0_master_same_host": { "cli_pages_per_min": 10.6, "receipt": "raw/v0.60.48-master-cli-57ms.json", "note": "master 6622a119 (v0.60.48.0), 10-minute row on the host used for v0.60.58.0 and v0.60.70.0" },
     "v0.60.58.0_diet_admit_ahead": { "cli_pages_per_min": 28.8, "backlog_10k_pages_per_min": 30.9, "backlog_10k_hours": 5.4, "receipts": ["raw/v0.60.58-6021-cli-57ms.json", "raw/v0.60.58-6021-10k-57ms.json"] },
-    "v0.60.72.0_lanes": {
+    "v0.60.73.0_lanes": {
       "lanes4_1500_files": { "steady_pages_per_min": 137.9, "wall_pages_per_min": 115.8, "receipt": "raw/v0.60.70-lanes4-1500-57ms.json" },
       "lanes6_1500_files": { "steady_pages_per_min": 149.9, "wall_pages_per_min": 123.9, "receipt": "raw/v0.60.70-lanes6-1500-57ms.json" },
       "lanes6_10k_files": { "steady_pages_per_min": 152.8, "wall_pages_per_min": 137.4, "backlog_10k_hours": 1.2, "receipt": "raw/v0.60.70-lanes6-10k-57ms.json" },
@@ -17,8 +17,8 @@
   },
   "foreground_put_page_57ms": {
     "v0.60.58.0": { "idle_p95_s": 14.9, "during_p95_s": 15.1, "failures": 0, "receipt": "raw/v0.60.58-6021-foreground-57ms.json" },
-    "v0.60.72.0_lanes6": { "idle_p95_s": 14.1, "during_p95_s": 15.8, "failures": 0, "receipt": "raw/v0.60.70-lanes6-foreground-57ms.json" },
+    "v0.60.73.0_lanes6": { "idle_p95_s": 14.1, "during_p95_s": 15.8, "failures": 0, "receipt": "raw/v0.60.70-lanes6-foreground-57ms.json" },
     "note": "idle p95 comes from 5 writes per run (about +/-1 s of noise)"
   },
-  "rtt_0ms": { "v0.60.58.0_cli_pages_per_min": 544.9, "v0.60.72.0_lanes6_cli_pages_per_min": 740.6, "receipts": ["raw/v0.60.58-6021-cli-0ms.json", "raw/v0.60.70-lanes6-cli-0ms.json"] }
+  "rtt_0ms": { "v0.60.58.0_cli_pages_per_min": 544.9, "v0.60.73.0_lanes6_cli_pages_per_min": 740.6, "receipts": ["raw/v0.60.58-6021-cli-0ms.json", "raw/v0.60.70-lanes6-cli-0ms.json"] }
 }

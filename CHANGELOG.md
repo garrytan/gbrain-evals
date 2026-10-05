@@ -8,7 +8,7 @@ This records what each gbrain-evals release changed and what its measurements me
 
 gbrain measured its managed-sync catch-up on a 57 ms latency rig across three releases
 ([#5996](https://github.com/garrytan/gbrain/pull/5996), v0.60.48.0; [#6021](https://github.com/garrytan/gbrain/pull/6021),
-v0.60.58.0; [#6098](https://github.com/garrytan/gbrain/pull/6098), v0.60.72.0). Pages per minute went from 3.4
+v0.60.58.0; [#6098](https://github.com/garrytan/gbrain/pull/6098), v0.60.73.0). Pages per minute went from 3.4
 (v0.60.39.0, one page per run) to 13.1, 28.8 and finally 152.8 in steady state with six lanes saving groups at once
 (137.4 over the whole 10k run; the 10,000-file backlog from about 49 h to about 1.2 h). Foreground page writes stay
 within about 1.7 s of idle at p95 with no failures. The bench output is copied into
