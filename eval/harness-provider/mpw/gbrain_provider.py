@@ -500,8 +500,10 @@ class GbrainMemoryProvider(MemoryProvider):
             return docs, None, meta_out
         if lane not in ("facts", "combined"):
             raise GbrainRetrieveError(f"unknown lane {lane!r}: use raw, facts or combined")
-        pages, page_meta, saved = self._query_pages(u, query, user_id, expand_default=False)
+        # One lock across both calls: another unit's retrieve may otherwise close this unit's child in between.
         with self._lock:
+            u = self._ensure_unit(user_id or "_all", create=False)
+            pages, page_meta, saved = self._query_pages(u, query, user_id, expand_default=False)
             child = u.child
             assert child is not None
             try:
