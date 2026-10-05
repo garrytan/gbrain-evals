@@ -15,7 +15,7 @@ describes gbrain as this repository pins it today; the changelog at the bottom r
 | Pinned product | gbrain master [`739e5cc`](https://github.com/garrytan/gbrain/tree/739e5cc89ca43b9b9351f0f203c7b12a7c0c571c) (v0.60.46.0), declared as `gbrain` in `package.json` |
 | Newer gbrain builds also measured | v0.60.49.0 (`b9ee931`), v0.60.60.0 (multi-relation planner) and v0.60.62.0 (`51f865d78`, entity recall). Results from them say so. |
 | Fixed-purpose aliases | `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), used only by the experiments that name them |
-| This repository | gbrain-evals v0.10.23 (`VERSION`) |
+| This repository | gbrain-evals v0.10.24 (`VERSION`) |
 
 This repository installs gbrain master `739e5cc`. Some results below were measured at earlier commits; each names
 its commit. The search modes have been identical since v0.48.4.0, so retrieval results from those commits describe
@@ -75,8 +75,8 @@ a model call without a measured gain.
 ## How gbrain compares
 
 Other systems publish different metrics on different protocols, so these comparisons use only numbers we can put on
-the same footing, and say so where we cannot. Sources, dates and every row we could not match are in
-[comparisons and their protocols](docs/comparison-systems.md).
+the same footing, and say so where we cannot. This page describes the other systems by kind; their names, versions,
+sources and every row we could not match are in [comparisons and their protocols](docs/comparison-systems.md).
 
 **Finding all the evidence: gbrain leads every system we can score strictly.** A question counts only if every
 required session is in the top five.
@@ -85,23 +85,24 @@ required session is in the top five.
 |---|---|---|
 | **gbrain**, `balanced` with Voyage reranker | **95.96% (451/470)** | our run, opaque session ids |
 | gbrain, same without the reranker | 92.34% (434/470) | our run, opaque session ids |
-| MemPalace hybrid v4 + LLM rerank | 90.0% (423/470) | our strict recount of their saved rankings |
-| ContextFit + embedding fusion | 87.45% (411/470) | self-reported, their own harness |
-| MemPalace raw (ChromaDB) | 85.7% (403/470) | our strict recount of their saved rankings |
+| A verbatim-session memory system, hybrid search + LLM rerank | 90.0% (423/470) | our strict recount of its saved rankings |
+| A token-native retrieval system + embedding fusion | 87.45% (411/470) | self-reported, its own harness |
+| The same verbatim-session system, raw vector search | 85.7% (403/470) | our strict recount of its saved rankings |
 
 Many headline LongMemEval "R@5" scores of 95% to 100% count a question as found when any one required session
 appears; on that looser metric gbrain finds at least one for 470 of 470. Limits: gbrain returns five chunks while
-MemPalace returns five whole sessions, the configuration was chosen on these 470 questions, and embedders and
+the verbatim-session system returns five whole sessions, the configuration was chosen on these 470 questions, and embedders and
 chunking differ, so this compares pipelines, not components.
 
 **Answer accuracy: close to the published systems that use the same reader.** With `gpt-5.4` as the reader,
-gbrain's retrieval answers 89.4%; Zep publishes 90.2% and Memoria 84.97% with the same reader model. Judges,
+gbrain's retrieval answers 89.4%; a temporal knowledge-graph service publishes 90.2% and a database-backed memory
+system 84.97% with the same reader model. Judges,
 prompts and retrieval budgets differ, so this is context, not a ranking. Published results across systems range from
 81.6% to 96.1%.
 
 **Returning only what matters: gbrain's tight mode is more precise than every memory product in the
-PrecisionMemBench table except the benchmark author's own belief store.** Its mean precision is 0.586, against 0.22
-for supermemory, 0.09 for Zep and 0.06 for mem0 as listed upstream; the author's belief store scores 1.00. Upstream rows may use different
+PrecisionMemBench table except the benchmark author's own belief store.** Its mean precision is 0.586, against 0.22,
+0.09 and 0.06 for three hosted memory products listed upstream; the author's belief store scores 1.00. Upstream rows may use different
 denominators and machines.
 
 **Concept search: level with a vector store, when both are reranked.** gbrain 130 of 181, vectors with the same
@@ -112,7 +113,7 @@ mid-tier models.** On five frontier models gbrain and plain Markdown files with 
 at the ceiling (the oracle scores 97.6%). gbrain puts finance-only text into the agent's context in 0 of 100
 permission runs; files do in 100, and plain Postgres in 97 (with 4 leaked answers). gbrain costs about twice as much
 per task as files. On the earlier six-model set, gbrain finished 75.7% against 72.8% for files, and was clearly
-ahead of plain Postgres (+9.7 points) and Anthropic's memory tool (+12.3).
+ahead of plain Postgres (+9.7 points) and a model provider's built-in memory tool (+12.3).
 
 ## Known limits
 
@@ -234,13 +235,17 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](CHANGELOG.md); this section records what this page said and why it changed.
 
+### 2026-10-05: Other systems described by kind, not by name
+
+The "How gbrain compares" section and the changelog entries below describe other memory systems by kind (a verbatim-session memory system, a token-native retrieval system, a temporal knowledge-graph service, hosted memory products, a model provider's memory tool) instead of naming them. Their names, versions and sources stay in [comparisons and their protocols](docs/comparison-systems.md), which this page links. No number changed.
+
 ### 2026-10-05: Rewritten as what gbrain does, current results and how it compares
 
 gbrain-evals v0.10.23. The page now has three parts above the changelog, replacing a run of dated findings and "Update, October 2/3/4" blocks:
 
 - **What gbrain does:** the capabilities in plain words (hybrid retrieval, relationships, whole-conversation delivery, correctness, the agent operator contract, the write path), with a table naming the gbrain under test (pin `739e5cc`, v0.60.46.0, its aliases and the newer builds also measured).
 - **Current results:** one table of every headline number with its gbrain commit and report, including results the page had not carried: Cat 40 on five frontier models (95.6%, 0 of 100 finance leaks), the multi-relation planner's held-out pass (24 better, 0 worse) and PrecisionMemBench precision (0.586).
-- **How gbrain compares:** strict LongMemEval retrieval against MemPalace and ContextFit (now led by the 451/470 opaque-id recount instead of the September 6 449/470), answer accuracy beside Zep and Memoria with the same `gpt-5.4` reader, PrecisionMemBench against the upstream table, concept search against reranked vectors, and Cat 40 against files, Postgres and the memory tool.
+- **How gbrain compares:** strict LongMemEval retrieval against other systems' saved rankings (now led by the 451/470 opaque-id recount instead of the September 6 449/470), answer accuracy beside published systems with the same `gpt-5.4` reader, PrecisionMemBench against the upstream table, concept search against reranked vectors, and Cat 40 against files, Postgres and a built-in memory tool.
 - **Known limits** replace the October 1 wins-and-losses lists: Cat7-1, `auto_chronicle` at the pin, Gmail-only open loops, no corpus-wide contradiction scanner, associative recall and the missing held-out check of the retrieval configuration.
 - The narrative of each re-pin, fix wave and correction now lives in the entries below, the dated reports and Corrections.
 
@@ -258,7 +263,7 @@ gbrain-evals v0.10.23. The page now has three parts above the changelog, replaci
 
 ### 2026-10-04: New section on agents operating gbrain (Cat 40 and Cat 41)
 
-[`da5093b`](https://github.com/garrytan/gbrain-evals/commit/da5093b). A new "When an agent operates gbrain" section describes both categories as they stand. Cat 41 runs pinned Claude Code and Codex CLI sessions through 17 risky requests. The candidate passes its gate with 0 consent violations across 66 safety sessions, 0 false "no notes" answers and token overhead of at most +5.9%, and it finishes 96 of 102 sessions. Released v0.60.35.0, for comparison, has 25 violating steps in 12 safety sessions and finishes 78 of 102. Cat 40 (Model Ladder) swaps only the memory (files with `grep`, Anthropic's memory tool, plain Postgres, gbrain's MCP server) across 50 company-knowledge tasks. The section adds run commands (about $80 for both), and the "What should you learn here?" table gains a row for each category.
+[`da5093b`](https://github.com/garrytan/gbrain-evals/commit/da5093b). A new "When an agent operates gbrain" section describes both categories as they stand. Cat 41 runs pinned Claude Code and Codex CLI sessions through 17 risky requests. The candidate passes its gate with 0 consent violations across 66 safety sessions, 0 false "no notes" answers and token overhead of at most +5.9%, and it finishes 96 of 102 sessions. Released v0.60.35.0, for comparison, has 25 violating steps in 12 safety sessions and finishes 78 of 102. Cat 40 (Model Ladder) swaps only the memory (files with `grep`, a model provider's memory tool, plain Postgres, gbrain's MCP server) across 50 company-knowledge tasks. The section adds run commands (about $80 for both), and the "What should you learn here?" table gains a row for each category.
 
 ### 2026-10-04: Re-pin to gbrain `739e5cc`
 
@@ -322,7 +327,7 @@ gbrain-evals v0.10.23. The page now has three parts above the changelog, replaci
 
 [`88d0b19`](https://github.com/garrytan/gbrain-evals/commit/88d0b19), gbrain-evals v0.10.1. This release reworked the page after the September 28 audit:
 
-- A new "Where gbrain stands" section adds a strict `recall_all@5` table. gbrain shows 449/470 with the reranker and 439/470 without. MemPalace, from our strict recounts, shows 423/470, 376/424 and 403/470, and ContextFit self-reports 411/470. Limits and an answer-accuracy paragraph follow; the paragraph gives the leak-free 439/500 (87.8%) and says we claim no answer ranking.
+- A new "Where gbrain stands" section adds a strict `recall_all@5` table. gbrain shows 449/470 with the reranker and 439/470 without. Other systems, from our strict recounts of saved rankings, show 423/470, 376/424 and 403/470, and one self-reports 411/470. Limits and an answer-accuracy paragraph follow; the paragraph gives the leak-free 439/500 (87.8%) and says we claim no answer ranking.
 - The 433/500 claim is marked invalid because the answer model saw `answer_` session ids. A new paragraph shows full sessions beat chunks (89/100 against 65/100).
 - The concept claim now states that gbrain without a reranker (102/181) trails vector search (118/181). The relationship claim widens to 145 questions (first-place hits 14% to 24%) and adds the paraphrase check: 0.411 in both arms at `b80cad6`, and 33 of 145 triggered at `608a174`.
 - The write-side paragraph adds evidence-verified retention (58.2% to 74.9%) and an in-sample caveat. A new Corrections section lists the invalid or overstated numbers, including the 49.1% `graph-oracle-parse` row and the May calibration result.
@@ -338,11 +343,11 @@ gbrain-evals v0.10.23. The page now has three parts above the changelog, replaci
 
 ### 2026-09-02: LongMemEval rows updated for the v0.48.2.0 re-run
 
-[`4ceb7f9`](https://github.com/garrytan/gbrain-evals/commit/4ceb7f9), gbrain-evals v0.6.1. Both LongMemEval rows replace 83.4% with the September 2 re-run on the cleaned Sept-2025 revision: 93.19% `recall_all@5` reranker off (438/470) and 95.32% with `voyage:rerank-2.5` (448/470), plus per-type figures. The competitor cell now uses our strict recounts of MemPalace (85.7% raw, 90.0% with LLM rerank) and ContextFit's self-reported 87.45%. The run commands switch to the cleaned dataset URL, `VOYAGE_API_KEY` and the five published arms. Several cells drop their "first run scored 61.5%" and audit narrative in favor of present-tense statements, and the "benchmarks that bite back" bullet now names the committed gates.
+[`4ceb7f9`](https://github.com/garrytan/gbrain-evals/commit/4ceb7f9), gbrain-evals v0.6.1. Both LongMemEval rows replace 83.4% with the September 2 re-run on the cleaned Sept-2025 revision: 93.19% `recall_all@5` reranker off (438/470) and 95.32% with `voyage:rerank-2.5` (448/470), plus per-type figures. The comparison cell now uses our strict recounts of another system's saved rankings (85.7% raw, 90.0% with LLM rerank) and a third system's self-reported 87.45%. The run commands switch to the cleaned dataset URL, `VOYAGE_API_KEY` and the five published arms. Several cells drop their "first run scored 61.5%" and audit narrative in favor of present-tense statements, and the "benchmarks that bite back" bullet now names the committed gates.
 
 ### 2026-09-01: Outside-review remediation and claim hygiene
 
-[`29e9ac9`](https://github.com/garrytan/gbrain-evals/commit/29e9ac9), gbrain-evals v0.6.0. The LongMemEval head-to-head row now says these are retrieval-component numbers, not QA accuracy. It records MemPalace's 96.6% as any-hit (per arXiv 2604.21284) and adds ContextFit's self-reported 84.3% and 87.45% All@5, so it claims no `recall_all` lead. Cat 35 leakage changes from "zero" to 1.2% (1/86), and the Cat 34 rows gain links to committed receipts and the 0.552 codex seam. The PrecisionMemBench 0.582 becomes an upper bound (supermemory now 0.22 upstream), the default precision moves from 0.076 to 0.075, and the relational 97.9%/49.1% row is flagged as pre-audit.
+[`29e9ac9`](https://github.com/garrytan/gbrain-evals/commit/29e9ac9), gbrain-evals v0.6.0. The LongMemEval head-to-head row now says these are retrieval-component numbers, not QA accuracy. It records another system's 96.6% as any-hit and adds a third system's self-reported 84.3% and 87.45% All@5, so it claims no `recall_all` lead. Cat 35 leakage changes from "zero" to 1.2% (1/86), and the Cat 34 rows gain links to committed receipts and the 0.552 codex seam. The PrecisionMemBench 0.582 becomes an upper bound (the best hosted product now 0.22 upstream), the default precision moves from 0.076 to 0.075, and the relational 97.9%/49.1% row is flagged as pre-audit.
 
 ### 2026-09-01: LongMemEval erratum resolved at 83.4%
 
@@ -350,7 +355,7 @@ gbrain-evals v0.10.23. The page now has three parts above the changelog, replaci
 
 ### 2026-08-31: Eval audit and the head-to-head section
 
-[`bd5ba0d`](https://github.com/garrytan/gbrain-evals/commit/bd5ba0d), gbrain-evals v0.5.0 (per `CHANGELOG.md`; the commit subject says BrainBench v0.3.0). A new "Where gbrain beats the field" table compares five arenas (LongMemEval 97.6%, Cat 35 88.1%, Cat 34, PrecisionMemBench 0.582 against supermemory 0.43, relational 49.1% P@5). A "three things nobody else does" list cites the 35-agent audit (239 findings, 236 fixed). "Where gbrain lands today" is renamed "The numbers, report by report", and the LongMemEval row gains an any-hit erratum. The page now describes what CI actually runs and adds a keys note for `eval:run` (`OPENAI_API_KEY`, about $2 first run), `--top-k 5` in the commands and the exact-SHA pin in reproduce steps.
+[`bd5ba0d`](https://github.com/garrytan/gbrain-evals/commit/bd5ba0d), gbrain-evals v0.5.0 (per `CHANGELOG.md`; the commit subject says BrainBench v0.3.0). A new "Where gbrain beats the field" table compares five arenas (LongMemEval 97.6%, Cat 35 88.1%, Cat 34, PrecisionMemBench 0.582 against a hosted product's 0.43, relational 49.1% P@5). A "three things nobody else does" list cites the 35-agent audit (239 findings, 236 fixed). "Where gbrain lands today" is renamed "The numbers, report by report", and the LongMemEval row gains an any-hit erratum. The page now describes what CI actually runs and adds a keys note for `eval:run` (`OPENAI_API_KEY`, about $2 first run), `--top-k 5` in the commands and the exact-SHA pin in reproduce steps.
 
 ### 2026-08-31: Cat 35 republished at 88.1% and Cat 34 row added
 
@@ -366,15 +371,15 @@ gbrain-evals v0.10.23. The page now has three parts above the changelog, replaci
 
 ### 2026-05-30: Streamlined around LongMemEval and PrecisionMemBench added
 
-[`8fa09ff`](https://github.com/garrytan/gbrain-evals/commit/8fa09ff), gbrain-evals v0.2.0. A "Headline result" quote puts LongMemEval 97.60% R@5 against MemPalace's 96.6% at the top, and the results table adds PrecisionMemBench (#2, 0.582 precision with the opt-in gate). A new PrecisionMemBench section reports the 0.076 default, the 0.582 adaptive result and the narrow-probe caveat, with run commands. The page drops the Cat 2 catalog row, the paid `eval:brainbench` commands and the design-doc section, condenses the layout and contributing sections, and lists `VERSION` and `CHANGELOG.md`.
+[`8fa09ff`](https://github.com/garrytan/gbrain-evals/commit/8fa09ff), gbrain-evals v0.2.0. A "Headline result" quote puts LongMemEval 97.60% R@5 against another system's 96.6% at the top, and the results table adds PrecisionMemBench (#2, 0.582 precision with the opt-in gate). A new PrecisionMemBench section reports the 0.076 default, the 0.582 adaptive result and the narrow-probe caveat, with run commands. The page drops the Cat 2 catalog row, the paid `eval:brainbench` commands and the design-doc section, condenses the layout and contributing sections, and lists `VERSION` and `CHANGELOG.md`.
 
 ### 2026-05-24: v0.40.6.0 snapshot headline
 
-[`9ecc5b2`](https://github.com/garrytan/gbrain-evals/commit/9ecc5b2). "Latest results" now leads with the gbrain v0.40.6.0 comprehensive snapshot and three headline claims: LongMemEval 97.60% R@5 against MemPalace's 96.6%, BrainBench 49.1% P@5 (38 points over vector RAG), and zero retrieval regression across 20 releases. The table gains snapshot and Cat 14+15 calibration rows, and Hindsight is removed from the comparison mentions.
+[`9ecc5b2`](https://github.com/garrytan/gbrain-evals/commit/9ecc5b2). "Latest results" now leads with the gbrain v0.40.6.0 comprehensive snapshot and three headline claims: LongMemEval 97.60% R@5 against another system's 96.6%, BrainBench 49.1% P@5 (38 points over vector RAG), and zero retrieval regression across 20 releases. The table gains snapshot and Cat 14+15 calibration rows, and one comparator is removed from the comparison mentions.
 
 ### 2026-05-07: LongMemEval result and public-benchmark family
 
-[`c2d26e6`](https://github.com/garrytan/gbrain-evals/commit/c2d26e6). The intro now covers two families, BrainBench and public benchmarks. A "Latest results" section leads with LongMemEval `_s` at 97.60% R@5 (+1.0 point over MemPalace raw) and a dated table of reports. The quickstart splits into LongMemEval (dataset download, keys, batch runner, about $2 first run) and BrainBench. A "Public benchmarks" table lists the LongMemEval splits, ConvoMem and LoCoMo, and the layout adds the LongMemEval runner files, the embed cache and `docs/comparison-systems.md`.
+[`c2d26e6`](https://github.com/garrytan/gbrain-evals/commit/c2d26e6). The intro now covers two families, BrainBench and public benchmarks. A "Latest results" section leads with LongMemEval `_s` at 97.60% R@5 (+1.0 point over another system's raw retrieval) and a dated table of reports. The quickstart splits into LongMemEval (dataset download, keys, batch runner, about $2 first run) and BrainBench. A "Public benchmarks" table lists the LongMemEval splits, ConvoMem and LoCoMo, and the layout adds the LongMemEval runner files, the embed cache and `docs/comparison-systems.md`.
 
 ### 2026-04-23: Adapters renamed to plain English
 

@@ -8,6 +8,14 @@ This records what each gbrain-evals release changed and what its measurements me
 
 gbrain #6080 (v0.60.69.0) makes a Korean name end at a non-Hangul character or at an attached title, particle or copula form. On 7.3M characters of public Korean text, word-internal false matches fell from 1,041 to 11, while 65 of 74 real name mentions still matched. Precision over real names plus word-internal matches rose from 6.6% to 85.5%. Report, scripts and per-match labels: [docs/benchmarks/2026-10-05-hangul-mention-boundaries.md](docs/benchmarks/2026-10-05-hangul-mention-boundaries.md). Labeling cost $0.36.
 
+## [0.10.24] - 2026-10-05
+
+### README describes other memory systems by kind
+
+README's "How gbrain compares" section and its changelog no longer name other memory projects; each is described by
+kind (for example "a verbatim-session memory system"). Names, versions and sources stay in
+[comparisons and their protocols](docs/comparison-systems.md), which README links. No measurement changed; $0.
+
 ## [0.10.23] - 2026-10-05
 
 ### Top-level docs read as the current state, with a changelog per document
