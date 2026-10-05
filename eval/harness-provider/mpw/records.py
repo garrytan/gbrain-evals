@@ -105,6 +105,7 @@ class JudgeRecord:
     rubric: list[dict] | None = None
     requests: list[dict] = field(default_factory=list)
     error: str | None = None
+    details: dict = field(default_factory=dict)  # dataset metrics, e.g. PrecisionMemBench precision/recall
 
 
 _SAFE = re.compile(r"[^A-Za-z0-9._-]+")

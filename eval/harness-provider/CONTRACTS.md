@@ -60,6 +60,24 @@ startMeteringProxy({
 - An optional `x-mpw-tag` request header is recorded and stripped.
 - An unknown token answers 401 without dispatch.
 
+Additions beyond the signature above (all additive): the returned object
+also has `baseUrls` (proxy base URL per provider, for gbrain's
+`provider_base_urls.voyage`), `exhausted` (true after any refusal) and
+`lastRefusal` (the exact refusal text). Refusal bodies never contain 429,
+500, 502, 503, 504, 529 or "rate", because the harness Gemini, OpenAI and
+Groq clients retry on those substrings; a zero-width space breaks them.
+Settlement: decoded usage reconciles; a 4xx without usage settles at $0
+(the provider rejected it before doing work); anything else without usage
+is charged at its reservation. Free requests (model listings, Gemini
+countTokens) are forwarded without a reservation. The CLI form takes
+`--upstream <provider>=<url>` for stubs.
+
+`eval/runner/metering-proxy-testkit.ts` exports `createMeteredTestCell` and
+`assertZeroBalanceBlocks({ label, spawn, trigger, stop })`, the per-process
+zero-balance check (refused at zero balance with no upstream hit and no new
+committed spend; reaches the stub and settles with budget). The comparator
+server launcher must pass it under label `comparator`.
+
 `eval/runner/stub-upstream.ts` serves deterministic OpenAI, Anthropic, Gemini,
 Groq and Voyage responses (schema-valid structured output, hash embeddings,
 usage blocks) for keyless tests, the mode smoke and the quickstart fixture.
@@ -114,6 +132,41 @@ an isolated HOME there.
 ## Scorer (`mpw/scorer.py`)
 
 Typed outcomes from `mpw/records.py`; strict judge field validation; a fixed
-scheduled denominator; BEAM rubric completeness. The re-judge
-(`mpw/rejudge.py`) blinds and shuffles answers from several cells and calls
-each dataset's own judge, asserting its model id.
+scheduled denominator; BEAM rubric completeness. Published differences from
+the harness scorer: `SCORER.md`.
+
+```python
+judge_answer(*, dataset, split, query, answer, judge_llm=None, expected_judge_model=None,
+             cell_id, retrieved_original=None, cache_dir=None, retries=1) -> JudgeRecord
+aggregate(scheduled_ids, records, cell_id=None) -> dict
+resolve_judge_llm(dataset)           # dataset.default_judge_llm() else get_judge_llm()
+map_retrieved(documents, id_map)     # RetrieveRecord dicts -> harness Documents, ids mapped back
+```
+
+- `query` is the original harness `Query` (gold answers, rubric meta);
+  `answer` an AnswerRecord or its dict. `judge_llm` and
+  `expected_judge_model` are required for open-ended datasets and ignored
+  for MCQ and retrieval; a model mismatch raises `JudgeModelMismatch`.
+- `judge_answer` never raises on a judge problem: it returns `judge_failure`.
+  Failure outcomes on the answer are passed through without a judge call
+  (score 0, or None for `incomplete_ingest`). Answers that decline are
+  `abstention` and are judged like any other answer.
+- `score` is in [0, 1]; `correct` is the judge's boolean, or `score >= 0.5`
+  for BEAM. `rubric` holds BEAM's per-item judgments, `requests` every judge
+  call with its attempts, `details` dataset metrics (PrecisionMemBench).
+- `aggregate` keys: `scheduled`, `counts` (every outcome plus `missing`),
+  `judged`, `correct`, `accuracy`, `mean_score`, `complete`, `missing_ids`,
+  `judge_failure_ids`, `incomplete_ingest_ids`. It raises on unscheduled,
+  duplicate, foreign-cell or inconsistent records.
+
+## Re-judge (`mpw/rejudge.py`)
+
+`python -m mpw.rejudge --cell <dir> --cell <dir> [--seed N] --out <dir> --judge-model provider:model [--cache <dir>]`
+
+Reads `cell.json` keys `cell_id` (or `id`), `spec.dataset`, `spec.split`,
+`spec.provider` (optional) and `resolved.schedule` (dataset query ids), and
+`stages/answer/<qid>.json`. Refuses fewer than two cells, duplicate cell
+ids, different dataset/split/schedule, retrieval datasets and a judge whose
+model id differs from `--judge-model`. Writes
+`<out>/<cell_id>/stages/judge/<qid>.json`, `<out>/unblinding.json`,
+`<out>/summary.json` and the judge cache (`<out>/judge-cache` by default).
