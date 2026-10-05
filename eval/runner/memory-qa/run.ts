@@ -17,7 +17,8 @@
  * and the reader's calls go to the cell's lease proxy, and the lease (not this
  * process's budget run) is the spending authority.
  *
- * Systems: `gbrain` (default) is the legacy in-process path behind the
+ * Systems: `full-context`, `no-memory` and `plain-hybrid` are the D1
+ * controls (eval/runner/systems/baselines.ts). `gbrain` (default) is the legacy in-process path behind the
  * `MemorySystem` interface (eval/runner/systems/gbrain.ts), pinned by the
  * keyless golden; every other system gets sanitized input (opaque ids, dated
  * turns, the question and its date), sessions in event-time order, a
@@ -74,6 +75,8 @@ import { decideError, DecideError, renderOperatorMessage } from '../decisions/er
 import { appendAttempt, canonicalize, DEFAULT_MAX_ATTEMPTS, freezeManifest, HARNESS_FAILURES, PRODUCT_FAILURES, readAttempts, writeCanonical, type Outcome } from './outcomes.ts';
 import { checkSealedDestinations, sealedPaths, type SealedPaths } from './sealed-profile.ts';
 import { FakeMemorySystem } from '../systems/fake.ts';
+import { FullContextSystem, NoMemorySystem, PlainHybridSystem } from '../systems/baselines.ts';
+import { cachedOpenAIEmbedder, PG_EMBED_DIMS } from '../cat40/pg-arm.ts';
 import { GbrainLegacySystem, GbrainShootoutSystem, type GbrainModules } from '../systems/gbrain.ts';
 import { HttpMemorySystem } from '../systems/http.ts';
 import { packContext, RENDERER_VERSION, strictSources, TOKENIZER, validateSources, type ContextMode } from '../systems/render.ts';
@@ -332,7 +335,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
     process.env.OPENAI_BASE_URL = `${a.providerProxy}/gbrain/openai/v1`;
     process.env.ANTHROPIC_BASE_URL = `${a.providerProxy}/gbrain/anthropic`;
   }
-  const needsPaid = !a.providerProxy && ((inProcessGbrain && a.embed === 'real') || a.system === 'gbrain-shootout' || a.qa.mode !== 'none' || a.facts !== 'none');
+  const needsPaid = !a.providerProxy && (((inProcessGbrain || a.system === 'plain-hybrid') && a.embed === 'real') || a.system === 'gbrain-shootout' || a.qa.mode !== 'none' || a.facts !== 'none');
   if (!['none', 'reader', 'think'].includes(a.qa.mode)) throw new Error('--qa must be none, reader or think');
   if (!['none', 'conversation'].includes(a.facts)) throw new Error('--facts must be none or conversation');
   if (!['sessions', 'facts'].includes(a.qa.context)) throw new Error('--qa-context must be sessions or facts');
@@ -342,7 +345,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
     const perQa: Record<string, number> = { none: 0, reader: a.benchmark === 'lme-s' ? 0.05 : 0.01, think: 0.08 };
     const mine = manifest.expected.length;
     const factSessions = a.facts === 'none' ? 0 : myConvs.reduce((n, id) => n + (byConv.get(id)?.sessions.length ?? 0), 0);
-    const estimate = Math.max(0.05, Math.round(((((inProcessGbrain && a.embed === 'real') ? perQuestion[a.benchmark] ?? 0.02 : 0) + perQa[a.qa.mode] * a.qa.runs) * mine + FACTS_USD_PER_SESSION * factSessions) * 100) / 100);
+    const estimate = Math.max(0.05, Math.round((((((inProcessGbrain || a.system === 'plain-hybrid') && a.embed === 'real') ? perQuestion[a.benchmark] ?? 0.02 : 0) + perQa[a.qa.mode] * a.qa.runs) * mine + FACTS_USD_PER_SESSION * factSessions) * 100) / 100);
     try { requirePaidArm(a.argv, { arm: `memory-qa ${a.benchmark}`, estimateUsd: estimate }); }
     catch (e) {
       throw decideError({ code: 'PAID_FLAGS_MISSING', message: (e as Error).message, why: 'real embeddings and the reading lane call paid providers, and every paid request is reserved in the budget ledger first',
@@ -392,8 +395,14 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   const system: MemorySystem = legacy ? new GbrainLegacySystem(mods!, { ...a.pins, ...a.config }, identity, { topK: a.topK, as: extractFacts ? 'conversation' : 'note', rerankPinned })
     : a.system === 'gbrain-shootout' ? new GbrainShootoutSystem(mods!, a.config, identity)
     : a.system === 'fake' ? new FakeMemorySystem()
+    : a.system === 'full-context' ? new FullContextSystem()
+    : a.system === 'no-memory' ? new NoMemorySystem()
+    : a.system === 'plain-hybrid' ? new PlainHybridSystem(a.embed === 'hash'
+      ? async texts => texts.map(t => hashEmbed(t, PG_EMBED_DIMS))
+      : cachedOpenAIEmbedder(join(sealed?.embedCache ?? process.env.GBRAIN_EVALS_EMBED_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'embed-cache'), 'plain-hybrid-te3l-1536.json')),
+      a.embed === 'hash' ? `hash@${PG_EMBED_DIMS} (keyless control)` : undefined)
     : /^https?:\/\//.test(a.system) ? new HttpMemorySystem(a.system, { markers: sanitizer.markers })
-    : (() => { throw new Error(`--system must be gbrain, gbrain-shootout, fake or a shim URL (got ${a.system})`); })();
+    : (() => { throw new Error(`--system must be gbrain, gbrain-shootout, fake, full-context, no-memory, plain-hybrid or a shim URL (got ${a.system})`); })();
   const capabilities = await system.capabilities();
   const policy: RetrievalPolicy = { name: `${capabilities.system}:${a.policy}`, mode: a.policy, settings: { ...(capabilities.retrieval_policies?.[a.policy] ?? {}), ...a.policySettings } };
   const brain = () => (system as GbrainLegacySystem).brain;
@@ -524,7 +533,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
             const rel = new Set(q.gold);
             const retrieved = toSessions(atK.sources);
             row = { ...base, system: system.name, policy: policy.name, context: a.context,
-              ...(at5.measurable ? { recall_all_at_5: recallAllAtK(toSessions(at5.sources), rel, 5), recall_any_at_5: recallAnyAtK(toSessions(at5.sources), rel, 5),
+              ...(at5.measurable && capabilities.retrieval_metrics !== 'not-applicable' ? { recall_all_at_5: recallAllAtK(toSessions(at5.sources), rel, 5), recall_any_at_5: recallAnyAtK(toSessions(at5.sources), rel, 5),
                 recall_all_at_10: recallAllAtK(toSessions(at10.sources), rel, 10), ndcg_at_10: ndcgAtK(toSessions(at10.sources), new Map(q.gold.map(g => [g, 1])), 10) } : { recall_measurable: false }),
               retrieved, items_returned: res.items.length, fanout_mean: atK.fanout_mean, fanout_max: atK.fanout_max,
               provenance: { exact: res.items.filter(i => i.provenance_status === 'exact').length, partial: res.items.filter(i => i.provenance_status === 'partial').length, unavailable: res.items.filter(i => i.provenance_status === 'unavailable').length },

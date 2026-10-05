@@ -15,6 +15,9 @@ import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { FakeMemorySystem, serveProtocol } from '../../eval/runner/systems/fake.ts';
+import { FullContextSystem, NoMemorySystem, PlainHybridSystem } from '../../eval/runner/systems/baselines.ts';
+import { PG_EMBED_DIMS } from '../../eval/runner/cat40/pg-arm.ts';
+import { hashEmbed } from '../../eval/runner/memory-qa/run.ts';
 import { HttpMemorySystem } from '../../eval/runner/systems/http.ts';
 import { validateSources } from '../../eval/runner/systems/render.ts';
 import { opaqueNamespace, opaqueSourceId, SanitizerLeakError } from '../../eval/runner/systems/sanitize.ts';
@@ -48,6 +51,8 @@ afterAll(() => { ts.stop(); py?.proc.kill(); });
 type Target = { name: string; system: () => MemorySystem; url?: () => string };
 const targets: Target[] = [
   { name: 'TypeScript fake (in process)', system: () => new FakeMemorySystem() },
+  { name: 'full-context control', system: () => new FullContextSystem() },
+  { name: 'plain-hybrid control (hash vectors)', system: () => new PlainHybridSystem(async texts => texts.map(t => hashEmbed(t, PG_EMBED_DIMS)), 'hash') },
   { name: 'TypeScript fake (HTTP)', system: () => new HttpMemorySystem(ts.url), url: () => ts.url },
   { name: 'Python reference shim (HTTP)', system: () => { if (!py) throw new Error(pyError ?? 'python shim missing'); return new HttpMemorySystem(py.url); }, url: () => py!.url },
   ...(process.env.SHIM_URL ? [{ name: `live shim ${process.env.SHIM_URL}`, system: () => new HttpMemorySystem(process.env.SHIM_URL!, { timeoutMs: 900_000 }), url: () => process.env.SHIM_URL! }] : []),
@@ -120,6 +125,30 @@ for (const t of targets) {
 }
 
 describe('harness side of the contract', () => {
+  test('the no-memory control stores nothing and returns nothing', async () => {
+    const sys = new NoMemorySystem();
+    await sys.reset(NS_A);
+    expect((await sys.ingestSession(NS_A, session(S1, 'kitten Pebble'), null)).items_created).toBe(0);
+    expect((await sys.retrieve(NS_A, { text: 'kitten Pebble', query_time: null }, POLICY)).items).toEqual([]);
+    await expect(sys.retrieve(NS_A, { text: 'x', query_time: null }, { ...POLICY, mode: 'bad' as never })).rejects.toBeInstanceOf(SystemError);
+  });
+
+  test('the full-context control returns the whole namespace in event order, and plain hybrid fuses keyword and vector ranks', async () => {
+    const full = new FullContextSystem();
+    await full.reset(NS_A);
+    await full.ingestSession(NS_A, session(S1, 'first'), '2023-01-01T00:00:00');
+    await full.ingestSession(NS_A, session(S2, 'second'), '2023-02-01T00:00:00');
+    expect((await full.retrieve(NS_A, { text: 'anything', query_time: null }, POLICY)).items.map(i => [i.rank, i.source_ids[0], i.valid_from])).toEqual([[1, S1, '2023-01-01T00:00:00'], [2, S2, '2023-02-01T00:00:00']]);
+    const hybrid = new PlainHybridSystem(async texts => texts.map(t => hashEmbed(t, PG_EMBED_DIMS)), 'hash');
+    try {
+      await hybrid.reset(NS_A);
+      for (const [i, text] of ['the bakery on Main Street sells sourdough', 'we hiked to the waterfall at dawn', 'my sourdough starter is named Clint'].entries()) await hybrid.ingestSession(NS_A, session(opaqueSourceId('h', String(i)), text), null);
+      const res = await hybrid.retrieve(NS_A, { text: 'sourdough starter name', query_time: null }, { ...POLICY, settings: { k: 2 } });
+      expect(res.items.map(i => i.source_ids[0])).toEqual([opaqueSourceId('h', '2'), opaqueSourceId('h', '0')]);
+      expect(res.applied_settings).toMatchObject({ k: 2, pool: 50, rrf_k: 60 });
+    } finally { await hybrid.close(); }
+  });
+
   test('the TypeScript and Python fakes return identical items for identical input', async () => {
     if (!py) throw new Error(pyError ?? 'python shim missing');
     const a = new HttpMemorySystem(ts.url), b = new HttpMemorySystem(py.url);

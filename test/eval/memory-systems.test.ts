@@ -245,6 +245,15 @@ describe('memory-qa with a MemorySystem', () => {
     expect(receipt.system.capabilities.retrieval_policies).toEqual({ 'vendor-default': {}, 'fixed-evidence': { limit: 40 } });
   }, 120_000);
 
+  test('the D1 controls run end to end: context controls carry no recall, plain hybrid does', async () => {
+    for (const [system, measurable] of [['full-context', false], ['no-memory', false], ['plain-hybrid', true]] as const) {
+      const { receipt, rows } = await runArm(args(join(tmp, `d1-${system}`), '--system', system, '--embed', 'hash'));
+      expect(receipt.run_status).toBe('complete');
+      expect(rows.every(r => r.outcome === 'scored')).toBe(true);
+      expect(rows.filter(r => !r.abstention).every(r => (r.recall_measurable !== false) === measurable)).toBe(true);
+    }
+  });
+
   test('flags: native context and budgets are accepted for shootout systems; gbrain-only lanes are refused elsewhere', async () => {
     const a = args(join(tmp, 'x'), '--system', 'fake', '--context', 'native', '--budget-tokens', '8000', '--policy', 'fixed-evidence');
     expect([a.context, a.qa.budgetTokens, a.policy]).toEqual(['native', 8000, 'fixed-evidence']);
