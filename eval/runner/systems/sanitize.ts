@@ -33,8 +33,17 @@ export class SanitizerLeakError extends Error {
 export const opaqueNamespace = (salt: string, conversation: string) => `ns-${createHash('sha256').update(`shootout-ns\u0000${salt}\u0000${conversation}`).digest('hex').slice(0, 16)}`;
 export const opaqueSourceId = (conversation: string, session: string) => `src-${occurrenceId(conversation, session)}`;
 
-/** An event time as ISO 8601 (minute precision, no zone), or null when the dataset's form is unknown. */
+const MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+
+/**
+ * An event time as ISO 8601 (minute precision, no zone), or null when the
+ * dataset's form is unknown. Beyond the forms `isoSessionDate` reads
+ * (LoCoMo, LongMemEval, ISO), BEAM's `March-15-2024` reads as that day at
+ * midnight. The legacy gbrain pages keep the raw string.
+ */
 export function eventTimeOf(session: Session): string | null {
+  const beam = session.date?.match(/^([A-Za-z]+)-(\d{1,2})-(\d{4})$/);
+  if (beam && MONTHS.includes(beam[1].toLowerCase())) return `${beam[3]}-${String(MONTHS.indexOf(beam[1].toLowerCase()) + 1).padStart(2, '0')}-${beam[2].padStart(2, '0')}T00:00:00`;
   const iso = isoSessionDate(session.date);
   if (!iso) return null;
   return /^\d{4}-\d{2}-\d{2}$/.test(iso) ? `${iso}T00:00:00` : iso;
@@ -61,18 +70,26 @@ export function findLeaks(text: string, markers: readonly string[]): string[] {
 
 /**
  * Raw ids, categories and the abstention marker for a corpus. A candidate
- * shorter than six characters, or one that appears in the sessions' own text
- * or in any question text, is dropped so honest traffic never trips it.
+ * shorter than six characters, or one that appears as a word in the sessions'
+ * own text or in any question text, is dropped so honest traffic never trips
+ * it. Words split on anything but letters, digits, `_`, `:` and `-`; one pass
+ * over the corpus, so a LongMemEval haystack set stays linear.
  */
 export function forbiddenMarkers(corpus: Pick<Corpus, 'conversations' | 'questions'>): string[] {
-  const candidates = new Set<string>(['_abs']);
+  const candidates = new Set<string>();
   for (const c of corpus.conversations) { candidates.add(c.id); for (const s of c.sessions) candidates.add(s.id); }
   for (const q of corpus.questions) { candidates.add(q.id); candidates.add(q.category); for (const g of q.gold) candidates.add(g); }
-  const haystack = [
-    ...corpus.conversations.flatMap(c => c.sessions.flatMap(s => s.turns.map(t => `${t.speaker}\n${t.content}`))),
-    ...corpus.questions.map(q => q.question),
-  ].join('\n');
-  return [...candidates].filter(m => m === '_abs' ? !haystack.includes(m) : m.length >= 6 && !haystack.includes(m)).sort();
+  const words = new Set<string>();
+  let abs = false;
+  const scan = (text: string) => {
+    if (!abs && text.includes('_abs')) abs = true;
+    for (const w of text.split(/[^A-Za-z0-9_:-]+/)) if (w.length >= 6 && candidates.has(w)) words.add(w);
+  };
+  for (const c of corpus.conversations) for (const s of c.sessions) for (const t of s.turns) { scan(t.speaker); scan(t.content); }
+  for (const q of corpus.questions) scan(q.question);
+  const out = [...candidates].filter(m => m.length >= 6 && !words.has(m));
+  if (!abs) out.push('_abs');
+  return out.sort();
 }
 
 export class Sanitizer {
@@ -101,9 +118,14 @@ export class Sanitizer {
     return { source_id: this.source(conversation, s.id), turns: s.turns.map(t => ({ role: roleOf(t.speaker), speaker: t.speaker, content: t.content })) };
   }
 
-  question(q: MemoryQuestion): PublicQuestion {
+  /**
+   * The question as a system sees it. A dataset that dates no questions
+   * (LoCoMo) is asked at `fallback`, the latest event time of the
+   * conversation, the same date the reader prompt falls back to.
+   */
+  question(q: MemoryQuestion, fallback: string | null = null): PublicQuestion {
     const iso = q.question_date ? isoSessionDate(q.question_date) : null;
-    return { text: q.question, query_time: iso ? (/^\d{4}-\d{2}-\d{2}$/.test(iso) ? `${iso}T00:00:00` : iso) : null };
+    return { text: q.question, query_time: iso ? (/^\d{4}-\d{2}-\d{2}$/.test(iso) ? `${iso}T00:00:00` : iso) : fallback };
   }
 
   /**

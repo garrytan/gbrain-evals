@@ -81,7 +81,7 @@ import { GbrainLegacySystem, GbrainShootoutSystem, type GbrainModules } from '..
 import { HttpMemorySystem } from '../systems/http.ts';
 import { packContext, RENDERER_VERSION, strictSources, TOKENIZER, validateSources, type ContextMode } from '../systems/render.ts';
 import { Sanitizer, SanitizerLeakError } from '../systems/sanitize.ts';
-import { SystemError, type Item, type MemorySystem, type RetrievalPolicy } from '../systems/types.ts';
+import { SystemError, type CapabilityRecord, type Item, type MemorySystem, type RetrievalPolicy, type SessionInput } from '../systems/types.ts';
 
 export interface RunArgs {
   benchmark: string;
@@ -160,9 +160,11 @@ export interface MemoryQaRow {
   applied_settings?: Record<string, unknown>;
   truncated?: boolean;
   harness_ms?: number;
-  ingest?: { sessions: number; failed_sessions: number; synthetic_times: number; finish_ready: boolean; completeness: string; degraded: boolean };
+  ingest?: { sessions: number; failed_sessions: number; synthetic_times: number; finish_ready: boolean; completeness: string; readiness_probe: ProbeResult; degraded: boolean };
   qa_context?: { mode: ContextMode; tokenizer: string; renderer: string; budget_tokens: number | null; tokens: number; item_ids: string[]; source_ids: string[]; prompt_sha256: string };
   qa_prompt?: string;
+  query_time?: string | null;
+  query_time_source?: 'question' | 'last-session' | 'none';
 }
 
 const DEFAULT_PINS: Record<string, string> = { 'search.mode': 'balanced', 'search.reranker.enabled': 'false', 'search.autocut': 'false' };
@@ -276,6 +278,26 @@ export function runConfigHash(a: RunArgs, gut: GbrainUnderTest, corpus: Corpus):
 }
 
 const errorText = (e: unknown) => (e as Error).message.slice(0, 300);
+
+export type ProbeResult = 'found' | 'missed' | 'not-measurable' | 'skipped';
+
+/**
+ * Readiness probe (engineering review P2): after the system reports its
+ * background work done, ask for a verbatim passage of the last session it
+ * ingested and expect that session among the cited sources. A miss means the
+ * quiescence signal lied, so the conversation is ingest-degraded. Systems
+ * without provenance, and the context controls, cannot be probed this way.
+ */
+export async function readinessProbe(system: MemorySystem, ns: string, last: SessionInput | undefined, policy: RetrievalPolicy, capabilities: CapabilityRecord): Promise<ProbeResult> {
+  if (!last) return 'skipped';
+  if (capabilities.retrieval_metrics === 'not-applicable' || capabilities.provenance?.status === 'unavailable') return 'not-measurable';
+  const passage = [...last.turns].sort((x, y) => y.content.length - x.content.length)[0]?.content.slice(0, 300);
+  if (!passage?.trim()) return 'skipped';
+  try {
+    const res = await system.retrieve(ns, { text: passage, query_time: null }, { ...policy, mode: 'fixed-evidence', settings: { ...(capabilities.retrieval_policies?.['fixed-evidence'] ?? {}) } });
+    return res.items.some(i => i.source_ids.includes(last.source_id)) ? 'found' : 'missed';
+  } catch { return 'missed'; }
+}
 
 /** A system's retrieval failure as a row: its kind decides whether it is a product miss, a harness failure or a budget stop. */
 function failureRow(base: MemoryQaRow, e: unknown): MemoryQaRow {
@@ -407,7 +429,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   const policy: RetrievalPolicy = { name: `${capabilities.system}:${a.policy}`, mode: a.policy, settings: { ...(capabilities.retrieval_policies?.[a.policy] ?? {}), ...a.policySettings } };
   const brain = () => (system as GbrainLegacySystem).brain;
   const fidelity = inProcessGbrain ? (system as GbrainLegacySystem).fidelity : { embedding_deferred_pages: 0, rerank_missing_queries: 0, reranked_queries: 0 };
-  const ingestStats = { conversations: 0, sessions: 0, failed_sessions: 0, synthetic_times: 0, degraded_conversations: 0, finish_timeouts: 0 };
+  const ingestStats = { conversations: 0, sessions: 0, failed_sessions: 0, synthetic_times: 0, degraded_conversations: 0, finish_timeouts: 0, readiness_probe_misses: 0 };
   const invalidReasons: string[] = [];
   let written = 0;
   const record = (row: MemoryQaRow) => { appendAttempt(a.output, row as unknown as Parameters<typeof appendAttempt>[1]); written++; };
@@ -421,6 +443,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
       let importError: string | null = null;
       let degraded: MemoryQaRow['ingest'] | undefined;
       const ingested = new Set<string>();
+      let lastEventTime: string | null = null;
       try { await system.reset(ns); } catch (e) { importError = `reset failed: ${errorText(e)}`; }
       if (legacy && !importError) {
         for (const s of conv.sessions) {
@@ -446,9 +469,12 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
         if (!importError) { try { finish = await system.finishIngest(ns, a.finishTimeoutS); } catch (e) { finish = { ready: false, completeness: `error: ${errorText(e)}` }; } }
         ingestStats.conversations++; ingestStats.sessions += plan.length; ingestStats.failed_sessions += failed; ingestStats.synthetic_times += synthetic;
         if (!finish.ready) ingestStats.finish_timeouts++;
-        const isDegraded = !importError && (failed / Math.max(1, plan.length) > 0.01 || !finish.ready);
+        const probe = !importError && finish.ready ? await readinessProbe(system, ns, plan.at(-1)?.input, policy, capabilities) : 'skipped';
+        if (probe === 'missed') ingestStats.readiness_probe_misses++;
+        const isDegraded = !importError && (failed / Math.max(1, plan.length) > 0.01 || !finish.ready || probe === 'missed');
         if (isDegraded) ingestStats.degraded_conversations++;
-        degraded = { sessions: plan.length, failed_sessions: failed, synthetic_times: synthetic, finish_ready: finish.ready, completeness: finish.completeness, degraded: isDegraded };
+        degraded = { sessions: plan.length, failed_sessions: failed, synthetic_times: synthetic, finish_ready: finish.ready, completeness: finish.completeness, readiness_probe: probe, degraded: isDegraded };
+        lastEventTime = plan.map(p => p.event_time).filter((t): t is string => !!t).sort().pop() ?? null;
       }
       const factsBySession = new Map<string, SavedFact[]>();
       let convFacts: Pick<MemoryQaRow, 'facts_count' | 'facts_unresolved_share' | 'facts_extract_error'> = {};
@@ -525,14 +551,15 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
         } else {
           const t0 = performance.now();
           try {
-            const res = await system.retrieve(ns, sanitizer.question(q), policy);
+            const pq = sanitizer.question(q, lastEventTime);
+            const res = await system.retrieve(ns, pq, policy);
             const harnessMs = performance.now() - t0;
             validateSources(res.items, ingested);
             const toSessions = (srcs: string[]) => srcs.map(s => sanitizer.sessionOf(ns, s)!);
             const at5 = strictSources(res.items, 5), at10 = strictSources(res.items, 10), atK = strictSources(res.items, a.topK);
             const rel = new Set(q.gold);
             const retrieved = toSessions(atK.sources);
-            row = { ...base, system: system.name, policy: policy.name, context: a.context,
+            row = { ...base, system: system.name, policy: policy.name, context: a.context, query_time: pq.query_time, query_time_source: q.question_date ? 'question' : pq.query_time ? 'last-session' : 'none',
               ...(at5.measurable && capabilities.retrieval_metrics !== 'not-applicable' ? { recall_all_at_5: recallAllAtK(toSessions(at5.sources), rel, 5), recall_any_at_5: recallAnyAtK(toSessions(at5.sources), rel, 5),
                 recall_all_at_10: recallAllAtK(toSessions(at10.sources), rel, 10), ndcg_at_10: ndcgAtK(toSessions(at10.sources), new Map(q.gold.map(g => [g, 1])), 10) } : { recall_measurable: false }),
               retrieved, items_returned: res.items.length, fanout_mean: atK.fanout_mean, fanout_max: atK.fanout_max,

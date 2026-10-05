@@ -199,6 +199,7 @@ describe('memory-qa with a MemorySystem', () => {
     const fake = new FakeMemorySystem();
     const original = fake.retrieve.bind(fake);
     fake.retrieve = async (ns, q, p) => {
+      if (p.mode === 'fixed-evidence') return original(ns, q, p);
       const n = (calls.get(q.text) ?? 0) + 1; calls.set(q.text, n);
       if (/vet visit/.test(q.text) && n === 1) throw new SystemError('timeout', 'vendor timed out');
       if (/hallway/.test(q.text)) throw new SystemError('product_error', 'always broken');
@@ -252,6 +253,27 @@ describe('memory-qa with a MemorySystem', () => {
       expect(rows.every(r => r.outcome === 'scored')).toBe(true);
       expect(rows.filter(r => !r.abstention).every(r => (r.recall_measurable !== false) === measurable)).toBe(true);
     }
+  });
+
+  test('readiness probe: a shim whose quiescence signal lies (indexes late) marks its conversations ingest-degraded; an honest one passes', async () => {
+    const late = new FakeMemorySystem();
+    const original = late.retrieve.bind(late);
+    const probed = new Set<string>();
+    late.retrieve = async (ns, q, p) => {
+      if (!probed.has(ns)) { probed.add(ns); return { items: [], applied_settings: {}, truncated: false }; }
+      return original(ns, q, p);
+    };
+    const server = serveProtocol(late);
+    try {
+      const { receipt, rows } = await runArm(args(join(tmp, 'late-index'), '--system', server.url));
+      expect((receipt as any).ingest).toMatchObject({ conversations: 4, readiness_probe_misses: 4, degraded_conversations: 4 });
+      expect(rows.every(r => r.outcome === 'ingest_degraded' && r.ingest?.readiness_probe === 'missed')).toBe(true);
+      expect((receipt as any).outcomes.ingest_degraded).toBe(8);
+    } finally { server.stop(); }
+    const honest = await runArm(args(join(tmp, 'honest-index'), '--system', 'fake'));
+    expect(honest.rows.every(r => r.ingest?.readiness_probe === 'found' && r.outcome === 'scored')).toBe(true);
+    const control = await runArm(args(join(tmp, 'probe-control'), '--system', 'no-memory'));
+    expect(control.rows.every(r => r.ingest?.readiness_probe === 'not-measurable' && r.outcome === 'scored')).toBe(true);
   });
 
   test('flags: native context and budgets are accepted for shootout systems; gbrain-only lanes are refused elsewhere', async () => {
