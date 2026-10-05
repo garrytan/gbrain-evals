@@ -1,10 +1,10 @@
 # Comparing memory systems without comparing different things
 
-Updated September 9, 2026. Historical rows keep their original measurement or access dates. A source check confirms what an author published; it does not mean we reproduced the system.
+This page compares gbrain, as this repository pins it (master `739e5cc`, v0.60.46.0), with published results for other memory systems. Every row keeps its own measurement or access date; external sources were last checked September 9, 2026. A source check confirms what an author published; it does not mean we reproduced the system. Everything above [Changelog](#changelog) is current.
 
 Before comparing two memory scores, ask what each system had to do. Find one useful conversation? Find every conversation needed? Return only the right facts? Write the right answer? Those are different jobs, and a system can do one well while struggling with another.
 
-Gbrain now has evidence for each stage. The [September 6 experiment](benchmarks/2026-09-06-longmemeval-ranker-wave.md) found all labeled evidence on 449/470 answerable LongMemEval questions, or 95.53%, and answered 433/500 questions correctly, or 86.6%; that answer figure is invalid because the answer model saw `answer_` evidence-session ids. A [leak-free re-run on September 29](benchmarks/2026-09-29-longmemeval-opaque-qa.md), with the reranker off and the notes reader, answered 439/500 (87.8%). The [September 9 refresh](benchmarks/2026-09-09-retrieval-refresh.md) also measures how much irrelevant memory search returns. Its tight adaptive configuration with reranking has mean precision 0.5859 and recall 0.8250 on PrecisionMemBench, while broad hybrid returns many more distractions.
+Gbrain has evidence for each stage. Its release configuration finds all labeled evidence on 451/470 answerable LongMemEval questions (95.96%, opaque session ids, gbrain `109b992`; [recount](benchmarks/2026-10-04-longmemeval-opaque-followups.md)). With opaque ids its house reader answers 439/500 (87.8%) with the reranker off and 453/500 with it on, and a `gpt-5.4` reader answers 447/500 on the reranker-off sessions ([re-run](benchmarks/2026-09-29-longmemeval-opaque-qa.md)). The [September 9 refresh](benchmarks/2026-09-09-retrieval-refresh.md) measures how much irrelevant memory search returns: the tight adaptive configuration with reranking has mean precision 0.5859 and recall 0.8250 on PrecisionMemBench, while broad hybrid returns many more distractions.
 
 Those results give engineers useful choices. They do not establish one universal ranking of memory systems. Use [retrieval lessons](retrieval-lessons.md) for the practical conclusions and [settings](settings.md) for the controls behind them.
 
@@ -63,15 +63,15 @@ The detailed source table below preserves earlier external snapshots. Rows sayin
 
 On September 9 we downloaded MemPalace's three cited per-question files and joined their first five ranked session IDs to official cleaned gold. We reproduced every saved any-hit flag with zero mismatches. Strict counts were 403/470 for raw retrieval, 376/424 for the held-out hybrid subset, and 423/470 for the full reranked run. These confirm the strict recomputations first published here September 2.
 
-The held-out file has 443/450 any-hits, which rounds to 98.4%. This page formerly printed 442/450 beside that percentage; the count was wrong. Excluding abstentions, its any-hit count is 417/424. Raw retrieval has 454/470 any-hits and the reranked file has 467/470. These counts let readers compare the same metric while keeping the different subsets visible.
+The held-out file has 443/450 any-hits, which rounds to 98.4%. Excluding abstentions, its any-hit count is 417/424. Raw retrieval has 454/470 any-hits and the reranked file has 467/470. These counts let readers compare the same metric while keeping the different subsets visible.
 
-Gbrain's strict scores are higher than those particular saved MemPal rankings. That is a useful result for the tested pipelines. It does not isolate why. Embedding models, chunking, candidate selection, and ranking all differ. Earlier versions of this page attributed the gap to embedding quality without a matched embedder experiment. We no longer make that causal claim.
+Gbrain's strict scores are higher than those particular saved MemPal rankings. That is a useful result for the tested pipelines. It does not isolate why. Embedding models, chunking, candidate selection, and ranking all differ, and no matched embedder experiment exists, so this page makes no claim that embedding quality explains the gap.
 
 [MemPalace's own benchmark notes](https://github.com/MemPalace/mempalace/blob/main/benchmarks/BENCHMARKS.md) disclose that the final move to its historical 100% any-hit result was developed against three known failing questions. Its later committed rerank reproduction is 496/500 any-hit, or 99.2%. The tuned headline, held-out subset, and full reproduction are separate observations. An [independent architecture analysis](https://arxiv.org/abs/2604.21284) also discusses the any-hit distinction; the counts here come directly from the primary ranking files.
 
 ContextFit publishes both All@ and Any@. Its [whitepaper](https://www.context.fit/whitepaper.html), checked September 9, still reports 84.3% All@5 for its token-native path and 87.45% for optional embedding fusion, with route-gated Any@5 of 98.94%. Its earlier [May artifact](https://github.com/garrytan/gbrain-evals/issues/10) reported All@5 83.62%, All@10 91.28%, Any@5 96.60%, Any@10 98.72%, and MRR 0.8999. Those describe different recorded configurations.
 
-The previous version of this page alleged a gold-ID prefix check in ContextFit's reranker. We could not substantiate that claim in the primary repository and have removed it. A narrower, verifiable qualification remains: at commit `be36da8da17fdec0ee23bc6ecb1e2d7912eea325`, optional coverage and temporal paths in [the benchmark runner](https://github.com/ContextFit/cf/blob/be36da8da17fdec0ee23bc6ecb1e2d7912eea325/benchmarks/longmemeval_contextfit.py#L691) route using the dataset's `question_type`. The [May 16 token-only command](https://github.com/ContextFit/cf/blob/master/benchmarks/longmemeval_token_only_leaderboard_evidence_20260516.md) enables coverage reranking. That warrants a matched query-only check; it does not establish that every later whitepaper row used the same path or that the ranker read answer IDs.
+We found no gold-ID prefix check in ContextFit's primary repository. A narrower, verifiable qualification applies: at commit `be36da8da17fdec0ee23bc6ecb1e2d7912eea325`, optional coverage and temporal paths in [the benchmark runner](https://github.com/ContextFit/cf/blob/be36da8da17fdec0ee23bc6ecb1e2d7912eea325/benchmarks/longmemeval_contextfit.py#L691) route using the dataset's `question_type`. The [May 16 token-only command](https://github.com/ContextFit/cf/blob/master/benchmarks/longmemeval_token_only_leaderboard_evidence_20260516.md) enables coverage reranking. That warrants a matched query-only check; it does not establish that every later whitepaper row used the same path or that the ranker read answer IDs.
 
 Lethe's [paper](https://arxiv.org/html/2606.15903) reports 93.8% session R@5 over 500 questions. The strict variant is not established by that label, so it belongs beside a qualified any-hit comparison. [Agentmemory](https://github.com/rohitg00/agentmemory/blob/main/benchmark/LONGMEMEVAL.md) publishes 95.2% R@5 for BM25 plus vectors and 86.2% for BM25 alone. Those are useful local-stack references, not evidence that hosted embeddings explain every difference from gbrain.
 
@@ -79,7 +79,7 @@ The original LongMemEval paper's [Table 3](https://arxiv.org/html/2410.10813v2) 
 
 ## Answer quality depends on the reader too
 
-Gbrain's 86.6% answer result is invalid: on September 28, 2026 we found that the answer model saw each session's raw id, and LongMemEval's evidence sessions, and only those, have ids starting with `answer_`. A [leak-free re-run on September 29](benchmarks/2026-09-29-longmemeval-opaque-qa.md) answered 439/500 (87.8%) with the reranker off and the notes reader, and a GPT-4o reader with the official reading prompt scored 430/500 on the same retrieved sessions, not a demonstrated difference. The same re-run found that the reader's evidence budget matters most: with only the five retrieved chunks instead of full sessions, the same reader fell from 89/100 to 65/100 on a fixed subset, while three different prompts over those chunks tied. The paragraph below describes the historical September 6 run. Retrieval scores are not affected as far as a 30-question check can tell; see the [notice in the full report](benchmarks/2026-09-06-longmemeval-ranker-wave.md). The result used a Sonnet 4.6 reader, a 512-token answer limit, full sessions represented by the first five chunks with a 60,000-character cap per session, and a GPT-4o judge. An abstention instruction and data-boundary wrappers differ from the original prompts. The [full report](benchmarks/2026-09-06-longmemeval-ranker-wave.md) discloses those choices and the limits of its compacted receipts.
+With opaque session ids, gbrain's house reader answers 439/500 (87.8%) with the reranker off, and a GPT-4o reader with the official reading prompt scores 430/500 on the same retrieved sessions, not a demonstrated difference ([re-run](benchmarks/2026-09-29-longmemeval-opaque-qa.md)). The historical 86.6% (433/500) is invalid: the answer model saw each session's raw id, and LongMemEval's evidence sessions, and only those, have ids starting with `answer_`. The same re-run found that the reader's evidence budget matters most: with only the five retrieved chunks instead of full sessions, the same reader fell from 89/100 to 65/100 on a fixed subset, while three different prompts over those chunks tied. The paragraph below describes the historical September 6 run. Retrieval scores are not affected as far as a 30-question check can tell; see the [notice in the full report](benchmarks/2026-09-06-longmemeval-ranker-wave.md). The result used a Sonnet 4.6 reader, a 512-token answer limit, full sessions represented by the first five chunks with a 60,000-character cap per session, and a GPT-4o judge. An abstention instruction and data-boundary wrappers differ from the original prompts. The [full report](benchmarks/2026-09-06-longmemeval-ranker-wave.md) discloses those choices and the limits of its compacted receipts.
 
 Several external QA results are higher. They remain useful targets, but changing the reader, judge, context budget, or aggregation can move the score independently of retrieval. [Memoria's own experiment](https://dev.to/origin_matrix_b790e656217/benchmarking-memoria-on-longmemeval-strong-memory-retrieval-clear-reader-separation-435b) makes this particularly clear: identical retrieved memories produced 88.78%, 84.97%, and 70.74% answer accuracy with three readers, judged by GPT-5.4. One timeout left 499 scored questions.
 
@@ -89,7 +89,7 @@ Several external QA results are higher. They remain useful targets, but changing
 
 [Hindsight's repository](https://github.com/vectorize-io/hindsight-benchmarks) reports 91.4% with Gemini-3 and 89.0% with GPT-OSS-120B; its [vendor post](https://hindsight.vectorize.io/blog/2026/03/23/agent-memory-benchmark) lists 94.6% under a less specific protocol. [MemCog's paper](https://arxiv.org/html/2605.28046v1) reports 95.80% QA accuracy. We retain each attribution rather than selecting whichever headline makes gbrain look best.
 
-The [ByteRover page](https://www.byterover.dev/blog/benchmark_ai_agent_memory_real_production_byterover_top_market_accuracy_longmemeval), checked September 9, now adds a 96.1% result for v2.1.5 and preserves earlier 92.8% and 92.2% runs. The old version of this table attached the v2.1.5 label to those earlier scores; it now labels them as earlier runs. All remain external QA results with their own protocol.
+The [ByteRover page](https://www.byterover.dev/blog/benchmark_ai_agent_memory_real_production_byterover_top_market_accuracy_longmemeval), checked September 9, adds a 96.1% result for v2.1.5 and preserves earlier 92.8% and 92.2% runs, which the table labels as earlier runs. All remain external QA results with their own protocol.
 
 The two old Supermemory URLs currently redirect to its homepage and blog index. Their 95%, experimental 98.60% pass@8, and 97.20% majority-vote figures remain a historical September 2 source record, not newly verified claims. Pass@8 means at least one of eight tries passed; it is not single-answer accuracy. The OMEGA 95.4% and older Mem0 93.4% figures in the September 6 report are also historical external citations with unmatched protocols, not comparison targets established by this harness.
 
@@ -115,7 +115,7 @@ There is no gbrain ConvoMem run in this repository. Similar architecture does no
 
 ## LoCoMo: retrieval and QA were mixed here too
 
-The MemPal rows below are published retrieval results. Memori's 81.95% is instead answer accuracy, confirmed by [Memori's primary results page](https://memorilabs.ai/docs/memori-cloud/benchmark/results/). The old table put all four under an R@10 header; the labels below correct that error without changing the reported values.
+The MemPal rows below are published retrieval results. Memori's 81.95% is instead answer accuracy, confirmed by [Memori's primary results page](https://memorilabs.ai/docs/memori-cloud/benchmark/results/). Each row names its own metric; the values are as reported.
 
 | System / mode | Published score | Notes |
 |---|---|---|
@@ -179,3 +179,111 @@ The upstream README still lists tenure at 1.00 precision, supermemory at 0.22, a
 Record the question the benchmark asks, dataset revision and subset, result budget and unit, model and software versions, score definition and denominator, error handling, and whether results were selected after inspecting test failures. Link the primary source with an access date. Keep changed results as dated entries so readers can tell a new run from a corrected label.
 
 A causal explanation needs a controlled change. If two systems use different models and chunking, report the observed difference without assigning it to one component. If gbrain has not run the benchmark, say so. The purpose of this page is to help choose the next useful experiment and the right configuration, not to manufacture one leaderboard from incompatible scores.
+
+## Changelog
+
+How this page changed, newest first. Measurement history lives in the dated reports and in
+[CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-10-05: Restructured as a current-state page with this changelog
+
+gbrain-evals v0.10.23. The "Updated September 9, 2026" line becomes a statement of the pin and of when external sources were last checked. The opening evidence paragraph leads with the opaque-id retrieval recount (451/470) and current answer results (439/500, 453/500, `gpt-5.4` 447/500) instead of the September 6 figures. Sentences that described earlier versions of this page (the wrong 442/450 count, the withdrawn causal claim about embedders, the unsubstantiated ContextFit gold-ID allegation, the mislabeled ByteRover version and the R@10 header on LoCoMo) now state the current position only; the history of those fixes is in the entries below. The answer-quality section leads with the leak-free result before explaining why 86.6% is invalid.
+
+### 2026-10-04: Re-pin to gbrain `739e5cc`
+
+[`bf5fa53`](https://github.com/garrytan/gbrain-evals/commit/bf5fa53). The installed-dependency note in the LongMemEval section changed from gbrain master `109b992` (v0.60.37.0) to `739e5cc` (v0.60.46.0), the agent-first operator wave. The September 6 measurement and its pin stay as they were.
+
+### 2026-10-04: Opaque-id recount and a frontier-reader QA row
+
+[`6bc98aa`](https://github.com/garrytan/gbrain-evals/commit/6bc98aa). The October 4 opaque-session-id follow-ups were added as dated annotations beside the published numbers, which stay in place:
+
+- The September 6 retrieval paragraph gained the recount at gbrain `109b992`: 434/470 strict and 463/470 any-hit without the reranker, 451/470 and 470/470 with it (+23/−6 paired). The page says the published numbers are confirmed.
+- The LongMemEval table gained a row for a `gpt-5.4` reader over gbrain v0.60.37.0 retrieval: 89.4% (447/500), 448/500 under the official `evaluate_qa.py` judge, against 430/500 for GPT-4o on identical prompts (paired +33/−16, exact McNemar p = 0.021). It notes the same reader model as Zep's 90.2% and Memoria's 84.97% but claims no ranking.
+- The autocut and expansion paragraph gained the recount: autocut on 384/470 against 451/470 off, but expansion without reranking 436/470 (budget 0.25: 435/470), level with plain hybrid at 434/470. The page now says the September 6 expansion losses do not reproduce at current gbrain with opaque ids.
+
+### 2026-10-03: Re-pin to gbrain `109b992`
+
+[`f321afb`](https://github.com/garrytan/gbrain-evals/commit/f321afb). The installed-dependency note changed from gbrain master `48ed5e8` (v0.60.32.0) to `109b992` (v0.60.37.0), fix wave 8 and Foundations 1.
+
+### 2026-10-02: Re-pin to gbrain `48ed5e8`
+
+[`c8350c5`](https://github.com/garrytan/gbrain-evals/commit/c8350c5). The installed-dependency note changed from gbrain master `d44296c` (v0.60.30.0) to `48ed5e8` (v0.60.32.0), fix wave 7.
+
+### 2026-10-02: Re-pin to gbrain `d44296c`
+
+[`adffe95`](https://github.com/garrytan/gbrain-evals/commit/adffe95). The installed-dependency note changed from gbrain master `3a284ae` (v0.60.26.0) to `d44296c` (v0.60.30.0), fix waves 5 and 6.
+
+### 2026-10-01: Re-pin to gbrain `3a284ae`
+
+[`f94e98d`](https://github.com/garrytan/gbrain-evals/commit/f94e98d), gbrain-evals v0.10.5. The installed-dependency note changed from gbrain master `6c8373c` (v0.60.13.0) to `3a284ae` (v0.60.26.0), as part of the eval-category wave release.
+
+### 2026-09-30: Re-pin to gbrain `6c8373c`
+
+[`1ec19a2`](https://github.com/garrytan/gbrain-evals/commit/1ec19a2), gbrain-evals v0.10.2. The installed-dependency note changed from gbrain master `608a174` (v0.60.10.0) to `6c8373c` (v0.60.13.0).
+
+### 2026-09-29: QA leak notice, opaque-id QA row and corrected PrecisionMemBench rows
+
+[`88d0b19`](https://github.com/garrytan/gbrain-evals/commit/88d0b19), gbrain-evals v0.10.1.
+
+- The 86.6% (433/500) September 6 answer-accuracy result is now marked invalid in the intro, the table row and "Answer quality depends on the reader too": on September 28 the team found the answer model saw raw session ids, and only evidence sessions have ids starting with `answer_`.
+- A new table row records the leak-free September 29 re-run at gbrain v0.59.13.0: 87.8% (439/500) with the house reader and 86.0% (430/500) with a GPT-4o reader on the same sessions (paired +21/−30, p = 0.26). The reader paragraph adds that cutting the reader to five chunks dropped a fixed subset from 89/100 to 65/100.
+- The pin sentence now separates the measured commit `2efaaf8f` (receipts from `fd7e7fd9`) from the installed gbrain master `608a174` (v0.60.10.0).
+- The Cat 35 sentence adds 74.9% salient recall when the judge's quoted evidence must appear in the page (recomputed September 28).
+- The PrecisionMemBench table gained four corrected September 9 gbrain rows (tight adaptive + rerank 0.5859, tight adaptive 0.5333, broad hybrid 0.0565, keyword 0.1361, each with its non-null case count and recall). The two May rows (0.582, 0.075) are now struck through as invalid. A new paragraph explains the per-metric denominators and that latencies come from different machines.
+
+### 2026-09-09: Rewrite as a guide to comparing different measurements
+
+[`9238ec8`](https://github.com/garrytan/gbrain-evals/commit/9238ec8), gbrain-evals v0.8.0. The page was retitled "Comparing memory systems without comparing different things" and rewritten in plain prose. The source tables stay, with corrections, but the per-benchmark "vs gbrain" win/loss analyses and the "What gbrain master ships" summary were removed.
+
+- New sections: "Four questions hidden inside the word recall" (any-hit, strict all-hit, returned-set precision and answer accuracy, plus what K counts), "What the closest retrieval comparisons tell us", "Answer quality depends on the reader too" and "What gbrain's other configurations teach us".
+- The headline evidence became the September 6 numbers (449/470 strict, 86.6% QA) and the September 9 PrecisionMemBench refresh (tight adaptive + rerank 0.5859 precision, 0.8250 recall).
+- Corrections after a September 9 re-check: the MemPal held-out count changed from 442/450 to 443/450; the claim that embedding quality explains gbrain's lead over MemPal was dropped as untested; the unverified gold-id prefix allegation against ContextFit was removed and replaced by a narrower `question_type` routing caveat; ByteRover's 92.8% and 92.2% were relabeled as earlier runs; Memori's LoCoMo 81.95% was relabeled as QA accuracy, not R@10; the ConvoMem section now notes that the source ran 50 questions per category.
+- The May PrecisionMemBench gbrain rows are now called invalid because of a seeding defect, not upper bounds.
+
+### 2026-09-06: September 6 ranker-wave numbers and first gbrain QA row
+
+[`1816017`](https://github.com/garrytan/gbrain-evals/commit/1816017), gbrain-evals v0.7.0. The current pin moved from v0.48.2.0 (`5cfb84f1`) to v0.48.4.0 (`2efaaf8f`). The gbrain retrieval headline moved from 95.32% (448/470) reranker on and 93.19% (438/470) off to 95.53% (449/470) and 93.40% (439/470), measured September 6 with autocut off. The gbrain rows note was rewritten around the ranker wave: the old default with autocut 0.35 scored 80.64% (379/470), released `tokenmax` 92.77% (436/470), expansion without reranking 54.26% (255/470), and the new `search.expansion_variant_budget` knob recovered it only to 83.83% (394/470). The table gained gbrain's first judged QA row, 86.6% (433/500) with a claude-sonnet-4-6 reader and gpt-4o judge, with no vendor comparison claimed.
+
+### 2026-09-02: LongMemEval re-run at v0.48.2.0 and strict recomputations of competitor rows
+
+[`4ceb7f9`](https://github.com/garrytan/gbrain-evals/commit/4ceb7f9), gbrain-evals v0.6.1.
+
+- The current pin moved from v0.47.8.0 to v0.48.2.0 (`5cfb84f1`). The intro now describes the `voyage:rerank-2.5` reranker as on by default in `balanced` and `tokenmax` (it had said reranking was off by default), and states the new headline: 95.32% official `recall_all@5` (448/470) reranker on, 93.19% (438/470) off. They replace the resolved 83.40% figure in the metric key. The section heading now names the cleaned Sept-2025 dataset revision.
+- New "our recomputation" rows give strict `recall_all@5` from MemPalace's committed per-question files: 90.0% (423/470) LLM rerank, 88.7% (376/424) held-out, 85.7% (403/470) raw. The published MemPal rows were relabeled as any-hit.
+- The table added rows for agentmemory, the LongMemEval paper's `_m` baselines, MemCog, Zep, Hindsight, ByteRover, an independent Mem0 run (49.00%), and expanded Mastra, Supermemory, Memoria and Mem0 rows. Stella, Contriever and BM25 became one paper row.
+- The gbrain rows note now carries all five arms with per-type counts (including hybrid+expansion at 54.89%, 258/470). ContextFit gained a gold-label leakage caveat.
+- The "vs gbrain" analysis was rewritten against two yardsticks (95.32% and 93.19%). It now says the lead over MemPal raw is not from the keyword arm, because pure vector scores 93.8%.
+- Elsewhere, the Cat 35 61.5% fix-wave history was trimmed to the 88.1% result, and the PrecisionMemBench caveat was reworded as current state. The source list gained entries for the new rows, the official evaluator code, the cleaned dataset and the MemPalace result files.
+
+### 2026-09-01: Outside-review remediation: new competitor rows and PrecisionMemBench
+
+[`29e9ac9`](https://github.com/garrytan/gbrain-evals/commit/29e9ac9), gbrain-evals v0.6.0.
+
+- MemPalace's 96.6% is now settled as any-hit, citing arXiv 2604.21284. Its "vs gbrain" bullet now compares 97.66% against 96.6% on the same variant.
+- New LongMemEval rows: ContextFit token-native (84.3% All@5) and embedding fusion (87.45% All@5), Lethe v1 (93.8%), Memoria (88.78% QA), Mem0 April 2026 (per-type QA) and ContextFit fusion QA (84.8%), each with a "vs gbrain" bullet. A ContextFit comparability caveat explains their own harness and cleaned dataset.
+- The HaluMem analysis corrected the Cat 35 distractor leakage from zero to 1.2% (1/86). The zero figure belonged to the superseded 61.5% run.
+- A new PrecisionMemBench section adds the upstream leaderboard, gbrain adaptive at 0.582 and default hybrid at 0.075 as upper bounds after the `superseded_by` leak fix, the upstream author's own gbrain row (0.14), and a note that the 0.43 supermemory row no longer appears upstream. Sources were added for each new row.
+
+### 2026-08-31: LongMemEval erratum resolved at 83.40%
+
+[`91d2af8`](https://github.com/garrytan/gbrain-evals/commit/91d2af8), gbrain-evals v0.5.1. The metric key now records that the any-hit erratum is resolved from the original May rows: gbrain's official `recall_all@5` is 83.40% (n=470) beside the reconciled 97.60% any-hit. The gbrain rows note gained the strict figures (83.4% hybrid, 84.3% hybrid+expansion, 79.4% vector, 10.6% keyword). A new warning says competitor rows do not state their variant.
+
+### 2026-08-31: "vs gbrain" analyses and the any-hit erratum
+
+[`bd5ba0d`](https://github.com/garrytan/gbrain-evals/commit/bd5ba0d), gbrain-evals v0.5.0 (BrainBench v0.3.0 in the commit subject). The eval-suite audit changed the page's format and its metric key:
+
+- A format note and a summary of what gbrain master v0.47.8.0 (`2a56b512`) ships were added. Every benchmark section gained a "vs gbrain" block naming the mechanism behind each win or loss, or saying there is no gbrain number and so no claim.
+- The LongMemEval metric key was corrected: the official evaluator computes strict `recall_all@k`, and gbrain's rows (97.6% hybrid, 97.4% vector, 19.8% keyword) used a looser any-hit variant, with re-measurement pending.
+- The "add a row" guidance now allows the analysis blocks but requires a mechanism for every win and loss, the gbrain version, and no win claims on unrun benchmarks. HaluMem was added to the sources.
+
+### 2026-08-30: HaluMem write-path section
+
+[`d5b94c7`](https://github.com/garrytan/gbrain-evals/commit/d5b94c7), gbrain-evals v0.3.0. A new section added HaluMem (arXiv 2511.03506) as the published write-path benchmark, with Mem0 at 42.9% and Supermemory at 41.5% extraction recall on HaluMem-Medium. The rows are marked as context, not comparable. It named Cat 35 as gbrain's write-path benchmark, which this commit introduced, and SummHay as the planted-gold ancestor.
+
+### 2026-05-24: Remove Hindsight and Mem0 rows
+
+[`9ecc5b2`](https://github.com/garrytan/gbrain-evals/commit/9ecc5b2), gbrain v0.40.6.0 snapshot. The Hindsight 91.4% LongMemEval row, the Mem0 30-45% ConvoMem row and the Mem0 research-page source were removed, along with Hindsight's mention in the reading note. The commit stripped peer-system references from the docs.
+
+### 2026-05-07: Page created
+
+[`55fe214`](https://github.com/garrytan/gbrain-evals/commit/55fe214). Created as a living list of published numbers from memory and retrieval systems on benchmarks gbrain runs. It had LongMemEval `_s` rows (MemPal, Hindsight, Stella, Contriever, BM25, Mastra, Supermemory) with a note separating retrieval recall from QA accuracy, ConvoMem and LoCoMo tables marked as not yet run, a list of checked sources, and rules for adding a row (cite with an access date, keep caveats, stay neutral).
