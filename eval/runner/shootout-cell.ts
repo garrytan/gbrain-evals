@@ -28,6 +28,7 @@ import { createHash } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { BudgetRun, initLedger, ledgerStatus } from './budget-ledger.ts';
+import { DEFAULT_MAX_OUTPUT_TOKENS } from './metering-proxy.ts';
 
 const REPO_ROOT = resolve(import.meta.dir, '../..');
 export const UBI_RUNNER = process.env.UBI_RUNNER ?? '/home/user/.capy/drive/user-garry-tan/skills/ubicloud/scripts/ubi-runner.sh';
@@ -38,6 +39,8 @@ export interface CellSpec {
   benchmark: string;
   config: string;
   lease_usd: number;
+  /** Output-token cap per provider request, recorded with the lease (proxy default 32,768; Letta asks for 64,000). */
+  max_output_tokens?: number;
   /** Shell command run in the synced checkout on the VM, with SHOOTOUT_OUT, SHOOTOUT_PROXY and the proxy base URLs set. */
   command: string;
   /** Local bootstrap script run once on the VM before the command (ubi-runner --setup). */
@@ -64,6 +67,7 @@ export function loadCampaign(path: string): { manifest: CampaignManifest; sha256
     if (ids.has(c.id)) problems.push(`duplicate cell ${c.id}`);
     ids.add(c.id);
     if (!(c.lease_usd > 0)) problems.push(`cell ${c.id}: lease_usd must be positive`);
+    if (c.max_output_tokens !== undefined && !(Number.isInteger(c.max_output_tokens) && c.max_output_tokens > 0)) problems.push(`cell ${c.id}: max_output_tokens must be a positive integer`);
     if (typeof c.command !== 'string' || !c.command.trim()) problems.push(`cell ${c.id}: command is required`);
     if (c.setup !== undefined && !existsSync(resolve(REPO_ROOT, c.setup)) && !existsSync(resolve(c.setup))) problems.push(`cell ${c.id}: setup ${c.setup} does not exist`);
   }
@@ -73,13 +77,13 @@ export function loadCampaign(path: string): { manifest: CampaignManifest; sha256
 }
 
 export type LeaseEvent =
-  | { event: 'reserved'; lease_id: string; cell: string; attempt: number; usd: number; entry_id: string; at: string }
+  | { event: 'reserved'; lease_id: string; cell: string; attempt: number; usd: number; entry_id: string; at: string; max_output_tokens: number | null }
   | { event: 'launched'; lease_id: string; at: string; argv: string[] }
   | { event: 'finished'; lease_id: string; at: string; exit_code: number | null }
-  | { event: 'settled'; lease_id: string; at: string; actual_usd: number; requests: number }
+  | { event: 'settled'; lease_id: string; at: string; actual_usd: number; requests: number; max_output_tokens: number | null }
   | { event: 'abandoned'; lease_id: string; at: string; reason: string };
 
-export interface LeaseState { lease_id: string; cell: string; attempt: number; usd: number; entry_id: string; status: 'reserved' | 'launched' | 'finished' | 'settled' | 'abandoned'; actual_usd?: number; exit_code?: number | null }
+export interface LeaseState { lease_id: string; cell: string; attempt: number; usd: number; entry_id: string; max_output_tokens: number | null; status: 'reserved' | 'launched' | 'finished' | 'settled' | 'abandoned'; actual_usd?: number; exit_code?: number | null }
 
 interface CampaignState { campaign_id: string; run_id: string; ledger: string; manifest_sha256: string; created_at: string }
 
@@ -121,7 +125,7 @@ export class Campaign {
     if (!existsSync(this.eventsPath)) return [];
     for (const line of readFileSync(this.eventsPath, 'utf8').split('\n').filter(Boolean)) {
       const e = JSON.parse(line) as LeaseEvent;
-      if (e.event === 'reserved') { out.set(e.lease_id, { lease_id: e.lease_id, cell: e.cell, attempt: e.attempt, usd: e.usd, entry_id: e.entry_id, status: 'reserved' }); continue; }
+      if (e.event === 'reserved') { out.set(e.lease_id, { lease_id: e.lease_id, cell: e.cell, attempt: e.attempt, usd: e.usd, entry_id: e.entry_id, max_output_tokens: e.max_output_tokens ?? null, status: 'reserved' }); continue; }
       const l = out.get(e.lease_id);
       if (!l) continue;
       if (e.event === 'launched') l.status = 'launched';
@@ -141,8 +145,8 @@ export class Campaign {
     if (open) throw new Error(`cell ${cellId} already holds lease ${open.lease_id} (${open.status}); settle or abandon it before reserving again`);
     const attempt = mine.length + 1;
     const entry = this.run().reserve(c.lease_usd, `lease ${cellId} attempt ${attempt}`);
-    const l: LeaseState = { lease_id: `${cellId}-a${attempt}-${entry.slice(0, 8)}`, cell: cellId, attempt, usd: c.lease_usd, entry_id: entry, status: 'reserved' };
-    this.append({ event: 'reserved', lease_id: l.lease_id, cell: cellId, attempt, usd: c.lease_usd, entry_id: entry, at: new Date().toISOString() });
+    const l: LeaseState = { lease_id: `${cellId}-a${attempt}-${entry.slice(0, 8)}`, cell: cellId, attempt, usd: c.lease_usd, entry_id: entry, max_output_tokens: c.max_output_tokens ?? null, status: 'reserved' };
+    this.append({ event: 'reserved', lease_id: l.lease_id, cell: cellId, attempt, usd: c.lease_usd, entry_id: entry, at: new Date().toISOString(), max_output_tokens: l.max_output_tokens });
     return l;
   }
 
@@ -152,7 +156,7 @@ export class Campaign {
   launchArgv(l: LeaseState): string[] {
     const c = this.cell(l.cell);
     const remoteOut = `eval/reports/shootout/${l.cell}/${l.lease_id}`;
-    const payload = Buffer.from(JSON.stringify({ lease_id: l.lease_id, lease_usd: l.usd, command: c.command, out: remoteOut })).toString('base64');
+    const payload = Buffer.from(JSON.stringify({ lease_id: l.lease_id, lease_usd: l.usd, max_output_tokens: l.max_output_tokens, command: c.command, out: remoteOut })).toString('base64');
     const setup = c.setup ? (existsSync(resolve(REPO_ROOT, c.setup)) ? resolve(REPO_ROOT, c.setup) : resolve(c.setup)) : null;
     return ['bash', UBI_RUNNER, 'run', '-s', c.vm?.size ?? 'standard-8', '-l', c.vm?.location ?? 'eu-central-h1', ...(c.vm?.storage_gib ? ['-S', String(c.vm.storage_gib)] : []),
       ...(setup ? ['--setup', setup] : []), ...(c.pass ?? []).flatMap(p => ['--pass', p]),
@@ -185,20 +189,22 @@ export class Campaign {
     if (l.status === 'settled' || l.status === 'abandoned') throw new Error(`lease ${leaseId} is already ${l.status}`);
     if (l.status === 'reserved') throw new Error(`lease ${leaseId} was never launched; abandon it instead`);
     const dir = this.resultsDir(l);
-    let committed: number, requests: number, leaseUsd: number, runId: string;
+    let committed: number, requests: number, leaseUsd: number, runId: string, maxOut: number | null;
     if (existsSync(join(dir, 'lease.sqlite'))) {
       const s = ledgerStatus({ ledgerPath: join(dir, 'lease.sqlite'), runId: leaseId });
       if (!s.run) throw new Error(`the pulled VM ledger has no lease ${leaseId}`);
       ({ committed_usd: committed, budget_usd: leaseUsd, run_id: runId } = s.run);
-      requests = s.totals.requests;
+      requests = BudgetRun.runRequests(join(dir, 'lease.sqlite'), leaseId);
+      maxOut = BudgetRun.leaseMaxOutputTokens(join(dir, 'lease.sqlite'), leaseId);
     } else if (existsSync(join(dir, 'lease-summary.json'))) {
-      const s = JSON.parse(readFileSync(join(dir, 'lease-summary.json'), 'utf8')) as { run_id: string; lease_usd: number; committed_usd: number; requests: number };
+      const s = JSON.parse(readFileSync(join(dir, 'lease-summary.json'), 'utf8')) as { run_id: string; lease_usd: number; committed_usd: number; requests: number; max_output_tokens?: number | null };
       ({ committed_usd: committed, lease_usd: leaseUsd, run_id: runId, requests } = s);
+      maxOut = s.max_output_tokens ?? null;
     } else throw new Error(`no VM ledger or lease summary pulled into ${dir}; the lease keeps its full reservation (abandon it to close it)`);
     if (runId !== leaseId) throw new Error(`the pulled ledger is for lease ${runId}, not ${leaseId}`);
     if (Math.abs(leaseUsd - l.usd) > 1e-9) throw new Error(`the pulled ledger's lease is $${leaseUsd}, the host reserved $${l.usd}`);
     this.run().settle(l.entry_id, { usd: committed });
-    this.append({ event: 'settled', lease_id: leaseId, at: new Date().toISOString(), actual_usd: committed, requests });
+    this.append({ event: 'settled', lease_id: leaseId, at: new Date().toISOString(), actual_usd: committed, requests, max_output_tokens: maxOut ?? null });
     return this.lease(leaseId);
   }
 
@@ -221,13 +227,13 @@ export class Campaign {
 }
 
 /** On the VM: start the lease proxy, run the cell command against it, write the lease summary beside the cell's output. */
-export async function runRemote(payload: { lease_id: string; lease_usd: number; command: string; out: string }, opts: { port?: number } = {}): Promise<number> {
+export async function runRemote(payload: { lease_id: string; lease_usd: number; max_output_tokens?: number | null; command: string; out: string }, opts: { port?: number } = {}): Promise<number> {
   const out = resolve(payload.out);
   mkdirSync(out, { recursive: true });
   const port = opts.port ?? 8787;
   const ledger = join(out, 'lease.sqlite');
   const proxy = Bun.spawn([process.execPath, join(REPO_ROOT, 'eval/runner/metering-proxy.ts'), '--listen', `0.0.0.0:${port}`, '--budget-ledger', ledger, '--lease-usd', String(payload.lease_usd),
-    '--run-id', payload.lease_id, '--usage-log', join(out, 'usage.ndjson')], { stdout: 'inherit', stderr: 'inherit' });
+    '--run-id', payload.lease_id, '--usage-log', join(out, 'usage.ndjson'), ...(payload.max_output_tokens ? ['--max-output-tokens', String(payload.max_output_tokens)] : [])], { stdout: 'inherit', stderr: 'inherit' });
   let code: number | null = null;
   try {
     let up = false;
@@ -244,7 +250,8 @@ export async function runRemote(payload: { lease_id: string; lease_usd: number; 
     proxy.kill('SIGTERM');
     await proxy.exited;
     const s = ledgerStatus({ ledgerPath: ledger, runId: payload.lease_id });
-    writeFileSync(join(out, 'lease-summary.json'), JSON.stringify({ run_id: payload.lease_id, lease_usd: payload.lease_usd, committed_usd: s.run?.committed_usd ?? payload.lease_usd, requests: s.totals.requests, cell_exit_code: code }, null, 2) + '\n');
+    writeFileSync(join(out, 'lease-summary.json'), JSON.stringify({ run_id: payload.lease_id, lease_usd: payload.lease_usd, committed_usd: s.run?.committed_usd ?? payload.lease_usd,
+      requests: s.run ? BudgetRun.runRequests(ledger, payload.lease_id) : null, max_output_tokens: s.run ? BudgetRun.leaseMaxOutputTokens(ledger, payload.lease_id) ?? DEFAULT_MAX_OUTPUT_TOKENS : null, cell_exit_code: code }, null, 2) + '\n');
   }
   return code ?? 1;
 }

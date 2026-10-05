@@ -856,27 +856,58 @@ export class BudgetRun {
 
   /**
    * Open or resume a lease run with a fixed id (a shootout cell's metering
-   * proxy). The ledger holds only this lease: a missing ledger is created
-   * with the lease as its program cap, and a lease run that already exists is
-   * resumed with its committed spend, so restarting the proxy never grants the
-   * lease again. A finished lease, a different amount, or another run in the
-   * same ledger is refused.
+   * proxy). A lease ledger is marked as one when it is created, and its
+   * program cap is the sum of the leases opened in it, so one file can hold a
+   * cell's reruns. A lease run that already exists is resumed with its
+   * committed spend and its recorded output cap, so restarting the proxy never
+   * grants the lease again. Refused: a closed lease, a different amount or
+   * output cap for the same id, a ledger that is not a lease ledger, and a new
+   * lease while another lease in the file is still open, unless `newRun`
+   * closes the open ones first (they are never reopened).
    */
-  static openLease(options: { runId: string; leaseUsd: number; ledgerPath: string; runner?: string; log?: (line: string) => void }): BudgetRun {
+  static openLease(options: { runId: string; leaseUsd: number; ledgerPath: string; maxOutputTokens?: number | null; newRun?: boolean; runner?: string; log?: (line: string) => void }): BudgetRun {
     if (!Number.isFinite(options.leaseUsd) || options.leaseUsd <= 0) throw new BudgetExceededError('--lease-usd must be a positive number of dollars');
     if (!/^[A-Za-z0-9._:-]{1,128}$/.test(options.runId)) throw new BudgetExceededError(`lease run id ${JSON.stringify(options.runId)} must be 1-128 characters of [A-Za-z0-9._:-]`);
+    const maxOut = options.maxOutputTokens ?? null;
+    if (maxOut !== null && !(Number.isInteger(maxOut) && maxOut > 0)) throw new BudgetExceededError('--max-output-tokens must be a positive integer');
     const paths = ledgerPaths(options.ledgerPath);
+    const fresh = !existsSync(paths.ledger);
     ensureLedger(paths, { migrateCapUsd: options.leaseUsd, create: { capUsd: options.leaseUsd, reason: `lease ${options.runId}` }, log: options.log });
     write(paths.ledger, `lease ${options.runId}`, db => {
-      checkCap(db, paths.ledger, { programCapUsd: options.leaseUsd, programCapSource: '--program-cap-usd' });
-      const others = db.query('SELECT run_id FROM runs WHERE run_id != ?').all(options.runId) as Array<{ run_id: string }>;
-      if (others.length) throw new BudgetExceededError(`the lease ledger ${paths.ledger} already holds run ${others[0].run_id}; a lease ledger holds exactly one lease`);
-      const run = db.query('SELECT budget_usd, finished_at FROM runs WHERE run_id = ?').get(options.runId) as { budget_usd: number; finished_at: string | null } | null;
-      if (run?.finished_at) throw new BudgetExceededError(`lease ${options.runId} was closed at ${run.finished_at}; a closed lease is never reopened`);
-      if (run && Math.abs(run.budget_usd - options.leaseUsd) > 1e-9) throw new BudgetExceededError(`lease ${options.runId} was opened for $${run.budget_usd.toFixed(2)}, not $${options.leaseUsd.toFixed(2)}`);
-      if (!run) db.query(`INSERT INTO runs (${RUN_COLUMNS}) VALUES (?, ?, ?, ?, ?, NULL)`).run(options.runId, options.runner ?? 'lease', options.leaseUsd, null, now());
+      const meta = (key: string) => (db.query('SELECT value FROM ledger_meta WHERE key = ?').get(key) as { value: string } | null)?.value ?? null;
+      const runs = db.query('SELECT run_id, runner, budget_usd, finished_at FROM runs').all() as Array<{ run_id: string; runner: string; budget_usd: number; finished_at: string | null }>;
+      if (fresh && !runs.length) db.query(`INSERT OR REPLACE INTO ledger_meta (key, value) VALUES ('lease_ledger', '1')`).run();
+      else if (meta('lease_ledger') !== '1' && !(runs.length && runs.every(r => r.runner === 'metering-proxy' || r.runner === 'lease'))) {
+        throw new BudgetExceededError(`${paths.ledger} is not a lease ledger; a metering proxy never raises another ledger's cap. Give the proxy its own --budget-ledger file`);
+      }
+      const run = runs.find(r => r.run_id === options.runId);
+      const capKey = `lease_max_output_tokens:${options.runId}`;
+      if (run) {
+        if (run.finished_at) throw new BudgetExceededError(`lease ${options.runId} was closed at ${run.finished_at}; a closed lease is never reopened`);
+        if (Math.abs(run.budget_usd - options.leaseUsd) > 1e-9) throw new BudgetExceededError(`lease ${options.runId} was opened for $${run.budget_usd.toFixed(2)}, not $${options.leaseUsd.toFixed(2)}`);
+        const recorded = meta(capKey);
+        if ((recorded === null ? null : Number(recorded)) !== maxOut) throw new BudgetExceededError(`lease ${options.runId} was opened with an output cap of ${recorded ?? 'the default'}, not ${maxOut ?? 'the default'}`);
+        return;
+      }
+      const open = runs.filter(r => r.finished_at === null);
+      if (open.length && !options.newRun) throw new BudgetExceededError(`${paths.ledger} still holds open lease ${open[0].run_id}; pass --new-run to close it and open ${options.runId}`);
+      for (const r of open) db.query('UPDATE runs SET finished_at = ? WHERE run_id = ?').run(now(), r.run_id);
+      if (runs.length) db.query('INSERT INTO caps (program_cap_usd, kind, reason, by, at) VALUES (?, ?, ?, ?, ?)').run(currentCap(db) + options.leaseUsd, 'lease', `lease ${options.runId}`, whoami(), now());
+      db.query(`INSERT INTO runs (${RUN_COLUMNS}) VALUES (?, ?, ?, ?, ?, NULL)`).run(options.runId, options.runner ?? 'lease', options.leaseUsd, null, now());
+      if (maxOut !== null) db.query('INSERT OR REPLACE INTO ledger_meta (key, value) VALUES (?, ?)').run(capKey, String(maxOut));
     });
     return new BudgetRun(options.runId, options.leaseUsd, paths.ledger);
+  }
+
+  /** Requests recorded against one run (a lease ledger can hold several). */
+  static runRequests(ledgerPath: string, runId: string): number {
+    return (connect(ledgerPaths(ledgerPath).ledger).db.query('SELECT COUNT(*) AS n FROM entries WHERE run_id = ?').get(runId) as { n: number }).n;
+  }
+
+  /** The output-token cap a lease was opened with (null: the proxy default). */
+  static leaseMaxOutputTokens(ledgerPath: string, runId: string): number | null {
+    const row = connect(ledgerPaths(ledgerPath).ledger).db.query('SELECT value FROM ledger_meta WHERE key = ?').get(`lease_max_output_tokens:${runId}`) as { value: string } | null;
+    return row ? Number(row.value) : null;
   }
 
   /** Measure this process's event-loop lag for the run's summary; close() stops it. */

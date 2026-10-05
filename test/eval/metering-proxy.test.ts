@@ -111,6 +111,22 @@ describe('lease mode forwarding', () => {
     } finally { proxy.stop(); }
   });
 
+  test('a 4xx without usage settles at $0; a 5xx without usage keeps its reservation', async () => {
+    const lease = BudgetRun.openLease({ runId: 'lease-4xx', leaseUsd: 1, ledgerPath: ledgerFile() });
+    let status = 400;
+    const up = fakeUpstream(() => Response.json({ error: { message: 'bad request' } }, { status }));
+    const { proxy, post, usageLog } = leased(lease, up.fetchImpl);
+    try {
+      expect((await post('/c/openai/v1/chat/completions', chat())).status).toBe(400);
+      expect(ledgerStatus({ ledgerPath: lease.ledgerPath, runId: 'lease-4xx' }).run!.committed_usd).toBe(0);
+      status = 503;
+      expect((await post('/c/openai/v1/chat/completions', chat())).status).toBe(503);
+      const lines = readFileSync(usageLog, 'utf8').trim().split('\n').map(l => JSON.parse(l));
+      expect(lines.map(l => [l.status, l.actual_usd === 0, l.charged_reservation])).toEqual([[400, true, false], [503, false, true]]);
+      expect(ledgerStatus({ ledgerPath: lease.ledgerPath, runId: 'lease-4xx' }).run!.committed_usd).toBeCloseTo(lines[1].reserved_usd, 12);
+    } finally { proxy.stop(); }
+  });
+
   test('the input reservation is bounded by request bytes, not bytes over three', async () => {
     const lease = BudgetRun.openLease({ runId: 'lease-e', leaseUsd: 1, ledgerPath: ledgerFile() });
     let reserved = 0;
@@ -182,9 +198,31 @@ describe('leases survive restarts without replay', () => {
     const again = BudgetRun.openLease({ runId: 'lease-h', leaseUsd: 0.5, ledgerPath: path });
     expect(() => again.reserve(0.2, 'after restart')).toThrow(/over its \$0\.50 budget/);
     expect(() => BudgetRun.openLease({ runId: 'lease-h', leaseUsd: 1, ledgerPath: path })).toThrow(/program cap mismatch|opened for/);
-    expect(() => BudgetRun.openLease({ runId: 'lease-other', leaseUsd: 0.5, ledgerPath: path })).toThrow(/exactly one lease/);
+    expect(() => BudgetRun.openLease({ runId: 'lease-other', leaseUsd: 0.5, ledgerPath: path })).toThrow(/still holds open lease lease-h; pass --new-run/);
     closeRun(path, 'lease-h');
     expect(() => BudgetRun.openLease({ runId: 'lease-h', leaseUsd: 0.5, ledgerPath: path })).toThrow(/never reopened/);
+  });
+
+  test('one ledger holds a cell\'s reruns: --new-run closes the open lease, each lease keeps its own budget and output cap', () => {
+    const path = ledgerFile();
+    const a = BudgetRun.openLease({ runId: 'rerun-1', leaseUsd: 0.5, ledgerPath: path, maxOutputTokens: 64000 });
+    a.settle(a.reserve(0.45, 'first run'), null);
+    expect(() => BudgetRun.openLease({ runId: 'rerun-1', leaseUsd: 0.5, ledgerPath: path })).toThrow(/output cap of 64000, not the default/);
+    const b = BudgetRun.openLease({ runId: 'rerun-2', leaseUsd: 0.5, ledgerPath: path, newRun: true });
+    expect(ledgerStatus({ ledgerPath: path, runId: 'rerun-1' }).run!.finished_at).not.toBeNull();
+    expect(() => BudgetRun.openLease({ runId: 'rerun-1', leaseUsd: 0.5, ledgerPath: path, maxOutputTokens: 64000 })).toThrow(/never reopened/);
+    expect(() => b.reserve(0.49, 'second run')).not.toThrow();
+    expect(() => b.reserve(0.02, 'over')).toThrow(/over its \$0\.50 budget/);
+    expect(ledgerStatus({ ledgerPath: path }).totals.program_cap_usd).toBeCloseTo(1, 9);
+    expect(BudgetRun.leaseMaxOutputTokens(path, 'rerun-1')).toBe(64000);
+    expect(BudgetRun.leaseMaxOutputTokens(path, 'rerun-2')).toBeNull();
+    expect(BudgetRun.runRequests(path, 'rerun-2')).toBe(1);
+  });
+
+  test('a ledger that is not a lease ledger is never used as one', () => {
+    const path = ledgerFile();
+    BudgetRun.open({ runner: 'some-runner', budgetUsd: 1, ledgerPath: path, programCapUsd: 5 });
+    expect(() => BudgetRun.openLease({ runId: 'sneaky', leaseUsd: 1, ledgerPath: path })).toThrow(/not a lease ledger/);
   });
 
   test('the CLI proxy, restarted on the same lease, keeps refusing once the lease is spent', async () => {
@@ -215,7 +253,7 @@ describe('leases survive restarts without replay', () => {
       expect(seen).toEqual(['Bearer placeholder-openai', 'Bearer placeholder-openai']);
       closeLedgers();
       const summary = Bun.spawnSync([process.execPath, 'eval/runner/metering-proxy.ts', 'summary', '--budget-ledger', path, '--run-id', 'lease-cli'], { cwd: ROOT });
-      expect(JSON.parse(summary.stdout.toString())).toMatchObject({ run_id: 'lease-cli', lease_usd: Number(leaseUsd) });
+      expect(JSON.parse(summary.stdout.toString())).toMatchObject({ run_id: 'lease-cli', lease_usd: Number(leaseUsd), max_output_tokens: 32768, requests: 2 });
     } finally { upstream.stop(true); }
   }, 30_000);
 

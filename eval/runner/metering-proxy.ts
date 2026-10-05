@@ -21,15 +21,21 @@
  *     enforces an output-token cap so the provider enforces the bound,
  *     reserves the worst case before forwarding (concurrent requests serialize
  *     on the ledger, so they cannot overspend the lease), meters streamed
- *     responses from their usage events (or charges the reservation), refuses
+ *     responses from their usage events (or charges the reservation), settles
+ *     a 4xx answer without usage at $0 (providers do not bill rejected
+ *     requests; a 5xx, a timeout or a lost connection keeps the reservation), refuses
  *     bodies carrying a forbidden marker (the sanitizer's leak tripwire), and
  *     appends one usage line per request (never a body or a key).
  *
  * Standalone (lease mode):
  *   bun eval/runner/metering-proxy.ts --listen 0.0.0.0:8787 --budget-ledger <file> --lease-usd <n> --run-id <id>
  *     [--usage-log <file>] [--allow-models openai:gpt-4.1-mini,...] [--max-output-tokens 32768]
- *     [--forbidden-markers <file>] [--streaming meter|refuse] [--upstream openai=http://...]
+ *     [--forbidden-markers <file>] [--streaming meter|refuse] [--upstream openai=http://...] [--new-run]
  *   bun eval/runner/metering-proxy.ts summary --budget-ledger <file> --run-id <id>
+ *
+ * One lease ledger can hold a cell's reruns: each run id is its own lease, the
+ * output cap is recorded with the lease, and `--new-run` closes a lease still
+ * open in the file before opening the next one.
  */
 import { appendFileSync, readFileSync } from 'node:fs';
 import { BudgetExceededError, BudgetRun, ledgerStatus, priceRequest, reservationUsd, usageCost, type BudgetAllowance } from './budget-ledger.ts';
@@ -184,7 +190,8 @@ export class MeteringProxy {
   status() {
     const p = this.options.policy;
     const run = p ? ledgerStatus({ ledgerPath: p.lease.ledgerPath, runId: p.lease.runId }).run : null;
-    return { mode: p ? 'lease' : 'in-process', run_id: p?.lease.runId ?? null, lease_usd: p?.lease.budgetUsd ?? null, committed_usd: run?.committed_usd ?? null, ...this.counts };
+    return { mode: p ? 'lease' : 'in-process', run_id: p?.lease.runId ?? null, lease_usd: p?.lease.budgetUsd ?? null, committed_usd: run?.committed_usd ?? null,
+      max_output_tokens: p ? p.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS : null, ...this.counts };
   }
 
   private charge(key: string, prov: string, model: string | null, usd: number, unpriced: boolean) {
@@ -304,6 +311,7 @@ export class MeteringProxy {
     const text = await res.text();
     let cost: ReturnType<typeof usageCost> = null;
     if (bounded) { try { cost = usageCost(bounded, JSON.parse(text)); } catch { cost = null; } }
+    if (!cost && bounded && res.status >= 400 && res.status < 500) cost = { usd: 0, input_tokens: 0, output_tokens: 0 };
     settle(cost, res.status, false);
     return new Response(text, { status: res.status, headers: out });
   }
@@ -311,7 +319,7 @@ export class MeteringProxy {
 
 export interface ProxyCliArgs {
   host: string; port: number; ledger: string; leaseUsd: number; runId: string; usageLog: string | null;
-  allowModels: string[] | null; maxOutputTokens: number; forbiddenMarkers: string[]; streaming: 'meter' | 'refuse'; upstream: Partial<Record<ProviderName, string>>;
+  allowModels: string[] | null; maxOutputTokens: number | null; forbiddenMarkers: string[]; streaming: 'meter' | 'refuse'; upstream: Partial<Record<ProviderName, string>>; newRun: boolean;
 }
 
 export function parseProxyArgs(argv: string[]): ProxyCliArgs {
@@ -335,16 +343,16 @@ export function parseProxyArgs(argv: string[]): ProxyCliArgs {
   return {
     host: listen.slice(0, at), port, ledger, leaseUsd: Number(lease), runId, usageLog: one('--usage-log') ?? null,
     allowModels: one('--allow-models') ? one('--allow-models')!.split(',').map(s => s.trim()).filter(Boolean) : null,
-    maxOutputTokens: Number(one('--max-output-tokens') ?? DEFAULT_MAX_OUTPUT_TOKENS),
+    maxOutputTokens: one('--max-output-tokens') ? Number(one('--max-output-tokens')) : null,
     forbiddenMarkers: markersFile ? readFileSync(markersFile, 'utf8').split('\n').map(s => s.trim()).filter(Boolean) : [],
-    streaming, upstream,
+    streaming, upstream, newRun: argv.includes('--new-run'),
   };
 }
 
 export function startLeaseProxy(a: ProxyCliArgs, env: Record<string, string | undefined> = process.env): MeteringProxy {
-  const lease = BudgetRun.openLease({ runId: a.runId, leaseUsd: a.leaseUsd, ledgerPath: a.ledger, runner: 'metering-proxy' });
+  const lease = BudgetRun.openLease({ runId: a.runId, leaseUsd: a.leaseUsd, ledgerPath: a.ledger, runner: 'metering-proxy', maxOutputTokens: a.maxOutputTokens, newRun: a.newRun });
   const proxy = new MeteringProxy({ hostname: a.host, port: a.port, upstream: a.upstream,
-    policy: { lease, env, allowModels: a.allowModels, maxOutputTokens: a.maxOutputTokens, forbiddenMarkers: a.forbiddenMarkers, streaming: a.streaming, usageLog: a.usageLog ?? `${lease.ledgerPath}.usage.ndjson` } });
+    policy: { lease, env, allowModels: a.allowModels, maxOutputTokens: a.maxOutputTokens ?? undefined, forbiddenMarkers: a.forbiddenMarkers, streaming: a.streaming, usageLog: a.usageLog ?? `${lease.ledgerPath}.usage.ndjson` } });
   proxy.start();
   return proxy;
 }
@@ -356,7 +364,9 @@ if (import.meta.main) {
       const one = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
       const s = ledgerStatus({ ledgerPath: one('--budget-ledger'), runId: one('--run-id') });
       if (!s.run) throw new Error(`no lease ${one('--run-id')} in ${s.ledger}`);
-      console.log(JSON.stringify({ run_id: s.run.run_id, lease_usd: s.run.budget_usd, committed_usd: s.run.committed_usd, overshoot_usd: s.run.overshoot_usd, requests: s.totals.requests, finished_at: s.run.finished_at }));
+      const requests = BudgetRun.runRequests(s.ledger, s.run.run_id);
+      console.log(JSON.stringify({ run_id: s.run.run_id, lease_usd: s.run.budget_usd, committed_usd: s.run.committed_usd, overshoot_usd: s.run.overshoot_usd, requests,
+        max_output_tokens: BudgetRun.leaseMaxOutputTokens(s.ledger, s.run.run_id) ?? DEFAULT_MAX_OUTPUT_TOKENS, finished_at: s.run.finished_at }));
     } else {
       const a = parseProxyArgs(argv);
       const proxy = startLeaseProxy(a);
