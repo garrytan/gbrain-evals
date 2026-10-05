@@ -508,12 +508,19 @@ class CellRun:
             from memory_bench.models import Document
 
             ret = read_record(self.dir, "retrieve", q.id, self.cell_id) or {}
+            provider_ids = getattr(self.provider, "reverse_ids", None)
+            provider_ids = provider_ids() if callable(provider_ids) else {}
+
+            def original(i):
+                i = provider_ids.get(i, i)
+                return self.projection.original_doc(i) or i
+
             retrieved_original = []
             for d in ret.get("documents", []):
                 d = dict(d)
-                d["id"] = self.projection.original_doc(d["id"]) or d["id"]
+                d["id"] = original(d["id"])
                 if d.get("source_ids"):
-                    d["source_ids"] = [self.projection.original_doc(s) or s for s in d["source_ids"]]
+                    d["source_ids"] = [original(s) for s in d["source_ids"]]
                 retrieved_original.append(Document(**d))
         judge_llm = self._judge_llm()
         expected = self.spec["models"].get("judge") if self.task_type == "open" else None

@@ -103,6 +103,47 @@ separately from `raw_response`, because the LongMemEval, LoCoMo and LifeBench
 prompt builders substitute `json.dumps(raw_response)` for the context
 whenever it is non-None.
 
+## Comparator server (`mpw/comparator_server.py`, `comparator.lock.json`)
+
+The comparator's current release runs as its own server, installed by
+`bun run harness:comparator install` into `.harness/comparator/<version>/`
+from `comparator.lock.json` (exact versions, sha256 per wheel, CPU torch,
+local model weights at pinned revisions). The provider starts it in
+`prepare()` and stops it in `cleanup()` (also atexit, and Linux
+`PR_SET_PDEATHSIG` when started from the main thread); data lives in
+`config.data_dir` (default `<store_dir>/comparator-server`), with the
+embedded database under an isolated HOME there. `stop()` also reaps the
+embedded database, which runs in its own session and survives a SIGKILL of
+the server.
+
+- LLM route: `MPW_CHILD_ENV_COMPARATOR` (the proxy's `envFor('comparator')`
+  as JSON). The server gets `OPENAI_BASE_URL` / `OPENAI_API_KEY` from it as
+  its LLM base URL and key and refuses a non-loopback base URL. Its
+  extraction model is the server's documented default (`openai:gpt-4o-mini`
+  at 0.10.2) unless `extraction_model` (`provider:model`) is set; only the
+  `openai` route is wired.
+- Embeddings, reranking and the database are local CPU work, reported as
+  local compute in `receipt()`, not as spend. `receipt()["unmetered"]` lists
+  anything that bypasses the proxy; at 0.10.2 it is empty (the server suite
+  passes in a loopback-only network namespace).
+- Provider config: `max_tokens` (facts budget), `max_chunk_tokens` (raw-chunk
+  budget, 0 for facts only), `budget`, `extraction_model`, `server_url`,
+  `data_dir`, `id_salt`, `startup_timeout_s`.
+- Hooks: `retrieve_with_meta` (knob values, fact/chunk counts, bank),
+  `reset_unit(unit)` (drops the unit's bank), `last_ingest_receipt(unit)`
+  (documents and facts stored, `barrier_ms` spent waiting for the server's
+  extraction queue, expected extraction calls, bank config, server receipt).
+  Ingest returns only when the bank has no pending or failed operations and
+  stores every document; otherwise it raises.
+- Ids: every emitted id (documents, facts, chunks, source ids, banks, and any
+  `*_id`/`*_ids` field or id-keyed map inside `raw_response`) is
+  `c-<hex12>` = HMAC-sha256(salt, original); ids inside a document's
+  `context` are hashed before the server sees them. `reverse_ids()` maps
+  them back for the scorer only (the cell runner composes it with the
+  projection's map for retrieval scoring). The salt (`id-salt`), the map
+  (`reverse-ids.jsonl`) and the bank registry (`banks.json`) are kept in
+  `data_dir`, so a resumed cell keeps its banks and ids.
+
 ## Scorer (`mpw/scorer.py`)
 
 Typed outcomes from `mpw/records.py`; strict judge field validation; a fixed
