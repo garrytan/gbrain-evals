@@ -35,8 +35,9 @@ messages in `role: text` transcripts with its built-in parsers. So ingest
 calls gbrain's explicit extraction op, `extract_facts`, once per window of
 whole turns that fits its 8,000-character input (the windowing gbrain applies
 to session-corpus files), with the document's date as `valid_from`, its
-opaque id as `session_id` and `visibility: "world"` (stdio MCP is a remote
-caller and sees world facts only). The calls return only after the facts are
+page id as `session_id` and `visibility: "world"` (stdio MCP is a remote
+caller and sees world facts only). An identical repeated session is written
+and extracted once. The calls return only after the facts are
 written, so the extraction barrier is the last call returning; failed windows
 are retried once and counted in the receipt.
 
@@ -378,9 +379,22 @@ class GbrainMemoryProvider(MemoryProvider):
         child = u.child
         assert child is not None
         t0 = time.perf_counter()
-        pages = [{"slug": SLUG_PREFIX + d.id.lower(), "content": page_markdown(d)} for d in docs]
+        # A dataset can list one session twice in a history (LongMemEval haystacks do): an identical repeat is
+        # written once; a repeat with different text gets its own slug so both stay retrievable.
+        pages, seen, written = [], {}, []
         for d in docs:
-            u.timestamps[d.id.lower()] = d.timestamp
+            slug, body = SLUG_PREFIX + d.id.lower(), page_markdown(d)
+            if slug in seen:
+                if seen[slug] == body:
+                    continue
+                n = 2
+                while f"{slug}-{n}" in seen:
+                    n += 1
+                slug = f"{slug}-{n}"
+            seen[slug] = body
+            u.timestamps[slug[len(SLUG_PREFIX):]] = d.timestamp
+            pages.append({"slug": slug, "content": body})
+            written.append((slug, d))
         u.save()
         batched = "put_pages" in child.tools
         try:
@@ -398,14 +412,14 @@ class GbrainMemoryProvider(MemoryProvider):
                           "barrier_ms": round((time.perf_counter() - b0) * 1000, 1), "barrier": barrier,
                           "server": child.server_info})
         if self.cfg.get("extraction_model"):
-            u.receipt["facts"] = self._extract_facts(child, docs)
+            u.receipt["facts"] = self._extract_facts(child, written)
 
-    def _extract_facts(self, child: McpChild, docs: list[Document]) -> dict:
-        """gbrain's `extract_facts` over every window of every page; returns when every call has returned."""
+    def _extract_facts(self, child: McpChild, written: list[tuple[str, Document]]) -> dict:
+        """gbrain's `extract_facts` over every window of every written page; returns when every call has returned."""
         calls = []
-        for d in docs:
+        for slug, d in written:
             for text in extraction_windows(d, int(self.cfg["extraction_window_chars"])):
-                args = {"turn_text": text, "session_id": d.id.lower(), "source_slug": SLUG_PREFIX + d.id.lower(),
+                args = {"turn_text": text, "session_id": slug[len(SLUG_PREFIX):], "source_slug": slug,
                         "visibility": "world", "request_id": str(uuid.uuid4())}
                 if _iso(d.timestamp):
                     args["valid_from"] = _iso(d.timestamp)
@@ -495,21 +509,17 @@ class GbrainMemoryProvider(MemoryProvider):
         return docs, raw
 
     def retrieve_with_meta(self, query: str, k: int = 10, user_id: str | None = None, query_timestamp: str | None = None):
-        u = self._ensure_unit(user_id or "_all", create=False)
         lane = self.cfg.get("lane") or "raw"
         if lane == "raw":
-            docs, meta_out, _saved = self._query_pages(u, query, user_id)
+            _u, docs, meta_out, _saved = self._query_pages(query, user_id)
             return docs, None, meta_out
         if lane not in ("facts", "combined"):
             raise GbrainRetrieveError(f"unknown lane {lane!r}: use raw, facts or combined")
-        # One lock across both calls: another unit's retrieve may otherwise close this unit's child in between.
+        # One lock hold across both calls: another unit opening in between could close this unit's child.
         with self._lock:
-            u = self._ensure_unit(user_id or "_all", create=False)
-            pages, page_meta, saved = self._query_pages(u, query, user_id, expand_default=False)
-            child = u.child
-            assert child is not None
+            u, pages, page_meta, saved = self._query_pages(query, user_id, expand_default=False)
             try:
-                recalled, _ = child.call("recall", {"limit": int(self.cfg["facts_limit"])})
+                recalled, _ = u.child.call("recall", {"limit": int(self.cfg["facts_limit"])})
             except McpToolError as e:
                 raise GbrainRetrieveError(str(e)) from e
         if not isinstance(recalled, dict) or not isinstance(recalled.get("facts"), list):
@@ -554,7 +564,7 @@ class GbrainMemoryProvider(MemoryProvider):
         return docs, {"budget": budget, "tokens": used, "kept": kept, "dropped": dropped, "saved_facts": len(saved),
                       "recalled": len(recalled), "documents": len(docs)}
 
-    def _query_pages(self, u: _Unit, query: str, user_id: str | None, expand_default: bool | None = None):
+    def _query_pages(self, query: str, user_id: str | None, expand_default: bool | None = None):
         # token_budget / return_unit / limit set to null in the cell config mean "gbrain's own default": the argument is omitted.
         args = {"query": query}
         for key in ("token_budget", "return_unit", "limit"):
@@ -564,11 +574,12 @@ class GbrainMemoryProvider(MemoryProvider):
         expand = self.cfg.get("expand") if self.cfg.get("expand") is not None else expand_default
         if expand is not None:
             args["expand"] = bool(expand)
+        # Open the unit and call it under one lock hold: another unit opening in between can close this unit's
+        # child once `max_open_units` children are live.
         with self._lock:
-            child = u.child
-            assert child is not None
+            u = self._ensure_unit(user_id or "_all", create=False)
             try:
-                rows, meta = child.call("query", args)
+                rows, meta = u.child.call("query", args)
             except McpToolError as e:
                 raise GbrainRetrieveError(str(e)) from e
         retrieval = (meta or {}).get("retrieval", {})
@@ -605,17 +616,15 @@ class GbrainMemoryProvider(MemoryProvider):
         }
         if delivery.get("tokenizer") not in (None, "cl100k"):
             raise GbrainRetrieveError(f"gbrain packed evidence with tokenizer {delivery.get('tokenizer')!r}, not cl100k")
-        return docs, meta_out, retrieval.get("saved_facts") or []
+        return u, docs, meta_out, retrieval.get("saved_facts") or []
 
     def direct_answer(self, query: str, user_id: str | None = None, query_timestamp: str | None = None):
-        u = self._ensure_unit(user_id or "_all", create=False)
         args = {"question": query}
         if self.cfg.get("think_model"):
             args["model"] = self.cfg["think_model"]
         with self._lock:
-            child = u.child
-            assert child is not None
-            result, meta = child.call("think", args)
+            u = self._ensure_unit(user_id or "_all", create=False)
+            result, meta = u.child.call("think", args)
         if not isinstance(result, dict):
             raise RuntimeError(f"think returned {type(result).__name__}")
         if result.get("synthesis_status") in ("no_llm", "model_unusable"):
