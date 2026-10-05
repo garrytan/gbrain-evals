@@ -69,7 +69,8 @@ from .mcp_stdio import McpChild, McpToolError, stderr_tail
 # Bump when anything that changes what ingest writes changes (page rendering, slugs, template config, barrier).
 # Cells with equal ingest inputs share one store keyed on this (eval/runner/harness-cell.ts storeIdentity).
 INGEST_REVISION = "gbrain-ingest-1"
-INGEST_KEYS = ("embedding_model", "embedding_dimensions", "gbrain_config", "remote_budget_max", "extraction_model", "extraction_window_chars")
+INGEST_KEYS = ("embedding_model", "embedding_dimensions", "gbrain_config", "remote_budget_max", "extraction_model", "extraction_window_chars",
+               "page_split")
 
 DEFAULTS = {
     "lane": "raw",
@@ -147,6 +148,21 @@ def page_markdown(doc: Document) -> str:
         fm.append(f"date: {doc.timestamp[:10]}")
     fm.append("---")
     return "\n".join(fm) + "\n\n" + render_body(doc).strip() + "\n"
+
+
+_EXCHANGE_START = re.compile(r"(?=\[(?:[A-Za-z]+-\d{1,2}-\d{4} \| )?Turn (\d+)\] User:)")
+
+
+def split_exchanges(doc: Document) -> list[Document]:
+    """One page per exchange (a user turn and the replies before the next user turn), for transcripts that mark
+    turns as `[Turn N] User:` (BEAM). Each page keeps the document's date; text before the first marker stays with
+    the first page. A document without markers stays whole."""
+    marks = list(_EXCHANGE_START.finditer(doc.content))
+    if len(marks) < 2:
+        return [doc]
+    bounds = [0] + [m.start() for m in marks[1:]] + [len(doc.content)]
+    return [Document(id=f"{doc.id}-t{m.group(1)}", content=doc.content[a:b].strip(), user_id=doc.user_id, timestamp=doc.timestamp)
+            for m, a, b in zip(marks, bounds, bounds[1:]) if doc.content[a:b].strip()]
 
 
 def _turns(doc: Document) -> list[tuple[str, str]] | None:
@@ -404,6 +420,10 @@ class GbrainMemoryProvider(MemoryProvider):
         t0 = time.perf_counter()
         # A dataset can list one session twice in a history (LongMemEval haystacks do): an identical repeat is
         # written once; a repeat with different text gets its own slug so both stay retrievable.
+        if self.cfg.get("page_split") == "exchanges":
+            docs = [piece for d in docs for piece in split_exchanges(d)]
+        elif self.cfg.get("page_split"):
+            raise GbrainIngestError(f"unknown page_split {self.cfg['page_split']!r}: use exchanges or leave it unset")
         pages, seen, written = [], {}, []
         for d in docs:
             slug, body = SLUG_PREFIX + d.id.lower(), page_markdown(d)
@@ -590,6 +610,9 @@ class GbrainMemoryProvider(MemoryProvider):
     def _query_pages(self, query: str, user_id: str | None, expand_default: bool | None = None):
         # token_budget / return_unit / limit set to null in the cell config mean "gbrain's own default": the argument is omitted.
         args = {"query": query}
+        for key in ("detail", "return_window"):
+            if self.cfg.get(key) is not None:
+                args[key] = self.cfg[key]
         for key in ("token_budget", "return_unit", "limit"):
             if self.cfg.get(key) is not None:
                 args[key] = int(self.cfg[key]) if key != "return_unit" else self.cfg[key]
