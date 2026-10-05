@@ -1,6 +1,0 @@
-restates     retrieved 298/300 (99.3%) median cos 0.941 p10 0.886
-corrected    retrieved 59/150 (39.3%) median cos 0.774 p10 0.694
-negation     retrieved 143/150 (95.3%) median cos 0.843 p10 0.808
-temporal     retrieved 131/150 (87.3%) median cos 0.834 p10 0.793
-compound     retrieved 122/150 (81.3%) median cos 0.840 p10 0.779
-independent  retrieved 1/150 (0.7%) median cos 0.528 p10 0.443
