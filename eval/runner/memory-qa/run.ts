@@ -20,7 +20,8 @@
  * Facts lane (`--facts conversation`): pages import as conversation pages
  * with ISO session dates and gbrain's conversation-facts extractor runs on
  * each conversation before its questions; rows carry facts_count and
- * facts_unresolved_share, and every saved fact lands in facts.ndjson.
+ * facts_unresolved_share, and every saved fact lands in facts.ndjson (with its
+ * stored attributed_to when the build has the column).
  * `--qa reader --qa-context facts` answers from the
  * saved facts of the top sessions instead of their raw turns.
  *
@@ -334,14 +335,14 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
           extractError = (e as Error).message.slice(0, 300);
         }
         // Whatever the extractor saved before a failure is what the brain holds, so it is read and scored either way.
-        const facts = await engine.executeRaw(`SELECT fact, valid_from, source_markdown_slug FROM facts WHERE expired_at IS NULL AND source NOT LIKE 'cli:extract-conversation-facts:terminal%' AND source NOT LIKE 'cli:extract-conversation-facts:non-extractable%' ORDER BY valid_from, id`) as Array<{ fact: string; valid_from: Date | string | null; source_markdown_slug: string | null }>;
+        const facts = await engine.executeRaw(`SELECT fact, valid_from, source_markdown_slug, to_jsonb(facts)->>'attributed_to' AS attributed_to FROM facts WHERE expired_at IS NULL AND source NOT LIKE 'cli:extract-conversation-facts:terminal%' AND source NOT LIKE 'cli:extract-conversation-facts:non-extractable%' ORDER BY valid_from, id`) as Array<{ fact: string; valid_from: Date | string | null; source_markdown_slug: string | null; attributed_to: string | null }>;
         for (const f of facts) {
           const sessionId = f.source_markdown_slug ? bySlug.get(f.source_markdown_slug) : undefined;
           if (!sessionId) continue;
           factsBySession.set(sessionId, [...(factsBySession.get(sessionId) ?? []), { fact: f.fact, valid_from: f.valid_from ? new Date(f.valid_from).toISOString() : null }]);
         }
         appendFileSync(join(a.output, 'facts.ndjson'), facts.map(f => JSON.stringify({ conversation: convId, session: f.source_markdown_slug ? bySlug.get(f.source_markdown_slug) ?? null : null,
-          valid_from: f.valid_from ? new Date(f.valid_from).toISOString() : null, fact: f.fact, unresolved: unresolvedRelativeTime(f.fact) }) + '\n').join(''));
+          valid_from: f.valid_from ? new Date(f.valid_from).toISOString() : null, fact: f.fact, attributed_to: f.attributed_to, unresolved: unresolvedRelativeTime(f.fact) }) + '\n').join(''));
         const unresolved = facts.filter(f => unresolvedRelativeTime(f.fact)).length;
         factStats.conversations++; factStats.facts += facts.length; factStats.unresolved += unresolved;
         convFacts = { facts_count: facts.length, facts_unresolved_share: facts.length ? unresolved / facts.length : 0,
