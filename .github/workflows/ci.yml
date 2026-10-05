@@ -107,7 +107,7 @@ jobs:
           bun-version: 1.4.2
 
       - name: Install uv 0.12.3
-        run: curl -LsSf https://astral.sh/uv/0.12.3/install.sh | sh && echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+        run: pipx install uv==0.12.3
 
       - name: Install (frozen lockfile)
         run: bun install --frozen-lockfile

@@ -40,7 +40,7 @@ describe.skipIf(!ready)('harness:cell keyless fixture', () => {
       const summary = JSON.parse(readFileSync(join(dir, 'summary.json'), 'utf8'));
       expect(summary.scheduled).toBe(4);
       expect(summary.score.complete).toBe(true);
-      expect(summary.gates).toEqual({ complete: true, delivered_context: true, no_remote_clamp: true });
+      expect(summary.gates).toEqual({ complete: true, no_answer_or_retrieval_failures: true, delivered_context: true, no_remote_clamp: true });
       for (const stage of ['ingest', 'retrieve', 'answer', 'judge']) expect(readdirSync(join(dir, 'stages', stage)).length).toBeGreaterThan(0);
       const answer = JSON.parse(readFileSync(join(dir, 'stages/answer', readdirSync(join(dir, 'stages/answer'))[0]), 'utf8'));
       expect(answer.requests.length).toBe(1);

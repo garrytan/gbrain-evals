@@ -147,5 +147,5 @@
     "unpriced": [],
     "note": "list-price estimate from token volumes; the run is enforced by the metering proxy, not by this number"
   },
-  "reproduce": "bun run harness:cell run /tmp/specs/reader-openai-gpt-6-1-sol.json"
+  "reproduce": "bun run harness:cell run <tmp>/specs/reader-openai-gpt-6-1-sol.json"
 }

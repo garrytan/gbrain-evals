@@ -147,5 +147,5 @@
     "unpriced": [],
     "note": "list-price estimate from token volumes; the run is enforced by the metering proxy, not by this number"
   },
-  "reproduce": "bun run harness:cell run /tmp/specs/reader-anthropic-claude-opus-5-5.json"
+  "reproduce": "bun run harness:cell run <tmp>/specs/reader-anthropic-claude-opus-5-5.json"
 }
