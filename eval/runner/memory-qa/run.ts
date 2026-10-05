@@ -324,25 +324,28 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
       const factsBySession = new Map<string, SavedFact[]>();
       let convFacts: Pick<MemoryQaRow, 'facts_count' | 'facts_unresolved_share' | 'facts_extract_error'> = {};
       if (extractFacts && !importError) {
+        let extractError: string | null = null;
         try {
           const res = await extractFacts(engine, { sourceId: 'default', slugs: [...bySlug.keys()], types: ['conversation'], force: true });
-          const facts = await engine.executeRaw(`SELECT fact, valid_from, source_markdown_slug FROM facts WHERE expired_at IS NULL AND source NOT LIKE 'cli:extract-conversation-facts:terminal%' AND source NOT LIKE 'cli:extract-conversation-facts:non-extractable%' ORDER BY valid_from, id`) as Array<{ fact: string; valid_from: Date | string | null; source_markdown_slug: string | null }>;
-          for (const f of facts) {
-            const sessionId = f.source_markdown_slug ? bySlug.get(f.source_markdown_slug) : undefined;
-            if (!sessionId) continue;
-            factsBySession.set(sessionId, [...(factsBySession.get(sessionId) ?? []), { fact: f.fact, valid_from: f.valid_from ? new Date(f.valid_from).toISOString() : null }]);
-          }
-          appendFileSync(join(a.output, 'facts.ndjson'), facts.map(f => JSON.stringify({ conversation: convId, session: f.source_markdown_slug ? bySlug.get(f.source_markdown_slug) ?? null : null,
-            valid_from: f.valid_from ? new Date(f.valid_from).toISOString() : null, fact: f.fact, unresolved: unresolvedRelativeTime(f.fact) }) + '\n').join(''));
-          const unresolved = facts.filter(f => unresolvedRelativeTime(f.fact)).length;
-          factStats.conversations++; factStats.pages_processed += res.pages_processed; factStats.pages_failed += res.pages_failed;
-          factStats.facts += facts.length; factStats.unresolved += unresolved;
-          convFacts = { facts_count: facts.length, facts_unresolved_share: facts.length ? unresolved / facts.length : 0,
-            ...(res.pages_failed ? { facts_extract_error: `${res.pages_failed} of ${bySlug.size} pages failed extraction` } : {}) };
+          factStats.pages_processed += res.pages_processed; factStats.pages_failed += res.pages_failed;
+          if (res.pages_failed) extractError = `${res.pages_failed} of ${bySlug.size} pages failed extraction`;
         } catch (e) {
           factStats.errors++;
-          convFacts = { facts_extract_error: (e as Error).message.slice(0, 300) };
+          extractError = (e as Error).message.slice(0, 300);
         }
+        // Whatever the extractor saved before a failure is what the brain holds, so it is read and scored either way.
+        const facts = await engine.executeRaw(`SELECT fact, valid_from, source_markdown_slug FROM facts WHERE expired_at IS NULL AND source NOT LIKE 'cli:extract-conversation-facts:terminal%' AND source NOT LIKE 'cli:extract-conversation-facts:non-extractable%' ORDER BY valid_from, id`) as Array<{ fact: string; valid_from: Date | string | null; source_markdown_slug: string | null }>;
+        for (const f of facts) {
+          const sessionId = f.source_markdown_slug ? bySlug.get(f.source_markdown_slug) : undefined;
+          if (!sessionId) continue;
+          factsBySession.set(sessionId, [...(factsBySession.get(sessionId) ?? []), { fact: f.fact, valid_from: f.valid_from ? new Date(f.valid_from).toISOString() : null }]);
+        }
+        appendFileSync(join(a.output, 'facts.ndjson'), facts.map(f => JSON.stringify({ conversation: convId, session: f.source_markdown_slug ? bySlug.get(f.source_markdown_slug) ?? null : null,
+          valid_from: f.valid_from ? new Date(f.valid_from).toISOString() : null, fact: f.fact, unresolved: unresolvedRelativeTime(f.fact) }) + '\n').join(''));
+        const unresolved = facts.filter(f => unresolvedRelativeTime(f.fact)).length;
+        factStats.conversations++; factStats.facts += facts.length; factStats.unresolved += unresolved;
+        convFacts = { facts_count: facts.length, facts_unresolved_share: facts.length ? unresolved / facts.length : 0,
+          ...(extractError ? { facts_extract_error: extractError } : {}) };
       }
       for (const q of qs) {
         const base: MemoryQaRow = { id: q.id, conversation: q.conversation, category: q.category, abstention: q.abstention, gold_count: q.gold.length, ...convFacts };
