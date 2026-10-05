@@ -33,6 +33,30 @@ def _disable_dotenv() -> None:
     os.environ["PYTHON_DOTENV_DISABLED"] = "1"
 
 
+def _stable_dataset_cache() -> None:
+    """Keep downloaded datasets under MPW_DATASET_CACHE, outside the venv, so a rebuilt venv reuses them."""
+    root = os.environ.get("MPW_DATASET_CACHE")
+    if not root:
+        return
+    import importlib
+    import pkgutil
+    from pathlib import Path
+
+    import memory_bench.dataset as ds_pkg
+    import memory_bench.dataset._cache as cache_mod
+
+    def dataset_cache_dir(name: str) -> Path:
+        path = Path(root) / name
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+
+    cache_mod.dataset_cache_dir = dataset_cache_dir
+    for info in pkgutil.iter_modules(ds_pkg.__path__):
+        mod = importlib.import_module(f"memory_bench.dataset.{info.name}")
+        if hasattr(mod, "dataset_cache_dir"):
+            mod.dataset_cache_dir = dataset_cache_dir
+
+
 def _fixed_agentic_rag():
     from memory_bench.modes.agentic_rag import AgenticRAGMode
     from memory_bench.modes.rag import RAGMode
@@ -55,6 +79,7 @@ def install() -> None:
     if _installed:
         return
     _disable_dotenv()
+    _stable_dataset_cache()
 
     import memory_bench.llm as llm_pkg
     import memory_bench.memory as memory_pkg

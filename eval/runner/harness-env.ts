@@ -37,6 +37,8 @@ export interface HarnessLock {
   excluded_requirements: string[];
   extra_requirements: string[];
   comparator: { registry_key_sha256: string; [k: string]: unknown };
+  /** Dataset files the harness loaders cannot fetch themselves, pinned by content hash. */
+  datasets?: Record<string, { env: string; file: string; url: string; sha256: string; why?: string }>;
 }
 
 export interface HarnessInstall {
@@ -49,6 +51,8 @@ export interface HarnessInstall {
   /** PYTHONPATH that makes `python -m mpw` importable. */
   pythonpath: string;
   torch_version: string;
+  /** Environment variables pointing the harness loaders at pinned dataset files. */
+  dataset_env: Record<string, string>;
 }
 
 export function readLock(path = LOCK_PATH): { lock: HarnessLock; sha256: string } {
@@ -97,7 +101,7 @@ export function ensureHarness(options: { log?: (l: string) => void; checkOnly?: 
   const python = join(venv, 'bin', 'python');
   const readyPath = join(venv, 'ready.json');
   const src = join(HARNESS_HOME, 'src', lock.harness_commit);
-  const result = (torch: string): HarnessInstall => ({ lock, lock_sha256: sha256, src, venv, python, pythonpath: PROVIDER_DIR, torch_version: torch });
+  const result = (torch: string): HarnessInstall => ({ lock, lock_sha256: sha256, src, venv, python, pythonpath: PROVIDER_DIR, torch_version: torch, dataset_env: options.checkOnly ? datasetEnv(lock) : ensureDatasets(lock, log) });
   if (existsSync(readyPath)) {
     const ready = JSON.parse(readFileSync(readyPath, 'utf8')) as { lock_sha256: string; torch_version: string };
     if (ready.lock_sha256 === sha256 && existsSync(python)) return result(ready.torch_version);
@@ -120,6 +124,26 @@ export function ensureHarness(options: { log?: (l: string) => void; checkOnly?: 
   return result(torch);
 }
 
+const DATASET_DIR = join(HARNESS_HOME, 'datasets');
+
+function datasetEnv(lock: HarnessLock): Record<string, string> {
+  return Object.fromEntries(Object.values(lock.datasets ?? {}).map(d => [d.env, join(DATASET_DIR, d.file)]));
+}
+
+/** Download each pinned dataset file once and verify its sha256. */
+export function ensureDatasets(lock: HarnessLock, log: (l: string) => void = () => {}): Record<string, string> {
+  mkdirSync(DATASET_DIR, { recursive: true });
+  for (const [name, d] of Object.entries(lock.datasets ?? {})) {
+    const path = join(DATASET_DIR, d.file);
+    const ok = () => existsSync(path) && createHash('sha256').update(readFileSync(path)).digest('hex') === d.sha256;
+    if (ok()) continue;
+    log(`[harness] downloading the pinned ${name} file`);
+    run(['curl', '-sSfL', '-o', path, d.url]);
+    if (!ok()) throw new Error(`${name}: ${d.url} does not match the pinned sha256 ${d.sha256.slice(0, 12)}`);
+  }
+  return datasetEnv(lock);
+}
+
 /**
  * Environment for a harness Python process: the venv's python first on PATH,
  * mpw importable, dotenv disabled, unbuffered output. Callers add the cell's
@@ -136,9 +160,10 @@ export function harnessProcessEnv(install: HarnessInstall, extra: Record<string,
     VIRTUAL_ENV: install.venv,
     HF_HUB_DISABLE_TELEMETRY: '1',
     TOKENIZERS_PARALLELISM: 'false',
+    MPW_DATASET_CACHE: join(DATASET_DIR, 'cache'),
   };
   for (const k of ['LANG', 'LC_ALL', 'TMPDIR', 'HF_HOME', 'XDG_CACHE_HOME']) if (process.env[k]) base[k] = process.env[k]!;
-  return { ...base, ...extra };
+  return { ...base, ...install.dataset_env, ...extra };
 }
 
 if (import.meta.main) {
