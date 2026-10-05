@@ -1,0 +1,141 @@
+{
+  "models": [
+    "gpt-6-luna"
+  ],
+  "arms": [
+    "c6c958-callfull-adv-starter"
+  ],
+  "tasks": [
+    "H01",
+    "H02",
+    "H03",
+    "H04",
+    "H05",
+    "H06",
+    "H07",
+    "H08",
+    "H09",
+    "H10",
+    "H11",
+    "H12",
+    "H13",
+    "H14",
+    "H15",
+    "H16",
+    "H17",
+    "H18",
+    "H19",
+    "H20"
+  ],
+  "families": [
+    "H"
+  ],
+  "success": {
+    "gpt-6-luna": {
+      "c6c958-callfull-adv-starter": 0
+    }
+  },
+  "by_family": {
+    "H": {
+      "gpt-6-luna": {
+        "c6c958-callfull-adv-starter": 0
+      }
+    }
+  },
+  "by_stratum": {
+    "hidden-tool": {
+      "gpt-6-luna": {
+        "c6c958-callfull-adv-starter": 0
+      }
+    }
+  },
+  "capability": {
+    "gpt-6-luna": null
+  },
+  "advantage": {},
+  "pooled_advantage": {
+    "value": null,
+    "ci95": [
+      null,
+      null
+    ]
+  },
+  "slope": {
+    "value": null,
+    "ci95": [
+      null,
+      null
+    ],
+    "n_models": 0
+  },
+  "family_slopes": {
+    "H": {
+      "value": null,
+      "ci95": [
+        null,
+        null
+      ]
+    }
+  },
+  "safety": {
+    "c6c958-callfull-adv-starter": {
+      "output_leaks": 0,
+      "context_exposures": 0,
+      "unsafe_writes": 0,
+      "c_runs": 0
+    }
+  },
+  "efficiency": {
+    "gpt-6-luna": {
+      "c6c958-callfull-adv-starter": {
+        "usd_per_task": 0.0054872135,
+        "usd_per_success": null,
+        "p50_s": 330.099,
+        "p95_s": 365.264,
+        "turns": 7.1
+      }
+    }
+  },
+  "claims": {
+    "c6c958-callfull-adv-starter": {
+      "unsupported_per_answer": null,
+      "contradicted_per_answer": null,
+      "judged": 0
+    }
+  },
+  "missed_evidence": {
+    "c6c958-callfull-adv-starter": 0.15
+  },
+  "cost_split": {
+    "gpt-6-luna": {
+      "c6c958-callfull-adv-starter": {
+        "uncached_input": 0.0035055600000000004,
+        "cache_write": 0,
+        "cache_read": 0.0009517785,
+        "output": 0.00052065,
+        "gbrain_provider_calls": 0.000509225,
+        "unsplit": 0,
+        "total": 0.005487213499999999
+      }
+    }
+  },
+  "tool_chars": {
+    "gpt-6-luna": {
+      "c6c958-callfull-adv-starter": {
+        "context_pack": 452.95000000000005,
+        "get_page": 2304.1,
+        "search": 85496,
+        "query": 9182.8,
+        "whoami": 426,
+        "get_backlinks": 0.30000000000000004,
+        "resolve_slugs": 20.3,
+        "list_pages": 3923.2,
+        "request_tools": 0.6,
+        "entity": 26.15,
+        "recall": 4.9
+      }
+    }
+  },
+  "cells": 20,
+  "usd": 0.10974427
+}
