@@ -309,9 +309,8 @@ class GbrainMemoryProvider(MemoryProvider):
                     n += 1
                 slug = f"{slug}-{n}"
             seen[slug] = body
+            u.timestamps[slug[len(SLUG_PREFIX):]] = d.timestamp
             pages.append({"slug": slug, "content": body})
-        for d in docs:
-            u.timestamps[d.id.lower()] = d.timestamp
         u.save()
         batched = "put_pages" in child.tools
         try:
