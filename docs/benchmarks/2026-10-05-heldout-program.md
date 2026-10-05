@@ -47,7 +47,7 @@ One row per idea. "Held-out verdict" is the custodian's sealed result against th
 | P3 | Relational triplet scoring | `search.triplet_scoring` | **FAIL** (relational arm fired on 17% of questions, bar 80%) | removed | #6014 |
 | P3 | Declared single-value relations close the older value | `dream.single_value.mode` | **FAIL** (3 wrong closures, bar 0) | `propose` | #6014 |
 | P4 | Core memory tier and save before compaction | in progress, see gbrain PR | in progress | in progress | [#6015](https://github.com/garrytan/gbrain/pull/6015), draft |
-| P5 | Typed relation lines, wanted pages, similar-page hint ([records](2026-10-05-heldout-program/p5.md)) | `line_grammar.*`, `wanted_pages.*`, `put_page.similar_pages` | H1, H2, H4, H5a, H7, H8, H9 **PASS**; set G re-check and H11 **FAIL**; H3, H5b, H6 pending | per hypothesis | [#6017](https://github.com/garrytan/gbrain/pull/6017), draft |
+| P5 | Typed relation lines, wanted pages, similar-page hint ([records](2026-10-05-heldout-program/p5.md)) | `line_grammar.*`, `wanted_pages.*`, `put_page.similar_pages` | H1, H2, H4, H5a, H7, H8, H9 **PASS**; set G and set H re-checks and H11 **FAIL** (typing and lexicon changes removed); H3, H5b, H6 pending | per hypothesis | [#6017](https://github.com/garrytan/gbrain/pull/6017), draft |
 | P6 | Time-aware search | in progress | in progress | in progress | no PR yet |
 | P7 | Multi-relation query planner | `search.relational_planner` | **PASS** (24 better, 0 worse; +27 points strict all-hit@10) | on in `balanced` and `tokenmax` | [#6019](https://github.com/garrytan/gbrain/pull/6019), merged, v0.60.60.0 |
 | P7 | One-hop orientation | `search.relational_orient_onehop` | does not meet its rule (1 better, 0 worse, p = 1.0) | off | #6019 |
