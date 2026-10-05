@@ -113,8 +113,6 @@ class CogneeAdapter(Adapter):
         return await cognee.cognify(datasets=[ns], chunker=JsonListChunker, extractor="llm")
 
     def ingest(self, ns: str, session: dict[str, Any]) -> dict[str, Any]:
-        if not session["event_time"]:
-            raise ShimError("invalid_request", "event_time is required; cognee would otherwise date the session to ingest time", 400)
         number = self.session_counts.get(ns, 0) + 1
         items = render_session(session, number)
         if not items:

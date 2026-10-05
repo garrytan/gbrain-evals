@@ -30,7 +30,7 @@
     }
   },
   "time": "in-text",
-  "time_notes": "Each turn-pair item carries 'Time anchor: <event_time>' in its text, as cognee's BEAM preprocessing does. temporal_cognify stays off, as in cognee's BEAM ingestion. cognee.search takes no query date, so query_time is ignored and applied_settings says so.",
+  "time_notes": "Each turn-pair item carries 'Time anchor: <event_time>' in its text, as cognee's BEAM preprocessing does. temporal_cognify stays off, as in cognee's BEAM ingestion. cognee.search takes no query date, so query_time is ignored and applied_settings says so. A null event_time (allowed by the protocol) is written as 'Time anchor: unknown'; cognee never substitutes the ingest time, because dates live only in the text.",
   "provenance": {
     "status": "partial",
     "mechanism": "Chunk items carry payload.document_id, which is the cognee Data id. The shim pins each session's Data id (uuid5 of namespace and source id) through DataItem.data_id and labels it with the source id, so a chunk maps to exactly one session (exact). Entity and fact items come from the merged graph and carry no source; they are returned with provenance unavailable. The map is rebuilt from cognee.datasets.list_data labels (public API) after a restart."
