@@ -131,6 +131,10 @@ The planner plans 70% of plainly worded questions and 21% of reworded ones, the 
 
 - Starting line: [`2026-10-05-heldout-program/starting-line/`](2026-10-05-heldout-program/starting-line/) holds each shard's `receipt.json`, `run-config.json` and `rows.ndjson.gz`. `bun docs/benchmarks/2026-10-05-heldout-program/recount-starting-line.ts` recomputes [`summary.json`](2026-10-05-heldout-program/starting-line/summary.json) from the rows. The runs used `bun run eval:decide` sources `lme-s`, `locomo`, `beam-100k` and `beam-1m` on the dev split, seed 42, with an overlay of gbrain `6622a119e`, and need `OPENAI_API_KEY`.
 - Held-out aggregates: [`2026-10-05-heldout-verdicts/`](2026-10-05-heldout-verdicts/README.md). Sealed rows stay with the custodian.
-- Branch history: [`2026-10-05-heldout-program/branch-folds.md`](2026-10-05-heldout-program/branch-folds.md) lists how each plan's evaluation branch is folded into this one.
+- Branch history: [`2026-10-05-heldout-program/branch-folds.md`](2026-10-05-heldout-program/branch-folds.md) lists how each plan's evaluation branch is folded into main.
 
 Head-to-head comparisons against external memory systems, a full-context baseline and a file-agent baseline at matched cost are not part of this report.
+
+## Changelog
+
+- 2026-10-05: First publication (gbrain-evals#71). The starting line on gbrain master `6622a119e`, the held-out records of P1, P3 and P7, and the program scorecard, with P2, P4, P5, P6 and P8 listed as in progress.
