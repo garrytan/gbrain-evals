@@ -230,5 +230,6 @@
       "lexicon_coverage_on_set_E": "now-precision 0.768, as-of 0.556, stale-summary correction 0.000, traps 0.848 (investment 29/35, alumni 27/37: ended stints stay live because their leave lines are not read), on both builds"
     }
   },
-  "cost_usd": 0
+  "cost_usd": 0,
+  "decision": "dream.single_value.mode stays propose (Garry, 2026-10-05): accuracy decides, and no E5 run, on set C or on the retest material, has recorded a correct single-value closure, so apply mode has no measured benefit. The guard result shows apply would be safe with the guard on this material."
 }
