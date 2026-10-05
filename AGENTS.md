@@ -12,3 +12,4 @@ Top-level docs, in short (full rules in [CLAUDE.md, "Shape of a top-level docume
 README.md, the hub pages in `docs/` and the guides in `eval/` open with what gbrain does at the commit `package.json`
 pins, in present tense, and end with a `## Changelog` of how that document changed, newest first. Replace a superseded
 claim instead of appending an update beside it, and add the changelog entry in the same commit.
+README's current state is three parts: what gbrain does, current results, and how gbrain compares with other systems.

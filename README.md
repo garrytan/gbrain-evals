@@ -1,191 +1,130 @@
 # gbrain-evals
 
-[gbrain](https://github.com/garrytan/gbrain) is a memory system for agents. It keeps notes as Markdown files and
-builds a database index over them that combines word search, meaning-based (vector) search and stored relationships
-between pages. An agent such as Claude Code or Codex reaches it through a CLI or an MCP server.
+[gbrain](https://github.com/garrytan/gbrain) is a memory system for AI agents. gbrain-evals is its public test
+suite: the data, the comparison systems, the scoring code and every published result. Use it to see what gbrain
+does well, check any claim against its saved records, or run the same tests on another system.
 
-This repository tests gbrain. It holds the test data, the comparison systems, the scoring code and every published
-result, so you can check a claim, reproduce a run, compare another system or add the questions your application
-needs answered.
-
-This page describes gbrain as this repository currently pins it. Everything above [Changelog](#changelog) is the
-current state; the changelog at the bottom records how this page changed and why.
+This page has three parts: [what gbrain does](#what-gbrain-does), [its current results](#current-results) and
+[how it compares with other memory systems](#how-gbrain-compares). Everything above [Changelog](#changelog)
+describes gbrain as this repository pins it today; the changelog at the bottom records how this page changed.
 
 ## The gbrain under test
 
 | Item | Value |
 |---|---|
-| Pinned product | gbrain master [`739e5cc`](https://github.com/garrytan/gbrain/tree/739e5cc89ca43b9b9351f0f203c7b12a7c0c571c) (v0.60.46.0, the agent-first operator wave), declared as `gbrain` in `package.json` |
-| Fixed-purpose aliases | `gbrain-cues` at `939232f` (situation-cue experiments, Cat 36) and `gbrain-reader` at `e78f1c3` (LongMemEval reader comparisons). Every other arm measures the pinned product. |
-| Newer builds measured as overlays | v0.60.49.0 (`b9ee931`, gbrain [#6010](https://github.com/garrytan/gbrain/pull/6010), the `auto_chronicle` date fix) and v0.60.62.0 (`51f865d78`, the entity-recall wave, Cat 40). Their results name their own commit. |
+| Pinned product | gbrain master [`739e5cc`](https://github.com/garrytan/gbrain/tree/739e5cc89ca43b9b9351f0f203c7b12a7c0c571c) (v0.60.46.0), declared as `gbrain` in `package.json` |
+| Newer gbrain builds also measured | v0.60.49.0 (`b9ee931`), v0.60.60.0 (multi-relation planner) and v0.60.62.0 (`51f865d78`, entity recall). Results from them say so. |
+| Fixed-purpose aliases | `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), used only by the experiments that name them |
 | This repository | gbrain-evals v0.10.23 (`VERSION`) |
 
-This repository installs gbrain master `739e5cc`; a local `bun link` overrides it, and a report always names the
-code it actually loaded. Many retrieval results were measured at older commits. Each number below carries its
-commit when it differs from the pin. The search mode definitions (`balanced`, `conservative`, `tokenmax`) are
-identical from v0.48.4.0 (`2efaaf8f`) through `739e5cc`, so the retrieval settings below still describe the
-installed modes.
+This repository installs gbrain master `739e5cc`. Some results below were measured at earlier commits; each names
+its commit. The search modes have been identical since v0.48.4.0, so retrieval results from those commits describe
+the installed modes.
 
-## What gbrain does today
+## What gbrain does
 
-### It finds every conversation a question needs
+gbrain keeps your notes, conversations and documents as Markdown files you own, and builds a database index over
+them (Postgres or embedded PGLite). An agent such as Claude Code or Codex uses it through a CLI or an MCP server to
+save, find, update and forget what it knows. The parts that matter for an agent:
 
-On [LongMemEval](https://arxiv.org/abs/2410.10813)'s cleaned small split, gbrain's `balanced` mode with the Voyage
-reranker finds all labeled evidence sessions for **451 of 470 answerable questions (95.96%)** in its first five
-returned chunks. That count uses opaque session ids, so no id reveals which sessions are evidence (gbrain
-`109b992`, October 4, 2026). It is higher than every other system we can score on the same strict metric from saved
-per-question rankings.
+- **Hybrid retrieval.** Every search combines word matching (for exact names and phrases), meaning-based vector
+  search (for vague recollections and synonyms) and an optional reranker that rereads the candidates against the
+  question. [How the pieces work together](docs/retrieval-lessons.md).
+- **Relationships as evidence.** gbrain stores typed links between pages ("works at", "invested in", "attended") and
+  follows them for questions like "who invested in Acme?", where the answer page may never mention the question's
+  words.
+- **Whole conversations for the reader.** Search ranks short passages, then hands the agent the whole conversation
+  behind each hit, within a token budget, so a question that needs two old chats gets both.
+- **Memory that stays correct.** An updated value replaces the old one everywhere and keeps it as history; `forget`
+  removes a claim from every recall surface; private pages stay out of what agent callers can read.
+- **Built to be run by an agent.** Every error and notice tells the agent what to do next and whether it must ask
+  the user first, so agents do not spend money or repair data without consent.
+- **A write path you can measure.** Agent sessions become readable memory pages, and timeline events are extracted
+  from meetings and chats.
 
-| System | Strict `recall_all@5` | Where the number comes from |
-|---|---|---|
-| **gbrain v0.60.37.0** (`109b992`), `balanced` with Voyage reranker | **95.96% (451/470)** | our recount with opaque ids, October 4 |
-| gbrain v0.60.37.0, same without the reranker | 92.34% (434/470) | our recount with opaque ids, October 4 |
-| gbrain v0.48.4.0, `balanced` with Voyage reranker | 95.53% (449/470) | our run, September 6 |
-| MemPalace hybrid v4 + LLM rerank | 90.0% (423/470) | our strict recount of their saved rankings |
-| MemPalace hybrid v4, held-out subset | 88.7% (376/424) | our strict recount; different denominator |
-| MemPalace raw (ChromaDB) | 85.7% (403/470) | our strict recount of their saved rankings |
-| ContextFit + embedding fusion | 87.45% (411/470) All@5 | self-reported, their own harness |
+## Current results
 
-A question counts only if every required session is found, so finding one of two needed conversations earns
-nothing. Many published LongMemEval "R@5" scores of 95% to 100% count a question as found when any one required
-session appears; MemPalace's raw rankings find at least one for 454/470 questions but all of them for only 403/470.
-Three limits apply. gbrain's five results are chunks, which can cover fewer than five sessions, while MemPalace
-returns five whole sessions. The configuration was chosen on these same 470 questions, with no held-out
-confirmation of the retrieval setting yet. Embedders, chunking and ranking all differ, so this shows how the tested
-pipelines compare, not why. Sources and every row we could not match are in
+| What we measure | Result | gbrain | Report |
+|---|---|---|---|
+| Finding every conversation a question needs (LongMemEval, strict `recall_all@5`) | **451 of 470 (95.96%)** | `109b992` | [Recount](docs/benchmarks/2026-10-04-longmemeval-opaque-followups.md) |
+| Answer accuracy on LongMemEval, house reader with reranker | **453 of 500 (90.6%)** | v0.59.13.0 | [Re-run](docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md) |
+| Answer accuracy with a frontier reader (`gpt-5.4`) on gbrain's retrieval | **447 of 500 (89.4%)** | v0.59.13.0 retrieval | [Frontier reader](docs/benchmarks/2026-10-04-longmemeval-opaque-followups.md#2-a-frontier-reader-on-gbrains-retrieval) |
+| Whole-conversation delivery against bare chunks, sealed held-out set | **192 vs 132 of 200** (+60/−0) | `d44296c` | [Sealed decision](docs/benchmarks/2026-10-02-sealed-v2-decision-1.md) |
+| Concept questions in different words, target ranked first (with reranker) | **130 of 181** | `d44296c` | [Matched comparison](docs/benchmarks/2026-10-02-concept-vector-rerank.md) |
+| Relationship retrieval on reworded one-hop questions, recall at five | **0.411 → 0.537**, 19 better, 0 worse | `3a284ae` | [N9](docs/benchmarks/2026-10-01-n9-multi-hop.md) |
+| Questions chaining two or three relations (multi-relation planner) | **24 better, 0 worse** held-out; +27 points strict all-hit@10 | v0.60.60.0 | [Held-out program](docs/benchmarks/2026-10-05-heldout-program.md) |
+| Returning only the right facts (PrecisionMemBench, tight adaptive + reranker) | **0.586 precision**, 0.825 recall | `2efaaf8f` | [Refresh](docs/benchmarks/2026-09-09-retrieval-refresh.md) |
+| Serving the new value after an update | **388 of 388** probes, never stale | `739e5cc` | [N1](docs/benchmarks/2026-10-01-n1-knowledge-update.md) |
+| Nothing left behind after `forget` | **0** prohibited outputs, 6 of 6 reinstatements | `739e5cc` | [N5](docs/benchmarks/2026-10-01-n5-forget-residue.md) |
+| Private pages reaching agent callers or remote callers | **0** (N6, N8) | `739e5cc` | [N6](docs/benchmarks/2026-09-30-n6-visibility-fuzz.md), [N8](docs/benchmarks/2026-10-01-n8-proactive-recall.md) |
+| Keeping speaker and time across chat export formats | **27 of 27** formats | `739e5cc` | [N12](docs/benchmarks/2026-10-01-n12-format-fidelity.md) |
+| Finding contradicting notes | **149 of 150** conflicts | `739e5cc` | [N2](docs/benchmarks/2026-10-01-n2-contradiction-surfacing.md) |
+| Real agents (Claude Code, Codex) spending or destroying data without consent | **0** violations in 66 safety sessions; 96 of 102 tasks finished | v0.60.46.0 | [Cat 41](docs/benchmarks/2026-10-03-agent-operator.md) |
+| Company-knowledge tasks on five frontier models | **95.6%** success; **0 of 100** finance-only leaks into context | `51f865d78` | [Cat 40](docs/benchmarks/2026-10-02-model-ladder.md) |
+| Timeline events extracted from meetings and chats | **37 and 38 of 38**, 0.04 wrong per page | `b9ee931` | [`auto_chronicle`](docs/benchmarks/2026-10-04-auto-chronicle-rerun.md) |
+| Useful material kept when a session becomes a memory page | **88.1%** judged; 74.9% with quoted evidence | Cat 35 run | [Cat 35](docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md) |
+
+All 28 reproductions in the [bug ledger](docs/benchmarks/2026-10-01-wave-bugs.md) pass at `739e5cc`, and moving to
+that pin cost no category any accuracy ([re-pin report](docs/benchmarks/2026-10-04-operator-wave-repin.md)). The
+correctness rows come from keyless checks on synthetic worlds with generated answer keys, rerun at every pin.
+
+Settings that change these numbers are in [settings by workload](docs/settings.md). Two matter most: keep autocut off
+for questions that need several conversations (451 against 384 of 470), and leave query expansion off, since it adds
+a model call without a measured gain.
+
+## How gbrain compares
+
+Other systems publish different metrics on different protocols, so these comparisons use only numbers we can put on
+the same footing, and say so where we cannot. Sources, dates and every row we could not match are in
 [comparisons and their protocols](docs/comparison-systems.md).
 
-### Its answers are accurate, but no answer ranking is claimed
+**Finding all the evidence: gbrain leads every system we can score strictly.** A question counts only if every
+required session is in the top five.
 
-With opaque session ids, gbrain's house reader (Sonnet 4.6 taking brief notes, 1,024 output tokens) answers **453
-of 500** LongMemEval questions correctly with the reranker on and **439 of 500** with it off. On exactly the
-reranker-off sessions, a frontier reader (`gpt-5.4` at medium reasoning, LongMemEval's official reading prompt)
-answers **447 of 500**, and GPT-4o with the same prompt answers 430. Published results for other systems range from
-81.6% to 96.1%, each with its own retrieval, reader, judge and prompts, so we claim no ranking on answers in either
-direction. [Opaque-id re-run](docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md),
-[frontier reader](docs/benchmarks/2026-10-04-longmemeval-opaque-followups.md#2-a-frontier-reader-on-gbrains-retrieval).
+| System | Strict `recall_all@5` on LongMemEval | Source |
+|---|---|---|
+| **gbrain**, `balanced` with Voyage reranker | **95.96% (451/470)** | our run, opaque session ids |
+| gbrain, same without the reranker | 92.34% (434/470) | our run, opaque session ids |
+| MemPalace hybrid v4 + LLM rerank | 90.0% (423/470) | our strict recount of their saved rankings |
+| ContextFit + embedding fusion | 87.45% (411/470) | self-reported, their own harness |
+| MemPalace raw (ChromaDB) | 85.7% (403/470) | our strict recount of their saved rankings |
 
-### It hands the reader whole conversations by default
+Many headline LongMemEval "R@5" scores of 95% to 100% count a question as found when any one required session
+appears; on that looser metric gbrain finds at least one for 470 of 470. Limits: gbrain returns five chunks while
+MemPalace returns five whole sessions, the configuration was chosen on these 470 questions, and embedders and
+chunking differ, so this compares pipelines, not components.
 
-What the reader receives matters more than which chunks rank first. gbrain's default evidence delivery, `auto`,
-returns the whole conversation behind each hit within a 24,000-token budget and leaves other hits as chunks. On a
-sealed held-out set (200 questions, histories of about 143,000 tokens, answers that need two to four chats months
-apart), `auto` answered **192 of 200** against 132 for bare chunks from the same five hits (+60/−0), at about four
-times the reader input (13,000 against 3,300 tokens). `return_unit: page` is the uncapped opt-in.
-[Sealed v2 decision](docs/benchmarks/2026-10-02-sealed-v2-decision-1.md),
-[evidence-delivery study](docs/benchmarks/2026-09-30-evidence-delivery.md).
+**Answer accuracy: close to the published systems that use the same reader.** With `gpt-5.4` as the reader,
+gbrain's retrieval answers 89.4%; Zep publishes 90.2% and Memoria 84.97% with the same reader model. Judges,
+prompts and retrieval budgets differ, so this is context, not a ranking. Published results across systems range from
+81.6% to 96.1%.
 
-### It finds an idea described in different words, with a reranker
+**Returning only what matters: gbrain's tight mode is more precise than every memory product in the
+PrecisionMemBench table except the benchmark author's own belief store.** Its mean precision is 0.586, against 0.22
+for supermemory, 0.09 for Zep and 0.06 for mem0 as listed upstream; the author's belief store scores 1.00. Upstream rows may use different
+denominators and machines.
 
-On held-out concept questions, gbrain with the Voyage reranker puts an exact target first on **130 of 181**;
-vectors with the same reranker score 128, so the two are level. Without reranking gbrain scores 99 and vectors 118.
-For concept questions, run gbrain with reranking, and rerank both sides when you compare it with a vector store.
-[Matched comparison](docs/benchmarks/2026-10-02-concept-vector-rerank.md) (gbrain `d44296c`).
+**Concept search: level with a vector store, when both are reranked.** gbrain 130 of 181, vectors with the same
+reranker 128.
 
-### It uses relationships as evidence for one-hop questions
+**Agent tasks: as good as plain files at the frontier, safer with restricted data, ahead of the alternatives on
+mid-tier models.** On five frontier models gbrain and plain Markdown files with `grep` both finish 95.6% of tasks,
+at the ceiling (the oracle scores 97.6%). gbrain puts finance-only text into the agent's context in 0 of 100
+permission runs; files do in 100, and plain Postgres in 97 (with 4 leaked answers). gbrain costs about twice as much
+per task as files. On the earlier six-model set, gbrain finished 75.7% against 72.8% for files, and was clearly
+ahead of plain Postgres (+9.7 points) and Anthropic's memory tool (+12.3).
 
-Asked "who invested in Acme?", gbrain can follow a stored "invested in" link instead of matching words. Switching
-relationship retrieval on raises investor first-place hits from 9 of 39 to 21 of 39 on templated questions
-([controlled test](docs/benchmarks/2026-09-09-retrieval-refresh.md#production-relationship-retrieval-one-switch)),
-and on 145 reworded questions it raises recall at five from 0.411 to 0.537, with 19 questions better and none worse
-([multi-hop check](docs/benchmarks/2026-10-01-n9-multi-hop.md), gbrain `3a284ae`). At the pin it does not plan
-questions that chain two or three relations. gbrain v0.60.60.0 ([#6019](https://github.com/garrytan/gbrain/pull/6019),
-after the pin) adds a multi-relation planner, on by default in `balanced` and `tokenmax`, which passed its held-out
-test with 24 questions better and 0 worse (+27 points strict all-hit@10).
+## Known limits
 
-### Its settings have measured effects
-
-Score-based trimming (autocut) throws away a second needed conversation: turning it off raises complete retrieval
-from 384 to 451 of 470. Query expansion no longer hurts at current gbrain but adds a model call with no measured
-gain, so it stays off. [Settings by workload](docs/settings.md) lists every control with its evidence.
-
-### It stays correct after edits, forgetting and updates
-
-Keyless checks on synthetic worlds with generated answer keys run against every re-pin. At `739e5cc`, all 28
-reproductions in the [bug ledger](docs/benchmarks/2026-10-01-wave-bugs.md) pass, and no category lost accuracy
-against the previous pin. What holds:
-
-- After a value changes, gbrain serves the new value on 388 of 388 probes and never a stale one (N1).
-- `forget` leaves no residue in a running server: 0 prohibited outputs, 6 of 6 reinstatements (N5).
-- No read operation it probes leaks a private page, held Take or private Fact to an agent-facing caller (N6), and
-  no private page reaches a remote caller or the turn block (N8).
-- It keeps different people with similar names apart (N4), and keeps speaker and time across the 27 transcript
-  formats it registers, with `Participants:` lines counted as attendance (N12).
-- It tracks Gmail-shaped open loops, and a "Thanks!" reply no longer closes someone's request (N7).
-- Its contradiction judge finds 149 of 150 conflicts, but calls 6 of 51 compatible pairs contradictions (N2).
-- Its answer grade calls 100 of 120 answerable questions `moderate` and 0 of 120 unanswerable ones (A4).
-
-What remains open: a timeline read on a 1,000-page brain takes about 0.075 ms against 0.045 ms before gbrain's
-Foundations 1 release (Cat7-1, open); open loops cover Gmail only and do not detect a commitment fulfilled by reply;
-there is no corpus-wide contradiction scanner; and associative recall, which gbrain does not claim, scores 0 of 240.
-[Re-pin at `739e5cc`](docs/benchmarks/2026-10-04-operator-wave-repin.md),
-[capability matrix](docs/benchmarks/2026-10-01-capability-matrix.md).
-
-### Automatic event extraction: turn it off at the pin, keep it on from v0.60.49.0
-
-`auto_chronicle`, on by default since v0.60.45.0, turns meeting, chat and calendar pages into timeline events. At
-`739e5cc` it finds 35 and 37 of 38 labeled events and takes "who did I meet that day" questions from 60% to 100%,
-but it also writes planned follow-ups as events on their future dates (0.96 wrong events per page against gbrain's
-0.20 gate). gbrain v0.60.49.0 (`b9ee931`) fixes this: 0 future-dated events, 0.04 wrong events per page, recall 37
-and 38 of 38. [Experiment](docs/benchmarks/2026-10-04-auto-chronicle-lift.md),
-[rerun on the fix](docs/benchmarks/2026-10-04-auto-chronicle-rerun.md).
-
-### Agents operating it ask before spending or destroying data
-
-Most gbrain users never type a gbrain command; their agent does. **Agent operator outcomes (Cat 41)** runs real
-Claude Code and Codex CLI sessions in Docker through 17 requests where an operating agent can go wrong (a paid fix
-nobody approved, a destructive repair, a locked or unmounted brain, an unpriced model under the user's cap, a fresh
-install). gbrain v0.60.46.0, the pinned release, passes the gate: **0 consent violations across 66 safety sessions,
-0 false "you have no notes" answers, token overhead at most +5.9%**, and 96 of 102 sessions finish the user's task
-(measured at the release candidate `b3f4e8b`).
-[What Cat 41 measures](docs/benchmarks/2026-10-03-agent-operator-protocol.md),
-[the runs](docs/benchmarks/2026-10-03-agent-operator.md).
-
-### On company-knowledge tasks it ties plain files at the ceiling and keeps restricted text out
-
-**Model Ladder (Cat 40)** gives one agent loop 50 tasks about a fictional company (which contract term is in force,
-who owns an account now, what a non-finance employee may see, five-part renewal briefs, corrections that must
-survive into a new session) and swaps only the memory: plain files with `grep`, Anthropic's memory tool, plain
-Postgres or gbrain's MCP server. On the five newest frontier models (Sonnet 5.5, Opus 5.5, Fable 5.1, GPT-6.1 Sol,
-GPT-6 Astra), gbrain v0.60.62.0 (`51f865d78`, newer than the pin) and plain files each finish **95.6%** of held-out
-tasks (paired 0.0 points, 95% CI −3.2 to +3.0). The oracle scores 97.6%, so these tasks are at the ceiling. gbrain
-puts finance-only text into the agent's context in 0 of 100 permission runs; files put it there in all 100. gbrain
-costs about twice as much per task ($0.238 against $0.112).
-[What Cat 40 measures](docs/benchmarks/2026-10-02-model-ladder-protocol.md),
-[results](docs/benchmarks/2026-10-02-model-ladder.md).
-
-Which MCP tools an agent sees matters too. On a build after the pin (`c72d6ff`, v0.60.49.0 plus gbrain's operator
-follow-up wave), agents on the `starter` surface (about 35 tools) succeeded as often as on the `full` surface (40 of
-40 both) with 36% fewer tokens, and more often than on the seven-verb surface (37 of 40), so gbrain keeps `starter`
-as the surface its registrations pin.
-[Registration-surface cell](docs/benchmarks/2026-10-05-registration-surface.md).
-
-### Memory has a write side too
-
-Retrieval can only find what was saved. When an agent session becomes a memory page, judged retention of useful
-material is **88.1%**, or **74.9%** when the quoted evidence must actually appear in the page, with **7.0%** claim
-hallucination. These are in-sample results from one run on a 24-transcript corpus the write path was tuned on.
-[Transcript distillation (Cat 35)](docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md),
-[memory at the right moment (Cat 34)](docs/benchmarks/2026-06-12-brainbench-memory.md).
-
-### A small decision model helps in two places, on a branch
-
-gbrain's System One lets a small model (TypeSafe's Jev, `jev-1.13.0`) make nine yes/no or ranking calls. Jev
-measurably helps dream triage (0 of 18 buried decisions missed, against 10) and contradiction proposals (94 of 97
-updated facts found, against none), and regresses reranking, evidence trimming and abstention. System One lives on
-gbrain's `feat/system-one-v1` branch, not on master; at the pin its decision slots stay off unless a TypeSafe key is
-set. [System One report](docs/benchmarks/2026-09-30-system-one-jev.md).
-
-### gbrain master is ahead of the pin, and its new defaults are decided on held-out data
-
-Feature changes to gbrain now get a preregistered decision rule, a development verdict and a held-out verdict run by
-a custodian who keeps the sealed questions; only a held-out win turns a feature on by default. The first program
-measured its starting line at gbrain master `6622a119e` (v0.60.48.0): strict retrieval of all gold sessions at five is
-92.8% on LongMemEval-S, 75.6% on LoCoMo, 45.4% on BEAM-100K and 18.2% on BEAM-1M, the last a history far too large
-for one prompt. Of the merged plans, three ideas pass and ship on (dated relationships with as-of reads, the
-certified nightly contradiction check, the multi-relation planner); four lose or miss their gate and ship off or in a
-safer mode. These builds are newer than the pin.
-[Held-out program](docs/benchmarks/2026-10-05-heldout-program.md), [decision kit](docs/decisions.md).
+- At the pin, a timeline read on a 1,000-page brain takes about 0.075 ms against 0.045 ms before the Foundations 1
+  release (ledger entry Cat7-1, open).
+- At the pin, `auto_chronicle` (on by default) writes planned follow-ups as events on their future dates; turn it
+  off there, or use v0.60.49.0 or later.
+- Open loops cover Gmail only, and a commitment fulfilled by reply does not close.
+- There is no corpus-wide contradiction scanner; the judge compares notes that search returns together.
+- Associative recall, which gbrain does not claim, scores 0 of 240.
+- Several retrieval settings were chosen on the same LongMemEval questions they are scored on; held-out
+  confirmation exists for evidence delivery, not yet for the retrieval configuration.
 
 ## Where to read next
 
@@ -195,14 +134,9 @@ safer mode. These builds are newer than the pin.
 | Which configuration should I try? | [Settings by workload](docs/settings.md) |
 | Every report, grouped by the question it answers | [Documentation index](docs/README.md) |
 | How do retrieval scores differ from answer accuracy? | [What the scores mean](docs/retrieval-lessons.md#what-the-scores-mean) |
-| How does gbrain compare with other memory systems? | [Comparisons and their protocols](docs/comparison-systems.md) |
-| Does memory stay correct after edits, forgetting and restarts? | [Lifecycle experiment](docs/benchmarks/2026-09-29-lifecycle.md) |
+| How are new gbrain defaults decided? | [Held-out program](docs/benchmarks/2026-10-05-heldout-program.md), [decision kit](docs/decisions.md) |
 | Can I reproduce a result or test my own system? | [Run the suite](eval/README.md), [contribute an adapter or a category](eval/CONTRIBUTING.md) |
-| How do I get a verdict on a gbrain change? | [Decision kit](docs/decisions.md) |
 | What is still unfinished? | [Open work](TODOS.md) |
-
-A good score on one workload is a reason to investigate that capability, not a promise about every workload. A
-copied phrase, a vague recollection and a relationship lookup exercise different parts of the system.
 
 ## Try a small experiment
 
@@ -300,21 +234,15 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](CHANGELOG.md); this section records what this page said and why it changed.
 
-### 2026-10-05: gbrain master's held-out program
+### 2026-10-05: Rewritten as what gbrain does, current results and how it compares
 
-gbrain-evals v0.10.23. A new subsection reports the nine-plan held-out program merged in #71: its starting line at gbrain master `6622a119e` (92.8% LongMemEval-S, 75.6% LoCoMo, 45.4% BEAM-100K, 18.2% BEAM-1M strict retrieval) and the three ideas that pass and ship on. The relationships section now says the pin cannot plan chained relations but gbrain v0.60.60.0 adds a planner that passed held-out (24 better, 0 worse), replacing "gbrain does not claim that capability". The reading table links the decision kit.
+gbrain-evals v0.10.23. The page now has three parts above the changelog, replacing a run of dated findings and "Update, October 2/3/4" blocks:
 
-### 2026-10-05: Restructured as a current-state page with this changelog
-
-gbrain-evals v0.10.23. The page now opens with a table naming the gbrain under test (master `739e5cc`, v0.60.46.0, its two aliases and the newer builds measured as overlays) and a "What gbrain does today" section that states each capability in present tense with its current number and commit:
-
-- The retrieval table leads with the opaque-id recount (451/470 at `109b992`) instead of the September 6 run.
-- The "Update, October 2/3/4" blocks and the October 1 wins-and-losses lists are folded into one current section on correctness checks at `739e5cc`, listing what holds and what remains open (Cat7-1, Gmail-only open loops, no corpus-wide contradiction scanner, associative recall 0 of 240).
-- "Why put gbrain on your shortlist?" is merged into that section; its dated narrative (the 433/500 history, the September 24 notes study) moves to the reports and to Corrections.
-- Cat 40 now reports the frontier-model headline (gbrain `51f865d78` and plain files both at 95.6%, at the ceiling; 0 of 100 finance leaks against 100; about twice the cost), which the page had not carried. The registration-surface cell (`starter` kept) is new.
-- `auto_chronicle` advice reads as current: off at the pin, on from v0.60.49.0 (`b9ee931`).
-- Corrections become a list of numbers not to cite, with query expansion's September loss as its own entry.
-- History moves here, below the current state.
+- **What gbrain does:** the capabilities in plain words (hybrid retrieval, relationships, whole-conversation delivery, correctness, the agent operator contract, the write path), with a table naming the gbrain under test (pin `739e5cc`, v0.60.46.0, its aliases and the newer builds also measured).
+- **Current results:** one table of every headline number with its gbrain commit and report, including results the page had not carried: Cat 40 on five frontier models (95.6%, 0 of 100 finance leaks), the multi-relation planner's held-out pass (24 better, 0 worse) and PrecisionMemBench precision (0.586).
+- **How gbrain compares:** strict LongMemEval retrieval against MemPalace and ContextFit (now led by the 451/470 opaque-id recount instead of the September 6 449/470), answer accuracy beside Zep and Memoria with the same `gpt-5.4` reader, PrecisionMemBench against the upstream table, concept search against reranked vectors, and Cat 40 against files, Postgres and the memory tool.
+- **Known limits** replace the October 1 wins-and-losses lists: Cat7-1, `auto_chronicle` at the pin, Gmail-only open loops, no corpus-wide contradiction scanner, associative recall and the missing held-out check of the retrieval configuration.
+- The narrative of each re-pin, fix wave and correction now lives in the entries below, the dated reports and Corrections.
 
 ### 2026-10-04: `auto_chronicle` verdict updated for the fix rerun
 

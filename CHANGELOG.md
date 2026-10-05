@@ -10,12 +10,11 @@ README, the docs index, the settings guide, retrieval lessons, the comparison pa
 contributor guide and the credits now open with what gbrain does at the pinned commit (`739e5cc`, v0.60.46.0) and
 close with a `## Changelog` section recording how that document changed and why, one entry per commit, newest first.
 
-- **README.** A table names the gbrain under test, its aliases and the newer builds measured as overlays. "What gbrain
-  does today" states each capability once with its current number and commit; the dated "Update, October 2/3/4"
-  blocks are folded into it. Cat 40 now carries the frontier-model headline, and the registration-surface cell is
-  linked. Corrections list the numbers not to cite.
-- **Held-out program.** README reports the nine-plan held-out program's starting line on gbrain master and the
-  ideas that ship on, and says the multi-relation planner (gbrain v0.60.60.0, after the pin) passed held-out.
+- **README.** Three parts: what gbrain does, current results (one table, each number with its gbrain commit and
+  report) and how gbrain compares (strict LongMemEval retrieval, answer accuracy with the same reader,
+  PrecisionMemBench, concept search, Cat 40 against files, Postgres and the memory tool), then known limits. The
+  dated "Update, October 2/3/4" blocks move to its changelog. New on the page: Cat 40 on frontier models, the
+  multi-relation planner's held-out pass (gbrain v0.60.60.0) and the held-out program.
 - **Settings and retrieval lessons.** Dated "October 4, 2026:" amendments become current statements (opaque-id
   recount at `109b992`), a `return_unit` row and a whole-conversation delivery section are added, and the September 6
   values move to the changelog.

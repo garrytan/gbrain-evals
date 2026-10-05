@@ -33,6 +33,8 @@ README.md, the hub pages in `docs/` (index, settings, retrieval lessons, compari
 1. **Current state, on top.** A first-time reader, human or agent, learns what gbrain does at the commit `package.json` pins, in present tense. Name the pin once; give each number its gbrain commit when it differs from the pin. Replace a superseded claim instead of appending an "Update" or a dated amendment beside it.
 2. **`## Changelog`, at the bottom.** Newest first, one `### YYYY-MM-DD: <what changed>` entry per change, linking the commit, saying what changed on that page (old value to new value) and why. History, superseded numbers and corrections to earlier wording live here, in dated reports and in CHANGELOG.md.
 
+README's current state has three parts, in this order: **what gbrain does** (capabilities in plain words), **current results** (one table, each number with its gbrain commit and report) and **how gbrain compares** with other systems, to the best we know. Put gbrain's best foot forward, exactly: lead with what it does well, keep each comparison on a matched metric, and list known limits after. Never add an "Update, <date>" block; fold a new result into the right table and record the change in the changelog.
+
 When you change one of these documents, update the current state and add its changelog entry in the same commit.
 
 ## Shape of a benchmark report
