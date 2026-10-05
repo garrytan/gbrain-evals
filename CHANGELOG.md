@@ -2,6 +2,45 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.28] - 2026-10-05
+
+### Held-out follow-ups for the merged plans: root causes, fresh-wording rechecks, sealed-v2 exposure
+
+A second custodian reread the failed held-out decisions of the merged plans and ran rechecks on phrasing sets that share no wording with earlier sets. All runs here are deterministic; $0 in model calls.
+
+- **P3 root causes** ([report section](docs/benchmarks/2026-10-05-heldout-program.md#root-causes-of-the-p3-failures-custodian-analysis)). E1's flat LoCoMo result is a limit of the benchmark shape (feedback weights apply and move 18% of rankings at λ = 0.1, with no net signal), not a harness bug. E4's miss is parser coverage: triplet scoring changes all 37 questions where the relational arm fires and gains +2.27 NDCG@10 points there. E5 is a product defect.
+- **P3 E5 retest on fresh material** ([record](docs/benchmarks/2026-10-05-heldout-verdicts/p3-e5-setf-retest-2026-10-05.json)). Without the advisory-role guard, 23 of 23 single-value closures are wrong; with it, 0 are applied and every gate passes. No E5 run has recorded a correct closure, so `dream.single_value.mode` stays `propose`.
+- **P1 E1 on a third phrasing set** ([record](docs/benchmarks/2026-10-05-heldout-verdicts/p1-e1-sete-2026-10-05.json)). This fails traps at 89 of 105: the employment lexicon misses the set's join, leave and move cues, so ended jobs stay live.
+- **Sealed confirmation v2 exposure** ([protocol](docs/benchmarks/2026-10-01-sealed-confirmation-v2-protocol.md#access-policy)). The corpus's sessions were used for gbrain P8 quote grounding on custodian machines; future v2 decisions must name this.
+- **Report.** The program report gains a changelog. Plans still in progress publish their records in their own pages under `docs/benchmarks/2026-10-05-heldout-program/`.
+
+## [0.10.26] - 2026-10-05
+
+### Mirror: managed Postgres catch-up goes from 3.4 to about 150 pages a minute 57 ms from the database
+
+gbrain measured its managed-sync catch-up on a 57 ms latency rig across three releases
+([#5996](https://github.com/garrytan/gbrain/pull/5996), v0.60.48.0; [#6021](https://github.com/garrytan/gbrain/pull/6021),
+v0.60.58.0; [#6098](https://github.com/garrytan/gbrain/pull/6098), v0.60.73.0). Pages per minute went from 3.4
+(v0.60.39.0, one page per run) to 13.1, 28.8 and finally 152.8 in steady state with six lanes saving groups at once
+(137.4 over the whole 10k run; the 10,000-file backlog from about 49 h to about 1.2 h). Foreground page writes stay
+within about 1.7 s of idle at p95 with no failures. The bench output is copied into
+`docs/benchmarks/2026-10-05-managed-sync-catchup/raw/` and summarized in `results.json`
+([report](docs/benchmarks/2026-10-05-managed-sync-catchup.md)). Nothing was rerun here; $0.
+
+## [0.10.25] - 2026-10-05
+
+### Mirror: gbrain's Hangul end-boundary rule cuts word-internal mention matches from 1,041 to 11
+
+gbrain #6080 (v0.60.69.0) makes a Korean name end at a non-Hangul character or at an attached title, particle or copula form. On 7.3M characters of public Korean text, word-internal false matches fell from 1,041 to 11, while 65 of 74 real name mentions still matched. Precision over real names plus word-internal matches rose from 6.6% to 85.5%. Report, scripts and per-match labels: [docs/benchmarks/2026-10-05-hangul-mention-boundaries.md](docs/benchmarks/2026-10-05-hangul-mention-boundaries.md). Labeling cost $0.36.
+
+## [0.10.24] - 2026-10-05
+
+### README describes other memory systems by kind
+
+README's "How gbrain compares" section and its changelog no longer name other memory projects; each is described by
+kind (for example "a verbatim-session memory system"). Names, versions and sources stay in
+[comparisons and their protocols](docs/comparison-systems.md), which README links. No measurement changed; $0.
+
 ## [0.10.23] - 2026-10-05
 
 ### Top-level docs read as the current state, with a changelog per document

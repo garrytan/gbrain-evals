@@ -83,6 +83,8 @@ The rules are v1's ([access policy](2026-09-29-sealed-confirmation-protocol.md#a
 
 **Openings: 1 of 3 used (added 2026-10-02).** The paragraph above describes the set as of 2026-10-01 and is kept as written. Release decision 1 ([preregistration](2026-10-02-sealed-v2-decision-1-preregistration.md), [results](2026-10-02-sealed-v2-decision-1.md)) opened the set on 2026-10-02. It compared gbrain's `auto` evidence default with `chunk` at gbrain `d44296c` and came out `pass` with superiority confirmed (192 against 132 of 200). The labels were read twice through the runner under decision id `sealed-v2-decision-1-2026-10-02:auto-vs-chunk`, so the access log now has three lines. `ledger.json` was not read. Two release decisions remain.
 
+**Exposure (added 2026-10-05).** On 2026-10-04 and 2026-10-05, the corpus's sessions (not its questions or `labels.json`) were used by GBRA-49 custodians for gbrain P8 quote grounding: the session text was read from `questions.json` on custodian machines, imported into throwaway brains, and sent to model providers inside prompts. The first P8 sealed run asked questions about 60 sessions and imported 30 of the 40 histories; a stopped and voided retest sent 260 sessions to a question writer and imported 5 more histories, 34 of 40 in all. No release decision was opened and no label was read. Future v2 decisions must name this exposure in their preregistration.
+
 ## Limits
 
 - **Same model family throughout.** The planner and auditor are `gpt-6-sol` and the chat writer is the smaller `gpt-6-luna`. A blind spot shared by the family would not be caught by its own audit, and the judge (GPT-4o) is also an OpenAI model.

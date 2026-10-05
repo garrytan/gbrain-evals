@@ -8,11 +8,13 @@ published. Comparators are named by kind only.
 |---|---|---|
 | `p1-e1-heldout-2026-10-04.json` | P1 temporal edges E1, round 1 (phrasing set B) | fail (traps 101/115) |
 | `p1-e1-r2-heldout-2026-10-04.json` | P1 temporal edges E1, round 2 (set C) | pass |
+| `p1-e1-sete-2026-10-05.json` | P1 temporal edges E1 on a third phrasing set (second custodian) | fail (traps 89/105; lexicon misses the set's join, leave and move cues) |
 | `p1-e2-r2-heldout-2026-10-04.json` | P1 contradiction phase E2, five judge models | all certified for apply |
 | `p1-e3-r2-heldout-2026-10-04.json` | P1 ingestion to answer E3 | report-only |
 | `p3-e1-heldout-2026-10-04.json` | P3 retrieval feedback E1, per corpus | world-v1 checks pass except one category; LoCoMo fail |
 | `p3-e4-heldout-2026-10-04.json` | P3 triplet scoring E4 | fail (precondition: arm fired on 17%) |
 | `p3-e5-heldout-2026-10-05.json` | P3 declared single-value relations E5 | fail (3 wrong closures) |
+| `p3-e5-setf-retest-2026-10-05.json` | P3 E5 retest on fresh material (second custodian), guard vs no guard | guard: all gates pass, 0 closures applied (power precondition not met); no guard: 23 of 23 closures wrong |
 | `p7-heldout-2-2026-10-04.json` | P7 multi-relation planner, N9 v1 second opening | pass |
 
-This folder holds the verdicts of plans whose gbrain pull requests have merged (P1, P3, P7). Verdicts of plans still in progress (P2, P4, P5, P6, P8) are added as each gbrain pull request lands. The [program report](../2026-10-05-heldout-program.md) puts these verdicts beside each plan's preregistration, development results and default.
+The table lists the verdicts of plans whose gbrain pull requests have merged (P1, P3, P7). Each plan still in progress (P2, P4, P5, P6, P8) lists its own verdict files on its page under [`../2026-10-05-heldout-program/`](../2026-10-05-heldout-program/), and they move into this table when its gbrain pull request merges. The [program report](../2026-10-05-heldout-program.md) puts these verdicts beside each plan's preregistration, development results and default.
