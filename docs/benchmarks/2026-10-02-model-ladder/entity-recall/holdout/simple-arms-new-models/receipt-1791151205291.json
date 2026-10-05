@@ -1,0 +1,80 @@
+{
+  "schema": "cat40-receipt-v1",
+  "version": "cat40-v1",
+  "judge_prompt": "cat40-claims-v1",
+  "judge": "gpt-5.4-mini",
+  "world": {
+    "path": "eval/reports/cat40/holdout/world.json",
+    "scale": "v1",
+    "digest": "df9e4f65cf603430934d6afa30073a44813ea670f78ae83c68bbde8210d1db9b",
+    "seed": 20261003,
+    "docs": 4036,
+    "tasks": 50
+  },
+  "evals_commit": "4b5ae3052fff53589a8c522558225617530e8321",
+  "evals_dirty": false,
+  "gbrain": null,
+  "mode": "cells",
+  "order": "task",
+  "complete": true,
+  "cells_planned": 960,
+  "slot_builds": [],
+  "models": [
+    "claude-opus-5-5",
+    "claude-fable-5-1",
+    "gpt-6-astra"
+  ],
+  "arms": [
+    "oracle",
+    "fs",
+    "fs-acl",
+    "pg"
+  ],
+  "families": [
+    "A",
+    "B",
+    "C",
+    "E",
+    "F"
+  ],
+  "repeats": 2,
+  "max_tool_chars": null,
+  "argv": [
+    "--world",
+    "eval/reports/cat40/holdout/world.json",
+    "--models",
+    "claude-opus-5-5,claude-fable-5-1,gpt-6-astra",
+    "--arms",
+    "oracle,fs,fs-acl,pg",
+    "--repeat",
+    "2",
+    "--concurrency",
+    "6",
+    "--transcripts",
+    "--budget-ledger",
+    ".budget/cat40-followups.sqlite",
+    "--budget-usd",
+    "120",
+    "--out",
+    "eval/reports/cat40/entity-holdout-simple-newmodels"
+  ],
+  "budget_run_id": "cat40-model-ladder-2026-10-04T21-09-40-647Z-f10d4d1b",
+  "resumed": false,
+  "proxy_unattributed": {},
+  "failed_cells_proxy_usd": 0,
+  "cost": {
+    "usd": 104.3431,
+    "input_tokens": 28298377,
+    "output_tokens": 1182592,
+    "basis": "budget ledger cat40-model-ladder-2026-10-04T21-09-40-647Z-f10d4d1b: 5642 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "<evals>/.budget/cat40-followups.sqlite",
+    "program_cap_usd": 1237,
+    "overshoot_usd": 0.00048,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 4,
+      "max": 8563.4
+    }
+  },
+  "finished_at": "2026-10-04T22:00:05.291Z"
+}

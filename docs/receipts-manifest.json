@@ -4501,6 +4501,25 @@
       "note": "auto_chronicle rerun at gbrain PR #6010 head 5a44025 (overlay); summary computed from scores.json (rescore keylessly with chronicle-lift.ts score)."
     },
     {
+      "claim_id": "takes-bootstrap-verdict-mirror",
+      "readme_anchor": "docs/benchmarks/2026-10-04-takes-bootstrap-verdict.md: The finding",
+      "artifact_path": "docs/benchmarks/2026-10-04-takes-bootstrap-verdict/verdict.json",
+      "artifact_sha256": "a1ac8c90e1a2a83b845d94792906acb942654d4a355f654dc27e2ddf772b29fe",
+      "status": "covered",
+      "expected": {
+        "/variants_passed": 75,
+        "/variants_total": 123,
+        "/per_kind/fact/precision": 0.714,
+        "/per_kind/bet/precision": 0.545,
+        "/per_kind/hunch/recall": 0.667,
+        "/forbid_violations": 3,
+        "/decision": "the takes-bootstrap autopilot tier stays manual_only",
+        "/source/merge_commit": "d37fab68e95e66347ba661e913cdafca330ae5a2",
+        "/rerun_here": false
+      },
+      "note": "Mirror of gbrain's reported numbers (#6013, d37fab68e); copied from the upstream excerpts, not re-measured; gbrain committed no predictions file, so the table cannot be recomputed from public files."
+    },
+    {
       "claim_id": "heldout-program-starting-line",
       "readme_anchor": "docs/benchmarks/2026-10-05-heldout-program.md: The starting line on master",
       "artifact_path": "docs/benchmarks/2026-10-05-heldout-program/starting-line/summary.json",

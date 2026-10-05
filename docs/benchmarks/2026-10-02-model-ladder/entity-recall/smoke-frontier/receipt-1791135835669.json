@@ -1,0 +1,74 @@
+{
+  "schema": "cat40-receipt-v1",
+  "version": "cat40-v1",
+  "judge_prompt": "cat40-claims-v1",
+  "judge": "gpt-5.4-mini",
+  "world": {
+    "path": "eval/data/model-ladder-v1/world.json",
+    "scale": "v1",
+    "digest": "df8c95e71b17beab176851e3b15daaea9b8719fb009ba50e02cfc68243009a20",
+    "seed": 20261002,
+    "docs": 3973,
+    "tasks": 50
+  },
+  "evals_commit": "39df3fa4cd6d41018f6bae5cb035809de61de522",
+  "evals_dirty": false,
+  "gbrain": null,
+  "mode": "cells",
+  "order": "task",
+  "complete": true,
+  "cells_planned": 3,
+  "slot_builds": [],
+  "models": [
+    "claude-fable-5-1",
+    "gpt-6-astra",
+    "claude-opus-5-5"
+  ],
+  "arms": [
+    "fs"
+  ],
+  "families": [
+    "A",
+    "B",
+    "C",
+    "E",
+    "F"
+  ],
+  "repeats": 1,
+  "max_tool_chars": null,
+  "argv": [
+    "--models",
+    "claude-fable-5-1,gpt-6-astra,claude-opus-5-5",
+    "--arms",
+    "fs",
+    "--tasks",
+    "A01",
+    "--repeat",
+    "1",
+    "--budget-ledger",
+    ".budget/cat40-followups.sqlite",
+    "--budget-usd",
+    "3",
+    "--out",
+    "eval/reports/cat40/entity-smoke-frontier"
+  ],
+  "budget_run_id": "cat40-model-ladder-2026-10-04T17-43-17-626Z-3a59a7e8",
+  "resumed": false,
+  "proxy_unattributed": {},
+  "failed_cells_proxy_usd": 0,
+  "cost": {
+    "usd": 0.438033,
+    "input_tokens": 115472,
+    "output_tokens": 4285,
+    "basis": "budget ledger cat40-model-ladder-2026-10-04T17-43-17-626Z-3a59a7e8: 23 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "<evals>/.budget/cat40-followups.sqlite",
+    "program_cap_usd": 1237,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 0,
+      "max": 34.8
+    }
+  },
+  "finished_at": "2026-10-04T17:43:55.669Z"
+}

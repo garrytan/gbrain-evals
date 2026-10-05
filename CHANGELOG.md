@@ -2,6 +2,82 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.22] - 2026-10-05
+
+### Mirror: gbrain's takes-bootstrap classifier did not graduate; its autopilot stays `manual_only`
+
+gbrain's first live graduation run of the takes-bootstrap eval
+([#6013](https://github.com/garrytan/gbrain/pull/6013), merge `d37fab68e`,
+v0.60.59.0; measured 2026-10-04 with Claude Haiku 4.5, $0.0935) passed 75 of
+123 pages. Fact precision was 0.714 (50 of 70), bet precision 0.545 (18 of 33),
+and hunch precision 0.750 with recall 0.667, against bars of 0.80 and 0.70,
+with 3 forbidden attributions. The autopilot tier stays `manual_only`
+([mirror](docs/benchmarks/2026-10-04-takes-bootstrap-verdict.md), with the
+upstream text copied verbatim and `verdict.json`). Nothing was rerun here, and
+gbrain committed no predictions file. The run used an older model generation,
+so TODOS asks for a rerun on current frontier models before the result is
+cited as model-independent.
+- **Version.** 0.10.21 went to #65, which merged first, so this release is 0.10.22.
+
+## [0.10.21] - 2026-10-05
+
+### Cat 40 on frontier models: gbrain ties plain files at the ceiling; the entity-recall wave lifts renewal briefs and cuts cost
+
+The finding now uses the five newest frontier models: Sonnet 5.5, Opus 5.5, Fable 5.1, GPT-6.1 Sol and GPT-6 Astra.
+They run under the new model-selection rules.
+
+- **Headline.** gbrain `51f865d78` (the entity-recall wave, gbrain v0.60.62.0) and plain files each finish 95.6% of
+  held-out tasks: 0.0 points, CI −3.2 to +3.0. The oracle scores 97.6%, so these tasks are at the ceiling for
+  frontier models. gbrain puts no finance-only text into the agent's context in 100 permission runs; files put it
+  there in all 100. gbrain costs about twice as much per task ($0.238 against $0.112).
+- **Wave against v0.60.44.0.** Renewal briefs rise 7.0 points (CI +1.0 to +12.0), success is level (+0.4), cost per
+  task falls 26%, and there are no leaks. The ship rule and the default-on rule pass.
+- **Development rounds and controls.** Master and two rounds ran on the five models. For the three models new to the
+  eval, the held-out world also got `a714410a5` and the simple arms. Artifacts are in
+  `docs/benchmarks/2026-10-02-model-ladder/entity-recall/`.
+- **`holdout_stats.py`** no longer fails when a cost table lists an arm with no cells for a model.
+
+### The corrected Cat 40 headline: on the held-out world, gbrain and plain files with grep finish about as many tasks
+
+The [Cat 40 report](docs/benchmarks/2026-10-02-model-ladder.md)'s finding now compares gbrain `a714410a5`
+(v0.60.44.0), measured on the fixed harness, with the simple setups on the held-out world (6 models, 2 repeats,
+50 tasks). gbrain succeeds on 75.7% of cells and plain Markdown files with `grep` on 72.8%: a paired difference of
++2.8 points (95% CI −2.3 to +8.2), a tie. gbrain is ahead of Postgres search (+9.7, CI +3.2 to +16.8) and the memory
+tool (+12.3, CI +6.8 to +18.3), leaks nothing in 120 permission runs, trails files on renewal briefs (−9.2, CI −20.8
+to +0.8) and costs about 2.5 times as much per task. By model it gains 16 to 17 points with Haiku 4.5 and Sonnet 4.6
+and loses 15 with GPT-5.4-mini. The earlier summary stays in the report as history under the 2026-10-04 correction.
+This follows Garry's gate decisions UC1 and UC2 on the
+[entity-recall plan](docs/plans/2026-10-04-cat40-entity-recall/PLAN.md).
+
+- **Reused simple-arm cells, audited.** `eval/runner/cat40/rescore.ts` rescores stored Cat 40 cells with today's
+  `score.ts` from their answers and transcripts ($0). It rescores only success and claims, keeps the original safety
+  flags (transcripts cut tool results at 40,000 characters), marks cells whose eligibility cannot be shown as needing
+  a rerun, and lists cells whose claims need the paid judge again. On the 2026-10-02 held-out simple arms, all 2,520
+  cells are eligible and nothing changed ([audit](docs/benchmarks/2026-10-02-model-ladder/entity-recall/simple-arms-rescored/README.md)).
+- **Preregistration before the wave runs.** [PREREGISTRATION.md](docs/benchmarks/2026-10-02-model-ladder/entity-recall/PREREGISTRATION.md)
+  fixes the comparator (`fs`, the best pooled of `fs`, `memory` and `pg`), the headline sentences, the ship rule, the
+  default-on rule (family-E point gain above 0, cost per task up at most 25%), the G1 and harm-screen thresholds, the
+  exact A3 commands and the analysis commands.
+- **`holdout_stats.py` modes.** `--choose-comparator`, `--headline` (pooled, per model and per family against the
+  comparator, plus every other simple arm, with `fs-acl` on family C only), `--capability-screen` (gates on success,
+  flags families at −10 points or worse) and `--default-on`. The ship rule's leak check is now per
+  (model, task, repeat, leak kind) cell: a leak that moves to another cell fails it even when totals are equal.
+- **Slot coverage preflight.** Slot builds run `gbrain extract --stale --catch-up`, ask the built brain for its
+  mention coverage through an `entity` miss, and record it beside the snapshot and in the slot receipt. A round
+  refuses slots whose coverage is not `complete` with 0 pending pages; builds whose gbrain does not report coverage
+  are not checked.
+
+## [0.10.20] - 2026-10-05
+
+### Ledger: CL-1 and CL-2 point at the merged gbrain fix
+
+gbrain [#6010](https://github.com/garrytan/gbrain/pull/6010) merged to master as
+`b9ee931` (v0.60.49.0). CL-1 and CL-2 now name `b9ee931` as their fixing commit,
+with the note "verified at PR head 5a44025; chronicle code identical at merge":
+no file under `src/core/chronicle/` or `src/core/cycle/` differs between the
+measured head and the merge. The [rerun report](docs/benchmarks/2026-10-04-auto-chronicle-rerun.md)
+carries a dated line saying so. No new measurement; $0.
+
 ## [0.10.19] - 2026-10-04
 
 ### `auto_chronicle` rerun on gbrain's date-quality fix: default-on supported at PR #6010's head

@@ -1,0 +1,75 @@
+{
+  "by_surface": {
+    "starter": {
+      "success": 40,
+      "n": 40,
+      "tool_calls": 334,
+      "tool_errors": 0,
+      "request_tools_calls": 0,
+      "widenings": 0,
+      "tokens": 7918775,
+      "usd": 14.17,
+      "leaks": 0
+    },
+    "full": {
+      "success": 40,
+      "n": 40,
+      "tool_calls": 310,
+      "tool_errors": 0,
+      "request_tools_calls": 0,
+      "widenings": 0,
+      "tokens": 12305630,
+      "usd": 15.39,
+      "leaks": 0
+    },
+    "verbs": {
+      "success": 37,
+      "n": 40,
+      "tool_calls": 244,
+      "tool_errors": 0,
+      "request_tools_calls": 0,
+      "widenings": 0,
+      "tokens": 7348364,
+      "usd": 14.37,
+      "leaks": 0
+    }
+  },
+  "by_model": {
+    "claude-sonnet-5-5": {
+      "starter": "10/10",
+      "full": "10/10",
+      "verbs": "9/10"
+    },
+    "claude-opus-5-5": {
+      "starter": "10/10",
+      "full": "10/10",
+      "verbs": "9/10"
+    },
+    "gpt-6.1-sol": {
+      "starter": "10/10",
+      "full": "10/10",
+      "verbs": "9/10"
+    },
+    "claude-fable-5-1": {
+      "starter": "10/10",
+      "full": "10/10",
+      "verbs": "10/10"
+    }
+  },
+  "paired": {
+    "full-starter": {
+      "diff_points": 0,
+      "ci95": [
+        0,
+        0
+      ]
+    },
+    "verbs-starter": {
+      "diff_points": -7.5,
+      "ci95": [
+        -20,
+        0
+      ]
+    }
+  }
+}
