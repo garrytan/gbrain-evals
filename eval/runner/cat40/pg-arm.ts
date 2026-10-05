@@ -26,7 +26,7 @@ import { vector } from '@electric-sql/pglite/vector';
 import { createHash } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { HarnessError, type Arm, type ToolSpec } from './loop.ts';
+import { HarnessError, RETRYABLE_STATUS, type Arm, type ToolSpec } from './loop.ts';
 import type { LadderDoc } from '../../generators/model-ladder-gen.ts';
 import { renderDoc } from '../../generators/model-ladder-gen.ts';
 import { priceRequest, reservationUsd, usageCost } from '../budget-ledger.ts';
@@ -80,16 +80,20 @@ export function cachedOpenAIEmbedder(cachePath: string, fetchImpl: typeof fetch 
     const payload = { model: PG_EMBED_MODEL, input: batch.map(t => t.slice(0, PG_EMBED_INPUT_CHARS)), dimensions: PG_EMBED_DIMS };
     const price = priceRequest(url, payload);
     let res: Response, text: string;
-    try {
-      res = await fetchImpl(url, {
-        method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.OPENAI_API_KEY ?? ''}` },
-        body: JSON.stringify(payload),
-      });
-      text = await res.text();
-    } catch (e) {
-      if ((e as Error).name === 'BudgetExceededError') throw e;
-      if (usage && price) { usage.requests++; usage.unpriced++; usage.usd += reservationUsd(price); }
-      throw new HarnessError(`embedding request failed: ${(e as Error).message}`);
+    for (let attempt = 0; ; attempt++) {
+      try {
+        res = await fetchImpl(url, {
+          method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.OPENAI_API_KEY ?? ''}` },
+          body: JSON.stringify(payload),
+        });
+        text = await res.text();
+      } catch (e) {
+        if ((e as Error).name === 'BudgetExceededError') throw e;
+        if (usage && price) { usage.requests++; usage.unpriced++; usage.usd += reservationUsd(price); }
+        throw new HarnessError(`embedding request failed: ${(e as Error).message}`);
+      }
+      if (!RETRYABLE_STATUS.includes(res.status) || attempt === 5) break;
+      await new Promise(r => setTimeout(r, Math.min(60_000, 2000 * 2 ** attempt) + Math.random() * 1000));
     }
     let body: { data?: Array<{ index: number; embedding: number[] }>; usage?: unknown } | null = null;
     try { body = JSON.parse(text); } catch { body = null; }
