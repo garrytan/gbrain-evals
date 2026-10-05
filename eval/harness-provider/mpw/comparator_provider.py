@@ -423,6 +423,26 @@ class ComparatorMemoryProvider(MemoryProvider):
         docs, raw, _meta = self.retrieve_with_meta(query, k, user_id, query_timestamp)
         return docs, raw
 
+    # ── agent mode ───────────────────────────────────────────────────────
+
+    async def async_direct_answer(self, query, user_id=None, query_timestamp=None):
+        """The server's own synthesis (reflect) over this user's bank, with every id in the reply made opaque."""
+        if user_id not in self._banks:
+            raise RuntimeError(f"{self.name}: no bank for user_id {user_id!r}; it was never ingested in this cell")
+        bank = self._banks[user_id]
+        answer, _context, raw = await self._inner.async_direct_answer(query, user_id=user_id, query_timestamp=query_timestamp)
+        if not answer:
+            raise RuntimeError(f"{self.name}: reflect returned no answer (timed out or empty)")
+        originals = [*self._bank_docs.get(bank, []), "" if user_id is None else user_id]
+        scrubbed = self._ids.scrub({"answer": answer, "raw": raw or {}}, extra_originals=originals)
+        self._persist_ids()
+        return scrubbed["answer"], scrubbed["answer"], scrubbed["raw"]
+
+    def direct_answer(self, query, user_id=None, query_timestamp=None):
+        import asyncio
+
+        return asyncio.run(self.async_direct_answer(query, user_id, query_timestamp))
+
     @staticmethod
     def _build_docs(raw: dict) -> list[Document]:
         import importlib

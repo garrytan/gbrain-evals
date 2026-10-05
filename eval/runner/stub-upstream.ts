@@ -190,8 +190,33 @@ export async function startStubUpstream(options: { port?: number } = {}): Promis
     return { text: `stub answer from ${request.model || request.provider}`, structured: null };
   }
 
+  /**
+   * The tool an OpenAI-style request makes the model call: a named tool_choice,
+   * `required` (a finishing tool when offered, else the first), or `auto` once a
+   * tool result is already in the conversation and a finishing tool is offered.
+   */
+  function openaiForcedTool(body: any): { name: string; parameters?: unknown } | null {
+    const tools = (Array.isArray(body.tools) ? body.tools : []).map((t: any) => t.function ?? t).filter((t: any) => t?.name);
+    if (!tools.length) return null;
+    const choice = body.tool_choice;
+    const finishing = tools.find((t: any) => /^(done|final_answer|answer|finish|respond)$/.test(t.name));
+    if (choice && typeof choice === 'object') return tools.find((t: any) => t.name === (choice.function?.name ?? choice.name)) ?? null;
+    if (choice === 'required') return finishing ?? tools[0];
+    const sawTool = (body.messages ?? []).some((m: any) => m.role === 'tool');
+    return choice !== 'none' && sawTool && finishing ? finishing : null;
+  }
+
   async function openaiChat(request: StubRequest, groq: boolean): Promise<Response> {
     const { body } = request;
+    const forced = body.stream ? null : openaiForcedTool(body);
+    if (forced) {
+      const args = JSON.stringify(schemaInstance(forced.parameters ?? { type: 'object', properties: {} }));
+      const id = `chatcmpl-stub-${++seq}`;
+      const usage = { prompt_tokens: tokens(promptText(body)), completion_tokens: tokens(args), total_tokens: 0, prompt_tokens_details: { cached_tokens: 0 } };
+      usage.total_tokens = usage.prompt_tokens + usage.completion_tokens;
+      const call = { id: `call_stub_${seq}`, type: 'function', function: { name: forced.name, arguments: args } };
+      return json({ id, object: 'chat.completion', created: 1_700_000_000, model: request.model, choices: [{ index: 0, message: { role: 'assistant', content: null, tool_calls: [call], refusal: null }, finish_reason: 'tool_calls', logprobs: null }], usage });
+    }
     const inPrompt = promptSchema(body);
     const result = await content(request, inPrompt ?? openaiSchema(body), inPrompt !== null);
     if (result instanceof Response) return result;
@@ -263,7 +288,9 @@ export async function startStubUpstream(options: { port?: number } = {}): Promis
     const { body } = request;
     const choice = body.tool_choice;
     const forced = (choice?.type === 'tool' ? (body.tools ?? []).find((t: any) => t.name === choice.name)
-      : choice?.type === 'any' ? body.tools?.[0] : undefined) as { name: string; input_schema?: unknown } | undefined;
+      : choice?.type === 'any' ? body.tools?.[0]
+      // A model offered a structured-response tool under tool_choice auto calls it (mpw/anthropic_llm.py asks it to).
+      : (body.tools ?? []).find((t: any) => t.name === 'respond')) as { name: string; input_schema?: unknown } | undefined;
     const result = await content(request, forced ? forced.input_schema ?? { type: 'object' } : null);
     if (result instanceof Response) return result;
     const id = `msg_stub_${++seq}`;
