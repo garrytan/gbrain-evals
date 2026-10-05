@@ -2,6 +2,16 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.27] - 2026-10-05
+
+### Mirror: gbrain fix wave 9 pins `search_path` at about 10-13% insert cost; takes-quality receipts move to protocol 2
+
+gbrain #6111 (fix wave 9, v0.60.73.0, open and pending merge at head `1fbe8660c`) carries two changes recorded here ([report](docs/benchmarks/2026-10-05-fix-wave-9-mirror.md), [`verdict.json`](docs/benchmarks/2026-10-05-fix-wave-9-mirror/verdict.json), upstream text verbatim in `upstream/`). Nothing was rerun; $0.
+
+- **`search_path` pinning (#5190, migration v211 `function_search_path`): accepted cost.** Every gbrain plpgsql function pins `search_path`, a security hardening. On the wave lane's own machine (3 runs per side, ranges only), 10,000 fact inserts through the withdrawal trigger went from 1.31-1.46 s to 1.45-1.69 s on PGLite and from 531-536 ms to 565-604 ms on Postgres 16: +13% and +10% at the midpoints, 6-16% at the range ends. The cause is the trigger's pinned setting. A 24-claim fact-fingerprint golden is byte-identical before and after on both engines, and the fingerprint index is still used. Not a retrieval change.
+- **Takes-quality protocol 2 (#5325): comparability note, not a verdict.** One same-model correction per malformed judge slot, priced against the cap first; valid low scores are never re-asked. Receipts gain `protocol_version`, `correction_selection_rule` and `corrections`, and `regress` treats a protocol change as dissimilar inputs. No before/after score was measured. Compare takes-quality receipts only within one protocol version; this repository has published none so far.
+- **Version.** Open #76 and #78 both claim 0.10.26, so this release is 0.10.27.
+
 ## [0.10.25] - 2026-10-05
 
 ### Mirror: gbrain's Hangul end-boundary rule cuts word-internal mention matches from 1,041 to 11

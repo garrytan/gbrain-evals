@@ -4537,6 +4537,27 @@
       },
       "golden_test": "bun docs/benchmarks/2026-10-05-heldout-program/recount-starting-line.ts --check",
       "note": "P0 starting line on gbrain master 6622a119e (v0.60.48.0), dev splits only, 2026-10-04. summary.json is recounted from the committed shard rows."
+    },
+    {
+      "claim_id": "fix-wave-9-mirror",
+      "readme_anchor": "docs/benchmarks/2026-10-05-fix-wave-9-mirror.md: The finding",
+      "artifact_path": "docs/benchmarks/2026-10-05-fix-wave-9-mirror/verdict.json",
+      "artifact_sha256": "527dc5976729f0cb09025bf03c0ec42fb29faacfd9bc6e2acf90fe7816e7efa8",
+      "status": "covered",
+      "expected": {
+        "/items/search_path_insert_cost/measurement/pglite/before_range/0": 1.31,
+        "/items/search_path_insert_cost/measurement/pglite/after_range/1": 1.69,
+        "/items/search_path_insert_cost/measurement/postgres/before_range/0": 0.531,
+        "/items/search_path_insert_cost/measurement/postgres/after_range/1": 0.604,
+        "/items/search_path_insert_cost/correctness/fingerprint_golden_claims": 24,
+        "/items/search_path_insert_cost/correctness/fingerprint_golden_identical_before_after": true,
+        "/items/search_path_insert_cost/verdict": "accepted cost",
+        "/items/takes_quality_protocol_2/protocol_version": 2,
+        "/items/takes_quality_protocol_2/score_measurement": null,
+        "/source/pr_head": "1fbe8660cb0dc1737d7bd9323aa9c6410dc80ec8",
+        "/rerun_here": false
+      },
+      "note": "Mirror of gbrain fix wave 9 (#6111, pending merge at head 1fbe8660c): the search_path insert timing is a local lane measurement (3 runs per side, ranges only, copied from commit daf7426b6); takes-quality protocol 2 is a comparability note with no score measurement."
     }
   ]
 }
