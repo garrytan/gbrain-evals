@@ -227,12 +227,39 @@ export function directGitPath(root: string): string | undefined {
   return `${bin}:${path}`;
 }
 
-export interface SlotBuild { slot: string; dir: string; steps: Array<{ step: string; code: number; ms: number; tail: string }>; meter: Meter; ms: number; pages?: unknown; allowance?: { reserved_usd: number; usd: number; requests: number; charged_reservations: number } }
+export interface SlotBuild { slot: string; dir: string; steps: Array<{ step: string; code: number; ms: number; tail: string }>; meter: Meter; ms: number; pages?: unknown; coverage?: SlotCoverage; allowance?: { reserved_usd: number; usd: number; requests: number; charged_reservations: number } }
+
+/**
+ * gbrain's mention-index coverage for a built slot (entity-recall plan 2026-10-04, E-T7). gbrain reports it as
+ * `coverage: {state, pending_pages, last_pass_at}` on `entity` cards and misses; `supported: false` records a
+ * build that predates the field, whose slots are not checked.
+ */
+export interface SlotCoverage { supported: boolean; state: string | null; pending: number | null; last_pass_at: string | null }
+/** A name no Cat 40 world uses, so the `entity` probe is a miss, which still carries `coverage`. */
+export const COVERAGE_PROBE_NAME = 'cat40 coverage probe';
+
+export function parseCoverage(text: string): SlotCoverage {
+  let j: Record<string, unknown>;
+  try { j = JSON.parse(text) as Record<string, unknown>; } catch { return { supported: false, state: null, pending: null, last_pass_at: null }; }
+  const c = (j.coverage ?? (j.card as Record<string, unknown> | undefined)?.coverage) as Record<string, unknown> | undefined;
+  if (!c || typeof c !== 'object') return { supported: false, state: null, pending: null, last_pass_at: null };
+  const pending = c.pending_pages ?? c.pending;
+  return { supported: true, state: typeof c.state === 'string' ? c.state : null, pending: typeof pending === 'number' ? pending : null, last_pass_at: typeof c.last_pass_at === 'string' ? c.last_pass_at : null };
+}
+
+/** Why a slot's recorded coverage does not allow a round to start; null when it does or when the build has no coverage. */
+export function coverageProblem(c: SlotCoverage): string | null {
+  if (!c.supported) return null;
+  if (c.state === 'complete' && c.pending === 0) return null;
+  return `mention coverage ${c.state ?? 'unknown'} with ${c.pending ?? 'unknown'} pending pages`;
+}
 
 export class GbrainSlot {
   client: McpClient | null = null;
   readonly dir: string;
   readonly run: RunEnv;
+  /** `gbrain config set` pairs applied after every restore (the snapshot does not carry them). */
+  config: Array<[string, string]> = [];
   /** `advertised`: the brain's mcp.advertised_surface (tools listed; the callable set stays `surface`). Null leaves it unset. */
   constructor(readonly id: string, root: string, readonly buildDir: string, proxyPort: number, readonly surface: string, readonly advertised: string | null = null) {
     this.dir = join(root, id);
@@ -307,7 +334,8 @@ export class GbrainSlot {
       }
     } else await op('sync', ['sync', '--source', 'vault', '--no-pull']);
     git(['tag', CORPUS_TAG]);
-    await op('extract', ['extract', '--stale']);
+    // --catch-up runs past the stale sweep's 30-minute budget, so the mention pass finishes before the snapshot.
+    await op('extract', ['extract', '--stale', '--catch-up']);
     // `embed --stale` stops after 30 minutes of wall clock unless --catch-up is given, which would leave a large
     // corpus partly embedded. The dry run afterwards proves nothing is left.
     // The evaluator is the user here and authorizes the build's embedding spend (metered by the slot allowance).
@@ -315,7 +343,7 @@ export class GbrainSlot {
     // reject that flag, so it is passed only after a confirmation_required refusal.
     const embedArgs = ['embed', '--stale', ...(staged ? ['--catch-up'] : [])];
     const first = await runCli(this.run, embedArgs, 3_600_000);
-    if (first.code === 3 && /confirmation_required/.test(first.stdout + first.stderr)) {
+    if (first.code === 3 && /confirmation_required|needs the user's approval/.test(first.stdout + first.stderr)) {
       steps.push({ step: 'embed-consent-refused', code: 3, ms: first.ms, tail: 'confirmation_required; rerun with --yes (evaluator-authorized build spend)' });
       await op('embed', [...embedArgs, '--yes']);
     } else {
@@ -331,7 +359,20 @@ export class GbrainSlot {
     proxy.unbind(this.id);
     const meter = await proxy.finalize(meterKey);
     execFileSync('tar', ['-C', this.dir, '-cf', this.snapshot, 'home']);
-    return { slot: this.id, dir: this.dir, steps, meter, ms: Date.now() - t0 };
+    const coverage = await this.probeCoverage();
+    writeFileSync(this.coverageFile, JSON.stringify(coverage, null, 2) + '\n');
+    return { slot: this.id, dir: this.dir, steps, meter, ms: Date.now() - t0, coverage };
+  }
+
+  /** Written beside the snapshot by `build`; the round preflight reads it. */
+  get coverageFile() { return `${this.dir}.coverage.json`; }
+
+  /** Asks the built brain for its mention coverage through an `entity` miss (zero model calls). */
+  async probeCoverage(): Promise<SlotCoverage> {
+    const client = new McpClient(this.run, ['--surface', this.surface]);
+    await client.start();
+    try { return parseCoverage(await client.call('entity', { name: COVERAGE_PROBE_NAME })); }
+    finally { await client.close(); }
   }
 
   async start() {
@@ -360,6 +401,10 @@ export class GbrainSlot {
     const home = join(this.dir, 'home');
     for (const entry of readdirSync(home).sort()) rmSync(join(home, entry), { recursive: true, force: true });
     execFileSync('tar', ['-C', this.dir, '-xf', this.snapshot, 'home']);
+    for (const [key, value] of this.config) {
+      const r = await runCli(this.run, ['config', 'set', key, value], 120_000);
+      if (r.code !== 0) throw new Error(`gbrain ${this.id}: config set ${key} failed (exit ${r.code}): ${(r.stdout + r.stderr).trim().split('\n').slice(-3).join(' ')}`);
+    }
     await this.start();
   }
   /** A fresh harness session: a new server process on the same brain. */
