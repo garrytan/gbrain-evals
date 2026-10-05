@@ -1,8 +1,55 @@
 # Model Ladder (Cat 40): does gbrain help agents finish company-knowledge tasks, and does that hold as models improve?
 
-Measured 2026-10-02 and 2026-10-03. The protocol is in
+Measured 2026-10-02 to 2026-10-04. The protocol is in
 [2026-10-02-model-ladder-protocol.md](2026-10-02-model-ladder-protocol.md), and the reasons for the experiment are in
 [the knowledge-layer plan](../plans/2026-10-01-knowledge-layer/PLAN.md).
+
+## The finding
+
+**On the newest frontier models, agents using gbrain finish as many held-out tasks as agents using plain files with
+grep, and both are at the ceiling.** The current entity-recall build of gbrain (`51f865d78`), measured on the fixed
+harness, succeeds on 95.6% of 500 cells. Plain Markdown files with `grep` (`fs`), the preregistered comparator, also
+succeed on 95.6%. Paired by task, the difference is 0.0 points, with a 95% CI of −3.2 to +3.0.
+
+| Model | gbrain `51f865d78` | fs | Paired difference | 95% CI |
+|---|---|---|---|---|
+| Sonnet 5.5 | 93% | 91% | +2.0 pts | [−5.0, +9.0] |
+| Opus 5.5 | 92% | 95% | −3.0 pts | [−10.0, +3.0] |
+| Fable 5.1 | 95% | 94% | +1.0 pts | [−6.0, +7.0] |
+| GPT-6 Astra | 98% | 98% | 0 | [−5.0, +4.0] |
+| GPT-6.1 Sol | 100% | 100% | 0 (ceiling) | [0, 0] |
+| All five | 95.6% | 95.6% | 0.0 pts | [−3.2, +3.0] |
+
+- **Why a tie here says little about capability.** The oracle arm, which is handed the evidence, scores 97.6%. So at
+  this level the 50 tasks can't separate memory systems on success. A harder Cat 40 tier, now in planning, is meant to
+  measure that edge.
+- **What gbrain does differently at the frontier: it keeps finance-only text out.** In 100 permission runs gbrain put
+  finance-only text in neither an answer nor the agent's context. Plain files put it in the context of all 100
+  (though in no answer), and Postgres put it in 4 answers and 97 contexts.
+- **gbrain costs about twice as much per task as files:** $0.238 against $0.112, averaged over the five models.
+- **The entity-recall wave makes gbrain better and cheaper than the build before it.** Against `a714410a5` (v0.60.44.0)
+  on the same models and tasks:
+  - renewal briefs rise 7.0 points (CI +1.0 to +12.0)
+  - overall success moves +0.4 points (CI −2.0 to +2.4)
+  - cost per task falls 26%
+  - leaks stay at zero
+
+  Details are in [Entity recall](#entity-recall-wave-frontier-models).
+
+**On the earlier six-model set, gbrain was level with files and helped mid-tier models.** gbrain `a714410a5` succeeded
+on 75.7% against 72.8% for files: +2.8 points (CI −2.3 to +8.2). It was clearly ahead for Haiku 4.5 (+16) and Sonnet
+4.6 (+17), and behind on renewal briefs (−9.2). Those tables, and the comparisons with Postgres and the memory tool,
+are in [headline-a714410a5.md](2026-10-02-model-ladder/entity-recall/headline-a714410a5.md).
+
+**How this was measured.** The held-out world (seed 20261003, 4,036 documents, 50 tasks; its third use for a gbrain
+decision) ran 2 repeats per model.
+- **Comparator.** It was fixed in advance as the best pooled of `fs`, `memory` and `pg`
+  ([preregistration](2026-10-02-model-ladder/entity-recall/PREREGISTRATION.md)); amendment 1 moved the models to the
+  newest frontier set.
+- **Simple-arm cells.** Sonnet 5.5 and GPT-6.1 Sol come from the 2026-10-02 runs, rescored with today's scorer (all
+  eligible, none changed). Opus 5.5, Fable 5.1 and GPT-6 Astra ran on 2026-10-04. The memory arm was not run for
+  the three new models.
+- **Full tables:** [headline-wave.md](2026-10-02-model-ladder/entity-recall/holdout/headline-wave.md).
 
 > **Correction, 2026-10-04: gbrain's AI search was partly switched off in every gbrain run below.**
 > The old budget ledger stalled the runner's event loop, and the same loop carries gbrain's embedding requests
@@ -17,37 +64,9 @@ Measured 2026-10-02 and 2026-10-03. The protocol is in
 > plain files are not comparisons of gbrain as configured. Comparisons between gbrain builds within one run shared
 > the condition. The plain-file, memory-tool and oracle arms make no provider calls through the proxy. The pg arm
 > embeds its queries inside the runner, which waits rather than falls back. The ledger fix is gbrain-evals v0.10.16.
-> Runs since then are in [the cost wave section](#cost-wave-v060440-measured-on-the-fixed-harness). gbrain against
-> plain files has not been re-measured under the fixed harness.
-
-## The finding
-
-**At release v0.60.27.0, gbrain did not help agents.** An agent with plain Markdown files and `grep` finished more
-tasks than the same agent using gbrain's MCP server. Across 11 models, gbrain was 8 points lower pooled
-(95% CI −13 to −4; 7,624 runs, no output cap). It also leaked finance-only data more often than any other setup:
-64 of 330 permission runs, against 17 for plain files. On a 52,000-document version of the same company, the gap
-was 16 points (CI −24 to −10). Grep kept up at that scale.
-
-**A wave of read-path fixes changed the result.** The fixes are the gbrain PR that accompanies this report, measured
-on the development world at gbrain `51a30c1`. On the same tasks, gbrain went from 423 to 494 of 550 runs and passed plain files at 455.
-Pooled across the 11 models, it is now 7 points ahead of the best simple setup (CI +3 to +9). It leads on 8 models,
-ties on 1 and trails on 2. It leaks nothing (0 of 110 permission runs, against 6 for files), and it ties or leads
-files in every task family.
-
-**The fixes held up on a world nobody looked at while fixing.** A second world, generated from a new seed, was
-run with 6 models and 2 repeats against the build that ships (`77dcf414`). There the fixed gbrain beat the release by
-17 points (CI +10 to +24, better on 29 of 50 tasks and worse on 10). It finished 6 points more tasks than plain files,
-but that interval runs from −0.2 to +12, so on unseen tasks gbrain with the fixes is at least level with grep, not
-proven ahead of it. It leaked nothing in 120 permission runs; plain files leaked 9 times.
-
-**Two costs and one open question remain.**
-- Price: a gbrain run costs 2.5 to 4 times a file run ($0.19 against $0.054 per task here, $0.13 against $0.032 on
-  the held-out world), mostly because 33 tool definitions ride along on every turn.
-- Speed: in the harness, gbrain calls looked several times slower after the fixes. That is a harness artifact (see
-  [cost and speed](#cost-and-speed)). Replayed alone, the fixed build's searches are as fast as the release's.
-- The slope: the experiment cannot say whether gbrain's advantage grows with model capability. The strongest models
-  already score 96–100% with every setup, so there is no room left to see a slope.
-
+> Runs since then are in [the cost wave section](#cost-wave-v060440-measured-on-the-fixed-harness). The finding above
+> compares the fixed-harness gbrain run with the simple arms. Under Results, every section before the cost wave is the
+> earlier record.
 
 ## The concrete case
 
@@ -107,6 +126,59 @@ briefs, all five fields must match. A finance-only string in the answer is a lea
 contract fails the run. A fixed judge (`gpt-5.4-mini`) counts unsupported claims but never decides success.
 
 ## Results
+
+### Entity-recall wave (frontier models)
+
+The wave links every page to the entity records it names, by name or declared code, and the `entity` card lists
+those pages by type. One instruction tells agents to start an account brief with `entity`
+([plan](../plans/2026-10-04-cat40-entity-recall/PLAN.md); gbrain v0.60.62.0).
+
+| Run | Build | Success | Renewal briefs (family E) | $/task |
+|---|---|---|---|---|
+| Dev world, master control | `739e5cc89` | 239/250 | 44/50 | 0.341 |
+| Dev world, round 1 (linking) | `a3246dea8` | 236/250 (−1.2 [−3.2, +0.8]) | 43/50 | 0.286 |
+| Dev world, round 2 (+instruction) | `51f865d78` | 239/250 (0.0 [−2.0, +2.0]) | 46/50 | 0.240 |
+| Held-out, previous gbrain | `a714410a5` | 95.2% | — | 0.323 |
+| Held-out, wave | `51f865d78` | 95.6% (+0.4 [−2.0, +2.4]) | +7.0 pts [+1.0, +12.0] | 0.238 |
+
+Five models (Sonnet 5.5, Opus 5.5, Fable 5.1, GPT-6.1 Sol, GPT-6 Astra), one repeat on the development world and
+two on the held-out world. The preregistered ship rule passes, with no new leaks and no model or family at −8 or
+worse, and so does the default-on rule (family E above 0, cost within +25%). On the development brain, the wave adds
+4,124 mention links across 3,973 pages; the previous build had 0. A keyword-only variant of master, tested before the
+wave was built, scored 5 of 30 renewal briefs against 2 of 30 for master on the older development models, and lost
+about 25 points on families A and C ([uc3/](2026-10-02-model-ladder/entity-recall/uc3/)). Artifacts:
+[entity-recall/](2026-10-02-model-ladder/entity-recall/).
+
+### The finding as published on 2026-10-03
+
+This is the summary written before the correction above. Its gbrain numbers come from runs with vector search
+often degraded.
+
+**At release v0.60.27.0, gbrain did not help agents.** An agent with plain Markdown files and `grep` finished more
+tasks than the same agent using gbrain's MCP server. Across 11 models, gbrain was 8 points lower pooled
+(95% CI −13 to −4; 7,624 runs, no output cap). It also leaked finance-only data more often than any other setup:
+64 of 330 permission runs, against 17 for plain files. On a 52,000-document version of the same company, the gap
+was 16 points (CI −24 to −10). Grep kept up at that scale.
+
+**A wave of read-path fixes changed the result.** The fixes are the gbrain PR that accompanies this report, measured
+on the development world at gbrain `51a30c1`. On the same tasks, gbrain went from 423 to 494 of 550 runs and passed plain files at 455.
+Pooled across the 11 models, it is now 7 points ahead of the best simple setup (CI +3 to +9). It leads on 8 models,
+ties on 1 and trails on 2. It leaks nothing (0 of 110 permission runs, against 6 for files), and it ties or leads
+files in every task family.
+
+**The fixes held up on a world nobody looked at while fixing.** A second world, generated from a new seed, was
+run with 6 models and 2 repeats against the build that ships (`77dcf414`). There the fixed gbrain beat the release by
+17 points (CI +10 to +24, better on 29 of 50 tasks and worse on 10). It finished 6 points more tasks than plain files,
+but that interval runs from −0.2 to +12, so on unseen tasks gbrain with the fixes is at least level with grep, not
+proven ahead of it. It leaked nothing in 120 permission runs; plain files leaked 9 times.
+
+**Two costs and one open question remain.**
+- Price: a gbrain run costs 2.5 to 4 times a file run ($0.19 against $0.054 per task here, $0.13 against $0.032 on
+  the held-out world), mostly because 33 tool definitions ride along on every turn.
+- Speed: in the harness, gbrain calls looked several times slower after the fixes. That is a harness artifact (see
+  [cost and speed](#cost-and-speed)). Replayed alone, the fixed build's searches are as fast as the release's.
+- The slope: the experiment cannot say whether gbrain's advantage grows with model capability. The strongest models
+  already score 96–100% with every setup, so there is no room left to see a slope.
 
 ### Release v0.60.27.0: grep beats gbrain
 
@@ -347,9 +419,12 @@ contact live. Keyword-only search did better on this family. That is a gbrain ra
 
 ## What to use, and what this does not show
 
-- **Use gbrain with the fix wave.** On unseen tasks it is 17 points better than the release, and at least level with
-  plain files at 2.5 to 4 times the price. For permissions, the release lets derived pages leak; the fix wave closes
-  that. For saved memories, the release's `search` cannot see what `remember` stored.
+- **On frontier models, gbrain matches plain files on these tasks, keeps finance-only text out of the agent's
+  context, and costs about twice as much per task.** Use gbrain when permissions or audited memory matter. Expect no
+  success gain on tasks this size until the harder tier measures one. On mid-tier models (Haiku 4.5, Sonnet 4.6)
+  gbrain finished 16–17 points more tasks than files.
+- **Use the current gbrain.** The entity-recall wave (v0.60.62.0) finds every page about an account. It raises
+  renewal briefs by 7 points over v0.60.44.0 and costs 26% less per task.
 - **Do not read this as "gbrain improves as models improve."** The strongest models already succeed 96–100% with
   plain files, so this world cannot measure a slope at the top. A harder world, real harnesses (Claude Code, Codex),
   and the failure family (D) are the next steps.
@@ -357,9 +432,10 @@ contact live. Keyword-only search did better on this family. That is a gbrain ra
   the other-name feature reads. The held-out world uses the same templates with a new seed, so it tests overfitting
   to these 50 tasks, not to the wording.
 - **Some caveats on the numbers:**
+  - Results before the 2026-10-04 correction measured gbrain with vector search partly degraded.
   - The fixed-build ladder has one repeat per model, compared with repeat 0 of the release.
   - gbrain's saved facts carry the real clock date while the world's "today" is 2026-09-15.
-  - The 52k world was run only on the release.
+  - The 52k world has been run only on the release, under the stalled harness.
   - Tool latency measured inside the harness is not valid (see [cost and speed](#cost-and-speed)).
 
 ## Reproduce
@@ -369,6 +445,14 @@ bun eval/generators/model-ladder-gen.ts --check
 bun eval/runner/cat40-model-ladder.ts --models <list> --arms oracle,fs,fs-acl,memory,pg,gbrain \
   --max-tool-chars 100000000 --gbrain-repo ../gbrain --gbrain-ref <commit> --budget-usd <n> --out eval/reports/cat40/<name>
 bun eval/runner/cat40/analyze.ts eval/reports/cat40/<name>/results.jsonl --subject gbrain
+```
+
+The headline in [The finding](#the-finding) reproduces from committed files ($0):
+
+```
+D=docs/benchmarks/2026-10-02-model-ladder
+python3 $D/holdout/holdout_stats.py $D/entity-recall/simple-arms-rescored/results.jsonl $D/followups/holdout/results.jsonl \
+  --choose-comparator fs,memory,pg --headline gbrain-c1234-holdout,fs
 ```
 
 Keys: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` and `VOYAGE_API_KEY` (gbrain's reranker). Spend across the whole program

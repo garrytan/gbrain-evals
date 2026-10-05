@@ -1,0 +1,124 @@
+{
+  "kind": "memory-qa-arm",
+  "schema_version": 1,
+  "benchmark": "locomo",
+  "split": "dev",
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "started_at": "2026-10-04T19:06:02.942Z",
+  "finished_at": "2026-10-04T19:42:41.190Z",
+  "run_config_hash": "7ecfa292a92d49e895202fad07b3fcce8f5b60cc9af1f2442865a5f7afaf40e2",
+  "product": {
+    "package": "gbrain",
+    "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "declared_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "version": "0.60.48.0",
+    "package_sha256": "fab1c3142270c58c8357f2298bb3f7bf9b59a1062f5954684e95bd1d1cc11c01",
+    "loaded_git_head": "6622a119e40ea09a7719233046aca24741863ed2"
+  },
+  "overlay": {
+    "requested": "<gbrain checkout>@6622a119e40ea09a7719233046aca24741863ed2",
+    "ref": "6622a119e40ea09a7719233046aca24741863ed2",
+    "commit": "6622a119e40ea09a7719233046aca24741863ed2",
+    "tree": "6e83dc90b3d7ca04b625a53e8f1e3b751a7144a4",
+    "version": "0.60.48.0",
+    "checkout_dirty": false,
+    "verified": {
+      "copy_tree": "6e83dc90b3d7ca04b625a53e8f1e3b751a7144a4",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.48.0",
+      "cli_version_matches": true
+    },
+    "copied_not_symlinked": true
+  },
+  "arm_config": {},
+  "search_pins": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.autocut": "false"
+  },
+  "retrieval_path": "hybridSearch (expansion off), chunks reduced to distinct sessions",
+  "embedding": {
+    "mode": "real",
+    "model": "openai:text-embedding-3-large",
+    "dims": 1536,
+    "cache_stats": {
+      "hits": 730,
+      "misses": 0,
+      "inserts": 0,
+      "bytes": 0
+    }
+  },
+  "dataset": {
+    "name": "LoCoMo (locomo10.json)",
+    "files": [
+      {
+        "path": "locomo/locomo10.json",
+        "sha256": "79fa87e90f04081343b8c8debecb80a9a6842b76a7aa537dc9fdf651ea698ff4"
+      }
+    ],
+    "revision": "3eb6f2c",
+    "license": "CC BY-NC 4.0"
+  },
+  "selection": {
+    "categories": null,
+    "limit": null,
+    "seed": 42,
+    "shard": {
+      "index": 0,
+      "count": 1
+    },
+    "conversations": 3,
+    "questions_expected": 587
+  },
+  "counts": {
+    "rows": 587,
+    "scored": 464,
+    "errors": 0,
+    "abstention": 123
+  },
+  "summary": {
+    "recall_all_at_5": 0.7564655172413793,
+    "recall_any_at_5": 0.8663793103448276,
+    "recall_all_at_10": 0.8556034482758621,
+    "ndcg_at_10": 0.7405740290712928,
+    "latency_p50_ms": 51.5,
+    "latency_p95_ms": 64.99499999999998,
+    "qa_score": 0.6746166950596252,
+    "qa_rows": 587,
+    "qa_errors": 0
+  },
+  "qa": {
+    "mode": "reader",
+    "reader": "openai:gpt-4o-mini",
+    "judge": "openai:gpt-4o-2024-08-06",
+    "runs": 1,
+    "sessions": 5,
+    "budgetTokens": null,
+    "thinkModel": "anthropic:claude-sonnet-5-5",
+    "reader_prompt": "LongMemEval step-by-step reading prompt, sessions in date order",
+    "judge_prompts": "LongMemEval official per-type prompts"
+  },
+  "fidelity": {
+    "embedding_deferred_pages": 0,
+    "rerank_missing_queries": 0,
+    "reranked_queries": 0
+  },
+  "cost": {
+    "usd": 1.075381,
+    "input_tokens": 2797314,
+    "output_tokens": 158429,
+    "basis": "budget ledger p0-qa-master-dev-2026-10-04T19-05-55-566Z-8f7a655f: 1152 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": ".budget/ledger.sqlite",
+    "program_cap_usd": 500,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 3,
+      "max": 2643.5
+    }
+  },
+  "rows_file": "rows.ndjson"
+}

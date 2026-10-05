@@ -1,0 +1,90 @@
+{
+  "schema": "cat40-receipt-v1",
+  "version": "cat40-v1",
+  "judge_prompt": "cat40-claims-v1",
+  "judge": "gpt-5.4-mini",
+  "world": {
+    "path": "eval/data/model-ladder-v1/world.json",
+    "scale": "v1",
+    "digest": "df8c95e71b17beab176851e3b15daaea9b8719fb009ba50e02cfc68243009a20",
+    "seed": 20261002,
+    "docs": 3973,
+    "tasks": 50
+  },
+  "evals_commit": "54c7ada70f2d967747ef934e9a7dc0bf087a35d2",
+  "evals_dirty": false,
+  "gbrain": {
+    "slot_ref": null,
+    "slot_commit": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "label": "gbrain",
+    "commit": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "version": "0.60.46.0",
+    "tree": "e2e7f91cc2df8668141315ae13e9d2f16f6ea064",
+    "verified": {
+      "copy_tree": "e2e7f91cc2df8668141315ae13e9d2f16f6ea064",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.46.0",
+      "cli_version_matches": true
+    },
+    "surface": "starter",
+    "operator_analyze": true,
+    "serve_boot_timeout_s": 0,
+    "staged_build": null
+  },
+  "mode": "build-slots",
+  "order": "task",
+  "complete": false,
+  "cells_planned": 0,
+  "slot_builds": [],
+  "models": [],
+  "arms": [
+    "gbrain"
+  ],
+  "families": [
+    "A",
+    "B",
+    "C",
+    "E",
+    "F"
+  ],
+  "repeats": 1,
+  "max_tool_chars": null,
+  "argv": [
+    "--build-slots",
+    "--gbrain-repo",
+    "../gbrain",
+    "--gbrain-ref",
+    "739e5cc89",
+    "--slots",
+    "5",
+    "--slot-build-allowance-usd",
+    "2",
+    "--budget-usd",
+    "6",
+    "--budget-ledger",
+    ".budget/cat40-followups.sqlite",
+    "--out",
+    "eval/reports/cat40/entity-slots-master"
+  ],
+  "budget_run_id": "cat40-slot-build-2026-10-04T16-22-13-492Z-a5e1129f",
+  "resumed": false,
+  "proxy_unattributed": {},
+  "failed_cells_proxy_usd": 0,
+  "cost": {
+    "usd": 0.010198,
+    "input_tokens": 78444,
+    "output_tokens": 0,
+    "basis": "budget ledger cat40-slot-build-2026-10-04T16-22-13-492Z-a5e1129f: 1 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "<evals>/.budget/cat40-followups.sqlite",
+    "program_cap_usd": 1237,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 0,
+      "max": 4310.4
+    }
+  },
+  "finished_at": "2026-10-04T16:27:12.121Z"
+}

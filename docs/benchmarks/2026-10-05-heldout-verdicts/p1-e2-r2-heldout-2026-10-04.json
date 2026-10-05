@@ -1,0 +1,254 @@
+{
+  "decision_id": "p1-e2-r2-heldout-2026-10-04",
+  "stage": "held-out",
+  "verdict": "all five judge models certified for apply",
+  "default_rule": "dream.edge_contradictions.mode=apply only for E2-certified models: wrong closures <= 1% in all 3 runs, as-of +0.10 over the E1 arm, undated pairs never closed (P1 r2 prereg / round-1 E2 text)",
+  "build": "feb077ef9c21ec6b80ea2f026a2c2cb9c391d129",
+  "harness": "gbrain-evals p0-heldout-harness 1d4dfec (temporal-contradictions, resumed from checkpoint after a machine restart; attempt 1 interrupted before any receipt)",
+  "held_out_material": "phrasing set C joins-only ledger (dated, out-of-order and undated sub-ledgers), seeds 11, 13, 17",
+  "e1_arm_asof_exact": 0.24552845528455283,
+  "certification": {
+    "anthropic:claude-haiku-4-5": {
+      "certified": true,
+      "runs": [
+        {
+          "run": 1,
+          "applied": 65,
+          "wrong": 0,
+          "late": 40,
+          "wrong_closure_rate": 0,
+          "asof_exact": 0.35609756097560974,
+          "asof_delta_vs_e1": 0.11056910569105691,
+          "undated_closures": 0,
+          "judge_errors": 0,
+          "harness_errors": 0
+        },
+        {
+          "run": 2,
+          "applied": 65,
+          "wrong": 0,
+          "late": 40,
+          "wrong_closure_rate": 0,
+          "asof_exact": 0.359349593495935,
+          "asof_delta_vs_e1": 0.11382113821138215,
+          "undated_closures": 0,
+          "judge_errors": 0,
+          "harness_errors": 0
+        },
+        {
+          "run": 3,
+          "applied": 66,
+          "wrong": 0,
+          "late": 41,
+          "wrong_closure_rate": 0,
+          "asof_exact": 0.36097560975609755,
+          "asof_delta_vs_e1": 0.11544715447154472,
+          "undated_closures": 0,
+          "judge_errors": 0,
+          "harness_errors": 0
+        }
+      ]
+    },
+    "anthropic:claude-opus-5-5": {
+      "certified": true,
+      "runs": [
+        {
+          "run": 1,
+          "applied": 66,
+          "wrong": 0,
+          "late": 41,
+          "wrong_closure_rate": 0,
+          "asof_exact": 0.36097560975609755,
+          "asof_delta_vs_e1": 0.11544715447154472,
+          "undated_closures": 0,
+          "judge_errors": 0,
+          "harness_errors": 0
+        },
+        {
+          "run": 2,
+          "applied": 66,
+          "wrong": 0,
+          "late": 41,
+          "wrong_closure_rate": 0,
+          "asof_exact": 0.36097560975609755,
+          "asof_delta_vs_e1": 0.11544715447154472,
+          "undated_closures": 0,
+          "judge_errors": 0,
+          "harness_errors": 0
+        },
+        {
+          "run": 3,
+          "applied": 66,
+          "wrong": 0,
+          "late": 41,
+          "wrong_closure_rate": 0,
+          "asof_exact": 0.36097560975609755,
+          "asof_delta_vs_e1": 0.11544715447154472,
+          "undated_closures": 0,
+          "judge_errors": 0,
+          "harness_errors": 0
+        }
+      ]
+    },
+    "anthropic:claude-sonnet-5-5": {
+      "certified": true,
+      "runs": [
+        {
+          "run": 1,
+          "applied": 66,
+          "wrong": 0,
+          "late": 41,
+          "wrong_closure_rate": 0,
+          "asof_exact": 0.36097560975609755,
+          "asof_delta_vs_e1": 0.11544715447154472,
+          "undated_closures": 0,
+          "judge_errors": 3,
+          "harness_errors": 0
+        },
+        {
+          "run": 2,
+          "applied": 66,
+          "wrong": 0,
+          "late": 41,
+          "wrong_closure_rate": 0,
+          "asof_exact": 0.36097560975609755,
+          "asof_delta_vs_e1": 0.11544715447154472,
+          "undated_closures": 0,
+          "judge_errors": 0,
+          "harness_errors": 0
+        },
+        {
+          "run": 3,
+          "applied": 66,
+          "wrong": 0,
+          "late": 41,
+          "wrong_closure_rate": 0,
+          "asof_exact": 0.36097560975609755,
+          "asof_delta_vs_e1": 0.11544715447154472,
+          "undated_closures": 0,
+          "judge_errors": 6,
+          "harness_errors": 0
+        }
+      ]
+    },
+    "openai:gpt-6.1-sol": {
+      "certified": true,
+      "runs": [
+        {
+          "run": 1,
+          "applied": 66,
+          "wrong": 0,
+          "late": 41,
+          "wrong_closure_rate": 0,
+          "asof_exact": 0.36097560975609755,
+          "asof_delta_vs_e1": 0.11544715447154472,
+          "undated_closures": 0,
+          "judge_errors": 0,
+          "harness_errors": 0
+        },
+        {
+          "run": 2,
+          "applied": 66,
+          "wrong": 0,
+          "late": 41,
+          "wrong_closure_rate": 0,
+          "asof_exact": 0.36097560975609755,
+          "asof_delta_vs_e1": 0.11544715447154472,
+          "undated_closures": 0,
+          "judge_errors": 0,
+          "harness_errors": 0
+        },
+        {
+          "run": 3,
+          "applied": 66,
+          "wrong": 0,
+          "late": 41,
+          "wrong_closure_rate": 0,
+          "asof_exact": 0.36097560975609755,
+          "asof_delta_vs_e1": 0.11544715447154472,
+          "undated_closures": 0,
+          "judge_errors": 0,
+          "harness_errors": 0
+        }
+      ]
+    },
+    "anthropic:claude-fable-5-1": {
+      "certified": true,
+      "runs": [
+        {
+          "run": 1,
+          "applied": 66,
+          "wrong": 0,
+          "late": 41,
+          "wrong_closure_rate": 0,
+          "asof_exact": 0.36097560975609755,
+          "asof_delta_vs_e1": 0.11544715447154472,
+          "undated_closures": 0,
+          "judge_errors": 0,
+          "harness_errors": 0
+        },
+        {
+          "run": 2,
+          "applied": 66,
+          "wrong": 0,
+          "late": 41,
+          "wrong_closure_rate": 0,
+          "asof_exact": 0.36097560975609755,
+          "asof_delta_vs_e1": 0.11544715447154472,
+          "undated_closures": 0,
+          "judge_errors": 6,
+          "harness_errors": 0
+        },
+        {
+          "run": 3,
+          "applied": 66,
+          "wrong": 0,
+          "late": 41,
+          "wrong_closure_rate": 0,
+          "asof_exact": 0.36097560975609755,
+          "asof_delta_vs_e1": 0.11544715447154472,
+          "undated_closures": 0,
+          "judge_errors": 0,
+          "harness_errors": 0
+        }
+      ]
+    }
+  },
+  "proposal_statuses_all_runs": {
+    "anthropic:claude-haiku-4-5": {
+      "applied": 196,
+      "compatible": 140,
+      "stale": 51
+    },
+    "anthropic:claude-opus-5-5": {
+      "applied": 198,
+      "compatible": 36,
+      "undated_unresolved": 102,
+      "stale": 51
+    },
+    "anthropic:claude-sonnet-5-5": {
+      "applied": 198,
+      "compatible": 93,
+      "undated_unresolved": 39,
+      "stale": 51,
+      "error": 6
+    },
+    "openai:gpt-6.1-sol": {
+      "applied": 198,
+      "compatible": 84,
+      "undated_unresolved": 54,
+      "stale": 51
+    },
+    "anthropic:claude-fable-5-1": {
+      "applied": 198,
+      "compatible": 117,
+      "stale": 51,
+      "undated_unresolved": 15,
+      "error": 6
+    }
+  },
+  "cost_usd": {
+    "attempt_2": 5.877109,
+    "attempt_1_interrupted": 6.017
+  }
+}

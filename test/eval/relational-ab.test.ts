@@ -239,3 +239,14 @@ describe('paraphrase grammar (B-RAB-01) and stratified --limit (B-RAB-02)', () =
   });
 });
 
+
+describe('evalSearchPins (feature-arm config pins)', () => {
+  test('parses search.<key>=<value> pairs and rejects anything else', async () => {
+    const { evalSearchPins } = await import('../../eval/runner/relational-ab.ts');
+    expect(evalSearchPins(undefined)).toEqual({});
+    expect(evalSearchPins('search.relational_planner=true, search.reranker.enabled=true'))
+      .toEqual({ 'search.relational_planner': 'true', 'search.reranker.enabled': 'true' });
+    expect(() => evalSearchPins('embedding_model=x')).toThrow('not search.<key>=<value>');
+    expect(() => evalSearchPins('search.mode')).toThrow();
+  });
+});

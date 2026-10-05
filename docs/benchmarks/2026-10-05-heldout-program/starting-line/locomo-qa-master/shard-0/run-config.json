@@ -1,0 +1,8 @@
+{
+  "run_config_hash": "7ecfa292a92d49e895202fad07b3fcce8f5b60cc9af1f2442865a5f7afaf40e2",
+  "benchmark": "locomo",
+  "shard": {
+    "index": 0,
+    "count": 1
+  }
+}

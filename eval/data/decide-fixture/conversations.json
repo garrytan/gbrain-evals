@@ -1,0 +1,281 @@
+{
+ "note": "Invented keyless fixture for the decision-kit walkthrough. Names are placeholders. Scores on it prove the plumbing, never retrieval quality.",
+ "conversations": [
+  {
+   "id": "alice-example",
+   "sessions": [
+    {
+     "id": "s1",
+     "date": "2026-01-05",
+     "turns": [
+      {
+       "speaker": "user",
+       "content": "I adopted a gray tabby kitten named Pebble from the shelter."
+      },
+      {
+       "speaker": "assistant",
+       "content": "Thanks for sharing, noted."
+      }
+     ]
+    },
+    {
+     "id": "s2",
+     "date": "2026-02-11",
+     "turns": [
+      {
+       "speaker": "user",
+       "content": "Pebble needed a rabies vaccine and the vet visit cost 85 dollars."
+      },
+      {
+       "speaker": "assistant",
+       "content": "Thanks for sharing, noted."
+      }
+     ]
+    },
+    {
+     "id": "s3",
+     "date": "2026-03-20",
+     "turns": [
+      {
+       "speaker": "user",
+       "content": "We repainted the hallway in a sage green color called Willow Mist."
+      },
+      {
+       "speaker": "assistant",
+       "content": "Thanks for sharing, noted."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "bob-example",
+   "sessions": [
+    {
+     "id": "s1",
+     "date": "2026-01-09",
+     "turns": [
+      {
+       "speaker": "user",
+       "content": "My cello teacher assigned the Bach prelude in G major."
+      },
+      {
+       "speaker": "assistant",
+       "content": "Thanks for sharing, noted."
+      }
+     ]
+    },
+    {
+     "id": "s2",
+     "date": "2026-02-14",
+     "turns": [
+      {
+       "speaker": "user",
+       "content": "I moved my cello lessons from Tuesday to Thursday evenings."
+      },
+      {
+       "speaker": "assistant",
+       "content": "Thanks for sharing, noted."
+      }
+     ]
+    },
+    {
+     "id": "s3",
+     "date": "2026-04-02",
+     "turns": [
+      {
+       "speaker": "user",
+       "content": "I bought a new carbon fiber cello bow for 310 dollars."
+      },
+      {
+       "speaker": "assistant",
+       "content": "Thanks for sharing, noted."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "carol-example",
+   "sessions": [
+    {
+     "id": "s1",
+     "date": "2026-01-15",
+     "turns": [
+      {
+       "speaker": "user",
+       "content": "Started training for a half marathon with a 12 week plan."
+      },
+      {
+       "speaker": "assistant",
+       "content": "Thanks for sharing, noted."
+      }
+     ]
+    },
+    {
+     "id": "s2",
+     "date": "2026-02-28",
+     "turns": [
+      {
+       "speaker": "user",
+       "content": "My long run reached 14 kilometers along the river trail."
+      },
+      {
+       "speaker": "assistant",
+       "content": "Thanks for sharing, noted."
+      }
+     ]
+    },
+    {
+     "id": "s3",
+     "date": "2026-03-30",
+     "turns": [
+      {
+       "speaker": "user",
+       "content": "Switched running shoes to a model with a wider toe box."
+      },
+      {
+       "speaker": "assistant",
+       "content": "Thanks for sharing, noted."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "dana-example",
+   "sessions": [
+    {
+     "id": "s1",
+     "date": "2026-01-20",
+     "turns": [
+      {
+       "speaker": "user",
+       "content": "Planted tomato seedlings indoors under a grow light."
+      },
+      {
+       "speaker": "assistant",
+       "content": "Thanks for sharing, noted."
+      }
+     ]
+    },
+    {
+     "id": "s2",
+     "date": "2026-03-01",
+     "turns": [
+      {
+       "speaker": "user",
+       "content": "Transplanted the tomatoes into raised beds by the fence."
+      },
+      {
+       "speaker": "assistant",
+       "content": "Thanks for sharing, noted."
+      }
+     ]
+    },
+    {
+     "id": "s3",
+     "date": "2026-05-10",
+     "turns": [
+      {
+       "speaker": "user",
+       "content": "Harvested the first cherry tomatoes and made salsa."
+      },
+      {
+       "speaker": "assistant",
+       "content": "Thanks for sharing, noted."
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "questions": [
+  {
+   "id": "fx-00",
+   "conversation": "alice-example",
+   "question": "How much did the vet visit for Pebble cost?",
+   "category": "single-session",
+   "gold": [
+    "s2"
+   ],
+   "abstention": false,
+   "answer": "85 dollars"
+  },
+  {
+   "id": "fx-01",
+   "conversation": "alice-example",
+   "question": "What color did we paint the hallway?",
+   "category": "single-session",
+   "gold": [
+    "s3"
+   ],
+   "abstention": false,
+   "answer": "Willow Mist, a sage green"
+  },
+  {
+   "id": "fx-02",
+   "conversation": "bob-example",
+   "question": "Which day are cello lessons on now?",
+   "category": "knowledge-update",
+   "gold": [
+    "s2"
+   ],
+   "abstention": false,
+   "answer": "Thursday evenings"
+  },
+  {
+   "id": "fx-03",
+   "conversation": "bob-example",
+   "question": "How much was the carbon fiber bow?",
+   "category": "single-session",
+   "gold": [
+    "s3"
+   ],
+   "abstention": false,
+   "answer": "310 dollars"
+  },
+  {
+   "id": "fx-04",
+   "conversation": "carol-example",
+   "question": "How far was the long run on the river trail?",
+   "category": "single-session",
+   "gold": [
+    "s2"
+   ],
+   "abstention": false,
+   "answer": "14 kilometers"
+  },
+  {
+   "id": "fx-05",
+   "conversation": "carol-example",
+   "question": "What kind of running shoes did I switch to?",
+   "category": "single-session",
+   "gold": [
+    "s3"
+   ],
+   "abstention": false,
+   "answer": "a model with a wider toe box"
+  },
+  {
+   "id": "fx-06",
+   "conversation": "dana-example",
+   "question": "When were the tomatoes transplanted into raised beds?",
+   "category": "temporal",
+   "gold": [
+    "s2"
+   ],
+   "abstention": false,
+   "answer": "2026-03-01"
+  },
+  {
+   "id": "fx-07",
+   "conversation": "dana-example",
+   "question": "What is the name of my goldfish?",
+   "category": "abstention",
+   "gold": [],
+   "abstention": true,
+   "answer": "Never mentioned."
+  }
+ ]
+}

@@ -1,0 +1,23 @@
+{
+  "schema": "cat40-experiment-v1",
+  "gbrain_commit": "51f865d78f75eece3d6969fcce1d93ec7931d471",
+  "slot_commit": "51f865d78f75eece3d6969fcce1d93ec7931d471",
+  "world_digest": "df9e4f65cf603430934d6afa30073a44813ea670f78ae83c68bbde8210d1db9b",
+  "models": [],
+  "arms": [
+    "gbrain"
+  ],
+  "label": "gbrain",
+  "flags": {
+    "--build-slots": true,
+    "--world": "eval/reports/cat40/holdout/world.json",
+    "--no-pglite-analyze": true,
+    "--gbrain-repo": "../gbrain",
+    "--gbrain-ref": "51f865d78",
+    "--slots": "5",
+    "--slot-build-allowance-usd": "2",
+    "--budget-ledger": ".budget/cat40-followups.sqlite",
+    "--out": "eval/reports/cat40/entity-slots-holdout"
+  },
+  "budget_run_id": "cat40-slot-build-2026-10-05T00-12-30-528Z-aa6d62e5"
+}

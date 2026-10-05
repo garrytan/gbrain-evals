@@ -1,0 +1,124 @@
+{
+  "decision_id": "p1-e3-r2-heldout-2026-10-04",
+  "stage": "held-out",
+  "verdict": "report_only (E3 carries no preregistered bar; no default rides on it)",
+  "builds": {
+    "baseline": "6622a119e40ea09a7719233046aca24741863ed2",
+    "candidate": "feb077ef9c21ec6b80ea2f026a2c2cb9c391d129"
+  },
+  "harness": "gbrain-evals p0-heldout-harness 662b990 (temporal-ingest-answer custodian mode; stdio put_page only, HTTP arm not run)",
+  "held_out_material": "phrasing set C, seeds 11, 13, 17",
+  "people_per_surface": 155,
+  "baseline": {
+    "entity": {
+      "n": 155,
+      "errors": 0,
+      "missing_surface": 0,
+      "no_entry": 0,
+      "current_ok": 0,
+      "ended_ok": 0,
+      "no_stale_current": 0,
+      "surface_ok": 0
+    },
+    "context_pack": {
+      "n": 155,
+      "errors": 0,
+      "missing_surface": 0,
+      "no_entry": 0,
+      "current_ok": 0,
+      "ended_ok": 0,
+      "no_stale_current": 0,
+      "surface_ok": 0
+    },
+    "ambient": {
+      "n": 155,
+      "errors": 0,
+      "missing_surface": 0,
+      "no_entry": 12,
+      "current_ok": 0,
+      "ended_ok": 0,
+      "no_stale_current": 1,
+      "surface_ok": 0
+    },
+    "compiled": {
+      "n": 155,
+      "errors": 0,
+      "missing_surface": 0,
+      "no_entry": 0,
+      "current_ok": 0,
+      "ended_ok": 0,
+      "no_stale_current": 1,
+      "surface_ok": 0
+    },
+    "query": {
+      "n": 155,
+      "errors": 0,
+      "missing_surface": 0,
+      "no_entry": 0,
+      "current_ok": 0,
+      "ended_ok": 0,
+      "no_stale_current": 0.0064516129032258064,
+      "surface_ok": 0,
+      "exploratory": {
+        "relational_current": 0.3935483870967742,
+        "relational_former": 0.34838709677419355
+      }
+    }
+  },
+  "candidate": {
+    "entity": {
+      "n": 155,
+      "errors": 0,
+      "missing_surface": 0,
+      "no_entry": 0,
+      "current_ok": 0.2903225806451613,
+      "ended_ok": 0.3935483870967742,
+      "no_stale_current": 0.3935483870967742,
+      "surface_ok": 0.27741935483870966
+    },
+    "context_pack": {
+      "n": 155,
+      "errors": 0,
+      "missing_surface": 0,
+      "no_entry": 0,
+      "current_ok": 0.2903225806451613,
+      "ended_ok": 0.3935483870967742,
+      "no_stale_current": 0.3935483870967742,
+      "surface_ok": 0.27741935483870966
+    },
+    "ambient": {
+      "n": 155,
+      "errors": 0,
+      "missing_surface": 0,
+      "no_entry": 12,
+      "current_ok": 0.25161290322580643,
+      "ended_ok": 0.34838709677419355,
+      "no_stale_current": 1,
+      "surface_ok": 0.23870967741935484
+    },
+    "compiled": {
+      "n": 155,
+      "errors": 0,
+      "missing_surface": 0,
+      "no_entry": 0,
+      "current_ok": 0.2903225806451613,
+      "ended_ok": 0.3935483870967742,
+      "no_stale_current": 1,
+      "surface_ok": 0.27741935483870966
+    },
+    "query": {
+      "n": 155,
+      "errors": 0,
+      "missing_surface": 0,
+      "no_entry": 0,
+      "current_ok": 0,
+      "ended_ok": 0,
+      "no_stale_current": 0.01935483870967742,
+      "surface_ok": 0,
+      "exploratory": {
+        "relational_current": 0.3741935483870968,
+        "relational_former": 0
+      }
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "schema": "cat40-experiment-v1",
+  "gbrain_commit": "51f865d78f75eece3d6969fcce1d93ec7931d471",
+  "slot_commit": "51f865d78f75eece3d6969fcce1d93ec7931d471",
+  "world_digest": "df9e4f65cf603430934d6afa30073a44813ea670f78ae83c68bbde8210d1db9b",
+  "models": [
+    "claude-sonnet-5-5",
+    "claude-opus-5-5",
+    "claude-fable-5-1",
+    "gpt-6.1-sol",
+    "gpt-6-astra"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "label": "gbrain-entity-holdout",
+  "flags": {
+    "--arms": "gbrain",
+    "--surface": "starter",
+    "--gbrain-repo": "../gbrain",
+    "--budget-ledger": ".budget/cat40-followups.sqlite",
+    "--transcripts": true,
+    "--world": "eval/reports/cat40/holdout/world.json",
+    "--repeat": "2",
+    "--no-pglite-analyze": true,
+    "--slots": "5",
+    "--concurrency": "10",
+    "--models": "claude-sonnet-5-5,claude-opus-5-5,claude-fable-5-1,gpt-6.1-sol,gpt-6-astra",
+    "--gbrain-ref": "51f865d78",
+    "--gbrain-label": "gbrain-entity-holdout",
+    "--out": "eval/reports/cat40/entity-holdout"
+  },
+  "budget_run_id": "cat40-model-ladder-2026-10-05T00-38-37-127Z-140a67a3"
+}

@@ -1,0 +1,12 @@
+{
+  "decision_id": "p3-e4-heldout-2026-10-04",
+  "stage": "held-out",
+  "verdict": "fail: precondition not met (relational arm fired on 17.0% of held-out constrained questions, bar >= 80%); effect +0.39 NDCG@10 points, below the +2.0 bar",
+  "default_rule": "search.triplet_scoring on iff sealed constrained-relational NDCG@10 +2.0 points with CI excluding 0 and 0 hit@1 losses on the guards; otherwise the setting leaves the pull request (prereg gbrain d0735c643)",
+  "build": "70ad30e4e9d384df66acad1e9aff7d49eec35c43, triplet off vs search.triplet_scoring=true + search.triplet_penalty=3.0",
+  "harness": "gbrain-evals p0-heldout-harness 916fcda (constrained-relational and relational-ab with --embed-cache; warm run first, 0 cache misses in both scored arms)",
+  "held_out_material": "custodian phrasing B (new question wording and page prose, extractor relation cues kept) and seeds 41, 53, 67; in custody",
+  "constrained_relational": {"n": 218, "clusters_seed_x_template": 9, "fire_rate": 0.170, "ndcg_off": 0.4400, "ndcg_on": 0.4438, "delta_ndcg": 0.0039, "ci95": [0.0009, 0.0081], "hit_at_1": [0.266, 0.271], "hit_at_1_wins": 1, "hit_at_1_losses": 0,
+    "fire_rate_by_template": {"who_at_topic": 0.033, "portfolio_sector": 0.472, "attended_role": 0.0}},
+  "guards": {"world_v1_relational_sealed_half": {"rows": 432, "hit_at_1_wins": 0, "hit_at_1_losses": 0}, "namedthingbench_relational": "not run: the live script refused (brain has no explicit embedding model); moot because the precondition already fails"}
+}

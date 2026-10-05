@@ -1,0 +1,35 @@
+{
+  "schema": "cat40-experiment-v1",
+  "gbrain_commit": "c72d6ffa308cb8431964936b9a66dbc4f8c536a6",
+  "slot_commit": "c72d6ffa308cb8431964936b9a66dbc4f8c536a6",
+  "world_digest": "df8c95e71b17beab176851e3b15daaea9b8719fb009ba50e02cfc68243009a20",
+  "models": [
+    "claude-opus-5-5",
+    "gpt-6.1-sol",
+    "claude-sonnet-5-5",
+    "claude-fable-5-1"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "label": "gbrain-verbs",
+  "flags": {
+    "--models": "claude-opus-5-5,gpt-6.1-sol,claude-sonnet-5-5,claude-fable-5-1",
+    "--arms": "gbrain",
+    "--tasks": "A01,A04,B01,B02,C01,C06,E01,E02,F01,F02",
+    "--repeat": "1",
+    "--surface": "verbs",
+    "--gbrain-label": "gbrain-verbs",
+    "--judge": "none",
+    "--max-tool-chars": "none",
+    "--transcripts": true,
+    "--gbrain-repo": "../gbrain",
+    "--gbrain-ref": "c72d6ffa308cb8431964936b9a66dbc4f8c536a6",
+    "--slots": "3",
+    "--concurrency": "3",
+    "--program-cap-usd": "150",
+    "--budget-ledger": "eval/reports/cat40/t1-ledger.sqlite",
+    "--out": "eval/reports/cat40/t1-verbs"
+  },
+  "budget_run_id": "cat40-model-ladder-2026-10-05T01-47-07-120Z-e4b12b59"
+}

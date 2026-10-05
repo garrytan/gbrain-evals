@@ -52,6 +52,61 @@ is not in finance. Today is 2026-09-15.
 Family D (surviving crashes, concurrent writes and restores) is not in v1. It
 needs failure injection built into every arm, and is the next addition.
 
+## The wide world and the hidden-tool family
+
+`--scale wide` generates a second world for decisions about which gbrain tools
+are listed to the model (`mcp.advertised_surface`). It has 20 tasks in each of
+families A, B, C, E and F, plus family H, 120 tasks in all, over 220 accounts
+and about 8,800 documents. Every task carries a stratum so results can be
+reported per stratum:
+
+| Stratum | Families | What the agent has to do |
+|---|---|---|
+| memory-only | A, B, C, E | Find and weigh what is already stored |
+| page-authoring | F | Write a correction that a later session needs |
+| hidden-tool | H | Use a gbrain operation that the starter tool list does not show |
+
+**Family H (hidden tool).** Revenue operations keeps each account's renewal
+forecast (renewal ARR, expected close date or seat count) as takes on a
+forecast page: a takes table between `<!--- gbrain:takes:begin -->` and
+`<!--- gbrain:takes:end -->` markers, every row held by `world`. For half of
+the accounts a later take replaced an earlier one; the earlier row is struck
+through and an email still quotes it. Namesake accounts and 30 other accounts
+have forecast pages too. Example: "What renewal ARR does revenue operations
+currently forecast for Ondrtiva Retail?"
+
+gbrain removes the takes table from `get_page`, `search` and `query` results
+for MCP callers, so on the `gbrain` arm the forecast is reachable only through
+`takes_list` or `takes_search`, which are callable but outside the `starter`
+and `verbs` tool lists (a client finds them through `request_tools`). With a
+chat-model key, `synthesize` and `think` may also gather takes. The file arms
+read the table as Markdown and the oracle gets it with its documents, so every
+arm can answer and success is comparable across arms. A superseded value, the
+contract's seat count or renewal date, and a namesake's forecast are wrong
+values.
+
+**Template sets and custodian mode.** Question wording, the F session message
+and the H forecast text come from a template set. Set A, in the generator,
+reproduces model-ladder-v1 exactly. Held-out wording is a custodian's file,
+never in this repository:
+
+```sh
+# Custodian: generate the sealed world (seed and templates are the custodian's)
+bun eval/generators/model-ladder-gen.ts --scale wide --seed <held-out seed> \
+  --world-templates-file <custody dir>/templates.json --decision-id <id> --purpose <text> \
+  --custodian-out <custody dir>/world
+# Custodian: run it (the runner regenerates the world from the same file and refuses a mismatch)
+bun eval/runner/cat40-model-ladder.ts --world <custody dir>/world/world.json \
+  --world-templates-file <custody dir>/templates.json --decision-id <id> --purpose <text> \
+  --out <dir outside the repository> ...
+```
+
+Each read of the templates file appends a line to `access-log.jsonl` beside it
+before the contents are used, and receipts record only its SHA-256. Both
+commands refuse output directories inside the repository. Without the
+custodian flags, the generator and runner accept only the published seeds
+(20261002, 20261003) and template set A.
+
 ## The arms
 
 Every arm runs through one agent loop (`eval/runner/cat40/loop.ts`) with the
@@ -146,6 +201,11 @@ expected to struggle. Real harnesses (Claude Code, Codex) are measured by
 ```sh
 # Hermetic arms, no provider calls
 bun eval/runner/cat40-model-ladder.ts --scripted --arms fs,memory,oracle --out $(mktemp -d)
+
+# The dev wide world (seed 20261002, set A): regenerate it, then run any arm with --world
+bun eval/generators/model-ladder-gen.ts --scale wide
+bun eval/runner/cat40-model-ladder.ts --scripted --arms fs,memory,oracle \
+  --world eval/data/model-ladder-wide-dev/world.json --out $(mktemp -d)
 
 # gbrain arm: build the slots once per commit, then run the cells
 bun eval/runner/cat40-model-ladder.ts --build-slots --gbrain-repo <gbrain checkout> --gbrain-ref <sha> \
