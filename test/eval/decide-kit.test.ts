@@ -258,5 +258,7 @@ describe('memory-qa questionDay', () => {
     expect(questionDay('2025-9-3')).toBe('2025-09-03');
     expect(questionDay(undefined)).toBeUndefined();
     expect(questionDay('sometime last spring')).toBeUndefined();
+    expect(questionDay(undefined, ['1:56 pm on 8 May, 2023', '10:04 am on 19 October, 2023', undefined])).toBe('2023-10-19');
+    expect(questionDay('2023/05/30 (Tue) 23:40', ['10:04 am on 19 October, 2023'])).toBe('2023-05-30');
   });
 });

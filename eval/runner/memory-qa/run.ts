@@ -44,7 +44,7 @@ import { requirePaidArm } from '../paid-arm.ts';
 import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
 import { EmbeddingCache, makeCachingTransport } from '../longmemeval-cache.ts';
 import { ndcgAtK, recallAllAtK, recallAnyAtK, uniqueInOrder, percentile } from '../metrics.ts';
-import { loadCorpus, occurrenceId, renderSessionPage, type Corpus, type MemoryQuestion, type Session } from './corpus.ts';
+import { isoSessionDate, loadCorpus, occurrenceId, renderSessionPage, type Corpus, type MemoryQuestion, type Session } from './corpus.ts';
 import { ChatClient, DEFAULT_JUDGE, DEFAULT_READER, factsReaderPrompt, judgeResponse, packSessions, readerPrompt, repeatsTrap, approxTokens, unresolvedRelativeTime, type SavedFact } from './qa.ts';
 import { devConversations, loadSplit } from '../decisions/splits.ts';
 import { appendAccessLog } from '../sealed-confirmation-lib.ts';
@@ -182,10 +182,14 @@ export function selectQuestions(questions: MemoryQuestion[], limit: number | nul
   return out;
 }
 
-/** The question date as YYYY-MM-DD for think's referenceDate (LongMemEval writes "2023/05/30 (Tue) 23:40"); undefined when absent or unparseable. */
-export function questionDay(questionDate: string | undefined): string | undefined {
+/**
+ * think's referenceDate (YYYY-MM-DD): the question date (LongMemEval writes "2023/05/30 (Tue) 23:40"), else the
+ * conversation's latest session date (LoCoMo questions carry no date); undefined when neither parses.
+ */
+export function questionDay(questionDate: string | undefined, sessionDates: readonly (string | undefined)[] = []): string | undefined {
   const m = /(\d{4})[/-](\d{1,2})[/-](\d{1,2})/.exec(questionDate ?? '');
-  return m ? `${m[1]}-${m[2]!.padStart(2, '0')}-${m[3]!.padStart(2, '0')}` : undefined;
+  if (m) return `${m[1]}-${m[2]!.padStart(2, '0')}-${m[3]!.padStart(2, '0')}`;
+  return sessionDates.map(isoSessionDate).filter((d): d is string => d !== null).sort().pop()?.slice(0, 10);
 }
 
 export function scoreRetrieval(retrieved: string[], gold: string[]): Pick<MemoryQaRow, 'recall_all_at_5' | 'recall_any_at_5' | 'recall_all_at_10' | 'ndcg_at_10'> {
@@ -382,7 +386,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
                 const readFacts = a.qa.context === 'facts' ? retrieved.slice(0, a.qa.sessions).flatMap(id => factsBySession.get(id) ?? []) : [];
                 for (let r = 0; r < a.qa.runs; r++) {
                   if (think) {
-                    const res = await think(engine, { question: q.question, model: a.qa.thinkModel, modelExplicit: true, remote: false, referenceDate: questionDay(q.question_date) });
+                    const res = await think(engine, { question: q.question, model: a.qa.thinkModel, modelExplicit: true, remote: false, referenceDate: questionDay(q.question_date, conv.sessions.map(x => x.date)) });
                     answer = res.answer ?? '';
                     tin += approxTokens(q.question);
                   } else {
@@ -441,7 +445,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
       ...(a.qa.mode !== 'none' ? (() => { const qa = allRows.filter(r => typeof r.qa_score === 'number'); return { qa_score: qa.length ? qa.reduce((x, r) => x + (r.qa_score ?? 0), 0) / qa.length : null, qa_rows: qa.length, qa_errors: allRows.filter(r => r.qa_error).length }; })() : {}) },
     facts: a.facts === 'none' ? null : { lane: a.facts, extractor: 'runExtractConversationFactsCore (product default model, force)', pages: 'conversation type, ISO session date', ...factStats,
       unresolved_share: factStats.facts ? factStats.unresolved / factStats.facts : null },
-    qa: a.qa.mode === 'none' ? null : { ...a.qa, reader_prompt: a.qa.mode === 'think' ? 'gbrain think, referenceDate = the question date (YYYY-MM-DD)' : a.qa.context === 'facts' ? 'step-by-step reading prompt over the saved facts (text + stored date) of the top sessions' : 'LongMemEval step-by-step reading prompt, sessions in date order', judge_prompts: a.benchmark.startsWith('beam') ? 'per-rubric-item yes/no' : 'LongMemEval official per-type prompts' },
+    qa: a.qa.mode === 'none' ? null : { ...a.qa, reader_prompt: a.qa.mode === 'think' ? 'gbrain think, referenceDate = the question date, else the latest session date (YYYY-MM-DD)' : a.qa.context === 'facts' ? 'step-by-step reading prompt over the saved facts (text + stored date) of the top sessions' : 'LongMemEval step-by-step reading prompt, sessions in date order', judge_prompts: a.benchmark.startsWith('beam') ? 'per-rubric-item yes/no' : 'LongMemEval official per-type prompts' },
     fidelity, cost, rows_file: 'rows.ndjson',
   };
   writeFileSync(join(a.output, 'receipt.json'), JSON.stringify(receipt, null, 2) + '\n');
