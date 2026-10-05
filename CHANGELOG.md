@@ -2,6 +2,29 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.23] - 2026-10-05
+
+### Top-level docs read as the current state, with a changelog per document
+
+README, the docs index, the settings guide, retrieval lessons, the comparison page, the evaluation guide, the
+contributor guide and the credits now open with what gbrain does at the pinned commit (`739e5cc`, v0.60.46.0) and
+close with a `## Changelog` section recording how that document changed and why, one entry per commit, newest first.
+
+- **README.** Three parts: what gbrain does, current results (one table, each number with its gbrain commit and
+  report) and how gbrain compares (strict LongMemEval retrieval, answer accuracy with the same reader,
+  PrecisionMemBench, concept search, Cat 40 against files, Postgres and the memory tool), then known limits. The
+  dated "Update, October 2/3/4" blocks move to its changelog. New on the page: Cat 40 on frontier models, the
+  multi-relation planner's held-out pass (gbrain v0.60.60.0) and the held-out program.
+- **Settings and retrieval lessons.** Dated "October 4, 2026:" amendments become current statements (opaque-id
+  recount at `109b992`), a `return_unit` row and a whole-conversation delivery section are added, and the September 6
+  values move to the changelog.
+- **Comparison page.** Sentences about earlier versions of the page now state the current position; the history is
+  in its changelog.
+- **CLAUDE.md** records the shape (current state on top, a per-document changelog below), and AGENTS.md summarizes
+  it so Codex and other agents that read only AGENTS.md see it.
+
+No measurement changed; $0.
+
 ## [0.10.22] - 2026-10-05
 
 ### Mirror: gbrain's takes-bootstrap classifier did not graduate; its autopilot stays `manual_only`
