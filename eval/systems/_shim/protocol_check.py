@@ -2,7 +2,7 @@
 
 Stdlib only; works against any shim. Checks: health, capability record shape and both policies, error shapes,
 reset, ingest of two dated sessions, a canary session in a second namespace, finish, retrieval item shape and
-provenance, dated probes that must return the right session, namespace isolation with a witness that the canary is
+provenance (a system with no passive memory API is checked for `unsupported` on every passive call instead), dated probes that must return the right session, namespace isolation with a witness that the canary is
 retrievable where it was written, delete_source with a survivor check, and reset emptying the namespace. With
 `--questions N` it also asks up to N LoCoMo-style questions and records the returned evidence (metered smokes use
 this). Systems that extract facts with an LLM make provider calls during ingest.
@@ -102,6 +102,21 @@ def main() -> int:
           f"missing={[k for k in CAP_KEYS if k not in cap]}")
     check("capability record has both policies", set(cap.get("retrieval_policies", {})) >= {"vendor-default", "fixed-evidence"})
     prov_unavailable = cap.get("provenance", {}).get("status") == "unavailable"
+    policies = list((cap.get("retrieval_policies") or {}).values())
+    if (cap.get("agent_surface") or {}).get("kind") == "native-agent" and policies and all(p.get("supported") is False for p in policies):
+        print("no passive memory API: every passive call must answer unsupported", flush=True)
+        for path, body in (("/reset", {"ns": ns_a}), ("/ingest", {"ns": ns_a, "session": sessions[0]}), ("/finish", {"ns": ns_a, "timeout_s": 5}),
+                           ("/retrieve", {"ns": ns_a, "question": "x", "query_time": None, "policy": {"name": "p", "mode": "vendor-default", "settings": {}}})):
+            s, out = go("POST", path, body)
+            check(f"{path} -> unsupported", out.get("error", {}).get("kind") == "unsupported", json.dumps(out)[:200])
+        s, out = go("POST", "/delete_source", {"ns": ns_a, "source_id": sessions[0]["source_id"]})
+        check("/delete_source -> unsupported", out.get("status") == "unsupported" or out.get("error", {}).get("kind") == "unsupported", json.dumps(out)[:200])
+        failed = [r for r in results if not r["pass"]]
+        print(f"\n{len(results) - len(failed)}/{len(results)} checks passed")
+        if a.json:
+            with open(a.json, "w") as f:
+                json.dump({"url": base, "system": cap.get("system"), "results": results, "evidence": [], "transcript": log}, f, indent=1)
+        return 1 if failed else 0
 
     s, out = go("POST", "/retrieve", {"ns": ns_a})
     check("missing fields -> 400 invalid_request", s == 400 and out.get("error", {}).get("kind") == "invalid_request")

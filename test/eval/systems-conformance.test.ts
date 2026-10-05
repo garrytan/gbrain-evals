@@ -21,7 +21,7 @@ import { hashEmbed } from '../../eval/runner/memory-qa/run.ts';
 import { HttpMemorySystem } from '../../eval/runner/systems/http.ts';
 import { validateSources } from '../../eval/runner/systems/render.ts';
 import { opaqueNamespace, opaqueSourceId, SanitizerLeakError } from '../../eval/runner/systems/sanitize.ts';
-import { ERROR_KINDS, SystemError, type MemorySystem, type RetrievalPolicy, type SessionInput } from '../../eval/runner/systems/types.ts';
+import { ERROR_KINDS, passiveUnsupported, SystemError, type MemorySystem, type RetrievalPolicy, type SessionInput } from '../../eval/runner/systems/types.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
 const NS_A = opaqueNamespace('conformance', 'alpha'), NS_B = opaqueNamespace('conformance', 'beta');
@@ -31,6 +31,19 @@ const session = (source_id: string, user: string): SessionInput => ({ source_id,
 const POLICY: RetrievalPolicy = { name: 'conformance:vendor-default', mode: 'vendor-default', settings: {} };
 
 const ts = serveProtocol(new FakeMemorySystem());
+
+/** A system with no passive memory API, shaped like the Letta record: native agent, every policy unsupported. */
+class NativeAgentOnly implements MemorySystem {
+  readonly name = 'native-agent-only';
+  private no = (): never => { throw new SystemError('unsupported', 'no passive memory API', 501); };
+  async capabilities() { return { ...(await new FakeMemorySystem().capabilities()), system: 'native-agent-only', agent_surface: { kind: 'native-agent' as const }, delete: 'unsupported' as const, retrieval_policies: { 'vendor-default': { supported: false }, 'fixed-evidence': { supported: false } } }; }
+  async reset() { return this.no(); }
+  async ingestSession(): Promise<never> { return this.no(); }
+  async finishIngest(): Promise<never> { return this.no(); }
+  async retrieve(_ns: string, _q: unknown, p: RetrievalPolicy): Promise<never> { if (p?.mode !== 'vendor-default' && p?.mode !== 'fixed-evidence') throw new SystemError('invalid_request', 'policy.mode must be vendor-default or fixed-evidence', 400); return this.no(); }
+  async deleteSource() { return { status: 'unsupported' as const, receipt: {} }; }
+}
+const agentOnly = serveProtocol(new NativeAgentOnly());
 let py: { proc: ReturnType<typeof Bun.spawn>; url: string } | null = null;
 let pyError: string | null = null;
 
@@ -46,7 +59,7 @@ beforeAll(async () => {
     if (!py) { proc.kill(); pyError = `python fake shim did not start: ${(await new Response(proc.stderr).text()).slice(-300)}`; }
   }
 }, 30_000);
-afterAll(() => { ts.stop(); py?.proc.kill(); });
+afterAll(() => { ts.stop(); agentOnly.stop(); py?.proc.kill(); });
 
 type Target = { name: string; system: () => MemorySystem; url?: () => string };
 const targets: Target[] = [
@@ -54,6 +67,7 @@ const targets: Target[] = [
   { name: 'full-context control', system: () => new FullContextSystem() },
   { name: 'plain-hybrid control (hash vectors)', system: () => new PlainHybridSystem(async texts => texts.map(t => hashEmbed(t, PG_EMBED_DIMS)), 'hash') },
   { name: 'TypeScript fake (HTTP)', system: () => new HttpMemorySystem(ts.url), url: () => ts.url },
+  { name: 'native agent without a passive API (HTTP)', system: () => new HttpMemorySystem(agentOnly.url), url: () => agentOnly.url },
   { name: 'Python reference shim (HTTP)', system: () => { if (!py) throw new Error(pyError ?? 'python shim missing'); return new HttpMemorySystem(py.url); }, url: () => py!.url },
   ...(process.env.SHIM_URL ? [{ name: `live shim ${process.env.SHIM_URL}`, system: () => new HttpMemorySystem(process.env.SHIM_URL!, { timeoutMs: 900_000 }), url: () => process.env.SHIM_URL! }] : []),
 ];
@@ -67,6 +81,16 @@ for (const t of targets) {
       expect(typeof cap.system).toBe('string');
       for (const k of ['time', 'provenance', 'delete', 'readiness', 'namespace', 'parallel_namespaces', 'retrieval_policies', 'streaming', 'agent_surface']) expect(cap).toHaveProperty(k);
       expect(['native', 'in-text', 'none']).toContain(cap.time);
+      if (passiveUnsupported(cap)) {
+        const unsupported = async (p: Promise<unknown>) => { const e = await p.then(() => null, x => x); expect(e).toBeInstanceOf(SystemError); expect((e as SystemError).kind).toBe('unsupported'); };
+        await unsupported(sys.reset(NS_A));
+        await unsupported(sys.ingestSession(NS_A, session(S1, 'kitten'), '2023-05-08T13:56:00'));
+        await unsupported(sys.finishIngest(NS_A, 10));
+        await unsupported(sys.retrieve(NS_A, { text: 'kitten', query_time: null }, POLICY));
+        const del = await sys.deleteSource(NS_A, S1).then(r => r.status, e => (e as SystemError).kind);
+        expect(del).toBe('unsupported');
+        return;
+      }
       await sys.reset(NS_A); await sys.reset(NS_B);
       const r1 = await sys.ingestSession(NS_A, session(S1, 'I adopted a gray tabby kitten named Pebble from the shelter.'), '2023-05-08T13:56:00');
       const r2 = await sys.ingestSession(NS_A, session(S2, 'Pebble needed a rabies vaccine and the vet visit cost 85 dollars.'), '2023-06-02T09:10:00');
@@ -194,7 +218,7 @@ describe('harness side of the contract', () => {
 describe('shared Python shim tooling (eval/systems/_shim)', () => {
   test('protocol_check.py passes against the TypeScript fake and the Python reference shim', async () => {
     if (!py) throw new Error(pyError ?? 'python shim missing');
-    for (const url of [ts.url, py.url]) {
+    for (const url of [ts.url, py.url, agentOnly.url]) {
       const proc = Bun.spawn(['python3', 'eval/systems/_shim/protocol_check.py', '--url', url, '--questions', '3'], { cwd: ROOT, stdout: 'pipe', stderr: 'pipe' });
       const [out, code] = await Promise.all([new Response(proc.stdout).text(), proc.exited]);
       expect(code, out).toBe(0);

@@ -73,6 +73,7 @@ export interface CapabilityRecord {
   readiness: string;
   namespace: string;
   parallel_namespaces: boolean;
+  /** Per mode: `{ settings: { knob: value }, ...documentation }`; the harness sends only `settings`. */
   retrieval_policies: Record<string, Record<string, unknown>>;
   streaming: 'disabled' | 'supported';
   telemetry_off: string[];
@@ -94,6 +95,26 @@ export interface MemorySystem {
   retrieve(ns: string, question: PublicQuestion, policy: RetrievalPolicy): Promise<RetrieveResult>;
   deleteSource(ns: string, sourceId: string): Promise<DeleteResult>;
   close?(): Promise<void>;
+}
+
+/** True for a system with no passive memory API (a native agent such as Letta): every passive call answers `unsupported`. */
+export function passiveUnsupported(cap: Pick<CapabilityRecord, 'agent_surface' | 'retrieval_policies'>): boolean {
+  const policies = Object.values(cap.retrieval_policies ?? {});
+  return cap.agent_surface?.kind === 'native-agent' && policies.length > 0 && policies.every(p => p?.supported === false);
+}
+
+/** Documentation keys a pre-`settings` capability record keeps beside its knobs; never sent as settings. */
+const POLICY_DOC_KEYS = new Set(['notes', 'maps_to', 'resolved', 'why', 'api', 'supported', 'description']);
+
+/**
+ * The knob map for one retrieval policy: the record's `settings` object
+ * (PROTOCOL.md), or, for a record written before `settings` existed, the
+ * entry without its documentation keys. `source` says which, for the receipt.
+ */
+export function policyKnobs(entry: Record<string, unknown> | undefined): { settings: Record<string, unknown>; source: 'settings' | 'flattened' | 'none' } {
+  if (!entry) return { settings: {}, source: 'none' };
+  if (entry.settings && typeof entry.settings === 'object' && !Array.isArray(entry.settings)) return { settings: { ...(entry.settings as Record<string, unknown>) }, source: 'settings' };
+  return { settings: Object.fromEntries(Object.entries(entry).filter(([k]) => !POLICY_DOC_KEYS.has(k))), source: 'flattened' };
 }
 
 export const ITEM_TYPES: readonly ItemType[] = ['fact', 'episode', 'chunk', 'note', 'entity', 'observation', 'page'];

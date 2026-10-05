@@ -2,7 +2,8 @@
  * Event time on the real datasets (engineering review C6). Every session a
  * shootout system receives carries an ISO event time, either the dataset's own
  * or a disclosed synthetic one, sessions arrive in event-time order, and every
- * question has a query time. The counts are pinned: the datasets are pinned by
+ * question has a query time, and building the sanitizer stays well under 20 seconds even on LongMemEval-S (it once
+ * took 28 minutes). The counts are pinned: the datasets are pinned by
  * SHA-256, so a change here means the loader or the date policy changed.
  *
  * Needs the datasets (`bun run eval:decide fetch --benchmark <name>`, free, no key); each benchmark is skipped
@@ -27,7 +28,9 @@ describe('event time on the pinned datasets', () => {
   for (const [benchmark, want] of Object.entries(EXPECTED)) {
     test.skipIf(!present(benchmark))(`${benchmark}: every session dated or counted synthetic, ordered, every question has a query time`, () => {
       const corpus = loadCorpus(benchmark);
+      const t0 = performance.now();
       const san = new Sanitizer(corpus, 'event-time-test');
+      expect(performance.now() - t0).toBeLessThan(20_000);
       let sessions = 0, dated = 0, synthetic = 0, reordered = 0;
       for (const conv of corpus.conversations) {
         const plan = san.ingestPlan(conv);

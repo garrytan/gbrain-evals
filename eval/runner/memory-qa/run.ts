@@ -81,7 +81,7 @@ import { GbrainLegacySystem, GbrainShootoutSystem, type GbrainModules } from '..
 import { HttpMemorySystem } from '../systems/http.ts';
 import { packContext, RENDERER_VERSION, strictSources, TOKENIZER, validateSources, type ContextMode } from '../systems/render.ts';
 import { Sanitizer, SanitizerLeakError } from '../systems/sanitize.ts';
-import { SystemError, type CapabilityRecord, type Item, type MemorySystem, type RetrievalPolicy, type SessionInput } from '../systems/types.ts';
+import { policyKnobs, SystemError, type CapabilityRecord, type Item, type MemorySystem, type RetrievalPolicy, type SessionInput } from '../systems/types.ts';
 
 export interface RunArgs {
   benchmark: string;
@@ -160,7 +160,7 @@ export interface MemoryQaRow {
   applied_settings?: Record<string, unknown>;
   truncated?: boolean;
   harness_ms?: number;
-  ingest?: { sessions: number; failed_sessions: number; synthetic_times: number; finish_ready: boolean; completeness: string; readiness_probe: ProbeResult; degraded: boolean };
+  ingest?: { sessions: number; failed_sessions: number; synthetic_times: number; finish_ready: boolean; completeness: string; readiness_probe: ProbeResult; degraded: boolean; errors: IngestError[] };
   qa_context?: { mode: ContextMode; tokenizer: string; renderer: string; budget_tokens: number | null; tokens: number; item_ids: string[]; source_ids: string[]; prompt_sha256: string };
   qa_prompt?: string;
   query_time?: string | null;
@@ -270,16 +270,31 @@ export function hashEmbed(text: string, dims: number): number[] {
 
 const PROVIDER_KEY: Record<string, string> = { openai: 'OPENAI_API_KEY', voyage: 'VOYAGE_API_KEY', google: 'GOOGLE_GENERATIVE_AI_API_KEY' };
 
-export function runConfigHash(a: RunArgs, gut: GbrainUnderTest, corpus: Corpus): string {
+/** What a system says it is: its capability record's name and versions and, for a shim, the configuration /health reports active. */
+export interface SystemIdentity { system: string; config: string | null; versions: Record<string, unknown> | null; health?: Record<string, unknown> }
+
+export async function systemIdentity(a: RunArgs): Promise<SystemIdentity | null> {
+  if (a.system === 'gbrain') return null;
+  if (!/^https?:\/\//.test(a.system)) return { system: a.system, config: a.system === 'gbrain-shootout' ? JSON.stringify(a.config) : null, versions: null };
+  const client = new HttpMemorySystem(a.system);
+  const [health, cap] = await Promise.all([client.health(), client.capabilities()]);
+  if (health.ok !== true) throw new Error(`${a.system} is not healthy: ${JSON.stringify(health).slice(0, 300)}`);
+  const { service_ms: _ms, ...h } = health;
+  return { system: cap.system, config: typeof h.config === 'string' ? h.config : null, versions: cap.versions ?? null, health: h };
+}
+
+export function runConfigHash(a: RunArgs, gut: GbrainUnderTest, corpus: Corpus, identity: SystemIdentity | null = null): string {
   const pre = { benchmark: a.benchmark, split: a.split, config: a.config, pins: a.pins, embed: a.embed, model: a.embeddingModel, dims: a.embeddingDims, qa: a.qa,
     categories: a.categories, limit: a.limit, seed: a.seed, topK: a.topK, gbrain: gut.overlay?.build.commit ?? gut.version, data: corpus.source.files, ...(a.facts !== 'none' ? { facts: a.facts } : {}),
-    ...(a.system !== 'gbrain' ? { system: a.system, context: a.context, policy: a.policy } : {}) };
+    ...(a.system !== 'gbrain' ? { system: a.system, context: a.context, policy: a.policy, identity: identity && { system: identity.system, config: identity.config, versions: identity.versions } } : {}) };
   return createHash('sha256').update(JSON.stringify(pre)).digest('hex');
 }
 
 const errorText = (e: unknown) => (e as Error).message.slice(0, 300);
 
 export type ProbeResult = 'found' | 'missed' | 'not-measurable' | 'skipped';
+/** One failed session: its opaque source id, the error kind and the message (never a request body). */
+export interface IngestError { source_id: string; kind: string; message: string }
 
 /**
  * Readiness probe (engineering review P2): after the system reports its
@@ -296,7 +311,7 @@ export async function readinessProbe(system: MemorySystem, ns: string, last: Ses
   if (!passage?.trim()) return 'skipped';
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const res = await system.retrieve(ns, { text: passage, query_time: null }, { ...policy, mode: 'fixed-evidence', settings: { ...(capabilities.retrieval_policies?.['fixed-evidence'] ?? {}) } });
+      const res = await system.retrieve(ns, { text: passage, query_time: null }, { ...policy, mode: 'fixed-evidence', settings: policyKnobs(capabilities.retrieval_policies?.['fixed-evidence']).settings });
       return res.items.some(i => i.source_ids.includes(last.source_id)) ? 'found' : 'missed';
     } catch { /* a vendor error is retried once, then counts as a miss */ }
   }
@@ -341,7 +356,8 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   const myConvs = convIds.filter((_, i) => i % a.shard.count === a.shard.index);
   const byConv = new Map(corpus.conversations.map(c => [c.id, c]));
 
-  const hash = runConfigHash(a, gut, corpus);
+  const sysIdentity = await systemIdentity(a);
+  const hash = runConfigHash(a, gut, corpus, sysIdentity);
   const headerPath = join(a.output, 'run-config.json');
   if (existsSync(headerPath)) {
     const prior = JSON.parse(readFileSync(headerPath, 'utf8')) as { run_config_hash: string };
@@ -372,7 +388,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
     const mine = manifest.expected.length;
     const factSessions = a.facts === 'none' ? 0 : myConvs.reduce((n, id) => n + (byConv.get(id)?.sessions.length ?? 0), 0);
     const estimate = Math.max(0.05, Math.round((((((inProcessGbrain || a.system === 'plain-hybrid') && a.embed === 'real') ? perQuestion[a.benchmark] ?? 0.02 : 0) + perQa[a.qa.mode] * a.qa.runs) * mine + FACTS_USD_PER_SESSION * factSessions) * 100) / 100);
-    try { requirePaidArm(a.argv, { arm: `memory-qa ${a.benchmark}`, estimateUsd: estimate }); }
+    try { requirePaidArm(a.argv, { arm: `memory-qa ${a.benchmark}`, estimateUsd: estimate, ledgerPath: budgetOptionsFrom(a.argv).ledgerPath }); }
     catch (e) {
       throw decideError({ code: 'PAID_FLAGS_MISSING', message: (e as Error).message, why: 'real embeddings and the reading lane call paid providers, and every paid request is reserved in the budget ledger first',
         fix: { next: 'run', argv: ['bun', 'eval/runner/budget-ledger.ts', 'status'], verify: ['bun', 'eval/runner/budget-ledger.ts', 'status'] } });
@@ -430,10 +446,12 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
     : /^https?:\/\//.test(a.system) ? new HttpMemorySystem(a.system, { markers: sanitizer.markers })
     : (() => { throw new Error(`--system must be gbrain, gbrain-shootout, fake, full-context, no-memory, plain-hybrid or a shim URL (got ${a.system})`); })();
   const capabilities = await system.capabilities();
-  const policy: RetrievalPolicy = { name: `${capabilities.system}:${a.policy}`, mode: a.policy, settings: { ...(capabilities.retrieval_policies?.[a.policy] ?? {}), ...a.policySettings } };
+  const knobs = policyKnobs(capabilities.retrieval_policies?.[a.policy]);
+  const policy: RetrievalPolicy = { name: `${capabilities.system}:${a.policy}`, mode: a.policy, settings: { ...knobs.settings, ...a.policySettings } };
   const brain = () => (system as GbrainLegacySystem).brain;
   const fidelity = inProcessGbrain ? (system as GbrainLegacySystem).fidelity : { embedding_deferred_pages: 0, rerank_missing_queries: 0, reranked_queries: 0 };
-  const ingestStats = { conversations: 0, sessions: 0, failed_sessions: 0, synthetic_times: 0, degraded_conversations: 0, finish_timeouts: 0, readiness_probe_misses: 0 };
+  const ingestStats = { conversations: 0, sessions: 0, failed_sessions: 0, synthetic_times: 0, degraded_conversations: 0, finish_timeouts: 0, readiness_probe_misses: 0, error_kinds: {} as Record<string, number> };
+  const allIngestErrors: Array<IngestError & { conversation_ns: string }> = [];
   const invalidReasons: string[] = [];
   let written = 0;
   const record = (row: MemoryQaRow) => { appendAttempt(a.output, row as unknown as Parameters<typeof appendAttempt>[1]); written++; };
@@ -447,6 +465,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
       let importError: string | null = null;
       let degraded: MemoryQaRow['ingest'] | undefined;
       const ingested = new Set<string>();
+      const ingestErrors: IngestError[] = [];
       let lastEventTime: string | null = null;
       try { await system.reset(ns); } catch (e) { importError = `reset failed: ${errorText(e)}`; }
       if (legacy && !importError) {
@@ -459,14 +478,18 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
         const plan = sanitizer.ingestPlan(conv);
         for (const step of plan) {
           if (step.synthetic_time) synthetic++;
+          ingested.add(step.input.source_id);
           try {
             const res = await system.ingestSession(ns, step.input, step.event_time);
-            ingested.add(step.input.source_id);
-            if (res.errors.length || res.completeness === 'degraded') failed++;
+            if (res.errors.length || res.completeness === 'degraded') {
+              failed++;
+              ingestErrors.push({ source_id: step.input.source_id, kind: res.errors.length ? 'reported' : 'degraded', message: (res.errors.map(String).join('; ') || `completeness ${res.completeness}`).slice(0, 300) });
+            }
           } catch (e) {
             if (e instanceof SanitizerLeakError) { importError = e.message; invalidReasons.push(`sanitizer tripwire during ingest: ${e.message}`); break; }
-            if (e instanceof SystemError && e.kind === 'budget') { importError = `budget: ${errorText(e)}`; break; }
+            if (e instanceof SystemError && e.kind === 'budget') { importError = `budget: ${errorText(e)}`; ingestErrors.push({ source_id: step.input.source_id, kind: 'budget', message: errorText(e) }); break; }
             failed++;
+            ingestErrors.push({ source_id: step.input.source_id, kind: e instanceof SystemError ? e.kind : 'product_error', message: errorText(e) });
           }
         }
         let finish: { ready: boolean; completeness: string } = { ready: false, completeness: 'unknown' };
@@ -477,7 +500,8 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
         if (probe === 'missed') ingestStats.readiness_probe_misses++;
         const isDegraded = !importError && (failed / Math.max(1, plan.length) > 0.01 || !finish.ready || probe === 'missed');
         if (isDegraded) ingestStats.degraded_conversations++;
-        degraded = { sessions: plan.length, failed_sessions: failed, synthetic_times: synthetic, finish_ready: finish.ready, completeness: finish.completeness, readiness_probe: probe, degraded: isDegraded };
+        degraded = { sessions: plan.length, failed_sessions: failed, synthetic_times: synthetic, finish_ready: finish.ready, completeness: finish.completeness, readiness_probe: probe, degraded: isDegraded, errors: ingestErrors };
+        for (const e of ingestErrors) { ingestStats.error_kinds[e.kind] = (ingestStats.error_kinds[e.kind] ?? 0) + 1; if (allIngestErrors.length < 500) allIngestErrors.push({ conversation_ns: ns, ...e }); }
         lastEventTime = plan.map(p => p.event_time).filter((t): t is string => !!t).sort().pop() ?? null;
       }
       const factsBySession = new Map<string, SavedFact[]>();
@@ -646,10 +670,10 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
     qa: a.qa.mode === 'none' ? null : { ...a.qa, reader_prompt: a.qa.mode === 'think' ? 'gbrain think' : a.qa.context === 'facts' ? 'step-by-step reading prompt over the saved facts (text + stored date) of the top sessions' : !legacy && a.context === 'native' ? `native memory-item reading prompt (${RENDERER_VERSION}, ${TOKENIZER.id})` : 'LongMemEval step-by-step reading prompt, sessions in date order', judge_prompts: a.benchmark.startsWith('beam') ? 'per-rubric-item yes/no' : 'LongMemEval official per-type prompts' },
     fidelity, cost, rows_file: 'rows.ndjson',
     metering: a.providerProxy ? { mode: 'lease-proxy', proxy: a.providerProxy, lease_id: process.env.SHOOTOUT_LEASE_ID ?? null } : { mode: paid ? 'budget-ledger' : 'none' },
-    system: { name: system.name, capability_system: capabilities.system, context: a.context, policy, capabilities },
-    context: a.context, policy: { name: policy.name, mode: policy.mode },
+    system: { name: system.name, capability_system: capabilities.system, context: a.context, policy, capabilities, identity: sysIdentity },
+    context: a.context, policy: { name: policy.name, mode: policy.mode, settings: policy.settings, settings_source: knobs.source },
     manifest_sha256: manifest.expected_sha256, outcomes: canon.counts, attempts_this_run: written, comparison_complete: canon.missing.length === 0 && harnessFailures === 0,
-    ingest: legacy ? null : ingestStats, sanitizer: { forbidden_markers: sanitizer.markers.length }, sealed_profile: sealed ? { checked: 'output and caches inside the custody root, outside the repository and the shared cache' } : null,
+    ingest: legacy ? null : { ...ingestStats, errors: allIngestErrors, errors_truncated: allIngestErrors.length >= 500 }, sanitizer: { forbidden_markers: sanitizer.markers.length }, sealed_profile: sealed ? { checked: 'output and caches inside the custody root, outside the repository and the shared cache' } : null,
     files: { manifest: 'manifest.json', attempts: 'attempts.ndjson', outcomes: 'outcomes.ndjson', rows: 'rows.ndjson' },
   };
   writeFileSync(join(a.output, 'receipt.json'), JSON.stringify(receipt, null, 2) + '\n');

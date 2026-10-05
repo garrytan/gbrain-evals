@@ -18,7 +18,7 @@ export const FAKE_CAPABILITIES: CapabilityRecord = {
   versions: { package: 'in-repo', lock_sha256: null, image: null, vendor_benchmark_code: null },
   configs: { recipe: { model_roles: {}, notes: 'keyword overlap, no provider calls' }, common: { model_roles: {}, unsettable: ['extraction', 'embedder'] } },
   time: 'native', provenance: { status: 'exact', mechanism: 'one item per ingested session' }, delete: 'native', readiness: 'synchronous',
-  namespace: 'in-memory dict key', parallel_namespaces: true, retrieval_policies: { 'vendor-default': { k: 5 }, 'fixed-evidence': { k: 20 } },
+  namespace: 'in-memory dict key', parallel_namespaces: true, retrieval_policies: { 'vendor-default': { settings: { k: 5 } }, 'fixed-evidence': { settings: { k: 20 } } },
   streaming: 'disabled', telemetry_off: [], agent_surface: { kind: 'none' }, deviations_from_vendor_code: [],
 };
 
@@ -40,7 +40,7 @@ export class FakeMemorySystem implements MemorySystem {
 
   async retrieve(ns: string, question: PublicQuestion, policy: RetrievalPolicy): Promise<RetrieveResult> {
     if (policy?.mode !== 'vendor-default' && policy?.mode !== 'fixed-evidence') throw new SystemError('invalid_request', 'policy.mode must be vendor-default or fixed-evidence', 400);
-    const k = Number(policy.settings?.k || FAKE_CAPABILITIES.retrieval_policies[policy.mode].k);
+    const k = Number(policy.settings?.k || (FAKE_CAPABILITIES.retrieval_policies[policy.mode].settings as { k: number }).k);
     const q = words(question.text);
     const scored = [...(this.store.get(ns) ?? new Map()).entries()]
       .map(([src, s]) => ({ score: [...q].filter(w => s.words.has(w)).length, src, s }))
@@ -59,7 +59,7 @@ export class FakeMemorySystem implements MemorySystem {
 const err = (kind: string, message: string, status: number) => ({ status, out: { error: { kind, message } } as Record<string, unknown> });
 
 /** Serve a `MemorySystem` over protocol v1 (mirrors shim.py `dispatch`). */
-export function serveProtocol(system: MemorySystem, opts: { port?: number; hostname?: string } = {}): { port: number; url: string; stop: () => void } {
+export function serveProtocol(system: MemorySystem, opts: { port?: number; hostname?: string; config?: string } = {}): { port: number; url: string; stop: () => void } {
   const server = Bun.serve({
     port: opts.port ?? 0, hostname: opts.hostname ?? '127.0.0.1',
     fetch: async req => {
@@ -72,7 +72,7 @@ export function serveProtocol(system: MemorySystem, opts: { port?: number; hostn
       const need = (...keys: string[]) => { const missing = keys.filter(k => !(k in body)); if (missing.length) throw new SystemError('invalid_request', `missing fields: ${missing.join(', ')}`, 400); };
       try {
         if (body === null) throw new SystemError('invalid_request', 'body is not JSON', 400);
-        if (req.method === 'GET' && path === '/health') result = { status: 200, out: { ok: true } };
+        if (req.method === 'GET' && path === '/health') result = { status: 200, out: { ok: true, config: opts.config ?? 'recipe' } };
         else if (req.method === 'GET' && path === '/capabilities') result = { status: 200, out: { ...(await system.capabilities()), protocol: 1 } };
         else if (req.method === 'POST' && path === '/reset') { need('ns'); await system.reset(body.ns); result = { status: 200, out: { ok: true } }; }
         else if (req.method === 'POST' && path === '/ingest') {

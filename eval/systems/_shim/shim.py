@@ -88,7 +88,8 @@ def dispatch(adapter: Adapter, method: str, path: str, body: dict[str, Any]) -> 
     start = time.perf_counter()
     try:
         if method == "GET" and path == "/health":
-            out = adapter.health()
+            out = dict(adapter.health())
+            out.setdefault("config", os.environ.get("SHIM_CONFIG", "recipe"))
         elif method == "GET" and path == "/capabilities":
             out = {"protocol": PROTOCOL, **adapter.capabilities()}
         elif method == "POST" and path == "/reset":

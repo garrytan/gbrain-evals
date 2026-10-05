@@ -18,6 +18,7 @@ import { pairObservations } from '../../eval/runner/stats/paired.ts';
 import { toObservation } from '../../eval/runner/stats/rows.ts';
 import { FakeMemorySystem, serveProtocol } from '../../eval/runner/systems/fake.ts';
 import { FullContextSystem } from '../../eval/runner/systems/baselines.ts';
+import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
 import { HttpMemorySystem } from '../../eval/runner/systems/http.ts';
 import { packContext, packNative, renderItem, strictSources, TOKENIZER, validateSources } from '../../eval/runner/systems/render.ts';
 import { findLeaks, forbiddenMarkers, NS_RE, Sanitizer, SRC_RE } from '../../eval/runner/systems/sanitize.ts';
@@ -260,7 +261,8 @@ describe('memory-qa with a MemorySystem', () => {
     const receipt = JSON.parse(readFileSync(join(out, 'receipt.json'), 'utf8'));
     expect(receipt.metering.mode).toBe('lease-proxy');
     expect(receipt.run_status).toBe('complete');
-    expect(receipt.system.capabilities.retrieval_policies).toEqual({ 'vendor-default': {}, 'fixed-evidence': { limit: 40 } });
+    expect(receipt.system.capabilities.retrieval_policies).toEqual({ 'vendor-default': { settings: {} }, 'fixed-evidence': { settings: { limit: 40 } } });
+    expect(receipt.policy).toMatchObject({ mode: 'vendor-default', settings: {}, settings_source: 'settings' });
   }, 120_000);
 
   test('the D1 controls run end to end: context controls carry no recall, plain hybrid does', async () => {
@@ -312,6 +314,69 @@ describe('memory-qa with a MemorySystem', () => {
     } finally { brokenServer.stop(); }
     const control = await runArm(args(join(tmp, 'probe-control'), '--system', 'no-memory'));
     expect(control.rows.every(r => r.ingest?.readiness_probe === 'not-measurable' && r.outcome === 'scored')).toBe(true);
+  });
+
+  test('receipts carry the shim identity; a recipe run and a common run never share an output directory', async () => {
+    const out = join(tmp, 'identity');
+    const probe = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: () => new Response('') });
+    const port = probe.port as number;
+    probe.stop(true);
+    let server = serveProtocol(new FakeMemorySystem(), { port, config: 'recipe' });
+    try {
+      const { receipt } = await runArm(args(out, '--system', server.url));
+      expect((receipt as any).system.identity).toMatchObject({ system: 'fake', config: 'recipe', versions: { package: 'in-repo' }, health: { ok: true, config: 'recipe' } });
+    } finally { server.stop(); }
+    server = serveProtocol(new FakeMemorySystem(), { port, config: 'common' });
+    try {
+      await expect(runArm(args(out, '--system', server.url))).rejects.toThrow(/different run configuration/);
+      const { receipt } = await runArm(args(join(tmp, 'identity-common'), '--system', server.url));
+      expect((receipt as any).system.identity.config).toBe('common');
+    } finally { server.stop(); }
+  });
+
+  test('a failed session keeps its error kind and message in the attempt row and the receipt', async () => {
+    const fake = new FakeMemorySystem();
+    const base = fake.ingestSession.bind(fake);
+    let n = 0;
+    fake.ingestSession = async (ns, s, t) => { if (++n === 2) throw new SystemError('timeout', 'vendor queue timed out'); return base(ns, s, t); };
+    const server = serveProtocol(fake);
+    try {
+      const out = join(tmp, 'ingest-errors');
+      const { receipt } = await runArm(args(out, '--system', server.url));
+      expect((receipt as any).ingest.error_kinds).toEqual({ timeout: 1 });
+      expect((receipt as any).ingest.errors[0]).toMatchObject({ kind: 'timeout', message: expect.stringContaining('vendor queue timed out') });
+      expect((receipt as any).ingest.errors[0].source_id).toMatch(/^src-[0-9a-f]{16}$/);
+      const attempts = readFileSync(join(out, 'attempts.ndjson'), 'utf8').trim().split('\n').map(l => JSON.parse(l));
+      expect(attempts.some(r => r.ingest?.errors?.[0]?.kind === 'timeout')).toBe(true);
+    } finally { server.stop(); }
+  });
+
+  test('a policy sends only its knob map; a record without settings is flattened and says so', async () => {
+    const seen: Array<Record<string, unknown>> = [];
+    const flat = new FakeMemorySystem();
+    const caps = flat.capabilities.bind(flat);
+    const retrieve = flat.retrieve.bind(flat);
+    flat.capabilities = async () => ({ ...(await caps()), retrieval_policies: { 'vendor-default': { k: 3, maps_to: 'search(top_k=3)', notes: 'doc' }, 'fixed-evidence': { k: 20 } } });
+    flat.retrieve = async (ns, q, p) => { if (p.mode === 'vendor-default') seen.push(p.settings); return retrieve(ns, q, p); };
+    const server = serveProtocol(flat);
+    try {
+      const { receipt } = await runArm(args(join(tmp, 'flattened'), '--system', server.url));
+      expect(seen.every(s => JSON.stringify(s) === JSON.stringify({ k: 3 }))).toBe(true);
+      expect((receipt as any).policy).toMatchObject({ settings: { k: 3 }, settings_source: 'flattened' });
+    } finally { server.stop(); }
+    const { receipt } = await runArm(args(join(tmp, 'knobs'), '--system', 'fake', '--policy-setting', 'k=2'));
+    expect((receipt as any).policy).toMatchObject({ settings: { k: '2' }, settings_source: 'settings' });
+  });
+
+  test('the paid guard reads --budget-ledger, not only the default ledger', () => {
+    const ledger = join(tmp, 'custom-ledger.sqlite');
+    const run = BudgetRun.open({ runner: 'test', budgetUsd: 0.01, ledgerPath: ledger, programCapUsd: 1 });
+    closeLedgers();
+    const proc = Bun.spawnSync([process.execPath, 'eval/runner/memory-qa/run.ts', '--benchmark', 'fixture', '--system', 'fake', '--qa', 'reader', '--output', join(tmp, 'ledger-run'),
+      '--paid', '--budget-run-id', run.runId, '--budget-ledger', ledger], { cwd: join(import.meta.dir, '../..'), env: { ...process.env, BRAINBENCH_BUDGET_LEDGER: '' } });
+    const err = proc.stderr.toString();
+    expect(proc.exitCode).not.toBe(0);
+    expect(err).toContain(`run ${run.runId} has only $0.01 left`);
   });
 
   test('flags: native context and budgets are accepted for shootout systems; gbrain-only lanes are refused elsewhere', async () => {

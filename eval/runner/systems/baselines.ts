@@ -31,7 +31,7 @@ const sessionText = (s: SessionInput) => s.turns.map(t => `${t.speaker}: ${t.con
 const record = (system: string, extra: Partial<CapabilityRecord>): CapabilityRecord => ({
   system, protocol: 1, versions: { package: 'in-repo', lock_sha256: null, image: null, vendor_benchmark_code: null },
   configs: { common: { model_roles: {}, notes: 'harness control' } }, time: 'in-text', provenance: { status: 'exact', mechanism: 'one item per ingested session' },
-  delete: 'native', readiness: 'synchronous', namespace: 'in-process', parallel_namespaces: false, retrieval_policies: { 'vendor-default': {}, 'fixed-evidence': {} },
+  delete: 'native', readiness: 'synchronous', namespace: 'in-process', parallel_namespaces: false, retrieval_policies: { 'vendor-default': { settings: {} }, 'fixed-evidence': { settings: {} } },
   streaming: 'disabled', telemetry_off: [], agent_surface: { kind: 'none' }, deviations_from_vendor_code: [], ...extra,
 });
 const checkMode = (p: RetrievalPolicy) => { if (p?.mode !== 'vendor-default' && p?.mode !== 'fixed-evidence') throw new SystemError('invalid_request', 'policy.mode must be vendor-default or fixed-evidence', 400); };
@@ -82,7 +82,7 @@ export class PlainHybridSystem implements MemorySystem {
   async capabilities() {
     return record('plain-hybrid', {
       configs: { common: { model_roles: { embedder: this.embedderId, dims: PG_EMBED_DIMS }, notes: 'Postgres full-text plus pgvector cosine, reciprocal-rank fusion; whole sessions; embedding input cut at 24,000 characters' } },
-      retrieval_policies: { ...PlainHybridSystem.POLICIES }, readiness: 'synchronous: a session is searchable once its row is written',
+      retrieval_policies: { 'vendor-default': { settings: { ...PlainHybridSystem.POLICIES['vendor-default'] } }, 'fixed-evidence': { settings: { ...PlainHybridSystem.POLICIES['fixed-evidence'] } } }, readiness: 'synchronous: a session is searchable once its row is written',
     });
   }
 

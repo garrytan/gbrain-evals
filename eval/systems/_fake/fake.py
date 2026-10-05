@@ -39,7 +39,7 @@ class FakeAdapter(Adapter):
             "readiness": "synchronous",
             "namespace": "in-memory dict key",
             "parallel_namespaces": True,
-            "retrieval_policies": {"vendor-default": {"k": 5}, "fixed-evidence": {"k": 20}},
+            "retrieval_policies": {"vendor-default": {"settings": {"k": 5}}, "fixed-evidence": {"settings": {"k": 20}}},
             "streaming": "disabled",
             "telemetry_off": [],
             "agent_surface": {"kind": "none"},
@@ -59,7 +59,7 @@ class FakeAdapter(Adapter):
     def retrieve(self, ns: str, question: str, query_time: str | None, policy: dict[str, Any]) -> dict[str, Any]:
         if policy.get("mode") not in ("vendor-default", "fixed-evidence"):
             raise ShimError("invalid_request", "policy.mode must be vendor-default or fixed-evidence", 400)
-        k = int(policy.get("settings", {}).get("k") or self.capabilities()["retrieval_policies"][policy["mode"]]["k"])
+        k = int(policy.get("settings", {}).get("k") or self.capabilities()["retrieval_policies"][policy["mode"]]["settings"]["k"])
         q = words(question)
         with self.lock:
             scored = sorted(((len(q & s["words"]), src, s) for src, s in self.store.get(ns, {}).items()), key=lambda x: (-x[0], x[1]))

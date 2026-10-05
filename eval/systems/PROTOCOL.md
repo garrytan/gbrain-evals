@@ -23,7 +23,7 @@ at the proxy is `blocked`.
 
 | Method and path | Request | Response |
 |---|---|---|
-| `GET /health` | | `{ "ok": true }` once the vendor backend accepts writes |
+| `GET /health` | | `{ "ok": true, "config": "recipe" \| "common" }` once the vendor backend accepts writes; `config` is the active `SHIM_CONFIG` (the shared base adds it when a shim does not) |
 | `GET /capabilities` | | the capability record (below) |
 | `POST /reset` | `{ "ns" }` | `{ "ok": true }`; the namespace is empty afterwards, including pending background work |
 | `POST /ingest` | `{ "ns", "session": { "source_id", "event_time", "turns": [{ "role", "speaker", "content" }] } }` | `{ "items_created", "warnings": [], "errors": [], "completeness": "known" \| "unknown" \| "degraded" }` |
@@ -63,7 +63,10 @@ API cannot say, and `source_ids` is empty. A shim never queries a vendor databas
   "readiness": "how /finish knows background work is done",
   "namespace": "user_id | group_id | bank | dataset | project | …",
   "parallel_namespaces": false,
-  "retrieval_policies": { "vendor-default": {}, "fixed-evidence": {} },
+  "retrieval_policies": {
+    "vendor-default": { "settings": { "k": 20 }, "notes": "what the knobs map to in the vendor API" },
+    "fixed-evidence": { "settings": { "k": 200 }, "notes": "…" }
+  },
   "streaming": "disabled | supported",
   "telemetry_off": ["ENV=VALUE"],
   "agent_surface": { "kind": "vendor-mcp | harness-mcp | native-agent | none", "transport": "stdio | http", "version": "…" },
@@ -73,6 +76,22 @@ API cannot say, and `source_ids` is empty. A shim never queries a vendor databas
 
 The active configuration is chosen at container start with `SHIM_CONFIG=recipe|common`; `/capabilities` reports both
 and `/health` reports the active one.
+
+### Retrieval policy settings
+
+Each `retrieval_policies` entry holds its knobs under `settings`, a flat map of the values the shim passes to the vendor
+call (`{ "k": 20 }`, `{ "budget": "mid", "max_tokens": 4096 }`), next to any documentation keys (`notes`, `maps_to`,
+`resolved`, `why`, `api`). The harness sends exactly that `settings` map, merged with any `--policy-setting key=value`
+overrides, as `policy.settings` on every `/retrieve`; documentation keys never cross. A shim reads its knobs from
+`policy.settings` and falls back to its own record's `settings` for the mode. Records written before `settings` existed
+are flattened by dropping the documentation keys, and the receipt says so (`policy.settings_source: flattened`); move
+the knobs under `settings` so nothing is guessed.
+
+A system with no passive memory API (`agent_surface.kind` `native-agent`, every policy `"supported": false`) answers
+every passive call (`/reset`, `/ingest`, `/finish`, `/retrieve`, `/delete_source`) with the `unsupported` error kind.
+
+The harness records `/health` and `/capabilities` (system, active config, versions) in each run's receipt and hashes
+them into the run configuration, so a `recipe` run and a `common` run never share an output directory.
 
 ## Conformance
 

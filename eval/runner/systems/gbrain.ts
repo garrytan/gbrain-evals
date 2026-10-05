@@ -127,7 +127,7 @@ export class GbrainLegacySystem extends GbrainBrain {
   async capabilities(): Promise<CapabilityRecord> {
     return baseCapabilities('gbrain', this.identity, {
       configs: { legacy: { model_roles: {}, notes: 'memory-qa legacy path: harness pins, hybridSearch expansion off, chunks reduced to pages' } },
-      time: 'in-text', retrieval_policies: { 'vendor-default': { limit: this.opts.topK * 3, expansion: false, pins: this.settings } },
+      time: 'in-text', retrieval_policies: { 'vendor-default': { settings: { limit: this.opts.topK * 3, expansion: false }, pins: this.settings } },
     });
   }
 
@@ -157,7 +157,7 @@ export class GbrainShootoutSystem extends GbrainBrain {
   async capabilities(): Promise<CapabilityRecord> {
     return baseCapabilities('gbrain-shootout', this.identity, {
       configs: { recipe: { model_roles: {}, notes: 'gbrain init defaults for search; embedder from the run' }, common: { model_roles: { embedder: 'openai:text-embedding-3-large', dims: 1536 }, unsettable: ['extraction'] } },
-      time: 'native', retrieval_policies: { ...GbrainShootoutSystem.POLICIES }, provenance: { status: 'exact', mechanism: 'each chunk cites its page; one page per session' },
+      time: 'native', retrieval_policies: { 'vendor-default': { settings: { ...GbrainShootoutSystem.POLICIES['vendor-default'] } }, 'fixed-evidence': { settings: { ...GbrainShootoutSystem.POLICIES['fixed-evidence'] } } }, provenance: { status: 'exact', mechanism: 'each chunk cites its page; one page per session' },
       deviations_from_vendor_code: ['retrieval limits frozen from a keyless LoCoMo check (see eval/runner/systems/gbrain.ts)'],
     });
   }
