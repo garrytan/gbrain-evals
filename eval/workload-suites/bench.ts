@@ -28,7 +28,7 @@ import { gbrainSpecFrom, resolveGbrainUnderTest } from '../runner/gbrain-under-t
 import { REPO_ROOT } from '../runner/harness-env.ts';
 import { startBench, type Bench, type Bridge } from './bench-infra.ts';
 import { SUITES, manifestPath } from './cli.ts';
-import { bundleManifest, countValue, sha256 } from './common.ts';
+import { bundleManifest, countValue, sha256, valueForms } from './common.ts';
 import { ComparatorCorrectionAdapter, GbrainCorrectionAdapter, type RetrieveReceipt } from './correction-adapters.ts';
 import { CORRECTION_ARMS, runCorrectionArm, type ArmId, type CorrectionItem } from './corrections.ts';
 import { classifyMiss } from './passing-details.ts';
@@ -206,7 +206,7 @@ async function answerStatic(bench: Bench, bundle: SuiteBundle, dir: string, armI
         const ing = await bridge.call<{ ms: number; receipts: Record<string, unknown> }>('ingest', { docs });
         const r: Record<string, unknown> = { documents: docs.length, ingest: ing.receipts[unit], ms: Date.now() - t0 };
         if (first.extractFacts) r.extract_facts = await extractFacts(bridge, unit, log);
-        const needles = queries.filter(q => q.user_id === unit).flatMap(q => labels.get(q.id)!.needles.map(n => ({ doc_id: n.doc_id, value: n.value })));
+        const needles = queries.filter(q => q.user_id === unit).flatMap(q => labels.get(q.id)!.needles.map(n => ({ doc_id: n.doc_id, value: n.value, forms: valueForms(n.value) })));
         r.presence = await presence(bridge, unit, needles, first.presence);
         ingestReceipts[unit] = r;
         const missing = Object.entries((r.presence as { found: Record<string, boolean> }).found).filter(([, v]) => !v).map(([k]) => k);
@@ -246,7 +246,7 @@ async function extractFacts(bridge: Bridge, unit: string, log: (l: string) => vo
   }
 }
 
-async function presence(bridge: Bridge, unit: string, needles: Array<{ doc_id: string; value: string }>, kind: BenchArm['presence']): Promise<{ found: Record<string, boolean>; by_kind: Record<string, Record<string, boolean>> }> {
+async function presence(bridge: Bridge, unit: string, needles: Array<{ doc_id: string; value: string; forms?: string[] }>, kind: BenchArm['presence']): Promise<{ found: Record<string, boolean>; by_kind: Record<string, Record<string, boolean>> }> {
   const kinds = kind === 'memories' ? ['chunks', 'facts'] : kind === 'pages' ? ['pages'] : ['pages', 'facts'];
   const by: Record<string, Record<string, boolean>> = {};
   for (const k of kinds) by[k] = (await bridge.call<{ found: Record<string, boolean> }>('presence', { unit, needles, kind: k })).found;
@@ -361,7 +361,7 @@ async function score(bench: Bench | null, bundle: SuiteBundle, dir: string, log:
   const queries = new Map(bundle.queries.map(q => [q.id, q]));
   const presenceByUnit = new Map<string, Record<string, boolean>>();
   if (existsSync(join(dir, 'ingest'))) {
-    for (const f of readdirSync(join(dir, 'ingest'))) {
+    for (const f of readdirSync(join(dir, 'ingest')).sort()) {
       const ing = JSON.parse(readFileSync(join(dir, 'ingest', f), 'utf8'));
       for (const [unit, r] of Object.entries(ing.units as Record<string, { presence?: { found: Record<string, boolean>; by_kind?: Record<string, Record<string, boolean>> } }>)) {
         presenceByUnit.set(`${ing.store}/${unit}`, r.presence?.found ?? {});

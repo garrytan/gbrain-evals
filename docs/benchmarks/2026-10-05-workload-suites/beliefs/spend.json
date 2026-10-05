@@ -87,6 +87,33 @@
    },
    "at": "2026-10-05T19:14:57.120Z",
    "stub": false
+  },
+  {
+   "phase": "sweep",
+   "usd": 1.215764,
+   "requests": 76,
+   "run_id": "workload-beliefs-sweep-2026-10-05T20-05-23-257Z-c5489daa",
+   "by_label": {
+    "reader": {
+     "requests": 76,
+     "refused": 0,
+     "reserved_usd": 5.187517500000002,
+     "actual_usd": 1.2157640000000003,
+     "input_tokens": 598902,
+     "output_tokens": 1796
+    }
+   },
+   "at": "2026-10-05T20:05:50.505Z",
+   "stub": false
+  },
+  {
+   "phase": "score",
+   "usd": 0,
+   "requests": 0,
+   "run_id": "workload-beliefs-score-2026-10-05T20-09-14-827Z-94605f8b",
+   "by_label": {},
+   "at": "2026-10-05T20:09:14.977Z",
+   "stub": false
   }
  ]
 }

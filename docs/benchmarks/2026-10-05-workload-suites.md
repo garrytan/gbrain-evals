@@ -2,7 +2,7 @@
 
 Four seeded question sets test what an agent memory does with ordinary chat: recall a detail mentioned once, apply a correction, track how relationships change over time, and keep track of who believes what. Each suite generates the same raw conversations for gbrain and for the comparator (an extract-first memory server that calls a model on every write to pull out facts), so both systems are measured on identical records.
 
-**Status, October 5, 2026 (interim).** The paid runs are in progress. B2, B3 and B4 are fully answered and scored with the fixed reader and the frontier sweep. In B1, gbrain's fact-extraction lane has answered 250 of its 400 questions, and the sweep has not yet re-read the B1 comparator and gbrain fact lanes. The results below are interim until this line says otherwise. Every suite passes its offline checks: a stub reader answers every question from the gold conversations and answers none without memory (apart from questions whose correct answer is "none"), and the full history never makes a question ambiguous.
+**Status, October 5, 2026.** All four suites have run for both systems. Every question was answered by the fixed reader, a quarter of each category was re-read by four more frontier readers, and every answer is scored. The offline checks pass: a stub reader answers every question from the gold conversations, answers none without memory (apart from questions whose correct answer is "none"), and never finds a question ambiguous in the full history.
 
 | Suite | Command | Questions | Isolation units | Conversation tokens | Manifest digest |
 |---|---|---|---|---|---|
@@ -13,11 +13,42 @@ Four seeded question sets test what an agent memory does with ordinary chat: rec
 
 Token counts are characters divided by four. Digests are the first 16 characters of the `digest` field in `eval/data/workload-suites/<version>.manifest.json`.
 
-## Results (interim)
+## Results
 
-Both systems ran from the same raw records through the harness providers, behind the metering proxy, at a delivered-context target of 8,000 cl100k tokens. Answers came from the fixed reader (`anthropic:claude-sonnet-5-5`), and a hash-chosen quarter of each category's questions was re-read by `anthropic:claude-opus-5-5`, `openai:gpt-6-astra` and `anthropic:claude-fable-5-1`. The builds were gbrain `e8e1f66b` (capy/mpw-integration) and the comparator's pinned release (0.10.2). The comparator used its own extraction model, gpt-4o-mini. Its fact and chunk budgets were tuned retrieval-only on each suite's smoke store to reach the target. gbrain's fact extraction (`extract-conversation-facts`, its default `anthropic:claude-sonnet-4-6`) ran in the pipeline, and its spend is counted. Deterministic scoring decides every answer except those that name the gold value together with a stale or distractor value; the fixed judge (`openai:gpt-6.1-sol`) decides those. The receipts are in [2026-10-05-workload-suites/](2026-10-05-workload-suites/): scored rows, ingest and presence receipts, B2 arm runs, spend by label and run manifests.
+At a matched delivered context, gbrain answers more questions than the comparator on details mentioned in passing (98.5% against 93.0%) and on beliefs (92.7% against 72.0%), and the two are within two points on time and relationships (59.4% against 61.0%). On corrections, each system has two paths that keep the corrected value through five later writes. gbrain's forget-then-remember path and the comparator's memory-edit path both fail. Several cells are at the ceiling, as noted under each suite.
 
-### B2 corrections (complete)
+Both systems ran from the same raw records through the harness providers, behind the metering proxy, at a delivered-context target of 8,000 cl100k tokens.
+- **Builds:** gbrain `e8e1f66b` (capy/mpw-integration) and the comparator's pinned release (0.10.2).
+- **Structures:** gbrain built its facts in the pipeline with `extract-conversation-facts` (its default extraction model, `anthropic:claude-sonnet-4-6`), and that spend is counted. The comparator extracted with its own default model, gpt-4o-mini. Its fact and chunk budgets were tuned retrieval-only on each suite's smoke store to reach the target.
+- **Readers:** every question was answered by the fixed reader, `anthropic:claude-sonnet-5-5`. A hash-chosen quarter of each category was re-read from the saved contexts by `anthropic:claude-opus-5-5`, `openai:gpt-6-astra` and `anthropic:claude-fable-5-1`, and by `openai:gpt-6.1-sol` as the alternate newest GPT.
+- **Scoring:** deterministic scoring decides every answer except those that name the gold value together with a stale or distractor value, or every gold name plus others. The fixed judge, `openai:gpt-6.1-sol`, decides those.
+- **Receipts:** [2026-10-05-workload-suites/](2026-10-05-workload-suites/) holds the scored rows per reader, ingest and presence receipts, B2 arm runs, spend by proxy label and run manifests.
+
+### B1 passing details
+
+| Arm | Fixed reader (400) | Opus / Astra / Fable / gpt-6.1-sol (101) | Delivered tokens (mean / p95) |
+|---|---:|---:|---:|
+| gbrain, pages plus extracted facts | 394 (98.5%) | 101 / 101 / 101 / 101 | 7,892 / 7,931 |
+| gbrain, pages only | 350 (87.5%) | 89 / 90 / 91 / 89 | 4,333 / 5,493 |
+| comparator, facts plus chunks | 372 (93.0%) | 93 / 91 / 93 / 90 | 7,966 / 8,173 |
+| comparator, facts only | 366 (91.5%) | 92 / 88 / 92 / 87 | 4,295 / 4,464 |
+
+Where the misses come from (fixed reader):
+
+| Arm | Absent from storage | Stored, not retrieved | Delivered, misread |
+|---|---:|---:|---:|
+| gbrain, pages plus extracted facts | 0 | 4 | 2 |
+| gbrain, pages only | 0 | 49 | 1 |
+| comparator, facts plus chunks | 0 | 24 | 4 |
+| comparator, facts only | 30 | 0 | 4 |
+
+- **gbrain with extracted facts is at the ceiling for the sweep readers** (101/101 each). Its six fixed-reader misses are four retrieval misses and two misreads.
+- **gbrain's pages-only lane loses on retrieval, not storage.** All 49 of its retrieval misses are details the store holds. `query` returns about ten page blocks whatever the token budget, so this lane gets roughly half the comparator's context. Restaurants (16/33) and furniture widths (23/36) suffer most. With extracted facts in the brain, the same `query` fills the budget (7,892 tokens on average) and its retrieval misses drop to 4.
+- **The comparator's facts-only lane loses on extraction.** 30 answer values are in no extracted fact in any recognized written form. Its recall returns at most about 4,300 tokens of facts, whatever the budget. Adding raw chunks recovers storage but leaves 24 retrieval misses, concentrated in wifi passwords (26/36) and access codes (26/30).
+
+Two lanes the plan names cannot run at these builds, and they are reported instead of run. gbrain has no facts-only lane: it has no query-ranked fact retrieval, because `recall` lists facts by entity, session or time. The comparator has no raw-only lane: it returns raw chunks only attached to the facts they came from.
+
+### B2 corrections
 
 Fixed reader, 100 corrections per arm:
 
@@ -30,28 +61,19 @@ Fixed reader, 100 corrections per arm:
 | comparator re-retain | 100 | 100 | 0 | 100 | 0 |
 | comparator append | 100 | 100 | 0 | 100 | 0 |
 
-`gbrain-remember-replaces` did not run: `remember` has no `replaces` parameter at `e8e1f66b`. Four arms are at the ceiling, so the useful signal is which paths fail.
+`gbrain-remember-replaces` did not run: `remember` has no `replaces` parameter at `e8e1f66b`. Four arms are at the ceiling with every reader, so the result is which paths fail.
 
-- **gbrain forget + remember fails.** The raw lane has no facts to forget, so the conversation page still states the old value. `query` returns the remembered statement only when it shares three quarters of the question's words, and "Which bank does Apex use?" does not match "Apex banks with Tidewell Bank." The reader therefore sees only the old value.
-- **comparator edit/invalidate fails.** The comparator's memory PATCH rewrites the extracted fact, but the raw chunk still quotes the old value. The reader sees both and does not commit to the corrected value; most of these answers are hedges the judge rejects.
+- **gbrain forget + remember.** The raw lane holds no facts to forget, so the conversation page keeps the old value. `query` returns a remembered statement only when it shares three quarters of the question's words. "Which bank does Apex use?" does not match "Apex banks with Tidewell Bank.", so the reader sees only the old value. Every sweep reader also fails this arm (24 to 32 of 75, which is the pre-correction probes plus a few).
+- **comparator edit/invalidate.** The memory PATCH rewrites the extracted fact, but the raw chunk still quotes the old value. Readers see both and mostly hedge, and the judge rejects the hedges. gpt-6.1-sol commits to the edited value more often (39/75) than the other readers (18 to 24/75).
 
-The frontier sweep agrees: Opus, Astra and Fable score every passing arm at 100% and both failing arms at 30% to 43%, which is close to the share of pre-correction probes in the subset.
+A unit holds about 3,300 tokens, so each system delivers nearly the whole unit (3,100 to 3,800 tokens). B2 measures what each correction path leaves in the store, not retrieval.
 
-### B4 beliefs (complete)
+### B3 time and relationships
 
-| Arm | Fixed reader | Opus / Astra / Fable (38-question subset) | Delivered tokens (mean / p95) |
+| Arm | Fixed reader (374) | Opus / Astra / Fable / gpt-6.1-sol (95) | Delivered tokens (mean / p95) |
 |---|---:|---:|---:|
-| gbrain (pages plus extracted facts) | 139/150 (92.7%) | 35 / 35 / 35 | 7,866 / 7,898 |
-| comparator (facts plus chunks) | 108/150 (72.0%) | 28 / 28 / 28 | 7,823 / 7,999 |
-
-By category (fixed reader), holder questions score 50/50 for gbrain and 42/50 for the comparator, weight change 50/50 and 38/50, resolved-one 20/25 and 20/25, and resolved-set 19/25 and 8/25. gbrain is at the ceiling on holder and weight-change questions. The gap is on the questions whose evidence is spread over several conversations: every confidence statement, or a prediction and its later outcome. That is consistent with gbrain delivering those conversations as whole pages while the comparator delivers extracted facts and the chunks attached to them; the receipts keep every delivered context for checking this per question.
-
-### B3 time and relationships (complete)
-
-| Arm | Fixed reader | Opus / Astra / Fable (95-question subset) | Delivered tokens (mean / p95) |
-|---|---:|---:|---:|
-| gbrain (pages plus extracted facts) | 222/374 (59.4%) | 60 / 71 / 62 | 8,029 / 8,157 |
-| comparator (facts plus chunks) | 228/374 (61.0%) | 55 / 68 / 55 | 7,027 / 10,739 |
+| gbrain, pages plus extracted facts | 222 (59.4%) | 60 / 71 / 62 / 70 | 8,029 / 8,157 |
+| comparator, facts plus chunks | 228 (61.0%) | 55 / 68 / 55 / 68 | 7,027 / 10,739 |
 
 | Family (fixed reader) | gbrain | comparator |
 |---|---:|---:|
@@ -59,22 +81,52 @@ By category (fixed reader), holder questions score 50/50 for gbrain and 42/50 fo
 | one-hop relationships | 106/145 | 108/145 |
 | composed multi-hop | 52/125 | 53/125 |
 
-The two systems are within two points with the fixed reader. Astra scores both about ten points higher than the other readers. Neither system's pipeline turns these conversations into a relationship graph a reader can walk: multi-hop questions whose answers span many pages (portfolio peers, founders' meetings) score near zero for both. The comparator's p95 delivered context (10,739 tokens) exceeds the target by more than 10%, because its recall overshoots the fact and chunk budgets on world-v1 pages. Its first run, at the budgets tuned on B4, averaged 13,310 tokens. That run was discarded, and the arm was re-answered at the lower budgets.
+The systems are within two points with every reader. The OpenAI readers score both about ten points higher than the Anthropic readers. Neither pipeline turns these conversations into a relationship graph a reader can walk: multi-hop families whose answers span many pages, such as portfolio peers (1/22 and 0/22) and founders' meetings (0/9 each), score near zero for both. On world-v1 pages the comparator's recall overshoots its fact and chunk budgets, so at the lowest budgets that bring its mean under the target, its p95 (10,739 tokens) is still more than 10% over. Its first run, at the budgets tuned on B4, averaged 13,310 tokens. That run was discarded and the arm re-answered. gbrain's fact extraction on the world-v1 unit exited nonzero after inserting 2,385 facts, and the run used the facts it inserted.
 
-### B1 passing details (interim)
+### B4 beliefs
 
-| Arm | Fixed reader | Delivered tokens (mean / p95) |
+| Arm | Fixed reader (150) | Opus / Astra / Fable / gpt-6.1-sol (38) | Delivered tokens (mean / p95) |
+|---|---:|---:|---:|
+| gbrain, pages plus extracted facts | 139 (92.7%) | 35 / 35 / 35 / 35 | 7,866 / 7,898 |
+| comparator, facts plus chunks | 108 (72.0%) | 28 / 28 / 28 / 28 | 7,823 / 7,999 |
+
+By category (fixed reader):
+
+| Category | gbrain | comparator |
 |---|---:|---:|
-| gbrain raw (pages only) | 350/400 (87.5%) | 4,333 / 5,493 |
-| gbrain pages plus extracted facts | 246/250 so far (98.4%) | 7,891 / 7,931 |
-| comparator facts plus chunks | 353/400 (88.3%) | 7,966 / 8,173 |
-| comparator facts only | 345/400 (86.3%) | 4,295 / 4,464 |
+| holder | 50/50 | 42/50 |
+| weight change | 50/50 | 38/50 |
+| resolved, one prediction | 20/25 | 20/25 |
+| resolved, set of predictions | 19/25 | 8/25 |
 
-gbrain's raw lane under-delivers. `query` returns about ten page blocks (roughly 4,300 tokens) whatever the token budget, so it competes at about half the comparator's context. The comparator's facts-only recall returns at most about 4,300 to 4,500 tokens of facts, whatever its budget. These lanes cannot run at the measured builds: a gbrain facts-only lane (no query-ranked fact retrieval; `recall` lists facts by entity, session or time) and a comparator raw-only lane (chunks come only attached to the facts they came from). The miss classes and the remaining gbrain fact-lane questions arrive with the final update.
+gbrain is at the ceiling on holder and weight-change questions. The gap is on questions whose evidence is spread over several conversations: every confidence statement, or a prediction and its later outcome. That fits gbrain delivering those conversations as whole pages while the comparator delivers extracted facts and their chunks. The receipts keep every delivered context, so this can be checked question by question. All five readers agree on the subset, so this suite measures retrieval, not reading.
+
+### What the runs found in each system
+
+- **gbrain `e8e1f66b`:**
+  - `remember` has no `replaces` parameter.
+  - `extract-conversation-facts` skips plain `role: text` transcripts, which is the format the harness provider writes. It extracts from `**Speaker:**` lines, so the B-suite gbrain pages use that format.
+  - `query` returns about ten page blocks whatever the token budget.
+  - `query` surfaces a remembered fact only when the fact shares three quarters of the question's words.
+  - `extract-conversation-facts` exits nonzero when some pages fail, even after inserting facts.
+  - A remembered fact's date header shows when it was written, not when the conversation happened.
+- **The comparator (0.10.2):**
+  - A memory edit leaves the raw chunk quoting the old value.
+  - Facts-only recall stops at about 4,300 tokens.
+  - On world-v1 pages, recall overshoots its fact and chunk budgets.
+  - Its bank statistics lag a newly retained document by up to a minute, so the bench reads completion from the retain operation instead.
+  - It stores long dates in other forms ("October 1, 2029"). The scorer and the presence check accept equivalent date forms; an earlier scoring pass without them counted 19 answers in the comparator's combined lane and 21 in its facts lane as wrong, and was replaced.
 
 ### Spend
 
-The proxy ledger (`.budget/workload-suites.sqlite`, cap $720) had committed $262.28 when this interim update was written. That covers smokes, full runs, sweeps and judging for all four suites, including the discarded B3 comparator run and gbrain's and the comparator's extraction. Per-suite spend by proxy label is in each suite's `spend.json`.
+The proxy ledger (`.budget/workload-suites.sqlite`, cap $720) committed $356.41. That covers the smokes, the full runs, the sweeps, judging, gbrain's and the comparator's extraction, the discarded B3 comparator run and the retrieval-only tuning. By suite, from each run directory: B1 $139.36, B2 $75.17, B3 $91.93, B4 $41.25. The rest is the separate smoke directories.
+
+| Proxy label | B1 | B2 | B3 | B4 |
+|---|---:|---:|---:|---:|
+| readers (fixed and sweep) | $111.38 | $71.06 | $85.86 | $28.02 |
+| gbrain (embeddings, fact extraction) | $25.63 | $0.07 | $5.28 | $12.10 |
+| comparator (extraction) | $2.18 | $3.71 | $0.60 | $1.06 |
+| judge | $0.17 | $0.33 | $0.19 | $0.07 |
 
 ## What each suite asks
 
@@ -98,7 +150,7 @@ Each miss is classified from the run's receipts:
 | stored, not retrieved | the value is stored, but the exact context inserted into the final prompt does not contain it |
 | delivered, misread | the delivered context contains the gold value and the graded answer is still wrong |
 
-Because gold values are unique tokens within a history, "the context contains the value" means the answer-bearing detail was delivered, not a look-alike. The function is `classifyMiss` in `eval/workload-suites/passing-details.ts`. B1 runs three lanes per system: raw conversations only, extracted facts only, and both.
+Because gold values are unique tokens within a history, "the context contains the value" means the answer-bearing detail was delivered, not a look-alike. The function is `classifyMiss` in `eval/workload-suites/passing-details.ts`. B1 runs four lanes: gbrain pages only, gbrain pages plus extracted facts, comparator facts only, and comparator facts plus chunks.
 
 ### B2: corrections
 
@@ -182,31 +234,24 @@ The stub reader receives the structured form of a question (what is asked, never
 
 ## Readers, judge and paid-run volume
 
-`eval/workload-suites/run-config.ts` holds the model configuration. Its ids are placeholders until the preregistration freezes them.
+`eval/workload-suites/run-config.ts` holds the model configuration that the runs above used:
 
-- One fixed reader for every cell: the newest frontier Sonnet (`anthropic:claude-sonnet-5-5`).
-- A preregistered quarter of each category's questions, chosen by hash order of query id, re-read by the newest frontier Opus, GPT, Sonnet and Fable models (`anthropic:claude-opus-5-5`, `openai:gpt-6-astra`, `anthropic:claude-sonnet-5-5`, `anthropic:claude-fable-5-1`). The sweep re-reads the contexts saved by the fixed-reader run, so it adds no retrieval or ingest.
-- One fixed judge (`openai:gpt-6.1-sol`) for answers the deterministic scorer marks ambiguous.
-- No older generation and no `gpt-5.4-mini`; `modelRuleViolations` fails the entry point if one is configured.
-- The no-memory control calls the reader with an explicit placeholder context, so an empty-context guard cannot skip the call.
+- **Fixed reader:** the newest frontier Sonnet, `anthropic:claude-sonnet-5-5`, on every cell.
+- **Frontier sweep:** a quarter of each category's questions, chosen by hash order of query id, re-read by `anthropic:claude-opus-5-5`, `openai:gpt-6-astra` and `anthropic:claude-fable-5-1`. `openai:gpt-6.1-sol`, the alternate newest GPT, re-reads the same questions. The sweep re-reads the contexts saved by the fixed-reader run, so it adds no retrieval or ingest.
+- **Judge:** `openai:gpt-6.1-sol`, only for answers the deterministic scorer marks ambiguous. It is also the alternate reader, so in B3 it judged 13 of its own answers in gbrain's arm and 9 in the comparator's. It judged none of its own answers in the other suites, because its answers there are terse enough to score deterministically.
+- **No older generation and no `gpt-5.4-mini`.** `modelRuleViolations` fails the entry point if one is configured.
+- **No-memory control:** it calls the reader with an explicit placeholder context, so an empty-context guard cannot skip the call.
 
-`bun run eval:<suite>:dry` prints the paid-run volume without spending. At an 8,000-token delivered-context target:
-
-| Suite | Arms | Fixed-reader calls | Sweep calls | Reader input tokens |
-|---|---|---|---|---|
-| B1 | 6 | 2,400 | 1,818 | ~35M |
-| B2 | 6 (plus the optional arm) | 1,800 | 1,350 | ~26M |
-| B3 | 2 | 748 | 570 | ~11M |
-| B4 | 2 | 300 | 228 | ~4M |
-
-That is about 76M reader input tokens before ingest and judging, which is more than the plan's $200 line for B suites buys at frontier input prices. The A0 spend ledger prices the plan; a smaller sweep fraction or a lower delivered-context target are the levers if it does not fit.
+The paid bench is `eval/workload-suites/bench.ts` (phases `answer`, `sweep` and `score`). It reaches the harness providers through `eval/harness-provider/mpw_workload/bridge.py`, and B2 runs through the per-system `CorrectionAdapter` in `eval/workload-suites/correction-adapters.ts`. `bun run eval:<suite>:dry` prints the planned volume without spending. The measured spend is in the Spend table above.
 
 ## Limits
 
-- The conversations are template text. Filler topics repeat across sessions and histories, and asides are inserted into unrelated turns. The suites test whether a memory keeps and finds stated details, not how it handles natural dialogue.
-- B2 units and the B3 as-of history fit inside common delivered-context targets; those questions measure storage and reading more than retrieval.
-- B3's one-hop and multi-hop gold come from world-v1 `_facts`. World-v1 prose was model-written and may state relationships the facts omit; the explicit "For the record" lines are what the gold and the stub reader rely on.
-- The deterministic scorer matches answer values as whole normalized tokens. Answers that name the gold value and a stale or distractor value are left to the judge.
+- **Template text.** The conversations come from templates. Filler topics repeat across sessions and histories, and asides are inserted into unrelated turns. The suites test whether a memory keeps and finds stated details, not how it handles natural dialogue.
+- **Ceilings.** gbrain is at the ceiling on B1 with extracted facts and on B4 holder and weight-change questions. Four B2 arms are at the ceiling for every reader. These cells cannot show a difference between readers.
+- **Units that fit the target.** B2 units and the B3 as-of history fit inside the 8,000-token target, so those questions measure storage and reading more than retrieval.
+- **Unmatched context in two places.** gbrain's pages-only lane delivers about 4,300 tokens because `query` stops at about ten blocks, and the comparator's B3 p95 is 10,739 tokens. Both are reported, not adjusted.
+- **B3 gold.** The one-hop and multi-hop gold comes from world-v1 `_facts`. World-v1 prose was model-written and may state relationships the facts omit; the explicit "For the record" lines are what the gold and the stub reader rely on.
+- **Matching rules.** The scorer and the presence check match values as whole normalized tokens, accepting equivalent written forms of a long date. A fact that rewrites a value some other way (for example, a number spelled out) counts as absent.
 
 ## Reproduce
 
@@ -219,4 +264,16 @@ bun run eval:corrections:dry          # paid-run volume, no spend
 bun test test/eval/workload-suites.test.ts
 ```
 
-Output lands in `eval/reports/workload-suites/<version>/` (ignored by Git): the record streams, `manifest.json` and `check-receipt.json` with every check result, the model configuration and the arms. `--seed N` generates another instance; `--output DIR` writes elsewhere. The generator code lives in `eval/workload-suites/`; the committed manifests in `eval/data/workload-suites/` pin the default-seed bundles byte for byte.
+The paid runs need the pinned harness (`bun run harness:setup`), the comparator server (`bun run harness:comparator install`), a gbrain checkout at `e8e1f66b`, Bun 1.4 or newer for that checkout (`WORKLOAD_GBRAIN_BUN=<path to bun>`) and provider keys in the environment. Every request goes through the metering proxy against `.budget/workload-suites.sqlite`:
+
+```sh
+bun eval/workload-suites/bench.ts beliefs --phase answer --smoke 20 --budget-usd 8   # 20-question paid smoke
+bun eval/workload-suites/bench.ts beliefs --phase answer --budget-usd 40             # all arms (or --arms a,b)
+bun eval/workload-suites/bench.ts beliefs --phase sweep --budget-usd 40              # frontier readers on the saved contexts
+bun eval/workload-suites/bench.ts beliefs --phase score --budget-usd 3               # deterministic scoring plus the judge
+bun eval/workload-suites/report.ts --copy docs/benchmarks/2026-10-05-workload-suites
+```
+
+Reader and judge calls are cached by prompt hash and ingested stores are reused, so rerunning a phase spends nothing on work already done. Paid output lands in `eval/reports/workload-bench/<suite>/`.
+
+Output of the offline entry points lands in `eval/reports/workload-suites/<version>/` (ignored by Git): the record streams, `manifest.json` and `check-receipt.json` with every check result, the model configuration and the arms. `--seed N` generates another instance; `--output DIR` writes elsewhere. The generator code lives in `eval/workload-suites/`; the committed manifests in `eval/data/workload-suites/` pin the default-seed bundles byte for byte.

@@ -55,7 +55,7 @@ gap does not isolate the effect of a graph alone.
 | Engineering question | Report |
 |---|---|
 | Does the index stay correct after moves, renames, corrections, forgetting, an embedding outage and a restart? | [September 29 lifecycle experiment](benchmarks/2026-09-29-lifecycle.md) |
-| Which question sets test recall of passing details, corrections, as-of relationships and beliefs from chat, for gbrain and an extract-first memory server on the same records? | [October 5 workload suites (B1 to B4): design and offline checks, no results yet](benchmarks/2026-10-05-workload-suites.md) |
+| Which question sets test recall of passing details, corrections, as-of relationships and beliefs from chat, for gbrain and an extract-first memory server on the same records? | [October 5 workload suites (B1 to B4): results for both systems](benchmarks/2026-10-05-workload-suites.md) |
 | Does important material from a working session survive into saved pages? | [Transcript distillation](benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md) |
 | Does useful memory arrive at the right moment in a conversation? | [Memory conformance](benchmarks/2026-06-12-brainbench-memory.md) |
 | Where does a small decision model (TypeSafe Jev) help gbrain triage, rerank, prune, abstain or spot contradicting facts, and where does it hurt? | [September 30 System One v1 slots](benchmarks/2026-09-30-system-one-jev.md) |
@@ -158,6 +158,10 @@ procedure with documented missing pieces; it is not the current refresh command.
 
 How this index changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-10-05: Workload-suite results
+
+The workload-suite row links the B1 to B4 results for gbrain and the comparator instead of the design-only page.
 
 ### 2026-10-05: Memory proof wave gbrain decision records row
 

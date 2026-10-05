@@ -165,7 +165,7 @@
       "16058": true,
       "Ansel Barrowby": true,
       "Petrova": true,
-      "The Orchardist’s Ledger": false,
+      "The Orchardist’s Ledger": true,
       "Bramble": true,
       "Fig and Thistle": true,
       "17 February 2026": true,
@@ -178,13 +178,14 @@
        "16058": true,
        "Ansel Barrowby": true,
        "Petrova": true,
-       "The Orchardist’s Ledger": false,
+       "The Orchardist’s Ledger": true,
        "Bramble": true,
        "Fig and Thistle": true,
        "17 February 2026": true,
        "TP 8824": true
       }
-     }
+     },
+     "recheck": "pages re-read after fixing the presence check, which had escaped non-ASCII characters (’) before comparing"
     }
    },
    "pdu-80eb4ef37a1c": {
@@ -284,7 +285,7 @@
       "10 December 2026": true,
       "Sage Whisper": true,
       "redkite86": true,
-      "The Clockmaker’s Daughter": false,
+      "The Clockmaker’s Daughter": true,
       "Saoirse Malloy": true,
       "KL 8817": true,
       "Quintero": true
@@ -297,12 +298,13 @@
        "10 December 2026": true,
        "Sage Whisper": true,
        "redkite86": true,
-       "The Clockmaker’s Daughter": false,
+       "The Clockmaker’s Daughter": true,
        "Saoirse Malloy": true,
        "KL 8817": true,
        "Quintero": true
       }
-     }
+     },
+     "recheck": "pages re-read after fixing the presence check, which had escaped non-ASCII characters (’) before comparing"
     }
    },
    "pdu-159b9fe63bee": {
@@ -400,7 +402,7 @@
       "18 July 2027": true,
       "Banjo": true,
       "Keiko Hollander": true,
-      "The Clockmaker’s Daughter": false,
+      "The Clockmaker’s Daughter": true,
       "Nakamura": true,
       "redkite87": true,
       "Storm Cloud": true,
@@ -413,14 +415,15 @@
        "18 July 2027": true,
        "Banjo": true,
        "Keiko Hollander": true,
-       "The Clockmaker’s Daughter": false,
+       "The Clockmaker’s Daughter": true,
        "Nakamura": true,
        "redkite87": true,
        "Storm Cloud": true,
        "Bistro Amandine": true,
        "NH 9856": true
       }
-     }
+     },
+     "recheck": "pages re-read after fixing the presence check, which had escaped non-ASCII characters (’) before comparing"
     }
    },
    "pdu-a848b4ea6c7a": {
@@ -518,7 +521,7 @@
       "286": true,
       "27723": true,
       "Ansel Barrowby": true,
-      "The Clockmaker’s Daughter": false,
+      "The Clockmaker’s Daughter": true,
       "Gizmo": true,
       "sunporch84": true,
       "20 September 2028": true,
@@ -531,14 +534,15 @@
        "286": true,
        "27723": true,
        "Ansel Barrowby": true,
-       "The Clockmaker’s Daughter": false,
+       "The Clockmaker’s Daughter": true,
        "Gizmo": true,
        "sunporch84": true,
        "20 September 2028": true,
        "Blue Heron Grill": true,
        "NH 4395": true
       }
-     }
+     },
+     "recheck": "pages re-read after fixing the presence check, which had escaped non-ASCII characters (’) before comparing"
     }
    },
    "pdu-3ccb91fe525c": {
@@ -814,7 +818,7 @@
       "54881": true,
       "stonewall86": true,
       "LH 1820": true,
-      "The Clockmaker’s Daughter": false,
+      "The Clockmaker’s Daughter": true,
       "Kiwi": true,
       "Juniper Hall": true,
       "Priya Venkataraman": true,
@@ -827,13 +831,14 @@
        "54881": true,
        "stonewall86": true,
        "LH 1820": true,
-       "The Clockmaker’s Daughter": false,
+       "The Clockmaker’s Daughter": true,
        "Kiwi": true,
        "Juniper Hall": true,
        "Priya Venkataraman": true,
        "Desert Rose": true
       }
-     }
+     },
+     "recheck": "pages re-read after fixing the presence check, which had escaped non-ASCII characters (’) before comparing"
     }
    },
    "pdu-7ae63dd388b3": {
@@ -1286,7 +1291,7 @@
       "Marigold Room": true,
       "Moreau": true,
       "Rafael Okonkwo": true,
-      "The Orchardist’s Ledger": false,
+      "The Orchardist’s Ledger": true,
       "Ziggy": true,
       "UA 9560": true,
       "Oat Milk": true,
@@ -1299,13 +1304,14 @@
        "Marigold Room": true,
        "Moreau": true,
        "Rafael Okonkwo": true,
-       "The Orchardist’s Ledger": false,
+       "The Orchardist’s Ledger": true,
        "Ziggy": true,
        "UA 9560": true,
        "Oat Milk": true,
        "5 October 2027": true
       }
-     }
+     },
+     "recheck": "pages re-read after fixing the presence check, which had escaped non-ASCII characters (’) before comparing"
     }
    },
    "pdu-3f04ab9adc1e": {
@@ -2050,7 +2056,7 @@
      "found": {
       "35": true,
       "689": true,
-      "The Clockmaker’s Daughter": false,
+      "The Clockmaker’s Daughter": true,
       "13 October 2029": true,
       "NH 2360": true,
       "Ember and Oak": true,
@@ -2063,7 +2069,7 @@
       "pages": {
        "35": true,
        "689": true,
-       "The Clockmaker’s Daughter": false,
+       "The Clockmaker’s Daughter": true,
        "13 October 2029": true,
        "NH 2360": true,
        "Ember and Oak": true,
@@ -2072,7 +2078,8 @@
        "Tango": true,
        "Midnight Spruce": true
       }
-     }
+     },
+     "recheck": "pages re-read after fixing the presence check, which had escaped non-ASCII characters (’) before comparing"
     }
    },
    "pdu-206cc2018e6f": {
@@ -2481,14 +2488,15 @@
        "186": true,
        "34897": true,
        "KL 4544": true,
-       "1 October 2029": false,
+       "1 October 2029": true,
        "Noodle": true,
        "Varga": true,
        "The Honey Thief": true,
        "bluefinch67": true,
        "Dmitri Salazar": true
       }
-     }
+     },
+     "recheck": "facts re-read with equivalent date forms (a memory may store \"October 1, 2029\" for \"1 October 2029\")"
     }
    },
    "pdu-eafea01c2c64": {
@@ -2598,7 +2606,8 @@
        "Rufus": true,
        "Isidore Quan": true
       }
-     }
+     },
+     "recheck": "facts re-read with equivalent date forms (a memory may store \"October 1, 2029\" for \"1 October 2029\")"
     }
    },
    "pdu-a715edad520d": {
@@ -2705,10 +2714,11 @@
        "The Orchardist’s Ledger": true,
        "Bramble": true,
        "Fig and Thistle": true,
-       "17 February 2026": false,
+       "17 February 2026": true,
        "TP 8824": true
       }
-     }
+     },
+     "recheck": "facts re-read with equivalent date forms (a memory may store \"October 1, 2029\" for \"1 October 2029\")"
     }
    },
    "pdu-80eb4ef37a1c": {
@@ -2816,9 +2826,10 @@
        "Kiwi": true,
        "Fitzgerald": true,
        "IB 6198": true,
-       "11 January 2026": false
+       "11 January 2026": true
       }
-     }
+     },
+     "recheck": "facts re-read with equivalent date forms (a memory may store \"October 1, 2029\" for \"1 October 2029\")"
     }
    },
    "pdu-58bdc06ebd73": {
@@ -2920,7 +2931,7 @@
        "90": true,
        "16690": true,
        "Hazel": true,
-       "10 December 2026": false,
+       "10 December 2026": true,
        "Sage Whisper": true,
        "redkite86": true,
        "The Clockmaker’s Daughter": true,
@@ -2928,7 +2939,8 @@
        "KL 8817": true,
        "Quintero": true
       }
-     }
+     },
+     "recheck": "facts re-read with equivalent date forms (a memory may store \"October 1, 2029\" for \"1 October 2029\")"
     }
    },
    "pdu-159b9fe63bee": {
@@ -3032,13 +3044,14 @@
        "Golden Wheat": true,
        "Blue Heron Grill": true,
        "Abernathy": true,
-       "6 January 2028": false,
+       "6 January 2028": true,
        "The Lighthouse Accountant": true,
        "Kiwi": true,
        "Leonie Fairweather": true,
        "mapletree66": true
       }
-     }
+     },
+     "recheck": "facts re-read with equivalent date forms (a memory may store \"October 1, 2029\" for \"1 October 2029\")"
     }
    },
    "pdu-3b258f400d8f": {
@@ -3258,7 +3271,8 @@
        "sunporch30": true,
        "Casa Olivo": true
       }
-     }
+     },
+     "recheck": "facts re-read with equivalent date forms (a memory may store \"October 1, 2029\" for \"1 October 2029\")"
     }
    },
    "pdu-61ef64da2c48": {
@@ -3364,11 +3378,12 @@
        "The Clockmaker’s Daughter": true,
        "Gizmo": true,
        "sunporch84": true,
-       "20 September 2028": false,
+       "20 September 2028": true,
        "Blue Heron Grill": true,
        "NH 4395": true
       }
-     }
+     },
+     "recheck": "facts re-read with equivalent date forms (a memory may store \"October 1, 2029\" for \"1 October 2029\")"
     }
    },
    "pdu-3ccb91fe525c": {
@@ -3470,7 +3485,7 @@
        "54": true,
        "607": true,
        "Abernathy": true,
-       "21 January 2028": false,
+       "21 January 2028": true,
        "Harbor Noodle Bar": true,
        "stonewall82": false,
        "Small Hours in Tangier": true,
@@ -3478,7 +3493,8 @@
        "BA 4114": true,
        "Ansel Barrowby": true
       }
-     }
+     },
+     "recheck": "facts re-read with equivalent date forms (a memory may store \"October 1, 2029\" for \"1 October 2029\")"
     }
    },
    "pdu-de0060a6487d": {
@@ -3580,7 +3596,7 @@
        "109": true,
        "11182": true,
        "Haddad": true,
-       "9 May 2029": false,
+       "9 May 2029": true,
        "The Lighthouse Accountant": true,
        "Storm Cloud": true,
        "IB 3518": true,
@@ -3588,7 +3604,8 @@
        "Lotus Garden": true,
        "quietfox14": true
       }
-     }
+     },
+     "recheck": "facts re-read with equivalent date forms (a memory may store \"October 1, 2029\" for \"1 October 2029\")"
     }
    },
    "pdu-c4b6a446b2d1": {
@@ -3808,7 +3825,8 @@
        "Golden Wheat": true,
        "Casa Olivo": true
       }
-     }
+     },
+     "recheck": "facts re-read with equivalent date forms (a memory may store \"October 1, 2029\" for \"1 October 2029\")"
     }
    },
    "pdu-72d9f5fdbca1": {
@@ -3918,7 +3936,8 @@
        "Priya Venkataraman": true,
        "Desert Rose": true
       }
-     }
+     },
+     "recheck": "facts re-read with equivalent date forms (a memory may store \"October 1, 2029\" for \"1 October 2029\")"
     }
    },
    "pdu-7ae63dd388b3": {
@@ -4028,7 +4047,8 @@
        "Nine Paper Boats": true,
        "Okafor": true
       }
-     }
+     },
+     "recheck": "facts re-read with equivalent date forms (a memory may store \"October 1, 2029\" for \"1 October 2029\")"
     }
    },
    "pdu-0db1101d32da": {
@@ -4136,9 +4156,10 @@
        "Midnight Spruce": false,
        "LH 2576": true,
        "Delacroix": true,
-       "27 August 2027": false
+       "27 August 2027": true
       }
-     }
+     },
+     "recheck": "facts re-read with equivalent date forms (a memory may store \"October 1, 2029\" for \"1 October 2029\")"
     }
    },
    "pdu-afffa0209ce9": {
@@ -4240,7 +4261,7 @@
        "73": true,
        "556": true,
        "65859": false,
-       "19 June 2029": false,
+       "19 June 2029": true,
        "Bramble": true,
        "sunporch10": false,
        "Coral Reef": true,
@@ -4248,7 +4269,8 @@
        "Ottoline Park": true,
        "The Lantern House": true
       }
-     }
+     },
+     "recheck": "facts re-read with equivalent date forms (a memory may store \"October 1, 2029\" for \"1 October 2029\")"
     }
    },
    "pdu-7641af1b50f3": {
@@ -4358,7 +4380,8 @@
        "Small Hours in Tangier": true,
        "Delacroix": true
       }
-     }
+     },
+     "recheck": "facts re-read with equivalent date forms (a memory may store \"October 1, 2029\" for \"1 October 2029\")"
     }
    },
    "pdu-b27b87f03013": {
@@ -4466,9 +4489,10 @@
        "Small Hours in Tangier": true,
        "Pepper": true,
        "KL 7139": true,
-       "8 July 2026": false
+       "8 July 2026": true
       }
-     }
+     },
+     "recheck": "facts re-read with equivalent date forms (a memory may store \"October 1, 2029\" for \"1 October 2029\")"
     }
    },
    "pdu-81ff8d8e132f": {
@@ -4683,12 +4707,13 @@
        "Castellanos": true,
        "Wren Achterberg": true,
        "Desert Rose": true,
-       "1 February 2029": false,
+       "1 February 2029": true,
        "sunporch81": true,
        "Bistro Amandine": true,
        "Marlowe": true
       }
-     }
+     },
+     "recheck": "facts re-read with equivalent date forms (a memory may store \"October 1, 2029\" for \"1 October 2029\")"
     }
    },
    "pdu-bb51a91c20b5": {
@@ -4796,9 +4821,10 @@
        "Ziggy": true,
        "UA 9560": true,
        "Oat Milk": true,
-       "5 October 2027": false
+       "5 October 2027": true
       }
-     }
+     },
+     "recheck": "facts re-read with equivalent date forms (a memory may store \"October 1, 2029\" for \"1 October 2029\")"
     }
    },
    "pdu-3f04ab9adc1e": {
@@ -5009,7 +5035,7 @@
       "facts": {
        "67": false,
        "615": true,
-       "14 June 2028": false,
+       "14 June 2028": true,
        "The Honey Thief": true,
        "oakbarrel36": false,
        "Casa Olivo": false,
@@ -5018,7 +5044,8 @@
        "NH 5477": true,
        "Bhattacharya": true
       }
-     }
+     },
+     "recheck": "facts re-read with equivalent date forms (a memory may store \"October 1, 2029\" for \"1 October 2029\")"
     }
    },
    "pdu-79fa43c2a9f7": {
@@ -5238,7 +5265,8 @@
        "A Map of Quiet Rivers": true,
        "Ottoline Park": true
       }
-     }
+     },
+     "recheck": "facts re-read with equivalent date forms (a memory may store \"October 1, 2029\" for \"1 October 2029\")"
     }
    },
    "pdu-b5fb640b0468": {
@@ -5348,7 +5376,8 @@
        "12 September 2029": true,
        "AC 5869": false
       }
-     }
+     },
+     "recheck": "facts re-read with equivalent date forms (a memory may store \"October 1, 2029\" for \"1 October 2029\")"
     }
    },
    "pdu-e3c5c272b506": {
@@ -5568,7 +5597,8 @@
        "UA 7784": true,
        "Odin": true
       }
-     }
+     },
+     "recheck": "facts re-read with equivalent date forms (a memory may store \"October 1, 2029\" for \"1 October 2029\")"
     }
    },
    "pdu-ce418e8bb4c2": {
@@ -5675,10 +5705,11 @@
        "Ember and Oak": true,
        "Petrova": true,
        "Ansel Barrowby": true,
-       "8 June 2028": false,
+       "8 June 2028": true,
        "Small Hours in Tangier": true
       }
-     }
+     },
+     "recheck": "facts re-read with equivalent date forms (a memory may store \"October 1, 2029\" for \"1 October 2029\")"
     }
    },
    "pdu-520fbdb17032": {
@@ -5898,7 +5929,8 @@
        "Haddad": true,
        "Mireille Dufresne": true
       }
-     }
+     },
+     "recheck": "facts re-read with equivalent date forms (a memory may store \"October 1, 2029\" for \"1 October 2029\")"
     }
    },
    "pdu-8ebfc835bc96": {
@@ -5999,7 +6031,7 @@
       "facts": {
        "75": true,
        "676": true,
-       "21 November 2027": false,
+       "21 November 2027": true,
        "Lotus Garden": true,
        "Coral Reef": true,
        "Nine Paper Boats": true,
@@ -6008,7 +6040,8 @@
        "UA 5122": true,
        "Caspian Mbeki": true
       }
-     }
+     },
+     "recheck": "facts re-read with equivalent date forms (a memory may store \"October 1, 2029\" for \"1 October 2029\")"
     }
    },
    "pdu-b881c64de77c": {
@@ -6118,7 +6151,8 @@
        "Paprika": true,
        "Quiet Moss": true
       }
-     }
+     },
+     "recheck": "facts re-read with equivalent date forms (a memory may store \"October 1, 2029\" for \"1 October 2029\")"
     }
    },
    "pdu-97c79ba1cb11": {
@@ -6220,7 +6254,7 @@
        "35": true,
        "689": true,
        "The Clockmaker’s Daughter": true,
-       "13 October 2029": false,
+       "13 October 2029": true,
        "NH 2360": true,
        "Ember and Oak": true,
        "Bhattacharya": true,
@@ -6228,7 +6262,8 @@
        "Tango": true,
        "Midnight Spruce": true
       }
-     }
+     },
+     "recheck": "facts re-read with equivalent date forms (a memory may store \"October 1, 2029\" for \"1 October 2029\")"
     }
    },
    "pdu-206cc2018e6f": {
@@ -6446,9 +6481,10 @@
        "Tango": true,
        "Delacroix": true,
        "Coral Reef": true,
-       "24 April 2026": false
+       "24 April 2026": true
       }
-     }
+     },
+     "recheck": "facts re-read with equivalent date forms (a memory may store \"October 1, 2029\" for \"1 October 2029\")"
     }
    },
    "pdu-5458e5b02ba3": {
@@ -6558,7 +6594,8 @@
        "BA 6219": true,
        "Szabo": true
       }
-     }
+     },
+     "recheck": "facts re-read with equivalent date forms (a memory may store \"October 1, 2029\" for \"1 October 2029\")"
     }
    },
    "pdu-a1743ace0282": {
@@ -6664,11 +6701,12 @@
        "Banjo": true,
        "Lavender Haze": true,
        "stonewall92": true,
-       "12 December 2028": false,
+       "12 December 2028": true,
        "BA 1717": true,
        "Quintero": true
       }
-     }
+     },
+     "recheck": "facts re-read with equivalent date forms (a memory may store \"October 1, 2029\" for \"1 October 2029\")"
     }
    },
    "pdu-901d2bbd398b": {
@@ -7000,7 +7038,7 @@
       "16058": true,
       "Ansel Barrowby": true,
       "Petrova": true,
-      "The Orchardist’s Ledger": false,
+      "The Orchardist’s Ledger": true,
       "Bramble": true,
       "Fig and Thistle": true,
       "17 February 2026": true,
@@ -7013,7 +7051,7 @@
        "16058": true,
        "Ansel Barrowby": true,
        "Petrova": true,
-       "The Orchardist’s Ledger": false,
+       "The Orchardist’s Ledger": true,
        "Bramble": true,
        "Fig and Thistle": true,
        "17 February 2026": true,
@@ -7031,7 +7069,8 @@
        "17 February 2026": false,
        "TP 8824": false
       }
-     }
+     },
+     "recheck": "pages re-read after fixing the presence check, which had escaped non-ASCII characters (’) before comparing"
     }
    },
    "pdu-80eb4ef37a1c": {
@@ -7161,7 +7200,7 @@
       "10 December 2026": true,
       "Sage Whisper": true,
       "redkite86": true,
-      "The Clockmaker’s Daughter": false,
+      "The Clockmaker’s Daughter": true,
       "Saoirse Malloy": true,
       "KL 8817": true,
       "Quintero": true
@@ -7174,7 +7213,7 @@
        "10 December 2026": true,
        "Sage Whisper": true,
        "redkite86": true,
-       "The Clockmaker’s Daughter": false,
+       "The Clockmaker’s Daughter": true,
        "Saoirse Malloy": true,
        "KL 8817": true,
        "Quintero": true
@@ -7191,7 +7230,8 @@
        "KL 8817": false,
        "Quintero": false
       }
-     }
+     },
+     "recheck": "pages re-read after fixing the presence check, which had escaped non-ASCII characters (’) before comparing"
     }
    },
    "pdu-159b9fe63bee": {
@@ -7319,7 +7359,7 @@
       "18 July 2027": true,
       "Banjo": true,
       "Keiko Hollander": true,
-      "The Clockmaker’s Daughter": false,
+      "The Clockmaker’s Daughter": true,
       "Nakamura": true,
       "redkite87": true,
       "Storm Cloud": true,
@@ -7332,7 +7372,7 @@
        "18 July 2027": true,
        "Banjo": true,
        "Keiko Hollander": true,
-       "The Clockmaker’s Daughter": false,
+       "The Clockmaker’s Daughter": true,
        "Nakamura": true,
        "redkite87": true,
        "Storm Cloud": true,
@@ -7351,7 +7391,8 @@
        "Bistro Amandine": false,
        "NH 9856": false
       }
-     }
+     },
+     "recheck": "pages re-read after fixing the presence check, which had escaped non-ASCII characters (’) before comparing"
     }
    },
    "pdu-a848b4ea6c7a": {
@@ -7479,7 +7520,7 @@
       "286": true,
       "27723": true,
       "Ansel Barrowby": true,
-      "The Clockmaker’s Daughter": false,
+      "The Clockmaker’s Daughter": true,
       "Gizmo": true,
       "sunporch84": true,
       "20 September 2028": true,
@@ -7492,7 +7533,7 @@
        "286": true,
        "27723": true,
        "Ansel Barrowby": true,
-       "The Clockmaker’s Daughter": false,
+       "The Clockmaker’s Daughter": true,
        "Gizmo": true,
        "sunporch84": true,
        "20 September 2028": true,
@@ -7511,7 +7552,8 @@
        "Blue Heron Grill": false,
        "NH 4395": false
       }
-     }
+     },
+     "recheck": "pages re-read after fixing the presence check, which had escaped non-ASCII characters (’) before comparing"
     }
    },
    "pdu-3ccb91fe525c": {
@@ -7880,7 +7922,7 @@
       "54881": true,
       "stonewall86": true,
       "LH 1820": true,
-      "The Clockmaker’s Daughter": false,
+      "The Clockmaker’s Daughter": true,
       "Kiwi": true,
       "Juniper Hall": true,
       "Priya Venkataraman": true,
@@ -7893,7 +7935,7 @@
        "54881": true,
        "stonewall86": true,
        "LH 1820": true,
-       "The Clockmaker’s Daughter": false,
+       "The Clockmaker’s Daughter": true,
        "Kiwi": true,
        "Juniper Hall": true,
        "Priya Venkataraman": true,
@@ -7911,7 +7953,8 @@
        "Priya Venkataraman": false,
        "Desert Rose": false
       }
-     }
+     },
+     "recheck": "pages re-read after fixing the presence check, which had escaped non-ASCII characters (’) before comparing"
     }
    },
    "pdu-7ae63dd388b3": {
@@ -8520,7 +8563,7 @@
       "Marigold Room": true,
       "Moreau": true,
       "Rafael Okonkwo": true,
-      "The Orchardist’s Ledger": false,
+      "The Orchardist’s Ledger": true,
       "Ziggy": true,
       "UA 9560": true,
       "Oat Milk": true,
@@ -8533,7 +8576,7 @@
        "Marigold Room": true,
        "Moreau": true,
        "Rafael Okonkwo": true,
-       "The Orchardist’s Ledger": false,
+       "The Orchardist’s Ledger": true,
        "Ziggy": true,
        "UA 9560": true,
        "Oat Milk": true,
@@ -8551,7 +8594,8 @@
        "Oat Milk": false,
        "5 October 2027": false
       }
-     }
+     },
+     "recheck": "pages re-read after fixing the presence check, which had escaped non-ASCII characters (’) before comparing"
     }
    },
    "pdu-3f04ab9adc1e": {
@@ -8790,6 +8834,1207 @@
        "The Salt Cellar": false,
        "Rufus": false,
        "Tobias Wrenfield": false
+      }
+     }
+    }
+   },
+   "pdu-b95cea266820": {
+    "documents": 64,
+    "ingest": {
+     "template_copy_s": 0.245,
+     "child_start_s": 0.936,
+     "write_path": "put_pages",
+     "pages": 64,
+     "write_s": 1.997,
+     "barrier_ms": 14182.5,
+     "barrier": {
+      "polls": 11,
+      "pages": 64,
+      "missing_embeddings": 0,
+      "stale_pages": 44,
+      "embed_coverage": 1
+     },
+     "server": {
+      "name": "gbrain",
+      "version": "0.60.64.0"
+     },
+     "gbrain": {
+      "cli": ".gbrain-overlays/e8e1f66b8e5225b113cacd18931b627fca451bae/src/cli.ts",
+      "version": "gbrain 0.60.64.0",
+      "template_build_s": 14.11,
+      "config": {
+       "search.return_budget_max_remote": "200000"
+      }
+     }
+    },
+    "ms": 17432,
+    "extract_facts": {
+     "ms": 363465.1,
+     "facts_inserted": 370,
+     "pages_processed": 64,
+     "pages_skipped": 0,
+     "pages_failed": 0,
+     "spent_usd": 0.6208410600000001,
+     "outcome": "extracted 370 facts (370 inserted)"
+    },
+    "presence": {
+     "found": {
+      "714": true,
+      "47928": true,
+      "oakbarrel83": true,
+      "The Copper Kettle": true,
+      "Okafor": true,
+      "KL 6284": true,
+      "Storm Cloud": true,
+      "11 May 2027": true,
+      "A Map of Quiet Rivers": true,
+      "Ottoline Park": true
+     },
+     "by_kind": {
+      "pages": {
+       "714": true,
+       "47928": true,
+       "oakbarrel83": true,
+       "The Copper Kettle": true,
+       "Okafor": true,
+       "KL 6284": true,
+       "Storm Cloud": true,
+       "11 May 2027": true,
+       "A Map of Quiet Rivers": true,
+       "Ottoline Park": true
+      },
+      "facts": {
+       "714": false,
+       "47928": false,
+       "oakbarrel83": false,
+       "The Copper Kettle": false,
+       "Okafor": false,
+       "KL 6284": false,
+       "Storm Cloud": false,
+       "11 May 2027": false,
+       "A Map of Quiet Rivers": false,
+       "Ottoline Park": false
+      }
+     }
+    }
+   },
+   "pdu-b5fb640b0468": {
+    "documents": 64,
+    "ingest": {
+     "template_copy_s": 0.291,
+     "child_start_s": 0.895,
+     "write_path": "put_pages",
+     "pages": 64,
+     "write_s": 2.096,
+     "barrier_ms": 14196.9,
+     "barrier": {
+      "polls": 11,
+      "pages": 64,
+      "missing_embeddings": 0,
+      "stale_pages": 44,
+      "embed_coverage": 1
+     },
+     "server": {
+      "name": "gbrain",
+      "version": "0.60.64.0"
+     },
+     "gbrain": {
+      "cli": ".gbrain-overlays/e8e1f66b8e5225b113cacd18931b627fca451bae/src/cli.ts",
+      "version": "gbrain 0.60.64.0",
+      "template_build_s": 14.11,
+      "config": {
+       "search.return_budget_max_remote": "200000"
+      }
+     }
+    },
+    "ms": 17551,
+    "extract_facts": {
+     "ms": 394962.3,
+     "facts_inserted": 363,
+     "pages_processed": 64,
+     "pages_skipped": 0,
+     "pages_failed": 0,
+     "spent_usd": 0.6083481000000006,
+     "outcome": "extracted 363 facts (363 inserted)"
+    },
+    "presence": {
+     "found": {
+      "835": true,
+      "52375": true,
+      "Nakamura": true,
+      "Bramble": true,
+      "The Glass Orchard": true,
+      "Blue Heron Grill": true,
+      "tidepool46": true,
+      "Lavender Haze": true,
+      "12 September 2029": true,
+      "AC 5869": true
+     },
+     "by_kind": {
+      "pages": {
+       "835": true,
+       "52375": true,
+       "Nakamura": true,
+       "Bramble": true,
+       "The Glass Orchard": true,
+       "Blue Heron Grill": true,
+       "tidepool46": true,
+       "Lavender Haze": true,
+       "12 September 2029": true,
+       "AC 5869": true
+      },
+      "facts": {
+       "835": false,
+       "52375": false,
+       "Nakamura": false,
+       "Bramble": false,
+       "The Glass Orchard": false,
+       "Blue Heron Grill": false,
+       "tidepool46": false,
+       "Lavender Haze": false,
+       "12 September 2029": false,
+       "AC 5869": false
+      }
+     }
+    }
+   },
+   "pdu-e3c5c272b506": {
+    "documents": 64,
+    "ingest": {
+     "template_copy_s": 0.26,
+     "child_start_s": 0.886,
+     "write_path": "put_pages",
+     "pages": 64,
+     "write_s": 2.249,
+     "barrier_ms": 11631.1,
+     "barrier": {
+      "polls": 10,
+      "pages": 64,
+      "missing_embeddings": 0,
+      "stale_pages": 44,
+      "embed_coverage": 1
+     },
+     "server": {
+      "name": "gbrain",
+      "version": "0.60.64.0"
+     },
+     "gbrain": {
+      "cli": ".gbrain-overlays/e8e1f66b8e5225b113cacd18931b627fca451bae/src/cli.ts",
+      "version": "gbrain 0.60.64.0",
+      "template_build_s": 14.11,
+      "config": {
+       "search.return_budget_max_remote": "200000"
+      }
+     }
+    },
+    "ms": 15097,
+    "extract_facts": {
+     "ms": 389777.9,
+     "facts_inserted": 369,
+     "pages_processed": 64,
+     "pages_skipped": 0,
+     "pages_failed": 0,
+     "spent_usd": 0.6182844000000004,
+     "outcome": "extracted 369 facts (369 inserted)"
+    },
+    "presence": {
+     "found": {
+      "111": true,
+      "264": true,
+      "20370": true,
+      "Fitzgerald": true,
+      "Paprika": true,
+      "BA 8923": true,
+      "Sage Whisper": true,
+      "redkite14": true,
+      "3 March 2029": true,
+      "Imogen Tull": true
+     },
+     "by_kind": {
+      "pages": {
+       "111": true,
+       "264": true,
+       "20370": true,
+       "Fitzgerald": true,
+       "Paprika": true,
+       "BA 8923": true,
+       "Sage Whisper": true,
+       "redkite14": true,
+       "3 March 2029": true,
+       "Imogen Tull": true
+      },
+      "facts": {
+       "111": false,
+       "264": false,
+       "20370": false,
+       "Fitzgerald": false,
+       "Paprika": false,
+       "BA 8923": false,
+       "Sage Whisper": false,
+       "redkite14": false,
+       "3 March 2029": false,
+       "Imogen Tull": false
+      }
+     }
+    }
+   },
+   "pdu-4bf6ac17c475": {
+    "documents": 64,
+    "ingest": {
+     "template_copy_s": 0.259,
+     "child_start_s": 0.919,
+     "write_path": "put_pages",
+     "pages": 64,
+     "write_s": 2.002,
+     "barrier_ms": 14164.6,
+     "barrier": {
+      "polls": 11,
+      "pages": 64,
+      "missing_embeddings": 0,
+      "stale_pages": 44,
+      "embed_coverage": 1
+     },
+     "server": {
+      "name": "gbrain",
+      "version": "0.60.64.0"
+     },
+     "gbrain": {
+      "cli": ".gbrain-overlays/e8e1f66b8e5225b113cacd18931b627fca451bae/src/cli.ts",
+      "version": "gbrain 0.60.64.0",
+      "template_build_s": 14.11,
+      "config": {
+       "search.return_budget_max_remote": "200000"
+      }
+     }
+    },
+    "ms": 17468,
+    "extract_facts": {
+     "ms": 422830.3,
+     "facts_inserted": 407,
+     "pages_processed": 64,
+     "pages_skipped": 0,
+     "pages_failed": 0,
+     "spent_usd": 0.6536035799999993,
+     "outcome": "extracted 407 facts (407 inserted)"
+    },
+    "presence": {
+     "found": {
+      "39": true,
+      "833": true,
+      "20196": true,
+      "Szabo": true,
+      "Oat Milk": true,
+      "The Glass Orchard": true,
+      "The Copper Kettle": true,
+      "quietfox61": true,
+      "UA 7784": true,
+      "Odin": true
+     },
+     "by_kind": {
+      "pages": {
+       "39": true,
+       "833": true,
+       "20196": true,
+       "Szabo": true,
+       "Oat Milk": true,
+       "The Glass Orchard": true,
+       "The Copper Kettle": true,
+       "quietfox61": true,
+       "UA 7784": true,
+       "Odin": true
+      },
+      "facts": {
+       "39": false,
+       "833": false,
+       "20196": false,
+       "Szabo": false,
+       "Oat Milk": false,
+       "The Glass Orchard": false,
+       "The Copper Kettle": false,
+       "quietfox61": false,
+       "UA 7784": false,
+       "Odin": false
+      }
+     }
+    }
+   },
+   "pdu-ce418e8bb4c2": {
+    "documents": 64,
+    "ingest": {
+     "template_copy_s": 0.234,
+     "child_start_s": 0.982,
+     "write_path": "put_pages",
+     "pages": 64,
+     "write_s": 2.082,
+     "barrier_ms": 11622,
+     "barrier": {
+      "polls": 10,
+      "pages": 64,
+      "missing_embeddings": 0,
+      "stale_pages": 44,
+      "embed_coverage": 1
+     },
+     "server": {
+      "name": "gbrain",
+      "version": "0.60.64.0"
+     },
+     "gbrain": {
+      "cli": ".gbrain-overlays/e8e1f66b8e5225b113cacd18931b627fca451bae/src/cli.ts",
+      "version": "gbrain 0.60.64.0",
+      "template_build_s": 14.11,
+      "config": {
+       "search.return_budget_max_remote": "200000"
+      }
+     }
+    },
+    "ms": 14994,
+    "extract_facts": {
+     "ms": 362786.6,
+     "facts_inserted": 381,
+     "pages_processed": 64,
+     "pages_skipped": 0,
+     "pages_failed": 0,
+     "spent_usd": 0.6279765000000007,
+     "outcome": "extracted 381 facts (381 inserted)"
+    },
+    "presence": {
+     "found": {
+      "35": true,
+      "18427": true,
+      "Gizmo": true,
+      "Terracotta Sun": true,
+      "bluefinch94": true,
+      "Ember and Oak": true,
+      "Petrova": true,
+      "Ansel Barrowby": true,
+      "8 June 2028": true,
+      "Small Hours in Tangier": true
+     },
+     "by_kind": {
+      "pages": {
+       "35": true,
+       "18427": true,
+       "Gizmo": true,
+       "Terracotta Sun": true,
+       "bluefinch94": true,
+       "Ember and Oak": true,
+       "Petrova": true,
+       "Ansel Barrowby": true,
+       "8 June 2028": true,
+       "Small Hours in Tangier": true
+      },
+      "facts": {
+       "35": false,
+       "18427": false,
+       "Gizmo": false,
+       "Terracotta Sun": false,
+       "bluefinch94": false,
+       "Ember and Oak": false,
+       "Petrova": false,
+       "Ansel Barrowby": false,
+       "8 June 2028": false,
+       "Small Hours in Tangier": false
+      }
+     }
+    }
+   },
+   "pdu-520fbdb17032": {
+    "documents": 64,
+    "ingest": {
+     "template_copy_s": 0.241,
+     "child_start_s": 0.952,
+     "write_path": "put_pages",
+     "pages": 64,
+     "write_s": 2.094,
+     "barrier_ms": 11657.2,
+     "barrier": {
+      "polls": 10,
+      "pages": 64,
+      "missing_embeddings": 0,
+      "stale_pages": 44,
+      "embed_coverage": 1
+     },
+     "server": {
+      "name": "gbrain",
+      "version": "0.60.64.0"
+     },
+     "gbrain": {
+      "cli": ".gbrain-overlays/e8e1f66b8e5225b113cacd18931b627fca451bae/src/cli.ts",
+      "version": "gbrain 0.60.64.0",
+      "template_build_s": 14.11,
+      "config": {
+       "search.return_budget_max_remote": "200000"
+      }
+     }
+    },
+    "ms": 15016,
+    "extract_facts": {
+     "ms": 402991.5,
+     "facts_inserted": 360,
+     "pages_processed": 64,
+     "pages_skipped": 0,
+     "pages_failed": 0,
+     "spent_usd": 0.6070854600000007,
+     "outcome": "extracted 360 facts (360 inserted)"
+    },
+    "presence": {
+     "found": {
+      "686": true,
+      "88773": true,
+      "The Long Way to Calder": true,
+      "The Copper Kettle": true,
+      "Gizmo": true,
+      "Quintero": true,
+      "Buttercream": true,
+      "TP 3361": true,
+      "18 December 2028": true,
+      "quietfox56": true
+     },
+     "by_kind": {
+      "pages": {
+       "686": true,
+       "88773": true,
+       "The Long Way to Calder": true,
+       "The Copper Kettle": true,
+       "Gizmo": true,
+       "Quintero": true,
+       "Buttercream": true,
+       "TP 3361": true,
+       "18 December 2028": true,
+       "quietfox56": true
+      },
+      "facts": {
+       "686": false,
+       "88773": false,
+       "The Long Way to Calder": false,
+       "The Copper Kettle": false,
+       "Gizmo": false,
+       "Quintero": false,
+       "Buttercream": false,
+       "TP 3361": false,
+       "18 December 2028": false,
+       "quietfox56": false
+      }
+     }
+    }
+   },
+   "pdu-b076d4085c6b": {
+    "documents": 64,
+    "ingest": {
+     "template_copy_s": 0.228,
+     "child_start_s": 0.989,
+     "write_path": "put_pages",
+     "pages": 64,
+     "write_s": 1.955,
+     "barrier_ms": 14114.3,
+     "barrier": {
+      "polls": 11,
+      "pages": 64,
+      "missing_embeddings": 0,
+      "stale_pages": 44,
+      "embed_coverage": 1
+     },
+     "server": {
+      "name": "gbrain",
+      "version": "0.60.64.0"
+     },
+     "gbrain": {
+      "cli": ".gbrain-overlays/e8e1f66b8e5225b113cacd18931b627fca451bae/src/cli.ts",
+      "version": "gbrain 0.60.64.0",
+      "template_build_s": 14.11,
+      "config": {
+       "search.return_budget_max_remote": "200000"
+      }
+     }
+    },
+    "ms": 17359,
+    "extract_facts": {
+     "ms": 392029.5,
+     "facts_inserted": 384,
+     "pages_processed": 64,
+     "pages_skipped": 0,
+     "pages_failed": 0,
+     "spent_usd": 0.6352461000000007,
+     "outcome": "extracted 384 facts (384 inserted)"
+    },
+    "presence": {
+     "found": {
+      "32": true,
+      "186": true,
+      "A Map of Quiet Rivers": true,
+      "BA 9289": true,
+      "Biscuit": true,
+      "Arctic Mist": true,
+      "25 March 2027": true,
+      "Blue Heron Grill": true,
+      "Haddad": true,
+      "Mireille Dufresne": true
+     },
+     "by_kind": {
+      "pages": {
+       "32": true,
+       "186": true,
+       "A Map of Quiet Rivers": true,
+       "BA 9289": true,
+       "Biscuit": true,
+       "Arctic Mist": true,
+       "25 March 2027": true,
+       "Blue Heron Grill": true,
+       "Haddad": true,
+       "Mireille Dufresne": true
+      },
+      "facts": {
+       "32": false,
+       "186": false,
+       "A Map of Quiet Rivers": false,
+       "BA 9289": false,
+       "Biscuit": false,
+       "Arctic Mist": false,
+       "25 March 2027": false,
+       "Blue Heron Grill": false,
+       "Haddad": false,
+       "Mireille Dufresne": false
+      }
+     }
+    }
+   },
+   "pdu-8ebfc835bc96": {
+    "documents": 64,
+    "ingest": {
+     "template_copy_s": 0.241,
+     "child_start_s": 1.094,
+     "write_path": "put_pages",
+     "pages": 64,
+     "write_s": 2.492,
+     "barrier_ms": 14105.1,
+     "barrier": {
+      "polls": 11,
+      "pages": 64,
+      "missing_embeddings": 0,
+      "stale_pages": 44,
+      "embed_coverage": 1
+     },
+     "server": {
+      "name": "gbrain",
+      "version": "0.60.64.0"
+     },
+     "gbrain": {
+      "cli": ".gbrain-overlays/e8e1f66b8e5225b113cacd18931b627fca451bae/src/cli.ts",
+      "version": "gbrain 0.60.64.0",
+      "template_build_s": 14.11,
+      "config": {
+       "search.return_budget_max_remote": "200000"
+      }
+     }
+    },
+    "ms": 18001,
+    "extract_facts": {
+     "ms": 401540.1,
+     "facts_inserted": 374,
+     "pages_processed": 64,
+     "pages_skipped": 0,
+     "pages_failed": 0,
+     "spent_usd": 0.62246628,
+     "outcome": "extracted 374 facts (374 inserted)"
+    },
+    "presence": {
+     "found": {
+      "75": true,
+      "676": true,
+      "21 November 2027": true,
+      "Lotus Garden": true,
+      "Coral Reef": true,
+      "Nine Paper Boats": true,
+      "Fitzgerald": true,
+      "stonewall72": true,
+      "UA 5122": true,
+      "Caspian Mbeki": true
+     },
+     "by_kind": {
+      "pages": {
+       "75": true,
+       "676": true,
+       "21 November 2027": true,
+       "Lotus Garden": true,
+       "Coral Reef": true,
+       "Nine Paper Boats": true,
+       "Fitzgerald": true,
+       "stonewall72": true,
+       "UA 5122": true,
+       "Caspian Mbeki": true
+      },
+      "facts": {
+       "75": false,
+       "676": false,
+       "21 November 2027": false,
+       "Lotus Garden": false,
+       "Coral Reef": false,
+       "Nine Paper Boats": false,
+       "Fitzgerald": false,
+       "stonewall72": false,
+       "UA 5122": false,
+       "Caspian Mbeki": false
+      }
+     }
+    }
+   },
+   "pdu-b881c64de77c": {
+    "documents": 64,
+    "ingest": {
+     "template_copy_s": 0.262,
+     "child_start_s": 0.934,
+     "write_path": "put_pages",
+     "pages": 64,
+     "write_s": 2.093,
+     "barrier_ms": 11591.5,
+     "barrier": {
+      "polls": 10,
+      "pages": 64,
+      "missing_embeddings": 0,
+      "stale_pages": 44,
+      "embed_coverage": 1
+     },
+     "server": {
+      "name": "gbrain",
+      "version": "0.60.64.0"
+     },
+     "gbrain": {
+      "cli": ".gbrain-overlays/e8e1f66b8e5225b113cacd18931b627fca451bae/src/cli.ts",
+      "version": "gbrain 0.60.64.0",
+      "template_build_s": 14.11,
+      "config": {
+       "search.return_budget_max_remote": "200000"
+      }
+     }
+    },
+    "ms": 14953,
+    "extract_facts": {
+     "ms": 391838.9,
+     "facts_inserted": 409,
+     "pages_processed": 64,
+     "pages_skipped": 0,
+     "pages_failed": 0,
+     "spent_usd": 0.6530338200000008,
+     "outcome": "extracted 409 facts (409 inserted)"
+    },
+    "presence": {
+     "found": {
+      "91": true,
+      "967": true,
+      "52610": true,
+      "Small Hours in Tangier": true,
+      "Juniper Hall": true,
+      "oakbarrel66": true,
+      "Szabo": true,
+      "Keiko Hollander": true,
+      "Paprika": true,
+      "Quiet Moss": true
+     },
+     "by_kind": {
+      "pages": {
+       "91": true,
+       "967": true,
+       "52610": true,
+       "Small Hours in Tangier": true,
+       "Juniper Hall": true,
+       "oakbarrel66": true,
+       "Szabo": true,
+       "Keiko Hollander": true,
+       "Paprika": true,
+       "Quiet Moss": true
+      },
+      "facts": {
+       "91": false,
+       "967": false,
+       "52610": false,
+       "Small Hours in Tangier": false,
+       "Juniper Hall": false,
+       "oakbarrel66": false,
+       "Szabo": false,
+       "Keiko Hollander": false,
+       "Paprika": false,
+       "Quiet Moss": false
+      }
+     }
+    }
+   },
+   "pdu-97c79ba1cb11": {
+    "documents": 64,
+    "ingest": {
+     "template_copy_s": 0.231,
+     "child_start_s": 1.06,
+     "write_path": "put_pages",
+     "pages": 64,
+     "write_s": 2.118,
+     "barrier_ms": 11688.6,
+     "barrier": {
+      "polls": 10,
+      "pages": 64,
+      "missing_embeddings": 0,
+      "stale_pages": 44,
+      "embed_coverage": 1
+     },
+     "server": {
+      "name": "gbrain",
+      "version": "0.60.64.0"
+     },
+     "gbrain": {
+      "cli": ".gbrain-overlays/e8e1f66b8e5225b113cacd18931b627fca451bae/src/cli.ts",
+      "version": "gbrain 0.60.64.0",
+      "template_build_s": 14.11,
+      "config": {
+       "search.return_budget_max_remote": "200000"
+      }
+     }
+    },
+    "ms": 15172,
+    "extract_facts": {
+     "ms": 393710.9,
+     "facts_inserted": 371,
+     "pages_processed": 64,
+     "pages_skipped": 0,
+     "pages_failed": 0,
+     "spent_usd": 0.6144389400000004,
+     "outcome": "extracted 371 facts (371 inserted)"
+    },
+    "presence": {
+     "found": {
+      "35": true,
+      "689": true,
+      "The Clockmaker’s Daughter": true,
+      "13 October 2029": true,
+      "NH 2360": true,
+      "Ember and Oak": true,
+      "Bhattacharya": true,
+      "mapletree55": true,
+      "Tango": true,
+      "Midnight Spruce": true
+     },
+     "by_kind": {
+      "pages": {
+       "35": true,
+       "689": true,
+       "The Clockmaker’s Daughter": true,
+       "13 October 2029": true,
+       "NH 2360": true,
+       "Ember and Oak": true,
+       "Bhattacharya": true,
+       "mapletree55": true,
+       "Tango": true,
+       "Midnight Spruce": true
+      },
+      "facts": {
+       "35": false,
+       "689": false,
+       "The Clockmaker’s Daughter": false,
+       "13 October 2029": false,
+       "NH 2360": false,
+       "Ember and Oak": false,
+       "Bhattacharya": false,
+       "mapletree55": false,
+       "Tango": false,
+       "Midnight Spruce": false
+      }
+     },
+     "recheck": "pages re-read after fixing the presence check, which had escaped non-ASCII characters (’) before comparing"
+    }
+   },
+   "pdu-206cc2018e6f": {
+    "documents": 64,
+    "ingest": {
+     "template_copy_s": 0.244,
+     "child_start_s": 0.931,
+     "write_path": "put_pages",
+     "pages": 64,
+     "write_s": 2.083,
+     "barrier_ms": 19910.6,
+     "barrier": {
+      "polls": 13,
+      "pages": 64,
+      "missing_embeddings": 0,
+      "stale_pages": 44,
+      "embed_coverage": 1
+     },
+     "server": {
+      "name": "gbrain",
+      "version": "0.60.64.0"
+     },
+     "gbrain": {
+      "cli": ".gbrain-overlays/e8e1f66b8e5225b113cacd18931b627fca451bae/src/cli.ts",
+      "version": "gbrain 0.60.64.0",
+      "template_build_s": 14.11,
+      "config": {
+       "search.return_budget_max_remote": "200000"
+      }
+     }
+    },
+    "ms": 23241,
+    "extract_facts": {
+     "ms": 383064,
+     "facts_inserted": 378,
+     "pages_processed": 64,
+     "pages_skipped": 0,
+     "pages_failed": 0,
+     "spent_usd": 0.6217162800000006,
+     "outcome": "extracted 378 facts (378 inserted)"
+    },
+    "presence": {
+     "found": {
+      "391": true,
+      "35740": true,
+      "The Honey Thief": true,
+      "NH 4319": true,
+      "mapletree57": true,
+      "Bhattacharya": true,
+      "Dmitri Salazar": true,
+      "27 April 2027": true,
+      "Lotus Garden": true,
+      "Golden Wheat": true
+     },
+     "by_kind": {
+      "pages": {
+       "391": true,
+       "35740": true,
+       "The Honey Thief": true,
+       "NH 4319": true,
+       "mapletree57": true,
+       "Bhattacharya": true,
+       "Dmitri Salazar": true,
+       "27 April 2027": true,
+       "Lotus Garden": true,
+       "Golden Wheat": true
+      },
+      "facts": {
+       "391": false,
+       "35740": false,
+       "The Honey Thief": false,
+       "NH 4319": false,
+       "mapletree57": false,
+       "Bhattacharya": false,
+       "Dmitri Salazar": false,
+       "27 April 2027": false,
+       "Lotus Garden": false,
+       "Golden Wheat": false
+      }
+     }
+    }
+   },
+   "pdu-28f741cdeffd": {
+    "documents": 64,
+    "ingest": {
+     "template_copy_s": 0.234,
+     "child_start_s": 0.995,
+     "write_path": "put_pages",
+     "pages": 64,
+     "write_s": 1.994,
+     "barrier_ms": 11639.8,
+     "barrier": {
+      "polls": 10,
+      "pages": 64,
+      "missing_embeddings": 0,
+      "stale_pages": 44,
+      "embed_coverage": 1
+     },
+     "server": {
+      "name": "gbrain",
+      "version": "0.60.64.0"
+     },
+     "gbrain": {
+      "cli": ".gbrain-overlays/e8e1f66b8e5225b113cacd18931b627fca451bae/src/cli.ts",
+      "version": "gbrain 0.60.64.0",
+      "template_build_s": 14.11,
+      "config": {
+       "search.return_budget_max_remote": "200000"
+      }
+     }
+    },
+    "ms": 14986,
+    "extract_facts": {
+     "ms": 373548.8,
+     "facts_inserted": 378,
+     "pages_processed": 64,
+     "pages_skipped": 0,
+     "pages_failed": 0,
+     "spent_usd": 0.6236250600000003,
+     "outcome": "extracted 378 facts (378 inserted)"
+    },
+    "presence": {
+     "found": {
+      "45": true,
+      "380": true,
+      "Ember and Oak": true,
+      "The Long Way to Calder": true,
+      "Saoirse Malloy": true,
+      "bluefinch42": true,
+      "Tango": true,
+      "Delacroix": true,
+      "Coral Reef": true,
+      "24 April 2026": true
+     },
+     "by_kind": {
+      "pages": {
+       "45": true,
+       "380": true,
+       "Ember and Oak": true,
+       "The Long Way to Calder": true,
+       "Saoirse Malloy": true,
+       "bluefinch42": true,
+       "Tango": true,
+       "Delacroix": true,
+       "Coral Reef": true,
+       "24 April 2026": true
+      },
+      "facts": {
+       "45": false,
+       "380": false,
+       "Ember and Oak": false,
+       "The Long Way to Calder": false,
+       "Saoirse Malloy": false,
+       "bluefinch42": false,
+       "Tango": false,
+       "Delacroix": false,
+       "Coral Reef": false,
+       "24 April 2026": false
+      }
+     }
+    }
+   },
+   "pdu-5458e5b02ba3": {
+    "documents": 64,
+    "ingest": {
+     "template_copy_s": 0.231,
+     "child_start_s": 0.941,
+     "write_path": "put_pages",
+     "pages": 64,
+     "write_s": 1.875,
+     "barrier_ms": 17057.2,
+     "barrier": {
+      "polls": 12,
+      "pages": 64,
+      "missing_embeddings": 0,
+      "stale_pages": 44,
+      "embed_coverage": 1
+     },
+     "server": {
+      "name": "gbrain",
+      "version": "0.60.64.0"
+     },
+     "gbrain": {
+      "cli": ".gbrain-overlays/e8e1f66b8e5225b113cacd18931b627fca451bae/src/cli.ts",
+      "version": "gbrain 0.60.64.0",
+      "template_build_s": 14.11,
+      "config": {
+       "search.return_budget_max_remote": "200000"
+      }
+     }
+    },
+    "ms": 20175,
+    "extract_facts": {
+     "ms": 377823.2,
+     "facts_inserted": 374,
+     "pages_processed": 64,
+     "pages_skipped": 0,
+     "pages_failed": 0,
+     "spent_usd": 0.6214832400000007,
+     "outcome": "extracted 374 facts (374 inserted)"
+    },
+    "presence": {
+     "found": {
+      "31": true,
+      "108": true,
+      "93598": true,
+      "Rufus": true,
+      "Blue Heron Grill": true,
+      "quietfox95": true,
+      "6 September 2029": true,
+      "Midnight Spruce": true,
+      "BA 6219": true,
+      "Szabo": true
+     },
+     "by_kind": {
+      "pages": {
+       "31": true,
+       "108": true,
+       "93598": true,
+       "Rufus": true,
+       "Blue Heron Grill": true,
+       "quietfox95": true,
+       "6 September 2029": true,
+       "Midnight Spruce": true,
+       "BA 6219": true,
+       "Szabo": true
+      },
+      "facts": {
+       "31": false,
+       "108": false,
+       "93598": false,
+       "Rufus": false,
+       "Blue Heron Grill": false,
+       "quietfox95": false,
+       "6 September 2029": false,
+       "Midnight Spruce": false,
+       "BA 6219": false,
+       "Szabo": false
+      }
+     }
+    }
+   },
+   "pdu-a1743ace0282": {
+    "documents": 64,
+    "ingest": {
+     "template_copy_s": 0.237,
+     "child_start_s": 1.16,
+     "write_path": "put_pages",
+     "pages": 64,
+     "write_s": 2.942,
+     "barrier_ms": 11637,
+     "barrier": {
+      "polls": 10,
+      "pages": 64,
+      "missing_embeddings": 0,
+      "stale_pages": 44,
+      "embed_coverage": 1
+     },
+     "server": {
+      "name": "gbrain",
+      "version": "0.60.64.0"
+     },
+     "gbrain": {
+      "cli": ".gbrain-overlays/e8e1f66b8e5225b113cacd18931b627fca451bae/src/cli.ts",
+      "version": "gbrain 0.60.64.0",
+      "template_build_s": 14.11,
+      "config": {
+       "search.return_budget_max_remote": "200000"
+      }
+     }
+    },
+    "ms": 16048,
+    "extract_facts": {
+     "ms": 352559.2,
+     "facts_inserted": 362,
+     "pages_processed": 64,
+     "pages_skipped": 0,
+     "pages_failed": 0,
+     "spent_usd": 0.6084459000000005,
+     "outcome": "extracted 362 facts (362 inserted)"
+    },
+    "presence": {
+     "found": {
+      "49": true,
+      "924": true,
+      "51271": true,
+      "The Long Way to Calder": true,
+      "Banjo": true,
+      "Lavender Haze": true,
+      "stonewall92": true,
+      "12 December 2028": true,
+      "BA 1717": true,
+      "Quintero": true
+     },
+     "by_kind": {
+      "pages": {
+       "49": true,
+       "924": true,
+       "51271": true,
+       "The Long Way to Calder": true,
+       "Banjo": true,
+       "Lavender Haze": true,
+       "stonewall92": true,
+       "12 December 2028": true,
+       "BA 1717": true,
+       "Quintero": true
+      },
+      "facts": {
+       "49": false,
+       "924": false,
+       "51271": false,
+       "The Long Way to Calder": false,
+       "Banjo": false,
+       "Lavender Haze": false,
+       "stonewall92": false,
+       "12 December 2028": false,
+       "BA 1717": false,
+       "Quintero": false
+      }
+     }
+    }
+   },
+   "pdu-901d2bbd398b": {
+    "documents": 64,
+    "ingest": {
+     "template_copy_s": 0.263,
+     "child_start_s": 0.961,
+     "write_path": "put_pages",
+     "pages": 64,
+     "write_s": 2.089,
+     "barrier_ms": 23272.7,
+     "barrier": {
+      "polls": 14,
+      "pages": 64,
+      "missing_embeddings": 0,
+      "stale_pages": 44,
+      "embed_coverage": 1
+     },
+     "server": {
+      "name": "gbrain",
+      "version": "0.60.64.0"
+     },
+     "gbrain": {
+      "cli": ".gbrain-overlays/e8e1f66b8e5225b113cacd18931b627fca451bae/src/cli.ts",
+      "version": "gbrain 0.60.64.0",
+      "template_build_s": 14.11,
+      "config": {
+       "search.return_budget_max_remote": "200000"
+      }
+     }
+    },
+    "ms": 26709,
+    "extract_facts": {
+     "ms": 375855.3,
+     "facts_inserted": 385,
+     "pages_processed": 64,
+     "pages_skipped": 0,
+     "pages_failed": 0,
+     "spent_usd": 0.6289136999999997,
+     "outcome": "extracted 385 facts (385 inserted)"
+    },
+    "presence": {
+     "found": {
+      "78": true,
+      "213": true,
+      "96496": true,
+      "Tango": true,
+      "Storm Cloud": true,
+      "KL 9975": true,
+      "The Lighthouse Accountant": true,
+      "Moreau": true,
+      "tidepool98": true,
+      "18 May 2027": true
+     },
+     "by_kind": {
+      "pages": {
+       "78": true,
+       "213": true,
+       "96496": true,
+       "Tango": true,
+       "Storm Cloud": true,
+       "KL 9975": true,
+       "The Lighthouse Accountant": true,
+       "Moreau": true,
+       "tidepool98": true,
+       "18 May 2027": true
+      },
+      "facts": {
+       "78": false,
+       "213": false,
+       "96496": false,
+       "Tango": false,
+       "Storm Cloud": false,
+       "KL 9975": false,
+       "The Lighthouse Accountant": false,
+       "Moreau": false,
+       "tidepool98": false,
+       "18 May 2027": false
       }
      }
     }

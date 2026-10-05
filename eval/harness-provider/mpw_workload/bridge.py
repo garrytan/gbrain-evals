@@ -305,6 +305,11 @@ class Bridge:
         `facts` greps the unit's facts. comparator: `chunks` reads the stored chunks of the needle's
         document; `facts` lists the bank's memories whose text holds the value."""
         found: dict[str, bool] = {}
+
+        def holds(n: dict, text: str) -> bool:
+            t = _norm(text)
+            return any(_norm(f) in t for f in (n.get("forms") or [n["value"]]))
+
         if self.system == "gbrain":
             from mpw.gbrain_provider import SLUG_PREFIX
 
@@ -313,27 +318,32 @@ class Bridge:
                 if kind == "facts":
                     res = self.gbrain_call(unit, "recall", {"grep": v, "limit": 5})["result"]
                     rows = (res or {}).get("facts", []) if isinstance(res, dict) else []
-                    found[v] = found.get(v, False) or any(_norm(v) in _norm(str(r.get("fact", ""))) for r in rows)
+                    found[v] = found.get(v, False) or any(holds(n, str(r.get("fact", ""))) for r in rows)
                 else:
                     try:
                         page = self.gbrain_call(unit, "get_page", {"slug": SLUG_PREFIX + n["doc_id"].lower(), "include_content": True})["result"]
                     except Exception:  # noqa: BLE001
                         page = None
-                    text = json.dumps(page) if page is not None else ""
-                    found[v] = found.get(v, False) or _norm(v) in _norm(text.replace("\\n", " "))
+                    text = json.dumps(page, ensure_ascii=False) if page is not None else ""
+                    found[v] = found.get(v, False) or holds(n, text.replace("\\n", " "))
         else:
             for n in needles:
                 v = n["value"]
                 if kind == "facts":
-                    r = self.comparator_http("GET", unit, "/v1/default/banks/{bank}/memories/list", params={"q": v[:200], "limit": 50})
-                    items = r["body"].get("items", []) if isinstance(r["body"], dict) else []
-                    hit = any(_norm(v) in _norm(str(x.get("text", ""))) for x in items)
+                    hit = False
+                    for form in (n.get("forms") or [v]):
+                        q = form.split(" ")[-1] if len(n.get("forms") or []) > 1 else form
+                        r = self.comparator_http("GET", unit, "/v1/default/banks/{bank}/memories/list", params={"q": q[:200], "limit": 100})
+                        items = r["body"].get("items", []) if isinstance(r["body"], dict) else []
+                        if any(holds(n, str(x.get("text", ""))) for x in items):
+                            hit = True
+                            break
                 else:
                     doc = self.provider._ids.hash(n["doc_id"])
                     r = self.comparator_http("GET", unit, f"/v1/default/banks/{{bank}}/documents/{doc}/chunks")
                     body = r["body"]
                     items = body.get("items", body.get("chunks", [])) if isinstance(body, dict) else (body if isinstance(body, list) else [])
-                    hit = any(_norm(v) in _norm(str(x.get("text", x.get("chunk_text", "")))) for x in items)
+                    hit = any(holds(n, str(x.get("text", x.get("chunk_text", "")))) for x in items)
                 found[v] = found.get(v, False) or hit
         return {"found": found}
 

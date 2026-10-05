@@ -1,6 +1,6 @@
 {
  "suite": "time-relationships",
- "scored_at": "2026-10-05T19:52:46.115Z",
+ "scored_at": "2026-10-05T20:09:35.297Z",
  "results": {
   "comparator-combined": {
    "anthropic:claude-sonnet-5-5": {
@@ -5531,6 +5531,833 @@
       "category": "as_of_employer",
       "outcome": "wrong",
       "correct": false,
+      "judged": false,
+      "context_tokens": 10676
+     },
+     {
+      "query_id": "trq-fecfb2917984",
+      "category": "multi_hop_investor_founders",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 4765
+     }
+    ]
+   },
+   "openai:gpt-6.1-sol": {
+    "n": 95,
+    "correct": 68,
+    "accuracy": 0.7157894736842105,
+    "by_category": {
+     "one_hop_attended": {
+      "n": 13,
+      "correct": 13
+     },
+     "one_hop_invested_in": {
+      "n": 10,
+      "correct": 10
+     },
+     "as_of_employer": {
+      "n": 26,
+      "correct": 25
+     },
+     "multi_hop_meeting_investors": {
+      "n": 7,
+      "correct": 1
+     },
+     "multi_hop_founder_portfolio_peers": {
+      "n": 6,
+      "correct": 0
+     },
+     "multi_hop_founder_investors": {
+      "n": 6,
+      "correct": 5
+     },
+     "multi_hop_investor_founder_meetings": {
+      "n": 2,
+      "correct": 0
+     },
+     "multi_hop_coinvestors": {
+      "n": 5,
+      "correct": 3
+     },
+     "one_hop_works_at": {
+      "n": 10,
+      "correct": 4
+     },
+     "one_hop_advises": {
+      "n": 4,
+      "correct": 3
+     },
+     "multi_hop_advisor_founders": {
+      "n": 2,
+      "correct": 2
+     },
+     "multi_hop_investor_founders": {
+      "n": 4,
+      "correct": 2
+     }
+    },
+    "outcomes": {
+     "correct": 68,
+     "abstain": 8,
+     "wrong": 19
+    },
+    "judged": 9,
+    "context_tokens": {
+     "mean": 6948,
+     "p95": 10711
+    },
+    "rows": [
+     {
+      "query_id": "trq-0195314d698f",
+      "category": "one_hop_attended",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 4946
+     },
+     {
+      "query_id": "trq-027eb5b1e68c",
+      "category": "one_hop_invested_in",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 5469
+     },
+     {
+      "query_id": "trq-0c445c68a730",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 10691
+     },
+     {
+      "query_id": "trq-0d2702ff99d5",
+      "category": "multi_hop_meeting_investors",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 5229
+     },
+     {
+      "query_id": "trq-0f32f6035eae",
+      "category": "one_hop_invested_in",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 5190
+     },
+     {
+      "query_id": "trq-1961a9d811c7",
+      "category": "one_hop_attended",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 4897
+     },
+     {
+      "query_id": "trq-20328e4fae9a",
+      "category": "multi_hop_founder_portfolio_peers",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 5731
+     },
+     {
+      "query_id": "trq-208610358c59",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 10703
+     },
+     {
+      "query_id": "trq-2627bd25a0ed",
+      "category": "multi_hop_meeting_investors",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 4655
+     },
+     {
+      "query_id": "trq-29e8672aaf49",
+      "category": "multi_hop_founder_investors",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 5240
+     },
+     {
+      "query_id": "trq-2ba632c56112",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 10689
+     },
+     {
+      "query_id": "trq-2c10a226430d",
+      "category": "multi_hop_meeting_investors",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 5556
+     },
+     {
+      "query_id": "trq-2f66c7aaba9f",
+      "category": "multi_hop_meeting_investors",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 5095
+     },
+     {
+      "query_id": "trq-318e05d67816",
+      "category": "multi_hop_meeting_investors",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 4529
+     },
+     {
+      "query_id": "trq-338ec1e2f610",
+      "category": "one_hop_attended",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 4891
+     },
+     {
+      "query_id": "trq-35b8c45d4342",
+      "category": "multi_hop_investor_founder_meetings",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 5336
+     },
+     {
+      "query_id": "trq-3b66bb8aa660",
+      "category": "one_hop_attended",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 5523
+     },
+     {
+      "query_id": "trq-3c5fa4000e3f",
+      "category": "multi_hop_coinvestors",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 5179
+     },
+     {
+      "query_id": "trq-3c95e261adea",
+      "category": "one_hop_attended",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 5093
+     },
+     {
+      "query_id": "trq-3d6b0a7110fc",
+      "category": "multi_hop_founder_portfolio_peers",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 5559
+     },
+     {
+      "query_id": "trq-3f7d40064000",
+      "category": "one_hop_invested_in",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 5808
+     },
+     {
+      "query_id": "trq-433813ead679",
+      "category": "one_hop_attended",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 4974
+     },
+     {
+      "query_id": "trq-45beeb2ff4b4",
+      "category": "multi_hop_founder_investors",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 4922
+     },
+     {
+      "query_id": "trq-4680b6efa8b8",
+      "category": "one_hop_works_at",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 5907
+     },
+     {
+      "query_id": "trq-46b2079cf111",
+      "category": "one_hop_advises",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 6649
+     },
+     {
+      "query_id": "trq-49ef7b9b0c01",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 10653
+     },
+     {
+      "query_id": "trq-5442b21bb94e",
+      "category": "multi_hop_advisor_founders",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 6510
+     },
+     {
+      "query_id": "trq-57e49bc0e06e",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 10649
+     },
+     {
+      "query_id": "trq-5b18d86bb422",
+      "category": "one_hop_invested_in",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 5902
+     },
+     {
+      "query_id": "trq-5b1a50f26198",
+      "category": "one_hop_invested_in",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 6157
+     },
+     {
+      "query_id": "trq-5bae366148b0",
+      "category": "multi_hop_coinvestors",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 5977
+     },
+     {
+      "query_id": "trq-5cd3c7d4b1b5",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 10685
+     },
+     {
+      "query_id": "trq-626c34fedbba",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 10579
+     },
+     {
+      "query_id": "trq-64a3386e0978",
+      "category": "one_hop_works_at",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7090
+     },
+     {
+      "query_id": "trq-6508b2ce1f6a",
+      "category": "one_hop_advises",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7003
+     },
+     {
+      "query_id": "trq-664f88cbf067",
+      "category": "one_hop_attended",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 5381
+     },
+     {
+      "query_id": "trq-67cb096321bf",
+      "category": "one_hop_advises",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 6904
+     },
+     {
+      "query_id": "trq-7114b0796042",
+      "category": "multi_hop_meeting_investors",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 4749
+     },
+     {
+      "query_id": "trq-719cbb42075b",
+      "category": "one_hop_attended",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 4816
+     },
+     {
+      "query_id": "trq-74abe33a401c",
+      "category": "multi_hop_founder_portfolio_peers",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 4836
+     },
+     {
+      "query_id": "trq-74ce5e7c9c65",
+      "category": "one_hop_works_at",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 4833
+     },
+     {
+      "query_id": "trq-7612659a058e",
+      "category": "multi_hop_coinvestors",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 5930
+     },
+     {
+      "query_id": "trq-76f929ad73d7",
+      "category": "one_hop_works_at",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 6066
+     },
+     {
+      "query_id": "trq-7eba892021fd",
+      "category": "one_hop_advises",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7558
+     },
+     {
+      "query_id": "trq-7f1ecdda9548",
+      "category": "multi_hop_investor_founders",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 5697
+     },
+     {
+      "query_id": "trq-87aedd78f1b9",
+      "category": "one_hop_attended",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 4989
+     },
+     {
+      "query_id": "trq-889a08d74774",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 10637
+     },
+     {
+      "query_id": "trq-8c013f7282c1",
+      "category": "as_of_employer",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 10658
+     },
+     {
+      "query_id": "trq-8d5222344a81",
+      "category": "multi_hop_founder_portfolio_peers",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 4800
+     },
+     {
+      "query_id": "trq-8e5cf9766191",
+      "category": "multi_hop_founder_investors",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 5264
+     },
+     {
+      "query_id": "trq-94a4c0b2a0c3",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 10704
+     },
+     {
+      "query_id": "trq-979071194fab",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 10717
+     },
+     {
+      "query_id": "trq-98e6a9be88ee",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 10495
+     },
+     {
+      "query_id": "trq-9aab38b53929",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 10578
+     },
+     {
+      "query_id": "trq-9ae5f5e51d61",
+      "category": "multi_hop_advisor_founders",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 5773
+     },
+     {
+      "query_id": "trq-9d9c69cf0aeb",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 10648
+     },
+     {
+      "query_id": "trq-9faff7e6ae7e",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 10490
+     },
+     {
+      "query_id": "trq-a408e3693926",
+      "category": "one_hop_works_at",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 6520
+     },
+     {
+      "query_id": "trq-a540cce313d2",
+      "category": "multi_hop_meeting_investors",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 5854
+     },
+     {
+      "query_id": "trq-a9d5c12b3fad",
+      "category": "multi_hop_coinvestors",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 5751
+     },
+     {
+      "query_id": "trq-aaae5b3e7b69",
+      "category": "one_hop_attended",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 4779
+     },
+     {
+      "query_id": "trq-ad8990a4ad24",
+      "category": "multi_hop_founder_investors",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 5056
+     },
+     {
+      "query_id": "trq-aec0777ea77e",
+      "category": "one_hop_works_at",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 4918
+     },
+     {
+      "query_id": "trq-aef6d1d8dca9",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 10620
+     },
+     {
+      "query_id": "trq-b0a54b9244e3",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 10580
+     },
+     {
+      "query_id": "trq-b16a2ad9eea7",
+      "category": "multi_hop_founder_portfolio_peers",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 4980
+     },
+     {
+      "query_id": "trq-b21760aff146",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 10619
+     },
+     {
+      "query_id": "trq-b445676fefd3",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 10776
+     },
+     {
+      "query_id": "trq-bdade22afd8a",
+      "category": "one_hop_works_at",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 5061
+     },
+     {
+      "query_id": "trq-bf2cd9f935c9",
+      "category": "one_hop_works_at",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 6048
+     },
+     {
+      "query_id": "trq-c433b4414311",
+      "category": "multi_hop_investor_founders",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 5059
+     },
+     {
+      "query_id": "trq-c5f0acc702d1",
+      "category": "multi_hop_founder_portfolio_peers",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 6237
+     },
+     {
+      "query_id": "trq-c7955076760b",
+      "category": "multi_hop_investor_founder_meetings",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 5132
+     },
+     {
+      "query_id": "trq-c79c13dddd07",
+      "category": "one_hop_invested_in",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 6497
+     },
+     {
+      "query_id": "trq-c945c638fc68",
+      "category": "multi_hop_founder_investors",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 6160
+     },
+     {
+      "query_id": "trq-cb4446ac5163",
+      "category": "multi_hop_founder_investors",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 5140
+     },
+     {
+      "query_id": "trq-cd9a04285415",
+      "category": "one_hop_invested_in",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 6186
+     },
+     {
+      "query_id": "trq-d218907bc1f6",
+      "category": "one_hop_works_at",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 6631
+     },
+     {
+      "query_id": "trq-d8e8a6360754",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 10711
+     },
+     {
+      "query_id": "trq-da9abff673ea",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 10763
+     },
+     {
+      "query_id": "trq-e360ef8e8cc6",
+      "category": "one_hop_attended",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 4491
+     },
+     {
+      "query_id": "trq-e87c44c0a77b",
+      "category": "one_hop_attended",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 5063
+     },
+     {
+      "query_id": "trq-e99211723fb9",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 10449
+     },
+     {
+      "query_id": "trq-ed3768be9546",
+      "category": "one_hop_invested_in",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 5944
+     },
+     {
+      "query_id": "trq-eda69881ec66",
+      "category": "one_hop_invested_in",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 6127
+     },
+     {
+      "query_id": "trq-ee83687d6647",
+      "category": "one_hop_invested_in",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 6513
+     },
+     {
+      "query_id": "trq-ee9d427be6ec",
+      "category": "multi_hop_investor_founders",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 6040
+     },
+     {
+      "query_id": "trq-ef36170cb2e0",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 10689
+     },
+     {
+      "query_id": "trq-f206a077266f",
+      "category": "one_hop_works_at",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 5847
+     },
+     {
+      "query_id": "trq-f4f541910d9b",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 10742
+     },
+     {
+      "query_id": "trq-f57ad30df775",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 10582
+     },
+     {
+      "query_id": "trq-f6c2a86e253a",
+      "category": "multi_hop_coinvestors",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 5036
+     },
+     {
+      "query_id": "trq-f6d9271a2f05",
+      "category": "one_hop_attended",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 4848
+     },
+     {
+      "query_id": "trq-f9dc690a75ba",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
       "judged": false,
       "context_tokens": 10676
      },
@@ -11075,6 +11902,833 @@
       "category": "as_of_employer",
       "outcome": "wrong",
       "correct": false,
+      "judged": false,
+      "context_tokens": 8122
+     },
+     {
+      "query_id": "trq-fecfb2917984",
+      "category": "multi_hop_investor_founders",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8024
+     }
+    ]
+   },
+   "openai:gpt-6.1-sol": {
+    "n": 95,
+    "correct": 70,
+    "accuracy": 0.7368421052631579,
+    "by_category": {
+     "one_hop_attended": {
+      "n": 13,
+      "correct": 13
+     },
+     "one_hop_invested_in": {
+      "n": 10,
+      "correct": 10
+     },
+     "as_of_employer": {
+      "n": 26,
+      "correct": 25
+     },
+     "multi_hop_meeting_investors": {
+      "n": 7,
+      "correct": 5
+     },
+     "multi_hop_founder_portfolio_peers": {
+      "n": 6,
+      "correct": 0
+     },
+     "multi_hop_founder_investors": {
+      "n": 6,
+      "correct": 5
+     },
+     "multi_hop_investor_founder_meetings": {
+      "n": 2,
+      "correct": 0
+     },
+     "multi_hop_coinvestors": {
+      "n": 5,
+      "correct": 3
+     },
+     "one_hop_works_at": {
+      "n": 10,
+      "correct": 3
+     },
+     "one_hop_advises": {
+      "n": 4,
+      "correct": 2
+     },
+     "multi_hop_advisor_founders": {
+      "n": 2,
+      "correct": 2
+     },
+     "multi_hop_investor_founders": {
+      "n": 4,
+      "correct": 2
+     }
+    },
+    "outcomes": {
+     "correct": 70,
+     "wrong": 22,
+     "abstain": 3
+    },
+    "judged": 13,
+    "context_tokens": {
+     "mean": 8028,
+     "p95": 8156
+    },
+    "rows": [
+     {
+      "query_id": "trq-0195314d698f",
+      "category": "one_hop_attended",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8012
+     },
+     {
+      "query_id": "trq-027eb5b1e68c",
+      "category": "one_hop_invested_in",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7905
+     },
+     {
+      "query_id": "trq-0c445c68a730",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8166
+     },
+     {
+      "query_id": "trq-0d2702ff99d5",
+      "category": "multi_hop_meeting_investors",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8049
+     },
+     {
+      "query_id": "trq-0f32f6035eae",
+      "category": "one_hop_invested_in",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7988
+     },
+     {
+      "query_id": "trq-1961a9d811c7",
+      "category": "one_hop_attended",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8030
+     },
+     {
+      "query_id": "trq-20328e4fae9a",
+      "category": "multi_hop_founder_portfolio_peers",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7894
+     },
+     {
+      "query_id": "trq-208610358c59",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8152
+     },
+     {
+      "query_id": "trq-2627bd25a0ed",
+      "category": "multi_hop_meeting_investors",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8034
+     },
+     {
+      "query_id": "trq-29e8672aaf49",
+      "category": "multi_hop_founder_investors",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 7966
+     },
+     {
+      "query_id": "trq-2ba632c56112",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8151
+     },
+     {
+      "query_id": "trq-2c10a226430d",
+      "category": "multi_hop_meeting_investors",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 8041
+     },
+     {
+      "query_id": "trq-2f66c7aaba9f",
+      "category": "multi_hop_meeting_investors",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 7979
+     },
+     {
+      "query_id": "trq-318e05d67816",
+      "category": "multi_hop_meeting_investors",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7993
+     },
+     {
+      "query_id": "trq-338ec1e2f610",
+      "category": "one_hop_attended",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8019
+     },
+     {
+      "query_id": "trq-35b8c45d4342",
+      "category": "multi_hop_investor_founder_meetings",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 8038
+     },
+     {
+      "query_id": "trq-3b66bb8aa660",
+      "category": "one_hop_attended",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8047
+     },
+     {
+      "query_id": "trq-3c5fa4000e3f",
+      "category": "multi_hop_coinvestors",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7969
+     },
+     {
+      "query_id": "trq-3c95e261adea",
+      "category": "one_hop_attended",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8029
+     },
+     {
+      "query_id": "trq-3d6b0a7110fc",
+      "category": "multi_hop_founder_portfolio_peers",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7933
+     },
+     {
+      "query_id": "trq-3f7d40064000",
+      "category": "one_hop_invested_in",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7988
+     },
+     {
+      "query_id": "trq-433813ead679",
+      "category": "one_hop_attended",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8014
+     },
+     {
+      "query_id": "trq-45beeb2ff4b4",
+      "category": "multi_hop_founder_investors",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8010
+     },
+     {
+      "query_id": "trq-4680b6efa8b8",
+      "category": "one_hop_works_at",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 7967
+     },
+     {
+      "query_id": "trq-46b2079cf111",
+      "category": "one_hop_advises",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 7930
+     },
+     {
+      "query_id": "trq-49ef7b9b0c01",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8156
+     },
+     {
+      "query_id": "trq-5442b21bb94e",
+      "category": "multi_hop_advisor_founders",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7988
+     },
+     {
+      "query_id": "trq-57e49bc0e06e",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8156
+     },
+     {
+      "query_id": "trq-5b18d86bb422",
+      "category": "one_hop_invested_in",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7946
+     },
+     {
+      "query_id": "trq-5b1a50f26198",
+      "category": "one_hop_invested_in",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7928
+     },
+     {
+      "query_id": "trq-5bae366148b0",
+      "category": "multi_hop_coinvestors",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8036
+     },
+     {
+      "query_id": "trq-5cd3c7d4b1b5",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8076
+     },
+     {
+      "query_id": "trq-626c34fedbba",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8103
+     },
+     {
+      "query_id": "trq-64a3386e0978",
+      "category": "one_hop_works_at",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7957
+     },
+     {
+      "query_id": "trq-6508b2ce1f6a",
+      "category": "one_hop_advises",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8003
+     },
+     {
+      "query_id": "trq-664f88cbf067",
+      "category": "one_hop_attended",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8053
+     },
+     {
+      "query_id": "trq-67cb096321bf",
+      "category": "one_hop_advises",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 7938
+     },
+     {
+      "query_id": "trq-7114b0796042",
+      "category": "multi_hop_meeting_investors",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8020
+     },
+     {
+      "query_id": "trq-719cbb42075b",
+      "category": "one_hop_attended",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8047
+     },
+     {
+      "query_id": "trq-74abe33a401c",
+      "category": "multi_hop_founder_portfolio_peers",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7941
+     },
+     {
+      "query_id": "trq-74ce5e7c9c65",
+      "category": "one_hop_works_at",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 7971
+     },
+     {
+      "query_id": "trq-7612659a058e",
+      "category": "multi_hop_coinvestors",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7965
+     },
+     {
+      "query_id": "trq-76f929ad73d7",
+      "category": "one_hop_works_at",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 7996
+     },
+     {
+      "query_id": "trq-7eba892021fd",
+      "category": "one_hop_advises",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7954
+     },
+     {
+      "query_id": "trq-7f1ecdda9548",
+      "category": "multi_hop_investor_founders",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 8032
+     },
+     {
+      "query_id": "trq-87aedd78f1b9",
+      "category": "one_hop_attended",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8027
+     },
+     {
+      "query_id": "trq-889a08d74774",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8150
+     },
+     {
+      "query_id": "trq-8c013f7282c1",
+      "category": "as_of_employer",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 8146
+     },
+     {
+      "query_id": "trq-8d5222344a81",
+      "category": "multi_hop_founder_portfolio_peers",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7953
+     },
+     {
+      "query_id": "trq-8e5cf9766191",
+      "category": "multi_hop_founder_investors",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 8036
+     },
+     {
+      "query_id": "trq-94a4c0b2a0c3",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8043
+     },
+     {
+      "query_id": "trq-979071194fab",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8174
+     },
+     {
+      "query_id": "trq-98e6a9be88ee",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8164
+     },
+     {
+      "query_id": "trq-9aab38b53929",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8051
+     },
+     {
+      "query_id": "trq-9ae5f5e51d61",
+      "category": "multi_hop_advisor_founders",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8026
+     },
+     {
+      "query_id": "trq-9d9c69cf0aeb",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8112
+     },
+     {
+      "query_id": "trq-9faff7e6ae7e",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8108
+     },
+     {
+      "query_id": "trq-a408e3693926",
+      "category": "one_hop_works_at",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7955
+     },
+     {
+      "query_id": "trq-a540cce313d2",
+      "category": "multi_hop_meeting_investors",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8036
+     },
+     {
+      "query_id": "trq-a9d5c12b3fad",
+      "category": "multi_hop_coinvestors",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7973
+     },
+     {
+      "query_id": "trq-aaae5b3e7b69",
+      "category": "one_hop_attended",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8016
+     },
+     {
+      "query_id": "trq-ad8990a4ad24",
+      "category": "multi_hop_founder_investors",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8038
+     },
+     {
+      "query_id": "trq-aec0777ea77e",
+      "category": "one_hop_works_at",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 8018
+     },
+     {
+      "query_id": "trq-aef6d1d8dca9",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8183
+     },
+     {
+      "query_id": "trq-b0a54b9244e3",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8156
+     },
+     {
+      "query_id": "trq-b16a2ad9eea7",
+      "category": "multi_hop_founder_portfolio_peers",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7974
+     },
+     {
+      "query_id": "trq-b21760aff146",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8067
+     },
+     {
+      "query_id": "trq-b445676fefd3",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8137
+     },
+     {
+      "query_id": "trq-bdade22afd8a",
+      "category": "one_hop_works_at",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 8005
+     },
+     {
+      "query_id": "trq-bf2cd9f935c9",
+      "category": "one_hop_works_at",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7944
+     },
+     {
+      "query_id": "trq-c433b4414311",
+      "category": "multi_hop_investor_founders",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 8024
+     },
+     {
+      "query_id": "trq-c5f0acc702d1",
+      "category": "multi_hop_founder_portfolio_peers",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 7851
+     },
+     {
+      "query_id": "trq-c7955076760b",
+      "category": "multi_hop_investor_founder_meetings",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 8076
+     },
+     {
+      "query_id": "trq-c79c13dddd07",
+      "category": "one_hop_invested_in",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7942
+     },
+     {
+      "query_id": "trq-c945c638fc68",
+      "category": "multi_hop_founder_investors",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7977
+     },
+     {
+      "query_id": "trq-cb4446ac5163",
+      "category": "multi_hop_founder_investors",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8028
+     },
+     {
+      "query_id": "trq-cd9a04285415",
+      "category": "one_hop_invested_in",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8006
+     },
+     {
+      "query_id": "trq-d218907bc1f6",
+      "category": "one_hop_works_at",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 8038
+     },
+     {
+      "query_id": "trq-d8e8a6360754",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8074
+     },
+     {
+      "query_id": "trq-da9abff673ea",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8149
+     },
+     {
+      "query_id": "trq-e360ef8e8cc6",
+      "category": "one_hop_attended",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8026
+     },
+     {
+      "query_id": "trq-e87c44c0a77b",
+      "category": "one_hop_attended",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8014
+     },
+     {
+      "query_id": "trq-e99211723fb9",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8064
+     },
+     {
+      "query_id": "trq-ed3768be9546",
+      "category": "one_hop_invested_in",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7974
+     },
+     {
+      "query_id": "trq-eda69881ec66",
+      "category": "one_hop_invested_in",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7951
+     },
+     {
+      "query_id": "trq-ee83687d6647",
+      "category": "one_hop_invested_in",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7943
+     },
+     {
+      "query_id": "trq-ee9d427be6ec",
+      "category": "multi_hop_investor_founders",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8009
+     },
+     {
+      "query_id": "trq-ef36170cb2e0",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8045
+     },
+     {
+      "query_id": "trq-f206a077266f",
+      "category": "one_hop_works_at",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8018
+     },
+     {
+      "query_id": "trq-f4f541910d9b",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8071
+     },
+     {
+      "query_id": "trq-f57ad30df775",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8147
+     },
+     {
+      "query_id": "trq-f6c2a86e253a",
+      "category": "multi_hop_coinvestors",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7992
+     },
+     {
+      "query_id": "trq-f6d9271a2f05",
+      "category": "one_hop_attended",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 8034
+     },
+     {
+      "query_id": "trq-f9dc690a75ba",
+      "category": "as_of_employer",
+      "outcome": "correct",
+      "correct": true,
       "judged": false,
       "context_tokens": 8122
      },

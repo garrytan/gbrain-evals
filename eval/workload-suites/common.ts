@@ -51,10 +51,26 @@ export function norm(text: string): string {
   return text.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
 }
 
-/** Whole-token containment after normalization. */
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+/**
+ * Equivalent written forms of a value. A long date ("1 October 2029") also
+ * matches "October 1, 2029", "Oct 1 2029", "1 Oct 2029" and "2029-10-01",
+ * because memories and readers reformat dates; every other value has one form.
+ */
+export function valueForms(value: string): string[] {
+  const m = /^(\d{1,2}) ([A-Z][a-z]+) (\d{4})$/.exec(value.trim());
+  const month = m ? MONTH_NAMES.indexOf(m[2]!) : -1;
+  if (!m || month < 0) return [value];
+  const [d, name, y] = [m[1]!, m[2]!, m[3]!];
+  const short = name.slice(0, 3);
+  return [value, `${name} ${d}, ${y}`, `${short} ${d}, ${y}`, `${d} ${short} ${y}`, `${y}-${String(month + 1).padStart(2, '0')}-${d.padStart(2, '0')}`];
+}
+
+/** Whole-token containment after normalization, of any written form of the value. */
 export function containsValue(text: string, value: string): boolean {
-  const v = norm(value);
-  return v.length > 0 && ` ${norm(text)} `.includes(` ${v} `);
+  const t = ` ${norm(text)} `;
+  return valueForms(value).some(form => { const v = norm(form); return v.length > 0 && t.includes(` ${v} `); });
 }
 
 export function countValue(text: string, value: string): number {

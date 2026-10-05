@@ -157,6 +157,69 @@
    },
    "at": "2026-10-05T19:53:40.274Z",
    "stub": false
+  },
+  {
+   "phase": "sweep",
+   "usd": 15.461324,
+   "requests": 369,
+   "run_id": "workload-corrections-sweep-2026-10-05T19-58-03-475Z-976d526a",
+   "by_label": {
+    "reader": {
+     "requests": 369,
+     "refused": 0,
+     "reserved_usd": 45.932666000000026,
+     "actual_usd": 15.461323999999998,
+     "input_tokens": 1950572,
+     "output_tokens": 11265
+    }
+   },
+   "at": "2026-10-05T20:00:57.085Z",
+   "stub": false
+  },
+  {
+   "phase": "score",
+   "usd": 0.03601,
+   "requests": 100,
+   "run_id": "workload-corrections-score-2026-10-05T20-00-59-276Z-b89271d8",
+   "by_label": {
+    "judge": {
+     "requests": 100,
+     "refused": 0,
+     "reserved_usd": 2.0554675000000007,
+     "actual_usd": 0.036009999999999986,
+     "input_tokens": 14005,
+     "output_tokens": 800
+    }
+   },
+   "at": "2026-10-05T20:03:34.440Z",
+   "stub": false
+  },
+  {
+   "phase": "sweep",
+   "usd": 2.903952,
+   "requests": 402,
+   "run_id": "workload-corrections-sweep-2026-10-05T20-05-52-643Z-2bde1fb3",
+   "by_label": {
+    "reader": {
+     "requests": 402,
+     "refused": 0,
+     "reserved_usd": 21.406349999999996,
+     "actual_usd": 2.9039520000000003,
+     "input_tokens": 1424296,
+     "output_tokens": 5536
+    }
+   },
+   "at": "2026-10-05T20:07:56.879Z",
+   "stub": false
+  },
+  {
+   "phase": "score",
+   "usd": 0,
+   "requests": 0,
+   "run_id": "workload-corrections-score-2026-10-05T20-09-17-116Z-59106a98",
+   "by_label": {},
+   "at": "2026-10-05T20:09:17.432Z",
+   "stub": false
   }
  ]
 }

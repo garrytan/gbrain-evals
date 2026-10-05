@@ -337,6 +337,12 @@
     "family": "fable"
    }
   ],
+  "alternate_readers": [
+   {
+    "id": "openai:gpt-6.1-sol",
+    "family": "gpt"
+   }
+  ],
   "judge": {
    "id": "openai:gpt-6.1-sol",
    "family": "gpt"

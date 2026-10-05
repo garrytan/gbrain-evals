@@ -149,6 +149,42 @@
    "by_label": {},
    "at": "2026-10-05T19:52:46.121Z",
    "stub": false
+  },
+  {
+   "phase": "sweep",
+   "usd": 2.91568,
+   "requests": 190,
+   "run_id": "workload-time-relationships-sweep-2026-10-05T20-07-58-388Z-cd204df9",
+   "by_label": {
+    "reader": {
+     "requests": 190,
+     "refused": 0,
+     "reserved_usd": 12.347292500000005,
+     "actual_usd": 2.915679999999998,
+     "input_tokens": 1431220,
+     "output_tokens": 5324
+    }
+   },
+   "at": "2026-10-05T20:09:13.373Z",
+   "stub": false
+  },
+  {
+   "phase": "score",
+   "usd": 0.003334,
+   "requests": 9,
+   "run_id": "workload-time-relationships-score-2026-10-05T20-09-18-817Z-3b6f5b50",
+   "by_label": {
+    "judge": {
+     "requests": 9,
+     "refused": 0,
+     "reserved_usd": 0.18478250000000002,
+     "actual_usd": 0.003334,
+     "input_tokens": 1182,
+     "output_tokens": 97
+    }
+   },
+   "at": "2026-10-05T20:09:35.302Z",
+   "stub": false
   }
  ]
 }

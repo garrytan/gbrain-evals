@@ -93,12 +93,12 @@ export function copyReceipts(target: string): void {
     for (const f of ['run.json', 'spend.json']) if (existsSync(join(dir, f))) writeFileSync(join(out, f), scrub(readFileSync(join(dir, f), 'utf8')));
     if (existsSync(join(dir, 'ingest'))) {
       const ingest: Record<string, unknown> = {};
-      for (const f of readdirSync(join(dir, 'ingest'))) ingest[f.replace(/\.json$/, '')] = read(join(dir, 'ingest', f));
+      for (const f of readdirSync(join(dir, 'ingest')).sort()) ingest[f.replace(/\.json$/, '')] = read(join(dir, 'ingest', f));
       writeFileSync(join(out, 'ingest.json'), scrub(JSON.stringify(ingest, null, 1)) + '\n');
     }
     if (existsSync(join(dir, 'corrections-runs'))) {
       const runs: Record<string, unknown> = {};
-      for (const f of readdirSync(join(dir, 'corrections-runs'))) runs[f.replace(/\.json$/, '')] = read(join(dir, 'corrections-runs', f));
+      for (const f of readdirSync(join(dir, 'corrections-runs')).sort()) runs[f.replace(/\.json$/, '')] = read(join(dir, 'corrections-runs', f));
       writeFileSync(join(out, 'corrections-runs.json'), scrub(JSON.stringify(runs, null, 1)) + '\n');
     }
   }
