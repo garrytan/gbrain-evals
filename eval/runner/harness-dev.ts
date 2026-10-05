@@ -81,7 +81,7 @@ export async function sweep(t: Track, passthrough: string[]): Promise<number> {
     log({ step: 'tune', code: tune.code, chosen });
   }
   let failures = 0;
-  const runs: Array<[number | null, Record<string, unknown>]> = t.targets.map(target => [target, chosen[String(target)] ?? null]);
+  const runs: Array<[number | null, Record<string, unknown> | null]> = t.targets.map(target => [target, chosen[String(target)] ?? null]);
   if (t.runDefault) runs.push([null, Object.fromEntries(Object.keys(t.base).map(k => [k, null]))]);
   for (const [target, knobs] of runs) {
     if (target !== null && !knobs) { log({ step: 'run', target, skipped: 'no knob setting passed the delivered-context gate on the tuning sample' }); failures++; continue; }
