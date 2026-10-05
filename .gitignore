@@ -41,3 +41,6 @@ __pycache__/
 
 # Cat 40 large world (41 MB): regenerate with `bun eval/generators/model-ladder-gen.ts --scale large`; manifest.json is committed
 eval/data/model-ladder-v1-large/world.json
+
+# Pinned agent-memory benchmark harness checkout and CPU venv (eval/runner/harness-env.ts)
+.harness/

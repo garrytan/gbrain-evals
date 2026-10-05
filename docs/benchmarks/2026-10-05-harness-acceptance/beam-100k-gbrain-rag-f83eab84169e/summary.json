@@ -1,0 +1,62 @@
+{
+  "cell_id": "beam-100k-gbrain-rag-f83eab84169e",
+  "scheduled": 10,
+  "answered_receipts": 10,
+  "judged_receipts": 10,
+  "score": {
+    "scheduled": 10,
+    "counts": {
+      "answered": 9,
+      "abstention": 1,
+      "answer_failure": 0,
+      "retrieval_failure": 0,
+      "judge_failure": 0,
+      "incomplete_ingest": 0,
+      "missing": 0
+    },
+    "judged": 10,
+    "correct": 7,
+    "accuracy": 0.7,
+    "mean_score": 0.6433333333333333,
+    "complete": true,
+    "missing_ids": [],
+    "judge_failure_ids": [],
+    "incomplete_ingest_ids": []
+  },
+  "delivered_context": {
+    "target": 8000,
+    "n": 10,
+    "mean": 7936.4,
+    "p95": 7970.0,
+    "tolerance": 0.1,
+    "ok": true,
+    "reason": "within \u00b110% of target",
+    "inserted_kinds": {
+      "rendered": 10
+    },
+    "tokenizer": "cl100k_base"
+  },
+  "remote_budget_clamp": {
+    "fired": false,
+    "questions": []
+  },
+  "leak_check": {
+    "checked_prompts": 10,
+    "policy": "pre-dispatch identifier check on every answer prompt"
+  },
+  "timestamp_provenance": {
+    "rule": {
+      "provenance": "observed_session_time",
+      "source": "the session's time_anchor turn field; flat 10M fallback documents carry none"
+    },
+    "counts": {
+      "observed_session_time": 6
+    }
+  },
+  "gates": {
+    "complete": true,
+    "delivered_context": true,
+    "no_remote_clamp": true
+  },
+  "ok": true
+}

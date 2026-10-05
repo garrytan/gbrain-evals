@@ -1,0 +1,23 @@
+{
+  "note": "Paid acceptance cell (A0 step 9): ten BEAM 100k questions from the first conversation, the comparator in its best supported mode (facts plus raw chunks), 8,000-token delivered-context target. Measures per-stage usage for the cell ledger; not a comparison result. Knobs from the retrieval-only sweep on the first comparator acceptance cell (4000/4000 delivered 10,752 tokens on average): facts 3,500 and chunks 2,000 delivered 7,982.",
+  "dataset": "beam",
+  "split": "100k",
+  "provider": "comparator",
+  "mode": "rag",
+  "lane": "combined",
+  "seal": "dev",
+  "target_tokens": 8000,
+  "models": {
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash"
+  },
+  "budget_usd": 10,
+  "questions": {
+    "limit": 10
+  },
+  "k": 10,
+  "provider_config": {
+    "max_tokens": 3500,
+    "max_chunk_tokens": 2000
+  }
+}

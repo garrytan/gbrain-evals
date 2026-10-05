@@ -1,0 +1,132 @@
+{
+  "schema": "mpw-cell-v1",
+  "cell_id": "beam-100k-comparator-rag-894be477adbb",
+  "identity": {
+    "schema": "mpw-cell-v1",
+    "dataset": "beam",
+    "split": "100k",
+    "dataset_manifest_sha256": "04c7de0088e12610436ce970cb5a9ebc369abec4775c2ebbab4a079a32f2a227",
+    "schedule_sha256": "7202e5b1bb791a71ede11f28a389ad749b276215b329ee2603f16551749b1dbf",
+    "pins": {
+      "harness_commit": "f618ed7b1f0eb9cad7b42e876f91a42f0eadb150",
+      "harness_lock_sha256": "6b6ace4f721ae10bf66214a8a617c3c6e97a930e91c163728835691994a07b8f",
+      "torch": "2.10.0+cpu",
+      "comparator_lock_sha256": "49a0e4f35e81e50ea9706e1ef0bf6b660f2b3a82fd27c0e98fc059648f5249b7"
+    },
+    "provider": "comparator",
+    "provider_config": {
+      "max_tokens": 4000,
+      "max_chunk_tokens": 4000
+    },
+    "gbrain_credentials": null,
+    "mode": "rag",
+    "lane": "combined",
+    "seal": "dev",
+    "k": 10,
+    "target_tokens": 8000,
+    "models": {
+      "answer": "gemini:gemini-3.8-flash",
+      "judge": "gemini:gemini-3.5-flash"
+    },
+    "prompt_revision": "c4b5c923fa0dcce6066b078345467837f84911b46ff40b94893bfbbf972a7b32",
+    "scorer_revision": "7619a08c34a45592b0f1d47d8c7f9340c512803f4fceb8900d76e0880d86bada",
+    "wrapper_revision": "7c817e8d550751498d49ebf3d8e08ce3f39b9cb1b8ed9b5b1db6ad15ebe74279",
+    "budget_usd": 10
+  },
+  "spec": {
+    "note": "Paid acceptance cell (A0 step 9): ten BEAM 100k questions from the first conversation, the comparator in its best supported mode (facts plus raw chunks), 8,000-token delivered-context target. Measures per-stage usage for the cell ledger; not a comparison result.",
+    "dataset": "beam",
+    "split": "100k",
+    "provider": "comparator",
+    "mode": "rag",
+    "lane": "combined",
+    "seal": "dev",
+    "target_tokens": 8000,
+    "models": {
+      "answer": "gemini:gemini-3.8-flash",
+      "judge": "gemini:gemini-3.5-flash"
+    },
+    "budget_usd": 10,
+    "questions": {
+      "limit": 10
+    },
+    "k": 10,
+    "provider_config": {
+      "max_tokens": 4000,
+      "max_chunk_tokens": 4000
+    }
+  },
+  "resolved": {
+    "dataset": "beam",
+    "split": "100k",
+    "task_type": "open",
+    "isolation_unit": "conversation",
+    "schedule": [
+      "1_abstention_0",
+      "1_abstention_1",
+      "1_contradiction_resolution_0",
+      "1_contradiction_resolution_1",
+      "1_event_ordering_0",
+      "1_event_ordering_1",
+      "1_information_extraction_0",
+      "1_information_extraction_1",
+      "1_instruction_following_0",
+      "1_instruction_following_1"
+    ],
+    "schedule_sha256": "7202e5b1bb791a71ede11f28a389ad749b276215b329ee2603f16551749b1dbf",
+    "dataset_manifest_sha256": "04c7de0088e12610436ce970cb5a9ebc369abec4775c2ebbab4a079a32f2a227",
+    "questions": 10,
+    "units": [
+      "1"
+    ],
+    "documents": 6,
+    "document_tokens_cl100k": 116718,
+    "document_tokens_by_unit": {
+      "1": 116718
+    },
+    "timestamp_provenance": {
+      "rule": {
+        "provenance": "observed_session_time",
+        "source": "the session's time_anchor turn field; flat 10M fallback documents carry none"
+      },
+      "counts": {
+        "observed_session_time": 6
+      }
+    },
+    "dataset_judge_model": "gemini:gemini-3.5-flash",
+    "judge_calls": 27,
+    "prompt_revision": "c4b5c923fa0dcce6066b078345467837f84911b46ff40b94893bfbbf972a7b32",
+    "scorer_revision": "7619a08c34a45592b0f1d47d8c7f9340c512803f4fceb8900d76e0880d86bada",
+    "wrapper_revision": "7c817e8d550751498d49ebf3d8e08ce3f39b9cb1b8ed9b5b1db6ad15ebe74279"
+  },
+  "planned_at": "2026-10-05T06:26:48.224Z",
+  "estimate": {
+    "usd": 0.7548,
+    "lines": [
+      {
+        "stage": "ingest: comparator extraction",
+        "tokens_in": 186749,
+        "tokens_out": 29180,
+        "usd": 0.5427386999999999,
+        "basis": "116718 document tokens x 1.6 in / x 0.25 out (extraction passes)"
+      },
+      {
+        "stage": "answer",
+        "tokens_in": 92000,
+        "tokens_out": 9000,
+        "usd": 0.10275,
+        "basis": "10 questions x 1 call(s) x (8000 context + 1200 prompt) in, 900 out"
+      },
+      {
+        "stage": "judge",
+        "tokens_in": 32400,
+        "tokens_out": 6750,
+        "usd": 0.10935,
+        "basis": "27 judge calls x 1200 in / 250 out"
+      }
+    ],
+    "unpriced": [],
+    "note": "list-price estimate from token volumes; the run is enforced by the metering proxy, not by this number"
+  },
+  "reproduce": "bun run harness:cell run eval/harness-provider/cells/acceptance-beam100k-comparator-rag.json"
+}

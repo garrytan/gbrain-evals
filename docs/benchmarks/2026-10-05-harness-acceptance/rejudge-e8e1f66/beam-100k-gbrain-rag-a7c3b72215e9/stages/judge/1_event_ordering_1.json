@@ -1,0 +1,150 @@
+{
+  "cell_id": "beam-100k-gbrain-rag-a7c3b72215e9",
+  "query_id": "1_event_ordering_1",
+  "outcome": "answered",
+  "score": 0.7,
+  "correct": true,
+  "judge_model": "gemini:gemini-3.5-flash",
+  "reason": "score=0.700 over 5 rubric items",
+  "rubric": [
+    {
+      "criterion": "LLM response should mention: Initial project setup",
+      "valid": true,
+      "score": 1.0,
+      "reason": "The response mentions 'Setting up local development', which is semantically equivalent to initial project setup.",
+      "attempts": 1
+    },
+    {
+      "criterion": "LLM response should mention: Transaction CRUD implementation",
+      "valid": true,
+      "score": 0.5,
+      "reason": "The response mentions 'transaction management', which is a partial match or close paraphrase of 'Transaction CRUD implementation' but lacks the specific mention of CRUD implementation.",
+      "attempts": 1
+    },
+    {
+      "criterion": "LLM response should mention: Deployment configuration",
+      "valid": true,
+      "score": 1.0,
+      "reason": "The response explicitly mentions 'Configuring deployment' as the fifth item, which satisfies the criterion.",
+      "attempts": 1
+    },
+    {
+      "criterion": "LLM response should mention: Integration test coverage",
+      "valid": true,
+      "score": 0.0,
+      "reason": "The LLM response does not mention 'Integration test coverage' or any equivalent term, only referring generally to 'testing, debugging, and bug fixes'.",
+      "attempts": 1
+    },
+    {
+      "criterion": "LLM response should mention: Deployment and test improvements",
+      "valid": true,
+      "score": 1.0,
+      "reason": "The response mentions both testing/debugging planning (item 4) and deployment configuration (item 5), which semantically covers deployment and test improvements.",
+      "attempts": 1
+    }
+  ],
+  "requests": [
+    {
+      "model": "gemini:gemini-3.5-flash",
+      "prompt": "Evaluate whether the following LLM response demonstrates compliance with the specified RUBRIC CRITERION.\n\nQUESTION:\nCan you walk me through the order in which I brought up different aspects of my app development and deployment across our conversations? Mention ONLY and ONLY five items.\n\nLLM RESPONSE:\nHere is the chronological order in which you brought up five aspects of your app development and deployment: 1. Core project features and milestone breakdown (user authentication, transaction management, and basic analytics). 2. Adding data visualization for expense tracking using Matplotlib or Seaborn. 3. Setting up local development using Flask 2.3.1, Python 3.11, and SQLite 3.39 on port 5000. 4. Planning testing, debugging, and bug fixes for the sprint deadline. 5. Configuring deployment and custom domain settings on Render.com.\n\nRUBRIC CRITERION:\nLLM response should mention: Initial project setup\n\nSCORING GUIDELINES:\n\nFirst, determine whether the rubric criterion is a POSITIVE requirement (the response SHOULD include something) or a NEGATIVE constraint (the response SHOULD NOT include something).\n\n**For POSITIVE requirements** (response should contain, mention, or demonstrate something):\n- **1.0 (Complete Compliance)**: The required element is present, accurate, and complete.\n- **0.5 (Partial Compliance)**: The required element is partially present, has minor inaccuracies, or is incomplete.\n- **0.0 (No Compliance)**: The required element is missing, incorrect, or the response is entirely off-topic / non-responsive.\n\n**For NEGATIVE constraints** (response should NOT contain or should avoid something):\n- **1.0**: The response is responsive AND the prohibited element is absent.\n- **0.5**: The response is responsive but contains a borderline or ambiguous reference to the prohibited element.\n- **0.0**: The prohibited element is present, OR the response is non-responsive.\n\n**Compound statements** (\"and\"/commas joining multiple required elements): all present=1.0, some=0.5, none=0.0.\n\nEVALUATION RULES:\n1. Semantic tolerance: paraphrases and synonyms are acceptable.\n2. Numeric/date equivalence: \"$68,000\"=\"68k\"=\"sixty-eight thousand dollars\"; \"2 years\"=\"24 months\".\n3. Case/punctuation/whitespace tolerance.\n4. Hedging tolerance: do not penalize \"I think\"/\"probably\"/passive/verbosity if content satisfies the criterion.\n5. Style neutrality: do not penalize tone/format/length unless the criterion requires it.\n6. Responsiveness: completely off-topic or refusal = 0.0.\n7. Independence: evaluate this criterion in isolation.\n8. Specificity: vague generic answers score lower than specific, detailed ones.\n\nReturn JSON: {\"score\": <0.0 or 0.5 or 1.0>, \"reason\": \"<one concise sentence>\"}",
+      "prompt_sha256": "e72046a9ee65218a4edbaffe9aab6a9b30158e61ad2fa57fe576e8ff172a9e89",
+      "attempts": [
+        {
+          "attempt": 0,
+          "response": {
+            "score": 1.0,
+            "reason": "The response mentions 'Setting up local development', which is semantically equivalent to initial project setup."
+          },
+          "problems": []
+        }
+      ],
+      "valid": true,
+      "response": {
+        "score": 1.0,
+        "reason": "The response mentions 'Setting up local development', which is semantically equivalent to initial project setup."
+      }
+    },
+    {
+      "model": "gemini:gemini-3.5-flash",
+      "prompt": "Evaluate whether the following LLM response demonstrates compliance with the specified RUBRIC CRITERION.\n\nQUESTION:\nCan you walk me through the order in which I brought up different aspects of my app development and deployment across our conversations? Mention ONLY and ONLY five items.\n\nLLM RESPONSE:\nHere is the chronological order in which you brought up five aspects of your app development and deployment: 1. Core project features and milestone breakdown (user authentication, transaction management, and basic analytics). 2. Adding data visualization for expense tracking using Matplotlib or Seaborn. 3. Setting up local development using Flask 2.3.1, Python 3.11, and SQLite 3.39 on port 5000. 4. Planning testing, debugging, and bug fixes for the sprint deadline. 5. Configuring deployment and custom domain settings on Render.com.\n\nRUBRIC CRITERION:\nLLM response should mention: Transaction CRUD implementation\n\nSCORING GUIDELINES:\n\nFirst, determine whether the rubric criterion is a POSITIVE requirement (the response SHOULD include something) or a NEGATIVE constraint (the response SHOULD NOT include something).\n\n**For POSITIVE requirements** (response should contain, mention, or demonstrate something):\n- **1.0 (Complete Compliance)**: The required element is present, accurate, and complete.\n- **0.5 (Partial Compliance)**: The required element is partially present, has minor inaccuracies, or is incomplete.\n- **0.0 (No Compliance)**: The required element is missing, incorrect, or the response is entirely off-topic / non-responsive.\n\n**For NEGATIVE constraints** (response should NOT contain or should avoid something):\n- **1.0**: The response is responsive AND the prohibited element is absent.\n- **0.5**: The response is responsive but contains a borderline or ambiguous reference to the prohibited element.\n- **0.0**: The prohibited element is present, OR the response is non-responsive.\n\n**Compound statements** (\"and\"/commas joining multiple required elements): all present=1.0, some=0.5, none=0.0.\n\nEVALUATION RULES:\n1. Semantic tolerance: paraphrases and synonyms are acceptable.\n2. Numeric/date equivalence: \"$68,000\"=\"68k\"=\"sixty-eight thousand dollars\"; \"2 years\"=\"24 months\".\n3. Case/punctuation/whitespace tolerance.\n4. Hedging tolerance: do not penalize \"I think\"/\"probably\"/passive/verbosity if content satisfies the criterion.\n5. Style neutrality: do not penalize tone/format/length unless the criterion requires it.\n6. Responsiveness: completely off-topic or refusal = 0.0.\n7. Independence: evaluate this criterion in isolation.\n8. Specificity: vague generic answers score lower than specific, detailed ones.\n\nReturn JSON: {\"score\": <0.0 or 0.5 or 1.0>, \"reason\": \"<one concise sentence>\"}",
+      "prompt_sha256": "0aac97a2f2f75cebc7ab45b9dbc7d7bb996ff3327e9ac341881b4c2d58a0e582",
+      "attempts": [
+        {
+          "attempt": 0,
+          "response": {
+            "score": 0.5,
+            "reason": "The response mentions 'transaction management', which is a partial match or close paraphrase of 'Transaction CRUD implementation' but lacks the specific mention of CRUD implementation."
+          },
+          "problems": []
+        }
+      ],
+      "valid": true,
+      "response": {
+        "score": 0.5,
+        "reason": "The response mentions 'transaction management', which is a partial match or close paraphrase of 'Transaction CRUD implementation' but lacks the specific mention of CRUD implementation."
+      }
+    },
+    {
+      "model": "gemini:gemini-3.5-flash",
+      "prompt": "Evaluate whether the following LLM response demonstrates compliance with the specified RUBRIC CRITERION.\n\nQUESTION:\nCan you walk me through the order in which I brought up different aspects of my app development and deployment across our conversations? Mention ONLY and ONLY five items.\n\nLLM RESPONSE:\nHere is the chronological order in which you brought up five aspects of your app development and deployment: 1. Core project features and milestone breakdown (user authentication, transaction management, and basic analytics). 2. Adding data visualization for expense tracking using Matplotlib or Seaborn. 3. Setting up local development using Flask 2.3.1, Python 3.11, and SQLite 3.39 on port 5000. 4. Planning testing, debugging, and bug fixes for the sprint deadline. 5. Configuring deployment and custom domain settings on Render.com.\n\nRUBRIC CRITERION:\nLLM response should mention: Deployment configuration\n\nSCORING GUIDELINES:\n\nFirst, determine whether the rubric criterion is a POSITIVE requirement (the response SHOULD include something) or a NEGATIVE constraint (the response SHOULD NOT include something).\n\n**For POSITIVE requirements** (response should contain, mention, or demonstrate something):\n- **1.0 (Complete Compliance)**: The required element is present, accurate, and complete.\n- **0.5 (Partial Compliance)**: The required element is partially present, has minor inaccuracies, or is incomplete.\n- **0.0 (No Compliance)**: The required element is missing, incorrect, or the response is entirely off-topic / non-responsive.\n\n**For NEGATIVE constraints** (response should NOT contain or should avoid something):\n- **1.0**: The response is responsive AND the prohibited element is absent.\n- **0.5**: The response is responsive but contains a borderline or ambiguous reference to the prohibited element.\n- **0.0**: The prohibited element is present, OR the response is non-responsive.\n\n**Compound statements** (\"and\"/commas joining multiple required elements): all present=1.0, some=0.5, none=0.0.\n\nEVALUATION RULES:\n1. Semantic tolerance: paraphrases and synonyms are acceptable.\n2. Numeric/date equivalence: \"$68,000\"=\"68k\"=\"sixty-eight thousand dollars\"; \"2 years\"=\"24 months\".\n3. Case/punctuation/whitespace tolerance.\n4. Hedging tolerance: do not penalize \"I think\"/\"probably\"/passive/verbosity if content satisfies the criterion.\n5. Style neutrality: do not penalize tone/format/length unless the criterion requires it.\n6. Responsiveness: completely off-topic or refusal = 0.0.\n7. Independence: evaluate this criterion in isolation.\n8. Specificity: vague generic answers score lower than specific, detailed ones.\n\nReturn JSON: {\"score\": <0.0 or 0.5 or 1.0>, \"reason\": \"<one concise sentence>\"}",
+      "prompt_sha256": "3087668d770fa00ba4667db2726b0f1c46e64366a47425025f30140ef77c06af",
+      "attempts": [
+        {
+          "attempt": 0,
+          "response": {
+            "score": 1.0,
+            "reason": "The response explicitly mentions 'Configuring deployment' as the fifth item, which satisfies the criterion."
+          },
+          "problems": []
+        }
+      ],
+      "valid": true,
+      "response": {
+        "score": 1.0,
+        "reason": "The response explicitly mentions 'Configuring deployment' as the fifth item, which satisfies the criterion."
+      }
+    },
+    {
+      "model": "gemini:gemini-3.5-flash",
+      "prompt": "Evaluate whether the following LLM response demonstrates compliance with the specified RUBRIC CRITERION.\n\nQUESTION:\nCan you walk me through the order in which I brought up different aspects of my app development and deployment across our conversations? Mention ONLY and ONLY five items.\n\nLLM RESPONSE:\nHere is the chronological order in which you brought up five aspects of your app development and deployment: 1. Core project features and milestone breakdown (user authentication, transaction management, and basic analytics). 2. Adding data visualization for expense tracking using Matplotlib or Seaborn. 3. Setting up local development using Flask 2.3.1, Python 3.11, and SQLite 3.39 on port 5000. 4. Planning testing, debugging, and bug fixes for the sprint deadline. 5. Configuring deployment and custom domain settings on Render.com.\n\nRUBRIC CRITERION:\nLLM response should mention: Integration test coverage\n\nSCORING GUIDELINES:\n\nFirst, determine whether the rubric criterion is a POSITIVE requirement (the response SHOULD include something) or a NEGATIVE constraint (the response SHOULD NOT include something).\n\n**For POSITIVE requirements** (response should contain, mention, or demonstrate something):\n- **1.0 (Complete Compliance)**: The required element is present, accurate, and complete.\n- **0.5 (Partial Compliance)**: The required element is partially present, has minor inaccuracies, or is incomplete.\n- **0.0 (No Compliance)**: The required element is missing, incorrect, or the response is entirely off-topic / non-responsive.\n\n**For NEGATIVE constraints** (response should NOT contain or should avoid something):\n- **1.0**: The response is responsive AND the prohibited element is absent.\n- **0.5**: The response is responsive but contains a borderline or ambiguous reference to the prohibited element.\n- **0.0**: The prohibited element is present, OR the response is non-responsive.\n\n**Compound statements** (\"and\"/commas joining multiple required elements): all present=1.0, some=0.5, none=0.0.\n\nEVALUATION RULES:\n1. Semantic tolerance: paraphrases and synonyms are acceptable.\n2. Numeric/date equivalence: \"$68,000\"=\"68k\"=\"sixty-eight thousand dollars\"; \"2 years\"=\"24 months\".\n3. Case/punctuation/whitespace tolerance.\n4. Hedging tolerance: do not penalize \"I think\"/\"probably\"/passive/verbosity if content satisfies the criterion.\n5. Style neutrality: do not penalize tone/format/length unless the criterion requires it.\n6. Responsiveness: completely off-topic or refusal = 0.0.\n7. Independence: evaluate this criterion in isolation.\n8. Specificity: vague generic answers score lower than specific, detailed ones.\n\nReturn JSON: {\"score\": <0.0 or 0.5 or 1.0>, \"reason\": \"<one concise sentence>\"}",
+      "prompt_sha256": "f97f9b7c058f97bbc0d86c32ec1db20f46f79e3c643fdebdcbcbaaa21eb8762f",
+      "attempts": [
+        {
+          "attempt": 0,
+          "response": {
+            "score": 0.0,
+            "reason": "The LLM response does not mention 'Integration test coverage' or any equivalent term, only referring generally to 'testing, debugging, and bug fixes'."
+          },
+          "problems": []
+        }
+      ],
+      "valid": true,
+      "response": {
+        "score": 0.0,
+        "reason": "The LLM response does not mention 'Integration test coverage' or any equivalent term, only referring generally to 'testing, debugging, and bug fixes'."
+      }
+    },
+    {
+      "model": "gemini:gemini-3.5-flash",
+      "prompt": "Evaluate whether the following LLM response demonstrates compliance with the specified RUBRIC CRITERION.\n\nQUESTION:\nCan you walk me through the order in which I brought up different aspects of my app development and deployment across our conversations? Mention ONLY and ONLY five items.\n\nLLM RESPONSE:\nHere is the chronological order in which you brought up five aspects of your app development and deployment: 1. Core project features and milestone breakdown (user authentication, transaction management, and basic analytics). 2. Adding data visualization for expense tracking using Matplotlib or Seaborn. 3. Setting up local development using Flask 2.3.1, Python 3.11, and SQLite 3.39 on port 5000. 4. Planning testing, debugging, and bug fixes for the sprint deadline. 5. Configuring deployment and custom domain settings on Render.com.\n\nRUBRIC CRITERION:\nLLM response should mention: Deployment and test improvements\n\nSCORING GUIDELINES:\n\nFirst, determine whether the rubric criterion is a POSITIVE requirement (the response SHOULD include something) or a NEGATIVE constraint (the response SHOULD NOT include something).\n\n**For POSITIVE requirements** (response should contain, mention, or demonstrate something):\n- **1.0 (Complete Compliance)**: The required element is present, accurate, and complete.\n- **0.5 (Partial Compliance)**: The required element is partially present, has minor inaccuracies, or is incomplete.\n- **0.0 (No Compliance)**: The required element is missing, incorrect, or the response is entirely off-topic / non-responsive.\n\n**For NEGATIVE constraints** (response should NOT contain or should avoid something):\n- **1.0**: The response is responsive AND the prohibited element is absent.\n- **0.5**: The response is responsive but contains a borderline or ambiguous reference to the prohibited element.\n- **0.0**: The prohibited element is present, OR the response is non-responsive.\n\n**Compound statements** (\"and\"/commas joining multiple required elements): all present=1.0, some=0.5, none=0.0.\n\nEVALUATION RULES:\n1. Semantic tolerance: paraphrases and synonyms are acceptable.\n2. Numeric/date equivalence: \"$68,000\"=\"68k\"=\"sixty-eight thousand dollars\"; \"2 years\"=\"24 months\".\n3. Case/punctuation/whitespace tolerance.\n4. Hedging tolerance: do not penalize \"I think\"/\"probably\"/passive/verbosity if content satisfies the criterion.\n5. Style neutrality: do not penalize tone/format/length unless the criterion requires it.\n6. Responsiveness: completely off-topic or refusal = 0.0.\n7. Independence: evaluate this criterion in isolation.\n8. Specificity: vague generic answers score lower than specific, detailed ones.\n\nReturn JSON: {\"score\": <0.0 or 0.5 or 1.0>, \"reason\": \"<one concise sentence>\"}",
+      "prompt_sha256": "a625bf79fc1215250f25c25ed837e9ff4dd74d18dcf0622e6cdf3e2798ee8258",
+      "attempts": [
+        {
+          "attempt": 0,
+          "response": {
+            "score": 1.0,
+            "reason": "The response mentions both testing/debugging planning (item 4) and deployment configuration (item 5), which semantically covers deployment and test improvements."
+          },
+          "problems": []
+        }
+      ],
+      "valid": true,
+      "response": {
+        "score": 1.0,
+        "reason": "The response mentions both testing/debugging planning (item 4) and deployment configuration (item 5), which semantically covers deployment and test improvements."
+      }
+    }
+  ],
+  "error": null,
+  "details": {}
+}

@@ -1,0 +1,15 @@
+{
+  "counts": {
+    "observed_session_time": 23867
+  },
+  "dataset": "longmemeval",
+  "dates_passed_to_providers": 23867,
+  "documents": 23867,
+  "policy": "Only observed session times reach providers; stated event dates and unknown dates are withheld from both systems.",
+  "rows_sha256": "1aa32f87324413faaf68b8d0c57e385ef7f40be182d32f7df6c8c04ed511b10d",
+  "rule": {
+    "provenance": "observed_session_time",
+    "source": "haystack_dates[i]: the session date in the dataset"
+  },
+  "split": "s"
+}

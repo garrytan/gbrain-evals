@@ -1,0 +1,147 @@
+{
+  "seed": 20261005,
+  "schedule_sha256": "2f21431474e1151349e723f6e4e4cb1e3b732e39eaa59e645f66d6d89bfe0b84",
+  "judge_model": "gemini:gemini-3.5-flash",
+  "order": [
+    {
+      "position": 0,
+      "blind_id": "b-6857c78b188f",
+      "cell_id": "beam-100k-comparator-rag-b1bc1d8eee25",
+      "query_id": "1_instruction_following_0",
+      "redactions": 0
+    },
+    {
+      "position": 1,
+      "blind_id": "b-6d8577f5baec",
+      "cell_id": "beam-100k-gbrain-rag-48a25f23a91b",
+      "query_id": "1_contradiction_resolution_0",
+      "redactions": 0
+    },
+    {
+      "position": 2,
+      "blind_id": "b-3514bde009e4",
+      "cell_id": "beam-100k-comparator-rag-b1bc1d8eee25",
+      "query_id": "1_abstention_1",
+      "redactions": 0
+    },
+    {
+      "position": 3,
+      "blind_id": "b-51ee5bb46931",
+      "cell_id": "beam-100k-gbrain-rag-48a25f23a91b",
+      "query_id": "1_information_extraction_1",
+      "redactions": 0
+    },
+    {
+      "position": 4,
+      "blind_id": "b-ff17b78397c4",
+      "cell_id": "beam-100k-gbrain-rag-48a25f23a91b",
+      "query_id": "1_information_extraction_0",
+      "redactions": 0
+    },
+    {
+      "position": 5,
+      "blind_id": "b-3a583c0e204d",
+      "cell_id": "beam-100k-gbrain-rag-48a25f23a91b",
+      "query_id": "1_contradiction_resolution_1",
+      "redactions": 0
+    },
+    {
+      "position": 6,
+      "blind_id": "b-07e2005dd797",
+      "cell_id": "beam-100k-gbrain-rag-48a25f23a91b",
+      "query_id": "1_event_ordering_1",
+      "redactions": 0
+    },
+    {
+      "position": 7,
+      "blind_id": "b-b2e4830d818e",
+      "cell_id": "beam-100k-comparator-rag-b1bc1d8eee25",
+      "query_id": "1_information_extraction_0",
+      "redactions": 0
+    },
+    {
+      "position": 8,
+      "blind_id": "b-799a4b62bfba",
+      "cell_id": "beam-100k-comparator-rag-b1bc1d8eee25",
+      "query_id": "1_event_ordering_1",
+      "redactions": 0
+    },
+    {
+      "position": 9,
+      "blind_id": "b-2d9f04e6a52f",
+      "cell_id": "beam-100k-comparator-rag-b1bc1d8eee25",
+      "query_id": "1_abstention_0",
+      "redactions": 0
+    },
+    {
+      "position": 10,
+      "blind_id": "b-c805a6726226",
+      "cell_id": "beam-100k-comparator-rag-b1bc1d8eee25",
+      "query_id": "1_event_ordering_0",
+      "redactions": 0
+    },
+    {
+      "position": 11,
+      "blind_id": "b-b971b7f63fc2",
+      "cell_id": "beam-100k-gbrain-rag-48a25f23a91b",
+      "query_id": "1_abstention_0",
+      "redactions": 0
+    },
+    {
+      "position": 12,
+      "blind_id": "b-81a3feaada8f",
+      "cell_id": "beam-100k-comparator-rag-b1bc1d8eee25",
+      "query_id": "1_contradiction_resolution_1",
+      "redactions": 0
+    },
+    {
+      "position": 13,
+      "blind_id": "b-c320a096c729",
+      "cell_id": "beam-100k-comparator-rag-b1bc1d8eee25",
+      "query_id": "1_instruction_following_1",
+      "redactions": 0
+    },
+    {
+      "position": 14,
+      "blind_id": "b-61599199d5d7",
+      "cell_id": "beam-100k-gbrain-rag-48a25f23a91b",
+      "query_id": "1_abstention_1",
+      "redactions": 0
+    },
+    {
+      "position": 15,
+      "blind_id": "b-dd677d638cf3",
+      "cell_id": "beam-100k-gbrain-rag-48a25f23a91b",
+      "query_id": "1_event_ordering_0",
+      "redactions": 0
+    },
+    {
+      "position": 16,
+      "blind_id": "b-264709963f35",
+      "cell_id": "beam-100k-comparator-rag-b1bc1d8eee25",
+      "query_id": "1_contradiction_resolution_0",
+      "redactions": 0
+    },
+    {
+      "position": 17,
+      "blind_id": "b-587f34c19c15",
+      "cell_id": "beam-100k-gbrain-rag-48a25f23a91b",
+      "query_id": "1_instruction_following_1",
+      "redactions": 0
+    },
+    {
+      "position": 18,
+      "blind_id": "b-d0937b6442ef",
+      "cell_id": "beam-100k-comparator-rag-b1bc1d8eee25",
+      "query_id": "1_information_extraction_1",
+      "redactions": 0
+    },
+    {
+      "position": 19,
+      "blind_id": "b-51986394bb59",
+      "cell_id": "beam-100k-gbrain-rag-48a25f23a91b",
+      "query_id": "1_instruction_following_0",
+      "redactions": 0
+    }
+  ]
+}
