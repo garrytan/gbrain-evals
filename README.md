@@ -18,7 +18,7 @@ current state; the changelog at the bottom records how this page changed and why
 | Pinned product | gbrain master [`739e5cc`](https://github.com/garrytan/gbrain/tree/739e5cc89ca43b9b9351f0f203c7b12a7c0c571c) (v0.60.46.0, the agent-first operator wave), declared as `gbrain` in `package.json` |
 | Fixed-purpose aliases | `gbrain-cues` at `939232f` (situation-cue experiments, Cat 36) and `gbrain-reader` at `e78f1c3` (LongMemEval reader comparisons). Every other arm measures the pinned product. |
 | Newer builds measured as overlays | v0.60.49.0 (`b9ee931`, gbrain [#6010](https://github.com/garrytan/gbrain/pull/6010), the `auto_chronicle` date fix) and v0.60.62.0 (`51f865d78`, the entity-recall wave, Cat 40). Their results name their own commit. |
-| This repository | gbrain-evals v0.10.22 (`VERSION`) |
+| This repository | gbrain-evals v0.10.23 (`VERSION`) |
 
 This repository installs gbrain master `739e5cc`; a local `bun link` overrides it, and a report always names the
 code it actually loaded. Many retrieval results were measured at older commits. Each number below carries its
@@ -288,7 +288,7 @@ How this page changed, newest first. Measurement history lives in the dated repo
 
 ### 2026-10-05: Restructured as a current-state page with this changelog
 
-gbrain-evals v0.10.22. The page now opens with a table naming the gbrain under test (master `739e5cc`, v0.60.46.0, its two aliases and the newer builds measured as overlays) and a "What gbrain does today" section that states each capability in present tense with its current number and commit:
+gbrain-evals v0.10.23. The page now opens with a table naming the gbrain under test (master `739e5cc`, v0.60.46.0, its two aliases and the newer builds measured as overlays) and a "What gbrain does today" section that states each capability in present tense with its current number and commit:
 
 - The retrieval table leads with the opaque-id recount (451/470 at `109b992`) instead of the September 6 run.
 - The "Update, October 2/3/4" blocks and the October 1 wins-and-losses lists are folded into one current section on correctness checks at `739e5cc`, listing what holds and what remains open (Cat7-1, Gmail-only open loops, no corpus-wide contradiction scanner, associative recall 0 of 240).

@@ -1,6 +1,6 @@
 # BrainBench credits
 
-BrainBench combines project-authored tests, public benchmark material and comparison implementations. Attribution matters because a test written by a project's authors supplies different evidence from an independent submission. Everything above [Changelog](#changelog) is current as of gbrain-evals v0.10.22.
+BrainBench combines project-authored tests, public benchmark material and comparison implementations. Attribution matters because a test written by a project's authors supplies different evidence from an independent submission. Everything above [Changelog](#changelog) is current as of gbrain-evals v0.10.23.
 
 ## Project work
 
@@ -44,7 +44,7 @@ How this page changed, newest first. Measurement history lives in the dated repo
 
 ### 2026-10-05: Restructured as a current-state page with this changelog
 
-gbrain-evals v0.10.22. The adapter table lists all five adapters with their current roles: `gbrain` is the product path with relationship retrieval on (it had read "the graph-based relational system under test"), and `graph-oracle-parse`, the template-parsing upper bound, is added.
+gbrain-evals v0.10.23. The adapter table lists all five adapters with their current roles: `gbrain` is the product path with relationship retrieval on (it had read "the graph-based relational system under test"), and `graph-oracle-parse`, the template-parsing upper bound, is added.
 
 ### 2026-10-01: System One dataset attribution
 

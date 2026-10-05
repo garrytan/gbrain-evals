@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [0.10.22] - 2026-10-05
+## [0.10.23] - 2026-10-05
 
 ### Top-level docs read as the current state, with a changelog per document
 
@@ -23,6 +23,23 @@ close with a `## Changelog` section recording how that document changed and why,
   it so Codex and other agents that read only AGENTS.md see it.
 
 No measurement changed; $0.
+
+## [0.10.22] - 2026-10-05
+
+### Mirror: gbrain's takes-bootstrap classifier did not graduate; its autopilot stays `manual_only`
+
+gbrain's first live graduation run of the takes-bootstrap eval
+([#6013](https://github.com/garrytan/gbrain/pull/6013), merge `d37fab68e`,
+v0.60.59.0; measured 2026-10-04 with Claude Haiku 4.5, $0.0935) passed 75 of
+123 pages. Fact precision was 0.714 (50 of 70), bet precision 0.545 (18 of 33),
+and hunch precision 0.750 with recall 0.667, against bars of 0.80 and 0.70,
+with 3 forbidden attributions. The autopilot tier stays `manual_only`
+([mirror](docs/benchmarks/2026-10-04-takes-bootstrap-verdict.md), with the
+upstream text copied verbatim and `verdict.json`). Nothing was rerun here, and
+gbrain committed no predictions file. The run used an older model generation,
+so TODOS asks for a rerun on current frontier models before the result is
+cited as model-independent.
+- **Version.** 0.10.21 went to #65, which merged first, so this release is 0.10.22.
 
 ## [0.10.21] - 2026-10-05
 
@@ -71,6 +88,7 @@ This follows Garry's gate decisions UC1 and UC2 on the
   mention coverage through an `entity` miss, and record it beside the snapshot and in the slot receipt. A round
   refuses slots whose coverage is not `complete` with 0 pending pages; builds whose gbrain does not report coverage
   are not checked.
+
 ## [0.10.20] - 2026-10-05
 
 ### Ledger: CL-1 and CL-2 point at the merged gbrain fix

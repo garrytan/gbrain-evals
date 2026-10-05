@@ -152,7 +152,7 @@ How this page changed, newest first. Measurement history lives in the dated repo
 
 ### 2026-10-05: Restructured as a current-state page with this changelog
 
-gbrain-evals v0.10.22. The opening now quotes the opaque-id recount (451/470 at `109b992`) as the headline and states the installed pin once, replacing the list of nine commits at which the mode definitions were checked (they are identical from `2efaaf8f` through `739e5cc`). Rows that carried dated "October 4, 2026:" amendments (the long-conversation workload, `search.expansion`, `search.expansion_variant_budget`, `search.autocut`) now state only the current measurement; the September 6 values remain in the entries below and in the reports. The `auto_chronicle` row leads with the pinned behavior. A new `return_unit` row describes the `auto` evidence-delivery default and its sealed-set result (192 of 200 against 132).
+gbrain-evals v0.10.23. The opening now quotes the opaque-id recount (451/470 at `109b992`) as the headline and states the installed pin once, replacing the list of nine commits at which the mode definitions were checked (they are identical from `2efaaf8f` through `739e5cc`). Rows that carried dated "October 4, 2026:" amendments (the long-conversation workload, `search.expansion`, `search.expansion_variant_budget`, `search.autocut`) now state only the current measurement; the September 6 values remain in the entries below and in the reports. The `auto_chronicle` row leads with the pinned behavior. A new `return_unit` row describes the `auto` evidence-delivery default and its sealed-set result (192 of 200 against 132).
 
 ### 2026-10-04: `auto_chronicle` row says keep it on from v0.60.49.0
 

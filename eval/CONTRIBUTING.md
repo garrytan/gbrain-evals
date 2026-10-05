@@ -98,7 +98,7 @@ How this page changed, newest first. Measurement history lives in the dated repo
 
 ### 2026-10-05: Restructured as a current-state page with this changelog
 
-gbrain-evals v0.10.22. The opening paragraph names the gbrain a category scores (`739e5cc`) and points model-comparison work to the model rules in CLAUDE.md. This changelog section is new.
+gbrain-evals v0.10.23. The opening paragraph names the gbrain a category scores (`739e5cc`) and points model-comparison work to the model rules in CLAUDE.md. This changelog section is new.
 
 ### 2026-10-01: "Add a category" checklist
 

@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "experiment": "gbrain takes-bootstrap classifier graduation run (TODOS TODO-E, GBRA-47 D-6)",
+  "measured": "2026-10-04",
+  "mirrored": "2026-10-05",
+  "source": {
+    "repo": "garrytan/gbrain",
+    "pr": "garrytan/gbrain#6013",
+    "merge_commit": "d37fab68e95e66347ba661e913cdafca330ae5a2",
+    "release": "v0.60.59.0",
+    "files": [
+      "TODOS.md (TODO-E)",
+      "docs/test-audit/2026-10-04/implementation/lane-c.md (Takes-bootstrap graduation run (D-6))",
+      "evals/takes-bootstrap/README.md"
+    ],
+    "excerpts": [
+      "upstream/lane-c-d6-excerpt.md",
+      "upstream/todos-todo-e-excerpt.md",
+      "upstream/readme-graduation-excerpt.md"
+    ],
+    "unchanged_on_master": "8c9a8e9a4 (checked 2026-10-05)"
+  },
+  "rerun_here": false,
+  "predictions_committed": false,
+  "model": "anthropic:claude-haiku-4-5 (the harness default; production extraction uses the configured chat model, default anthropic:claude-sonnet-4-6 at d37fab68e)",
+  "corpus": {
+    "variants": 123,
+    "archetypes": 41,
+    "note": "41 hand-authored archetypes x 3 label-invariant placeholder variants (evals/takes-bootstrap/corpus.jsonl)"
+  },
+  "cost_usd": {
+    "actual": 0.0935,
+    "estimate": 0.23,
+    "hard_cap": 1
+  },
+  "graduation_rule": "scorer v1: per-kind precision >= 0.80 and recall >= 0.70, zero malformed cases, zero forbid violations",
+  "per_kind": {
+    "fact": {
+      "expected": 42,
+      "matched": 32,
+      "predicted": 70,
+      "precise": 50,
+      "precision": 0.714,
+      "recall": 0.762,
+      "passes_bars": false
+    },
+    "take": {
+      "expected": 33,
+      "matched": 32,
+      "predicted": 47,
+      "precise": 42,
+      "precision": 0.894,
+      "recall": 0.97,
+      "passes_bars": true
+    },
+    "bet": {
+      "expected": 24,
+      "matched": 18,
+      "predicted": 33,
+      "precise": 18,
+      "precision": 0.545,
+      "recall": 0.75,
+      "passes_bars": false
+    },
+    "hunch": {
+      "expected": 18,
+      "matched": 12,
+      "predicted": 16,
+      "precise": 12,
+      "precision": 0.75,
+      "recall": 0.667,
+      "passes_bars": false
+    }
+  },
+  "variants_passed": 75,
+  "variants_total": 123,
+  "overall": {
+    "precision": 0.735,
+    "recall": 0.803
+  },
+  "malformed": 0,
+  "forbid_violations": 3,
+  "verdict": "not graduated",
+  "decision": "the takes-bootstrap autopilot tier stays manual_only",
+  "bars_failed": [
+    "fact precision 0.714 < 0.80",
+    "bet precision 0.545 < 0.80",
+    "hunch precision 0.750 < 0.80",
+    "hunch recall 0.667 < 0.70",
+    "3 forbid violations (press claims attributed to the page holder)"
+  ],
+  "next_upstream": "complete the archetype labels (valid unlabeled claims count as imprecise), then fix bio-fact recall and press-claim attribution, then rerun"
+}

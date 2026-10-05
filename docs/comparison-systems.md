@@ -187,7 +187,7 @@ How this page changed, newest first. Measurement history lives in the dated repo
 
 ### 2026-10-05: Restructured as a current-state page with this changelog
 
-gbrain-evals v0.10.22. The "Updated September 9, 2026" line becomes a statement of the pin and of when external sources were last checked. The opening evidence paragraph leads with the opaque-id retrieval recount (451/470) and current answer results (439/500, 453/500, `gpt-5.4` 447/500) instead of the September 6 figures. Sentences that described earlier versions of this page (the wrong 442/450 count, the withdrawn causal claim about embedders, the unsubstantiated ContextFit gold-ID allegation, the mislabeled ByteRover version and the R@10 header on LoCoMo) now state the current position only; the history of those fixes is in the entries below. The answer-quality section leads with the leak-free result before explaining why 86.6% is invalid.
+gbrain-evals v0.10.23. The "Updated September 9, 2026" line becomes a statement of the pin and of when external sources were last checked. The opening evidence paragraph leads with the opaque-id retrieval recount (451/470) and current answer results (439/500, 453/500, `gpt-5.4` 447/500) instead of the September 6 figures. Sentences that described earlier versions of this page (the wrong 442/450 count, the withdrawn causal claim about embedders, the unsubstantiated ContextFit gold-ID allegation, the mislabeled ByteRover version and the R@10 header on LoCoMo) now state the current position only; the history of those fixes is in the entries below. The answer-quality section leads with the leak-free result before explaining why 86.6% is invalid.
 
 ### 2026-10-04: Re-pin to gbrain `739e5cc`
 

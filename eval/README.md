@@ -112,7 +112,7 @@ How this page changed, newest first. Measurement history lives in the dated repo
 
 ### 2026-10-05: Restructured as a current-state page with this changelog
 
-gbrain-evals v0.10.22. The introduction names the gbrain each runner loads (`739e5cc` plus the `gbrain-cues` and `gbrain-reader` aliases) and the `--gbrain` overlay flag, and points to the documentation index instead of calling the September 9 refresh "the new comparison". "The four retrieval adapters" becomes "The retrieval adapters", since the table lists five, and the `gbrain` and `graph-oracle-parse` rows describe their current roles, with the pre-v0.10.1 name kept as a note for reading old receipts.
+gbrain-evals v0.10.23. The introduction names the gbrain each runner loads (`739e5cc` plus the `gbrain-cues` and `gbrain-reader` aliases) and the `--gbrain` overlay flag, and points to the documentation index instead of calling the September 9 refresh "the new comparison". "The four retrieval adapters" becomes "The retrieval adapters", since the table lists five, and the `gbrain` and `graph-oracle-parse` rows describe their current roles, with the pre-v0.10.1 name kept as a note for reading old receipts.
 
 ### 2026-10-04: Cat 40 and Cat 41 rows in the test table
 

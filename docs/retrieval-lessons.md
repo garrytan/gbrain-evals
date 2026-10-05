@@ -257,7 +257,7 @@ How this page changed, newest first. Measurement history lives in the dated repo
 
 ### 2026-10-05: Restructured as a current-state page with this changelog
 
-gbrain-evals v0.10.22. The introduction quotes 451/470 (opaque ids, `109b992`) and names the pin. The expansion section is retitled "Extra phrasings no longer outvote a good question, but they cost a call" and leads with the current recount (436/470 against 434/470), keeping the September 6 losses (255/470, 394/470) as one paragraph about older code. The autocut paragraph states the recount (384 to 451 of 470) instead of both counts. A new section, "The reader needs whole conversations, not just matching passages", summarizes the evidence-delivery study (361 against 253 of 400) and the sealed `auto` decision (192 against 132 of 200). The answer-accuracy example notes that the September 6 answer score is invalid.
+gbrain-evals v0.10.23. The introduction quotes 451/470 (opaque ids, `109b992`) and names the pin. The expansion section is retitled "Extra phrasings no longer outvote a good question, but they cost a call" and leads with the current recount (436/470 against 434/470), keeping the September 6 losses (255/470, 394/470) as one paragraph about older code. The autocut paragraph states the recount (384 to 451 of 470) instead of both counts. A new section, "The reader needs whole conversations, not just matching passages", summarizes the evidence-delivery study (361 against 253 of 400) and the sealed `auto` decision (192 against 132 of 200). The answer-accuracy example notes that the September 6 answer score is invalid.
 
 ### 2026-10-04: Opaque-id recount notes on autocut and query expansion
 
