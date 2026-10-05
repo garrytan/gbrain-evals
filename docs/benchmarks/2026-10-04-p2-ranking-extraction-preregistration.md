@@ -112,3 +112,35 @@ Each conversation has 2 assistant-said questions and 2 user-said questions: 120 
 **Power.** Development showed a +36.7-pt effect with about 40% of questions changing. With 120 assistant-said questions in 60 clusters, a true effect of +15 pts (less than half of development) gives the clustered bootstrap about 90% power at α = 0.05. With 120 user-said questions and development's zero changed answers, the −2-pt margin holds with no net loss or one. Two or more net losses would make the guard inconclusive, and the setting would stay off.
 
 **Budget.** Estimate: generation and gold check $8; extraction 60 conversations × about 6 sessions × 2 arms × 2 runs, about $30; reader and judge 240 questions × 2 arms × 5 replicates, about $30; guard judging $4. Total about $72, within the remaining $82. Arms run only under a ledger reservation.
+
+## Amendment 3 — E2 per-consumer checks (approved 2026-10-05, before any fixture exists)
+
+Status: approved 2026-10-05. This makes the E2 "per-consumer checks" above operational, and was committed before any fixture was generated.
+
+The held-out E2 verdict (`p2-e2-heldout-2026-10-04`, PASS) measured fact extraction, so `extraction.date_grounding` defaults on there. Four other prompts follow the rule only when the setting is explicitly `true`: life chronicle events, dream synthesis, extract_atoms and propose_takes. Each is checked here separately, and each prompt that passes defaults on.
+
+**Fixtures.** 30 invented dated pages, shared by the four prompts:
+- each is a short note or two-person conversation with 3 to 6 relative time references (yesterday, last week, in two weeks, by Friday, three months ago, and so on);
+- each also has at least one decision, plan, prediction or claim, so every prompt has something to extract;
+- each has an observation date in its frontmatter (2024–2026) and invented people and companies only;
+- they are written by `google:gemini-3.8-flash` (seed recorded) and frozen as a file before any consumer runs.
+
+**Arms.** Each prompt runs twice on each fixture with the same model and settings, through the product's own prompt builder: once as today (setting absent) and once grounded (setting `true`).
+- chronicle: `defaultJudge`;
+- extract_atoms: `atomsPrompt` with the atoms response schema;
+- propose_takes: `defaultExtractor`;
+- dream synthesis: `buildSynthesisPrompt` in oneshot mode, sent with the oneshot system prompt.
+
+Generation model: `anthropic:claude-sonnet-5-5`.
+
+**Measures.**
+1. **Unresolved relative phrases:** the facts lane's `unresolvedRelativeTime` check (a relative time phrase and no absolute date), counted per output item (event, atom, take or synthesis paragraph) and summed over the 30 fixtures.
+2. **Blind pairwise judge:** `openai:gpt-6-sol`, a different family from the generator. The judge sees the fixture, its observation date and the two outputs labelled A and B in random order (fresh order per replicate). It answers which output records the source more accurately and usefully as long-term memory, with correct dates counting, or tie. 10 replicates per fixture. Score per fixture: mean of grounded win = 1, tie = 0.5, loss = 0.
+
+**Pass (per prompt).**
+- (a) The grounded outputs hold fewer unresolved relative phrases than the current outputs, summed over the 30 fixtures.
+- (b) The judge score has a 95% bootstrap lower bound (over fixtures, 10,000 resamples) of at least 0.45, so grounded is not worse by more than 5 points.
+
+A prompt that fails either keeps its current prompt behind the explicit opt-in. Results are recorded next to the E2 verdict in gbrain `docs/eval/decisions/p2-e2-heldout/`.
+
+**Budget.** Estimate $12: 240 generations plus 1,200 judge calls. This counts against the E2 cap.
