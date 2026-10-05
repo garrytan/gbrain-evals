@@ -37,7 +37,7 @@ describe('CATEGORIES catalog', () => {
   test('lists every category in the repository (drift tripwire, audit tests-audit-01 and C-09)', () => {
     expect(CATEGORIES.map(c => c.id)).toEqual([
       '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '13b', '13b-sit', '14', '15', '18', '18b',
-      '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30-33', '34', '35', '36', '36-live', 'N3', 'temporal-edges', 'P1-E2', 'P1-E3', 'P5-H1', 'P5-H2', 'P5-H4', 'P5-H5a', 'P8-quotes', 'P8-write-cost', 'N4', 'N6', 'N12', 'N13', 'N7', 'N8', 'N2', 'A4', 'SO', 'SO-live',
+      '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30-33', '34', '35', '36', '36-live', 'N3', 'temporal-edges', 'P1-E2', 'P1-E3', 'P5-H1', 'P5-H2', 'P5-H4', 'P5-H5a', 'P5-H3', 'P5-H5b', 'P5-H6', 'P8-quotes', 'P8-write-cost', 'N4', 'N6', 'N12', 'N13', 'N7', 'N8', 'N2', 'A4', 'SO', 'SO-live',
       'multi-adapter', 'relational-ab', 'constrained-relational', 'N9', 'N9-paid', 'precisionmembench', 'longmemeval', 'longmemeval-answers',
       'longmemeval-m-pilot', 'reading-notes', 'lifecycle', '40', '41', 'N1', 'N5', 'N1-ci', 'N5-ci', 'evidence-delivery', 'sealed-confirmation', 'situation-recall', 'shootout', 'qrels',
     ]);
