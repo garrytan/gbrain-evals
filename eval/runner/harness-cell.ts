@@ -318,7 +318,7 @@ export function planCell(ctx: Ctx, target: string): CellFile {
   const cell: CellFile = {
     schema: CELL_SCHEMA, cell_id: id, identity, spec, resolved, planned_at: new Date().toISOString(),
     estimate: estimateCell(spec, resolved),
-    reproduce: `bun run harness:cell run ${join(dir, 'spec.json').replace(REPO_ROOT + '/', '')}`,
+    reproduce: `bun run harness:cell run ${(existsSync(target) ? resolve(target) : join(dir, 'spec.json')).replace(REPO_ROOT + '/', '')}`,
   };
   writeFileSync(path, JSON.stringify(cell, null, 2) + '\n');
   return cell;
@@ -366,7 +366,7 @@ export async function runCell(ctx: Ctx, target: string, resume: boolean): Promis
   if (remaining <= 0.0001) throw new Error(`cell ${cell.cell_id} has spent its $${cell.spec.budget_usd.toFixed(2)} budget. Inspect it with \`bun eval/runner/budget-ledger.ts status\`; a larger budget is a new cell.`);
 
   const { startMeteringProxy } = await import('./metering-proxy.ts');
-  let stub: { url: string; close(): void } | null = null;
+  let stub: Awaited<ReturnType<typeof import('./stub-upstream.ts')['startStubUpstream']>> | null = null;
   let ledgerPath = budgetOptionsFrom(ctx.argv).ledgerPath;
   if (ctx.stub) {
     const { startStubUpstream } = await import('./stub-upstream.ts');
@@ -377,7 +377,7 @@ export async function runCell(ctx: Ctx, target: string, resume: boolean): Promis
   const run = BudgetRun.open({ runner: `harness-cell:${cell.cell_id}`, budgetUsd: remaining, estimateUsd: Math.min(remaining, cell.estimate.usd), ledgerPath, log: ctx.log });
   const proxyDir = join(dir, 'proxy');
   mkdirSync(proxyDir, { recursive: true });
-  const upstreams = stub ? Object.fromEntries(['openai', 'anthropic', 'gemini', 'groq', 'voyage'].map(p => [p, stub!.url])) : undefined;
+  const upstreams = stub ? stub.upstreams : undefined;
   const realKeys = stub ? Object.fromEntries(['openai', 'anthropic', 'gemini', 'groq', 'voyage'].map(p => [p, 'stub-upstream-key'])) : undefined;
   const proxy = await startMeteringProxy({
     run, cellId: cell.cell_id, requestLogPath: join(proxyDir, 'requests.jsonl'), bodiesDir: join(proxyDir, 'bodies'),
@@ -396,7 +396,7 @@ export async function runCell(ctx: Ctx, target: string, resume: boolean): Promis
     MPW_PROVIDER_CONFIG: JSON.stringify(cell.spec.provider_config ?? {}),
     MPW_GBRAIN_CLI: join(ctx.gut.root, 'src/cli.ts'),
     MPW_BUN: process.execPath,
-    MPW_CHILD_ENV_GBRAIN: JSON.stringify(pick(proxy.envFor('gbrain'), cell.spec.gbrain_credentials ?? ['voyage'])),
+    MPW_CHILD_ENV_GBRAIN: JSON.stringify(pick({ ...proxy.envFor('gbrain'), VOYAGE_BASE_URL: proxy.baseUrls.voyage }, cell.spec.gbrain_credentials ?? ['voyage'])),
     MPW_CHILD_ENV_COMPARATOR: JSON.stringify(proxy.envFor('comparator')),
     MPW_REPO_ROOT: REPO_ROOT,
   };
