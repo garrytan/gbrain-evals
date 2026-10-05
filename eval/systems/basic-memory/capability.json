@@ -44,11 +44,15 @@
   "parallel_namespaces": false,
   "retrieval_policies": {
     "vendor-default": {
-      "k": 10,
+      "settings": {
+        "k": 10
+      },
       "maps_to": "search_notes(page_size=10, search_type='hybrid', output_format='json'): page_size default 10 in search_notes and top_k default 10 in the vendor benchmark; hybrid is the default search type when semantic search is on; semantic_min_similarity 0.55, semantic_vector_k 100, reranker off"
     },
     "fixed-evidence": {
-      "k": 30,
+      "settings": {
+        "k": 30
+      },
       "maps_to": "same call with page_size=30, so the harness can pack an 8,000-token budget from more candidates than the default page"
     }
   },

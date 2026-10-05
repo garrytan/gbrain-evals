@@ -37,7 +37,6 @@ META = DATA / "meta"
 NS_RE = re.compile(r"^ns-[A-Za-z0-9_-]{1,80}$")
 SRC_RE = re.compile(r"^src-[A-Za-z0-9_-]{1,120}$")
 EMBED_SUMMARY = re.compile(r"(\d+) entities embedded, (\d+) skipped, (\d+) errors")
-POLICY_K = {"vendor-default": 10, "fixed-evidence": 30}
 
 COMMON_ENV = {
     "BASIC_MEMORY_SEMANTIC_EMBEDDING_PROVIDER": "litellm",
@@ -241,9 +240,13 @@ class BasicMemoryAdapter(Adapter):
 
     def retrieve(self, ns: str, question: str, query_time: str | None, policy: dict[str, Any]) -> dict[str, Any]:
         mode = policy.get("mode")
-        if mode not in POLICY_K:
+        if mode not in ("vendor-default", "fixed-evidence"):
             raise ShimError("invalid_request", "policy.mode must be vendor-default or fixed-evidence", 400)
-        k = int((policy.get("settings") or {}).get("k") or POLICY_K[mode])
+        settings = policy.get("settings") or {}
+        unknown = set(settings) - {"k"}
+        if unknown:
+            raise ShimError("invalid_request", f"unknown policy settings {sorted(unknown)}; this shim takes only k", 400)
+        k = int(settings.get("k") or self.record["retrieval_policies"][mode]["settings"]["k"])
         self.lock_for(ns)
         meta = self.meta(ns)
         applied = {

@@ -29,9 +29,9 @@ LongMemEval and BEAM) and scopes everything by `user_id`.
 
 | Endpoint | What happens |
 |---|---|
-| `/reset` | `delete_all(user_id)`, then the namespace moves to a fresh `user_id` (`<ns>.g<n>`), because `delete_all` leaves the scope's 10 most recent raw messages in the history store, where the next extraction call would read them |
-| `/ingest` | one `Memory.add(messages, user_id, metadata={source_id, session_date})` per chunk of `MEM0_CHUNK_TURNS` turns, each chunk headed by a system line `This conversation took place at 1:56 pm on 8 May, 2023.`. A failed chunk is reported in `errors` and marks the session `degraded`; a metering-proxy refusal stops the session: HTTP 402 becomes `budget`, 403 (route not allowlisted or leak tripwire) becomes `invalid_request` |
-| `/finish` | returns at once: `add` is synchronous |
+| `/reset` | cancels queued sessions, `delete_all(user_id)`, then the namespace moves to a fresh `user_id` (`<ns>.g<n>`), because `delete_all` leaves the scope's 10 most recent raw messages in the history store, where the next extraction call would read them |
+| `/ingest` | queues the session on the namespace's single worker and returns `completeness: unknown` at once. The worker makes one `Memory.add(messages, user_id, metadata={source_id, session_date})` per chunk of `MEM0_CHUNK_TURNS` turns, each chunk headed by a system line `This conversation took place at 1:56 pm on 8 May, 2023.` A failed chunk is recorded and marks the namespace `degraded`; a metering-proxy refusal stops the namespace's remaining chunks: HTTP 402 becomes `budget`, 403 (route not allowlisted or leak tripwire) becomes `invalid_request` |
+| `/finish` | waits for the queue to drain (up to `timeout_s`, else `ready: false`) and reports `known` or `degraded` with session, memory and error counts. Queuing exists because one session can outlast the harness's 600-second request deadline: `gpt-5-mini` takes about 16 seconds per `add`, so a 30-turn LoCoMo session at one turn per call takes about 8 minutes |
 | `/retrieve` | `Memory.search(question, top_k=k, filters={"user_id"})`, k is 20 for `vendor-default` (the SDK default) and 200 for `fixed-evidence` (the vendor benchmark's largest cutoff). Each memory carries the `source_id` of the session whose add created it (`provenance_status: partial`) and its session date as `valid_from` |
 | `/delete_source` | `get_all(filters={user_id, source_id})`, then `delete(memory_id)` for each, then a re-check that none is left |
 
