@@ -2,6 +2,70 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.25] - 2026-10-05
+
+### Cat 40 Hard generator v2: records stop naming their account
+
+Calibration round 2 left plain files at 95%: agents searched for the account name in the question and read every
+record, because every record named the account. Generator `model-ladder-hard-v2` (amendment A1) keeps every fact and
+answer key and changes how records refer to accounts. No paid call ran; round 3 is ready to calibrate on the 50k world.
+
+- **Reference forms.** Each account reference in an event record uses the account's name, its code, its nickname, or
+  `<manager>'s <region> <industry> account`, meaning the account that manager held on the record's date. Knobs
+  `direct_name_share`, `code_ref_weight`, `nickname_ref_weight` and `manager_ref_weight` set the mix;
+  [knobs.round-3.json](docs/benchmarks/cat40-hard/knobs.round-3.json) starts at 15% by name and about 30%, 30% and 24%
+  for the others. CRM records, new account sheets, rename and merger notices name the account and resolve the other
+  forms in at most two hops. A manager reference is used only where it fits one account on that date from the records
+  written by then. Event documents get opaque ids, so paths never name an account. A knob file without the new keys
+  writes v1's worlds byte for byte (rounds 1 and 2 still regenerate); with `direct_name_share` 1 the documents and
+  tasks are v1's.
+- **Checks.** `hardWorldProblems` checks every reference: its text is in its document, a reference not by name never
+  names the account, a manager reference fits one account, every code, nickname and descriptor is introduced on or
+  before its use, and every task's oracle documents tie each reference to the asked name. Oracle evidence carries the
+  resolution documents each record needs. [WORLD_SCHEMA.md](docs/benchmarks/cat40-hard/WORLD_SCHEMA.md) states the
+  rules for the sealed generator.
+- **Difficulty proxy.** `bun eval/runner/cat40/hard-proxy.ts` reports, without a model call, how often the oracle's
+  records name the asked account. On the 50k calibration world it falls from 91% with round-2 knobs to 14% with
+  round-3 knobs; code and nickname searches together still reach 76%, so the manager form carries most of the added
+  difficulty ([calibration.md](docs/benchmarks/cat40-hard/calibration.md)).
+- **Calibration at 50k.** `scripts/cat40-hard.sh step calibrate` builds the 50k world from round 3 on (`SCALE=large`,
+  `SCALE=v1` for the 4k world). Projections use measured cells at the step's scale when there are any and add the pg
+  arm's one-time corpus embedding when the world is known (about $2.70 at 50k). The pg store now checkpoints PGlite while it builds; without that, the 50k Hard build ran out of memory and hung. Appended 50k accounts have their own
+  account managers, so 4k records keep their meaning inside the 50k world.
+- **H1 set sizes.** H1 keys are computed over the 4k accounts so they match at both scales; the 261-account
+  population supports at most 25 to 34 members per predicate, so round 3 keeps 10 to 40.
+
+## [0.10.24] - 2026-10-05
+
+### README describes other memory systems by kind
+
+README's "How gbrain compares" section and its changelog no longer name other memory projects; each is described by
+kind (for example "a verbatim-session memory system"). Names, versions and sources stay in
+[comparisons and their protocols](docs/comparison-systems.md), which README links. No measurement changed; $0.
+
+## [0.10.23] - 2026-10-05
+
+### Top-level docs read as the current state, with a changelog per document
+
+README, the docs index, the settings guide, retrieval lessons, the comparison page, the evaluation guide, the
+contributor guide and the credits now open with what gbrain does at the pinned commit (`739e5cc`, v0.60.46.0) and
+close with a `## Changelog` section recording how that document changed and why, one entry per commit, newest first.
+
+- **README.** Three parts: what gbrain does, current results (one table, each number with its gbrain commit and
+  report) and how gbrain compares (strict LongMemEval retrieval, answer accuracy with the same reader,
+  PrecisionMemBench, concept search, Cat 40 against files, Postgres and the memory tool), then known limits. The
+  dated "Update, October 2/3/4" blocks move to its changelog. New on the page: Cat 40 on frontier models, the
+  multi-relation planner's held-out pass (gbrain v0.60.60.0) and the held-out program.
+- **Settings and retrieval lessons.** Dated "October 4, 2026:" amendments become current statements (opaque-id
+  recount at `109b992`), a `return_unit` row and a whole-conversation delivery section are added, and the September 6
+  values move to the changelog.
+- **Comparison page.** Sentences about earlier versions of the page now state the current position; the history is
+  in its changelog.
+- **CLAUDE.md** records the shape (current state on top, a per-document changelog below), and AGENTS.md summarizes
+  it so Codex and other agents that read only AGENTS.md see it.
+
+No measurement changed; $0.
+
 ## [0.10.22] - 2026-10-05
 
 ### Cat 40 Hard: the harness for tasks that measure the edge of frontier models
@@ -45,6 +109,30 @@ $1,794).
   the `model-ladder-hard` registry row (tier P, report-only).
 - **Regression contract.** Tests pin the v1 world, the large manifest digest, the `score.ts` hash, v1 tool limits and
   a v1 scripted run's scores against a fixture recorded from the previous runner.
+- **After calibration round 1 (2026-10-05).** Both oracle models missed the same account on two H1 tasks: a renamed
+  account's ticket written after the rename still used the old name, and the H1 evidence lacked the rename notice.
+  Records written on or after a rename now use the new name, H1 evidence carries rename and merger notices, a merged
+  account's tickets count for the account it merged into, and H1 predicates that turn on a date boundary are not
+  drawn ([calibration.md](docs/benchmarks/cat40-hard/calibration.md)). Projections now go per model, arm and family
+  from round 1's measured Hard costs (2 to 5 times v1 per cell) plus the measured judge cost; a resumed step opens a
+  new budget run (`--new-budget-run`) sized to the cells still missing. `knobs.round-2.json` makes H2 and H3 harder.
+
+## [0.10.22] - 2026-10-05
+
+### Mirror: gbrain's takes-bootstrap classifier did not graduate; its autopilot stays `manual_only`
+
+gbrain's first live graduation run of the takes-bootstrap eval
+([#6013](https://github.com/garrytan/gbrain/pull/6013), merge `d37fab68e`,
+v0.60.59.0; measured 2026-10-04 with Claude Haiku 4.5, $0.0935) passed 75 of
+123 pages. Fact precision was 0.714 (50 of 70), bet precision 0.545 (18 of 33),
+and hunch precision 0.750 with recall 0.667, against bars of 0.80 and 0.70,
+with 3 forbidden attributions. The autopilot tier stays `manual_only`
+([mirror](docs/benchmarks/2026-10-04-takes-bootstrap-verdict.md), with the
+upstream text copied verbatim and `verdict.json`). Nothing was rerun here, and
+gbrain committed no predictions file. The run used an older model generation,
+so TODOS asks for a rerun on current frontier models before the result is
+cited as model-independent.
+- **Version.** 0.10.21 went to #65, which merged first, so this release is 0.10.22.
 
 ## [0.10.21] - 2026-10-05
 
@@ -93,6 +181,7 @@ This follows Garry's gate decisions UC1 and UC2 on the
   mention coverage through an `entity` miss, and record it beside the snapshot and in the slot receipt. A round
   refuses slots whose coverage is not `complete` with 0 pending pages; builds whose gbrain does not report coverage
   are not checked.
+
 ## [0.10.20] - 2026-10-05
 
 ### Ledger: CL-1 and CL-2 point at the merged gbrain fix

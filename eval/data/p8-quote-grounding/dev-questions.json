@@ -1,0 +1,307 @@
+{
+  "generator": "p8-quote-grounding@1",
+  "seed": 1,
+  "model": "gpt-6.1-sol",
+  "questions": [
+    {
+      "id": "q000",
+      "page": "notes/2026-03-10-market-report-reactions.md",
+      "kind": "quote",
+      "question": "What exactly did the author write about Sunfield Energy’s $30M valuation cap and the traction supporting it?"
+    },
+    {
+      "id": "q001",
+      "page": "emails/em-0009.md",
+      "kind": "quote",
+      "question": "What exactly did Lena Park tell Amara Okafor about Meridian Solar’s signed pilot contract and its effect on the company’s risk profile?"
+    },
+    {
+      "id": "q002",
+      "page": "notes/2026-03-24-morning-reflection.md",
+      "kind": "quote",
+      "question": "What exactly did the author write in their March 24, 2026 morning reflection about why they held firm on Jordan Park’s 15% founder equity stake in Helios?"
+    },
+    {
+      "id": "q003",
+      "page": "notes/2026-03-20-orange-mode.md",
+      "kind": "quote",
+      "question": "What exactly did the author write about how Anna Petrov’s orange-mode implementation throttles inference loads during peak grid stress?"
+    },
+    {
+      "id": "q004",
+      "page": "emails/em-0026.md",
+      "kind": "quote",
+      "question": "What exactly did Amara Okafor tell Lena Park about Halfway Fund III’s first close and the investment opportunities the fund was targeting?"
+    },
+    {
+      "id": "q005",
+      "page": "emails/em-0038.md",
+      "kind": "quote",
+      "question": "What exactly did Amara Okafor write to Kofi Mensah about why Beacon and Halfway should co-lead Terraform Energy’s Series A?"
+    },
+    {
+      "id": "q006",
+      "page": "emails/em-0031.md",
+      "kind": "quote",
+      "question": "What exactly did Priya Patel tell Amara Okafor about Datastream hiring a CFO and how that changed her assessment of its operational risk?"
+    },
+    {
+      "id": "q007",
+      "page": "emails/em-0048.md",
+      "kind": "quote",
+      "question": "What exactly did Amara Okafor write to Tomoko Sato about Axiom Energy’s modular power solutions for edge AI deployments?"
+    },
+    {
+      "id": "q008",
+      "page": "emails/em-0037.md",
+      "kind": "quote",
+      "question": "What exactly did Amara Okafor say to Elena Rossi about Halfway taking the lead position and Crossbeam investing in the Terraform Industries round?"
+    },
+    {
+      "id": "q009",
+      "page": "notes/2026-03-08-threshold-terms.md",
+      "kind": "quote",
+      "question": "What exactly did the author write about the risk that threshold-based milestone terms could create the wrong incentives for Diego Alvarez’s Series A?"
+    },
+    {
+      "id": "q010",
+      "page": "notes/2026-03-22-weekly-review.md",
+      "kind": "quote",
+      "question": "What exactly did I write in my March 22, 2026 weekly review about Derek Chen’s concerns regarding Volterra and my assessment of its unit economics?"
+    },
+    {
+      "id": "q011",
+      "page": "notes/2026-02-20-novamind-followup.md",
+      "kind": "quote",
+      "question": "What exactly did the author write about their concerns with NovaMind’s go-to-market timeline and semiconductor supply chain?"
+    },
+    {
+      "id": "q012",
+      "page": "notes/2026-01-29-climate-thesis.md",
+      "kind": "quote",
+      "question": "What exactly did the author of the January 29, 2026 climate thesis note write about the intersection of climate infrastructure and AI workloads?"
+    },
+    {
+      "id": "q013",
+      "page": "notes/2026-02-22-climate-thesis.md",
+      "kind": "quote",
+      "question": "What exactly did I write about Solaris’s claimed $18/MWh LCOE by 2028 and its capacity factor assumptions for West Texas sites?"
+    },
+    {
+      "id": "q014",
+      "page": "notes/2026-02-24-orange-mode.md",
+      "kind": "quote",
+      "question": "What exactly did the February 24, 2026 note about Marcus Reid’s “orange-mode” operations at Terraform say about when the system operates independently and when it escalates to human operators?"
+    },
+    {
+      "id": "q015",
+      "page": "notes/2026-03-16-novamind-followup.md",
+      "kind": "quote",
+      "question": "What exactly did the author write about NovaMinds’ potential to reduce energy per inference and AI’s carbon footprint?"
+    },
+    {
+      "id": "q016",
+      "page": "notes/2026-02-18-next-quarter-plan.md",
+      "kind": "quote",
+      "question": "What exactly did the author of the February 18, 2026 Q2 planning note write about spending more time with founders before the term-sheet stage?"
+    },
+    {
+      "id": "q017",
+      "page": "emails/em-0030.md",
+      "kind": "quote",
+      "question": "What exactly did Priya Patel write to Amara Okafor about the seed-stage carbon removal company’s technology and founders?"
+    },
+    {
+      "id": "q018",
+      "page": "emails/em-0016.md",
+      "kind": "quote",
+      "question": "What exactly did Amara Okafor write to Elena Rossi when asking for her candid take on GridMatrix’s team and go-to-market?"
+    },
+    {
+      "id": "q019",
+      "page": "emails/em-0025.md",
+      "kind": "quote",
+      "question": "What exactly did Amara Okafor ask Jordan Park to clarify about NovaMind AI’s Q3 revenue projections before the Monday partner meeting?"
+    },
+    {
+      "id": "q020",
+      "page": "meetings/mtg-0001.md",
+      "kind": "quote",
+      "question": "What exactly did the meeting notes say about Priya Patel’s assessment of Jordan Park’s equity stake in NovaBio?"
+    },
+    {
+      "id": "q021",
+      "page": "conversations/slack-deal-flow-2026-04-15.md",
+      "kind": "quote",
+      "question": "What exactly did Tomoko Sato say about Cognivault’s $45M pre-money valuation ask on April 15, 2026?"
+    },
+    {
+      "id": "q022",
+      "page": "conversations/slack-halfway-partners-2026-04-17.md",
+      "kind": "quote",
+      "question": "What exactly did Kofi Mensah say about Marcus Chen’s pushback on the Tideline term sheet and a possible compromise on April 17, 2026?"
+    },
+    {
+      "id": "q023",
+      "page": "emails/em-0017.md",
+      "kind": "quote",
+      "question": "What exactly did Elena Rossi say to Amara Okafor about Helion Energy’s fusion commercialization timeline assumptions and the team’s execution track record?"
+    },
+    {
+      "id": "q024",
+      "page": "notes/2026-02-04-morning-reflection.md",
+      "kind": "quote",
+      "question": "What exactly did Amara Okafor write about why she got into climate investing in her February 4, 2026 morning reflection?"
+    },
+    {
+      "id": "q025",
+      "page": "notes/2026-02-12-threshold-terms.md",
+      "kind": "quote",
+      "question": "What exactly did the author write about Priya Patel’s proposed threshold conversion model for later-stage climate deals?"
+    },
+    {
+      "id": "q026",
+      "page": "emails/em-0002.md",
+      "kind": "quote",
+      "question": "What exactly did Marcus Reid say to Amara Okafor about Terraform Industries’ synthetic fuels approach and scaling timeline?"
+    },
+    {
+      "id": "q027",
+      "page": "emails/em-0033.md",
+      "kind": "quote",
+      "question": "What exactly did Amara Okafor write to Ravi Gupta about Terraform Energy’s grid orchestration approach and its potential to become a category leader?"
+    },
+    {
+      "id": "q028",
+      "page": "emails/em-0010.md",
+      "kind": "quote",
+      "question": "What exactly did Bill Hart say to Amara Okafor about the company doing inference optimization for edge devices?"
+    },
+    {
+      "id": "q029",
+      "page": "emails/em-0004.md",
+      "kind": "quote",
+      "question": "What exactly did Bill Hart write to Amara Okafor about the Meridian Solar Series A round he helped structure?"
+    },
+    {
+      "id": "q030",
+      "page": "notes/2026-04-07-next-quarter-plan.md",
+      "kind": "quote",
+      "question": "What exactly did I write in my Q2 planning note about why patient capital for climate infrastructure doesn’t mean passivity?"
+    },
+    {
+      "id": "q031",
+      "page": "notes/2026-01-25-next-quarter-plan.md",
+      "kind": "quote",
+      "question": "What exactly did the author write about why they want to go deeper on energy-aware data centers in Q2?"
+    },
+    {
+      "id": "q032",
+      "page": "emails/em-0029.md",
+      "kind": "quote",
+      "question": "What exactly did Anna Petrov say to Amara Okafor about the Terraform Dynamics opportunity and sharing her team's pre-seed diligence notes?"
+    },
+    {
+      "id": "q033",
+      "page": "emails/em-0023.md",
+      "kind": "quote",
+      "question": "What exactly did Tomoko Sato tell Amara Okafor about the founder’s technical approach and what she wanted to investigate before committing to a co-lead structure?"
+    },
+    {
+      "id": "q034",
+      "page": "conversations/slack-ops-2026-04-13.md",
+      "kind": "quote",
+      "question": "What exactly did Sarah Chen say about Halfway Capital’s Q1 expense report and budget in #ops on April 13, 2026?"
+    },
+    {
+      "id": "q035",
+      "page": "conversations/slack-random-2026-04-13.md",
+      "kind": "natural",
+      "question": "What did Amara Okafor say about the coffee shop on Valencia that changed her morning routine?"
+    },
+    {
+      "id": "q036",
+      "page": "emails/em-0022.md",
+      "kind": "natural",
+      "question": "What did Amara Okafor tell Tomoko Sato about Threshold Energy’s Series B and its fit with Khosla’s grid resilience thesis?"
+    },
+    {
+      "id": "q037",
+      "page": "notes/2026-02-26-weekly-review.md",
+      "kind": "natural",
+      "question": "What concerns did I have about participating in Derek Massamba’s Series B, and what questions did I want answered before moving forward?"
+    },
+    {
+      "id": "q038",
+      "page": "emails/em-0011.md",
+      "kind": "natural",
+      "question": "What advice did Bill Hart give Amara Okafor about board governance before a term sheet creates urgency?"
+    },
+    {
+      "id": "q039",
+      "page": "emails/em-0045.md",
+      "kind": "natural",
+      "question": "What did Anna Petrov suggest to Amara Okafor after reviewing Halfway Capital’s climate-AI investment deck?"
+    },
+    {
+      "id": "q040",
+      "page": "emails/em-0027.md",
+      "kind": "natural",
+      "question": "Why did Lena Park pass on the Terraform Bio investment round, and how did Amara Okafor’s perspective factor into her decision?"
+    },
+    {
+      "id": "q041",
+      "page": "conversations/slack-random-2026-04-17.md",
+      "kind": "natural",
+      "question": "What chart was Mina Kapoor looking for while preparing the deck for the April 2026 LP meeting?"
+    },
+    {
+      "id": "q042",
+      "page": "conversations/slack-random-2026-04-15.md",
+      "kind": "natural",
+      "question": "Why did Amara Okafor skip the offsite, and what made her regret it?"
+    },
+    {
+      "id": "q043",
+      "page": "conversations/slack-deal-flow-2026-04-16.md",
+      "kind": "natural",
+      "question": "What did Amara Okafor say about Nimbus Robotics’ potential and the next steps for evaluating them on April 16, 2026?"
+    },
+    {
+      "id": "q044",
+      "page": "meetings/mtg-0005.md",
+      "kind": "natural",
+      "question": "What were the key takeaways and action items from my April 18 portfolio review with Priya Patel on CarbonLoop’s Q1 performance?"
+    },
+    {
+      "id": "q045",
+      "page": "emails/em-0001.md",
+      "kind": "natural",
+      "question": "What did Amara Okafor tell Ravi Gupta about her interest in co-investing in his carbon accounting portfolio company’s Series A?"
+    },
+    {
+      "id": "q046",
+      "page": "emails/em-0046.md",
+      "kind": "natural",
+      "question": "What results did Jordan Park share from Novamind’s emissions-monitoring pilot with two Midwest cement plants?"
+    },
+    {
+      "id": "q047",
+      "page": "meetings/mtg-0007.md",
+      "kind": "natural",
+      "question": "What were the key takeaways and action items from Amara Okafor and Elena Rossi’s review of Codex Robotics’ Q1 2026 performance?"
+    },
+    {
+      "id": "q048",
+      "page": "notes/2026-03-18-climate-thesis.md",
+      "kind": "natural",
+      "question": "What was the core climate investment thesis I discussed with Ravi Mehta, and how did Threshold’s $25M Series B fit into it?"
+    },
+    {
+      "id": "q049",
+      "page": "conversations/slack-ops-2026-04-15.md",
+      "kind": "natural",
+      "question": "Who was scheduled to lead the Q2 ops review sync on April 16, 2026, instead of Amara Okafor, and why?"
+    }
+  ]
+}

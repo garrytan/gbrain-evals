@@ -2,7 +2,7 @@
  * Cat 40 Hard operator support: the paid-step plan, cost projections, the
  * program ledger roster and the freeze record. No model is called here.
  *
- *   bun eval/runner/cat40/hard-ops.ts project --step <step> [--measured <results.jsonl|attempts.jsonl>,...] [--world <world.json>]
+ *   bun eval/runner/cat40/hard-ops.ts project --step <step> [--measured <results.jsonl|attempts.jsonl>,...] [--done <the step's attempts.jsonl>] [--world <world.json>] [--scale v1|large]
  *   bun eval/runner/cat40/hard-ops.ts roster
  *   bun eval/runner/cat40/hard-ops.ts freeze write --knobs <knobs.round-N.json> --note "<why this round froze>"
  *   bun eval/runner/cat40/hard-ops.ts freeze check
@@ -65,10 +65,17 @@ export function stepPlan(step: string): StepPlan {
 
 export interface CostBasis {
   v1_per_cell_usd: Record<string, Record<string, number>>;
-  hard_factor_round1: number;
-  judge: { v1_gpt_5_4_mini_per_cell_usd: number; gpt_6_1_sol_price_ratio: number };
+  /**
+   * Measured Hard cost per cell divided by the v1 cost per cell of the same model and arm, by arm and family
+   * (calibration round 1). Arms without a measurement borrow one: memory from fs, gbrain from pg.
+   */
+  hard_factor_by_arm_family: Record<string, Record<string, number>>;
+  /** Measured gpt-6.1-sol judge dollars per cell, by family. */
+  judge_per_cell_usd_by_family: Record<string, number>;
   scale_50k_factor: Record<string, number>;
   slot_build: { usd_per_slot: number; world_bytes: number };
+  /** pg arm setup: embedding price per million tokens; the corpus is embedded once per new world (about 4 characters per token). */
+  pg_embed_usd_per_million_tokens: number;
   margin: number;
 }
 
@@ -76,44 +83,63 @@ export function loadCostBasis(path = join(HARD_DOCS, 'cost-basis.json')): CostBa
   return JSON.parse(readFileSync(path, 'utf8')) as CostBasis;
 }
 
-export interface Projection { step: string; cells: number; agent_usd: number; judge_usd: number; slot_build_usd: number; total_usd: number; with_margin_usd: number; basis: string; rows: Array<{ model: string; arm: string; cells: number; per_cell_usd: number; source: string }> }
+const FAMILIES5 = ['H1', 'H2', 'H3', 'H4', 'H5'];
+const FACTOR_ARM: Record<string, string> = { memory: 'fs', gbrain: 'pg' };
+
+export interface Projection { step: string; cells: number; agent_usd: number; judge_usd: number; slot_build_usd: number; pg_setup_usd: number; total_usd: number; with_margin_usd: number; basis: string; rows: Array<{ model: string; arm: string; cells: number; per_cell_usd: number; source: string }> }
 
 /**
- * Project a step's cost. Per (model, arm): measured Hard cost per cell when
- * `measured` holds cells for it (cost over every attempt, judge included,
- * divided by canonical cells; a 4k measurement times the 50k factor for a 50k
- * step), else the v1 basis times the round-1 Hard factor plus the projected
- * gpt-6.1-sol judge. Slot builds scale with the world's bytes.
+ * Project a step's cost, per model, arm and family (Hard cells differ in
+ * cost by family far more than by arm: an H1 cell reads dozens of records).
+ * Per (model, arm, family): the measured Hard cost per cell when `measured`
+ * holds cells for it (cost over every attempt, judge included, divided by
+ * canonical cells; cells at the step's scale when there are any, else 4k
+ * measurements times the 50k factor for a 50k step);
+ * otherwise the v1 cost per cell of that model and arm times the measured Hard
+ * factor for the arm and family, plus the measured judge cost for the family.
+ * Cells already done (`done`, keys with a harness-clean attempt) are not
+ * projected. Slot builds scale with the world's bytes; given the world's size, a step with the pg arm adds
+ * embedding the corpus once.
  */
-export function project(plan: StepPlan, o: { basis: CostBasis; measured?: CellView[]; measuredScale?: 'v1' | 'large'; worldBytes?: number }): Projection {
-  const families = plan.families?.length ?? 5;
-  const n = plan.tasksPerFamily * families * plan.repeats;
+export function project(plan: StepPlan, o: { basis: CostBasis; measured?: CellView[]; measuredScale?: 'v1' | 'large'; worldBytes?: number; done?: CellView[] }): Projection {
+  const families = plan.families ?? FAMILIES5;
   const rows: Projection['rows'] = [];
-  let agent = 0, judge = 0;
-  const judgeV1 = o.basis.judge.v1_gpt_5_4_mini_per_cell_usd * o.basis.judge.gpt_6_1_sol_price_ratio * o.basis.hard_factor_round1;
+  let agent = 0, judge = 0, cells = 0;
+  const doneCount = (model: string, arm: string, f: string) => new Set((o.done ?? []).filter(c => c.harness_clean && c.model === model && c.family === f && (c.arm === arm || (arm === 'gbrain' && c.arm.startsWith('gbrain')))).map(c => c.key)).size;
   for (const model of plan.models) for (const arm of plan.arms) {
-    const ms = (o.measured ?? []).filter(c => c.model === model && (c.arm === arm || (arm === 'gbrain' && c.arm.startsWith('gbrain'))));
-    let per: number, source: string, perJudge: number;
-    if (ms.length) {
-      const canon = new Set(ms.filter(c => c.harness_clean).map(c => c.key)).size || 1;
-      const scale = plan.scale === 'large' && o.measuredScale !== 'large' ? (o.basis.scale_50k_factor[arm] ?? o.basis.scale_50k_factor.default) : 1;
-      per = ms.reduce((s, c) => s + c.total_usd, 0) / canon * scale;
-      perJudge = ms.reduce((s, c) => s + c.judge_usd, 0) / canon * scale;
-      source = `measured Hard (${ms.length} attempts${scale !== 1 ? `, x${scale} for 50k` : ''})`;
-    } else {
-      const v1 = o.basis.v1_per_cell_usd[model]?.[arm];
-      if (v1 === undefined) throw new Error(`no cost basis for ${model} ${arm}; add it to docs/benchmarks/cat40-hard/cost-basis.json or pass --measured`);
-      const scale = plan.scale === 'large' ? (o.basis.scale_50k_factor[arm] ?? o.basis.scale_50k_factor.default) : 1;
-      per = v1 * o.basis.hard_factor_round1 * scale;
-      perJudge = judgeV1 * scale;
-      source = `v1 x ${o.basis.hard_factor_round1}${scale !== 1 ? ` x ${scale} (50k)` : ''}`;
+    let rowUsd = 0, rowCells = 0;
+    const sources = new Set<string>();
+    for (const f of families) {
+      const n = Math.max(0, plan.tasksPerFamily * plan.repeats - doneCount(model, arm, f));
+      if (!n) continue;
+      const all = (o.measured ?? []).filter(c => c.model === model && c.family === f && (c.arm === arm || (arm === 'gbrain' && c.arm.startsWith('gbrain'))));
+      const same = all.filter(c => (o.measuredScale ?? c.scale ?? 'v1') === plan.scale);
+      const ms = same.length ? same : all;
+      const scale = plan.scale === 'large' && !same.length ? (o.basis.scale_50k_factor[arm] ?? o.basis.scale_50k_factor.default) : 1;
+      let per: number, perJudge: number;
+      if (ms.length) {
+        const canon = new Set(ms.filter(c => c.harness_clean).map(c => c.key)).size || 1;
+        per = ms.reduce((s, c) => s + c.total_usd, 0) / canon * scale;
+        perJudge = ms.reduce((s, c) => s + c.judge_usd, 0) / canon * scale;
+        sources.add('measured');
+      } else {
+        const v1 = o.basis.v1_per_cell_usd[model]?.[arm];
+        const factor = o.basis.hard_factor_by_arm_family[FACTOR_ARM[arm] ?? arm]?.[f];
+        if (v1 === undefined || factor === undefined) throw new Error(`no cost basis for ${model} ${arm} ${f}; add it to docs/benchmarks/cat40-hard/cost-basis.json or pass --measured`);
+        per = v1 * factor * scale;
+        perJudge = (o.basis.judge_per_cell_usd_by_family[f] ?? 0) * scale;
+        sources.add(`v1 x Hard factor${scale !== 1 ? ' x 50k' : ''}`);
+      }
+      agent += per * n; judge += perJudge * n; rowUsd += (per + perJudge) * n; rowCells += n;
     }
-    agent += per * n; judge += perJudge * n;
-    rows.push({ model, arm, cells: n, per_cell_usd: per + perJudge, source });
+    cells += rowCells;
+    if (rowCells) rows.push({ model, arm, cells: rowCells, per_cell_usd: rowUsd / rowCells, source: [...sources].join(' + ') });
   }
-  const slot_build_usd = (plan.slotBuilds ?? 0) * o.basis.slot_build.usd_per_slot * ((o.worldBytes ?? (plan.scale === 'large' ? 85_000_000 : 10_500_000)) / o.basis.slot_build.world_bytes);
-  const total = agent + judge + slot_build_usd;
-  return { step: plan.step, cells: n * plan.models.length * plan.arms.length, agent_usd: agent, judge_usd: judge, slot_build_usd, total_usd: total, with_margin_usd: total * (1 + o.basis.margin), basis: o.measured?.length ? 'measured where available' : 'v1 basis', rows };
+  const worldBytes = o.worldBytes ?? (plan.scale === 'large' ? 85_000_000 : 10_500_000);
+  const slot_build_usd = (plan.slotBuilds ?? 0) * o.basis.slot_build.usd_per_slot * (worldBytes / o.basis.slot_build.world_bytes);
+  const pg_setup_usd = cells && plan.arms.includes('pg') && o.worldBytes ? o.worldBytes / 4 / 1e6 * o.basis.pg_embed_usd_per_million_tokens : 0;
+  const total = agent + judge + slot_build_usd + pg_setup_usd;
+  return { step: plan.step, cells, agent_usd: agent, judge_usd: judge, slot_build_usd, pg_setup_usd, total_usd: total, with_margin_usd: total * (1 + o.basis.margin), basis: o.measured?.length ? 'measured Hard cells where available, else v1 x measured Hard factor' : 'v1 x measured Hard factor (round 1)', rows };
 }
 
 // ─── Ledger roster (ENG-F9) ─────────────────────────────────────────
@@ -186,11 +212,14 @@ if (import.meta.main) {
   try {
     const cmd = argv[0];
     if (cmd === 'project') {
-      const plan = stepPlan(flag('--step') ?? '');
+      const scale = flag('--scale');
+      if (scale !== undefined && scale !== 'v1' && scale !== 'large') { console.error('--scale must be v1 or large'); process.exit(2); }
+      const plan = { ...stepPlan(flag('--step') ?? ''), ...(scale ? { scale: scale as 'v1' | 'large' } : {}) };
       const measured = (flag('--measured') ?? '').split(',').filter(Boolean);
       const views = measured.length ? canonicalCells(readRecords(measured)).attempts : undefined;
       const worldBytes = flag('--world') ? statSync(flag('--world')!).size : undefined;
-      const p = project(plan, { basis: loadCostBasis(), measured: views, worldBytes, measuredScale: (flag('--measured-scale') ?? 'v1') as 'v1' | 'large' });
+      const done = flag('--done') && existsSync(flag('--done')!) ? canonicalCells(readRecords([flag('--done')!])).attempts : undefined;
+      const p = project(plan, { basis: loadCostBasis(), measured: views, worldBytes, done, measuredScale: (flag('--measured-scale') ?? 'v1') as 'v1' | 'large' });
       console.log(JSON.stringify(p, null, 2));
     } else if (cmd === 'roster') {
       console.log(JSON.stringify(checkRoster(loadRoster()), null, 2));

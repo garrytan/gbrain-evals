@@ -1,0 +1,100 @@
+{
+ "schema": "sealed-confirmation-questions-v1",
+ "set_id": "synthetic-fixture",
+ "haystacks": [
+  {
+   "haystack_id": "h-0a1b2c3d4e",
+   "sessions": [
+    {
+     "session_id": "s-1a2b3c4d5e",
+     "date": "2026/01/05 (Mon) 09:12",
+     "turns": [
+      {
+       "role": "user",
+       "content": "I want to plant tomatoes on my balcony this spring. Which varieties stay compact?"
+      },
+      {
+       "role": "assistant",
+       "content": "Compact options include patio-type cherry tomatoes; they stay under a metre and fruit in containers of about twenty litres."
+      }
+     ]
+    },
+    {
+     "session_id": "s-2b3c4d5e6f",
+     "date": "2026/01/12 (Mon) 18:40",
+     "turns": [
+      {
+       "role": "user",
+       "content": "My bike makes a clicking noise when I shift into the smallest cog."
+      },
+      {
+       "role": "assistant",
+       "content": "A click on the smallest cog usually means the limit screw needs a quarter turn; check the cable tension first."
+      }
+     ]
+    },
+    {
+     "session_id": "s-3c4d5e6f7a",
+     "date": "2026/02/02 (Mon) 07:55",
+     "turns": [
+      {
+       "role": "user",
+       "content": "Remind me: I decided the reading group meets on the first Thursday of each month."
+      },
+      {
+       "role": "assistant",
+       "content": "Noted: the reading group meets on the first Thursday of each month."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "haystack_id": "h-4d5e6f7a8b",
+   "sessions": [
+    {
+     "session_id": "s-4d5e6f7a8b",
+     "date": "2026/03/03 (Tue) 12:00",
+     "turns": [
+      {
+       "role": "user",
+       "content": "I said the placeholder project kickoff should move to the second week of April."
+      },
+      {
+       "role": "assistant",
+       "content": "Understood, the placeholder project kickoff moves to the second week of April."
+      }
+     ]
+    },
+    {
+     "session_id": "s-5e6f7a8b9c",
+     "date": "2026/03/10 (Tue) 21:15",
+     "turns": [
+      {
+       "role": "user",
+       "content": "What temperature should synthetic bread dough proof at?"
+      },
+      {
+       "role": "assistant",
+       "content": "Around twenty-five degrees Celsius works well for a first proof of about an hour."
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "questions": [
+  {
+   "question_id": "q-6f7a8b9c0d",
+   "haystack_id": "h-0a1b2c3d4e",
+   "question": "When does the reading group meet?",
+   "question_date": "2026/02/10 (Tue) 10:00"
+  },
+  {
+   "question_id": "q-7a8b9c0d1e",
+   "haystack_id": "h-4d5e6f7a8b",
+   "question": "When is the kickoff?",
+   "question_date": "2026/03/20 (Fri) 10:00"
+  }
+ ]
+}

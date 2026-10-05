@@ -109,6 +109,8 @@ export interface CellView {
   tool_calls: number;
   sessions: Array<{ index: number; stop: string; usd: number; turns: number; tool_calls: number }>;
   unparseable_set: boolean;
+  /** World scale the cell ran on (v1 records: always the 4k world). */
+  scale: 'v1' | 'large';
   raw: Record<string, unknown>;
 }
 
@@ -128,7 +130,7 @@ export function view(raw: Record<string, unknown>): CellView {
       agent_ms: r.timings?.agent_ms ?? r.wall_ms, wall_ms: r.wall_ms,
       turns: r.sessions.reduce((s, x) => s + x.run.turns, 0), tool_calls: r.sessions.reduce((s, x) => s + x.run.tool_calls.length, 0),
       sessions: r.sessions.map(s => ({ index: s.index, stop: s.stop, usd: s.usd, turns: s.run.turns, tool_calls: s.run.tool_calls.length })),
-      unparseable_set: Boolean(r.score.unparseable_set), raw,
+      unparseable_set: Boolean(r.score.unparseable_set), scale: r.experiment?.scale ?? 'v1', raw,
     };
   }
   const r = raw as unknown as V1Like;
@@ -139,7 +141,7 @@ export function view(raw: Record<string, unknown>): CellView {
     agent_ms: r.wall_ms - (r.restore_ms ?? 0), wall_ms: r.wall_ms,
     turns: sessions.reduce((s, x) => s + x.s.turns, 0), tool_calls: sessions.reduce((s, x) => s + (x.s.tool_calls?.length ?? 0), 0),
     sessions: sessions.map(x => ({ index: x.index, stop: x.s.stop, usd: x.s.usd, turns: x.s.turns, tool_calls: x.s.tool_calls?.length ?? 0 })),
-    unparseable_set: false, raw,
+    unparseable_set: false, scale: 'v1', raw,
   };
 }
 

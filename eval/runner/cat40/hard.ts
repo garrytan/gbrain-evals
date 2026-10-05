@@ -93,6 +93,7 @@ export function hardRefusals(o: { models: string[]; judge: string | undefined; a
 /** Regenerators by world version; the sealed validation variant registers its own version here. */
 export const HARD_WORLD_GENERATORS: Record<string, (seed: number, knobs: HardWorld['knobs'], scale: 'v1' | 'large') => HardWorld> = {
   'model-ladder-hard-v1': (seed, knobs, scale) => generateHardWorld(seed, knobs, { scale }),
+  'model-ladder-hard-v2': (seed, knobs, scale) => generateHardWorld(seed, knobs, { scale }),
   'hard-sealed': (seed, knobs, scale) => generateSealedWorld(seed, knobs, scale),
 };
 
@@ -142,13 +143,16 @@ export const HARD_RULES = [
   '- An account may be named by its name, its account code, a former name or the name of an account merged into it; each refers to the same account.',
 ].join('\n');
 
+/** Generator v2 worlds add how records refer to accounts (amendment A1). */
+export const HARD_RULES_REFERENCES = '- Records may instead refer to an account by its nickname, or as "<manager>\'s <region> <industry> account", meaning the one account with that region and industry whose account manager (account owner) was that person on the record\'s date. Account sheets give each account\'s nickname, region and industry; the CRM record gives its code and first owner; handoff notes give later owner changes.';
+
 export function hardSystemPrompt(world: HardWorld, arm: Arm): string {
   const p = world.principal;
   return [
     `You are an AI assistant working for ${p.name}, an ${p.role} at Acme Example Inc. Today is ${world.today}.`,
     'Answer using the company knowledge base available through your tools. Do not guess.',
     arm.systemHint(),
-    HARD_RULES,
+    world.references ? `${HARD_RULES}\n${HARD_RULES_REFERENCES}` : HARD_RULES,
     'When you are done, call submit_answer with the value only in `answer`, the ids or paths of the documents you relied on in `sources`, and any caveats in `notes`. Write dates as YYYY-MM-DD.',
     'If the knowledge base does not contain the answer, answer UNKNOWN.',
   ].join('\n\n');

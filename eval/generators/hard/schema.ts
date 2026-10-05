@@ -14,10 +14,13 @@
 import { createHash } from 'node:crypto';
 import type { LadderDoc } from '../model-ladder-gen.ts';
 
-/** Version string of worlds written by the main Hard generator. A generator with different output uses its own. */
+/** Version string of worlds written by the main Hard generator from a knob file without reference-form knobs. A generator with different output uses its own. */
 export const HARD_GENERATOR_VERSION = 'model-ladder-hard-v1';
-/** Version of the knob schema below. A change to the key set or a key's meaning bumps it. */
+/** Version string of worlds written by the main Hard generator from a knob file with the reference-form knobs (amendment A1). */
+export const HARD_GENERATOR_VERSION_V2 = 'model-ladder-hard-v2';
+/** Version of the knob schema below: 1 for the v1 keys, 2 when the reference-form keys are present. A change to the key set or a key's meaning bumps it. */
 export const HARD_KNOB_SCHEMA_VERSION = 1;
+export const HARD_KNOB_SCHEMA_VERSION_V2 = 2;
 
 export type HardFamily = 'H1' | 'H2' | 'H3' | 'H4' | 'H5';
 export const HARD_FAMILIES: readonly HardFamily[] = ['H1', 'H2', 'H3', 'H4', 'H5'];
@@ -86,6 +89,15 @@ export interface HardKnobs {
   large_extra_accounts: number;
   /** 50k scale: non-deciding documents appended per 4k account. */
   large_nondeciding_per_account: number;
+  /**
+   * Reference forms (knob schema 2, generator v2). Share of account references in event records that use the
+   * account's name. 1 renders every record exactly as generator v1 does.
+   */
+  direct_name_share?: number;
+  /** Relative weights splitting the remaining references between the account code, the nickname and the account manager form. */
+  code_ref_weight?: number;
+  nickname_ref_weight?: number;
+  manager_ref_weight?: number;
 }
 
 export const HARD_KNOB_KEYS = [
@@ -95,6 +107,9 @@ export const HARD_KNOB_KEYS = [
   'h3_lookalikes_max', 'h4_sources_min', 'h4_sources_max', 'h4_long_document_rate', 'h5_noise_sessions', 'max_turns', 'tasks_per_family',
   'large_extra_accounts', 'large_nondeciding_per_account',
 ] as const satisfies ReadonlyArray<keyof HardKnobs>;
+
+/** Reference-form keys (knob schema 2): a knob file has all of them or none. */
+export const HARD_V2_KNOB_KEYS = ['direct_name_share', 'code_ref_weight', 'nickname_ref_weight', 'manager_ref_weight'] as const satisfies ReadonlyArray<keyof HardKnobs>;
 
 /** Knob groups in the calibration priority order (CEO-F5): content first, the turn cap last. */
 export const KNOB_PRIORITY: ReadonlyArray<{ group: string; keys: ReadonlyArray<keyof HardKnobs> }> = [
@@ -106,7 +121,12 @@ export const KNOB_PRIORITY: ReadonlyArray<{ group: string; keys: ReadonlyArray<k
 ];
 
 /** Integer knobs; every other knob is a fraction in [0, 1]. */
-const RATE_KNOBS = new Set<keyof HardKnobs>(['backdated_handoff_rate', 'wrong_agent_note_rate', 'h2_correction_rate', 'h4_long_document_rate']);
+const RATE_KNOBS = new Set<keyof HardKnobs>(['backdated_handoff_rate', 'wrong_agent_note_rate', 'h2_correction_rate', 'h4_long_document_rate', ...HARD_V2_KNOB_KEYS]);
+
+/** True when the knobs carry the reference-form keys (knob schema 2). */
+export function hasReferenceKnobs(knobs: HardKnobs | Record<string, number>): boolean {
+  return 'direct_name_share' in knobs;
+}
 
 export const DEFAULT_HARD_KNOBS: HardKnobs = {
   accounts: 110, emails_per_account: 7, meetings_per_account: 2, transcript_lines_min: 80, transcript_lines_max: 220, tickets_per_account_max: 3,
@@ -124,11 +144,13 @@ export function validateKnobs(raw: unknown, source = 'knobs'): HardKnobs {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error(`${source}: a knob file is one JSON object with the keys ${HARD_KNOB_KEYS.join(', ')}`);
   const obj = raw as Record<string, unknown>;
   const problems: string[] = [];
-  const unknown = Object.keys(obj).filter(k => !(HARD_KNOB_KEYS as readonly string[]).includes(k));
-  const missing = HARD_KNOB_KEYS.filter(k => !(k in obj));
+  const v2 = HARD_V2_KNOB_KEYS.some(k => k in obj);
+  const keys: ReadonlyArray<keyof HardKnobs> = v2 ? [...HARD_KNOB_KEYS, ...HARD_V2_KNOB_KEYS] : HARD_KNOB_KEYS;
+  const unknown = Object.keys(obj).filter(k => !(keys as readonly string[]).includes(k));
+  const missing = keys.filter(k => !(k in obj));
   if (unknown.length) problems.push(`unknown keys: ${unknown.join(', ')}`);
-  if (missing.length) problems.push(`missing keys: ${missing.join(', ')}`);
-  for (const k of HARD_KNOB_KEYS) {
+  if (missing.length) problems.push(`missing keys: ${missing.join(', ')}${v2 ? ' (the reference-form keys go together)' : ''}`);
+  for (const k of keys) {
     if (!(k in obj)) continue;
     const v = obj[k];
     if (typeof v !== 'number' || !Number.isFinite(v)) { problems.push(`${k} must be a number (got ${JSON.stringify(v)})`); continue; }
@@ -144,14 +166,24 @@ export function validateKnobs(raw: unknown, source = 'knobs'): HardKnobs {
   if (typeof n.max_turns === 'number' && n.max_turns < 1) problems.push('max_turns is at least 1');
   if (typeof n.tasks_per_family === 'number' && (n.tasks_per_family < 1 || n.tasks_per_family > 99)) problems.push('tasks_per_family is between 1 and 99');
   if (typeof n.h5_noise_sessions === 'number' && n.h5_noise_sessions > 1) problems.push('h5_noise_sessions is 0 or 1 (four recording sessions hold three required or superseded facts)');
-  if (problems.length) throw new Error(`${source}: ${problems.join('; ')}. Valid keys: ${HARD_KNOB_KEYS.join(', ')}. Fix the file, or start from docs/benchmarks/cat40-hard/knobs.default.json.`);
-  return Object.fromEntries(HARD_KNOB_KEYS.map(k => [k, obj[k]])) as unknown as HardKnobs;
+  if (v2 && typeof n.direct_name_share === 'number' && n.direct_name_share < 1 && !((n.code_ref_weight ?? 0) + (n.nickname_ref_weight ?? 0) + (n.manager_ref_weight ?? 0) > 0)) problems.push('code_ref_weight, nickname_ref_weight and manager_ref_weight sum above 0 when direct_name_share is below 1');
+  if (problems.length) throw new Error(`${source}: ${problems.join('; ')}. Valid keys: ${HARD_KNOB_KEYS.join(', ')}, optionally with ${HARD_V2_KNOB_KEYS.join(', ')}. Fix the file, or start from docs/benchmarks/cat40-hard/knobs.default.json.`);
+  return Object.fromEntries(keys.map(k => [k, obj[k]])) as unknown as HardKnobs;
 }
 
-/** Digest of a knob set: SHA-256 of the knobs as JSON with keys in HARD_KNOB_KEYS order, plus the schema version. */
+/** Digest of a knob set: SHA-256 of the knobs as JSON with sorted keys, plus the knob schema version. */
 export function knobDigest(knobs: HardKnobs | Record<string, number>): string {
   const ordered = Object.fromEntries(Object.keys(knobs).sort().map(k => [k, (knobs as Record<string, number>)[k]]));
-  return createHash('sha256').update(JSON.stringify({ schema: HARD_KNOB_SCHEMA_VERSION, knobs: ordered })).digest('hex');
+  return createHash('sha256').update(JSON.stringify({ schema: knobSchemaOf(knobs), knobs: ordered })).digest('hex');
+}
+
+export function knobSchemaOf(knobs: HardKnobs | Record<string, number>): number {
+  return hasReferenceKnobs(knobs) ? HARD_KNOB_SCHEMA_VERSION_V2 : HARD_KNOB_SCHEMA_VERSION;
+}
+
+/** The generator version a knob set selects: v2 with the reference-form keys, v1 without. */
+export function hardGeneratorVersion(knobs: HardKnobs): string {
+  return hasReferenceKnobs(knobs) ? HARD_GENERATOR_VERSION_V2 : HARD_GENERATOR_VERSION;
 }
 
 // ─── World ──────────────────────────────────────────────────────────
@@ -162,8 +194,34 @@ export interface HardEntity {
   id: string;
   /** Canonical name as of the world's `today`. */
   name: string;
-  /** Every other name: account code, former names, names of accounts merged into it. */
+  /** Every other name: account code, former names, names of accounts merged into it (v2: and every nickname). */
   aliases: string[];
+  /** v2: what the reference forms resolve against (WORLD_SCHEMA.md, "Reference forms"). */
+  refs?: EntityRefs;
+}
+
+/** The ways an event record may refer to its account (generator v2). */
+export type RefForm = 'name' | 'code' | 'nickname' | 'manager';
+export const REF_FORMS: readonly RefForm[] = ['name', 'code', 'nickname', 'manager'];
+
+export interface EntityRefs {
+  /** Every account code that maps to the entity (its own, former, merged accounts'). */
+  codes: string[];
+  /** Every nickname that maps to the entity (its own and merged accounts'). */
+  nicknames: string[];
+  /** Region and industry, e.g. `EMEA freight`; the manager form is `<manager>'s <descriptor> account`. */
+  descriptor: string;
+  /** The account manager (account owner) timeline: each value with its effective date, recorded date and the document recording it. */
+  managers: Array<{ name: string; effective: string; recorded: string; doc: string }>;
+}
+
+/** One account reference in one document (generator v2). */
+export interface HardReference {
+  doc: string;
+  entity: string;
+  form: RefForm;
+  /** The text the document uses for the account. */
+  text: string;
 }
 
 /** H1 predicate: every clause must hold for an entity to be a member. Clauses are evaluated as of `as_of`. */
@@ -252,6 +310,8 @@ export interface HardWorld {
   entities: HardEntity[];
   docs: LadderDoc[];
   tasks: HardTask[];
+  /** v2: every account reference in an event record. Resolution documents (CRM records, account sheets, rename and merger notices) are not listed. */
+  references?: HardReference[];
 }
 
 /** The identity the runner checks on every invocation: a resume or regeneration must match each field. */

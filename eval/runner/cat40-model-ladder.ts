@@ -14,10 +14,18 @@
  *     --arms oracle,fs,pg,memory,gbrain --budget-usd 100 [--families A,B] [--tasks A01,B02] \
  *     [--repeat 1] [--concurrency 6] [--slots 3] [--gbrain-repo ../gbrain --gbrain-ref <sha>] \
  *     [--judge gpt-5.4-mini|none] [--world eval/data/model-ladder-v1-large/world.json] [--out eval/reports/cat40/<name>] \
- *     [--max-tool-chars <n>|none] [--order task|model] [--slot-ref <sha>] [--no-pglite-analyze] [--surface starter] [--gbrain-config key=value,...]
+ *     [--max-tool-chars <n>|none] [--order task|model] [--slot-ref <sha>] [--no-pglite-analyze] [--surface starter] [--advertised verbs|starter|full] [--gbrain-config key=value,...]
  *     [--gbrain-instructions-file <file>] [--gbrain-tool-descriptions-file <json>] [--gbrain-drop-tools a,b]
  *       (evaluator-side A/B of the instruction and tool-description text the model sees; gbrain code unchanged)
  *   bun eval/runner/cat40-model-ladder.ts --scripted --arms fs,memory,oracle   (hermetic, $0)
+ *   --gbrain <checkout>@<ref> is shorthand for --gbrain-repo <checkout> --gbrain-ref <ref>.
+ *
+ * Worlds: v1 (default), `--world eval/data/model-ladder-wide-dev/world.json` (scale wide: families A-F plus
+ * H, hidden tool; every record carries its task's stratum). Dev mode runs only dev seeds and dev template sets.
+ * Custodian (held-out) mode: --world <custody dir>/world.json --world-templates-file <custody path>
+ *   --decision-id <id> --purpose <text> --out <dir outside the repository>. The templates file gets an
+ *   access-log.jsonl line beside it before its contents are used (the world is regenerated from it and must
+ *   match); the receipt records only the templates file's SHA-256.
  *   bun eval/runner/cat40-model-ladder.ts --build-slots --gbrain-ref <sha> --slots 5 --budget-usd 10 --slot-build-allowance-usd 2
  *
  * Tool results reach the model whole unless --max-tool-chars <n> sets a cap
@@ -31,10 +39,11 @@
  * is refused. `--order model` finishes each model's tasks before the next.
  */
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join, relative, resolve } from 'node:path';
+import { isAbsolute, join, relative, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { generateLadderWorld, worldDigest, DEFAULT_LADDER_DIR, FAMILIES, type LadderTask, type LadderWorld, type Family } from '../generators/model-ladder-gen.ts';
+import { generateLadderWorld, worldDigest, DEFAULT_LADDER_DIR, WIDE_FAMILIES, stratumOf, openCustodianTemplates, assertDevWorld, type LadderTask, type LadderWorld, type Family, type Stratum } from '../generators/model-ladder-gen.ts';
+import { gbrainSpecFrom, parseGbrainSpec } from './gbrain-under-test.ts';
 import { runAgent, runAgentText, provider, type AgentRun, type Arm, type ScriptedModel } from './cat40/loop.ts';
 import { FsArm, MemoryArm, OracleArm, FileStore, isWriteCall, type ArmName } from './cat40/arms.ts';
 import { renderDoc } from '../generators/model-ladder-gen.ts';
@@ -86,6 +95,9 @@ export interface CellRecord {
   arm: string;
   task: string;
   family: Family;
+  /** memory-only (A, B, C, E), page-authoring (F) or hidden-tool (H). */
+  /** Absent on records written before the wide world (derive it with stratumOf(family)). */
+  stratum?: Stratum;
   variant: string;
   repeat: number;
   score: TaskScore;
@@ -194,7 +206,7 @@ async function runCell(ctx: Ctx, model: string, armName: ArmName, task: LadderTa
       judged = { claims: null, usd: 0, error: (e as Error).message };
     }
     partial = {
-      key: runId, model, provider: ctx.scripted ? 'scripted' : provider(model), arm: label, task: task.id, family: task.family, variant: task.variant, repeat,
+      key: runId, model, provider: ctx.scripted ? 'scripted' : provider(model), arm: label, task: task.id, family: task.family, stratum: stratumOf(task.family), variant: task.variant, repeat,
       score, claims: judged.claims, ...(judged.error ? { judge_error: judged.error } : {}), run: strip(run), ...(session1 ? { session1: strip(session1) } : {}),
       judge_usd: judged.usd, budget_run_id: ctx.budgetRunId, started_at: started.toISOString(), agent_usd: run.usd + (session1?.usd ?? 0),
     };
@@ -272,7 +284,7 @@ export function scheduleCells(o: { tasks: LadderTask[]; models: string[]; arms: 
 // ─── Experiment identity of an output directory ─────────────────────
 
 /** Flags that set money, not the experiment: a resume may change them. */
-const BUDGET_FLAGS = new Set(['--budget-usd', '--estimate-usd', '--budget-run-id']);
+const BUDGET_FLAGS = new Set(['--budget-usd', '--estimate-usd', '--budget-run-id', '--new-budget-run']);
 
 export interface ExperimentManifest {
   schema: 'cat40-experiment-v1';
@@ -284,8 +296,10 @@ export interface ExperimentManifest {
   label: string;
   /** Every flag except the budget flags, as given. */
   flags: Record<string, string | true>;
-  /** The budget-ledger run every invocation on this directory charges (a resume joins it). */
+  /** The budget-ledger run every invocation on this directory charges (a resume joins it, unless `--new-budget-run`). */
   budget_run_id: string | null;
+  /** Every budget run this directory has charged, oldest first, once a resume opened a new one (`--new-budget-run`). */
+  budget_runs?: string[];
   /** Hard worlds: identity, behavior settings and the evaluator's code hashes (DX-F14); a resume must match them. */
   hard?: { identity: ReturnType<typeof identityOf>; max_turns: number; tool_limits: string; judge: string | null; scorer: string; judge_prompt: string; settings_digest: string; code: Record<string, string>; runner_commit: string | null };
 }
@@ -310,7 +324,7 @@ export function experimentFlags(argv: readonly string[]): Record<string, string 
  * experiment is refused: give a changed build its own --out.
  */
 export function bindExperiment<T extends { run: BudgetRun; guard: PaidRequestGuard }>(
-  out: string, manifest: Omit<ExperimentManifest, 'schema' | 'budget_run_id'>, start: (recordedRunId: string | null) => T | null,
+  out: string, manifest: Omit<ExperimentManifest, 'schema' | 'budget_run_id' | 'budget_runs'>, start: (recordedRunId: string | null) => T | null, opts: { newBudgetRun?: boolean } = {},
 ): { paid: T | null; manifest: ExperimentManifest } {
   const path = join(out, 'experiment.json');
   const recorded = existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) as ExperimentManifest : null;
@@ -322,11 +336,19 @@ export function bindExperiment<T extends { run: BudgetRun; guard: PaidRequestGua
         + 'A resume must repeat the original command except for budget flags; a changed build, world or flag set needs a new --out.');
     }
   }
-  const paid = start(recorded?.budget_run_id ?? null);
-  const bound: ExperimentManifest = { schema: 'cat40-experiment-v1', ...manifest, budget_run_id: paid?.run.runId ?? recorded?.budget_run_id ?? null };
+  // --new-budget-run: a resume whose recorded run is spent opens a fresh run (a new --budget-usd) and keeps the history.
+  const paid = start(opts.newBudgetRun ? null : recorded?.budget_run_id ?? null);
+  const runId = paid?.run.runId ?? recorded?.budget_run_id ?? null;
+  const history = [...new Set([...(recorded?.budget_runs ?? (recorded?.budget_run_id ? [recorded.budget_run_id] : [])), ...(runId ? [runId] : [])])];
+  const bound: ExperimentManifest = { schema: 'cat40-experiment-v1', ...manifest, budget_run_id: runId, ...(history.length > 1 ? { budget_runs: history } : {}) };
   mkdirSync(out, { recursive: true });
   writeFileSync(path, JSON.stringify(bound, null, 2) + '\n');
   return { paid, manifest: bound };
+}
+
+function insideRepo(p: string): boolean {
+  const r = relative(REPO_ROOT, resolve(p));
+  return r === '' || (!r.startsWith('..') && !isAbsolute(r));
 }
 
 // ─── gbrain slots ───────────────────────────────────────────────────
@@ -362,8 +384,9 @@ export function incompleteSlotCoverage(dir: string, n: number): { problems: stri
 /** Flags the runner accepts; anything else is refused before anything is written (DX-F3). */
 export const VALUE_FLAGS = ['--arms', '--models', '--families', '--tasks', '--repeat', '--concurrency', '--slots', '--gbrain-repo', '--gbrain-ref', '--gbrain-root', '--gbrain-label', '--judge', '--world', '--out',
   '--max-tool-chars', '--order', '--slot-ref', '--surface', '--gbrain-instructions-file', '--gbrain-tool-descriptions-file', '--gbrain-drop-tools', '--gbrain-config', '--slot-build-allowance-usd',
-  '--budget-usd', '--estimate-usd', '--budget-run-id', '--budget-ledger', '--program-cap-usd', '--max-turns', '--per-family', '--hard-tool-limits', '--accept-freeze-drift', '--step'];
-export const BOOLEAN_FLAGS = ['--scripted', '--build-slots', '--rebuild', '--no-pglite-analyze', '--transcripts', '--preflight', '--help'];
+  '--budget-usd', '--estimate-usd', '--budget-run-id', '--budget-ledger', '--program-cap-usd', '--max-turns', '--per-family', '--hard-tool-limits', '--accept-freeze-drift', '--step',
+  '--gbrain', '--advertised', '--world-templates-file', '--decision-id', '--purpose'];
+export const BOOLEAN_FLAGS = ['--scripted', '--build-slots', '--rebuild', '--no-pglite-analyze', '--transcripts', '--preflight', '--help', '--new-budget-run'];
 const NUMERIC_FLAGS = new Set(['--repeat', '--concurrency', '--slots', '--slot-build-allowance-usd', '--budget-usd', '--estimate-usd', '--program-cap-usd', '--max-turns', '--per-family']);
 
 export const RUNNER_USAGE = `Usage: bun eval/runner/cat40-model-ladder.ts [flags]
@@ -399,12 +422,23 @@ export async function main(argv = process.argv.slice(2)) {
   const scripted = argv.includes('--scripted');
   const buildSlots = argv.includes('--build-slots');
   const worldPath = resolve(flag(argv, '--world') ?? join(DEFAULT_LADDER_DIR, 'world.json'));
+  const templatesFile = flag(argv, '--world-templates-file');
+  let sealed: ReturnType<typeof openCustodianTemplates> | null = null;
+  if (templatesFile) {
+    if (!flag(argv, '--out') || insideRepo(flag(argv, '--out')!)) throw new Error('custodian mode needs --out <dir outside the repository>: results and transcripts carry held-out wording');
+    sealed = openCustodianTemplates({ file: templatesFile, decisionId: flag(argv, '--decision-id'), purpose: flag(argv, '--purpose') });
+  }
   const raw = JSON.parse(readFileSync(worldPath, 'utf8')) as LadderWorld | HardWorld;
   const hard = isHardWorld(raw);
-  if (hard) checkHardWorld(raw, relative(process.cwd(), worldPath));
-  else {
-    const regenerated = generateLadderWorld(raw.seed, { scale: raw.scale });
-    if (worldDigest(regenerated) !== worldDigest(raw)) throw new Error(`${worldPath} does not match its generator; run bun eval/generators/model-ladder-gen.ts${raw.scale ? ` --scale ${raw.scale}` : ''}`);
+  if (hard) {
+    if (sealed) throw new UsageError('--world-templates-file applies to v1 worlds only');
+    checkHardWorld(raw, relative(process.cwd(), worldPath));
+  } else {
+    if (sealed) {
+      if (raw.templates !== `sealed:${sealed.id}`) throw new Error(`${worldPath} was not generated from the templates file passed (world templates ${raw.templates ?? 'A'})`);
+    } else assertDevWorld(raw.seed, raw.templates);
+    const regenerated = generateLadderWorld(raw.seed, { scale: raw.scale, templates: sealed ? undefined : raw.templates, sealedTemplates: sealed ? { id: sealed.id, templates: sealed.templates } : undefined });
+    if (worldDigest(regenerated) !== worldDigest(raw)) throw new Error(`${worldPath} does not match its generator; ${sealed ? 'regenerate it in custodian mode' : `run bun eval/generators/model-ladder-gen.ts${raw.scale ? ` --scale ${raw.scale}` : ''}`}`);
     for (const f of ['--per-family', '--hard-tool-limits', '--accept-freeze-drift', '--step']) if (flag(argv, f) !== undefined) throw new UsageError(`${f} applies to Hard worlds only`);
   }
   const world = raw as LadderWorld;
@@ -412,8 +446,8 @@ export async function main(argv = process.argv.slice(2)) {
   if (!models.length && !buildSlots) throw new Error('--models is required (or --scripted, or --build-slots)');
   const arms = (buildSlots ? 'gbrain' : flag(argv, '--arms') ?? (scripted ? 'oracle,fs,memory' : 'oracle,fs,pg,memory,gbrain')).split(',') as ArmName[];
   if (hard && !buildSlots) hardRefusals({ models: scripted ? [] : models, judge: flag(argv, '--judge'), arms, scripted });
-  const families = (flag(argv, '--families') ?? (hard ? HARD_FAMILIES : FAMILIES).join(',')).split(',') as Family[];
-  const known = new Set<string>(hard ? HARD_FAMILIES : FAMILIES);
+  const families = (flag(argv, '--families') ?? (hard ? HARD_FAMILIES : WIDE_FAMILIES).join(',')).split(',') as Family[];
+  const known = new Set<string>(hard ? HARD_FAMILIES : WIDE_FAMILIES);
   const badFamilies = families.filter(f => !known.has(f));
   if (badFamilies.length) throw new UsageError(`unknown families ${badFamilies.join(', ')}; this world has ${[...known].join(', ')}`);
   const only = flag(argv, '--tasks')?.split(',');
@@ -422,7 +456,10 @@ export async function main(argv = process.argv.slice(2)) {
   if (order !== 'task' && order !== 'model') throw new Error('--order must be task or model');
   const perFamily = flag(argv, '--per-family') ? Number(flag(argv, '--per-family')) : null;
   const allTasks = (world.tasks as Array<LadderTask | HardTask>).filter(t => families.includes(t.family as Family) && (!only || only.includes(t.id)));
-  const tasks = (perFamily === null ? allTasks : allTasks.filter(t => allTasks.filter(x => x.family === t.family).indexOf(t) < perFamily)) as LadderTask[];
+  const picked = perFamily === null ? allTasks : allTasks.filter(t => allTasks.filter(x => x.family === t.family).indexOf(t) < perFamily);
+  // Hard cells run families round-robin (H1-01, H2-01, ..., H5-01, H1-02, ...), so a step cut short by its budget still covers every family.
+  const rank = (t: LadderTask | HardTask) => picked.filter(x => x.family === t.family).indexOf(t);
+  const tasks = (hard ? [...picked].sort((x, y) => rank(x) - rank(y) || x.family.localeCompare(y.family)) : picked) as LadderTask[];
   if (!tasks.length && !buildSlots) throw new UsageError('the task selection is empty (check --families, --tasks and --per-family)');
   const out = resolve(flag(argv, '--out') ?? join('eval/reports/cat40', scripted ? 'scripted' : new Date().toISOString().replace(/[:.]/g, '-')));
   const hw = hard ? raw : null;
@@ -474,14 +511,18 @@ export async function main(argv = process.argv.slice(2)) {
   // gbrain identity and the slot preflight come first, so a refusal opens no budget run.
   const needsGbrain = buildSlots || cells.some(c => c.arm === 'gbrain');
   const analyze = !argv.includes('--no-pglite-analyze');
-  const repo = resolve(flag(argv, '--gbrain-repo') ?? '../gbrain');
+  const spec = gbrainSpecFrom(argv, {});
+  if (spec && (flag(argv, '--gbrain-repo') || flag(argv, '--gbrain-ref'))) throw new Error('pass either --gbrain <checkout>@<ref> or --gbrain-repo/--gbrain-ref, not both');
+  const parsedSpec = spec ? parseGbrainSpec(spec) : null;
+  const repo = parsedSpec?.checkout ?? resolve(flag(argv, '--gbrain-repo') ?? '../gbrain');
+  const gbrainRef = parsedSpec?.ref ?? flag(argv, '--gbrain-ref') ?? 'HEAD';
   const root = resolve(flag(argv, '--gbrain-root') ?? join(process.env.HOME ?? '.', '.capy/work/cat40/gbrain'));
   const nSlots = Number(flag(argv, '--slots') ?? 3);
   let gbrainCommit: string | null = null, slotCommit: string | null = null, slotDir: string | null = null;
   if (needsGbrain) {
     if (scripted) throw new Error('the gbrain arm needs real embeddings; run it without --scripted');
     const rev = (ref: string) => execFileSync('git', ['-C', repo, 'rev-parse', `${ref}^{commit}`], { encoding: 'utf8' }).trim();
-    gbrainCommit = rev(flag(argv, '--gbrain-ref') ?? 'HEAD');
+    gbrainCommit = rev(gbrainRef);
     // --slot-ref reuses brains built by another commit (read-path changes only; the commits must share a schema).
     if (buildSlots && flag(argv, '--slot-ref')) throw new Error('--build-slots builds with --gbrain-ref itself; build the --slot-ref commit by passing it as --gbrain-ref');
     slotCommit = flag(argv, '--slot-ref') ? rev(flag(argv, '--slot-ref')!) : gbrainCommit;
@@ -516,14 +557,16 @@ export async function main(argv = process.argv.slice(2)) {
     runner_commit: (() => { try { return execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(); } catch { return null; } })(),
   } : undefined;
   if (argv.includes('--preflight')) {
-    printPreflight({ hw, world, models, arms, cells: cells.length, judge, maxTurns, toolLimits, needsGbrain, slotDir, nSlots, step: flag(argv, '--step'), scripted });
+    const perFam = Math.max(0, ...families.map(f => tasks.filter(t => t.family === f).length));
+    printPreflight({ hw, world, models, arms, cells: cells.length, judge, maxTurns, toolLimits, needsGbrain, slotDir, nSlots, step: flag(argv, '--step'), scripted, families: families.filter(f => tasks.some(t => t.family === f)), tasksPerFamily: perFam, repeats, done: hardAttempts as unknown as Array<Record<string, unknown>> });
     return;
   }
 
   const options = budgetOptionsFrom(argv);
   const estimateUsd = flag(argv, '--estimate-usd') ? Number(flag(argv, '--estimate-usd')) : null;
   const { paid: budget } = bindExperiment(out, { gbrain_commit: gbrainCommit, slot_commit: slotCommit, world_digest: worldDigest(world), models, arms, label: ctx.gbrainLabel, flags: experimentFlags(argv), ...(hardManifest ? { hard: hardManifest } : {}) },
-    recorded => scripted ? null : startPaidRun(buildSlots ? 'cat40-slot-build' : 'cat40-model-ladder', { ...options, runId: recorded ?? options.runId, estimateUsd, log }));
+    recorded => scripted ? null : startPaidRun(buildSlots ? 'cat40-slot-build' : 'cat40-model-ladder', { ...options, runId: recorded ?? options.runId, estimateUsd, log }),
+    { newBudgetRun: argv.includes('--new-budget-run') });
   ctx.budgetRunId = budget?.run.runId ?? null;
   if (budget?.run.participant) log(`resumed: joined the recorded budget run ${budget.run.runId}`);
 
@@ -542,7 +585,7 @@ export async function main(argv = process.argv.slice(2)) {
       ctx.proxy = new MeteringProxy();
       ctx.proxy.start();
       const surface = flag(argv, '--surface') ?? 'starter';
-      const slots = Array.from({ length: nSlots }, (_, i) => new GbrainSlot(`slot${i}`, slotDir!, gbrainBuild!.dir, ctx.proxy!.port, surface));
+      const slots = Array.from({ length: nSlots }, (_, i) => new GbrainSlot(`slot${i}`, slotDir!, gbrainBuild!.dir, ctx.proxy!.port, surface, flag(argv, '--advertised') ?? null));
       // --gbrain-config key=value[,key=value]: brain config applied after every restore (a variant of the same build).
       const gbrainConfig = (flag(argv, '--gbrain-config') ?? '').split(',').filter(Boolean).map(kv => {
         const i = kv.indexOf('=');
@@ -627,6 +670,13 @@ export async function main(argv = process.argv.slice(2)) {
       complete = buildSlots || finished === cells.length;
       if (!complete) log(`${cells.length - finished} cells failed; rerun the same command to resume them within the same budget run`);
     }
+  } catch (e) {
+    if (hw && (e as Error).name === 'BudgetExceededError') {
+      throw new HardStop('HARD_BUDGET_SHORT', `${relative(process.cwd(), out)} stopped when its budget run was spent: ${(e as Error).message.slice(0, 300)}`,
+        'project the remaining cells (hard-ops.ts project --step <step> --done <out>/attempts.jsonl) and resume with the same command plus --new-budget-run and a new --budget-usd; scripts/cat40-hard.sh step <step> does both',
+        'Garry decides only if the Hard ledger has less left than the remaining projection plus 15%');
+    }
+    throw e;
   } finally {
     terminateGrepWorkers();
     if (ctx.pool) await Promise.all(ctx.pool.slots.map(s => s.stop()));
@@ -638,10 +688,12 @@ export async function main(argv = process.argv.slice(2)) {
     const receipt = {
       schema: 'cat40-receipt-v1', version: CAT40_VERSION, judge_prompt: hw ? HARD_JUDGE_PROMPT_VERSION : JUDGE_PROMPT_VERSION, judge: ctx.judge,
       ...(hardManifest ? { hard: { ...hardManifest, attempts_path: 'attempts.jsonl', max_retries: HARD_MAX_RETRIES, quarantined: ctx.pool ? Object.fromEntries(ctx.pool.quarantined) : {}, pg_setup_embed_usd: ctx.pg?.setupEmbedUsd ?? 0 } } : {}),
-      world: { path: relative(process.cwd(), worldPath), scale: world.scale ?? 'v1', digest: worldDigest(world), seed: world.seed, docs: world.docs.length, tasks: world.tasks.length },
+      world: { path: relative(process.cwd(), worldPath), scale: world.scale ?? 'v1', digest: worldDigest(world), seed: world.seed, docs: world.docs.length, tasks: world.tasks.length,
+        ...(hw ? {} : { templates: world.templates ?? 'A', templates_file_sha256: sealed?.sha256 ?? null,
+          strata: Object.fromEntries((['memory-only', 'page-authoring', 'hidden-tool'] as const).map(k => [k, tasks.filter(t => stratumOf(t.family) === k).length])) }) },
       evals_commit: (() => { try { return execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(); } catch { return null; } })(),
       evals_dirty: (() => { try { return execFileSync('git', ['status', '--porcelain'], { encoding: 'utf8' }).trim().length > 0; } catch { return null; } })(),
-      gbrain: gbrainBuild ? { slot_ref: flag(argv, '--slot-ref') ?? null, slot_commit: slotCommit, label: ctx.gbrainLabel, commit: gbrainBuild.commit, version: gbrainBuild.version, tree: gbrainBuild.tree, verified: gbrainBuild.verified, surface: flag(argv, '--surface') ?? 'starter', tool_overrides: { descriptions_file: descriptionsFile ?? null, descriptions_sha256: instructionsOverride.descriptions ? createHash('sha256').update(JSON.stringify(instructionsOverride.descriptions)).digest('hex') : null, dropped: instructionsOverride.dropTools }, instructions_override: instructionsOverride.text === null ? null : { file: relative(process.cwd(), resolve(instructionsFile!)), sha256: createHash('sha256').update(instructionsOverride.text).digest('hex') }, served_instructions_sha256: instructionsOverride.served === null ? null : createHash('sha256').update(instructionsOverride.served).digest('hex'), operator_analyze: analyze, serve_boot_timeout_s: SERVE_BOOT_TIMEOUT_SECONDS, staged_build: world.docs.length > STAGED_SOURCE_ADD_DOCS ? { sync_batch_docs: STAGED_SYNC_BATCH } : null } : null,
+      gbrain: gbrainBuild ? { slot_ref: flag(argv, '--slot-ref') ?? null, slot_commit: slotCommit, label: ctx.gbrainLabel, commit: gbrainBuild.commit, version: gbrainBuild.version, tree: gbrainBuild.tree, verified: gbrainBuild.verified, surface: flag(argv, '--surface') ?? 'starter', advertised_surface: flag(argv, '--advertised') ?? null, tool_overrides: { descriptions_file: descriptionsFile ?? null, descriptions_sha256: instructionsOverride.descriptions ? createHash('sha256').update(JSON.stringify(instructionsOverride.descriptions)).digest('hex') : null, dropped: instructionsOverride.dropTools }, instructions_override: instructionsOverride.text === null ? null : { file: relative(process.cwd(), resolve(instructionsFile!)), sha256: createHash('sha256').update(instructionsOverride.text).digest('hex') }, served_instructions_sha256: instructionsOverride.served === null ? null : createHash('sha256').update(instructionsOverride.served).digest('hex'), operator_analyze: analyze, serve_boot_timeout_s: SERVE_BOOT_TIMEOUT_SECONDS, staged_build: world.docs.length > STAGED_SOURCE_ADD_DOCS ? { sync_batch_docs: STAGED_SYNC_BATCH } : null } : null,
       mode: buildSlots ? 'build-slots' : 'cells', order, complete, cells_planned: cells.length,
       slot_builds: builds, models, arms, families, repeats, max_tool_chars: ctx.maxToolChars, argv,
       budget_run_id: ctx.budgetRunId, resumed: Boolean(budget?.run.participant),
@@ -659,12 +711,12 @@ export async function main(argv = process.argv.slice(2)) {
   }
   if (hw && !buildSlots && !complete) {
     throw new HardStop('HARD_CELLS_INCOMPLETE', `${relative(process.cwd(), out)}: some planned cells lack a harness-clean attempt`,
-      `rerun the same command to resume (it joins the same budget run): bun eval/runner/cat40-model-ladder.ts ${argv.map(a => (/^[\w./:=,@+-]+$/.test(a) ? a : JSON.stringify(a))).join(' ')}`);
+      `rerun the same command to resume (it joins the same budget run; add --new-budget-run with a new --budget-usd if that run is spent): bun eval/runner/cat40-model-ladder.ts ${argv.map(a => (/^[\w./:=,@+-]+$/.test(a) ? a : JSON.stringify(a))).join(' ')}`);
   }
 }
 
 /** --preflight: everything a paid step needs, with no paid call (DX-F13). */
-function printPreflight(o: { hw: HardWorld | null; world: LadderWorld; models: string[]; arms: string[]; cells: number; judge: string | null; maxTurns?: number; toolLimits: string; needsGbrain: boolean; slotDir: string | null; nSlots: number; step?: string; scripted: boolean }) {
+function printPreflight(o: { hw: HardWorld | null; world: LadderWorld; models: string[]; arms: string[]; cells: number; judge: string | null; maxTurns?: number; toolLimits: string; needsGbrain: boolean; slotDir: string | null; nSlots: number; step?: string; scripted: boolean; families: string[]; tasksPerFamily: number; repeats: number; done: Array<Record<string, unknown>> }) {
   const keyOf = (m: string) => { try { return provider(m) === 'anthropic' ? 'ANTHROPIC_API_KEY' : 'OPENAI_API_KEY'; } catch { return '(unknown provider)'; } };
   const env: Record<string, string[]> = {};
   for (const a of o.arms) env[a] = [...new Set([...(o.scripted ? [] : o.models.map(keyOf)), ...(a === 'pg' || a === 'gbrain' ? ['OPENAI_API_KEY (embeddings)'] : [])])];
@@ -682,11 +734,11 @@ function printPreflight(o: { hw: HardWorld | null; world: LadderWorld; models: s
       const r = checkRoster(loadRoster());
       lines.push(`Hard ledger ${relative(process.cwd(), r.hardLedger)}: cap $${r.capUsd.toFixed(2)} (roster), committed $${r.committedUsd.toFixed(2)}, remaining $${r.remainingUsd.toFixed(2)}`);
       if (o.step) {
-        const plan: StepPlan = { step: o.step, order: 0, models: o.models, arms: o.arms, tasksPerFamily: 0, repeats: 1, scale: o.hw.scale ?? 'v1' };
+        const plan: StepPlan = { step: o.step, order: 0, models: o.models, arms: o.arms, tasksPerFamily: o.tasksPerFamily, families: o.families, repeats: o.repeats, scale: o.hw.scale ?? 'v1' };
         const measured = (process.env.HARD_MEASURED ?? '').split(',').filter(Boolean);
         const views = measured.length ? canonicalCells(readRecords(measured)).attempts : undefined;
-        const p = project({ ...plan, tasksPerFamily: o.cells / Math.max(1, o.models.length * o.arms.length) / 5 }, { basis: loadCostBasis(), measured: views });
-        lines.push(`projection for ${o.step}: $${p.total_usd.toFixed(2)} ($${p.with_margin_usd.toFixed(2)} with 15%), basis ${p.basis}`);
+        const p = project(plan, { basis: loadCostBasis(), measured: views, done: canonicalCells(o.done).attempts, worldBytes: o.hw.docs.reduce((n, d) => n + d.title.length + d.body.length, 0) });
+        lines.push(`projection for ${o.step}: $${p.total_usd.toFixed(2)} ($${p.with_margin_usd.toFixed(2)} with 15%), basis ${p.basis}; ${p.cells} cells: agent $${p.agent_usd.toFixed(2)}, judge $${p.judge_usd.toFixed(2)}, pg setup embedding $${p.pg_setup_usd.toFixed(2)}`);
         if (r.remainingUsd < p.with_margin_usd) stop = new HardStop('HARD_BUDGET_SHORT', `step ${o.step} projects $${p.with_margin_usd.toFixed(2)} with the margin; $${r.remainingUsd.toFixed(2)} remains`, 'do not raise the cap yourself', 'Garry decides whether to fund, narrow or stop the step');
       }
     } catch (e) { if (e instanceof HardStop) stop = e; else throw e; }

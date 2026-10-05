@@ -12,10 +12,10 @@ On tasks where plain files with grep finish roughly half of the work for frontie
 
 - Calibration seed: 20261005. Smoke seed: 20261099.
 - Held-out seed: 20261006 (both scales).
-- Generator: `model-ladder-hard-v1`, frozen at step 3 (`freeze.json` and `knobs.frozen.json` in this directory).
+- Generator: `model-ladder-hard-v2` (amendment A1), frozen at step 3 (`freeze.json` and `knobs.frozen.json` in this directory).
 - Models: Sonnet 5.5 (`claude-sonnet-5-5`), Opus 5.5 (`claude-opus-5-5`), GPT-6.1 Sol (`gpt-6.1-sol`), Fable 5.1 (`claude-fable-5-1`), GPT-6 Astra (`gpt-6-astra`). A newer frontier release replaces its predecessor in the same family and tier only through a dated amendment below, with its price registered, before any cell of the next step runs (rules in the plan, CEO-F3).
 - Claims judge: `gpt-6.1-sol` on every cell (reported, never part of success).
-- Arms: oracle (reference only), fs, pg, memory and gbrain, uncapped tool results, Hard tool limits (grep returns every match with full lines and a total; pg searches page with offsets, totals and an exhaustion flag, limit up to 100).
+- Arms: oracle (reference only), fs, pg, memory (Sonnet 5.5 and GPT-6.1 Sol only, amendment A1) and gbrain, uncapped tool results, Hard tool limits (grep returns every match with full lines and a total; pg searches page with offsets, totals and an exhaustion flag, limit up to 100).
 - Turn cap: 16 per session (each H5 session separately), unless calibration moved it; the frozen value is `max_turns` in knobs.frozen.json.
 - Tasks: 20 per family (100 tasks), 1 repeat, at each scale (Taste CEO-T2). The 50k oracle runs on the 20 H1 tasks, the only family whose oracle evidence changes at 50k.
 - Budget: Garry's tier A decision, $4,350 program authorization; Hard ledger `.budget/cat40-hard.sqlite` at $1,794.
@@ -25,7 +25,7 @@ Program ledger roster ([ledger-roster.json](ledger-roster.json)); other allocati
 | Ledger | Allocation |
 |---|---|
 | four original machines (committed) | $1,763.00 |
-| `.budget/cat40-followups.sqlite` (cap lowered to committed spend) | $792.69 |
+| `.budget/cat40-followups.sqlite` (cap $793, lowered to its committed $792.69) | $793.00 |
 | `.budget/cat40-hard.sqlite` | $1,794.00 |
 | total | $4,349.69 of $4,350 |
 
@@ -97,4 +97,12 @@ The runner argv for every step is in [RUNBOOK.md](RUNBOOK.md) and `scripts/cat40
 
 ## Amendments
 
-None yet. Each amendment is dated, gives its reason, and is committed before any cell it affects runs.
+Each amendment is dated, gives its reason, and is committed before any cell it affects runs.
+
+### A1 (2026-10-05): memory arm on two models; generator v2 tuned at 50k
+
+Garry, 2026-10-05, after calibration round 2: "1A 2i".
+
+- **Memory arm.** The memory arm runs on Sonnet 5.5 and GPT-6.1 Sol only, at both scales. It does not run on Opus 5.5, Fable 5.1 or GPT-6 Astra. Reason: at round-2 costs the rest of tier A projects to about $2,360 against $1,707 left on the Hard ledger; the memory arm on those three models is about $777 of that, and memory was the weakest simple arm in the earlier Cat 40 runs. Consequences: the comparator is chosen among simple arms run on every model, which is now fs and pg; the simultaneous intervals cover gbrain against fs and pg; memory's results on its two models are reported as secondary, per model. The authorization ($4,350) and the Hard ledger cap ($1,794) are unchanged.
+- **Generator.** Round 2 left plain files at 95% pooled (fs 95/99 on two frontier models), with H2 to H5 at 95 to 100% after their knobs were raised: the agents search for the account name and read what comes back. The knobs are at their useful range, so the generator changes how documents refer to accounts before the freeze: most records refer to an account by its internal code, a nickname or its account manager instead of its name, and the documents that tie those references to the name are separate. Questions still ask by name. The frozen generator is `model-ladder-hard-v2`; `model-ladder-hard-v1` is never frozen.
+- **Calibration scale.** Calibration rounds from round 3 run on the 50k world (seed 20261005, `--scale large`), where a name search returns the most noise and where gbrain trailed by 16 points in the earlier scale run. The freeze rule applies to the 50k calibration results; the 4k held-out world uses the same frozen knobs.

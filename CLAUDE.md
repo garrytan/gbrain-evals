@@ -26,6 +26,17 @@ Use short paragraphs, active verbs and plain English. No marketing slogans, em d
 
 The LongMemEval embedding cache is local and uncommitted. Its default location is under `eval/reports/longmemeval/embed-cache/`. A fresh clone has no warm cache. Never describe repeated API work as free unless the particular runner caches it.
 
+## Shape of a top-level document
+
+README.md, the hub pages in `docs/` (index, settings, retrieval lessons, comparisons) and the guides in `eval/` (README, CONTRIBUTING, CREDITS) have two parts:
+
+1. **Current state, on top.** A first-time reader, human or agent, learns what gbrain does at the commit `package.json` pins, in present tense. Name the pin once; give each number its gbrain commit when it differs from the pin. Replace a superseded claim instead of appending an "Update" or a dated amendment beside it.
+2. **`## Changelog`, at the bottom.** Newest first, one `### YYYY-MM-DD: <what changed>` entry per change, linking the commit, saying what changed on that page (old value to new value) and why. History, superseded numbers and corrections to earlier wording live here, in dated reports and in CHANGELOG.md.
+
+README's current state has three parts, in this order: **what gbrain does** (capabilities in plain words), **current results** (one table, each number with its gbrain commit and report) and **how gbrain compares** with other systems, to the best we know. Put gbrain's best foot forward, exactly: lead with what it does well, keep each comparison on a matched metric, and list known limits after. Never add an "Update, <date>" block; fold a new result into the right table and record the change in the changelog.
+
+When you change one of these documents, update the current state and add its changelog entry in the same commit.
+
 ## Shape of a benchmark report
 
 Use the structure that makes the result easiest to assess. The default is:
@@ -67,6 +78,23 @@ For a new report:
 4. Save the raw output, resolved settings and code identities.
 5. Write the report from the results, including unsuccessful candidates.
 6. Run the relevant artifact, data and documentation checks.
+
+### Choose models
+
+Every model-comparison run (Cat 40 Model Ladder and any agent-task or answer-model benchmark) uses current frontier
+models.
+
+- **Always run the newest frontier model of each family:** Opus, GPT, Sonnet and Fable. Before a run, check which
+  models are newest (the provider's model list, or the harness's available models). Add any that the run doesn't
+  already include. Register a price for a new model in `eval/runner/budget-ledger.ts` so the ledger can reserve it.
+- **Do not run older generations** (for example Sonnet 4.6 next to Sonnet 5.5, GPT-5.x next to GPT-6.x, Haiku 4.5,
+  older Opus). The one exception is a single older model that is the only shared link to the previous eval's results.
+  If a model that appears in both runs already gives that link, add no older model.
+- **Do not run gpt-5.4-mini.** Never base a product change, gate or release decision on a gpt-5.4-mini-only finding.
+- **Report the models people use first.** Note a ceiling (a model at 100% on every arm cannot show a difference)
+  rather than counting it as a win or a tie.
+- **Preregistered gates keep their model list.** To change the models of an existing preregistered gate, record the
+  change and its reason in the preregistration before any new cell runs.
 
 To add a category, follow the "Add a category" checklist in [eval/CONTRIBUTING.md](eval/CONTRIBUTING.md): registry row and preregistered promotion rules first, the shared hermetic environment, the paid-arm guard, the scorer mutation kit and the bug ledger.
 

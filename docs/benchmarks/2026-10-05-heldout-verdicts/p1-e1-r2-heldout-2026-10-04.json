@@ -1,0 +1,135 @@
+{
+  "decision_id": "p1-e1-r2-heldout-2026-10-04",
+  "stage": "held-out",
+  "verdict": "pass",
+  "default_rule": "graph.edge_validity stays on only if E1 passes with no guardrail failing (P1 round-2 preregistration, gbrain 752aaa41e docs/eval/decisions/p1-dev-2026-10-04-r2)",
+  "builds": {
+    "baseline": "6622a119e40ea09a7719233046aca24741863ed2 (master merge base named by the round-2 preregistration)",
+    "candidate": "feb077ef9c21ec6b80ea2f026a2c2cb9c391d129"
+  },
+  "harness": "gbrain-evals p0-heldout-harness 5dbb27f (temporal-edges custodian mode; untracked node_modules link only)",
+  "held_out_material": "phrasing set C (custodian-authored after the round-2 preregistration, no set B wording; in custody, sha256 366116cb...), seeds 11, 13, 17; opened once per arm",
+  "trap_rate_candidate": 1,
+  "comparisons": [
+    {
+      "id": "now-precision",
+      "gate": "superiority",
+      "status": "pass",
+      "a": 0.3755447243579339,
+      "b": 0.9425925925925926,
+      "delta": 0.5670478682346586,
+      "ci95": [
+        0.49773238863151115,
+        0.6324028065062637
+      ],
+      "n": 36,
+      "clusters": 36
+    },
+    {
+      "id": "asof",
+      "gate": "superiority",
+      "status": "pass",
+      "a": 0.20833333333333334,
+      "b": 0.6777777777777778,
+      "delta": 0.46944444444444444,
+      "ci95": [
+        0.4111111111111111,
+        0.5291666666666667
+      ],
+      "n": 720,
+      "clusters": 240
+    },
+    {
+      "id": "during",
+      "gate": "superiority",
+      "status": "pass",
+      "a": 0.4552777777777782,
+      "b": 0.6527777777777779,
+      "delta": 0.1975000000000001,
+      "ci95": [
+        0.16444444444444448,
+        0.23291666666666686
+      ],
+      "n": 240,
+      "clusters": 240
+    },
+    {
+      "id": "correction",
+      "gate": "superiority",
+      "status": "pass",
+      "a": 0,
+      "b": 0.36363636363636365,
+      "delta": 0.36363636363636365,
+      "ci95": [
+        0.22727272727272727,
+        0.5
+      ],
+      "n": 44,
+      "clusters": 44
+    },
+    {
+      "id": "now-recall",
+      "gate": "noninferiority",
+      "status": "pass",
+      "a": 0.6159722993056326,
+      "b": 0.6120040453373786,
+      "delta": -0.003968253968253968,
+      "ci95": [
+        -0.011904761904761904,
+        0
+      ],
+      "n": 36,
+      "clusters": 36
+    },
+    {
+      "id": "live-recall",
+      "gate": "noninferiority",
+      "status": "pass",
+      "a": 0.6076555023923444,
+      "b": 0.6028708133971292,
+      "delta": -0.004784688995215311,
+      "ci95": [
+        -0.014354066985645933,
+        0
+      ],
+      "n": 209,
+      "clusters": 209
+    },
+    {
+      "id": "traps",
+      "gate": "exact",
+      "status": "pass",
+      "a": null,
+      "b": null,
+      "delta": null,
+      "ci95": null,
+      "n": 115,
+      "clusters": null
+    },
+    {
+      "id": "invariance",
+      "gate": "exact",
+      "status": "pass",
+      "a": null,
+      "b": null,
+      "delta": null,
+      "ci95": null,
+      "n": 240,
+      "clusters": null
+    },
+    {
+      "id": "names-current",
+      "gate": "exploratory",
+      "status": "report_only",
+      "a": 0.13636363636363635,
+      "b": 0.4318181818181818,
+      "delta": 0.29545454545454547,
+      "ci95": [
+        0.1590909090909091,
+        0.4318181818181818
+      ],
+      "n": 44,
+      "clusters": 44
+    }
+  ]
+}
