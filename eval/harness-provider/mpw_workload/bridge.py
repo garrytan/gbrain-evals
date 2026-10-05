@@ -165,6 +165,8 @@ class Bridge:
         args = {"query": query, "token_budget": int(p.cfg["token_budget"]), "return_unit": p.cfg["return_unit"], "limit": int(p.cfg["limit"])}
         if p.cfg.get("expand") is not None:
             args["expand"] = bool(p.cfg["expand"])
+        if p.cfg.get("autocut") is not None:
+            args["autocut"] = bool(p.cfg["autocut"])
         with p._lock:
             rows, meta = u.child.call("query", args)
         retrieval = (meta or {}).get("retrieval", {})

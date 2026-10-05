@@ -1,0 +1,110 @@
+{
+ "runs": [
+  {
+   "phase": "answer",
+   "usd": 5.65698256,
+   "requests": 3360,
+   "run_id": "workload-passing-details-answer-2026-10-05T16-53-28-275Z-07b57a01",
+   "by_label": {
+    "gbrain": {
+     "requests": 2960,
+     "refused": 0,
+     "reserved_usd": 0.09741792000000038,
+     "actual_usd": 0.0602025600000001,
+     "input_tokens": 1003376,
+     "output_tokens": 0
+    },
+    "reader": {
+     "requests": 400,
+     "refused": 0,
+     "reserved_usd": 6.978177999999997,
+     "actual_usd": 5.596779999999997,
+     "input_tokens": 2695980,
+     "output_tokens": 20482
+    }
+   },
+   "at": "2026-10-05T17:12:05.906Z",
+   "stub": false
+  },
+  {
+   "phase": "sweep",
+   "usd": 23.587142,
+   "requests": 450,
+   "run_id": "workload-passing-details-sweep-2026-10-05T17-12-51-705Z-692cbc4e",
+   "by_label": {
+    "reader": {
+     "requests": 450,
+     "refused": 0,
+     "reserved_usd": 61.83653199999999,
+     "actual_usd": 23.587142000000007,
+     "input_tokens": 2960141,
+     "output_tokens": 17679
+    }
+   },
+   "at": "2026-10-05T17:16:39.871Z",
+   "stub": false
+  },
+  {
+   "phase": "answer",
+   "usd": 15.8470941,
+   "requests": 3440,
+   "run_id": "workload-passing-details-answer-2026-10-05T16-53-35-213Z-aa472a4b",
+   "by_label": {
+    "comparator": {
+     "requests": 2640,
+     "refused": 0,
+     "reserved_usd": 28.22423324999995,
+     "actual_usd": 2.175212100000001,
+     "input_tokens": 8618550,
+     "output_tokens": 1470716
+    },
+    "reader": {
+     "requests": 800,
+     "refused": 0,
+     "reserved_usd": 14.481185999999997,
+     "actual_usd": 13.671881999999991,
+     "input_tokens": 6683486,
+     "output_tokens": 30491
+    }
+   },
+   "at": "2026-10-05T18:06:48.769Z",
+   "stub": false
+  },
+  {
+   "phase": "score",
+   "usd": 0.11603,
+   "requests": 322,
+   "run_id": "workload-passing-details-score-2026-10-05T19-27-19-705Z-ccbd7616",
+   "by_label": {
+    "judge": {
+     "requests": 322,
+     "refused": 0,
+     "reserved_usd": 6.616539999999999,
+     "actual_usd": 0.1160299999999999,
+     "input_tokens": 45135,
+     "output_tokens": 2576
+    }
+   },
+   "at": "2026-10-05T19:34:19.604Z",
+   "stub": false
+  },
+  {
+   "phase": "score",
+   "usd": 0.002856,
+   "requests": 8,
+   "run_id": "workload-passing-details-score-2026-10-05T19-54-42-055Z-52af7c82",
+   "by_label": {
+    "judge": {
+     "requests": 8,
+     "refused": 0,
+     "reserved_usd": 0.16437000000000002,
+     "actual_usd": 0.002856,
+     "input_tokens": 1108,
+     "output_tokens": 64
+    }
+   },
+   "at": "2026-10-05T19:54:54.647Z",
+   "stub": false
+  }
+ ]
+}

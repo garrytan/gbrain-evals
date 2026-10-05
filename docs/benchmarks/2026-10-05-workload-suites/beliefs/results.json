@@ -1,0 +1,4517 @@
+{
+ "suite": "beliefs",
+ "scored_at": "2026-10-05T19:14:57.115Z",
+ "results": {
+  "comparator-combined": {
+   "anthropic:claude-sonnet-5-5": {
+    "n": 150,
+    "correct": 108,
+    "accuracy": 0.72,
+    "by_category": {
+     "holder": {
+      "n": 50,
+      "correct": 42
+     },
+     "weight_change": {
+      "n": 50,
+      "correct": 38
+     },
+     "resolved_one": {
+      "n": 25,
+      "correct": 20
+     },
+     "resolved_set": {
+      "n": 25,
+      "correct": 8
+     }
+    },
+    "outcomes": {
+     "distractor": 16,
+     "correct": 108,
+     "abstain": 9,
+     "wrong": 17
+    },
+    "judged": 57,
+    "context_tokens": {
+     "mean": 7823,
+     "p95": 7999
+    },
+    "rows": [
+     {
+      "query_id": "blq-0558f0186f25",
+      "category": "holder",
+      "outcome": "distractor",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7735
+     },
+     {
+      "query_id": "blq-0702243658c5",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7731
+     },
+     {
+      "query_id": "blq-07b432ee67c9",
+      "category": "weight_change",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7837
+     },
+     {
+      "query_id": "blq-08e375bcf8cf",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7744
+     },
+     {
+      "query_id": "blq-0ac0cb187bc4",
+      "category": "holder",
+      "outcome": "distractor",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7848
+     },
+     {
+      "query_id": "blq-0c9792692ce3",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7654
+     },
+     {
+      "query_id": "blq-0d69cf933022",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7911
+     },
+     {
+      "query_id": "blq-0f394f82b5ea",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7864
+     },
+     {
+      "query_id": "blq-12d720ad6814",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7741
+     },
+     {
+      "query_id": "blq-136760651247",
+      "category": "holder",
+      "outcome": "distractor",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 8026
+     },
+     {
+      "query_id": "blq-13f6369ea584",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7718
+     },
+     {
+      "query_id": "blq-152e4b013470",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7974
+     },
+     {
+      "query_id": "blq-154bc8678f19",
+      "category": "weight_change",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7811
+     },
+     {
+      "query_id": "blq-16a3a86b8701",
+      "category": "resolved_one",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7752
+     },
+     {
+      "query_id": "blq-1a47b8956833",
+      "category": "weight_change",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7818
+     },
+     {
+      "query_id": "blq-1c642bf093ac",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7730
+     },
+     {
+      "query_id": "blq-1e75f9243e7f",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7599
+     },
+     {
+      "query_id": "blq-1ea6713cde8c",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7817
+     },
+     {
+      "query_id": "blq-274bc7edf28a",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7867
+     },
+     {
+      "query_id": "blq-284c900ec41b",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7888
+     },
+     {
+      "query_id": "blq-2a1c88fe3b60",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7887
+     },
+     {
+      "query_id": "blq-2b3b25d05f26",
+      "category": "holder",
+      "outcome": "distractor",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7911
+     },
+     {
+      "query_id": "blq-2b563ad2dd20",
+      "category": "resolved_set",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 8050
+     },
+     {
+      "query_id": "blq-2bf3fb083735",
+      "category": "weight_change",
+      "outcome": "distractor",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7810
+     },
+     {
+      "query_id": "blq-2d9c0ae9da83",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7751
+     },
+     {
+      "query_id": "blq-386047670968",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7791
+     },
+     {
+      "query_id": "blq-3bd33948c7fb",
+      "category": "weight_change",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7680
+     },
+     {
+      "query_id": "blq-3d0d28b74e86",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7707
+     },
+     {
+      "query_id": "blq-3f41aee7ea3c",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7729
+     },
+     {
+      "query_id": "blq-3f572736c3ce",
+      "category": "weight_change",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7808
+     },
+     {
+      "query_id": "blq-40149a56e5f9",
+      "category": "resolved_set",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 7923
+     },
+     {
+      "query_id": "blq-40b151e2cd7e",
+      "category": "resolved_set",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 7967
+     },
+     {
+      "query_id": "blq-46374f35c2a4",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7762
+     },
+     {
+      "query_id": "blq-46b72b92eac4",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7655
+     },
+     {
+      "query_id": "blq-47433c758120",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7833
+     },
+     {
+      "query_id": "blq-485aaf2b873c",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7776
+     },
+     {
+      "query_id": "blq-48d2a101526f",
+      "category": "weight_change",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7707
+     },
+     {
+      "query_id": "blq-4916d800ae71",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7856
+     },
+     {
+      "query_id": "blq-4a12293e9c51",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7912
+     },
+     {
+      "query_id": "blq-4f703139fb8f",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7911
+     },
+     {
+      "query_id": "blq-508d93c4603e",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7724
+     },
+     {
+      "query_id": "blq-53413ee3af0c",
+      "category": "resolved_set",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 7972
+     },
+     {
+      "query_id": "blq-541ad52fb3c3",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7704
+     },
+     {
+      "query_id": "blq-54620c5ebbd2",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7741
+     },
+     {
+      "query_id": "blq-5467a217ee9b",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7797
+     },
+     {
+      "query_id": "blq-558565db8561",
+      "category": "holder",
+      "outcome": "distractor",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7932
+     },
+     {
+      "query_id": "blq-57bdfa132767",
+      "category": "resolved_set",
+      "outcome": "distractor",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7863
+     },
+     {
+      "query_id": "blq-58f50da926db",
+      "category": "resolved_set",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7864
+     },
+     {
+      "query_id": "blq-5c2ac3c9bc5d",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7814
+     },
+     {
+      "query_id": "blq-5c3e3c52cb7b",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7693
+     },
+     {
+      "query_id": "blq-5df803fd93b3",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 8051
+     },
+     {
+      "query_id": "blq-5f2db10bed55",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7913
+     },
+     {
+      "query_id": "blq-5f8f86441126",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7820
+     },
+     {
+      "query_id": "blq-62b45a9db6d3",
+      "category": "resolved_set",
+      "outcome": "distractor",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7926
+     },
+     {
+      "query_id": "blq-62e8d4bf0a76",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7744
+     },
+     {
+      "query_id": "blq-682752323ac3",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7807
+     },
+     {
+      "query_id": "blq-6b6bf74941ee",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7709
+     },
+     {
+      "query_id": "blq-6b6cde97d052",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7843
+     },
+     {
+      "query_id": "blq-6bb1a4dc2057",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7785
+     },
+     {
+      "query_id": "blq-6d7de54daeab",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7974
+     },
+     {
+      "query_id": "blq-6d99cc95b720",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7668
+     },
+     {
+      "query_id": "blq-6f5d7a11fdfe",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7812
+     },
+     {
+      "query_id": "blq-70599c6ff2e4",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7813
+     },
+     {
+      "query_id": "blq-72db74d3223c",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7799
+     },
+     {
+      "query_id": "blq-74e5d017c841",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7824
+     },
+     {
+      "query_id": "blq-759a9d5a6fda",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7780
+     },
+     {
+      "query_id": "blq-769d1217dc2a",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7711
+     },
+     {
+      "query_id": "blq-76a5a0209bdd",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7948
+     },
+     {
+      "query_id": "blq-76dd40059732",
+      "category": "weight_change",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7750
+     },
+     {
+      "query_id": "blq-77a647dc996f",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7796
+     },
+     {
+      "query_id": "blq-79cd0ea036c3",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7725
+     },
+     {
+      "query_id": "blq-7a8c74ebfc76",
+      "category": "resolved_set",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 7880
+     },
+     {
+      "query_id": "blq-7e830562b9e4",
+      "category": "resolved_set",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 7901
+     },
+     {
+      "query_id": "blq-7edb25e58d83",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7731
+     },
+     {
+      "query_id": "blq-7f7b6d975d42",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7818
+     },
+     {
+      "query_id": "blq-802b62666f01",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7852
+     },
+     {
+      "query_id": "blq-81639d743ed0",
+      "category": "weight_change",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7734
+     },
+     {
+      "query_id": "blq-83ad5a20dd90",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7801
+     },
+     {
+      "query_id": "blq-85947a06f2a6",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7887
+     },
+     {
+      "query_id": "blq-8947eecb73c5",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7682
+     },
+     {
+      "query_id": "blq-89a48c451e41",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7826
+     },
+     {
+      "query_id": "blq-89b4697a40aa",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7721
+     },
+     {
+      "query_id": "blq-8c30531e7527",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7782
+     },
+     {
+      "query_id": "blq-8dc1baf111d8",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7775
+     },
+     {
+      "query_id": "blq-8f1e416f1223",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7874
+     },
+     {
+      "query_id": "blq-92fbf13400dd",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7801
+     },
+     {
+      "query_id": "blq-941995afe827",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7894
+     },
+     {
+      "query_id": "blq-96379e20cb17",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7760
+     },
+     {
+      "query_id": "blq-9a0310dfad58",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7768
+     },
+     {
+      "query_id": "blq-9b22e69361c0",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7809
+     },
+     {
+      "query_id": "blq-9c3ef9c3dd2c",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 8002
+     },
+     {
+      "query_id": "blq-9d47c8494dac",
+      "category": "resolved_one",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7735
+     },
+     {
+      "query_id": "blq-9f8266f03b94",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7649
+     },
+     {
+      "query_id": "blq-a3c771bc1925",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7922
+     },
+     {
+      "query_id": "blq-a56a56842cc9",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7857
+     },
+     {
+      "query_id": "blq-a67940dfadf1",
+      "category": "weight_change",
+      "outcome": "distractor",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7958
+     },
+     {
+      "query_id": "blq-a8916e6a6430",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7758
+     },
+     {
+      "query_id": "blq-aa88f900e316",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7785
+     },
+     {
+      "query_id": "blq-aaa52f805b64",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7834
+     },
+     {
+      "query_id": "blq-abf83d33d7b0",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7818
+     },
+     {
+      "query_id": "blq-b0769428ef23",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7778
+     },
+     {
+      "query_id": "blq-b53ac2e8d31e",
+      "category": "resolved_set",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 7954
+     },
+     {
+      "query_id": "blq-bab5fa2e9281",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 8048
+     },
+     {
+      "query_id": "blq-bb52ad900287",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7890
+     },
+     {
+      "query_id": "blq-bbcb32cd6113",
+      "category": "resolved_one",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7801
+     },
+     {
+      "query_id": "blq-bc4cfff1153f",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7756
+     },
+     {
+      "query_id": "blq-bcab7bd470c1",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7733
+     },
+     {
+      "query_id": "blq-bee7b20506cf",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 8058
+     },
+     {
+      "query_id": "blq-bf8cb5fe3f2f",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7794
+     },
+     {
+      "query_id": "blq-c16a09cbe6db",
+      "category": "holder",
+      "outcome": "distractor",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7831
+     },
+     {
+      "query_id": "blq-c48d13e769f9",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7958
+     },
+     {
+      "query_id": "blq-c6ea2f00597f",
+      "category": "holder",
+      "outcome": "distractor",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7815
+     },
+     {
+      "query_id": "blq-c77d340ff6df",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7918
+     },
+     {
+      "query_id": "blq-c8b5cccae2fa",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7840
+     },
+     {
+      "query_id": "blq-c932aff79989",
+      "category": "resolved_set",
+      "outcome": "distractor",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7827
+     },
+     {
+      "query_id": "blq-c9e227526a0e",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7947
+     },
+     {
+      "query_id": "blq-cf1056090b74",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7624
+     },
+     {
+      "query_id": "blq-d083eb5826ea",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7925
+     },
+     {
+      "query_id": "blq-d441af82efcc",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7714
+     },
+     {
+      "query_id": "blq-d5042f36c4cc",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7931
+     },
+     {
+      "query_id": "blq-d74068544d59",
+      "category": "resolved_set",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 7939
+     },
+     {
+      "query_id": "blq-d7483d79ca93",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7803
+     },
+     {
+      "query_id": "blq-d798b5942d11",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7761
+     },
+     {
+      "query_id": "blq-d866f63f767f",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7832
+     },
+     {
+      "query_id": "blq-dc69b1ae5889",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7779
+     },
+     {
+      "query_id": "blq-dca0c29104ca",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7819
+     },
+     {
+      "query_id": "blq-de5d54fcfea8",
+      "category": "resolved_set",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 7946
+     },
+     {
+      "query_id": "blq-deb92959bd79",
+      "category": "weight_change",
+      "outcome": "distractor",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7803
+     },
+     {
+      "query_id": "blq-df4f43073bba",
+      "category": "weight_change",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7658
+     },
+     {
+      "query_id": "blq-e239a7d74840",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7776
+     },
+     {
+      "query_id": "blq-e3da25b04d01",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7869
+     },
+     {
+      "query_id": "blq-e58109d3ac5d",
+      "category": "resolved_set",
+      "outcome": "distractor",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7962
+     },
+     {
+      "query_id": "blq-e9e83847f6a3",
+      "category": "resolved_set",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 8049
+     },
+     {
+      "query_id": "blq-eab9f68dfac3",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7936
+     },
+     {
+      "query_id": "blq-eae77c5101cb",
+      "category": "resolved_one",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7760
+     },
+     {
+      "query_id": "blq-eb7eb7d0e806",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7762
+     },
+     {
+      "query_id": "blq-ef92292a53ae",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7907
+     },
+     {
+      "query_id": "blq-efa3da9088e6",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7737
+     },
+     {
+      "query_id": "blq-f02ded117a1f",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7772
+     },
+     {
+      "query_id": "blq-f0d3367c9616",
+      "category": "resolved_one",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7873
+     },
+     {
+      "query_id": "blq-f1b495c0031e",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7676
+     },
+     {
+      "query_id": "blq-f300d1abfa2f",
+      "category": "holder",
+      "outcome": "distractor",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7760
+     },
+     {
+      "query_id": "blq-f37dd6a9f8a7",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7862
+     },
+     {
+      "query_id": "blq-f38143d456da",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7765
+     },
+     {
+      "query_id": "blq-f5ef651dfd5f",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7942
+     },
+     {
+      "query_id": "blq-f6f435ef36b3",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7820
+     },
+     {
+      "query_id": "blq-f71e75574c49",
+      "category": "resolved_set",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7999
+     },
+     {
+      "query_id": "blq-fa097d85524d",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7892
+     },
+     {
+      "query_id": "blq-fa3bd225e682",
+      "category": "resolved_set",
+      "outcome": "distractor",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7716
+     },
+     {
+      "query_id": "blq-fd62e9f46d9e",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7742
+     }
+    ]
+   },
+   "anthropic:claude-opus-5-5": {
+    "n": 38,
+    "correct": 28,
+    "accuracy": 0.7368421052631579,
+    "by_category": {
+     "holder": {
+      "n": 13,
+      "correct": 10
+     },
+     "resolved_one": {
+      "n": 6,
+      "correct": 5
+     },
+     "weight_change": {
+      "n": 13,
+      "correct": 12
+     },
+     "resolved_set": {
+      "n": 6,
+      "correct": 1
+     }
+    },
+    "outcomes": {
+     "distractor": 4,
+     "correct": 28,
+     "wrong": 4,
+     "abstain": 2
+    },
+    "judged": 15,
+    "context_tokens": {
+     "mean": 7817,
+     "p95": 7999
+    },
+    "rows": [
+     {
+      "query_id": "blq-0558f0186f25",
+      "category": "holder",
+      "outcome": "distractor",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7735
+     },
+     {
+      "query_id": "blq-08e375bcf8cf",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7744
+     },
+     {
+      "query_id": "blq-0d69cf933022",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7911
+     },
+     {
+      "query_id": "blq-0f394f82b5ea",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7864
+     },
+     {
+      "query_id": "blq-12d720ad6814",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7741
+     },
+     {
+      "query_id": "blq-136760651247",
+      "category": "holder",
+      "outcome": "distractor",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 8026
+     },
+     {
+      "query_id": "blq-152e4b013470",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7974
+     },
+     {
+      "query_id": "blq-1c642bf093ac",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7730
+     },
+     {
+      "query_id": "blq-1e75f9243e7f",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7599
+     },
+     {
+      "query_id": "blq-1ea6713cde8c",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7817
+     },
+     {
+      "query_id": "blq-274bc7edf28a",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7867
+     },
+     {
+      "query_id": "blq-3f41aee7ea3c",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7729
+     },
+     {
+      "query_id": "blq-3f572736c3ce",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7808
+     },
+     {
+      "query_id": "blq-40149a56e5f9",
+      "category": "resolved_set",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 7923
+     },
+     {
+      "query_id": "blq-508d93c4603e",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7724
+     },
+     {
+      "query_id": "blq-558565db8561",
+      "category": "holder",
+      "outcome": "distractor",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7932
+     },
+     {
+      "query_id": "blq-58f50da926db",
+      "category": "resolved_set",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7864
+     },
+     {
+      "query_id": "blq-62b45a9db6d3",
+      "category": "resolved_set",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 7926
+     },
+     {
+      "query_id": "blq-6f5d7a11fdfe",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7812
+     },
+     {
+      "query_id": "blq-74e5d017c841",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7824
+     },
+     {
+      "query_id": "blq-7a8c74ebfc76",
+      "category": "resolved_set",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 7880
+     },
+     {
+      "query_id": "blq-7f7b6d975d42",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7818
+     },
+     {
+      "query_id": "blq-8947eecb73c5",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7682
+     },
+     {
+      "query_id": "blq-8dc1baf111d8",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7775
+     },
+     {
+      "query_id": "blq-92fbf13400dd",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7801
+     },
+     {
+      "query_id": "blq-9d47c8494dac",
+      "category": "resolved_one",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7735
+     },
+     {
+      "query_id": "blq-9f8266f03b94",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7649
+     },
+     {
+      "query_id": "blq-a67940dfadf1",
+      "category": "weight_change",
+      "outcome": "distractor",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7958
+     },
+     {
+      "query_id": "blq-bb52ad900287",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7890
+     },
+     {
+      "query_id": "blq-bf8cb5fe3f2f",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7794
+     },
+     {
+      "query_id": "blq-c8b5cccae2fa",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7840
+     },
+     {
+      "query_id": "blq-c9e227526a0e",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7947
+     },
+     {
+      "query_id": "blq-cf1056090b74",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7624
+     },
+     {
+      "query_id": "blq-d7483d79ca93",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7803
+     },
+     {
+      "query_id": "blq-dc69b1ae5889",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7779
+     },
+     {
+      "query_id": "blq-f1b495c0031e",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7676
+     },
+     {
+      "query_id": "blq-f37dd6a9f8a7",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7862
+     },
+     {
+      "query_id": "blq-f71e75574c49",
+      "category": "resolved_set",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7999
+     }
+    ]
+   },
+   "openai:gpt-6-astra": {
+    "n": 38,
+    "correct": 28,
+    "accuracy": 0.7368421052631579,
+    "by_category": {
+     "holder": {
+      "n": 13,
+      "correct": 10
+     },
+     "resolved_one": {
+      "n": 6,
+      "correct": 5
+     },
+     "weight_change": {
+      "n": 13,
+      "correct": 12
+     },
+     "resolved_set": {
+      "n": 6,
+      "correct": 1
+     }
+    },
+    "outcomes": {
+     "wrong": 4,
+     "correct": 28,
+     "abstain": 6
+    },
+    "judged": 0,
+    "context_tokens": {
+     "mean": 7817,
+     "p95": 7999
+    },
+    "rows": [
+     {
+      "query_id": "blq-0558f0186f25",
+      "category": "holder",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7735
+     },
+     {
+      "query_id": "blq-08e375bcf8cf",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7744
+     },
+     {
+      "query_id": "blq-0d69cf933022",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7911
+     },
+     {
+      "query_id": "blq-0f394f82b5ea",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7864
+     },
+     {
+      "query_id": "blq-12d720ad6814",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7741
+     },
+     {
+      "query_id": "blq-136760651247",
+      "category": "holder",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 8026
+     },
+     {
+      "query_id": "blq-152e4b013470",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7974
+     },
+     {
+      "query_id": "blq-1c642bf093ac",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7730
+     },
+     {
+      "query_id": "blq-1e75f9243e7f",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7599
+     },
+     {
+      "query_id": "blq-1ea6713cde8c",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7817
+     },
+     {
+      "query_id": "blq-274bc7edf28a",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7867
+     },
+     {
+      "query_id": "blq-3f41aee7ea3c",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7729
+     },
+     {
+      "query_id": "blq-3f572736c3ce",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7808
+     },
+     {
+      "query_id": "blq-40149a56e5f9",
+      "category": "resolved_set",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7923
+     },
+     {
+      "query_id": "blq-508d93c4603e",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7724
+     },
+     {
+      "query_id": "blq-558565db8561",
+      "category": "holder",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7932
+     },
+     {
+      "query_id": "blq-58f50da926db",
+      "category": "resolved_set",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7864
+     },
+     {
+      "query_id": "blq-62b45a9db6d3",
+      "category": "resolved_set",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7926
+     },
+     {
+      "query_id": "blq-6f5d7a11fdfe",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7812
+     },
+     {
+      "query_id": "blq-74e5d017c841",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7824
+     },
+     {
+      "query_id": "blq-7a8c74ebfc76",
+      "category": "resolved_set",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7880
+     },
+     {
+      "query_id": "blq-7f7b6d975d42",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7818
+     },
+     {
+      "query_id": "blq-8947eecb73c5",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7682
+     },
+     {
+      "query_id": "blq-8dc1baf111d8",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7775
+     },
+     {
+      "query_id": "blq-92fbf13400dd",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7801
+     },
+     {
+      "query_id": "blq-9d47c8494dac",
+      "category": "resolved_one",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7735
+     },
+     {
+      "query_id": "blq-9f8266f03b94",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7649
+     },
+     {
+      "query_id": "blq-a67940dfadf1",
+      "category": "weight_change",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7958
+     },
+     {
+      "query_id": "blq-bb52ad900287",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7890
+     },
+     {
+      "query_id": "blq-bf8cb5fe3f2f",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7794
+     },
+     {
+      "query_id": "blq-c8b5cccae2fa",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7840
+     },
+     {
+      "query_id": "blq-c9e227526a0e",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7947
+     },
+     {
+      "query_id": "blq-cf1056090b74",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7624
+     },
+     {
+      "query_id": "blq-d7483d79ca93",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7803
+     },
+     {
+      "query_id": "blq-dc69b1ae5889",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7779
+     },
+     {
+      "query_id": "blq-f1b495c0031e",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7676
+     },
+     {
+      "query_id": "blq-f37dd6a9f8a7",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7862
+     },
+     {
+      "query_id": "blq-f71e75574c49",
+      "category": "resolved_set",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7999
+     }
+    ]
+   },
+   "anthropic:claude-fable-5-1": {
+    "n": 38,
+    "correct": 28,
+    "accuracy": 0.7368421052631579,
+    "by_category": {
+     "holder": {
+      "n": 13,
+      "correct": 10
+     },
+     "resolved_one": {
+      "n": 6,
+      "correct": 5
+     },
+     "weight_change": {
+      "n": 13,
+      "correct": 12
+     },
+     "resolved_set": {
+      "n": 6,
+      "correct": 1
+     }
+    },
+    "outcomes": {
+     "distractor": 3,
+     "correct": 28,
+     "wrong": 5,
+     "abstain": 2
+    },
+    "judged": 15,
+    "context_tokens": {
+     "mean": 7817,
+     "p95": 7999
+    },
+    "rows": [
+     {
+      "query_id": "blq-0558f0186f25",
+      "category": "holder",
+      "outcome": "distractor",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7735
+     },
+     {
+      "query_id": "blq-08e375bcf8cf",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7744
+     },
+     {
+      "query_id": "blq-0d69cf933022",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7911
+     },
+     {
+      "query_id": "blq-0f394f82b5ea",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7864
+     },
+     {
+      "query_id": "blq-12d720ad6814",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7741
+     },
+     {
+      "query_id": "blq-136760651247",
+      "category": "holder",
+      "outcome": "distractor",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 8026
+     },
+     {
+      "query_id": "blq-152e4b013470",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7974
+     },
+     {
+      "query_id": "blq-1c642bf093ac",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7730
+     },
+     {
+      "query_id": "blq-1e75f9243e7f",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7599
+     },
+     {
+      "query_id": "blq-1ea6713cde8c",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7817
+     },
+     {
+      "query_id": "blq-274bc7edf28a",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7867
+     },
+     {
+      "query_id": "blq-3f41aee7ea3c",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7729
+     },
+     {
+      "query_id": "blq-3f572736c3ce",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7808
+     },
+     {
+      "query_id": "blq-40149a56e5f9",
+      "category": "resolved_set",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 7923
+     },
+     {
+      "query_id": "blq-508d93c4603e",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7724
+     },
+     {
+      "query_id": "blq-558565db8561",
+      "category": "holder",
+      "outcome": "distractor",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7932
+     },
+     {
+      "query_id": "blq-58f50da926db",
+      "category": "resolved_set",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 7864
+     },
+     {
+      "query_id": "blq-62b45a9db6d3",
+      "category": "resolved_set",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 7926
+     },
+     {
+      "query_id": "blq-6f5d7a11fdfe",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7812
+     },
+     {
+      "query_id": "blq-74e5d017c841",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7824
+     },
+     {
+      "query_id": "blq-7a8c74ebfc76",
+      "category": "resolved_set",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 7880
+     },
+     {
+      "query_id": "blq-7f7b6d975d42",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7818
+     },
+     {
+      "query_id": "blq-8947eecb73c5",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7682
+     },
+     {
+      "query_id": "blq-8dc1baf111d8",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7775
+     },
+     {
+      "query_id": "blq-92fbf13400dd",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7801
+     },
+     {
+      "query_id": "blq-9d47c8494dac",
+      "category": "resolved_one",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7735
+     },
+     {
+      "query_id": "blq-9f8266f03b94",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7649
+     },
+     {
+      "query_id": "blq-a67940dfadf1",
+      "category": "weight_change",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7958
+     },
+     {
+      "query_id": "blq-bb52ad900287",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7890
+     },
+     {
+      "query_id": "blq-bf8cb5fe3f2f",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7794
+     },
+     {
+      "query_id": "blq-c8b5cccae2fa",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7840
+     },
+     {
+      "query_id": "blq-c9e227526a0e",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7947
+     },
+     {
+      "query_id": "blq-cf1056090b74",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7624
+     },
+     {
+      "query_id": "blq-d7483d79ca93",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7803
+     },
+     {
+      "query_id": "blq-dc69b1ae5889",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7779
+     },
+     {
+      "query_id": "blq-f1b495c0031e",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7676
+     },
+     {
+      "query_id": "blq-f37dd6a9f8a7",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7862
+     },
+     {
+      "query_id": "blq-f71e75574c49",
+      "category": "resolved_set",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 7999
+     }
+    ]
+   }
+  },
+  "gbrain-combined": {
+   "anthropic:claude-sonnet-5-5": {
+    "n": 150,
+    "correct": 139,
+    "accuracy": 0.9266666666666666,
+    "by_category": {
+     "holder": {
+      "n": 50,
+      "correct": 50
+     },
+     "weight_change": {
+      "n": 50,
+      "correct": 50
+     },
+     "resolved_one": {
+      "n": 25,
+      "correct": 20
+     },
+     "resolved_set": {
+      "n": 25,
+      "correct": 19
+     }
+    },
+    "outcomes": {
+     "correct": 139,
+     "abstain": 8,
+     "wrong": 3
+    },
+    "judged": 52,
+    "context_tokens": {
+     "mean": 7866,
+     "p95": 7898
+    },
+    "rows": [
+     {
+      "query_id": "blq-0558f0186f25",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7860
+     },
+     {
+      "query_id": "blq-0702243658c5",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7845
+     },
+     {
+      "query_id": "blq-07b432ee67c9",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7855
+     },
+     {
+      "query_id": "blq-08e375bcf8cf",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7886
+     },
+     {
+      "query_id": "blq-0ac0cb187bc4",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7865
+     },
+     {
+      "query_id": "blq-0c9792692ce3",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7864
+     },
+     {
+      "query_id": "blq-0d69cf933022",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7866
+     },
+     {
+      "query_id": "blq-0f394f82b5ea",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7870
+     },
+     {
+      "query_id": "blq-12d720ad6814",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7861
+     },
+     {
+      "query_id": "blq-136760651247",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7893
+     },
+     {
+      "query_id": "blq-13f6369ea584",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7882
+     },
+     {
+      "query_id": "blq-152e4b013470",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7843
+     },
+     {
+      "query_id": "blq-154bc8678f19",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7857
+     },
+     {
+      "query_id": "blq-16a3a86b8701",
+      "category": "resolved_one",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7895
+     },
+     {
+      "query_id": "blq-1a47b8956833",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7863
+     },
+     {
+      "query_id": "blq-1c642bf093ac",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7873
+     },
+     {
+      "query_id": "blq-1e75f9243e7f",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7831
+     },
+     {
+      "query_id": "blq-1ea6713cde8c",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7814
+     },
+     {
+      "query_id": "blq-274bc7edf28a",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7856
+     },
+     {
+      "query_id": "blq-284c900ec41b",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7896
+     },
+     {
+      "query_id": "blq-2a1c88fe3b60",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7872
+     },
+     {
+      "query_id": "blq-2b3b25d05f26",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7879
+     },
+     {
+      "query_id": "blq-2b563ad2dd20",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7874
+     },
+     {
+      "query_id": "blq-2bf3fb083735",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7873
+     },
+     {
+      "query_id": "blq-2d9c0ae9da83",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7876
+     },
+     {
+      "query_id": "blq-386047670968",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7870
+     },
+     {
+      "query_id": "blq-3bd33948c7fb",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7838
+     },
+     {
+      "query_id": "blq-3d0d28b74e86",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7858
+     },
+     {
+      "query_id": "blq-3f41aee7ea3c",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7858
+     },
+     {
+      "query_id": "blq-3f572736c3ce",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7758
+     },
+     {
+      "query_id": "blq-40149a56e5f9",
+      "category": "resolved_set",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7883
+     },
+     {
+      "query_id": "blq-40b151e2cd7e",
+      "category": "resolved_set",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7851
+     },
+     {
+      "query_id": "blq-46374f35c2a4",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7860
+     },
+     {
+      "query_id": "blq-46b72b92eac4",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7862
+     },
+     {
+      "query_id": "blq-47433c758120",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7860
+     },
+     {
+      "query_id": "blq-485aaf2b873c",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7876
+     },
+     {
+      "query_id": "blq-48d2a101526f",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7839
+     },
+     {
+      "query_id": "blq-4916d800ae71",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7843
+     },
+     {
+      "query_id": "blq-4a12293e9c51",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7850
+     },
+     {
+      "query_id": "blq-4f703139fb8f",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7892
+     },
+     {
+      "query_id": "blq-508d93c4603e",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7868
+     },
+     {
+      "query_id": "blq-53413ee3af0c",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7903
+     },
+     {
+      "query_id": "blq-541ad52fb3c3",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7885
+     },
+     {
+      "query_id": "blq-54620c5ebbd2",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7830
+     },
+     {
+      "query_id": "blq-5467a217ee9b",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7859
+     },
+     {
+      "query_id": "blq-558565db8561",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7856
+     },
+     {
+      "query_id": "blq-57bdfa132767",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7917
+     },
+     {
+      "query_id": "blq-58f50da926db",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7862
+     },
+     {
+      "query_id": "blq-5c2ac3c9bc5d",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7844
+     },
+     {
+      "query_id": "blq-5c3e3c52cb7b",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7857
+     },
+     {
+      "query_id": "blq-5df803fd93b3",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7859
+     },
+     {
+      "query_id": "blq-5f2db10bed55",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7855
+     },
+     {
+      "query_id": "blq-5f8f86441126",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7895
+     },
+     {
+      "query_id": "blq-62b45a9db6d3",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7864
+     },
+     {
+      "query_id": "blq-62e8d4bf0a76",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7858
+     },
+     {
+      "query_id": "blq-682752323ac3",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7856
+     },
+     {
+      "query_id": "blq-6b6bf74941ee",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7893
+     },
+     {
+      "query_id": "blq-6b6cde97d052",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7872
+     },
+     {
+      "query_id": "blq-6bb1a4dc2057",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7880
+     },
+     {
+      "query_id": "blq-6d7de54daeab",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7887
+     },
+     {
+      "query_id": "blq-6d99cc95b720",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7875
+     },
+     {
+      "query_id": "blq-6f5d7a11fdfe",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7885
+     },
+     {
+      "query_id": "blq-70599c6ff2e4",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7842
+     },
+     {
+      "query_id": "blq-72db74d3223c",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7907
+     },
+     {
+      "query_id": "blq-74e5d017c841",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7879
+     },
+     {
+      "query_id": "blq-759a9d5a6fda",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7861
+     },
+     {
+      "query_id": "blq-769d1217dc2a",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7834
+     },
+     {
+      "query_id": "blq-76a5a0209bdd",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7831
+     },
+     {
+      "query_id": "blq-76dd40059732",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7884
+     },
+     {
+      "query_id": "blq-77a647dc996f",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7868
+     },
+     {
+      "query_id": "blq-79cd0ea036c3",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7884
+     },
+     {
+      "query_id": "blq-7a8c74ebfc76",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7857
+     },
+     {
+      "query_id": "blq-7e830562b9e4",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7868
+     },
+     {
+      "query_id": "blq-7edb25e58d83",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7887
+     },
+     {
+      "query_id": "blq-7f7b6d975d42",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7862
+     },
+     {
+      "query_id": "blq-802b62666f01",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7899
+     },
+     {
+      "query_id": "blq-81639d743ed0",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7867
+     },
+     {
+      "query_id": "blq-83ad5a20dd90",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7851
+     },
+     {
+      "query_id": "blq-85947a06f2a6",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7891
+     },
+     {
+      "query_id": "blq-8947eecb73c5",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7863
+     },
+     {
+      "query_id": "blq-89a48c451e41",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7878
+     },
+     {
+      "query_id": "blq-89b4697a40aa",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7856
+     },
+     {
+      "query_id": "blq-8c30531e7527",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7874
+     },
+     {
+      "query_id": "blq-8dc1baf111d8",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7869
+     },
+     {
+      "query_id": "blq-8f1e416f1223",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7875
+     },
+     {
+      "query_id": "blq-92fbf13400dd",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7876
+     },
+     {
+      "query_id": "blq-941995afe827",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7848
+     },
+     {
+      "query_id": "blq-96379e20cb17",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7876
+     },
+     {
+      "query_id": "blq-9a0310dfad58",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7872
+     },
+     {
+      "query_id": "blq-9b22e69361c0",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7875
+     },
+     {
+      "query_id": "blq-9c3ef9c3dd2c",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7842
+     },
+     {
+      "query_id": "blq-9d47c8494dac",
+      "category": "resolved_one",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7844
+     },
+     {
+      "query_id": "blq-9f8266f03b94",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7896
+     },
+     {
+      "query_id": "blq-a3c771bc1925",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7845
+     },
+     {
+      "query_id": "blq-a56a56842cc9",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7865
+     },
+     {
+      "query_id": "blq-a67940dfadf1",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7867
+     },
+     {
+      "query_id": "blq-a8916e6a6430",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7841
+     },
+     {
+      "query_id": "blq-aa88f900e316",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7868
+     },
+     {
+      "query_id": "blq-aaa52f805b64",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7864
+     },
+     {
+      "query_id": "blq-abf83d33d7b0",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7846
+     },
+     {
+      "query_id": "blq-b0769428ef23",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7898
+     },
+     {
+      "query_id": "blq-b53ac2e8d31e",
+      "category": "resolved_set",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7865
+     },
+     {
+      "query_id": "blq-bab5fa2e9281",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7863
+     },
+     {
+      "query_id": "blq-bb52ad900287",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7841
+     },
+     {
+      "query_id": "blq-bbcb32cd6113",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7866
+     },
+     {
+      "query_id": "blq-bc4cfff1153f",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7857
+     },
+     {
+      "query_id": "blq-bcab7bd470c1",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7904
+     },
+     {
+      "query_id": "blq-bee7b20506cf",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7870
+     },
+     {
+      "query_id": "blq-bf8cb5fe3f2f",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7875
+     },
+     {
+      "query_id": "blq-c16a09cbe6db",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7842
+     },
+     {
+      "query_id": "blq-c48d13e769f9",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7855
+     },
+     {
+      "query_id": "blq-c6ea2f00597f",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7854
+     },
+     {
+      "query_id": "blq-c77d340ff6df",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7879
+     },
+     {
+      "query_id": "blq-c8b5cccae2fa",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7870
+     },
+     {
+      "query_id": "blq-c932aff79989",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7876
+     },
+     {
+      "query_id": "blq-c9e227526a0e",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7865
+     },
+     {
+      "query_id": "blq-cf1056090b74",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7880
+     },
+     {
+      "query_id": "blq-d083eb5826ea",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7873
+     },
+     {
+      "query_id": "blq-d441af82efcc",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7880
+     },
+     {
+      "query_id": "blq-d5042f36c4cc",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7853
+     },
+     {
+      "query_id": "blq-d74068544d59",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7903
+     },
+     {
+      "query_id": "blq-d7483d79ca93",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7879
+     },
+     {
+      "query_id": "blq-d798b5942d11",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7869
+     },
+     {
+      "query_id": "blq-d866f63f767f",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7875
+     },
+     {
+      "query_id": "blq-dc69b1ae5889",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7875
+     },
+     {
+      "query_id": "blq-dca0c29104ca",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7861
+     },
+     {
+      "query_id": "blq-de5d54fcfea8",
+      "category": "resolved_set",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7865
+     },
+     {
+      "query_id": "blq-deb92959bd79",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7891
+     },
+     {
+      "query_id": "blq-df4f43073bba",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7849
+     },
+     {
+      "query_id": "blq-e239a7d74840",
+      "category": "resolved_one",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7906
+     },
+     {
+      "query_id": "blq-e3da25b04d01",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7890
+     },
+     {
+      "query_id": "blq-e58109d3ac5d",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7870
+     },
+     {
+      "query_id": "blq-e9e83847f6a3",
+      "category": "resolved_set",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7864
+     },
+     {
+      "query_id": "blq-eab9f68dfac3",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7837
+     },
+     {
+      "query_id": "blq-eae77c5101cb",
+      "category": "resolved_one",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7849
+     },
+     {
+      "query_id": "blq-eb7eb7d0e806",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7849
+     },
+     {
+      "query_id": "blq-ef92292a53ae",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7866
+     },
+     {
+      "query_id": "blq-efa3da9088e6",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7850
+     },
+     {
+      "query_id": "blq-f02ded117a1f",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7855
+     },
+     {
+      "query_id": "blq-f0d3367c9616",
+      "category": "resolved_one",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7865
+     },
+     {
+      "query_id": "blq-f1b495c0031e",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7834
+     },
+     {
+      "query_id": "blq-f300d1abfa2f",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7873
+     },
+     {
+      "query_id": "blq-f37dd6a9f8a7",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7854
+     },
+     {
+      "query_id": "blq-f38143d456da",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7882
+     },
+     {
+      "query_id": "blq-f5ef651dfd5f",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7860
+     },
+     {
+      "query_id": "blq-f6f435ef36b3",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7879
+     },
+     {
+      "query_id": "blq-f71e75574c49",
+      "category": "resolved_set",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": true,
+      "context_tokens": 7839
+     },
+     {
+      "query_id": "blq-fa097d85524d",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7880
+     },
+     {
+      "query_id": "blq-fa3bd225e682",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7871
+     },
+     {
+      "query_id": "blq-fd62e9f46d9e",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7875
+     }
+    ]
+   },
+   "anthropic:claude-opus-5-5": {
+    "n": 38,
+    "correct": 35,
+    "accuracy": 0.9210526315789473,
+    "by_category": {
+     "holder": {
+      "n": 13,
+      "correct": 13
+     },
+     "resolved_one": {
+      "n": 6,
+      "correct": 5
+     },
+     "weight_change": {
+      "n": 13,
+      "correct": 13
+     },
+     "resolved_set": {
+      "n": 6,
+      "correct": 4
+     }
+    },
+    "outcomes": {
+     "correct": 35,
+     "wrong": 2,
+     "abstain": 1
+    },
+    "judged": 20,
+    "context_tokens": {
+     "mean": 7861,
+     "p95": 7893
+    },
+    "rows": [
+     {
+      "query_id": "blq-0558f0186f25",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7860
+     },
+     {
+      "query_id": "blq-08e375bcf8cf",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7886
+     },
+     {
+      "query_id": "blq-0d69cf933022",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7866
+     },
+     {
+      "query_id": "blq-0f394f82b5ea",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7870
+     },
+     {
+      "query_id": "blq-12d720ad6814",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7861
+     },
+     {
+      "query_id": "blq-136760651247",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7893
+     },
+     {
+      "query_id": "blq-152e4b013470",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7843
+     },
+     {
+      "query_id": "blq-1c642bf093ac",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7873
+     },
+     {
+      "query_id": "blq-1e75f9243e7f",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7831
+     },
+     {
+      "query_id": "blq-1ea6713cde8c",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7814
+     },
+     {
+      "query_id": "blq-274bc7edf28a",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7856
+     },
+     {
+      "query_id": "blq-3f41aee7ea3c",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7858
+     },
+     {
+      "query_id": "blq-3f572736c3ce",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7758
+     },
+     {
+      "query_id": "blq-40149a56e5f9",
+      "category": "resolved_set",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7883
+     },
+     {
+      "query_id": "blq-508d93c4603e",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7868
+     },
+     {
+      "query_id": "blq-558565db8561",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7856
+     },
+     {
+      "query_id": "blq-58f50da926db",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7862
+     },
+     {
+      "query_id": "blq-62b45a9db6d3",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7864
+     },
+     {
+      "query_id": "blq-6f5d7a11fdfe",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7885
+     },
+     {
+      "query_id": "blq-74e5d017c841",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7879
+     },
+     {
+      "query_id": "blq-7a8c74ebfc76",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7857
+     },
+     {
+      "query_id": "blq-7f7b6d975d42",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7862
+     },
+     {
+      "query_id": "blq-8947eecb73c5",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7863
+     },
+     {
+      "query_id": "blq-8dc1baf111d8",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7869
+     },
+     {
+      "query_id": "blq-92fbf13400dd",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7876
+     },
+     {
+      "query_id": "blq-9d47c8494dac",
+      "category": "resolved_one",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7844
+     },
+     {
+      "query_id": "blq-9f8266f03b94",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7896
+     },
+     {
+      "query_id": "blq-a67940dfadf1",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7867
+     },
+     {
+      "query_id": "blq-bb52ad900287",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7841
+     },
+     {
+      "query_id": "blq-bf8cb5fe3f2f",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7875
+     },
+     {
+      "query_id": "blq-c8b5cccae2fa",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7870
+     },
+     {
+      "query_id": "blq-c9e227526a0e",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7865
+     },
+     {
+      "query_id": "blq-cf1056090b74",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7880
+     },
+     {
+      "query_id": "blq-d7483d79ca93",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7879
+     },
+     {
+      "query_id": "blq-dc69b1ae5889",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7875
+     },
+     {
+      "query_id": "blq-f1b495c0031e",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7834
+     },
+     {
+      "query_id": "blq-f37dd6a9f8a7",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7854
+     },
+     {
+      "query_id": "blq-f71e75574c49",
+      "category": "resolved_set",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7839
+     }
+    ]
+   },
+   "openai:gpt-6-astra": {
+    "n": 38,
+    "correct": 35,
+    "accuracy": 0.9210526315789473,
+    "by_category": {
+     "holder": {
+      "n": 13,
+      "correct": 13
+     },
+     "resolved_one": {
+      "n": 6,
+      "correct": 5
+     },
+     "weight_change": {
+      "n": 13,
+      "correct": 13
+     },
+     "resolved_set": {
+      "n": 6,
+      "correct": 4
+     }
+    },
+    "outcomes": {
+     "correct": 35,
+     "wrong": 2,
+     "abstain": 1
+    },
+    "judged": 0,
+    "context_tokens": {
+     "mean": 7861,
+     "p95": 7893
+    },
+    "rows": [
+     {
+      "query_id": "blq-0558f0186f25",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7860
+     },
+     {
+      "query_id": "blq-08e375bcf8cf",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7886
+     },
+     {
+      "query_id": "blq-0d69cf933022",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7866
+     },
+     {
+      "query_id": "blq-0f394f82b5ea",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7870
+     },
+     {
+      "query_id": "blq-12d720ad6814",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7861
+     },
+     {
+      "query_id": "blq-136760651247",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7893
+     },
+     {
+      "query_id": "blq-152e4b013470",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7843
+     },
+     {
+      "query_id": "blq-1c642bf093ac",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7873
+     },
+     {
+      "query_id": "blq-1e75f9243e7f",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7831
+     },
+     {
+      "query_id": "blq-1ea6713cde8c",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7814
+     },
+     {
+      "query_id": "blq-274bc7edf28a",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7856
+     },
+     {
+      "query_id": "blq-3f41aee7ea3c",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7858
+     },
+     {
+      "query_id": "blq-3f572736c3ce",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7758
+     },
+     {
+      "query_id": "blq-40149a56e5f9",
+      "category": "resolved_set",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7883
+     },
+     {
+      "query_id": "blq-508d93c4603e",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7868
+     },
+     {
+      "query_id": "blq-558565db8561",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7856
+     },
+     {
+      "query_id": "blq-58f50da926db",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7862
+     },
+     {
+      "query_id": "blq-62b45a9db6d3",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7864
+     },
+     {
+      "query_id": "blq-6f5d7a11fdfe",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7885
+     },
+     {
+      "query_id": "blq-74e5d017c841",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7879
+     },
+     {
+      "query_id": "blq-7a8c74ebfc76",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7857
+     },
+     {
+      "query_id": "blq-7f7b6d975d42",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7862
+     },
+     {
+      "query_id": "blq-8947eecb73c5",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7863
+     },
+     {
+      "query_id": "blq-8dc1baf111d8",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7869
+     },
+     {
+      "query_id": "blq-92fbf13400dd",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7876
+     },
+     {
+      "query_id": "blq-9d47c8494dac",
+      "category": "resolved_one",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7844
+     },
+     {
+      "query_id": "blq-9f8266f03b94",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7896
+     },
+     {
+      "query_id": "blq-a67940dfadf1",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7867
+     },
+     {
+      "query_id": "blq-bb52ad900287",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7841
+     },
+     {
+      "query_id": "blq-bf8cb5fe3f2f",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7875
+     },
+     {
+      "query_id": "blq-c8b5cccae2fa",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7870
+     },
+     {
+      "query_id": "blq-c9e227526a0e",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7865
+     },
+     {
+      "query_id": "blq-cf1056090b74",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7880
+     },
+     {
+      "query_id": "blq-d7483d79ca93",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7879
+     },
+     {
+      "query_id": "blq-dc69b1ae5889",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7875
+     },
+     {
+      "query_id": "blq-f1b495c0031e",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7834
+     },
+     {
+      "query_id": "blq-f37dd6a9f8a7",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7854
+     },
+     {
+      "query_id": "blq-f71e75574c49",
+      "category": "resolved_set",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7839
+     }
+    ]
+   },
+   "anthropic:claude-fable-5-1": {
+    "n": 38,
+    "correct": 35,
+    "accuracy": 0.9210526315789473,
+    "by_category": {
+     "holder": {
+      "n": 13,
+      "correct": 13
+     },
+     "resolved_one": {
+      "n": 6,
+      "correct": 5
+     },
+     "weight_change": {
+      "n": 13,
+      "correct": 13
+     },
+     "resolved_set": {
+      "n": 6,
+      "correct": 4
+     }
+    },
+    "outcomes": {
+     "correct": 35,
+     "wrong": 2,
+     "abstain": 1
+    },
+    "judged": 16,
+    "context_tokens": {
+     "mean": 7861,
+     "p95": 7893
+    },
+    "rows": [
+     {
+      "query_id": "blq-0558f0186f25",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7860
+     },
+     {
+      "query_id": "blq-08e375bcf8cf",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7886
+     },
+     {
+      "query_id": "blq-0d69cf933022",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7866
+     },
+     {
+      "query_id": "blq-0f394f82b5ea",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7870
+     },
+     {
+      "query_id": "blq-12d720ad6814",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7861
+     },
+     {
+      "query_id": "blq-136760651247",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7893
+     },
+     {
+      "query_id": "blq-152e4b013470",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7843
+     },
+     {
+      "query_id": "blq-1c642bf093ac",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7873
+     },
+     {
+      "query_id": "blq-1e75f9243e7f",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7831
+     },
+     {
+      "query_id": "blq-1ea6713cde8c",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7814
+     },
+     {
+      "query_id": "blq-274bc7edf28a",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7856
+     },
+     {
+      "query_id": "blq-3f41aee7ea3c",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7858
+     },
+     {
+      "query_id": "blq-3f572736c3ce",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7758
+     },
+     {
+      "query_id": "blq-40149a56e5f9",
+      "category": "resolved_set",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7883
+     },
+     {
+      "query_id": "blq-508d93c4603e",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7868
+     },
+     {
+      "query_id": "blq-558565db8561",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7856
+     },
+     {
+      "query_id": "blq-58f50da926db",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7862
+     },
+     {
+      "query_id": "blq-62b45a9db6d3",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7864
+     },
+     {
+      "query_id": "blq-6f5d7a11fdfe",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7885
+     },
+     {
+      "query_id": "blq-74e5d017c841",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7879
+     },
+     {
+      "query_id": "blq-7a8c74ebfc76",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7857
+     },
+     {
+      "query_id": "blq-7f7b6d975d42",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7862
+     },
+     {
+      "query_id": "blq-8947eecb73c5",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7863
+     },
+     {
+      "query_id": "blq-8dc1baf111d8",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7869
+     },
+     {
+      "query_id": "blq-92fbf13400dd",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7876
+     },
+     {
+      "query_id": "blq-9d47c8494dac",
+      "category": "resolved_one",
+      "outcome": "abstain",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7844
+     },
+     {
+      "query_id": "blq-9f8266f03b94",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7896
+     },
+     {
+      "query_id": "blq-a67940dfadf1",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7867
+     },
+     {
+      "query_id": "blq-bb52ad900287",
+      "category": "resolved_set",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7841
+     },
+     {
+      "query_id": "blq-bf8cb5fe3f2f",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7875
+     },
+     {
+      "query_id": "blq-c8b5cccae2fa",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7870
+     },
+     {
+      "query_id": "blq-c9e227526a0e",
+      "category": "holder",
+      "outcome": "correct",
+      "correct": true,
+      "judged": true,
+      "context_tokens": 7865
+     },
+     {
+      "query_id": "blq-cf1056090b74",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7880
+     },
+     {
+      "query_id": "blq-d7483d79ca93",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7879
+     },
+     {
+      "query_id": "blq-dc69b1ae5889",
+      "category": "resolved_one",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7875
+     },
+     {
+      "query_id": "blq-f1b495c0031e",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7834
+     },
+     {
+      "query_id": "blq-f37dd6a9f8a7",
+      "category": "weight_change",
+      "outcome": "correct",
+      "correct": true,
+      "judged": false,
+      "context_tokens": 7854
+     },
+     {
+      "query_id": "blq-f71e75574c49",
+      "category": "resolved_set",
+      "outcome": "wrong",
+      "correct": false,
+      "judged": false,
+      "context_tokens": 7839
+     }
+    ]
+   }
+  }
+ }
+}

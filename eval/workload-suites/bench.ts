@@ -23,7 +23,7 @@
  */
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { gbrainSpecFrom, resolveGbrainUnderTest } from '../runner/gbrain-under-test.ts';
 import { REPO_ROOT } from '../runner/harness-env.ts';
 import { startBench, type Bench, type Bridge } from './bench-infra.ts';
@@ -52,19 +52,22 @@ export interface BenchArm {
   note: string;
 }
 
+/** Facts and chunk budgets tuned retrieval-only on each suite's smoke store to a mean of about 8,000 delivered tokens. */
 const COMPARATOR_COMBINED = { max_tokens: 5500, max_chunk_tokens: 4500 };
+const COMPARATOR_COMBINED_B1 = { max_tokens: 4800, max_chunk_tokens: 3800 };
+const COMPARATOR_COMBINED_B3 = { max_tokens: 2300, max_chunk_tokens: 2700 };
 const COMPARATOR_FACTS = { max_tokens: 8000, max_chunk_tokens: 0 };
 
 export const BENCH_ARMS: Record<Exclude<SuiteId, 'corrections'>, BenchArm[]> = {
   'passing-details': [
     { id: 'gbrain-raw', system: 'gbrain', store: 'gbrain-raw', config: GBRAIN_BASE, overrides: {}, presence: 'pages', note: 'conversation pages only, zero-LLM write path' },
     { id: 'gbrain-combined', system: 'gbrain', store: 'gbrain-facts', config: GBRAIN_BASE, overrides: {}, credentials: ['voyage', 'anthropic'], extractFacts: true, presence: 'pages+facts', note: 'pages plus facts from extract-conversation-facts; query returns matching saved facts beside the page blocks' },
-    { id: 'comparator-facts', system: 'comparator', store: 'comparator', config: COMPARATOR_COMBINED, overrides: COMPARATOR_FACTS, presence: 'memories', note: 'extracted facts only' },
-    { id: 'comparator-combined', system: 'comparator', store: 'comparator', config: COMPARATOR_COMBINED, overrides: COMPARATOR_COMBINED, presence: 'memories', note: 'facts plus the raw chunks they came from' },
+    { id: 'comparator-facts', system: 'comparator', store: 'comparator', config: COMPARATOR_COMBINED_B1, overrides: COMPARATOR_FACTS, presence: 'memories', note: 'extracted facts only (its recall returns about 4k tokens of facts at most)' },
+    { id: 'comparator-combined', system: 'comparator', store: 'comparator', config: COMPARATOR_COMBINED_B1, overrides: COMPARATOR_COMBINED_B1, presence: 'memories', note: 'facts plus the raw chunks they came from' },
   ],
   'time-relationships': [
     { id: 'gbrain-combined', system: 'gbrain', store: 'gbrain-facts', config: GBRAIN_BASE, overrides: {}, credentials: ['voyage', 'anthropic'], extractFacts: true, presence: 'pages+facts', note: 'pages plus extracted facts' },
-    { id: 'comparator-combined', system: 'comparator', store: 'comparator', config: COMPARATOR_COMBINED, overrides: COMPARATOR_COMBINED, presence: 'memories', note: 'facts plus raw chunks' },
+    { id: 'comparator-combined', system: 'comparator', store: 'comparator', config: COMPARATOR_COMBINED_B3, overrides: COMPARATOR_COMBINED_B3, presence: 'memories', note: 'facts plus raw chunks; budgets tuned down because world-v1 facts and chunks overshoot them' },
   ],
   beliefs: [
     { id: 'gbrain-combined', system: 'gbrain', store: 'gbrain-facts', config: GBRAIN_BASE, overrides: {}, credentials: ['voyage', 'anthropic'], extractFacts: true, presence: 'pages+facts', note: 'pages plus extracted facts' },
@@ -234,7 +237,7 @@ async function answerStatic(bench: Bench, bundle: SuiteBundle, dir: string, armI
 
 async function extractFacts(bridge: Bridge, unit: string, log: (l: string) => void): Promise<Record<string, unknown>> {
   try {
-    const r = await bridge.call<{ stdout: string; ms: number }>('gbrain_cli', { unit, args: ['extract-conversation-facts', '--yes', '--json', '--max-cost-usd', '5', '--workers', '4'] });
+    const r = await bridge.call<{ stdout: string; ms: number }>('gbrain_cli', { unit, args: ['extract-conversation-facts', '--yes', '--json', '--max-cost-usd', '5', '--workers', '8'] });
     const json = JSON.parse(r.stdout.slice(r.stdout.indexOf('{')));
     return { ms: r.ms, facts_inserted: json.facts_inserted, pages_processed: json.pages_processed, pages_skipped: json.pages_skipped, pages_failed: json.pages_failed, spent_usd: json.spent_usd, outcome: json.outcome };
   } catch (e) {
@@ -360,8 +363,9 @@ async function score(bench: Bench | null, bundle: SuiteBundle, dir: string, log:
   if (existsSync(join(dir, 'ingest'))) {
     for (const f of readdirSync(join(dir, 'ingest'))) {
       const ing = JSON.parse(readFileSync(join(dir, 'ingest', f), 'utf8'));
-      for (const [unit, r] of Object.entries(ing.units as Record<string, { presence?: { found: Record<string, boolean> } }>)) {
+      for (const [unit, r] of Object.entries(ing.units as Record<string, { presence?: { found: Record<string, boolean>; by_kind?: Record<string, Record<string, boolean>> } }>)) {
         presenceByUnit.set(`${ing.store}/${unit}`, r.presence?.found ?? {});
+        for (const [kind, found] of Object.entries(r.presence?.by_kind ?? {})) presenceByUnit.set(`${ing.store}/${unit}/${kind}`, found);
       }
     }
   }
@@ -389,7 +393,8 @@ async function score(bench: Bench | null, bundle: SuiteBundle, dir: string, log:
         const row: ScoredAnswer = { query_id: r.query_id, category: label.category, checkpoint: r.checkpoint, outcome, correct, judged, context_tokens: r.context_tokens_cl100k };
         if (bundle.suite === 'passing-details' && label.gold.kind === 'value') {
           const store = BENCH_ARMS['passing-details'].find(a => a.id === arm)?.store ?? arm;
-          const found = presenceByUnit.get(`${store}/${r.unit}`);
+          // A facts-only lane stores only what extraction kept, so its presence is the facts check alone.
+          const found = presenceByUnit.get(arm === 'comparator-facts' ? `${store}/${r.unit}/facts` : `${store}/${r.unit}`);
           const stored = found && label.gold.value in found ? found[label.gold.value]! : null;
           const context = r.prompt.slice(r.prompt.indexOf('Context:'), r.prompt.lastIndexOf('Question (asked on'));
           row.miss = classifyMiss(label, { outcome: correct ? 'correct' : outcome === 'ambiguous' ? 'wrong' : outcome as Outcome, stored, deliveredContext: context });
@@ -442,7 +447,7 @@ if (import.meta.main) {
   const phase = arg(argv, '--phase') ?? 'answer';
   const smoke = arg(argv, '--smoke') ? Number(arg(argv, '--smoke')) : null;
   const stub = argv.includes('--stub');
-  const dir = arg(argv, '--out') ?? join(REPO_ROOT, 'eval/reports/workload-bench', `${suiteId}${smoke ? `-smoke${smoke}` : ''}${stub ? '-stub' : ''}`);
+  const dir = resolve(arg(argv, '--out') ?? join(REPO_ROOT, 'eval/reports/workload-bench', `${suiteId}${smoke ? `-smoke${smoke}` : ''}${stub ? '-stub' : ''}`));
   const log = (l: string) => process.stderr.write(`${new Date().toISOString().slice(11, 19)} ${l}\n`);
   const bundle = suite.generate({ seed: suite.defaultSeed, smoke: false });
   bundle.extra['frontier-subset'] = frontierSubset(bundle);

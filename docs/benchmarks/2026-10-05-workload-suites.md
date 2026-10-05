@@ -2,7 +2,7 @@
 
 Four seeded question sets test what an agent memory does with ordinary chat: recall a detail mentioned once, apply a correction, track how relationships change over time, and keep track of who believes what. Each suite generates the same raw conversations for gbrain and for the comparator (an extract-first memory server that calls a model on every write to pull out facts), so both systems are measured on identical records.
 
-**Status, October 5, 2026.** The generators, record formats, offline checks and entry points are complete. No paid run has happened, so this page reports no gbrain or comparator results. Every suite passes its offline checks: a stub reader answers every question from the gold conversations, answers none without memory (apart from questions whose correct answer is "none"), and the full history never makes a question ambiguous.
+**Status, October 5, 2026 (interim).** The paid runs are in progress. B2, B3 and B4 are fully answered and scored with the fixed reader and the frontier sweep. In B1, gbrain's fact-extraction lane has answered 250 of its 400 questions, and the sweep has not yet re-read the B1 comparator and gbrain fact lanes. The results below are interim until this line says otherwise. Every suite passes its offline checks: a stub reader answers every question from the gold conversations and answers none without memory (apart from questions whose correct answer is "none"), and the full history never makes a question ambiguous.
 
 | Suite | Command | Questions | Isolation units | Conversation tokens | Manifest digest |
 |---|---|---|---|---|---|
@@ -12,6 +12,69 @@ Four seeded question sets test what an agent memory does with ordinary chat: rec
 | B4 beliefs | `bun run eval:beliefs` | 150 | 25 histories | ~0.54M (~22k per history) | `bb6dea9648f4f59d` |
 
 Token counts are characters divided by four. Digests are the first 16 characters of the `digest` field in `eval/data/workload-suites/<version>.manifest.json`.
+
+## Results (interim)
+
+Both systems ran from the same raw records through the harness providers, behind the metering proxy, at a delivered-context target of 8,000 cl100k tokens. Answers came from the fixed reader (`anthropic:claude-sonnet-5-5`), and a hash-chosen quarter of each category's questions was re-read by `anthropic:claude-opus-5-5`, `openai:gpt-6-astra` and `anthropic:claude-fable-5-1`. The builds were gbrain `e8e1f66b` (capy/mpw-integration) and the comparator's pinned release (0.10.2). The comparator used its own extraction model, gpt-4o-mini. Its fact and chunk budgets were tuned retrieval-only on each suite's smoke store to reach the target. gbrain's fact extraction (`extract-conversation-facts`, its default `anthropic:claude-sonnet-4-6`) ran in the pipeline, and its spend is counted. Deterministic scoring decides every answer except those that name the gold value together with a stale or distractor value; the fixed judge (`openai:gpt-6.1-sol`) decides those. The receipts are in [2026-10-05-workload-suites/](2026-10-05-workload-suites/): scored rows, ingest and presence receipts, B2 arm runs, spend by label and run manifests.
+
+### B2 corrections (complete)
+
+Fixed reader, 100 corrections per arm:
+
+| Arm | Before the correction | Corrected after 1 write | Stale after 1 write | Corrected after 5 writes | Stale after 5 writes |
+|---|---:|---:|---:|---:|---:|
+| gbrain edit + sync | 100 | 100 | 0 | 100 | 0 |
+| gbrain forget + remember | 100 | 0 | 91 | 0 | 89 |
+| gbrain append | 100 | 100 | 0 | 100 | 0 |
+| comparator edit/invalidate | 100 | 0 | 14 | 0 | 12 |
+| comparator re-retain | 100 | 100 | 0 | 100 | 0 |
+| comparator append | 100 | 100 | 0 | 100 | 0 |
+
+`gbrain-remember-replaces` did not run: `remember` has no `replaces` parameter at `e8e1f66b`. Four arms are at the ceiling, so the useful signal is which paths fail.
+
+- **gbrain forget + remember fails.** The raw lane has no facts to forget, so the conversation page still states the old value. `query` returns the remembered statement only when it shares three quarters of the question's words, and "Which bank does Apex use?" does not match "Apex banks with Tidewell Bank." The reader therefore sees only the old value.
+- **comparator edit/invalidate fails.** The comparator's memory PATCH rewrites the extracted fact, but the raw chunk still quotes the old value. The reader sees both and does not commit to the corrected value; most of these answers are hedges the judge rejects.
+
+The frontier sweep agrees: Opus, Astra and Fable score every passing arm at 100% and both failing arms at 30% to 43%, which is close to the share of pre-correction probes in the subset.
+
+### B4 beliefs (complete)
+
+| Arm | Fixed reader | Opus / Astra / Fable (38-question subset) | Delivered tokens (mean / p95) |
+|---|---:|---:|---:|
+| gbrain (pages plus extracted facts) | 139/150 (92.7%) | 35 / 35 / 35 | 7,866 / 7,898 |
+| comparator (facts plus chunks) | 108/150 (72.0%) | 28 / 28 / 28 | 7,823 / 7,999 |
+
+By category (fixed reader), holder questions score 50/50 for gbrain and 42/50 for the comparator, weight change 50/50 and 38/50, resolved-one 20/25 and 20/25, and resolved-set 19/25 and 8/25. gbrain is at the ceiling on holder and weight-change questions. The gap is on the questions whose evidence is spread over several conversations: every confidence statement, or a prediction and its later outcome. That is consistent with gbrain delivering those conversations as whole pages while the comparator delivers extracted facts and the chunks attached to them; the receipts keep every delivered context for checking this per question.
+
+### B3 time and relationships (complete)
+
+| Arm | Fixed reader | Opus / Astra / Fable (95-question subset) | Delivered tokens (mean / p95) |
+|---|---:|---:|---:|
+| gbrain (pages plus extracted facts) | 222/374 (59.4%) | 60 / 71 / 62 | 8,029 / 8,157 |
+| comparator (facts plus chunks) | 228/374 (61.0%) | 55 / 68 / 55 | 7,027 / 10,739 |
+
+| Family (fixed reader) | gbrain | comparator |
+|---|---:|---:|
+| as-of employer | 64/104 | 67/104 |
+| one-hop relationships | 106/145 | 108/145 |
+| composed multi-hop | 52/125 | 53/125 |
+
+The two systems are within two points with the fixed reader. Astra scores both about ten points higher than the other readers. Neither system's pipeline turns these conversations into a relationship graph a reader can walk: multi-hop questions whose answers span many pages (portfolio peers, founders' meetings) score near zero for both. The comparator's p95 delivered context (10,739 tokens) exceeds the target by more than 10%, because its recall overshoots the fact and chunk budgets on world-v1 pages. Its first run, at the budgets tuned on B4, averaged 13,310 tokens. That run was discarded, and the arm was re-answered at the lower budgets.
+
+### B1 passing details (interim)
+
+| Arm | Fixed reader | Delivered tokens (mean / p95) |
+|---|---:|---:|
+| gbrain raw (pages only) | 350/400 (87.5%) | 4,333 / 5,493 |
+| gbrain pages plus extracted facts | 246/250 so far (98.4%) | 7,891 / 7,931 |
+| comparator facts plus chunks | 353/400 (88.3%) | 7,966 / 8,173 |
+| comparator facts only | 345/400 (86.3%) | 4,295 / 4,464 |
+
+gbrain's raw lane under-delivers. `query` returns about ten page blocks (roughly 4,300 tokens) whatever the token budget, so it competes at about half the comparator's context. The comparator's facts-only recall returns at most about 4,300 to 4,500 tokens of facts, whatever its budget. These lanes cannot run at the measured builds: a gbrain facts-only lane (no query-ranked fact retrieval; `recall` lists facts by entity, session or time) and a comparator raw-only lane (chunks come only attached to the facts they came from). The miss classes and the remaining gbrain fact-lane questions arrive with the final update.
+
+### Spend
+
+The proxy ledger (`.budget/workload-suites.sqlite`, cap $720) had committed $262.28 when this interim update was written. That covers smokes, full runs, sweeps and judging for all four suites, including the discarded B3 comparator run and gbrain's and the comparator's extraction. Per-suite spend by proxy label is in each suite's `spend.json`.
 
 ## What each suite asks
 
