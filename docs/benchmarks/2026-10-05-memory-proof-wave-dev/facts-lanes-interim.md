@@ -1,6 +1,6 @@
-# gbrain facts lanes on the dev slices (interim, 2026-10-05)
+# gbrain facts lanes on the dev slices (2026-10-05)
 
-Interim. LongMemEval-S cells are still running and this note will be updated when they finish. Raw-lane cells for the same slices run in the parent lane and are not repeated here.
+Every planned facts-lane and combined-lane dev cell has run, on BEAM 100k, 500k and 1m, LoCoMo10 and LongMemEval-S. Raw-lane cells for the same slices run in the parent lane and are not repeated here. The file keeps its interim name so links to it stay valid.
 
 gbrain build e8e1f66b8 (copied overlay). Answer model gemini:gemini-3.8-flash. Judge gemini:gemini-3.5-flash (BEAM's forced judge). Extraction model openai:gpt-6-luna. Delivered context is counted with cl100k_base on the text inserted into the final prompt. Receipts are in [cells/](cells/) (summary, cell, spec, spend, tuning, and `questions.jsonl` with per-question outcome, score, delivered tokens and fact tokens). Extraction receipts per memory unit are in [facts-lanes/stores/](facts-lanes/stores/), the per-slice extraction totals are in [facts-lanes/extraction.json](facts-lanes/extraction.json), and the dev driver logs are in [facts-lanes/tracks/](facts-lanes/tracks/).
 
@@ -26,14 +26,16 @@ The delivered-token gate passes when the mean and p95 are both within ±10% of t
 | `beam-1m-gbrain-rag-6fd67a9e9a1a` | BEAM 1m | facts | ceiling | 1,708 / 2,042 | 36 / 140 | 0.257 | 0.248 | no target | $3.42 |
 | `locomo-locomo10-gbrain-rag-7875d00f3b75` | LoCoMo10 (conv-44, conv-42) | combined | facts 1800, pages 6300 | 8,036 / 8,136 | 291 / 322 | 0.904 | 0.904 | pass | $4.54 |
 | `locomo-locomo10-gbrain-rag-15da9e907a79` | LoCoMo10 | facts | ceiling | 1,744 / 1,819 | 137 / 322 | 0.425 | 0.425 | no target | $2.82 |
+| `longmemeval-s-gbrain-rag-8c869080496e` | LongMemEval-S (100 dev questions) | combined | facts 1800, pages 6300 | 8,180 / 8,399 | 80 / 100 | 0.800 | 0.800 | fails `complete` (1 incomplete ingest) | $1.40 |
+| `longmemeval-s-gbrain-rag-000a85eacea5` | LongMemEval-S | facts | ceiling | 1,912 / 2,090 | 27 / 100 | 0.270 | 0.270 | no target; fails `complete` (1 incomplete ingest) | $1.05 |
 
-Every denominator is the full scheduled set. BEAM accuracy counts a question as correct when its graded score is at least 0.5, and the mean score is the rubric-graded mean.
+Every denominator is the full scheduled set, so the LongMemEval question whose history never ingests counts as not correct. BEAM accuracy counts a question as correct when its graded score is at least 0.5, and the mean score is the rubric-graded mean.
 
 Superseded LoCoMo cells, kept for the split comparison: `locomo-locomo10-gbrain-rag-146f654a74a2` (facts 1793, pages 6275, 285/322) and `locomo-locomo10-gbrain-rag-9c77c271d7b8` (facts 585, pages 7316, 284/322). They ran before the provider kept image-intent queries: 8 rows were retrieval failures when gbrain reported `vector_arm_failed` for a photo question on a text-only voyage-4 brain, so they fail `no_answer_or_retrieval_failures`.
 
 **Split.** The facts and page split for combined was tuned on BEAM 100k and LoCoMo: facts 1800 scored 57/80 and 285/322, and facts 600 scored 58/80 and 284/322. The two are tied. The remaining slices use facts 1800, which is all of `recall`'s 100 facts (about 1.5k to 1.6k tokens), because that is the setting where the facts lane actually contributes. More facts tokens cannot help: `recall` caps at 100 facts.
 
-**Wrapper revisions.** The BEAM 100k cells and the BEAM 500k combined cell ran on wrapper revision `4f465aaba5c3`; the others ran on `b7d4b3475c90`, after merging the harness branch's degraded-stage policy. The changes between the two touch only rows with a degraded stage, a date-header switch that stays on, and locking. No BEAM row had a degraded stage.
+**Wrapper revisions.** The BEAM 100k cells and the BEAM 500k combined cell ran on wrapper revision `4f465aaba5c3`. The other BEAM and LoCoMo cells ran on `b7d4b3475c90`, after merging the harness branch's degraded-stage policy. The LongMemEval cells ran on `255f78f813b0` (combined) and `9d9d38eb159c` (facts), after merging the repeated-session fix and the dev-table tooling. The changes between the two touch only rows with a degraded stage, a date-header switch that stays on, and locking. No BEAM row had a degraded stage.
 
 ## Extraction cost
 
@@ -47,8 +49,8 @@ Extraction runs once per slice. Its share of each slice is below. It is a one-ti
 | LoCoMo10 | 2 | 99,092 | 64 | 157k / 54k | $0.04 | $0.43 | 0.65 | 520 | $0.01 |
 | LongMemEval-S | 99 of 100 | 11,326,071 | 8,913 | 18.7M / 4.24M | $3.94 | $0.35 | 0.79 | 30,340 | $0.75 |
 
-No extraction window failed after one retry. LongMemEval counts include one interrupted unit that was re-extracted after the repeated-session fix. One LongMemEval history (`gpt4_468eb063`) does not ingest at all: its `put_pages` batch stays `pending` past the 900-second barrier, and gbrain serve logs repeated `[persistence] phase=preparation reason=deadline_exceeded`. This happens on two attempts, while every embedding request succeeds and no chat request is made. Its question is an incomplete-ingest row in the LongMemEval cells.
+No extraction window failed after one retry. LongMemEval counts include one interrupted unit that was re-extracted after the repeated-session fix. One LongMemEval history (`gpt4_468eb063`) does not ingest at all: its `put_pages` batch stays `pending` past the 900-second barrier, and gbrain serve logs repeated `[persistence] phase=preparation reason=deadline_exceeded`. This happens on two attempts, while every embedding request succeeds and no chat request is made. Its question is the incomplete-ingest row in both LongMemEval cells.
 
 ## Spend
 
-Ledger `.budget/mpw-dev-facts.sqlite`, cap $120: $54.85 committed, $65.15 remaining, 83,976 metered requests (status at the time of this note).
+Ledger `.budget/mpw-dev-facts.sqlite`, cap $120: $56.05 committed, $63.95 remaining, 84,436 metered requests. The full status is in [facts-lanes/ledger-status.json](facts-lanes/ledger-status.json).
