@@ -4518,6 +4518,25 @@
         "/rerun_here": false
       },
       "note": "Mirror of gbrain's reported numbers (#6013, d37fab68e); copied from the upstream excerpts, not re-measured; gbrain committed no predictions file, so the table cannot be recomputed from public files."
+    },
+    {
+      "claim_id": "heldout-program-starting-line",
+      "readme_anchor": "docs/benchmarks/2026-10-05-heldout-program.md: The starting line on master",
+      "artifact_path": "docs/benchmarks/2026-10-05-heldout-program/starting-line/summary.json",
+      "artifact_sha256": "d3665fc2cba7f5764f6f4ea65384263b5e0658fe49e753def0547a6339edb625",
+      "status": "covered",
+      "expected": {
+        "/lme-s-master/recall_all_at_5": 0.9276595744680851,
+        "/lme-s-master/retrieval_scored": 470,
+        "/lme-s-qa-master/qa_score": 0.856,
+        "/locomo-qa-master/qa_score": 0.6746166950596252,
+        "/locomo-qa-master/abstention_score": 0.6341463414634146,
+        "/beam-100k-master/recall_all_at_5": 0.4537037037037037,
+        "/beam-1m-master/recall_all_at_5": 0.18181818181818182,
+        "/lme-s-master/builds/0": "0.60.48.0@6622a119e40ea09a7719233046aca24741863ed2"
+      },
+      "golden_test": "bun docs/benchmarks/2026-10-05-heldout-program/recount-starting-line.ts --check",
+      "note": "P0 starting line on gbrain master 6622a119e (v0.60.48.0), dev splits only, 2026-10-04. summary.json is recounted from the committed shard rows."
     }
   ]
 }

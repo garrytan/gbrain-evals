@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "benchmark": "hub-world",
+  "method": "generator seeds: seed 1 renders from the public salt and is development data; seeds 2 and 3 render only from the custodian's private salt (SHA-256 commitment below) and are held out",
+  "dev_seeds": [1],
+  "sealed_seeds": [2, 3],
+  "sealed_salt_sha256": "feaef5bdf62cfb4590690b45719137eb310de9a5c650b8331e5074db6675a42e",
+  "sealed_probe_files_sha256": {
+    "2": "ea764561ba53f8d5d969f77be110276d3ab2c2f31ec5a4079edf1f521884a534",
+    "3": "42cf2d7a108aed69ab4c4130b3084991945d5044b11d4d716926786dc4b8f97b"
+  },
+  "generator_version": "hub-world-gen/1",
+  "created_at": "2026-10-04",
+  "note": "Sealed worlds, probes and rows stay in custody; decisions publish aggregates until the seeds retire."
+}

@@ -60,6 +60,10 @@ BRAINBENCH_N=1 bun eval/runner/multi-adapter.ts --adapter my-adapter --queries r
 
 Document the model, embedding dimensions, graph behavior, network use and any limits. An adapter name must describe the behavior that actually ran. A missing provider key must not silently turn a reranked comparison into ordinary hybrid search.
 
+## Evaluate a gbrain change
+
+To compare a candidate gbrain build against its baseline on dev splits, and later on held-out data, use the decision kit: [docs/decisions.md](../docs/decisions.md) (`bun run eval:decide`).
+
 ## Add a category
 
 A category is a runner, a seeded generator, a scorer and a dated report that answer one question about gbrain. Copy the N3 runner (`runner/n3-temporal-asof.ts`) for the shape, then work through this list in order. The registry test fails on a runner without a row, so start there.

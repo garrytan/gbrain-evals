@@ -41,3 +41,5 @@ __pycache__/
 
 # Cat 40 large world (41 MB): regenerate with `bun eval/generators/model-ladder-gen.ts --scale large`; manifest.json is committed
 eval/data/model-ladder-v1-large/world.json
+# Cat 40 dev wide world (7 MB): regenerate with `bun eval/generators/model-ladder-gen.ts --scale wide`; manifest.json is committed
+eval/data/model-ladder-wide-dev/world.json

@@ -1,0 +1,273 @@
+{
+  "decision_id": "p7-heldout-2-2026-10-04",
+  "stage": "held-out",
+  "verdict": "pass (benefit gates 1-6 pass; gate 7 latency and release gates 1-5 rest on the implementer's frozen-build CI evidence; the unanswerable-question part of gate 3 is not evaluable on N9 v1, as recorded before the run)",
+  "default_rule": "search.relational_planner defaults on in balanced and tokenmax iff release gates 1-5 and benefit gates 1-7 hold (prereg gbrain-evals 75b8d74)",
+  "orientation": "search.relational_orient_onehop stays off: passes gate 5 but its relational-ab paraphrase recall@5 gain (1 better, 0 worse, p=1.0) does not pass N9 rule 1",
+  "builds": {
+    "candidate": "94bd52e01093aab7dfc8200248562b487083ba1a (stacked on P1 273d2b7e88f027272844e1c8ec7d470de249e583)",
+    "arms": "same build, planner off vs search.relational_planner=true; cell (b) adds search.reranker.enabled=true to both"
+  },
+  "harness": "gbrain-evals p0-heldout-harness e81279c (clean tree for every cell)",
+  "held_out_material": "N9 v1 composed set (sha256 1a2bdd9c...), second opening; the first opening ran build 1b84e519 under prereg 7560577 before the prereg named 94bd52e0; the implementer saw no sealed result before this run",
+  "reranker_evidence": "1968 voyage:rerank-2.5 calls per cell-(b) arm in the budget ledger; 0 in cell (a)",
+  "cost_usd_all_p7_sealed_cells_both_decisions": 5.05,
+  "gates": {
+    "benefit_1_sign_test": {
+      "pass": true,
+      "detail": {
+        "better": 24,
+        "worse": 0,
+        "ties": 101,
+        "p_two_sided": 1.1920928955078125e-07
+      }
+    },
+    "benefit_2_effect_floor": {
+      "pass": true,
+      "detail": {
+        "cell_a_delta": 0.2696629213483146,
+        "cell_b_delta": 0.2696629213483146
+      }
+    },
+    "benefit_3_safety": {
+      "pass": true,
+      "detail": {
+        "cell_a": {
+          "fired_runs": 339,
+          "chain_answers": 870,
+          "chain_answer_precision": 0.8310344827586207,
+          "edge_evidence_correct": 0.8482758620689655
+        },
+        "cell_b": {
+          "fired_runs": 339,
+          "chain_answers": 870,
+          "chain_answer_precision": 0.8310344827586207,
+          "edge_evidence_correct": 0.8482758620689655
+        },
+        "promotion_cell_b": {
+          "baseline_wrong_above_first_gold_per_run": 3.312,
+          "feature_chain_wrong_above_first_gold_per_run": 0.092
+        },
+        "unanswerable_chain_questions": "not evaluable: N9 v1 has no unanswerable composed questions"
+      }
+    },
+    "benefit_4_no_hurt": {
+      "pass": true
+    },
+    "benefit_5_one_hop": {
+      "pass": true,
+      "detail": {
+        "feature": {
+          "template:recall_at_5": {
+            "better": 0,
+            "worse": 0,
+            "p_two_sided": 1,
+            "regression": false
+          },
+          "template:hit_at_1": {
+            "better": 2,
+            "worse": 0,
+            "p_two_sided": 0.5,
+            "regression": false
+          },
+          "paraphrase:recall_at_5": {
+            "better": 2,
+            "worse": 0,
+            "p_two_sided": 0.5,
+            "regression": false
+          },
+          "paraphrase:hit_at_1": {
+            "better": 0,
+            "worse": 0,
+            "p_two_sided": 1,
+            "regression": false
+          }
+        },
+        "orientation": {
+          "template:recall_at_5": {
+            "better": 0,
+            "worse": 0,
+            "p_two_sided": 1,
+            "regression": false
+          },
+          "template:hit_at_1": {
+            "better": 2,
+            "worse": 0,
+            "p_two_sided": 0.5,
+            "regression": false
+          },
+          "paraphrase:recall_at_5": {
+            "better": 1,
+            "worse": 0,
+            "p_two_sided": 1,
+            "regression": false
+          },
+          "paraphrase:hit_at_1": {
+            "better": 0,
+            "worse": 0,
+            "p_two_sided": 1,
+            "regression": false
+          }
+        }
+      }
+    },
+    "benefit_6_false_fire": {
+      "pass": true,
+      "detail": [
+        {
+          "set": "longmemeval-s",
+          "n": 500,
+          "fired": 0
+        },
+        {
+          "set": "brainbench-tier5-non-relational",
+          "n": 77,
+          "fired": 0
+        },
+        {
+          "set": "brainbench-cat13-subset",
+          "n": 50,
+          "fired": 0
+        }
+      ]
+    },
+    "benefit_7_latency": {
+      "pass": null,
+      "detail": "release gate 5, implementer evidence on the frozen build (not re-measured by the custodian)"
+    }
+  },
+  "cells": {
+    "a_keyless:composed-template": {
+      "strict_typed": {
+        "base": 0.011235955056179775,
+        "feat": 0.898876404494382
+      },
+      "strict_all7": {
+        "base": 0.02666666666666667,
+        "feat": 0.6586666666666666
+      },
+      "sign_test": {
+        "better": 79,
+        "worse": 0,
+        "ties": 46,
+        "p_two_sided": 3.308722450212111e-24
+      },
+      "hurts": false,
+      "fired": 261,
+      "runs": 375,
+      "family_drop_over_5pt": []
+    },
+    "a_keyless:composed-paraphrase": {
+      "strict_typed": {
+        "base": 0.011235955056179775,
+        "feat": 0.2808988764044944
+      },
+      "strict_all7": {
+        "base": 0.013333333333333334,
+        "feat": 0.20533333333333334
+      },
+      "sign_test": {
+        "better": 24,
+        "worse": 0,
+        "ties": 101,
+        "p_two_sided": 1.1920928955078125e-07
+      },
+      "hurts": false,
+      "fired": 78,
+      "runs": 375,
+      "family_drop_over_5pt": []
+    },
+    "a_paid:composed-template": {
+      "strict_typed": {
+        "base": 0.011235955056179775,
+        "feat": 0.898876404494382
+      },
+      "strict_all7": {
+        "base": 0.008,
+        "feat": 0.64
+      },
+      "sign_test": {
+        "better": 79,
+        "worse": 0,
+        "ties": 46,
+        "p_two_sided": 3.308722450212111e-24
+      },
+      "hurts": false,
+      "fired": 261,
+      "runs": 375,
+      "family_drop_over_5pt": []
+    },
+    "a_paid:composed-paraphrase": {
+      "strict_typed": {
+        "base": 0,
+        "feat": 0.2696629213483146
+      },
+      "strict_all7": {
+        "base": 0.008,
+        "feat": 0.2
+      },
+      "sign_test": {
+        "better": 24,
+        "worse": 0,
+        "ties": 101,
+        "p_two_sided": 1.1920928955078125e-07
+      },
+      "hurts": false,
+      "fired": 78,
+      "runs": 375,
+      "family_drop_over_5pt": []
+    },
+    "b_paid:composed-template": {
+      "strict_typed": {
+        "base": 0.02247191011235955,
+        "feat": 0.8876404494382022
+      },
+      "strict_all7": {
+        "base": 0.032,
+        "feat": 0.648
+      },
+      "sign_test": {
+        "better": 77,
+        "worse": 0,
+        "ties": 48,
+        "p_two_sided": 1.3234889800848443e-23
+      },
+      "hurts": false,
+      "fired": 261,
+      "runs": 375,
+      "family_drop_over_5pt": []
+    },
+    "b_paid:composed-paraphrase": {
+      "strict_typed": {
+        "base": 0.011235955056179775,
+        "feat": 0.2808988764044944
+      },
+      "strict_all7": {
+        "base": 0.016,
+        "feat": 0.208
+      },
+      "sign_test": {
+        "better": 24,
+        "worse": 0,
+        "ties": 101,
+        "p_two_sided": 1.1920928955078125e-07
+      },
+      "hurts": false,
+      "fired": 78,
+      "runs": 375,
+      "family_drop_over_5pt": []
+    }
+  },
+  "decision_1_build_1b84e519": {
+    "verdict_same_gates": {
+      "benefit_1_sign_test": true,
+      "benefit_2_effect_floor": true,
+      "benefit_3_safety": true,
+      "benefit_4_no_hurt": true,
+      "benefit_5_one_hop": true,
+      "benefit_6_false_fire": true,
+      "benefit_7_latency": null
+    },
+    "note": "superseded; cell (b) attempt 1 voided by a harness defect (reranker key stripped), attempt 2 after fix b20fdcf; harness commits advanced during that run"
+  }
+}
