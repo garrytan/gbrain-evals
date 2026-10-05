@@ -82,6 +82,22 @@ server launcher must pass it under label `comparator`.
 Groq and Voyage responses (schema-valid structured output, hash embeddings,
 usage blocks) for keyless tests, the mode smoke and the quickstart fixture.
 
+## Launcher actions (`eval/runner/harness-cell.ts`)
+
+| Action | Spends | What it does |
+|---|---|---|
+| `plan <spec>` | no | Resolve the schedule and manifest hashes in Python, compute the cell id, write `cell.json`, print the estimate |
+| `run <spec\|id>` | yes | Refuses when stage receipts exist; opens a ledger run for the cell's remaining budget, starts the proxy, runs `python -m mpw.cell run` |
+| `resume <id>` | yes | Recomputes the id and refuses on any change (names the fields); continues missing receipts only |
+| `tune <id> --grid <json>` | retrieval only | `python -m mpw.tune` on the ingested store: delivered tokens per knob setting, no answer or judge call |
+| `rejudge <id> <id>` | judge only | `python -m mpw.rejudge` through the proxy with the dataset's own judge |
+| `cli -- <args>` | no | The harness's own CLI with the providers registered (keyless) |
+
+`--stub-upstream` routes every provider to `eval/runner/stub-upstream.ts` against a throwaway ledger inside the cell.
+`spend.json` accumulates every ledger run a cell made, so `resume` can only use what is left of `budget_usd`.
+
+Cell gates (`summary.json`): `complete` (every scheduled question has a typed outcome and no judge failure or incomplete ingest), `no_answer_or_retrieval_failures`, `delivered_context` (mean and p95 within ±10% of `target_tokens`) and `no_remote_clamp` (gbrain's `budget_clamped` never set). A reader refusal is scored as an answer and kept in the record's `error`.
+
 ## Cell directory and records
 
 See `mpw/records.py`. Stage files: `stages/{ingest,retrieve,answer,judge}/<id>.json`.
@@ -185,3 +201,7 @@ ids, different dataset/split/schedule, retrieval datasets and a judge whose
 model id differs from `--judge-model`. Writes
 `<out>/<cell_id>/stages/judge/<qid>.json`, `<out>/unblinding.json`,
 `<out>/summary.json` and the judge cache (`<out>/judge-cache` by default).
+
+## Workload suite B2 (corrections) adapter: decision
+
+The B2 driver is TypeScript (`runCorrectionArm` with a `CorrectionAdapter`). The simpler path is a TypeScript adapter per system, not a Python bridge: gbrain over stdio MCP (`put_pages`/`put_page`, `get_page`/`edit_page`, `forget`, `remember`, `query` with the same `token_budget` and `return_unit`), and the comparator through its HTTP API on the pinned server (`python -m mpw.comparator_server` starts it; its edit/invalidate and retain operations), both launched with `MPW_CHILD_ENV_*` from the metering proxy and calling `storePresenceFailures` after ingest. It is not built in this lane.

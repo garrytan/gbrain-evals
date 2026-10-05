@@ -12,7 +12,7 @@
  *
  * Files that held a dated citation before this guard existed are allowed for
  * the names they already contain (docs/comparison-systems.md stays as is by
- * decision). The harness lock may name the harness repository, which carries
+ * decision). The harness locks may name the harness repository, which carries
  * the maker's organisation name.
  *
  *   bun scripts/check-comparator-name.ts            exit 1 on any hit
@@ -35,6 +35,7 @@ export const ALLOWED: Record<string, Needle['id'][]> = {
   'docs/plans/2026-09-28-gbrain-10x/audit/coverage-and-categories.md': ['product', 'maker'],
   'docs/plans/2026-09-28-gbrain-10x/audit/evals-docs-infra.md': ['product'],
   'eval/harness-provider/harness.lock.json': ['maker'],
+  'eval/data/memory-proof-wave/harness.lock.json': ['maker'],
   // Raw receipts of earlier runs: gbrain research file paths inside agent transcripts.
   'docs/benchmarks/2026-10-03-agent-operator/after-7d16702/runs.tar.gz': ['product'],
   'docs/benchmarks/2026-10-03-agent-operator/after-b3f4e8b/runs.tar.gz': ['product'],
@@ -101,8 +102,8 @@ export function scan(root: string, files = repoFiles(root)): { violations: Hit[]
     let bytes: Uint8Array;
     try {
       if (!statSync(path).isFile()) continue;
-      bytes = readFileSync(path);
-      if (rel.endsWith('.gz')) bytes = Bun.gunzipSync(bytes);
+      const raw = readFileSync(path);
+      bytes = rel.endsWith('.gz') ? Bun.gunzipSync(new Uint8Array(raw)) : raw;
     } catch {
       continue;
     }
