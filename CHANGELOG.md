@@ -2,6 +2,14 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.24] - 2026-10-05
+
+### README describes other memory systems by kind
+
+README's "How gbrain compares" section and its changelog no longer name other memory projects; each is described by
+kind (for example "a verbatim-session memory system"). Names, versions and sources stay in
+[comparisons and their protocols](docs/comparison-systems.md), which README links. No measurement changed; $0.
+
 ## [0.10.23] - 2026-10-05
 
 ### Top-level docs read as the current state, with a changelog per document

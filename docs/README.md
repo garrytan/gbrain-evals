@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.23, with gbrain master `739e5cc` (v0.60.46.0) as the product under test. Results measured at
+gbrain-evals v0.10.24, with gbrain master `739e5cc` (v0.60.46.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -59,6 +59,7 @@ gap does not isolate the effect of a graph alone.
 | Does important material from a working session survive into saved pages? | [Transcript distillation](benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md) |
 | Does useful memory arrive at the right moment in a conversation? | [Memory conformance](benchmarks/2026-06-12-brainbench-memory.md) |
 | Where does a small decision model (TypeSafe Jev) help gbrain triage, rerank, prune, abstain or spot contradicting facts, and where does it hurt? | [September 30 System One v1 slots](benchmarks/2026-09-30-system-one-jev.md) |
+| Which memory proof wave ideas did gbrain ship, keep off or make opt-in: interleaved supersession candidates, per-model supersession thresholds, pinned questions and entity-anchored query retrieval? | [October 5 gbrain decision records, mirrored from gbrain #6066](benchmarks/2026-10-05-memory-proof-wave-gbrain-verdicts.md) |
 | Did gbrain's takes-bootstrap classifier (facts, takes, bets and hunches from a person's pages) pass its graduation bar for running on autopilot? | [October 4 graduation verdict, mirrored from gbrain #6013](benchmarks/2026-10-04-takes-bootstrap-verdict.md) |
 | Can a skill improve on held-out tasks, and can the judge detect cheating? | [Skill optimization](benchmarks/2026-06-03-skillopt.md) |
 | Can the system distinguish kinds of claims and sensible confidence? | [Calibration and proposed takes](benchmarks/2026-05-18-brainbench-cat14-cat15-calibration.md) (the advice result was retracted on September 28, 2026), [October 2 blind rerun of the advice test](benchmarks/2026-10-02-cat14-rerun.md) |
@@ -157,6 +158,10 @@ procedure with documented missing pieces; it is not the current refresh command.
 
 How this index changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-10-05: Memory proof wave gbrain decision records row
+
+The memory table gained a row for the four gbrain decision records mirrored from gbrain #6066: interleaved supersession candidates (no benefit), per-model supersession thresholds (applied), pinned questions (opt-in; anchored retrieval is the win) and entity-anchored query retrieval (gates 1 and 2 pass, key off pending gate 3).
 
 ### 2026-10-05: Restructured as a current-state page with this changelog
 

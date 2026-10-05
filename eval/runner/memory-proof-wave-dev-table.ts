@@ -55,7 +55,7 @@ export function collect(cellDirs: string[]): DevRow[] {
   const rows: DevRow[] = [];
   for (const base of cellDirs) {
     if (!existsSync(base)) continue;
-    for (const name of readdirSync(base)) {
+    for (const name of readdirSync(base).sort()) {
       if (name.startsWith('_')) continue;
       const row = devRow(join(base, name));
       if (row) rows.push(row);
@@ -94,7 +94,7 @@ export function copyReceipts(rows: DevRow[], cellDirs: string[], dest: string, i
     }
     if (existsSync(join(src, 'tuning'))) {
       mkdirSync(join(out, 'tuning'), { recursive: true });
-      for (const f of readdirSync(join(src, 'tuning')).filter(f => f.endsWith('.json'))) {
+      for (const f of readdirSync(join(src, 'tuning')).filter(f => f.endsWith('.json')).sort()) {
         const text = readFileSync(join(src, 'tuning', f), 'utf8').replace(VM_CHECKOUT, '').replace(VM_HOME, '~/');
         writeFileSync(join(out, 'tuning', f), JSON.stringify(scrubMachinePaths(JSON.parse(text)), null, 2) + '\n');
       }
