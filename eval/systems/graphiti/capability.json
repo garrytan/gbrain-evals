@@ -31,7 +31,7 @@
     }
   },
   "time": "native",
-  "time_notes": "add_episode(reference_time=session event_time). In message granularity each turn gets reference_time = event_time + turn_index milliseconds so retrieve_episodes (ORDER BY valid_at DESC) sees the conversation order instead of ties. search_ takes no query time, so query_time is ignored and applied_settings says so.",
+  "time_notes": "add_episode(reference_time=session event_time). In message granularity each turn gets reference_time = event_time + turn_index milliseconds so retrieve_episodes (ORDER BY valid_at DESC) sees the conversation order instead of ties. search_ takes no query time, so query_time is ignored and applied_settings says so. An event_time or query_time without a UTC offset is read as UTC.",
   "granularity": "session (default, SHIM_GRANULARITY=session): one EpisodeType.message episode per session whose body is the session's 'speaker: text' lines. message (SHIM_GRANULARITY=message): one episode per turn, as Zep's LoCoMo harness does. The metered smoke measures both; the preregistration fixes one.",
   "provenance": {
     "status": "partial",

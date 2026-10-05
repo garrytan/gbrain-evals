@@ -12,7 +12,7 @@ import json
 import os
 import sys
 import threading
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import openai
@@ -105,6 +105,8 @@ class GraphitiAdapter(Adapter):
             event_time = datetime.fromisoformat(session["event_time"].replace("Z", "+00:00"))
         except ValueError as e:
             raise ShimError("invalid_request", f"not an ISO-8601 time: {session['event_time']!r}", 400) from e
+        if event_time.tzinfo is None:
+            event_time = event_time.replace(tzinfo=timezone.utc)
         lines = [f"{t['speaker']}: {t['content']}" for t in turns]
         episodes = [(source_id, "\n".join(lines), event_time)] if GRANULARITY == "session" else [
             (f"{source_id}#{i:04d}", line, event_time + timedelta(milliseconds=i)) for i, line in enumerate(lines)]

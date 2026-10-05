@@ -13,7 +13,7 @@ import os
 import sys
 import threading
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "_shim"))
@@ -35,9 +35,10 @@ def _parse_time(value: str | None) -> datetime | None:
     if value is None:
         return None
     try:
-        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
     except ValueError as e:
         raise ShimError("invalid_request", f"not an ISO-8601 time: {value!r}", 400) from e
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
 
 
 def _proxy_refused(message: str | None) -> bool:

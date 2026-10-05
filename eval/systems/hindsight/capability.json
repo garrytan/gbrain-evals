@@ -34,7 +34,7 @@
     }
   },
   "time": "native",
-  "time_notes": "retain item `timestamp` = session event_time (AMB passes Document.timestamp the same way); recall `query_timestamp` = query_time, the anchor for relative dates and recency.",
+  "time_notes": "retain item `timestamp` = session event_time (AMB passes Document.timestamp the same way); recall `query_timestamp` = query_time, the anchor for relative dates and recency. An event_time or query_time without a UTC offset is read as UTC.",
   "granularity": "one retain item per session (content = JSON of the session's turns, as AMB serializes LoCoMo and LongMemEval sessions), document_id = source_id",
   "provenance": {
     "status": "exact",
