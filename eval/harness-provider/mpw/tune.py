@@ -95,7 +95,13 @@ async def auto_tune(cell_dir: Path, targets: list[int], base: dict, sample: int 
                 if not errors and gate.ok:
                     chosen = setting
                     break
-                scale *= max(0.5, min(2.0, target / mean))
+                step = target / mean
+                if gate.p95 > target * 1.10:
+                    # Mean on target but a long tail: aim the 95th percentile just inside the gate instead.
+                    step = min(step, target * 1.08 / gate.p95)
+                elif gate.p95 < target * 0.90:
+                    step = max(step, target * 0.92 / gate.p95)
+                scale *= max(0.5, min(2.0, step))
             results[str(target)] = {"chosen": chosen, "rows": rows}
     finally:
         prov.cleanup()
