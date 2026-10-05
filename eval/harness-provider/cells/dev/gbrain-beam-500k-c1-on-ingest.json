@@ -10,7 +10,7 @@
     "answer": "gemini:gemini-3.8-flash",
     "judge": "gemini:gemini-3.5-flash"
   },
-  "budget_usd": 10,
+  "budget_usd": 60,
   "questions": {
     "units": [
       "8",
@@ -26,9 +26,13 @@
   "provider_config": {
     "embedding_model": "voyage:voyage-4",
     "embedding_dimensions": 1024,
+    "date_header": false,
+    "gbrain_config": {
+      "search.evidence_date_header": "true"
+    },
     "token_budget": 8100
   },
-  "note": "memory proof wave dev gbrain-beam-500k-rag-raw 8000-token target",
+  "note": "memory proof wave dev gbrain-beam-500k-c1-on 8000-token target",
   "gbrain_credentials": [
     "voyage"
   ]
