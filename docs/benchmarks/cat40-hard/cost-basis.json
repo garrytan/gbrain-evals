@@ -87,5 +87,7 @@
     "world_bytes": 41551224,
     "note": "v1-large (52,028 docs) slot builds cost $1.177 each (scale-tier receipt); a Hard slot build is projected as 1.177 x world bytes / 41,551,224."
   },
+  "pg_embed_usd_per_million_tokens": 0.13,
+  "pg_embed_note": "text-embedding-3-large list price, as eval/runner/cat40/pg-arm.ts charges it; a new world's corpus is embedded once, at about 4 characters per token",
   "margin": 0.15
 }

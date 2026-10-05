@@ -14,6 +14,11 @@ export const LAST = ['Okafor', 'Lindqvist', 'Marchetti', 'Haddad', 'Nakashima', 
 export const SYL_A = ['Quor', 'Tel', 'Ves', 'Ondr', 'Pral', 'Kest', 'Mur', 'Zel', 'Bran', 'Cael', 'Dov', 'Fen', 'Gral', 'Hyd', 'Isk', 'Jor', 'Lum', 'Nax', 'Orv', 'Thal', 'Ulm', 'Vor', 'Wyn', 'Xer', 'Yar'];
 export const SYL_B = ['vane', 'miro', 'tiva', 'ellis', 'onex', 'adyn', 'ura', 'ithe', 'oria', 'quent', 'ostra', 'ivel', 'anta', 'esso', 'umbr', 'ari', 'ovik', 'enza', 'alto', 'ique'];
 export const SUFFIX = ['Systems', 'Health', 'Logistics', 'Labs', 'Foods', 'Capital', 'Robotics', 'Energy', 'Media', 'Retail'];
+/** Generator v2: an account's industry, from the suffix of its first name; with the region it forms the manager-form descriptor. */
+export const INDUSTRY: Record<string, string> = { Systems: 'software', Health: 'healthcare', Logistics: 'freight', Labs: 'research', Foods: 'food', Capital: 'finance', Robotics: 'automation', Energy: 'utilities', Media: 'publishing', Retail: 'consumer' };
+/** Generator v2 nicknames: one word from each list. No word is a prefix of another, and none appears in any other template. */
+export const NICK_A = ['Amber', 'Basalt', 'Cobalt', 'Driftwood', 'Ember', 'Flint', 'Garnet', 'Hazel', 'Indigo', 'Jonquil', 'Kestrel', 'Lichen', 'Maple', 'Nectar', 'Obsidian', 'Pewter', 'Quartz', 'Russet', 'Saffron', 'Tundra', 'Umber', 'Velvet', 'Walnut', 'Yarrow', 'Zinc', 'Alder', 'Bramble', 'Cinder', 'Dune', 'Ebony', 'Fennel', 'Glacier', 'Heather', 'Ivory', 'Juniper', 'Kelp', 'Larch', 'Mica', 'Nutmeg', 'Ochre', 'Pumice', 'Quince', 'Rowan', 'Sorrel', 'Thistle', 'Vermilion', 'Willow', 'Agate', 'Birch', 'Clover', 'Damask', 'Ermine', 'Fjord', 'Gossamer', 'Hemlock', 'Iris', 'Jade', 'Kumquat', 'Lupine', 'Marigold', 'Nimbus', 'Opal', 'Pinyon', 'Raven'];
+export const NICK_B = ['Heron', 'Lantern', 'Anvil', 'Badger', 'Compass', 'Dynamo', 'Falcon', 'Gazebo', 'Harbor', 'Igloo', 'Jackal', 'Kiln', 'Lynx', 'Marmot', 'Narwhal', 'Otter', 'Pelican', 'Quokka', 'Rudder', 'Sextant', 'Tapir', 'Urchin', 'Vulture', 'Walrus', 'Yak', 'Zeppelin', 'Abacus', 'Beacon', 'Caravan', 'Dolphin', 'Easel', 'Ferret', 'Gondola', 'Hammock', 'Ibis', 'Jetty', 'Koala', 'Lemur', 'Mongoose', 'Nautilus', 'Ocelot', 'Puffin', 'Quiver', 'Raccoon', 'Sparrow', 'Toucan', 'Unicorn', 'Viaduct', 'Wombat', 'Xylophone', 'Yurt', 'Zebra', 'Albatross', 'Bison', 'Condor', 'Dingo', 'Egret', 'Flamingo', 'Gecko', 'Hornet', 'Iguana', 'Jaguar', 'Kayak', 'Lobster'];
 export const SEGMENTS = ['enterprise', 'mid-market', 'growth'];
 export const REGIONS = ['North America', 'EMEA', 'APAC', 'LATAM'];
 
@@ -55,6 +60,9 @@ export const TERM_LABELS: Record<string, string> = { seats: 'licensed seats', pa
 
 export function frontmatterless(title: string, lines: string[]) { return [`# ${title}`, ...lines].join('\n\n'); }
 
+/** "Name (CODE)" for a record that names its account; the single reference text otherwise (generator v2 passes one text as both). */
+export function both(name: string, code: string) { return name === code ? name : `${name} (${code})`; }
+
 export function transcript(rng: Rng, speakers: string[], planted: string[], minLines: number, maxLines: number): string {
   const n = rng.int(minLines, maxLines);
   const lines = Array.from({ length: n }, () => `${rng.pick(speakers)}: ${rng.pick(TRANSCRIPT_LINES)}`);
@@ -75,7 +83,7 @@ export function routineMeeting(rng: Rng, o: { title: string; date: string; speak
 export function contractBody(o: { name: string; code: string; segment: string; region: string; signed: string; renewal: string; terms: Record<string, string>; champion: string; acmeSigner: string }): string {
   return frontmatterless(`Master Services Agreement: Acme Example Inc. and ${o.name}`, [
     `Status: Executed. Countersigned by both parties on ${longDate(o.signed)}.`,
-    `Customer: ${o.name} (account code ${o.code}). Segment: ${o.segment}. Region: ${o.region}.`,
+    `Customer: ${o.name === o.code ? o.name : `${o.name} (account code ${o.code})`}. Segment: ${o.segment}. Region: ${o.region}.`,
     `Initial term: ${longDate(o.signed)} through ${longDate(o.renewal)}. Renewal date: ${o.renewal}.`,
     `Payment terms: ${o.terms.payment_terms}. Licensed seats: ${o.terms.seats}. Uptime SLA: ${o.terms.uptime_sla}. Liability cap: ${o.terms.liability_cap}.`,
     `Signed for ${o.name}: ${o.champion} (customer champion). Signed for Acme Example Inc.: ${o.acmeSigner}.`,
@@ -88,6 +96,15 @@ export function crmBody(o: { name: string; code: string; segment: string; region
     `Segment: ${o.segment}. Region: ${o.region}.`,
     `Account owner: ${o.owner} (as of ${o.asOf}). Champion: ${o.champion}. Billing contact: ${o.billing}.`,
     'Owner changes after the date above are announced by email and are not reflected in this record until the next sync.',
+  ]);
+}
+
+/** Generator v2: the resolution document that introduces an account's nickname and descriptor. */
+export function accountSheetBody(o: { name: string; nickname: string; industry: string; region: string; descriptor: string }): string {
+  return frontmatterless(`Account sheet: ${o.name}`, [
+    `Account: ${o.name}. Nickname used by the team: ${o.nickname}. Industry: ${o.industry}. Region: ${o.region}.`,
+    `In notes and tickets the team also calls it "${o.nickname}", or "the ${o.descriptor} account" together with its account manager on that date (for example "<manager>'s ${o.descriptor} account").`,
+    'Account manager changes are announced in handoff notes; the CRM record holds the account code and the first account owner.',
   ]);
 }
 

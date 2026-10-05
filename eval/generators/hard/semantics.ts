@@ -17,6 +17,10 @@
  *   Names: every name, account code, former name and name of a merged account
  *   maps to exactly one entity id (the namespace is injective at both
  *   scales), so a name resolves to the same entity on every date.
+ *   Reference forms (v2): a record may name its account by name, code,
+ *   nickname, or as "<manager>'s <descriptor> account", meaning the one
+ *   account with that descriptor whose manager on the record's date is that
+ *   person, readable from records dated on or before it.
  */
 import type { H1Clause, H1Predicate, HardEntity } from './schema.ts';
 
@@ -79,6 +83,34 @@ export function nameRegistry(entities: readonly HardEntity[], normalize: (s: str
     m.set(k, e.id);
   }
   return m;
+}
+
+// ─── Reference forms (generator v2) ─────────────────────────────────
+
+/**
+ * The text of a manager-form reference: the account manager on the record's
+ * date, then the account's descriptor (region and industry).
+ */
+export function managerReference(manager: string, descriptor: string): string {
+  return `${manager}'s ${descriptor} account`;
+}
+
+/**
+ * The account manager a record dated `date` may name: the manager in effect on
+ * that date, provided the records written on or before that date already say
+ * so (a belated handoff note or a later correction makes the date unusable).
+ * Null when the two readings differ or no manager is in effect yet.
+ */
+export function managerKnownOn(events: readonly ValueEvent[], date: string): string | null {
+  const now = valueAsOf(events, date);
+  return now !== null && now === valueAsOf(events.filter(e => e.recorded <= date), date) ? now : null;
+}
+
+/** Every manager a reader could take for the account on `date`: the one in effect with hindsight and the one the records written by then show. */
+export function managerReadingsOn(events: readonly ValueEvent[], date: string): Set<string> {
+  const out = new Set<string>();
+  for (const v of [valueAsOf(events, date), valueAsOf(events.filter(e => e.recorded <= date), date)]) if (v !== null) out.add(v);
+  return out;
 }
 
 // ─── H1 predicates ──────────────────────────────────────────────────

@@ -10,7 +10,7 @@ Calibration uses seed 20261005, 10 tasks per family from a world generated at th
 |---|---|---|---|
 | 1 | [knobs.round-1.json](knobs.round-1.json) (knobs.default.json) | starting values: 16 turns, 10 to 40 H1 members, 3 to 6 H2 changes, 1 to 3 H3 look-alikes, 3 to 5 H4 sources, one look-alike fact in each H5 chain | stopped at 189 of 300 cells on its $38 budget run; H2 and H3 at 100% on fs and pg; two H1 answer-key defects (below) |
 | 2 | [knobs.round-2.json](knobs.round-2.json) | 2026-10-05: H2 and H3 far too easy (fs 20/20 each); record counts, history length and distractors for those two families raised; background accounts lowered to hold world size; H1, H4, H5, noise and the turn cap unchanged (details below) | pooled fs 95%, pg 97%, oracle 99%; H2 to H5 at 95 to 100% on fs; knobs at their useful range |
-| 3 | knobs.round-3.json (generator v2, 50k) | 2026-10-05, amendment A1: records refer to accounts by code, nickname or manager instead of name; calibration moves to the 50k world | pending |
+| 3 | [knobs.round-3.json](knobs.round-3.json) (generator v2, 50k) | 2026-10-05, amendment A1: round-2 knobs plus the reference forms (15% of references by name, the rest split about evenly between code, nickname and account manager); records stop naming their account; calibration moves to the 50k world (details below) | pending |
 
 ## Round 1 (2026-10-05)
 
@@ -64,6 +64,35 @@ World: seed 20261005, knobs.round-2.json, generator at `cfb84fa`, 4,526 document
 | oracle | 19/20 | 20/20 | 20/20 | 20/20 | 20/20 | 99% |
 
 Most fs runs finished in 3 to 5 turns: the agent searched for the account name and read the matching documents. Raising history length and look-alike counts did not change that, because every relevant document still named the account. A turn cap tight enough to force misses (6 to 8) would measure speed rather than memory (CEO-UC1), so the next lever is the generator change in amendment A1, recorded here before any round-3 cell runs.
+
+## Round 3 knobs (2026-10-05)
+
+Target: pooled fs within 40-70% on the 50k world, with H2 to H5 well below round 2's 95-100%, by making the agent find records that do not name the account. Generator v2 (`model-ladder-hard-v2`, rules in [WORLD_SCHEMA.md](WORLD_SCHEMA.md#reference-forms-generator-v2)) keeps every round-2 fact and answer key and changes only how records refer to accounts. Changes:
+
+| Knob | Round 2 | Round 3 | Group | Reason |
+|---|---|---|---|---|
+| `direct_name_share` | (1, v1) | 0.15 | reference forms (new) | round-2 agents searched for the account name and read what came back, because every record named it; at 0.15 about one record in seven still does, so a name search finds something but not the deciding records |
+| `code_ref_weight` / `nickname_ref_weight` / `manager_ref_weight` | (none) | 0.25 / 0.25 / 0.5 | reference forms (new) | a drawn manager form falls back to code or nickname when it would fit more than one account or the handoff note is not written yet (about 40% of draws); doubling its weight makes the realized shares about even: name 15%, code 30%, nickname 30%, manager 24% of all references at 50k |
+| world | 4k (4,526 documents) | 50k (53,631 documents) | scale (amendment A1) | a name search returns the most noise at 50k; the 4k base world is 4,792 documents (round 2 plus 266 account sheets) |
+
+Unchanged: every round-2 knob, including H1 member counts (10 to 40) and the 16-turn cap. The reference-form knobs are not in the analyzer's knob-priority list (`KNOB_PRIORITY`), and they move difficulty the other way from it: a lower `direct_name_share` or a higher `manager_ref_weight` makes tasks harder. If round 3 lands above 70%, the next lever is a higher manager weight (the only form no fixed-string search finds); below 40%, a higher `direct_name_share`. Either is recorded here before the round runs.
+
+**H1 set sizes.** The knobs allow any range, but an H1 key is computed over the 4k accounts only, so that it is the same at both scales (appended 50k accounts never satisfy a predicate, and since v2 they have their own account managers). The round-3 4k population is 261 accounts. Over 3,000 sampled predicates per template, member counts reach at most 25 (one owner), 34 (segment and open escalated ticket), 31 (open escalated ticket and renewal window) and 24 (region and renewal window), with medians of 14, 27, 4 and 3. Sets of 50 to 150 would need roughly four times the 4k accounts, which the 4k size band (3,000 to 5,000 documents) does not hold even with less routine mail per account, or broader predicates such as a region alone, which are degenerate. Round 3 keeps 10 to 40; the generator stops with a message rather than draw a predicate outside the range. The largest round-3 oracle prompt is about 67,000 tokens (H1-11 at 50k), well under the 200,000-token limit.
+
+**Free difficulty proxy.** `bun eval/runner/cat40/hard-proxy.ts --scale large --knobs knobs.round-2.json --knobs knobs.round-3.json`, seed 20261005, 50k, no model call. For each task it takes the oracle's event records (documents that refer to an account) and asks: does the record contain the name the question asks about; does one case-insensitive grep for that name return it; and does it after a second grep for the account code (given by the CRM record) and a third for the nickname (given by the account sheet). H1 questions name no account, so each member or near miss is grepped by its own name. Shares are averaged over tasks.
+
+| Family | records, round 2 | name verbatim, round 2 | one name grep, round 2 | records, round 3 | name verbatim, round 3 | one name grep, round 3 | name, then code, round 3 | name, code, then nickname, round 3 |
+|---|---|---|---|---|---|---|---|---|
+| H1 | 2,547 | 73.6% | 73.6% | 2,887 | 15.3% | 15.3% | 49.6% | 85.3% |
+| H2 | 270 | 100.0% | 100.0% | 284 | 15.6% | 15.6% | 42.5% | 73.6% |
+| H3 | 139 | 91.8% | 91.8% | 139 | 22.4% | 23.6% | 46.6% | 71.3% |
+| H4 | 76 | 90.3% | 90.3% | 101 | 5.6% | 5.6% | 34.8% | 74.2% |
+| H5 | 30 | 100.0% | 100.0% | 36 | 11.3% | 11.3% | 38.8% | 76.3% |
+| all | 3,062 | 91.1% | 91.1% | 3,447 | 14.0% | 14.3% | 42.4% | 76.1% |
+
+Round 2's H1 share is below 100% because v1 tickets and team updates already named an account by code about half the time; a second grep for the code reached 98% of round-2 records. In round 3 a name search reaches 14%, and the code and nickname searches together reach 76%. The remaining quarter use the manager form, which needs the account's descriptor from its sheet and its manager on the record's date from the handoff notes. The proxy measures what a search returns, not what an agent concludes; an agent that reads the CRM record and the account sheet first can still reach three quarters of the records with three searches, so the proxy is an upper bound on how much harder round 3 is.
+
+Risks to read with the round-3 results: the oracle now has to resolve references from the resolution documents in its evidence (every reference reaches the asked name within two hops of the oracle's documents, checked by `hardWorldProblems`), so an oracle failure may be a resolution failure rather than an answer-key defect; and fs and pg cells will take more turns than in round 2, so a turn-cap share above 50% of failures is possible.
 
 ## Notes after the freeze
 

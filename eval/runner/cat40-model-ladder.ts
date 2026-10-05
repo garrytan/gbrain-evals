@@ -702,8 +702,8 @@ function printPreflight(o: { hw: HardWorld | null; world: LadderWorld; models: s
         const plan: StepPlan = { step: o.step, order: 0, models: o.models, arms: o.arms, tasksPerFamily: o.tasksPerFamily, families: o.families, repeats: o.repeats, scale: o.hw.scale ?? 'v1' };
         const measured = (process.env.HARD_MEASURED ?? '').split(',').filter(Boolean);
         const views = measured.length ? canonicalCells(readRecords(measured)).attempts : undefined;
-        const p = project(plan, { basis: loadCostBasis(), measured: views, done: canonicalCells(o.done).attempts });
-        lines.push(`projection for ${o.step}: $${p.total_usd.toFixed(2)} ($${p.with_margin_usd.toFixed(2)} with 15%), basis ${p.basis}`);
+        const p = project(plan, { basis: loadCostBasis(), measured: views, done: canonicalCells(o.done).attempts, worldBytes: o.hw.docs.reduce((n, d) => n + d.title.length + d.body.length, 0) });
+        lines.push(`projection for ${o.step}: $${p.total_usd.toFixed(2)} ($${p.with_margin_usd.toFixed(2)} with 15%), basis ${p.basis}; ${p.cells} cells: agent $${p.agent_usd.toFixed(2)}, judge $${p.judge_usd.toFixed(2)}, pg setup embedding $${p.pg_setup_usd.toFixed(2)}`);
         if (r.remainingUsd < p.with_margin_usd) stop = new HardStop('HARD_BUDGET_SHORT', `step ${o.step} projects $${p.with_margin_usd.toFixed(2)} with the margin; $${r.remainingUsd.toFixed(2)} remains`, 'do not raise the cap yourself', 'Garry decides whether to fund, narrow or stop the step');
       }
     } catch (e) { if (e instanceof HardStop) stop = e; else throw e; }

@@ -26,6 +26,14 @@
  *                    superseded, one a look-alike's fact), then a question
  *                    that depends on two of them
  *
+ * Reference forms (generator v2, amendment A1, knob schema 2): event records
+ * refer to their account by name, account code, nickname or account manager
+ * ("<manager>'s <region> <industry> account"), drawn per reference from the
+ * reference-form knobs after the ledger is complete; CRM records, account
+ * sheets, rename and merger notices name the account and resolve the other
+ * forms. Event documents get opaque ids, so a path never names an account.
+ * With `direct_name_share` 1 (or without the keys) the output is v1's.
+ *
  * Scale `large` (about 50,000 documents) is the 4k world plus appended
  * accounts that never satisfy a full H1 predicate and never name a 4k
  * account, plus non-deciding documents about 4k accounts. The generator
@@ -40,10 +48,13 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { LadderDoc } from './model-ladder-gen.ts';
 import {
-  HARD_GENERATOR_VERSION, HARD_KNOB_SCHEMA_VERSION, HARD_FAMILIES, HARD_SEEDS, RECORDED, DEFAULT_HARD_KNOBS, validateKnobs, knobDigest,
-  type HardKnobs, type HardWorld, type HardTask, type HardEntity, type H1Predicate, type H1Clause, type SessionFact, type HardFamily,
+  HARD_FAMILIES, HARD_SEEDS, RECORDED, DEFAULT_HARD_KNOBS, validateKnobs, knobDigest, knobSchemaOf, hardGeneratorVersion,
+  type HardKnobs, type HardWorld, type HardTask, type HardEntity, type H1Predicate, type H1Clause, type SessionFact, type HardFamily, type RefForm, type HardReference,
 } from './hard/schema.ts';
-import { eventAsOf, valueAsOf, correctionOf, historyValues, statedValue, nameRegistry, evaluatePredicate, clauseHolds, type ValueEvent, type PredicateFacts, type UserStatement } from './hard/semantics.ts';
+import {
+  eventAsOf, valueAsOf, correctionOf, historyValues, statedValue, nameRegistry, evaluatePredicate, clauseHolds, managerReference, managerKnownOn, managerReadingsOn,
+  type ValueEvent, type PredicateFacts, type UserStatement,
+} from './hard/semantics.ts';
 import { Rng, rngFor, addDays, longDate, slugify } from './hard/rng.ts';
 import * as R from './hard/render.ts';
 import { assertHardWorld } from './hard/validate.ts';
@@ -52,6 +63,8 @@ export const HARD_TODAY = '2026-09-15';
 export const HARD_PRINCIPAL = { name: 'Sam Rivera', role: 'account manager (sales team)' };
 export const HARD_KNOBS_DIR = resolve(import.meta.dir, '../../docs/benchmarks/cat40-hard');
 export const HARD_STAFF = 18;
+/** Generator v2: account managers of appended (50k) accounts, a separate team, so a 4k record's manager reference stays unique at 50k. */
+export const HARD_STAFF_LARGE = 150;
 /** World sizes the generator holds (CEO-F5): about 4,000 and about 50,000 documents, within 25%. */
 export const HARD_SIZE = { v1: [3000, 5000], large: [37_500, 62_500] } as const;
 /** Appended look-alikes per H3 task at 50k. */
@@ -75,7 +88,12 @@ export interface HardAccount {
   /** Name and code on the original contract when the account was renamed later. */
   former?: { name: string; code: string; date: string; doc: string };
   /** Accounts merged into this one (their names become aliases). */
-  mergedIn: Array<{ name: string; code: string; date: string; doc: string }>;
+  mergedIn: Array<{ name: string; code: string; date: string; doc: string; nickname?: string }>;
+  /** Generator v2: the nickname (an alias) and the account sheet that introduces it. */
+  nickname?: string;
+  sheetDoc?: string;
+  /** Industry from the suffix of the account's first name; with the region it is the manager-form descriptor. */
+  industry: string;
   /** Set on an account merged into another: it is not an entity of its own. */
   mergedInto?: string;
   segment: string;
@@ -99,7 +117,34 @@ export interface HardAccount {
   customContract?: boolean;
 }
 
-interface HDoc extends Omit<LadderDoc, 'body'> { body: string | (() => string) }
+/**
+ * How one document refers to one account. Name, code and base are captured
+ * when the document is created (as v1 rendered them); in v2 the reference
+ * form is resolved after the ledger is complete, and a non-name form replaces
+ * all three with its text.
+ */
+interface Ident {
+  readonly account: HardAccount;
+  readonly name: string;
+  readonly code: string;
+  readonly base: string;
+  /** v1: the name when `useName`, else the code. v2: the reference text. */
+  alt(useName: boolean): string;
+  /** Owner-timeline records never use the manager form (they define it). */
+  noManager: boolean;
+  /** v2: the form, its text, and the name and code in force on the document's date (what a name-form record prints). */
+  resolved?: { form: RefForm; text: string; name: string; code: string };
+}
+
+interface HDoc extends Omit<LadderDoc, 'body' | 'title'> {
+  title: string | (() => string);
+  body: string | (() => string);
+  /** Accounts the document refers to (event records). */
+  refs?: Ident[];
+  /** CRM records, account sheets, rename and merger notices: they name the account and keep readable ids. */
+  resolution?: true;
+}
+const text = (v: string | (() => string)) => (typeof v === 'function' ? v() : v);
 
 export interface HardBuild {
   seed: number;
@@ -114,11 +159,15 @@ export interface HardBuild {
   appendedDocIds: Set<string>;
   /** Facts for the H1 evaluator over every entity in the build. */
   facts(): PredicateFacts[];
+  /** v2: every account reference in an event record, with final document ids. */
+  references: HardReference[];
 }
 
 export function aliasesOf(a: HardAccount): string[] {
-  return [a.code, ...(a.former ? [a.former.name, a.former.code] : []), ...a.mergedIn.flatMap(m => [m.name, m.code])];
+  return [a.code, ...(a.former ? [a.former.name, a.former.code] : []), ...a.mergedIn.flatMap(m => [m.name, m.code]), ...(a.nickname ? [a.nickname] : []), ...a.mergedIn.flatMap(m => (m.nickname ? [m.nickname] : []))];
 }
+
+export const descriptorOf = (a: HardAccount) => `${a.region} ${a.industry}`;
 
 function factsOf(a: HardAccount): PredicateFacts {
   return { id: a.id, segment: a.segment, region: a.region, owner: a.owner, renewal: a.renewal, tickets: a.tickets };
@@ -135,6 +184,8 @@ const pairwiseClean = (vals: string[]) => {
 export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 'v1' | 'large' } = {}): HardBuild {
   const scale = opts.scale ?? 'v1';
   const K = knobs;
+  /** Reference forms on: generator v2 with some references not by name. Off reproduces v1 exactly. */
+  const refsOn = (K.direct_name_share ?? 1) < 1;
   const docs: HDoc[] = [];
   const ids = new Set<string>();
   const add = (d: HDoc) => {
@@ -168,6 +219,32 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
   const staffRng = rngFor(seed, 'staff');
   const staff = Array.from({ length: HARD_STAFF }, () => person(staffRng));
   const acmeSigner = staff[0];
+  const staffLargeRng = rngFor(seed, 'staff-large');
+  const staffLarge: string[] = [];
+  while (refsOn && staffLarge.length < HARD_STAFF_LARGE) { const p = person(staffLargeRng, true); if (!staffLarge.includes(p)) staffLarge.push(p); }
+  const ownersFor = (a: HardAccount) => (refsOn && a.large ? staffLarge : staff);
+  const usedNicknames = new Set<string>();
+  const nickname = (streamKey: string) => {
+    const rng = rngFor(seed, 'nick', streamKey);
+    const n = draw(() => `${rng.pick(R.NICK_A)} ${rng.pick(R.NICK_B)}`, x => !usedNicknames.has(x), 'nicknames');
+    usedNicknames.add(n);
+    return n;
+  };
+  const ident = (a: HardAccount, o: { name?: string; code?: string; noManager?: boolean } = {}): Ident => {
+    const name = o.name ?? a.name, code = o.code ?? a.code, base = a.base;
+    const v2 = () => {
+      if (!I.resolved) throw new Error(`model-ladder-hard: a reference to ${a.id} was rendered before its form was resolved`);
+      return I.resolved;
+    };
+    const I: Ident = {
+      account: a, noManager: o.noManager ?? false,
+      get name() { return !refsOn ? name : v2().form === 'name' ? v2().name : v2().text; },
+      get code() { return !refsOn ? code : v2().form === 'name' ? v2().code : v2().text; },
+      get base() { return refsOn ? I.name : base; },
+      alt(useName: boolean) { return refsOn ? I.name : useName ? name : code; },
+    };
+    return I;
+  };
   const uniqueValue = (parent: Rng, make: (r: Rng) => string, ns: string) => {
     if (ns === 'large') return make(parent);
     const rng = sub(parent);
@@ -214,7 +291,8 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
     const a: HardAccount = {
       id, slug: slugify(name), base, name, code, mergedIn: [], segment: rng.pick(R.SEGMENTS), region: rng.pick(R.REGIONS),
       champion: person(rng, large), billing: person(rng, large), signed, owner: [], renewal: [], terms: { seats: [], payment_terms: [], liability_cap: [], uptime_sla: [] },
-      tickets: [], contractDoc: '', crmDoc: '', large, role: o.role, stream: streamKey, docIds: [],
+      tickets: [], contractDoc: '', crmDoc: '', large, role: o.role, stream: streamKey, docIds: [], industry: R.INDUSTRY[name.split(' ')[1]],
+      ...(refsOn ? { nickname: nickname(streamKey) } : {}),
     };
     a.contractDoc = `contracts/${a.slug}-msa`;
     a.crmDoc = `crm/${a.slug}`;
@@ -227,28 +305,28 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
 
   /** Timelines: owner handoffs, renewal, contract terms and tickets, with their documents. */
   const populate = (a: HardAccount, rng: Rng) => {
-    const nm = a.name, cd = a.code, base = a.base, champion = a.champion;
+    const cd = a.code, champion = a.champion;
+    const owners = ownersFor(a);
     const rv = rngFor(seed, 'values', a.stream);
-    const refAt = (r: Rng) => (r.chance(0.55) ? nm : cd);
     const renewal0 = rng.date('2026-09-20', '2027-08-31');
     for (const t of TERMS) a.terms[t] = [{ value: termValue(t, rv, a.role.split('-')[0]), effective: a.signed, recorded: a.signed, doc: a.contractDoc, kind: 'initial' }];
     a.renewal = [{ value: renewal0, effective: a.signed, recorded: a.signed, doc: a.contractDoc, kind: 'initial' }];
-    a.owner = [{ value: rng.pick(staff), effective: a.signed, recorded: a.signed, doc: a.crmDoc, kind: 'initial' }];
+    a.owner = [{ value: rng.pick(owners), effective: a.signed, recorded: a.signed, doc: a.crmDoc, kind: 'initial' }];
     if (rng.chance(0.2)) {
       const ad = rng.date('2026-01-05', '2026-08-31');
       const nr = rng.date('2026-10-01', '2027-09-30');
       const doc = `contracts/${a.slug}-renewal-amendment`;
       a.renewal.push({ value: nr, effective: ad, recorded: ad, doc, kind: 'change' });
-      const name = a.name, code = a.code, prev = renewal0;
-      add({ id: doc, title: `Amendment: ${code} renewal date`, type: 'amendment', date: ad, author: 'legal@acme-example',
-        body: () => R.frontmatterless(`Amendment to the Master Services Agreement with ${name}`, [`Status: Executed. Countersigned by both parties on ${longDate(ad)}.`, `Effective ${ad}, the renewal date moves from ${prev} to ${nr}. All other terms are unchanged.`]) });
+      const I = ident(a), prev = renewal0;
+      add({ id: doc, title: () => `Amendment: ${I.code} renewal date`, type: 'amendment', date: ad, author: 'legal@acme-example', refs: [I],
+        body: () => R.frontmatterless(`Amendment to the Master Services Agreement with ${I.name}`, [`Status: Executed. Countersigned by both parties on ${longDate(ad)}.`, `Effective ${ad}, the renewal date moves from ${prev} to ${nr}. All other terms are unchanged.`]) });
     }
     const nh = rng.int(0, K.handoffs_per_account_max);
     const effs = Array.from({ length: nh }, () => rng.date('2025-03-01', '2026-11-30')).filter(d => d > a.signed).sort();
     let current = a.owner[0].value;
     let lastRecorded = a.signed;
     effs.forEach((eff, k) => {
-      const next = draw(() => rng.pick(staff), x => x !== current, 'owners');
+      const next = draw(() => rng.pick(owners), x => x !== current, 'owners');
       const prev = current;
       let recorded: string, kind: 'belated' | 'advance' | 'heads_up';
       if (eff > HARD_TODAY) { recorded = addDays(eff, -rng.int(5, 30)); kind = 'heads_up'; }
@@ -257,22 +335,24 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
       if (recorded > HARD_TODAY) recorded = HARD_TODAY;
       if (recorded < lastRecorded) recorded = lastRecorded;
       lastRecorded = recorded;
-      const docId = add({ id: `mail/${recorded.slice(0, 7)}/${recorded}-handoff-${slugify(cd)}`, title: `Handoff: ${nm}`, type: 'email', date: recorded, author: prev,
+      const I = ident(a, { noManager: true });
+      const docId = add({ id: `mail/${recorded.slice(0, 7)}/${recorded}-handoff-${slugify(cd)}`, title: () => `Handoff: ${I.name}`, type: 'email', date: recorded, author: prev, refs: [I],
         body: body(`handoff:${a.stream}:${k}`, r => {
-          const lead = kind === 'belated' ? `Belated note, sorry for the delay: effective ${eff}, ${next} took over as account owner for ${r.chance(0.5) ? nm : cd} from me.`
-            : kind === 'heads_up' ? `Heads up: effective ${eff}, ${next} will take over as account owner for ${nm} from me.`
-            : `Team, effective ${eff} ${next} takes over as account owner for ${nm}. I'll stay on for two weeks to transition.`;
-          return `From: ${prev}\nDate: ${recorded}\nSubject: Handoff of ${nm} (${cd})\n\n${lead}`;
+          const lead = kind === 'belated' ? `Belated note, sorry for the delay: effective ${eff}, ${next} took over as account owner for ${I.alt(r.chance(0.5))} from me.`
+            : kind === 'heads_up' ? `Heads up: effective ${eff}, ${next} will take over as account owner for ${I.name} from me.`
+            : `Team, effective ${eff} ${next} takes over as account owner for ${I.name}. I'll stay on for two weeks to transition.`;
+          return `From: ${prev}\nDate: ${recorded}\nSubject: Handoff of ${R.both(I.name, I.code)}\n\n${lead}`;
         }) });
       const ev: ValueEvent = { value: next, effective: eff, recorded, doc: docId, kind: 'change' };
       a.owner.push(ev);
       current = next;
       if (eff <= HARD_TODAY && rng.chance(0.12)) {
-        const fixed = draw(() => rng.pick(staff), x => x !== next && x !== prev, 'owners');
+        const fixed = draw(() => rng.pick(owners), x => x !== next && x !== prev, 'owners');
         const cr = addDays(recorded, rng.int(2, 20));
         if (cr <= HARD_TODAY) {
-          const cdoc = add({ id: `mail/${cr.slice(0, 7)}/${cr}-owner-correction-${slugify(cd)}`, title: `Correction: owner of ${cd}`, type: 'email', date: cr, author: 'sales-ops@acme-example',
-            body: () => `From: sales-ops@acme-example\nDate: ${cr}\nSubject: Correction: owner of ${cd}\n\nCorrection to the handoff note of ${recorded}: effective ${eff}, ${nm} went to ${fixed}, not ${next}. The CRM will be updated in the next sync.` });
+          const C = ident(a, { noManager: true });
+          const cdoc = add({ id: `mail/${cr.slice(0, 7)}/${cr}-owner-correction-${slugify(cd)}`, title: () => `Correction: owner of ${C.code}`, type: 'email', date: cr, author: 'sales-ops@acme-example', refs: [C],
+            body: () => `From: sales-ops@acme-example\nDate: ${cr}\nSubject: Correction: owner of ${C.code}\n\nCorrection to the handoff note of ${recorded}: effective ${eff}, ${C.name} went to ${fixed}, not ${next}. The CRM will be updated in the next sync.` });
           a.owner.push(correctionOf(ev, fixed, cr, cdoc));
           current = fixed;
           lastRecorded = cr;
@@ -285,44 +365,53 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
       const escalated = rng.chance(0.55) ? addDays(opened, rng.int(1, 10)) : undefined;
       const closeAt = rng.chance(0.5) ? addDays(escalated ?? opened, rng.int(3, 70)) : undefined;
       const tk: Ticket = { id: ticketId(rng), opened, escalated: escalated && escalated <= HARD_TODAY ? escalated : undefined, closed: closeAt && closeAt <= HARD_TODAY ? closeAt : undefined, topic: rng.pick(TICKET_TOPICS), doc: '' };
-      tk.doc = addTicket(a, tk, refAt(rng));
+      tk.doc = addTicket(a, tk, rng.chance(0.55));
       a.tickets.push(tk);
     }
     if (rng.chance(K.wrong_agent_note_rate)) {
       const nd = rng.date('2026-05-01', '2026-09-12');
-      const wrongOwner = draw(() => rng.pick(staff), x => x !== valueAsOf(a.owner, nd), 'owners');
+      const wrongOwner = draw(() => rng.pick(owners), x => x !== valueAsOf(a.owner, nd), 'owners');
       const wrongRenewal = draw(() => rng.date('2026-09-20', '2027-09-30'), x => x !== valueAsOf(a.renewal, nd), 'dates');
-      add({ id: `notes/agents/${nd}-${a.slug}-snapshot`, title: `Agent snapshot: ${nm}`, type: 'agent-note', date: nd, author: 'agent:research-assistant',
-        body: () => R.frontmatterless(`Account snapshot: ${nm} (auto-generated)`, [`Account owner: ${wrongOwner}. Renewal date: ${wrongRenewal}.`, 'Confidence: high. Verified against the CRM and recent email.']) });
+      const I = ident(a);
+      add({ id: `notes/agents/${nd}-${a.slug}-snapshot`, title: () => `Agent snapshot: ${I.name}`, type: 'agent-note', date: nd, author: 'agent:research-assistant', refs: [I],
+        body: () => R.frontmatterless(`Account snapshot: ${I.name} (auto-generated)`, [`Account owner: ${wrongOwner}. Renewal date: ${wrongRenewal}.`, 'Confidence: high. Verified against the CRM and recent email.']) });
     }
     for (let k = 0; k < K.emails_per_account; k++) {
       const d = rng.date('2025-10-01', '2026-09-14');
-      add({ id: `mail/${d.slice(0, 7)}/${d}-${slugify(cd)}-note`, title: `Email: ${cd}`, type: 'email', date: d, author: champion,
-        body: body(`routine:${a.stream}:${k}`, r => R.routineEmail(r, { from: r.chance(0.5) ? champion : 'success@acme-example', date: d, ref: r.chance(0.3) ? base : refAt(r) }).body) });
+      const I = ident(a);
+      add({ id: `mail/${d.slice(0, 7)}/${d}-${slugify(cd)}-note`, title: () => `Email: ${I.code}`, type: 'email', date: d, author: champion, refs: [I],
+        body: body(`routine:${a.stream}:${k}`, r => R.routineEmail(r, { from: r.chance(0.5) ? champion : 'success@acme-example', date: d, ref: r.chance(0.3) ? I.base : I.alt(r.chance(0.55)) }).body) });
     }
     for (let k = 0; k < K.meetings_per_account; k++) {
       const d = rng.date('2025-10-01', '2026-09-14');
-      add({ id: `meetings/${d.slice(0, 7)}/${d}-${slugify(cd)}-sync`, title: `Meeting: ${cd} sync`, type: 'meeting', date: d, author: 'success@acme-example',
-        body: body(`meeting:${a.stream}:${k}`, r => R.routineMeeting(r, { title: `Sync: ${r.chance(0.5) ? nm : cd}`, date: d, speakers: [champion, 'Acme success team'], minLines: K.transcript_lines_min, maxLines: K.transcript_lines_max })) });
+      const I = ident(a);
+      add({ id: `meetings/${d.slice(0, 7)}/${d}-${slugify(cd)}-sync`, title: () => `Meeting: ${I.code} sync`, type: 'meeting', date: d, author: 'success@acme-example', refs: [I],
+        body: body(`meeting:${a.stream}:${k}`, r => R.routineMeeting(r, { title: `Sync: ${I.alt(r.chance(0.5))}`, date: d, speakers: [champion, 'Acme success team'], minLines: K.transcript_lines_min, maxLines: K.transcript_lines_max })) });
     }
   };
 
-  const addTicket = (a: HardAccount, tk: Ticket, refText: string) => {
+  const addTicket = (a: HardAccount, tk: Ticket, useName: boolean) => {
     const log: Array<[string, string]> = [[tk.opened, 'Opened.']];
     if (tk.escalated) log.push([tk.escalated, 'Escalated to the Platform team.']);
     if (tk.closed) log.push([tk.closed, 'Closed. Resolved.']);
-    return add({ id: `tickets/${tk.id}`, title: `${tk.id}: ${tk.topic}`, type: 'ticket', date: log.at(-1)![0], author: 'support-desk', body: () => R.ticketBody({ id: tk.id, ref: refText, topic: tk.topic, log }) });
+    const I = ident(a);
+    return add({ id: `tickets/${tk.id}`, title: `${tk.id}: ${tk.topic}`, type: 'ticket', date: log.at(-1)![0], author: 'support-desk', refs: [I], body: () => R.ticketBody({ id: tk.id, ref: I.alt(useName), topic: tk.topic, log }) });
   };
 
-  /** Contract and CRM documents; rendered at the end, so renames and merges planted later appear. */
+  /** Contract, CRM and (v2) account-sheet documents; rendered at the end, so renames and merges planted later appear. */
   const recordDocs = (a: HardAccount) => {
     const t0 = Object.fromEntries(TERMS.map(t => [t, a.terms[t][0].value]));
-    const contractName = a.former?.name ?? a.name, contractCode = a.former?.code ?? a.code;
-    if (!a.customContract) add({ id: a.contractDoc, title: `Master Services Agreement: ${contractName}`, type: 'contract', date: a.signed, author: 'legal@acme-example',
-      body: () => R.contractBody({ name: contractName, code: contractCode, segment: a.segment, region: a.region, signed: a.signed, renewal: a.renewal[0].value, terms: t0, champion: a.champion, acmeSigner }) });
-    add({ id: a.crmDoc, title: `CRM record: ${a.name}`, type: 'crm', date: a.signed, author: 'crm-sync',
+    const I = ident(a, { name: a.former?.name ?? a.name, code: a.former?.code ?? a.code });
+    if (!a.customContract) add({ id: a.contractDoc, title: () => `Master Services Agreement: ${I.name}`, type: 'contract', date: a.signed, author: 'legal@acme-example', refs: [I],
+      body: () => R.contractBody({ name: I.name, code: I.code, segment: a.segment, region: a.region, signed: a.signed, renewal: a.renewal[0].value, terms: t0, champion: a.champion, acmeSigner }) });
+    if (refsOn) {
+      a.sheetDoc = `accounts/${a.slug}`;
+      add({ id: a.sheetDoc, title: `Account sheet: ${a.name}`, type: 'crm', date: a.signed, author: 'crm-sync', resolution: true,
+        body: R.accountSheetBody({ name: a.name, nickname: a.nickname!, industry: a.industry, region: a.region, descriptor: descriptorOf(a) }) });
+    }
+    add({ id: a.crmDoc, title: `CRM record: ${a.name}`, type: 'crm', date: a.signed, author: 'crm-sync', resolution: true,
       body: () => a.mergedInto ? R.frontmatterless(`CRM record: ${a.name}`, [`Account: ${a.name}. Account code: ${a.code}.`, `Status: merged into another account (see the merger announcement). Champion at the time of the merger: ${a.champion}.`])
-        : R.crmBody({ name: a.name, code: a.code, segment: a.segment, region: a.region, owner: a.owner[0].value, asOf: a.signed, champion: a.champion, billing: a.billing, aliases: aliasesOf(a).filter(x => x !== a.code) }) });
+        : R.crmBody({ name: a.name, code: a.code, segment: a.segment, region: a.region, owner: a.owner[0].value, asOf: a.signed, champion: a.champion, billing: a.billing, aliases: aliasesOf(a).filter(x => x !== a.code && x !== a.nickname && !a.mergedIn.some(m => m.nickname === x)) }) });
   };
 
   const tasks: HardTask[] = [];
@@ -351,16 +440,18 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
       let recorded = backdated ? addDays(eff, rng.int(5, 45)) : addDays(eff, -rng.int(1, 30));
       if (recorded > today) recorded = today;
       if (recorded < a.signed) recorded = addDays(a.signed, 1);
-      const doc = add({ id: `contracts/${a.slug}-change-order-${k + 1}`, title: `Change Order No. ${k + 1}: ${a.name}`, type: 'amendment', date: recorded, author: 'legal@acme-example',
-        body: () => R.frontmatterless(`Change Order No. ${k + 1} under the Master Services Agreement with ${a.name} (${a.code})`, [`Status: Executed. Signed by both parties on ${longDate(recorded)}.`, `Effective ${eff}, the ${label} under the agreement ${reversal ? 'return to' : 'change to'} ${value}.`, 'All other terms are unchanged.']) });
+      const I = ident(a);
+      const doc = add({ id: `contracts/${a.slug}-change-order-${k + 1}`, title: () => `Change Order No. ${k + 1}: ${I.name}`, type: 'amendment', date: recorded, author: 'legal@acme-example', refs: [I],
+        body: () => R.frontmatterless(`Change Order No. ${k + 1} under the Master Services Agreement with ${R.both(I.name, I.code)}`, [`Status: Executed. Signed by both parties on ${longDate(recorded)}.`, `Effective ${eff}, the ${label} under the agreement ${reversal ? 'return to' : 'change to'} ${value}.`, 'All other terms are unchanged.']) });
       const ev: ValueEvent = { value, effective: eff, recorded, doc, kind: 'change' };
       events.push(ev);
       if (rng.chance(K.h2_correction_rate)) {
         const fixed = fresh();
         const cr = addDays(recorded, rng.int(3, 40));
         if (cr <= today) {
-          const cdoc = add({ id: `mail/${cr.slice(0, 7)}/${cr}-change-order-correction-${slugify(a.code)}`, title: `Correction: Change Order No. ${k + 1} (${a.code})`, type: 'email', date: cr, author: 'legal@acme-example',
-            body: () => `From: legal@acme-example\nDate: ${cr}\nSubject: Correction to Change Order No. ${k + 1} for ${a.name}\n\nChange Order No. ${k + 1}, signed ${recorded}, has a typo. Effective ${eff}, the ${label} is ${fixed}, not ${value}. Both parties initialed the corrected page on ${cr}.` });
+          const C = ident(a);
+          const cdoc = add({ id: `mail/${cr.slice(0, 7)}/${cr}-change-order-correction-${slugify(a.code)}`, title: () => `Correction: Change Order No. ${k + 1} (${C.code})`, type: 'email', date: cr, author: 'legal@acme-example', refs: [C],
+            body: () => `From: legal@acme-example\nDate: ${cr}\nSubject: Correction to Change Order No. ${k + 1} for ${C.name}\n\nChange Order No. ${k + 1}, signed ${recorded}, has a typo. Effective ${eff}, the ${label} is ${fixed}, not ${value}. Both parties initialed the corrected page on ${cr}.` });
           events.push(correctionOf(ev, fixed, cr, cdoc));
         }
       }
@@ -378,10 +469,11 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
     for (let k = 0; k < K.h2_intermediate_notes && others.length; k++) {
       const v = others[k % others.length];
       const nd = rng.date(addDays(D, -60) > a.signed ? addDays(D, -60) : addDays(a.signed, 1), today);
-      notes.push(add({ id: `notes/agents/${nd}-${a.slug}-${attr}-summary`, title: `Agent summary: ${a.name} ${label}`, type: 'agent-note', date: nd, author: 'agent:research-assistant',
-        body: () => R.frontmatterless(`Contract summary: ${a.name} (auto-generated)`, [`The ${label} for ${a.code} is ${v}, from the latest change order I could find.`, 'Confidence: high.']) }));
+      const I = ident(a);
+      notes.push(add({ id: `notes/agents/${nd}-${a.slug}-${attr}-summary`, title: () => `Agent summary: ${I.name} ${label}`, type: 'agent-note', date: nd, author: 'agent:research-assistant', refs: [I],
+        body: () => R.frontmatterless(`Contract summary: ${I.name} (auto-generated)`, [`The ${label} for ${I.code} is ${v}, from the latest change order I could find.`, 'Confidence: high.']) }));
     }
-    const asName = i % 2 === 0;
+    const asName = refsOn || i % 2 === 0;
     tasks.push({
       id: taskId('H2', i), family: 'H2', variant, answer_kind: 'value', accounts: [a.id],
       question: attr === 'seats' ? `How many licensed seats did ${asName ? a.name : a.code} have under contract on ${D}?` : `What was the liability cap in our agreement with ${asName ? a.name : a.code} on ${D}?`,
@@ -409,10 +501,10 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
       target = createAccount(`H3:${i}:merged`, { role: 'H3', fresh: true });
       ambiguous = target.base;
       const md = rng.date('2026-03-01', '2026-08-20');
-      const doc = add({ id: `mail/${md.slice(0, 7)}/${md}-merger-${slugify(target.code)}`, title: `Merger: ${target.name} and ${holder.name}`, type: 'email', date: md, author: 'legal@acme-example',
+      const doc = add({ id: `mail/${md.slice(0, 7)}/${md}-merger-${slugify(target.code)}`, title: `Merger: ${target.name} and ${holder.name}`, type: 'email', date: md, author: 'legal@acme-example', resolution: true,
         body: () => `From: legal@acme-example\nDate: ${md}\nSubject: ${target.name} has merged into ${holder.name}\n\nEffective ${md}, ${target.name} (account code ${target.code}) is part of ${holder.name}. The ${target.name} agreement is consolidated into the ${holder.name} Master Services Agreement, whose terms, owner and renewal date now govern both. ${holder.name} keeps both names, and code ${target.code} now refers to ${holder.name}.` });
       target.mergedInto = holder.id;
-      holder.mergedIn.push({ name: target.name, code: target.code, date: md, doc });
+      holder.mergedIn.push({ name: target.name, code: target.code, date: md, doc, ...(target.nickname ? { nickname: target.nickname } : {}) });
       // One entity, one set of facts: the merged account's names map to the holder, so its tickets are the holder's
       // tickets, and its contract carries the holder's renewal date (its own renewal amendment is not written).
       holder.tickets.push(...target.tickets);
@@ -432,7 +524,7 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
         const { base: nb, name: nn } = allocName(rng, { fresh: true });
         usedNames.add(nameKey(nn));
         const nc = allocCode(rng, nb, nn);
-        const doc = add({ id: `mail/${rd.slice(0, 7)}/${rd}-rename-${slugify(oldCode)}`, title: `Account renamed: ${oldName}`, type: 'email', date: rd, author: 'sales-ops@acme-example',
+        const doc = add({ id: `mail/${rd.slice(0, 7)}/${rd}-rename-${slugify(oldCode)}`, title: `Account renamed: ${oldName}`, type: 'email', date: rd, author: 'sales-ops@acme-example', resolution: true,
           body: () => `From: sales-ops@acme-example\nDate: ${rd}\nSubject: ${oldName} is now ${nn}\n\nAs of ${rd}, ${oldName} (account code ${oldCode}) operates as ${nn}, account code ${nc}. Same customer, same contract; records from now on use the new name.` });
         target.former = { name: oldName, code: oldCode, date: rd, doc };
         target.name = nn; target.base = nb; target.code = nc; target.slug = slugify(nn); target.crmDoc = `crm/${target.slug}`;
@@ -442,14 +534,16 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
         wrongExtra.push(nowValue(target, attr));
         if (attr === 'owner') {
           const next = draw(() => rng.pick(staff), x => x !== valueAsOf(target.owner, today), 'owners');
-          const hd = add({ id: `mail/${ce.slice(0, 7)}/${ce}-handoff-${slugify(nc)}`, title: `Handoff: ${nn}`, type: 'email', date: ce, author: 'sales-ops@acme-example',
-            body: () => `From: sales-ops@acme-example\nDate: ${ce}\nSubject: Handoff of ${nn}\n\nEffective ${ce}, ${next} takes over as account owner for ${nn} (${nc}).` });
+          const I = ident(target, { noManager: true });
+          const hd = add({ id: `mail/${ce.slice(0, 7)}/${ce}-handoff-${slugify(nc)}`, title: () => `Handoff: ${I.name}`, type: 'email', date: ce, author: 'sales-ops@acme-example', refs: [I],
+            body: () => `From: sales-ops@acme-example\nDate: ${ce}\nSubject: Handoff of ${I.name}\n\nEffective ${ce}, ${next} takes over as account owner for ${R.both(I.name, I.code)}.` });
           target.owner.push({ value: next, effective: ce, recorded: ce, doc: hd, kind: 'change' });
         } else {
           const events = attr === 'renewal_date' ? target.renewal : target.terms[attr];
           const value = attr === 'renewal_date' ? draw(() => rng.date('2026-10-01', '2027-09-30'), v => !historyValues(events).includes(v), 'dates') : draw(() => termValue(attr, rng, 'H3'), v => pairwiseClean([...historyValues(events), v]), 'H3 values');
-          const am = add({ id: `contracts/${slugify(nn)}-amendment-1`, title: `Amendment No. 1: ${nn}`, type: 'amendment', date: ce, author: 'legal@acme-example',
-            body: () => R.frontmatterless(`Amendment No. 1 to the Master Services Agreement with ${nn} (${nc})`, [`Status: Executed. Countersigned by both parties on ${longDate(ce)}.`, `Effective ${ce}, the ${label} change to ${value}. All other terms are unchanged.`]) });
+          const I = ident(target);
+          const am = add({ id: `contracts/${slugify(nn)}-amendment-1`, title: () => `Amendment No. 1: ${I.name}`, type: 'amendment', date: ce, author: 'legal@acme-example', refs: [I],
+            body: () => R.frontmatterless(`Amendment No. 1 to the Master Services Agreement with ${R.both(I.name, I.code)}`, [`Status: Executed. Countersigned by both parties on ${longDate(ce)}.`, `Effective ${ce}, the ${label} change to ${value}. All other terms are unchanged.`]) });
           events.push({ value, effective: ce, recorded: ce, doc: am, kind: 'change' });
         }
         relevant.push(doc);
@@ -468,7 +562,7 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
         const v = nowValue(cand, attr);
         if (v !== gold && pairwiseClean([gold, v])) { look = cand; break; }
         accounts.pop();
-        usedNames.delete(nameKey(cand.name)); usedNames.delete(nameKey(cand.code));
+        usedNames.delete(nameKey(cand.name)); usedNames.delete(nameKey(cand.code)); if (cand.nickname) usedNicknames.delete(cand.nickname);
         for (const d of docs.splice(mark)) ids.delete(d.id);
       }
       if (!look) throw new Error(`model-ladder-hard: H3 task index ${i}: no look-alike with a different value`);
@@ -496,9 +590,9 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
     const subst = (text: string) => text.replace(new RegExp(esc(f.name), 'g'), a.name).replace(new RegExp(`\\b${esc(f.code)}\\b`, 'g'), a.code).replace(new RegExp(`\\b${esc(oldBase)}\\b`, 'g'), newBase);
     for (const d of docs) {
       if (!a.docIds.includes(d.id) || d.date < f.date) continue;
-      const orig = d.body;
-      d.title = subst(d.title);
-      d.body = () => subst(typeof orig === 'function' ? orig() : orig);
+      const orig = d.body, origTitle = d.title;
+      d.title = () => subst(text(origTitle));
+      d.body = () => subst(text(orig));
     }
   }
 
@@ -515,10 +609,11 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
     const executed: string[] = [a.contractDoc];
     const long = rng.chance(K.h4_long_document_rate);
     const amend = (k: number, eff: string, recorded: string, value: string, isLong: boolean) => {
-      const head = [`# Amendment No. ${k} to the Master Services Agreement with ${a.name} (${a.code})`, `Status: Executed. Countersigned by both parties on ${longDate(recorded)}.`];
+      const I = ident(a);
+      const head = () => [`# Amendment No. ${k} to the Master Services Agreement with ${R.both(I.name, I.code)}`, `Status: Executed. Countersigned by both parties on ${longDate(recorded)}.`];
       const deciding = `Effective ${eff}, the ${label} change to ${value}.`;
-      const doc = add({ id: `contracts/${a.slug}-amendment-${k}`, title: `Amendment No. ${k}: ${a.name}`, type: 'amendment', date: recorded, author: 'legal@acme-example',
-        body: body(`h4:${a.stream}:${k}`, r => isLong ? R.longExecuted(r, head, deciding, r.int(26_000, 40_000)) : [...head, deciding, 'All other terms are unchanged.'].join('\n\n')) });
+      const doc = add({ id: `contracts/${a.slug}-amendment-${k}`, title: () => `Amendment No. ${k}: ${I.name}`, type: 'amendment', date: recorded, author: 'legal@acme-example', refs: [I],
+        body: body(`h4:${a.stream}:${k}`, r => isLong ? R.longExecuted(r, head(), deciding, r.int(26_000, 40_000)) : [...head(), deciding, 'All other terms are unchanged.'].join('\n\n')) });
       events.push({ value, effective: eff, recorded, doc, kind: 'change' });
       executed.push(doc);
     };
@@ -532,16 +627,17 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
     if (variant === 'future_effective') { const r = rng.date('2026-07-01', '2026-09-10'); amend(1, rng.date(addDays(today, 20), addDays(today, 120)), r, fresh(), false); }
     if (variant === 'contract_holds' && long) {
       const otherTerms = TERMS.filter(t => t !== attr).map(t => `${R.TERM_LABELS[t][0].toUpperCase()}${R.TERM_LABELS[t].slice(1)}: ${a.terms[t][0].value}.`).join(' ');
-      const head = [`# Master Services Agreement: Acme Example Inc. and ${a.name}`, `Status: Executed. Countersigned by both parties on ${longDate(a.signed)}.`,
-        `Customer: ${a.name} (account code ${a.code}). Segment: ${a.segment}. Region: ${a.region}.`, `Initial term: ${longDate(a.signed)} through ${longDate(a.renewal[0].value)}. Renewal date: ${a.renewal[0].value}.`,
-        otherTerms, `Signed for ${a.name}: ${a.champion} (customer champion). Signed for Acme Example Inc.: ${acmeSigner}.`];
+      const I = ident(a);
+      const head = () => [`# Master Services Agreement: Acme Example Inc. and ${I.name}`, `Status: Executed. Countersigned by both parties on ${longDate(a.signed)}.`,
+        `Customer: ${I.name === I.code ? I.name : `${I.name} (account code ${I.code})`}. Segment: ${a.segment}. Region: ${a.region}.`, `Initial term: ${longDate(a.signed)} through ${longDate(a.renewal[0].value)}. Renewal date: ${a.renewal[0].value}.`,
+        otherTerms, `Signed for ${I.name}: ${a.champion} (customer champion). Signed for Acme Example Inc.: ${acmeSigner}.`];
       const oldDoc = a.contractDoc;
       a.contractDoc = `contracts/${a.slug}-msa-full`;
       a.customContract = true;
       for (const ev of [...a.renewal, ...TERMS.flatMap(t => a.terms[t])]) if (ev.doc === oldDoc) ev.doc = a.contractDoc;
       const t0 = events[0].value;
-      add({ id: a.contractDoc, title: `Master Services Agreement (full text): ${a.name}`, type: 'contract', date: a.signed, author: 'legal@acme-example',
-        body: body(`h4full:${a.stream}`, r => R.longExecuted(r, head, `The ${label} under this agreement is ${t0}.`, r.int(26_000, 40_000))) });
+      add({ id: a.contractDoc, title: () => `Master Services Agreement (full text): ${I.name}`, type: 'contract', date: a.signed, author: 'legal@acme-example', refs: [I],
+        body: body(`h4full:${a.stream}`, r => R.longExecuted(r, head(), `The ${label} under this agreement is ${t0}.`, r.int(26_000, 40_000))) });
       executed[0] = a.contractDoc;
     }
     const lower: string[] = [];
@@ -550,22 +646,24 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
     for (const kind of kinds) {
       const v = fresh();
       const d = rng.date('2026-06-01', '2026-09-12');
-      if (kind === 'draft') lower.push(add({ id: `contracts/${a.slug}-amendment-draft`, title: `DRAFT Amendment: ${a.name}`, type: 'amendment', date: d, author: 'legal@acme-example',
-        body: () => R.frontmatterless(`DRAFT: Amendment to the Master Services Agreement with ${a.name}`, ['Status: Draft for discussion. Not signed by either party.', `Proposed: the ${label} change to ${v}.`]) }));
-      else if (kind === 'note') lower.push(add({ id: `notes/agents/${d}-${a.slug}-terms`, title: `Agent summary: ${a.name} contract terms`, type: 'agent-note', date: d, author: 'agent:research-assistant',
-        body: () => R.frontmatterless(`Contract terms summary: ${a.name} (auto-generated)`, [`${label[0].toUpperCase()}${label.slice(1)}: ${v}. Summarized from recent correspondence.`]) }));
+      const I = ident(a);
+      if (kind === 'draft') lower.push(add({ id: `contracts/${a.slug}-amendment-draft`, title: () => `DRAFT Amendment: ${I.name}`, type: 'amendment', date: d, author: 'legal@acme-example', refs: [I],
+        body: () => R.frontmatterless(`DRAFT: Amendment to the Master Services Agreement with ${I.name}`, ['Status: Draft for discussion. Not signed by either party.', `Proposed: the ${label} change to ${v}.`]) }));
+      else if (kind === 'note') lower.push(add({ id: `notes/agents/${d}-${a.slug}-terms`, title: () => `Agent summary: ${I.name} contract terms`, type: 'agent-note', date: d, author: 'agent:research-assistant', refs: [I],
+        body: () => R.frontmatterless(`Contract terms summary: ${I.name} (auto-generated)`, [`${label[0].toUpperCase()}${label.slice(1)}: ${v}. Summarized from recent correspondence.`]) }));
       else {
         const from = rng.pick(staff);
-        lower.push(add({ id: `mail/${d.slice(0, 7)}/${d}-re-${slugify(a.code)}-${slugify(label)}`, title: `Re: ${a.code} ${label}`, type: 'email', date: d, author: from,
-          body: () => `From: ${from}\nDate: ${d}\nSubject: Re: ${a.code} ${label}\n\nSummary from the call: the ${label} for ${a.name} is ${v} now. Can someone double-check before the QBR deck goes out?` }));
+        lower.push(add({ id: `mail/${d.slice(0, 7)}/${d}-re-${slugify(a.code)}-${slugify(label)}`, title: () => `Re: ${I.code} ${label}`, type: 'email', date: d, author: from, refs: [I],
+          body: () => `From: ${from}\nDate: ${d}\nSubject: Re: ${I.code} ${label}\n\nSummary from the call: the ${label} for ${I.name} is ${v} now. Can someone double-check before the QBR deck goes out?` }));
       }
     }
     const gold = valueAsOf(events, today)!;
+    const asked = refsOn || i % 2 === 0 ? a.name : a.code;
     tasks.push({ id: taskId('H4', i), family: 'H4', variant: `${variant}${long ? '+long' : ''}:${attr}`, answer_kind: 'value', accounts: [a.id],
-      question: attr === 'seats' ? `How many licensed seats does ${i % 2 ? a.code : a.name} have under contract right now?`
-        : attr === 'payment_terms' ? `What payment terms are currently in force with ${i % 2 ? a.code : a.name}?`
-        : attr === 'uptime_sla' ? `What uptime SLA do we currently owe ${i % 2 ? a.code : a.name}?`
-        : `What is the current liability cap in our agreement with ${i % 2 ? a.code : a.name}?`,
+      question: attr === 'seats' ? `How many licensed seats does ${asked} have under contract right now?`
+        : attr === 'payment_terms' ? `What payment terms are currently in force with ${asked}?`
+        : attr === 'uptime_sla' ? `What uptime SLA do we currently owe ${asked}?`
+        : `What is the current liability cap in our agreement with ${asked}?`,
       gold: { answer: [gold], wrong: values.filter(v => v !== gold), evidence: [eventAsOf(events, today)!.doc] },
       relevant: [a.crmDoc, ...executed, ...lower] });
   }
@@ -602,8 +700,9 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
       const codeDocs: string[] = [];
       for (const [acc, code] of [[x, dx0], [y, dy0]] as const) {
         const d = rng.date('2026-03-01', '2026-08-31');
-        codeDocs.push(add({ id: `mail/${d.slice(0, 7)}/${d}-discount-code-${slugify(acc.code)}`, title: `Discount code: ${acc.code}`, type: 'email', date: d, author: 'billing@acme-example',
-          body: () => `From: billing@acme-example\nDate: ${d}\nSubject: Discount code for ${acc.code}\n\nThe discount code on file for ${acc.name} orders is ${code}.` }));
+        const I = ident(acc);
+        codeDocs.push(add({ id: `mail/${d.slice(0, 7)}/${d}-discount-code-${slugify(acc.code)}`, title: () => `Discount code: ${I.code}`, type: 'email', date: d, author: 'billing@acme-example', refs: [I],
+          body: () => `From: billing@acme-example\nDate: ${d}\nSubject: Discount code for ${I.code}\n\nThe discount code on file for ${I.name} orders is ${code}.` }));
       }
       docValues.dx0 = dx0; docValues.dy0 = dy0;
       facts = [
@@ -700,7 +799,7 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
         const cand = createAccount(`large:${k}:${attempt}`, { role: spec ? 'large-lookalike' : 'large', large: true, base: spec && !spec.prefix ? spec.base : undefined, codePrefix: spec?.prefix });
         if (!satisfiesAny(cand)) { a = cand; for (const d of docs.slice(mark)) appendedDocIds.add(d.id); break; }
         appended.pop();
-        usedNames.delete(nameKey(cand.name)); usedNames.delete(nameKey(cand.code));
+        usedNames.delete(nameKey(cand.name)); usedNames.delete(nameKey(cand.code)); if (cand.nickname) usedNicknames.delete(cand.nickname);
         for (const d of docs.splice(mark)) ids.delete(d.id);
       }
       if (!a) throw new Error(`model-ladder-hard: appended account index ${k} satisfies an H1 predicate after 60 draws`);
@@ -713,12 +812,13 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
       for (let k = 0; k < K.large_nondeciding_per_account; k++) {
         const kind = R.NONDECIDING_KINDS[k % R.NONDECIDING_KINDS.length];
         const d = rng.date('2025-10-01', '2026-09-14');
-        if (kind === 'logistics') add({ id: `logistics/${d.slice(0, 7)}/${d}-${slugify(a.code)}-visit`, title: `Logistics: ${a.code} visit`, type: 'email', date: d, author: 'events@acme-example', body: body(`nd:${a.stream}:${k}`, r => R.logisticsBody(r, { name: a.name, date: d })) });
-        else if (kind === 'correspondence') add({ id: `mail/${d.slice(0, 7)}/${d}-${slugify(a.code)}-correspondence`, title: `Email: ${a.code}`, type: 'email', date: d, author: a.champion, body: body(`nd:${a.stream}:${k}`, r => R.routineEmail(r, { from: a.champion, date: d, ref: r.chance(0.5) ? a.name : a.code }).body) });
+        const I = ident(a);
+        if (kind === 'logistics') add({ id: `logistics/${d.slice(0, 7)}/${d}-${slugify(a.code)}-visit`, title: () => `Logistics: ${I.code} visit`, type: 'email', date: d, author: 'events@acme-example', refs: [I], body: body(`nd:${a.stream}:${k}`, r => R.logisticsBody(r, { name: I.name, date: d })) });
+        else if (kind === 'correspondence') add({ id: `mail/${d.slice(0, 7)}/${d}-${slugify(a.code)}-correspondence`, title: () => `Email: ${I.code}`, type: 'email', date: d, author: a.champion, refs: [I], body: body(`nd:${a.stream}:${k}`, r => R.routineEmail(r, { from: a.champion, date: d, ref: I.alt(r.chance(0.5)) }).body) });
         else {
           const closed = addDays(d, rng.int(0, 5)) <= today ? addDays(d, rng.int(0, 5)) : d;
           const tk: Ticket = { id: ticketId(rng), opened: d, closed, topic: rng.pick(R.UNRELATED_TICKET_TOPICS), doc: '' };
-          tk.doc = addTicket(a, tk, a.code);
+          tk.doc = addTicket(a, tk, false);
           a.tickets.push(tk);
         }
       }
@@ -759,14 +859,83 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
   function teamUpdate(rng: Rng, k: number, pool: HardAccount[], tag: string) {
     const d = rng.date('2025-10-01', '2026-09-14');
     const team = rng.pick(['Platform', 'Support', 'Solutions', 'Partnerships', 'Growth']);
-    const picked = rng.shuffle(pool).slice(0, 3);
-    const tid = add({ id: `team/updates/${d}-${slugify(team)}-${tag}-${k}`, title: `${team} team update ${d}`, type: 'team-update', date: d, author: `${team.toLowerCase()}@acme-example`,
-      body: body(`team:${tag}:${k}`, r => R.teamUpdateBody(r, { team, date: d, refs: picked.map(a => (r.chance(0.5) ? a.name : a.code)) })) });
+    const picked = rng.shuffle(pool).slice(0, 3).map(a => ident(a));
+    const tid = add({ id: `team/updates/${d}-${slugify(team)}-${tag}-${k}`, title: `${team} team update ${d}`, type: 'team-update', date: d, author: `${team.toLowerCase()}@acme-example`, refs: picked,
+      body: body(`team:${tag}:${k}`, r => R.teamUpdateBody(r, { team, date: d, refs: picked.map(I => I.alt(r.chance(0.5))) })) });
     if (tag === 'large') appendedDocIds.add(tid);
   }
 
+  const references = refsOn ? resolveReferences() : [];
+
+  /**
+   * Generator v2, once the ledger is complete: draw each reference's form, fall back from the manager form where it
+   * would not name exactly one account on the record's date, add the resolution documents each oracle record needs,
+   * and give event documents opaque ids.
+   */
+  function resolveReferences(): HardReference[] {
+    const all = [...accounts, ...appended];
+    const byDescriptor = new Map<string, HardAccount[]>();
+    for (const a of all) byDescriptor.set(descriptorOf(a), [...(byDescriptor.get(descriptorOf(a)) ?? []), a]);
+    const weighted = (u: number, opts: Array<[RefForm, number]>): RefForm => {
+      let x = u * opts.reduce((t, [, w]) => t + w, 0);
+      for (const [f, w] of opts) { if (w > 0 && x < w) return f; x -= w; }
+      return 'code';
+    };
+    const managerText = (I: Ident, date: string) => {
+      const a = I.account;
+      const m = I.noManager || a.mergedInto ? null : managerKnownOn(a.owner, date);
+      if (!m || byDescriptor.get(descriptorOf(a))!.some(b => b !== a && managerReadingsOn(b.owner, date).has(m))) return null;
+      return managerReference(m, descriptorOf(a));
+    };
+    const before = (a: HardAccount, date: string) => !!a.former && date < a.former.date;
+    for (const d of docs) (d.refs ?? []).forEach((I, k) => {
+      const rng = rngFor(seed, 'ref', d.id, k);
+      const a = I.account;
+      let form: RefForm = rng.chance(K.direct_name_share!) ? 'name' : weighted(rng.float(), [['code', K.code_ref_weight!], ['nickname', K.nickname_ref_weight!], ['manager', K.manager_ref_weight!]]);
+      const manager = form === 'manager' ? managerText(I, d.date) : null;
+      if (form === 'manager' && !manager) form = weighted(rng.float(), [['code', K.code_ref_weight!], ['nickname', K.nickname_ref_weight!]]);
+      const name = before(a, d.date) ? a.former!.name : a.name, code = before(a, d.date) ? a.former!.code : a.code;
+      I.resolved = { form, text: form === 'name' ? name : form === 'code' ? code : form === 'nickname' ? a.nickname! : manager!, name, code };
+    });
+
+    const byId = new Map(docs.map(d => [d.id, d]));
+    const mergerDoc = new Map(all.flatMap(h => h.mergedIn.map(m => [all.find(x => x.mergedInto === h.id && x.name === m.name)!.id, m.doc] as const)));
+    const linksOf = (I: Ident, date: string): string[] => {
+      const a = I.account, f = I.resolved!.form;
+      const out = [...(a.mergedInto ? [mergerDoc.get(a.id)!] : []), ...(f === 'name' && before(a, date) ? [a.former!.doc] : [])];
+      if (f === 'code') out.push(a.crmDoc);
+      if (f === 'nickname' || f === 'manager') out.push(a.sheetDoc!);
+      if (f === 'manager') for (const e of a.owner) if (e.recorded <= date) out.push(e.doc, ...(byId.get(e.doc)?.refs ?? []).flatMap(J => linksOf(J, e.recorded)));
+      return out;
+    };
+    const withLinks = (ids: string[]) => [...new Set([...ids, ...ids.flatMap(id => { const d = byId.get(id)!; return (d.refs ?? []).flatMap(I => linksOf(I, d.date)); })])];
+    for (const t of tasks) { t.relevant = withLinks(t.relevant); t.gold.evidence = withLinks(t.gold.evidence); }
+
+    const remap = new Map<string, string>();
+    for (const d of docs) {
+      if (d.resolution) continue;
+      const slash = d.id.lastIndexOf('/');
+      const date = /^\d{4}-\d{2}-\d{2}-/.exec(d.id.slice(slash + 1))?.[0] ?? '';
+      remap.set(d.id, `${d.id.slice(0, slash)}/${date}${createHash('sha256').update(`${seed}:${d.id}`).digest('hex').slice(0, 10)}`);
+    }
+    if (new Set(remap.values()).size !== remap.size) throw new Error('model-ladder-hard: two event documents got the same opaque id');
+    const re = (id: string) => remap.get(id) ?? id;
+    for (const d of docs) d.id = re(d.id);
+    for (const t of tasks) { t.relevant = t.relevant.map(re); t.gold.evidence = t.gold.evidence.map(re); }
+    for (const a of all) {
+      a.docIds = a.docIds.map(re);
+      a.contractDoc = re(a.contractDoc);
+      for (const e of [...a.owner, ...a.renewal, ...TERMS.flatMap(t => a.terms[t])]) e.doc = re(e.doc);
+      for (const tk of a.tickets) tk.doc = re(tk.doc);
+    }
+    const appendedNow = [...appendedDocIds].map(re);
+    appendedDocIds.clear();
+    for (const id of appendedNow) appendedDocIds.add(id);
+    return docs.flatMap(d => (d.refs ?? []).map(I => ({ doc: d.id, entity: I.account.mergedInto ?? I.account.id, form: I.resolved!.form, text: I.resolved!.text })));
+  }
+
   return {
-    seed, knobs: K, scale, staff, accounts, appended, tasks, docs, appendedDocIds,
+    seed, knobs: K, scale, staff, accounts, appended, tasks, docs, appendedDocIds, references,
     facts: () => [...population(), ...appended].map(factsOf),
   };
 }
@@ -821,12 +990,19 @@ export function h5Resolve(variant: string, statements: readonly UserStatement[],
 export function generateHardWorld(seed: number = HARD_SEEDS.calibration, knobs: HardKnobs = DEFAULT_HARD_KNOBS, opts: { scale?: 'v1' | 'large'; skipSizeCheck?: boolean } = {}): HardWorld {
   const scale = opts.scale ?? 'v1';
   const b = buildHardLedger(seed, knobs, { scale });
-  const docs: LadderDoc[] = b.docs.map(d => ({ ...d, body: typeof d.body === 'function' ? d.body() : d.body })).sort((x, y) => x.id.localeCompare(y.id));
-  const entities: HardEntity[] = [...b.accounts, ...b.appended].filter(a => !a.mergedInto).map(a => ({ id: a.id, name: a.name, aliases: aliasesOf(a) }));
+  const docs: LadderDoc[] = b.docs.map(({ refs: _r, resolution: _s, ...d }) => ({ ...d, title: text(d.title), body: text(d.body) })).sort((x, y) => x.id.localeCompare(y.id));
+  const v2 = b.references.length > 0;
+  const entities: HardEntity[] = [...b.accounts, ...b.appended].filter(a => !a.mergedInto).map(a => ({
+    id: a.id, name: a.name, aliases: aliasesOf(a),
+    ...(v2 ? { refs: {
+      codes: [a.code, ...(a.former ? [a.former.code] : []), ...a.mergedIn.map(m => m.code)], nicknames: [a.nickname!, ...a.mergedIn.map(m => m.nickname!)], descriptor: descriptorOf(a),
+      managers: a.owner.map(e => ({ name: e.value, effective: e.effective, recorded: e.recorded, doc: e.doc })),
+    } } : {}),
+  }));
   const world: HardWorld = {
-    version: HARD_GENERATOR_VERSION, mode: 'hard', seed, ...(scale === 'large' ? { scale: 'large' as const } : {}),
-    knob_schema: HARD_KNOB_SCHEMA_VERSION, knobs, knob_digest: knobDigest(knobs), max_turns: knobs.max_turns,
-    today: HARD_TODAY, principal: HARD_PRINCIPAL, entities, docs, tasks: b.tasks,
+    version: hardGeneratorVersion(knobs), mode: 'hard', seed, ...(scale === 'large' ? { scale: 'large' as const } : {}),
+    knob_schema: knobSchemaOf(knobs), knobs, knob_digest: knobDigest(knobs), max_turns: knobs.max_turns,
+    today: HARD_TODAY, principal: HARD_PRINCIPAL, entities, docs, tasks: b.tasks, ...(v2 ? { references: b.references } : {}),
   };
   if (scale === 'large') {
     world.base_digest = hardWorldDigest(generateHardWorld(seed, knobs, { skipSizeCheck: opts.skipSizeCheck }));
@@ -901,7 +1077,7 @@ export function hardGenMain(args: { seed?: string; knobs?: string; scale?: strin
   if (scale === 'large') {
     if (!args['base-world']) throw new Error('--scale large needs --base-world <4k world.json>: the 50k world extends that exact 4k world');
     const base = JSON.parse(readFileSync(resolve(args['base-world']), 'utf8')) as HardWorld;
-    const differs = (['seed', 'version', 'knob_digest'] as const).filter(k => base[k] !== (k === 'seed' ? seed : k === 'version' ? HARD_GENERATOR_VERSION : knobDigest(knobs)));
+    const differs = (['seed', 'version', 'knob_digest'] as const).filter(k => base[k] !== (k === 'seed' ? seed : k === 'version' ? hardGeneratorVersion(knobs) : knobDigest(knobs)));
     if (differs.length) throw new Error(`--base-world ${args['base-world']} differs in ${differs.join(', ')} from this generation. Fix: repeat the 4k world's seed and --knobs, or regenerate the 4k world first.`);
     const regenerated = hardWorldDigest(generateHardWorld(seed, knobs));
     if (regenerated !== hardWorldDigest(base)) throw new Error(`--base-world ${args['base-world']} does not match its generator (digest ${hardWorldDigest(base).slice(0, 12)}, regenerated ${regenerated.slice(0, 12)}); regenerate the 4k world first`);

@@ -160,6 +160,12 @@ export const PG_SEARCH_LIMITS: Record<ToolLimits, { defaultLimit: number; maxLim
 
 const lit = (v: number[]) => `[${v.join(',')}]`;
 
+/**
+ * Rows between checkpoints while building the store. PGlite holds write-ahead log in memory until a checkpoint, and a
+ * 50k-document Hard build without one exhausts the WASM heap and hangs (about 48,000 chunk rows in).
+ */
+export const PG_BUILD_CHECKPOINT_ROWS = 2000;
+
 export class PgStore {
   /** Paid embedding usage of the build (setup cost, not any cell's). */
   readonly setupEmbed = newEmbedUsage();
@@ -168,6 +174,8 @@ export class PgStore {
   static async build(world: { docs: LadderDoc[] }, embed: Embedder, options: { chunking?: PgChunking } = {}): Promise<PgStore> {
     const chunking = options.chunking ?? 'whole';
     const db = await PGlite.create({ extensions: { vector } });
+    let inserted = 0;
+    const insert = async (sql: string, params: unknown[]) => { await db.query(sql, params); if (++inserted % PG_BUILD_CHECKPOINT_ROWS === 0) await db.exec('CHECKPOINT'); };
     await db.exec(`CREATE EXTENSION IF NOT EXISTS vector;
       CREATE TABLE docs (id text NOT NULL, run_id text, title text, body text NOT NULL, tsv tsvector, embedding vector(${PG_EMBED_DIMS}));
       CREATE INDEX docs_tsv ON docs USING gin(tsv);`);
@@ -177,20 +185,20 @@ export class PgStore {
       await db.exec(`CREATE TABLE chunks (id text NOT NULL, run_id text, chunk int NOT NULL, text text NOT NULL, embedding vector(${PG_EMBED_DIMS}));`);
       for (let i = 0; i < world.docs.length; i++) {
         const d = world.docs[i];
-        await db.query(`INSERT INTO docs (id, run_id, title, body, tsv, embedding) VALUES ($1, NULL, $2, $3, to_tsvector('english', $2 || ' ' || $3), NULL)`, [d.id, d.title, texts[i]]);
+        await insert(`INSERT INTO docs (id, run_id, title, body, tsv, embedding) VALUES ($1, NULL, $2, $3, to_tsvector('english', $2 || ' ' || $3), NULL)`, [d.id, d.title, texts[i]]);
       }
       const chunks = world.docs.map((d, i) => ({ d, parts: chunkDocument(texts[i]) }));
       const vecs = await embed(chunks.flatMap(c => chunkEmbedTexts(c.d.title, c.parts)), { usage: store.setupEmbed, namespace: PG_CHUNKING_ID });
       let k = 0;
       for (const { d, parts } of chunks) for (let j = 0; j < parts.length; j++) {
-        await db.query(`INSERT INTO chunks (id, run_id, chunk, text, embedding) VALUES ($1, NULL, $2, $3, $4::vector)`, [d.id, j, parts[j], lit(vecs[k++])]);
+        await insert(`INSERT INTO chunks (id, run_id, chunk, text, embedding) VALUES ($1, NULL, $2, $3, $4::vector)`, [d.id, j, parts[j], lit(vecs[k++])]);
       }
       return store;
     }
     const vecs = await embed(texts, { usage: store.setupEmbed });
     for (let i = 0; i < world.docs.length; i++) {
       const d = world.docs[i];
-      await db.query(`INSERT INTO docs (id, run_id, title, body, tsv, embedding) VALUES ($1, NULL, $2, $3, to_tsvector('english', $2 || ' ' || $3), $4::vector)`, [d.id, d.title, texts[i], lit(vecs[i])]);
+      await insert(`INSERT INTO docs (id, run_id, title, body, tsv, embedding) VALUES ($1, NULL, $2, $3, to_tsvector('english', $2 || ' ' || $3), $4::vector)`, [d.id, d.title, texts[i], lit(vecs[i])]);
     }
     return store;
   }

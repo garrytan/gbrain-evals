@@ -10,7 +10,7 @@
 #   step <step>                run one step after checking its predecessors, the budget decision and the projection
 #
 # Steps, in the plan's order (CEO-F16):
-#   calibrate      ROUND=N (1-5): world from knobs.round-N.json, fs+pg+oracle on Sonnet 5.5 and GPT-6 Astra, 10 tasks per family, then the freeze-rule analyzer
+#   calibrate      ROUND=N (1-5) [SCALE=v1|large]: world from knobs.round-N.json, fs+pg+oracle on Sonnet 5.5 and GPT-6 Astra, 10 tasks per family, then the freeze-rule analyzer
 #   freeze-check   ROUND=N: fs+pg+oracle on Opus 5.5, Fable 5.1 and GPT-6.1 Sol on round N's world (at most 2), then the analyzer over all five models
 #   freeze         copy knobs.round-N.json to knobs.frozen.json and write freeze.json (code hashes, settings digest)            free
 #   smoke          gbrain smoke on seed 20261099 with the frozen generator: 1 slot build and 1 task per family on Sonnet 5.5
@@ -26,6 +26,7 @@
 # Environment:
 #   GBRAIN_REPO   gbrain checkout (default ../gbrain);  GBRAIN_REF   the gbrain commit under test (current master; recorded resolved)
 #   ROUND         calibration round for calibrate, freeze-check and freeze
+#   SCALE         calibration world scale: large (the 50k world, default from round 3, amendment A1) or v1 (the 4k world, default for rounds 1-2)
 #   LEDGER        default .budget/cat40-hard.sqlite (must match the roster)
 #   BUDGET_USD    the step's --budget-usd instead of its projection plus 15% (the ledger gate still applies)
 #   PRINT_ONLY=1  print the commands instead of running them (guards are listed, not checked)
@@ -146,16 +147,23 @@ case "$CMD" in
     case "$STEP" in
       calibrate)
         R="$(round)"; KNOBS="$DOCS/knobs.round-$R.json"; DIR="$REPORTS/calibration/round-$R"
+        SCALE="${SCALE:-$([[ "$R" -ge 3 ]] && echo large || echo v1)}"
+        [[ "$SCALE" == v1 || "$SCALE" == large ]] || { echo "[cat40-hard] SCALE must be v1 or large (got '$SCALE')" >&2; exit 2; }
         if [[ "$R" == 1 && ! -f "$KNOBS" ]]; then print_only || cp "$DOCS/knobs.default.json" "$KNOBS"; fi
         need "$KNOBS" "the round's knob file (record the knob change and its reason in $DOCS/calibration.md first)"
         if [[ "$R" -gt 1 ]]; then need "$REPORTS/calibration/round-$((R - 1))/cells/results.jsonl" "round $((R - 1))'s results"; fi
         budget_decision
-        run bun "$GEN" --mode hard --seed "$CAL_SEED" --knobs "$KNOBS" --out "$DIR/world"
+        if [[ "$SCALE" == large ]]; then
+          run bun "$GEN" --mode hard --seed "$CAL_SEED" --knobs "$KNOBS" --out "$DIR/base-4k"
+          run bun "$GEN" --mode hard --seed "$CAL_SEED" --knobs "$KNOBS" --scale large --base-world "$DIR/base-4k/world.json" --out "$DIR/world"
+        else
+          run bun "$GEN" --mode hard --seed "$CAL_SEED" --knobs "$KNOBS" --out "$DIR/world"
+        fi
         ARGS=(--world "$DIR/world/world.json" --models "$CAL_MODELS" --arms oracle,fs,pg --per-family 10 --repeat 1 --concurrency 6 "${COMMON[@]}" --out "$DIR/cells" --step calibrate)
         PRIOR=(); for p in "$REPORTS"/calibration/round-*/cells/attempts.jsonl; do [[ -f "$p" ]] && PRIOR+=("$p"); done
         M="$(measured ${PRIOR[@]+"${PRIOR[@]}"})"
         if [[ "$CMD" == preflight ]]; then HARD_MEASURED="${M#--measured }" run bun "$RUNNER" "${ARGS[@]}" --preflight; exit; fi
-        B="$(budget_for calibrate $M $(done_arg "$DIR/cells"))"
+        B="$(budget_for calibrate --scale "$SCALE" --world "$DIR/world/world.json" $M $(done_arg "$DIR/cells"))"
         budget_gate "$B"
         HARD_MEASURED="${M#--measured }" run bun "$RUNNER" "${ARGS[@]}" --preflight
         run bun "$RUNNER" "${ARGS[@]}" --budget-usd "$B" $(resume_args "$DIR/cells")
@@ -181,7 +189,8 @@ case "$CMD" in
         ARGS=(--world "$DIR/world/world.json" --models "$CHECK_MODELS" --arms oracle,fs,pg --per-family 10 --repeat 1 --concurrency 6 "${COMMON[@]}" --out "$DIR/freeze-check" --step freeze-check)
         M="$(measured "$DIR/cells/attempts.jsonl")"
         if [[ "$CMD" == preflight ]]; then HARD_MEASURED="${M#--measured }" run bun "$RUNNER" "${ARGS[@]}" --preflight; exit; fi
-        B="$(budget_for freeze-check $M $(done_arg "$DIR/freeze-check"))"
+        WSCALE="$(print_only && echo '<round scale>' || bun -e "console.log(JSON.parse(require('fs').readFileSync('$DIR/world/manifest.json', 'utf8')).scale)")"
+        B="$(budget_for freeze-check --scale "$WSCALE" --world "$DIR/world/world.json" $M $(done_arg "$DIR/freeze-check"))"
         budget_gate "$B"
         run bun "$RUNNER" "${ARGS[@]}" --budget-usd "$B" $(resume_args "$DIR/freeze-check")
         set +e
