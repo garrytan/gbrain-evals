@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [0.10.33] - 2026-10-06
+## [0.10.34] - 2026-10-06
 
 ### Cat 40 Hard round 4: questions about several accounts; the held-out run is 50k only
 
@@ -109,6 +109,12 @@ $1,794).
   drawn ([calibration.md](docs/benchmarks/cat40-hard/calibration.md)). Projections now go per model, arm and family
   from round 1's measured Hard costs (2 to 5 times v1 per cell) plus the measured judge cost; a resumed step opens a
   new budget run (`--new-budget-run`) sized to the cells still missing. `knobs.round-2.json` makes H2 and H3 harder.
+
+## [0.10.33] - 2026-10-06
+
+### P6 held-out records: the `think` date frame ships on
+
+Mirrors gbrain [#6112](https://github.com/garrytan/gbrain/pull/6112) (merged as `43b0adb69` in v0.60.88.0) in [the P6 page](docs/benchmarks/2026-10-05-heldout-program/p6.md). The date frame gives `think` the current date and the content dates of the page blocks it reads. On sealed LoCoMo (7 conversations, 1,399 questions) judged accuracy rises from 74.2% to 88.2%, +14.0 points with a clustered 95% CI of [+11.8, +16.2], 229 wins and 33 losses; temporal questions go from 27 to 199 of 221, and retrieval is identical in both arms. The first sealed pass stopped at its $80 ledger cap after 4 of 7 conversations, and the 142 rows whose `think` call the cap refused were answered again in a second pass, so every question has one answer; spend was about $162. `think` p95 latency, measured on 150 LongMemEval-S development questions because the sealed lane times retrieval only, has a ratio of 0.93 [0.88, 1.03], within the +20% bar. The LongMemEval-M sealed confirmation is pending. Fact keys failed the `tokenmax` gate on LoCoMo development data and stay a recorded negative result; time scope and notes-first reading were killed in development. The LoCoMo verdict file joins the verdict index.
 
 ## [0.10.32] - 2026-10-06
 
