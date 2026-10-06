@@ -98,6 +98,8 @@ On builds before a87c, raw exchange pages delivered about 6.9k tokens on average
 
 On e8e1 and a87c, every fact's `valid_from` equals its source session date: 16,295 of 16,295 facts on BEAM dev. gbrain's extractor wrote no event date. Printing each fact's date changed nothing: pooled 0.636 with dates, 0.642 without. The temporal gap needs an extracted event date and fact recall ranked by the question. Build `505a65aab` adds `valid_from` for `remember` and a query facts arm. Neither shows up in BEAM's combined cells. `extract_facts` still writes no event date (0 of 16,234 facts carry one), and the facts arm added 0 rows in all 360 retrievals, because the page query already fills its budget. The combined lane on 505a scores 0.636 / 0.676 / 0.659, pooled 0.661, with every gate passing. Temporal reasoning there is 0.50 against the comparator's 0.72 ([write-up](2026-10-05-memory-proof-wave-dev/facts-lanes-fix1-505a.md)).
 
+**Fix round 2: date grounding** (dev evidence, scratch build `98537693f` = the wave plus #6020). With `extraction.date_grounding` on, 4.9–8.4% of facts carry an event date that differs from their session date, against 0% with it off. BEAM dev does not improve. The combined lane scores 0.653 pooled with grounding on and 0.663 with it off, against the comparator's 0.654. Temporal reasoning goes the wrong way, 0.438 on against 0.493 off (paired 0/3/33), and event ordering doesn't move (0.429 against 0.433). The dates barely reach the prompt: the facts block is 600 tokens, `recall` returns the newest 100 facts of which only 3–6% are dated, and the query facts arm adds no rows because the page query fills its budget. Every BEAM dev session has an observed date (158 of 158), so the lack of a gain is not for want of dates. Write-up: [facts-lanes-fix2-date-grounding.md](2026-10-05-memory-proof-wave-dev/facts-lanes-fix2-date-grounding.md).
+
 ## Public datasets at 8,000 tokens
 
 | Dataset | gbrain | comparator |
@@ -190,6 +192,6 @@ The dev phase is capped at $650 of proxy-metered spend. The ledger partitions we
 |---|---:|---:|
 | local (gbrain tracks, diagnosis, full context) | $301 | $270.63 |
 | VM (comparator tracks, hybrid search; closed, VM destroyed) | $158.28 | $158.28 |
-| facts lanes | $165 | $130.47 |
+| facts lanes | $265 | $165.71 |
 | coding spike | $25 | $4.65 |
-| **total** | **$649.28** | $564.03 |
+| **total** | **$749.28** | $599.27 |
