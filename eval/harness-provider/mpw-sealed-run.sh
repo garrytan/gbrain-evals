@@ -37,7 +37,7 @@ case "${1:?step}" in
     "$UBI" ssh "$vm" "cat > ~/custody/run.sh" <<EOS
 set -a; . ~/.mpw-keys; set +a
 cd ~/work/gbrain-evals && export PATH=\$HOME/.bun/bin:\$HOME/.local/bin:\$PATH
-bun eval/runner/budget-ledger.ts status --budget-ledger ~/custody/ledger.sqlite >/dev/null 2>&1 || bun eval/runner/budget-ledger.ts init --budget-ledger ~/custody/ledger.sqlite --program-cap-usd 60 --reason "sealed comparator, beam $split"
+test -f ~/custody/ledger.sqlite || bun eval/runner/budget-ledger.ts init --budget-ledger ~/custody/ledger.sqlite --program-cap-usd 60 --reason "sealed comparator, beam $split"
 bun run harness:cell run ~/custody/specs/sealed-beam-$split-comparator.json --cells-dir ~/custody/cells --budget-ledger ~/custody/ledger.sqlite
 echo \$? > ~/custody/exit
 EOS
