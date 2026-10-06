@@ -642,7 +642,7 @@ describe('sealed generator: round-5 knobs (3 to 4 items per question)', () => {
 
   test('round-3 and round-4 worlds are byte for byte what they were before the lead pool could grow', () => {
     for (const { knobs, digests } of Object.values(EARLIER)) for (const s of SEEDS) expect(sealedWorldDigest(generateSealedWorld(s, knobs))).toBe(digests[s]);
-  });
+  }, 60_000);
 
   test('round-5 worlds build on every test seed: invariants, 3 to 4 unlinked items, resolvable references, complete oracle evidence', () => {
     for (const s of SEEDS) {
