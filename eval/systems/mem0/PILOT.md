@@ -4,8 +4,9 @@ These are setup checks for the [open-source memory shootout](../../../docs/plans
 not results. Each slice is one conversation or one haystack, too small to compare systems. The scores show that
 ingest, retrieval, provenance, the reader and the judge ran end to end; the dollars and minutes size Phase 4.
 
-**Status: ready with the common models. The recipe configuration (`gpt-5-mini`) is still being piloted:** two
-attempts failed on harness deadlines, described below, and a third is running.
+**Status: ready, both configurations.** The recipe configuration (`gpt-5-mini`) needed four attempts: two failed on a
+harness deadline (described below), one died when the machine restarted, and the fourth completed with every
+question scored. The recipe needs the runner started with `BUN_CONFIG_HTTP_IDLE_TIMEOUT` until the harness fix lands.
 
 ## What ran
 
@@ -35,7 +36,8 @@ attempts failed on harness deadlines, described below, and a third is running.
 | `pilot-mem0-beam-common` | common | 20 (18) | $0.244 | 94 | 6.3 | $0.0025 | 474 / 648 | 0.500 | 0.833 | 0.447 |
 | `pilot-mem0-locomo-recipe` (attempt 1) | recipe | 158 (0) | $2.33 | 593 | 149, not finished | n/a | n/a | n/a | n/a | n/a |
 | `pilot-mem0-locomo-recipe-r2` | recipe | 158 (0) | $0.33 | 101 | stopped at the deadline | $0.0016 (on an empty memory) | n/a | n/a | n/a | n/a |
-| `pilot-mem0-locomo-recipe-r3` | recipe | running | | | | | | | | |
+| `pilot-mem0-locomo-recipe-r3` | recipe | none | $0.06 | 18 | the machine restarted | n/a | n/a | n/a | n/a | n/a |
+| `pilot-mem0-locomo-recipe-r4` | recipe | 158 (123) | $2.725 | 675 | 185.1 | $0.00164 | 437 / 592 | 0.683 | 0.935 | 0.703 |
 
 Readers and judges: LoCoMo `gpt-4o-mini` reader and `gpt-4o-2024-08-06` judge; LongMemEval-S `gpt-4o-2024-08-06`
 for both; BEAM `gpt-4.1-mini` for both. Every common-model row was `scored`, with no reader, judge or retrieval
@@ -44,8 +46,8 @@ errors and no degraded ingest. Every item had `provenance_status: partial` (each
 
 Per `add` call with the common models: LoCoMo $0.00142 (8,399 input and 102 output tokens), LongMemEval-S $0.00184
 (8,946 and 224), BEAM $0.0024 (9,986 and 297). Almost all input is Mem0's own extraction prompt. With `gpt-5-mini`
-(attempt 1): $0.0039 per call (8,477 input and 1,677 output tokens, most of them reasoning) and 10 to 16 seconds per
-call, against about 2.3 seconds for `gpt-4.1-mini`. The reader saw a median of 963 tokens of memories on LoCoMo,
+(attempt 4): $0.00404 per call (8,490 input and 1,732 output tokens, most of them reasoning) and 16.4 seconds per call
+on average, against about 2.3 seconds for `gpt-4.1-mini`. The reader saw a median of 963 tokens of memories on LoCoMo,
 1,060 on LongMemEval-S and 1,142 on BEAM: 20 short facts.
 
 ## What went wrong in the recipe attempts
@@ -62,15 +64,16 @@ call, against about 2.3 seconds for `gpt-4.1-mini`. The reader saw a median of 9
    once; `/finish` waits for the queue to drain, as the protocol allows. `/reset` cancels queued work.
 3. **Attempt 2.** With queueing, `/finish` became the long request, and Bun aborted it at its 300-second limit too.
    The runner recorded `ingest_degraded` for all 158 questions; I restarted the shim to stop the orphaned queue.
-4. **Attempt 3** runs the runner with `BUN_CONFIG_HTTP_IDLE_TIMEOUT=14400`. The durable fix belongs in
+4. **Attempts 3 and 4** ran the runner with `BUN_CONFIG_HTTP_IDLE_TIMEOUT=14400`. Attempt 3 died when the machine
+   restarted after 18 calls; attempt 4 completed (one `/finish` of 185 minutes). The durable fix belongs in
    `eval/runner/systems/http.ts`: pass `timeout: false` (or a `socketTimeout` equal to the deadline) to `fetch`,
    because Bun ignores the `AbortSignal` for this limit.
 
 ## Phase 4 extrapolation
 
-Inputs: the measured per-item costs above. For the recipe arm, until attempt 3 finishes, a LoCoMo conversation is
-675 `add` calls × $0.0039 = $2.63. For BEAM, the recipe is the common BEAM cost times the measured `gpt-5-mini` to
-`gpt-4.1-mini` per-call ratio on LoCoMo (2.75): $0.67 per conversation. Question counts: LoCoMo dev 587, BEAM-100K dev
+Inputs: the measured per-item costs above; a recipe LoCoMo conversation costs $2.725 (attempt 4). For BEAM, the
+recipe is the common BEAM cost times the measured `gpt-5-mini` to `gpt-4.1-mini` per-call ratio on LoCoMo (2.84):
+$0.69 per conversation. Question counts: LoCoMo dev 587, BEAM-100K dev
 120, LongMemEval-S 100; the recipe arm skips LongMemEval-S. One reading arm is one policy and one context mode; the plan
 runs four per configuration. Ingest is paid once per configuration and dataset, and LoCoMo dev is ingested twice
 for run-to-run variance.
@@ -78,20 +81,20 @@ for run-to-run variance.
 | Item | Arithmetic | Dollars |
 |---|---|---|
 | LoCoMo ingest, common, twice | 2 × 3 × $0.968 | $5.81 |
-| LoCoMo ingest, recipe, twice | 2 × 3 × $2.63 | $15.78 |
+| LoCoMo ingest, recipe, twice | 2 × 3 × $2.725 | $16.35 |
 | BEAM ingest, common | 6 × $0.244 | $1.46 |
-| BEAM ingest, recipe | 6 × $0.67 | $4.02 |
+| BEAM ingest, recipe | 6 × $0.69 | $4.15 |
 | LongMemEval-S ingest, common | 100 × $0.505 | $50.50 |
 | Reading, per arm | LoCoMo 2 × 587 × $0.00169 + BEAM 2 × 120 × $0.0025 + LongMemEval-S 100 × $0.0056 | $3.15 |
 | Reading, four arms | 4 × $3.15 | $12.60 |
-| **Total** | | **about $90** |
+| **Total** | | **about $91** |
 
 Two conditions move this number. If the harness re-ingests for each of the four reading arms instead of reusing
-one ingest per configuration, the total rises to about $320, so reuse matters for Mem0. And the `fixed-evidence`
+one ingest per configuration, the total rises to about $325, so reuse matters for Mem0. And the `fixed-evidence`
 policy (top 200 memories, packed to 8,000 tokens) gives the reader about 8 times the vendor-default context, so
 its reading arms may cost several times the per-arm figure above.
 
 Wall time: ingest is serial within a namespace and parallel across namespaces (`parallel_namespaces: true`).
 LongMemEval-S is about 100 × 14 minutes of `gpt-4.1-mini` calls (23 hours serial; about 3 hours at 8 namespaces in
-parallel, if rate limits allow) plus the harness start-up. The recipe takes about 2 to 3 hours per LoCoMo
-conversation, run in parallel across the three.
+parallel, if rate limits allow) plus the harness start-up. The recipe took 3 hours 5 minutes for one LoCoMo
+conversation; the three can run in parallel.
