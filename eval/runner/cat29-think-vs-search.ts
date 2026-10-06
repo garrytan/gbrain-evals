@@ -93,7 +93,7 @@ import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, t
 import { assertCat29JudgeInput, assertCat29SutQuestion, CAT29_JUDGE_PAIR, CAT29_SUT_QUESTION, type Cat29JudgeInput } from './evaluator/judge-inputs.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 import { installStubEmbed } from './cat27-graph-signals.ts';
-import { anthropicModelId, judgeClientFor, judgeTransport } from './openai-judge-shim.ts';
+import { acceptsTemperature, anthropicModelId, judgeClientFor, judgeTransport } from './openai-judge-shim.ts';
 import { budgetOptionsFrom, receiptCost, startPaidRun, type BudgetOptions } from './budget-ledger.ts';
 import { attestPreregistration, type Attestation } from './prereg.ts';
 
@@ -448,7 +448,7 @@ async function judgeOrder(
       response = await budget.withLlmSlot(() => client.messages.create({
         model: judgeConfig.model ?? JUDGE_MODEL,
         max_tokens: judgeConfig.maxTokens ?? PAIR_MAX_TOKENS,
-        temperature: JUDGE_TEMPERATURE,
+        ...(acceptsTemperature(judgeConfig.model ?? JUDGE_MODEL) ? { temperature: JUDGE_TEMPERATURE } : {}),
         system: [{ type: 'text', text: PAIRWISE_JUDGE_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
         tools: [SCORE_PAIR_TOOL],
         tool_choice: { type: 'tool', name: SCORE_PAIR_TOOL.name },
@@ -538,7 +538,7 @@ export async function judgePair(
 export function makeThinkClient(anthropic: Pick<Anthropic, 'messages'>): ThinkLLMClient {
   return {
     create: (params: Anthropic.MessageCreateParamsNonStreaming, opts?: { signal?: AbortSignal }) => anthropic.messages.create(
-      { ...params, model: String(params.model).replace(/^anthropic[:/]/, ''), temperature: THINK_TEMPERATURE },
+      { ...params, model: String(params.model).replace(/^anthropic[:/]/, ''), ...(acceptsTemperature(String(params.model)) ? { temperature: THINK_TEMPERATURE } : {}) },
       opts,
     ),
   } as unknown as ThinkLLMClient;
@@ -921,6 +921,7 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
       embed_transport: hashEmbeds ? 'stubbed-hash' : 'live',
       embed_mode: options.embedMode ?? 'real',
       judge_transport: judgeTransport(judgeModel),
+      temperature_sent: { think: acceptsTemperature(thinkModel), judge: acceptsTemperature(judgeModel) },
       think_llm: thinkResponseFor ? 'stubbed' : options.thinkAnthropic ? 'injected' : 'live',
       think_temperature: THINK_TEMPERATURE,
       judge_mode: options.judgeClient || stub ? 'injected/stub' : 'live',

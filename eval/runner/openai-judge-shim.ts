@@ -90,3 +90,14 @@ export function judgeTransport(model: string): string {
     ? `OpenAI Responses API through openai-judge-shim: no temperature, reasoning effort ${OPENAI_JUDGE_REASONING_EFFORT}, max_output_tokens at least ${OPENAI_JUDGE_MIN_OUTPUT_TOKENS}`
     : 'Anthropic Messages API';
 }
+
+/**
+ * Whether a model accepts a `temperature` parameter. Claude 5-family models
+ * reject it ("temperature is deprecated for this model"), as do OpenAI
+ * reasoning models; runners send it only where it is accepted and record
+ * provider-default sampling otherwise.
+ */
+export function acceptsTemperature(model: string): boolean {
+  if (isOpenAIModel(model)) return false;
+  return !/(?:^|[:/])(?:anthropic[:/])?claude-[a-z]+-5(?:[.-]|$)/i.test(model);
+}

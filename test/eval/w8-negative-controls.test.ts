@@ -6,7 +6,7 @@ import { describe, expect, test } from 'bun:test';
 import { degradeProbes, loadProbes } from '../../eval/runner/cat14-calibration.ts';
 import { optionsFromEnv as cat29Options } from '../../eval/runner/cat29-think-vs-search.ts';
 import { firstHalf, unrelatedDonors } from '../../eval/runner/cat35-transcript-distill.ts';
-import { anthropicModelId, isOpenAIModel, judgeClientFor, judgeTransport, openAIMessagesShim } from '../../eval/runner/openai-judge-shim.ts';
+import { acceptsTemperature, anthropicModelId, isOpenAIModel, judgeClientFor, judgeTransport, openAIMessagesShim } from '../../eval/runner/openai-judge-shim.ts';
 
 describe('cat14 profile arms', () => {
   const probes = loadProbes();
@@ -80,6 +80,14 @@ describe('openai judge shim', () => {
     expect(judgeClientFor('openai:gpt-6.1-sol', () => anth)).not.toBe(anth);
     expect(judgeTransport('openai:gpt-6.1-sol')).toMatch(/Responses API/);
     expect(judgeTransport('claude-sonnet-5-5')).toBe('Anthropic Messages API');
+  });
+
+  test('temperature is sent only to models that accept it', () => {
+    expect(acceptsTemperature('claude-sonnet-4-6')).toBe(true);
+    expect(acceptsTemperature('claude-haiku-4-5-20251001')).toBe(true);
+    expect(acceptsTemperature('anthropic:claude-sonnet-5-5')).toBe(false);
+    expect(acceptsTemperature('claude-fable-5-1')).toBe(false);
+    expect(acceptsTemperature('openai:gpt-6.1-sol')).toBe(false);
   });
 
   test('maps a forced tool to a json_schema format and returns a tool_use block', async () => {

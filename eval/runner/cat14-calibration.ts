@@ -112,7 +112,7 @@ import {
 } from './receipt.ts';
 import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
 import { UNTRUSTED_DATA_INSTRUCTION, fenceUntrusted, newJudgeNonce } from './judge.ts';
-import { anthropicModelId, judgeClientFor, judgeTransport } from './openai-judge-shim.ts';
+import { acceptsTemperature, anthropicModelId, judgeClientFor, judgeTransport } from './openai-judge-shim.ts';
 import { budgetOptionsFrom, receiptCost, startPaidRun } from './budget-ledger.ts';
 import { attestPreregistration } from './prereg.ts';
 import { seededRandom } from './stats/paired.ts';
@@ -502,7 +502,7 @@ function makeLiveComplete(anthropic: Anthropic): CompleteFn {
     const res = await anthropic.messages.create({
       model,
       max_tokens: params.max_tokens,
-      temperature: THINK_TEMPERATURE,
+      ...(acceptsTemperature(model) ? { temperature: THINK_TEMPERATURE } : {}),
       ...(params.system !== undefined ? { system: params.system } : {}),
       messages: params.messages,
     });
@@ -707,7 +707,7 @@ function makeLiveJudge(anthropic: Anthropic): JudgeFn {
           const res = await client.messages.create({
             model: anthropicModelId(JUDGE_MODEL),
             max_tokens: JUDGE_MAX_TOKENS,
-            temperature: JUDGE_TEMPERATURE,
+            ...(acceptsTemperature(JUDGE_MODEL) ? { temperature: JUDGE_TEMPERATURE } : {}),
             system,
             tools: [JUDGE_TOOL],
             tool_choice: { type: 'tool', name: 'judge_ab' },
@@ -1227,7 +1227,7 @@ async function main(): Promise<void> {
       completion_rate: accSummary.completion_rate,
       errors: accSummary.errors,
       publishable: false,
-      resolved_config: { ...resolvedConfig(hermetic, filter), profile_mode: profileMode, judge_transport: judgeTransport(JUDGE_MODEL) },
+      resolved_config: { ...resolvedConfig(hermetic, filter), profile_mode: profileMode, judge_transport: judgeTransport(JUDGE_MODEL), temperature_sent: { think: acceptsTemperature(THINK_MODEL), judge: acceptsTemperature(JUDGE_MODEL) } },
       judge: { model: hermetic ? 'heuristic-string-judge' : JUDGE_MODEL, temperature: JUDGE_TEMPERATURE },
       ...runExtras,
       data: { summary: summary as unknown as Record<string, unknown> },
@@ -1248,7 +1248,7 @@ async function main(): Promise<void> {
     completion_rate: accSummary.completion_rate,
     errors: accSummary.errors,
     publishable: accSummary.publishable && !hermetic && !filter,
-    resolved_config: { ...resolvedConfig(hermetic, filter), profile_mode: profileMode, judge_transport: judgeTransport(JUDGE_MODEL) },
+    resolved_config: { ...resolvedConfig(hermetic, filter), profile_mode: profileMode, judge_transport: judgeTransport(JUDGE_MODEL), temperature_sent: { think: acceptsTemperature(THINK_MODEL), judge: acceptsTemperature(JUDGE_MODEL) } },
     judge: { model: hermetic ? 'heuristic-string-judge' : JUDGE_MODEL, temperature: JUDGE_TEMPERATURE },
     ...runExtras,
     data: { summary: summary as unknown as Record<string, unknown> },
