@@ -205,7 +205,7 @@ async function mintDocs(gut: GbrainUnderTest, docs: readonly AuditDoc[], config:
   return withHermeticEnv(CATEGORY, async () => {
     const grammar = await importGbrain<Grammar>(gut, 'src/core/line-grammar.ts');
     const { loadActivePackForLocalEngine } = await importGbrain<{ loadActivePackForLocalEngine: (e: unknown, o: { sourceId: string }) => Promise<{ manifest?: { link_types: Array<{ name: string }> } } | null> }>(gut, 'src/core/schema-pack/best-effort.ts');
-    const brain = await openP5Brain(gut, config);
+    let brain = await openP5Brain(gut, config);
     try {
       const pack = (await loadActivePackForLocalEngine(brain.engine, { sourceId: 'default' }))?.manifest ?? null;
       const declaredTypes = config['line_grammar.allow_undeclared_types'] === 'true' ? null : pack?.link_types.length ? new Set(pack.link_types.map(l => l.name)) : null;
@@ -249,6 +249,10 @@ async function mintDocs(gut: GbrainUnderTest, docs: readonly AuditDoc[], config:
         }
         checkpoint.append(record);
         if (++n % 500 === 0) log(`minting pass: ${n} pages written`);
+        // Each in-memory write leaves persistence requests outstanding for the one principal; past about 8,000 writes the
+        // build refuses with "Write capacity exhausted". Pages are minted independently, so a fresh brain every 2,000 pages
+        // changes no count.
+        if (n % 2000 === 0) { await brain.close(); brain = await openP5Brain(gut, config); }
       }
       return { ...brain.configRecord, positive_control: 'passed: 1 relation line and 1 fact line minted, prose decoy not minted' };
     } finally { await brain.close(); }
