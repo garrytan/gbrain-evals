@@ -114,6 +114,7 @@ import {
   writeReceipt, receiptPath, RECEIPT_SCHEMA_VERSION, BENCHMARK_VERSION,
   type Receipt, type ReceiptVerdict,
 } from './receipt.ts';
+import { attestPreregistration } from './prereg.ts';
 import { BudgetExceededError, budgetOptionsFrom, receiptCost, startPaidRun, type BudgetOptions, type BudgetRun, type PaidRequestGuard } from './budget-ledger.ts';
 import { registryEntry } from '../registry.ts';
 import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
@@ -733,6 +734,8 @@ export function ensureGateway(stubEmbed: boolean, embedder: EmbedderConfig = res
     embedding_model: embedder.model,
     embedding_dimensions: embedder.dims,
     env: process.env as Record<string, string | undefined>,
+    // gbrain reads OLLAMA_BASE_URL only through buildGatewayConfig; a direct configureGateway needs base_urls.
+    ...(process.env.OLLAMA_BASE_URL ? { base_urls: { ollama: process.env.OLLAMA_BASE_URL } } : {}),
   });
   __setEmbedTransportForTests(
     stubEmbed
@@ -959,6 +962,8 @@ export interface AdapterScore {
   byTemplate: Record<string, { ndcg: number; count: number }>;
   probesScored: number;
   wallMs: number;
+  /** Ingest vs query-phase ledger spend and per-query latency. */
+  phase?: PhaseStats;
   /** Tuning / held-out rollups when a ConceptSplit was supplied. */
   splits?: {
     seed: number;
@@ -1031,6 +1036,28 @@ export interface ScoreAdapterOptions {
   split?: ConceptSplit;
   /** Evaluator-side gold from the separate loader. Defaults to a store built from gradesByQuery. */
   gold?: GoldStore<Cat13Gold>;
+  /** Cumulative ledger spend of this run; read around init and the query loop to split ingest from query cost. */
+  spentUsd?: () => number;
+}
+
+/** Query-phase cost and latency of one adapter run (live runs only for cost). */
+export interface PhaseStats {
+  ingest_cost_usd: number | null;
+  query_cost_usd: number | null;
+  cost_per_1000_queries_usd: number | null;
+  query_ms: { mean: number; p50: number; p95: number } | null;
+}
+
+export function phaseStats(latencies: number[], spent: { start: number | null; afterInit: number | null; end: number | null }, queries: number): PhaseStats {
+  const sorted = [...latencies].sort((a, b) => a - b);
+  const pct = (q: number) => sorted[Math.min(sorted.length - 1, Math.max(0, Math.ceil(q * sorted.length) - 1))]!;
+  const queryCost = spent.afterInit !== null && spent.end !== null ? spent.end - spent.afterInit : null;
+  return {
+    ingest_cost_usd: spent.start !== null && spent.afterInit !== null ? spent.afterInit - spent.start : null,
+    query_cost_usd: queryCost,
+    cost_per_1000_queries_usd: queryCost !== null && queries > 0 ? queryCost / queries * 1000 : null,
+    query_ms: sorted.length ? { mean: sorted.reduce((a, b) => a + b, 0) / sorted.length, p50: pct(0.5), p95: pct(0.95) } : null,
+  };
 }
 
 /** Duck-typed optional adapter hooks (GbrainInlineAdapter / HybridNoGraphAdapter expose them). */
@@ -1052,7 +1079,10 @@ export async function scoreAdapter(
   assertCat13Alignment(gold, probes);
   const publicPages = pages.map(sanitizePage);
   for (const page of publicPages) assertPayload(CAT13_SUT_PAGE, page);
+  const spentStart = opts.spentUsd?.() ?? null;
   const state = await adapter.init(publicPages, { name: adapter.name, ...(opts.initConfig ?? {}) });
+  const spentAfterInit = opts.spentUsd?.() ?? null;
+  const latencies: number[] = [];
 
   // Read the gateway AFTER init: adapters that call configureGateway themselves
   // (vector, vector-grep-rrf-fusion) must land on the run's embedder, and the
@@ -1082,7 +1112,9 @@ export async function scoreAdapter(
     const publicQuery = sanitizeQuery(probe.q);
     assertPayload(CAT13_SUT_QUERY, publicQuery, cat13ForbiddenValues(gold, probe.q.id));
     try {
+      const tq = Date.now();
       const results: RankedDoc[] = await adapter.query(publicQuery, state);
+      latencies.push(Date.now() - tq);
       rankedPages = results.slice(0, TOP_K);
       const reference = scoreCat13(gold, probe.q.id, results.map(r => r.page_id), TOP_K);
       ndcg = Number.isNaN(reference.ndcg) ? 0 : reference.ndcg;
@@ -1117,6 +1149,7 @@ export async function scoreAdapter(
     }
   }
 
+  const phase = phaseStats(latencies, { start: spentStart, afterInit: spentAfterInit, end: opts.spentUsd?.() ?? null }, probes.length);
   const hooks = adapter as unknown as EchoingAdapter;
   const resolvedConfig = typeof hooks.resolvedConfig === 'function' ? hooks.resolvedConfig(state) : undefined;
   const observed = typeof hooks.observedStats === 'function' ? hooks.observedStats(state) : undefined;
@@ -1137,6 +1170,7 @@ export async function scoreAdapter(
     byTemplate: all.byTemplate,
     probesScored: probes.length,
     wallMs: Date.now() - t0,
+    phase,
     per_query: perQuery,
     ...(opts.split ? {
       splits: {
@@ -1251,6 +1285,10 @@ export interface Cat13Options {
   corpusDir?: string;
   /** Paid-run budget (--budget-usd, --budget-ledger, --program-cap-usd); defaults to the BRAINBENCH_* env vars. */
   budget?: BudgetOptions;
+  /** Preregistration attested (pushed, unedited) before the first paid request; recorded in the receipt. */
+  preregistration?: string;
+  /** Override the registry's cost estimate for this run (must not exceed --budget-usd). */
+  estimateUsd?: number;
 }
 
 export const DEFAULT_TUNING_CONCEPTS = 20;
@@ -1304,6 +1342,14 @@ export function parseCat13Argv(
       case '--holdout-concepts': opts.holdoutConcepts = parseNonNegativeInt(value(), '--holdout-concepts'); break;
       case '--seed': opts.seed = parseNonNegativeInt(value(), '--seed'); break;
       case '--corpus-dir': opts.corpusDir = value(); break;
+      case '--preregistration': opts.preregistration = value(); break;
+      case '--estimate-usd': {
+        const raw = value();
+        const n = Number(raw);
+        if (!Number.isFinite(n) || n <= 0) throw new Error(`--estimate-usd must be a positive number of dollars, got '${raw}'`);
+        opts.estimateUsd = n;
+        break;
+      }
       case '--budget-usd': case '--budget-ledger': case '--program-cap-usd': {
         const flagValue = value();
         opts.budget = budgetOptionsFrom([...budgetArgv, flag, flagValue], env);
@@ -1464,9 +1510,10 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
   // Live embeds go through the budget ledger, which refuses to start without
   // --budget-usd; the hermetic stub makes no provider request.
   let paid: { run: BudgetRun; guard: PaidRequestGuard } | null = null;
+  const attestation = !stubEmbed && opts.preregistration ? attestPreregistration(opts.preregistration) : null;
   if (!stubEmbed) {
     try {
-      paid = startPaidRun(CATEGORY, { ...(opts.budget ?? budgetOptionsFrom([])), estimateUsd: registryEntry('concept-search')!.cost_estimate.usd });
+      paid = startPaidRun(CATEGORY, { ...(opts.budget ?? budgetOptionsFrom([])), estimateUsd: opts.estimateUsd ?? registryEntry('concept-search')!.cost_estimate.usd });
     } catch (error) {
       if (error instanceof BudgetExceededError) return skipped(`budget: ${error.message}`);
       throw error;
@@ -1478,6 +1525,7 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
     const spend = paid.run.close();
     paid = null;
     receipt.cost = receiptCost(spend);
+    if (attestation) receipt.preregistration_attestation = attestation;
     receipt.delivered_tokens = { tokens: spend.input_tokens, basis: 'provider-reported input tokens of every paid embedding request, from the budget ledger' };
   };
 
@@ -1515,7 +1563,8 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
   for (const { adapter: a, initConfig } of plans) {
     log(`- ${a.name} ...`);
     try {
-      const r = await scoreAdapter(a, pages, probes, gradesByQuery, acc, { initConfig, split, gold });
+      const run = paid?.run;
+      const r = await scoreAdapter(a, pages, probes, gradesByQuery, acc, { initConfig, split, gold, ...(run ? { spentUsd: () => run.summary().actual_usd } : {}) });
       if (GBRAIN_BACKED_ADAPTERS.has(a.name)) {
         const failures = observedSearchFailures(r.observed, probes.length);
         if (failures.length) {
@@ -1720,6 +1769,7 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
       p5_graded: r.p5_graded,
       p1_strict: r.p1_strict,
       wall_ms: r.wallMs,
+      ...(r.phase ? { phase: r.phase } : {}),
       tuning: subsetRow(r.splits?.tuning),
       holdout: subsetRow(r.splits?.holdout),
     })),

@@ -32,6 +32,7 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import { acceptsTemperature, anthropicModelId, judgeClientFor } from './openai-judge-shim.ts';
 import { getDefaultLlmBudget } from './llm-budget.ts';
 import { JUDGE_TEMPERATURE, UNTRUSTED_DATA_INSTRUCTION, escapeUntrusted, fenceUntrusted, newJudgeNonce, unescapeUntrusted } from './judge.ts';
 
@@ -166,8 +167,9 @@ async function callJudgeOnce(
   tool: JudgeTool,
   userContent: string,
 ): Promise<OneCall> {
-  const client = cfg?.client ?? getDefaultClient();
-  const model = resolveModel(cfg);
+  const requested = resolveModel(cfg);
+  const client = cfg?.client ?? judgeClientFor(requested, getDefaultClient);
+  const model = anthropicModelId(requested);
   const maxTokens = cfg?.maxTokens ?? DEFAULT_MAX_TOKENS;
   let response: Anthropic.Messages.Message;
   try {
@@ -175,7 +177,7 @@ async function callJudgeOnce(
       client.messages.create({
         model,
         max_tokens: maxTokens,
-        temperature: JUDGE_TEMPERATURE,
+        ...(acceptsTemperature(requested) ? { temperature: JUDGE_TEMPERATURE } : {}),
         system: [
           {
             type: 'text',

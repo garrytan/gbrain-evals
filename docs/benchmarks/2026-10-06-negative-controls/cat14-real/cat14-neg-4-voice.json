@@ -1,0 +1,91 @@
+{
+  "probe_id": "cat14-neg-4-voice",
+  "category": "calibration-voice-stress",
+  "question": "This founder reminds me of three previous ones who didn't make it. Should I write the check?",
+  "baseline_answer": "## Answer\n\nThe brain can't say whether to write the check. It has no information about this founder, the deal, or the three founders you're comparing them to. It does hold a track record for this kind of pattern-matching call.\n\n- Garry's claim that \"This pattern-matched founder type won't make it\" was resolved as correct. It was recorded 2024-04-20 with conviction weight 0.7 [cat14/cat14-neg-4-voice/take-1].\n- Garry's claim that \"That archetype always plateaus\" was also resolved as correct. It was recorded 2024-10-15 with conviction weight 0.75 [cat14/cat14-neg-4-voice/take-2].\n\nBoth resolved calls in the founder-patterns domain were right. That is mild evidence that the pattern-matching instinct has worked before. Only two resolved takes were retrieved, and I can't tell whether they cover the same archetype as this founder. The brain doesn't show how many pattern-based calls were wrong, or how many founders matching a pattern went on to succeed. It also holds nothing on the current founder's traction, terms, or the specific traits that trigger the match.",
+  "calibrated_answer": "## Answer\nThe brain can't say whether to write the check. It has no record of this founder, the three earlier founders, or the deal. It does hold two resolved pattern-match calls by garry, and both were correct.\n\n- A claim that \"This pattern-matched founder type won't make it\" resolved correct (conviction 0.7, recorded 2024-04-20) [cat14/cat14-neg-4-voice/take-1].\n- A claim that \"That archetype always plateaus\" resolved correct (conviction 0.75, recorded 2024-10-15) [cat14/cat14-neg-4-voice/take-2].\n\nThe pattern in your question, a founder resembling several who didn't make it, is the same kind of read as these two resolved calls. Both calls were in the founder-patterns domain [cat14/cat14-neg-4-voice/take-1] [cat14/cat14-neg-4-voice/take-2].\n\n## Calibration\n- **Prior (default reasoning):** the resemblance to three failures points toward passing. Your calibration profile says your founder-archetype reads have held up, 2/2 in 2024, and carries the tag *well-calibrated-founder-patterns*.\n- **Counter-prior:** the profile shows no hedged-domain signal for founder patterns, so the brain gives no specific counter-view from you. The track record is thin, with only two resolved calls. Both are negative (\"won't make it\" / \"always plateaus\"), and both are from 2024, about two years before today (2026-10-06). The brain has no resolved cases where a pattern-matched founder succeeded, so it can't show whether the pattern ever misfires.\n- Neither prior is substituted for the other here. The record supports trusting the pattern read in this domain, and the sample is small and one-directional.",
+  "prompts_identical": false,
+  "calibration_block_present": true,
+  "think_warnings": {
+    "baseline": [],
+    "calibrated": []
+  },
+  "win_eligible": true,
+  "judge_orders": 2,
+  "scores": [
+    {
+      "axis": "mentions_relevant_bias_tag",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers correctly connect the question to the user's successful founder-pattern reads, without forcing in an unrelated bias. B explicitly names the instinct to pass and counters it with the thin, one-directional track record; A gives that caveat without explicitly naming the user's gut prior. Neither maintains a friend-like voice, and both expose untranslated conviction numbers, while B adds more calibration jargon. Their substantive advice is essentially the same, but A communicates the useful evidence and its limits more simply. || Both answers reference the relevant founder-pattern track record without force-fitting another bias. A explicitly names the gut inclination to pass and counters it with the track record’s small, one-directional sample; B provides similar caution but does not explicitly name the gut prior. Neither maintains a friend-like voice, and both expose unnecessary conviction statistics and recordkeeping language. Their recommendations are substantively equivalent, but B is more useful because it more carefully distinguishes past pattern-matching success from evidence about this particular founder."
+    },
+    {
+      "axis": "presents_counter_prior",
+      "expected": false,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers correctly connect the question to the user's successful founder-pattern reads, without forcing in an unrelated bias. B explicitly names the instinct to pass and counters it with the thin, one-directional track record; A gives that caveat without explicitly naming the user's gut prior. Neither maintains a friend-like voice, and both expose untranslated conviction numbers, while B adds more calibration jargon. Their substantive advice is essentially the same, but A communicates the useful evidence and its limits more simply. || Both answers reference the relevant founder-pattern track record without force-fitting another bias. A explicitly names the gut inclination to pass and counters it with the track record’s small, one-directional sample; B provides similar caution but does not explicitly name the gut prior. Neither maintains a friend-like voice, and both expose unnecessary conviction statistics and recordkeeping language. Their recommendations are substantively equivalent, but B is more useful because it more carefully distinguishes past pattern-matching success from evidence about this particular founder."
+    },
+    {
+      "axis": "changes_recommendation_meaningfully",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers correctly connect the question to the user's successful founder-pattern reads, without forcing in an unrelated bias. B explicitly names the instinct to pass and counters it with the thin, one-directional track record; A gives that caveat without explicitly naming the user's gut prior. Neither maintains a friend-like voice, and both expose untranslated conviction numbers, while B adds more calibration jargon. Their substantive advice is essentially the same, but A communicates the useful evidence and its limits more simply. || Both answers reference the relevant founder-pattern track record without force-fitting another bias. A explicitly names the gut inclination to pass and counters it with the track record’s small, one-directional sample; B provides similar caution but does not explicitly name the gut prior. Neither maintains a friend-like voice, and both expose unnecessary conviction statistics and recordkeeping language. Their recommendations are substantively equivalent, but B is more useful because it more carefully distinguishes past pattern-matching success from evidence about this particular founder."
+    },
+    {
+      "axis": "voice_conversational",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers correctly connect the question to the user's successful founder-pattern reads, without forcing in an unrelated bias. B explicitly names the instinct to pass and counters it with the thin, one-directional track record; A gives that caveat without explicitly naming the user's gut prior. Neither maintains a friend-like voice, and both expose untranslated conviction numbers, while B adds more calibration jargon. Their substantive advice is essentially the same, but A communicates the useful evidence and its limits more simply. || Both answers reference the relevant founder-pattern track record without force-fitting another bias. A explicitly names the gut inclination to pass and counters it with the track record’s small, one-directional sample; B provides similar caution but does not explicitly name the gut prior. Neither maintains a friend-like voice, and both expose unnecessary conviction statistics and recordkeeping language. Their recommendations are substantively equivalent, but B is more useful because it more carefully distinguishes past pattern-matching success from evidence about this particular founder."
+    },
+    {
+      "axis": "doesnt_force_fit_irrelevant_bias",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers correctly connect the question to the user's successful founder-pattern reads, without forcing in an unrelated bias. B explicitly names the instinct to pass and counters it with the thin, one-directional track record; A gives that caveat without explicitly naming the user's gut prior. Neither maintains a friend-like voice, and both expose untranslated conviction numbers, while B adds more calibration jargon. Their substantive advice is essentially the same, but A communicates the useful evidence and its limits more simply. || Both answers reference the relevant founder-pattern track record without force-fitting another bias. A explicitly names the gut inclination to pass and counters it with the track record’s small, one-directional sample; B provides similar caution but does not explicitly name the gut prior. Neither maintains a friend-like voice, and both expose unnecessary conviction statistics and recordkeeping language. Their recommendations are substantively equivalent, but B is more useful because it more carefully distinguishes past pattern-matching success from evidence about this particular founder."
+    },
+    {
+      "axis": "voice_must_not_be_clinical",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers correctly connect the question to the user's successful founder-pattern reads, without forcing in an unrelated bias. B explicitly names the instinct to pass and counters it with the thin, one-directional track record; A gives that caveat without explicitly naming the user's gut prior. Neither maintains a friend-like voice, and both expose untranslated conviction numbers, while B adds more calibration jargon. Their substantive advice is essentially the same, but A communicates the useful evidence and its limits more simply. || Both answers reference the relevant founder-pattern track record without force-fitting another bias. A explicitly names the gut inclination to pass and counters it with the track record’s small, one-directional sample; B provides similar caution but does not explicitly name the gut prior. Neither maintains a friend-like voice, and both expose unnecessary conviction statistics and recordkeeping language. Their recommendations are substantively equivalent, but B is more useful because it more carefully distinguishes past pattern-matching success from evidence about this particular founder."
+    }
+  ],
+  "win_score": 0,
+  "win_overall": "baseline",
+  "per_axis_pass_rate": 0.5,
+  "failure_modes": [
+    "presents_counter_prior",
+    "voice_conversational",
+    "voice_must_not_be_clinical"
+  ]
+}

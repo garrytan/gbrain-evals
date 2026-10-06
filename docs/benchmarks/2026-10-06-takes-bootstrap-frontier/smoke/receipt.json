@@ -1,0 +1,67 @@
+{
+  "kind": "w4-takes-bootstrap-frontier",
+  "smoke_max_cases": 3,
+  "preregistration_attestation": {
+    "preregistration": "docs/benchmarks/2026-10-06-takes-bootstrap-frontier-preregistration.md",
+    "preregistration_commit": "17f36a1e134a394820f2686c56146e0416113aa2",
+    "runner_commit": "17f36a1e134a394820f2686c56146e0416113aa2",
+    "worktree_clean_for_preregistration": true,
+    "on_origin": true,
+    "attested_at": "2026-10-06T18:12:51.071Z"
+  },
+  "gbrain_pin": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+  "gbrain_dir": "node_modules/gbrain",
+  "gbrain_tree_verified": {
+    "ref": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+    "files": 2435,
+    "mismatched": [],
+    "missing": []
+  },
+  "overlay": {
+    "path": "eval/runner/takes-bootstrap/harness-overlay.mjs",
+    "upstream": "evals/takes-bootstrap/harness.mjs",
+    "diff": "eval/runner/takes-bootstrap/harness-overlay.diff"
+  },
+  "arms": [
+    {
+      "model": "openai:gpt-6.1-sol",
+      "max_usd": 0.1,
+      "exit_code": 0,
+      "wall_ms": 14069,
+      "settled_usd": 0.004562,
+      "settled_from": "harness BudgetTracker totalSpent",
+      "files": {
+        "predictions": "../../home/user/.capy/work/lane-b/w4-smoke/predictions-gpt-6.1-sol.jsonl",
+        "summary": "../../home/user/.capy/work/lane-b/w4-smoke/summary-gpt-6.1-sol.json",
+        "report": "../../home/user/.capy/work/lane-b/w4-smoke/report-gpt-6.1-sol.json",
+        "log": "../../home/user/.capy/work/lane-b/w4-smoke/stderr-gpt-6.1-sol.log",
+        "requests": "../../home/user/.capy/work/lane-b/w4-smoke/requests-gpt-6.1-sol.jsonl"
+      },
+      "request_stats": {
+        "requests": 3,
+        "non_ok": 0,
+        "output_limit_finishes": 0,
+        "cases_with_retries": 0
+      },
+      "verdict": {
+        "model": "openai:gpt-6.1-sol",
+        "cases": 3,
+        "malformed": 0,
+        "forbid_violations": 0,
+        "pass": true
+      },
+      "graduated": true
+    }
+  ],
+  "cost": {
+    "usd": 0.004562,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "budget ledger w4-takes-bootstrap-frontier-2026-10-06T18-12-51-960Z-7d529ca8: 1 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "/workspace/gbrain-evals/.budget/followups-2026-10.sqlite",
+    "program_cap_usd": 297,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": null,
+    "event_loop_lag_unavailable": "no lag monitor: the run was not started through startPaidRun"
+  }
+}

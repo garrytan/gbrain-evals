@@ -1,0 +1,103 @@
+{
+  "scorer_version": 1,
+  "cases": 3,
+  "malformed": [],
+  "forbid_violations": [],
+  "by_kind": [
+    {
+      "kind": "fact",
+      "expected": 0,
+      "matched": 0,
+      "predicted": 0,
+      "precise": 0,
+      "precision": 1,
+      "recall": 1
+    },
+    {
+      "kind": "take",
+      "expected": 3,
+      "matched": 3,
+      "predicted": 6,
+      "precise": 6,
+      "precision": 1,
+      "recall": 1
+    },
+    {
+      "kind": "bet",
+      "expected": 0,
+      "matched": 0,
+      "predicted": 0,
+      "precise": 0,
+      "precision": 1,
+      "recall": 1
+    },
+    {
+      "kind": "hunch",
+      "expected": 0,
+      "matched": 0,
+      "predicted": 0,
+      "precise": 0,
+      "precision": 1,
+      "recall": 1
+    }
+  ],
+  "by_archetype": [
+    {
+      "archetype": "take-plain",
+      "category": "take",
+      "variants": 3,
+      "variants_passed": 3,
+      "malformed": 0,
+      "expected": 3,
+      "matched": 3,
+      "predicted": 6,
+      "precise": 6,
+      "forbid_violations": 0
+    }
+  ],
+  "by_variant": [
+    {
+      "id": "take-plain-v1",
+      "archetype": "take-plain",
+      "category": "take",
+      "malformed": false,
+      "pass": true,
+      "expected": 1,
+      "matched": 1,
+      "predicted": 2,
+      "precise": 2,
+      "forbid_violations": 0
+    },
+    {
+      "id": "take-plain-v2",
+      "archetype": "take-plain",
+      "category": "take",
+      "malformed": false,
+      "pass": true,
+      "expected": 1,
+      "matched": 1,
+      "predicted": 2,
+      "precise": 2,
+      "forbid_violations": 0
+    },
+    {
+      "id": "take-plain-v3",
+      "archetype": "take-plain",
+      "category": "take",
+      "malformed": false,
+      "pass": true,
+      "expected": 1,
+      "matched": 1,
+      "predicted": 2,
+      "precise": 2,
+      "forbid_violations": 0
+    }
+  ],
+  "overall": {
+    "precision": 1,
+    "recall": 1,
+    "f1": 1
+  },
+  "graduated": true,
+  "failures": []
+}

@@ -70,6 +70,8 @@ import { uniqueInOrder, reciprocalRank, recallAnyAtK, rankOfFirstHit, percentile
 import { ProbeAccounting } from './probe-accounting.ts';
 import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, gateFromEnv, type Receipt } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
+import { budgetOptionsFrom, receiptCost, startPaidRun, type BudgetOptions } from './budget-ledger.ts';
+import { attestPreregistration, type Attestation } from './prereg.ts';
 
 export const CAT21_CATEGORY = 'cat21-code-retrieval';
 
@@ -105,6 +107,29 @@ export interface CodeQuery {
   text: string;
   /** Path suffix (relative to src/core walk) uniquely naming the gold file. */
   expected_file: string;
+  /** Question set the query belongs to; unset for the original named questions. */
+  split?: string;
+}
+
+/** Behavior questions that never name the symbol: two per gold file, frozen 2026-10-06 (W5). */
+export const PARAPHRASE_QUERIES_PATH = join(import.meta.dir, '../data/cat21-paraphrase-v1/questions.json');
+
+export function loadQueryFile(path: string): CodeQuery[] {
+  const parsed = JSON.parse(readFileSync(path, 'utf8')) as { questions?: CodeQuery[] };
+  if (!Array.isArray(parsed.questions) || parsed.questions.length === 0) throw new Error(`${path}: no questions`);
+  for (const q of parsed.questions) {
+    if (typeof q.id !== 'string' || typeof q.text !== 'string' || typeof q.expected_file !== 'string') throw new Error(`${path}: malformed question ${JSON.stringify(q)}`);
+  }
+  return parsed.questions;
+}
+
+/** Query set for a split: `named` (the original 12), `paraphrase` (frozen v1 file) or `both` (named first). */
+export function queriesForSplit(split: string): CodeQuery[] {
+  const named = QUERIES.map(q => ({ ...q, split: 'named' }));
+  if (split === 'named') return QUERIES;
+  if (split === 'paraphrase') return loadQueryFile(PARAPHRASE_QUERIES_PATH);
+  if (split === 'both') return [...named, ...loadQueryFile(PARAPHRASE_QUERIES_PATH)];
+  throw new Error(`unknown split ${JSON.stringify(split)} (named, paraphrase or both)`);
 }
 
 export const QUERIES: CodeQuery[] = [
@@ -124,6 +149,7 @@ export const QUERIES: CodeQuery[] = [
 
 const PROVIDER_ENV_KEY: Record<string, string> = {
   'voyage-code-3': 'VOYAGE_API_KEY',
+  'voyage-code-4': 'VOYAGE_API_KEY',
   'openai-default': 'OPENAI_API_KEY',
 };
 
@@ -132,6 +158,7 @@ export const CELLS_DEFAULT = ['voyage-code-3', 'openai-default'];
 export function cellConfig(name: string): { embedder: string; dim: number } {
   switch (name) {
     case 'voyage-code-3': return { embedder: 'voyage:voyage-code-3', dim: 1024 };
+    case 'voyage-code-4': return { embedder: 'voyage:voyage-code-4', dim: 1024 };
     case 'openai-default': return { embedder: 'openai:text-embedding-3-large', dim: 1536 };
     default: throw new Error(`unknown cell: ${name}`);
   }
@@ -225,6 +252,27 @@ export interface ProviderCell {
   valid: boolean;
   invalid_reasons: string[];
   per_query: Array<{ id: string; rank: number | null; top1: boolean; ms: number }>;
+  /** Metrics per question split, when the run carries split labels; the verdict gates on `named`. */
+  splits?: Record<string, SplitMetrics>;
+}
+
+export interface SplitMetrics { queries: number; scored: number; top1_hits: number; mrr: number | null; recall_at_5: number | null }
+
+/** Per-split metrics from a cell's per-query ranks; unscored queries stay in `queries` but not in the means. */
+export function splitMetrics(perQuery: ProviderCell['per_query'], queries: CodeQuery[]): Record<string, SplitMetrics> {
+  const out: Record<string, SplitMetrics> = {};
+  const byId = new Map(perQuery.map(p => [p.id, p]));
+  for (const split of [...new Set(queries.map(q => q.split ?? 'named'))]) {
+    const rows = queries.filter(q => (q.split ?? 'named') === split).map(q => byId.get(q.id)).filter((p): p is ProviderCell['per_query'][number] => p !== undefined);
+    const n = rows.length;
+    out[split] = {
+      queries: queries.filter(q => (q.split ?? 'named') === split).length, scored: n,
+      top1_hits: rows.filter(r => r.top1).length,
+      mrr: n ? rows.reduce((a, r) => a + (r.rank ? 1 / r.rank : 0), 0) / n : null,
+      recall_at_5: n ? rows.filter(r => r.rank !== null && r.rank <= K_RECALL).length / n : null,
+    };
+  }
+  return out;
 }
 
 const DEGRADED_VECTOR_STAGES = new Set(['embed_unavailable', 'embed_timeout', 'vector_arm_failed', 'rescore_skipped']);
@@ -425,9 +473,10 @@ export function computeVerdict(
       reasons: [`${valid.length}/${requested} cells valid — invalid: ${cells.filter(c => !c.valid).map(c => `${c.cell} (${c.invalid_reasons.join('; ') || 'missing'})`).join(', ')}`],
     };
   }
-  const below = valid.filter(c => (c.mrr ?? 0) < minMrr);
+  const gateMrr = (c: ProviderCell) => c.splits?.named?.mrr ?? c.mrr ?? 0;
+  const below = valid.filter(c => gateMrr(c) < minMrr);
   if (below.length > 0) {
-    return { verdict: 'fail', reasons: [`MRR below ${minMrr} floor: ${below.map(c => `${c.cell}=${(c.mrr ?? 0).toFixed(3)}`).join(', ')}`] };
+    return { verdict: 'fail', reasons: [`MRR below ${minMrr} floor: ${below.map(c => `${c.cell}=${gateMrr(c).toFixed(3)}`).join(', ')}`] };
   }
   if (opts.requireGoldRetrieved) {
     const unretrieved = valid.flatMap(c => c.per_query.filter(p => p.rank === null).map(p => `${c.cell}:${p.id}`));
@@ -453,6 +502,12 @@ export interface Cat21Options {
   minMrr?: number;
   reportsDir?: string;
   quiet?: boolean;
+  /** Question split label recorded in the receipt (`named`, `paraphrase`, `both`). */
+  split?: string;
+  /** Ledger flags for live runs; a live run refuses without --budget-usd. */
+  budget?: BudgetOptions;
+  /** Preregistration to attest before the first paid request. */
+  preregistration?: string;
 }
 
 export interface Cat21RunResult {
@@ -463,8 +518,15 @@ export interface Cat21RunResult {
 }
 
 export function optionsFromEnv(argv: string[] = process.argv.slice(2)): Cat21Options {
+  const flag = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
+  const cells = flag('--cells') ?? process.env.CAT21_CELLS;
+  const split = flag('--split') ?? process.env.CAT21_SPLIT;
   return {
-    cells: process.env.CAT21_CELLS ? process.env.CAT21_CELLS.split(',').map(s => s.trim()).filter(Boolean) : undefined,
+    cells: cells ? cells.split(',').map(s => s.trim()).filter(Boolean) : undefined,
+    split,
+    queries: split ? queriesForSplit(split) : undefined,
+    budget: budgetOptionsFrom(argv),
+    preregistration: flag('--preregistration'),
     stubEmbed: argv.includes('--stub-embed') || process.env.CAT21_STUB_EMBED === '1',
     allowSkip: argv.includes('--allow-skip') || process.env.BRAINBENCH_ALLOW_SKIP === '1',
     distractors: process.env.CAT21_DISTRACTORS ? parseInt(process.env.CAT21_DISTRACTORS, 10) : undefined,
@@ -483,6 +545,7 @@ export async function runCat21(options: Cat21Options = {}): Promise<Cat21RunResu
   const reportsDir = options.reportsDir ?? join(process.cwd(), 'eval/reports');
   const receiptFile = receiptPath(CAT21_CATEGORY, reportsDir);
   const log = options.quiet ? (_: string) => {} : (s: string) => process.stderr.write(s);
+  let attestation: Attestation | null = null;
 
   const home = join(tmpdir(), `cat21-gbrain-home-${process.pid}-${Date.now()}`);
   mkdirSync(home, { recursive: true });
@@ -527,6 +590,13 @@ export async function runCat21(options: Cat21Options = {}): Promise<Cat21RunResu
     __setEmbedTransportForTests(makeHashEmbedTransport());
   }
 
+  let paid: ReturnType<typeof startPaidRun> | null = null;
+  if (!options.stubEmbed) {
+    if (options.preregistration) attestation = attestPreregistration(options.preregistration);
+    if (!options.budget) throw new Error('cat21 live run makes paid embedding requests; pass --budget-ledger and --budget-usd');
+    paid = startPaidRun(CAT21_CATEGORY, { ...options.budget, estimateUsd: 0.12 * cellNames.length });
+  }
+
   // Corpus: gold files (asserted unique) + deterministic distractors.
   const allFiles = walkTs(SRC_ROOT);
   const goldPathByQueryId = resolveGoldFiles(allFiles, queries);
@@ -543,6 +613,7 @@ export async function runCat21(options: Cat21Options = {}): Promise<Cat21RunResu
       log(`[cat21] cell=${name}...\n`);
       try {
         const cell = await runCell({ name, files, queries, goldSlugByQueryId, goldPathByQueryId, acc });
+        if (queries.some(q => q.split)) cell.splits = splitMetrics(cell.per_query, queries);
         cells.push(cell);
         log(`[cat21]   ${name}: valid=${cell.valid} gold=${cell.gold_present}/${queries.length} top1=${cell.top1_hits ?? 'n/a'}/${cell.queries_scored} MRR=${cell.mrr?.toFixed(3) ?? 'n/a'} R@5=${cell.recall_at_5 !== null ? (cell.recall_at_5 * 100).toFixed(1) + '%' : 'n/a'} errors=${cell.query_errors}\n`);
       } catch (e: any) {
@@ -564,7 +635,9 @@ export async function runCat21(options: Cat21Options = {}): Promise<Cat21RunResu
     }
   } finally {
     if (options.stubEmbed) __setEmbedTransportForTests(null);
+    paid?.guard.uninstall();
   }
+  const cost = paid ? receiptCost(paid.run.close()) : null;
 
   const summary = acc.summary();
   const validCells = cells.filter(c => c.valid);
@@ -602,7 +675,11 @@ export async function runCat21(options: Cat21Options = {}): Promise<Cat21RunResu
       min_mrr_gate_mode: options.stubEmbed ? 'stub-plumbing' : 'live-quality',
       cells: Object.fromEntries(cells.map(c => [c.cell, { embedder: c.embedder, dim: c.dim }])),
       corpus: 'gbrain-src-core',
+      split: options.split ?? 'named',
+      queries: queries.map(q => ({ id: q.id, expected_file: q.expected_file, split: q.split ?? 'named' })),
     },
+    ...(attestation ? { preregistration_attestation: attestation } : {}),
+    ...(cost ? { cost } : {}),
     finished_at: new Date().toISOString(),
     data: {
       cells,

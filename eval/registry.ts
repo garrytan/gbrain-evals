@@ -1124,6 +1124,14 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'README-cat13-phase-e0.md': { role: 'protocol notes for the Cat13 ranker-wave phases', part_of: 'concept-search' },
   'adversarial-injections.ts': { role: 'injection generator and scorer used by Cat6', part_of: 'prose-autolink-precision' },
   'all.ts': { role: 'umbrella runner that dispatches registry entries' },
+  'a4-s4-rescore.ts': { role: 'keyless re-score of the A4 S4-on arm (G8, 2026-10-06)', part_of: 'abstention' },
+  'cat20-judges.ts': { role: 'keyless four-judge Cat 20 decision and the W8 Cat 20 control statistic (2026-10-06)', part_of: 'brainstorm-grounding' },
+  'cat21-paired.ts': { role: 'keyless Cat 21 per-split metrics and file-clustered paired comparisons (2026-10-06)', part_of: 'code-retrieval' },
+  'n2-judge-replay.ts': { role: 'N2 judge-only replay: capture and verify judge inputs, select, judge, score (W9, 2026-10-06); paid, not dispatched', part_of: 'contradiction-surfacing' },
+  'openai-judge-shim.ts': { role: 'Anthropic-shaped messages.create over the OpenAI Responses API, so Anthropic-SDK judges can run OpenAI models' },
+  'takes-bootstrap-frontier.ts': { role: "gbrain takes-bootstrap eval on frontier models through the priced overlay: route check, ledger-wrapped run, keyless re-score (W4, 2026-10-06); paid, not dispatched" },
+  'w6-embedding-matrix.ts': { role: 'keyless summary of the 2026-10-06 embedding matrix (Cat 13 held-out and Cat 18b receipts)' },
+  'w8-negative-controls.ts': { role: 'keyless summary of the 2026-10-06 live negative controls (ratio rule, signal floors, injection checks)' },
   'chronicle-lift.ts': { role: 'auto_chronicle off-versus-on experiment (docs/benchmarks/2026-10-04-auto-chronicle-lift-preregistration.md); paid, not dispatched' },
   'budget-ledger.ts': { role: 'shared paid-run reservation ledger' },
   'bug-ledger.ts': { role: 'shared gbrain bug ledger: validated entries and the Markdown view' },
@@ -1217,4 +1225,4 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
 };
 
 /** Subdirectories of eval/runner/ holding helper modules only. */
-export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'cat40', 'cat41', 'decisions', 'evaluator', 'evidence-delivery', 'lifecycle', 'memory-qa', 'p4-stream', 'queries', 'stats', 'system-one'];
+export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'cat40', 'cat41', 'decisions', 'evaluator', 'evidence-delivery', 'lifecycle', 'memory-qa', 'p4-stream', 'queries', 'stats', 'system-one', 'takes-bootstrap'];

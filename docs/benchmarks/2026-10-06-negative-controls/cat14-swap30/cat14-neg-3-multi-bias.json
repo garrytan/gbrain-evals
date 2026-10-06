@@ -1,0 +1,78 @@
+{
+  "probe_id": "cat14-neg-3-multi-bias",
+  "category": "calibration-multi-bias",
+  "question": "Should we lead the Series A for an LA-based AI startup with a COO from a slower-paced company?",
+  "baseline_answer": "## Answer\n\nThe brain does not contain enough to say whether to lead this Series A, and it holds no data on the specific company, its COO, or deal terms. It has only two resolved past takes by garry, and they are tangentially related.\n\n- **Geography:** garry's claim that a NY tech startup would scale beyond NY was resolved incorrect, with high conviction (0.85, recorded 2024-03-01) [cat14/cat14-neg-3-multi-bias/take-1]. This is a geography-related miss, but it concerns New York, not Los Angeles, so it does not directly bear on an LA-based startup.\n- **Tactics:** garry's claim that \"This founder ships fast and wins\" was resolved correct (conviction 0.8, recorded 2024-06-10) [cat14/cat14-neg-3-multi-bias/take-2]. This suggests a past pattern of speed-focused judgment paying off. The page does not say anything about COOs or about companies moving at different speeds.\n\nThe two records come from a single multi-bias test case. They are a small sample, and neither addresses AI startups, Series A leadership, or a COO's background.",
+  "calibrated_answer": "## Answer\n\nThe brain cannot say whether to lead this round, and it holds nothing on this specific company. It has no page for the LA AI startup, its COO, its traction, its valuation, or the round terms. What it does hold is two resolved takes from garry that bear on how the question is framed.\n\n**Garry's prior (default reasoning):** The question combines a geography element (LA-based) and a founder/team-tactics element (a COO from a slower-paced company). Garry's tactics record is a sharp one. He called \"This founder ships fast and wins\" correctly, with conviction weight 0.8 [cat14/cat14-neg-3-multi-bias/take-2]. That suggests his founder-pattern instincts about execution speed are worth trusting.\n\n**Counter-prior (hedged-domain self):** The geography record is weaker. He called \"This NY tech startup will scale beyond NY\" with conviction weight 0.85, and it was incorrect [cat14/cat14-neg-3-multi-bias/take-1]. The calibration profile flags this as an over-confident geography prior, at 0/1 in 2024.\n\n**How the pieces map to this question:**\n- The LA-location element falls under the geography domain, where garry's confidence has run ahead of his results. The sample is only one resolved take, so this is a thin signal.\n- The COO-from-a-slower-company element falls under tactics/founder patterns, where the profile reads as well calibrated. The brain has no resolved take on COO backgrounds or on hiring from slower-paced organizations specifically. The tactics evidence concerns founders shipping fast, not COO pedigree, so it does not transfer directly.\n\n## Calibration\n\nActive bias tags are **over-confident-geography** and **well-calibrated-founder-patterns**. Any strong conviction about LA as a market should be treated with caution under the first tag. A read on team execution speed can lean more on garry's usual instincts under the second. The track record is one miss in geography (0/1) and one hit in tactics, so neither is statistically robust.",
+  "prompts_identical": false,
+  "calibration_block_present": true,
+  "think_warnings": {
+    "baseline": [],
+    "calibrated": []
+  },
+  "win_eligible": true,
+  "judge_orders": 2,
+  "scores": [
+    {
+      "axis": "mentions_relevant_bias_tag",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers reference relevant geography and execution-speed patterns, and both acknowledge that founder-speed evidence does not directly establish anything about this COO. B explicitly contrasts the user's execution instincts with the geography track-record warning, whereas A largely dismisses the records as tangential. This creates a substantive difference: B recommends tempering location-based confidence while giving execution judgments more weight. B is more useful, though both use impersonal language and raw conviction statistics, and B unnecessarily substitutes a founder-patterns label for the supplied tactics tag. || Both answers reference relevant geography and execution-speed patterns without clearly force-fitting an unrelated bias. A connects the user's default instincts to a track-record counterweight, while B lists past results without explicitly presenting that contrast. Their guidance differs: A recommends tempering geography-based conviction, whereas B largely dismisses the geography signal because the earlier startup was in New York. A is more useful for that transferable calibration guidance, although both answers use impersonal language and untranslated conviction numbers rather than a friend-like voice."
+    },
+    {
+      "axis": "presents_counter_prior",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers reference relevant geography and execution-speed patterns, and both acknowledge that founder-speed evidence does not directly establish anything about this COO. B explicitly contrasts the user's execution instincts with the geography track-record warning, whereas A largely dismisses the records as tangential. This creates a substantive difference: B recommends tempering location-based confidence while giving execution judgments more weight. B is more useful, though both use impersonal language and raw conviction statistics, and B unnecessarily substitutes a founder-patterns label for the supplied tactics tag. || Both answers reference relevant geography and execution-speed patterns without clearly force-fitting an unrelated bias. A connects the user's default instincts to a track-record counterweight, while B lists past results without explicitly presenting that contrast. Their guidance differs: A recommends tempering geography-based conviction, whereas B largely dismisses the geography signal because the earlier startup was in New York. A is more useful for that transferable calibration guidance, although both answers use impersonal language and untranslated conviction numbers rather than a friend-like voice."
+    },
+    {
+      "axis": "changes_recommendation_meaningfully",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers reference relevant geography and execution-speed patterns, and both acknowledge that founder-speed evidence does not directly establish anything about this COO. B explicitly contrasts the user's execution instincts with the geography track-record warning, whereas A largely dismisses the records as tangential. This creates a substantive difference: B recommends tempering location-based confidence while giving execution judgments more weight. B is more useful, though both use impersonal language and raw conviction statistics, and B unnecessarily substitutes a founder-patterns label for the supplied tactics tag. || Both answers reference relevant geography and execution-speed patterns without clearly force-fitting an unrelated bias. A connects the user's default instincts to a track-record counterweight, while B lists past results without explicitly presenting that contrast. Their guidance differs: A recommends tempering geography-based conviction, whereas B largely dismisses the geography signal because the earlier startup was in New York. A is more useful for that transferable calibration guidance, although both answers use impersonal language and untranslated conviction numbers rather than a friend-like voice."
+    },
+    {
+      "axis": "voice_conversational",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers reference relevant geography and execution-speed patterns, and both acknowledge that founder-speed evidence does not directly establish anything about this COO. B explicitly contrasts the user's execution instincts with the geography track-record warning, whereas A largely dismisses the records as tangential. This creates a substantive difference: B recommends tempering location-based confidence while giving execution judgments more weight. B is more useful, though both use impersonal language and raw conviction statistics, and B unnecessarily substitutes a founder-patterns label for the supplied tactics tag. || Both answers reference relevant geography and execution-speed patterns without clearly force-fitting an unrelated bias. A connects the user's default instincts to a track-record counterweight, while B lists past results without explicitly presenting that contrast. Their guidance differs: A recommends tempering geography-based conviction, whereas B largely dismisses the geography signal because the earlier startup was in New York. A is more useful for that transferable calibration guidance, although both answers use impersonal language and untranslated conviction numbers rather than a friend-like voice."
+    },
+    {
+      "axis": "doesnt_force_fit_irrelevant_bias",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers reference relevant geography and execution-speed patterns, and both acknowledge that founder-speed evidence does not directly establish anything about this COO. B explicitly contrasts the user's execution instincts with the geography track-record warning, whereas A largely dismisses the records as tangential. This creates a substantive difference: B recommends tempering location-based confidence while giving execution judgments more weight. B is more useful, though both use impersonal language and raw conviction statistics, and B unnecessarily substitutes a founder-patterns label for the supplied tactics tag. || Both answers reference relevant geography and execution-speed patterns without clearly force-fitting an unrelated bias. A connects the user's default instincts to a track-record counterweight, while B lists past results without explicitly presenting that contrast. Their guidance differs: A recommends tempering geography-based conviction, whereas B largely dismisses the geography signal because the earlier startup was in New York. A is more useful for that transferable calibration guidance, although both answers use impersonal language and untranslated conviction numbers rather than a friend-like voice."
+    }
+  ],
+  "win_score": 1,
+  "win_overall": "calibrated",
+  "per_axis_pass_rate": 0.8,
+  "failure_modes": [
+    "voice_conversational"
+  ]
+}

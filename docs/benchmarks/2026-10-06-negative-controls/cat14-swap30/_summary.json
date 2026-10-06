@@ -1,0 +1,77 @@
+{
+  "mode": "live",
+  "total_probes": 8,
+  "scored_probes": 8,
+  "judge_failed": 0,
+  "sut_failed": 0,
+  "win_eligible_n": 6,
+  "win_rate_calibrated": 0.16666666666666666,
+  "win_rate_baseline": 0.8333333333333334,
+  "win_rate_tie": 0,
+  "per_axis": {
+    "mentions_relevant_bias_tag": {
+      "rate": 1,
+      "n": 4,
+      "subset": "positive"
+    },
+    "presents_counter_prior": {
+      "rate": 1,
+      "n": 4,
+      "subset": "positive"
+    },
+    "changes_recommendation_meaningfully": {
+      "rate": 0.75,
+      "n": 8,
+      "subset": "all"
+    },
+    "voice_conversational": {
+      "rate": 0,
+      "n": 8,
+      "subset": "all"
+    },
+    "doesnt_force_fit_irrelevant_bias": {
+      "rate": 0.5,
+      "n": 4,
+      "subset": "negative"
+    },
+    "behaves_like_baseline": {
+      "rate": 1,
+      "n": 1,
+      "subset": "declaring"
+    },
+    "voice_must_not_be_clinical": {
+      "rate": 0,
+      "n": 1,
+      "subset": "declaring"
+    }
+  },
+  "failure_mode_counts": {
+    "changes_recommendation_meaningfully": 2,
+    "voice_conversational": 8,
+    "doesnt_force_fit_irrelevant_bias": 6,
+    "presents_counter_prior": 1,
+    "voice_must_not_be_clinical": 1
+  },
+  "doctor_flags": [
+    "calibration_net_negative"
+  ],
+  "gate": "fail",
+  "gate_reasons": [
+    "win_rate 17% < 60% target (over 6 win-eligible probes)",
+    "doesnt_force_fit_irrelevant_bias 50% < 90% target (negative subset, n=4)",
+    "voice_conversational 0% < 95% target (all subset, n=8)",
+    "voice_must_not_be_clinical 0% < 95% target (declaring subset, n=1)"
+  ],
+  "provenance": {
+    "probe_filter": null,
+    "probes_planned": 8,
+    "probes_in_fixture": 8,
+    "think_model": "claude-sonnet-5-5",
+    "think_temperature": 0,
+    "judge_model": "openai:gpt-6.1-sol",
+    "judge_temperature": 0,
+    "probes_jsonl_sha256_16": "e65f3d49a5f6bf9f",
+    "started_at": "2026-10-06T19:05:00.549Z",
+    "finished_at": "2026-10-06T19:10:05.957Z"
+  }
+}
