@@ -94,9 +94,13 @@ to measure run-to-run variance.
 
 The sealed splits are not opened here (Phase 7). Namespaces are opaque (`ns-` plus a hash) and so are source ids
 (`src-` plus the occurrence id); no dataset id, label, category or abstention marker reaches a system (the sanitizer,
-with a tripwire in the client and the proxy). Sessions arrive in event-time order. Undated sessions get a disclosed
-synthetic time one minute after the previous dated session and are counted (BEAM-100K: 1,795 of 1,877 sessions); a
-question with no date (LoCoMo, BEAM) is asked at its conversation's last event time.
+with a tripwire in the client and the proxy). Sessions arrive in event-time order. Undated sessions would get a
+disclosed synthetic time one minute after the previous dated session, counted per run, but at this commit no session
+needs one: BEAM dates a batch once, on its first message, and the loader gives every turn group its batch's time
+anchor (`d263dd8`), so all 1,877 BEAM-100K sessions are dated, sessions in one batch share a time and keep dataset
+order. The BEAM pilots ran under the earlier loader, when 1,795 of those 1,877 sessions carried synthetic times; their
+BEAM temporal behavior is not comparable with Phase 4. A question with no date (LoCoMo, BEAM) is asked at its
+conversation's last event time.
 
 ### Readers and judges
 
@@ -303,6 +307,11 @@ labeled with its commit. Recorded on 2026-10-06 at the campaign owner's decision
 ran the pin only and was replaced before freezing.
 
 ## Changelog
+
+### 2026-10-06: main merged
+
+Merged main (gbrain-evals v0.10.35). Its BEAM loader dates every turn group with its batch's time anchor, so BEAM-100K
+sessions are all dated and the synthetic fill no longer fires; the BEAM pilots ran under the earlier loader.
 
 ### 2026-10-06: frozen
 

@@ -21,7 +21,7 @@ const present = (b: string) => filesFor(b).every(f => existsSync(join(DATASET_RO
 const EXPECTED: Record<string, { conversations: number; sessions: number; dated: number; synthetic: number; questions: number; questionsDated: number }> = {
   locomo: { conversations: 10, sessions: 272, dated: 272, synthetic: 0, questions: 1986, questionsDated: 0 },
   'lme-s': { conversations: 500, sessions: 23867, dated: 23867, synthetic: 0, questions: 500, questionsDated: 500 },
-  'beam-100k': { conversations: 20, sessions: 1877, dated: 82, synthetic: 1795, questions: 400, questionsDated: 0 },
+  'beam-100k': { conversations: 20, sessions: 1877, dated: 1877, synthetic: 0, questions: 400, questionsDated: 0 },
 };
 
 describe('event time on the pinned datasets', () => {
