@@ -37,8 +37,8 @@ export interface CampaignManifest {
   schema: 'q2-campaign-v1'; decision_id: string; approved_usd: number; alert_usd: number;
   /** Typing units in the selection family. */
   units: string[];
-  /** Whether U3 and U4 form the joint unit U34 (freeze record); null until decided, and {unit} steps refuse to start. */
-  u34_joint?: boolean | null;
+  /** Dependency units from the development trace (preregistration amendment 3): joint id -> member units. */
+  joint_units?: Record<string, string[]>;
   steps: CampaignStep[];
 }
 export interface LedgerEntry { step: string; run: string; receipt: string; receipt_sha256: string; run_status: string; verdict: string | null; spend_usd: number; at: string; note?: string }
@@ -61,13 +61,27 @@ export function readLedger(root: string): LedgerEntry[] {
  * baseline and P1..Pk, where k is the length of the order the recorded selection decision (step c-select, run
  * decision) produced. Null when `{package}` cannot be expanded yet.
  */
-/** The selection family: U34 replaces U3 and U4 when they are joint; throws while the manifest leaves it undecided. */
-export function familyUnits(m: CampaignManifest): string[] {
-  if (m.u34_joint === undefined) return m.units;
-  if (m.u34_joint === null) throw new Error('the campaign manifest leaves u34_joint undecided (null); set it to true or false from the freeze record in the harness commit before any selection or confirmation arm runs');
-  if (!m.u34_joint) return m.units.filter(u => u !== 'U34');
-  const out = m.units.filter(u => u !== 'U3' && u !== 'U4' && u !== 'U34');
-  out.splice(Math.min(2, out.length), 0, 'U34');
+/**
+ * The selection family: each joint unit replaces its members, at the position of its first member
+ * (U1..U6 with U25 = U2+U5 and U34 = U3+U4 gives U1, U25, U34, U6). The family drives every per-unit step, the Holm
+ * family and the package order.
+ */
+export function familyUnits(m: Pick<CampaignManifest, 'units' | 'joint_units'>): string[] {
+  const joint = Object.entries(m.joint_units ?? {});
+  const memberOf = new Map<string, string>();
+  for (const [id, members] of joint) {
+    if (members.length < 2) throw new Error(`campaign manifest: joint unit ${id} needs at least two member units`);
+    for (const u of members) {
+      if (!m.units.includes(u)) throw new Error(`campaign manifest: joint unit ${id} names ${u}, which is not in units`);
+      if (memberOf.has(u)) throw new Error(`campaign manifest: ${u} belongs to both ${memberOf.get(u)} and ${id}`);
+      memberOf.set(u, id);
+    }
+  }
+  const out: string[] = [];
+  for (const u of m.units) {
+    const id = memberOf.get(u) ?? u;
+    if (!out.includes(id)) out.push(id);
+  }
   return out;
 }
 

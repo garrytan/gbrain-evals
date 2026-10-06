@@ -67,19 +67,22 @@ describe('campaign manifest order', () => {
     expect(() => campaignGuard(['--campaign', join(REPO, 'eval/reports/q2'), '--step', 'smoke', '--run', 'a'], { manifest })).toThrow('inside the repository');
     expect(() => campaignGuard(['--campaign', root(), '--step', 'smoke', '--run', 'a', '--output', '/tmp/elsewhere'], { manifest })).toThrow('drop --output');
   });
-  test('the U3/U4 placeholder: null refuses unit steps; true makes U34 the joint unit; false keeps six units', () => {
+  test('joint units replace their members: the committed family is U1, U25, U34, U6 and drives the per-unit runs', () => {
     const m = loadCampaignManifest();
-    expect(m.u34_joint).toBeNull();
-    expect(() => familyUnits(m)).toThrow('u34_joint undecided');
-    expect(familyUnits({ ...m, u34_joint: true })).toEqual(['U1', 'U2', 'U34', 'U5', 'U6']);
-    expect(familyUnits({ ...m, u34_joint: false })).toEqual(['U1', 'U2', 'U3', 'U4', 'U5', 'U6']);
+    expect(m.joint_units).toEqual({ U34: ['U3', 'U4'], U25: ['U2', 'U5'] });
+    expect(familyUnits(m)).toEqual(['U1', 'U25', 'U34', 'U6']);
+    expect(familyUnits({ units: ['U1', 'U2', 'U3'], joint_units: {} })).toEqual(['U1', 'U2', 'U3']);
+    expect(() => familyUnits({ units: ['U1', 'U2', 'U3'], joint_units: { U12: ['U1', 'U2'], U23: ['U2', 'U3'] } })).toThrow('U2 belongs to both');
+    expect(() => familyUnits({ units: ['U1'], joint_units: { U19: ['U1', 'U9'] } })).toThrow('U9, which is not in units');
+    const step = m.steps.find(s => s.id === 'c-select-arms')!;
+    expect(expandRuns(m, step, null, [])!.filter(r => r.startsWith('w-W1-'))).toEqual(['w-W1-baseline', 'w-W1-U1', 'w-W1-U25', 'w-W1-U34', 'w-W1-U6']);
     const r = root();
-    for (const [step, run] of [['smoke', 'dev-junk-audit-N'], ['smoke', 'dev-junk-audit-K'], ['smoke', 'dev-temporal-edges'], ['smoke', 'dev-wta-scripted'], ['preflight', 'preflight']]) {
-      const h = campaignGuard(['--campaign', r, '--step', step, '--run', run], { manifest: m })!;
+    for (const [st, run] of [['smoke', 'dev-junk-audit-N'], ['smoke', 'dev-junk-audit-K'], ['smoke', 'dev-temporal-edges'], ['smoke', 'dev-wta-scripted'], ['preflight', 'preflight']]) {
+      const h = campaignGuard(['--campaign', r, '--step', st, '--run', run], { manifest: m })!;
       h.finish(receipt(h.output, 'pass'), 0);
     }
-    expect(() => campaignGuard(['--campaign', r, '--step', 'c-select-arms', '--run', 'te-I1-f1-U1'], { manifest: m })).toThrow('u34_joint undecided');
-    expect(campaignGuard(['--campaign', r, '--step', 'c-select-arms', '--run', 'te-I1-f1-U34'], { manifest: { ...m, u34_joint: true } })).not.toBeNull();
+    expect(() => campaignGuard(['--campaign', r, '--step', 'c-select-arms', '--run', 'te-I1-f1-U3'], { manifest: m })).toThrow('te-I1-f1-U3 is not one of them');
+    expect(campaignGuard(['--campaign', r, '--step', 'c-select-arms', '--run', 'te-I1-f1-U25'], { manifest: m })).not.toBeNull();
   });
   test('the committed manifest loads, keeps the preregistered order and budget', () => {
     const m = loadCampaignManifest();

@@ -19,7 +19,8 @@
  * receipt on world-v1>`; the three phrasing files of I1 (or I2), one seed each, are joined with `+`. A temporal-edges receipt must come from a `--c-gate` run (general single-value pass, E5
  * probe and Q2 ledger on every arm).
  *
- *   bun eval/runner/q2/c-gates.ts select --baseline te=..,w=..,world=.. --unit U1:te=..,w=..,world=.. [...] --output <dir> [--joint-u34]
+ *   bun eval/runner/q2/c-gates.ts select --baseline te=..,w=..,world=.. --unit U1:te=..,w=..,world=.. [...] --output <dir>
+ *     (the --unit arms must be exactly the campaign manifest's family: units with joint_units replacing their members)
  *   bun eval/runner/q2/c-gates.ts confirm --selection <select receipt> --baseline te=..,w=..,world=.. --package P1:te=..,w=..,world=.. [...] --output <dir>
  */
 import { readFileSync } from 'node:fs';
@@ -30,7 +31,7 @@ import { resolveGbrainUnderTest } from '../gbrain-under-test.ts';
 import { p5Receipt } from '../p5-brain.ts';
 import { flagValue } from '../p5-agent.ts';
 import { writeReceipt, type GateOutcome } from '../receipt.ts';
-import { campaignGuard } from './campaign.ts';
+import { campaignGuard, familyUnits, loadCampaignManifest } from './campaign.ts';
 import { newWrong } from './transitions.ts';
 
 export const SEED = 20261006;
@@ -50,6 +51,7 @@ export const UNIT_PRIMARY: Record<string, MetricSel> = {
   U3: { metric: 'trap_ok', direction: 'higher', filter: r => String(r.probe_id).includes(':trap-invest:'), label: 'investment-trap accuracy' },
   U4: { metric: 'e5_false_starts', direction: 'lower', label: 'false employment starts per E5 probe person, by identity' },
   U34: { metric: 'e5_false_starts', direction: 'lower', label: 'false employment starts per E5 probe person, by identity (joint U3+U4)' },
+  U25: { metric: 'live_recall', direction: 'higher', label: 'live-edge recall (joint U2+U5)' },
   U5: { metric: 'ti_end_recall', direction: 'higher', label: 'recall of correct end transitions, by identity' },
   U6: { metric: 'ti_start_recall', direction: 'higher', label: 'recall of correct start transitions, by identity' },
 };
@@ -123,6 +125,13 @@ export function safetyChecks(cand: ArmData, comp: ArmData, o: { invariantExpecte
   return out;
 }
 
+/** The --unit arms must be exactly the manifest's family (joint units replace their members), so Holm runs over it. */
+export function assertFamily(given: readonly string[], family: readonly string[]): void {
+  const missing = family.filter(u => !given.includes(u));
+  const extra = given.filter(u => !family.includes(u));
+  if (missing.length || extra.length) throw new Error(`the selection family is ${family.join(', ')} (campaign manifest units and joint_units); ${missing.length ? `missing ${missing.join(', ')}` : ''}${missing.length && extra.length ? '; ' : ''}${extra.length ? `not in the family: ${extra.join(', ')}` : ''}. Pass one --unit per family member and rerun.`);
+}
+
 export interface UnitSelection { unit: string; primary: Comparison; p_holm: number; holm_pass: boolean; safety: SafetyCheck[]; safety_pass: boolean; selected: boolean; standardized_effect: number | null }
 
 export function selectUnits(baseline: ArmData, units: Record<string, ArmData>, o: { invariantExpected?: number } = {}): { units: UnitSelection[]; order: string[] } {
@@ -192,12 +201,12 @@ async function main(argv: string[]): Promise<void> {
   const startedAt = new Date().toISOString();
   if (cmd === 'select') {
     const units = Object.fromEntries(all('--unit').map(s => { const at = s.indexOf(':'); return [s.slice(0, at), loadArm(s.slice(0, at), s.slice(at + 1))]; }));
-    if (units.U34 && (units.U3 || units.U4)) throw new Error('U34 replaces U3 and U4 (joint unit); pass either U34 or U3 and U4');
+    assertFamily(Object.keys(units), familyUnits(loadCampaignManifest()));
     const r = selectUnits(baseline, units);
     const receipt = p5Receipt({ category: 'q2-c-gates-select', gut, startedAt, rows: [], harnessError: null, gates: r.units.map(unitGate),
       summary: { order: r.order, packages: r.order.map((_, j) => ({ package: `P${j + 1}`, units: r.order.slice(0, j + 1) })), units: r.units },
       basis: 'decision only: receipts in, no model call',
-      resolvedConfig: { seed: SEED, draws: DRAWS, holm: { alpha_one_sided: HOLM_ALPHA_ONE_SIDED, family: Object.keys(units).sort() }, ni_margin: NI_MARGIN, spurious_max_points: SPURIOUS_MAX_POINTS, invariant_expected: INVARIANT_EXPECTED,
+      resolvedConfig: { seed: SEED, draws: DRAWS, holm: { alpha_one_sided: HOLM_ALPHA_ONE_SIDED, family: Object.keys(units).sort() }, joint_units: loadCampaignManifest().joint_units ?? {}, ni_margin: NI_MARGIN, spurious_max_points: SPURIOUS_MAX_POINTS, invariant_expected: INVARIANT_EXPECTED,
         arms: { baseline: baseline.sources, ...Object.fromEntries(Object.entries(units).map(([k, v]) => [k, v.sources])) } } });
     // Selection is a decision, not a pass/fail run: a unit that is not selected is an outcome, so the verdict reports the selection.
     writeReceipt(join(output, 'receipt.json'), receipt);

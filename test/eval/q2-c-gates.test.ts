@@ -3,7 +3,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fixedSequence } from '../../eval/runner/stats/fixed-sequence.ts';
-import { confirmPackages, loadArm, safetyChecks, selectUnits, type ArmData } from '../../eval/runner/q2/c-gates.ts';
+import { assertFamily, confirmPackages, loadArm, safetyChecks, selectUnits, UNIT_PRIMARY, type ArmData } from '../../eval/runner/q2/c-gates.ts';
 import { closureCorrect, goldTransitions, newWrong, transitionMetrics } from '../../eval/runner/q2/transitions.ts';
 import { generateTemporalEdgesWorld } from '../../eval/generators/temporal-edges-gen.ts';
 
@@ -68,6 +68,18 @@ describe('C-gate selection (Holm across units, safety as intersection-union)', (
     const failed = safetyChecks(worse, base).filter(s => !s.pass).map(s => s.id);
     expect(failed).toEqual(expect.arrayContaining(['ni:asof_exact', 'trap_count:alumni', 'write_order_invariance', 'w_spurious_specific_types']));
     expect(safetyChecks(base, base).every(s => s.pass)).toBe(true);
+  });
+  test('joint units use their preregistered primaries; the --unit set must be exactly the family', () => {
+    expect(UNIT_PRIMARY.U25).toMatchObject({ metric: 'live_recall', direction: 'higher' });
+    expect(UNIT_PRIMARY.U34).toMatchObject({ metric: 'e5_false_starts', direction: 'lower' });
+    const family = ['U1', 'U25', 'U34', 'U6'];
+    expect(() => assertFamily(['U1', 'U25', 'U34', 'U6'], family)).not.toThrow();
+    expect(() => assertFamily(['U1', 'U2', 'U34', 'U6'], family)).toThrow('missing U25; not in the family: U2');
+    expect(() => assertFamily(['U1', 'U25', 'U34'], family)).toThrow('missing U6');
+    const r = selectUnits(base, { U1: arm('U1', { lift: { trap_advises: 0.2 } }), U25: arm('U25', { lift: { live_recall: 0.3 } }), U34: arm('U34', { lift: { e5_ok: 0.4 } }), U6: arm('U6') });
+    expect(r.units.map(u => u.unit)).toEqual(['U1', 'U25', 'U34', 'U6']);
+    expect(r.order).toEqual(expect.arrayContaining(['U1', 'U25', 'U34']));
+    expect(r.order).not.toContain('U6');
   });
   test('the "lower is better" primary (false starts) is oriented', () => {
     const r = selectUnits(base, { U4: arm('U4', { lift: { e5_ok: 0.4 } }) });

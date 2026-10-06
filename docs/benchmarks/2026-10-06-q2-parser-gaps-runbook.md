@@ -45,11 +45,11 @@ export DEC=q2-parser-gaps-2026-10
 export UBI_OWNER=gbra49                  # if a step runs on Ubicloud
 ```
 
-Unit refs (`$U1` … `$U6`, or `$U34` when the freeze record makes U3 and U4 joint) and package refs (`$P1` … `$Pk`)
-come from the freeze record and the package script. The manifest's `u34_joint` field holds that decision: it is
-`null` until the development trace settles it, and every step that runs one arm per unit refuses to start while it is
-`null`. `true` makes the family U1, U2, U34, U5, U6; `false` keeps the six units. It is set in the harness commit the
-freeze record names, before any cell runs.
+The selection family is U1, U25, U34 and U6 (preregistration amendment 3). The manifest's `joint_units` field
+(`{ "U34": ["U3", "U4"], "U25": ["U2", "U5"] }`) replaces each pair with its joint unit, and every per-unit step, the
+Holm family and the package order use that family. U34 is scored on U4's primary metric (false employment starts per
+E5 probe person, by identity, down) and U25 on U2's (live-edge recall, up). Unit refs `$U1`, `$U25`, `$U34` and `$U6`
+(baseline plus that unit) come from the freeze record; package refs `$P1` … `$Pk` come from the package script.
 
 ## 1. Zero-cost smoke (`smoke`)
 
@@ -77,7 +77,7 @@ directory sits outside every git worktree with a writable access log. Every late
 
 ## 3. Selection arms on I1 and W1 (`c-select-arms`)
 
-For the baseline and for each unit `X` (ref `$UX`, baseline plus that unit):
+For the baseline and for each family unit `X` in U1, U25, U34 and U6 (ref `$UX`, baseline plus that unit):
 
 ```bash
 for fs in 1:a:167 2:b:173 3:c:179; do IFS=: read f x seed <<< "$fs"
@@ -100,11 +100,12 @@ rows.
 
 ```bash
 A() { echo "te=$C/c-select-arms/te-I1-f1-$1/receipt.json+$C/c-select-arms/te-I1-f2-$1/receipt.json+$C/c-select-arms/te-I1-f3-$1/receipt.json,w=$C/c-select-arms/w-W1-$1/receipt.json,world=$C/c-select-arms/world-$1/receipt.json"; }
-bun eval/runner/q2/c-gates.ts select --baseline "$(A baseline)" --unit "U1:$(A U1)" --unit "U2:$(A U2)" --unit "U3:$(A U3)" \
-  --unit "U4:$(A U4)" --unit "U5:$(A U5)" --unit "U6:$(A U6)" --campaign "$C" --step c-select --run decision
+bun eval/runner/q2/c-gates.ts select --baseline "$(A baseline)" --unit "U1:$(A U1)" --unit "U25:$(A U25)" --unit "U34:$(A U34)" --unit "U6:$(A U6)" \
+  --campaign "$C" --step c-select --run decision
 ```
 
-Expected: a `q2-c-gates-select` receipt. `data.summary.order` lists the selected units by I1 standardized effect, ties
+The decision refuses a `--unit` set that differs from the manifest's family. Expected: a `q2-c-gates-select` receipt.
+`data.summary.order` lists the selected units by I1 standardized effect, ties
 by unit id; `data.summary.packages` gives P1 ⊂ … ⊂ Pk. Holm runs across the units on one-sided bootstrap p-values at
 0.025 (the preregistration's family-wise 0.05 with each test one-sided at 0.025); safety is an intersection-union test.
 
@@ -290,6 +291,8 @@ A raise in sizes goes into the freeze record with its cost; sizes never fall.
 
 ## Changelog
 
+- 2026-10-06: the selection family is U1, U25, U34 and U6 (amendment 3); the manifest's `joint_units` replaces the
+  `u34_joint` placeholder, and the selection refuses any other `--unit` set.
 - 2026-10-06: G5 variants read fresh seeds from a custody seeds file (`--seeds-file`); the manifest's `u34_joint`
   placeholder holds the U3/U4 decision until the freeze record settles it.
 - 2026-10-06: first version, with the campaign manifest and the Q2 harness on branch `capy/q2-parser-gaps`.
