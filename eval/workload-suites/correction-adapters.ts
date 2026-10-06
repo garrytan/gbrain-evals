@@ -64,6 +64,13 @@ export class GbrainCorrectionAdapter extends BridgeAdapter {
   }
   /** Set after the first ingest: whether `remember` accepts `replaces` at this build. */
   hasReplaces: boolean | null = null;
+  /**
+   * Pass the correction's own timestamp as `remember`'s `valid_from` (bench
+   * `--remember-valid-from`, only at builds whose `remember` has it). Without
+   * it the fact is dated at the real write time, which falls after the
+   * questions' simulated dates.
+   */
+  rememberValidFrom = false;
   supports(arm: CorrectionArm): { ok: true } | { ok: false; reason: string } {
     if (arm.system !== 'gbrain') return { ok: false, reason: `${arm.id} is a ${arm.system} arm` };
     if (arm.id === 'gbrain-remember-replaces' && this.hasReplaces !== true) {
@@ -97,6 +104,7 @@ export class GbrainCorrectionAdapter extends BridgeAdapter {
       }
       case 'remember': {
         const args: Record<string, unknown> = { fact: item.corrected_statement, entity: item.entity, provenance: `user correction, ${item.correction_timestamp.slice(0, 10)}` };
+        if (this instanceof GbrainCorrectionAdapter && this.rememberValidFrom) args.valid_from = item.correction_timestamp;
         if (step.replaces) {
           const ids = this.located.get(item.item_id) ?? [];
           if (ids.length) args.replaces = ids[0];

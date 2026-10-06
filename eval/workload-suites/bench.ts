@@ -5,6 +5,7 @@
  *
  *   bun eval/workload-suites/bench.ts <suite> --phase answer|sweep|score [--arms a,b] [--smoke N]
  *       [--budget-usd N] [--out DIR] [--stub] [--gbrain <checkout>@<ref>]
+ *       [--gbrain-search-config k=v[,k=v]] [--remember-valid-from]
  *
  * Phases:
  *   answer  ingest each arm's store (gbrain structures built in the pipeline,
@@ -256,6 +257,18 @@ async function presence(bridge: Bridge, unit: string, needles: Array<{ doc_id: s
 
 // ─── answer phase: corrections ────────────────────────────────────────────
 
+/** Run-wide gbrain options: `--gbrain-search-config k=v[,k=v]` (read-time config set in every unit brain) and `--remember-valid-from`. */
+const BENCH_FLAGS = {
+  gbrainSearchConfig: Object.fromEntries((arg(process.argv, '--gbrain-search-config') ?? '').split(',').filter(Boolean).map(kv => kv.split('=') as [string, string])),
+  rememberValidFrom: process.argv.includes('--remember-valid-from'),
+};
+
+function gbrainRememberHas(gutRoot: string, param: string): boolean {
+  const src = readFileSync(join(gutRoot, 'src/core/verbs.ts'), 'utf8');
+  const remember = src.slice(src.indexOf("name: 'remember'"), src.indexOf('handler:', src.indexOf("name: 'remember'")));
+  return new RegExp(`\\b${param}\\s*:`).test(remember);
+}
+
 function gbrainHasReplaces(gutRoot: string): boolean {
   const src = readFileSync(join(gutRoot, 'src/core/verbs.ts'), 'utf8');
   const remember = src.slice(src.indexOf("name: 'remember'"), src.indexOf('handler:', src.indexOf("name: 'remember'")));
@@ -277,6 +290,9 @@ async function answerCorrections(bench: Bench, bundle: SuiteBundle, dir: string,
   };
   const forbidden = forbiddenIds(bundle);
   const hasReplaces = gbrainHasReplaces(bench.gut.root);
+  const rememberValidFrom = BENCH_FLAGS.rememberValidFrom && gbrainRememberHas(bench.gut.root, 'valid_from');
+  if (BENCH_FLAGS.rememberValidFrom && !rememberValidFrom) log('[corrections] --remember-valid-from ignored: remember has no valid_from parameter at this build');
+  const gbrainSearchConfig = BENCH_FLAGS.gbrainSearchConfig;
   const results: Record<string, unknown> = {};
   for (const arm of CORRECTION_ARMS.filter(a => !armIds || armIds.includes(a.id))) {
     const storeDir = join(dir, 'stores', arm.id);
@@ -288,11 +304,11 @@ async function answerCorrections(bench: Bench, bundle: SuiteBundle, dir: string,
     }
     rmSync(storeDir, { recursive: true, force: true });
     const bridge = arm.system === 'gbrain'
-      ? await bench.bridge('gbrain', { ...GBRAIN_BASE }, storeDir)
+      ? await bench.bridge('gbrain', { ...GBRAIN_BASE, ...(Object.keys(gbrainSearchConfig).length ? { search_config: gbrainSearchConfig } : {}) }, storeDir)
       : await bench.bridge('comparator', { ...COMPARATOR_COMBINED }, storeDir);
     try {
       const adapter = arm.system === 'gbrain' ? new GbrainCorrectionAdapter(bridge) : new ComparatorCorrectionAdapter(bridge, COMPARATOR_COMBINED);
-      if (adapter instanceof GbrainCorrectionAdapter) adapter.hasReplaces = hasReplaces;
+      if (adapter instanceof GbrainCorrectionAdapter) { adapter.hasReplaces = hasReplaces; adapter.rememberValidFrom = rememberValidFrom; }
       let n = 0;
       const pendingQ = new Map(sub.queries.map(q => [q.id, q]));
       const result = await runCorrectionArm(adapter, arm, sub, async (label: ScorerLabel, query: HarnessQuery, context: string) => {
@@ -458,7 +474,7 @@ if (import.meta.main) {
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv) ?? `${process.env.HOME}/.capy/work/gbrain@e8e1f66b8e5225b113cacd18931b627fca451bae`);
   const armIds = arg(argv, '--arms')?.split(',') ?? null;
   mkdirSync(dir, { recursive: true });
-  writeJson(join(dir, 'run.json'), { suite: suiteId, manifest_digest: committed.digest, gbrain: { root: gut.root.replace(REPO_ROOT + '/', ''), version: gut.version, overlay: gut.overlay ? { ref: gut.overlay.ref } : null }, smoke, scheduled: queries.map(q => q.id), target_tokens: TARGET_TOKENS, models: MODEL_CONFIG, not_supported: NOT_SUPPORTED.filter(n => n.suite === suiteId) });
+  writeJson(join(dir, 'run.json'), { suite: suiteId, flags: BENCH_FLAGS, manifest_digest: committed.digest, gbrain: { root: gut.root.replace(REPO_ROOT + '/', ''), version: gut.version, overlay: gut.overlay ? { ref: gut.overlay.ref } : null }, smoke, scheduled: queries.map(q => q.id), target_tokens: TARGET_TOKENS, models: MODEL_CONFIG, not_supported: NOT_SUPPORTED.filter(n => n.suite === suiteId) });
   const needsBench = phase !== 'score' || true;
   const bench = needsBench ? await startBench({ runner: `workload-${suiteId}-${phase}${smoke ? `-smoke${smoke}` : ''}`, budgetUsd: budget, outDir: dir, gut, stub }) : null;
   let code = 0;
