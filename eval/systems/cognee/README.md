@@ -68,16 +68,41 @@ Result on 2026-10-05 (4-core Capy machine): 28 of 28 checks pass in both configu
 reach the internet directly, and all 52 provider calls (41 embeddings, 11 chat) arrived through the relay with the
 configured model names. Each session took 1 to 5 seconds to ingest against the fake provider.
 
-For a metered run, start the metering proxy, then:
+For a metered run, start the metering proxy (`eval/runner/metering-proxy.ts`) on `0.0.0.0:8787`, then:
 
 ```bash
 PROXY_HOSTPORT=host.docker.internal:8787 SHIM_CONFIG=common docker compose -f eval/systems/cognee/docker-compose.yml up -d --wait
 python3 eval/systems/cognee/tests/protocol_check.py --questions 3 --out eval/reports/cognee-smoke.json
 ```
 
+The shim maps a proxy refusal (HTTP 402) to the protocol's `budget` error.
+
 ## Known behavior worth measuring
 
-- After a delete, no chunk from the deleted session returns, but graph entities shared with a surviving session stay
-  and their edge text can still quote the deleted session. `lifecycle-lite` should score entity and fact items, not
-  only chunks.
+- After a delete, no chunk from the deleted session returns. Graph entities shared with a surviving session stay; in
+  the keyless run their edge text still quoted the deleted session, in the metered smoke nothing did. `lifecycle-lite`
+  should score entity and fact items, not only chunks.
 - cognee's search takes no query date, so `query_time` is ignored; dates live in the item text.
+
+## Metered smoke, 2026-10-05
+
+One run per configuration through `eval/runner/metering-proxy.ts` (lease mode, $0.50 lease each, slot `cognee`),
+using `tests/protocol_check.py --questions 3`: two dated sessions (4 and 3 turns) in one namespace, a canary session
+in a second namespace, both retrieval policies, isolation, three questions, delete and reset. Numbers are from the
+proxy's usage log and `/__proxy/status`; timings are the shim's wall time on the 4-core Capy machine.
+
+| | common | recipe |
+|---|---|---|
+| Protocol checks | 28/28 | 28/28 |
+| Chat model, requests | `gpt-4.1-mini`, 11 | `gpt-5.6-luna`, 11 |
+| Chat tokens in / out | 6,078 / 1,456 | 6,047 / 2,982 |
+| Embeddings (`text-embedding-3-large`), requests, tokens | 41, 2,098 (1,536 dims) | 41, 2,212 (3,072 dims) |
+| Dollars, chat + embeddings | $0.00476 + $0.00027 = $0.00503 | $0.00479 + $0.00029 = $0.00508 |
+| Ingest per session (s1, s2, canary) | 11.6 s, 4.6 s, 5.5 s | 18.7 s, 5.8 s, 11.7 s |
+| Query latency (3 questions) | 0.67 to 0.78 s | 0.62 to 0.69 s |
+| Refusals, tripwires | 0, 0 | 0, 0 |
+
+All three questions returned the session holding the answer, with the answer word in the evidence, in both runs. With
+a real extractor the delete left no entity or fact mentioning the deleted fact (the keyless run, with canned
+extraction, did leave some). One tiny conversation does not predict LoCoMo cost;
+the Phase 2 pilots measure cost per conversation.

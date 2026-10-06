@@ -11,6 +11,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import re
 import sys
 import threading
 import time
@@ -39,8 +40,10 @@ from cognee.tasks.ingestion.data_item import DataItem  # noqa: E402
 
 CAPABILITY = json.loads((Path(__file__).resolve().parent / "capability.json").read_text())
 POLICIES = CAPABILITY["retrieval_policies"]
+DESCRIPTIVE_KEYS = set(CAPABILITY["retrieval_notes"]["descriptive_keys"])
 LANE_KEYS = ("chunks_top_k", "entities_top_k", "facts_top_k", "max_edges_per_entity")
 ENTITY_HEADER = "## Relevant entities\n"
+PROXY_REFUSAL = re.compile(r"\b402\b|['\"]kind['\"]\s*:\s*['\"]budget['\"]")
 
 
 def render_session(session: dict[str, Any], session_number: int) -> list[str]:
@@ -65,7 +68,14 @@ class CogneeAdapter(Adapter):
 
     def run(self, coro: Any, timeout: float | None = None) -> Any:
         with self.lock:
-            return asyncio.run_coroutine_threadsafe(coro, self.loop).result(timeout)
+            try:
+                return asyncio.run_coroutine_threadsafe(coro, self.loop).result(timeout)
+            except ShimError:
+                raise
+            except Exception as e:
+                if PROXY_REFUSAL.search(str(e)):
+                    raise ShimError("budget", f"metering proxy refused a provider call: {type(e).__name__}: {e}", 402) from e
+                raise
 
     def data_id(self, ns: str, source_id: str) -> UUID:
         return uuid5(NAMESPACE_URL, f"shootout:{ns}:{source_id}")
@@ -103,8 +113,6 @@ class CogneeAdapter(Adapter):
         return await cognee.cognify(datasets=[ns], chunker=JsonListChunker, extractor="llm")
 
     def ingest(self, ns: str, session: dict[str, Any]) -> dict[str, Any]:
-        if not session["event_time"]:
-            raise ShimError("invalid_request", "event_time is required; cognee would otherwise date the session to ingest time", 400)
         number = self.session_counts.get(ns, 0) + 1
         items = render_session(session, number)
         if not items:
@@ -138,10 +146,12 @@ class CogneeAdapter(Adapter):
         mode = policy.get("mode")
         if mode not in ("vendor-default", "fixed-evidence"):
             raise ShimError("invalid_request", "policy.mode must be vendor-default or fixed-evidence", 400)
-        unknown = set(policy.get("settings", {})) - {"top_k", *LANE_KEYS}
+        given = {k: v for k, v in policy.get("settings", {}).items() if k not in DESCRIPTIVE_KEYS}
+        unknown = set(given) - {"top_k", *LANE_KEYS}
         if unknown:
             raise ShimError("invalid_request", f"unknown settings for cognee: {sorted(unknown)}", 400)
-        settings = {**POLICIES[mode]["settings"], **policy.get("settings", {})}
+        defaults = {k: v for k, v in POLICIES[mode].items() if k not in DESCRIPTIVE_KEYS}
+        settings = {**defaults, **given}
         applied = {"query_type": "HYBRID_COMPLETION", "only_context": True, "verbose": True, **settings,
                    "query_time": "not supported by cognee search; ignored"}
         results = self.run(self._search(ns, question, settings))

@@ -48,6 +48,10 @@ def start_app_server() -> subprocess.Popen:
     if base_url:
         subprocess.run(["letta", "connect", "openai-compatible", "--base-url", base_url, "--api-key", os.environ.get("OPENAI_API_KEY", "dummy")],
                        check=True, capture_output=True)
+    anthropic_url = os.environ.get("ANTHROPIC_BASE_URL")
+    if anthropic_url:
+        subprocess.run(["letta", "connect", "anthropic", "--api-key", os.environ.get("ANTHROPIC_API_KEY", "dummy"), "--base-url", anthropic_url],
+                       check=True, capture_output=True)
     return subprocess.Popen(["letta", "server", "--listen", f"ws://0.0.0.0:{APP_SERVER_PORT}", "--ws-auth", "capability-token",
                              "--ws-token-file", str(TOKEN_FILE), "--backend", "local"])
 

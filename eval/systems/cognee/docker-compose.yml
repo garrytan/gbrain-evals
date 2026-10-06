@@ -6,7 +6,7 @@
 # Keyless run:  PROXY_HOSTPORT=fake-provider:8787 docker compose --profile keyless up -d --build
 #
 # PROXY_HOSTPORT     where the metering proxy listens, as seen from the egress relay (default host.docker.internal:8787)
-# PROXY_OPENAI_PATH  path prefix of the proxy's OpenAI-compatible routes (default /v1)
+# PROXY_OPENAI_PATH  path prefix of the proxy's OpenAI routes (default /cognee/openai/v1: slot "cognee" on eval/runner/metering-proxy.ts)
 # SHIM_HOST_PORT     host port for the shim (default 8701, bound to 127.0.0.1)
 name: shootout-cognee
 services:
@@ -17,11 +17,11 @@ services:
     image: shootout-cognee:dev
     environment:
       SHIM_CONFIG: ${SHIM_CONFIG:-recipe}
-      OPENAI_BASE_URL: http://egress:8787${PROXY_OPENAI_PATH:-/v1}
+      OPENAI_BASE_URL: http://egress:8787${PROXY_OPENAI_PATH:-/cognee/openai/v1}
       OPENAI_API_KEY: dummy-key-the-proxy-injects-the-real-one
-      LLM_ENDPOINT: http://egress:8787${PROXY_OPENAI_PATH:-/v1}
+      LLM_ENDPOINT: http://egress:8787${PROXY_OPENAI_PATH:-/cognee/openai/v1}
       LLM_API_KEY: dummy-key-the-proxy-injects-the-real-one
-      EMBEDDING_ENDPOINT: http://egress:8787${PROXY_OPENAI_PATH:-/v1}
+      EMBEDDING_ENDPOINT: http://egress:8787${PROXY_OPENAI_PATH:-/cognee/openai/v1}
       EMBEDDING_API_KEY: dummy-key-the-proxy-injects-the-real-one
     volumes:
       - cognee-data:/data
