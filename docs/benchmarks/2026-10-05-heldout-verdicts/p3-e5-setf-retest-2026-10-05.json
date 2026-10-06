@@ -1,0 +1,235 @@
+{
+  "decision_id": "p3-e5-setf-2026-10-05",
+  "stage": "held-out (second custodian), retest on fresh material",
+  "verdict": "all E5 gates pass on the guard build (0 wrong closures, every undated conflict left open, as-of, during-F1 and now-precision unchanged, traps and invariance pass); the preregistered power precondition (at least 10 applied closures on the guard build) is not met because with the guard the pass finds no dated conflict to close. The same material without the guard applies 23 closures, all wrong.",
+  "default_rule": "dream.single_value.mode defaults to apply iff 0 wrong closures, every undated/same-date conflict left open and no as-of regression (P3 preregistration); retest arm per GBRA-49: P3's master code plus gbrain#6017's NOT_EMPLOYMENT_ROLE guard vs master without it",
+  "builds": {
+    "guard": "4391711269ba19c74dc27078ca22ef3851e3d198 (master 8c9a8e9a4 plus eval/data/p5-delta/not-employment-role-guard.patch; its link-temporal-evidence.ts regexes equal gbrain#6017 head's; local only)",
+    "no_guard": "8c9a8e9a480c388cf7a87dc0c48dd0d56e6c4bb3 (gbrain master)"
+  },
+  "harness": "gbrain-evals evals/program-followups 880ff28 (temporal-edges --pack --single-value-pass; verdict pairs the P1 gates as in p3-e5-heldout-2026-10-05)",
+  "held_out_material": "temporal-edges phrasing set F, written by the second custodian after sets D and E, 0 identical template lines and 0 shared word trigrams with sets B, C and E outside the fixed explicit grammar; seeds 113, 127, 131; in custody",
+  "guard": {
+    "applied_closures": 0,
+    "wrong_closures": 0,
+    "undated_or_same_date_conflicts_closed": 0,
+    "undated_unresolved": 23,
+    "family_verdict": "pass",
+    "comparisons": [
+      {
+        "id": "asof",
+        "gate": "noninferiority",
+        "status": "pass",
+        "a": 0.5527777777777778,
+        "b": 0.5527777777777778,
+        "delta": 0,
+        "ci95": [
+          0,
+          0
+        ],
+        "n": 720,
+        "clusters": 240
+      },
+      {
+        "id": "now-precision",
+        "gate": "noninferiority",
+        "status": "pass",
+        "a": 0.7697089947089949,
+        "b": 0.7697089947089949,
+        "delta": 0,
+        "ci95": [
+          0,
+          0
+        ],
+        "n": 36,
+        "clusters": 36
+      },
+      {
+        "id": "during",
+        "gate": "noninferiority",
+        "status": "pass",
+        "a": 0.6099999999999999,
+        "b": 0.6099999999999999,
+        "delta": 0,
+        "ci95": [
+          0,
+          0
+        ],
+        "n": 240,
+        "clusters": 240
+      },
+      {
+        "id": "traps",
+        "gate": "exact",
+        "status": "pass",
+        "a": null,
+        "b": null,
+        "delta": null,
+        "ci95": null,
+        "n": 107,
+        "clusters": null
+      },
+      {
+        "id": "invariance",
+        "gate": "exact",
+        "status": "pass",
+        "a": null,
+        "b": null,
+        "delta": null,
+        "ci95": null,
+        "n": 240,
+        "clusters": null
+      },
+      {
+        "id": "now-recall",
+        "gate": "exploratory",
+        "status": "report_only",
+        "a": 0.5623086018919353,
+        "b": 0.5623086018919353,
+        "delta": 0,
+        "ci95": [
+          0,
+          0
+        ],
+        "n": 36,
+        "clusters": 36
+      },
+      {
+        "id": "live-recall",
+        "gate": "exploratory",
+        "status": "report_only",
+        "a": 0.5776699029126213,
+        "b": 0.5776699029126213,
+        "delta": 0,
+        "ci95": [
+          0,
+          0
+        ],
+        "n": 206,
+        "clusters": 206
+      }
+    ],
+    "report_only_probe": {
+      "probe_people": 108,
+      "e5_wrong_closures": 0,
+      "e5_extra_works_at_starts": 0
+    }
+  },
+  "no_guard": {
+    "applied_closures": 23,
+    "wrong_closures": 23,
+    "family_verdict": "fail",
+    "comparisons": [
+      {
+        "id": "asof",
+        "gate": "noninferiority",
+        "status": "inconclusive",
+        "a": 0.6416666666666667,
+        "b": 0.6388888888888888,
+        "delta": -0.002777777777777778,
+        "ci95": [
+          -0.008333333333333333,
+          0
+        ],
+        "n": 720,
+        "clusters": 240
+      },
+      {
+        "id": "now-precision",
+        "gate": "noninferiority",
+        "status": "fail",
+        "a": 0.7697089947089949,
+        "b": 0.7257936507936508,
+        "delta": -0.04391534391534391,
+        "ci95": [
+          -0.08829365079365077,
+          -0.012764550264550263
+        ],
+        "n": 36,
+        "clusters": 36
+      },
+      {
+        "id": "during",
+        "gate": "noninferiority",
+        "status": "inconclusive",
+        "a": 0.638888888888889,
+        "b": 0.6361111111111111,
+        "delta": -0.0027777777777777775,
+        "ci95": [
+          -0.008333333333333333,
+          0
+        ],
+        "n": 240,
+        "clusters": 240
+      },
+      {
+        "id": "traps",
+        "gate": "exact",
+        "status": "pass",
+        "a": null,
+        "b": null,
+        "delta": null,
+        "ci95": null,
+        "n": 107,
+        "clusters": null
+      },
+      {
+        "id": "invariance",
+        "gate": "exact",
+        "status": "pass",
+        "a": null,
+        "b": null,
+        "delta": null,
+        "ci95": null,
+        "n": 240,
+        "clusters": null
+      },
+      {
+        "id": "now-recall",
+        "gate": "exploratory",
+        "status": "report_only",
+        "a": 0.5623086018919353,
+        "b": 0.4511403719737053,
+        "delta": -0.11116822991822992,
+        "ci95": [
+          -0.15811688311688313,
+          -0.06812169312169312
+        ],
+        "n": 36,
+        "clusters": 36
+      },
+      {
+        "id": "live-recall",
+        "gate": "exploratory",
+        "status": "report_only",
+        "a": 0.5776699029126213,
+        "b": 0.470873786407767,
+        "delta": -0.10679611650485436,
+        "ci95": [
+          -0.15048543689320387,
+          -0.06796116504854369
+        ],
+        "n": 206,
+        "clusters": 206
+      }
+    ],
+    "report_only_probe": {
+      "probe_people": 108,
+      "e5_wrong_closures": 54,
+      "e5_extra_works_at_starts": 88
+    }
+  },
+  "residual_defect": "Link-type inference types a company named in a dated line describing an advisory, board or observer role as works_at, on master and on gbrain#6017 head. The guard stops that line from starting a dated works_at stint (so nothing is closed), but the undated works_at edge stays live, so the company appears as a current employer at every date. On set F the guard build's as-of exact rate is 0.553 against 0.642 without the guard (64 probes worse, 0 better): without the guard the wrong dated start hides the edge before its date and closes the real employer after it; with the guard the edge is live everywhere.",
+  "history": {
+    "set_D": "void: the overlap check against sets B and C (run after the guard arms finished, before any decision result was read) found one identical template line and shared trigrams",
+    "set_E": {
+      "decision_id": "p3-e5-sete-2026-10-05",
+      "verdict": "inconclusive (no power): 0 closures applied on either build; the build's employment lexicon reads few of set E's dated join and leave lines",
+      "guard_family_verdict": "fail",
+      "no_guard_family_verdict": "fail",
+      "lexicon_coverage_on_set_E": "now-precision 0.768, as-of 0.556, stale-summary correction 0.000, traps 0.848 (investment 29/35, alumni 27/37: ended stints stay live because their leave lines are not read), on both builds"
+    }
+  },
+  "cost_usd": 0,
+  "decision": "dream.single_value.mode stays propose (Garry, 2026-10-05): accuracy decides, and no E5 run, on set C or on the retest material, has recorded a correct single-value closure, so apply mode has no measured benefit. The guard result shows apply would be safe with the guard on this material."
+}

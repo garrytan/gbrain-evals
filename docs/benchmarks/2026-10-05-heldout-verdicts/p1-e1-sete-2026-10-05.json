@@ -1,0 +1,127 @@
+{
+  "decision_id": "p1-e1-sete-2026-10-05",
+  "stage": "held-out (second custodian), P1 E1 on wording no P1 decision has used",
+  "verdict": "fail: traps 89 of 105 (0.848 against the 0.99 bar; investment after exit 29/35, alumni meeting 27/37, advisor 33/33)",
+  "default_rule": "graph.edge_validity stays on only if E1 passes with no guardrail failing (P1 round-2 preregistration). The feature is merged and on; this run re-tests generalization, and the default is a decision for the owner.",
+  "builds": {
+    "baseline": "6622a119e40ea09a7719233046aca24741863ed2 (the merge base P1's round-2 preregistration names)",
+    "candidate": "8c9a8e9a480c388cf7a87dc0c48dd0d56e6c4bb3 (gbrain master, contains #6018)"
+  },
+  "harness": "gbrain-evals evals/program-followups eeebeef (temporal-edges custodian mode; gates from gbrain docs/eval/decisions/p1-dev-2026-10-04-r2/decision.json, source temporal-edges-a)",
+  "held_out_material": "temporal-edges phrasing set E, written by the second custodian, 0 identical lines and 0 shared word trigrams with sets B and C; seeds 103, 107, 109; in custody. Disclosure: set E was opened earlier for the P3 E5 retest on master-based builds, so master's aggregates on it were known before this run.",
+  "traps": {
+    "candidate": {
+      "advisor": "33/33",
+      "investment_after_exit": "29/35",
+      "alumni_meeting": "27/37"
+    },
+    "baseline": {
+      "advisor": "33/33",
+      "investment_after_exit": "6/35",
+      "alumni_meeting": "0/37"
+    }
+  },
+  "invariance": "pass 240/240",
+  "comparisons_reported_after_the_exact_gate_failed": [
+    {
+      "id": "now-precision",
+      "gate": "superiority",
+      "status": "pass",
+      "a": 0.336,
+      "b": 0.768,
+      "delta": 0.432,
+      "ci95": [
+        0.374,
+        0.491
+      ],
+      "n": 36,
+      "clusters": 36
+    },
+    {
+      "id": "asof",
+      "gate": "superiority",
+      "status": "pass",
+      "a": 0.167,
+      "b": 0.556,
+      "delta": 0.389,
+      "ci95": [
+        0.332,
+        0.449
+      ],
+      "n": 720,
+      "clusters": 240
+    },
+    {
+      "id": "during",
+      "gate": "superiority",
+      "status": "inconclusive",
+      "a": 0.445,
+      "b": 0.582,
+      "delta": 0.137,
+      "ci95": [
+        0.094,
+        0.18
+      ],
+      "n": 240,
+      "clusters": 240
+    },
+    {
+      "id": "correction",
+      "gate": "superiority",
+      "status": "inconclusive",
+      "a": 0,
+      "b": 0,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "n": 45,
+      "clusters": 45
+    },
+    {
+      "id": "now-recall",
+      "gate": "noninferiority",
+      "status": "pass",
+      "a": 0.631,
+      "b": 0.631,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "n": 36,
+      "clusters": 36
+    },
+    {
+      "id": "live-recall",
+      "gate": "noninferiority",
+      "status": "pass",
+      "a": 0.638,
+      "b": 0.638,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "n": 196,
+      "clusters": 196
+    },
+    {
+      "id": "names-current",
+      "gate": "exploratory",
+      "status": "report_only",
+      "a": 0.267,
+      "b": 0.333,
+      "delta": 0.067,
+      "ci95": [
+        0,
+        0.156
+      ],
+      "n": 45,
+      "clusters": 45
+    }
+  ],
+  "mechanism": "The employment lexicon recognizes none of set E's dated timeline cues: an onboarding-style join verb, a leave phrase whose phrasal verb is split by its object, and an exchange-style move phrase ('A for B'). With no dated start or end read, ended stints never close: a former employer stays live (the investment and alumni traps check exactly that), and a stale summary is never flagged (correction 0 on both builds). Prose that names a past job is read as past, which is where the now-precision and as-of gains come from.",
+  "cost_usd": 0
+}
