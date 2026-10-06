@@ -59,7 +59,8 @@ def test_query_fact_rows_render_without_date_header_and_are_not_repeated(tmp_pat
             if name == "query":
                 rows = [{"slug": "conversations/d-a1", "chunk_text": "user: I adopted Miso."},
                         {"result_type": "fact", "fact_id": "7", "slug": "facts/7", "page_slug": "conversations/d-a1",
-                         "chunk_text": "Saved fact (fact; valid from 2024-03-05; provenance: mcp:extract_facts): The cat is Miso."}]
+                         "chunk_text": "Saved fact (fact; valid from 2024-03-05; provenance: mcp:extract_facts): The cat is Miso."},
+                        {"result_type": "fact", "fact_id": "11", "chunk_text": "Saved fact (event; valid from 2024-02-01; provenance: mcp:extract_facts): Miso was adopted."}]
                 meta = {"retrieval": {"vector_enabled": True, "delivery": {"tokens_delivered": 40, "tokenizer": "cl100k"},
                                       "saved_facts": [{"id": 7, "fact": "The cat is Miso."}, {"id": 8, "fact": "Miso likes the window seat."}]}}
                 return rows, meta
@@ -80,7 +81,10 @@ def test_query_fact_rows_render_without_date_header_and_are_not_repeated(tmp_pat
     assert page.id == "d-a1"
     block = "\n".join(d.content for d in docs if "\nSaved facts:\n" in d.content)
     assert "The cat is Miso." not in block and "Miso likes the window seat." in block and "The user runs." in block
-    assert meta["pages"]["fact_rows"] == ["7"] and meta["facts"]["page_fact_rows"] == 1
+    assert meta["pages"]["fact_rows"] == ["7", "11"] and meta["facts"]["page_fact_rows"] == 2
+    assert [d.id for d in docs if d.content.startswith("Saved fact (event")] == ["facts/11"]
+    from mpw.context import count_tokens
+    assert meta["pages"]["fact_row_tokens"] == sum(count_tokens(d.content) for d in docs if d.content.startswith("Saved fact ("))
     p.cfg["lane"] = "facts"
     _, _, fmeta = p.retrieve_with_meta("What is the cat called?", 10, "u-1")
     assert fmeta["facts"]["page_fact_rows"] == 0 and fmeta["facts"]["kept"] == 3
