@@ -176,6 +176,10 @@ World: seed 20261005, 50k, knobs.round-5.json, generator at `4ef7be4`, 55,440 do
 
 The freeze rule fails on pooled fs (75%, Wilson interval 65.7 to 82.5 against 40-70%), on GPT-6 Astra's per-model band (86% against 20-80%) and on the turn-cap share of fs failures (22 of 25). Sonnet 5.5, the calibration model that also runs in the held-out run, is inside its band at 64%. GPT-6 Astra no longer runs in the held-out run (amendment A3). Three or four accounts per question moved H3 (fs 95% to 70%) but not H2, H4 or H5, which stayed at 90 to 95% on fs; almost every failure is a turn-cap stop. Round 5 is the last round the plan allows; per amendment A3 the result goes to Garry before any freeze check.
 
+## Freeze (2026-10-06)
+
+Round 5's knobs are frozen (`knobs.frozen.json`, `freeze.json`, knob digest `37a16085…27434`) by Garry's decisions in amendments A4 and A5. The freeze check on round 5's world stopped at 288 of 450 cells when its budget run was spent ($237). On the better simple arm: Opus 5.5 75% (fs 24/32), GPT-6.1 Sol 84% (fs 27/32), Fable 5.1 81% (pg 25/31; fs 6/32, 26 of 26 failures turn-cap stops); oracle 97 of 97. The analyzer's table for round 5 with the freeze check is above.
+
 ## Notes after the freeze
 
 Dated notes for runner or scorer fixes that leave every world digest unchanged (CEO-F17, ENG-F6).
@@ -356,3 +360,57 @@ Cost of this round over every attempt (agent, embeddings, gbrain and judge): $15
 Next:
 - Too easy: raise record counts (h1_min_members, h1_max_members, h4_sources_min, h4_sources_max, h3_lookalikes_min, h3_lookalikes_max) to make tasks harder. Priority order: record counts, then history length, then distractor rate, then noise, then turn cap.
 - Difficulty comes from truncation (more than half of the pooled arm's failures are turn_cap stops): move content knobs, starting with record counts, not the turn cap. The turn cap moves only last, with a dated reason in calibration.md.
+
+### Round 5 (analyzer output, 2026-10-06)
+
+Freeze rule, round 5: FAIL. Models: claude-sonnet-5-5, claude-opus-5-5, gpt-6.1-sol, claude-fable-5-1, gpt-6-astra. Tasks: 50. Pooled arm: pg. Wilson 95% intervals in brackets; point estimates decide.
+
+| Condition | measured | Wilson 95% | threshold | n | result |
+|---|---|---|---|---|---|
+| (a) pooled pg success (the better of fs and pg) | 71% (139/195) | [64.6, 77.2] | 40-70% | 195 | FAIL |
+| (b) claude-sonnet-5-5: better of fs and pg (fs) | 64% (32/50) | [50.1, 75.9] | 20-80% | 50 | PASS |
+| (b) claude-opus-5-5: better of fs and pg (fs) | 75% (24/32) | [57.9, 86.7] | 20-80% | 32 | PASS |
+| (b) gpt-6.1-sol: better of fs and pg (fs) | 84% (27/32) | [68.2, 93.1] | 20-80% | 32 | FAIL |
+| (b) claude-fable-5-1: better of fs and pg (pg) | 81% (25/31) | [63.7, 90.8] | 20-80% | 31 | FAIL |
+| (b) gpt-6-astra: better of fs and pg (fs) | 86% (43/50) | [73.8, 93.0] | 20-80% | 50 | FAIL |
+| (c) claude-sonnet-5-5: oracle | 98% (49/50) | [89.5, 99.6] | at least 90% | 50 | PASS |
+| (c) claude-opus-5-5: oracle | 100% (33/33) | [89.6, 100.0] | at least 90% | 33 | PASS |
+| (c) gpt-6.1-sol: oracle | 100% (32/32) | [89.3, 100.0] | at least 90% | 32 | PASS |
+| (c) claude-fable-5-1: oracle | 100% (32/32) | [89.3, 100.0] | at least 90% | 32 | PASS |
+| (c) gpt-6-astra: oracle | 100% (50/50) | [92.9, 100.0] | at least 90% | 50 | PASS |
+| (d) family H1: oracle, pooled over models | 98% (40/41) | [87.4, 99.6] | at least 80% | 41 | PASS |
+| (d) family H2: oracle, pooled over models | 100% (41/41) | [91.4, 100.0] | at least 80% | 41 | PASS |
+| (d) family H3: oracle, pooled over models | 100% (39/39) | [91.0, 100.0] | at least 80% | 39 | PASS |
+| (d) family H4: oracle, pooled over models | 100% (38/38) | [90.8, 100.0] | at least 80% | 38 | PASS |
+| (d) family H5: oracle, pooled over models | 100% (38/38) | [90.8, 100.0] | at least 80% | 38 | PASS |
+| (e) turn_cap share of pooled pg failures | 75% (42/56) | [62.3, 84.5] | at most 50% | 56 | FAIL |
+| (grid) complete grid (5 models x 3 arms x 50 tasks) and one experiment | 162 expected cells are missing |  | no problems | 588 | FAIL |
+
+| Model | fs | pg | oracle |
+|---|---|---|---|
+| claude-sonnet-5-5 | 64% (32/50) [50.1, 75.9] | 50% (25/50) [36.6, 63.4] | 98% (49/50) [89.5, 99.6] |
+| claude-opus-5-5 | 75% (24/32) [57.9, 86.7] | 69% (22/32) [51.4, 82.0] | 100% (33/33) [89.6, 100.0] |
+| gpt-6.1-sol | 84% (27/32) [68.2, 93.1] | 78% (25/32) [61.2, 89.0] | 100% (32/32) [89.3, 100.0] |
+| claude-fable-5-1 | 19% (6/32) [8.9, 35.3] | 81% (25/31) [63.7, 90.8] | 100% (32/32) [89.3, 100.0] |
+| gpt-6-astra | 86% (43/50) [73.8, 93.0] | 84% (42/50) [71.5, 91.7] | 100% (50/50) [92.9, 100.0] |
+
+| Family | fs | pg | oracle |
+|---|---|---|---|
+| H1 | 22% (9/41) [12.0, 36.7] | 29% (12/41) [17.6, 44.5] | 98% (40/41) [87.4, 99.6] |
+| H2 | 83% (34/41) [68.7, 91.5] | 88% (35/40) [73.9, 94.5] | 100% (41/41) [91.4, 100.0] |
+| H3 | 68% (26/38) [52.5, 80.9] | 66% (25/38) [49.9, 78.8] | 100% (39/39) [91.0, 100.0] |
+| H4 | 76% (29/38) [60.8, 87.0] | 89% (34/38) [75.9, 95.8] | 100% (38/38) [90.8, 100.0] |
+| H5 | 89% (34/38) [75.9, 95.8] | 87% (33/38) [72.7, 94.2] | 100% (38/38) [90.8, 100.0] |
+
+| Arm | submitted | turn_cap | no_tool_call | context_overflow | error | harness_error | cost, all attempts |
+|---|---|---|---|---|---|---|---|
+| fs | 137 | 58 | 0 | 1 | 0 | 0 | $229.7704 |
+| pg | 153 | 42 | 0 | 0 | 0 | 0 | $126.6293 |
+| oracle | 197 | 0 | 0 | 0 | 0 | 0 | $26.8587 |
+
+Cost of this round over every attempt (agent, embeddings, gbrain and judge): $383.26.
+
+Next:
+- Too easy: raise record counts (h1_min_members, h1_max_members, h4_sources_min, h4_sources_max, h3_lookalikes_min, h3_lookalikes_max) to make tasks harder. Priority order: record counts, then history length, then distractor rate, then noise, then turn cap.
+- Difficulty comes from truncation (more than half of the pooled arm's failures are turn_cap stops): move content knobs, starting with record counts, not the turn cap. The turn cap moves only last, with a dated reason in calibration.md.
+- Complete the grid first: resume the run (same command and --out) until every cell has a harness-clean attempt.

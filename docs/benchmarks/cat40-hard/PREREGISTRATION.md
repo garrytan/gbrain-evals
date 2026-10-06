@@ -18,7 +18,7 @@ On tasks where plain files with grep finish roughly half of the work for frontie
 - Arms: oracle (reference only), fs, pg, memory (Sonnet 5.5 and GPT-6.1 Sol only, amendment A1) and gbrain, uncapped tool results, Hard tool limits (grep returns every match with full lines and a total; pg searches page with offsets, totals and an exhaustion flag, limit up to 100).
 - Turn cap: 16 per session (each H5 session separately), unless calibration moved it; the frozen value is `max_turns` in knobs.frozen.json.
 - Tasks: 20 per family (100 tasks), 1 repeat, at each scale (Taste CEO-T2). The 50k oracle runs on the 20 H1 tasks, the only family whose oracle evidence changes at 50k.
-- Budget: Garry's tier A decision, $4,350 program authorization; Hard ledger `.budget/cat40-hard.sqlite` at $1,794.
+- Budget: Garry's tier A decision, $4,350 program authorization; Hard ledger `.budget/cat40-hard.sqlite` at $1,794; raised to $4,600 and $2,044 by amendment A5.
 
 Program ledger roster ([ledger-roster.json](ledger-roster.json)); other allocations are frozen for this campaign:
 
@@ -26,8 +26,8 @@ Program ledger roster ([ledger-roster.json](ledger-roster.json)); other allocati
 |---|---|
 | four original machines (committed) | $1,763.00 |
 | `.budget/cat40-followups.sqlite` (cap $793, lowered to its committed $792.69) | $793.00 |
-| `.budget/cat40-hard.sqlite` | $1,794.00 |
-| total | $4,349.69 of $4,350 |
+| `.budget/cat40-hard.sqlite` | $2,044.00 (A5; was $1,794.00) |
+| total | $4,599.69 of $4,600 (A5) |
 
 ## Comparator and endpoints
 
@@ -132,3 +132,9 @@ Garry, 2026-10-06, after calibration round 5 failed the freeze rule (pooled fs 7
 - **Go rule for the held-out run.** After the freeze check, the held-out run proceeds if every held-out model (Sonnet 5.5 from round 5; Opus 5.5, Fable 5.1 and GPT-6.1 Sol from the freeze check) has its better simple arm (fs or pg) within 20-80% and its oracle at 90% or more. If a model misses, the report states it beside that model's comparison (the existing ceiling rule), and the run still proceeds; if two or more models miss, the result goes to Garry before any held-out cell runs.
 - **Reporting.** The report states that the pooled band was missed on the calibration models, that GPT-6 Astra (out of band) does not run in the held-out run, and that most failures are turn-cap stops, so a gbrain advantage on these tasks may show up as finishing within the turn budget.
 - **Unchanged.** The 16-turn cap, models, arms, endpoints and budget gates of A1 to A3.
+
+### A5 (2026-10-06): freeze-check outcome; $250 added; held-out run proceeds
+
+The freeze check stopped at 288 of 450 cells when its budget run was spent ($237; the projection used estimated costs for Opus 5.5, Fable 5.1 and GPT-6.1 Sol, and Fable 5.1 on fs measured $2.49 per cell). With 31 to 33 cells per model and arm it showed, on the better simple arm: Opus 5.5 75% (fs), GPT-6.1 Sol 84% (fs), Fable 5.1 81% (pg; fs 19%, 26 of 26 failures turn-cap stops); every oracle at 100%. Two models are above 80%, so under A4 the result went to Garry with the measured cost of the primary batch (about $1,020, $1,174 with margin, against $1,053 left).
+
+Garry, 2026-10-06: "1", the option to add about $250 and run the 50k held-out primary batch at full size (20 tasks per family). The program authorization becomes $4,600 and the Hard ledger cap $2,044 (`ledger-roster.json`). The freeze check is not resumed; its 288 cells are its record. Round 5's knobs freeze. GPT-6.1 Sol (84%) and Fable 5.1 (81% on pg) are reported with that ceiling note beside their comparisons.
