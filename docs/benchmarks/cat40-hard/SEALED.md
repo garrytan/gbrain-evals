@@ -2,7 +2,7 @@
 
 The sealed variant is a second Cat 40 Hard world generator, written separately from the main one. It produces the same kinds of tasks (H1 to H5) with the same answer rules, but in document styles, naming conventions and folder layouts that gbrain has never been tuned on. Its seed is private and its rendered world stays unopened until a later held-out check reveals it. That check shows whether a gbrain improvement measured on the main Hard tier also holds on company documents written another way, or whether it learned the main generator's habits.
 
-The generator lives in [`eval/generators/hard-sealed/`](../../../eval/generators/hard-sealed/). It reads the same knob files as the main generator and implements the same reference forms (generator v2, amendment A1): with the reference-form knobs, most records name their customer by short-name, desk handle or "<lead>'s <territory> <sector> account" instead of by name. It is registered with the runner as `hard-sealed` (knob files without the reference-form keys) and `hard-sealed-v2` (knob files with them), and its worlds pass the same invariants, runner checks and scorer as main Hard worlds. Gate decision CEO-UC2 in [the Hard plan](../../plans/2026-10-05-cat40-hard/PLAN.md) created it. No paid cell has run on it.
+The generator lives in [`eval/generators/hard-sealed/`](../../../eval/generators/hard-sealed/). It reads the same knob files as the main generator and implements the same reference forms (generator v2, amendment A1): with the reference-form knobs, most records name their customer by short-name, desk handle or "<lead>'s <territory> <sector> account" instead of by name. With the multi-account knobs (amendment A2) its H2 to H5 questions ask about two or more unlinked customers at once. It is registered with the runner as `hard-sealed` (knob files without the reference-form keys) and `hard-sealed-v2` (knob files with them, multi-account keys included), and its worlds pass the same invariants, runner checks and scorer as main Hard worlds. Gate decision CEO-UC2 in [the Hard plan](../../plans/2026-10-05-cat40-hard/PLAN.md) created it. No paid cell has run on it.
 
 ## Committed digest
 
@@ -63,6 +63,23 @@ A knob file without the reference keys reproduces the earlier sealed worlds byte
 
 One change is not tied to reference forms: an H3 task with more than four look-alikes needs seven or more distinct attribute values, more than the base pools hold, so the variant now adds two overflow values per attribute in that case only. Before this, round-2 and round-3 knobs stopped the sealed generator with "cannot sample 7 of 6". Worlds whose knobs never need the overflow values are unchanged.
 
+## Multi-account questions
+
+With `multi_account_min` and `multi_account_max` (knob schema 3, for example `knobs.round-4.json`), each H2 to H5 task draws its item count k from that range, and the variant follows WORLD_SCHEMA.md's "Multi-account questions" section:
+
+- **Items.** Each item is a complete single-account instance of its family, built by the same code as a single-account task, with its own customers, documents, key, evidence and resolution documents. Item j of task i takes its variant or attribute from index i + j and its random streams from `<i>/item<j>` (item 0 keeps the single-account names), so consecutive items differ in variant or attribute.
+- **No shortcut.** While a question's items are built, each item's customer (and, for a merged H3 pair, the customer folded into it) takes a territory and sector pair and account leads that no earlier item's customer has: the trade, territory and lead team are drawn from what is still free. First words and short-name prefixes already never repeat outside one look-alike cluster. Look-alikes are not checked across items, as the contract says.
+- **Wording, sessions and fields.** The question, the H5 session layout (every chain's n-th statement in item order, then one recording instruction), `session_facts` order, the oracle note's first line, `answer_kind` `values`, `gold.items`, `accounts`, `variant` and the evidence unions follow the contract text exactly, because the shared scorer and runner read them. The sealed single-account question texts and the sealed recording instructions fill the parts the contract leaves open.
+- **Unchanged worlds.** Without the multi-account keys, or with `multi_account_max` 1, the world is byte for byte the reference-form world (with the keys, only `knob_schema`, `knobs` and `knob_digest` differ).
+
+At the round-4 knobs a 4k world has about 9,400 to 9,900 documents and the 50k world about 54,000 to 55,000 (test seeds). The sealed H1 search finds its 20 predicates in the smaller 6-to-12 member range without the main generator's extra-clause fallback; if a future knob set left it short, generation stops with a message naming the knobs to change.
+
+Readings of the contract where it leaves room:
+
+- A sealed H5 statement can carry two facts (the contact statement names a signer at each of two sites). `session_facts` therefore lists every fact of each chain's statement for a session, in item order, rather than exactly one fact per chain.
+- The contract gives the oracle note's opening line (`Recorded from team updates (sessions 1 to 4):`) but not where it goes. It is the first line of the note's body; the note title keeps the sealed style and names every item's customer.
+- "No two accounts created for different items" is read as each item's customer plus, for a merged H3 pair, the merged-away customer, whose name and short-name are aliases of the item's customer. Look-alikes and the H5 noise customer are exempt.
+
 The variant keeps everything the scorer and runner depend on: task ids, answer kinds, `gold.wrong`, oracle evidence, the H5 ideal-store note, and the meaning of dates, corrections, authority and user statements from `semantics.ts`. It reads the same knob set as the main generator. At the default knobs a 4k world has about 4,100 documents and the 50k world about 46,000.
 
 ## Choose and record the seed
@@ -103,7 +120,10 @@ A held-out check that Garry or a preregistration names opens the sealed world:
 
 For reference forms it checks, on test seeds and the round-3 knobs: byte-for-byte reproduction of the earlier worlds from knob files without the reference keys; that every reference resolves to exactly one customer and is introduced by a resolution document dated on or before it; that oracle `relevant` and `gold.evidence` each tie every reference to the canonical name through resolution documents, with the lead timeline for the lead form; that answer keys equal the reference-free world's; desk-handle uniqueness and containment rules at both scales; opaque ids; the 50k extension; and that no sealed sentence template or six-word run appears in a main-generator v2 world.
 
+For multi-account questions it checks, on test seeds and the round-4 knobs: that `multi_account_max` 1 reproduces the reference-form world; every invariant, determinism and runner acceptance; the contract wording and fields; the no-shortcut rule (no shared descriptor, name first word, short-name prefix or account lead between items' customers); resolvability and oracle completeness; that each item's evidence holds a record about its customer; the H5 layout and per-item dependency; the scorer on gold, swapped, short, prose and wrong-valued arrays; and the full round-4 50k extension for seed 101.
+
 ## Changelog
 
+- 2026-10-06: Multi-account questions (amendment A2) added from WORLD_SCHEMA.md: k items per H2 to H5 question, unlinked items, the contract's wording, H5 session layout and `values` fields; the round-4 knobs run at both scales. Worlds without the multi-account keys are unchanged.
 - 2026-10-05: Reference forms (generator v2, amendment A1) added from WORLD_SCHEMA.md, with the variant's own desk handles, account profile, change slips and id scheme, the `hard-sealed-v2` version, and the H3 overflow values that let round-2 and round-3 knobs run. Worlds from knob files without the reference keys are unchanged. The digest stays unrecorded until the knob freeze.
 - 2026-10-05: The sealed generator, CLI, tests and this document are added. The digest is not yet recorded. During authoring, the output comparison found a few generic contract phrases shared with the main world (for example, a phrase about both parties signing on a date); they were reworded before the first commit.

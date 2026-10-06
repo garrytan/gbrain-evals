@@ -22,6 +22,8 @@ const SEEDS = [101, 202, 303];
 const SMALL_LARGE: HardKnobs = { ...DEFAULT_HARD_KNOBS, large_extra_accounts: 300, large_nondeciding_per_account: 2 };
 /** The main generator's calibration round-3 knobs: the reference-form keys plus larger H2 and H3 knobs. */
 const R3 = validateKnobs(JSON.parse(readFileSync(resolve(import.meta.dir, '../../docs/benchmarks/cat40-hard/knobs.round-3.json'), 'utf8')), 'knobs.round-3.json');
+/** Round-4 knobs (amendment A2): multi-account H2 to H5 questions with 2 or 3 items, smaller H1. */
+const R4 = validateKnobs(JSON.parse(readFileSync(resolve(import.meta.dir, '../../docs/benchmarks/cat40-hard/knobs.round-4.json'), 'utf8')), 'knobs.round-4.json');
 const R3_WITHOUT_FORMS = Object.fromEntries(Object.entries(R3).filter(([k]) => !(HARD_V2_KNOB_KEYS as readonly string[]).includes(k))) as unknown as HardKnobs;
 const worlds = new Map<number, ReturnType<typeof buildSealed>>(SEEDS.map(s => [s, buildSealed(s)]));
 const world = worlds.get(SEEDS[0])!.world;
@@ -307,6 +309,40 @@ function tiedIn(w: HardWorld, set: ReadonlySet<string>, resolution: readonly str
   return reached && timeline;
 }
 
+/** Every reference resolves to exactly one entity, introduced by a resolution document dated on or before it. */
+function checkResolvable(w: HardWorld): void {
+  const { docs, text, resolution, entities: ents } = contextOf(w), registry = nameRegistry(w.entities, normalizeValue);
+  const byDescriptor = new Map<string, HardEntity[]>();
+  for (const x of w.entities) byDescriptor.set(x.refs!.descriptor, [...(byDescriptor.get(x.refs!.descriptor) ?? []), x]);
+  for (const e of w.entities) for (const m of e.refs!.managers) expect(docs.get(m.doc)?.date).toBe(m.recorded);
+  let checked = 0;
+  for (const r of w.references!) {
+    const e = ents.get(r.entity)!, date = docs.get(r.doc)!.date;
+    if (r.form === 'name') { expect(registry.get(normalizeValue(r.text))).toBe(r.entity); continue; }
+    const holders = r.form === 'code' ? w.entities.filter(x => x.refs!.codes.includes(r.text))
+      : r.form === 'nickname' ? w.entities.filter(x => x.refs!.nicknames.includes(r.text))
+        : [...byDescriptor.values()].flat().filter(x => r.text.endsWith(`'s ${x.refs!.descriptor} account`) && [...managerReadingsOn(managerEvents(x), date)].some(m => r.text === managerReference(m, x.refs!.descriptor)));
+    expect(holders.map(x => x.id)).toEqual([r.entity]);
+    if (r.form === 'manager') expect(r.text).toBe(managerReference(managerKnownOn(managerEvents(e), date)!, e.refs!.descriptor));
+    const intro = resolution.filter(d => d.date <= date && text(d.id).includes(needleOf(r, e)) && namesOf(e).some(n => text(d.id).includes(n)));
+    expect(intro.length).toBeGreaterThan(0);
+    checked++;
+  }
+  expect(checked).toBeGreaterThan(1000);
+}
+
+/** Oracle `relevant` and `gold.evidence` tie every reference they hold to its entity's canonical name. */
+function checkOracle(w: HardWorld): void {
+  const byDoc = new Map<string, HardReference[]>();
+  for (const r of w.references!) byDoc.set(r.doc, [...(byDoc.get(r.doc) ?? []), r]);
+  const { withRefs } = contextOf(w);
+  for (const t of w.tasks) for (const ids of [t.relevant, t.gold.evidence]) {
+    const set = new Set(ids), resolution = ids.filter(id => !withRefs.has(id));
+    const untied = ids.flatMap(id => byDoc.get(id) ?? []).filter(r => !tiedIn(w, set, resolution, r));
+    expect({ task: t.id, untied: untied.length }).toEqual({ task: t.id, untied: 0 });
+  }
+}
+
 describe('sealed generator: reference forms', () => {
   test('knob files without the reference keys reproduce the earlier worlds byte for byte (4k and 50k)', () => {
     for (const s of SEEDS) expect(sealedWorldDigest(worlds.get(s)!.world)).toBe(V1_DIGESTS[s]);
@@ -357,26 +393,7 @@ describe('sealed generator: reference forms', () => {
   });
 
   test('every reference resolves to exactly one customer from documents dated on or before it', () => {
-    for (const w of v2Worlds.values()) {
-      const { docs, text, resolution, entities: ents } = contextOf(w), registry = nameRegistry(w.entities, normalizeValue);
-      const byDescriptor = new Map<string, HardEntity[]>();
-      for (const x of w.entities) byDescriptor.set(x.refs!.descriptor, [...(byDescriptor.get(x.refs!.descriptor) ?? []), x]);
-      for (const e of w.entities) for (const m of e.refs!.managers) expect(docs.get(m.doc)?.date).toBe(m.recorded);
-      let checked = 0;
-      for (const r of w.references!) {
-        const e = ents.get(r.entity)!, date = docs.get(r.doc)!.date;
-        if (r.form === 'name') { expect(registry.get(normalizeValue(r.text))).toBe(r.entity); continue; }
-        const holders = r.form === 'code' ? w.entities.filter(x => x.refs!.codes.includes(r.text))
-          : r.form === 'nickname' ? w.entities.filter(x => x.refs!.nicknames.includes(r.text))
-            : [...byDescriptor.values()].flat().filter(x => r.text.endsWith(`'s ${x.refs!.descriptor} account`) && [...managerReadingsOn(managerEvents(x), date)].some(m => r.text === managerReference(m, x.refs!.descriptor)));
-        expect(holders.map(x => x.id)).toEqual([r.entity]);
-        if (r.form === 'manager') expect(r.text).toBe(managerReference(managerKnownOn(managerEvents(e), date)!, e.refs!.descriptor));
-        const intro = resolution.filter(d => d.date <= date && text(d.id).includes(needleOf(r, e)) && namesOf(e).some(n => text(d.id).includes(n)));
-        expect(intro.length).toBeGreaterThan(0);
-        checked++;
-      }
-      expect(checked).toBeGreaterThan(1000);
-    }
+    for (const w of v2Worlds.values()) checkResolvable(w);
   });
 
   test('records referring by short-name, handle or lead never name the customer, and handle or lead records never give the short-name', () => {
@@ -389,16 +406,7 @@ describe('sealed generator: reference forms', () => {
   });
 
   test('oracle evidence and relevant documents carry every resolution document their references need', () => {
-    for (const w of v2Worlds.values()) {
-      const byDoc = new Map<string, HardReference[]>();
-      for (const r of w.references!) byDoc.set(r.doc, [...(byDoc.get(r.doc) ?? []), r]);
-      const { withRefs } = contextOf(w);
-      for (const t of w.tasks) for (const ids of [t.relevant, t.gold.evidence]) {
-        const set = new Set(ids), resolution = ids.filter(id => !withRefs.has(id));
-        const untied = ids.flatMap(id => byDoc.get(id) ?? []).filter(r => !tiedIn(w, set, resolution, r));
-        expect({ task: t.id, untied: untied.length }).toEqual({ task: t.id, untied: 0 });
-      }
-    }
+    for (const w of v2Worlds.values()) checkOracle(w);
   });
 
   test('reference forms change no fact: questions and answer keys match the reference-free world from the same knobs', () => {
@@ -481,4 +489,142 @@ describe('sealed generator: reference forms', () => {
     const mainSentences = sentences(main);
     expect([...sentences(v2)].filter(k => mainSentences.has(k))).toEqual([]);
   });
+});
+
+// ─── Multi-account questions (knob schema 3, WORLD_SCHEMA.md "Multi-account questions") ───
+
+describe('sealed generator: multi-account questions', () => {
+  const r4Worlds = new Map(SEEDS.map(s => [s, buildSealed(s, R4)]));
+  const r4 = r4Worlds.get(SEEDS[0])!.world;
+  const multi = (w: HardWorld) => w.tasks.filter(t => t.answer_kind === 'values');
+
+  test('multi_account_max 1 writes the reference-form world apart from the knob fields', () => {
+    const knobs: HardKnobs = { ...R3, multi_account_min: 1, multi_account_max: 1 };
+    const w = generateSealedWorld(SEEDS[0], knobs);
+    expect(w).toMatchObject({ version: SEALED_VERSION_V2, knob_schema: 3, knob_digest: knobDigest(knobs) });
+    const strip = ({ knob_schema: _s, knobs: _k, knob_digest: _d, ...rest }: HardWorld) => rest;
+    expect(JSON.stringify(strip(w))).toBe(JSON.stringify(strip(v2)));
+  });
+
+  test('round-4 worlds pass every invariant, are deterministic and are accepted by the runner', () => {
+    for (const s of SEEDS) {
+      const w = r4Worlds.get(s)!.world;
+      expect(w).toMatchObject({ version: SEALED_VERSION_V2, knob_schema: 3, knob_digest: knobDigest(R4) });
+      expect(hardWorldProblems(w)).toEqual([]);
+    }
+    expect(sealedWorldDigest(generateSealedWorld(SEEDS[0], R4))).toBe(sealedWorldDigest(r4));
+    expect(new Set(SEEDS.map(s => sealedWorldDigest(r4Worlds.get(s)!.world))).size).toBe(SEEDS.length);
+    expect(() => checkHardWorld(r4, 'sealed-r4-test')).not.toThrow();
+  });
+
+  test('H2 to H5 questions have k items in the contract wording; H1 stays single and within the smaller member range', () => {
+    for (const w of [...r4Worlds.values()].map(x => x.world)) {
+      for (const t of w.tasks) {
+        if (t.family === 'H1') {
+          const n = t.answer_kind === 'set' ? t.gold.members!.length : t.gold.count!;
+          expect(n).toBeGreaterThanOrEqual(R4.h1_min_members);
+          expect(n).toBeLessThanOrEqual(R4.h1_max_members);
+          continue;
+        }
+        expect(t.answer_kind).toBe('values');
+        const items = t.gold.items!, k = items.length;
+        expect(k).toBeGreaterThanOrEqual(R4.multi_account_min!);
+        expect(k).toBeLessThanOrEqual(R4.multi_account_max!);
+        expect(t.gold.answer).toBeUndefined();
+        expect(t.gold.wrong).toBeUndefined();
+        const lines = t.question.split('\n');
+        expect(lines[0]).toBe(`Answer each of these ${k} questions:`);
+        expect(lines.slice(1, -1).map((l, n) => l.startsWith(`${n + 1}. `))).toEqual(Array(k).fill(true));
+        expect(lines.length).toBe(k + 2);
+        expect(lines.at(-1)).toBe(`Answer with a JSON array of the ${k} answers in the order asked, as one string in \`answer\`, for example ["first answer","second answer"].`);
+        expect(t.variant.split('|').length).toBe(k);
+        for (const it of items) {
+          expect(t.accounts).toContain(it.account);
+          expect(it.answer.length).toBeGreaterThan(0);
+          expect(it.wrong.length).toBeGreaterThan(0);
+        }
+        expect(new Set(t.accounts).size).toBe(t.accounts.length);
+      }
+      expect(multi(w).length).toBe(4 * R4.tasks_per_family);
+    }
+  });
+
+  test('no shortcut: accounts of different items share no descriptor, name first word, short-name prefix or account lead', () => {
+    for (const w of [...r4Worlds.values()].map(x => x.world)) {
+      const ents = new Map(w.entities.map(e => [e.id, e]));
+      for (const t of multi(w)) {
+        const keys = t.gold.items!.map(it => {
+          const e = ents.get(it.account)!;
+          return {
+            descriptor: new Set([e.refs!.descriptor]), first: new Set(namesOf(e).map(n => n.split(' ')[0])),
+            prefix: new Set(e.refs!.codes.map(c => c.slice(0, 3))), leads: new Set(e.refs!.managers.map(m => m.name)),
+          };
+        });
+        for (let a = 0; a < keys.length; a++) for (let b = a + 1; b < keys.length; b++) for (const f of ['descriptor', 'first', 'prefix', 'leads'] as const) {
+          expect({ task: t.id, f, shared: [...keys[a][f]].filter(x => keys[b][f].has(x)) }).toEqual({ task: t.id, f, shared: [] });
+        }
+      }
+    }
+  });
+
+  test('every reference resolves to exactly one customer, and every task\'s oracle documents tie each reference to its customer', () => {
+    for (const { world: w } of r4Worlds.values()) { checkResolvable(w); checkOracle(w); }
+  });
+
+  test('each item carries its own evidence: the evidence holds a record about every item\'s account, and relevant holds the evidence', () => {
+    const about = new Map<string, Set<string>>();
+    for (const r of r4.references!) about.set(r.doc, (about.get(r.doc) ?? new Set()).add(r.entity));
+    for (const t of multi(r4)) {
+      for (const id of t.gold.evidence) expect(t.relevant).toContain(id);
+      for (const it of t.gold.items!) expect(t.gold.evidence.some(id => about.get(id)?.has(it.account))).toBe(true);
+    }
+  });
+
+  test('H5: sessions carry every chain\'s statement in item order; each item\'s key follows from its chain and needs two sessions', () => {
+    for (const { world: w, h5 } of r4Worlds.values()) {
+      for (const t of multi(w).filter(x => x.family === 'H5')) {
+        expect(t.sessions!.length).toBe(H5_SESSIONS - 1);
+        for (const s of t.sessions!) expect(s).toContain(RECORDED);
+        const facts = t.session_facts!;
+        expect(facts.map(f => f.session)).toEqual([...facts.map(f => f.session)].sort((x, y) => x - y));
+        for (const f of facts) if (f.superseded_by !== undefined) expect(facts.some(x => x.session === f.superseded_by && x.key === f.key)).toBe(true);
+        expect(t.oracle_notes![0].body.split('\n')[0]).toBe('Recorded from team updates (sessions 1 to 4):');
+        const said = (fs: typeof facts): UserStatement[] => fs.map(f => ({ session: f.session, key: f.key, value: f.value }));
+        t.gold.items!.forEach((it, j) => {
+          const led = h5.find(x => x.task === t.id && x.item === j)!;
+          expect(led.account).toBe(it.account);
+          expect(resolveH5(led.account, said(facts), led.directory)).toBe(it.answer[0]);
+          const own = facts.filter(f => f.key.includes(it.account));
+          expect(new Set(own.filter(f => f.required).map(f => f.session)).size).toBeGreaterThanOrEqual(2);
+          for (const f of own.filter(x => x.required)) expect(resolveH5(led.account, said(facts.filter(x => x !== f)), led.directory)).not.toBe(it.answer[0]);
+        });
+        for (const n of [1, 2, 3, 4]) expect(facts.filter(f => f.session === n).length).toBeGreaterThanOrEqual(t.gold.items!.length);
+        const firstSession = t.gold.items!.map(it => facts.findIndex(f => f.session === 1 && f.key.includes(it.account))).filter(x => x >= 0);
+        expect(firstSession).toEqual([...firstSession].sort((x, y) => x - y));
+      }
+    }
+  });
+
+  test('scorer: the gold array passes; a swapped, short, prose or wrong-valued answer fails', () => {
+    for (const t of multi(r4)) {
+      const gold = t.gold.items!.map(it => it.answer[0]);
+      expect(score(r4, t, JSON.stringify(gold)).success).toBe(true);
+      expect(score(r4, t, gold).success).toBe(true);
+      const reversed = [...gold].reverse();
+      if (reversed.some((g, n) => !t.gold.items![n].answer.includes(g))) expect(score(r4, t, JSON.stringify(reversed)).success).toBe(false);
+      expect(score(r4, t, JSON.stringify(gold.slice(1))).success).toBe(false);
+      expect(score(r4, t, gold.join(', ')).unparseable_set).toBe(true);
+      expect(score(r4, t, JSON.stringify([t.gold.items![0].wrong[0], ...gold.slice(1)])).success).toBe(false);
+    }
+  });
+
+  test('50k at the full round-4 knobs: base documents and keys kept, every invariant passes', () => {
+    const large = generateSealedWorld(SEEDS[0], R4, 'large');
+    expect(hardWorldProblems(large)).toEqual([]);
+    expect(large.base_digest).toBe(sealedWorldDigest(r4));
+    expect(large.docs.slice(0, r4.docs.length)).toEqual(r4.docs);
+    large.tasks.forEach((t, i) => expect(t.gold).toEqual(r4.tasks[i].gold));
+    expect(large.entities.length - r4.entities.length).toBe(R4.large_extra_accounts + r4.tasks.filter(t => t.family === 'H3').reduce((n, t) => n + (t.gold.items?.length ?? 1), 0));
+    checkOracle(large);
+  }, 180_000);
 });

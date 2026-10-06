@@ -9,7 +9,7 @@
  */
 import { createHash } from 'node:crypto';
 import type { LadderDoc } from '../model-ladder-gen.ts';
-import { DEFAULT_HARD_KNOBS, hasReferenceKnobs, knobDigest, knobSchemaOf, type H1Clause, type H1Predicate, type HardEntity, type HardKnobs, type HardReference, type HardTask, type HardWorld, type RefForm, type SessionFact } from '../hard/schema.ts';
+import { DEFAULT_HARD_KNOBS, H5_SESSIONS, hasReferenceKnobs, knobDigest, knobSchemaOf, type H1Clause, type H1Predicate, type HardEntity, type HardFamily, type HardKnobs, type HardReference, type HardTask, type HardWorld, type RefForm, type SessionFact } from '../hard/schema.ts';
 import { clauseHolds, correctionOf, evaluatePredicate, eventAsOf, historyValues, managerKnownOn, managerReadingsOn, managerReference, nameRegistry, statedValue, valueAsOf, type PredicateFacts, type UserStatement, type ValueEvent } from '../hard/semantics.ts';
 import { assertHardWorld } from '../hard/validate.ts';
 import { normalizeValue } from '../../runner/cat40/score.ts';
@@ -37,8 +37,8 @@ type Fact =
 
 interface H3Spec { task: number; token: { kind: 'first-word' | 'code-prefix'; value: string }; fact: Fact; target: string }
 
-/** What the H5 dependency check needs about a task beyond the world: the site directory's contacts. */
-export interface H5Ledger { task: string; account: string; directory: Record<string, string> }
+/** What the H5 dependency check needs about a task (or one item of a multi-account task) beyond the world: the site directory's contacts. */
+export interface H5Ledger { task: string; item: number; account: string; directory: Record<string, string> }
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
 const uniq = <T>(xs: T[]) => [...new Set(xs)];
@@ -73,6 +73,8 @@ class Builder {
   /** Rename and merger documents by the customer whose names they link. */
   links = new Map<string, string[]>();
   nicknames = new Set<string>();
+  /** Multi-account questions: descriptors and account leads taken by earlier items of the question being built. */
+  guard: { descriptors: Set<string>; managers: Set<string> } | null = null;
   private descIndex?: { n: number; map: Map<string, Acct[]> };
 
   constructor(readonly seed: number, readonly k: HardKnobs) {
@@ -124,8 +126,9 @@ class Builder {
     }
   }
 
-  newName(r: Rng, first: string): string {
+  newName(r: Rng, first: string, tradeOk?: (trade: typeof P.TRADES[number]) => boolean): string {
     for (const trade of r.shuffle(P.TRADES)) {
+      if (tradeOk && !tradeOk(trade)) continue;
       const name = `${first} ${trade}`;
       if (this.reserve(name)) return name;
     }
@@ -141,9 +144,19 @@ class Builder {
     return { id, no };
   }
 
-  makeAccount(r: Rng, o: { kind: Acct['kind']; first?: string; firstSyllables?: 2 | 3; prefix?: string; segment?: string; region?: string; avoidSegment?: string; avoidRegion?: string; ghost?: boolean; openedBy?: string; team?: readonly string[] }): Acct {
+  /**
+   * `guarded`: the account an item of a multi-account question is about. While `guard` is set, it takes a
+   * territory and sector pair and account leads that no earlier item's account has (first words and short-name
+   * prefixes are unique across clusters already).
+   */
+  makeAccount(r: Rng, o: { kind: Acct['kind']; first?: string; firstSyllables?: 2 | 3; prefix?: string; segment?: string; region?: string; avoidSegment?: string; avoidRegion?: string; ghost?: boolean; openedBy?: string; team?: readonly string[]; guarded?: boolean }): Acct {
+    const guard = o.guarded ? this.guard : null;
+    const regions = (trade: typeof P.TRADES[number]) => (o.region ? [o.region] : P.REGIONS.filter(x => x !== o.avoidRegion)).filter(x => !guard?.descriptors.has(`${x} ${P.SECTOR[trade]}`));
     const first = o.first ?? this.newFirstWord(r, o.firstSyllables ?? 2);
-    const name = this.newName(r, first);
+    const name = this.newName(r, first, guard ? trade => regions(trade).length > 0 : undefined);
+    const free = guard ? regions(name.slice(name.indexOf(' ') + 1) as typeof P.TRADES[number]) : null;
+    const team = o.team ?? (guard ? P.STAFF.filter(x => !guard.managers.has(x)) : P.STAFF);
+    if (team.length < 3) throw new Error('a multi-account question has run out of account leads for its items; lower multi_account_max');
     const code = this.newCode(r, o.prefix);
     const opened = randomDate(r, EPOCH, o.openedBy ?? '2026-01-30');
     const contacts: string[] = [];
@@ -154,13 +167,13 @@ class Builder {
     const a: Acct = {
       id: `cust-${String(this.accts.length + 1).padStart(4, '0')}`, code, names: [{ name, from: opened }], opened,
       segment: o.segment ?? r.pick(P.SEGMENTS.filter(s => s !== o.avoidSegment)),
-      region: o.region ?? r.pick(P.REGIONS.filter(s => s !== o.avoidRegion)),
+      region: o.region ?? r.pick(free ?? P.REGIONS.filter(s => s !== o.avoidRegion)),
       domain: `${first.toLowerCase()}-${name.split(' ')[1].toLowerCase()}.example`,
       contacts, owner: [], renewal: [], tickets: [], form, changes: [], cos: [], announcements: [], docs: [], pending: [], seq: {}, kind: o.kind,
     };
     this.accts.push(a);
     this.byId.set(a.id, a);
-    if (!o.ghost) { this.buildOwner(a, r, o.team ?? P.STAFF); this.buildRenewal(a, r); this.buildTickets(a, r); }
+    if (!o.ghost) { this.buildOwner(a, r, team); this.buildRenewal(a, r); this.buildTickets(a, r); }
     return a;
   }
 
@@ -482,14 +495,17 @@ function assertH3Unique(b: Builder): void {
 
 // ─── Families ───────────────────────────────────────────────────────
 
-function buildH2(b: Builder, i: number): HardTask {
+/** Random-stream key of item `j` of task `i`: item 0 keeps the single-account name. */
+const itemKey = (i: number, j: number) => (j ? `${i}/item${j}` : `${i}`);
+
+function buildH2(b: Builder, i: number, j = 0): HardTask {
   const k = b.k;
-  const r = new Rng(b.seed, `h2:${i}`);
-  const a = b.makeAccount(r, { kind: 'task', openedBy: '2025-11-30' });
-  const attr = P.H2_ATTRS[i % P.H2_ATTRS.length];
+  const r = new Rng(b.seed, `h2:${itemKey(i, j)}`);
+  const a = b.makeAccount(r, { kind: 'task', openedBy: '2025-11-30', guarded: true });
+  const attr = P.H2_ATTRS[(i + j) % P.H2_ATTRS.length];
   const { label, values } = P.ATTRIBUTES[attr];
   for (let attempt = 0; attempt < 60; attempt++) {
-    const h = new Rng(b.seed, `h2:${i}:${attempt}`);
+    const h = new Rng(b.seed, `h2:${itemKey(i, j)}:${attempt}`);
     type Step = { value: string; effective: string; recorded: string; kind: ValueEvent['kind']; corrects?: number };
     const steps: Step[] = [{ value: h.pick(values), effective: a.opened, recorded: a.opened, kind: 'initial' }];
     const asEvents = (doc: (j: number) => string) => steps.map((s, j): ValueEvent => ({ value: s.value, effective: s.effective, recorded: s.recorded, doc: doc(j), kind: s.kind }));
@@ -555,10 +571,10 @@ function buildH2(b: Builder, i: number): HardTask {
   throw new Error(`H2 task index ${i}: no usable history after 60 attempts`);
 }
 
-function buildH3(b: Builder, i: number): HardTask {
+function buildH3(b: Builder, i: number, j = 0): HardTask {
   const k = b.k;
-  const r = new Rng(b.seed, `h3:${i}`);
-  const variant = (['first-word', 'code-prefix', 'renamed', 'merged'] as const)[i % 4];
+  const r = new Rng(b.seed, `h3:${itemKey(i, j)}`);
+  const variant = (['first-word', 'code-prefix', 'renamed', 'merged'] as const)[(i + j) % 4];
   const attr = r.pick(P.H3_ATTRS);
   const { label, values } = P.ATTRIBUTES[attr];
   const nLook = r.int(k.h3_lookalikes_min, k.h3_lookalikes_max);
@@ -575,21 +591,21 @@ function buildH3(b: Builder, i: number): HardTask {
 
   if (variant === 'code-prefix') {
     const prefix = b.newPrefix(r);
-    target = b.makeAccount(r, { kind: 'task', prefix, segment, region });
+    target = b.makeAccount(r, { kind: 'task', prefix, segment, region, guarded: true });
     for (let j = 0; j < nLook; j++) look({ prefix });
     token = { kind: 'code-prefix', value: prefix };
     target.form[label] = vals[0];
     attrDoc = formId(target);
   } else if (variant === 'first-word') {
     const first = b.newFirstWord(r, 2);
-    target = b.makeAccount(r, { kind: 'task', first, segment, region });
+    target = b.makeAccount(r, { kind: 'task', first, segment, region, guarded: true });
     for (let j = 0; j < nLook; j++) look({ first });
     token = { kind: 'first-word', value: first };
     target.form[label] = vals[0];
     attrDoc = formId(target);
   } else if (variant === 'renamed') {
     const first = b.newFirstWord(r, 2);
-    target = b.makeAccount(r, { kind: 'task', first, segment, region, openedBy: '2025-12-31' });
+    target = b.makeAccount(r, { kind: 'task', first, segment, region, openedBy: '2025-12-31', guarded: true });
     for (let j = 0; j < nLook; j++) look({ first });
     token = { kind: 'first-word', value: first };
     const oldName = target.names[0].name;
@@ -610,9 +626,9 @@ function buildH3(b: Builder, i: number): HardTask {
     evidence.push(row.doc, notice);
     relevant.push(formId(target));
   } else {
-    target = b.makeAccount(r, { kind: 'task', segment, region, openedBy: '2025-11-30' });
+    target = b.makeAccount(r, { kind: 'task', segment, region, openedBy: '2025-11-30', guarded: true });
     const first = b.newFirstWord(r, 2);
-    const ghost = b.makeAccount(r, { kind: 'task', first, segment, region, ghost: true, openedBy: '2025-12-31' });
+    const ghost = b.makeAccount(r, { kind: 'task', first, segment, region, ghost: true, openedBy: '2025-12-31', guarded: true });
     for (let j = 0; j < nLook; j++) look({ first });
     token = { kind: 'first-word', value: first };
     ghost.ghostOf = target.id;
@@ -670,13 +686,13 @@ function buildH3(b: Builder, i: number): HardTask {
   };
 }
 
-function buildH4(b: Builder, i: number): HardTask {
+function buildH4(b: Builder, i: number, j = 0): HardTask {
   const k = b.k;
-  const r = new Rng(b.seed, `h4:${i}`);
-  const a = b.makeAccount(r, { kind: 'task', openedBy: '2025-10-31' });
+  const r = new Rng(b.seed, `h4:${itemKey(i, j)}`);
+  const a = b.makeAccount(r, { kind: 'task', openedBy: '2025-10-31', guarded: true });
   const term = r.pick(P.TERM_KINDS);
   const { label, values } = P.TERMS[term];
-  const variant = (['amendment-wins', 'draft-loses', 'later-effective-wins', 'not-yet-effective'] as const)[i % 4];
+  const variant = (['amendment-wins', 'draft-loses', 'later-effective-wins', 'not-yet-effective'] as const)[(i + j) % 4];
   const n = r.int(k.h4_sources_min, k.h4_sources_max);
   const vals = r.sample(values, n);
   a.form[label] = vals[0];
@@ -745,10 +761,19 @@ export function resolveH5(account: string, statements: readonly UserStatement[],
   return statedValue(statements, `contact:${account}:${route}`, directory[route] ?? null);
 }
 
-function buildH5(b: Builder, i: number): HardTask {
-  const r = new Rng(b.seed, `h5:${i}`);
+/** One H5 statement chain's parts that a multi-account question recombines: the statements in session order and the store lines. */
+interface H5Chain { texts: string[]; store: string[] }
+
+const H5_CLOSINGS = [
+  'Keep this somewhere you can find it in a later conversation, then submit RECORDED as your answer.',
+  'Save it to memory for later sessions and answer with RECORDED.',
+  'Please store this durably; when done, submit the single word RECORDED.',
+];
+
+function buildH5(b: Builder, i: number, j = 0): { task: HardTask; chain: H5Chain } {
+  const r = new Rng(b.seed, `h5:${itemKey(i, j)}`);
   const first = b.newFirstWord(r, 2);
-  const a = b.makeAccount(r, { kind: 'task', first, openedBy: '2025-12-31' });
+  const a = b.makeAccount(r, { kind: 'task', first, openedBy: '2025-12-31', guarded: true });
   const look = b.k.h5_noise_sessions ? b.makeAccount(r, { kind: 'task', first }) : undefined;
   const name = currentName(a);
   const [sA, sB] = r.sample(P.SITE_WORDS, 2).map(w => `${w} ${r.pick(P.SITE_KINDS)}`);
@@ -758,7 +783,7 @@ function buildH5(b: Builder, i: number): HardTask {
   a.sites = { doc: `registry/${folder(a)}/sites`, asOf: randomDate(r, addDays(a.opened, 20), addDays(TODAY, -120)), list: [{ name: sA, contact: p0 }, { name: sB, contact: q0 }] };
   const key = (site: string) => `contact:${a.id}:${site}`, route = `route:${a.id}`;
   type Statement = { tag: string; facts: Array<{ key: string; value: string }>; text: string; after?: string };
-  const variant = i % 2 === 0 ? 'contact-updated' : 'route-moved';
+  const variant = (i + j) % 2 === 0 ? 'contact-updated' : 'route-moved';
   const contacts: Statement = { tag: 'C', facts: [{ key: key(sA), value: p1 }, { key: key(sB), value: q1 }], text: `${name} told me who signs for incoming documents at each of their sites: ${p1} at the ${sA} and ${q1} at the ${sB}.` };
   const statements: Statement[] = [contacts];
   if (variant === 'contact-updated') {
@@ -797,23 +822,66 @@ function buildH5(b: Builder, i: number): HardTask {
     return { session: s.session, key: s.key, value: s.value, ...(later ? { superseded_by: later.session } : {}), required: required.includes(s) };
   });
   const personValues = uniq([...said.filter(s => s.key.startsWith('contact:')).map(s => s.value), p0, q0]);
-  const closings = [
-    'Keep this somewhere you can find it in a later conversation, then submit RECORDED as your answer.',
-    'Save it to memory for later sessions and answer with RECORDED.',
-    'Please store this durably; when done, submit the single word RECORDED.',
-  ];
   const tid = `H5-${pad2(i + 1)}`;
-  b.h5.push({ task: tid, account: a.id, directory });
+  b.h5.push({ task: tid, item: j, account: a.id, directory });
   const store = [`Renewal paperwork for ${name} goes to the ${routed}.`, `Signs for documents at the ${sA}: ${statedValue(said, key(sA), p0)}.`, `Signs for documents at the ${sB}: ${statedValue(said, key(sB), q0)}.`];
   if (look) store.push(`${currentName(look)} is a different customer; its routing does not apply to ${name}.`);
-  return {
+  const task: HardTask = {
     id: tid, family: 'H5', variant, answer_kind: 'value', accounts: [a.id, ...(look ? [look.id] : [])],
-    sessions: order.map(s => `${s.text} ${r.pick(closings)}`),
+    sessions: order.map(s => `${s.text} ${r.pick(H5_CLOSINGS)}`),
     question: `Who should receive the signed renewal paperwork for ${name}? Give the person's full name only.`,
     gold: { answer: [answer], wrong: personValues.filter(v => v !== answer), evidence: [a.sites.doc] },
     relevant: [a.sites.doc],
     oracle_notes: [{ id: `oracle/${tid.toLowerCase()}-store`, title: `What the store holds after sessions 1 to 4: ${name}`, body: store.join('\n') }],
     session_facts,
+  };
+  return { task, chain: { texts: order.map(s => s.text), store } };
+}
+
+// ─── Multi-account questions (amendment A2) ─────────────────────────
+
+/**
+ * Task `i` of a family: k items drawn from multi_account_min..max (1 without the multi-account knobs), each a
+ * complete single-account instance built by `item`. While the items are built, each item's account avoids the
+ * descriptors and account leads of the earlier items' accounts. k = 1 is the single-account task unchanged.
+ */
+function question(b: Builder, family: HardFamily, i: number, item: (j: number) => { task: HardTask; chain?: H5Chain }): HardTask {
+  const kn = b.k;
+  const k = kn.multi_account_max === undefined ? 1 : new Rng(b.seed, `items:${family}:${i}`).int(kn.multi_account_min!, kn.multi_account_max);
+  if (k === 1) return item(0).task;
+  b.guard = { descriptors: new Set(), managers: new Set() };
+  const built: Array<{ task: HardTask; chain?: H5Chain }> = [];
+  for (let j = 0; j < k; j++) {
+    const one = item(j);
+    built.push(one);
+    const main = b.byId.get(one.task.accounts[0])!;
+    for (const a of [main, ...b.accts.filter(x => x.ghostOf === main.id)]) {
+      b.guard.descriptors.add(descriptorOf(a));
+      for (const e of a.owner) b.guard.managers.add(e.value);
+    }
+  }
+  b.guard = null;
+  const items = built.map(x => x.task);
+  const tid = `${family}-${pad2(i + 1)}`;
+  const union = (f: (t: HardTask) => string[]) => uniq(items.flatMap(f));
+  const head = { id: tid, family, variant: items.map(t => t.variant).join('|'), answer_kind: 'values' as const, accounts: union(t => t.accounts) };
+  const rest = {
+    question: [`Answer each of these ${k} questions:`, ...items.map((t, n) => `${n + 1}. ${t.question}`), `Answer with a JSON array of the ${k} answers in the order asked, as one string in \`answer\`, for example ["first answer","second answer"].`].join('\n'),
+    gold: { items: items.map(t => ({ account: t.accounts[0], answer: t.gold.answer!, wrong: t.gold.wrong! })), evidence: union(t => t.gold.evidence) },
+    relevant: union(t => t.relevant),
+  };
+  if (family !== 'H5') return { ...head, ...rest };
+  const chains = built.map(x => x.chain!);
+  const r = new Rng(b.seed, `h5:${i}:closings`);
+  return {
+    ...head,
+    sessions: Array.from({ length: H5_SESSIONS - 1 }, (_, n) => `${chains.map(c => c.texts[n]).join(' ')} ${r.pick(H5_CLOSINGS)}`),
+    ...rest,
+    oracle_notes: [{
+      id: `oracle/${tid.toLowerCase()}-store`, title: `What the store holds after sessions 1 to 4: ${items.map(t => currentName(b.byId.get(t.accounts[0])!)).join('; ')}`,
+      body: ['Recorded from team updates (sessions 1 to 4):', ...chains.flatMap(c => c.store)].join('\n'),
+    }],
+    session_facts: Array.from({ length: H5_SESSIONS - 1 }, (_, n) => items.flatMap(t => t.session_facts!.filter(f => f.session === n + 1))).flat(),
   };
 }
 
@@ -915,10 +983,10 @@ export function sealedWorldDigest(w: HardWorld): string {
 function build(seed: number, knobs: HardKnobs): { world: HardWorld; b: Builder } {
   const b = new Builder(seed, knobs);
   const t = knobs.tasks_per_family;
-  const h2 = Array.from({ length: t }, (_, i) => buildH2(b, i));
-  const h3 = Array.from({ length: t }, (_, i) => buildH3(b, i));
-  const h4 = Array.from({ length: t }, (_, i) => buildH4(b, i));
-  const h5 = Array.from({ length: t }, (_, i) => buildH5(b, i));
+  const h2 = Array.from({ length: t }, (_, i) => question(b, 'H2', i, j => ({ task: buildH2(b, i, j) })));
+  const h3 = Array.from({ length: t }, (_, i) => question(b, 'H3', i, j => ({ task: buildH3(b, i, j) })));
+  const h4 = Array.from({ length: t }, (_, i) => question(b, 'H4', i, j => ({ task: buildH4(b, i, j) })));
+  const h5 = Array.from({ length: t }, (_, i) => question(b, 'H5', i, j => buildH5(b, i, j)));
   for (let j = 0; j < knobs.accounts; j++) b.makeAccount(new Rng(seed, `acct:${j}`), { kind: 'background' });
   if (b.v2) b.assignNicknames(b.accts);
   const h1 = buildH1(b);
