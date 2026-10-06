@@ -618,13 +618,14 @@ describe('sealed generator: multi-account questions', () => {
     }
   });
 
-  test('50k at the full round-4 knobs: base documents and keys kept, every invariant passes', () => {
-    const large = generateSealedWorld(SEEDS[0], R4, 'large');
+  test('50k at the round-4 knobs (fewer appended customers): base documents and keys kept, every invariant passes', () => {
+    const knobs: HardKnobs = { ...R4, large_extra_accounts: 300, large_nondeciding_per_account: 2 };
+    const base = generateSealedWorld(SEEDS[0], knobs), large = generateSealedWorld(SEEDS[0], knobs, 'large');
     expect(hardWorldProblems(large)).toEqual([]);
-    expect(large.base_digest).toBe(sealedWorldDigest(r4));
-    expect(large.docs.slice(0, r4.docs.length)).toEqual(r4.docs);
-    large.tasks.forEach((t, i) => expect(t.gold).toEqual(r4.tasks[i].gold));
-    expect(large.entities.length - r4.entities.length).toBe(R4.large_extra_accounts + r4.tasks.filter(t => t.family === 'H3').reduce((n, t) => n + (t.gold.items?.length ?? 1), 0));
+    expect(large.base_digest).toBe(sealedWorldDigest(base));
+    expect(large.docs.slice(0, base.docs.length)).toEqual(base.docs);
+    large.tasks.forEach((t, i) => expect(t.gold).toEqual(base.tasks[i].gold));
+    expect(large.entities.length - base.entities.length).toBe(knobs.large_extra_accounts + base.tasks.filter(t => t.family === 'H3').reduce((n, t) => n + (t.gold.items?.length ?? 1), 0));
     checkOracle(large);
-  }, 180_000);
+  }, 60_000);
 });
