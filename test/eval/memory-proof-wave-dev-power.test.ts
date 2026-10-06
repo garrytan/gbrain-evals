@@ -32,3 +32,20 @@ describe('dev power pairs', () => {
     expect(rows.map(r => r.d)).toEqual([0, 0]);
   });
 });
+
+describe('sealed analysis', () => {
+  test('clusters sum paired differences in points per conversation and decides against the margin', async () => {
+    const { analyse, clusters } = await import('../../eval/runner/memory-proof-wave-sealed-analysis.ts');
+    const rows = [] as { split: string; conversation: string; qid: string; d: number }[];
+    for (const [split, convs] of [['100k', 3], ['500k', 3]] as const)
+      for (let c = 0; c < convs; c++) for (let q = 0; q < 4; q++) rows.push({ split, conversation: `${split}/${c}`, qid: `${c}_x_${q}`, d: (q % 2 ? 0.1 : -0.05) + c * 0.01 });
+    const cl = clusters(rows);
+    expect(cl.length).toBe(6);
+    expect(cl.find(c => c.id === '100k/0')!.sum).toBeCloseTo(10, 6);
+    const out = analyse(rows, 3.5, 199, 20261005);
+    expect(out.questions).toBe(24);
+    expect(out.primary.lower).toBeLessThanOrEqual(out.estimate_points);
+    expect(out.primary.upper).toBeGreaterThanOrEqual(out.estimate_points);
+    expect(['ahead', 'non-inferior', 'behind', 'inconclusive']).toContain(out.outcome);
+  });
+});

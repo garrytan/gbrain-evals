@@ -79,6 +79,8 @@ A sealed cell is marked incomplete, and the decision is `inconclusive`, if any s
 - **Validation receipts stay in custody.** For validation cells the repository gets only summaries and per-category aggregates: scores, paired W/L/T counts, firing rates, gates and spend. It gets no conversation or question ids, schedules or per-question rows. The full validation receipts stay in custody beside the private file until the sealed run is scored, and are then published with the sealed receipts.
 - BEAM is public, so after validation is opened the sealed set is the complement of dev and validation. The protection is procedural: the commitments prove the split was fixed before tuning, and the log shows every open.
 
+**Overlap with a separately drawn split.** Another campaign drew its own BEAM split, called P0, independently of this grouping manifest. Eight of this wave's BEAM dev conversations are sealed in P0. This wave's own sealed set is unaffected, because its grouping manifest drew it. P0's sealed set, though, has been partly opened by this wave's dev phase, so those eight conversations cannot serve as untouched sealed conversations for P0. BEAM 10M is not opened, ingested or answered by this wave.
+
 ## Reseal, 2026-10-05
 
 The first private grouping file (private file `f67da64c…`, salt `d7c382d8…`) was stored where every project subagent could read it, so its validation and sealed partition is treated as possibly seen. No validation or sealed ids had been opened: no access log existed, and dev runs had used only the public dev ids. The split was therefore resealed before any open, with `memory-proof-wave-grouping.ts reseal`:
