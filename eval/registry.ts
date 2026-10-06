@@ -644,7 +644,7 @@ export const REGISTRY: readonly CategoryEntry[] = [
     id: 'write-cost', legacy_alias: 'P8-write-cost', name: 'Write cost: what an agent\'s memory writes cost with fact extraction on and off',
     family: 'performance', tier: 'P', script: 'eval/runner/p8-write-cost.ts',
     run: { kind: 'listed', reason: 'paid publication run for plan P8 (gbrain#6027) section 2: LongMemEval-S sessions written through gbrain serve over stdio MCP on a build passed with --gbrain, metered under the eval budget ledger', command: 'bun eval/runner/p8-write-cost.ts --gbrain <checkout>@<ref> --sessions 1000 --arms on,off --budget-usd <n> --out eval/reports/p8-write-cost/<name>' },
-    cost_estimate: { usd: 12.28, basis: 'P8 dev write-cost receipt (gbrain#6027 docs/eval/decisions/p8/DEV_RESULTS.md): 1,000 pages per arm, extraction on and off, $12.28 actual' },
+    cost_estimate: { usd: 12.28, basis: 'docs/benchmarks/2026-10-04-p8-dev/write-cost/receipt-1000.json: 1,000 pages per arm, extraction on and off, $12.28 actual' },
     receipt_path: 'eval/reports/p8-write-cost/<name>/receipt.json',
     headline: { metric: 'generative attempts on the commit path (must be 0); generative and embedding calls, tokens and dollars by model; put_page and remember latency p50/p95; drain time and jobs outstanding, per arm', denominator: 'per arm: pages written (one LongMemEval-S session each) and their messages, also reported per 1,000 pages and per 1,000 messages' },
     gate: 'report-only', evidence_maturity: 'synthetic-production-path',

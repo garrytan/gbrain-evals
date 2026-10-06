@@ -1,0 +1,32 @@
+{
+  "decision_id": "p8-quotes-retest2-2026-10-05",
+  "stage": "held-out (second custodian): quote grounding retest on fresh material (gbrain#6027 preregistration amendment, section 6)",
+  "verdict": "pass: supported spans wrongly flagged 5/321 = 1.56%, Wilson 95% upper 3.59% (bar < 5%)",
+  "default_rule": "PASS turns think.quote_verify and dream.quote_verify on by default; FAIL keeps them opt-in (P8 amendment)",
+  "build": "7715e647aa234ef413c3bc9445c0340d63725d0e, think model anthropic:claude-sonnet-5-5, judge gpt-6.1-sol (prompt unchanged; it sees the full prompt including the question, so a quote of the user's question counts as supported)",
+  "harness": "gbrain-evals evals/p8-verdicts 74820ed (quote-grounding custodian mode with flaggedSpans attribution and --resume)",
+  "held_out_material": "custodian-written synthetic user-assistant histories (committed generator, new seed 20261005, 12 histories, 552 sessions; disjoint from the dev questions and the first sealed set by construction; no sealed-confirmation-v2 session); 320 questions (seed 7101, 70% quote-eliciting); corpus, questions and preregistration hashes in custody",
+  "results": {
+    "questions": 320,
+    "answered": 320,
+    "spans": 328,
+    "supported_spans": 321,
+    "verbatim": 318,
+    "close": 3,
+    "supported_wrongly_flagged": 5,
+    "rate": 0.0156,
+    "wilson_upper": 0.0359,
+    "questions_with_supported": 173,
+    "questions_with_a_wrong_flag": 5,
+    "question_level_wilson_upper_reported": 0.0659,
+    "unsupported_spans": 7,
+    "unsupported_flagged": 2,
+    "unsupported_kept": 5
+  },
+  "notes": [
+    "The gate measures false flags only. Of the 7 spans the judge labeled unsupported, gbrain flagged 2 and kept 5; the run is not sized to measure how often the check catches unsupported quotes.",
+    "The 32-question pilot was cut short by a machine restart after 7 questions; the full run resumed from those rows (--resume), so every question was answered once. 321 supported spans cleared the 300-span size rule, so the preregistered top-up batch did not run.",
+    "The earlier retest on sealed-confirmation-v2 (p8-quotes-retest-2026-10-05) is void, not a verdict, and did not shape this run."
+  ],
+  "cost_usd_approx": "about 15: corpus generation 4.10 (metered); question writing, think and judge calls are not metered by this runner"
+}

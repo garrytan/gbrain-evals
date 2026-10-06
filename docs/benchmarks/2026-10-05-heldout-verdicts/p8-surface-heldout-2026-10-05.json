@@ -1,0 +1,390 @@
+{
+ "decision_id": "p8-surface-heldout-2026-10-05",
+ "section": "P8 section 7, advertised tool surface (mcp.advertised_surface), Cat 40 sealed world",
+ "build": "gbrain 6c958d6e2",
+ "harness": "gbrain-evals 0b7abad",
+ "models_reported_order": [
+  "claude-sonnet-5-5",
+  "gpt-6.1-sol",
+  "claude-opus-5-5",
+  "claude-fable-5-1"
+ ],
+ "repeats": {
+  "claude-sonnet-5-5": 2,
+  "gpt-6.1-sol": 2,
+  "claude-opus-5-5": 2,
+  "claude-fable-5-1": 1
+ },
+ "disclosure": "claude-fable-5-1 ran 1 repeat per task (P8 amendment dc3f0191a); the other three ran 2",
+ "verdict": "neither narrower arm passes; fresh installs keep advertising full",
+ "pooled_four_models": {
+  "starter": {
+   "pass": false,
+   "pooled": {
+    "n_tasks": 120,
+    "control": 93.2,
+    "arm": 84.7,
+    "delta_pts": -8.5,
+    "ci95": [
+     -12.5,
+     -4.8
+    ]
+   },
+   "hidden_tool": {
+    "n_tasks": 20,
+    "control": 96.9,
+    "arm": 46.9,
+    "delta_pts": -50.0,
+    "ci95": [
+     -58.1,
+     -42.5
+    ]
+   },
+   "leaks": 0,
+   "context_exposures": 0,
+   "usd": 233.56
+  },
+  "verbs": {
+   "pass": false,
+   "pooled": {
+    "n_tasks": 120,
+    "control": 93.2,
+    "arm": 83.3,
+    "delta_pts": -9.9,
+    "ci95": [
+     -13.3,
+     -6.7
+    ]
+   },
+   "hidden_tool": {
+    "n_tasks": 20,
+    "control": 96.9,
+    "arm": 75.6,
+    "delta_pts": -21.2,
+    "ci95": [
+     -28.7,
+     -14.4
+    ]
+   },
+   "leaks": 0,
+   "context_exposures": 0,
+   "usd": 240.98
+  },
+  "decision": "full",
+  "full_usd": 236.75
+ },
+ "pooled_without_fable": {
+  "starter": {
+   "pass": false,
+   "pooled": {
+    "n_tasks": 120,
+    "control": 92.9,
+    "arm": 85.4,
+    "delta_pts": -7.5,
+    "ci95": [
+     -11.0,
+     -4.3
+    ]
+   },
+   "hidden_tool": {
+    "n_tasks": 20,
+    "control": 95.8,
+    "arm": 54.2,
+    "delta_pts": -41.7,
+    "ci95": [
+     -48.3,
+     -35.8
+    ]
+   },
+   "leaks": 0,
+   "context_exposures": 0,
+   "usd": 120.61
+  },
+  "verbs": {
+   "pass": false,
+   "pooled": {
+    "n_tasks": 120,
+    "control": 92.9,
+    "arm": 83.9,
+    "delta_pts": -9.0,
+    "ci95": [
+     -12.4,
+     -6.0
+    ]
+   },
+   "hidden_tool": {
+    "n_tasks": 20,
+    "control": 95.8,
+    "arm": 77.5,
+    "delta_pts": -18.3,
+    "ci95": [
+     -25.8,
+     -11.7
+    ]
+   },
+   "leaks": 0,
+   "context_exposures": 0,
+   "usd": 130.91
+  },
+  "decision": "full",
+  "full_usd": 124.72
+ },
+ "per_model": {
+  "claude-sonnet-5-5": {
+   "starter": {
+    "pass": false,
+    "pooled": {
+     "n_tasks": 120,
+     "control": 88.8,
+     "arm": 82.5,
+     "delta_pts": -6.2,
+     "ci95": [
+      -11.7,
+      -1.7
+     ]
+    },
+    "hidden_tool": {
+     "n_tasks": 20,
+     "control": 100.0,
+     "arm": 57.5,
+     "delta_pts": -42.5,
+     "ci95": [
+      -62.5,
+      -25.0
+     ]
+    },
+    "leaks": 0,
+    "context_exposures": 0,
+    "usd": 33.93
+   },
+   "verbs": {
+    "pass": false,
+    "pooled": {
+     "n_tasks": 120,
+     "control": 88.8,
+     "arm": 80.4,
+     "delta_pts": -8.3,
+     "ci95": [
+      -13.3,
+      -3.8
+     ]
+    },
+    "hidden_tool": {
+     "n_tasks": 20,
+     "control": 100.0,
+     "arm": 87.5,
+     "delta_pts": -12.5,
+     "ci95": [
+      -22.5,
+      -5.0
+     ]
+    },
+    "leaks": 0,
+    "context_exposures": 0,
+    "usd": 42.67
+   },
+   "decision": "full",
+   "full_usd": 36.0
+  },
+  "gpt-6.1-sol": {
+   "starter": {
+    "pass": false,
+    "pooled": {
+     "n_tasks": 120,
+     "control": 96.2,
+     "arm": 82.1,
+     "delta_pts": -14.2,
+     "ci95": [
+      -20.4,
+      -8.3
+     ]
+    },
+    "hidden_tool": {
+     "n_tasks": 20,
+     "control": 87.5,
+     "arm": 5.0,
+     "delta_pts": -82.5,
+     "ci95": [
+      -95.0,
+      -70.0
+     ]
+    },
+    "leaks": 0,
+    "context_exposures": 0,
+    "usd": 16.7
+   },
+   "verbs": {
+    "pass": false,
+    "pooled": {
+     "n_tasks": 120,
+     "control": 96.2,
+     "arm": 86.2,
+     "delta_pts": -10.0,
+     "ci95": [
+      -14.6,
+      -5.8
+     ]
+    },
+    "hidden_tool": {
+     "n_tasks": 20,
+     "control": 87.5,
+     "arm": 50.0,
+     "delta_pts": -37.5,
+     "ci95": [
+      -50.0,
+      -25.0
+     ]
+    },
+    "leaks": 0,
+    "context_exposures": 0,
+    "usd": 23.45
+   },
+   "decision": "full",
+   "full_usd": 17.35
+  },
+  "claude-opus-5-5": {
+   "starter": {
+    "pass": true,
+    "pooled": {
+     "n_tasks": 120,
+     "control": 93.8,
+     "arm": 91.7,
+     "delta_pts": -2.1,
+     "ci95": [
+      -5.4,
+      0.8
+     ]
+    },
+    "hidden_tool": {
+     "n_tasks": 20,
+     "control": 100.0,
+     "arm": 100.0,
+     "delta_pts": 0.0,
+     "ci95": [
+      0.0,
+      0.0
+     ]
+    },
+    "leaks": 0,
+    "context_exposures": 0,
+    "usd": 69.98
+   },
+   "verbs": {
+    "pass": false,
+    "pooled": {
+     "n_tasks": 120,
+     "control": 93.8,
+     "arm": 85.0,
+     "delta_pts": -8.8,
+     "ci95": [
+      -13.3,
+      -4.6
+     ]
+    },
+    "hidden_tool": {
+     "n_tasks": 20,
+     "control": 100.0,
+     "arm": 95.0,
+     "delta_pts": -5.0,
+     "ci95": [
+      -12.5,
+      0.0
+     ]
+    },
+    "leaks": 0,
+    "context_exposures": 0,
+    "usd": 64.79
+   },
+   "decision": "starter",
+   "full_usd": 71.38
+  },
+  "claude-fable-5-1": {
+   "starter": {
+    "pass": false,
+    "pooled": {
+     "n_tasks": 120,
+     "control": 94.2,
+     "arm": 82.5,
+     "delta_pts": -11.7,
+     "ci95": [
+      -18.3,
+      -5.0
+     ]
+    },
+    "hidden_tool": {
+     "n_tasks": 20,
+     "control": 100.0,
+     "arm": 25.0,
+     "delta_pts": -75.0,
+     "ci95": [
+      -90.0,
+      -55.0
+     ]
+    },
+    "leaks": 0,
+    "context_exposures": 0,
+    "usd": 112.95
+   },
+   "verbs": {
+    "pass": false,
+    "pooled": {
+     "n_tasks": 120,
+     "control": 94.2,
+     "arm": 81.7,
+     "delta_pts": -12.5,
+     "ci95": [
+      -20.0,
+      -5.8
+     ]
+    },
+    "hidden_tool": {
+     "n_tasks": 20,
+     "control": 100.0,
+     "arm": 70.0,
+     "delta_pts": -30.0,
+     "ci95": [
+      -50.0,
+      -10.0
+     ]
+    },
+    "leaks": 0,
+    "context_exposures": 0,
+    "usd": 110.06
+   },
+   "decision": "full",
+   "full_usd": 112.03
+  }
+ },
+ "success_by_model": {
+  "claude-sonnet-5-5": {
+   "starter": 82.5,
+   "verbs": 80.4,
+   "full": 88.8
+  },
+  "gpt-6.1-sol": {
+   "starter": 82.1,
+   "verbs": 86.2,
+   "full": 96.2
+  },
+  "claude-opus-5-5": {
+   "starter": 91.7,
+   "verbs": 85.0,
+   "full": 93.8
+  },
+  "claude-fable-5-1": {
+   "starter": 82.5,
+   "verbs": 81.7,
+   "full": 94.2
+  }
+ },
+ "ceilings": {},
+ "spend_usd": {
+  "pilot": 51.06,
+  "sonnet": 113.21,
+  "gpt": 60.23,
+  "opus": 206.77,
+  "fable": 335.66,
+  "total": 766.93,
+  "cap": 800
+ }
+}
