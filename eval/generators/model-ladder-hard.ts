@@ -65,11 +65,16 @@ export const HARD_KNOBS_DIR = resolve(import.meta.dir, '../../docs/benchmarks/ca
 export const HARD_STAFF = 18;
 /** Generator v2: account managers of appended (50k) accounts, a separate team, so a 4k record's manager reference stays unique at 50k. */
 export const HARD_STAFF_LARGE = 150;
-/** World sizes the generator holds (CEO-F5): about 4,000 and about 50,000 documents, within 25%. */
+/**
+ * World sizes the generator holds (CEO-F5): about 4,000 and about 50,000 documents, within 25%. A multi-account 4k
+ * world (amendment A2) is only the 50k world's base and runs no cells, so only its 50k world is held to a size.
+ */
 export const HARD_SIZE = { v1: [3000, 5000], large: [37_500, 62_500] } as const;
 /** Appended look-alikes per H3 task at 50k. */
 export const LARGE_LOOKALIKES_PER_H3 = 3;
 const MAX_DRAWS = 20_000;
+/** H1 predicate attempts (of 5,000) before a question is narrowed to one region or segment. */
+const H1_SCOPE_AFTER = 2500;
 
 type Term = 'seats' | 'payment_terms' | 'liability_cap' | 'uptime_sla';
 const TERMS: Term[] = ['seats', 'payment_terms', 'liability_cap', 'uptime_sla'];
@@ -209,10 +214,11 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
   };
   /** Draws that reject values already used elsewhere take one number from the caller's stream and reject on a sub-stream, so a collision never shifts the caller's later draws (ENG-F15). */
   const sub = (rng: Rng) => new Rng(Math.floor(rng.float() * 4294967296));
+  const lastNames = (K.multi_account_max ?? 1) > 1 ? [...R.LAST, ...R.LAST_MORE] : R.LAST;
   const person = (parent: Rng, large = false) => {
     const rng = sub(parent);
     if (large) return `${rng.pick(R.FIRST_LARGE)} ${rng.pick(R.LAST)}`;
-    const p = draw(() => `${rng.pick(R.FIRST)} ${rng.pick(R.LAST)}`, x => !usedPersons.has(x), 'person names');
+    const p = draw(() => `${rng.pick(R.FIRST)} ${rng.pick(lastNames)}`, x => !usedPersons.has(x), 'person names');
     usedPersons.add(p);
     return p;
   };
@@ -301,6 +307,13 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
     a.docIds = docs.slice(mark).map(d => d.id);
     (large ? appended : accounts).push(a);
     return a;
+  };
+
+  /** Undo a just-created account (a rejected draw): its list entry, names, nickname and documents. */
+  const discard = (a: HardAccount, mark: number) => {
+    (a.large ? appended : accounts).pop();
+    usedNames.delete(nameKey(a.name)); usedNames.delete(nameKey(a.code)); if (a.nickname) usedNicknames.delete(a.nickname);
+    for (const d of docs.splice(mark)) ids.delete(d.id);
   };
 
   /** Timelines: owner handoffs, renewal, contract terms and tickets, with their documents. */
@@ -419,13 +432,51 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
   const today = HARD_TODAY;
   const taskId = (f: HardFamily, i: number) => `${f}-${String(i + 1).padStart(2, '0')}`;
 
+  // ─── Multi-account questions (amendment A2) ──────────────────────
+  /**
+   * One item of an H2 to H4 question (WORLD_SCHEMA.md, "Multi-account questions"): its single-account question, the
+   * account asked about, the key and its evidence. Item j of task i draws from streams named `<i>:<j>` (part 0 keeps v2's `<i>`) and takes the
+   * variant and attribute of virtual index i + j * (tasks_per_family + 1).
+   */
+  interface Part { created: HardAccount[]; accounts: string[]; asked: string; variant: string; question: string; answer: string; wrong: string[]; evidence: string[]; relevant: string[] }
+  const partKey = (i: number, j: number) => (j ? [i, j] : [i]);
+  const partIndex = (i: number, j: number) => i + j * (nTasks + 1);
+  /** Accounts per question: 1 unless the multi-account knobs say otherwise, drawn per task from its own stream. */
+  const accountsPer = (f: HardFamily, i: number) => ((K.multi_account_max ?? 1) <= 1 ? 1 : rngFor(seed, 'accounts-per', f, i).int(K.multi_account_min!, K.multi_account_max!));
+  /** Two accounts a single search could connect: same descriptor, first word or code prefix, or an account manager in common. */
+  const linked = (a: HardAccount, b: HardAccount) => descriptorOf(a) === descriptorOf(b) || a.base === b.base || a.code.slice(0, 3) === b.code.slice(0, 3) || a.owner.some(e => b.owner.some(o => o.value === e.value));
+  /** Create an account for a question item, redrawn until it is linked to no account of the question's earlier parts. */
+  const createFor = (taken: HardAccount[], streamKey: string, o: Parameters<typeof createAccount>[1]) => {
+    for (let attempt = 0; attempt < 200; attempt++) {
+      const mark = docs.length;
+      const a = createAccount(attempt ? `${streamKey}:${attempt}` : streamKey, o);
+      if (!taken.some(t => linked(a, t))) return a;
+      discard(a, mark);
+    }
+    throw new Error(`model-ladder-hard: no account for ${streamKey} that is unlinked to its question's other accounts`);
+  };
+  /** Numbered items of a multi-account question, each a single-account question, answered as one JSON array. */
+  const itemsQuestion = (questions: string[]) => `Answer each of these ${questions.length} questions:\n${questions.map((q, n) => `${n + 1}. ${q}`).join('\n')}\nAnswer with a JSON array of the ${questions.length} answers in the order asked, as one string in \`answer\`, for example ["first answer","second answer"].`;
+  const multiTasks = (f: HardFamily, make: (i: number, j: number, taken: HardAccount[]) => Part) => {
+    for (let i = 0; i < nTasks; i++) {
+      const taken: HardAccount[] = [], parts: Part[] = [];
+      for (let j = 0, k = accountsPer(f, i); j < k; j++) { const p = make(i, j, taken); taken.push(...p.created); parts.push(p); }
+      const [p] = parts;
+      tasks.push(parts.length === 1
+        ? { id: taskId(f, i), family: f, variant: p.variant, answer_kind: 'value', accounts: p.accounts, question: p.question, gold: { answer: [p.answer], wrong: p.wrong, evidence: p.evidence }, relevant: p.relevant }
+        : { id: taskId(f, i), family: f, variant: parts.map(x => x.variant).join('|'), answer_kind: 'values', accounts: [...new Set(parts.flatMap(x => x.accounts))], question: itemsQuestion(parts.map(x => x.question)),
+          gold: { items: parts.map(x => ({ account: x.asked, answer: [x.answer], wrong: x.wrong })), evidence: [...new Set(parts.flatMap(x => x.evidence))] }, relevant: [...new Set(parts.flatMap(x => x.relevant))] });
+    }
+  };
+
   // ─── H2: long histories ──────────────────────────────────────────
-  for (let i = 0; i < nTasks; i++) {
-    const rng = rngFor(seed, 'task', 'H2', i);
-    const a = createAccount(`H2:${i}`, { role: 'H2' });
-    const attr: Term = i % 2 ? 'liability_cap' : 'seats';
+  multiTasks('H2', (i, j, taken) => {
+    const s = partIndex(i, j);
+    const rng = rngFor(seed, 'task', 'H2', ...partKey(i, j));
+    const a = createFor(taken, `H2:${partKey(i, j).join(':')}`, { role: 'H2' });
+    const attr: Term = s % 2 ? 'liability_cap' : 'seats';
     const label = R.TERM_LABELS[attr];
-    const variant = ['intermediate', 'current_with_corrections', 'before_backdated'][i % 3];
+    const variant = ['intermediate', 'current_with_corrections', 'before_backdated'][s % 3];
     const n = rng.int(K.h2_changes_min, K.h2_changes_max);
     const events = a.terms[attr];
     const values = [events[0].value];
@@ -473,32 +524,33 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
       notes.push(add({ id: `notes/agents/${nd}-${a.slug}-${attr}-summary`, title: () => `Agent summary: ${I.name} ${label}`, type: 'agent-note', date: nd, author: 'agent:research-assistant', refs: [I],
         body: () => R.frontmatterless(`Contract summary: ${I.name} (auto-generated)`, [`The ${label} for ${I.code} is ${v}, from the latest change order I could find.`, 'Confidence: high.']) }));
     }
-    const asName = refsOn || i % 2 === 0;
-    tasks.push({
-      id: taskId('H2', i), family: 'H2', variant, answer_kind: 'value', accounts: [a.id],
+    const asName = refsOn || s % 2 === 0;
+    return {
+      created: [a], accounts: [a.id], asked: a.id, variant,
       question: attr === 'seats' ? `How many licensed seats did ${asName ? a.name : a.code} have under contract on ${D}?` : `What was the liability cap in our agreement with ${asName ? a.name : a.code} on ${D}?`,
-      gold: { answer: [gold], wrong: others, evidence: [eventAsOf(events, D)!.doc] },
+      answer: gold, wrong: others, evidence: [eventAsOf(events, D)!.doc],
       relevant: [a.contractDoc, a.crmDoc, ...new Set(changes.map(e => e.doc))],
-    });
-  }
+    };
+  });
 
   // ─── H3: look-alikes ─────────────────────────────────────────────
   const h3Targets: Array<{ task: number; base: string; prefix?: string; champion: string; variant: string; accountId: string }> = [];
   const nowValue = (a: HardAccount, attr: Term | 'renewal_date' | 'owner') => attr === 'owner' ? valueAsOf(a.owner, today)! : attr === 'renewal_date' ? valueAsOf(a.renewal, today)! : valueAsOf(a.terms[attr], today)!;
   const nowDoc = (a: HardAccount, attr: Term | 'renewal_date' | 'owner') => eventAsOf(attr === 'owner' ? a.owner : attr === 'renewal_date' ? a.renewal : a.terms[attr], today)!.doc;
   const attrDocs = (a: HardAccount, attr: Term | 'renewal_date' | 'owner') => [...new Set((attr === 'owner' ? a.owner : attr === 'renewal_date' ? a.renewal : a.terms[attr]).map(e => e.doc))];
-  for (let i = 0; i < nTasks; i++) {
-    const rng = rngFor(seed, 'task', 'H3', i);
-    const variant = ['shared_first_word', 'code_prefix', 'renamed', 'merged'][i % 4];
-    const attr = (['payment_terms', 'seats', 'renewal_date', 'owner'] as const)[Math.floor(i / 4) % 4];
+  multiTasks('H3', (i, j, taken) => {
+    const s = partIndex(i, j), key = partKey(i, j).join(':');
+    const rng = rngFor(seed, 'task', 'H3', ...partKey(i, j));
+    const variant = ['shared_first_word', 'code_prefix', 'renamed', 'merged'][s % 4];
+    const attr = (['payment_terms', 'seats', 'renewal_date', 'owner'] as const)[Math.floor(s / 4) % 4];
     const label = attr === 'owner' ? 'account owner' : R.TERM_LABELS[attr];
     let target: HardAccount, holder: HardAccount, ambiguous: string, prefix: string | undefined;
     const wrongExtra: string[] = [];
     const relevant: string[] = [];
     const evidence: string[] = [];
     if (variant === 'merged') {
-      holder = createAccount(`H3:${i}:holder`, { role: 'H3', fresh: true });
-      target = createAccount(`H3:${i}:merged`, { role: 'H3', fresh: true });
+      holder = createFor(taken, `H3:${key}:holder`, { role: 'H3', fresh: true });
+      target = createFor(taken, `H3:${key}:merged`, { role: 'H3', fresh: true });
       ambiguous = target.base;
       const md = rng.date('2026-03-01', '2026-08-20');
       const doc = add({ id: `mail/${md.slice(0, 7)}/${md}-merger-${slugify(target.code)}`, title: `Merger: ${target.name} and ${holder.name}`, type: 'email', date: md, author: 'legal@acme-example', resolution: true,
@@ -514,7 +566,7 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
       relevant.push(doc, target.contractDoc, target.crmDoc);
       evidence.push(doc, target.contractDoc);
     } else {
-      target = createAccount(`H3:${i}:target`, { role: 'H3', fresh: true });
+      target = createFor(taken, `H3:${key}:target`, { role: 'H3', fresh: true });
       holder = target;
       ambiguous = target.base;
       if (variant === 'code_prefix') prefix = target.code.slice(0, 3);
@@ -533,7 +585,7 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
         const ce = ceDraw <= today ? ceDraw : today;
         wrongExtra.push(nowValue(target, attr));
         if (attr === 'owner') {
-          const next = draw(() => rng.pick(staff), x => x !== valueAsOf(target.owner, today), 'owners');
+          const next = draw(() => rng.pick(staff), x => x !== valueAsOf(target.owner, today) && !taken.some(t => t.owner.some(e => e.value === x)), 'owners');
           const I = ident(target, { noManager: true });
           const hd = add({ id: `mail/${ce.slice(0, 7)}/${ce}-handoff-${slugify(nc)}`, title: () => `Handoff: ${I.name}`, type: 'email', date: ce, author: 'sales-ops@acme-example', refs: [I],
             body: () => `From: sales-ops@acme-example\nDate: ${ce}\nSubject: Handoff of ${I.name}\n\nEffective ${ce}, ${next} takes over as account owner for ${R.both(I.name, I.code)}.` });
@@ -558,12 +610,10 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
       let look: HardAccount | null = null;
       for (let attempt = 0; attempt < 50; attempt++) {
         const mark = docs.length;
-        const cand = createAccount(`H3:${i}:look:${k}:${attempt}`, { role: 'H3-lookalike', base: prefix ? undefined : ambiguous, codePrefix: prefix });
+        const cand = createAccount(`H3:${key}:look:${k}:${attempt}`, { role: 'H3-lookalike', base: prefix ? undefined : ambiguous, codePrefix: prefix });
         const v = nowValue(cand, attr);
         if (v !== gold && pairwiseClean([gold, v])) { look = cand; break; }
-        accounts.pop();
-        usedNames.delete(nameKey(cand.name)); usedNames.delete(nameKey(cand.code)); if (cand.nickname) usedNicknames.delete(cand.nickname);
-        for (const d of docs.splice(mark)) ids.delete(d.id);
+        discard(cand, mark);
       }
       if (!look) throw new Error(`model-ladder-hard: H3 task index ${i}: no look-alike with a different value`);
       wrongExtra.push(nowValue(look, attr));
@@ -578,9 +628,9 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
       : `Who is the account owner right now for ${who}?`;
     const wrong = [...new Set(wrongExtra.filter(v => v !== gold))];
     h3Targets.push({ task: i, base: ambiguous, prefix, champion: target.champion, variant, accountId: holder.id });
-    tasks.push({ id: taskId('H3', i), family: 'H3', variant: `${variant}:${attr}`, answer_kind: 'value', accounts: [holder.id], question,
-      gold: { answer: [gold], wrong, evidence: [...new Set(evidence)] }, relevant: [...new Set(relevant)] });
-  }
+    return { created: variant === 'merged' ? [holder, target] : [holder], accounts: [holder.id], asked: holder.id, variant: `${variant}:${attr}`, question,
+      answer: gold, wrong, evidence: [...new Set(evidence)], relevant: [...new Set(relevant)] };
+  });
 
   // Records written on or after a rename use the new name and code (the rename announcement says so); earlier ones keep the old.
   for (const a of accounts.filter(x => x.former)) {
@@ -597,11 +647,12 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
   }
 
   // ─── H4: conflicting sources by authority ─────────────────────────
-  for (let i = 0; i < nTasks; i++) {
-    const rng = rngFor(seed, 'task', 'H4', i);
-    const a = createAccount(`H4:${i}`, { role: 'H4' });
-    const variant = ['contract_holds', 'amended', 'later_effective_wins', 'future_effective'][i % 4];
-    const attr = TERMS[Math.floor(i / 4) % 4];
+  multiTasks('H4', (i, j, taken) => {
+    const s = partIndex(i, j);
+    const rng = rngFor(seed, 'task', 'H4', ...partKey(i, j));
+    const a = createFor(taken, `H4:${partKey(i, j).join(':')}`, { role: 'H4' });
+    const variant = ['contract_holds', 'amended', 'later_effective_wins', 'future_effective'][s % 4];
+    const attr = TERMS[Math.floor(s / 4) % 4];
     const label = R.TERM_LABELS[attr];
     const events = a.terms[attr];
     const values = [events[0].value];
@@ -658,29 +709,31 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
       }
     }
     const gold = valueAsOf(events, today)!;
-    const asked = refsOn || i % 2 === 0 ? a.name : a.code;
-    tasks.push({ id: taskId('H4', i), family: 'H4', variant: `${variant}${long ? '+long' : ''}:${attr}`, answer_kind: 'value', accounts: [a.id],
+    const asked = refsOn || s % 2 === 0 ? a.name : a.code;
+    return { created: [a], accounts: [a.id], asked: a.id, variant: `${variant}${long ? '+long' : ''}:${attr}`,
       question: attr === 'seats' ? `How many licensed seats does ${asked} have under contract right now?`
         : attr === 'payment_terms' ? `What payment terms are currently in force with ${asked}?`
         : attr === 'uptime_sla' ? `What uptime SLA do we currently owe ${asked}?`
         : `What is the current liability cap in our agreement with ${asked}?`,
-      gold: { answer: [gold], wrong: values.filter(v => v !== gold), evidence: [eventAsOf(events, today)!.doc] },
-      relevant: [a.crmDoc, ...executed, ...lower] });
-  }
+      answer: gold, wrong: values.filter(v => v !== gold), evidence: [eventAsOf(events, today)!.doc],
+      relevant: [a.crmDoc, ...executed, ...lower] };
+  });
 
   // ─── H5: memory across five sessions ──────────────────────────────
   const discount = (rng: Rng) => uniqueValue(rng, r => `DISC-${r.pick([...'ABCDEFGHJKLMNPQRSTUVWXYZ'])}${r.pick([...'ABCDEFGHJKLMNPQRSTUVWXYZ'])}${r.int(100, 999)}`, 'H5');
-  for (let i = 0; i < nTasks; i++) {
-    const rng = rngFor(seed, 'task', 'H5', i);
-    const variant = i % 2 ? 'merge' : 'routing';
-    const x = createAccount(`H5:${i}:x`, { role: 'H5', fresh: true });
-    const record = 'Please record this in the knowledge base so that other people and agents see it. When it is recorded, submit the answer RECORDED.';
+  const record = 'Please record this in the knowledge base so that other people and agents see it. When it is recorded, submit the answer RECORDED.';
+  /** One account's statement chain (four facts, one per recording session) and the question it answers. */
+  const h5Chain = (i: number, j: number, taken: HardAccount[]) => {
+    const key = partKey(i, j).join(':');
+    const rng = rngFor(seed, 'task', 'H5', ...partKey(i, j));
+    const variant = partIndex(i, j) % 2 ? 'merge' : 'routing';
+    const x = createFor(taken, `H5:${key}:x`, { role: 'H5', fresh: true });
     let facts: Array<{ key: string; value: string; text: string; role: 'superseded' | 'required' | 'superseding' | 'noise' }>;
     let question: string, wrong: string[], relevant: string[];
     const docValues: Record<string, string> = {};
     let y: HardAccount | null = null;
     if (variant === 'routing') {
-      const look = createAccount(`H5:${i}:look`, { role: 'H5-lookalike', base: x.base });
+      const look = createAccount(`H5:${key}:look`, { role: 'H5-lookalike', base: x.base });
       const [pa, pb, pc] = [person(rng), person(rng), person(rng)];
       facts = [
         { key: `procurement_lead:${x.id}`, value: pa, role: 'superseded', text: `Quick update for the team: ${pa} is the procurement lead at ${x.name}.` },
@@ -694,8 +747,8 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
       wrong = [pa, x.billing, ...(K.h5_noise_sessions ? [pc] : [])];
       relevant = [x.crmDoc, x.contractDoc, look.crmDoc];
     } else {
-      y = createAccount(`H5:${i}:y`, { role: 'H5', fresh: true });
-      const ly = createAccount(`H5:${i}:look`, { role: 'H5-lookalike', base: y.base });
+      y = createFor(taken, `H5:${key}:y`, { role: 'H5', fresh: true });
+      const ly = createAccount(`H5:${key}:look`, { role: 'H5-lookalike', base: y.base });
       const [dx0, dy0, d1, d2, d3] = [discount(rng), discount(rng), discount(rng), discount(rng), discount(rng)];
       const codeDocs: string[] = [];
       for (const [acc, code] of [[x, dx0], [y, dy0]] as const) {
@@ -725,14 +778,20 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
     const gold = h5Resolve(variant, statements, { x: x.id, y: y?.id ?? null, ...docValues })!;
     const stateNow = (key: string) => statedValue(statements, key, null);
     const note = variant === 'routing'
-      ? `Recorded from team updates (sessions 1 to 4):\n- ${x.name}: procurement lead is ${stateNow(`procurement_lead:${x.id}`)} (this replaces an earlier entry).\n- ${x.name}: renewal invoices go to the procurement lead, not to the billing contact on file.`
-      : `Recorded from team updates (sessions 1 to 4):\n- ${y!.name} is folded into ${x.name}; ${possessive(y!.name)} orders use ${possessive(x.name)} discount code.\n- ${x.name}: discount code is ${stateNow(`discount_code:${x.id}`)} (this replaces an earlier entry).`;
-    tasks.push({
-      id: taskId('H5', i), family: 'H5', variant, answer_kind: 'value', accounts: [x.id, ...(y ? [y.id] : [])],
-      sessions: order.map(fi => `${facts[fi].text} ${record}`), question,
-      gold: { answer: [gold], wrong: [...new Set(wrong)].filter(v => v !== gold), evidence: [] },
-      relevant, oracle_notes: [{ id: `notes/${taskId('H5', i).toLowerCase()}-ideal-store`, title: 'Recorded team updates', body: note }], session_facts: sessionFacts,
-    });
+      ? `- ${x.name}: procurement lead is ${stateNow(`procurement_lead:${x.id}`)} (this replaces an earlier entry).\n- ${x.name}: renewal invoices go to the procurement lead, not to the billing contact on file.`
+      : `- ${y!.name} is folded into ${x.name}; ${possessive(y!.name)} orders use ${possessive(x.name)} discount code.\n- ${x.name}: discount code is ${stateNow(`discount_code:${x.id}`)} (this replaces an earlier entry).`;
+    return { created: [x, ...(y ? [y] : [])], variant, accounts: [x.id, ...(y ? [y.id] : [])], asked: y?.id ?? x.id, statements: order.map(fi => facts[fi].text), sessionFacts, question, gold, wrong: [...new Set(wrong)].filter(v => v !== gold), relevant, note };
+  };
+  for (let i = 0; i < nTasks; i++) {
+    const taken: HardAccount[] = [], chains: Array<ReturnType<typeof h5Chain>> = [];
+    for (let j = 0, k = accountsPer('H5', i); j < k; j++) { const c = h5Chain(i, j, taken); taken.push(...c.created); chains.push(c); }
+    const [c] = chains;
+    const sessions = [0, 1, 2, 3].map(n => `${chains.map(x => x.statements[n]).join(' ')} ${record}`);
+    const store = { oracle_notes: [{ id: `notes/${taskId('H5', i).toLowerCase()}-ideal-store`, title: 'Recorded team updates', body: `Recorded from team updates (sessions 1 to 4):\n${chains.map(x => x.note).join('\n')}` }], session_facts: [0, 1, 2, 3].flatMap(n => chains.map(x => x.sessionFacts[n])) };
+    tasks.push(chains.length === 1
+      ? { id: taskId('H5', i), family: 'H5', variant: c.variant, answer_kind: 'value', accounts: c.accounts, sessions, question: c.question, gold: { answer: [c.gold], wrong: c.wrong, evidence: [] }, relevant: c.relevant, ...store }
+      : { id: taskId('H5', i), family: 'H5', variant: chains.map(x => x.variant).join('|'), answer_kind: 'values', accounts: chains.flatMap(x => x.accounts), sessions, question: itemsQuestion(chains.map(x => x.question)),
+        gold: { items: chains.map(x => ({ account: x.asked, answer: [x.gold], wrong: x.wrong })), evidence: [] }, relevant: [...new Set(chains.flatMap(x => x.relevant))], ...store });
   }
 
   // ─── Background population ────────────────────────────────────────
@@ -749,13 +808,18 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
     for (let attempt = 0; attempt < 5000 && !found; attempt++) {
       const asOf = rng.chance(0.4) ? today : rng.date('2026-03-01', '2026-09-14');
       const st = rng.pick(staff), seg = rng.pick(R.SEGMENTS), reg = rng.pick(R.REGIONS), days = rng.pick([30, 45, 60, 90, 120]);
+      // Past half the attempts a question is narrowed to one region (template 5, already by region: to one segment), for
+      // populations whose plain sets exceed h1_max_members (multi-account worlds have about twice the accounts).
+      const scoped = attempt >= H1_SCOPE_AFTER;
+      const extra: H1Clause[] = !scoped ? [] : template === 5 ? [{ kind: 'segment', segment: seg }] : [{ kind: 'region', region: reg }];
+      const accts = !scoped ? 'accounts' : `${reg} accounts`;
       const spec: { clauses: H1Clause[]; q: string; kind: 'set' | 'count' } =
-        template === 0 ? { clauses: [{ kind: 'owner', staff: st }], kind: 'count', q: `How many accounts did ${st} own on ${asOf}?` }
-        : template === 1 ? { clauses: [{ kind: 'owner', staff: st }], kind: 'set', q: `Which accounts did ${st} own on ${asOf}?` }
-        : template === 2 ? { clauses: [{ kind: 'segment', segment: seg }, { kind: 'open_escalated_ticket' }], kind: 'set', q: `Which ${seg} accounts had an open escalated support ticket on ${asOf}?` }
-        : template === 3 ? { clauses: [{ kind: 'open_escalated_ticket' }, { kind: 'renewal_within', days }], kind: 'count', q: `How many accounts had an open escalated support ticket and a contract renewal date within ${days} days on ${asOf}?` }
-        : template === 4 ? { clauses: [{ kind: 'open_escalated_ticket' }, { kind: 'renewal_within', days }], kind: 'set', q: `Which accounts had an open escalated support ticket and a contract renewal date within ${days} days on ${asOf}?` }
-        : { clauses: [{ kind: 'region', region: reg }, { kind: 'renewal_within', days }], kind: 'count', q: `How many ${reg} accounts had a contract renewal date within ${days} days of ${asOf}?` };
+        template === 0 ? { clauses: [{ kind: 'owner', staff: st }, ...extra], kind: 'count', q: `How many ${accts} did ${st} own on ${asOf}?` }
+        : template === 1 ? { clauses: [{ kind: 'owner', staff: st }, ...extra], kind: 'set', q: `Which ${accts} did ${st} own on ${asOf}?` }
+        : template === 2 ? { clauses: [{ kind: 'segment', segment: seg }, { kind: 'open_escalated_ticket' }, ...extra], kind: 'set', q: `Which ${seg} ${accts} had an open escalated support ticket on ${asOf}?` }
+        : template === 3 ? { clauses: [{ kind: 'open_escalated_ticket' }, { kind: 'renewal_within', days }, ...extra], kind: 'count', q: `How many ${accts} had an open escalated support ticket and a contract renewal date within ${days} days on ${asOf}?` }
+        : template === 4 ? { clauses: [{ kind: 'open_escalated_ticket' }, { kind: 'renewal_within', days }, ...extra], kind: 'set', q: `Which ${accts} had an open escalated support ticket and a contract renewal date within ${days} days on ${asOf}?` }
+        : { clauses: [{ kind: 'region', region: reg }, { kind: 'renewal_within', days }, ...extra], kind: 'count', q: `How many ${scoped ? `${seg} ` : ''}${reg} accounts had a contract renewal date within ${days} days of ${asOf}?` };
       const p: H1Predicate = { as_of: asOf, clauses: spec.clauses };
       const r = evaluatePredicate(p, facts);
       if (r.members.length >= K.h1_min_members && r.members.length <= K.h1_max_members && !h1Tasks.some(t => JSON.stringify(t.predicate) === JSON.stringify(p)) && !onEdge(p, facts)) found = { p, ...r, q: spec.q, kind: spec.kind };
@@ -798,9 +862,7 @@ export function buildHardLedger(seed: number, knobs: HardKnobs, opts: { scale?: 
         const mark = docs.length;
         const cand = createAccount(`large:${k}:${attempt}`, { role: spec ? 'large-lookalike' : 'large', large: true, base: spec && !spec.prefix ? spec.base : undefined, codePrefix: spec?.prefix });
         if (!satisfiesAny(cand)) { a = cand; for (const d of docs.slice(mark)) appendedDocIds.add(d.id); break; }
-        appended.pop();
-        usedNames.delete(nameKey(cand.name)); usedNames.delete(nameKey(cand.code)); if (cand.nickname) usedNicknames.delete(cand.nickname);
-        for (const d of docs.splice(mark)) ids.delete(d.id);
+        discard(cand, mark);
       }
       if (!a) throw new Error(`model-ladder-hard: appended account index ${k} satisfies an H1 predicate after 60 draws`);
     }
@@ -1011,7 +1073,8 @@ export function generateHardWorld(seed: number = HARD_SEEDS.calibration, knobs: 
     if (bad) throw new Error(`model-ladder-hard: 50k invariance failed: ${bad} appended-account documents name a 4k account`);
   }
   const [lo, hi] = HARD_SIZE[scale];
-  if (!opts.skipSizeCheck && (docs.length < lo || docs.length > hi)) throw new Error(`model-ladder-hard: the ${scale === 'large' ? '50k' : '4k'} world has ${docs.length} documents, outside ${lo}-${hi}; change the accounts or large_extra_accounts knob`);
+  const baseOnly = scale === 'v1' && (knobs.multi_account_max ?? 1) > 1;
+  if (!opts.skipSizeCheck && !baseOnly && (docs.length < lo || docs.length > hi)) throw new Error(`model-ladder-hard: the ${scale === 'large' ? '50k' : '4k'} world has ${docs.length} documents, outside ${lo}-${hi}; change the accounts or large_extra_accounts knob`);
   assertHardWorld(world);
   return world;
 }

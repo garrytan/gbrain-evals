@@ -253,7 +253,7 @@ describe('rescore.ts --hard (DX-F14, ENG-F6)', () => {
     const h5 = records.find(r => r.key === `${SONNET}|fs|H5-01|0`)!;
     expect(h5.score.success).toBe(false);
     expect(h5.rescored.score).toMatchObject({ success: true, wrote: true, recorded: [true, true, true, true] });
-    expect(h5.rescored).toMatchObject({ scorer_version: 'cat40-hard-score-v1', success_changed: true });
+    expect(h5.rescored).toMatchObject({ scorer_version: 'cat40-hard-score-v2', success_changed: true });
     const retried = records.filter(r => r.task === 'H1-01' && r.arm === 'fs');
     expect(retried.map(r => r.rescored.score?.success)).toEqual([false, true]);
     expect(summary).toMatchObject({ lines: 7, canonical_cells: 6, changed: [{ key: `${SONNET}|fs|H5-01|0`, original: false, rescored: true }], by_arm: { fs: { cells: 3, success_original: 1, success_rescored: 2 }, oracle: { cells: 3, success_original: 3, success_rescored: 3 } } });

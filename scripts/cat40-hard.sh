@@ -14,14 +14,14 @@
 #   freeze-check   ROUND=N: fs+pg+oracle on Opus 5.5, Fable 5.1 and GPT-6.1 Sol on round N's world (at most 2), then the analyzer over all five models
 #   freeze         copy knobs.round-N.json to knobs.frozen.json and write freeze.json (code hashes, settings digest)            free
 #   smoke          gbrain smoke on seed 20261099 with the frozen generator: 1 slot build and 1 task per family on Sonnet 5.5
-#   heldout-world  held-out worlds (seed 20261006, 4k and 50k) from the frozen knobs; records hashes only                       free
-#   slots-4k       5 gbrain slot snapshots on the 4k held-out world
-#   simple-4k      oracle, fs, pg and memory on the five frontier models, 20 tasks per family, 1 repeat
-#   comparator     the preregistered comparator from the simple arms (holdout_stats.py --hard-comparator)                     free
-#   gbrain-4k      gbrain on the five frontier models on the 4k held-out world
+#   heldout-world  the 50k held-out world (seed 20261006) and its 4k base from the frozen knobs; records hashes only          free
 #   slots-50k      5 gbrain slot snapshots on the 50k held-out world
-#   cells-50k      a 5-cell gbrain smoke on the 50k slots (halts on any harness error), then gbrain and fs on every model, then the oracle on H1
-#   report         analysis tables, the primary endpoint and every comparison, from committed results                       free
+#   cells-50k      batch (a), primary: a 5-cell gbrain smoke on the 50k slots (halts on any harness error), then gbrain and fs on every model
+#   oracle-50k     batch (b): the oracle reference on every model
+#   pg-50k         batch (c): pg on every model
+#   memory-50k     batch (d): memory on Sonnet 5.5 and GPT-6.1 Sol
+#   report         analysis tables, the primary endpoint (gbrain minus fs at 50k) and every comparison, from committed results free
+# Amendment A2 retired the 4k held-out steps (slots-4k, simple-4k, comparator, gbrain-4k); they stop with HARD_STEP_RETIRED.
 #
 # Environment:
 #   GBRAIN_REPO   gbrain checkout (default ../gbrain);  GBRAIN_REF   the gbrain commit under test (current master; recorded resolved)
@@ -45,6 +45,7 @@ JUDGE=gpt-6.1-sol
 MODELS=claude-sonnet-5-5,claude-opus-5-5,gpt-6.1-sol,claude-fable-5-1,gpt-6-astra
 CAL_MODELS=claude-sonnet-5-5,gpt-6-astra
 CHECK_MODELS=claude-opus-5-5,claude-fable-5-1,gpt-6.1-sol
+MEMORY_MODELS=claude-sonnet-5-5,gpt-6.1-sol
 CAL_SEED=20261005
 SMOKE_SEED=20261099
 HELDOUT_SEED=20261006
@@ -136,12 +137,12 @@ case "$CMD" in
     run bun eval/runner/budget-ledger.ts status --budget-ledger "$LEDGER" || true
     run bun "$OPS" roster || true
     run bun "$OPS" freeze check || true
-    for d in "$REPORTS"/calibration/round-*/cells "$REPORTS"/calibration/round-*/freeze-check "$REPORTS"/smoke/cells "$REPORTS"/simple-4k "$REPORTS"/gbrain-4k "$REPORTS"/cells-50k-smoke "$REPORTS"/cells-50k "$REPORTS"/oracle-50k; do
+    for d in "$REPORTS"/calibration/round-*/cells "$REPORTS"/calibration/round-*/freeze-check "$REPORTS"/smoke/cells "$REPORTS"/cells-50k-smoke "$REPORTS"/cells-50k "$REPORTS"/oracle-50k "$REPORTS"/pg-50k "$REPORTS"/memory-50k; do
       [[ -d "$d" ]] || continue
       if complete "$d"; then s=complete; else s=incomplete; fi
       echo "$d: $s, $(harness_errors "$d") harness-error attempts"
     done
-    for w in "$HOLDOUT/4k/world.json" "$HOLDOUT/50k/world.json" "$REPORTS/smoke/world/world.json"; do echo "$w sha256 $(world_hash "$w")"; done
+    for w in "$HOLDOUT/50k/world.json" "$HOLDOUT/base-4k/world.json" "$REPORTS/smoke/world/world.json"; do echo "$w sha256 $(world_hash "$w")"; done
     ;;
   preflight|step)
     case "$STEP" in
@@ -226,85 +227,72 @@ case "$CMD" in
       heldout-world)
         need "$REPORTS/smoke/cells/results.jsonl" "a clean gbrain smoke"
         print_only || grep -q "Held-out seed: $HELDOUT_SEED" "$DOCS/PREREGISTRATION.md" || stop HARD_PREREG_MISSING "PREREGISTRATION.md does not name the held-out seed" "write 'Held-out seed: $HELDOUT_SEED' and commit the preregistration before generating the held-out world"
-        [[ "$CMD" == preflight ]] && { echo "heldout-world is free; it writes $HOLDOUT/4k and $HOLDOUT/50k and prints hashes only"; exit 0; }
-        run bun "$GEN" --mode hard --seed "$HELDOUT_SEED" --knobs "$DOCS/knobs.frozen.json" --out "$HOLDOUT/4k"
-        run bun "$GEN" --mode hard --seed "$HELDOUT_SEED" --knobs "$DOCS/knobs.frozen.json" --scale large --base-world "$HOLDOUT/4k/world.json" --out "$HOLDOUT/50k"
-        print_only || note "record these in PREREGISTRATION.md (ENG-F18): 4k $(world_hash "$HOLDOUT/4k/world.json"), 50k $(world_hash "$HOLDOUT/50k/world.json"). Do not open the worlds."
+        [[ "$CMD" == preflight ]] && { echo "heldout-world is free; it writes $HOLDOUT/50k and its base $HOLDOUT/base-4k (amendment A2: no 4k cells) and prints hashes only"; exit 0; }
+        run bun "$GEN" --mode hard --seed "$HELDOUT_SEED" --knobs "$DOCS/knobs.frozen.json" --out "$HOLDOUT/base-4k"
+        run bun "$GEN" --mode hard --seed "$HELDOUT_SEED" --knobs "$DOCS/knobs.frozen.json" --scale large --base-world "$HOLDOUT/base-4k/world.json" --out "$HOLDOUT/50k"
+        print_only || note "record this in PREREGISTRATION.md (ENG-F18): 50k $(world_hash "$HOLDOUT/50k/world.json") (its 4k base $(world_hash "$HOLDOUT/base-4k/world.json") runs no cells). Do not open the worlds."
         ;;
-      slots-4k|slots-50k)
-        SCALE="${STEP#slots-}"; W="$HOLDOUT/$SCALE/world.json"
-        need "$W" "the $SCALE held-out world"
-        [[ "$STEP" == slots-50k ]] && need "$REPORTS/gbrain-4k/results.jsonl" "the 4k gbrain cells (the 50k projection uses their measured cost)"
+      slots-4k|simple-4k|comparator|gbrain-4k)
+        stop HARD_STEP_RETIRED "$STEP is a 4k held-out step, which amendment A2 (PREREGISTRATION.md) retired" "run the 50k path: heldout-world, slots-50k, cells-50k, oracle-50k, pg-50k, memory-50k, report"
+        ;;
+      slots-50k)
+        W="$HOLDOUT/50k/world.json"
+        need "$W" "the 50k held-out world"
         REF="$(gbrain_ref)"; budget_decision
-        ARGS=(--build-slots --world "$W" --gbrain-repo "$GBRAIN_REPO" --gbrain-ref "$REF" --slots 5 --slot-build-allowance-usd "$([[ $SCALE == 50k ]] && echo 4 || echo 2)" --budget-ledger "$LEDGER" --out "$REPORTS/$STEP")
+        ARGS=(--build-slots --world "$W" --gbrain-repo "$GBRAIN_REPO" --gbrain-ref "$REF" --slots 5 --slot-build-allowance-usd 4 --budget-ledger "$LEDGER" --out "$REPORTS/$STEP")
         if [[ "$CMD" == preflight ]]; then run bun "$OPS" project --step "$STEP" --world "$W"; exit; fi
         B="$(budget_for "$STEP" --world "$W")"
         budget_gate "$B"
         run bun "$RUNNER" "${ARGS[@]}" --budget-usd "$B"
         ;;
-      simple-4k)
-        need "$REPORTS/slots-4k" "the 4k slot build step"
-        need "$HOLDOUT/4k/world.json" "the 4k held-out world"
-        budget_decision
-        ARGS=(--world "$HOLDOUT/4k/world.json" --models "$MODELS" --arms oracle,fs,pg,memory --repeat 1 --concurrency 10 "${COMMON[@]}" --out "$REPORTS/simple-4k" --step simple-4k)
-        CAL=(); for p in "$REPORTS"/calibration/round-*/cells/attempts.jsonl "$REPORTS"/calibration/round-*/freeze-check/attempts.jsonl; do [[ -f "$p" ]] && CAL+=("$p"); done
-        M="$(measured ${CAL[@]+"${CAL[@]}"})"
-        if [[ "$CMD" == preflight ]]; then HARD_MEASURED="${M#--measured }" run bun "$RUNNER" "${ARGS[@]}" --preflight; exit; fi
-        B="$(budget_for simple-4k $M $(done_arg "$REPORTS/simple-4k"))"
-        budget_gate "$B"
-        run bun "$RUNNER" "${ARGS[@]}" --budget-usd "$B" $(resume_args "$REPORTS/simple-4k")
-        ;;
-      comparator)
-        need "$REPORTS/simple-4k/results.jsonl" "the 4k simple-arm results"
-        print_only || complete "$REPORTS/simple-4k" || stop HARD_CELLS_INCOMPLETE "the 4k simple-arm step is incomplete" "rerun $0 step simple-4k to resume"
-        [[ "$CMD" == preflight ]] && { echo "comparator is free"; exit 0; }
-        run python3 "$STATS" "$REPORTS/simple-4k/attempts.jsonl" --hard-comparator fs,pg,memory
-        print_only || python3 "$STATS" "$REPORTS/simple-4k/attempts.jsonl" --hard-comparator fs,pg,memory > "$DOCS/comparator.txt"
-        print_only || python3 "$STATS" "$REPORTS/simple-4k/attempts.jsonl" --hard-mdd "$(sed -n 's/^Comparator: \([a-z-]*\).*/\1/p' "$DOCS/comparator.txt")" --mdd-tasks 100 >> "$DOCS/comparator.txt"
-        note "commit $DOCS/comparator.txt before any gbrain held-out cell runs; next: GBRAIN_REF=<preregistered> $0 step gbrain-4k"
-        ;;
-      gbrain-4k)
-        need "$DOCS/comparator.txt" "the committed comparator"
-        REF="$(gbrain_ref)"; budget_decision
-        ARGS=(--world "$HOLDOUT/4k/world.json" --models "$MODELS" --arms gbrain --gbrain-label "$GBRAIN_LABEL" --gbrain-repo "$GBRAIN_REPO" --gbrain-ref "$REF" --slots 5 --concurrency 10 --repeat 1 "${COMMON[@]}" --out "$REPORTS/gbrain-4k" --step gbrain-4k)
-        M="$(measured "$REPORTS/smoke/cells/attempts.jsonl")"
-        if [[ "$CMD" == preflight ]]; then HARD_MEASURED="${M#--measured }" run bun "$RUNNER" "${ARGS[@]}" --preflight; exit; fi
-        B="$(budget_for gbrain-4k $M $(done_arg "$REPORTS/gbrain-4k"))"
-        budget_gate "$B"
-        run bun "$RUNNER" "${ARGS[@]}" --budget-usd "$B" $(resume_args "$REPORTS/gbrain-4k")
-        ;;
-      cells-50k)
-        need "$REPORTS/slots-50k" "the 50k slot build step"
-        REF="$(gbrain_ref)"; budget_decision
+      cells-50k|oracle-50k|pg-50k|memory-50k)
         W="$HOLDOUT/50k/world.json"
-        M="$(measured "$REPORTS/simple-4k/attempts.jsonl" "$REPORTS/gbrain-4k/attempts.jsonl")"
-        SMOKE=(--world "$W" --models claude-sonnet-5-5 --arms gbrain --gbrain-label "$GBRAIN_LABEL" --gbrain-repo "$GBRAIN_REPO" --gbrain-ref "$REF" --slots 5 --concurrency 5 --per-family 1 "${COMMON[@]}" --out "$REPORTS/cells-50k-smoke")
-        ARGS=(--world "$W" --models "$MODELS" --arms gbrain,fs --gbrain-label "$GBRAIN_LABEL" --gbrain-repo "$GBRAIN_REPO" --gbrain-ref "$REF" --slots 5 --concurrency 10 --repeat 1 "${COMMON[@]}" --out "$REPORTS/cells-50k" --step cells-50k)
-        ORACLE=(--world "$W" --models "$MODELS" --arms oracle --families H1 --repeat 1 --concurrency 10 "${COMMON[@]}" --out "$REPORTS/oracle-50k" --step oracle-50k)
-        if [[ "$CMD" == preflight ]]; then HARD_MEASURED="${M#--measured }" run bun "$RUNNER" "${ARGS[@]}" --preflight; HARD_MEASURED="${M#--measured }" run bun "$RUNNER" "${ORACLE[@]}" --preflight; exit; fi
-        print_only || budget_gate 5
-        run bun "$RUNNER" "${SMOKE[@]}" --budget-usd 5
-        if ! print_only; then n="$(harness_errors "$REPORTS/cells-50k-smoke")"; [[ "$n" == 0 ]] || stop HARD_SMOKE_FAILED "$n harness-error attempts in the 50k 5-cell smoke" "read $REPORTS/cells-50k-smoke/attempts.jsonl and fix the harness before the 50k cells"; fi
-        B="$(budget_for cells-50k $M --measured-scale v1 $(done_arg "$REPORTS/cells-50k"))"; B2="$(budget_for oracle-50k $M --measured-scale v1 $(done_arg "$REPORTS/oracle-50k"))"
-        print_only || budget_gate "$(bun -e "console.log(Number('$B') + Number('$B2') + 5)")"
-        run bun "$RUNNER" "${ARGS[@]}" --budget-usd "$B" $(resume_args "$REPORTS/cells-50k")
-        run bun "$RUNNER" "${ORACLE[@]}" --budget-usd "$B2" $(resume_args "$REPORTS/oracle-50k")
+        need "$W" "the 50k held-out world"
+        case "$STEP" in
+          cells-50k) need "$REPORTS/slots-50k" "the 50k slot build step" ;;
+          oracle-50k) PREV=cells-50k ;;
+          pg-50k) PREV=oracle-50k ;;
+          memory-50k) PREV=pg-50k ;;
+        esac
+        if [[ -n "${PREV:-}" ]]; then
+          need "$REPORTS/$PREV/results.jsonl" "batch $PREV (the 50k batches run in order: cells-50k, oracle-50k, pg-50k, memory-50k)"
+          print_only || complete "$REPORTS/$PREV" || stop HARD_CELLS_INCOMPLETE "batch $PREV is incomplete" "rerun $0 step $PREV to resume it first"
+        fi
+        budget_decision
+        CAL=(); for p in "$REPORTS"/calibration/round-*/cells/attempts.jsonl "$REPORTS"/calibration/round-*/freeze-check/attempts.jsonl "$REPORTS"/smoke/cells/attempts.jsonl "$REPORTS"/cells-50k/attempts.jsonl; do [[ -f "$p" ]] && CAL+=("$p"); done
+        M="$(measured ${CAL[@]+"${CAL[@]}"})"
+        case "$STEP" in
+          cells-50k) REF="$(gbrain_ref)"; ARMS=(--models "$MODELS" --arms gbrain,fs --gbrain-label "$GBRAIN_LABEL" --gbrain-repo "$GBRAIN_REPO" --gbrain-ref "$REF" --slots 5) ;;
+          oracle-50k) ARMS=(--models "$MODELS" --arms oracle) ;;
+          pg-50k) ARMS=(--models "$MODELS" --arms pg) ;;
+          memory-50k) ARMS=(--models "$MEMORY_MODELS" --arms memory) ;;
+        esac
+        ARGS=(--world "$W" "${ARMS[@]}" --concurrency 10 --repeat 1 "${COMMON[@]}" --out "$REPORTS/$STEP" --step "$STEP")
+        if [[ "$CMD" == preflight ]]; then HARD_MEASURED="${M#--measured }" run bun "$RUNNER" "${ARGS[@]}" --preflight; exit; fi
+        if [[ "$STEP" == cells-50k ]]; then
+          SMOKE=(--world "$W" --models claude-sonnet-5-5 --arms gbrain --gbrain-label "$GBRAIN_LABEL" --gbrain-repo "$GBRAIN_REPO" --gbrain-ref "$REF" --slots 5 --concurrency 5 --per-family 1 "${COMMON[@]}" --out "$REPORTS/cells-50k-smoke")
+          print_only || budget_gate 5
+          run bun "$RUNNER" "${SMOKE[@]}" --budget-usd 5
+          if ! print_only; then n="$(harness_errors "$REPORTS/cells-50k-smoke")"; [[ "$n" == 0 ]] || stop HARD_SMOKE_FAILED "$n harness-error attempts in the 50k 5-cell smoke" "read $REPORTS/cells-50k-smoke/attempts.jsonl and fix the harness before the 50k cells"; fi
+        fi
+        B="$(budget_for "$STEP" --world "$W" $M $(done_arg "$REPORTS/$STEP"))"
+        budget_gate "$B"
+        run bun "$RUNNER" "${ARGS[@]}" --budget-usd "$B" $(resume_args "$REPORTS/$STEP")
         ;;
       report)
         [[ "$CMD" == preflight ]] && { echo "report is free"; exit 0; }
-        C="$(sed -n 's/^Comparator: \([a-z-]*\).*/\1/p' "$DOCS/comparator.txt" 2>/dev/null || echo fs)"
-        run python3 "$STATS" "$REPORTS/simple-4k/attempts.jsonl" "$REPORTS/gbrain-4k/attempts.jsonl" --hard-headline "$GBRAIN_LABEL,$C" --simple fs,pg,memory
-        run bun "$ANALYZE" "$REPORTS/simple-4k/attempts.jsonl" "$REPORTS/gbrain-4k/attempts.jsonl" --subject "$GBRAIN_LABEL" --comparator "$C" --md "$REPORTS/analysis-4k.md" --json "$REPORTS/analysis-4k.json" --budget-ledger "$LEDGER"
-        if [[ -f "$REPORTS/cells-50k/attempts.jsonl" ]]; then
-          run python3 "$STATS" "$REPORTS/cells-50k/attempts.jsonl" --hard-headline "$GBRAIN_LABEL,fs" --simple fs
-          run bun "$ANALYZE" "$REPORTS/cells-50k/attempts.jsonl" "$REPORTS/oracle-50k/attempts.jsonl" --subject "$GBRAIN_LABEL" --comparator fs --md "$REPORTS/analysis-50k.md" --json "$REPORTS/analysis-50k.json"
-        fi
+        need "$REPORTS/cells-50k/attempts.jsonl" "the primary 50k batch (cells-50k)"
+        FILES=("$REPORTS/cells-50k/attempts.jsonl"); SIMPLE=fs
+        if [[ -f "$REPORTS/pg-50k/attempts.jsonl" ]] && { print_only || complete "$REPORTS/pg-50k"; }; then FILES+=("$REPORTS/pg-50k/attempts.jsonl"); SIMPLE=fs,pg; fi
+        run python3 "$STATS" "${FILES[@]}" --hard-headline "$GBRAIN_LABEL,fs" --simple "$SIMPLE"
+        for b in oracle-50k memory-50k; do [[ -f "$REPORTS/$b/attempts.jsonl" ]] && FILES+=("$REPORTS/$b/attempts.jsonl"); done
+        run bun "$ANALYZE" "${FILES[@]}" --subject "$GBRAIN_LABEL" --comparator fs --md "$REPORTS/analysis-50k.md" --json "$REPORTS/analysis-50k.json" --budget-ledger "$LEDGER"
         ;;
-      *) stop HARD_PREDECESSOR_MISSING "unknown step '$STEP'" "use one of: calibrate freeze-check freeze smoke heldout-world slots-4k simple-4k comparator gbrain-4k slots-50k cells-50k report" ;;
+      *) stop HARD_PREDECESSOR_MISSING "unknown step '$STEP'" "use one of: calibrate freeze-check freeze smoke heldout-world slots-50k cells-50k oracle-50k pg-50k memory-50k report" ;;
     esac
     ;;
   *)
-    sed -n '2,34p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '2,36p' "$0" | sed 's/^# \{0,1\}//'
     [[ -z "$CMD" || "$CMD" == help || "$CMD" == --help ]] && exit 0
     exit 2
     ;;

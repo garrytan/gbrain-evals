@@ -121,12 +121,12 @@ const fakeEmbedder: Embedder = async texts => texts.map(hashed);
 const doc = (id: string, body: string, title = id): LadderDoc => ({ id, title, type: 'email', date: '2026-01-01', author: 'Test Author', body });
 
 /** A fake OpenAI embeddings endpoint: hashed vectors, usage of one token per 4 characters. */
-function fakeOpenAI(opts: { status?: number } = {}) {
+function fakeOpenAI(opts: { status?: number; failures?: number } = {}) {
   const calls: string[][] = [];
   const fetchImpl = (async (_url: string, init: RequestInit) => {
     const body = JSON.parse(String(init.body)) as { input: string[] };
     calls.push(body.input);
-    if (opts.status) return new Response('{"error":{"message":"boom"}}', { status: opts.status });
+    if (opts.status && calls.length <= (opts.failures ?? Infinity)) return new Response('{"error":{"message":"boom"}}', { status: opts.status });
     const tokens = body.input.reduce((n, t) => n + Math.ceil(t.length / 4), 0);
     return Response.json({ data: body.input.map((t, index) => ({ index, embedding: hashed(t) })), usage: { prompt_tokens: tokens, total_tokens: tokens } });
   }) as unknown as typeof fetch;
@@ -253,11 +253,22 @@ describe('pg chunked embeddings on Hard', () => {
 
   test('an embedding API failure during a cell is a HarnessError and is still charged', async () => {
     const store = await PgStore.build({ docs: others }, fakeEmbedder);
-    const api = fakeOpenAI({ status: 500 });
+    const api = fakeOpenAI({ status: 400 });
     const arm = new PgArm(Object.assign(Object.create(Object.getPrototypeOf(store)), store, { embed: cachedOpenAIEmbedder(join(tmp, 'fail-cache.json'), api.fetchImpl) }), 'r', { limits: 'hard' });
     await expect(arm.call('vector_search', { query: 'anything' })).rejects.toBeInstanceOf(HarnessError);
+    expect(api.calls.length).toBe(1);
     expect(arm.embedUsage.requests).toBe(1);
     expect(arm.embedUsage.unpriced).toBe(1);
+  }, 60_000);
+
+  test('a rate-limited embedding request backs off and retries; only the answered request is counted', async () => {
+    const api = fakeOpenAI({ status: 429, failures: 2 });
+    const usage = { requests: 0, unpriced: 0, usd: 0, tokens: 0 };
+    const [vec] = await cachedOpenAIEmbedder(join(tmp, 'retry-cache.json'), api.fetchImpl)(['rate limited text'], { usage });
+    expect(vec).toEqual(hashed('rate limited text'));
+    expect(api.calls.length).toBe(3);
+    expect(usage.requests).toBe(1);
+    expect(usage.unpriced).toBe(0);
   }, 60_000);
 });
 

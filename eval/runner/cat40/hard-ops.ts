@@ -40,22 +40,27 @@ export interface StepPlan {
   free?: boolean;
 }
 
+export const MEMORY_MODELS = ['claude-sonnet-5-5', 'gpt-6.1-sol'];
+
+/** Paid and free steps in order. Amendment A2: the held-out run is 50k only, in four batches; the 4k held-out steps are retired. */
 export const STEPS: StepPlan[] = [
   { step: 'calibrate', order: 1, models: CALIBRATION_MODELS, arms: ['oracle', 'fs', 'pg'], tasksPerFamily: 10, repeats: 1, scale: 'v1' },
   { step: 'freeze-check', order: 2, models: FREEZE_CHECK_MODELS, arms: ['oracle', 'fs', 'pg'], tasksPerFamily: 10, repeats: 1, scale: 'v1' },
   { step: 'freeze', order: 3, models: [], arms: [], tasksPerFamily: 0, repeats: 0, scale: 'v1', free: true },
   { step: 'smoke', order: 4, models: ['claude-sonnet-5-5'], arms: ['gbrain'], tasksPerFamily: 1, repeats: 1, scale: 'v1', slotBuilds: 1 },
-  { step: 'heldout-world', order: 5, models: [], arms: [], tasksPerFamily: 0, repeats: 0, scale: 'v1', free: true },
-  { step: 'slots-4k', order: 6, models: [], arms: [], tasksPerFamily: 0, repeats: 0, scale: 'v1', slotBuilds: 5 },
-  { step: 'simple-4k', order: 7, models: HARD_MODELS, arms: ['oracle', 'fs', 'pg', 'memory'], tasksPerFamily: 20, repeats: 1, scale: 'v1' },
-  { step: 'comparator', order: 8, models: [], arms: [], tasksPerFamily: 0, repeats: 0, scale: 'v1', free: true },
-  { step: 'gbrain-4k', order: 9, models: HARD_MODELS, arms: ['gbrain'], tasksPerFamily: 20, repeats: 1, scale: 'v1' },
-  { step: 'slots-50k', order: 10, models: [], arms: [], tasksPerFamily: 0, repeats: 0, scale: 'large', slotBuilds: 5 },
-  { step: 'cells-50k', order: 11, models: HARD_MODELS, arms: ['gbrain', 'fs'], tasksPerFamily: 20, repeats: 1, scale: 'large' },
-  { step: 'oracle-50k', order: 11, models: HARD_MODELS, arms: ['oracle'], tasksPerFamily: 20, families: ['H1'], repeats: 1, scale: 'large' },
+  { step: 'heldout-world', order: 5, models: [], arms: [], tasksPerFamily: 0, repeats: 0, scale: 'large', free: true },
+  { step: 'slots-50k', order: 6, models: [], arms: [], tasksPerFamily: 0, repeats: 0, scale: 'large', slotBuilds: 5 },
+  { step: 'cells-50k', order: 7, models: HARD_MODELS, arms: ['gbrain', 'fs'], tasksPerFamily: 20, repeats: 1, scale: 'large' },
+  { step: 'oracle-50k', order: 8, models: HARD_MODELS, arms: ['oracle'], tasksPerFamily: 20, repeats: 1, scale: 'large' },
+  { step: 'pg-50k', order: 9, models: HARD_MODELS, arms: ['pg'], tasksPerFamily: 20, repeats: 1, scale: 'large' },
+  { step: 'memory-50k', order: 10, models: MEMORY_MODELS, arms: ['memory'], tasksPerFamily: 20, repeats: 1, scale: 'large' },
 ];
 
+/** The 4k held-out steps amendment A2 retired; the operator script refuses them with HARD_STEP_RETIRED. */
+export const RETIRED_STEPS = ['slots-4k', 'simple-4k', 'comparator', 'gbrain-4k'];
+
 export function stepPlan(step: string): StepPlan {
+  if (RETIRED_STEPS.includes(step)) throw new HardStop('HARD_STEP_RETIRED', `${step} is a 4k held-out step, retired by amendment A2`, 'run the 50k path: heldout-world, slots-50k, cells-50k, oracle-50k, pg-50k, memory-50k, report');
   const p = STEPS.find(s => s.step === step);
   if (!p) throw new Error(`unknown step ${step}; steps: ${STEPS.map(s => s.step).join(', ')}`);
   return p;

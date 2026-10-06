@@ -11,7 +11,7 @@ On tasks where plain files with grep finish roughly half of the work for frontie
 ## Fixed now
 
 - Calibration seed: 20261005. Smoke seed: 20261099.
-- Held-out seed: 20261006 (both scales).
+- Held-out seed: 20261006 (50k only, amendment A2).
 - Generator: `model-ladder-hard-v2` (amendment A1), frozen at step 3 (`freeze.json` and `knobs.frozen.json` in this directory).
 - Models: Sonnet 5.5 (`claude-sonnet-5-5`), Opus 5.5 (`claude-opus-5-5`), GPT-6.1 Sol (`gpt-6.1-sol`), Fable 5.1 (`claude-fable-5-1`), GPT-6 Astra (`gpt-6-astra`). A newer frontier release replaces its predecessor in the same family and tier only through a dated amendment below, with its price registered, before any cell of the next step runs (rules in the plan, CEO-F3).
 - Claims judge: `gpt-6.1-sol` on every cell (reported, never part of success).
@@ -83,14 +83,12 @@ Claims stay within unrestricted information: Hard has no permissions family, so 
 ## Analysis commands
 
 ```bash
-# comparator (step 8)
-python3 docs/benchmarks/2026-10-02-model-ladder/holdout/holdout_stats.py eval/reports/cat40/hard/simple-4k/attempts.jsonl --hard-comparator fs,pg,memory
-# primary endpoint, simultaneous intervals, per-model and per-family tables, weakest-family rule
-python3 docs/benchmarks/2026-10-02-model-ladder/holdout/holdout_stats.py eval/reports/cat40/hard/simple-4k/attempts.jsonl eval/reports/cat40/hard/gbrain-4k/attempts.jsonl --hard-headline gbrain-hard,<comparator> --simple fs,pg,memory
-# 50k
+# amendment A2: the held-out run is 50k only. Primary endpoint, gbrain minus fs, with per-model and per-family tables and the weakest-family rule
 python3 docs/benchmarks/2026-10-02-model-ladder/holdout/holdout_stats.py eval/reports/cat40/hard/cells-50k/attempts.jsonl --hard-headline gbrain-hard,fs --simple fs
-# tables, costs, stops, latency
-bun eval/runner/cat40/analyze.ts eval/reports/cat40/hard/simple-4k/attempts.jsonl eval/reports/cat40/hard/gbrain-4k/attempts.jsonl --subject gbrain-hard --comparator <comparator> --budget-ledger .budget/cat40-hard.sqlite
+# when the pg batch ran on every model: simultaneous intervals against fs and pg
+python3 docs/benchmarks/2026-10-02-model-ladder/holdout/holdout_stats.py eval/reports/cat40/hard/cells-50k/attempts.jsonl eval/reports/cat40/hard/pg-50k/attempts.jsonl --hard-headline gbrain-hard,fs --simple fs,pg
+# tables, costs, stops, latency (add the oracle, pg and memory batches that ran)
+bun eval/runner/cat40/analyze.ts eval/reports/cat40/hard/cells-50k/attempts.jsonl eval/reports/cat40/hard/oracle-50k/attempts.jsonl --subject gbrain-hard --comparator fs --budget-ledger .budget/cat40-hard.sqlite
 ```
 
 The runner argv for every step is in [RUNBOOK.md](RUNBOOK.md) and `scripts/cat40-hard.sh` (print it with `PRINT_ONLY=1 scripts/cat40-hard.sh step <step>`).
@@ -106,3 +104,14 @@ Garry, 2026-10-05, after calibration round 2: "1A 2i".
 - **Memory arm.** The memory arm runs on Sonnet 5.5 and GPT-6.1 Sol only, at both scales. It does not run on Opus 5.5, Fable 5.1 or GPT-6 Astra. Reason: at round-2 costs the rest of tier A projects to about $2,360 against $1,707 left on the Hard ledger; the memory arm on those three models is about $777 of that, and memory was the weakest simple arm in the earlier Cat 40 runs. Consequences: the comparator is chosen among simple arms run on every model, which is now fs and pg; the simultaneous intervals cover gbrain against fs and pg; memory's results on its two models are reported as secondary, per model. The authorization ($4,350) and the Hard ledger cap ($1,794) are unchanged.
 - **Generator.** Round 2 left plain files at 95% pooled (fs 95/99 on two frontier models), with H2 to H5 at 95 to 100% after their knobs were raised: the agents search for the account name and read what comes back. The knobs are at their useful range, so the generator changes how documents refer to accounts before the freeze: most records refer to an account by its internal code, a nickname or its account manager instead of its name, and the documents that tie those references to the name are separate. Questions still ask by name. The frozen generator is `model-ladder-hard-v2`; `model-ladder-hard-v1` is never frozen.
 - **Calibration scale.** Calibration rounds from round 3 run on the 50k world (seed 20261005, `--scale large`), where a name search returns the most noise and where gbrain trailed by 16 points in the earlier scale run. The freeze rule applies to the 50k calibration results; the 4k held-out world uses the same frozen knobs.
+
+### A2 (2026-10-06): multi-account questions; the 50k held-out run is the main result
+
+Garry, 2026-10-06, after calibration round 3, relayed by GBRA-40: "take the recommendations ... A + i".
+
+- **Generator.** Round 3 (50k, generator v2) left the better simple arm at 83% pooled: H1 fell to 15-20%, while H2 to H5, which ask about one account, stayed at 85 to 100%. The number of accounts a question needs is what moved difficulty. Before the freeze, H2 to H5 questions ask about 2 to 4 accounts at once (a knob sets the range, 1 reproduces v2), and H1 sets get smaller so H1 is not decided by turn-cap stops. Calibration rounds 4 and 5 (the last two the plan allows) tune these knobs on the 50k calibration world. The frozen generator is still `model-ladder-hard-v2`, with these knobs.
+- **Held-out scale.** The held-out run uses only the 50k world (seed 20261006, `--scale large`). The 4k held-out steps (simple-4k, comparator, gbrain-4k) do not run. Reason: at round-3 costs both scales project to about $2,120 with margin against $1,605 left on the Hard ledger, and calibration happens at 50k.
+- **Primary endpoint.** The pooled 50k paired difference, gbrain minus fs, with the task-clustered bootstrap: `holdout_stats.py --hard-headline gbrain-hard,fs --simple fs`. fs was already the preregistered 50k comparator; no comparator is selected from results.
+- **Arms and order at 50k.** gbrain and fs on all five models first (the primary endpoint), then the oracle reference, then pg on all five models and memory on Sonnet 5.5 and GPT-6.1 Sol (secondary) as the remaining Hard ledger allows. Each batch runs only after its projection plus 15% fits the remaining balance. With pg run on every model, the simultaneous intervals cover gbrain against fs and pg; otherwise against fs only.
+- **Models.** Unchanged: Sonnet 5.5, Opus 5.5, GPT-6.1 Sol, Fable 5.1, GPT-6 Astra, the newest frontier models of each family.
+- **Unchanged.** The freeze rule, the freeze check on five models, the sealed validation variant, the authorization ($4,350) and the Hard ledger cap ($1,794).

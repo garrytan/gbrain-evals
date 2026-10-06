@@ -24,7 +24,7 @@ It generates a calibration-seed Hard world, runs every family through the script
 
 Run the steps in order with `scripts/cat40-hard.sh step <step>`. `scripts/cat40-hard.sh preflight <step>` prints the same step's checks without spending, and `PRINT_ONLY=1` prints every command instead of running it. Each step checks its predecessor artifacts and the recorded budget decision, projects its cost and stops with `HARD_BUDGET_SHORT` when the Hard ledger has less than the projection plus 15%. A step that stops part way resumes by running the same step again: the script opens a new budget run (`--new-budget-run`) sized to the projection of the cells still missing, so a resume never joins a spent run. `BUDGET_USD=<n>` sets a step's `--budget-usd` explicitly; the ledger gate still applies.
 
-Projections come from `bun eval/runner/cat40/hard-ops.ts project --step <step> [--measured <attempts.jsonl>,...] [--done <the step's attempts.jsonl>]`, per model, arm and family, because Hard cells differ in cost far more by family than by arm (an H1 cell reads dozens of records). A (model, arm, family) uses measured Hard cells when `--measured` has them (the script passes every earlier Hard step's attempts); otherwise the v1 cost per cell of that model and arm times the Hard factor measured for its arm and family in calibration round 1, plus the measured judge cost for the family ([cost-basis.json](cost-basis.json); memory borrows the fs factors, gbrain the pg factors, H5 is assumed at 3 times the H2-H4 mean until measured). The 50k step uses measured 4k costs times 1.8 (fs, oracle) or 1.3 (gbrain); slot builds scale with the world's bytes. Cells a step already finished (`--done`) are not projected. Figures below use calibration round 1's measurements (2026-10-05).
+Projections come from `bun eval/runner/cat40/hard-ops.ts project --step <step> [--measured <attempts.jsonl>,...] [--done <the step's attempts.jsonl>]`, per model, arm and family, because Hard cells differ in cost far more by family than by arm (an H1 cell reads dozens of records). A (model, arm, family) uses measured Hard cells when `--measured` has them (the script passes every earlier Hard step's attempts); otherwise the v1 cost per cell of that model and arm times the Hard factor measured for its arm and family in calibration round 1, plus the measured judge cost for the family ([cost-basis.json](cost-basis.json); memory borrows the fs factors, gbrain the pg factors, H5 is assumed at 3 times the H2-H4 mean until measured). A 50k step uses measured 50k cells (calibration from round 3, the freeze check, earlier 50k batches) where they exist, else 4k measurements times 1.8 (fs, oracle, pg) or 1.3 (gbrain, from the 4k smoke); slot builds scale with the world's bytes. Cells a step already finished (`--done`) are not projected. Figures below use calibration round 1's measurements (2026-10-05).
 
 | # | Step | What it runs | Output | Projection (+15%) | Wall clock |
 |---|---|---|---|---|---|
@@ -32,14 +32,15 @@ Projections come from `bun eval/runner/cat40/hard-ops.ts project --step <step> [
 | 2 | `freeze-check` (ROUND=N) | oracle, fs and pg on Opus 5.5, Fable 5.1 and GPT-6.1 Sol on round N's world, reusing round N's two models; the analyzer over all five | `.../round-N/freeze-check` | $114.61 ($131.81) | about 90 min |
 | 3 | `freeze` (ROUND=N) | copies `knobs.round-N.json` to `knobs.frozen.json` and writes `freeze.json` (code hashes, settings digest); commit both | `docs/benchmarks/cat40-hard/` | free | seconds |
 | 4 | `smoke` (GBRAIN_REF) | seed 20261099 world from the frozen knobs, 1 gbrain slot build, 1 task per family on Sonnet 5.5; checked only for harness errors | `eval/reports/cat40/hard/smoke/{world,slots,cells}` | $1.79 ($2.05) | about 20 min |
-| 5 | `heldout-world` | held-out worlds from seed 20261006 and the frozen knobs at 4k and 50k; prints hashes only; record them in PREREGISTRATION.md and commit it | `eval/reports/cat40/hard-holdout/{4k,50k}` | free | about 1 min |
-| 6 | `slots-4k` (GBRAIN_REF) | 5 gbrain slot snapshots on the 4k world, one at a time | `eval/reports/cat40/hard/slots-4k` | $1.49 ($1.71) | about 1 h |
-| 7 | `simple-4k` | oracle, fs, pg and memory on the five models, 20 tasks per family, 1 repeat | `eval/reports/cat40/hard/simple-4k` | $1,097.35 ($1,261.95) | about 4 h |
-| 8 | `comparator` | `holdout_stats.py --hard-comparator fs,pg,memory` plus the comparator's planning MDD; commit `comparator.txt` before any gbrain held-out cell | `docs/benchmarks/cat40-hard/comparator.txt` | free | seconds |
-| 9 | `gbrain-4k` (GBRAIN_REF) | gbrain (label `gbrain-hard`) on the five models | `eval/reports/cat40/hard/gbrain-4k` | $340.21 ($391.24) | about 3 h |
-| 10 | `slots-50k` (GBRAIN_REF) | 5 gbrain slot snapshots on the 50k world, one at a time | `eval/reports/cat40/hard/slots-50k` | $12.04 ($13.84) | about 7.5 h |
-| 11 | `cells-50k` (GBRAIN_REF) | a 5-cell gbrain smoke that halts on any harness error, then gbrain and fs on every model, then the oracle on the 20 H1 tasks | `eval/reports/cat40/hard/{cells-50k-smoke,cells-50k,oracle-50k}` | $746.67 ($858.68) | about 12 h |
-| | `report` | analysis tables, the primary endpoint with simultaneous intervals against every simple arm, and the 50k comparison | `eval/reports/cat40/hard/analysis-*.{md,json}` | free | minutes |
+| 5 | `heldout-world` | the 50k held-out world from seed 20261006 and the frozen knobs, built on its 4k base (which runs no cells, amendment A2); prints hashes only; record the 50k hash in PREREGISTRATION.md and commit it | `eval/reports/cat40/hard-holdout/{base-4k,50k}` | free | about 2 min |
+| 6 | `slots-50k` (GBRAIN_REF) | 5 gbrain slot snapshots on the 50k world, one at a time | `eval/reports/cat40/hard/slots-50k` | $12.04 ($13.84) | about 7.5 h |
+| 7 | `cells-50k` (GBRAIN_REF) | batch (a), the primary endpoint: a 5-cell gbrain smoke that halts on any harness error, then gbrain and fs on the five models, 20 tasks per family | `eval/reports/cat40/hard/{cells-50k-smoke,cells-50k}` | `preflight cells-50k` | about 10 h |
+| 8 | `oracle-50k` | batch (b): the oracle reference on the five models, every family | `eval/reports/cat40/hard/oracle-50k` | `preflight oracle-50k` | about 1 h |
+| 9 | `pg-50k` | batch (c): pg on the five models | `eval/reports/cat40/hard/pg-50k` | `preflight pg-50k` | about 5 h |
+| 10 | `memory-50k` | batch (d): memory on Sonnet 5.5 and GPT-6.1 Sol only (amendment A1) | `eval/reports/cat40/hard/memory-50k` | `preflight memory-50k` | about 4 h |
+| | `report` | analysis tables and the primary endpoint, gbrain minus fs at 50k (`--hard-headline gbrain-hard,fs --simple fs`, adding pg to the simultaneous intervals when `pg-50k` completed) | `eval/reports/cat40/hard/analysis-50k.{md,json}` | free | minutes |
+
+The held-out path is 50k only (amendment A2): freeze-check, freeze, smoke, heldout-world, slots-50k, then the four 50k batches in order, each a separate step with its own projection and the projection-plus-15% ledger gate, each starting only after the previous batch is complete. `slots-4k`, `simple-4k`, `comparator` and `gbrain-4k` stop with `HARD_STEP_RETIRED`. Batch projections come from the step's `preflight`, which uses every measured Hard cell at hand; there are no fixed figures until round 4's 50k cells exist.
 
 ### Calibration at 50k (round 3 on)
 
@@ -91,6 +92,7 @@ Every refusal and stop-for-Garry condition exits 3 and prints `STOP <code>`, wha
 | `HARD_FREEZE_RULE_FAILED` | a round or freeze check fails the freeze rule | tune the next knob group with a dated reason; after round 5 or the second freeze check, Garry decides |
 | `HARD_SMOKE_FAILED` | the gbrain smoke had harness errors | fix the harness and rerun the smoke |
 | `HARD_PREREG_MISSING` | the preregistration lacks a field this step needs | fill it and commit before the step |
+| `HARD_STEP_RETIRED` | a 4k held-out step (slots-4k, simple-4k, comparator, gbrain-4k), which amendment A2 retired | run the 50k path: heldout-world, slots-50k, cells-50k, oracle-50k, pg-50k, memory-50k, report |
 
 ## Runs, records and stop kinds
 

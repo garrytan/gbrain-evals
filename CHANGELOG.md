@@ -2,7 +2,33 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [0.10.25] - 2026-10-05
+## [0.10.29] - 2026-10-05
+
+### Cat 40 Hard round 4: questions about several accounts; the held-out run is 50k only
+
+Round 3 (50k, generator v2) left the better simple arm at 83%: H1 fell to 15-20%, but H2 to H5, which each asked about
+one account, stayed at 85 to 100%. Under amendment A2, H2 to H5 questions now ask about several accounts at once and H1
+sets shrink. No paid call ran; round 4 is ready to calibrate.
+
+- **Multi-account questions.** Knobs `multi_account_min` and `multi_account_max` set how many accounts each H2 to H5
+  question asks about; [knobs.round-4.json](docs/benchmarks/cat40-hard/knobs.round-4.json) uses 2 to 3. A question
+  lists its items as numbered one-account questions, each a complete instance of its family with its own records, and
+  asks for a JSON array of the answers in order. No two accounts in a question share a descriptor, first word, code
+  prefix or account manager, so each needs its own search. With a maximum of 1 the generator writes the v2 world, and
+  the round-3 world is unchanged.
+- **Scoring.** The Hard scorer grades the array as a new `values` answer kind (`cat40-hard-score-v2`): each element is
+  graded like a one-account answer, and success needs every element right. Earlier answer kinds score as before. The
+  validator checks every item's accounts and the unlinked rule, and the H5 write diagnostic matches each superseded
+  fact to its own chain.
+- **Smaller H1.** Round 4 asks for 6 to 12 members (round 3: 10 to 40). When a predicate cannot land in range, the
+  generator narrows it to one region or segment.
+- **Held-out path.** The held-out run is 50k only: freeze check, freeze, smoke, the 50k world, slots, then four batches
+  that each run after the one before (gbrain and fs, the oracle, pg, memory on two models), each with its own
+  projection and ledger gate. `slots-4k`, `simple-4k`, `comparator` and `gbrain-4k` stop with `HARD_STEP_RETIRED`.
+  The primary endpoint is `holdout_stats.py --hard-headline gbrain-hard,fs --simple fs`, adding pg when it ran.
+- **Proxy.** `hard-proxy.ts` also reports oracle documents and accounts per answer. On the 50k calibration world,
+  H2 to H5 answers now need 2.4 to 2.7 accounts and two to three times the oracle documents
+  ([calibration.md](docs/benchmarks/cat40-hard/calibration.md)).
 
 ### Cat 40 Hard generator v2: records stop naming their account
 
@@ -34,39 +60,6 @@ answer key and changes how records refer to accounts. No paid call ran; round 3 
   account managers, so 4k records keep their meaning inside the 50k world.
 - **H1 set sizes.** H1 keys are computed over the 4k accounts so they match at both scales; the 261-account
   population supports at most 25 to 34 members per predicate, so round 3 keeps 10 to 40.
-
-## [0.10.24] - 2026-10-05
-
-### README describes other memory systems by kind
-
-README's "How gbrain compares" section and its changelog no longer name other memory projects; each is described by
-kind (for example "a verbatim-session memory system"). Names, versions and sources stay in
-[comparisons and their protocols](docs/comparison-systems.md), which README links. No measurement changed; $0.
-
-## [0.10.23] - 2026-10-05
-
-### Top-level docs read as the current state, with a changelog per document
-
-README, the docs index, the settings guide, retrieval lessons, the comparison page, the evaluation guide, the
-contributor guide and the credits now open with what gbrain does at the pinned commit (`739e5cc`, v0.60.46.0) and
-close with a `## Changelog` section recording how that document changed and why, one entry per commit, newest first.
-
-- **README.** Three parts: what gbrain does, current results (one table, each number with its gbrain commit and
-  report) and how gbrain compares (strict LongMemEval retrieval, answer accuracy with the same reader,
-  PrecisionMemBench, concept search, Cat 40 against files, Postgres and the memory tool), then known limits. The
-  dated "Update, October 2/3/4" blocks move to its changelog. New on the page: Cat 40 on frontier models, the
-  multi-relation planner's held-out pass (gbrain v0.60.60.0) and the held-out program.
-- **Settings and retrieval lessons.** Dated "October 4, 2026:" amendments become current statements (opaque-id
-  recount at `109b992`), a `return_unit` row and a whole-conversation delivery section are added, and the September 6
-  values move to the changelog.
-- **Comparison page.** Sentences about earlier versions of the page now state the current position; the history is
-  in its changelog.
-- **CLAUDE.md** records the shape (current state on top, a per-document changelog below), and AGENTS.md summarizes
-  it so Codex and other agents that read only AGENTS.md see it.
-
-No measurement changed; $0.
-
-## [0.10.22] - 2026-10-05
 
 ### Cat 40 Hard: the harness for tasks that measure the edge of frontier models
 
@@ -116,6 +109,68 @@ $1,794).
   drawn ([calibration.md](docs/benchmarks/cat40-hard/calibration.md)). Projections now go per model, arm and family
   from round 1's measured Hard costs (2 to 5 times v1 per cell) plus the measured judge cost; a resumed step opens a
   new budget run (`--new-budget-run`) sized to the cells still missing. `knobs.round-2.json` makes H2 and H3 harder.
+
+## [0.10.28] - 2026-10-05
+
+### Held-out follow-ups for the merged plans: root causes, fresh-wording rechecks, sealed-v2 exposure
+
+A second custodian reread the failed held-out decisions of the merged plans and ran rechecks on phrasing sets that share no wording with earlier sets. All runs here are deterministic; $0 in model calls.
+
+- **P3 root causes** ([report section](docs/benchmarks/2026-10-05-heldout-program.md#root-causes-of-the-p3-failures-custodian-analysis)). E1's flat LoCoMo result is a limit of the benchmark shape (feedback weights apply and move 18% of rankings at λ = 0.1, with no net signal), not a harness bug. E4's miss is parser coverage: triplet scoring changes all 37 questions where the relational arm fires and gains +2.27 NDCG@10 points there. E5 is a product defect.
+- **P3 E5 retest on fresh material** ([record](docs/benchmarks/2026-10-05-heldout-verdicts/p3-e5-setf-retest-2026-10-05.json)). Without the advisory-role guard, 23 of 23 single-value closures are wrong; with it, 0 are applied and every gate passes. No E5 run has recorded a correct closure, so `dream.single_value.mode` stays `propose`.
+- **P1 E1 on a third phrasing set** ([record](docs/benchmarks/2026-10-05-heldout-verdicts/p1-e1-sete-2026-10-05.json)). This fails traps at 89 of 105: the employment lexicon misses the set's join, leave and move cues, so ended jobs stay live.
+- **Sealed confirmation v2 exposure** ([protocol](docs/benchmarks/2026-10-01-sealed-confirmation-v2-protocol.md#access-policy)). The corpus's sessions were used for gbrain P8 quote grounding on custodian machines; future v2 decisions must name this.
+- **Report.** The program report gains a changelog. Plans still in progress publish their records in their own pages under `docs/benchmarks/2026-10-05-heldout-program/`.
+
+## [0.10.26] - 2026-10-05
+
+### Mirror: managed Postgres catch-up goes from 3.4 to about 150 pages a minute 57 ms from the database
+
+gbrain measured its managed-sync catch-up on a 57 ms latency rig across three releases
+([#5996](https://github.com/garrytan/gbrain/pull/5996), v0.60.48.0; [#6021](https://github.com/garrytan/gbrain/pull/6021),
+v0.60.58.0; [#6098](https://github.com/garrytan/gbrain/pull/6098), v0.60.73.0). Pages per minute went from 3.4
+(v0.60.39.0, one page per run) to 13.1, 28.8 and finally 152.8 in steady state with six lanes saving groups at once
+(137.4 over the whole 10k run; the 10,000-file backlog from about 49 h to about 1.2 h). Foreground page writes stay
+within about 1.7 s of idle at p95 with no failures. The bench output is copied into
+`docs/benchmarks/2026-10-05-managed-sync-catchup/raw/` and summarized in `results.json`
+([report](docs/benchmarks/2026-10-05-managed-sync-catchup.md)). Nothing was rerun here; $0.
+
+## [0.10.25] - 2026-10-05
+
+### Mirror: gbrain's Hangul end-boundary rule cuts word-internal mention matches from 1,041 to 11
+
+gbrain #6080 (v0.60.69.0) makes a Korean name end at a non-Hangul character or at an attached title, particle or copula form. On 7.3M characters of public Korean text, word-internal false matches fell from 1,041 to 11, while 65 of 74 real name mentions still matched. Precision over real names plus word-internal matches rose from 6.6% to 85.5%. Report, scripts and per-match labels: [docs/benchmarks/2026-10-05-hangul-mention-boundaries.md](docs/benchmarks/2026-10-05-hangul-mention-boundaries.md). Labeling cost $0.36.
+
+## [0.10.24] - 2026-10-05
+
+### README describes other memory systems by kind
+
+README's "How gbrain compares" section and its changelog no longer name other memory projects; each is described by
+kind (for example "a verbatim-session memory system"). Names, versions and sources stay in
+[comparisons and their protocols](docs/comparison-systems.md), which README links. No measurement changed; $0.
+
+## [0.10.23] - 2026-10-05
+
+### Top-level docs read as the current state, with a changelog per document
+
+README, the docs index, the settings guide, retrieval lessons, the comparison page, the evaluation guide, the
+contributor guide and the credits now open with what gbrain does at the pinned commit (`739e5cc`, v0.60.46.0) and
+close with a `## Changelog` section recording how that document changed and why, one entry per commit, newest first.
+
+- **README.** Three parts: what gbrain does, current results (one table, each number with its gbrain commit and
+  report) and how gbrain compares (strict LongMemEval retrieval, answer accuracy with the same reader,
+  PrecisionMemBench, concept search, Cat 40 against files, Postgres and the memory tool), then known limits. The
+  dated "Update, October 2/3/4" blocks move to its changelog. New on the page: Cat 40 on frontier models, the
+  multi-relation planner's held-out pass (gbrain v0.60.60.0) and the held-out program.
+- **Settings and retrieval lessons.** Dated "October 4, 2026:" amendments become current statements (opaque-id
+  recount at `109b992`), a `return_unit` row and a whole-conversation delivery section are added, and the September 6
+  values move to the changelog.
+- **Comparison page.** Sentences about earlier versions of the page now state the current position; the history is
+  in its changelog.
+- **CLAUDE.md** records the shape (current state on top, a per-document changelog below), and AGENTS.md summarizes
+  it so Codex and other agents that read only AGENTS.md see it.
+
+No measurement changed; $0.
 
 ## [0.10.22] - 2026-10-05
 
