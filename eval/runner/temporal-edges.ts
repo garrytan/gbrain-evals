@@ -280,7 +280,9 @@ export function svClosureWrong(p: TePerson, ending: string, closeDate: string): 
 
 /** Observed transitions (works_at, advises) whose subject is one of `people`, plus applied single-value closures as ends. */
 async function observedTransitions(sut: Sut, people: readonly string[], closures: ReadonlyArray<{ person: string; ending: string; close_date: string; status: string }>): Promise<Map<string, Transition[]>> {
-  const rows = await sut.engine.executeRaw<{ subject: string; target: string; type: string; kind: 'start' | 'end'; date: string; precision: 'day' | 'month' | 'year'; producer: string }>(
+  // A build without temporal edges has no link_transitions table: it observes no transition, which is the comparison, not an error.
+  const [table] = await sut.engine.executeRaw<{ t: string | null }>(`SELECT to_regclass('link_transitions')::text AS t`);
+  const rows = !table?.t ? [] : await sut.engine.executeRaw<{ subject: string; target: string; type: string; kind: 'start' | 'end'; date: string; precision: 'day' | 'month' | 'year'; producer: string }>(
     `SELECT f.slug AS subject, t.slug AS target, lt.link_type AS type, lt.kind, lt.occurred_on::text AS date, lt.date_precision AS precision, lt.producer
        FROM link_transitions lt JOIN pages f ON f.id = lt.from_page_id JOIN pages t ON t.id = lt.to_page_id
       WHERE f.slug = ANY($1::text[]) AND lt.link_type = ANY($2::text[])`, [people, TRANSITION_TYPES]);
