@@ -1,0 +1,69 @@
+{
+  "kind": "oss-shootout-cells",
+  "schema_version": 1,
+  "system": "hindsight",
+  "config": "common",
+  "notes": "Draft. LongMemEval-S runs eight namespaces in parallel on one standard-16 VM.",
+  "cells": [
+    {
+      "id": "hindsight-common-locomo-r1",
+      "benchmark": "locomo",
+      "lease_usd": 10,
+      "lease_basis": "1.5 x eval/systems/hindsight/PILOT.md ($6.58)",
+      "command": "bash eval/systems/bootstrap.sh up --system hindsight --config common --timeout 1800 && { bun eval/runner/memory-qa/run.ts --benchmark locomo --split dev --system http://127.0.0.1:8700 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-locomo.json --output \"$SHOOTOUT_OUT/mqa\"; }; s=$?; bash eval/systems/bootstrap.sh down --system hindsight; exit $s",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system hindsight --datasets locomo,beam-100k,lme-s",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY"
+      ]
+    },
+    {
+      "id": "hindsight-common-locomo-r2",
+      "benchmark": "locomo",
+      "lease_usd": 1,
+      "lease_basis": "1.5 x eval/systems/hindsight/PILOT.md ingest only ($0.29)",
+      "command": "bash eval/systems/bootstrap.sh up --system hindsight --config common --timeout 1800 && { bun eval/runner/memory-qa/run.ts --benchmark locomo --split dev --system http://127.0.0.1:8700 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/retrieval-only.json --ingest-replicate 2 --output \"$SHOOTOUT_OUT/mqa\"; }; s=$?; bash eval/systems/bootstrap.sh down --system hindsight; exit $s",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system hindsight --datasets locomo,beam-100k,lme-s",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY"
+      ]
+    },
+    {
+      "id": "hindsight-common-beam-100k",
+      "benchmark": "beam-100k",
+      "lease_usd": 9,
+      "lease_basis": "1.5 x eval/systems/hindsight/PILOT.md ($5.48)",
+      "command": "bash eval/systems/bootstrap.sh up --system hindsight --config common --timeout 1800 && { bun eval/runner/memory-qa/run.ts --benchmark beam-100k --split dev --system http://127.0.0.1:8700 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-beam-100k.json --output \"$SHOOTOUT_OUT/mqa\"; }; s=$?; bash eval/systems/bootstrap.sh down --system hindsight; exit $s",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system hindsight --datasets locomo,beam-100k,lme-s",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY"
+      ]
+    },
+    {
+      "id": "hindsight-common-lme-s",
+      "benchmark": "lme-s",
+      "lease_usd": 76,
+      "lease_basis": "1.5 x eval/systems/hindsight/PILOT.md ($50.12)",
+      "command": "bash eval/systems/bootstrap.sh up --system hindsight --config common --timeout 1800 && { pids=(); for i in $(seq 0 7); do bun eval/runner/memory-qa/run.ts --benchmark lme-s --limit {{lme_s_limit}} --seed 42 --system http://127.0.0.1:8700 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-lme-s.json --shard $i/8 --output \"$SHOOTOUT_OUT/mqa/shard-$i\" & pids+=($!); done; s=0; for p in \"${pids[@]}\"; do wait $p || s=1; done; (exit $s); }; s=$?; bash eval/systems/bootstrap.sh down --system hindsight; exit $s",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system hindsight --datasets locomo,beam-100k,lme-s",
+      "vm": {
+        "size": "standard-16"
+      },
+      "pass": [
+        "OPENAI_API_KEY"
+      ],
+      "lease_scale": {
+        "param": "lme_s_limit",
+        "base": 100
+      }
+    }
+  ]
+}

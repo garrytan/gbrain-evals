@@ -11,6 +11,20 @@
  *     [--system gbrain|gbrain-shootout|fake|<shim URL>] [--context native|rehydrated] [--budget-tokens N]
  *     [--policy vendor-default|fixed-evidence] [--policy-setting key=value]... [--max-attempts 3]
  *     [--finish-timeout-s 600] [--sealed-profile <custody root>] [--provider-proxy <metering proxy URL>]
+ *     [--arms <arms.json> [--replay]] [--proxy-slot <slot>] [--no-retry-upstream-5xx] [--ingest-timeout-s 3600]
+ *     [--ingest-replicate N]
+ *
+ * Multi-arm cells (arms.ts): `--arms` ingests each namespace once, retrieves
+ * once per question and policy, and derives every context mode and reader
+ * from that state, one canonical row set per arm under arms/<id>/; frozen
+ * reader prompts in contexts.ndjson are replayed byte for byte. `--replay`
+ * adds readers to a finished cell without contacting the system.
+ *
+ * Provider attribution (with a lease proxy): each ingest and each retrieval
+ * is bound to its own proxy key, so rows carry the provider dollars and what
+ * the provider answered (`provider.upstream`). A retrieval that failed while
+ * the provider returned a 5xx, dropped the connection or sent an unparseable
+ * 200 is retried once (`upstream_retry`), unless --no-retry-upstream-5xx.
  *
  * Provider proxy (a shootout cell; default SHOOTOUT_PROXY): the process's
  * provider keys become dummies, gbrain's OpenAI, Anthropic and Voyage calls
@@ -126,6 +140,10 @@ export interface RunArgs {
   ingestTimeoutS: number;
   /** Multi-arm mode (--arms <file.json>): one ingest, one retrieval per policy, every context and reader derived from them. */
   arms: ArmsSpec | null;
+  /** Reader replay (--replay, with --arms): run new arms from a finished cell's frozen retrievals and contexts without contacting the system. */
+  replay: boolean;
+  /** Independent re-ingestion of the same selection (run-to-run variance); enters the run hash when above 1. */
+  ingestReplicate: number;
 }
 
 export interface MemoryQaRow {
@@ -250,6 +268,8 @@ export function parseRunArgs(argv: string[]): RunArgs {
     retryUpstream5xx: !argv.includes('--no-retry-upstream-5xx'),
     ingestTimeoutS: Number(one('--ingest-timeout-s') ?? 3600),
     arms,
+    replay: argv.includes('--replay'),
+    ingestReplicate: Number(one('--ingest-replicate') ?? 1),
   };
 }
 
@@ -295,6 +315,29 @@ const PROVIDER_KEY: Record<string, string> = { openai: 'OPENAI_API_KEY', voyage:
 /** What a system says it is: its capability record's name and versions and, for a shim, the configuration /health reports active. */
 export interface SystemIdentity { system: string; config: string | null; versions: Record<string, unknown> | null; health?: Record<string, unknown> }
 
+/** The system identity and capability record a finished multi-arm cell recorded, for `--replay`. */
+function replaySource(a: RunArgs): { identity: SystemIdentity | null; capabilities: CapabilityRecord } {
+  if (!a.arms) throw new Error('--replay needs --arms (the readers to add)');
+  const path = join(a.output, 'receipt.json');
+  if (!existsSync(path)) throw new Error(`--replay needs a finished multi-arm cell in ${a.output} (no receipt.json)`);
+  const r = JSON.parse(readFileSync(path, 'utf8')) as { kind: string; system?: { identity: SystemIdentity | null; capabilities: CapabilityRecord } };
+  if (r.kind !== 'memory-qa-arms' || !r.system?.capabilities) throw new Error(`${path} is not a multi-arm cell receipt`);
+  return { identity: r.system.identity, capabilities: r.system.capabilities };
+}
+
+/** Stands in for the system during `--replay`: any call means a retrieval was not frozen, which is refused. */
+class ReplaySystem implements MemorySystem {
+  readonly name: string;
+  constructor(private cap: CapabilityRecord) { this.name = `replay:${cap.system}`; }
+  private no(): never { throw new SystemError('invalid_request', 'replay mode never calls the system'); }
+  async capabilities() { return this.cap; }
+  async reset(): Promise<void> { this.no(); }
+  async ingestSession(): Promise<never> { this.no(); }
+  async finishIngest(): Promise<never> { this.no(); }
+  async retrieve(): Promise<never> { this.no(); }
+  async deleteSource(): Promise<never> { this.no(); }
+}
+
 export async function systemIdentity(a: RunArgs): Promise<SystemIdentity | null> {
   if (a.system === 'gbrain') return null;
   if (!/^https?:\/\//.test(a.system)) return { system: a.system, config: a.system === 'gbrain-shootout' ? JSON.stringify(a.config) : null, versions: null };
@@ -309,7 +352,8 @@ export function runConfigHash(a: RunArgs, gut: GbrainUnderTest, corpus: Corpus, 
   const pre = { benchmark: a.benchmark, split: a.split, config: a.config, pins: a.pins, embed: a.embed, model: a.embeddingModel, dims: a.embeddingDims, qa: a.qa,
     categories: a.categories, limit: a.limit, seed: a.seed, topK: a.topK, gbrain: gut.overlay?.build.commit ?? gut.version, data: corpus.source.files, ...(a.facts !== 'none' ? { facts: a.facts } : {}),
     ...(a.system !== 'gbrain' ? { system: a.system, context: a.context, policy: a.policy, identity: identity && { system: identity.system, config: identity.config, versions: identity.versions } } : {}),
-    ...(a.arms ? { qa: null, context: null, policy: null, arms_policies: Object.keys(a.arms.policies).sort() } : {}) };
+    ...(a.arms ? { qa: null, context: null, policy: null, arms_policies: Object.keys(a.arms.policies).sort() } : {}),
+    ...(a.ingestReplicate !== 1 ? { ingest_replicate: a.ingestReplicate } : {}) };
   return createHash('sha256').update(JSON.stringify(pre)).digest('hex');
 }
 
@@ -381,7 +425,8 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   const myConvs = convIds.filter((_, i) => i % a.shard.count === a.shard.index);
   const byConv = new Map(corpus.conversations.map(c => [c.id, c]));
 
-  const sysIdentity = await systemIdentity(a);
+  const prior = a.replay ? replaySource(a) : null;
+  const sysIdentity = prior ? prior.identity : await systemIdentity(a);
   const hash = runConfigHash(a, gut, corpus, sysIdentity);
   const headerPath = join(a.output, 'run-config.json');
   if (existsSync(headerPath)) {
@@ -459,7 +504,8 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   const rerankPinned = (a.config['search.reranker.enabled'] ?? a.pins['search.reranker.enabled']) === 'true';
   const identity = productIdentityFor(gut) as unknown as Record<string, unknown>;
   const sanitizer = new Sanitizer(corpus, hash);
-  const system: MemorySystem = legacy ? new GbrainLegacySystem(mods!, { ...a.pins, ...a.config }, identity, { topK: a.topK, as: extractFacts ? 'conversation' : 'note', rerankPinned })
+  const system: MemorySystem = prior ? new ReplaySystem(prior.capabilities)
+    : legacy ? new GbrainLegacySystem(mods!, { ...a.pins, ...a.config }, identity, { topK: a.topK, as: extractFacts ? 'conversation' : 'note', rerankPinned })
     : a.system === 'gbrain-shootout' ? new GbrainShootoutSystem(mods!, a.config, identity)
     : a.system === 'fake' ? new FakeMemorySystem()
     : a.system === 'full-context' ? new FullContextSystem()
@@ -497,6 +543,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   if (arms.length) mkdirSync(rDir, { recursive: true });
   const rManifest = arms.length ? freezeManifest(rDir, hash, manifest.expected.flatMap(id => policies.map(p => retrievalKey(id, p)))) : null;
   const rPending = rManifest ? canonicalize(rManifest, readAttempts(rDir), a.maxAttempts).pending : new Set<string>();
+  if (prior && rPending.size) throw new Error(`--replay reads frozen retrievals, but ${rPending.size} retrievals in ${a.output} are not done; finish the cell first`);
   const rByKey = new Map<string, MemoryQaRow>(rManifest ? canonicalize(rManifest, readAttempts(rDir), a.maxAttempts).rows.map(r => [r.id, r as unknown as MemoryQaRow]) : []);
   const armState = arms.map(arm => {
     const dir = armsDir(a.output, arm);
@@ -783,7 +830,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
     dataset: corpus.source,
     facts: a.facts === 'none' ? null : { lane: a.facts, extractor: 'runExtractConversationFactsCore (product default model, force)', pages: 'conversation type, ISO session date', ...factStats,
       unresolved_share: factStats.facts ? factStats.unresolved / factStats.facts : null },
-    fidelity, cost,
+    fidelity, cost, ingest_replicate: a.ingestReplicate,
     metering: a.providerProxy ? { mode: 'lease-proxy', proxy: a.providerProxy, slot, lease_id: process.env.SHOOTOUT_LEASE_ID ?? null, retry_upstream_5xx: a.retryUpstream5xx } : { mode: paid ? 'budget-ledger' : 'none' },
     ingest: legacy ? null : { ...ingestStats, errors: allIngestErrors, errors_truncated: allIngestErrors.length >= 500 }, sanitizer: { forbidden_markers: sanitizer.markers.length }, sealed_profile: sealed ? { checked: 'output and caches inside the custody root, outside the repository and the shared cache' } : null,
   };

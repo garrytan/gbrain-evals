@@ -1,0 +1,30 @@
+{
+  "kind": "oss-shootout-campaign",
+  "schema_version": 1,
+  "campaign_id": "oss-memory-shootout-p1",
+  "cap_usd": 1200,
+  "ledger": ".budget/oss-memory-shootout.sqlite",
+  "parameters": {
+    "lme_s_limit": 100,
+    "graphiti_beam_recipe": true
+  },
+  "cells_from": [
+    "cells/basic-memory-recipe.json",
+    "cells/basic-memory-common.json",
+    "cells/mem0-recipe.json",
+    "cells/mem0-common.json",
+    "cells/hindsight-recipe.json",
+    "cells/hindsight-common.json",
+    "cells/graphiti-recipe.json",
+    "cells/graphiti-common.json",
+    "cells/cognee-recipe.json",
+    "cells/cognee-common.json",
+    "cells/gbrain-legacy-common.json",
+    "cells/gbrain-shootout-recipe.json",
+    "cells/gbrain-shootout-common.json",
+    "cells/full-context-control.json",
+    "cells/no-memory-control.json",
+    "cells/plain-hybrid-control.json"
+  ],
+  "cells": []
+}

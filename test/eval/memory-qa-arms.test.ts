@@ -108,8 +108,16 @@ describe('one ingest, many arms', () => {
       expect(proxy.finalized.filter(k => k.startsWith('ingest:'))).toHaveLength(4);
 
       const before = { ...shim.calls };
-      writeFileSync(arms, JSON.stringify({ ...spec, readers: [...spec.readers, { id: 'sonnet', model: 'anthropic:claude-sonnet-5-5' }] }));
+      writeFileSync(arms, JSON.stringify({ ...spec, readers: [...spec.readers, { id: 'sonnet', model: 'openai:gpt-5.5' }] }));
       await run(['--system', shim.server.url, '--arms', arms, '--provider-proxy', proxy.url, '--output', out]);
+      expect(shim.calls).toEqual(before);
+      const url = shim.server.url;
+      shim.server.stop();
+      writeFileSync(arms, JSON.stringify({ ...spec, readers: [...spec.readers, { id: 'sonnet', model: 'openai:gpt-5.5' }, { id: 'luna', model: 'openai:gpt-6-luna', slice: { limit: 2, seed: 3 } }] }));
+      await run(['--system', url, '--arms', arms, '--provider-proxy', proxy.url, '--output', out, '--replay']);
+      const luna = readJson(join(out, 'receipt.json')).arms.filter((x: any) => x.id.endsWith('luna'));
+      expect(luna.map((x: any) => x.run_status)).toEqual(['complete', 'complete', 'complete', 'complete']);
+      expect(readNd(join(out, luna[0].dir, 'rows.ndjson')).every((r: any) => r.qa_context.replayed === true)).toBe(true);
       expect(shim.calls).toEqual(before);
       const added = readJson(join(out, 'receipt.json')).arms.filter((x: any) => x.id.endsWith('sonnet'));
       expect(added).toHaveLength(4);

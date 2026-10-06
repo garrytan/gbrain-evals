@@ -128,6 +128,25 @@ describe('campaign leases', () => {
   });
 });
 
+describe('cell files and parameters', () => {
+  test('a setup command becomes the --setup script, placeholders fill from parameters, and an unknown parameter is refused', () => {
+    const dir = join(tmp, `files-${++n}`);
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, 'cells.json'), JSON.stringify({ kind: 'oss-shootout-cells', schema_version: 1, system: 'mem0', config: 'common', cells: [
+      { id: 'mem0-lme', lease_usd: 10, lease_scale: { param: 'n', base: 100 }, command: 'run --limit {{n}}', setup_command: 'bash eval/systems/bootstrap.sh setup --system mem0' },
+      { id: 'mem0-off', lease_usd: 5, when: 'extra', command: 'x' }] }));
+    writeFileSync(join(dir, 'campaign.json'), JSON.stringify({ kind: 'oss-shootout-campaign', schema_version: 1, campaign_id: `files-${n}`, cap_usd: 10, ledger: join(dir, 'l.sqlite'), parameters: { n: 50, extra: false }, cells_from: ['cells.json'], cells: [] }));
+    const c = new Campaign(join(dir, 'campaign.json'), join(dir, 'state'));
+    expect(c.manifest.cells.map(x => [x.id, x.system, x.lease_usd, x.command])).toEqual([['mem0-lme', 'mem0', 5, 'run --limit 50']]);
+    c.init();
+    const argv = c.launchArgv(c.reserve('mem0-lme'));
+    const script = argv[argv.indexOf('--setup') + 1];
+    expect(readFileSync(script, 'utf8')).toBe('set -euo pipefail\nbash eval/systems/bootstrap.sh setup --system mem0\n');
+    writeFileSync(join(dir, 'campaign.json'), JSON.stringify({ kind: 'oss-shootout-campaign', schema_version: 1, campaign_id: 'x', cap_usd: 10, ledger: join(dir, 'l2.sqlite'), parameters: {}, cells_from: ['cells.json'], cells: [] }));
+    expect(() => new Campaign(join(dir, 'campaign.json'), join(dir, 'state2'))).toThrow(/unknown parameter/);
+  });
+});
+
 describe('remote cell', () => {
   test('starts the lease proxy, hands the cell dummy keys and proxy URLs, and writes the lease summary', async () => {
     const out = join(tmp, 'remote-out');

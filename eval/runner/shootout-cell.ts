@@ -45,17 +45,74 @@ export interface CellSpec {
   command: string;
   /** Local bootstrap script run once on the VM before the command (ubi-runner --setup). */
   setup?: string;
+  /** Or a setup command line (for example `bash eval/systems/bootstrap.sh setup --system mem0 --datasets locomo`), written to a script at launch. */
+  setup_command?: string;
   vm?: { size?: string; location?: string; storage_gib?: number };
   /** Local environment variables forwarded to the VM; the proxy alone reads them. */
   pass?: string[];
   timeout_hours?: number;
 }
 
-export interface CampaignManifest { kind: 'oss-shootout-campaign'; schema_version: 1; campaign_id: string; cap_usd: number; ledger: string; cells: CellSpec[] }
+export type ParamValue = number | boolean | string;
+
+export interface CellsFile { kind: 'oss-shootout-cells'; schema_version: 1; system: string; config: string; notes?: string; cells: CellTemplate[] }
+
+/** A cell as written in a manifest: `{{param}}` placeholders, an optional `when` switch and a lease that scales with a parameter. */
+export interface CellTemplate extends Omit<CellSpec, 'lease_usd' | 'system' | 'config'> {
+  system?: string;
+  config?: string;
+  lease_usd: number;
+  /** Include the cell only when this campaign parameter is true. */
+  when?: string;
+  /** lease_usd x parameter / base, for a cell whose size a parameter sets (the LongMemEval-S slice). */
+  lease_scale?: { param: string; base: number };
+  /** How the lease was sized: the pilot measurement or estimate behind it. */
+  lease_basis?: string;
+}
+
+export interface CampaignManifest {
+  kind: 'oss-shootout-campaign'; schema_version: 1; campaign_id: string; cap_usd: number; ledger: string;
+  /** Decisions left open in the manifest, substituted into `{{param}}` and `when`. */
+  parameters?: Record<string, ParamValue>;
+  /** Cell files, relative to the manifest (one per system and configuration). */
+  cells_from?: string[];
+  cells: CellSpec[];
+}
+
+const subst = (text: string, params: Record<string, ParamValue>, where: string) => text.replace(/\{\{([a-z0-9_]+)\}\}/g, (_, k: string) => {
+  if (!(k in params)) throw new Error(`${where}: unknown parameter {{${k}}}`);
+  return String(params[k]);
+});
+
+/** Expand a cell template under the campaign parameters; null when its `when` switch is off. */
+export function expandCell(t: CellTemplate, params: Record<string, ParamValue>, where: string, defaults: { system: string; config: string }): CellSpec | null {
+  if (t.when !== undefined) {
+    if (!(t.when in params)) throw new Error(`${where}: cell ${t.id} names unknown parameter ${t.when}`);
+    if (params[t.when] !== true) return null;
+  }
+  if (t.lease_scale && !(t.lease_scale.param in params)) throw new Error(`${where}: cell ${t.id} scales by unknown parameter ${t.lease_scale.param}`);
+  const scale = t.lease_scale ? Number(params[t.lease_scale.param]) / t.lease_scale.base : 1;
+  if (!Number.isFinite(scale) || scale <= 0) throw new Error(`${where}: cell ${t.id} lease scale is not a positive number`);
+  const { when: _w, lease_scale: _s, lease_basis: _b, ...rest } = t;
+  return { ...rest, system: t.system ?? defaults.system, config: t.config ?? defaults.config, id: subst(t.id, params, where), lease_usd: Math.ceil(t.lease_usd * scale * 100) / 100, command: subst(t.command, params, where),
+    ...(t.setup_command ? { setup_command: subst(t.setup_command, params, where) } : {}) };
+}
 
 export function loadCampaign(path: string): { manifest: CampaignManifest; sha256: string } {
   const text = readFileSync(path, 'utf8');
   const m = JSON.parse(text) as CampaignManifest;
+  const params = m.parameters ?? {};
+  const hash = createHash('sha256').update(text);
+  const cells: CellSpec[] = [...(m.cells ?? [])];
+  for (const rel of m.cells_from ?? []) {
+    const file = resolve(dirname(resolve(path)), rel);
+    const t = readFileSync(file, 'utf8');
+    hash.update(`\u0000${rel}\u0000${t}`);
+    const f = JSON.parse(t) as CellsFile;
+    if (f.kind !== 'oss-shootout-cells' || f.schema_version !== 1) throw new Error(`${file}: kind must be oss-shootout-cells, schema_version 1`);
+    for (const c of f.cells ?? []) { const e = expandCell(c, params, file, { system: f.system, config: f.config }); if (e) cells.push(e); }
+  }
+  m.cells = cells;
   const problems: string[] = [];
   if (m.kind !== 'oss-shootout-campaign' || m.schema_version !== 1) problems.push('kind must be oss-shootout-campaign, schema_version 1');
   if (!/^[A-Za-z0-9._-]{1,64}$/.test(m.campaign_id ?? '')) problems.push('campaign_id must be 1-64 characters of [A-Za-z0-9._-]');
@@ -70,10 +127,11 @@ export function loadCampaign(path: string): { manifest: CampaignManifest; sha256
     if (c.max_output_tokens !== undefined && !(Number.isInteger(c.max_output_tokens) && c.max_output_tokens > 0)) problems.push(`cell ${c.id}: max_output_tokens must be a positive integer`);
     if (typeof c.command !== 'string' || !c.command.trim()) problems.push(`cell ${c.id}: command is required`);
     if (c.setup !== undefined && !existsSync(resolve(REPO_ROOT, c.setup)) && !existsSync(resolve(c.setup))) problems.push(`cell ${c.id}: setup ${c.setup} does not exist`);
+    if (c.setup !== undefined && c.setup_command !== undefined) problems.push(`cell ${c.id}: give setup or setup_command, not both`);
   }
   if (!m.cells?.length) problems.push('cells must list at least one cell');
   if (problems.length) throw new Error(`campaign manifest ${path}: ${problems.join('; ')}`);
-  return { manifest: m, sha256: createHash('sha256').update(text).digest('hex') };
+  return { manifest: m, sha256: hash.digest('hex') };
 }
 
 export type LeaseEvent =
@@ -157,7 +215,12 @@ export class Campaign {
     const c = this.cell(l.cell);
     const remoteOut = `eval/reports/shootout/${l.cell}/${l.lease_id}`;
     const payload = Buffer.from(JSON.stringify({ lease_id: l.lease_id, lease_usd: l.usd, max_output_tokens: l.max_output_tokens, command: c.command, out: remoteOut })).toString('base64');
-    const setup = c.setup ? (existsSync(resolve(REPO_ROOT, c.setup)) ? resolve(REPO_ROOT, c.setup) : resolve(c.setup)) : null;
+    let setup = c.setup ? (existsSync(resolve(REPO_ROOT, c.setup)) ? resolve(REPO_ROOT, c.setup) : resolve(c.setup)) : null;
+    if (c.setup_command) {
+      mkdirSync(join(this.stateDir, 'setup'), { recursive: true });
+      setup = join(this.stateDir, 'setup', `${l.cell}.sh`);
+      writeFileSync(setup, `set -euo pipefail\n${c.setup_command}\n`);
+    }
     return ['bash', UBI_RUNNER, 'run', '-s', c.vm?.size ?? 'standard-8', '-l', c.vm?.location ?? 'eu-central-h1', ...(c.vm?.storage_gib ? ['-S', String(c.vm.storage_gib)] : []),
       ...(setup ? ['--setup', setup] : []), ...(c.pass ?? []).flatMap(p => ['--pass', p]),
       '--pull', `work/${basename(REPO_ROOT)}/${remoteOut}:${dirname(this.resultsDir(l))}`,

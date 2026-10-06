@@ -1,0 +1,69 @@
+{
+  "kind": "oss-shootout-cells",
+  "schema_version": 1,
+  "system": "plain-hybrid",
+  "config": "control",
+  "notes": "Draft. D1 control: Postgres full-text plus pgvector over text-embedding-3-large, reciprocal-rank fusion, no gbrain code.",
+  "cells": [
+    {
+      "id": "plain-hybrid-control-locomo-r1",
+      "benchmark": "locomo",
+      "lease_usd": 8,
+      "lease_basis": "1.5 x estimate, not piloted: Basic Memory common reading plus embeddings ($5.20)",
+      "command": "bun eval/runner/memory-qa/run.ts --benchmark locomo --split dev --system plain-hybrid --embed real --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-locomo.json --output \"$SHOOTOUT_OUT/mqa\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo,beam-100k,lme-s",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY"
+      ]
+    },
+    {
+      "id": "plain-hybrid-control-locomo-r2",
+      "benchmark": "locomo",
+      "lease_usd": 1,
+      "lease_basis": "1.5 x estimate, not piloted: retrieval-only replicate ($0.20)",
+      "command": "bun eval/runner/memory-qa/run.ts --benchmark locomo --split dev --system plain-hybrid --embed real --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/retrieval-only.json --ingest-replicate 2 --output \"$SHOOTOUT_OUT/mqa\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo,beam-100k,lme-s",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY"
+      ]
+    },
+    {
+      "id": "plain-hybrid-control-beam-100k",
+      "benchmark": "beam-100k",
+      "lease_usd": 6,
+      "lease_basis": "1.5 x estimate, not piloted: Basic Memory common reading ($3.40)",
+      "command": "bun eval/runner/memory-qa/run.ts --benchmark beam-100k --split dev --system plain-hybrid --embed real --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-beam-100k.json --output \"$SHOOTOUT_OUT/mqa\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo,beam-100k,lme-s",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY"
+      ]
+    },
+    {
+      "id": "plain-hybrid-control-lme-s",
+      "benchmark": "lme-s",
+      "lease_usd": 44,
+      "lease_basis": "1.5 x estimate, not piloted: Basic Memory LongMemEval-S reading plus 11.5M embedding tokens ($29.00)",
+      "command": "bun eval/runner/memory-qa/run.ts --benchmark lme-s --limit {{lme_s_limit}} --seed 42 --system plain-hybrid --embed real --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-lme-s.json --output \"$SHOOTOUT_OUT/mqa\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo,beam-100k,lme-s",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY"
+      ],
+      "lease_scale": {
+        "param": "lme_s_limit",
+        "base": 100
+      }
+    }
+  ]
+}
