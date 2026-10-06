@@ -579,7 +579,11 @@ class GbrainMemoryProvider(MemoryProvider):
                 raise GbrainRetrieveError(str(e)) from e
         if not isinstance(recalled, dict) or not isinstance(recalled.get("facts"), list):
             raise GbrainRetrieveError(f"recall returned {type(recalled).__name__} without a facts list")
-        fact_docs, fact_meta = self._pack_facts(u, saved, recalled["facts"], int(self.cfg["facts_tokens"]), user_id)
+        # In combined, a fact the page arm already delivered as a fact row is not repeated in the facts block.
+        skip = set(page_meta.get("fact_rows") or []) if lane == "combined" else set()
+        fact_docs, fact_meta = self._pack_facts(u, [f for f in saved if str(f.get("id")) not in skip],
+                                                [f for f in recalled["facts"] if str(f.get("id")) not in skip], int(self.cfg["facts_tokens"]), user_id)
+        fact_meta["page_fact_rows"] = len(skip)
         if lane == "facts":
             return fact_docs, None, {"lane": lane, "facts": fact_meta, "tokens_delivered": fact_meta["tokens"], "tokenizer": "cl100k",
                                      "budget_clamped": False, "entity_anchored": page_meta.get("entity_anchored", 0),
@@ -654,11 +658,17 @@ class GbrainMemoryProvider(MemoryProvider):
             raise GbrainRetrieveError(f"gbrain reported degraded retrieval: {degraded}")
         if not isinstance(rows, list):
             raise GbrainRetrieveError(f"query returned {type(rows).__name__}, not a list of blocks")
-        docs = []
+        docs, fact_rows = [], []
         for row in rows:
             slug = str(row.get("slug", ""))
-            doc_id = slug[len(SLUG_PREFIX):] if slug.startswith(SLUG_PREFIX) else slug
             text = row.get("chunk_text") or row.get("text") or ""
+            if row.get("result_type") == "fact":
+                # gbrain's query facts arm: the row text carries its own `valid from`, so no session date header.
+                fact_rows.append(str(row.get("fact_id") or slug.rsplit("/", 1)[-1]))
+                page = str(row.get("page_slug") or "")
+                docs.append(Document(id=page[len(SLUG_PREFIX):] if page.startswith(SLUG_PREFIX) else slug, content=text, user_id=user_id))
+                continue
+            doc_id = slug[len(SLUG_PREFIX):] if slug.startswith(SLUG_PREFIX) else slug
             if self.cfg.get("date_header", True):
                 text = f"{date_header(u.timestamps.get(doc_id))}\n{text}"
             docs.append(Document(id=doc_id, content=text, user_id=user_id))
@@ -675,6 +685,7 @@ class GbrainMemoryProvider(MemoryProvider):
             "expansion_applied": retrieval.get("expansion_applied"),
             "degraded": degraded,
             "entity_anchored": sum(1 for row in rows if isinstance(row, dict) and row.get("entity_anchored")),
+            **({"fact_rows": fact_rows} if fact_rows else {}),
         }
         if delivery.get("tokenizer") not in (None, "cl100k"):
             raise GbrainRetrieveError(f"gbrain packed evidence with tokenizer {delivery.get('tokenizer')!r}, not cl100k")

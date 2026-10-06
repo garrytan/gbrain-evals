@@ -51,6 +51,41 @@ def test_extraction_windows_keep_whole_turns_and_label_continuations():
     assert extraction_windows(Document(id="d-3", content=""), 80) == []
 
 
+def test_query_fact_rows_render_without_date_header_and_are_not_repeated(tmp_path):
+    from mpw.gbrain_provider import GbrainMemoryProvider, _Unit
+
+    class Child:
+        def call(self, name, args):
+            if name == "query":
+                rows = [{"slug": "conversations/d-a1", "chunk_text": "user: I adopted Miso."},
+                        {"result_type": "fact", "fact_id": "7", "slug": "facts/7", "page_slug": "conversations/d-a1",
+                         "chunk_text": "Saved fact (fact; valid from 2024-03-05; provenance: mcp:extract_facts): The cat is Miso."}]
+                meta = {"retrieval": {"vector_enabled": True, "delivery": {"tokens_delivered": 40, "tokenizer": "cl100k"},
+                                      "saved_facts": [{"id": 7, "fact": "The cat is Miso."}, {"id": 8, "fact": "Miso likes the window seat."}]}}
+                return rows, meta
+            if name == "recall":
+                return {"facts": [{"id": 7, "fact": "The cat is Miso.", "source_session": "d-a1", "valid_from": "2024-03-05T00:00:00Z"},
+                                  {"id": 9, "fact": "The user runs.", "source_session": "d-a1", "valid_from": "2024-03-05T00:00:00Z"}]}, {}
+            raise AssertionError(name)
+
+    unit = _Unit("u-1", tmp_path)
+    unit.child = Child()
+    unit.timestamps = {"d-a1": "2024-03-05T18:30:00"}
+    p = GbrainMemoryProvider({"gbrain_cli": "unused", "child_env": {}, "lane": "combined", "facts_tokens": 400})
+    p._ensure_unit = lambda unit_id, create=False: unit
+    docs, _, meta = p.retrieve_with_meta("What is the cat called?", 10, "u-1")
+    fact_row = next(d for d in docs if d.content.startswith("Saved fact ("))
+    assert fact_row.id == "d-a1" and "Date:" not in fact_row.content
+    page = next(d for d in docs if d.content.startswith("Date: 2024-03-05 18:30 UTC\nuser:"))
+    assert page.id == "d-a1"
+    block = "\n".join(d.content for d in docs if "\nSaved facts:\n" in d.content)
+    assert "The cat is Miso." not in block and "Miso likes the window seat." in block and "The user runs." in block
+    assert meta["pages"]["fact_rows"] == ["7"] and meta["facts"]["page_fact_rows"] == 1
+    p.cfg["lane"] = "facts"
+    _, _, fmeta = p.retrieve_with_meta("What is the cat called?", 10, "u-1")
+    assert fmeta["facts"]["page_fact_rows"] == 0 and fmeta["facts"]["kept"] == 3
+
+
 if not _bun_ok():
     if os.environ.get("MPW_REQUIRE_HARNESS") == "1":
         raise RuntimeError("gbrain facts tests need bun >= 1.4 and node_modules/gbrain (bun install)")
