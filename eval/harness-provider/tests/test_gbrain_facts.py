@@ -157,6 +157,7 @@ def test_facts_extraction_and_lanes(tmp_path, upstream):
         page_docs = [d for d in cdocs if "\nSaved facts:\n" not in d.content]
         assert page_docs and len(cdocs) == len(page_docs) + cmeta["facts"]["documents"]
         assert cmeta["tokens_delivered"] == cmeta["facts"]["tokens"] + cmeta["pages"]["tokens_delivered"]
+        assert cmeta["entity_anchored"] == cmeta["pages"]["entity_anchored"] and "entity_anchored" in meta
         assert cmeta["pages"]["requested"]["token_budget"] == 1500 and cmeta["pages"]["requested"]["expand"] is False
         assert [d.content for d in cdocs[:len(fdocs)]] == [d.content for d in fdocs]
 

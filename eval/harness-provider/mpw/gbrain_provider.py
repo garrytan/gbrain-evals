@@ -582,10 +582,12 @@ class GbrainMemoryProvider(MemoryProvider):
         fact_docs, fact_meta = self._pack_facts(u, saved, recalled["facts"], int(self.cfg["facts_tokens"]), user_id)
         if lane == "facts":
             return fact_docs, None, {"lane": lane, "facts": fact_meta, "tokens_delivered": fact_meta["tokens"], "tokenizer": "cl100k",
-                                     "budget_clamped": False, "pages": {"requested": page_meta["requested"], "used": "saved_facts only"}}
+                                     "budget_clamped": False, "entity_anchored": page_meta.get("entity_anchored", 0),
+                                     "pages": {"requested": page_meta["requested"], "used": "saved_facts only"}}
         return fact_docs + pages, None, {"lane": lane, "facts": fact_meta, "pages": page_meta, "tokenizer": "cl100k",
                                          "tokens_delivered": fact_meta["tokens"] + int(page_meta.get("tokens_delivered") or 0),
-                                         "budget_clamped": bool(page_meta.get("budget_clamped"))}
+                                         "budget_clamped": bool(page_meta.get("budget_clamped")),
+                                         "entity_anchored": page_meta.get("entity_anchored", 0)}
 
     def _pack_facts(self, u: _Unit, saved: list, recalled: list, budget: int, user_id: str | None) -> tuple[list[Document], dict]:
         """Question-matched saved_facts first, then recall's newest facts, one line each, grouped under their source page."""
