@@ -1,5 +1,15 @@
 {
   "schema_version": 1,
   "note": "Experiments under the preregistration order check (eval/runner/prereg.ts). Each preregistration must be committed before any file matching its results globs. Add an entry in the same commit as the preregistration.",
-  "experiments": []
+  "experiments": [
+    {
+      "id": "w1-followups-repin",
+      "preregistration": "docs/benchmarks/2026-10-06-followups-repin-preregistration.md",
+      "results": [
+        "docs/benchmarks/2026-10-06-followups-repin/offline-tier/**",
+        "docs/benchmarks/2026-10-06-followups-repin/*.txt",
+        "docs/benchmarks/2026-10-06-followups-repin/*.json"
+      ]
+    }
+  ]
 }
