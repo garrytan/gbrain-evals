@@ -1176,6 +1176,8 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'longmemeval-validate-ndjson.ts': { role: 'LongMemEval NDJSON validator', part_of: 'longmemeval-retrieval' },
   'metrics.ts': { role: 'shared retrieval metrics' },
   'mutation-kit.ts': { role: 'scorer mutation kit: fake systems every category scorer must fail' },
+  'attendance-world-score.ts': { role: 'keyless W3 attendance scorer over N9 receipts, against the list on each meeting page', part_of: 'multi-hop-paraphrase' },
+  'attendee-role-planner.ts': { role: 'attendee-role questions (constrained-relational development phrasing) with planner and parser instrumentation, hermetic', part_of: 'multi-hop-paraphrase' },
   'n2-3-prompt-ab.ts': { role: 'matched before/after of the gbrain contradiction-judge prompt (N2-3) on a fresh N2 seed, development data', part_of: 'contradiction-surfacing' },
   'n6-postgres-http.ts': { role: 'N6 on Postgres over the real HTTP transport (publication run; needs a localhost Docker Postgres)', part_of: 'visibility-leak-fuzz' },
   'p5-agent.ts': { role: 'P5 agent runners (H5b, H6) and judges (H3, H6): keyless brain served over MCP stdio with in-place snapshots, the fixed P5 tool lists, judge calls, paid-run joining, per-unit checkpoints, pilot subsets and paired receipt comparison' },

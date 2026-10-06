@@ -29,6 +29,7 @@
  *   bun eval/runner/n9-multi-hop-paraphrase.ts
  *   bun eval/runner/n9-multi-hop-paraphrase.ts --gbrain ../gbrain@3a284ae --output /tmp/n9
  *   bun eval/runner/n9-multi-hop-paraphrase.ts --paid --budget-run-id <id>
+ *   bun eval/runner/n9-multi-hop-paraphrase.ts --corpus eval/data/world-v1-attendees   # another world-v1-shaped corpus
  *
  * Decision rules and void conditions: docs/benchmarks/2026-10-01-n9-multi-hop-preregistration.md.
  */
@@ -259,7 +260,7 @@ export interface N9Options {
   quiet?: boolean;
   /** Test seam: replaces the product's hybridSearch (the broken-adapter test). */
   search?: RelationalSearch;
-  /** Test seam: a smaller corpus directory (gold is then regenerated from it, not read from the committed file). */
+  /** Another world-v1-shaped corpus (`--corpus`, e.g. eval/data/world-v1-attendees); gold is then regenerated from it, not read from the committed question file. */
   corpusDir?: string;
   /** Run each ingestion seed's index in its own process (hermetic arm, default on); results merge in seed order. */
   parallelSeeds?: boolean;
@@ -280,6 +281,7 @@ export function parseN9Args(argv: readonly string[]): N9Options {
     if (flag === '--seed') o.seeds = [Number(value())];
     else if (flag === '--seeds') o.seeds = value().split(',').map(Number);
     else if (flag === '--output') o.outputDir = value();
+    else if (flag === '--corpus') o.corpusDir = value();
     else if (flag === '--record-bugs') o.recordBugs = true;
     else if (flag === '--quiet') o.quiet = true;
     else if (flag === '--serial-seeds') o.parallelSeeds = false;
@@ -527,8 +529,9 @@ async function runN9Inner(options: N9Options, paid: boolean): Promise<N9Result> 
       })),
       per_query: oneHopRows.map(r => {
         const m = r.on.relational_meta[0] as { kind?: string | null; seeds_resolved?: number; fired?: boolean; candidates?: number } | undefined;
-        return { seed: r.seed, query_id: r.query_id, split: r.split, template: r.template, text: r.text,
+        return { seed: r.seed, query_id: r.query_id, split: r.split, template: r.template, text: r.text, relevant: r.relevant,
           parsed: Boolean(m?.kind), seeds_resolved: m?.seeds_resolved ?? 0, fired: Boolean(m?.fired), candidates: m?.candidates ?? 0,
+          relational_slugs: [...new Set(r.on.rows.filter(x => x.relational).map(x => x.slug))],
           off: r.off.metrics, on: r.on.metrics, error: r.off.error?.message ?? r.on.error?.message ?? null };
       }),
     } : null,
