@@ -26,7 +26,7 @@
  *
  * Hermetic: provider keys stripped, PGLite in memory, zero LLM.
  *
- * Usage: bun eval/runner/temporal-edges.ts [--seeds 3,5] [--phrasing A|A2|A3] [--output <dir>] [--gbrain <checkout>[@ref]] [--json]
+ * Usage: bun eval/runner/temporal-edges.ts [--seeds 3,5] [--phrasing A|A2|A3 | --dev-phrasing-file <path>] [--output <dir>] [--gbrain <checkout>[@ref]] [--json]
  *   [--pack <pack.yaml>] [--single-value-pass]   (P3 E5: bind a test schema pack before any page; run one declared-only
  *   edge_contradictions pass before the probes and add sv_wrong_closures / sv_conflicts_closed rows)
  *   [--render relation-lines]   (P5 delta H7: a seeded half of the people state employment only as typed relation lines
@@ -44,6 +44,10 @@
  * Custodian (held-out) mode: --phrasing-file <custody path> --decision-id <id> --purpose <text> --seeds <held-out seeds>.
  * The phrasing file lives outside the repository; every read appends a line to access-log.jsonl beside it, and the
  * receipt records only the phrasing file's SHA-256, never its text.
+ *
+ * Development phrasing file: --dev-phrasing-file <path> (dev seeds only) runs a fresh development phrasing written as a
+ * JSON { id, templates } PhrasingTemplates file. It is development material, not custody: no access log is written,
+ * and the receipt records the file's id and SHA-256 so a later run can confirm it used the same text.
  */
 import { join } from 'node:path';
 import type { OperationContext } from 'gbrain/operations';
@@ -351,6 +355,17 @@ export function summarize(rows: readonly TeRow[]): Record<string, { n: number; m
   return out;
 }
 
+/** Loads a development { id, templates } phrasing file; refuses held-out seeds, because dev text never meets custody seeds. */
+export function loadDevPhrasingFile(path: string, seeds: readonly number[]): { phrasing: { id: string; templates: PhrasingTemplates }; sha256: string } {
+  const held = seeds.filter(s => !DEV_SEEDS.includes(s));
+  if (held.length) throw new Error(`--dev-phrasing-file runs development seeds only (${DEV_SEEDS.join(', ')}); seeds ${held.join(', ')} are held out. Rerun with --seeds ${DEV_SEEDS.join(',')}, or give a custody file to the custodian's --phrasing-file mode instead.`);
+  const bytes = readFileSync(path);
+  let parsed: { id?: unknown; templates?: unknown };
+  try { parsed = JSON.parse(bytes.toString('utf8')); } catch (e) { throw new Error(`--dev-phrasing-file ${path} is not JSON (${(e as Error).message}); write { "id": "<name>", "templates": { ...PhrasingTemplates } } and rerun.`); }
+  if (typeof parsed.id !== 'string' || !parsed.id.trim()) throw new Error(`--dev-phrasing-file ${path} needs a non-empty string "id" beside "templates"; add one and rerun.`);
+  return { phrasing: { id: parsed.id, templates: validatePhrasing(parsed.templates) }, sha256: createHash('sha256').update(bytes).digest('hex') };
+}
+
 function argValue(argv: readonly string[], flag: string): string | undefined {
   const at = argv.indexOf(flag);
   if (at >= 0) return argv[at + 1];
@@ -365,7 +380,14 @@ async function main(): Promise<void> {
   const phrasingFile = argValue(argv, '--phrasing-file');
   let sealedPhrasing: { id: string; templates: PhrasingTemplates } | undefined;
   let phrasingSha: string | null = null;
-  if (phrasingFile) {
+  const devPhrasingFile = argValue(argv, '--dev-phrasing-file');
+  let devFile: { id: string; sha256: string } | undefined;
+  if (devPhrasingFile && (phrasingFile || argValue(argv, '--phrasing'))) throw new Error('--dev-phrasing-file replaces --phrasing and cannot run with the custodian\'s --phrasing-file; pass exactly one phrasing source and rerun.');
+  if (devPhrasingFile) {
+    const loaded = loadDevPhrasingFile(devPhrasingFile, seeds);
+    sealedPhrasing = loaded.phrasing;
+    devFile = { id: loaded.phrasing.id, sha256: loaded.sha256 };
+  } else if (phrasingFile) {
     const decisionId = argValue(argv, '--decision-id');
     const purpose = argValue(argv, '--purpose');
     if (!decisionId || !purpose) throw new Error('custodian mode needs --decision-id and --purpose, recorded in the access log before the phrasing file is read');
@@ -415,7 +437,8 @@ async function main(): Promise<void> {
     resolved_config: {
       engine: 'pglite-in-memory',
       caller: 'operation handlers with OperationContext { remote: false, sourceId: default }',
-      seeds, phrasing: sealedPhrasing ? `held-out set ${sealedPhrasing.id} (custody file sha256 ${phrasingSha})` : `${devPhrasing} (development)`, generator_version: TEMPORAL_EDGES_GENERATOR_VERSION,
+      seeds, phrasing: devFile ? `development file ${devFile.id} (sha256 ${devFile.sha256})` : sealedPhrasing ? `held-out set ${sealedPhrasing.id} (custody file sha256 ${phrasingSha})` : `${devPhrasing} (development)`, generator_version: TEMPORAL_EDGES_GENERATOR_VERSION,
+      ...(devFile ? { dev_phrasing_file: { id: devFile.id, sha256: devFile.sha256, access_log: 'none (development material, not custody)' } } : {}),
       oracle: 'employment stints from the generator ledger; set arithmetic for now / as-of / during',
       gbrain_overlay: overlaySummary(gut),
       ...(pack ? { pack: { name: pack.name, sha256: createHash('sha256').update(pack.text).digest('hex') } } : {}),
