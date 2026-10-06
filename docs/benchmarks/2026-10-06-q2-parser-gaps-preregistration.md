@@ -40,7 +40,8 @@ effect. Fact lines (`- [category] claim`) carry no feature. They must pass the j
 write advisory once the grammar is on.
 
 If U3 and U4 depend on each other (the implementer's development trace decides, recorded in the freeze record before
-any cell), they form one joint unit `U34` with U4's primary metric, and the family has five units.
+any cell), they form one joint unit `U34` with U4's primary metric, and the family has five units. Amendment 3 records
+the final family (U1, U25, U34, U6).
 
 ## Custody
 
@@ -320,6 +321,17 @@ Exceeding the alert needs the owner's decision and never changes a bar. If G1–
    cell opens, the custodian drops that conversation from the beam stratum, records the drop here, and checks that the
    500,000-line floor still holds.
 
+3. **2026-10-06, dependency units (from the development trace; no cell has run).** The implementer's development trace
+   (gbrain `docs/eval/decisions/q2-parser-gaps/dev-trace.md` and `dev-units.md`) shows two dependencies. (a) U4 depends
+   on U3: on the board-director development phrasing, U4 alone lowers as-of exact from 0.946 to 0.783, while U3 alone
+   and U3 with U4 both give 0.950. Under the clause above, U3 and U4 form the joint unit `U34`, with U4's primary metric.
+   (b) U2 depends on U5 in the same way: a current employer that U2 newly types meets a former employer whose leave only
+   U5 reads, so with U2 alone the general single-value pass closes that former employer at the new employer's start.
+   That leaves one development wrong closure each on two phrasings, and adding U5 removes both. U2 and U5 therefore form
+   the joint unit `U25`, with U2's primary metric (live-edge recall, up). The plan's rule that each unit is one
+   dependency unit with no development wrong closure applies to the joint unit. The family is U1, U25, U34 and U6 (four
+   units). Holm runs across these four, and the package order uses them. Every other bar is unchanged.
+
 ## Freeze record
 
 Appended before any cell runs: the frozen gbrain build SHA and baseline master SHA; unit commit SHAs and whether U3 and
@@ -369,5 +381,6 @@ Aggregates:
 
 ## Changelog
 
+- 2026-10-06: amendment 3 (dependency units U34 and U25 from the development trace), before the freeze.
 - 2026-10-06: amendments 1 and 2 (beam stratum excludes three conversations GBRA-52 opened; concurrent QA-only opening), before the freeze.
 - 2026-10-06: first version, before any material was minted.
