@@ -72,6 +72,10 @@ import { ProbeAccounting } from './probe-accounting.ts';
 import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 import { JUDGE_PROMPT_VERSION, scoreAnswer, type JudgeEvidence, type RubricCriterion } from './judge.ts';
+import { chat } from 'gbrain/ai/gateway';
+import { budgetOptionsFrom, receiptCost, startPaidRun, type BudgetOptions } from './budget-ledger.ts';
+import { attestPreregistration, type Attestation } from './prereg.ts';
+import { seededRandom } from './stats/paired.ts';
 
 export const CAT20_CATEGORY = 'cat20-brainstorm';
 
@@ -202,6 +206,10 @@ export interface QuestionResult {
   /** Live-judge axes (scoreAnswer overall 0-5); null when judge not run. */
   judge_overall: number | null;
   judge_verdict: string | null;
+  /** Every generated idea as produced (text, citations, internal judge result), W7. */
+  ideas?: Array<{ id: string; text: string; close_slug: string; far_slug: string; distance_score: number; passes: boolean; internal_judge: unknown; internal_judge_failed: boolean }>;
+  /** External per-idea judgments, blind to `passes`. */
+  idea_judgments?: IdeaJudgment[];
 }
 
 // ─── Run options ─────────────────────────────────────────────────────
@@ -224,6 +232,16 @@ export interface Cat20Options {
   maxCostUsd?: number;
   reportsDir?: string;
   quiet?: boolean;
+  /** Generation (and internal judge) chat model; default unchanged (claude-sonnet-4-6). */
+  model?: string;
+  /** External per-idea judges (`provider:model`), each scoring every generated idea blind to the internal pass/fail. */
+  ideaJudges?: string[];
+  /** Degraded arm: shuffle sentences across all pages with this seed before ingest. */
+  shuffleSeed?: number;
+  budget?: BudgetOptions;
+  preregistration?: string;
+  /** Test seam for the per-idea judges. */
+  ideaJudgeChat?: typeof chat;
 }
 
 export interface Cat20RunResult {
@@ -234,7 +252,14 @@ export interface Cat20RunResult {
 }
 
 export function optionsFromEnv(argv: string[] = process.argv.slice(2)): Cat20Options {
+  const flag = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
+  const shuffle = flag('--shuffle-corpus');
   return {
+    model: flag('--model'),
+    ideaJudges: flag('--idea-judges')?.split(',').map(s => s.trim()).filter(Boolean),
+    shuffleSeed: shuffle === undefined ? undefined : Number(shuffle),
+    budget: budgetOptionsFrom(argv),
+    preregistration: flag('--preregistration'),
     stubLlm: argv.includes('--stub-llm') || process.env.CAT20_STUB_LLM === '1',
     liveJudge: argv.includes('--live-judge') || process.env.CAT20_LIVE_JUDGE === '1',
     allowSkip: argv.includes('--allow-skip') || process.env.BRAINBENCH_ALLOW_SKIP === '1',
@@ -279,6 +304,127 @@ export async function judgeNoveltyUsefulness(
     throw new Error('judge_failed: scoreAnswer produced malformed output after retry');
   }
   return { overall: result.overall_score, verdict: result.verdict };
+}
+
+// ─── Degraded arm: sentence-shuffled corpus ──────────────────────────
+
+/**
+ * Pool every body sentence of every page, shuffle the pool with a seeded RNG
+ * and deal it back so each page keeps its frontmatter, its title line and its
+ * sentence count. Retrieval still returns pages, but what a close or far page
+ * says is a random draw from the whole corpus.
+ */
+export function shuffleCorpusSentences(pages: SyntheticPage[], seed: number): SyntheticPage[] {
+  const split = (body: string) => {
+    const fm = body.match(/^---\n[\s\S]*?\n---\n/)?.[0] ?? '';
+    const rest = body.slice(fm.length);
+    const title = rest.match(/^\s*# [^\n]*\n/)?.[0] ?? '';
+    const text = rest.slice(title.length);
+    const sentences = text.split(/(?<=[.!?])\s+/).map(t => t.trim()).filter(Boolean);
+    return { fm, title, sentences };
+  };
+  const parts = pages.map(p => split(p.body));
+  const pool = parts.flatMap(p => p.sentences);
+  const rand = seededRandom(seed);
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [pool[i], pool[j]] = [pool[j]!, pool[i]!];
+  }
+  let k = 0;
+  return pages.map((p, i) => {
+    const { fm, title, sentences } = parts[i]!;
+    const dealt = pool.slice(k, k + sentences.length);
+    k += sentences.length;
+    return { ...p, body: `${fm}${title}\n${dealt.join(' ')}\n` };
+  });
+}
+
+// ─── External per-idea judges (W7) ───────────────────────────────────
+
+export const IDEA_JUDGE_PROMPT_VERSION = 'cat20-idea-judge-v1';
+export const IDEA_JUDGE_MAX_TOKENS = 4000;
+
+export interface IdeaJudgment {
+  judge: string;
+  idea_id: string;
+  novelty: number | null;
+  usefulness: number | null;
+  /** Mean of novelty and usefulness, 0-5; null on a judge error. */
+  overall: number | null;
+  rationale: string | null;
+  error: string | null;
+}
+
+export function buildIdeaJudgePrompt(question: string, closeSlug: string, close: SyntheticPage | undefined, farSlug: string, far: SyntheticPage | undefined, ideas: Array<{ id: string; text: string }>): string {
+  const page = (label: string, slug: string, p: SyntheticPage | undefined) => `${label} [${slug}]\n${p ? p.body.slice(0, 1500) : '(page not found in the brain)'}`;
+  return [
+    'You are rating brainstorm ideas a memory system generated from two pages of a user\'s notes.',
+    `QUESTION: ${question}`,
+    '',
+    page('CLOSE PAGE', closeSlug, close),
+    '',
+    page('FAR PAGE', farSlug, far),
+    '',
+    'IDEAS:',
+    ...ideas.map(i => `## Idea ${i.id}\n${i.text}`),
+    '',
+    'Rate EACH idea on two 0-5 integer scales:',
+    '- novelty: lateral and non-obvious; combines the two pages into a thesis the user would not get from either page alone. A trivial restatement scores 0-1.',
+    '- usefulness: actionable for a founder or operator; concrete next steps grounded in the pages, not generic platitudes.',
+    'Give a one- or two-sentence rationale per idea.',
+    'Reply with JSON only: {"ideas":[{"id":"<id>","novelty":<0-5>,"usefulness":<0-5>,"rationale":"<text>"}]}',
+  ].join('\n');
+}
+
+/** Parse a judge reply; every requested id must appear with integer scores in 0..5, or that idea is a judge error. */
+export function parseIdeaJudgeReply(judge: string, text: string, ids: string[]): IdeaJudgment[] {
+  let parsed: { ideas?: Array<{ id?: unknown; novelty?: unknown; usefulness?: unknown; rationale?: unknown }> } | null = null;
+  const json = text.match(/\{[\s\S]*\}/)?.[0];
+  try { parsed = json ? JSON.parse(json) : null; } catch { parsed = null; }
+  const byId = new Map((parsed?.ideas ?? []).map(r => [String(r.id), r]));
+  const score = (v: unknown) => (typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= 5 ? v : null);
+  return ids.map(id => {
+    const r = byId.get(id);
+    const novelty = score(r?.novelty);
+    const usefulness = score(r?.usefulness);
+    const ok = novelty !== null && usefulness !== null;
+    return { judge, idea_id: id, novelty, usefulness, overall: ok ? (novelty! + usefulness!) / 2 : null,
+      rationale: typeof r?.rationale === 'string' ? r.rationale : null, error: ok ? null : (parsed ? 'missing or out-of-range scores' : 'unparseable reply') };
+  });
+}
+
+/** Judge every idea with every judge, one call per (judge, close page, far page) group; one retry on a malformed reply; a truncated reply is a judge error. */
+export async function judgeIdeas(
+  question: string,
+  ideas: BrainstormIdea[],
+  pagesBySlug: Map<string, SyntheticPage>,
+  judges: string[],
+  chatFn: typeof chat,
+): Promise<IdeaJudgment[]> {
+  const groups = new Map<string, BrainstormIdea[]>();
+  for (const i of ideas) groups.set(`${i.close_slug}\u0000${i.far_slug}`, [...(groups.get(`${i.close_slug}\u0000${i.far_slug}`) ?? []), i]);
+  const out: IdeaJudgment[] = [];
+  for (const judge of judges) {
+    for (const group of groups.values()) {
+      const { close_slug: c, far_slug: f } = group[0]!;
+      const prompt = buildIdeaJudgePrompt(question, c, pagesBySlug.get(c), f, pagesBySlug.get(f), group);
+      const ids = group.map(i => i.id);
+      let rows: IdeaJudgment[] = [];
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const res = await chatFn({ model: judge, maxTokens: IDEA_JUDGE_MAX_TOKENS, messages: [{ role: 'user', content: prompt }] });
+          rows = res.stopReason === 'length'
+            ? ids.map(id => ({ judge, idea_id: id, novelty: null, usefulness: null, overall: null, rationale: null, error: 'truncated at the output limit' }))
+            : parseIdeaJudgeReply(judge, res.text, ids);
+        } catch (e) {
+          rows = ids.map(id => ({ judge, idea_id: id, novelty: null, usefulness: null, overall: null, rationale: null, error: `call failed: ${String((e as Error).message ?? e).slice(0, 200)}` }));
+        }
+        if (rows.every(r => r.error === null) || rows.some(r => r.error === 'truncated at the output limit')) break;
+      }
+      out.push(...rows);
+    }
+  }
+  return out;
 }
 
 // ─── Full run ────────────────────────────────────────────────────────
@@ -336,15 +482,26 @@ export async function runCat20(options: Cat20Options = {}): Promise<Cat20RunResu
     __setEmbedTransportForTests(makeHashEmbedTransport());
   }
   const stubChatFn = stubLlm ? makeStubChatFn(options.stubChatKind ?? 'grounded') : undefined;
+  const chatModel = options.model ?? 'anthropic:claude-sonnet-4-6';
+  const ideaJudges = options.ideaJudges ?? [];
+  const ideaJudgeChat = options.ideaJudgeChat ?? (stubLlm ? undefined : chat);
 
   configureGateway({
     embedding_model: EMBED_MODEL,
     embedding_dimensions: EMBED_DIM,
-    chat_model: 'anthropic:claude-sonnet-4-6',
+    chat_model: chatModel,
     env: process.env as Record<string, string | undefined>,
   });
 
-  const pages = options.pages ?? loadSyntheticV1();
+  let attestation: Attestation | null = null;
+  let paid: ReturnType<typeof startPaidRun> | null = null;
+  if (!stubLlm && (options.budget?.budgetUsd != null || options.preregistration)) {
+    if (options.preregistration) attestation = attestPreregistration(options.preregistration);
+    paid = startPaidRun(CAT20_CATEGORY, { ...options.budget!, estimateUsd: 1 + 1.5 * ideaJudges.length });
+  }
+
+  const basePages = options.pages ?? loadSyntheticV1();
+  const pages = options.shuffleSeed === undefined ? basePages : shuffleCorpusSentences(basePages, options.shuffleSeed);
   const pagesBySlug = new Map(pages.map(p => [p.slug, p]));
   const corpusSlugs = new Set(pages.map(p => p.slug));
 
@@ -385,6 +542,7 @@ export async function runCat20(options: Cat20Options = {}): Promise<Cat20RunResu
             skipCostPreview: true,
             maxCostUsd: options.maxCostUsd ?? 2.0,
             chatFn: stubChatFn,
+            ...(options.model ? { modelOverride: options.model } : {}),
             stderrWrite: options.quiet ? () => {} : (s: string) => process.stderr.write(`[cat20]   ${s}`),
           },
         );
@@ -431,8 +589,17 @@ export async function runCat20(options: Cat20Options = {}): Promise<Cat20RunResu
         }
       }
 
+      let ideaJudgments: IdeaJudgment[] | undefined;
+      if (ideaJudges.length > 0 && ideaJudgeChat) {
+        ideaJudgments = await judgeIdeas(question, ideas, pagesBySlug, ideaJudges, ideaJudgeChat);
+        log(`[cat20]   idea judges: ${ideaJudgments.length} judgments, ${ideaJudgments.filter(j => j.error).length} errors\n`);
+      }
+
       perQ.push({
         question, error: null,
+        ideas: ideas.map(i => ({ id: i.id, text: i.text, close_slug: i.close_slug, far_slug: i.far_slug, distance_score: i.distance_score, passes: i.passes,
+          internal_judge: i.judge ?? null, internal_judge_failed: i.judge_failed ?? false })),
+        ...(ideaJudgments ? { idea_judgments: ideaJudgments } : {}),
         idea_count: ideas.length,
         passing_count: passing.length,
         internal_judge_failed: result?.judge_failed ?? false,
@@ -448,7 +615,9 @@ export async function runCat20(options: Cat20Options = {}): Promise<Cat20RunResu
   } finally {
     if (stubLlm) __setEmbedTransportForTests(null);
     await engine.disconnect().catch(() => {});
+    paid?.guard.uninstall();
   }
+  const cost = paid ? receiptCost(paid.run.close()) : null;
 
   const summary = acc.summary();
   const scoredQ = perQ.filter(p => p.error === null);
@@ -489,7 +658,11 @@ export async function runCat20(options: Cat20Options = {}): Promise<Cat20RunResu
       embed_transport: stubLlm ? 'stubbed-hash' : 'live',
       chat_transport: stubLlm ? `stubbed-${options.stubChatKind ?? 'grounded'}` : 'live',
       profile: 'brainstorm',
-      corpus: 'synthetic-v1',
+      chat_model: chatModel,
+      idea_judges: ideaJudges,
+      ...(ideaJudges.length ? { idea_judge_prompt_version: IDEA_JUDGE_PROMPT_VERSION, idea_judge_max_tokens: IDEA_JUDGE_MAX_TOKENS } : {}),
+      corpus_shuffle_seed: options.shuffleSeed ?? null,
+      corpus: options.shuffleSeed === undefined ? 'synthetic-v1' : `synthetic-v1, sentences shuffled across pages (seed ${options.shuffleSeed})`,
       corpus_pages: pages.length,
       min_grounding: minGrounding,
       min_ideas: minIdeas,
@@ -498,6 +671,8 @@ export async function runCat20(options: Cat20Options = {}): Promise<Cat20RunResu
     },
     ...(liveJudge ? { judge: { model: 'claude-haiku-4-5-20251001', temperature: 0, rubric_version: 'cat20-novelty-usefulness-v1' } } : {}),
     finished_at: new Date().toISOString(),
+    ...(attestation ? { preregistration_attestation: attestation } : {}),
+    ...(cost ? { cost } : {}),
     data: {
       per_question: perQ,
       mean_grounding: Number.isNaN(meanGrounding) ? null : meanGrounding,
