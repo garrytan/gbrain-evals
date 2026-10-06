@@ -2121,6 +2121,29 @@
       "reason": "Harness defect in gbrain-evals (N6's callers shared one notice session), exposed by gbrain #5991's notice dedupe and fixed in gbrain-evals 0.10.17: every probe call gets its own session id. Not a gbrain leak: the extra block is a fixed info notice and follows call order."
     },
     {
+      "id": "N6-2",
+      "category": "visibility-leak-fuzz",
+      "classification": "category-defect",
+      "gbrain_sha": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+      "status": "not-a-bug",
+      "contract": "N6 (eval/registry.ts visibility-leak-fuzz) gates on zero existence-oracle probes, comparing protected and ghost responses after masking target values and volatile keys such as latency_ms; gbrain documents that a tool result's body is content[0] and that notice blocks follow it (src/core/connect-probe.ts resultBodyText).",
+      "surface": "eval/runner/n6-visibility-fuzz.ts parseToolResult joined every content block before JSON.parse, against the [gbrain notice mention_index kind=degraded] block entity appends at v0.60.95.0",
+      "repro": "bun eval/runner/n6-visibility-fuzz.ts --only entity   (at gbrain-evals 084d373 or d841738: oracles > 0; at 3894363 and later: 0)",
+      "expected": "0 existence-oracle probes, as at 739e5cc",
+      "actual": "13 to 14 oracle probes, all on entity, across stdio, http-read, http-write and http-bound; each protected and ghost response differs only in latency_ms, because the joined text is not JSON, so data stayed a raw string and the volatile-key mask never applied",
+      "reason": "a harness defect in gbrain-evals, not a gbrain leak: fixed in gbrain-evals 3894363 (parseToolResult parses content[0] as the body; the oracle check compares the parsed body plus the notice blocks)",
+      "review": {
+        "date": "2026-10-06",
+        "gbrain_sha": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-06-n8-privacy-gate/n6-receipt-c5fb0201-run1-notice-parse.json",
+          "docs/benchmarks/2026-10-06-n8-privacy-gate/n6-receipt-c5fb0201.json"
+        ],
+        "note": "before the fix 13 oracle probes on entity (the W1 offline-tier VM run at c5fb0201 saw 14); after it 0 content, 0 existence and 0 oracle probes over 6,490 exposed probes, every N6 rule passing; entity signal rose from 16 to 20 probes once its body parsed"
+      }
+    },
+    {
       "id": "CL-1",
       "category": "auto-chronicle-lift",
       "classification": "bug",
