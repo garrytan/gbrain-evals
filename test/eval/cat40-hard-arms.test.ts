@@ -88,7 +88,7 @@ describe('fs grep limits match their descriptions', () => {
   });
 
   test('hard grep runs in a worker: a catastrophic pattern times out as agent text, the main thread keeps running, the next call works', async () => {
-    const files = new Map([['slow.md', `${'a'.repeat(40)}b`], ['ok.md', 'fine line']]);
+    const files = new Map([['slow.md', `${'a'.repeat(40)}b\n`.repeat(20)], ['ok.md', 'fine line']]);
     const arm = new FsArm('fs', new FileStore(files), { limits: 'hard', grepTimeoutMs: 400 });
     let ticks = 0;
     const timer = setInterval(() => ticks++, 20);
