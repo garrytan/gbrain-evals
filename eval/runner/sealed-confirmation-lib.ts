@@ -17,7 +17,7 @@
  *     content-addressed response cache.
  */
 import { createHash, randomUUID } from 'node:crypto';
-import { appendFileSync, existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { accessSync, appendFileSync, constants as fsConstants, existsSync, mkdirSync, readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { hostname, userInfo } from 'node:os';
 import { recallAllAtK, recallAnyAtK, uniqueInOrder } from './metrics.ts';
@@ -172,23 +172,68 @@ export function appendAccessLog(logPath: string, entry: Omit<AccessLogEntry, 'at
 
 const REPO_ROOT = realpathSync(resolve(import.meta.dir, '../..'));
 
-/** True when the path (or, for a path not yet created, its nearest existing ancestor) resolves inside this repository. */
-export function insideRepository(path: string): boolean {
+/** The path with symlinks resolved; for a path not yet created, its nearest existing ancestor resolved plus the rest. */
+export function resolvedPath(path: string): string {
   let probe = resolve(path);
   const tail: string[] = [];
   while (!existsSync(probe) && dirname(probe) !== probe) { tail.unshift(probe.slice(dirname(probe).length + 1)); probe = dirname(probe); }
-  const r = relative(REPO_ROOT, join(realpathSync(probe), ...tail));
+  return join(realpathSync(probe), ...tail);
+}
+
+/** True when the path (symlinks resolved) is inside this repository. */
+export function insideRepository(path: string): boolean {
+  const r = relative(REPO_ROOT, resolvedPath(path));
   return r === '' || (!r.startsWith('..') && !isAbsolute(r));
 }
 
-/** Refuse a custody path (held-out input or custodian output) that lives inside the repository, where Git could pick it up. */
+/**
+ * The root of the git worktree holding the path, or null. Symlinks are resolved first, so a link from a scratch
+ * directory into a checkout counts as inside it. Any `.git` entry counts: a main checkout's directory, a linked
+ * worktree's or submodule's `.git` file.
+ */
+export function gitWorktreeRoot(path: string): string | null {
+  let dir = resolvedPath(path);
+  while (!existsSync(dir) && dirname(dir) !== dir) dir = dirname(dir);
+  if (existsSync(dir) && !statSync(dir).isDirectory()) dir = dirname(dir);
+  for (;;) {
+    if (existsSync(join(dir, '.git'))) return dir;
+    const up = dirname(dir);
+    if (up === dir) return null;
+    dir = up;
+  }
+}
+
+/** Refuse a custody path (held-out input, custodian output or work root) inside any git worktree, where Git could pick it up. */
 export function assertOutsideRepository(path: string, flag: string): void {
-  if (insideRepository(path)) throw new Error(`${flag} ${path} is inside the repository; held-out files and custodian output live in the custodian's directory`);
+  const root = insideRepository(path) ? REPO_ROOT : gitWorktreeRoot(path);
+  if (root) throw new Error(`${flag} ${path} is inside the repository or another git worktree (${root}, symlinks resolved); held-out files, custodian output and work directories live in the custodian's directory outside every git checkout. Pick a directory such as ~/q2-custody/<run> and rerun.`);
+}
+
+export interface CustodyRoots { output: string; work: string | null }
+
+/**
+ * Validate a sealed run's output and work roots before any custody material is read: both must be given explicitly
+ * (no default under the repository or a shared cache), resolve outside every git worktree, and be writable. The
+ * directories are created when missing.
+ */
+export function assertCustodyRoots(o: { output: string | undefined; work?: string | undefined; needsWork?: boolean; outputFlag?: string; workFlag?: string }): CustodyRoots {
+  const outputFlag = o.outputFlag ?? '--output';
+  const workFlag = o.workFlag ?? '--work';
+  if (!o.output) throw new Error(`a sealed run needs an explicit ${outputFlag} <dir> outside every git worktree, checked before any custody file is read; pass one and rerun`);
+  if (o.needsWork && !o.work) throw new Error(`a sealed run needs an explicit ${workFlag} <dir> outside every git worktree (brains, snapshots and line text stay there), checked before any custody file is read; pass one and rerun`);
+  const roots: CustodyRoots = { output: resolve(o.output), work: o.work ? resolve(o.work) : null };
+  for (const [flag, dir] of [[outputFlag, roots.output], [workFlag, roots.work]] as const) {
+    if (!dir) continue;
+    assertOutsideRepository(dir, flag);
+    mkdirSync(dir, { recursive: true });
+    try { accessSync(dir, fsConstants.W_OK); } catch { throw new Error(`${flag} ${dir} is not writable by this user; fix its permissions or pick another directory, then rerun`); }
+  }
+  return roots;
 }
 
 /**
- * Open one custody file the temporal-edges way: refuse a path inside the
- * repository, read the bytes, hash them, append an access-log line beside the
+ * Open one custody file the temporal-edges way: refuse a path inside any git
+ * worktree, read the bytes, hash them, append an access-log line beside the
  * file, and only then hand the bytes back for parsing. Callers record the
  * SHA-256, never the path or the text.
  */
@@ -199,6 +244,79 @@ export function openCustodyFile(o: { file: string; flag: string; decisionId?: st
   const sha256 = sha256Hex(bytes);
   appendAccessLog(join(dirname(resolve(o.file)), 'access-log.jsonl'), { action: 'open', purpose: o.purpose, decision_id: o.decisionId, labels_sha256: sha256, run_sha256: null });
   return { bytes, sha256 };
+}
+
+export interface CustodyTemplates { parsed: { id: string; templates: unknown }; sha256: string; roots: CustodyRoots }
+
+function argFlag(argv: readonly string[], flag: string): string | undefined {
+  const at = argv.indexOf(flag);
+  if (at >= 0) return argv[at + 1];
+  return argv.find(a => a.startsWith(`${flag}=`))?.slice(flag.length + 1);
+}
+
+/**
+ * The custodian's `{ id, templates }` file, the loader every held-out runner shares:
+ * `--phrasing-file <custody path> --decision-id <id> --purpose <text>` plus an explicit `--output` (and `--work` when
+ * the runner keeps brains or line text) outside every git worktree. Order: decision id and purpose, then the roots,
+ * then the access-log line, then parsing. Without a phrasing file only dev seeds run.
+ */
+export function custodyTemplatesInput(argv: readonly string[], seeds: readonly number[], devSeeds: readonly number[], o: { needsWork?: boolean } = {}): CustodyTemplates | null {
+  const file = argFlag(argv, '--phrasing-file');
+  if (!file) {
+    if (!seeds.every(s => devSeeds.includes(s))) throw new Error(`only dev seeds ${devSeeds.join(', ')} run here; held-out seeds belong to the custodian`);
+    return null;
+  }
+  const decisionId = argFlag(argv, '--decision-id');
+  const purpose = argFlag(argv, '--purpose');
+  if (!decisionId || !purpose) throw new Error('custodian mode needs --decision-id and --purpose, recorded in the access log before the phrasing file is read');
+  const roots = assertCustodyRoots({ output: argFlag(argv, '--output'), work: argFlag(argv, '--work'), needsWork: o.needsWork });
+  const { bytes, sha256 } = openCustodyFile({ file, flag: '--phrasing-file', decisionId, purpose });
+  let parsed: { id: string; templates: unknown };
+  try { parsed = JSON.parse(bytes.toString('utf8')); } catch (e) { throw new Error(`--phrasing-file (sha256 ${sha256}) is not JSON: ${(e as Error).message}; ask the custodian for the intact file`); }
+  if (typeof parsed?.id !== 'string' || parsed.templates === undefined) throw new Error(`--phrasing-file (sha256 ${sha256}) needs { "id": string, "templates": ... }; ask the custodian for the intact file`);
+  return { parsed, sha256, roots };
+}
+
+// ─── Allowlisted aggregate export ─────────────────────────────────
+
+const SAFE_EXPORT_STRING = /^[A-Za-z0-9_.:@/+=-]{0,96}$/;
+
+/**
+ * Copy only allowlisted paths of a custody receipt into an aggregate that may leave custody. Paths are dotted with `*`
+ * for any object key or array index (`data.summary.g1.*`). Every exported leaf must be a number, boolean, null or a
+ * short plain string without spaces (ids, hashes, model names, outcomes); anything else (line text, questions, answers) is refused,
+ * and the refusal names the path so the allowlist, not the receipt, gets fixed.
+ */
+export function exportAggregates(source: unknown, allowlist: readonly string[]): { aggregate: Record<string, unknown>; exported: string[] } {
+  const out: Record<string, unknown> = {};
+  const exported: string[] = [];
+  const checkLeaf = (v: unknown, path: string): unknown => {
+    if (v === null || typeof v === 'number' || typeof v === 'boolean') return v;
+    if (typeof v === 'string') {
+      if (!SAFE_EXPORT_STRING.test(v)) throw new Error(`export refused: ${path} holds a string that is not a short plain identifier; aggregates leave custody as numbers, outcomes and hashes only. Remove ${path} from the allowlist or export a count instead.`);
+      return v;
+    }
+    if (Array.isArray(v)) return v.map((x, i) => checkLeaf(x, `${path}.${i}`));
+    if (typeof v === 'object') return Object.fromEntries(Object.entries(v as Record<string, unknown>).map(([k, x]) => {
+      if (!SAFE_EXPORT_STRING.test(k)) throw new Error(`export refused: key ${JSON.stringify(k).slice(0, 40)} under ${path} is not a plain identifier`);
+      return [k, checkLeaf(x, `${path}.${k}`)];
+    }));
+    throw new Error(`export refused: ${path} has an unsupported value type`);
+  };
+  const set = (path: string[], value: unknown) => {
+    let cur = out;
+    for (const k of path.slice(0, -1)) cur = (cur[k] ??= {}) as Record<string, unknown>;
+    cur[path[path.length - 1]] = value;
+  };
+  const walk = (node: unknown, pattern: string[], at: string[]) => {
+    if (!pattern.length) { set(at, checkLeaf(node, at.join('.'))); exported.push(at.join('.')); return; }
+    if (node === null || typeof node !== 'object') return;
+    const [head, ...rest] = pattern;
+    const keys = head === '*' ? Object.keys(node as object) : [head];
+    for (const k of keys) if (Object.prototype.hasOwnProperty.call(node, k)) walk((node as Record<string, unknown>)[k], rest, [...at, k]);
+  };
+  for (const p of allowlist) walk(source, p.split('.'), []);
+  return { aggregate: out, exported: exported.sort() };
 }
 
 function safeUser(): string {

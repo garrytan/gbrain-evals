@@ -62,8 +62,7 @@ import {
 } from '../generators/temporal-edges-gen.ts';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { dirname } from 'node:path';
-import { appendAccessLog } from './sealed-confirmation-lib.ts';
+import { custodyTemplatesInput } from './sealed-confirmation-lib.ts';
 import { applyEvalConfig, evalConfigRecord, parseEvalConfig } from './eval-config.ts';
 
 export const CATEGORY = 'temporal-edges';
@@ -387,17 +386,9 @@ async function main(): Promise<void> {
     const loaded = loadDevPhrasingFile(devPhrasingFile, seeds);
     sealedPhrasing = loaded.phrasing;
     devFile = { id: loaded.phrasing.id, sha256: loaded.sha256 };
-  } else if (phrasingFile) {
-    const decisionId = argValue(argv, '--decision-id');
-    const purpose = argValue(argv, '--purpose');
-    if (!decisionId || !purpose) throw new Error('custodian mode needs --decision-id and --purpose, recorded in the access log before the phrasing file is read');
-    const bytes = readFileSync(phrasingFile);
-    phrasingSha = createHash('sha256').update(bytes).digest('hex');
-    appendAccessLog(join(dirname(phrasingFile), 'access-log.jsonl'), { action: 'open', purpose, decision_id: decisionId, labels_sha256: phrasingSha, run_sha256: null });
-    const parsed = JSON.parse(bytes.toString('utf8')) as { id: string; templates: unknown };
-    sealedPhrasing = { id: parsed.id, templates: validatePhrasing(parsed.templates) };
-  } else if (!seeds.every(s => DEV_SEEDS.includes(s))) {
-    throw new Error(`only dev seeds ${DEV_SEEDS.join(', ')} run here; held-out seeds belong to the custodian`);
+  } else {
+    const custody = custodyTemplatesInput(argv, seeds, DEV_SEEDS);
+    if (custody) { phrasingSha = custody.sha256; sealedPhrasing = { id: custody.parsed.id, templates: validatePhrasing(custody.parsed.templates) }; }
   }
   const output = argValue(argv, '--output');
   const outPath = output ? join(output, 'receipt.json') : receiptPath(CATEGORY);
