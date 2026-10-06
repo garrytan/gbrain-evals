@@ -68,7 +68,7 @@ These came out of the autoplan review of `docs/plans/2026-10-04-cat40-entity-rec
 
 - [ ] **Record the Cat 20 judge's rationale and add a second judge.** The 2026-10-02 rerun scored 1.17/5 but stored no rationale, so a weak-ideas result cannot be told from a harsh judge.
 
-- [ ] **Give Cat 21 questions that do not name the symbol.** Every 2026-10-02 question names its symbol, so the keyword arm finds it and both embedders tie at 12/12.
+- [x] **Give Cat 21 questions that do not name the symbol.** Done 2026-10-06 at `c5fb0201` ($0.15): 24 frozen behavior questions (`eval/data/cat21-paraphrase-v1/`). Paraphrase MRR `voyage-code-3` 0.927, `text-embedding-3-large` 0.906 (tied inside the 0.10 margin), `voyage-code-4` 0.751 (lower than both, Holm p = 0.047). No evidence that a code-tuned embedder beats the general one; Cat 21's main split is now the paraphrase set. [Report](docs/benchmarks/2026-10-06-cat21-paraphrase.md). Original text: Every 2026-10-02 question names its symbol, so the keyword arm finds it and both embedders tie at 12/12.
 
 - [x] **Re-pin gbrain to a master commit or release tag** (September 28 audit, C1/C2). Done in 0.10.1: `gbrain` pins master `b80cad6`, the cue experiments use the `gbrain-cues` alias at `939232f`, and pins are read from `package.json`. `gbrain-reader` moved in 0.10.1 from `a9de062` (on no branch) to master `e78f1c3`, whose `src/` tree is byte-identical.
 
