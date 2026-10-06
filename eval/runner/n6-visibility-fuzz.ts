@@ -89,6 +89,8 @@ export interface CallOutcome {
   error_code?: string;
   raw: string;
   data: unknown;
+  /** Extra text blocks after the body (`[gbrain notice ...]`), compared in the oracle check. */
+  notices?: string[];
   timed_out?: boolean;
 }
 
@@ -349,13 +351,25 @@ async function loadGbrain(gut: GbrainUnderTest): Promise<Gbrain> {
 const CONFIG = { engine: 'pglite', database_path: ':memory:' } as OperationContext['config'];
 const QUIET = { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} };
 
-function parseToolResult(result: { content: { text: string }[]; isError?: boolean }): CallOutcome {
+/**
+ * The body is content[0]; gbrain appends notice blocks (`[gbrain notice <code> kind=<kind>]`) as further
+ * blocks, so the joined text is not JSON (gbrain src/core/connect-probe.ts resultBodyText). `raw` keeps every
+ * block for the leak scan; `data` parses the body alone.
+ */
+export function parseToolResult(result: { content: { text: string }[]; isError?: boolean }): CallOutcome {
   const raw = result.content.map(c => c.text).join('\n');
+  const body = result.content[0]?.text ?? '';
   let data: unknown = raw;
-  try { data = JSON.parse(raw); } catch { /* plain text */ }
+  try { data = JSON.parse(body); } catch { /* plain text */ }
+  const notices = result.content.slice(1).map(c => c.text);
   const code = data && typeof data === 'object' && !Array.isArray(data) && typeof (data as Record<string, unknown>).error === 'string'
     ? String((data as Record<string, unknown>).error) : undefined;
-  return { exposed: true, ok: !result.isError, raw, data, ...(result.isError ? { error_code: code ?? 'error' } : {}) };
+  return { exposed: true, ok: !result.isError, raw, data, ...(notices.length ? { notices } : {}), ...(result.isError ? { error_code: code ?? 'error' } : {}) };
+}
+
+/** What the oracle check compares: the parsed body and the notice blocks, or the error code. */
+export function oracleView(o: CallOutcome): unknown {
+  return o.ok ? { data: o.data, notices: o.notices ?? [] } : { error: o.error_code };
 }
 
 const DENIAL_CODES = new Set(['insufficient_scope', 'permission_denied', 'unknown_tool', 'unknown_operation', 'scope_denied', 'not_exposed']);
@@ -622,7 +636,7 @@ async function runN6Hermetic(options: N6Options) {
               if (lg && unit.cls) {
                 const mask = [...targetValues(unit.cls.protected), ...targetValues(unit.cls.ghost)];
                 localOraclePairs++;
-                if (normalizeForOracle(lr.ok ? lr.data : { error: lr.error_code }, mask) !== normalizeForOracle(lg.ok ? lg.data : { error: lg.error_code }, mask)) localOracleDiffs++;
+                if (normalizeForOracle(oracleView(lr), mask) !== normalizeForOracle(oracleView(lg), mask)) localOracleDiffs++;
               }
             }
             const pr = await call(caller, op, protParams);
@@ -654,8 +668,8 @@ async function runN6Hermetic(options: N6Options) {
               }
               if (gr && !gr.timed_out && !leak.content && !leak.existence) {
                 const mask = [...targetValues(cls.protected), ...targetValues(cls.ghost)];
-                const a = normalizeForOracle(pr.ok ? pr.data : { error: pr.error_code }, mask);
-                const b = normalizeForOracle(gr.ok ? gr.data : { error: gr.error_code }, mask);
+                const a = normalizeForOracle(oracleView(pr), mask);
+                const b = normalizeForOracle(oracleView(gr), mask);
                 if (a !== b) oracle = `protected: ${a.slice(0, 300)} | ghost: ${b.slice(0, 300)}`;
               }
               if (expansionUnit && tr) {

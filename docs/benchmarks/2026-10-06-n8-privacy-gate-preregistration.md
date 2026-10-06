@@ -87,4 +87,8 @@ Before this commit, a scratch probe (not a gate run, not committed) seeded the N
 
 ## Amendments
 
-None yet.
+### 2026-10-06, after the first N6 run: notice blocks broke the oracle comparison
+
+The first attested N6 run at `c5fb0201` (gbrain-evals `d841738`, receipt `2026-10-06-n8-privacy-gate/n6-receipt-c5fb0201-run1-notice-parse.json`) found 0 content and 0 existence leaks but 13 existence-oracle probes, all on `entity`. Every one differs between the protected and ghost responses only in `latency_ms`. Cause: gbrain at this pin appends `[gbrain notice ...]` blocks after the result body (here `mention_index kind=degraded`), the runner joined every block before `JSON.parse`, parsing failed, and the response was compared as plain text, so the volatile-key mask never applied. gbrain documents that the body is `content[0]` (`src/core/connect-probe.ts`, `resultBodyText`).
+
+Harness fix, in a commit of its own before the rerun: `parseToolResult` parses `content[0]` as the body, keeps every block in `raw` for the leak scan, and the oracle check compares the parsed body plus the notice blocks (`oracleView`), so a notice that differs between a protected target and a ghost still counts. No rule, threshold or fixture changes. The rerun's receipt is the one that counts for the gate; the first receipt is kept. This defect is not specific to the named window: it affects N6 at this pin with or without it, so it bears on the W1 regression check too.

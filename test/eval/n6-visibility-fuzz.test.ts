@@ -6,7 +6,7 @@ import type { ParamDef } from 'gbrain/operations';
 import { generateN6World, ledgerFingerprint, N6_CLASSES, N6_DEFAULT_SEED } from '../../eval/generators/n6-visibility-gen.ts';
 import {
   controlSeen, countOccurrences, deliveredUnits, echoCredit, hasSourceRow, isTargeted, namedSlugs, normalizeForOracle,
-  namingWindow, runN6, scanLeaks, synthesizeParams, targetTitle, variantsFor, type CallOutcome,
+  namingWindow, oracleView, parseToolResult, runN6, scanLeaks, synthesizeParams, targetTitle, variantsFor, type CallOutcome,
 } from '../../eval/runner/n6-visibility-fuzz.ts';
 import { gbrainSpecFrom, parseGbrainSpec } from '../../eval/runner/gbrain-under-test.ts';
 
@@ -64,6 +64,30 @@ describe('N6 generator ledger', () => {
   test('v2 keeps every v1 class and marker unchanged', () => {
     expect(ledger.classes.slice(0, 5).map(c => c.class)).toEqual(['private_page', 'private_take', 'private_fact', 'derived_atom', 'foreign_source']);
     expect(ledger.classes[0].protected_markers).toEqual(V1_PRIVATE_PAGE_MARKERS);
+  });
+});
+
+describe('N6 tool-result parsing with gbrain notice blocks', () => {
+  const body = JSON.stringify({ found: false, latency_ms: 11, suggestions: [] });
+  const notice = '[gbrain notice mention_index kind=degraded]\nwhy: 17 page(s) have not been scanned';
+
+  test('the body is content[0]; notice blocks stay in raw for the leak scan and do not break JSON parsing', () => {
+    const o = parseToolResult({ content: [{ text: body }, { text: notice }] });
+    expect(o.data).toEqual({ found: false, latency_ms: 11, suggestions: [] });
+    expect(o.notices).toEqual([notice]);
+    expect(o.raw).toContain('mention_index');
+  });
+
+  test('two responses that differ only in a volatile key compare equal; a differing notice does not', () => {
+    const a = parseToolResult({ content: [{ text: body }, { text: notice }] });
+    const b = parseToolResult({ content: [{ text: body.replace('11', '23') }, { text: notice }] });
+    const c = parseToolResult({ content: [{ text: body }, { text: notice.replace('17', '18') }] });
+    expect(normalizeForOracle(oracleView(a), [])).toBe(normalizeForOracle(oracleView(b), []));
+    expect(normalizeForOracle(oracleView(a), [])).not.toBe(normalizeForOracle(oracleView(c), []));
+  });
+
+  test('an error body keeps its code', () => {
+    expect(parseToolResult({ content: [{ text: JSON.stringify({ error: 'page_not_found' }) }, { text: notice }], isError: true }).error_code).toBe('page_not_found');
   });
 });
 
