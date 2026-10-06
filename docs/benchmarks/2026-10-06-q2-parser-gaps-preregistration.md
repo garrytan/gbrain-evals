@@ -332,7 +332,8 @@ Minted by the second custodian for $23.09; the owner copy on Garry's Mac matches
 
 | File | SHA-256 |
 |---|---|
-| `custody-hashes.txt` (all 5,070 material files) | `aef53279070e37666bf927d4b8de47f5be8fbc606637e7e998683432c7de2f1c` |
+| `custody-hashes.txt` (all 5,071 material files; replaces the earlier 5,070-entry list `aef53279…`, re-sorted by path in locale order rather than byte order, entries unchanged apart from the G5 seeds file) | `1f5932081e0acb3c067d1603004a2e02e0eca665f2bb9ec56810442761dc056e` |
+| `g5/g5-seeds.json` (fresh generator seeds for G5's relation-line variants; values stay in custody) | `b739fecd2f19054f8fee76ed65de23b5c65f0bcc4d349e61677b5c52638a345d` |
 | `n/n-manifest.json` | `d69787ff3aea3a8072d53f4eabf234af9f541ad4330807bc53f2f3b1cfa4a964` |
 | `k/k-pages.jsonl` | `b53550175563bf63748778c0b65a447eaf9120014008204f84debd0dc795e1e2` |
 | `w1/w1-manifest.json` | `c3b644d55716fd13e824108f9d6130b84abecb33595b2a925716f5275022779d` |
@@ -357,6 +358,10 @@ Aggregates:
 - Gold support: 56 K labels removed and 2 career pairs replaced. 10 of the amara pairs come from meeting pages and the calendar.
 
 **Deviation.** The overlap check against sealed-confirmation-v1 was not run. That material sits in owner custody outside the repository, and the custodian does not hold it. The risk is low: v1 is personal life-arc chats and general-help filler, while Q2's material is people, companies, templates and public notes. sealed-confirmation-v2 was excluded by design.
+
+### Clarification (recorded before any cell)
+
+- C-gate selection applies Holm to one-sided p-values at a family-wise α of 0.025 (the stricter reading of "family-wise α = 0.05" together with "each test one-sided at α = 0.025").
 
 ### Builds, runners and models
 
