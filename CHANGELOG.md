@@ -2,6 +2,12 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.30] - 2026-10-06
+
+### P8 held-out records: write guard, semantic withdrawal, quote grounding, advertised surface
+
+Mirrors gbrain [#6027](https://github.com/garrytan/gbrain/pull/6027) (merged in v0.60.77.0) in [the P8 page](docs/benchmarks/2026-10-05-heldout-program/p8.md). Write cost and the review-gated withdrawal pass. Quote grounding failed its first sealed run (15 of 319 supported quotes wrongly flagged, Wilson upper 7.6%) and a second-custodian rescore (16 of 319). It passes a retest on fresh custodian-written synthetic sessions: 5 of 321 wrongly flagged, Wilson upper 3.59%. A retest on sealed-confirmation-v2 was stopped and is void; the corpus exposure is recorded in the v2 protocol. Narrower advertised tool surfaces fail in both arms on the sealed Cat 40 world (`starter` −8.5 points, `verbs` −9.9), so new installs keep advertising `full`. The quote-grounding runner attributes flags to spans by exact text (`flaggedSpans`), gains `--exclude-questions` and `--resume`, and the P8 dev receipts are restored. Retest spend about $15.
+
 ## [0.10.29] - 2026-10-05
 
 ### Mirror: gbrain fix wave 9 pins `search_path` at about 10-13% insert cost; takes-quality receipts move to protocol 2
