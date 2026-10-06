@@ -42,13 +42,13 @@
         "slug": "inbox/2026-05-23-content-import",
         "expected": {
           "source_kind": "capture-cli",
-          "source_uri": "file:///tmp/probe.md",
+          "source_uri": "file://<tmp>/probe.md",
           "ingested_via": "capture-cli",
           "ingested_at_null": false
         },
         "actual": {
           "source_kind": "capture-cli",
-          "source_uri": "file:///tmp/probe.md",
+          "source_uri": "file://<tmp>/probe.md",
           "ingested_via": "capture-cli",
           "ingested_at": "2026-10-06T18:13:05.968Z",
           "source_path": null
@@ -62,13 +62,13 @@
         "slug": "inbox/2026-05-23-file-import",
         "expected": {
           "source_kind": null,
-          "source_uri": "file:///tmp/cat24-files-2477-1791310385992/inbox/2026-05-23-file-import.md",
+          "source_uri": "file://<tmp>/cat24-files-2477-1791310385992/inbox/2026-05-23-file-import.md",
           "ingested_via": null,
           "ingested_at_null": false
         },
         "actual": {
           "source_kind": null,
-          "source_uri": "file:///tmp/cat24-files-2477-1791310385992/inbox/2026-05-23-file-import.md",
+          "source_uri": "file://<tmp>/cat24-files-2477-1791310385992/inbox/2026-05-23-file-import.md",
           "ingested_via": null,
           "ingested_at": "2026-10-06T18:13:06.021Z",
           "source_path": "inbox/2026-05-23-file-import.md"
@@ -189,14 +189,14 @@
       "error": null,
       "before": {
         "source_kind": "capture-cli",
-        "source_uri": "file:///tmp/probe.md",
+        "source_uri": "file://<tmp>/probe.md",
         "ingested_via": "capture-cli",
         "ingested_at": "2026-10-06T18:13:05.968Z",
         "source_path": null
       },
       "after": {
         "source_kind": "capture-cli",
-        "source_uri": "file:///tmp/probe.md",
+        "source_uri": "file://<tmp>/probe.md",
         "ingested_via": "capture-cli",
         "ingested_at": "2026-10-06T18:13:05.968Z",
         "source_path": null

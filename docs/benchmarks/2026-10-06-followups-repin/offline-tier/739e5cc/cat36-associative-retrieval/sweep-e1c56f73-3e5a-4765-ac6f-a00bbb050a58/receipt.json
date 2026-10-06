@@ -155,11 +155,11 @@
             "OPENAI_API_KEY"
           ]
         },
-        "isolated_home": "/tmp/cat36-isolated-rttTOW/home",
+        "isolated_home": "<tmp>/cat36-isolated-rttTOW/home",
         "database": "fresh in-memory PGLite",
         "fixed_source_timestamps": true,
         "file_config": {
-          "path": "/tmp/cat36-isolated-rttTOW/home/.gbrain/config.json",
+          "path": "<tmp>/cat36-isolated-rttTOW/home/.gbrain/config.json",
           "values": {
             "engine": "pglite",
             "embedding_model": "openai:text-embedding-3-large",

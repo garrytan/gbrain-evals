@@ -284,7 +284,7 @@
           "scratch_import": {
             "code": 0,
             "stdout": "Found 3 markdown files\n\nImport complete (0.4s):\n  3 pages imported\n  0 pages skipped (0 unchanged, 0 errors, 0 malformed filenames)\n  3 chunks created\n",
-            "stderr": "UPGRADE_AVAILABLE 0.60.46.0 0.60.95.0\ngbrain 0.60.46.0 -> 0.60.95.0 available. Run: gbrain self-upgrade\n[gbrain phase] import.collect_files start dir=/tmp/w8f1-repo-7KzItV/scratch strategy=markdown\n[gbrain phase] import.collect_files done 4ms files=3\n[import.files] start\n[import.files] 3/3 (100%) imported=3 skipped=0 errors=0\n[import.files] 3/3 (100%) done\n"
+            "stderr": "UPGRADE_AVAILABLE 0.60.46.0 0.60.95.0\ngbrain 0.60.46.0 -> 0.60.95.0 available. Run: gbrain self-upgrade\n[gbrain phase] import.collect_files start dir=<tmp>/w8f1-repo-7KzItV/scratch strategy=markdown\n[gbrain phase] import.collect_files done 4ms files=3\n[import.files] start\n[import.files] 3/3 (100%) imported=3 skipped=0 errors=0\n[import.files] 3/3 (100%) done\n"
           },
           "scratch_list": "scratch-note-1\tconcept\t2026-10-06\tScratch note 1\nscratch-note-2\tconcept\t2026-10-06\tScratch note 2\nscratch-note-3\tconcept\t2026-10-06\tScratch note 3\n",
           "repo_import": {

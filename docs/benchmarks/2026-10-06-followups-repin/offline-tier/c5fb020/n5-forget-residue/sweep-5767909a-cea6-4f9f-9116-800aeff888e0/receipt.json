@@ -1391,13 +1391,13 @@
               "init",
               "--pglite",
               "--path",
-              "/tmp/n5-forget-residue-cells-OsN54D/n5-pglite-mcp-stdio/gbrain-home/brain.pglite",
+              "<tmp>/n5-forget-residue-cells-OsN54D/n5-pglite-mcp-stdio/gbrain-home/brain.pglite",
               "--no-embedding",
               "--non-interactive"
             ],
             "code": 0,
             "ms": 3506,
-            "tail": "More: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to postgres --plan` · health `gbrain doctor`\n  Setting up brain schema (v215)...\n  v142: takes.embedding resized to vector(1024); existing take vectors cleared\n  210 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: /tmp/n5-forget-residue-cells-OsN54D/n5-pglite-mcp-stdio/gbrain-home/.gbrain/content/2aa1cbc8-7a8d-473c-b620-d1724c1fc4e9/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)"
+            "tail": "More: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to postgres --plan` · health `gbrain doctor`\n  Setting up brain schema (v215)...\n  v142: takes.embedding resized to vector(1024); existing take vectors cleared\n  210 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: <tmp>/n5-forget-residue-cells-OsN54D/n5-pglite-mcp-stdio/gbrain-home/.gbrain/content/2aa1cbc8-7a8d-473c-b620-d1724c1fc4e9/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)"
           },
           {
             "step": "sources-add:vault",
@@ -1406,11 +1406,11 @@
               "add",
               "vault",
               "--path",
-              "/tmp/n5-forget-residue-cells-OsN54D/n5-pglite-mcp-stdio/vault-vault"
+              "<tmp>/n5-forget-residue-cells-OsN54D/n5-pglite-mcp-stdio/vault-vault"
             ],
             "code": 0,
             "ms": 1017,
-            "tail": "  \"source_id\": \"vault\",\n  \"local_path\": \"/tmp/n5-forget-residue-cells-OsN54D/n5-pglite-mcp-stdio/vault-vault\",\n  \"source_incarnation\": \"79a9cf56-f851-46fd-9f47-56a01302c1a2\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"ee2d2d08-6733-4ccd-a92e-eb9e717638cf\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}"
+            "tail": "  \"source_id\": \"vault\",\n  \"local_path\": \"<tmp>/n5-forget-residue-cells-OsN54D/n5-pglite-mcp-stdio/vault-vault\",\n  \"source_incarnation\": \"79a9cf56-f851-46fd-9f47-56a01302c1a2\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"ee2d2d08-6733-4ccd-a92e-eb9e717638cf\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}"
           },
           {
             "step": "sources-add:other",
@@ -1419,11 +1419,11 @@
               "add",
               "other",
               "--path",
-              "/tmp/n5-forget-residue-cells-OsN54D/n5-pglite-mcp-stdio/other-vault"
+              "<tmp>/n5-forget-residue-cells-OsN54D/n5-pglite-mcp-stdio/other-vault"
             ],
             "code": 0,
             "ms": 1029,
-            "tail": "  \"source_id\": \"other\",\n  \"local_path\": \"/tmp/n5-forget-residue-cells-OsN54D/n5-pglite-mcp-stdio/other-vault\",\n  \"source_incarnation\": \"6f42c194-00b0-4b63-b376-40cf7a9baf04\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"9d10722c-355c-4afd-9cd2-8ae3f34959c9\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}"
+            "tail": "  \"source_id\": \"other\",\n  \"local_path\": \"<tmp>/n5-forget-residue-cells-OsN54D/n5-pglite-mcp-stdio/other-vault\",\n  \"source_incarnation\": \"6f42c194-00b0-4b63-b376-40cf7a9baf04\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"9d10722c-355c-4afd-9cd2-8ae3f34959c9\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}"
           },
           {
             "step": "sources-default",
