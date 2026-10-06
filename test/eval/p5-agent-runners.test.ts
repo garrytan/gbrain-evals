@@ -8,7 +8,9 @@ import {
   MENTIONS_PER_TASK, TEMPLATES_A, generateSaveNotesWorld, renderSeedPage, validateTemplates,
 } from '../../eval/generators/save-notes-dedup-gen.ts';
 import { classifyTask, summarizeH5b, type H5bRow } from '../../eval/runner/save-notes-dedup.ts';
-import { datedItems, devQuestions, ingestBatches, judgePrompt as h6JudgePrompt, questionRows, summarizeH6 } from '../../eval/runner/write-then-answer.ts';
+import { answerRows, datedItems, devDecoyQuestions, devQuestions, ingestBatches, summarizeArm } from '../../eval/runner/write-then-answer.ts';
+import { AttemptCheckpoint, answerKey, judgeKey } from '../../eval/runner/q2/checkpoints.ts';
+import { wtaJudgePrompt } from '../../eval/runner/q2/wta-judge.ts';
 import { renderCorpus } from '../../eval/runner/chronicle-lift.ts';
 
 const tmp = () => mkdtempSync(join(tmpdir(), 'p5-agent-'));
@@ -203,14 +205,28 @@ describe('P5 H6 write-then-answer', () => {
     expect(batches.flat().map(p => p.path)).toEqual(pages.map(p => p.path));
     for (const b of batches) if (b.length > 1) expect(b.reduce((s, p) => s + p.content.length, 0)).toBeLessThanOrEqual(24_000);
   });
-  test('per-question score is the mean over judged replicates, with their SD; rows pair by model and question', () => {
-    const q = { id: 'q1', pair: 'p1', type: 'relational' as const, question: 'Who?', answer: 'Elena Rossi' };
-    const rec = (r: number, correct: number) => ({ key: `m|q1|r${r}`, model: 'm', question: 'q1', replicate: r, answer: '', correct, judge_reason: '', judge_usd: 0.001, agent_usd: 0.01, stop: 'submitted', turns: 2, budget_run_id: null });
-    const [row] = questionRows([q], ['m'], [rec(0, 1), rec(1, 0), rec(2, 1), rec(3, 1)], 10, true);
-    expect(row).toMatchObject({ id: 'm:q1', cluster: 'm:p1', replicates: 4, replicates_planned: 10, qa_score: 0.75 });
-    expect(row.qa_sd).toBeCloseTo(0.5);
-    expect(row.question).toBeUndefined();
-    expect((summarizeH6([row]) as { qa_score: number }).qa_score).toBe(0.75);
-    expect(h6JudgePrompt(q, 'Elena')).toContain('Reference answer: Elena Rossi');
+  test('one answer per question per ingested brain; rows pair by corpus, model, ingest and question, clustered by the pair key', () => {
+    const q = { id: 'q1', pair: 'p1', corpus: 'amara' as const, type: 'relational' as const, answerable: true, question: 'Who?', answer: 'Elena Rossi' };
+    const dir = tmp();
+    const answers = new AttemptCheckpoint<{ answer: string; agent_usd: number; stop: string; turns: number }>(join(dir, 'answers.jsonl'));
+    const judgments = new AttemptCheckpoint<{ correct: 0 | 1; false_answer: 0 | 1 }>(join(dir, 'judgments.jsonl'));
+    for (const ingest of [0, 1, 2]) {
+      const u = { corpus: 'amara', ingest, model: 'm', arm: 'B', question: 'q1' };
+      answers.record(answerKey(u), u, { state: 'done', result: { answer: 'Elena', agent_usd: 0.01, stop: 'submitted', turns: 2 }, usd: 0.01 });
+      if (ingest < 2) judgments.record(judgeKey(u, 'j'), u, { state: 'done', result: { correct: ingest === 0 ? 1 : 0, false_answer: 0 }, usd: 0.001 });
+    }
+    const rows = answerRows({ corpus: 'amara', arm: 'B', models: ['m'], ingests: [0, 1, 2], questions: [q], answers, judgments, judge: 'j', auditJudge: 'audit', redact: true });
+    expect(rows.map(r => r.id)).toEqual(['amara|m|i0|q1', 'amara|m|i1|q1', 'amara|m|i2|q1']);
+    expect(rows.map(r => r.cluster)).toEqual(['amara|p1', 'amara|p1', 'amara|p1']);
+    expect(rows.map(r => r.correct)).toEqual([1, 0, null]);
+    expect(rows[2].judge_state).toBe('not_started');
+    expect(rows[0].question).toBeUndefined();
+    expect((summarizeArm(rows) as { accuracy: number; judged: number }).accuracy).toBe(0.5);
+    expect(wtaJudgePrompt(q, 'Elena')).toContain('Reference answer: Elena Rossi');
+  });
+  test('development decoys are unanswerable pairs the corpus never mentions', () => {
+    const d = devDecoyQuestions(1);
+    expect(d.map(x => x.answerable)).toEqual([false, false]);
+    expect(d[0].pair).toBe(d[1].pair);
   });
 });

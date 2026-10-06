@@ -65,7 +65,7 @@ export function readMint(work: string, set: 'N' | 'K', arm: 'baseline' | 'candid
 }
 
 /** The build's parser with the active pack's verbs, exactly as put_page reads lines (for the near-miss probe). */
-async function buildParser(gut: GbrainUnderTest, config: Record<string, string>): Promise<(text: string) => { relations: Array<{ type: string }> }> {
+export async function buildParser(gut: GbrainUnderTest, config: Record<string, string>): Promise<(text: string) => { relations: Array<{ type: string }> }> {
   const grammar = await importGbrain<{ parseLineGrammar: (t: string, o: { declaredTypes?: ReadonlySet<string> | null }) => { relations: Array<{ type: string }> } }>(gut, 'src/core/line-grammar.ts');
   const { loadActivePackForLocalEngine } = await importGbrain<{ loadActivePackForLocalEngine: (e: unknown, o: { sourceId: string }) => Promise<{ manifest?: { link_types: Array<{ name: string }> } } | null> }>(gut, 'src/core/schema-pack/best-effort.ts');
   const brain = await openP5Brain(gut, config);
