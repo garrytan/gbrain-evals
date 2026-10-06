@@ -37,7 +37,7 @@ bun eval/runner/q2/campaign.ts status --campaign "$C"
 ```bash
 export C=~/q2-custody/campaign           # campaign root (ledger, receipts)
 export W=~/q2-custody/work               # work roots (brains, line text, labels)
-export K=~/q2-custody/material           # custody material: n/, k-pages.jsonl, i1/, i2/, w1/, w2/, q-questions.json, career-corpus/, variants.json
+export K=~/q2-custody/material           # custody material as frozen: n/, k/k-pages.jsonl, i/phrasing-i1{a,b,c}.json, i/phrasing-i2{a,b,c}.json, w1/, w2/, q/q-questions.json, q/career-corpus/
 export GB=~/gbrain                       # a gbrain checkout holding every ref below
 export BASE=<baseline master SHA from the freeze record>
 export CAND=<frozen Q2 build SHA>
@@ -66,7 +66,7 @@ shapes the frozen build accepts.
 
 ```bash
 bun eval/runner/q2/campaign.ts preflight --campaign "$C" --step preflight --run preflight \
-  --baseline "$GB@$BASE" --candidate "$GB@$CAND" --custody-dir "$K,$K/n,$K/i1,$K/i2,$K/w1,$K/w2,$K/career-corpus"
+  --baseline "$GB@$BASE" --candidate "$GB@$CAND" --custody-dir "$K/n,$K/k,$K/i,$K/w1,$K/w2,$K/q,$K/q/career-corpus"
 ```
 
 Expected: every `preflight.*` gate passes: bun >= 1.4.0, git, tar and rsync, the pinned gbrain installed, a verified
@@ -78,8 +78,8 @@ directory sits outside every git worktree with a writable access log. Every late
 For the baseline and for each unit `X` (ref `$UX`, baseline plus that unit):
 
 ```bash
-for f in 1 2 3; do
-  bun eval/runner/temporal-edges.ts --c-gate --phrasing-file "$K/i1/f$f.json" --seeds <seed of file f> --decision-id "$DEC" --purpose "C-gate selection on I1" \
+for fs in 1:a:167 2:b:173 3:c:179; do IFS=: read f x seed <<< "$fs"
+  bun eval/runner/temporal-edges.ts --c-gate --phrasing-file "$K/i/phrasing-i1$x.json" --seeds $seed --decision-id "$DEC" --purpose "C-gate selection on I1" \
     --gbrain "$GB@$UX" --campaign "$C" --step c-select-arms --run te-I1-f$f-X
 done
 GBRAIN_EVAL_CONFIG=line_grammar.enabled=true bun eval/runner/line-grammar-typing.ts --dir "$K/w1" --decision-id "$DEC" --purpose "C-gate selection on W1" \
@@ -87,8 +87,9 @@ GBRAIN_EVAL_CONFIG=line_grammar.enabled=true bun eval/runner/line-grammar-typing
 GBRAIN_EVAL_CONFIG=line_grammar.enabled=true bun eval/runner/line-grammar-typing.ts --gbrain "$GB@$UX" --campaign "$C" --step c-select-arms --run world-X
 ```
 
-Use `X=baseline` with `$BASE` for the baseline. Each of the three I1 phrasing files runs with its own seed (three
-seeds of 80 people give the 240/240 write-order invariance check); the decision joins them and pairs rows by probe
+Use `X=baseline` with `$BASE` for the baseline. Each of the three I1 phrasing files runs with its own seed from the
+freeze record (I1: 167, 173, 179; I2: 181, 191, 193; three seeds of 80 people give the 240/240 write-order invariance
+check); the decision joins them and pairs rows by probe
 id. Expected: receipts with
 `resolved_config.c_gate: true` (general single-value pass, E5 probe and the Q2 ledger on every arm) and hash-only W
 rows.
@@ -119,8 +120,8 @@ bun eval/runner/q2/campaign.ts record --campaign "$C" --step package-build --run
 For the baseline and every package `Pj` (ref `$Pj`), as in step 3 with I2 and W2:
 
 ```bash
-for f in 1 2 3; do
-  bun eval/runner/temporal-edges.ts --c-gate --phrasing-file "$K/i2/f$f.json" --seeds <seed of file f> --decision-id "$DEC" --purpose "C-gate confirmation on I2" \
+for fs in 1:a:181 2:b:191 3:c:193; do IFS=: read f x seed <<< "$fs"
+  bun eval/runner/temporal-edges.ts --c-gate --phrasing-file "$K/i/phrasing-i2$x.json" --seeds $seed --decision-id "$DEC" --purpose "C-gate confirmation on I2" \
     --gbrain "$GB@$Pj" --campaign "$C" --step c-confirm-arms --run te-I2-f$f-Pj
 done
 GBRAIN_EVAL_CONFIG=line_grammar.enabled=true bun eval/runner/line-grammar-typing.ts --dir "$K/w2" --decision-id "$DEC" --purpose "C-gate confirmation on W2" \
@@ -145,10 +146,10 @@ condition holds against the baseline. `data.summary.units_that_ship` is the long
 ## 8. G6 arms (`g6-arms`)
 
 Build the final Q2 build with the confirmed package (a committed ref `$FINAL`), hash the arm-B guidance, write
-`arms.json` (`{ "final_ref", "guidance_b_sha256" }`) into custody and record it:
+`$C/arms.json` (`{ "run_status": "completed", "verdict": "pass", "final_ref", "guidance_b_sha256" }`) and record it:
 
 ```bash
-bun eval/runner/q2/campaign.ts record --campaign "$C" --step g6-arms --run arms --receipt "$K/arms.json"
+bun eval/runner/q2/campaign.ts record --campaign "$C" --step g6-arms --run arms --receipt "$C/arms.json"
 ```
 
 ## 9. G6 ingest (`g6-ingest`)
@@ -157,10 +158,10 @@ For each corpus `X` in amara and career, arm A then arm B:
 
 ```bash
 GBRAIN_EVAL_CONFIG=line_grammar.enabled=false bun eval/runner/write-then-answer.ts --phase ingest --corpus X --arm-label A --guidance eval/data/p5-write-then-answer/guidance-a.md \
-  --questions-file "$K/q-questions.json" [--career-dir "$K/career-corpus"] --decision-id "$DEC" --purpose "G6 ingest" --gbrain "$GB@$FINAL" \
+  --questions-file "$K/q/q-questions.json" [--career-dir "$K/q/career-corpus"] --decision-id "$DEC" --purpose "G6 ingest" --gbrain "$GB@$FINAL" \
   --work "$W/g6-X-A" --paid --budget-usd <step budget> --campaign "$C" --step g6-ingest --run X-A
 GBRAIN_EVAL_CONFIG=line_grammar.enabled=true bun eval/runner/write-then-answer.ts --phase ingest --corpus X --arm-label B --guidance <arm B guidance> \
-  --questions-file "$K/q-questions.json" [--career-dir "$K/career-corpus"] --decision-id "$DEC" --purpose "G6 ingest" --gbrain "$GB@$FINAL" \
+  --questions-file "$K/q/q-questions.json" [--career-dir "$K/q/career-corpus"] --decision-id "$DEC" --purpose "G6 ingest" --gbrain "$GB@$FINAL" \
   --work "$W/g6-X-B" --paid --budget-usd <step budget> --campaign "$C" --step g6-ingest --run X-B
 ```
 
@@ -172,7 +173,7 @@ Defaults are the preregistered matrix: four models and three ingests per arm. Ex
 ```bash
 for arm in baseline candidate; do ref=$([ $arm = baseline ] && echo $BASE || echo $CAND)
   bun eval/runner/q2/junk-audit.ts mint --set N --arm $arm --n-dir "$K/n" --decision-id "$DEC" --purpose "G1 and G4 minting" --gbrain "$GB@$ref" --work "$W/grammar" --campaign "$C" --step grammar-mint --run N-$arm
-  bun eval/runner/q2/junk-audit.ts mint --set K --arm $arm --k-file "$K/k-pages.jsonl" --decision-id "$DEC" --purpose "G3 and G4 minting" --gbrain "$GB@$ref" --work "$W/grammar" --campaign "$C" --step grammar-mint --run K-$arm
+  bun eval/runner/q2/junk-audit.ts mint --set K --arm $arm --k-file "$K/k/k-pages.jsonl" --decision-id "$DEC" --purpose "G3 and G4 minting" --gbrain "$GB@$ref" --work "$W/grammar" --campaign "$C" --step grammar-mint --run K-$arm
 done
 ```
 
@@ -215,7 +216,7 @@ Expected: a `q2-grammar-gates` receipt with `G1.material_floor`, `G1.zero_tolera
 ```bash
 GBRAIN_EVAL_CONFIG=line_grammar.enabled=true bun eval/runner/line-grammar-typing.ts --gbrain "$GB@$BASE" --campaign "$C" --step g5 --run world-v1-baseline
 GBRAIN_EVAL_CONFIG=line_grammar.enabled=true bun eval/runner/line-grammar-typing.ts --gbrain "$GB@$CAND" --campaign "$C" --step g5 --run world-v1-candidate
-GBRAIN_EVAL_CONFIG=line_grammar.enabled=true bun eval/runner/relation-line-variants.ts --phrasing-file "$K/variants.json" --seeds <fresh seeds> --decision-id "$DEC" --purpose "G5 variants" \
+GBRAIN_EVAL_CONFIG=line_grammar.enabled=true bun eval/runner/relation-line-variants.ts --phrasing-file <custodian's variants templates file> --seeds <fresh seeds> --decision-id "$DEC" --purpose "G5 variants" \
   --gbrain "$GB@$CAND" --output "$C/g5/variants-candidate"
 bun eval/runner/q2/campaign.ts record --campaign "$C" --step g5 --run variants-candidate --receipt "$C/g5/variants-candidate/receipt.json"
 bun eval/runner/q2/g5.ts --world-baseline "$C/g5/world-v1-baseline/receipt.json" --world-candidate "$C/g5/world-v1-candidate/receipt.json" \
@@ -243,7 +244,7 @@ Rerun each command with `--phase immediate --step g6-immediate`, then once:
 
 ```bash
 GBRAIN_EVAL_CONFIG=line_grammar.enabled=true bun eval/runner/write-then-answer.ts --phase http-journey --corpus career --arm-label B --guidance <arm B guidance> \
-  --questions-file "$K/q-questions.json" --career-dir "$K/career-corpus" --decision-id "$DEC" --purpose "G6 HTTP journey" --gbrain "$GB@$FINAL" \
+  --questions-file "$K/q/q-questions.json" --career-dir "$K/q/career-corpus" --decision-id "$DEC" --purpose "G6 HTTP journey" --gbrain "$GB@$FINAL" \
   --work "$W/g6-career-B" --campaign "$C" --step g6-immediate --run http-journey
 ```
 

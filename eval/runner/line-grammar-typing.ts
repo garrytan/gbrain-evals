@@ -79,20 +79,36 @@ async function pagesWithRelationLines(gut: GbrainUnderTest, pages: readonly Rich
   return new Set(pages.filter(p => parseLineGrammar(p.compiled_truth).relations.length > 0).map(p => p.slug));
 }
 
-/** W custody pages: every file hash-logged through the access log before parsing, in world-v1's page format. */
-export function loadCustodyPages(dir: string, custody: { decisionId: string; purpose: string }): { pages: RichPage[]; files_sha256: string } {
-  const files = readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_')).sort();
-  if (!files.length) throw new Error(`--dir ${dir} holds no page files (*.json in world-v1 format); ask the custodian for the set`);
+/**
+ * W custody pages in world-v1's page format. When the directory holds a manifest (`*manifest.json` with
+ * `files: [{ path, sha256 }]`), exactly the listed files are read and each must hash to its entry; otherwise every
+ * `*.json` except manifests is a page. Every file read is hash-logged through the access log before parsing.
+ */
+export function loadCustodyPages(dir: string, custody: { decisionId: string; purpose: string }): { pages: RichPage[]; files_sha256: string; manifest_sha256: string | null } {
+  const manifests = readdirSync(dir).filter(f => /manifest\.json$/.test(f)).sort();
+  if (manifests.length > 1) throw new Error(`--dir ${dir} holds ${manifests.length} manifests (${manifests.join(', ')}); a W set has one`);
+  let listed: Array<{ path: string; sha256: string | null }>;
+  let manifestSha: string | null = null;
+  if (manifests.length) {
+    const m = openCustodyFile({ file: join(dir, manifests[0]), flag: '--dir', decisionId: custody.decisionId, purpose: custody.purpose });
+    manifestSha = m.sha256;
+    const parsed = JSON.parse(m.bytes.toString('utf8')) as { files?: Array<{ path: string; sha256: string }> };
+    if (!Array.isArray(parsed.files) || !parsed.files.length) throw new Error(`${manifests[0]} (sha256 ${m.sha256}) needs files [{ path, sha256 }]; ask the custodian for the manifest`);
+    listed = parsed.files.map(f => ({ path: f.path, sha256: f.sha256 }));
+  } else listed = readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_')).sort().map(path => ({ path, sha256: null }));
+  if (!listed.length) throw new Error(`--dir ${dir} holds no page files (*.json in world-v1 format); ask the custodian for the set`);
   const hashes: string[] = [];
-  const pages = files.map(f => {
-    const { bytes, sha256 } = openCustodyFile({ file: join(dir, f), flag: '--dir', decisionId: custody.decisionId, purpose: custody.purpose });
-    hashes.push(`${f.length}:${sha256}`);
+  const pages = listed.map(f => {
+    if (f.path.startsWith('/') || f.path.split('/').includes('..')) throw new Error(`W manifest path ${f.path} must stay inside ${dir}`);
+    const { bytes, sha256 } = openCustodyFile({ file: join(dir, f.path), flag: '--dir', decisionId: custody.decisionId, purpose: custody.purpose });
+    if (f.sha256 && f.sha256 !== sha256) throw new Error(`W page ${f.path} hashes to ${sha256}, not the manifest's ${f.sha256}; the custody copy changed, stop and tell the custodian`);
+    hashes.push(`${f.path.length}:${sha256}`);
     const p = JSON.parse(bytes.toString('utf8'));
     if (Array.isArray(p.timeline)) p.timeline = p.timeline.join('\n');
     if (Array.isArray(p.compiled_truth)) p.compiled_truth = p.compiled_truth.join('\n\n');
     return { ...p, title: String(p.title ?? ''), compiled_truth: String(p.compiled_truth ?? ''), timeline: String(p.timeline ?? '') } as RichPage;
   });
-  return { pages, files_sha256: createHash('sha256').update(hashes.join('\n')).digest('hex') };
+  return { pages, files_sha256: createHash('sha256').update(hashes.join('\n')).digest('hex'), manifest_sha256: manifestSha };
 }
 
 /** Spurious specific types: stored typed edges other than `mentions` whose pair's gold type differs or is absent. */
@@ -202,7 +218,7 @@ async function main(): Promise<void> {
       engine: 'pglite-in-memory',
       caller: 'put_page operation handler, OperationContext { remote: false, sourceId: default }',
       corpus: custody ? `custody set (files sha256 ${custody.files_sha256}, ${custody.pages.length} pages)` : dir,
-      ...(custody ? { custody: { decision_id: decisionId, files_sha256: custody.files_sha256, receipt: 'hash-only: slugs hashed, no page text' } } : {}),
+      ...(custody ? { custody: { decision_id: decisionId, files_sha256: custody.files_sha256, manifest_sha256: custody.manifest_sha256, receipt: 'hash-only: slugs hashed, no page text' } } : {}),
       render: 'serializeMarkdown form: frontmatter type/title, compiled truth, <!-- timeline -->, timeline',
       extraction: 'extractStaleFromDB (gbrain extract --stale, catch-up) after every page is written',
       gold: 'world-v1-gold.ts buildGoldEdges (the type-accuracy gold)',

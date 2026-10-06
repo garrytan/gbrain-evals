@@ -164,5 +164,16 @@ describe('line-grammar-typing custodian helpers', () => {
     expect(redactRows([{ id: 'people/alice-example->companies/acme-example', kind: 'edge', cluster: 'people/alice-example' }])[0].id).toBe(rows[0].id);
     expect(spuriousSpecific([{ goldType: 'works_at', inferredTypes: ['works_at', 'mentions', 'advises'] }, { goldType: null, inferredTypes: ['invested_in'] }])).toEqual({ specific_typed_edges: 3, spurious_specific: 2, spurious_specific_points: 200 / 3 });
     expect(existsSync(join(dir, 'p1.json'))).toBe(true);
+    const page = JSON.stringify({ slug: 'people/bob-example', type: 'person', title: 'Bob', compiled_truth: 'x', timeline: '', _facts: { type: 'person' } });
+    const sha = (await import('node:crypto')).createHash('sha256').update(page).digest('hex');
+    const md = mkdtempSync(join(tmpdir(), 'q2-wm-'));
+    (await import('node:fs')).mkdirSync(join(md, 'pages'));
+    writeFileSync(join(md, 'pages', 'b.json'), page);
+    writeFileSync(join(md, 'w1-manifest.json'), JSON.stringify({ files: [{ path: 'pages/b.json', sha256: sha }] }));
+    const viaManifest = loadCustodyPages(md, { decisionId: 'q2', purpose: 'W1' });
+    expect(viaManifest.pages.map(p => p.slug)).toEqual(['people/bob-example']);
+    expect(viaManifest.manifest_sha256).toMatch(/^[0-9a-f]{64}$/);
+    writeFileSync(join(md, 'pages', 'b.json'), page + ' ');
+    expect(() => loadCustodyPages(md, { decisionId: 'q2', purpose: 'W1' })).toThrow('custody copy changed');
   });
 });
