@@ -3,16 +3,16 @@
   "state": "sqlite",
   "totals": {
     "program_cap_usd": 120,
-    "committed_usd": 74.70499117,
-    "reconciled_usd": 74.70498901,
-    "open_reservations_usd": 0.00000216,
-    "remaining_usd": 45.29500883,
-    "requests": 88476,
-    "overshoot_usd": 0.01452676
+    "committed_usd": 114.54508126,
+    "reconciled_usd": 114.5053246,
+    "open_reservations_usd": 0.03975666,
+    "remaining_usd": 5.4549187399999965,
+    "requests": 174970,
+    "overshoot_usd": 0.04407084999999997
   },
   "run": null,
-  "runs": 55,
-  "open_runs": 1,
+  "runs": 90,
+  "open_runs": 0,
   "last_cap_change": {
     "program_cap_usd": 120,
     "kind": "open",
@@ -20,8 +20,8 @@
     "by": "user@cox.local",
     "at": "2026-10-05T14:50:04.809Z"
   },
-  "size_bytes": 43540480,
-  "read_ms": 23.02,
+  "size_bytes": 83406848,
+  "read_ms": 39.07,
   "hints": [
     "both files present: a real legacy ledger.json beside the SQLite ledger is an interrupted migration; if the totals match run `migrate --finish`, otherwise stop and ask the user",
     "cap mismatch: unset --program-cap-usd / BRAINBENCH_PROGRAM_CAP_USD to use the recorded cap; run `set-cap` only with the user's authorization"
