@@ -33,9 +33,18 @@ case "${1:?step}" in
     export UBI_OWNER=gbra52 UBI_GC_HOURS=0
     "$UBI" ssh "$vm" 'mkdir -p ~/custody/specs && chmod 700 ~/custody'
     "$UBI" ssh "$vm" "cat > ~/custody/specs/sealed-beam-$split-comparator.json" < "$C/sealed-specs/sealed-beam-$split-comparator.json"
-    "$UBI" ssh "$vm" "set -a; . ~/.mpw-keys; set +a; cd work/gbrain-evals && export PATH=\$HOME/.bun/bin:\$HOME/.local/bin:\$PATH && \
-      (bun eval/runner/budget-ledger.ts status --budget-ledger ~/custody/ledger.sqlite >/dev/null 2>&1 || bun eval/runner/budget-ledger.ts init --budget-ledger ~/custody/ledger.sqlite --program-cap-usd 60 --reason 'sealed comparator, beam $split') && \
-      bun run harness:cell run ~/custody/specs/sealed-beam-$split-comparator.json --cells-dir ~/custody/cells --budget-ledger ~/custody/ledger.sqlite"
+    # Detached on the VM so a dropped ssh session cannot stop the cell; polled until it writes its exit code.
+    "$UBI" ssh "$vm" "cat > ~/custody/run.sh" <<EOS
+set -a; . ~/.mpw-keys; set +a
+cd ~/work/gbrain-evals && export PATH=\$HOME/.bun/bin:\$HOME/.local/bin:\$PATH
+bun eval/runner/budget-ledger.ts status --budget-ledger ~/custody/ledger.sqlite >/dev/null 2>&1 || bun eval/runner/budget-ledger.ts init --budget-ledger ~/custody/ledger.sqlite --program-cap-usd 60 --reason "sealed comparator, beam $split"
+bun run harness:cell run ~/custody/specs/sealed-beam-$split-comparator.json --cells-dir ~/custody/cells --budget-ledger ~/custody/ledger.sqlite
+echo \$? > ~/custody/exit
+EOS
+    "$UBI" ssh "$vm" 'rm -f ~/custody/exit; nohup setsid bash ~/custody/run.sh > ~/custody/run.log 2>&1 < /dev/null &'
+    until "$UBI" ssh "$vm" 'test -f ~/custody/exit' 2>/dev/null; do sleep 120; done
+    "$UBI" ssh "$vm" 'cat ~/custody/exit; tail -3 ~/custody/run.log' 
+    mkdir -p "$C/sealed-cells"
     "$UBI" ssh "$vm" 'cd ~/custody && tar --exclude="*/store" --exclude="_stores" -czf - cells ledger.sqlite' | tar -C "$C/sealed-cells" --strip-components=1 -xzf - --wildcards 'cells/*' ;;
   judge)
     for split in 100k 500k 1m; do
