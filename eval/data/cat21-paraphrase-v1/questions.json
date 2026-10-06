@@ -1,0 +1,152 @@
+{
+  "version": "cat21-paraphrase-v1",
+  "frozen": "2026-10-06",
+  "written_by": "agent (Claude, gbrain-evals follow-up round lane B), reading gbrain c5fb0201 src/core around the 12 known gold files",
+  "rules": "two questions per gold file; each describes behavior of the file's named symbol or its file without using the symbol's identifier or the file name",
+  "questions": [
+    {
+      "id": "p01a",
+      "text": "Where does the pipeline start that classifies a question's intent, gathers evidence from the brain and asks a model to write a synthesized answer?",
+      "expected_file": "think/index.ts",
+      "split": "paraphrase"
+    },
+    {
+      "id": "p01b",
+      "text": "Which code optionally adds the holder's calibration profile and a trajectory block to the answer prompt before calling the model?",
+      "expected_file": "think/index.ts",
+      "split": "paraphrase"
+    },
+    {
+      "id": "p02a",
+      "text": "Which storage backend runs an embedded Postgres compiled to WebAssembly, loading the vector and trigram extensions from bundled assets?",
+      "expected_file": "pglite-engine.ts",
+      "split": "paraphrase"
+    },
+    {
+      "id": "p02b",
+      "text": "Where is the in-process database engine that keeps chunk invalidation and chunk replacement atomic inside transaction clones?",
+      "expected_file": "pglite-engine.ts",
+      "split": "paraphrase"
+    },
+    {
+      "id": "p03a",
+      "text": "Which function merges keyword and vector result lists with reciprocal rank fusion, then boosts compiled truth and re-scores by cosine similarity?",
+      "expected_file": "search/hybrid.ts",
+      "split": "paraphrase"
+    },
+    {
+      "id": "p03b",
+      "text": "Where is the query embedding raced against a shared deadline so a slow embedder cannot stall retrieval?",
+      "expected_file": "search/hybrid.ts",
+      "split": "paraphrase"
+    },
+    {
+      "id": "p04a",
+      "text": "Which function parses a markdown string, hashes it, and writes the page version, tags and chunks in one transaction?",
+      "expected_file": "import-file.ts",
+      "split": "paraphrase"
+    },
+    {
+      "id": "p04b",
+      "text": "Where is a page body rejected when its UTF-8 byte length is over the maximum file size, so a remote caller cannot run up the embedding bill?",
+      "expected_file": "import-file.ts",
+      "split": "paraphrase"
+    },
+    {
+      "id": "p05a",
+      "text": "Which parser finds markdown links that point at people or company pages, accepting both relative file paths and bare slugs?",
+      "expected_file": "link-extraction.ts",
+      "split": "paraphrase"
+    },
+    {
+      "id": "p05b",
+      "text": "Where are references inside fenced or inline code blocks skipped when collecting links to person and company pages?",
+      "expected_file": "link-extraction.ts",
+      "split": "paraphrase"
+    },
+    {
+      "id": "p06a",
+      "text": "Which code decides which vector column a query searches: a per-call override first, then the database default, then the standard column?",
+      "expected_file": "search/embedding-column.ts",
+      "split": "paraphrase"
+    },
+    {
+      "id": "p06b",
+      "text": "Where does an unknown vector column name raise an error that includes a paste-ready hint for registering it?",
+      "expected_file": "search/embedding-column.ts",
+      "split": "paraphrase"
+    },
+    {
+      "id": "p07a",
+      "text": "Which ranking stage gives a small score bump to a top result that several other top results link to?",
+      "expected_file": "search/graph-signals.ts",
+      "split": "paraphrase"
+    },
+    {
+      "id": "p07b",
+      "text": "Where are several results from the same chat session demoted so only the best of them keeps its full score?",
+      "expected_file": "search/graph-signals.ts",
+      "split": "paraphrase"
+    },
+    {
+      "id": "p08a",
+      "text": "Which code generates ideas by crossing close pages found by search with far pages from a domain bank, then has a judge score them?",
+      "expected_file": "brainstorm/orchestrator.ts",
+      "split": "paraphrase"
+    },
+    {
+      "id": "p08b",
+      "text": "Where is a cost estimate printed with a short grace period before the idea-generation model calls begin?",
+      "expected_file": "brainstorm/orchestrator.ts",
+      "split": "paraphrase"
+    },
+    {
+      "id": "p09a",
+      "text": "Where is the single seam every model call goes through, configured once at startup instead of reading environment variables at call time?",
+      "expected_file": "ai/gateway.ts",
+      "split": "paraphrase"
+    },
+    {
+      "id": "p09b",
+      "text": "Which module turns SDK errors into configuration errors and transient errors and caches provider clients by model and base URL?",
+      "expected_file": "ai/gateway.ts",
+      "split": "paraphrase"
+    },
+    {
+      "id": "p10a",
+      "text": "Which helper maps a bare first name to an existing people page instead of creating a stub page at the brain root?",
+      "expected_file": "entities/resolve.ts",
+      "split": "paraphrase"
+    },
+    {
+      "id": "p10b",
+      "text": "Where is a stub page redirected to its canonical page by fuzzy title match and then by people or companies prefix expansion, skipping the exact-slug step?",
+      "expected_file": "entities/resolve.ts",
+      "split": "paraphrase"
+    },
+    {
+      "id": "p11a",
+      "text": "Which code turns a brain health report into an ordered list of fix-up steps for the doctor's repair plan?",
+      "expected_file": "brain-score-recommendations.ts",
+      "split": "paraphrase"
+    },
+    {
+      "id": "p11b",
+      "text": "Where are extra repair steps from doctor checks merged into the built-in plan and deduplicated by id, with the built-in entry winning?",
+      "expected_file": "brain-score-recommendations.ts",
+      "split": "paraphrase"
+    },
+    {
+      "id": "p12a",
+      "text": "Which method submits a background job, deduplicating by idempotency key and capping how many children a parent job may have?",
+      "expected_file": "minions/queue.ts",
+      "split": "paraphrase"
+    },
+    {
+      "id": "p12b",
+      "text": "Where does the Postgres-backed job system lock the parent row while a child job is submitted, so concurrent submissions cannot exceed the cap?",
+      "expected_file": "minions/queue.ts",
+      "split": "paraphrase"
+    }
+  ]
+}
