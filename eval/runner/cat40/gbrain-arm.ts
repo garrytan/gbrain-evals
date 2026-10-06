@@ -334,11 +334,11 @@ export class GbrainSlot {
     } };
     const git = (args: string[]) => execFileSync('git', ['-C', vault, '-c', 'user.name=cat40', '-c', 'user.email=cat40@example.invalid', ...args], { stdio: 'pipe' });
     // `gbrain sources add` hashes every file into a manifest and refuses one over 1 MiB (source-lifecycle.ts),
-    // about 8,000 files. A larger corpus registers the source with the policy files only, then adds the rest
+    // about 8,000 files. A larger corpus registers the source with the policy files only (none in Hard worlds, so the first commit may be empty), then adds the rest
     // in synced batches. The final corpus commit is tagged so restore resets to it.
     const staged = world.docs.length > STAGED_SOURCE_ADD_DOCS;
     writeDocs(staged ? world.docs.filter(d => d.type === 'policy') : world.docs);
-    git(['init', '-q']); git(['add', '-A']); git(['commit', '-q', '-m', staged ? 'policies' : 'corpus']);
+    git(['init', '-q']); git(['add', '-A']); git(['commit', '-q', '--allow-empty', '-m', staged ? 'policies' : 'corpus']);
     const steps: SlotBuild['steps'] = [];
     const op = async (step: string, args: string[]) => {
       const r = await runCli(this.run, args, 3_600_000);

@@ -29,6 +29,7 @@
 #   SCALE         calibration world scale: large (the 50k world, default from round 3, amendment A1) or v1 (the 4k world, default for rounds 1-2)
 #   LEDGER        default .budget/cat40-hard.sqlite (must match the roster)
 #   BUDGET_USD    the step's --budget-usd instead of its projection plus 15% (the ledger gate still applies)
+#   FREEZE_OVERRIDE  Garry's dated decision to freeze-check and freeze a round that fails the freeze rule; becomes the freeze note
 #   PRINT_ONLY=1  print the commands instead of running them (guards are listed, not checked)
 #
 # Every refusal and stop-for-Garry condition exits 3 with a stable code (RUNBOOK.md lists them). A step that stops
@@ -182,9 +183,9 @@ case "$CMD" in
         R="$(round)"; DIR="$REPORTS/calibration/round-$R"
         need "$DIR/cells/results.jsonl" "round $R's results"
         if ! print_only; then
-          n=$(ls -d "$REPORTS"/calibration/round-*/freeze-check 2>/dev/null | grep -v "round-$R/" | wc -l)
+          n=$(find "$REPORTS/calibration" -mindepth 2 -maxdepth 2 -type d -name freeze-check ! -path "*/round-$R/*" | wc -l)
           [[ "$n" -lt 2 ]] || stop HARD_FREEZE_RULE_FAILED "2 freeze checks already ran" "stop" "Garry decides with the calibration table"
-          bun "$ANALYZE" "$DIR/cells/results.jsonl" --freeze-rule --round "$R" >/dev/null || stop HARD_PREDECESSOR_MISSING "round $R does not pass the freeze rule" "a freeze check runs only after a passing round"
+          bun "$ANALYZE" "$DIR/cells/results.jsonl" --freeze-rule --round "$R" >/dev/null || [[ -n "${FREEZE_OVERRIDE:-}" ]] || stop HARD_PREDECESSOR_MISSING "round $R does not pass the freeze rule" "a freeze check runs only after a passing round, or with FREEZE_OVERRIDE naming Garry's dated decision"
         fi
         budget_decision
         ARGS=(--world "$DIR/world/world.json" --models "$CHECK_MODELS" --arms oracle,fs,pg --per-family 10 --repeat 1 --concurrency 6 "${COMMON[@]}" --out "$DIR/freeze-check" --step freeze-check)
@@ -198,14 +199,14 @@ case "$CMD" in
         run bun "$ANALYZE" "$DIR/cells/results.jsonl" "$DIR/freeze-check/results.jsonl" --freeze-rule --round "$R" --calibration-md "$DOCS/calibration.md"; rc=$?
         set -e
         print_only && exit 0
-        [[ $rc -eq 0 ]] || stop HARD_FREEZE_RULE_FAILED "the freeze check on round $R's world fails on the five models" "tune again within the round limit (ROUND=$((R + 1)) step calibrate) or stop after 2 freeze checks" "Garry decides when no rounds or freeze checks remain"
+        [[ $rc -eq 0 || -n "${FREEZE_OVERRIDE:-}" ]] || stop HARD_FREEZE_RULE_FAILED "the freeze check on round $R's world fails on the five models" "tune again within the round limit (ROUND=$((R + 1)) step calibrate) or stop after 2 freeze checks" "Garry decides when no rounds or freeze checks remain"
         note "freeze check passes; next: ROUND=$R $0 step freeze"
         ;;
       freeze)
         R="$(round)"
         need "$REPORTS/calibration/round-$R/freeze-check/results.jsonl" "round $R's passing freeze check"
         [[ "$CMD" == preflight ]] && { echo "freeze is free; it writes $DOCS/knobs.frozen.json and $DOCS/freeze.json"; exit 0; }
-        run bun "$OPS" freeze write --knobs "$DOCS/knobs.round-$R.json" --note "round $R passed the freeze rule and the five-model freeze check ($(date -u +%F))"
+        run bun "$OPS" freeze write --knobs "$DOCS/knobs.round-$R.json" --note "${FREEZE_OVERRIDE:-round $R passed the freeze rule and the five-model freeze check} ($(date -u +%F))"
         note "commit $DOCS/knobs.frozen.json and $DOCS/freeze.json now; next: GBRAIN_REF=<master> $0 step smoke"
         ;;
       smoke)
