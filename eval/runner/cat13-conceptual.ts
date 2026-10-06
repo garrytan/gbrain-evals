@@ -1285,6 +1285,8 @@ export interface Cat13Options {
   budget?: BudgetOptions;
   /** Preregistration attested (pushed, unedited) before the first paid request; recorded in the receipt. */
   preregistration?: string;
+  /** Override the registry's cost estimate for this run (must not exceed --budget-usd). */
+  estimateUsd?: number;
 }
 
 export const DEFAULT_TUNING_CONCEPTS = 20;
@@ -1339,6 +1341,13 @@ export function parseCat13Argv(
       case '--seed': opts.seed = parseNonNegativeInt(value(), '--seed'); break;
       case '--corpus-dir': opts.corpusDir = value(); break;
       case '--preregistration': opts.preregistration = value(); break;
+      case '--estimate-usd': {
+        const raw = value();
+        const n = Number(raw);
+        if (!Number.isFinite(n) || n <= 0) throw new Error(`--estimate-usd must be a positive number of dollars, got '${raw}'`);
+        opts.estimateUsd = n;
+        break;
+      }
       case '--budget-usd': case '--budget-ledger': case '--program-cap-usd': {
         const flagValue = value();
         opts.budget = budgetOptionsFrom([...budgetArgv, flag, flagValue], env);
@@ -1502,7 +1511,7 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
   const attestation = !stubEmbed && opts.preregistration ? attestPreregistration(opts.preregistration) : null;
   if (!stubEmbed) {
     try {
-      paid = startPaidRun(CATEGORY, { ...(opts.budget ?? budgetOptionsFrom([])), estimateUsd: registryEntry('concept-search')!.cost_estimate.usd });
+      paid = startPaidRun(CATEGORY, { ...(opts.budget ?? budgetOptionsFrom([])), estimateUsd: opts.estimateUsd ?? registryEntry('concept-search')!.cost_estimate.usd });
     } catch (error) {
       if (error instanceof BudgetExceededError) return skipped(`budget: ${error.message}`);
       throw error;

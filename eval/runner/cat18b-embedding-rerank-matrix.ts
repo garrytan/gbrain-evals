@@ -132,6 +132,16 @@ export const LEGACY_CELLS: ProviderSpec[] = [
   { name: 'voyage-1024+rerank', embedder: 'voyage:voyage-3-large', embed_dim: 1024, reranker: 'voyage:rerank-2.5' },
 ];
 
+/**
+ * Pre-run estimate: corpus embedding at list price per cell, plus, for a
+ * reranked cell, every query reranking the full fetch at about 400 tokens a
+ * passage. An estimate only; the ledger reserves each request's worst case.
+ */
+export function estimateMatrixUsd(specs: ProviderSpec[], totalChars: number, queries: number): number {
+  return specs.reduce((usd, s) => usd + (totalChars / 3.5 / 1e6) * (PRICING[s.embedder] ?? 0)
+    + (s.reranker ? queries * CHUNK_FETCH * 400 / 1e6 * 0.05 : 0), 0);
+}
+
 /** Where a cell's text goes: the embedder's host and, with a reranker, the reranker's. */
 export function dataEgress(spec: ProviderSpec): string {
   const local = spec.embedder.startsWith('ollama:');
@@ -570,7 +580,7 @@ export async function runCat18b(options: Cat18bOptions = {}): Promise<Cat18bRunR
   if (!options.stub) {
     if (options.preregistration) attestation = attestPreregistration(options.preregistration);
     if (!options.budget) throw new Error('cat18b live run makes paid requests; pass --budget-ledger and --budget-usd');
-    paid = startPaidRun(CAT18B_CATEGORY, { ...options.budget, estimateUsd: 0.5 * specs.length });
+    paid = startPaidRun(CAT18B_CATEGORY, { ...options.budget, estimateUsd: estimateMatrixUsd(specs, totalChars, queries.length) });
   }
   const spentUsd = paid ? () => paid!.run.summary().actual_usd : undefined;
 

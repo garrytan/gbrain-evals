@@ -75,4 +75,4 @@ The keyless summary, `bun eval/runner/w6-embedding-matrix.ts summarize <results 
 
 ## Amendments
 
-None yet.
+**2026-10-06, before any paid request.** The first launch was refused at budget-run open, before any provider call: the runners' built-in estimates ($4 for Cat 18b's 8 cells, the Cat 13 registry's $3 per run) exceeded the per-run budgets above. Cat 18b now estimates from the corpus size and list prices (`estimateMatrixUsd`), and Cat 13 takes `--estimate-usd` (0.5 for reranked runs, 0.1 otherwise). Budgets, arms, metrics and decision rules are unchanged.
