@@ -33,7 +33,8 @@
  *     --decision-id <id> --purpose <text> [--model gpt-6.1-sol]
  *   bun eval/runner/p8-quote-grounding.ts --gbrain <checkout>@<ref> --heldout-questions <custody file>
  *     [--corpus-dir <custody dir>] [--corpus-manifest <manifest.json>] --decision-id <id> --purpose <text>
- *     --out <dir outside the repository> [--think-model ...] [--judge ...] [--replay <rows.ndjson>]
+ *     --out <dir outside the repository> [--think-model ...] [--judge ...] [--replay <rows.ndjson>] [--resume]
+ *   --resume keeps the rows already in <out>/rows.ndjson and runs only the questions they lack (a run cut short by a machine restart).
  * On amara, held-out questions are drawn only from pages no dev question uses.
  * Writing a held-out questions file appends a `write` line with its SHA-256 to
  * access-log.jsonl beside it.
@@ -54,7 +55,7 @@
  * A question without `corpus` targets amara (the generator@1 dev file).
  */
 import Anthropic from '@anthropic-ai/sdk';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { renderCorpus } from './chronicle-lift.ts';
@@ -304,13 +305,22 @@ async function main(argv = process.argv.slice(2)) {
   };
   const rows: Array<Record<string, unknown>> = [];
   const rowsPath = join(out, 'rows.ndjson');
-  writeFileSync(rowsPath, '');
+  // --resume: keep the rows a run cut short already wrote and answer only the questions they lack.
+  const done = new Set<string>();
+  if (argv.includes('--resume') && existsSync(rowsPath)) {
+    for (const line of readFileSync(rowsPath, 'utf8').split('\n').filter(Boolean)) {
+      const row = JSON.parse(line) as Record<string, unknown>;
+      rows.push(row);
+      done.add(String(row.id));
+    }
+    log(`resuming: ${done.size} question(s) already answered`);
+  } else writeFileSync(rowsPath, '');
   // --replay <rows.ndjson>: the same answers (as the model wrote them) and judge labels, grounded again by this build.
   const replay = flag('--replay') ? new Map(readFileSync(flag('--replay')!, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l)).map((r: any) => [r.id, r])) : null;
   // One brain per corpus, and per haystack for sealed-confirmation: a question sees only the pages of its own corpus.
   const brainOf = (q: Question) => q.corpus === 'amara' ? 'amara' : `sealed-confirmation|${q.haystack}`;
   const groups = new Map<string, Question[]>();
-  for (const q of questions) groups.set(brainOf(q), [...(groups.get(brainOf(q)) ?? []), q]);
+  for (const q of questions) if (!done.has(q.id)) groups.set(brainOf(q), [...(groups.get(brainOf(q)) ?? []), q]);
   for (const [brain, group] of groups) {
     const engine = new PGLiteEngine();
     await engine.connect({});
