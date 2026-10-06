@@ -74,6 +74,7 @@ A sealed cell is marked incomplete, and the decision is `inconclusive`, if any s
 - **Dev** conversation ids are public in the manifest. Tuning, knob sweeps and the delivered-context fitting use dev only.
 - **Validation** ids are opened through `memory-proof-wave-grouping.ts open --split validation`, which checks the private file against its commitment and appends a line to the access log. Every fix and configuration choice is confirmed on validation before it counts.
 - **Sealed** ids open only with `--decision-id`, a purpose, and this file committed with no `TODO` marker. The log line records this file's SHA-256. Sealed runs once per system. A failed sealed result ends this decision; it is never rerun with `--only-failed` or merged reruns.
+- **Validation receipts stay in custody.** For validation cells the repository gets only summaries and per-category aggregates: scores, paired W/L/T counts, firing rates, gates and spend. It gets no conversation or question ids, schedules or per-question rows. The full validation receipts stay in custody beside the private file until the sealed run is scored, and are then published with the sealed receipts.
 - BEAM is public, so after validation is opened the sealed set is the complement of dev and validation. The protection is procedural: the commitments prove the split was fixed before tuning, and the log shows every open.
 
 ## Reseal, 2026-10-05
