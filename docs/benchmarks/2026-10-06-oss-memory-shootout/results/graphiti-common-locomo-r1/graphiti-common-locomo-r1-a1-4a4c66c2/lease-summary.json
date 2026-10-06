@@ -1,0 +1,8 @@
+{
+  "run_id": "graphiti-common-locomo-r1-a1-4a4c66c2",
+  "lease_usd": 15,
+  "committed_usd": 10.413819809999831,
+  "requests": 181827,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}
