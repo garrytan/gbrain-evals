@@ -1,6 +1,6 @@
 # Cat 40 Hard preregistration
 
-Status: filled through step 4 on 2026-10-06 (world hashes at step 5); template written 2026-10-05. Fields marked **TBD (step N)** are filled and committed at that step, before the step's cells run. Plan: [docs/plans/2026-10-05-cat40-hard/PLAN.md](../../plans/2026-10-05-cat40-hard/PLAN.md). Operator guide: [RUNBOOK.md](RUNBOOK.md).
+Status: filled through step 5 on 2026-10-06; template written 2026-10-05. Fields marked **TBD (step N)** are filled and committed at that step, before the step's cells run. Plan: [docs/plans/2026-10-05-cat40-hard/PLAN.md](../../plans/2026-10-05-cat40-hard/PLAN.md). Operator guide: [RUNBOOK.md](RUNBOOK.md).
 
 This run is the Hard baseline. Each later measurement of a gbrain change on Hard uses a fresh preregistered seed with the frozen generator, because this run's tasks and transcripts are published.
 
@@ -77,8 +77,8 @@ Computed at step 5 from the freeze check's pooled fs success `p` with `holdout_s
 | knob digest (knobs.frozen.json) | `37a16085e0fbf2e92072b2e7cf00468d43451dd4fb35bb1232ebbf79d3027434` |
 | settings digest (freeze.json) | `9aeccdddad8e4721e6123f1e846f28914c05acbcadfe5c4e1eb839d7345b3210` |
 | frozen code hashes | `freeze.json` (step 3) |
-| 4k held-out world SHA-256 | TBD (step 5) |
-| 50k held-out world SHA-256 | TBD (step 5) |
+| 4k held-out world SHA-256 | the 4k base of the 50k world runs no cells (A2): file SHA-256 `42e452f45309347dda0e59547cc57045ba44977fa243a4fe89587098d9fe15fb`, world digest `b931d322…96ed0`, 13,193 documents |
+| 50k held-out world SHA-256 | file SHA-256 `67cc90b4122fc866085ae8421dad1b6710de7249da1671442c1212a637bc8c14`, world digest `9ea46415f46e0f2b8a74b5c3773caf9ba7e8303058114c5e4e329a0596892877`, 55,235 documents, seed 20261006, generated 2026-10-06 and not opened |
 
 ## Analysis commands
 
