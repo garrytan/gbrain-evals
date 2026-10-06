@@ -1,0 +1,12 @@
+{
+  "decision_id": "p5-heldout-2026-10-05",
+  "stage": "held-out (custodian)",
+  "builds": {"baseline": "6622a119e40ea09a7719233046aca24741863ed2 (merge base)", "candidate": "21befeb5b7274b23e872261aa924ee46f63a0d20 with line_grammar.enabled, wanted_pages.enabled, put_page.similar_pages = true (read back)"},
+  "harness": "gbrain-evals p0-heldout-harness 9c7a3da (decision kit; GBRAIN_EVAL_CONFIG channel)",
+  "held_out_material": "custodian set B: H2 templates (seeds 29, 37, 43), H4 draw (seeds 31, 47, 59), H5a name pools (seeds 23, 41, 61); in custody",
+  "H1_type_accuracy": {"verdict": "pass", "any_type_match": [0.4929, 0.4929], "type_accuracy": [0.747, 0.767], "strict_f1": [0.246, 0.255], "pages_identical_grammar_on_off": "240/240"},
+  "H2_relation_lines": {"verdict": "pass", "typed_recall": [0.811, 1.0], "typed_recall_candidate_grammar_off": 0.896, "decoys": 120, "decoy_types_reached": [32, 32], "decoy_types_added_by_grammar": 0},
+  "H4_forward_references_local": {"verdict": "pass", "edges_lost": {"baseline": "1849/3810", "candidate": "0/3738"}, "withheld_recall": [0, 1.0], "non_entity_share_candidate": 0.0, "http_arm": "not measurable: the first sweep fails with writer_coordinator_required on pages with timelines, in both builds"},
+  "H5a_similar_page_hint": {"verdict": "pass", "lexical_recall_at_3": [0, 0.980], "solvable_recall_at_3": [0, 0.815], "no_referent_hint_rate": [0, 0.047], "no_referent_names": 192},
+  "pending": "H3 junk audit, H5b agent loop, H6 write-then-answer QA (runners not built yet)"
+}

@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [0.10.34] - 2026-10-06
+## [0.10.35] - 2026-10-06
 
 ### Cat 40 Hard round 4: questions about several accounts; the held-out run is 50k only
 
@@ -109,6 +109,12 @@ $1,794).
   drawn ([calibration.md](docs/benchmarks/cat40-hard/calibration.md)). Projections now go per model, arm and family
   from round 1's measured Hard costs (2 to 5 times v1 per cell) plus the measured judge cost; a resumed step opens a
   new budget run (`--new-budget-run`) sized to the cells still missing. `knobs.round-2.json` makes H2 and H3 harder.
+
+## [0.10.34] - 2026-10-06
+
+### P5 held-out records: wanted pages on, typed relation lines and the similar-page hint off
+
+Mirrors gbrain [#6017](https://github.com/garrytan/gbrain/pull/6017) (merged as `426e129ec` in v0.60.93.0) in [the P5 page](docs/benchmarks/2026-10-05-heldout-program/p5.md). Wanted pages pass: sequential writes lose 0 of 3,738 edges instead of 1,849 of 3,810, and withheld-entity recall is 1.000 over local writes and over HTTP (H4, H8), so `wanted_pages.enabled` and `wanted_pages.remote` ship on. Typed relation lines pass H1 and H2 but fail H3: the grammar minted 18 of 696,295 held-out list lines, all fact lines from unfilled template slots and dictionary usage labels, precision 0/18 (Wilson 95% [0.00, 0.18]) against 0.95, so `line_grammar.enabled` ships off and H6 does not run; a placeholder guard waits for a follow-up with its own held-out frame. The similar-page hint passes H5a but fails H5b on wrong merges (+1.25 points against a +1 bar, all in the `gpt-6.1-sol` arm), so `put_page.similar_pages` ships off. Validity ranges (H7) and the link-typing changes (H9) pass; the advisory-role guard and the post-freeze typing and lexicon changes failed their set G and set H re-checks and were removed. The P5 verdict files join the verdict index.
 
 ## [0.10.33] - 2026-10-06
 

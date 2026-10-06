@@ -1,0 +1,25 @@
+{
+ "decision_id": "p5-h8r-heldout-2026-10-05",
+ "build": "1a088e2ac (contains sweep coordinator fix 9d6b789f5; H8 code identical to e5e9aa7fd)",
+ "harness": "gbrain-evals f03bc96",
+ "draw": "h4-draw-B, seeds 31,47,59, withhold 0.2",
+ "gates": {
+  "http_on_withheld_recall": 1.0,
+  "bar_recall_ge_0.95": true,
+  "local_withheld_recall": 1.0,
+  "within_0.02_of_local": true,
+  "non_entity_targets": 0,
+  "bar_noise_0": true
+ },
+ "verdict": "pass",
+ "reported": {
+  "http_off_withheld_recall": 1.0,
+  "http_off_non_entity": 0,
+  "remote_flag_effect": "none: http-off and http-on identical (same wanted targets 134/126/127, same edges)",
+  "http_sequential_edges_lost": "2125 of 4362 edge checks (48.7%) in both http arms, 17-22 extra edges per seed; local arm 0 of 4536 lost",
+  "reference_edges_per_seed": {
+   "http": 727,
+   "local": 756
+  }
+ }
+}
