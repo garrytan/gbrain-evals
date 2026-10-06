@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.30, with gbrain master `739e5cc` (v0.60.46.0) as the product under test. Results measured at
+gbrain-evals v0.10.31, with gbrain master `739e5cc` (v0.60.46.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 

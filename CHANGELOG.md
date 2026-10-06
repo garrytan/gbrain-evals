@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [0.10.30] - 2026-10-06
+## [0.10.31] - 2026-10-06
 
 ### Cat 40 Hard round 4: questions about several accounts; the held-out run is 50k only
 
@@ -109,6 +109,12 @@ $1,794).
   drawn ([calibration.md](docs/benchmarks/cat40-hard/calibration.md)). Projections now go per model, arm and family
   from round 1's measured Hard costs (2 to 5 times v1 per cell) plus the measured judge cost; a resumed step opens a
   new budget run (`--new-budget-run`) sized to the cells still missing. `knobs.round-2.json` makes H2 and H3 harder.
+
+## [0.10.30] - 2026-10-06
+
+### P8 held-out records: write guard, semantic withdrawal, quote grounding, advertised surface
+
+Mirrors gbrain [#6027](https://github.com/garrytan/gbrain/pull/6027) (merged in v0.60.77.0) in [the P8 page](docs/benchmarks/2026-10-05-heldout-program/p8.md). Write cost and the review-gated withdrawal pass. Quote grounding failed its first sealed run (15 of 319 supported quotes wrongly flagged, Wilson upper 7.6%) and a second-custodian rescore (16 of 319). It passes a retest on fresh custodian-written synthetic sessions: 5 of 321 wrongly flagged, Wilson upper 3.59%. A retest on sealed-confirmation-v2 was stopped and is void; the corpus exposure is recorded in the v2 protocol. Narrower advertised tool surfaces fail in both arms on the sealed Cat 40 world (`starter` −8.5 points, `verbs` −9.9), so new installs keep advertising `full`. The quote-grounding runner attributes flags to spans by exact text (`flaggedSpans`), gains `--exclude-questions` and `--resume`, and the P8 dev receipts are restored. Retest spend about $15.
 
 ## [0.10.29] - 2026-10-05
 

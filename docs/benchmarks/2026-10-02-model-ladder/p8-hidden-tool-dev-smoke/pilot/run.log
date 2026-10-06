@@ -1,0 +1,6 @@
+2026-10-05T00:27:59.074Z 2 cells to run (0 already done, order task) in /workspace/gbrain-evals/eval/reports/cat40/h-smoke-pilot
+2026-10-05T00:27:59.185Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger /workspace/gbrain-evals/.budget/p8-h-smoke.sqlite
+2026-10-05T00:28:56.647Z write probe passed on every slot
+2026-10-05T00:28:56.647Z gbrain 0.60.48.0 (6c958d6e246d) ready on 1 slots, surface full
+2026-10-05T00:30:22.164Z 2/2 cells; last gpt-6-luna|c-adv-full-pilot|H02|0 success=true $0.001
+2026-10-05T00:30:22.423Z receipt /workspace/gbrain-evals/eval/reports/cat40/h-smoke-pilot/receipt-1791160222423.json

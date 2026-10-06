@@ -1,0 +1,31 @@
+{
+  "schema": "cat40-experiment-v1",
+  "gbrain_commit": "6c958d6e246d18bfbba092ae5fe787511bba76cb",
+  "slot_commit": "6c958d6e246d18bfbba092ae5fe787511bba76cb",
+  "world_digest": "79094a8a2cbb6725cae37da8a97bb16b64d7941186f5682e209ecc644b8ab510",
+  "models": [
+    "gpt-6-luna"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "label": "c-adv-full-pilot",
+  "flags": {
+    "--models": "gpt-6-luna",
+    "--arms": "gbrain",
+    "--world": "eval/data/model-ladder-wide-dev/world.json",
+    "--gbrain": "/workspace/gbrain@6c958d6e2",
+    "--gbrain-label": "c-adv-full-pilot",
+    "--surface": "full",
+    "--advertised": "full",
+    "--slots": "1",
+    "--tasks": "H01,H02",
+    "--transcripts": true,
+    "--judge": "none",
+    "--max-tool-chars": "none",
+    "--program-cap-usd": "3",
+    "--budget-ledger": ".budget/p8-h-smoke.sqlite",
+    "--out": "eval/reports/cat40/h-smoke-pilot"
+  },
+  "budget_run_id": "cat40-model-ladder-2026-10-05T00-27-59-187Z-4caa5e0b"
+}
