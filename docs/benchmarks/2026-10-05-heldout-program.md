@@ -2,7 +2,7 @@
 
 This report collects one feature program for [gbrain](https://github.com/garrytan/gbrain), a memory system for agents. Eight feature plans (P1 to P8) each change gbrain in one pull request. P0 is the evaluation plan: it measures the starting line on gbrain master and runs the held-out harness every other plan uses. Each feature idea has a preregistered decision rule, a development verdict on data the implementer may see, and a held-out verdict on sealed data that only the custodian opens. The held-out verdict sets the idea's default.
 
-This report covers the plans whose gbrain pull requests have merged: P1 (#6018), P3 (#6014) and P7 (#6019), with eight held-out decisions. Three ideas pass and ship on: dated relationships, the certified nightly contradiction check and the multi-relation planner. Four ideas lose or miss their gate, and each one ships off, ships in a safer mode or leaves its pull request. P2, P4, P5, P6 and P8 are in progress; their records join this report as each gbrain pull request lands.
+This report covers the plans whose gbrain pull requests have merged: P1 (#6018), P3 (#6014), P7 (#6019), P8 (#6027), P4 (#6015), P6 (#6112), P5 (#6017) and P2 (#6020). Across P1, P3 and P7's eight held-out decisions, three ideas pass and ship on: dated relationships, the certified nightly contradiction check and the multi-relation planner. Four ideas lose or miss their gate, and each one ships off, ships in a safer mode or leaves its pull request. P8's write guard, semantic withdrawal and quote grounding pass and ship on, and its narrower advertised surface fails. P4's pre-compaction save notice passes and ships on, and its always-loaded core memory tier fails and ships off. P6's `think` date frame passes and ships on, and its fact keys and time scope were killed in development. P5's wanted pages pass and ship on, and its typed relation lines and similar-page hint fail and ship off. P2's date-grounded extraction and speaker attribution pass and ship on, and its hub dampening fails and was removed before merge.
 
 ## How the program decides a default
 
@@ -32,26 +32,28 @@ BEAM-1M is a conversation history far too large to paste into a prompt, and stri
 
 The receipts, per-question rows and the recount script are in [`2026-10-05-heldout-program/starting-line/`](2026-10-05-heldout-program/starting-line/). Starting-line spend was $32.09.
 
+**BEAM session dates (note added 2026-10-06).** The BEAM rows above ran on a loader that dated only the first turn group of each BEAM batch, so about 96% of BEAM sessions reached gbrain and the reader without a date. BEAM dates each batch once, and the loader now gives every turn group its batch's date. They stand as measured. A rerun of BEAM-100K dev on the same build with the fixed loader, reported only, gives strict recall of all gold sessions at 5 of 47.2% (45.4% before, 2 more questions) and answer accuracy of 58.0% (57.1% before). Per question type, the changes are within ±1 question of 12 and mixed in sign. Receipt and rows: [`starting-line-beam-dates/`](2026-10-05-heldout-program/starting-line-beam-dates/beam-100k-qa/shard-0/receipt.json). BEAM-1M was not rerun.
+
 ## Program scorecard
 
 One row per idea. "Held-out verdict" is the custodian's sealed result against the preregistered bar. "Default" is what the idea ships with.
 
 | Plan | Idea | Setting | Held-out verdict | Default | gbrain PR |
 |---|---|---|---|---|---|
-| P1 | Dated typed relationships with live-only reads and as-of queries | `graph.edge_validity` | Round 1 **FAIL** (traps 101/115, recall −4.9 and −6.2 points); round 2 **PASS** on fresh phrasing | on | [#6018](https://github.com/garrytan/gbrain/pull/6018), merged, v0.60.57.0 |
+| P1 | Dated typed relationships with live-only reads and as-of queries | `graph.edge_validity` | Round 1 **FAIL** (traps 101/115, recall −4.9 and −6.2 points); round 2 **PASS** on fresh phrasing; custodian check on a third phrasing **FAIL** (traps 89/105) | on | [#6018](https://github.com/garrytan/gbrain/pull/6018), merged, v0.60.57.0 |
 | P1 | Nightly contradiction check closes superseded relationships | `dream.edge_contradictions.mode` | **PASS** for all five judge models (0 wrong closures) | `apply` for the five certified models, `propose` for others | #6018 |
 | P1 | Corrections reach every read surface (E3) | none | report-only | none | #6018 |
-| P2 | Hub dampening, date-grounded extraction, speaker attribution | in progress, see gbrain PR | in progress | in progress | [#6020](https://github.com/garrytan/gbrain/pull/6020), draft |
+| P2 | Hub dampening, date-grounded extraction, speaker attribution ([records](2026-10-05-heldout-program/p2.md)) | `extraction.date_grounding`, `facts.attribution`, `search.hub_dampening` | date grounding **PASS**, attribution **PASS**, hub dampening **FAIL** | date grounding and attribution on; hub dampening removed | [#6020](https://github.com/garrytan/gbrain/pull/6020), merged, v0.60.94.0 |
 | P3 | Use-attributed feedback weights from explicit ratings | `feedback.enabled` | world-v1 **PASS** (+2.04 NDCG@10 points); LoCoMo **FAIL** (−0.12, CI crosses 0) | off (opt-in), by decision | [#6014](https://github.com/garrytan/gbrain/pull/6014), merged, v0.60.63.0 |
 | P3 | Implicit citation signal | `feedback.implicit` | not run (gated on E1 passing both corpora) | off | #6014 |
 | P3 | Relational triplet scoring | `search.triplet_scoring` | **FAIL** (relational arm fired on 17% of questions, bar 80%) | removed | #6014 |
-| P3 | Declared single-value relations close the older value | `dream.single_value.mode` | **FAIL** (3 wrong closures, bar 0) | `propose` | #6014 |
-| P4 | Core memory tier and save before compaction | in progress, see gbrain PR | in progress | in progress | [#6015](https://github.com/garrytan/gbrain/pull/6015), draft |
-| P5 | Typed relation lines, wanted pages, similar-page hint | in progress, see gbrain PR | in progress | in progress | [#6017](https://github.com/garrytan/gbrain/pull/6017), draft |
-| P6 | Time-aware search | in progress | in progress | in progress | no PR yet |
+| P3 | Declared single-value relations close the older value | `dream.single_value.mode` | **FAIL** (3 wrong closures, bar 0); retest with the advisory-role guard: safe (0 wrong) but no correct closure measured | `propose` | #6014 |
+| P4 | Core memory tier and save before compaction ([records](2026-10-05-heldout-program/p4.md)) | `memory.pressure.enabled`, `memory.core.enabled` | pressure gate **PASS** (+11.35 points); core gate **FAIL** (`gpt-6.1-sol` −2.4, `claude-fable-5-1` −2.4) | pressure notice on; core off (opt-in) | [#6015](https://github.com/garrytan/gbrain/pull/6015), merged, v0.60.87.0 |
+| P5 | Typed relation lines, wanted pages, similar-page hint ([records](2026-10-05-heldout-program/p5.md)) | `line_grammar.*`, `wanted_pages.*`, `put_page.similar_pages` | H1, H2, H4, H5a, H7, H8, H9 **PASS**; H3 **FAIL** (precision 0/18), so H6 not run; H5b **FAIL**; set G and set H re-checks and H11 **FAIL** (guard, typing and lexicon changes removed) | wanted pages on; typed relation lines and similar-page hint off | [#6017](https://github.com/garrytan/gbrain/pull/6017), merged, v0.60.93.0 |
+| P6 | Time-aware retrieval and reading ([records](2026-10-05-heldout-program/p6.md)) | `think` date frame | date frame sealed LoCoMo **PASS** (+14.0 points), LongMemEval-M confirmation not runnable (no sealed split exists); fact keys, time scope and notes-first killed in development | date frame on | [#6112](https://github.com/garrytan/gbrain/pull/6112), merged, v0.60.88.0 |
 | P7 | Multi-relation query planner | `search.relational_planner` | **PASS** (24 better, 0 worse; +27 points strict all-hit@10) | on in `balanced` and `tokenmax` | [#6019](https://github.com/garrytan/gbrain/pull/6019), merged, v0.60.60.0 |
 | P7 | One-hop orientation | `search.relational_orient_onehop` | does not meet its rule (1 better, 0 worse, p = 1.0) | off | #6019 |
-| P8 | Write guard, semantic withdrawal, quote grounding, advertised surface | in progress, see gbrain PR | in progress | in progress | [#6027](https://github.com/garrytan/gbrain/pull/6027), draft |
+| P8 | Write guard, semantic withdrawal, quote grounding, advertised surface ([records](2026-10-05-heldout-program/p8.md)) | guard, `review_withdraw`, `think.quote_verify`, `mcp.advertised_surface` | write cost **PASS**, withdrawal **PASS**, quote grounding first run **FAIL** and fresh retest **PASS**, narrower surface **FAIL** | guard, withdrawal and quote grounding on; new installs advertise `full` | [#6027](https://github.com/garrytan/gbrain/pull/6027), merged, v0.60.77.0 |
 
 The P3 raw-query routing guard in #6014 has no preregistered experiment and no default rides on it.
 
@@ -80,6 +82,8 @@ A relationship such as "works at Acme" gets a start and an end date. Reads of "w
 
 Round 1's cause is recorded in the round-2 record: the build overfit set A. Start and end cues anywhere on a line moved employment even on investing, meeting and event lines; past-tense prose closed dated starts at an unknown date; and some transitions ("moved from A to B", "started at X") were missed. Round 2 fixes the rules, not the wording, and passed on phrasing it had never seen. In E2 all five models sit at the same ceiling, so the result certifies `apply` as safe with each of them; it does not rank them. 41 of 66 closures are dated after the true end, which is late, not wrong.
 
+**Generalization check on fresh wording (custodian, 2026-10-05).** A second custodian ran E1 again on a new phrasing set (seeds 103, 107, 109) that shares no wording with sets B and C, comparing master (`8c9a8e9a4`, which contains #6018) to the round-2 baseline `6622a119e`. It **fails** the traps gate: 89 of 105 (investment after exit 29/35, alumni meeting 27/37, advisor 33/33). The feature still lifts now-precision (0.336 → 0.768) and as-of (0.167 → 0.556), with recall unchanged and invariance 240/240. During-year F1 (+0.137) and stale-summary correction (0 in both builds) miss their bars. The cause is lexicon coverage. The employment cue list recognizes none of this set's dated join, leave and move lines (an onboarding-style join verb, a leave phrase whose phrasal verb is split by its object, and an exchange-style "A for B" move), so ended jobs never close. The former employer then stays live, which is exactly what the investment and alumni traps check. Record: [`p1-e1-sete-2026-10-05.json`](2026-10-05-heldout-verdicts/p1-e1-sete-2026-10-05.json).
+
 ### P3: retrieval feedback, triplet scoring, declared single-value relations
 
 gbrain [#6014](https://github.com/garrytan/gbrain/pull/6014) (merged, v0.60.63.0). Records: [preregistration](https://github.com/garrytan/gbrain/blob/master/docs/eval/decisions/p3-retrieval-feedback/PREREGISTRATION.md), [held-out verdicts](https://github.com/garrytan/gbrain/blob/master/docs/eval/decisions/p3-retrieval-feedback/VERDICTS.md).
@@ -101,6 +105,14 @@ gbrain [#6014](https://github.com/garrytan/gbrain/pull/6014) (merged, v0.60.63.0
 Exploratory λ = 0.2 gives +5.45 on world-v1 and −2.23 on LoCoMo. The preregistration did not say whether the cold-start and category clauses belong to E1's pass bar. Garry chose on 2026-10-05, after the sealed results, that E1's bar is the clause labelled E1, so feedback ships with `feedback.enabled=false` (opt-in, explicit ratings only). The P3 record states this as a decision, not a preregistered outcome.
 
 E4's cause: the one-hop relational parser keys on exact surface forms, so reworded questions skip the relational arm and triplet scoring never acts on them. E5's cause: the employment-start cue `EMPLOYMENT.start` also matches "took an advisory role with X", so an advisory line on a page that asserts `works_at` to X becomes a newer employment start, and the single-value rule closes the real current employer. A guard that keeps advisory and board roles from starting employment is in progress in gbrain#6017; a retest on fresh sealed material decides whether single-value closures can default to `apply`.
+
+#### Root causes of the P3 failures (custodian analysis)
+
+A second custodian reread each failed decision's sealed receipts to separate harness defects from product defects and real limits. No harness defect was found in E1, E4 or E5.
+
+- **E1 LoCoMo is a limit of the benchmark shape, not a bug.** The feedback weights apply: at λ = 0.1 the frozen arm changes 91 of the 518 scored rankings (40 better, 51 worse) in all 7 conversations, and at λ = 0.2 it changes 185 (56 better, 129 worse), so a larger λ does not help. No scored question is in the training half, and the whole run makes about one pass of embedding requests, so every arm reads the same cached vectors. The cause is that a LoCoMo conversation is a small closed set of sessions: the training half's gold sessions cover 16 to 30 of each conversation's 19 to 32 sessions, and each rated answer marks about 20 sessions, so every session collects both "useful" and "not useful" ratings. A page-level prior that ignores the query cannot say which session answers a new question. On world-v1 an entity page answers many questions, so the same prior helps.
+- **E4 is explained by parser coverage; triplet scoring itself behaves as designed.** Triplet scoring changed the ranking on all 37 questions where the relational arm fired and on none of the other 181. On the fired questions it gains +2.27 NDCG@10 points, close to the development gain at full coverage (+1.94). The arm fired on 0 of 56 attendee questions, 3 of 90 who-at-topic questions and 34 of 72 portfolio questions. Even with full parser coverage, the gain sits at about the +2.0 bar.
+- **E5 is a product defect, and a retest on fresh material shows the guard removes the wrong closures.** On a new held-out phrasing set (seeds 113, 127, 131), master without the guard applies 23 single-value closures, all wrong. Master with gbrain#6017's guard applies none and passes every E5 gate, so the retest shows the guard is safe for `apply`. It cannot show a benefit: with the guard there is no dated conflict left to close, which misses the precondition the retest preregistered (at least 10 applied closures). Because no E5 run has recorded a correct closure, `apply` has no measured benefit, and `dream.single_value.mode` stays `propose` (decision, 2026-10-05). A later report-only recheck on a third fresh set (set G, on gbrain#6017's re-frozen build `970c3088b`) applied 3 single-value closures, all correct, with 0 wrong; the default stays `propose` until a preregistered decision measures a benefit. The retest also finds a remaining defect: link typing still types a company named in a dated advisory, board or observer line as `works_at`, on master and on #6017's head. With the guard that edge has no start date, so the company shows as a current employer at every date (as-of exact 0.553 with the guard against 0.642 without it on this set). Record: [`p3-e5-setf-retest-2026-10-05.json`](2026-10-05-heldout-verdicts/p3-e5-setf-retest-2026-10-05.json).
 
 ### P7: multi-relation query planner
 
@@ -131,6 +143,20 @@ The planner plans 70% of plainly worded questions and 21% of reworded ones, the 
 
 - Starting line: [`2026-10-05-heldout-program/starting-line/`](2026-10-05-heldout-program/starting-line/) holds each shard's `receipt.json`, `run-config.json` and `rows.ndjson.gz`. `bun docs/benchmarks/2026-10-05-heldout-program/recount-starting-line.ts` recomputes [`summary.json`](2026-10-05-heldout-program/starting-line/summary.json) from the rows. The runs used `bun run eval:decide` sources `lme-s`, `locomo`, `beam-100k` and `beam-1m` on the dev split, seed 42, with an overlay of gbrain `6622a119e`, and need `OPENAI_API_KEY`.
 - Held-out aggregates: [`2026-10-05-heldout-verdicts/`](2026-10-05-heldout-verdicts/README.md). Sealed rows stay with the custodian.
-- Branch history: [`2026-10-05-heldout-program/branch-folds.md`](2026-10-05-heldout-program/branch-folds.md) lists how each plan's evaluation branch is folded into this one.
+- Branch history: [`2026-10-05-heldout-program/branch-folds.md`](2026-10-05-heldout-program/branch-folds.md) lists how each plan's evaluation branch is folded into main.
 
 Head-to-head comparisons against external memory systems, a full-context baseline and a file-agent baseline at matched cost are not part of this report.
+
+## Changelog
+
+- 2026-10-06: P4's core gate gains the complete `claude-opus-5-5` and `claude-fable-5-1` runs; P6's LongMemEval-M confirmation is recorded as not runnable (no sealed split exists).
+- 2026-10-06: P5 merged (gbrain#6017, v0.60.93.0): wanted pages ship on; typed relation lines (H3 fail) and the similar-page hint (H5b fail) ship off.
+- 2026-10-06: P6 merged (gbrain#6112, v0.60.88.0): the `think` date frame passes sealed LoCoMo and ships on.
+- 2026-10-06: P4 merged (gbrain#6015, v0.60.87.0): pressure gate PASS and on, core gate FAIL and off; the opening paragraph now lists P8 and P4 among the merged plans.
+- 2026-10-05: First publication (gbrain-evals#71). The starting line on gbrain master `6622a119e`, the held-out records of P1, P3 and P7, and the program scorecard, with P2, P4, P5, P6 and P8 listed as in progress.
+- 2026-10-05: P3 gains the custodian's root-cause analysis of E1, E4 and E5 and the E5 retest on fresh material.
+- 2026-10-05: P1 gains the custodian's E1 check on a third phrasing set (fails traps, lexicon coverage); the E5 record states that `dream.single_value.mode` stays `propose`.
+- 2026-10-05: P3 records the report-only E5 recheck on set G (3 correct closures, 0 wrong). Plans still in progress publish their records in their own pages under `2026-10-05-heldout-program/`.
+- 2026-10-06: The starting line notes that its BEAM rows ran on a loader that left most sessions undated, with a reported-only BEAM-100K dev rerun on the fixed loader.
+- 2026-10-06: P2's hub dampening (E1) fails its sealed run; the P2 row and record are updated, and gbrain#6020 drops the search-side mechanism.
+- 2026-10-06: P2 merged (gbrain#6020 as `e7f59913e`, v0.60.94.0); its verdict files join the verdict index.

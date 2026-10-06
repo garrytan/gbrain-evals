@@ -1,0 +1,724 @@
+{
+ "schema": "gbrain.bench.managed-sync-catchup/v1",
+ "label": "master-v0.60.48",
+ "commit": "HEAD@6622a119e",
+ "started_at": "2026-10-04T17:40:55.637Z",
+ "params": {
+  "files": 500,
+  "deletes": 34,
+  "history": 0,
+  "receipt_history": 0,
+  "pad_words": 0,
+  "seed": 1,
+  "rtt_ms": [
+   57
+  ],
+  "rows": [
+   "cli"
+  ],
+  "max_minutes": 10
+ },
+ "host": {
+  "cpus": 4,
+  "platform": "linux",
+  "bun": "1.4.2"
+ },
+ "rerun": "bun scripts/bench/managed-sync-catchup.ts --files 500 --deletes 34 --rtt 57 --rows cli --max-minutes 10 --label master-v0.60.48 --pg-port 55442 --proxy-port 55443 --api-port 58484 --out ~/.capy/work/bench-15/master-cli-57.json",
+ "rows": [
+  {
+   "row": "cli",
+   "rtt_target_ms": 57,
+   "managed": true,
+   "backlog_entries": 534,
+   "done": false,
+   "timed_out": true,
+   "error": null,
+   "wall_s": 600.1,
+   "entries_committed": 106,
+   "entries_noop": 0,
+   "entries_waived": null,
+   "pages_per_min": 10.6,
+   "extrapolated_full_backlog_h": 0.8,
+   "per_page_wall_ms": {
+    "p50": 0,
+    "p90": 14646.8,
+    "import_p50": 0,
+    "delete_p50": null
+   },
+   "admission_to_commit_ms": {
+    "p50": 3189.3,
+    "p90": 4089.9,
+    "p99": 5227.9
+   },
+   "requests_by_state": {
+    "managed_sync_import:committed": 106,
+    "managed_sync_import:running": 3
+   },
+   "cli": {
+    "invocations": 1,
+    "wall_ms_p50": 600012.3,
+    "wall_ms_p90": 600012.3,
+    "pages_per_invocation": 106,
+    "writer_pending_exits": 0,
+    "first_stderr_ms_p50": 332.4,
+    "e1_first_progress_ms": 7720.1,
+    "failed_runs": {},
+    "statuses": {
+     "null/null": 1
+    }
+   },
+   "reentry": null,
+   "trace": {
+    "round_trips": 22267,
+    "round_trips_per_page": 210.1,
+    "describe_round_trips": 857,
+    "connections_opened": 8,
+    "connect_ms_p50": 188.5,
+    "db_ms_per_page": 12832.9,
+    "by_process": {
+     "cli-sync": {
+      "round_trips": 22267,
+      "per_page": 210.1,
+      "ms": 1360292.1,
+      "processes": 1
+     }
+    },
+    "round_trips_by_class": {
+     "connection-setup": 0.2,
+     "other-control": 29.3,
+     "cursor": 8.9,
+     "page-data": 39.7,
+     "txn-control": 45.5,
+     "journal": 14.7,
+     "guards+counters": 4.8,
+     "consumer-background": 67.2
+    },
+    "sync_process_by_class": {
+     "connection-setup": {
+      "round_trips": 16,
+      "per_page": 0.2,
+      "share": 0.1
+     },
+     "other-control": {
+      "round_trips": 2957,
+      "per_page": 27.9,
+      "share": 13.8
+     },
+     "cursor": {
+      "round_trips": 883,
+      "per_page": 8.3,
+      "share": 4.1
+     },
+     "page-data": {
+      "round_trips": 3839,
+      "per_page": 36.2,
+      "share": 17.9
+     },
+     "txn-control": {
+      "round_trips": 4810,
+      "per_page": 45.4,
+      "share": 22.5
+     },
+     "journal": {
+      "round_trips": 1445,
+      "per_page": 13.6,
+      "share": 6.7
+     },
+     "guards+counters": {
+      "round_trips": 458,
+      "per_page": 4.3,
+      "share": 2.1
+     },
+     "consumer-background": {
+      "round_trips": 7002,
+      "per_page": 66.1,
+      "share": 32.7
+     }
+    },
+    "errors": {},
+    "top_statements": [
+     {
+      "sql": "begin",
+      "count": 1520,
+      "total_ms": 91150.2,
+      "per_page": 14.3,
+      "by_process": {
+       "cli-sync": 1520
+      }
+     },
+     {
+      "sql": "commit",
+      "count": 1519,
+      "total_ms": 91181.2,
+      "per_page": 14.3,
+      "by_process": {
+       "cli-sync": 1519
+      }
+     },
+     {
+      "sql": "SELECT set_config('?','?',true)",
+      "count": 1486,
+      "total_ms": 89210.2,
+      "per_page": 14,
+      "by_process": {
+       "cli-sync": 1486
+      }
+     },
+     {
+      "sql": "SELECT c.* FROM persistence_topology_changes c JOIN persistence_worktrees w ON w.id=(c.recovery->>'?')::uuid WHERE c.recovery IS NOT NULL AND w.owner_host_id=$N",
+      "count": 1200,
+      "total_ms": 72163.9,
+      "per_page": 11.3,
+      "by_process": {
+       "cli-sync": 1200
+      }
+     },
+     {
+      "sql": "WITH chosen AS ( SELECT p.* FROM pages p WHERE p.slug=$N AND p.source_id=$N ORDER BY (p.slug=$N) DESC, (p.source_id=$N) DESC, p.source_id ASC LIMIT N ) SELECT p",
+      "count": 749,
+      "total_ms": 44968.3,
+      "per_page": 7.1,
+      "by_process": {
+       "cli-sync": 749
+      }
+     },
+     {
+      "sql": "SELECT r.* FROM persistence_requests r LEFT JOIN persistence_worktrees w ON w.id=r.worktree_id WHERE r.state='?' AND (r.worktree_id IS NULL OR (w.owner_host_id=",
+      "count": 636,
+      "total_ms": 38501.3,
+      "per_page": 6,
+      "by_process": {
+       "cli-sync": 636
+      }
+     },
+     {
+      "sql": "SELECT brain_id,enabled,to_jsonb(persistence_brain)->>'?' AS mode_epoch FROM persistence_brain WHERE singleton=N",
+      "count": 601,
+      "total_ms": 36334.6,
+      "per_page": 5.7,
+      "by_process": {
+       "cli-sync": 601
+      }
+     },
+     {
+      "sql": "SELECT DISTINCT ON (local_path) * FROM ( SELECT h.local_path,s.source_id,s.source_incarnation,s.worktree_id,s.topology_generation FROM persistence_host_bindings",
+      "count": 601,
+      "total_ms": 36142.6,
+      "per_page": 5.7,
+      "by_process": {
+       "cli-sync": 601
+      }
+     },
+     {
+      "sql": "SELECT e.* FROM persistence_effects e JOIN persistence_worktrees w ON w.id=e.worktree_id WHERE e.recovery IS NOT NULL AND w.owner_host_id=$N::uuid AND e.next_at",
+      "count": 600,
+      "total_ms": 37561.1,
+      "per_page": 5.7,
+      "by_process": {
+       "cli-sync": 600
+      }
+     },
+     {
+      "sql": "SELECT r.* FROM persistence_requests r JOIN persistence_worktrees w ON w.id=r.worktree_id WHERE w.owner_host_id=$N::uuid AND r.recovery IS NOT NULL AND NOT(r.wo",
+      "count": 600,
+      "total_ms": 37492,
+      "per_page": 5.7,
+      "by_process": {
+       "cli-sync": 600
+      }
+     },
+     {
+      "sql": "SELECT EXISTS (SELECT N FROM persistence_requests r LEFT JOIN persistence_worktrees w ON w.id=r.worktree_id WHERE r.state='?' AND (r.worktree_id IS NULL OR (w.o",
+      "count": 600,
+      "total_ms": 37663.4,
+      "per_page": 5.7,
+      "by_process": {
+       "cli-sync": 600
+      }
+     },
+     {
+      "sql": "WITH expired AS ( SELECT r.id FROM persistence_requests r WHERE r.state='?' AND r.recovery IS NULL AND r.publication_started=false AND r.claim_expires_at<now() ",
+      "count": 600,
+      "total_ms": 36013.8,
+      "per_page": 5.7,
+      "by_process": {
+       "cli-sync": 600
+      }
+     },
+     {
+      "sql": "SELECT s.id AS source_id,j.source_incarnation,j.slug,j.revision,p.page_kind FROM (SELECT source_incarnation,slug,revision,updated_at FROM page_projection_jobs j",
+      "count": 600,
+      "total_ms": 36077.8,
+      "per_page": 5.7,
+      "by_process": {
+       "cli-sync": 600
+      }
+     },
+     {
+      "sql": "SELECT f.* FROM persistence_worktree_refreshes f JOIN persistence_worktrees w ON w.id=f.worktree_id WHERE w.owner_host_id=$N::uuid AND f.state IN ('?','?','?') ",
+      "count": 600,
+      "total_ms": 37459.8,
+      "per_page": 5.7,
+      "by_process": {
+       "cli-sync": 600
+      }
+     },
+     {
+      "sql": "SELECT e.* FROM persistence_effects e LEFT JOIN persistence_worktrees w ON w.id=e.worktree_id WHERE (e.state='?' OR e.state='?' AND e.claim_expires_at<now()) AN",
+      "count": 600,
+      "total_ms": 36141.3,
+      "per_page": 5.7,
+      "by_process": {
+       "cli-sync": 600
+      }
+     },
+     {
+      "sql": "SELECT lane,revoked_at,grant_ceiling FROM persistence_local_writers WHERE id=$N::uuid",
+      "count": 430,
+      "total_ms": 25608.9,
+      "per_page": 4.1,
+      "by_process": {
+       "cli-sync": 430
+      }
+     },
+     {
+      "sql": "WITH chosen AS ( SELECT p.* FROM pages p WHERE p.slug=$N AND p.source_id=$N AND p.deleted_at IS NULL ORDER BY (p.slug=$N) DESC, (p.source_id=$N) DESC, p.source_",
+      "count": 424,
+      "total_ms": 25540.5,
+      "per_page": 4,
+      "by_process": {
+       "cli-sync": 424
+      }
+     },
+     {
+      "sql": "SELECT id,slug,source_path FROM pages WHERE source_id=$N AND source_path=ANY($N::text[])",
+      "count": 393,
+      "total_ms": 24979.1,
+      "per_page": 3.7,
+      "by_process": {
+       "cli-sync": 393
+      }
+     },
+     {
+      "sql": "SELECT value FROM config WHERE key = $N",
+      "count": 341,
+      "total_ms": 20459.9,
+      "per_page": 3.2,
+      "by_process": {
+       "cli-sync": 341
+      }
+     },
+     {
+      "sql": "SELECT key, value FROM config",
+      "count": 221,
+      "total_ms": 13252.6,
+      "per_page": 2.1,
+      "by_process": {
+       "cli-sync": 221
+      }
+     },
+     {
+      "sql": "SELECT s.source_id,s.source_incarnation,s.worktree_id,s.relative_path, s.topology_generation::text AS topology_generation,w.owner_host_id,w.owner_epoch::text AS",
+      "count": 218,
+      "total_ms": 13065.5,
+      "per_page": 2.1,
+      "by_process": {
+       "cli-sync": 218
+      }
+     },
+     {
+      "sql": "SELECT lane,revoked_at,grant_ceiling FROM persistence_local_writers WHERE id=$N::uuid FOR SHARE",
+      "count": 216,
+      "total_ms": 12879.9,
+      "per_page": 2,
+      "by_process": {
+       "cli-sync": 216
+      }
+     },
+     {
+      "sql": "UPDATE pages SET text_projection_revision=knowledge_revision, search_vector=setweight(to_tsvector('?',COALESCE(title,'?')),'?') || setweight(to_tsvector('?',$N:",
+      "count": 212,
+      "total_ms": 12831.2,
+      "per_page": 2,
+      "by_process": {
+       "cli-sync": 212
+      }
+     },
+     {
+      "sql": "WITH page_state AS ( SELECT id FROM pages WHERE slug = $N AND source_id = $N FOR KEY SHARE ), inserted AS ( INSERT INTO timeline_entries (page_id, date, source,",
+      "count": 212,
+      "total_ms": 12806.3,
+      "per_page": 2,
+      "by_process": {
+       "cli-sync": 212
+      }
+     },
+     {
+      "sql": "SELECT completed_keys FROM op_checkpoints WHERE op=$N AND fingerprint=$N",
+      "count": 178,
+      "total_ms": 10593.1,
+      "per_page": 1.7,
+      "by_process": {
+       "cli-sync": 178
+      }
+     },
+     {
+      "sql": "UPDATE op_checkpoints SET completed_keys=$N::text::jsonb,updated_at=now() WHERE op=$N AND fingerprint=$N AND completed_keys=$N::text::jsonb RETURNING fingerprin",
+      "count": 175,
+      "total_ms": 10492.6,
+      "per_page": 1.7,
+      "by_process": {
+       "cli-sync": 175
+      }
+     },
+     {
+      "sql": "UPDATE op_checkpoints SET updated_at=now() WHERE op=$N AND fingerprint=$N",
+      "count": 175,
+      "total_ms": 10429.2,
+      "per_page": 1.7,
+      "by_process": {
+       "cli-sync": 175
+      }
+     },
+     {
+      "sql": "SELECT state,error_code,error_message,completed_at,updated_at,blocked_reason,outcome FROM persistence_requests WHERE id=$N::uuid",
+      "count": 172,
+      "total_ms": 10316.2,
+      "per_page": 1.6,
+      "by_process": {
+       "cli-sync": 172
+      }
+     },
+     {
+      "sql": "SELECT to_regclass('?') IS NOT NULL AS present",
+      "count": 146,
+      "total_ms": 8793.4,
+      "per_page": 1.4,
+      "by_process": {
+       "cli-sync": 146
+      }
+     },
+     {
+      "sql": "SELECT p.source_id,p.source_incarnation,s.local_path AS source_root, h.local_path AS worktree_root,b.relative_path FROM shared_skill_packs p JOIN sources s ON s",
+      "count": 145,
+      "total_ms": 10478.7,
+      "per_page": 1.4,
+      "by_process": {
+       "cli-sync": 145
+      }
+     },
+     {
+      "sql": "SELECT incarnation,archived FROM sources WHERE id=$N FOR SHARE",
+      "count": 143,
+      "total_ms": 8544.5,
+      "per_page": 1.3,
+      "by_process": {
+       "cli-sync": 143
+      }
+     },
+     {
+      "sql": "SELECT N FROM op_checkpoints WHERE op=$N AND fingerprint=$N",
+      "count": 140,
+      "total_ms": 8359.4,
+      "per_page": 1.3,
+      "by_process": {
+       "cli-sync": 140
+      }
+     },
+     {
+      "sql": "SELECT enabled FROM persistence_brain WHERE singleton=N",
+      "count": 112,
+      "total_ms": 6705.7,
+      "per_page": 1.1,
+      "by_process": {
+       "cli-sync": 112
+      }
+     },
+     {
+      "sql": "SELECT local_path FROM sources WHERE id=$N",
+      "count": 109,
+      "total_ms": 6550.9,
+      "per_page": 1,
+      "by_process": {
+       "cli-sync": 109
+      }
+     },
+     {
+      "sql": "SELECT id, slug FROM pages WHERE source_id = $N AND deleted_at IS NULL AND (content_hash = $N OR (frontmatter->>'?' = $N AND $N::text IS NOT NULL)) AND ($N::tex",
+      "count": 109,
+      "total_ms": 6835.7,
+      "per_page": 1,
+      "by_process": {
+       "cli-sync": 109
+      }
+     },
+     {
+      "sql": "SELECT id, name, local_path, last_commit, last_sync_at, config, created_at, contextual_retrieval_mode, trust_frontmatter_overrides FROM sources WHERE id = $N",
+      "count": 109,
+      "total_ms": 6552.7,
+      "per_page": 1,
+      "by_process": {
+       "cli-sync": 109
+      }
+     },
+     {
+      "sql": "SELECT set_config('?',$N,true),set_config('?',$N,true),set_config('?',$N,true)",
+      "count": 107,
+      "total_ms": 6379,
+      "per_page": 1,
+      "by_process": {
+       "cli-sync": 107
+      }
+     },
+     {
+      "sql": "INSERT INTO pages (source_id, slug, type, page_kind, title, compiled_truth, timeline, frontmatter, content_hash, updated_at, effective_date, effective_date_sour",
+      "count": 107,
+      "total_ms": 6579.6,
+      "per_page": 1,
+      "by_process": {
+       "cli-sync": 107
+      }
+     },
+     {
+      "sql": "UPDATE pages SET contextual_retrieval_mode = $N, corpus_generation = $N, updated_at = now() WHERE source_id = $N AND slug = $N AND deleted_at IS NULL",
+      "count": 107,
+      "total_ms": 6468.6,
+      "per_page": 1,
+      "by_process": {
+       "cli-sync": 107
+      }
+     },
+     {
+      "sql": "DELETE FROM content_chunks WHERE page_id = (SELECT id FROM pages WHERE slug = $N AND source_id = $N)",
+      "count": 107,
+      "total_ms": 6417.9,
+      "per_page": 1,
+      "by_process": {
+       "cli-sync": 107
+      }
+     }
+    ],
+    "re_entry": {
+     "processes": 1,
+     "statements_per_process_p50": 22267,
+     "statements_before_first_admission_p50": 1070,
+     "ms_from_first_statement_to_first_admission_p50": 65421.1
+    },
+    "pg_stat_statements_calls_ex_txn": 18175,
+    "traced_executions_ex_txn": 18150,
+    "reconciliation_pct": -0.1
+   },
+   "pg_stat_statements": {
+    "available": true,
+    "calls": 19747,
+    "calls_ex_txn": 18175,
+    "total_ms": 13713.3,
+    "top": [
+     {
+      "query": "begin",
+      "calls": 1520,
+      "total_ms": 2.7
+     },
+     {
+      "query": "SELECT set_config($1,$2,$3)",
+      "calls": 1486,
+      "total_ms": 20.7
+     },
+     {
+      "query": "SELECT c.* FROM persistence_topology_changes c JOIN persistence_worktrees w ON w.id=(c.recovery->>$4)::uuid WHERE c.recovery IS NOT NULL AND w.owner_host_id=$1::uuid AND ($2::uuid IS NULL OR c.id>$2::",
+      "calls": 1200,
+      "total_ms": 25.1
+     },
+     {
+      "query": "WITH chosen AS ( SELECT p.* FROM pages p WHERE p.slug=$1 AND p.source_id=$2 ORDER BY (p.slug=$1) DESC, (p.source_id=$3) DESC, p.source_id ASC LIMIT $4 ) SELECT p.*, (SELECT s.incarnation FROM sources ",
+      "calls": 749,
+      "total_ms": 79
+     },
+     {
+      "query": "SELECT r.* FROM persistence_requests r LEFT JOIN persistence_worktrees w ON w.id=r.worktree_id WHERE r.state=$3 AND (r.worktree_id IS NULL OR (w.owner_host_id=$1::uuid AND w.state=$4)) AND (r.worktree",
+      "calls": 636,
+      "total_ms": 34.4
+     },
+     {
+      "query": "SELECT brain_id, enabled, to_jsonb(persistence_brain)->>$1 AS mode_epoch FROM persistence_brain WHERE singleton=$2",
+      "calls": 602,
+      "total_ms": 33
+     },
+     {
+      "query": "SELECT DISTINCT ON (local_path) * FROM ( SELECT h.local_path,s.source_id,s.source_incarnation,s.worktree_id,s.topology_generation FROM persistence_host_bindings h JOIN persistence_source_bindings s ON",
+      "calls": 601,
+      "total_ms": 45.7
+     },
+     {
+      "query": "SELECT e.* FROM persistence_effects e JOIN persistence_worktrees w ON w.id=e.worktree_id WHERE e.recovery IS NOT NULL AND w.owner_host_id=$1::uuid AND e.next_attempt_at<=now() AND ($2::bigint IS NULL ",
+      "calls": 600,
+      "total_ms": 22.3
+     },
+     {
+      "query": "SELECT r.* FROM persistence_requests r JOIN persistence_worktrees w ON w.id=r.worktree_id WHERE w.owner_host_id=$1::uuid AND r.recovery IS NOT NULL AND NOT(r.worktree_id::text=ANY($2::text[])) AND NOT",
+      "calls": 600,
+      "total_ms": 15.9
+     },
+     {
+      "query": "SELECT e.* FROM persistence_effects e LEFT JOIN persistence_worktrees w ON w.id=e.worktree_id WHERE (e.state=$2 OR e.state=$3 AND e.claim_expires_at<now()) AND e.next_attempt_at<=now() AND (e.worktree",
+      "calls": 600,
+      "total_ms": 11.1
+     },
+     {
+      "query": "SELECT f.* FROM persistence_worktree_refreshes f JOIN persistence_worktrees w ON w.id=f.worktree_id WHERE w.owner_host_id=$1::uuid AND f.state IN ($2,$3,$4) ORDER BY f.created_at LIMIT $5",
+      "calls": 600,
+      "total_ms": 10.6
+     },
+     {
+      "query": "SELECT EXISTS (SELECT $3 FROM persistence_requests r LEFT JOIN persistence_worktrees w ON w.id=r.worktree_id WHERE r.state=$4 AND (r.worktree_id IS NULL OR (w.owner_host_id=$1::uuid AND w.state=$5)) A",
+      "calls": 600,
+      "total_ms": 26.7
+     },
+     {
+      "query": "WITH expired AS ( SELECT r.id FROM persistence_requests r WHERE r.state=$2 AND r.recovery IS NULL AND r.publication_started=$3 AND r.claim_expires_at<now() AND set_config($4,$5,$6)=$7 AND (r.worktree_",
+      "calls": 600,
+      "total_ms": 31.4
+     },
+     {
+      "query": "SELECT s.id AS source_id,j.source_incarnation,j.slug,j.revision,p.page_kind FROM (SELECT source_incarnation,slug,revision,updated_at FROM page_projection_jobs j WHERE (j.reason IS DISTINCT FROM $2 OR ",
+      "calls": 600,
+      "total_ms": 17.8
+     },
+     {
+      "query": "SELECT lane,revoked_at,grant_ceiling FROM persistence_local_writers WHERE id=$1::uuid",
+      "calls": 430,
+      "total_ms": 14.7
+     },
+     {
+      "query": "WITH chosen AS ( SELECT p.* FROM pages p WHERE p.slug=$1 AND p.source_id=$2 AND p.deleted_at IS NULL ORDER BY (p.slug=$1) DESC, (p.source_id=$3) DESC, p.source_id ASC LIMIT $4 ) SELECT p.*, (SELECT s.",
+      "calls": 424,
+      "total_ms": 115
+     },
+     {
+      "query": "SELECT id,slug,source_path FROM pages WHERE source_id=$1 AND source_path=ANY($2::text[])",
+      "calls": 393,
+      "total_ms": 11.5
+     },
+     {
+      "query": "SELECT value FROM config WHERE key = $1",
+      "calls": 346,
+      "total_ms": 7.9
+     },
+     {
+      "query": "SELECT key, value FROM config",
+      "calls": 221,
+      "total_ms": 4.8
+     },
+     {
+      "query": "SELECT s.source_id,s.source_incarnation,s.worktree_id,s.relative_path, s.topology_generation::text AS topology_generation,w.owner_host_id,w.owner_epoch::text AS owner_epoch,w.state, h.local_path,h.coo",
+      "calls": 218,
+      "total_ms": 9.9
+     },
+     {
+      "query": "SELECT lane,revoked_at,grant_ceiling FROM persistence_local_writers WHERE id=$1::uuid FOR SHARE",
+      "calls": 216,
+      "total_ms": 7.8
+     },
+     {
+      "query": "UPDATE pages SET text_projection_revision=knowledge_revision, search_vector=setweight(to_tsvector($5,COALESCE(title,$6)),$7) || setweight(to_tsvector($8,$3::text),$9) WHERE source_id=$1 AND slug=$2 AN",
+      "calls": 212,
+      "total_ms": 139.9
+     },
+     {
+      "query": "SELECT completed_keys FROM op_checkpoints WHERE op=$1 AND fingerprint=$2",
+      "calls": 178,
+      "total_ms": 21.6
+     },
+     {
+      "query": "UPDATE op_checkpoints SET completed_keys=$4::text::jsonb,updated_at=now() WHERE op=$1 AND fingerprint=$2 AND completed_keys=$3::text::jsonb RETURNING fingerprint",
+      "calls": 175,
+      "total_ms": 70.4
+     },
+     {
+      "query": "UPDATE op_checkpoints SET updated_at=now() WHERE op=$1 AND fingerprint=$2",
+      "calls": 175,
+      "total_ms": 37.8
+     }
+    ]
+   },
+   "guard_wait": {
+    "statements": 78,
+    "total_ms": 4645.8,
+    "per_page_ms": 43.8,
+    "p50_ms": 59.5,
+    "max_ms": 60.8
+   },
+   "claims": {
+    "claims_by_process": {
+     "cli-sync": 36
+    },
+    "publications_by_process": {
+     "cli-sync": 106
+    },
+    "released_unpublished_by_process": {}
+   },
+   "lock_waits": {
+    "samples": 115,
+    "sample_every_ms": 100,
+    "by_holder": [
+     {
+      "samples": 48,
+      "waiting": "UPDATE persistence_requests r SET claim_expires_at=now()+($N::double precision*interval '?'),updated_at=now() FROM unnest($N::uuid[],$N::uuid[]) AS t(id,token) ",
+      "blocker_app": "cli-sync",
+      "blocker_query": "UPDATE persistence_counters SET outstanding_count=outstanding_count-N,intent_bytes=intent_bytes-$N WHERE key=ANY($N::text[])",
+      "blocker_state": "idle in transaction"
+     },
+     {
+      "samples": 36,
+      "waiting": "UPDATE persistence_requests r SET claim_expires_at=now()+($N::double precision*interval '?'),updated_at=now() FROM unnest($N::uuid[],$N::uuid[]) AS t(id,token) ",
+      "blocker_app": "cli-sync",
+      "blocker_query": "SELECT COALESCE(SUM(octet_length(data::text)+octet_length(kind)+N),N)::text AS bytes FROM persistence_effects WHERE request_id=$N::uuid",
+      "blocker_state": "idle in transaction"
+     },
+     {
+      "samples": 31,
+      "waiting": "UPDATE persistence_requests r SET claim_expires_at=now()+($N::double precision*interval '?'),updated_at=now() FROM unnest($N::uuid[],$N::uuid[]) AS t(id,token) ",
+      "blocker_app": "cli-sync",
+      "blocker_query": "UPDATE persistence_requests SET state=$N,outcome=$N::text::jsonb, error_code=$N,error_message=$N,error_detail=COALESCE($N::text::jsonb,error_detail),completed_a",
+      "blocker_state": "idle in transaction"
+     }
+    ]
+   },
+   "db_growth_bytes_per_page": 18934,
+   "db_size_bytes": 17292311,
+   "persistence_counters": [
+    {
+     "key": "brain",
+     "outstanding": 3,
+     "lifetime_ids": 109,
+     "intent_bytes": 6611,
+     "terminal_bytes": 1785856
+    },
+    {
+     "key": "principal:local_cli:98d61154-b6b0-4b1d-a62d-12a359b5286f",
+     "outstanding": 3,
+     "lifetime_ids": 109,
+     "intent_bytes": 6611,
+     "terminal_bytes": 1785856
+    },
+    {
+     "key": "worktree:dd2b376c-cb4f-4691-a8c9-cb5b5bd301ce",
+     "outstanding": 0,
+     "lifetime_ids": 0,
+     "intent_bytes": 0,
+     "terminal_bytes": 0
+    }
+   ],
+   "capacity_headroom": {
+    "terminal_bytes_per_request": 16384,
+    "brain_lifetime_ids_used_pct": 0,
+    "principal_terminal_bytes_used_pct": 0.1,
+    "full_backlog_principal_terminal_bytes_pct": 0.7,
+    "full_backlog_principal_lifetime_ids_pct": 0.3
+   },
+   "rtt_measured_ms": 59.5,
+   "cli_is_owner_host": true
+  }
+ ],
+ "finished_at": "2026-10-04T17:51:05.454Z"
+}

@@ -1,0 +1,137 @@
+{
+  "models": [
+    "gpt-6-luna"
+  ],
+  "arms": [
+    "b6622a-surface-starter"
+  ],
+  "tasks": [
+    "H01",
+    "H02",
+    "H03",
+    "H04",
+    "H05",
+    "H06",
+    "H07",
+    "H08",
+    "H09",
+    "H10",
+    "H11",
+    "H12",
+    "H13",
+    "H14",
+    "H15",
+    "H16",
+    "H17",
+    "H18",
+    "H19",
+    "H20"
+  ],
+  "families": [
+    "H"
+  ],
+  "success": {
+    "gpt-6-luna": {
+      "b6622a-surface-starter": 0
+    }
+  },
+  "by_family": {
+    "H": {
+      "gpt-6-luna": {
+        "b6622a-surface-starter": 0
+      }
+    }
+  },
+  "by_stratum": {
+    "hidden-tool": {
+      "gpt-6-luna": {
+        "b6622a-surface-starter": 0
+      }
+    }
+  },
+  "capability": {
+    "gpt-6-luna": null
+  },
+  "advantage": {},
+  "pooled_advantage": {
+    "value": null,
+    "ci95": [
+      null,
+      null
+    ]
+  },
+  "slope": {
+    "value": null,
+    "ci95": [
+      null,
+      null
+    ],
+    "n_models": 0
+  },
+  "family_slopes": {
+    "H": {
+      "value": null,
+      "ci95": [
+        null,
+        null
+      ]
+    }
+  },
+  "safety": {
+    "b6622a-surface-starter": {
+      "output_leaks": 0,
+      "context_exposures": 0,
+      "unsafe_writes": 0,
+      "c_runs": 0
+    }
+  },
+  "efficiency": {
+    "gpt-6-luna": {
+      "b6622a-surface-starter": {
+        "usd_per_task": 0.007245612500000001,
+        "usd_per_success": null,
+        "p50_s": 345.322,
+        "p95_s": 361.794,
+        "turns": 7.45
+      }
+    }
+  },
+  "claims": {
+    "b6622a-surface-starter": {
+      "unsupported_per_answer": null,
+      "contradicted_per_answer": null,
+      "judged": 0
+    }
+  },
+  "missed_evidence": {
+    "b6622a-surface-starter": 0.15
+  },
+  "cost_split": {
+    "gpt-6-luna": {
+      "b6622a-surface-starter": {
+        "uncached_input": 0.005075555,
+        "cache_write": 0,
+        "cache_read": 0.0012044445,
+        "output": 0.0005909,
+        "gbrain_provider_calls": 0.00037471300000000004,
+        "unsplit": 0,
+        "total": 0.007245612500000002
+      }
+    }
+  },
+  "tool_chars": {
+    "gpt-6-luna": {
+      "b6622a-surface-starter": {
+        "context_pack": 452.24999999999994,
+        "get_page": 2584.7,
+        "search": 129845.45,
+        "query": 8836.6,
+        "list_pages": 5663.500000000001,
+        "get_backlinks": 0.6,
+        "whoami": 355
+      }
+    }
+  },
+  "cells": 20,
+  "usd": 0.14491225000000002
+}

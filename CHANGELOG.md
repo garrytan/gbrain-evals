@@ -2,6 +2,95 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.35] - 2026-10-06
+
+### P2 held-out records, the P4 core-gate remainder and P6's LongMemEval-M confirmation
+
+**P2: date-grounded extraction and speaker attribution on, hub dampening removed.** Mirrors gbrain [#6020](https://github.com/garrytan/gbrain/pull/6020) (merged as `e7f59913e` in v0.60.94.0) in [the P2 page](docs/benchmarks/2026-10-05-heldout-program/p2.md). Date-grounded extraction passes E2 on 7 sealed LoCoMo conversations (1,076 questions): saved facts with an unresolved relative date fall from 8.95% to 2.05% (−77% relative, CI [−8.3, −5.5] points), temporal QA holds (+0.8 [−1.2, +2.7]) and overall QA rises (+1.2 [+0.6, +1.7]); per-prompt checks turn it on for dream synthesis, `extract_atoms` and `propose_takes`, and life chronicle events stay opt-in after missing criterion (a) on a floor. Speaker attribution passes E3 on 60 sealed synthetic conversations: assistant-said QA rises from 44.1% to 95.8% (+51.7 [+42.9, +60.3]) with every guard passing, at about 41% more saved facts per conversation. Hub dampening at H = 32 fails E1 on all 12 cells of sealed hub-world seeds 2 and 3: both rivals beat it on concept nDCG@5 and hub-as-answer falls 10.0 to 36.2 points against a −0.5 guard, so gbrain#6020 removed the search-side mechanism before merge. The three P2 verdict files join the verdict index.
+
+**P4 core gate, report-only models complete.** The `claude-opus-5-5` and `claude-fable-5-1` runs that stopped at their budget caps were resumed to completion on all 14 sealed BEAM-100K conversations (56 questions, $197): Opus 89.1% → 89.4%, +0.3 points [−5.9, +6.5]; Fable 89.3% → 86.8%, −2.4 [−8.9, +4.2]. The earlier partial figures (+3.4, +2.3) did not hold. Fable is a second model below zero if all four models gate; the verdict is FAIL either way and core memory stays off. The four-model custodian aggregate, `p4-core-heldout-2026-10-06.json`, joins the verdict index, and the P4 page and the program scorecard cite it.
+
+**P6 LongMemEval-M confirmation: not runnable.** The preregistration leaves the sealed LongMemEval-M split to the eval harness owner, and none was ever defined: the frozen harness `cf270c2` marks every LongMemEval question id as development data (`lme-s.json`, `dev_fraction` 1; S and M share ids), and its memory-qa runner has no LongMemEval-M path. P6 development also used 470 LongMemEval-M questions. No run was made ($0); the sealed LoCoMo pass stands as P6's evidence.
+
+## [0.10.34] - 2026-10-06
+
+### P5 held-out records: wanted pages on, typed relation lines and the similar-page hint off
+
+Mirrors gbrain [#6017](https://github.com/garrytan/gbrain/pull/6017) (merged as `426e129ec` in v0.60.93.0) in [the P5 page](docs/benchmarks/2026-10-05-heldout-program/p5.md). Wanted pages pass: sequential writes lose 0 of 3,738 edges instead of 1,849 of 3,810, and withheld-entity recall is 1.000 over local writes and over HTTP (H4, H8), so `wanted_pages.enabled` and `wanted_pages.remote` ship on. Typed relation lines pass H1 and H2 but fail H3: the grammar minted 18 of 696,295 held-out list lines, all fact lines from unfilled template slots and dictionary usage labels, precision 0/18 (Wilson 95% [0.00, 0.18]) against 0.95, so `line_grammar.enabled` ships off and H6 does not run; a placeholder guard waits for a follow-up with its own held-out frame. The similar-page hint passes H5a but fails H5b on wrong merges (+1.25 points against a +1 bar, all in the `gpt-6.1-sol` arm), so `put_page.similar_pages` ships off. Validity ranges (H7) and the link-typing changes (H9) pass; the advisory-role guard and the post-freeze typing and lexicon changes failed their set G and set H re-checks and were removed. The P5 verdict files join the verdict index.
+
+## [0.10.33] - 2026-10-06
+
+### P6 held-out records: the `think` date frame ships on
+
+Mirrors gbrain [#6112](https://github.com/garrytan/gbrain/pull/6112) (merged as `43b0adb69` in v0.60.88.0) in [the P6 page](docs/benchmarks/2026-10-05-heldout-program/p6.md). The date frame gives `think` the current date and the content dates of the page blocks it reads. On sealed LoCoMo (7 conversations, 1,399 questions) judged accuracy rises from 74.2% to 88.2%, +14.0 points with a clustered 95% CI of [+11.8, +16.2], 229 wins and 33 losses; temporal questions go from 27 to 199 of 221, and retrieval is identical in both arms. The first sealed pass stopped at its $80 ledger cap after 4 of 7 conversations, and the 142 rows whose `think` call the cap refused were answered again in a second pass, so every question has one answer; spend was about $162. `think` p95 latency, measured on 150 LongMemEval-S development questions because the sealed lane times retrieval only, has a ratio of 0.93 [0.88, 1.03], within the +20% bar. The LongMemEval-M sealed confirmation is pending. Fact keys failed the `tokenmax` gate on LoCoMo development data and stay a recorded negative result; time scope and notes-first reading were killed in development. The LoCoMo verdict file joins the verdict index.
+
+## [0.10.32] - 2026-10-06
+
+### P4 held-out records: pre-compaction save notice on, core memory tier off
+
+Mirrors gbrain [#6015](https://github.com/garrytan/gbrain/pull/6015) (merged as `66cf3f589` in v0.60.87.0) in [the P4 page](docs/benchmarks/2026-10-05-heldout-program/p4.md). The growth-aware save notice passes its sealed pressure gate on BEAM-500K with `claude-sonnet-5-5`: 51.7% → 63.0%, +11.35 points [+8.3, +14.4] over 460 paired questions, with no question type's interval entirely below −2.0. It costs $0.87 instead of $0.68 per question and $1.38 instead of $1.32 per correct answer, and ships on. The pressure gate ran before the BEAM loader's date fix (0.10.31); both arms saw the same headers, so the paired verdict stands, but the temporal-reasoning and event-ordering breakdowns were measured with most session dates hidden. The always-loaded core memory tier fails its sealed core gate on BEAM-100K: `gpt-6.1-sol` −2.4 points [−5.4, +0.3], from an instruction-following drop, against a bar of at least 0 on every model; `claude-sonnet-5-5` is +4.6 [−0.4, +10.7]. Core ships off as an opt-in. The `claude-opus-5-5` and `claude-fable-5-1` core runs stopped at their budget caps (32 and 28 of 56 questions); their remainders are report-only, cannot change the verdict, and land in a later pull request. The pressure gate's aggregate verdict file joins the verdict index.
+
+## [0.10.31] - 2026-10-06
+
+### BEAM loader dates every session
+
+BEAM dates each batch once, on the first message of its first turn group. The memory-qa loader (`eval/runner/memory-qa/corpus.ts`, used by the decision kit, the starting line and the P4 streaming harness) made one session per turn group, but took a date only from a message inside that group. So on development data only 21 of 486 BEAM-100K, 110 of 4,728 BEAM-500K and 106 of 9,003 BEAM-1M sessions carried a date. Every turn group now takes its batch's date (`beamGroupDates`, unit-tested), which gives 3 to 10 distinct dates per conversation. Paired comparisons saw the same undated sessions in both arms. A reported-only BEAM-100K dev rerun on the starting-line build moves strict R@5 from 45.4% to 47.2% and reader accuracy from 57.1% to 58.0% ([note](docs/benchmarks/2026-10-05-heldout-program.md#the-starting-line-on-master)). $0.76.
+
+## [0.10.30] - 2026-10-06
+
+### P8 held-out records: write guard, semantic withdrawal, quote grounding, advertised surface
+
+Mirrors gbrain [#6027](https://github.com/garrytan/gbrain/pull/6027) (merged in v0.60.77.0) in [the P8 page](docs/benchmarks/2026-10-05-heldout-program/p8.md). Write cost and the review-gated withdrawal pass. Quote grounding failed its first sealed run (15 of 319 supported quotes wrongly flagged, Wilson upper 7.6%) and a second-custodian rescore (16 of 319). It passes a retest on fresh custodian-written synthetic sessions: 5 of 321 wrongly flagged, Wilson upper 3.59%. A retest on sealed-confirmation-v2 was stopped and is void; the corpus exposure is recorded in the v2 protocol. Narrower advertised tool surfaces fail in both arms on the sealed Cat 40 world (`starter` −8.5 points, `verbs` −9.9), so new installs keep advertising `full`. The quote-grounding runner attributes flags to spans by exact text (`flaggedSpans`), gains `--exclude-questions` and `--resume`, and the P8 dev receipts are restored. Retest spend about $15.
+
+## [0.10.29] - 2026-10-05
+
+### Mirror: gbrain fix wave 9 pins `search_path` at about 10-13% insert cost; takes-quality receipts move to protocol 2
+
+gbrain #6111 (fix wave 9, v0.60.74.0, open and pending merge at head `1fbe8660c`) carries two changes recorded here ([report](docs/benchmarks/2026-10-05-fix-wave-9-mirror.md), [`verdict.json`](docs/benchmarks/2026-10-05-fix-wave-9-mirror/verdict.json), upstream text verbatim in `upstream/`). Nothing was rerun; $0.
+
+- **`search_path` pinning (#5190, migration v211 `function_search_path`): accepted cost.** Every gbrain plpgsql function pins `search_path`, a security hardening. On the wave lane's own machine (3 runs per side, ranges only), 10,000 fact inserts through the withdrawal trigger went from 1.31-1.46 s to 1.45-1.69 s on PGLite and from 531-536 ms to 565-604 ms on Postgres 16: +13% and +10% at the midpoints, 6-16% at the range ends. The cause is the trigger's pinned setting. A 24-claim fact-fingerprint golden is byte-identical before and after on both engines, and the fingerprint index is still used. Not a retrieval change.
+- **Takes-quality protocol 2 (#5325): comparability note, not a verdict.** One same-model correction per malformed judge slot, priced against the cap first; valid low scores are never re-asked. Receipts gain `protocol_version`, `correction_selection_rule` and `corrections`, and `regress` treats a protocol change as dissimilar inputs. No before/after score was measured. Compare takes-quality receipts only within one protocol version; this repository has published none so far.
+- **Version.** #78 and #80 took 0.10.26 and 0.10.28, so this release is 0.10.29.
+
+## [0.10.28] - 2026-10-05
+
+### Held-out follow-ups for the merged plans: root causes, fresh-wording rechecks, sealed-v2 exposure
+
+A second custodian reread the failed held-out decisions of the merged plans and ran rechecks on phrasing sets that share no wording with earlier sets. All runs here are deterministic; $0 in model calls.
+
+- **P3 root causes** ([report section](docs/benchmarks/2026-10-05-heldout-program.md#root-causes-of-the-p3-failures-custodian-analysis)). E1's flat LoCoMo result is a limit of the benchmark shape (feedback weights apply and move 18% of rankings at λ = 0.1, with no net signal), not a harness bug. E4's miss is parser coverage: triplet scoring changes all 37 questions where the relational arm fires and gains +2.27 NDCG@10 points there. E5 is a product defect.
+- **P3 E5 retest on fresh material** ([record](docs/benchmarks/2026-10-05-heldout-verdicts/p3-e5-setf-retest-2026-10-05.json)). Without the advisory-role guard, 23 of 23 single-value closures are wrong; with it, 0 are applied and every gate passes. No E5 run has recorded a correct closure, so `dream.single_value.mode` stays `propose`.
+- **P1 E1 on a third phrasing set** ([record](docs/benchmarks/2026-10-05-heldout-verdicts/p1-e1-sete-2026-10-05.json)). This fails traps at 89 of 105: the employment lexicon misses the set's join, leave and move cues, so ended jobs stay live.
+- **Sealed confirmation v2 exposure** ([protocol](docs/benchmarks/2026-10-01-sealed-confirmation-v2-protocol.md#access-policy)). The corpus's sessions were used for gbrain P8 quote grounding on custodian machines; future v2 decisions must name this.
+- **Report.** The program report gains a changelog. Plans still in progress publish their records in their own pages under `docs/benchmarks/2026-10-05-heldout-program/`.
+
+## [0.10.26] - 2026-10-05
+
+### Mirror: managed Postgres catch-up goes from 3.4 to about 150 pages a minute 57 ms from the database
+
+gbrain measured its managed-sync catch-up on a 57 ms latency rig across three releases
+([#5996](https://github.com/garrytan/gbrain/pull/5996), v0.60.48.0; [#6021](https://github.com/garrytan/gbrain/pull/6021),
+v0.60.58.0; [#6098](https://github.com/garrytan/gbrain/pull/6098), v0.60.73.0). Pages per minute went from 3.4
+(v0.60.39.0, one page per run) to 13.1, 28.8 and finally 152.8 in steady state with six lanes saving groups at once
+(137.4 over the whole 10k run; the 10,000-file backlog from about 49 h to about 1.2 h). Foreground page writes stay
+within about 1.7 s of idle at p95 with no failures. The bench output is copied into
+`docs/benchmarks/2026-10-05-managed-sync-catchup/raw/` and summarized in `results.json`
+([report](docs/benchmarks/2026-10-05-managed-sync-catchup.md)). Nothing was rerun here; $0.
+
+## [0.10.25] - 2026-10-05
+
+### Mirror: gbrain's Hangul end-boundary rule cuts word-internal mention matches from 1,041 to 11
+
+gbrain #6080 (v0.60.69.0) makes a Korean name end at a non-Hangul character or at an attached title, particle or copula form. On 7.3M characters of public Korean text, word-internal false matches fell from 1,041 to 11, while 65 of 74 real name mentions still matched. Precision over real names plus word-internal matches rose from 6.6% to 85.5%. Report, scripts and per-match labels: [docs/benchmarks/2026-10-05-hangul-mention-boundaries.md](docs/benchmarks/2026-10-05-hangul-mention-boundaries.md). Labeling cost $0.36.
+
+## [0.10.24] - 2026-10-05
+
+### README describes other memory systems by kind
+
+README's "How gbrain compares" section and its changelog no longer name other memory projects; each is described by
+kind (for example "a verbatim-session memory system"). Names, versions and sources stay in
+[comparisons and their protocols](docs/comparison-systems.md), which README links. No measurement changed; $0.
+
 ## [0.10.23] - 2026-10-05
 
 ### Top-level docs read as the current state, with a changelog per document

@@ -1,0 +1,152 @@
+{
+  "decision_id": "p5-delta-set-h-2026-10-05",
+  "stage": "held-out (second custodian): P5 delta cycle 2, H10 re-check and H11 on fresh set H, E5 recheck (report only)",
+  "verdict": {
+    "H10_recheck": "fail: e5_extra_works_at_starts 0 and probe wrong closures 0 (pass), as-of equal to the no-guard arm (pass), but live-edge recall is inferior to master (-0.078 [-0.141, -0.015]) and current-employer recall and during-F1 are inconclusive",
+    "H11": "fail: traps 85/122 = 0.697 (bar 0.99); live-edge recall inferior to master"
+  },
+  "consequence": "gbrain#6017 delta amendment 3 cycle limit: the post-freeze link-typing and temporal-lexicon changes are removed before landing; the edge-validity plan's master behavior stands",
+  "gates_source": "gbrain#6017 delta preregistration amendment 3 (2026-10-05T19:42Z, before set H was opened), plus amendment 2's as-of clause",
+  "builds": {
+    "candidate": "583a851ee38e54f32d644c86930687cde5fd2d43",
+    "master": "d2c5e38a345a0d533a4b43b749a977e35c786a34",
+    "no_guard": "8e5517449 (583a851ee with NOT_EMPLOYMENT_ROLE removed; eval/data/p5-delta/no-not-employment-role-guard-583a851ee.patch; local only)",
+    "p1_baseline": "6622a119e40ea09a7719233046aca24741863ed2 (report only)"
+  },
+  "held_out_material": "set H: three sub-sets (seeds 151, 157, 163) written and hashed by the second custodian before reading amendment 3 or the cycle-2 code, pooled; 0 identical template lines and 0 shared word trigrams with sets B-G",
+  "candidate_vs_master": [
+    {
+      "id": "now-precision",
+      "gate": "noninferiority",
+      "status": "pass",
+      "a": 0.6354,
+      "b": 0.7328,
+      "delta": 0.0974,
+      "ci95": [
+        0.0197,
+        0.1627
+      ],
+      "n": 36,
+      "clusters": 36
+    },
+    {
+      "id": "asof",
+      "gate": "noninferiority",
+      "status": "pass",
+      "a": 0.5778,
+      "b": 0.6292,
+      "delta": 0.0514,
+      "ci95": [
+        0.0042,
+        0.1
+      ],
+      "n": 720,
+      "clusters": 240
+    },
+    {
+      "id": "during",
+      "gate": "noninferiority",
+      "status": "inconclusive",
+      "a": 0.6843,
+      "b": 0.6951,
+      "delta": 0.0108,
+      "ci95": [
+        -0.0401,
+        0.0631
+      ],
+      "n": 240,
+      "clusters": 240
+    },
+    {
+      "id": "correction",
+      "gate": "noninferiority",
+      "status": "pass",
+      "a": 0.0513,
+      "b": 0.4872,
+      "delta": 0.4359,
+      "ci95": [
+        0.2821,
+        0.5897
+      ],
+      "n": 39,
+      "clusters": 39
+    },
+    {
+      "id": "now-recall",
+      "gate": "noninferiority",
+      "status": "inconclusive",
+      "a": 0.7407,
+      "b": 0.6767,
+      "delta": -0.064,
+      "ci95": [
+        -0.1575,
+        0.0276
+      ],
+      "n": 36,
+      "clusters": 36
+    },
+    {
+      "id": "live-recall",
+      "gate": "noninferiority",
+      "status": "fail",
+      "a": 0.7476,
+      "b": 0.6699,
+      "delta": -0.0777,
+      "ci95": [
+        -0.1408,
+        -0.0146
+      ],
+      "n": 206,
+      "clusters": 206
+    }
+  ],
+  "traps": {
+    "candidate": {
+      "trap-advises": "13/36",
+      "trap-invest": "33/39",
+      "trap-alumni": "39/47"
+    },
+    "master": {
+      "trap-advises": "13/36",
+      "trap-invest": "27/39",
+      "trap-alumni": "32/47"
+    },
+    "no_guard": {
+      "trap-advises": "13/36",
+      "trap-invest": "33/39",
+      "trap-alumni": "39/47"
+    },
+    "p1_baseline": {
+      "trap-advises": "13/36",
+      "trap-invest": "7/39",
+      "trap-alumni": "7/47"
+    }
+  },
+  "invariance": "pass 240/240",
+  "asof_candidate_vs_no_guard": {
+    "candidate": 0.6292,
+    "no_guard": 0.6292
+  },
+  "probe": {
+    "candidate": {
+      "e5_extra_works_at_starts": 0,
+      "probe_people": 108,
+      "e5_wrong_closures": 0
+    },
+    "no_guard": {
+      "e5_extra_works_at_starts": 24,
+      "probe_people": 108,
+      "e5_wrong_closures": 12
+    }
+  },
+  "e5_recheck_report_only": {
+    "applied_closures": 2,
+    "wrong_closures": 2
+  },
+  "mechanisms": [
+    "Typing: a current employer named in further role-bearing phrasings (a role followed by 'for <company>', a join described as starting a new chapter, a move with the role in parentheses) is still typed mentions where master types works_at, so the current employer drops out of live reads. 30 live-recall probes are worse than master and 14 better, concentrated in one sub-set.",
+    "Leave cues: several idiomatic leave phrases are still not read, so a former employer keeps a live works_at edge (investment 33/39 and alumni 39/47 traps; master 27/39 and 32/47).",
+    "Advisor traps 13/36 on every build, the pre-feature baseline included: adviser prose in these wordings is not typed advises on any build, so this part of the trap failure is not caused by the change."
+  ],
+  "cost_usd": 0
+}
