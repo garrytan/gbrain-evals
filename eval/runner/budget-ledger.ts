@@ -1039,7 +1039,7 @@ export const CHAT_PRICE_OVERRIDES: Record<string, { input: number; output: numbe
 };
 
 /** A dated API snapshot (`gpt-4o-2024-08-06`) is billed at its family's list price. */
-const chatPrice = (id: string) => {
+export const chatPrice = (id: string) => {
   const undated = id.replace(/-\d{4}-?\d{2}-?\d{2}$/, '');
   return CHAT_PRICE_OVERRIDES[id] ?? CHAT_PRICE_OVERRIDES[undated] ?? canonicalLookup(id) ?? canonicalLookup(undated);
 };
