@@ -2,6 +2,12 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.35] - 2026-10-06
+
+### P2 held-out records: date-grounded extraction and speaker attribution on, hub dampening removed
+
+Mirrors gbrain [#6020](https://github.com/garrytan/gbrain/pull/6020) (merged as `e7f59913e` in v0.60.94.0) in [the P2 page](docs/benchmarks/2026-10-05-heldout-program/p2.md). Date-grounded extraction passes E2 on 7 sealed LoCoMo conversations (1,076 questions): saved facts with an unresolved relative date fall from 8.95% to 2.05% (−77% relative, CI [−8.3, −5.5] points), temporal QA holds (+0.8 [−1.2, +2.7]) and overall QA rises (+1.2 [+0.6, +1.7]); per-prompt checks turn it on for dream synthesis, `extract_atoms` and `propose_takes`, and life chronicle events stay opt-in after missing criterion (a) on a floor. Speaker attribution passes E3 on 60 sealed synthetic conversations: assistant-said QA rises from 44.1% to 95.8% (+51.7 [+42.9, +60.3]) with every guard passing, at about 41% more saved facts per conversation. Hub dampening at H = 32 fails E1 on all 12 cells of sealed hub-world seeds 2 and 3: both rivals beat it on concept nDCG@5 and hub-as-answer falls 10.0 to 36.2 points against a −0.5 guard, so gbrain#6020 removed the search-side mechanism before merge. The three P2 verdict files join the verdict index.
+
 ## [0.10.34] - 2026-10-06
 
 ### P5 held-out records: wanted pages on, typed relation lines and the similar-page hint off

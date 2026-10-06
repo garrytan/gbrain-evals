@@ -11,6 +11,9 @@ published. Comparators are named by kind only.
 | `p1-e1-sete-2026-10-05.json` | P1 temporal edges E1 on a third phrasing set (second custodian) | fail (traps 89/105; lexicon misses the set's join, leave and move cues) |
 | `p1-e2-r2-heldout-2026-10-04.json` | P1 contradiction phase E2, five judge models | all certified for apply |
 | `p1-e3-r2-heldout-2026-10-04.json` | P1 ingestion to answer E3 | report-only |
+| `p2-e1-heldout-2026-10-06.json` | P2 hub dampening E1, sealed hub-world seeds 2 and 3, all 12 cells | fail (rivals win on concept; hub-as-answer −10.0 to −36.2) |
+| `p2-e2-heldout-2026-10-04.json` | P2 date-grounded extraction E2, sealed LoCoMo | pass (unresolved relative dates 8.95% → 2.05%) |
+| `p2-e3-heldout-2026-10-05.json` | P2 speaker attribution E3, sealed synthetic conversations | pass (assistant-said QA 44.1% → 95.8%) |
 | `p3-e1-heldout-2026-10-04.json` | P3 retrieval feedback E1, per corpus | world-v1 checks pass except one category; LoCoMo fail |
 | `p3-e4-heldout-2026-10-04.json` | P3 triplet scoring E4 | fail (precondition: arm fired on 17%) |
 | `p3-e5-heldout-2026-10-05.json` | P3 declared single-value relations E5 | fail (3 wrong closures) |
@@ -33,4 +36,4 @@ published. Comparators are named by kind only.
 | `p8-quotes-retest2-2026-10-05.json` | P8 quote grounding retest on custodian-written synthetic sessions | pass (5/321, Wilson upper 3.59%) |
 | `p8-surface-heldout-2026-10-05.json` | P8 advertised tool surface (Cat 40 sealed world) | fail in both narrower arms; `full` stays |
 
-The table lists the verdicts of plans whose gbrain pull requests have merged (P1, P3, P4, P5, P6, P7, P8). Each plan still in progress (P2) lists its own verdict files on its page under [`../2026-10-05-heldout-program/`](../2026-10-05-heldout-program/), and they move into this table when its gbrain pull request merges. The [program report](../2026-10-05-heldout-program.md) puts these verdicts beside each plan's preregistration, development results and default.
+The table lists the verdicts of plans whose gbrain pull requests have merged (P1, P2, P3, P4, P5, P6, P7, P8). Each plan's page under [`../2026-10-05-heldout-program/`](../2026-10-05-heldout-program/) explains its verdicts. The [program report](../2026-10-05-heldout-program.md) puts these verdicts beside each plan's preregistration, development results and default.
