@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "description": "Map from published claims to their saved evidence. The manifest test checks artifact paths, SHA-256 hashes, and declared JSON-pointer values. It does not parse report prose or independently validate every scorer. Separate golden tests and recount scripts are named where available. Entries marked disclosed-gap identify missing evidence; a fresh run cannot restore a missing historical receipt.",
-  "updated": "2026-10-05",
+  "updated": "2026-10-06",
   "entries": [
     {
       "claim_id": "lifecycle-2026-09-29-primary",
@@ -4537,6 +4537,53 @@
       },
       "golden_test": "bun docs/benchmarks/2026-10-05-heldout-program/recount-starting-line.ts --check",
       "note": "P0 starting line on gbrain master 6622a119e (v0.60.48.0), dev splits only, 2026-10-04. summary.json is recounted from the committed shard rows."
+    },
+    {
+      "claim_id": "fix-wave-9-mirror",
+      "readme_anchor": "docs/benchmarks/2026-10-05-fix-wave-9-mirror.md: The finding",
+      "artifact_path": "docs/benchmarks/2026-10-05-fix-wave-9-mirror/verdict.json",
+      "artifact_sha256": "4c5a5a0c6cecacb06572b0f48658d8e5bde3a11f002517194731d57327b03180",
+      "status": "covered",
+      "expected": {
+        "/items/search_path_insert_cost/measurement/pglite/before_range/0": 1.31,
+        "/items/search_path_insert_cost/measurement/pglite/after_range/1": 1.69,
+        "/items/search_path_insert_cost/measurement/postgres/before_range/0": 0.531,
+        "/items/search_path_insert_cost/measurement/postgres/after_range/1": 0.604,
+        "/items/search_path_insert_cost/correctness/fingerprint_golden_claims": 24,
+        "/items/search_path_insert_cost/correctness/fingerprint_golden_identical_before_after": true,
+        "/items/search_path_insert_cost/verdict": "accepted cost",
+        "/items/takes_quality_protocol_2/protocol_version": 2,
+        "/items/takes_quality_protocol_2/score_measurement": null,
+        "/source/pr_head": "1fbe8660cb0dc1737d7bd9323aa9c6410dc80ec8",
+        "/rerun_here": false
+      },
+      "note": "Mirror of gbrain fix wave 9 (#6111, pending merge at head 1fbe8660c): the search_path insert timing is a local lane measurement (3 runs per side, ranges only, copied from commit daf7426b6); takes-quality protocol 2 is a comparability note with no score measurement."
+    },
+    {
+      "claim_id": "p8-quote-grounding-retest",
+      "readme_anchor": "docs/benchmarks/2026-10-05-heldout-program/p8.md: Held-out verdicts",
+      "artifact_path": "docs/benchmarks/2026-10-05-heldout-verdicts/p8-quotes-retest2-2026-10-05.json",
+      "artifact_sha256": "172ff9cf95ec8f721d75bfb83f735b79419dcb9c982196c7909602fcf506a053",
+      "status": "covered",
+      "expected": {
+        "/results/supported_spans": 321,
+        "/results/supported_wrongly_flagged": 5,
+        "/results/wilson_upper": 0.0359
+      },
+      "note": "Custodian aggregate of the P8 quote-grounding retest (build 7715e647a, 320 questions over 552 custodian-written synthetic sessions); rows stay in custody."
+    },
+    {
+      "claim_id": "p8-advertised-surface",
+      "readme_anchor": "docs/benchmarks/2026-10-05-heldout-program/p8.md: Held-out verdicts",
+      "artifact_path": "docs/benchmarks/2026-10-05-heldout-verdicts/p8-surface-heldout-2026-10-05.json",
+      "artifact_sha256": "85604c0b8a18f1a42b9929ec27f0960533b1e23d49c56c9e423b0af24a0a9526",
+      "status": "covered",
+      "expected": {
+        "/pooled_four_models/starter/pooled/delta_pts": -8.5,
+        "/pooled_four_models/verbs/pooled/delta_pts": -9.9,
+        "/pooled_four_models/decision": "full"
+      },
+      "note": "Custodian aggregate of P8 section 7 on the sealed Cat 40 world (build 6c958d6e2); per-task rows stay in custody."
     }
   ]
 }
