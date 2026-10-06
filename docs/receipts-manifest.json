@@ -4602,19 +4602,22 @@
       "claim_id": "mpw-query-facts-arm-verdict-mirror",
       "readme_anchor": "docs/benchmarks/2026-10-05-memory-proof-wave-gbrain-verdicts.md: Facts arm in query",
       "artifact_path": "docs/benchmarks/2026-10-05-memory-proof-wave-gbrain-verdicts/query-facts-arm/verdict.json",
-      "artifact_sha256": "4a1ea267f59e00bc4d65a339bcc4806f66163d4d7424119465a6f935f87aac3e",
+      "artifact_sha256": "cae829e7ecd40b038c854d472e13fccb01efc9423ab78c9e238680f336ce5506",
       "status": "covered",
       "expected": {
-        "/overall": "off_gate_1_failed",
+        "/overall": "on_gates_1b_and_2_passed",
         "/measured_build": "garrytan/gbrain@16288b95c",
         "/gate_1/status": "fail",
-        "/gate_1/rule_result/after_5_writes/higher": false,
-        "/gate_1/forget_remember/off/checkpoints/1/stale": 92,
-        "/gate_1/forget_remember/on/checkpoints/1/stale": 4,
-        "/gate_2/status": "pass",
-        "/metered_spend_usd": 26.05
+        "/gate_1b/status": "pass",
+        "/gate_1b/measured_build": "garrytan/gbrain@947536f4c",
+        "/gate_1b/forget_remember/off/checkpoints/1/correct": 92,
+        "/gate_1b/forget_remember/on/checkpoints/1/correct": 100,
+        "/gate_1b/forget_remember/on/checkpoints/5/correct": 100,
+        "/gate_2_revised/status": "pass",
+        "/gate_2_revised/sets/relational+facts/recall10_lower": 0,
+        "/gate_1b/metered_spend_usd": 18.0532
       },
-      "note": "Mirror of gbrain's facts-arm-in-query gates (#6066, measured at 16288b95c); copied byte for byte. Gate 1 ran this repository's B2 corrections bench with bench-flags.patch applied locally."
+      "note": "Mirror of gbrain's facts-arm-in-query gates (#6066): gates 1 and 2 at 16288b95c, gates 1b and revised 2 at 947536f4c; copied byte for byte. The gate-1 runs used bench-flags.patch locally; gate 1b used the flags merged at d01d3bc."
     },
     {
       "claim_id": "fix-wave-9-mirror",
