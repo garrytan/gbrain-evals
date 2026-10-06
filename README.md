@@ -12,12 +12,11 @@ describes gbrain as this repository pins it today; the changelog at the bottom r
 
 | Item | Value |
 |---|---|
-| Pinned product | gbrain master [`739e5cc`](https://github.com/garrytan/gbrain/tree/739e5cc89ca43b9b9351f0f203c7b12a7c0c571c) (v0.60.46.0), declared as `gbrain` in `package.json` |
-| Newer gbrain builds also measured | v0.60.49.0 (`b9ee931`), v0.60.60.0 (multi-relation planner) and v0.60.62.0 (`51f865d78`, entity recall). Results from them say so. |
+| Pinned product | gbrain master [`c5fb0201`](https://github.com/garrytan/gbrain/tree/c5fb0201d1960a0a5a81c35d77718311b03154b7) (v0.60.95.0), declared as `gbrain` in `package.json` |
 | Fixed-purpose aliases | `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), used only by the experiments that name them |
-| This repository | gbrain-evals v0.10.24 (`VERSION`) |
+| This repository | gbrain-evals v0.10.37 (`VERSION`) |
 
-This repository installs gbrain master `739e5cc`. Some results below were measured at earlier commits; each names
+This repository installs gbrain master `c5fb0201`. Some results below were measured at earlier commits; each names
 its commit. The search modes have been identical since v0.48.4.0, so retrieval results from those commits describe
 the installed modes.
 
@@ -53,20 +52,23 @@ save, find, update and forget what it knows. The parts that matter for an agent:
 | Concept questions in different words, target ranked first (with reranker) | **130 of 181** | `d44296c` | [Matched comparison](docs/benchmarks/2026-10-02-concept-vector-rerank.md) |
 | Relationship retrieval on reworded one-hop questions, recall at five | **0.411 → 0.537**, 19 better, 0 worse | `3a284ae` | [N9](docs/benchmarks/2026-10-01-n9-multi-hop.md) |
 | Questions chaining two or three relations (multi-relation planner) | **24 better, 0 worse** held-out; +27 points strict all-hit@10 | v0.60.60.0 | [Held-out program](docs/benchmarks/2026-10-05-heldout-program.md) |
+| Meeting attendance from a documented `## Attendees` list | **132 of 132** attendees stored, 0 false; "who attended" recall at five 32% → 80% | `c5fb0201` | [Attendance world](docs/benchmarks/2026-10-06-attendance-world.md) |
 | Returning only the right facts (PrecisionMemBench, tight adaptive + reranker) | **0.586 precision**, 0.825 recall | `2efaaf8f` | [Refresh](docs/benchmarks/2026-09-09-retrieval-refresh.md) |
 | Serving the new value after an update | **388 of 388** probes, never stale | `739e5cc` | [N1](docs/benchmarks/2026-10-01-n1-knowledge-update.md) |
 | Nothing left behind after `forget` | **0** prohibited outputs, 6 of 6 reinstatements | `739e5cc` | [N5](docs/benchmarks/2026-10-01-n5-forget-residue.md) |
-| Private pages reaching agent callers or remote callers | **0** (N6, N8) | `739e5cc` | [N6](docs/benchmarks/2026-09-30-n6-visibility-fuzz.md), [N8](docs/benchmarks/2026-10-01-n8-proactive-recall.md) |
-| Keeping speaker and time across chat export formats | **27 of 27** formats | `739e5cc` | [N12](docs/benchmarks/2026-10-01-n12-format-fidelity.md) |
-| Finding contradicting notes | **149 of 150** conflicts | `739e5cc` | [N2](docs/benchmarks/2026-10-01-n2-contradiction-surfacing.md) |
+| Private pages reaching agent callers or remote callers | **0**, in process and on Postgres over real HTTP (155 of 155 cells, 5 kinds of caller); proactive recall gated in CI | `c5fb0201` | [N6 on Postgres](docs/benchmarks/2026-10-06-n6-postgres-http.md), [N8 gate](docs/benchmarks/2026-10-06-n8-privacy-gate.md) |
+| Keeping speaker and time across chat export formats | **28 of 28** formats | `c5fb0201` | [N12](docs/benchmarks/2026-10-01-n12-format-fidelity.md), [re-pin](docs/benchmarks/2026-10-06-followups-repin.md) |
+| Finding contradicting notes | **149 of 150** conflicts with the default judge model | `739e5cc` | [N2](docs/benchmarks/2026-10-01-n2-contradiction-surfacing.md) |
+| Contradiction judge on current models | **150 of 150** conflicts and **0 of 251** compatible pairs flagged, for each of five current models; cheapest passing model $0.21 per 1,000 pairs | `c5fb0201` | [N2 judges](docs/benchmarks/2026-10-06-n2-judges.md) |
+| Attributing someone else's claim to the page holder (takes classifier) | **0 of 123** cases on each of four frontier models (3 with Claude Haiku 4.5); the classifier is not yet graduated | `c5fb0201` | [Takes-bootstrap](docs/benchmarks/2026-10-06-takes-bootstrap-frontier.md) |
 | Real agents (Claude Code, Codex) spending or destroying data without consent | **0** violations in 66 safety sessions; 96 of 102 tasks finished | v0.60.46.0 | [Cat 41](docs/benchmarks/2026-10-03-agent-operator.md) |
 | Company-knowledge tasks on five frontier models | **95.6%** success; **0 of 100** finance-only leaks into context | `51f865d78` | [Cat 40](docs/benchmarks/2026-10-02-model-ladder.md) |
 | Timeline events extracted from meetings and chats | **37 and 38 of 38**, 0.04 wrong per page | `b9ee931` | [`auto_chronicle`](docs/benchmarks/2026-10-04-auto-chronicle-rerun.md) |
 | Managed Postgres catch-up 57 ms from the database (10,000-file backlog) | **152.8 pages/min** steady, about **1.2 h** for the backlog (was 3.4 pages/min, about 49 h) | v0.60.73.0 | [Catch-up](docs/benchmarks/2026-10-05-managed-sync-catchup.md) |
-| Useful material kept when a session becomes a memory page | **88.1%** judged; 74.9% with quoted evidence | Cat 35 run | [Cat 35](docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md) |
+| Useful material kept when a session becomes a memory page | **88.1%** judged (judge calibration awaiting a person's review); 74.9% with quoted evidence | Cat 35 run | [Cat 35](docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md) |
 
-All 28 reproductions in the [bug ledger](docs/benchmarks/2026-10-01-wave-bugs.md) pass at `739e5cc`, and moving to
-that pin cost no category any accuracy ([re-pin report](docs/benchmarks/2026-10-04-operator-wave-repin.md)). The
+All 28 reproductions in the [bug ledger](docs/benchmarks/2026-10-01-wave-bugs.md) pass at `c5fb0201`, and moving to
+that pin cost no category any accuracy ([re-pin report](docs/benchmarks/2026-10-06-followups-repin.md)). The
 correctness rows come from keyless checks on synthetic worlds with generated answer keys, rerun at every pin.
 
 Settings that change these numbers are in [settings by workload](docs/settings.md). Two matter most: keep autocut off
@@ -232,6 +234,10 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 [PrecisionMemBench attribution](eval/precisionmembench/ATTRIBUTION.md).
 
 ## Changelog
+
+### 2026-10-06: Re-pin to gbrain `c5fb0201` and the October follow-up round
+
+gbrain-evals v0.10.37. The pin moves from `739e5cc` (v0.60.46.0) to `c5fb0201` (v0.60.95.0), which contains every held-out-program plan, so the "newer builds also measured" row is gone. Results rows: privacy now covers Postgres over real HTTP and the N8 gate at `c5fb0201` (was N6 and N8 at `739e5cc`); chat formats 28 of 28 (was 27 of 27); new rows for attendance from documented lists, the contradiction judge on current models and the takes classifier on frontier models; the Cat 35 row says its judge calibration awaits a person's review; the ledger sentence names the October 6 re-pin. Reasons and receipts: the [round plan](docs/plans/2026-10-06-followups-round/PLAN.md) and its reports.
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](CHANGELOG.md); this section records what this page said and why it changed.

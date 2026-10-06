@@ -6,11 +6,12 @@ autocut off. That setup retrieves all labeled conversations for 451/470 answerab
 with opaque session ids at gbrain `109b992`. [Recount](benchmarks/2026-10-04-longmemeval-opaque-followups.md),
 [original experiment](benchmarks/2026-09-06-longmemeval-ranker-wave.md).
 
-This page describes the gbrain this repository installs, master `739e5cc` (v0.60.46.0, declared in
+This page describes the gbrain this repository installs, master `c5fb0201` (v0.60.95.0, declared in
 `package.json`). Most experiments here ran at gbrain v0.48.4.0 (`2efaaf8f`) or later commits named beside each
 number. The `balanced`, `conservative` and `tokenmax` mode definitions (`MODE_BUNDLES` in
-`src/core/search/mode.ts`) hold the same values from `2efaaf8f` through `739e5cc`, so the measurements describe the
-installed modes; other code differs. Existing per-key overrides take precedence over a mode, so a mode name alone
+`src/core/search/mode.ts`) hold the same values from `2efaaf8f` through `c5fb0201`, apart from three keys v0.60.60.0
+added for the multi-relation planner (`relational_planner`, on in `balanced` and `tokenmax`). The planner plans none
+of LongMemEval's 500 questions, so the conversation measurements describe the installed modes; other code differs. Existing per-key overrides take precedence over a mode, so a mode name alone
 is not a complete description of an experiment. Everything above [Changelog](#changelog) is current.
 
 ## Choose by the questions you need to answer
@@ -19,6 +20,7 @@ is not a complete description of an experiment. Everything above [Changelog](#ch
 |---|---|---|
 | Long conversations; questions need several old sessions | `balanced`, reranker on, expansion off, autocut off | Complete retrieval is 451/470 with reranking versus 434/470 without (opaque ids, `109b992`). Autocut discards necessary additional evidence. [Recount](benchmarks/2026-10-04-longmemeval-opaque-followups.md) |
 | Exact names, identifiers, or remembered phrases | Include a keyword baseline | The `grep-only` adapter is a BM25 ranker. Compare it with gbrain on your actual phrases before paying for extra stages. [Concept comparison](benchmarks/2026-09-09-retrieval-refresh.md) |
+| Choosing an embedder | `voyage-4` or `text-embedding-3-large`, with the reranker on | On 181 held-out concept questions with the reranker, `voyage-4` put an exact target first on 130, `voyage-4-large` 128, OpenAI `text-embedding-3-large` 126 and a local `qwen3-embedding:8b` 120; no embedder is shown better than `voyage-4`. The reranker adds 13 to 17 points for every embedder, at about $0.50 per 1,000 queries. A code embedder (`voyage-code-4`) did not help code search on described functions. [Embedding matrix](benchmarks/2026-10-06-embedding-matrix.md), [Cat 21](benchmarks/2026-10-06-cat21-paraphrase.md) |
 | Synonyms and vague descriptions | Compare gbrain with reranking and lexical metadata gating against a vector baseline | Held-out concept nDCG@5 was 0.6619 with reranking, 0.5780 without it, and 0.6054 for vectors alone. Link popularity must not overwhelm a better match. [Concept experiment](benchmarks/2026-09-09-retrieval-refresh.md#concept-search-order-meaning-and-popularity) |
 | Recognized relationship questions over linked pages | Evaluate production relationship retrieval; retain relational pin `3` with reranking | Enabling the stage raised investor first-place hits from 9/39 to 21/39. Attendance questions did not improve; link direction and parser coverage matter. [Controlled test](benchmarks/2026-09-09-retrieval-refresh.md#production-relationship-retrieval-one-switch) |
 | Curated notes mixed with imported chat | Compare the measured `originals/` factor `1.5` and `openclaw/chat/` factor `0.5` with neutral `1.0` weights | The boost gained one top result out of 30, with no losses. Vector search still led this fixture. Test the preference on your own source layout. [Paired experiment](benchmarks/2026-09-09-retrieval-refresh.md#a-source-preference-is-a-choice-about-trust) |
@@ -146,6 +148,10 @@ the [refresh report](benchmarks/2026-09-09-retrieval-refresh.md) gives the full
 reproducible matrix used here.
 
 ## Changelog
+
+### 2026-10-06: Installed pin moves to `c5fb0201`; an embedder row
+
+gbrain-evals v0.10.37. The installed gbrain commit changed from `739e5cc` (v0.60.46.0) to `c5fb0201` (v0.60.95.0). The mode-definition note now says the bundles are unchanged except the three multi-relation planner keys, which plan no LongMemEval question. A new "Choosing an embedder" row cites the October 6 embedding matrix (reranker +13 to +17 points; no embedder better than `voyage-4`) and Cat 21's paraphrase questions (no gain from a code embedder).
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
