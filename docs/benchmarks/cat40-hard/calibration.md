@@ -12,6 +12,7 @@ Calibration uses seed 20261005, 10 tasks per family from a world generated at th
 | 2 | [knobs.round-2.json](knobs.round-2.json) | 2026-10-05: H2 and H3 far too easy (fs 20/20 each); record counts, history length and distractors for those two families raised; background accounts lowered to hold world size; H1, H4, H5, noise and the turn cap unchanged (details below) | pooled fs 95%, pg 97%, oracle 99%; H2 to H5 at 95 to 100% on fs; knobs at their useful range |
 | 3 | [knobs.round-3.json](knobs.round-3.json) (generator v2, 50k) | 2026-10-05, amendment A1: round-2 knobs plus the reference forms (15% of references by name, the rest split about evenly between code, nickname and account manager); records stop naming their account; calibration moves to the 50k world (details below) | pooled fs 76%, pg 83%, oracle 96%; H1 at 15-20%, mostly turn-cap stops; H2 to H5 at 85-100% |
 | 4 | [knobs.round-4.json](knobs.round-4.json) (generator v2, 50k) | 2026-10-06, amendment A2: H2 to H5 questions ask about 2 to 3 accounts each; H1 sets of 6 to 12 members; manager weight raised to hold the manager share; 2,400 appended accounts to hold the 50k size (details below) | fs 79%, pg 71%, oracle 99%; H1 25-30%, H2 to H5 fs 85-95%; 76% of fs failures are turn-cap stops; fails the band |
+| 5 | [knobs.round-5.json](knobs.round-5.json) (generator v2, 50k) | 2026-10-06, amendment A3: H2 to H5 ask about 3 to 4 accounts (round 4: 2 to 3), H1 sets of 5 to 10 members (round 4: 6 to 12); the last round the plan allows | pending |
 
 ## Round 1 (2026-10-05)
 
@@ -147,6 +148,15 @@ World: seed 20261005, 50k, knobs.round-4.json, generator at `0431f84`, 54,999 do
 | oracle | 19/20 | 20/20 | 20/20 | 20/20 | 20/20 | 99% |
 
 Asking about two or three accounts at once took pg down 12 points on H2 to H5 but fs only 5: fs still answers H2 to H5 at 85 to 95%, and 16 of fs's 21 failures are turn-cap stops. Frontier agents with grep rarely answer wrong on these tasks; they fail by running out of turns. Sonnet 5.5 (fs 74%) is inside its per-model band; GPT-6 Astra (pg 86%) is not. The oracle at 99% shows the multi-account answers are well posed.
+
+## Round 5 knobs (2026-10-06)
+
+| Knob | Round 4 | Round 5 | Reason |
+|---|---|---|---|
+| `multi_account_min` / `max` | 2 / 3 | 3 / 4 | fs answered H2 to H5 at 85 to 95% with two or three accounts per question; each added account adds its own resolution and reading, the one lever that moved H2 to H5 in round 4 (pg fell 12 points) |
+| `h1_min_members` / `max` | 6 / 12 | 5 / 10 | H1 stayed at 25 to 30%, mostly turn-cap stops; smaller sets move H1 toward the band so its failures are not all truncation |
+
+Everything else is unchanged, including the 16-turn cap. Projection target: H1 about 40 to 50%, H2 to H5 about 60 to 70% on fs, pooled within 40-70%.
 
 ## Notes after the freeze
 
