@@ -2,7 +2,7 @@
 
 This report collects one feature program for [gbrain](https://github.com/garrytan/gbrain), a memory system for agents. Eight feature plans (P1 to P8) each change gbrain in one pull request. P0 is the evaluation plan: it measures the starting line on gbrain master and runs the held-out harness every other plan uses. Each feature idea has a preregistered decision rule, a development verdict on data the implementer may see, and a held-out verdict on sealed data that only the custodian opens. The held-out verdict sets the idea's default.
 
-This report covers the plans whose gbrain pull requests have merged: P1 (#6018), P3 (#6014) and P7 (#6019), with eight held-out decisions. Three ideas pass and ship on: dated relationships, the certified nightly contradiction check and the multi-relation planner. Four ideas lose or miss their gate, and each one ships off, ships in a safer mode or leaves its pull request. P2, P4, P5, P6 and P8 are in progress; their records join this report as each gbrain pull request lands.
+This report covers the plans whose gbrain pull requests have merged: P1 (#6018), P3 (#6014), P7 (#6019), P8 (#6027) and P4 (#6015). Across P1, P3 and P7's eight held-out decisions, three ideas pass and ship on: dated relationships, the certified nightly contradiction check and the multi-relation planner. Four ideas lose or miss their gate, and each one ships off, ships in a safer mode or leaves its pull request. P8's write guard, semantic withdrawal and quote grounding pass and ship on, and its narrower advertised surface fails. P4's pre-compaction save notice passes and ships on, and its always-loaded core memory tier fails and ships off. P2, P5 and P6 are in progress; their records join this report as each gbrain pull request lands.
 
 ## How the program decides a default
 
@@ -48,7 +48,7 @@ One row per idea. "Held-out verdict" is the custodian's sealed result against th
 | P3 | Implicit citation signal | `feedback.implicit` | not run (gated on E1 passing both corpora) | off | #6014 |
 | P3 | Relational triplet scoring | `search.triplet_scoring` | **FAIL** (relational arm fired on 17% of questions, bar 80%) | removed | #6014 |
 | P3 | Declared single-value relations close the older value | `dream.single_value.mode` | **FAIL** (3 wrong closures, bar 0); retest with the advisory-role guard: safe (0 wrong) but no correct closure measured | `propose` | #6014 |
-| P4 | Core memory tier and save before compaction | in progress, see gbrain PR | in progress | in progress | [#6015](https://github.com/garrytan/gbrain/pull/6015), draft |
+| P4 | Core memory tier and save before compaction ([records](2026-10-05-heldout-program/p4.md)) | `memory.pressure.enabled`, `memory.core.enabled` | pressure gate **PASS** (+11.35 points); core gate **FAIL** (`gpt-6.1-sol` −2.4) | pressure notice on; core off (opt-in) | [#6015](https://github.com/garrytan/gbrain/pull/6015), merged, v0.60.87.0 |
 | P5 | Typed relation lines, wanted pages, similar-page hint | in progress, see gbrain PR | in progress | in progress | [#6017](https://github.com/garrytan/gbrain/pull/6017), draft |
 | P6 | Time-aware search | in progress | in progress | in progress | no PR yet |
 | P7 | Multi-relation query planner | `search.relational_planner` | **PASS** (24 better, 0 worse; +27 points strict all-hit@10) | on in `balanced` and `tokenmax` | [#6019](https://github.com/garrytan/gbrain/pull/6019), merged, v0.60.60.0 |
@@ -149,6 +149,7 @@ Head-to-head comparisons against external memory systems, a full-context baselin
 
 ## Changelog
 
+- 2026-10-06: P4 merged (gbrain#6015, v0.60.87.0): pressure gate PASS and on, core gate FAIL and off; the opening paragraph now lists P8 and P4 among the merged plans.
 - 2026-10-05: First publication (gbrain-evals#71). The starting line on gbrain master `6622a119e`, the held-out records of P1, P3 and P7, and the program scorecard, with P2, P4, P5, P6 and P8 listed as in progress.
 - 2026-10-05: P3 gains the custodian's root-cause analysis of E1, E4 and E5 and the E5 retest on fresh material.
 - 2026-10-05: P1 gains the custodian's E1 check on a third phrasing set (fails traps, lexicon coverage); the E5 record states that `dream.single_value.mode` stays `propose`.
