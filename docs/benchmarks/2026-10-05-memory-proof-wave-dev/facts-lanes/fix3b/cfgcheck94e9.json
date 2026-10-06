@@ -1,0 +1,44 @@
+{
+ "gbrain-beam-100k-f20ae7ed9154": {
+  "search.hub_dampening": " remove it from ~/.gbrain/config.json. Falling back to the key-aware default.\nConfig key not found: search.hub_dampening",
+  "extraction.date_grounding": "ve it from ~/.gbrain/config.json. Falling back to the key-aware default.\nConfig key not found: extraction.date_grounding",
+  "facts.attribution": " or remove it from ~/.gbrain/config.json. Falling back to the key-aware default.\nConfig key not found: facts.attribution",
+  "search.query_facts_arm": "emove it from ~/.gbrain/config.json. Falling back to the key-aware default.\nConfig key not found: search.query_facts_arm",
+  "search.temporal_fact_reserve": "it from ~/.gbrain/config.json. Falling back to the key-aware default.\nConfig key not found: search.temporal_fact_reserve"
+ },
+ "gbrain-beam-500k-573277646403": {
+  "search.hub_dampening": " remove it from ~/.gbrain/config.json. Falling back to the key-aware default.\nConfig key not found: search.hub_dampening",
+  "extraction.date_grounding": "ve it from ~/.gbrain/config.json. Falling back to the key-aware default.\nConfig key not found: extraction.date_grounding",
+  "facts.attribution": " or remove it from ~/.gbrain/config.json. Falling back to the key-aware default.\nConfig key not found: facts.attribution",
+  "search.query_facts_arm": "emove it from ~/.gbrain/config.json. Falling back to the key-aware default.\nConfig key not found: search.query_facts_arm",
+  "search.temporal_fact_reserve": "it from ~/.gbrain/config.json. Falling back to the key-aware default.\nConfig key not found: search.temporal_fact_reserve"
+ },
+ "gbrain-beam-1m-ea33737206db": {
+  "search.hub_dampening": " remove it from ~/.gbrain/config.json. Falling back to the key-aware default.\nConfig key not found: search.hub_dampening",
+  "extraction.date_grounding": "ve it from ~/.gbrain/config.json. Falling back to the key-aware default.\nConfig key not found: extraction.date_grounding",
+  "facts.attribution": " or remove it from ~/.gbrain/config.json. Falling back to the key-aware default.\nConfig key not found: facts.attribution",
+  "search.query_facts_arm": "emove it from ~/.gbrain/config.json. Falling back to the key-aware default.\nConfig key not found: search.query_facts_arm",
+  "search.temporal_fact_reserve": "it from ~/.gbrain/config.json. Falling back to the key-aware default.\nConfig key not found: search.temporal_fact_reserve"
+ },
+ "gbrain-beam-100k-4dfc19802f85": {
+  "search.hub_dampening": " remove it from ~/.gbrain/config.json. Falling back to the key-aware default.\nConfig key not found: search.hub_dampening",
+  "extraction.date_grounding": "false",
+  "facts.attribution": " or remove it from ~/.gbrain/config.json. Falling back to the key-aware default.\nConfig key not found: facts.attribution",
+  "search.query_facts_arm": "emove it from ~/.gbrain/config.json. Falling back to the key-aware default.\nConfig key not found: search.query_facts_arm",
+  "search.temporal_fact_reserve": "it from ~/.gbrain/config.json. Falling back to the key-aware default.\nConfig key not found: search.temporal_fact_reserve"
+ },
+ "gbrain-beam-500k-441067a2a76a": {
+  "search.hub_dampening": " remove it from ~/.gbrain/config.json. Falling back to the key-aware default.\nConfig key not found: search.hub_dampening",
+  "extraction.date_grounding": "false",
+  "facts.attribution": " or remove it from ~/.gbrain/config.json. Falling back to the key-aware default.\nConfig key not found: facts.attribution",
+  "search.query_facts_arm": "emove it from ~/.gbrain/config.json. Falling back to the key-aware default.\nConfig key not found: search.query_facts_arm",
+  "search.temporal_fact_reserve": "it from ~/.gbrain/config.json. Falling back to the key-aware default.\nConfig key not found: search.temporal_fact_reserve"
+ },
+ "gbrain-beam-1m-2fed0e918755": {
+  "search.hub_dampening": " remove it from ~/.gbrain/config.json. Falling back to the key-aware default.\nConfig key not found: search.hub_dampening",
+  "extraction.date_grounding": "false",
+  "facts.attribution": " or remove it from ~/.gbrain/config.json. Falling back to the key-aware default.\nConfig key not found: facts.attribution",
+  "search.query_facts_arm": "emove it from ~/.gbrain/config.json. Falling back to the key-aware default.\nConfig key not found: search.query_facts_arm",
+  "search.temporal_fact_reserve": "it from ~/.gbrain/config.json. Falling back to the key-aware default.\nConfig key not found: search.temporal_fact_reserve"
+ }
+}
