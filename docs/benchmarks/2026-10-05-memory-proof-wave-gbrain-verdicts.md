@@ -1,22 +1,25 @@
-# gbrain's memory proof wave: four product decisions and the measurements behind them
+# gbrain's memory proof wave: five product decisions and the measurements behind them
 
-**Measured by gbrain on October 5, 2026, and mirrored here the same day. This mirror reruns nothing.**
+**Measured by gbrain on October 5-6, 2026, and mirrored here. This mirror reruns nothing; the fifth record's gate 1 ran this repository's B2 corrections bench.**
 
 [gbrain](https://github.com/garrytan/gbrain) is a memory system for agents. Each time gbrain tries a new idea, it
-writes down what it tested, what counted as a win, and what happened. Four ideas from its memory proof wave were
+writes down what it tested, what counted as a win, and what happened. Five ideas from its memory proof wave were
 tested this way:
 
 - Search two ways for an old fact a new one should replace.
 - Pick the cutoff for "same fact, new value" separately for each embedding model.
 - Keep standing answers to pinned questions.
 - Look up the newest notes about the one thing a question is about.
+- Hand the reader the saved facts that match a question, next to the notes.
 
 The first idea did not help, so it stays off. The cutoff check showed the default model's setting was already
 right and another model needed its own, so gbrain now stores the cutoff per model. Pinned answers were no more
 accurate than handing a reader the same well-chosen notes, so they stay something an owner turns on. The fourth
-idea fixed a real mistake in the test workload and is waiting for broader tests before it turns on.
+idea fixed a real mistake in the test workload and is waiting for broader tests before it turns on. The fifth
+put a saved correction in front of the reader, but the reader still kept the old answer, because the correction
+was dated the day it was saved, after the question's date. It stays off.
 
-All four records ship in [garrytan/gbrain#6066](https://github.com/garrytan/gbrain/pull/6066) (branch
+All five records ship in [garrytan/gbrain#6066](https://github.com/garrytan/gbrain/pull/6066) (branch
 `capy/mpw-integration`). Each record names the gbrain commit it measured. The `decision.json` (what would be
 tested and how) and `verdict.json` (what happened) files are copied byte for byte from gbrain's
 `docs/eval/decisions/` into [`2026-10-05-memory-proof-wave-gbrain-verdicts/`](2026-10-05-memory-proof-wave-gbrain-verdicts/).
@@ -27,8 +30,9 @@ tested and how) and `verdict.json` (what happened) files are copied byte for byt
 | [Supersession threshold per embedding model](#supersession-threshold-per-embedding-model) | voyage-4 keeps 0.95; models without a calibrated threshold never supersede by cosine | `7d2cc1c7049ae6820131b91d146d2c950714583d` | voyage-4 at 0.95: 46.7% corrections missed, 0.75% false supersession, 99.8% distinct claims kept; 3-large at 0.95 wrongly replaces 53.75% of coexisting claims |
 | [Pinned questions](#pinned-questions) | Opt-in; anchored retrieval is the measured win | run 3: `1384a0dbf8cc89d7c01b4576a9a346525893bdd0` | Pinned 0.981 accuracy vs anchored reader 0.968 at equal tokens; pinned loses seed 42; 0 leaks in 144 probes |
 | [Entity-anchored query retrieval](#entity-anchored-query-retrieval) | Gates 1 and 2 pass; `search.entity_anchoring` stays off until the harness-lane gate 3 passes | `2fa44f149a352788421aed510a25ce3d574e81f4` | `query` + reader at equal tokens: 0.884 → 1.000 accuracy, 11.6% → 0% stale-wrong; no recall loss on existing `query` evals |
+| [Facts arm in query](#facts-arm-in-query) | Gate 1 fails, gate 2 passes; `search.query_facts_arm` stays off | `16288b95ca700de1f4930d77196e6f49829b17c7` | B2 forget-then-remember: stale 92% → 4-6%, corrected accuracy 0% → 1% / 0%; edit-sync and append 100% both ways |
 
-All four are dev-stage verdicts on synthetic, seeded fixtures. None was confirmed on a held-out set.
+All five are dev-stage verdicts on synthetic, seeded fixtures. None was confirmed on a held-out set.
 
 ## Interleaved supersession candidates
 
@@ -162,11 +166,49 @@ With the key off, results match the build without the change, apart from fields 
 **Gate 3** is the harness lane's job: LongMemEval knowledge-update, PersonaMem and BEAM dev slices, then
 validation. The key stays off until it passes. Spend for gates 1 and 2: $1.52.
 
+## Facts arm in query
+
+**Measured at gbrain `16288b95ca700de1f4930d77196e6f49829b17c7`.** Record:
+[`query-facts-arm/`](2026-10-05-memory-proof-wave-gbrain-verdicts/query-facts-arm/). The gates were preregistered
+at gbrain `a87c3e2afa4e7abb1972dbdc01beb9cf28d25947`.
+
+With `search.query_facts_arm` on, gbrain's `query` adds up to three active saved facts that match the question as
+rows next to the notes. They fit inside the caller's row count and token budget. It makes no model call.
+
+**Gate 1, B2 corrections (fail).** This repository's corrections bench (`corrections-v1`, seed 20261006, 100
+items, reader `claude-sonnet-5-5`) ran the forget-then-remember arm with the key on and off. The rule needed
+higher corrected-value accuracy after 1 and after 5 unrelated writes.
+
+| Arm | Key | After 1 write: correct / stale | After 5 writes: correct / stale |
+|---|---|---|---|
+| forget-then-remember | off | 0% / 92% | 0% / 92% |
+| forget-then-remember | on | 1% / 4% | 0% / 6% |
+| edit-sync | off and on | 100% / 0% | 100% / 0% |
+| append | off and on | 100% / 0% | 100% / 0% |
+
+The reader named the correction in 158 of 200 answers with the key on, and 0 of 200 with it off, but kept the old
+value. A remembered fact is dated the day it is saved, which is after every question's simulated date. So the
+reader treated the correction as not yet in effect. Edit-sync and append sit at 100% either way, so they rule out a
+loss and cannot show a gain.
+
+As a diagnostic chosen after gate 1 ran, and not a gate, `remember` received the correction's own date as
+`valid_from`. Key off then answered 92% correctly and key on 100%, at both checkpoints.
+
+**Gate 2, existing `query` evals (pass).** No question lost recall@10. The corpora hold no saved facts, so the arm
+never fired there. In a diagnostic copy with one saved fact per question, the relational fixture lost recall@10 on
+2 of 38 questions, because a fact row takes a page slot when the row count is full.
+
+Spend: $26.05 of a $40 cap. The two bench flags the runs used (`--gbrain-search-config`, `--remember-valid-from`)
+are in [`bench-flags.patch`](2026-10-05-memory-proof-wave-gbrain-verdicts/query-facts-arm/bench-flags.patch),
+against this repository at `00baf2b3c1fb6ae992a3747fb9b9579e0c974751`. They are not merged into
+`eval/workload-suites/`.
+
 ## Limits of these results
 
 - **Dev stage, synthetic fixtures.** Every number above comes from seeded, templated workloads built to stress
   one mechanism. The entity-anchoring workload in particular was built around the failure mode it fixes.
-- **Mirrored, not re-measured.** This repository copies gbrain's records. The pinned-questions and
+- **Mirrored, not re-measured.** This repository copies gbrain's records. The facts-arm gate 1 ran this
+  repository's bench with a local patch; its numbers are gbrain's record, copied byte for byte. The pinned-questions and
   entity-anchoring harnesses are in gbrain (`evals/pinned-questions/`, `evals/entity-anchoring/`), and the C2 and
   threshold sweeps are in `scripts/eval-c2-candidate-fusion.ts`. Each record's `reproduce` field gives the
   command.
@@ -176,3 +218,4 @@ validation. The key stays off until it passes. Spend for gates 1 and 2: $1.52.
 ## Changelog
 
 - 2026-10-05: First version, mirroring the four records from gbrain#6066.
+- 2026-10-06: Added the facts arm in query record (gate 1 fails, gate 2 passes; stays off).

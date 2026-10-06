@@ -24,7 +24,7 @@
  */
 import { Rng, addDays } from '../generators/seeded.ts';
 import {
-  STUB_ABSTAIN, capitalize, contextBlocks, countValue, fill, isoAt, longDate, makeDocument, norm, opaqueId, renderContext, scoreGold, statementRegex,
+  STUB_ABSTAIN, capitalize, containsValue, contextBlocks, countValue, fill, isoAt, longDate, makeDocument, norm, opaqueId, renderContext, scoreGold, statementRegex,
 } from './common.ts';
 import { fillerSession } from './filler.ts';
 import type { ChatMessage, HarnessDocument, HarnessQuery, Outcome, ScoreResult, ScorerLabel, SuiteBundle, SuiteDefinition } from './types.ts';
@@ -336,7 +336,7 @@ export function classifyMiss(label: ScorerLabel, input: { outcome: Outcome; stor
   if (input.outcome === 'correct') return 'correct';
   if (label.gold.kind !== 'value') return 'unclassified';
   if (input.stored === false) return 'absent_from_storage';
-  const delivered = countValue(input.deliveredContext, label.gold.value) > 0;
+  const delivered = containsValue(input.deliveredContext, label.gold.value);
   if (!delivered) return input.stored === null ? 'unclassified' : 'stored_not_retrieved';
   return 'delivered_but_misread';
 }

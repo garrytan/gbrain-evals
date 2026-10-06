@@ -1,0 +1,460 @@
+{
+ "gbrain-facts": {
+  "store": "gbrain-facts",
+  "system": "gbrain",
+  "config": {
+   "token_budget": 8000,
+   "embedding_model": "voyage:voyage-4",
+   "embedding_dimensions": 1024,
+   "speaker_format": "bold"
+  },
+  "extract_facts": true,
+  "units": {
+   "tru-0c2880616e41": {
+    "documents": 114,
+    "ingest": {
+     "template_copy_s": 0.26,
+     "child_start_s": 1.252,
+     "write_path": "put_pages",
+     "pages": 114,
+     "write_s": 4.445,
+     "barrier_ms": 16938.7,
+     "barrier": {
+      "polls": 12,
+      "pages": 114,
+      "missing_embeddings": 0,
+      "stale_pages": 94,
+      "embed_coverage": 1
+     },
+     "server": {
+      "name": "gbrain",
+      "version": "0.60.64.0"
+     },
+     "gbrain": {
+      "cli": ".gbrain-overlays/e8e1f66b8e5225b113cacd18931b627fca451bae/src/cli.ts",
+      "version": "gbrain 0.60.64.0",
+      "template_build_s": 9.81,
+      "config": {
+       "search.return_budget_max_remote": "200000"
+      }
+     }
+    },
+    "ms": 22901,
+    "extract_facts": {
+     "ms": 432278.3,
+     "facts_inserted": 334,
+     "pages_processed": 114,
+     "pages_skipped": 0,
+     "pages_failed": 0,
+     "spent_usd": 0.7500211200000002,
+     "outcome": "extracted 334 facts (334 inserted)"
+    },
+    "presence": {
+     "found": {
+      "Brightwater": true,
+      "Copperline": true,
+      "Ironbark": true,
+      "Fernway": true,
+      "Halcyon Labs": true
+     },
+     "by_kind": {
+      "pages": {
+       "Brightwater": true,
+       "Copperline": true,
+       "Ironbark": true,
+       "Fernway": true,
+       "Halcyon Labs": true
+      },
+      "facts": {
+       "Brightwater": false,
+       "Copperline": false,
+       "Ironbark": false,
+       "Fernway": false,
+       "Halcyon Labs": false
+      }
+     }
+    }
+   },
+   "tru-ec7c798fcbd9": {
+    "documents": 240,
+    "ingest": {
+     "template_copy_s": 0.248,
+     "child_start_s": 0.925,
+     "write_path": "put_pages",
+     "pages": 240,
+     "write_s": 6.972,
+     "barrier_ms": 63341.4,
+     "barrier": {
+      "polls": 23,
+      "pages": 240,
+      "missing_embeddings": 0,
+      "stale_pages": 220,
+      "embed_coverage": 1
+     },
+     "server": {
+      "name": "gbrain",
+      "version": "0.60.64.0"
+     },
+     "gbrain": {
+      "cli": ".gbrain-overlays/e8e1f66b8e5225b113cacd18931b627fca451bae/src/cli.ts",
+      "version": "gbrain 0.60.64.0",
+      "template_build_s": 9.81,
+      "config": {
+       "search.return_budget_max_remote": "200000"
+      }
+     }
+    },
+    "ms": 71644,
+    "extract_facts": {
+     "error": "RuntimeError: gbrain extract-conversation-facts --yes failed (1): ps; add 'timezone: <IANA>' to page frontmatter for accurate facts\n[extract-conversation-facts] conversations/trd-2b7fd42a15ca: 10 facts inserted across 1 segments entity_resolution_counts={\"fallback_slugify\":10}\n[conversation-parser] pattern=bold-name-no-time assumed UTC for time-only timestamps; add 'timezone: <IANA>' to page frontmatter for accurate facts\n[extract-conversation-facts] conversations/trd-2822e66ed081: 10 facts inserted across 1 segments entity_resolution_counts={\"fallback_slugify\":10}\n[conversation-parser] pattern=bold-name-no-time assumed UTC for time-only timestamps; add 'timezone: <IANA>' to page frontmatter for accurate facts\n[extract-conversation-facts] conversations/trd-a52e04062afe: 5 facts inserted across 1 segments entity_resolution_counts={\"fallback_slugify\":5}\n[conversation-parser] pattern=bold-name-no-time assumed UTC for time-only timestamps; add 'timezone: <IANA>' to page frontmatter for accurate facts\n[extract-conversation-facts] conversations/trd-18728f40edc3: 10 facts inserted across 1 segments entity_resolution_counts={\"fallback_slugify\":10}\n[conversation-parser] pattern=bold-name-no-time assumed UTC for time-only timestamps; add 'timezone: <IANA>' to page frontmatter for accurate facts\n[extract-conversation-facts] conversations/trd-1ad5e2a91466: 10 facts inserted across 1 segments entity_resolution_counts={\"fallback_slugify\":10}\n[extract.conversation_facts] 1/1 (100%) default: 2385 facts inserted\n[extract.conversation_facts] 1/1 (100%) done\n\nTraceback (most recent call last):\n  File \"eval/harness-provider/mpw_workload/bridge.py\", line 348, in main\n    req = json.loads(line)\n                 ^^^^^^^^^^\n  File \"eval/harness-provider/mpw_workload/bridge.py\", line 238, in gbrain_cli\n    home = self.provider._unit_home(unit)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"eval/harness-provider/mpw/"
+    },
+    "presence": {
+     "found": {
+      "Tara Kapoor": true,
+      "Victor Taylor": true,
+      "Forge": true,
+      "Sarah Lopez": true,
+      "Vera Singh": true,
+      "Eric Martinez": true,
+      "Yara Johnson": true,
+      "Uma Brown": true,
+      "Victor Jackson": true,
+      "Noah Kapoor": true,
+      "Rachel Brown": true,
+      "Rosa Nakamura": true,
+      "Wendy Hernandez": true,
+      "David Zhang": true,
+      "Delta": true,
+      "Victor Wilson": true,
+      "Delta Board Meeting Q4 2025": true,
+      "Demo Day W27 - Delta Biotech Presentation": true,
+      "1:1 David Zhang + Victor Wilson": true,
+      "Vector": true,
+      "Vector Board Meeting Q3 2025": true,
+      "Demo Day W25 - Beta Cybersecurity Pitch": true,
+      "Demo Day W30": true,
+      "1:1 Julia Davis + Uma Brown": true,
+      "Vera Rodriguez": true
+     },
+     "by_kind": {
+      "pages": {
+       "Tara Kapoor": true,
+       "Victor Taylor": true,
+       "Forge": true,
+       "Sarah Lopez": true,
+       "Vera Singh": true,
+       "Eric Martinez": true,
+       "Yara Johnson": true,
+       "Uma Brown": true,
+       "Victor Jackson": true,
+       "Noah Kapoor": true,
+       "Rachel Brown": true,
+       "Rosa Nakamura": true,
+       "Wendy Hernandez": true,
+       "David Zhang": true,
+       "Delta": true,
+       "Victor Wilson": true,
+       "Delta Board Meeting Q4 2025": true,
+       "Demo Day W27 - Delta Biotech Presentation": true,
+       "1:1 David Zhang + Victor Wilson": true,
+       "Vector": true,
+       "Vector Board Meeting Q3 2025": true,
+       "Demo Day W25 - Beta Cybersecurity Pitch": true,
+       "Demo Day W30": true,
+       "1:1 Julia Davis + Uma Brown": true,
+       "Vera Rodriguez": true
+      },
+      "facts": {
+       "Tara Kapoor": false,
+       "Victor Taylor": false,
+       "Forge": false,
+       "Sarah Lopez": false,
+       "Vera Singh": false,
+       "Eric Martinez": false,
+       "Yara Johnson": false,
+       "Uma Brown": false,
+       "Victor Jackson": false,
+       "Noah Kapoor": false,
+       "Rachel Brown": false,
+       "Rosa Nakamura": false,
+       "Wendy Hernandez": false,
+       "David Zhang": false,
+       "Delta": false,
+       "Victor Wilson": false,
+       "Delta Board Meeting Q4 2025": false,
+       "Demo Day W27 - Delta Biotech Presentation": false,
+       "1:1 David Zhang + Victor Wilson": false,
+       "Vector": false,
+       "Vector Board Meeting Q3 2025": false,
+       "Demo Day W25 - Beta Cybersecurity Pitch": false,
+       "Demo Day W30": false,
+       "1:1 Julia Davis + Uma Brown": false,
+       "Vera Rodriguez": false
+      }
+     }
+    }
+   }
+  }
+ },
+ "comparator": {
+  "store": "comparator",
+  "system": "comparator",
+  "config": {
+   "max_tokens": 2300,
+   "max_chunk_tokens": 2700
+  },
+  "extract_facts": false,
+  "units": {
+   "tru-0c2880616e41": {
+    "documents": 114,
+    "ingest": {
+     "bank": "c-6758f51ee052",
+     "documents": 114,
+     "facts": 413,
+     "ingest_ms": 30600,
+     "barrier_ms": 30349.5,
+     "extraction_calls_expected": 114,
+     "extraction_calls_rule": "one LLM call per 3000-character retain chunk of each document",
+     "bank_config": {
+      "enable_observations": false
+     },
+     "server": {
+      "version": "0.10.2",
+      "lock_sha256": "49a0e4f35e81e50ea9706e1ef0bf6b660f2b3a82fd27c0e98fc059648f5249b7",
+      "torch": "2.14.1+cpu",
+      "install_seconds": 29.4,
+      "metered": [
+       {
+        "what": "LLM",
+        "provider": "openai",
+        "model": "gpt-4o-mini",
+        "model_source": "server default",
+        "base_url": "http://127.0.0.1:39939/openai/v1",
+        "operations": [
+         "fact extraction (retain)",
+         "consolidation when observations are on",
+         "reflect (agent mode)"
+        ]
+       }
+      ],
+      "local_compute": [
+       {
+        "what": "embeddings",
+        "model": "BAAI/bge-small-en-v1.5@5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+        "device": "cpu"
+       },
+       {
+        "what": "reranker",
+        "model": "cross-encoder/ms-marco-MiniLM-L-6-v2@233902d25c440f23af6f7d6e94d2946bac0bee0a",
+        "device": "cpu"
+       },
+       {
+        "what": "database",
+        "engine": "embedded PostgreSQL",
+        "location": "isolated HOME under the cell directory"
+       }
+      ],
+      "unmetered": [],
+      "defaults": {
+       "llm_provider": "openai",
+       "llm_model": "gpt-4o-mini",
+       "embeddings_provider": "local",
+       "embeddings_local_model": "BAAI/bge-small-en-v1.5",
+       "reranker_provider": "local",
+       "reranker_local_model": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+       "database_url": "pg0",
+       "retain_chunk_size": 3000,
+       "retain_extraction_mode": "concise",
+       "retain_extract_causal_links": true,
+       "enable_observations": true,
+       "tokenizer_encoding": "o200k_base"
+      },
+      "url": "http://127.0.0.1:39487",
+      "data_dir": "eval/reports/workload-bench/time-relationships-smoke20/stores/comparator/comparator-server"
+     }
+    },
+    "ms": 30613,
+    "presence": {
+     "found": {
+      "Brightwater": true,
+      "Copperline": true,
+      "Ironbark": true,
+      "Fernway": true,
+      "Halcyon Labs": true
+     },
+     "by_kind": {
+      "chunks": {
+       "Brightwater": true,
+       "Copperline": true,
+       "Ironbark": true,
+       "Fernway": true,
+       "Halcyon Labs": true
+      },
+      "facts": {
+       "Brightwater": true,
+       "Copperline": true,
+       "Ironbark": true,
+       "Fernway": true,
+       "Halcyon Labs": true
+      }
+     }
+    }
+   },
+   "tru-ec7c798fcbd9": {
+    "documents": 240,
+    "ingest": {
+     "bank": "c-2b76349ea404",
+     "documents": 240,
+     "facts": 3976,
+     "ingest_ms": 166556.4,
+     "barrier_ms": 165397.6,
+     "extraction_calls_expected": 476,
+     "extraction_calls_rule": "one LLM call per 3000-character retain chunk of each document",
+     "bank_config": {
+      "enable_observations": false
+     },
+     "server": {
+      "version": "0.10.2",
+      "lock_sha256": "49a0e4f35e81e50ea9706e1ef0bf6b660f2b3a82fd27c0e98fc059648f5249b7",
+      "torch": "2.14.1+cpu",
+      "install_seconds": 29.4,
+      "metered": [
+       {
+        "what": "LLM",
+        "provider": "openai",
+        "model": "gpt-4o-mini",
+        "model_source": "server default",
+        "base_url": "http://127.0.0.1:39939/openai/v1",
+        "operations": [
+         "fact extraction (retain)",
+         "consolidation when observations are on",
+         "reflect (agent mode)"
+        ]
+       }
+      ],
+      "local_compute": [
+       {
+        "what": "embeddings",
+        "model": "BAAI/bge-small-en-v1.5@5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+        "device": "cpu"
+       },
+       {
+        "what": "reranker",
+        "model": "cross-encoder/ms-marco-MiniLM-L-6-v2@233902d25c440f23af6f7d6e94d2946bac0bee0a",
+        "device": "cpu"
+       },
+       {
+        "what": "database",
+        "engine": "embedded PostgreSQL",
+        "location": "isolated HOME under the cell directory"
+       }
+      ],
+      "unmetered": [],
+      "defaults": {
+       "llm_provider": "openai",
+       "llm_model": "gpt-4o-mini",
+       "embeddings_provider": "local",
+       "embeddings_local_model": "BAAI/bge-small-en-v1.5",
+       "reranker_provider": "local",
+       "reranker_local_model": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+       "database_url": "pg0",
+       "retain_chunk_size": 3000,
+       "retain_extraction_mode": "concise",
+       "retain_extract_causal_links": true,
+       "enable_observations": true,
+       "tokenizer_encoding": "o200k_base"
+      },
+      "url": "http://127.0.0.1:39487",
+      "data_dir": "eval/reports/workload-bench/time-relationships-smoke20/stores/comparator/comparator-server"
+     }
+    },
+    "ms": 166595,
+    "presence": {
+     "found": {
+      "Tara Kapoor": true,
+      "Victor Taylor": true,
+      "Forge": true,
+      "Sarah Lopez": true,
+      "Vera Singh": true,
+      "Eric Martinez": true,
+      "Yara Johnson": true,
+      "Uma Brown": true,
+      "Victor Jackson": true,
+      "Noah Kapoor": true,
+      "Rachel Brown": true,
+      "Rosa Nakamura": true,
+      "Wendy Hernandez": true,
+      "David Zhang": true,
+      "Delta": true,
+      "Victor Wilson": true,
+      "Delta Board Meeting Q4 2025": true,
+      "Demo Day W27 - Delta Biotech Presentation": true,
+      "1:1 David Zhang + Victor Wilson": true,
+      "Vector": true,
+      "Vector Board Meeting Q3 2025": true,
+      "Demo Day W25 - Beta Cybersecurity Pitch": true,
+      "Demo Day W30": true,
+      "1:1 Julia Davis + Uma Brown": true,
+      "Vera Rodriguez": true
+     },
+     "by_kind": {
+      "chunks": {
+       "Tara Kapoor": true,
+       "Victor Taylor": true,
+       "Forge": true,
+       "Sarah Lopez": true,
+       "Vera Singh": true,
+       "Eric Martinez": true,
+       "Yara Johnson": true,
+       "Uma Brown": true,
+       "Victor Jackson": true,
+       "Noah Kapoor": true,
+       "Rachel Brown": true,
+       "Rosa Nakamura": true,
+       "Wendy Hernandez": true,
+       "David Zhang": true,
+       "Delta": true,
+       "Victor Wilson": true,
+       "Delta Board Meeting Q4 2025": true,
+       "Demo Day W27 - Delta Biotech Presentation": true,
+       "1:1 David Zhang + Victor Wilson": true,
+       "Vector": true,
+       "Vector Board Meeting Q3 2025": true,
+       "Demo Day W25 - Beta Cybersecurity Pitch": true,
+       "Demo Day W30": true,
+       "1:1 Julia Davis + Uma Brown": true,
+       "Vera Rodriguez": true
+      },
+      "facts": {
+       "Tara Kapoor": true,
+       "Victor Taylor": true,
+       "Forge": true,
+       "Sarah Lopez": true,
+       "Vera Singh": true,
+       "Eric Martinez": true,
+       "Yara Johnson": true,
+       "Uma Brown": true,
+       "Victor Jackson": true,
+       "Noah Kapoor": true,
+       "Rachel Brown": true,
+       "Rosa Nakamura": true,
+       "Wendy Hernandez": true,
+       "David Zhang": true,
+       "Delta": true,
+       "Victor Wilson": true,
+       "Delta Board Meeting Q4 2025": true,
+       "Demo Day W27 - Delta Biotech Presentation": true,
+       "1:1 David Zhang + Victor Wilson": false,
+       "Vector": true,
+       "Vector Board Meeting Q3 2025": true,
+       "Demo Day W25 - Beta Cybersecurity Pitch": true,
+       "Demo Day W30": true,
+       "1:1 Julia Davis + Uma Brown": false,
+       "Vera Rodriguez": true
+      }
+     }
+    }
+   }
+  }
+ }
+}
