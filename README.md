@@ -15,7 +15,7 @@ describes gbrain as this repository pins it today; the changelog at the bottom r
 | Pinned product | gbrain master [`739e5cc`](https://github.com/garrytan/gbrain/tree/739e5cc89ca43b9b9351f0f203c7b12a7c0c571c) (v0.60.46.0), declared as `gbrain` in `package.json` |
 | Newer gbrain builds also measured | v0.60.49.0 (`b9ee931`), v0.60.60.0 (multi-relation planner) and v0.60.62.0 (`51f865d78`, entity recall). Results from them say so. |
 | Fixed-purpose aliases | `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), used only by the experiments that name them |
-| This repository | gbrain-evals v0.10.35 (`VERSION`) |
+| This repository | gbrain-evals v0.10.36 (`VERSION`) |
 
 This repository installs gbrain master `739e5cc`. Some results below were measured at earlier commits; each names
 its commit. The search modes have been identical since v0.48.4.0, so retrieval results from those commits describe

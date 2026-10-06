@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [0.10.35] - 2026-10-06
+## [0.10.36] - 2026-10-06
 
 ### Cat 40 Hard round 4: questions about several accounts; the held-out run is 50k only
 
@@ -109,6 +109,16 @@ $1,794).
   drawn ([calibration.md](docs/benchmarks/cat40-hard/calibration.md)). Projections now go per model, arm and family
   from round 1's measured Hard costs (2 to 5 times v1 per cell) plus the measured judge cost; a resumed step opens a
   new budget run (`--new-budget-run`) sized to the cells still missing. `knobs.round-2.json` makes H2 and H3 harder.
+
+## [0.10.35] - 2026-10-06
+
+### P2 held-out records, the P4 core-gate remainder and P6's LongMemEval-M confirmation
+
+**P2: date-grounded extraction and speaker attribution on, hub dampening removed.** Mirrors gbrain [#6020](https://github.com/garrytan/gbrain/pull/6020) (merged as `e7f59913e` in v0.60.94.0) in [the P2 page](docs/benchmarks/2026-10-05-heldout-program/p2.md). Date-grounded extraction passes E2 on 7 sealed LoCoMo conversations (1,076 questions): saved facts with an unresolved relative date fall from 8.95% to 2.05% (−77% relative, CI [−8.3, −5.5] points), temporal QA holds (+0.8 [−1.2, +2.7]) and overall QA rises (+1.2 [+0.6, +1.7]); per-prompt checks turn it on for dream synthesis, `extract_atoms` and `propose_takes`, and life chronicle events stay opt-in after missing criterion (a) on a floor. Speaker attribution passes E3 on 60 sealed synthetic conversations: assistant-said QA rises from 44.1% to 95.8% (+51.7 [+42.9, +60.3]) with every guard passing, at about 41% more saved facts per conversation. Hub dampening at H = 32 fails E1 on all 12 cells of sealed hub-world seeds 2 and 3: both rivals beat it on concept nDCG@5 and hub-as-answer falls 10.0 to 36.2 points against a −0.5 guard, so gbrain#6020 removed the search-side mechanism before merge. The three P2 verdict files join the verdict index.
+
+**P4 core gate, report-only models complete.** The `claude-opus-5-5` and `claude-fable-5-1` runs that stopped at their budget caps were resumed to completion on all 14 sealed BEAM-100K conversations (56 questions, $197): Opus 89.1% → 89.4%, +0.3 points [−5.9, +6.5]; Fable 89.3% → 86.8%, −2.4 [−8.9, +4.2]. The earlier partial figures (+3.4, +2.3) did not hold. Fable is a second model below zero if all four models gate; the verdict is FAIL either way and core memory stays off. The four-model custodian aggregate, `p4-core-heldout-2026-10-06.json`, joins the verdict index, and the P4 page and the program scorecard cite it.
+
+**P6 LongMemEval-M confirmation: not runnable.** The preregistration leaves the sealed LongMemEval-M split to the eval harness owner, and none was ever defined: the frozen harness `cf270c2` marks every LongMemEval question id as development data (`lme-s.json`, `dev_fraction` 1; S and M share ids), and its memory-qa runner has no LongMemEval-M path. P6 development also used 470 LongMemEval-M questions. No run was made ($0); the sealed LoCoMo pass stands as P6's evidence.
 
 ## [0.10.34] - 2026-10-06
 
