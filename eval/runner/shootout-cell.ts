@@ -22,6 +22,7 @@
  *   bun eval/runner/shootout-cell.ts settle  --campaign <manifest.json> --state <dir> --lease <id>
  *   bun eval/runner/shootout-cell.ts abandon --campaign <manifest.json> --state <dir> --lease <id> --reason <text>
  *   bun eval/runner/shootout-cell.ts status  --campaign <manifest.json> --state <dir>
+ *   bun eval/runner/shootout-cell.ts hash    --campaign <manifest.json>   (the hash a preregistration records)
  *   bun eval/runner/shootout-cell.ts remote  --cell-b64 <base64 json>        (on the VM: proxy + cell command + lease summary)
  */
 import { createHash, randomUUID } from 'node:crypto';
@@ -98,6 +99,7 @@ export function expandCell(t: CellTemplate, params: Record<string, ParamValue>, 
     ...(t.setup_command ? { setup_command: subst(t.setup_command, params, where) } : {}) };
 }
 
+/** The campaign hash covers the campaign file, every cell file and every arms file a cell command names. */
 export function loadCampaign(path: string): { manifest: CampaignManifest; sha256: string } {
   const text = readFileSync(path, 'utf8');
   const m = JSON.parse(text) as CampaignManifest;
@@ -113,7 +115,10 @@ export function loadCampaign(path: string): { manifest: CampaignManifest; sha256
     for (const c of f.cells ?? []) { const e = expandCell(c, params, file, { system: f.system, config: f.config }); if (e) cells.push(e); }
   }
   m.cells = cells;
+  const armsFiles = [...new Set(cells.flatMap(c => [...c.command.matchAll(/--arms (\S+)/g)].map(x => x[1])))].sort();
+  for (const f of armsFiles) if (existsSync(resolve(REPO_ROOT, f))) hash.update(`\u0000${f}\u0000${readFileSync(resolve(REPO_ROOT, f), 'utf8')}`);
   const problems: string[] = [];
+  for (const f of armsFiles) if (!existsSync(resolve(REPO_ROOT, f))) problems.push(`arms file ${f} does not exist`);
   if (m.kind !== 'oss-shootout-campaign' || m.schema_version !== 1) problems.push('kind must be oss-shootout-campaign, schema_version 1');
   if (!/^[A-Za-z0-9._-]{1,64}$/.test(m.campaign_id ?? '')) problems.push('campaign_id must be 1-64 characters of [A-Za-z0-9._-]');
   if (!(m.cap_usd > 0)) problems.push('cap_usd must be positive');
@@ -333,6 +338,11 @@ if (import.meta.main) {
     const cmd = argv[0];
     if (cmd === 'remote') {
       process.exit(await runRemote(JSON.parse(Buffer.from(one('--cell-b64') ?? '', 'base64').toString('utf8')), { port: one('--port') ? Number(one('--port')) : undefined }));
+    }
+    if (cmd === 'hash') {
+      const loaded = loadCampaign(one('--campaign') ?? '');
+      print({ sha256: loaded.sha256, cells: loaded.manifest.cells.length, parameters: loaded.manifest.parameters ?? {}, leases_usd: loaded.manifest.cells.reduce((x, c) => x + c.lease_usd, 0) });
+      process.exit(0);
     }
     const manifest = one('--campaign'), state = one('--state');
     if (!manifest || !state) throw new Error('usage: see the header of eval/runner/shootout-cell.ts (--campaign <manifest.json> --state <dir>)');

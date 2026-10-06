@@ -1,0 +1,291 @@
+# Preregistration: open-source memory shootout, memory QA and PrecisionMemBench (2026-10-06)
+
+**Status: draft.** Two values are open: `lme_s_limit` (the LongMemEval-S slice) and `graphiti_beam_recipe` (whether
+Graphiti's `gpt-5.5` recipe runs on BEAM). The freezing commit fills both, records the campaign hash they produce, and
+changes this line to "Frozen". Nothing below changes after the first counted cell runs; a later change gets a new
+dated amendment at the end of this file, before any cell it affects.
+
+Plan: [docs/plans/2026-10-05-oss-memory-shootout/PLAN.md](../plans/2026-10-05-oss-memory-shootout/PLAN.md) (approved
+2026-10-05). This file is its Phase 3. It covers P1 (memory QA, Phase 4 cells and the D1 controls and D2 readers) and P3
+(PrecisionMemBench, Phase 5). Update and forget (P2) and the Cat 40 agent tasks (P4) get their own preregistrations.
+
+## The question
+
+When an agent needs memory, an engineer can choose gbrain or an open-source memory system: Graphiti, Cognee, Mem0, Basic
+Memory or Hindsight (Letta is in scope only as an agent, in P4, because it has no passive memory API at 0.34.4). For
+the same conversations, the same reader and the same amount of evidence, which system returns evidence that lets the
+reader answer correctly, how much of the right evidence does it return, and at what cost and latency? The report says
+where gbrain loses as plainly as where it wins.
+
+## What runs
+
+### Systems, pinned
+
+Each system runs whole in its own cell on an identical Ubicloud VM class, behind the shim protocol v1
+([eval/systems/PROTOCOL.md](../../eval/systems/PROTOCOL.md), sha256 `4484c587…bab963`) and the shared shim base
+(`eval/systems/_shim/shim.py`, sha256 `9ba9f737…7e1053`). Every provider call goes through the cell's metering proxy.
+The capability record (`eval/systems/<name>/capability.json`) names every model role, the namespace and provenance
+mechanism, the readiness signal and every deviation from the vendor's benchmark code; its hash is part of each run's
+configuration hash.
+
+| System | Pinned version | Capability record sha256 | Lock sha256 | Provenance | Time | Parallel namespaces |
+|---|---|---|---|---|---|---|
+| Basic Memory | `basic-memory==0.23.2` | `412ba2f9fff3b4facba6fa40b41a51a5e5f54027627a93c837cb4762b19407d0` | `e1a14a19…ab16807` | exact | in text | no |
+| Mem0 (OSS) | `mem0ai[nlp]==2.2.1`, Qdrant 1.19.2 | `26c2047a386234458795e4ef6ead421afccb3abfaa3e4906e7565f75993f4ae7` | `9777b7a8…25680` | partial | in text | yes |
+| Graphiti (OSS) | `graphiti-core==0.30.2`, Neo4j 5.26.2 | `7a19ff2c3c9087c4aaf1c6ddfe4bd50e100de61b0b77c03cac7106e35faa5001` | `4ce9b216…bddd1d13` | partial | native | yes |
+| Hindsight | server and client 0.10.2, image `ghcr.io/vectorize-io/hindsight:0.10.2@sha256:d1840062…ab70` | `6e20e737429cbe028c9db396682f3d7b6435ab0b73120973179383ed1a29899c` | `f54d89df…d6d8` | exact | native | yes |
+| Cognee | `cognee==1.6.2` | `d047df533ad059d4144fb849bfd8b43ff6df0b5e8e62ea227d22c8770c225d9a` | `59af44d5…5a0d7` | partial | in text | no |
+| Letta (P4 only) | Letta Code 0.34.4, image `letta/letta:0.34.4@sha256:8ee7fb69…a5c` | `621897ff642845caa8f03e71a95795aa2a480dcd59d00f55b8aa9291c2edd22b` | none | unavailable | none | no |
+| gbrain | repository pin `739e5cc` (v0.60.46.0), `package.json` | in process | `bun.lock` | exact | native (shootout recipe) | no |
+
+Two configurations per system, named for what they control:
+
+- **recipe**: the vendor's documented local or self-hosted install, as its capability record resolves it. Extraction
+  and embedding models: Basic Memory local `bge-small-en-v1.5` (384 dims, no provider calls at ingest); Mem0
+  `gpt-5-mini` with `text-embedding-3-small`; Graphiti `gpt-5.5` with `gpt-4.1-nano` as small model and reranker,
+  `text-embedding-3-small` at 1,024; Hindsight `gpt-4o-mini` with a local `bge-small-en-v1.5` and a local cross-encoder;
+  Cognee `gpt-5.6-luna` with `text-embedding-3-large` at 3,072; gbrain `gbrain init` defaults (`voyage:voyage-4` at
+  1,024, balanced search with the Voyage `rerank-2.5` reranker).
+- **common**: extraction `gpt-4.1-mini` and embedder `text-embedding-3-large` at 1,536 dimensions wherever the system
+  lets them be set, and nothing else changed. gbrain's common row keeps its default search (the Voyage reranker stays).
+
+The recipe configuration does not run on LongMemEval-S (cost); it runs on LoCoMo dev and BEAM-100K dev, and on BEAM for
+Graphiti only when `graphiti_beam_recipe` is true.
+
+gbrain runs as two named adapters (`eval/runner/systems/gbrain.ts`): **gbrain-shootout**, the counted recipe (native
+chunk items from gbrain's own search defaults, limits `vendor-default` = the search mode's own 25 and
+`fixed-evidence` = 40, frozen from a keyless LoCoMo check), and **gbrain-legacy**, the existing memory-qa path
+(sessions rehydrated, one fixed retrieval) kept as the link to the starting line. Counted gbrain rows run at the
+repository pin, the code the harness, its golden test and every pilot used (amendment A2).
+
+The D1 controls (`eval/runner/systems/baselines.ts`) run behind the same interface: **full-context** (the whole history,
+most recent sessions kept first under a budget), **no-memory** (the question alone) and **plain-hybrid** (Postgres
+full-text plus pgvector over `text-embedding-3-large`, reciprocal-rank fusion, no gbrain code).
+
+### Cells and the manifest
+
+The cells are in [2026-10-06-oss-memory-shootout/manifests/](2026-10-06-oss-memory-shootout/manifests/): one campaign
+file with a $1,200 cap and one ledger, one cell file per system and configuration, and the arms files the cells run.
+`bun eval/runner/shootout-cell.ts hash --campaign <campaign.json>` hashes the campaign file, every cell file and every
+arms file a cell names.
+
+- Campaign hash at freeze: **(filled by the freezing commit)**.
+- Draft hash with the default values (`lme_s_limit` 100, `graphiti_beam_recipe` true):
+  `78e3131b8863880d9624ee6c6bbdc45402607f42d071b712e921ee4d97f58422` (58 cells).
+
+A cell ingests each namespace once, retrieves once per question and policy, and derives every arm from that state
+(`memory-qa --arms`). LoCoMo dev is ingested a second time per configuration (`--ingest-replicate 2`, retrieval only)
+to measure run-to-run variance.
+
+### Data and selection
+
+| Set | Data | Questions | Clusters | Role |
+|---|---|---|---|---|
+| LongMemEval-S slice | `longmemeval_s_cleaned.json` at `98d7416c`, sha256 `d6f21ea9…c3a442` | `lme_s_limit`, category-stratified, `--seed 42` | one per question (each has its own haystack) | **inferential** |
+| PrecisionMemBench | the vendored upstream fixture and scorer, byte for byte | 77 cases | one per case | **inferential** |
+| LoCoMo dev | `locomo10.json` at `3eb6f2c`, dev split (3 conversations) | 587 | 3 | descriptive |
+| BEAM-100K dev | BEAM at `b2da22e`, dev split (6 conversations) | 120 | 6 | descriptive |
+
+The sealed splits are not opened here (Phase 7). Namespaces are opaque (`ns-` plus a hash) and so are source ids
+(`src-` plus the occurrence id); no dataset id, label, category or abstention marker reaches a system (the sanitizer,
+with a tripwire in the client and the proxy). Sessions arrive in event-time order. Undated sessions get a disclosed
+synthetic time one minute after the previous dated session and are counted (BEAM-100K: 1,795 of 1,877 sessions); a
+question with no date (LoCoMo, BEAM) is asked at its conversation's last event time.
+
+### Readers and judges
+
+The judge is a fixed instrument per benchmark, and so is the main reader. The main readers are the runner's
+preregistered readers, which the starting line and the published numbers use (amendment A1): `gpt-4o-2024-08-06` on
+LongMemEval-S, `gpt-4o-mini` on LoCoMo, `gpt-4.1-mini` on BEAM. Judges: `gpt-4o-2024-08-06` with LongMemEval's official
+per-type prompts on LongMemEval-S and LoCoMo (the temporal off-by-one prompt on LoCoMo temporal questions, the
+unanswerable prompt on abstention questions); `gpt-4.1-mini` judging BEAM rubric items yes or no. One run per question,
+temperature 0 where the model accepts it, 1,024 reader output tokens.
+
+D2 frontier readers replay the main reader's frozen contexts, unchanged, on a 100-question slice of each benchmark
+(`--seed 2026`): `anthropic:claude-opus-5-5`, `openai:gpt-6.1-sol`, `anthropic:claude-sonnet-5-5` and
+`anthropic:claude-fable-5-1` (CLAUDE.md, "Choose models"; `gpt-5.4-mini` never runs).
+
+## The arms
+
+An arm is retrieval policy × context mode × reader, from one ingest and one retrieval per policy:
+
+- **Policies.** `vendor-default`: the system's own documented retrieval amount and settings, with no token budget.
+  `fixed-evidence`: the record's larger candidate setting, packed to an 8,000-token budget. Each policy sends only its
+  capability record's `settings` map.
+- **Context modes.** `native`: the item text the system returned, in rank order, each with its validity window and a
+  superseded mark when the system sets one. `rehydrated`: the raw sessions behind the items' source ids, selected in
+  first-appearance order and shown in date order (the LongMemEval reading prompt, byte for byte the starting line's).
+- **Readers.** The main reader on every question; the D2 frontier readers on their slice.
+
+**Packing.** One reader-independent budget unit for every system and reader: 4 characters per token (`approx-chars-div-4`,
+recorded in every row). Selection runs in rank order and takes items (or sessions) whole; the first that does not fit
+ends the pack. The exact prompt bytes are frozen in the cell's `contexts.ndjson`, and every reader of that arm reads the
+same bytes. The full-context control is ranked most recent first and shown oldest first, like a chat window.
+
+## Outcomes, recall and provenance
+
+**Canonical outcomes.** Each expected question has exactly one terminal outcome per arm, from a frozen manifest and an
+append-only attempt log (`eval/runner/memory-qa/outcomes.ts`):
+
+- `scored`;
+- product failures, kept in the denominator: `retrieval_error`, `unsupported`, and `ingest_degraded` (a conversation
+  with more than 1% failed sessions, a finish timeout, or a readiness probe that does not find the last session; its
+  questions keep the scores they get);
+- harness failures, which make a comparison incomplete and are never a product loss: `reader_error`, `judge_error`,
+  `harness_invalid`, `budget_not_run`.
+
+A failed question is retried on resume up to 3 attempts; the last attempt is terminal. A retrieval that fails while the
+proxy saw the provider misbehave (a 5xx, a dropped connection, an unparseable 200) is retried once at once; the row
+records the first failure and the provider status (`upstream_retry`, `provider.upstream`). A readiness probe that hits a
+vendor error is retried once, then counts as a miss.
+
+**QA scores.** *Service quality* (headline): mean judge score with product failures as 0, over questions with no
+harness failure on any compared system. *Completed-call quality*: the same mean over `scored` rows only, reported beside
+it. Before pairing, a question that has a harness failure on any system in a family is excluded from every system in
+that family (`crossSystemExclusion`), and the count is reported.
+
+**Strict recall.** `recall_all@5` and `recall_all@10`: every gold session among the distinct sources the items cite, in
+first-appearance order across items in rank order, taken whole item by item until the next item's new sources would
+pass K. One item citing every session cannot score 1.0; for one source per item this equals the starting line's
+definition. Fan-out (mean and largest number of sources per item) is recorded per row. `recall_any@5` and nDCG@10 are
+reported, never combined with `recall_all`. Abstention questions have no gold and no recall.
+
+**Provenance.** A source id must be one the namespace ingested; any other id makes that retrieval a `retrieval_error`.
+Items with `provenance_status: unavailable` cite nothing; a system whose items all lack provenance gets "recall not
+measurable", never zero. `partial` provenance (Mem0, Graphiti, Cognee) counts for recall and is labeled beside every
+number. Shims never query a vendor database privately to manufacture provenance. Recall is not reported for the
+full-context and no-memory controls (returning everything is not a ranking).
+
+## The comparisons
+
+### Primary family (inferential, Holm, α = 0.05)
+
+On the LongMemEval-S slice, arm `fixed-evidence.native.b8000.main` (8,000 tokens of native evidence, the main reader),
+metric **QA service quality**, each system's common configuration against **gbrain-shootout common**:
+
+1. Basic Memory common vs gbrain-shootout common
+2. Mem0 common vs gbrain-shootout common
+3. Graphiti common vs gbrain-shootout common
+4. Hindsight common vs gbrain-shootout common
+5. Cognee common vs gbrain-shootout common
+
+Method: rows paired by question id after the exclusion join (`pairObservations`), `clusteredPairedDelta` with the
+question as cluster, seed 20261006, 10,000 draws; the two-sided cluster sign-flip p-value (`p_two_sided`), Holm-adjusted
+across the five (`holmAdjusted`). The delta is system minus gbrain with a cluster bootstrap 95% interval.
+
+### Secondary families (each Holm-corrected within itself, α = 0.05)
+
+- **S1, strict recall.** The same five pairs and arm on LongMemEval-S, metric `recall_all@5`, for systems whose
+  provenance is measurable.
+- **S2, do I need a memory system at all (D1).** On LongMemEval-S, main reader, QA service quality, gbrain-shootout
+  common in the rehydrated context against: full-context under `fixed-evidence` and under `vendor-default` (the whole
+  history, where it fits), plain-hybrid under both policies, and no-memory (its one arm, no evidence). Five
+  comparisons.
+- **S3, PrecisionMemBench (P3).** The upstream contract (the shared evaluator supplies persona, pins and relation
+  expansion for every system), cases as clusters: each system's common configuration against gbrain-shootout common
+  on the search-only categories' precision and recall (ten comparisons); structural categories reported separately.
+
+### Descriptive (no tests)
+
+Every other arm and set: `vendor-default` and `rehydrated` arms, recipe configurations, LoCoMo dev and BEAM-100K dev
+(3 and 6 clusters, too few for the repository's 10-cluster minimum), the second LoCoMo ingest (run-to-run agreement),
+gbrain-legacy against gbrain-shootout (a harness link), and the D2 frontier readers. These are reported with cluster
+counts and ranges, and paired intervals where the clusters allow.
+
+### Minimum detectable differences
+
+Two-sided paired test, 80% power, normal approximation, paired binary outcomes whose disagreement rate between the two
+systems is d. The first Holm step uses α/5 = 0.01; the last uses 0.05.
+
+| LongMemEval-S slice | α = 0.01, d = 0.2 / 0.3 / 0.4 | α = 0.05, d = 0.2 / 0.3 / 0.4 |
+|---|---|---|
+| 50 questions | 21.6 / 26.5 / 30.6 points | 17.7 / 21.7 / 25.1 points |
+| 100 questions | 15.3 / 18.7 / 21.6 points | 12.5 / 15.3 / 17.7 points |
+| 200 questions | 10.8 / 13.2 / 15.3 points | 8.9 / 10.9 / 12.5 points |
+| 500 questions | 6.8 / 8.4 / 9.7 points | 5.6 / 6.9 / 7.9 points |
+
+An exact McNemar test needs at least 8 discordant wins with no losses to reach 0.01, and 6 to reach 0.05. The report
+prints each comparison's own detectable difference from its observed cluster-robust standard error (`powerNote`).
+
+## What the report may say
+
+The report uses these sentences and their plain variants, and no stronger claim.
+
+**Primary family**, for each pair after Holm:
+
+- Adjusted p ≤ 0.05, delta > 0: "On the LongMemEval-S slice, with the same reader and 8,000 tokens of each system's own
+  evidence, {system} answered more questions correctly than gbrain ({a}% vs {b}%, difference {d} points, 95% interval
+  {lo} to {hi})."
+- Adjusted p ≤ 0.05, delta < 0: the same sentence with gbrain first.
+- Adjusted p > 0.05: "On this slice we could not tell {system} and gbrain apart ({a}% vs {b}%); a difference smaller
+  than about {mdd} points would not have been detected." Never "equivalent" or "as good as".
+- Both systems at or above 95%: "Both answered nearly every question on this slice; it cannot separate them."
+- More than 5% of the slice excluded for harness failures, or any cell of the pair `invalid`: "The comparison is
+  incomplete" with the count and cause, and no direction.
+
+**Descriptive sets**: "On LoCoMo dev (three conversations), {system} scored {a}% and gbrain {b}%. Three conversations
+describe these systems on these conversations; they cannot rank them." The same for BEAM-100K dev with six.
+
+**Recall**: always named as "strict recall of all gold sessions at 5 (or 10)", with the provenance status beside it;
+"not measurable" when provenance is unavailable.
+
+**Costs and latency**: ingest dollars and minutes per conversation or haystack, query dollars per question and reader
+tokens come from the metering proxy and the rows; p50 and p95 latency is the shim's own `service_ms` on identical VM
+classes. Costs are reported as measured, never as free; cached reader calls are counted separately.
+
+**Overall**: a workload-by-workload finding, not a leaderboard. "Best" or "beats the field" appears only if every
+primary comparison favors one system after Holm.
+
+## Known pilot findings, reported as findings
+
+The Phase 2 pilots (`eval/systems/<name>/PILOT.md` on the vendor lane branches) found three product behaviors that the
+report states as results, and that this run does not tune away:
+
+1. **Mem0, out of the box.** Mem0 2.2.1 treats only the exact model name `gpt-5` as a reasoning model, so with its own
+   default `gpt-5-mini` it sends `temperature=0.1`, and OpenAI rejects every extraction call with HTTP 400: the default
+   OSS install stores no memories against the current OpenAI API. The recipe arm sets `is_reasoning_model=True`, Mem0's
+   documented override, and says so; the report states both facts.
+2. **Graphiti, delete residue.** `remove_episode` deletes an edge only when the removed episode first created it, so text
+   from a deleted session can survive in an entity summary or in a fact first stored from another session (31 of 32
+   protocol checks pass; the miss is "deleted fact no longer in text"). P2 measures the residue; the shim does not repair
+   it.
+3. **Basic Memory, common embedder.** Basic Memory's default `semantic_min_similarity` of 0.55 was set for its local
+   embedder. With `text-embedding-3-large` the scores run lower, so the common configuration returns fewer notes (8.5 of
+   10 on average on the LoCoMo pilot, 9.2 on BEAM), and one probe query returned nothing. The floor stays at its
+   default in both configurations.
+
+## Budget and stop rules
+
+- **Cap.** $1,200 for P1 and P3 together, held in the campaign ledger (`.budget/oss-memory-shootout.sqlite`) as
+  durable leases: each cell reserves its lease before its VM starts, the VM's metering proxy can spend only that lease,
+  and the lease settles to the proxy's recorded spend. A lease is used once; a cell whose VM never reports back keeps
+  its full lease until abandoned. Leases are 1.5 times the pilot measurement (the gbrain, D1 and D2 lines are estimates).
+  Pilot-based totals: Graphiti about $343 (LongMemEval-S ingest $154; the BEAM recipe about $91 if run), Cognee about $94,
+  Mem0 $91, Hindsight $73, Basic Memory $43.
+- **Phase stop.** If any phase's measured spend passes its estimate by more than 50%, the phase stops for approval.
+- **Cell stops.** A cell that ends `invalid` (a sanitizer or proxy tripwire, foreign ids in the manifest) stops that
+  system's remaining cells until the cause is found and recorded. A lease that runs out leaves its cell `partial`; the
+  rest of the cell runs only on a new lease, and the partial rows stay in the record.
+- **Never rerun to improve a number.** Finished cells are not rerun; a retry happens only under the outcome rules above,
+  and every attempt stays in the attempt log.
+
+## Amendments
+
+**A1 (2026-10-06), main reader.** The plan's decision D2-A named GPT-4o "as the one historical link on everything".
+The main reader per benchmark stays the runner's preregistered reader instead: `gpt-4o-2024-08-06` on LongMemEval-S,
+`gpt-4o-mini` on LoCoMo, `gpt-4.1-mini` on BEAM. These are the readers of the starting line and of the published
+numbers, so they are the link to earlier results; GPT-4o remains the reader on LongMemEval-S, where the inferential
+comparisons run. The four frontier readers are unchanged, with `gpt-6.1-sol` as the newest GPT model. Recorded on
+2026-10-06 at the campaign owner's decision.
+
+**A2 (2026-10-06), gbrain identity.** The plan lists gbrain at the repository pin `739e5cc` and at master frozen on the
+preregistration date. Counted gbrain rows run at the pin, which the harness, its keyless golden and every pilot used. A
+row at a later gbrain commit is a new configuration, added by a dated amendment before its cells run, and labeled with
+its commit.
+
+## Changelog
+
+### 2026-10-06: draft
+
+First draft, from the approved plan, the pilots and the Phase 4 draft manifests. Open: `lme_s_limit` and
+`graphiti_beam_recipe`.
