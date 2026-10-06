@@ -56,7 +56,12 @@
  * GBRAIN_HOME pointed at a temp dir. `--gbrain <checkout>[@ref]` runs a
  * copied overlay (eval/runner/gbrain-under-test.ts).
  *
- * Usage: bun eval/runner/n6-visibility-fuzz.ts [--seed N] [--gbrain <path>[@ref]] [--output <dir>] [--only op1,op2] [--json]
+ * Named window (2026-10-06): an op parameter named `window` gets a one-turn
+ * window naming the target page by its capitalized title, so
+ * volunteer_context resolves the page for the trusted caller and its probes
+ * carry signal (docs/benchmarks/2026-10-06-n8-privacy-gate-preregistration.md).
+ *
+ * Usage: bun eval/runner/n6-visibility-fuzz.ts [--seed N] [--gbrain <path>[@ref]] [--output <dir>] [--only op1,op2] [--attest <preregistration.md>] [--json]
  */
 import { existsSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
@@ -66,6 +71,7 @@ import { generateN6World, ledgerFingerprint, personIntro, N6_DEFAULT_SEED, N6_GE
 import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
 import { gbrainPin } from './gbrain-version.ts';
 import { DECIDE_OFF, withHermeticEnv } from './hermetic-env.ts';
+import { attestPreregistration, type Attestation } from './prereg.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, receiptPath, sourceTreeIdentity, writeReceipt, type Receipt } from './receipt.ts';
 
@@ -99,17 +105,36 @@ export type ScopeVariant = 'ambient' | 'foreign' | 'all';
 export interface Synthesized { params: Record<string, unknown>; unsupported?: undefined }
 export interface Unsupported { params?: undefined; unsupported: string }
 
+/**
+ * A one-turn conversation window that names a page by its title, each word capitalized so gbrain's entity
+ * extractor sees a name (lower-case titles and slugs resolve nothing). Preregistered 2026-10-06
+ * (docs/benchmarks/2026-10-06-n8-privacy-gate-preregistration.md).
+ */
+export function namingWindow(title: string): string {
+  return `user: I was just reading ${title.split(/\s+/).filter(Boolean).map(w => w[0].toUpperCase() + w.slice(1)).join(' ')} again.`;
+}
+
+/** Title of the ledger page a target names; for a never-written ghost, the protected title with its query word swapped. */
+export function targetTitle(ledger: Pick<N6Ledger, 'pages'>, target: N6Target, protectedTwin?: N6Target): string | undefined {
+  const page = ledger.pages.find(p => p.slug === target.slug && p.source_id === (target.source_id ?? 'alpha'));
+  const title = page ? /^title:\s*(.+)$/m.exec(page.content)?.[1]?.trim() : undefined;
+  if (title || !protectedTwin) return title;
+  const base = targetTitle(ledger, protectedTwin);
+  return base?.includes(protectedTwin.query) ? base.split(protectedTwin.query).join(target.query) : base;
+}
+
 /** Build arguments for one op aimed at one target. Returns why not when a required param has no rule. */
 export function synthesizeParams(
   params: Record<string, ParamDef>,
   target: N6Target | null,
-  opts: { scope?: ScopeVariant; enumOverride?: [string, string] } = {},
+  opts: { scope?: ScopeVariant; enumOverride?: [string, string]; title?: string } = {},
 ): Synthesized | Unsupported {
   const out: Record<string, unknown> = {};
   for (const [name, def] of Object.entries(params)) {
     let value: unknown;
     if (target) {
-      if (SLUG_PARAMS.has(name)) value = target.slug;
+      if (name === 'window' && opts.title) value = namingWindow(opts.title);
+      else if (SLUG_PARAMS.has(name)) value = target.slug;
       else if (QUERY_PARAMS.has(name)) value = target.query;
       else if (ENTITY_PARAMS.has(name)) value = target.slug;
       else if (name === 'partial') value = target.slug;
@@ -507,7 +532,7 @@ export function uncoveredReason(s: OpSummary, rows: readonly ProbeRow[]): string
 
 // ─── Main run ──────────────────────────────────────────────────────────
 
-export interface N6Options { seed?: number; gbrainSpec?: string | null; only?: string[]; reportsDir?: string; outputDir?: string; quiet?: boolean }
+export interface N6Options { seed?: number; gbrainSpec?: string | null; only?: string[]; reportsDir?: string; outputDir?: string; quiet?: boolean; attestation?: Attestation | null }
 
 export interface OpSummary {
   op: string;
@@ -562,6 +587,9 @@ async function runN6Hermetic(options: N6Options) {
   log(`[n6] gbrain ${gut.version}${gut.overlay ? ` (overlay ${gut.overlay.build.commit.slice(0, 12)})` : ' (pinned)'}; ${g.operations.length} operations, ${readOps.length} read ops fuzzed; presence ${presenceOk ? 'ok' : 'FAILED'}`);
 
   const hubTarget: N6Target = { slug: ledger.hub_slug, query: 'offsite planning', type: 'note', date: ledger.classes[0].twin.date };
+  const unitTitles = (unit: ProbeUnit) => unit.cls
+    ? { protected: targetTitle(ledger, unit.cls.protected), twin: targetTitle(ledger, unit.cls.twin), ghost: targetTitle(ledger, unit.cls.ghost, unit.cls.protected) }
+    : { protected: unit.protected ? targetTitle(ledger, unit.protected) : undefined, twin: undefined, ghost: undefined };
   const localReplay = new Map<string, boolean>();
   let localOraclePairs = 0;
   let localOracleDiffs = 0;
@@ -578,13 +606,14 @@ async function runN6Hermetic(options: N6Options) {
       for (const caller of REMOTE_CALLERS) {
         for (const unit of units) {
           for (const v of variants) {
-            const prot = synthesizeParams(op.params, unit.protected, v);
+            const titles = unitTitles(unit);
+            const prot = synthesizeParams(op.params, unit.protected, { ...v, title: titles.protected });
             if (!prot.params) { unsupported.add(prot.unsupported); continue; }
             const protParams = prot.params;
             const probe_id = `${caller}:${op.name}:${unit.id}:${v.id}`;
             const base = { probe_id, caller, op: op.name, target: unit.id, variant: v.id };
             const replayKey = `${op.name}:${unit.id}:${v.id}`;
-            const gh = unit.cls ? synthesizeParams(op.params, unit.cls.ghost, v) : null;
+            const gh = unit.cls ? synthesizeParams(op.params, unit.cls.ghost, { ...v, title: titles.ghost }) : null;
             if (!localReplay.has(replayKey)) {
               const lr = await call('local', op, protParams);
               const lg = gh?.params ? await call('local', op, gh.params) : null;
@@ -612,7 +641,7 @@ async function runN6Hermetic(options: N6Options) {
             let twinError: string | undefined;
             if (unit.cls) {
               const cls = unit.cls;
-              const tw = synthesizeParams(op.params, cls.twin, v);
+              const tw = synthesizeParams(op.params, cls.twin, { ...v, title: titles.twin });
               const tr = tw.params ? await call(caller, op, tw.params) : null;
               twinSeen = tr ? controlSeen(tr, cls.twin_markers, [cls.twin.slug]) : false;
               if (tr && !tr.ok) twinError = `${tr.error_code}: ${tr.raw.slice(0, 160)}`;
@@ -748,6 +777,7 @@ async function runN6Hermetic(options: N6Options) {
     probes_exposed: exposedRows.length,
     probes_with_signal: exposedRows.filter(r => r.control).length,
     probes_no_signal: exposedRows.filter(r => r.status === 'no_signal').length,
+    named_window_probes_with_signal: exposedRows.filter(r => r.control && 'window' in (readOps.find(o => o.name === r.op)?.params ?? {})).length,
     content_leak_probes: count('content'),
     existence_leak_probes: count('existence'),
     oracle_probes: count('oracle'),
@@ -816,7 +846,7 @@ async function runN6Hermetic(options: N6Options) {
     },
   };
   const file = options.outputDir ? join(options.outputDir, 'receipt.json') : receiptPath(N6_CATEGORY, options.reportsDir);
-  writeReceipt(file, receipt);
+  writeReceipt(file, (options.attestation ? { ...receipt, preregistration_attestation: options.attestation } : receipt) as Receipt);
   log(`[n6] coverage ${covered}/${readOps.length} read ops; content leaks ${metrics.content_leak_probes}, existence ${metrics.existence_leak_probes}, oracles ${metrics.oracle_probes}, gate bypasses ${metrics.gate_bypasses}; receipt ${file}`);
   return { receipt, file };
 }
@@ -826,7 +856,8 @@ if (import.meta.main) {
   const flag = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
   const seedArg = flag('--seed');
   const only = flag('--only');
-  runN6({ seed: seedArg ? Number(seedArg) : undefined, gbrainSpec: gbrainSpecFrom(argv), only: only ? only.split(',') : undefined, outputDir: flag('--output') })
+  const attest = flag('--attest');
+  runN6({ seed: seedArg ? Number(seedArg) : undefined, gbrainSpec: gbrainSpecFrom(argv), only: only ? only.split(',') : undefined, outputDir: flag('--output'), attestation: attest ? attestPreregistration(attest) : null })
     .then(({ receipt }) => {
       if (argv.includes('--json')) console.log(JSON.stringify(receipt.data, null, 2));
       process.exit(receipt.run_status === 'completed' ? 0 : 1);

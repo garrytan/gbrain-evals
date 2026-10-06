@@ -680,7 +680,7 @@ export const REGISTRY: readonly CategoryEntry[] = [
     headline: { metric: 'leaking probes (content, existence, existence-oracle; target 0), access-gate bypasses, and read-op coverage', denominator: 'every read op enumerated from gbrain operations at run time x 6 remote callers x targets and variants (3,854 exposed probes and 74 read ops at 0.60.13.0; generator v2 at d44296c: 5,984 exposed probes, 30 of 74 read ops covered)' },
     gate: 'gate', evidence_maturity: 'synthetic-production-path',
     promotion: {
-      preregistered: '2026-10-01', basis: 'amendment 1: zero leaks gate immediately (they held at 6c8373c and 3a284ae); the coverage floor follows the outside review (a safety gate needs an authorized-utility floor) and held at both commits',
+      preregistered: '2026-10-01', basis: 'amendment 1: zero leaks gate immediately (they held at 6c8373c and 3a284ae); the coverage floor follows the outside review (a safety gate needs an authorized-utility floor) and held at both commits; the named-window signal floor was added on 2026-10-06 by docs/benchmarks/2026-10-06-n8-privacy-gate-preregistration.md before any run with the new window',
       safety_contracts: [
         zero('no-content-leak', 'data.metrics.content_leak_probes', 'no protected marker in any remote response'),
         zero('no-existence-leak', 'data.metrics.existence_leak_probes', 'no protected slug or ungranted-source row the probe did not ask for'),
@@ -691,6 +691,7 @@ export const REGISTRY: readonly CategoryEntry[] = [
       ],
       quality_thresholds: [
         { id: 'content-reachable-coverage', path: 'data.metrics.content_reachable_coverage', op: '>=', value: 1, description: 'every read op that returns protected content to the trusted caller has a signal-bearing remote probe (a system that refuses everything cannot pass)' },
+        { id: 'named-window-signal', path: 'data.metrics.named_window_probes_with_signal', op: '>=', value: 1, description: 'added 2026-10-06 (docs/benchmarks/2026-10-06-n8-privacy-gate-preregistration.md): a window naming a protected page by its title reaches protected content for the trusted caller and the public twin for a remote caller, so volunteer_context carries signal' },
       ],
       exploratory: ['data.metrics.op_coverage', 'data.metrics.probes_with_signal', 'data.by_caller'],
     },
@@ -787,15 +788,23 @@ export const REGISTRY: readonly CategoryEntry[] = [
     family: 'agent', tier: 'H', script: 'eval/runner/n8-proactive-recall.ts', run: { kind: 'dispatched' },
     cost_estimate: FREE, receipt_path: receipt('n8-proactive-recall'),
     headline: { metric: 'proactive recall on trigger turns against false-alarm rate on negative turns at the default gate, with a min_confidence sweep, tokens per turn, redundant injections per session, and private or withdrawn deliveries', denominator: 'seed 8: 186 user turns in 52 sessions (60 triggers, 42 of them alias or exact title; 80 negatives, 68 innocuous or no-mention and 12 common-word; 8 private and 8 soft-deleted mentions; 30 repeats) plus 480 associative-recall-v1 probes as one-turn windows (240 indirect, 120 direct, 120 negatives with three adjudicated)' },
-    gate: 'report-only', evidence_maturity: 'synthetic-production-path',
+    gate: 'gate', evidence_maturity: 'synthetic-production-path',
     promotion: {
-      preregistered: '2026-10-01',
-      basis: 'amendment 8 and the CEO requirement: report-only until associative-recall-v1 labels pass independent human review, so nothing gates; the targets below were frozen before the first N8 run and are reported as exploratory with their pass flags',
-      safety_contracts: [],
-      quality_thresholds: [],
+      preregistered: '2026-10-06',
+      basis: 'docs/benchmarks/2026-10-06-n8-privacy-gate-preregistration.md, frozen in its own commit before any run at gbrain c5fb0201: the two privacy contracts (no private page to a remote volunteer_context caller, none in the turn_context block; N8-1 and N8-2, fixed in bb4e9970) and their body-marker counterparts gate; the alias and exact-title floor (0.8, the target frozen on 2026-10-01) and the private-mention count (8, from the generator) are signal floors so a gate that delivers nothing fails. Everything else, the associative arm included, stays exploratory until associative-recall-v1 labels pass independent human review (amendment 8, CEO requirement)',
+      safety_contracts: [
+        zero('no-private-page-remote', 'data.privacy_gate.private_pages_delivered_remote', 'volunteer_context for a remote caller never delivers a visibility: private page'),
+        zero('no-private-page-turn-context', 'data.privacy_gate.private_pages_delivered_turn_context', 'the turn_context block injected into a model never carries a private page'),
+        zero('no-private-marker-remote', 'data.privacy_gate.private_markers_delivered_remote', 'no private page body marker appears anywhere in a remote volunteer_context payload'),
+        zero('no-private-marker-turn-context', 'data.privacy_gate.private_markers_delivered_turn_context', 'no private page body marker appears anywhere in the turn_context block'),
+      ],
+      quality_thresholds: [
+        { id: 'remote-alias-title-floor', path: 'data.privacy_gate.remote_alias_title_recall', op: '>=', value: 0.8, description: 'signal floor: the remote volunteer_context mode still delivers the target on at least 80% of the 42 alias and exact-title trigger turns' },
+        { id: 'turn-context-alias-title-floor', path: 'data.privacy_gate.turn_context_alias_title_recall', op: '>=', value: 0.8, description: 'signal floor: the turn_context block still carries the target on at least 80% of the 42 alias and exact-title trigger turns' },
+        { id: 'private-mention-floor', path: 'data.privacy_gate.private_mention_turns', op: '>=', value: 8, description: 'signal floor: the ledger still holds the 8 turns that name a private person' },
+      ],
       exploratory: [
-        'data.contracts.private_pages_delivered_remote (target 0: volunteer_context for a remote caller never delivers a visibility: private page)',
-        'data.contracts.private_pages_delivered_turn_context (target 0: the turn_context block injected into a model never carries a private page)',
+        'data.privacy_gate.trusted_local_private_deliveries (the trusted local caller still resolves private mentions; a product decision, never gated)',
         'data.contracts.withdrawn_pages_delivered (target 0: soft-deleted pages are never delivered)',
         'data.contracts.redelivered_with_prior_context (target 0: a page whose slug is in prior_context is not volunteered again)',
         'data.quality.mechanics.recall_default (target >= 0.8 on alias and exact-title trigger turns at the default gate)',
@@ -1176,6 +1185,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'precisionmembench-instrument.ts': { role: 'PrecisionMemBench instrumentation sweep', part_of: 'precisionmembench' },
   'probe-accounting.ts': { role: 'shared probe accounting' },
   'promotion.ts': { role: 'evaluates preregistered promotion rules against a receipt' },
+  'prereg.ts': { role: 'preregistration attestation and the CI order check' },
   'reading-notes-recount.ts': { role: 'keyless recount of the reading-notes artifacts', part_of: 'reading-notes' },
   'reading-notes-requests.ts': { role: 'offline reading-notes request builder', part_of: 'reading-notes' },
   'receipt.ts': { role: 'receipt schema, writer and validator' },

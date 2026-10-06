@@ -6,7 +6,7 @@ import type { ParamDef } from 'gbrain/operations';
 import { generateN6World, ledgerFingerprint, N6_CLASSES, N6_DEFAULT_SEED } from '../../eval/generators/n6-visibility-gen.ts';
 import {
   controlSeen, countOccurrences, deliveredUnits, echoCredit, hasSourceRow, isTargeted, namedSlugs, normalizeForOracle,
-  runN6, scanLeaks, synthesizeParams, variantsFor, type CallOutcome,
+  namingWindow, runN6, scanLeaks, synthesizeParams, targetTitle, variantsFor, type CallOutcome,
 } from '../../eval/runner/n6-visibility-fuzz.ts';
 import { gbrainSpecFrom, parseGbrainSpec } from '../../eval/runner/gbrain-under-test.ts';
 
@@ -64,6 +64,31 @@ describe('N6 generator ledger', () => {
   test('v2 keeps every v1 class and marker unchanged', () => {
     expect(ledger.classes.slice(0, 5).map(c => c.class)).toEqual(['private_page', 'private_take', 'private_fact', 'derived_atom', 'foreign_source']);
     expect(ledger.classes[0].protected_markers).toEqual(V1_PRIVATE_PAGE_MARKERS);
+  });
+});
+
+describe('N6 naming window (preregistered 2026-10-06)', () => {
+  const page = ledger.classes.find(c => c.class === 'private_page')!;
+  const foreign = ledger.classes.find(c => c.class === 'foreign_source')!;
+  const params: Record<string, ParamDef> = { window: { type: 'string' }, prior_context: { type: 'string' } };
+
+  test('the window names the page title with every word capitalized', () => {
+    expect(namingWindow('Note zxkapewezeteq')).toBe('user: I was just reading Note Zxkapewezeteq again.');
+  });
+
+  test('titles come from the ledger page in the target source; the ghost title swaps in the ghost query', () => {
+    expect(targetTitle(ledger, page.protected)).toBe(`Note ${page.protected.query}`);
+    expect(targetTitle(ledger, page.twin)).toBe(`Note ${page.twin.query}`);
+    expect(targetTitle(ledger, page.ghost, page.protected)).toBe(`Note ${page.ghost.query}`);
+    expect(targetTitle(ledger, foreign.protected)).toBe(`Project ${foreign.protected.query}`);
+    expect(targetTitle(ledger, page.ghost)).toBeUndefined();
+  });
+
+  test('only a window parameter changes; without a title the old query rule stands', () => {
+    const named = synthesizeParams(params, page.protected, { title: targetTitle(ledger, page.protected) }).params!;
+    expect(named.window).toBe(namingWindow(`Note ${page.protected.query}`));
+    expect(named.prior_context).toBe(page.protected.query);
+    expect(synthesizeParams(params, page.protected).params!.window).toBe(page.protected.query);
   });
 });
 
