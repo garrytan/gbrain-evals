@@ -541,18 +541,18 @@ describe('operator tools (T1, T3, T5, T11: DX-F1, DX-F4, DX-F7, DX-F13, CEO-F4, 
     expect(experimentFlags(['--new-budget-run', '--per-family', '10'])).toEqual({ '--per-family': '10' });
     expect(() => checkRunnerFlags(['--new-budget-run'])).not.toThrow();
   });
-  test('ledger roster: allocations within the $4,350 authorization; the Hard ledger opens at $1,794; a missing or different ledger refuses', () => {
+  test('ledger roster: allocations within the $4,600 authorization (amendment A5); the Hard ledger is at $2,044; a missing or different ledger refuses', () => {
     const roster = JSON.parse(readFileSync(join(ROOT, 'docs/benchmarks/cat40-hard/ledger-roster.json'), 'utf8'));
-    expect(roster.authorization_usd).toBe(4350);
-    expect(roster.ledgers.find((l: { hard?: boolean }) => l.hard).allocation_usd).toBe(1794);
+    expect(roster.authorization_usd).toBe(4600);
+    expect(roster.ledgers.find((l: { hard?: boolean }) => l.hard).allocation_usd).toBe(2044);
     expect(roster.ledgers.find((l: { hard?: boolean }) => l.hard).path).toBe('.budget/cat40-hard.sqlite');
     const followupsCap = roster.ledgers.find((l: { path: string | null }) => l.path === '.budget/cat40-followups.sqlite').allocation_usd;
-    expect(roster.ledgers.reduce((t: number, l: { allocation_usd: number }) => t + l.allocation_usd, 0)).toBeLessThanOrEqual(4350);
+    expect(roster.ledgers.reduce((t: number, l: { allocation_usd: number }) => t + l.allocation_usd, 0)).toBeLessThanOrEqual(4600);
     const d = tmp();
     expect(() => checkRoster(roster, d)).toThrow('HARD_LEDGER_ROSTER');
     initLedger({ ledgerPath: join(d, '.budget/cat40-followups.sqlite'), programCapUsd: followupsCap, reason: 'test' });
-    initLedger({ ledgerPath: join(d, '.budget/cat40-hard.sqlite'), programCapUsd: 1794, reason: 'test' });
-    expect(checkRoster(roster, d)).toMatchObject({ capUsd: 1794, remainingUsd: 1794 });
+    initLedger({ ledgerPath: join(d, '.budget/cat40-hard.sqlite'), programCapUsd: 2044, reason: 'test' });
+    expect(checkRoster(roster, d)).toMatchObject({ capUsd: 2044, remainingUsd: 2044 });
     closeLedgers();
     const d2 = tmp();
     initLedger({ ledgerPath: join(d2, '.budget/cat40-followups.sqlite'), programCapUsd: followupsCap, reason: 'test' });
