@@ -183,7 +183,7 @@ case "$CMD" in
         R="$(round)"; DIR="$REPORTS/calibration/round-$R"
         need "$DIR/cells/results.jsonl" "round $R's results"
         if ! print_only; then
-          n=$(ls -d "$REPORTS"/calibration/round-*/freeze-check 2>/dev/null | grep -v "round-$R/" | wc -l)
+          n=$(find "$REPORTS/calibration" -mindepth 2 -maxdepth 2 -type d -name freeze-check ! -path "*/round-$R/*" | wc -l)
           [[ "$n" -lt 2 ]] || stop HARD_FREEZE_RULE_FAILED "2 freeze checks already ran" "stop" "Garry decides with the calibration table"
           bun "$ANALYZE" "$DIR/cells/results.jsonl" --freeze-rule --round "$R" >/dev/null || [[ -n "${FREEZE_OVERRIDE:-}" ]] || stop HARD_PREDECESSOR_MISSING "round $R does not pass the freeze rule" "a freeze check runs only after a passing round, or with FREEZE_OVERRIDE naming Garry's dated decision"
         fi
