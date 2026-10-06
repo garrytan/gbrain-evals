@@ -334,11 +334,13 @@ export class GbrainSlot {
     } };
     const git = (args: string[]) => execFileSync('git', ['-C', vault, '-c', 'user.name=cat40', '-c', 'user.email=cat40@example.invalid', ...args], { stdio: 'pipe' });
     // `gbrain sources add` hashes every file into a manifest and refuses one over 1 MiB (source-lifecycle.ts),
-    // about 8,000 files. A larger corpus registers the source with the policy files only (none in Hard worlds, so the first commit may be empty), then adds the rest
+    // about 8,000 files. A larger corpus registers the source with the policy files only (or, in Hard worlds, which have none, the first sync batch), then adds the rest
     // in synced batches. The final corpus commit is tagged so restore resets to it.
     const staged = world.docs.length > STAGED_SOURCE_ADD_DOCS;
-    writeDocs(staged ? world.docs.filter(d => d.type === 'policy') : world.docs);
-    git(['init', '-q']); git(['add', '-A']); git(['commit', '-q', '--allow-empty', '-m', staged ? 'policies' : 'corpus']);
+    const policies = world.docs.filter(d => d.type === 'policy');
+    const initialDocs = !staged ? world.docs : policies.length ? policies : world.docs.slice(0, STAGED_SYNC_BATCH);
+    writeDocs(initialDocs);
+    git(['init', '-q']); git(['add', '-A']); git(['commit', '-q', '-m', staged ? 'first batch' : 'corpus']);
     const steps: SlotBuild['steps'] = [];
     const op = async (step: string, args: string[]) => {
       const r = await runCli(this.run, args, 3_600_000);
@@ -366,7 +368,8 @@ export class GbrainSlot {
       // The import slows as tables grow with stale planner statistics (2.3 docs/s at 13k pages, about 7 after
       // an ANALYZE), and a sync is hard-killed after an hour. So the corpus arrives in batches, each synced and
       // followed by an operator ANALYZE (only when analyze is on), the way a growing company brain is maintained.
-      const rest = world.docs.filter(d => d.type !== 'policy');
+      const firstIds = new Set(initialDocs.map(d => d.id));
+      const rest = world.docs.filter(d => !firstIds.has(d.id));
       for (let i = 0, k = 1; i < rest.length; i += STAGED_SYNC_BATCH, k++) {
         writeDocs(rest.slice(i, i + STAGED_SYNC_BATCH));
         git(['add', '-A']); git(['commit', '-q', '-m', `corpus batch ${k}`]);
