@@ -13,7 +13,7 @@ On tasks where plain files with grep finish roughly half of the work for frontie
 - Calibration seed: 20261005. Smoke seed: 20261099.
 - Held-out seed: 20261006 (50k only, amendment A2).
 - Generator: `model-ladder-hard-v2` (amendment A1), frozen at step 3 (`freeze.json` and `knobs.frozen.json` in this directory).
-- Models: Sonnet 5.5 (`claude-sonnet-5-5`), Opus 5.5 (`claude-opus-5-5`), GPT-6.1 Sol (`gpt-6.1-sol`), Fable 5.1 (`claude-fable-5-1`), GPT-6 Astra (`gpt-6-astra`). A newer frontier release replaces its predecessor in the same family and tier only through a dated amendment below, with its price registered, before any cell of the next step runs (rules in the plan, CEO-F3).
+- Models: Sonnet 5.5 (`claude-sonnet-5-5`), Opus 5.5 (`claude-opus-5-5`), GPT-6.1 Sol (`gpt-6.1-sol`), Fable 5.1 (`claude-fable-5-1`); GPT-6 Astra (`gpt-6-astra`) is a calibration model only (amendment A3). A newer frontier release replaces its predecessor in the same family and tier only through a dated amendment below, with its price registered, before any cell of the next step runs (rules in the plan, CEO-F3).
 - Claims judge: `gpt-6.1-sol` on every cell (reported, never part of success).
 - Arms: oracle (reference only), fs, pg, memory (Sonnet 5.5 and GPT-6.1 Sol only, amendment A1) and gbrain, uncapped tool results, Hard tool limits (grep returns every match with full lines and a total; pg searches page with offsets, totals and an exhaustion flag, limit up to 100).
 - Turn cap: 16 per session (each H5 session separately), unless calibration moved it; the frozen value is `max_turns` in knobs.frozen.json.
@@ -115,3 +115,11 @@ Garry, 2026-10-06, after calibration round 3, relayed by GBRA-40: "take the reco
 - **Arms and order at 50k.** gbrain and fs on all five models first (the primary endpoint), then the oracle reference, then pg on all five models and memory on Sonnet 5.5 and GPT-6.1 Sol (secondary) as the remaining Hard ledger allows. Each batch runs only after its projection plus 15% fits the remaining balance. With pg run on every model, the simultaneous intervals cover gbrain against fs and pg; otherwise against fs only.
 - **Models.** Unchanged: Sonnet 5.5, Opus 5.5, GPT-6.1 Sol, Fable 5.1, GPT-6 Astra, the newest frontier models of each family.
 - **Unchanged.** The freeze rule, the freeze check on five models, the sealed validation variant, the authorization ($4,350) and the Hard ledger cap ($1,794).
+
+### A3 (2026-10-06): GPT-6 Astra leaves the held-out run; last calibration round
+
+Garry, 2026-10-06, after calibration round 4, relayed by GBRA-40: "take all recommendations for GBRA-39 option #1".
+
+- **Models.** The held-out 50k run uses Sonnet 5.5, Opus 5.5, GPT-6.1 Sol and Fable 5.1. GPT-6 Astra does not run there. GPT-6.1 Sol remains the newest frontier GPT, so each family keeps its newest frontier model (the project model rule). Reason: at round-4 costs the freeze check and the primary 50k batch (gbrain and fs on five models) project to $1,233 with margin against $1,445 left on the Hard ledger, which leaves no room for a fifth calibration round; GPT-6 Astra is about $250 of the primary batch. Memory still runs on Sonnet 5.5 and GPT-6.1 Sol.
+- **Calibration.** Round 5, the last the plan allows, keeps Sonnet 5.5 and GPT-6 Astra as calibration models so its results compare with rounds 1 to 4; the freeze check still covers Opus 5.5, Fable 5.1 and GPT-6.1 Sol, so every held-out model is seen before the freeze. Round 5 asks about 3 to 4 accounts per H2 to H5 question and draws H1 sets of 5 to 10 members (knobs.round-5.json). After round 5 the knobs freeze if the freeze rule passes; if it fails, the result and the knobs go to Garry before any freeze check.
+- **Unchanged.** Everything else in A1 and A2, the authorization ($4,350) and the Hard ledger cap ($1,794).

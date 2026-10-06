@@ -1,0 +1,254 @@
+{
+  "decision_id": "p5-delta-set-g-2026-10-05",
+  "stage": "held-out (second custodian): P5 delta H10 re-check and H11 on fresh set G, E5 recheck (report only)",
+  "verdict": {
+    "H10_recheck": "fail: e5_extra_works_at_starts 0 (pass) and as-of not below the no-guard arm (pass, equal), but two edge-validity gates are inferior to master (current-employer recall -0.056, live-edge recall -0.061) and during-F1 is inconclusive",
+    "H11": "fail: traps 104/113 = 0.920 (bar 0.99), and the same two recall gates are inferior to master"
+  },
+  "gates_source": "gbrain#6017 delta preregistration amendment 2 (2026-10-05T16:53Z, before set G existed)",
+  "builds": {
+    "candidate": "970c3088b6a97c4b5c9bcd4a752fe25579415bc7",
+    "master": "df34c67af680052dbfb612a994e2d56aaee61cb8",
+    "no_guard": "a26827dc3 (970c3088b with NOT_EMPLOYMENT_ROLE removed; eval/data/p5-delta/no-not-employment-role-guard-970c3088b.patch; local only)",
+    "p1_baseline": "6622a119e40ea09a7719233046aca24741863ed2 (report only)"
+  },
+  "harness": "gbrain-evals evals/program-followups b4871eb (temporal-edges custodian mode)",
+  "held_out_material": "set G: three sub-sets (one seed each: 137, 139, 149) written by the second custodian, pooled; 0 identical template lines and 0 shared word trigrams with sets B-F; preregistration hashed into custody before the build was pinned",
+  "candidate_vs_master": [
+    {
+      "id": "now-precision",
+      "gate": "noninferiority",
+      "status": "pass",
+      "a": 0.5597,
+      "b": 0.7297,
+      "delta": 0.17,
+      "ci95": [
+        0.11,
+        0.2294
+      ],
+      "n": 36,
+      "clusters": 36
+    },
+    {
+      "id": "asof",
+      "gate": "noninferiority",
+      "status": "pass",
+      "a": 0.4667,
+      "b": 0.5333,
+      "delta": 0.0667,
+      "ci95": [
+        0.0333,
+        0.1014
+      ],
+      "n": 720,
+      "clusters": 240
+    },
+    {
+      "id": "during",
+      "gate": "noninferiority",
+      "status": "inconclusive",
+      "a": 0.5985,
+      "b": 0.5792,
+      "delta": -0.0193,
+      "ci95": [
+        -0.0506,
+        0.0106
+      ],
+      "n": 240,
+      "clusters": 240
+    },
+    {
+      "id": "correction",
+      "gate": "noninferiority",
+      "status": "pass",
+      "a": 0,
+      "b": 0.2,
+      "delta": 0.2,
+      "ci95": [
+        0.0889,
+        0.3111
+      ],
+      "n": 45,
+      "clusters": 45
+    },
+    {
+      "id": "now-recall",
+      "gate": "noninferiority",
+      "status": "fail",
+      "a": 0.6496,
+      "b": 0.5936,
+      "delta": -0.0559,
+      "ci95": [
+        -0.094,
+        -0.023
+      ],
+      "n": 36,
+      "clusters": 36
+    },
+    {
+      "id": "live-recall",
+      "gate": "noninferiority",
+      "status": "fail",
+      "a": 0.6061,
+      "b": 0.5455,
+      "delta": -0.0606,
+      "ci95": [
+        -0.101,
+        -0.0253
+      ],
+      "n": 198,
+      "clusters": 198
+    }
+  ],
+  "traps": {
+    "candidate": {
+      "trap-alumni": "34/37",
+      "trap-invest": "32/38",
+      "trap-advises": "38/38"
+    },
+    "master": {
+      "trap-alumni": "25/37",
+      "trap-invest": "28/38",
+      "trap-advises": "24/38"
+    },
+    "no_guard": {
+      "trap-alumni": "34/37",
+      "trap-invest": "32/38",
+      "trap-advises": "38/38"
+    },
+    "p1_baseline": {
+      "trap-alumni": "11/37",
+      "trap-invest": "9/38",
+      "trap-advises": "24/38"
+    }
+  },
+  "invariance": "pass 240/240",
+  "asof_candidate_vs_no_guard": {
+    "candidate": 0.5333,
+    "no_guard": 0.5333
+  },
+  "probe": {
+    "candidate": {
+      "e5_extra_works_at_starts": 0,
+      "probe_people": 108,
+      "e5_wrong_closures": 0
+    },
+    "no_guard": {
+      "e5_extra_works_at_starts": 11,
+      "probe_people": 108,
+      "e5_wrong_closures": 6
+    }
+  },
+  "e5_recheck_report_only": {
+    "applied_closures": 3,
+    "wrong_closures": 0,
+    "undated_or_same_date_closed": 0,
+    "note": "the first single-value closures any E5 run has recorded as correct"
+  },
+  "p1_superiority_vs_6622a119e_report": [
+    {
+      "id": "now-precision",
+      "gate": "superiority",
+      "status": "pass",
+      "a": 0.3296,
+      "b": 0.7297,
+      "delta": 0.4001,
+      "ci95": [
+        0.3374,
+        0.4607
+      ],
+      "n": 36,
+      "clusters": 36
+    },
+    {
+      "id": "asof",
+      "gate": "superiority",
+      "status": "pass",
+      "a": 0.1889,
+      "b": 0.5333,
+      "delta": 0.3444,
+      "ci95": [
+        0.2903,
+        0.4014
+      ],
+      "n": 720,
+      "clusters": 240
+    },
+    {
+      "id": "during",
+      "gate": "superiority",
+      "status": "inconclusive",
+      "a": 0.4493,
+      "b": 0.5792,
+      "delta": 0.1299,
+      "ci95": [
+        0.0829,
+        0.1765
+      ],
+      "n": 240,
+      "clusters": 240
+    },
+    {
+      "id": "correction",
+      "gate": "superiority",
+      "status": "inconclusive",
+      "a": 0,
+      "b": 0.2,
+      "delta": 0.2,
+      "ci95": [
+        0.0889,
+        0.3111
+      ],
+      "n": 45,
+      "clusters": 45
+    },
+    {
+      "id": "now-recall",
+      "gate": "noninferiority",
+      "status": "fail",
+      "a": 0.6496,
+      "b": 0.5936,
+      "delta": -0.0559,
+      "ci95": [
+        -0.094,
+        -0.023
+      ],
+      "n": 36,
+      "clusters": 36
+    },
+    {
+      "id": "live-recall",
+      "gate": "noninferiority",
+      "status": "fail",
+      "a": 0.6061,
+      "b": 0.5455,
+      "delta": -0.0606,
+      "ci95": [
+        -0.101,
+        -0.0253
+      ],
+      "n": 198,
+      "clusters": 198
+    },
+    {
+      "id": "names-current",
+      "gate": "exploratory",
+      "status": "report_only",
+      "a": 0.1778,
+      "b": 0.1778,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "n": 45,
+      "clusters": 45
+    }
+  ],
+  "mechanisms": [
+    "Link typing regression against master: a company named in a role-bearing employment phrase (a role before 'at', or a timeline join or move line that ends with 'as <role>') is typed mentions on the candidate where master typed works_at. With no works_at edge the current employer drops out of live reads, which is the recall loss (concentrated in two of the three sub-sets).",
+    "Leave cues still partial: some idiomatic leave phrases (a verb with a particle or object, and quitting idioms) are not read, so a former employer keeps a live works_at edge with an open stint. That is what the 9 failed investment and alumni traps check.",
+    "Join cues still partial: start events framed as a first day or a kick-off are not read as dated starts (the stint is undated), while onboarding verbs are read."
+  ],
+  "cost_usd": 0
+}

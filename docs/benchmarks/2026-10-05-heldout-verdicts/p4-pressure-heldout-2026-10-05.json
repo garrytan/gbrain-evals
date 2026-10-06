@@ -1,0 +1,147 @@
+{
+ "decision_id": "p4-pressure-heldout-2026-10-05",
+ "cell": "P4 pressure gate, BEAM-500K sealed, claude-sonnet-5-5, A-prime vs B",
+ "builds": {
+  "Aprime": "master 8c9a8e9a4",
+  "B": "gbrain#6015 66956a3ee, memory.pressure.enabled=true, memory.core.enabled=false"
+ },
+ "harness": "gbrain-evals 8cfae29",
+ "verdict": "pass",
+ "paired_questions": 460,
+ "conversations": 23,
+ "dropped": "500k-11 (its B arm stopped at the $280 shard cap before running; its 20 A-prime rows are unpaired and excluded)",
+ "overall": {
+  "n": 460,
+  "clusters": 23,
+  "Aprime": 51.66,
+  "B": 63.01,
+  "delta_pts": 11.35,
+  "ci95": [
+   8.29,
+   14.39
+  ]
+ },
+ "per_category": {
+  "abstention": {
+   "Aprime": 89.1,
+   "B": 90.0,
+   "delta_pts": 0.9,
+   "ci95": [
+    -7.0,
+    8.7
+   ]
+  },
+  "contradiction_resolution": {
+   "Aprime": 62.8,
+   "B": 78.3,
+   "delta_pts": 15.5,
+   "ci95": [
+    8.6,
+    22.9
+   ]
+  },
+  "event_ordering": {
+   "Aprime": 32.6,
+   "B": 42.8,
+   "delta_pts": 10.3,
+   "ci95": [
+    2.2,
+    19.1
+   ]
+  },
+  "information_extraction": {
+   "Aprime": 42.1,
+   "B": 61.4,
+   "delta_pts": 19.2,
+   "ci95": [
+    3.7,
+    34.8
+   ]
+  },
+  "instruction_following": {
+   "Aprime": 81.3,
+   "B": 80.7,
+   "delta_pts": -0.7,
+   "ci95": [
+    -7.2,
+    5.9
+   ]
+  },
+  "knowledge_update": {
+   "Aprime": 25.0,
+   "B": 45.7,
+   "delta_pts": 20.7,
+   "ci95": [
+    8.7,
+    32.6
+   ]
+  },
+  "multi_session_reasoning": {
+   "Aprime": 38.9,
+   "B": 59.0,
+   "delta_pts": 20.1,
+   "ci95": [
+    5.9,
+    33.7
+   ]
+  },
+  "preference_following": {
+   "Aprime": 81.8,
+   "B": 86.4,
+   "delta_pts": 4.6,
+   "ci95": [
+    -1.4,
+    11.3
+   ]
+  },
+  "summarization": {
+   "Aprime": 33.6,
+   "B": 32.2,
+   "delta_pts": -1.4,
+   "ci95": [
+    -9.5,
+    7.4
+   ]
+  },
+  "temporal_reasoning": {
+   "Aprime": 29.3,
+   "B": 53.7,
+   "delta_pts": 24.3,
+   "ci95": [
+    8.0,
+    40.9
+   ]
+  }
+ },
+ "cost": {
+  "Aprime": {
+   "per_question_usd": 0.679,
+   "per_correct_usd": 1.315,
+   "evidence_saved_rate": 0.396
+  },
+  "B": {
+   "per_question_usd": 0.87,
+   "per_correct_usd": 1.381,
+   "evidence_saved_rate": 0.607
+  }
+ },
+ "notices": {
+  "Aprime": {
+   "conversations": 24,
+   "compactions": 1278,
+   "notices": 0,
+   "missed_segments": 1278,
+   "tool_errors": 10,
+   "truncated_tool_calls": 201
+  },
+  "B": {
+   "conversations": 23,
+   "compactions": 1647,
+   "notices": 1342,
+   "missed_segments": 309,
+   "tool_errors": 73,
+   "truncated_tool_calls": 1113
+  }
+ },
+ "spend_usd": 743.22
+}

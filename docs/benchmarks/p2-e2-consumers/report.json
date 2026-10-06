@@ -1,0 +1,97 @@
+{
+  "generation_model": "anthropic:claude-sonnet-5-5",
+  "judge_model": "gpt-6-sol",
+  "replicates": 10,
+  "result": {
+    "chronicle": {
+      "fixtures_scored": 30,
+      "unresolved": {
+        "current": 0,
+        "grounded": 0,
+        "items_current": 149,
+        "items_grounded": 155
+      },
+      "judge_score": 0.9366666666666666,
+      "judge_ci95": [
+        0.8599999999999999,
+        0.9900000000000001
+      ],
+      "verdict_counts": {
+        "grounded": 281,
+        "current": 19
+      },
+      "generation_errors": 0,
+      "pass_a": false,
+      "pass_b": true,
+      "pass": false
+    },
+    "atoms": {
+      "fixtures_scored": 30,
+      "unresolved": {
+        "current": 5,
+        "grounded": 0,
+        "items_current": 66,
+        "items_grounded": 69
+      },
+      "judge_score": 0.9733333333333333,
+      "judge_ci95": [
+        0.94,
+        0.9933333333333334
+      ],
+      "verdict_counts": {
+        "grounded": 292,
+        "current": 8
+      },
+      "generation_errors": 0,
+      "pass_a": true,
+      "pass_b": true,
+      "pass": true
+    },
+    "takes": {
+      "fixtures_scored": 30,
+      "unresolved": {
+        "current": 10,
+        "grounded": 0,
+        "items_current": 96,
+        "items_grounded": 99
+      },
+      "judge_score": 0.9333333333333332,
+      "judge_ci95": [
+        0.8666666666666667,
+        0.9866666666666666
+      ],
+      "verdict_counts": {
+        "grounded": 275,
+        "tie": 10,
+        "current": 15
+      },
+      "generation_errors": 0,
+      "pass_a": true,
+      "pass_b": true,
+      "pass": true
+    },
+    "synthesis": {
+      "fixtures_scored": 30,
+      "unresolved": {
+        "current": 49,
+        "grounded": 1,
+        "items_current": 475,
+        "items_grounded": 615
+      },
+      "judge_score": 0.8133333333333332,
+      "judge_ci95": [
+        0.7066666666666667,
+        0.9166666666666666
+      ],
+      "verdict_counts": {
+        "grounded": 224,
+        "tie": 40,
+        "current": 36
+      },
+      "generation_errors": 0,
+      "pass_a": true,
+      "pass_b": true,
+      "pass": true
+    }
+  }
+}
