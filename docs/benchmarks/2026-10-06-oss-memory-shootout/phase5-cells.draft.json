@@ -1,0 +1,139 @@
+{
+  "kind": "oss-shootout-cells",
+  "schema_version": 1,
+  "system": "precisionmembench",
+  "config": "common",
+  "notes": "DRAFT for Phase 5 (PrecisionMemBench, P3), not part of the frozen Phase 4 campaign. Each cell sets its own system and config. Workload per system: 6 namespaces, 50 one-belief sessions (35 beliefs; the 5 universal beliefs sit in each of the 4 searched scopes of the test user), 72 searching cases and 6 readiness probes. Estimates sum to about $1.85 without Graphiti's recipe and about $9.27 with it (per-session basis, the conservative one); leases sum to $5.00 without it and $16.50 with it. Adding these cells to the campaign changes its hash and needs a preregistration amendment.",
+  "cells": [
+    {
+      "id": "basic-memory-common-pmb",
+      "system": "basic-memory",
+      "config": "common",
+      "benchmark": "precisionmembench",
+      "lease_usd": 0.5,
+      "lease_basis": "1.5 x eval/systems/basic-memory/PILOT.md, scaled per session: LoCoMo common ingest $0.0033 for 28 sessions, x 50/28 = $0.006, plus query embeddings (under $0.001); $0.50 floor so one reservation fits",
+      "command": "bash eval/systems/bootstrap.sh up --system basic-memory --config common --timeout 1800 && { bun eval/runner/precisionmembench-system.ts --system http://127.0.0.1:8700 --output \"$SHOOTOUT_OUT/pmb\"; }; s=$?; bash eval/systems/bootstrap.sh down --system basic-memory; exit $s",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system basic-memory",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY"
+      ]
+    },
+    {
+      "id": "mem0-common-pmb",
+      "system": "mem0",
+      "config": "common",
+      "benchmark": "precisionmembench",
+      "lease_usd": 0.5,
+      "lease_basis": "1.5 x eval/systems/mem0/PILOT.md, per add call: $0.00142 per common add (8,399 input tokens, mostly Mem0's own prompt) x 50 one-turn sessions = $0.071; $0.50 floor so one reservation fits",
+      "command": "MEM0_CHUNK_TURNS=1 bash eval/systems/bootstrap.sh up --system mem0 --config common --timeout 1800 && { bun eval/runner/precisionmembench-system.ts --system http://127.0.0.1:8700 --finish-timeout-s 14400 --output \"$SHOOTOUT_OUT/pmb\"; }; s=$?; bash eval/systems/bootstrap.sh down --system mem0; exit $s",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system mem0",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY"
+      ]
+    },
+    {
+      "id": "hindsight-common-pmb",
+      "system": "hindsight",
+      "config": "common",
+      "benchmark": "precisionmembench",
+      "lease_usd": 0.5,
+      "lease_basis": "1.5 x eval/systems/hindsight/PILOT.md, scaled per session: LoCoMo conv-44 common ingest $0.096 for 28 sessions x 50/28 = $0.17 (per character, 10,921 of about 80,000: $0.013); query cost under $0.0001 each; $0.50 floor",
+      "command": "bash eval/systems/bootstrap.sh up --system hindsight --config common --timeout 1800 && { bun eval/runner/precisionmembench-system.ts --system http://127.0.0.1:8700 --output \"$SHOOTOUT_OUT/pmb\"; }; s=$?; bash eval/systems/bootstrap.sh down --system hindsight; exit $s",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system hindsight",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY"
+      ]
+    },
+    {
+      "id": "graphiti-common-pmb",
+      "system": "graphiti",
+      "config": "common",
+      "benchmark": "precisionmembench",
+      "lease_usd": 1.5,
+      "lease_basis": "1.5 x eval/systems/graphiti/PILOT.md, scaled per session: LoCoMo common ingest $0.46 for 28 session episodes x 50/28 = $0.82 (per character: $0.063), plus the cross-encoder at $0.0013 per search x 78 = $0.10; estimate $0.92",
+      "command": "bash eval/systems/bootstrap.sh up --system graphiti --config common --timeout 1800 && { bun eval/runner/precisionmembench-system.ts --system http://127.0.0.1:8700 --output \"$SHOOTOUT_OUT/pmb\"; }; s=$?; bash eval/systems/bootstrap.sh down --system graphiti; exit $s",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system graphiti",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY"
+      ]
+    },
+    {
+      "id": "graphiti-recipe-pmb",
+      "system": "graphiti",
+      "config": "recipe",
+      "benchmark": "precisionmembench",
+      "lease_usd": 11.5,
+      "lease_basis": "1.5 x eval/systems/graphiti/PILOT.md, scaled per session: LoCoMo recipe (gpt-5.5) ingest $4.10 for 28 session episodes x 50/28 = $7.32 (per character: $0.56), plus the cross-encoder at $0.0013 per search x 78 = $0.10; estimate $7.42, the per-session basis is the ceiling because Graphiti makes about three gpt-5.5 calls per episode whatever its length",
+      "command": "bash eval/systems/bootstrap.sh up --system graphiti --config recipe --timeout 1800 && { bun eval/runner/precisionmembench-system.ts --system http://127.0.0.1:8700 --output \"$SHOOTOUT_OUT/pmb\"; }; s=$?; bash eval/systems/bootstrap.sh down --system graphiti; exit $s",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system graphiti",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY"
+      ]
+    },
+    {
+      "id": "cognee-common-pmb",
+      "system": "cognee",
+      "config": "common",
+      "benchmark": "precisionmembench",
+      "lease_usd": 1.0,
+      "lease_basis": "1.5 x eval/systems/cognee/PILOT.md, scaled per session: LoCoMo common ingest $0.369 for 28 sessions x 50/28 = $0.66 (per turn pair, $0.00108 x 50: $0.054); query embeddings $0.000003 each; estimate $0.66",
+      "command": "bash eval/systems/bootstrap.sh up --system cognee --config common --timeout 1800 && { bun eval/runner/precisionmembench-system.ts --system http://127.0.0.1:8700 --output \"$SHOOTOUT_OUT/pmb\"; }; s=$?; bash eval/systems/bootstrap.sh down --system cognee; exit $s",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system cognee",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY"
+      ]
+    },
+    {
+      "id": "gbrain-shootout-common-pmb",
+      "system": "gbrain-shootout",
+      "config": "common",
+      "benchmark": "precisionmembench",
+      "lease_usd": 0.5,
+      "lease_basis": "1.5 x estimate, not piloted: 50 pages (10,921 characters, about 2,700 tokens) through text-embedding-3-large (under $0.001) plus Voyage rerank-2.5 on 78 searches (72 cases and 6 readiness probes) at about 2,000 tokens each (about $0.01); $0.50 floor so one reservation fits",
+      "command": "bun eval/runner/precisionmembench-system.ts --system gbrain-shootout --embed real --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --output \"$SHOOTOUT_OUT/pmb\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY",
+        "VOYAGE_API_KEY"
+      ]
+    },
+    {
+      "id": "gbrain-shootout-master-common-pmb",
+      "system": "gbrain-shootout-master",
+      "config": "common",
+      "benchmark": "precisionmembench",
+      "lease_usd": 0.5,
+      "lease_basis": "1.5 x estimate, not piloted: 50 pages (10,921 characters, about 2,700 tokens) through text-embedding-3-large (under $0.001) plus Voyage rerank-2.5 on 78 searches (72 cases and 6 readiness probes) at about 2,000 tokens each (about $0.01); $0.50 floor so one reservation fits",
+      "command": "bun eval/runner/precisionmembench-system.ts --system gbrain-shootout --embed real --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --gbrain \"$HOME/gbrain-master@{{gbrain_master_sha}}\" --output \"$SHOOTOUT_OUT/pmb\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup && { test -d \"$HOME/gbrain-master/.git\" || git clone -q https://github.com/garrytan/gbrain \"$HOME/gbrain-master\"; } && git -C \"$HOME/gbrain-master\" fetch -q origin {{gbrain_master_sha}} && git -C \"$HOME/gbrain-master\" checkout -q {{gbrain_master_sha}}",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY",
+        "VOYAGE_API_KEY"
+      ]
+    }
+  ]
+}

@@ -20,6 +20,8 @@ describe('bootstrap.sh', () => {
     expect(r.stderr.toString()).toContain('setup  [--system NAME]');
     expect(sh(['up']).stderr.toString()).toContain('--system is required');
     expect(sh(['up', '--system', 'no-such-system']).stderr.toString()).toContain('no compose file');
+    expect(r.stderr.toString()).toContain('restart --system NAME');
+    expect(sh(['restart']).stderr.toString()).toContain('--system is required');
   });
 
   test.skipIf(process.env.SHOOTOUT_DOCKER_TESTS !== '1')('brings the keyless reference stack up behind a lease proxy', () => {
@@ -35,6 +37,12 @@ describe('bootstrap.sh', () => {
       const exec = (code: string) => Bun.spawnSync(['docker', 'compose', '-f', 'eval/systems/_fake/docker-compose.yml', 'exec', '-T', 'shim', 'python', '-c', code], { cwd: ROOT, env: { ...process.env, SHIM_HOST_PORT: shimPort, PROXY_UPSTREAM: `host.docker.internal:${proxyPort}` } });
       expect(exec("import urllib.request; print(urllib.request.urlopen('http://egress:8787/__proxy/status', timeout=5).read().decode())").stdout.toString()).toContain('"run_id":"bootstrap-test"');
       expect(exec("import urllib.request; urllib.request.urlopen('https://api.openai.com', timeout=5)").exitCode).not.toBe(0);
+      const out2 = join(out, 'lifecycle-lite');
+      const restartCmd = `bash eval/systems/bootstrap.sh restart --system _fake --port ${shimPort} --proxy-port ${proxyPort} --timeout 300`;
+      const lite = Bun.spawnSync([process.execPath, 'eval/runner/lifecycle-lite.ts', '--system', `http://127.0.0.1:${shimPort}`, '--seeds', '1', '--restart', '--restart-cmd', restartCmd, '--output', out2], { cwd: ROOT });
+      expect(lite.exitCode, lite.stderr.toString().slice(-2000)).toBe(0);
+      const receipt = JSON.parse(readFileSync(join(out2, 'receipt.json'), 'utf8'));
+      expect([receipt.run_status, receipt.checks.restart, receipt.metrics.restart.lost, receipt.checks.forget]).toEqual(['complete', 'pass', 0, 'pass']);
     } finally {
       sh(['down', '--system', '_fake', '--port', shimPort]);
       Bun.spawnSync(['kill', readFileSync(join(out, 'proxy', 'proxy.pid'), 'utf8').trim()]);

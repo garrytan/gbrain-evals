@@ -13,6 +13,10 @@
 #   up     --system NAME [--config recipe|common] [--port 8700] [--proxy-port 8787] [--timeout 900]
 #          Start the system's compose stack with SHIM_CONFIG, its egress relay pointed at the proxy on this host, and
 #          the shim published on 127.0.0.1:PORT; wait for GET /health to answer {"ok": true}.
+#   restart --system NAME [--port 8700] [--timeout 900]
+#          Restart the stack's containers in place (`docker compose restart`): processes start fresh, volumes and
+#          container file systems are kept. Waits for GET /health as `up` does. lifecycle-lite's restart checkpoint
+#          runs it as its --restart-cmd.
 #   down   --system NAME      Stop the stack and remove its volumes.
 #
 # A counted cell command therefore looks like:
@@ -70,6 +74,16 @@ compose_env() {
   esac
 }
 
+# Wait until the shim on SHIM_HOST_PORT answers GET /health with {"ok": true}, or fail with the stack's last logs.
+wait_healthy() {
+  local f=$1 deadline=$(( $(date +%s) + TIMEOUT ))
+  until curl -sf "http://127.0.0.1:$SHIM_HOST_PORT/health" | python3 -c 'import json,sys; sys.exit(0 if json.load(sys.stdin).get("ok") is True else 1)' 2>/dev/null; do
+    [ "$(date +%s)" -lt "$deadline" ] || { compose -f "$f" logs --tail 50 >&2; die "$SYSTEM did not report healthy within ${TIMEOUT}s"; }
+    sleep 2
+  done
+  curl -sf "http://127.0.0.1:$SHIM_HOST_PORT/health"; echo
+}
+
 # Compose interpolates the caller's environment: never let the cell's own base URLs or keys reach a container.
 compose() { env -u OPENAI_BASE_URL -u ANTHROPIC_BASE_URL -u VOYAGE_BASE_URL -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u VOYAGE_API_KEY bash -c 'if docker info >/dev/null 2>&1; then exec docker compose "$@"; else exec sudo -E docker compose "$@"; fi' compose "$@"; }
 
@@ -124,12 +138,15 @@ case "$cmd" in
     curl -sf "http://127.0.0.1:$PROXY_PORT/__proxy/status" >/dev/null || die "no metering proxy on port $PROXY_PORT; start one with: bash eval/systems/bootstrap.sh proxy --lease-id ... --lease-usd ..."
     log "starting $SYSTEM ($CONFIG) with the shim on 127.0.0.1:$SHIM_HOST_PORT"
     compose -f "$f" up -d
-    deadline=$(( $(date +%s) + TIMEOUT ))
-    until curl -sf "http://127.0.0.1:$SHIM_HOST_PORT/health" | python3 -c 'import json,sys; sys.exit(0 if json.load(sys.stdin).get("ok") is True else 1)' 2>/dev/null; do
-      [ "$(date +%s)" -lt "$deadline" ] || { compose -f "$f" logs --tail 50 >&2; die "$SYSTEM did not report healthy within ${TIMEOUT}s"; }
-      sleep 2
-    done
-    curl -sf "http://127.0.0.1:$SHIM_HOST_PORT/health"; echo
+    wait_healthy "$f"
+    ;;
+
+  restart)
+    f=$(compose_file)
+    compose_env
+    log "restarting $SYSTEM in place (volumes and container file systems kept)"
+    compose -f "$f" restart
+    wait_healthy "$f"
     ;;
 
   down)
@@ -139,7 +156,7 @@ case "$cmd" in
     ;;
 
   *)
-    sed -n '2,27p' "$0" >&2
+    sed -n '2,31p' "$0" >&2
     exit 2
     ;;
 esac

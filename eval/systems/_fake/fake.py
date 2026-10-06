@@ -2,9 +2,12 @@
 
 It proves the harness plumbing (conformance tests, CI). Its scores say nothing about memory quality.
 Run: python3 eval/systems/_fake/fake.py  (listens on SHIM_PORT, default 8700)
+With SHIM_STATE_FILE set, the store is written to that JSON file after every change and read back at start, so a
+restart keeps state (lifecycle-lite's restart checkpoint); without it the store lives in memory only.
 """
 from __future__ import annotations
 
+import json
 import os
 import re
 import sys
@@ -26,6 +29,22 @@ class FakeAdapter(Adapter):
     def __init__(self) -> None:
         self.store: dict[str, dict[str, dict[str, Any]]] = defaultdict(dict)
         self.lock = Lock()
+        self.state_file = os.environ.get("SHIM_STATE_FILE") or None
+        if self.state_file and os.path.exists(self.state_file):
+            with open(self.state_file, encoding="utf-8") as f:
+                for ns, sessions in json.load(f).items():
+                    for src, s in sessions.items():
+                        self.store[ns][src] = {"text": s["text"], "event_time": s["event_time"], "words": words(s["text"])}
+
+    def save(self) -> None:
+        """Write the store to SHIM_STATE_FILE (atomically); call with the lock held."""
+        if not self.state_file:
+            return
+        data = {ns: {src: {"text": s["text"], "event_time": s["event_time"]} for src, s in sessions.items()} for ns, sessions in self.store.items()}
+        tmp = f"{self.state_file}.tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(data, f)
+        os.replace(tmp, self.state_file)
 
     def capabilities(self) -> dict[str, Any]:
         return {
@@ -49,11 +68,13 @@ class FakeAdapter(Adapter):
     def reset(self, ns: str) -> None:
         with self.lock:
             self.store.pop(ns, None)
+            self.save()
 
     def ingest(self, ns: str, session: dict[str, Any]) -> dict[str, Any]:
         text = "\n".join(f"{t['speaker']}: {t['content']}" for t in session["turns"])
         with self.lock:
             self.store[ns][session["source_id"]] = {"text": text, "event_time": session["event_time"], "words": words(text)}
+            self.save()
         return {"items_created": 1, "warnings": [], "errors": [], "completeness": "known"}
 
     def retrieve(self, ns: str, question: str, query_time: str | None, policy: dict[str, Any]) -> dict[str, Any]:
@@ -70,6 +91,7 @@ class FakeAdapter(Adapter):
     def delete_source(self, ns: str, source_id: str) -> dict[str, Any]:
         with self.lock:
             removed = self.store.get(ns, {}).pop(source_id, None)
+            self.save()
         return {"status": "deleted" if removed else "partial", "receipt": {"removed": bool(removed)}}
 
 

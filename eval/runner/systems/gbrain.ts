@@ -52,7 +52,8 @@ abstract class GbrainBrain implements MemorySystem {
   private processed = 0;
   private current: string | null = null;
   readonly fidelity = { embedding_deferred_pages: 0, rerank_missing_queries: 0, reranked_queries: 0 };
-  constructor(protected mods: GbrainModules, protected settings: Record<string, string>, readonly identity: Record<string, unknown>) {}
+  /** `databasePath` keeps the brain on disk so `restart()` can close and reopen it; without one the brain is in memory. */
+  constructor(protected mods: GbrainModules, protected settings: Record<string, string>, readonly identity: Record<string, unknown>, protected storage: { databasePath?: string } = {}) {}
 
   abstract capabilities(): Promise<CapabilityRecord>;
   protected abstract page(session: SessionInput, eventTime: string | null): string;
@@ -63,7 +64,7 @@ abstract class GbrainBrain implements MemorySystem {
 
   private async open() {
     const e = new this.mods.PGLiteEngine();
-    await e.connect({});
+    await e.connect(this.storage.databasePath ? { database_path: this.storage.databasePath } : {});
     await e.initSchema();
     for (const [k, v] of Object.entries(this.settings)) await e.setConfig(k, v);
     return e;
@@ -71,7 +72,7 @@ abstract class GbrainBrain implements MemorySystem {
 
   async reset(ns: string): Promise<void> {
     if (!this.engine) this.engine = await this.open();
-    else if (this.processed > 0 && this.processed % RECYCLE_EVERY === 0) { try { await this.engine.disconnect(); } catch { /* ignore */ } this.engine = await this.open(); }
+    else if (!this.storage.databasePath && this.processed > 0 && this.processed % RECYCLE_EVERY === 0) { try { await this.engine.disconnect(); } catch { /* ignore */ } this.engine = await this.open(); }
     else if (this.processed > 0) {
       const rows = await this.engine.executeRaw(`SELECT tablename FROM pg_tables WHERE schemaname = 'public'`) as Array<{ tablename: string }>;
       const targets = rows.map(r => r.tablename).filter(t => !PRESERVE_TABLES.has(t));
@@ -108,6 +109,14 @@ abstract class GbrainBrain implements MemorySystem {
     this.live(ns);
     await this.engine.deletePage(slugOf(sourceId));
     return { status: 'deleted', receipt: { page: 'deleted through BrainEngine.deletePage' } };
+  }
+
+  /** Close the brain and open it again from disk, keeping the namespace it holds (lifecycle-lite's restart checkpoint). */
+  async restart(): Promise<void> {
+    if (!this.storage.databasePath) throw new SystemError('invalid_request', 'restart needs a database path; an in-memory brain would lose its state');
+    if (!this.engine) return;
+    await this.engine.disconnect();
+    this.engine = await this.open();
   }
 
   async close(): Promise<void> { try { await this.engine?.disconnect(); } catch { /* ignore */ } this.engine = null; }
