@@ -1,0 +1,20 @@
+{
+ "beam-100k-gbrain-rag-05ee197b0e99": {
+  "questions": 80,
+  "temporal_cue": 40,
+  "fired": 34,
+  "fired_without_cue": 0
+ },
+ "beam-500k-gbrain-rag-8763b1ef988b": {
+  "questions": 140,
+  "temporal_cue": 60,
+  "fired": 55,
+  "fired_without_cue": 0
+ },
+ "beam-1m-gbrain-rag-18f8768c12b3": {
+  "questions": 140,
+  "temporal_cue": 68,
+  "fired": 53,
+  "fired_without_cue": 0
+ }
+}
