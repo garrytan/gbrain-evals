@@ -1,0 +1,12 @@
+{
+  "generated_by": "scripts/w11-packet.ts",
+  "chronicle": {
+    "file": "chronicle-review.html",
+    "data_sha256": "20210a0610461a138f9b7ce2013ef273b9af4a01ff3cb55a5bf136f7086cacdc"
+  },
+  "cat35": {
+    "file": "cat35-review.html",
+    "data_sha256": "c5249d7e527853e8e403bc13854967e4c9124d35f898c0d3a92c6b27a4eee3f7",
+    "seed": 20261006
+  }
+}
