@@ -91,7 +91,10 @@ function captures(): Map<string, { system: string; user: string; max_tokens: num
 // ─── Arms ───────────────────────────────────────────────────────────
 
 interface Built { bodies: Map<string, Record<string, unknown>>; source: string; protocol: { name: string; sha256: string }; meta?: Record<string, unknown> }
-interface ArmDef { id: string; workstream: Workstream; model: string; build: () => Built }
+interface ArmDef { id: string; workstream: Workstream; model: string; build: () => Built; /** A preregistered per-arm output limit (amendment) in place of the model's. */ maxOutputTokens?: number }
+
+/** W10 amendment of 2026-10-06: W10a's Sonnet 5.5 arm at 3,500 output tokens so its worst case fits W10a's cap after retrieval. */
+export const W10A_MAX_OUTPUT = 3500;
 
 const fromReplay = (replay: () => Map<string, ReplayRow>, model: string, ids?: () => string[]) => (): Map<string, Record<string, unknown>> => {
   const rows = replay();
@@ -148,9 +151,9 @@ export const ARMS: Record<string, ArmDef> = Object.fromEntries(([
   { id: 'w10b-opus55-notes', workstream: 'W10b', model: 'claude-opus-5-5', build: () => ({ bodies: fromReplay(r1, 'claude-opus-5-5')(), source: R1_SRC, protocol: HOUSE_NOTES_PROTOCOL }) },
   { id: 'w10b-fable51-notes', workstream: 'W10b', model: 'claude-fable-5-1', build: () => ({ bodies: fromReplay(r1, 'claude-fable-5-1', subsets.fable200)(), source: `${R1_SRC}; seeded 200-question subset (seed ${SEED})`, protocol: HOUSE_NOTES_PROTOCOL }) },
   {
-    id: 'w10a-sonnet55-notes', workstream: 'W10a', model: 'claude-sonnet-5-5', build: () => {
+    id: 'w10a-sonnet55-notes', workstream: 'W10a', model: 'claude-sonnet-5-5', maxOutputTokens: W10A_MAX_OUTPUT, build: () => {
       const caps = captures();
-      return { bodies: new Map(allIds().filter(id => caps.has(id)).map(id => [id, readerBody('claude-sonnet-5-5', caps.get(id)!)])), source: 'W10a stub-reader capture of gbrain eval longmemeval at c5fb0201 (release retrieval); system and user text unchanged', protocol: HOUSE_NOTES_PROTOCOL };
+      return { bodies: new Map(allIds().filter(id => caps.has(id)).map(id => [id, readerBody('claude-sonnet-5-5', caps.get(id)!, W10A_MAX_OUTPUT, W10A_MAX_OUTPUT)])), source: 'W10a stub-reader capture of gbrain eval longmemeval at c5fb0201 (release retrieval); system and user text unchanged', protocol: HOUSE_NOTES_PROTOCOL };
     },
   },
   {
@@ -338,7 +341,7 @@ async function main(argv: string[]) {
     if (!def) throw new Error(`unknown arm ${arm}; arms: ${Object.keys(ARMS).join(', ')}`);
     const built = def.build();
     const s = MODEL_SETTINGS[def.model];
-    const manifest = buildManifest({ arm_id: def.id, workstream: def.workstream, kind: 'reader', provider: s.provider, model: def.model, max_output_tokens: s.max_output_tokens, reasoning_effort: s.effort, protocol: built.protocol, source: built.source, denominator: built.bodies.size, bodies: built.bodies });
+    const manifest = buildManifest({ arm_id: def.id, workstream: def.workstream, kind: 'reader', provider: s.provider, model: def.model, max_output_tokens: def.maxOutputTokens ?? s.max_output_tokens, reasoning_effort: s.effort, protocol: built.protocol, source: built.source, denominator: built.bodies.size, bodies: built.bodies, ...(def.maxOutputTokens ? { outputFloor: def.maxOutputTokens } : {}) });
     for (const body of built.bodies.values()) if (JSON.stringify(body).includes('answer_')) throw new Error(`${arm}: a request body carries an answer_ session id`);
     freezeManifest(manifestPath(arm), manifest);
     saveBodies(arm, built.bodies);

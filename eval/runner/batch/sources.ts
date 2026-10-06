@@ -112,11 +112,11 @@ export interface ReaderText { system: string; user: string }
  * effort are set. Anthropic: gbrain's request shape plus `output_config.effort`.
  * OpenAI: the system text as the system message, then the user text.
  */
-export function readerBody(model: string, text: ReaderText, maxOutputTokens = MODEL_SETTINGS[model]?.max_output_tokens): Record<string, unknown> {
+export function readerBody(model: string, text: ReaderText, maxOutputTokens = MODEL_SETTINGS[model]?.max_output_tokens, floor?: number): Record<string, unknown> {
   const settings = MODEL_SETTINGS[model];
   if (!settings) throw new Error(`no preregistered reader settings for ${model}`);
   if (maxOutputTokens === undefined) throw new Error(`no output limit for ${model}`);
-  if (settings.reasoning) assertOutputFloor(model, maxOutputTokens);
+  if (settings.reasoning) assertOutputFloor(model, maxOutputTokens, floor);
   if (settings.provider === 'anthropic') {
     return { model, max_tokens: maxOutputTokens, system: text.system, messages: [{ role: 'user', content: text.user }], ...(settings.effort ? { output_config: { effort: settings.effort } } : {}) };
   }
