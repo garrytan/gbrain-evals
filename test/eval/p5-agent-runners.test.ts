@@ -98,20 +98,18 @@ describe('P5 H3 line-grammar junk audit', () => {
     const lines = listLines(CONTROL_PAGE).map(l => l.content);
     expect(lines).toEqual(['works_at [[companies/acme-example]]', '[preference] Prefers tea', 'Met [[people/alice-example]] for lunch today']);
   });
-  test('precision counts agreed-correct over minted lines in the sample; disagreements wait for adjudication', () => {
+  test('precision counts agreed-correct over minted lines in the sample; a disagreement counts as wrong (no adjudication)', () => {
     const minted = (id: string, zt: null | 'date' = null) => ({ id, doc: 'd', corpus: 'blue-book' as const, line: 1, kind: 'relation' as const, parsed: 'relation type x', text: '- x [[y]]', context: '', zero_tolerance: zt });
     const docs = [{ key: 'blue-book|d', corpus: 'blue-book' as const, doc: 'd', list_lines: 400, zero_tolerance_list_lines: { date: 3 }, advisory: { relations: 4, facts: 0 },
       minted: [minted('a'), minted('b'), minted('c'), minted('z', 'date')] }];
     const label = (v: 'correct' | 'incorrect') => ({ key: '', id: '', judge: '', verdict: v, reason: '', usd: 0 });
     const labels = new Map([['a', { j1: label('correct'), j2: label('correct') }], ['b', { j1: label('correct'), j2: label('incorrect') }], ['c', { j1: label('incorrect'), j2: label('incorrect') }]]);
-    const s = summarizeH3(docs, new Set(['a', 'b', 'c']), 300, labels, ['j1', 'j2'], new Map()) as { minted_per_1000_list_lines: number; precision: Record<string, number | null>; zero_tolerance: { violations: number } };
+    const s = summarizeH3(docs, new Set(['a', 'b', 'c']), 300, labels, ['j1', 'j2']) as { minted_per_1000_list_lines: number; precision: Record<string, number | null>; zero_tolerance: { violations: number } };
     expect(s.minted_per_1000_list_lines).toBe(10);
     expect(s.zero_tolerance.violations).toBe(1);
     expect(s.precision.precision_agreed_correct).toBeCloseTo(1 / 3);
-    expect(s.precision.precision_adjudicated).toBeNull();
-    expect(s.precision.pending_adjudication).toBe(1);
-    const done = summarizeH3(docs, new Set(['a', 'b', 'c']), 300, labels, ['j1', 'j2'], new Map([['b', true]])) as { precision: Record<string, number | null> };
-    expect(done.precision.precision_adjudicated).toBeCloseTo(2 / 3);
+    expect(s.precision.disagreements).toBe(1);
+    expect(s.precision).not.toHaveProperty('pending_adjudication');
   });
   test('the judge sees the parse, the line and its context', () => {
     const p = h3JudgePrompt({ kind: 'fact', parsed: 'fact category note', text: '- [note] remember this', context: 'a\n- [note] remember this\nb' });
