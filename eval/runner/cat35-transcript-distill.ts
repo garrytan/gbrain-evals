@@ -663,7 +663,10 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
   // synthesis and its subagents) is reserved in the budget ledger first.
   const attestation = opts.preregistration ? attestPreregistration(opts.preregistration) : null;
   try {
-    paidRun = startPaidRun('cat35-transcript-distill', { ...budgetOptionsFrom(process.argv.slice(2)), estimateUsd: projected, log: err });
+    // --estimate-usd replaces the pessimistic projection for the budget run only; the hard stop above still uses the projection.
+    const estimateFlag = process.argv.indexOf('--estimate-usd');
+    const estimateUsd = estimateFlag >= 0 ? Number(process.argv[estimateFlag + 1]) : projected;
+    paidRun = startPaidRun('cat35-transcript-distill', { ...budgetOptionsFrom(process.argv.slice(2)), estimateUsd, log: err });
   } catch (error) {
     if (!(error instanceof BudgetExceededError)) throw error;
     writeReceipt(WS0_RECEIPT_PATH, skippedWs0Receipt(`budget: ${error.message}`, startedAt));

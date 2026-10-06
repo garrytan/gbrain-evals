@@ -72,3 +72,5 @@ bun eval/runner/cat20-brainstorm.ts --model anthropic:claude-sonnet-5-5 --idea-j
 ## Amendments
 
 None yet.
+
+**2026-10-06, before any paid request.** The first launch was refused at budget-run open, before any provider call: the runners' pre-run estimates (Cat 14 and Cat 29 $1, Cat 35's deliberately pessimistic $6 projection) exceeded the per-run budgets above. The runs now pass an explicit estimate (`--estimate-usd`: Cat 14 and Cat 29 $0.40, Cat 35 $1.50; Cat 35's $40 hard-stop check still uses its projection). Budgets, arms, metrics and decision rules are unchanged.

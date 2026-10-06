@@ -658,6 +658,8 @@ export interface Cat29Options {
   embedMode?: 'real' | 'hash';
   budget?: BudgetOptions;
   preregistration?: string;
+  /** Pre-run estimate for the budget run (default $0.40, the header's live estimate). */
+  estimateUsd?: number;
 }
 
 export interface Cat29RunResult {
@@ -677,6 +679,7 @@ export function optionsFromEnv(argv: string[] = process.argv.slice(2)): Cat29Opt
     embedMode: embedMode as 'real' | 'hash' | undefined,
     budget: budgetOptionsFrom(argv),
     preregistration: flag('--preregistration'),
+    estimateUsd: flag('--estimate-usd') === undefined ? undefined : Number(flag('--estimate-usd')),
     stub: argv.includes('--stub') || process.env.CAT29_STUB === '1',
     allowSkip: argv.includes('--allow-skip') || process.env.BRAINBENCH_ALLOW_SKIP === '1',
     questionLimit: process.env.CAT29_QUESTIONS ? parseInt(process.env.CAT29_QUESTIONS, 10) : undefined,
@@ -730,7 +733,7 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
   let attestation: Attestation | null = null;
   // The guard goes in before any SDK client is built, so the clients fetch through it.
   const paid = !stub && options.budget?.budgetUsd != null
-    ? (options.preregistration ? (attestation = attestPreregistration(options.preregistration)) : null, startPaidRun(CAT29_CATEGORY, { ...options.budget, estimateUsd: 1 }))
+    ? (options.preregistration ? (attestation = attestPreregistration(options.preregistration)) : null, startPaidRun(CAT29_CATEGORY, { ...options.budget, estimateUsd: options.estimateUsd ?? 0.4 }))
     : null;
 
   if (hashEmbeds) {
