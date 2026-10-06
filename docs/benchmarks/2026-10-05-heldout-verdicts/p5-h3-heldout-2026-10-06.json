@@ -1,0 +1,19 @@
+{
+  "decision_id": "p5-heldout-2026-10-05",
+  "hypothesis": "H3 junk stays out (amendment 2: minted frame)",
+  "computed_by": "second custodian (gbra49), P0 unresponsive; from P0's vmjobs/p5h3 pull",
+  "build": "gbrain 21befeb5b7274b23e872261aa924ee46f63a0d20",
+  "harness": "gbrain-evals aceb6eb (dirty tree, sha256 5abc3b16)",
+  "custody_sha256": "e4f7097cc33fe3bf806402b5cefbebea66de9fff40d36c60d7ff92e3e2df042d",
+  "corpora": {"lme-s": "17,319 pages, 668,711 list lines", "locomo": "183 pages, 0 list lines", "public notes vault (CC0)": "1,020 pages, 27,584 list lines"},
+  "bar": "precision >= 0.95 on minted lines (two-judge labels, disagreements count as wrong; coordinator reading: Wilson 95% lower bound >= 0.95); zero lines minted from timecodes, task markers, citations, dates or machine-written sections",
+  "minting": {"list_lines": 696295, "minted": 18, "minted_relations": 0, "minted_facts": 18, "minted_per_1000_list_lines": 0.026, "pages_minting": 3},
+  "zero_tolerance": {"violations": 0, "list_lines_by_class": {"date": 76, "timecode": 1714, "task_marker": 108, "citation": 168, "machine_section": 61}},
+  "precision": {"frame_size": 18, "planned_sample": 300, "labeled": 18, "judges": ["claude-sonnet-5-5", "gpt-6.1-sol"], "agreed_correct": 0, "agreed_incorrect": 18, "disagreements": 0, "precision": 0.0, "wilson95": [0.0, 0.176]},
+  "failure_shape": "every minted line is a fact line whose bracketed list prefix is not a category: unfilled template slots (15 lines, two pages) and dictionary usage labels (3 lines, one page)",
+  "harness_error": "1 of 18,522 pages (8 list lines) failed the write cross-check ('accepted and still pending'); even if all 8 minted correctly, precision would be 8/26 (Wilson upper 0.50), so the verdict cannot change",
+  "sample_shortfall": "only 18 lines minted in the whole frame, so all 18 were labeled instead of 300",
+  "judge_usd": 0.054,
+  "verdict": "fail (precision 0/18; zero-tolerance classes pass)",
+  "consequence": "line_grammar.enabled needs H1, H2, H3 and H6; H3 fails, so H6 does not run under the preregistration"
+}

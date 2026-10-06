@@ -1,0 +1,282 @@
+{
+  "decision_id": "p5-delta-heldout-2026-10-05",
+  "stage": "held-out (custodian)",
+  "builds": {
+    "delta": "011bd0b6a03bcf6c722db4c1c494162a1722da58",
+    "frozen": "21befeb5b7274b23e872261aa924ee46f63a0d20",
+    "no_guard_variant": "8f45997ff (011bd0b6a minus NOT_EMPLOYMENT_ROLE, local only)",
+    "p3_master": "aa02a8dec (#6014 merge) and b55f566f1 (same plus the guard, local only)"
+  },
+  "harness": "gbrain-evals p0-heldout-harness (temporal-edges --render relation-lines / --e5-probe / --pack / --single-value-pass; relation-line-variants --type-rows)",
+  "held_out_material": "P1 phrasing set C seeds 11/13/17; P5 H2 template set B on new seeds 71/79/83",
+  "H7": {
+    "verdict": "pass",
+    "range_pages": {
+      "verdict": "pass",
+      "comparisons": [
+        {
+          "id": "asof",
+          "gate": "superiority",
+          "status": "pass",
+          "a": 0.22792022792022792,
+          "b": 1,
+          "delta": 0.7720797720797721,
+          "ci95": [
+            0.6951566951566952,
+            0.8461538461538461
+          ],
+          "n": 351,
+          "clusters": 117,
+          "why": "McNemar treats items as independent; the clustered sign-flip p-value is the primary test here"
+        },
+        {
+          "id": "live",
+          "gate": "noninferiority",
+          "status": "pass",
+          "a": 1,
+          "b": 1,
+          "delta": 0,
+          "ci95": [
+            0,
+            0
+          ],
+          "n": 106,
+          "clusters": 106
+        },
+        {
+          "id": "during",
+          "gate": "exploratory",
+          "status": "report_only",
+          "a": 0.6584045584045582,
+          "b": 1,
+          "delta": 0.3415954415954416,
+          "ci95": [
+            0.29715099715099713,
+            0.385754985754986
+          ],
+          "n": 117,
+          "clusters": 117
+        }
+      ]
+    },
+    "all_pages": {
+      "verdict": "pass",
+      "comparisons": [
+        {
+          "id": "now-precision",
+          "gate": "noninferiority",
+          "status": "pass",
+          "a": 0.49114611022505744,
+          "b": 1,
+          "delta": 0.5088538897749425,
+          "ci95": [
+            0.4497950473827666,
+            0.5648302680100926
+          ],
+          "n": 36,
+          "clusters": 36
+        },
+        {
+          "id": "asof-all",
+          "gate": "exploratory",
+          "status": "report_only",
+          "a": 0.4041666666666667,
+          "b": 0.7805555555555556,
+          "delta": 0.3763888888888889,
+          "ci95": [
+            0.31666666666666665,
+            0.4388888888888889
+          ],
+          "n": 720,
+          "clusters": 240,
+          "why": "McNemar treats items as independent; the clustered sign-flip p-value is the primary test here"
+        }
+      ]
+    },
+    "prose_page_transitions_identical": {
+      "pages": 123,
+      "identical": 123
+    }
+  },
+  "H9": {
+    "verdict": "pass",
+    "typing": {
+      "verdict": "pass",
+      "comparisons": [
+        {
+          "id": "any-type-match",
+          "gate": "noninferiority",
+          "status": "pass",
+          "a": 0.5059523809523809,
+          "b": 0.5059523809523809,
+          "delta": 0,
+          "ci95": [
+            0,
+            0
+          ],
+          "n": 840,
+          "clusters": 240,
+          "why": "McNemar treats items as independent; the clustered sign-flip p-value is the primary test here"
+        },
+        {
+          "id": "correctly-typed",
+          "gate": "exploratory",
+          "status": "report_only",
+          "a": 0.4488095238095238,
+          "b": 0.4488095238095238,
+          "delta": 0,
+          "ci95": [
+            0,
+            0
+          ],
+          "n": 840,
+          "clusters": 240,
+          "why": "McNemar treats items as independent; the clustered sign-flip p-value is the primary test here"
+        }
+      ]
+    },
+    "live_relationships": {
+      "verdict": "pass",
+      "comparisons": [
+        {
+          "id": "live-recall",
+          "gate": "noninferiority",
+          "status": "pass",
+          "a": 0.5550239234449761,
+          "b": 0.5598086124401914,
+          "delta": 0.004784688995215311,
+          "ci95": [
+            0,
+            0.014354066985645933
+          ],
+          "n": 209,
+          "clusters": 209
+        }
+      ]
+    }
+  },
+  "H10": {
+    "verdict": "pass",
+    "e5_extra_works_at_starts": {
+      "guard": 0,
+      "no_guard": 36,
+      "probe_people": 108
+    },
+    "p1_gates_guard_vs_no_guard": {
+      "verdict": "pass",
+      "comparisons": [
+        {
+          "id": "now-precision",
+          "gate": "noninferiority",
+          "status": "pass",
+          "a": 0.9722222222222222,
+          "b": 0.9722222222222222,
+          "delta": 0,
+          "ci95": [
+            0,
+            0
+          ],
+          "n": 36,
+          "clusters": 36
+        },
+        {
+          "id": "asof",
+          "gate": "noninferiority",
+          "status": "pass",
+          "a": 0.6125,
+          "b": 0.6125,
+          "delta": 0,
+          "ci95": [
+            0,
+            0
+          ],
+          "n": 720,
+          "clusters": 240,
+          "why": "McNemar treats items as independent; the clustered sign-flip p-value is the primary test here"
+        },
+        {
+          "id": "during",
+          "gate": "noninferiority",
+          "status": "pass",
+          "a": 0.5944444444444444,
+          "b": 0.5944444444444444,
+          "delta": 0,
+          "ci95": [
+            0,
+            0
+          ],
+          "n": 240,
+          "clusters": 240
+        },
+        {
+          "id": "correction",
+          "gate": "noninferiority",
+          "status": "pass",
+          "a": 0.4090909090909091,
+          "b": 0.4090909090909091,
+          "delta": 0,
+          "ci95": [
+            0,
+            0
+          ],
+          "n": 44,
+          "clusters": 44
+        },
+        {
+          "id": "now-recall",
+          "gate": "noninferiority",
+          "status": "pass",
+          "a": 0.5694996361663027,
+          "b": 0.5694996361663027,
+          "delta": 0,
+          "ci95": [
+            0,
+            0
+          ],
+          "n": 36,
+          "clusters": 36
+        },
+        {
+          "id": "live-recall",
+          "gate": "noninferiority",
+          "status": "pass",
+          "a": 0.5598086124401914,
+          "b": 0.5598086124401914,
+          "delta": 0,
+          "ci95": [
+            0,
+            0
+          ],
+          "n": 209,
+          "clusters": 209
+        },
+        {
+          "id": "traps",
+          "gate": "exact",
+          "status": "pass",
+          "n": 115
+        },
+        {
+          "id": "invariance",
+          "gate": "exact",
+          "status": "pass",
+          "n": 240
+        }
+      ]
+    },
+    "report_only_wrong_closures_on_p3_master": {
+      "no_guard": 54,
+      "guard": 0,
+      "probe_people": 108,
+      "set_c_world_sv_wrong_closures": {
+        "no_guard": 3,
+        "guard": 0
+      }
+    }
+  },
+  "guardrails": {
+    "n4": "pass: 0 wrong merges on both builds (144 rows each)",
+    "lme_s": "pending (rerun after the P2 E2 shards free memory)"
+  },
+  "H8": "not run: waits on the build that carries #6025"
+}
