@@ -329,7 +329,7 @@ function excerpt(raw: string, needle: string): string {
 
 // ─── gbrain wiring ─────────────────────────────────────────────────────
 
-interface Gbrain {
+export interface Gbrain {
   operations: Operation[];
   PGLiteEngine: new () => { connect(c: unknown): Promise<void>; initSchema(): Promise<void>; disconnect(): Promise<void>; executeRaw<T = Record<string, unknown>>(sql: string, params?: unknown[]): Promise<T[]> };
   dispatchToolCall: (engine: unknown, name: string, params: Record<string, unknown> | undefined, opts: Record<string, unknown>) => Promise<{ content: { text: string }[]; isError?: boolean }>;
@@ -337,7 +337,7 @@ interface Gbrain {
   buildBrainTools: (opts: Record<string, unknown>) => Array<{ name: string; execute(input: unknown, ctx: unknown): Promise<unknown> }>;
 }
 
-async function loadGbrain(gut: GbrainUnderTest): Promise<Gbrain> {
+export async function loadGbrain(gut: GbrainUnderTest): Promise<Gbrain> {
   const [ops, pglite, dispatch, scope, tools] = await Promise.all([
     importGbrain<{ operations: Operation[] }>(gut, 'src/core/operations.ts'),
     importGbrain<{ PGLiteEngine: Gbrain['PGLiteEngine'] }>(gut, 'src/core/pglite-engine.ts'),
@@ -373,27 +373,28 @@ export function oracleView(o: CallOutcome): unknown {
 }
 
 const DENIAL_CODES = new Set(['insufficient_scope', 'permission_denied', 'unknown_tool', 'unknown_operation', 'scope_denied', 'not_exposed']);
-const isDenial = (o: CallOutcome) => !o.exposed || DENIAL_CODES.has(o.error_code ?? '') || /unknown tool|not (available|found) in this surface/i.test(o.raw);
+export const isDenial = (o: CallOutcome) => !o.exposed || DENIAL_CODES.has(o.error_code ?? '') || /unknown tool|not (available|found) in this surface/i.test(o.raw);
 
-type Caller = (op: Operation, params: Record<string, unknown>) => Promise<CallOutcome>;
+export type Caller = (op: Operation, params: Record<string, unknown>) => Promise<CallOutcome>;
+export type N6Engine = { executeRaw<T = Record<string, unknown>>(sql: string, params?: unknown[]): Promise<T[]> };
 
 function authFor(clientId: string, scopes: string[], extra: Partial<AuthInfo> = {}): AuthInfo {
   return { token: `n6-${clientId}`, clientId, principal: { kind: 'oauth_client', id: clientId }, scopes, sourceId: 'alpha', allowedSources: ['alpha'], hasSourceGrant: true, ...extra };
 }
 
-function makeCallers(g: Gbrain, engine: unknown): Record<CallerId, Caller> {
+export function makeCallers(g: Gbrain, engine: unknown, config: OperationContext['config'] = CONFIG): Record<CallerId, Caller> {
   // Each probe call gets its own session id. gbrain v0.60.46.0 dedupes agent notices per (transport, principal,
   // session); with no session id every call of a caller shares one ledger, so the first of two otherwise identical
   // calls carried a notice the second lacked and the protected-before-ghost order read as an existence oracle.
   const viaDispatch = (opts: Record<string, unknown>): Caller => async (op, params) =>
-    parseToolResult(await g.dispatchToolCall(engine, op.name, params, { config: CONFIG, logger: QUIET, sessionId: `n6-${randomUUID()}`, ...opts }));
+    parseToolResult(await g.dispatchToolCall(engine, op.name, params, { config, logger: QUIET, sessionId: `n6-${randomUUID()}`, ...opts }));
   const viaServeHttp = (auth: AuthInfo): Caller => async (op, params) => {
     if (!g.operationScopesAllowed(auth.scopes, op)) return { exposed: false, ok: false, error_code: 'insufficient_scope', raw: '', data: null };
     return viaDispatch({ remote: true, transport: 'http', takesHoldersAllowList: auth.takesHoldersAllowList ?? ['world'], sourceId: auth.sourceId ?? 'default', auth })(op, params);
   };
   const viaSubagent = (delegated: boolean): Caller => {
     const registry = g.buildBrainTools({
-      engine, config: CONFIG, subagentId: 6, jobId: 6, sourceId: 'alpha',
+      engine, config, subagentId: 6, jobId: 6, sourceId: 'alpha',
       ...(delegated ? { delegatedAuth: { clientId: 'n6-subagent', scopes: ['read'], sourceId: 'alpha', allowedSources: ['alpha'] } } : {}),
     });
     const byOp = new Map(registry.map(t => [t.name.replace(/^brain_/, ''), t]));
@@ -432,13 +433,15 @@ async function withTimeout(p: Promise<CallOutcome>): Promise<CallOutcome> {
 
 // ─── Seeding and presence ──────────────────────────────────────────────
 
-async function seed(g: Gbrain, engine: Awaited<ReturnType<typeof newEngine>>, ledger: N6Ledger): Promise<string[]> {
+/** Writes the ledger through gbrain's own write path as the trusted local caller. Engine-agnostic (PGLite or Postgres). */
+export async function seed(g: Gbrain, engine: N6Engine, ledger: N6Ledger, config: OperationContext['config'] = CONFIG): Promise<string[]> {
   const errors: string[] = [];
+  // Only missing sources are inserted (no row, no trigger): on Postgres the caller adds them through writer administration first.
   for (const s of ledger.sources) {
-    await engine.executeRaw(`INSERT INTO sources (id, name, config) VALUES ($1, $1, '{}'::jsonb) ON CONFLICT (id) DO NOTHING`, [s]);
+    await engine.executeRaw(`INSERT INTO sources (id, name, config) SELECT $1::text, $1::text, '{}'::jsonb WHERE NOT EXISTS (SELECT 1 FROM sources WHERE id = $1::text)`, [s]);
   }
   const putPage = g.operations.find(o => o.name === 'put_page')!;
-  const local = makeCallers(g, engine).local;
+  const local = makeCallers(g, engine, config).local;
   // Hub first so links resolve; then everything else in ledger order.
   const ordered = [...ledger.pages.filter(p => p.slug === ledger.hub_slug), ...ledger.pages.filter(p => p.slug !== ledger.hub_slug)];
   // Two writes per page, so version history exists for get_versions to expose (or not).
@@ -450,7 +453,7 @@ async function seed(g: Gbrain, engine: Awaited<ReturnType<typeof newEngine>>, le
       const args = { slug: page.slug, content: write(page.content), ...(revisions.has(key) ? { expected_revision: revisions.get(key) } : {}) };
       const r = page.source_id === 'alpha'
         ? await local(putPage, args)
-        : parseToolResult(await g.dispatchToolCall(engine, 'put_page', args, { config: CONFIG, logger: QUIET, remote: false, sourceId: page.source_id }));
+        : parseToolResult(await g.dispatchToolCall(engine, 'put_page', args, { config, logger: QUIET, remote: false, sourceId: page.source_id }));
       if (!r.ok) errors.push(`put_page ${key}: ${r.raw.slice(0, 200)}`);
       const revision = (r.data as { revision?: unknown } | null)?.revision;
       if (typeof revision === 'string') revisions.set(key, revision);
@@ -470,7 +473,7 @@ async function seed(g: Gbrain, engine: Awaited<ReturnType<typeof newEngine>>, le
 }
 
 /** The trusted local read that must show a class's protected markers (the positive control). Page-borne classes use get_page. */
-const CONTROL_READ: Partial<Record<N6ClassSpec['class'], (t: N6Target) => [string, Record<string, unknown>]>> = {
+export const CONTROL_READ: Partial<Record<N6ClassSpec['class'], (t: N6Target) => [string, Record<string, unknown>]>> = {
   private_ontology: t => ['ontology_get', { entity: t.slug }],
   private_raw_data: t => ['get_raw_data', { slug: t.slug }],
 };
@@ -484,7 +487,7 @@ async function newEngine(g: Gbrain) {
 
 export interface PresenceResult { name: string; pass: boolean; detail: string }
 
-async function presence(engine: Awaited<ReturnType<typeof newEngine>>, ledger: N6Ledger, local: Caller, getPage: Operation, opByName: (name: string) => Operation): Promise<{ checks: PresenceResult[]; sealed_chunk_violations: string[] }> {
+export async function presence(engine: N6Engine, ledger: N6Ledger, local: Caller, getPage: Operation, opByName: (name: string) => Operation): Promise<{ checks: PresenceResult[]; sealed_chunk_violations: string[] }> {
   const checks: PresenceResult[] = [];
   const count = async (sql: string, params: unknown[]) => Number((await engine.executeRaw<{ n: number }>(sql, params))[0]?.n ?? 0);
   let found = 0;

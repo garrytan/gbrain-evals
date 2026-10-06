@@ -1177,6 +1177,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'metrics.ts': { role: 'shared retrieval metrics' },
   'mutation-kit.ts': { role: 'scorer mutation kit: fake systems every category scorer must fail' },
   'n2-3-prompt-ab.ts': { role: 'matched before/after of the gbrain contradiction-judge prompt (N2-3) on a fresh N2 seed, development data', part_of: 'contradiction-surfacing' },
+  'n6-postgres-http.ts': { role: 'N6 on Postgres over the real HTTP transport (publication run; needs a localhost Docker Postgres)', part_of: 'visibility-leak-fuzz' },
   'p5-agent.ts': { role: 'P5 agent runners (H5b, H6) and judges (H3, H6): keyless brain served over MCP stdio with in-place snapshots, the fixed P5 tool lists, judge calls, paid-run joining, per-unit checkpoints, pilot subsets and paired receipt comparison' },
   'p8-withdraw-retrieval.ts': { role: 'P8 withdrawal-review neighbour retrieval: cosine of each withdrawn claim and candidate (text-embedding-3-large, 1536 dims) against the review lane\'s 0.80 floor, by slice; the classifier half runs in gbrain decide' },
   'p5-brain.ts': { role: 'P5 runners: in-memory brain on the build under test (put_page, stale-link sweep, stored edges), world-v1 rendering, custodian-mode input and the shared receipt' },
