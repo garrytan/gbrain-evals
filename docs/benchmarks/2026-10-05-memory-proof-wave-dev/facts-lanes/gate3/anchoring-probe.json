@@ -1,0 +1,70 @@
+{
+ "build": "a87c3e2af",
+ "search_config": {
+  "search.entity_anchoring": "true"
+ },
+ "probes": {
+  "beam-100k-gbrain-rag-a5d794bfbf2d": {
+   "questions": 80,
+   "setting": {
+    "facts_tokens": 600,
+    "token_budget": 7500
+   },
+   "mean": 8137.1,
+   "p95": 8274.0,
+   "ok": true,
+   "entity_anchored_questions": 0
+  },
+  "beam-500k-gbrain-rag-af11fda0862c": {
+   "questions": 140,
+   "setting": {
+    "facts_tokens": 600,
+    "token_budget": 7500
+   },
+   "mean": 8121.0,
+   "p95": 8168.0,
+   "ok": true,
+   "entity_anchored_questions": 0
+  },
+  "beam-1m-gbrain-rag-efe51fa42078": {
+   "questions": 140,
+   "setting": {
+    "facts_tokens": 600,
+    "token_budget": 7500
+   },
+   "mean": 8139.1,
+   "p95": 8194.0,
+   "ok": true,
+   "entity_anchored_questions": 0
+  }
+ },
+ "entity_pages": {
+  "100k": {
+   "units": 4,
+   "pages": 623,
+   "pages_by_type": {
+    "conversation": 623
+   },
+   "entity_dir_or_type_pages": 0,
+   "recall100_facts_with_entity_slug": 0
+  },
+  "500k": {
+   "units": 7,
+   "pages": 3817,
+   "pages_by_type": {
+    "conversation": 3817
+   },
+   "entity_dir_or_type_pages": 0,
+   "recall100_facts_with_entity_slug": 0
+  },
+  "1m": {
+   "units": 7,
+   "pages": 7814,
+   "pages_by_type": {
+    "conversation": 7814
+   },
+   "entity_dir_or_type_pages": 0,
+   "recall100_facts_with_entity_slug": 0
+  }
+ }
+}
