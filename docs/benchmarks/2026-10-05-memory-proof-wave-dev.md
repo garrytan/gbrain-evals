@@ -2,7 +2,7 @@
 
 October 5–6, 2026. Every number on this page comes from the dev questions only. No validation or sealed question has been opened.
 
-In plain words: before the real test, both memory systems get a practice round on questions set aside for practice. Each system gets the same reader model and the same amount of retrieved text (8,000 tokens), and a grader scores the answers. The practice round sets each system's knobs, finds where gbrain falls behind and why, and catches harness bugs before any held-out question is opened. On the long BEAM conversations gbrain first trailed by about 10 points. The cause was how the conversations were stored: as a few huge pages, of which gbrain could show only one slice each. Storing one dated page per exchange closes most of that gap. With gbrain's own fact extraction added as well, gbrain and the comparator score the same within a tenth of a point. Dates of events remain the comparator's clear edge. The practice round also showed that the planned 3-point test is noisier than assumed, so its margin or design has to change before the real run.
+In plain words: before the real test, both memory systems get a practice round on questions set aside for practice. Each system gets the same reader model and the same amount of retrieved text (8,000 tokens), and a grader scores the answers. The practice round sets each system's knobs, finds where gbrain falls behind and why, and catches harness bugs before any held-out question is opened. On the long BEAM conversations gbrain first trailed by about 10 points. The cause was how the conversations were stored: as a few huge pages, of which gbrain could show only one slice each. Storing one dated page per exchange closes most of that gap. With gbrain's own fact extraction added as well, gbrain scores 0.661 against the comparator's 0.654. Dates of events remain the comparator's clear edge. The practice round also showed that the planned 3-point test is noisier than assumed, so its margin or design has to change before the real run.
 
 ## What ran
 
@@ -30,6 +30,7 @@ Mean rubric score, all three dev sizes (360 questions). "Gate" marks cells whose
 | System, configuration | Build | 100k | 500k | 1M | Pooled |
 |---|---|---:|---:|---:|---:|
 | comparator, facts plus chunks | 0.10.2 | 0.677 | 0.668 | 0.627 | **0.654** |
+| gbrain combined, exchange pages, facts 600 | 505a65aab | 0.636 | 0.676 | 0.659 | **0.661** |
 | gbrain combined, exchange pages, facts 600 | a87c3e2af | 0.627 | 0.671 | 0.651 | **0.653** |
 | gbrain combined, whole pages, facts 1,800 | e8e1f66 | 0.647 | 0.641 | 0.640 | 0.642 |
 | gbrain raw, exchange pages | b0e70f498 | 0.622 (gate) | 0.648 (gate) | 0.634 | 0.637 |
@@ -95,7 +96,7 @@ On builds before a87c, raw exchange pages delivered about 6.9k tokens on average
 
 ### Fact dates
 
-On e8e1 and a87c, every fact's `valid_from` equals its source session date: 16,295 of 16,295 facts on BEAM dev. gbrain's extractor wrote no event date. Printing each fact's date changed nothing: pooled 0.636 with dates, 0.642 without. The temporal gap needs an extracted event date and fact recall ranked by the question. Build `505a65aab` adds both a fact `valid_from` from the extractor and a query facts arm; its combined-lane cells were still running when this page was written.
+On e8e1 and a87c, every fact's `valid_from` equals its source session date: 16,295 of 16,295 facts on BEAM dev. gbrain's extractor wrote no event date. Printing each fact's date changed nothing: pooled 0.636 with dates, 0.642 without. The temporal gap needs an extracted event date and fact recall ranked by the question. Build `505a65aab` adds `valid_from` for `remember` and a query facts arm. Neither shows up in BEAM's combined cells. `extract_facts` still writes no event date (0 of 16,234 facts carry one), and the facts arm added 0 rows in all 360 retrievals, because the page query already fills its budget. The combined lane on 505a scores 0.636 / 0.676 / 0.659, pooled 0.661, with every gate passing. Temporal reasoning there is 0.50 against the comparator's 0.72 ([write-up](2026-10-05-memory-proof-wave-dev/facts-lanes-fix1-505a.md)).
 
 ## Public datasets at 8,000 tokens
 
@@ -189,6 +190,6 @@ The dev phase is capped at $650 of proxy-metered spend. The ledger partitions we
 |---|---:|---:|
 | local (gbrain tracks, diagnosis, full context) | $301 | $270.63 |
 | VM (comparator tracks, hybrid search; closed, VM destroyed) | $158.28 | $158.28 |
-| facts lanes | $165 | $127.94 (rerun on 505a running) |
+| facts lanes | $165 | $130.47 |
 | coding spike | $25 | $4.65 |
-| **total** | **$649.28** | $561.50 |
+| **total** | **$649.28** | $564.03 |
