@@ -147,6 +147,276 @@
     "note": "memory proof wave dev comparator-beam-100k-rag-combined system default"
   },
   {
+    "cell_id": "beam-100k-gbrain-rag-091fa4bdc37f",
+    "provider": "gbrain",
+    "build": "e8e1f66b8",
+    "dataset": "beam",
+    "split": "100k",
+    "mode": "rag",
+    "lane": "combined",
+    "target": 8000,
+    "knobs": {
+      "lane": "combined",
+      "token_budget": 6300
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 80,
+    "mean_score": 0.6466815476190477,
+    "accuracy": 0.7125,
+    "delivered_mean": 7926.7,
+    "delivered_p95": 8071,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 2.295138,
+    "note": "memory proof wave dev gbrain-beam-100k-rag-combined-f1800 8000-token target"
+  },
+  {
+    "cell_id": "beam-100k-gbrain-rag-1088c6907a7d",
+    "provider": "gbrain",
+    "build": "a87c3e2af",
+    "dataset": "beam",
+    "split": "100k",
+    "mode": "rag",
+    "lane": "combined",
+    "target": 8000,
+    "knobs": {
+      "lane": "combined",
+      "token_budget": 7500
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 80,
+    "mean_score": 0.6272991071428573,
+    "accuracy": 0.6875,
+    "delivered_mean": 8137.1,
+    "delivered_p95": 8274,
+    "gates": {
+      "complete": false,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": false,
+    "usd": 2.212555,
+    "note": "memory proof wave dev gbrain-a87c-beam-100k-combined-exch-f600 8000-token target"
+  },
+  {
+    "cell_id": "beam-100k-gbrain-rag-5202425916f9",
+    "provider": "gbrain",
+    "build": "b0e70f498",
+    "dataset": "beam",
+    "split": "100k",
+    "mode": "rag",
+    "lane": "combined",
+    "target": 8000,
+    "knobs": {
+      "lane": "combined",
+      "token_budget": 7500
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 80,
+    "mean_score": 0.6515178571428571,
+    "accuracy": 0.7125,
+    "delivered_mean": 8124.1,
+    "delivered_p95": 8248,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 2.218718,
+    "note": "memory proof wave dev gbrain-b0e7-beam-100k-combined-exch-f600 8000-token target"
+  },
+  {
+    "cell_id": "beam-100k-gbrain-rag-62572407e664",
+    "provider": "gbrain",
+    "build": "e8e1f66b8",
+    "dataset": "beam",
+    "split": "100k",
+    "mode": "rag",
+    "lane": "combined",
+    "target": 8000,
+    "knobs": {
+      "lane": "combined",
+      "token_budget": 6300
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 80,
+    "mean_score": 0.6400595238095238,
+    "accuracy": 0.7,
+    "delivered_mean": 8106.3,
+    "delivered_p95": 8150,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 2.307534,
+    "note": "memory proof wave dev gbrain-beam-100k-rag-combined-f1800-fd 8000-token target"
+  },
+  {
+    "cell_id": "beam-100k-gbrain-rag-88ccfaf52605",
+    "provider": "gbrain",
+    "build": "e8e1f66b8",
+    "dataset": "beam",
+    "split": "100k",
+    "mode": "rag",
+    "lane": "combined",
+    "target": 8000,
+    "knobs": {
+      "lane": "combined",
+      "token_budget": 7500
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 80,
+    "mean_score": 0.6637127976190476,
+    "accuracy": 0.725,
+    "delivered_mean": 8078.1,
+    "delivered_p95": 8125,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 2.364596,
+    "note": "memory proof wave dev gbrain-beam-100k-rag-combined-f600 8000-token target"
+  },
+  {
+    "cell_id": "beam-100k-gbrain-rag-c66580e85f6d",
+    "provider": "gbrain",
+    "build": "b0e70f498",
+    "dataset": "beam",
+    "split": "100k",
+    "mode": "rag",
+    "lane": "combined",
+    "target": 8000,
+    "knobs": {
+      "lane": "combined",
+      "token_budget": 6300
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 80,
+    "mean_score": 0.7001711309523809,
+    "accuracy": 0.775,
+    "delivered_mean": 7998.1,
+    "delivered_p95": 8256,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 2.265612,
+    "note": "memory proof wave dev gbrain-b0e7-beam-100k-combined-exch-f1800 8000-token target"
+  },
+  {
+    "cell_id": "beam-100k-gbrain-rag-d196321494c8",
+    "provider": "gbrain",
+    "build": "a87c3e2af",
+    "dataset": "beam",
+    "split": "100k",
+    "mode": "rag",
+    "lane": "combined",
+    "target": 8000,
+    "knobs": {
+      "lane": "combined",
+      "token_budget": 7500
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 80,
+    "mean_score": 0.6563764880952381,
+    "accuracy": 0.7375,
+    "delivered_mean": 8083.7,
+    "delivered_p95": 8139,
+    "gates": {
+      "complete": false,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": false,
+    "usd": 2.276689,
+    "note": "memory proof wave dev gbrain-a87c-beam-100k-combined-f600 8000-token target"
+  },
+  {
+    "cell_id": "beam-100k-gbrain-rag-d42d6f30f142",
+    "provider": "gbrain",
+    "build": "b0e70f498",
+    "dataset": "beam",
+    "split": "100k",
+    "mode": "rag",
+    "lane": "combined",
+    "target": 8000,
+    "knobs": {
+      "lane": "combined",
+      "token_budget": 6300
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 80,
+    "mean_score": 0.6347470238095239,
+    "accuracy": 0.7,
+    "delivered_mean": 7955.2,
+    "delivered_p95": 8119,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 2.235365,
+    "note": "memory proof wave dev gbrain-b0e7-beam-100k-combined-f1800 8000-token target"
+  },
+  {
+    "cell_id": "beam-100k-gbrain-rag-e8fec4e667ca",
+    "provider": "gbrain",
+    "build": "e8e1f66b8",
+    "dataset": "beam",
+    "split": "100k",
+    "mode": "rag",
+    "lane": "combined",
+    "target": 8000,
+    "knobs": {
+      "lane": "combined",
+      "token_budget": 7500
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 80,
+    "mean_score": 0.6762723214285714,
+    "accuracy": 0.7375,
+    "delivered_mean": 8067,
+    "delivered_p95": 8121,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 2.330911,
+    "note": "memory proof wave dev gbrain-beam-100k-rag-combined-f600-fd 8000-token target"
+  },
+  {
     "cell_id": "beam-100k-comparator-rag-2b50cfbb3bc4",
     "provider": "comparator",
     "build": "server pinned",
@@ -175,6 +445,38 @@
     "ok": true,
     "usd": 2.264452,
     "note": "memory proof wave dev comparator-beam-100k-rag-facts 8000-token target"
+  },
+  {
+    "cell_id": "beam-100k-gbrain-rag-6076391483b1",
+    "provider": "gbrain",
+    "build": "e8e1f66b8",
+    "dataset": "beam",
+    "split": "100k",
+    "mode": "rag",
+    "lane": "facts",
+    "target": null,
+    "knobs": {
+      "lane": "facts",
+      "token_budget": null,
+      "return_unit": null,
+      "limit": null
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 80,
+    "mean_score": 0.37312500000000004,
+    "accuracy": 0.4,
+    "delivered_mean": 1677.6,
+    "delivered_p95": 1794,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 1.727022,
+    "note": "memory proof wave dev gbrain-beam-100k-rag-facts: facts only at gbrain's ceiling, no delivered-token target. recall returns at most 100 facts, newest first, plus at most 5 question-matched saved_facts, about 1.8k tokens, so an 8000-token target cannot be met (auto-tune finds no setting inside the gate)"
   },
   {
     "cell_id": "beam-100k-full-context-rag-cf0370830f86",
@@ -295,6 +597,152 @@
     "note": "memory proof wave dev gbrain-beam-100k-c1-on 8000-token target"
   },
   {
+    "cell_id": "beam-100k-gbrain-rag-35a5870cf7d1",
+    "provider": "gbrain",
+    "build": "e8e1f66b8",
+    "dataset": "beam",
+    "split": "100k",
+    "mode": "rag",
+    "lane": "raw",
+    "target": 8000,
+    "knobs": {
+      "return_unit": "window",
+      "token_budget": 8100
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 80,
+    "mean_score": 0.6052678571428571,
+    "accuracy": 0.675,
+    "delivered_mean": 7427,
+    "delivered_p95": 8001,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 2.196031,
+    "note": "memory proof wave dev r1-beam-100k-window 8000-token target"
+  },
+  {
+    "cell_id": "beam-100k-gbrain-rag-5b1ad50416a7",
+    "provider": "gbrain",
+    "build": "a87c3e2af",
+    "dataset": "beam",
+    "split": "100k",
+    "mode": "rag",
+    "lane": "raw",
+    "target": 8000,
+    "knobs": {
+      "token_budget": 8100
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 80,
+    "mean_score": 0.5992187499999999,
+    "accuracy": 0.6625,
+    "delivered_mean": 7986.1,
+    "delivered_p95": 8062,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 2.045886,
+    "note": "memory proof wave dev a87-beam-100k-pages 8000-token target"
+  },
+  {
+    "cell_id": "beam-100k-gbrain-rag-67563c155713",
+    "provider": "gbrain",
+    "build": "e8e1f66b8",
+    "dataset": "beam",
+    "split": "100k",
+    "mode": "rag",
+    "lane": "raw",
+    "target": 8000,
+    "knobs": {
+      "token_budget": 8659
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 80,
+    "mean_score": 0.6027380952380952,
+    "accuracy": 0.6375,
+    "delivered_mean": 6977.7,
+    "delivered_p95": 8659,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": false,
+      "no_remote_clamp": true
+    },
+    "ok": false,
+    "usd": 1.935417,
+    "note": "memory proof wave dev r1-beam-100k-exchanges 8000-token target; off target: exchange pages saturate near 7k delivered (row cap), run at token_budget 8659 (tuning p95 inside the gate) and reported as a gate miss"
+  },
+  {
+    "cell_id": "beam-100k-gbrain-rag-7fcff7acc310",
+    "provider": "gbrain",
+    "build": "b0e70f498",
+    "dataset": "beam",
+    "split": "100k",
+    "mode": "rag",
+    "lane": "raw",
+    "target": 8000,
+    "knobs": {
+      "token_budget": 8659
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 80,
+    "mean_score": 0.622202380952381,
+    "accuracy": 0.6625,
+    "delivered_mean": 6977.4,
+    "delivered_p95": 8659,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": false,
+      "no_remote_clamp": true
+    },
+    "ok": false,
+    "usd": 1.921917,
+    "note": "memory proof wave dev r1b-beam-100k-exchanges 8000-token target; fix round 1 (gbrain per-dataset BEAM config: one dated page per exchange); off target: exchange pages saturate near 7k delivered (gbrain returns 6-13 rows), run at token_budget 8659 and reported as a gate miss"
+  },
+  {
+    "cell_id": "beam-100k-gbrain-rag-a751f344ef9f",
+    "provider": "gbrain",
+    "build": "a87c3e2af",
+    "dataset": "beam",
+    "split": "100k",
+    "mode": "rag",
+    "lane": "raw",
+    "target": 8000,
+    "knobs": {
+      "token_budget": 10085
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 80,
+    "mean_score": 0.6449255952380952,
+    "accuracy": 0.7,
+    "delivered_mean": 7296.7,
+    "delivered_p95": 10053,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": false,
+      "no_remote_clamp": true
+    },
+    "ok": false,
+    "usd": 2.017623,
+    "note": "memory proof wave dev a87-beam-100k-exchanges 8000-token target; off target: no setting met the delivered-context gate, so the setting with the mean nearest the target runs and the cell reports the gate miss"
+  },
+  {
     "cell_id": "beam-100k-gbrain-rag-bc972e62b285",
     "provider": "gbrain",
     "build": "e8e1f66b8",
@@ -353,6 +801,35 @@
     "ok": true,
     "usd": 2.060107,
     "note": "memory proof wave dev gbrain-beam-100k-c1-off 8000-token target"
+  },
+  {
+    "cell_id": "beam-100k-gbrain-rag-e8c83b0d70ff",
+    "provider": "gbrain",
+    "build": "a87c3e2af",
+    "dataset": "beam",
+    "split": "100k",
+    "mode": "rag",
+    "lane": "raw",
+    "target": 8000,
+    "knobs": {
+      "token_budget": 8100
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 80,
+    "mean_score": 0.6061607142857142,
+    "accuracy": 0.65,
+    "delivered_mean": 7986.1,
+    "delivered_p95": 8062,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 2.151396,
+    "note": "memory proof wave dev gate3-beam-100k-off 8000-token target"
   },
   {
     "cell_id": "beam-100k-gbrain-rag-65a35cf49693",
@@ -588,6 +1065,96 @@
     "note": "memory proof wave dev comparator-beam-1m-rag-combined system default"
   },
   {
+    "cell_id": "beam-1m-gbrain-rag-964cf8f16d96",
+    "provider": "gbrain",
+    "build": "e8e1f66b8",
+    "dataset": "beam",
+    "split": "1m",
+    "mode": "rag",
+    "lane": "combined",
+    "target": 8000,
+    "knobs": {
+      "lane": "combined",
+      "token_budget": 6300
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 140,
+    "mean_score": 0.6343466553287982,
+    "accuracy": 0.7142857142857143,
+    "delivered_mean": 8177.8,
+    "delivered_p95": 8230,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 5.449838,
+    "note": "memory proof wave dev gbrain-beam-1m-rag-combined-f1800-fd 8000-token target"
+  },
+  {
+    "cell_id": "beam-1m-gbrain-rag-a418fcfae976",
+    "provider": "gbrain",
+    "build": "e8e1f66b8",
+    "dataset": "beam",
+    "split": "1m",
+    "mode": "rag",
+    "lane": "combined",
+    "target": 8000,
+    "knobs": {
+      "lane": "combined",
+      "token_budget": 6300
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 140,
+    "mean_score": 0.6401048752834466,
+    "accuracy": 0.6928571428571428,
+    "delivered_mean": 7953.6,
+    "delivered_p95": 8249,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 4.898258,
+    "note": "memory proof wave dev gbrain-beam-1m-rag-combined-f1800 8000-token target"
+  },
+  {
+    "cell_id": "beam-1m-gbrain-rag-f6b10e8f7fe6",
+    "provider": "gbrain",
+    "build": "a87c3e2af",
+    "dataset": "beam",
+    "split": "1m",
+    "mode": "rag",
+    "lane": "combined",
+    "target": 8000,
+    "knobs": {
+      "lane": "combined",
+      "token_budget": 7500
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 140,
+    "mean_score": 0.6510175736961451,
+    "accuracy": 0.7,
+    "delivered_mean": 8138.9,
+    "delivered_p95": 8194,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 5.011674,
+    "note": "memory proof wave dev gbrain-a87c-beam-1m-combined-exch-f600 8000-token target"
+  },
+  {
     "cell_id": "beam-1m-comparator-rag-720dc347a853",
     "provider": "comparator",
     "build": "server pinned",
@@ -616,6 +1183,38 @@
     "ok": true,
     "usd": 4.72206,
     "note": "memory proof wave dev comparator-beam-1m-rag-facts 8000-token target"
+  },
+  {
+    "cell_id": "beam-1m-gbrain-rag-6fd67a9e9a1a",
+    "provider": "gbrain",
+    "build": "e8e1f66b8",
+    "dataset": "beam",
+    "split": "1m",
+    "mode": "rag",
+    "lane": "facts",
+    "target": null,
+    "knobs": {
+      "lane": "facts",
+      "token_budget": null,
+      "return_unit": null,
+      "limit": null
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 140,
+    "mean_score": 0.24828798185941037,
+    "accuracy": 0.2571428571428571,
+    "delivered_mean": 1707.8,
+    "delivered_p95": 2042,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 3.417103,
+    "note": "memory proof wave dev gbrain-beam-1m-rag-facts: facts only at gbrain's ceiling, no delivered-token target. recall returns at most 100 facts, newest first, plus at most 5 question-matched saved_facts, about 1.8k tokens, so an 8000-token target cannot be met (auto-tune finds no setting inside the gate)"
   },
   {
     "cell_id": "beam-1m-gbrain-rag-d63defa9d81c",
@@ -647,6 +1246,68 @@
     "note": "memory proof wave dev gbrain-beam-1m-rag-raw 4000-token target"
   },
   {
+    "cell_id": "beam-1m-gbrain-rag-0def066c3a2d",
+    "provider": "gbrain",
+    "build": "e8e1f66b8",
+    "dataset": "beam",
+    "split": "1m",
+    "mode": "rag",
+    "lane": "raw",
+    "target": 8000,
+    "knobs": {
+      "date_header": false,
+      "gbrain_config": {
+        "search.evidence_date_header": "true"
+      },
+      "token_budget": 8100
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 140,
+    "mean_score": 0.5236692176870748,
+    "accuracy": 0.5571428571428572,
+    "delivered_mean": 7885.7,
+    "delivered_p95": 7936,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 4.45803,
+    "note": "memory proof wave dev gbrain-beam-1m-c1-on 8000-token target"
+  },
+  {
+    "cell_id": "beam-1m-gbrain-rag-0f7154bd76e7",
+    "provider": "gbrain",
+    "build": "a87c3e2af",
+    "dataset": "beam",
+    "split": "1m",
+    "mode": "rag",
+    "lane": "raw",
+    "target": 8000,
+    "knobs": {
+      "token_budget": 8100
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 140,
+    "mean_score": 0.5374872448979592,
+    "accuracy": 0.5571428571428572,
+    "delivered_mean": 7977.1,
+    "delivered_p95": 8035,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 4.39817,
+    "note": "memory proof wave dev a87-beam-1m-pages 8000-token target"
+  },
+  {
     "cell_id": "beam-1m-gbrain-rag-19dcfd3b3200",
     "provider": "gbrain",
     "build": "e8e1f66b8",
@@ -674,6 +1335,35 @@
     "ok": true,
     "usd": 4.50414,
     "note": "memory proof wave dev gbrain-beam-1m-rag-raw 8000-token target"
+  },
+  {
+    "cell_id": "beam-1m-gbrain-rag-7020113030c5",
+    "provider": "gbrain",
+    "build": "b0e70f498",
+    "dataset": "beam",
+    "split": "1m",
+    "mode": "rag",
+    "lane": "raw",
+    "target": 8000,
+    "knobs": {
+      "token_budget": 8659
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 140,
+    "mean_score": 0.6344005102040816,
+    "accuracy": 0.7,
+    "delivered_mean": 7244.7,
+    "delivered_p95": 8596,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 4.283205,
+    "note": "memory proof wave dev r1b-beam-1m-exchanges 8000-token target; fix round 1 (gbrain per-dataset BEAM config: one dated page per exchange); off target: exchange pages saturate near 7k delivered (gbrain returns 6-13 rows), run at token_budget 8659 and reported as a gate miss"
   },
   {
     "cell_id": "beam-1m-gbrain-rag-9ff6d7083b62",
@@ -705,6 +1395,64 @@
     "ok": true,
     "usd": 4.51316,
     "note": "memory proof wave dev gbrain-beam-1m-c1-off 8000-token target"
+  },
+  {
+    "cell_id": "beam-1m-gbrain-rag-b673b089876e",
+    "provider": "gbrain",
+    "build": "a87c3e2af",
+    "dataset": "beam",
+    "split": "1m",
+    "mode": "rag",
+    "lane": "raw",
+    "target": 8000,
+    "knobs": {
+      "token_budget": 8687
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 140,
+    "mean_score": 0.6489243197278911,
+    "accuracy": 0.6928571428571428,
+    "delivered_mean": 7253.2,
+    "delivered_p95": 8616,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 4.259337,
+    "note": "memory proof wave dev a87-beam-1m-exchanges 8000-token target"
+  },
+  {
+    "cell_id": "beam-1m-gbrain-rag-e32ae0e68a4c",
+    "provider": "gbrain",
+    "build": "a87c3e2af",
+    "dataset": "beam",
+    "split": "1m",
+    "mode": "rag",
+    "lane": "raw",
+    "target": 8000,
+    "knobs": {
+      "token_budget": 8100
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 140,
+    "mean_score": 0.542049319727891,
+    "accuracy": 0.5428571428571428,
+    "delivered_mean": 7977.1,
+    "delivered_p95": 8035,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 5.086304,
+    "note": "memory proof wave dev gate3-beam-1m-off 8000-token target"
   },
   {
     "cell_id": "beam-1m-gbrain-rag-4cb1e54e9124",
@@ -974,6 +1722,186 @@
     "note": "memory proof wave dev comparator-beam-500k-rag-combined system default"
   },
   {
+    "cell_id": "beam-500k-gbrain-rag-2d8a3f619a56",
+    "provider": "gbrain",
+    "build": "e8e1f66b8",
+    "dataset": "beam",
+    "split": "500k",
+    "mode": "rag",
+    "lane": "combined",
+    "target": 8000,
+    "knobs": {
+      "lane": "combined",
+      "token_budget": 6300
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 140,
+    "mean_score": 0.6364668367346938,
+    "accuracy": 0.6857142857142857,
+    "delivered_mean": 8133.9,
+    "delivered_p95": 8166,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 4.15146,
+    "note": "memory proof wave dev gbrain-beam-500k-rag-combined-f1800-fd 8000-token target"
+  },
+  {
+    "cell_id": "beam-500k-gbrain-rag-58fa8bddbfe0",
+    "provider": "gbrain",
+    "build": "b0e70f498",
+    "dataset": "beam",
+    "split": "500k",
+    "mode": "rag",
+    "lane": "combined",
+    "target": 8000,
+    "knobs": {
+      "lane": "combined",
+      "token_budget": 6300
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 140,
+    "mean_score": 0.6447278911564626,
+    "accuracy": 0.7142857142857143,
+    "delivered_mean": 7923.6,
+    "delivered_p95": 8200,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 4.096031,
+    "note": "memory proof wave dev gbrain-b0e7-beam-500k-combined-exch-f1800 8000-token target"
+  },
+  {
+    "cell_id": "beam-500k-gbrain-rag-5e6f48723881",
+    "provider": "gbrain",
+    "build": "e8e1f66b8",
+    "dataset": "beam",
+    "split": "500k",
+    "mode": "rag",
+    "lane": "combined",
+    "target": 8000,
+    "knobs": {
+      "lane": "combined",
+      "token_budget": 6300
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 140,
+    "mean_score": 0.6408645124716553,
+    "accuracy": 0.7142857142857143,
+    "delivered_mean": 7911.9,
+    "delivered_p95": 8191,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 5.354909,
+    "note": "memory proof wave dev gbrain-beam-500k-rag-combined-f1800 8000-token target"
+  },
+  {
+    "cell_id": "beam-500k-gbrain-rag-787d0e1a0f38",
+    "provider": "gbrain",
+    "build": "a87c3e2af",
+    "dataset": "beam",
+    "split": "500k",
+    "mode": "rag",
+    "lane": "combined",
+    "target": 8000,
+    "knobs": {
+      "lane": "combined",
+      "token_budget": 7500
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 140,
+    "mean_score": 0.6709608843537416,
+    "accuracy": 0.7142857142857143,
+    "delivered_mean": 8121,
+    "delivered_p95": 8168,
+    "gates": {
+      "complete": false,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": false,
+    "usd": 5.000129,
+    "note": "memory proof wave dev gbrain-a87c-beam-500k-combined-exch-f600 8000-token target"
+  },
+  {
+    "cell_id": "beam-500k-gbrain-rag-bff1efbc4c06",
+    "provider": "gbrain",
+    "build": "e8e1f66b8",
+    "dataset": "beam",
+    "split": "500k",
+    "mode": "rag",
+    "lane": "combined",
+    "target": 8000,
+    "knobs": {
+      "lane": "combined",
+      "token_budget": 7500
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 140,
+    "mean_score": 0.6506335034013606,
+    "accuracy": 0.7,
+    "delivered_mean": 8088.5,
+    "delivered_p95": 8145,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 4.166868,
+    "note": "memory proof wave dev gbrain-beam-500k-rag-combined-f600-fd 8000-token target"
+  },
+  {
+    "cell_id": "beam-500k-gbrain-rag-ee362eafae11",
+    "provider": "gbrain",
+    "build": "b0e70f498",
+    "dataset": "beam",
+    "split": "500k",
+    "mode": "rag",
+    "lane": "combined",
+    "target": 8000,
+    "knobs": {
+      "lane": "combined",
+      "token_budget": 7500
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 140,
+    "mean_score": 0.6627111678004535,
+    "accuracy": 0.7,
+    "delivered_mean": 8124.4,
+    "delivered_p95": 8177,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 4.13422,
+    "note": "memory proof wave dev gbrain-b0e7-beam-500k-combined-exch-f600 8000-token target"
+  },
+  {
     "cell_id": "beam-500k-comparator-rag-2ed29660a163",
     "provider": "comparator",
     "build": "server pinned",
@@ -1002,6 +1930,38 @@
     "ok": false,
     "usd": 4.175651,
     "note": "memory proof wave dev comparator-beam-500k-rag-facts 8000-token target"
+  },
+  {
+    "cell_id": "beam-500k-gbrain-rag-e0c8684af630",
+    "provider": "gbrain",
+    "build": "e8e1f66b8",
+    "dataset": "beam",
+    "split": "500k",
+    "mode": "rag",
+    "lane": "facts",
+    "target": null,
+    "knobs": {
+      "lane": "facts",
+      "token_budget": null,
+      "return_unit": null,
+      "limit": null
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 140,
+    "mean_score": 0.34496882086167807,
+    "accuracy": 0.37857142857142856,
+    "delivered_mean": 1676.7,
+    "delivered_p95": 2077,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 2.94935,
+    "note": "memory proof wave dev gbrain-beam-500k-rag-facts: facts only at gbrain's ceiling, no delivered-token target. recall returns at most 100 facts, newest first, plus at most 5 question-matched saved_facts, about 1.8k tokens, so an 8000-token target cannot be met (auto-tune finds no setting inside the gate)"
   },
   {
     "cell_id": "beam-500k-full-context-rag-fcf297c8684d",
@@ -1060,6 +2020,35 @@
     "note": "memory proof wave dev gbrain-beam-500k-rag-raw 4000-token target"
   },
   {
+    "cell_id": "beam-500k-gbrain-rag-25b35129ace0",
+    "provider": "gbrain",
+    "build": "a87c3e2af",
+    "dataset": "beam",
+    "split": "500k",
+    "mode": "rag",
+    "lane": "raw",
+    "target": 8000,
+    "knobs": {
+      "token_budget": 8100
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 140,
+    "mean_score": 0.5649730725623582,
+    "accuracy": 0.6071428571428571,
+    "delivered_mean": 7976.1,
+    "delivered_p95": 8015,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 4.539976,
+    "note": "memory proof wave dev a87-beam-500k-pages 8000-token target"
+  },
+  {
     "cell_id": "beam-500k-gbrain-rag-51a770ed8e9a",
     "provider": "gbrain",
     "build": "e8e1f66b8",
@@ -1087,6 +2076,36 @@
     "ok": true,
     "usd": 4.525933,
     "note": "memory proof wave dev gbrain-beam-500k-rag-raw 8000-token target"
+  },
+  {
+    "cell_id": "beam-500k-gbrain-rag-565b52ce2fd9",
+    "provider": "gbrain",
+    "build": "e8e1f66b8",
+    "dataset": "beam",
+    "split": "500k",
+    "mode": "rag",
+    "lane": "raw",
+    "target": 8000,
+    "knobs": {
+      "return_unit": "window",
+      "token_budget": 8100
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 140,
+    "mean_score": 0.5946102607709752,
+    "accuracy": 0.6428571428571429,
+    "delivered_mean": 7934.3,
+    "delivered_p95": 8010,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 3.957388,
+    "note": "memory proof wave dev r1-beam-500k-window 8000-token target"
   },
   {
     "cell_id": "beam-500k-gbrain-rag-8d8efde8b0c3",
@@ -1120,6 +2139,93 @@
     "note": "memory proof wave dev gbrain-beam-500k-c1-off 8000-token target"
   },
   {
+    "cell_id": "beam-500k-gbrain-rag-9c20005c1fd7",
+    "provider": "gbrain",
+    "build": "a87c3e2af",
+    "dataset": "beam",
+    "split": "500k",
+    "mode": "rag",
+    "lane": "raw",
+    "target": 8000,
+    "knobs": {
+      "token_budget": 8100
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 140,
+    "mean_score": 0.5581122448979592,
+    "accuracy": 0.6071428571428571,
+    "delivered_mean": 7976.1,
+    "delivered_p95": 8015,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 4.390856,
+    "note": "memory proof wave dev gate3-beam-500k-off 8000-token target"
+  },
+  {
+    "cell_id": "beam-500k-gbrain-rag-a3e60723483d",
+    "provider": "gbrain",
+    "build": "e8e1f66b8",
+    "dataset": "beam",
+    "split": "500k",
+    "mode": "rag",
+    "lane": "raw",
+    "target": 8000,
+    "knobs": {
+      "token_budget": 8659
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 140,
+    "mean_score": 0.6590178571428572,
+    "accuracy": 0.7,
+    "delivered_mean": 6902.4,
+    "delivered_p95": 8565,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": false,
+      "no_remote_clamp": true
+    },
+    "ok": false,
+    "usd": 3.815351,
+    "note": "memory proof wave dev r1-beam-500k-exchanges 8000-token target; off target: exchange pages saturate near 7k delivered (row cap), run at token_budget 8659 (tuning p95 inside the gate) and reported as a gate miss"
+  },
+  {
+    "cell_id": "beam-500k-gbrain-rag-a74400a7d74d",
+    "provider": "gbrain",
+    "build": "a87c3e2af",
+    "dataset": "beam",
+    "split": "500k",
+    "mode": "rag",
+    "lane": "raw",
+    "target": 8000,
+    "knobs": {
+      "token_budget": 8751
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 140,
+    "mean_score": 0.6501147959183674,
+    "accuracy": 0.6928571428571428,
+    "delivered_mean": 6903.5,
+    "delivered_p95": 8661,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": false,
+      "no_remote_clamp": true
+    },
+    "ok": false,
+    "usd": 3.855478,
+    "note": "memory proof wave dev a87-beam-500k-exchanges 8000-token target"
+  },
+  {
     "cell_id": "beam-500k-gbrain-rag-abf3547eec2e",
     "provider": "gbrain",
     "build": "e8e1f66b8",
@@ -1151,6 +2257,35 @@
     "ok": true,
     "usd": 4.789021,
     "note": "memory proof wave dev gbrain-beam-500k-c1-on 8000-token target"
+  },
+  {
+    "cell_id": "beam-500k-gbrain-rag-d5650cf1f16a",
+    "provider": "gbrain",
+    "build": "b0e70f498",
+    "dataset": "beam",
+    "split": "500k",
+    "mode": "rag",
+    "lane": "raw",
+    "target": 8000,
+    "knobs": {
+      "token_budget": 8659
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 140,
+    "mean_score": 0.6478160430839003,
+    "accuracy": 0.7,
+    "delivered_mean": 6889.4,
+    "delivered_p95": 8568,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": false,
+      "no_remote_clamp": true
+    },
+    "ok": false,
+    "usd": 4.765498,
+    "note": "memory proof wave dev r1b-beam-500k-exchanges 8000-token target; fix round 1 (gbrain per-dataset BEAM config: one dated page per exchange); off target: exchange pages saturate near 7k delivered (gbrain returns 6-13 rows), run at token_budget 8659 and reported as a gate miss"
   },
   {
     "cell_id": "beam-500k-gbrain-rag-0ab6d111ad70",
@@ -1271,6 +2406,38 @@
     "note": "memory proof wave dev comparator-lifebench-agent system default"
   },
   {
+    "cell_id": "lifebench-en-gbrain-agent-adc3cdee4b6c",
+    "provider": "gbrain",
+    "build": "2b1f5b69f",
+    "dataset": "lifebench",
+    "split": "en",
+    "mode": "agent",
+    "lane": "raw",
+    "target": null,
+    "knobs": {
+      "think_model": "google:gemini-3.8-flash",
+      "token_budget": null,
+      "return_unit": null,
+      "limit": null
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 50,
+    "mean_score": 0.86,
+    "accuracy": 0.86,
+    "delivered_mean": 75.4,
+    "delivered_p95": 241,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 1.722464,
+    "note": "memory proof wave dev gbrain-lifebench-agent system default"
+  },
+  {
     "cell_id": "lifebench-en-comparator-agentic-rag-9ddc757fda9e",
     "provider": "comparator",
     "build": "server pinned",
@@ -1301,6 +2468,35 @@
     "note": "memory proof wave dev comparator-lifebench-agentic 8000-token target"
   },
   {
+    "cell_id": "lifebench-en-gbrain-agentic-rag-203e89d2076e",
+    "provider": "gbrain",
+    "build": "2b1f5b69f",
+    "dataset": "lifebench",
+    "split": "en",
+    "mode": "agentic-rag",
+    "lane": "raw",
+    "target": 8000,
+    "knobs": {
+      "token_budget": 8100
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 50,
+    "mean_score": 0.86,
+    "accuracy": 0.86,
+    "delivered_mean": 42136.4,
+    "delivered_p95": 80576,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": false,
+      "no_remote_clamp": true
+    },
+    "ok": false,
+    "usd": 6.137688,
+    "note": "memory proof wave dev gbrain-lifebench-agentic 8000-token target"
+  },
+  {
     "cell_id": "locomo-locomo10-comparator-agent-b7240543efdf",
     "provider": "comparator",
     "build": "server pinned",
@@ -1326,6 +2522,38 @@
     "ok": true,
     "usd": 0.343613,
     "note": "memory proof wave dev comparator-locomo-agent system default"
+  },
+  {
+    "cell_id": "locomo-locomo10-gbrain-agent-40d2f747a52f",
+    "provider": "gbrain",
+    "build": "2b1f5b69f",
+    "dataset": "locomo",
+    "split": "locomo10",
+    "mode": "agent",
+    "lane": "raw",
+    "target": null,
+    "knobs": {
+      "think_model": "google:gemini-3.8-flash",
+      "token_budget": null,
+      "return_unit": null,
+      "limit": null
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 50,
+    "mean_score": 0.84,
+    "accuracy": 0.84,
+    "delivered_mean": 71,
+    "delivered_p95": 205,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 1.49647,
+    "note": "memory proof wave dev gbrain-locomo-agent system default"
   },
   {
     "cell_id": "locomo-locomo10-comparator-agentic-rag-122f169d1a7e",
@@ -1358,6 +2586,35 @@
     "note": "memory proof wave dev comparator-locomo-agentic 8000-token target"
   },
   {
+    "cell_id": "locomo-locomo10-gbrain-agentic-rag-28c2175c050f",
+    "provider": "gbrain",
+    "build": "2b1f5b69f",
+    "dataset": "locomo",
+    "split": "locomo10",
+    "mode": "agentic-rag",
+    "lane": "raw",
+    "target": 8000,
+    "knobs": {
+      "token_budget": 8100
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 50,
+    "mean_score": 0.9,
+    "accuracy": 0.9,
+    "delivered_mean": 21792.2,
+    "delivered_p95": 80748,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": false,
+      "no_remote_clamp": true
+    },
+    "ok": false,
+    "usd": 2.869175,
+    "note": "memory proof wave dev gbrain-locomo-agentic 8000-token target"
+  },
+  {
     "cell_id": "locomo-locomo10-comparator-rag-c42cdf3d59d0",
     "provider": "comparator",
     "build": "server pinned",
@@ -1388,6 +2645,96 @@
     "note": "memory proof wave dev comparator-locomo-locomo10-rag-combined-rerun 8000-token target"
   },
   {
+    "cell_id": "locomo-locomo10-gbrain-rag-146f654a74a2",
+    "provider": "gbrain",
+    "build": "e8e1f66b8",
+    "dataset": "locomo",
+    "split": "locomo10",
+    "mode": "rag",
+    "lane": "combined",
+    "target": 8000,
+    "knobs": {
+      "lane": "combined",
+      "token_budget": 6275
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 322,
+    "mean_score": 0.8850931677018633,
+    "accuracy": 0.8850931677018633,
+    "delivered_mean": 8013,
+    "delivered_p95": 8117,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": false,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": false,
+    "usd": 5.092815,
+    "note": "memory proof wave dev gbrain-locomo-locomo10-rag-combined-f1800 8000-token target; knobs from the sweep's auto-tune rows that passed the delivered-context gate (the sweep skipped the run because 2 of 60 sampled questions fail retrieval: image-intent queries report vector_arm_failed on a text-only voyage-4 brain)"
+  },
+  {
+    "cell_id": "locomo-locomo10-gbrain-rag-7875d00f3b75",
+    "provider": "gbrain",
+    "build": "e8e1f66b8",
+    "dataset": "locomo",
+    "split": "locomo10",
+    "mode": "rag",
+    "lane": "combined",
+    "target": 8000,
+    "knobs": {
+      "lane": "combined",
+      "token_budget": 6300
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 322,
+    "mean_score": 0.9037267080745341,
+    "accuracy": 0.9037267080745341,
+    "delivered_mean": 8036.4,
+    "delivered_p95": 8136,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 4.535397,
+    "note": "memory proof wave dev gbrain-locomo-locomo10-rag-combined-f1800 8000-token target"
+  },
+  {
+    "cell_id": "locomo-locomo10-gbrain-rag-9c77c271d7b8",
+    "provider": "gbrain",
+    "build": "e8e1f66b8",
+    "dataset": "locomo",
+    "split": "locomo10",
+    "mode": "rag",
+    "lane": "combined",
+    "target": 8000,
+    "knobs": {
+      "lane": "combined",
+      "token_budget": 7316
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 322,
+    "mean_score": 0.8819875776397516,
+    "accuracy": 0.8819875776397516,
+    "delivered_mean": 8012.8,
+    "delivered_p95": 8067,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": false,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": false,
+    "usd": 4.938805,
+    "note": "memory proof wave dev gbrain-locomo-locomo10-rag-combined-f600 8000-token target; knobs from the sweep's auto-tune rows that passed the delivered-context gate (the sweep skipped the run because 2 of 60 sampled questions fail retrieval: image-intent queries report vector_arm_failed on a text-only voyage-4 brain)"
+  },
+  {
     "cell_id": "locomo-locomo10-comparator-rag-af905d165838",
     "provider": "comparator",
     "build": "server pinned",
@@ -1416,6 +2763,38 @@
     "ok": false,
     "usd": 4.370537,
     "note": "memory proof wave dev comparator-locomo-locomo10-rag-facts-rerun 8000-token target"
+  },
+  {
+    "cell_id": "locomo-locomo10-gbrain-rag-15da9e907a79",
+    "provider": "gbrain",
+    "build": "e8e1f66b8",
+    "dataset": "locomo",
+    "split": "locomo10",
+    "mode": "rag",
+    "lane": "facts",
+    "target": null,
+    "knobs": {
+      "lane": "facts",
+      "token_budget": null,
+      "return_unit": null,
+      "limit": null
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 322,
+    "mean_score": 0.4254658385093168,
+    "accuracy": 0.4254658385093168,
+    "delivered_mean": 1743.8,
+    "delivered_p95": 1819,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 2.824695,
+    "note": "memory proof wave dev gbrain-locomo-locomo10-rag-facts: facts only at gbrain's ceiling, no delivered-token target. recall returns at most 100 facts, newest first, plus at most 5 question-matched saved_facts, about 1.8k tokens, so an 8000-token target cannot be met (auto-tune finds no setting inside the gate)"
   },
   {
     "cell_id": "locomo-locomo10-comparator-rag-e21fa5df3aa0",
@@ -1504,6 +2883,97 @@
     "note": "memory proof wave dev comparator-longmemeval-agent system default"
   },
   {
+    "cell_id": "longmemeval-s-gbrain-agent-fe5adcb15415",
+    "provider": "gbrain",
+    "build": "2b1f5b69f",
+    "dataset": "longmemeval",
+    "split": "s",
+    "mode": "agent",
+    "lane": "raw",
+    "target": null,
+    "knobs": {
+      "think_model": "google:gemini-3.8-flash",
+      "token_budget": null,
+      "return_unit": null,
+      "limit": null
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 50,
+    "mean_score": 0.68,
+    "accuracy": 0.68,
+    "delivered_mean": 49.6,
+    "delivered_p95": 92,
+    "gates": {
+      "complete": false,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": false,
+    "usd": 1.40685,
+    "note": "memory proof wave dev gbrain-longmemeval-agent system default"
+  },
+  {
+    "cell_id": "longmemeval-s-comparator-agentic-rag-ba75df07588d",
+    "provider": "comparator",
+    "build": "server pinned",
+    "dataset": "longmemeval",
+    "split": "s",
+    "mode": "agentic-rag",
+    "lane": "combined",
+    "target": 8000,
+    "knobs": {
+      "max_tokens": 875,
+      "max_chunk_tokens": 500
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 50,
+    "mean_score": 0.88,
+    "accuracy": 0.88,
+    "delivered_mean": 7833.8,
+    "delivered_p95": 20667,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": false,
+      "no_remote_clamp": true
+    },
+    "ok": false,
+    "usd": 1.907515,
+    "note": "memory proof wave dev comparator-longmemeval-agentic 8000-token target; off target: no setting met the delivered-context gate, so the setting with the mean nearest the target runs and the cell reports the gate miss"
+  },
+  {
+    "cell_id": "longmemeval-s-gbrain-agentic-rag-93066723dbcc",
+    "provider": "gbrain",
+    "build": "2b1f5b69f",
+    "dataset": "longmemeval",
+    "split": "s",
+    "mode": "agentic-rag",
+    "lane": "raw",
+    "target": 8000,
+    "knobs": {
+      "token_budget": 8100
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 50,
+    "mean_score": 0.86,
+    "accuracy": 0.86,
+    "delivered_mean": 21530,
+    "delivered_p95": 64332,
+    "gates": {
+      "complete": false,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": false,
+      "no_remote_clamp": true
+    },
+    "ok": false,
+    "usd": 2.486107,
+    "note": "memory proof wave dev gbrain-longmemeval-agentic 8000-token target"
+  },
+  {
     "cell_id": "longmemeval-s-comparator-rag-3752c2d57c52",
     "provider": "comparator",
     "build": "server pinned",
@@ -1532,6 +3002,96 @@
     "ok": false,
     "usd": 1.342334,
     "note": "memory proof wave dev comparator-longmemeval-s-rag-combined 8000-token target; off target: no setting met the delivered-context gate, so the setting with the mean nearest the target runs and the cell reports the gate miss"
+  },
+  {
+    "cell_id": "longmemeval-s-comparator-rag-6edb18afcfa1",
+    "provider": "comparator",
+    "build": "server pinned",
+    "dataset": "longmemeval",
+    "split": "s",
+    "mode": "rag",
+    "lane": "combined",
+    "target": 8000,
+    "knobs": {
+      "max_tokens": 866,
+      "max_chunk_tokens": 495
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 100,
+    "mean_score": 0.94,
+    "accuracy": 0.94,
+    "delivered_mean": 7943,
+    "delivered_p95": 9491,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": false,
+      "no_remote_clamp": true
+    },
+    "ok": false,
+    "usd": 1.355285,
+    "note": "memory proof wave dev comparator-longmemeval-s-rag-combined 8000-token target; off target: no setting met the delivered-context gate, so the setting with the mean nearest the target runs and the cell reports the gate miss"
+  },
+  {
+    "cell_id": "longmemeval-s-gbrain-rag-8c869080496e",
+    "provider": "gbrain",
+    "build": "e8e1f66b8",
+    "dataset": "longmemeval",
+    "split": "s",
+    "mode": "rag",
+    "lane": "combined",
+    "target": 8000,
+    "knobs": {
+      "lane": "combined",
+      "token_budget": 6300
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 100,
+    "mean_score": 0.8,
+    "accuracy": 0.8,
+    "delivered_mean": 8263,
+    "delivered_p95": 8408,
+    "gates": {
+      "complete": false,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": false,
+    "usd": 1.403367,
+    "note": "memory proof wave dev gbrain-longmemeval-s-rag-combined-f1800 8000-token target"
+  },
+  {
+    "cell_id": "longmemeval-s-comparator-rag-24a759bfab8b",
+    "provider": "comparator",
+    "build": "server pinned",
+    "dataset": "longmemeval",
+    "split": "s",
+    "mode": "rag",
+    "lane": "facts",
+    "target": 8000,
+    "knobs": {
+      "max_tokens": 937,
+      "max_chunk_tokens": 0
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 100,
+    "mean_score": 0.91,
+    "accuracy": 0.91,
+    "delivered_mean": 7943.4,
+    "delivered_p95": 9624,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": false,
+      "no_remote_clamp": true
+    },
+    "ok": false,
+    "usd": 1.369067,
+    "note": "memory proof wave dev comparator-longmemeval-s-rag-facts 8000-token target; off target: no setting met the delivered-context gate, so the setting with the mean nearest the target runs and the cell reports the gate miss"
   },
   {
     "cell_id": "longmemeval-s-comparator-rag-f6f18dd43ae5",
@@ -1564,6 +3124,68 @@
     "note": "memory proof wave dev comparator-longmemeval-s-rag-facts 8000-token target; off target: no setting met the delivered-context gate, so the setting with the mean nearest the target runs and the cell reports the gate miss"
   },
   {
+    "cell_id": "longmemeval-s-gbrain-rag-000a85eacea5",
+    "provider": "gbrain",
+    "build": "e8e1f66b8",
+    "dataset": "longmemeval",
+    "split": "s",
+    "mode": "rag",
+    "lane": "facts",
+    "target": null,
+    "knobs": {
+      "lane": "facts",
+      "token_budget": null,
+      "return_unit": null,
+      "limit": null
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 100,
+    "mean_score": 0.27,
+    "accuracy": 0.27,
+    "delivered_mean": 1931.3,
+    "delivered_p95": 2090,
+    "gates": {
+      "complete": false,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": false,
+    "usd": 1.05328,
+    "note": "memory proof wave dev gbrain-longmemeval-s-rag-facts: facts only at gbrain's ceiling, no delivered-token target. recall returns at most 100 facts, newest first, plus at most 5 question-matched saved_facts, about 1.8k tokens, so an 8000-token target cannot be met (auto-tune finds no setting inside the gate)"
+  },
+  {
+    "cell_id": "longmemeval-s-comparator-rag-82a024ded403",
+    "provider": "comparator",
+    "build": "server pinned",
+    "dataset": "longmemeval",
+    "split": "s",
+    "mode": "rag",
+    "lane": "raw",
+    "target": 8000,
+    "knobs": {
+      "max_tokens": 0,
+      "max_chunk_tokens": 6856
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 100,
+    "mean_score": 0.86,
+    "accuracy": 0.86,
+    "delivered_mean": 8030.8,
+    "delivered_p95": 8249,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 1.247923,
+    "note": "memory proof wave dev comparator-longmemeval-s-rag-raw 8000-token target"
+  },
+  {
     "cell_id": "longmemeval-s-comparator-rag-8882adc366bd",
     "provider": "comparator",
     "build": "server pinned",
@@ -1592,6 +3214,65 @@
     "ok": false,
     "usd": 1.225631,
     "note": "memory proof wave dev comparator-longmemeval-s-rag-raw 8000-token target"
+  },
+  {
+    "cell_id": "longmemeval-s-comparator-rag-d200ed504486",
+    "provider": "comparator",
+    "build": "server pinned",
+    "dataset": "longmemeval",
+    "split": "s",
+    "mode": "rag",
+    "lane": "raw",
+    "target": 8000,
+    "knobs": {
+      "max_tokens": 0,
+      "max_chunk_tokens": 6857
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 100,
+    "mean_score": 0.85,
+    "accuracy": 0.85,
+    "delivered_mean": 8027.5,
+    "delivered_p95": 8337,
+    "gates": {
+      "complete": false,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": false,
+    "usd": 1.239956,
+    "note": "memory proof wave dev comparator-longmemeval-s-rag-raw 8000-token target"
+  },
+  {
+    "cell_id": "longmemeval-s-gbrain-rag-2f53d5453623",
+    "provider": "gbrain",
+    "build": "a87c3e2af",
+    "dataset": "longmemeval",
+    "split": "s",
+    "mode": "rag",
+    "lane": "raw",
+    "target": 8000,
+    "knobs": {
+      "token_budget": 8100
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 100,
+    "mean_score": 0.9,
+    "accuracy": 0.9,
+    "delivered_mean": 8051.8,
+    "delivered_p95": 8098,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 1.218667,
+    "note": "memory proof wave dev gbrain-longmemeval-s-rag-raw-a87c3e2af 8000-token target"
   },
   {
     "cell_id": "longmemeval-s-gbrain-rag-2f85a6cc4f0f",
@@ -1623,6 +3304,35 @@
     "note": "memory proof wave dev gbrain-longmemeval-s-rag-raw 8000-token target"
   },
   {
+    "cell_id": "longmemeval-s-gbrain-rag-35d09f303c9b",
+    "provider": "gbrain",
+    "build": "a87c3e2af",
+    "dataset": "longmemeval",
+    "split": "s",
+    "mode": "rag",
+    "lane": "raw",
+    "target": 8000,
+    "knobs": {
+      "token_budget": 8100
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 42,
+    "mean_score": 0.9047619047619048,
+    "accuracy": 0.9047619047619048,
+    "delivered_mean": 8050.2,
+    "delivered_p95": 8102,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 0.485751,
+    "note": "memory proof wave dev gate3-lme-ku-temporal-off 8000-token target"
+  },
+  {
     "cell_id": "longmemeval-s-gbrain-rag-d52a469ebe8f",
     "provider": "gbrain",
     "build": "e8e1f66b8",
@@ -1650,5 +3360,34 @@
     "ok": false,
     "usd": 1.211772,
     "note": "memory proof wave dev gbrain-longmemeval-s-rag-raw 8000-token target"
+  },
+  {
+    "cell_id": "personamem-32k-gbrain-rag-c57b322a5c6d",
+    "provider": "gbrain",
+    "build": "a87c3e2af",
+    "dataset": "personamem",
+    "split": "32k",
+    "mode": "rag",
+    "lane": "raw",
+    "target": 8000,
+    "knobs": {
+      "token_budget": 8100
+    },
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash",
+    "n": 93,
+    "mean_score": 0.8494623655913979,
+    "accuracy": 0.8494623655913979,
+    "delivered_mean": 7957.4,
+    "delivered_p95": 7987,
+    "gates": {
+      "complete": true,
+      "no_answer_or_retrieval_failures": true,
+      "delivered_context": true,
+      "no_remote_clamp": true
+    },
+    "ok": true,
+    "usd": 1.1506,
+    "note": "memory proof wave dev gate3-personamem-32k-off 8000-token target"
   }
 ]

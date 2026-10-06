@@ -1,0 +1,252 @@
+{
+  "schema": "mpw-cell-v1",
+  "cell_id": "locomo-locomo10-gbrain-agent-40d2f747a52f",
+  "identity": {
+    "schema": "mpw-cell-v1",
+    "dataset": "locomo",
+    "split": "locomo10",
+    "dataset_manifest_sha256": "b3a4b3245233c2f957a14fddf054224571d4821c4acd2509a2e9d7c2ba111274",
+    "schedule_sha256": "a2adbcc89a530001cd93972a3f7d9b323a006e71fc8dd5f85196fbacd3d44a1a",
+    "pins": {
+      "harness_commit": "f618ed7b1f0eb9cad7b42e876f91a42f0eadb150",
+      "harness_lock_sha256": "6b6ace4f721ae10bf66214a8a617c3c6e97a930e91c163728835691994a07b8f",
+      "torch": "2.10.0+cpu",
+      "gbrain": {
+        "version": "0.60.65.0",
+        "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+        "loaded_git_head": "2b1f5b69f49b5c52f6e9a37358ec7b7edeef00fb",
+        "package_sha256": "dd30369cbf0a39f05ed2655a64af9649be9f6adc6a5adffcdccb2c5da6703c68"
+      }
+    },
+    "provider": "gbrain",
+    "provider_config": {
+      "embedding_model": "voyage:voyage-4",
+      "embedding_dimensions": 1024,
+      "think_model": "google:gemini-3.8-flash",
+      "token_budget": null,
+      "return_unit": null,
+      "limit": null
+    },
+    "gbrain_credentials": [
+      "voyage",
+      "gemini"
+    ],
+    "mode": "agent",
+    "lane": "raw",
+    "seal": "dev",
+    "k": 10,
+    "target_tokens": null,
+    "models": {
+      "answer": "gemini:gemini-3.8-flash",
+      "judge": "gemini:gemini-3.5-flash"
+    },
+    "prompt_revision": "dda4d9edc9f29a1f5c835a7de5ae80571370204701e92ca08ae47a20eedc5973",
+    "scorer_revision": "5344821c2a5abc39972dc14976af3ff92870b48066c7555f5d0c994983adca87",
+    "wrapper_revision": "6a01a2100f7bbc083398681c652bb37137aafacf591c0b72cc86f53d3b181b83",
+    "budget_usd": 40
+  },
+  "spec": {
+    "dataset": "locomo",
+    "split": "locomo10",
+    "provider": "gbrain",
+    "mode": "agent",
+    "lane": "raw",
+    "seal": "dev",
+    "target_tokens": null,
+    "models": {
+      "answer": "gemini:gemini-3.8-flash",
+      "judge": "gemini:gemini-3.5-flash"
+    },
+    "budget_usd": 40,
+    "questions": {
+      "ids": [
+        "conv-42_q62",
+        "conv-42_q172",
+        "conv-42_q65",
+        "conv-42_q122",
+        "conv-42_q58",
+        "conv-42_q181",
+        "conv-44_q88",
+        "conv-44_q31",
+        "conv-42_q48",
+        "conv-42_q134",
+        "conv-42_q148",
+        "conv-42_q191",
+        "conv-42_q84",
+        "conv-42_q23",
+        "conv-42_q31",
+        "conv-44_q113",
+        "conv-44_q122",
+        "conv-42_q190",
+        "conv-42_q198",
+        "conv-42_q6",
+        "conv-44_q23",
+        "conv-42_q115",
+        "conv-42_q40",
+        "conv-44_q54",
+        "conv-44_q5",
+        "conv-42_q28",
+        "conv-42_q183",
+        "conv-42_q16",
+        "conv-44_q59",
+        "conv-44_q94",
+        "conv-44_q9",
+        "conv-44_q121",
+        "conv-44_q44",
+        "conv-42_q168",
+        "conv-44_q66",
+        "conv-42_q0",
+        "conv-42_q96",
+        "conv-42_q129",
+        "conv-44_q68",
+        "conv-42_q186",
+        "conv-42_q54",
+        "conv-42_q195",
+        "conv-42_q188",
+        "conv-42_q67",
+        "conv-44_q63",
+        "conv-42_q117",
+        "conv-44_q57",
+        "conv-42_q72",
+        "conv-44_q85",
+        "conv-42_q189"
+      ]
+    },
+    "k": 10,
+    "provider_config": {
+      "embedding_model": "voyage:voyage-4",
+      "embedding_dimensions": 1024,
+      "think_model": "google:gemini-3.8-flash",
+      "token_budget": null,
+      "return_unit": null,
+      "limit": null
+    },
+    "note": "memory proof wave dev gbrain-locomo-agent system default",
+    "gbrain_credentials": [
+      "voyage",
+      "gemini"
+    ]
+  },
+  "resolved": {
+    "dataset": "locomo",
+    "split": "locomo10",
+    "task_type": "open",
+    "isolation_unit": "conversation",
+    "schedule": [
+      "conv-42_q62",
+      "conv-42_q172",
+      "conv-42_q65",
+      "conv-42_q122",
+      "conv-42_q58",
+      "conv-42_q181",
+      "conv-44_q88",
+      "conv-44_q31",
+      "conv-42_q48",
+      "conv-42_q134",
+      "conv-42_q148",
+      "conv-42_q191",
+      "conv-42_q84",
+      "conv-42_q23",
+      "conv-42_q31",
+      "conv-44_q113",
+      "conv-44_q122",
+      "conv-42_q190",
+      "conv-42_q198",
+      "conv-42_q6",
+      "conv-44_q23",
+      "conv-42_q115",
+      "conv-42_q40",
+      "conv-44_q54",
+      "conv-44_q5",
+      "conv-42_q28",
+      "conv-42_q183",
+      "conv-42_q16",
+      "conv-44_q59",
+      "conv-44_q94",
+      "conv-44_q9",
+      "conv-44_q121",
+      "conv-44_q44",
+      "conv-42_q168",
+      "conv-44_q66",
+      "conv-42_q0",
+      "conv-42_q96",
+      "conv-42_q129",
+      "conv-44_q68",
+      "conv-42_q186",
+      "conv-42_q54",
+      "conv-42_q195",
+      "conv-42_q188",
+      "conv-42_q67",
+      "conv-44_q63",
+      "conv-42_q117",
+      "conv-44_q57",
+      "conv-42_q72",
+      "conv-44_q85",
+      "conv-42_q189"
+    ],
+    "schedule_sha256": "a2adbcc89a530001cd93972a3f7d9b323a006e71fc8dd5f85196fbacd3d44a1a",
+    "dataset_manifest_sha256": "b3a4b3245233c2f957a14fddf054224571d4821c4acd2509a2e9d7c2ba111274",
+    "questions": 50,
+    "units": [
+      "conv-42",
+      "conv-44"
+    ],
+    "documents": 57,
+    "document_tokens_cl100k": 99092,
+    "document_tokens_by_unit": {
+      "conv-42": 47863,
+      "conv-44": 51229
+    },
+    "timestamp_provenance": {
+      "rule": {
+        "provenance": "observed_session_time",
+        "source": "conversation['<session>_date_time']"
+      },
+      "counts": {
+        "observed_session_time": 57
+      }
+    },
+    "dataset_judge_model": null,
+    "judge_calls": 50,
+    "prompt_revision": "dda4d9edc9f29a1f5c835a7de5ae80571370204701e92ca08ae47a20eedc5973",
+    "scorer_revision": "5344821c2a5abc39972dc14976af3ff92870b48066c7555f5d0c994983adca87",
+    "wrapper_revision": "6a01a2100f7bbc083398681c652bb37137aafacf591c0b72cc86f53d3b181b83"
+  },
+  "planned_at": "2026-10-05T20:00:45.495Z",
+  "estimate": {
+    "usd": 1.2385,
+    "lines": [
+      {
+        "stage": "ingest: gbrain embeddings",
+        "tokens_in": 157556,
+        "tokens_out": 0,
+        "usd": 0.0094533768,
+        "basis": "99092 cl100k document tokens x 1.59 (provider tokenizer and chunk overlap)"
+      },
+      {
+        "stage": "retrieve: gbrain query embeddings",
+        "tokens_in": 3200,
+        "tokens_out": 0,
+        "usd": 0.000192,
+        "basis": "64 tokens per question"
+      },
+      {
+        "stage": "answer",
+        "tokens_in": 817500,
+        "tokens_out": 110000,
+        "usd": 1.025625,
+        "basis": "50 questions x 1 call(s) x (16000 context + 350 prompt) in, 2200 out"
+      },
+      {
+        "stage": "judge",
+        "tokens_in": 36500,
+        "tokens_out": 16500,
+        "usd": 0.20325,
+        "basis": "50 judge calls x 730 in / 330 out"
+      }
+    ],
+    "unpriced": [],
+    "note": "list-price estimate from token volumes; the run is enforced by the metering proxy, not by this number"
+  },
+  "reproduce": "bun run harness:cell run eval/harness-provider/cells/dev/gbrain-locomo-agent-default.json"
+}

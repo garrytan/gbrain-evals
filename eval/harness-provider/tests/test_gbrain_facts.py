@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import threading
@@ -48,6 +49,41 @@ def test_extraction_windows_keep_whole_turns_and_label_continuations():
     plain = Document(id="d-2", content="x" * 170)
     assert extraction_windows(plain, 80) == ["x" * 80, "x" * 80, "x" * 10]
     assert extraction_windows(Document(id="d-3", content=""), 80) == []
+
+
+def test_query_fact_rows_render_without_date_header_and_are_not_repeated(tmp_path):
+    from mpw.gbrain_provider import GbrainMemoryProvider, _Unit
+
+    class Child:
+        def call(self, name, args):
+            if name == "query":
+                rows = [{"slug": "conversations/d-a1", "chunk_text": "user: I adopted Miso."},
+                        {"result_type": "fact", "fact_id": "7", "slug": "facts/7", "page_slug": "conversations/d-a1",
+                         "chunk_text": "Saved fact (fact; valid from 2024-03-05; provenance: mcp:extract_facts): The cat is Miso."}]
+                meta = {"retrieval": {"vector_enabled": True, "delivery": {"tokens_delivered": 40, "tokenizer": "cl100k"},
+                                      "saved_facts": [{"id": 7, "fact": "The cat is Miso."}, {"id": 8, "fact": "Miso likes the window seat."}]}}
+                return rows, meta
+            if name == "recall":
+                return {"facts": [{"id": 7, "fact": "The cat is Miso.", "source_session": "d-a1", "valid_from": "2024-03-05T00:00:00Z"},
+                                  {"id": 9, "fact": "The user runs.", "source_session": "d-a1", "valid_from": "2024-03-05T00:00:00Z"}]}, {}
+            raise AssertionError(name)
+
+    unit = _Unit("u-1", tmp_path)
+    unit.child = Child()
+    unit.timestamps = {"d-a1": "2024-03-05T18:30:00"}
+    p = GbrainMemoryProvider({"gbrain_cli": "unused", "child_env": {}, "lane": "combined", "facts_tokens": 400})
+    p._ensure_unit = lambda unit_id, create=False: unit
+    docs, _, meta = p.retrieve_with_meta("What is the cat called?", 10, "u-1")
+    fact_row = next(d for d in docs if d.content.startswith("Saved fact ("))
+    assert fact_row.id == "d-a1" and "Date:" not in fact_row.content
+    page = next(d for d in docs if d.content.startswith("Date: 2024-03-05 18:30 UTC\nuser:"))
+    assert page.id == "d-a1"
+    block = "\n".join(d.content for d in docs if "\nSaved facts:\n" in d.content)
+    assert "The cat is Miso." not in block and "Miso likes the window seat." in block and "The user runs." in block
+    assert meta["pages"]["fact_rows"] == ["7"] and meta["facts"]["page_fact_rows"] == 1
+    p.cfg["lane"] = "facts"
+    _, _, fmeta = p.retrieve_with_meta("What is the cat called?", 10, "u-1")
+    assert fmeta["facts"]["page_fact_rows"] == 0 and fmeta["facts"]["kept"] == 3
 
 
 if not _bun_ok():
@@ -156,8 +192,19 @@ def test_facts_extraction_and_lanes(tmp_path, upstream):
         page_docs = [d for d in cdocs if "\nSaved facts:\n" not in d.content]
         assert page_docs and len(cdocs) == len(page_docs) + cmeta["facts"]["documents"]
         assert cmeta["tokens_delivered"] == cmeta["facts"]["tokens"] + cmeta["pages"]["tokens_delivered"]
+        assert cmeta["entity_anchored"] == cmeta["pages"]["entity_anchored"] and "entity_anchored" in meta
         assert cmeta["pages"]["requested"]["token_budget"] == 1500 and cmeta["pages"]["requested"]["expand"] is False
         assert [d.content for d in cdocs[:len(fdocs)]] == [d.content for d in fdocs]
+
+        p.cfg.update({"lane": "facts", "fact_dates": True})
+        ddocs, _, dmeta = p.retrieve_with_meta("What is the cat called?", 10, "u-1")
+        assert [d.id for d in ddocs] == [d.id for d in fdocs]
+        lines = {d.id: [l for l in d.content.split("\n") if l.startswith("- ")] for d in ddocs}
+        assert all(re.match(r"- \(\d{4}-\d{2}-\d{2}\) ", l) for ls in lines.values() for l in ls)
+        assert lines["d-a1"] and all(l.startswith("- (2024-03-05) ") for l in lines["d-a1"])
+        assert all(l.startswith("- (2024-03-01) ") for l in lines.get("d-a0", []))
+        assert dmeta["facts"]["tokens"] > meta["facts"]["tokens"] and dmeta["facts"]["tokens"] <= 400
+        p.cfg["fact_dates"] = False
 
         p.cfg["lane"] = "summaries"
         with pytest.raises(Exception, match="unknown lane"):
@@ -185,5 +232,22 @@ def test_raw_lane_makes_no_chat_request_and_keeps_its_shape(tmp_path, upstream):
         assert not _model_hits(hits, before)
         template = json.loads((tmp_path / "store/gbrain/_template/mpw-template.json").read_text())
         assert "facts.extraction_model" not in template["gbrain"]["config"]
+    finally:
+        p.cleanup()
+
+
+def test_exchange_pages_extract_from_whole_documents(tmp_path, upstream):
+    url, hits = upstream
+    p = _provider(tmp_path / "store", url, lane="facts", page_split="exchanges")
+    text = "".join(f"[Turn {i}] User: I moved my piano lesson to Thursday number {i}.\nAssistant: Noted, Thursday {i}.\n" for i in range(1, 6))
+    doc = Document(id="d-b0", content=text, user_id="u-3", timestamp="2024-05-02T08:00:00")
+    try:
+        p.ingest([doc])
+        r = p.last_ingest_receipt("u-3")
+        assert r["pages"] == 5
+        assert r["facts"]["windows"] == len(extraction_windows(doc, 8000)) == 1
+        docs, _, meta = p.retrieve_with_meta("When is the piano lesson?", 10, "u-3")
+        assert meta["facts"]["kept"] > 0
+        assert [d.id for d in docs] == ["d-b0"] and docs[0].content.startswith("Date: 2024-05-02 08:00 UTC\nSaved facts:\n")
     finally:
         p.cleanup()

@@ -1,0 +1,63 @@
+{
+  "cell_id": "personamem-32k-gbrain-rag-c57b322a5c6d",
+  "scheduled": 93,
+  "answered_receipts": 93,
+  "judged_receipts": 93,
+  "score": {
+    "scheduled": 93,
+    "counts": {
+      "answered": 93,
+      "abstention": 0,
+      "answer_failure": 0,
+      "retrieval_failure": 0,
+      "judge_failure": 0,
+      "incomplete_ingest": 0,
+      "missing": 0
+    },
+    "judged": 93,
+    "correct": 79,
+    "accuracy": 0.8494623655913979,
+    "mean_score": 0.8494623655913979,
+    "complete": true,
+    "missing_ids": [],
+    "judge_failure_ids": [],
+    "incomplete_ingest_ids": []
+  },
+  "delivered_context": {
+    "target": 8000,
+    "n": 93,
+    "mean": 7957.4,
+    "p95": 7987,
+    "tolerance": 0.1,
+    "ok": true,
+    "reason": "within ±10% of target",
+    "inserted_kinds": {
+      "rendered": 93
+    },
+    "tokenizer": "cl100k_base"
+  },
+  "remote_budget_clamp": {
+    "fired": false,
+    "questions": []
+  },
+  "leak_check": {
+    "checked_prompts": 93,
+    "policy": "pre-dispatch identifier check on every answer prompt"
+  },
+  "timestamp_provenance": {
+    "rule": {
+      "provenance": "stated_event_date",
+      "source": "first 'Month D, YYYY' match in the session text (an event the text mentions)"
+    },
+    "counts": {
+      "unknown": 37
+    }
+  },
+  "gates": {
+    "complete": true,
+    "no_answer_or_retrieval_failures": true,
+    "delivered_context": true,
+    "no_remote_clamp": true
+  },
+  "ok": true
+}

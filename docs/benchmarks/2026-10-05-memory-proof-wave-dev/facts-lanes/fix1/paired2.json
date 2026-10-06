@@ -1,0 +1,98 @@
+{
+ "100k e8e1 f600 -> a87c exch f600": {
+  "temporal_reasoning": {
+   "n": 8,
+   "wins": 1,
+   "losses": 2,
+   "ties": 5,
+   "mean_diff": -0.125
+  },
+  "ALL": {
+   "n": 80,
+   "wins": 10,
+   "losses": 19,
+   "ties": 51,
+   "mean_diff": -0.0364
+  }
+ },
+ "100k e8e1 f600 -> a87c whole f600": {
+  "temporal_reasoning": {
+   "n": 8,
+   "wins": 1,
+   "losses": 1,
+   "ties": 6,
+   "mean_diff": 0.0
+  },
+  "ALL": {
+   "n": 80,
+   "wins": 8,
+   "losses": 13,
+   "ties": 59,
+   "mean_diff": -0.0073
+  }
+ },
+ "100k a87c whole f600 -> a87c exch f600": {
+  "temporal_reasoning": {
+   "n": 8,
+   "wins": 1,
+   "losses": 2,
+   "ties": 5,
+   "mean_diff": -0.125
+  },
+  "ALL": {
+   "n": 80,
+   "wins": 16,
+   "losses": 17,
+   "ties": 47,
+   "mean_diff": -0.0291
+  }
+ },
+ "500k e8e1 f1800 -> a87c exch f600": {
+  "temporal_reasoning": {
+   "n": 14,
+   "wins": 2,
+   "losses": 0,
+   "ties": 12,
+   "mean_diff": 0.1429
+  },
+  "ALL": {
+   "n": 140,
+   "wins": 31,
+   "losses": 25,
+   "ties": 84,
+   "mean_diff": 0.0301
+  }
+ },
+ "1m e8e1 f1800 -> a87c exch f600": {
+  "temporal_reasoning": {
+   "n": 14,
+   "wins": 1,
+   "losses": 2,
+   "ties": 11,
+   "mean_diff": -0.1071
+  },
+  "ALL": {
+   "n": 140,
+   "wins": 30,
+   "losses": 34,
+   "ties": 76,
+   "mean_diff": 0.0109
+  }
+ },
+ "500k b0e7 exch f600 -> a87c exch f600": {
+  "temporal_reasoning": {
+   "n": 14,
+   "wins": 0,
+   "losses": 0,
+   "ties": 14,
+   "mean_diff": 0.0
+  },
+  "ALL": {
+   "n": 140,
+   "wins": 11,
+   "losses": 12,
+   "ties": 117,
+   "mean_diff": 0.0082
+  }
+ }
+}

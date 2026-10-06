@@ -1,0 +1,61 @@
+{
+  "cell_id": "personamem-32k-gbrain-rag-c57b322a5c6d",
+  "runs": [
+    {
+      "run_id": "harness-cell:personamem-32k-gbrain-rag-c57b322a5c6d-2026-10-06T02-41-03-026Z-f143b601",
+      "ledger": ".budget/mpw-dev-local.sqlite",
+      "usd": 1.1506,
+      "requests": 186,
+      "started_at": "2026-10-06T02:47:15.106Z",
+      "stub": false
+    }
+  ],
+  "metered_by_label": {
+    "total": {
+      "requests": 186,
+      "refused": 0,
+      "reserved_usd": 23.944370340000006,
+      "actual_usd": 1.15059996,
+      "input_tokens": 815347,
+      "output_tokens": 149938
+    },
+    "byLabel": {
+      "gbrain": {
+        "requests": 93,
+        "refused": 0,
+        "reserved_usd": 0.00379884,
+        "actual_usd": 0.0020154600000000006,
+        "input_tokens": 33591,
+        "output_tokens": 0
+      },
+      "harness": {
+        "requests": 93,
+        "refused": 0,
+        "reserved_usd": 23.9405715,
+        "actual_usd": 1.1485845000000001,
+        "input_tokens": 781756,
+        "output_tokens": 149938
+      }
+    },
+    "byProvider": {
+      "voyage": {
+        "requests": 93,
+        "refused": 0,
+        "reserved_usd": 0.00379884,
+        "actual_usd": 0.0020154600000000006,
+        "input_tokens": 33591,
+        "output_tokens": 0
+      },
+      "gemini": {
+        "requests": 93,
+        "refused": 0,
+        "reserved_usd": 23.9405715,
+        "actual_usd": 1.1485845000000001,
+        "input_tokens": 781756,
+        "output_tokens": 149938
+      }
+    },
+    "exhausted": false
+  },
+  "unmetered": []
+}

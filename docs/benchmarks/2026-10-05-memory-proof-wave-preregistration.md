@@ -23,15 +23,15 @@ After the [power simulation](2026-10-05-memory-proof-wave-power.md), Garry set t
 | Split | [`grouping-manifest.json`](../../eval/data/memory-proof-wave/grouping-manifest.json), committed before any tuning: 18 dev, 18 validation and 54 sealed conversations (100k 4 / 4 / 12, 500k and 1M 7 / 7 / 21 each). Resealed on October 5 (see [Reseal](#reseal-2026-10-05)): private file commitment `22292099…`, salt commitment `62449d8c…`. Built and resealed by [`memory-proof-wave-grouping.ts`](../../eval/runner/memory-proof-wave-grouping.ts). |
 | Sealed questions | 1,080: 54 conversations × 20 questions (240 at 100k, 420 at 500k, 420 at 1M) |
 | gbrain build | TODO(SHA of the wave PR head, installed from GitHub; the merged `src/` tree is checked byte-identical at merge) |
-| gbrain configuration | TODO(`token_budget`, `return_unit: page`, date header setting, remote budget clamp raised and asserted; values tuned on dev only) |
-| Comparator build | TODO(pinned current release of the comparator server, its best supported mode: facts plus raw chunks) |
-| Comparator configuration | TODO(fact and chunk budgets tuned on dev to the same delivered-context target) |
-| Harness mode | TODO(`rag` expected; fixed before any paid cell) |
-| Answer model | `gemini-3.8-flash` for both systems, set through `OMB_ANSWER_LLM` / `OMB_ANSWER_MODEL` with `.env` loading disabled. TODO(exact resolved model id string and the fallback model run on an overlap) |
+| gbrain configuration | Read through `query` with `return_unit: page` and `token_budget` tuned on dev to the target (8,100 to 8,800 by build and layout); `search.return_budget_max_remote` raised to 200,000 and the remote clamp asserted unfired on every row; the harness date header on (`date_header: true`; the C1 evidence-date-header switch showed no dev gain: 0.588/0.586 at 100k, 0.586/0.586 at 500k). BEAM's per-dataset ingest config writes one dated gbrain page per exchange (`page_split: "exchanges"`, gbrain only; the comparator chunks internally); the dev report gives the measurements. TODO(lane: raw pages only, or gbrain's best supported mode, combined = opt-in fact extraction plus pages, mirroring the comparator's facts plus chunks; at 8k on BEAM dev, gbrain trails by 0.6 points raw with exchange pages (a87c3e2af) and leads by 0.7 points combined (505a65aab)) |
+| Comparator build | The comparator server's pinned current release, 0.10.2 (lock SHA-256 `49a0e4f3…`, [`comparator.lock.json`](../../eval/harness-provider/comparator.lock.json)), in its own environment with its documented default extraction model, local CPU embeddings and reranker, in its best supported mode: extracted facts plus raw chunks, observations off |
+| Comparator configuration | Fact and chunk budgets scaled together at a fixed 7:4 ratio and tuned on dev to the target: at 8,000 tokens, `max_tokens` 3,129 / 2,845 / 2,855 and `max_chunk_tokens` 1,788 / 1,626 / 1,631 for 100k / 500k / 1M (delivered mean 7,763 / 7,617 / 7,745, p95 8,631 / 8,607 / 8,539) |
+| Harness mode | `rag` for both systems |
+| Answer model | `gemini-3.8-flash` for both systems, set through `OMB_ANSWER_LLM` / `OMB_ANSWER_MODEL` with `.env` loading disabled. Resolved id `gemini-3.8-flash` (Gemini API, asserted from the metering proxy log on every call). No fallback model: if the model is unavailable the run pauses and resumes; it never switches models mid-decision. |
 | Judge | `gemini-3.5-flash`, BEAM's judge as the harness forces it, asserted by model id on every call; one blinded, shuffled joint judging pass over both systems |
-| Delivered-context target | TODO(tokens, counted with `cl100k_base` on the exact text inserted into the final prompt; cells gated on mean and p95 within ±10% of the target; no truncation) |
-| Scorer | TODO(audited scorer revision: typed outcomes, strict judge field validation, every rubric item scored) |
-| Cost formula | TODO(A6: ingest LLM dollars + embedding dollars + CPU-hours at a stated rate + read-time context and answer dollars, amortized at a stated reads-per-write ratio; sensitivity at 1× and 10× reads) |
+| Delivered-context target | 8,000 tokens, counted with `cl100k_base` on the exact text inserted into the final prompt; every cell gated on mean and p95 within ±10% of the target (7,200 to 8,800); no truncation |
+| Scorer | Audited harness scorer, revision `7619a08c…` (`scorer_revision` in every cell's `cell.json`): typed outcomes, strict judge field validation, every rubric item scored, fixed denominator ([`SCORER.md`](../../eval/harness-provider/SCORER.md)) |
+| Cost formula | Per system, cost per correct answer = (ingest LLM dollars + ingest embedding dollars + ingest CPU-hours × $0.05 per vCPU-hour, divided by R reads per written conversation) + read-time dollars per question (query embedding, any read-time LLM call, and answer-model input and output for the delivered context) divided by accuracy. All dollars are proxy-metered at the ledger's list prices. R = 20 (each sealed conversation is read by its 20 questions), with sensitivity at R = 1× and 10× that. |
 | Spending cap for this decision | TODO(dollars for this decision, from the rebuilt ledger; the wave cap is $2,800) |
 
 ## The estimand and the statistic
@@ -50,6 +50,8 @@ The [power report](2026-10-05-memory-proof-wave-power.md) checked these choices 
 
 **3.0 points.** The plan first said 2.0. The [power report](2026-10-05-memory-proof-wave-power.md) found that 42 sealed BEAM 500k + 1M conversations cannot resolve 2.0: with no true difference, the bound clears −2.0 in 50% of simulations under the central assumptions. With BEAM 100k added (54 sealed conversations) and a 3.0-point margin, it clears in 87% under the central assumptions (99% optimistic, 65% pessimistic, 78% under skew), and at a true difference of −1 in 58% central. The decision was made before any paid cell, as the plan requires. A loss of 3 points on a score near 72 is about a 4% relative loss.
 
+**Dev re-estimate (October 6).** The dev pairs (18 conversations, 360 questions; gbrain raw with exchange pages against the comparator's facts plus chunks, 8,000 tokens, gemini-3.8-flash) give a per-question paired variance of 0.185 and a conversation effect of 3.2 points, against 0.097 and 3.5 assumed. At 54 sealed conversations that puts power at a true difference of 0 at 71–74% for a 3.0-point margin (82–84% at 3.5, 91% at 4.0); a second pairing gives 73–76%. The 80% rule in the plan fires, so the margin or the design changes before any validation or sealed cell. TODO(margin or variance-reduction decision after the dev power re-estimate, with its reason)
+
 ## What each outcome means
 
 The outcome is computed by `decide()` in [`ni-stats.ts`](../../eval/runner/memory-proof-wave/ni-stats.ts) from the one-sided 95% lower and upper bounds of gbrain minus comparator. There is no "tied" outcome: a non-significant difference never becomes a claim of equality.
@@ -61,7 +63,7 @@ The outcome is computed by `decide()` in [`ni-stats.ts`](../../eval/runner/memor
 | `behind` | lower bound ≤ −margin and upper bound < 0 | gbrain is measurably behind, and a loss larger than the margin cannot be ruled out. Published as such, with the per-kind breakdown. |
 | `inconclusive` | lower bound ≤ −margin and upper bound ≥ 0 | The sample cannot tell. Published as inconclusive; no equality or parity claim. |
 
-The cost claim ("lower total cost per correct answer") is reported with its own interval under the preregistered cost formula. TODO(cost decision rule: the interval method for the ratio and the sensitivity at 1× and 10× reads).
+The cost claim ("lower total cost per correct answer") is reported with its own interval under the preregistered cost formula. The ratio of the two systems' cost per correct answer gets a 95% interval from the stratified cluster bootstrap over conversations (9,999 draws, seed `20261005`), with the sensitivity at 1× and 10× reads reported beside it. A cost claim is made only when the whole interval lies below 1.
 
 A sealed cell is marked incomplete, and the decision is `inconclusive`, if any sealed question lacks a scored row for either system, any BEAM rubric item is unscored, or the delivered-context gate fails. An answer failure, retrieval failure or incomplete ingest scores 0 for that system and is counted by type.
 
@@ -94,7 +96,7 @@ Each secondary dataset is its own row, never pooled with BEAM. Both are descript
 
 ## Models
 
-The answer model is `gemini-3.8-flash` and the BEAM judge `gemini-3.5-flash` (see the table above). TODO(fallback answer model and any agent-mode readers). They follow the gbrain eval model rules: the newest frontier model of each family, no older generations except one shared link to a previous result, and no gpt-5.4-mini. A change to a model named here is written into this file, with its reason, before any new cell runs.
+The answer model is `gemini-3.8-flash` and the BEAM judge `gemini-3.5-flash` (see the table above). There is no fallback answer model. Agent-mode rows, which are descriptive only, use `gemini-3.8-flash` as the synthesis model for both systems (gbrain `think`, the comparator's reflect). They follow the gbrain eval model rules: the newest frontier model of each family, no older generations except one shared link to a previous result, and no gpt-5.4-mini. A change to a model named here is written into this file, with its reason, before any new cell runs.
 
 ## Reproduce
 
