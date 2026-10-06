@@ -7,6 +7,7 @@
  * No model calls.
  *
  *   bun eval/runner/memory-proof-wave-dev-power.ts --pair <gbrain-cell-dir>:<comparator-cell-dir> [--pair ...]
+ *   (either side may list comma-separated answer-sample directories, averaged per question)
  *       [--margin 3] [--sims 4000] [--draws 999] [--out <json>]
  *
  * Per question d = gbrain score - comparator score (BEAM rubric means in
@@ -32,11 +33,24 @@ function judgeScores(dir: string): Map<string, number> {
   return out;
 }
 
-export function pairRows(gbrainDir: string, comparatorDir: string): PairRow[] {
-  const cg = JSON.parse(readFileSync(join(gbrainDir, 'cell.json'), 'utf8'));
-  const cc = JSON.parse(readFileSync(join(comparatorDir, 'cell.json'), 'utf8'));
-  if (cg.resolved.schedule_sha256 !== cc.resolved.schedule_sha256) throw new Error(`${gbrainDir} and ${comparatorDir} have different schedules`);
-  const g = judgeScores(gbrainDir), c = judgeScores(comparatorDir);
+/** Mean score per question over answer samples: the first directory holds the cell, the others its further samples' judge records. */
+function sampleMeans(dirs: string[]): Map<string, number> {
+  const maps = dirs.map(judgeScores);
+  const out = new Map<string, number>();
+  for (const qid of new Set(maps.flatMap(m => [...m.keys()]))) {
+    const xs = maps.filter(m => m.has(qid)).map(m => m.get(qid)!);
+    out.set(qid, xs.reduce((a, b) => a + b, 0) / xs.length);
+  }
+  return out;
+}
+
+/** Each side is a cell directory, or comma-separated directories of answer samples averaged per question. */
+export function pairRows(gbrainSide: string, comparatorSide: string): PairRow[] {
+  const gd = gbrainSide.split(','), cd = comparatorSide.split(',');
+  const cg = JSON.parse(readFileSync(join(gd[0], 'cell.json'), 'utf8'));
+  const cc = JSON.parse(readFileSync(join(cd[0], 'cell.json'), 'utf8'));
+  if (cg.resolved.schedule_sha256 !== cc.resolved.schedule_sha256) throw new Error(`${gd[0]} and ${cd[0]} have different schedules`);
+  const g = sampleMeans(gd), c = sampleMeans(cd);
   // BEAM query ids are <conversation>_<category>_<n>; the conversation is the cluster.
   return (cg.resolved.schedule as string[]).map(qid => ({ split: cg.spec.split, conversation: `${cg.spec.split}/${qid.split('_')[0]}`, qid, d: (g.get(qid) ?? 0) - (c.get(qid) ?? 0) }));
 }

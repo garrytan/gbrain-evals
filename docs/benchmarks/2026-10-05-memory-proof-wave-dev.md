@@ -144,6 +144,15 @@ Agentic RAG lets the reader retrieve in rounds. Agent mode hands the question to
 
 At the same 54 sealed conversations, a 3.5-point margin gives 82–84% and 4.0 gives 91%. The plan's rule (stop below 80%) fires: the margin or the design changes, in the preregistration, before any validation or sealed cell.
 
+**Two answer samples do not fix it.** The check used the primary pairing, gbrain combined with exchange pages on 505a65aab against the comparator. It regenerated a second answer for every question and system from the recorded retrievals: each rebuilt prompt was byte-identical to the recorded one, so only the answer varies. The second samples were judged jointly per split, and scores were averaged over the two samples.
+
+| Primary pairing (505a) | Paired variance | Conversation effect | Power at 0, margin 3.0 | 3.5 | 4.0 | Margin for 80% power |
+|---|---:|---:|---:|---:|---:|---:|
+| one answer sample | 0.158 | 1.8 points | 76% | 86% | 94% | 3.1 |
+| two samples averaged | 0.157 | 2.3 points | 76% | 87% | 93% | 3.1 |
+
+Answers barely move between samples: test–retest correlation is 0.90 for gbrain and 0.93 for the comparator, and 69–86% of questions get the identical score. Answer noise is about 0.025 of the 0.158 paired variance. Most of the variance is real question-by-question disagreement between the two systems, which more samples cannot average away. A 3.5-point margin reaches 86–87% power on the primary pairing. The check cost $22.78 ($10.68 of answers, $12.10 of judging).
+
 ## Fix lane
 
 **Applied as harness or provider config.**
@@ -190,8 +199,8 @@ The dev phase is capped at $650 of proxy-metered spend. The ledger partitions we
 
 | Ledger | Cap | Committed |
 |---|---:|---:|
-| local (gbrain tracks, diagnosis, full context) | $301 | $270.63 |
+| local (gbrain tracks, diagnosis, full context, variance check) | $331 | $293.42 |
 | VM (comparator tracks, hybrid search; closed, VM destroyed) | $158.28 | $158.28 |
-| facts lanes | $265 | $165.71 |
+| facts lanes | $235 | $165.71 |
 | coding spike | $25 | $4.65 |
-| **total** | **$749.28** | $599.27 |
+| **total** | **$749.28** | $622.06 |

@@ -502,6 +502,36 @@ export async function rejudgeCells(ctx: Ctx, ids: string[], budgetUsd: number, o
   return code;
 }
 
+/**
+ * A further answer sample for a finished rag cell, from its recorded
+ * retrievals, through the metering proxy (mpw/reanswer.py). Variance checks
+ * re-judge it jointly with the original cell.
+ */
+export async function reanswerCell(ctx: Ctx, id: string, sample: number, budgetUsd: number, out: string): Promise<number> {
+  const cell = JSON.parse(readFileSync(join(ctx.cellsDir, id, 'cell.json'), 'utf8')) as CellFile;
+  const { startMeteringProxy } = await import('./metering-proxy.ts');
+  const run = BudgetRun.open({ runner: `harness-reanswer:${id}-s${sample}`, budgetUsd, ledgerPath: budgetOptionsFrom(ctx.argv).ledgerPath, log: ctx.log });
+  const proxyDir = join(out, `${id}-s${sample}`, 'proxy');
+  mkdirSync(proxyDir, { recursive: true });
+  const proxy = await startMeteringProxy({ run, cellId: `${id}-s${sample}`, requestLogPath: join(proxyDir, 'requests.jsonl'), bodiesDir: join(proxyDir, 'bodies'), labels: ['harness'] });
+  const a = splitModel(cell.spec.models.answer);
+  const j = cell.spec.models.judge ? splitModel(cell.spec.models.judge) : a;
+  const env = { ...pick(proxy.envFor('harness'), [...new Set([LLM_PROVIDER[a.llm], LLM_PROVIDER[j.llm]])]), OMB_ANSWER_LLM: a.llm, OMB_ANSWER_MODEL: a.model,
+    OMB_JUDGE_LLM: j.llm, OMB_JUDGE_MODEL: j.model, MPW_PROXY_LOG: join(proxyDir, 'requests.jsonl'), MPW_PROXY_BODIES: join(proxyDir, 'bodies') };
+  const child = Bun.spawn([ctx.install.python, '-m', 'mpw.reanswer', '--cell', join(ctx.cellsDir, id), '--out', out, '--sample', String(sample)], {
+    cwd: PROVIDER_DIR, env: harnessProcessEnv(ctx.install, env), stdout: 'inherit', stderr: 'inherit',
+  });
+  let code: number;
+  try { code = await child.exited; } finally {
+    const stats = proxy.stats();
+    await proxy.close();
+    const summary = run.close();
+    writeFileSync(join(out, `${id}-s${sample}`, 'spend.json'), JSON.stringify({ run_id: summary.run_id, usd: summary.actual_usd, requests: summary.requests, metered: stats }, null, 2) + '\n');
+    closeLedgers();
+  }
+  return code;
+}
+
 export function makeCtx(argv: string[], log: (l: string) => void = l => process.stderr.write(l + '\n')): Ctx {
   const cellsDir = resolve(flag(argv, '--cells-dir') ?? DEFAULT_CELLS_DIR);
   return { argv, cellsDir, install: ensureHarness({ log }), gut: resolveGbrainUnderTest(gbrainSpecFrom(argv)), stub: argv.includes('--stub-upstream'), log };
@@ -509,6 +539,7 @@ export function makeCtx(argv: string[], log: (l: string) => void = l => process.
 
 export const USAGE = `usage: bun run harness:cell <plan|run|resume> <spec.json | cell-id> [--stub-upstream] [--budget-ledger <path>] [--gbrain <checkout>[@ref]] [--cells-dir <dir>]
        bun run harness:cell rejudge <cell-id> <cell-id> [--out <dir>] [--seed N] [--budget-usd N]   joint blinded re-judge with the dataset's judge
+       bun run harness:cell reanswer <cell-id> [--sample N] [--out <dir>] [--budget-usd N]   another answer sample from the recorded retrievals
        bun run harness:cell ingest <spec.json | cell-id>   ingest every unit into the shared store, no questions
        bun run harness:cell tune <cell-id> --auto '{"targets": [4000, 8000, 16000, 32000], "base": {"token_budget": 8100}, "sample": 60}'
        bun run harness:cell tune <cell-id> --grid '{"token_budget": [6000, 7000, 8000]}'   retrieval-only knob sweep on an ingested cell
@@ -527,7 +558,7 @@ if (import.meta.main) {
       process.exit(proc.exitCode ?? 1);
     }
     if (action === 'ingest') argv.push('--ingest-only');
-    if (!['plan', 'run', 'resume', 'tune', 'rejudge', 'ingest'].includes(action ?? '') || !target) { console.error(USAGE); process.exit(2); }
+    if (!['plan', 'run', 'resume', 'tune', 'rejudge', 'reanswer', 'ingest'].includes(action ?? '') || !target) { console.error(USAGE); process.exit(2); }
     const ctx = makeCtx(argv);
     if (action === 'plan') {
       const cell = planCell(ctx, target);
@@ -540,6 +571,10 @@ if (import.meta.main) {
       const ids = argv.slice(1).filter((a, i, all) => !a.startsWith('--') && !(all[i - 1] ?? '').startsWith('--'));
       const out = resolve(flag(argv, '--out') ?? join(ctx.cellsDir, `rejudge-${Date.now()}`));
       process.exit(await rejudgeCells(ctx, ids, Number(flag(argv, '--budget-usd') ?? 2), out, flag(argv, '--seed') ?? '20261005'));
+    }
+    if (action === 'reanswer') {
+      const out = resolve(flag(argv, '--out') ?? ctx.cellsDir);
+      process.exit(await reanswerCell(ctx, target, Number(flag(argv, '--sample') ?? 2), Number(flag(argv, '--budget-usd') ?? 5), out));
     }
     if (action === 'tune') {
       const grid = flag(argv, '--grid');
