@@ -6,7 +6,8 @@
   "ledger": ".budget/oss-memory-shootout.sqlite",
   "parameters": {
     "lme_s_limit": 100,
-    "graphiti_beam_recipe": true
+    "graphiti_beam_recipe": true,
+    "gbrain_master_sha": "fill-at-freeze"
   },
   "cells_from": [
     "cells/basic-memory-recipe.json",
@@ -22,6 +23,8 @@
     "cells/gbrain-legacy-common.json",
     "cells/gbrain-shootout-recipe.json",
     "cells/gbrain-shootout-common.json",
+    "cells/gbrain-shootout-master-recipe.json",
+    "cells/gbrain-shootout-master-common.json",
     "cells/full-context-control.json",
     "cells/no-memory-control.json",
     "cells/plain-hybrid-control.json"

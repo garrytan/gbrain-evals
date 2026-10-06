@@ -3,7 +3,7 @@
   "schema_version": 1,
   "system": "gbrain-shootout",
   "config": "common",
-  "notes": "Draft. Common models: text-embedding-3-large at 1,536 dimensions; search stays on gbrain defaults (Voyage reranker).",
+  "notes": "Draft. gbrain at the repository pin 739e5cc (secondary link). Common models: text-embedding-3-large at 1,536 dimensions; search stays on gbrain defaults (Voyage reranker).",
   "cells": [
     {
       "id": "gbrain-shootout-common-locomo-r1",

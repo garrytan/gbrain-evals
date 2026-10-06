@@ -11,8 +11,11 @@ spend its metering proxy recorded, so unused headroom returns to the campaign.
   - `lme_s_limit` (default 100): the LongMemEval-S stratified slice; LongMemEval-S leases scale with it.
   - `graphiti_beam_recipe` (default true): whether Graphiti's `gpt-5.5` recipe runs on BEAM (lease about $137,
     scaled from LoCoMo, not measured).
+  - `gbrain_master_sha` (`fill-at-freeze`): gbrain master for the primary contrast, resolved from `garrytan/gbrain`
+    `origin/master` by the freezing commit. No lease is reserved while it is unfilled.
 - `cells/<system>-<config>.json`: one file per system and configuration, plus `gbrain-legacy`, `gbrain-shootout`
-  (recipe and common) and the three D1 controls (`full-context`, `no-memory`, `plain-hybrid`). Letta has no passive
+  at the repository pin and `gbrain-shootout-master` at the frozen master SHA (recipe and common each), and the three
+  D1 controls (`full-context`, `no-memory`, `plain-hybrid`). Letta has no passive
   memory API, so it has no memory-QA cells.
 - `arms/`: the arms each cell runs (`bun eval/runner/memory-qa/run.ts --arms`): both retrieval policies, both
   context modes and the benchmark's preregistered reader, from one ingest. `retrieval-only.json` serves the second

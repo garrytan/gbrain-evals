@@ -1,8 +1,9 @@
 # Preregistration: open-source memory shootout, memory QA and PrecisionMemBench (2026-10-06)
 
-**Status: draft.** Two values are open: `lme_s_limit` (the LongMemEval-S slice) and `graphiti_beam_recipe` (whether
-Graphiti's `gpt-5.5` recipe runs on BEAM). The freezing commit fills both, records the campaign hash they produce, and
-changes this line to "Frozen". Nothing below changes after the first counted cell runs; a later change gets a new
+**Status: draft.** Three values are open: `lme_s_limit` (the LongMemEval-S slice), `graphiti_beam_recipe` (whether
+Graphiti's `gpt-5.5` recipe runs on BEAM) and `gbrain_master_sha` (gbrain master, resolved from `garrytan/gbrain`
+`origin/master` at the freezing commit). The freezing commit fills all three, records the campaign hash they produce,
+and changes this line to "Frozen". No lease can be reserved while a parameter still reads `fill-at-freeze`. Nothing below changes after the first counted cell runs; a later change gets a new
 dated amendment at the end of this file, before any cell it affects.
 
 Plan: [docs/plans/2026-10-05-oss-memory-shootout/PLAN.md](../plans/2026-10-05-oss-memory-shootout/PLAN.md) (approved
@@ -36,7 +37,8 @@ configuration hash.
 | Hindsight | server and client 0.10.2, image `ghcr.io/vectorize-io/hindsight:0.10.2@sha256:d1840062…ab70` | `6e20e737429cbe028c9db396682f3d7b6435ab0b73120973179383ed1a29899c` | `f54d89df…d6d8` | exact | native | yes |
 | Cognee | `cognee==1.6.2` | `d047df533ad059d4144fb849bfd8b43ff6df0b5e8e62ea227d22c8770c225d9a` | `59af44d5…5a0d7` | partial | in text | no |
 | Letta (P4 only) | Letta Code 0.34.4, image `letta/letta:0.34.4@sha256:8ee7fb69…a5c` | `621897ff642845caa8f03e71a95795aa2a480dcd59d00f55b8aa9291c2edd22b` | none | unavailable | none | no |
-| gbrain | repository pin `739e5cc` (v0.60.46.0), `package.json` | in process | `bun.lock` | exact | native (shootout recipe) | no |
+| gbrain, frozen master | `garrytan/gbrain` master at `gbrain_master_sha`, built as a `--gbrain` overlay (`git archive` of the commit, `bun install --frozen-lockfile`, tree verified) | in process | the commit's `bun.lock` | exact | native (shootout recipe) | no |
+| gbrain, repository pin | `739e5cc` (v0.60.46.0), `package.json` | in process | `bun.lock` | exact | native (shootout recipe) | no |
 
 Two configurations per system, named for what they control:
 
@@ -55,8 +57,13 @@ Graphiti only when `graphiti_beam_recipe` is true.
 gbrain runs as two named adapters (`eval/runner/systems/gbrain.ts`): **gbrain-shootout**, the counted recipe (native
 chunk items from gbrain's own search defaults, limits `vendor-default` = the search mode's own 25 and
 `fixed-evidence` = 40, frozen from a keyless LoCoMo check), and **gbrain-legacy**, the existing memory-qa path
-(sessions rehydrated, one fixed retrieval) kept as the link to the starting line. Counted gbrain rows run at the
-repository pin, the code the harness, its golden test and every pilot used (amendment A2).
+(sessions rehydrated, one fixed retrieval) kept as the link to the starting line. Counted gbrain-shootout rows run at
+two builds (amendment A2): gbrain master frozen at `gbrain_master_sha`, which the primary contrast uses because the
+comparison is between each system's latest release, and the repository pin `739e5cc`, the secondary link to the
+starting line and to the pilots. gbrain-legacy runs at the pin only. A keyless fixture check ran both adapters on the
+master overlay build at `b51ad15f` (v0.60.84.0, the master head on 2026-10-06): both completed, and the legacy path
+retrieved the same sessions as the pin's golden on every fixture question (`GBRAIN_OVERLAY_SPEC=<checkout>@<sha> bun
+test test/eval/memory-qa-golden.test.ts`); the freezing commit repeats it at the frozen SHA.
 
 The D1 controls (`eval/runner/systems/baselines.ts`) run behind the same interface: **full-context** (the whole history,
 most recent sessions kept first under a budget), **no-memory** (the question alone) and **plain-hybrid** (Postgres
@@ -70,8 +77,8 @@ file with a $1,200 cap and one ledger, one cell file per system and configuratio
 arms file a cell names.
 
 - Campaign hash at freeze: **(filled by the freezing commit)**.
-- Draft hash with the default values (`lme_s_limit` 100, `graphiti_beam_recipe` true):
-  `78e3131b8863880d9624ee6c6bbdc45402607f42d071b712e921ee4d97f58422` (58 cells).
+- Draft hash with the default values (`lme_s_limit` 100, `graphiti_beam_recipe` true, `gbrain_master_sha`
+  unfilled): `5b908b258bab234dfa72634e3f3208f3388c3674f26b3489ac2e36ab6f28b8bc` (65 cells).
 
 A cell ingests each namespace once, retrieves once per question and policy, and derives every arm from that state
 (`memory-qa --arms`). LoCoMo dev is ingested a second time per configuration (`--ingest-replicate 2`, retrieval only)
@@ -161,13 +168,13 @@ full-context and no-memory controls (returning everything is not a ranking).
 ### Primary family (inferential, Holm, α = 0.05)
 
 On the LongMemEval-S slice, arm `fixed-evidence.native.b8000.main` (8,000 tokens of native evidence, the main reader),
-metric **QA service quality**, each system's common configuration against **gbrain-shootout common**:
+metric **QA service quality**, each system's common configuration against **gbrain-shootout common at frozen master**:
 
-1. Basic Memory common vs gbrain-shootout common
-2. Mem0 common vs gbrain-shootout common
-3. Graphiti common vs gbrain-shootout common
-4. Hindsight common vs gbrain-shootout common
-5. Cognee common vs gbrain-shootout common
+1. Basic Memory common vs gbrain-shootout common (master)
+2. Mem0 common vs gbrain-shootout common (master)
+3. Graphiti common vs gbrain-shootout common (master)
+4. Hindsight common vs gbrain-shootout common (master)
+5. Cognee common vs gbrain-shootout common (master)
 
 Method: rows paired by question id after the exclusion join (`pairObservations`), `clusteredPairedDelta` with the
 question as cluster, seed 20261006, 10,000 draws; the two-sided cluster sign-flip p-value (`p_two_sided`), Holm-adjusted
@@ -177,6 +184,8 @@ across the five (`holmAdjusted`). The delta is system minus gbrain with a cluste
 
 - **S1, strict recall.** The same five pairs and arm on LongMemEval-S, metric `recall_all@5`, for systems whose
   provenance is measurable.
+In the secondary families, "gbrain-shootout common" also means the frozen-master build.
+
 - **S2, do I need a memory system at all (D1).** On LongMemEval-S, main reader, QA service quality, gbrain-shootout
   common in the rehydrated context against: full-context under `fixed-evidence` and under `vendor-default` (the whole
   history, where it fits), plain-hybrid under both policies, and no-memory (its one arm, no evidence). Five
@@ -189,7 +198,9 @@ across the five (`holmAdjusted`). The delta is system minus gbrain with a cluste
 
 Every other arm and set: `vendor-default` and `rehydrated` arms, recipe configurations, LoCoMo dev and BEAM-100K dev
 (3 and 6 clusters, too few for the repository's 10-cluster minimum), the second LoCoMo ingest (run-to-run agreement),
-gbrain-legacy against gbrain-shootout (a harness link), and the D2 frontier readers. These are reported with cluster
+gbrain-shootout at the pin against gbrain-shootout at frozen master (what changed in gbrain between the pilots and the
+counted run), gbrain-legacy against gbrain-shootout at the pin (a harness link to the starting line), and the D2
+frontier readers. These are reported with cluster
 counts and ranges, and paired intervals where the clusters allow.
 
 ### Minimum detectable differences
@@ -261,7 +272,9 @@ report states as results, and that this run does not tune away:
   and the lease settles to the proxy's recorded spend. A lease is used once; a cell whose VM never reports back keeps
   its full lease until abandoned. Leases are 1.5 times the pilot measurement (the gbrain, D1 and D2 lines are estimates).
   Pilot-based totals: Graphiti about $343 (LongMemEval-S ingest $154; the BEAM recipe about $91 if run), Cognee about $94,
-  Mem0 $91, Hindsight $73, Basic Memory $43.
+  Mem0 $91, Hindsight $73, Basic Memory $43. With the default parameters the 65 cells' estimates sum to about $831 and
+  their leases to $1,277: leases are reserved one cell at a time and settle when the cell ends, so the cap bounds what
+  is committed at once, and a reservation that would pass it is refused rather than run.
 - **Phase stop.** If any phase's measured spend passes its estimate by more than 50%, the phase stops for approval.
 - **Cell stops.** A cell that ends `invalid` (a sanitizer or proxy tripwire, foreign ids in the manifest) stops that
   system's remaining cells until the cause is found and recorded. A lease that runs out leaves its cell `partial`; the
@@ -278,14 +291,17 @@ numbers, so they are the link to earlier results; GPT-4o remains the reader on L
 comparisons run. The four frontier readers are unchanged, with `gpt-6.1-sol` as the newest GPT model. Recorded on
 2026-10-06 at the campaign owner's decision.
 
-**A2 (2026-10-06), gbrain identity.** The plan lists gbrain at the repository pin `739e5cc` and at master frozen on the
-preregistration date. Counted gbrain rows run at the pin, which the harness, its keyless golden and every pilot used. A
-row at a later gbrain commit is a new configuration, added by a dated amendment before its cells run, and labeled with
-its commit.
+**A2 (2026-10-06), gbrain identity.** As the approved plan says, counted gbrain-shootout rows run at both the repository
+pin `739e5cc` and gbrain master frozen at one SHA by the freezing commit (`gbrain_master_sha`, resolved from
+`garrytan/gbrain` `origin/master`). The comparison is between each system's latest release, so the primary contrast
+uses frozen master; the pin rows are the secondary link to the starting line and the pilots. Every gbrain number is
+labeled with its commit. Recorded on 2026-10-06 at the campaign owner's decision; an earlier draft of this amendment
+ran the pin only and was replaced before freezing.
 
 ## Changelog
 
 ### 2026-10-06: draft
 
-First draft, from the approved plan, the pilots and the Phase 4 draft manifests. Open: `lme_s_limit` and
-`graphiti_beam_recipe`.
+First draft, from the approved plan, the pilots and the Phase 4 draft manifests. Open: `lme_s_limit`,
+`graphiti_beam_recipe` and `gbrain_master_sha`. Amendment A2 now runs gbrain-shootout at frozen master (primary) and at
+the pin (secondary), with the master cells added to the manifests.

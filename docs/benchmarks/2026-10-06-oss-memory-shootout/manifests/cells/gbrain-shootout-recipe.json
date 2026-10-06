@@ -3,7 +3,7 @@
   "schema_version": 1,
   "system": "gbrain-shootout",
   "config": "recipe",
-  "notes": "Draft. gbrain init defaults: voyage:voyage-4 embedder, balanced search with the Voyage reranker. Needs VOYAGE_API_KEY. Recipe arm off LongMemEval-S.",
+  "notes": "Draft. gbrain at the repository pin 739e5cc, the secondary link to the starting line and the pilots. gbrain init defaults: voyage:voyage-4 embedder, balanced search with the Voyage reranker. Needs VOYAGE_API_KEY. Recipe arm off LongMemEval-S.",
   "cells": [
     {
       "id": "gbrain-shootout-recipe-locomo-r1",

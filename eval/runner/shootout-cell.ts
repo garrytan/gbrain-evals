@@ -55,6 +55,8 @@ export interface CellSpec {
 }
 
 export type ParamValue = number | boolean | string;
+/** A parameter value the freezing commit must replace; no lease is reserved while one remains. */
+export const UNFILLED = 'fill-at-freeze';
 
 export interface CellsFile { kind: 'oss-shootout-cells'; schema_version: 1; system: string; config: string; notes?: string; cells: CellTemplate[] }
 
@@ -202,6 +204,8 @@ export class Campaign {
 
   /** Reserve a new lease for a cell; refused while the cell holds an unsettled lease, or when the campaign cap would be passed. */
   reserve(cellId: string): LeaseState {
+    const unfilled = Object.entries(this.manifest.parameters ?? {}).filter(([, v]) => v === UNFILLED).map(([k]) => k);
+    if (unfilled.length) throw new Error(`campaign parameters ${unfilled.join(', ')} are still ${UNFILLED}; the freezing commit fills them before any lease`);
     const c = this.cell(cellId);
     const mine = this.leases().filter(l => l.cell === cellId);
     const open = mine.find(l => l.status === 'reserved' || l.status === 'launched' || l.status === 'finished');

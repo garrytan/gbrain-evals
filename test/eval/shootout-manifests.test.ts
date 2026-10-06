@@ -6,7 +6,7 @@ import { describe, expect, test } from 'bun:test';
 import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { loadCampaign } from '../../eval/runner/shootout-cell.ts';
+import { Campaign, loadCampaign } from '../../eval/runner/shootout-cell.ts';
 import { loadArms } from '../../eval/runner/memory-qa/arms.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
@@ -34,9 +34,25 @@ describe('Phase 4 draft manifests', () => {
     expect(manifest.cells.filter(c => c.config === 'recipe' && c.id.includes('lme-s'))).toEqual([]);
     const noVariance = new Set(['gbrain-legacy', 'full-context', 'no-memory']);
     const systems = [...new Set(manifest.cells.filter(c => c.id.includes('-locomo-r1') && !noVariance.has(c.system)).map(c => `${c.system}:${c.config}`))];
-    expect(systems.length).toBe(13);
+    expect(systems.length).toBe(15);
     for (const s of systems) expect(manifest.cells.some(c => `${c.system}:${c.config}` === s && c.id.endsWith('locomo-r2') && c.command.includes('--ingest-replicate 2'))).toBe(true);
   });
+  test('gbrain runs at the pin and at frozen master; no lease is reserved before the master SHA is filled', () => {
+    const master = manifest.cells.filter(c => c.system === 'gbrain-shootout-master');
+    expect(master.map(c => c.id).sort()).toEqual(['gbrain-shootout-master-common-beam-100k', 'gbrain-shootout-master-common-lme-s', 'gbrain-shootout-master-common-locomo-r1', 'gbrain-shootout-master-common-locomo-r2',
+      'gbrain-shootout-master-recipe-beam-100k', 'gbrain-shootout-master-recipe-locomo-r1', 'gbrain-shootout-master-recipe-locomo-r2']);
+    expect(master.every(c => c.command.includes('--gbrain "$HOME/gbrain-master@fill-at-freeze"') && c.setup_command!.includes('checkout -q fill-at-freeze'))).toBe(true);
+    expect(manifest.cells.filter(c => c.system === 'gbrain-shootout').every(c => !c.command.includes('--gbrain'))).toBe(true);
+    const tmp = mkdtempSync(join(tmpdir(), 'unfilled-'));
+    const c = JSON.parse(readFileSync(join(DIR, 'campaign.json'), 'utf8'));
+    writeFileSync(join(tmp, 'campaign.json'), JSON.stringify({ ...c, ledger: join(tmp, 'l.sqlite'), cells_from: c.cells_from.map((f: string) => join(DIR, f)) }));
+    const camp = new Campaign(join(tmp, 'campaign.json'), join(tmp, 'state'));
+    camp.init();
+    expect(() => camp.reserve('mem0-common-locomo-r1')).toThrow(/gbrain_master_sha are still fill-at-freeze/);
+    const filled = withParams({ gbrain_master_sha: 'b51ad15ff45e74348df9991b5673cff5a58b10cb' });
+    expect(filled.cells.find(x => x.id === 'gbrain-shootout-master-common-lme-s')!.command).toContain('gbrain-master@b51ad15ff45e74348df9991b5673cff5a58b10cb');
+  });
+
   test('parameters: the Graphiti BEAM recipe cell switches off, and LongMemEval-S leases follow the slice', () => {
     const lme = (m: typeof manifest) => m.cells.filter(c => c.id.includes('lme-s')).reduce((s, c) => s + c.lease_usd, 0);
     const off = withParams({ graphiti_beam_recipe: false, lme_s_limit: 50 });
