@@ -134,6 +134,13 @@ describe('N8 privacy gate (preregistered 2026-10-06)', () => {
     expect(evaluatePromotion(rules, { data: {} }).pass).toBe(false);
   });
 
+  test('the keyless re-score CLI passes the committed receipt at the pin and fails the control at the leaky build', () => {
+    const run = (receipt: string) => Bun.spawnSync(['bun', 'eval/runner/promotion.ts', 'N8', `docs/benchmarks/2026-10-06-n8-privacy-gate/${receipt}`], { cwd: join(import.meta.dir, '../..') });
+    const pin = run('n8-receipt-c5fb0201.json');
+    expect([pin.exitCode, pin.stdout.toString().trim().split('\n').pop()]).toEqual([0, 'N8: pass (safety 4/4, quality 3/3)']);
+    expect(run('n8-receipt-3a284ae-control.json').exitCode).toBe(1);
+  });
+
   test('trusted local private deliveries are reported, never gated', () => {
     const local = deliver((_id, g) => g.kind === 'private_mention' ? [priv] : g.target);
     const r = receiptFor(honest, honest, local);
