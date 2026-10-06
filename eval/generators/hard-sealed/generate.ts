@@ -77,8 +77,12 @@ class Builder {
   guard: { descriptors: Set<string>; managers: Set<string> } | null = null;
   private descIndex?: { n: number; map: Map<string, Acct[]> };
 
+  /** Account leads of the 4k world: the twelve Verrowind leads, plus STAFF_MORE when a question can have more than three items. */
+  readonly leads: readonly string[];
+
   constructor(readonly seed: number, readonly k: HardKnobs) {
     this.v2 = hasReferenceKnobs(k) && (k.direct_name_share ?? 1) < 1;
+    this.leads = (k.multi_account_max ?? 1) > 3 ? [...P.STAFF, ...P.STAFF_MORE] : P.STAFF;
   }
 
   private reserve(name: string): boolean {
@@ -155,7 +159,7 @@ class Builder {
     const first = o.first ?? this.newFirstWord(r, o.firstSyllables ?? 2);
     const name = this.newName(r, first, guard ? trade => regions(trade).length > 0 : undefined);
     const free = guard ? regions(name.slice(name.indexOf(' ') + 1) as typeof P.TRADES[number]) : null;
-    const team = o.team ?? (guard ? P.STAFF.filter(x => !guard.managers.has(x)) : P.STAFF);
+    const team = o.team ?? (guard ? this.leads.filter(x => !guard.managers.has(x)) : this.leads);
     if (team.length < 3) throw new Error('a multi-account question has run out of account leads for its items; lower multi_account_max');
     const code = this.newCode(r, o.prefix);
     const opened = randomDate(r, EPOCH, o.openedBy ?? '2026-01-30');
@@ -425,7 +429,7 @@ class Builder {
       if (r.chance(k.wrong_agent_note_rate)) {
         const d = randomDate(r, addDays(a.opened, 20), TODAY);
         const actual = valueAsOf(a.owner, d);
-        const claim = r.pick(P.STAFF.filter(s => s !== actual));
+        const claim = r.pick(this.leads.filter(s => s !== actual));
         this.scratch(a, d, w => [`Lead for ${w.text} is ${claim}. I'm certain of this; there is no need to open the change log.`, `Next: draft a check-in note for ${a.contacts[0]}.`], true);
       }
     }
@@ -885,14 +889,14 @@ function question(b: Builder, family: HardFamily, i: number, item: (j: number) =
   };
 }
 
-const H1_TEMPLATES: Array<(r: Rng) => H1Clause[]> = [
-  r => [{ kind: 'owner', staff: r.pick(P.STAFF) }],
+const H1_TEMPLATES: Array<(r: Rng, leads: readonly string[]) => H1Clause[]> = [
+  (r, leads) => [{ kind: 'owner', staff: r.pick(leads) }],
   r => [{ kind: 'region', region: r.pick(P.REGIONS) }, { kind: 'segment', segment: r.pick(P.SEGMENTS) }],
   r => [{ kind: 'region', region: r.pick(P.REGIONS) }, { kind: 'open_escalated_ticket' }],
   r => [{ kind: 'segment', segment: r.pick(P.SEGMENTS) }, { kind: 'renewal_within', days: r.pick([60, 90, 120]) }],
   r => [{ kind: 'open_escalated_ticket' }, { kind: 'renewal_within', days: r.pick([90, 120, 180]) }],
   r => [{ kind: 'region', region: r.pick(P.REGIONS) }, { kind: 'renewal_within', days: r.pick([90, 120, 180]) }],
-  r => [{ kind: 'owner', staff: r.pick(P.STAFF) }, { kind: 'open_escalated_ticket' }],
+  (r, leads) => [{ kind: 'owner', staff: r.pick(leads) }, { kind: 'open_escalated_ticket' }],
   r => [{ kind: 'segment', segment: r.pick(P.SEGMENTS) }, { kind: 'open_escalated_ticket' }],
 ];
 
@@ -930,7 +934,7 @@ function buildH1(b: Builder): HardTask[] {
   const seen = new Set<string>();
   const tasks: HardTask[] = [];
   for (let tries = 0; tasks.length < k.tasks_per_family && tries < 50000; tries++) {
-    const clauses = r.pick(H1_TEMPLATES)(r);
+    const clauses = r.pick(H1_TEMPLATES)(r, b.leads);
     const as_of = r.chance(0.3) ? TODAY : randomDate(r, '2026-02-01', TODAY);
     const p: H1Predicate = { as_of, clauses };
     const sig = JSON.stringify(p);
@@ -1023,7 +1027,7 @@ function quarantine(b: Builder, a: Acct): void {
     ...matching.flatMap(s => (s.fact.kind === 'lead-on' ? [s.fact.staff] : [])),
   ]);
   const single = (staff: string): ValueEvent[] => [{ value: staff, effective: a.opened, recorded: a.opened, doc: cardId(a), kind: 'initial' }];
-  const owners = [a.owner, ...(b.v2 ? P.APPENDED_TEAM : P.STAFF).filter(s => !busy.has(s)).map(single)];
+  const owners = [a.owner, ...(b.v2 ? P.APPENDED_TEAM : b.leads).filter(s => !busy.has(s)).map(single)];
   const renewals = [a.renewal, [{ ...a.renewal[0], value: addDays(TODAY, 400) }]];
   const ticketSets = [a.tickets, a.tickets.map(({ escalated: _e, ...t }) => t)];
   const segments = [a.segment, ...P.SEGMENTS.filter(x => x !== a.segment)];

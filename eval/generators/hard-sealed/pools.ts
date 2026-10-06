@@ -13,6 +13,15 @@ export const STAFF = [
   'Saoirse Pell', 'Rafferty Imre', 'Yusra Kettle', 'Bastian Corr', 'Leocadia Finn', 'Morwen Talbet',
 ] as const;
 
+/**
+ * More Verrowind account leads, used only when a multi-account question can ask about more than three customers
+ * (multi_account_max above 3): the items' customers need disjoint lead teams, which twelve leads cannot supply.
+ */
+export const STAFF_MORE = [
+  'Agnetha Rennick', 'Barnaby Oyelade', 'Cosima Treharne', 'Desmond Achterberg', 'Elspeth Nakamura', 'Fergus Abernethy',
+  'Gwenllian Probert', 'Horatio Mbeki', 'Imelda Quaye', 'Jory Penhallow', 'Kinga Wysocka', 'Lysander Okwu',
+] as const;
+
 /** Verrowind people who write routine mail and attend meetings but never lead accounts. */
 export const SUPPORT_STAFF = ['Dov Aranha', 'Phaedra Lusk', 'Emrys Okonjo', 'Tilde Varga', 'Kasimir Bell', 'Nell Ardoin'] as const;
 

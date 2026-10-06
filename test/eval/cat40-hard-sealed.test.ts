@@ -10,7 +10,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { DEFAULT_HARD_KNOBS, H5_SESSIONS, HARD_FAMILIES, HARD_V2_KNOB_KEYS, RECORDED, knobDigest, validateKnobs, type HardEntity, type HardKnobs, type HardReference, type HardTask, type HardWorld } from '../../eval/generators/hard/schema.ts';
 import { managerKnownOn, managerReadingsOn, managerReference, nameRegistry, type UserStatement, type ValueEvent } from '../../eval/generators/hard/semantics.ts';
-import { STAFF } from '../../eval/generators/hard-sealed/pools.ts';
+import { STAFF, STAFF_MORE } from '../../eval/generators/hard-sealed/pools.ts';
 import { hardWorldProblems } from '../../eval/generators/hard/validate.ts';
 import { normalizeValue } from '../../eval/runner/cat40/score.ts';
 import { scoreHardTask } from '../../eval/runner/cat40/score-hard.ts';
@@ -626,6 +626,54 @@ describe('sealed generator: multi-account questions', () => {
     expect(large.docs.slice(0, base.docs.length)).toEqual(base.docs);
     large.tasks.forEach((t, i) => expect(t.gold).toEqual(base.tasks[i].gold));
     expect(large.entities.length - base.entities.length).toBe(knobs.large_extra_accounts + base.tasks.filter(t => t.family === 'H3').reduce((n, t) => n + (t.gold.items?.length ?? 1), 0));
+    checkOracle(large);
+  }, 60_000);
+});
+
+// ─── Round-5 knobs: questions with up to four items need a larger lead pool ───
+
+describe('sealed generator: round-5 knobs (3 to 4 items per question)', () => {
+  const R5 = validateKnobs(JSON.parse(readFileSync(resolve(import.meta.dir, '../../docs/benchmarks/cat40-hard/knobs.round-5.json'), 'utf8')), 'knobs.round-5.json');
+  /** Earlier knob sets must not move when the lead pool grows for more than three items. */
+  const EARLIER: Record<string, { knobs: HardKnobs; digests: Record<number, string> }> = {
+    'round-3': { knobs: R3, digests: { 101: '742369078b2c6cbd991762e6297ac6deafc497bae5e2f811c520004b5ba8f7ea', 202: '4abaa02901b6fd2491533a5a4bccbcc8f005f3e5a8ee324109f4d36812755af8', 303: 'd299f6f4b2bd6e121d1e8b2a155f4c9890f8301f10a8c54e5c27005b6f1a2317' } },
+    'round-4': { knobs: R4, digests: { 101: '4b924526d237a41064f665989ff19a322f494f45b9d76a6bb585dc34f654164e', 202: 'eeaf1619611d6f028d2f5440236cf2fff90774ef421b1d5130f9ed09695c77ff', 303: 'd188bfd1031e6b64852196fc77a628ef1732a3c6ec2db68c4d28e09850b50621' } },
+  };
+
+  test('round-3 and round-4 worlds are byte for byte what they were before the lead pool could grow', () => {
+    for (const { knobs, digests } of Object.values(EARLIER)) for (const s of SEEDS) expect(sealedWorldDigest(generateSealedWorld(s, knobs))).toBe(digests[s]);
+  });
+
+  test('round-5 worlds build on every test seed: invariants, 3 to 4 unlinked items, resolvable references, complete oracle evidence', () => {
+    for (const s of SEEDS) {
+      const w = generateSealedWorld(s, R5);
+      expect(w).toMatchObject({ version: SEALED_VERSION_V2, knob_schema: 3, knob_digest: knobDigest(R5) });
+      expect(hardWorldProblems(w)).toEqual([]);
+      const multi = w.tasks.filter(t => t.answer_kind === 'values');
+      expect(multi.length).toBe(4 * R5.tasks_per_family);
+      for (const t of multi) {
+        expect(t.gold.items!.length).toBeGreaterThanOrEqual(3);
+        expect(t.gold.items!.length).toBeLessThanOrEqual(4);
+      }
+      expect(multi.some(t => t.gold.items!.length === 4)).toBe(true);
+      for (const t of w.tasks.filter(x => x.family === 'H1')) {
+        const n = t.answer_kind === 'set' ? t.gold.members!.length : t.gold.count!;
+        expect(n).toBeGreaterThanOrEqual(R5.h1_min_members);
+        expect(n).toBeLessThanOrEqual(R5.h1_max_members);
+      }
+      const leads = new Set(w.entities.flatMap(e => e.refs!.managers.map(m => m.name)));
+      expect(STAFF_MORE.some(m => leads.has(m))).toBe(true);
+      checkResolvable(w);
+      checkOracle(w);
+    }
+  }, 120_000);
+
+  test('round-5 50k (fewer appended customers): base documents and keys kept, every invariant passes, oracle complete', () => {
+    const knobs: HardKnobs = { ...R5, large_extra_accounts: 300, large_nondeciding_per_account: 2 };
+    const base = generateSealedWorld(SEEDS[0], knobs), large = generateSealedWorld(SEEDS[0], knobs, 'large');
+    expect(hardWorldProblems(large)).toEqual([]);
+    expect(large.docs.slice(0, base.docs.length)).toEqual(base.docs);
+    large.tasks.forEach((t, i) => expect(t.gold).toEqual(base.tasks[i].gold));
     checkOracle(large);
   }, 60_000);
 });
