@@ -52,7 +52,7 @@
       "benchmark": "lme-s",
       "lease_usd": 21,
       "lease_basis": "1.5 x eval/systems/basic-memory/PILOT.md, one of 2 shards ($13.78)",
-      "command": "bash eval/systems/bootstrap.sh up --system basic-memory --config common --timeout 1800 && { bun eval/runner/memory-qa/run.ts --benchmark lme-s --limit {{lme_s_limit}} --seed 42 --system http://127.0.0.1:8700 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-lme-s.json --shard 0/2 --output \"$SHOOTOUT_OUT/mqa\"; }; s=$?; bash eval/systems/bootstrap.sh down --system basic-memory; exit $s",
+      "command": "bash eval/systems/bootstrap.sh up --system basic-memory --config common --timeout 1800 && { bun eval/runner/memory-qa/run.ts --benchmark lme-s --limit {{lme_s_limit}} --seed 42 --system http://127.0.0.1:8700 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-lme-s.json --finish-timeout-s 14400 --shard 0/2 --output \"$SHOOTOUT_OUT/mqa\"; }; s=$?; bash eval/systems/bootstrap.sh down --system basic-memory; exit $s",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system basic-memory --datasets locomo,beam-100k,lme-s",
       "vm": {
         "size": "standard-8"
@@ -70,7 +70,7 @@
       "benchmark": "lme-s",
       "lease_usd": 21,
       "lease_basis": "1.5 x eval/systems/basic-memory/PILOT.md, one of 2 shards ($13.78)",
-      "command": "bash eval/systems/bootstrap.sh up --system basic-memory --config common --timeout 1800 && { bun eval/runner/memory-qa/run.ts --benchmark lme-s --limit {{lme_s_limit}} --seed 42 --system http://127.0.0.1:8700 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-lme-s.json --shard 1/2 --output \"$SHOOTOUT_OUT/mqa\"; }; s=$?; bash eval/systems/bootstrap.sh down --system basic-memory; exit $s",
+      "command": "bash eval/systems/bootstrap.sh up --system basic-memory --config common --timeout 1800 && { bun eval/runner/memory-qa/run.ts --benchmark lme-s --limit {{lme_s_limit}} --seed 42 --system http://127.0.0.1:8700 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-lme-s.json --finish-timeout-s 14400 --shard 1/2 --output \"$SHOOTOUT_OUT/mqa\"; }; s=$?; bash eval/systems/bootstrap.sh down --system basic-memory; exit $s",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system basic-memory --datasets locomo,beam-100k,lme-s",
       "vm": {
         "size": "standard-8"

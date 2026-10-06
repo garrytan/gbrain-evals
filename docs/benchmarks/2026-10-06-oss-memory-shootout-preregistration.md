@@ -78,6 +78,9 @@ arms file a cell names.
 
 - Campaign hash at freeze: **`14f684f8145c0ed48d7afed6d259709ff9937af577b98c3021b55e7807ca41f0`** (64 cells,
   leases $1,140).
+- Campaign hash after amendment A3: **`c5901391c1516861d666ebdc93e3ca336a1733d354ac6af38d228236eb461ad3`** (64 cells,
+  leases $1,140). The ten LoCoMo dev r1 cells that settled before A3 ran under the frozen hash; A3 does not change
+  their commands.
 
 A cell ingests each namespace once, retrieves once per question and policy, and derives every arm from that state
 (`memory-qa --arms`). LoCoMo dev is ingested a second time per configuration (`--ingest-replicate 2`, retrieval only)
@@ -306,7 +309,21 @@ uses frozen master; the pin rows are the secondary link to the starting line and
 labeled with its commit. Recorded on 2026-10-06 at the campaign owner's decision; an earlier draft of this amendment
 ran the pin only and was replaced before freezing.
 
+**A3 (2026-10-06), finish wait.** Every Mem0 cell and every vendor LongMemEval-S cell passes `--finish-timeout-s
+14400` to the runner, so the runner waits up to four hours for a system's `/finish` instead of the 600-second default.
+The reason: `mem0-common-locomo-r1` attempt 1 (lease `a1-757e7284`) timed out on all three conversations' `/finish`
+while Mem0's ingest queue drained, so all 587 rows were recorded `ingest_degraded`. The pilot's recipe drain took 185
+minutes, and LongMemEval-S haystacks are the longest ingests in the campaign. The flag caps waiting only: it changes no
+measurement, scoring, arm, lease or budget. Attempt 1 stays in the record as a harness failure, and the rerun is
+attempt 2 under a new lease. Recorded on 2026-10-06, after ten cells had settled and before any other cell was
+reserved; the campaign hash changes (see "Cells and the manifest").
+
 ## Changelog
+
+### 2026-10-06: amendment A3
+
+Added A3 (`--finish-timeout-s 14400` on every Mem0 cell and every vendor LongMemEval-S cell) after Mem0's LoCoMo r1
+cell timed out at the 600-second default; recorded the new campaign hash.
 
 ### 2026-10-06: main merged
 

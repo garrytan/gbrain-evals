@@ -2,7 +2,8 @@
 
 Cell manifests for the [open-source memory shootout](../../../plans/2026-10-05-oss-memory-shootout/PLAN.md), Phase 4
 (memory QA on LoCoMo dev, BEAM-100K dev and a LongMemEval-S slice), frozen with the
-[preregistration](../../2026-10-06-oss-memory-shootout-preregistration.md). Lease sizes come from the
+[preregistration](../../2026-10-06-oss-memory-shootout-preregistration.md) and amended by its A3 (a four-hour `/finish`
+wait on every Mem0 cell and every vendor LongMemEval-S cell). Lease sizes come from the
 Phase 2 pilots (`eval/systems/<name>/PILOT.md` on the vendor lane branches) times 1.5 headroom; a lease settles to the
 spend its metering proxy recorded, so unused headroom returns to the campaign.
 

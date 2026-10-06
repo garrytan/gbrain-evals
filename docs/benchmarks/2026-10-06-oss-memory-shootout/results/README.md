@@ -9,8 +9,8 @@ One directory per cell and lease (`<cell>/<lease>/`), copied from the cell VM af
   strict recall, retrieved session ids, tokens, latency and cost. Reader answers, retrieved item text and the packed
   contexts are left out: they carry dataset text. They are kept outside the repository with the pulled run.
 
-The manifests and campaign hash are in [manifests/](manifests/) and the rules in the
-[preregistration](../2026-10-06-oss-memory-shootout-preregistration.md).
+The manifests and campaign hash are in [manifests/](../manifests/) and the rules in the
+[preregistration](../../2026-10-06-oss-memory-shootout-preregistration.md).
 
 ## Status
 

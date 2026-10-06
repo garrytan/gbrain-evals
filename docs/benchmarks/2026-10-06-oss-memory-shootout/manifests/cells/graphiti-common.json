@@ -52,7 +52,7 @@
       "benchmark": "lme-s",
       "lease_usd": 283,
       "lease_basis": "1.5 x eval/systems/graphiti/PILOT.md ($154 of it LongMemEval-S ingest) ($188.59)",
-      "command": "bash eval/systems/bootstrap.sh up --system graphiti --config common --timeout 1800 && { pids=(); for i in $(seq 0 7); do bun eval/runner/memory-qa/run.ts --benchmark lme-s --limit {{lme_s_limit}} --seed 42 --system http://127.0.0.1:8700 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-lme-s.json --shard $i/8 --output \"$SHOOTOUT_OUT/mqa/shard-$i\" & pids+=($!); done; s=0; for p in \"${pids[@]}\"; do wait $p || s=1; done; (exit $s); }; s=$?; bash eval/systems/bootstrap.sh down --system graphiti; exit $s",
+      "command": "bash eval/systems/bootstrap.sh up --system graphiti --config common --timeout 1800 && { pids=(); for i in $(seq 0 7); do bun eval/runner/memory-qa/run.ts --benchmark lme-s --limit {{lme_s_limit}} --seed 42 --system http://127.0.0.1:8700 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-lme-s.json --finish-timeout-s 14400 --shard $i/8 --output \"$SHOOTOUT_OUT/mqa/shard-$i\" & pids+=($!); done; s=0; for p in \"${pids[@]}\"; do wait $p || s=1; done; (exit $s); }; s=$?; bash eval/systems/bootstrap.sh down --system graphiti; exit $s",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system graphiti --datasets locomo,beam-100k,lme-s",
       "vm": {
         "size": "standard-16"
