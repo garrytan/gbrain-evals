@@ -38,7 +38,7 @@
   },
   "delete": "public-api-composition",
   "delete_notes": "get_all(filters={user_id, source_id}) then delete(memory_id) for each. Mem0 deletes memories, not sources. The history store keeps the scope's 10 most recent raw messages (fed to later extraction calls as context) and each memory's change log; neither is searchable.",
-  "readiness": "synchronous: Memory.add returns after extraction, embedding and the Qdrant insert, so /finish returns at once. completeness is degraded when any add raised (mem0 falls back to per-record inserts and raises only when none persisted, main.py:1055-1076).",
+  "readiness": "queued: /ingest validates the session and queues it on the namespace's single worker, returning completeness `unknown` at once, because one session of synchronous Memory.add calls can outlast the harness's 600-second request deadline (gpt-5-mini takes about 16 s per call; a 30-turn LoCoMo session at one turn per call is about 8 minutes). /finish waits until the queue drains (bounded by timeout_s, else ready=false) and reports `known`, or `degraded` when any add raised (mem0 falls back to per-record inserts and raises only when none persisted, main.py:1055-1076), with counts in its receipt. A budget refusal stops the namespace's remaining chunks and /finish returns the budget error. /reset cancels queued sessions; one already running finishes into the retired user_id, which nothing reads.",
   "namespace": "user_id (filters={'user_id': ...} on search and get_all). /reset moves the namespace to a fresh user_id (<ns>.g<n>) after delete_all, because delete_all leaves the scope's recent raw messages in the history store.",
   "parallel_namespaces": true,
   "parallel_notes": "memory-benchmarks drives one Memory instance from 10 concurrent workers across conversations (FastAPI threadpool, sync endpoints); the shim serializes calls within a namespace.",
@@ -54,11 +54,15 @@
   },
   "retrieval_policies": {
     "vendor-default": {
-      "k": 20,
+      "settings": {
+        "k": 20
+      },
       "maps_to": "Memory.search(query, top_k=20, filters={'user_id'}, threshold=0.1, rerank=False): the SDK defaults (main.py:1397-1400). Hybrid scoring (semantic + BM25 + entity boost) is always on when spaCy and fastembed are installed."
     },
     "fixed-evidence": {
-      "k": 200,
+      "settings": {
+        "k": 200
+      },
       "maps_to": "same call with top_k=200, the largest cutoff memory-benchmarks evaluates (--top-k 200, cutoffs 10,20,50,200), so the harness can pack 8,000 tokens of short memories"
     }
   },

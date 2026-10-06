@@ -12,6 +12,9 @@ import os
 import re
 import sys
 import threading
+import time
+from concurrent.futures import ThreadPoolExecutor, wait
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -24,7 +27,6 @@ DATA = Path(os.environ.get("SHIM_DATA_DIR", "/data"))
 CONFIG = os.environ.get("SHIM_CONFIG", "recipe")
 CHUNK_TURNS = int(os.environ.get("MEM0_CHUNK_TURNS", "2"))
 NS_RE = re.compile(r"^ns-[A-Za-z0-9_-]{1,80}$")
-POLICY_K = {"vendor-default": 20, "fixed-evidence": 200}
 LIST_PAGE = 1000
 
 
@@ -67,6 +69,17 @@ def proxy_refusal(exc: BaseException, doing: str) -> None:
         seen = seen.__cause__ or seen.__context__
 
 
+@dataclass
+class Lane:
+    """One namespace's ingest queue: a single worker keeps sessions in arrival (event-time) order."""
+    pool: ThreadPoolExecutor = field(default_factory=lambda: ThreadPoolExecutor(max_workers=1))
+    futures: list = field(default_factory=list)
+    sessions: int = 0
+    created: int = 0
+    errors: list = field(default_factory=list)
+    budget: str | None = None
+
+
 class Mem0Adapter(Adapter):
     def __init__(self) -> None:
         from mem0 import Memory
@@ -87,14 +100,18 @@ class Mem0Adapter(Adapter):
         self.scopes_path = DATA / f"scopes_{CONFIG}.json"
         self.scopes: dict[str, int] = json.loads(self.scopes_path.read_text()) if self.scopes_path.exists() else {}
         self.guard = threading.Lock()
-        self.ns_locks: dict[str, threading.Lock] = {}
-        self.degraded: set[str] = set()
+        self.lanes: dict[str, Lane] = {}
 
-    def lock_for(self, ns: str) -> threading.Lock:
+    def lane(self, ns: str) -> Lane:
         if not NS_RE.match(ns):
             raise ShimError("invalid_request", "ns must be opaque (ns-...)", 400)
         with self.guard:
-            return self.ns_locks.setdefault(ns, threading.Lock())
+            return self.lanes.setdefault(ns, Lane())
+
+    def drain(self, ns: str, timeout_s: float) -> tuple[Lane, bool]:
+        lane = self.lane(ns)
+        _, pending = wait(list(lane.futures), timeout=timeout_s)
+        return lane, not pending
 
     def scope(self, ns: str) -> str:
         """Mem0 user_id for a namespace. Reset moves to a fresh user_id because delete_all leaves the scope's
@@ -112,12 +129,15 @@ class Mem0Adapter(Adapter):
         return {"ok": True, **self.resolved}
 
     def reset(self, ns: str) -> None:
-        with self.lock_for(ns):
-            self.memory.delete_all(user_id=self.scope(ns))
-            with self.guard:
-                self.scopes[ns] = self.scopes.get(ns, 0) + 1
-                self.scopes_path.write_text(json.dumps(self.scopes))
-            self.degraded.discard(ns)
+        """Queued sessions are cancelled; one already running finishes into the old user_id, which nothing reads."""
+        old = self.lane(ns)
+        with self.guard:
+            old_scope = self.scope(ns)
+            self.scopes[ns] = self.scopes.get(ns, 0) + 1
+            self.scopes_path.write_text(json.dumps(self.scopes))
+            self.lanes[ns] = Lane()
+        old.pool.shutdown(wait=False, cancel_futures=True)
+        self.memory.delete_all(user_id=old_scope)
 
     def messages(self, session: dict[str, Any]) -> list[dict[str, str]]:
         first = session["turns"][0]["speaker"] if session["turns"] else None
@@ -131,38 +151,59 @@ class Mem0Adapter(Adapter):
         return out
 
     def ingest(self, ns: str, session: dict[str, Any]) -> dict[str, Any]:
-        sid, date = session["source_id"], render_date(session["event_time"])
+        """Queues the session and returns at once: one session can take longer than the harness's request deadline
+        (about 16 s per gpt-5-mini add call), so /finish is where the shim waits for mem0, as the protocol allows."""
         msgs = self.messages(session)
+        lane = self.lane(ns)
+        with self.guard:
+            user_id = self.scope(ns)
+            lane.futures.append(lane.pool.submit(self.add_session, lane, user_id, session, msgs))
+        warnings = [f"{session['source_id']} has no non-empty turns"] if not msgs else []
+        return {"items_created": 0, "warnings": warnings, "errors": [], "completeness": "unknown"}
+
+    def add_session(self, lane: Lane, user_id: str, session: dict[str, Any], msgs: list[dict[str, str]]) -> None:
+        sid, date = session["source_id"], render_date(session["event_time"])
         header = [{"role": "system", "content": f"This conversation took place at {date}."}] if date else []
         metadata = {"source_id": sid, "session_date": session["event_time"]}
-        created, errors, warnings = 0, [], []
-        with self.lock_for(ns):
-            user_id = self.scope(ns)
-            for start in range(0, len(msgs), CHUNK_TURNS):
+        for start in range(0, len(msgs), CHUNK_TURNS):
+            if lane.budget:
+                lane.errors.append(f"{sid} chunk {start // CHUNK_TURNS}: not sent after a budget refusal")
+                continue
+            try:
+                res = self.memory.add(header + msgs[start:start + CHUNK_TURNS], user_id=user_id, metadata=metadata)
+            except Exception as e:  # noqa: BLE001 - one failed chunk degrades the session, the rest still run
                 try:
-                    res = self.memory.add(header + msgs[start:start + CHUNK_TURNS], user_id=user_id, metadata=metadata)
-                except Exception as e:  # noqa: BLE001 - one failed chunk degrades the session, the rest still run
                     proxy_refusal(e, f"ingesting {sid}")
-                    errors.append(f"chunk {start // CHUNK_TURNS}: {type(e).__name__}: {str(e)[:300]}")
+                except ShimError as refusal:
+                    if refusal.kind == "budget":
+                        lane.budget = str(refusal)
+                    lane.errors.append(f"{sid} chunk {start // CHUNK_TURNS}: {refusal}")
                     continue
-                created += sum(1 for r in res.get("results", []) if r.get("event") == "ADD")
-            if errors:
-                self.degraded.add(ns)
-        if not msgs:
-            warnings.append(f"{sid} has no non-empty turns")
-        return {"items_created": created, "warnings": warnings, "errors": errors,
-                "completeness": "degraded" if errors else "known"}
+                lane.errors.append(f"{sid} chunk {start // CHUNK_TURNS}: {type(e).__name__}: {str(e)[:300]}")
+                continue
+            lane.created += sum(1 for r in res.get("results", []) if r.get("event") == "ADD")
+        lane.sessions += 1
 
     def finish(self, ns: str, timeout_s: float) -> dict[str, Any]:
-        with self.lock_for(ns):
-            return {"ready": True, "waited_ms": 0, "completeness": "degraded" if ns in self.degraded else "known"}
+        t0 = time.monotonic()
+        lane, done = self.drain(ns, timeout_s)
+        if lane.budget:
+            raise ShimError("budget", lane.budget, 402)
+        receipt = {"sessions_added": lane.sessions, "memories_created": lane.created, "errors": lane.errors[:50],
+                   "error_count": len(lane.errors), "pending": sum(not f.done() for f in lane.futures)}
+        return {"ready": done, "waited_ms": round((time.monotonic() - t0) * 1000),
+                "completeness": "unknown" if not done else "degraded" if lane.errors else "known", "receipt": receipt}
 
     def retrieve(self, ns: str, question: str, query_time: str | None, policy: dict[str, Any]) -> dict[str, Any]:
         mode = policy.get("mode")
-        if mode not in POLICY_K:
+        if mode not in ("vendor-default", "fixed-evidence"):
             raise ShimError("invalid_request", "policy.mode must be vendor-default or fixed-evidence", 400)
-        k = int((policy.get("settings") or {}).get("k") or POLICY_K[mode])
-        self.lock_for(ns)
+        settings = policy.get("settings") or {}
+        unknown = set(settings) - {"k"}
+        if unknown:
+            raise ShimError("invalid_request", f"unknown policy settings {sorted(unknown)}; this shim takes only k", 400)
+        k = int(settings.get("k") or self.record["retrieval_policies"][mode]["settings"]["k"])
+        self.lane(ns)
         try:
             res = self.memory.search(question, top_k=k, filters={"user_id": self.scope(ns)})
         except Exception as e:  # noqa: BLE001
@@ -181,17 +222,20 @@ class Mem0Adapter(Adapter):
         return {"items": items, "applied_settings": applied, "truncated": len(items) >= k, "raw": res}
 
     def delete_source(self, ns: str, source_id: str) -> dict[str, Any]:
-        with self.lock_for(ns):
+        _, done = self.drain(ns, 3600)
+        if not done:
+            raise ShimError("timeout", "ingest still running after an hour; delete not attempted", 504)
+        with self.guard:
             filters = {"user_id": self.scope(ns), "source_id": source_id}
-            deleted: list[str] = []
-            for _ in range(100):
-                batch = self.memory.get_all(filters=filters, top_k=LIST_PAGE).get("results", [])
-                if not batch:
-                    break
-                for m in batch:
-                    self.memory.delete(m["id"])
-                    deleted.append(m["id"])
-            left = self.memory.get_all(filters=filters, top_k=LIST_PAGE).get("results", [])
+        deleted: list[str] = []
+        for _ in range(100):
+            batch = self.memory.get_all(filters=filters, top_k=LIST_PAGE).get("results", [])
+            if not batch:
+                break
+            for m in batch:
+                self.memory.delete(m["id"])
+                deleted.append(m["id"])
+        left = self.memory.get_all(filters=filters, top_k=LIST_PAGE).get("results", [])
         return {
             "status": "partial" if left else "deleted",
             "receipt": {

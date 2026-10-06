@@ -24,7 +24,6 @@ COPY _shim/shim.py /app/_shim/shim.py
 COPY basic-memory/shim.py basic-memory/capability.json ./
 
 ENV SHIM_PORT=8700 SHIM_CONFIG=recipe SHIM_DATA_DIR=/data \
-    BASIC_MEMORY_CONFIG_DIR=/data/bm-config \
     BASIC_MEMORY_INDEX_CHANGES=false \
     BASIC_MEMORY_NO_PROMOS=1 BASIC_MEMORY_AUTO_UPDATE=false \
     BASIC_MEMORY_LOGFIRE_ENABLED=false BASIC_MEMORY_LOGFIRE_SEND_TO_LOGFIRE=false \
