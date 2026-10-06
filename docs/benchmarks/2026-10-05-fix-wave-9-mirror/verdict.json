@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "experiment": "gbrain fix wave 9 mirror: search_path pinning insert cost (#5190) and the takes-quality protocol 2 comparability note (#5325)",
+  "measured": "2026-10-05",
+  "mirrored": "2026-10-05",
+  "source": {
+    "repo": "garrytan/gbrain",
+    "pr": "garrytan/gbrain#6111",
+    "pr_state_at_mirror": "open, pending merge",
+    "pr_head": "1fbe8660cb0dc1737d7bd9323aa9c6410dc80ec8",
+    "release": "v0.60.74.0 (PR title; VERSION at the mirrored head still reads 0.60.72.0 until the pending restamp)",
+    "commits": {
+      "search_path": "daf7426b6dbfa0de25356fffc7cb526dbcb78fb0",
+      "takes_quality_protocol": "8a2d8a82aad5d32c5b3993fa16f8a75bd2f01103"
+    },
+    "excerpts": [
+      "upstream/search-path-commit.md",
+      "upstream/takes-quality-protocol-commit.md",
+      "upstream/release-notes-excerpt.md"
+    ]
+  },
+  "rerun_here": false,
+  "paid_runs": 0,
+  "cost_usd": 0,
+  "items": {
+    "search_path_insert_cost": {
+      "issue": "garrytan/gbrain#5190",
+      "migration": "v211 function_search_path",
+      "change": "every gbrain plpgsql function pins SET search_path = pg_catalog, public; the fact fingerprint SQL functions call pg_catalog-qualified built-ins instead, so they stay inlinable for the withdrawal index",
+      "measurement": {
+        "kind": "local timing on the wave lane's own machine, not a controlled benchmark",
+        "workload": "insert 10,000 rows into facts through the withdrawal trigger",
+        "runs_per_side": 3,
+        "unit": "seconds",
+        "pglite": {
+          "before_range": [1.31, 1.46],
+          "after_range": [1.45, 1.69],
+          "midpoint_change_pct": 13.4
+        },
+        "postgres": {
+          "version": "16",
+          "before_range": [0.531, 0.536],
+          "after_range": [0.565, 0.604],
+          "midpoint_change_pct": 9.6
+        },
+        "range_end_change_pct": [6.4, 15.8],
+        "per_run_values_published": false,
+        "hardware_published": false
+      },
+      "cause": "the trigger function's pinned search_path setting (a function with a SET clause runs with a configuration change on every call)",
+      "correctness": {
+        "fingerprint_golden_claims": 24,
+        "fingerprint_golden_identical_before_after": true,
+        "engines": ["pglite", "postgres"],
+        "fingerprint_index_plan_unchanged": true,
+        "evidence": "test/fact-fingerprint-search-path.test.ts (PGLite) and test/e2e/fact-fingerprint-search-path-postgres.test.ts (Postgres) at the PR head: the golden was captured on master before the change; the index-plan case (EXPLAIN) passes on both sides"
+      },
+      "retrieval_change": false,
+      "verdict": "accepted cost",
+      "decision": "about 10-13% slower bulk fact inserts (midpoints; range ends 6-16%) accepted as the price of security hardening; search results and fact fingerprints do not change"
+    },
+    "takes_quality_protocol_2": {
+      "issue": "garrytan/gbrain#5325",
+      "kind": "protocol and comparability note, not a verdict",
+      "score_measurement": null,
+      "score_measurement_note": "no before/after takes-quality score run was made; nothing here says protocol 2 raises or lowers scores",
+      "protocol_version": 2,
+      "absent_protocol_version_reads_as": 1,
+      "changes": [
+        "judges run with thinking off",
+        "one same-model correction per malformed judge slot (parse_failed, including an empty reply, or incomplete_scores), with the validator's error appended",
+        "each correction is priced against --budget-usd before it is sent; not sent means corrected null with skipped_reason budget or aborted",
+        "a corrected reply replaces the first attempt only when it validates (correction_selection_rule corrected_if_valid)",
+        "provider errors and valid low scores are never re-asked",
+        "correction calls count toward cost_usd and the budget cap"
+      ],
+      "receipt_fields_added": ["protocol_version", "correction_selection_rule", "corrections"],
+      "regress_behavior": "gbrain eval takes-quality regress lists a protocol_version difference among the dissimilar inputs (inputs_differ true), as it does for corpus, prompt and rubric hash differences; it warns and does not refuse",
+      "comparability_rule": "do not compare takes-quality receipts across protocol_version 1 and 2 as a like-for-like score change; report such a comparison as dissimilar inputs, and compare only receipts with the same protocol_version, model panel, corpus, prompt and rubric"
+    }
+  }
+}

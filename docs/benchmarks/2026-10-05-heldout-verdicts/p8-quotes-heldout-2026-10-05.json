@@ -1,0 +1,15 @@
+{
+  "decision_id": "p8-quotes-heldout-2026-10-05",
+  "stage": "held-out",
+  "verdict": "fail: supported spans wrongly flagged 15/319 = 4.70%, Wilson 95% upper 7.61% (bar <= 5%)",
+  "default_rule": "think.quote_verify and dream.quote_verify ship on only if the span-level Wilson upper bound is <= 5%; on fail the kill switches ship off (P8 prereg section 6)",
+  "build": "6c958d6e246d18bfbba092ae5fe787511bba76cb, think model claude-sonnet-5-5, judge gpt-6.1-sol",
+  "harness": "gbrain-evals p0-heldout-harness 632572d (quote-grounding custodian mode)",
+  "held_out_material": "128 custodian-generated questions in custody: 68 over amara-life-v1 pages unused in dev (seed 7001), 60 over sealed-confirmation-v2 sessions (seed 7002; that corpus's access log records the opening)",
+  "by_corpus": {
+    "amara": {"questions": 68, "spans": 244, "supported": 243, "wrongly_flagged": 9, "rate": 0.037, "wilson_upper": 0.069, "unsupported": 1, "unsupported_flagged": 1},
+    "sealed_confirmation_v2": {"questions": 60, "spans": 76, "supported": 76, "wrongly_flagged": 6, "rate": 0.079, "wilson_upper": 0.162, "unsupported": 0}
+  },
+  "pooled": {"supported_spans": 319, "wrongly_flagged": 15, "rate": 0.047, "wilson_95": [0.0287, 0.0761], "question_clustered_bootstrap_upper": 0.074, "questions_with_a_wrong_flag": "13 of 103 with supported spans"},
+  "failure_shapes_seen": "bracketed editorial insertions inside a quote (ha[s], sheet[s]), link markup kept from the page ([Name]), a quote truncated with an ellipsis mid-word, and dropped trailing punctuation"
+}

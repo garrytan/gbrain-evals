@@ -13,7 +13,7 @@ import {
   DEV_POOLS, DEV_SEED, MIN_ACTIONABLE_FAMILIES, generate, validatePools, type Wordings,
 } from '../../eval/generators/p8-withdraw-review-gen.ts';
 import {
-  DEV_QUESTIONS, amaraPages, assertPagesExist, makeQuestions, parseQuestions, parseSealedCorpus, openSealedCorpus, renderSession, sealedPages,
+  DEV_QUESTIONS, amaraPages, assertPagesExist, flaggedSpans, makeQuestions, parseQuestions, parseSealedCorpus, openSealedCorpus, renderSession, sealedPages,
 } from '../../eval/runner/p8-quote-grounding.ts';
 import { insideRepository, openCustodyFile, sha256Hex } from '../../eval/runner/sealed-confirmation-lib.ts';
 import { haystackToPages } from '../../node_modules/gbrain/src/eval/longmemeval/adapter.ts';
@@ -158,6 +158,22 @@ describe('quote grounding: sealed-confirmation corpus loader', () => {
     expect(r.sha256).toBe(sha256Hex(readFileSync(join(d, 'questions.json'))));
     expect(JSON.parse(readFileSync(join(d, 'access-log.jsonl'), 'utf8').trim()).labels_sha256).toBe(r.sha256);
     expect(() => openSealedCorpus({ dir: FIXTURE, decisionId: 'dec', purpose: 'p' })).toThrow(/inside the repository/);
+  });
+});
+
+describe('quote grounding: flag attribution', () => {
+  test('a supported span inside or around a different flagged quote stays kept', () => {
+    const long = 'the team is strong, and the execution record is hard to ignore';
+    expect(flaggedSpans([long, 'hard to ignore'], [long])).toEqual([true, false]);
+    expect(flaggedSpans([long, 'hard to ignore'], ['hard to ignore'])).toEqual([false, true]);
+    expect(flaggedSpans(['threshold conversion model', 'threshold conversion model,'], ['threshold conversion model,'])).toEqual([false, true]);
+  });
+
+  test('matches gbrain\'s reported form: whitespace collapsed, clipped at 300 characters', () => {
+    const span = `${'word '.repeat(80)}end`;
+    const reported = `${span.replace(/\s+/g, ' ').slice(0, 297)}...`;
+    expect(flaggedSpans([span, 'two  spaced\nwords here'], [reported, 'two spaced words here'])).toEqual([true, true]);
+    expect(flaggedSpans(['no flags at all here'], [])).toEqual([false]);
   });
 });
 
