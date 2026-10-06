@@ -27,10 +27,18 @@
  *     bodies carrying a forbidden marker (the sanitizer's leak tripwire), and
  *     appends one usage line per request (never a body or a key).
  *
+ * Attribution across processes (lease mode): the harness binds a slot (the
+ * path segment a shim's base URL carries) to a key around each question or
+ * namespace ingest and reads the key's meter afterwards, through
+ * `POST /__proxy/bind {slot, key}`, `POST /__proxy/unbind {slot}` and
+ * `POST /__proxy/finalize {key}`. With `--control-token` (or
+ * SHOOTOUT_PROXY_CONTROL_TOKEN) these need the `x-proxy-control` header, so a
+ * vendor container cannot move charges.
+ *
  * Standalone (lease mode):
  *   bun eval/runner/metering-proxy.ts --listen 0.0.0.0:8787 --budget-ledger <file> --lease-usd <n> --run-id <id>
  *     [--usage-log <file>] [--allow-models openai:gpt-4.1-mini,...] [--max-output-tokens 32768]
- *     [--forbidden-markers <file>] [--streaming meter|refuse] [--upstream openai=http://...] [--new-run]
+ *     [--forbidden-markers <file>] [--streaming meter|refuse] [--upstream openai=http://...] [--new-run] [--control-token <t>]
  *   bun eval/runner/metering-proxy.ts summary --budget-ledger <file> --run-id <id>
  *
  * One lease ledger can hold a cell's reruns: each run id is its own lease, the
@@ -57,6 +65,8 @@ const ROUTES: Record<ProviderName, Array<{ method: string; path: RegExp }>> = {
 const KEY_ENV: Record<ProviderName, string> = { openai: 'OPENAI_API_KEY', anthropic: 'ANTHROPIC_API_KEY', voyage: 'VOYAGE_API_KEY' };
 const CREDENTIAL_HEADERS = ['authorization', 'x-api-key', 'api-key', 'openai-organization', 'openai-project', 'cookie', 'proxy-authorization'];
 export const DEFAULT_MAX_OUTPUT_TOKENS = 32_768;
+/** A provider call may run this long (Bun's own 300-second fetch timeout is off; long reasoning calls exceed it). */
+export const UPSTREAM_DEADLINE_MS = 900_000;
 
 export interface Meter {
   usd: number;
@@ -66,8 +76,13 @@ export interface Meter {
   /** Requests still in flight when the meter was finalized after its timeout (their cost is missing here, not in the ledger). */
   undrained?: number;
   byModel: Record<string, { usd: number; requests: number }>;
+  /** Lease mode: what the provider answered (HTTP status counts, connection failures, 200 bodies that were not JSON), so a report can tell provider outages from product bugs. */
+  upstream?: { statuses: Record<string, number>; failed: number; unparseable: number };
 }
 export const newMeter = (): Meter => ({ usd: 0, requests: 0, unpriced: 0, byModel: {} });
+
+/** True when the provider itself misbehaved during a meter's requests: a 5xx, a lost connection, or a 200 that was not JSON. */
+export const upstreamTrouble = (m: Meter | null | undefined) => !!m?.upstream && (m.upstream.failed > 0 || m.upstream.unparseable > 0 || Object.keys(m.upstream.statuses).some(s => Number(s) >= 500));
 
 export interface LeasePolicy {
   /** The lease this proxy spends; every request is reserved against it before it is forwarded. */
@@ -136,7 +151,7 @@ export class MeteringProxy {
   private bindings = new Map<string, string>();
   private inflight = new Map<string, number>();
   private waiters = new Map<string, Array<() => void>>();
-  constructor(private options: { fetchImpl?: typeof fetch; hostname?: string; port?: number; upstream?: Partial<Record<ProviderName, string>>; policy?: LeasePolicy } = {}) {}
+  constructor(private options: { fetchImpl?: typeof fetch; hostname?: string; port?: number; upstream?: Partial<Record<ProviderName, string>>; policy?: LeasePolicy; controlToken?: string | null } = {}) {}
   get port(): number { return this.server!.port as number; }
   /** Charge the slot's provider requests to `key` (a cell id) from now on. */
   bind(slot: string, key: string) { this.bindings.set(slot, key); }
@@ -166,10 +181,11 @@ export class MeteringProxy {
   start() {
     const send: Send = this.options.fetchImpl ?? ((input, init) => fetch(input, init));
     this.server = Bun.serve({
-      port: this.options.port ?? 0, hostname: this.options.hostname ?? '127.0.0.1', idleTimeout: 255,
+      port: this.options.port ?? 0, hostname: this.options.hostname ?? '127.0.0.1', idleTimeout: 0,
       fetch: async req => {
         const url = new URL(req.url);
         if (url.pathname === '/__proxy/status' && req.method === 'GET') return Response.json(this.status());
+        if (url.pathname.startsWith('/__proxy/') && req.method === 'POST') return this.control(url.pathname, req);
         const m = url.pathname.match(/^\/(?:([^/]+)\/)?(anthropic|openai|voyage)(\/.*)$/);
         if (!m) return json(404, 'invalid_request', `no provider route ${url.pathname}`);
         const [, slot = 'default', prov, rest] = m as unknown as [string, string | undefined, ProviderName, string];
@@ -192,6 +208,24 @@ export class MeteringProxy {
     const run = p ? ledgerStatus({ ledgerPath: p.lease.ledgerPath, runId: p.lease.runId }).run : null;
     return { mode: p ? 'lease' : 'in-process', run_id: p?.lease.runId ?? null, lease_usd: p?.lease.budgetUsd ?? null, committed_usd: run?.committed_usd ?? null,
       max_output_tokens: p ? p.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS : null, ...this.counts };
+  }
+
+  private async control(path: string, req: Request): Promise<Response> {
+    if (this.options.controlToken && req.headers.get('x-proxy-control') !== this.options.controlToken) return json(403, 'invalid_request', 'control endpoints need the x-proxy-control token');
+    let body: { slot?: string; key?: string; timeout_ms?: number };
+    try { body = await req.json() as typeof body; } catch { return json(400, 'invalid_request', 'control body is not JSON'); }
+    if (path === '/__proxy/bind' && body.slot && body.key) { this.bind(body.slot, body.key); return Response.json({ ok: true }); }
+    if (path === '/__proxy/unbind' && body.slot) { this.unbind(body.slot); return Response.json({ ok: true }); }
+    if (path === '/__proxy/finalize' && body.key) return Response.json(await this.finalize(body.key, Math.min(Number(body.timeout_ms ?? 30_000), 120_000)));
+    return json(404, 'invalid_request', `no control route ${path}`);
+  }
+
+  private observe(key: string, status: number | 'failed' | 'unparseable') {
+    const m = this.meter(key);
+    m.upstream ??= { statuses: {}, failed: 0, unparseable: 0 };
+    if (status === 'failed') m.upstream.failed++;
+    else if (status === 'unparseable') m.upstream.unparseable++;
+    else m.upstream.statuses[String(status)] = (m.upstream.statuses[String(status)] ?? 0) + 1;
   }
 
   private charge(key: string, prov: string, model: string | null, usd: number, unpriced: boolean) {
@@ -290,10 +324,11 @@ export class MeteringProxy {
         input_tokens: cost?.input_tokens, output_tokens: cost?.output_tokens, charged_reservation: !!bounded && !cost, streamed: isStream });
     };
     let res: Response;
-    try { res = await send(target, { method: req.method, headers, body: outBody }); }
+    try { res = await send(target, { method: req.method, headers, body: outBody, timeout: false, signal: AbortSignal.timeout(UPSTREAM_DEADLINE_MS) } as RequestInit); }
     catch (e) {
       if (entry) p.lease.settle(entry, null);
       this.charge(key, prov, bounded?.model ?? null, reserved, !!bounded);
+      this.observe(key, 'failed');
       this.log({ at, key, provider: prov, route, model, outcome: 'failed', reason: (e as Error).message.slice(0, 300), reserved_usd: reserved, actual_usd: reserved, charged_reservation: !!bounded });
       return json(502, 'product_error', `upstream failed: ${(e as Error).message}`);
     }
@@ -302,6 +337,7 @@ export class MeteringProxy {
     if ((res.headers.get('content-type') ?? '').includes('event-stream') && res.body) {
       const done = beginStream();
       const [client, meterBranch] = res.body.tee();
+      this.observe(key, res.status);
       void new Response(meterBranch).text().then(
         text => { const u = sseUsage(text); settle(bounded && u ? usageCost(bounded, { usage: u }) : null, res.status, true); },
         () => settle(null, res.status, true),
@@ -310,16 +346,41 @@ export class MeteringProxy {
     }
     const text = await res.text();
     let cost: ReturnType<typeof usageCost> = null;
-    if (bounded) { try { cost = usageCost(bounded, JSON.parse(text)); } catch { cost = null; } }
+    let parsed = true;
+    try { JSON.parse(text); } catch { parsed = false; }
+    this.observe(key, res.ok && !parsed ? 'unparseable' : res.status);
+    if (bounded && parsed) cost = usageCost(bounded, JSON.parse(text));
     if (!cost && bounded && res.status >= 400 && res.status < 500) cost = { usd: 0, input_tokens: 0, output_tokens: 0 };
     settle(cost, res.status, false);
     return new Response(text, { status: res.status, headers: out });
   }
 }
 
+/** The harness side of cross-process attribution: bind a slot to a key around a question or an ingest, then read its meter. */
+export class ProxyControl {
+  constructor(private base: string, private token: string | null = process.env.SHOOTOUT_PROXY_CONTROL_TOKEN ?? null) {}
+  private async post(path: string, body: unknown): Promise<unknown> {
+    const res = await fetch(`${this.base.replace(/\/$/, '')}${path}`, { method: 'POST', headers: { 'content-type': 'application/json', ...(this.token ? { 'x-proxy-control': this.token } : {}) }, body: JSON.stringify(body), keepalive: false });
+    if (!res.ok) throw new Error(`metering proxy ${path}: HTTP ${res.status}`);
+    return res.json();
+  }
+  bind(slot: string, key: string) { return this.post('/__proxy/bind', { slot, key }); }
+  unbind(slot: string) { return this.post('/__proxy/unbind', { slot }); }
+  finalize(key: string, timeoutMs = 30_000) { return this.post('/__proxy/finalize', { key, timeout_ms: timeoutMs }) as Promise<Meter>; }
+  /** Run `fn` with the slot's provider calls charged to `key`; returns its result and the key's meter. */
+  async around<T>(slot: string, key: string, fn: () => Promise<T>): Promise<{ value?: T; error?: unknown; meter: Meter }> {
+    await this.bind(slot, key);
+    let value: T | undefined, error: unknown;
+    try { value = await fn(); } catch (e) { error = e; }
+    await this.unbind(slot);
+    return { value, error, meter: await this.finalize(key) };
+  }
+}
+
 export interface ProxyCliArgs {
   host: string; port: number; ledger: string; leaseUsd: number; runId: string; usageLog: string | null;
   allowModels: string[] | null; maxOutputTokens: number | null; forbiddenMarkers: string[]; streaming: 'meter' | 'refuse'; upstream: Partial<Record<ProviderName, string>>; newRun: boolean;
+  controlToken: string | null;
 }
 
 export function parseProxyArgs(argv: string[]): ProxyCliArgs {
@@ -345,13 +406,13 @@ export function parseProxyArgs(argv: string[]): ProxyCliArgs {
     allowModels: one('--allow-models') ? one('--allow-models')!.split(',').map(s => s.trim()).filter(Boolean) : null,
     maxOutputTokens: one('--max-output-tokens') ? Number(one('--max-output-tokens')) : null,
     forbiddenMarkers: markersFile ? readFileSync(markersFile, 'utf8').split('\n').map(s => s.trim()).filter(Boolean) : [],
-    streaming, upstream, newRun: argv.includes('--new-run'),
+    streaming, upstream, newRun: argv.includes('--new-run'), controlToken: one('--control-token') ?? process.env.SHOOTOUT_PROXY_CONTROL_TOKEN ?? null,
   };
 }
 
 export function startLeaseProxy(a: ProxyCliArgs, env: Record<string, string | undefined> = process.env): MeteringProxy {
   const lease = BudgetRun.openLease({ runId: a.runId, leaseUsd: a.leaseUsd, ledgerPath: a.ledger, runner: 'metering-proxy', maxOutputTokens: a.maxOutputTokens, newRun: a.newRun });
-  const proxy = new MeteringProxy({ hostname: a.host, port: a.port, upstream: a.upstream,
+  const proxy = new MeteringProxy({ hostname: a.host, port: a.port, upstream: a.upstream, controlToken: a.controlToken,
     policy: { lease, env, allowModels: a.allowModels, maxOutputTokens: a.maxOutputTokens ?? undefined, forbiddenMarkers: a.forbiddenMarkers, streaming: a.streaming, usageLog: a.usageLog ?? `${lease.ledgerPath}.usage.ndjson` } });
   proxy.start();
   return proxy;

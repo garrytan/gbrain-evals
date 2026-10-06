@@ -7,7 +7,7 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { BudgetRun, closeLedgers, closeRun, ledgerStatus, priceRequest, reservationUsd } from '../../eval/runner/budget-ledger.ts';
-import { MeteringProxy, parseProxyArgs, sseUsage, type LeasePolicy } from '../../eval/runner/metering-proxy.ts';
+import { MeteringProxy, parseProxyArgs, ProxyControl, sseUsage, upstreamTrouble, type LeasePolicy } from '../../eval/runner/metering-proxy.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
 const tmp = mkdtempSync(join(tmpdir(), 'metering-proxy-'));
@@ -184,6 +184,35 @@ describe('lease mode forwarding', () => {
     const sse = 'event: message_start\ndata: {"type":"message_start","message":{"usage":{"input_tokens":50,"output_tokens":1}}}\n\nevent: message_delta\ndata: {"type":"message_delta","usage":{"output_tokens":30}}\n\n';
     expect(sseUsage(sse)).toEqual({ input_tokens: 50, output_tokens: 30 });
     expect(sseUsage('data: [DONE]\n')).toBeNull();
+  });
+});
+
+describe('attribution across processes', () => {
+  beforeEach(() => closeLedgers());
+  test('the harness binds a slot to a question, and the meter shows what the provider answered', async () => {
+    const lease = BudgetRun.openLease({ runId: 'lease-ctl', leaseUsd: 1, ledgerPath: ledgerFile() });
+    let mode: 'ok' | '503' | 'garbled' = 'ok';
+    const up = fakeUpstream(() => mode === '503' ? new Response('{"error":"overloaded"}', { status: 503 }) : mode === 'garbled' ? new Response('<html>oops</html>', { status: 200 }) : Response.json({ usage: { prompt_tokens: 1, completion_tokens: 1 } }));
+    const proxy = new MeteringProxy({ fetchImpl: up.fetchImpl, controlToken: 'tok', policy: { lease, env: FAKE_ENV } });
+    proxy.start();
+    const base = `http://127.0.0.1:${proxy.port}`;
+    const ctl = new ProxyControl(base, 'tok');
+    const post = () => fetch(`${base}/mem0/openai/v1/chat/completions`, { method: 'POST', body: JSON.stringify(chat()) });
+    try {
+      expect((await fetch(`${base}/__proxy/bind`, { method: 'POST', body: JSON.stringify({ slot: 'mem0', key: 'x' }) })).status).toBe(403);
+      const ok = await ctl.around('mem0', 'q:1', async () => { await post(); mode = '503'; await post(); return 'done'; });
+      expect(ok.value).toBe('done');
+      expect(ok.meter).toMatchObject({ requests: 2, upstream: { statuses: { '200': 1, '503': 1 }, failed: 0, unparseable: 0 } });
+      expect(upstreamTrouble(ok.meter)).toBe(true);
+      mode = 'garbled';
+      const bad = await ctl.around('mem0', 'q:2', () => post());
+      expect(bad.meter.upstream).toEqual({ statuses: {}, failed: 0, unparseable: 1 });
+      mode = 'ok';
+      const clean = await ctl.around('mem0', 'q:3', () => post());
+      expect(upstreamTrouble(clean.meter)).toBe(false);
+      await post();
+      expect(proxy.meters.get('slot:mem0')!.requests).toBe(1);
+    } finally { proxy.stop(); }
   });
 });
 

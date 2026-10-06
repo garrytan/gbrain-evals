@@ -61,7 +61,7 @@ const err = (kind: string, message: string, status: number) => ({ status, out: {
 /** Serve a `MemorySystem` over protocol v1 (mirrors shim.py `dispatch`). */
 export function serveProtocol(system: MemorySystem, opts: { port?: number; hostname?: string; config?: string } = {}): { port: number; url: string; stop: () => void } {
   const server = Bun.serve({
-    port: opts.port ?? 0, hostname: opts.hostname ?? '127.0.0.1',
+    port: opts.port ?? 0, hostname: opts.hostname ?? '127.0.0.1', idleTimeout: 0,
     fetch: async req => {
       const start = performance.now();
       const path = new URL(req.url).pathname;

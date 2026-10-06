@@ -30,7 +30,6 @@ cd "$ROOT"
 BUN_VERSION=1.3.14
 die() { echo "bootstrap: $*" >&2; exit 1; }
 log() { echo "bootstrap: $*" >&2; }
-docker_cmd() { if docker info >/dev/null 2>&1; then docker "$@"; else sudo docker "$@"; fi; }
 
 cmd=${1:-}; shift || true
 SYSTEM="" CONFIG=recipe PORT="" PROXY_PORT=8787 TIMEOUT=900 DATASETS="" LEASE_ID="" LEASE_USD="" MAX_OUT="" OUT=""
@@ -57,10 +56,22 @@ compose_file() {
   echo "$f"
 }
 
+# The stacks name their relay settings differently: Mem0 and Basic Memory read PROXY_UPSTREAM and PROXY_SLOT (and
+# would take PROXY_URL as their in-network base URL), Graphiti and Hindsight read PROXY_URL and PROXY_OPENAI_PATH,
+# Cognee and Letta read PROXY_HOSTPORT and PROXY_OPENAI_PATH. Every stack's provider calls arrive on the proxy slot
+# named after the system, which the harness binds to each question for attribution.
 compose_env() {
-  export SHIM_CONFIG="$CONFIG" SHIM_HOST_PORT="${PORT:-8700}"
-  export PROXY_UPSTREAM="host.docker.internal:$PROXY_PORT" PROXY_HOSTPORT="host.docker.internal:$PROXY_PORT" PROXY_URL="http://host.docker.internal:$PROXY_PORT"
+  export SHIM_CONFIG="$CONFIG" SHIM_HOST_PORT="${PORT:-8700}" PROXY_SLOT="$SYSTEM"
+  export PROXY_UPSTREAM="host.docker.internal:$PROXY_PORT" PROXY_HOSTPORT="host.docker.internal:$PROXY_PORT"
+  export PROXY_OPENAI_PATH="/$SYSTEM/openai/v1" PROXY_ANTHROPIC_PATH="/$SYSTEM/anthropic"
+  case "$SYSTEM" in
+    graphiti|hindsight) export PROXY_URL="http://host.docker.internal:$PROXY_PORT" ;;
+    *) unset PROXY_URL ;;
+  esac
 }
+
+# Compose interpolates the caller's environment: never let the cell's own base URLs or keys reach a container.
+compose() { env -u OPENAI_BASE_URL -u ANTHROPIC_BASE_URL -u VOYAGE_BASE_URL -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u VOYAGE_API_KEY bash -c 'if docker info >/dev/null 2>&1; then exec docker compose "$@"; else exec sudo -E docker compose "$@"; fi' compose "$@"; }
 
 case "$cmd" in
   setup)
@@ -86,8 +97,8 @@ case "$cmd" in
       f=$(compose_file)
       compose_env
       log "pulling pinned images for $SYSTEM"
-      docker_cmd compose -f "$f" pull --ignore-buildable --quiet
-      docker_cmd compose -f "$f" build --quiet
+      compose -f "$f" pull --ignore-buildable --quiet
+      compose -f "$f" build --quiet
     fi
     log "setup done"
     ;;
@@ -112,10 +123,10 @@ case "$cmd" in
     if [ -n "${SHOOTOUT_PROXY:-}" ]; then PROXY_PORT=${SHOOTOUT_PROXY##*:}; compose_env; fi
     curl -sf "http://127.0.0.1:$PROXY_PORT/__proxy/status" >/dev/null || die "no metering proxy on port $PROXY_PORT; start one with: bash eval/systems/bootstrap.sh proxy --lease-id ... --lease-usd ..."
     log "starting $SYSTEM ($CONFIG) with the shim on 127.0.0.1:$SHIM_HOST_PORT"
-    docker_cmd compose -f "$f" up -d
+    compose -f "$f" up -d
     deadline=$(( $(date +%s) + TIMEOUT ))
     until curl -sf "http://127.0.0.1:$SHIM_HOST_PORT/health" | python3 -c 'import json,sys; sys.exit(0 if json.load(sys.stdin).get("ok") is True else 1)' 2>/dev/null; do
-      [ "$(date +%s)" -lt "$deadline" ] || { docker_cmd compose -f "$f" logs --tail 50 >&2; die "$SYSTEM did not report healthy within ${TIMEOUT}s"; }
+      [ "$(date +%s)" -lt "$deadline" ] || { compose -f "$f" logs --tail 50 >&2; die "$SYSTEM did not report healthy within ${TIMEOUT}s"; }
       sleep 2
     done
     curl -sf "http://127.0.0.1:$SHIM_HOST_PORT/health"; echo
@@ -124,7 +135,7 @@ case "$cmd" in
   down)
     f=$(compose_file)
     compose_env
-    docker_cmd compose -f "$f" down -v
+    compose -f "$f" down -v
     ;;
 
   *)

@@ -205,6 +205,20 @@ describe('harness side of the contract', () => {
     } finally { server.stop(); }
   });
 
+  test('long shim calls run under the harness deadline, not the HTTP client\'s default timeout', async () => {
+    const inits: RequestInit[] = [];
+    const sys = new HttpMemorySystem('http://shim.invalid', { ingestTimeoutMs: 123_000, fetchImpl: async (_u, init) => { inits.push(init!); return Response.json({ ready: true, waited_ms: 1, completeness: 'known', items_created: 1, errors: [], warnings: [] }); } });
+    await sys.finishIngest(NS_A, 11_000);
+    await sys.ingestSession(NS_A, session(S1, 'x'), null);
+    expect(inits.every(i => (i as { timeout?: unknown }).timeout === false && i.signal instanceof AbortSignal)).toBe(true);
+    const slow = Bun.serve({ port: 0, hostname: '127.0.0.1', idleTimeout: 0, fetch: async () => { await Bun.sleep(1500); return Response.json({ items_created: 1, errors: [], warnings: [], completeness: 'known' }); } });
+    try {
+      const err = await new HttpMemorySystem(`http://127.0.0.1:${slow.port}`, { ingestTimeoutMs: 200 }).ingestSession(NS_A, session(S1, 'x'), null).then(() => null, e => e);
+      expect(err).toBeInstanceOf(SystemError);
+      expect((err as SystemError).kind).toBe('timeout');
+    } finally { slow.stop(true); }
+  });
+
   test('the client refuses raw ids and forbidden markers before anything is sent', async () => {
     const sent: string[] = [];
     const sys = new HttpMemorySystem(ts.url, { markers: ['conv-26:q007', '_abs'], onRequest: (_p, body) => sent.push(body) });

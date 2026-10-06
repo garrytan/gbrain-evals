@@ -7,7 +7,11 @@
  * carries none of them (the captured-request tripwire). Error responses map
  * to `SystemError` with the shim's `kind`; a malformed response is a product
  * error; a network failure or a deadline is a `timeout`. Connections are not
- * reused: the Python shim base speaks HTTP/1.0 and closes each one.
+ * reused (a shim may close each one). Bun's own 300-second fetch timeout is
+ * off: every call runs under the harness's deadline instead, so a vendor
+ * that drains its background work for hours (Mem0's recipe /finish took 185
+ * minutes) is waited for, up to `--finish-timeout-s` plus a minute for
+ * /finish and `--ingest-timeout-s` for each /ingest.
  */
 import { findLeaks, NS_RE, SanitizerLeakError, SRC_RE } from './sanitize.ts';
 import { checkItem, ERROR_KINDS, SystemError, type CapabilityRecord, type DeleteResult, type ErrorKind, type FinishResult, type IngestResult, type MemorySystem, type PublicQuestion, type RetrievalPolicy, type RetrieveResult, type SessionInput } from './types.ts';
@@ -19,7 +23,10 @@ export interface HttpSystemOptions {
   /** Forbidden markers from the sanitizer; a body containing one is never sent. */
   markers?: readonly string[];
   fetchImpl?: Send;
+  /** Deadline for ordinary calls (default 10 minutes). */
   timeoutMs?: number;
+  /** Deadline for each /ingest (default 60 minutes). */
+  ingestTimeoutMs?: number;
   /** Every request body as sent, for leak tests. */
   onRequest?: (path: string, body: string) => void;
 }
@@ -45,8 +52,8 @@ export class HttpMemorySystem implements MemorySystem {
     try {
       res = await (this.options.fetchImpl ?? fetch)(`${this.base}${path}`, {
         method, headers: { connection: 'close', ...(text === undefined ? {} : { 'content-type': 'application/json' }) }, body: text, keepalive: false,
-        signal: AbortSignal.timeout(timeoutMs ?? this.options.timeoutMs ?? 600_000),
-      });
+        signal: AbortSignal.timeout(timeoutMs ?? this.options.timeoutMs ?? 600_000), timeout: false,
+      } as RequestInit);
     } catch (e) { throw new SystemError('timeout', `${method} ${path}: ${(e as Error).message}`); }
     let json: any;
     try { json = await res.json(); } catch { throw new SystemError('product_error', `${method} ${path}: HTTP ${res.status} with a non-JSON body`, res.status); }
@@ -73,7 +80,7 @@ export class HttpMemorySystem implements MemorySystem {
 
   async ingestSession(ns: string, session: SessionInput, event_time: string | null): Promise<IngestResult> {
     if (!SRC_RE.test(session.source_id)) throw new SystemError('invalid_request', 'source id is not opaque (src-<16 hex>)');
-    const r = await this.call('POST', '/ingest', { ns: this.ns(ns), session: { source_id: session.source_id, event_time, turns: session.turns } });
+    const r = await this.call('POST', '/ingest', { ns: this.ns(ns), session: { source_id: session.source_id, event_time, turns: session.turns } }, this.options.ingestTimeoutMs ?? 3_600_000);
     if (!COMPLETENESS.includes(r.completeness)) throw new SystemError('product_error', 'ingest must report completeness');
     return { items_created: Number(r.items_created ?? 0), warnings: r.warnings ?? [], errors: r.errors ?? [], completeness: r.completeness, service_ms: r.service_ms };
   }

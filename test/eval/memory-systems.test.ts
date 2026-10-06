@@ -246,6 +246,7 @@ describe('memory-qa with a MemorySystem', () => {
     const seen: Array<{ path: string; auth: string | null; model: string }> = [];
     const upstream = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: async req => {
       const body = await req.json().catch(() => ({})) as { model?: string; documents?: string[] };
+      if (new URL(req.url).pathname.startsWith('/__proxy/')) return Response.json({ usd: 0, requests: 0, unpriced: 0, byModel: {} });
       seen.push({ path: new URL(req.url).pathname, auth: req.headers.get('authorization'), model: String(body.model) });
       return Response.json({ object: 'list', model: body.model, data: (body.documents ?? []).map((_, i) => ({ index: i, relevance_score: 1 - i / 10 })), usage: { total_tokens: 5 } });
     } });
@@ -257,7 +258,7 @@ describe('memory-qa with a MemorySystem', () => {
       expect(code, err).toBe(0);
     } finally { upstream.stop(true); }
     expect(seen.length).toBeGreaterThan(0);
-    expect(seen.every(r => r.path === '/gbrain/voyage/v1/rerank' && r.auth === 'Bearer dummy-key-the-proxy-replaces' && r.model === 'rerank-2.5')).toBe(true);
+    expect(seen.every(r => r.path === '/harness/voyage/v1/rerank' && r.auth === 'Bearer dummy-key-the-proxy-replaces' && r.model === 'rerank-2.5')).toBe(true);
     const receipt = JSON.parse(readFileSync(join(out, 'receipt.json'), 'utf8'));
     expect(receipt.metering.mode).toBe('lease-proxy');
     expect(receipt.run_status).toBe('complete');
