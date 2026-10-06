@@ -4618,6 +4618,27 @@
         "/gate_1b/metered_spend_usd": 18.0532
       },
       "note": "Mirror of gbrain's facts-arm-in-query gates (#6066): gates 1 and 2 at 16288b95c, gates 1b and revised 2 at 947536f4c; copied byte for byte. The gate-1 runs used bench-flags.patch locally; gate 1b used the flags merged at d01d3bc."
+    },
+    {
+      "claim_id": "fix-wave-9-mirror",
+      "readme_anchor": "docs/benchmarks/2026-10-05-fix-wave-9-mirror.md: The finding",
+      "artifact_path": "docs/benchmarks/2026-10-05-fix-wave-9-mirror/verdict.json",
+      "artifact_sha256": "4c5a5a0c6cecacb06572b0f48658d8e5bde3a11f002517194731d57327b03180",
+      "status": "covered",
+      "expected": {
+        "/items/search_path_insert_cost/measurement/pglite/before_range/0": 1.31,
+        "/items/search_path_insert_cost/measurement/pglite/after_range/1": 1.69,
+        "/items/search_path_insert_cost/measurement/postgres/before_range/0": 0.531,
+        "/items/search_path_insert_cost/measurement/postgres/after_range/1": 0.604,
+        "/items/search_path_insert_cost/correctness/fingerprint_golden_claims": 24,
+        "/items/search_path_insert_cost/correctness/fingerprint_golden_identical_before_after": true,
+        "/items/search_path_insert_cost/verdict": "accepted cost",
+        "/items/takes_quality_protocol_2/protocol_version": 2,
+        "/items/takes_quality_protocol_2/score_measurement": null,
+        "/source/pr_head": "1fbe8660cb0dc1737d7bd9323aa9c6410dc80ec8",
+        "/rerun_here": false
+      },
+      "note": "Mirror of gbrain fix wave 9 (#6111, pending merge at head 1fbe8660c): the search_path insert timing is a local lane measurement (3 runs per side, ranges only, copied from commit daf7426b6); takes-quality protocol 2 is a comparability note with no score measurement."
     }
   ]
 }
