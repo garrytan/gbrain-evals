@@ -28,11 +28,13 @@
  * each read appends a line to access-log.jsonl beside the file before its bytes
  * are parsed, and summaries record SHA-256 values, never custody paths or text.
  *   bun eval/runner/p8-quote-grounding.ts --make-questions --corpus amara|sealed-confirmation [--corpus-dir <custody dir>]
+ *     [--exclude-questions <earlier held-out questions files, comma-separated>]   (custodian: a retest set disjoint from them)
  *     [--corpus-manifest <manifest.json>] --n <n> --seed <held-out seed, not 1> --out-questions <custody file>
  *     --decision-id <id> --purpose <text> [--model gpt-6.1-sol]
  *   bun eval/runner/p8-quote-grounding.ts --gbrain <checkout>@<ref> --heldout-questions <custody file>
  *     [--corpus-dir <custody dir>] [--corpus-manifest <manifest.json>] --decision-id <id> --purpose <text>
- *     --out <dir outside the repository> [--think-model ...] [--judge ...] [--replay <rows.ndjson>]
+ *     --out <dir outside the repository> [--think-model ...] [--judge ...] [--replay <rows.ndjson>] [--resume]
+ *   --resume keeps the rows already in <out>/rows.ndjson and runs only the questions they lack (a run cut short by a machine restart).
  * On amara, held-out questions are drawn only from pages no dev question uses.
  * Writing a held-out questions file appends a `write` line with its SHA-256 to
  * access-log.jsonl beside it.
@@ -53,7 +55,7 @@
  * A question without `corpus` targets amara (the generator@1 dev file).
  */
 import Anthropic from '@anthropic-ai/sdk';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { renderCorpus } from './chronicle-lift.ts';
@@ -167,6 +169,18 @@ export function quoteSpans(text: string): string[] {
   return out;
 }
 
+/**
+ * Which answer spans gbrain flagged. gbrain reports each unverified quote as its inner text with whitespace collapsed
+ * and clipped to 300 characters (`clip` in synthesize-verify.ts), so a span is flagged when its text in that form equals
+ * a reported text. Substring containment would also mark a supported span that sits inside, or contains, a different
+ * flagged quote.
+ */
+export function flaggedSpans(spans: readonly string[], unverified: readonly string[]): boolean[] {
+  const key = (t: string) => { const flat = t.replace(/\s+/g, ' ').trim(); return flat.length > 300 ? `${flat.slice(0, 297)}...` : flat; };
+  const reported = new Set(unverified.map(key));
+  return spans.map(span => reported.has(key(span)));
+}
+
 function wilsonUpper(k: number, n: number, z = 1.96): number {
   if (n === 0) return 1;
   const p = k / n, d = 1 + z * z / n;
@@ -223,7 +237,11 @@ async function makeQuestionsCli(argv: readonly string[]) {
     throw new Error(`only dev seeds ${DEV_SEEDS.join(', ')} run here; held-out questions belong to the custodian (--decision-id, --purpose, --out-questions outside the repository)`);
   }
   const { pages, sealedSha256 } = corpusPages(f, custodian, corpus === 'sealed-confirmation');
-  const exclude = custodian && corpus === 'amara' ? new Set(parseQuestions(JSON.parse(readFileSync(DEV_QUESTIONS, 'utf8'))).questions.map(q => q.page)) : undefined;
+  // --exclude-questions a.json,b.json (custodian): pages an earlier held-out set used, so a retest set is disjoint from it.
+  const priorFiles = custodian ? (f('--exclude-questions') ?? '').split(',').filter(Boolean) : [];
+  const priorPages = priorFiles.flatMap(file => parseQuestions(JSON.parse(readFileSync(file, 'utf8'))).questions.map(q => q.page));
+  const devPages = custodian && corpus === 'amara' ? parseQuestions(JSON.parse(readFileSync(DEV_QUESTIONS, 'utf8'))).questions.map(q => q.page) : [];
+  const exclude = devPages.length || priorPages.length ? new Set([...devPages, ...priorPages]) : undefined;
   const model = f('--model') ?? 'gpt-6.1-sol';
   const cache = cacheDir(custodian);
   const chat = new ChatClient(cache);
@@ -287,13 +305,22 @@ async function main(argv = process.argv.slice(2)) {
   };
   const rows: Array<Record<string, unknown>> = [];
   const rowsPath = join(out, 'rows.ndjson');
-  writeFileSync(rowsPath, '');
+  // --resume: keep the rows a run cut short already wrote and answer only the questions they lack.
+  const done = new Set<string>();
+  if (argv.includes('--resume') && existsSync(rowsPath)) {
+    for (const line of readFileSync(rowsPath, 'utf8').split('\n').filter(Boolean)) {
+      const row = JSON.parse(line) as Record<string, unknown>;
+      rows.push(row);
+      done.add(String(row.id));
+    }
+    log(`resuming: ${done.size} question(s) already answered`);
+  } else writeFileSync(rowsPath, '');
   // --replay <rows.ndjson>: the same answers (as the model wrote them) and judge labels, grounded again by this build.
   const replay = flag('--replay') ? new Map(readFileSync(flag('--replay')!, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l)).map((r: any) => [r.id, r])) : null;
   // One brain per corpus, and per haystack for sealed-confirmation: a question sees only the pages of its own corpus.
   const brainOf = (q: Question) => q.corpus === 'amara' ? 'amara' : `sealed-confirmation|${q.haystack}`;
   const groups = new Map<string, Question[]>();
-  for (const q of questions) groups.set(brainOf(q), [...(groups.get(brainOf(q)) ?? []), q]);
+  for (const q of questions) if (!done.has(q.id)) groups.set(brainOf(q), [...(groups.get(brainOf(q)) ?? []), q]);
   for (const [brain, group] of groups) {
     const engine = new PGLiteEngine();
     await engine.connect({});
@@ -314,10 +341,11 @@ async function main(argv = process.argv.slice(2)) {
       }
       catch (e) { log(`${q.id}: ${(e as Error).message}`); continue; }
       const raw = String(res.answer_raw ?? res.answer ?? '');
-      const flaggedTexts = new Set(((res.unverified_quotes ?? []) as Array<{ text: string }>).map(u => u.text.trim()));
+      const answerSpans = quoteSpans(raw);
+      const flags = flaggedSpans(answerSpans, ((res.unverified_quotes ?? []) as Array<{ text: string }>).map(u => u.text));
       const spans = [];
-      for (const span of quoteSpans(raw)) {
-        const flagged = [...flaggedTexts].some(t => t.includes(span) || span.includes(t));
+      for (const [i, span] of answerSpans.entries()) {
+        const flagged = flags[i];
         const judged = prior?.spans.find(s => s.span === span)?.judge;
         if (prior && !judged) continue;
         spans.push({ span, gbrain: flagged ? 'flagged' : 'kept', judge: judged ?? await judge(chat, judgeModel, captured, span) });

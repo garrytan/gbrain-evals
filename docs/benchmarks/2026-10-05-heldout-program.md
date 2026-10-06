@@ -51,7 +51,7 @@ One row per idea. "Held-out verdict" is the custodian's sealed result against th
 | P6 | Time-aware search | in progress | in progress | in progress | no PR yet |
 | P7 | Multi-relation query planner | `search.relational_planner` | **PASS** (24 better, 0 worse; +27 points strict all-hit@10) | on in `balanced` and `tokenmax` | [#6019](https://github.com/garrytan/gbrain/pull/6019), merged, v0.60.60.0 |
 | P7 | One-hop orientation | `search.relational_orient_onehop` | does not meet its rule (1 better, 0 worse, p = 1.0) | off | #6019 |
-| P8 | Write guard, semantic withdrawal, quote grounding, advertised surface | in progress, see gbrain PR | in progress | in progress | [#6027](https://github.com/garrytan/gbrain/pull/6027), draft |
+| P8 | Write guard, semantic withdrawal, quote grounding, advertised surface ([records](2026-10-05-heldout-program/p8.md)) | guard, `review_withdraw`, `think.quote_verify`, `mcp.advertised_surface` | write cost **PASS**, withdrawal **PASS**, quote grounding first run **FAIL** and fresh retest **PASS**, narrower surface **FAIL** | guard, withdrawal and quote grounding on; new installs advertise `full` | [#6027](https://github.com/garrytan/gbrain/pull/6027), merged, v0.60.77.0 |
 
 The P3 raw-query routing guard in #6014 has no preregistered experiment and no default rides on it.
 
