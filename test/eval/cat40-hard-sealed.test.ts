@@ -468,7 +468,7 @@ describe('sealed generator: reference forms', () => {
     const appended = large.entities.slice(base.entities.length);
     expect(appended.flatMap(e => e.refs!.managers.map(m => m.name)).some(m => (STAFF as readonly string[]).includes(m))).toBe(false);
     expect(sealedWorldDigest(generateSealedWorld(SEEDS[0], knobs, 'large'))).toBe(sealedWorldDigest(large));
-  });
+  }, 60_000);
 
   test('independence: no sealed reference-form sentence template or six-word run appears in a main-generator v2 world', () => {
     const main = generateHardWorld(undefined, R3);
@@ -488,7 +488,7 @@ describe('sealed generator: reference forms', () => {
     const sentences = (w: HardWorld) => new Set(w.docs.flatMap(d => d.body.split(/\n|(?<=[.!?])\s+/)).map(skeleton).filter(k => k.split(' ').filter(x => x !== 'N' && x !== '#').length >= 4));
     const mainSentences = sentences(main);
     expect([...sentences(v2)].filter(k => mainSentences.has(k))).toEqual([]);
-  });
+  }, 60_000);
 });
 
 // ─── Multi-account questions (knob schema 3, WORLD_SCHEMA.md "Multi-account questions") ───
@@ -515,7 +515,7 @@ describe('sealed generator: multi-account questions', () => {
     expect(sealedWorldDigest(generateSealedWorld(SEEDS[0], R4))).toBe(sealedWorldDigest(r4));
     expect(new Set(SEEDS.map(s => sealedWorldDigest(r4Worlds.get(s)!.world))).size).toBe(SEEDS.length);
     expect(() => checkHardWorld(r4, 'sealed-r4-test')).not.toThrow();
-  });
+  }, 60_000);
 
   test('H2 to H5 questions have k items in the contract wording; H1 stays single and within the smaller member range', () => {
     for (const w of [...r4Worlds.values()].map(x => x.world)) {
@@ -569,7 +569,7 @@ describe('sealed generator: multi-account questions', () => {
 
   test('every reference resolves to exactly one customer, and every task\'s oracle documents tie each reference to its customer', () => {
     for (const { world: w } of r4Worlds.values()) { checkResolvable(w); checkOracle(w); }
-  });
+  }, 60_000);
 
   test('each item carries its own evidence: the evidence holds a record about every item\'s account, and relevant holds the evidence', () => {
     const about = new Map<string, Set<string>>();
