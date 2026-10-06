@@ -18,6 +18,7 @@ published. Comparators are named by kind only.
 | `p3-e4-heldout-2026-10-04.json` | P3 triplet scoring E4 | fail (precondition: arm fired on 17%) |
 | `p3-e5-heldout-2026-10-05.json` | P3 declared single-value relations E5 | fail (3 wrong closures) |
 | `p3-e5-setf-retest-2026-10-05.json` | P3 E5 retest on fresh material (second custodian), guard vs no guard | guard: all gates pass, 0 closures applied (power precondition not met); no guard: 23 of 23 closures wrong |
+| `p4-core-heldout-2026-10-06.json` | P4 always-loaded core memory tier, core gate (BEAM-100K sealed, four models) | fail (`gpt-6.1-sol` −2.4 points; `claude-fable-5-1` −2.4) |
 | `p4-pressure-heldout-2026-10-05.json` | P4 pre-compaction save notice, pressure gate (BEAM-500K sealed) | pass (+11.35 points [+8.3, +14.4]) |
 | `p5-heldout-2026-10-05.json` | P5 first run: H1 link typing, H2 relation lines, H4 forward references, H5a similar-page hint | pass |
 | `p5-h3-heldout-2026-10-06.json` | P5 H3 junk audit on minted lines (second custodian, from P0's run) | fail (precision 0/18) |
