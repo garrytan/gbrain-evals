@@ -1,0 +1,9 @@
+{
+ "captured": 2680,
+ "receipt": 2680,
+ "missing": 0,
+ "extra": 0,
+ "gold_class_mismatches": 0,
+ "ledger_sha_matches": true,
+ "ok": true
+}
