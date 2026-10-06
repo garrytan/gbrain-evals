@@ -4597,6 +4597,24 @@
         "/gate_1/metered_spend_usd": 1.5243
       },
       "note": "Mirror of gbrain's entity-anchored query retrieval gates (#6066, measured at 2fa44f149); copied byte for byte, not re-measured; gate 3 belongs to the harness lane."
+    },
+    {
+      "claim_id": "mpw-query-facts-arm-verdict-mirror",
+      "readme_anchor": "docs/benchmarks/2026-10-05-memory-proof-wave-gbrain-verdicts.md: Facts arm in query",
+      "artifact_path": "docs/benchmarks/2026-10-05-memory-proof-wave-gbrain-verdicts/query-facts-arm/verdict.json",
+      "artifact_sha256": "4a1ea267f59e00bc4d65a339bcc4806f66163d4d7424119465a6f935f87aac3e",
+      "status": "covered",
+      "expected": {
+        "/overall": "off_gate_1_failed",
+        "/measured_build": "garrytan/gbrain@16288b95c",
+        "/gate_1/status": "fail",
+        "/gate_1/rule_result/after_5_writes/higher": false,
+        "/gate_1/forget_remember/off/checkpoints/1/stale": 92,
+        "/gate_1/forget_remember/on/checkpoints/1/stale": 4,
+        "/gate_2/status": "pass",
+        "/metered_spend_usd": 26.05
+      },
+      "note": "Mirror of gbrain's facts-arm-in-query gates (#6066, measured at 16288b95c); copied byte for byte. Gate 1 ran this repository's B2 corrections bench with bench-flags.patch applied locally."
     }
   ]
 }
