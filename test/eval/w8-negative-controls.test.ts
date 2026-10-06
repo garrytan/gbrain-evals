@@ -116,3 +116,17 @@ describe('openai judge shim', () => {
     await expect(failing.messages.create({ model: 'gpt-6.1-sol', max_tokens: 10, messages: [{ role: 'user', content: 'x' }] } as never)).rejects.toMatchObject({ status: 429 });
   });
 });
+
+describe('w8 control decision', () => {
+  const { decide } = require('../../eval/runner/w8-negative-controls.ts') as typeof import('../../eval/runner/w8-negative-controls.ts');
+  const base = { category: 'c', statistic: 's', floor: 'f', floor_met: true, injection_ok: true, injection_note: '' };
+  test('pass at or under half, fail above, inconclusive under the floor or on a failed injection, not run when missing', () => {
+    expect(decide({ ...base, real: 0.6, degraded: 0.3 }).verdict).toBe('pass');
+    expect(decide({ ...base, real: 0.6, degraded: 0.31 }).verdict).toBe('fail');
+    expect(decide({ ...base, real: 3.26, degraded: 3.62 }).ratio).toBeCloseTo(1.110, 3);
+    expect(decide({ ...base, real: 0.6, degraded: 0, floor_met: false }).verdict).toBe('inconclusive');
+    expect(decide({ ...base, real: 0.6, degraded: 0, injection_ok: false }).verdict).toBe('inconclusive');
+    expect(decide({ ...base, real: 0, degraded: 0 }).verdict).toBe('inconclusive');
+    expect(decide({ ...base, real: null, degraded: 0 }).verdict).toBe('not run');
+  });
+});
