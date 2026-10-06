@@ -32,6 +32,8 @@ BEAM-1M is a conversation history far too large to paste into a prompt, and stri
 
 The receipts, per-question rows and the recount script are in [`2026-10-05-heldout-program/starting-line/`](2026-10-05-heldout-program/starting-line/). Starting-line spend was $32.09.
 
+**BEAM session dates (note added 2026-10-06).** The BEAM rows above ran on a loader that dated only the first turn group of each BEAM batch, so about 96% of BEAM sessions reached gbrain and the reader without a date. BEAM dates each batch once, and the loader now gives every turn group its batch's date. They stand as measured. A rerun of BEAM-100K dev on the same build with the fixed loader, reported only, gives strict recall of all gold sessions at 5 of 47.2% (45.4% before, 2 more questions) and answer accuracy of 58.0% (57.1% before). Per question type, the changes are within ±1 question of 12 and mixed in sign. Receipt and rows: [`starting-line-beam-dates/`](2026-10-05-heldout-program/starting-line-beam-dates/beam-100k-qa/shard-0/receipt.json). BEAM-1M was not rerun.
+
 ## Program scorecard
 
 One row per idea. "Held-out verdict" is the custodian's sealed result against the preregistered bar. "Default" is what the idea ships with.
@@ -151,3 +153,4 @@ Head-to-head comparisons against external memory systems, a full-context baselin
 - 2026-10-05: P3 gains the custodian's root-cause analysis of E1, E4 and E5 and the E5 retest on fresh material.
 - 2026-10-05: P1 gains the custodian's E1 check on a third phrasing set (fails traps, lexicon coverage); the E5 record states that `dream.single_value.mode` stays `propose`.
 - 2026-10-05: P3 records the report-only E5 recheck on set G (3 correct closures, 0 wrong). Plans still in progress publish their records in their own pages under `2026-10-05-heldout-program/`.
+- 2026-10-06: The starting line notes that its BEAM rows ran on a loader that left most sessions undated, with a reported-only BEAM-100K dev rerun on the fixed loader.
