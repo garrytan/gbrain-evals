@@ -147,4 +147,6 @@ Claude 5.x models count about 1.6 times as many input tokens as `gpt-6.1-sol` fo
 
 ## Amendments
 
-None yet.
+### 2026-10-06, after the `w10b-sonnet55-notes` arm settled: lane order while W10a's capture runs
+
+W10a's retrieval capture runs for about four hours on a cold embedding cache (25 seconds per question). Instead of leaving the batch lane idle, the W10b arms after Sonnet 5.5 notes run in their preregistered order (direct, `gpt-6.1-sol`, `gpt-5.4`, Opus, Fable) while the capture runs, and W10a's and W10c's batches run when the capture ends. Each workstream has its own budget run and cap, so the change cannot move money between W10a, W10b and W10c, and the order inside each workstream is unchanged. Batches still run one at a time. No result had been looked at beyond the Sonnet 5.5 arm's settlement status when this was written.
